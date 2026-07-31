@@ -215,11 +215,12 @@ pin change ships with a CHANGELOG line + documented **Hex retirement** as the ne
 
 ## Current State
 
-**v2.2 IN PROGRESS - CI Signal Integrity & Supply-Chain Hygiene (phases 141-144).** Phases 141-143 are
-complete and verifier-passed. CI lane classification and supply-chain gating are reconciled, the Ecto
-Sandbox ownership leak is fixed through a sanctioned ownership seam, all four Core Full Suite matrix
-legs have live green evidence with anti-vacuity floors, and the two supported-floor legs now gate Hex
-publishes with positive and negative rehearsal evidence. Next: Phase 144 (Signal & Drift Integrity).
+**v2.2 IMPLEMENTATION COMPLETE - CI Signal Integrity & Supply-Chain Hygiene (phases 141-144).** All four
+phases are complete and verifier-passed. CI lane classification and supply-chain gating are reconciled;
+the Core Full Suite is non-vacuous and release-gating; branch-protection, repo-hygiene, icon, publish,
+and release-recovery signals now fail closed with hermetic automated evidence. Phase 144 passed 12/12
+must-haves, is Nyquist-compliant, and closed all 13 planned threats with no human UAT. Next: milestone
+audit and archive; v2.2 is not labeled shipped until that lifecycle gate completes.
 
 **v2.1 SHIPPED 2026-07-08 - Postgres + Admin URL Hardening.** All 3 phases (138-140) complete, audit
 `status: passed` (13/13 requirements). Focused no-search-path schema-prefix hardening has hostile
@@ -808,7 +809,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-07-31 — v2.2 Phase 143 (Test-Harness Truth) complete, verifier `status: passed` (7/7). Core Full Suite is green across all four legs, guarded against vacuous success, and the supported-floor pair is Hex publish-gating. Next: Phase 144.*
+*Last updated: 2026-07-31 — v2.2 Phase 144 (Signal & Drift Integrity) complete, verifier `status: passed` (12/12), Nyquist-compliant, security `threats_open: 0`, and no human UAT. All v2.2 implementation phases are complete; next: milestone audit and archive.*
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->
 <!-- prior footer: 2026-06-28 — v1.14 Phase 122 (Preview surface redesign) complete, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).* -->
