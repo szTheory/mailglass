@@ -1,6 +1,8 @@
 ---
 id: SEED-005
-status: dormant
+status: archived
+updated: 2026-07-31
+note: Deferred at v2.2 close; retained as compatibility-sensitive future reference only.
 planted: 2026-07-19
 planted_during: v2.1 archived / awaiting next milestone
 trigger_when: when planning renderer APIs, Mailable ergonomics, preview assigns, or template integration
