@@ -1,113 +1,99 @@
 ---
 phase: 143
 slug: test-harness-truth
-# status lifecycle: draft (seeded by plan-phase) → validated (set by validate-phase §6)
-# audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: false) (#2117)
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-07-29
+validated: 2026-07-31
 ---
 
 # Phase 143 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution.
-> Source: `143-RESEARCH.md` § Validation Architecture (lines 1215-1279). Do not re-derive — amend here.
-
----
+> Retroactive Nyquist audit of the executed phase. The original pre-execution
+> contract has been reconciled with all 14 plans, their summaries, the shipped
+> tests, and the Phase 143 verification evidence.
 
 ## Test Infrastructure
 
 | Property | Value |
 |----------|-------|
-| **Framework** | ExUnit (Elixir 1.18.4 per `.tool-versions`; 1.19.5 on the next-toolchain legs) |
-| **Config file** | `test/test_helper.exs` (`ExUnit.start()` at `:1`; conditional `ExUnit.configure(exclude: [:public_only])` at `:54`) |
-| **Quick run command** | `mix test test/scripts/ --warnings-as-errors` (the `verify.ci_lane_contract` alias, `mix.exs:296-298`) |
+| **Framework** | ExUnit (Elixir 1.18.4 / OTP 27 on the gating toolchain; Elixir 1.19 / OTP 28 on next-toolchain CI legs) |
+| **Config file** | `test/test_helper.exs` |
+| **Quick run command** | `mix test test/scripts/ --warnings-as-errors` |
+| **Focused phase command** | `mix test test/scripts/mechanism_account_contract_test.exs test/scripts/suite_floor_contract_test.exs test/scripts/lane_classification_drift_test.exs test/scripts/required_checks_test.exs test/mailglass/test_support/sandbox_ownership_test.exs test/mailglass/test_support/suite_truth_formatter_test.exs test/mailglass/mailer_case_test.exs test/mailglass/credo/no_raw_sandbox_ownership_test.exs --warnings-as-errors` |
 | **Full suite command** | `mix test --warnings-as-errors --exclude requires_workspace` |
-| **Lint gate** | `mix credo --strict` (`.credo.exs`, `requires: ["./credo_checks/*.ex"]` at `:180`) |
-| **Estimated runtime** | ~5 s quick / ~480 s full suite per leg (observed `Finished in 478.3 seconds`) |
+| **Pinned runner** | `make toolchain CMD='<command>'` |
+| **Lint gate** | `mix credo --strict` plus `actionlint` for workflow changes |
 
----
+The host checkout currently stops before ExUnit because its local Ecto dependency
+has a lock mismatch. The pinned toolchain is the authoritative local path and ran
+the focused phase command on 2026-07-31: **189 tests, 0 failures**, with
+`already_shared=0`, `formatter_violations=0`, and zero `SuiteFloor` violations.
 
 ## Sampling Rate
 
-- **After every task commit:** `mix test test/scripts/ --warnings-as-errors` + `mix credo --strict` (seconds).
-- **After every plan wave:** `mix test --warnings-as-errors --exclude requires_workspace` locally on the
-  `public` axis, then `MAILGLASS_SCHEMA=mailglass` on the `mailglass` axis.
-- **Wave 2 → Wave 3 boundary:** floors may only be pinned from **green CI runs**, never locally (D-27).
-- **Wave 3 → Wave 4 boundary:** D-28's five-condition blocking checkpoint, pasted into the phase artifact.
-- **Before `/gsd-verify-work`:** full suite green on all four legs + `mix verify.ci_lane_contract` +
-  `mix credo --strict`.
-- **Max feedback latency:** 5 s (quick lane) / 480 s (full-suite lane).
+- After test-support or policy changes: run the focused affected ExUnit file.
+- After script-contract or workflow changes: run `mix test test/scripts/ --warnings-as-errors` and `actionlint` on changed workflows.
+- At plan-wave boundaries: run the full root suite on both schema axes.
+- Before promotion or release-gate changes: require real Actions evidence; never infer a green matrix from local results.
+- Before phase verification: require all four Core Full Suite legs plus the deliberate-failure and publish-block rehearsals.
 
----
+## Requirement Coverage
+
+| Requirement | Automated coverage | Current status |
+|-------------|--------------------|----------------|
+| **HARNESS-01** | `sandbox_ownership_test.exs`, `suite_truth_formatter_test.exs`, `mailer_case_test.exs`, `no_raw_sandbox_ownership_test.exs`, and `mechanism_account_contract_test.exs` cover the mechanism, release-first ownership, class A/B/C observation, sanctioned call sites, and recurrence guard. | **COVERED** — focused pinned run green; successful four-leg CI runs exercised the full-suite path. |
+| **HARNESS-02** | `advisory-matrix.yml` executes the full suite across Elixir/OTP and schema axes; lane drift tests pin the matrix contract. | **COVERED** — three distinct green `main` SHAs plus successful scheduled and tag-shaped dispatch evidence in `143-VERIFICATION.md`. |
+| **HARNESS-03** | `suite_floor_contract_test.exs` covers count loss, exclusion drift, raw and composed `:already_shared` signatures, and fail-closed formatter state; the deliberate regression probe exercises the live lane. | **COVERED** — focused pinned run green; Actions run `30599206217` proves both floor legs fail on an injected regression. |
+| **HARNESS-04** | `lane_classification_drift_test.exs`, `required_checks_test.exs`, and `mechanism_account_contract_test.exs` pin lane classification, gate wiring, and the decision record. | **COVERED** — positive release runs passed the gate; rehearsal `30654293410` failed the gate and left `publish-core` skipped. |
 
 ## Per-Task Verification Map
 
-> Requirement → behavior → automated command. Task IDs are bound by the planner; the behavior rows below
-> are the contract each task must satisfy.
-
-| Req | Behavior | Test type | Automated Command | File Exists |
-|---|---|---|---|---|
-| HARNESS-01 | The mechanism account is written and cites the confirming run | doc contract | `mix test test/scripts/ --warnings-as-errors` | ❌ W1 |
-| HARNESS-01 | A leaked shared owner produces `:already_shared` on the next `start_owner!(shared: true)`; `shared: false` survives; `stop_owner`/`mode(:auto)` heal | unit (mechanism regression, D-04) | `mix test test/mailglass/test_support/sandbox_ownership_test.exs` | ❌ W2 |
-| HARNESS-01 | `checkout!/1` registers release before any statement that can raise | unit | `mix test test/mailglass/test_support/sandbox_ownership_test.exs --only release_first` | ❌ W2 |
-| HARNESS-01 | The four S2 no-ops are deleted; `set_mailglass_global/0` semantics unchanged | unit + grep tripwire | `mix test test/mailglass/mailer_case_test.exs` + `mix credo --strict` | ⚠️ file exists; add assertions |
-| HARNESS-01 | Raw `Sandbox.*` under `test/` outside the sanctioned helper fails lint | Credo | `mix credo --strict` | ❌ W2 |
-| HARNESS-01 | Class A: baseline tables present at every `async: false` module boundary | formatter probe (suite-level) | full suite with `MAILGLASS_SUITE_FLOOR=1` | ❌ W2 |
-| HARNESS-01 | Class B: `Config.schema()` equals its boot value at every `async: false` module boundary | formatter probe (suite-level) | full suite with `MAILGLASS_SUITE_FLOOR=1` | ❌ W2 |
-| HARNESS-02 | All four legs green | CI (integration) | `advisory-matrix.yml` — three consecutive completed runs across three distinct `main` SHAs, ≥1 `schedule`, ≥1 `workflow_dispatch` on a tag-shaped ref (D-28) | ✅ lane exists, currently red |
-| HARNESS-02 | Green is not seed-luck | CI (repeat) | the three runs above use random seeds (no `--seed` in the lane) — that *is* the seed variation | ✅ |
-| HARNESS-03 | `violations/1` fires when executed count drops | unit (negative control) | `mix test test/scripts/suite_floor_contract_test.exs` | ❌ W3 |
-| HARNESS-03 | `violations/1` fires on an unknown `--exclude` tag, in both directions | unit | same file | ❌ W3 |
-| HARNESS-03 | The signature classifier returns `:already_shared` for the **verbatim captured failure term** | unit | same file | ❌ W3 — highest-value single test in the phase |
-| HARNESS-03 | The classifier also counts the composed guard error (laundering guard) | unit | same file | ❌ W3 |
-| HARNESS-03 | The lane catches a deliberately-injected regression | CI probe | `gh workflow run gate-self-test.yml -f check_name='Core Full Suite (' -f required_only=false` → expect `result=blocked` | ⚠️ workflow exists; needs 2 inputs + never-appeared outcome |
-| HARNESS-03 | The existing probe is vacuous against `CI Green` (D-18a) | CI probe, one-shot | `gh workflow run gate-self-test.yml` (defaults) → expect `result=leaked` | ✅ runnable today |
-| HARNESS-04 | Registry ↔ YAML ↔ `MAINTAINING.md` agree on the 7 advisory-matrix lanes | drift meta-test | `mix test test/scripts/lane_classification_drift_test.exs` | ⚠️ file exists; add assertions |
-| HARNESS-04 | `expanded_matrix_job_names/1` is non-vacuous | unit + negative control | same file | ❌ W3 |
-| HARNESS-04 | The 24-row `ci.yml` counts are unchanged | drift meta-test | same file (`:442-465`) | ✅ exists — must stay green |
-| HARNESS-04 | Branch protection still exactly `{CI Green, Guard Release Trigger}` | unit | `mix test test/scripts/required_checks_test.exs` (`:45-58`) | ✅ exists |
-| HARNESS-04 | A red gating leg blocks a Hex publish | CI rehearsal (negative) | [`30654293410`](https://github.com/szTheory/mailglass/actions/runs/30654293410): gate fails on both floor legs; `publish-core` is skipped with zero steps and did not start | ✅ W4 (D-29) |
-| HARNESS-04 | A green gating leg permits the publish path | CI rehearsal (positive) | real 2.3.0 release runs [`30645265238`](https://github.com/szTheory/mailglass/actions/runs/30645265238) and [`30645266725`](https://github.com/szTheory/mailglass/actions/runs/30645266725): both gate jobs pass after self-healing [`30645896855`](https://github.com/szTheory/mailglass/actions/runs/30645896855) | ✅ W4 (D-29) |
-
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
-
----
-
-## Wave 0 Requirements
-
-- [ ] `test/support/sandbox_ownership.ex` — the sanctioned ownership door (D-06)
-- [ ] `test/support/suite_truth_formatter.ex` — hygiene probe + failure-signature tally (D-08/D-09)
-- [ ] `test/support/suite_floor.ex` — floors, tag allowlist, ceilings (D-13/D-15/D-16)
-- [ ] `credo_checks/no_raw_sandbox_ownership.ex` — prevention layer (D-08)
-- [ ] `test/scripts/suite_floor_contract_test.exs` — negative controls; **auto-collected, no `mix.exs`
-      change** (`verify.ci_lane_contract` is a directory glob)
-- [ ] `test/mailglass/test_support/sandbox_ownership_test.exs` — mechanism-level regression test (D-04)
-- [ ] Two `env: MAILGLASS_SUITE_FLOOR: "1"` additions (`advisory-matrix.yml`, full-suite steps at `:113`, `:216`)
-- [ ] `Mailglass.CIYaml.expanded_matrix_job_names/1` + `Mailglass.CILanes` third axis (D-24)
-- [ ] `MAINTAINING.md` new `## Advisory Matrix Lanes` section (D-25)
-
-**Framework install: none.** ExUnit, Credo, and the drift-test harness all already exist.
-
----
+| Plan | Wave | Requirements | Verification | Status |
+|------|------|--------------|--------------|--------|
+| 143-01 | 1 | HARNESS-01 | Formatter unit tests and traced suite observation | COVERED |
+| 143-02 | 1 | HARNESS-03 | `actionlint` plus recorded gate-self-test vacuity probe | COVERED |
+| 143-03 | 2 | HARNESS-01 | Ledger artifacts and mechanism-account contract | COVERED |
+| 143-04 | 3 | HARNESS-01 | Real-repo ownership regression and `release_first` tests | COVERED |
+| 143-05 | 4 | HARNESS-01 | Case-template, leak-site, Oban, and mailer regression tests | COVERED |
+| 143-06 | 4 | HARNESS-01 | Property, schema-isolation, and migration teardown tests on both schema axes | COVERED |
+| 143-07 | 5 | HARNESS-01, HARNESS-02 | Schema/baseline restoration tests and full-suite verification | COVERED |
+| 143-08 | 6 | HARNESS-01 | Credo check unit/integration tests and strict whole-tree lint | COVERED |
+| 143-09 | 6 | HARNESS-03 | Suite-floor policy, signature classifier, and negative controls | COVERED |
+| 143-10 | 7 | HARNESS-02, HARNESS-03 | Green-run threshold evidence, floor contracts, lane drift, and workflow lint | COVERED |
+| 143-11 | 8 | HARNESS-04 | Matrix-name expansion negative controls, registry drift, docs contract, and workflow lint | COVERED |
+| 143-12 | 9 | HARNESS-02, HARNESS-03 | Deliberate-failure probe and five-condition promotion artifact | COVERED |
+| 143-13 | 10 | HARNESS-04 | Publish-workflow lint, lane decision-table tests, and registry drift | COVERED |
+| 143-14 | 11 | HARNESS-04 | Decision-record contract plus live positive and negative publish-path rehearsals | COVERED |
 
 ## Manual-Only Verifications
 
-| Behavior | Requirement | Why Manual | Test Instructions |
-|----------|-------------|------------|-------------------|
-| The recorded gating decision itself (prose judgment on whether Core Full Suite should gate a release) | HARNESS-04 | A decision record is a human judgment, not a computable predicate; only its *consequences* (gate wiring, rehearsal outcomes) are automatable | Read the decision record in the phase artifact; confirm it states a verdict, its rationale, and the evidence run IDs it rests on |
-| D-28 five-condition promotion checkpoint | HARNESS-02 | Requires reading three real CI runs across three distinct `main` SHAs over wall-clock time | Paste the five conditions and the satisfying run IDs into the phase artifact before Wave 4 starts |
+| Behavior | Requirement | Why Manual | Evidence / Instructions |
+|----------|-------------|------------|-------------------------|
+| Repeated four-leg green across distinct SHAs, schedule, and tag-shaped dispatch | HARNESS-02 | Cross-run, wall-clock Actions evidence cannot be reproduced by a unit test. | Re-check the run IDs and job conclusions recorded in `143-VERIFICATION.md` and `143-PROMOTION-CHECKPOINT.md`. |
+| The release-gating verdict and accepted trade-offs | HARNESS-04 | The decision is a maintainer judgment; tests can only pin its recorded consequences. | Review `143-GATING-DECISION.md` for the verdict, rationale, run IDs, and accepted gaps. |
+| A red floor leg prevents the publish job from starting | HARNESS-04 | The strongest proof crosses two live workflows and GitHub job dependency semantics. | Re-check rehearsal run `30654293410`: `gate-ci-green` failed and `publish-core` was skipped with zero steps. |
 
----
+## Validation Audit 2026-07-31
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+No tests were generated: every requirement already had behavior-targeted automated
+coverage, and the focused suite ran green on the repository's pinned gating toolchain.
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 480s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All executable tasks have automated verification; human checkpoints have durable evidence artifacts.
+- [x] Sampling continuity has no three-task gap without automated feedback.
+- [x] All originally missing Wave 0 references now exist and are exercised.
+- [x] No watch-mode flags appear in validation commands.
+- [x] Focused feedback latency is under one second after compilation in the pinned runner.
+- [x] Every phase requirement is COVERED or explicitly backed by live manual evidence.
+- [x] `nyquist_compliant: true` is set in frontmatter.
 
-**Approval:** pending
+**Approval:** validated — 2026-07-31
