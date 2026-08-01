@@ -78,6 +78,24 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     end)
   end
 
+  test "prepublish summary uploads a credential-free Phase 148 proof artifact" do
+    source = File.read!(@publish_path)
+    prepublish = extract_job!(source, "prepublish-summary")
+
+    assert prepublish =~ "test/mailglass/webhook/ingest_auto_suppress_test.exs"
+    assert prepublish =~ "test/mailglass/suppression_test.exs"
+    assert prepublish =~ "test/mailglass/docs_contract_test.exs"
+    assert prepublish =~ "cd mailglass_admin"
+    assert prepublish =~ "test/mailglass_admin/operator_live_test.exs"
+    assert prepublish =~ "tmp/release-proof/phase-148.json"
+    assert prepublish =~ "phase-148-release-proof-${{ github.run_id }}"
+    assert prepublish =~ "retention-days: 90"
+    assert prepublish =~ "if-no-files-found: error"
+    assert prepublish =~ "actions/upload-artifact@"
+    assert prepublish =~ "--arg inbound \"2.1.1\""
+    refute prepublish =~ "HEX_API_KEY"
+  end
+
   defp valid_static_concurrency?(source) do
     concurrency = extract_top_level_concurrency!(source)
 
@@ -109,6 +127,10 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
         "mailglass_inbound" -> "publish-inbound"
       end
 
+    extract_job!(source, job_name)
+  end
+
+  defp extract_job!(source, job_name) do
     lines = String.split(source, "\n")
 
     matches =

@@ -133,6 +133,55 @@ jobs:
           echo "## mailglass_inbound" >> "$GITHUB_STEP_SUMMARY"
           set -o pipefail
           mix mailglass.publish.check --package mailglass_inbound 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+      # This is a deliberately narrow, credential-free release ledger. It proves
+      # the focused behavioral suite on the protected release path without
+      # retaining test output, environments, package credentials, or message data.
+      - name: Run Phase 148 release proof suite
+        if: ${{ github.event_name == 'release' || github.event.inputs.package == 'all' }}
+        run: |
+          mix test test/mailglass/webhook/ingest_auto_suppress_test.exs test/mailglass/suppression_test.exs test/mailglass/docs_contract_test.exs --warnings-as-errors
+          (
+            cd mailglass_admin
+            mix test test/mailglass_admin/operator_live_test.exs --warnings-as-errors
+          )
+      - name: Write sanitized Phase 148 release proof
+        if: ${{ github.event_name == 'release' || github.event.inputs.package == 'all' }}
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/release-proof
+          jq -n \
+            --arg ref "${{ github.event.release.tag_name || github.event.inputs.tag }}" \
+            --arg sha "$(git rev-parse HEAD)" \
+            --arg core "2.4.0" \
+            --arg admin "2.4.0" \
+            --arg inbound "2.1.1" \
+            --arg webhook_suppression "passed" \
+            --arg transactional_suppression "passed" \
+            --arg b2c_docs "passed" \
+            --arg operator_live "passed" \
+            '{
+              ref: $ref,
+              sha: $sha,
+              packages: {
+                mailglass: $core,
+                mailglass_admin: $admin,
+                mailglass_inbound: $inbound
+              },
+              commands: {
+                "proof-02-webhook-suppression": $webhook_suppression,
+                "proof-02-transactional-suppression": $transactional_suppression,
+                "proof-03-b2c-docs": $b2c_docs,
+                "phase-147-operator-live": $operator_live
+              }
+            }' > tmp/release-proof/phase-148.json
+      - name: Upload Phase 148 release proof
+        if: ${{ github.event_name == 'release' || github.event.inputs.package == 'all' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: phase-148-release-proof-${{ github.run_id }}
+          path: tmp/release-proof/phase-148.json
+          if-no-files-found: error
+          retention-days: 90
 
   gate-ci-green:
     runs-on: ubuntu-latest
