@@ -297,17 +297,15 @@ The script’s Hex mode pins core and admin to `VERSION` and inbound to `VERSION
 | A3 | A release-proof summary/artifact is the appropriate evidence format. | Common Pitfalls | The project may prefer a CI summary-only convention. |
 | A4 | A named alias/workflow step is useful if it exposes, rather than obscures, the canonical proof files. | Architecture Patterns | Could add avoidable automation surface. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Which existing release workflow contract tests cover the new core/admin-only fan-out?**
+1. **RESOLVED — Which existing release workflow contract tests cover the new core/admin-only fan-out?**
    - What we know: `linked_release_concurrency_test.exs` verifies all three publish job idempotency blocks but not their event conditions; `post_publish_smoke_contract_test.exs` validates published-smoke shape. [VERIFIED: codebase grep]
-   - What's unclear: whether a new targeted test or an extension to that test best fits current conventions. [VERIFIED: codebase grep]
-   - Recommendation: extend `linked_release_concurrency_test.exs` with job-block condition/`needs` assertions; add a separate test only if it remains shorter and more fail-loud. [ASSUMED]
+   - Resolution: extend `test/scripts/linked_release_concurrency_test.exs` with named job-block event-condition and `needs` assertions, and retain the exact 2.4.0/2.1.1 consumer contract in `test/mailglass/publish/post_publish_smoke_contract_test.exs`. This keeps release-graph invariants in the established source-contract suite and published-consumer invariants in its existing workflow-specific suite, without adding a redundant peer test. [RESOLVED: repository convention embodied by Plans 01 and 02]
 
-2. **Does the release-pr sync currently see a reliable per-component release output?**
+2. **RESOLVED — Does the release-pr sync currently see a reliable per-component release output?**
    - What we know: it receives `prs_created` and reads manifest entries, including inbound, unconditionally. [VERIFIED: codebase grep]
-   - What's unclear: whether release-please action output identifies changed components directly in this pinned version. [VERIFIED: codebase grep]
-   - Recommendation: use the release PR branch’s manifest diff or release PR changed files as the fallback deterministic condition; do not rely on guessed action outputs. [ASSUMED]
+   - Resolution: do not depend on an unverified per-component action output. After the established release-branch checkout, compare the release branch's `.release-please-manifest.json` `mailglass_inbound` value with `origin/main` and derive one fail-closed `INBOUND_CHANGED` predicate that gates every inbound-owned substitution, sync path, and commit-message fragment. This uses repository-owned state, preserves standalone inbound releases, and deterministically excludes inbound-owned edits from linked core/admin-only release PRs. [RESOLVED: repository convention embodied by Plan 02]
 
 ## Environment Availability
 
