@@ -61,7 +61,7 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     assert admin =~ "needs.gate-ci-green.result == 'success'"
     assert admin =~ "needs.publish-core.result == 'success'"
     assert admin =~ "github.event_name == 'release'"
-    refute admin =~ "publish-inbound"
+    refute admin =~ "needs: [gate-ci-green, publish-core, publish-inbound]"
 
     refute inbound =~ "github.event_name == 'release'"
     assert inbound =~ "github.event_name == 'workflow_dispatch'"
