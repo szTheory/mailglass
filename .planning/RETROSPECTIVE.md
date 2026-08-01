@@ -4,6 +4,47 @@
 
 ---
 
+## Milestone: v2.2 — CI Signal Integrity & Supply-Chain Hygiene
+
+**Shipped 2026-07-31** — 4 phases (141–144), 30 plans, 63 tasks, 20 requirements; audit `status: passed`.
+
+### What Was Built
+
+- One machine-verified classification and disposition model for every CI lane, bound across workflow YAML, runtime registries, publish gating, and maintainer documentation.
+- Shared, time-boxed accepted-advisory policy for Hex and Deps audits; both lanes now merge-gate and fail closed when an audit command cannot produce a recognized result.
+- A sanctioned Ecto Sandbox ownership API, raw-call recurrence guard, multi-class suite instrumentation, per-schema execution floors, and Core Full Suite publish veto.
+- Honest branch-protection/repo-hygiene outcomes, dynamic Heroicon coverage, serialized linked-release fan-out, and bounded release-trigger recovery.
+
+### What Worked
+
+- Negative controls and exact-count guards made anti-vacuity a first-class property instead of an assertion in prose.
+- Dependency-first phase ordering let later gate changes reuse the lane-truth seam rather than create another registry.
+- Live GitHub probes supplemented hermetic tests exactly where runtime job names and protection state cannot be derived from source alone.
+
+### What Was Inefficient
+
+- Phase 143 expanded from the planned ownership leak into several adjacent suite-truth classes, producing 14 plans plus six gap-closure summaries.
+- Draft Nyquist artifacts for Phases 141 and 142 were not promoted during execution and required closeout reconciliation.
+- The first milestone audit found a fail-open unparseable-command path that phase-local verification missed; closure required a second audit pass.
+
+### Patterns Established
+
+- A nonzero external-tool result is successful only when its output is positively classified, never merely because no known finding parsed.
+- Every CI truth claim needs both a registry agreement check and a fail-loud negative control.
+- Suite health includes executed-count floors, skipped ceilings, and known-failure-signature tallies—not only zero ExUnit failures.
+
+### Key Lessons
+
+- Green can mean unavailable unless command status survives parsing and aggregation intact.
+- Runtime names, workflow job IDs, and branch-protection contexts are separate namespaces and need explicit cross-checks.
+- Closeout audits are valuable integration tests: this one caught the only remaining end-to-end blocker after all four phase verifiers passed.
+
+### Cost Observations
+
+- 84 commits across 4 calendar days; 213 files changed in the milestone range.
+- 4 phases, 30 plans, 63 tasks; Phase 143 carried most of the diagnostic and closure cost.
+- No Hex release cut; this milestone changed repository trust infrastructure rather than adopter-facing package behavior.
+
 ## Milestone: v2.1 — Postgres + Admin URL Hardening
 
 **Shipped 2026-07-08** — 3 phases (138–140), 13 requirements, audit `status: passed`.
@@ -707,4 +748,7 @@ baseline: "I LOVE THE NEW BRANDBOOK."
 
 ## Cross-Milestone Trends
 
-*To be populated as future milestones complete.*
+| Milestone | Phases | Plans | Primary lesson |
+|-----------|-------:|------:|----------------|
+| v2.1 | 3 | 9 | Hostile-path and first-load proof expose false confidence hidden by friendly fixtures. |
+| v2.2 | 4 | 30 | CI truth requires fail-closed aggregation, negative controls, and runtime/source cross-checks. |

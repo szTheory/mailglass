@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-current_phase: 144
-status: completed
+status: Awaiting next milestone
 stopped_at: Completed 144-05-PLAN.md
-last_updated: "2026-07-31T21:56:35.912Z"
+last_updated: "2026-08-01T00:00:01.464Z"
 last_activity: 2026-07-31
-last_activity_desc: Phase 144 complete
+last_activity_desc: Milestone v2.2 completed and archived
 progress:
   total_phases: 4
   completed_phases: 4
   total_plans: 30
   completed_plans: 30
+current_phase: 144
 current_phase_name: signal-drift-integrity
 ---
 
@@ -20,19 +20,17 @@ current_phase_name: signal-drift-integrity
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
+See: .planning/PROJECT.md (updated 2026-07-31 - after v2.2 milestone archive)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 144 — signal-drift-integrity
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 144
-Plan: Not started
-Status: All phases complete
-Last activity: 2026-07-31 — Phase 144 complete
-
-Progress: [██████████] 100%
+Phase: Milestone v2.2 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-07-31 — Milestone v2.2 completed and archived
 
 ### Plan-phase gate override (2026-07-29)
 

@@ -8,7 +8,32 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v2.2 CI Signal Integrity & Supply-Chain Hygiene
+## Current State
+
+**v2.2 CI Signal Integrity & Supply-Chain Hygiene shipped 2026-07-31.** All four phases, 30 plans,
+63 tasks, and 20 requirements are complete. The milestone audit passed with all 8 integration seams and
+all 6 end-to-end flows verified. CI lane classification is machine-bound to runtime and documentation
+truth; dependency audits are merge-gating and fail closed; the Ecto Sandbox ownership leak is fixed with
+suite floors and recurrence guards; branch-protection, repo-hygiene, dynamic-icon, linked-publish, and
+release-recovery signals report honest outcomes.
+
+This was a maintenance milestone and intentionally cut no Hex release. Package versions remain
+mailglass 2.1.3, mailglass_admin 2.1.3, and mailglass_inbound 2.1.1.
+
+See [the v2.2 milestone audit](milestones/v2.2-MILESTONE-AUDIT.md) and
+[archived roadmap](milestones/v2.2-ROADMAP.md).
+
+## Next Milestone Goals
+
+No next milestone is committed. Start from measured adopter or maintainer pull rather than automatic
+feature expansion. Archived seeds preserve optional directions for sent-message retention, native HEEx
+assign propagation, and CI efficiency; the next milestone should reactivate only a direction with a
+current trigger and fresh requirements.
+
+<details>
+<summary>Archived v2.2 milestone context</summary>
+
+## Archived: v2.2 CI Signal Integrity & Supply-Chain Hygiene (SHIPPED 2026-07-31)
 
 **Opened 2026-07-28.** Maintenance and trust-restoration only — explicitly not product expansion, not a
 redesign, not a release-cut milestone, and not a CI topology rewrite. The lane structure is sound; the
@@ -84,6 +109,8 @@ exactly this was itself blind.
   greens are not trustworthy just makes it lie faster.
 
 Scope source: `.planning/research/v2.2/MILESTONE-SCOPE.md`.
+
+</details>
 
 ---
 
@@ -213,7 +240,7 @@ pin change ships with a CHANGELOG line + documented **Hex retirement** as the ne
 - **Research: DONE** — decision-ready dossiers + adversarial synthesis already persisted; phases plan
   directly. Phases continue from 124 → 125+.
 
-## Current State
+## Historical State Ledger
 
 **v2.2 IMPLEMENTATION COMPLETE - CI Signal Integrity & Supply-Chain Hygiene (phases 141-144).** All four
 phases are complete and verifier-passed. CI lane classification and supply-chain gating are reconciled;
@@ -809,7 +836,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-07-31 — v2.2 Phase 144 (Signal & Drift Integrity) complete, verifier `status: passed` (12/12), Nyquist-compliant, security `threats_open: 0`, and no human UAT. All v2.2 implementation phases are complete; next: milestone audit and archive.*
+*Last updated: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined.*
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->
 <!-- prior footer: 2026-06-28 — v1.14 Phase 122 (Preview surface redesign) complete, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).* -->
