@@ -211,6 +211,38 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
            )
   end
 
+  test "core/admin-only release synchronization leaves inbound-owned artifacts untouched" do
+    sync = extract_step_block!(workflow_source(), "Sync sibling package -> mailglass dep pin on release-please branch")
+
+    assert sync =~ "git show origin/main:.release-please-manifest.json"
+    assert sync =~ "INBOUND_CHANGED=false"
+    assert sync =~ "INBOUND_CHANGED=true"
+    assert sync =~ "if [ \"$INBOUND_CHANGED\" = true ]; then"
+
+    inbound_paths = [
+      "mailglass_inbound/README.md",
+      "mailglass_inbound/docs/inbound-install.md",
+      ".planning/publish/mailglass_inbound-publish-summary.json"
+    ]
+
+    inbound_branch = extract_shell_branch(sync, "if [ \"$INBOUND_CHANGED\" = true ]; then")
+
+    Enum.each(inbound_paths, fn path ->
+      assert inbound_branch =~ path
+    end)
+
+    sync_paths = extract_shell_branch(sync, "SYNC_PATHS=(")
+    assert sync_paths =~ "README.md"
+    assert sync_paths =~ "mailglass_admin/README.md"
+
+    Enum.each(inbound_paths, fn path ->
+      assert sync_paths =~ path
+    end)
+
+    assert sync =~ "sync inbound README \\`~>\\` pin + publish-summary to core $CORE_VERSION"
+    assert sync =~ "sync core/admin README pins to core $CORE_VERSION"
+  end
+
   test "contributing documents the bounded hourly recovery and manual fallbacks" do
     recovery_runbook =
       extract_markdown_section!(
