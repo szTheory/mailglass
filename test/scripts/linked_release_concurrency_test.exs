@@ -48,6 +48,36 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     end)
   end
 
+  test "release events fan out only to the linked core and admin packages" do
+    source = File.read!(@publish_path)
+    core = extract_publish_job!(source, "mailglass")
+    admin = extract_publish_job!(source, "mailglass_admin")
+    inbound = extract_publish_job!(source, "mailglass_inbound")
+
+    assert core =~ "needs: [gate-ci-green]"
+    assert core =~ "github.event_name == 'release'"
+
+    assert admin =~ "needs: [gate-ci-green, publish-core]"
+    assert admin =~ "needs.gate-ci-green.result == 'success'"
+    assert admin =~ "needs.publish-core.result == 'success'"
+    assert admin =~ "github.event_name == 'release'"
+    refute admin =~ "publish-inbound"
+
+    refute inbound =~ "github.event_name == 'release'"
+    assert inbound =~ "github.event_name == 'workflow_dispatch'"
+  end
+
+  test "all publish jobs preserve the protected environment and step-local credential" do
+    source = File.read!(@publish_path)
+
+    Enum.each(@packages, fn package ->
+      job = extract_publish_job!(source, package)
+
+      assert job =~ "environment: hex-publish"
+      assert job =~ "HEX_API_KEY: ${{ secrets.HEX_API_KEY }}"
+    end)
+  end
+
   defp valid_static_concurrency?(source) do
     concurrency = extract_top_level_concurrency!(source)
 

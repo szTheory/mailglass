@@ -53,6 +53,21 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
              index_of(consumer_install, "Compile, fail on warnings")
   end
 
+  test "2.4.0 consumer smoke fails closed while including inbound 2.1.1" do
+    workflow = File.read!(@workflow_path)
+    consumer_install = extract_job!(workflow, "consumer-install", "published-trust-journey")
+
+    assert consumer_install =~ "VERSION_INBOUND: 2.1.1"
+    assert consumer_install =~ "mailglass_inbound 2.1.1"
+    assert consumer_install =~ "exit 1"
+    refute consumer_install =~ "Skipping inbound consumer dependency"
+
+    assert consumer_install =~ "DEP_MODE: hex"
+    assert consumer_install =~ "VERSION: ${{ needs.cron-guard.outputs.version }}"
+    assert consumer_install =~ "VERSION_INBOUND: 2.1.1"
+    assert consumer_install =~ "INCLUDE_INBOUND: true"
+  end
+
   test "post-publish smoke auto-closes tracker only after green guard and journey evidence" do
     workflow = File.read!(@workflow_path)
 
