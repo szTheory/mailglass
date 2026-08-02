@@ -314,17 +314,19 @@ The legacy branch must be restricted to a recognizably old, queued row and is in
 
 All remaining material claims are repository-verified or cited from official documentation.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Exact Oban readiness predicate**
    - What we know: Oban 2.23 exposes configuration and queue inspection APIs, while the project needs failure before its own job is reported queued. [CITED: https://oban.hexdocs.pm/Oban.html]
    - What's unclear: Whether a transient producer state should reject enqueue or whether configuration plus a successful transactional insert is sufficient for ENVL-06.
    - Recommendation: Plan a focused gateway test seam with injected outcomes. Treat missing dependency, unregistered instance, wrong queue config, and insert failure as fail-closed; do not require proving a worker is actively polling inside the transaction.
+   - **RESOLVED:** Readiness requires the optional dependency, a configured usable Oban instance, the canonical `mailglass_outbound` queue, and successful transactional job insertion. Proof that a worker is actively polling remains Phase 153 scope. Plan `150-03` adopts and verifies this predicate.
 
 2. **Payload integrity fact**
    - What we know: D-03 requires an integrity/version fact but leaves representation discretionary.
    - What's unclear: Whether integrity is a SHA-256 checksum column, a checksum inside the envelope, or both.
    - Recommendation: Store `envelope_version` and a SHA-256 hex digest over canonical encoded envelope bytes as columns; verify before load. This is an implementation recommendation derived from the locked integrity requirement. [ASSUMED]
+   - **RESOLVED:** Store `envelope_version` with a lowercase SHA-256 hex digest computed over the canonical envelope bytes, and verify the digest before loading. Plan `150-01` adopts and verifies this representation.
 
 ## Environment Availability
 
