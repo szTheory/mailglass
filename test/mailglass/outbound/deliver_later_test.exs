@@ -173,7 +173,10 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
         :skip
       else
         Application.put_env(:mailglass, :async_adapter, :oban)
-        start_supervised!({Oban, testing: :manual, repo: TestRepo, queues: [mailglass_outbound: 10]})
+
+        start_supervised!(
+          {Oban, testing: :manual, repo: TestRepo, queues: [mailglass_outbound: 10]}
+        )
 
         private_subject = "private subject #{unique_id()}"
         private_body = "private rendered body #{unique_id()}"
@@ -185,11 +188,13 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
           |> Message.put_metadata(:public_marker, "adopter-visible")
 
         assert {:ok, %Delivery{status: :queued} = delivery} = Outbound.deliver_later(message)
+
         assert %Payload{delivery_id: delivery_id, tenant_id: "test-tenant"} =
                  TestRepo.get_by!(Payload, delivery_id: delivery.id)
 
         assert delivery_id == delivery.id
         assert delivery.metadata == %{public_marker: "adopter-visible"}
+
         assert %{rows: [[1]]} =
                  TestRepo.query!(
                    "SELECT COUNT(*) FROM oban_jobs WHERE queue = 'mailglass_outbound' AND args->>'delivery_id' = $1",
