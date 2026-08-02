@@ -44,9 +44,6 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     # process reaches the DB because the pool is genuinely shared already.
 
     on_exit(fn ->
-      # Brief pause so any in-flight Task.Supervisor tasks finish their DB work
-      # before the sandbox is torn down (avoids Postgrex disconnect noise).
-      Process.sleep(50)
       Application.put_env(:mailglass, :async_adapter, :oban)
       Application.put_env(:mailglass, :adapter, prior_adapter)
 
@@ -77,6 +74,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
 
       assert {:ok, %Delivery{tenant_id: "default"} = delivery} = Outbound.deliver_later(msg)
       assert %Delivery{tenant_id: "default"} = TestRepo.get!(Delivery, delivery.id)
+      assert_async_fake_delivery("default")
       assert [%{message: %{tenant_id: "default"}}] = Mailglass.Adapters.Fake.deliveries()
     end
 
@@ -86,6 +84,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       result = Outbound.deliver_later(msg)
 
       assert {:ok, %Delivery{status: :queued, tenant_id: "test-tenant"}} = result
+      assert_async_fake_delivery("test-tenant")
     end
 
     test "returned Delivery has an idempotency_key set" do
@@ -93,6 +92,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       {:ok, delivery} = Outbound.deliver_later(msg)
       assert is_binary(delivery.idempotency_key)
       assert delivery.adapter_ref == Delivery.default_adapter_ref()
+      assert_async_fake_delivery("test-tenant")
     end
 
     test "Delivery row is persisted with last_event_type: :queued before return" do
@@ -102,6 +102,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       reloaded = TestRepo.get!(Delivery, delivery.id)
       assert reloaded.last_event_type in [:queued, :dispatched]
       assert reloaded.status in [:queued, :sent]
+      assert_async_fake_delivery("test-tenant")
     end
   end
 
@@ -110,6 +111,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       msg = build_message("fallback-#{unique_id()}@example.com")
       result = Outbound.deliver_later(msg)
       assert {:ok, %Delivery{status: :queued}} = result
+      assert_async_fake_delivery("test-tenant")
     end
 
     test "Task.Supervisor fallback re-stamps tenancy via with_tenant — dispatch completes" do
@@ -119,13 +121,10 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       msg = build_message("task-tenant-#{unique_id()}@example.com")
       {:ok, delivery} = Outbound.deliver_later(msg)
 
-      # Give the Task.Supervisor task time to run dispatch
-      Process.sleep(150)
+      assert_async_fake_delivery("test-tenant")
 
-      # Check the delivery was updated to :sent
       reloaded = TestRepo.get!(Delivery, delivery.id)
-      # The task may have completed or still be running; accept either
-      assert reloaded.status in [:queued, :sent]
+      assert reloaded.status == :sent
     end
 
     test "bulk async deliveries sign the persisted delivery id into unsubscribe headers" do
@@ -133,7 +132,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       {:ok, delivery} = Outbound.deliver_later(msg)
       delivery_id = delivery.id
 
-      Process.sleep(150)
+      assert_async_fake_delivery("test-tenant")
 
       [record] = Mailglass.Adapters.Fake.deliveries()
       token = unsubscribe_token!(record.message)
@@ -146,6 +145,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       result = Outbound.deliver_later(msg)
       # Must never return an %Oban.Job{} struct
       assert {:ok, %Delivery{status: :queued}} = result
+      assert_async_fake_delivery("test-tenant")
     end
   end
 
@@ -161,9 +161,9 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       assert delivery.adapter_ref == "route_a"
 
       Application.put_env(:mailglass, :tenancy, Mailglass.TestTenancy.RouteB)
-      Process.sleep(150)
 
       assert_receive {:adapter_route, :route_a, ^delivery_id, "test-tenant"}
+      await_task_supervisor_children()
       reloaded = TestRepo.get!(Delivery, delivery.id)
       assert reloaded.adapter_ref == "route_a"
     end
@@ -234,6 +234,31 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       route_a: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_a]},
       route_b: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_b]}
     )
+  end
+
+  defp assert_async_fake_delivery(tenant_id) do
+    assert %Message{tenant_id: ^tenant_id} = Mailglass.TestAssertions.wait_for_mail(500)
+    await_task_supervisor_children()
+  end
+
+  defp await_task_supervisor_children do
+    Mailglass.TaskSupervisor
+    |> DynamicSupervisor.which_children()
+    |> Enum.each(fn {_id, pid, _type, _modules} -> await_task_exit(pid) end)
+  end
+
+  defp await_task_exit(pid) do
+    ref = Process.monitor(pid)
+
+    receive do
+      {:DOWN, ^ref, :process, ^pid, reason} when reason in [:normal, :noproc] ->
+        :ok
+
+      {:DOWN, ^ref, :process, ^pid, reason} ->
+        flunk("Task.Supervisor child exited: #{inspect(reason)}")
+    after
+      500 -> flunk("Task.Supervisor child did not finish dispatch within 500ms")
+    end
   end
 
   defp unsubscribe_token!(%Message{} = message) do
