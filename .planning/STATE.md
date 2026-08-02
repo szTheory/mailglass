@@ -3,31 +3,52 @@ gsd_state_version: 1.0
 milestone: v2.4
 milestone_name: Outbound First-Adopter Correctness
 status: planning
-last_updated: "2026-08-02T14:49:46.228Z"
+last_updated: "2026-08-02T15:10:00.000Z"
 last_activity: 2026-08-02
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
   percent: 0
+current_phase: 149
+current_phase_name: first-send-contract-foundation
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-02 after v2.3 milestone completion)
+See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Planning the next milestone
+**Current focus:** Phase 149 — First-Send Contract Foundation
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 149 of 153 (First-Send Contract Foundation)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-08-02 — Milestone v2.4 started
+Status: Roadmap created; ready to plan
+Last activity: 2026-08-02 — v2.4 roadmap and requirement traceability created
+
+Progress: [░░░░░░░░░░] 0%
+
+## v2.4 Milestone Intent
+
+- **Goal:** Make the documented single-recipient sync/async B2C path correct, durable, privacy-bounded, and proven from a clean Phoenix host before Alpha adopts it.
+- **Execution order:** 149 First-Send Contract Foundation → 150 Private Envelope and Atomic Durable Enqueue → 151 Unified Dispatch, Honest Outcomes, and Payload Lifecycle → 152 Atomic One-Click Suppression Convergence → 153 Generated-Host Proof, Docs, and Release Gate.
+- **Locked contract:** exactly one envelope recipient total; `:oban` selected-but-unavailable fails closed; `Task.Supervisor` is explicitly non-durable; no Alpha policy, UI polish, HEEx assigns, providers, snapshot viewer, recipient fan-out, CI optimization, or ecosystem integrations.
+- **Proof bar:** Phase 153 uses an unassisted generated Phoenix/Ecto/Postgres host with the real running `mailglass_outbound` queue—never `MailerCase`, repo-local `TestRepo`, hidden tenant stamps, or inline-worker false greens.
+
+## v2.4 Roadmap Snapshot
+
+| Phase | Name | Requirements |
+|---|---|---|
+| 149 | First-Send Contract Foundation | FIRST-01..FIRST-07 |
+| 150 | Private Envelope and Atomic Durable Enqueue | ENVL-01, ENVL-02, ENVL-04..ENVL-08 |
+| 151 | Unified Dispatch, Honest Outcomes, and Payload Lifecycle | ENVL-03, DISP-01..DISP-04, PRIV-01..PRIV-04 |
+| 152 | Atomic One-Click Suppression Convergence | UNSUB-07..UNSUB-11 |
+| 153 | Generated-Host Proof, Docs, and Release Gate | ADOPT-01..ADOPT-06, REL-17 |
 
 ## v2.3 Closeout
 

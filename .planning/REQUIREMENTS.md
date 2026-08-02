@@ -89,11 +89,46 @@ Populated during roadmap creation. Every v2.4 requirement must map to exactly on
 
 | Requirement | Phase | Status |
 |---|---|---|
+| FIRST-01 | Phase 149 | Pending |
+| FIRST-02 | Phase 149 | Pending |
+| FIRST-03 | Phase 149 | Pending |
+| FIRST-04 | Phase 149 | Pending |
+| FIRST-05 | Phase 149 | Pending |
+| FIRST-06 | Phase 149 | Pending |
+| FIRST-07 | Phase 149 | Pending |
+| ENVL-01 | Phase 150 | Pending |
+| ENVL-02 | Phase 150 | Pending |
+| ENVL-04 | Phase 150 | Pending |
+| ENVL-05 | Phase 150 | Pending |
+| ENVL-06 | Phase 150 | Pending |
+| ENVL-07 | Phase 150 | Pending |
+| ENVL-08 | Phase 150 | Pending |
+| ENVL-03 | Phase 151 | Pending |
+| DISP-01 | Phase 151 | Pending |
+| DISP-02 | Phase 151 | Pending |
+| DISP-03 | Phase 151 | Pending |
+| DISP-04 | Phase 151 | Pending |
+| PRIV-01 | Phase 151 | Pending |
+| PRIV-02 | Phase 151 | Pending |
+| PRIV-03 | Phase 151 | Pending |
+| PRIV-04 | Phase 151 | Pending |
+| UNSUB-07 | Phase 152 | Pending |
+| UNSUB-08 | Phase 152 | Pending |
+| UNSUB-09 | Phase 152 | Pending |
+| UNSUB-10 | Phase 152 | Pending |
+| UNSUB-11 | Phase 152 | Pending |
+| ADOPT-01 | Phase 153 | Pending |
+| ADOPT-02 | Phase 153 | Pending |
+| ADOPT-03 | Phase 153 | Pending |
+| ADOPT-04 | Phase 153 | Pending |
+| ADOPT-05 | Phase 153 | Pending |
+| ADOPT-06 | Phase 153 | Pending |
+| REL-17 | Phase 153 | Pending |
 
 **Coverage:**
 - v2.4 requirements: 35 total
-- Mapped to phases: 0
-- Unmapped: 35
+- Mapped to phases: 35
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-08-02*
