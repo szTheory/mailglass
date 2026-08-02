@@ -69,14 +69,14 @@ defmodule Mailglass.Outbound.Preflight do
     states = [html_body_state(email.html_body), text_body_state(email.text_body)]
 
     cond do
-      :present in states ->
-        :ok
-
       :unsupported in states ->
         {:error,
          SendError.new(:preflight_rejected,
            context: %{reason_class: :body_invalid, body_state: :unsupported}
          )}
+
+      :present in states ->
+        :ok
 
       true ->
         {:error,

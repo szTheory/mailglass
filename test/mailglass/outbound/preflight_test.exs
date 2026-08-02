@@ -169,6 +169,21 @@ defmodule Mailglass.Outbound.PreflightTest do
       end
     end
 
+    test "rejects an unsupported explicit plaintext body even when HTML is valid" do
+      for text <- [:not_text, <<255>>] do
+        assert {:error,
+                %Mailglass.SendError{
+                  type: :preflight_rejected,
+                  context: %{reason_class: :body_invalid, body_state: :unsupported} = context
+                }} =
+                 Mailglass.Outbound.Preflight.run(
+                   message_with_bodies("<p>valid HTML</p>", text)
+                 )
+
+        assert Map.keys(context) |> Enum.sort() == [:body_state, :reason_class]
+      end
+    end
+
     test "accepts one nonblank supported body and preserves Unicode plaintext byte-for-byte" do
       plaintext = " caf\u00E9\n"
 
@@ -225,6 +240,36 @@ defmodule Mailglass.Outbound.PreflightTest do
 
       refute_receive {:preflight_telemetry, [:mailglass, :render, :message, :start]}
       refute_receive {:preflight_telemetry, [:mailglass, :outbound, :rate_limit, :stop]}
+      assert TestRepo.aggregate(Delivery, :count) == deliveries_before
+      assert Mailglass.Adapters.Fake.deliveries() == []
+    end
+
+    test "unsupported explicit plaintext is rejected before the renderer can replace it" do
+      handler_id = "body-preflight-rejection-#{System.unique_integer([:positive])}"
+      test_pid = self()
+
+      :telemetry.attach(
+        handler_id,
+        [:mailglass, :render, :message, :start],
+        fn event, _measurements, _metadata, _config ->
+          send(test_pid, {:preflight_telemetry, event})
+        end,
+        nil
+      )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      deliveries_before = TestRepo.aggregate(Delivery, :count)
+
+      for text <- [:not_text, <<255>>] do
+        assert {:error,
+                %Mailglass.SendError{
+                  type: :preflight_rejected,
+                  context: %{reason_class: :body_invalid, body_state: :unsupported}
+                }} = Outbound.send(message_with_bodies("<p>valid HTML</p>", text))
+      end
+
+      refute_receive {:preflight_telemetry, [:mailglass, :render, :message, :start]}
       assert TestRepo.aggregate(Delivery, :count) == deliveries_before
       assert Mailglass.Adapters.Fake.deliveries() == []
     end

@@ -265,6 +265,27 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       assert Mailglass.Adapters.Fake.deliveries() == []
     end
 
+    test "valid HTML does not mask unsupported explicit plaintext before async effects" do
+      Mailglass.TestSupport.SandboxOwnership.with_app_env!(:mailglass)
+      Application.put_env(:mailglass, :async_adapter, :oban)
+
+      deliveries_before = TestRepo.aggregate(Delivery, :count)
+      oban_jobs_before = oban_job_count()
+
+      for text <- [:not_text, <<255>>] do
+        assert {:error,
+                %Mailglass.SendError{
+                  type: :preflight_rejected,
+                  context: %{reason_class: :body_invalid, body_state: :unsupported}
+                }} = Outbound.deliver_later(build_message_with_bodies("<p>valid HTML</p>", text))
+      end
+
+      assert TestRepo.aggregate(Delivery, :count) == deliveries_before
+      assert oban_job_count() == oban_jobs_before
+      assert DynamicSupervisor.which_children(Mailglass.TaskSupervisor) == []
+      assert Mailglass.Adapters.Fake.deliveries() == []
+    end
+
     test "suppressed recipient returns {:error, %SuppressedError{}} — no Delivery row" do
       addr = "blocked-later-#{unique_id()}@example.com"
 
