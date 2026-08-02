@@ -1,7 +1,7 @@
 ---
 phase: 149
 slug: first-send-contract-foundation
-status: draft
+status: validated
 nyquist_compliant: true
 wave_0_complete: false
 created: 2026-08-02
@@ -38,14 +38,14 @@ created: 2026-08-02
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 149-01-01 | 149-01 | 1 | FIRST-01 | T-149-01 | Only configured `SingleTenant` may normalize an unstamped caller to tenant `"default"` | integration | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 149-01-02 | 149-01 | 1 | FIRST-02 | T-149-01 | Custom tenancy remains fail-closed for missing, invalid, or unrestorable context | unit + integration | `mix test test/mailglass/tenancy_test.exs test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 149-02-01 | 149-02 | 2 | FIRST-03 | T-149-02 | Every zero- or multi-recipient shape across `to`/`cc`/`bcc` is rejected without selecting or dropping an address | unit | `mix test test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 149-02-02 | 149-02 | 2 | FIRST-04 / FIRST-07 | T-149-03 / T-149-04 | Recipient/body rejection precedes rendering, limits, persistence, jobs, and provider dispatch; unsupported shapes use bounded non-PII errors | unit + integration | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 149-03-01 | 149-03 | 3 | FIRST-05 | T-149-04 | Explicit plaintext survives and text-only messages remain sendable | unit + integration | `mix test test/mailglass/renderer_test.exs test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 149-03-02 | 149-03 | 3 | FIRST-06 | T-149-04 | Plaintext generation and CSS inlining settings behave identically across render, sync, async, and preview | unit + integration + LiveView | `mix test test/mailglass/renderer_test.exs test/mailglass/outbound_test.exs test/mailglass/outbound/deliver_later_test.exs mailglass_admin/test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 149-04-01 | 149-04 | 4 | FIRST-01..FIRST-07 | T-149-01 / T-149-02 / T-149-04 | Stable API, authoring, and tenancy docs match the tested typed-error and preflight contract | docs + contract regression | `mix docs && mix test test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 149-04-02 | 149-04 | 4 | FIRST-01 / FIRST-05 / FIRST-06 | T-149-04 | Getting-started, jobs, and preview docs match tested renderer behavior without future-phase claims | docs + integration | `mix docs && mix test test/mailglass/renderer_test.exs mailglass_admin/test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 149-01-01 | 149-01 | 1 | FIRST-01 | T-149-01 | Only configured `SingleTenant` may normalize an unstamped caller to tenant `"default"` | integration | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 149-01-02 | 149-01 | 1 | FIRST-02 | T-149-01 | Custom tenancy remains fail-closed for missing, invalid, or unrestorable context | unit + integration | `mix test test/mailglass/tenancy_test.exs test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 149-02-01 | 149-02 | 2 | FIRST-03 | T-149-02 | Every zero- or multi-recipient shape across `to`/`cc`/`bcc` is rejected without selecting or dropping an address | unit | `mix test test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 149-02-02 | 149-02 | 2 | FIRST-04 / FIRST-07 | T-149-03 / T-149-04 | Recipient/body rejection precedes rendering, limits, persistence, jobs, and provider dispatch; unsupported shapes use bounded non-PII errors | unit + integration | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 149-03-01 | 149-03 | 3 | FIRST-05 | T-149-04 | Explicit plaintext survives and text-only messages remain sendable | unit + integration | `mix test test/mailglass/renderer_test.exs test/mailglass/outbound_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 149-03-02 | 149-03 | 3 | FIRST-06 | T-149-04 | Plaintext generation and CSS inlining settings behave identically across render, sync, async, and preview | unit + integration + LiveView | `mix test test/mailglass/renderer_test.exs test/mailglass/outbound_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` + `cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 149-04-01 | 149-04 | 4 | FIRST-01..FIRST-07 | T-149-01 / T-149-02 / T-149-04 | Stable API, authoring, and tenancy docs match the tested typed-error and preflight contract | docs + contract regression | `mix verify.support_contract.core && mix mailglass.docs.check` | ✅ | ✅ green |
+| 149-04-02 | 149-04 | 4 | FIRST-01 / FIRST-05 / FIRST-06 | T-149-04 | Getting-started, jobs, and preview docs match tested renderer behavior without future-phase claims | docs + integration | `mix verify.support_contract.core` + `cd mailglass_admin && mix verify.support_contract.admin` | ✅ | ✅ green |
 
 *Task IDs, plans, and waves are reconciled after PLAN.md generation. Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky.*
 
@@ -96,3 +96,31 @@ All phase behaviors have automated verification. Any Task.Supervisor/Fake-adapte
 - [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
+
+## Validation Audit 2026-08-02
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+Fresh post-review-fix evidence was collected after `c3cecc2c`. The focused core
+command completed with **158 tests, 0 failures, 1 skipped**; the required core
+support-contract alias completed with **1 property, 195 tests, 0 failures, 1
+skipped**; `mix mailglass.docs.check` completed successfully; and the required
+admin support-contract alias completed with **144 tests, 0 failures**.
+
+| Requirement | Behavioral evidence exercised | Fresh runnable command |
+|-------------|-------------------------------|------------------------|
+| FIRST-01 | Unstamped `SingleTenant` sync and monitored async ownership are persisted as `"default"`. | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` |
+| FIRST-02 | Missing, blank, and lost custom context return typed `:unstamped` before rows or adapter delivery. | `mix test test/mailglass/tenancy_test.exs test/mailglass/outbound/preflight_test.exs --warnings-as-errors` |
+| FIRST-03 | Sole native `to`/`cc`/`bcc` fields stay intact; malformed, zero, duplicate, and multi-recipient envelopes reject; native fields have distinct idempotency keys. | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound_test.exs test/mailglass/outbound/deliver_many_test.exs --warnings-as-errors` |
+| FIRST-04 | Invalid recipient/body input is proven to precede render/rate-limit telemetry, rows, Oban jobs, tasks, and Fake dispatch. | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` |
+| FIRST-05 | Explicit Unicode plaintext, text-only mail, HTML-only generation, and blank rendered function HTML are exercised in direct, sync, and async paths. | `mix test test/mailglass/renderer_test.exs test/mailglass/outbound_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` |
+| FIRST-06 | Plaintext/CSS configuration parity is exercised across direct rendering, sync, monitored async, and LiveView preview. | `mix test test/mailglass/renderer_test.exs test/mailglass/outbound_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` + `cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs --warnings-as-errors` |
+| FIRST-07 | Empty, malformed, unsupported, invalid-UTF-8, and unsupported companion bodies return bounded typed errors without content loss or effects; migration/docs examples are executable. | `mix verify.support_contract.core && mix mailglass.docs.check` |
+
+The support-contract aliases remain required evidence, not advisory checks:
+`mix verify.support_contract.core` and
+`cd mailglass_admin && mix verify.support_contract.admin` both ran green.
