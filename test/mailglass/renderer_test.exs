@@ -1,11 +1,14 @@
 defmodule Mailglass.RendererTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   import Phoenix.Component, only: [sigil_H: 2]
 
   alias Mailglass.Test.Fixtures
+  alias Mailglass.TestSupport.SandboxOwnership
 
   setup do
+    SandboxOwnership.with_app_env!(:mailglass)
+
     # Populate the :persistent_term theme cache so Mailglass.Components
     # render with real brand tokens.
     Mailglass.Config.validate_at_boot!()
@@ -13,6 +16,74 @@ defmodule Mailglass.RendererTest do
   end
 
   describe "render/2" do
+    test "preserves explicit Unicode plaintext byte-for-byte for text-only and HTML messages" do
+      text = "Grüße 👩‍🚀 café"
+
+      for email <- [
+            %Swoosh.Email{text_body: text},
+            %Swoosh.Email{html_body: "<p>Rendered HTML</p>", text_body: text}
+          ] do
+        message = Mailglass.Message.build(email, tenant_id: "t")
+
+        assert {:ok, rendered} = Mailglass.Renderer.render(message)
+        assert rendered.swoosh_email.text_body === text
+      end
+    end
+
+    test "keeps text-only messages sendable without manufacturing HTML" do
+      message = Mailglass.Message.build(%Swoosh.Email{text_body: "Text only"}, tenant_id: "t")
+
+      assert {:ok, rendered} = Mailglass.Renderer.render(message)
+      assert rendered.swoosh_email.text_body == "Text only"
+      assert is_nil(rendered.swoosh_email.html_body)
+    end
+
+    test "generates plaintext only for HTML-only messages when configured" do
+      html = "<p>Generated renderer text</p>"
+
+      with_renderer([plaintext: true, css_inliner: :none], fn ->
+        message = Mailglass.Message.build(%Swoosh.Email{html_body: html}, tenant_id: "t")
+        assert {:ok, rendered} = Mailglass.Renderer.render(message)
+        assert rendered.swoosh_email.text_body == "Generated renderer text"
+      end)
+
+      with_renderer([plaintext: false, css_inliner: :none], fn ->
+        message = Mailglass.Message.build(%Swoosh.Email{html_body: html}, tenant_id: "t")
+        assert {:ok, rendered} = Mailglass.Renderer.render(message)
+        assert is_nil(rendered.swoosh_email.text_body)
+      end)
+    end
+
+    test "treats blank plaintext as absent but never deletes nonblank explicit text" do
+      with_renderer([plaintext: true, css_inliner: :none], fn ->
+        blank = Mailglass.Message.build(%Swoosh.Email{html_body: "<p>Generated</p>", text_body: "  \n"}, tenant_id: "t")
+        assert {:ok, generated} = Mailglass.Renderer.render(blank)
+        assert generated.swoosh_email.text_body == "Generated"
+      end)
+
+      with_renderer([plaintext: false, css_inliner: :none], fn ->
+        explicit = Mailglass.Message.build(%Swoosh.Email{html_body: "<p>Ignored</p>", text_body: "Keep me"}, tenant_id: "t")
+        assert {:ok, rendered} = Mailglass.Renderer.render(explicit)
+        assert rendered.swoosh_email.text_body == "Keep me"
+      end)
+    end
+
+    test "honors CSS inliner switch while retaining HEEx rendering and data-mg stripping" do
+      component = fn assigns ->
+        ~H"""
+        <html><head><style>p { color: red; }</style></head><body><p data-mg-plaintext="text">Switch body</p></body></html>
+        """
+      end
+
+      with_renderer([plaintext: true, css_inliner: :none], fn ->
+        message = Mailglass.Message.build(%Swoosh.Email{html_body: component}, tenant_id: "t")
+        assert {:ok, rendered} = Mailglass.Renderer.render(message)
+        assert String.contains?(rendered.swoosh_email.html_body, "p { color: red; }")
+        refute String.contains?(rendered.swoosh_email.html_body, "data-mg-")
+        assert rendered.swoosh_email.text_body == "Switch body"
+      end)
+    end
+
     test "returns {:ok, %Message{}} with html_body and text_body populated" do
       message = Fixtures.simple_message()
       assert {:ok, rendered} = Mailglass.Renderer.render(message)
@@ -177,6 +248,11 @@ defmodule Mailglass.RendererTest do
       assert_receive {:telemetry, [:mailglass, :render, :message, :stop],
                       %{tenant_id: "test_tenant"}}
     end
+  end
+
+  defp with_renderer(renderer, fun) do
+    Application.put_env(:mailglass, :renderer, renderer)
+    fun.()
   end
 
   describe "to_plaintext/1" do
