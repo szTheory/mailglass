@@ -176,9 +176,7 @@ defmodule Mailglass.Outbound.PreflightTest do
                   type: :preflight_rejected,
                   context: %{reason_class: :body_invalid, body_state: :unsupported} = context
                 }} =
-                 Mailglass.Outbound.Preflight.run(
-                   message_with_bodies("<p>valid HTML</p>", text)
-                 )
+                 Mailglass.Outbound.Preflight.run(message_with_bodies("<p>valid HTML</p>", text))
 
         assert Map.keys(context) |> Enum.sort() == [:body_state, :reason_class]
       end
