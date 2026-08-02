@@ -118,7 +118,9 @@ defmodule Mailglass.Outbound.WorkerTest do
             metadata: %{
               "rendered_html" => "<p>Hello</p>",
               "rendered_text" => "Hello",
-              "subject" => "Test"
+              "subject" => "Test",
+              "headers" => %{},
+              "recipient_field" => "to"
             }
           )
 
@@ -145,7 +147,9 @@ defmodule Mailglass.Outbound.WorkerTest do
             metadata: %{
               "rendered_html" => "<p>Hello</p>",
               "rendered_text" => "Hello",
-              "subject" => "Test"
+              "subject" => "Test",
+              "headers" => %{},
+              "recipient_field" => "to"
             }
           )
 
@@ -190,7 +194,9 @@ defmodule Mailglass.Outbound.WorkerTest do
             metadata: %{
               "rendered_html" => "<p>Hello</p>",
               "rendered_text" => "Hello",
-              "subject" => "Test"
+              "subject" => "Test",
+              "headers" => %{},
+              "recipient_field" => "to"
             }
           )
 

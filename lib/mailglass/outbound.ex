@@ -253,7 +253,7 @@ defmodule Mailglass.Outbound do
           {:ok, Delivery.t()} | {:error, Mailglass.Error.t()}
   def dispatch_by_id(delivery_id) when is_binary(delivery_id) do
     with {:ok, delivery} <- load_delivery(delivery_id),
-         {:ok, rendered} <- rehydrate_message(delivery),
+         {:ok, rendered} <- load_payload_prepared(delivery),
          prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
          {:ok, adapter} <- resolve_persisted_adapter(delivery.adapter_ref),
          {:ok, dispatch_result} <- call_adapter(prepared, adapter) do
@@ -815,6 +815,49 @@ defmodule Mailglass.Outbound do
       %Delivery{} = d ->
         {:ok, d}
     end
+  end
+
+  # Durable jobs are payload-first. The metadata reader below is deliberately
+  # limited to old queued rows that carry the complete pre-v2.4 marker set;
+  # modern rows never fall through to a lossy reconstruction path.
+  defp load_payload_prepared(%Delivery{} = delivery) do
+    case Payload.fetch_for_delivery(delivery.tenant_id, delivery.id) do
+      {:ok, %Message{} = message} ->
+        {:ok, message}
+
+      {:error, :not_found} ->
+        load_legacy_pre_v24_queued_message(delivery)
+
+      {:error, %{__exception__: true} = error} ->
+        {:error, error}
+
+      {:error, _reason} ->
+        {:error,
+         Mailglass.SendError.new(:adapter_failure,
+           context: %{reason_class: :payload_unavailable}
+         )}
+    end
+  end
+
+  defp load_legacy_pre_v24_queued_message(%Delivery{status: :queued, metadata: metadata} = delivery)
+       when is_map(metadata) do
+    legacy_keys = ["rendered_html", "rendered_text", "subject", "headers", "recipient_field"]
+
+    if Enum.all?(legacy_keys, &Map.has_key?(metadata, &1)) do
+      rehydrate_message(delivery)
+    else
+      {:error,
+       Mailglass.SendError.new(:adapter_failure,
+         context: %{reason_class: :legacy_payload_unavailable}
+       )}
+    end
+  end
+
+  defp load_legacy_pre_v24_queued_message(_delivery) do
+    {:error,
+     Mailglass.SendError.new(:adapter_failure,
+       context: %{reason_class: :legacy_payload_unavailable}
+     )}
   end
 
   defp rehydrate_message(%Delivery{} = delivery) do

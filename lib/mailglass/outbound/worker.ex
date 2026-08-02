@@ -35,6 +35,10 @@ if Code.ensure_loaded?(Oban.Worker) do
       max_attempts: 20,
       unique: [period: 3600, fields: [:args], keys: [:delivery_id]]
 
+    @doc false
+    @spec queue() :: :mailglass_outbound
+    def queue, do: :mailglass_outbound
+
     @impl Oban.Worker
     def perform(%Oban.Job{args: %{"delivery_id" => id}} = job) when is_binary(id) do
       Mailglass.Oban.TenancyMiddleware.wrap_perform(job, fn ->
