@@ -182,8 +182,8 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
 
     lanes = all_lanes()
 
-    assert length(Mailglass.CILanes.required_lanes()) == 7,
-           "expected exactly 7 required lanes from Mailglass.CILanes"
+    assert length(Mailglass.CILanes.required_lanes()) == 8,
+           "expected exactly 8 required lanes from Mailglass.CILanes"
 
     # Every ci_lanes lane must have a matcher (no lane silently ignored)...
     lanes_without_matcher =

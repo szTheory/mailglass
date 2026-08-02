@@ -62,8 +62,15 @@ defmodule Mailglass.Scripts.BranchProtectionTruthTest do
   test "the shared outcome seam preserves drift as non-green without mutating in read-only mode" do
     with_fake_github("drift", fn temp_dir, env ->
       assert {"drift\n", 0} = run_outcome(["probe", "main"], env)
-      assert {report, 1} = run_outcome(["report", "drift"], env)
-      assert report =~ "drifted"
+      summary_path = Path.join(temp_dir, "summary.md")
+
+      assert {"", 1} =
+               run_outcome(
+                 ["report", "drift"],
+                 Map.put(env, "GITHUB_STEP_SUMMARY", summary_path)
+               )
+
+      assert File.read!(summary_path) =~ "drifted"
       refute gh_calls(temp_dir) =~ "-X PUT"
     end)
   end

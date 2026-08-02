@@ -122,8 +122,8 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
     js_source = File.read!(@publish_hex_path)
     publish_gating_from_js = parse_js_array(js_source, "PUBLISH_GATING_LANES")
 
-    assert MapSet.size(publish_gating_from_js) == 12,
-           "expected exactly 12 entries parsed from publish-hex.yml's " <>
+    assert MapSet.size(publish_gating_from_js) == 11,
+           "expected exactly 11 entries parsed from publish-hex.yml's " <>
              "PUBLISH_GATING_LANES array — parser or file format changed"
 
     {only_in_js, only_in_registry} = drift(publish_gating_from_js, @publish_gating_lanes)
@@ -177,8 +177,8 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
     job_names = Mailglass.CIYaml.job_names(ci_source)
     matrix_names = Mailglass.CIYaml.matrix_job_names(ci_source)
 
-    assert MapSet.size(required_from_js) == 7,
-           "expected exactly 7 entries parsed from publish-hex.yml's REQUIRED_LANES " <>
+    assert MapSet.size(required_from_js) == 8,
+           "expected exactly 8 entries parsed from publish-hex.yml's REQUIRED_LANES " <>
              "array — parser or file format changed"
 
     assert map_size(job_names) > 0,
