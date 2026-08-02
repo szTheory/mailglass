@@ -365,16 +365,25 @@ defmodule Mailglass.Outbound do
       Keyword.get(opts, :async_adapter) ||
         Application.get_env(:mailglass, :async_adapter, :oban)
 
-    cond do
-      async_adapter == :task_supervisor ->
+    case async_adapter do
+      :task_supervisor ->
         enqueue_task_supervisor(rendered, adapter_ref, opts)
 
-      Mailglass.OptionalDeps.Oban.available?() ->
-        enqueue_oban(rendered, adapter_ref, opts)
+      :oban ->
+        with :ok <- Mailglass.OptionalDeps.Oban.ready?(Mailglass.Outbound.Worker.queue()) do
+          enqueue_oban(rendered, adapter_ref, opts)
+        else
+          {:error, reason_class} -> oban_readiness_error(reason_class)
+        end
 
-      true ->
-        enqueue_task_supervisor(rendered, adapter_ref, opts)
+      _ ->
+        oban_readiness_error(:instance_unavailable)
     end
+  end
+
+  defp oban_readiness_error(reason_class) do
+    {:error,
+     Mailglass.SendError.new(:adapter_failure, context: %{reason_class: reason_class})}
   end
 
   defp enqueue_oban(%Message{} = rendered, adapter_ref, _opts) do

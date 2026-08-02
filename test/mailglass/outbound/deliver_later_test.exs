@@ -167,6 +167,22 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   end
 
   describe "deliver_later/2 — atomic private durable enqueue (Phase 150)" do
+    @tag phase_150_task: "t150_03_02"
+    test "explicit Oban without a configured instance fails closed without Task.Supervisor dispatch" do
+      Application.put_env(:mailglass, :async_adapter, :oban)
+
+      before_count = TestRepo.aggregate(Delivery, :count)
+
+      assert {:error,
+              %Mailglass.SendError{
+                type: :adapter_failure,
+                context: %{reason_class: :instance_unavailable}
+              }} = Outbound.deliver_later(build_message("unready-#{unique_id()}@example.com"))
+
+      assert TestRepo.aggregate(Delivery, :count) == before_count
+      assert Mailglass.Adapters.Fake.deliveries() == []
+    end
+
     @tag phase_150_task: "t150_02_01"
     test "Oban enqueue persists only public delivery metadata and all four durable facts" do
       if not Code.ensure_loaded?(Oban) do
@@ -175,7 +191,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
         Application.put_env(:mailglass, :async_adapter, :oban)
 
         start_supervised!(
-          {Oban, testing: :manual, repo: TestRepo, queues: [mailglass_outbound: 10]}
+          {Oban, testing: :disabled, repo: TestRepo, queues: [mailglass_outbound: 10]}
         )
 
         private_subject = "private subject #{unique_id()}"
@@ -211,7 +227,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
         Application.put_env(:mailglass, :async_adapter, :oban)
 
         start_supervised!(
-          {Oban, testing: :manual, repo: TestRepo, queues: [mailglass_outbound: 10]}
+          {Oban, testing: :disabled, repo: TestRepo, queues: [mailglass_outbound: 10]}
         )
 
         for {table, constraint, expression} <- [

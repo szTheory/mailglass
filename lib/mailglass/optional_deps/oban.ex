@@ -46,6 +46,30 @@ defmodule Mailglass.OptionalDeps.Oban do
   def available?, do: Code.ensure_loaded?(Oban)
 
   @doc """
+  Confirms that the configured default Oban instance can accept Mailglass's
+  canonical worker queue. This is deliberately a producer-readiness check;
+  successful `insert/4` remains the transactional proof of job creation.
+  """
+  @spec ready?(atom()) :: :ok | {:error, :dependency_unavailable | :instance_unavailable | :canonical_queue_unavailable}
+  def ready?(canonical_queue) when is_atom(canonical_queue) do
+    cond do
+      not available?() ->
+        {:error, :dependency_unavailable}
+
+      true ->
+        case configured_instance() do
+          {:ok, config} when is_map(config) ->
+            if canonical_queue_configured?(config, canonical_queue),
+              do: :ok,
+              else: {:error, :canonical_queue_unavailable}
+
+          {:error, :instance_unavailable} ->
+            {:error, :instance_unavailable}
+        end
+    end
+  end
+
+  @doc """
   Gateway wrapper for `Oban.insert/3` used from `Ecto.Multi` pipelines.
 
   Returns the original multi unchanged when Oban is not loaded.
@@ -73,9 +97,35 @@ defmodule Mailglass.OptionalDeps.Oban do
     if available?() do
       Oban.insert(multi, name, job_builder, opts)
     else
-      multi
+      Ecto.Multi.error(multi, name, :dependency_unavailable)
     end
   end
+
+  defp configured_instance do
+    try do
+      {:ok, Oban.config(Oban)}
+    rescue
+      _ -> {:error, :instance_unavailable}
+    catch
+      :exit, _ -> {:error, :instance_unavailable}
+    end
+  end
+
+  defp canonical_queue_configured?(config, canonical_queue) do
+    expected = Atom.to_string(canonical_queue)
+
+    config
+    |> config_queues()
+    |> Enum.any?(fn {queue, _opts} -> normalize_queue_name(queue) == expected end)
+  end
+
+  defp config_queues(config) when is_list(config), do: Keyword.get(config, :queues, [])
+  defp config_queues(%{queues: queues}) when is_list(queues), do: queues
+  defp config_queues(_), do: []
+
+  defp normalize_queue_name(queue) when is_atom(queue), do: Atom.to_string(queue)
+  defp normalize_queue_name(queue) when is_binary(queue), do: queue
+  defp normalize_queue_name(_), do: nil
 
   @doc """
   Gateway wrapper for `Oban.insert_all/1`.
