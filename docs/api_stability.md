@@ -142,6 +142,10 @@ of the narrow `v1.x` stable contract unless and until they are listed here.
 The stable telemetry contract is semantic and family-based:
 
 - delivery spans and events under `[:mailglass, :outbound, ...]`
+- durable provider/compliance feedback at
+  `[:mailglass, :delivery, :feedback, :stop]`, with measurements `%{count: 1}`
+  and metadata keys `tenant_id`, `delivery_id`, `provider`, `stream`,
+  `mailable`, and `status`
 - webhook ingest spans and events under `[:mailglass, :webhook, ...]`
 - render/tracking/compliance-related events under documented
   `[:mailglass, ...]` names in this file

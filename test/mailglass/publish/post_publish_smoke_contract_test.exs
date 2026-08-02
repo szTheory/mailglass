@@ -82,5 +82,4 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     [job | _after] = String.split(rest, "\n  #{next_key}:\n", parts: 2)
     job
   end
-
 end

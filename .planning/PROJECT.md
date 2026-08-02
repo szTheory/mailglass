@@ -10,25 +10,20 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**v2.2 CI Signal Integrity & Supply-Chain Hygiene shipped 2026-07-31.** All four phases, 30 plans,
-63 tasks, and 20 requirements are complete. The milestone audit passed with all 8 integration seams and
-all 6 end-to-end flows verified. CI lane classification is machine-bound to runtime and documentation
-truth; dependency audits are merge-gating and fail closed; the Ecto Sandbox ownership leak is fixed with
-suite floors and recurrence guards; branch-protection, repo-hygiene, dynamic-icon, linked-publish, and
-release-recovery signals report honest outcomes.
+**v2.3 B2C First-Adopter Readiness opened 2026-07-31.** The first production adopter is a
+solo-operated, low-volume consumer subscription product. Mailglass is already production-credible; this
+milestone closes the specific divergence between that profile and the shipped B2B operations reference:
+a decisive consumer launch guide, canonical provider-feedback telemetry, and a live outbound admin.
 
-This was a maintenance milestone and intentionally cut no Hex release. Package versions remain
-mailglass 2.1.3, mailglass_admin 2.1.3, and mailglass_inbound 2.1.1.
-
-See [the v2.2 milestone audit](milestones/v2.2-MILESTONE-AUDIT.md) and
-[archived roadmap](milestones/v2.2-ROADMAP.md).
+Package boundaries are locked. Chimeway owns notification policy and preferences; Sigra owns auth token
+semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
+paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
 
 ## Next Milestone Goals
 
-No next milestone is committed. Start from measured adopter or maintainer pull rather than automatic
-feature expansion. Archived seeds preserve optional directions for sent-message retention, native HEEx
-assign propagation, and CI efficiency; the next milestone should reactivate only a direction with a
-current trigger and fresh requirements.
+Ship the Mailglass-owned B2C launch profile as linked core/admin 2.4.0, leaving inbound unchanged unless a
+real compatibility change is required. Production launch additionally requires the external Sigra,
+Chimeway, Parapet, Accrue, and host recovery gates recorded in `.planning/REQUIREMENTS.md`.
 
 <details>
 <summary>Archived v2.2 milestone context</summary>

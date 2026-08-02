@@ -29,7 +29,51 @@
 - ✅ **v2.0 Postgres Schema Isolation** — Phases 132-137 (shipped 2026-07-04) — [archive](milestones/v2.0-ROADMAP.md)
 - ✅ **v2.1 Postgres + Admin URL Hardening** — Phases 138-140 (shipped 2026-07-08) — [archive](milestones/v2.1-ROADMAP.md)
 - ✅ **v2.2 CI Signal Integrity & Supply-Chain Hygiene** — Phases 141-144 (shipped 2026-07-31) — [archive](milestones/v2.2-ROADMAP.md)
+- 🚧 **v2.3 B2C First-Adopter Readiness** — Phases 145-148 (active)
 
-## Next Milestone
+## Active Milestone: v2.3 B2C First-Adopter Readiness
 
-Not yet defined. Start with `$gsd-new-milestone` to create fresh requirements and continue phase numbering from 145.
+**Goal:** Make the safe single-tenant consumer launch path opinionated, automated, and observable while preserving ownership boundaries across the package family.
+
+- [x] **Phase 145: B2C Safety Profile** — Publish the stream, suppression, single-tenant, cold-domain, MPP, package-boundary, launch-gate, and Crosswake decisions.
+- [x] **Phase 146: Provider-Feedback Contract** — Add the stable PII-free post-commit feedback event with replay convergence.
+- [x] **Phase 147: Live Solo-Operator Admin** — Refresh tenant-scoped delivery and evidence state from existing PubSub signals without reloads.
+- [ ] **Phase 148: Release and Adoption Proof** — Run suppression/docs/browser proofs, cut linked core/admin 2.4.0, and smoke the published consumer path without bumping inbound unnecessarily.
+
+**Execution order:** 145 → 146 → 147 → 148. Phase 148 release publication remains gated by all Mailglass tests and the external B2C launch checklist in `REQUIREMENTS.md`.
+
+### Phase 148: Release and Adoption Proof
+
+**Goal**: Prove the locked suppression, documentation, and live-operator behaviors; release linked `mailglass` and `mailglass_admin` 2.4.0 without republishing `mailglass_inbound`; and validate a clean consumer install from the published packages.
+**Depends on**: Phase 145 (B2C safety and package-boundary decisions), Phase 146 (provider-feedback contract), and Phase 147 (live solo-operator admin proof)
+**Requirements**: PROOF-02, PROOF-03, REL-01
+**Success Criteria** (what must be TRUE):
+
+  1. Focused suppression evidence proves stream unsubscribe remains stream-scoped while complaint and hard-bounce suppression remains address-wide and blocks transactional delivery.
+  2. B2C documentation-contract evidence proves every published guide example parses against current APIs and `guides/b2c-first-adopter.md` remains in the HexDocs/package surface.
+  3. The release-proof bundle includes the tenant-scoped LiveView refresh and foreign-tenant rejection evidence delivered by Phase 147.
+  4. Release Please and protected Hex publication produce linked `mailglass` and `mailglass_admin` 2.4.0 releases while `mailglass_inbound` remains at 2.1.1 and is neither republished nor required for the core/admin publish fan-out to complete.
+  5. `scripts/consumer_install_smoke.sh` passes both the shift-left local-path proof and the post-publication Hex-mode proof from a clean consumer using the versions adopters actually install.
+
+**Plans**: 1/5 plans executed
+
+Plans:
+**Wave 1**
+
+- [x] 148-01-PLAN.md — Prove the protected core/admin release path and establish the evidence ledger.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 148-02-PLAN.md — Isolate Release Please sync and upload sanitized prepublish proof.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 148-03-PLAN.md — Capture commit-bound behavioral, consumer, and release preflight evidence.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 148-04-PLAN.md — Pause for go/no-go and run the protected one-way release ceremony.
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 148-05-PLAN.md — Verify Hex versions and finalize the published-consumer proof.

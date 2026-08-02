@@ -17,7 +17,7 @@ defmodule Mailglass.TelemetryTest do
   # metadata — and carries no PII. The property test strips it before the
   # subset check so the whitelist continues to guard real metadata keys.
 
-  @whitelisted_keys ~w(tenant_id mailable provider status message_id delivery_id event_id
+  @whitelisted_keys ~w(tenant_id mailable provider stream status message_id delivery_id event_id
                        latency_ms recipient_count bytes retry_count)a
 
   @telemetry_infrastructure_keys [:telemetry_span_context]

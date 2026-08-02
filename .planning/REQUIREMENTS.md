@@ -1,0 +1,63 @@
+# Requirements: mailglass — v2.3 B2C First-Adopter Readiness
+
+**Defined:** 2026-07-31  
+**Goal:** Let a solo-operated, single-tenant consumer product safely serve its first paying user without moving notification policy, authentication, billing, support, mobile activation, or SRE ownership into Mailglass.
+
+## B2C launch profile
+
+- [x] **B2C-01:** Document a decisive mapping from B2C message purposes to transactional, operational, and bulk streams.
+- [x] **B2C-02:** Document and prove that operational/bulk unsubscribe is stream-scoped while hard-bounce and complaint suppression remains address-wide.
+- [x] **B2C-03:** Document category-specific RFC 8058 preferences as a Chimeway/host concern using opaque recipient references and idempotent POST behavior.
+- [x] **B2C-04:** Document the zero-config single-tenant path and separate transactional/engagement sending identities using named adapter refs.
+- [x] **B2C-05:** Provide a conservative cold-domain pacing profile without weakening transactional rate-limit bypass or changing global defaults.
+- [x] **B2C-06:** Keep open tracking disabled and prohibit MPP-distorted opens from driving product, suppression, or re-engagement decisions.
+- [x] **B2C-07:** Record sibling-package ownership, external launch gates, and the decision not to create `crosswake_mailglass`.
+
+## Provider feedback
+
+- [x] **OBS-01:** Emit `[:mailglass, :delivery, :feedback, :stop]` once after a new durable provider/compliance fact for the documented outcome set.
+- [x] **OBS-02:** Lock measurements to `%{count: 1}` and metadata to `tenant_id`, `delivery_id`, `provider`, `stream`, `mailable`, and `status`, with no recipient or message PII and no replay duplication.
+
+## Solo-operator admin
+
+- [x] **ADMIN-01:** Subscribe the connected outbound operator LiveView to the current tenant's existing Mailglass events topic and safely change subscriptions with tenant selection.
+- [x] **ADMIN-02:** Refresh the visible list, selected detail/evidence, suppression state, provider options, and overview counters without losing URL-backed filters, page, or selection.
+
+## Proof and release
+
+- [x] **PROOF-01:** Browser/LiveView evidence shows a provider status transition without a manual reload and rejects foreign-tenant events.
+- [x] **PROOF-02:** Tests prove stream unsubscribe does not suppress transactional delivery, while bounce and complaint suppression remains address-wide.
+- [x] **PROOF-03:** B2C examples parse against current APIs and the guide remains in the published HexDocs/package surface.
+- [ ] **REL-01:** Release linked `mailglass` and `mailglass_admin` 2.4.0, leave `mailglass_inbound` unchanged, and pass a clean published-package consumer smoke test.
+
+## External launch gates
+
+These gates block B2C Alpha production but are not Mailglass requirements:
+
+- [ ] Sigra/host uses non-consuming magic-link GET validation followed by CSRF-protected POST consumption.
+- [ ] Chimeway/host ships idempotent category-level one-click preferences.
+- [ ] Parapet consumes the canonical feedback event and pages on any complaint at launch volume.
+- [ ] Accrue/host passes Stripe payment success, failure, action-required, recovery, and missing-tax-location journeys.
+- [ ] The host provides separately verified email replacement and recovery for address-wide suppression.
+
+## Deferred promotion triggers
+
+- Declarative stream routing: two adopters duplicate or misconfigure the resolver.
+- Warmup automation: planned engagement volume exceeds roughly 500/day or sustained deferrals appear.
+- MPP classification: reliable provider metadata and a concrete human-vs-proxy workflow exist.
+- Generic inbound threading: two independent products need the same References/In-Reply-To model.
+- Charset transcoding: a retained non-UTF-8 message fails a real workflow.
+- Sent-body snapshots: exact content reproduction is required with approved retention and security policy.
+- Complaint-rate UI: volume supplies a stable denominator or reaches approximately 5,000/day.
+- `crosswake_mailglass`: two adopters need the same provider-neutral signed email-to-route-intent adapter and prove it cannot live in the host, Chimeway, or Crosswake.
+
+## Traceability
+
+| Requirement | Phase |
+|---|---|
+| B2C-01 through B2C-07 | 145 |
+| OBS-01, OBS-02 | 146 |
+| ADMIN-01, ADMIN-02, PROOF-01 | 147 |
+| PROOF-02, PROOF-03, REL-01 | 148 |
+
+**Coverage:** 15/15 requirements mapped.

@@ -1,0 +1,8 @@
+{
+  "status": "active",
+  "packages": {
+    "mailglass": "2.4.0",
+    "mailglass_admin": "2.4.0",
+    "mailglass_inbound": "2.1.1"
+  }
+}

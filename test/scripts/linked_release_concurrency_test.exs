@@ -92,7 +92,15 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     assert prepublish =~ "retention-days: 90"
     assert prepublish =~ "if-no-files-found: error"
     assert prepublish =~ "actions/upload-artifact@"
-    assert prepublish =~ "--arg inbound \"2.1.1\""
+    assert prepublish =~ "Validate automated release target"
+    assert prepublish =~ ".planning/release-target.json"
+    assert prepublish =~ "steps.release-target.outputs.core"
+    assert prepublish =~ "steps.release-target.outputs.admin"
+    assert prepublish =~ "steps.release-target.outputs.inbound"
+    assert prepublish =~ "steps.release-target.outputs.active == 'true'"
+    refute prepublish =~ "--arg core \"2.4.0\""
+    refute prepublish =~ "--arg admin \"2.4.0\""
+    refute prepublish =~ "--arg inbound \"2.1.1\""
     refute prepublish =~ "HEX_API_KEY"
   end
 

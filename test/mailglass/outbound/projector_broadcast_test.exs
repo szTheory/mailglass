@@ -16,6 +16,63 @@ defmodule Mailglass.Outbound.ProjectorBroadcastTest do
   end
 
   describe "broadcast_delivery_updated/3" do
+    test "emits the stable PII-free feedback event for provider outcomes", %{
+      delivery: delivery
+    } do
+      handler_id = "delivery-feedback-#{System.unique_integer([:positive])}"
+      test_pid = self()
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          [:mailglass, :delivery, :feedback, :stop],
+          fn event, measurements, metadata, _config ->
+            send(test_pid, {:feedback, event, measurements, metadata})
+          end,
+          nil
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      :ok = Projector.broadcast_delivery_updated(delivery, :complained, %{provider: "postmark"})
+
+      assert_receive {:feedback, [:mailglass, :delivery, :feedback, :stop], %{count: 1}, metadata}
+
+      assert metadata == %{
+               tenant_id: delivery.tenant_id,
+               delivery_id: delivery.id,
+               provider: "postmark",
+               stream: :transactional,
+               mailable: "MyApp.UserMailer.welcome/1",
+               status: :complained
+             }
+
+      refute Map.has_key?(metadata, :recipient)
+      refute Map.has_key?(metadata, :subject)
+      refute Map.has_key?(metadata, :headers)
+    end
+
+    test "does not emit feedback for internal lifecycle transitions", %{delivery: delivery} do
+      handler_id = "delivery-feedback-internal-#{System.unique_integer([:positive])}"
+      test_pid = self()
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          [:mailglass, :delivery, :feedback, :stop],
+          fn event, measurements, metadata, _config ->
+            send(test_pid, {:feedback, event, measurements, metadata})
+          end,
+          nil
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      :ok = Projector.broadcast_delivery_updated(delivery, :dispatched, %{})
+
+      refute_receive {:feedback, _, _, _}, 50
+    end
+
     # Test 1: broadcasts to tenant-wide topic
     test "broadcasts {:delivery_updated, ...} to tenant-wide events topic", %{
       delivery: delivery,

@@ -15,6 +15,18 @@ and metadata keys that the current code emits.
 | `[:mailglass, :outbound, :send, :start \| :stop \| :exception]` | full span | caller-supplied whitelist keys such as `tenant_id, mailable, status, delivery_id, latency_ms` |
 | `[:mailglass, :outbound, :dispatch, :start \| :stop \| :exception]` | full span | caller-supplied whitelist keys such as `provider, status, delivery_id, latency_ms` |
 
+### Durable provider feedback
+
+| Event path | Type | Measurements | Metadata keys |
+|------------|------|--------------|---------------|
+| `[:mailglass, :delivery, :feedback, :stop]` | single emit after commit | `count` (always `1`) | `tenant_id, delivery_id, provider, stream, mailable, status` |
+
+Feedback status is one of `sent`, `delivered`, `bounced`, `complained`,
+`deferred`, `rejected`, `opened`, `clicked`, or `unsubscribed`. Mailglass emits
+the event only for a newly persisted fact; idempotent webhook and unsubscribe
+replays do not emit it again. Internal transitions such as `queued`,
+`dispatched`, `suppressed`, and `reconciled` are excluded.
+
 ### Webhook spans and emits from `Mailglass.Webhook.Telemetry`
 
 | Event path | Type | Stop metadata keys |
@@ -33,6 +45,7 @@ The shipped whitelist in `Mailglass.Telemetry` allows keys such as:
 - `tenant_id`
 - `mailable`
 - `provider`
+- `stream`
 - `status`
 - `message_id`
 - `delivery_id`
@@ -57,6 +70,33 @@ Webhook helpers also emit the shipped operational keys:
 
 mailglass does not emit recipient addresses, message bodies, subjects, raw
 payloads, raw request bodies, IPs, or user agents in telemetry metadata.
+
+## Alert on provider feedback
+
+Use the durable feedback family for provider-outcome metrics rather than
+deriving outcomes from the dispatch span:
+
+```elixir
+:telemetry.attach(
+  "mailglass-provider-feedback",
+  [:mailglass, :delivery, :feedback, :stop],
+  fn _event, %{count: 1}, metadata, _config ->
+    MyApp.Observability.increment("mailglass.delivery.feedback",
+      tags: [
+        provider: metadata.provider,
+        stream: metadata.stream,
+        status: metadata.status
+      ]
+    )
+  end,
+  nil
+)
+```
+
+For a low-volume launch, page on every `:complained` event. Do not wait for a
+percentage threshold whose denominator is only tens or hundreds of messages.
+Provider-side reputation and inbox placement remain provider truth; this event
+reports the facts Mailglass durably received.
 
 ## Reading the support model correctly
 

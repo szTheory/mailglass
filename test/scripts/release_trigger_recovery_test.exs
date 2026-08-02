@@ -4,6 +4,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   @repo_root Path.expand("../..", __DIR__)
   @workflow_path Path.expand("../../.github/workflows/release-please.yml", __DIR__)
   @manifest_path Path.expand("../../.release-please-manifest.json", __DIR__)
+  @release_target_path Path.expand("../../.planning/release-target.json", __DIR__)
   @contributing_path Path.expand("../../CONTRIBUTING.md", __DIR__)
   @recovery_runbook_facts [
     "GitHub-native auto-merge",
@@ -212,7 +213,11 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   end
 
   test "core/admin-only release synchronization leaves inbound-owned artifacts untouched" do
-    sync = extract_step_block!(workflow_source(), "Sync sibling package -> mailglass dep pin on release-please branch")
+    sync =
+      extract_step_block!(
+        workflow_source(),
+        "Sync sibling package -> mailglass dep pin on release-please branch"
+      )
 
     assert sync =~ "git show origin/main:.release-please-manifest.json"
     assert sync =~ "INBOUND_CHANGED=false"
@@ -241,6 +246,33 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
     assert sync =~ "sync inbound README \\`~>\\` pin + publish-summary to core $CORE_VERSION"
     assert sync =~ "sync core/admin README pins to core $CORE_VERSION"
+  end
+
+  test "release target is machine-validated before hands-free auto-merge" do
+    source = workflow_source()
+    validation = extract_step_block!(source, "Validate automated release target")
+    target = Jason.decode!(File.read!(@release_target_path))
+
+    assert target == %{
+             "status" => "active",
+             "packages" => %{
+               "mailglass" => "2.4.0",
+               "mailglass_admin" => "2.4.0",
+               "mailglass_inbound" => "2.1.1"
+             }
+           }
+
+    assert validation =~ ".planning/release-target.json"
+    assert validation =~ ".release-please-manifest.json"
+    assert validation =~ "mailglass_admin/mix.exs"
+    assert validation =~ "mailglass_inbound/mix.exs"
+    assert validation =~ "Release target mismatch"
+
+    assert step_precedes?(
+             source,
+             "Validate automated release target",
+             "Arm auto-merge on the release PR"
+           )
   end
 
   test "contributing documents the bounded hourly recovery and manual fallbacks" do
@@ -296,6 +328,12 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   end
 
   defp workflow_source, do: File.read!(@workflow_path)
+
+  defp step_precedes?(source, first_name, second_name) do
+    {first, _} = :binary.match(source, "- name: #{first_name}")
+    {second, _} = :binary.match(source, "- name: #{second_name}")
+    first < second
+  end
 
   defp with_fake_gh(mode, fun),
     do: with_fake_gh(mode, "Merge pull request #42 from release-please--branches--main", fun)

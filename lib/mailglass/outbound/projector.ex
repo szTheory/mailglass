@@ -46,6 +46,7 @@ defmodule Mailglass.Outbound.Projector do
   alias Mailglass.Outbound.Delivery
 
   @terminal_event_types ~w[delivered bounced complained rejected failed suppressed]a
+  @feedback_event_types ~w[sent delivered bounced complained deferred rejected opened clicked unsubscribed]a
 
   @doc """
   Returns a changeset that applies  monotonic projection updates for
@@ -148,6 +149,10 @@ defmodule Mailglass.Outbound.Projector do
   - `Mailglass.PubSub.Topics.events(tenant_id, delivery_id)` — per-delivery
     stream (single-delivery LiveView views, `assert_mail_delivered/2`)
 
+  Provider and compliance outcomes also emit the stable, PII-free
+  `[:mailglass, :delivery, :feedback, :stop]` telemetry event from this
+  post-commit chokepoint. Internal lifecycle transitions are not feedback.
+
   Broadcast failure never rolls back — if Phoenix.PubSub is unreachable
   (application stopping, node partition), the broadcast is best-effort
   and returns `:ok`. The event ledger is the durable source of truth;
@@ -163,7 +168,7 @@ defmodule Mailglass.Outbound.Projector do
   @doc since: "0.1.0"
   @spec broadcast_delivery_updated(Delivery.t(), atom(), map()) :: :ok
   def broadcast_delivery_updated(
-        %Delivery{id: delivery_id, tenant_id: tenant_id},
+        %Delivery{id: delivery_id, tenant_id: tenant_id} = delivery,
         event_type,
         meta
       )
@@ -172,9 +177,28 @@ defmodule Mailglass.Outbound.Projector do
 
     _ = safe_broadcast(Mailglass.PubSub.Topics.events(tenant_id), payload)
     _ = safe_broadcast(Mailglass.PubSub.Topics.events(tenant_id, delivery_id), payload)
+    emit_feedback(delivery, event_type, meta)
 
     :ok
   end
+
+  defp emit_feedback(%Delivery{} = delivery, event_type, meta)
+       when event_type in @feedback_event_types do
+    Mailglass.Telemetry.execute(
+      [:mailglass, :delivery, :feedback, :stop],
+      %{count: 1},
+      %{
+        tenant_id: delivery.tenant_id,
+        delivery_id: delivery.id,
+        provider: Map.get(meta, :provider) || delivery.provider,
+        stream: delivery.stream,
+        mailable: delivery.mailable,
+        status: event_type
+      }
+    )
+  end
+
+  defp emit_feedback(_delivery, _event_type, _meta), do: :ok
 
   defp safe_broadcast(topic, payload) do
     Phoenix.PubSub.broadcast(Mailglass.PubSub, topic, payload)

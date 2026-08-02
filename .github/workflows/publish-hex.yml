@@ -89,6 +89,52 @@ jobs:
           # using workflow_dispatch so publish runs against the reviewed release
           # commit, not a later `main` SHA.
           ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+      - name: Validate automated release target
+        id: release-target
+        run: |
+          set -euo pipefail
+          target=.planning/release-target.json
+
+          if [ ! -r "$target" ]; then
+            echo "active=false" >> "$GITHUB_OUTPUT"
+            echo "No release target present; skipping milestone-specific proof."
+            exit 0
+          fi
+
+          status=$(jq -er '.status' "$target")
+          if [ "$status" != "active" ]; then
+            echo "active=false" >> "$GITHUB_OUTPUT"
+            echo "Release target is '$status'; skipping milestone-specific proof."
+            exit 0
+          fi
+
+          expected_core=$(jq -er '.packages.mailglass' "$target")
+          expected_admin=$(jq -er '.packages.mailglass_admin' "$target")
+          expected_inbound=$(jq -er '.packages.mailglass_inbound' "$target")
+          actual_core=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mix.exs | head -1)
+          actual_admin=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_admin/mix.exs | head -1)
+          actual_inbound=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_inbound/mix.exs | head -1)
+          release_ref="${{ github.event.release.tag_name || github.event.inputs.tag }}"
+
+          if [ "$actual_core" != "$expected_core" ] || \
+             [ "$actual_admin" != "$expected_admin" ] || \
+             [ "$actual_inbound" != "$expected_inbound" ]; then
+            echo "Release target mismatch: expected core/admin/inbound $expected_core/$expected_admin/$expected_inbound; source has $actual_core/$actual_admin/$actual_inbound" >&2
+            exit 1
+          fi
+
+          if [ "$release_ref" != "mailglass-v${expected_core}" ] && \
+             [ "$release_ref" != "mailglass_admin-v${expected_admin}" ]; then
+            echo "Release target mismatch: ref '$release_ref' is not an authorized linked release tag" >&2
+            exit 1
+          fi
+
+          {
+            echo "active=true"
+            echo "core=$actual_core"
+            echo "admin=$actual_admin"
+            echo "inbound=$actual_inbound"
+          } >> "$GITHUB_OUTPUT"
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
@@ -137,7 +183,7 @@ jobs:
       # the focused behavioral suite on the protected release path without
       # retaining test output, environments, package credentials, or message data.
       - name: Run Phase 148 release proof suite
-        if: ${{ github.event_name == 'release' || github.event.inputs.package == 'all' }}
+        if: ${{ steps.release-target.outputs.active == 'true' }}
         run: |
           mix test test/mailglass/webhook/ingest_auto_suppress_test.exs test/mailglass/suppression_test.exs test/mailglass/docs_contract_test.exs --warnings-as-errors
           (
@@ -145,16 +191,16 @@ jobs:
             mix test test/mailglass_admin/operator_live_test.exs --warnings-as-errors
           )
       - name: Write sanitized Phase 148 release proof
-        if: ${{ github.event_name == 'release' || github.event.inputs.package == 'all' }}
+        if: ${{ steps.release-target.outputs.active == 'true' }}
         run: |
           set -euo pipefail
           mkdir -p tmp/release-proof
           jq -n \
             --arg ref "${{ github.event.release.tag_name || github.event.inputs.tag }}" \
             --arg sha "$(git rev-parse HEAD)" \
-            --arg core "2.4.0" \
-            --arg admin "2.4.0" \
-            --arg inbound "2.1.1" \
+            --arg core "${{ steps.release-target.outputs.core }}" \
+            --arg admin "${{ steps.release-target.outputs.admin }}" \
+            --arg inbound "${{ steps.release-target.outputs.inbound }}" \
             --arg webhook_suppression "passed" \
             --arg transactional_suppression "passed" \
             --arg b2c_docs "passed" \
@@ -175,7 +221,7 @@ jobs:
               }
             }' > tmp/release-proof/phase-148.json
       - name: Upload Phase 148 release proof
-        if: ${{ github.event_name == 'release' || github.event.inputs.package == 'all' }}
+        if: ${{ steps.release-target.outputs.active == 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: phase-148-release-proof-${{ github.run_id }}

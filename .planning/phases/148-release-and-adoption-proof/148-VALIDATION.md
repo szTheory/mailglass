@@ -56,12 +56,14 @@ created: 2026-08-01
 
 ---
 
-## Manual-Only Verifications
+## Protected External Verifications
 
-| Behavior | Requirement | Why Manual | Test Instructions |
-|----------|-------------|------------|-------------------|
-| Linked core/admin 2.4.0 packages are published while inbound remains 2.1.1 | REL-01 | Requires protected release events, Hex credentials, registry propagation, and real published artifacts | Confirm Release Please tags/releases, protected publish jobs, Hex versions, and absence of an inbound 2.4.0 release. |
-| Clean consumer resolves and boots from published packages | REL-01 | Final evidence requires packages and HexDocs to exist on Hex | Run the post-publish workflow and retain the successful `DEP_MODE=hex` consumer-smoke evidence after readiness polling. |
+| Behavior | Requirement | Why External | Automated Verification |
+|----------|-------------|--------------|------------------------|
+| Linked core/admin 2.4.0 packages are published while inbound remains 2.1.1 | REL-01 | Requires protected release events, Hex credentials, registry propagation, and real published artifacts | Release-target validation, protected publish jobs, GitHub/Hex API checks, and explicit absence of an inbound 2.4.0 release. |
+| Clean consumer resolves and boots from published packages | REL-01 | Final evidence requires packages and HexDocs to exist on Hex | `post-publish-smoke.yml` retains successful `DEP_MODE=hex` consumer-smoke evidence after bounded readiness polling. |
+
+No human verification or UAT is required. External checks are observed and evaluated by automation; any missing or red evidence fails closed.
 
 ---
 

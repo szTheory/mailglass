@@ -57,6 +57,7 @@ defmodule Mailglass.MixProject do
         # Local↔CI parity aliases (CICD milestone)
         ci: :test,
         "ci.fast": :test,
+        "ci.full": :test,
         "ci.setup": :test,
         "ci.browser": :test,
         # Semantic verify aliases (REL-03)
@@ -364,7 +365,8 @@ defmodule Mailglass.MixProject do
       # first so absence fails with a brand-voice line, not a DB stacktrace.
       "ci.setup": [
         "cmd bash scripts/preflight_postgres.sh",
-        "ecto.create -r Mailglass.TestRepo --quiet",
+        "cmd env MIX_ENV=test mix ecto.create -r Mailglass.TestRepo --quiet",
+        "cmd --cd mailglass_inbound mix deps.get --check-locked",
         "cmd --cd mailglass_inbound mix ecto.create -r MailglassInbound.TestRepo --quiet"
       ],
 
@@ -383,15 +385,36 @@ defmodule Mailglass.MixProject do
       # hygiene. Preflight guards fail closed before any DB/network task.
       ci: [
         "cmd bash scripts/preflight_postgres.sh",
-        "ci.fast",
-        "ci.setup",
-        "verify.support_contract.core",
-        "test --warnings-as-errors --exclude flaky",
+        # Package-isolation tasks can leave local dev artifacts behind the
+        # unchanged lock. Rehydrate them before the parity run starts.
+        "cmd mix deps.get --check-locked",
+        # Keep the no-optional-deps compile in an isolated child build. Running
+        # `ci.fast` inline unloads Hex from this parent Mix VM; sharing _build
+        # would also delete optional dependency artifacts needed by later lanes.
+        "cmd env MIX_ENV=test MIX_BUILD_PATH=_build/ci_fast mix ci.fast",
+        # Run the remaining parity surface in a fresh Mix VM. The no-optional-deps
+        # compile above intentionally changes compiler/dependency state; keeping
+        # the full suite in the parent VM makes Mix inspect stale dependency
+        # metadata and report false lock mismatches.
+        "cmd mix deps.get --check-locked",
+        "cmd env MIX_ENV=test mix ci.full"
+      ],
+
+      # The full parity surface is separate so `mix ci` can execute it in a
+      # clean Mix VM after the isolated fast gate. Keep this alias declarative:
+      # ci_parity_drift_test expands externally invoked aliases and proves the
+      # union still covers every protected and advisory CI lane.
+      "ci.full": [
+        "cmd env MIX_ENV=test mix ci.setup",
+        "cmd env MIX_ENV=test mix verify.support_contract.core",
+        "cmd env MIX_ENV=test mix test --warnings-as-errors",
+        "cmd --cd mailglass_admin mix deps.get --check-locked",
         "cmd --cd mailglass_admin mix verify.support_contract.admin",
+        "cmd --cd mailglass_inbound mix deps.get --check-locked",
         "cmd --cd mailglass_inbound mix compile --no-optional-deps --warnings-as-errors",
         "cmd --cd mailglass_inbound mix test --exclude property",
-        "docs --warnings-as-errors",
-        "mailglass.docs.check",
+        "cmd env MIX_ENV=test mix docs --warnings-as-errors",
+        "cmd env MIX_ENV=test mix mailglass.docs.check",
         # F1: widened from the two bare hex-audit/deps-audit mix tasks so
         # `mix ci` reproduces the same shared-allowlist, three-directory scan
         # both ci.yml audit lanes now run (Phase 142/VULN-05). Leaving this
@@ -400,12 +423,12 @@ defmodule Mailglass.MixProject do
         # allowlist-unaware scan. Costs `mix ci` two extra deps.get/audit
         # passes (mailglass_admin, mailglass_inbound); noted as a SEED-006
         # input, not optimized here.
-        "mailglass.audit --kind hex",
-        "mailglass.audit --kind deps",
-        "dialyzer",
+        "cmd env MIX_ENV=test mix mailglass.audit --kind hex",
+        "cmd env MIX_ENV=test mix mailglass.audit --kind deps",
+        "cmd env MIX_ENV=test mix dialyzer",
         "cmd --cd reference/host_app mix deps.get",
         "cmd --cd reference/host_app env MIX_ENV=dev mix compile",
-        "verify.reference_host.journey",
+        "cmd env MIX_ENV=test mix verify.reference_host.journey",
         "cmd bash scripts/check_trust_runner_checkpoint.sh",
         "cmd bash scripts/preflight_network.sh",
         "cmd env DEP_MODE=path MAILGLASS_PATH=#{File.cwd!()} bash scripts/consumer_install_smoke.sh"
@@ -414,7 +437,7 @@ defmodule Mailglass.MixProject do
       # Opt-in browser gate (Node + Playwright). Advisory in CI; zero-Node is an
       # ADOPTER guarantee, so requiring Node HERE (dev/CI tooling) is fine.
       "ci.browser": [
-        "ci.setup",
+        "cmd env MIX_ENV=test mix ci.setup",
         "cmd --cd mailglass_admin npm ci",
         "cmd --cd mailglass_admin npx playwright install --with-deps chromium",
         "cmd --cd mailglass_admin npm run test:operator-browser"
@@ -469,6 +492,7 @@ defmodule Mailglass.MixProject do
         "guides/upgrading-to-v1_0.md",
         "guides/upgrading-to-v2_0.md",
         "guides/getting-started.md",
+        "guides/b2c-first-adopter.md",
         "guides/learning-path.md",
         "guides/jobs.md",
         "guides/authoring-mailables.md",
@@ -500,6 +524,7 @@ defmodule Mailglass.MixProject do
           "guides/upgrading-to-v1_0.md",
           "guides/upgrading-to-v2_0.md",
           "guides/getting-started.md",
+          "guides/b2c-first-adopter.md",
           "guides/learning-path.md",
           "guides/jobs.md",
           "guides/authoring-mailables.md",

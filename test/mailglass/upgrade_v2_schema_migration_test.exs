@@ -186,7 +186,17 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
   defp table_count(schema) do
     {:ok, %{rows: [[count]]}} =
       TestRepo.query(
-        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = $1 AND table_name LIKE 'mailglass_%'",
+        """
+        SELECT COUNT(*)
+        FROM information_schema.tables
+        WHERE table_schema = $1
+          AND table_name IN (
+            'mailglass_events',
+            'mailglass_deliveries',
+            'mailglass_suppressions',
+            'mailglass_webhook_events'
+          )
+        """,
         [schema]
       )
 

@@ -4,6 +4,8 @@ defmodule Mailglass.Webhook.PlugResendTest do
   import ExUnit.CaptureLog
 
   alias Mailglass.TestRepo
+  alias Mailglass.Generators
+  alias Mailglass.Outbound.Delivery
   alias Mailglass.Webhook.Plug, as: WebhookPlug
   alias Mailglass.Webhook.WebhookEvent
 
@@ -25,6 +27,43 @@ defmodule Mailglass.Webhook.PlugResendTest do
   end
 
   describe "call/2 Resend valid signature" do
+    test "emits provider feedback once for a replayed durable delivery event" do
+      delivery = Generators.delivery_fixture(provider: "resend")
+
+      _delivery =
+        delivery
+        |> Delivery.changeset(%{provider_message_id: "email_delivered_001"})
+        |> TestRepo.update!()
+
+      handler_id = "resend-feedback-#{System.unique_integer([:positive])}"
+      test_pid = self()
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          [:mailglass, :delivery, :feedback, :stop],
+          fn _event, measurements, metadata, _config ->
+            send(test_pid, {:feedback, measurements, metadata})
+          end,
+          nil
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      raw_body = Mailglass.WebhookCase.stub_resend_fixture("delivered")
+      conn = Mailglass.WebhookCase.mailglass_webhook_conn(:resend, raw_body)
+
+      assert WebhookPlug.call(conn, WebhookPlug.init(provider: :resend)).status == 200
+
+      assert_receive {:feedback, %{count: 1}, metadata}
+      assert metadata.status == :delivered
+      assert metadata.delivery_id == delivery.id
+      assert metadata.provider == "resend"
+
+      assert WebhookPlug.call(conn, WebhookPlug.init(provider: :resend)).status == 200
+      refute_receive {:feedback, _, _}, 50
+    end
+
     test "returns 200 on a valid signed Resend request" do
       raw_body = Mailglass.WebhookCase.stub_resend_fixture("delivered")
       conn = Mailglass.WebhookCase.mailglass_webhook_conn(:resend, raw_body)

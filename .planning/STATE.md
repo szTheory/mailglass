@@ -1,38 +1,62 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.2
-milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-status: Awaiting next milestone
-stopped_at: Completed 144-05-PLAN.md
-last_updated: "2026-08-01T00:00:01.464Z"
-last_activity: 2026-07-31
-last_activity_desc: Milestone v2.2 completed and archived
+milestone: v2.3
+milestone_name: B2C First-Adopter Readiness
+current_phase: 148
+current_phase_name: release-and-adoption-proof
+status: executing
+stopped_at: Completed 148-01-PLAN.md
+last_updated: "2026-08-01T23:14:26.339Z"
+last_activity: 2026-08-01
+last_activity_desc: Phase 148 execution started
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 30
-  completed_plans: 30
-current_phase: 144
-current_phase_name: signal-drift-integrity
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 5
+  completed_plans: 1
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-31 - after v2.2 milestone archive)
+See: .planning/PROJECT.md (updated 2026-07-31 - v2.3 milestone opened)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Planning next milestone
+**Current focus:** Phase 148 — release-and-adoption-proof
 
 ## Current Position
 
-Phase: Milestone v2.2 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-07-31 — Milestone v2.2 completed and archived
+Phase: 148 (release-and-adoption-proof) — EXECUTING
+Plan: 2 of 5
+Status: Ready to execute
+Last activity: 2026-08-01 — Phase 148 execution started
 
-### Plan-phase gate override (2026-07-29)
+## v2.3 Milestone Intent
+
+- **Goal:** Make Mailglass safe, opinionated, and observable for the first paying consumer user without
+  absorbing notification, auth, billing, support, mobile, or SRE concerns from their owning packages.
+
+- **Launch order:** document the safety profile, expose durable provider feedback, make the admin update
+  itself, then release and prove the published consumer path.
+
+- **Architecture decision:** no `crosswake_mailglass`. Host-generated HTTPS links feed Crosswake route
+  activation; Chimeway owns notification-open evidence and Sigra owns authentication returns.
+
+- **Release boundary:** core and admin ship linked as 2.4.0. Inbound remains on its independent version
+  unless a real compatibility change is required.
+
+## v2.3 Roadmap Snapshot
+
+| Phase | Name | Requirements |
+|---|---|---|
+| 145 | B2C Safety Profile | B2C-01..B2C-07 |
+| 146 | Provider-Feedback Contract | OBS-01, OBS-02 |
+| 147 | Live Solo-Operator Admin | ADMIN-01, ADMIN-02, PROOF-01 |
+| 148 | Release and Adoption Proof | PROOF-02, PROOF-03, REL-01 |
+
+### Archived v2.2 plan-phase gate override (2026-07-29)
 
 The **decision-coverage gate** was overridden at plan time. It returned
 `passed: false, reason: "could-not-parse", uncovered: []` — a *parser* failure, not a coverage gap.
@@ -384,6 +408,8 @@ release debug campaign.
 - [Phase ?]: [144-04] Already-published core, admin, and inbound packages remain explicit successful nothing-to-do no-ops.
 - [Phase ?]: Keep the existing minute-17 hourly recovery topology and prove it rather than adding a workflow or trigger.
 - [Phase ?]: Document workflow_dispatch as the direct recovery path and manually creating missing GitHub releases as the last-resort canonical release: published fan-out.
+- [Phase ?]: Release events publish only linked core/admin packages; inbound remains dispatch-only recovery.
+- [Phase ?]: Published consumer proof pins inbound 2.1.1 and fails closed on unavailable or unrecognized compatibility.
 
 ## Quick Tasks Completed
 
@@ -438,6 +464,7 @@ release debug campaign.
 | Phase 144 P03 | 3min | 1 tasks | 2 files |
 | Phase 144-signal-drift-integrity P04 | 6min | 1 tasks | 3 files |
 | Phase 144 P05 | 4m | 2 tasks | 2 files |
+| Phase 148-release-and-adoption-proof P01 | 6min | 2 tasks | 5 files |
 
 ## Deferred Items
 
@@ -605,8 +632,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-31T21:09:37.007Z
-**Stopped at:** Completed 144-05-PLAN.md
+**Last session:** 2026-08-01T23:14:26.331Z
+**Stopped at:** Completed 148-01-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

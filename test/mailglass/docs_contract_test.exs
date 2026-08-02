@@ -113,6 +113,22 @@ defmodule Mailglass.DocsContractTest do
   end
 
   describe "Guide contracts" do
+    test "B2C first-adopter profile locks the safe consumer launch contract" do
+      guide = File.read!("guides/b2c-first-adopter.md")
+      blocks = extract_code_blocks("guides/b2c-first-adopter.md")
+
+      assert guide =~ "Do not create `crosswake_mailglass`"
+      assert guide =~ "operational or bulk unsubscribe therefore does not suppress"
+      assert guide =~ "Hard bounces and complaints are intentionally address-wide"
+      assert guide =~ "[:mailglass, :delivery, :feedback, :stop]"
+      assert guide =~ "Sigra or the host validates magic-link GETs without consuming them"
+      assert guide =~ "Production inbound processing uses Oban"
+      assert "guides/b2c-first-adopter.md" in Mix.Project.config()[:docs][:extras]
+      assert Enum.any?(blocks, &(&1 =~ "resolve_outbound_adapter_ref"))
+      assert Enum.any?(blocks, &(&1 =~ "List-Unsubscribe-Post"))
+      assert Enum.all?(blocks, &match?({:ok, _}, Code.string_to_quoted(&1)))
+    end
+
     test "Getting Started compiles" do
       code = extract_block_after_heading("guides/getting-started.md", "4) Send your first message")
       assert code

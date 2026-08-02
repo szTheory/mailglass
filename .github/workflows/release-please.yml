@@ -282,6 +282,59 @@ jobs:
           git commit -m "$COMMIT_MESSAGE"
           git push origin "$BRANCH"
 
+      # A machine-readable target replaces the former human go/no-go. The
+      # release PR may auto-merge only when Release Please produced the exact
+      # package set the active milestone authorized.
+      - name: Validate automated release target
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release.outputs.prs_created == 'true' }}
+        run: |
+          set -euo pipefail
+          target=.planning/release-target.json
+          manifest=.release-please-manifest.json
+
+          if [ ! -r "$target" ]; then
+            echo "Release target mismatch: missing $target" >&2
+            exit 1
+          fi
+
+          status=$(jq -er '.status' "$target")
+          if [ "$status" != "active" ]; then
+            echo "No active automated release target; standard Release Please policy applies."
+            exit 0
+          fi
+
+          expected_core=$(jq -er '.packages.mailglass' "$target")
+          expected_admin=$(jq -er '.packages.mailglass_admin' "$target")
+          expected_inbound=$(jq -er '.packages.mailglass_inbound' "$target")
+          actual_core=$(jq -er '.["."]' "$manifest")
+          actual_admin=$(jq -er '.mailglass_admin' "$manifest")
+          actual_inbound=$(jq -er '.mailglass_inbound' "$manifest")
+          source_core=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mix.exs | head -1)
+          source_admin=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_admin/mix.exs | head -1)
+          source_inbound=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_inbound/mix.exs | head -1)
+
+          for version in \
+            "$expected_core" "$expected_admin" "$expected_inbound" \
+            "$actual_core" "$actual_admin" "$actual_inbound" \
+            "$source_core" "$source_admin" "$source_inbound"; do
+            if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
+              echo "Release target mismatch: invalid version '$version'" >&2
+              exit 1
+            fi
+          done
+
+          if [ "$actual_core" != "$expected_core" ] || \
+             [ "$actual_admin" != "$expected_admin" ] || \
+             [ "$actual_inbound" != "$expected_inbound" ] || \
+             [ "$source_core" != "$expected_core" ] || \
+             [ "$source_admin" != "$expected_admin" ] || \
+             [ "$source_inbound" != "$expected_inbound" ]; then
+            echo "Release target mismatch: expected core/admin/inbound $expected_core/$expected_admin/$expected_inbound; manifest has $actual_core/$actual_admin/$actual_inbound; source has $source_core/$source_admin/$source_inbound" >&2
+            exit 1
+          fi
+
+          echo "Automated release target validated: core/admin $expected_core, inbound unchanged at $expected_inbound."
+
       # Hands-free release: arm squash auto-merge so the release PR ships the
       # moment its required checks go green. The Hex publish itself has no
       # environment gate (intentional — see CLAUDE.md), so this completes the

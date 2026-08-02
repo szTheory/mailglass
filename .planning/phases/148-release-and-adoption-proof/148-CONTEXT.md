@@ -27,6 +27,7 @@ Run and capture the suppression, B2C documentation, and live operator proofs; re
 ### Completion Boundary
 - **D-08:** External B2C launch gates remain recorded production-adoption blockers, but they are not completion criteria for the Mailglass 2.4.0 release.
 - **D-09:** Do not add Crosswake integration, sibling-product behavior, or a `crosswake_mailglass` package in this phase.
+- **D-10:** Release authorization is fully machine-gated: an active exact-version target, required CI, protected prepublish checks, and published-consumer proof replace human go/no-go and UAT.
 
 ### the agent's Discretion
 - Exact workflow dependency and conditional structure used to remove inbound from the core/admin release fan-out, provided the existing release protections remain intact.

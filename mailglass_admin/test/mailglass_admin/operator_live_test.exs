@@ -21,6 +21,92 @@ defmodule MailglassAdmin.OperatorLiveTest do
   @theme_cookie MailglassAdmin.Theme.cookie_name()
 
   describe "operator surface" do
+    test "refreshes the current tenant delivery list from PubSub without a page reload", %{
+      conn: conn
+    } do
+      delivery = insert_delivery!(last_event_type: :sent, status: :sent)
+      conn = operator_conn(conn)
+
+      {:ok, view, html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
+
+      assert html =~ "Dispatched"
+      assert has_element?(view, "[data-testid='operator-delivery-row']", "Dispatched")
+      refute has_element?(view, "[data-testid='operator-delivery-row']", "Delivered")
+
+      updated =
+        delivery
+        |> Ecto.Changeset.change(
+          last_event_type: :delivered,
+          last_event_at: DateTime.utc_now()
+        )
+        |> TestRepo.update!()
+
+      Phoenix.PubSub.broadcast(
+        Mailglass.PubSub,
+        Mailglass.PubSub.Topics.events(@tenant_id),
+        {:delivery_updated, updated.id, :delivered, %{tenant_id: "foreign-tenant"}}
+      )
+
+      _html = render(view)
+      assert has_element?(view, "[data-testid='operator-delivery-row']", "Dispatched")
+
+      Phoenix.PubSub.broadcast(
+        Mailglass.PubSub,
+        Mailglass.PubSub.Topics.events(@tenant_id),
+        {:delivery_updated, updated.id, :delivered, %{tenant_id: @tenant_id}}
+      )
+
+      _html = render(view)
+      assert has_element?(view, "[data-testid='operator-delivery-row']", "Delivered")
+      refute has_element?(view, "[data-testid='operator-delivery-row']", "Dispatched")
+    end
+
+    test "refreshes selected full-detail evidence while preserving URL-backed filters", %{
+      conn: conn
+    } do
+      delivery = insert_delivery!(last_event_type: :sent, status: :sent, provider: "postmark")
+      _sent = insert_event!(delivery, type: :sent)
+      conn = operator_conn(conn)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "provider" => "postmark",
+            "delivery_id" => delivery.id,
+            "full" => "1"
+          })
+        )
+
+      refute has_element?(view, "[data-testid='operator-timeline-event']", "Delivered")
+
+      occurred_at = DateTime.utc_now()
+      _delivered = insert_event!(delivery, type: :delivered, occurred_at: occurred_at)
+
+      updated =
+        delivery
+        |> Ecto.Changeset.change(last_event_type: :delivered, last_event_at: occurred_at)
+        |> TestRepo.update!()
+
+      Phoenix.PubSub.broadcast(
+        Mailglass.PubSub,
+        Mailglass.PubSub.Topics.events(@tenant_id),
+        {:delivery_updated, updated.id, :delivered, %{tenant_id: @tenant_id}}
+      )
+
+      _html = render(view)
+      assert has_element?(view, "[data-testid='operator-timeline-event']", "Delivered")
+      assert has_element?(view, "[data-testid='operator-detail-header']")
+
+      assert has_element?(
+               view,
+               "[data-testid='operator-detail-back'][href*='provider=postmark']"
+             )
+    end
+
     test "renders the full-width list and no overlay when no delivery is selected", %{conn: conn} do
       delivery = insert_delivery!(recipient: "selected@example.com")
       conn = operator_conn(conn)
