@@ -3,7 +3,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
   use Mailglass.DataCase, async: false
 
   alias Mailglass.{Outbound, Message, TestRepo}
-  alias Mailglass.Outbound.Delivery
+  alias Mailglass.Outbound.{Delivery, Payload}
 
   setup do
     Mailglass.Adapters.Fake.checkout()
@@ -293,6 +293,50 @@ defmodule Mailglass.Outbound.DeliverManyTest do
         # The background task may complete before or after this assertion;
         # accept :queued (still pending) or :sent (dispatch completed).
         assert reloaded.status in [:queued, :sent]
+      end
+    end
+  end
+
+  describe "deliver_many/2 — per-envelope durable enqueue (Phase 150)" do
+    @tag phase_150_task: "t150_02_02"
+    test "each newly eligible message gets an independent payload and canonical Oban job" do
+      if not Code.ensure_loaded?(Oban) do
+        :skip
+      else
+        Application.put_env(:mailglass, :async_adapter, :oban)
+
+        start_supervised!(
+          {Oban, testing: :manual, repo: TestRepo, queues: [mailglass_outbound: 10]}
+        )
+
+        uid = unique_id()
+
+        assert {:ok, deliveries} =
+                 Outbound.deliver_many(
+                   [
+                     build_message("durable-batch-one-#{uid}@example.com"),
+                     build_message("durable-batch-two-#{uid}@example.com")
+                   ],
+                   []
+                 )
+
+        assert Enum.map(deliveries, & &1.recipient) == [
+                 "durable-batch-one-#{uid}@example.com",
+                 "durable-batch-two-#{uid}@example.com"
+               ]
+
+        for delivery <- deliveries do
+          assert %Payload{delivery_id: delivery_id, tenant_id: "test-tenant"} =
+                   TestRepo.get_by!(Payload, delivery_id: delivery.id)
+
+          assert delivery_id == delivery.id
+
+          assert %{rows: [[1]]} =
+                   TestRepo.query!(
+                     "SELECT COUNT(*) FROM oban_jobs WHERE queue = 'mailglass_outbound' AND args->>'delivery_id' = $1",
+                     [delivery.id]
+                   )
+        end
       end
     end
   end
