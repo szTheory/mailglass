@@ -215,7 +215,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
            )
   end
 
-  test "core/admin-only release synchronization leaves inbound-owned artifacts untouched" do
+  test "core/admin-only release synchronization refreshes inbound compatibility without bumping inbound" do
     sync =
       extract_step_block!(
         workflow_source(),
@@ -233,12 +233,6 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       ".planning/publish/mailglass_inbound-publish-summary.json"
     ]
 
-    inbound_branch = extract_shell_branch(sync, "if [ \"$INBOUND_CHANGED\" = true ]; then")
-
-    Enum.each(inbound_paths, fn path ->
-      assert inbound_branch =~ path
-    end)
-
     sync_paths = extract_shell_branch(sync, "SYNC_PATHS=(")
     assert sync_paths =~ "README.md"
     assert sync_paths =~ "mailglass_admin/README.md"
@@ -248,7 +242,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end)
 
     assert sync =~ "sync inbound README \\`~>\\` pin + publish-summary to core $CORE_VERSION"
-    assert sync =~ "sync core/admin README pins to core $CORE_VERSION"
+    assert sync =~ "--argjson inbound_changed \"$INBOUND_CHANGED\""
+    assert sync =~ "if $inbound_changed then .version=$v"
+    assert sync =~ "sync linked package pins to core $CORE_VERSION"
   end
 
   test "release target is machine-validated before hands-free auto-merge" do

@@ -219,9 +219,9 @@ jobs:
           fi
 
           # Inbound is independently versioned. Compare the release branch's
-          # manifest entry with main before touching any inbound-owned artifact.
-          # Missing/unreadable data fails closed: a core/admin-only release must
-          # never infer inbound ownership from the linked version.
+          # manifest entry with main before changing any inbound self-version.
+          # Its core compatibility docs/evidence still follow every linked core
+          # release even when inbound itself is not versioned or published.
           INBOUND_VERSION=$(jq -r '.["mailglass_inbound"]' .release-please-manifest.json)
           MAIN_INBOUND_VERSION=$(git show origin/main:.release-please-manifest.json | jq -r '.["mailglass_inbound"]')
           if [ -z "$INBOUND_VERSION" ] || [ "$INBOUND_VERSION" = "null" ] || \
@@ -243,47 +243,49 @@ jobs:
           # pin major.minor == @version major.minor, which would otherwise fail
           # on the PR branch the moment release-please bumps @version.
           CORE_MM=$(echo "$CORE_VERSION" | cut -d. -f1,2)
+          INBOUND_MM=$(echo "$INBOUND_VERSION" | cut -d. -f1,2)
           echo "Target core/admin README pins: ~> $CORE_MM"
           for readme in README.md mailglass_admin/README.md; do
             sed -i -E "s/\{:mailglass, \"~> [0-9]+\.[0-9]+\"/{:mailglass, \"~> ${CORE_MM}\"/" "$readme"
             sed -i -E "s/\{:mailglass_admin, \"~> [0-9]+\.[0-9]+\"/{:mailglass_admin, \"~> ${CORE_MM}\"/" "$readme"
           done
 
+          # Inbound stays on its independent version line, but its install docs
+          # and committed compatibility evidence must describe the new core.
+          sed -i -E "s/\{:mailglass, \"~> [0-9]+\.[0-9]+\"/{:mailglass, \"~> ${CORE_MM}\"/" mailglass_inbound/README.md
+          sed -i -E "s/\{:mailglass_admin, \"~> [0-9]+\.[0-9]+\"/{:mailglass_admin, \"~> ${CORE_MM}\"/" mailglass_inbound/README.md
+
+          INSTALL=mailglass_inbound/docs/inbound-install.md
+          if [ -f "$INSTALL" ]; then
+            sed -i -E "s/(\{:mailglass,[[:space:]]+\"~> )[0-9]+\.[0-9]+(\")/\1${CORE_MM}\2/" "$INSTALL"
+          fi
+
+          SUMMARY=.planning/publish/mailglass_inbound-publish-summary.json
+          if [ -f "$SUMMARY" ]; then
+            tmp=$(mktemp)
+            jq --arg v "$INBOUND_VERSION" --arg pin "~> ${CORE_MM} and >= ${CORE_VERSION}" --arg core "$CORE_VERSION" --argjson inbound_changed "$INBOUND_CHANGED" \
+              '.mailglass_inbound_publish_pin=$pin | .linked_versions.mailglass=$core | .linked_versions.mailglass_admin=$core | .linked_versions.mailglass_inbound=$v | if $inbound_changed then .version=$v | .manifest_version=$v | .source_ref=("v"+$v) else . end' \
+              "$SUMMARY" >"$tmp" && mv "$tmp" "$SUMMARY"
+          fi
+
           if [ "$INBOUND_CHANGED" = true ]; then
-            # An actual inbound release owns its self pin, its core compatibility
-            # pin, installation guide, and committed publish summary. Keep all of
-            # those inbound-owned paths out of a linked core/admin-only release PR.
-            INBOUND_MM=$(echo "$INBOUND_VERSION" | cut -d. -f1,2)
+            # Only an actual inbound release changes inbound's own install pin.
             echo "Target inbound README pin: {:mailglass_inbound, \"~> $INBOUND_MM\"}"
             sed -i -E "s/\{:mailglass_inbound, \"~> [0-9]+\.[0-9]+\"\}/{:mailglass_inbound, \"~> ${INBOUND_MM}\"}/" mailglass_inbound/README.md
-            sed -i -E "s/\{:mailglass, \"~> [0-9]+\.[0-9]+\"/{:mailglass, \"~> ${CORE_MM}\"/" mailglass_inbound/README.md
-            sed -i -E "s/\{:mailglass_admin, \"~> [0-9]+\.[0-9]+\"/{:mailglass_admin, \"~> ${CORE_MM}\"/" mailglass_inbound/README.md
-
-            INSTALL=mailglass_inbound/docs/inbound-install.md
             if [ -f "$INSTALL" ]; then
-              sed -i -E "s/(\{:mailglass,[[:space:]]+\"~> )[0-9]+\.[0-9]+(\")/\1${CORE_MM}\2/" "$INSTALL"
               sed -i -E "s/(\{:mailglass_inbound,[[:space:]]+\"~> )[0-9]+\.[0-9]+(\")/\1${INBOUND_MM}\2/" "$INSTALL"
-            fi
-            SUMMARY=.planning/publish/mailglass_inbound-publish-summary.json
-            if [ -f "$SUMMARY" ]; then
-              tmp=$(mktemp)
-              jq --arg v "$INBOUND_VERSION" --arg pin "~> ${CORE_MM} and >= ${CORE_VERSION}" --arg core "$CORE_VERSION" \
-                '.version=$v | .manifest_version=$v | .source_ref=("v"+$v) | .mailglass_inbound_publish_pin=$pin | .linked_versions.mailglass=$core | .linked_versions.mailglass_admin=$core | .linked_versions.mailglass_inbound=$v' \
-                "$SUMMARY" >"$tmp" && mv "$tmp" "$SUMMARY"
             fi
           fi
 
           SYNC_PATHS=(
             README.md
             mailglass_admin/README.md
+            mailglass_inbound/README.md
+            mailglass_inbound/docs/inbound-install.md
+            .planning/publish/mailglass_inbound-publish-summary.json
           )
-          COMMIT_MESSAGE="chore(release-please): sync core/admin README pins to core $CORE_VERSION"
+          COMMIT_MESSAGE="chore(release-please): sync linked package pins to core $CORE_VERSION"
           if [ "$INBOUND_CHANGED" = true ]; then
-            SYNC_PATHS+=(
-              mailglass_inbound/README.md
-              mailglass_inbound/docs/inbound-install.md
-              .planning/publish/mailglass_inbound-publish-summary.json
-            )
             COMMIT_MESSAGE="chore(release-please): sync inbound README \`~>\` pin + publish-summary to core $CORE_VERSION"
           fi
           if git diff --quiet -- "${SYNC_PATHS[@]}"; then
