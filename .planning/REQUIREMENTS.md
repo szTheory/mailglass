@@ -96,10 +96,10 @@ Populated during roadmap creation. Every v2.4 requirement must map to exactly on
 | FIRST-05 | Phase 149 | Complete |
 | FIRST-06 | Phase 149 | Complete |
 | FIRST-07 | Phase 149 | Complete |
-| ENVL-01 | Phase 150 | Pending |
-| ENVL-02 | Phase 150 | Pending |
-| ENVL-04 | Phase 150 | Pending |
-| ENVL-05 | Phase 150 | Pending |
+| ENVL-01 | Phase 150 | Complete |
+| ENVL-02 | Phase 150 | Complete |
+| ENVL-04 | Phase 150 | Complete |
+| ENVL-05 | Phase 150 | Complete |
 | ENVL-06 | Phase 150 | Pending |
 | ENVL-07 | Phase 150 | Pending |
 | ENVL-08 | Phase 150 | Pending |

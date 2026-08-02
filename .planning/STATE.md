@@ -5,15 +5,15 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 150
 current_phase_name: Private Envelope and Atomic Durable Enqueue
 status: executing
-stopped_at: Phase 150 context gathered (assumptions mode)
-last_updated: "2026-08-02T23:12:55.180Z"
+stopped_at: Completed 150-01-PLAN.md
+last_updated: "2026-08-02T23:19:06.827Z"
 last_activity: 2026-08-02
 last_activity_desc: Phase 149 complete, transitioned to Phase 150
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 9
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -32,7 +32,7 @@ Plan: Not started
 Status: Ready to execute
 Last activity: 2026-08-02 — Phase 149 complete, transitioned to Phase 150
 
-Progress: [██████████] 100%
+Progress: [██████░░░░] 56%
 
 ## v2.4 Milestone Intent
 
@@ -442,6 +442,8 @@ release debug campaign.
 - [Phase ?]: [149-03] css_inliner :none skips only Premailex while retaining HEEx rendering and data-mg stripping.
 - [Phase ?]: SingleTenant first sends normalize to string "default"; custom tenancy remains fail-closed.
 - [Phase ?]: Phase 149 docs promise renderer preparation parity only; durable envelope and dispatch lifecycle remain Phase 150/151 work.
+- [Phase ?]: Payloads store an explicit envelope version and lowercase SHA-256 digest.
+- [Phase ?]: The Oban enqueue multi writes its private payload between queued event and job.
 
 ## Quick Tasks Completed
 
@@ -505,6 +507,7 @@ release debug campaign.
 | Phase 149 P02 | 4m | 2 tasks | 3 files |
 | Phase 149 P03 | 7m | 2 tasks | 6 files |
 | Phase 149 P04 | 8m | 2 tasks | 7 files |
+| Phase 150-private-envelope-and-atomic-durable-enqueue P01 | 8min | 2 tasks | 8 files |
 
 ## Deferred Items
 
@@ -671,9 +674,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-02T19:12:03.876Z
-**Stopped at:** Phase 150 context gathered (assumptions mode)
-**Resume file:** .planning/phases/150-private-envelope-and-atomic-durable-enqueue/150-CONTEXT.md
+**Last session:** 2026-08-02T23:19:06.816Z
+**Stopped at:** Completed 150-01-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
