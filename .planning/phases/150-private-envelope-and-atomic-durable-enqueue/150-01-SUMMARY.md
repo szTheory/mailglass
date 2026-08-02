@@ -78,11 +78,24 @@ status: complete
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+### Auto-fixed Issues
+
+**1. [Rule 1 - Bug] Restored V06 compatibility with the migration and upgrade harnesses**
+- **Found during:** Post-wave integration gate
+- **Issue:** An interrupted/legacy test setup could have created `mailglass_outbound_payloads` before its version marker advanced, causing V06 to raise `42P07`; the v2 schema-move fixture neither cleaned nor moved the new private table, which destroyed the public baseline and cascaded failures.
+- **Fix:** Made V06's create operations idempotent, conditionally moved the payload table in the generated v2 schema migration, and expanded the upgrade and baseline harness inventories to include it.
+- **Files modified:** `lib/mailglass/migrations/postgres/v06.ex`, `lib/mix/tasks/mailglass.upgrade.v2_schema.ex`, `test/mailglass/upgrade_v2_schema_migration_test.exs`, `test/support/sandbox_ownership.ex`
+- **Verification:** Focused migration/upgrade suite: 22 tests, 0 failures; full `mix test` passed.
+- **Committed in:** `40e8e819`
+
+---
+
+**Total deviations:** 1 auto-fixed (Rule 1).
+**Impact on plan:** Required migration-harness correctness only; no public product surface was added.
 
 ## Issues Encountered
 
-None. The full planned verification command passed: 17 tests, 0 failures.
+None. The original planned verification command passed: 17 tests, 0 failures. The post-wave full `mix test` gate also passed after the migration-harness fix.
 
 ## Next Phase Readiness
 
