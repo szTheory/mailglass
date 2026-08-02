@@ -24,7 +24,7 @@ defmodule Mailglass.Telemetry do
 
   ## Metadata Policy
 
-  **Whitelisted keys:** `:tenant_id, :mailable, :provider, :status,
+  **Whitelisted keys:** `:tenant_id, :mailable, :provider, :stream, :status,
   :message_id, :delivery_id, :event_id, :latency_ms, :recipient_count,
   :bytes, :retry_count`.
 
@@ -60,6 +60,7 @@ defmodule Mailglass.Telemetry do
   @handler_name "mailglass-default-logger"
 
   @logged_events [
+    [:mailglass, :delivery, :feedback, :stop],
     [:mailglass, :render, :message, :stop],
     [:mailglass, :render, :message, :exception],
     # : events-append + persist spans.

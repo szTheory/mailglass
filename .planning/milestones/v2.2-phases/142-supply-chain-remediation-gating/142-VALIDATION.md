@@ -3,9 +3,9 @@ phase: 142
 slug: supply-chain-remediation-gating
 # status lifecycle: draft (seeded by plan-phase) → validated (set by validate-phase §6)
 # audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: false) (#2117)
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-07-28
 ---
 
@@ -60,17 +60,11 @@ this table against the final PLAN.md files.*
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | 1 | VULN-05 | — | Allowlist is one source; both lanes read it | unit | `MIX_ENV=test mix test test/mailglass/supply_chain/accepted_advisories_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 1 | VULN-05 | — | Per-directory audit sees `mailglass_admin`'s cowlib findings | unit | `MIX_ENV=test mix test test/mix/tasks/mailglass.audit_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 1 | VULN-05 | — | Extraction does not regress the publish gate | unit | `MIX_ENV=test mix test test/mailglass/publish/audit_allowlist_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
-| TBD | TBD | 1 | VULN-05 | — | Local `mix ci` parity not silently narrowed (F1) | unit | `MIX_ENV=test mix test test/scripts/ci_parity_drift_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
-| TBD | TBD | 1 | VULN-06 | T-142-01 | Expired `recheck_by` hard-fails, naming the entry | unit | `MIX_ENV=test mix test test/mailglass/supply_chain/accepted_advisories_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 1 | VULN-06 | T-142-01 | Unused allowlist entry hard-fails, naming the entry | unit | `MIX_ENV=test mix test test/mailglass/supply_chain/accepted_advisories_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 1 | VULN-02 | T-142-03 | Each dependabot PR dispositioned individually, never blanket | manual | `gh pr list --repo szTheory/mailglass --state open --json number,author,autoMergeRequest` | ✅ | ⬜ pending |
-| TBD | TBD | 2 | VULN-03 | — | New HIGH-with-fix exits non-zero; cowlib-only exits zero | unit | `MIX_ENV=test mix test test/mix/tasks/mailglass.audit_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 2 | VULN-03 | — | 24-job classification totality holds post-promotion | integration | `mix verify.ci_lane_contract` | ✅ | ⬜ pending |
-| TBD | TBD | 2 | VULN-03 | — | `continue-on-error: true` absent from the promoted lane | static | `MIX_ENV=test mix test test/scripts/conformance_advisory_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
-| TBD | TBD | 3 | VULN-04 | T-142-02 | Triage cadence documented outside the 24-row table's bounds | static | `MIX_ENV=test mix test test/scripts/lane_classification_drift_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
+| 1-3 | 142-01 | 1 | VULN-05, VULN-06 | — | Allowlist is one source; all audit and publish paths consume it and fail closed | unit | `MIX_ENV=test mix test test/mailglass/supply_chain/ test/mix/tasks/mailglass.audit_test.exs test/mailglass/publish/audit_allowlist_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 1-2 | 142-02 | 1 | VULN-02 | T-142-03 | Each Dependabot PR dispositioned individually, never blanket | manual + live API | Evidence in `142-02-SUMMARY.md` and `142-VERIFICATION.md` | ✅ | ✅ green |
+| 1 | 142-03 | 2 | VULN-05, VULN-03 | — | Live accepted findings and negative control prove non-vacuous filtering | live CI + negative control | Evidence in `142-03-SUMMARY.md` | ✅ | ✅ green |
+| 1 | 142-04 | 2 | VULN-03 | — | Both audits merge-gate and fail closed | integration | `MIX_ENV=test mix verify.ci_lane_contract` | ✅ | ✅ green |
+| 1 | 142-05 | 3 | VULN-04 | T-142-02 | Triage cadence remains outside the 24-row parser boundary | static | `MIX_ENV=test mix test test/scripts/lane_classification_drift_test.exs --warnings-as-errors` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -95,20 +89,20 @@ this table against the final PLAN.md files.*
 
 ## Wave 0 Requirements
 
-- [ ] `lib/mailglass/supply_chain/accepted_advisories.ex` — new module, `use Boundary, classify_to: Mailglass`
+- [x] `lib/mailglass/supply_chain/accepted_advisories.ex` — new module, `use Boundary, classify_to: Mailglass`
       (**A1/F5**, MEDIUM confidence — if the boundary call shape is wrong, `mix compile --warnings-as-errors`
       fails loudly at first build; no silent failure mode) — covers VULN-05, VULN-06
-- [ ] `dev/mix/tasks/mailglass.audit.ex` — new dev-path task (covers VULN-05). **Must stay in `dev/`**:
+- [x] `dev/mix/tasks/mailglass.audit.ex` — new dev-path task (covers VULN-05). **Must stay in `dev/`**:
       a `lib/`-hosted task obligates entries in `docs/api_stability.md` **and**
       `test/mailglass/stability_contract_test.exs:43-50`, which runs in the **required** Support Contract
       Core lane — red lane if missed (D-01)
-- [ ] `test/mailglass/supply_chain/accepted_advisories_test.exs` — new (VULN-06 expiry + unused-entry checks)
-- [ ] `test/mix/tasks/mailglass.audit_test.exs` — new; **auto-included** by the existing `verify.mix_tasks`
+- [x] `test/mailglass/supply_chain/accepted_advisories_test.exs` — new (VULN-06 expiry + unused-entry checks)
+- [x] `test/mix/tasks/mailglass.audit_test.exs` — new; **auto-included** by the existing `verify.mix_tasks`
       directory glob, no `ci.yml` / `mix.exs` wiring needed
-- [ ] `test/mailglass/publish/audit_allowlist_test.exs` — modify per **F2**: add the missing **positive**
+- [x] `test/mailglass/publish/audit_allowlist_test.exs` — modify per **F2**: add the missing **positive**
       alias-suppression test (only a negative control exists today) and correct the now-stale docstrings at
       `:57-62`
-- [ ] `mix.exs` — widen the `:ci` alias audit steps (**F1**) in the same commit as the CI-side rewire
+- [x] `mix.exs` — widen the `:ci` alias audit steps (**F1**) in the same commit as the CI-side rewire
 
 No framework install needed. No new dependency (`.planning/research/v2.2/SUMMARY.md` lock honored).
 
@@ -128,12 +122,20 @@ No framework install needed. No new dependency (`.planning/research/v2.2/SUMMARY
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 90 s
-- [ ] Criteria 1b (D-14 gate), 1c, 2d and 4 executed once and their output recorded in SUMMARY.md
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 90 s
+- [x] Criteria 1b (D-14 gate), 1c, 2d and 4 executed once and their output recorded in SUMMARY.md
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** validated 2026-07-31 — 40 focused supply-chain tests and 141 CI-lane contract tests green; live/manual evidence is recorded in 142-02/03/04 summaries and 142-VERIFICATION.md.
+
+## Validation Audit 2026-07-31
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |

@@ -1,6 +1,8 @@
 ---
 id: SEED-004
-status: dormant
+status: archived
+updated: 2026-07-31
+note: Deferred at v2.2 close; retained as pull-gated future reference only.
 planted: 2026-07-10
 planted_during: v2.1 archived / awaiting next milestone
 trigger_when: when planning outbound operator evidence, delivery audit, compliance, or message-retention work

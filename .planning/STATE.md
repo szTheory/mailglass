@@ -1,51 +1,62 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.2
-milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-current_phase: 143
-current_phase_name: test-harness-truth
-status: verifying
-stopped_at: Completed 143-14-PLAN.md
-last_updated: "2026-07-31T18:28:26.321Z"
-last_activity: 2026-07-31
+milestone: v2.3
+milestone_name: B2C First-Adopter Readiness
+current_phase: 148
+current_phase_name: release-and-adoption-proof
+status: executing
+stopped_at: Completed 148-01-PLAN.md
+last_updated: "2026-08-01T23:14:26.339Z"
+last_activity: 2026-08-01
+last_activity_desc: Phase 148 execution started
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 25
-  completed_plans: 25
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 5
+  completed_plans: 1
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
+See: .planning/PROJECT.md (updated 2026-07-31 - v2.3 milestone opened)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 143 — test-harness-truth
+**Current focus:** Phase 148 — release-and-adoption-proof
 
 ## Current Position
 
-Phase: 143 (test-harness-truth) — READY FOR VERIFICATION
-Plan: 14 of 14 complete
-Status: Phase complete — ready for verification. The pre-rehearsal history below is superseded by run 30654293410: both floor legs failed, publish-core did not start, temporary refs were deleted, and HARNESS-04 is complete.
-  real `main` evidence (see 143-PROMOTION-CHECKPOINT.md and
-  143-MAIN-GREEN-EVIDENCE.md). 143-13 shipped: the two Elixir 1.18 / OTP 27
-  Core Full Suite legs now hold publish-veto power, and the gate has since run
-  against a REAL release (2.3.0) and passed — `gate-ci-green` = success in both
-  publish runs, having dispatched its own advisory-matrix run on the tag ref
-  because the release SHA had none.
+Phase: 148 (release-and-adoption-proof) — EXECUTING
+Plan: 2 of 5
+Status: Ready to execute
+Last activity: 2026-08-01 — Phase 148 execution started
 
-  REMAINING: 143-14's NEGATIVE rehearsal — prove a RED gating leg actually
-  blocks a publish. The positive half is already evidenced by the 2.3.0 release
-  above; only the negative half is outstanding, and it is what the phase goal's
-  "demonstrably blocks a Hex publish (not merely a PR merge)" asks for.
-  HARNESS-04 stays `[ ]` until it exists.
-Last activity: 2026-07-31
+## v2.3 Milestone Intent
 
-Progress: [██████████] 100%
+- **Goal:** Make Mailglass safe, opinionated, and observable for the first paying consumer user without
+  absorbing notification, auth, billing, support, mobile, or SRE concerns from their owning packages.
 
-### Plan-phase gate override (2026-07-29)
+- **Launch order:** document the safety profile, expose durable provider feedback, make the admin update
+  itself, then release and prove the published consumer path.
+
+- **Architecture decision:** no `crosswake_mailglass`. Host-generated HTTPS links feed Crosswake route
+  activation; Chimeway owns notification-open evidence and Sigra owns authentication returns.
+
+- **Release boundary:** core and admin ship linked as 2.4.0. Inbound remains on its independent version
+  unless a real compatibility change is required.
+
+## v2.3 Roadmap Snapshot
+
+| Phase | Name | Requirements |
+|---|---|---|
+| 145 | B2C Safety Profile | B2C-01..B2C-07 |
+| 146 | Provider-Feedback Contract | OBS-01, OBS-02 |
+| 147 | Live Solo-Operator Admin | ADMIN-01, ADMIN-02, PROOF-01 |
+| 148 | Release and Adoption Proof | PROOF-02, PROOF-03, REL-01 |
+
+### Archived v2.2 plan-phase gate override (2026-07-29)
 
 The **decision-coverage gate** was overridden at plan time. It returned
 `passed: false, reason: "could-not-parse", uncovered: []` — a *parser* failure, not a coverage gap.
@@ -389,6 +400,16 @@ release debug campaign.
 - [Phase ?]: SuiteTruthFormatter's cross-process read to SuiteFloor.check/1 uses a :persistent_term snapshot written at :suite_finished, not a live :sys.get_state/1 -- ExUnit.EventManager.stop/1 terminates every formatter before after_suite callbacks run (confirmed by decompiling ExUnit.Runner)
 - [Phase ?]: 143-10: pinned SuiteFloor's executed floors per-schema (public 1576 / mailglass 1575) and the skipped ceiling (7) from green Advisory Matrix run 30568802513's two Elixir 1.18.4/OTP 27 legs — no margin, >= comparison, D-27 (never from a local 1.19.5 run)
 - [Phase ?]: 143-10: SuiteFloor's executed floor, growth nudge and skipped ceiling evaluate only on a run that declares itself a complete suite via MAILGLASS_SUITE_FLOOR; :test is discounted from the unknown-exclusion-tag set only when paired with a non-empty include set (--only's mechanism). Both distinguish deliberate scoping from silent coverage loss.
+- [Phase ?]: Shared repository-internal branch-protection outcome seam makes only clean verification green.
+- [Phase ?]: Phase 144 replaces human branch-protection UAT with hermetic real-script integration evidence.
+- [Phase ?]: [144-02] Only canonical DRIFT: verifier output is classified as branch-protection drift; all other unavailable verification remains :unknown and blocks aggregate success.
+- [Phase ?]: CONFORM-02 resolves finite dynamic Heroicon construction against the vendored inventory and fails closed for non-finite expressions.
+- [Phase ?]: [144-04] Linked publish and smoke workflows share static mailglass-linked-release-fanout concurrency with cancellation disabled.
+- [Phase ?]: [144-04] Already-published core, admin, and inbound packages remain explicit successful nothing-to-do no-ops.
+- [Phase ?]: Keep the existing minute-17 hourly recovery topology and prove it rather than adding a workflow or trigger.
+- [Phase ?]: Document workflow_dispatch as the direct recovery path and manually creating missing GitHub releases as the last-resort canonical release: published fan-out.
+- [Phase ?]: Release events publish only linked core/admin packages; inbound remains dispatch-only recovery.
+- [Phase ?]: Published consumer proof pins inbound 2.1.1 and fails closed on unavailable or unrecognized compatibility.
 
 ## Quick Tasks Completed
 
@@ -438,6 +459,12 @@ release debug campaign.
 | Phase 143 P09 | 35min | 3 tasks | 4 files |
 | Phase 143 P10 | ~2h | 3 tasks | 4 files |
 | Phase 143 P14 | 22 min | 4 tasks | 4 files |
+| Phase 144 P01 | 28 min | 2 tasks | 5 files |
+| Phase 144-signal-drift-integrity P02 | 4m | 1 tasks | 2 files |
+| Phase 144 P03 | 3min | 1 tasks | 2 files |
+| Phase 144-signal-drift-integrity P04 | 6min | 1 tasks | 3 files |
+| Phase 144 P05 | 4m | 2 tasks | 2 files |
+| Phase 148-release-and-adoption-proof P01 | 6min | 2 tasks | 5 files |
 
 ## Deferred Items
 
@@ -605,8 +632,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-31T18:26:31.481Z
-**Stopped at:** Completed 143-14-PLAN.md
+**Last session:** 2026-08-01T23:14:26.331Z
+**Stopped at:** Completed 148-01-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

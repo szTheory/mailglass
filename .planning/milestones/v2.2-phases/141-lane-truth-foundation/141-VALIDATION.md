@@ -3,9 +3,9 @@ phase: 141
 slug: lane-truth-foundation
 # status lifecycle: draft (seeded by plan-phase) → validated (set by validate-phase §6)
 # audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: false) (#2117)
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-07-28
 ---
 
@@ -56,13 +56,14 @@ this table against the final PLAN.md files.*
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | 0 | — | — | N/A | unit | `MIX_ENV=test mix test test/scripts/ci_parity_drift_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
-| TBD | TBD | 1 | TRUTH-07 | — | N/A | unit | `MIX_ENV=test mix test test/scripts/lane_classification_drift_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 1 | TRUTH-09 | — | N/A | unit | `MIX_ENV=test mix test test/scripts/lane_classification_drift_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 1 | TRUTH-05 | — | N/A | unit | `MIX_ENV=test mix test test/scripts/lane_classification_drift_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 2 | CONFORM-04 | — | N/A | static | `grep -c 'name: Design System Conformance' .github/workflows/ci.yml` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 2 | TRUTH-09 | — | N/A | integration | `mix verify.ci_lane_contract` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 3 | HIST-01 | — | N/A | static | `test -f .planning/TOOLING-DEFECTS.md && grep -q 'cleared:' .planning/TOOLING-DEFECTS.md` | ❌ W0 | ⬜ pending |
+| 1 | 141-01 | 1 | TRUTH-07 | — | N/A | unit | `MIX_ENV=test mix test test/scripts/lane_classification_drift_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 2 | 141-01 | 1 | TRUTH-07 | — | N/A | negative control | `MIX_ENV=test mix test test/scripts/lane_classification_drift_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 1 | 141-02 | 1 | HIST-01 | — | N/A | static | `test -f .planning/TOOLING-DEFECTS.md && grep -q 'cleared:' .planning/TOOLING-DEFECTS.md` | ✅ | ✅ green |
+| 2-3 | 141-02 | 1 | TRUTH-09 | — | N/A | static | `grep -q 'publish-gating' .planning/REQUIREMENTS.md && grep -q 'CI Green' CONTRIBUTING.md` | ✅ | ✅ green |
+| 1-2 | 141-03 | 1 | CONFORM-04 | — | N/A | integration | `MIX_ENV=test mix verify.ci_lane_contract` | ✅ | ✅ green |
+| 1-3 | 141-04 | 1 | TRUTH-07, TRUTH-09 | — | N/A | integration | `MIX_ENV=test mix verify.ci_lane_contract` | ✅ | ✅ green |
+| 1-2 | 141-05 | 1 | TRUTH-09 | — | N/A | integration | `MIX_ENV=test mix verify.ci_lane_contract` | ✅ | ✅ green |
+| 1-2 | 141-06 | 1 | TRUTH-05, TRUTH-07 | — | N/A | integration | `MIX_ENV=test mix verify.ci_lane_contract` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -84,12 +85,12 @@ this table against the final PLAN.md files.*
 
 ## Wave 0 Requirements
 
-- [ ] `test/scripts/ci_parity_drift_test.exs:159-162` — remove the dead assertion (**F5**; unblocks
+- [x] `test/scripts/ci_parity_drift_test.exs:159-162` — remove the dead assertion (**F5**; unblocks
       `--warnings-as-errors`, which every later sampling command depends on)
-- [ ] `test/support/ci_yaml.ex` — `job_names/1` + `matrix_job_names/1` helpers
-- [ ] `test/scripts/lane_classification_drift_test.exs` — the drift assertions (TRUTH-05/07/09)
-- [ ] `mix.exs` — `verify.ci_lane_contract` alias + `preferred_cli_env` entry
-- [ ] `.github/workflows/ci.yml` — `mix_task_tests` step invoking the new alias
+- [x] `test/support/ci_yaml.ex` — `job_names/1` + `matrix_job_names/1` helpers
+- [x] `test/scripts/lane_classification_drift_test.exs` — the drift assertions (TRUTH-05/07/09)
+- [x] `mix.exs` — `verify.ci_lane_contract` alias + `preferred_cli_env` entry
+- [x] `.github/workflows/ci.yml` — `mix_task_tests` step invoking the new alias
       (**without this, criterion 1 is unenforced**)
 
 No framework install needed. No new dependency (`.planning/research/v2.2/SUMMARY.md:32` lock honored).
@@ -108,12 +109,20 @@ No framework install needed. No new dependency (`.planning/research/v2.2/SUMMARY
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 90 s
-- [ ] Criteria 1b and 2b executed once and their output recorded in SUMMARY.md
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 90 s
+- [x] Criteria 1b and 2b executed once and their output recorded in SUMMARY.md
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** validated 2026-07-31 — 141 contract tests green; live/manual evidence is recorded in 141-04/05/06 summaries and 141-VERIFICATION.md.
+
+## Validation Audit 2026-07-31
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |

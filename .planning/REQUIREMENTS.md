@@ -1,275 +1,63 @@
-# Requirements: mailglass — v2.2 CI Signal Integrity & Supply-Chain Hygiene
+# Requirements: mailglass — v2.3 B2C First-Adopter Readiness
 
-> **Milestone v2.2 (maintenance / trust-restoration).** Make every green check mean what it says, and close
-> the supply-chain gap that let four HIGH-severity advisories sit unpatched for 24 days behind a
-> branch-protection typo that no signal reported.
->
-> Defined 2026-07-28 from `.planning/research/v2.2/` — four parallel research agents (stack, features,
-> architecture, pitfalls) plus a synthesis pass, all grounded in this repository's own workflow YAML,
-> `test/support/ci_lanes.ex`, `scripts/setup_branch_protection.sh`, and `MAINTAINING.md`.
->
-> This milestone is intentionally **not** a product-expansion, redesign, release-cut, or CI-topology-rewrite
-> milestone. The lane structure is sound; the signals were not.
+**Defined:** 2026-07-31  
+**Goal:** Let a solo-operated, single-tenant consumer product safely serve its first paying user without moving notification policy, authentication, billing, support, mobile activation, or SRE ownership into Mailglass.
 
----
+## B2C launch profile
 
-## Framing: what research changed
+- [x] **B2C-01:** Document a decisive mapping from B2C message purposes to transactional, operational, and bulk streams.
+- [x] **B2C-02:** Document and prove that operational/bulk unsubscribe is stream-scoped while hard-bounce and complaint suppression remains address-wide.
+- [x] **B2C-03:** Document category-specific RFC 8058 preferences as a Chimeway/host concern using opaque recipient references and idempotent POST behavior.
+- [x] **B2C-04:** Document the zero-config single-tenant path and separate transactional/engagement sending identities using named adapter refs.
+- [x] **B2C-05:** Provide a conservative cold-domain pacing profile without weakening transactional rate-limit bypass or changing global defaults.
+- [x] **B2C-06:** Keep open tracking disabled and prohibit MPP-distorted opens from driving product, suppression, or re-engagement decisions.
+- [x] **B2C-07:** Record sibling-package ownership, external launch gates, and the decision not to create `crosswake_mailglass`.
 
-Research contradicted the original scope document in three places. Each correction changes what the work is,
-and each is already applied to `.planning/research/v2.2/MILESTONE-SCOPE.md`:
+## Provider feedback
 
-| Original claim | Corrected fact |
-|---|---|
-| `MAINTAINING.md` "has never existed in this repository" | It **exists** — 370 lines at the repo root since `5f8d7f4a`, and `ci_lanes.ex`'s docstring cites it **accurately**. It is *stale*, not phantom. So there are **three** disagreeing advisory registries, not two. |
-| CONFORM-02: build a gate that fails on missing vendored icons | **Already shipped.** `ICON-EXISTS-GATE` lives at `mailglass_admin/scripts/check-conformance.sh:148-179`, added in the same PR #136 the scope doc credits for the icon fixes. The remaining work is *verifying coverage*. |
-| Core Full Suite failures were blocking releases | They were not — but a **hidden third gating tier** was. 9+ `ci.yml` jobs sit in neither `ci_green.needs` nor `gate-ci-green`'s advisory list, silently blocking Hex publish while never blocking a PR merge. |
+- [x] **OBS-01:** Emit `[:mailglass, :delivery, :feedback, :stop]` once after a new durable provider/compliance fact for the documented outcome set.
+- [x] **OBS-02:** Lock measurements to `%{count: 1}` and metadata to `tenant_id`, `delivery_id`, `provider`, `stream`, `mailable`, and `status`, with no recipient or message PII and no replay duplication.
 
-**The load-bearing finding is the hidden third tier.** It is the verified mechanism behind the 2.1.1 gate
-failure, and it means "Credo Strict" is de-facto release-gating today despite being declared advisory.
+## Solo-operator admin
 
-**Everything this milestone needs already exists in the repo.** `mix_audit ~> 2.1`, `mix hex.audit`, an
-OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mailglass.CILanes`, and
-`gate-self-test.yml`'s deliberate-failure-probe pattern are all shipped. **No new dependencies.**
+- [x] **ADMIN-01:** Subscribe the connected outbound operator LiveView to the current tenant's existing Mailglass events topic and safely change subscriptions with tenant selection.
+- [x] **ADMIN-02:** Refresh the visible list, selected detail/evidence, suppression state, provider options, and overview counters without losing URL-backed filters, page, or selection.
 
----
+## Proof and release
 
-## Milestone v2.2 Requirements
+- [x] **PROOF-01:** Browser/LiveView evidence shows a provider status transition without a manual reload and rejects foreign-tenant events.
+- [x] **PROOF-02:** Tests prove stream unsubscribe does not suppress transactional delivery, while bounce and complaint suppression remains address-wide.
+- [x] **PROOF-03:** B2C examples parse against current APIs and the guide remains in the published HexDocs/package surface.
+- [ ] **REL-01:** Release linked `mailglass` and `mailglass_admin` 2.4.0, leave `mailglass_inbound` unchanged, and pass a clean published-package consumer smoke test.
 
-### VULN — Supply-chain remediation
+## External launch gates
 
-- [x] **VULN-02**: Every dependency PR left with auto-merge enabled on 2026-07-28 is confirmed either merged
-  or closed with a recorded reason. No PR is left in an indeterminate state.
+These gates block B2C Alpha production but are not Mailglass requirements:
 
-- [x] **VULN-05**: The CI-side audit lanes honor the same accepted-advisory allowlist that
-  `publish.check`'s `@accepted_advisories` uses, read from **one** source rather than duplicated. Today
-  `ci.yml`'s `hex_audit` runs bare `mix hex.audit` with zero allowlist logic. *(Hard precondition for
-  VULN-03 — promoting the lane without this reds every PR on the already-accepted cowlib advisories.)*
+- [ ] Sigra/host uses non-consuming magic-link GET validation followed by CSRF-protected POST consumption.
+- [ ] Chimeway/host ships idempotent category-level one-click preferences.
+- [ ] Parapet consumes the canonical feedback event and pages on any complaint at launch volume.
+- [ ] Accrue/host passes Stripe payment success, failure, action-required, recovery, and missing-tax-location journeys.
+- [ ] The host provides separately verified email replacement and recovery for address-wide suppression.
 
-- [x] **VULN-03**: **Both** the Hex Audit and Deps Audit lanes are merge-gating — present in
-  `ci_green.needs` and in `Mailglass.CILanes.required_lanes()`, with the parity-drift test updated — so a
-  newly-published HIGH advisory blocks merge instead of accumulating. *(Deps Audit / `mix_audit` is the lane
-  that covers transitive dependencies, i.e. the `hpax` case; Hex Audit alone would not close it.)*
+## Deferred promotion triggers
 
-- [x] **VULN-06**: Each allowlisted advisory carries a recorded reason and a re-check date, and the lane
-  surfaces an entry whose upstream fix has landed, so an exception cannot silently become permanent.
-
-- [x] **VULN-04**: A documented triage cadence exists that explicitly covers **transitive** dependencies,
-  naming who checks what, how often, and the response expectation by severity. It states plainly that
-  Dependabot cannot auto-file a Hex transitive fix requiring a parent bump — documented upstream behavior,
-  not a repo defect — and that reading audit output directly is therefore the only path for that class.
-
-### HARNESS — Test-harness truth
-
-- [x] **HARNESS-01**: The Ecto Sandbox ownership leak is fixed, with the **mechanism empirically confirmed
-  before the fix is written** rather than inferred. 194 of 242 core-suite failures are
-  `{:badmatch, :already_shared}` from `Sandbox.start_owner!/2`. Leading candidates, all to be verified:
-  `Mailglass.DataCase` (the dominant shared-mode acquisition site, 35 files), `mailer_case.ex:158` and
-  `:248` (raw `Sandbox.mode(repo, {:shared, self()})` calls outside the `start_owner!`/`stop_owner` pair,
-  whose `on_exit` never reverts to `:manual`), and
-  `properties/webhook_idempotency_convergence_test.exs`.
-
-  *(Amended per Plan 143-03's mechanism account, `.planning/phases/143-test-harness-truth/143-MECHANISM.md`
-  — empirically confirmed against CI run `30464215272` / job `90617762038` and independently reproduced in
-  this plan's own local instrumented capture. `Mailglass.DataCase` is EXONERATED as a candidate: its
-  `on_exit(stop_owner)` is registered on the line immediately following acquisition (`data_case.ex:35-36`),
-  Ecto's own documented idiom — it is the observed victim, never the culprit. The confirmed sites are
-  `properties/webhook_idempotency_convergence_test.exs`'s acquire/release gap (CI evidence) and
-  `test/support/mailer_case.ex`'s 92-line equivalent gap (independently reproduced locally, in
-  `Mailglass.Webhook.PlugSESTest`). The `mailer_case.ex:158` / `:248` entry is correct that those calls do
-  nothing, but for a different reason than originally stated: they are provable no-ops that run AFTER the
-  pool is already shared, discarding an `:already_shared` return value that changes nothing — they are
-  redundant, not broken, and deleting them is behaviour-preserving (D-07).
-  <br><br>
-  The phase closed **three** global-state leak classes, not one: **Class A** (migration-baseline teardown —
-  a genuine, reproduced symptom, but REFUTED for `migration_test.exs` specifically, whose own restoration
-  succeeded in both of this plan's local captures; the historically-blamed file is not implicated by this
-  evidence, and SEED-007's "already ruled out" entry for `migration_test.exs` teardown is RE-OPENED because
-  it was measured locally against a restored baseline and does not hold under CI's cold database), **Class
-  B** (`Mailglass.Config.schema()` drift — narrowed from six `:schema_isolation`-tagged candidates to three
-  confirmed schema-flipping files, plus a fourth structural candidate outside the original tag set), and
-  **Class C** (the ownership leak, above). Per-leg evidence: `143-MECHANISM.md` §4.)*
-
-- [x] **HARNESS-02**: Core Full Suite passes across all four matrix legs (Elixir 1.18/OTP 27 and 1.19/OTP 28,
-  each × `public` and `mailglass` schema).
-
-  *(Evidence, 2026-07-31: all four legs green on `main` in runs
-  [`30607136165`](https://github.com/szTheory/mailglass/actions/runs/30607136165) (`schedule`, `d6e50388`)
-  and [`30635221221`](https://github.com/szTheory/mailglass/actions/runs/30635221221) (`push`, `981b9343`) —
-  both Elixir 1.18/OTP 27 legs and both 1.19/OTP 28 legs, with the executed floor enforced on each. See
-  `.planning/phases/143-test-harness-truth/143-MAIN-GREEN-EVIDENCE.md`. Recorded plainly: this box was
-  ticked **before** that evidence existed — plan 143-10 found the four-leg bar unmet at the time, since
-  the 1.19/OTP 28 legs carry `if: github.event_name != 'pull_request'` and had never run once during the
-  phase's branch life. The claim is true now; it was not when it was first made.)*
-
-  *(Scope split from HARNESS-04, recorded per Plan 143-03's D-31 amendments: HARNESS-02 is judged on lane
-  **content** — all FOUR legs green in the evidence. HARNESS-04's gating scope is deliberately narrower —
-  only the TWO Elixir 1.18 / OTP 27 legs are publish-gating. A future reader must not mistake HARNESS-04's
-  narrower gate for a failure to meet HARNESS-02's four-leg bar.)*
-
-- [x] **HARNESS-03**: The recovered tests are proven to genuinely execute and assert — not skipped, excluded,
-  or tagged away to manufacture green. Proof is mechanical, not narrative: a test-count floor that fails if
-  the executed count drops, plus a deliberate-failure probe following the existing `gate-self-test.yml`
-  pattern pointed at Core Full Suite.
-
-  *(Evidence, 2026-07-31 — both halves now exist. **Floor:** pinned from green CI evidence (public 1576,
-  mailglass 1575, skipped ceiling 7), enforced on every `main` leg including the previously-unmeasured
-  1.19/OTP 28 pair; anti-vacuity proven by mutation — removing a 33-test file drove executed to 1558 and
-  failed the build with `[VIOLATION] executed_floor` while ExUnit itself reported success. **Probe:** both
-  gating legs returned FAILURE on the verbatim synthetic-failure commit
-  ([run 30599206217](https://github.com/szTheory/mailglass/actions/runs/30599206217)); see
-  `143-PROBE-EVIDENCE.md`. Recorded plainly: this box was ticked before the probe half existed, and the
-  probe could not be produced by `gate-self-test.yml` at all — GitHub does not trigger workflows for
-  `GITHUB_TOKEN`-raised events, so the PR that workflow opens receives zero checks. The probe was opened
-  with a user token instead, making it a **manual** procedure. Automating it needs a stored PAT, which is
-  an open maintainer decision, not a code gap.)*
-
-- [x] **HARNESS-04**: `gate-ci-green` inspects `advisory-matrix.yml` in addition to `ci.yml`, so a Core Full
-  Suite regression blocks a Hex publish. *(Sequenced strictly after HARNESS-01..03 — gating a red lane
-  deadlocks releases.)*
-
-  *(HARNESS-02 versus HARNESS-04 scope split, recorded per Plan 143-03's D-31 amendments: HARNESS-04's
-  gating scope is deliberately narrower than HARNESS-02's four-leg green bar — only the Elixir 1.18 / OTP 27
-  pair (the declared `~> 1.18` floor) is publish-gating. The Elixir 1.19 / OTP 28 legs, Provider
-  Compatibility, and Inbound Full Suite stay advisory. This is a deliberate design choice (D-19: keep
-  required matrices small — an established anti-pattern is using one gigantic matrix as required status),
-  not a failure to meet HARNESS-02's broader four-leg green requirement. State this plainly so a future
-  reader does not conflate the two.)*
-
-  *(Evidence, 2026-07-31: the real 2.3.0 release exercised the positive path—both publish runs' gate jobs
-  passed after the anti-recursion self-heal dispatched Advisory Matrix run
-  [`30645896855`](https://github.com/szTheory/mailglass/actions/runs/30645896855). The negative dry-run
-  rehearsal [`30654293410`](https://github.com/szTheory/mailglass/actions/runs/30654293410) read both
-  deliberately-red floor legs, failed `gate-ci-green`, and left `publish-core` completed/skipped with zero
-  steps: it did not start. Branch and tag were deleted and no package version changed. Full evidence,
-  rationale, and accepted gaps: `.planning/phases/143-test-harness-truth/143-GATING-DECISION.md`.)*
-
-### CONFORM — Design-system conformance
-
-- [ ] **CONFORM-02**: The existing `ICON-EXISTS-GATE` is **verified** to cover the whole invisible-icon
-  class, not only literal-string call sites. Coverage of `components.ex`'s dynamic sites (`name={@icon}`,
-  `name={option.icon}`, `name={stat_severity_icon(@severity)}`) is either proven or explicitly documented as
-  a bounded, accepted gap with its reasoning. Rebuilding the gate is out of scope — it already ships.
-
-- [x] **CONFORM-04**: The lane called "Credo Strict" is renamed to reflect what it actually runs (Credo plus
-  the admin design-system conformance shell gates). **Lands together with TRUTH-07 and TRUTH-09**, never
-  before: `gate-ci-green` matches lanes **by name**, and this lane sits in the hidden third tier, so a
-  rename in isolation either preserves the accidental-gating bug under a new name or silently demotes a
-  de-facto-gating lane.
-
-### TRUTH — Lane truth & drift-proofing
-
-- [x] **TRUTH-09**: The hidden third gating tier is eliminated. Every `ci.yml` job is explicitly classified
-  into exactly one named bucket — **merge-gating (required)**, **publish-gating**, or **advisory** for
-  check lanes, plus a **structural** bucket for the two jobs that are not check lanes (`changes` /
-  `Detect Non-Doc Changes` and `ci_green` / `CI Green`) — and no job may sit in none of them and thereby
-  block publish by accident. The publish-gating bucket now carries Credo Strict, Dialyzer, Hex Audit,
-  Format Check, Compile Warnings as Errors, Docs Warnings as Errors, Mix Task Tests, Inbound Test, Inbound
-  Compile No Optional Deps, Installer Golden Gate, Trust Lane Clean Baseline, Branch Protection Advisory,
-  and the new Design System Conformance lane, each with a recorded disposition. *(Amended from the
-  original two-bucket wording — the original text read "merge-gating or advisory" for every job. A
-  two-bucket model would either let a Hex publish proceed on red Dialyzer / red trust-evidence lanes or
-  promote them to merge-gating, contradicting D-04 for `Trust Lane Clean Baseline` and lengthening every
-  PR's critical path. The named publish-gating bucket preserves today's effective publish posture
-  byte-for-byte. See `.planning/phases/141-lane-truth-foundation/141-CONTEXT.md` D-02/D-03.)*
-
-- [x] **TRUTH-07**: The three disagreeing advisory registries are reconciled to **one** authoritative source,
-  with the others generated from or verified against it by a test that fails on drift. `MAINTAINING.md` is
-  refreshed as part of this — it is stale, and reconciliation that leaves it stale is incomplete.
-
-- [ ] **TRUTH-02**: A check that cannot do its work never reports success. Both instances are fixed:
-  `branch-protection-drift.yml`'s `reassert-protection` job and `ci.yml`'s "Branch Protection Advisory", which
-  share the identical `if: pat_present == 'true'`-skip-but-still-green shape. Since GitHub Actions has no
-  native job-level neutral conclusion, the repo's own proven `if: always()` + explicit-failure idiom is the
-  expected mechanism.
-
-- [ ] **TRUTH-03**: Live branch protection is verified against `scripts/setup_branch_protection.sh
-  --print-expected-json` on a schedule, and a regression guard specifically catches the job-`id`-vs-job-`name`
-  context mismatch that caused this milestone.
-
-- [ ] **TRUTH-06**: `repo-hygiene` distinguishes "genuinely blocked" from "cannot check". Its
-  `branch_protection` sub-check currently 403s and reports the failure as drift.
-
-- [ ] **TRUTH-08**: The publish fan-out no longer races itself. `publish-hex.yml`'s
-  `concurrency.group` is ref-scoped (`publish-hex-${{ github.ref }}`) while release-please's linked-versions
-  plugin fires two releases on two different tags, so the runs never serialize. `post-publish-smoke.yml`
-  carries the identical pattern and is fixed alongside it. A successful release must not report failure.
-
-- [x] **TRUTH-05**: Every lane carries a recorded disposition — promote, keep-with-reason, or retire. No lane
-  sits red or unclassified indefinitely. *(Follows TRUTH-09/07: dispositions are recorded against the
-  reconciled set, not the ambiguous one.)*
-
-- [ ] **TRUTH-04**: The release-trigger anti-recursion gap is either fixed or formally accepted with its cost
-  recorded. Bot-auto-merged release PRs do not fire release-please's `push` trigger, so tagging waits on an
-  hourly cron — this cost ~30 minutes on three separate occasions on 2026-07-28.
-
-### HIST — Planning-history integrity
-
-- [x] **HIST-01**: v2.0's phase artifacts (132-137) are restored to `.planning/milestones/v2.0-phases/`, and
-  the `gsd-tools query phases.clear` defect that deleted them without writing an archive is recorded. The
-  same defect deleted v2.1's phases 138-140 during this milestone's own opening; those were caught and
-  restored in commit `70099869`.
-
----
-
-## Future Requirements (deferred, not this milestone)
-
-- **CI/CD efficiency and contributor feedback latency** — wall-clock, runner cost, matrix breadth, and
-  caching. Tracked as `SEED-006`, deliberately sequenced **after** v2.2. Optimizing a pipeline whose greens
-  are not trustworthy just makes it lie faster.
-
-- **Ecosystem integrations** — `SEED-003`, dormant.
-- **Whole-suite no-search-path fixture cleanup** — carried from v2.1.
-- **`remove-cowlib-advisory-allowlist-when-upstream-fixes`** — pending an external upstream fix; VULN-06's
-  re-check mechanism should surface it automatically once the fix lands.
-
-## Out of Scope (explicit exclusions)
-
-- **Product features, new providers, transports, or adopter-facing surface.** This is maintenance.
-- **Admin UI redesign** — no token, component, motion, layout, or brand work.
-- **A CI topology rewrite.** The lane structure is sound; only the honesty of its signals changes. Splitting,
-  merging, or restructuring workflows beyond what a named requirement demands is excluded.
-
-- **A release cut.** v2.2 ships no Hex release; 2.1.3 / 2.1.3 / 2.1.1 stand.
-- **Re-planning the 2026-07-28 remediation** — branch protection correction, the nine advisory patches, the
-  seven conformance gates, Dialyzer, the admin publish allowlist, the honest citext probe, and the migration
-  baseline restoration are shipped history.
-
-- **Rebuilding `ICON-EXISTS-GATE`** — it exists; CONFORM-02 verifies it.
-- **Making Core Full Suite merge-gating** by moving it into `ci.yml` — rejected in favor of HARNESS-04's
-  publish-gating approach, because adding four matrix legs to every PR is precisely the wall-clock cost
-  SEED-006 exists to address.
-
----
+- Declarative stream routing: two adopters duplicate or misconfigure the resolver.
+- Warmup automation: planned engagement volume exceeds roughly 500/day or sustained deferrals appear.
+- MPP classification: reliable provider metadata and a concrete human-vs-proxy workflow exist.
+- Generic inbound threading: two independent products need the same References/In-Reply-To model.
+- Charset transcoding: a retained non-UTF-8 message fails a real workflow.
+- Sent-body snapshots: exact content reproduction is required with approved retention and security policy.
+- Complaint-rate UI: volume supplies a stable denominator or reaches approximately 5,000/day.
+- `crosswake_mailglass`: two adopters need the same provider-neutral signed email-to-route-intent adapter and prove it cannot live in the host, Chimeway, or Crosswake.
 
 ## Traceability
 
-**Roadmap note:** phase assignment is regrouped by dependency, not by requirement-category prefix — see
-`ROADMAP.md` and `STATE.md` "v2.2 Milestone Intent" for the rationale (VULN-05→VULN-03 precondition;
-CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and sequenced early).
+| Requirement | Phase |
+|---|---|
+| B2C-01 through B2C-07 | 145 |
+| OBS-01, OBS-02 | 146 |
+| ADMIN-01, ADMIN-02, PROOF-01 | 147 |
+| PROOF-02, PROOF-03, REL-01 | 148 |
 
-| Requirement | Phase | Status |
-|---|---|---|
-| TRUTH-09 | Phase 141 | Complete |
-| TRUTH-07 | Phase 141 | Complete |
-| TRUTH-05 | Phase 141 | Complete |
-| CONFORM-04 | Phase 141 | Complete |
-| HIST-01 | Phase 141 | Complete |
-| VULN-05 | Phase 142 | Complete |
-| VULN-03 | Phase 142 | Complete |
-| VULN-06 | Phase 142 | Complete |
-| VULN-02 | Phase 142 | Complete |
-| VULN-04 | Phase 142 | Complete |
-| HARNESS-01 | Phase 143 | In Progress (5 of 7 contributing plans landed: 143-01, 143-03, 143-04, 143-05, 143-06; remaining: 07, 08) |
-| HARNESS-02 | Phase 143 | Complete |
-| HARNESS-03 | Phase 143 | Complete |
-| HARNESS-04 | Phase 143 | Complete |
-| CONFORM-02 | Phase 144 | Pending |
-| TRUTH-02 | Phase 144 | Pending |
-| TRUTH-03 | Phase 144 | Pending |
-| TRUTH-04 | Phase 144 | Pending |
-| TRUTH-06 | Phase 144 | Pending |
-| TRUTH-08 | Phase 144 | Pending |
-
-**Coverage: 20/20 requirements mapped (100%).** No orphans, no duplicates. (Note: the roadmapping brief
-referenced "21 requirements"; a direct scan of this file's checklist found 20 unique REQ-IDs across
-VULN/HARNESS/CONFORM/TRUTH/HIST — all 20 are mapped above.)
+**Coverage:** 15/15 requirements mapped.

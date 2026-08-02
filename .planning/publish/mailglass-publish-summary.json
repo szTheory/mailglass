@@ -7,6 +7,7 @@
     "guides/upgrading-to-v1_0.md",
     "guides/upgrading-to-v2_0.md",
     "guides/getting-started.md",
+    "guides/b2c-first-adopter.md",
     "guides/learning-path.md",
     "guides/jobs.md",
     "guides/authoring-mailables.md",
@@ -37,6 +38,7 @@
     "README.md",
     "SECURITY.md",
     "guides/authoring-mailables.md",
+    "guides/b2c-first-adopter.md",
     "guides/compatibility-and-deprecations.md",
     "guides/components.md",
     "guides/dkim-setup.md",
@@ -155,6 +157,7 @@
     "lib/mailglass/router.ex",
     "lib/mailglass/schema.ex",
     "lib/mailglass/stream.ex",
+    "lib/mailglass/supply_chain/accepted_advisories.ex",
     "lib/mailglass/suppression.ex",
     "lib/mailglass/suppression/auto_suppress.ex",
     "lib/mailglass/suppression/entry.ex",
@@ -231,6 +234,7 @@
       "guides/upgrading-to-v1_0.md",
       "guides/upgrading-to-v2_0.md",
       "guides/getting-started.md",
+      "guides/b2c-first-adopter.md",
       "guides/learning-path.md",
       "guides/jobs.md",
       "guides/authoring-mailables.md",
@@ -259,11 +263,11 @@
     ]
   },
   "linked_versions": {
-    "mailglass": "2.0.0",
-    "mailglass_admin": "2.0.0",
-    "mailglass_inbound": "2.0.0"
+    "mailglass": "2.3.0",
+    "mailglass_admin": "2.3.0",
+    "mailglass_inbound": "2.1.1"
   },
-  "manifest_version": "2.0.0",
+  "manifest_version": "2.3.0",
   "package": "mailglass",
   "package_files": [
     "lib",
@@ -299,9 +303,9 @@
     ],
     "status": "ok"
   },
-  "source_ref": "v2.0.0",
+  "source_ref": "v2.3.0",
   "source_ref_pattern": "mailglass-sibling-group-v%{version}",
   "source_url": "https://github.com/szTheory/mailglass",
-  "tarball_size": 1228284,
-  "version": "2.0.0"
+  "tarball_size": 1280555,
+  "version": "2.3.0"
 }

@@ -57,6 +57,12 @@ defmodule Mailglass.ReferenceHost.ScopeLockContractTest do
     files =
       Path.wildcard(Path.join(@host_app_root, "**/*"))
       |> Enum.filter(&File.regular?/1)
+      |> Enum.reject(fn file ->
+        relative = Path.relative_to(file, @host_app_root)
+
+        relative == "deps" or String.starts_with?(relative, "deps/") or
+          relative == "_build" or String.starts_with?(relative, "_build/")
+      end)
 
     hits =
       for file <- files,

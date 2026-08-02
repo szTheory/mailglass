@@ -78,6 +78,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:tenant_options, [])
       |> assign(:tenant_state, :none)
       |> assign(:selected_tenant_id, nil)
+      |> assign(:events_topic, nil)
       |> assign(:provider_options, [])
       |> assign(:event_values, @event_values)
       |> assign(:window_options, @window_options)
@@ -146,6 +147,7 @@ defmodule MailglassAdmin.OperatorLive do
         |> assign(:tenant_state, tenant_state)
         |> assign(:selected_tenant_id, selected_tenant_id)
         |> assign(:provider_options, provider_options)
+        |> sync_event_subscription(selected_tenant_id, tenant_state)
 
       if connected?(socket) and tenant_state == :auto_select do
         send(self(), :canonicalize_tenant)
@@ -184,6 +186,21 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_info(:canonicalize_tenant, socket), do: {:noreply, socket}
+
+  def handle_info(
+        {:delivery_updated, _delivery_id, _event_type, metadata},
+        %{assigns: %{selected_tenant_id: tenant_id}} = socket
+      )
+      when is_binary(tenant_id) and is_map(metadata) do
+    if matching_tenant?(metadata, tenant_id) do
+      {:noreply, refresh_visible_state(socket)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_info({:delivery_updated, _delivery_id, _event_type, _metadata}, socket),
+    do: {:noreply, socket}
 
   @impl true
   def handle_event("apply_filters", %{"filters" => filters}, socket) do
@@ -843,6 +860,51 @@ defmodule MailglassAdmin.OperatorLive do
   defp tenant_state(nil, [_tenant], false), do: :auto_select
   defp tenant_state(nil, _tenants, _tenant_param_present?), do: :select_required
   defp tenant_state(_selected_tenant_id, _tenants, _tenant_param_present?), do: :selected
+
+  defp sync_event_subscription(socket, selected_tenant_id, tenant_state) do
+    desired_topic =
+      if connected?(socket) and tenant_state == :selected and is_binary(selected_tenant_id) do
+        Mailglass.PubSub.Topics.events(selected_tenant_id)
+      end
+
+    current_topic = socket.assigns.events_topic
+
+    if current_topic == desired_topic do
+      socket
+    else
+      if current_topic, do: Phoenix.PubSub.unsubscribe(Mailglass.PubSub, current_topic)
+      if desired_topic, do: Phoenix.PubSub.subscribe(Mailglass.PubSub, desired_topic)
+      assign(socket, :events_topic, desired_topic)
+    end
+  end
+
+  defp matching_tenant?(metadata, tenant_id) do
+    case Map.get(metadata, :tenant_id) || Map.get(metadata, "tenant_id") do
+      nil -> true
+      ^tenant_id -> true
+      _foreign_tenant -> false
+    end
+  end
+
+  defp refresh_visible_state(%{assigns: %{view: :deliveries}} = socket) do
+    socket
+    |> assign(:provider_options, load_provider_options(socket.assigns.filter_params))
+    |> assign_delivery_state(
+      socket.assigns.filter_params,
+      selected_delivery_id(socket),
+      socket.assigns.full_detail?,
+      support_focus?(socket.assigns.support_state)
+    )
+  end
+
+  defp refresh_visible_state(socket) do
+    socket
+    |> assign(:provider_options, load_provider_options(socket.assigns.filter_params))
+    |> assign_overview_state(socket.assigns.filter_params)
+  end
+
+  defp selected_delivery_id(%{assigns: %{selected_delivery: %{id: id}}}), do: id
+  defp selected_delivery_id(_socket), do: nil
 
   defp clear_surface_state(socket) do
     socket

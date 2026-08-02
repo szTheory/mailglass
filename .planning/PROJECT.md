@@ -8,7 +8,27 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v2.2 CI Signal Integrity & Supply-Chain Hygiene
+## Current State
+
+**v2.3 B2C First-Adopter Readiness opened 2026-07-31.** The first production adopter is a
+solo-operated, low-volume consumer subscription product. Mailglass is already production-credible; this
+milestone closes the specific divergence between that profile and the shipped B2B operations reference:
+a decisive consumer launch guide, canonical provider-feedback telemetry, and a live outbound admin.
+
+Package boundaries are locked. Chimeway owns notification policy and preferences; Sigra owns auth token
+semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
+paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
+
+## Next Milestone Goals
+
+Ship the Mailglass-owned B2C launch profile as linked core/admin 2.4.0, leaving inbound unchanged unless a
+real compatibility change is required. Production launch additionally requires the external Sigra,
+Chimeway, Parapet, Accrue, and host recovery gates recorded in `.planning/REQUIREMENTS.md`.
+
+<details>
+<summary>Archived v2.2 milestone context</summary>
+
+## Archived: v2.2 CI Signal Integrity & Supply-Chain Hygiene (SHIPPED 2026-07-31)
 
 **Opened 2026-07-28.** Maintenance and trust-restoration only — explicitly not product expansion, not a
 redesign, not a release-cut milestone, and not a CI topology rewrite. The lane structure is sound; the
@@ -84,6 +104,8 @@ exactly this was itself blind.
   greens are not trustworthy just makes it lie faster.
 
 Scope source: `.planning/research/v2.2/MILESTONE-SCOPE.md`.
+
+</details>
 
 ---
 
@@ -213,18 +235,14 @@ pin change ships with a CHANGELOG line + documented **Hex retirement** as the ne
 - **Research: DONE** — decision-ready dossiers + adversarial synthesis already persisted; phases plan
   directly. Phases continue from 124 → 125+.
 
-## Current State
+## Historical State Ledger
 
-**v2.2 IN PROGRESS - CI Signal Integrity & Supply-Chain Hygiene (phases 141-144).** Phase 141 (Lane Truth
-Foundation) complete 2026-07-28, verifier `status: passed` (5/5 must-haves; TRUTH-09, TRUTH-07, TRUTH-05,
-CONFORM-04, HIST-01). Every one of `ci.yml`'s 24 jobs now carries exactly one machine-verified
-classification in `Mailglass.CILanes`, replacing three disagreeing advisory registries and the
-undocumented default bucket that let 9+ lanes silently gate Hex publish while never blocking a merge.
-`gate-ci-green` classifies by registry instead of a name-convention regex; `credo_strict` was split so
-its name matches what it runs (`Credo Strict` + `Design System Conformance (shell gates)`, both green
-live); `MAINTAINING.md` carries a 24-row disposition table bound to the registry by a drift test that
-fails loud and cannot pass vacuously. Validated live on CI run 30408642505. Next: Phase 142
-(Supply-Chain Remediation & Gating).
+**v2.2 IMPLEMENTATION COMPLETE - CI Signal Integrity & Supply-Chain Hygiene (phases 141-144).** All four
+phases are complete and verifier-passed. CI lane classification and supply-chain gating are reconciled;
+the Core Full Suite is non-vacuous and release-gating; branch-protection, repo-hygiene, icon, publish,
+and release-recovery signals now fail closed with hermetic automated evidence. Phase 144 passed 12/12
+must-haves, is Nyquist-compliant, and closed all 13 planned threats with no human UAT. Next: milestone
+audit and archive; v2.2 is not labeled shipped until that lifecycle gate completes.
 
 **v2.1 SHIPPED 2026-07-08 - Postgres + Admin URL Hardening.** All 3 phases (138-140) complete, audit
 `status: passed` (13/13 requirements). Focused no-search-path schema-prefix hardening has hostile
@@ -813,7 +831,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-07-28 — v2.2 Phase 141 (Lane Truth Foundation) complete, verifier `status: passed` (5/5). All 24 `ci.yml` jobs carry exactly one machine-verified classification; the hidden third gating tier is closed. Next: Phase 142.*
+*Last updated: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined.*
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->
 <!-- prior footer: 2026-06-28 — v1.14 Phase 122 (Preview surface redesign) complete, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).* -->

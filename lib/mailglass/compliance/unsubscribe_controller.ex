@@ -130,11 +130,17 @@ defmodule Mailglass.Compliance.UnsubscribeController do
     repo.one!(query, Repo.multi_opts())
   end
 
-  defp respond_to_unsubscribe({:ok, %{unsubscribe_event_record: event}}, conn, delivery) do
-    Projector.broadcast_delivery_updated(delivery, event.type, %{
-      tenant_id: delivery.tenant_id,
-      event_id: event.id
-    })
+  defp respond_to_unsubscribe(
+         {:ok, %{unsubscribe_event: inserted_event, unsubscribe_event_record: event}},
+         conn,
+         delivery
+       ) do
+    if inserted_event.inserted_at do
+      Projector.broadcast_delivery_updated(delivery, event.type, %{
+        tenant_id: delivery.tenant_id,
+        event_id: event.id
+      })
+    end
 
     send_resp(conn, 200, "")
   end

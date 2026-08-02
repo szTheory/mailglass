@@ -1,6 +1,8 @@
 ---
 id: SEED-007
-status: dormant
+status: archived
+updated: 2026-07-31
+note: Implemented and verified in v2.2 Phase 143; retained as the incident and mechanism record.
 planted: 2026-07-28
 planted_during: v2.2 (CI Signal Integrity) scoping
 trigger_when: when core-suite signal matters — the lane is fully red today, so 1401 tests provide no regression signal. NOT release-blocking (corrected 2026-07-28)

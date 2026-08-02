@@ -27,6 +27,14 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      # Scheduled and manual recovery runs have no workspace by default. Check
+      # out the triggering revision before preflight reads the manifest; the
+      # action's default ref is the event SHA/ref for each trigger type.
+      - name: Checkout triggering revision for release preflight
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
+
       # release-please reruns on a merged release PR can be stale if the
       # release was already tagged/published by an earlier run. That is the
       # current failure mode for PR #34: the PR has already been labeled
@@ -41,38 +49,55 @@ jobs:
         id: release-preflight
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The scheduled/manual paths have no checkout, so gh cannot infer a
+          # remote. Pin it to this workflow's repository for every preflight
+          # query rather than treating failed lookups as absent releases.
+          GH_REPO: ${{ github.repository }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
 
-          pr_number=""
-          if [[ "${COMMIT_MESSAGE:-}" =~ Merge\ pull\ request\ #([0-9]+) ]]; then
-            pr_number="${BASH_REMATCH[1]}"
+          manifest=.release-please-manifest.json
+          if [ ! -r "$manifest" ]; then
+            echo "ERROR: release manifest is missing or unreadable: $manifest" >&2
+            exit 1
           fi
 
-          if [ -z "$pr_number" ]; then
-            echo "No merge PR number found in head commit message; running release-please."
-            echo "should_run=true" >>"$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          mapfile -t expected_tags < <(
-            jq -r '
-              to_entries[]
+          if ! expected_tags_text=$(jq -er '
+              if type != "object" or length == 0 or any(.[]; type != "string" or length == 0) then
+                error("release manifest must be a non-empty object of version strings")
+              else
+                to_entries[]
               | .key as $package
               | .value as $version
               | if $package == "." then "mailglass-v\($version)" else "\($package)-v\($version)" end
-            ' .release-please-manifest.json
-          )
+              end
+            ' "$manifest"); then
+            echo "ERROR: release manifest is invalid: $manifest" >&2
+            exit 1
+          fi
+
+          mapfile -t expected_tags <<<"$expected_tags_text"
+          if [ "${#expected_tags[@]}" -eq 0 ] || [ -z "${expected_tags[0]:-}" ]; then
+            echo "ERROR: release manifest yielded no expected release tags" >&2
+            exit 1
+          fi
 
           missing_tags=()
           present_tags=()
           for tag in "${expected_tags[@]}"; do
-            if gh release view "$tag" >/dev/null 2>&1; then
+            release_response=$(mktemp)
+            if gh api --include "repos/${GH_REPO}/releases/tags/${tag}" >"$release_response" 2>&1; then
               present_tags+=("$tag")
-            else
+            elif grep -qE '^HTTP/[0-9.]+ 404 ' "$release_response"; then
               missing_tags+=("$tag")
+            else
+              echo "ERROR: could not determine release state for tag $tag" >&2
+              cat "$release_response" >&2
+              rm -f "$release_response"
+              exit 1
             fi
+            rm -f "$release_response"
           done
 
           if [ "${#present_tags[@]}" -gt 0 ] && [ "${#missing_tags[@]}" -gt 0 ]; then
@@ -88,7 +113,23 @@ jobs:
             exit 0
           fi
 
-          labels=$(gh pr view "$pr_number" --json labels --jq '.labels[].name' 2>/dev/null || true)
+          # Every expected tag is authoritatively absent. Only now may a
+          # schedule/manual run without a push commit start release-please.
+          pr_number=""
+          if [[ "${COMMIT_MESSAGE:-}" =~ Merge\ pull\ request\ #([0-9]+) ]]; then
+            pr_number="${BASH_REMATCH[1]}"
+          fi
+
+          if [ -z "$pr_number" ]; then
+            echo "No merge PR number found after confirming all release tags are absent; running release-please."
+            echo "should_run=true" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if ! labels=$(gh pr view "$pr_number" --json labels --jq '.labels[].name'); then
+            echo "ERROR: could not determine labels for release PR #$pr_number" >&2
+            exit 1
+          fi
           if grep -qx 'autorelease: tagged' <<<"$labels"; then
             echo "Release PR #$pr_number is already tagged; skipping release-please rerun."
             echo "should_run=false" >>"$GITHUB_OUTPUT"
@@ -150,25 +191,30 @@ jobs:
           git fetch origin "$BRANCH":"$BRANCH"
           git checkout "$BRANCH"
 
-          # Read the core manifest version — used to sync README `~>` install pins
-          # and the inbound publish-summary. Read .["."] directly; do NOT use a
-          # fallback chain (would return inbound's unlinked version).
+          # Read the linked core/admin manifest version. Read .["."] directly;
+          # do NOT use a fallback chain (which could return inbound's independent
+          # version instead).
           CORE_VERSION=$(jq -r '.["."]' .release-please-manifest.json)
           if [ -z "$CORE_VERSION" ] || [ "$CORE_VERSION" = "null" ]; then
             echo "ERROR: could not read core version (.[\".\"]) from .release-please-manifest.json" >&2
             exit 1
           fi
-          # Sync the inbound README's `{:mailglass_inbound, "~> X.Y"}` install
-          # pin to the inbound package's new major.minor. The docs contract
-          # (WR-01, mailglass_inbound/test/.../docs_contract_test.exs) asserts
-          # README major.minor == @version major.minor, which would otherwise
-          # fail on the PR branch the moment release-please bumps @version.
-          # Inbound is UNLINKED, so read its own manifest entry (not core's).
+
+          # Inbound is independently versioned. Compare the release branch's
+          # manifest entry with main before touching any inbound-owned artifact.
+          # Missing/unreadable data fails closed: a core/admin-only release must
+          # never infer inbound ownership from the linked version.
           INBOUND_VERSION=$(jq -r '.["mailglass_inbound"]' .release-please-manifest.json)
-          if [ -n "$INBOUND_VERSION" ] && [ "$INBOUND_VERSION" != "null" ]; then
-            INBOUND_MM=$(echo "$INBOUND_VERSION" | cut -d. -f1,2)
-            echo "Target inbound README pin: {:mailglass_inbound, \"~> $INBOUND_MM\"}"
-            sed -i -E "s/\{:mailglass_inbound, \"~> [0-9]+\.[0-9]+\"\}/{:mailglass_inbound, \"~> ${INBOUND_MM}\"}/" mailglass_inbound/README.md
+          MAIN_INBOUND_VERSION=$(git show origin/main:.release-please-manifest.json | jq -r '.["mailglass_inbound"]')
+          if [ -z "$INBOUND_VERSION" ] || [ "$INBOUND_VERSION" = "null" ] || \
+             [ -z "$MAIN_INBOUND_VERSION" ] || [ "$MAIN_INBOUND_VERSION" = "null" ]; then
+            echo "ERROR: could not read inbound manifest version on release branch or origin/main" >&2
+            exit 1
+          fi
+
+          INBOUND_CHANGED=false
+          if [ "$INBOUND_VERSION" != "$MAIN_INBOUND_VERSION" ]; then
+            INBOUND_CHANGED=true
           fi
 
           # Sync the core + admin README `{:mailglass, "~> X.Y"}` and
@@ -180,25 +226,21 @@ jobs:
           # on the PR branch the moment release-please bumps @version.
           CORE_MM=$(echo "$CORE_VERSION" | cut -d. -f1,2)
           echo "Target core/admin README pins: ~> $CORE_MM"
-          # mailglass_inbound/README.md is included so its `{:mailglass, "~> X.Y"}`
-          # core-dep pin tracks core too (the `{:mailglass_admin, ...}` sed simply
-          # no-ops there; its own `{:mailglass_inbound, "~> X.Y"}` self-pin is
-          # synced separately above).
-          for readme in README.md mailglass_admin/README.md mailglass_inbound/README.md; do
+          for readme in README.md mailglass_admin/README.md; do
             sed -i -E "s/\{:mailglass, \"~> [0-9]+\.[0-9]+\"/{:mailglass, \"~> ${CORE_MM}\"/" "$readme"
             sed -i -E "s/\{:mailglass_admin, \"~> [0-9]+\.[0-9]+\"/{:mailglass_admin, \"~> ${CORE_MM}\"/" "$readme"
           done
 
-          # The inbound install guide carries BOTH a core pin (~> CORE_MM) and the
-          # inbound self-pin (~> INBOUND_MM) with aligned whitespace; release-please
-          # touches neither and docs_contract_test asserts both. Capture the prefix
-          # (incl. alignment) so only the version number is rewritten. The committed
-          # inbound publish summary's version-bearing fields are asserted by
-          # stability_contract_test on the PR branch; patch them with jq here (the
-          # full artifact, incl. tarball_size, is regenerated by
-          # `mix mailglass.publish.check` at publish time).
-          if [ -n "${INBOUND_VERSION:-}" ] && [ "$INBOUND_VERSION" != "null" ]; then
+          if [ "$INBOUND_CHANGED" = true ]; then
+            # An actual inbound release owns its self pin, its core compatibility
+            # pin, installation guide, and committed publish summary. Keep all of
+            # those inbound-owned paths out of a linked core/admin-only release PR.
             INBOUND_MM=$(echo "$INBOUND_VERSION" | cut -d. -f1,2)
+            echo "Target inbound README pin: {:mailglass_inbound, \"~> $INBOUND_MM\"}"
+            sed -i -E "s/\{:mailglass_inbound, \"~> [0-9]+\.[0-9]+\"\}/{:mailglass_inbound, \"~> ${INBOUND_MM}\"}/" mailglass_inbound/README.md
+            sed -i -E "s/\{:mailglass, \"~> [0-9]+\.[0-9]+\"/{:mailglass, \"~> ${CORE_MM}\"/" mailglass_inbound/README.md
+            sed -i -E "s/\{:mailglass_admin, \"~> [0-9]+\.[0-9]+\"/{:mailglass_admin, \"~> ${CORE_MM}\"/" mailglass_inbound/README.md
+
             INSTALL=mailglass_inbound/docs/inbound-install.md
             if [ -f "$INSTALL" ]; then
               sed -i -E "s/(\{:mailglass,[[:space:]]+\"~> )[0-9]+\.[0-9]+(\")/\1${CORE_MM}\2/" "$INSTALL"
@@ -214,12 +256,18 @@ jobs:
           fi
 
           SYNC_PATHS=(
-            mailglass_inbound/README.md
-            mailglass_inbound/docs/inbound-install.md
             README.md
             mailglass_admin/README.md
-            .planning/publish/mailglass_inbound-publish-summary.json
           )
+          COMMIT_MESSAGE="chore(release-please): sync core/admin README pins to core $CORE_VERSION"
+          if [ "$INBOUND_CHANGED" = true ]; then
+            SYNC_PATHS+=(
+              mailglass_inbound/README.md
+              mailglass_inbound/docs/inbound-install.md
+              .planning/publish/mailglass_inbound-publish-summary.json
+            )
+            COMMIT_MESSAGE="chore(release-please): sync inbound README \`~>\` pin + publish-summary to core $CORE_VERSION"
+          fi
           if git diff --quiet -- "${SYNC_PATHS[@]}"; then
             echo "Pins + README already synced — nothing to commit."
             exit 0
@@ -231,8 +279,61 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "${SYNC_PATHS[@]}"
-          git commit -m "chore(release-please): sync inbound README \`~>\` pin + publish-summary to core $CORE_VERSION"
+          git commit -m "$COMMIT_MESSAGE"
           git push origin "$BRANCH"
+
+      # A machine-readable target replaces the former human go/no-go. The
+      # release PR may auto-merge only when Release Please produced the exact
+      # package set the active milestone authorized.
+      - name: Validate automated release target
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release.outputs.prs_created == 'true' }}
+        run: |
+          set -euo pipefail
+          target=.planning/release-target.json
+          manifest=.release-please-manifest.json
+
+          if [ ! -r "$target" ]; then
+            echo "Release target mismatch: missing $target" >&2
+            exit 1
+          fi
+
+          status=$(jq -er '.status' "$target")
+          if [ "$status" != "active" ]; then
+            echo "No active automated release target; standard Release Please policy applies."
+            exit 0
+          fi
+
+          expected_core=$(jq -er '.packages.mailglass' "$target")
+          expected_admin=$(jq -er '.packages.mailglass_admin' "$target")
+          expected_inbound=$(jq -er '.packages.mailglass_inbound' "$target")
+          actual_core=$(jq -er '.["."]' "$manifest")
+          actual_admin=$(jq -er '.mailglass_admin' "$manifest")
+          actual_inbound=$(jq -er '.mailglass_inbound' "$manifest")
+          source_core=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mix.exs | head -1)
+          source_admin=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_admin/mix.exs | head -1)
+          source_inbound=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_inbound/mix.exs | head -1)
+
+          for version in \
+            "$expected_core" "$expected_admin" "$expected_inbound" \
+            "$actual_core" "$actual_admin" "$actual_inbound" \
+            "$source_core" "$source_admin" "$source_inbound"; do
+            if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
+              echo "Release target mismatch: invalid version '$version'" >&2
+              exit 1
+            fi
+          done
+
+          if [ "$actual_core" != "$expected_core" ] || \
+             [ "$actual_admin" != "$expected_admin" ] || \
+             [ "$actual_inbound" != "$expected_inbound" ] || \
+             [ "$source_core" != "$expected_core" ] || \
+             [ "$source_admin" != "$expected_admin" ] || \
+             [ "$source_inbound" != "$expected_inbound" ]; then
+            echo "Release target mismatch: expected core/admin/inbound $expected_core/$expected_admin/$expected_inbound; manifest has $actual_core/$actual_admin/$actual_inbound; source has $source_core/$source_admin/$source_inbound" >&2
+            exit 1
+          fi
+
+          echo "Automated release target validated: core/admin $expected_core, inbound unchanged at $expected_inbound."
 
       # Hands-free release: arm squash auto-merge so the release PR ships the
       # moment its required checks go green. The Hex publish itself has no

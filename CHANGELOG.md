@@ -14,6 +14,24 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [Unreleased]
+
+### Added
+
+* Add a stable, PII-free delivery-feedback telemetry event for durable provider and unsubscribe outcomes.
+* Add an opinionated B2C first-adopter production profile covering streams, suppression recovery, cold-domain routing, observability, and sibling-package boundaries.
+
+### Changed
+
+* The sibling packages (`mailglass_inbound`, `mailglass_admin`) now depend on
+  `mailglass` via pessimistic `~>` constraints instead of exact pins, ending
+  the paired-release-per-core-patch requirement. A core patch release no longer
+  drags a paired inbound or admin release.
+
+### Fixed
+
+* Prevent replayed RFC 8058 POSTs from emitting duplicate delivery-update and feedback signals.
+
 ## [2.3.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.2.2...mailglass-v2.3.0) (2026-07-31)
 
 
@@ -163,15 +181,6 @@ version line per [`guides/compatibility-and-deprecations.md`](guides/compatibili
 
 * **128:** bound preflight TCP fallback; correct CONTRIBUTING + comment discipline ([90f1416](https://github.com/szTheory/mailglass/commit/90f1416813553aecd8ba67dd3223836a8f9f9444))
 * **ci:** format+credo+compile-no-optional-deps regressions from phase 126-130 commits ([6da0074](https://github.com/szTheory/mailglass/commit/6da0074489c1033eaccc34dd2c64f30fca49c37a))
-
-## [Unreleased]
-
-### Changed
-
-* The sibling packages (`mailglass_inbound`, `mailglass_admin`) now depend on
-  `mailglass` via pessimistic `~>` constraints instead of exact pins, ending
-  the paired-release-per-core-patch requirement. A core patch release no longer
-  drags a paired inbound or admin release.
 
 ## [1.10.2](https://github.com/szTheory/mailglass/compare/mailglass-v1.10.1...mailglass-v1.10.2) (2026-06-30)
 

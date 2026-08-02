@@ -27,30 +27,27 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert job =~ "path: tmp/mailglass_trust_runner/checkpoint.json"
   end
 
-  test "published install guard detects hackney and api_client regressions before compile" do
+  test "published consumer smoke delegates install guards to the shared script" do
     workflow = File.read!(@workflow_path)
     consumer_install = extract_job!(workflow, "consumer-install", "published-trust-journey")
 
-    assert consumer_install =~ "Run mix mailglass.install"
-    assert consumer_install =~ "Guard against hackney/api_client regression on published install"
-    assert consumer_install =~ "Compile, fail on warnings"
-    assert consumer_install =~ "set -euo pipefail"
-    assert consumer_install =~ ~s(grep -F "config :swoosh, :api_client, false" config/runtime.exs)
-    assert consumer_install =~ "Swoosh\\.ApiClient\\.Finch"
-    assert consumer_install =~ ~S[grep -Eq '"(hackney|finch)":' mix.lock]
-    assert consumer_install =~ "OPS-01 guard passed."
+    assert consumer_install =~ "DEP_MODE: hex"
+    assert consumer_install =~ "run: bash scripts/consumer_install_smoke.sh"
+  end
 
-    assert index_of(consumer_install, "Run mix mailglass.install") <
-             index_of(
-               consumer_install,
-               "Guard against hackney/api_client regression on published install"
-             )
+  test "2.4.0 consumer smoke fails closed while including inbound 2.1.1" do
+    workflow = File.read!(@workflow_path)
+    consumer_install = extract_job!(workflow, "consumer-install", "published-trust-journey")
 
-    assert index_of(
-             consumer_install,
-             "Guard against hackney/api_client regression on published install"
-           ) <
-             index_of(consumer_install, "Compile, fail on warnings")
+    assert consumer_install =~ "VERSION_INBOUND: 2.1.1"
+    assert consumer_install =~ "mailglass_inbound 2.1.1"
+    assert consumer_install =~ "exit 1"
+    refute consumer_install =~ "Skipping inbound consumer dependency"
+
+    assert consumer_install =~ "DEP_MODE: hex"
+    assert consumer_install =~ "VERSION: ${{ needs.cron-guard.outputs.version }}"
+    assert consumer_install =~ "VERSION_INBOUND: 2.1.1"
+    assert consumer_install =~ "INCLUDE_INBOUND: true"
   end
 
   test "post-publish smoke auto-closes tracker only after green guard and journey evidence" do
@@ -84,12 +81,5 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     [_before, rest] = String.split(workflow, "\n  #{start_key}:\n", parts: 2)
     [job | _after] = String.split(rest, "\n  #{next_key}:\n", parts: 2)
     job
-  end
-
-  defp index_of(text, needle) do
-    case :binary.match(text, needle) do
-      {index, _length} -> index
-      :nomatch -> flunk("missing expected text: #{needle}")
-    end
   end
 end

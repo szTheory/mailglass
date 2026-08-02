@@ -151,9 +151,75 @@ fi
 used_icons="$(mktemp)"
 available_icons="$(mktemp)"
 missing_icons="$(mktemp)"
-trap 'rm -f "$used_icons" "$available_icons" "$missing_icons"' EXIT
+unresolved_dynamic_icons="$(mktemp)"
+trap 'rm -f "$used_icons" "$available_icons" "$missing_icons" "$unresolved_dynamic_icons"' EXIT
 
-grep -rhoE 'hero-[a-z0-9-]+' "$LIB" --include="*.ex" 2>/dev/null |
+# Extract finite, computed icon names used at the <.icon> boundary. Literal names
+# remain covered by the existing source scan below; this closes the only bounded
+# construction form that cannot appear there as a complete `hero-*` token. Any
+# non-finite concatenation or interpolation is deliberately recorded for a
+# fail-closed diagnostic rather than silently treated as a valid icon reference.
+extract_dynamic_icon_references() {
+  local file line_number tag expression
+
+  # A component's attributes frequently span lines in HEEx. Read each complete
+  # <.icon ...> tag before inspecting name={} so finite expressions are not
+  # formatting-dependent. The record separator is deliberately non-printing:
+  # flattened tags can contain ordinary newlines and spaces.
+  while IFS=$'\t' read -r -d $'\034' file line_number tag; do
+    [[ "$tag" == *'name={'* ]] || continue
+
+    if [[ "$tag" =~ name=\{[[:space:]]*\"([^\"]*)#\{[[:space:]]*\"([^\"]*)\"[[:space:]]*\}[[:space:]]*\"[[:space:]]*\} ]]; then
+      printf '%s%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+      continue
+    fi
+
+    expression="${tag#*name=\{}"
+    expression="${expression%%\}*}"
+
+    if [[ "$expression" =~ ^\"(hero-[a-z0-9-]+)\"[[:space:]]*$ ]]; then
+      printf '%s\n' "${BASH_REMATCH[1]}"
+    elif [[ "$expression" == *'<'*'>'* ]]; then
+      if [[ "$expression" =~ ^\"([^\"]*)\"[[:space:]]*\<\>[[:space:]]*\"([^\"]*)\" ]]; then
+        printf '%s%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+      else
+        printf '%s:%s: literal concatenation\n' "$file" "$line_number" >> "$unresolved_dynamic_icons"
+      fi
+    elif [[ "$expression" == *'#{'* ]]; then
+      printf '%s:%s: interpolation\n' "$file" "$line_number" >> "$unresolved_dynamic_icons"
+    else
+      printf '%s:%s: dynamic expression\n' "$file" "$line_number" >> "$unresolved_dynamic_icons"
+    fi
+  done < <(
+    while IFS= read -r -d '' file; do
+      # Components.icon/1 and the generic primitives in components.ex relay
+      # caller-supplied names; their concrete hero-* values are scanned at the
+      # caller. Every feature-level <.icon name={...}> must resolve here.
+      [[ "$file" == "$LIB/mailglass_admin/components.ex" ]] && continue
+
+      awk -v file="$file" '
+        BEGIN { RS = "<\\.icon" }
+        NR > 1 {
+          tag = $0
+          # Prefer the self-closing component terminator. A bare `>` would
+          # truncate the valid Elixir literal-concatenation operator `<>`.
+          if (match(tag, /\/>/)) {
+            tag = substr(tag, 1, RSTART - 1)
+          } else {
+            sub(/[[:space:]]>.*/, "", tag)
+          }
+          gsub(/[[:space:]]+/, " ", tag)
+          printf "%s\t0\t%s\034", file, tag
+        }
+      ' "$file"
+    done < <(find "$LIB" -type f -name '*.ex' -print0)
+  )
+}
+
+{
+  grep -rhoE 'hero-[a-z0-9-]+' "$LIB" --include="*.ex" 2>/dev/null || true
+  extract_dynamic_icon_references
+} |
   sed 's/^hero-//' |
   sort -u > "$used_icons"
 
@@ -167,6 +233,12 @@ grep -rhoE 'hero-[a-z0-9-]+' "$LIB" --include="*.ex" 2>/dev/null |
   echo "FAIL: ICON-EXISTS-GATE — zero hero-* usages scanned in $LIB (path/scan error, not an icon-free lib)" >&2
   exit 2
 }
+
+if [[ -s "$unresolved_dynamic_icons" ]]; then
+  cat "$unresolved_dynamic_icons"
+  echo "FAIL: ICON-EXISTS-GATE — cannot statically resolve dynamic icon expression; use a finite literal value/concatenation or add the resolved hero-* value at the source" >&2
+  errors=$((errors + 1))
+fi
 
 grep -E '^[[:space:]]*"[-a-z0-9]+":' "$HEROICONS" 2>/dev/null |
   sed -E 's/^[[:space:]]*"([-a-z0-9]+)".*/\1/' |

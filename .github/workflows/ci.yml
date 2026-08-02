@@ -1101,17 +1101,10 @@ jobs:
             echo "pat_present=true" >> "$GITHUB_OUTPUT"
           else
             echo "pat_present=false" >> "$GITHUB_OUTPUT"
-            {
-              echo "## Branch Protection Advisory"
-              echo ""
-              echo "Skipped live verification because BRANCH_PROTECTION_PAT is not set."
-              echo "Run \`scripts/verify-branch-protection.sh --print-expected\` locally"
-              echo "to inspect the expected ruleset."
-            } >> "$GITHUB_STEP_SUMMARY"
+            echo "classification=cannot_check" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout
-        if: steps.check-pat.outputs.pat_present == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Verify branch protection
@@ -1122,21 +1115,14 @@ jobs:
           GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_PAT }}
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: ./scripts/verify-branch-protection.sh main
-
-      - name: Write advisory summary
-        if: steps.check-pat.outputs.pat_present == 'true'
         run: |
-          {
-            echo "## Branch Protection Advisory"
-            echo ""
-            if [ "${{ steps.verify-protection.outcome }}" = "success" ]; then
-              echo "Live branch protection matches the expected read-only ruleset."
-            else
-              echo "Live branch protection drifted from the expected ruleset."
-              echo "Review the verifier step log and re-apply with ./scripts/setup_branch_protection.sh main."
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          classification=$(./scripts/branch-protection-outcome.sh probe main)
+          echo "classification=$classification" >> "$GITHUB_OUTPUT"
+
+      - name: Report branch protection outcome
+        if: always()
+        run: |
+          ./scripts/branch-protection-outcome.sh report "${{ steps.verify-protection.outputs.classification || steps.check-pat.outputs.classification || 'unknown' }}"
 
   ci_green:
     name: CI Green

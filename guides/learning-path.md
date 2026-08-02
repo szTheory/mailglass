@@ -36,6 +36,10 @@ your integration matures.
 
 Once the week-1 arc is solid, these guides cover the next layer:
 
+- **[B2C first-adopter profile](b2c-first-adopter.md)** — An opinionated single-tenant,
+  low-volume consumer launch profile covering streams, suppression recovery, cold-domain routing,
+  provider-feedback alerts, and package-family ownership.
+
 - **[Multi-tenancy](multi-tenancy.md)** — Route mail through per-tenant adapters using the
   `Mailglass.Tenancy` behaviour and `adapter_ref` configuration.
 

@@ -142,28 +142,38 @@ A core **patch** release requires no sibling change at all. A core **minor** (e.
 requires a deliberate `fix(inbound):` commit in `mailglass_inbound/mix.exs` updating the
 floor — asserting "verified against core 1.11" — before or alongside the release PR.
 
-**Recursion-safety guarantee:** the sync push uses `GITHUB_TOKEN`, which by
-GitHub's anti-recursion guarantee does NOT trigger further workflow runs.
+**CI-trigger guarantee:** the sync checkout and push use `RELEASE_PLEASE_PAT`.
+That non-`GITHUB_TOKEN` identity deliberately triggers
+`pull_request: synchronize`, so the release PR's required CI checks report on
+the synchronized head. (The GitHub-native auto-merge itself still uses
+`GITHUB_TOKEN`, whose anti-recursion behavior is why the recovery path below
+exists.)
 
 ## If a release publishes but the tags/publish never fire
 
-`release-please.yml` runs only `on: push: main`. When the **release PR**
-(`chore: release main`) is merged by GitHub-native **auto-merge**, the resulting
-push is authored by `GITHUB_TOKEN`, and GitHub's anti-recursion guarantee
-suppresses the `push` event — so release-please does **not** re-run to tag the
-release, and the `release: published` fan-out in `publish-hex.yml` never starts.
-Symptom: the manifest on `main` is at the new version and the release PR is
-merged with label `autorelease: pending`, but no `mailglass-vX.Y.Z` GitHub
-release exists and Hex still shows the prior version.
+`release-please.yml` runs on pushes to `main`, direct `workflow_dispatch`, and
+its hourly schedule at minute 17. When the **release PR** (`chore: release main`)
+is merged by GitHub-native auto-merge, the resulting push is authored by
+`GITHUB_TOKEN`; GitHub suppresses that recursive push event. Symptom: the
+manifest on `main` is at the new version and the release PR is merged with label
+`autorelease: pending`, but no `mailglass-vX.Y.Z` GitHub release exists and Hex
+still shows the prior version.
 
-**Recovery:** land any subsequent commit on `main` via a **non-`GITHUB_TOKEN`
-identity** (e.g. a maintainer merging a small PR with `gh pr merge` rather than
-arming auto-merge). That push wakes release-please; its preflight sees the
-`pending`, untagged release PR, creates the `vX.Y.Z` releases (via
-`RELEASE_PLEASE_PAT`), and the `release: published` events drive `publish-hex`.
-The publish jobs are idempotent (`mix hex.info` guards), so a re-trigger is
-always safe. Manually creating the releases with `gh release create <tag>` is an
-equivalent fallback — `release: published` is the canonical publish trigger.
+**Automatic recovery:** the scheduled run at minute 17 checks this state hourly,
+so recovery waits for the next hourly run — up to one hour. The recorded
+incidents cost roughly 30 minutes. Its preflight is idempotent: all expected tags
+already present and an `autorelease: tagged` label are successful no-ops. A
+partial linked-tag state fails deliberately and requires reconciliation before
+another release action can run.
+
+**Direct manual recovery:** use `workflow_dispatch` for the existing
+release-please workflow when waiting for the hourly recovery is inappropriate.
+The preflight permits a pending untagged release and the `RELEASE_PLEASE_PAT`
+release creation emits the canonical `release: published` fan-out to
+`publish-hex.yml`.
+
+**Last resort:** manually creating the missing GitHub releases remains the
+canonical `release: published` fan-out when the workflow path cannot be used.
 
 ## One-time setup: branch protection automation
 
@@ -184,7 +194,8 @@ To enable the drift-detection workflow, add a repo secret
    → Secrets and variables → Actions → New repository secret.)
 3. Run `Branch Protection Drift` once via the Actions tab to confirm.
 
-Without the secret, the drift workflow no-ops and posts a notice in its
+Without the secret, the drift workflow reports a visible failed
+`cannot_check` outcome (rather than a green no-op) and posts remediation in its
 workflow summary. Without it, you can still call the script directly:
 
 ```bash

@@ -55,11 +55,27 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
 
       steps when is_list(steps) ->
         Enum.flat_map(steps, fn step ->
+          external_alias = external_mix_alias(step, alias_key_strings)
+
           cond do
             is_binary(step) and MapSet.member?(alias_key_strings, step) ->
               # Safe: `step` is a known alias key, so the atom already exists.
               # Keep the reference token AND its transitive expansion.
               [step | do_flatten_alias(aliases, String.to_existing_atom(step), alias_key_strings)]
+
+            external_alias != nil ->
+              # `mix ci` intentionally crosses a fresh-VM boundary between its
+              # fast and full tiers. Preserve the command for exact matching and
+              # expand its known root alias so parity checks cannot become blind
+              # to the lanes behind that process boundary.
+              [
+                step
+                | do_flatten_alias(
+                    aliases,
+                    String.to_existing_atom(external_alias),
+                    alias_key_strings
+                  )
+              ]
 
             is_binary(step) ->
               [step]
@@ -70,6 +86,15 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
         end)
     end
   end
+
+  defp external_mix_alias(step, alias_key_strings) when is_binary(step) do
+    case Regex.run(~r/(?:^|\s)mix\s+([a-z0-9_.]+)(?:\s|$)/, step) do
+      [_, name] -> if MapSet.member?(alias_key_strings, name), do: name
+      _ -> nil
+    end
+  end
+
+  defp external_mix_alias(_step, _alias_key_strings), do: nil
 
   defp aliases, do: Mix.Project.config()[:aliases]
 
@@ -112,8 +137,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
         &any_step?(&1, "docs --warnings-as-errors"),
       "Hex Audit (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mailglass.audit --kind hex"),
       "Deps Audit (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mailglass.audit --kind deps"),
-      "Mix Task Tests (Elixir 1.18 / OTP 27)" =>
-        &any_step?(&1, "test --warnings-as-errors --exclude flaky"),
+      "Mix Task Tests (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mix test --warnings-as-errors"),
       "Inbound Test (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mailglass_inbound mix test"),
       "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)" =>
         &any_step?(&1, "mailglass_inbound mix compile --no-optional-deps")

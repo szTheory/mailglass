@@ -11,7 +11,7 @@ defmodule Mailglass.Scripts.MechanismAccountContractTest do
   RESEARCH.md F2 finding `lane_classification_drift_test.exs` exists to guard against).
 
   Asserts the phase's HARNESS-01 mechanism account
-  (`.planning/phases/143-test-harness-truth/143-MECHANISM.md`) and its two committed
+  (`.planning/milestones/v2.2-phases/143-test-harness-truth/143-MECHANISM.md`) and its two committed
   pre-fix ledgers exist, are non-empty, and carry the specific evidence HARNESS-01's
   "empirically confirmed before the fix is written" bar requires: all seven required
   section headings, the confirming CI run/job IDs, the nested `MatchError` shape (plus
@@ -23,18 +23,19 @@ defmodule Mailglass.Scripts.MechanismAccountContractTest do
   """
 
   @repo_root Path.expand("../..", __DIR__)
-  @mechanism_path Path.join(@repo_root, ".planning/phases/143-test-harness-truth/143-MECHANISM.md")
+  @phase_archive ".planning/milestones/v2.2-phases/143-test-harness-truth"
+  @mechanism_path Path.join(@repo_root, "#{@phase_archive}/143-MECHANISM.md")
   @gating_decision_path Path.join(
                           @repo_root,
-                          ".planning/phases/143-test-harness-truth/143-GATING-DECISION.md"
+                          "#{@phase_archive}/143-GATING-DECISION.md"
                         )
   @ledger_public_path Path.join(
                         @repo_root,
-                        ".planning/phases/143-test-harness-truth/143-LEDGER-public.txt"
+                        "#{@phase_archive}/143-LEDGER-public.txt"
                       )
   @ledger_mailglass_path Path.join(
                            @repo_root,
-                           ".planning/phases/143-test-harness-truth/143-LEDGER-mailglass.txt"
+                           "#{@phase_archive}/143-LEDGER-mailglass.txt"
                          )
 
   @required_section_headings [

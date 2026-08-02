@@ -1,6 +1,8 @@
 ---
 id: SEED-006
-status: dormant
+status: archived
+updated: 2026-07-31
+note: Deferred at v2.2 close pending measured latency or runner-cost pull; retained as future reference.
 planted: 2026-07-28
 planted_during: v2.1 archived / v2.2 (CI Signal Integrity) being scoped
 trigger_when: after v2.2 lands — when CI signal is trustworthy but wall-clock, runner cost, or contributor feedback latency becomes the felt problem

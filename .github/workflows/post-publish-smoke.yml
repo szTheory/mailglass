@@ -25,7 +25,7 @@ permissions:
   issues: write
 
 concurrency:
-  group: post-publish-smoke-${{ github.event.inputs.tag || github.event.release.tag_name || github.ref }}
+  group: mailglass-linked-release-fanout
   cancel-in-progress: false
 
 jobs:
@@ -344,15 +344,22 @@ jobs:
         id: inbound-compat
         env:
           VERSION: ${{ needs.cron-guard.outputs.version }}
-          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
+          VERSION_INBOUND: 2.1.1
         run: |
-          if [ -z "${VERSION_INBOUND}" ]; then
-            echo "include_inbound=false" >> "$GITHUB_OUTPUT"
-            echo "No inbound version resolved; consumer install will skip inbound."
-            exit 0
+          if [ "${VERSION}" != "2.4.0" ]; then
+            echo "Published consumer proof is pinned to mailglass 2.4.0, got ${VERSION}."
+            exit 1
           fi
 
-          INFO=$(mix hex.info mailglass_inbound "${VERSION_INBOUND}" 2>&1)
+          if [ "${VERSION_INBOUND}" != "2.1.1" ]; then
+            echo "Published consumer proof requires mailglass_inbound 2.1.1."
+            exit 1
+          fi
+
+          INFO=$(mix hex.info mailglass_inbound "${VERSION_INBOUND}" 2>&1) || {
+            echo "mailglass_inbound ${VERSION_INBOUND} is not available on Hex.pm."
+            exit 1
+          }
           echo "${INFO}"
 
           # ~>-aware compatibility check: matches both the legacy exact form
@@ -360,13 +367,11 @@ jobs:
           # (mailglass ~> ... and >= ...) introduced by the Phase 125 pin
           # loosening (LD-2). Anchored on the `mailglass` dep name to avoid
           # false matches on `mailglass_inbound` or `mailglass_admin` lines.
-          if echo "${INFO}" | grep -E "^[[:space:]]*mailglass (==|~>|>=)" >/dev/null || \
-             echo "${INFO}" | grep -F "mailglass == ${VERSION}" >/dev/null; then
-            echo "include_inbound=true" >> "$GITHUB_OUTPUT"
-            echo "mailglass_inbound ${VERSION_INBOUND} is compatible with mailglass ${VERSION} (loosened ~> or exact == pin detected)."
+          if echo "${INFO}" | grep -E "^[[:space:]]*mailglass (~> 2\\.0|== 2\\.4\\.0|>= 2\\.4\\.0)" >/dev/null; then
+            echo "mailglass_inbound ${VERSION_INBOUND} has a recognized compatible mailglass constraint for ${VERSION}."
           else
-            echo "include_inbound=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping inbound consumer dependency: mailglass_inbound ${VERSION_INBOUND} has no recognized mailglass compatibility pin for ${VERSION}."
+            echo "mailglass_inbound ${VERSION_INBOUND} has no recognized compatible mailglass constraint for ${VERSION}."
+            exit 1
           fi
       - name: Run consumer-install smoke (published Hex versions)
         # Shared body with the PR-time `Installer Host Smoke` job in ci.yml —
@@ -376,8 +381,8 @@ jobs:
           DEP_MODE: hex
           WORK_DIR: ${{ runner.temp }}
           VERSION: ${{ needs.cron-guard.outputs.version }}
-          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
-          INCLUDE_INBOUND: ${{ steps.inbound-compat.outputs.include_inbound }}
+          VERSION_INBOUND: 2.1.1
+          INCLUDE_INBOUND: true
         run: bash scripts/consumer_install_smoke.sh
 
   published-trust-journey:
