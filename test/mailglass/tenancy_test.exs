@@ -1,9 +1,19 @@
 defmodule Mailglass.TenancyTest do
-  # async-safe: the process dict is per-process; each test gets its own slate.
-  use ExUnit.Case, async: true
+  # Process-local tenant state is reset per test; custom-resolver configuration
+  # is global, so this module runs serially.
+  use ExUnit.Case, async: false
 
   alias Mailglass.Tenancy
   alias Mailglass.TenancyError
+  alias Mailglass.TestSupport.SandboxOwnership
+
+  defmodule CustomTenancy do
+    @moduledoc false
+    @behaviour Mailglass.Tenancy
+
+    @impl Mailglass.Tenancy
+    def scope(queryable, _context), do: queryable
+  end
 
   setup do
     # Each test starts with a clean process-dict slate so `current/0`
@@ -141,6 +151,43 @@ defmodule Mailglass.TenancyTest do
       # current/0 returns "default" via SingleTenant — assert_stamped!/0 must raise anyway
       assert Tenancy.current() == "default"
       assert_raise TenancyError, fn -> Tenancy.assert_stamped!() end
+    end
+  end
+
+  describe "custom tenancy remains fail-closed" do
+    setup do
+      SandboxOwnership.with_app_env!(:mailglass)
+      Application.put_env(:mailglass, :tenancy, CustomTenancy)
+      Tenancy.clear()
+      on_exit(&Tenancy.clear/0)
+      :ok
+    end
+
+    test "missing context does not inherit the SingleTenant default" do
+      assert Tenancy.current() == nil
+
+      error = assert_raise TenancyError, fn -> Tenancy.tenant_id!() end
+      assert error.type == :unstamped
+    end
+
+    test "strict accessors remain fail-closed after simulated worker restoration loss" do
+      assert {:error, :unstamped} =
+               Task.async(fn ->
+                 try do
+                   Tenancy.assert_stamped!()
+                 rescue
+                   error in TenancyError -> {:error, error.type}
+                 end
+               end)
+               |> Task.await()
+    end
+
+    test "a valid custom stamp remains the strict tenant identity" do
+      Tenancy.put_current("custom-tenant")
+
+      assert Tenancy.current() == "custom-tenant"
+      assert Tenancy.tenant_id!() == "custom-tenant"
+      assert Tenancy.assert_stamped!() == :ok
     end
   end
 

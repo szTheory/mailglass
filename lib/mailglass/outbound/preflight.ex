@@ -12,18 +12,17 @@ defmodule Mailglass.Outbound.Preflight do
     end
   end
 
-  # `tenant_id!/0` deliberately remains the strict accessor. An unstamped
-  # process may only use the `current/0` default when the configured resolver
-  # is SingleTenant; custom resolvers return nil from `current/0` without a
-  # process stamp and therefore retain the existing TenancyError contract.
+  # `tenant_id!/0` deliberately remains the strict accessor. Resolve the
+  # configured resolver before consulting a fallback so a custom resolver can
+  # never inherit SingleTenant's implicit "default" tenant.
   defp resolve_tenant do
-    {:ok, valid_tenant_id!(Tenancy.tenant_id!())}
-  rescue
-    error in TenancyError ->
-      case Tenancy.current() do
-        "default" -> {:ok, "default"}
-        _ -> raise error
-      end
+    case Application.get_env(:mailglass, :tenancy, Mailglass.Tenancy.SingleTenant) do
+      resolver when resolver in [nil, Mailglass.Tenancy.SingleTenant] ->
+        {:ok, valid_tenant_id!(Tenancy.current())}
+
+      _custom_resolver ->
+        {:ok, valid_tenant_id!(Tenancy.tenant_id!())}
+    end
   end
 
   defp valid_tenant_id!(tenant_id) when is_binary(tenant_id) do

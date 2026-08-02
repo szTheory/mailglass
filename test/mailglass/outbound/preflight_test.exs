@@ -1,8 +1,17 @@
 defmodule Mailglass.Outbound.PreflightTest do
   use Mailglass.DataCase, async: false
 
-  alias Mailglass.{Outbound, Message, TestRepo}
+  alias Mailglass.{Message, Outbound, Tenancy, TenancyError, TestRepo}
   alias Mailglass.Outbound.Delivery
+  alias Mailglass.TestSupport.SandboxOwnership
+
+  defmodule CustomTenancy do
+    @moduledoc false
+    @behaviour Mailglass.Tenancy
+
+    @impl Mailglass.Tenancy
+    def scope(queryable, _context), do: queryable
+  end
 
   setup do
     Mailglass.Adapters.Fake.checkout()
@@ -18,6 +27,65 @@ defmodule Mailglass.Outbound.PreflightTest do
       assert {:ok, %Delivery{tenant_id: "default"} = delivery} = Outbound.send(msg)
       assert %Delivery{tenant_id: "default"} = TestRepo.get!(Delivery, delivery.id)
       assert [%{message: %{tenant_id: "default"}}] = Mailglass.Adapters.Fake.deliveries()
+    end
+
+    @tag tenant: :unset
+    test "custom tenancy rejects missing context before persistence or adapter delivery" do
+      use_custom_tenancy!()
+      message = build_unstamped_message("missing-tenant@example.com")
+      delivery_count = TestRepo.aggregate(Delivery, :count)
+
+      error = assert_raise TenancyError, fn -> Outbound.send(message) end
+
+      assert error.type == :unstamped
+      assert TestRepo.aggregate(Delivery, :count) == delivery_count
+      assert Mailglass.Adapters.Fake.deliveries() == []
+    end
+
+    @tag tenant: :unset
+    test "custom tenancy rejects an empty stamp before Message ownership or outbound effects" do
+      use_custom_tenancy!()
+      Tenancy.put_current("   ")
+      message = build_unstamped_message("empty-tenant@example.com")
+      delivery_count = TestRepo.aggregate(Delivery, :count)
+
+      error = assert_raise TenancyError, fn -> Outbound.send(message) end
+
+      assert error.type == :unstamped
+      assert TestRepo.aggregate(Delivery, :count) == delivery_count
+      assert Mailglass.Adapters.Fake.deliveries() == []
+    end
+
+    @tag tenant: :unset
+    test "custom tenancy copies a valid stamp into persisted and adapter-visible ownership" do
+      use_custom_tenancy!()
+      Tenancy.put_current("custom-tenant")
+
+      assert {:ok, %Delivery{tenant_id: "custom-tenant"} = delivery} =
+               Outbound.send(build_unstamped_message("custom-tenant@example.com"))
+
+      assert %Delivery{tenant_id: "custom-tenant"} = TestRepo.get!(Delivery, delivery.id)
+      assert [%{message: %{tenant_id: "custom-tenant"}}] = Mailglass.Adapters.Fake.deliveries()
+    end
+
+    @tag tenant: :unset
+    test "custom tenancy remains fail-closed when async context restoration is lost" do
+      use_custom_tenancy!()
+      message = build_unstamped_message("lost-context@example.com")
+      delivery_count = TestRepo.aggregate(Delivery, :count)
+
+      assert {:error, %TenancyError{type: :unstamped}} =
+               Task.async(fn ->
+                 try do
+                   Outbound.send(message)
+                 rescue
+                   error in TenancyError -> {:error, error}
+                 end
+               end)
+               |> Task.await()
+
+      assert TestRepo.aggregate(Delivery, :count) == delivery_count
+      assert Mailglass.Adapters.Fake.deliveries() == []
     end
   end
 
@@ -185,6 +253,13 @@ defmodule Mailglass.Outbound.PreflightTest do
 
   defp build_message(to_addr) do
     build_message_for_stream(to_addr, :transactional)
+  end
+
+  defp use_custom_tenancy! do
+    SandboxOwnership.with_app_env!(:mailglass)
+    Tenancy.clear()
+    Application.put_env(:mailglass, :tenancy, CustomTenancy)
+    on_exit(&Tenancy.clear/0)
   end
 
   defp build_unstamped_message(to_addr) do
