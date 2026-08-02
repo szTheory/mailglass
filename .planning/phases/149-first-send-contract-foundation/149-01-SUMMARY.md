@@ -76,6 +76,7 @@ status: complete
 
 1. **Task 1: Send one unstamped SingleTenant message end to end** - `0177a5cf`, `d310ef78` (test, feat)
 2. **Task 2: Prove custom tenancy remains fail-closed** - `8156167b` (feat)
+3. **Post-wave integration fix: Synchronize async Fake ownership** - `1ade874f` (fix)
 
 ## Files Created/Modified
 
@@ -97,7 +98,7 @@ None - plan executed exactly as written.
 
 ## Issues Encountered
 
-The plan-level regression command emitted existing Task.Supervisor/Fake ownership warnings from async delivery tests, but all 61 tests passed and the warnings did not affect this preflight contract.
+The post-wave integration gate exposed an order-sensitive Task.Supervisor/Fake ownership race. Blind sleeps were replaced with monitored child completion; the exact 61-test wave gate then passed across the orchestrator run and six debugger seeds without ownership or sandbox-teardown warnings.
 
 ## User Setup Required
 
@@ -109,5 +110,5 @@ Plan 149-02 can extend the shared preflight gate with the remaining recipient an
 
 ## Self-Check: PASSED
 
-- Confirmed task commits `0177a5cf`, `d310ef78`, and `8156167b` exist.
+- Confirmed task commits `0177a5cf`, `d310ef78`, `8156167b`, and post-wave fix `1ade874f` exist.
 - Confirmed `lib/mailglass/outbound/preflight.ex` and focused tenancy/outbound tests exist.
