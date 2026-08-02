@@ -14,6 +14,20 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.4.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.3.0...mailglass-v2.4.0) (2026-08-02)
+
+
+### Features
+
+* ship B2C first-adopter readiness ([#165](https://github.com/szTheory/mailglass/issues/165)) ([53211e8](https://github.com/szTheory/mailglass/commit/53211e8bb9db2d2e16d5b2457868f2eefad249c5))
+
+
+### Bug Fixes
+
+* **ci:** isolate branch protection report output ([#168](https://github.com/szTheory/mailglass/issues/168)) ([e171798](https://github.com/szTheory/mailglass/commit/e17179814d8e8a70b153255d9dd770e4cb621edc))
+* **ci:** make missing gh fixture portable ([#167](https://github.com/szTheory/mailglass/issues/167)) ([c829c38](https://github.com/szTheory/mailglass/commit/c829c386c59a08a190ffb5243e5871f974548637))
+* **release:** sync inbound core compatibility pins ([#178](https://github.com/szTheory/mailglass/issues/178)) ([313455a](https://github.com/szTheory/mailglass/commit/313455a67b60c1b5221047190ed390f7449279f0))
+
 ## [Unreleased]
 
 ### Added

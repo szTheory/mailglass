@@ -4,6 +4,13 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.4.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.3.0...mailglass_admin-v2.4.0) (2026-08-02)
+
+
+### Features
+
+* ship B2C first-adopter readiness ([#165](https://github.com/szTheory/mailglass/issues/165)) ([53211e8](https://github.com/szTheory/mailglass/commit/53211e8bb9db2d2e16d5b2457868f2eefad249c5))
+
 ## [Unreleased]
 
 ### Added
