@@ -3,15 +3,17 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
 
   @publish_path Path.expand("../../.github/workflows/publish-hex.yml", __DIR__)
   @smoke_path Path.expand("../../.github/workflows/post-publish-smoke.yml", __DIR__)
-  @shared_group "mailglass-linked-release-fanout"
+  @publish_group "mailglass-linked-release-publish"
+  @smoke_group "mailglass-linked-release-smoke"
   @packages ["mailglass", "mailglass_admin", "mailglass_inbound"]
 
-  test "linked release workflows share one static non-cancelling concurrency block" do
+  test "publish and smoke use distinct static non-cancelling concurrency blocks" do
     publish_concurrency = extract_top_level_concurrency!(File.read!(@publish_path))
     smoke_concurrency = extract_top_level_concurrency!(File.read!(@smoke_path))
 
-    assert publish_concurrency.group == @shared_group
-    assert smoke_concurrency.group == @shared_group
+    assert publish_concurrency.group == @publish_group
+    assert smoke_concurrency.group == @smoke_group
+    refute publish_concurrency.group == smoke_concurrency.group
     assert publish_concurrency.cancel_in_progress == false
     assert smoke_concurrency.cancel_in_progress == false
   end
@@ -21,17 +23,17 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     smoke_source = File.read!(@smoke_path)
 
     ref_scoped_publish =
-      String.replace(publish_source, @shared_group, "publish-hex-${{ github.ref }}")
+      String.replace(publish_source, @publish_group, "publish-hex-${{ github.ref }}")
 
     tag_scoped_smoke =
       String.replace(
         smoke_source,
-        @shared_group,
+        @smoke_group,
         "post-publish-smoke-${{ github.event.inputs.tag || github.event.release.tag_name || github.ref }}"
       )
 
-    refute valid_static_concurrency?(ref_scoped_publish)
-    refute valid_static_concurrency?(tag_scoped_smoke)
+    refute valid_static_concurrency?(ref_scoped_publish, @publish_group)
+    refute valid_static_concurrency?(tag_scoped_smoke, @smoke_group)
   end
 
   test "every package publish job keeps an observable already-published success no-op" do
@@ -104,10 +106,10 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     refute prepublish =~ "HEX_API_KEY"
   end
 
-  defp valid_static_concurrency?(source) do
+  defp valid_static_concurrency?(source, expected_group) do
     concurrency = extract_top_level_concurrency!(source)
 
-    concurrency.group == @shared_group and
+    concurrency.group == expected_group and
       concurrency.cancel_in_progress == false and
       not String.contains?(concurrency.group, ["github.ref", "tag", "inputs"])
   end
