@@ -57,7 +57,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: mailglass-linked-release-fanout
+  group: mailglass-linked-release-publish
   cancel-in-progress: false
 
 jobs:
