@@ -5,15 +5,15 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 149
 current_phase_name: first-send-contract-foundation
 status: executing
-stopped_at: Completed 149-01-PLAN.md
-last_updated: "2026-08-02T17:42:36.004Z"
+stopped_at: Completed 149-02-PLAN.md
+last_updated: "2026-08-02T17:54:18.482Z"
 last_activity: 2026-08-02
 last_activity_desc: Phase 149 execution started
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 ## Current Position
 
 Phase: 149 (first-send-contract-foundation) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-08-02 — Phase 149 execution started
 
-Progress: [███░░░░░░░] 25%
+Progress: [█████░░░░░] 50%
 
 ## v2.4 Milestone Intent
 
@@ -436,6 +436,8 @@ release debug campaign.
 - [Phase ?]: Release events publish only linked core/admin packages; inbound remains dispatch-only recovery.
 - [Phase ?]: Published consumer proof pins inbound 2.1.1 and fails closed on unavailable or unrecognized compatibility.
 - [Phase ?]: Only configured SingleTenant may normalize an unstamped outbound message to default; custom resolvers require strict process-local tenant context.
+- [Phase ?]: Recipient cardinality counts untouched native to/cc/bcc entries; no selection, deduplication, sorting, or fan-out.
+- [Phase ?]: Preflight errors expose only bounded reason class plus recipient count or body-state metadata.
 
 ## Quick Tasks Completed
 
@@ -496,6 +498,7 @@ release debug campaign.
 | Phase 148-release-and-adoption-proof P04 | automated | 2 tasks | protected release chain |
 | Phase 148-release-and-adoption-proof P05 | automated | 1 task | registry and consumer proof |
 | Phase 149 P01 | 19m | 2 tasks | 6 files |
+| Phase 149 P02 | 4m | 2 tasks | 3 files |
 
 ## Deferred Items
 
@@ -662,8 +665,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-02T17:42:35.994Z
-**Stopped at:** Completed 149-01-PLAN.md
+**Last session:** 2026-08-02T17:54:18.471Z
+**Stopped at:** Completed 149-02-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
