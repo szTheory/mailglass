@@ -19,6 +19,66 @@ defmodule Mailglass.Outbound.PreflightTest do
     :ok
   end
 
+  describe "preflight recipient cardinality" do
+    test "accepts exactly one recipient in its native to, cc, or bcc collection" do
+      Enum.each([:to, :cc, :bcc], fn field ->
+        message = message_with_recipients(%{field => ["one@example.com"]})
+        original_email = message.swoosh_email
+
+        assert {:ok, normalized} = Mailglass.Outbound.Preflight.run(message)
+        assert normalized.swoosh_email == original_email
+      end)
+    end
+
+    test "rejects zero recipients with the bounded exact count context" do
+      message = message_with_recipients(%{})
+
+      assert {:error,
+              %Mailglass.SendError{
+                type: :preflight_rejected,
+                context: %{reason_class: :recipient_count_invalid, recipient_count: 0}
+              }} = Mailglass.Outbound.Preflight.run(message)
+    end
+
+    test "rejects every multi-recipient shape without selecting, deduplicating, or reordering" do
+      duplicate = "same@example.com"
+
+      for recipients <- [
+            %{to: ["first@example.com", "second@example.com"]},
+            %{to: [duplicate, duplicate]},
+            %{to: ["to@example.com"], cc: ["cc@example.com"]},
+            %{cc: ["first@example.com"], bcc: ["second@example.com"]},
+            %{to: ["to@example.com"], cc: ["cc@example.com"], bcc: ["bcc@example.com"]},
+            %{to: Enum.map(1..17, &"recipient-#{&1}@example.com")}
+          ] do
+        message = message_with_recipients(recipients)
+        original_email = message.swoosh_email
+        expected_count = recipient_count(original_email)
+
+        assert {:error,
+                %Mailglass.SendError{
+                  type: :preflight_rejected,
+                  context: %{reason_class: :recipient_count_invalid, recipient_count: ^expected_count}
+                }} = Mailglass.Outbound.Preflight.run(message)
+
+        assert message.swoosh_email == original_email
+      end
+    end
+
+    test "has an exact zero, one, and two recipient threshold" do
+      assert {:error, %Mailglass.SendError{context: %{recipient_count: 0}}} =
+               Mailglass.Outbound.Preflight.run(message_with_recipients(%{}))
+
+      assert {:ok, _} =
+               Mailglass.Outbound.Preflight.run(message_with_recipients(%{bcc: ["one@example.com"]}))
+
+      assert {:error, %Mailglass.SendError{context: %{recipient_count: 2}}} =
+               Mailglass.Outbound.Preflight.run(
+                 message_with_recipients(%{to: ["one@example.com"], bcc: ["two@example.com"]})
+               )
+    end
+  end
+
   describe "preflight stage 0 — resolver-aware tenancy normalization" do
     @tag tenant: :unset
     test "SingleTenant sends an unstamped message as the default tenant" do
@@ -253,6 +313,26 @@ defmodule Mailglass.Outbound.PreflightTest do
 
   defp build_message(to_addr) do
     build_message_for_stream(to_addr, :transactional)
+  end
+
+  defp message_with_recipients(recipients) do
+    email =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Test", "from@example.com"})
+      |> Swoosh.Email.subject("Recipient cardinality")
+      |> Swoosh.Email.text_body("Body")
+      |> Map.merge(%{to: [], cc: [], bcc: []})
+      |> Map.merge(recipients)
+
+    Message.build(email,
+      mailable: Mailglass.FakeFixtures.TestMailer,
+      tenant_id: "test-tenant",
+      stream: :transactional
+    )
+  end
+
+  defp recipient_count(email) do
+    length(List.wrap(email.to) ++ List.wrap(email.cc) ++ List.wrap(email.bcc))
   end
 
   defp use_custom_tenancy! do
