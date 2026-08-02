@@ -72,6 +72,14 @@ defmodule Mailglass.Outbound.WorkerTest do
     end
   end
 
+  describe "Oban readiness" do
+    @tag phase_150_task: "t150_03_02"
+    test "missing configured Oban instance fails with a bounded reason" do
+      assert {:error, :instance_unavailable} =
+               Mailglass.OptionalDeps.Oban.ready?(Mailglass.Outbound.Worker.queue())
+    end
+  end
+
   describe "Worker.perform/1" do
     @tag phase_150_task: "t150_03_01"
     test "dispatches immutable payload input before consulting legacy delivery metadata" do
