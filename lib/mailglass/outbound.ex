@@ -391,7 +391,7 @@ defmodule Mailglass.Outbound do
     delivery_id = delivery_id!(rendered)
     attrs = base_delivery_attrs(rendered, ik, adapter_ref)
 
-    result =
+    multi =
       Ecto.Multi.new()
       |> Ecto.Multi.insert(
         :delivery,
@@ -423,7 +423,8 @@ defmodule Mailglass.Outbound do
         end,
         Repo.multi_opts()
       )
-      |> Repo.multi()
+
+    result = run_durable_multi(multi)
 
     case result do
       {:ok, %{delivery: d, event_queued: _event, payload: _payload, job: _job}} ->
@@ -432,6 +433,13 @@ defmodule Mailglass.Outbound do
       {:error, _step, err, _} ->
         {:error, to_error(err)}
     end
+  end
+
+  defp run_durable_multi(multi) do
+    Repo.multi(multi)
+  rescue
+    err in [Ecto.ConstraintError, Postgrex.Error] ->
+      {:error, :transaction, err, %{}}
   end
 
   defp enqueue_task_supervisor(%Message{} = rendered, adapter_ref, _opts) do
@@ -760,6 +768,18 @@ defmodule Mailglass.Outbound do
       _ -> base
     end
   end
+
+  defp to_error(%Ecto.ConstraintError{} = err),
+    do:
+      Mailglass.SendError.new(:adapter_failure,
+        context: %{reason_class: :persistence_failed, constraint: err.constraint}
+      )
+
+  defp to_error(%Postgrex.Error{} = err),
+    do:
+      Mailglass.SendError.new(:adapter_failure,
+        context: %{reason_class: :persistence_failed, postgres: err.postgres.code}
+      )
 
   defp to_error(%{__exception__: true} = e), do: e
 

@@ -202,6 +202,35 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
                  )
       end
     end
+
+    @tag phase_150_task: "t150_02_01"
+    test "payload and canonical job insert failures roll back every durable fact" do
+      if not Code.ensure_loaded?(Oban) do
+        :skip
+      else
+        Application.put_env(:mailglass, :async_adapter, :oban)
+
+        start_supervised!(
+          {Oban, testing: :manual, repo: TestRepo, queues: [mailglass_outbound: 10]}
+        )
+
+        for {table, constraint, expression} <- [
+              {"mailglass_outbound_payloads", "phase_150_payload_reject", "CHECK (false)"},
+              {"oban_jobs", "phase_150_job_reject", "CHECK (queue <> 'mailglass_outbound')"}
+            ] do
+          before_counts = durable_fact_counts()
+
+          with_temporary_check_constraint(table, constraint, expression, fn ->
+            assert {:error, %Mailglass.SendError{type: :adapter_failure}} =
+                     Outbound.deliver_later(
+                       build_message("rollback-#{constraint}-#{unique_id()}@example.com")
+                     )
+          end)
+
+          assert durable_fact_counts() == before_counts
+        end
+      end
+    end
   end
 
   describe "deliver_later/2 — Task.Supervisor fallback" do
@@ -414,6 +443,29 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   defp oban_job_count do
     %{rows: [[count]]} = TestRepo.query!("SELECT COUNT(*) FROM oban_jobs")
     count
+  end
+
+  defp durable_fact_counts do
+    for table <- [
+          "mailglass_deliveries",
+          "mailglass_events",
+          "mailglass_outbound_payloads",
+          "oban_jobs"
+        ],
+        into: %{} do
+      %{rows: [[count]]} = TestRepo.query!("SELECT COUNT(*) FROM #{table}")
+      {table, count}
+    end
+  end
+
+  defp with_temporary_check_constraint(table, constraint, expression, fun) do
+    TestRepo.query!("ALTER TABLE #{table} ADD CONSTRAINT #{constraint} #{expression}")
+
+    try do
+      fun.()
+    after
+      TestRepo.query!("ALTER TABLE #{table} DROP CONSTRAINT IF EXISTS #{constraint}")
+    end
   end
 
   defp configure_routed_adapters(test_pid) do
