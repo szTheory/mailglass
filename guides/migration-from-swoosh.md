@@ -99,6 +99,7 @@ email =
   |> Swoosh.Email.to("migrated@example.com")
   |> Swoosh.Email.from("system@example.com")
   |> Swoosh.Email.subject("Migration test")
+  |> Swoosh.Email.text_body("Migration test")
 
 assert {:ok, _delivery} = Mailglass.deliver(email)
 ```

@@ -12,15 +12,11 @@ defmodule Mailglass.DocsMigrationSmokeTest do
     assert {:ok, _quoted} = Code.string_to_quoted(code)
   end
 
-  test "parity smoke: raw Swoosh email can be delivered via Mailglass" do
-    email =
-      Swoosh.Email.new()
-      |> Swoosh.Email.to("migrated@example.com")
-      |> Swoosh.Email.from("system@example.com")
-      |> Swoosh.Email.subject("Migration parity check")
-      |> Swoosh.Email.text_body("Migration parity check")
+  test "parity smoke executes the documented raw Swoosh example" do
+    code = extract_block_after_heading(@guide_path, "End-to-End Example")
 
-    assert {:ok, _delivery} = Mailglass.deliver(email)
+    assert code =~ "Swoosh.Email.text_body(\"Migration test\")"
+    assert {{:ok, _delivery}, _bindings} = Code.eval_string(code, [], __ENV__)
   end
 
   test "canonical upgrade guide is the single upgrade authority" do
