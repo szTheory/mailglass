@@ -100,7 +100,8 @@ defmodule Mailglass.CILanes do
     "Trust Lane Repo Head (Elixir 1.18 / OTP 27)",
     "Installer Host Smoke",
     "Hex Audit (Elixir 1.18 / OTP 27)",
-    "Deps Audit (Elixir 1.18 / OTP 27)"
+    "Deps Audit (Elixir 1.18 / OTP 27)",
+    "Mix Task Tests (Elixir 1.18 / OTP 27)"
   ]
 
   # Hygiene lanes `mix ci` reproduces (verbatim ci.yml name:).
@@ -135,7 +136,6 @@ defmodule Mailglass.CILanes do
   @publish_gating_lanes [
     "Format Check (Elixir 1.18 / OTP 27)",
     "Compile Warnings as Errors (Elixir 1.18 / OTP 27)",
-    "Mix Task Tests (Elixir 1.18 / OTP 27)",
     "Inbound Test (Elixir 1.18 / OTP 27)",
     "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)",
     "Credo Strict (Elixir 1.18 / OTP 27)",

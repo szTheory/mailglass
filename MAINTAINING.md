@@ -245,7 +245,7 @@ executed into that state; see each `promote` row's `reason` cell.
 | `preview_capture_advisory` | `Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)` | advisory | keep-with-reason | Node/Playwright preview capture. One of the three matrix lanes - never promote to the exact-equality required set. |
 | `format_check` | `Format Check (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Cheap hygiene; reproduced by `mix ci.fast`. |
 | `compile_warnings` | `Compile Warnings as Errors (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Reproduced by `mix ci.fast`. |
-| `mix_task_tests` | `Mix Task Tests (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Generator/CLI surface; directory-scoped anti-drift. |
+| `mix_task_tests` | `Mix Task Tests (Elixir 1.18 / OTP 27)` | required | keep-with-reason | Generator/CLI and CI-contract surface; a failure blocks CI Green and merge. |
 | `inbound_test` | `Inbound Test (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Sibling package on its own version line. |
 | `inbound_compile_no_optional_deps` | `Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Sibling optional-deps gateway. |
 | `credo_strict` | `Credo Strict (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Custom Credo checks enforce domain rules at lint time. |

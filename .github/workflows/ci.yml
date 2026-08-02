@@ -1131,6 +1131,7 @@ jobs:
     needs:
       - compile_no_optional_deps
       - installer_host_smoke
+      - mix_task_tests
       - support_contract_core
       - support_contract_admin
       - trust_lane_repo_head
@@ -1143,6 +1144,7 @@ jobs:
           for job_result in \
             "compile_no_optional_deps=${{ needs.compile_no_optional_deps.result }}" \
             "installer_host_smoke=${{ needs.installer_host_smoke.result }}" \
+            "mix_task_tests=${{ needs.mix_task_tests.result }}" \
             "support_contract_core=${{ needs.support_contract_core.result }}" \
             "support_contract_admin=${{ needs.support_contract_admin.result }}" \
             "trust_lane_repo_head=${{ needs.trust_lane_repo_head.result }}" \

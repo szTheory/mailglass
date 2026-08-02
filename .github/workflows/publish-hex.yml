@@ -430,7 +430,8 @@ jobs:
               'Trust Lane Repo Head (Elixir 1.18 / OTP 27)',
               'Installer Host Smoke',
               'Hex Audit (Elixir 1.18 / OTP 27)',
-              'Deps Audit (Elixir 1.18 / OTP 27)'
+              'Deps Audit (Elixir 1.18 / OTP 27)',
+              'Mix Task Tests (Elixir 1.18 / OTP 27)'
             ];
 
             // Classification mirrors Mailglass.CILanes (test/support/ci_lanes.ex),
@@ -446,7 +447,7 @@ jobs:
             // 27)`, and Operator Browser Gate / Preview Capture Advisory gain a
             // similar matrix-value suffix. Prefix matching is REQUIRED for any
             // array that may contain a matrix lane. REQUIRED_LANES correctly
-            // keeps exact equality because none of its seven lanes declares a
+            // keeps exact equality because none of its eight lanes declares a
             // matrix, and a required lane must be PRESENT, so the stricter test
             // is right there.
             const ADVISORY_LANES = [
@@ -461,7 +462,6 @@ jobs:
             const PUBLISH_GATING_LANES = [
               'Format Check (Elixir 1.18 / OTP 27)',
               'Compile Warnings as Errors (Elixir 1.18 / OTP 27)',
-              'Mix Task Tests (Elixir 1.18 / OTP 27)',
               'Inbound Test (Elixir 1.18 / OTP 27)',
               'Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)',
               'Credo Strict (Elixir 1.18 / OTP 27)',
