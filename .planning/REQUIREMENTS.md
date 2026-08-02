@@ -93,8 +93,8 @@ Populated during roadmap creation. Every v2.4 requirement must map to exactly on
 | FIRST-02 | Phase 149 | Complete |
 | FIRST-03 | Phase 149 | Complete |
 | FIRST-04 | Phase 149 | Complete |
-| FIRST-05 | Phase 149 | Pending |
-| FIRST-06 | Phase 149 | Pending |
+| FIRST-05 | Phase 149 | Complete |
+| FIRST-06 | Phase 149 | Complete |
 | FIRST-07 | Phase 149 | Complete |
 | ENVL-01 | Phase 150 | Pending |
 | ENVL-02 | Phase 150 | Pending |
