@@ -33,7 +33,7 @@ defmodule Mailglass.Suppression do
   @doc """
   Pre-send suppression check. Returns `:ok` when allowed, `{:error, %SuppressedError{}}` when blocked.
 
-  Extracts the primary recipient from `msg.swoosh_email.to` and delegates to the
+  Uses the shared validated sole-recipient extractor and delegates to the
   configured `SuppressionStore` implementation.
   """
   @doc since: "0.1.0"
@@ -41,7 +41,7 @@ defmodule Mailglass.Suppression do
   def check_before_send(%Message{} = msg) do
     start = System.monotonic_time(:microsecond)
 
-    address = primary_recipient(msg)
+    address = recipient_address(msg)
     key = %{tenant_id: msg.tenant_id, address: address, stream: msg.stream}
 
     result = store().check(key, [])
@@ -106,14 +106,12 @@ defmodule Mailglass.Suppression do
     Application.get_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.Ecto)
   end
 
-  defp primary_recipient(%Message{swoosh_email: %Swoosh.Email{to: [{_, addr} | _]}}),
-    do: String.downcase(addr)
-
-  defp primary_recipient(%Message{swoosh_email: %Swoosh.Email{to: [addr | _]}})
-       when is_binary(addr),
-       do: String.downcase(addr)
-
-  defp primary_recipient(_), do: ""
+  defp recipient_address(%Message{} = message) do
+    case Message.sole_recipient(message) do
+      {:ok, %{address: address}} -> address
+      {:error, _} -> ""
+    end
+  end
 
   defp emit_telemetry(duration_us, hit, tenant_id) do
     :telemetry.execute(

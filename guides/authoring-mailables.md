@@ -4,10 +4,10 @@ Use `Mailglass.Mailable` to define message builders on the native v0.2 API. The 
 
 ## First-send envelope and body contract
 
-A supported first send has **exactly one native `to` recipient**. `cc` and
-`bcc` count toward the one-recipient limit, but Phase 149 rejects them rather
-than silently changing recipient-field identity across durable async delivery.
-Do not add a second recipient, use `cc`/`bcc` as a selection mechanism, or
+A supported first send has **exactly one native recipient total** across `to`,
+`cc`, and `bcc`. Mailglass preserves that sole field for synchronous delivery
+and current async rehydration. Do not add a second recipient, use `cc`/`bcc` as
+a selection mechanism, or
 expect recipient fan-out. The body must contain
 nonblank HTML, nonblank plaintext, or both. Invalid envelope/body shapes return
 `%Mailglass.SendError{type: :preflight_rejected}` before rendering, persistence,

@@ -61,6 +61,25 @@ defmodule Mailglass.OutboundTest do
   end
 
   describe "send/2 — happy path" do
+    test "sync delivery preserves a sole cc or bcc recipient and persists its address" do
+      for field <- [:cc, :bcc] do
+        address = "sync-#{field}@example.com"
+        message = message_with_recipient_field(field, address)
+
+        assert {:ok, %Delivery{tenant_id: "test-tenant", recipient: ^address}} =
+                 Outbound.send(message)
+
+        record =
+          Enum.find(Fake.deliveries(), fn %{message: dispatched} ->
+            Map.fetch!(dispatched.swoosh_email, field) == [{"", address}]
+          end)
+
+        assert Map.fetch!(record.message.swoosh_email, field) == [{"", address}]
+        assert record.message.swoosh_email.to == []
+        Fake.checkout()
+      end
+    end
+
     test "sync Fake delivery retains renderer plaintext semantics" do
       Application.put_env(:mailglass, :renderer, plaintext: false, css_inliner: :none)
 
@@ -293,6 +312,22 @@ defmodule Mailglass.OutboundTest do
       mailable: Mailglass.FakeFixtures.TestMailer,
       tenant_id: "test-tenant",
       stream: Keyword.get(opts, :stream, :transactional)
+    )
+  end
+
+  defp message_with_recipient_field(field, address) do
+    email =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Test", "from@example.com"})
+      |> Swoosh.Email.subject("Recipient field")
+      |> Swoosh.Email.text_body("Body")
+      |> Map.merge(%{to: [], cc: [], bcc: []})
+      |> Map.put(field, [{"", address}])
+
+    Message.build(email,
+      mailable: Mailglass.FakeFixtures.TestMailer,
+      tenant_id: "test-tenant",
+      stream: :transactional
     )
   end
 

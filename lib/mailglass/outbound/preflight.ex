@@ -49,71 +49,20 @@ defmodule Mailglass.Outbound.Preflight do
     tenant_id
   end
 
-  defp validate_envelope(%Message{swoosh_email: email}) do
-    with {:ok, to} <- normalize_recipient_collection(email.to),
-         {:ok, cc} <- normalize_recipient_collection(email.cc),
-         {:ok, bcc} <- normalize_recipient_collection(email.bcc) do
-      validate_normalized_envelope(to, cc, bcc)
-    else
-      :error -> recipient_invalid_error()
-    end
-  end
+  defp validate_envelope(%Message{} = message) do
+    case Message.sole_recipient(message) do
+      {:ok, _recipient} ->
+        :ok
 
-  defp validate_normalized_envelope(to, cc, bcc) do
-    recipients = to ++ cc ++ bcc
-    count = length(recipients)
-
-    cond do
-      count != 1 ->
+      {:error, {:recipient_count_invalid, count}} ->
         {:error,
          SendError.new(:preflight_rejected,
            context: %{reason_class: :recipient_count_invalid, recipient_count: count}
          )}
 
-      to == [] ->
-        # Phase 149 persists only a recipient address. Retaining a `cc`/`bcc`
-        # field through the async boundary needs the private envelope planned for
-        # Phase 150, so reject these shapes instead of silently converting them.
-        {:error,
-         SendError.new(:preflight_rejected,
-           context: %{reason_class: :recipient_field_unsupported}
-         )}
-
-      true ->
-        :ok
+      {:error, :recipient_invalid} ->
+        recipient_invalid_error()
     end
-  end
-
-  defp normalize_recipient_collection(recipients) when is_list(recipients) do
-    recipients
-    |> Enum.reduce_while({:ok, []}, fn recipient, {:ok, acc} ->
-      case normalize_recipient(recipient) do
-        {:ok, normalized} -> {:cont, {:ok, [normalized | acc]}}
-        :error -> {:halt, :error}
-      end
-    end)
-    |> case do
-      {:ok, normalized} -> {:ok, Enum.reverse(normalized)}
-      :error -> :error
-    end
-  end
-
-  defp normalize_recipient_collection(_), do: :error
-
-  defp normalize_recipient(address) when is_binary(address) do
-    if valid_address?(address), do: {:ok, {"", address}}, else: :error
-  end
-
-  defp normalize_recipient({name, address})
-       when (is_binary(name) or is_nil(name)) and is_binary(address) do
-    if valid_address?(address), do: {:ok, {name || "", address}}, else: :error
-  end
-
-  defp normalize_recipient(_), do: :error
-
-  defp valid_address?(address) do
-    String.valid?(address) and String.trim(address) != "" and
-      Regex.match?(~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/, address)
   end
 
   defp recipient_invalid_error do

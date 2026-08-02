@@ -120,6 +120,28 @@ defmodule Mailglass.Message do
     }
   end
 
+  @doc false
+  @spec sole_recipient(t()) ::
+          {:ok, %{field: :to | :cc | :bcc, address: String.t()}}
+          | {:error, :recipient_invalid | {:recipient_count_invalid, non_neg_integer()}}
+  def sole_recipient(%__MODULE__{swoosh_email: email}) do
+    with {:ok, to} <- normalize_recipient_collection(email.to),
+         {:ok, cc} <- normalize_recipient_collection(email.cc),
+         {:ok, bcc} <- normalize_recipient_collection(email.bcc) do
+      recipients =
+        Enum.map(to, &%{field: :to, address: &1}) ++
+          Enum.map(cc, &%{field: :cc, address: &1}) ++
+          Enum.map(bcc, &%{field: :bcc, address: &1})
+
+      case recipients do
+        [recipient] -> {:ok, recipient}
+        recipients -> {:error, {:recipient_count_invalid, length(recipients)}}
+      end
+    else
+      :error -> {:error, :recipient_invalid}
+    end
+  end
+
   @doc """
   Creates a new `Mailglass.Message` from `use Mailglass.Mailable` opts.
 
@@ -183,6 +205,39 @@ defmodule Mailglass.Message do
   @spec update_swoosh(t(), (Swoosh.Email.t() -> Swoosh.Email.t())) :: t()
   def update_swoosh(%__MODULE__{swoosh_email: email} = msg, fun) when is_function(fun, 1) do
     %{msg | swoosh_email: fun.(email)}
+  end
+
+  defp normalize_recipient_collection(recipients) when is_list(recipients) do
+    recipients
+    |> Enum.reduce_while({:ok, []}, fn recipient, {:ok, acc} ->
+      case normalize_recipient(recipient) do
+        {:ok, address} -> {:cont, {:ok, [address | acc]}}
+        :error -> {:halt, :error}
+      end
+    end)
+    |> case do
+      {:ok, normalized} -> {:ok, Enum.reverse(normalized)}
+      :error -> :error
+    end
+  end
+
+  defp normalize_recipient_collection(_), do: :error
+
+  defp normalize_recipient(address) when is_binary(address), do: normalize_address(address)
+
+  defp normalize_recipient({name, address})
+       when (is_binary(name) or is_nil(name)) and is_binary(address),
+       do: normalize_address(address)
+
+  defp normalize_recipient(_), do: :error
+
+  defp normalize_address(address) do
+    if String.valid?(address) and String.trim(address) != "" and
+         Regex.match?(~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/, address) do
+      {:ok, String.downcase(address)}
+    else
+      :error
+    end
   end
 
   @doc """

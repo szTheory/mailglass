@@ -28,16 +28,13 @@ defmodule Mailglass.Outbound.PreflightTest do
       assert normalized.swoosh_email == original_email
     end
 
-    test "rejects sole cc and bcc recipients rather than silently changing their field" do
+    test "accepts a sole cc or bcc recipient without changing its field" do
       for field <- [:cc, :bcc] do
-        assert {:error,
-                %Mailglass.SendError{
-                  type: :preflight_rejected,
-                  context: %{reason_class: :recipient_field_unsupported}
-                }} =
-                 Mailglass.Outbound.Preflight.run(
-                   message_with_recipients(%{field => ["one@example.com"]})
-                 )
+        message = message_with_recipients(%{field => ["one@example.com"]})
+        original_email = message.swoosh_email
+
+        assert {:ok, normalized} = Mailglass.Outbound.Preflight.run(message)
+        assert normalized.swoosh_email == original_email
       end
     end
 
@@ -83,7 +80,7 @@ defmodule Mailglass.Outbound.PreflightTest do
       assert {:error, %Mailglass.SendError{context: %{recipient_count: 0}}} =
                Mailglass.Outbound.Preflight.run(message_with_recipients(%{}))
 
-      assert {:error, %Mailglass.SendError{context: %{reason_class: :recipient_field_unsupported}}} =
+      assert {:ok, _} =
                Mailglass.Outbound.Preflight.run(
                  message_with_recipients(%{bcc: ["one@example.com"]})
                )
@@ -327,6 +324,24 @@ defmodule Mailglass.Outbound.PreflightTest do
   end
 
   describe "preflight stage 2 — Suppression.check_before_send" do
+    test "suppression checks the real sole cc or bcc recipient address" do
+      for field <- [:cc, :bcc] do
+        address = "blocked-#{field}@example.com"
+
+        {:ok, _} =
+          insert_suppression!(%{
+            tenant_id: "test-tenant",
+            address: address,
+            scope: :address,
+            reason: :manual,
+            source: "test"
+          })
+
+        assert {:error, %Mailglass.SuppressedError{type: :address}} =
+                 Outbound.send(message_with_recipients(%{field => [address]}))
+      end
+    end
+
     test "suppressed recipient returns enriched SuppressedError context and inserts no Delivery row" do
       expires_at = DateTime.add(DateTime.utc_now(), 3_600, :second)
 

@@ -978,7 +978,7 @@ defmodule Mailglass.Outbound do
 
     email =
       Swoosh.Email.new()
-      |> Swoosh.Email.to(delivery.recipient)
+      |> put_rehydrated_recipient(delivery.recipient, delivery.metadata || %{})
       |> Swoosh.Email.subject(get_in(delivery.metadata, ["subject"]) || "")
       |> Swoosh.Email.html_body(get_in(delivery.metadata, ["rendered_html"]))
       |> Swoosh.Email.text_body(get_in(delivery.metadata, ["rendered_text"]))
@@ -1188,14 +1188,12 @@ defmodule Mailglass.Outbound do
     %{tenant_id: msg.tenant_id, mailable: msg.mailable, stream: msg.stream}
   end
 
-  defp primary_recipient(%Message{swoosh_email: %Swoosh.Email{to: [{_, addr} | _]}}),
-    do: String.downcase(addr)
-
-  defp primary_recipient(%Message{swoosh_email: %Swoosh.Email{to: [addr | _]}})
-       when is_binary(addr),
-       do: String.downcase(addr)
-
-  defp primary_recipient(_), do: ""
+  defp primary_recipient(%Message{} = message) do
+    case Message.sole_recipient(message) do
+      {:ok, %{address: address}} -> address
+      {:error, _} -> ""
+    end
+  end
 
   defp recipient_domain(msg) do
     case String.split(primary_recipient(msg), "@", parts: 2) do
@@ -1236,7 +1234,11 @@ defmodule Mailglass.Outbound do
           rendered_html: rendered.swoosh_email.html_body,
           rendered_text: rendered.swoosh_email.text_body,
           subject: rendered.swoosh_email.subject,
-          headers: rendered.swoosh_email.headers || %{}
+          headers: rendered.swoosh_email.headers || %{},
+          # Phase 149 retains this minimal marker solely to preserve the native
+          # sole-recipient field during current async rehydration. Phase 150's
+          # private envelope remains responsible for full envelope fidelity.
+          recipient_field: recipient_field(rendered)
         }),
       idempotency_key: ik
     }
@@ -1269,6 +1271,23 @@ defmodule Mailglass.Outbound do
 
       _ ->
         metadata
+    end
+  end
+
+  defp put_rehydrated_recipient(%Swoosh.Email{} = email, recipient, metadata) do
+    case Map.get(metadata, "recipient_field") || Map.get(metadata, :recipient_field) do
+      "cc" -> Swoosh.Email.cc(email, recipient)
+      "bcc" -> Swoosh.Email.bcc(email, recipient)
+      :cc -> Swoosh.Email.cc(email, recipient)
+      :bcc -> Swoosh.Email.bcc(email, recipient)
+      _ -> Swoosh.Email.to(email, recipient)
+    end
+  end
+
+  defp recipient_field(%Message{} = message) do
+    case Message.sole_recipient(message) do
+      {:ok, %{field: field}} -> Atom.to_string(field)
+      {:error, _} -> "to"
     end
   end
 

@@ -244,7 +244,6 @@ Its context is deliberately bounded:
 | Rejection | Context |
 |-----------|---------|
 | Zero or multiple total `to`/`cc`/`bcc` entries | `%{reason_class: :recipient_count_invalid, recipient_count: non_neg_integer()}` |
-| Sole `cc` or `bcc` recipient | `%{reason_class: :recipient_field_unsupported}` |
 | Malformed recipient collection or entry | `%{reason_class: :recipient_invalid}` |
 | Missing or blank supported body | `%{reason_class: :body_invalid, body_state: :empty}` |
 | Unsupported body shape | `%{reason_class: :body_invalid, body_state: :unsupported}` |
@@ -1000,8 +999,9 @@ Application.get_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.E
 Default is `Mailglass.SuppressionStore.Ecto`. Tests override to `Mailglass.SuppressionStore.ETS`
 for in-memory speed.
 
-**Recipient extraction:** Reads `msg.swoosh_email.to` — first element (primary recipient).
-Returns `""` when the `to` list is empty (store will return `:not_suppressed`).
+**Recipient extraction:** Uses the validated sole recipient across native `to`,
+`cc`, and `bcc` fields. Invalid shapes are rejected by outbound preflight before
+this check runs.
 
 **Return shape:**
 - `:ok` — recipient is not suppressed
@@ -1317,9 +1317,10 @@ Top-level `Mailglass` module re-exports all five public verbs as `defdelegate`.
 
 0. Shared tenancy, envelope, and body preflight — resolves `SingleTenant` to
    `"default"`, enforces exactly one total native envelope recipient, requires
-   that Phase 149's sole recipient be in `to` rather than silently losing a
-   sole `cc`/`bcc` field at the async boundary, and requires nonblank supported
-   HTML and/or plaintext. Tenancy raises
+   that a sole `to`, `cc`, or `bcc` recipient retain its native field through
+   current async rehydration, and requires nonblank supported HTML and/or
+   plaintext. Phase 150 still owns complete private durable-envelope fidelity.
+   Tenancy raises
    `%TenancyError{:unstamped}` for strict custom context; envelope/body failures
    return `%SendError{type: :preflight_rejected}`.
 1. `Mailglass.Renderer.render/1` followed by rendered-body validation — renders a

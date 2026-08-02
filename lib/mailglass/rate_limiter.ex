@@ -188,16 +188,12 @@ defmodule Mailglass.RateLimiter do
     )
   end
 
-  defp extract_recipient_domain(%Mailglass.Message{swoosh_email: %Swoosh.Email{to: [entry | _]}}) do
-    recipient_address(entry)
-    |> extract_domain()
+  defp extract_recipient_domain(%Mailglass.Message{} = message) do
+    case Mailglass.Message.sole_recipient(message) do
+      {:ok, %{address: address}} -> extract_domain(address)
+      {:error, _} -> ""
+    end
   end
-
-  defp extract_recipient_domain(_), do: ""
-
-  defp recipient_address({_, addr}) when is_binary(addr), do: addr
-  defp recipient_address(addr) when is_binary(addr), do: addr
-  defp recipient_address(_), do: ""
 
   defp extract_domain(addr) do
     case String.split(addr, "@", parts: 2) do

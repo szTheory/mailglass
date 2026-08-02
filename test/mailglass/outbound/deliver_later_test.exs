@@ -68,6 +68,25 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   end
 
   describe "deliver_later/2 — return shape invariant (D-14)" do
+    test "async delivery preserves a sole cc or bcc recipient, tenant, and persisted address" do
+      for field <- [:cc, :bcc] do
+        address = "async-#{field}-#{unique_id()}@example.com"
+        message = build_message_with_recipient_field(field, address)
+
+        assert {:ok, %Delivery{tenant_id: "test-tenant", recipient: ^address} = delivery} =
+                 Outbound.deliver_later(message)
+
+        assert %Delivery{tenant_id: "test-tenant", recipient: ^address} =
+                 TestRepo.get!(Delivery, delivery.id)
+
+        assert_async_fake_delivery("test-tenant")
+        %{message: dispatched} = fake_delivery_in_field!(field, address)
+        assert Map.fetch!(dispatched.swoosh_email, field) == [{"", address}]
+        assert dispatched.swoosh_email.to == []
+        Mailglass.Adapters.Fake.checkout()
+      end
+    end
+
     test "async preparation retains renderer plaintext semantics before monitored dispatch" do
       Application.put_env(:mailglass, :renderer, plaintext: false, css_inliner: :none)
 
@@ -288,6 +307,22 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     )
   end
 
+  defp build_message_with_recipient_field(field, address) do
+    email =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Test", "from@example.com"})
+      |> Swoosh.Email.subject("Recipient field")
+      |> Swoosh.Email.text_body("Body")
+      |> Map.merge(%{to: [], cc: [], bcc: []})
+      |> Map.put(field, [{"", address}])
+
+    Message.build(email,
+      mailable: Mailglass.FakeFixtures.TestMailer,
+      tenant_id: "test-tenant",
+      stream: :transactional
+    )
+  end
+
   defp build_message_with_bodies(html, text) do
     email =
       Swoosh.Email.new()
@@ -331,6 +366,14 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     Enum.find(Mailglass.Adapters.Fake.deliveries(), fn %{message: message} ->
       Enum.any?(message.swoosh_email.to, fn {_name, recipient} -> recipient == address end)
     end) || flunk("no Fake delivery found for #{address}")
+  end
+
+  defp fake_delivery_in_field!(field, address) do
+    Enum.find(Mailglass.Adapters.Fake.deliveries(), fn %{message: message} ->
+      Enum.any?(Map.fetch!(message.swoosh_email, field), fn {_name, recipient} ->
+        recipient == address
+      end)
+    end) || flunk("no Fake delivery found for #{address} in #{field}")
   end
 
   defp await_task_supervisor_children do
