@@ -89,7 +89,7 @@ defmodule Mailglass.Outbound do
     Telemetry
   }
 
-  alias Mailglass.Outbound.{Delivery, Projector}
+  alias Mailglass.Outbound.{Delivery, Preflight, Projector}
   alias Mailglass.Tracking
 
   import Kernel, except: [send: 2]
@@ -201,9 +201,7 @@ defmodule Mailglass.Outbound do
 
   def deliver_many(messages, opts) when is_list(messages) do
     Telemetry.send_span(%{batch_size: length(messages)}, fn ->
-      case Tenancy.assert_stamped!() do
-        :ok -> do_deliver_many(messages, opts)
-      end
+      do_deliver_many(messages, opts)
     end)
   end
 
@@ -287,12 +285,12 @@ defmodule Mailglass.Outbound do
 
   defp do_send(%Message{} = msg, opts) do
     # Preflight (stages 0-5) — no DB writes yet
-    with :ok <- Tenancy.assert_stamped!(),
-         :ok <- Tracking.Guard.assert_safe!(msg),
-         :ok <- Suppression.check_before_send(msg),
-         :ok <- RateLimiter.check(msg),
-         :ok <- Stream.policy_check(msg),
-         {:ok, rendered} <- Renderer.render(msg) do
+    with {:ok, normalized} <- Preflight.run(msg),
+         :ok <- Tracking.Guard.assert_safe!(normalized),
+         :ok <- Suppression.check_before_send(normalized),
+         :ok <- RateLimiter.check(normalized),
+         :ok <- Stream.policy_check(normalized),
+         {:ok, rendered} <- Renderer.render(normalized) do
       do_send_after_preflight(prepare_outbound_message(rendered), opts)
     end
   end
@@ -348,12 +346,12 @@ defmodule Mailglass.Outbound do
   # =========================================================
 
   defp do_deliver_later(%Message{} = msg, opts) do
-    with :ok <- Tenancy.assert_stamped!(),
-         :ok <- Tracking.Guard.assert_safe!(msg),
-         :ok <- Suppression.check_before_send(msg),
-         :ok <- RateLimiter.check(msg),
-         :ok <- Stream.policy_check(msg),
-         {:ok, rendered} <- Renderer.render(msg),
+    with {:ok, normalized} <- Preflight.run(msg),
+         :ok <- Tracking.Guard.assert_safe!(normalized),
+         :ok <- Suppression.check_before_send(normalized),
+         :ok <- RateLimiter.check(normalized),
+         :ok <- Stream.policy_check(normalized),
+         {:ok, rendered} <- Renderer.render(normalized),
          prepared = prepare_outbound_message(rendered),
          {:ok, adapter_ref} <- resolve_async_adapter_ref(prepared, opts) do
       enqueue_via_async_adapter(prepared, adapter_ref, opts)
@@ -533,11 +531,12 @@ defmodule Mailglass.Outbound do
   end
 
   defp preflight_single(%Message{} = msg) do
-    with :ok <- Tracking.Guard.assert_safe!(msg),
-         :ok <- Suppression.check_before_send(msg),
-         :ok <- RateLimiter.check(msg),
-         :ok <- Stream.policy_check(msg),
-         {:ok, rendered} <- Renderer.render(msg) do
+    with {:ok, normalized} <- Preflight.run(msg),
+         :ok <- Tracking.Guard.assert_safe!(normalized),
+         :ok <- Suppression.check_before_send(normalized),
+         :ok <- RateLimiter.check(normalized),
+         :ok <- Stream.policy_check(normalized),
+         {:ok, rendered} <- Renderer.render(normalized) do
       {:ok, prepare_outbound_message(rendered)}
     else
       {:error, err} -> {:error, err, msg}
