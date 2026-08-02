@@ -58,7 +58,10 @@ defmodule Mailglass.Outbound.PreflightTest do
         assert {:error,
                 %Mailglass.SendError{
                   type: :preflight_rejected,
-                  context: %{reason_class: :recipient_count_invalid, recipient_count: ^expected_count}
+                  context: %{
+                    reason_class: :recipient_count_invalid,
+                    recipient_count: ^expected_count
+                  }
                 }} = Mailglass.Outbound.Preflight.run(message)
 
         assert message.swoosh_email == original_email
@@ -70,7 +73,9 @@ defmodule Mailglass.Outbound.PreflightTest do
                Mailglass.Outbound.Preflight.run(message_with_recipients(%{}))
 
       assert {:ok, _} =
-               Mailglass.Outbound.Preflight.run(message_with_recipients(%{bcc: ["one@example.com"]}))
+               Mailglass.Outbound.Preflight.run(
+                 message_with_recipients(%{bcc: ["one@example.com"]})
+               )
 
       assert {:error, %Mailglass.SendError{context: %{recipient_count: 2}}} =
                Mailglass.Outbound.Preflight.run(
@@ -138,7 +143,9 @@ defmodule Mailglass.Outbound.PreflightTest do
           [:mailglass, :render, :message, :start],
           [:mailglass, :outbound, :rate_limit, :stop]
         ],
-        fn event, _measurements, _metadata, _config -> send(test_pid, {:preflight_telemetry, event}) end,
+        fn event, _measurements, _metadata, _config ->
+          send(test_pid, {:preflight_telemetry, event})
+        end,
         nil
       )
 
