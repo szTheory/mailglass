@@ -22,12 +22,32 @@ Package boundaries are locked. Chimeway owns notification policy and preferences
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
 paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
 
-## Next Milestone Goals
+## Current Milestone: v2.4 Outbound First-Adopter Correctness
 
-Planning next milestone. Default posture remains convergence and adopter-pull: do not absorb notification
-policy, authentication, billing, support, mobile activation, or SRE ownership into Mailglass. The external
-Sigra, Chimeway, Parapet, Accrue, and host recovery gates remain production-adoption work owned by those
-systems, not unfinished Mailglass requirements.
+**Goal:** Make Mailglass's documented single-recipient sync/async B2C path correct, durable,
+privacy-bounded, and proven from a clean Phoenix host before Alpha adopts it.
+
+**Target features:**
+- First-send contract truth: correct Oban queue wiring, real zero-config single tenancy, and honest renderer/body semantics.
+- Durable async fidelity: one envelope recipient per delivery, complete wire-equivalent payloads, fail-closed durability, and honest retry behavior.
+- One-click compliance convergence: idempotent RFC 8058 POST produces the stream-scoped suppression future sends enforce.
+- Async payload privacy: internal queued content is lifecycle-bounded, scrubbed after successful dispatch, and separated from adopter metadata.
+- Unassisted adopter proof: a clean Phoenix/Postgres host installs, migrates, sends sync and async, ingests feedback, enforces unsubscribe, mounts production operations, and passes release proof without test-helper shortcuts.
+
+## Active Requirements
+
+- [ ] The documented single-tenant first-send path works without an explicit process tenant stamp, while custom tenancy remains fail-closed.
+- [ ] Synchronous and durable asynchronous delivery preserve the same supported message semantics for exactly one envelope recipient.
+- [ ] Built-in one-click unsubscribe atomically creates the correct stream-scoped suppression and remains replay-idempotent.
+- [ ] Explicit plaintext, text-only mail, and documented renderer options behave as published.
+- [ ] Async message content has an explicit internal storage, scrubbing, and bounded-retention contract.
+- [ ] A generated production-shaped Phoenix host proves the complete adopter journey and blocks release on configuration drift.
+
+Default posture remains convergence and adopter-pull: do not absorb notification policy,
+authentication, billing, support, mobile activation, or SRE ownership into Mailglass. The external
+Sigra, Chimeway, Parapet, Accrue, and host recovery gates remain production-adoption work owned by
+those systems, not unfinished Mailglass requirements. Admin visual polish, native HEEx assigns,
+provider breadth, ecosystem integrations, and sent-snapshot viewing are explicitly deferred.
 
 <details>
 <summary>Archived v2.2 milestone context</summary>
@@ -845,7 +865,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-08-02 after v2.3 milestone completion. Audit passed 15/15 requirements, 7/7 integration seams, and 5/5 end-to-end flows; next milestone not yet defined.*
+*Last updated: 2026-08-02 after opening v2.4 Outbound First-Adopter Correctness for Alpha readiness.*
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->

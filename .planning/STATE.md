@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.3
-milestone_name: B2C First-Adopter Readiness
-status: Awaiting next milestone
-stopped_at: Completed and verified Phase 148
-last_updated: "2026-08-02T14:15:46.332Z"
+milestone: v2.4
+milestone_name: Outbound First-Adopter Correctness
+status: planning
+last_updated: "2026-08-02T14:49:46.228Z"
 last_activity: 2026-08-02
-last_activity_desc: Milestone v2.3 completed and archived
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
-current_phase: 148
-current_phase_name: release-and-adoption-proof
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-08-02 after v2.3 milestone completion)
 
 ## Current Position
 
-Phase: Milestone v2.3 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-08-02 — Milestone v2.3 completed and archived
+Status: Defining requirements
+Last activity: 2026-08-02 — Milestone v2.4 started
 
 ## v2.3 Closeout
 
