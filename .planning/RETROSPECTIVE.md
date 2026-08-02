@@ -4,6 +4,47 @@
 
 ---
 
+## Milestone: v2.3 — B2C First-Adopter Readiness
+
+**Shipped 2026-08-02** — 4 phases (145–148), 8 plans, 18 tasks, 15 requirements; audit `status: passed`.
+
+### What Was Built
+
+- An executable B2C first-adopter guide locking stream mapping, suppression scope, RFC 8058 ownership, named sending identities, conservative pacing, tracking policy, and sibling-package boundaries.
+- Stable post-commit provider-feedback telemetry with `%{count: 1}`, a PII-free metadata contract, and replay convergence.
+- Tenant-scoped live operator refresh across list, detail/evidence, suppression, provider options, and counters without losing URL-backed state.
+- Protected core/admin 2.4.0 publication with inbound held at 2.1.1, followed by a clean public-Hex consumer boot and trust journey.
+
+### What Worked
+
+- One release-proof ledger kept local path proof, protected publish evidence, and public-registry proof distinct and fail-closed.
+- Reusing the projector's existing tenant topics connected provider feedback to operator visibility without introducing another event bus.
+- Package-boundary decisions prevented B2C adoption work from pulling auth, billing, support, preferences, or mobile routing into Mailglass.
+
+### What Was Inefficient
+
+- Phases 145–147 shipped in the large `53211e8b` integration commit without lifecycle directories, so closeout initially failed the three-source requirement audit despite working implementation.
+- Phase 148 verification was human-readable but lacked canonical YAML frontmatter, and its seeded validation file remained draft after all proof was green.
+- Running root and admin database-heavy validation suites concurrently caused one PostgreSQL deadlock; the standalone rerun passed 79/79.
+
+### Patterns Established
+
+- Historical evidence reconstruction must be explicit: label artifacts `reconstructed`, cite the immutable ship commit, and bind every claim to fresh tests plus integration inspection.
+- External adopter launch gates belong beside Mailglass requirements for visibility but remain clearly excluded from Mailglass completion scoring.
+- A package that did not change should be positively proven compatible and left unpublished, not mechanically dragged through a linked release.
+
+### Key Lessons
+
+1. Create phase SUMMARY, VERIFICATION, and VALIDATION artifacts in the same commit as shipped behavior; checked ROADMAP lines are not audit evidence.
+2. Keep one real release ledger from preflight through registry smoke so irreversible publication decisions remain reviewable.
+3. Serialize database-heavy validation suites unless their schemas and teardown paths are isolated.
+
+### Cost Observations
+
+- One-day ship/verification window from `53211e8b` on 2026-08-01 through milestone close on 2026-08-02.
+- 203 files changed in the milestone range; 9,916 insertions and 988 deletions, including the same integration commit's planning-history reconciliation.
+- 4 phases, 8 plans, 18 tasks; release automation and proof carried most of the operational cost.
+
 ## Milestone: v2.2 — CI Signal Integrity & Supply-Chain Hygiene
 
 **Shipped 2026-07-31** — 4 phases (141–144), 30 plans, 63 tasks, 20 requirements; audit `status: passed`.
@@ -752,3 +793,4 @@ baseline: "I LOVE THE NEW BRANDBOOK."
 |-----------|-------:|------:|----------------|
 | v2.1 | 3 | 9 | Hostile-path and first-load proof expose false confidence hidden by friendly fixtures. |
 | v2.2 | 4 | 30 | CI truth requires fail-closed aggregation, negative controls, and runtime/source cross-checks. |
+| v2.3 | 4 | 8 | Release proof is strongest when policy, live observability, and public-consumer evidence converge without crossing package boundaries. |
