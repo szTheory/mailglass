@@ -38,6 +38,18 @@ defmodule Mailglass.RendererTest do
       assert is_nil(rendered.swoosh_email.html_body)
     end
 
+    test "normalizes blank function HTML to absent while preserving explicit plaintext" do
+      message =
+        Mailglass.Message.build(
+          %Swoosh.Email{html_body: fn _assigns -> "" end, text_body: "Explicit plaintext"},
+          tenant_id: "t"
+        )
+
+      assert {:ok, rendered} = Mailglass.Renderer.render(message)
+      assert is_nil(rendered.swoosh_email.html_body)
+      assert rendered.swoosh_email.text_body == "Explicit plaintext"
+    end
+
     test "generates plaintext only for HTML-only messages when configured" do
       html = "<p>Generated renderer text</p>"
 

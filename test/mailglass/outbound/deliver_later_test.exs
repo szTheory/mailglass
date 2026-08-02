@@ -87,6 +87,19 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       end
     end
 
+    test "async delivery sends explicit plaintext when an HTML function renders blank" do
+      message =
+        build_message("blank-html-later-#{unique_id()}@example.com")
+        |> put_in([Access.key(:swoosh_email), Access.key(:html_body)], fn _assigns -> "" end)
+        |> put_in([Access.key(:swoosh_email), Access.key(:text_body)], "explicit plaintext")
+
+      assert {:ok, %Delivery{}} = Outbound.deliver_later(message)
+      assert_async_fake_delivery("test-tenant")
+
+      assert [%{message: %{swoosh_email: %{html_body: nil, text_body: "explicit plaintext"}}}] =
+               Mailglass.Adapters.Fake.deliveries()
+    end
+
     test "async preparation retains renderer plaintext semantics before monitored dispatch" do
       Application.put_env(:mailglass, :renderer, plaintext: false, css_inliner: :none)
 

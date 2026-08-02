@@ -80,7 +80,10 @@ defmodule Mailglass.Renderer do
          html_binary = IO.iodata_to_binary(html_iodata),
          {:ok, final_html} <- finalize_html(html_binary, renderer) do
       text_body = rendered_text_body(message.swoosh_email.text_body, html_binary, renderer)
-      updated_email = %{message.swoosh_email | html_body: final_html, text_body: text_body}
+
+      updated_email =
+        %{message.swoosh_email | html_body: blank_html_to_nil(final_html), text_body: text_body}
+
       {:ok, %{message | swoosh_email: updated_email}}
     end
   end
@@ -97,6 +100,10 @@ defmodule Mailglass.Renderer do
       renderer[:plaintext] -> to_plaintext(html)
       true -> nil
     end
+  end
+
+  defp blank_html_to_nil(html) when is_binary(html) do
+    if String.trim(html) == "", do: nil, else: html
   end
 
   defp maybe_inline_css(html, :premailex), do: inline_css(html)

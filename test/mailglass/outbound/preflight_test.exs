@@ -230,6 +230,15 @@ defmodule Mailglass.Outbound.PreflightTest do
     end
   end
 
+  describe "rendered body validation" do
+    test "accepts blank rendered HTML when explicit plaintext is nonblank" do
+      source = message_with_bodies(fn _assigns -> "" end, "explicit plaintext")
+      rendered = put_in(source.swoosh_email.html_body, nil)
+
+      assert :ok = Mailglass.Outbound.Preflight.validate_rendered_body(source, rendered)
+    end
+  end
+
   describe "preflight stage 0 — resolver-aware tenancy normalization" do
     @tag tenant: :unset
     test "SingleTenant sends an unstamped message as the default tenant" do

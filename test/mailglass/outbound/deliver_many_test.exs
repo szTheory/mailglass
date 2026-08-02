@@ -64,6 +64,20 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       assert length(deliveries) == 3
       assert Enum.all?(deliveries, fn d -> %Delivery{} = d end)
     end
+
+    test "renders a blank HTML function once and dispatches its explicit plaintext" do
+      address = "blank-html-batch-#{unique_id()}@example.com"
+
+      message =
+        build_message(address)
+        |> put_in([Access.key(:swoosh_email), Access.key(:html_body)], fn _assigns -> "" end)
+        |> put_in([Access.key(:swoosh_email), Access.key(:text_body)], "explicit plaintext")
+
+      assert {:ok, [%Delivery{recipient: ^address}]} = Outbound.deliver_many([message], [])
+
+      assert %Message{swoosh_email: %{html_body: nil, text_body: "explicit plaintext"}} =
+               Mailglass.TestAssertions.wait_for_mail(500)
+    end
   end
 
   describe "deliver_many/2 — idempotency keys (Test 2)" do

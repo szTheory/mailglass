@@ -80,6 +80,18 @@ defmodule Mailglass.OutboundTest do
       end
     end
 
+    test "blank rendered HTML with explicit plaintext dispatches the plaintext once" do
+      message =
+        build_message("blank-html-sync@example.com")
+        |> put_in([Access.key(:swoosh_email), Access.key(:html_body)], fn _assigns -> "" end)
+        |> put_in([Access.key(:swoosh_email), Access.key(:text_body)], "explicit plaintext")
+
+      assert {:ok, %Delivery{recipient: "blank-html-sync@example.com"}} = Outbound.send(message)
+
+      assert [%{message: %{swoosh_email: %{html_body: nil, text_body: "explicit plaintext"}}}] =
+               Fake.deliveries()
+    end
+
     test "sync Fake delivery retains renderer plaintext semantics" do
       Application.put_env(:mailglass, :renderer, plaintext: false, css_inliner: :none)
 
