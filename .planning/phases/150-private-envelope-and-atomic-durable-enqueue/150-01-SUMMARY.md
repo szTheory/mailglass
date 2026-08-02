@@ -90,12 +90,19 @@ status: complete
 
 ---
 
-**Total deviations:** 1 auto-fixed (Rule 1).
+**2. [Rule 1 - Bug] Completed the five-table baseline fixture inventory**
+- **Found during:** Independent seeded integration rerun
+- **Issue:** Two sandbox-ownership fixtures still modeled the former four-table baseline.
+- **Fix:** Added the payload relation to empty-schema and ledger-gap fixture inventories.
+- **Verification:** Full suites under seeds `967795` and `123456` passed with 1,721 tests and 0 failures each.
+- **Committed in:** `6a21d3ce`
+
+**Total deviations:** 2 auto-fixed (Rule 1).
 **Impact on plan:** Required migration-harness correctness only; no public product surface was added.
 
 ## Issues Encountered
 
-None. The original planned verification command passed: 17 tests, 0 failures. The post-wave full `mix test` gate also passed after the migration-harness fix.
+None. The original planned verification command passed: 17 tests, 0 failures. Repeatability proof passed under seeds `967795` and `123456`: 1,721 tests, 0 failures each.
 
 ## Next Phase Readiness
 
