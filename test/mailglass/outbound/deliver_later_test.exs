@@ -183,6 +183,27 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   end
 
   describe "deliver_later/2 — preflight failures" do
+    test "recipient and body rejection insert no delivery, event, Oban job, task, or Fake delivery" do
+      Mailglass.TestSupport.SandboxOwnership.with_app_env!(:mailglass)
+      Application.put_env(:mailglass, :async_adapter, :oban)
+
+      deliveries_before = TestRepo.aggregate(Delivery, :count)
+      oban_jobs_before = oban_job_count()
+
+      for message <- [
+            build_message_with_recipients(["one@example.com", "two@example.com"]),
+            build_message_with_bodies(nil, "\u00A0\u2003")
+          ] do
+        assert {:error, %Mailglass.SendError{type: :preflight_rejected}} =
+                 Outbound.deliver_later(message)
+      end
+
+      assert TestRepo.aggregate(Delivery, :count) == deliveries_before
+      assert oban_job_count() == oban_jobs_before
+      assert DynamicSupervisor.which_children(Mailglass.TaskSupervisor) == []
+      assert Mailglass.Adapters.Fake.deliveries() == []
+    end
+
     test "suppressed recipient returns {:error, %SuppressedError{}} — no Delivery row" do
       addr = "blocked-later-#{unique_id()}@example.com"
 
@@ -221,6 +242,42 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       tenant_id: Keyword.get(opts, :tenant_id, "test-tenant"),
       stream: Keyword.get(opts, :stream, :transactional)
     )
+  end
+
+  defp build_message_with_recipients(recipients) do
+    email =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Test", "from@example.com"})
+      |> Swoosh.Email.to(recipients)
+      |> Swoosh.Email.subject("Rejected later")
+      |> Swoosh.Email.text_body("Body")
+
+    Message.build(email,
+      mailable: Mailglass.FakeFixtures.TestMailer,
+      tenant_id: "test-tenant",
+      stream: :transactional
+    )
+  end
+
+  defp build_message_with_bodies(html, text) do
+    email =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Test", "from@example.com"})
+      |> Swoosh.Email.to("one@example.com")
+      |> Swoosh.Email.subject("Rejected later")
+      |> Map.put(:html_body, html)
+      |> Map.put(:text_body, text)
+
+    Message.build(email,
+      mailable: Mailglass.FakeFixtures.TestMailer,
+      tenant_id: "test-tenant",
+      stream: :transactional
+    )
+  end
+
+  defp oban_job_count do
+    %{rows: [[count]]} = TestRepo.query!("SELECT COUNT(*) FROM oban_jobs")
+    count
   end
 
   defp configure_routed_adapters(test_pid) do

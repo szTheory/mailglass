@@ -79,6 +79,84 @@ defmodule Mailglass.Outbound.PreflightTest do
     end
   end
 
+  describe "preflight body contract" do
+    test "rejects nil, empty, and Unicode-whitespace-only bodies as empty without values in context" do
+      for {html, text} <- [
+            {nil, nil},
+            {"", ""},
+            {"\u00A0\u2003", "\n\t\r"}
+          ] do
+        assert {:error,
+                %Mailglass.SendError{
+                  type: :preflight_rejected,
+                  context: %{reason_class: :body_invalid, body_state: :empty} = context
+                }} = Mailglass.Outbound.Preflight.run(message_with_bodies(html, text))
+
+        assert Map.keys(context) |> Enum.sort() == [:body_state, :reason_class]
+      end
+    end
+
+    test "rejects unsupported body type, HTML arity, and invalid plaintext encoding" do
+      for {html, text} <- [
+            {:not_html, nil},
+            {fn -> "wrong arity" end, nil},
+            {nil, :not_text},
+            {nil, <<255>>}
+          ] do
+        assert {:error,
+                %Mailglass.SendError{
+                  type: :preflight_rejected,
+                  context: %{reason_class: :body_invalid, body_state: :unsupported} = context
+                }} = Mailglass.Outbound.Preflight.run(message_with_bodies(html, text))
+
+        assert Map.keys(context) |> Enum.sort() == [:body_state, :reason_class]
+      end
+    end
+
+    test "accepts one nonblank supported body and preserves Unicode plaintext byte-for-byte" do
+      plaintext = " caf\u00E9\n"
+
+      assert {:ok, %Message{swoosh_email: %{text_body: ^plaintext}}} =
+               Mailglass.Outbound.Preflight.run(message_with_bodies(nil, plaintext))
+
+      assert {:ok, _} =
+               Mailglass.Outbound.Preflight.run(message_with_bodies("<p>html only</p>", nil))
+
+      assert {:ok, _} =
+               Mailglass.Outbound.Preflight.run(message_with_bodies("<p>both</p>", "plain"))
+    end
+  end
+
+  describe "preflight ordering" do
+    test "invalid envelopes return before renderer, rate limiter, persistence, and Fake dispatch" do
+      handler_id = "preflight-rejection-#{System.unique_integer([:positive])}"
+      test_pid = self()
+
+      :telemetry.attach_many(
+        handler_id,
+        [
+          [:mailglass, :render, :message, :start],
+          [:mailglass, :outbound, :rate_limit, :stop]
+        ],
+        fn event, _measurements, _metadata, _config -> send(test_pid, {:preflight_telemetry, event}) end,
+        nil
+      )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      deliveries_before = TestRepo.aggregate(Delivery, :count)
+
+      assert {:error,
+              %Mailglass.SendError{type: :preflight_rejected, context: %{recipient_count: 2}}} =
+               Outbound.send(message_with_recipients(%{to: ["one@example.com", "two@example.com"]}))
+
+      refute_receive {:preflight_telemetry, [:mailglass, :render, :message, :start]}
+      refute_receive {:preflight_telemetry, [:mailglass, :outbound, :rate_limit, :stop]}
+      assert TestRepo.aggregate(Delivery, :count) == deliveries_before
+      assert Mailglass.Adapters.Fake.deliveries() == []
+    end
+  end
+
   describe "preflight stage 0 — resolver-aware tenancy normalization" do
     @tag tenant: :unset
     test "SingleTenant sends an unstamped message as the default tenant" do
@@ -323,6 +401,22 @@ defmodule Mailglass.Outbound.PreflightTest do
       |> Swoosh.Email.text_body("Body")
       |> Map.merge(%{to: [], cc: [], bcc: []})
       |> Map.merge(recipients)
+
+    Message.build(email,
+      mailable: Mailglass.FakeFixtures.TestMailer,
+      tenant_id: "test-tenant",
+      stream: :transactional
+    )
+  end
+
+  defp message_with_bodies(html, text) do
+    email =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Test", "from@example.com"})
+      |> Swoosh.Email.to("one@example.com")
+      |> Swoosh.Email.subject("Body contract")
+      |> Map.put(:html_body, html)
+      |> Map.put(:text_body, text)
 
     Message.build(email,
       mailable: Mailglass.FakeFixtures.TestMailer,
