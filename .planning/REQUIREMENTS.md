@@ -89,8 +89,8 @@ Populated during roadmap creation. Every v2.4 requirement must map to exactly on
 
 | Requirement | Phase | Status |
 |---|---|---|
-| FIRST-01 | Phase 149 | Pending |
-| FIRST-02 | Phase 149 | Pending |
+| FIRST-01 | Phase 149 | Complete |
+| FIRST-02 | Phase 149 | Complete |
 | FIRST-03 | Phase 149 | Pending |
 | FIRST-04 | Phase 149 | Pending |
 | FIRST-05 | Phase 149 | Pending |
@@ -126,6 +126,7 @@ Populated during roadmap creation. Every v2.4 requirement must map to exactly on
 | REL-17 | Phase 153 | Pending |
 
 **Coverage:**
+
 - v2.4 requirements: 35 total
 - Mapped to phases: 35
 - Unmapped: 0

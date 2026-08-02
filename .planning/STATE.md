@@ -5,15 +5,15 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 149
 current_phase_name: first-send-contract-foundation
 status: executing
-stopped_at: Phase 149 context gathered (assumptions mode)
-last_updated: "2026-08-02T17:20:35.163Z"
+stopped_at: Completed 149-01-PLAN.md
+last_updated: "2026-08-02T17:42:36.004Z"
 last_activity: 2026-08-02
-last_activity_desc: "Phase 149 planned: 4 plans in 4 waves; verification passed"
+last_activity_desc: Phase 149 execution started
 progress:
   total_phases: 1
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 4
+  completed_plans: 1
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 149 — First-Send Contract Foundation
+**Current focus:** Phase 149 — first-send-contract-foundation
 
 ## Current Position
 
-Phase: 149 of 153 (First-Send Contract Foundation)
-Plan: —
+Phase: 149 (first-send-contract-foundation) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-08-02 — Phase 149 planned: 4 plans in 4 waves; verification passed
+Last activity: 2026-08-02 — Phase 149 execution started
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 25%
 
 ## v2.4 Milestone Intent
 
@@ -435,6 +435,7 @@ release debug campaign.
 - [Phase ?]: Document workflow_dispatch as the direct recovery path and manually creating missing GitHub releases as the last-resort canonical release: published fan-out.
 - [Phase ?]: Release events publish only linked core/admin packages; inbound remains dispatch-only recovery.
 - [Phase ?]: Published consumer proof pins inbound 2.1.1 and fails closed on unavailable or unrecognized compatibility.
+- [Phase ?]: Only configured SingleTenant may normalize an unstamped outbound message to default; custom resolvers require strict process-local tenant context.
 
 ## Quick Tasks Completed
 
@@ -494,6 +495,7 @@ release debug campaign.
 | Phase 148-release-and-adoption-proof P03 | 8min | 2 tasks | 1 file |
 | Phase 148-release-and-adoption-proof P04 | automated | 2 tasks | protected release chain |
 | Phase 148-release-and-adoption-proof P05 | automated | 1 task | registry and consumer proof |
+| Phase 149 P01 | 19m | 2 tasks | 6 files |
 
 ## Deferred Items
 
@@ -660,9 +662,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-02T15:31:11.993Z
-**Stopped at:** Phase 149 context gathered (assumptions mode)
-**Resume file:** .planning/phases/149-first-send-contract-foundation/149-CONTEXT.md
+**Last session:** 2026-08-02T17:42:35.994Z
+**Stopped at:** Completed 149-01-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
