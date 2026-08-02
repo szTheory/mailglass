@@ -298,7 +298,10 @@ defmodule Mailglass.MixProject do
         "test test/scripts/ --warnings-as-errors"
       ],
       "verify.support_contract.core": [
-        "test test/mailglass/docs_contract_test.exs test/mailglass/docs/testing_guide_test.exs test/mailglass/stability_contract_test.exs test/mailglass/compatibility_contract_test.exs test/mailglass/docs_migration_smoke_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs test/mailglass/operator/support_summary_test.exs test/mailglass/webhook/telemetry_test.exs test/mailglass/telemetry_test.exs test/mailglass/webhook/replay_test.exs test/mailglass/webhook/reconciler_test.exs --warnings-as-errors"
+        # FIRST-01..FIRST-07 are stable first-adopter support promises, not an
+        # advisory-only phase check. Keep their public sync/async, preflight,
+        # tenancy, and renderer proofs in the existing required support lane.
+        "test test/mailglass/docs_contract_test.exs test/mailglass/docs/testing_guide_test.exs test/mailglass/stability_contract_test.exs test/mailglass/compatibility_contract_test.exs test/mailglass/docs_migration_smoke_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs test/mailglass/operator/support_summary_test.exs test/mailglass/webhook/telemetry_test.exs test/mailglass/telemetry_test.exs test/mailglass/webhook/replay_test.exs test/mailglass/webhook/reconciler_test.exs test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs test/mailglass/outbound_test.exs test/mailglass/renderer_test.exs test/mailglass/tenancy_test.exs --warnings-as-errors"
       ],
       "verify.stability_contract": [
         "verify.support_contract.core",

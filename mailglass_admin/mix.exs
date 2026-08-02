@@ -206,7 +206,9 @@ defmodule MailglassAdmin.MixProject do
         "cmd git diff --exit-code priv/static/"
       ],
       "verify.support_contract.admin": [
-        "test test/mailglass_admin/post_installer_smoke_test.exs test/mailglass_admin/operator_live_test.exs test/mailglass_admin/operator_trust_doc_test.exs test/mailglass_admin/stability_contract_test.exs test/mailglass_admin/router_test.exs test/mailglass_admin/auth_test.exs test/mailglass_admin/token_parity_test.exs test/mailglass_admin/ratchet_baseline_test.exs --warnings-as-errors"
+        # Preview consumes the same renderer contract as direct, sync, and
+        # async delivery. Keep that parity in the existing required admin lane.
+        "test test/mailglass_admin/post_installer_smoke_test.exs test/mailglass_admin/operator_live_test.exs test/mailglass_admin/operator_trust_doc_test.exs test/mailglass_admin/stability_contract_test.exs test/mailglass_admin/router_test.exs test/mailglass_admin/auth_test.exs test/mailglass_admin/token_parity_test.exs test/mailglass_admin/ratchet_baseline_test.exs test/mailglass_admin/preview_live_test.exs --warnings-as-errors"
       ],
       # Deprecated pass-through (REL-03, one cycle) — use verify.preview instead
       "verify.phase_05": ["verify.preview"]
