@@ -5,7 +5,9 @@ defmodule Mailglass.Outbound.WorkerTest do
   @moduletag :oban
 
   alias Mailglass.Outbound
-  alias Mailglass.Outbound.Delivery
+  alias Mailglass.Outbound.{Delivery, Envelope, Payload}
+  alias Mailglass.Message
+  alias Mailglass.TestRepo
   alias Mailglass.Generators
 
   setup do
@@ -32,6 +34,13 @@ defmodule Mailglass.Outbound.WorkerTest do
   end
 
   describe "Worker module structure" do
+    @tag phase_150_task: "t150_03_01"
+    test "Worker exposes the canonical queue identity" do
+      if Code.ensure_loaded?(Mailglass.Outbound.Worker) do
+        assert Mailglass.Outbound.Worker.queue() == :mailglass_outbound
+      end
+    end
+
     test "Worker module exists when Oban is available" do
       if Code.ensure_loaded?(Oban.Worker) do
         assert Code.ensure_loaded?(Mailglass.Outbound.Worker)
@@ -64,6 +73,40 @@ defmodule Mailglass.Outbound.WorkerTest do
   end
 
   describe "Worker.perform/1" do
+    @tag phase_150_task: "t150_03_01"
+    test "dispatches immutable payload input before consulting legacy delivery metadata" do
+      if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do
+        :skip
+      else
+        delivery =
+          Generators.delivery_fixture(
+            tenant_id: "test-tenant",
+            metadata: %{"subject" => "legacy subject", "rendered_html" => "legacy body"}
+          )
+
+        email =
+          Swoosh.Email.new()
+          |> Swoosh.Email.from({"Payload", "from@example.com"})
+          |> Swoosh.Email.to("payload-#{System.unique_integer([:positive])}@example.com")
+          |> Swoosh.Email.subject("immutable payload subject")
+          |> Swoosh.Email.html_body("<p>immutable payload body</p>")
+
+        {:ok, envelope} =
+          Envelope.dump(
+            Message.build(email, tenant_id: "test-tenant", stream: :transactional),
+            adapter_ref: Delivery.default_adapter_ref()
+          )
+
+        {:ok, _payload} =
+          Payload.from_envelope("test-tenant", delivery.id, envelope) |> TestRepo.insert()
+
+        assert {:ok, %Delivery{status: :sent}} = Outbound.dispatch_by_id(delivery.id)
+
+        assert [%{message: %{swoosh_email: %{subject: "immutable payload subject"}}}] =
+                 Mailglass.Adapters.Fake.deliveries()
+      end
+    end
+
     test "perform/1 dispatches delivery and returns :ok on success" do
       if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do
         :skip
