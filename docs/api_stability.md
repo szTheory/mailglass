@@ -245,6 +245,7 @@ Its context is deliberately bounded:
 |-----------|---------|
 | Zero or multiple total `to`/`cc`/`bcc` entries | `%{reason_class: :recipient_count_invalid, recipient_count: non_neg_integer()}` |
 | Sole `cc` or `bcc` recipient | `%{reason_class: :recipient_field_unsupported}` |
+| Malformed recipient collection or entry | `%{reason_class: :recipient_invalid}` |
 | Missing or blank supported body | `%{reason_class: :body_invalid, body_state: :empty}` |
 | Unsupported body shape | `%{reason_class: :body_invalid, body_state: :unsupported}` |
 

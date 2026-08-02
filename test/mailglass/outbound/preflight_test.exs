@@ -93,6 +93,24 @@ defmodule Mailglass.Outbound.PreflightTest do
                  message_with_recipients(%{to: ["one@example.com"], bcc: ["two@example.com"]})
                )
     end
+
+    test "rejects malformed raw Swoosh recipient collections and entries with bounded context" do
+      for attrs <- [
+            %{to: "bad"},
+            %{to: [:bad]},
+            %{to: [{"", ""}]},
+            %{to: [{:invalid_name, "one@example.com"}]},
+            %{to: ["one@example.com"], cc: "bad"}
+          ] do
+        assert {:error,
+                %Mailglass.SendError{
+                  type: :preflight_rejected,
+                  context: %{reason_class: :recipient_invalid} = context
+                }} = Mailglass.Outbound.Preflight.run(message_with_recipients(attrs))
+
+        assert Map.keys(context) == [:reason_class]
+      end
+    end
   end
 
   describe "preflight body contract" do
@@ -144,6 +162,21 @@ defmodule Mailglass.Outbound.PreflightTest do
   end
 
   describe "preflight ordering" do
+    test "malformed raw recipient collections fail before persistence and dispatch" do
+      deliveries_before = TestRepo.aggregate(Delivery, :count)
+
+      for attrs <- [%{to: "bad"}, %{to: [:bad]}, %{to: [{"", ""}]}] do
+        assert {:error,
+                %Mailglass.SendError{
+                  type: :preflight_rejected,
+                  context: %{reason_class: :recipient_invalid}
+                }} = Outbound.send(message_with_recipients(attrs))
+      end
+
+      assert TestRepo.aggregate(Delivery, :count) == deliveries_before
+      assert Mailglass.Adapters.Fake.deliveries() == []
+    end
+
     test "invalid envelopes return before renderer, rate limiter, persistence, and Fake dispatch" do
       handler_id = "preflight-rejection-#{System.unique_integer([:positive])}"
       test_pid = self()

@@ -1188,6 +1188,10 @@ defmodule Mailglass.Outbound do
   defp primary_recipient(%Message{swoosh_email: %Swoosh.Email{to: [{_, addr} | _]}}),
     do: String.downcase(addr)
 
+  defp primary_recipient(%Message{swoosh_email: %Swoosh.Email{to: [addr | _]}})
+       when is_binary(addr),
+       do: String.downcase(addr)
+
   defp primary_recipient(_), do: ""
 
   defp recipient_domain(msg) do
