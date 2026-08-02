@@ -35,11 +35,15 @@ defmodule Mailglass.Outbound.Preflight do
 
   defp validate_envelope(%Message{swoosh_email: email}) do
     recipients = List.wrap(email.to) ++ List.wrap(email.cc) ++ List.wrap(email.bcc)
+    count = length(recipients)
 
-    if length(recipients) == 1 do
+    if count == 1 do
       :ok
     else
-      {:error, SendError.new(:preflight_rejected, context: %{reason_class: :recipient_count})}
+      {:error,
+       SendError.new(:preflight_rejected,
+         context: %{reason_class: :recipient_count_invalid, recipient_count: count}
+       )}
     end
   end
 
