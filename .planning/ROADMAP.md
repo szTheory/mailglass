@@ -52,7 +52,13 @@
   3. A delivery with zero recipients or more than one total recipient across `to`, `cc`, and `bcc` is rejected with a typed preflight error before rendering, rate limiting, persistence, job insertion, or provider dispatch.
   4. Explicit plaintext, text-only mail, and HTML mail retain the documented body semantics, and the `renderer.plaintext` and `renderer.css_inliner` settings have the same observable effect in rendering, sync send, async send, and preview.
   5. Unsupported envelope or body content fails explicitly before a delivery row or job exists; Mailglass never silently drops a recipient or message content.
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 149-01-PLAN.md — Prove the resolver-aware first-send tracer and fail-closed custom tenancy.
+- [ ] 149-02-PLAN.md — Enforce exact recipient/body preflight before every side effect.
+- [ ] 149-03-PLAN.md — Implement renderer body precedence and cross-consumer configuration parity.
+- [ ] 149-04-PLAN.md — Reconcile stable API and adopter documentation with the shipped contract.
 
 ### Phase 150: Private Envelope and Atomic Durable Enqueue
 **Goal**: A durable async request either creates one private, complete, recoverable outbound envelope and its queue work atomically or reports no queued work at all.

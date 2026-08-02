@@ -2,8 +2,8 @@
 phase: 149
 slug: first-send-contract-foundation
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-08-02
 ---
 
@@ -38,13 +38,14 @@ created: 2026-08-02
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD-01 | TBD | TBD | FIRST-01 | T-149-01 | Only configured `SingleTenant` may normalize an unstamped caller to tenant `"default"` | integration | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| TBD-02 | TBD | TBD | FIRST-02 | T-149-01 | Custom tenancy remains fail-closed for missing, invalid, or unrestorable context | unit + integration | `mix test test/mailglass/tenancy_test.exs test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| TBD-03 | TBD | TBD | FIRST-03 | T-149-02 | Every zero- or multi-recipient shape across `to`/`cc`/`bcc` is rejected without selecting or dropping an address | unit | `mix test test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| TBD-04 | TBD | TBD | FIRST-04 | T-149-03 | Recipient rejection precedes rendering, limits, persistence, jobs, and provider dispatch | integration | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| TBD-05 | TBD | TBD | FIRST-05 | T-149-04 | Explicit plaintext survives and text-only messages remain sendable | unit + integration | `mix test test/mailglass/renderer_test.exs test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| TBD-06 | TBD | TBD | FIRST-06 | T-149-04 | Plaintext generation and CSS inlining settings behave identically across render, sync, async, and preview | unit + integration + LiveView | `mix test test/mailglass/renderer_test.exs test/mailglass/outbound_test.exs mailglass_admin/test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
-| TBD-07 | TBD | TBD | FIRST-07 | T-149-03 / T-149-04 | Unsupported body/envelope shapes produce bounded non-PII `:preflight_rejected` errors before delivery or job creation | unit + integration | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 149-01-01 | 149-01 | 1 | FIRST-01 | T-149-01 | Only configured `SingleTenant` may normalize an unstamped caller to tenant `"default"` | integration | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 149-01-02 | 149-01 | 1 | FIRST-02 | T-149-01 | Custom tenancy remains fail-closed for missing, invalid, or unrestorable context | unit + integration | `mix test test/mailglass/tenancy_test.exs test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 149-02-01 | 149-02 | 2 | FIRST-03 | T-149-02 | Every zero- or multi-recipient shape across `to`/`cc`/`bcc` is rejected without selecting or dropping an address | unit | `mix test test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 149-02-02 | 149-02 | 2 | FIRST-04 / FIRST-07 | T-149-03 / T-149-04 | Recipient/body rejection precedes rendering, limits, persistence, jobs, and provider dispatch; unsupported shapes use bounded non-PII errors | unit + integration | `mix test test/mailglass/outbound/preflight_test.exs test/mailglass/outbound/deliver_later_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 149-03-01 | 149-03 | 3 | FIRST-05 | T-149-04 | Explicit plaintext survives and text-only messages remain sendable | unit + integration | `mix test test/mailglass/renderer_test.exs test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 149-03-02 | 149-03 | 3 | FIRST-06 | T-149-04 | Plaintext generation and CSS inlining settings behave identically across render, sync, async, and preview | unit + integration + LiveView | `mix test test/mailglass/renderer_test.exs test/mailglass/outbound_test.exs test/mailglass/outbound/deliver_later_test.exs mailglass_admin/test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 149-04-01 | 149-04 | 4 | FIRST-01..FIRST-07 | T-149-01 / T-149-02 / T-149-04 | Stable API, authoring, and tenancy docs match the tested typed-error and preflight contract | docs + contract regression | `mix docs && mix test test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 149-04-02 | 149-04 | 4 | FIRST-01 / FIRST-05 / FIRST-06 | T-149-04 | Getting-started, jobs, and preview docs match tested renderer behavior without future-phase claims | docs + integration | `mix docs && mix test test/mailglass/renderer_test.exs mailglass_admin/test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | ✅ extend | ⬜ pending |
 
 *Task IDs, plans, and waves are reconciled after PLAN.md generation. Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky.*
 
@@ -52,9 +53,9 @@ created: 2026-08-02
 
 ## Wave 0 Requirements
 
-- [ ] Extend `mailglass_admin/test/mailglass_admin/preview_live_test.exs` with config-isolated renderer-parity regressions for `renderer.plaintext` and `renderer.css_inliner`.
-- [ ] Confirm or add a stable assertion seam proving preflight rejection inserts zero Oban jobs.
-- [ ] Add config-isolated renderer tests that restore application environment and the Mailglass config cache after every case.
+- [x] Plan 149-03 Task 02 extends `mailglass_admin/test/mailglass_admin/preview_live_test.exs` test-first with config-isolated renderer-parity regressions for `renderer.plaintext` and `renderer.css_inliner`.
+- [x] Plan 149-02 Task 02 confirms or adds a stable assertion seam before implementation that proves preflight rejection inserts zero Oban jobs.
+- [x] Plan 149-03 Tasks 01-02 add config-isolated renderer tests that restore application environment and relevant Mailglass config cache state after every case.
 
 ---
 
@@ -66,12 +67,12 @@ All phase behaviors have automated verification. Any Task.Supervisor/Fake-adapte
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all missing references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s for focused checks
-- [ ] Per-task map reconciled to final PLAN task IDs
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 coverage is assigned test-first before the corresponding implementation
+- [x] No watch-mode flags
+- [x] Feedback latency target is below 60s for focused checks and must be measured during execution
+- [x] Per-task map reconciled to final PLAN task IDs
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
