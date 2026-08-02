@@ -110,11 +110,11 @@
     ]
   },
   "linked_versions": {
-    "mailglass": "2.3.0",
-    "mailglass_admin": "2.3.0",
+    "mailglass": "2.4.0",
+    "mailglass_admin": "2.4.0",
     "mailglass_inbound": "2.1.1"
   },
-  "mailglass_inbound_publish_pin": "~> 2.3 and >= 2.3.0",
+  "mailglass_inbound_publish_pin": "~> 2.4 and >= 2.4.0",
   "manifest_version": "2.1.1",
   "package": "mailglass_inbound",
   "package_files": [
