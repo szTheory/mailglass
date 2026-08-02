@@ -1,5 +1,27 @@
 # Milestones
 
+## v2.3 B2C First-Adopter Readiness (Shipped: 2026-08-02)
+
+**Delivered:** An opinionated and observable B2C first-adopter path, published as core/admin 2.4.0 with inbound 2.1.1 proven compatible and intentionally unchanged.
+
+**Phases completed:** 4 phases, 8 plans, 18 tasks
+
+**Stats:** 203 files changed; 9,916 insertions / 988 deletions; 49,643 lines across current Elixir library source; one-day ship and verification window.
+
+**Git range:** `53211e8b` → `d5ab78ab`
+
+**Archives:** `milestones/v2.3-ROADMAP.md`, `milestones/v2.3-REQUIREMENTS.md`, `milestones/v2.3-MILESTONE-AUDIT.md`, `milestones/v2.3-phases/`
+
+**Key accomplishments:**
+
+- Published and package-tested the decisive B2C stream, suppression, single-tenant, pacing, tracking, and sibling-ownership guide.
+- Added a stable post-commit provider-feedback event with `%{count: 1}`, PII-free metadata, and replay convergence.
+- Made tenant-scoped outbound operator state refresh live without reloads or URL-state loss, with explicit foreign-tenant rejection.
+- Published `mailglass` and `mailglass_admin` 2.4.0 through protected automation while leaving `mailglass_inbound` at 2.1.1.
+- Passed a clean public-Hex consumer install, boot, HTTP 200 check, and five-stage trust journey for 2.4.0/2.4.0/2.1.1.
+
+---
+
 ## v2.2 CI Signal Integrity & Supply-Chain Hygiene (Shipped: 2026-07-31)
 
 **Delivered:** Trustworthy CI and release signals: classified lanes, fail-closed dependency audits, a repaired and release-gating core suite, and honest drift/recovery automation.

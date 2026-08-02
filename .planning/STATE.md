@@ -2,36 +2,43 @@
 gsd_state_version: 1.0
 milestone: v2.3
 milestone_name: B2C First-Adopter Readiness
+status: Awaiting next milestone
+stopped_at: Completed and verified Phase 148
+last_updated: "2026-08-02T14:15:46.332Z"
+last_activity: 2026-08-02
+last_activity_desc: Milestone v2.3 completed and archived
+progress:
+  total_phases: 4
+  completed_phases: 4
+  total_plans: 8
+  completed_plans: 8
+  percent: 100
 current_phase: 148
 current_phase_name: release-and-adoption-proof
-status: phase_complete
-stopped_at: Completed and verified Phase 148
-last_updated: "2026-08-02T02:39:00Z"
-last_activity: 2026-08-02
-last_activity_desc: Phase 148 released and verified from public packages
-progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-31 - v2.3 milestone opened)
+See: .planning/PROJECT.md (updated 2026-08-02 after v2.3 milestone completion)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v2.3 milestone closeout after Phase 148 release verification
+**Current focus:** Planning the next milestone
 
 ## Current Position
 
-Phase: 148 (release-and-adoption-proof) — COMPLETE
-Plan: 5 of 5
-Status: Verified from protected publication and public Hex consumer smoke
-Last activity: 2026-08-02 — Phase 148 released and verified from public packages
+Phase: Milestone v2.3 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-08-02 — Milestone v2.3 completed and archived
+
+## v2.3 Closeout
+
+- Audit passed: 15/15 requirements, 4/4 phases, 7/7 integration seams, and 5/5 end-to-end flows.
+- `mailglass` 2.4.0 and `mailglass_admin` 2.4.0 are public; `mailglass_inbound` remains at 2.1.1 by design.
+- Phase 145–148 lifecycle records, roadmap, requirements, and milestone audit are archived under `.planning/milestones/`.
+- No open blockers. One bounded test-strengthening note remains in the milestone audit: add a single webhook-to-LiveView browser-visible test if future regression risk justifies it.
 
 ## v2.3 Milestone Intent
 

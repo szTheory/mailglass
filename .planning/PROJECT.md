@@ -10,10 +10,13 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**v2.3 B2C First-Adopter Readiness opened 2026-07-31.** The first production adopter is a
-solo-operated, low-volume consumer subscription product. Mailglass is already production-credible; this
-milestone closes the specific divergence between that profile and the shipped B2B operations reference:
-a decisive consumer launch guide, canonical provider-feedback telemetry, and a live outbound admin.
+**v2.3 B2C First-Adopter Readiness shipped 2026-08-02.** Mailglass now has an opinionated first-adopter
+consumer launch guide, a canonical post-commit provider-feedback event, tenant-scoped live outbound
+operator refresh, and published-package proof for the package family adopters install.
+
+`mailglass` 2.4.0 and `mailglass_admin` 2.4.0 are live on Hex. `mailglass_inbound` intentionally remains
+at 2.1.1 and passed the clean consumer trust journey with the linked 2.4.0 packages. The v2.3 audit passed
+15/15 requirements, 7/7 cross-phase seams, and 5/5 end-to-end flows.
 
 Package boundaries are locked. Chimeway owns notification policy and preferences; Sigra owns auth token
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
@@ -21,9 +24,10 @@ paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package
 
 ## Next Milestone Goals
 
-Ship the Mailglass-owned B2C launch profile as linked core/admin 2.4.0, leaving inbound unchanged unless a
-real compatibility change is required. Production launch additionally requires the external Sigra,
-Chimeway, Parapet, Accrue, and host recovery gates recorded in `.planning/REQUIREMENTS.md`.
+Planning next milestone. Default posture remains convergence and adopter-pull: do not absorb notification
+policy, authentication, billing, support, mobile activation, or SRE ownership into Mailglass. The external
+Sigra, Chimeway, Parapet, Accrue, and host recovery gates remain production-adoption work owned by those
+systems, not unfinished Mailglass requirements.
 
 <details>
 <summary>Archived v2.2 milestone context</summary>
@@ -570,9 +574,15 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 If everything else fails, the preview dashboard, normalized event ledger, and one-line `Mailglass.deliver/2 → deliver_later/2` ergonomics must work flawlessly.
 
-## Validated Requirements (v0.1, v0.2, v1.1, v1.3, v1.4, v1.7, v1.10, v1.11 — SHIPPED)
+## Validated Requirements (through v2.3 — SHIPPED)
 
 All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, 19 v1.7 REQ-IDs, 10 v1.10 REQ-IDs, and 34 v1.11 REQ-IDs satisfied. The v1.9 brand book shipped its 22 REQ-IDs (archived in `milestones/v1.9-REQUIREMENTS.md`); v1.8 validated 2 brand-audit requirements before closing superseded.
+
+**v2.3 B2C First-Adopter Readiness:**
+- ✓ B2C-01..07 — stream mapping, suppression scope, RFC 8058 ownership, single-tenant identities, cold-domain pacing, privacy-first tracking, sibling ownership, external launch gates, and no `crosswake_mailglass`.
+- ✓ OBS-01..02 — one stable post-commit provider-feedback telemetry event with `%{count: 1}`, PII-free metadata, and replay convergence.
+- ✓ ADMIN-01..02 / PROOF-01 — tenant-scoped LiveView subscription switching and live visible-state refresh with foreign-tenant rejection and URL-state preservation.
+- ✓ PROOF-02..03 / REL-01 — suppression/docs package proof and the public 2.4.0/2.4.0/2.1.1 clean-consumer release journey.
 
 **By category (v1.13 in progress — Phase 110 validated 2026-06-18):**
 - ✓ PRIM-01..07 — public primitive API (`nav_link`, `nav_pill`, `tenant_chip`,
@@ -809,6 +819,10 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-27 | v1.11 re-baselines `mailglass_admin` onto the canonical fable brand tokens and runs a fractal (component → group → page), idempotent, research-grounded design-system uplift of all three admin surfaces — an adopter-visible-quality investment under D-23, not feature growth | The admin UI was last polished (v1.7) against the *old codex-era* brand; v1.9→v1.10 brand work never touched the admin's `app.css`, leaving it drifted (borders drawn in the accent color, cards one brand-role off, dark muted text below AA, no consumption of `brandbook/tokens.css`). The "Storybook lens" is realized as a thin dev-only gallery (zero-Node forbids real Storybook); "only-forward" is enforced by a committed score baseline + carried-forward GAP register. Scope fenced to admin UI; release prepare-only | ✓ Validated v1.11 — all 3 admin surfaces re-baselined onto `brandbook/tokens.css`; idempotent ratchet armed (36/36 cells meet-or-beat, zero regressions); dev-only gallery shipped; audit passed 34/34 reqs across 10 phases; release prepare-only held (no Hex cut); fenced scope held (no functional core/inbound changes) |
 | D-28 | Each adopter-quality milestone **actually cuts** the linked-version Hex release at close (not prepare-only), draining the staged-but-unshipped backlog to adopters | v1.7/v1.11 staged release ceremonies prepare-only, accumulating polish on `main` that adopters never saw; the convergence posture is only adopter-valuable once it ships | ✓ Validated v1.12 — first real linked-version release since 1.6.2 cut (1.7.0/1.7.0/1.4.0); carried into v1.13 (PR #86 fixes + the design-system uplift ship together) |
 | D-29 | v1.13 is a third adopter-visible-quality admin pass under D-23, distinguished from v1.7/v1.11 by being **lived-experience / real-demo-driven** rather than in-the-lab: a fractal, research-per-decision (adversarially judged), WCAG-2.2-AA, light/dark/**system**, idempotent design-system stress-test that also fixes the multi-tenant demo so the picker earns its place — then ships (D-28) | v1.11's ratchet passed in the lab (LLM-scored PNGs, structural assertions) yet clicking the real demo still surfaced usability traps and "kind of ugly" rough edges; the remaining gap is lived-experience polish + a tangible multi-tenant story, not more capability. Restraint (admin+demo only, brand book is source of truth, no new deps without a decision brief, idempotent meet-or-beat ratchet extended from v1.11) keeps it convergence-aligned | — Pending (v1.13 in flight) |
+| D-30 | Mailglass publishes the B2C email safety profile but host/Chimeway retain notification preferences and RFC 8058 category policy | Preference, consent, auth, and product policy belong with the host; Mailglass owns stream and suppression mechanics | ✓ Validated v2.3 — guide/package contracts passed without adding a preference-center API |
+| D-31 | Provider feedback emits once from the existing post-commit projector chokepoint with a closed, PII-free metadata contract | Observability consumers need durable facts, not webhook-attempt noise or recipient/message data | ✓ Validated v2.3 — replay-safe event and metadata contract passed focused tests |
+| D-32 | The admin reuses existing tenant PubSub topics and refreshes read models; it does not add a second event bus or mutate URL navigation state | Existing projection topics are the canonical live signal and keep the one-maintainer architecture supportable | ✓ Validated v2.3 — current-tenant refresh and foreign-tenant rejection passed 79 LiveView tests |
+| D-33 | B2C release links core/admin 2.4.0 while inbound remains independently versioned at 2.1.1 | Inbound had no compatibility change and must not be republished merely because linked outbound/admin packages ship | ✓ Validated v2.3 — protected publication and clean public consumer smoke passed |
 
 ## Evolution
 
@@ -831,7 +845,8 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined.*
+*Last updated: 2026-08-02 after v2.3 milestone completion. Audit passed 15/15 requirements, 7/7 integration seams, and 5/5 end-to-end flows; next milestone not yet defined.*
+<!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->
 <!-- prior footer: 2026-06-28 — v1.14 Phase 122 (Preview surface redesign) complete, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).* -->
