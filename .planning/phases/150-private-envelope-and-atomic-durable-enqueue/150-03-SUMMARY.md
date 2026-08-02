@@ -85,6 +85,8 @@ status: complete
 - `test/mailglass/outbound/worker_test.exs` — worker queue, payload-first, and unavailable-instance regression coverage.
 - `test/mailglass/outbound/deliver_later_test.exs` — explicit Oban no-fallback coverage.
 - `test/mailglass/outbound/deliver_many_test.exs` — configured Oban test harness for the existing durable-batch assertion.
+- `test/support/mailer_case.ex` — queue-configured Oban test setup for tagged Oban cases.
+- `test/mailglass/core_send_integration_test.exs` — configured-Oban durable enqueue assertion replacing the stale inline-worker expectation.
 
 ## Decisions Made
 
@@ -103,7 +105,15 @@ status: complete
 - **Verification:** Focused batch test and the phase-wide outbound verification suite pass.
 - **Committed in:** `42436a48`.
 
-**Total deviations:** 1 auto-fixed (Rule 1).
+**2. [Rule 1 - Bug] Repaired the core Oban integration harness after readiness enforcement**
+- **Found during:** Post-wave full-suite gate.
+- **Issue:** The old `:inline` Oban instance mode clears Oban's runtime queue list, making its claimed durable enqueue fail the canonical-queue readiness check.
+- **Fix:** Tagged Oban cases start a queue-configured disabled instance; the core integration assertion now verifies truthful configured Oban enqueue rather than an inline-worker false green.
+- **Files modified:** `test/support/mailer_case.ex`, `test/mailglass/core_send_integration_test.exs`.
+- **Verification:** `mix test test/mailglass/core_send_integration_test.exs:103 --trace --warnings-as-errors`, Phase 150 outbound suite, no-optional-deps compile, and `mix test` pass.
+- **Committed in:** `d85216f5`.
+
+**Total deviations:** 2 auto-fixed (Rule 1).
 **Impact on plan:** Test harness only; no production scope expanded.
 
 ## Issues Encountered
