@@ -48,14 +48,40 @@ defmodule Mailglass.Outbound.Preflight do
   end
 
   defp validate_body(%Message{swoosh_email: email}) do
-    if present_body?(email.html_body) or present_body?(email.text_body) do
-      :ok
-    else
-      {:error, SendError.new(:preflight_rejected, context: %{reason_class: :empty_body})}
+    states = [html_body_state(email.html_body), text_body_state(email.text_body)]
+
+    cond do
+      :present in states ->
+        :ok
+
+      :unsupported in states ->
+        {:error,
+         SendError.new(:preflight_rejected,
+           context: %{reason_class: :body_invalid, body_state: :unsupported}
+         )}
+
+      true ->
+        {:error,
+         SendError.new(:preflight_rejected,
+           context: %{reason_class: :body_invalid, body_state: :empty}
+         )}
     end
   end
 
-  defp present_body?(body) when is_binary(body), do: String.trim(body) != ""
-  defp present_body?(body) when is_function(body, 1), do: true
-  defp present_body?(_body), do: false
+  defp html_body_state(body) when is_function(body, 1), do: :present
+  defp html_body_state(body) when is_binary(body), do: binary_body_state(body)
+  defp html_body_state(nil), do: :empty
+  defp html_body_state(_body), do: :unsupported
+
+  defp text_body_state(body) when is_binary(body), do: binary_body_state(body)
+  defp text_body_state(nil), do: :empty
+  defp text_body_state(_body), do: :unsupported
+
+  defp binary_body_state(body) do
+    if String.valid?(body) do
+      if String.trim(body) == "", do: :empty, else: :present
+    else
+      :unsupported
+    end
+  end
 end
