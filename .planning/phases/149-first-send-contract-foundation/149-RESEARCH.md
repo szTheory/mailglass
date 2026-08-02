@@ -277,12 +277,12 @@ The exact helper names are discretionary; the branch behavior is locked. [VERIFI
 |---|-------|---------|---------------|
 | A1 | `Mailglass.OptionalDeps.Oban`'s existing test harness can assert no job insertion without adding new infrastructure. | Validation Architecture | Test implementation may need a focused helper or a different existing Oban assertion seam. [ASSUMED] |
 
-## Open Questions
+## Resolved Questions
 
-1. **What exact private helper boundary best fits the package's Boundary declarations?**
-   - What we know: `Outbound` already owns side-effect orchestration, while Renderer is deliberately pure and cannot depend on Outbound/Repo. [VERIFIED: codebase grep]
-   - What's unclear: Whether Phase 149 should add `Mailglass.Outbound.Preflight` or keep private functions in `Outbound`. [VERIFIED: codebase grep]
-   - Recommendation: Prefer an internal `Outbound.Preflight` only if it can be made a Boundary-legal dependency; otherwise keep a tightly named private helper in `Outbound`. This is an implementation discretion, not a public API choice. [VERIFIED: codebase grep]
+1. **Private helper boundary: use internal `Mailglass.Outbound.Preflight`.**
+   - Decision: Extract `Mailglass.Outbound.Preflight` under the existing `Mailglass.Outbound` namespace. It is contained by the `Mailglass.Outbound` Boundary, does not declare a sibling Boundary, and is not added to `Mailglass.Outbound`'s `exports:` list, so it remains internal rather than becoming adopter-facing API. [VERIFIED: `lib/mailglass/outbound.ex`; `test/mailglass/boundary_test.exs`]
+   - Dependency proof: `Mailglass.Outbound` already declares `deps: [Mailglass]`; the root `Mailglass` Boundary exports the only modules the pure helper needs (`Mailglass.Message`, `Mailglass.Tenancy`, `Mailglass.TenancyError`, and `Mailglass.SendError`). The helper must not reference Renderer, Repo, Oban, RateLimiter, Suppression, Tracking, or adapters. [VERIFIED: `lib/mailglass.ex`; `lib/mailglass/outbound.ex`]
+   - Verification: compile with the Boundary compiler enabled via `mix compile --warnings-as-errors`, then run `mix test test/mailglass/boundary_test.exs --warnings-as-errors` to pin Outbound's root-only dependency and the helper's non-exported status. This resolves the extraction choice without changing public Boundary exports. [VERIFIED: `mix.exs`; `test/mailglass/boundary_test.exs`]
 
 ## Environment Availability
 
