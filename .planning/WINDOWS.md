@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 9
+open_count: 10
 waived_count: 0
 fixed_count: 10
-total_count: 19
-last_updated: 2026-08-02T18:00:56.428Z
+total_count: 20
+last_updated: 2026-08-02T23:45:32.733Z
 ---
 
 # Broken Windows Ledger
@@ -34,6 +34,7 @@ last_updated: 2026-08-02T18:00:56.428Z
 | 17 | 143 | unrun-verify | .github/workflows/publish-hex.yml |  | gate-ci-green's advisory-matrix dispatch-and-poll has never executed on a real release SHA; only a live release (or plan 143-14's rehearsal) can confirm the tag-ref dispatch, the shared 30-minute deadline, and the fan-out settle behave as designed | open |  | 2026-07-31T15:09:13.616Z |  |
 | 18 | 143 | lint-warning | test/support/suite_floor.ex |  | SuiteFloor executed_nudge fires on the gating toolchain: 1630 executed vs pinned floor 1575 on the mailglass axis, 55 above the 40-test nudge margin. Advisory only, halts nothing. Already over margin on main before this plan (run 30635221221 showed 1623 vs 1576). Re-pinning must be measured from a real CI run per 143-10's protocol, not locally | open |  | 2026-07-31T15:09:13.698Z |  |
 | 19 | 149 | deviation | mailglass_admin/test/mailglass_admin/preview_live_test.exs |  | Preview verification must run from the nested mailglass_admin Mix project. | open |  | 2026-08-02T18:00:56.428Z |  |
+| 20 | 150 | deviation | lib/mailglass/outbound.ex |  | Normalized database constraint failures from the durable enqueue Multi | open |  | 2026-08-02T23:45:32.733Z |  |
 
 ````json
 [
@@ -263,6 +264,18 @@ last_updated: 2026-08-02T18:00:56.428Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-02T18:00:56.428Z",
+    "resolved_at": null
+  },
+  {
+    "id": 20,
+    "kind": "deviation",
+    "phase": "150",
+    "file": "lib/mailglass/outbound.ex",
+    "line": null,
+    "description": "Normalized database constraint failures from the durable enqueue Multi",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-02T23:45:32.733Z",
     "resolved_at": null
   }
 ]
