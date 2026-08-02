@@ -286,11 +286,12 @@ defmodule Mailglass.Outbound do
   defp do_send(%Message{} = msg, opts) do
     # Preflight (stages 0-5) — no DB writes yet
     with {:ok, normalized} <- Preflight.run(msg),
+         {:ok, rendered} <- Renderer.render(normalized),
+         :ok <- Preflight.validate_rendered_body(normalized, rendered),
          :ok <- Tracking.Guard.assert_safe!(normalized),
          :ok <- Suppression.check_before_send(normalized),
          :ok <- RateLimiter.check(normalized),
-         :ok <- Stream.policy_check(normalized),
-         {:ok, rendered} <- Renderer.render(normalized) do
+         :ok <- Stream.policy_check(normalized) do
       do_send_after_preflight(prepare_outbound_message(rendered), opts)
     end
   end
@@ -347,11 +348,12 @@ defmodule Mailglass.Outbound do
 
   defp do_deliver_later(%Message{} = msg, opts) do
     with {:ok, normalized} <- Preflight.run(msg),
+         {:ok, rendered} <- Renderer.render(normalized),
+         :ok <- Preflight.validate_rendered_body(normalized, rendered),
          :ok <- Tracking.Guard.assert_safe!(normalized),
          :ok <- Suppression.check_before_send(normalized),
          :ok <- RateLimiter.check(normalized),
          :ok <- Stream.policy_check(normalized),
-         {:ok, rendered} <- Renderer.render(normalized),
          prepared = prepare_outbound_message(rendered),
          {:ok, adapter_ref} <- resolve_async_adapter_ref(prepared, opts) do
       enqueue_via_async_adapter(prepared, adapter_ref, opts)
@@ -532,11 +534,12 @@ defmodule Mailglass.Outbound do
 
   defp preflight_single(%Message{} = msg) do
     with {:ok, normalized} <- Preflight.run(msg),
+         {:ok, rendered} <- Renderer.render(normalized),
+         :ok <- Preflight.validate_rendered_body(normalized, rendered),
          :ok <- Tracking.Guard.assert_safe!(normalized),
          :ok <- Suppression.check_before_send(normalized),
          :ok <- RateLimiter.check(normalized),
-         :ok <- Stream.policy_check(normalized),
-         {:ok, rendered} <- Renderer.render(normalized) do
+         :ok <- Stream.policy_check(normalized) do
       {:ok, prepare_outbound_message(rendered)}
     else
       {:error, err} -> {:error, err, msg}

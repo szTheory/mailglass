@@ -220,7 +220,8 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
 
       for message <- [
             build_message_with_recipients(["one@example.com", "two@example.com"]),
-            build_message_with_bodies(nil, "\u00A0\u2003")
+            build_message_with_bodies(nil, "\u00A0\u2003"),
+            build_message_with_bodies(fn _assigns -> "" end, nil)
           ] do
         assert {:error, %Mailglass.SendError{type: :preflight_rejected}} =
                  Outbound.deliver_later(message)

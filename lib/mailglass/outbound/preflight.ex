@@ -12,6 +12,22 @@ defmodule Mailglass.Outbound.Preflight do
     end
   end
 
+  @doc false
+  @spec validate_rendered_body(Message.t(), Message.t()) :: :ok | {:error, SendError.t()}
+  def validate_rendered_body(
+        %Message{swoosh_email: %{html_body: html_body}},
+        %Message{} = rendered
+      )
+      when is_function(html_body, 1) do
+    if blank_body?(rendered.swoosh_email.html_body) do
+      body_invalid_error(:empty)
+    else
+      validate_body(rendered)
+    end
+  end
+
+  def validate_rendered_body(%Message{}, %Message{} = rendered), do: validate_body(rendered)
+
   # `tenant_id!/0` deliberately remains the strict accessor. Resolve the
   # configured resolver before consulting a fallback so a custom resolver can
   # never inherit SingleTenant's implicit "default" tenant.
@@ -140,5 +156,15 @@ defmodule Mailglass.Outbound.Preflight do
     else
       :unsupported
     end
+  end
+
+  defp blank_body?(body) when is_binary(body), do: String.trim(body) == ""
+  defp blank_body?(_body), do: true
+
+  defp body_invalid_error(body_state) do
+    {:error,
+     SendError.new(:preflight_rejected,
+       context: %{reason_class: :body_invalid, body_state: body_state}
+     )}
   end
 end

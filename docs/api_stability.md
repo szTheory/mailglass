@@ -1322,15 +1322,17 @@ Top-level `Mailglass` module re-exports all five public verbs as `defdelegate`.
    HTML and/or plaintext. Tenancy raises
    `%TenancyError{:unstamped}` for strict custom context; envelope/body failures
    return `%SendError{type: :preflight_rejected}`.
-1. `Mailglass.Tracking.Guard.assert_safe!/1` — raises `%ConfigError{:tracking_on_auth_stream}`
-2. `Mailglass.Suppression.check_before_send/1` — returns `{:error, %SuppressedError{}}`
-3. `Mailglass.RateLimiter.check/3` — `:transactional` bypasses; returns `{:error, %RateLimitError{}}`
-4. `Mailglass.Stream.policy_check/1` — no-op seam (v0.1)
-5. `Mailglass.Renderer.render/1` — returns `{:error, %TemplateError{}}`
+1. `Mailglass.Renderer.render/1` followed by rendered-body validation — renders a
+   function component exactly once and rejects a blank result before outbound effects.
+2. `Mailglass.Tracking.Guard.assert_safe!/1` — raises `%ConfigError{:tracking_on_auth_stream}`
+3. `Mailglass.Suppression.check_before_send/1` — returns `{:error, %SuppressedError{}}`
+4. `Mailglass.RateLimiter.check/3` — `:transactional` bypasses; returns `{:error, %RateLimitError{}}`
+5. `Mailglass.Stream.policy_check/1` — no-op seam (v0.1)
 
-The shared preflight completes before rendering, limits, persistence, job
-insertion, or provider work. It never selects, deduplicates, reorders, drops,
-or fans out recipients.
+Envelope preflight completes before rendering. The one render plus its body
+validation complete before tracking, limits, persistence, job insertion, or
+provider work. The pipeline never selects, deduplicates, reorders, drops, or
+fans out recipients.
 
 ### Renderer body and configuration contract
 

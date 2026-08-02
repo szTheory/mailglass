@@ -114,6 +114,31 @@ defmodule Mailglass.Outbound.PreflightTest do
   end
 
   describe "preflight body contract" do
+    test "rejects a blank function body after one render and before outbound effects" do
+      test_pid = self()
+      deliveries_before = TestRepo.aggregate(Delivery, :count)
+
+      message =
+        message_with_bodies(
+          fn _assigns ->
+            send(test_pid, :blank_body_rendered)
+            ""
+          end,
+          nil
+        )
+
+      assert {:error,
+              %Mailglass.SendError{
+                type: :preflight_rejected,
+                context: %{reason_class: :body_invalid, body_state: :empty}
+              }} = Outbound.send(message)
+
+      assert_receive :blank_body_rendered
+      refute_receive :blank_body_rendered
+      assert TestRepo.aggregate(Delivery, :count) == deliveries_before
+      assert Mailglass.Adapters.Fake.deliveries() == []
+    end
+
     test "rejects nil, empty, and Unicode-whitespace-only bodies as empty without values in context" do
       for {html, text} <- [
             {nil, nil},
