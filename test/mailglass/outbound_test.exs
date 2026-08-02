@@ -80,6 +80,26 @@ defmodule Mailglass.OutboundTest do
       end
     end
 
+    test "sync idempotency keeps otherwise identical native recipient fields distinct" do
+      address = "sync-idempotency-fields@example.com"
+
+      deliveries =
+        for field <- [:to, :cc, :bcc] do
+          assert {:ok, %Delivery{recipient: ^address} = delivery} =
+                   Outbound.send(message_with_recipient_field(field, address))
+
+          assert %{message: dispatched} =
+                   Enum.find(Fake.deliveries(), fn %{message: message} ->
+                     Map.fetch!(message.swoosh_email, field) == [{"", address}]
+                   end)
+
+          assert Map.fetch!(dispatched.swoosh_email, field) == [{"", address}]
+          delivery
+        end
+
+      assert deliveries |> Enum.map(& &1.idempotency_key) |> Enum.uniq() |> length() == 3
+    end
+
     test "blank rendered HTML with explicit plaintext dispatches the plaintext once" do
       message =
         build_message("blank-html-sync@example.com")

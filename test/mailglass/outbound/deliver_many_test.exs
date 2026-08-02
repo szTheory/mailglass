@@ -96,6 +96,37 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       assert length(Enum.uniq(keys)) == 3
       assert Enum.all?(keys, &is_binary/1)
     end
+
+    test "native recipient fields have distinct keys and each same-field replay converges" do
+      address = "recipient-field-idempotency-#{unique_id()}@example.com"
+
+      messages =
+        for field <- [:to, :cc, :bcc],
+            do: build_message_with_recipient_field(field, address)
+
+      assert {:ok, first_deliveries} = Outbound.deliver_many(messages, [])
+      assert length(first_deliveries) == 3
+
+      keys_by_field =
+        Map.new(first_deliveries, fn delivery ->
+          {Map.get(delivery.metadata, "recipient_field") ||
+             Map.get(delivery.metadata, :recipient_field), delivery.idempotency_key}
+        end)
+
+      assert Map.keys(keys_by_field) |> Enum.sort() == ["bcc", "cc", "to"]
+      assert keys_by_field |> Map.values() |> Enum.uniq() |> length() == 3
+      assert Enum.all?(first_deliveries, &(&1.recipient == address))
+
+      assert {:ok, replayed_deliveries} = Outbound.deliver_many(messages, [])
+
+      assert Enum.map(replayed_deliveries, & &1.id) |> Enum.sort() ==
+               Enum.map(first_deliveries, & &1.id) |> Enum.sort()
+
+      assert Map.new(replayed_deliveries, fn delivery ->
+               {Map.get(delivery.metadata, "recipient_field") ||
+                  Map.get(delivery.metadata, :recipient_field), delivery.idempotency_key}
+             end) == keys_by_field
+    end
   end
 
   describe "deliver_many/2 — idempotency replay (Test 3)" do
@@ -294,6 +325,23 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       |> Swoosh.Email.subject("Test batch")
       |> Swoosh.Email.html_body("<p>Test body</p>")
       |> Swoosh.Email.text_body("Test body")
+
+    Message.build(email,
+      mailable: Mailglass.FakeFixtures.TestMailer,
+      tenant_id: "test-tenant",
+      stream: :transactional
+    )
+  end
+
+  defp build_message_with_recipient_field(field, address) do
+    email =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Test", "from@example.com"})
+      |> Swoosh.Email.subject("Test batch")
+      |> Swoosh.Email.html_body("<p>Test body</p>")
+      |> Swoosh.Email.text_body("Test body")
+      |> Map.merge(%{to: [], cc: [], bcc: []})
+      |> Map.put(field, [{"", address}])
 
     Message.build(email,
       mailable: Mailglass.FakeFixtures.TestMailer,

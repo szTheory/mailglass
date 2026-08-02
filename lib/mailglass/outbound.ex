@@ -1205,7 +1205,7 @@ defmodule Mailglass.Outbound do
   defp compute_idempotency_key(%Message{} = msg) do
     tenant_id = msg.tenant_id || ""
     mailable = inspect(msg.mailable)
-    recipient = primary_recipient(msg)
+    {:ok, %{field: field, address: recipient}} = Message.sole_recipient(msg)
 
     content_hash =
       :crypto.hash(:sha256, [
@@ -1214,7 +1214,17 @@ defmodule Mailglass.Outbound do
       ])
       |> Base.encode16(case: :lower)
 
-    :crypto.hash(:sha256, [tenant_id, "|", mailable, "|", recipient, "|", content_hash])
+    :crypto.hash(:sha256, [
+      tenant_id,
+      "|",
+      mailable,
+      "|",
+      Atom.to_string(field),
+      "|",
+      recipient,
+      "|",
+      content_hash
+    ])
     |> Base.encode16(case: :lower)
   end
 
