@@ -1356,7 +1356,7 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   # named as missing — was the one relation the probe could not observe. A check
   # that cannot observe its subject must not report success, and an incomplete
   # subject list is exactly that failure wearing a `true`.
-  @baseline_relations ~w(mailglass_deliveries mailglass_events mailglass_suppressions mailglass_webhook_events)
+  @baseline_relations ~w(mailglass_deliveries mailglass_events mailglass_suppressions mailglass_webhook_events mailglass_outbound_payloads)
 
   @doc """
   Checks whether all four baseline relations the shipped install migration

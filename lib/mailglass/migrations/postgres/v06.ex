@@ -4,7 +4,7 @@ defmodule Mailglass.Migrations.Postgres.V06 do
   def up(opts \\ []) do
     prefix = opts[:prefix]
 
-    create table(:mailglass_outbound_payloads, primary_key: false, prefix: prefix) do
+    create_if_not_exists table(:mailglass_outbound_payloads, primary_key: false, prefix: prefix) do
       add(:id, :uuid, primary_key: true)
       add(:tenant_id, :text, null: false)
 
@@ -22,21 +22,21 @@ defmodule Mailglass.Migrations.Postgres.V06 do
       timestamps(type: :utc_datetime_usec)
     end
 
-    create(
+    create_if_not_exists(
       unique_index(:mailglass_outbound_payloads, [:delivery_id],
         name: :mailglass_outbound_payloads_delivery_id_idx,
         prefix: prefix
       )
     )
 
-    create(
+    create_if_not_exists(
       index(:mailglass_outbound_payloads, [:tenant_id, :delivery_id],
         name: :mailglass_outbound_payloads_tenant_delivery_idx,
         prefix: prefix
       )
     )
 
-    create(
+    create_if_not_exists(
       index(:mailglass_outbound_payloads, [:expires_at],
         name: :mailglass_outbound_payloads_expires_at_idx,
         where: "expires_at IS NOT NULL",

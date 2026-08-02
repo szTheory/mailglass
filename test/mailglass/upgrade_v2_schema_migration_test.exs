@@ -173,7 +173,7 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
   # run seeds a clean 1.x state (belt-and-suspenders across interrupted runs).
   defp clean_public_mailglass! do
     for t <-
-          ~w(mailglass_events mailglass_deliveries mailglass_suppressions mailglass_webhook_events) do
+          ~w(mailglass_events mailglass_deliveries mailglass_suppressions mailglass_webhook_events mailglass_outbound_payloads) do
       {:ok, _} = TestRepo.query("DROP TABLE IF EXISTS public.#{t} CASCADE")
     end
 
@@ -194,7 +194,8 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
             'mailglass_events',
             'mailglass_deliveries',
             'mailglass_suppressions',
-            'mailglass_webhook_events'
+            'mailglass_webhook_events',
+            'mailglass_outbound_payloads'
           )
         """,
         [schema]
@@ -219,8 +220,8 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
 
   describe "UPG-04: generated move migration relocates the 1.x public install to mailglass.*" do
     test "all four tables live under mailglass.* and public has none" do
-      assert table_count(@prefix) == 4,
-             "all four mailglass tables must live under #{@prefix} after the move"
+      assert table_count(@prefix) == 5,
+             "all five mailglass tables must live under #{@prefix} after the move"
 
       assert table_count("public") == 0,
              "public must be empty of mailglass tables after the move"
@@ -302,8 +303,8 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
           Ecto.Migrator.down(repo, version, MoveWrapperMigration, log: false, prefix: "public")
         end)
 
-      assert table_count("public") == 4,
-             "down must move all four tables back to public"
+      assert table_count("public") == 5,
+             "down must move all five tables back to public"
 
       {:ok, %{rows: [[schema_count]]}} =
         TestRepo.query(

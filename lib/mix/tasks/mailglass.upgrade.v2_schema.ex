@@ -114,6 +114,14 @@ defmodule Mix.Tasks.Mailglass.Upgrade.V2Schema do
         execute ~s(ALTER TABLE public.mailglass_deliveries SET SCHEMA "\#{@schema}")
         execute ~s(ALTER TABLE public.mailglass_suppressions SET SCHEMA "\#{@schema}")
         execute ~s(ALTER TABLE public.mailglass_webhook_events SET SCHEMA "\#{@schema}")
+        execute \"\"\"
+        DO $$
+        BEGIN
+          IF to_regclass('public.mailglass_outbound_payloads') IS NOT NULL THEN
+            ALTER TABLE public.mailglass_outbound_payloads SET SCHEMA "\#{@schema}";
+          END IF;
+        END $$;
+        \"\"\"
 
         # The immutability FUNCTION does not move with the table — recreate it qualified.
         execute ~s(DROP TRIGGER IF EXISTS mailglass_events_immutable_trigger ON "\#{@schema}".mailglass_events)
@@ -150,6 +158,14 @@ defmodule Mix.Tasks.Mailglass.Upgrade.V2Schema do
         execute ~s(ALTER TABLE "\#{@schema}".mailglass_deliveries SET SCHEMA public)
         execute ~s(ALTER TABLE "\#{@schema}".mailglass_suppressions SET SCHEMA public)
         execute ~s(ALTER TABLE "\#{@schema}".mailglass_webhook_events SET SCHEMA public)
+        execute \"\"\"
+        DO $$
+        BEGIN
+          IF to_regclass('\#{@schema}.mailglass_outbound_payloads') IS NOT NULL THEN
+            ALTER TABLE "\#{@schema}".mailglass_outbound_payloads SET SCHEMA public;
+          END IF;
+        END $$;
+        \"\"\"
 
         execute ~s(DROP TRIGGER IF EXISTS mailglass_events_immutable_trigger ON public.mailglass_events)
         execute ~s|DROP FUNCTION IF EXISTS "\#{@schema}".mailglass_raise_immutability()|
