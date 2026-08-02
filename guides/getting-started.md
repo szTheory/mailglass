@@ -28,8 +28,14 @@ config :mailglass,
   adapter:
     {Mailglass.Adapters.Swoosh,
      swoosh_adapter: {Swoosh.Adapters.Postmark, api_key: System.fetch_env!("POSTMARK_API_KEY")}},
+  renderer: [plaintext: true, css_inliner: :premailex],
   telemetry: [default_logger: true]
 ```
+
+`renderer.plaintext` controls only automatic plaintext for HTML-only mail:
+`true` generates it and `false` leaves it absent. Nonblank authored plaintext
+always wins. `renderer.css_inliner: :premailex` inlines CSS; `:none` skips only
+that step, while HEEx rendering and `data-mg-*` stripping still run.
 
 ## 3) Mount preview and webhook routes
 
@@ -76,6 +82,27 @@ end
   |> MyApp.UserMailer.welcome()
   |> Mailglass.deliver()
 ```
+
+This message has one native `to` recipient and both nonblank HTML and plaintext
+bodies. With the default `Mailglass.Tenancy.SingleTenant` resolver, no tenant
+stamp is required: the shared preflight records ownership as string `"default"`.
+`cc` and `bcc` count toward the same one-recipient total; invalid tenant,
+recipient, or body shapes fail before rendering, persistence, queue insertion,
+or provider work.
+
+To select the configured asynchronous path instead, call:
+
+```elixir
+%{email: "alice@example.com"}
+|> MyApp.UserMailer.welcome()
+|> Mailglass.deliver_later()
+```
+
+`async_adapter: :task_supervisor` is explicitly non-durable and intended for
+development or test use. Phase 149 does not promise private-envelope fidelity
+or atomic durable enqueue; those are Phase 150 work. It also does not promise
+sync/async provider-wire equivalence, dispatch-outcome convergence, or payload
+lifecycle behavior; those are Phase 151 work.
 
 ## End-to-End Example
 

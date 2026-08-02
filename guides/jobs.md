@@ -116,7 +116,8 @@ special email renderer."
 need to see the real output before a single customer gets it.
 
 Mount the preview behind dev routes. It discovers your Mailables and runs them
-through the same renderer used for delivery.
+through `Mailglass.Renderer`, the same renderer used for direct rendering,
+synchronous send preparation, and asynchronous send preparation.
 
 ```elixir
 defmodule MyAppWeb.Router do
@@ -136,9 +137,9 @@ Open `http://localhost:4000/dev/mail` and you get a sidebar of Mailables,
 HTML/Text/Raw/Headers tabs, device-width and dark-mode toggles, plus editable
 assigns.
 
-**What this job really buys you:** preview is not a toy renderer. It is the
-production renderer with a UI around it, which means less drift and fewer
-"looked fine in preview, broke in inbox" surprises.
+**What this job really buys you:** preview is not a toy renderer. Its HTML and
+text preparation uses the production renderer with a UI around it, which means
+less render drift. It does not promise eventual provider-wire equivalence.
 
 **Go deeper →** [Preview](preview.md)
 
@@ -189,8 +190,9 @@ tracking on auth-shaped functions into a compile-time failure.
 *Scenario:* you want the request to finish fast, but you also want retries and
 replays to be boring instead of terrifying.
 
-Use `deliver_later/2`. When Oban is available, mailglass uses it. When it is
-not, mailglass degrades to a supervised `Task` and tells you so once at boot.
+Use `deliver_later/2` to select the configured asynchronous path. The explicit
+`:task_supervisor` adapter is non-durable and suited to development or test
+work; choose it intentionally rather than treating it as durable queueing.
 
 ```elixir
 %{email: "alice@example.com"}
@@ -198,12 +200,11 @@ not, mailglass degrades to a supervised `Task` and tells you so once at boot.
 |> Mailglass.deliver_later()
 ```
 
-Every logical send carries an idempotency key, so retried work converges instead
-of duplicating mail.
-
-**What this job really buys you:** the common async path without making Oban a
-hard requirement, plus replay safety enforced in persistence rather than hoped
-for in application code.
+**What this job really buys you:** the documented asynchronous selection path
+with the same preflight and renderer preparation as sync. Phase 149 does not
+promise a private complete envelope, atomic enqueue, provider-wire equivalence,
+converged dispatch outcomes, or payload lifecycle; Phase 150 owns durable
+envelope/enqueue work and Phase 151 owns dispatch and lifecycle work.
 
 **Go deeper →** [Testing](testing.md) · [Authoring Mailables](authoring-mailables.md)
 

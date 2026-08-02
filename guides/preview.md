@@ -1,6 +1,19 @@
 # Preview
 
-The preview surface runs in dev and uses your production render pipeline, so HTML/Text/Raw/Headers stay consistent with real delivery.
+The preview surface runs in dev and uses `Mailglass.Renderer`, the shared
+production renderer used for direct rendering, synchronous send preparation,
+and asynchronous send preparation. Its HTML and text therefore observe the same
+explicit-text precedence, automatic-plaintext switch, and CSS-inliner switch.
+
+For HTML-only mail, `renderer.plaintext: true` generates plaintext and `false`
+leaves it absent; nonblank authored plaintext is preserved in either case.
+`renderer.css_inliner: :premailex` inlines CSS, while `:none` skips only CSS
+inlining and keeps HEEx rendering plus `data-mg-*` stripping.
+
+This is renderer parity, not a provider dispatch promise: Phase 149 does not
+claim private-envelope fidelity, atomic durable enqueue, provider-wire
+equivalence, dispatch outcomes, or payload lifecycle. Those boundaries belong
+to Phases 150 and 151.
 
 The screenshot capture workflow is for **preview-pipeline confidence only**. It
 does **not** claim cross-client parity across Outlook/Gmail/Apple Mail.
