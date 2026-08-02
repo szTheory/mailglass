@@ -378,52 +378,59 @@ defmodule Mailglass.Outbound do
   end
 
   defp enqueue_oban(%Message{} = rendered, adapter_ref, _opts) do
+    with {:ok, envelope} <- Envelope.dump(rendered, adapter_ref: adapter_ref) do
+      enqueue_durable_oban(rendered, adapter_ref, envelope)
+    end
+  end
+
+  # The only durable enqueue boundary: all public async Oban paths must enter
+  # after their message is fully prepared, routed, and serialized.
+  defp enqueue_durable_oban(%Message{} = rendered, adapter_ref, envelope) do
     ik = compute_idempotency_key(rendered)
     tenant_id = rendered.tenant_id
     delivery_id = delivery_id!(rendered)
-
     attrs = base_delivery_attrs(rendered, ik, adapter_ref)
 
-    with {:ok, envelope} <- Envelope.dump(rendered, adapter_ref: adapter_ref) do
-      result =
-        Ecto.Multi.new()
-        |> Ecto.Multi.insert(
-          :delivery,
-          Delivery.changeset(%Delivery{id: delivery_id}, attrs),
-          Repo.multi_opts()
-        )
-        |> Events.append_multi(:event_queued, fn %{delivery: d} ->
-          %{
-            tenant_id: tenant_id,
-            delivery_id: d.id,
-            type: :queued,
-            occurred_at: Clock.utc_now(),
-            idempotency_key: ik,
-            normalized_payload: %{}
-          }
-        end)
-        |> Ecto.Multi.insert(
-          :payload,
-          fn %{delivery: d} ->
-            Payload.from_envelope(tenant_id, d.id, envelope)
-          end,
-          Repo.multi_opts()
-        )
-        |> Mailglass.OptionalDeps.Oban.insert(:job, fn %{delivery: d} ->
+    result =
+      Ecto.Multi.new()
+      |> Ecto.Multi.insert(
+        :delivery,
+        Delivery.changeset(%Delivery{id: delivery_id}, attrs),
+        Repo.multi_opts()
+      )
+      |> Events.append_multi(:event_queued, fn %{delivery: d} ->
+        %{
+          tenant_id: tenant_id,
+          delivery_id: d.id,
+          type: :queued,
+          occurred_at: Clock.utc_now(),
+          idempotency_key: ik,
+          normalized_payload: %{}
+        }
+      end)
+      |> Ecto.Multi.insert(
+        :payload,
+        fn %{delivery: d} -> Payload.from_envelope(tenant_id, d.id, envelope) end,
+        Repo.multi_opts()
+      )
+      |> Mailglass.OptionalDeps.Oban.insert(
+        :job,
+        fn %{delivery: d} ->
           Mailglass.Outbound.Worker.new(%{
             "delivery_id" => d.id,
             "mailglass_tenant_id" => tenant_id
           })
-        end)
-        |> Repo.multi()
+        end,
+        Repo.multi_opts()
+      )
+      |> Repo.multi()
 
-      case result do
-        {:ok, %{delivery: d}} ->
-          {:ok, %{d | status: :queued, last_event_type: :queued}}
+    case result do
+      {:ok, %{delivery: d, event_queued: _event, payload: _payload, job: _job}} ->
+        {:ok, %{d | status: :queued, last_event_type: :queued}}
 
-        {:error, _step, err, _} ->
-          {:error, to_error(err)}
-      end
+      {:error, _step, err, _} ->
+        {:error, to_error(err)}
     end
   end
 
@@ -462,7 +469,7 @@ defmodule Mailglass.Outbound do
           fn ->
             Mailglass.Tenancy.with_tenant(tenant_id, fn ->
               try do
-                case dispatch_by_id(d.id) do
+                case dispatch_prepared(d, rendered) do
                   {:ok, _} ->
                     :ok
 
@@ -766,6 +773,30 @@ defmodule Mailglass.Outbound do
         adapter_mod.deliver(rendered, adapter_opts)
       end
     )
+  end
+
+  # The explicit Task.Supervisor path is intentionally non-durable, so it may
+  # carry the already-prepared message in memory. It must not reconstruct that
+  # private content from Delivery metadata.
+  defp dispatch_prepared(%Delivery{} = delivery, %Message{} = rendered) do
+    with {:ok, adapter} <- resolve_persisted_adapter(delivery.adapter_ref),
+         {:ok, dispatch_result} <- call_adapter(rendered, adapter),
+         {:ok, %{delivery: updated}} <-
+           persist_dispatched_multi(delivery, dispatch_result, rendered) do
+      Projector.broadcast_delivery_updated(updated, :dispatched, %{
+        tenant_id: updated.tenant_id,
+        delivery_id: updated.id
+      })
+
+      {:ok, updated}
+    else
+      {:error, %{__exception__: true} = err} ->
+        persist_failed_by_id(delivery.id, err)
+        {:error, err}
+
+      other ->
+        other
+    end
   end
 
   defp persist_dispatched_multi(
@@ -1248,17 +1279,9 @@ defmodule Mailglass.Outbound do
       status: :queued,
       last_event_type: :queued,
       last_event_at: Clock.utc_now(),
-      metadata:
-        Map.merge(rendered.metadata || %{}, %{
-          rendered_html: rendered.swoosh_email.html_body,
-          rendered_text: rendered.swoosh_email.text_body,
-          subject: rendered.swoosh_email.subject,
-          headers: rendered.swoosh_email.headers || %{},
-          # Phase 149 retains this minimal marker solely to preserve the native
-          # sole-recipient field during current async rehydration. Phase 150's
-          # private envelope remains responsible for full envelope fidelity.
-          recipient_field: recipient_field(rendered)
-        }),
+      # Delivery metadata is an adopter-visible projection. The stamped
+      # delivery id and every reconstruction value live only in Payload.
+      metadata: Map.drop(rendered.metadata || %{}, [:delivery_id, "delivery_id"]),
       idempotency_key: ik
     }
   end
@@ -1300,13 +1323,6 @@ defmodule Mailglass.Outbound do
       :cc -> Swoosh.Email.cc(email, recipient)
       :bcc -> Swoosh.Email.bcc(email, recipient)
       _ -> Swoosh.Email.to(email, recipient)
-    end
-  end
-
-  defp recipient_field(%Message{} = message) do
-    case Message.sole_recipient(message) do
-      {:ok, %{field: field}} -> Atom.to_string(field)
-      {:error, _} -> "to"
     end
   end
 

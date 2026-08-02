@@ -61,6 +61,23 @@ defmodule Mailglass.OptionalDeps.Oban do
   end
 
   @doc """
+  Gateway wrapper for the prefix-aware `Oban.insert/4` Multi variant.
+
+  The caller supplies the same step options used by Mailglass persistence so
+  the Oban job is inserted in the configured schema inside the active Multi.
+  """
+  @doc since: "2.4.0"
+  @spec insert(Ecto.Multi.t(), atom(), (map() -> term()), keyword()) :: Ecto.Multi.t()
+  def insert(multi, name, job_builder, opts)
+      when is_atom(name) and is_function(job_builder, 1) and is_list(opts) do
+    if available?() do
+      Oban.insert(multi, name, job_builder, opts)
+    else
+      multi
+    end
+  end
+
+  @doc """
   Gateway wrapper for `Oban.insert_all/1`.
   """
   @doc since: "0.1.0"
