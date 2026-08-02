@@ -1,99 +1,120 @@
-# Feature Landscape
+# Feature Research
 
-**Domain:** v1.3 Adopter Trust Proof (reference host app)  
-**Project:** mailglass  
-**Researched:** 2026-05-27  
-**Overall confidence:** HIGH
+**Domain:** Outbound first-adopter correctness for a Phoenix transactional-email framework
+**Project:** mailglass v2.4
+**Researched:** 2026-08-02
+**Confidence:** HIGH
 
-## Scope Principle
+## Feature Landscape
 
-This milestone is a **trust-proof wedge**, not a capability wedge.
+This is a launch-contract repair milestone, not a product-surface expansion. The adopter must be able to use the documented one-brand, one-recipient path without knowing Mailglass internals: construct a message, choose sync or durable async, accept an unsubscribe, and verify production readiness. A result is only complete when it is observable from a generated Phoenix/Postgres host without test-only configuration.
 
-The new work should prove that a real adopter can run one maintained Phoenix host app through:
+### Table Stakes (Users Expect These)
 
-1. install,
-2. preview,
-3. send,
-4. webhook ingest,
-5. operator troubleshooting.
+| Feature | Why Expected | Complexity | Notes / testable acceptance expectation |
+|---------|--------------|------------|-----------------------------------------|
+| **Zero-config single-tenant first send** | A single-brand app should not need a process-local tenant stamp merely to send its first email. | MEDIUM | With no custom tenancy module and no `put_current/1`, sync and async sends persist/use tenant `"default"`; verified feedback and unsubscribe resolve to that same tenant. A configured custom resolver remains fail-closed when its context is absent or invalid. |
+| **Explicit body and renderer contract** | An adopter must know whether HTML, generated plaintext, and text-only mail will be sent before depending on the guide. | MEDIUM | `text_body/2` produces text-only mail without requiring HTML; explicit plaintext wins over generated text; HTML-only behavior follows the documented renderer setting; published CSS-inliner choices have the same observable result in both modes. Unsupported renderer input fails before any send/job is created. |
+| **Exactly one envelope recipient per delivery** | Transactional mail must not leak recipients or silently turn one logical send into multi-recipient semantics. | HIGH | Reject or split unsupported recipient shapes before persistence; every successful `deliver/2` or `deliver_later/2` has one envelope recipient, one delivery row, one suppression decision, and one provider dispatch. The v2.4 contract is one recipient, not a `deliver_many/2` redesign. |
+| **Sync/async wire fidelity** | Choosing `deliver_later/2` must change timing/durability, not message meaning. | HIGH | Given a supported one-recipient message, sync and durable async deliver equivalent provider-ready From/To/subject/headers/HTML/text/attachments and the persisted selected adapter reference. Render once before the async boundary; do not serialize executable HEEx/functions or raw adapter secrets. |
+| **Fail-closed durable async enqueueing** | Production callers reasonably interpret a queued result as recoverable durable work. | HIGH | `{:ok, delivery}` with `:queued` means the delivery record, queued event, complete internal payload, and Oban job commit atomically. If Oban is unavailable/miswired or payload persistence/enqueue fails, return an error and create no sendable partial work. Task-supervisor dispatch is expressly non-production/non-durable. |
+| **Honest retry and terminal outcome semantics** | Operators must not mistake permanent rejects or post-dispatch ambiguity for safe automatic retries. | MEDIUM | Only genuinely retryable dispatch failures are returned to Oban; rendering, serialization, suppression, configuration, and malformed payload failures settle as non-retryable with an honest final delivery/error record. Retries retain the already selected route and never claim exactly-once provider acceptance. |
+| **Built-in one-click suppression convergence** | RFC 8058 one-click must actually stop subsequent eligible sends, including POST replay. | HIGH | A valid POST returns empty `200`; first click atomically writes the originating address+stream suppression and durable unsubscribe event; replays return the same `200` without duplicate rows/events. A later same-stream send is preflight-blocked; transactional mail is not blocked by an operational/bulk stream unsubscribe. |
+| **Bounded private queued payload lifecycle** | Queued content can contain PII or sensitive business text, but async delivery needs it until dispatch succeeds. | HIGH | Store a private, internal delivery artifact separate from adopter `Delivery.metadata`; retain only what dispatch/retry needs; scrub it transactionally after successful dispatch; expire/scrub terminal undeliverable payloads on a documented bounded schedule. It is not operator-visible sent-mail retention. |
+| **Production preflight and clean-host release proof** | Copy-paste docs are not sufficient evidence for a framework that owns migrations, queueing, webhooks, and compliance. | HIGH | A generated Phoenix/Postgres host installs published packages, runs migrations, configures Oban and real runtime settings, performs sync and async send, ingests feedback, proves one-click enforcement, mounts production operations, and runs `mail.doctor`/`mailglass.doctor`. This path blocks release when snippets, migrations, queue names, or contracts drift. |
 
-Anything that does not strengthen that proof should be deferred.
+### Differentiators (Competitive Advantage)
 
-## New Work Only (Delta From Shipped v1.2)
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **One-recipient parity as a documented compatibility promise** | Most email abstractions make async behavior an implementation detail; Mailglass can give Phoenix adopters a concrete, testable equivalence guarantee. | HIGH | Differentiate through correctness and evidence, not more provider features. The guarantee applies only to the supported single-recipient contract. |
+| **Privacy-bounded queued artifact rather than casual job serialization** | Lets teams use durable delivery without treating Oban args or delivery metadata as a long-lived mail archive. | HIGH | The artifact is an internal transport aid with deletion rules; it creates no sent-body browsing feature. |
+| **Compliance that converges into send preflight** | The built-in RFC 8058 endpoint provides a safe baseline whose effect is visible on the next send. | HIGH | Keep category preferences with Chimeway/host; Mailglass owns stream-level suppression and delivery evidence. |
+| **Generated-host proof as a release gate** | An adopter can trust the published install journey, not only the repository test harness. | HIGH | This is release-confidence infrastructure, not a demo app or a UI redesign. |
 
-Shipped capability is already broad (outbound, preview/admin, inbound ingest/runtime, telemetry, operator tooling, docs). The v1.3 delta is:
+### Anti-Features (Commonly Requested, Often Problematic)
 
-- one maintained reference host app as the canonical adoption proof artifact;
-- one clean-baseline CI lane that continuously validates that artifact;
-- one explicit docs posture that keeps API-contract truth in core docs/tests (not in the reference app).
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| **Multi-recipient / CC / BCC support in the v2.4 async repair** | It sounds like ordinary email functionality. | It changes privacy, suppression, idempotency, delivery-row, and envelope semantics while the milestone must make one recipient correct. | Enforce the one-envelope-recipient contract; plan recipient fan-out only with its own data model and privacy work. |
+| **Task.Supervisor fallback presented as production async** | It reduces setup friction where Oban is absent. | Process-local work is lost on restart and cannot satisfy a durable queued-success promise. | Require Oban and its queue/schema for production; retain the fallback only as clearly non-durable development/test behavior. |
+| **Sent-email snapshots or admin body viewer** | Operators want to see the exact email after send. | It turns short-lived private queue data into a retention, encryption, authorization, redaction, and deletion product. | Scrub transient async payloads; defer opt-in sent snapshots to SEED-004 with a dedicated privacy design. |
+| **Native HEEx assigns/API redesign** | It would make dynamic template authoring more ergonomic. | It changes stable renderer and preview semantics, expanding a correctness milestone into compatibility work. | Keep documented renderer/body semantics honest; defer to SEED-005. |
+| **Category preferences, quiet hours, caps, digests, or scheduling** | A B2C adopter wants richer preference controls. | These are notification-policy decisions and would violate the locked Chimeway/host ownership boundary. | Mailglass provides stream-level suppression; Chimeway/host consumes one-click intent and owns category policy. |
+| **Provider breadth, ecosystem integrations, or admin polish** | Each improves the product in isolation. | None proves the first documented send path correct and all increase the release matrix. | Defer until actual adopter pull; preserve current provider and UI boundaries. |
+| **Exactly-once provider delivery claim** | It sounds stronger than retryable delivery. | Network/provider acknowledgement can be ambiguous after handoff; retries can be at-least-once at the provider boundary. | Promise idempotent local enqueue/ledger handling and honest attempt/status semantics, not impossible provider exactly-once delivery. |
 
-## Table Stakes (Must-Have To Prove Trust)
+## Feature Dependencies
 
-| Feature | Expected Behavior In v1.3 | Complexity | Depends On Shipped Capability | Why It Is Table Stakes |
-|---|---|---|---|---|
-| **Maintained reference Phoenix host app** | Fresh clone + setup runs successfully; app boots with Mailglass integrated and configured on a realistic Phoenix baseline. | Med | `mix mailglass.install`, Phoenix mount patterns, existing schema/migrations | Without a runnable host, trust remains fragmented across docs/tests. |
-| **Single canonical trust journey** | One documented flow proves install -> preview -> send -> webhook ingest -> operator troubleshoot, with clear checkpoints and expected outcomes. | Med | Preview LiveView, outbound pipeline, inbound ingress, admin/operator surfaces | Trust requires an end-to-end story, not isolated subsystem proofs. |
-| **Webhook + operator troubleshooting proof path** | The host app demonstrates diagnosis from evidence (event/history/timeline), including at least one non-happy-path troubleshooting case. | Med | append-only event ledger, normalized events, replay/evidence tooling, inbound admin pages | Operators must be able to answer "what happened and why" in one place. |
-| **Clean-baseline CI lane for reference app** | CI creates/uses a clean host-app baseline and verifies the trust journey deterministically; failures block drift. | High | existing CI discipline, contract tests, fixture/test helpers | Proof must be continuously re-validated, not manually claimed. |
-| **Contract-boundary docs positioning** | Docs explicitly state: reference app is usage/operations proof; contract truth remains in `api_stability.md`, requirements, and contract tests. | Low | existing stability docs + docs contract tests | Prevents accidental "example app behavior == guaranteed public API" drift. |
+```text
+Zero-config single tenancy ─┐
+Explicit renderer/body truth ├──> one-recipient normalized artifact ──> sync/async wire-fidelity proof
+One-envelope-recipient rule ─┘                         │
+                                                        ├──> atomic durable Oban enqueue
+                                                        ├──> retry classification and route persistence
+                                                        └──> private-payload scrub/expiry lifecycle
 
-## Differentiators (Nice-To-Have Follow-On, Not Required For v1.3 Exit)
+One-click POST replay convergence ──> stream-scoped suppression ──> later-send preflight enforcement
 
-| Feature | Value | Complexity | Suggested Timing |
-|---|---|---|---|
-| **Multi-provider trust matrix in host app** | Stronger evaluator confidence across provider permutations. | High | After v1.3 (inbound stability lock or focused provider follow-on) |
-| **Hosted demo instance of reference app** | Faster evaluator onboarding, easier demos. | Med-High | After v1.3; only if maintenance budget supports ops burden |
-| **Synthetic inbound generation UI in host app** | Better local troubleshooting ergonomics. | Med | After trust-proof baseline; keep dev-only and security-scoped |
-| **Cross-version upgrade proof matrix** | Better long-horizon trust for adopters upgrading over time. | Med-High | After inbound stability lock clarifies broader contract posture |
-| **Expanded failure-playbook scenarios** | Richer operator readiness and support docs. | Med | Incremental follow-on once baseline journey is stable |
+All launch contracts ──> generated Phoenix/Postgres proof ──> release gate
 
-## Anti-Features / Exclusions (Do Not Bundle Into v1.3)
+Sent snapshot viewer ──conflicts with── transient private queued-payload lifecycle
+Category notification preferences ──owned by── Chimeway/host (outside Mailglass scope)
+```
 
-| Anti-Feature | Why It Weakens This Milestone | Keep Out Of Scope For v1.3 |
-|---|---|---|
-| **Transport-class expansion (`gen_smtp` listener)** | Different architecture, ops risk, and threat surface; not needed for trust-proof baseline. | Yes |
-| **Ecosystem grab-bag integrations** | Dilutes milestone focus and complicates verification. | Yes |
-| **Broad provider matrix expansion** | Increases combinatorial test burden without improving the core trust claim. | Yes |
-| **New product surface (marketing/multi-channel)** | Violates locked project boundary and distracts from adopter proof objective. | Yes |
-| **Core API redesign during trust-proof milestone** | Destabilizes the very contract the milestone is trying to prove trustworthy. | Yes |
-| **Treating reference-app internals as API contract** | Creates accidental public guarantees and long-term maintenance drag. | Yes |
+### Dependency Notes
 
-## Expected Milestone Behavior (Done-Enough Signal)
+- **One-recipient normalized artifact requires renderer/body truth:** async fidelity cannot be proved until the supported provider-ready form of HTML, text-only, explicit text, headers, and attachments is defined.
+- **Durable enqueue requires the artifact and selected adapter reference:** the database transaction must persist everything a later worker needs, while excluding host secrets and executable render state.
+- **Retry semantics require durable enqueue:** Oban can only make a retry decision after it can load a complete artifact and distinguish permanent pre-dispatch errors from retryable adapter failures.
+- **Suppression enforcement requires one-click convergence:** a `200` is insufficient unless the committed suppression is consulted by the next matching send before provider handoff.
+- **Generated-host proof comes last:** it should exercise the integrated contract rather than masking seams with inline adapters, test tenancy stamps, or hand-built migrations.
 
-At milestone exit, adopters should reasonably expect:
+## MVP Definition
 
-- a maintained reference host app they can run locally on a clean Phoenix baseline;
-- a deterministic walkthrough that reaches preview, send, webhook ingest, and operator diagnosis;
-- CI evidence that the walkthrough still works from a clean starting point;
-- documentation that cleanly separates "usage proof" from "public API contract";
-- no surprise scope creep into new transports/providers/product surfaces.
+### Launch With (v2.4)
 
-## Dependency Notes (What Reuses Shipped Capability)
+- [ ] **Real single-tenant sync and async first send** — default `"default"` behavior works with no caller stamp; custom tenancy does not silently downgrade its safety checks.
+- [ ] **Supported one-recipient message contract** — explicit HTML/plaintext/text-only semantics and a single envelope recipient are validated before persistence and are identical at the provider boundary for sync and async.
+- [ ] **Atomic Oban-backed async path** — queued success is durable and fail-closed, has a full private dispatch artifact, preserves route identity, and classifies retries honestly.
+- [ ] **Idempotent stream-scoped RFC 8058 POST** — first and replayed POSTs converge, and future same-stream sends are blocked before dispatch.
+- [ ] **Bounded async privacy lifecycle** — internal queued content is separated from adopter metadata, scrubbed on success, and bounded for non-success terminal states.
+- [ ] **Generated production-shaped host release proof** — clean install through production preflight, sync/async send, feedback, unsubscribe enforcement, and operations mounting passes without test-helper shortcuts.
 
-v1.3 should reuse, not re-implement, these shipped foundations:
+### Add After Validation (v2.x)
 
-- **Install + setup primitives:** existing install/generator flow and baseline project wiring;
-- **Preview + send path:** shipped preview/admin and outbound delivery foundations;
-- **Webhook/inbound path:** normalized ingress, replay-safe persistence, and event taxonomy already in place;
-- **Operator troubleshooting:** existing admin evidence/timeline/replay tooling;
-- **Contract truth and docs checks:** existing stability docs and docs-contract verification lanes.
+- [ ] **Sent-message snapshot retention** — add only when exact body reproduction has an approved encryption, authorization, redaction, retention, and deletion policy (SEED-004).
+- [ ] **Native HEEx assigns rendering** — add only through a compatibility-aware renderer/preview design (SEED-005).
+- [ ] **Recipient fan-out model** — add only after real adopter demand justifies per-recipient delivery, suppression, idempotency, and audit semantics.
 
-## Complexity Notes
+### Future Consideration (post-v2.4)
 
-| Workstream | Complexity | Primary Risk | Mitigation |
-|---|---|---|---|
-| Reference app design (thin but realistic) | Med | Becoming a second product app | Keep one representative journey only |
-| Deterministic trust fixtures/scenarios | Med | Flaky or ambiguous proof outputs | Use stable fixtures + explicit expected checkpoints |
-| Clean-baseline CI lane | High | Environment drift and long feedback loops | Keep lane narrow and purpose-built for trust journey |
-| Docs boundary language | Low | Contract confusion between app and library | Explicitly separate proof artifact vs API contract source |
-| Ongoing maintenance posture | Med | Reference app silently rotting between releases | Tie upkeep to release/CI gates and milestone rituals |
+- [ ] **Provider expansion and ecosystem integrations** — defer until repeated adopter pull justifies the support matrix.
+- [ ] **Admin visual polish and message-content viewer** — defer; neither proves outbound correctness, and content viewing first requires the sent-snapshot privacy product.
+- [ ] **Notification policy and preference orchestration** — keep with Chimeway/host; Mailglass remains transport, evidence, and stream suppression.
 
-## Out Of Scope For This Milestone
+## Feature Prioritization Matrix
 
-- Cloudflare Email Routing support
-- `gen_smtp` listener/relay transport work
-- broad ecosystem integrations (`SEED-003` auto-promotion)
-- schedule-send convenience work
-- inbound auto-suppression policy expansion without fresh adopter signal
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| Single-tenant and renderer/body contract truth | HIGH | MEDIUM | P1 |
+| One-recipient sync/async wire fidelity | HIGH | HIGH | P1 |
+| Atomic durable Oban enqueue and honest retries | HIGH | HIGH | P1 |
+| One-click suppression convergence | HIGH | HIGH | P1 |
+| Private queued-payload scrub/retention | HIGH | HIGH | P1 |
+| Generated-host preflight/release proof | HIGH | HIGH | P1 |
+| Sent snapshots, HEEx assigns, fan-out, providers, UI polish | MEDIUM | HIGH | P3 |
 
-These remain viable follow-on wedges, but they are not required to prove v1.3 trust.
+## Sources
+
+- `.planning/PROJECT.md` — v2.4 goal, active requirements, locked ownership boundaries, and explicit deferrals.
+- `.planning/milestones/v2.3-REQUIREMENTS.md` — shipped B2C contract and promotion triggers.
+- `guides/b2c-first-adopter.md` — single-tenant profile, stream behavior, and external-owner boundaries.
+- `guides/getting-started.md`, `guides/authoring-mailables.md`, `guides/production-go-live-checklist.md` — published first-send and production expectations.
+- `guides/unsubscribe.md`, `guides/multi-tenancy.md`, `guides/errors-and-troubleshooting.md`, `guides/testing.md` — current one-click, tenancy, retry, and test/Oban behavior.
+- `.planning/seeds/SEED-004-sent-email-snapshot-retention.md`, `.planning/seeds/SEED-005-native-heex-assigns-rendering.md` — explicitly deferred scope.
+- `lib/mailglass/outbound.ex`, `lib/mailglass/outbound/delivery.ex`, `lib/mailglass/config.ex` — current contract seams audited for roadmap implications.
+
+---
+*Feature research for: mailglass v2.4 Outbound First-Adopter Correctness*
+*Researched: 2026-08-02*

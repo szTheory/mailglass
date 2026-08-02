@@ -1,124 +1,130 @@
-# Technology Stack
+# Stack Research
 
-**Project:** mailglass  
-**Researched:** 2026-05-27  
-**Milestone scope:** v1.3 Adopter Trust Proof (maintained Phoenix reference host app + clean-baseline CI journey)
+**Domain:** Mailglass v2.4 outbound first-adopter correctness (Phoenix/Postgres transactional email)
+**Researched:** 2026-08-02
+**Confidence:** MEDIUM
 
-## Recommendation
+## Recommended Stack
 
-For v1.3, keep the shipped `mailglass`/`mailglass_admin`/`mailglass_inbound`
-runtime stack intact and add a thin, maintained **reference host app proof
-layer** around it.
+### Core Technologies
 
-This milestone should add:
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| Elixir / Phoenix | Elixir `~> 1.18`; Phoenix `~> 1.8` (lock: 1.8.9) | Host integration and existing unsubscribe endpoint | Keep the existing Phoenix controller/router mechanism. It already supplies the POST endpoint required by RFC 8058; this milestone is about transaction and idempotency correctness, not another web stack. |
+| Ecto SQL / PostgreSQL | Ecto + Ecto SQL `~> 3.13` (lock: 3.14.0); Postgrex `~> 0.22` (lock: 0.22.3); PostgreSQL 14+ | Durable deliveries, event ledger, suppressions, and queued payload records | Use the existing `Repo.multi/1` + `Ecto.Multi` boundary. Ecto documents `Multi` as the mechanism for one database transaction, which fits delivery+job insertion and event+suppression convergence. |
+| Oban | Optional `~> 2.21` (lock: 2.23.0) | Durable async execution through the adopter's host Repo | Make Oban the required production mode for `deliver_later/2`; retain it as an optional library dependency for package compatibility. Oban worker `new/2` generates an insertable job changeset and supports insertion in the same transaction as Mailglass persistence. |
+| Swoosh | `~> 1.25` (lock: 1.26.3) | Canonical email/envelope representation and provider dispatch | Preserve Swoosh as the single message representation. Its email contract carries `from`, `to`, `cc`, `bcc`, `reply_to`, headers, bodies, attachments, and provider options; the async payload must explicitly serialize the supported one-recipient subset rather than reconstruct only a partial email. |
+| Premailex + Floki | Premailex `~> 1.0` (lock: 1.0.0); Floki `~> 0.38` (lock: 0.38.4) | Existing HTML inlining and plaintext extraction | Retain the pure renderer pipeline. Fix configuration semantics in `Mailglass.Renderer` so explicit text-only, explicit plaintext, and the documented `renderer.plaintext` option are honored; do not substitute a rendering system. |
 
-1. one committed Phoenix reference host app artifact (maintained, not throwaway),
-2. one required CI lane proving the full adopter journey in-repo, and
-3. one clean-baseline CI lane proving the same journey from a fresh host app.
+### Supporting Libraries
 
-This milestone should **not** add new transport classes, broad provider
-expansion, or product-like UI scope.
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| `Mailglass.OptionalDeps.Oban` | Repo-native gateway | Optional-dependency-safe `Oban.insert` / `insert_all` calls | Keep all Oban calls behind this gateway so the `--no-optional-deps` compile lane remains valid. Extend it only as needed to make the delivery row and job insert atomic. |
+| `Mailglass.Tenancy.SingleTenant` | Repo-native default | Zero-config default tenant and no-op query scoping | Use it whenever `config :mailglass, tenancy: nil`. Change the outbound precondition to accept `Tenancy.current() == "default"` in that mode, while preserving `assert_stamped!/0` for custom tenancy. |
+| `Mailglass.SuppressionStore.Ecto` | Repo-native default | Stream-scoped suppression persistence and pre-send lookup | Use an `Ecto.Multi`-compatible insertion path for the unsubscribe POST, not a post-commit lifecycle callback. The existing store has the needed unique conflict target and lookup predicates. |
+| `Phoenix.Token` / existing `Mailglass.Compliance.Unsubscribe` | Phoenix 1.8 / repo-native | Opaque signed unsubscribe identifier | Keep the signed delivery token. RFC 8058 calls for an opaque, hard-to-forge component and an HTTPS POST without cookies; no session, CSRF, or new token package is required for this endpoint. |
 
-## Keep As-Is (No New Foundational Research)
+### Development Tools
 
-- Elixir floor: `~> 1.18`
-- OTP floor: `27+`
-- Phoenix stack: `phoenix ~> 1.8`, `phoenix_live_view ~> 1.1`, `plug ~> 1.18`
-- Persistence: Postgres-only (`ecto_sql ~> 3.13`, `postgrex ~> 0.22`)
-- Core mail layer: `swoosh ~> 1.25`
-- Optional dependency gateway policy remains unchanged (`Mailglass.OptionalDeps.*`)
-- CI realism posture remains: required lanes for deterministic proof, advisory
-  lanes for broader ecosystem drift detection
+| Tool | Purpose | Notes |
+|------|---------|-------|
+| Oban testing (`:manual` and `:inline`) | Prove worker queue, transaction, retry result, and payload scrub behavior | Continue the existing `async: false` test isolation. Add a production-shaped host test with a real `oban_jobs` migration and configure `queues: [mailglass_outbound: concurrency]`; the current docs incorrectly say `:mailglass`. |
+| Clean Phoenix/Postgres reference host | Adopter proof | Generate/configure a host that owns `Repo`, `Oban`, migrations, endpoint signing config, and Mailglass. It must use the published package surface rather than test helpers or the core repo's fake application wiring. |
 
-These are already shipped and validated; v1.3 work is integration proof, not
-stack re-foundation.
+## Required Integration Changes
 
-## v1.3 Stack Additions and Changes (New Work Only)
+1. **Oban becomes the documented durable path.** Keep the existing optional `{:oban, "~> 2.21", optional: true}` dependency, but production documentation and the clean-host proof must install/configure it with the host Repo and `queues: [mailglass_outbound: 10]` (or host-selected concurrency). This exactly matches `Mailglass.Outbound.Worker`'s compile-time queue. Do not claim that a missing-Oban `Task.Supervisor` fallback is durable or retryable; either retain it only as explicit best-effort compatibility mode or fail closed when `async_adapter: :oban` is selected but unavailable.
 
-| Tool / Library / Service | Version awareness | Why it matters | Integration points |
-|---|---|---|---|
-| Phoenix reference host app (committed artifact in repo) | Generate with Phoenix 1.8 toolchain; keep Elixir/OTP floors aligned with core | Creates a durable, inspectable adopter-proof app instead of fixture snapshots only | New `examples/` (or equivalent) app wired with `mailglass`, `mailglass_admin`, and optional `mailglass_inbound` seams |
-| `phx_new` archive in CI for clean-baseline generation | Pin to vetted `1.8.x` patch in required lane; run latest `1.8.x` in advisory lane | Proves "fresh adopter can install and run" against current Phoenix generator behavior | Clean-baseline workflow step: generate app -> add deps -> run install -> execute proof scenario |
-| `mix mailglass.install` as canonical integration entrypoint | Use shipped installer; no forked install script | Keeps trust proof coupled to real adoption path and catches installer regressions | Both committed reference app refresh process and clean-baseline lane run installer directly |
-| Outbound send proof via `Mailglass.Adapters.Fake` + `config :swoosh, :api_client, false` | No new provider SDK versions required | Proves send path and event persistence without external network/provider flakiness | Reference scenario triggers send and asserts persisted delivery/event behavior locally |
-| Webhook ingest proof via signed fixture payloads (single representative provider path) | Reuse existing provider verifier stack; no provider matrix expansion in v1.3 | Demonstrates ingest + normalization + troubleshooting loop deterministically | Scenario posts signed webhook payload to host app webhook endpoint and verifies ledger/admin visibility |
-| Postgres service container in CI (`postgres:16-alpine`) | Match existing CI service version to avoid environment skew | Full trust path (send + webhook + operator troubleshooting) needs real DB-backed state | Required CI lane boots Postgres, runs migrations, executes end-to-end scenario |
-| ExUnit + ConnTest/LiveView assertions for operator troubleshooting proof | Stay on current Phoenix testing stack; do not introduce browser-E2E requirement | Gives stable operator-proof checks without adding Node/browser flake to required lane | Scenario asserts key operator surfaces (events timeline/evidence/replayability) through server-side tests |
-| Dedicated trust-proof verify alias (e.g. `mix verify.reference_host`) | Keep preferred env explicit (`:test`) like existing `verify.*` aliases | Makes the milestone proof repeatable locally and in CI with one command | Root mix aliases + CI job invoke single trust-proof gate |
+2. **Use one Ecto transaction for delivery + Oban job.** `enqueue_oban/3` already forms an `Ecto.Multi` containing delivery, queued event, and job. Preserve that shape, verify the host Oban configuration uses the same Repo/schema setup, and make batch enqueue use the same atomic pattern rather than committing deliveries then calling `insert_all/1` separately. This gives enqueue durability, not exactly-once provider delivery.
 
-## CI Shape for Trust Proof
+3. **Define a bounded internal async-envelope payload.** Add a Mailglass-owned, non-adopter metadata storage field/table for queued wire content. It needs enough JSON-safe data to rebuild exactly one supported envelope recipient: sender, one `to`, the explicitly supported `cc`/`bcc` policy, reply-to, subject, HTML/text bodies, headers (including compliance headers), provider options if supported, and attachment policy. Current `Delivery.metadata` is documented for adopter non-PII metadata yet currently stores rendered bodies there, while rehydration restores only `to`, subject, bodies, and headers. Separate transient private content from adopter metadata and scrub it in the same successful-dispatch transaction; add a bounded retention/pruner path for abandoned/retry-exhausted jobs.
 
-### Required lane (new)
+4. **Keep Swoosh as the fidelity contract, but narrow the v2.4 promise.** The milestone requires exactly one envelope recipient. Reject or split unsupported multi-recipient shapes before enqueue, and persist/rebuild every supported field rather than silently dropping Swoosh fields. Attachments should be explicitly rejected for durable async unless the project persists bytes or a stable external reference; filesystem paths are not a durable cross-node payload contract.
 
-Add one required CI job that proves:
+5. **Repair semantics instead of adding a retry library.** Oban retries any error return with exponential backoff and jitter up to `max_attempts`; a worker can be re-run after a provider call whose outcome was not durably recorded. Document async as at-least-once execution and provider delivery as potentially duplicate unless the selected adapter/provider supports an idempotency key. Classify deterministic payload/configuration failures as cancellation/non-retryable once the worker can identify them; leave transient adapter/database failures retryable.
 
-1. install (`mix mailglass.install`)
-2. preview route boots
-3. send persists evidence
-4. webhook ingest appends normalized event(s)
-5. operator troubleshooting surface can inspect that evidence
+6. **Make unsubscribe convergence a single existing-Repo transaction.** The controller already validates an opaque token and appends an idempotency-keyed event. Add the stream-scoped `Suppression.Entry` write to the same `Ecto.Multi`; make duplicate POSTs converge through the existing unique conflict target. This makes the subsequent existing `Suppression.check_before_send/1` enforce the result. Respond 200 for valid replay/expired/invalid one-click POSTs as the current privacy-safe behavior intends, but return 500 only for a real transaction failure.
 
-Use a real Postgres service container and deterministic fixtures; do not call
-external provider APIs.
+7. **Honor renderer configuration without new dependencies.** The configuration schema advertises `renderer.plaintext: true`, but `Renderer.render/2` currently always generates plaintext and overwrites any supplied text. Route the option through the existing pure renderer: preserve explicit `text_body`, allow text-only email without forcing an empty HTML pipeline, and generate plaintext only when enabled and absent. Keep CSS inlining independent of plaintext generation.
 
-### Clean-baseline lane (new or expanded from existing smoke)
+## Installation
 
-Keep the existing "fresh host" posture, but expand from preview-only smoke into
-the full trust journey. The lane should still generate a brand-new Phoenix app
-instead of relying only on committed app files.
+No new Mailglass dependency is recommended. The production host needs its already-supported durable adapter enabled:
 
-### Advisory lane (optional but recommended)
+```elixir
+# mix.exs in the Phoenix host
+{:oban, "~> 2.21"}
 
-Run the same clean-baseline flow on a schedule with latest compatible generator
-patches to detect ecosystem drift early without blocking every PR.
+# config/runtime.exs in the Phoenix host
+config :my_app, Oban,
+  repo: MyApp.Repo,
+  queues: [mailglass_outbound: 10]
 
-## Version and Currentness Verification Strategy
+config :mailglass, async_adapter: :oban
+```
 
-Use a lightweight, explicit verification loop so stack guidance stays current:
+Run the host's Oban migrations alongside Mailglass migrations. Do not add `Oban` to the Mailglass supervision tree: Oban belongs to, and must use, the adopter application and its Repo.
 
-1. **Milestone-open snapshot:** record current versions for Phoenix stack,
-   `phx_new`, Elixir/OTP, and CI action SHAs.
-2. **Required-lane pinning:** keep required trust-proof lane pinned to vetted
-   Elixir/OTP and `phx_new` patch versions for deterministic gating.
-3. **Advisory drift checks:** schedule a non-blocking run using latest allowed
-   patch versions in the same major/minor compatibility window.
-4. **Dependency audits:** run `mix hex.outdated` and `mix hex.audit` on cadence;
-   promote upgrades only when trust-proof lanes stay green.
-5. **Workflow pin hygiene:** continue SHA-pinning third-party GitHub Actions and
-   refresh pins deliberately (not ad hoc) with rerun evidence.
+## Alternatives Considered
 
-## What Not To Add In v1.3
+| Recommended | Alternative | When to Use Alternative |
+|-------------|-------------|-------------------------|
+| Existing Oban integration | `Task.Supervisor` fallback | Only explicit development/test or best-effort compatibility work where loss and no automatic retry are acceptable. It does not satisfy the v2.4 durable async contract. |
+| Existing Ecto JSONB persistence + `Ecto.Multi` | Redis queue / external broker / new outbox product | Do not use for this milestone. The required data and transaction boundary already live in Postgres with Oban. |
+| Swoosh email struct + explicit internal serializer | Serializing `%Mailglass.Message{}` directly into Oban args | Never: mailables can hold functions, PIDs, structs, and other non-JSON-safe data. |
+| Existing Phoenix controller + signed token | Browser/session unsubscribe flow | Do not use for RFC 8058 machine POST. The standard requires no cookies or request context; the current token route is the correct shape. |
 
-- No new foundational runtime dependencies in core packages.
-- No transport-class expansion (`gen_smtp` listener work stays out of this milestone).
-- No broad provider matrix expansion for reference proof (one representative
-  webhook ingest path is enough).
-- No Cloudflare forwarding slice in this milestone.
-- No synthetic inbound composer/devtool expansion here.
-- No second-product UI ambition for the reference app; keep it a proof host, not
-  a polished demo app.
-- No browser/Playwright-only required gate for v1.3 trust proof (keep required
-  lane server-side deterministic; browser checks can remain advisory).
+## What NOT to Use
 
-## Maintainer Sustainability Notes
+| Avoid | Why | Use Instead |
+|-------|-----|-------------|
+| A second queue, job system, or retry package | It creates competing durability and observability contracts without fixing the existing queue-name/config drift. | Host-configured Oban and the current Ecto transaction boundary. |
+| `:mailglass` Oban queue configuration | The actual worker declares `queue: :mailglass_outbound`; jobs will not execute when only `:mailglass` workers are running. | `queues: [mailglass_outbound: concurrency]`. |
+| `Task.Supervisor` advertised as durable fallback | It has no durable job record or automatic retry after process/node failure. | Oban for documented async; label fallback best-effort or fail closed. |
+| Persisting rendered payload in `Delivery.metadata` | It violates the field's non-PII adopter-metadata contract and leaves message content after delivery. | Separate Mailglass-internal queued payload with post-success scrub and bounded retention. |
+| Direct `String.to_atom/1` or dynamic module recovery from DB data | It risks atom-table exhaustion and does not restore envelope fidelity. | JSON-safe explicit envelope serialization with existing atoms/modules resolved from trusted config. |
+| Exactly-once delivery claim | Database enqueue can be atomic, but a worker can retry after an uncertain provider call. | At-least-once execution, idempotent persistence, and provider idempotency where available. |
 
-- Keep the reference host app thin and contract-oriented so it remains
-  maintainable by one maintainer.
-- Prefer fixture-driven deterministic tests over live-provider integration for
-  required CI.
-- Keep "API contract truth" in core docs and contract tests; reference app is
-  usage/operations proof, not a replacement contract source.
+## Stack Patterns by Variant
+
+**If the adopter has no custom tenancy:**
+
+- Use `Mailglass.Tenancy.SingleTenant` and its literal `"default"` fallback.
+- Because this is the advertised zero-config mode; only custom tenancy should require an explicit process stamp.
+
+**If the adopter configures custom tenancy:**
+
+- Continue requiring `Tenancy.assert_stamped!/0` before outbound work and propagate a JSON-safe tenant id through Oban args.
+- Because silent fallback would write/query cross-tenant records under `"default"`.
+
+**If async delivery is requested in production:**
+
+- Use host-owned Oban with `mailglass_outbound` configured and host migrations applied.
+- Because it is the only repo-native path with persisted jobs and automatic retry.
+
+**If the queued job completes successfully:**
+
+- Atomically record dispatch truth and scrub internal payload bytes; retain only delivery projection/audit metadata.
+- Because the payload is transient operational content, not a sent-message archive.
+
+## Version Compatibility
+
+| Package A | Compatible With | Notes |
+|-----------|-----------------|-------|
+| `mailglass` 2.4.0 | Elixir `~> 1.18`, Phoenix `~> 1.8` | Existing project floor; no change needed. |
+| Oban `~> 2.21` (lock 2.23.0) | Ecto SQL `~> 3.10`; project lock Ecto SQL 3.14.0 / Postgrex 0.22.3 | Compatible in the current lock. Host must run Oban migrations and configure the actual worker queue. |
+| Swoosh `~> 1.25` (lock 1.26.3) | Existing Phoenix/Plug stack | Treat its documented email fields as the async-envelope compatibility surface; do not rehydrate a partial struct. |
+| Ecto/Ecto SQL `~> 3.13` (lock 3.14.0) | PostgreSQL 14+ | Current `Ecto.Multi` API is sufficient for all v2.4 atomicity requirements. |
 
 ## Sources
 
-- `.planning/PROJECT.md`
-- `.planning/STATE.md`
-- `.planning/MILESTONE-ARC.md`
-- `.planning/research/milestone-candidates/06-adopter-trust-proof.md`
-- `.planning/research/milestone-candidates/SYNTHESIS.md`
-- `.planning/threads/next-milestone-adopter-trust-proof.md`
-- `.github/workflows/ci.yml`
-- `.github/workflows/post-publish-smoke.yml`
-- `mix.exs`
-- `mailglass_admin/mix.exs`
-- `mailglass_inbound/mix.exs`
+- [Oban Worker documentation](https://oban.hexdocs.pm/Oban.Worker.html) — worker queue/options, job creation, transaction insertion, and return semantics (MEDIUM; official primary docs, current v2.23).
+- [Oban error handling documentation](https://oban.hexdocs.pm/error_handling.html) — retry limits and exponential backoff with jitter (MEDIUM; official primary docs, current v2.23).
+- [Swoosh.Email documentation](https://swoosh.hexdocs.pm/Swoosh.Email.html) — supported email fields and setters (MEDIUM; official primary docs, current v1.27; repository lock is 1.26.3).
+- [Ecto.Multi documentation](https://hexdocs.pm/ecto/Ecto.Multi.html) — single-transaction grouping semantics (MEDIUM; official primary docs, current v3.14).
+- [RFC 8058](https://www.rfc-editor.org/rfc/rfc8058.html) — one-click HTTPS POST, opaque identifier, and no-cookie requirements (MEDIUM; standards-track primary source).
+
+---
+*Stack research for: Mailglass v2.4 outbound first-adopter correctness*
+*Researched: 2026-08-02*
