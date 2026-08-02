@@ -690,6 +690,16 @@ defmodule Mailglass.Config do
   end
 
   @doc """
+  Returns the validated renderer subtree with defaults applied.
+  """
+  @doc since: "0.1.0"
+  @spec renderer() :: keyword()
+  def renderer do
+    validated_config()
+    |> Keyword.fetch!(:renderer)
+  end
+
+  @doc """
   Returns the validated named adapter registry keyed by stable route ref.
   """
   @doc since: "0.4.0"

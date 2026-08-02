@@ -56,13 +56,21 @@ defmodule Mailglass.RendererTest do
 
     test "treats blank plaintext as absent but never deletes nonblank explicit text" do
       with_renderer([plaintext: true, css_inliner: :none], fn ->
-        blank = Mailglass.Message.build(%Swoosh.Email{html_body: "<p>Generated</p>", text_body: "  \n"}, tenant_id: "t")
+        blank =
+          Mailglass.Message.build(%Swoosh.Email{html_body: "<p>Generated</p>", text_body: "  \n"},
+            tenant_id: "t"
+          )
+
         assert {:ok, generated} = Mailglass.Renderer.render(blank)
         assert generated.swoosh_email.text_body == "Generated"
       end)
 
       with_renderer([plaintext: false, css_inliner: :none], fn ->
-        explicit = Mailglass.Message.build(%Swoosh.Email{html_body: "<p>Ignored</p>", text_body: "Keep me"}, tenant_id: "t")
+        explicit =
+          Mailglass.Message.build(%Swoosh.Email{html_body: "<p>Ignored</p>", text_body: "Keep me"},
+            tenant_id: "t"
+          )
+
         assert {:ok, rendered} = Mailglass.Renderer.render(explicit)
         assert rendered.swoosh_email.text_body == "Keep me"
       end)

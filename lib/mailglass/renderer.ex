@@ -32,6 +32,7 @@ defmodule Mailglass.Renderer do
   # land in later phases and are not exported to Renderer.
   use Boundary, deps: [Mailglass]
 
+  alias Mailglass.Config
   alias Mailglass.Message
   alias Mailglass.Telemetry
   alias Mailglass.TemplateEngine.HEEx
@@ -43,8 +44,8 @@ defmodule Mailglass.Renderer do
   Takes a Message whose `swoosh_email.html_body` is either a HEEx function
   component (`fn assigns -> ~H"..." end`) or a pre-rendered HTML string. Runs
   the configured pipeline and returns a Message with `swoosh_email.html_body`
-  replaced by the final inlined HTML and `swoosh_email.text_body` populated
-  with the auto-generated plaintext.
+  replaced by the final configured HTML. Explicit plaintext is preserved;
+  plaintext is generated only for HTML-only messages when enabled.
 
   The entire pipeline is wrapped in `Mailglass.Telemetry.render_span/2`.
   Metadata is whitelisted to `%{tenant_id, mailable}` — no PII per .
@@ -66,23 +67,40 @@ defmodule Mailglass.Renderer do
       mailable: message.mailable
     }
 
-    Telemetry.render_span(metadata, fn ->
-      with {:ok, html_iodata} <- render_html(message, opts),
-           html_binary = IO.iodata_to_binary(html_iodata),
-           plaintext = to_plaintext(html_binary),
-           {:ok, inlined_html} <- inline_css(html_binary) do
-        final_html = strip_mg_attributes(inlined_html)
+    renderer = Config.renderer()
 
-        updated_email = %{
-          message.swoosh_email
-          | html_body: final_html,
-            text_body: plaintext
-        }
-
-        {:ok, %{message | swoosh_email: updated_email}}
-      end
-    end)
+    Telemetry.render_span(metadata, fn -> render_body(message, opts, renderer) end)
   end
+
+  defp render_body(%Message{swoosh_email: %{html_body: nil}} = message, _opts, _renderer),
+    do: {:ok, message}
+
+  defp render_body(%Message{} = message, opts, renderer) do
+    with {:ok, html_iodata} <- render_html(message, opts),
+         html_binary = IO.iodata_to_binary(html_iodata),
+         {:ok, final_html} <- finalize_html(html_binary, renderer) do
+      text_body = rendered_text_body(message.swoosh_email.text_body, html_binary, renderer)
+      updated_email = %{message.swoosh_email | html_body: final_html, text_body: text_body}
+      {:ok, %{message | swoosh_email: updated_email}}
+    end
+  end
+
+  defp finalize_html(html, renderer) do
+    with {:ok, transformed_html} <- maybe_inline_css(html, renderer[:css_inliner]) do
+      {:ok, strip_mg_attributes(transformed_html)}
+    end
+  end
+
+  defp rendered_text_body(text_body, html, renderer) do
+    cond do
+      is_binary(text_body) and String.trim(text_body) != "" -> text_body
+      renderer[:plaintext] -> to_plaintext(html)
+      true -> nil
+    end
+  end
+
+  defp maybe_inline_css(html, :premailex), do: inline_css(html)
+  defp maybe_inline_css(html, :none), do: {:ok, html}
 
   # --- Step 1: render the HEEx function component to HTML iodata ---
 
