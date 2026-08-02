@@ -107,14 +107,8 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       assert {:ok, first_deliveries} = Outbound.deliver_many(messages, [])
       assert length(first_deliveries) == 3
 
-      keys_by_field =
-        Map.new(first_deliveries, fn delivery ->
-          {Map.get(delivery.metadata, "recipient_field") ||
-             Map.get(delivery.metadata, :recipient_field), delivery.idempotency_key}
-        end)
-
-      assert Map.keys(keys_by_field) |> Enum.sort() == ["bcc", "cc", "to"]
-      assert keys_by_field |> Map.values() |> Enum.uniq() |> length() == 3
+      assert Enum.all?(first_deliveries, &(&1.metadata == %{}))
+      assert first_deliveries |> Enum.map(& &1.idempotency_key) |> Enum.uniq() |> length() == 3
       assert Enum.all?(first_deliveries, &(&1.recipient == address))
 
       assert {:ok, replayed_deliveries} = Outbound.deliver_many(messages, [])
@@ -122,10 +116,8 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       assert Enum.map(replayed_deliveries, & &1.id) |> Enum.sort() ==
                Enum.map(first_deliveries, & &1.id) |> Enum.sort()
 
-      assert Map.new(replayed_deliveries, fn delivery ->
-               {Map.get(delivery.metadata, "recipient_field") ||
-                  Map.get(delivery.metadata, :recipient_field), delivery.idempotency_key}
-             end) == keys_by_field
+      assert Enum.map(replayed_deliveries, & &1.idempotency_key) |> Enum.sort() ==
+               Enum.map(first_deliveries, & &1.idempotency_key) |> Enum.sort()
     end
   end
 

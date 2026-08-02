@@ -505,46 +505,30 @@ defmodule Mailglass.Outbound do
   # =========================================================
 
   defp do_deliver_many(messages, opts) do
-    {eligible, failed_preflight} =
-      messages
-      |> Enum.map(&preflight_single/1)
-      |> Enum.split_with(fn
-        {:ok, _msg} -> true
-        {:error, _err, _msg} -> false
-      end)
+    # Each input owns a separate persistence boundary. Enum.map retains input
+    # positions while allowing an individual serialization, routing, or job
+    # failure to become that item's public failed result.
+    {:ok, Enum.map(messages, &enqueue_batch_item(&1, opts))}
+  end
 
-    eligible_messages = Enum.map(eligible, fn {:ok, msg} -> msg end)
+  defp enqueue_batch_item(%Message{} = message, opts) do
+    with {:ok, prepared} <- preflight_single(message),
+         {:ok, adapter_ref} <- resolve_async_adapter_ref(prepared, opts) do
+      idempotency_key = compute_idempotency_key(prepared)
 
-    {routable, failed_routes} =
-      eligible_messages
-      |> Enum.map(fn %Message{} = msg ->
-        case resolve_async_adapter_ref(msg, opts) do
-          {:ok, adapter_ref} -> {:ok, {msg, adapter_ref}}
-          {:error, err} -> {:error, err, msg}
-        end
-      end)
-      |> Enum.split_with(fn
-        {:ok, _} -> true
-        {:error, _err, _msg} -> false
-      end)
+      case fetch_existing_delivery(idempotency_key) do
+        %Delivery{} = existing ->
+          existing
 
-    failed_deliveries =
-      Enum.map(failed_preflight ++ failed_routes, fn {:error, err, msg} ->
-        build_failed_delivery(msg, err)
-      end)
-
-    case insert_batch(Enum.map(routable, fn {:ok, route} -> route end)) do
-      {:ok, inserted_deliveries} ->
-        # I-13: Only re-enqueue :queued rows. On replay, some rows may already
-        # be :sent/:failed — do NOT re-enqueue them (duplicate send risk).
-        {fresh, _already_settled} =
-          Enum.split_with(inserted_deliveries, fn d -> d.status == :queued end)
-
-        enqueue_batch_jobs(fresh)
-        {:ok, inserted_deliveries ++ failed_deliveries}
-
-      {:error, _} = err ->
-        err
+        nil ->
+          case enqueue_via_async_adapter(prepared, adapter_ref, opts) do
+            {:ok, %Delivery{} = delivery} -> delivery
+            {:error, err} -> build_failed_delivery(message, err)
+          end
+      end
+    else
+      {:error, err, failed_message} -> build_failed_delivery(failed_message, err)
+      {:error, err} -> build_failed_delivery(message, err)
     end
   end
 
@@ -563,138 +547,11 @@ defmodule Mailglass.Outbound do
     end
   end
 
-  defp insert_batch([]), do: {:ok, []}
+  defp fetch_existing_delivery(idempotency_key) do
+    import Ecto.Query
 
-  defp insert_batch(messages_with_refs) when is_list(messages_with_refs) do
-    now = Clock.utc_now()
-
-    rows =
-      Enum.map(messages_with_refs, fn {%Message{} = m, adapter_ref} ->
-        ik = compute_idempotency_key(m)
-
-        base_delivery_attrs(m, ik, adapter_ref)
-        |> Map.put(:id, delivery_id!(m))
-        |> Map.put(:inserted_at, now)
-        |> Map.put(:updated_at, now)
-      end)
-
-    result =
-      Ecto.Multi.new()
-      |> Ecto.Multi.insert_all(
-        :deliveries,
-        Delivery,
-        rows,
-        Repo.multi_opts(
-          on_conflict: :nothing,
-          conflict_target:
-            {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
-          returning: true
-        )
-      )
-      |> Ecto.Multi.run(:events, fn repo, %{deliveries: {_count, inserted}} ->
-        event_rows =
-          Enum.map(inserted, fn d ->
-            %{
-              id: Ecto.UUID.generate(),
-              tenant_id: d.tenant_id,
-              delivery_id: d.id,
-              type: :queued,
-              occurred_at: now,
-              idempotency_key: d.idempotency_key,
-              normalized_payload: %{},
-              metadata: %{},
-              needs_reconciliation: false,
-              inserted_at: now
-            }
-          end)
-
-        {n, _} =
-          repo.insert_all(
-            Mailglass.Events.Event,
-            event_rows,
-            Repo.multi_opts(
-              on_conflict: :nothing,
-              conflict_target:
-                {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
-              returning: false
-            )
-          )
-
-        {:ok, n}
-      end)
-      |> Repo.multi()
-
-    case result do
-      {:ok, %{deliveries: {_count, _inserted_rows}}} ->
-        # Re-fetch all rows by idempotency_key (ON CONFLICT DO NOTHING doesn't return
-        # conflicting rows, so we need a SELECT to get the full result set on replay).
-        import Ecto.Query
-        idempotency_keys = Enum.map(rows, & &1.idempotency_key) |> Enum.reject(&is_nil/1)
-
-        all_rows =
-          if idempotency_keys == [] do
-            []
-          else
-            query = from(d in Delivery, where: d.idempotency_key in ^idempotency_keys)
-            Repo.all(Tenancy.scope(query))
-          end
-
-        {:ok, all_rows}
-
-      {:error, _step, err, _} ->
-        {:error, to_error(err)}
-    end
-  end
-
-  defp enqueue_batch_jobs(deliveries) when is_list(deliveries) do
-    async_adapter = Application.get_env(:mailglass, :async_adapter, :oban)
-    use_oban = async_adapter != :task_supervisor and Mailglass.OptionalDeps.Oban.available?()
-
-    if use_oban do
-      jobs =
-        Enum.map(deliveries, fn %Delivery{id: id, tenant_id: t} ->
-          Mailglass.Outbound.Worker.new(%{
-            "delivery_id" => id,
-            "mailglass_tenant_id" => t
-          })
-        end)
-
-      _ = Mailglass.OptionalDeps.Oban.insert_all(jobs)
-      :ok
-    else
-      Enum.each(deliveries, fn %Delivery{id: id, tenant_id: t} ->
-        # AsyncAdapter dispatch (-11). TaskSupervisor (prod) | Inline (test).
-        Mailglass.Outbound.AsyncAdapter.dispatch(
-          fn ->
-            Mailglass.Tenancy.with_tenant(t, fn ->
-              try do
-                case dispatch_by_id(id) do
-                  {:ok, _} ->
-                    :ok
-
-                  {:error, err} ->
-                    require Logger
-
-                    Logger.warning(
-                      "[mailglass] Task.Supervisor batch dispatch failed for #{id}: #{Exception.message(err)}"
-                    )
-                end
-              rescue
-                err ->
-                  require Logger
-
-                  Logger.warning(
-                    "[mailglass] Task.Supervisor batch dispatch raised for #{id}: #{Exception.message(err)}"
-                  )
-              end
-            end)
-          end,
-          []
-        )
-      end)
-
-      :ok
-    end
+    query = from(d in Delivery, where: d.idempotency_key == ^idempotency_key, limit: 1)
+    Repo.one(Tenancy.scope(query))
   end
 
   defp build_failed_delivery(%Message{} = msg, err) do
