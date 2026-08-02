@@ -28,7 +28,7 @@
 - [x] **PROOF-01:** Browser/LiveView evidence shows a provider status transition without a manual reload and rejects foreign-tenant events.
 - [x] **PROOF-02:** Tests prove stream unsubscribe does not suppress transactional delivery, while bounce and complaint suppression remains address-wide.
 - [x] **PROOF-03:** B2C examples parse against current APIs and the guide remains in the published HexDocs/package surface.
-- [ ] **REL-01:** Release linked `mailglass` and `mailglass_admin` 2.4.0, leave `mailglass_inbound` unchanged, and pass a clean published-package consumer smoke test.
+- [x] **REL-01:** Release linked `mailglass` and `mailglass_admin` 2.4.0, leave `mailglass_inbound` unchanged, and pass a clean published-package consumer smoke test.
 
 ## External launch gates
 

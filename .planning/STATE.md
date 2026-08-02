@@ -4,17 +4,17 @@ milestone: v2.3
 milestone_name: B2C First-Adopter Readiness
 current_phase: 148
 current_phase_name: release-and-adoption-proof
-status: executing
-stopped_at: Completed 148-01-PLAN.md
-last_updated: "2026-08-01T23:14:26.339Z"
-last_activity: 2026-08-01
-last_activity_desc: Phase 148 execution started
+status: phase_complete
+stopped_at: Completed and verified Phase 148
+last_updated: "2026-08-02T02:39:00Z"
+last_activity: 2026-08-02
+last_activity_desc: Phase 148 released and verified from public packages
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 1
-  percent: 0
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-31 - v2.3 milestone opened)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 148 — release-and-adoption-proof
+**Current focus:** v2.3 milestone closeout after Phase 148 release verification
 
 ## Current Position
 
-Phase: 148 (release-and-adoption-proof) — EXECUTING
-Plan: 2 of 5
-Status: Ready to execute
-Last activity: 2026-08-01 — Phase 148 execution started
+Phase: 148 (release-and-adoption-proof) — COMPLETE
+Plan: 5 of 5
+Status: Verified from protected publication and public Hex consumer smoke
+Last activity: 2026-08-02 — Phase 148 released and verified from public packages
 
 ## v2.3 Milestone Intent
 
@@ -465,6 +465,10 @@ release debug campaign.
 | Phase 144-signal-drift-integrity P04 | 6min | 1 tasks | 3 files |
 | Phase 144 P05 | 4m | 2 tasks | 2 files |
 | Phase 148-release-and-adoption-proof P01 | 6min | 2 tasks | 5 files |
+| Phase 148-release-and-adoption-proof P02 | 5min | 2 tasks | 3 files |
+| Phase 148-release-and-adoption-proof P03 | 8min | 2 tasks | 1 file |
+| Phase 148-release-and-adoption-proof P04 | automated | 2 tasks | protected release chain |
+| Phase 148-release-and-adoption-proof P05 | automated | 1 task | registry and consumer proof |
 
 ## Deferred Items
 
@@ -621,7 +625,6 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Pending Todos
 
-- **Fix `post-publish-smoke` `wait-for-index` missing checkout step** — The `wait-for-index` job uses `version-file: .tool-versions` in `setup-beam` but has no `actions/checkout` step. Works on scheduled runs (runner workspace reuse), fails on dispatch/release paths (fresh runners). Maintenance-tier fix: add a checkout step to `wait-for-index`. Low priority — scheduled smoke still runs nightly; consumer smoke is the SHIP-02 proof.
 - **Remove the cowlib advisory allowlist when upstream fixes** (`.planning/todos/pending/2026-06-30-remove-cowlib-advisory-allowlist-when-upstream-fixes.md`) — v1.14 added a narrow temporary allowlist in `publish.check` for 2 unfixable cowlib advisories (EEF-CVE-2026-43966/43969). Maintenance-tier `/gsd-quick` when cowlib ships a patch.
 - **Run the UI browser/persona gate during phases, not only at release** (`.planning/backlog/ui-browser-gate-during-phases-not-only-at-release.md`) — v1.14 post-mortem: deferred phase verification let 7 browser-gate regressions reach the release ceremony. Fold into the next admin-UI milestone's method; surface via `/gsd-review-backlog`.
 - ~~Refresh outbound admin UI look and feel~~ — superseded by v1.11's fractal three-surface uplift + v1.14 operator IA redesign (resolved; the 2026-06-13 todo file is stale).
@@ -632,8 +635,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-01T23:14:26.331Z
-**Stopped at:** Completed 148-01-PLAN.md
+**Last session:** 2026-08-02T02:39:00Z
+**Stopped at:** Completed and verified Phase 148
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

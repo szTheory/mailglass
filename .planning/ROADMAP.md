@@ -38,9 +38,9 @@
 - [x] **Phase 145: B2C Safety Profile** — Publish the stream, suppression, single-tenant, cold-domain, MPP, package-boundary, launch-gate, and Crosswake decisions.
 - [x] **Phase 146: Provider-Feedback Contract** — Add the stable PII-free post-commit feedback event with replay convergence.
 - [x] **Phase 147: Live Solo-Operator Admin** — Refresh tenant-scoped delivery and evidence state from existing PubSub signals without reloads.
-- [ ] **Phase 148: Release and Adoption Proof** — Run suppression/docs/browser proofs, cut linked core/admin 2.4.0, and smoke the published consumer path without bumping inbound unnecessarily.
+- [x] **Phase 148: Release and Adoption Proof** — Run suppression/docs/browser proofs, cut linked core/admin 2.4.0, and smoke the published consumer path without bumping inbound unnecessarily.
 
-**Execution order:** 145 → 146 → 147 → 148. Phase 148 release publication remains gated by all Mailglass tests and the external B2C launch checklist in `REQUIREMENTS.md`.
+**Execution order:** 145 → 146 → 147 → 148. Phase 148 release publication was gated by Mailglass's automated release checks; the external B2C launch checklist in `REQUIREMENTS.md` remains separate production-adoption work.
 
 ### Phase 148: Release and Adoption Proof
 
@@ -55,7 +55,7 @@
   4. Release Please and protected Hex publication produce linked `mailglass` and `mailglass_admin` 2.4.0 releases while `mailglass_inbound` remains at 2.1.1 and is neither republished nor required for the core/admin publish fan-out to complete.
   5. `scripts/consumer_install_smoke.sh` passes both the shift-left local-path proof and the post-publication Hex-mode proof from a clean consumer using the versions adopters actually install.
 
-**Plans**: 1/5 plans executed
+**Plans**: 5/5 plans executed
 
 Plans:
 **Wave 1**
@@ -64,16 +64,16 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 148-02-PLAN.md — Isolate Release Please sync and upload sanitized prepublish proof.
+- [x] 148-02-PLAN.md — Isolate Release Please sync and upload sanitized prepublish proof.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 148-03-PLAN.md — Capture commit-bound behavioral, consumer, and release preflight evidence.
+- [x] 148-03-PLAN.md — Capture commit-bound behavioral, consumer, and release preflight evidence.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 148-04-PLAN.md — Pause for go/no-go and run the protected one-way release ceremony.
+- [x] 148-04-PLAN.md — Run the machine-gated protected one-way release ceremony.
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 148-05-PLAN.md — Verify Hex versions and finalize the published-consumer proof.
+- [x] 148-05-PLAN.md — Verify Hex versions and finalize the published-consumer proof.
