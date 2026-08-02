@@ -93,7 +93,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     write_branch_protection_verifier!(repo, "echo 'OK'\n")
 
     result =
-      with_env("PATH", "/usr/bin:/bin", fn ->
+      without_gh(fn ->
         with_env("GH_TOKEN", "test-token", fn -> Hygiene.audit(repo) end)
       end)
 
@@ -253,6 +253,27 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
       fun.()
     after
       if previous, do: System.put_env(key, previous), else: System.delete_env(key)
+    end
+  end
+
+  # A literal /usr/bin:/bin PATH is not a portable "gh missing" fixture:
+  # GitHub's Ubuntu runner installs gh in /usr/bin, while Homebrew puts it
+  # elsewhere on macOS. Build an explicit PATH containing the git prerequisite
+  # and no gh binary so the test proves the same condition on every runner.
+  defp without_gh(fun) do
+    bin =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-repo-hygiene-no-gh-#{System.unique_integer([:positive])}"
+      )
+
+    File.mkdir_p!(bin)
+    File.ln_s!(System.find_executable("git"), Path.join(bin, "git"))
+
+    try do
+      with_env("PATH", bin, fun)
+    after
+      File.rm_rf!(bin)
     end
   end
 
