@@ -4,7 +4,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
 
   alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.{Outbound, Message, TestRepo}
-  alias Mailglass.Outbound.Delivery
+  alias Mailglass.Outbound.{Delivery, Payload}
 
   setup do
     # Use shared mode so Task.Supervisor background tasks can deliver via the Fake adapter.
@@ -163,6 +163,39 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       assert reloaded.last_event_type in [:queued, :dispatched]
       assert reloaded.status in [:queued, :sent]
       assert_async_fake_delivery("test-tenant")
+    end
+  end
+
+  describe "deliver_later/2 — atomic private durable enqueue (Phase 150)" do
+    @tag phase_150_task: "t150_02_01"
+    test "Oban enqueue persists only public delivery metadata and all four durable facts" do
+      if not Code.ensure_loaded?(Oban) do
+        :skip
+      else
+        Application.put_env(:mailglass, :async_adapter, :oban)
+        start_supervised!({Oban, testing: :manual, repo: TestRepo, queues: [mailglass_outbound: 10]})
+
+        private_subject = "private subject #{unique_id()}"
+        private_body = "private rendered body #{unique_id()}"
+
+        message =
+          build_message("atomic-#{unique_id()}@example.com")
+          |> put_in([Access.key(:swoosh_email), Access.key(:subject)], private_subject)
+          |> put_in([Access.key(:swoosh_email), Access.key(:html_body)], "<p>#{private_body}</p>")
+          |> Message.put_metadata(:public_marker, "adopter-visible")
+
+        assert {:ok, %Delivery{status: :queued} = delivery} = Outbound.deliver_later(message)
+        assert %Payload{delivery_id: delivery_id, tenant_id: "test-tenant"} =
+                 TestRepo.get_by!(Payload, delivery_id: delivery.id)
+
+        assert delivery_id == delivery.id
+        assert delivery.metadata == %{public_marker: "adopter-visible"}
+        assert %{rows: [[1]]} =
+                 TestRepo.query!(
+                   "SELECT COUNT(*) FROM oban_jobs WHERE queue = 'mailglass_outbound' AND args->>'delivery_id' = $1",
+                   [delivery.id]
+                 )
+      end
     end
   end
 
