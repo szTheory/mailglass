@@ -89,7 +89,7 @@ defmodule Mailglass.Outbound do
     Telemetry
   }
 
-  alias Mailglass.Outbound.{Delivery, Preflight, Projector}
+  alias Mailglass.Outbound.{Delivery, Envelope, Payload, Preflight, Projector}
   alias Mailglass.Tracking
 
   import Kernel, except: [send: 2]
@@ -384,37 +384,46 @@ defmodule Mailglass.Outbound do
 
     attrs = base_delivery_attrs(rendered, ik, adapter_ref)
 
-    result =
-      Ecto.Multi.new()
-      |> Ecto.Multi.insert(
-        :delivery,
-        Delivery.changeset(%Delivery{id: delivery_id}, attrs),
-        Repo.multi_opts()
-      )
-      |> Events.append_multi(:event_queued, fn %{delivery: d} ->
-        %{
-          tenant_id: tenant_id,
-          delivery_id: d.id,
-          type: :queued,
-          occurred_at: Clock.utc_now(),
-          idempotency_key: ik,
-          normalized_payload: %{}
-        }
-      end)
-      |> Mailglass.OptionalDeps.Oban.insert(:job, fn %{delivery: d} ->
-        Mailglass.Outbound.Worker.new(%{
-          "delivery_id" => d.id,
-          "mailglass_tenant_id" => tenant_id
-        })
-      end)
-      |> Repo.multi()
+    with {:ok, envelope} <- Envelope.dump(rendered, adapter_ref: adapter_ref) do
+      result =
+        Ecto.Multi.new()
+        |> Ecto.Multi.insert(
+          :delivery,
+          Delivery.changeset(%Delivery{id: delivery_id}, attrs),
+          Repo.multi_opts()
+        )
+        |> Events.append_multi(:event_queued, fn %{delivery: d} ->
+          %{
+            tenant_id: tenant_id,
+            delivery_id: d.id,
+            type: :queued,
+            occurred_at: Clock.utc_now(),
+            idempotency_key: ik,
+            normalized_payload: %{}
+          }
+        end)
+        |> Ecto.Multi.insert(
+          :payload,
+          fn %{delivery: d} ->
+            Payload.from_envelope(tenant_id, d.id, envelope)
+          end,
+          Repo.multi_opts()
+        )
+        |> Mailglass.OptionalDeps.Oban.insert(:job, fn %{delivery: d} ->
+          Mailglass.Outbound.Worker.new(%{
+            "delivery_id" => d.id,
+            "mailglass_tenant_id" => tenant_id
+          })
+        end)
+        |> Repo.multi()
 
-    case result do
-      {:ok, %{delivery: d}} ->
-        {:ok, %{d | status: :queued, last_event_type: :queued}}
+      case result do
+        {:ok, %{delivery: d}} ->
+          {:ok, %{d | status: :queued, last_event_type: :queued}}
 
-      {:error, _step, err, _} ->
-        {:error, to_error(err)}
+        {:error, _step, err, _} ->
+          {:error, to_error(err)}
+      end
     end
   end
 

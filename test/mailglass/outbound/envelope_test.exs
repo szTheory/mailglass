@@ -13,12 +13,14 @@ defmodule Mailglass.Outbound.EnvelopeTest do
       |> Swoosh.Email.subject("Private subject")
       |> Swoosh.Email.text_body("plain body")
       |> Swoosh.Email.html_body("<p>html body</p>")
-      |> then(&Message.build(&1,
-        tenant_id: "tenant-150",
-        mailable: __MODULE__,
-        tags: ["welcome", "welcome"],
-        metadata: %{source: "test"}
-      ))
+      |> then(
+        &Message.build(&1,
+          tenant_id: "tenant-150",
+          mailable: __MODULE__,
+          tags: ["welcome", "welcome"],
+          metadata: %{source: "test"}
+        )
+      )
 
     assert {:ok, envelope} = Envelope.dump(message, adapter_ref: "primary")
     assert Envelope.digest(envelope) == Envelope.digest(envelope)
