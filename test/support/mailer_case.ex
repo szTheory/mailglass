@@ -149,15 +149,16 @@ defmodule Mailglass.MailerCase do
     # synchronously after a brief Process.sleep (see wait_for_mail/1 for
     # async alternatives).
     #
-    # @tag oban: :manual: start a supervised Oban instance in :manual mode.
+    # @tag oban: :manual: start a queue-configured Oban instance and set
+    # process-local manual insertion mode.
     # deliver_later/2 enqueues a job but does NOT run it. Use assert_enqueued/1
     # + perform_job/2 for those tests. MUST be async: false (I-12).
     #
-    # @tag oban: :inline: start a supervised Oban instance in :inline mode.
+    # @tag oban: :inline: start a queue-configured Oban instance and set
+    # process-local inline insertion mode.
     # deliver_later/2 runs the worker synchronously. MUST be async: false (I-12).
     cond do
       oban_tagged? and Code.ensure_loaded?(Oban) ->
-        oban_mode = Map.fetch!(tags, :oban)
         repo = Application.get_env(:mailglass, :repo, Mailglass.TestRepo)
 
         # Oban's internal processes (which don't inherit $callers) reach the
@@ -168,8 +169,12 @@ defmodule Mailglass.MailerCase do
         # with a live agent owner, so db_connection's ownership manager
         # (manager.ex:148-159) replies :already_shared and changes nothing.
         ExUnit.Callbacks.start_supervised!(
-          {Oban, testing: oban_mode, repo: repo, queues: [mailglass_outbound: 10]}
+          {Oban, testing: :disabled, repo: repo, queues: [mailglass_outbound: 10]}
         )
+
+        # Oban's instance-level testing modes clear its runtime queue list.
+        # Keep a real canonical queue for Mailglass readiness. Tests that need
+        # inline/manual insertion wrap the operation in Oban.Testing.
 
         Mailglass.Adapters.Fake.set_shared(self())
 

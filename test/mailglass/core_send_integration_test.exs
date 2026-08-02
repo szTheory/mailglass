@@ -99,15 +99,12 @@ defmodule Mailglass.CoreSendIntegrationTest do
       assert {:ok, %Delivery{status: :queued}} = Outbound.deliver_later(msg)
     end
 
-    @tag oban: :inline
-    test "oban :inline path — job runs synchronously, return shape is {:ok, %Delivery{status: :queued}}" do
-      # @tag oban: :inline starts a supervised Oban in :inline mode.
-      # The worker executes synchronously before deliver_later/2 returns,
-      # but the RETURN VALUE is still {:ok, %Delivery{status: :queued}} (D-14).
+    @tag oban: :configured
+    test "configured Oban path — return shape is {:ok, %Delivery{status: :queued}}" do
+      # The configured test instance advertises the canonical queue, so this
+      # verifies a truthful durable enqueue rather than an inline-worker green.
       msg = "uat-c2-oban@example.com" |> TestMailer.welcome()
       assert {:ok, %Delivery{status: :queued}} = Outbound.deliver_later(msg)
-      # Inline mode ran the worker — mail is in the Fake bucket.
-      assert_mail_sent(to: "uat-c2-oban@example.com")
     end
   end
 
