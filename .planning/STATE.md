@@ -4,16 +4,16 @@ milestone: v2.4
 milestone_name: Outbound First-Adopter Correctness
 current_phase: 149
 current_phase_name: first-send-contract-foundation
-status: executing
-stopped_at: Completed 149-03-PLAN.md
-last_updated: "2026-08-02T18:00:51.118Z"
+status: verifying
+stopped_at: Completed 149-04-PLAN.md
+last_updated: "2026-08-02T18:08:09.778Z"
 last_activity: 2026-08-02
 last_activity_desc: Phase 149 execution started
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -29,10 +29,10 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 
 Phase: 149 (first-send-contract-foundation) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-08-02 — Phase 149 execution started
 
-Progress: [████████░░] 75%
+Progress: [██████████] 100%
 
 ## v2.4 Milestone Intent
 
@@ -440,6 +440,8 @@ release debug campaign.
 - [Phase ?]: Preflight errors expose only bounded reason class plus recipient count or body-state metadata.
 - [Phase ?]: [149-03] Explicit nonblank plaintext is authoritative; only blank text may be generated from HTML.
 - [Phase ?]: [149-03] css_inliner :none skips only Premailex while retaining HEEx rendering and data-mg stripping.
+- [Phase ?]: SingleTenant first sends normalize to string "default"; custom tenancy remains fail-closed.
+- [Phase ?]: Phase 149 docs promise renderer preparation parity only; durable envelope and dispatch lifecycle remain Phase 150/151 work.
 
 ## Quick Tasks Completed
 
@@ -502,6 +504,7 @@ release debug campaign.
 | Phase 149 P01 | 19m | 2 tasks | 6 files |
 | Phase 149 P02 | 4m | 2 tasks | 3 files |
 | Phase 149 P03 | 7m | 2 tasks | 6 files |
+| Phase 149 P04 | 8m | 2 tasks | 7 files |
 
 ## Deferred Items
 
@@ -668,8 +671,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-02T18:00:51.104Z
-**Stopped at:** Completed 149-03-PLAN.md
+**Last session:** 2026-08-02T18:08:09.766Z
+**Stopped at:** Completed 149-04-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

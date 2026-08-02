@@ -55,7 +55,7 @@
   4. Explicit plaintext, text-only mail, and HTML mail retain the documented body semantics, and the `renderer.plaintext` and `renderer.css_inliner` settings have the same observable effect in rendering, sync send, async send, and preview.
   5. Unsupported envelope or body content fails explicitly before a delivery row or job exists; Mailglass never silently drops a recipient or message content.
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans executed
 
 Plans:
 **Wave 1**
@@ -72,7 +72,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 149-04-PLAN.md — Reconcile stable API and adopter documentation with the shipped contract.
+- [x] 149-04-PLAN.md — Reconcile stable API and adopter documentation with the shipped contract.
 
 ### Phase 150: Private Envelope and Atomic Durable Enqueue
 
@@ -138,7 +138,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 149. First-Send Contract Foundation | 3/4 | In Progress|  |
+| 149. First-Send Contract Foundation | 4/4 | In Progress|  |
 | 150. Private Envelope and Atomic Durable Enqueue | 0/TBD | Not started | - |
 | 151. Unified Dispatch, Honest Outcomes, and Payload Lifecycle | 0/TBD | Not started | - |
 | 152. Atomic One-Click Suppression Convergence | 0/TBD | Not started | - |
