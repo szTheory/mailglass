@@ -68,6 +68,34 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   end
 
   describe "deliver_later/2 — return shape invariant (D-14)" do
+    test "async preparation retains renderer plaintext semantics before monitored dispatch" do
+      Application.put_env(:mailglass, :renderer, plaintext: false, css_inliner: :none)
+
+      html_address = "renderer-later-html-#{unique_id()}@example.com"
+
+      html_only =
+        build_message(html_address)
+        |> put_in([Access.key(:swoosh_email), Access.key(:text_body)], nil)
+
+      assert {:ok, %Delivery{}} = Outbound.deliver_later(html_only)
+      assert_async_fake_delivery("test-tenant")
+      %{message: html_rendered} = fake_delivery_to!(html_address)
+      assert is_nil(html_rendered.swoosh_email.text_body)
+
+      Mailglass.Adapters.Fake.checkout()
+
+      explicit_address = "renderer-later-explicit-#{unique_id()}@example.com"
+
+      explicit_text =
+        build_message(explicit_address)
+        |> put_in([Access.key(:swoosh_email), Access.key(:text_body)], "Async authored Unicode 🚀")
+
+      assert {:ok, %Delivery{}} = Outbound.deliver_later(explicit_text)
+      assert_async_fake_delivery("test-tenant")
+      %{message: explicit_rendered} = fake_delivery_to!(explicit_address)
+      assert explicit_rendered.swoosh_email.text_body == "Async authored Unicode 🚀"
+    end
+
     @tag tenant: :unset
     test "SingleTenant queues an unstamped message as the default tenant" do
       msg = build_message("default-later-#{unique_id()}@example.com", tenant_id: nil)
@@ -296,6 +324,12 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   defp assert_async_fake_delivery(tenant_id) do
     assert %Message{tenant_id: ^tenant_id} = Mailglass.TestAssertions.wait_for_mail(500)
     await_task_supervisor_children()
+  end
+
+  defp fake_delivery_to!(address) do
+    Enum.find(Mailglass.Adapters.Fake.deliveries(), fn %{message: message} ->
+      Enum.any?(message.swoosh_email.to, fn {_name, recipient} -> recipient == address end)
+    end) || flunk("no Fake delivery found for #{address}")
   end
 
   defp await_task_supervisor_children do

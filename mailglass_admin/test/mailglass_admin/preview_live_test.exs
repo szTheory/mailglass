@@ -1,3 +1,30 @@
+defmodule MailglassAdmin.Fixtures.RendererParityMailer do
+  use Mailglass.Mailable, stream: :transactional
+
+  def preview_props, do: [html_only: %{}, explicit_text: %{}]
+
+  def html_only(_assigns) do
+    new()
+    |> Mailglass.Message.from("no-reply@example.test")
+    |> Mailglass.Message.to("renderer-preview@example.test")
+    |> Mailglass.Message.subject("Renderer HTML only")
+    |> Mailglass.Message.html_body(
+      "<html><head><style>p { color: purple; }</style></head><body><p data-mg-plaintext=\"text\">Preview generated text</p></body></html>"
+    )
+    |> Mailglass.Message.put_function(:html_only)
+  end
+
+  def explicit_text(_assigns) do
+    new()
+    |> Mailglass.Message.from("no-reply@example.test")
+    |> Mailglass.Message.to("renderer-preview@example.test")
+    |> Mailglass.Message.subject("Renderer explicit text")
+    |> Mailglass.Message.html_body("<p>Preview HTML</p>")
+    |> Mailglass.Message.text_body("Preview authored Unicode 🚀")
+    |> Mailglass.Message.put_function(:explicit_text)
+  end
+end
+
 defmodule MailglassAdmin.PreviewLiveTest do
   @moduledoc """
   RED-by-default coverage for PREV-03 (sidebar + tabs + device/dark toggle
@@ -21,6 +48,15 @@ defmodule MailglassAdmin.PreviewLiveTest do
   @theme_cookie MailglassAdmin.Theme.cookie_name()
 
   setup %{conn: conn} do
+    prior_renderer = Application.fetch_env(:mailglass, :renderer)
+
+    on_exit(fn ->
+      case prior_renderer do
+        {:ok, renderer} -> Application.put_env(:mailglass, :renderer, renderer)
+        :error -> Application.delete_env(:mailglass, :renderer)
+      end
+    end)
+
     # Stash the explicit fixture list in the session so __session__/2's
     # default :auto_scan does not swallow fixture mailables. Plan 06 wires
     # session["mailables"] into the Discovery call on mount.
@@ -357,6 +393,32 @@ defmodule MailglassAdmin.PreviewLiveTest do
   end
 
   describe "tabs" do
+    test "preview consumes renderer plaintext and CSS switch semantics", %{conn: conn} do
+      parity_conn =
+        Plug.Test.init_test_session(conn, %{
+          "mailables" => [MailglassAdmin.Fixtures.RendererParityMailer]
+        })
+
+      Application.put_env(:mailglass, :renderer, plaintext: false, css_inliner: :none)
+
+      {:ok, html_only_view, html_only_html} =
+        live(parity_conn, "/dev/mail/MailglassAdmin.Fixtures.RendererParityMailer/html_only")
+
+      refute html_only_html =~ "data-mg-"
+      assert html_only_html =~ "p { color: purple; }"
+
+      text_html = render_click(html_only_view, "set_tab", %{"tab" => "text"})
+      refute text_html =~ "Preview generated text"
+
+      Application.put_env(:mailglass, :renderer, plaintext: true, css_inliner: :premailex)
+
+      {:ok, explicit_view, _explicit_html} =
+        live(parity_conn, "/dev/mail/MailglassAdmin.Fixtures.RendererParityMailer/explicit_text")
+
+      explicit_text_html = render_click(explicit_view, "set_tab", %{"tab" => "text"})
+      assert explicit_text_html =~ "Preview authored Unicode 🚀"
+    end
+
     @tag :tabs
     test "HTML, Text, Raw, Headers tabs each render the correct artifact",
          %{conn: conn} do

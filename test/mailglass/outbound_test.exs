@@ -61,6 +61,28 @@ defmodule Mailglass.OutboundTest do
   end
 
   describe "send/2 — happy path" do
+    test "sync Fake delivery retains renderer plaintext semantics" do
+      Application.put_env(:mailglass, :renderer, plaintext: false, css_inliner: :none)
+
+      html_only =
+        build_message("renderer-sync-html@example.com")
+        |> put_in([Access.key(:swoosh_email), Access.key(:text_body)], nil)
+
+      assert {:ok, %Delivery{}} = Outbound.send(html_only)
+      html_record = fake_delivery_to!("renderer-sync-html@example.com")
+      assert is_nil(html_record.message.swoosh_email.text_body)
+
+      Fake.checkout()
+
+      explicit_text =
+        build_message("renderer-sync-explicit@example.com")
+        |> put_in([Access.key(:swoosh_email), Access.key(:text_body)], "Sync authored Unicode 🚀")
+
+      assert {:ok, %Delivery{}} = Outbound.send(explicit_text)
+      explicit_record = fake_delivery_to!("renderer-sync-explicit@example.com")
+      assert explicit_record.message.swoosh_email.text_body == "Sync authored Unicode 🚀"
+    end
+
     test "returns {:ok, %Delivery{status: :sent, tenant_id: t}} with Fake adapter recording the message" do
       msg = build_message("happy@example.com")
 
@@ -285,6 +307,12 @@ defmodule Mailglass.OutboundTest do
       route_a: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_a]},
       route_b: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_b]}
     )
+  end
+
+  defp fake_delivery_to!(address) do
+    Enum.find(Fake.deliveries(), fn %{message: message} ->
+      Enum.any?(message.swoosh_email.to, fn {_name, recipient} -> recipient == address end)
+    end) || flunk("no Fake delivery found for #{address}")
   end
 
   defp insert_suppression!(address) do
