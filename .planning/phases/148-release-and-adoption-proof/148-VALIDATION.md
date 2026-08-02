@@ -1,9 +1,9 @@
 ---
 phase: 148
 slug: release-and-adoption-proof
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-08-01
 ---
 
@@ -38,11 +38,11 @@ created: 2026-08-01
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | 0/1 | REL-01 | T-148-01 | Release events cannot expose secrets or republish inbound; manual inbound-only dispatch remains explicit | workflow contract | `mix test test/scripts/linked_release_concurrency_test.exs --warnings-as-errors` | ❌ W0 extension | ⬜ pending |
-| TBD | TBD | 1 | PROOF-02 | N/A | Stream-scoped unsubscribe and address-wide complaint/bounce suppression retain their locked scopes | unit/integration | `mix test test/mailglass/webhook/ingest_auto_suppress_test.exs test/mailglass/suppression_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
-| TBD | TBD | 1 | PROOF-03 | N/A | Published B2C examples use current APIs and the guide remains packaged | contract | `mix test test/mailglass/docs_contract_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
-| TBD | TBD | 1 | PROOF-01 bundle | T-148-02 | Foreign-tenant events cannot refresh the selected tenant's operator UI | LiveView integration | `cd mailglass_admin && mix test test/mailglass_admin/operator_live_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
-| TBD | TBD | release | REL-01 | T-148-03 | Protected publication releases only intended packages and the fresh consumer resolves actual Hex artifacts | published E2E | `.github/workflows/post-publish-smoke.yml` runs `DEP_MODE=hex scripts/consumer_install_smoke.sh` after Hex and HexDocs readiness | ✅ workflow | ⬜ pending |
+| 148-01-01 | 01 | 1 | REL-01 | T-148-01 | Release events cannot expose secrets or republish inbound; manual inbound-only dispatch remains explicit | workflow contract | `mix test test/scripts/linked_release_concurrency_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 148-03-01 | 03 | 3 | PROOF-02 | N/A | Stream-scoped unsubscribe and address-wide complaint/bounce suppression retain their locked scopes | unit/integration | `mix test test/mailglass/webhook/ingest_auto_suppress_test.exs test/mailglass/suppression_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 148-03-02 | 03 | 3 | PROOF-03 | N/A | Published B2C examples use current APIs and the guide remains packaged | contract | `mix test test/mailglass/docs_contract_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 148-03-03 | 03 | 3 | PROOF-01 bundle | T-148-02 | Foreign-tenant events cannot refresh the selected tenant's operator UI | LiveView integration | `cd mailglass_admin && mix test test/mailglass_admin/operator_live_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 148-05-01 | 05 | 5 | REL-01 | T-148-03 | Protected publication releases only intended packages and the fresh consumer resolves actual Hex artifacts | published E2E | `.github/workflows/post-publish-smoke.yml` runs `DEP_MODE=hex scripts/consumer_install_smoke.sh` after Hex and HexDocs readiness | ✅ workflow | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -50,9 +50,7 @@ created: 2026-08-01
 
 ## Wave 0 Requirements
 
-- [ ] Extend `test/scripts/linked_release_concurrency_test.exs` (or add a focused peer contract test) to assert release-event core/admin-only fan-out and preservation of the inbound-only manual path.
-- [ ] Add a deterministic compatibility assertion for unchanged `mailglass_inbound` 2.1.1 against core 2.4.0 while retaining the live published resolver smoke as final proof.
-- [ ] Define a credential-free, PII-free release-proof summary/artifact location.
+Existing infrastructure covers all phase requirements. The workflow contract, deterministic inbound 2.1.1 compatibility assertion, and credential-/PII-free release ledger were delivered during the phase.
 
 ---
 
@@ -69,11 +67,21 @@ No human verification or UAT is required. External checks are observed and evalu
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Local feedback latency < 120 seconds
-- [ ] `nyquist_compliant: true` set in frontmatter after validation
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Local feedback latency < 120 seconds
+- [x] `nyquist_compliant: true` set in frontmatter after validation
 
-**Approval:** pending
+**Approval:** approved 2026-08-02
+
+## Validation Audit 2026-08-02
+
+| Metric | Count |
+|---|---:|
+| Gaps found | 3 seeded Wave 0 items |
+| Resolved | 3 |
+| Escalated | 0 |
+
+Fresh evidence: the combined root validation command passed 86 tests with 0 failures and 1 intentional skip; the standalone admin operator command passed 79 tests with 0 failures. Protected publication and clean Hex consumer evidence remain recorded in `148-RELEASE-PROOF.md`.
