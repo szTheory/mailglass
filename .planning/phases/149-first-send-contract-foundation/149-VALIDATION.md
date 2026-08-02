@@ -73,9 +73,9 @@ This is the canonical no-silent-drop mapping for the deterministic fallback repo
 
 No pre-execution Wave 0 scaffold is required because every target test file and assertion surface already exists. The following work remains pending in its owning execution wave:
 
-- [ ] Wave 2 / Task 149-02-02 confirms or adds a test-local stable assertion seam proving preflight rejection inserts zero Oban jobs.
-- [ ] Wave 3 / Task 149-03-02 extends `mailglass_admin/test/mailglass_admin/preview_live_test.exs` test-first with config-isolated renderer-parity regressions for `renderer.plaintext` and `renderer.css_inliner`.
-- [ ] Wave 3 / Tasks 149-03-01 and 149-03-02 add config-isolated renderer tests that restore application environment and relevant Mailglass config cache state after every case.
+- [x] Wave 2 / Task 149-02-02 confirms or adds a test-local stable assertion seam proving preflight rejection inserts zero Oban jobs.
+- [x] Wave 3 / Task 149-03-02 extends `mailglass_admin/test/mailglass_admin/preview_live_test.exs` test-first with config-isolated renderer-parity regressions for `renderer.plaintext` and `renderer.css_inliner`.
+- [x] Wave 3 / Tasks 149-03-01 and 149-03-02 add config-isolated renderer tests that restore application environment and relevant Mailglass config cache state after every case.
 
 ---
 
@@ -95,7 +95,7 @@ All phase behaviors have automated verification. Any Task.Supervisor/Fake-adapte
 - [x] Per-task map reconciled to final PLAN task IDs
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** automated evidence complete
 
 ## Validation Audit 2026-08-02
 

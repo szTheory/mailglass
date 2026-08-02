@@ -8,13 +8,13 @@
 
 ### First-send contract
 
-- [ ] **FIRST-01:** A default `Mailglass.Tenancy.SingleTenant` caller can send synchronously and durably asynchronously as tenant `"default"` without setting a process-local tenant stamp.
-- [ ] **FIRST-02:** A configured custom tenancy implementation remains fail-closed when required tenant context is absent, invalid, or cannot be restored in an async worker.
-- [ ] **FIRST-03:** Mailglass accepts exactly one envelope recipient total across `to`, `cc`, and `bcc` for a delivery and returns a typed, actionable preflight error for every zero- or multi-recipient shape.
-- [ ] **FIRST-04:** Recipient-cardinality rejection occurs before rendering side effects, rate-limit consumption, delivery/event/payload persistence, job insertion, or provider dispatch.
-- [ ] **FIRST-05:** An adopter-authored plaintext body is preserved, a text-only message remains non-empty and sendable, and automatic plaintext is generated only when the published renderer contract calls for it.
-- [ ] **FIRST-06:** The documented `renderer.plaintext` and `renderer.css_inliner` settings change observable rendering behavior consistently in direct render, synchronous send, async send, and preview paths.
-- [ ] **FIRST-07:** Invalid or unsupported body/envelope shapes return typed errors before any delivery row or job is created; no path silently drops content or recipients.
+- [x] **FIRST-01:** A default `Mailglass.Tenancy.SingleTenant` caller can send synchronously and durably asynchronously as tenant `"default"` without setting a process-local tenant stamp.
+- [x] **FIRST-02:** A configured custom tenancy implementation remains fail-closed when required tenant context is absent, invalid, or cannot be restored in an async worker.
+- [x] **FIRST-03:** Mailglass accepts exactly one envelope recipient total across `to`, `cc`, and `bcc` for a delivery and returns a typed, actionable preflight error for every zero- or multi-recipient shape.
+- [x] **FIRST-04:** Recipient-cardinality rejection occurs before rendering side effects, rate-limit consumption, delivery/event/payload persistence, job insertion, or provider dispatch.
+- [x] **FIRST-05:** An adopter-authored plaintext body is preserved, a text-only message remains non-empty and sendable, and automatic plaintext is generated only when the published renderer contract calls for it.
+- [x] **FIRST-06:** The documented `renderer.plaintext` and `renderer.css_inliner` settings change observable rendering behavior consistently in direct render, synchronous send, async send, and preview paths.
+- [x] **FIRST-07:** Invalid or unsupported body/envelope shapes return typed errors before any delivery row or job is created; no path silently drops content or recipients.
 
 ### Durable outbound envelope
 
