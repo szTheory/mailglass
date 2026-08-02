@@ -11,6 +11,11 @@ defmodule Mailglass.BoundaryTest do
     assert boundary_deps(Mailglass.Outbound) == [Mailglass]
   end
 
+  test "outbound preflight stays an internal child" do
+    assert boundary_deps(Mailglass.Outbound) == [Mailglass]
+    refute Mailglass.Outbound.Preflight in boundary_exports(Mailglass.Outbound)
+  end
+
   test "events boundary has no outbound dependency edge" do
     assert boundary_deps(Mailglass.Events) == [Mailglass]
   end

@@ -71,6 +71,15 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   end
 
   describe "deliver_later/2 — return shape invariant (D-14)" do
+    @tag tenant: :unset
+    test "SingleTenant queues an unstamped message as the default tenant" do
+      msg = build_message("default-later-#{unique_id()}@example.com", tenant_id: nil)
+
+      assert {:ok, %Delivery{tenant_id: "default"} = delivery} = Outbound.deliver_later(msg)
+      assert %Delivery{tenant_id: "default"} = TestRepo.get!(Delivery, delivery.id)
+      assert [%{message: %{tenant_id: "default"}}] = Mailglass.Adapters.Fake.deliveries()
+    end
+
     test "returns {:ok, %Delivery{status: :queued}} — never %Oban.Job{}" do
       msg = build_message("later-#{unique_id()}@example.com")
 
@@ -209,7 +218,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
 
     Message.build(email,
       mailable: Mailglass.FakeFixtures.TestMailer,
-      tenant_id: "test-tenant",
+      tenant_id: Keyword.get(opts, :tenant_id, "test-tenant"),
       stream: Keyword.get(opts, :stream, :transactional)
     )
   end

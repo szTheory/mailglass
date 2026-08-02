@@ -10,11 +10,14 @@ defmodule Mailglass.Outbound.PreflightTest do
     :ok
   end
 
-  describe "preflight stage 0 — Tenancy.assert_stamped!" do
+  describe "preflight stage 0 — resolver-aware tenancy normalization" do
     @tag tenant: :unset
-    test "raises TenancyError when tenant is not stamped" do
-      msg = build_message("alice@example.com")
-      assert_raise Mailglass.TenancyError, fn -> Outbound.send(msg) end
+    test "SingleTenant sends an unstamped message as the default tenant" do
+      msg = build_unstamped_message("alice@example.com")
+
+      assert {:ok, %Delivery{tenant_id: "default"} = delivery} = Outbound.send(msg)
+      assert %Delivery{tenant_id: "default"} = TestRepo.get!(Delivery, delivery.id)
+      assert [%{message: %{tenant_id: "default"}}] = Mailglass.Adapters.Fake.deliveries()
     end
   end
 
@@ -182,6 +185,22 @@ defmodule Mailglass.Outbound.PreflightTest do
 
   defp build_message(to_addr) do
     build_message_for_stream(to_addr, :transactional)
+  end
+
+  defp build_unstamped_message(to_addr) do
+    email =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Test", "from@example.com"})
+      |> Swoosh.Email.to(to_addr)
+      |> Swoosh.Email.subject("Test")
+      |> Swoosh.Email.html_body("<p>Body</p>")
+      |> Swoosh.Email.text_body("Body")
+
+    Message.build(email,
+      mailable: Mailglass.FakeFixtures.TestMailer,
+      tenant_id: nil,
+      stream: :transactional
+    )
   end
 
   defp build_message_for_stream(to_addr, stream) do
