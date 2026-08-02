@@ -18,6 +18,7 @@ defmodule Mailglass.DocsMigrationSmokeTest do
       |> Swoosh.Email.to("migrated@example.com")
       |> Swoosh.Email.from("system@example.com")
       |> Swoosh.Email.subject("Migration parity check")
+      |> Swoosh.Email.text_body("Migration parity check")
 
     assert {:ok, _delivery} = Mailglass.deliver(email)
   end
