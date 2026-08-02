@@ -237,6 +237,20 @@ Per-kind fields: `delivery_id :: binary() | nil`.
 
 Retryable: `true` for `:adapter_failure`, `false` otherwise.
 
+**First-send preflight contract:** envelope and body failures use the existing
+`:preflight_rejected` type; no separate public error family is introduced.
+Its context is deliberately bounded:
+
+| Rejection | Context |
+|-----------|---------|
+| Zero or multiple total `to`/`cc`/`bcc` entries | `%{reason_class: :recipient_count_invalid, recipient_count: non_neg_integer()}` |
+| Missing or blank supported body | `%{reason_class: :body_invalid, body_state: :empty}` |
+| Unsupported body shape | `%{reason_class: :body_invalid, body_state: :unsupported}` |
+
+The context never contains recipient addresses, sender addresses, subject,
+headers, HTML, plaintext, or a message body. Match `%Mailglass.SendError{type:
+:preflight_rejected}` and these bounded keys, never an exception message.
+
 Since: 0.1.0.
 
 ### `Mailglass.TemplateError`
@@ -400,7 +414,7 @@ a known tenant (Phase 4).
 
 | Atom | When raised |
 |------|-------------|
-| `:unstamped` | No tenant stamped on the current process (Phase 2) — typically a missing `on_mount/4` callback or test setup. `Mailglass.Tenancy.tenant_id!/0` raises; `Mailglass.Tenancy.current/0` falls back to the SingleTenant default instead. |
+| `:unstamped` | A strict tenant-context lookup found no valid nonblank stamp. The shared outbound preflight normalizes an unstamped `Mailglass.Tenancy.SingleTenant` caller to string `"default"`; any configured custom resolver instead fails closed with this typed error. `Mailglass.Tenancy.tenant_id!/0` remains the strict accessor. |
 | `:webhook_tenant_unresolved` (Phase 4 D-14) | `Mailglass.Tenancy.resolve_webhook_tenant/1` returned `{:error, _}` for a cryptographically verified webhook request. Rescued by `Mailglass.Webhook.Plug` to HTTP 422 (distinct from signature 401 / orphan 200). The `:context` map carries `:provider` and optionally `:reason` for Logger correlation. |
 
 Per-kind fields: none.
@@ -650,6 +664,16 @@ Since: 0.1.0.
 - `assert_stamped!() :: :ok` — raises `%TenancyError{type: :unstamped}` when no tenant is stamped on the current process. Returns `:ok` otherwise. Does NOT fall back to the `SingleTenant` default (unlike `current/0`). SEND-01 precondition (D-18).
 
 Since: 0.1.0.
+
+### Outbound tenancy resolution
+
+Before any outbound effect, shared preflight resolves tenancy. With the default
+`Mailglass.Tenancy.SingleTenant` resolver, an unstamped caller is normalized to
+the string `"default"` on the message. This exception is resolver-specific:
+a configured custom tenancy resolver must supply a valid, restorable stamped
+context for sync and async work. Missing, blank, invalid, or unavailable custom
+context raises `%Mailglass.TenancyError{type: :unstamped}`; it never falls back
+to `"default"`.
 
 ### `Mailglass.Tenancy` optional callback: `tracking_host/1`
 
@@ -1287,14 +1311,35 @@ Since: 0.1.0.
 
 Top-level `Mailglass` module re-exports all five public verbs as `defdelegate`.
 
-**Preflight pipeline order (D-18, SEND-01) — locked:**
+**Preflight pipeline order — locked:**
 
-0. `Mailglass.Tenancy.assert_stamped!/0` — raises `%TenancyError{:unstamped}`
+0. Shared tenancy, envelope, and body preflight — resolves `SingleTenant` to
+   `"default"`, enforces exactly one total native `to`/`cc`/`bcc` recipient, and
+   requires nonblank supported HTML and/or plaintext. Tenancy raises
+   `%TenancyError{:unstamped}` for strict custom context; envelope/body failures
+   return `%SendError{type: :preflight_rejected}`.
 1. `Mailglass.Tracking.Guard.assert_safe!/1` — raises `%ConfigError{:tracking_on_auth_stream}`
 2. `Mailglass.Suppression.check_before_send/1` — returns `{:error, %SuppressedError{}}`
 3. `Mailglass.RateLimiter.check/3` — `:transactional` bypasses; returns `{:error, %RateLimitError{}}`
 4. `Mailglass.Stream.policy_check/1` — no-op seam (v0.1)
 5. `Mailglass.Renderer.render/1` — returns `{:error, %TemplateError{}}`
+
+The shared preflight completes before rendering, limits, persistence, job
+insertion, or provider work. It never selects, deduplicates, reorders, drops,
+or fans out recipients.
+
+### Renderer body and configuration contract
+
+`Mailglass.Renderer` is the single implementation point for direct rendering,
+synchronous send preparation, asynchronous send preparation, and preview.
+
+- A nonblank authored `text_body` wins and is preserved byte-for-byte.
+- Text-only mail is valid; it does not manufacture an HTML body.
+- For HTML-only mail, `renderer.plaintext: true` generates plaintext and
+  `renderer.plaintext: false` leaves it absent. Either setting preserves
+  nonblank authored plaintext.
+- `renderer.css_inliner: :premailex` uses Premailex; `:none` skips only CSS
+  inlining. Both retain HEEx rendering and `data-mg-*` attribute stripping.
 
 **Two-Multi sync pattern invariant (D-20 — critical, T-3-05-03):**
 

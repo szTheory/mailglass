@@ -14,7 +14,13 @@ config :mailglass,
        {Swoosh.Adapters.Postmark, api_key: System.fetch_env!("POSTMARK_API_KEY")}}
 ```
 
-You do not need `config :mailglass, adapters:` or a custom tenancy callback for this case. `Mailglass.Tenancy.SingleTenant` keeps returning `:default`, and queued deliveries persist the reserved default `adapter_ref` internally so retries stay deterministic.
+You do not need `config :mailglass, adapters:` or a custom tenancy callback for this case. An unstamped outbound caller using `Mailglass.Tenancy.SingleTenant` is normalized to the string `"default"` before rendering, persistence, job insertion, or provider work.
+
+This is deliberately not a general fallback. When you configure a custom
+`Mailglass.Tenancy` resolver, every send needs a valid, nonblank tenant context
+that can be restored for its execution context. Missing, invalid, or unavailable
+custom context fails closed as `%Mailglass.TenancyError{type: :unstamped}`; it is
+never rewritten to `"default"`.
 
 ## Named adapter refs
 
@@ -124,7 +130,9 @@ config :mailglass, adapters: [
 ## Sync vs async semantics
 
 - `Mailglass.deliver/2` resolves the effective adapter at send time.
-- `Mailglass.deliver_later/2` and `Mailglass.deliver_many/2` persist `delivery.adapter_ref` before the job is enqueued.
-- Worker dispatch resolves credentials from runtime config at execution time, but it does not rerun tenant routing. That keeps retries on the same named route even if your tenancy callback would choose something different later.
+- `Mailglass.deliver_later/2` applies the same resolver-aware preflight before it
+  selects its configured async path.
 
-Queued paths should use `adapter_ref` overrides, not raw `adapter` tuples. Mailglass will reject queued raw adapter overrides that cannot be persisted safely without storing secrets.
+Phase 149 does not promise private-envelope fidelity, atomic durable enqueue,
+or later worker dispatch equivalence. Those durability guarantees belong to
+Phase 150; provider outcomes and payload lifecycle belong to Phase 151.

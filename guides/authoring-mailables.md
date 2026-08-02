@@ -2,6 +2,16 @@
 
 Use `Mailglass.Mailable` to define message builders on the native v0.2 API. The macro imports the common `Mailglass.Message` setters so the default path does not have to call `Swoosh.Email.*` directly.
 
+## First-send envelope and body contract
+
+A supported first send has **exactly one total recipient** across native
+`to`, `cc`, and `bcc`. Do not add a second recipient, use `cc`/`bcc` as a
+selection mechanism, or expect recipient fan-out. The body must contain
+nonblank HTML, nonblank plaintext, or both. Invalid envelope/body shapes return
+`%Mailglass.SendError{type: :preflight_rejected}` before rendering, persistence,
+queue insertion, or adapter delivery; its context never includes addresses or
+body content.
+
 ## Prerequisites
 
 - `mix mailglass.install` has already run
@@ -24,6 +34,19 @@ defmodule MyApp.BillingMailer do
     |> put_tag("billing")
     |> Mailglass.Message.put_function(:receipt)
   end
+end
+```
+
+`text_body/2` is authoritative when nonblank: it is preserved exactly even when
+HTML is also supplied. A text-only mailable is also supported:
+
+```elixir
+def account_notice(account) do
+  new()
+  |> to(account.owner_email)
+  |> from({"MyApp", "support@example.com"})
+  |> subject("Account notice")
+  |> text_body("Your account needs attention.")
 end
 ```
 
