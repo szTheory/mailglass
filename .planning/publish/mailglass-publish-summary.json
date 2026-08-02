@@ -306,6 +306,6 @@
   "source_ref": "v2.3.0",
   "source_ref_pattern": "mailglass-sibling-group-v%{version}",
   "source_url": "https://github.com/szTheory/mailglass",
-  "tarball_size": 1278881,
+  "tarball_size": 1280555,
   "version": "2.3.0"
 }

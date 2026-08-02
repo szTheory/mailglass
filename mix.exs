@@ -413,8 +413,10 @@ defmodule Mailglass.MixProject do
         "cmd --cd mailglass_inbound mix deps.get --check-locked",
         "cmd --cd mailglass_inbound mix compile --no-optional-deps --warnings-as-errors",
         "cmd --cd mailglass_inbound mix test --exclude property",
-        "cmd env MIX_ENV=test mix docs --warnings-as-errors",
-        "cmd env MIX_ENV=test mix mailglass.docs.check",
+        # ExDoc is intentionally a dev-only dependency; invoke the docs gates in
+        # their native environment instead of inheriting ci.full's test env.
+        "cmd env MIX_ENV=dev mix docs --warnings-as-errors",
+        "cmd env MIX_ENV=dev mix mailglass.docs.check",
         # F1: widened from the two bare hex-audit/deps-audit mix tasks so
         # `mix ci` reproduces the same shared-allowlist, three-directory scan
         # both ci.yml audit lanes now run (Phase 142/VULN-05). Leaving this
