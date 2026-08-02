@@ -244,6 +244,7 @@ Its context is deliberately bounded:
 | Rejection | Context |
 |-----------|---------|
 | Zero or multiple total `to`/`cc`/`bcc` entries | `%{reason_class: :recipient_count_invalid, recipient_count: non_neg_integer()}` |
+| Sole `cc` or `bcc` recipient | `%{reason_class: :recipient_field_unsupported}` |
 | Missing or blank supported body | `%{reason_class: :body_invalid, body_state: :empty}` |
 | Unsupported body shape | `%{reason_class: :body_invalid, body_state: :unsupported}` |
 
@@ -1314,8 +1315,10 @@ Top-level `Mailglass` module re-exports all five public verbs as `defdelegate`.
 **Preflight pipeline order — locked:**
 
 0. Shared tenancy, envelope, and body preflight — resolves `SingleTenant` to
-   `"default"`, enforces exactly one total native `to`/`cc`/`bcc` recipient, and
-   requires nonblank supported HTML and/or plaintext. Tenancy raises
+   `"default"`, enforces exactly one total native envelope recipient, requires
+   that Phase 149's sole recipient be in `to` rather than silently losing a
+   sole `cc`/`bcc` field at the async boundary, and requires nonblank supported
+   HTML and/or plaintext. Tenancy raises
    `%TenancyError{:unstamped}` for strict custom context; envelope/body failures
    return `%SendError{type: :preflight_rejected}`.
 1. `Mailglass.Tracking.Guard.assert_safe!/1` — raises `%ConfigError{:tracking_on_auth_stream}`

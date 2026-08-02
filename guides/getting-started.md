@@ -86,9 +86,10 @@ end
 This message has one native `to` recipient and both nonblank HTML and plaintext
 bodies. With the default `Mailglass.Tenancy.SingleTenant` resolver, no tenant
 stamp is required: the shared preflight records ownership as string `"default"`.
-`cc` and `bcc` count toward the same one-recipient total; invalid tenant,
-recipient, or body shapes fail before rendering, persistence, queue insertion,
-or provider work.
+`cc` and `bcc` count toward the same one-recipient total. Until the private
+durable envelope can preserve recipient-field identity, Phase 149 accepts the
+sole recipient only in `to`; `cc`/`bcc` shapes fail closed before rendering,
+persistence, queue insertion, or provider work.
 
 To select the configured asynchronous path instead, call:
 

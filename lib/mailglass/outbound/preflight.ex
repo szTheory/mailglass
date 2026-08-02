@@ -37,13 +37,24 @@ defmodule Mailglass.Outbound.Preflight do
     recipients = List.wrap(email.to) ++ List.wrap(email.cc) ++ List.wrap(email.bcc)
     count = length(recipients)
 
-    if count == 1 do
-      :ok
-    else
-      {:error,
-       SendError.new(:preflight_rejected,
-         context: %{reason_class: :recipient_count_invalid, recipient_count: count}
-       )}
+    cond do
+      count != 1 ->
+        {:error,
+         SendError.new(:preflight_rejected,
+           context: %{reason_class: :recipient_count_invalid, recipient_count: count}
+         )}
+
+      List.wrap(email.to) == [] ->
+        # Phase 149 persists only a recipient address. Retaining a `cc`/`bcc`
+        # field through the async boundary needs the private envelope planned for
+        # Phase 150, so reject these shapes instead of silently converting them.
+        {:error,
+         SendError.new(:preflight_rejected,
+           context: %{reason_class: :recipient_field_unsupported}
+         )}
+
+      true ->
+        :ok
     end
   end
 

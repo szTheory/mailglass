@@ -20,14 +20,25 @@ defmodule Mailglass.Outbound.PreflightTest do
   end
 
   describe "preflight recipient cardinality" do
-    test "accepts exactly one recipient in its native to, cc, or bcc collection" do
-      Enum.each([:to, :cc, :bcc], fn field ->
-        message = message_with_recipients(%{field => ["one@example.com"]})
-        original_email = message.swoosh_email
+    test "accepts exactly one supported to recipient" do
+      message = message_with_recipients(%{to: ["one@example.com"]})
+      original_email = message.swoosh_email
 
-        assert {:ok, normalized} = Mailglass.Outbound.Preflight.run(message)
-        assert normalized.swoosh_email == original_email
-      end)
+      assert {:ok, normalized} = Mailglass.Outbound.Preflight.run(message)
+      assert normalized.swoosh_email == original_email
+    end
+
+    test "rejects sole cc and bcc recipients rather than silently changing their field" do
+      for field <- [:cc, :bcc] do
+        assert {:error,
+                %Mailglass.SendError{
+                  type: :preflight_rejected,
+                  context: %{reason_class: :recipient_field_unsupported}
+                }} =
+                 Mailglass.Outbound.Preflight.run(
+                   message_with_recipients(%{field => ["one@example.com"]})
+                 )
+      end
     end
 
     test "rejects zero recipients with the bounded exact count context" do
@@ -72,7 +83,7 @@ defmodule Mailglass.Outbound.PreflightTest do
       assert {:error, %Mailglass.SendError{context: %{recipient_count: 0}}} =
                Mailglass.Outbound.Preflight.run(message_with_recipients(%{}))
 
-      assert {:ok, _} =
+      assert {:error, %Mailglass.SendError{context: %{reason_class: :recipient_field_unsupported}}} =
                Mailglass.Outbound.Preflight.run(
                  message_with_recipients(%{bcc: ["one@example.com"]})
                )
