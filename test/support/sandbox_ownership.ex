@@ -1337,7 +1337,7 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   end
 
   # ENUMERATED FROM THE SHIPPED INSTALL MIGRATION, not from a CI log excerpt.
-  # `Mailglass.Migration.up/1` dispatches v01..v05
+  # `Mailglass.Migration.up/1` dispatches v01..v06
   # (`lib/mailglass/migrations/postgres/`), and exactly four `create table`
   # calls exist across all five steps:
   #
@@ -1346,7 +1346,8 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   #   v01.ex:163 create table(:mailglass_suppressions, prefix: prefix)
   #   v02.ex:28  create table(:mailglass_webhook_events, prefix: prefix)
   #
-  # v03/v04/v05 add columns, indexes and constraints only — no further tables.
+  # v03/v04/v05 add columns, indexes and constraints only; v06 creates the
+  # private outbound payload relation.
   # Re-derive this list with:
   #   grep -rn 'create table' lib/mailglass/migrations/
   #
@@ -1359,7 +1360,7 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   @baseline_relations ~w(mailglass_deliveries mailglass_events mailglass_suppressions mailglass_webhook_events mailglass_outbound_payloads)
 
   @doc """
-  Checks whether all four baseline relations the shipped install migration
+  Checks whether all five baseline relations the shipped install migration
   creates (`mailglass_deliveries`, `mailglass_events`, `mailglass_suppressions`,
   `mailglass_webhook_events`) exist in the schema `Mailglass.Config.schema()`
   currently resolves to — Class A (D-31): the migration baseline was torn down
@@ -1383,7 +1384,7 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
 
   Returns:
 
-    * `true` — all four relations are present in the current schema.
+    * `true` — all five relations are present in the current schema.
     * `{false, missing}` — `missing` is the subset of `@baseline_relations`
       not found. Never merely `false`, so the formatter can name exactly
       what's absent without a second query.

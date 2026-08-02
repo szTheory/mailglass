@@ -817,19 +817,19 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
   # (143-07, D-31 Class A) ─────────────────────────────────────────────────
 
   # 11. `{false, missing}` — pointed at a schema that genuinely has none of
-  # the three baseline relations, without touching the real migrated schema
+  # the five baseline relations, without touching the real migrated schema
   # at all. This is the exact mechanism migration_test.exs's,
   # upgrade_v2_schema_migration_test.exs's, and
   # schema_prefix_hardening_test.exs's own restore-verification on_exit
   # blocks depend on.
-  test "baseline_tables_present?/1 reports {false, missing} for a schema with none of the four baseline relations" do
+  test "baseline_tables_present?/1 reports {false, missing} for a schema with none of the five baseline relations" do
     SandboxOwnership.with_schema!("with_schema_bang_baseline_missing_test_schema")
 
     assert {false, missing} = SandboxOwnership.baseline_tables_present?(Mailglass.TestRepo)
 
     assert Enum.sort(missing) ==
              Enum.sort(
-               ~w(mailglass_deliveries mailglass_events mailglass_suppressions mailglass_webhook_events)
+               ~w(mailglass_deliveries mailglass_events mailglass_suppressions mailglass_webhook_events mailglass_outbound_payloads)
              )
   end
 
@@ -857,7 +857,8 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
 
       # Every baseline relation EXCEPT mailglass_events. A probe blind to the
       # ledger reports `true` here; a complete one reports the ledger missing.
-      for table <- ~w(mailglass_deliveries mailglass_suppressions mailglass_webhook_events) do
+      for table <-
+            ~w(mailglass_deliveries mailglass_suppressions mailglass_webhook_events mailglass_outbound_payloads) do
         Ecto.Adapters.SQL.query!(
           Mailglass.TestRepo,
           ~s|CREATE TABLE IF NOT EXISTS "#{schema}"."#{table}" (id uuid PRIMARY KEY)|
