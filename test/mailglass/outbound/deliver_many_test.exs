@@ -298,7 +298,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
         Application.put_env(:mailglass, :async_adapter, :oban)
 
         start_supervised!(
-          {Oban, testing: :manual, repo: TestRepo, queues: [mailglass_outbound: 10]}
+          {Oban, testing: :disabled, repo: TestRepo, queues: [mailglass_outbound: 10]}
         )
 
         uid = unique_id()
