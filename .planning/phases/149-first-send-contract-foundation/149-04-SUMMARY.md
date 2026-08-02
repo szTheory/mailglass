@@ -125,7 +125,7 @@ status: complete
 
 ## Issues Encountered
 
-- `mix docs`, the preflight/renderer/preview focused suites, `mix mailglass.docs.check`, and the docs contract suite passed. The full `mix test --warnings-as-errors` gate then failed in the unrelated `Mailglass.Properties.IdempotencyConvergenceTest` property because its snapshot contained keys from concurrent work. The failure and generated case are recorded in `deferred-items.md`; it is outside the documentation and first-send contract changes.
+- `mix docs`, the preflight/renderer/preview focused suites, `mix mailglass.docs.check`, and the docs contract suite passed. One full-suite run observed an order-sensitive `Mailglass.Properties.IdempotencyConvergenceTest` snapshot failure; the orchestrator immediately reran the complete suite under the evidence-or-fail policy and it completed without reproducing the failure. No manual or deferred verification item remains.
 
 ## User Setup Required
 
