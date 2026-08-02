@@ -100,9 +100,9 @@ Populated during roadmap creation. Every v2.4 requirement must map to exactly on
 | ENVL-02 | Phase 150 | Complete |
 | ENVL-04 | Phase 150 | Complete |
 | ENVL-05 | Phase 150 | Complete |
-| ENVL-06 | Phase 150 | Pending |
+| ENVL-06 | Phase 150 | Complete |
 | ENVL-07 | Phase 150 | Pending |
-| ENVL-08 | Phase 150 | Pending |
+| ENVL-08 | Phase 150 | Complete |
 | ENVL-03 | Phase 151 | Pending |
 | DISP-01 | Phase 151 | Pending |
 | DISP-02 | Phase 151 | Pending |

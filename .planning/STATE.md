@@ -5,15 +5,15 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 150
 current_phase_name: Private Envelope and Atomic Durable Enqueue
 status: executing
-stopped_at: Completed 150-02-PLAN.md
-last_updated: "2026-08-02T23:45:14.119Z"
+stopped_at: Completed 150-03-PLAN.md
+last_updated: "2026-08-02T23:54:33.902Z"
 last_activity: 2026-08-02
-last_activity_desc: Phase 149 complete, transitioned to Phase 150
+last_activity_desc: Completed 150-02 durable single and batch enqueue
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 9
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 ## Current Position
 
 Phase: 150 — Private Envelope and Atomic Durable Enqueue
-Plan: 2 of 5
-Status: In progress
+Plan: 3 of 5
+Status: Ready to execute
 Last activity: 2026-08-02 — Completed 150-02 durable single and batch enqueue
 
-Progress: [███████░░░] 67%
+Progress: [████████░░] 78%
 
 ## v2.4 Milestone Intent
 
@@ -446,6 +446,8 @@ release debug campaign.
 - [Phase ?]: The Oban enqueue multi writes its private payload between queued event and job.
 - [Phase ?]: Oban job insertion receives Repo.multi_opts() inside the durable Multi.
 - [Phase ?]: Batch sends use independent per-envelope transactions and preserve input order.
+- [Phase ?]: Worker dispatch loads and validates the tenant-scoped private Payload before considering legacy metadata.
+- [Phase ?]: Explicit :oban only succeeds after a configured instance advertises Worker.queue/0; it never falls back to Task.Supervisor.
 
 ## Quick Tasks Completed
 
@@ -511,6 +513,7 @@ release debug campaign.
 | Phase 149 P04 | 8m | 2 tasks | 7 files |
 | Phase 150-private-envelope-and-atomic-durable-enqueue P01 | 8min | 2 tasks | 8 files |
 | Phase 150-private-envelope-and-atomic-durable-enqueue P02 | 12min | 2 tasks | 4 files |
+| Phase 150 P03 | 6min | 2 tasks | 6 files |
 
 ## Deferred Items
 
@@ -677,8 +680,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-02T23:45:14.108Z
-**Stopped at:** Completed 150-02-PLAN.md
+**Last session:** 2026-08-02T23:54:33.891Z
+**Stopped at:** Completed 150-03-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
