@@ -72,6 +72,38 @@ defmodule Mailglass.GeneratedHost.Checkpoint do
     %{"name" => "negative_controls", "status" => "passed", "controls" => normalized}
   end
 
+  @spec feedback!(map()) :: map()
+  def feedback!(proof) when is_map(proof) do
+    required =
+      ~w(valid_status valid_body_bytes forged_status forged_body_bytes webhook_event_count ledger_event_count forged_effects_zero)
+
+    unless Enum.all?(required, &Map.has_key?(proof, &1)) and proof["valid_status"] == 200 and
+             proof["valid_body_bytes"] == 0 and proof["forged_status"] == 401 and
+             proof["forged_body_bytes"] == 0 and proof["webhook_event_count"] >= 1 and
+             proof["ledger_event_count"] >= 1 and proof["forged_effects_zero"] do
+      raise "generated-host feedback proof is incomplete"
+    end
+
+    Map.take(proof, required) |> Map.put("name", "feedback") |> Map.put("status", "passed")
+  end
+
+  @spec one_click!(map()) :: map()
+  def one_click!(proof) when is_map(proof) do
+    required =
+      ~w(first_status first_body_bytes replay_status replay_body_bytes canonical_event_count canonical_suppression_count matching_send transactional_send unrelated_stream_send matching_capture_growth control_capture_growth)
+
+    unless Enum.all?(required, &Map.has_key?(proof, &1)) and proof["first_status"] == 200 and
+             proof["first_body_bytes"] == 0 and proof["replay_status"] == 200 and
+             proof["replay_body_bytes"] == 0 and proof["canonical_event_count"] == 1 and
+             proof["canonical_suppression_count"] == 1 and proof["matching_send"] == "suppressed" and
+             proof["transactional_send"] == "sent" and proof["unrelated_stream_send"] == "sent" and
+             proof["matching_capture_growth"] == 0 and proof["control_capture_growth"] == 2 do
+      raise "generated-host one-click proof is incomplete"
+    end
+
+    Map.take(proof, required) |> Map.put("name", "one_click") |> Map.put("status", "passed")
+  end
+
   defp stringify_keys(map) when is_map(map),
     do: Map.new(map, fn {key, value} -> {to_string(key), stringify_keys(value)} end)
 

@@ -1,6 +1,7 @@
 defmodule Mailglass.GeneratedHost.Journey do
   @moduledoc false
-  @compile {:no_warn_undefined, [GeneratedHost.CaptureStore, GeneratedHost.SampleMailable]}
+  @compile {:no_warn_undefined,
+            [GeneratedHost.CaptureStore, GeneratedHost.SampleMailable, GeneratedHostWeb.Endpoint]}
 
   alias Mailglass.GeneratedHost.HostTemplate
 
@@ -44,6 +45,8 @@ defmodule Mailglass.GeneratedHost.Journey do
       :boot -> start_host!(proof)
       :async_parity -> async_parity!(proof)
       :negative_controls -> negative_controls!(proof, opts)
+      :feedback -> feedback!(proof)
+      :feedback_unsubscribe -> proof |> feedback!() |> one_click!()
     end
   end
 
@@ -131,8 +134,8 @@ defmodule Mailglass.GeneratedHost.Journey do
     }
   end
 
-  defp count!(repo, sql) do
-    {:ok, %{rows: [[count]]}} = repo.query(sql)
+  defp count!(repo, sql, params \\ []) do
+    {:ok, %{rows: [[count]]}} = repo.query(sql, params)
     count
   end
 
@@ -217,8 +220,183 @@ defmodule Mailglass.GeneratedHost.Journey do
     repo = Application.fetch_env!(:mailglass, :repo)
     :ok = repo.stop()
     {:ok, _} = Application.ensure_all_started(:generated_host)
+    wait_for_endpoint!()
     proof
   end
+
+  defp feedback!(proof) do
+    start_host!(proof)
+    before = feedback_snapshot(proof.schema)
+    payload = postmark_payload()
+    valid = http_post!("/webhooks/postmark", payload, postmark_headers(:valid))
+    after_valid = feedback_snapshot(proof.schema)
+
+    unless valid.status == 200 and valid.body_bytes == 0 and
+             after_valid.webhook_events == before.webhook_events + 1 and
+             after_valid.events == before.events + 1 do
+      raise "generated-host signed feedback did not commit its durable facts"
+    end
+
+    forged = http_post!("/webhooks/postmark", payload, postmark_headers(:forged))
+    after_forged = feedback_snapshot(proof.schema)
+
+    unless forged.status == 401 and forged.body_bytes == 0 and after_forged == after_valid do
+      raise "generated-host forged feedback had effects or an unexpected privacy response"
+    end
+
+    Map.put(proof, :feedback, %{
+      valid_status: valid.status,
+      valid_body_bytes: valid.body_bytes,
+      forged_status: forged.status,
+      forged_body_bytes: forged.body_bytes,
+      webhook_event_count: after_valid.webhook_events,
+      ledger_event_count: after_valid.events,
+      forged_effects_zero: true
+    })
+  end
+
+  defp one_click!(proof) do
+    repo = Application.fetch_env!(:mailglass, :repo)
+    table = quote_identifier(proof.schema)
+    captures_before = length(GeneratedHost.CaptureStore.all())
+    {:ok, delivery} = GeneratedHost.SampleMailable.bulk_message() |> Mailglass.Outbound.deliver()
+    one_click_path = one_click_path!()
+    first = http_post!(one_click_path, "List-Unsubscribe=One-Click", one_click_headers())
+    second = http_post!(one_click_path, "List-Unsubscribe=One-Click", one_click_headers())
+    {event_count, suppression_count} = one_click_pair_counts!(repo, table, delivery.id)
+
+    unless first == %{status: 200, body_bytes: 0} and second == %{status: 200, body_bytes: 0} and
+             {event_count, suppression_count} == {1, 1} do
+      raise "generated-host one-click replay did not converge to one canonical pair"
+    end
+
+    matching = Mailglass.Outbound.deliver(GeneratedHost.SampleMailable.bulk_message())
+    captures_after_matching = length(GeneratedHost.CaptureStore.all())
+    transactional = Mailglass.Outbound.deliver(GeneratedHost.SampleMailable.sync_message())
+    unrelated = Mailglass.Outbound.deliver(GeneratedHost.SampleMailable.operational_message())
+    captures_after_controls = length(GeneratedHost.CaptureStore.all())
+
+    unless suppressed?(matching) and captures_after_matching == captures_before + 1 and
+             sendable?(transactional) and sendable?(unrelated) and
+             captures_after_controls == captures_before + 3 do
+      raise "generated-host one-click suppression scope widened or failed to block matching public send"
+    end
+
+    Map.put(proof, :one_click, %{
+      first_status: first.status,
+      first_body_bytes: first.body_bytes,
+      replay_status: second.status,
+      replay_body_bytes: second.body_bytes,
+      canonical_event_count: event_count,
+      canonical_suppression_count: suppression_count,
+      matching_send: "suppressed",
+      transactional_send: "sent",
+      unrelated_stream_send: "sent",
+      matching_capture_growth: captures_after_matching - captures_before,
+      control_capture_growth: captures_after_controls - captures_after_matching
+    })
+  end
+
+  defp wait_for_endpoint!(attempts \\ 40)
+  defp wait_for_endpoint!(0), do: raise("generated-host endpoint did not boot for HTTP proof")
+
+  defp wait_for_endpoint!(attempts) do
+    case :gen_tcp.connect(~c"127.0.0.1", endpoint_port!(), [:binary, active: false], 100) do
+      {:ok, socket} ->
+        :gen_tcp.close(socket)
+
+      {:error, _} ->
+        Process.sleep(25)
+        wait_for_endpoint!(attempts - 1)
+    end
+  end
+
+  defp http_post!(path, body, headers) when is_binary(path) and is_binary(body) do
+    :inets.start()
+
+    request =
+      {~c"http://127.0.0.1:#{endpoint_port!()}#{path}", headers,
+       ~c"application/x-www-form-urlencoded", body}
+
+    case :httpc.request(:post, request, [timeout: 5_000], body_format: :binary) do
+      {:ok, {{_version, status, _reason}, _headers, response_body}} ->
+        %{status: status, body_bytes: byte_size(response_body)}
+
+      {:error, reason} ->
+        raise "generated-host HTTP request failed: #{inspect(reason)}"
+    end
+  end
+
+  defp postmark_headers(:valid),
+    do: [{~c"authorization", ~c"Basic Z2VuZXJhdGVkLWhvc3Q6Z2VuZXJhdGVkLWhvc3Qtc2lnbmF0dXJl"}]
+
+  defp postmark_headers(:forged), do: [{~c"authorization", ~c"Basic Zm9yZ2VkOmZvcmdlZA=="}]
+  defp one_click_headers, do: [{~c"content-type", ~c"application/x-www-form-urlencoded"}]
+
+  defp endpoint_port! do
+    GeneratedHostWeb.Endpoint
+    |> apply(:config, [:http])
+    |> Keyword.fetch!(:port)
+  end
+
+  defp postmark_payload do
+    Jason.encode!(%{
+      "RecordType" => "Delivery",
+      "MessageID" => "generated-host-feedback-event",
+      "Recipient" => "proof-recipient@example.test",
+      "DeliveredAt" => "2026-08-03T00:00:00Z"
+    })
+  end
+
+  defp feedback_snapshot(schema) do
+    repo = Application.fetch_env!(:mailglass, :repo)
+    table = quote_identifier(schema)
+
+    %{
+      webhook_events: count!(repo, "SELECT count(*) FROM #{table}.mailglass_webhook_events"),
+      events: count!(repo, "SELECT count(*) FROM #{table}.mailglass_events")
+    }
+  end
+
+  defp one_click_path! do
+    GeneratedHost.CaptureStore.all()
+    |> List.last()
+    |> Map.fetch!(:headers)
+    |> Enum.find_value(fn
+      ["List-Unsubscribe", "<" <> url] ->
+        uri = URI.parse(String.trim_trailing(url, ">"))
+        uri.path <> if(uri.query, do: "?" <> uri.query, else: "")
+
+      _ ->
+        nil
+    end)
+    |> case do
+      nil -> raise "generated-host bulk delivery omitted List-Unsubscribe header"
+      path -> path
+    end
+  end
+
+  defp one_click_pair_counts!(repo, table, delivery_id) do
+    event_count =
+      count!(
+        repo,
+        "SELECT count(*) FROM #{table}.mailglass_events WHERE delivery_id::text = $1 AND type = 'unsubscribed'",
+        [delivery_id]
+      )
+
+    suppression_count =
+      count!(
+        repo,
+        "SELECT count(*) FROM #{table}.mailglass_suppressions WHERE source = 'compliance:one_click'"
+      )
+
+    {event_count, suppression_count}
+  end
+
+  defp suppressed?({:error, %Mailglass.SuppressedError{}}), do: true
+  defp suppressed?(_), do: false
+  defp sendable?({:ok, _delivery}), do: true
+  defp sendable?(_), do: false
 
   defp run_mix!(args) do
     {output, status} = System.cmd("mix", args, stderr_to_stdout: true)

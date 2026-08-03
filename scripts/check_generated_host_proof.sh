@@ -32,6 +32,14 @@ for stage in stages:
             before=control.get("before"); after=control.get("after")
             if set(before or {}) != effect_keys or set(after or {}) != effect_keys: bad.append("negative control effect vector")
             elif not all(isinstance(v,int) and v >= 0 for v in before.values()) or before != after: bad.append("negative control all zero delta")
+    if stage.get("name") == "feedback":
+        required={"name","status","valid_status","valid_body_bytes","forged_status","forged_body_bytes","webhook_event_count","ledger_event_count","forged_effects_zero"}
+        if set(stage) != required: bad.append("feedback stage shape")
+        elif stage.get("valid_status") != 200 or stage.get("valid_body_bytes") != 0 or stage.get("forged_status") != 401 or stage.get("forged_body_bytes") != 0 or not stage.get("forged_effects_zero") or not all(isinstance(stage.get(key),int) and stage[key] >= 1 for key in ("webhook_event_count","ledger_event_count")): bad.append("feedback HTTP durable proof")
+    if stage.get("name") == "one_click":
+        required={"name","status","first_status","first_body_bytes","replay_status","replay_body_bytes","canonical_event_count","canonical_suppression_count","matching_send","transactional_send","unrelated_stream_send","matching_capture_growth","control_capture_growth"}
+        if set(stage) != required: bad.append("one-click stage shape")
+        elif (stage.get("first_status"), stage.get("first_body_bytes"), stage.get("replay_status"), stage.get("replay_body_bytes"), stage.get("canonical_event_count"), stage.get("canonical_suppression_count"), stage.get("matching_send"), stage.get("transactional_send"), stage.get("unrelated_stream_send"), stage.get("matching_capture_growth"), stage.get("control_capture_growth")) != (200,0,200,0,1,1,"suppressed","sent","sent",0,2): bad.append("one-click convergence and scope")
 raw=json.dumps(p).lower()
 if any(word in raw for word in ("recipient","password","secret","token","database_url","postgres://","body","webhook")): bad.append("forbidden privacy material")
 if p.get("dependency_mode")=="hex" and any("path" in str(x).lower() or "git" in str(x).lower() for x in p.get("packages",[])): bad.append("hex dependency identity")

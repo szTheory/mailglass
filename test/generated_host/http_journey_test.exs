@@ -24,7 +24,13 @@ defmodule Mailglass.GeneratedHost.HttpJourneyTest do
   @tag journey: :feedback
   test "checkpoint rejects incomplete or privacy-leaking feedback evidence" do
     validator = Path.join(@project_root, "scripts/check_generated_host_proof.sh")
-    checkpoint = Path.join(System.tmp_dir!(), "generated-host-feedback-#{System.unique_integer([:positive])}.json")
+
+    checkpoint =
+      Path.join(
+        System.tmp_dir!(),
+        "generated-host-feedback-#{System.unique_integer([:positive])}.json"
+      )
+
     on_exit(fn -> File.rm(checkpoint) end)
 
     File.write!(
@@ -32,7 +38,9 @@ defmodule Mailglass.GeneratedHost.HttpJourneyTest do
       ~s({"schema_version":"generated_host_proof.v1","dependency_mode":"local","source_sha256":"#{String.duplicate("a", 64)}","packages":[],"stages":[{"name":"feedback","status":"passed","valid_status":200}],"overall_status":"passed","checkpoint_sha256":"#{String.duplicate("b", 64)}"})
     )
 
-    {_output, status} = System.cmd("bash", [validator, "--checkpoint", checkpoint], stderr_to_stdout: true)
+    {_output, status} =
+      System.cmd("bash", [validator, "--checkpoint", checkpoint], stderr_to_stdout: true)
+
     assert status != 0
   end
 

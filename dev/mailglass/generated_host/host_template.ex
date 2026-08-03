@@ -9,6 +9,8 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
     write!(host_root, "lib/generated_host/capture_store.ex", capture_store_source())
     write!(host_root, "lib/generated_host/capture_adapter.ex", capture_adapter_source())
     write!(host_root, "lib/generated_host/sample_mailable.ex", sample_mailable_source())
+    write!(host_root, "lib/generated_host_web/router.ex", router_source())
+    patch_endpoint!(host_root)
 
     write!(
       host_root,
@@ -35,7 +37,18 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
       repo: GeneratedHost.Repo,
       schema: #{inspect(schema)},
       adapter: GeneratedHost.CaptureAdapter,
-      async_adapter: :oban
+      async_adapter: :oban,
+      postmark: [basic_auth: {"generated-host", "generated-host-signature"}],
+      compliance: [
+        endpoint: GeneratedHostWeb.Endpoint,
+        host: "generated-host.example.test",
+        scheme: "http",
+        mount_path: "/mailglass/unsubscribe",
+        previous_secrets: [],
+        max_age: 300,
+        redirect: nil,
+        lifecycle: Mailglass.Lifecycle.Noop
+      ]
 
     config :generated_host, Oban,
       repo: GeneratedHost.Repo,
@@ -43,6 +56,12 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
 
     config :generated_host, GeneratedHost.Repo,
       database: "generated_host_#{schema}"
+
+    config :generated_host, GeneratedHostWeb.Endpoint,
+      url: [host: "127.0.0.1"],
+      http: [ip: {127, 0, 0, 1}, port: 4053],
+      server: true,
+      secret_key_base: String.duplicate("generated-host-key-", 4)
 
     config :swoosh, :api_client, false
     """
@@ -55,6 +74,52 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
     unless File.read!(path) =~ import_line do
       File.write!(path, import_line, [:append])
     end
+  end
+
+  defp patch_endpoint!(host_root) do
+    path = Path.join(host_root, "lib/generated_host_web/endpoint.ex")
+    endpoint = File.read!(path)
+
+    patched =
+      String.replace(
+        endpoint,
+        "json_decoder: Phoenix.json_library()",
+        "json_decoder: Phoenix.json_library(),\n    body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []}"
+      )
+
+    if patched == endpoint do
+      raise "generated-host endpoint parser shape drifted; cannot configure Mailglass webhook body reader"
+    end
+
+    File.write!(path, patched)
+  end
+
+  defp router_source do
+    """
+    defmodule GeneratedHostWeb.Router do
+      use GeneratedHostWeb, :router
+      import Mailglass.Webhook.Router
+
+      pipeline :mailglass_webhooks do
+        plug :accepts, ["json"]
+      end
+
+      pipeline :one_click do
+        plug :accepts, ["html"]
+      end
+
+      scope "/" do
+        pipe_through :mailglass_webhooks
+        mailglass_webhook_routes "/webhooks", providers: [:postmark]
+      end
+
+      scope "/mailglass/unsubscribe" do
+        pipe_through :one_click
+        get "/:token", Mailglass.Compliance.UnsubscribeController, :show
+        post "/:token", Mailglass.Compliance.UnsubscribeController, :unsubscribe
+      end
+    end
+    """
   end
 
   defp proof_source do
@@ -190,6 +255,8 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
 
       def sync_message, do: message()
       def async_message, do: GeneratedHost.AsyncSampleMailable.message()
+      def bulk_message, do: GeneratedHost.BulkSampleMailable.message()
+      def operational_message, do: GeneratedHost.OperationalSampleMailable.message()
 
       # Negative controls all pass through the public outbound entrypoint. The
       # malformed shape is represented in the control name; the absent envelope
@@ -232,6 +299,32 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
         |> Mailglass.Message.text_body("generated host parity")
         |> Mailglass.Message.put_tag("generated-host")
         |> Map.put(:metadata, %{proof: "async-parity"})
+        |> Mailglass.Message.put_function(:message)
+      end
+    end
+
+    defmodule GeneratedHost.BulkSampleMailable do
+      use Mailglass.Mailable, stream: :bulk
+
+      def message do
+        new()
+        |> Mailglass.Message.to({"Proof Recipient", "proof-recipient@example.test"})
+        |> Mailglass.Message.from({"Generated Host", "sender@example.test"})
+        |> Mailglass.Message.subject("Generated host bulk proof")
+        |> Mailglass.Message.text_body("generated host bulk proof")
+        |> Mailglass.Message.put_function(:message)
+      end
+    end
+
+    defmodule GeneratedHost.OperationalSampleMailable do
+      use Mailglass.Mailable, stream: :operational
+
+      def message do
+        new()
+        |> Mailglass.Message.to({"Proof Recipient", "proof-recipient@example.test"})
+        |> Mailglass.Message.from({"Generated Host", "sender@example.test"})
+        |> Mailglass.Message.subject("Generated host operational proof")
+        |> Mailglass.Message.text_body("generated host operational proof")
         |> Mailglass.Message.put_function(:message)
       end
     end
