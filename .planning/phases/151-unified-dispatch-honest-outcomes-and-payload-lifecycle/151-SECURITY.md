@@ -70,9 +70,9 @@ No accepted risks.
 
 | Audit Date | Threats Total | Closed | Open | Run By |
 |------------|---------------|--------|------|--------|
-| 2026-08-03 | 24 | 24 | 0 | gsd-security-auditor (ASVS L1) |
+| 2026-08-03 | 25 | 25 | 0 | gsd-security-auditor (ASVS L1) |
 
-Seven repeated `T-151-SC` declaration rows were deduplicated to one unique threat ID; all 31 declared rows were reviewed.
+Repeated `T-151-SC` declaration rows were deduplicated to one unique threat ID; all declared rows were reviewed. The unique register contains `T-151-01` through `T-151-23`, `T-151-06B`, and `T-151-SC` (25 IDs).
 
 ---
 
