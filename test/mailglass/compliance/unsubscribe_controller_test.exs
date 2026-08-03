@@ -74,6 +74,27 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     def handle_event(_multi, _attrs), do: raise("expected post-commit lifecycle failure")
   end
 
+  defmodule TenantAwareLifecycle do
+    @behaviour Mailglass.Lifecycle
+
+    @impl true
+    def handle_event(%Ecto.Multi{} = multi, attrs) do
+      Ecto.Multi.run(multi, :tenant_aware_probe, fn repo, _changes ->
+        tenant_id = Tenancy.current()
+
+        if pid = Application.get_env(:mailglass, :unsubscribe_test_pid) do
+          send(pid, {:lifecycle_tenant, tenant_id})
+        end
+
+        # This intentionally reaches the host repo while reading the restored
+        # tenant context, mirroring an adopter-side lifecycle transaction.
+        _ = repo.get(Delivery, attrs.delivery_id, Mailglass.Repo.multi_opts())
+
+        {:ok, :tenant_context_restored}
+      end)
+    end
+  end
+
   import Phoenix.ConnTest
 
   @endpoint TestEndpoint
@@ -257,7 +278,6 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
                tenant_id: delivery.tenant_id,
                delivery_id: delivery.id,
                event_type: :unsubscribed,
-               address: "recipient@example.com",
                scope: :address_stream,
                stream: :bulk
              }
@@ -268,6 +288,28 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert [_suppression] = suppressions_for(delivery)
 
       assert_receive {:delivery_updated, ^delivery_id, :unsubscribed, ^attrs}
+    end
+
+    test "runs post-commit lifecycle work inside the delivery tenant context", %{conn: conn} do
+      Application.put_env(
+        :mailglass,
+        :compliance,
+        Keyword.put(
+          Application.fetch_env!(:mailglass, :compliance),
+          :lifecycle,
+          TenantAwareLifecycle
+        )
+      )
+
+      Application.put_env(:mailglass, :unsubscribe_test_pid, self())
+      delivery = Generators.delivery_fixture(tenant_id: "lifecycle-tenant", stream: :bulk)
+
+      assert response(
+               post(conn, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}", %{}),
+               200
+             ) == ""
+
+      assert_receive {:lifecycle_tenant, "lifecycle-tenant"}
     end
 
     test "keeps committed convergence successful when lifecycle work fails", %{conn: conn} do
@@ -416,7 +458,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     end
 
     test "returns empty 500 and rolls back both facts after the event step", %{conn: conn} do
-      Application.put_env(:mailglass, :unsubscribe_convergence_failure_step, :after_event)
+      Process.put(:mailglass_unsubscribe_convergence_failure, :after_event)
 
       delivery = Generators.delivery_fixture(stream: :bulk)
       result_conn = post(conn, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}", %{})
@@ -427,7 +469,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     end
 
     test "returns empty 500 and rolls back both facts after the suppression step", %{conn: conn} do
-      Application.put_env(:mailglass, :unsubscribe_convergence_failure_step, :after_suppression)
+      Process.put(:mailglass_unsubscribe_convergence_failure, :after_suppression)
 
       delivery = Generators.delivery_fixture(stream: :bulk)
       result_conn = post(conn, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}", %{})

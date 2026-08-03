@@ -2,6 +2,7 @@ defmodule Mailglass.Outbound.PreflightTest do
   use Mailglass.DataCase, async: false
 
   alias Mailglass.{Message, Outbound, Tenancy, TenancyError, TestRepo}
+  alias Mailglass.Compliance.{Unsubscribe, UnsubscribeController}
   alias Mailglass.Outbound.Delivery
   alias Mailglass.TestSupport.SandboxOwnership
 
@@ -11,6 +12,9 @@ defmodule Mailglass.Outbound.PreflightTest do
 
     @impl Mailglass.Tenancy
     def scope(queryable, _context), do: queryable
+  end
+
+  defmodule TransactionalMailable do
   end
 
   setup do
@@ -376,7 +380,7 @@ defmodule Mailglass.Outbound.PreflightTest do
   end
 
   describe "preflight stage 2 — Suppression.check_before_send" do
-    test "blocks only the matching tenant address and originating stream at the public send boundary" do
+    test "a signed one-click POST immediately blocks only its matching tenant address and stream" do
       SandboxOwnership.with_app_env!(:mailglass)
 
       Application.put_env(
@@ -389,21 +393,31 @@ defmodule Mailglass.Outbound.PreflightTest do
         )
       )
 
-      {:ok, _suppression} =
-        insert_suppression!(%{
-          tenant_id: "test-tenant",
-          address: "recipient@example.com",
-          scope: :address_stream,
-          stream: :bulk,
-          reason: :unsubscribe,
-          source: "compliance:one_click"
-        })
+      {:ok, delivery} =
+        Outbound.send(build_message_for_stream("Recipient@Example.com", :bulk))
+
+      post_conn =
+        Plug.Test.conn(:post, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}")
+        |> UnsubscribeController.unsubscribe(%{"token" => Unsubscribe.sign_token(delivery.id)})
+
+      assert post_conn.status == 200
+      assert post_conn.resp_body == ""
+      deliveries_before_blocked_send = Mailglass.Adapters.Fake.deliveries()
 
       assert {:error, %Mailglass.SuppressedError{type: :address_stream}} =
                Outbound.send(build_message_for_stream("Recipient@Example.com", :bulk))
 
+      assert Mailglass.Adapters.Fake.deliveries() == deliveries_before_blocked_send
+
       assert {:ok, _delivery} =
-               Outbound.send(build_message_for_stream("recipient@example.com", :operational))
+               Outbound.send(
+                 build_message_for_stream(
+                   "recipient@example.com",
+                   :operational,
+                   "test-tenant",
+                   __MODULE__
+                 )
+               )
 
       assert {:ok, _delivery} =
                Outbound.send(
@@ -411,7 +425,7 @@ defmodule Mailglass.Outbound.PreflightTest do
                    "recipient@example.com",
                    :transactional,
                    "test-tenant",
-                   __MODULE__
+                   TransactionalMailable
                  )
                )
 
@@ -421,6 +435,59 @@ defmodule Mailglass.Outbound.PreflightTest do
                    build_message_for_stream("recipient@example.com", :bulk, "other-tenant")
                  )
                end)
+    end
+
+    test "a signed one-click POST permanently promotes expired and future same-identity suppressions" do
+      SandboxOwnership.with_app_env!(:mailglass)
+
+      Application.put_env(
+        :mailglass,
+        :compliance,
+        Keyword.put(
+          Application.get_env(:mailglass, :compliance, []),
+          :host,
+          "unsubscribe.example.com"
+        )
+      )
+
+      for {recipient, expires_at} <- [
+            {"expired-unsubscribe@example.com", DateTime.add(DateTime.utc_now(), -60, :second)},
+            {"future-unsubscribe@example.com", DateTime.add(DateTime.utc_now(), 3_600, :second)}
+          ] do
+        {:ok, delivery} = Outbound.send(build_message_for_stream(recipient, :bulk))
+
+        {:ok, _temporary} =
+          insert_suppression!(%{
+            tenant_id: delivery.tenant_id,
+            address: recipient,
+            scope: :address_stream,
+            stream: :bulk,
+            reason: :manual,
+            source: "test:temporary",
+            expires_at: expires_at
+          })
+
+        post_conn =
+          Plug.Test.conn(:post, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}")
+          |> UnsubscribeController.unsubscribe(%{"token" => Unsubscribe.sign_token(delivery.id)})
+
+        assert post_conn.status == 200
+        assert post_conn.resp_body == ""
+
+        assert [%{reason: :unsubscribe, expires_at: nil}] =
+                 TestRepo.all(
+                   from(suppression in Mailglass.Suppression.Entry,
+                     where:
+                       suppression.tenant_id == ^delivery.tenant_id and
+                         suppression.address == ^String.downcase(recipient) and
+                         suppression.scope == :address_stream and suppression.stream == :bulk,
+                     select: %{reason: suppression.reason, expires_at: suppression.expires_at}
+                   )
+                 )
+
+        assert {:error, %Mailglass.SuppressedError{type: :address_stream}} =
+                 Outbound.send(build_message_for_stream(String.upcase(recipient), :bulk))
+      end
     end
 
     test "suppression checks the real sole cc or bcc recipient address" do

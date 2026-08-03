@@ -9,6 +9,7 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
   alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.Events.Event
   alias Mailglass.Generators
+  alias Mailglass.Suppression.Entry
   alias Mailglass.TestRepo
 
   defmodule RecordingLifecycle do
@@ -163,6 +164,10 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
       assert Enum.all?(replay_responses, &(Phoenix.ConnTest.response(&1, 200) == ""))
       assert replay_snapshot == baseline_snapshot
       assert length(replay_snapshot) == 1
+
+      assert active_suppression_snapshot(delivery) == [
+               {:unsubscribe, :address_stream, delivery.stream}
+             ]
     end
   end
 
@@ -193,6 +198,11 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
 
     assert responses == ["", "", "", ""]
     assert durable_snapshot(delivery.id) == [{"unsubscribe:#{delivery.id}", :unsubscribed}]
+
+    assert active_suppression_snapshot(delivery) == [
+             {:unsubscribe, :address_stream, delivery.stream}
+           ]
+
     delivery_id = delivery.id
     assert_receive {:created_effect, ^delivery_id}
     refute_receive {:created_effect, _}
@@ -203,6 +213,19 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
       from(event in Event,
         where: event.delivery_id == ^delivery_id and event.type == :unsubscribed,
         select: {event.idempotency_key, event.type}
+      )
+    )
+  end
+
+  defp active_suppression_snapshot(delivery) do
+    TestRepo.all(
+      from(suppression in Entry,
+        where:
+          suppression.tenant_id == ^delivery.tenant_id and
+            suppression.address == ^String.downcase(delivery.recipient) and
+            suppression.scope == :address_stream and suppression.stream == ^delivery.stream and
+            is_nil(suppression.expires_at),
+        select: {suppression.reason, suppression.scope, suppression.stream}
       )
     )
   end

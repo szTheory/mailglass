@@ -36,10 +36,12 @@ defmodule Mailglass.Compliance.UnsubscribeController do
   def unsubscribe(conn, %{"token" => token}) do
     case resolve_delivery(token) do
       {:ok, delivery} ->
-        result =
-          Tenancy.with_tenant(delivery.tenant_id, fn -> UnsubscribeConvergence.run(delivery) end)
+        result = run_convergence(delivery)
 
-        maybe_run_post_commit_effects(result, delivery)
+        Tenancy.with_tenant(delivery.tenant_id, fn ->
+          maybe_run_post_commit_effects(result, delivery)
+        end)
+
         respond_to_unsubscribe(result, conn)
 
       {:error, :expired} ->
@@ -95,12 +97,32 @@ defmodule Mailglass.Compliance.UnsubscribeController do
     send_resp(conn, 500, "")
   end
 
+  defp run_convergence(delivery) do
+    Tenancy.with_tenant(delivery.tenant_id, fn -> UnsubscribeConvergence.run(delivery) end)
+  rescue
+    exception in [
+      Postgrex.Error,
+      DBConnection.ConnectionError,
+      Ecto.NoResultsError,
+      Mailglass.EventLedgerImmutableError
+    ] ->
+      log_convergence_failure(exception)
+      {:error, :convergence_database_failure}
+  catch
+    :exit, reason ->
+      if expected_repo_exit?(reason) do
+        log_convergence_failure(:repository_exit)
+        {:error, :convergence_database_failure}
+      else
+        :erlang.raise(:exit, reason, __STACKTRACE__)
+      end
+  end
+
   defp maybe_run_post_commit_effects({:ok, %{status: :created, event: event}}, delivery) do
     attrs = %{
       tenant_id: delivery.tenant_id,
       delivery_id: delivery.id,
       event_type: event.type,
-      address: String.downcase(delivery.recipient),
       scope: :address_stream,
       stream: delivery.stream
     }
@@ -137,9 +159,26 @@ defmodule Mailglass.Compliance.UnsubscribeController do
 
   defp log_effect_failure(effect, reason) do
     Logger.warning(
-      "[mailglass] unsubscribe #{effect} effect failed after commit: #{inspect(reason)}"
+      "[mailglass] unsubscribe #{effect} effect failed after commit (#{bounded_failure_class(reason)})"
     )
 
     :ok
   end
+
+  defp log_convergence_failure(reason) do
+    Logger.warning("[mailglass] unsubscribe convergence failed (#{bounded_failure_class(reason)})")
+  end
+
+  defp bounded_failure_class(%Postgrex.Error{}), do: :postgrex
+  defp bounded_failure_class(%DBConnection.ConnectionError{}), do: :connection
+  defp bounded_failure_class(%Ecto.NoResultsError{}), do: :not_found
+  defp bounded_failure_class(%Mailglass.EventLedgerImmutableError{}), do: :event_immutable
+  defp bounded_failure_class(:repository_exit), do: :repository_exit
+  defp bounded_failure_class(_), do: :callback_failure
+
+  defp expected_repo_exit?(:timeout), do: true
+  defp expected_repo_exit?({:timeout, _}), do: true
+  defp expected_repo_exit?({:shutdown, _}), do: true
+  defp expected_repo_exit?({:noproc, _}), do: true
+  defp expected_repo_exit?(_), do: false
 end

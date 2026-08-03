@@ -36,7 +36,7 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
     Ecto.Multi.new()
     |> Events.append_multi(:unsubscribe_event, event_attrs)
     |> Ecto.Multi.run(:canonical_event, fn repo, changes ->
-      {:ok, canonical_event(repo, changes.unsubscribe_event, delivery)}
+      canonical_event(repo, changes.unsubscribe_event, delivery)
     end)
     |> maybe_inject_failure(:after_event)
     |> Ecto.Multi.run(:unsubscribe_suppression, fn repo, changes ->
@@ -52,7 +52,10 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
       )
     end)
     |> Ecto.Multi.run(:canonical_suppression, fn repo, changes ->
-      {:ok, canonical_suppression(repo, changes.unsubscribe_suppression, delivery)}
+      with {:ok, suppression} <-
+             canonical_suppression(repo, changes.unsubscribe_suppression, delivery) do
+        ensure_permanent_unsubscribe(repo, suppression)
+      end
     end)
     |> maybe_inject_failure(:after_suppression)
   end
@@ -79,7 +82,7 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
 
   defp classify_result({:error, step, reason, changes}), do: {:error, {step, reason, changes}}
 
-  defp canonical_event(_repo, %Event{inserted_at: %DateTime{}} = event, _delivery), do: event
+  defp canonical_event(_repo, %Event{inserted_at: %DateTime{}} = event, _delivery), do: {:ok, event}
 
   defp canonical_event(repo, %Event{inserted_at: nil}, %Delivery{} = delivery) do
     query =
@@ -90,11 +93,14 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
         limit: 1
       )
 
-    repo.one!(query, Repo.multi_opts())
+    case repo.one(query, Repo.multi_opts()) do
+      %Event{} = event -> {:ok, event}
+      nil -> {:error, :canonical_event_missing}
+    end
   end
 
   defp canonical_suppression(_repo, %Entry{inserted_at: %DateTime{}} = suppression, _delivery),
-    do: suppression
+    do: {:ok, suppression}
 
   defp canonical_suppression(repo, %Entry{inserted_at: nil}, %Delivery{} = delivery) do
     query =
@@ -106,7 +112,25 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
         limit: 1
       )
 
-    repo.one!(query, Repo.multi_opts())
+    case repo.one(query, Repo.multi_opts()) do
+      %Entry{} = suppression -> {:ok, suppression}
+      nil -> {:error, :canonical_suppression_missing}
+    end
+  end
+
+  # An existing permanent suppression is already an effective opt-out and is
+  # deliberately preserved.  A same-identity temporary row, however, would
+  # let a valid one-click POST silently expire. Promote only that row in the
+  # enclosing transaction so the event and its permanent enforcement fact are
+  # still all-or-nothing. Complaint rows are permanent by schema invariant;
+  # existing permanent unsubscribe rows are never rewritten.
+  defp ensure_permanent_unsubscribe(_repo, %Entry{expires_at: nil} = suppression),
+    do: {:ok, suppression}
+
+  defp ensure_permanent_unsubscribe(repo, %Entry{} = suppression) do
+    suppression
+    |> Ecto.Changeset.change(reason: :unsubscribe, expires_at: nil)
+    |> repo.update(Repo.multi_opts())
   end
 
   defp suppression_attrs(%Event{} = event, %Delivery{} = delivery) do
@@ -125,17 +149,21 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
     }
   end
 
-  # This narrow seam is intentionally inert outside a focused test. Keeping it
-  # inside the Multi proves a failure after either durable insert rolls back the
-  # whole convergence instead of being misclassified as the privacy no-op.
-  defp maybe_inject_failure(multi, step) do
-    Ecto.Multi.run(multi, {:failure_injection, step}, fn _repo, _changes ->
-      if Application.get_env(:mailglass, :unsubscribe_convergence_failure_step) == step do
-        {:error, :injected_convergence_failure}
-      else
-        {:ok, :not_injected}
-      end
-    end)
+  # Test-only, process-local failure seam. This is compiled out of production:
+  # no request can be changed by mutable application configuration at runtime.
+  if Mix.env() == :test do
+    defp maybe_inject_failure(multi, step) do
+      Ecto.Multi.run(multi, {:failure_injection, step}, fn _repo, _changes ->
+        case Process.get(:mailglass_unsubscribe_convergence_failure) do
+          ^step -> {:error, :injected_convergence_failure}
+          %{^step => {:raise, exception}} -> raise exception
+          %{^step => {:exit, reason}} -> exit(reason)
+          _ -> {:ok, :not_injected}
+        end
+      end)
+    end
+  else
+    defp maybe_inject_failure(multi, _step), do: multi
   end
 
   defp unsubscribe_idempotency_key(%Delivery{id: delivery_id}), do: "unsubscribe:#{delivery_id}"
