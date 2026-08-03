@@ -301,21 +301,19 @@ The exact conflict sentinel for a UUIDv7 suppression must be verified in a focus
 | A1 | A legacy lifecycle implementation can be adapted to post-commit behavior without a public breaking change. | Architecture Patterns | Existing adopters may need a documented migration/adapter. |
 | A2 | `inserted_at` is a suitable suppression insert sentinel under its current schema/adapter. | Code Examples | Created-only effect gating could be wrong; prove before implementation. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Does executing the legacy lifecycle-returned Multi separately preserve every supported adopter use?**
+1. **Does executing the legacy lifecycle-returned Multi separately preserve every supported adopter use? — Resolved for Phase 152**
    - What we know: its sole callback accepts/returns `Ecto.Multi`; `Repo.multi/1` can execute a new Multi after primary commit. [VERIFIED: `lifecycle.ex`, `repo.ex`]
-   - What's unclear: whether any adopter relies on atomic co-commit with the unsubscribe event.
-   - Recommendation: use the separate best-effort transaction as the minimal compatibility adapter, document the required ordering change, and add a regression demonstrating that lifecycle failure leaves canonical facts committed and returns empty 200.
+   - Resolution: use the separate best-effort transaction as the minimal signature/config compatibility adapter. Phase 152's locked D-11/D-12 ordering supersedes the former co-commit semantics; update every public config/doc claim and add a regression demonstrating that lifecycle failure leaves canonical facts committed and returns empty 200.
 
-2. **Which suppression insert result reliably marks conflict for this Ecto/Postgrex combination?**
+2. **Which suppression insert result reliably marks conflict for this Ecto/Postgrex combination? — Resolved contract**
    - What we know: event uses DB-default `inserted_at` due client-generated UUIDs. [VERIFIED: `events.ex`]
-   - What's unclear: suppression's exact `on_conflict: :nothing, returning: true` struct shape is not currently tested.
-   - Recommendation: Wave 0 test the result and implement a deterministic helper around the verified sentinel.
+   - Resolution: use the suppression row's DB-defaulted, `read_after_writes` `inserted_at` as the provisional insert/conflict sentinel, matching the event convention. Plan 01 must first pin the actual adapter result under `on_conflict: :nothing, returning: true`; if the focused test disproves that representation, implement a deterministic insert-result helper while preserving the locked semantic: `completed?` is true when this transaction inserts either missing fact, and false only when both canonical facts pre-existed.
 
-3. **What response status should an actual convergence failure use?**
+3. **What response status should an actual convergence failure use? — Resolved as HTTP 500**
    - What we know: current controller uses 500 and D-07 leaves status to discretion.
-   - Recommendation: retain 500 unless the implementation identifies a typed, stable client-versus-server distinction; body remains empty to minimize disclosure.
+   - Resolution: retain byte-empty HTTP 500 for every genuine convergence/transaction failure in this phase. Do not introduce a new public error taxonomy without a separately reviewed contract.
 
 ## Environment Availability
 

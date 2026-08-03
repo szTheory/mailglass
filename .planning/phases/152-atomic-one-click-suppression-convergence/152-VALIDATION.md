@@ -6,12 +6,12 @@ This file is the executable evidence index for Phase 152. Run focused commands a
 
 | Plan / task | Evidence | Focused command |
 |---|---|---|
-| 152-01 Task 1 | First valid POST, Delivery-derived scope, canonical event/suppression, privacy no-ops | `mix test test/mailglass/compliance/unsubscribe_controller_test.exs --warnings-as-errors` |
+| 152-01 Task 1 | First valid POST, Delivery-derived scope, canonical event/suppression, verified conflict sentinel, bounded source/metadata, privacy no-ops | `mix test test/mailglass/compliance/unsubscribe_controller_test.exs --warnings-as-errors` |
 | 152-01 Task 2 | Conflict refetch, event-only/suppression-only repair, injected rollback and empty 500 | `mix test test/mailglass/compliance/unsubscribe_controller_test.exs --warnings-as-errors` |
 | 152-02 Task 1 | Commit-before-lifecycle/broadcast, separate compatibility Multi, best-effort failure, bounded created-only effects | `mix test test/mailglass/compliance/unsubscribe_controller_test.exs --warnings-as-errors` |
 | 152-02 Task 2 | Serial/true-concurrent replay, uniqueness race, tenant isolation, hostile `search_path` | `mix test test/mailglass/properties/unsubscribe_post_idempotency_property_test.exs test/mailglass/schema_prefix_hardening_test.exs --warnings-as-errors && mix verify.schema_prefix` |
 | 152-02 Task 3 | Real Outbound preflight matrix for normalization, stream, transactional, and tenant isolation | `mix test test/mailglass/outbound/preflight_test.exs --warnings-as-errors` |
-| 152-03 Task 1 | Unsubscribe guide, lifecycle signature/config, API response/convergence contract | `mix test test/mailglass/docs/unsubscribe_guide_test.exs test/mailglass/compliance/unsubscribe_test.exs --warnings-as-errors` |
+| 152-03 Task 1 | Unsubscribe guide, Lifecycle and Config lifecycle semantics, signature/config compatibility, API response/convergence contract | `mix test test/mailglass/docs/unsubscribe_guide_test.exs test/mailglass/compliance/unsubscribe_test.exs --warnings-as-errors` |
 | 152-03 Task 2 | Production procedure, docs drift, and stability drift | `mix test test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors && mix verify.docs.contract && mix verify.stability_contract` |
 
 ## Requirement coverage
