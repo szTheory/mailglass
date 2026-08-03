@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.4
 milestone_name: Outbound First-Adopter Correctness
-current_phase: 150
-current_phase_name: Private Envelope and Atomic Durable Enqueue
-status: verifying
+current_phase: 151
+current_phase_name: Unified Dispatch, Honest Outcomes, and Payload Lifecycle
+status: planning
 stopped_at: Completed 150-08-PLAN.md
-last_updated: "2026-08-03T01:35:53.561Z"
+last_updated: "2026-08-03T02:01:16.539Z"
 last_activity: 2026-08-02
-last_activity_desc: Completed 150-02 durable single and batch enqueue
+last_activity_desc: Phase 150 complete, transitioned to Phase 151
 progress:
   total_phases: 2
   completed_phases: 2
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 
 ## Current Position
 
-Phase: 150 — Private Envelope and Atomic Durable Enqueue
-Plan: 5 of 5
-Status: Phase complete — ready for verification
-Last activity: 2026-08-02 — Completed 150-02 durable single and batch enqueue
+Phase: 151 — Unified Dispatch, Honest Outcomes, and Payload Lifecycle
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-08-02 — Phase 150 complete, transitioned to Phase 151
 
 Progress: [██████████] 100%
 
