@@ -1,6 +1,6 @@
 ---
 phase: 151
-fixed_at: 2026-08-03T03:46:00Z
+fixed_at: 2026-08-03T09:46:00Z
 review_path: .planning/phases/151-unified-dispatch-honest-outcomes-and-payload-lifecycle/151-REVIEW.md
 iteration: 1
 findings_in_scope: 3
@@ -11,7 +11,7 @@ status: all_fixed
 
 # Phase 151: Code Review Fix Report
 
-**Fixed at:** 2026-08-03T03:46:00Z
+**Fixed at:** 2026-08-03T09:46:00Z
 **Source review:** `.planning/phases/151-unified-dispatch-honest-outcomes-and-payload-lifecycle/151-REVIEW.md`
 **Iteration:** 1
 
@@ -49,15 +49,21 @@ status: all_fixed
 **Commit:** 2cef16a4
 **Applied fix:** The worker now recognizes both a first-attempt persisted adapter mismatch and the terminal lifecycle fact observed on a repeated claim, returning `{:cancel, :pre_dispatch_failure}` in both cases. The regression verifies no adapter I/O, finite terminal retention, and no extra event on the second attempt.
 
+### CR-01: Event/persistence failure cancels the job after rolling back missing-payload settlement
+
+**Files modified:** `lib/mailglass/outbound.ex`, `test/mailglass/outbound/worker_test.exs`
+**Commit:** cf3646ec
+**Applied fix:** A failed Delivery-plus-Event settlement now produces only the bounded retryable `adapter_failure/persistence_failed` error. The integration regression forces Event insertion to fail, confirms the Delivery remains queued with no Event or adapter call, then confirms a later retry writes exactly one terminal missing-payload fact and subsequent repeats do not append another Event.
+
 ## Verification
 
-- Worker/outbound/payload lifecycle/pruner sampler: passed (40 tests, 0 failures).
+- Worker/outbound/payload lifecycle/pruner sampler: passed (42 tests, 0 failures).
 - `mix verify.support_contract.core`: passed (205 tests, 0 failures, 1 skipped).
 - `mix compile --no-optional-deps --warnings-as-errors`: passed in the preceding fix run.
 - The earlier complete-suite attempt had an unrelated reference-host smoke failure because `test/reference_host` dependencies were unavailable.
 
 ---
 
-_Fixed: 2026-08-03T03:46:00Z_
+_Fixed: 2026-08-03T09:46:00Z_
 _Fixer: the agent (gsd-code-fixer)_
 _Iteration: 1_
