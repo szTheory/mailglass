@@ -5,15 +5,15 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 153
 current_phase_name: Generated-Host Proof, Docs, and Release Gate
 status: planning
-stopped_at: Completed 153-01-PLAN.md
-last_updated: "2026-08-03T16:18:06.071Z"
+stopped_at: Completed 153-02-PLAN.md
+last_updated: "2026-08-03T17:00:42.848Z"
 last_activity: 2026-08-03
 last_activity_desc: Phase 153 auto-discussion completed from requirements and codebase evidence
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 32
-  completed_plans: 25
+  completed_plans: 26
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 ## Current Position
 
 Phase: 153 — Generated-Host Proof, Docs, and Release Gate
-Plan: Not started
-Status: Context locked; ready to research and plan
+Plan: 2 of 8 complete
+Status: Plan 03 is next
 Last activity: 2026-08-03 — Phase 153 auto-discussion completed from requirements and codebase evidence
 
-Progress: [████████░░] 78%
+Progress: [████████░░] 81%
 
 ## v2.4 Milestone Intent
 
@@ -470,6 +470,7 @@ release debug campaign.
 - [Phase ?]: One-click lifecycle compatibility runs as a separate best-effort Multi only after created convergence commits.
 - [Phase ?]: Canonical suppression refetch uses the table uniqueness identity and preserves stronger existing suppression reasons.
 - [Phase ?]: Generated migration wrappers delegate only to Mailglass.Migration.up/0 and down/0.
+- [Phase ?]: Generated-host parity uses distinct equivalent mailable modules to avoid idempotency convergence.
 
 ## Quick Tasks Completed
 
@@ -551,6 +552,7 @@ release debug campaign.
 | Phase 152 P02 | 10min | 3 tasks | 6 files |
 | Phase 152-atomic-one-click-suppression-convergence P03 | 12min | 2 tasks | 9 files |
 | Phase 153 P01 | 0h 12m | 2 tasks | 8 files |
+| Phase 153 P02 | 0m | 2 tasks | 6 files |
 
 ## Deferred Items
 
@@ -717,8 +719,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T16:18:06.057Z
-**Stopped at:** Completed 153-01-PLAN.md
+**Last session:** 2026-08-03T17:00:42.834Z
+**Stopped at:** Completed 153-02-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
