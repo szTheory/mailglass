@@ -43,13 +43,27 @@ defmodule Mailglass.Outbound.PayloadLifecycleTest do
     assert PayloadLifecycle.retention_days(:uncertain) == 30
     assert PayloadLifecycle.retention_days(:legacy) == 14
     assert PayloadLifecycle.retention_days(:recoverable) == nil
-    assert PayloadLifecycle.expires_at(:terminal) == DateTime.add(Clock.utc_now(), 14 * 86_400, :second)
 
-    assert PayloadLifecycle.recovery_eligibility(%Payload{lifecycle_state: :recoverable, expires_at: DateTime.add(now, 1, :second)}) == :claimable
-    assert PayloadLifecycle.recovery_eligibility(%Payload{lifecycle_state: :dispatching}) == :uncertain
-    assert PayloadLifecycle.recovery_eligibility(%Payload{lifecycle_state: :legacy}) == :legacy_unavailable
-    assert PayloadLifecycle.recovery_eligibility(%Payload{lifecycle_state: :scrubbed}) == :unavailable
-    assert PayloadLifecycle.recovery_eligibility(%Payload{lifecycle_state: :expired}) == :unavailable
+    assert PayloadLifecycle.expires_at(:terminal) ==
+             DateTime.add(Clock.utc_now(), 14 * 86_400, :second)
+
+    assert PayloadLifecycle.recovery_eligibility(%Payload{
+             lifecycle_state: :recoverable,
+             expires_at: DateTime.add(now, 1, :second)
+           }) == :claimable
+
+    assert PayloadLifecycle.recovery_eligibility(%Payload{lifecycle_state: :dispatching}) ==
+             :uncertain
+
+    assert PayloadLifecycle.recovery_eligibility(%Payload{lifecycle_state: :legacy}) ==
+             :legacy_unavailable
+
+    assert PayloadLifecycle.recovery_eligibility(%Payload{lifecycle_state: :scrubbed}) ==
+             :unavailable
+
+    assert PayloadLifecycle.recovery_eligibility(%Payload{lifecycle_state: :expired}) ==
+             :unavailable
+
     assert {:error, :tenant_required} = PayloadPruner.prune([])
     assert {:error, :tenant_required} = PayloadPruner.prune(tenant_id: "  ")
   end

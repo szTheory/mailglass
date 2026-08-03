@@ -2,8 +2,9 @@ defmodule Mailglass.Outbound.Payload do
   use Mailglass.Schema
   import Ecto.Changeset
   import Ecto.Query
-  alias Mailglass.{Repo, Tenancy}
+  alias Mailglass.{Clock, Repo, Tenancy}
   alias Mailglass.Outbound.Envelope
+  alias Mailglass.Outbound.PayloadLifecycle
 
   @lifecycle_states [
     :recoverable,
@@ -90,7 +91,10 @@ defmodule Mailglass.Outbound.Payload do
         {:error, :not_found}
 
       %__MODULE__{lifecycle_state: :recoverable} = payload ->
-        load_envelope(payload)
+        case PayloadLifecycle.recovery_eligibility(payload) do
+          :claimable -> load_envelope(payload)
+          :expired -> {:error, :expired}
+        end
 
       %__MODULE__{lifecycle_state: :scrubbed} ->
         {:error, :scrubbed}
@@ -140,7 +144,7 @@ defmodule Mailglass.Outbound.Payload do
       )
       |> Tenancy.scope(tenant_id)
 
-    now = DateTime.utc_now()
+    now = Clock.utc_now()
 
     multi =
       Ecto.Multi.new()
@@ -178,15 +182,19 @@ defmodule Mailglass.Outbound.Payload do
       lifecycle_state: :scrubbed,
       reason_class: :accepted,
       envelope: nil,
-      scrubbed_at: DateTime.utc_now(),
+      scrubbed_at: Clock.utc_now(),
       claimed_at: nil
     })
   end
 
   @doc false
   def settle_changeset(%__MODULE__{} = payload, state, reason) do
-    payload
-    |> change(%{lifecycle_state: state, reason_class: reason, claimed_at: nil})
+    attrs = %{lifecycle_state: state, reason_class: reason, claimed_at: nil}
+
+    case PayloadLifecycle.expires_at(state) do
+      nil -> change(payload, attrs)
+      expires_at -> change(payload, Map.put(attrs, :expires_at, expires_at))
+    end
   end
 
   @doc false

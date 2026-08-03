@@ -11,8 +11,9 @@ defmodule Mailglass.ConfigTest do
     test "validates finite outbound payload retention defaults and overrides" do
       config = Mailglass.Config.new!()
 
-      assert Keyword.fetch!(config, :outbound_payload_retention) ==
+      assert Keyword.fetch!(config, :outbound_payload_retention) |> Enum.sort() ==
                [terminal_days: 14, uncertain_days: 30, legacy_days: 14, prune_batch_size: 500]
+               |> Enum.sort()
 
       assert Mailglass.Config.new!(
                outbound_payload_retention: [
@@ -33,6 +34,7 @@ defmodule Mailglass.ConfigTest do
         Mailglass.Config.new!(outbound_payload_retention: [unknown: 1])
       end
     end
+
     test "accepts empty opts and uses all defaults" do
       assert config = Mailglass.Config.new!([])
       assert Keyword.get(config, :adapter) == {Mailglass.Adapters.Fake, []}

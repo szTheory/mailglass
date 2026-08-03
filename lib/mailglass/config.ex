@@ -465,6 +465,36 @@ defmodule Mailglass.Config do
               "(never prune)."
         ]
       ]
+    ],
+    outbound_payload_retention: [
+      type: :keyword_list,
+      default: [],
+      doc:
+        "Finite retention policy for private outbound payload content. Expired payloads retain a contentless audit tombstone.",
+      keys: [
+        terminal_days: [
+          type: :pos_integer,
+          default: 14,
+          doc: "Days to retain terminal, discarded, and abandoned payload content. Default: `14`."
+        ],
+        uncertain_days: [
+          type: :pos_integer,
+          default: 30,
+          doc:
+            "Days to retain acceptance-uncertain payload content for reconciliation. Default: `30`."
+        ],
+        legacy_days: [
+          type: :pos_integer,
+          default: 14,
+          doc: "Days to retain recognizable legacy queued payload content. Default: `14`."
+        ],
+        prune_batch_size: [
+          type: :pos_integer,
+          default: 500,
+          doc:
+            "Maximum payload tombstones transitioned by one explicit tenant prune call. Default: `500`."
+        ]
+      ]
     ]
   ]
 
@@ -822,6 +852,13 @@ defmodule Mailglass.Config do
   @spec webhook_ingest_mode() :: :sync | :async
   def webhook_ingest_mode do
     Application.get_env(:mailglass, :webhook_ingest_mode, :sync)
+  end
+
+  @doc false
+  @spec outbound_payload_retention() :: keyword()
+  def outbound_payload_retention do
+    validated_config()
+    |> Keyword.fetch!(:outbound_payload_retention)
   end
 
   defp validated_config do
