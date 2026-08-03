@@ -3,7 +3,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   use Mailglass.DataCase, async: false
 
   alias Mailglass.Compliance.Unsubscribe
-  alias Mailglass.{Outbound, Message, TestRepo}
+  alias Mailglass.{Events.Event, Outbound, Message, TestRepo}
   alias Mailglass.Outbound.{Delivery, Payload}
 
   setup do
@@ -167,6 +167,65 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   end
 
   describe "deliver_later/2 — atomic private durable enqueue (Phase 150)" do
+    @tag phase_150_task: "t150_01_01"
+    test "stores envelope-only content privately while public delivery, event, and job surfaces stay identifier-only" do
+      if not Code.ensure_loaded?(Oban) do
+        :skip
+      else
+        Application.put_env(:mailglass, :async_adapter, :oban)
+
+        start_supervised!(
+          {Oban, testing: :disabled, repo: TestRepo, queues: [mailglass_outbound: 10]}
+        )
+
+        private_subject = "private subject #{unique_id()}"
+        private_body = "private body #{unique_id()}"
+        private_header = "private-header-#{unique_id()}"
+        private_option = "private-option-#{unique_id()}"
+
+        message =
+          build_message("private-#{unique_id()}@example.com")
+          |> put_in([Access.key(:swoosh_email), Access.key(:subject)], private_subject)
+          |> put_in([Access.key(:swoosh_email), Access.key(:html_body)], private_body)
+          |> put_in([Access.key(:swoosh_email), Access.key(:headers)], [
+            {"X-Private", private_header}
+          ])
+          |> put_in([Access.key(:swoosh_email), Access.key(:provider_options)], %{
+            "token" => private_option
+          })
+
+        assert {:ok, delivery} = Outbound.deliver_later(message)
+        payload = TestRepo.get_by!(Payload, delivery_id: delivery.id)
+        event = TestRepo.get_by!(Event, delivery_id: delivery.id, type: :queued)
+
+        job =
+          TestRepo.one!(
+            from(j in Oban.Job,
+              where: j.queue == "mailglass_outbound" and j.args["delivery_id"] == ^delivery.id
+            )
+          )
+
+        assert payload.envelope["subject"] == private_subject
+        assert payload.envelope["html_body"] == private_body
+        assert payload.envelope["headers"] == [["X-Private", private_header]]
+        assert payload.envelope["provider_options"] == %{"token" => private_option}
+        assert job.args == %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
+
+        for public_surface <- [
+              delivery.metadata,
+              event.metadata,
+              event.normalized_payload,
+              job.args
+            ] do
+          rendered = inspect(public_surface)
+          refute rendered =~ private_subject
+          refute rendered =~ private_body
+          refute rendered =~ private_header
+          refute rendered =~ private_option
+        end
+      end
+    end
+
     @tag phase_150_task: "t150_03_02"
     test "explicit Oban without a configured instance fails closed without Task.Supervisor dispatch" do
       Application.put_env(:mailglass, :async_adapter, :oban)
