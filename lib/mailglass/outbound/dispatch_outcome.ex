@@ -12,6 +12,15 @@ defmodule Mailglass.Outbound.DispatchOutcome do
   }
 
   @classes [:retryable, :terminal, :uncertain]
+  @safe_error_modules [
+    ConfigError,
+    SendError,
+    SignatureError,
+    StreamPolicyError,
+    SuppressedError,
+    TemplateError,
+    TenancyError
+  ]
   @reason_classes [
     :provider_client_rejected,
     :provider_server_error,
@@ -67,16 +76,18 @@ defmodule Mailglass.Outbound.DispatchOutcome do
       do: accepted(acceptance)
 
   def classify({:error, %SendError{type: :adapter_failure, context: context}}) do
-    classify_adapter_failure(context || %{})
+    context
+    |> classify_adapter_failure()
+    |> with_error_module(SendError)
   end
 
-  def classify({:error, %SendError{}}), do: terminal(:pre_dispatch_failure)
+  def classify({:error, %SendError{}}), do: terminal(:pre_dispatch_failure, error_module: SendError)
 
   def classify({:error, error})
       when is_struct(error, ConfigError) or is_struct(error, SignatureError) or
              is_struct(error, StreamPolicyError) or is_struct(error, SuppressedError) or
              is_struct(error, TemplateError) or is_struct(error, TenancyError),
-      do: terminal(:pre_dispatch_failure)
+      do: terminal(:pre_dispatch_failure, error_module: error.__struct__)
 
   def classify(_), do: uncertain(:provider_acceptance_unknown)
 
@@ -87,12 +98,19 @@ defmodule Mailglass.Outbound.DispatchOutcome do
             %{availability: :available, identifier: String.t()} | %{availability: :unavailable}
         }
   def safe_projection(%__MODULE__{} = outcome) do
-    %{
+    projection = %{
       class: outcome.class,
       reason_class: outcome.reason_class,
       correlation: correlation_projection(outcome.context)
     }
+
+    case safe_error_module(outcome.context) do
+      nil -> projection
+      module -> Map.put(projection, :module, Atom.to_string(module))
+    end
   end
+
+  defp classify_adapter_failure(nil), do: uncertain(:provider_acceptance_unknown)
 
   defp classify_adapter_failure(%{provider_status: status})
        when is_integer(status) and status in 400..499,
@@ -126,6 +144,12 @@ defmodule Mailglass.Outbound.DispatchOutcome do
        do: %{availability: :available, identifier: identifier}
 
   defp correlation_projection(_), do: %{availability: :unavailable}
+
+  defp with_error_module(%__MODULE__{} = outcome, module) when module in @safe_error_modules,
+    do: %{outcome | context: Map.put(outcome.context, :error_module, module)}
+
+  defp safe_error_module(%{error_module: module}) when module in @safe_error_modules, do: module
+  defp safe_error_module(_), do: nil
 
   defp validate_class!(class) when class in @classes, do: :ok
 
