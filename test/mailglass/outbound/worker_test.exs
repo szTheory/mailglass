@@ -95,6 +95,17 @@ defmodule Mailglass.Outbound.WorkerTest do
   end
 
   describe "Worker.perform/1" do
+    @tag phase_151_task: "t151_04_02"
+    test "cancels a modern missing payload rather than retrying or reconstructing it" do
+      delivery = Generators.delivery_fixture(tenant_id: "test-tenant")
+
+      job = %Oban.Job{
+        args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
+      }
+
+      assert {:cancel, :payload_missing} = Mailglass.Outbound.Worker.perform(job)
+    end
+
     @tag phase_150_task: "t150_10_01"
     test "persists finite float metadata and provider options without losing payload integrity" do
       delivery = Generators.delivery_fixture(tenant_id: "test-tenant")
