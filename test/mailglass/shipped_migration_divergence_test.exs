@@ -154,7 +154,12 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
   end
 
   test "the public generator emits only the complete stable facade wrapper" do
-    root = Path.join(System.tmp_dir!(), "mailglass-generated-wrapper-#{System.unique_integer([:positive])}")
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-generated-wrapper-#{System.unique_integer([:positive])}"
+      )
+
     on_exit(fn -> File.rm_rf(root) end)
     File.mkdir_p!(Path.join(root, "priv/repo/migrations"))
 

@@ -19,7 +19,7 @@ defmodule Mailglass.GeneratedHost.JourneyContractTest do
     journey = File.read!(Path.join(@project_root, "dev/mailglass/generated_host/journey.ex"))
     template = File.read!(Path.join(@project_root, "dev/mailglass/generated_host/host_template.ex"))
 
-    assert journey =~ "Mailglass.Migration.up()"
+    assert journey =~ "mailglass.gen.migration"
     assert journey =~ "Mailglass.Migration.migrated_version()"
     refute journey =~ "Mailglass.Migrations.Postgres.current_version"
     assert journey =~ "information_schema.tables"

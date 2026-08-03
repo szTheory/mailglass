@@ -59,12 +59,8 @@ defmodule Mix.Tasks.Mailglass.Gen.Migration do
     defmodule #{app_module}.Repo.Migrations.MailglassInstall do
       use Ecto.Migration
 
-      def change do
-        create table(:mailglass_events) do
-          add :tenant_id, :string
-          timestamps(type: :utc_datetime_usec)
-        end
-      end
+      def up, do: Mailglass.Migration.up()
+      def down, do: Mailglass.Migration.down()
     end
     """
   end
