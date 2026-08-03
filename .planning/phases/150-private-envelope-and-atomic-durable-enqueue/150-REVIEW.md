@@ -34,11 +34,11 @@ files_reviewed_list:
   - test/support/mailer_case.ex
   - test/support/sandbox_ownership.ex
 findings:
-  critical: 2
+  critical: 0
   warning: 0
   info: 0
-  total: 2
-status: issues_found
+  total: 0
+status: clean
 ---
 
 # Phase 150: Code Review Report
@@ -46,17 +46,19 @@ status: issues_found
 **Reviewed:** 2026-08-02T20:21:00Z
 **Depth:** standard
 **Files Reviewed:** 29
-**Status:** issues_found
+**Status:** clean (fixed in review-fix iteration 1)
 
 ## Summary
 
-The durable enqueue implementation is not viable in two supported production configurations. Passing Mailglass's schema prefix to Oban redirects job writes away from Oban's configured job table; and the Oban-absent path calls a conditionally absent worker before the readiness gateway can return its promised typed error.
+The two Critical findings from this review were fixed in review-fix iteration 1. See `150-REVIEW-FIX.md` for the changes, commits, and verification record.
 
 ## Narrative Findings (AI reviewer)
 
-## Critical Issues
+## Resolved Critical Issues
 
 ### CR-01: Mailglass schema prefix is incorrectly forced onto Oban jobs
+
+**Status:** fixed — `31062190`
 
 **File:** `/Users/jon/projects/mailglass/lib/mailglass/outbound.ex:431-440`  
 **Issue:** The durable multi passes `Repo.multi_opts()` to `Oban.insert/4`. That adds `prefix: Mailglass.Config.schema()` (normally `"mailglass"`) to the Oban insert. Oban merges passed options over its own configured prefix, so a normal Oban instance configured with its default `"public"` prefix attempts to write `mailglass.oban_jobs`, a table Mailglass never creates and that Oban's poller does not read. The advertised default production configuration passes readiness but every enqueue rolls back. This was reproduced with `MAILGLASS_SCHEMA=mailglass mix test test/mailglass/outbound/deliver_later_test.exs:187 --warnings-as-errors`, which returned the adapter failure/rollback.
@@ -76,6 +78,8 @@ Add a durable enqueue integration test on the non-public `MAILGLASS_SCHEMA=mailg
 
 ### CR-02: Oban-absent durable sends crash instead of returning the typed fail-closed error
 
+**Status:** fixed — `7fd2a06c`
+
 **File:** `/Users/jon/projects/mailglass/lib/mailglass/outbound.ex:379`  
 **Issue:** `Mailglass.Outbound.Worker` is conditionally compiled only when `Oban.Worker` is present, but this line calls `Mailglass.Outbound.Worker.queue()` before `OptionalDeps.Oban.ready?/1` can detect that Oban is absent. In a `--no-optional-deps` build the Worker module does not exist, so the default `:oban` path raises `UndefinedFunctionError` rather than returning `{:error, %Mailglass.SendError{context: %{reason_class: :dependency_unavailable}}}`. That violates the documented fail-closed return contract.
 
@@ -94,4 +98,3 @@ Add a no-optional-dependencies runtime test that invokes `deliver_later/2` with 
 _Reviewed: 2026-08-02T20:21:00Z_  
 _Reviewer: the agent (gsd-code-reviewer)_  
 _Depth: standard_
-
