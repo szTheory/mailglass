@@ -216,7 +216,7 @@ Oban marks `{:error, reason}` retryable until exhausted and `{:cancel, reason}` 
 
 **What:** On confirmed adapter success, one `Ecto.Multi` updates Delivery, appends `:dispatched`, and replaces recoverable envelope bytes with a non-content tombstone carrying state/version/digest and `scrubbed_at`.
 
-**When to use:** All successful sync, Task.Supervisor, and Oban dispatches.
+**When to use:** Only durable payload-backed dispatch. Sync and the explicitly non-durable Task.Supervisor path share the provider-input seam but have no Payload: their success transaction updates Delivery and Event only and must not query, create, or scrub a payload.
 
 **Example:**
 
@@ -279,7 +279,21 @@ For D-04 compatibility, allow existing custom adapters to keep returning the pre
 
 ### Payload states and retention
 
-Use explicit private payload states: `:recoverable`, `:dispatching`, `:scrubbed`, `:expired`, and `:terminal_retained`. Persist a bounded `reason_class` for non-recoverable states. This likely requires a small migration because V06 only has `scrubbed_at` and `expires_at`; timestamps alone cannot represent all required states safely. [VERIFIED: codebase grep]
+Use this closed private lifecycle set: `:recoverable`, `:dispatching`, `:scrubbed`, `:expired`, `:terminal`, `:discarded`, `:abandoned`, `:uncertain`, and `:legacy`. Persist a bounded `reason_class` for every non-recoverable state. V07 is required because V06 timestamps cannot distinguish these operational causes safely. [VERIFIED: codebase grep]
+
+| Lifecycle state | Required bounded reason contract | Recoverable content | Default retention/action |
+|---|---|---:|---|
+| `:recoverable` | `nil` (no failure yet) | yes | retry horizon; only state eligible for a new claim |
+| `:dispatching` | `:dispatch_claimed` | yes | a later observer settles it to `:uncertain`, never auto-resends |
+| `:scrubbed` | `:accepted` | no | retain explanatory tombstone |
+| `:expired` | retain the prior bounded reason, or `:retention_expired` when none exists | no | retain explanatory tombstone |
+| `:terminal` | closed permanent reason such as `:provider_client_rejected`, `:pre_dispatch_failure`, or exact `:payload_*` reason | yes until prune | 14 days, then `:expired` |
+| `:discarded` | `:job_discarded` | yes until prune | 14 days, then `:expired` |
+| `:abandoned` | `:job_abandoned` | yes until prune | 14 days, then `:expired`; stale post-I/O claims use `:uncertain` instead |
+| `:uncertain` | `:provider_acceptance_unknown` or a closed bounded uncertainty subtype | yes until reconciliation/prune | 30 days, reconciliation only, then `:expired` |
+| `:legacy` | `:legacy_queued` | only if the old row actually has it | 14 days; never invent an envelope from Delivery metadata |
+
+Retryable settlement returns `:dispatching` to `:recoverable` while Oban attempts remain; the final attempt records `:discarded/:job_discarded` before exhaustion. `:abandoned` is an explicit idempotent lifecycle transition applied only when queue/recovery evidence proves no viable job exists—it is never inferred from provider ambiguity. Observing a stranded post-handoff `:dispatching` claim is `:uncertain`, not abandoned or retry-safe.
 
 Recommend this NimbleOptions subtree:
 
@@ -424,17 +438,16 @@ Keep raw body data out of the outcome; the current adapter’s `body_preview` is
 | A1 | 30 days is an appropriate default uncertain-outcome reconciliation window. | Recommended Outcome and Payload Policy | Operators may need a different support/reconciliation window; expose configuration and document the default. |
 | A2 | 500 rows is a safe default prune batch size for typical adopters. | Recommended Outcome and Payload Policy | Large payloads/DBs may need smaller batches; validate as configurable and bounded. |
 
-## Open Questions
+## Resolved Questions
 
-1. **Can a Swoosh provider adapter prove a transport failure happened before request acceptance?**
+1. **RESOLVED — Can a Swoosh provider adapter prove a transport failure happened before request acceptance?**
    - What we know: Swoosh’s public behavior exposes only generic success/error terms. [CITED: https://swoosh.hexdocs.pm/Swoosh.Adapter.html]
    - What's unclear: Provider-specific adapters may have richer internal result shapes, but no portable contract establishes acceptance timing.
-   - Recommendation: Ship only Swoosh HTTP 4xx/5xx mapping plus conservative unknown handling; add provider-specific evidence only with an authoritative contract/test.
+   - Policy: Ship only Swoosh HTTP 4xx/5xx mapping plus conservative unknown handling. Unknown acceptance stays `:uncertain`; provider-specific retry evidence is permitted only with an authoritative contract and executable test.
 
-2. **Should the scheduled outbound pruner use the existing `:mailglass_maintenance` queue or a new queue?**
+2. **RESOLVED — Which queue and fallback does outbound pruning use?**
    - What we know: existing maintenance uses `:mailglass_maintenance`; Phase 150 locks `:mailglass_outbound` for delivery work. [VERIFIED: codebase grep]
-   - What's unclear: whether an adopter’s canonical readiness contract currently includes maintenance.
-   - Recommendation: reuse `:mailglass_maintenance` for consistency if Phase 151 does not extend readiness requirements; make the Mix task the universally available entrypoint.
+   - Policy: reuse `:mailglass_maintenance` without broadening the Phase 150 `mailglass_outbound` delivery-readiness contract. The non-Oban library API and tenant-explicit Mix task are universally available; the worker is only an optional scheduler.
 
 ## Environment Availability
 
@@ -469,8 +482,8 @@ Keep raw body data out of the outcome; the current adapter’s `body_preview` is
 | DISP-02 | Worker returns `{:error, _}` only for retryable and `{:cancel, _}` for terminal. | integration | `worker_test.exs` focused tag | ✅ extend |
 | DISP-03 | Unknown timeout/custom-adapter error settles as uncertain and does not resend. | integration | `worker_test.exs` focused tag | ✅ extend |
 | DISP-04 | Docs state at-least-once/idempotency limits without exact-once promise. | docs contract | `mix verify.support_contract.core` | ✅ extend |
-| PRIV-01 | Success transaction includes Delivery, Event, and scrubbed tombstone; injected scrub failure rolls all back. | integration | `payload_lifecycle_test.exs` focused tag | ❌ Wave 0 |
-| PRIV-02 | Finite defaults, exact cutoff, bounded batch, tenant/prefix safety, idempotency, and manual/Oban entrypoints. | integration | `payload_lifecycle_test.exs` + migration prefix test | ❌ Wave 0 |
+| PRIV-01 | Durable success transaction includes Delivery, Event, and scrubbed tombstone; sync/Task success includes Delivery+Event and performs zero Payload operations. | integration | `payload_lifecycle_test.exs` focused tag | ❌ Wave 0 |
+| PRIV-02 | Complete state/retention matrix, exact cutoffs, tenant-explicit bounded batch, multi-tenant/prefix safety, and manual/Oban entrypoints. | integration | `payload_lifecycle_test.exs` + migration prefix test | ❌ Wave 0 |
 | PRIV-03 | Public Delivery/Event/job contain no private content through every new outcome/lifecycle path. | regression | existing Phase-150 privacy suite plus Phase-151 focused tag | ✅ extend |
 | PRIV-04 | Missing/corrupt/unsupported/expired/scrubbed are distinct terminal facts and never legacy-rehydrate modern rows. | unit/integration | `payload_lifecycle_test.exs` + `worker_test.exs` | ❌ Wave 0 |
 
@@ -483,10 +496,10 @@ Keep raw body data out of the outcome; the current adapter’s `body_preview` is
 ### Wave 0 Gaps
 
 - [ ] `test/mailglass/outbound/dispatch_outcome_test.exs` — closed classification table, opaque/custom adapter fallbacks, no-message-matching source contract.
-- [ ] `test/mailglass/outbound/payload_lifecycle_test.exs` — state matrix, atomic success/scrub failure injection, expiry/prune/tombstone/tenant/batch/idempotence checks.
+- [ ] `test/mailglass/outbound/payload_lifecycle_test.exs` — exact nine-state/reason/retention matrix, durable atomic scrub, sync/Task zero-Payload success, expiry/prune/tombstone/explicit-tenant/batch/idempotence checks.
 - [ ] Extend `test/mailglass/outbound/worker_test.exs` — actual Oban return values and a duplicate-risk negative control.
 - [ ] Extend `test/mailglass/adapters/swoosh_test.exs` — 4xx terminal, 5xx retryable, timeout/unknown uncertain, and no raw response propagation.
-- [ ] Extend V06 successor migration/prefix tests — explicit state/reason schema, hostile search path, forward/down/up and V06 queued-row strategy.
+- [ ] Extend V06 successor migration/prefix tests — exact nine-state/reason schema, hostile search path, tombstone-present downgrade refusal before DDL, clean down/up, and V06 queued-row strategy.
 - [ ] Extend docs/source contract tests — retention defaults, cron/manual invocation, at-least-once wording, no exact-once claims.
 
 ## Security Domain
