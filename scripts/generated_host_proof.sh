@@ -15,7 +15,7 @@ export HEX_HOME="${WORK_DIR}/hex"
 export MIX_HOME="${WORK_DIR}/mix"
 
 usage() {
-  echo "Usage: DEP_MODE=local|hex scripts/generated_host_proof.sh [--stage migrate|boot|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness] [--family queue-schema|input]" >&2
+  echo "Usage: DEP_MODE=local|hex scripts/generated_host_proof.sh [--stage migrate|boot|docs|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness] [--family queue-schema|input]" >&2
 }
 
 while [[ $# -gt 0 ]]; do
@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$DEP_MODE" in local|hex) ;; *) echo "generated-host proof blocked: DEP_MODE must be local|hex" >&2; exit 1 ;; esac
-case "$STAGE" in migrate|boot|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness) ;; *) echo "generated-host proof blocked: invalid --stage" >&2; exit 1 ;; esac
+case "$STAGE" in migrate|boot|docs|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness) ;; *) echo "generated-host proof blocked: invalid --stage" >&2; exit 1 ;; esac
 case "$FAMILY" in all|queue-schema|input) ;; *) echo "generated-host proof blocked: invalid --family" >&2; exit 1 ;; esac
 case "$WORK_DIR" in ''|/|"$ROOT_DIR") echo "generated-host proof blocked: unsafe WORK_DIR" >&2; exit 1 ;; esac
 

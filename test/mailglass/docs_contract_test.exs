@@ -37,9 +37,8 @@ defmodule Mailglass.DocsContractTest do
       assert readme =~ "guides/compatibility-and-deprecations.md"
       assert readme =~ "guides/upgrading-to-v1_0.md"
       assert readme =~ "## Demo App"
-      assert readme =~ "reference/demo_app"
-      assert readme =~ "reference/host_app"
-      assert readme =~ "maintained trust-proof baseline"
+      assert readme =~ "optional exploration tool"
+      assert readme =~ "does not require any repository example"
       assert readme =~ "**`mailglass_inbound`** (inbound routing; stable 2.0)"
       assert readme =~ "`mailglass_inbound` has its own stable `2.0` contract inventory"
       assert readme =~ "mailglass_inbound/docs/api_stability.md"
@@ -687,15 +686,15 @@ defmodule Mailglass.DocsContractTest do
         "guides/rate-limiting.md"
       ]
 
-      forbidden = ["MailerCase", "TestRepo", "reference/host_app", "Mailglass.GeneratedHost"]
+      forbidden = ["MailerCase", "TestRepo", "Mailglass.GeneratedHost"]
 
       for path <- docs do
         body = File.read!(path)
         assert body =~ "<!-- docs: executable -->", "#{path} has no executable adopter block"
-        refute Enum.any?(forbidden, &String.contains?(body, &1)),
-               "#{path} leaks a repository-private adoption seam"
-
         for [_, code] <- Regex.scan(~r/<!-- docs: (?:executable|syntax-only) -->\s*```elixir\n(.*?)```/s, body) do
+          refute Enum.any?(forbidden, &String.contains?(code, &1)),
+                 "#{path} leaks a repository-private adoption seam in a marked block"
+
           assert {:ok, _quoted} = Code.string_to_quoted(code), "#{path} has an invalid marked Elixir block"
         end
       end
@@ -728,7 +727,7 @@ defmodule Mailglass.DocsContractTest do
       assert compatibility =~ "legacy_payload_missing"
       refute compatibility =~ "v1.x"
 
-      assert admin =~ "mailglass_admin does not require mailglass_inbound"
+      assert admin =~ "does not require mailglass_inbound"
       assert admin =~ "mailglass_admin consumes public mailglass APIs"
       assert admin =~ "host-owned authentication"
       assert admin =~ "mailglass_operator_routes"

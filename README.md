@@ -51,8 +51,8 @@ http://localhost:4015) over seeded data. Stop with `make demo-down`. Ports are
 configurable so the demo runs alongside other library demos without collisions —
 see [`guides/run-the-demo.md`](guides/run-the-demo.md) for the full walkthrough.
 
-The demo lives in `reference/demo_app`; the narrower `reference/host_app` remains
-the maintained trust-proof baseline.
+The demo is an optional exploration tool. The installation path below is the
+supported path for an adopter app; it does not require any repository example.
 
 ## Installation
 
@@ -63,7 +63,7 @@ Add `mailglass` to your dependencies:
 def deps do
   [
     {:mailglass, "~> 2.4"},
-    {:mailglass_admin, "~> 2.4", only: [:dev]}
+    {:mailglass_admin, "~> 2.4"}
   ]
 end
 ```
@@ -76,12 +76,9 @@ mix mailglass.install
 mix ecto.migrate
 ```
 
-The installer generates: a `MyApp.Mailing` context, the three-table
-migration (`mailglass_deliveries`, `mailglass_events`,
-`mailglass_suppressions` plus the immutability trigger), router mounts
-for the dev preview and webhook plug, a default mailable and layout,
-an Oban worker stub (when Oban is installed), and a `config/runtime.exs`
-configuration block.
+The installer generates the public migration wrapper and current Mailglass
+schema. Run the generated migration through your own Repo with `mix ecto.migrate`;
+do not copy a table list or migration implementation from this repository.
 
 ## Quickstart
 
@@ -97,6 +94,7 @@ mix compile
 The installer generates a config block in `config/runtime.exs`. Confirm your repo and
 adapter are wired:
 
+<!-- docs: executable -->
 ```elixir
 # config/runtime.exs
 config :mailglass,
@@ -109,6 +107,7 @@ config :mailglass,
 
 Define a mailable:
 
+<!-- docs: executable -->
 ```elixir
 defmodule MyApp.UserMailer do
   use Mailglass.Mailable, stream: :transactional
@@ -125,14 +124,24 @@ defmodule MyApp.UserMailer do
 end
 ```
 
-Send it — synchronously, asynchronously (via Oban when available), or
-in a batch:
+Each mailable has exactly one recipient—one envelope recipient total—across `to`, `cc`, and
+`bcc`; Mailglass rejects recipient fan-out. With the default unstamped
+single-tenant resolver, that delivery belongs to tenant `"default"`. Send it
+synchronously or durably through normal Oban processing on the canonical
+`:mailglass_outbound` queue:
 
+<!-- docs: executable -->
 ```elixir
 MyApp.UserMailer.welcome(user) |> Mailglass.deliver()
 MyApp.UserMailer.welcome(user) |> Mailglass.deliver_later()
-Mailglass.deliver_many(Enum.map(users, &MyApp.UserMailer.welcome/1))
 ```
+
+Observe the resulting delivery in the authenticated operator surface or through
+your adapter/telemetry. `deliver_later/2` stores private transport input first,
+then enqueues one durable job; successful payload content is scrubbed according
+to the configured retention policy. Continue with the complete
+[Getting Started guide](guides/getting-started.md), including signed feedback,
+one-click suppression, and `mix mailglass.preflight` before production traffic.
 
 Preview mailables in dev at `http://localhost:4000/dev/mail` — sidebar
 of discovered mailables, device width and dark-mode toggles,
@@ -163,10 +172,10 @@ placement certainty or a deliverability grade.
 
 ## API Stability
 
-The canonical `v1.x` contract inventory for the core package lives in
+The canonical 2.x contract inventory for the core package lives in
 [`docs/api_stability.md`](docs/api_stability.md).
 
-The canonical `1.x` compatibility, deprecation, and support-matrix policy
+The canonical 2.x compatibility, deprecation, and support-matrix policy
 lives in
 [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md).
 
@@ -181,7 +190,7 @@ Use that document, not root-module reachability, as the source of truth for:
 `mailglass_inbound` has its own stable `2.0` contract inventory in
 [`mailglass_inbound/docs/api_stability.md`](mailglass_inbound/docs/api_stability.md);
 it remains an independent package release line rather than part of the linked
-core/admin `v1.x` group.
+core/admin 2.x group.
 
 For release posture, support floors, retained legacy bridges, and upgrade
 expectations, use the compatibility guide rather than inferring policy from the
@@ -240,8 +249,8 @@ stability inventory alone.
 
 | Package             | Status                   | What it is |
 |---------------------|--------------------------|------------|
-| `mailglass`         | `v1.x` contract inventory documented in `docs/api_stability.md` | Core library: mailables, rendering, delivery pipeline, event ledger, webhook ingest, streams, unsubscribe, suppressions, tenancy. |
-| `mailglass_admin`   | Narrow `v1.x` admin contract documented separately | Mountable LiveView dashboard with stable router/auth/operator seams and internal UI implementation details. |
+| `mailglass`         | 2.x contract inventory documented in `docs/api_stability.md` | Core library: mailables, rendering, delivery pipeline, event ledger, webhook ingest, streams, unsubscribe, suppressions, tenancy. |
+| `mailglass_admin`   | Narrow 2.x admin contract documented separately | Mountable LiveView dashboard with stable router/auth/operator seams and internal UI implementation details. |
 | `mailglass_inbound` | Stable `2.0` contract documented separately | Inbound routing (Action Mailbox equivalent): recipient/subject/header matchers, ingress plugs per provider, storage adapters, Oban routing. |
 
 ## Roadmap

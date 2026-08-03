@@ -1,6 +1,10 @@
 # Rate Limiting
 
-Mailglass includes a multi-bucket rate limiter designed to protect your sender reputation and satisfy ISP throughput requirements (RATE-01).
+Mailglass includes a multi-bucket rate limiter designed to protect sender reputation and satisfy ISP throughput requirements. Limits apply to one envelope recipient at a time: Mailglass accepts exactly one recipient per email, never recipient fan-out.
+
+With the default unstamped tenancy resolver, the tenant is `"default"`. Async
+sends are processed by normal Oban work on `:mailglass_outbound`; rate-limit
+rejection happens before a payload or queue entry is created.
 
 ## The Three Buckets
 
@@ -16,6 +20,7 @@ Every outbound message passes through three rate limit checks in sequence. If an
 
 Rate limits are configured in `config/config.exs` or `config/runtime.exs`. You can set global defaults and per-domain overrides for each bucket.
 
+<!-- docs: executable -->
 ```elixir
 config :mailglass, :rate_limit,
   tenant_recipient: [
@@ -57,6 +62,7 @@ Adopters should handle this error based on their application needs:
 - **Synchronous:** Inform the user or retry after the `retry_after_ms` period.
 - **Asynchronous (Oban):** Oban automatically retries failed jobs. The `RateLimitError` is transient, so the job will eventually succeed as tokens refill.
 
+<!-- docs: executable -->
 ```elixir
 case MyApp.UserMailer.welcome(user) |> Mailglass.deliver() do
   :ok -> :ok

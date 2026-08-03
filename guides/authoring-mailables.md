@@ -1,10 +1,13 @@
 # Authoring Mailables
 
-Use `Mailglass.Mailable` to define message builders on the native v0.2 API. The macro imports the common `Mailglass.Message` setters so the default path does not have to call `Swoosh.Email.*` directly.
+Use `Mailglass.Mailable` to define message builders on the public 2.x API. The
+macro imports the common `Mailglass.Message` setters so the default path does
+not have to call `Swoosh.Email.*` directly.
 
 ## First-send envelope and body contract
 
-A supported first send has **exactly one native recipient total** across `to`,
+A supported first send has **exactly one recipient**—one envelope recipient
+total—across `to`,
 `cc`, and `bcc`. Mailglass preserves that sole field for synchronous delivery
 and current async rehydration. Do not add a second recipient, use `cc`/`bcc` as
 a selection mechanism, or
@@ -22,6 +25,7 @@ body content.
 
 ## Define a mailable module
 
+<!-- docs: executable -->
 ```elixir
 defmodule MyApp.BillingMailer do
   use Mailglass.Mailable, stream: :operational
@@ -42,6 +46,7 @@ end
 `text_body/2` is authoritative when nonblank: it is preserved exactly even when
 HTML is also supplied. A text-only mailable is also supported:
 
+<!-- docs: syntax-only -->
 ```elixir
 def account_notice(account) do
   new()
@@ -56,6 +61,7 @@ end
 
 Keep uncommon provider-specific calls isolated:
 
+<!-- docs: syntax-only -->
 ```elixir
 def receipt_with_template(invoice) do
   new()
@@ -70,6 +76,7 @@ end
 
 ## Render and deliver
 
+<!-- docs: executable -->
 ```elixir
 invoice = %{number: "INV-1001", customer_email: "alice@example.com"}
 
@@ -81,6 +88,7 @@ invoice = %{number: "INV-1001", customer_email: "alice@example.com"}
 
 ## Use async delivery
 
+<!-- docs: executable -->
 ```elixir
 invoice
 |> MyApp.BillingMailer.receipt()
@@ -89,6 +97,12 @@ invoice
 
 ## End-to-End Example
 
+Async delivery stores the private payload before enqueueing one job on the
+canonical `:mailglass_outbound` queue. With the default unstamped tenancy
+resolver, the delivery's tenant is `"default"`; custom tenancy must supply a
+valid tenant rather than relying on this default.
+
+<!-- docs: executable -->
 ```elixir
 invoice = %{number: "INV-1002", customer_email: "bob@example.com"}
 

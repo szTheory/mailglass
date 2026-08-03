@@ -1,7 +1,7 @@
 # Getting Started
 
-This guide wires mailglass into a Phoenix app and sends one message through the
-stable `v1.x` lane.
+This guide wires mailglass 2.x into a Phoenix app and sends one message through
+the public package API, without repository fixtures or private modules.
 
 ## Prerequisites
 
@@ -21,6 +21,7 @@ mix compile --warnings-as-errors
 
 ## 2) Configure mailglass
 
+<!-- docs: executable -->
 ```elixir
 # config/runtime.exs
 config :mailglass,
@@ -39,6 +40,7 @@ that step, while HEEx rendering and `data-mg-*` stripping still run.
 
 ## 3) Mount preview and webhook routes
 
+<!-- docs: executable -->
 ```elixir
 # lib/my_app_web/router.ex
 defmodule MyAppWeb.Router do
@@ -62,6 +64,7 @@ end
 
 ## 4) Send your first message
 
+<!-- docs: syntax-only -->
 ```elixir
 defmodule MyApp.UserMailer do
   use Mailglass.Mailable, stream: :transactional
@@ -83,7 +86,7 @@ end
   |> Mailglass.deliver()
 ```
 
-This message has one native `to` recipient and both nonblank HTML and plaintext
+This message has exactly one recipient: one native `to` recipient and both nonblank HTML and plaintext
 bodies. With the default `Mailglass.Tenancy.SingleTenant` resolver, no tenant
 stamp is required: the shared preflight records ownership as string `"default"`.
 `cc` and `bcc` count toward the same one-recipient total, and a sole recipient
@@ -93,6 +96,7 @@ reconstruct provider input.
 
 To select the configured asynchronous path instead, call:
 
+<!-- docs: executable -->
 ```elixir
 %{email: "alice@example.com"}
 |> MyApp.UserMailer.welcome()

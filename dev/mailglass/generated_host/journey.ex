@@ -43,6 +43,7 @@ defmodule Mailglass.GeneratedHost.Journey do
     case stage do
       :migrate -> proof
       :boot -> start_host!(proof)
+      :docs -> start_host!(proof)
       :async_parity -> async_parity!(proof)
       :negative_controls -> negative_controls!(proof, opts)
       :feedback -> feedback!(proof)
