@@ -5,8 +5,8 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 150
 current_phase_name: Private Envelope and Atomic Durable Enqueue
 status: verifying
-stopped_at: Completed 150-09-PLAN.md
-last_updated: "2026-08-03T01:21:04.273Z"
+stopped_at: Completed 150-09-PLAN.md with end-to-end runtime proof
+last_updated: "2026-08-03T01:29:04.291Z"
 last_activity: 2026-08-02
 last_activity_desc: Completed 150-02 durable single and batch enqueue
 progress:
@@ -456,6 +456,7 @@ release debug campaign.
 - [Phase ?]: Headers and attachment headers use ordered string-pair wire arrays to preserve duplicates.
 - [Phase ?]: V06 utc_datetime_usec catalog type is timestamp without time zone; no migration rewrite or backfill is needed.
 - [Phase ?]: No-optional runtime proof uses direct Elixir with a source-derived optional-app denylist and isolated allowlisted ebins.
+- [Phase ?]: The no-optional public-send runtime proof compiles Mailglass under MIX_ENV=prod and uses a probe-local Repo, excluding maintainer/test tooling.
 
 ## Quick Tasks Completed
 
@@ -693,8 +694,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T01:21:04.265Z
-**Stopped at:** Completed 150-09-PLAN.md
+**Last session:** 2026-08-03T01:29:04.283Z
+**Stopped at:** Completed 150-09-PLAN.md with end-to-end runtime proof
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

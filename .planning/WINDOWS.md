@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 11
+open_count: 10
 waived_count: 0
-fixed_count: 10
+fixed_count: 11
 total_count: 21
-last_updated: 2026-08-03T01:20:52.443Z
+last_updated: 2026-08-03T01:28:33.066Z
 ---
 
 # Broken Windows Ledger
@@ -35,7 +35,7 @@ last_updated: 2026-08-03T01:20:52.443Z
 | 18 | 143 | lint-warning | test/support/suite_floor.ex |  | SuiteFloor executed_nudge fires on the gating toolchain: 1630 executed vs pinned floor 1575 on the mailglass axis, 55 above the 40-test nudge margin. Advisory only, halts nothing. Already over margin on main before this plan (run 30635221221 showed 1623 vs 1576). Re-pinning must be measured from a real CI run per 143-10's protocol, not locally | open |  | 2026-07-31T15:09:13.698Z |  |
 | 19 | 149 | deviation | mailglass_admin/test/mailglass_admin/preview_live_test.exs |  | Preview verification must run from the nested mailglass_admin Mix project. | open |  | 2026-08-02T18:00:56.428Z |  |
 | 20 | 150 | deviation | lib/mailglass/outbound.ex |  | Normalized database constraint failures from the durable enqueue Multi | open |  | 2026-08-02T23:45:32.733Z |  |
-| 21 | 150 | unrun-verify | scripts/no_optional_deps_runtime_smoke.sh |  | MIX_ENV=test mix verify.no_optional_runtime could not run past the isolated compile because the pre-existing deps/yamerl cache lacks required headers. | open |  | 2026-08-03T01:20:52.443Z |  |
+| 21 | 150 | unrun-verify | scripts/no_optional_deps_runtime_smoke.sh |  | MIX_ENV=test mix verify.no_optional_runtime could not run past the isolated compile because the pre-existing deps/yamerl cache lacks required headers. | fixed |  | 2026-08-03T01:20:52.443Z | 2026-08-03T01:28:33.066Z |
 
 ````json
 [
@@ -286,10 +286,10 @@ last_updated: 2026-08-03T01:20:52.443Z
     "file": "scripts/no_optional_deps_runtime_smoke.sh",
     "line": null,
     "description": "MIX_ENV=test mix verify.no_optional_runtime could not run past the isolated compile because the pre-existing deps/yamerl cache lacks required headers.",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-08-03T01:20:52.443Z",
-    "resolved_at": null
+    "resolved_at": "2026-08-03T01:28:33.066Z"
   }
 ]
 ````

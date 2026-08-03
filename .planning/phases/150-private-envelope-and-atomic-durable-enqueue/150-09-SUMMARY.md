@@ -29,13 +29,14 @@ status: complete
 
 # Phase 150 Plan 09: Oban-Free Public Runtime Proof Summary
 
-**A direct, isolated Elixir runtime now proves selected-Oban `deliver_later/2` fails closed with a typed result and no durable, queue, provider, or Task fallback effects.**
+**A direct production-graph Elixir runtime now proves selected-Oban `deliver_later/2` fails closed with a typed result and no durable, queue, provider, or Task fallback effects.**
 
 ## Accomplishments
 
-- Added an executable harness that compiles only into a temporary build path with `--no-optional-deps`, derives optional applications from `Mailglass.MixProject.project()[:deps]`, rejects optional build roots, and creates an allowlisted ebin manifest.
+- Added an executable harness that compiles Mailglass in `MIX_ENV=prod` into a temporary build path with `--no-optional-deps`, derives optional applications from `Mailglass.MixProject.project()[:deps]`, rejects optional build roots, and creates an allowlisted ebin manifest.
+- Reuses only non-optional production dependency artifacts inside the temporary root, excluding maintainer/test tooling and preserving dependency compile-time assets without exposing normal build paths to the proof process.
 - Launches the probe from an empty temporary directory through `elixir`, with Mix and Erlang path-injection variables unset.
-- Audits code paths, optional application roots, and `Oban`/conditional Worker availability before configuration or Mailglass startup; the probe then checks the exact public error and schema-qualified durable/Oban/Fake/Task observations before and after.
+- Audits code paths, optional application roots, and `Oban`/conditional Worker availability before configuration or Mailglass startup; the probe owns a local Ecto Repo configured from the test database credentials, then checks the exact public error and schema-qualified durable/Oban/Fake/Task observations before and after.
 - Registered `mix verify.no_optional_runtime` and made it a required step in the existing Postgres-backed `support_contract_core` CI job.
 
 ## Task Commits
@@ -50,7 +51,8 @@ status: complete
 - PASS — `elixir -e 'Code.string_to_quoted!(File.read!("test/runtime/no_optional_deps_public_send.exs"))'`
 - PASS — `MIX_ENV=test mix help verify.no_optional_runtime` (alias registered)
 - PASS — focused source-contract scan confirmed isolated `MIX_BUILD_PATH`, direct `elixir` launcher, cleared path-injection variables, source-derived denylist, absence checks, exact `dependency_unavailable` match, durable/queue/Fake/Task measurements, and CI step.
-- BLOCKED (pre-existing environment) — `MIX_ENV=test mix verify.no_optional_runtime` reaches the isolated compile but fails compiling the existing `deps/yamerl` cache because required `.hrl` headers are absent. The failure occurs before Mailglass compilation or the new direct runtime probe.
+- PASS — `MIX_ENV=test mix verify.no_optional_runtime` compiled the production graph, launched the direct isolated runtime, and printed `no-optional-deps public send runtime proof passed`.
+- PASS — `MIX_ENV=test mix verify.support_contract.core` completed 202 tests with 0 failures and 1 pre-existing skip.
 
 ## Deviations from Plan
 
@@ -65,6 +67,15 @@ status: complete
 - **Commit:** `c1620847`
 
 **Total deviations:** 1 auto-fixed (Rule 1).
+
+**2. [Rule 3 - Blocking harness issue] Compile the shipped production graph with a probe-local Repo**
+- **Found during:** Task 150-09-01 verification
+- **Issue:** The test artifact compiled maintainer-only `mix_audit -> yaml_elixir -> yamerl`; once that was removed, test-only `Mailglass.TestRepo` was no longer available to the direct process.
+- **Fix:** Compile Mailglass under `MIX_ENV=prod`, copy only non-optional production dependency artifacts into the temporary root, and define/configure a probe-local Ecto Repo from the existing test database configuration.
+- **Files modified:** `scripts/no_optional_deps_runtime_smoke.sh`, `test/runtime/no_optional_deps_public_send.exs`
+- **Verification:** `MIX_ENV=test mix verify.no_optional_runtime` passed end-to-end.
+
+**Total deviations:** 2 auto-fixed (Rule 1, Rule 3).
 
 ## Known Stubs
 
