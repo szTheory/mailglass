@@ -88,6 +88,7 @@ defmodule Mailglass.Adapters.SwooshTest do
   end
 
   describe "deliver/2 error mapping" do
+    @tag phase_151_task: :t151_02_01
     test "Test 4: {:error, {:api_error, 500, body}} maps to SendError :adapter_failure with context" do
       msg = make_message()
       result = SwooshAdapter.deliver(msg, swoosh_adapter: ApiErrorAdapter)
@@ -99,6 +100,7 @@ defmodule Mailglass.Adapters.SwooshTest do
       assert String.contains?(ctx.body_preview, "server down")
     end
 
+    @tag phase_151_task: :t151_02_01
     test "Test 5: {:error, :timeout} maps to SendError :adapter_failure with reason_class: :transport" do
       msg = make_message()
       result = SwooshAdapter.deliver(msg, swoosh_adapter: TimeoutAdapter)
@@ -108,6 +110,7 @@ defmodule Mailglass.Adapters.SwooshTest do
       assert is_atom(ctx.provider_module)
     end
 
+    @tag phase_151_task: :t151_02_01
     test "4xx client error maps to SendError :adapter_failure with reason_class: :client_error" do
       msg = make_message()
       result = SwooshAdapter.deliver(msg, swoosh_adapter: ClientErrorAdapter)
@@ -115,6 +118,17 @@ defmodule Mailglass.Adapters.SwooshTest do
       assert {:error, %SendError{type: :adapter_failure, context: ctx}} = result
       assert ctx.provider_status == 422
       assert ctx.reason_class == :client_error
+    end
+
+    @tag phase_151_task: :t151_02_01
+    test "provider error context adds only bounded dispatch evidence" do
+      msg = make_message()
+
+      assert {:error, %SendError{context: context}} =
+               SwooshAdapter.deliver(msg, swoosh_adapter: ApiErrorAdapter)
+
+      assert context.dispatch_evidence == :provider_response
+      refute Map.has_key?(context, :correlation_id)
     end
   end
 
