@@ -153,6 +153,30 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
     end
   end
 
+  test "the public generator emits only the complete stable facade wrapper" do
+    root = Path.join(System.tmp_dir!(), "mailglass-generated-wrapper-#{System.unique_integer([:positive])}")
+    on_exit(fn -> File.rm_rf(root) end)
+    File.mkdir_p!(Path.join(root, "priv/repo/migrations"))
+
+    File.write!(
+      Path.join(root, "mix.exs"),
+      "defmodule GeneratedHost.MixProject do\n  use Mix.Project\n  def project, do: [app: :generated_host]\nend\n"
+    )
+
+    File.cd!(root, fn ->
+      Mix.Task.reenable("mailglass.gen.migration")
+      assert :ok = Mix.Task.run("mailglass.gen.migration", [])
+
+      [wrapper] = Path.wildcard("priv/repo/migrations/*_mailglass_install.exs")
+      body = File.read!(wrapper)
+
+      assert body =~ "def up, do: Mailglass.Migration.up()"
+      assert body =~ "def down, do: Mailglass.Migration.down()"
+      refute body =~ "def change"
+      refute body =~ "create table"
+    end)
+  end
+
   defp deliveries_column_exists?(column_name) do
     {:ok, %{rows: rows}} =
       TestRepo.query(
