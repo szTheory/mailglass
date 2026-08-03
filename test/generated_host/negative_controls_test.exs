@@ -65,6 +65,29 @@ defmodule Mailglass.GeneratedHost.NegativeControlsTest do
   end
 
   @tag control_family: :input
+  test "checkpoint validator accepts bounded recipient control names without treating them as PII" do
+    validator = Path.join(@project_root, "scripts/check_generated_host_proof.sh")
+
+    checkpoint =
+      Path.join(
+        System.tmp_dir!(),
+        "generated-host-negative-valid-#{System.unique_integer([:positive])}.json"
+      )
+
+    on_exit(fn -> File.rm(checkpoint) end)
+
+    File.write!(
+      checkpoint,
+      ~s({"schema_version":"generated_host_proof.v1","dependency_mode":"local","source_sha256":"#{String.duplicate("a", 64)}","packages":[],"stages":[{"name":"negative_controls","status":"passed","controls":[{"name":"zero_recipient","reason_class":"recipient_count_invalid","result":"rejected","before":{"jobs":0,"deliveries":0,"events":0,"payloads":0,"captures":0,"renders":0,"tasks":0},"after":{"jobs":0,"deliveries":0,"events":0,"payloads":0,"captures":0,"renders":0,"tasks":0}}]}],"overall_status":"passed","checkpoint_sha256":"#{String.duplicate("b", 64)}"})
+    )
+
+    {output, status} =
+      System.cmd("bash", [validator, "--checkpoint", checkpoint], stderr_to_stdout: true)
+
+    assert status == 0, output
+  end
+
+  @tag control_family: :input
   test "every input control requires a public rejection before its zero-effect snapshot is accepted" do
     journey = File.read!(Path.join(@project_root, "dev/mailglass/generated_host/journey.ex"))
 

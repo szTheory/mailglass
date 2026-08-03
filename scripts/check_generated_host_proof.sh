@@ -45,7 +45,7 @@ for stage in stages:
         if set(stage) != required: bad.append("operator readiness stage shape")
         elif stage.get("preflight_ready") is not True or (stage.get("anonymous_status"), stage.get("authenticated_status")) != (401,200): bad.append("operator readiness authentication")
 raw=json.dumps(p).lower()
-if any(word in raw for word in ("recipient","password","secret","token","database_url","postgres://","body","webhook")): bad.append("forbidden privacy material")
+if re.search(r"[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9.-]+\.[a-z]{2,}", raw) or any(word in raw for word in ("password","secret","token","database_url","postgres://")): bad.append("forbidden privacy material")
 if p.get("dependency_mode")=="hex" and any("path" in str(x).lower() or "git" in str(x).lower() for x in p.get("packages",[])): bad.append("hex dependency identity")
 if bad: print("generated-host checkpoint blocked: "+", ".join(bad), file=sys.stderr); sys.exit(1)
 print("generated-host checkpoint OK")
