@@ -1,9 +1,13 @@
 defmodule Mailglass.NoOptionalDepsPublicSendProbe do
   @moduledoc false
 
-  alias Mailglass.{Message, TestRepo}
-  alias Mailglass.Events.Event
-  alias Mailglass.Outbound.{Delivery, Payload}
+  alias Mailglass.Message
+
+  defmodule Repo do
+    use Ecto.Repo,
+      otp_app: :mailglass,
+      adapter: Ecto.Adapters.Postgres
+  end
 
   def run do
     %{build_root: build_root, ebins: ebins, optional_apps: optional_apps} = manifests!()
@@ -107,23 +111,31 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
     config_path = Path.join(required_env!("MAILGLASS_NO_OPTIONAL_REPO_ROOT"), "config/config.exs")
     config = Config.Reader.read!(config_path, env: :test)
     Application.put_all_env(config)
+    Application.put_env(:swoosh, :api_client, false)
 
     repo_config =
-      Application.fetch_env!(:mailglass, TestRepo)
+      Application.fetch_env!(:mailglass, Mailglass.TestRepo)
       |> Keyword.put(:pool, DBConnection.ConnectionPool)
 
-    Application.put_env(:mailglass, TestRepo, repo_config)
+    Application.put_env(:mailglass, Repo, repo_config)
+    Application.put_env(:mailglass, :repo, Repo)
   end
 
   defp start_runtime! do
-    {:ok, _} = Application.ensure_all_started(:mailglass)
-    {:ok, _} = TestRepo.start_link()
+    # Starting :mailglass through Application.ensure_all_started/1 would also
+    # start Swoosh's configured HTTP-client application. The proof only needs
+    # Mailglass's local supervisor closure and Ecto; start those explicitly so
+    # the public fail-closed branch cannot be masked by transport boot wiring.
+    {:ok, _} = Application.ensure_all_started(:ecto_sql)
+    {:ok, _} = Application.ensure_all_started(:phoenix_pubsub)
+    {:ok, _} = Mailglass.Application.start(:normal, [])
+    {:ok, _} = Repo.start_link()
   end
 
   defp migrate! do
     version = 20_260_803_150_009
 
-    case Ecto.Migrator.up(TestRepo, version, __MODULE__.Migration, log: false) do
+    case Ecto.Migrator.up(Repo, version, __MODULE__.Migration, log: false) do
       :ok -> :ok
       :already_up -> :ok
     end
@@ -144,12 +156,12 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
   end
 
   defp count!(qualified_table) do
-    {:ok, %{rows: [[count]]}} = TestRepo.query("SELECT COUNT(*) FROM #{qualified_table}")
+    {:ok, %{rows: [[count]]}} = Repo.query("SELECT COUNT(*) FROM #{qualified_table}")
     count
   end
 
   defp oban_jobs_observation! do
-    {:ok, %{rows: [[table]]}} = TestRepo.query("SELECT to_regclass('public.oban_jobs')")
+    {:ok, %{rows: [[table]]}} = Repo.query("SELECT to_regclass('public.oban_jobs')")
 
     case table do
       nil -> :missing
@@ -159,7 +171,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
 
   defp standard_library_ebin?(path) do
     otp_lib = :code.lib_dir(:kernel) |> List.to_string() |> Path.dirname() |> Path.dirname()
-    elixir_lib = :code.lib_dir(:elixir) |> List.to_string() |> Path.dirname() |> Path.dirname()
+    elixir_lib = :code.lib_dir(:elixir) |> List.to_string() |> Path.expand() |> Path.dirname()
 
     path == otp_lib or String.starts_with?(path, otp_lib <> "/") or
       path == elixir_lib or String.starts_with?(path, elixir_lib <> "/")
@@ -187,7 +199,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
   defmodule Migration do
     use Ecto.Migration
 
-    def up, do: Mailglass.Migration.up(repo: Mailglass.TestRepo)
+    def up, do: Mailglass.Migration.up(repo: Mailglass.NoOptionalDepsPublicSendProbe.Repo)
   end
 end
 

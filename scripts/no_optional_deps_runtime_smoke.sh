@@ -15,7 +15,9 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 [[ -f "$probe" ]] || { echo "missing runtime probe: $probe" >&2; exit 1; }
-mkdir -p "$build_root" "$run_root"
+mkdir -p "$build_root/lib" "$run_root"
+build_root=$(cd "$build_root" && pwd -P)
+run_root=$(cd "$run_root" && pwd -P)
 
 # This controller invocation reads the source-controlled dependency declaration.
 # It is deliberately separate from the proof process, which launches Elixir directly.
@@ -36,9 +38,21 @@ MIX_ENV=test mix run --no-start -e '
 [[ -s "$denylist" ]] || { echo "optional dependency denylist was empty" >&2; exit 1; }
 grep -qx 'oban' "$denylist" || { echo "optional dependency denylist omitted oban" >&2; exit 1; }
 
-MIX_ENV=test MIX_BUILD_PATH="$build_root" mix compile --no-optional-deps --warnings-as-errors
+# Reuse only required production dependency artifacts under the temporary root.
+# This preserves dependency-owned compile-time assets (for example Premailex's
+# entities file) while Mailglass itself is separately compiled there. The direct
+# proof process still sees only this temporary manifest, never normal build paths.
+for source_app in "$repo_root"/_build/prod/lib/*; do
+  [[ -d "$source_app" ]] || continue
+  app=$(basename "$source_app")
+  grep -qx "$app" "$denylist" && continue
+  [[ "$app" == "mailglass" ]] && continue
+  cp -R "$source_app" "$build_root/lib/$app"
+done
 
-artifact_root="$build_root/test"
+MIX_ENV=prod MIX_BUILD_PATH="$build_root" mix compile --no-optional-deps --warnings-as-errors
+
+artifact_root="$build_root"
 artifact_lib="$artifact_root/lib"
 [[ -d "$artifact_lib" ]] || { echo "isolated artifact has no lib directory: $artifact_lib" >&2; exit 1; }
 
