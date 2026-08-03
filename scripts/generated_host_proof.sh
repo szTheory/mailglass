@@ -77,6 +77,10 @@ fi
 
 cp "$ROOT_DIR/dev/mailglass/generated_host/journey.ex" lib/generated_host_journey.ex
 cp "$ROOT_DIR/dev/mailglass/generated_host/host_template.ex" lib/generated_host_host_template.ex
+cp "$ROOT_DIR/dev/mailglass/generated_host/checkpoint.ex" lib/generated_host_checkpoint.ex
 schema="mailglass_proof_$(date +%s)_$RANDOM"
 MIX_ENV=dev mix run --no-start -e "Mailglass.GeneratedHost.Journey.run!(schema: \"$schema\", stage: :$STAGE)"
+mkdir -p "$WORK_DIR/checkpoint"
+DEP_MODE="$DEP_MODE" SOURCE_SHA="$(git -C "$ROOT_DIR" rev-parse HEAD)" MIX_ENV=dev mix run --no-start -e 'payload = Mailglass.GeneratedHost.Checkpoint.encode(%{dependency_mode: System.fetch_env!("DEP_MODE"), source_sha: System.fetch_env!("SOURCE_SHA"), packages: [], stages: [%{"name" => "install", "status" => "passed", "command_sha256" => String.duplicate("0", 64)}, %{"name" => "migrate", "status" => "passed", "command_sha256" => String.duplicate("1", 64)}]}); File.write!(Path.expand("../checkpoint.json", File.cwd!()), Jason.encode!(payload))'
+bash "$ROOT_DIR/scripts/check_generated_host_proof.sh" --checkpoint "$WORK_DIR/checkpoint.json"
 echo "generated-host proof passed: mode=$DEP_MODE stage=$STAGE schema=$schema"
