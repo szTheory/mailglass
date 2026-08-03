@@ -340,50 +340,29 @@ jobs:
         with:
           path: deps
           key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
-      - name: Check published inbound compatibility
-        id: inbound-compat
-        env:
-          VERSION: ${{ needs.cron-guard.outputs.version }}
-          VERSION_INBOUND: 2.1.1
+      - name: Resolve exact published release set
+        id: release-target
         run: |
-          if [ "${VERSION}" != "2.4.0" ]; then
-            echo "Published consumer proof is pinned to mailglass 2.4.0, got ${VERSION}."
-            exit 1
-          fi
-
-          if [ "${VERSION_INBOUND}" != "2.1.1" ]; then
-            echo "Published consumer proof requires mailglass_inbound 2.1.1."
-            exit 1
-          fi
-
-          INFO=$(mix hex.info mailglass_inbound "${VERSION_INBOUND}" 2>&1) || {
-            echo "mailglass_inbound ${VERSION_INBOUND} is not available on Hex.pm."
-            exit 1
-          }
-          echo "${INFO}"
-
-          # ~>-aware compatibility check: matches both the legacy exact form
-          # (mailglass == X.Y.Z) and the loosened sibling-pin form
-          # (mailglass ~> ... and >= ...) introduced by the Phase 125 pin
-          # loosening (LD-2). Anchored on the `mailglass` dep name to avoid
-          # false matches on `mailglass_inbound` or `mailglass_admin` lines.
-          if echo "${INFO}" | grep -E "^[[:space:]]*mailglass (~> 2\\.0|== 2\\.4\\.0|>= 2\\.4\\.0)" >/dev/null; then
-            echo "mailglass_inbound ${VERSION_INBOUND} has a recognized compatible mailglass constraint for ${VERSION}."
-          else
-            echo "mailglass_inbound ${VERSION_INBOUND} has no recognized compatible mailglass constraint for ${VERSION}."
-            exit 1
-          fi
-      - name: Run consumer-install smoke (published Hex versions)
-        # Shared body with the PR-time `Installer Host Smoke` job in ci.yml —
-        # phx.new -> install -> OPS-01 guard -> compile --warnings-as-errors ->
-        # boot -> GET /dev/mail/. Here DEP_MODE=hex pins the published versions.
+          set -euo pipefail
+          result=$(elixir scripts/resolve_release_packages.exs --repo . --target .planning/release-target.json)
+          echo "$result"
+          for package in $(printf '%s' "$result" | jq -r '.release_packages[]'); do
+            version=$(jq -er '.packages[$package]' --arg package "$package" .planning/release-target.json)
+            case "$version" in *'>'*|*'~'*|*'*'*|*' '*|"") echo "floating dependency constraint for $package" >&2; exit 1;; esac
+            echo "${package}_version=${version}" >> "$GITHUB_OUTPUT"
+          done
+      - name: Run exact resolver-selected generated-host journey
+        # The canonical runner rejects local/path/git dependencies. Never replace
+        # this with a reference-host or consumer-install shortcut.
         env:
           DEP_MODE: hex
           WORK_DIR: ${{ runner.temp }}
-          VERSION: ${{ needs.cron-guard.outputs.version }}
-          VERSION_INBOUND: 2.1.1
-          INCLUDE_INBOUND: true
-        run: bash scripts/consumer_install_smoke.sh
+          VERSION: ${{ steps.release-target.outputs.mailglass_version }}
+          VERSION_INBOUND: ${{ steps.release-target.outputs.mailglass_inbound_version }}
+        run: DEP_MODE=hex bash scripts/generated_host_proof.sh --stage all
+      - name: Append exact-Hex evidence
+        run: |
+          echo "release-proof-post-publish: canonical generated-host journey passed" >> "$GITHUB_STEP_SUMMARY"
 
   published-trust-journey:
     name: Published-version trust journey

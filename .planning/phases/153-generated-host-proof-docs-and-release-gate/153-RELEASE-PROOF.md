@@ -8,6 +8,24 @@ or message content.
 | --- | --- | --- | --- | --- | --- | --- |
 | _pending immutable candidate_ | _pending resolver run_ | _pending Release Please output_ | all required gates | _pending_ | _not yet observed_ | _not yet pushed_ |
 
+## Ledger data (authoritative JSON)
+
+```release-proof
+{
+  "candidate": {"sha": null, "tag": null},
+  "publication": {
+    "workflow_path": ".github/workflows/publish-hex.yml",
+    "workflow_name": "publish-hex",
+    "environment": "hex-publish",
+    "run_id": null,
+    "run_url": null
+  },
+  "release_packages": [],
+  "target_versions": {},
+  "archive_checksums": {}
+}
+```
+
 ## Required candidate evidence
 
 Before publication, record the exact candidate SHA, resolver output, target versions,

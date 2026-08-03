@@ -16,8 +16,10 @@ defmodule Mailglass.Scripts.ReleaseProofVerifierTest do
     for {field, value} <- [
           {"environment_approved", false},
           {"tag_sha", "deadbeef"},
-          {"published_packages", [%{"name" => "mailglass", "version" => "9.9.9", "checksum" => @checksum}]},
-          {"archive_checksum", "bad-checksum"}
+          {"published_packages",
+           [%{"name" => "mailglass", "version" => "9.9.9", "checksum" => @checksum}]},
+          {"published_packages",
+           [%{"name" => "mailglass", "version" => "2.4.0", "checksum" => "bad-checksum"}]}
         ] do
       with_fixture(%{field => value}, fn ledger, fixture ->
         {output, status} = verify(ledger, fixture)
@@ -28,13 +30,17 @@ defmodule Mailglass.Scripts.ReleaseProofVerifierTest do
   end
 
   defp verify(ledger, fixture) do
-    System.cmd("mix", ["run", @script, "--", "--ledger", ledger, "--fixture", fixture, "--stage", "prepublication"],
+    System.cmd(
+      "mix",
+      ["run", @script, "--", "--ledger", ledger, "--fixture", fixture, "--stage", "prepublication"],
       stderr_to_stdout: true
     )
   end
 
   defp with_fixture(overrides, fun) do
-    root = Path.join(System.tmp_dir!(), "mailglass-release-proof-#{System.unique_integer([:positive])}")
+    root =
+      Path.join(System.tmp_dir!(), "mailglass-release-proof-#{System.unique_integer([:positive])}")
+
     File.mkdir_p!(root)
     ledger = Path.join(root, "ledger.json")
     fixture = Path.join(root, "fixture.json")
@@ -50,18 +56,45 @@ defmodule Mailglass.Scripts.ReleaseProofVerifierTest do
     end
   end
 
-  defp ledger(candidate), do: %{
-    "candidate" => %{"sha" => candidate, "tag" => "mailglass-v2.4.0"},
-    "publication" => %{"workflow_path" => ".github/workflows/publish-hex.yml", "workflow_name" => "publish-hex", "environment" => "hex-publish", "run_id" => 123, "run_url" => "https://github.example/runs/123"},
-    "release_packages" => ["mailglass", "mailglass_admin", "mailglass_inbound"],
-    "target_versions" => %{"mailglass" => "2.4.0", "mailglass_admin" => "2.4.0", "mailglass_inbound" => "2.1.1"},
-    "archive_checksums" => %{"mailglass" => @checksum, "mailglass_admin" => @checksum, "mailglass_inbound" => @checksum}
-  }
+  defp ledger(candidate),
+    do: %{
+      "candidate" => %{"sha" => candidate, "tag" => "mailglass-v2.4.0"},
+      "publication" => %{
+        "workflow_path" => ".github/workflows/publish-hex.yml",
+        "workflow_name" => "publish-hex",
+        "environment" => "hex-publish",
+        "run_id" => 123,
+        "run_url" => "https://github.example/runs/123"
+      },
+      "release_packages" => ["mailglass", "mailglass_admin", "mailglass_inbound"],
+      "target_versions" => %{
+        "mailglass" => "2.4.0",
+        "mailglass_admin" => "2.4.0",
+        "mailglass_inbound" => "2.1.1"
+      },
+      "archive_checksums" => %{
+        "mailglass" => @checksum,
+        "mailglass_admin" => @checksum,
+        "mailglass_inbound" => @checksum
+      }
+    }
 
-  defp fixture(candidate), do: %{
-    "workflow_path" => ".github/workflows/publish-hex.yml", "workflow_name" => "publish-hex", "run_id" => 123, "run_url" => "https://github.example/runs/123", "head_sha" => candidate, "tag_sha" => candidate, "environment" => "hex-publish", "environment_approved" => true,
-    "publish_jobs" => ["publish-core", "publish-admin", "publish-inbound"],
-    "published_packages" => Enum.map([{"mailglass", "2.4.0"}, {"mailglass_admin", "2.4.0"}, {"mailglass_inbound", "2.1.1"}], fn {name, version} -> %{"name" => name, "version" => version, "checksum" => @checksum} end),
-    "archive_checksum" => @checksum
-  }
+  defp fixture(candidate),
+    do: %{
+      "workflow_path" => ".github/workflows/publish-hex.yml",
+      "workflow_name" => "publish-hex",
+      "run_id" => 123,
+      "run_url" => "https://github.example/runs/123",
+      "head_sha" => candidate,
+      "tag_sha" => candidate,
+      "environment" => "hex-publish",
+      "environment_approved" => true,
+      "publish_jobs" => ["publish-core", "publish-admin", "publish-inbound"],
+      "published_packages" =>
+        Enum.map(
+          [{"mailglass", "2.4.0"}, {"mailglass_admin", "2.4.0"}, {"mailglass_inbound", "2.1.1"}],
+          fn {name, version} -> %{"name" => name, "version" => version, "checksum" => @checksum} end
+        ),
+      "archive_checksum" => @checksum
+    }
 end
