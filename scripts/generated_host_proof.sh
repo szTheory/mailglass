@@ -31,11 +31,22 @@ case "$WORK_DIR" in ''|/|"$ROOT_DIR") echo "generated-host proof blocked: unsafe
 
 cleanup() {
   status=$?
+
   if [[ "$status" -ne 0 && "$KEEP_HOST_ON_FAILURE" == "true" ]]; then
     echo "generated-host proof retained at $WORK_DIR" >&2
   else
+    if [[ -f "$HOST_DIR/config/mailglass_generated_host.exs" ]]; then
+      if ! (cd "$HOST_DIR" && MIX_ENV=dev mix ecto.drop --quiet >/dev/null 2>&1); then
+        echo "generated-host proof cleanup failed to drop its disposable database" >&2
+        if [[ "$status" -eq 0 ]]; then
+          status=1
+        fi
+      fi
+    fi
+
     rm -rf "$WORK_DIR"
   fi
+
   exit "$status"
 }
 trap cleanup EXIT
