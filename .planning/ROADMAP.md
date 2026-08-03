@@ -177,7 +177,7 @@ Plans:
   4. The host proves signed provider feedback reaches the durable event/ledger contract and a replayed one-click POST prevents a later same-stream send.
   5. Production preflight, the production-available operator mount, and executable README/getting-started/authoring/rate-limit/production/multi-tenancy/compatibility/admin-packaging guidance match shipped behavior; only changed packages are released after this published-package journey passes.
 
-**Plans**: 4/8 plans executed
+**Plans**: 5/8 plans executed
 
 Plans:
 
@@ -185,7 +185,7 @@ Plans:
 - [x] 153-02-PLAN.md — Prove sync/async parity through an actively polling Oban queue and durable payload lifecycle.
 - [x] 153-03-PLAN.md — Add queue, schema, recipient, and payload negative controls with zero-effect assertions.
 - [x] 153-04-PLAN.md — Prove signed feedback and replay-safe one-click suppression over real HTTP.
-- [ ] 153-05-PLAN.md — Add callable production preflight and an authenticated production operator mount.
+- [x] 153-05-PLAN.md — Add callable production preflight and an authenticated production operator mount.
 - [ ] 153-06-PLAN.md — Make adopter, production, compatibility, and admin documentation executable.
 - [ ] 153-07-PLAN.md — Derive changed packages and enforce all reversible prepublication gates.
 - [ ] 153-08-PLAN.md — Checkpoint the one-way protected publication and verify ledger-bound exact public Hex artifacts.
@@ -198,4 +198,4 @@ Plans:
 | 150. Private Envelope and Atomic Durable Enqueue | 9/9 | Complete    | 2026-08-02 |
 | 151. Unified Dispatch, Honest Outcomes, and Payload Lifecycle | 8/8 | Complete    | 2026-08-03 |
 | 152. Atomic One-Click Suppression Convergence | 3/3 | Complete    | 2026-08-03 |
-| 153. Generated-Host Proof, Docs, and Release Gate | 4/8 | In Progress|  |
+| 153. Generated-Host Proof, Docs, and Release Gate | 5/8 | In Progress|  |
