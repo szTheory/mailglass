@@ -20,7 +20,8 @@ findings:
   warning: 0
   info: 0
   total: 1
-status: issues_found
+status: fixed
+fixed_by: 773a0747
 ---
 
 # Phase 150: Code Review Report
@@ -28,17 +29,19 @@ status: issues_found
 **Reviewed:** 2026-08-03T01:40:37Z
 **Depth:** standard
 **Files Reviewed:** 11
-**Status:** issues_found
+**Status:** fixed
 
 ## Summary
 
-Reviewed the actual gap-closure changes from plans 150-06 through 150-09, including codec fidelity/safety, the prefix-hostile V06 lifecycle test, real queued-worker retry proof, and the isolated no-optional-dependency runtime harness. The migration, queued retry, and runtime probe exercised successfully in this checkout. However, the durable payload integrity scheme rejects valid envelopes containing finite JSON floats after PostgreSQL `jsonb` normalizes their textual representation, leaving otherwise valid queued mail undispatchable.
+Reviewed the actual gap-closure changes from plans 150-06 through 150-09, including codec fidelity/safety, the prefix-hostile V06 lifecycle test, real queued-worker retry proof, and the isolated no-optional-dependency runtime harness. The migration, queued retry, and runtime probe exercised successfully in this checkout. The finite-float JSONB integrity finding below was fixed in `773a0747` with a storage-stable, reversible representation and a persistence regression.
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
 ### CR-01: JSONB numeric canonicalization makes valid payloads fail integrity verification
+
+**Resolution:** Fixed in `773a0747`. Finite floats in the bounded JSON subtrees now persist as unambiguous, escaped tagged IEEE-754 strings and decode back to their original values after digest verification; integer values remain native JSON integers. The regression inserts and reloads exponent-form and trailing-zero floats through PostgreSQL, verifies reconstruction, and retains the tamper rejection assertion.
 
 **File:** `lib/mailglass/outbound/payload.ex:40-46`, `lib/mailglass/outbound/payload.ex:58-62`
 

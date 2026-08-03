@@ -1,48 +1,42 @@
 ---
 phase: 150
-fixed_at: 2026-08-03T00:27:29Z
+fixed_at: 2026-08-03T02:00:00Z
 review_path: .planning/phases/150-private-envelope-and-atomic-durable-enqueue/150-REVIEW.md
-iteration: 1
-findings_in_scope: 2
-fixed: 2
+iteration: 2
+findings_in_scope: 1
+fixed: 1
 skipped: 0
 status: all_fixed
 ---
 
 # Phase 150: Code Review Fix Report
 
-**Fixed at:** 2026-08-03T00:27:29Z
+**Fixed at:** 2026-08-03T02:00:00Z
 **Source review:** `.planning/phases/150-private-envelope-and-atomic-durable-enqueue/150-REVIEW.md`
-**Iteration:** 1
+**Iteration:** 2
 
 **Summary:**
 
-- Findings in scope: 2
-- Fixed: 2
+- Findings in scope: 1
+- Fixed: 1
 - Skipped: 0
 
 ## Fixed Issues
 
-### CR-01: Mailglass schema prefix is incorrectly forced onto Oban jobs
+### CR-01: JSONB numeric canonicalization makes valid payloads fail integrity verification
 
-**Files modified:** `lib/mailglass/outbound.ex`, `test/mailglass/outbound/deliver_later_test.exs`
-**Commit:** `31062190`
-**Applied fix:** The Delivery, Event, and private Payload steps retain `Repo.multi_opts()`, while the Oban gateway now receives no Mailglass prefix override and uses its configured prefix. The durable enqueue regression asserts the job exists in the public `oban_jobs` table; it runs unchanged on the `MAILGLASS_SCHEMA=mailglass` matrix axis.
-
-### CR-02: Oban-absent durable sends crash instead of returning the typed fail-closed error
-
-**Files modified:** `lib/mailglass/outbound.ex`
-**Commit:** `7fd2a06c`
-**Applied fix:** The selected-Oban readiness gate now uses the always-compiled literal canonical queue identity, `:mailglass_outbound`, before any conditional Worker reference. A no-Oban runtime therefore reaches the gateway's `:dependency_unavailable` result and is converted into the documented typed `SendError`.
+**Files modified:** `lib/mailglass/outbound/envelope.ex`, `test/mailglass/outbound/worker_test.exs`
+**Commit:** `773a0747`
+**Applied fix:** Finite floats in `metadata` and `provider_options` are persisted as reversible IEEE-754 tagged strings before JSONB storage. User strings matching either reserved tag prefix are escaped, so no marker collision is ambiguous. On delivery loading restores the original float values; integers remain ordinary JSON integers. The persistence regression covers exponent-form and trailing-zero values, a reserved-prefix string, and a stale-digest tamper rejection.
 
 ## Verification
 
-- Tier 1: re-read both affected source sections and the regression test; `elixir` parsing passed for `lib/mailglass/outbound.ex` and `test/mailglass/outbound/deliver_later_test.exs`; `git diff --check` passed before each atomic commit.
-- Focused test attempted: `mix test test/mailglass/outbound/deliver_later_test.exs:187 --warnings-as-errors`.
-- Phase test and no-optional-dependencies commands could not run in this isolated worktree because the existing dependency cache is inconsistent with `mix.lock` (`premailex` is `0.3.20` while the lock requires `~> 1.0`); an isolated clean rebuild also fails inside the pre-existing `yamerl` dependency before Mailglass compilation. No source rollback was needed because these failures precede the changed code.
+- Tier 1: re-read the codec and persistence regression after formatting; `git diff --check` passed before the atomic source commit.
+- Tier 2: `elixir -e 'Code.string_to_quoted!(...)'` parsed both changed Elixir files successfully.
+- Focused envelope/payload/worker test command and the Phase 150 sampler were attempted, but Mix stopped before Mailglass compilation because this checkout has `premailex` 0.3.20 while `mix.lock` requires `~> 1.0`; an isolated build also hits pre-existing missing `yamerl` headers. The full core suite was therefore not runnable in this environment.
 
 ---
 
-_Fixed: 2026-08-03T00:27:29Z_
+_Fixed: 2026-08-03T02:00:00Z_
 _Fixer: the agent (gsd-code-fixer)_
-_Iteration: 1_
+_Iteration: 2_
