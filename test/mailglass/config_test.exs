@@ -7,6 +7,32 @@ defmodule Mailglass.ConfigTest do
   # O(1) read access during rendering (D-19).
 
   describe "new!/1" do
+    @tag phase_151_task: "t151_05_01"
+    test "validates finite outbound payload retention defaults and overrides" do
+      config = Mailglass.Config.new!()
+
+      assert Keyword.fetch!(config, :outbound_payload_retention) ==
+               [terminal_days: 14, uncertain_days: 30, legacy_days: 14, prune_batch_size: 500]
+
+      assert Mailglass.Config.new!(
+               outbound_payload_retention: [
+                 terminal_days: 1,
+                 uncertain_days: 2,
+                 legacy_days: 3,
+                 prune_batch_size: 4
+               ]
+             )
+
+      for invalid <- [0, -1, :infinity, "14"] do
+        assert_raise NimbleOptions.ValidationError, fn ->
+          Mailglass.Config.new!(outbound_payload_retention: [terminal_days: invalid])
+        end
+      end
+
+      assert_raise NimbleOptions.ValidationError, fn ->
+        Mailglass.Config.new!(outbound_payload_retention: [unknown: 1])
+      end
+    end
     test "accepts empty opts and uses all defaults" do
       assert config = Mailglass.Config.new!([])
       assert Keyword.get(config, :adapter) == {Mailglass.Adapters.Fake, []}
