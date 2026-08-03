@@ -1,9 +1,9 @@
 ---
 phase: 150
 slug: private-envelope-and-atomic-durable-enqueue
-status: ready
+status: validated
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-08-02
 ---
 
@@ -43,20 +43,20 @@ created: 2026-08-02
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 150-01-01 | 01 | 1 | ENVL-01, ENVL-02, ENVL-04 | T-150-01..04 | Private payload is tenant scoped; unsafe terms, mutable attachments, and private-content leakage are rejected | unit/smoke | `mix test test/mailglass/outbound/envelope_test.exs --only phase_150_task:t150_01_01 --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| 150-01-02 | 01 | 1 | ENVL-05 | T-150-05 | V06 creates exact prefix-safe storage without false legacy backfill | focused integration | `mix test test/mailglass/migration_test.exs test/mailglass/schema_prefix_hardening_test.exs --only phase_150_task:t150_01_02 --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 150-02-01 | 02 | 2 | ENVL-01, ENVL-04, ENVL-05 | T-150-06, T-150-07 | Delivery, Event, Payload, and Job commit together or roll back together | focused integration | `mix test test/mailglass/outbound/deliver_later_test.exs --only phase_150_task:t150_02_01 --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 150-02-02 | 02 | 2 | ENVL-05 | T-150-08 | Each eligible batch item uses the same per-envelope atomic boundary | focused integration | `mix test test/mailglass/outbound/deliver_many_test.exs --only phase_150_task:t150_02_02 --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 150-03-01 | 03 | 3 | ENVL-04, ENVL-08 | T-150-09, T-150-10 | Worker loads immutable private payload under restored tenant and only uses legacy metadata for identified old rows | focused integration | `mix test test/mailglass/outbound/worker_test.exs --only phase_150_task:t150_03_01 --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 150-03-02 | 03 | 3 | ENVL-06, ENVL-08 | T-150-11, T-150-12 | Explicit Oban fails closed, queue is canonical, and no TaskSupervisor downgrade occurs | unit/smoke | `mix test test/mailglass/outbound/deliver_later_test.exs test/mailglass/outbound/worker_test.exs --only phase_150_task:t150_03_02 --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 150-04-01 | 04 | 4 | ENVL-07, ENVL-08 | T-150-13, T-150-14 | `Config.production_readiness/0` rejects TaskSupervisor, passes canonical-ready Oban, and stays separate from ordinary boot | unit/smoke | `mix test test/mailglass/config_test.exs test/mailglass/application_test.exs --only phase_150_task:t150_04_01 --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 150-04-02 | 04 | 4 | ENVL-07, ENVL-08 | T-150-15 | Production checklist config and callable readiness smoke use only the canonical worker queue | contract smoke | `mix test test/mailglass/docs_migration_smoke_test.exs --only phase_150_task:t150_04_02 --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 150-05-01 | 05 | 5 | ENVL-01, ENVL-06, ENVL-07, ENVL-08 | T-150-16..19 | Every active outbound source/API/adopter fallback seam agrees with fail-closed Oban and explicit non-durable TaskSupervisor; historical/inbound provenance is preserved | contract smoke | `mix test test/mailglass/docs_contract_test.exs --only phase_150_task:t150_05_01 --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 150-06-01 | 06 | 6 | ENVL-02, ENVL-04 | T-150-20..23 | Full V1 field/adapter/nil/ordered-duplicate fidelity and attachment TOCTOU materialization | unit/integration | `mix test test/mailglass/outbound/envelope_test.exs --only phase_150_task:t150_06_01 --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 150-06-02 | 06 | 6 | ENVL-02 | T-150-20, T-150-21 | Recursive JSON depth/item/byte bounds and explicit IEEE non-finite rejection occur before persistence | unit/boundary | `mix test test/mailglass/outbound/envelope_test.exs --only phase_150_task:t150_06_02 --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 150-07-01 | 07 | 6 | ENVL-05 | T-150-24..26 | Exact V06 prefix-qualified catalog, no-backfill, hostile-search-path, down, and re-up lifecycle | focused integration | `mix test test/mailglass/v06_migration_test.exs --only phase_150_task:t150_07_01 --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| 150-08-01 | 08 | 7 | ENVL-04 | T-150-27..29 | Real queued Oban worker ignores changed live render/assign/route state and uses the persisted V1 route | focused integration | `mix test test/mailglass/outbound/worker_test.exs --only phase_150_task:t150_08_01 --warnings-as-errors` | ✅ extend | ⬜ pending |
-| 150-09-01 | 09 | 6 | ENVL-06 | T-150-30..32 | Genuine Oban-free runtime invokes public send, returns dependency_unavailable, and produces zero effects | runtime smoke | `MIX_ENV=test mix verify.no_optional_runtime` | ❌ W0 | ⬜ pending |
+| 150-01-01 | 01 | 1 | ENVL-01, ENVL-02, ENVL-04 | T-150-01..04 | Private payload is tenant scoped; unsafe terms, mutable attachments, and private-content leakage are rejected | integration | `mix test test/mailglass/outbound/deliver_later_test.exs --only phase_150_task:t150_01_01 --warnings-as-errors` | ✅ | ✅ green |
+| 150-01-02 | 01 | 1 | ENVL-05 | T-150-05 | V06 creates exact prefix-safe storage without false legacy backfill | focused integration | `mix test test/mailglass/v06_migration_test.exs --only phase_150_task:t150_07_01 --warnings-as-errors` | ✅ | ✅ green (superseded sampler) |
+| 150-02-01 | 02 | 2 | ENVL-01, ENVL-04, ENVL-05 | T-150-06, T-150-07 | Delivery, Event, Payload, and Job commit together or roll back together | focused integration | `mix test test/mailglass/outbound/deliver_later_test.exs --only phase_150_task:t150_02_01 --warnings-as-errors` | ✅ | ✅ green |
+| 150-02-02 | 02 | 2 | ENVL-05 | T-150-08 | Each eligible batch item uses the same per-envelope atomic boundary | focused integration | `mix test test/mailglass/outbound/deliver_many_test.exs --only phase_150_task:t150_02_02 --warnings-as-errors` | ✅ | ✅ green |
+| 150-03-01 | 03 | 3 | ENVL-04, ENVL-08 | T-150-09, T-150-10 | Worker loads immutable private payload under restored tenant and only uses legacy metadata for identified old rows | focused integration | `mix test test/mailglass/outbound/worker_test.exs --only phase_150_task:t150_03_01 --warnings-as-errors` | ✅ | ✅ green |
+| 150-03-02 | 03 | 3 | ENVL-06, ENVL-08 | T-150-11, T-150-12 | Explicit Oban fails closed, queue is canonical, and no TaskSupervisor downgrade occurs | unit/smoke | `mix test test/mailglass/outbound/deliver_later_test.exs test/mailglass/outbound/worker_test.exs --only phase_150_task:t150_03_02 --warnings-as-errors` | ✅ | ✅ green |
+| 150-04-01 | 04 | 4 | ENVL-07, ENVL-08 | T-150-13, T-150-14 | `Config.production_readiness/0` rejects TaskSupervisor, passes canonical-ready Oban, and stays separate from ordinary boot | unit/smoke | `mix test test/mailglass/config_test.exs test/mailglass/application_test.exs --only phase_150_task:t150_04_01 --warnings-as-errors` | ✅ | ✅ green |
+| 150-04-02 | 04 | 4 | ENVL-07, ENVL-08 | T-150-15 | Production checklist config and callable readiness smoke use only the canonical worker queue | contract smoke | `mix test test/mailglass/docs_migration_smoke_test.exs --only phase_150_task:t150_04_02 --warnings-as-errors` | ✅ | ✅ green |
+| 150-05-01 | 05 | 5 | ENVL-01, ENVL-06, ENVL-07, ENVL-08 | T-150-16..19 | Every active outbound source/API/adopter fallback seam agrees with fail-closed Oban and explicit non-durable TaskSupervisor; historical/inbound provenance is preserved | contract smoke | `mix test test/mailglass/docs_contract_test.exs --only phase_150_task:t150_05_01 --warnings-as-errors` | ✅ | ✅ green |
+| 150-06-01 | 06 | 6 | ENVL-02, ENVL-04 | T-150-20..23 | Full V1 field/adapter/nil/ordered-duplicate fidelity and attachment TOCTOU materialization | unit/integration | `mix test test/mailglass/outbound/envelope_test.exs --only phase_150_task:t150_06_01 --warnings-as-errors` | ✅ | ✅ green |
+| 150-06-02 | 06 | 6 | ENVL-02 | T-150-20, T-150-21 | Recursive JSON depth/item/byte bounds and explicit IEEE non-finite rejection occur before persistence | unit/boundary | `mix test test/mailglass/outbound/envelope_test.exs --only phase_150_task:t150_06_02 --warnings-as-errors` | ✅ | ✅ green |
+| 150-07-01 | 07 | 6 | ENVL-05 | T-150-24..26 | Exact V06 prefix-qualified catalog, no-backfill, hostile-search-path, down, and re-up lifecycle | focused integration | `mix test test/mailglass/v06_migration_test.exs --only phase_150_task:t150_07_01 --warnings-as-errors` | ✅ | ✅ green |
+| 150-08-01 | 08 | 7 | ENVL-04 | T-150-27..29 | Real queued Oban worker ignores changed live render/assign/route state and uses the persisted V1 route | focused integration | `mix test test/mailglass/outbound/worker_test.exs --only phase_150_task:t150_08_01 --warnings-as-errors` | ✅ | ✅ green |
+| 150-09-01 | 09 | 6 | ENVL-06 | T-150-30..32 | Genuine Oban-free runtime invokes public send, returns dependency_unavailable, and produces zero effects | runtime smoke | `MIX_ENV=test mix verify.no_optional_runtime` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -83,14 +83,26 @@ All Phase 150 behaviors have automated verification. Phase 153 owns the generate
 
 ---
 
+## Validation Audit 2026-08-03
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 2 |
+| Resolved | 2 |
+| Escalated | 0 |
+
+- Replaced the absent `t150_01_01` sampler with a public durable-enqueue regression that proves subject, body, headers, and provider options exist only in the private Payload and are absent from Delivery/Event/job surfaces.
+- The original `t150_01_02` tag no longer exists; the later dedicated `t150_07_01` hostile-prefix V06 lifecycle test exercises the required create/down/re-up/no-backfill behavior and passed.
+- Every remaining task command in this map was executed on 2026-08-03 and passed. The isolated no-optional runtime probe also passed and measured unchanged durable/job/provider/Task effects.
+
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Each measured per-task sampler meets the <30s target, or its tag group is split before execution continues
-- [ ] All nine task rows remain mapped after the Plan 04/05 scope split
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Each measured per-task sampler meets the <30s target, or its tag group is split before execution continues
+- [x] All nine task rows remain mapped after the Plan 04/05 scope split
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** validated — 2026-08-03
