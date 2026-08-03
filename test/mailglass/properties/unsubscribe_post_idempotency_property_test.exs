@@ -11,6 +11,19 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
   alias Mailglass.Generators
   alias Mailglass.TestRepo
 
+  defmodule RecordingLifecycle do
+    @behaviour Mailglass.Lifecycle
+
+    @impl true
+    def handle_event(%Ecto.Multi{} = multi, attrs) do
+      if pid = Application.get_env(:mailglass, :unsubscribe_property_test_pid) do
+        send(pid, {:created_effect, attrs.delivery_id})
+      end
+
+      multi
+    end
+  end
+
   defmodule TestRouter do
     use Phoenix.Router
 
@@ -153,6 +166,38 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
     end
   end
 
+  test "true concurrent POSTs converge to one event and one created-only lifecycle effect" do
+    Application.put_env(
+      :mailglass,
+      :compliance,
+      Keyword.put(Application.fetch_env!(:mailglass, :compliance), :lifecycle, RecordingLifecycle)
+    )
+
+    Application.put_env(:mailglass, :unsubscribe_property_test_pid, self())
+    delivery = Generators.delivery_fixture(stream: :bulk, recipient: "Race@Example.com")
+    path = "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}"
+    barrier = :counters.new(1, [])
+
+    responses =
+      1..4
+      |> Task.async_stream(
+        fn _ ->
+          :counters.add(barrier, 1, 1)
+          wait_for_barrier(barrier, 4)
+          Phoenix.ConnTest.post(Phoenix.ConnTest.build_conn(), path, %{})
+        end,
+        max_concurrency: 4,
+        timeout: 15_000
+      )
+      |> Enum.map(fn {:ok, conn} -> Phoenix.ConnTest.response(conn, 200) end)
+
+    assert responses == ["", "", "", ""]
+    assert durable_snapshot(delivery.id) == [{"unsubscribe:#{delivery.id}", :unsubscribed}]
+    delivery_id = delivery.id
+    assert_receive {:created_effect, ^delivery_id}
+    refute_receive {:created_effect, _}
+  end
+
   defp durable_snapshot(delivery_id) do
     TestRepo.all(
       from(event in Event,
@@ -160,5 +205,14 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
         select: {event.idempotency_key, event.type}
       )
     )
+  end
+
+  defp wait_for_barrier(barrier, target) do
+    if :counters.get(barrier, 1) == target do
+      :ok
+    else
+      Process.sleep(5)
+      wait_for_barrier(barrier, target)
+    end
   end
 end
