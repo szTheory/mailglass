@@ -112,11 +112,11 @@ Populated during roadmap creation. Every v2.4 requirement must map to exactly on
 | PRIV-02 | Phase 151 | Complete |
 | PRIV-03 | Phase 151 | Complete |
 | PRIV-04 | Phase 151 | Complete |
-| UNSUB-07 | Phase 152 | Pending |
-| UNSUB-08 | Phase 152 | Pending |
-| UNSUB-09 | Phase 152 | Pending |
-| UNSUB-10 | Phase 152 | Pending |
-| UNSUB-11 | Phase 152 | Pending |
+| UNSUB-07 | Phase 152 | Complete |
+| UNSUB-08 | Phase 152 | Complete |
+| UNSUB-09 | Phase 152 | Complete |
+| UNSUB-10 | Phase 152 | Complete |
+| UNSUB-11 | Phase 152 | Complete |
 | ADOPT-01 | Phase 153 | Pending |
 | ADOPT-02 | Phase 153 | Pending |
 | ADOPT-03 | Phase 153 | Pending |

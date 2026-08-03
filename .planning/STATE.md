@@ -2,18 +2,19 @@
 gsd_state_version: 1.0
 milestone: v2.4
 milestone_name: Outbound First-Adopter Correctness
-current_phase: 152
-current_phase_name: Atomic One-Click Suppression Convergence
+current_phase: 153
+current_phase_name: Generated-Host Proof, Docs, and Release Gate
 status: planning
 stopped_at: Completed 152-03-PLAN.md; Phase 152 verification pending
-last_updated: "2026-08-03T14:48:19.250Z"
+last_updated: "2026-08-03T15:25:18.908Z"
 last_activity: 2026-08-03
-last_activity_desc: Phase 151 complete, transitioned to Phase 152
+last_activity_desc: Phase 152 complete, transitioned to Phase 153
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 4
   total_plans: 24
   completed_plans: 24
+  percent: 80
 ---
 
 # Project State
@@ -27,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 
 ## Current Position
 
-Phase: 152 — Atomic One-Click Suppression Convergence
+Phase: 153 — Generated-Host Proof, Docs, and Release Gate
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-08-03 — Phase 151 complete, transitioned to Phase 152
+Last activity: 2026-08-03 — Phase 152 complete, transitioned to Phase 153
 
 Progress: [██████████] 96%
 
