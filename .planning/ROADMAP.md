@@ -186,7 +186,7 @@ Plans:
 - [x] 153-03-PLAN.md — Add queue, schema, recipient, and payload negative controls with zero-effect assertions.
 - [x] 153-04-PLAN.md — Prove signed feedback and replay-safe one-click suppression over real HTTP.
 - [x] 153-05-PLAN.md — Add callable production preflight and an authenticated production operator mount.
-- [ ] 153-06-PLAN.md — Make adopter, production, compatibility, and admin documentation executable.
+- [x] 153-06-PLAN.md — Make adopter, production, compatibility, and admin documentation executable.
 - [ ] 153-07-PLAN.md — Derive changed packages and enforce all reversible prepublication gates.
 - [ ] 153-08-PLAN.md — Checkpoint the one-way protected publication and verify ledger-bound exact public Hex artifacts.
 
@@ -198,4 +198,4 @@ Plans:
 | 150. Private Envelope and Atomic Durable Enqueue | 9/9 | Complete    | 2026-08-02 |
 | 151. Unified Dispatch, Honest Outcomes, and Payload Lifecycle | 8/8 | Complete    | 2026-08-03 |
 | 152. Atomic One-Click Suppression Convergence | 3/3 | Complete    | 2026-08-03 |
-| 153. Generated-Host Proof, Docs, and Release Gate | 5/8 | In Progress|  |
+| 153. Generated-Host Proof, Docs, and Release Gate | 6/8 | In Progress|  |

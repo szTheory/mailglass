@@ -122,7 +122,7 @@ Populated during roadmap creation. Every v2.4 requirement must map to exactly on
 | ADOPT-03 | Phase 153 | Complete |
 | ADOPT-04 | Phase 153 | Complete |
 | ADOPT-05 | Phase 153 | Complete |
-| ADOPT-06 | Phase 153 | Pending |
+| ADOPT-06 | Phase 153 | Complete |
 | REL-17 | Phase 153 | Pending |
 
 **Coverage:**

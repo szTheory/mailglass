@@ -2,18 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.4
 milestone_name: Outbound First-Adopter Correctness
-current_phase: 153
-current_phase_name: Generated-Host Proof, Docs, and Release Gate
-status: planning
-stopped_at: Completed 153-05-PLAN.md
-last_updated: "2026-08-03T17:39:42.066Z"
+status: executing
+stopped_at: Completed 153-06-PLAN.md
+last_updated: "2026-08-03T17:48:22.769Z"
 last_activity: 2026-08-03
-last_activity_desc: Phase 153 auto-discussion completed from requirements and codebase evidence
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 32
-  completed_plans: 29
+  completed_plans: 30
+  percent: 80
 ---
 
 # Project State
@@ -28,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 ## Current Position
 
 Phase: 153 — Generated-Host Proof, Docs, and Release Gate
-Plan: 5 of 8 complete
-Status: Plan 03 is next
-Last activity: 2026-08-03 — Phase 153 auto-discussion completed from requirements and codebase evidence
+Plan: 6 of 8 complete
+Status: Ready to execute
+Last activity: 2026-08-03
 
-Progress: [█████████░] 91%
+Progress: [█████████░] 94%
 
 ## v2.4 Milestone Intent
 
@@ -476,6 +474,8 @@ release debug campaign.
 - [Phase ?]: Generated-host HTTP proof reads the active endpoint port and emits only status/count evidence.
 - [Phase ?]: Production preflight returns all bounded checks and remediations without secret/config values.
 - [Phase ?]: Generated production operator proof uses host-owned BasicAuth plus explicit MailglassAdmin auth/session whitelist, never dev_routes.
+- [Phase ?]: 153-06 marks public Elixir examples executable or syntax-only and proves them in a package-shaped generated host.
+- [Phase ?]: 153-06 makes mix mailglass.preflight the final production documentation gate and keeps operator authentication host-owned.
 
 ## Quick Tasks Completed
 
@@ -561,6 +561,7 @@ release debug campaign.
 | Phase 153 P03 | 14m | 2 tasks | 6 files |
 | Phase 153 P04 | 11m | 2 tasks | 6 files |
 | Phase 153 P05 | 12 min | 2 tasks | 12 files |
+| Phase 153 P06 | 7 min | 2 tasks | 11 files |
 
 ## Deferred Items
 
@@ -727,8 +728,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T17:39:42.053Z
-**Stopped at:** Completed 153-05-PLAN.md
+**Last session:** 2026-08-03T17:48:22.764Z
+**Stopped at:** Completed 153-06-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
