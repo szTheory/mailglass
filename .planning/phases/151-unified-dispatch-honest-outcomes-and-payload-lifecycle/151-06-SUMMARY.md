@@ -51,6 +51,7 @@ status: complete
 
 - `mix test test/mailglass/outbound/payload_pruner_test.exs --only phase_151_task:t151_06_01 --warnings-as-errors` — passed (3 tests).
 - `MIX_ENV=test mix verify.no_optional_runtime` — passed; the isolated direct launcher ran both pruning entrypoints without Oban.
+- `mix test test/runtime/no_optional_deps_public_send_test.exs --only phase_151_task:t151_06_02 --warnings-as-errors` — passed; public catalog/table counts and private-output boundary are pinned.
 
 ## Decisions Made
 
@@ -71,6 +72,22 @@ status: complete
 ## Known Stubs
 
 None.
+
+## Post-Plan Regression Fix
+
+- The original runtime probe used the configured `public` schema, so its migration and seeded pruning fixtures altered the shared test database.
+- The probe now uses a generated, identifier-validated `mailglass_no_optional_*` scratch schema, records a unique migration version, drops only that schema, and removes only its matching `schema_migrations` entry.
+- Added a regression test that snapshots the public catalog and operational table counts around the real shell proof, and rejects private fixture content in the shell output.
+- Removed three exact, prior buggy-probe rows (`tenant_id LIKE 'runtime-prune-%'` and `mailable = 'RuntimeProbe'`) from the test database. No baseline schema or user rows were targeted.
+
+## Review Note
+
+The repaired sequential command no longer produces public-catalog/table failures. `MIX_ENV=test mix verify.support_contract.core` still reports two unrelated existing failures in `test/mailglass/outbound_test.exs` (header lookup shape and explicit route serialization); they were present before this regression fix and are outside the runtime probe's schema boundary.
+
+## Regression-Fix Commits
+
+3. **Regression RED:** `124063ae` — catalog/data preservation and private-output test.
+4. **Regression GREEN:** `03f2b2d3` — scratch-schema runtime isolation and logging boundary.
 
 ## Self-Check: PASSED
 
