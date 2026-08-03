@@ -338,6 +338,17 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert events_for(delivery) == []
       assert suppressions_for(delivery) == []
     end
+
+    test "returns empty 500 and rolls back both facts after the suppression step", %{conn: conn} do
+      Application.put_env(:mailglass, :unsubscribe_convergence_failure_step, :after_suppression)
+
+      delivery = Generators.delivery_fixture(stream: :bulk)
+      result_conn = post(conn, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}", %{})
+
+      assert response(result_conn, 500) == ""
+      assert events_for(delivery) == []
+      assert suppressions_for(delivery) == []
+    end
   end
 
   defp tamper_token!(token) when is_binary(token) do
