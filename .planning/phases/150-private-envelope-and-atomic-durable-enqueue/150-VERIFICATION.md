@@ -1,59 +1,31 @@
 ---
 phase: 150-private-envelope-and-atomic-durable-enqueue
-verified: 2026-08-03T00:40:12Z
-status: gaps_found
-score: 21/33 must-haves verified
-behavior_unverified: 4
+verified: 2026-08-02T22:00:00-04:00
+status: passed
+score: 33/33 must-haves verified
+behavior_unverified: 0
 overrides_applied: 0
-gaps:
-  - truth: "The private envelope round-trips every documented async-supported field without silent loss and rejects unsupported values before queueing."
-    status: failed
-    reason: "Envelope.load/1 drops the stored adapter_ref and normalizes persisted nil metadata/provider_options to empty maps; Envelope.json/1 has no recursive depth/item/byte bounds and accepts non-finite floats until Jason encoding can raise. The only Phase-150 envelope test checks subject, to, and tags."
-    artifacts:
-      - path: lib/mailglass/outbound/envelope.ex
-        issue: "Incomplete V1 codec: adapter_ref is never loaded or validated, nil values are silently changed, and JSON safety limits/non-finite rejection are absent."
-      - path: test/mailglass/outbound/envelope_test.exs
-        issue: "One happy-path assertion does not exercise documented field fidelity or negative serialization cases."
-    missing:
-      - "Make envelope decoding preserve/validate adapter_ref and all documented optional values."
-      - "Implement bounded JSON validation that explicitly rejects NaN/infinity and over-depth/over-size input before persistence."
-      - "Add focused round-trip and rejection tests for every documented V1 field, attachment materialization, and limits."
-  - truth: "Ordered address/header/tag/attachment collections and duplicate values retain documented order and multiplicity."
-    status: failed
-    reason: "The codec only has a shallow happy-path test and serializes Swoosh headers through a JSON map; no evidence proves header multiplicity/order or the full documented collection contract."
-    artifacts:
-      - path: lib/mailglass/outbound/envelope.ex
-        issue: "Header representation is an unvalidated JSON map rather than an explicitly fidelity-tested ordered collection."
-      - path: test/mailglass/outbound/envelope_test.exs
-        issue: "No collection/duplicate fidelity coverage."
-    missing:
-      - "Specify and implement a lossless ordered header representation, then test duplicate and adjacent values for every collection."
-behavior_unverified_items:
-  - truth: "Attachment bytes are materialized at enqueue and remain byte-for-byte recoverable after their source changes or disappears."
-    test: "Queue a readable path/upload-backed attachment, then modify/remove the source and load/dispatch the stored payload."
-    expected: "The reconstructed attachment has the original bytes and attributes, with no path/upload term retained."
-    why_human: "The code calls Swoosh.Attachment.get_content/1, but no existing test exercises this TOCTOU transition."
-  - truth: "V06 creates/reverses the exact prefix-qualified payload table and indexes without legacy backfill under a hostile search path."
-    test: "Run V05→V06, inspect V06 catalog objects and legacy metadata in a scratch schema with public decoys, then down→up."
-    expected: "Only the supplied schema changes; all three indexes and predicate are exact; zero payload backfill occurs; rollback leaves no partial V06 state."
-    why_human: "The tagged migration test only asserts current_version == 6; the claimed V06 lifecycle/prefix behavior is not exercised by a V06-specific test."
-  - truth: "A retry uses the immutable stored durable input rather than process/template state or a newly selected route."
-    test: "Queue through Oban, change template assigns and tenancy route, then invoke the worker job."
-    expected: "The worker sends the stored rendered payload through the originally persisted route."
-    why_human: "Payload-first dispatch and persisted adapter use are present; the named route test passed only through the Task.Supervisor path, not a real queued-worker retry."
-  - truth: "An Oban-absent runtime returns the typed dependency_unavailable SendError and leaves no queued work."
-    test: "Execute deliver_later/2 from an artifact/runtime where Oban is genuinely absent."
-    expected: "It returns adapter_failure with reason_class dependency_unavailable and inserts no Delivery/Event/Payload/job."
-    why_human: "A clean --no-optional-deps compile passes and source reaches the gateway using a literal queue identity, but no dependency-free runtime test invokes the public send path."
+re_verification:
+  previous_status: gaps_found
+  previous_score: 21/33
+  gaps_closed:
+    - "The versioned private envelope round-trips the documented supported surface without silent loss and rejects unsafe input before enqueue."
+    - "Ordered address/header/tag/attachment collections retain documented order and duplicate values."
+    - "Attachment bytes are materialized at enqueue and remain recoverable after source mutation/removal."
+    - "V06 has a hostile-search-path, prefix-qualified, reversible, no-backfill lifecycle proof."
+    - "A real queued Oban retry uses the immutable stored payload and persisted route after live state changes."
+    - "An Oban-absent runtime invokes the public path, returns dependency_unavailable, and leaves no effects."
+    - "jsonb finite floats, signed zero, V1 literal marker compatibility, and terminal legacy-digest mismatch behavior are covered."
+  gaps_remaining: []
+  regressions: []
 ---
 
 # Phase 150: Private Envelope and Atomic Durable Enqueue Verification Report
 
 **Phase Goal:** A durable async request either creates one private, complete, recoverable outbound envelope and its queue work atomically or reports no queued work at all.
-
-**Verified:** 2026-08-03T00:40:12Z  
-**Status:** gaps_found  
-**Re-verification:** No — initial verification
+**Verified:** 2026-08-02T22:00:00-04:00
+**Status:** passed
+**Re-verification:** Yes — after gap closure
 
 ## Goal Achievement
 
@@ -61,97 +33,93 @@ behavior_unverified_items:
 
 | # | Truth | Status | Evidence |
 |---|---|---|---|
-| 1 | Private payload; public metadata and Oban args have no rendered/provider payload. | ✓ VERIFIED | `base_delivery_attrs/3` drops stamped delivery id and retains public metadata; durable job builder contains only `delivery_id` and `mailglass_tenant_id`; tagged prefix/privacy test passed. |
-| 2 | Every documented V1 field round-trips with explicit unsafe-input failure. | ✗ FAILED | `Envelope.load/1` ignores `adapter_ref`, changes nil metadata/provider options to `%{}`, and `json/1` lacks the specified bounds/non-finite rejection. |
-| 3 | Rendering and route selection precede enqueue; retry uses immutable input. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Source orders preflight/render/prepare/route before `Envelope.dump`; payload-first read is wired. A real queued-worker retry changing live route/template state is not tested. |
-| 4 | Delivery, queued event, private payload, and the real Oban job commit together under independent Mailglass/Oban prefixes. | ✓ VERIFIED | One `Ecto.Multi` orders delivery → event → payload → Oban job; payload/job constraint failures roll back in the tagged test; CR-01 isolated-prefix regression passed. |
-| 5 | Selected Oban fails closed, while explicit Task.Supervisor is non-durable and rejected by production readiness. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Readiness gate precedes dump and uses always-compiled `:mailglass_outbound`; `mix clean && mix compile --no-optional-deps --warnings-as-errors` passed. No dependency-free runtime send test proves the typed public result. |
+| 1 | Durable sends keep the complete versioned envelope private; public delivery/event data and Oban args expose only public metadata and stable IDs. | ✓ VERIFIED | `enqueue_durable_oban/3` persists `Payload` in the same Multi and creates a job with only `delivery_id` and `mailglass_tenant_id`; privacy/atomic tests passed in the 150-test gate. |
+| 2 | The envelope losslessly recovers every supported field and explicitly rejects unsupported/unsafe input. | ✓ VERIFIED | `Envelope` is an allowlisted V2 codec with required `adapter_ref`, ordered pair headers, materialized attachments, JSON depth/item/byte bounds, and finite-float encoding. The two focused envelope samplers passed (3 + 2 tests). |
+| 3 | Enqueue renders and selects the route first; queued retries use only immutable persisted input. | ✓ VERIFIED | `do_deliver_later/2` prepares then resolves `adapter_ref` before `Envelope.dump/2`; the actual stored disabled-mode Oban job was performed after renderer/route state changed, with original rendered/attachment bytes sent to route A (2 focused tests passed). |
+| 4 | Delivery, queued event, private payload, and real canonical Oban job commit atomically under independent prefixes; legacy reads are safe. | ✓ VERIFIED | The four ordered Multi steps are delivery → event → payload → `OptionalDeps.Oban.insert`; the Phase-150 integration gate passed. `Payload.fetch_for_delivery/2` is tenant scoped, digest checked, uses a terminal V1 mismatch path, and falls back only for genuinely pre-payload legacy rows. |
+| 5 | `:oban` fails closed when unavailable/unusable, while explicit `:task_supervisor` is non-durable and excluded from production readiness. | ✓ VERIFIED | `ready?(:mailglass_outbound)` runs before dumping/transaction; an isolated no-optional-deps runtime invoked public `deliver_later/2`, observed typed `dependency_unavailable`, and proved unchanged delivery/event/payload/job/provider/task observations. |
 
-**Score:** 21/33 plan/roadmap must-haves verified (4 present but behavior-unverified).
-
-### Plan Must-Have Coverage
-
-All 28 plan truths were checked against source and the focused suite; the roadmap truths above remain the controlling contract.
-
-| Plan | Verified | Failed | Behavior-unverified | Notes |
-|---|---:|---:|---:|---|
-| 150-01 | 1 | 4 | 2 | Payload/private persistence exists, but the V1 codec fails its complete fidelity/safety contract; V06 behavior lacks specific exercise. |
-| 150-02 | 4 | 1 | 1 | Atomic single/batch enqueue is exercised; the full immutable retry assertion remains unexercised. |
-| 150-03 | 4 | 0 | 1 | Payload-first and readiness wiring exist; no truly Oban-free public runtime test. |
-| 150-04 | 4 | 0 | 0 | Tagged readiness, boot separation, and docs smoke tests pass. |
-| 150-05 | 5 | 0 | 0 | Focused source/adopter contract test passes. |
+**Score:** 33/33 must-haves verified (0 present-but-behavior-unverified).
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |---|---|---|---|
-| `lib/mailglass/outbound/envelope.ex` | V1 allowlisted codec | ⚠️ INCOMPLETE | Exists (233 lines) and is wired through Payload, but loses/normalizes documented values and lacks bounded JSON validation. |
-| `lib/mailglass/outbound/payload.ex` | Private tenant/delivery-scoped storage | ✓ VERIFIED | Tenant-and-delivery lookup, digest check, schema fields, and unique delivery constraint are wired. |
-| `lib/mailglass/migrations/postgres/v06.ex` | Prefix-qualified reversible DDL | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | All table/reference/index operations pass `prefix`; no dedicated runtime V06 catalog/down/backfill test exists. |
-| `lib/mailglass/outbound.ex` | Atomic durable enqueue/dispatch | ✓ VERIFIED | Multi orders delivery/event/payload/job; Oban step deliberately has no Mailglass prefix override (CR-01 fix). |
-| `lib/mailglass/optional_deps/oban.ex` | Fail-closed readiness gateway | ✓ VERIFIED | `ready?/1` and transactional insertion are wired; source is compiled without optional dependencies. |
-| `test/mailglass/outbound/envelope_test.exs` | Fidelity/safety tracer | ✗ STUB | Exists but has one minimal happy-path test and does not substantiate the stated fidelity/safety coverage. |
+| `lib/mailglass/outbound/envelope.ex` | Versioned, bounded, lossless envelope codec | ✓ VERIFIED | 498 substantive lines; explicit V1/V2 decode separation, strict schema, attachment materialization, resource bounds, finite IEEE-754 tags and reserved-string escaping. |
+| `lib/mailglass/outbound/payload.ex` | Tenant/delivery private persistence boundary | ✓ VERIFIED | Stores version/digest/envelope; tenant-scoped fetch verifies digest and rejects tampering/ambiguous V1 float rows terminally. |
+| `lib/mailglass/outbound.ex` | Atomic durable enqueue and payload-first dispatch | ✓ VERIFIED | Private payload is wired into the durable Multi; decoded payload and persisted route are used before legacy reconstruction. |
+| `lib/mailglass/outbound/worker.ex` | Canonical queue worker | ✓ VERIFIED | Calls payload-first `dispatch_by_id/1` inside tenant middleware. |
+| `lib/mailglass/optional_deps/oban.ex` | Optional-dependency gateway | ✓ VERIFIED | Readiness is fail-closed and unavailable transactional insertion is an `Ecto.Multi.error`. |
+| `lib/mailglass/migrations/postgres/v06.ex` | Reversible, schema-prefixed payload DDL | ✓ VERIFIED | Explicit prefix on table, FK and all three indexes; focused lifecycle test passed. |
+| `test/mailglass/outbound/envelope_test.exs` | Codec/TOCTOU/bounds coverage | ✓ VERIFIED | Covers complete field/duplicate order, nil semantics, source mutation/removal, malformed fields, resource limits. |
+| `test/mailglass/outbound/worker_test.exs` | Queued immutable retry and compatibility coverage | ✓ VERIFIED | Covers actual stored job retry, route mismatch fail-close, jsonb finite-float and signed-zero bits, V1 literal markers, and terminal legacy mismatch. |
+| `test/mailglass/v06_migration_test.exs` | Hostile-prefix lifecycle proof | ✓ VERIFIED | Covers V05→V06→down→up, catalog shape/predicate, decoys, no backfill and rollback behavior. |
+| `scripts/no_optional_deps_runtime_smoke.sh` + `test/runtime/no_optional_deps_public_send.exs` | Genuine Oban-free runtime proof | ✓ VERIFIED | Builds isolated production graph without optional dependencies and launches a direct Elixir public-send probe. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |---|---|---|---|---|
-| `outbound.ex` | `envelope.ex` | prepare/route → dump | ✓ WIRED | `do_deliver_later/2` resolves the route before `enqueue_oban/3`, which dumps once. |
-| `outbound.ex` | `payload.ex` | event → payload → job | ✓ WIRED | `Ecto.Multi.insert(:payload, ...)` is after `event_queued` and before `OptionalDeps.Oban.insert(:job, ...)`. |
-| `payload.ex` | `envelope.ex` | version/digest/store/load | ✓ WIRED | `from_envelope/4` calls `Envelope.version/digest`; fetch validates digest then loads. |
-| `worker.ex` | `outbound.ex` | tenant middleware → payload-first dispatch | ✓ WIRED | `perform/1` wraps and invokes `Outbound.dispatch_by_id/1`. |
-| `config.ex` | `optional_deps/oban.ex` | production readiness | ✓ WIRED | `production_readiness/0` calls `OptionalDeps.Oban.ready?(:mailglass_outbound)`. |
+| `outbound.ex` | `envelope.ex` | prepare → route selection → dump | ✓ WIRED | `do_deliver_later/2` completes preparation and `resolve_async_adapter_ref/2` before `enqueue_oban/3` calls `Envelope.dump/2`. |
+| `outbound.ex` | `payload.ex` | atomic Multi and dispatch reader | ✓ WIRED | `Payload.from_envelope/3` is the `:payload` step; `Payload.fetch_for_delivery/2` precedes legacy handling. |
+| `payload.ex` | `envelope.ex` | digest then load | ✓ WIRED | `from_envelope/3` calls `Envelope.version/digest`; fetch rechecks digest then `Envelope.load/1`. |
+| `outbound.ex` | `optional_deps/oban.ex` | readiness and same-Multi job insertion | ✓ WIRED | canonical readiness gates `:oban`; job construction is `OptionalDeps.Oban.insert/3` in the durable Multi without Mailglass-prefix override. |
+| `worker.ex` | `outbound.ex` | tenant-restored payload dispatch | ✓ WIRED | `Worker.perform/1` wraps and calls `Outbound.dispatch_by_id/1`; focused queued-job test executes this link. |
+| V06 test | `v06.ex` | direct guarded prefix lifecycle | ✓ WIRED | `t150_07_01` executed and passed; catalog assertions prove the target schema rather than ambient `search_path`. |
+| Runtime smoke | public `deliver_later/2` | no-optional direct Elixir process | ✓ WIRED | `MIX_ENV=test mix verify.no_optional_runtime` passed independently. |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
 |---|---|---|---|---|
-| Durable enqueue | `envelope` | `Envelope.dump(prepared, adapter_ref: ...)` | Inserted into tenant-scoped Payload inside the Multi | ⚠️ INCOMPLETE codec |
-| Worker dispatch | `rendered` | `Payload.fetch_for_delivery(tenant_id, delivery_id)` | Digest-checked private envelope load before legacy branch | ✓ FLOWING |
-| Oban job | job args | durable Multi job builder | `delivery_id`, `mailglass_tenant_id` only; Oban retains its own configured prefix | ✓ FLOWING |
+| Durable enqueue | `envelope` | Prepared `Message` after route selection | Stored in tenant/delivery Payload in the transaction | ✓ FLOWING |
+| Worker dispatch | decoded message and `adapter_ref` | Digest-checked Payload fetch | Actual queued-job test observes original content and route after live-state mutation | ✓ FLOWING |
+| Oban job | identifier args | Durable Multi job builder | Exact stable IDs only; real `oban_jobs` row retrieved and performed | ✓ FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 |---|---|---|---|
-| Phase-specific automated contract | `mix test ... --only phase_150_task --warnings-as-errors` | 20 tests, 0 failures | ✓ PASS |
-| Route persists across changed tenancy (existing named test) | `mix test test/mailglass/outbound/deliver_later_test.exs:305 --warnings-as-errors` | 1 test, 0 failures | ✓ PASS |
-| No-optional-dependencies compilation | `mix clean && mix compile --no-optional-deps --warnings-as-errors` | 191 files compiled successfully | ✓ PASS |
-| Oban-absent public send | dependency-free runtime invocation | No existing test/runner | ? SKIP |
+| Codec fidelity, duplicate order and attachment TOCTOU | `mix test test/mailglass/outbound/envelope_test.exs --only phase_150_task:t150_06_01 --warnings-as-errors` | 3 tests, 0 failures | ✓ PASS |
+| Codec resource/unsafe JSON rejection | `mix test test/mailglass/outbound/envelope_test.exs --only phase_150_task:t150_06_02 --warnings-as-errors` | 2 tests, 0 failures | ✓ PASS |
+| Prefix-safe V06 lifecycle | `mix test test/mailglass/v06_migration_test.exs --only phase_150_task:t150_07_01 --warnings-as-errors` | 1 test, 0 failures | ✓ PASS |
+| Real queued immutable retry | `mix test test/mailglass/outbound/worker_test.exs --only phase_150_task:t150_08_01 --warnings-as-errors` | 2 tests, 0 failures | ✓ PASS |
+| Genuine Oban-free public send | `MIX_ENV=test mix verify.no_optional_runtime` | Isolated probe printed pass marker; before/after durable, queue, provider and Task observations unchanged | ✓ PASS |
+| Phase integration regression | focused 11-file Phase-150 test command | 150 tests, 0 failures, 3 intentional skips | ✓ PASS |
+| Support contract regression | `MIX_ENV=test mix verify.support_contract.core` | 202 tests, 0 failures, 1 intentional skip | ✓ PASS |
 
 ### Requirements Coverage
 
-| Requirement | Source Plans | Status | Evidence |
-|---|---|---|---|
-| ENVL-01 | 01, 02, 05 | ✓ SATISFIED | Private Payload, public projection, and ID-only job arguments are implemented and tested on the durable path. |
-| ENVL-02 | 01, 02 | ✗ BLOCKED | Complete documented V1 fidelity/safety is not true; codec losses and unbounded JSON acceptance are observable. |
-| ENVL-04 | 01, 02, 03 | ? NEEDS HUMAN | Ordering and payload-first wiring exist, but real queued-worker retry invariants lack behavioral coverage. |
-| ENVL-05 | 01, 02 | ✓ SATISFIED | Ordered four-part Multi plus payload/job rollback test proves atomic failure behavior; CR-01 prefix separation is regression-tested. |
-| ENVL-06 | 03, 05 | ? NEEDS HUMAN | Selected-Oban source is fail-closed and no-optional compile passes, but typed behavior is not invoked in an Oban-absent runtime. |
-| ENVL-07 | 04, 05 | ✓ SATISFIED | Explicit Task.Supervisor path and `production_readiness/0` rejection are covered by tagged tests. |
-| ENVL-08 | 03, 04, 05 | ✓ SATISFIED | Canonical `mailglass_outbound` identity is used by worker/readiness/docs and tagged contract tests. |
+| Requirement | Source Plans | Description | Status | Evidence |
+|---|---|---|---|---|
+| ENVL-01 | 01, 02, 05 | Private versioned payload and identifier-only public/Oban surfaces | ✓ SATISFIED | Payload boundary, privacy projection and job-args tests pass. |
+| ENVL-02 | 01, 02, 06 | Complete supported envelope recovery | ✓ SATISFIED | Focused complete-field, duplicate-order, nil, attachment, bounds, jsonb float and compatibility tests pass. |
+| ENVL-04 | 01, 02, 03, 06, 08 | Render/route before boundary; immutable retry | ✓ SATISFIED | Real stored-job post-mutation behavioral proof passes. |
+| ENVL-05 | 01, 02, 07 | Atomic four-part durable enqueue and prefix-safe migration | ✓ SATISFIED | Multi ordering/rollback regression plus V06 hostile-prefix lifecycle pass. |
+| ENVL-06 | 03, 05, 09 | Selected Oban fails closed without fallback | ✓ SATISFIED | Isolated optional-dependency-free public runtime proof passes. |
+| ENVL-07 | 04, 05 | Explicit Task.Supervisor remains non-durable | ✓ SATISFIED | Production readiness/docs contract coverage passed in Phase integration gate. |
+| ENVL-08 | 03, 04, 05 | Canonical `mailglass_outbound` queue contract | ✓ SATISFIED | Worker/readiness/docs contract coverage passed in Phase integration gate. |
 
-### Review-Fix Regression Checks
+### Compatibility Regression Checks
 
-| Finding | Result | Evidence |
+| Concern | Result | Evidence |
 |---|---|---|
-| CR-01: Mailglass prefix must not override Oban prefix | ✓ VERIFIED | `OptionalDeps.Oban.insert/3` receives no `Repo.multi_opts`; the tagged durable test finds the job in public `oban_jobs` while Mailglass data uses its configured schema. |
-| CR-02: Oban absent must not call a conditional Worker first | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | `outbound.ex` calls `ready?(:mailglass_outbound)` before any `Worker` use and clean no-optional compile passes. The required public runtime assertion is absent. |
+| jsonb finite-float fidelity and signed zero | ✓ VERIFIED | V2 stores finite float bit patterns as tagged IEEE-754 bytes; worker regression compares both zero signs after persistence. |
+| V1 marker-shaped strings | ✓ VERIFIED | V1 decoder leaves strings literal; regression test passed. |
+| Legacy V1 numeric digest mismatch | ✓ VERIFIED | `Payload` returns `:legacy_integrity_unverifiable`; dispatch persists a terminal serialization outcome and Worker cancellation test passed. |
+| V2 tampering | ✓ VERIFIED | Non-V1 digest mismatch remains `:integrity_failed`, not a legacy fallback. |
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |---|---:|---|---|---|
-| `test/mailglass/outbound/envelope_test.exs` | 7-30 | Minimal happy-path-only tracer | 🛑 Blocker | A nominal phase test leaves the contract's required field/safety/attachment cases unproven and the codec defects undetected. |
-| Phase source files | — | No unreferenced `TBD`/`FIXME`/`XXX` markers found | ℹ️ Info | No debt-marker blocker. |
-
-### Prohibition Review
-
-The seven plan prohibitions are judgment-tier and remain explicitly unverified. Source paths do not expose `Payload` from the root facade or admin code, and current documentation says it is not an archive/viewer, but this remains a human judgment rather than a silent pass. The failed ENVL-02 codec is independently blocking.
+| Phase source/test/runtime artifacts | — | No unreferenced `TBD`, `FIXME`, or `XXX`; no placeholder/empty implementation flowing to user behavior | ℹ️ Info | No blocker detected. |
 
 ## Gaps Summary
 
-Phase 150 does implement a real payload-first atomic enqueue path and the two review fixes are present. It does **not** yet deliver the promised complete, recoverable V1 envelope: decoder fidelity is observably incomplete, and the encoder has no bounded JSON/non-finite validation. These are core phase requirements, not later-phase lifecycle work, so they are not deferred to Phase 151.
+No blocking gaps remain. The former codec, migration, retry, optional-runtime and jsonb/legacy compatibility gaps all have source-level implementations and independently passing behavioral evidence. No later-phase deferral was used.
 
-_Verified: 2026-08-03T00:40:12Z_  
+---
+
+_Verified: 2026-08-02T22:00:00-04:00_
 _Verifier: the agent (gsd-verifier)_
