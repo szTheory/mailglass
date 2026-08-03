@@ -54,7 +54,7 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
     |> Ecto.Multi.run(:canonical_suppression, fn repo, changes ->
       with {:ok, suppression} <-
              canonical_suppression(repo, changes.unsubscribe_suppression, delivery) do
-        ensure_permanent_unsubscribe(repo, suppression)
+        ensure_permanent_unsubscribe(repo, suppression, delivery)
       end
     end)
     |> maybe_inject_failure(:after_suppression)
@@ -69,11 +69,11 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
             unsubscribe_event: inserted_event,
             canonical_event: event,
             unsubscribe_suppression: inserted_suppression,
-            canonical_suppression: suppression
+            canonical_suppression: %{suppression: suppression, promoted?: promoted?}
           }}
        ) do
     status =
-      if inserted_event.inserted_at || inserted_suppression.inserted_at,
+      if inserted_event.inserted_at || inserted_suppression.inserted_at || promoted?,
         do: :created,
         else: :already_converged
 
@@ -126,13 +126,39 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
   # enclosing transaction so the event and its permanent enforcement fact are
   # still all-or-nothing. Complaint rows are permanent by schema invariant;
   # existing permanent unsubscribe rows are never rewritten.
-  defp ensure_permanent_unsubscribe(_repo, %Entry{expires_at: nil} = suppression),
-    do: {:ok, suppression}
+  defp ensure_permanent_unsubscribe(_repo, %Entry{expires_at: nil} = suppression, _delivery),
+    do: {:ok, %{suppression: suppression, promoted?: false}}
 
-  defp ensure_permanent_unsubscribe(repo, %Entry{} = suppression) do
-    suppression
-    |> Ecto.Changeset.change(reason: :unsubscribe, expires_at: nil)
-    |> repo.update(Repo.multi_opts())
+  defp ensure_permanent_unsubscribe(repo, %Entry{} = suppression, %Delivery{} = delivery) do
+    promotion_query =
+      from(entry in Entry,
+        where:
+          entry.id == ^suppression.id and entry.tenant_id == ^delivery.tenant_id and
+            entry.address == ^String.downcase(delivery.recipient) and
+            entry.scope == :address_stream and entry.stream == ^delivery.stream and
+            not is_nil(entry.expires_at),
+        select: entry
+      )
+
+    case repo.update_all(
+           promotion_query,
+           [set: [reason: :unsubscribe, expires_at: nil]],
+           Repo.multi_opts(returning: true)
+         ) do
+      {1, [%Entry{} = promoted]} ->
+        {:ok, %{suppression: promoted, promoted?: true}}
+
+      {0, _} ->
+        # PostgreSQL rechecks the predicate after a concurrent updater commits.
+        # The losing transaction sees the permanent winner on this refetch.
+        with {:ok, %Entry{expires_at: nil} = canonical} <-
+               canonical_suppression(repo, %Entry{inserted_at: nil}, delivery) do
+          {:ok, %{suppression: canonical, promoted?: false}}
+        else
+          {:ok, _temporary} -> {:error, :canonical_suppression_not_permanent}
+          error -> error
+        end
+    end
   end
 
   defp suppression_attrs(%Event{} = event, %Delivery{} = delivery) do

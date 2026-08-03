@@ -9,6 +9,7 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
   alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.Events.Event
   alias Mailglass.Generators
+  alias Mailglass.PubSub.Topics
   alias Mailglass.Suppression.Entry
   alias Mailglass.TestRepo
 
@@ -208,6 +209,43 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
     refute_receive {:created_effect, _}
   end
 
+  test "concurrent temporary-suppression repair has one promotion winner and one effect pair" do
+    Application.put_env(
+      :mailglass,
+      :compliance,
+      Keyword.put(Application.fetch_env!(:mailglass, :compliance), :lifecycle, RecordingLifecycle)
+    )
+
+    Application.put_env(:mailglass, :unsubscribe_property_test_pid, self())
+    delivery = Generators.delivery_fixture(stream: :bulk, recipient: "repair-race@example.com")
+    insert_unsubscribe_event!(delivery)
+    insert_temporary_suppression!(delivery)
+    Phoenix.PubSub.subscribe(Mailglass.PubSub, Topics.events(delivery.tenant_id, delivery.id))
+    path = "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}"
+    barrier = :counters.new(1, [])
+
+    responses =
+      1..4
+      |> Task.async_stream(
+        fn _ ->
+          :counters.add(barrier, 1, 1)
+          wait_for_barrier(barrier, 4)
+          Phoenix.ConnTest.post(Phoenix.ConnTest.build_conn(), path, %{})
+        end,
+        max_concurrency: 4,
+        timeout: 15_000
+      )
+      |> Enum.map(fn {:ok, conn} -> Phoenix.ConnTest.response(conn, 200) end)
+
+    assert responses == ["", "", "", ""]
+    assert active_suppression_snapshot(delivery) == [{:unsubscribe, :address_stream, :bulk}]
+    delivery_id = delivery.id
+    assert_receive {:created_effect, ^delivery_id}
+    refute_receive {:created_effect, _}
+    assert_receive {:delivery_updated, ^delivery_id, :unsubscribed, _attrs}
+    refute_receive {:delivery_updated, ^delivery_id, :unsubscribed, _attrs}
+  end
+
   defp durable_snapshot(delivery_id) do
     TestRepo.all(
       from(event in Event,
@@ -228,6 +266,35 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
         select: {suppression.reason, suppression.scope, suppression.stream}
       )
     )
+  end
+
+  defp insert_unsubscribe_event!(delivery) do
+    {:ok, _event} =
+      TestRepo.insert(
+        Event.changeset(%{
+          tenant_id: delivery.tenant_id,
+          delivery_id: delivery.id,
+          type: :unsubscribed,
+          occurred_at: Mailglass.Clock.utc_now(),
+          idempotency_key: "unsubscribe:#{delivery.id}",
+          normalized_payload: %{source: :unsubscribe}
+        })
+      )
+  end
+
+  defp insert_temporary_suppression!(delivery) do
+    {:ok, _suppression} =
+      TestRepo.insert(
+        Entry.changeset(%{
+          tenant_id: delivery.tenant_id,
+          address: delivery.recipient,
+          scope: :address_stream,
+          stream: delivery.stream,
+          reason: :manual,
+          source: "test:temporary",
+          expires_at: DateTime.add(DateTime.utc_now(), 3_600, :second)
+        })
+      )
   end
 
   defp wait_for_barrier(barrier, target) do
