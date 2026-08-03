@@ -2,16 +2,17 @@
 gsd_state_version: 1.0
 milestone: v2.4
 milestone_name: Outbound First-Adopter Correctness
+current_phase: 153
+current_phase_name: Generated-Host Proof, Docs, and Release Gate
 status: executing
-stopped_at: Completed 153-06-PLAN.md
-last_updated: "2026-08-03T17:48:22.769Z"
+stopped_at: Completed 153-07-PLAN.md
+last_updated: "2026-08-03T17:58:05.107Z"
 last_activity: 2026-08-03
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 32
-  completed_plans: 30
-  percent: 80
+  completed_plans: 31
 ---
 
 # Project State
@@ -26,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 ## Current Position
 
 Phase: 153 — Generated-Host Proof, Docs, and Release Gate
-Plan: 6 of 8 complete
+Plan: 7 of 8 complete
 Status: Ready to execute
 Last activity: 2026-08-03
 
-Progress: [█████████░] 94%
+Progress: [██████████] 97%
 
 ## v2.4 Milestone Intent
 
@@ -476,6 +477,8 @@ release debug campaign.
 - [Phase ?]: Generated production operator proof uses host-owned BasicAuth plus explicit MailglassAdmin auth/session whitelist, never dev_routes.
 - [Phase ?]: 153-06 marks public Elixir examples executable or syntax-only and proves them in a package-shaped generated host.
 - [Phase ?]: 153-06 makes mix mailglass.preflight the final production documentation gate and keeps operator authentication host-owned.
+- [Phase ?]: Release package selection uses per-package reachable tags with linked core/admin and independent inbound.
+- [Phase ?]: Hex publication is gated on resolver agreement, local host proof, CI, package checks, and protected candidate-SHA evidence.
 
 ## Quick Tasks Completed
 
@@ -562,6 +565,7 @@ release debug campaign.
 | Phase 153 P04 | 11m | 2 tasks | 6 files |
 | Phase 153 P05 | 12 min | 2 tasks | 12 files |
 | Phase 153 P06 | 7 min | 2 tasks | 11 files |
+| Phase 153 P07 | 9min | 2 tasks | 9 files |
 
 ## Deferred Items
 
@@ -728,8 +732,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T17:48:22.764Z
-**Stopped at:** Completed 153-06-PLAN.md
+**Last session:** 2026-08-03T17:58:05.097Z
+**Stopped at:** Completed 153-07-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
