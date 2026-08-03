@@ -24,13 +24,21 @@ defmodule Mailglass.Scripts.ReleasePackageResolverTest do
   test "links core and admin for either public compatibility surface while inbound stays independent" do
     with_repo(fn repo ->
       seed_tagged_packages(repo)
-      commit(repo, "admin public API", %{"mailglass_admin/lib/mailglass_admin/public.ex" => "defmodule Public do end\n"})
+
+      commit(repo, "admin public API", %{
+        "mailglass_admin/lib/mailglass_admin/public.ex" => "defmodule Public do end\n"
+      })
+
       assert selected(repo, ["mailglass", "mailglass_admin"]) == ["mailglass", "mailglass_admin"]
     end)
 
     with_repo(fn repo ->
       seed_tagged_packages(repo)
-      commit(repo, "inbound API", %{"mailglass_inbound/lib/mailglass_inbound/parser.ex" => "defmodule Parser do end\n"})
+
+      commit(repo, "inbound API", %{
+        "mailglass_inbound/lib/mailglass_inbound/parser.ex" => "defmodule Parser do end\n"
+      })
+
       assert selected(repo, ["mailglass_inbound"]) == ["mailglass_inbound"]
     end)
   end
@@ -72,7 +80,9 @@ defmodule Mailglass.Scripts.ReleasePackageResolverTest do
       assert missing_status != 0
       assert missing_output =~ "release target package set mismatch"
 
-      {extra_output, extra_status} = resolve(repo, target(repo, ["mailglass", "mailglass_admin", "mailglass_inbound"]))
+      {extra_output, extra_status} =
+        resolve(repo, target(repo, ["mailglass", "mailglass_admin", "mailglass_inbound"]))
+
       assert extra_status != 0
       assert extra_output =~ "release target package set mismatch"
     end)
@@ -80,6 +90,7 @@ defmodule Mailglass.Scripts.ReleasePackageResolverTest do
 
   defp selected(repo, expected) do
     {output, 0} = resolve(repo, target(repo, expected))
+
     Regex.scan(~r/"release_packages":\[([^\]]*)\]/, output)
     |> List.first()
     |> Enum.at(1)
@@ -88,11 +99,18 @@ defmodule Mailglass.Scripts.ReleasePackageResolverTest do
   end
 
   defp resolve(repo, target_path) do
-    System.cmd("elixir", [@resolver, "--repo", repo, "--target", target_path], stderr_to_stdout: true)
+    System.cmd("elixir", [@resolver, "--repo", repo, "--target", target_path],
+      stderr_to_stdout: true
+    )
   end
 
   defp with_repo(fun) do
-    repo = Path.join(System.tmp_dir!(), "mailglass-release-resolver-#{System.unique_integer([:positive])}")
+    repo =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-release-resolver-#{System.unique_integer([:positive])}"
+      )
+
     File.mkdir_p!(repo)
     cmd!("git", ["init", "-b", "main"], cd: repo)
     cmd!("git", ["config", "user.email", "resolver@example.test"], cd: repo)
@@ -132,23 +150,29 @@ defmodule Mailglass.Scripts.ReleasePackageResolverTest do
 
   defp cmd!(command, arguments, options) do
     case System.cmd(command, arguments, options ++ [stderr_to_stdout: true]) do
-      {_output, 0} -> :ok
-      {output, status} -> flunk("#{command} #{Enum.join(arguments, " ")} failed (#{status}): #{output}")
+      {_output, 0} ->
+        :ok
+
+      {output, status} ->
+        flunk("#{command} #{Enum.join(arguments, " ")} failed (#{status}): #{output}")
     end
   end
 
   defp target(repo, packages) do
     path = Path.join(repo, "release-target.json")
 
-    File.write!(path, Jason.encode!(%{
-      "status" => "active",
-      "release_packages" => packages,
-      "packages" => %{
-        "mailglass" => "2.4.0",
-        "mailglass_admin" => "2.4.0",
-        "mailglass_inbound" => "2.1.1"
-      }
-    }))
+    File.write!(
+      path,
+      Jason.encode!(%{
+        "status" => "active",
+        "release_packages" => packages,
+        "packages" => %{
+          "mailglass" => "2.4.0",
+          "mailglass_admin" => "2.4.0",
+          "mailglass_inbound" => "2.1.1"
+        }
+      })
+    )
 
     path
   end
