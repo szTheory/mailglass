@@ -5,6 +5,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
   alias Mailglass.Compliance.UnsubscribeConvergence
   alias Mailglass.Events.Event
   alias Mailglass.Generators
+  alias Mailglass.PubSub.Topics
   alias Mailglass.Suppression.Entry
   alias Mailglass.TestRepo
   alias Mailglass.TestSupport.SandboxOwnership
@@ -224,6 +225,39 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
                "event_id" => event.id,
                "event_type" => "unsubscribed"
              }
+    end
+
+    test "runs bounded lifecycle compatibility work and broadcasts only after created convergence commits", %{
+      conn: conn
+    } do
+      Application.put_env(
+        :mailglass,
+        :compliance,
+        Keyword.put(Application.fetch_env!(:mailglass, :compliance), :lifecycle, RecordingLifecycle)
+      )
+
+      Application.put_env(:mailglass, :unsubscribe_test_pid, self())
+      delivery = Generators.delivery_fixture(stream: :bulk, recipient: "Recipient@Example.com")
+      Phoenix.PubSub.subscribe(Mailglass.PubSub, Topics.events(delivery.tenant_id, delivery.id))
+
+      result_conn = post(conn, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}", %{})
+
+      assert response(result_conn, 200) == ""
+      assert_receive {:lifecycle_multi, [], attrs}
+      assert attrs == %{
+               tenant_id: delivery.tenant_id,
+               delivery_id: delivery.id,
+               event_type: :unsubscribed,
+               address: "recipient@example.com",
+               scope: :address_stream,
+               stream: :bulk
+             }
+      delivery_id = delivery.id
+      assert_receive {:lifecycle_txn, ^delivery_id}
+      assert [_event] = events_for(delivery)
+      assert [_suppression] = suppressions_for(delivery)
+
+      assert_receive {:delivery_updated, ^delivery_id, :unsubscribed, ^attrs}
     end
 
     test "replayed POST returns 200 without duplicating durable state", %{conn: conn} do
