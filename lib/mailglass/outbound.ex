@@ -823,10 +823,24 @@ defmodule Mailglass.Outbound do
     if legacy_payload_missing_settled?(delivery) do
       {:error, outcome_error(outcome)}
     else
-      case persist_outcome_multi(delivery, nil, outcome) do
-        {:ok, _changes} -> {:error, outcome_error(outcome)}
-        {:error, _step, _reason, _changes} -> {:error, outcome_error(outcome)}
+      case persist_missing_payload_outcome(delivery, outcome) do
+        :ok -> {:error, outcome_error(outcome)}
+        :error -> {:error, settlement_persistence_error()}
       end
+    end
+  end
+
+  defp persist_missing_payload_outcome(delivery, outcome) do
+    try do
+      case persist_outcome_multi(delivery, nil, outcome) do
+        {:ok, _changes} -> :ok
+        {:error, _step, _reason, _changes} -> :error
+      end
+    rescue
+      # Ecto raises for constraints not declared on the append-only Event
+      # changeset. The Multi has rolled back, so expose only a bounded retry
+      # signal and leave the queued Delivery available for a later attempt.
+      _error -> :error
     end
   end
 
@@ -871,6 +885,10 @@ defmodule Mailglass.Outbound do
     Mailglass.SendError.new(:adapter_failure,
       context: %{reason_class: outcome.reason_class, outcome_class: outcome.class}
     )
+  end
+
+  defp settlement_persistence_error do
+    Mailglass.SendError.new(:adapter_failure, context: %{reason_class: :persistence_failed})
   end
 
   # A successful CAS claim owns the payload until it is settled. Fail closed

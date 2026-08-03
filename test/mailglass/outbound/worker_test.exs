@@ -95,6 +95,62 @@ defmodule Mailglass.Outbound.WorkerTest do
   end
 
   describe "Worker.perform/1" do
+    @tag phase_151_task: "t151_08_02"
+    test "retries a missing-payload settlement when its event transaction rolls back" do
+      delivery = Generators.delivery_fixture(tenant_id: "test-tenant")
+
+      job = %Oban.Job{
+        args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
+      }
+
+      TestRepo.query!(
+        "ALTER TABLE mailglass_events ADD CONSTRAINT phase_151_missing_payload_event_reject CHECK (false)"
+      )
+
+      try do
+        assert {:error,
+                %Mailglass.SendError{
+                  type: :adapter_failure,
+                  context: %{reason_class: :persistence_failed}
+                }} = Mailglass.Outbound.Worker.perform(job)
+
+        assert %Delivery{status: :queued, terminal: false} = TestRepo.get!(Delivery, delivery.id)
+
+        assert 0 ==
+                 TestRepo.aggregate(
+                   from(event in Mailglass.Events.Event, where: event.delivery_id == ^delivery.id),
+                   :count
+                 )
+
+        assert [] = Mailglass.Adapters.Fake.deliveries()
+      after
+        TestRepo.query!(
+          "ALTER TABLE mailglass_events DROP CONSTRAINT IF EXISTS phase_151_missing_payload_event_reject"
+        )
+      end
+
+      assert {:cancel, :legacy_payload_missing} = Mailglass.Outbound.Worker.perform(job)
+
+      assert %Delivery{status: :failed, terminal: true} = TestRepo.get!(Delivery, delivery.id)
+
+      assert 1 ==
+               TestRepo.aggregate(
+                 from(event in Mailglass.Events.Event, where: event.delivery_id == ^delivery.id),
+                 :count
+               )
+
+      assert {:cancel, :legacy_payload_missing} = Mailglass.Outbound.Worker.perform(job)
+
+      assert 1 ==
+               TestRepo.aggregate(
+                 from(event in Mailglass.Events.Event, where: event.delivery_id == ^delivery.id),
+                 :count
+               )
+
+      assert [] = Mailglass.Adapters.Fake.deliveries()
+      assert nil == TestRepo.get_by(Payload, tenant_id: "test-tenant", delivery_id: delivery.id)
+    end
+
     @tag phase_151_task: "t151_08_01"
     test "fails closed and settles a historical no-Payload job without exposing its private sentinel" do
       sentinel = "private-sentinel-#{System.unique_integer([:positive])}"
