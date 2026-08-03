@@ -376,6 +376,53 @@ defmodule Mailglass.Outbound.PreflightTest do
   end
 
   describe "preflight stage 2 — Suppression.check_before_send" do
+    test "blocks only the matching tenant address and originating stream at the public send boundary" do
+      SandboxOwnership.with_app_env!(:mailglass)
+
+      Application.put_env(
+        :mailglass,
+        :compliance,
+        Keyword.put(
+          Application.get_env(:mailglass, :compliance, []),
+          :host,
+          "unsubscribe.example.com"
+        )
+      )
+
+      {:ok, _suppression} =
+        insert_suppression!(%{
+          tenant_id: "test-tenant",
+          address: "recipient@example.com",
+          scope: :address_stream,
+          stream: :bulk,
+          reason: :unsubscribe,
+          source: "compliance:one_click"
+        })
+
+      assert {:error, %Mailglass.SuppressedError{type: :address_stream}} =
+               Outbound.send(build_message_for_stream("Recipient@Example.com", :bulk))
+
+      assert {:ok, _delivery} =
+               Outbound.send(build_message_for_stream("recipient@example.com", :operational))
+
+      assert {:ok, _delivery} =
+               Outbound.send(
+                 build_message_for_stream(
+                   "recipient@example.com",
+                   :transactional,
+                   "test-tenant",
+                   __MODULE__
+                 )
+               )
+
+      assert {:ok, _delivery} =
+               Tenancy.with_tenant("other-tenant", fn ->
+                 Outbound.send(
+                   build_message_for_stream("recipient@example.com", :bulk, "other-tenant")
+                 )
+               end)
+    end
+
     test "suppression checks the real sole cc or bcc recipient address" do
       for field <- [:cc, :bcc] do
         address = "blocked-#{field}@example.com"
@@ -595,7 +642,12 @@ defmodule Mailglass.Outbound.PreflightTest do
     )
   end
 
-  defp build_message_for_stream(to_addr, stream) do
+  defp build_message_for_stream(
+         to_addr,
+         stream,
+         tenant_id \\ "test-tenant",
+         mailable \\ Mailglass.FakeFixtures.TestMailer
+       ) do
     email =
       Swoosh.Email.new()
       |> Swoosh.Email.from({"Test", "from@example.com"})
@@ -605,8 +657,8 @@ defmodule Mailglass.Outbound.PreflightTest do
       |> Swoosh.Email.text_body("Body")
 
     Message.build(email,
-      mailable: Mailglass.FakeFixtures.TestMailer,
-      tenant_id: "test-tenant",
+      mailable: mailable,
+      tenant_id: tenant_id,
       stream: stream
     )
   end
