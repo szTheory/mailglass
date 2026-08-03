@@ -88,6 +88,7 @@ The repaired sequential command no longer produces public-catalog/table failures
 
 3. **Regression RED:** `124063ae` — catalog/data preservation and private-output test.
 4. **Regression GREEN:** `03f2b2d3` — scratch-schema runtime isolation and logging boundary.
+5. **Cleanup hardening:** `0da3f649` — enter the scratch cleanup guard before migration work.
 
 ## Self-Check: PASSED
 
