@@ -151,12 +151,15 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
       {0, _} ->
         # PostgreSQL rechecks the predicate after a concurrent updater commits.
         # The losing transaction sees the permanent winner on this refetch.
-        with {:ok, %Entry{expires_at: nil} = canonical} <-
-               canonical_suppression(repo, %Entry{inserted_at: nil}, delivery) do
-          {:ok, %{suppression: canonical, promoted?: false}}
-        else
-          {:ok, _temporary} -> {:error, :canonical_suppression_not_permanent}
-          error -> error
+        case canonical_suppression(repo, %Entry{inserted_at: nil}, delivery) do
+          {:ok, %Entry{expires_at: nil} = canonical} ->
+            {:ok, %{suppression: canonical, promoted?: false}}
+
+          {:ok, _temporary} ->
+            {:error, :canonical_suppression_not_permanent}
+
+          error ->
+            error
         end
     end
   end
