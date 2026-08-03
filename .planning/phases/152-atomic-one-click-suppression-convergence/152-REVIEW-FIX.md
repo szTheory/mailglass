@@ -60,3 +60,10 @@ Result: **47 tests, 0 failures** (including one property).
 ---
 
 _Fixer: gsd-code-fixer_
+
+## Re-review Follow-up
+
+### CR-01: Atomic temporary-suppression promotion
+
+**Files modified:** `unsubscribe_convergence.ex`, `unsubscribe_post_idempotency_property_test.exs`
+**Applied fix:** Promotion is now a prefix-explicit conditional `update_all` restricted to the exact suppression identity and non-null expiry. The returning row is the sole promotion winner; zero-row concurrent losers refetch the permanent canonical row and report `:already_converged`. The created classification includes only that winner. A four-way concurrent repair test proves one permanent suppression and one lifecycle/broadcast effect pair.
