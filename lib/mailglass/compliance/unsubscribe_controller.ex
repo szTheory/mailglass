@@ -8,16 +8,12 @@ defmodule Mailglass.Compliance.UnsubscribeController do
 
   use Phoenix.Controller, formats: [:html]
 
-  import Ecto.Query
   import Plug.Conn
 
-  alias Mailglass.Compliance
   alias Mailglass.Compliance.Unsubscribe
+  alias Mailglass.Compliance.UnsubscribeConvergence
   alias Mailglass.Compliance.UnsubscribeHTML
-  alias Mailglass.Events
-  alias Mailglass.Events.Event
   alias Mailglass.Outbound.Delivery
-  alias Mailglass.Outbound.Projector
   alias Mailglass.Repo
   alias Mailglass.Tenancy
 
@@ -38,8 +34,8 @@ defmodule Mailglass.Compliance.UnsubscribeController do
     case resolve_delivery(token) do
       {:ok, delivery} ->
         delivery
-        |> append_unsubscribe_event()
-        |> respond_to_unsubscribe(conn, delivery)
+        |> UnsubscribeConvergence.run()
+        |> respond_to_unsubscribe(conn)
 
       {:error, :expired} ->
         send_resp(conn, 200, "")
@@ -77,14 +73,6 @@ defmodule Mailglass.Compliance.UnsubscribeController do
     end
   end
 
-  defp append_unsubscribe_event(%Delivery{} = delivery) do
-    Tenancy.with_tenant(delivery.tenant_id, fn ->
-      delivery
-      |> unsubscribe_multi()
-      |> Repo.multi()
-    end)
-  end
-
   defp fetch_delivery(delivery_id) do
     Tenancy.audit_unscoped_bypass(%{
       reason: :unsubscribe_token_delivery_lookup,
@@ -94,60 +82,11 @@ defmodule Mailglass.Compliance.UnsubscribeController do
     Repo.get(Delivery, delivery_id, scope: :unscoped)
   end
 
-  defp unsubscribe_multi(%Delivery{} = delivery) do
-    attrs = %{
-      tenant_id: delivery.tenant_id,
-      delivery_id: delivery.id,
-      type: :unsubscribed,
-      idempotency_key: unsubscribe_idempotency_key(delivery),
-      normalized_payload: %{source: :unsubscribe}
-    }
-
-    Ecto.Multi.new()
-    |> Events.append_multi(:unsubscribe_event, attrs)
-    |> Ecto.Multi.run(:unsubscribe_event_record, fn repo, changes ->
-      {:ok, canonical_event(repo, changes.unsubscribe_event, delivery)}
-    end)
-    |> Compliance.configured_lifecycle().handle_event(%{
-      delivery_id: delivery.id,
-      tenant_id: delivery.tenant_id,
-      event: :unsubscribed
-    })
-  end
-
-  defp canonical_event(_repo, %Event{inserted_at: %DateTime{}} = event, _delivery), do: event
-
-  defp canonical_event(repo, %Event{inserted_at: nil}, %Delivery{} = delivery) do
-    query =
-      from(event in Event,
-        where:
-          event.delivery_id == ^delivery.id and
-            event.type == :unsubscribed and
-            event.idempotency_key == ^unsubscribe_idempotency_key(delivery),
-        limit: 1
-      )
-
-    repo.one!(query, Repo.multi_opts())
-  end
-
-  defp respond_to_unsubscribe(
-         {:ok, %{unsubscribe_event: inserted_event, unsubscribe_event_record: event}},
-         conn,
-         delivery
-       ) do
-    if inserted_event.inserted_at do
-      Projector.broadcast_delivery_updated(delivery, event.type, %{
-        tenant_id: delivery.tenant_id,
-        event_id: event.id
-      })
-    end
-
+  defp respond_to_unsubscribe({:ok, _convergence}, conn) do
     send_resp(conn, 200, "")
   end
 
-  defp respond_to_unsubscribe({:error, _step, _reason, _changes}, conn, _delivery) do
+  defp respond_to_unsubscribe({:error, _reason}, conn) do
     send_resp(conn, 500, "")
   end
-
-  defp unsubscribe_idempotency_key(%Delivery{id: delivery_id}), do: "unsubscribe:#{delivery_id}"
 end

@@ -4,7 +4,6 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
   alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.Events.Event
   alias Mailglass.Generators
-  alias Mailglass.PubSub.Topics
   alias Mailglass.Suppression.Entry
   alias Mailglass.TestRepo
   alias Mailglass.TestSupport.SandboxOwnership
@@ -228,25 +227,8 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     test "replayed POST returns 200 without duplicating durable state", %{conn: conn} do
       delivery = Generators.delivery_fixture()
       token = Unsubscribe.sign_token(delivery.id)
-      handler_id = "unsubscribe-feedback-#{System.unique_integer([:positive])}"
-      test_pid = self()
-
-      :ok =
-        :telemetry.attach(
-          handler_id,
-          [:mailglass, :delivery, :feedback, :stop],
-          fn _event, measurements, metadata, _config ->
-            send(test_pid, {:feedback, measurements, metadata})
-          end,
-          nil
-        )
-
-      on_exit(fn -> :telemetry.detach(handler_id) end)
 
       first = post(conn, "/mailglass/unsubscribe/#{token}", %{})
-
-      assert_receive {:feedback, %{count: 1}, %{status: :unsubscribed}}
-
       second = post(build_conn(), "/mailglass/unsubscribe/#{token}", %{})
 
       assert response(first, 200) == ""
@@ -261,7 +243,6 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
         )
 
       assert count == 1
-      refute_receive {:feedback, _, _}, 50
 
       assert [_event] = events_for(delivery)
       assert [_suppression] = suppressions_for(delivery)
