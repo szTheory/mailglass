@@ -3,13 +3,14 @@ defmodule Mailglass.Outbound.Envelope do
 
   alias Mailglass.Message
 
-  @version 1
+  @legacy_version 1
+  @version 2
   @max_json_depth 16
   @max_json_items 10_000
   @max_json_bytes 1_048_576
   @max_envelope_bytes 10_485_760
-  @json_float_prefix "~mailglass:json-v1:float:"
-  @json_string_prefix "~mailglass:json-v1:string:"
+  @json_float_prefix "~mailglass:json-v2:float:"
+  @json_string_prefix "~mailglass:json-v2:string:"
   @allowed_streams %{
     "transactional" => :transactional,
     "operational" => :operational,
@@ -65,7 +66,15 @@ defmodule Mailglass.Outbound.Envelope do
 
   def dump(_, _), do: serialization_error(:invalid_envelope)
 
-  def load(%{"version" => @version} = envelope) do
+  # V1 allowed arbitrary JSON strings, so its JSON values must never be
+  # interpreted as V2 float markers. The envelope version is the encoding
+  # discriminator; the payload column's version is only an index/projection.
+  def load(%{"version" => @legacy_version} = envelope), do: load_envelope(envelope, false)
+  def load(%{"version" => @version} = envelope), do: load_envelope(envelope, true)
+
+  def load(_), do: serialization_error(:unsupported_version)
+
+  defp load_envelope(envelope, decode_float_markers?) do
     with {:ok, _canonical} <- canonical_envelope(envelope),
          {:ok, tenant_id} <- required_string(envelope, "tenant_id"),
          {:ok, stream} <- required_stream(envelope),
@@ -78,8 +87,9 @@ defmodule Mailglass.Outbound.Envelope do
          {:ok, html_body} <- required_nullable_string(envelope, "html_body"),
          {:ok, text_body} <- required_nullable_string(envelope, "text_body"),
          {:ok, tags} <- required_strings(envelope, "tags"),
-         {:ok, metadata} <- required_json(envelope, "metadata"),
-         {:ok, provider_options} <- required_json(envelope, "provider_options"),
+         {:ok, metadata} <- required_json(envelope, "metadata", decode_float_markers?),
+         {:ok, provider_options} <-
+           required_json(envelope, "provider_options", decode_float_markers?),
          {:ok, attachments} <- required_attachments(envelope) do
       email = Swoosh.Email.new(from: from, subject: subject || "")
       email = apply(Swoosh.Email, field, [email, recipient])
@@ -110,8 +120,6 @@ defmodule Mailglass.Outbound.Envelope do
     end
   end
 
-  def load(_), do: serialization_error(:unsupported_version)
-
   def digest(envelope) do
     case Jason.encode(envelope) do
       {:ok, encoded} -> encoded |> then(&:crypto.hash(:sha256, &1)) |> Base.encode16(case: :lower)
@@ -138,8 +146,12 @@ defmodule Mailglass.Outbound.Envelope do
   defp required_nullable_string(map, key),
     do: with({:ok, value} <- Map.fetch(map, key), do: nullable_string(value))
 
-  defp required_json(map, key),
-    do: with({:ok, value} <- Map.fetch(map, key), do: load_json(value))
+  defp required_json(map, key, decode_float_markers?),
+    do:
+      with(
+        {:ok, value} <- Map.fetch(map, key),
+        do: load_json(value, decode_float_markers?)
+      )
 
   defp required_strings(map, key), do: with({:ok, value} <- Map.fetch(map, key), do: strings(value))
 
@@ -325,8 +337,8 @@ defmodule Mailglass.Outbound.Envelope do
     end
   end
 
-  defp load_json(value) do
-    with {:ok, value, _items} <- decode_json(value, 0, 0),
+  defp load_json(value, decode_float_markers?) do
+    with {:ok, value, _items} <- decode_json(value, 0, 0, decode_float_markers?),
          {:ok, encoded} <- Jason.encode(value),
          true <- byte_size(encoded) <= @max_json_bytes do
       {:ok, value}
@@ -335,35 +347,42 @@ defmodule Mailglass.Outbound.Envelope do
     end
   end
 
-  defp decode_json(_value, _depth, items) when items >= @max_json_items, do: :error
-  defp decode_json(nil, _depth, items), do: {:ok, nil, items + 1}
+  defp decode_json(_value, _depth, items, _decode_float_markers?) when items >= @max_json_items,
+    do: :error
 
-  defp decode_json(value, _depth, items) when is_boolean(value) or is_integer(value),
-    do: {:ok, value, items + 1}
+  defp decode_json(nil, _depth, items, _decode_float_markers?), do: {:ok, nil, items + 1}
 
-  defp decode_json(value, _depth, items) when is_float(value),
+  defp decode_json(value, _depth, items, _decode_float_markers?)
+       when is_boolean(value) or is_integer(value),
+       do: {:ok, value, items + 1}
+
+  defp decode_json(value, _depth, items, _decode_float_markers?) when is_float(value),
     do: if(finite_float?(value), do: {:ok, value, items + 1}, else: :error)
 
-  defp decode_json(value, _depth, items) when is_binary(value) do
+  defp decode_json(value, _depth, items, decode_float_markers?) when is_binary(value) do
     with true <- String.valid?(value),
-         {:ok, decoded} <- decode_json_string(value) do
+         {:ok, decoded} <- decode_json_string(value, decode_float_markers?) do
       {:ok, decoded, items + 1}
     else
       _ -> :error
     end
   end
 
-  defp decode_json(_value, depth, _items) when depth >= @max_json_depth, do: :error
+  defp decode_json(_value, depth, _items, _decode_float_markers?) when depth >= @max_json_depth,
+    do: :error
 
-  defp decode_json(values, depth, items) when is_list(values),
-    do: decode_json_list(values, depth + 1, items + 1, [])
+  defp decode_json(values, depth, items, decode_float_markers?) when is_list(values),
+    do: decode_json_list(values, depth + 1, items + 1, [], decode_float_markers?)
 
-  defp decode_json(values, depth, items) when is_map(values) and not is_struct(values),
-    do: decode_json_map(values, depth + 1, items + 1, %{})
+  defp decode_json(values, depth, items, decode_float_markers?)
+       when is_map(values) and not is_struct(values),
+       do: decode_json_map(values, depth + 1, items + 1, %{}, decode_float_markers?)
 
-  defp decode_json(_, _, _), do: :error
+  defp decode_json(_, _, _, _), do: :error
 
-  defp decode_json_string(value) do
+  defp decode_json_string(value, false), do: {:ok, value}
+
+  defp decode_json_string(value, true) do
     cond do
       String.starts_with?(value, @json_string_prefix) ->
         {:ok, String.replace_prefix(value, @json_string_prefix, "")}
@@ -385,20 +404,21 @@ defmodule Mailglass.Outbound.Envelope do
 
   defp decode_json_float(_), do: :error
 
-  defp decode_json_list([], _, items, acc), do: {:ok, Enum.reverse(acc), items}
+  defp decode_json_list([], _, items, acc, _decode_float_markers?),
+    do: {:ok, Enum.reverse(acc), items}
 
-  defp decode_json_list([value | rest], depth, items, acc),
+  defp decode_json_list([value | rest], depth, items, acc, decode_float_markers?),
     do:
       with(
-        {:ok, value, items} <- decode_json(value, depth, items),
-        do: decode_json_list(rest, depth, items, [value | acc])
+        {:ok, value, items} <- decode_json(value, depth, items, decode_float_markers?),
+        do: decode_json_list(rest, depth, items, [value | acc], decode_float_markers?)
       )
 
-  defp decode_json_map(values, depth, items, acc) do
+  defp decode_json_map(values, depth, items, acc, decode_float_markers?) do
     Enum.reduce_while(values, {:ok, acc, items}, fn {key, value}, {:ok, acc, items} ->
       with true <- is_binary(key) and String.valid?(key),
            false <- Map.has_key?(acc, key),
-           {:ok, value, items} <- decode_json(value, depth, items) do
+           {:ok, value, items} <- decode_json(value, depth, items, decode_float_markers?) do
         {:cont, {:ok, Map.put(acc, key, value), items}}
       else
         _ -> {:halt, :error}

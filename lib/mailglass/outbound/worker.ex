@@ -50,12 +50,19 @@ if Code.ensure_loaded?(Oban.Worker) do
             {:error, err}
 
           {:error, %{__exception__: true} = err} ->
-            {:error, err}
+            if terminal_payload_error?(err), do: {:cancel, err}, else: {:error, err}
 
           {:error, other} ->
             {:error, inspect(other)}
         end
       end)
     end
+
+    defp terminal_payload_error?(%Mailglass.SendError{
+           context: %{reason_class: :legacy_payload_integrity_unverifiable}
+         }),
+         do: true
+
+    defp terminal_payload_error?(_), do: false
   end
 end

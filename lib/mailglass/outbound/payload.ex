@@ -60,6 +60,12 @@ defmodule Mailglass.Outbound.Payload do
           digest when is_binary(digest) and digest == payload.envelope_digest ->
             Envelope.load(payload.envelope)
 
+          _ when payload.envelope_version == 1 ->
+            # jsonb discarded the original numeric spelling. A mismatched V1
+            # digest cannot distinguish corruption from a pre-V2 finite float,
+            # so fail terminally instead of guessing or retrying indefinitely.
+            {:error, :legacy_integrity_unverifiable}
+
           _ ->
             {:error, :integrity_failed}
         end

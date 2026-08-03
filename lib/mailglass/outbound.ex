@@ -853,6 +853,12 @@ defmodule Mailglass.Outbound do
           {:ok, %{message: message, adapter_ref: delivery.adapter_ref}}
         end
 
+      {:error, :legacy_integrity_unverifiable} ->
+        {:error,
+         Mailglass.SendError.new(:serialization_failed,
+           context: %{reason_class: :legacy_payload_integrity_unverifiable}
+         )}
+
       {:error, %{__exception__: true} = error} ->
         {:error, error}
 

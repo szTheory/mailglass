@@ -102,7 +102,7 @@ defmodule Mailglass.Outbound.WorkerTest do
       metadata = %{
         "exponent" => 1.0e20,
         "trailing_zero" => 1.2300,
-        "reserved_string" => "~mailglass:json-v1:float:not-a-marker"
+        "reserved_string" => "~mailglass:json-v2:float:not-a-marker"
       }
 
       provider_options = %{
@@ -137,11 +137,84 @@ defmodule Mailglass.Outbound.WorkerTest do
       assert restored.metadata == metadata
       assert restored.swoosh_email.provider_options == provider_options
 
+      assert <<0.0::float-64>> ==
+               <<Enum.at(restored.swoosh_email.provider_options["nested"], 0)::float-64>>
+
+      assert <<-0.0::float-64>> ==
+               <<Enum.at(restored.swoosh_email.provider_options["nested"], 1)::float-64>>
+
       TestRepo.update!(
         Ecto.Changeset.change(payload, envelope: Map.put(payload.envelope, "subject", "tampered"))
       )
 
       assert {:error, :integrity_failed} = Payload.fetch_for_delivery("test-tenant", delivery.id)
+    end
+
+    @tag phase_150_task: "t150_10_01"
+    test "keeps historical V1 marker-shaped JSON strings literal" do
+      delivery = Generators.delivery_fixture(tenant_id: "test-tenant")
+
+      envelope =
+        legacy_envelope(%{
+          "metadata" => %{
+            "float_marker" => "~mailglass:json-v1:float:3ff0000000000000",
+            "string_marker" => "~mailglass:json-v1:string:customer-value"
+          },
+          "provider_options" => %{
+            "marker" => "~mailglass:json-v1:float:4000000000000000"
+          }
+        })
+
+      assert {:ok, _payload} =
+               Payload.changeset(%Payload{}, %{
+                 tenant_id: "test-tenant",
+                 delivery_id: delivery.id,
+                 envelope_version: 1,
+                 envelope_digest: Envelope.digest(envelope),
+                 envelope: envelope
+               })
+               |> TestRepo.insert()
+
+      assert {:ok, %Envelope.Decoded{message: restored}} =
+               Payload.fetch_for_delivery("test-tenant", delivery.id)
+
+      assert restored.metadata["float_marker"] == "~mailglass:json-v1:float:3ff0000000000000"
+      assert restored.metadata["string_marker"] == "~mailglass:json-v1:string:customer-value"
+
+      assert restored.swoosh_email.provider_options["marker"] ==
+               "~mailglass:json-v1:float:4000000000000000"
+    end
+
+    @tag phase_150_task: "t150_10_01"
+    test "terminally cancels an unverifiable historical V1 float payload" do
+      delivery = Generators.delivery_fixture(tenant_id: "test-tenant")
+      envelope = legacy_envelope(%{"metadata" => %{"exponent" => 1.0e20}})
+
+      assert {:ok, _payload} =
+               Payload.changeset(%Payload{}, %{
+                 tenant_id: "test-tenant",
+                 delivery_id: delivery.id,
+                 envelope_version: 1,
+                 # Historical V1 rows recorded bytes before jsonb normalized
+                 # their numeric spelling; this digest is intentionally stale.
+                 envelope_digest: Envelope.digest(envelope),
+                 envelope: envelope
+               })
+               |> TestRepo.insert()
+
+      assert {:error, :legacy_integrity_unverifiable} =
+               Payload.fetch_for_delivery("test-tenant", delivery.id)
+
+      job = %Oban.Job{
+        args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
+      }
+
+      assert {:cancel,
+              %Mailglass.SendError{
+                context: %{reason_class: :legacy_payload_integrity_unverifiable}
+              }} = Mailglass.Outbound.Worker.perform(job)
+
+      assert %Delivery{status: :failed} = TestRepo.get!(Delivery, delivery.id)
     end
 
     @tag phase_150_task: "t150_08_01"
@@ -433,6 +506,28 @@ defmodule Mailglass.Outbound.WorkerTest do
       worker_available = Code.ensure_loaded?(Mailglass.Outbound.Worker)
       assert oban_available == worker_available
     end
+  end
+
+  defp legacy_envelope(overrides) do
+    email =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Legacy", "legacy@example.com"})
+      |> Swoosh.Email.to("legacy-#{System.unique_integer([:positive])}@example.com")
+      |> Swoosh.Email.subject("legacy envelope")
+
+    assert {:ok, envelope} =
+             Envelope.dump(
+               Message.build(email,
+                 tenant_id: "test-tenant",
+                 stream: :transactional,
+                 metadata: %{}
+               ),
+               adapter_ref: Delivery.default_adapter_ref()
+             )
+
+    envelope
+    |> Map.put("version", 1)
+    |> Map.merge(overrides)
   end
 end
 
