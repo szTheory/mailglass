@@ -17,7 +17,7 @@ The generated-host harness must create a new application in a temporary director
 
 ## Wave 0 Test Assets
 
-- [ ] `dev/mailglass/generated_host_proof.sh` — isolated host lifecycle, package build/unpack, database allocation, stage selection, and cleanup.
+- [ ] `scripts/generated_host_proof.sh` — canonical isolated host lifecycle, package build/unpack, database allocation, stage selection, and cleanup.
 - [ ] `dev/mailglass/generated_host/journey.ex` — one shared local/Hex downstream journey.
 - [ ] `dev/mailglass/generated_host/host_template.ex` — fresh-host files and configuration driven by public APIs.
 - [ ] `test/generated_host/package_boundary_test.exs` — rejects repository-path/private-helper leakage and validates archive manifests.
@@ -38,7 +38,7 @@ Wave 0 is incomplete until Plan 01 creates the generated-host harness and first 
 | 153-05 | ADOPT-05 | Preflight/task tests, production operator tests, and `--stage readiness` | Missing prerequisite passes, secret leaks, anonymous operator access, `dev_routes` production reliance |
 | 153-06 | ADOPT-06 | `mix test test/mailglass/docs_contract_test.exs`, `mix mailglass.docs.check`, and `--stage docs` | Unparseable/unexecutable examples or stale contract claim |
 | 153-07 | REL-17 | Resolver/workflow tests, full `DEP_MODE=local` journey, `mix ci`, selected package checks, protected candidate-SHA CI | Derived/target mismatch, bypass path, local proof failure, candidate CI failure |
-| 153-08 | REL-17 | Protected workflow evidence plus full `DEP_MODE=hex` journey at exact versions | Unprotected publication, version/checksum mismatch, public journey or HexDocs failure |
+| 153-08 | REL-17 | Workflow/verifier fixture tests, blocking exact-candidate checkpoint, ledger-bound protected publication verifier, and full `DEP_MODE=hex bash scripts/generated_host_proof.sh --stage all` journey | Wrong workflow/environment, absent approval, SHA/tag/package/version/checksum/ledger mismatch, unprotected publication, public journey failure, or missing HexDocs |
 
 ## Behavioral Coverage
 
@@ -60,7 +60,7 @@ For missing Oban, missing/wrong/stopped queue, absent migration, schema drift, m
 
 ### Release proof
 
-The release ledger is evidence, not a manually asserted checklist. Each row records the immutable candidate SHA, exact package/version, command or protected job, timestamp, result, and artifact/workflow URL. D-21 requires every reversible row green before Plan 08. D-23 permits a pause only for the protected publication credential/authentication gate and never permits bypassing a failed or absent check.
+The release ledger is evidence, not a manually asserted checklist. Each row records the immutable candidate SHA/tag, exact package/version/checksum, protected workflow path/name, environment approval/protection, command or job, timestamp, result, and artifact/workflow URL. D-21 requires every reversible row green before Plan 08. Plan 08 then blocks for explicit one-way publication confirmation; after approval, D-23 permits an operational pause only for protected publication credentials/authentication and never permits bypassing a failed, absent, or drifted check.
 
 ## Security Validation
 
@@ -77,7 +77,7 @@ The release ledger is evidence, not a manually asserted checklist. Each row reco
 |--------|---------|---------------|--------|
 | GOAL | Fresh production-shaped host proves the public first-adopter journey | 153-01 through 153-06 | COVERED |
 | GOAL | Contract/configuration drift blocks release | 153-06, 153-07 | COVERED |
-| GOAL | Exact public artifacts repeat the proof | 153-07, 153-08 | COVERED |
+| GOAL | Exact public artifacts repeat the proof | 153-08 | COVERED |
 | REQ | ADOPT-01 | 153-01 | COVERED |
 | REQ | ADOPT-02 | 153-02 | COVERED |
 | REQ | ADOPT-03 | 153-03 | COVERED |
@@ -97,7 +97,7 @@ The release ledger is evidence, not a manually asserted checklist. Each row reco
 | CONTEXT | D-15–D-16 | 153-05 | COVERED |
 | CONTEXT | D-17–D-18 | 153-06 | COVERED |
 | CONTEXT | D-19–D-21 | 153-07 | COVERED |
-| CONTEXT | D-22 | 153-07, 153-08 | COVERED |
+| CONTEXT | D-22 | 153-08 | COVERED |
 | CONTEXT | D-23 | 153-08 | COVERED |
 | CONTEXT | Deferred ideas | None included | EXCLUDED |
 

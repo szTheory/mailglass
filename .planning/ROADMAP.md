@@ -188,7 +188,7 @@ Plans:
 - [ ] 153-05-PLAN.md — Add callable production preflight and an authenticated production operator mount.
 - [ ] 153-06-PLAN.md — Make adopter, production, compatibility, and admin documentation executable.
 - [ ] 153-07-PLAN.md — Derive changed packages and enforce all reversible prepublication gates.
-- [ ] 153-08-PLAN.md — Publish only through the protected workflow and verify exact public Hex artifacts.
+- [ ] 153-08-PLAN.md — Checkpoint the one-way protected publication and verify ledger-bound exact public Hex artifacts.
 
 ## Progress
 

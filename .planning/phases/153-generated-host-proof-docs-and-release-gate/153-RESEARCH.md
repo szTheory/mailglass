@@ -163,14 +163,12 @@ PII-free proof manifest (inputs, package locks, checkpoint hashes, status)
 ### Recommended Project Structure
 
 ```text
-scripts/
-├── generated_host_proof.sh              # common local/hex host lifecycle
-├── check_generated_host_proof.sh        # manifest/schema validator
-└── consumer_install_smoke.sh             # preserve as quick install/boot smoke or delegate
-dev/mix/tasks/
-├── mailglass.generated_host.proof.ex     # root task if Elixir controls checkpoints
-└── mailglass.production.preflight.ex     # callable public readiness composition
-reference/host_app/                       # update only as production-mount example; not proof substitute
+scripts/generated_host_proof.sh                  # canonical common local/hex host lifecycle
+scripts/check_generated_host_proof.sh            # manifest/schema validator
+scripts/consumer_install_smoke.sh                 # preserve as quick install/boot smoke or delegate
+dev/mix/tasks/mailglass.generated_host.proof.ex  # root task if Elixir controls checkpoints
+dev/mix/tasks/mailglass.production.preflight.ex  # callable public readiness composition
+reference/host_app/                               # update only as production-mount example; not proof substitute
 test/generated_host/                      # runner, negative-control, manifest contract tests
 test/mailglass/                           # generator/preflight/docs/release selection contracts
 .github/workflows/                        # protected prepublish and postpublish orchestration
@@ -362,21 +360,17 @@ end
 
 | # | Claim | Section | Risk if Wrong |
 |---|---|---|---|
-| A1 | New `scripts/generated_host_proof.sh` is the right artifact location/name. | Likely Files | Planner may choose an Elixir task or another script location. |
+| A1 | `scripts/generated_host_proof.sh` is the canonical runner; templates remain under `dev/mailglass/generated_host/`. | Likely Files | RESOLVED — all plans, workflows, and validation use this single entry point. |
 | A2 | A separate public production-preflight task/module is needed rather than extending an existing task. | Likely Files | Could duplicate an existing public readiness surface. |
 | A3 | The suggested focused test command is suitable after host runner exists. | Validation | Exact test topology may use host commands instead. |
 
 ## Open Questions
 
-1. **Where should host-owned fixture source live?**
-   - What we know: `reference/host_app` is intentionally a reference/example and cannot substitute for a freshly generated host. [VERIFIED: 153-CONTEXT.md]
-   - What's unclear: whether the project prefers generator patches applied by shell or a minimal checked-in template copied into `mktemp`.
-   - Recommendation: choose one runner-owned template directory and prove it is generated/copied after `phx.new`; never make reference-host state the gate.
+1. **(RESOLVED) Where should host-owned fixture source live?**
+   - Resolution: `scripts/generated_host_proof.sh` is the single runner entry point. Runner-owned templates live under `dev/mailglass/generated_host/` and are copied into the temporary application only after an unmodified fresh `mix phx.new` completes. `reference/host_app` remains reference material and is never the release gate.
 
-2. **How should changed packaged docs be attributed?**
-   - What we know: each package has explicit `:package` files and existing publish checks inspect allowlists. [VERIFIED: codebase grep]
-   - What's unclear: the canonical tag-to-package diff helper does not yet exist.
-   - Recommendation: implement one auditable resolver and test changed/unchanged/core-admin-linked/inbound-independent fixtures before workflow changes.
+2. **(RESOLVED) How should changed packaged docs be attributed?**
+   - Resolution: one auditable resolver owns the package manifest/allowlist and compares each package against its own latest reachable package tag. The same resolver applies the core/admin linked-release rule, preserves inbound independence, and rejects any release-target omission or extra package.
 
 ## Sources
 
