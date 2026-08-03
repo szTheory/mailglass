@@ -92,6 +92,7 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
     # behind for the rest of the run. See `SandboxOwnership.with_app_env!/2`.
     with_app_env!(:mailglass)
 
+    TestRepo.query!("TRUNCATE TABLE mailglass_suppressions CASCADE", [])
     TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
     TestRepo.query!("TRUNCATE TABLE mailglass_deliveries CASCADE", [])
 
@@ -122,6 +123,7 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
     )
 
     on_exit(fn ->
+      TestRepo.query!("TRUNCATE TABLE mailglass_suppressions CASCADE", [])
       TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
       TestRepo.query!("TRUNCATE TABLE mailglass_deliveries CASCADE", [])
     end)
@@ -137,6 +139,7 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
             recipient_domain <- string(:alphanumeric, min_length: 3, max_length: 12),
             max_runs: 50
           ) do
+      TestRepo.query!("TRUNCATE TABLE mailglass_suppressions CASCADE", [])
       TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
       TestRepo.query!("TRUNCATE TABLE mailglass_deliveries CASCADE", [])
 
