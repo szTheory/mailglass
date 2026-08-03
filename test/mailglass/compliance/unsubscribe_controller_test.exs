@@ -5,6 +5,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
   alias Mailglass.Events.Event
   alias Mailglass.Generators
   alias Mailglass.PubSub.Topics
+  alias Mailglass.Suppression.Entry
   alias Mailglass.TestRepo
   alias Mailglass.TestSupport.SandboxOwnership
 
@@ -187,34 +188,16 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
   describe "POST /mailglass/unsubscribe/:token" do
     @describetag :post_flow
 
-    test "appends a single unsubscribed event, composes lifecycle, and broadcasts after commit", %{
+    test "converges a delivery-derived canonical event and immutable stream suppression", %{
       conn: conn
     } do
-      Application.put_env(:mailglass, :unsubscribe_test_pid, self())
-
-      Application.put_env(
-        :mailglass,
-        :compliance,
-        Keyword.put(Application.fetch_env!(:mailglass, :compliance), :lifecycle, RecordingLifecycle)
-      )
-
-      delivery = Generators.delivery_fixture()
-      delivery_id = delivery.id
-      tenant_id = delivery.tenant_id
+      delivery = Generators.delivery_fixture(stream: :bulk, recipient: "Recipient@Example.com")
       token = Unsubscribe.sign_token(delivery.id)
-      :ok = Phoenix.PubSub.subscribe(Mailglass.PubSub, Topics.events(tenant_id, delivery_id))
 
       conn = post(conn, "/mailglass/unsubscribe/#{token}", %{})
 
       assert response(conn, 200) == ""
       assert get_resp_header(conn, "location") == []
-
-      assert_receive {:lifecycle_multi, operations,
-                      %{delivery_id: ^delivery_id, event: :unsubscribed}}
-
-      assert :unsubscribe_event in operations
-      assert_receive {:lifecycle_txn, ^delivery_id}
-      assert_receive {:delivery_updated, ^delivery_id, :unsubscribed, %{tenant_id: ^tenant_id}}
 
       events =
         TestRepo.all(
@@ -224,7 +207,22 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
         )
 
       assert length(events) == 1
-      assert hd(events).idempotency_key == "unsubscribe:#{delivery.id}"
+      event = hd(events)
+      assert event.idempotency_key == "unsubscribe:#{delivery.id}"
+
+      [suppression] = suppressions_for(delivery)
+      assert suppression.tenant_id == delivery.tenant_id
+      assert suppression.address == "recipient@example.com"
+      assert suppression.scope == :address_stream
+      assert suppression.stream == :bulk
+      assert suppression.reason == :unsubscribe
+      assert suppression.source == "compliance:one_click"
+
+      assert suppression.metadata == %{
+               "delivery_id" => delivery.id,
+               "event_id" => event.id,
+               "event_type" => "unsubscribed"
+             }
     end
 
     test "replayed POST returns 200 without duplicating durable state", %{conn: conn} do
@@ -264,6 +262,9 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
 
       assert count == 1
       refute_receive {:feedback, _, _}, 50
+
+      assert [_event] = events_for(delivery)
+      assert [_suppression] = suppressions_for(delivery)
     end
 
     test "expired POST returns 200 without redirecting or writing an event", %{conn: conn} do
@@ -331,5 +332,25 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
   defp mutate_segment!(segment) when is_binary(segment) and segment != "" do
     replacement = if String.first(segment) == "A", do: "B", else: "A"
     String.replace_prefix(segment, String.first(segment), replacement)
+  end
+
+  defp events_for(delivery) do
+    TestRepo.all(
+      from(event in Event,
+        where: event.delivery_id == ^delivery.id and event.type == :unsubscribed
+      )
+    )
+  end
+
+  defp suppressions_for(delivery) do
+    TestRepo.all(
+      from(suppression in Entry,
+        where:
+          suppression.tenant_id == ^delivery.tenant_id and
+            suppression.address == ^String.downcase(delivery.recipient) and
+            suppression.scope == :address_stream and suppression.stream == ^delivery.stream and
+            suppression.reason == :unsubscribe
+      )
+    )
   end
 end
