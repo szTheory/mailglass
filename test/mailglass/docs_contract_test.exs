@@ -617,4 +617,95 @@ defmodule Mailglass.DocsContractTest do
       refute send_block =~ "Swoosh.Email.to"
     end
   end
+
+  describe "Phase 150 outbound durability source contract" do
+    @tag phase_150_task: "t150_05_01"
+    test "active outbound seams describe explicit durable and non-durable selection" do
+      seams = phase_150_outbound_seams()
+
+      assert phase_150_contract?(seams)
+
+      refute phase_150_contract?(
+               Map.put(
+                 seams,
+                 :optional_deps,
+                 "When Oban is unavailable, outbound work automatically falls back to Task.Supervisor."
+               )
+             )
+
+      refute phase_150_contract?(Map.put(seams, :oban, "queues: [mailglass: 10]"))
+    end
+  end
+
+  defp phase_150_outbound_seams do
+    %{
+      optional_deps: File.read!("lib/mailglass/optional_deps.ex"),
+      oban: File.read!("lib/mailglass/optional_deps/oban.ex"),
+      outbound: File.read!("lib/mailglass/outbound.ex"),
+      application: File.read!("lib/mailglass/application.ex"),
+      config: File.read!("lib/mailglass/config.ex"),
+      stability: extract_phase_150_stability_section(),
+      getting_started: extract_async_guide_section("guides/getting-started.md"),
+      jobs: extract_jobs_async_section()
+    }
+  end
+
+  defp phase_150_contract?(seams) do
+    canonical_queue = Atom.to_string(Mailglass.Outbound.Worker.queue())
+
+    Enum.all?([
+      seams.optional_deps =~ "fail closed",
+      seams.optional_deps =~ "Mailglass.OptionalDeps.Oban",
+      seams.oban =~ "available?/0",
+      seams.oban =~ "dependency detection",
+      seams.oban =~ "ready?/1",
+      seams.oban =~ "canonical readiness",
+      seams.oban =~ "insert/4",
+      seams.oban =~ "fail-closed",
+      seams.outbound =~ "explicitly selected",
+      seams.outbound =~ "non-durable",
+      seams.outbound =~ "typed",
+      seams.application =~ "durable deliver_later/2 sends fail closed",
+      seams.config =~ "explicitly selects non-durable",
+      seams.config =~ "fails closed",
+      seams.stability =~ "private transport state",
+      seams.stability =~ "not a sent-message archive",
+      seams.stability =~ "delivery_id",
+      seams.stability =~ "mailglass_tenant_id",
+      seams.stability =~ canonical_queue,
+      seams.getting_started =~ "Mailglass.Config.production_readiness/0",
+      seams.getting_started =~ "private transport state",
+      seams.getting_started =~ canonical_queue,
+      seams.jobs =~ "Mailglass.Config.production_readiness/0",
+      seams.jobs =~ "private transport state",
+      seams.jobs =~ canonical_queue
+    ]) and
+      Enum.all?(Map.values(seams), fn seam ->
+        not (seam =~ "automatically falls back to Task.Supervisor" or seam =~ "queues: [mailglass: 10]")
+      end)
+  end
+
+  defp extract_phase_150_stability_section do
+    "docs/api_stability.md"
+    |> File.read!()
+    |> extract_between("## §Outbound (Phase 3 Plan 05)", "## §Tracking.Token")
+  end
+
+  defp extract_async_guide_section(path) do
+    path
+    |> File.read!()
+    |> extract_between("To select the configured asynchronous path instead", "## End-to-End Example")
+  end
+
+  defp extract_jobs_async_section do
+    "guides/jobs.md"
+    |> File.read!()
+    |> extract_between("## Job 4: Send reliably in the background", "<!-- J5 -->")
+  end
+
+  defp extract_between(content, start_marker, end_marker) do
+    [_, after_start] = String.split(content, start_marker, parts: 2)
+    [section | _] = String.split(after_start, end_marker, parts: 2)
+    section
+  end
 end
