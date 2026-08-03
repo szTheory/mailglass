@@ -63,4 +63,13 @@ defmodule Mailglass.GeneratedHost.NegativeControlsTest do
 
     assert status != 0
   end
+
+  @tag control_family: :input
+  test "every input control requires a public rejection before its zero-effect snapshot is accepted" do
+    journey = File.read!(Path.join(@project_root, "dev/mailglass/generated_host/journey.ex"))
+
+    assert journey =~ "assert_input_rejected!"
+    assert journey =~ "unsupported_provider_options"
+    assert journey =~ "oversized_json"
+  end
 end
