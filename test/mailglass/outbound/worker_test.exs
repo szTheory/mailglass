@@ -100,12 +100,23 @@ defmodule Mailglass.Outbound.WorkerTest do
       if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do
         :skip
       else
-        control = start_supervised!({Agent, fn -> %{body: "original", route: :route_a, renders: 0, routes: 0} end})
+        control =
+          start_supervised!(
+            {Agent, fn -> %{body: "original", route: :route_a, renders: 0, routes: 0} end}
+          )
+
         Application.put_env(:mailglass, :phase_150_worker_route_control, control)
         Application.put_env(:mailglass, :async_adapter, :oban)
-        Application.put_env(:mailglass, :tenancy, Mailglass.Outbound.WorkerTest.StatefulRouteTenancy)
 
-        Application.put_env(:mailglass, :adapter,
+        Application.put_env(
+          :mailglass,
+          :tenancy,
+          Mailglass.Outbound.WorkerTest.StatefulRouteTenancy
+        )
+
+        Application.put_env(
+          :mailglass,
+          :adapter,
           {Mailglass.Outbound.WorkerTest.StatefulRouteAdapter, [test_pid: self(), route: :default]}
         )
 
@@ -149,10 +160,12 @@ defmodule Mailglass.Outbound.WorkerTest do
 
         assert %Oban.Job{} =
                  job =
-                   TestRepo.one!(
-                     from j in Oban.Job,
-                       where: j.queue == "mailglass_outbound" and j.args["delivery_id"] == ^delivery.id
+                 TestRepo.one!(
+                   from(j in Oban.Job,
+                     where:
+                       j.queue == "mailglass_outbound" and j.args["delivery_id"] == ^delivery.id
                    )
+                 )
 
         assert job.args == %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
         assert %{renders: 1, routes: 1} = Agent.get(control, & &1)
@@ -165,8 +178,10 @@ defmodule Mailglass.Outbound.WorkerTest do
         assert_receive {:stateful_adapter_delivery, :route_a, ^delivery_id, sent}
         assert sent.swoosh_email.subject == subject
         assert sent.swoosh_email.html_body == "&lt;p&gt;rendered original&lt;/p&gt;"
+
         assert [%Swoosh.Attachment{data: ^attachment_marker, filename: "immutable-marker.txt"}] =
                  sent.swoosh_email.attachments
+
         refute_receive {:stateful_adapter_delivery, :route_b, _, _}
         assert %{renders: 1, routes: 1} = Agent.get(control, & &1)
       end
@@ -205,8 +220,9 @@ defmodule Mailglass.Outbound.WorkerTest do
 
         job =
           TestRepo.one!(
-            from j in Oban.Job,
+            from(j in Oban.Job,
               where: j.queue == "mailglass_outbound" and j.args["delivery_id"] == ^delivery.id
+            )
           )
 
         TestRepo.update!(Ecto.Changeset.change(delivery, adapter_ref: "route_b"))
