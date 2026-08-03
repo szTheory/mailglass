@@ -1,6 +1,6 @@
 ---
 phase: 150-private-envelope-and-atomic-durable-enqueue
-reviewed: 2026-08-03T01:40:37Z
+reviewed: 2026-08-03T01:48:30Z
 depth: standard
 files_reviewed: 11
 files_reviewed_list:
@@ -16,24 +16,23 @@ files_reviewed_list:
   - test/mailglass/v06_migration_test.exs
   - test/runtime/no_optional_deps_public_send.exs
 findings:
-  critical: 1
-  warning: 0
+  critical: 2
+  warning: 1
   info: 0
-  total: 1
-status: fixed
-fixed_by: 773a0747
+  total: 3
+status: issues_found
 ---
 
 # Phase 150: Code Review Report
 
-**Reviewed:** 2026-08-03T01:40:37Z
+**Reviewed:** 2026-08-03T01:48:30Z
 **Depth:** standard
 **Files Reviewed:** 11
-**Status:** fixed
+**Status:** issues_found
 
 ## Summary
 
-Reviewed the actual gap-closure changes from plans 150-06 through 150-09, including codec fidelity/safety, the prefix-hostile V06 lifecycle test, real queued-worker retry proof, and the isolated no-optional-dependency runtime harness. The migration, queued retry, and runtime probe exercised successfully in this checkout. The finite-float JSONB integrity finding below was fixed in `773a0747` with a storage-stable, reversible representation and a persistence regression.
+Re-reviewed the CR-01 fix commits `773a0747` and `31f0e51a` against the actual persistence path. The tagged IEEE-754 representation correctly fixes new envelope float fidelity and survives PostgreSQL `jsonb`; the focused tests pass. However, the implementation changes the interpretation of existing V1 data without a version discriminator or migration: pre-fix float payloads remain undeliverable, while pre-fix strings sharing the new reserved prefixes are silently corrupted on dispatch.
 
 ## Narrative Findings (AI reviewer)
 
@@ -41,7 +40,7 @@ Reviewed the actual gap-closure changes from plans 150-06 through 150-09, includ
 
 ### CR-01: JSONB numeric canonicalization makes valid payloads fail integrity verification
 
-**Resolution:** Fixed in `773a0747`. Finite floats in the bounded JSON subtrees now persist as unambiguous, escaped tagged IEEE-754 strings and decode back to their original values after digest verification; integer values remain native JSON integers. The regression inserts and reloads exponent-form and trailing-zero floats through PostgreSQL, verifies reconstruction, and retains the tamper rejection assertion.
+**Resolution:** Fixed for newly created envelopes in `773a0747`; the two compatibility blockers below still prevent the overall finding from being closed.
 
 **File:** `lib/mailglass/outbound/payload.ex:40-46`, `lib/mailglass/outbound/payload.ex:58-62`
 
@@ -57,8 +56,34 @@ digest = :crypto.hash(:sha256, canonical_json) |> Base.encode16(case: :lower)
 # On fetch, verify the stored canonical_json bytes before decoding/loading.
 ```
 
+### CR-02: Old V1 marker-shaped strings are silently decoded as new float/string markers
+
+**File:** `lib/mailglass/outbound/envelope.ex:366-379`
+
+**Issue:** V1 already allowed arbitrary JSON strings. Before `773a0747`, a payload could legitimately contain, for example, `"~mailglass:json-v1:float:3ff0000000000000"` or `"~mailglass:json-v1:string:customer-value"`. The new loader has no format/version discriminator for the marker encoding: it converts the former to `1.0` and strips the latter's prefix. Escaping only occurs when new values are dumped (`320-326`), so it cannot protect already persisted V1 rows. A retry of one of those rows sends a different provider option or metadata value than the one that was queued.
+
+**Fix:** Introduce a new envelope version (or an explicit persisted encoding revision) and decode marker strings only for that revision. Retain the legacy V1 decoder unchanged for existing payloads, then add a migration/compatibility test that inserts historical marker-shaped strings and proves they load byte-for-byte unchanged.
+
+### CR-03: Pre-fix finite-float V1 payloads are still permanently unverifiable
+
+**File:** `lib/mailglass/outbound/envelope.ex:115-119`, `lib/mailglass/outbound/payload.ex:58-64`
+
+**Issue:** Existing payloads created before `773a0747` stored finite floats as JSON numbers and recorded a digest of Jason's pre-`jsonb` spelling. PostgreSQL has already discarded that spelling, so `Payload.fetch_for_delivery/2` fails its digest comparison before `Envelope.load/1` can apply the new decoder. No migration, versioned digest verifier, or explicit terminal recovery exists for those queued records. Thus every already-queued exponent/trailing-zero float payload remains stranded even though new payloads work.
+
+**Fix:** Provide an explicit compatible recovery path. Prefer a version bump plus a migration that safely rewrites known affected payloads only when their integrity can be established from a stored canonical representation; if that cannot be proven, mark them terminal with a clear operator-visible recovery action rather than leaving infinite retries. Add a regression seeded with a historical pre-fix `jsonb` envelope/digest and assert the chosen safe outcome.
+
+## Warnings
+
+### WR-01: The signed-zero regression cannot observe a lost sign bit
+
+**File:** `test/mailglass/outbound/worker_test.exs:108-112`, `test/mailglass/outbound/worker_test.exs:137-138`
+
+**Issue:** The test includes `[0.0, -0.0]`, but compares the restored structure with `==`. In Elixir, `0.0 == -0.0` is true, so this test remains green if the codec collapses negative zero to positive zero—the exact IEEE-754 fidelity property the tagged representation is meant to preserve.
+
+**Fix:** Assert the float bit patterns explicitly, e.g. `assert <<-0.0::float-64>> == <<Enum.at(restored.swoosh_email.provider_options["nested"], 1)::float-64>>`, and add marker-shaped historical-string cases separately from the new escaped-string round trip.
+
 ---
 
-_Reviewed: 2026-08-03T01:40:37Z_
+_Reviewed: 2026-08-03T01:48:30Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
