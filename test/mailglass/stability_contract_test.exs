@@ -220,6 +220,28 @@ defmodule Mailglass.StabilityContractTest do
     end
   end
 
+  describe "Phase 152 one-click stability contract" do
+    test "locks route, responses, convergence scope, and compatible post-commit lifecycle ordering" do
+      api = File.read!("docs/api_stability.md")
+      lifecycle = File.read!("lib/mailglass/lifecycle.ex")
+      config = File.read!("lib/mailglass/config.ex")
+
+      assert api =~ "POST /mailglass/unsubscribe/:token"
+      assert api =~ "byte-empty HTTP `200`"
+      assert api =~ "byte-empty HTTP `500`"
+      assert api =~ "canonical `:unsubscribed` event"
+      assert api =~ "immutable `:address_stream` suppression"
+      assert api =~ "configured schema prefix and tenant"
+      assert api =~ "transactional and unrelated-stream traffic is"
+      assert api =~ "arbitrary-host exactly-once"
+      assert api =~ "Phase 153 generated-host/release proof"
+      assert lifecycle =~ "handle_event(Ecto.Multi.t(), map()) :: Ecto.Multi.t()"
+      assert lifecycle =~ "separate,"
+      assert config =~ "lifecycle: ["
+      assert api =~ "cannot co-commit with or roll back"
+    end
+  end
+
   # Reads the `@version "X.Y.Z"` module attribute literal out of a mix.exs so
   # tests can derive the source-of-truth version instead of hardcoding it.
   defp read_at_version!(path) do

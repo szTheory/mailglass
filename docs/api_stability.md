@@ -27,8 +27,7 @@ is not part of the `v1.x` stability promise for this milestone.
 ## One-click unsubscribe convergence contract
 
 `POST /mailglass/unsubscribe/:token` is a stable public route. A valid request
-atomically creates or reuses the canonical `:unsubscribed` event and immutable
-`:address_stream` suppression using the trusted stored Delivery's tenant,
+atomically creates or reuses the canonical `:unsubscribed` event and immutable `:address_stream` suppression using the trusted stored Delivery's tenant,
 normalized address, and originating stream. Replay and concurrency converge on
 the same pair; effects are created-only. The configured schema prefix and tenant
 row scope are explicit and orthogonal, so a matching stream is blocked at the

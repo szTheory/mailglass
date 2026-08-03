@@ -139,6 +139,27 @@ Confirm your application handles `Mailglass.SuppressedError` without treating it
 
 For RFC 8058 List-Unsubscribe wiring and suppression record management, see [Unsubscribe](./unsubscribe.md). The `Mailglass.Suppression` module exposes functions for querying and managing suppression records programmatically.
 
+## One-click unsubscribe convergence
+
+Exercise the real built-in route with a real signed bulk-delivery link, then
+check the actual `Mailglass.Outbound` preflight boundary. The POST and valid
+replay each return a byte-empty `200` with no redirect; a genuine convergence
+failure is byte-empty `500` and must leave no partial event/suppression pair.
+
+After the first POST, verify that a same-tenant message to the Delivery-derived
+normalized address in its originating stream is blocked before the adapter runs.
+Use transactional and unrelated-stream messages as negative controls; they must
+remain eligible. Also use a second tenant as an isolation control. This confirms
+the canonical event plus immutable `:address_stream` suppression and the actual
+prefix/tenant-safe preflight behavior, not merely row existence.
+
+Record only bounded outcome facts (for example, Delivery ID and blocked/pass
+classification). Never log or paste the signed token, recipient address, or
+private message content into support artifacts. Lifecycle and broadcast work is
+separate best-effort post-commit work; verify its failure does not change the
+already-successful POST. This checklist does not prove arbitrary-host exactly
+once behavior or Phase 153 generated-host/release work.
+
 ## Telemetry and alerting
 
 mailglass emits telemetry on these event families:

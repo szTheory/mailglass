@@ -637,6 +637,23 @@ defmodule Mailglass.DocsContractTest do
     end
   end
 
+  describe "Phase 152 one-click production contract" do
+    test "production checklist requires a real one-click preflight isolation procedure without sensitive artifacts" do
+      checklist = File.read!("guides/production-go-live-checklist.md")
+
+      assert checklist =~ "real signed bulk-delivery link"
+      assert checklist =~ "same-tenant"
+      assert checklist =~ "originating stream"
+      assert checklist =~ "transactional and unrelated-stream"
+      assert checklist =~ "second tenant as an isolation control"
+      assert checklist =~ "Never log or paste the signed token"
+      assert checklist =~ "private message content"
+      assert checklist =~ "byte-empty `500`"
+      assert checklist =~ "does not prove arbitrary-host exactly"
+      refute checklist =~ "proves arbitrary-host exactly"
+    end
+  end
+
   describe "Phase 151 honest dispatch and payload lifecycle contract" do
     @tag phase_151_task: "t151_07_01"
     test "public guidance describes the at-least-once boundary and bounded payload operations" do
