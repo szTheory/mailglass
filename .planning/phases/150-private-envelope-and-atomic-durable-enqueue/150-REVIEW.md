@@ -1,104 +1,61 @@
 ---
 phase: 150-private-envelope-and-atomic-durable-enqueue
-reviewed: 2026-08-02T20:30:00Z
+reviewed: 2026-08-03T01:40:37Z
 depth: standard
-files_reviewed: 29
+files_reviewed: 11
 files_reviewed_list:
-  - docs/api_stability.md
-  - guides/getting-started.md
-  - guides/jobs.md
-  - guides/production-go-live-checklist.md
-  - lib/mailglass/application.ex
-  - lib/mailglass/config.ex
-  - lib/mailglass/migrations/postgres.ex
+  - .github/workflows/ci.yml
   - lib/mailglass/migrations/postgres/v06.ex
-  - lib/mailglass/optional_deps.ex
-  - lib/mailglass/optional_deps/oban.ex
-  - lib/mailglass/outbound.ex
   - lib/mailglass/outbound/envelope.ex
   - lib/mailglass/outbound/payload.ex
-  - lib/mailglass/outbound/worker.ex
-  - lib/mix/tasks/mailglass.upgrade.v2_schema.ex
-  - test/mailglass/application_test.exs
-  - test/mailglass/config_test.exs
-  - test/mailglass/core_send_integration_test.exs
-  - test/mailglass/docs_contract_test.exs
-  - test/mailglass/docs_migration_smoke_test.exs
-  - test/mailglass/migration_test.exs
-  - test/mailglass/outbound/deliver_later_test.exs
-  - test/mailglass/outbound/deliver_many_test.exs
+  - lib/mailglass/outbound.ex
+  - mix.exs
+  - scripts/no_optional_deps_runtime_smoke.sh
   - test/mailglass/outbound/envelope_test.exs
   - test/mailglass/outbound/worker_test.exs
-  - test/mailglass/test_support/sandbox_ownership_test.exs
-  - test/mailglass/upgrade_v2_schema_migration_test.exs
-  - test/support/mailer_case.ex
-  - test/support/sandbox_ownership.ex
+  - test/mailglass/v06_migration_test.exs
+  - test/runtime/no_optional_deps_public_send.exs
 findings:
-  critical: 0
+  critical: 1
   warning: 0
   info: 0
-  total: 0
-status: clean
+  total: 1
+status: issues_found
 ---
 
 # Phase 150: Code Review Report
 
-**Reviewed:** 2026-08-02T20:30:00Z
+**Reviewed:** 2026-08-03T01:40:37Z
 **Depth:** standard
-**Files Reviewed:** 29
-**Status:** clean
+**Files Reviewed:** 11
+**Status:** issues_found
 
 ## Summary
 
-The two Critical findings from this review are resolved. The durable enqueue preserves Oban's configured prefix, and the Oban-unavailable path no longer references the conditional Worker before readiness returns a typed error.
-
-## Independent Re-review (2026-08-02)
-
-Reviewed the actual code in commits `31062190` and `7fd2a06c`, rather than relying on the fix-status record. CR-01 is resolved: the Oban step no longer receives `Repo.multi_opts()`, and the isolated-schema durable enqueue test passed with Oban's job table in `public`. CR-02 is resolved: readiness uses the always-available `:mailglass_outbound` identity before any conditional Worker reference. `mix compile --warnings-as-errors`, the isolated-schema durable test, and the no-optional-dependencies compile/test check passed. No new Critical or Warning issue was found in the changed paths.
+Reviewed the actual gap-closure changes from plans 150-06 through 150-09, including codec fidelity/safety, the prefix-hostile V06 lifecycle test, real queued-worker retry proof, and the isolated no-optional-dependency runtime harness. The migration, queued retry, and runtime probe exercised successfully in this checkout. However, the durable payload integrity scheme rejects valid envelopes containing finite JSON floats after PostgreSQL `jsonb` normalizes their textual representation, leaving otherwise valid queued mail undispatchable.
 
 ## Narrative Findings (AI reviewer)
 
-## Resolved Critical Issues
+## Critical Issues
 
-### CR-01: Mailglass schema prefix is incorrectly forced onto Oban jobs
+### CR-01: JSONB numeric canonicalization makes valid payloads fail integrity verification
 
-**Status:** fixed — `31062190`
+**File:** `lib/mailglass/outbound/payload.ex:40-46`, `lib/mailglass/outbound/payload.ex:58-62`
 
-**File:** `/Users/jon/projects/mailglass/lib/mailglass/outbound.ex:431-440`  
-**Issue:** The durable multi passes `Repo.multi_opts()` to `Oban.insert/4`. That adds `prefix: Mailglass.Config.schema()` (normally `"mailglass"`) to the Oban insert. Oban merges passed options over its own configured prefix, so a normal Oban instance configured with its default `"public"` prefix attempts to write `mailglass.oban_jobs`, a table Mailglass never creates and that Oban's poller does not read. The advertised default production configuration passes readiness but every enqueue rolls back. This was reproduced with `MAILGLASS_SCHEMA=mailglass mix test test/mailglass/outbound/deliver_later_test.exs:187 --warnings-as-errors`, which returned the adapter failure/rollback.
+**Issue:** `from_envelope/4` stores a SHA-256 digest of `Jason.encode/1`'s pre-insert representation, but `fetch_for_delivery/2` recomputes that digest from the map decoded from PostgreSQL `jsonb`. PostgreSQL normalizes valid JSON numeric spellings: for example, Jason encodes `%{"value" => 1.0e20}` as `{"value":1.0e20}`, whereas `jsonb` canonically stores it as `{"value": 100000000000000000000}`. On read it no longer has the same Elixir numeric representation/encoding, so the recomputed digest differs and `fetch_for_delivery/2` returns `:integrity_failed`. Finite floats are explicitly accepted by `Envelope.json/1` at `lib/mailglass/outbound/envelope.ex:267-268`, so a supported `metadata` or `provider_options` value can permanently prevent a committed queued job from dispatching.
 
-**Fix:** Do not pass Mailglass persistence options to Oban. Keep `Repo.multi_opts()` on Delivery/Event/Payload steps only, and invoke the gateway without a `prefix` override so Oban uses its own configured prefix:
-
-```elixir
-|> Mailglass.OptionalDeps.Oban.insert(:job, fn %{delivery: d} ->
-  Mailglass.Outbound.Worker.new(%{
-    "delivery_id" => d.id,
-    "mailglass_tenant_id" => tenant_id
-  })
-end)
-```
-
-Add a durable enqueue integration test on the non-public `MAILGLASS_SCHEMA=mailglass` axis with Oban left at its normal public prefix.
-
-### CR-02: Oban-absent durable sends crash instead of returning the typed fail-closed error
-
-**Status:** fixed — `7fd2a06c`
-
-**File:** `/Users/jon/projects/mailglass/lib/mailglass/outbound.ex:379`  
-**Issue:** `Mailglass.Outbound.Worker` is conditionally compiled only when `Oban.Worker` is present, but this line calls `Mailglass.Outbound.Worker.queue()` before `OptionalDeps.Oban.ready?/1` can detect that Oban is absent. In a `--no-optional-deps` build the Worker module does not exist, so the default `:oban` path raises `UndefinedFunctionError` rather than returning `{:error, %Mailglass.SendError{context: %{reason_class: :dependency_unavailable}}}`. That violates the documented fail-closed return contract.
-
-**Fix:** Keep the canonical queue identity in a module that is always compiled (or use the literal atom at this call site) and pass it to the gateway without touching the conditional worker:
+**Fix:** Hash a canonical, storage-stable representation instead of the transient Elixir map. For example, persist the canonical JSON bytes (or a recursively normalized numeric representation that cannot change under `jsonb`) and digest those exact bytes; alternatively reject floats from V1 if numeric fidelity is intentionally unsupported. Add a persistence-level regression that inserts and fetches envelopes containing exponent-form and trailing-zero floats, then proves `Payload.fetch_for_delivery/2` succeeds.
 
 ```elixir
-with :ok <- Mailglass.OptionalDeps.Oban.ready?(:mailglass_outbound) do
-  enqueue_oban(rendered, adapter_ref, opts)
-end
-```
+# One viable direction: store canonical JSON text and hash that exact value.
+canonical_json = Jason.encode!(envelope)
+digest = :crypto.hash(:sha256, canonical_json) |> Base.encode16(case: :lower)
 
-Add a no-optional-dependencies runtime test that invokes `deliver_later/2` with `:oban` selected and asserts the typed `:dependency_unavailable` error.
+# On fetch, verify the stored canonical_json bytes before decoding/loading.
+```
 
 ---
 
-_Reviewed: 2026-08-02T20:21:00Z_  
-_Reviewer: the agent (gsd-code-reviewer)_  
+_Reviewed: 2026-08-03T01:40:37Z_
+_Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
