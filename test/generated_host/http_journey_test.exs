@@ -50,7 +50,7 @@ defmodule Mailglass.GeneratedHost.HttpJourneyTest do
     checkpoint = File.read!(Path.join(@project_root, "dev/mailglass/generated_host/checkpoint.ex"))
 
     assert journey =~ "one_click!"
-    assert journey =~ "List-Unsubscribe-Post"
+    assert journey =~ "List-Unsubscribe=One-Click"
     assert journey =~ "Mailglass.Outbound.deliver"
     assert journey =~ "matching"
     assert journey =~ "transactional"
