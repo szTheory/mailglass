@@ -50,23 +50,72 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     end)
   end
 
-  test "release events fan out only to the linked core and admin packages" do
+  test "release events publish exactly the resolver-selected package set" do
     source = File.read!(@publish_path)
+    prepublish = extract_job!(source, "prepublish-summary")
+    gate = extract_job!(source, "gate-ci-green")
     core = extract_publish_job!(source, "mailglass")
     admin = extract_publish_job!(source, "mailglass_admin")
     inbound = extract_publish_job!(source, "mailglass_inbound")
 
+    assert prepublish =~
+             "release_packages: ${{ steps.release-resolver.outputs.release_packages }}"
+
+    assert gate =~
+             "release_packages: ${{ needs.prepublish-summary.outputs.release_packages }}"
+
     assert core =~ "needs: [gate-ci-green]"
     assert core =~ "github.event_name == 'release'"
+    assert selected_package_condition?(core, "mailglass")
 
     assert admin =~ "needs: [gate-ci-green, publish-core]"
     assert admin =~ "needs.gate-ci-green.result == 'success'"
     assert admin =~ "needs.publish-core.result == 'success'"
     assert admin =~ "github.event_name == 'release'"
+    assert selected_package_condition?(admin, "mailglass_admin")
     refute admin =~ "needs: [gate-ci-green, publish-core, publish-inbound]"
 
-    refute inbound =~ "github.event_name == 'release'"
+    assert inbound =~ "needs: [gate-ci-green, publish-core]"
+    assert inbound =~ "needs.gate-ci-green.result == 'success'"
+    assert inbound =~ "needs.publish-core.result == 'success'"
+    assert inbound =~ "github.event_name == 'release'"
+    assert selected_package_condition?(inbound, "mailglass_inbound")
     assert inbound =~ "github.event_name == 'workflow_dispatch'"
+  end
+
+  test "selected sibling release jobs preserve core ordering without forcing an unselected core" do
+    source = File.read!(@publish_path)
+
+    for package <- ["mailglass_admin", "mailglass_inbound"] do
+      job = extract_publish_job!(source, package)
+
+      assert job =~
+               "contains(fromJSON(needs.gate-ci-green.outputs.release_packages), 'mailglass')"
+
+      assert job =~
+               "!contains(fromJSON(needs.gate-ci-green.outputs.release_packages), 'mailglass')"
+
+      assert job =~ "needs.publish-core.result == 'success'"
+      assert job =~ "needs.publish-core.result == 'skipped'"
+    end
+  end
+
+  test "fallback dispatch preserves single-package and all-package selection" do
+    source = File.read!(@publish_path)
+    core = extract_publish_job!(source, "mailglass")
+    admin = extract_publish_job!(source, "mailglass_admin")
+    inbound = extract_publish_job!(source, "mailglass_inbound")
+
+    assert core =~ "github.event.inputs.package != 'mailglass_admin'"
+    assert core =~ "github.event.inputs.package != 'mailglass_inbound'"
+
+    assert admin =~ "github.event.inputs.package == 'mailglass_admin'"
+    assert admin =~ "github.event.inputs.package != 'mailglass'"
+    assert admin =~ "github.event.inputs.package != 'mailglass_inbound'"
+
+    assert inbound =~ "github.event.inputs.package == 'mailglass_inbound'"
+    assert inbound =~ "github.event.inputs.package != 'mailglass'"
+    assert inbound =~ "github.event.inputs.package != 'mailglass_admin'"
   end
 
   test "all publish jobs preserve the protected environment and step-local credential" do
@@ -107,6 +156,11 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     concurrency.group == expected_group and
       concurrency.cancel_in_progress == false and
       not String.contains?(concurrency.group, ["github.ref", "tag", "inputs"])
+  end
+
+  defp selected_package_condition?(job, package) do
+    job =~
+      "contains(fromJSON(needs.gate-ci-green.outputs.release_packages), '#{package}')"
   end
 
   defp extract_top_level_concurrency!(source) do

@@ -63,6 +63,8 @@ concurrency:
 jobs:
   prepublish-summary:
     runs-on: ubuntu-latest
+    outputs:
+      release_packages: ${{ steps.release-resolver.outputs.release_packages }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -248,6 +250,11 @@ jobs:
   gate-ci-green:
     runs-on: ubuntu-latest
     needs: [prepublish-summary]
+    outputs:
+      # Publish jobs consume only the package set produced by the credential-free
+      # resolver gate. Propagating it through this job means no protected job can
+      # independently broaden the release after candidate CI has passed.
+      release_packages: ${{ needs.prepublish-summary.outputs.release_packages }}
     # `actions: write` lets this job self-dispatch ci.yml AND advisory-matrix.yml
     # on the tagged SHA when no run exists. That is the anti-recursion dead-end: a
     # release-please PR auto-merged by GITHUB_TOKEN produces a `main` SHA whose
@@ -827,7 +834,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [gate-ci-green]
     if: |
-      github.event_name == 'release' ||
+      (github.event_name == 'release' &&
+       contains(fromJSON(needs.gate-ci-green.outputs.release_packages), 'mailglass')) ||
       (github.event_name == 'workflow_dispatch' &&
        github.event.inputs.package != 'mailglass_admin' &&
        github.event.inputs.package != 'mailglass_inbound')
@@ -890,9 +898,10 @@ jobs:
   publish-admin:
     runs-on: ubuntu-latest
     needs: [gate-ci-green, publish-core]
-    # Linked core/admin releases publish admin only after a successful core
-    # publish. Inbound is independently versioned and release-event ineligible;
-    # dispatch-only recovery may still publish it or all packages explicitly.
+    # Canonical release events publish only resolver-selected packages. When core
+    # is also selected, admin remains ordered behind its successful publication;
+    # an admin-only selected release accepts the intentional skipped core job.
+    # Dispatch recovery retains its established single-package/all semantics.
     if: |
       always() &&
       (
@@ -907,7 +916,13 @@ jobs:
          needs.publish-core.result == 'success') ||
         (github.event_name == 'release' &&
          needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'success')
+         contains(fromJSON(needs.gate-ci-green.outputs.release_packages), 'mailglass_admin') &&
+         (
+           (contains(fromJSON(needs.gate-ci-green.outputs.release_packages), 'mailglass') &&
+            needs.publish-core.result == 'success') ||
+           (!contains(fromJSON(needs.gate-ci-green.outputs.release_packages), 'mailglass') &&
+            needs.publish-core.result == 'skipped')
+         ))
       )
     environment: hex-publish
     steps:
@@ -993,9 +1008,10 @@ jobs:
   publish-inbound:
     runs-on: ubuntu-latest
     needs: [gate-ci-green, publish-core]
-    # Inbound is independently versioned and can only be published by an
-    # explicit recovery dispatch. A failed or skipped gate never exposes the
-    # protected publishing environment.
+    # Canonical release events publish inbound exactly when the credential-free
+    # resolver selected it. When core is also selected, inbound stays ordered
+    # behind a successful core publication; an inbound-only selected release
+    # accepts the intentional skipped core job. Dispatch recovery is unchanged.
     if: |
       always() &&
       (
@@ -1007,7 +1023,16 @@ jobs:
          github.event.inputs.package != 'mailglass' &&
          github.event.inputs.package != 'mailglass_admin' &&
          needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'success')
+         needs.publish-core.result == 'success') ||
+        (github.event_name == 'release' &&
+         needs.gate-ci-green.result == 'success' &&
+         contains(fromJSON(needs.gate-ci-green.outputs.release_packages), 'mailglass_inbound') &&
+         (
+           (contains(fromJSON(needs.gate-ci-green.outputs.release_packages), 'mailglass') &&
+            needs.publish-core.result == 'success') ||
+           (!contains(fromJSON(needs.gate-ci-green.outputs.release_packages), 'mailglass') &&
+            needs.publish-core.result == 'skipped')
+         ))
       )
     environment: hex-publish
     steps:
