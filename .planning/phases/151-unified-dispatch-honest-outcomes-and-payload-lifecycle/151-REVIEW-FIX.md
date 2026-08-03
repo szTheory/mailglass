@@ -1,6 +1,6 @@
 ---
 phase: 151
-fixed_at: 2026-08-03T03:41:10Z
+fixed_at: 2026-08-03T03:46:00Z
 review_path: .planning/phases/151-unified-dispatch-honest-outcomes-and-payload-lifecycle/151-REVIEW.md
 iteration: 1
 findings_in_scope: 3
@@ -11,7 +11,7 @@ status: all_fixed
 
 # Phase 151: Code Review Fix Report
 
-**Fixed at:** 2026-08-03T03:41:10Z
+**Fixed at:** 2026-08-03T03:46:00Z
 **Source review:** `.planning/phases/151-unified-dispatch-honest-outcomes-and-payload-lifecycle/151-REVIEW.md`
 **Iteration:** 1
 
@@ -41,15 +41,23 @@ status: all_fixed
 **Commit:** 45611e15
 **Applied fix:** Replaced interpolated exception logging with fixed event names plus bounded classification metadata. The regression test raises a private sentinel and proves it is absent from captured logs.
 
+## Re-review Follow-up
+
+### CR-01: A terminal route-mismatch payload is retried indefinitely by the worker
+
+**Files modified:** `lib/mailglass/outbound/worker.ex`, `test/mailglass/outbound/worker_test.exs`
+**Commit:** 2cef16a4
+**Applied fix:** The worker now recognizes both a first-attempt persisted adapter mismatch and the terminal lifecycle fact observed on a repeated claim, returning `{:cancel, :pre_dispatch_failure}` in both cases. The regression verifies no adapter I/O, finite terminal retention, and no extra event on the second attempt.
+
 ## Verification
 
-- Phase 151 worker/outbound/payload sampler: passed (61 tests, 0 failures).
+- Worker/outbound/payload lifecycle/pruner sampler: passed (40 tests, 0 failures).
 - `mix verify.support_contract.core`: passed (205 tests, 0 failures, 1 skipped).
 - `mix compile --no-optional-deps --warnings-as-errors`: passed in the preceding fix run.
 - The earlier complete-suite attempt had an unrelated reference-host smoke failure because `test/reference_host` dependencies were unavailable.
 
 ---
 
-_Fixed: 2026-08-03T03:41:10Z_
+_Fixed: 2026-08-03T03:46:00Z_
 _Fixer: the agent (gsd-code-fixer)_
 _Iteration: 1_
