@@ -65,10 +65,11 @@ defmodule Mailglass.V06MigrationTest do
         Ecto.Migrator.up(repo, version, V05PrerequisitesMigration, log: false)
       end)
 
+    {:ok, _} = TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
+
     on_exit(fn ->
       _ = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
       _ = TestRepo.query("DROP SCHEMA IF EXISTS #{@decoy_prefix} CASCADE")
-      _ = TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
       SandboxOwnership.assert_baseline_intact!(TestRepo, __MODULE__)
     end)
 
