@@ -154,9 +154,8 @@ defmodule Mailglass.Outbound.WorkerTest do
       assert <<-0.0::float-64>> ==
                <<Enum.at(restored.swoosh_email.provider_options["nested"], 1)::float-64>>
 
-      TestRepo.update!(
-        Ecto.Changeset.change(payload, envelope: Map.put(payload.envelope, "subject", "tampered"))
-      )
+      tampered_envelope = Map.put(payload.envelope, "subject", "tampered")
+      TestRepo.update!(Ecto.Changeset.change(payload, envelope: tampered_envelope))
 
       assert {:error, :integrity_failed} = Payload.fetch_for_delivery("test-tenant", delivery.id)
 
@@ -170,7 +169,8 @@ defmodule Mailglass.Outbound.WorkerTest do
                lifecycle_state: :terminal,
                reason_class: :payload_corrupt,
                expires_at: %DateTime{},
-               envelope: ^envelope
+               claimed_at: nil,
+               envelope: ^tampered_envelope
              } = TestRepo.get!(Payload, payload.id)
 
       # A second attempt observes the retained terminal fact rather than a

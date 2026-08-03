@@ -79,6 +79,10 @@ defmodule Mailglass.Outbound.DispatchOutcome do
       when class in @classes and reason in @reason_classes,
       do: new(class, reason, error_module: SendError)
 
+  def classify({:error, %SendError{context: %{reason_class: reason}}})
+      when reason in [:payload_corrupt, :payload_unsupported_version],
+      do: terminal(reason, error_module: SendError)
+
   def classify({:error, %SendError{type: :adapter_failure, context: context}}) do
     context
     |> classify_adapter_failure()

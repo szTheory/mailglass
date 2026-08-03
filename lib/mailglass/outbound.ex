@@ -680,7 +680,11 @@ defmodule Mailglass.Outbound do
       {:error, %{__exception__: true} = err} ->
         outcome = claimed_payload_failure_outcome(err)
         _ = persist_outcome_multi(delivery, payload, outcome)
-        {:error, outcome_error(outcome)}
+        # Settling the claimed payload must not rewrite the stable public
+        # error contract. In particular, a persisted route mismatch remains a
+        # serialization_failed error for the worker/caller even though the
+        # retained payload receives a terminal lifecycle fact.
+        {:error, err}
     end
   end
 
