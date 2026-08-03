@@ -5,15 +5,15 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 151
 current_phase_name: Unified Dispatch, Honest Outcomes, and Payload Lifecycle
 status: planning
-stopped_at: Completed 151-01-PLAN.md
-last_updated: "2026-08-03T02:46:29.687Z"
+stopped_at: Completed 151-04-PLAN.md
+last_updated: "2026-08-03T02:53:21.843Z"
 last_activity: 2026-08-02
 last_activity_desc: Phase 150 complete, transitioned to Phase 151
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 20
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # Project State
@@ -32,7 +32,7 @@ Plan: Not started
 Status: Ready to plan
 Last activity: 2026-08-02 — Phase 150 complete, transitioned to Phase 151
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 85%
 
 ## v2.4 Milestone Intent
 
@@ -461,6 +461,7 @@ release debug campaign.
 - [Phase ?]: Only structured 4xx/5xx and explicit before-acceptance transport evidence establish terminal or retryable outcomes; opaque evidence is uncertain.
 - [Phase ?]: Safe dispatch projections allowlist closed reason classes and bounded correlation data only.
 - [Phase ?]: Sync uses the bounded Envelope codec in memory so it normalizes exactly as durable payload dispatch without writing a Payload.
+- [Phase ?]: Durable payload dispatch uses tenant-scoped CAS claims and settles accepted payloads atomically with Delivery and Event.
 
 ## Quick Tasks Completed
 
@@ -535,6 +536,7 @@ release debug campaign.
 | Phase 150-private-envelope-and-atomic-durable-enqueue P08 | 4min | 1 tasks | 1 files |
 | Phase 151-unified-dispatch-honest-outcomes-and-payload-lifecycle P02 | 2min | 1 tasks | 4 files |
 | Phase 151 P01 | 6min | 1 tasks | 2 files |
+| Phase 151 P04 | 12min | 2 tasks | 6 files |
 
 ## Deferred Items
 
@@ -701,8 +703,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T02:46:29.678Z
-**Stopped at:** Completed 151-01-PLAN.md
+**Last session:** 2026-08-03T02:53:21.833Z
+**Stopped at:** Completed 151-04-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
