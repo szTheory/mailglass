@@ -18,6 +18,16 @@ defmodule Mailglass.Outbound.WireEquivalenceTest do
       {Mailglass.Outbound.WireEquivalenceTest.CapturingAdapter, [test_pid: self()]}
     )
 
+    Application.put_env(:mailglass, :compliance,
+      endpoint: "wire-equivalence-test-secret",
+      host: "unsubscribe.example.com",
+      scheme: "https",
+      mount_path: "/mailglass/unsubscribe",
+      previous_secrets: [],
+      redirect: nil,
+      max_age: 60
+    )
+
     on_exit(fn ->
       Application.put_env(:mailglass, :adapter, prior_adapter)
       Application.put_env(:mailglass, :async_adapter, prior_async_adapter)
@@ -88,6 +98,40 @@ defmodule Mailglass.Outbound.WireEquivalenceTest do
         end)
       end
     end
+  end
+
+  @tag phase_151_task: "t151_01_01"
+  test "sync explicit adapters do not require a persistable envelope route" do
+    message = fully_featured_message(private_markers())
+
+    assert {:ok, %Delivery{}} =
+             Outbound.deliver(message,
+               adapter:
+                 {Mailglass.Outbound.WireEquivalenceTest.CapturingAdapter, [test_pid: self()]},
+               adapter_ref: :route_b
+             )
+
+    assert_receive {:adapter_input, %Message{}, _opts}
+  end
+
+  @tag phase_151_task: "t151_01_01"
+  test "sync bulk adapter input preserves map-backed unsubscribe headers" do
+    message =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Bulk Sender", "bulk@example.com"})
+      |> Swoosh.Email.to("bulk-recipient@example.com")
+      |> Swoosh.Email.subject("Bulk header compatibility")
+      |> Swoosh.Email.text_body("Bulk header compatibility")
+      |> Message.build(
+        mailable: Mailglass.FakeFixtures.TestMailer,
+        tenant_id: "test-tenant",
+        stream: :bulk
+      )
+
+    assert {:ok, %Delivery{}} = Outbound.deliver(message)
+    assert_receive {:adapter_input, captured, _opts}
+    assert is_map(captured.swoosh_email.headers)
+    assert is_binary(captured.swoosh_email.headers["List-Unsubscribe"])
   end
 
   defp canonical_adapter_input(%Message{} = message, opts) do

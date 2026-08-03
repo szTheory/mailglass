@@ -628,15 +628,22 @@ defmodule Mailglass.Outbound do
     )
   end
 
-  # Sync keeps its content in memory, but normalizes it through the same
-  # bounded envelope codec that durable dispatch reads. This makes the adapter
-  # input wire-equivalent without creating a Payload for synchronous delivery.
-  defp prepare_dispatch_input(%Message{} = rendered, adapter_ref) do
+  # Ordered header lists are the durable wire shape: normalize them through the
+  # bounded envelope codec without creating a sync Payload. Map-backed headers
+  # and nonpersistable explicit sync adapters retain their established direct
+  # adapter input contract.
+  defp prepare_dispatch_input(
+         %Message{swoosh_email: %{headers: headers}} = rendered,
+         adapter_ref
+       )
+       when is_list(headers) and is_binary(adapter_ref) do
     with {:ok, envelope} <- Envelope.dump(rendered, adapter_ref: adapter_ref),
          {:ok, %Envelope.Decoded{message: message}} <- Envelope.load(envelope) do
       {:ok, Message.put_metadata(message, :delivery_id, delivery_id!(rendered))}
     end
   end
+
+  defp prepare_dispatch_input(%Message{} = rendered, _adapter_ref), do: {:ok, rendered}
 
   # The explicit Task.Supervisor path is intentionally non-durable, so it may
   # carry the already-prepared message in memory. It must not reconstruct that
