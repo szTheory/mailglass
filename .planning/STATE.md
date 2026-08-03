@@ -5,15 +5,15 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 152
 current_phase_name: Atomic One-Click Suppression Convergence
 status: planning
-stopped_at: Completed 151-08-PLAN.md
-last_updated: "2026-08-03T13:51:47.973Z"
+stopped_at: Completed 152-01-PLAN.md
+last_updated: "2026-08-03T14:32:56.515Z"
 last_activity: 2026-08-03
 last_activity_desc: Phase 151 complete, transitioned to Phase 152
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 3
-  total_plans: 21
-  completed_plans: 21
+  total_plans: 24
+  completed_plans: 22
 ---
 
 # Project State
@@ -32,7 +32,7 @@ Plan: Not started
 Status: Ready to plan
 Last activity: 2026-08-03 — Phase 151 complete, transitioned to Phase 152
 
-Progress: [██████████] 100%
+Progress: [█████████░] 92%
 
 ## v2.4 Milestone Intent
 
@@ -465,6 +465,8 @@ release debug campaign.
 - [Phase ?]: Provider idempotency and correlation reduce risk and enable reconciliation; they do not make delivery exactly-once.
 - [Phase ?]: Private payload lifecycle operations remain internal while public guidance documents their operational limits.
 - [Phase ?]: D-19/PRIV-04: missing private Payloads terminalize as legacy_payload_missing without metadata reconstruction.
+- [Phase ?]: One-click convergence uses a flat prefix-explicit Multi and inserted_at conflict sentinels for both canonical rows.
+- [Phase ?]: Only a fully pre-existing event/suppression pair reports already_converged; either half-state repair reports created.
 
 ## Quick Tasks Completed
 
@@ -542,6 +544,7 @@ release debug campaign.
 | Phase 151 P04 | 12min | 2 tasks | 6 files |
 | Phase 151 P07 | 6min | 1 tasks | 5 files |
 | Phase 151 P08 | 20min | 2 tasks | 9 files |
+| Phase 152-atomic-one-click-suppression-convergence P01 | 5min | 2 tasks | 3 files |
 
 ## Deferred Items
 
@@ -708,8 +711,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T13:41:38.632Z
-**Stopped at:** Completed 151-08-PLAN.md
+**Last session:** 2026-08-03T14:32:56.507Z
+**Stopped at:** Completed 152-01-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
