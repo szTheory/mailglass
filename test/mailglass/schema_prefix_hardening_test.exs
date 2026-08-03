@@ -248,7 +248,7 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
   test "unsubscribe raw conflict lookup passes explicit configured-schema opts" do
     source = File.read!("lib/mailglass/compliance/unsubscribe_convergence.ex")
 
-    assert source =~ "repo.one!(query, Repo.multi_opts())"
+    assert source =~ "repo.one(query, Repo.multi_opts())"
   end
 
   defp insert_delivery!(attrs) do
