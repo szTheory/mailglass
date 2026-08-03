@@ -32,9 +32,13 @@ defmodule Mailglass.Outbound.WireEquivalenceTest do
       :skip
     else
       Application.put_env(:mailglass, :async_adapter, :oban)
-      start_supervised!({Oban, testing: :disabled, repo: TestRepo, queues: [mailglass_outbound: 10]})
+
+      start_supervised!(
+        {Oban, testing: :disabled, repo: TestRepo, queues: [mailglass_outbound: 10]}
+      )
 
       markers = private_markers()
+
       sync_message =
         fully_featured_message(markers)
         |> Message.put_metadata(:delivery_id, Ecto.UUID.generate())
@@ -45,6 +49,16 @@ defmodule Mailglass.Outbound.WireEquivalenceTest do
 
       assert {:ok, %Delivery{} = sync_delivery} = Outbound.deliver(sync_message)
       assert_receive {:adapter_input, captured_sync_message, sync_opts}
+
+      # The public idempotency key intentionally deduplicates equal recipient
+      # and body content. Release this first fixture's key only so the actual
+      # durable path can exercise the same wire payload independently.
+      sync_delivery =
+        TestRepo.update!(
+          Ecto.Changeset.change(sync_delivery,
+            idempotency_key: "wire-equivalence-#{System.unique_integer([:positive])}"
+          )
+        )
 
       assert {:ok, %Delivery{} = queued_delivery} = Outbound.deliver_later(async_message)
 
@@ -59,6 +73,7 @@ defmodule Mailglass.Outbound.WireEquivalenceTest do
                "delivery_id" => queued_delivery.id,
                "mailglass_tenant_id" => "test-tenant"
              }
+
       assert :ok = Mailglass.Outbound.Worker.perform(job)
       assert_receive {:adapter_input, captured_async_message, async_opts}
 
@@ -68,7 +83,7 @@ defmodule Mailglass.Outbound.WireEquivalenceTest do
       for surface <- public_surfaces(sync_delivery, queued_delivery, job) do
         inspected = inspect(surface)
 
-        Enum.each(Map.values(markers), fn marker ->
+        Enum.each(private_surface_markers(markers), fn marker ->
           refute inspected =~ marker
         end)
       end
@@ -161,6 +176,10 @@ defmodule Mailglass.Outbound.WireEquivalenceTest do
       metadata: "wire-metadata-#{unique}"
     }
   end
+
+  # Message metadata is an intentionally adopter-visible, PII-free projection;
+  # it is compared in the adapter oracle but is not a private-content sentinel.
+  defp private_surface_markers(markers), do: Map.values(Map.delete(markers, :metadata))
 end
 
 defmodule Mailglass.Outbound.WireEquivalenceTest.CapturingAdapter do

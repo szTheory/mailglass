@@ -258,24 +258,17 @@ defmodule Mailglass.Outbound do
   @spec dispatch_by_id(binary()) ::
           {:ok, Delivery.t()} | {:error, Mailglass.Error.t()}
   def dispatch_by_id(delivery_id) when is_binary(delivery_id) do
-    with {:ok, delivery} <- load_delivery(delivery_id),
-         {:ok, %{message: rendered, adapter_ref: adapter_ref}} <- load_payload_prepared(delivery),
-         prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
-         {:ok, adapter} <- resolve_persisted_adapter(adapter_ref),
-         {:ok, dispatch_result} <- call_adapter(prepared, adapter) do
-      case persist_dispatched_multi(delivery, dispatch_result, rendered) do
-        {:ok, %{delivery: updated}} ->
-          Projector.broadcast_delivery_updated(updated, :dispatched, %{
-            tenant_id: updated.tenant_id,
-            delivery_id: updated.id
-          })
-
-          {:ok, updated}
-
-        {:error, _step, err, _changes} ->
-          {:error, to_error(err)}
+    result =
+      with {:ok, delivery} <- load_delivery(delivery_id),
+           {:ok, %{message: rendered, adapter_ref: adapter_ref}} <-
+             load_payload_prepared(delivery),
+           prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
+           {:ok, adapter} <- resolve_persisted_adapter(adapter_ref),
+           {:ok, updated} <- dispatch_prepared(delivery, prepared, adapter) do
+        {:ok, updated}
       end
-    else
+
+    case result do
       {:error, %{__exception__: true} = err} ->
         persist_failed_by_id(delivery_id, err)
         {:error, err}
@@ -306,17 +299,9 @@ defmodule Mailglass.Outbound do
   # can correctly persist :failed status when the adapter call fails (T-3-05-07).
   defp do_send_after_preflight(%Message{} = rendered, opts) do
     with {:ok, route} <- resolve_sync_route(rendered, opts),
+         {:ok, dispatch_input} <- prepare_dispatch_input(rendered, route.adapter_ref),
          {:ok, %{delivery: delivery}} <- persist_queued(rendered, route.adapter_ref),
-         {:ok, dispatch_result} <-
-           call_adapter_or_persist_failure(delivery, rendered, route.adapter),
-         {:ok, %{delivery: updated}} <-
-           persist_dispatched_multi(delivery, dispatch_result, rendered) do
-      Projector.broadcast_delivery_updated(updated, :dispatched, %{
-        tenant_id: updated.tenant_id,
-        delivery_id: updated.id,
-        provider: provider_tag(dispatch_result.provider_response)
-      })
-
+         {:ok, updated} <- dispatch_prepared(delivery, dispatch_input, route.adapter) do
       {:ok, updated}
     else
       {:error, %{__exception__: true} = err} ->
@@ -327,24 +312,6 @@ defmodule Mailglass.Outbound do
 
       other ->
         other
-    end
-  end
-
-  # Calls the adapter; on failure writes Multi#2 with :failed status (T-3-05-07).
-  # Adapter call is outside any transaction.
-  defp call_adapter_or_persist_failure(%Delivery{} = delivery, %Message{} = rendered, adapter) do
-    case call_adapter(rendered, adapter) do
-      {:ok, _} = ok ->
-        ok
-
-      {:error, %{__exception__: true} = err} ->
-        persist_failed_by_id(delivery.id, err)
-        {:error, err}
-
-      {:error, other} ->
-        send_err = to_error(other)
-        persist_failed_by_id(delivery.id, send_err)
-        {:error, send_err}
     end
   end
 
@@ -493,7 +460,10 @@ defmodule Mailglass.Outbound do
           fn ->
             Mailglass.Tenancy.with_tenant(tenant_id, fn ->
               try do
-                case dispatch_prepared(d, rendered) do
+                with {:ok, adapter} <- resolve_persisted_adapter(d.adapter_ref) do
+                  dispatch_prepared(d, rendered, adapter)
+                end
+                |> case do
                   {:ok, _} ->
                     :ok
 
@@ -656,17 +626,31 @@ defmodule Mailglass.Outbound do
     )
   end
 
+  # Sync keeps its content in memory, but normalizes it through the same
+  # bounded envelope codec that durable dispatch reads. This makes the adapter
+  # input wire-equivalent without creating a Payload for synchronous delivery.
+  defp prepare_dispatch_input(%Message{} = rendered, adapter_ref) do
+    with {:ok, envelope} <- Envelope.dump(rendered, adapter_ref: adapter_ref),
+         {:ok, %Envelope.Decoded{message: message}} <- Envelope.load(envelope) do
+      {:ok, Message.put_metadata(message, :delivery_id, delivery_id!(rendered))}
+    end
+  end
+
   # The explicit Task.Supervisor path is intentionally non-durable, so it may
   # carry the already-prepared message in memory. It must not reconstruct that
   # private content from Delivery metadata.
-  defp dispatch_prepared(%Delivery{} = delivery, %Message{} = rendered) do
-    with {:ok, adapter} <- resolve_persisted_adapter(delivery.adapter_ref),
-         {:ok, dispatch_result} <- call_adapter(rendered, adapter),
+  # The single provider-input seam. Sync passes its already prepared in-memory
+  # message; durable dispatch first restores the immutable payload and its
+  # persisted adapter route, then reaches this same handoff.
+  # Adapter I/O remains outside every Repo transaction.
+  defp dispatch_prepared(%Delivery{} = delivery, %Message{} = rendered, adapter) do
+    with {:ok, dispatch_result} <- call_adapter(rendered, adapter),
          {:ok, %{delivery: updated}} <-
            persist_dispatched_multi(delivery, dispatch_result, rendered) do
       Projector.broadcast_delivery_updated(updated, :dispatched, %{
         tenant_id: updated.tenant_id,
-        delivery_id: updated.id
+        delivery_id: updated.id,
+        provider: provider_tag(dispatch_result.provider_response)
       })
 
       {:ok, updated}
