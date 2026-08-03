@@ -85,6 +85,8 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
   defp canonical_event(_repo, %Event{inserted_at: %DateTime{}} = event, _delivery), do: {:ok, event}
 
   defp canonical_event(repo, %Event{inserted_at: nil}, %Delivery{} = delivery) do
+    maybe_raise_refetch_failure!()
+
     query =
       from(event in Event,
         where:
@@ -164,6 +166,17 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
     end
   else
     defp maybe_inject_failure(multi, _step), do: multi
+  end
+
+  if Mix.env() == :test do
+    defp maybe_raise_refetch_failure! do
+      case Process.get(:mailglass_unsubscribe_convergence_failure) do
+        %{canonical_event_refetch: {:raise, exception}} -> raise exception
+        _ -> :ok
+      end
+    end
+  else
+    defp maybe_raise_refetch_failure!, do: :ok
   end
 
   defp unsubscribe_idempotency_key(%Delivery{id: delivery_id}), do: "unsubscribe:#{delivery_id}"

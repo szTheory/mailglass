@@ -478,6 +478,36 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert events_for(delivery) == []
       assert suppressions_for(delivery) == []
     end
+
+    test "normalizes an expected canonical-refetch exception to an empty 500", %{conn: conn} do
+      delivery = Generators.delivery_fixture(stream: :bulk)
+      insert_unsubscribe_event!(delivery)
+
+      Process.put(
+        :mailglass_unsubscribe_convergence_failure,
+        %{canonical_event_refetch: {:raise, Ecto.NoResultsError.exception(queryable: Event)}}
+      )
+
+      result_conn = post(conn, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}", %{})
+
+      assert response(result_conn, 500) == ""
+      assert events_for(delivery) |> length() == 1
+      assert suppressions_for(delivery) == []
+    end
+
+    test "normalizes an expected repository transaction exit to an empty 500", %{conn: conn} do
+      Process.put(
+        :mailglass_unsubscribe_convergence_failure,
+        %{after_event: {:exit, :timeout}}
+      )
+
+      delivery = Generators.delivery_fixture(stream: :bulk)
+      result_conn = post(conn, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}", %{})
+
+      assert response(result_conn, 500) == ""
+      assert events_for(delivery) == []
+      assert suppressions_for(delivery) == []
+    end
   end
 
   defp tamper_token!(token) when is_binary(token) do
