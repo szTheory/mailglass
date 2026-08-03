@@ -259,7 +259,9 @@ defmodule Mailglass.Config do
           type: :atom,
           default: Mailglass.Lifecycle.Noop,
           doc:
-            "Module implementing `Mailglass.Lifecycle` for transaction-local unsubscribe side effects."
+            "Module implementing `Mailglass.Lifecycle`. For one-click unsubscribe, Mailglass invokes " <>
+              "the compatible callback after the primary convergence commits and runs its returned Multi " <>
+              "as a separate, best-effort transaction; its failure cannot change the committed empty-200 result."
         ]
       ]
     ],

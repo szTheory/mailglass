@@ -104,6 +104,19 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
       assert Mailglass.Lifecycle.Noop.handle_event(multi, %{event: :unsubscribed}) == multi
     end
 
+    test "lifecycle callback and compliance key retain their compatible public shape" do
+      lifecycle_docs = File.read!("lib/mailglass/lifecycle.ex") |> String.replace("\n", " ")
+      config_source = File.read!("lib/mailglass/config.ex")
+
+      assert lifecycle_docs =~ "handle_event(Ecto.Multi.t(), map()) ::"
+      assert lifecycle_docs =~ "after the primary event and suppression convergence commits"
+      assert Regex.match?(~r/separate,\s+best-effort transaction/, lifecycle_docs)
+      assert config_source =~ "lifecycle: ["
+      assert config_source =~ "after the primary convergence commits"
+      assert config_source =~ "as a separate, best-effort transaction"
+      refute config_source =~ "transaction-local unsubscribe side effects"
+    end
+
     test "Mailglass.Tenancy exposes optional compliance_host/1 override" do
       Application.put_env(:mailglass, :tenancy, TenantWithComplianceHost)
 

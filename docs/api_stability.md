@@ -24,6 +24,29 @@ is not part of the `v1.x` stability promise for this milestone.
 
 ## Contract Posture
 
+## One-click unsubscribe convergence contract
+
+`POST /mailglass/unsubscribe/:token` is a stable public route. A valid request
+atomically creates or reuses the canonical `:unsubscribed` event and immutable
+`:address_stream` suppression using the trusted stored Delivery's tenant,
+normalized address, and originating stream. Replay and concurrency converge on
+the same pair; effects are created-only. The configured schema prefix and tenant
+row scope are explicit and orthogonal, so a matching stream is blocked at the
+real Outbound preflight while transactional and unrelated-stream traffic is
+isolated.
+
+Success and privacy no-ops are byte-empty HTTP `200`; a genuine convergence
+failure is byte-empty HTTP `500`. RFC 8058 supplies HTTPS POST/no-redirect
+interoperability, while Mailglass owns this empty-200 privacy contract.
+
+The `:compliance, lifecycle:` key and
+`handle_event(Ecto.Multi.t(), map()) :: Ecto.Multi.t()` callback remain
+compatible. For one-click unsubscribe the callback receives a fresh Multi only
+after the primary convergence commits, and Mailglass runs the returned Multi as
+a separate best-effort transaction. That work cannot co-commit with or roll back
+the canonical pair. This contract does not promise arbitrary-host exactly-once
+effects or Phase 153 generated-host/release proof.
+
 ### `stable`
 
 These surfaces are part of the documented `v1.x` adopter contract. Breaking

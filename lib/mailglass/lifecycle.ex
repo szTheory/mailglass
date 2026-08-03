@@ -1,10 +1,12 @@
 defmodule Mailglass.Lifecycle do
   @moduledoc """
-  Transaction lifecycle seam for adopter-side event composition.
+  Compatibility lifecycle seam for adopter-side event composition.
 
-   introduces the contract only. The unsubscribe controller's
-  `Ecto.Multi` integration lands in 11-03 per , where this callback
-  will be invoked inside the durable unsubscribe transaction.
+  The callback shape remains `handle_event(Ecto.Multi.t(), map()) ::
+  Ecto.Multi.t()`. For one-click unsubscribe, Mailglass calls
+  `handle_event(Ecto.Multi.new(), attrs)` only after the primary event and suppression convergence commits, then runs the returned Multi as a separate,
+  best-effort transaction. A lifecycle failure is logged and cannot roll back or
+  change the already-successful unsubscribe response.
   """
 
   @callback handle_event(Ecto.Multi.t(), map()) :: Ecto.Multi.t()
@@ -12,8 +14,8 @@ defmodule Mailglass.Lifecycle do
   @doc """
   Default no-op implementation for lifecycle hooks.
 
-  Returns the in-flight multi unchanged so adopters can opt out without
-  branching in the caller.
+  Returns the supplied Multi unchanged so adopters can opt out without branching
+  in the caller.
   """
   @spec handle_event(Ecto.Multi.t(), map()) :: Ecto.Multi.t()
   def handle_event(multi, attrs) when is_map(attrs) do

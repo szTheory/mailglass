@@ -23,8 +23,10 @@ Key points:
 - `host` must be the public unsubscribe origin. Mailglass rejects local, private, path-bearing, and malformed hosts.
 - `mount_path` is the canonical absolute path prefix used in generated links.
 - `previous_secrets` is the rotation escape hatch for old `secret_key_base` values.
-- `redirect` affects GET only. POST one-click requests always return HTTP 200 with an empty body.
-- `lifecycle` lets you extend the durable unsubscribe transaction with adopter-specific work.
+- `redirect` affects GET only. POST one-click requests never redirect.
+- `lifecycle` preserves the existing `Mailglass.Lifecycle` callback/config shape for
+  bounded adopter work after committed one-click convergence; it does not extend the
+  primary unsubscribe transaction.
 
 ## 2) Mount the router macro
 
@@ -65,15 +67,27 @@ Mailglass ships one controller for both mailbox-provider POSTs and user-visible 
 
 - `GET /mailglass/unsubscribe/:token` renders a built-in confirmation page by default.
 - If `redirect` is configured, GET redirects to that path instead of rendering the library page.
-- `POST /mailglass/unsubscribe/:token` is the RFC 8058 one-click endpoint.
-- POST returns `200` with an empty body for the first click and for replayed clicks.
-- Replayed POSTs converge on the same durable `:unsubscribed` event instead of creating duplicates.
+- `POST /mailglass/unsubscribe/:token` is the RFC 8058 one-click endpoint. RFC 8058 requires the HTTPS POST and no redirect; it does not define Mailglass's response body.
+- A first valid convergence, replay, concurrent replay, invalid/expired/missing token, and missing Delivery each return a byte-empty `200`. Mailglass owns the byte-empty `200` privacy compatibility contract.
+- A genuine database/convergence failure returns a byte-empty `500`; it is never
+  disguised as a privacy-preserving no-op.
+- A valid POST converges to the canonical `:unsubscribed` event and immutable
+  `:address_stream` suppression. The Delivery-derived normalized address and originating
+  stream define its scope, so request data cannot widen it.
+- Replays and concurrent POSTs converge on that same pair without duplicate durable
+  facts. Effects run only for created convergence; replays do not emit effects.
 
 Use the built-in page if you want a safe default. Use `redirect` only when your app owns the confirmation UI.
 
-## 5) Wire lifecycle hooks only for transaction-local side effects
+## 5) Use lifecycle hooks as compatible post-commit work
 
-`lifecycle` modules implement `Mailglass.Lifecycle.handle_event/2` and receive the in-flight `Ecto.Multi`. Keep the hook limited to work that must commit atomically with the unsubscribe event.
+`lifecycle` modules retain the compatible `Mailglass.Lifecycle.handle_event/2`
+signature. After the primary convergence commits, Mailglass calls
+`handle_event(Ecto.Multi.new(), attrs)` only for a newly created convergence and
+runs the returned Multi as a separate, best-effort transaction. Its failure is
+logged and does not roll back the canonical event/suppression pair or change the
+already-successful POST. Keep attrs bounded to domain facts; no token or message
+content is forwarded.
 
 ```elixir
 defmodule MyApp.MailLifecycle do
@@ -93,7 +107,9 @@ defmodule MyApp.MailLifecycle do
 end
 ```
 
-Do not use the lifecycle hook for post-commit fan-out. Mailglass keeps broadcast work outside the transaction.
+Do not rely on lifecycle work to co-commit with the unsubscribe pair. Mailglass
+also performs its broadcast after commit and best-effort; created convergence runs
+effects; replays do not.
 
 ## 6) Rotate `secret_key_base` without breaking in-flight links
 
@@ -125,10 +141,11 @@ Run these checks before rollout:
 
 1. Generate a real unsubscribe link from a bulk delivery.
 2. Browser GET check: visit `GET /mailglass/unsubscribe/:token` and confirm the built-in page renders, or confirm the configured redirect lands on your app page.
-3. One-click POST check: `POST /mailglass/unsubscribe/:token` with the same token and confirm the endpoint returns `200` without redirecting.
-4. Replay POST check: repeat the same POST and confirm it still returns `200`.
-5. Generator check: rerun `mix mailglass.gen.unsubscribe` and confirm it still copies zero files.
-6. DKIM check: inspect an actual delivered message and verify both `List-Unsubscribe` and `List-Unsubscribe-Post` appear in the DKIM `h=` list.
+3. One-click POST check: POST the real signed bulk-delivery link and confirm a byte-empty `200` without redirecting. Do not record the token or message content.
+4. Replay POST check: repeat the same POST and confirm it still returns a byte-empty `200` and no duplicate effect.
+5. Enforcement check: send a same-tenant, normalized-address, origin-stream bulk message through `Mailglass.Outbound`; preflight must block it. Verify transactional and unrelated-stream messages still pass. Keep evidence to bounded IDs and outcome facts, never the token or message content.
+6. Generator check: rerun `mix mailglass.gen.unsubscribe` and confirm it still copies zero files.
+7. DKIM check: inspect an actual delivered message and verify both `List-Unsubscribe` and `List-Unsubscribe-Post` appear in the DKIM `h=` list.
 
 ## 8) Troubleshooting
 
