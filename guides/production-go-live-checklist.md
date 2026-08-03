@@ -57,15 +57,18 @@ For setup details and provider-specific config keys, see [Webhooks](./webhooks.m
 
 `Mailglass.Outbound.Worker` runs under Oban when you call `deliver_later/2`. Production must explicitly select the durable adapter and configure its only outbound queue, `:mailglass_outbound`. A concurrency of `10` is a conservative starting point for moderate send volume; adjust it for delivery lag and your ESP's rate limits.
 
-Before routing live traffic, add this configuration and run the final preflight
-from a booted release or IEx session:
+Before routing live traffic, add this configuration:
 
 ```elixir
 config :mailglass, async_adapter: :oban
 
 config :my_app, Oban,
   queues: [mailglass_outbound: 10]
+```
 
+Then run the final preflight from a booted release environment:
+
+```console
 mix mailglass.preflight
 ```
 

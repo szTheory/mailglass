@@ -94,13 +94,20 @@ defmodule Mailglass.DocsMigrationSmokeTest do
 
   @tag phase_150_task: "t150_04_02"
   test "production checklist uses the canonical durable adapter and readiness preflight" do
-    block = extract_block_after_heading(@production_checklist_path, "Durable async readiness")
+    block =
+      extract_block_after_heading(
+        @production_checklist_path,
+        "Durable async readiness and final preflight"
+      )
+
+    checklist = File.read!(@production_checklist_path)
 
     assert block
     assert block =~ "async_adapter: :oban"
     assert block =~ "queues: [mailglass_outbound: 10]"
-    assert block =~ "Mailglass.Config.production_readiness()"
-    assert block =~ "%Mailglass.ConfigError{type: :invalid}"
+    assert checklist =~ "mix mailglass.preflight"
+    assert checklist =~ "Repo, schema"
+    assert checklist =~ "never emits configured secret values"
     refute block =~ "queues: [mailglass:"
 
     assert "mailglass_outbound" == Atom.to_string(Mailglass.Outbound.Worker.queue())
