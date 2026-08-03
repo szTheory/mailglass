@@ -84,10 +84,11 @@ Make a valid built-in RFC 8058 POST converge atomically into the canonical unsub
 
 ### Upstream unsubscribe and send contracts
 
-- `.planning/phases/012-rfc-8058-one-click-unsubscribe/012-CONTEXT.md` and its verification artifacts — original route, token, response, event, and lifecycle behavior.
+- `.planning/milestones/v0.2-phases/11-rfc-8058-list-unsubscribe/11-CONTEXT.md` and its verification artifacts — original route, token, response, event, and lifecycle behavior.
+- `.planning/milestones/v0.2-phases/12-auto-suppression-soft-bounce-escalation/12-CONTEXT.md` — original unsubscribe-to-stream-suppression mapping and suppression convergence decisions.
 - `.planning/phases/149-first-send-contract-foundation/149-CONTEXT.md` — current preflight, normalization, suppression-scope, tenancy, and prefix decisions.
 - `.planning/phases/149-first-send-contract-foundation/149-VERIFICATION.md` — executable evidence for preflight and suppression enforcement.
-- `.planning/phases/149-first-send-contract-foundation/149-SECURITY.md` — tenant, token, schema-prefix, and privacy controls that Phase 152 must preserve.
+- `.planning/phases/149-first-send-contract-foundation/149-VALIDATION.md` — automated tenant, schema-prefix, privacy, and preflight controls that Phase 152 must preserve.
 - `.planning/phases/151-unified-dispatch-honest-outcomes-and-payload-lifecycle/151-CONTEXT.md` — current send boundary and explicitly deferred Phase 152 ownership.
 
 ### Public compatibility and operations
