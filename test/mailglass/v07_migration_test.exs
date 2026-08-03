@@ -115,6 +115,49 @@ defmodule Mailglass.V07MigrationTest do
     assert payload_row(prefix, delivery_id) |> hd() == "scrubbed"
   end
 
+  test "the state, reason, claim, and content checks enforce the lifecycle matrix", %{
+    prefix: prefix,
+    decoy_prefix: decoy_prefix
+  } do
+    with_hostile_search_path!(decoy_prefix, fn -> run_v07_step!(V07UpMigration) end)
+
+    for {state, reason, claimed?, content?} <- [
+          {"recoverable", nil, false, true},
+          {"dispatching", "dispatch_claimed", true, true},
+          {"scrubbed", "accepted", false, false},
+          {"expired", "retention_expired", false, false},
+          {"terminal", "pre_dispatch_failure", false, true},
+          {"discarded", "job_discarded", false, true},
+          {"abandoned", "job_abandoned", false, true},
+          {"uncertain", "provider_acceptance_unknown", false, true},
+          {"legacy", "legacy_queued", false, true}
+        ] do
+      delivery_id = Ecto.UUID.generate()
+      insert_v06_payload!(prefix, delivery_id)
+
+      assert {:ok, _} =
+               TestRepo.query(
+                 "UPDATE #{prefix}.mailglass_outbound_payloads SET lifecycle_state = $1, reason_class = $2, claimed_at = CASE WHEN $3::boolean THEN now() ELSE NULL END, envelope = CASE WHEN $4::boolean THEN envelope ELSE NULL END, scrubbed_at = CASE WHEN $1 = 'scrubbed' THEN now() ELSE NULL END WHERE delivery_id = $5::text::uuid",
+                 [state, reason, claimed?, content?, delivery_id]
+               )
+    end
+
+    invalid_delivery_id = Ecto.UUID.generate()
+    insert_v06_payload!(prefix, invalid_delivery_id)
+
+    assert {:error, %Postgrex.Error{postgres: %{code: :check_violation}}} =
+             TestRepo.query(
+               "UPDATE #{prefix}.mailglass_outbound_payloads SET lifecycle_state = 'dispatching' WHERE delivery_id = $1::text::uuid",
+               [invalid_delivery_id]
+             )
+
+    assert {:error, %Postgrex.Error{postgres: %{code: :check_violation}}} =
+             TestRepo.query(
+               "UPDATE #{prefix}.mailglass_outbound_payloads SET lifecycle_state = 'scrubbed', reason_class = 'accepted', envelope = '{\"still\": \"present\"}'::jsonb WHERE delivery_id = $1::text::uuid",
+               [invalid_delivery_id]
+             )
+  end
+
   test "clean recoverable rows down and re-up with the exact V06 catalog", %{
     prefix: prefix,
     decoy_prefix: decoy_prefix
@@ -212,16 +255,26 @@ defmodule Mailglass.V07MigrationTest do
 
   defp v06_payload_columns do
     [
-      ["id", "uuid", true], ["tenant_id", "text", true], ["delivery_id", "uuid", true],
-      ["envelope_version", "integer", true], ["envelope_digest", "text", true],
-      ["envelope", "jsonb", true], ["scrubbed_at", "timestamp without time zone", false],
+      ["id", "uuid", true],
+      ["tenant_id", "text", true],
+      ["delivery_id", "uuid", true],
+      ["envelope_version", "integer", true],
+      ["envelope_digest", "text", true],
+      ["envelope", "jsonb", true],
+      ["scrubbed_at", "timestamp without time zone", false],
       ["expires_at", "timestamp without time zone", false],
-      ["inserted_at", "timestamp without time zone", true], ["updated_at", "timestamp without time zone", true]
+      ["inserted_at", "timestamp without time zone", true],
+      ["updated_at", "timestamp without time zone", true]
     ]
   end
 
   defp index_exists?(prefix, name) do
-    %{rows: rows} = TestRepo.query!("SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = $1 AND c.relname = $2 AND c.relkind = 'i'", [prefix, name])
+    %{rows: rows} =
+      TestRepo.query!(
+        "SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = $1 AND c.relname = $2 AND c.relkind = 'i'",
+        [prefix, name]
+      )
+
     rows != []
   end
 end
