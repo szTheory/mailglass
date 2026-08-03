@@ -335,9 +335,8 @@ defmodule Mailglass.Outbound do
         # This queue identity must remain available when Oban is absent: the
         # worker itself is conditionally compiled, while the gateway returns
         # the public typed dependency-unavailable error in that configuration.
-        with :ok <- Mailglass.OptionalDeps.Oban.ready?(:mailglass_outbound) do
-          enqueue_oban(rendered, adapter_ref, opts)
-        else
+        case Mailglass.OptionalDeps.Oban.ready?(:mailglass_outbound) do
+          :ok -> enqueue_oban(rendered, adapter_ref, opts)
           {:error, reason_class} -> oban_readiness_error(reason_class)
         end
 

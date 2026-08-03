@@ -145,6 +145,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
         "lib/mailglass/outbound.ex",
         "lib/mailglass/outbound/payload_pruner_worker.ex",
         "lib/mailglass/outbound/worker.ex",
+        "lib/mailglass/production_preflight.ex",
         "lib/mailglass/suppression/escalation.ex",
         "lib/mailglass/tenancy.ex",
         "lib/mailglass/webhook/ingest.ex",
@@ -158,6 +159,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
         "lib/mix/tasks/mailglass.gen.mailbox.ex",
         "lib/mix/tasks/mailglass.install.ex",
         "lib/mix/tasks/mailglass.outbound.payloads.prune.ex",
+        "lib/mix/tasks/mailglass.preflight.ex",
         "lib/mix/tasks/mailglass.reconcile.ex",
         "lib/mix/tasks/mailglass.upgrade.v0_2.ex",
         "lib/mix/tasks/mailglass.webhooks.prune.ex"
@@ -179,7 +181,11 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
   defp configure!(scratch_schema) do
     config_path = Path.join(required_env!("MAILGLASS_NO_OPTIONAL_REPO_ROOT"), "config/config.exs")
     config = Config.Reader.read!(config_path, env: :test)
-    Application.put_all_env(config)
+
+    Enum.each(config, fn {app, entries} ->
+      Enum.each(entries, fn {key, value} -> Application.put_env(app, key, value) end)
+    end)
+
     Application.put_env(:swoosh, :api_client, false)
     Application.put_env(:mailglass, :schema, scratch_schema)
     Logger.configure(level: :warning)
@@ -254,8 +260,9 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
     private_sentinel = "runtime-private-prune-sentinel@example.com"
     payload = expired_payload!(tenant_id, private_sentinel)
 
-    unless {:ok, 1} = PayloadPruner.prune(tenant_id: tenant_id) do
-      raise "non-Oban payload pruner did not transition exactly one tenant batch"
+    case PayloadPruner.prune(tenant_id: tenant_id) do
+      {:ok, 1} -> :ok
+      _other -> raise "non-Oban payload pruner did not transition exactly one tenant batch"
     end
 
     mix_payload = expired_payload!(tenant_id, private_sentinel)

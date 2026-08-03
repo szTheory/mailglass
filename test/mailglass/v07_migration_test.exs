@@ -153,7 +153,7 @@ defmodule Mailglass.V07MigrationTest do
 
     assert {:error, %Postgrex.Error{postgres: %{code: :check_violation}}} =
              TestRepo.query(
-               "UPDATE #{prefix}.mailglass_outbound_payloads SET lifecycle_state = 'scrubbed', reason_class = 'accepted', envelope = '{\"still\": \"present\"}'::jsonb WHERE delivery_id = $1::text::uuid",
+               ~s|UPDATE #{prefix}.mailglass_outbound_payloads SET lifecycle_state = 'scrubbed', reason_class = 'accepted', envelope = '{"still": "present"}'::jsonb WHERE delivery_id = $1::text::uuid|,
                [invalid_delivery_id]
              )
   end

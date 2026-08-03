@@ -1,4 +1,11 @@
 defmodule Mailglass.Outbound.Payload do
+  @moduledoc """
+  Durable, privacy-bounded storage for outbound delivery envelopes.
+
+  Payload rows retain dispatch content only while it is needed and transition
+  to content-free lifecycle tombstones after settlement or expiry.
+  """
+
   use Mailglass.Schema
   import Ecto.Changeset
   import Ecto.Query

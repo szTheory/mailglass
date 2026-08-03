@@ -14,4 +14,6 @@ config :mailglass,
 # Adopters override this in their own config when they select an HTTP adapter.
 config :swoosh, :api_client, false
 
+config :logger, :default_formatter, metadata: [:error_module, :reason_class]
+
 import_config "#{config_env()}.exs"
