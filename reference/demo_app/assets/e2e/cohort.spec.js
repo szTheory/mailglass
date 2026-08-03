@@ -91,15 +91,15 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     await expect(table).toBeVisible();
     await expectNoPageHorizontalOverflow(page);
 
-    // Open the single fjordline-aps delivery's detail. Navigate via the
-    // delivery_id URL param (the demo.spec.js pattern) rather than a phx-click,
-    // which is robust to LiveView connection timing.
+    // Open the single fjordline-aps delivery's full detail. A delivery_id by
+    // itself opens the quick view; full=1 selects the detail tier asserted below.
+    // Direct navigation remains robust to LiveView connection timing.
     const row = table.getByTestId("operator-delivery-row").first();
     await expect(row).toBeVisible();
     const deliveryId = await row.getAttribute("phx-value-id");
     expect(deliveryId).toBeTruthy();
     await page.goto(
-      `/ops/mail?tenant_id=fjordline-aps&delivery_id=${deliveryId}`
+      `/ops/mail?tenant_id=fjordline-aps&delivery_id=${deliveryId}&full=1`
     );
 
     const detail = page.getByTestId("operator-detail-header");

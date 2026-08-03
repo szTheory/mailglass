@@ -49,7 +49,10 @@ test.describe("mailglass demo evidence", () => {
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 
     const deliveryId = await page.getByTestId("operator-delivery-row").first().getAttribute("phx-value-id");
-    await page.goto(`/demo/login?return_to=/ops/mail?tenant_id=northstar%26delivery_id=${deliveryId}`);
+    const returnTo = encodeURIComponent(
+      `/ops/mail?tenant_id=northstar&delivery_id=${deliveryId}&full=1`,
+    );
+    await page.goto(`/demo/login?return_to=${returnTo}`);
 
     await expect(page.getByTestId("operator-detail-header")).toBeVisible();
     await expect(page.getByTestId("operator-timeline")).toBeVisible();
@@ -65,7 +68,10 @@ test.describe("mailglass demo evidence", () => {
     await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
 
     const inboundId = await page.getByTestId("inbound-record-row").first().getAttribute("phx-value-id");
-    await page.goto(`/demo/login?return_to=/ops/mail/inbound?tenant_id=northstar%26inbound_id=${inboundId}`);
+    const returnTo = encodeURIComponent(
+      `/ops/mail/inbound?tenant_id=northstar&inbound_id=${inboundId}&full=1`,
+    );
+    await page.goto(`/demo/login?return_to=${returnTo}`);
     await expect(page.getByTestId("inbound-detail-header")).toBeVisible();
   });
 });

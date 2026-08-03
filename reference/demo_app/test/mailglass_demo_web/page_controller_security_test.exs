@@ -28,6 +28,15 @@ defmodule MailglassDemoWeb.PageControllerSecurityTest do
     assert redirected_to(conn) == "/ops/mail/inbound?tenant_id=northstar"
   end
 
+  test "login preserves full-detail deep-link parameters", %{conn: conn} do
+    return_to =
+      "/ops/mail/inbound?tenant_id=northstar&inbound_id=019fc8ff-00ae-7649-b745-20110a0a9f0d&full=1"
+
+    conn = get(conn, "/demo/login", %{"return_to" => return_to})
+
+    assert redirected_to(conn) == return_to
+  end
+
   test "evidence reset requires the configured reset token", %{conn: conn} do
     conn = post(conn, "/demo/evidence/reset")
 
@@ -42,7 +51,8 @@ defmodule MailglassDemoWeb.PageControllerSecurityTest do
 
     assert %{
              "status" => "ok",
-             "warning" => "Destructive demo reset endpoint: truncates and reseeds demo evidence tables."
+             "warning" =>
+               "Destructive demo reset endpoint: truncates and reseeds demo evidence tables."
            } = json_response(conn, 200)
   end
 end
