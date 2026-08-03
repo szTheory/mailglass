@@ -1,6 +1,6 @@
 ---
 phase: 150-private-envelope-and-atomic-durable-enqueue
-reviewed: 2026-08-02T20:21:00Z
+reviewed: 2026-08-02T20:30:00Z
 depth: standard
 files_reviewed: 29
 files_reviewed_list:
@@ -43,14 +43,18 @@ status: clean
 
 # Phase 150: Code Review Report
 
-**Reviewed:** 2026-08-02T20:21:00Z
+**Reviewed:** 2026-08-02T20:30:00Z
 **Depth:** standard
 **Files Reviewed:** 29
-**Status:** clean (fixed in review-fix iteration 1)
+**Status:** clean
 
 ## Summary
 
-The two Critical findings from this review were fixed in review-fix iteration 1. See `150-REVIEW-FIX.md` for the changes, commits, and verification record.
+The two Critical findings from this review are resolved. The durable enqueue preserves Oban's configured prefix, and the Oban-unavailable path no longer references the conditional Worker before readiness returns a typed error.
+
+## Independent Re-review (2026-08-02)
+
+Reviewed the actual code in commits `31062190` and `7fd2a06c`, rather than relying on the fix-status record. CR-01 is resolved: the Oban step no longer receives `Repo.multi_opts()`, and the isolated-schema durable enqueue test passed with Oban's job table in `public`. CR-02 is resolved: readiness uses the always-available `:mailglass_outbound` identity before any conditional Worker reference. `mix compile --warnings-as-errors`, the isolated-schema durable test, and the no-optional-dependencies compile/test check passed. No new Critical or Warning issue was found in the changed paths.
 
 ## Narrative Findings (AI reviewer)
 
