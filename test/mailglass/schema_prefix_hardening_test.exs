@@ -243,6 +243,8 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
 
     assert_configured_unsubscribe_event_count!(delivery.id, 1)
     assert_public_unsubscribe_event_count!(delivery.id, 0)
+    assert_configured_unsubscribe_suppression_count!(delivery, 1)
+    assert_public_unsubscribe_suppression_count!(delivery, 0)
   end
 
   test "unsubscribe raw conflict lookup passes explicit configured-schema opts" do
@@ -373,6 +375,14 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     assert unsubscribe_event_count("public", delivery_id) == expected_count
   end
 
+  defp assert_configured_unsubscribe_suppression_count!(delivery, expected_count) do
+    assert unsubscribe_suppression_count(@prefix, delivery) == expected_count
+  end
+
+  defp assert_public_unsubscribe_suppression_count!(delivery, expected_count) do
+    assert unsubscribe_suppression_count("public", delivery) == expected_count
+  end
+
   # Rule 1 fix (143-07): same "table may not exist under the mailglass axis"
   # reasoning as `assert_public_delivery_absent!/1` above — only applies to
   # the "public" branch, since `@prefix` (the configured schema) always
@@ -391,6 +401,28 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
             AND idempotency_key = $2
           """,
           [Ecto.UUID.dump!(delivery_id), "unsubscribe:#{delivery_id}"]
+        )
+
+      count
+    end
+  end
+
+  defp unsubscribe_suppression_count(schema, delivery) when schema in [@prefix, "public"] do
+    if schema == "public" and not public_table_exists?("mailglass_suppressions") do
+      0
+    else
+      %{rows: [[count]]} =
+        TestRepo.query!(
+          """
+          SELECT COUNT(*)
+          FROM #{schema}.mailglass_suppressions
+          WHERE tenant_id = $1
+            AND address = $2
+            AND scope = 'address_stream'
+            AND stream = $3
+            AND reason = 'unsubscribe'
+          """,
+          [delivery.tenant_id, String.downcase(delivery.recipient), Atom.to_string(delivery.stream)]
         )
 
       count

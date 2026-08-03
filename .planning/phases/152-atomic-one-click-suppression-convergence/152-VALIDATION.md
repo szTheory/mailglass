@@ -1,3 +1,13 @@
+---
+phase: 152
+slug: atomic-one-click-suppression-convergence
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
+created: 2026-08-03
+updated: 2026-08-03
+---
+
 # Phase 152 Validation Matrix
 
 This file is the executable evidence index for Phase 152. Run focused commands after each task and the complete gates after Plan 03.
@@ -76,3 +86,64 @@ Run in order after all three plans:
 5. `mix verify.stability_contract`
 6. `mix docs --warnings-as-errors`
 7. `mix test --warnings-as-errors`
+
+## Nyquist Audit 2026-08-03
+
+| Metric | Count |
+|---|---:|
+| Requirements audited | 5 |
+| Task samplers audited | 7 |
+| Coverage gaps found | 1 |
+| Gaps resolved | 1 |
+| Escalated | 0 |
+
+### Per-Task Behavioral Evidence
+
+| Task ID | Requirement | Test type | Direct behavioral proof | Command | Status |
+|---|---|---|---|---|---|
+| 152-01-01 | UNSUB-07, UNSUB-08, UNSUB-11 | integration | First POST derives scope from the persisted Delivery, returns byte-empty 200, writes the canonical pair, and keeps invalid/tampered/expired/missing targets byte-empty 200 no-ops. | `mix test test/mailglass/compliance/unsubscribe_controller_test.exs --warnings-as-errors` | green (within 120-test matrix) |
+| 152-01-02 | UNSUB-07, UNSUB-08, UNSUB-11 | integration/negative | Event-only and suppression-only repair, canonical conflict refetch, and injected post-event/post-suppression rollback prove an empty 500 with no partial pair. | `mix test test/mailglass/compliance/unsubscribe_controller_test.exs --warnings-as-errors` | green (within 120-test matrix) |
+| 152-02-01 | UNSUB-08, UNSUB-10 | integration | Commit-observing lifecycle, callback/broadcast failure isolation, bounded attrs, and created-only effect assertions exercise post-commit ordering. | `mix test test/mailglass/compliance/unsubscribe_controller_test.exs --warnings-as-errors` | green (within 120-test matrix) |
+| 152-02-02 | UNSUB-08, UNSUB-11 | property/integration | Serial generated replays and four-way barrier replays converge to one event/suppression and one effect; hostile `search_path` proves configured-schema-only event and suppression persistence across the insert/conflict-refetch path. | `mix test test/mailglass/properties/unsubscribe_post_idempotency_property_test.exs test/mailglass/schema_prefix_hardening_test.exs --warnings-as-errors` | green (1 property; 4 schema tests) |
+| 152-02-03 | UNSUB-09 | integration | A real signed POST followed by `Outbound.send/1` blocks only the matching normalized tenant/address/stream before the adapter, while unrelated-stream, transactional, and other-tenant controls send. | `mix test test/mailglass/outbound/preflight_test.exs --warnings-as-errors` | green (within 120-test matrix) |
+| 152-03-01 | UNSUB-07..11 | contract | Public route, byte-empty 200/500, Delivery-derived scope, lifecycle config/signature, and post-commit behavior remain executable documentation contracts. | `mix test test/mailglass/docs/unsubscribe_guide_test.exs test/mailglass/compliance/unsubscribe_test.exs --warnings-as-errors` | green (within 120-test matrix) |
+| 152-03-02 | UNSUB-07..11 | contract/smoke | Production and stability contracts require the real one-click/preflight procedure, tenant/schema isolation, bounded support artifacts, and no Phase 153 exactly-once claim. | `mix test test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors` | green (within 120-test matrix) |
+
+### Gap Closed
+
+| Gap ID | Requirement | Finding | Resolution | Verification |
+|---|---|---|---|---|
+| N-152-01 | UNSUB-11 / D-15..D-16 | The hostile-`search_path` replay test counted only configured/public event rows, so it did not directly prove the suppression insert and conflict-refetch stayed in the configured schema. | Extended `test/mailglass/schema_prefix_hardening_test.exs` to assert one configured-schema `address_stream`/`unsubscribe` suppression and zero public-schema rows after two POSTs. | Focused schema test: 4 tests, 0 failures; complete Phase 152 matrix: 1 property, 120 tests, 0 failures, 1 skipped. |
+
+### Threat and Edge-Probe Audit
+
+| Threats | Executed edge probe | Result |
+|---|---|---|
+| T-152-01, T-152-03 | Tampered/expired/missing tokens and Delivery-derived scope | Exact byte-empty privacy 200s; no durable event. |
+| T-152-02, T-152-07 | Serial replay, four-way concurrent replay, and temporary-suppression promotion race | One canonical event, one active suppression, and one created-only effect. |
+| T-152-04 | Injected failure after event and after suppression | Byte-empty 500; zero partial pair and no effects. |
+| T-152-05, T-152-06 | Lifecycle/broadcast ordering, callback exception, invalid/failed returned Multi, bounded attrs | Durable pair is visible first; effects are best-effort and token/private payload is absent. |
+| T-152-08 | Hostile `search_path`, public-schema absence/decoys, replay conflict path | Configured schema has exactly one event and one suppression; public has zero of both. |
+| T-152-09 | Real `Outbound.send/1` after committed one-click POST | Matching preflight stops before Fake adapter; scope-isolation controls reach it. |
+| T-152-10..12 | Docs/stability/operator contract sampling | Focused contracts passed and reject sensitive verification artifacts and arbitrary-host exactly-once claims. |
+
+### Feedback Sampling and Gate Results
+
+- Every one of the seven task entries has an automated, non-watch sampler; no sequence of three tasks lacks automated feedback.
+- `mix verify.schema_prefix` ran its schema tests (4/4) and follow-up gate (69/69) green, then reported only existing unrelated Credo findings outside Phase 152 ownership. This is a warning on the umbrella command, not a requirement failure.
+- The actual complete Phase 152 focused gate ran after the gap closure: **1 property, 120 tests, 0 failures, 1 pre-existing skipped test**.
+
+## Manual-Only Verifications
+
+All Phase 152 requirements have automated behavioral verification. Phase 153 retains generated-host/release proof and arbitrary-host exactly-once claims by explicit scope boundary.
+
+## Validation Sign-Off
+
+- [x] Every UNSUB-07..11 behavior has a directly executed behavioral proof.
+- [x] Threat-register probes include privacy, rollback, concurrency, effect isolation, real preflight, and hostile-schema controls.
+- [x] One genuine coverage gap was closed with a passing behavioral test.
+- [x] No implementation files were modified during this audit.
+- [x] No watch-mode commands; sampling continuity is complete.
+- [x] Set `wave_0_complete: true`, `nyquist_compliant: true`, and `status: validated`.
+
+**Approval:** validated — Nyquist-compliant
