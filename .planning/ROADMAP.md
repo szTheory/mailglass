@@ -156,7 +156,12 @@ Plans:
   4. Database mutation completes before callbacks or broadcasts run, so failed transactions produce neither a success response nor a partial event/suppression pair.
   5. The behavior stays tenant-safe and schema-prefix-safe under hostile `search_path` conditions.
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 152-01-PLAN.md — Build the test-first atomic event/suppression convergence transaction, canonical conflict repair, and rollback semantics.
+- [ ] 152-02-PLAN.md — Add created-only post-commit effects and prove concurrent replay, hostile-schema safety, tenant isolation, and real preflight enforcement.
+- [ ] 152-03-PLAN.md — Publish and lock executable docs, API, configuration, compatibility, and operational contract evidence.
 
 ### Phase 153: Generated-Host Proof, Docs, and Release Gate
 
