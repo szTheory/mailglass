@@ -102,12 +102,13 @@ defmodule Mailglass.GeneratedHost.Journey do
 
   defp negative_result!(name) when name in @input_controls do
     message = GeneratedHost.SampleMailable.input_message(name)
-
-    case Mailglass.Outbound.deliver_later(message) do
-      {:error, _error} -> {input_reason_class(name), "rejected"}
-      {:ok, _delivery} -> raise("generated-host negative control falsely queued: #{name}")
-    end
+    assert_input_rejected!(name, Mailglass.Outbound.deliver_later(message))
   end
+
+  defp assert_input_rejected!(name, {:error, _error}), do: {input_reason_class(name), "rejected"}
+
+  defp assert_input_rejected!(name, {:ok, _delivery}),
+    do: raise("generated-host negative control falsely queued: #{name}")
 
   defp input_reason_class(name)
        when name in ["zero_recipient", "to_cc", "duplicate_recipient", "multiple_recipients"],
