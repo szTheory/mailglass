@@ -184,7 +184,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     end
 
     @tag phase_150_task: "t150_02_01"
-    test "Oban enqueue persists only public delivery metadata and all four durable facts" do
+    test "Oban enqueue keeps its configured public prefix when Mailglass uses an isolated schema" do
       if not Code.ensure_loaded?(Oban) do
         :skip
       else
@@ -215,6 +215,15 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
                  TestRepo.query!(
                    "SELECT COUNT(*) FROM oban_jobs WHERE queue = 'mailglass_outbound' AND args->>'delivery_id' = $1",
                    [delivery.id]
+                 )
+
+        # `MAILGLASS_SCHEMA=mailglass` runs this same test against Mailglass's
+        # isolated schema. Oban remains configured at its own default `public`
+        # prefix, so finding this job in the public table proves the durable
+        # Multi did not override Oban's configured prefix with Repo.multi_opts().
+        assert %{rows: [["public"]]} =
+                 TestRepo.query!(
+                   "SELECT table_schema FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'oban_jobs'"
                  )
       end
     end

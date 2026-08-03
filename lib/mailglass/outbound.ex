@@ -435,8 +435,7 @@ defmodule Mailglass.Outbound do
             "delivery_id" => d.id,
             "mailglass_tenant_id" => tenant_id
           })
-        end,
-        Repo.multi_opts()
+        end
       )
 
     result = run_durable_multi(multi)
