@@ -1,6 +1,6 @@
 ---
 phase: 152-atomic-one-click-suppression-convergence
-reviewed: 2026-08-03T15:10:00Z
+reviewed: 2026-08-03T15:15:00Z
 depth: deep
 files_reviewed: 15
 files_reviewed_list:
@@ -21,35 +21,29 @@ files_reviewed_list:
   - test/mailglass/stability_contract_test.exs
 findings:
   critical: 0
-  warning: 1
+  warning: 0
   info: 0
-  total: 1
-status: issues_found
+  total: 0
+status: clean
 ---
 
 # Phase 152: Final Code Review Report
 
-**Reviewed:** 2026-08-03T15:10:00Z
+**Reviewed:** 2026-08-03T15:15:00Z
 **Depth:** deep
 **Files Reviewed:** 15
-**Status:** issues_found
+**Status:** clean
 
 ## Summary
 
-The final implementation resolves the prior convergence blocker: the prefix-explicit conditional `update_all` gives temporary-suppression promotion a single winner, the zero-row path refetches the now-permanent canonical row, and the winner is included in `:created` classification. The new concurrent test also asserts one lifecycle and one broadcast effect. Prior tenant-context, error classification, test-seam, PII, and real-preflight fixes remain intact.
+All prior review findings are resolved. The convergence transaction uses a prefix-explicit, conditional single-winner promotion with a permanent canonical refetch for losers; promotion feeds the created-only effect classification; concurrent proof asserts exactly one lifecycle and broadcast effect. Tenant-scoped post-commit effects, bounded error classification and logs, test-only failure injection, PII-free effect attrs, and the real one-click-to-preflight proof remain intact.
 
-One test-isolation defect remains: the newly added committed promotion-race test fails when the focused suite is rerun against the same database.
+The committed-property cleanup now includes suppressions. The focused Phase 152 suite was run twice consecutively against the same database, with both runs passing 50 tests (including one property) and no failures.
 
-## Warnings
-
-### WR-01: Concurrent promotion test leaves a fixed-identity suppression behind
-
-**File:** `test/mailglass/properties/unsubscribe_post_idempotency_property_test.exs:212-222`
-**Issue:** This unsandboxed module commits its rows, but setup/on-exit truncate only `mailglass_events` and `mailglass_deliveries`; they never remove `mailglass_suppressions`. The new test inserts a fixed `repair-race@example.com` / `:bulk` identity at lines 218-222. On the next focused run, that insert raises `Ecto.ConstraintError` for `mailglass_suppressions_tenant_address_scope_idx`. The final focused command failed with exactly that error (50 tests run, 1 failure), so the concurrency regression gate is not repeatable.
-**Fix:** Include `mailglass_suppressions` in this module's explicit setup/on-exit cleanup using the established non-destructive test cleanup discipline, or generate a unique recipient for the test and still remove committed rows deterministically. Re-run the focused suite twice from the same database to prove isolation.
+All reviewed files meet the Phase 152 correctness, security, and quality requirements. No issues found.
 
 ---
 
-_Reviewed: 2026-08-03T15:10:00Z_
+_Reviewed: 2026-08-03T15:15:00Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: deep_
