@@ -1,4 +1,5 @@
 defmodule Mailglass.Migrations.Postgres.V06 do
+  @moduledoc false
   use Ecto.Migration
 
   def up(opts \\ []) do
