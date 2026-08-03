@@ -637,6 +637,58 @@ defmodule Mailglass.DocsContractTest do
     end
   end
 
+  describe "Phase 151 honest dispatch and payload lifecycle contract" do
+    @tag phase_151_task: "t151_07_01"
+    test "public guidance locks bounded dispatch, privacy, retention, and legacy semantics" do
+      jobs = File.read!("guides/jobs.md")
+      checklist = File.read!("guides/production-go-live-checklist.md")
+      compatibility = File.read!("guides/compatibility-and-deprecations.md")
+      stability = File.read!("docs/api_stability.md")
+
+      assert jobs =~ "at-least-once"
+      assert jobs =~ "cannot make provider acceptance and local acknowledgement one transaction"
+      assert jobs =~ "idempotency keys and correlation identifiers"
+      assert jobs =~ "risk reduction and reconciliation aids"
+      refute jobs =~ "provider exactly-once delivery"
+
+      for outcome <- ["retryable", "terminal", "uncertain"] do
+        assert jobs =~ outcome
+      end
+
+      assert jobs =~ "reconcile, not resend"
+      assert jobs =~ "no automatic resend"
+
+      for state <- ~w(recoverable dispatching scrubbed expired terminal discarded abandoned uncertain legacy) do
+        assert jobs =~ "`#{state}`"
+      end
+
+      assert jobs =~ "terminal_days: 14"
+      assert jobs =~ "uncertain_days: 30"
+      assert jobs =~ "legacy_days: 14"
+      assert jobs =~ "prune_batch_size: 500"
+      assert jobs =~ ":mailglass_maintenance"
+      assert jobs =~ "mix mailglass.outbound.payloads.prune --tenant TENANT_ID"
+      assert jobs =~ "at most one batch"
+      assert jobs =~ "tombstone"
+      assert jobs =~ "missing, corrupt, unsupported-version, expired, and scrubbed"
+      assert jobs =~ "never reconstructs a message from Delivery metadata"
+
+      assert checklist =~ "outbound_payload_retention"
+      assert checklist =~ "--tenant TENANT_ID"
+      assert checklist =~ ":mailglass_maintenance"
+      assert checklist =~ "no automatic resend"
+
+      assert compatibility =~ "finite forward cleanup"
+      assert compatibility =~ "14-day"
+      assert compatibility =~ "not a complete-envelope source"
+
+      assert stability =~ "private outbound payload content"
+      assert stability =~ "Delivery metadata, Events, job arguments"
+      assert stability =~ "Mailglass.Adapter"
+      assert stability =~ "callback compatibility"
+    end
+  end
+
   defp phase_150_outbound_seams do
     %{
       optional_deps: extract_optional_deps_docs(),
