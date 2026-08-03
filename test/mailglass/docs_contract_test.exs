@@ -691,11 +691,14 @@ defmodule Mailglass.DocsContractTest do
       for path <- docs do
         body = File.read!(path)
         assert body =~ "<!-- docs: executable -->", "#{path} has no executable adopter block"
-        for [_, code] <- Regex.scan(~r/<!-- docs: (?:executable|syntax-only) -->\s*```elixir\n(.*?)```/s, body) do
+
+        for [_, code] <-
+              Regex.scan(~r/<!-- docs: (?:executable|syntax-only) -->\s*```elixir\n(.*?)```/s, body) do
           refute Enum.any?(forbidden, &String.contains?(code, &1)),
                  "#{path} leaks a repository-private adoption seam in a marked block"
 
-          assert {:ok, _quoted} = Code.string_to_quoted(code), "#{path} has an invalid marked Elixir block"
+          assert {:ok, _quoted} = Code.string_to_quoted(code),
+                 "#{path} has an invalid marked Elixir block"
         end
       end
     end

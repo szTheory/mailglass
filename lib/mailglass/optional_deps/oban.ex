@@ -53,7 +53,9 @@ defmodule Mailglass.OptionalDeps.Oban do
   Mailglass's canonical worker queue. This is deliberately a producer-readiness
   check; successful `insert/4` remains the transactional proof of job creation.
   """
-  @spec ready?(atom()) :: :ok | {:error, :dependency_unavailable | :instance_unavailable | :canonical_queue_unavailable}
+  @spec ready?(atom()) ::
+          :ok
+          | {:error, :dependency_unavailable | :instance_unavailable | :canonical_queue_unavailable}
   def ready?(canonical_queue) when is_atom(canonical_queue) do
     cond do
       not available?() ->
