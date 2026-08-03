@@ -76,6 +76,42 @@ If you only call `deliver/2`, this section does not apply — `deliver/2` is syn
 
 For authoring mailables and choosing between `deliver/2` and `deliver_later/2`, see [Authoring Mailables](./authoring-mailables.md).
 
+## Payload retention and reconciliation
+
+Provider acceptance and Mailglass persistence are separate systems. Mailglass
+uses an at-least-once boundary and records `:retryable`, `:terminal`, or
+`:uncertain` outcomes. An uncertain outcome may already have reached the
+provider: reconcile with provider evidence and correlation data; there is no
+automatic resend.
+
+Set a finite private-content policy appropriate to your support window. The
+defaults are terminal/discarded/abandoned `14` days, uncertain `30` days,
+legacy queued content `14` days, and one prune batch of `500` payloads:
+
+```elixir
+config :mailglass,
+  outbound_payload_retention: [
+    terminal_days: 14,
+    uncertain_days: 30,
+    legacy_days: 14,
+    prune_batch_size: 500
+  ]
+```
+
+Successful durable payloads are atomically scrubbed, preserving only a
+non-content tombstone. Run the manual, Oban-independent operation for one
+tenant at a time; `--tenant TENANT_ID` is mandatory and each invocation handles
+at most one batch:
+
+```bash
+mix mailglass.outbound.payloads.prune --tenant TENANT_ID
+```
+
+For optional scheduling, use `Mailglass.Outbound.PayloadPrunerWorker` on
+`:mailglass_maintenance` with exactly one `mailglass_tenant_id` argument. Do
+not configure an all-tenant sweep or add maintenance work to
+`:mailglass_outbound` delivery readiness.
+
 ## Per-tenant adapter routing
 
 If your application routes email through different ESPs per tenant — for example, one tenant on Postmark and another on SendGrid — implement the `c:Mailglass.Tenancy.resolve_outbound_adapter_ref/1` callback in your tenancy module. It receives a context map (`%{tenant_id, message, mode}`) and returns `{:ok, adapter_ref}` or `:default`:

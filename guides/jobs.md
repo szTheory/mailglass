@@ -210,8 +210,76 @@ with the same preflight and renderer preparation as sync. Its private transport
 state is recoverable implementation data, not a sent-message archive, admin
 viewer, or public Payload API. New durable job args are exactly `delivery_id`
 and `mailglass_tenant_id`; a narrow legacy reader exists only for recognizable
-pre-v2.4 queued rows. This does not promise provider-wire equivalence,
-dispatch-outcome convergence, or payload lifecycle behavior.
+pre-v2.4 queued rows.
+
+### Dispatch outcome and private-payload operations
+
+Mailglass provides an **at-least-once** provider boundary. It can atomically
+make its database and queue transitions, but it cannot make provider acceptance
+and local acknowledgement one transaction. It therefore does not promise
+exactly-once provider delivery. Provider idempotency keys and correlation
+identifiers are risk reduction and reconciliation aids; they are not an
+exactly-once guarantee.
+
+The worker records one of three structural outcomes:
+
+- **retryable** — there is evidence that another attempt is appropriate, so
+  Oban may retry it.
+- **terminal** — local validation, policy, or confirmed rejection makes retry
+  inappropriate; the job is cancelled with an actionable reason.
+- **uncertain** — provider acceptance may have happened. Reconcile, not resend:
+  there is no automatic resend because it could duplicate customer mail.
+
+Private payload content has the following finite lifecycle. The public
+`Delivery` projection and event audit trail remain, while contentless tombstones
+explain why a payload cannot be recovered.
+
+| State | Meaning and operator action | Content / retention |
+| --- | --- | --- |
+| `recoverable` | Prepared content can be claimed for dispatch. | Content exists until claimed or settled. |
+| `dispatching` | A provider attempt may be in progress or have reached the provider. | Treat as uncertain; do not blindly recover or resend. |
+| `scrubbed` | Confirmed durable success atomically scrubbed content. | Tombstone only; no recovery. Sync and TaskSupervisor success have no Payload operation. |
+| `expired` | A bounded prune turned retained content into a tombstone. | Tombstone only; no recovery. |
+| `terminal` | Invalid, policy-blocked, or permanently rejected dispatch. | Retain content for the terminal window, then prune. |
+| `discarded` | A cancelled/discarded dispatch cannot be retried automatically. | Retain content for the terminal window, then prune. |
+| `abandoned` | A lifecycle transition ended the attempt without safe recovery. | Retain content for the terminal window, then prune. |
+| `uncertain` | Provider acceptance is not known. | Retain for reconciliation, never automatic resend. |
+| `legacy` | A recognizable pre-v2.4 queued row may use the narrow compatibility reader. | Retain only for forward cleanup; never reconstruct from public metadata. |
+
+Modern missing, corrupt, unsupported-version, expired, and scrubbed payloads
+are distinct terminal facts. Modern work never reconstructs a message from
+Delivery metadata. Public surfaces exclude private subject/body/header/token,
+attachment, provider-option, provider-payload, and raw exception content from
+Delivery metadata, Events, and job arguments.
+
+Configure finite retention explicitly when the defaults do not meet your
+reconciliation policy:
+
+```elixir
+config :mailglass,
+  outbound_payload_retention: [
+    terminal_days: 14,
+    uncertain_days: 30,
+    legacy_days: 14,
+    prune_batch_size: 500
+  ]
+```
+
+Successful payloads are scrubbed immediately. The default terminal,
+discarded, and abandoned window is 14 days; the acceptance-uncertain
+reconciliation window is 30 days; recognizable legacy queued content has a
+14-day cleanup window. A prune call requires one explicit tenant and processes
+at most one batch (500 rows by default), turning content into tombstones rather
+than deleting the audit history:
+
+```bash
+mix mailglass.outbound.payloads.prune --tenant TENANT_ID
+```
+
+This manual command works without Oban. If you choose scheduled maintenance,
+enqueue one tenant at a time through the optional
+`Mailglass.Outbound.PayloadPrunerWorker` on `:mailglass_maintenance`; it never
+defaults or enumerates tenants.
 
 **Go deeper →** [Testing](testing.md) · [Authoring Mailables](authoring-mailables.md)
 

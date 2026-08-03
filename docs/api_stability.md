@@ -69,6 +69,10 @@ they are not promised as stable adopter API for `v1.x`.
   `Mailglass.PubSub.Topics`, `Mailglass.Repo`, `Mailglass.Schema`,
   `Mailglass.IdempotencyKey`, `Mailglass.OptionalDeps.Oban`, and Oban worker
   modules exported only because the runtime or sibling packages need them.
+- Private outbound payload content and lifecycle internals, including
+  `Mailglass.Outbound.Payload`, payload claims, tombstones, retention, and the
+  payload-pruner worker. They are not a public Payload API and are never a
+  sent-message archive or admin content viewer.
 - Internal singleton names, ETS tables, storage processes, trigger helpers,
   migration runners, and other library-owned machinery documented later in
   this file.
@@ -1375,6 +1379,30 @@ adapter error with no queued work. It never falls back to Task.Supervisor.
 `:task_supervisor` is available only when explicitly selected and is
 non-durable. Never return `%Oban.Job{}`; Oban types never leak into the public
 API.
+
+### Dispatch, privacy, and lifecycle boundary (Phase 151)
+
+`Mailglass.Adapter` callback compatibility is preserved: outcome classification
+wraps its established result surface rather than introducing a new public
+provider callback. Mailglass can atomically settle local Delivery, Event, and
+private-payload transitions, but provider acceptance is external; the dispatch
+boundary is at-least-once, not an exactly-once provider-delivery promise.
+Idempotency keys and correlation identifiers reduce duplicate risk and support
+reconciliation only.
+
+`retryable` outcomes may be retried. `terminal` outcomes are cancelled.
+`uncertain` outcomes can represent possible provider acceptance and require
+reconciliation, not automatic resend. These structural classes are operational
+semantics, not a public guarantee that private adapter response data is exposed.
+
+Private content never belongs in Delivery metadata, Events, and job arguments.
+In particular, public projections exclude raw subject/body/header/token,
+attachment, provider-option, provider-payload, and arbitrary exception bytes.
+Modern missing, corrupt, unsupported-version, expired, and scrubbed payloads
+are distinct fail-closed terminal conditions; modern queued work never
+reconstructs a complete message from public metadata. See
+[`guides/jobs.md`](../guides/jobs.md) for finite retention, tombstone, and
+tenant-required prune operations.
 
 **`deliver_many/2` v0.1 scope:** Async-only. Selected `:oban` commits one
 canonical-queue job per successful message or yields that message's typed failed

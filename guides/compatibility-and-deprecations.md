@@ -74,6 +74,17 @@ Compatibility-lane support is not a promise that the older path remains the
 preferred API. It means the bridge still exists so adopters can migrate on a
 controlled schedule.
 
+### Legacy durable payload cleanup
+
+Recognizable pre-v2.4 queued rows retain a narrow compatibility reader solely
+for finite forward cleanup. Their private content has a 14-day cleanup window;
+after that, pruning preserves a non-content tombstone and an actionable
+lifecycle reason. Legacy queued metadata is not a complete-envelope source:
+new or incomplete rows must not be reconstructed from `Delivery.metadata`.
+This bridge does not create a public Payload API or extend the stable adapter
+callback; `Mailglass.Adapter` callback compatibility remains the public
+delivery seam.
+
 ## Release guarantees
 
 ### Patch releases

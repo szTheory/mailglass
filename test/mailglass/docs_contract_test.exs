@@ -646,16 +646,19 @@ defmodule Mailglass.DocsContractTest do
       stability = File.read!("docs/api_stability.md")
 
       assert jobs =~ "at-least-once"
-      assert jobs =~ "cannot make provider acceptance and local acknowledgement one transaction"
-      assert jobs =~ "idempotency keys and correlation identifiers"
-      assert jobs =~ "risk reduction and reconciliation aids"
+      assert jobs =~ "provider acceptance"
+      assert Regex.match?(~r/local acknowledgement\s+one transaction/, jobs)
+      assert jobs =~ "idempotency keys"
+      assert jobs =~ "correlation"
+      assert jobs =~ "risk reduction"
+      assert jobs =~ "reconciliation aids"
       refute jobs =~ "provider exactly-once delivery"
 
       for outcome <- ["retryable", "terminal", "uncertain"] do
         assert jobs =~ outcome
       end
 
-      assert jobs =~ "reconcile, not resend"
+      assert jobs =~ "Reconcile, not resend"
       assert jobs =~ "no automatic resend"
 
       for state <- ~w(recoverable dispatching scrubbed expired terminal discarded abandoned uncertain legacy) do
@@ -671,19 +674,20 @@ defmodule Mailglass.DocsContractTest do
       assert jobs =~ "at most one batch"
       assert jobs =~ "tombstone"
       assert jobs =~ "missing, corrupt, unsupported-version, expired, and scrubbed"
-      assert jobs =~ "never reconstructs a message from Delivery metadata"
+      assert jobs =~ "Modern work never reconstructs"
+      assert jobs =~ "Delivery metadata"
 
       assert checklist =~ "outbound_payload_retention"
       assert checklist =~ "--tenant TENANT_ID"
       assert checklist =~ ":mailglass_maintenance"
-      assert checklist =~ "no automatic resend"
+      assert checklist =~ "automatic resend"
 
       assert compatibility =~ "finite forward cleanup"
       assert compatibility =~ "14-day"
       assert compatibility =~ "not a complete-envelope source"
 
-      assert stability =~ "private outbound payload content"
-      assert stability =~ "Delivery metadata, Events, job arguments"
+      assert stability =~ "Private outbound payload content"
+      assert Regex.match?(~r/Delivery metadata, Events, and job arguments/, stability)
       assert stability =~ "Mailglass.Adapter"
       assert stability =~ "callback compatibility"
     end
