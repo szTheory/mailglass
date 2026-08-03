@@ -42,6 +42,7 @@ lib/mailglass/clock/frozen.ex
 lib/mailglass/clock/system.ex
 lib/mailglass/compliance.ex
 lib/mailglass/compliance/unsubscribe.ex
+lib/mailglass/compliance/unsubscribe_convergence.ex
 lib/mailglass/compliance/unsubscribe_controller.ex
 lib/mailglass/compliance/unsubscribe_html.ex
 lib/mailglass/compliance/unsubscribe_html/confirm.html.heex
@@ -94,6 +95,8 @@ lib/mailglass/migrations/postgres/v02.ex
 lib/mailglass/migrations/postgres/v03.ex
 lib/mailglass/migrations/postgres/v04.ex
 lib/mailglass/migrations/postgres/v05.ex
+lib/mailglass/migrations/postgres/v06.ex
+lib/mailglass/migrations/postgres/v07.ex
 lib/mailglass/operator/deliveries.ex
 lib/mailglass/operator/replay_history.ex
 lib/mailglass/operator/replay_targets.ex
@@ -112,8 +115,16 @@ lib/mailglass/outbound/async_adapter.ex
 lib/mailglass/outbound/async_adapter/inline.ex
 lib/mailglass/outbound/async_adapter/task_supervisor.ex
 lib/mailglass/outbound/delivery.ex
+lib/mailglass/outbound/dispatch_outcome.ex
+lib/mailglass/outbound/envelope.ex
+lib/mailglass/outbound/payload.ex
+lib/mailglass/outbound/payload_lifecycle.ex
+lib/mailglass/outbound/payload_pruner.ex
+lib/mailglass/outbound/payload_pruner_worker.ex
+lib/mailglass/outbound/preflight.ex
 lib/mailglass/outbound/projector.ex
 lib/mailglass/outbound/worker.ex
+lib/mailglass/production_preflight.ex
 lib/mailglass/pub_sub.ex
 lib/mailglass/pub_sub/topics.ex
 lib/mailglass/publish/installer_golden_check.ex
@@ -182,6 +193,8 @@ lib/mix/tasks/mailglass.gen.mailbox.ex
 lib/mix/tasks/mailglass.gen.migration.ex
 lib/mix/tasks/mailglass.gen.unsubscribe.ex
 lib/mix/tasks/mailglass.install.ex
+lib/mix/tasks/mailglass.outbound.payloads.prune.ex
+lib/mix/tasks/mailglass.preflight.ex
 lib/mix/tasks/mailglass.publish.check.ex
 lib/mix/tasks/mailglass.reconcile.ex
 lib/mix/tasks/mailglass.stability.check.ex
