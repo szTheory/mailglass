@@ -28,7 +28,7 @@ defmodule Mailglass.ProductionPreflightTest do
     Application.put_env(:mailglass, :repo, MissingRepo)
     Application.put_env(:mailglass, :schema, "mailglass")
     Application.put_env(:mailglass, :adapter, MissingAdapter)
-    Application.put_env(:mailglass, :postmark, basic_auth: {"operator", "preflight-secret"})
+    Application.put_env(:mailglass, :postmark, [])
     Application.put_env(:mailglass, :async_adapter, :task_supervisor)
     Application.put_env(:mailglass, :outbound_payload_maintenance, :none)
     Application.put_env(:mailglass, :operator, auth: MissingOperatorAuth)

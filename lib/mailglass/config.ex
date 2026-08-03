@@ -497,6 +497,26 @@ defmodule Mailglass.Config do
             "Maximum payload tombstones transitioned by one explicit tenant prune call. Default: `500`."
         ]
       ]
+    ],
+    outbound_payload_maintenance: [
+      type: {:in, [:scheduled, :manual, :none]},
+      default: :none,
+      doc:
+        "Production payload-maintenance mode. Set `:scheduled` when a host scheduler enqueues " <>
+          "tenant-explicit `Mailglass.Outbound.PayloadPrunerWorker` jobs, or `:manual` when an " <>
+          "operator runs `mix mailglass.outbound.payloads.prune --tenant TENANT_ID` from system cron."
+    ],
+    operator: [
+      type: :keyword_list,
+      default: [],
+      keys: [
+        auth: [
+          type: {:or, [:atom, nil]},
+          default: nil,
+          doc:
+            "Adopter-owned `MailglassAdmin.Auth` callback used by the production operator router mount."
+        ]
+      ]
     ]
   ]
 
@@ -634,7 +654,17 @@ defmodule Mailglass.Config do
 
   defp normalize_optional_keyword_subtrees(opts) do
     Enum.reduce(
-      [:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance, :ses, :resend],
+      [
+        :theme,
+        :telemetry,
+        :renderer,
+        :rate_limit,
+        :tracking,
+        :compliance,
+        :ses,
+        :resend,
+        :operator
+      ],
       opts,
       fn key, acc ->
         case Keyword.get(acc, key, :__missing__) do
@@ -861,6 +891,34 @@ defmodule Mailglass.Config do
   def outbound_payload_retention do
     validated_config()
     |> Keyword.fetch!(:outbound_payload_retention)
+  end
+
+  @doc """
+  Returns the declared payload-maintenance operating mode.
+
+  Production readiness requires either `:scheduled` (the host schedules
+  tenant-explicit pruner jobs) or `:manual` (the documented bounded Mix task
+  is owned by system cron or an equivalent operator runbook). `:none` is the
+  safe default for ordinary application boot and fails production preflight.
+  """
+  @doc since: "2.4.0"
+  @spec outbound_payload_maintenance() :: :scheduled | :manual | :none
+  def outbound_payload_maintenance do
+    validated_config()
+    |> Keyword.fetch!(:outbound_payload_maintenance)
+  end
+
+  @doc """
+  Returns the adopter-owned production operator authorization callback, if
+  one was configured. The callback must implement `authorize/2` when the
+  production preflight is run.
+  """
+  @doc since: "2.4.0"
+  @spec operator_auth() :: module() | nil
+  def operator_auth do
+    validated_config()
+    |> Keyword.fetch!(:operator)
+    |> Keyword.fetch!(:auth)
   end
 
   defp validated_config do
