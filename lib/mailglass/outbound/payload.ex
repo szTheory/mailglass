@@ -189,6 +189,11 @@ defmodule Mailglass.Outbound.Payload do
     |> change(%{lifecycle_state: state, reason_class: reason, claimed_at: nil})
   end
 
+  @doc false
+  def retry_changeset(%__MODULE__{} = payload) do
+    change(payload, %{lifecycle_state: :recoverable, reason_class: nil, claimed_at: nil})
+  end
+
   defp claim_error(tenant_id, delivery_id) do
     query =
       from(p in __MODULE__, where: p.tenant_id == ^tenant_id and p.delivery_id == ^delivery_id)

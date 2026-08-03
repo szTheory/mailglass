@@ -17,7 +17,13 @@ defmodule Mailglass.Outbound.DispatchOutcome do
     :provider_server_error,
     :transport_before_acceptance,
     :provider_acceptance_unknown,
-    :pre_dispatch_failure
+    :pre_dispatch_failure,
+    :payload_missing,
+    :payload_corrupt,
+    :payload_unsupported_version,
+    :payload_expired,
+    :payload_scrubbed,
+    :payload_dispatching
   ]
 
   @type class :: :retryable | :terminal | :uncertain
@@ -98,6 +104,20 @@ defmodule Mailglass.Outbound.DispatchOutcome do
 
   defp classify_adapter_failure(%{reason_class: :transport, dispatch_evidence: :before_acceptance}),
     do: retryable(:transport_before_acceptance)
+
+  defp classify_adapter_failure(%{reason_class: reason})
+       when reason in [
+              :payload_missing,
+              :legacy_payload_unavailable,
+              :payload_corrupt,
+              :payload_unsupported_version,
+              :payload_expired,
+              :payload_scrubbed
+            ],
+       do: terminal(if(reason == :legacy_payload_unavailable, do: :payload_missing, else: reason))
+
+  defp classify_adapter_failure(%{reason_class: :payload_dispatching}),
+    do: uncertain(:payload_dispatching)
 
   defp classify_adapter_failure(_), do: uncertain(:provider_acceptance_unknown)
 

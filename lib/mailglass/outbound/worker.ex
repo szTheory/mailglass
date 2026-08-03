@@ -50,7 +50,14 @@ if Code.ensure_loaded?(Oban.Worker) do
             {:error, err}
 
           {:error, %{__exception__: true} = err} ->
-            if terminal_payload_error?(err), do: {:cancel, err}, else: {:error, err}
+            worker_error_result(err)
+
+          {:error, %Mailglass.Outbound.DispatchOutcome{class: :retryable} = outcome} ->
+            {:error, outcome.reason_class}
+
+          {:error, %Mailglass.Outbound.DispatchOutcome{class: class} = outcome}
+          when class in [:terminal, :uncertain] ->
+            {:cancel, outcome.reason_class}
 
           {:error, other} ->
             {:error, inspect(other)}
@@ -58,11 +65,34 @@ if Code.ensure_loaded?(Oban.Worker) do
       end)
     end
 
-    defp terminal_payload_error?(%Mailglass.SendError{
-           context: %{reason_class: :legacy_payload_integrity_unverifiable}
-         }),
-         do: true
+    defp worker_result(%Mailglass.Outbound.DispatchOutcome{class: :retryable} = outcome),
+      do: {:error, outcome.reason_class}
 
-    defp terminal_payload_error?(_), do: false
+    defp worker_result(%Mailglass.Outbound.DispatchOutcome{class: class} = outcome)
+         when class in [:terminal, :uncertain],
+         do: {:cancel, outcome.reason_class}
+
+    # Preserve the established callback-visible errors for legacy rows while
+    # making lifecycle-originated payload facts terminal/cancelled.
+    defp worker_error_result(
+           %Mailglass.SendError{
+             context: %{reason_class: :legacy_payload_integrity_unverifiable}
+           } = err
+         ),
+         do: {:cancel, err}
+
+    defp worker_error_result(%Mailglass.SendError{context: %{reason_class: reason}} = err)
+         when reason in [
+                :legacy_payload_unavailable,
+                :payload_missing,
+                :payload_corrupt,
+                :payload_unsupported_version,
+                :payload_expired,
+                :payload_scrubbed,
+                :payload_dispatching
+              ],
+         do: worker_result(Mailglass.Outbound.DispatchOutcome.classify({:error, err}))
+
+    defp worker_error_result(err), do: {:error, err}
   end
 end

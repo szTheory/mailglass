@@ -263,9 +263,10 @@ defmodule Mailglass.Outbound do
            {:ok, payload} <- claim_payload(delivery),
            {:ok, %{message: rendered, adapter_ref: adapter_ref}} <-
              load_claimed_payload_prepared(delivery, payload),
+           payload_for_settlement = if(payload == :legacy, do: nil, else: payload),
            prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
            {:ok, adapter} <- resolve_persisted_adapter(adapter_ref),
-           {:ok, updated} <- dispatch_prepared(delivery, prepared, adapter, payload) do
+           {:ok, updated} <- dispatch_prepared(delivery, prepared, adapter, payload_for_settlement) do
         {:ok, updated}
       end
 
@@ -757,17 +758,22 @@ defmodule Mailglass.Outbound do
 
     multi =
       if payload do
-        state = if outcome.class == :uncertain, do: :uncertain, else: :terminal
+        payload_changeset =
+          case outcome.class do
+            :retryable ->
+              Payload.retry_changeset(payload)
 
-        reason =
-          if outcome.class == :uncertain,
-            do: :provider_acceptance_unknown,
-            else: :pre_dispatch_failure
+            :uncertain ->
+              Payload.settle_changeset(payload, :uncertain, :provider_acceptance_unknown)
+
+            :terminal ->
+              Payload.settle_changeset(payload, :terminal, :pre_dispatch_failure)
+          end
 
         Ecto.Multi.update(
           multi,
           :payload,
-          Payload.settle_changeset(payload, state, reason),
+          payload_changeset,
           Repo.multi_opts()
         )
       else
@@ -888,7 +894,14 @@ defmodule Mailglass.Outbound do
   defp claim_payload(%Delivery{} = delivery) do
     case Payload.claim(delivery.tenant_id, delivery.id) do
       {:ok, payload} -> {:ok, payload}
+      {:error, :not_found} -> {:ok, :legacy}
       {:error, reason} -> {:error, payload_lifecycle_error(reason)}
+    end
+  end
+
+  defp load_claimed_payload_prepared(%Delivery{} = delivery, :legacy) do
+    with {:ok, message} <- load_legacy_pre_v24_queued_message(delivery) do
+      {:ok, %{message: message, adapter_ref: delivery.adapter_ref}}
     end
   end
 
