@@ -23,6 +23,7 @@ defmodule Mailglass.Outbound.WorkerTest do
     prior_adapters = Application.get_env(:mailglass, :adapters)
     prior_tenancy = Application.get_env(:mailglass, :tenancy)
     prior_async_adapter = Application.get_env(:mailglass, :async_adapter)
+    prior_route_control = Application.get_env(:mailglass, :phase_150_worker_route_control)
 
     on_exit(fn ->
       Application.put_env(:mailglass, :adapter, prior_adapter)
@@ -35,6 +36,12 @@ defmodule Mailglass.Outbound.WorkerTest do
 
       Application.put_env(:mailglass, :tenancy, prior_tenancy)
       Application.put_env(:mailglass, :async_adapter, prior_async_adapter)
+
+      if is_nil(prior_route_control) do
+        Application.delete_env(:mailglass, :phase_150_worker_route_control)
+      else
+        Application.put_env(:mailglass, :phase_150_worker_route_control, prior_route_control)
+      end
     end)
 
     :ok
