@@ -113,7 +113,7 @@ Plans:
   4. A successful dispatch atomically records success and scrubs its private payload while retaining the non-sensitive delivery projection and ledger; terminal, discarded, abandoned, and legacy queued payloads follow a configurable bounded-retention prune/recovery policy.
   5. Missing, corrupt, expired, unsupported-version, or already-scrubbed payloads fail closed with an operator-actionable state and are never rebuilt from incomplete public metadata; new async sends keep bodies, subjects, headers, tokens, attachments, and provider options out of public metadata.
 
-**Plans**: 7/7 plans executed
+**Plans**: 8 plans (7 executed, 1 gap-closure pending)
 
 Plans:
 
@@ -138,6 +138,10 @@ Plans:
 **Wave 5** *(blocked on Wave 4 completion)*
 
 - [x] 151-07-PLAN.md — Publish executable dispatch, privacy, retention, and legacy contracts.
+
+**Wave 6** *(gap closure; blocked on Wave 5 completion)*
+
+- [ ] 151-08-PLAN.md — Retire no-Payload metadata dispatch and settle historical queued work fail-closed.
 
 ### Phase 152: Atomic One-Click Suppression Convergence
 

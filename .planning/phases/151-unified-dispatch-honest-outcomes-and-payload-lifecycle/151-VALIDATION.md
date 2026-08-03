@@ -34,6 +34,8 @@ created: 2026-08-02
 | 151-05-01 | 05 | 3 | PRIV-02/03/04 | T-151-11..13 | Exact per-state retention; required tenant; one bounded hostile-prefix batch | integration | `mix test test/mailglass/config_test.exs test/mailglass/outbound/payload_lifecycle_test.exs --only phase_151_task:t151_05_01 --warnings-as-errors` | ✅/❌ | ⬜ |
 | 151-06-01 | 06 | 4 | PRIV-02 | T-151-14..15 | Tenant-explicit worker/CLI; isolated API+Mix invocation without Oban; aggregate-only output | integration/runtime | `mix test test/mailglass/outbound/payload_pruner_test.exs --only phase_151_task:t151_06_01 --warnings-as-errors && MIX_ENV=test mix verify.no_optional_runtime` | ❌/✅ extend | ⬜ |
 | 151-07-01 | 07 | 5 | DISP-04 PRIV-02/03/04 | T-151-16..18 | Honest boundary/privacy/operations wording | contract | `mix test test/mailglass/docs_contract_test.exs --only phase_151_task:t151_07_01 --warnings-as-errors && MIX_ENV=test mix verify.support_contract.core` | ✅ | ⬜ |
+| 151-08-01 | 08 | 6 | DISP-02 PRIV-03/04 | T-151-19..23 | Historical and modern no-Payload rows cancel without metadata reconstruction, private fabrication, duplicate settlement, or adapter I/O | integration/negative control | `mix test test/mailglass/outbound/worker_test.exs --only phase_151_task:t151_08_01 --warnings-as-errors` | ✅ extend | ⬜ |
+| 151-08-02 | 08 | 6 | PRIV-02/03/04 | T-151-21 | Legacy cleanup/history remains but the dispatch reader promise is retired across active docs/API contracts | contract | `mix test test/mailglass/docs_contract_test.exs --only phase_151_task:t151_08_02 --warnings-as-errors && MIX_ENV=test mix verify.support_contract.core` | ✅ extend | ⬜ |
 
 ## Wave 0 Requirements
 - [ ] Create `wire_equivalence_test.exs`, `dispatch_outcome_test.exs`, `v07_migration_test.exs`, `payload_lifecycle_test.exs`, and `payload_pruner_test.exs` in their owning tasks before production edits.
@@ -43,12 +45,14 @@ created: 2026-08-02
 - [ ] Lifecycle tests prove durable versus sync/Task persistence modes, every state/reason/retention row, explicit tenant pruning, and multi-tenant hostile-prefix isolation.
 - [ ] Extend the existing isolated no-optional runtime probe to invoke the pruner library and Mix task, capture aggregate-only output, and fail on unguarded Oban references.
 - [ ] Preserve `async: false` for application-config, DDL, concurrency, and Oban-manual tests.
+- [ ] Extend `worker_test.exs` before runtime edits with a historical full-marker metadata sentinel that proves first/repeat cancellation, one atomic Event, unchanged provenance, zero Payload/envelope creation, and zero adapter calls.
+- [ ] Extend `docs_contract_test.exs` before prose edits so every active legacy-reader/metadata-dispatch promise fails until jobs/getting-started/compatibility/API stability agree with PRIV-04.
 
 ## Manual-Only Verifications
 All Phase 151 behavior has automated verification. Phase 153 owns generated-host/operator proof.
 
 ## Phase Gate
-`mix test test/mailglass/outbound/wire_equivalence_test.exs test/mailglass/outbound/dispatch_outcome_test.exs test/mailglass/outbound/payload_lifecycle_test.exs test/mailglass/outbound/payload_pruner_test.exs test/mailglass/outbound/worker_test.exs test/mailglass/adapters/swoosh_test.exs test/mailglass/v07_migration_test.exs test/mailglass/config_test.exs test/mailglass/docs_contract_test.exs --warnings-as-errors && MIX_ENV=test mix verify.no_optional_runtime && MIX_ENV=test mix verify.support_contract.core && mix test --warnings-as-errors`
+`mix test test/mailglass/outbound/wire_equivalence_test.exs test/mailglass/outbound/dispatch_outcome_test.exs test/mailglass/outbound/payload_lifecycle_test.exs test/mailglass/outbound/payload_pruner_test.exs test/mailglass/outbound/worker_test.exs test/mailglass/adapters/swoosh_test.exs test/mailglass/v07_migration_test.exs test/mailglass/config_test.exs test/mailglass/docs_contract_test.exs --warnings-as-errors && MIX_ENV=test mix verify.support_contract.core && MIX_ENV=test mix verify.no_optional_runtime && mix test --warnings-as-errors`
 
 ## Validation Sign-Off
 - [ ] All task samplers green
