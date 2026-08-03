@@ -119,7 +119,7 @@ Populated during roadmap creation. Every v2.4 requirement must map to exactly on
 | UNSUB-11 | Phase 152 | Complete |
 | ADOPT-01 | Phase 153 | Complete |
 | ADOPT-02 | Phase 153 | Complete |
-| ADOPT-03 | Phase 153 | Pending |
+| ADOPT-03 | Phase 153 | Complete |
 | ADOPT-04 | Phase 153 | Pending |
 | ADOPT-05 | Phase 153 | Pending |
 | ADOPT-06 | Phase 153 | Pending |
