@@ -4,16 +4,16 @@ milestone: v2.4
 milestone_name: Outbound First-Adopter Correctness
 current_phase: 150
 current_phase_name: Private Envelope and Atomic Durable Enqueue
-status: executing
-stopped_at: Completed 150-05-PLAN.md
-last_updated: "2026-08-03T00:13:58.243Z"
+status: verifying
+stopped_at: Completed 150-06-PLAN.md
+last_updated: "2026-08-03T01:07:56.193Z"
 last_activity: 2026-08-02
 last_activity_desc: Completed 150-02 durable single and batch enqueue
 progress:
   total_phases: 2
-  completed_phases: 2
-  total_plans: 9
-  completed_plans: 9
+  completed_phases: 1
+  total_plans: 13
+  completed_plans: 10
 ---
 
 # Project State
@@ -29,10 +29,10 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 
 Phase: 150 — Private Envelope and Atomic Durable Enqueue
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-08-02 — Completed 150-02 durable single and batch enqueue
 
-Progress: [██████████] 100%
+Progress: [████████░░] 77%
 
 ## v2.4 Milestone Intent
 
@@ -452,6 +452,8 @@ release debug campaign.
 - [Phase ?]: Production readiness reports only :async_adapter and a stable reason_class from canonical Oban readiness.
 - [Phase ?]: OptionalDeps.Oban keeps availability detection, canonical readiness, and fail-closed transactional insertion as distinct gateway responsibilities.
 - [Phase ?]: Selected Oban is durable and fail-closed; TaskSupervisor is explicit non-durable development/test behavior only.
+- [Phase ?]: Payload-backed dispatch uses the envelope adapter_ref; a non-nil Delivery projection must agree.
+- [Phase ?]: Headers and attachment headers use ordered string-pair wire arrays to preserve duplicates.
 
 ## Quick Tasks Completed
 
@@ -520,6 +522,7 @@ release debug campaign.
 | Phase 150 P03 | 6min | 2 tasks | 6 files |
 | Phase 150-private-envelope-and-atomic-durable-enqueue P04 | 9min | 2 tasks | 6 files |
 | Phase 150 P05 | 14min | 1 tasks | 9 files |
+| Phase 150 P06 | 12min | 2 tasks | 4 files |
 
 ## Deferred Items
 
@@ -686,8 +689,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T00:13:58.231Z
-**Stopped at:** Completed 150-05-PLAN.md
+**Last session:** 2026-08-03T01:07:56.181Z
+**Stopped at:** Completed 150-06-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
