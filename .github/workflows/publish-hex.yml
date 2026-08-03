@@ -159,6 +159,13 @@ jobs:
         run: mix deps.get
       - name: Prove package-shaped local generated host journey
         run: DEP_MODE=local bash scripts/generated_host_proof.sh --stage all
+      - name: Rehydrate root dependencies after package isolation
+        run: |
+          # `mix hex.build --unpack` under the release toolchain can leave
+          # fetched rebar dependencies without source headers. Re-fetch the
+          # locked tree before `mix ci` switches to its isolated build path.
+          mix deps.clean --all
+          mix deps.get --check-locked
       - name: Run repository CI candidate gate
         run: mix ci
       - name: Wait for postgres + create test DB

@@ -135,7 +135,17 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
 
     assert prepublish =~ "scripts/resolve_release_packages.exs"
     assert prepublish =~ "DEP_MODE=local bash scripts/generated_host_proof.sh --stage all"
+    assert prepublish =~ "Rehydrate root dependencies after package isolation"
+    assert prepublish =~ "mix deps.clean --all"
+    assert prepublish =~ "mix deps.get --check-locked"
     assert prepublish =~ "mix ci"
+
+    assert substring_index(prepublish, "generated_host_proof.sh --stage all") <
+             substring_index(prepublish, "mix deps.clean --all")
+
+    assert substring_index(prepublish, "mix deps.clean --all") <
+             substring_index(prepublish, "run: mix ci")
+
     assert prepublish =~ "mix mailglass.publish.check --package \"$package\""
     assert prepublish =~ "candidate_sha"
     assert prepublish =~ "tmp/release-proof/phase-153.json"
@@ -161,6 +171,11 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
   defp selected_package_condition?(job, package) do
     job =~
       "contains(fromJSON(needs.gate-ci-green.outputs.release_packages), '#{package}')"
+  end
+
+  defp substring_index(source, substring) do
+    {index, _length} = :binary.match(source, substring)
+    index
   end
 
   defp extract_top_level_concurrency!(source) do
