@@ -35,19 +35,17 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert consumer_install =~ "run: bash scripts/consumer_install_smoke.sh"
   end
 
-  test "2.4.0 consumer smoke fails closed while including inbound 2.1.1" do
+  test "exact resolver-selected Hex journey rejects floating and local dependencies" do
     workflow = File.read!(@workflow_path)
     consumer_install = extract_job!(workflow, "consumer-install", "published-trust-journey")
 
-    assert consumer_install =~ "VERSION_INBOUND: 2.1.1"
-    assert consumer_install =~ "mailglass_inbound 2.1.1"
-    assert consumer_install =~ "exit 1"
-    refute consumer_install =~ "Skipping inbound consumer dependency"
-
     assert consumer_install =~ "DEP_MODE: hex"
-    assert consumer_install =~ "VERSION: ${{ needs.cron-guard.outputs.version }}"
-    assert consumer_install =~ "VERSION_INBOUND: 2.1.1"
-    assert consumer_install =~ "INCLUDE_INBOUND: true"
+    assert consumer_install =~ "elixir scripts/resolve_release_packages.exs"
+    assert consumer_install =~ "jq -er '.packages[$package]'"
+    assert consumer_install =~ "DEP_MODE=hex bash scripts/generated_host_proof.sh --stage all"
+    assert consumer_install =~ "reject local/path/git dependencies"
+    assert consumer_install =~ "floating dependency constraint"
+    assert consumer_install =~ "release-proof-post-publish"
   end
 
   test "post-publish smoke auto-closes tracker only after green guard and journey evidence" do
