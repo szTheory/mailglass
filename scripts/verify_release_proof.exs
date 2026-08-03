@@ -10,6 +10,7 @@ defmodule Mailglass.ReleaseProofVerifier do
     "Core Full Suite (Elixir 1.18 / OTP 27 / schema public)",
     "Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)"
   ]
+  @pr_only_required_checks ["Guard Release Trigger"]
 
   def run(argv) do
     with {:ok, options} <- options(argv),
@@ -559,12 +560,19 @@ defmodule Mailglass.ReleaseProofVerifier do
   defp required_checks_valid?(contexts, checks)
        when is_list(contexts) and is_list(checks) and contexts != [] do
     Enum.reduce_while(contexts, :ok, fn context, :ok ->
-      if Enum.any?(
-           checks,
-           &(&1["name"] == context and &1["status"] == "completed" and &1["conclusion"] == "success")
-         ),
-         do: {:cont, :ok},
-         else: {:halt, {:error, "required protected check is not green: #{context}"}}
+      matching_check = Enum.find(checks, &(&1["name"] == context))
+
+      cond do
+        is_nil(matching_check) and context in @pr_only_required_checks ->
+          {:cont, :ok}
+
+        is_map(matching_check) and matching_check["status"] == "completed" and
+            matching_check["conclusion"] == "success" ->
+          {:cont, :ok}
+
+        true ->
+          {:halt, {:error, "required protected check is not green: #{context}"}}
+      end
     end)
   end
 

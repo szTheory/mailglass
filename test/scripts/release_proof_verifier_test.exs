@@ -29,6 +29,18 @@ defmodule Mailglass.Scripts.ReleaseProofVerifierTest do
       fn evidence -> put_in(evidence, ["ci_runs", "ci", "conclusion"], "failure") end,
       fn evidence ->
         put_in(evidence, ["required_checks", Access.at(0), "conclusion"], "failure")
+      end,
+      fn evidence ->
+        update_in(evidence, ["required_checks"], fn checks ->
+          checks ++
+            [
+              %{
+                "name" => "Guard Release Trigger",
+                "status" => "completed",
+                "conclusion" => "failure"
+              }
+            ]
+        end)
       end
     ]
 
@@ -181,8 +193,7 @@ defmodule Mailglass.Scripts.ReleaseProofVerifierTest do
       "hex_releases" => Map.new(@packages, &{&1, nil}),
       "branch_protection_contexts" => ["CI Green", "Guard Release Trigger"],
       "required_checks" => [
-        %{"name" => "CI Green", "status" => "completed", "conclusion" => "success"},
-        %{"name" => "Guard Release Trigger", "status" => "completed", "conclusion" => "success"}
+        %{"name" => "CI Green", "status" => "completed", "conclusion" => "success"}
       ],
       "ci_runs" => %{
         "ci" => %{
