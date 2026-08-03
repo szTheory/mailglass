@@ -638,6 +638,34 @@ defmodule Mailglass.DocsContractTest do
   end
 
   describe "Phase 151 honest dispatch and payload lifecycle contract" do
+    @tag phase_151_task: "t151_07_01"
+    test "public guidance describes the at-least-once boundary and bounded payload operations" do
+      jobs = File.read!("guides/jobs.md")
+      checklist = File.read!("guides/production-go-live-checklist.md")
+
+      assert jobs =~ "at-least-once"
+      assert jobs =~ "provider acceptance"
+      assert Regex.match?(~r/local acknowledgement\s+one transaction/, jobs)
+      refute jobs =~ "provider exactly-once delivery"
+
+      assert jobs =~ "idempotency keys"
+      assert jobs =~ "correlation"
+      assert jobs =~ "risk reduction"
+      assert jobs =~ "Reconcile, not resend"
+      assert jobs =~ "no automatic resend"
+
+      assert jobs =~ "terminal_days: 14"
+      assert jobs =~ "uncertain_days: 30"
+      assert jobs =~ "legacy_days: 14"
+      assert jobs =~ "prune_batch_size: 500"
+      assert jobs =~ "mix mailglass.outbound.payloads.prune --tenant TENANT_ID"
+      assert jobs =~ "at most one batch"
+
+      assert checklist =~ "outbound_payload_retention"
+      assert checklist =~ ":mailglass_maintenance"
+      assert checklist =~ "--tenant TENANT_ID"
+    end
+
     @tag phase_151_task: "t151_08_02"
     test "public guidance locks fail-closed no-Payload dispatch, privacy, and retention" do
       jobs = File.read!("guides/jobs.md")
