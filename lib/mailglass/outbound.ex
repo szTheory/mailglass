@@ -259,9 +259,9 @@ defmodule Mailglass.Outbound do
           {:ok, Delivery.t()} | {:error, Mailglass.Error.t()}
   def dispatch_by_id(delivery_id) when is_binary(delivery_id) do
     with {:ok, delivery} <- load_delivery(delivery_id),
-         {:ok, rendered} <- load_payload_prepared(delivery),
+         {:ok, %{message: rendered, adapter_ref: adapter_ref}} <- load_payload_prepared(delivery),
          prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
-         {:ok, adapter} <- resolve_persisted_adapter(delivery.adapter_ref),
+         {:ok, adapter} <- resolve_persisted_adapter(adapter_ref),
          {:ok, dispatch_result} <- call_adapter(prepared, adapter) do
       case persist_dispatched_multi(delivery, dispatch_result, rendered) do
         {:ok, %{delivery: updated}} ->
@@ -391,8 +391,7 @@ defmodule Mailglass.Outbound do
   end
 
   defp oban_readiness_error(reason_class) do
-    {:error,
-     Mailglass.SendError.new(:adapter_failure, context: %{reason_class: reason_class})}
+    {:error, Mailglass.SendError.new(:adapter_failure, context: %{reason_class: reason_class})}
   end
 
   defp enqueue_oban(%Message{} = rendered, adapter_ref, _opts) do
@@ -839,11 +838,20 @@ defmodule Mailglass.Outbound do
   # modern rows never fall through to a lossy reconstruction path.
   defp load_payload_prepared(%Delivery{} = delivery) do
     case Payload.fetch_for_delivery(delivery.tenant_id, delivery.id) do
-      {:ok, %Message{} = message} ->
-        {:ok, message}
+      {:ok, %Envelope.Decoded{message: %Message{} = message, adapter_ref: adapter_ref}}
+      when is_nil(delivery.adapter_ref) or adapter_ref == delivery.adapter_ref ->
+        {:ok, %{message: message, adapter_ref: adapter_ref}}
+
+      {:ok, %Envelope.Decoded{}} ->
+        {:error,
+         Mailglass.SendError.new(:serialization_failed,
+           context: %{reason_class: :persisted_adapter_mismatch}
+         )}
 
       {:error, :not_found} ->
-        load_legacy_pre_v24_queued_message(delivery)
+        with {:ok, message} <- load_legacy_pre_v24_queued_message(delivery) do
+          {:ok, %{message: message, adapter_ref: delivery.adapter_ref}}
+        end
 
       {:error, %{__exception__: true} = error} ->
         {:error, error}

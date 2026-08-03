@@ -56,9 +56,13 @@ defmodule Mailglass.Outbound.Payload do
         {:error, :not_found}
 
       %__MODULE__{} = payload ->
-        if payload.envelope_digest == Envelope.digest(payload.envelope),
-          do: Envelope.load(payload.envelope),
-          else: {:error, :integrity_failed}
+        case Envelope.digest(payload.envelope) do
+          digest when is_binary(digest) and digest == payload.envelope_digest ->
+            Envelope.load(payload.envelope)
+
+          _ ->
+            {:error, :integrity_failed}
+        end
 
       _ ->
         {:error, :integrity_failed}

@@ -4,99 +4,179 @@ defmodule Mailglass.Outbound.Envelope do
   alias Mailglass.Message
 
   @version 1
+  @max_json_depth 16
+  @max_json_items 10_000
+  @max_json_bytes 1_048_576
+  @max_envelope_bytes 10_485_760
   @allowed_streams %{
     "transactional" => :transactional,
     "operational" => :operational,
     "bulk" => :bulk
   }
 
+  defmodule Decoded do
+    @moduledoc false
+    @enforce_keys [:message, :adapter_ref]
+    defstruct [:message, :adapter_ref]
+  end
+
   def version, do: @version
 
   def dump(%Message{swoosh_email: email} = message, opts) when is_list(opts) do
-    with {:ok, adapter_ref} <- string(opts[:adapter_ref]),
+    with {:ok, tenant_id} <- string(message.tenant_id),
+         {:ok, stream} <- stream(message.stream),
+         {:ok, adapter_ref} <- string(opts[:adapter_ref]),
          {:ok, from} <- mailbox(email.from),
          {:ok, recipient} <- sole_recipient(email),
          {:ok, reply_to} <- mailboxes(email.reply_to),
+         {:ok, subject} <- nullable_string(email.subject),
+         {:ok, html_body} <- nullable_string(email.html_body),
+         {:ok, text_body} <- nullable_string(email.text_body),
+         {:ok, headers} <- headers(email.headers),
          {:ok, attachments} <- attachments(email.attachments),
          {:ok, provider_options} <- json(email.provider_options),
          {:ok, metadata} <- json(message.metadata),
-         {:ok, headers} <- json(email.headers),
-         {:ok, tags} <- strings(message.tags) do
-      {:ok,
-       %{
-         "version" => @version,
-         "tenant_id" => message.tenant_id,
-         "stream" => Atom.to_string(message.stream),
-         "adapter_ref" => adapter_ref,
-         "from" => from,
-         "recipient" => recipient,
-         "reply_to" => reply_to,
-         "subject" => email.subject,
-         "headers" => headers,
-         "html_body" => email.html_body,
-         "text_body" => email.text_body,
-         "tags" => tags,
-         "metadata" => metadata,
-         "provider_options" => provider_options,
-         "attachments" => attachments
-       }}
+         {:ok, tags} <- strings(message.tags),
+         {:ok, envelope} <-
+           canonical_envelope(%{
+             "version" => @version,
+             "tenant_id" => tenant_id,
+             "stream" => stream,
+             "adapter_ref" => adapter_ref,
+             "from" => from,
+             "recipient" => recipient,
+             "reply_to" => reply_to,
+             "subject" => subject,
+             "headers" => headers,
+             "html_body" => html_body,
+             "text_body" => text_body,
+             "tags" => tags,
+             "metadata" => metadata,
+             "provider_options" => provider_options,
+             "attachments" => attachments
+           }) do
+      {:ok, envelope}
     else
-      _ ->
-        {:error,
-         Mailglass.SendError.new(:serialization_failed, context: %{reason_class: :invalid_envelope})}
+      _ -> serialization_error(:invalid_envelope)
     end
   end
+
+  def dump(_, _), do: serialization_error(:invalid_envelope)
 
   def load(%{"version" => @version} = envelope) do
-    with {:ok, from} <- load_mailbox(envelope["from"]),
-         {:ok, {field, mailbox}} <- load_recipient(envelope["recipient"]),
-         {:ok, reply_to} <- load_mailboxes(envelope["reply_to"]),
-         {:ok, attachments} <- load_attachments(envelope["attachments"] || []),
-         {:ok, stream} <- Map.fetch(@allowed_streams, envelope["stream"]) do
-      email = Swoosh.Email.new(from: from, subject: envelope["subject"] || "")
-      email = apply(Swoosh.Email, field, [email, mailbox])
-      email = if reply_to == [], do: email, else: Swoosh.Email.reply_to(email, reply_to)
+    with {:ok, _canonical} <- canonical_envelope(envelope),
+         {:ok, tenant_id} <- required_string(envelope, "tenant_id"),
+         {:ok, stream} <- required_stream(envelope),
+         {:ok, adapter_ref} <- required_string(envelope, "adapter_ref"),
+         {:ok, from} <- required_mailbox(envelope, "from"),
+         {:ok, {field, recipient}} <- required_recipient(envelope),
+         {:ok, reply_to} <- required_mailboxes(envelope, "reply_to"),
+         {:ok, subject} <- required_nullable_string(envelope, "subject"),
+         {:ok, headers} <- required_headers(envelope),
+         {:ok, html_body} <- required_nullable_string(envelope, "html_body"),
+         {:ok, text_body} <- required_nullable_string(envelope, "text_body"),
+         {:ok, tags} <- required_strings(envelope, "tags"),
+         {:ok, metadata} <- required_json(envelope, "metadata"),
+         {:ok, provider_options} <- required_json(envelope, "provider_options"),
+         {:ok, attachments} <- required_attachments(envelope) do
+      email = Swoosh.Email.new(from: from, subject: subject || "")
+      email = apply(Swoosh.Email, field, [email, recipient])
+
+      email = %{
+        email
+        | reply_to: reply_to,
+          headers: headers,
+          html_body: html_body,
+          text_body: text_body,
+          attachments: attachments,
+          provider_options: provider_options
+      }
 
       {:ok,
-       %Message{
-         swoosh_email: %{
-           email
-           | headers: envelope["headers"] || %{},
-             html_body: envelope["html_body"],
-             text_body: envelope["text_body"],
-             attachments: attachments,
-             provider_options: envelope["provider_options"] || %{}
+       %Decoded{
+         message: %Message{
+           swoosh_email: email,
+           tenant_id: tenant_id,
+           stream: stream,
+           tags: tags,
+           metadata: metadata
          },
-         tenant_id: envelope["tenant_id"],
-         stream: stream,
-         tags: envelope["tags"] || [],
-         metadata: envelope["metadata"] || %{}
+         adapter_ref: adapter_ref
        }}
     else
-      _ ->
-        {:error,
-         Mailglass.SendError.new(:serialization_failed,
-           context: %{reason_class: :invalid_persisted_envelope}
-         )}
+      _ -> serialization_error(:invalid_persisted_envelope)
     end
   end
 
-  def load(_),
-    do:
-      {:error,
-       Mailglass.SendError.new(:serialization_failed,
-         context: %{reason_class: :unsupported_version}
-       )}
+  def load(_), do: serialization_error(:unsupported_version)
 
-  def digest(envelope),
-    do:
-      envelope |> Jason.encode!() |> then(&:crypto.hash(:sha256, &1)) |> Base.encode16(case: :lower)
+  def digest(envelope) do
+    case Jason.encode(envelope) do
+      {:ok, encoded} -> encoded |> then(&:crypto.hash(:sha256, &1)) |> Base.encode16(case: :lower)
+      _ -> nil
+    end
+  end
+
+  defp canonical_envelope(envelope) when is_map(envelope) do
+    with {:ok, encoded} <- Jason.encode(envelope),
+         true <- byte_size(encoded) <= @max_envelope_bytes do
+      {:ok, envelope}
+    else
+      _ -> :error
+    end
+  end
+
+  defp canonical_envelope(_), do: :error
+
+  defp serialization_error(reason),
+    do: {:error, Mailglass.SendError.new(:serialization_failed, context: %{reason_class: reason})}
+
+  defp required_string(map, key), do: with({:ok, value} <- Map.fetch(map, key), do: string(value))
+
+  defp required_nullable_string(map, key),
+    do: with({:ok, value} <- Map.fetch(map, key), do: nullable_string(value))
+
+  defp required_json(map, key), do: with({:ok, value} <- Map.fetch(map, key), do: json(value))
+  defp required_strings(map, key), do: with({:ok, value} <- Map.fetch(map, key), do: strings(value))
+
+  defp required_stream(map),
+    do: with({:ok, value} <- Map.fetch(map, "stream"), do: Map.fetch(@allowed_streams, value))
+
+  defp required_mailbox(map, key),
+    do: with({:ok, value} <- Map.fetch(map, key), do: load_mailbox(value))
+
+  defp required_mailboxes(map, key),
+    do: with({:ok, value} <- Map.fetch(map, key), do: load_mailboxes(value))
+
+  defp required_headers(map),
+    do: with({:ok, value} <- Map.fetch(map, "headers"), do: load_headers(value))
+
+  defp required_attachments(map),
+    do: with({:ok, value} <- Map.fetch(map, "attachments"), do: load_attachments(value))
+
+  defp required_recipient(map),
+    do: with({:ok, value} <- Map.fetch(map, "recipient"), do: load_recipient(value))
+
+  defp stream(value) when is_atom(value) do
+    case Map.fetch(@allowed_streams, Atom.to_string(value)) do
+      {:ok, _} -> {:ok, Atom.to_string(value)}
+      _ -> :error
+    end
+  end
+
+  defp stream(_), do: :error
 
   defp string(value) when is_binary(value) and byte_size(value) > 0 do
     if String.valid?(value), do: {:ok, value}, else: :error
   end
 
   defp string(_), do: :error
+  defp nullable_string(nil), do: {:ok, nil}
+
+  defp nullable_string(value) when is_binary(value),
+    do: if(String.valid?(value), do: {:ok, value}, else: :error)
+
+  defp nullable_string(_), do: :error
 
   defp strings(values) when is_list(values),
     do:
@@ -105,56 +185,61 @@ defmodule Mailglass.Outbound.Envelope do
   defp strings(_), do: :error
 
   defp mailbox({name, address}) when is_binary(name),
-    do:
-      string(address)
-      |> then(fn
-        {:ok, address} -> {:ok, [name, address]}
-        x -> x
-      end)
+    do: with({:ok, address} <- string(address), do: {:ok, [name, address]})
 
-  defp mailbox(address) when is_binary(address), do: {:ok, ["", address]}
+  defp mailbox(address) when is_binary(address),
+    do: with({:ok, address} <- string(address), do: {:ok, ["", address]})
+
   defp mailbox(_), do: :error
   defp mailboxes(nil), do: {:ok, []}
-  defp mailboxes(value) when is_list(value), do: value |> Enum.map(&mailbox/1) |> collect()
-
-  defp mailboxes(value),
-    do:
-      mailbox(value)
-      |> then(fn
-        {:ok, item} -> {:ok, [item]}
-        x -> x
-      end)
+  defp mailboxes(values) when is_list(values), do: values |> Enum.map(&mailbox/1) |> collect()
+  defp mailboxes(value), do: with({:ok, mailbox} <- mailbox(value), do: {:ok, [mailbox]})
 
   defp sole_recipient(email) do
-    case Message.sole_recipient(%Message{swoosh_email: email}) do
-      {:ok, %{field: field}} ->
-        {:ok, [Atom.to_string(field), hd(Map.get(email, field)) |> Tuple.to_list()]}
-
-      _ ->
-        :error
-    end
+    with {:ok, %{field: field}} <- Message.sole_recipient(%Message{swoosh_email: email}),
+         [mailbox] <- Map.get(email, field),
+         {:ok, value} <- mailbox(mailbox),
+         do: {:ok, [Atom.to_string(field), value]},
+         else: (_ -> :error)
   end
+
+  defp headers(values) when is_map(values) do
+    values |> Enum.sort_by(fn {key, value} -> {key, value} end) |> headers()
+  end
+
+  defp headers(values) when is_list(values), do: values |> Enum.map(&header/1) |> collect()
+  defp headers(_), do: :error
+  defp header({key, value}), do: header([key, value])
+
+  defp header([key, value]) when is_binary(key) and is_binary(value),
+    do: if(String.valid?(key) and String.valid?(value), do: {:ok, [key, value]}, else: :error)
+
+  defp header(_), do: :error
 
   defp attachments(values) when is_list(values), do: values |> Enum.map(&attachment/1) |> collect()
   defp attachments(_), do: :error
 
-  defp attachment(%Swoosh.Attachment{} = a) do
+  defp attachment(%Swoosh.Attachment{} = attachment) do
     try do
-      bytes = Swoosh.Attachment.get_content(a)
-
-      if is_binary(bytes),
-        do:
-          {:ok,
-           %{
-             "encoding" => "base64",
-             "data" => Base.encode64(bytes),
-             "filename" => a.filename,
-             "content_type" => a.content_type,
-             "type" => Atom.to_string(a.type),
-             "cid" => a.cid,
-             "headers" => a.headers || []
-           }},
-        else: :error
+      with bytes when is_binary(bytes) <- Swoosh.Attachment.get_content(attachment),
+           {:ok, filename} <- string(attachment.filename),
+           {:ok, content_type} <- string(attachment.content_type),
+           {:ok, cid} <- nullable_string(attachment.cid),
+           {:ok, headers} <- headers(attachment.headers),
+           true <- attachment.type in [:attachment, :inline] do
+        {:ok,
+         %{
+           "encoding" => "base64",
+           "data" => Base.encode64(bytes),
+           "filename" => filename,
+           "content_type" => content_type,
+           "type" => Atom.to_string(attachment.type),
+           "cid" => cid,
+           "headers" => headers
+         }}
+      else
+        _ -> :error
+      end
     rescue
       _ -> :error
     end
@@ -162,37 +247,80 @@ defmodule Mailglass.Outbound.Envelope do
 
   defp attachment(_), do: :error
 
-  defp json(value) when is_nil(value) or is_binary(value) or is_boolean(value) or is_integer(value),
-    do: {:ok, value}
+  defp json(value) do
+    with {:ok, normalized, _items} <- normalize_json(value, 0, 0),
+         {:ok, encoded} <- Jason.encode(normalized),
+         true <- byte_size(encoded) <= @max_json_bytes,
+         do: {:ok, normalized},
+         else: (_ -> :error)
+  end
 
-  defp json(value) when is_float(value) and value == value, do: {:ok, value}
-  defp json(value) when is_list(value), do: value |> Enum.map(&json/1) |> collect()
+  defp normalize_json(_value, _depth, items) when items >= @max_json_items, do: :error
+  defp normalize_json(nil, _depth, items), do: {:ok, nil, items + 1}
 
-  defp json(value) when is_map(value) and not is_struct(value) do
-    Enum.reduce_while(value, {:ok, %{}}, fn {key, val}, {:ok, acc} ->
+  defp normalize_json(value, _depth, items) when is_boolean(value) or is_integer(value),
+    do: {:ok, value, items + 1}
+
+  defp normalize_json(value, _depth, items) when is_binary(value),
+    do: if(String.valid?(value), do: {:ok, value, items + 1}, else: :error)
+
+  defp normalize_json(value, _depth, items) when is_float(value),
+    do: if(finite_float?(value), do: {:ok, value, items + 1}, else: :error)
+
+  defp normalize_json(_value, depth, _items) when depth >= @max_json_depth, do: :error
+
+  defp normalize_json(values, depth, items) when is_list(values),
+    do: normalize_list(values, depth + 1, items + 1, [])
+
+  defp normalize_json(values, depth, items) when is_map(values) and not is_struct(values),
+    do: normalize_map(values, depth + 1, items + 1, %{})
+
+  defp normalize_json(_, _, _), do: :error
+  defp normalize_list([], _, items, acc), do: {:ok, Enum.reverse(acc), items}
+
+  defp normalize_list([value | rest], depth, items, acc),
+    do:
+      with(
+        {:ok, value, items} <- normalize_json(value, depth, items),
+        do: normalize_list(rest, depth, items, [value | acc])
+      )
+
+  defp normalize_map(values, depth, items, acc) do
+    Enum.reduce_while(values, {:ok, acc, items}, fn {key, value}, {:ok, acc, items} ->
       key = if is_atom(key), do: Atom.to_string(key), else: key
 
-      with true <- is_binary(key),
+      with true <- is_binary(key) and String.valid?(key),
            false <- Map.has_key?(acc, key),
-           {:ok, val} <- json(val),
-           do: {:cont, {:ok, Map.put(acc, key, val)}},
-           else: (_ -> {:halt, :error})
+           {:ok, value, items} <- normalize_json(value, depth, items) do
+        {:cont, {:ok, Map.put(acc, key, value), items}}
+      else
+        _ -> {:halt, :error}
+      end
     end)
   end
 
-  defp json(_), do: :error
+  defp finite_float?(value) do
+    case <<value::float-64>> do
+      <<_sign::1, 0x7FF::11, _::52>> -> false
+      _ -> true
+    end
+  end
 
-  defp collect(items),
-    do:
-      Enum.reduce_while(items, {:ok, []}, fn item, {:ok, acc} ->
-        case item do
-          {:ok, value} -> {:cont, {:ok, acc ++ [value]}}
-          _ -> {:halt, :error}
-        end
-      end)
+  defp collect(items) do
+    case Enum.reduce_while(items, {:ok, []}, fn item, {:ok, acc} ->
+           case item do
+             {:ok, value} -> {:cont, {:ok, [value | acc]}}
+             _ -> {:halt, :error}
+           end
+         end) do
+      {:ok, values} -> {:ok, Enum.reverse(values)}
+      x -> x
+    end
+  end
 
-  defp load_mailbox([name, address]) when is_binary(name) and is_binary(address),
-    do: {:ok, {name, address}}
+  defp load_mailbox([name, address]) when is_binary(name) and is_binary(address) do
+    with true <- String.valid?(name), {:ok, address} <- string(address), do: {:ok, {name, address}}
+  end
 
   defp load_mailbox(_), do: :error
 
@@ -203,31 +331,48 @@ defmodule Mailglass.Outbound.Envelope do
 
   defp load_recipient([field, mailbox]) when field in ["to", "cc", "bcc"],
     do:
-      load_mailbox(mailbox)
-      |> then(fn
-        {:ok, x} -> {:ok, {String.to_existing_atom(field), x}}
-        x -> x
-      end)
+      with(
+        {:ok, mailbox} <- load_mailbox(mailbox),
+        do: {:ok, {String.to_existing_atom(field), mailbox}}
+      )
 
   defp load_recipient(_), do: :error
 
-  defp load_attachments(values),
-    do:
-      values
-      |> Enum.map(fn a ->
-        with "base64" <- a["encoding"], {:ok, bytes} <- Base.decode64(a["data"] || "") do
-          {:ok,
-           %Swoosh.Attachment{
-             filename: a["filename"],
-             content_type: a["content_type"],
-             data: bytes,
-             type: if(a["type"] == "inline", do: :inline, else: :attachment),
-             cid: a["cid"],
-             headers: a["headers"] || []
-           }}
-        else
-          _ -> :error
-        end
-      end)
-      |> collect()
+  defp load_headers(values) when is_list(values) do
+    case values |> Enum.map(&header/1) |> collect() do
+      {:ok, pairs} -> {:ok, Enum.map(pairs, fn [k, v] -> {k, v} end)}
+      x -> x
+    end
+  end
+
+  defp load_headers(_), do: :error
+
+  defp load_attachments(values) when is_list(values),
+    do: values |> Enum.map(&load_attachment/1) |> collect()
+
+  defp load_attachments(_), do: :error
+
+  defp load_attachment(%{} = attachment) do
+    with "base64" <- attachment["encoding"],
+         {:ok, bytes} <- Base.decode64(attachment["data"] || ""),
+         {:ok, filename} <- string(attachment["filename"]),
+         {:ok, content_type} <- string(attachment["content_type"]),
+         {:ok, cid} <- nullable_string(attachment["cid"]),
+         {:ok, headers} <- load_headers(attachment["headers"]),
+         type when type in ["attachment", "inline"] <- attachment["type"] do
+      {:ok,
+       %Swoosh.Attachment{
+         filename: filename,
+         content_type: content_type,
+         data: bytes,
+         type: String.to_existing_atom(type),
+         cid: cid,
+         headers: headers
+       }}
+    else
+      _ -> :error
+    end
+  end
+
+  defp load_attachment(_), do: :error
 end
