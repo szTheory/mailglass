@@ -5,15 +5,15 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 151
 current_phase_name: Unified Dispatch, Honest Outcomes, and Payload Lifecycle
 status: planning
-stopped_at: Completed 151-07-PLAN.md
-last_updated: "2026-08-03T03:10:45.623Z"
+stopped_at: Completed 151-08-PLAN.md
+last_updated: "2026-08-03T13:41:38.640Z"
 last_activity: 2026-08-02
 last_activity_desc: Phase 150 complete, transitioned to Phase 151
 progress:
   total_phases: 3
   completed_phases: 3
-  total_plans: 20
-  completed_plans: 20
+  total_plans: 21
+  completed_plans: 21
 ---
 
 # Project State
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 ## Current Position
 
 Phase: 151 — Unified Dispatch, Honest Outcomes, and Payload Lifecycle
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-08-02 — Phase 150 complete, transitioned to Phase 151
+Plan: 8 of 8 complete
+Status: Phase execution complete
+Last activity: 2026-08-03 — Phase 151 Plan 08 completed
 
 Progress: [██████████] 100%
 
@@ -464,6 +464,7 @@ release debug campaign.
 - [Phase ?]: Durable payload dispatch uses tenant-scoped CAS claims and settles accepted payloads atomically with Delivery and Event.
 - [Phase ?]: Provider idempotency and correlation reduce risk and enable reconciliation; they do not make delivery exactly-once.
 - [Phase ?]: Private payload lifecycle operations remain internal while public guidance documents their operational limits.
+- [Phase ?]: D-19/PRIV-04: missing private Payloads terminalize as legacy_payload_missing without metadata reconstruction.
 
 ## Quick Tasks Completed
 
@@ -540,6 +541,7 @@ release debug campaign.
 | Phase 151 P01 | 6min | 1 tasks | 2 files |
 | Phase 151 P04 | 12min | 2 tasks | 6 files |
 | Phase 151 P07 | 6min | 1 tasks | 5 files |
+| Phase 151 P08 | 20min | 2 tasks | 9 files |
 
 ## Deferred Items
 
@@ -706,8 +708,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T03:10:45.610Z
-**Stopped at:** Completed 151-07-PLAN.md
+**Last session:** 2026-08-03T13:41:38.632Z
+**Stopped at:** Completed 151-08-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

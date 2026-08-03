@@ -113,7 +113,7 @@ Plans:
   4. A successful dispatch atomically records success and scrubs its private payload while retaining the non-sensitive delivery projection and ledger; terminal, discarded, abandoned, and legacy queued payloads follow a configurable bounded-retention prune/recovery policy.
   5. Missing, corrupt, expired, unsupported-version, or already-scrubbed payloads fail closed with an operator-actionable state and are never rebuilt from incomplete public metadata; new async sends keep bodies, subjects, headers, tokens, attachments, and provider options out of public metadata.
 
-**Plans**: 8 plans (7 executed, 1 gap-closure pending)
+**Plans**: 8/8 plans executed
 
 Plans:
 
@@ -141,7 +141,7 @@ Plans:
 
 **Wave 6** *(gap closure; blocked on Wave 5 completion)*
 
-- [ ] 151-08-PLAN.md — Retire no-Payload metadata dispatch and settle historical queued work fail-closed.
+- [x] 151-08-PLAN.md — Retire no-Payload metadata dispatch and settle historical queued work fail-closed.
 
 ### Phase 152: Atomic One-Click Suppression Convergence
 
@@ -179,6 +179,6 @@ Plans:
 |-------|----------------|--------|-----------|
 | 149. First-Send Contract Foundation | 4/4 | Complete    | 2026-08-02 |
 | 150. Private Envelope and Atomic Durable Enqueue | 9/9 | Complete    | 2026-08-02 |
-| 151. Unified Dispatch, Honest Outcomes, and Payload Lifecycle | 7/7 | In Progress|  |
+| 151. Unified Dispatch, Honest Outcomes, and Payload Lifecycle | 8/8 | In Progress|  |
 | 152. Atomic One-Click Suppression Convergence | 0/TBD | Not started | - |
 | 153. Generated-Host Proof, Docs, and Release Gate | 0/TBD | Not started | - |
