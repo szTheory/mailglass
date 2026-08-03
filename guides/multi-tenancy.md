@@ -1,6 +1,8 @@
 # Multi-Tenancy
 
-Mailglass stores `tenant_id` on deliveries, events, and suppressions from day one. Phase 26 adds runtime per-tenant outbound adapter resolution without changing the zero-config single-tenant path.
+Mailglass stores `tenant_id` on deliveries, events, suppressions, and durable
+outbound payloads. The 2.x public contract keeps the zero-config single-tenant
+path while allowing runtime per-tenant adapter resolution.
 
 ## Single-tenant default
 
@@ -133,6 +135,6 @@ config :mailglass, adapters: [
 - `Mailglass.deliver_later/2` applies the same resolver-aware preflight before it
   selects its configured async path.
 
-Phase 149 does not promise private-envelope fidelity, atomic durable enqueue,
-or later worker dispatch equivalence. Those durability guarantees belong to
-Phase 150; provider outcomes and payload lifecycle belong to Phase 151.
+`deliver_later/2` persists private transport input first, then enqueues one job
+on `:mailglass_outbound`; successful payload content is scrubbed and retention
+is explicit. This is the current 2.x behavior, not a future-phase promise.

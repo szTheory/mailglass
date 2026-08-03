@@ -15,7 +15,7 @@ selected delivery. The canonical support runbook lives in
 The canonical operator trust contract lives in
 [`docs/operator-trust.md`](docs/operator-trust.md).
 
-The canonical `v1.x` admin surface inventory lives in
+The canonical 2.x admin surface inventory lives in
 [`docs/api_stability.md`](docs/api_stability.md).
 
 The canonical matched-sibling compatibility and deprecation policy lives in the
@@ -46,11 +46,16 @@ Add `mailglass_admin` to your adopter app's `mix.exs`:
     def deps do
       [
         {:mailglass, "~> 2.4"},
-        {:mailglass_admin, "~> 2.4", only: :dev}
+        {:mailglass_admin, "~> 2.4"}
       ]
     end
 
 Then `mix deps.get`.
+
+mailglass_admin consumes public mailglass APIs and does not require mailglass_inbound.
+Core and admin are linked release siblings; inbound remains
+an independent optional package. Development preview mounting is separate from
+the production operator mount below.
 
 ## Mount the dev preview
 
@@ -123,7 +128,8 @@ normal authenticated browser scope:
         unauthorized_path: "/users/log-in"
     end
 
-`auth:` stays adopter-owned. `mailglass_admin` does not ship a login system,
+`auth:` stays adopter-owned. This is host-owned authentication:
+`mailglass_admin` does not ship a login system,
 session schema, or recent-auth prompt. It expects your app to decide who may
 enter the operator surface and how "recent authentication" is satisfied.
 

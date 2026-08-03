@@ -1,11 +1,11 @@
 # Compatibility and Deprecations
 
-This guide is the canonical `1.x` compatibility, upgrade, and deprecation
-policy for Mailglass.
+This guide is the canonical 2.x compatibility, upgrade, and deprecation policy
+for Mailglass.
 
 Use this guide when you need to answer any of these questions:
 
-- Which Mailglass surfaces are the stable default path for `1.x`
+- Which Mailglass surfaces are the stable default path for 2.x
 - Which older surfaces still work only as retained compatibility bridges
 - What a patch, minor, or major release may change
 - Which runtime, framework, database, and sibling-package combinations the
@@ -24,7 +24,7 @@ That inventory is the canonical stable/internal/deferred source for
 
 ## Contract shape
 
-Mailglass keeps a two-lane public posture for the `1.x` line:
+Mailglass keeps a two-lane public posture for the 2.x line:
 
 - `stable lane`:
   [`Mailglass.deliver/2`](https://hexdocs.pm/mailglass/Mailglass.html#deliver/2),
@@ -36,14 +36,14 @@ Mailglass keeps a two-lane public posture for the `1.x` line:
   kept to make upgrades practical without promising that every historical path
   remains first-class forever
 
-If you are starting fresh on `1.x`, stay on the stable lane. The compatibility
-lane exists to help existing adopters land on `1.x` without rewriting
+If you are starting fresh on 2.x, stay on the stable lane. The compatibility
+lane exists to help existing adopters land on 2.x without rewriting
 everything in one release.
 
 ## Stable lane defaults
 
 The stable lane is the path maintainers intend adopters to build on throughout
-the `1.x` line.
+the 2.x line.
 
 - Delivery entrypoint: `Mailglass.deliver*`
 - Message construction: native `Mailglass.Message` setters
@@ -53,7 +53,17 @@ the `1.x` line.
   `scripts/verify_support_contract.sh`
 
 The stable lane is the only lane that receives an affirmative compatibility
-promise across `1.x` minor releases.
+promise across 2.x minor releases.
+
+### Current 2.x schema and payload contract
+
+Fresh installs use the public migration wrapper and the current Mailglass schema;
+do not depend on an old table-count claim or copy package migration internals.
+Async delivery stores private payload content before enqueuing normal Oban work
+on `:mailglass_outbound`, then scrubs successful content according to retention.
+There is no public payload reader or legacy metadata reconstruction path. A
+missing historical private payload settles as `legacy_payload_missing`, keeps
+the public Delivery/Event audit facts, and never invokes an adapter.
 
 ## Compatibility lane
 

@@ -1,6 +1,9 @@
 # Production Go-Live Checklist
 
-Work through this checklist before routing live traffic through mailglass. Each section is a focused verification step with links to the canonical guide for detail. Complete all seven sections before marking the deployment ready.
+Work through this checklist before routing live traffic through mailglass 2.x.
+Each section is a focused verification step with links to the canonical guide for
+detail. Complete every section, then run `mix mailglass.preflight` as the final
+release gate before marking the deployment ready.
 
 ## Deliverability: mix mail.doctor
 
@@ -50,11 +53,12 @@ To rotate a webhook secret:
 
 For setup details and provider-specific config keys, see [Webhooks](./webhooks.md). For incident recovery when webhooks stop verifying after a rotation, see the `guides/webhook-troubleshooting.md` runbook in the repository.
 
-## Durable async readiness
+## Durable async readiness and final preflight
 
 `Mailglass.Outbound.Worker` runs under Oban when you call `deliver_later/2`. Production must explicitly select the durable adapter and configure its only outbound queue, `:mailglass_outbound`. A concurrency of `10` is a conservative starting point for moderate send volume; adjust it for delivery lag and your ESP's rate limits.
 
-Before routing live traffic, add this configuration and run the preflight from a booted release or IEx session:
+Before routing live traffic, add this configuration and run the final preflight
+from a booted release or IEx session:
 
 ```elixir
 config :mailglass, async_adapter: :oban
@@ -62,15 +66,18 @@ config :mailglass, async_adapter: :oban
 config :my_app, Oban,
   queues: [mailglass_outbound: 10]
 
-case Mailglass.Config.production_readiness() do
-  :ok -> :ok
-  {:error, %Mailglass.ConfigError{type: :invalid} = error} -> raise error
-end
+mix mailglass.preflight
 ```
 
-The readiness result is deliberately bounded: it returns `:ok` only when the selected default Oban instance advertises `mailglass_outbound`; otherwise it returns `{:error, %Mailglass.ConfigError{type: :invalid}}` with a non-PII `:reason_class`. It rejects the explicit `:task_supervisor` adapter because that development/test path is non-durable.
+`mix mailglass.preflight` reports the bounded readiness classes for Repo, schema
+and migrations, adapter, signing, `:mailglass_outbound` queue, payload
+maintenance, and authenticated operator access. Fix every reported class and
+rerun it; it never emits configured secret values. It rejects `:task_supervisor`:
+**Task.Supervisor is not durable**. Normal Oban must both advertise
+`mailglass_outbound` and have a live consumer polling it.
 
-This preflight confirms producer configuration only. Phase 153 owns proof that an active consumer is polling the queue in a generated production host.
+The generated-host proof exercises this same package-shaped configuration with
+an active consumer; adopters should still run this command in their release.
 
 If you only call `deliver/2`, this section does not apply — `deliver/2` is synchronous and bypasses the job queue entirely.
 
@@ -158,7 +165,24 @@ classification). Never log or paste the signed token, recipient address, or
 private message content into support artifacts. Lifecycle and broadcast work is
 separate best-effort post-commit work; verify its failure does not change the
 already-successful POST. This checklist does not prove arbitrary-host exactly
-once behavior or Phase 153 generated-host/release work.
+once behavior.
+
+## Signed feedback and suppression outcome
+
+Configure each provider feedback route with its signing material and perform
+signed feedback verification with one valid request before launch. A forged or unsigned request must
+fail closed with no durable delivery, event, or suppression change. Do not log
+the request body, address, token, or secret. Verify the expected suppression
+outcome: a matching same-tenant bulk delivery is blocked before adapter work;
+transactional and unrelated-stream controls remain eligible. one-click POST
+uses the same scoped suppression contract.
+
+## Authenticated operator access
+
+Mount `mailglass_operator_routes` only inside a host-owned authenticated browser
+pipeline. Verify anonymous access is denied and an authorized operator can open
+the route after preflight passes. Mailglass does not provide a login system or
+decide who may operate this surface.
 
 ## Telemetry and alerting
 
