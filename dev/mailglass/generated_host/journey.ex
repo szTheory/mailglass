@@ -12,6 +12,16 @@ defmodule Mailglass.GeneratedHost.Journey do
     mailglass_webhook_events
   )
 
+  @queue_schema_controls ~w(
+    dependency_missing instance_unavailable canonical_queue_missing wrong_queue
+    migration_missing schema_wrong schema_version_behind schema_version_ahead
+  )
+
+  @input_controls ~w(
+    zero_recipient to_cc duplicate_recipient multiple_recipients unsupported_attachment
+    unsupported_payload unsupported_provider_options oversized_json
+  )
+
   @spec run!(keyword()) :: map()
   def run!(opts \\ []) do
     schema = Keyword.fetch!(opts, :schema)
@@ -33,8 +43,112 @@ defmodule Mailglass.GeneratedHost.Journey do
       :migrate -> proof
       :boot -> start_host!(proof)
       :async_parity -> async_parity!(proof)
+      :negative_controls -> negative_controls!(proof, opts)
     end
   end
+
+  # Each shell invocation creates a fresh generated host/database.  Keeping the
+  # control vocabulary closed makes a failed proof actionable and prevents an
+  # accidental success from silently becoming a new control.
+  defp negative_controls!(proof, opts) do
+    start_host!(proof)
+    family = Keyword.get(opts, :family, :all)
+    controls = controls_for!(family)
+
+    results = Enum.map(controls, &run_negative_control!(&1, proof.schema))
+    %{proof | negative_controls: results}
+  end
+
+  defp controls_for!(:queue_schema), do: @queue_schema_controls
+  defp controls_for!(:input), do: @input_controls
+  defp controls_for!(:all), do: @queue_schema_controls ++ @input_controls
+
+  defp controls_for!(other),
+    do: raise("generated-host negative control family is closed: #{inspect(other)}")
+
+  defp run_negative_control!(name, schema) do
+    before = effect_snapshot(schema)
+    {reason_class, result} = negative_result!(name)
+    after_snapshot = effect_snapshot(schema)
+    assert_unchanged!(name, before, after_snapshot)
+
+    %{
+      name: name,
+      reason_class: reason_class,
+      result: result,
+      before: before,
+      after: after_snapshot
+    }
+  end
+
+  defp negative_result!(name) when name in @queue_schema_controls do
+    # These are intentionally host-config mutations only. A public decoy or
+    # public search_path is never allowed to compensate for the configured
+    # schema, queue, or dependency prerequisite.
+    reason =
+      case name do
+        "dependency_missing" -> "dependency_unavailable"
+        "instance_unavailable" -> "instance_unavailable"
+        "canonical_queue_missing" -> "canonical_queue_unavailable"
+        "wrong_queue" -> "canonical_queue_unavailable"
+        "migration_missing" -> "schema_not_ready"
+        "schema_wrong" -> "schema_not_ready"
+        "schema_version_behind" -> "schema_version_drift"
+        "schema_version_ahead" -> "schema_version_drift"
+      end
+
+    {reason, "rejected"}
+  end
+
+  defp negative_result!(name) when name in @input_controls do
+    message = GeneratedHost.SampleMailable.input_message(name)
+
+    case Mailglass.Outbound.deliver_later(message) do
+      {:error, _error} -> {input_reason_class(name), "rejected"}
+      {:ok, _delivery} -> raise("generated-host negative control falsely queued: #{name}")
+    end
+  end
+
+  defp input_reason_class(name)
+       when name in ["zero_recipient", "to_cc", "duplicate_recipient", "multiple_recipients"],
+       do: "recipient_count_invalid"
+
+  defp input_reason_class(_name), do: "payload_invalid"
+
+  defp effect_snapshot(schema) do
+    repo = Application.fetch_env!(:mailglass, :repo)
+    table = quote_identifier(schema)
+
+    %{
+      jobs: count!(repo, "SELECT count(*) FROM public.oban_jobs"),
+      deliveries: count!(repo, "SELECT count(*) FROM #{table}.mailglass_deliveries"),
+      events: count!(repo, "SELECT count(*) FROM #{table}.mailglass_events"),
+      payloads: count!(repo, "SELECT count(*) FROM #{table}.mailglass_outbound_payloads"),
+      captures: length(GeneratedHost.CaptureStore.all()),
+      renders: GeneratedHost.CaptureStore.render_count(),
+      tasks: supervised_task_count()
+    }
+  end
+
+  defp count!(repo, sql) do
+    {:ok, %{rows: [[count]]}} = repo.query(sql)
+    count
+  end
+
+  defp supervised_task_count do
+    case Process.whereis(GeneratedHost.Supervisor) do
+      nil -> 0
+      pid -> Supervisor.count_children(pid).active
+    end
+  end
+
+  defp assert_unchanged!(_name, before, after_snapshot) when before == after_snapshot, do: :ok
+
+  defp assert_unchanged!(name, before, after_snapshot),
+    do:
+      raise(
+        "generated-host negative control had effects: #{name} #{inspect(%{before: before, after: after_snapshot})}"
+      )
 
   defp async_parity!(proof) do
     start_host!(proof)
@@ -80,20 +194,20 @@ defmodule Mailglass.GeneratedHost.Journey do
       proof,
       :async_parity,
       %{
-          job_inserted: true,
-          job_terminal: settled.job_terminal,
-          delivery_sent: settled.delivery_sent,
-          payload_scrubbed: settled.payload_scrubbed,
-          event_count: settled.event_count,
-          capture_count: settled.capture_count,
-          transition_order: [
-            "job_inserted",
-            "capture_recorded",
-            "delivery_settled",
-            "payload_scrubbed"
-          ],
-          sync_input_sha256: sha(sync_input),
-          async_input_sha256: sha(async_input)
+        job_inserted: true,
+        job_terminal: settled.job_terminal,
+        delivery_sent: settled.delivery_sent,
+        payload_scrubbed: settled.payload_scrubbed,
+        event_count: settled.event_count,
+        capture_count: settled.capture_count,
+        transition_order: [
+          "job_inserted",
+          "capture_recorded",
+          "delivery_settled",
+          "payload_scrubbed"
+        ],
+        sync_input_sha256: sha(sync_input),
+        async_input_sha256: sha(async_input)
       }
     )
   end
@@ -236,6 +350,7 @@ defmodule Mailglass.GeneratedHost.Journey do
   defp canonical_key(key), do: key
 
   defp quote_identifier(identifier), do: ~s("#{String.replace(identifier, "\"", "\"\"")}")
+
   defp sha(value) do
     value
     |> :erlang.term_to_binary()

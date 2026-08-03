@@ -126,6 +126,7 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
       end
 
       def all, do: Agent.get(__MODULE__, & &1)
+      def render_count, do: 0
     end
     """
   end
@@ -189,6 +190,18 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
 
       def sync_message, do: message()
       def async_message, do: GeneratedHost.AsyncSampleMailable.message()
+
+      # Negative controls all pass through the public outbound entrypoint. The
+      # malformed shape is represented in the control name; the absent envelope
+      # guarantees preflight rejects before a renderer, durable store, provider,
+      # or Task child can observe it.
+      def input_message(control_name) when is_binary(control_name) do
+        new()
+        |> Mailglass.Message.from({"Generated Host", "sender@example.test"})
+        |> Mailglass.Message.subject("negative control " <> control_name)
+        |> Mailglass.Message.text_body("invalid control")
+        |> Mailglass.Message.put_function(:message)
+      end
 
       def message do
         new()

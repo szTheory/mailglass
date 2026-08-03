@@ -23,6 +23,15 @@ for stage in stages:
         if not isinstance(stage.get("event_count"), int) or stage.get("event_count", 0) < 2: bad.append("async parity event count")
         if not isinstance(stage.get("capture_count"), int) or stage.get("capture_count", 0) < 2: bad.append("async parity capture count")
         if not all(re.fullmatch(r"[0-9a-f]{64}", str(stage.get(key, ""))) for key in ("transition_order_sha256","parity_sha256")): bad.append("async parity hashes")
+    if stage.get("name") == "negative_controls":
+        if set(stage) != {"name","status","controls"} or not stage.get("controls"): bad.append("negative controls stage shape")
+        effect_keys={"jobs","deliveries","events","payloads","captures","renders","tasks"}
+        for control in stage.get("controls",[]):
+            if set(control) != {"name","reason_class","result","before","after"}: bad.append("negative control shape"); continue
+            if not isinstance(control.get("name"),str) or not isinstance(control.get("reason_class"),str) or control.get("result") != "rejected": bad.append("negative control bounded rejection")
+            before=control.get("before"); after=control.get("after")
+            if set(before or {}) != effect_keys or set(after or {}) != effect_keys: bad.append("negative control effect vector")
+            elif not all(isinstance(v,int) and v >= 0 for v in before.values()) or before != after: bad.append("negative control all zero delta")
 raw=json.dumps(p).lower()
 if any(word in raw for word in ("recipient","password","secret","token","database_url","postgres://","body","webhook")): bad.append("forbidden privacy material")
 if p.get("dependency_mode")=="hex" and any("path" in str(x).lower() or "git" in str(x).lower() for x in p.get("packages",[])): bad.append("hex dependency identity")

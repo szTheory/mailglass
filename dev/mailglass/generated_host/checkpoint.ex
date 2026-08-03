@@ -49,5 +49,34 @@ defmodule Mailglass.GeneratedHost.Checkpoint do
     }
   end
 
+  @spec negative_controls!([map()]) :: map()
+  def negative_controls!(controls) when is_list(controls) and controls != [] do
+    normalized = Enum.map(controls, &stringify_keys/1)
+
+    Enum.each(normalized, fn control ->
+      required = ~w(name reason_class result before after)
+
+      unless Enum.all?(required, &Map.has_key?(control, &1)),
+        do: raise("generated-host negative control is incomplete")
+
+      unless control["result"] == "rejected",
+        do: raise("generated-host negative control did not reject")
+
+      unless control["before"] == control["after"],
+        do: raise("generated-host negative control has a nonzero effect delta")
+
+      unless Enum.all?(control["before"], fn {_key, value} -> is_integer(value) and value >= 0 end),
+        do: raise("generated-host negative control has invalid effects")
+    end)
+
+    %{"name" => "negative_controls", "status" => "passed", "controls" => normalized}
+  end
+
+  defp stringify_keys(map) when is_map(map),
+    do: Map.new(map, fn {key, value} -> {to_string(key), stringify_keys(value)} end)
+
+  defp stringify_keys(value) when is_list(value), do: Enum.map(value, &stringify_keys/1)
+  defp stringify_keys(value), do: value
+
   defp sha(value), do: :crypto.hash(:sha256, value) |> Base.encode16(case: :lower)
 end
