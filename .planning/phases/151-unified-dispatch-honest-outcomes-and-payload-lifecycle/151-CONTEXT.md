@@ -43,7 +43,7 @@ Make synchronous and durable asynchronous delivery consume the same prepared pro
 - **D-16:** Successful payloads scrub immediately. Terminal, discarded, abandoned, uncertain, and legacy queued payloads receive explicit lifecycle states and a configurable bounded retention window; no private content is retained indefinitely by default.
 - **D-17:** Exact default durations and configuration names are delegated to research/planning, which must justify them against current project configuration conventions and provider reconciliation needs. Defaults must be finite, documented, testable, and safe for a one-maintainer library.
 - **D-18:** Pruning is tenant-safe, schema-prefix-safe, bounded in batches, idempotent, and observable through non-sensitive counts/reason classes. It preserves the public Delivery/event audit trail and a private non-content tombstone sufficient to explain why recovery is no longer possible.
-- **D-19:** Legacy queued rows retain only the narrow forward-compatible reader already promised by Phase 150. There is no backfill that invents a complete envelope from old public metadata. Legacy recovery/cleanup has an explicit window and then settles to an actionable terminal state.
+- **D-19 (superseded 2026-08-03 after verification):** No queued Delivery lacking a private Payload may dispatch. The former narrow legacy reader is retired because reconstructing provider input from incomplete public `Delivery.metadata` contradicts PRIV-04 and the Phase 151 safety boundary. Historical rows retain immutable Delivery/Event provenance and explicit cleanup/operator recovery guidance only; they settle idempotently to an actionable terminal `legacy_payload_missing` fact without adapter I/O, fabricated Payload data, or metadata-derived message reconstruction.
 - **D-20:** Recovery never means blind resend of an uncertain outcome. Operator action must distinguish retry-safe recovery from reconciliation of possible provider acceptance.
 
 ### Documentation and contract evidence
@@ -59,6 +59,12 @@ Make synchronous and durable asynchronous delivery consume the same prepared pro
 - Whether pruning is exposed through a Mix task, scheduled worker, library API, or a small combination consistent with existing maintenance patterns.
 - Exact event/reason-class names, provided they are stable, closed, non-sensitive, and operator-actionable.
 - Provider mapping table details where existing Swoosh adapters expose reliable structured evidence.
+
+### Decision Amendment — Legacy No-Payload Rows (2026-08-03)
+
+- The initial auto-discussion preserved a Phase 150 compatibility reader in D-19. Goal-backward verification demonstrated that the reader rebuilt and sent private provider input from the public metadata projection, directly violating ROADMAP success criterion 5 and PRIV-04.
+- The authoritative decision is therefore amended in favor of the stricter safety contract: absence of a private Payload is terminal for every queued Delivery, regardless of metadata shape or historical provenance.
+- Compatibility is preserved as audit history and operator-guided re-authoring from an authoritative private source, never as automatic reconstruction or resend.
 
 </decisions>
 
