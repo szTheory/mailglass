@@ -178,7 +178,7 @@ defmodule Mailglass.MigrationTest do
     # :public_only on any non-public axis so this public-axis test runs only
     # where it validates something.
     @describetag :public_only
-    test "drops all three tables + trigger + function + citext in reverse order" do
+    test "drops all five tables + trigger + function + citext in reverse order" do
       # Roll the schema down through Ecto.Migrator (the same code path adopters
       # hit via `mix ecto.rollback`). :all with :down reverses every applied
       # migration — for V01 only, that drops everything back to the pre-initial
@@ -194,13 +194,21 @@ defmodule Mailglass.MigrationTest do
       refute table_exists?("mailglass_deliveries")
       refute table_exists?("mailglass_events")
       refute table_exists?("mailglass_suppressions")
+      refute table_exists?("mailglass_outbound_payloads")
       refute column_exists?("mailglass_deliveries", "adapter_ref")
 
       # Trigger function should be dropped
       {:ok, %{rows: fn_rows}} =
-        TestRepo.query("""
-        SELECT proname FROM pg_proc WHERE proname = 'mailglass_raise_immutability'
-        """)
+        TestRepo.query(
+          """
+          SELECT p.proname
+          FROM pg_proc AS p
+          JOIN pg_namespace AS n ON n.oid = p.pronamespace
+          WHERE p.proname = 'mailglass_raise_immutability'
+            AND n.nspname = $1
+          """,
+          [Mailglass.Config.schema()]
+        )
 
       assert fn_rows == []
 
