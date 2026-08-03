@@ -5,15 +5,15 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 153
 current_phase_name: Generated-Host Proof, Docs, and Release Gate
 status: planning
-stopped_at: Completed 153-03-PLAN.md
-last_updated: "2026-08-03T17:08:06.147Z"
+stopped_at: Completed 153-04-PLAN.md
+last_updated: "2026-08-03T17:24:48.947Z"
 last_activity: 2026-08-03
 last_activity_desc: Phase 153 auto-discussion completed from requirements and codebase evidence
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 32
-  completed_plans: 27
+  completed_plans: 28
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 ## Current Position
 
 Phase: 153 — Generated-Host Proof, Docs, and Release Gate
-Plan: 3 of 8 complete
+Plan: 4 of 8 complete
 Status: Plan 03 is next
 Last activity: 2026-08-03 — Phase 153 auto-discussion completed from requirements and codebase evidence
 
-Progress: [████████░░] 84%
+Progress: [█████████░] 88%
 
 ## v2.4 Milestone Intent
 
@@ -473,6 +473,7 @@ release debug campaign.
 - [Phase ?]: Generated-host parity uses distinct equivalent mailable modules to avoid idempotency convergence.
 - [Phase ?]: [153-03] Generated-host negative controls require a closed reason class and exact zero before/after effect vector.
 - [Phase ?]: [153-03] Negative checkpoint evidence stores counts and reason classes only.
+- [Phase ?]: Generated-host HTTP proof reads the active endpoint port and emits only status/count evidence.
 
 ## Quick Tasks Completed
 
@@ -556,6 +557,7 @@ release debug campaign.
 | Phase 153 P01 | 0h 12m | 2 tasks | 8 files |
 | Phase 153 P02 | 0m | 2 tasks | 6 files |
 | Phase 153 P03 | 14m | 2 tasks | 6 files |
+| Phase 153 P04 | 11m | 2 tasks | 6 files |
 
 ## Deferred Items
 
@@ -722,8 +724,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T17:08:06.133Z
-**Stopped at:** Completed 153-03-PLAN.md
+**Last session:** 2026-08-03T17:24:48.933Z
+**Stopped at:** Completed 153-04-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
