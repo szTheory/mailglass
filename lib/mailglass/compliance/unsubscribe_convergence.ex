@@ -15,6 +15,18 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
     "(tenant_id, address, scope, COALESCE(stream, ''))"
   }
 
+  @suppression_returning_fields [
+    :id,
+    :tenant_id,
+    :scope,
+    :stream,
+    :reason,
+    :source,
+    :expires_at,
+    :metadata,
+    :inserted_at
+  ]
+
   @spec run(Delivery.t()) ::
           {:ok, %{status: :created | :already_converged, event: Event.t(), suppression: Entry.t()}}
           | {:error, term()}
@@ -108,18 +120,34 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
     do: {:ok, suppression}
 
   defp canonical_suppression(repo, %Entry{inserted_at: nil}, %Delivery{} = delivery) do
+    address = String.downcase(delivery.recipient)
+
     query =
       from(suppression in Entry,
         where:
           suppression.tenant_id == ^delivery.tenant_id and
-            suppression.address == ^String.downcase(delivery.recipient) and
+            fragment("?::text", suppression.address) == ^address and
             suppression.scope == :address_stream and suppression.stream == ^delivery.stream,
-        limit: 1
+        limit: 1,
+        select: %{
+          id: suppression.id,
+          tenant_id: suppression.tenant_id,
+          scope: suppression.scope,
+          stream: suppression.stream,
+          reason: suppression.reason,
+          source: suppression.source,
+          expires_at: suppression.expires_at,
+          metadata: suppression.metadata,
+          inserted_at: suppression.inserted_at
+        }
       )
 
     case repo.one(query, Repo.multi_opts()) do
-      %Entry{} = suppression -> {:ok, suppression}
-      nil -> {:error, :canonical_suppression_missing}
+      suppression when is_map(suppression) ->
+        {:ok, struct(Entry, Map.put(suppression, :address, address))}
+
+      nil ->
+        {:error, :canonical_suppression_missing}
     end
   end
 
@@ -133,11 +161,13 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
     do: {:ok, %{suppression: suppression, promoted?: false}}
 
   defp ensure_permanent_unsubscribe(repo, %Entry{} = suppression, %Delivery{} = delivery) do
+    address = String.downcase(delivery.recipient)
+
     promotion_query =
       from(entry in Entry,
         where:
           entry.id == ^suppression.id and entry.tenant_id == ^delivery.tenant_id and
-            entry.address == ^String.downcase(delivery.recipient) and
+            fragment("?::text", entry.address) == ^address and
             entry.scope == :address_stream and entry.stream == ^delivery.stream and
             not is_nil(entry.expires_at),
         select: entry
@@ -146,10 +176,10 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
     case repo.update_all(
            promotion_query,
            [set: [reason: :unsubscribe, expires_at: nil]],
-           Repo.multi_opts(returning: true)
+           Repo.multi_opts(returning: @suppression_returning_fields)
          ) do
       {1, [%Entry{} = promoted]} ->
-        {:ok, %{suppression: promoted, promoted?: true}}
+        {:ok, %{suppression: %{promoted | address: address}, promoted?: true}}
 
       {0, _} ->
         # PostgreSQL rechecks the predicate after a concurrent updater commits.
