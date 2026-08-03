@@ -38,6 +38,7 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
     |> Ecto.Multi.run(:canonical_event, fn repo, changes ->
       {:ok, canonical_event(repo, changes.unsubscribe_event, delivery)}
     end)
+    |> maybe_inject_failure(:after_event)
     |> Ecto.Multi.run(:unsubscribe_suppression, fn repo, changes ->
       changes.canonical_event
       |> suppression_attrs(delivery)
@@ -53,6 +54,7 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
     |> Ecto.Multi.run(:canonical_suppression, fn repo, changes ->
       {:ok, canonical_suppression(repo, changes.unsubscribe_suppression, delivery)}
     end)
+    |> maybe_inject_failure(:after_suppression)
   end
 
   # `inserted_at` is the adapter-pinned DO NOTHING sentinel for both event and
@@ -122,6 +124,19 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
         "event_type" => "unsubscribed"
       }
     }
+  end
+
+  # This narrow seam is intentionally inert outside a focused test. Keeping it
+  # inside the Multi proves a failure after either durable insert rolls back the
+  # whole convergence instead of being misclassified as the privacy no-op.
+  defp maybe_inject_failure(multi, step) do
+    Ecto.Multi.run(multi, {:failure_injection, step}, fn _repo, _changes ->
+      if Application.get_env(:mailglass, :unsubscribe_convergence_failure_step) == step do
+        {:error, :injected_convergence_failure}
+      else
+        {:ok, :not_injected}
+      end
+    end)
   end
 
   defp unsubscribe_idempotency_key(%Delivery{id: delivery_id}), do: "unsubscribe:#{delivery_id}"

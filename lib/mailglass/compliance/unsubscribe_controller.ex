@@ -33,8 +33,7 @@ defmodule Mailglass.Compliance.UnsubscribeController do
   def unsubscribe(conn, %{"token" => token}) do
     case resolve_delivery(token) do
       {:ok, delivery} ->
-        delivery
-        |> UnsubscribeConvergence.run()
+        Tenancy.with_tenant(delivery.tenant_id, fn -> UnsubscribeConvergence.run(delivery) end)
         |> respond_to_unsubscribe(conn)
 
       {:error, :expired} ->
