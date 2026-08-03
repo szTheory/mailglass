@@ -47,6 +47,7 @@ defmodule Mailglass.GeneratedHost.Journey do
       :negative_controls -> negative_controls!(proof, opts)
       :feedback -> feedback!(proof)
       :feedback_unsubscribe -> proof |> feedback!() |> one_click!()
+      :readiness -> operator_readiness!(proof)
     end
   end
 
@@ -297,6 +298,30 @@ defmodule Mailglass.GeneratedHost.Journey do
     })
   end
 
+  defp operator_readiness!(proof) do
+    start_host!(proof)
+    readiness = Mailglass.ProductionPreflight.run()
+    anonymous = http_get!("/ops/mail", [])
+
+    authenticated =
+      http_get!("/ops/mail", [
+        {~c"authorization",
+         String.to_charlist(
+           "Basic " <> Base.encode64("generated-operator:generated-operator-password")
+         )}
+      ])
+
+    unless readiness.status == :ready and anonymous.status == 401 and authenticated.status == 200 do
+      raise "generated-host operator readiness did not enforce authentication or pass production preflight"
+    end
+
+    Map.put(proof, :operator_readiness, %{
+      preflight_ready: true,
+      anonymous_status: anonymous.status,
+      authenticated_status: authenticated.status
+    })
+  end
+
   defp wait_for_endpoint!(attempts \\ 40)
   defp wait_for_endpoint!(0), do: raise("generated-host endpoint did not boot for HTTP proof")
 
@@ -319,6 +344,23 @@ defmodule Mailglass.GeneratedHost.Journey do
        ~c"application/x-www-form-urlencoded", body}
 
     case :httpc.request(:post, request, [timeout: 5_000], body_format: :binary) do
+      {:ok, {{_version, status, _reason}, _headers, response_body}} ->
+        %{status: status, body_bytes: byte_size(response_body)}
+
+      {:error, reason} ->
+        raise "generated-host HTTP request failed: #{inspect(reason)}"
+    end
+  end
+
+  defp http_get!(path, headers) when is_binary(path) and is_list(headers) do
+    :inets.start()
+
+    case :httpc.request(
+           :get,
+           {~c"http://127.0.0.1:#{endpoint_port!()}#{path}", headers},
+           [timeout: 5_000],
+           body_format: :binary
+         ) do
       {:ok, {{_version, status, _reason}, _headers, response_body}} ->
         %{status: status, body_bytes: byte_size(response_body)}
 

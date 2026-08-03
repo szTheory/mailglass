@@ -13,6 +13,7 @@ defmodule Mailglass.GeneratedHost.ReadinessOperatorTest do
     assert template =~ "mailglass_operator_routes \"/mail\""
     assert template =~ "auth: GeneratedHost.OperatorAuth"
     assert template =~ "subject_id: \"operator_id\""
+    assert template =~ "outbound_payload_maintenance: :scheduled"
     refute template =~ "dev_routes"
   end
 

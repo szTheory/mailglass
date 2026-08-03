@@ -46,13 +46,19 @@ if Code.ensure_loaded?(MailglassInbound) do
               ]}
 
     @doc """
-    Returns `true`. Because this module is conditionally compiled, its mere
-    existence implies `mailglass_inbound` is loaded. Callers should still
-    `Code.ensure_loaded?(__MODULE__)` before calling.
+    Returns `true` only when the optional package is loaded and its host Repo
+    is configured. A linked host may install `mailglass_inbound` without
+    adopting its persistence surface; the operator dashboard must keep that
+    optional surface hidden instead of querying an unconfigured Repo.
     """
     @doc since: "0.2.0"
     @spec available?() :: boolean()
-    def available?, do: true
+    def available? do
+      case Application.get_env(:mailglass_inbound, :repo) do
+        repo when is_atom(repo) and not is_nil(repo) -> true
+        _ -> false
+      end
+    end
 
     @doc "Recent inbound records for a tenant — routes to the inbound read-model."
     @doc since: "0.2.0"

@@ -9,6 +9,8 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
     write!(host_root, "lib/generated_host/capture_store.ex", capture_store_source())
     write!(host_root, "lib/generated_host/capture_adapter.ex", capture_adapter_source())
     write!(host_root, "lib/generated_host/sample_mailable.ex", sample_mailable_source())
+    write!(host_root, "lib/generated_host/operator_auth.ex", operator_auth_source())
+    write!(host_root, "lib/generated_host/operator_auth_plug.ex", operator_auth_plug_source())
     write!(host_root, "lib/generated_host_web/router.ex", router_source())
     patch_endpoint!(host_root)
 
@@ -38,6 +40,8 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
       schema: #{inspect(schema)},
       adapter: GeneratedHost.CaptureAdapter,
       async_adapter: :oban,
+      outbound_payload_maintenance: :scheduled,
+      operator: [auth: GeneratedHost.OperatorAuth],
       postmark: [basic_auth: {"generated-host", "generated-host-signature"}],
       compliance: [
         endpoint: GeneratedHostWeb.Endpoint,
@@ -53,6 +57,10 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
     config :generated_host, Oban,
       repo: GeneratedHost.Repo,
       queues: [mailglass_outbound: 1]
+
+    config :generated_host, :operator_basic_auth,
+      username: "generated-operator",
+      password: "generated-operator-password"
 
     config :generated_host, GeneratedHost.Repo,
       database: "generated_host_#{schema}"
@@ -99,6 +107,13 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
     defmodule GeneratedHostWeb.Router do
       use GeneratedHostWeb, :router
       import Mailglass.Webhook.Router
+      import MailglassAdmin.Router
+
+      pipeline :operator do
+        plug :accepts, ["html"]
+        plug :fetch_session
+        plug GeneratedHost.OperatorAuthPlug
+      end
 
       pipeline :mailglass_webhooks do
         plug :accepts, ["json"]
@@ -117,6 +132,64 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
         pipe_through :one_click
         get "/:token", Mailglass.Compliance.UnsubscribeController, :show
         post "/:token", Mailglass.Compliance.UnsubscribeController, :unsubscribe
+      end
+
+      scope "/ops" do
+        pipe_through :operator
+
+        mailglass_operator_routes "/mail",
+          auth: GeneratedHost.OperatorAuth,
+          session: [
+            subject_id: "operator_id",
+            tenant_id: "operator_tenant",
+            auth_method: "operator_auth_method",
+            recent_auth_at: "operator_recent_auth_at"
+          ]
+      end
+    end
+    """
+  end
+
+  defp operator_auth_source do
+    """
+    defmodule GeneratedHost.OperatorAuth do
+      @behaviour MailglassAdmin.Auth
+
+      @impl true
+      def authorize(:operator_access, %{actor: %{subject_id: "generated-operator"} = actor}) do
+        {:ok, %{actor: actor, assigns: %{}}}
+      end
+
+      def authorize(_action, _context), do: {:error, :unauthorized, %{}}
+    end
+    """
+  end
+
+  defp operator_auth_plug_source do
+    """
+    defmodule GeneratedHost.OperatorAuthPlug do
+      import Plug.Conn
+
+      def init(opts), do: opts
+
+      def call(conn, _opts) do
+        credentials = Application.fetch_env!(:generated_host, :operator_basic_auth)
+
+        conn =
+          Plug.BasicAuth.basic_auth(conn,
+            username: Keyword.fetch!(credentials, :username),
+            password: Keyword.fetch!(credentials, :password)
+          )
+
+        if conn.halted do
+          conn
+        else
+          conn
+          |> put_session("operator_id", "generated-operator")
+          |> put_session("operator_tenant", "default")
+          |> put_session("operator_auth_method", "basic")
+          |> put_session("operator_recent_auth_at", DateTime.utc_now() |> DateTime.to_iso8601())
+        end
       end
     end
     """

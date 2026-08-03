@@ -15,7 +15,7 @@ export HEX_HOME="${WORK_DIR}/hex"
 export MIX_HOME="${WORK_DIR}/mix"
 
 usage() {
-  echo "Usage: DEP_MODE=local|hex scripts/generated_host_proof.sh [--stage migrate|boot|async-parity|negative-controls|feedback|feedback-unsubscribe] [--family queue-schema|input]" >&2
+  echo "Usage: DEP_MODE=local|hex scripts/generated_host_proof.sh [--stage migrate|boot|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness] [--family queue-schema|input]" >&2
 }
 
 while [[ $# -gt 0 ]]; do
@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$DEP_MODE" in local|hex) ;; *) echo "generated-host proof blocked: DEP_MODE must be local|hex" >&2; exit 1 ;; esac
-case "$STAGE" in migrate|boot|async-parity|negative-controls|feedback|feedback-unsubscribe) ;; *) echo "generated-host proof blocked: invalid --stage" >&2; exit 1 ;; esac
+case "$STAGE" in migrate|boot|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness) ;; *) echo "generated-host proof blocked: invalid --stage" >&2; exit 1 ;; esac
 case "$FAMILY" in all|queue-schema|input) ;; *) echo "generated-host proof blocked: invalid --family" >&2; exit 1 ;; esac
 case "$WORK_DIR" in ''|/|"$ROOT_DIR") echo "generated-host proof blocked: unsafe WORK_DIR" >&2; exit 1 ;; esac
 
@@ -106,7 +106,7 @@ ELIXIR_FAMILY="${FAMILY//-/_}"
 MIX_ENV=dev mix run --no-start -e "Mailglass.GeneratedHost.HostTemplate.install!(File.cwd!(), \"$schema\")"
 MIX_ENV=dev mix run --no-start -e "proof = Mailglass.GeneratedHost.Journey.run!(schema: \"$schema\", stage: :$ELIXIR_STAGE, family: :$ELIXIR_FAMILY); File.write!(\"proof.json\", Jason.encode!(proof))"
 mkdir -p "$WORK_DIR/checkpoint"
-DEP_MODE="$DEP_MODE" STAGE="$STAGE" SOURCE_SHA="$(git -C "$ROOT_DIR" rev-parse HEAD)" MIX_ENV=dev mix run --no-start -e 'proof = Jason.decode!(File.read!("proof.json")); stage = System.get_env("STAGE"); stages = [%{"name" => "install", "status" => "passed", "command_sha256" => String.duplicate("0", 64)}, %{"name" => "migrate", "status" => "passed", "command_sha256" => String.duplicate("1", 64)}] ++ if(stage == "async-parity", do: [Mailglass.GeneratedHost.Checkpoint.async_parity!(proof["async_parity"])], else: []) ++ if(stage == "negative-controls", do: [Mailglass.GeneratedHost.Checkpoint.negative_controls!(proof["negative_controls"])], else: []) ++ if(stage in ["feedback", "feedback-unsubscribe"], do: [Mailglass.GeneratedHost.Checkpoint.feedback!(proof["feedback"])], else: []) ++ if(stage == "feedback-unsubscribe", do: [Mailglass.GeneratedHost.Checkpoint.one_click!(proof["one_click"])], else: []); payload = Mailglass.GeneratedHost.Checkpoint.encode(%{dependency_mode: System.fetch_env!("DEP_MODE"), source_sha: System.fetch_env!("SOURCE_SHA"), packages: [], stages: stages}); File.write!(Path.expand("../checkpoint.json", File.cwd!()), Jason.encode!(payload))'
+DEP_MODE="$DEP_MODE" STAGE="$STAGE" SOURCE_SHA="$(git -C "$ROOT_DIR" rev-parse HEAD)" MIX_ENV=dev mix run --no-start -e 'proof = Jason.decode!(File.read!("proof.json")); stage = System.get_env("STAGE"); stages = [%{"name" => "install", "status" => "passed", "command_sha256" => String.duplicate("0", 64)}, %{"name" => "migrate", "status" => "passed", "command_sha256" => String.duplicate("1", 64)}] ++ if(stage == "async-parity", do: [Mailglass.GeneratedHost.Checkpoint.async_parity!(proof["async_parity"])], else: []) ++ if(stage == "negative-controls", do: [Mailglass.GeneratedHost.Checkpoint.negative_controls!(proof["negative_controls"])], else: []) ++ if(stage in ["feedback", "feedback-unsubscribe"], do: [Mailglass.GeneratedHost.Checkpoint.feedback!(proof["feedback"])], else: []) ++ if(stage == "feedback-unsubscribe", do: [Mailglass.GeneratedHost.Checkpoint.one_click!(proof["one_click"])], else: []) ++ if(stage == "readiness", do: [Mailglass.GeneratedHost.Checkpoint.operator_readiness!(proof["operator_readiness"])], else: []); payload = Mailglass.GeneratedHost.Checkpoint.encode(%{dependency_mode: System.fetch_env!("DEP_MODE"), source_sha: System.fetch_env!("SOURCE_SHA"), packages: [], stages: stages}); File.write!(Path.expand("../checkpoint.json", File.cwd!()), Jason.encode!(payload))'
 bash "$ROOT_DIR/scripts/check_generated_host_proof.sh" --checkpoint "$WORK_DIR/checkpoint.json"
 mkdir -p "$(dirname "$CHECKPOINT_OUT")"
 cp "$WORK_DIR/checkpoint.json" "$CHECKPOINT_OUT"

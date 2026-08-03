@@ -110,5 +110,19 @@ defmodule Mailglass.GeneratedHost.Checkpoint do
   defp stringify_keys(value) when is_list(value), do: Enum.map(value, &stringify_keys/1)
   defp stringify_keys(value), do: value
 
+  @spec operator_readiness!(map()) :: map()
+  def operator_readiness!(proof) when is_map(proof) do
+    required = ~w(preflight_ready anonymous_status authenticated_status)
+
+    unless Enum.all?(required, &Map.has_key?(proof, &1)) and proof["preflight_ready"] and
+             proof["anonymous_status"] == 401 and proof["authenticated_status"] == 200 do
+      raise "generated-host operator readiness proof is incomplete"
+    end
+
+    Map.take(proof, required)
+    |> Map.put("name", "operator_readiness")
+    |> Map.put("status", "passed")
+  end
+
   defp sha(value), do: :crypto.hash(:sha256, value) |> Base.encode16(case: :lower)
 end
