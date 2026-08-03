@@ -82,7 +82,8 @@ defmodule Mailglass.MixProject do
         "verify.docs.contract": :test,
         "verify.docs.contract.inbound": :test,
         "verify.docs.migration": :test,
-        "verify.schema_prefix": :test
+        "verify.schema_prefix": :test,
+        "verify.no_optional_runtime": :test
       ]
     ]
   end
@@ -329,6 +330,12 @@ defmodule Mailglass.MixProject do
         "cmd mix test test/mailglass/credo/raw_repo_prefix_contract_test.exs --warnings-as-errors",
         "credo --strict",
         "cmd --cd mailglass_inbound mix test test/mailglass_inbound/schema_prefix_contract_test.exs --warnings-as-errors"
+      ],
+      # D-14 / ENVL-06: compile an isolated no-optional artifact, then execute
+      # the public send contract from a direct Elixir process with only its
+      # allowlisted ebins. This is intentionally not a Mix launcher.
+      "verify.no_optional_runtime": [
+        "cmd bash scripts/no_optional_deps_runtime_smoke.sh"
       ],
       # Cold-start smoke — full suite from a fresh DB. Catches startup-order,
       # seed, and missing-migration issues that warm-state runs can mask.

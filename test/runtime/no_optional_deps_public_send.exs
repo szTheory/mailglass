@@ -160,6 +160,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
   defp standard_library_ebin?(path) do
     otp_lib = :code.lib_dir(:kernel) |> List.to_string() |> Path.dirname() |> Path.dirname()
     elixir_lib = :code.lib_dir(:elixir) |> List.to_string() |> Path.dirname() |> Path.dirname()
+
     path == otp_lib or String.starts_with?(path, otp_lib <> "/") or
       path == elixir_lib or String.starts_with?(path, elixir_lib <> "/")
   end

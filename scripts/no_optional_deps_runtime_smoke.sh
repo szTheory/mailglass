@@ -22,8 +22,12 @@ mkdir -p "$build_root" "$run_root"
 cd "$repo_root"
 MIX_ENV=test mix run --no-start -e '
   Mailglass.MixProject.project()[:deps]
-  |> Enum.filter(fn {_app, _requirement, opts} -> Keyword.get(opts, :optional, false) end)
-  |> Enum.map(&elem(&1, 0))
+  |> Enum.filter(fn
+    {_app, _requirement, opts} when is_list(opts) -> Keyword.get(opts, :optional, false)
+    {_app, opts} when is_list(opts) -> Keyword.get(opts, :optional, false)
+    _ -> false
+  end)
+  |> Enum.map(fn {app, _rest} -> app; {app, _requirement, _opts} -> app end)
   |> Enum.map(&Atom.to_string/1)
   |> Enum.sort()
   |> Enum.each(&IO.puts/1)

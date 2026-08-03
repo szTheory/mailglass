@@ -224,6 +224,8 @@ jobs:
         run: |
           until pg_isready -h localhost -U postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: Run no-optional-dependencies public send runtime proof
+        run: mix verify.no_optional_runtime
       - name: Run core support contract
         run: mix verify.support_contract.core
 
