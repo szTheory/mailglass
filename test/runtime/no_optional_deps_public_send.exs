@@ -2,6 +2,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
   @moduledoc false
 
   alias Mailglass.Message
+  alias Mailglass.Outbound.{Delivery, Payload, PayloadPruner}
 
   defmodule Repo do
     use Ecto.Repo,
@@ -15,6 +16,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
     audit_code_path!(build_root, ebins)
     audit_optional_apps!(optional_apps)
     audit_absent_modules!()
+    audit_optional_source_boundaries!()
 
     configure!()
     start_runtime!()
@@ -51,6 +53,8 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
       raise "dependency-free send caused durable, queue, provider, or task effects: " <>
               "before=#{inspect(before)} after=#{inspect(after_observations)}"
     end
+
+    prove_payload_pruning_without_oban!()
 
     IO.puts("no-optional-deps public send runtime proof passed")
   end
@@ -105,6 +109,61 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
     for module <- [Oban, Oban.Worker, Mailglass.Outbound.Worker] do
       if Code.ensure_loaded?(module), do: raise("optional module is loadable: #{inspect(module)}")
     end
+
+    if Mailglass.Outbound.PayloadPrunerWorker.available?() do
+      raise "optional payload pruner worker is available without Oban"
+    end
+  end
+
+  defp audit_optional_source_boundaries! do
+    repo_root = required_env!("MAILGLASS_NO_OPTIONAL_REPO_ROOT")
+
+    guarded_oban_files =
+      MapSet.new([
+        "lib/mailglass.ex",
+        "lib/mailglass/adapters/fake.ex",
+        "lib/mailglass/adapters/fake/storage.ex",
+        "lib/mailglass/application.ex",
+        "lib/mailglass/config.ex",
+        "lib/mailglass/events.ex",
+        "lib/mailglass/events/reconciler.ex",
+        "lib/mailglass/installer/plan.ex",
+        "lib/mailglass/installer/templates.ex",
+        "lib/mailglass/migrations/postgres/v01.ex",
+        "lib/mailglass/optional_deps.ex",
+        "lib/mailglass/optional_deps/oban.ex",
+        "lib/mailglass/outbound.ex",
+        "lib/mailglass/outbound/payload_pruner_worker.ex",
+        "lib/mailglass/outbound/worker.ex",
+        "lib/mailglass/suppression/escalation.ex",
+        "lib/mailglass/tenancy.ex",
+        "lib/mailglass/webhook/ingest.ex",
+        "lib/mailglass/webhook/pruner.ex",
+        "lib/mailglass/webhook/reconciler.ex",
+        "lib/mailglass/webhook/router.ex",
+        "lib/mix/tasks/mailglass.docs.check.ex",
+        "lib/mix/tasks/mailglass.gen.inbound_route.ex",
+        "lib/mix/tasks/mailglass.gen.inbound_router.ex",
+        "lib/mix/tasks/mailglass.gen.mailable.ex",
+        "lib/mix/tasks/mailglass.gen.mailbox.ex",
+        "lib/mix/tasks/mailglass.install.ex",
+        "lib/mix/tasks/mailglass.outbound.payloads.prune.ex",
+        "lib/mix/tasks/mailglass.reconcile.ex",
+        "lib/mix/tasks/mailglass.upgrade.v0_2.ex",
+        "lib/mix/tasks/mailglass.webhooks.prune.ex"
+      ])
+
+    repo_root
+    |> Path.join("lib/**/*.ex")
+    |> Path.wildcard()
+    |> Enum.each(fn path ->
+      relative = Path.relative_to(path, repo_root)
+
+      if File.read!(path) =~ ~r/\bOban(?:\.Worker|\.Job|\.)?\b/ and
+           not MapSet.member?(guarded_oban_files, relative) do
+        raise "unguarded Oban reference in #{relative}"
+      end
+    end)
   end
 
   defp configure! do
@@ -128,6 +187,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
     # the public fail-closed branch cannot be masked by transport boot wiring.
     {:ok, _} = Application.ensure_all_started(:ecto_sql)
     {:ok, _} = Application.ensure_all_started(:phoenix_pubsub)
+    {:ok, _} = Application.ensure_all_started(:mix)
     {:ok, _} = Mailglass.Application.start(:normal, [])
     {:ok, _} = Repo.start_link()
   end
@@ -138,6 +198,87 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
     case Ecto.Migrator.up(Repo, version, __MODULE__.Migration, log: false) do
       :ok -> :ok
       :already_up -> :ok
+    end
+  end
+
+  defp prove_payload_pruning_without_oban! do
+    tenant_id = "runtime-prune-#{System.unique_integer([:positive])}"
+    private_sentinel = "runtime-private-prune-sentinel@example.com"
+    payload = expired_payload!(tenant_id, private_sentinel)
+
+    unless {:ok, 1} = PayloadPruner.prune(tenant_id: tenant_id) do
+      raise "non-Oban payload pruner did not transition exactly one tenant batch"
+    end
+
+    mix_payload = expired_payload!(tenant_id, private_sentinel)
+
+    output =
+      capture_mix_output!(fn ->
+        Mix.Tasks.Mailglass.Outbound.Payloads.Prune.run(["--tenant", tenant_id])
+      end)
+
+    expired = Repo.get!(Payload, payload.id)
+    mix_expired = Repo.get!(Payload, mix_payload.id)
+
+    unless expired.lifecycle_state == :expired and is_nil(expired.envelope) and
+             mix_expired.lifecycle_state == :expired and is_nil(mix_expired.envelope) do
+      raise "non-Oban payload pruner did not retain an expired tombstone"
+    end
+
+    unless output =~ "expired=1" and output =~ "retention_expired=1" do
+      raise "manual payload pruner did not report aggregate state/reason counts: #{inspect(output)}"
+    end
+
+    if output =~ tenant_id or output =~ private_sentinel do
+      raise "manual payload pruner leaked tenant or private payload data: #{inspect(output)}"
+    end
+  end
+
+  defp expired_payload!(tenant_id, recipient) do
+    now = DateTime.utc_now()
+
+    {:ok, delivery} =
+      %Delivery{}
+      |> Delivery.changeset(%{
+        tenant_id: tenant_id,
+        mailable: "RuntimeProbe",
+        stream: :transactional,
+        recipient: recipient,
+        last_event_type: :queued,
+        last_event_at: now
+      })
+      |> Repo.insert()
+
+    {:ok, payload} =
+      Payload.changeset(%Payload{}, %{
+        tenant_id: tenant_id,
+        delivery_id: delivery.id,
+        envelope_version: 2,
+        envelope_digest: "runtime-prune-digest",
+        envelope: %{"private" => "runtime-private-prune-sentinel"},
+        lifecycle_state: :terminal,
+        reason_class: :pre_dispatch_failure,
+        expires_at: DateTime.add(now, -1, :second)
+      })
+      |> Repo.insert()
+
+    payload
+  end
+
+  defp capture_mix_output!(fun) do
+    prior_shell = Mix.shell()
+    Mix.shell(Mix.Shell.Process)
+
+    try do
+      fun.()
+
+      receive do
+        {:mix_shell, :info, [message]} when is_binary(message) -> message
+      after
+        1_000 -> raise "manual payload pruner produced no Mix output"
+      end
+    after
+      Mix.shell(prior_shell)
     end
   end
 

@@ -36,12 +36,21 @@ defmodule Mailglass.Outbound.PayloadPrunerTest do
   end
 
   test "manual pruning performs one tenant-scoped batch and leaves other tenants untouched" do
-    previous = Application.get_env(:mailglass, :config)
+    previous = Application.get_env(:mailglass, :outbound_payload_retention)
 
-    on_exit(fn -> Application.put_env(:mailglass, :config, previous) end)
+    on_exit(fn ->
+      if is_nil(previous) do
+        Application.delete_env(:mailglass, :outbound_payload_retention)
+      else
+        Application.put_env(:mailglass, :outbound_payload_retention, previous)
+      end
+    end)
 
-    Application.put_env(:mailglass, :config,
-      outbound_payload_retention: [terminal_days: 14, uncertain_days: 30, legacy_days: 14, prune_batch_size: 1]
+    Application.put_env(:mailglass, :outbound_payload_retention,
+      terminal_days: 14,
+      uncertain_days: 30,
+      legacy_days: 14,
+      prune_batch_size: 1
     )
 
     tenant_a = "prune-tenant-a"
@@ -72,6 +81,14 @@ defmodule Mailglass.Outbound.PayloadPrunerTest do
                })
 
       assert TestRepo.get!(Payload, payload.id).lifecycle_state == :expired
+
+      assert {:cancel, :tenant_required} =
+               Mailglass.Outbound.PayloadPrunerWorker.perform(%Oban.Job{args: %{}})
+
+      assert {:cancel, :tenant_required} =
+               Mailglass.Outbound.PayloadPrunerWorker.perform(%Oban.Job{
+                 args: %{"mailglass_tenant_id" => tenant_id, "unexpected" => "value"}
+               })
     else
       refute Mailglass.Outbound.PayloadPrunerWorker.available?()
     end
