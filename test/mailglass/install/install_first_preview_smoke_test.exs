@@ -28,9 +28,9 @@ defmodule Mailglass.Install.FirstPreviewSmokeTest do
     assert File.exists?(layout_path)
     assert File.exists?(mailable_path)
 
-    # The release-window gate flow (phx.new -> install -> compile -> boot ->
-    # GET /dev/mail/) lives in the shared script; the post-publish workflow and
-    # the PR-time ci.yml `Installer Host Smoke` job both call it.
+    # The PR-time installer gate remains in the shared script. The release-day
+    # workflow now runs the broader exact-Hex generated-host journey, which
+    # includes the same install/compile/boot contract plus the later stages.
     script = File.read!(script_path)
 
     assert script =~
@@ -42,8 +42,8 @@ defmodule Mailglass.Install.FirstPreviewSmokeTest do
     assert script =~ "GET /dev/mail/ -> HTTP ${STATUS}"
 
     workflow = File.read!(workflow_path)
-    assert workflow =~ "bash scripts/consumer_install_smoke.sh"
-    assert workflow =~ "canonical release-window gate"
+    assert workflow =~ "DEP_MODE=hex bash scripts/generated_host_proof.sh --stage all"
+    assert workflow =~ "Run exact resolver-selected generated-host journey"
 
     elapsed_ms = System.monotonic_time(:millisecond) - started_ms
     assert elapsed_ms < 300_000
