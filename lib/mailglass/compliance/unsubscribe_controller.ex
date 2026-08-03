@@ -14,8 +14,11 @@ defmodule Mailglass.Compliance.UnsubscribeController do
   alias Mailglass.Compliance.UnsubscribeConvergence
   alias Mailglass.Compliance.UnsubscribeHTML
   alias Mailglass.Outbound.Delivery
+  alias Mailglass.Outbound.Projector
   alias Mailglass.Repo
   alias Mailglass.Tenancy
+
+  require Logger
 
   @doc false
   def show(conn, %{"token" => token}) do
@@ -33,8 +36,11 @@ defmodule Mailglass.Compliance.UnsubscribeController do
   def unsubscribe(conn, %{"token" => token}) do
     case resolve_delivery(token) do
       {:ok, delivery} ->
-        Tenancy.with_tenant(delivery.tenant_id, fn -> UnsubscribeConvergence.run(delivery) end)
-        |> respond_to_unsubscribe(conn)
+        result =
+          Tenancy.with_tenant(delivery.tenant_id, fn -> UnsubscribeConvergence.run(delivery) end)
+
+        maybe_run_post_commit_effects(result, delivery)
+        respond_to_unsubscribe(result, conn)
 
       {:error, :expired} ->
         send_resp(conn, 200, "")
@@ -87,5 +93,53 @@ defmodule Mailglass.Compliance.UnsubscribeController do
 
   defp respond_to_unsubscribe({:error, _reason}, conn) do
     send_resp(conn, 500, "")
+  end
+
+  defp maybe_run_post_commit_effects({:ok, %{status: :created, event: event}}, delivery) do
+    attrs = %{
+      tenant_id: delivery.tenant_id,
+      delivery_id: delivery.id,
+      event_type: event.type,
+      address: String.downcase(delivery.recipient),
+      scope: :address_stream,
+      stream: delivery.stream
+    }
+
+    run_lifecycle_effect(attrs)
+    run_broadcast_effect(delivery, attrs)
+  end
+
+  defp maybe_run_post_commit_effects(_result, _delivery), do: :ok
+
+  defp run_lifecycle_effect(attrs) do
+    lifecycle = Mailglass.Config.compliance_lifecycle()
+
+    with %Ecto.Multi{} = multi <- lifecycle.handle_event(Ecto.Multi.new(), attrs),
+         {:ok, _changes} <- Repo.multi(multi) do
+      :ok
+    else
+      %Ecto.Multi{} -> :ok
+      invalid -> log_effect_failure(:lifecycle, invalid)
+    end
+  rescue
+    exception -> log_effect_failure(:lifecycle, exception)
+  catch
+    kind, reason -> log_effect_failure(:lifecycle, {kind, reason})
+  end
+
+  defp run_broadcast_effect(delivery, attrs) do
+    Projector.broadcast_delivery_updated(delivery, :unsubscribed, attrs)
+  rescue
+    exception -> log_effect_failure(:broadcast, exception)
+  catch
+    kind, reason -> log_effect_failure(:broadcast, {kind, reason})
+  end
+
+  defp log_effect_failure(effect, reason) do
+    Logger.warning(
+      "[mailglass] unsubscribe #{effect} effect failed after commit: #{inspect(reason)}"
+    )
+
+    :ok
   end
 end

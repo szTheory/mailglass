@@ -67,6 +67,13 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     end
   end
 
+  defmodule FailingLifecycle do
+    @behaviour Mailglass.Lifecycle
+
+    @impl true
+    def handle_event(_multi, _attrs), do: raise("expected post-commit lifecycle failure")
+  end
+
   import Phoenix.ConnTest
 
   @endpoint TestEndpoint
@@ -227,9 +234,10 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
              }
     end
 
-    test "runs bounded lifecycle compatibility work and broadcasts only after created convergence commits", %{
-      conn: conn
-    } do
+    test "runs bounded lifecycle compatibility work and broadcasts only after created convergence commits",
+         %{
+           conn: conn
+         } do
       Application.put_env(
         :mailglass,
         :compliance,
@@ -244,6 +252,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
 
       assert response(result_conn, 200) == ""
       assert_receive {:lifecycle_multi, [], attrs}
+
       assert attrs == %{
                tenant_id: delivery.tenant_id,
                delivery_id: delivery.id,
@@ -252,12 +261,45 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
                scope: :address_stream,
                stream: :bulk
              }
+
       delivery_id = delivery.id
       assert_receive {:lifecycle_txn, ^delivery_id}
       assert [_event] = events_for(delivery)
       assert [_suppression] = suppressions_for(delivery)
 
       assert_receive {:delivery_updated, ^delivery_id, :unsubscribed, ^attrs}
+    end
+
+    test "keeps committed convergence successful when lifecycle work fails", %{conn: conn} do
+      Application.put_env(
+        :mailglass,
+        :compliance,
+        Keyword.put(Application.fetch_env!(:mailglass, :compliance), :lifecycle, FailingLifecycle)
+      )
+
+      delivery = Generators.delivery_fixture(stream: :bulk)
+      token = Unsubscribe.sign_token(delivery.id)
+
+      first = post(conn, "/mailglass/unsubscribe/#{token}", %{})
+      second = post(build_conn(), "/mailglass/unsubscribe/#{token}", %{})
+
+      assert response(first, 200) == ""
+      assert response(second, 200) == ""
+      assert [_event] = events_for(delivery)
+      assert [_suppression] = suppressions_for(delivery)
+    end
+
+    test "converges an unsubscribe event without weakening an existing manual suppression", %{
+      conn: conn
+    } do
+      delivery = Generators.delivery_fixture(stream: :bulk)
+      insert_unsubscribe_suppression!(delivery, :manual)
+
+      result_conn = post(conn, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}", %{})
+
+      assert response(result_conn, 200) == ""
+      assert [_event] = events_for(delivery)
+      assert [%Entry{reason: :manual}] = suppressions_with_identity_for(delivery)
     end
 
     test "replayed POST returns 200 without duplicating durable state", %{conn: conn} do
@@ -434,6 +476,17 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     )
   end
 
+  defp suppressions_with_identity_for(delivery) do
+    TestRepo.all(
+      from(suppression in Entry,
+        where:
+          suppression.tenant_id == ^delivery.tenant_id and
+            suppression.address == ^String.downcase(delivery.recipient) and
+            suppression.scope == :address_stream and suppression.stream == ^delivery.stream
+      )
+    )
+  end
+
   defp insert_unsubscribe_event!(delivery) do
     {:ok, _event} =
       TestRepo.insert(
@@ -448,7 +501,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       )
   end
 
-  defp insert_unsubscribe_suppression!(delivery) do
+  defp insert_unsubscribe_suppression!(delivery, reason \\ :unsubscribe) do
     {:ok, _suppression} =
       TestRepo.insert(
         Entry.changeset(%{
@@ -456,7 +509,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
           address: delivery.recipient,
           scope: :address_stream,
           stream: delivery.stream,
-          reason: :unsubscribe,
+          reason: reason,
           source: "compliance:one_click",
           metadata: %{}
         })

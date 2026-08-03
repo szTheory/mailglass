@@ -102,8 +102,7 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
         where:
           suppression.tenant_id == ^delivery.tenant_id and
             suppression.address == ^String.downcase(delivery.recipient) and
-            suppression.scope == :address_stream and suppression.stream == ^delivery.stream and
-            suppression.reason == :unsubscribe,
+            suppression.scope == :address_stream and suppression.stream == ^delivery.stream,
         limit: 1
       )
 
