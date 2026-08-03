@@ -1,9 +1,10 @@
 defmodule Mailglass.DocsMigrationSmokeTest do
-  use Mailglass.MailerCase, async: true
+  use Mailglass.MailerCase, async: false
   import Mailglass.DocsHelpers
 
   @canonical_guide_path "guides/upgrading-to-v1_0.md"
   @guide_path "guides/migration-from-swoosh.md"
+  @production_checklist_path "guides/production-go-live-checklist.md"
 
   test "migration guide steps are accurate" do
     code = extract_block_after_heading(@guide_path, "End-to-End Example")
@@ -89,5 +90,55 @@ defmodule Mailglass.DocsMigrationSmokeTest do
     assert escape_hatch_block
     assert escape_hatch_block =~ "Swoosh.Email.put_provider_option"
     assert {:ok, _quoted} = Code.string_to_quoted(escape_hatch_block)
+  end
+
+  @tag phase_150_task: "t150_04_02"
+  test "production checklist uses the canonical durable adapter and readiness preflight" do
+    block = extract_block_after_heading(@production_checklist_path, "Durable async readiness")
+
+    assert block
+    assert block =~ "async_adapter: :oban"
+    assert block =~ "queues: [mailglass_outbound: 10]"
+    assert block =~ "Mailglass.Config.production_readiness()"
+    assert block =~ "%Mailglass.ConfigError{type: :invalid}"
+    refute block =~ "queues: [mailglass:"
+
+    assert "mailglass_outbound" == Atom.to_string(Mailglass.Outbound.Worker.queue())
+    assert {:ok, _quoted} = Code.string_to_quoted(block)
+  end
+
+  @tag phase_150_task: "t150_04_02"
+  test "production readiness rejects an empty queue fixture" do
+    if Code.ensure_loaded?(Oban) do
+      Application.put_env(:mailglass, :async_adapter, :oban)
+      start_supervised!({Oban, testing: :disabled, repo: Mailglass.TestRepo, queues: []})
+
+      assert {:error,
+              %Mailglass.ConfigError{
+                type: :invalid,
+                context: %{key: :async_adapter, reason_class: :canonical_queue_unavailable}
+              }} = Mailglass.Config.production_readiness()
+    else
+      :skip
+    end
+  end
+
+  @tag phase_150_task: "t150_04_02"
+  test "production readiness rejects a wrong queue fixture" do
+    if Code.ensure_loaded?(Oban) do
+      Application.put_env(:mailglass, :async_adapter, :oban)
+
+      start_supervised!(
+        {Oban, testing: :disabled, repo: Mailglass.TestRepo, queues: [wrong_outbound_queue: 10]}
+      )
+
+      assert {:error,
+              %Mailglass.ConfigError{
+                type: :invalid,
+                context: %{key: :async_adapter, reason_class: :canonical_queue_unavailable}
+              }} = Mailglass.Config.production_readiness()
+    else
+      :skip
+    end
   end
 end
