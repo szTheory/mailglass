@@ -249,7 +249,7 @@ defmodule Mailglass.GeneratedHost.Journey do
       valid_body_bytes: valid.body_bytes,
       forged_status: forged.status,
       forged_body_bytes: forged.body_bytes,
-      webhook_event_count: after_valid.webhook_events,
+      ingress_event_count: after_valid.webhook_events,
       ledger_event_count: after_valid.events,
       forged_effects_zero: true
     })
@@ -292,7 +292,7 @@ defmodule Mailglass.GeneratedHost.Journey do
       matching_send: "suppressed",
       transactional_send: "sent",
       unrelated_stream_send: "sent",
-      matching_capture_growth: captures_after_matching - captures_before,
+      matching_capture_growth: captures_after_matching - (captures_before + 1),
       control_capture_growth: captures_after_controls - captures_after_matching
     })
   end

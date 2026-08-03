@@ -75,11 +75,11 @@ defmodule Mailglass.GeneratedHost.Checkpoint do
   @spec feedback!(map()) :: map()
   def feedback!(proof) when is_map(proof) do
     required =
-      ~w(valid_status valid_body_bytes forged_status forged_body_bytes webhook_event_count ledger_event_count forged_effects_zero)
+      ~w(valid_status valid_body_bytes forged_status forged_body_bytes ingress_event_count ledger_event_count forged_effects_zero)
 
     unless Enum.all?(required, &Map.has_key?(proof, &1)) and proof["valid_status"] == 200 and
              proof["valid_body_bytes"] == 0 and proof["forged_status"] == 401 and
-             proof["forged_body_bytes"] == 0 and proof["webhook_event_count"] >= 1 and
+             proof["forged_body_bytes"] == 0 and proof["ingress_event_count"] >= 1 and
              proof["ledger_event_count"] >= 1 and proof["forged_effects_zero"] do
       raise "generated-host feedback proof is incomplete"
     end
