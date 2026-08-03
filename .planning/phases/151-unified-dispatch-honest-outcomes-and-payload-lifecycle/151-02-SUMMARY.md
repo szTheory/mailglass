@@ -62,10 +62,12 @@ status: complete
 - Classified only reliable structured HTTP and explicit pre-acceptance transport evidence; opaque evidence defaults to uncertain.
 - Added a safe projection that carries only closed reason classes and bounded correlation facts.
 - Added Swoosh `dispatch_evidence` context without changing its public adapter callback or response compatibility.
+- Restored the stable `last_error.module` projection for outcome-backed adapter failures without persisting error text, provider bodies, or causes.
 
 ## Task Commits
 
 1. **Task 151-02-01: Classify Swoosh evidence without changing the adapter contract** — `ee95598c` (test, RED) and `5b110177` (feat, GREEN)
+2. **Support compatibility regression: retain safe persisted error module** — `9204ad7f` (test, RED) and `b512f767` (fix, GREEN)
 
 ## Files Created/Modified
 
@@ -73,6 +75,7 @@ status: complete
 - `lib/mailglass/adapters/swoosh.ex` — additive bounded provider evidence and malformed-status guard.
 - `test/mailglass/outbound/dispatch_outcome_test.exs` — classification, privacy, and text-matching contract tests.
 - `test/mailglass/adapters/swoosh_test.exs` — Swoosh evidence compatibility coverage.
+- `test/mailglass/outbound_test.exs` — persisted error identity and privacy regression coverage.
 
 ## Decisions Made
 
@@ -94,6 +97,8 @@ status: complete
 ## Issues Encountered
 
 The `state.advance-plan` helper could not parse this repository's legacy `STATE.md` plan-counter format. Other state, roadmap, metric, decision, and requirement updates completed successfully.
+
+The Phase 151 outcome persistence path initially omitted the stable `last_error.module` key because it bypassed the legacy serializer. The safe projection now allowlists known Mailglass error module identities while retaining its raw-content exclusion.
 
 ## User Setup Required
 
