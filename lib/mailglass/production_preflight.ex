@@ -49,21 +49,15 @@ defmodule Mailglass.ProductionPreflight do
   end
 
   defp repo_access do
-    case configured_repo() do
-      {:ok, repo} ->
-        case repo.query("SELECT 1", [], log: false) do
-          {:ok, _} ->
-            passed(:repo_access)
+    case Mailglass.Repo.query!("SELECT 1") do
+      %{rows: [[1]]} ->
+        passed(:repo_access)
 
-          _ ->
-            failed(
-              :repo_access,
-              "Start the configured Ecto Repo and verify its PostgreSQL connection."
-            )
-        end
-
-      :error ->
-        failed(:repo_access, "Configure a running PostgreSQL Ecto Repo under :mailglass, :repo.")
+      _ ->
+        failed(
+          :repo_access,
+          "Start the configured Ecto Repo and verify its PostgreSQL connection."
+        )
     end
   rescue
     _ ->
@@ -71,13 +65,11 @@ defmodule Mailglass.ProductionPreflight do
   end
 
   defp schema_access do
-    with {:ok, repo} <- configured_repo(),
-         {:ok, schema} <- configured_schema(),
-         {:ok, %{rows: [[true]]}} <-
-           repo.query(
+    with {:ok, schema} <- configured_schema(),
+         %{rows: [[true]]} <-
+           Mailglass.Repo.query!(
              "SELECT EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = $1)",
-             [schema],
-             log: false
+             [schema]
            ) do
       passed(:schema_access)
     else
@@ -193,18 +185,6 @@ defmodule Mailglass.ProductionPreflight do
         :operator_mount,
         "Mount MailglassAdmin.Router behind a host auth pipeline and configure its authorize/2 callback."
       )
-  end
-
-  defp configured_repo do
-    case Application.get_env(:mailglass, :repo) do
-      repo when is_atom(repo) ->
-        if Code.ensure_loaded?(repo) and function_exported?(repo, :query, 3),
-          do: {:ok, repo},
-          else: :error
-
-      _ ->
-        :error
-    end
   end
 
   defp configured_schema do
