@@ -113,7 +113,7 @@ Plans:
   4. A successful dispatch atomically records success and scrubs its private payload while retaining the non-sensitive delivery projection and ledger; terminal, discarded, abandoned, and legacy queued payloads follow a configurable bounded-retention prune/recovery policy.
   5. Missing, corrupt, expired, unsupported-version, or already-scrubbed payloads fail closed with an operator-actionable state and are never rebuilt from incomplete public metadata; new async sends keep bodies, subjects, headers, tokens, attachments, and provider options out of public metadata.
 
-**Plans**: 4/7 plans executed
+**Plans**: 7/7 plans executed
 
 Plans:
 
@@ -129,15 +129,15 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 151-05-PLAN.md — Apply finite retention and bounded tombstone pruning policy.
+- [x] 151-05-PLAN.md — Apply finite retention and bounded tombstone pruning policy.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 151-06-PLAN.md — Expose optional scheduled and universal manual prune entrypoints.
+- [x] 151-06-PLAN.md — Expose optional scheduled and universal manual prune entrypoints.
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 151-07-PLAN.md — Publish executable dispatch, privacy, retention, and legacy contracts.
+- [x] 151-07-PLAN.md — Publish executable dispatch, privacy, retention, and legacy contracts.
 
 ### Phase 152: Atomic One-Click Suppression Convergence
 
@@ -175,6 +175,6 @@ Plans:
 |-------|----------------|--------|-----------|
 | 149. First-Send Contract Foundation | 4/4 | Complete    | 2026-08-02 |
 | 150. Private Envelope and Atomic Durable Enqueue | 9/9 | Complete    | 2026-08-02 |
-| 151. Unified Dispatch, Honest Outcomes, and Payload Lifecycle | 4/7 | In Progress|  |
+| 151. Unified Dispatch, Honest Outcomes, and Payload Lifecycle | 7/7 | In Progress|  |
 | 152. Atomic One-Click Suppression Convergence | 0/TBD | Not started | - |
 | 153. Generated-Host Proof, Docs, and Release Gate | 0/TBD | Not started | - |

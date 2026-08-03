@@ -107,9 +107,9 @@ Populated during roadmap creation. Every v2.4 requirement must map to exactly on
 | DISP-01 | Phase 151 | Complete |
 | DISP-02 | Phase 151 | Complete |
 | DISP-03 | Phase 151 | Complete |
-| DISP-04 | Phase 151 | Pending |
+| DISP-04 | Phase 151 | Complete |
 | PRIV-01 | Phase 151 | Complete |
-| PRIV-02 | Phase 151 | Pending |
+| PRIV-02 | Phase 151 | Complete |
 | PRIV-03 | Phase 151 | Complete |
 | PRIV-04 | Phase 151 | Complete |
 | UNSUB-07 | Phase 152 | Pending |
