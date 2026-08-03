@@ -11,7 +11,7 @@ HOST_DIR="${WORK_DIR}/generated_host"
 ARTIFACT_DIR="${WORK_DIR}/artifacts"
 
 usage() {
-  echo "Usage: DEP_MODE=local|hex scripts/generated_host_proof.sh [--stage migrate|boot]" >&2
+  echo "Usage: DEP_MODE=local|hex scripts/generated_host_proof.sh [--stage migrate|boot|async-parity]" >&2
 }
 
 while [[ $# -gt 0 ]]; do
@@ -23,7 +23,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$DEP_MODE" in local|hex) ;; *) echo "generated-host proof blocked: DEP_MODE must be local|hex" >&2; exit 1 ;; esac
-case "$STAGE" in migrate|boot) ;; *) echo "generated-host proof blocked: --stage must be migrate or boot" >&2; exit 1 ;; esac
+case "$STAGE" in migrate|boot|async-parity) ;; *) echo "generated-host proof blocked: --stage must be migrate, boot, or async-parity" >&2; exit 1 ;; esac
 case "$WORK_DIR" in ''|/|"$ROOT_DIR") echo "generated-host proof blocked: unsafe WORK_DIR" >&2; exit 1 ;; esac
 
 cleanup() {
@@ -63,8 +63,8 @@ DEP_MODE="$DEP_MODE" ARTIFACT_DIR="$ARTIFACT_DIR" VERSION="${VERSION:-}" VERSION
   end
   artifact_dir = System.fetch_env!("ARTIFACT_DIR")
   entries = case System.get_env("DEP_MODE") do
-    "local" -> dep.(:mailglass, Path.join(artifact_dir, "mailglass"), "") <> dep.(:mailglass_admin, Path.join(artifact_dir, "mailglass_admin"), "") <> dep.(:mailglass_inbound, Path.join(artifact_dir, "mailglass_inbound"), "")
-    "hex" -> dep.(:mailglass, "", System.fetch_env!("VERSION")) <> dep.(:mailglass_admin, "", System.fetch_env!("VERSION")) <> dep.(:mailglass_inbound, "", System.fetch_env!("VERSION_INBOUND"))
+    "local" -> dep.(:mailglass, Path.join(artifact_dir, "mailglass"), "") <> dep.(:mailglass_admin, Path.join(artifact_dir, "mailglass_admin"), "") <> dep.(:mailglass_inbound, Path.join(artifact_dir, "mailglass_inbound"), "") <> "      {:oban, \"~> 2.21\"},\n"
+    "hex" -> dep.(:mailglass, "", System.fetch_env!("VERSION")) <> dep.(:mailglass_admin, "", System.fetch_env!("VERSION")) <> dep.(:mailglass_inbound, "", System.fetch_env!("VERSION_INBOUND")) <> "      {:oban, \"~> 2.21\"},\n"
   end
   content = File.read!("mix.exs")
   File.write!("mix.exs", String.replace(content, ~r/(defp deps do\n\s*\[\n)/, "\\1" <> entries, global: false))
@@ -79,8 +79,8 @@ cp "$ROOT_DIR/dev/mailglass/generated_host/journey.ex" lib/generated_host_journe
 cp "$ROOT_DIR/dev/mailglass/generated_host/host_template.ex" lib/generated_host_host_template.ex
 cp "$ROOT_DIR/dev/mailglass/generated_host/checkpoint.ex" lib/generated_host_checkpoint.ex
 schema="mailglass_proof_$(date +%s)_$RANDOM"
-MIX_ENV=dev mix run --no-start -e "Mailglass.GeneratedHost.Journey.run!(schema: \"$schema\", stage: :$STAGE)"
+MIX_ENV=dev mix run --no-start -e "proof = Mailglass.GeneratedHost.Journey.run!(schema: \"$schema\", stage: :$STAGE); File.write!(\"proof.json\", Jason.encode!(proof))"
 mkdir -p "$WORK_DIR/checkpoint"
-DEP_MODE="$DEP_MODE" SOURCE_SHA="$(git -C "$ROOT_DIR" rev-parse HEAD)" MIX_ENV=dev mix run --no-start -e 'payload = Mailglass.GeneratedHost.Checkpoint.encode(%{dependency_mode: System.fetch_env!("DEP_MODE"), source_sha: System.fetch_env!("SOURCE_SHA"), packages: [], stages: [%{"name" => "install", "status" => "passed", "command_sha256" => String.duplicate("0", 64)}, %{"name" => "migrate", "status" => "passed", "command_sha256" => String.duplicate("1", 64)}]}); File.write!(Path.expand("../checkpoint.json", File.cwd!()), Jason.encode!(payload))'
+DEP_MODE="$DEP_MODE" STAGE="$STAGE" SOURCE_SHA="$(git -C "$ROOT_DIR" rev-parse HEAD)" MIX_ENV=dev mix run --no-start -e 'proof = Jason.decode!(File.read!("proof.json")); stages = [%{"name" => "install", "status" => "passed", "command_sha256" => String.duplicate("0", 64)}, %{"name" => "migrate", "status" => "passed", "command_sha256" => String.duplicate("1", 64)}] ++ if(System.get_env("STAGE") == "async-parity", do: [Mailglass.GeneratedHost.Checkpoint.async_parity!(proof["async_parity"])], else: []); payload = Mailglass.GeneratedHost.Checkpoint.encode(%{dependency_mode: System.fetch_env!("DEP_MODE"), source_sha: System.fetch_env!("SOURCE_SHA"), packages: [], stages: stages}); File.write!(Path.expand("../checkpoint.json", File.cwd!()), Jason.encode!(payload))'
 bash "$ROOT_DIR/scripts/check_generated_host_proof.sh" --checkpoint "$WORK_DIR/checkpoint.json"
 echo "generated-host proof passed: mode=$DEP_MODE stage=$STAGE schema=$schema"
