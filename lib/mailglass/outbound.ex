@@ -454,19 +454,11 @@ defmodule Mailglass.Outbound do
                     :ok
 
                   {:error, err} ->
-                    require Logger
-
-                    Logger.warning(
-                      "[mailglass] Task.Supervisor dispatch failed: #{Exception.message(err)}"
-                    )
+                    log_task_supervisor_failure(err)
                 end
               rescue
-                err ->
-                  require Logger
-
-                  Logger.warning(
-                    "[mailglass] Task.Supervisor dispatch raised: #{Exception.message(err)}"
-                  )
+                _err ->
+                  log_task_supervisor_exception()
               end
             end)
           end,
@@ -900,6 +892,29 @@ defmodule Mailglass.Outbound do
        do: DispatchOutcome.terminal(reason)
 
   defp claimed_payload_failure_outcome(_error), do: DispatchOutcome.terminal(:pre_dispatch_failure)
+
+  defp log_task_supervisor_failure(error) do
+    projection =
+      error
+      |> then(&DispatchOutcome.classify({:error, &1}))
+      |> DispatchOutcome.safe_projection()
+
+    require Logger
+
+    Logger.warning("mailglass.task_supervisor_dispatch_failed",
+      error_module: Map.get(projection, :module, "unknown"),
+      reason_class: projection.reason_class
+    )
+  end
+
+  defp log_task_supervisor_exception do
+    require Logger
+
+    Logger.warning("mailglass.task_supervisor_dispatch_raised",
+      error_module: "unknown",
+      reason_class: :unknown
+    )
+  end
 
   defp to_error(%Ecto.ConstraintError{} = err),
     do:

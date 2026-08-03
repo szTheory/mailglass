@@ -1,6 +1,7 @@
 defmodule Mailglass.Outbound.DeliverLaterTest do
   # async: false required — we switch sandbox to shared mode and use Application.put_env
   use Mailglass.DataCase, async: false
+  import ExUnit.CaptureLog
 
   alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.{Events.Event, Outbound, Message, TestRepo}
@@ -318,6 +319,39 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   end
 
   describe "deliver_later/2 — Task.Supervisor fallback" do
+    test "Task.Supervisor logging never exposes a provider exception message" do
+      sentinel = "private-recipient@example.com token=super-secret"
+      previous_impl = Application.get_env(:mailglass, :async_adapter_impl)
+
+      Application.put_env(
+        :mailglass,
+        :async_adapter_impl,
+        Mailglass.Outbound.AsyncAdapter.TaskSupervisor
+      )
+
+      Application.put_env(:mailglass, :adapter, {
+        Mailglass.Outbound.DeliverLaterTest.RaisingAdapter,
+        [sentinel: sentinel]
+      })
+
+      on_exit(fn ->
+        if previous_impl,
+          do: Application.put_env(:mailglass, :async_adapter_impl, previous_impl),
+          else: Application.delete_env(:mailglass, :async_adapter_impl)
+      end)
+
+      log =
+        capture_log(fn ->
+          assert {:ok, %Delivery{}} =
+                   Outbound.deliver_later(build_message("log-safety-#{unique_id()}@example.com"))
+
+          await_task_supervisor_children()
+        end)
+
+      assert log =~ "mailglass.task_supervisor_dispatch_raised"
+      refute log =~ sentinel
+    end
+
     test "fallback inserts Delivery synchronously and returns {:ok, %Delivery{status: :queued}}" do
       msg = build_message("fallback-#{unique_id()}@example.com")
       result = Outbound.deliver_later(msg)
@@ -613,4 +647,12 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     |> String.split("/", trim: true)
     |> List.last()
   end
+end
+
+defmodule Mailglass.Outbound.DeliverLaterTest.RaisingAdapter do
+  @moduledoc false
+  @behaviour Mailglass.Adapter
+
+  @impl Mailglass.Adapter
+  def deliver(_message, opts), do: raise(Keyword.fetch!(opts, :sentinel))
 end
