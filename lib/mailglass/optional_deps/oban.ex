@@ -88,7 +88,7 @@ defmodule Mailglass.OptionalDeps.Oban do
   end
 
   @doc """
-  Gateway wrapper for the prefix-aware `Oban.insert/4` Multi variant.
+  Gateway wrapper for the prefix-aware four-argument Oban Multi variant.
 
   The caller supplies the same step options used by Mailglass persistence so
   the Oban job is inserted in the configured schema inside the active Multi.
