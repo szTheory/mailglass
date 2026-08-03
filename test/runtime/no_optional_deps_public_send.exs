@@ -5,6 +5,8 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
   alias Mailglass.Outbound.{Delivery, Payload, PayloadPruner}
   require Logger
 
+  @public_tables ~w(mailglass_suppressions mailglass_deliveries mailglass_events mailglass_outbound_payloads)
+
   defmodule Repo do
     use Ecto.Repo,
       otp_app: :mailglass,
@@ -240,10 +242,15 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
       """).rows
 
     counts =
-      for table <-
-            ~w(mailglass_suppressions mailglass_deliveries mailglass_events mailglass_outbound_payloads) do
-        %{rows: [[count]]} = Repo.query!("SELECT COUNT(*) FROM public.#{table}")
-        {table, count}
+      for table <- @public_tables do
+        case Repo.query!("SELECT to_regclass($1)", ["public.#{table}"]).rows do
+          [[nil]] ->
+            {table, :missing}
+
+          [[_relation]] ->
+            %{rows: [[count]]} = Repo.query!("SELECT COUNT(*) FROM public.#{table}")
+            {table, count}
+        end
       end
 
     %{catalog: catalog, counts: counts}
