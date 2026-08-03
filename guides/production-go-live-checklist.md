@@ -50,18 +50,29 @@ To rotate a webhook secret:
 
 For setup details and provider-specific config keys, see [Webhooks](./webhooks.md). For incident recovery when webhooks stop verifying after a rotation, see the `guides/webhook-troubleshooting.md` runbook in the repository.
 
-## Oban queue sizing
+## Durable async readiness
 
-`Mailglass.Outbound.Worker` runs under Oban when you call `deliver_later/2`. Queue throughput depends on the `:concurrency` setting in your Oban config. The relevant queue is named `:mailglass`:
+`Mailglass.Outbound.Worker` runs under Oban when you call `deliver_later/2`. Production must explicitly select the durable adapter and configure its only outbound queue, `:mailglass_outbound`. A concurrency of `10` is a conservative starting point for moderate send volume; adjust it for delivery lag and your ESP's rate limits.
+
+Before routing live traffic, add this configuration and run the preflight from a booted release or IEx session:
 
 ```elixir
+config :mailglass, async_adapter: :oban
+
 config :my_app, Oban,
-  queues: [mailglass: 10]
+  queues: [mailglass_outbound: 10]
+
+case Mailglass.Config.production_readiness() do
+  :ok -> :ok
+  {:error, %Mailglass.ConfigError{type: :invalid} = error} -> raise error
+end
 ```
 
-A concurrency of `10` is a conservative starting point for moderate send volume. Increase it if deliveries lag under load; decrease it if you are rate-limited by your ESP. Monitor the queue depth with your existing Oban instrumentation.
+The readiness result is deliberately bounded: it returns `:ok` only when the selected default Oban instance advertises `mailglass_outbound`; otherwise it returns `{:error, %Mailglass.ConfigError{type: :invalid}}` with a non-PII `:reason_class`. It rejects the explicit `:task_supervisor` adapter because that development/test path is non-durable.
 
-If you are not using Oban (i.e., you only call `deliver/2`), this section does not apply — `deliver/2` is synchronous and bypasses the job queue entirely.
+This preflight confirms producer configuration only. Phase 153 owns proof that an active consumer is polling the queue in a generated production host.
+
+If you only call `deliver/2`, this section does not apply — `deliver/2` is synchronous and bypasses the job queue entirely.
 
 For authoring mailables and choosing between `deliver/2` and `deliver_later/2`, see [Authoring Mailables](./authoring-mailables.md).
 
