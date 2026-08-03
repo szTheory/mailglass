@@ -104,7 +104,7 @@ Populated during roadmap creation. Every v2.4 requirement must map to exactly on
 | ENVL-07 | Phase 150 | Gaps Found |
 | ENVL-08 | Phase 150 | Gaps Found |
 | ENVL-03 | Phase 151 | Pending |
-| DISP-01 | Phase 151 | Pending |
+| DISP-01 | Phase 151 | Complete |
 | DISP-02 | Phase 151 | Pending |
 | DISP-03 | Phase 151 | Pending |
 | DISP-04 | Phase 151 | Pending |

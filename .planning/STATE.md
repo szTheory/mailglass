@@ -5,15 +5,15 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 151
 current_phase_name: Unified Dispatch, Honest Outcomes, and Payload Lifecycle
 status: planning
-stopped_at: Completed 150-08-PLAN.md
-last_updated: "2026-08-03T02:01:16.539Z"
+stopped_at: Completed 151-02-PLAN.md
+last_updated: "2026-08-03T02:43:04.112Z"
 last_activity: 2026-08-02
 last_activity_desc: Phase 150 complete, transitioned to Phase 151
 progress:
-  total_phases: 2
+  total_phases: 3
   completed_phases: 2
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 20
+  completed_plans: 14
 ---
 
 # Project State
@@ -32,7 +32,7 @@ Plan: Not started
 Status: Ready to plan
 Last activity: 2026-08-02 — Phase 150 complete, transitioned to Phase 151
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 70%
 
 ## v2.4 Milestone Intent
 
@@ -458,6 +458,8 @@ release debug campaign.
 - [Phase ?]: No-optional runtime proof uses direct Elixir with a source-derived optional-app denylist and isolated allowlisted ebins.
 - [Phase ?]: The no-optional public-send runtime proof compiles Mailglass under MIX_ENV=prod and uses a probe-local Repo, excluding maintainer/test tooling.
 - [Phase ?]: [150-08] Real queued-worker retry proof fetches the public API's persisted Oban job and proves the decoded V1 route and rendered payload stay authoritative after live-state mutation.
+- [Phase ?]: Only structured 4xx/5xx and explicit before-acceptance transport evidence establish terminal or retryable outcomes; opaque evidence is uncertain.
+- [Phase ?]: Safe dispatch projections allowlist closed reason classes and bounded correlation data only.
 
 ## Quick Tasks Completed
 
@@ -530,6 +532,7 @@ release debug campaign.
 | Phase 150 P07 | 12 min | 1 tasks | 2 files |
 | Phase 150 P09 | 20min | 1 tasks | 4 files |
 | Phase 150-private-envelope-and-atomic-durable-enqueue P08 | 4min | 1 tasks | 1 files |
+| Phase 151-unified-dispatch-honest-outcomes-and-payload-lifecycle P02 | 2min | 1 tasks | 4 files |
 
 ## Deferred Items
 
@@ -696,8 +699,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T01:35:53.554Z
-**Stopped at:** Completed 150-08-PLAN.md
+**Last session:** 2026-08-03T02:43:04.104Z
+**Stopped at:** Completed 151-02-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
