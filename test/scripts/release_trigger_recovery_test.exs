@@ -254,7 +254,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
     assert target == %{
              "status" => "active",
-             "release_packages" => ["mailglass", "mailglass_admin"],
+             "release_packages" => ["mailglass", "mailglass_admin", "mailglass_inbound"],
              "packages" => %{
                "mailglass" => "2.4.0",
                "mailglass_admin" => "2.4.0",
@@ -264,7 +264,8 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
     assert validation =~ ".planning/release-target.json"
     assert validation =~ "release_packages"
-    assert validation =~ "publish exactly mailglass and mailglass_admin"
+    assert validation =~ "scripts/resolve_release_packages.exs"
+    assert validation =~ "resolver-derived package set"
     assert validation =~ ".release-please-manifest.json"
     assert validation =~ "mailglass_admin/mix.exs"
     assert validation =~ "mailglass_inbound/mix.exs"

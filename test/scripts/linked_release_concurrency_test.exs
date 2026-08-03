@@ -80,29 +80,24 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     end)
   end
 
-  test "prepublish summary uploads a credential-free Phase 148 proof artifact" do
+  test "prepublish summary proves the complete package-shaped Phase 153 candidate before credentials" do
     source = File.read!(@publish_path)
     prepublish = extract_job!(source, "prepublish-summary")
 
-    assert prepublish =~ "test/mailglass/webhook/ingest_auto_suppress_test.exs"
-    assert prepublish =~ "test/mailglass/suppression_test.exs"
-    assert prepublish =~ "test/mailglass/docs_contract_test.exs"
-    assert prepublish =~ "cd mailglass_admin"
-    assert prepublish =~ "test/mailglass_admin/operator_live_test.exs"
-    assert prepublish =~ "tmp/release-proof/phase-148.json"
-    assert prepublish =~ "phase-148-release-proof-${{ github.run_id }}"
+    assert prepublish =~ "scripts/resolve_release_packages.exs"
+    assert prepublish =~ "DEP_MODE=local bash scripts/generated_host_proof.sh --stage all"
+    assert prepublish =~ "mix ci"
+    assert prepublish =~ "mix mailglass.publish.check --package $package"
+    assert prepublish =~ "candidate_sha"
+    assert prepublish =~ "tmp/release-proof/phase-153.json"
+    assert prepublish =~ "phase-153-release-proof-${{ github.run_id }}"
     assert prepublish =~ "retention-days: 90"
     assert prepublish =~ "if-no-files-found: error"
     assert prepublish =~ "actions/upload-artifact@"
     assert prepublish =~ "Validate automated release target"
     assert prepublish =~ ".planning/release-target.json"
-    assert prepublish =~ "steps.release-target.outputs.core"
-    assert prepublish =~ "steps.release-target.outputs.admin"
-    assert prepublish =~ "steps.release-target.outputs.inbound"
+    assert prepublish =~ "release_packages"
     assert prepublish =~ "steps.release-target.outputs.active == 'true'"
-    refute prepublish =~ "--arg core \"2.4.0\""
-    refute prepublish =~ "--arg admin \"2.4.0\""
-    refute prepublish =~ "--arg inbound \"2.1.1\""
     refute prepublish =~ "HEX_API_KEY"
   end
 
