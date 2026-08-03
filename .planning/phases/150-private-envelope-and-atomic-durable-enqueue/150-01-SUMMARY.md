@@ -100,6 +100,15 @@ status: complete
 **Total deviations:** 2 auto-fixed (Rule 1).
 **Impact on plan:** Required migration-harness correctness only; no public product surface was added.
 
+**3. [Rule 1 - Bug] Prevented scratch-schema functions from aborting public rollback restoration**
+- **Found during:** Phase-level support-contract regression gate
+- **Issue:** The public migration down test inspected `pg_proc` by name only; an identically named scratch-schema function made the assertion fail before the test re-applied the baseline, cascading missing Delivery columns/indexes.
+- **Fix:** Scoped the function assertion to the configured schema and asserted V06 payload removal during full rollback.
+- **Verification:** Clean DB recreate, migration + delivery-idempotency tests: 27 passed; `mix verify.support_contract.core`: 202 passed, 1 skipped.
+- **Committed in:** `1d515a8d`
+
+**Total deviations:** 3 auto-fixed (Rule 1).
+
 ## Issues Encountered
 
 None. The original planned verification command passed: 17 tests, 0 failures. Repeatability proof passed under seeds `967795` and `123456`: 1,721 tests, 0 failures each.
