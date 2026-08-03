@@ -87,7 +87,7 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     assert prepublish =~ "scripts/resolve_release_packages.exs"
     assert prepublish =~ "DEP_MODE=local bash scripts/generated_host_proof.sh --stage all"
     assert prepublish =~ "mix ci"
-    assert prepublish =~ "mix mailglass.publish.check --package $package"
+    assert prepublish =~ "mix mailglass.publish.check --package \"$package\""
     assert prepublish =~ "candidate_sha"
     assert prepublish =~ "tmp/release-proof/phase-153.json"
     assert prepublish =~ "phase-153-release-proof-${{ github.run_id }}"

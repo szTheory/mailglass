@@ -35,6 +35,12 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Set up OTP + Elixir for resolver
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
       # release-please reruns on a merged release PR can be stale if the
       # release was already tagged/published by an earlier run. That is the
       # current failure mode for PR #34: the PR has already been labeled
@@ -323,9 +329,11 @@ jobs:
             exit 0
           fi
 
+          resolver_json=$(elixir scripts/resolve_release_packages.exs --repo . --target "$target")
           release_packages=$(jq -erc '.release_packages | sort | join(",")' "$target")
-          if [ "$release_packages" != "mailglass,mailglass_admin" ]; then
-            echo "Release target mismatch: Phase 148 must publish exactly mailglass and mailglass_admin; got $release_packages" >&2
+          resolver_packages=$(printf '%s' "$resolver_json" | jq -erc '.release_packages | sort | join(",")')
+          if [ "$release_packages" != "$resolver_packages" ]; then
+            echo "Release target mismatch: resolver-derived package set $resolver_packages does not match $release_packages" >&2
             exit 1
           fi
 

@@ -140,6 +140,14 @@ jobs:
         with:
           version-file: .tool-versions
           version-type: strict
+      - name: Resolve exact release package set
+        id: release-resolver
+        run: |
+          set -euo pipefail
+          result=$(elixir scripts/resolve_release_packages.exs --repo . --target .planning/release-target.json)
+          echo "$result"
+          echo "release_packages=$(printf '%s' "$result" | jq -c '.release_packages')" >> "$GITHUB_OUTPUT"
+          echo "candidate_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
@@ -147,6 +155,10 @@ jobs:
           key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
       - name: Install deps (root)
         run: mix deps.get
+      - name: Prove package-shaped local generated host journey
+        run: DEP_MODE=local bash scripts/generated_host_proof.sh --stage all
+      - name: Run repository CI candidate gate
+        run: mix ci
       - name: Wait for postgres + create test DB
         if: ${{ github.event.inputs.package != 'mailglass_admin' }}
         env:
@@ -174,11 +186,12 @@ jobs:
           set -o pipefail
           mix mailglass.publish.check --package mailglass_admin 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Pre-publish check for mailglass_inbound
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.package != 'mailglass' && github.event.inputs.package != 'mailglass_admin' }}
         run: |
-          echo "## mailglass_inbound" >> "$GITHUB_STEP_SUMMARY"
-          set -o pipefail
-          mix mailglass.publish.check --package mailglass_inbound 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+          set -euo pipefail
+          for package in $(printf '%s' '${{ steps.release-resolver.outputs.release_packages }}' | jq -r '.[]'); do
+            echo "## $package" >> "$GITHUB_STEP_SUMMARY"
+            mix mailglass.publish.check --package "$package" 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+          done
       # This is a deliberately narrow, credential-free release ledger. It proves
       # the focused behavioral suite on the protected release path without
       # retaining test output, environments, package credentials, or message data.
@@ -190,14 +203,15 @@ jobs:
             cd mailglass_admin
             mix test test/mailglass_admin/operator_live_test.exs --warnings-as-errors
           )
-      - name: Write sanitized Phase 148 release proof
+      - name: Write sanitized Phase 153 release proof
         if: ${{ steps.release-target.outputs.active == 'true' }}
         run: |
           set -euo pipefail
           mkdir -p tmp/release-proof
           jq -n \
             --arg ref "${{ github.event.release.tag_name || github.event.inputs.tag }}" \
-            --arg sha "$(git rev-parse HEAD)" \
+            --arg candidate_sha "${{ steps.release-resolver.outputs.candidate_sha }}" \
+            --argjson release_packages '${{ steps.release-resolver.outputs.release_packages }}' \
             --arg core "${{ steps.release-target.outputs.core }}" \
             --arg admin "${{ steps.release-target.outputs.admin }}" \
             --arg inbound "${{ steps.release-target.outputs.inbound }}" \
@@ -207,7 +221,9 @@ jobs:
             --arg operator_live "passed" \
             '{
               ref: $ref,
-              sha: $sha,
+              candidate_sha: $candidate_sha,
+              release_packages: $release_packages,
+              observed_at: (now | todateiso8601),
               packages: {
                 mailglass: $core,
                 mailglass_admin: $admin,
@@ -219,13 +235,13 @@ jobs:
                 "proof-03-b2c-docs": $b2c_docs,
                 "phase-147-operator-live": $operator_live
               }
-            }' > tmp/release-proof/phase-148.json
-      - name: Upload Phase 148 release proof
+            }' > tmp/release-proof/phase-153.json
+      - name: Upload Phase 153 release proof
         if: ${{ steps.release-target.outputs.active == 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: phase-148-release-proof-${{ github.run_id }}
-          path: tmp/release-proof/phase-148.json
+          name: phase-153-release-proof-${{ github.run_id }}
+          path: tmp/release-proof/phase-153.json
           if-no-files-found: error
           retention-days: 90
 

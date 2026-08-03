@@ -15,7 +15,7 @@ export HEX_HOME="${WORK_DIR}/hex"
 export MIX_HOME="${WORK_DIR}/mix"
 
 usage() {
-  echo "Usage: DEP_MODE=local|hex scripts/generated_host_proof.sh [--stage migrate|boot|docs|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness] [--family queue-schema|input]" >&2
+  echo "Usage: DEP_MODE=local|hex scripts/generated_host_proof.sh [--stage all|migrate|boot|docs|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness] [--family queue-schema|input]" >&2
 }
 
 while [[ $# -gt 0 ]]; do
@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$DEP_MODE" in local|hex) ;; *) echo "generated-host proof blocked: DEP_MODE must be local|hex" >&2; exit 1 ;; esac
-case "$STAGE" in migrate|boot|docs|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness) ;; *) echo "generated-host proof blocked: invalid --stage" >&2; exit 1 ;; esac
+case "$STAGE" in all|migrate|boot|docs|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness) ;; *) echo "generated-host proof blocked: invalid --stage" >&2; exit 1 ;; esac
 case "$FAMILY" in all|queue-schema|input) ;; *) echo "generated-host proof blocked: invalid --family" >&2; exit 1 ;; esac
 case "$WORK_DIR" in ''|/|"$ROOT_DIR") echo "generated-host proof blocked: unsafe WORK_DIR" >&2; exit 1 ;; esac
 
@@ -53,6 +53,16 @@ cleanup() {
   exit "$status"
 }
 trap cleanup EXIT
+
+if [[ "$STAGE" == "all" ]]; then
+  for stage in migrate boot docs async-parity negative-controls feedback feedback-unsubscribe readiness; do
+    echo "generated-host proof: running stage=$stage"
+    WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mailglass-generated-host.XXXXXX")" \
+      DEP_MODE="$DEP_MODE" KEEP_HOST_ON_FAILURE="$KEEP_HOST_ON_FAILURE" \
+      CHECKPOINT_OUT="$CHECKPOINT_OUT" bash "$0" --stage "$stage" --family "$FAMILY"
+  done
+  exit 0
+fi
 
 mkdir -p "$WORK_DIR" "$ARTIFACT_DIR"
 rm -rf "$HOST_DIR"
