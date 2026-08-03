@@ -34,6 +34,8 @@ created: 2026-08-02
 - **After Wave 3:** Run the combined payload/worker/readiness suites and `mix compile --no-optional-deps --warnings-as-errors` from Plan 03.
 - **After Wave 4:** Run the combined production-readiness, boot-separation, and production-checklist smoke gate from Plan 04.
 - **After Wave 5 / before `$gsd-verify-work`:** Run docs generation/checks, the full Phase 150 focused-file integration command, then `mix test --warnings-as-errors` as the final broad phase gate.
+- **After gap-closure Wave 6:** Run the complete envelope sampler, dedicated V06 lifecycle regression gate, and `MIX_ENV=test mix verify.no_optional_runtime`; Plans 150-06, 150-07, and 150-09 have disjoint file ownership and may execute in parallel.
+- **After gap-closure Wave 7:** Run envelope + durable enqueue + worker together, then the full gap-closure command and `mix test --warnings-as-errors`; Plan 150-08 depends on 150-06's decoded message-plus-route contract.
 
 ---
 
@@ -50,6 +52,11 @@ created: 2026-08-02
 | 150-04-01 | 04 | 4 | ENVL-07, ENVL-08 | T-150-13, T-150-14 | `Config.production_readiness/0` rejects TaskSupervisor, passes canonical-ready Oban, and stays separate from ordinary boot | unit/smoke | `mix test test/mailglass/config_test.exs test/mailglass/application_test.exs --only phase_150_task:t150_04_01 --warnings-as-errors` | ✅ extend | ⬜ pending |
 | 150-04-02 | 04 | 4 | ENVL-07, ENVL-08 | T-150-15 | Production checklist config and callable readiness smoke use only the canonical worker queue | contract smoke | `mix test test/mailglass/docs_migration_smoke_test.exs --only phase_150_task:t150_04_02 --warnings-as-errors` | ✅ extend | ⬜ pending |
 | 150-05-01 | 05 | 5 | ENVL-01, ENVL-06, ENVL-07, ENVL-08 | T-150-16..19 | Every active outbound source/API/adopter fallback seam agrees with fail-closed Oban and explicit non-durable TaskSupervisor; historical/inbound provenance is preserved | contract smoke | `mix test test/mailglass/docs_contract_test.exs --only phase_150_task:t150_05_01 --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 150-06-01 | 06 | 6 | ENVL-02, ENVL-04 | T-150-20..23 | Full V1 field/adapter/nil/ordered-duplicate fidelity and attachment TOCTOU materialization | unit/integration | `mix test test/mailglass/outbound/envelope_test.exs --only phase_150_task:t150_06_01 --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 150-06-02 | 06 | 6 | ENVL-02 | T-150-20, T-150-21 | Recursive JSON depth/item/byte bounds and explicit IEEE non-finite rejection occur before persistence | unit/boundary | `mix test test/mailglass/outbound/envelope_test.exs --only phase_150_task:t150_06_02 --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 150-07-01 | 07 | 6 | ENVL-05 | T-150-24..26 | Exact V06 prefix-qualified catalog, no-backfill, hostile-search-path, down, and re-up lifecycle | focused integration | `mix test test/mailglass/v06_migration_test.exs --only phase_150_task:t150_07_01 --warnings-as-errors` | ❌ W0 | ⬜ pending |
+| 150-08-01 | 08 | 7 | ENVL-04 | T-150-27..29 | Real queued Oban worker ignores changed live render/assign/route state and uses the persisted V1 route | focused integration | `mix test test/mailglass/outbound/worker_test.exs --only phase_150_task:t150_08_01 --warnings-as-errors` | ✅ extend | ⬜ pending |
+| 150-09-01 | 09 | 6 | ENVL-06 | T-150-30..32 | Genuine Oban-free runtime invokes public send, returns dependency_unavailable, and produces zero effects | runtime smoke | `MIX_ENV=test mix verify.no_optional_runtime` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -63,6 +70,10 @@ created: 2026-08-02
 - [ ] Keep all Oban manual/inline tests `async: false` and use the existing real `oban_jobs` test migration.
 - [ ] Add task-scoped `phase_150_task` tags exactly as listed above so every per-task sampler runs only its new/changed behavioral slice; broad regression coverage remains at wave gates.
 - [ ] Keep the Task 150-05-01 source-contract manifest scoped to active outbound source/API/adopter regions; historical planning archives, changelog/provenance, inbound sibling behavior, and webhook-maintenance cron fallback text are explicit exclusions.
+- [ ] Expand `test/mailglass/outbound/envelope_test.exs` under task tags `t150_06_01` and `t150_06_02` for complete field/adapter/nil/collection fidelity, attachment source mutation/removal, and exact recursive resource boundaries.
+- [ ] Create `test/mailglass/v06_migration_test.exs` under `t150_07_01` for direct V05→V06→down→up hostile-search-path catalog and zero-backfill proof.
+- [ ] Extend `test/mailglass/outbound/worker_test.exs` under `t150_08_01` so the job is inserted through public `deliver_later/2`, live render/route state changes, and the actual stored job is performed.
+- [ ] Create the isolated no-optional runtime script/probe and `verify.no_optional_runtime` alias for `t150_09_01`; the executing process must assert Oban/Worker absence before public send and measure every zero-effect store.
 
 ---
 
