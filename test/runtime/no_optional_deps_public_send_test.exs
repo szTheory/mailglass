@@ -6,6 +6,9 @@ defmodule Mailglass.NoOptionalDepsPublicSendTest do
   @moduletag phase_151_task: "t151_06_02"
   @public_tables ~w(mailglass_suppressions mailglass_deliveries mailglass_events mailglass_outbound_payloads)
 
+  # The smoke builds an isolated production artifact before launching its
+  # runtime probe, which can exceed ExUnit's default under full-suite contention.
+  @tag timeout: 120_000
   test "the isolated runtime preserves the public catalog and never logs its private fixture" do
     before = public_snapshot!()
 
