@@ -258,25 +258,9 @@ defmodule Mailglass.Outbound do
   @spec dispatch_by_id(binary()) ::
           {:ok, Delivery.t()} | {:error, Mailglass.Error.t()}
   def dispatch_by_id(delivery_id) when is_binary(delivery_id) do
-    result =
-      with {:ok, delivery} <- load_delivery(delivery_id),
-           {:ok, payload} <- claim_payload(delivery),
-           {:ok, %{message: rendered, adapter_ref: adapter_ref}} <-
-             load_claimed_payload_prepared(delivery, payload),
-           payload_for_settlement = if(payload == :legacy, do: nil, else: payload),
-           prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
-           {:ok, adapter} <- resolve_persisted_adapter(adapter_ref),
-           {:ok, updated} <- dispatch_prepared(delivery, prepared, adapter, payload_for_settlement) do
-        {:ok, updated}
-      end
-
-    case result do
-      {:error, %{__exception__: true} = err} ->
-        persist_failed_by_id(delivery_id, err)
-        {:error, err}
-
-      other ->
-        other
+    with {:ok, delivery} <- load_delivery(delivery_id),
+         {:ok, payload} <- claim_payload(delivery) do
+      dispatch_claimed_payload(delivery, payload)
     end
   end
 
@@ -671,6 +655,43 @@ defmodule Mailglass.Outbound do
     dispatch_outcome(delivery, payload, outcome)
   end
 
+  defp dispatch_claimed_payload(%Delivery{} = delivery, :legacy) do
+    result =
+      with {:ok, %{message: rendered, adapter_ref: adapter_ref}} <-
+             load_claimed_payload_prepared(delivery, :legacy),
+           prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
+           {:ok, adapter} <- resolve_persisted_adapter(adapter_ref),
+           {:ok, updated} <- dispatch_prepared(delivery, prepared, adapter) do
+        {:ok, updated}
+      end
+
+    case result do
+      {:error, %{__exception__: true} = err} ->
+        persist_failed_by_id(delivery.id, err)
+        {:error, err}
+
+      other ->
+        other
+    end
+  end
+
+  defp dispatch_claimed_payload(%Delivery{} = delivery, %Payload{} = payload) do
+    with {:ok, %{message: rendered, adapter_ref: adapter_ref}} <-
+           load_claimed_payload_prepared(delivery, payload),
+         prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
+         {:ok, adapter} <- resolve_persisted_adapter(adapter_ref) do
+      case dispatch_prepared_outcome(delivery, prepared, adapter, payload) do
+        {:error, %DispatchOutcome{} = outcome} -> {:error, outcome_error(outcome)}
+        other -> other
+      end
+    else
+      {:error, %{__exception__: true} = err} ->
+        outcome = claimed_payload_failure_outcome(err)
+        _ = persist_outcome_multi(delivery, payload, outcome)
+        {:error, outcome_error(outcome)}
+    end
+  end
+
   defp dispatch_outcome(
          %Delivery{} = delivery,
          payload,
@@ -792,7 +813,7 @@ defmodule Mailglass.Outbound do
               Payload.settle_changeset(payload, :uncertain, :provider_acceptance_unknown)
 
             :terminal ->
-              Payload.settle_changeset(payload, :terminal, :pre_dispatch_failure)
+              Payload.settle_changeset(payload, :terminal, outcome.reason_class)
           end
 
         Ecto.Multi.update(
@@ -870,6 +891,15 @@ defmodule Mailglass.Outbound do
       context: %{reason_class: outcome.reason_class, outcome_class: outcome.class}
     )
   end
+
+  # A successful CAS claim owns the payload until it is settled. Fail closed
+  # before adapter I/O so a bad envelope or route cannot strand private data in
+  # :dispatching and make subsequent jobs ambiguous.
+  defp claimed_payload_failure_outcome(%Mailglass.SendError{context: %{reason_class: reason}})
+       when reason in [:payload_corrupt, :payload_unsupported_version],
+       do: DispatchOutcome.terminal(reason)
+
+  defp claimed_payload_failure_outcome(_error), do: DispatchOutcome.terminal(:pre_dispatch_failure)
 
   defp to_error(%Ecto.ConstraintError{} = err),
     do:
@@ -951,8 +981,22 @@ defmodule Mailglass.Outbound do
       {:error, :legacy_integrity_unverifiable} ->
         {:error,
          Mailglass.SendError.new(:serialization_failed,
-           context: %{reason_class: :legacy_payload_integrity_unverifiable}
+           context: %{reason_class: :payload_corrupt}
          )}
+
+      {:error, :integrity_failed} ->
+        {:error,
+         Mailglass.SendError.new(:serialization_failed, context: %{reason_class: :payload_corrupt})}
+
+      {:error, %Mailglass.SendError{context: %{reason_class: :unsupported_version}}} ->
+        {:error,
+         Mailglass.SendError.new(:serialization_failed,
+           context: %{reason_class: :payload_unsupported_version}
+         )}
+
+      {:error, %Mailglass.SendError{}} ->
+        {:error,
+         Mailglass.SendError.new(:serialization_failed, context: %{reason_class: :payload_corrupt})}
 
       {:error, %{__exception__: true} = error} ->
         {:error, error}
@@ -971,6 +1015,12 @@ defmodule Mailglass.Outbound do
 
   defp payload_lifecycle_error(:already_dispatching),
     do: Mailglass.SendError.new(:adapter_failure, context: %{reason_class: :payload_dispatching})
+
+  defp payload_lifecycle_error({:terminal, reason}),
+    do:
+      Mailglass.SendError.new(:adapter_failure,
+        context: %{reason_class: reason, outcome_class: :terminal}
+      )
 
   defp payload_lifecycle_error(reason),
     do: Mailglass.SendError.new(:adapter_failure, context: %{reason_class: reason})

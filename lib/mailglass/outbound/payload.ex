@@ -134,7 +134,7 @@ defmodule Mailglass.Outbound.Payload do
   end
 
   @doc false
-  @spec claim(String.t(), Ecto.UUID.t()) :: {:ok, %__MODULE__{}} | {:error, atom()}
+  @spec claim(String.t(), Ecto.UUID.t()) :: {:ok, %__MODULE__{}} | {:error, term()}
   def claim(tenant_id, delivery_id) do
     query =
       from(p in __MODULE__,
@@ -210,6 +210,7 @@ defmodule Mailglass.Outbound.Payload do
     case Repo.one(query) do
       nil -> :not_found
       %{lifecycle_state: :dispatching} -> :already_dispatching
+      %{lifecycle_state: :terminal, reason_class: reason} -> {:terminal, reason}
       %{lifecycle_state: :scrubbed} -> :already_scrubbed
       %{lifecycle_state: state} -> state
     end

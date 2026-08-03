@@ -75,6 +75,10 @@ defmodule Mailglass.Outbound.DispatchOutcome do
       when is_binary(message_id),
       do: accepted(acceptance)
 
+  def classify({:error, %SendError{context: %{outcome_class: class, reason_class: reason}}})
+      when class in @classes and reason in @reason_classes,
+      do: new(class, reason, error_module: SendError)
+
   def classify({:error, %SendError{type: :adapter_failure, context: context}}) do
     context
     |> classify_adapter_failure()

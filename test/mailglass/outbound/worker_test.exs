@@ -7,7 +7,7 @@ defmodule Mailglass.Outbound.WorkerTest do
   @moduletag :oban
 
   alias Mailglass.Outbound
-  alias Mailglass.Outbound.{Delivery, Envelope, Payload}
+  alias Mailglass.Outbound.{Delivery, Envelope, Payload, PayloadPruner}
   alias Mailglass.Message
   alias Mailglass.TestRepo
   alias Mailglass.Generators
@@ -159,6 +159,32 @@ defmodule Mailglass.Outbound.WorkerTest do
       )
 
       assert {:error, :integrity_failed} = Payload.fetch_for_delivery("test-tenant", delivery.id)
+
+      job = %Oban.Job{
+        args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
+      }
+
+      assert {:cancel, :payload_corrupt} = Mailglass.Outbound.Worker.perform(job)
+
+      assert %Payload{
+               lifecycle_state: :terminal,
+               reason_class: :payload_corrupt,
+               expires_at: %DateTime{},
+               envelope: envelope
+             } = TestRepo.get!(Payload, payload.id)
+
+      # A second attempt observes the retained terminal fact rather than a
+      # stranded claim, and terminal payloads remain eligible for pruning.
+      assert {:cancel, :payload_corrupt} = Mailglass.Outbound.Worker.perform(job)
+
+      TestRepo.update!(
+        Ecto.Changeset.change(TestRepo.get!(Payload, payload.id),
+          expires_at: DateTime.add(DateTime.utc_now(), -1, :second)
+        )
+      )
+
+      assert {:ok, 1} = PayloadPruner.prune(tenant_id: "test-tenant")
+      assert %Payload{lifecycle_state: :expired, envelope: nil} = TestRepo.get!(Payload, payload.id)
     end
 
     @tag phase_150_task: "t150_10_01"
@@ -220,10 +246,7 @@ defmodule Mailglass.Outbound.WorkerTest do
         args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
       }
 
-      assert {:cancel,
-              %Mailglass.SendError{
-                context: %{reason_class: :legacy_payload_integrity_unverifiable}
-              }} = Mailglass.Outbound.Worker.perform(job)
+      assert {:cancel, :payload_corrupt} = Mailglass.Outbound.Worker.perform(job)
 
       assert %Delivery{status: :failed} = TestRepo.get!(Delivery, delivery.id)
     end
