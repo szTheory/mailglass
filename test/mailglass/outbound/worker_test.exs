@@ -95,6 +95,55 @@ defmodule Mailglass.Outbound.WorkerTest do
   end
 
   describe "Worker.perform/1" do
+    @tag phase_150_task: "t150_10_01"
+    test "persists finite float metadata and provider options without losing payload integrity" do
+      delivery = Generators.delivery_fixture(tenant_id: "test-tenant")
+
+      metadata = %{
+        "exponent" => 1.0e20,
+        "trailing_zero" => 1.2300,
+        "reserved_string" => "~mailglass:json-v1:float:not-a-marker"
+      }
+
+      provider_options = %{
+        "exponent" => 6.02e23,
+        "trailing_zero" => 42.500,
+        "nested" => [0.0, -0.0]
+      }
+
+      email =
+        Swoosh.Email.new()
+        |> Swoosh.Email.from({"Payload", "from@example.com"})
+        |> Swoosh.Email.to("payload-#{System.unique_integer([:positive])}@example.com")
+        |> Swoosh.Email.subject("float persistence")
+        |> then(&%{&1 | provider_options: provider_options})
+
+      assert {:ok, envelope} =
+               Envelope.dump(
+                 Message.build(email,
+                   tenant_id: "test-tenant",
+                   stream: :transactional,
+                   metadata: metadata
+                 ),
+                 adapter_ref: Delivery.default_adapter_ref()
+               )
+
+      assert {:ok, payload} =
+               Payload.from_envelope("test-tenant", delivery.id, envelope) |> TestRepo.insert()
+
+      assert {:ok, %Envelope.Decoded{message: restored}} =
+               Payload.fetch_for_delivery("test-tenant", delivery.id)
+
+      assert restored.metadata == metadata
+      assert restored.swoosh_email.provider_options == provider_options
+
+      TestRepo.update!(
+        Ecto.Changeset.change(payload, envelope: Map.put(payload.envelope, "subject", "tampered"))
+      )
+
+      assert {:error, :integrity_failed} = Payload.fetch_for_delivery("test-tenant", delivery.id)
+    end
+
     @tag phase_150_task: "t150_08_01"
     test "retries the real queued job with immutable rendered content and its persisted route" do
       if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do

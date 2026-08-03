@@ -8,6 +8,8 @@ defmodule Mailglass.Outbound.Envelope do
   @max_json_items 10_000
   @max_json_bytes 1_048_576
   @max_envelope_bytes 10_485_760
+  @json_float_prefix "~mailglass:json-v1:float:"
+  @json_string_prefix "~mailglass:json-v1:string:"
   @allowed_streams %{
     "transactional" => :transactional,
     "operational" => :operational,
@@ -136,7 +138,9 @@ defmodule Mailglass.Outbound.Envelope do
   defp required_nullable_string(map, key),
     do: with({:ok, value} <- Map.fetch(map, key), do: nullable_string(value))
 
-  defp required_json(map, key), do: with({:ok, value} <- Map.fetch(map, key), do: json(value))
+  defp required_json(map, key),
+    do: with({:ok, value} <- Map.fetch(map, key), do: load_json(value))
+
   defp required_strings(map, key), do: with({:ok, value} <- Map.fetch(map, key), do: strings(value))
 
   defp required_stream(map),
@@ -262,10 +266,10 @@ defmodule Mailglass.Outbound.Envelope do
     do: {:ok, value, items + 1}
 
   defp normalize_json(value, _depth, items) when is_binary(value),
-    do: if(String.valid?(value), do: {:ok, value, items + 1}, else: :error)
+    do: if(String.valid?(value), do: {:ok, encode_json_string(value), items + 1}, else: :error)
 
   defp normalize_json(value, _depth, items) when is_float(value),
-    do: if(finite_float?(value), do: {:ok, value, items + 1}, else: :error)
+    do: if(finite_float?(value), do: {:ok, encode_json_float(value), items + 1}, else: :error)
 
   defp normalize_json(_value, depth, _items) when depth >= @max_json_depth, do: :error
 
@@ -304,6 +308,102 @@ defmodule Mailglass.Outbound.Envelope do
       <<_sign::1, 0x7FF::11, _::52>> -> false
       _ -> true
     end
+  end
+
+  # PostgreSQL jsonb canonicalizes numeric spellings. Store finite floats as
+  # tagged IEEE-754 bytes so the payload digest covers a value that survives a
+  # jsonb round trip exactly. User strings sharing either reserved prefix are
+  # escaped, so the on-disk representation has no marker collisions.
+  defp encode_json_float(value),
+    do: @json_float_prefix <> Base.encode16(<<value::float-64>>, case: :lower)
+
+  defp encode_json_string(value) do
+    if String.starts_with?(value, [@json_float_prefix, @json_string_prefix]) do
+      @json_string_prefix <> value
+    else
+      value
+    end
+  end
+
+  defp load_json(value) do
+    with {:ok, value, _items} <- decode_json(value, 0, 0),
+         {:ok, encoded} <- Jason.encode(value),
+         true <- byte_size(encoded) <= @max_json_bytes do
+      {:ok, value}
+    else
+      _ -> :error
+    end
+  end
+
+  defp decode_json(_value, _depth, items) when items >= @max_json_items, do: :error
+  defp decode_json(nil, _depth, items), do: {:ok, nil, items + 1}
+
+  defp decode_json(value, _depth, items) when is_boolean(value) or is_integer(value),
+    do: {:ok, value, items + 1}
+
+  defp decode_json(value, _depth, items) when is_float(value),
+    do: if(finite_float?(value), do: {:ok, value, items + 1}, else: :error)
+
+  defp decode_json(value, _depth, items) when is_binary(value) do
+    with true <- String.valid?(value),
+         {:ok, decoded} <- decode_json_string(value) do
+      {:ok, decoded, items + 1}
+    else
+      _ -> :error
+    end
+  end
+
+  defp decode_json(_value, depth, _items) when depth >= @max_json_depth, do: :error
+
+  defp decode_json(values, depth, items) when is_list(values),
+    do: decode_json_list(values, depth + 1, items + 1, [])
+
+  defp decode_json(values, depth, items) when is_map(values) and not is_struct(values),
+    do: decode_json_map(values, depth + 1, items + 1, %{})
+
+  defp decode_json(_, _, _), do: :error
+
+  defp decode_json_string(value) do
+    cond do
+      String.starts_with?(value, @json_string_prefix) ->
+        {:ok, String.replace_prefix(value, @json_string_prefix, "")}
+
+      String.starts_with?(value, @json_float_prefix) ->
+        value
+        |> String.replace_prefix(@json_float_prefix, "")
+        |> Base.decode16(case: :mixed)
+        |> decode_json_float()
+
+      true ->
+        {:ok, value}
+    end
+  end
+
+  defp decode_json_float({:ok, <<value::float-64>>}) do
+    if finite_float?(value), do: {:ok, value}, else: :error
+  end
+
+  defp decode_json_float(_), do: :error
+
+  defp decode_json_list([], _, items, acc), do: {:ok, Enum.reverse(acc), items}
+
+  defp decode_json_list([value | rest], depth, items, acc),
+    do:
+      with(
+        {:ok, value, items} <- decode_json(value, depth, items),
+        do: decode_json_list(rest, depth, items, [value | acc])
+      )
+
+  defp decode_json_map(values, depth, items, acc) do
+    Enum.reduce_while(values, {:ok, acc, items}, fn {key, value}, {:ok, acc, items} ->
+      with true <- is_binary(key) and String.valid?(key),
+           false <- Map.has_key?(acc, key),
+           {:ok, value, items} <- decode_json(value, depth, items) do
+        {:cont, {:ok, Map.put(acc, key, value), items}}
+      else
+        _ -> {:halt, :error}
+      end
+    end)
   end
 
   defp collect(items) do
