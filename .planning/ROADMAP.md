@@ -87,12 +87,12 @@ Plans:
   4. Under the configured Mailglass schema prefix, the delivery projection, queued ledger event, private payload, and real `mailglass_outbound` Oban job commit together or none commit; legacy queued payloads have a prefix-safe forward-compatible reader/migration path.
   5. Selecting `async_adapter: :oban` returns a typed readiness failure if Oban is absent, unusable, or cannot insert the canonical-queue job, with no `Task.Supervisor` fallback; explicit `:task_supervisor` is documented and checked as non-durable development/test-only behavior.
 
-**Plans**: 3/5 plans executed
+**Plans**: 4/5 plans executed
 
 - [x] 150-01-PLAN.md
 - [x] 150-02-PLAN.md
 - [x] 150-03-PLAN.md
-- [ ] 150-04-PLAN.md
+- [x] 150-04-PLAN.md
 - [ ] 150-05-PLAN.md
 
 ### Phase 151: Unified Dispatch, Honest Outcomes, and Payload Lifecycle
@@ -145,7 +145,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 149. First-Send Contract Foundation | 4/4 | Complete    | 2026-08-02 |
-| 150. Private Envelope and Atomic Durable Enqueue | 3/5 | In Progress|  |
+| 150. Private Envelope and Atomic Durable Enqueue | 4/5 | In Progress|  |
 | 151. Unified Dispatch, Honest Outcomes, and Payload Lifecycle | 0/TBD | Not started | - |
 | 152. Atomic One-Click Suppression Convergence | 0/TBD | Not started | - |
 | 153. Generated-Host Proof, Docs, and Release Gate | 0/TBD | Not started | - |
