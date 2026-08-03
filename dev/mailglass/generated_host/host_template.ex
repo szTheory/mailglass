@@ -9,6 +9,13 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
     write!(host_root, "lib/generated_host/capture_store.ex", capture_store_source())
     write!(host_root, "lib/generated_host/capture_adapter.ex", capture_adapter_source())
     write!(host_root, "lib/generated_host/sample_mailable.ex", sample_mailable_source())
+
+    write!(
+      host_root,
+      "priv/repo/migrations/20260527000001_oban_install.exs",
+      oban_migration_source()
+    )
+
     write!(host_root, "lib/generated_host/proof.ex", proof_source())
     append_import!(host_root)
     :ok
@@ -33,6 +40,9 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
     config :generated_host, Oban,
       repo: GeneratedHost.Repo,
       queues: [mailglass_outbound: 1]
+
+    config :generated_host, GeneratedHost.Repo,
+      database: "generated_host_#{schema}"
 
     config :swoosh, :api_client, false
     """
@@ -89,6 +99,17 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
     """
   end
 
+  defp oban_migration_source do
+    """
+    defmodule GeneratedHost.Repo.Migrations.ObanInstall do
+      use Ecto.Migration
+
+      def up, do: Oban.Migrations.up()
+      def down, do: Oban.Migrations.down()
+    end
+    """
+  end
+
   defp capture_store_source do
     """
     defmodule GeneratedHost.CaptureStore do
@@ -129,9 +150,9 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
         %{
           recipient: email.to,
           from: email.from,
-          reply_to: email.reply_to,
+          reply_to: canonical_mailboxes(email.reply_to),
           subject: email.subject,
-          headers: email.headers,
+          headers: canonical_headers(email.headers),
           html_body: email.html_body,
           text_body: email.text_body,
           attachments: Enum.map(email.attachments, &Map.from_struct/1),
@@ -141,6 +162,22 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
           metadata: message.metadata
         }
       end
+
+      defp canonical_mailboxes(nil), do: []
+
+      defp canonical_mailboxes(values) when is_list(values),
+        do: Enum.map(values, &canonical_mailbox/1)
+
+      defp canonical_mailboxes(value), do: [canonical_mailbox(value)]
+
+      defp canonical_mailbox({name, address}), do: [name, address]
+      defp canonical_mailbox(address) when is_binary(address), do: ["", address]
+
+      defp canonical_headers(values) when is_map(values),
+        do: values |> Enum.sort() |> Enum.map(fn {key, value} -> [key, value] end)
+
+      defp canonical_headers(values) when is_list(values),
+        do: Enum.map(values, fn {key, value} -> [key, value] end)
     end
     """
   end
@@ -148,6 +185,27 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
   defp sample_mailable_source do
     """
     defmodule GeneratedHost.SampleMailable do
+      use Mailglass.Mailable, stream: :transactional
+
+      def sync_message, do: message()
+      def async_message, do: GeneratedHost.AsyncSampleMailable.message()
+
+      def message do
+        new()
+        |> Mailglass.Message.to({"Proof Recipient", "proof-recipient@example.test"})
+        |> Mailglass.Message.from({"Generated Host", "sender@example.test"})
+        |> Mailglass.Message.update_swoosh(&Swoosh.Email.reply_to(&1, {"Reply", "reply@example.test"}))
+        |> Mailglass.Message.subject("Generated host parity")
+        |> Mailglass.Message.header("X-Generated-Host", "parity")
+        |> Mailglass.Message.html_body("<p>generated host parity</p>")
+        |> Mailglass.Message.text_body("generated host parity")
+        |> Mailglass.Message.put_tag("generated-host")
+        |> Map.put(:metadata, %{proof: "async-parity"})
+        |> Mailglass.Message.put_function(:message)
+      end
+    end
+
+    defmodule GeneratedHost.AsyncSampleMailable do
       use Mailglass.Mailable, stream: :transactional
 
       def message do

@@ -41,11 +41,13 @@ defmodule Mailglass.GeneratedHost.Journey do
     repo = Application.fetch_env!(:mailglass, :repo)
     Mailglass.Tenancy.put_current(nil)
 
-    {:ok, _sync_delivery} = GeneratedHost.SampleMailable.message() |> Mailglass.Outbound.deliver()
+    {:ok, _sync_delivery} =
+      GeneratedHost.SampleMailable.sync_message() |> Mailglass.Outbound.deliver()
+
     [sync_capture] = GeneratedHost.CaptureStore.all()
 
     {:ok, async_delivery} =
-      GeneratedHost.SampleMailable.message() |> Mailglass.Outbound.deliver_later()
+      GeneratedHost.SampleMailable.async_message() |> Mailglass.Outbound.deliver_later()
 
     inserted_job = inserted_job!(repo, async_delivery.id)
 
@@ -61,13 +63,23 @@ defmodule Mailglass.GeneratedHost.Journey do
 
     [^sync_capture, async_capture] = GeneratedHost.CaptureStore.all()
 
-    unless normalize_provider_input(sync_capture) == normalize_provider_input(async_capture) do
-      raise "generated-host sync/async provider input diverged"
+    sync_input = normalize_provider_input(sync_capture)
+    async_input = normalize_provider_input(async_capture)
+
+    unless sync_input == async_input do
+      differing_fields =
+        (Map.keys(sync_input) ++ Map.keys(async_input))
+        |> Enum.uniq()
+        |> Enum.reject(&(Map.get(sync_input, &1) == Map.get(async_input, &1)))
+        |> Enum.sort()
+
+      raise "generated-host sync/async provider input diverged in fields: #{inspect(differing_fields)}"
     end
 
-    %{
-      proof
-      | async_parity: %{
+    Map.put(
+      proof,
+      :async_parity,
+      %{
           job_inserted: true,
           job_terminal: settled.job_terminal,
           delivery_sent: settled.delivery_sent,
@@ -80,10 +92,10 @@ defmodule Mailglass.GeneratedHost.Journey do
             "delivery_settled",
             "payload_scrubbed"
           ],
-          sync_input_sha256: sha(normalize_provider_input(sync_capture)),
-          async_input_sha256: sha(normalize_provider_input(async_capture))
-        }
-    }
+          sync_input_sha256: sha(sync_input),
+          async_input_sha256: sha(async_input)
+      }
+    )
   end
 
   defp start_host!(proof) do
@@ -159,18 +171,18 @@ defmodule Mailglass.GeneratedHost.Journey do
       repo.query("SELECT state FROM public.oban_jobs WHERE id = $1", [job_id])
 
     {:ok, %{rows: [[delivery_status]]}} =
-      repo.query("SELECT status FROM #{table}.mailglass_deliveries WHERE id = $1::uuid", [
+      repo.query("SELECT status FROM #{table}.mailglass_deliveries WHERE id::text = $1", [
         delivery_id
       ])
 
     {:ok, %{rows: [[payload_state, envelope]]}} =
       repo.query(
-        "SELECT lifecycle_state, envelope FROM #{table}.mailglass_outbound_payloads WHERE delivery_id = $1::uuid",
+        "SELECT lifecycle_state, envelope FROM #{table}.mailglass_outbound_payloads WHERE delivery_id::text = $1",
         [delivery_id]
       )
 
     {:ok, %{rows: [[event_count]]}} =
-      repo.query("SELECT count(*) FROM #{table}.mailglass_events WHERE delivery_id = $1::uuid", [
+      repo.query("SELECT count(*) FROM #{table}.mailglass_events WHERE delivery_id::text = $1", [
         delivery_id
       ])
 
@@ -205,9 +217,29 @@ defmodule Mailglass.GeneratedHost.Journey do
   defp normalize_provider_input(input) do
     input
     |> Map.drop([:provider_message_id])
-    |> :erlang.term_to_binary()
+    |> canonical_term()
+    |> Map.update("metadata", %{}, &Map.drop(&1, ["delivery_id"]))
   end
 
+  defp canonical_term(value) when is_tuple(value),
+    do: value |> Tuple.to_list() |> Enum.map(&canonical_term/1)
+
+  defp canonical_term(value) when is_list(value), do: Enum.map(value, &canonical_term/1)
+
+  defp canonical_term(value) when is_map(value) do
+    Map.new(value, fn {key, item} -> {canonical_key(key), canonical_term(item)} end)
+  end
+
+  defp canonical_term(value), do: value
+
+  defp canonical_key(key) when is_atom(key), do: Atom.to_string(key)
+  defp canonical_key(key), do: key
+
   defp quote_identifier(identifier), do: ~s("#{String.replace(identifier, "\"", "\"\"")}")
-  defp sha(value), do: :crypto.hash(:sha256, value) |> Base.encode16(case: :lower)
+  defp sha(value) do
+    value
+    |> :erlang.term_to_binary()
+    |> then(&:crypto.hash(:sha256, &1))
+    |> Base.encode16(case: :lower)
+  end
 end

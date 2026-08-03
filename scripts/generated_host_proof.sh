@@ -9,6 +9,7 @@ WORK_DIR="${WORK_DIR:-$(mktemp -d "${TMPDIR:-/tmp}/mailglass-generated-host.XXXX
 STAGE="boot"
 HOST_DIR="${WORK_DIR}/generated_host"
 ARTIFACT_DIR="${WORK_DIR}/artifacts"
+CHECKPOINT_OUT="${CHECKPOINT_OUT:-$ROOT_DIR/tmp/generated-host-proof/checkpoint.json}"
 export HEX_HOME="${WORK_DIR}/hex"
 export MIX_HOME="${WORK_DIR}/mix"
 
@@ -42,7 +43,7 @@ trap cleanup EXIT
 mkdir -p "$WORK_DIR" "$ARTIFACT_DIR"
 rm -rf "$HOST_DIR"
 mix archive.install hex phx_new --force >/dev/null
-(cd "$WORK_DIR" && mix phx.new generated_host --module GeneratedHost --app generated_host --no-mailer --install)
+(cd "$WORK_DIR" && mix phx.new generated_host --module GeneratedHost --app generated_host --no-mailer --no-assets --no-install)
 
 if [[ "$DEP_MODE" == "local" ]]; then
   for package_spec in "mailglass:$ROOT_DIR" "mailglass_admin:$ROOT_DIR/mailglass_admin" "mailglass_inbound:$ROOT_DIR/mailglass_inbound"; do
@@ -81,8 +82,17 @@ cp "$ROOT_DIR/dev/mailglass/generated_host/journey.ex" lib/generated_host_journe
 cp "$ROOT_DIR/dev/mailglass/generated_host/host_template.ex" lib/generated_host_host_template.ex
 cp "$ROOT_DIR/dev/mailglass/generated_host/checkpoint.ex" lib/generated_host_checkpoint.ex
 schema="mailglass_proof_$(date +%s)_$RANDOM"
-MIX_ENV=dev mix run --no-start -e "proof = Mailglass.GeneratedHost.Journey.run!(schema: \"$schema\", stage: :$STAGE); File.write!(\"proof.json\", Jason.encode!(proof))"
+ELIXIR_STAGE="${STAGE//-/_}"
+# The generated Mailglass config must exist before the VM that runs the
+# journey loads Mix configuration. The journey remains idempotent and writes
+# the same host-owned sources again, but doing this in a preliminary VM keeps
+# the Repo used for catalog assertions on the same per-run database that the
+# child migration commands use.
+MIX_ENV=dev mix run --no-start -e "Mailglass.GeneratedHost.HostTemplate.install!(File.cwd!(), \"$schema\")"
+MIX_ENV=dev mix run --no-start -e "proof = Mailglass.GeneratedHost.Journey.run!(schema: \"$schema\", stage: :$ELIXIR_STAGE); File.write!(\"proof.json\", Jason.encode!(proof))"
 mkdir -p "$WORK_DIR/checkpoint"
 DEP_MODE="$DEP_MODE" STAGE="$STAGE" SOURCE_SHA="$(git -C "$ROOT_DIR" rev-parse HEAD)" MIX_ENV=dev mix run --no-start -e 'proof = Jason.decode!(File.read!("proof.json")); stages = [%{"name" => "install", "status" => "passed", "command_sha256" => String.duplicate("0", 64)}, %{"name" => "migrate", "status" => "passed", "command_sha256" => String.duplicate("1", 64)}] ++ if(System.get_env("STAGE") == "async-parity", do: [Mailglass.GeneratedHost.Checkpoint.async_parity!(proof["async_parity"])], else: []); payload = Mailglass.GeneratedHost.Checkpoint.encode(%{dependency_mode: System.fetch_env!("DEP_MODE"), source_sha: System.fetch_env!("SOURCE_SHA"), packages: [], stages: stages}); File.write!(Path.expand("../checkpoint.json", File.cwd!()), Jason.encode!(payload))'
 bash "$ROOT_DIR/scripts/check_generated_host_proof.sh" --checkpoint "$WORK_DIR/checkpoint.json"
+mkdir -p "$(dirname "$CHECKPOINT_OUT")"
+cp "$WORK_DIR/checkpoint.json" "$CHECKPOINT_OUT"
 echo "generated-host proof passed: mode=$DEP_MODE stage=$STAGE schema=$schema"
