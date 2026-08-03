@@ -33,4 +33,26 @@ defmodule Mailglass.GeneratedHost.SyncAsyncParityTest do
     refute checkpoint =~ "recipient"
     refute checkpoint =~ "provider_input"
   end
+
+  test "checkpoint rejects an async stage without durable scrub evidence" do
+    validator = Path.join(@project_root, "scripts/check_generated_host_proof.sh")
+
+    checkpoint =
+      Path.join(
+        System.tmp_dir!(),
+        "generated-host-async-incomplete-#{System.unique_integer([:positive])}.json"
+      )
+
+    on_exit(fn -> File.rm(checkpoint) end)
+
+    File.write!(
+      checkpoint,
+      ~s({"schema_version":"generated_host_proof.v1","dependency_mode":"local","source_sha256":"#{String.duplicate("a", 64)}","packages":[],"stages":[{"name":"install","status":"passed"},{"name":"migrate","status":"passed"},{"name":"async_parity","status":"passed"}],"overall_status":"passed","checkpoint_sha256":"#{String.duplicate("b", 64)}"})
+    )
+
+    {_output, status} =
+      System.cmd("bash", [validator, "--checkpoint", checkpoint], stderr_to_stdout: true)
+
+    assert status != 0
+  end
 end
