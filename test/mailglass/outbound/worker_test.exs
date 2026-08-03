@@ -170,7 +170,7 @@ defmodule Mailglass.Outbound.WorkerTest do
                lifecycle_state: :terminal,
                reason_class: :payload_corrupt,
                expires_at: %DateTime{},
-               envelope: envelope
+               envelope: ^envelope
              } = TestRepo.get!(Payload, payload.id)
 
       # A second attempt observes the retained terminal fact rather than a

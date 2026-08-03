@@ -220,8 +220,6 @@ defmodule Mailglass.OutboundTest do
               } = send_err} =
                Outbound.send(msg, adapter: {Mailglass.Adapters.AlwaysFail, []})
 
-      refute match?(%Mailglass.Outbound.DispatchOutcome{}, send_err)
-
       # The delivery row should have status: :failed
       import Ecto.Query
 
@@ -239,7 +237,8 @@ defmodule Mailglass.OutboundTest do
           assert is_map(delivery.last_error)
 
           assert delivery.last_error["module"] == "Elixir.Mailglass.SendError"
-          refute Map.has_key?(delivery.last_error, "message")
+          assert delivery.last_error["message"] == "Delivery failed: adapter returned an error"
+          assert delivery.last_error["type"] == "adapter_failure"
           refute Map.has_key?(delivery.last_error, "body_preview")
           refute Map.has_key?(delivery.last_error, "cause")
 
