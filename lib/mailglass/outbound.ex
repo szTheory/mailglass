@@ -655,23 +655,41 @@ defmodule Mailglass.Outbound do
   defp dispatch_prepared(%Delivery{} = delivery, %Message{} = rendered, adapter, payload \\ nil) do
     outcome = DispatchOutcome.classify(call_adapter(rendered, adapter))
 
-    case outcome do
-      {:accepted, %{message_id: _pmid} = dispatch_result} ->
-        with {:ok, %{delivery: updated}} <-
-               persist_dispatched_multi(delivery, dispatch_result, payload) do
-          Projector.broadcast_delivery_updated(updated, :dispatched, %{
-            tenant_id: updated.tenant_id,
-            delivery_id: updated.id,
-            provider: provider_tag(dispatch_result.provider_response)
-          })
-
-          {:ok, updated}
-        end
-
-      %DispatchOutcome{} = classified ->
-        _ = persist_outcome_multi(delivery, payload, classified)
-        {:error, classified}
+    case dispatch_outcome(delivery, payload, outcome) do
+      {:error, %DispatchOutcome{} = classified} -> {:error, outcome_error(classified)}
+      other -> other
     end
+  end
+
+  # Durable dispatch needs the structural outcome to choose an Oban result, but
+  # the synchronous public API must continue to expose Mailglass.Error values.
+  # Keep that classification on this internal path rather than leaking the
+  # implementation struct through send/2 or deliver/2.
+  defp dispatch_prepared_outcome(%Delivery{} = delivery, %Message{} = rendered, adapter, payload) do
+    outcome = DispatchOutcome.classify(call_adapter(rendered, adapter))
+
+    dispatch_outcome(delivery, payload, outcome)
+  end
+
+  defp dispatch_outcome(
+         %Delivery{} = delivery,
+         payload,
+         {:accepted, %{message_id: _pmid} = dispatch_result}
+       ) do
+    with {:ok, %{delivery: updated}} <- persist_dispatched_multi(delivery, dispatch_result, payload) do
+      Projector.broadcast_delivery_updated(updated, :dispatched, %{
+        tenant_id: updated.tenant_id,
+        delivery_id: updated.id,
+        provider: provider_tag(dispatch_result.provider_response)
+      })
+
+      {:ok, updated}
+    end
+  end
+
+  defp dispatch_outcome(%Delivery{} = delivery, payload, %DispatchOutcome{} = classified) do
+    _ = persist_outcome_multi(delivery, payload, classified)
+    {:error, classified}
   end
 
   defp persist_dispatched_multi(
@@ -749,7 +767,7 @@ defmodule Mailglass.Outbound do
         Projector.update_projections(delivery, event)
         |> Ecto.Changeset.change(%{
           status: :failed,
-          last_error: projection,
+          last_error: serialize_error(outcome_error(outcome)),
           terminal: outcome.class == :terminal
         }),
         Repo.multi_opts()
@@ -845,6 +863,12 @@ defmodule Mailglass.Outbound do
       %{type: t} when is_atom(t) -> Map.put(base, :type, t)
       _ -> base
     end
+  end
+
+  defp outcome_error(%DispatchOutcome{} = outcome) do
+    Mailglass.SendError.new(:adapter_failure,
+      context: %{reason_class: outcome.reason_class, outcome_class: outcome.class}
+    )
   end
 
   defp to_error(%Ecto.ConstraintError{} = err),

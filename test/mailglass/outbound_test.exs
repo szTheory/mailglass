@@ -213,10 +213,14 @@ defmodule Mailglass.OutboundTest do
       # Configure Fake to return an error by overriding at call time via opts
       msg = build_message("fail@example.com")
 
-      {:error, send_err} =
-        Outbound.send(msg, adapter: {Mailglass.Adapters.AlwaysFail, []})
+      assert {:error,
+              %Mailglass.SendError{
+                type: :adapter_failure,
+                context: %{reason_class: :provider_acceptance_unknown, outcome_class: :uncertain}
+              } = send_err} =
+               Outbound.send(msg, adapter: {Mailglass.Adapters.AlwaysFail, []})
 
-      assert send_err.__struct__ != nil
+      refute match?(%Mailglass.Outbound.DispatchOutcome{}, send_err)
 
       # The delivery row should have status: :failed
       import Ecto.Query
