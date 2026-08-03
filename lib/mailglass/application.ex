@@ -51,14 +51,20 @@ defmodule Mailglass.Application do
   # : emit exactly once per BEAM node lifetime via :persistent_term gate.
   # Subsequent Application.start/2 calls (supervisor restart, test harness) do not re-emit.
   defp maybe_warn_missing_oban do
-    configured = Application.get_env(:mailglass, :async_adapter)
-    already_warned? = :persistent_term.get({:mailglass, :oban_warning_emitted}, false)
+    configured = Application.get_env(:mailglass, :async_adapter, :oban)
+    already_warned? = :persistent_term.get({:mailglass, :async_adapter_warning_emitted}, false)
 
     cond do
       already_warned? ->
         :ok
 
       configured == :task_supervisor ->
+        Logger.warning("""
+        [mailglass] Task.Supervisor is explicitly selected for deliver_later/2; sends are non-durable.
+        This development/test adapter is rejected by Mailglass.Config.production_readiness/0.
+        """)
+
+        :persistent_term.put({:mailglass, :async_adapter_warning_emitted}, true)
         :ok
 
       Code.ensure_loaded?(Oban) ->
@@ -66,12 +72,12 @@ defmodule Mailglass.Application do
 
       true ->
         Logger.warning("""
-        [mailglass] Oban not loaded; deliver_later/2 will use Task.Supervisor (non-durable).
-        Set `config :mailglass, async_adapter: :task_supervisor` to silence this warning,
-        or add `{:oban, "~> 2.21"}` to your deps for durable async delivery.
+        [mailglass] Oban is selected but unavailable; durable deliver_later/2 sends fail closed.
+        Add `{:oban, "~> 2.21"}` and configure the mailglass_outbound queue before production go-live,
+        or explicitly select `:task_supervisor` only for non-durable development/test delivery.
         """)
 
-        :persistent_term.put({:mailglass, :oban_warning_emitted}, true)
+        :persistent_term.put({:mailglass, :async_adapter_warning_emitted}, true)
         :ok
     end
   end

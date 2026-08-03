@@ -570,6 +570,35 @@ defmodule Mailglass.Config do
     :ok
   end
 
+  @doc """
+  Verifies that the explicitly selected async adapter is suitable for a
+  durable production deployment.
+
+  This is an operator-invoked preflight, deliberately separate from
+  `validate_at_boot!/0`: development and test applications may explicitly use
+  the non-durable `:task_supervisor` adapter.
+  """
+  @doc since: "2.4.0"
+  @spec production_readiness() :: :ok | {:error, Mailglass.ConfigError.t()}
+  def production_readiness do
+    case Application.get_env(:mailglass, :async_adapter, :oban) do
+      :task_supervisor ->
+        {:error, production_readiness_error(:non_durable_async_adapter)}
+
+      :oban ->
+        case Mailglass.OptionalDeps.Oban.ready?(:mailglass_outbound) do
+          :ok -> :ok
+          {:error, reason_class} -> {:error, production_readiness_error(reason_class)}
+        end
+    end
+  end
+
+  defp production_readiness_error(reason_class) do
+    Mailglass.ConfigError.new(:invalid,
+      context: %{key: :async_adapter, reason_class: reason_class}
+    )
+  end
+
   defp normalize_optional_keyword_subtrees(opts) do
     Enum.reduce(
       [:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance, :ses, :resend],
