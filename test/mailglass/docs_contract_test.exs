@@ -654,6 +654,88 @@ defmodule Mailglass.DocsContractTest do
     end
   end
 
+  describe "Phase 153 executable adopter documentation contract" do
+    test "primary 2.x docs use public, generated-host-shaped adoption contracts" do
+      readme = File.read!("README.md")
+      getting_started = File.read!("guides/getting-started.md")
+      authoring = File.read!("guides/authoring-mailables.md")
+      rate_limiting = File.read!("guides/rate-limiting.md")
+
+      for doc <- [readme, getting_started, authoring, rate_limiting] do
+        assert doc =~ "mailglass_outbound"
+        assert doc =~ "exactly one recipient"
+        assert doc =~ ~s("default")
+        refute doc =~ "three-table"
+        refute doc =~ "v1.x"
+      end
+
+      assert readme =~ "mix mailglass.install"
+      assert readme =~ "mix ecto.migrate"
+      assert readme =~ "Mailglass.deliver_later()"
+      assert readme =~ "<!-- docs: executable -->"
+      assert getting_started =~ "Mailglass.deliver()"
+      assert getting_started =~ "Mailglass.deliver_later()"
+      assert authoring =~ "one envelope recipient"
+      assert rate_limiting =~ "one envelope recipient"
+    end
+
+    test "marked Elixir adoption blocks parse and reject private repository seams" do
+      docs = [
+        "README.md",
+        "guides/getting-started.md",
+        "guides/authoring-mailables.md",
+        "guides/rate-limiting.md"
+      ]
+
+      forbidden = ["MailerCase", "TestRepo", "reference/host_app", "Mailglass.GeneratedHost"]
+
+      for path <- docs do
+        body = File.read!(path)
+        assert body =~ "<!-- docs: executable -->", "#{path} has no executable adopter block"
+        refute Enum.any?(forbidden, &String.contains?(body, &1)),
+               "#{path} leaks a repository-private adoption seam"
+
+        for [_, code] <- Regex.scan(~r/<!-- docs: (?:executable|syntax-only) -->\s*```elixir\n(.*?)```/s, body) do
+          assert {:ok, _quoted} = Code.string_to_quoted(code), "#{path} has an invalid marked Elixir block"
+        end
+      end
+    end
+  end
+
+  describe "Phase 153 production and package-boundary documentation contract" do
+    test "production docs require the current secure release gate" do
+      checklist = File.read!("guides/production-go-live-checklist.md")
+      tenancy = File.read!("guides/multi-tenancy.md")
+      compatibility = File.read!("guides/compatibility-and-deprecations.md")
+      admin = File.read!("mailglass_admin/README.md")
+
+      for required <- [
+            "mix mailglass.preflight",
+            "mailglass_outbound",
+            "Task.Supervisor is not durable",
+            "signed feedback",
+            "one-click",
+            "suppression",
+            "outbound_payload_retention",
+            "mailglass_maintenance"
+          ] do
+        assert checklist =~ required, "production checklist is missing #{inspect(required)}"
+      end
+
+      assert tenancy =~ ~s("default")
+      assert tenancy =~ "unstamped"
+      assert compatibility =~ "2.x"
+      assert compatibility =~ "legacy_payload_missing"
+      refute compatibility =~ "v1.x"
+
+      assert admin =~ "mailglass_admin does not require mailglass_inbound"
+      assert admin =~ "mailglass_admin consumes public mailglass APIs"
+      assert admin =~ "host-owned authentication"
+      assert admin =~ "mailglass_operator_routes"
+      refute admin =~ "only: :dev"
+    end
+  end
+
   describe "Phase 151 honest dispatch and payload lifecycle contract" do
     @tag phase_151_task: "t151_07_01"
     test "public guidance describes the at-least-once boundary and bounded payload operations" do
