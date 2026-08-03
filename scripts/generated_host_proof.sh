@@ -9,6 +9,8 @@ WORK_DIR="${WORK_DIR:-$(mktemp -d "${TMPDIR:-/tmp}/mailglass-generated-host.XXXX
 STAGE="boot"
 HOST_DIR="${WORK_DIR}/generated_host"
 ARTIFACT_DIR="${WORK_DIR}/artifacts"
+export HEX_HOME="${WORK_DIR}/hex"
+export MIX_HOME="${WORK_DIR}/mix"
 
 usage() {
   echo "Usage: DEP_MODE=local|hex scripts/generated_host_proof.sh [--stage migrate|boot|async-parity]" >&2

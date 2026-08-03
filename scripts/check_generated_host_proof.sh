@@ -15,6 +15,14 @@ stages=p.get("stages",[]); names=[s.get("name") for s in stages]
 if not stages or len(names)!=len(set(names)): bad.append("missing or duplicate stages")
 if any(s.get("status") not in ("passed","failed") for s in stages): bad.append("invalid stage status")
 if p.get("overall_status")=="passed" and any(s.get("status")!="passed" for s in stages): bad.append("successful proof contains failed stage")
+for stage in stages:
+    if stage.get("name") == "async_parity":
+        required={"name","status","job_inserted","job_terminal","delivery_sent","payload_scrubbed","event_count","capture_count","transition_order_sha256","parity_sha256"}
+        if set(stage) != required: bad.append("async parity stage shape")
+        if not all(stage.get(key) is True for key in ("job_inserted","job_terminal","delivery_sent","payload_scrubbed")): bad.append("async parity durable settlement")
+        if not isinstance(stage.get("event_count"), int) or stage.get("event_count", 0) < 2: bad.append("async parity event count")
+        if not isinstance(stage.get("capture_count"), int) or stage.get("capture_count", 0) < 2: bad.append("async parity capture count")
+        if not all(re.fullmatch(r"[0-9a-f]{64}", str(stage.get(key, ""))) for key in ("transition_order_sha256","parity_sha256")): bad.append("async parity hashes")
 raw=json.dumps(p).lower()
 if any(word in raw for word in ("recipient","password","secret","token","database_url","postgres://","body","webhook")): bad.append("forbidden privacy material")
 if p.get("dependency_mode")=="hex" and any("path" in str(x).lower() or "git" in str(x).lower() for x in p.get("packages",[])): bad.append("hex dependency identity")
