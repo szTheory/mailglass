@@ -33,7 +33,7 @@ coverage:
         ref: "mix test test/mailglass/outbound/wire_equivalence_test.exs --only phase_151_task:t151_01_01 --warnings-as-errors"
         status: pass
     human_judgment: false
-duration: 6min
+duration: 46min
 completed: 2026-08-03
 status: complete
 ---
@@ -44,7 +44,7 @@ status: complete
 
 ## Performance
 
-- **Duration:** 6 min
+- **Duration:** 46 min
 - **Tasks:** 1/1
 - **Files modified:** 2
 
@@ -56,7 +56,7 @@ status: complete
 
 ## Task Commits
 
-1. **Task 1: Prove one sync/Oban provider-input path** — `7202e5b7` (RED test), `50e9c92d` (GREEN implementation)
+1. **Task 1: Prove one sync/Oban provider-input path** — `7202e5b7` (RED test), `50e9c92d` (GREEN implementation), `624da02f` (support-contract follow-up)
 
 ## Files Created/Modified
 
@@ -82,6 +82,12 @@ status: complete
 
 **Total deviations:** 1 auto-fixed (Rule 1)
 
+### Follow-up Support-Contract Fix
+
+- Preserved direct sync adapter input for map-backed headers and nonpersistable explicit adapter overrides, while retaining envelope normalization for ordered durable-header input.
+- Added focused regressions for the explicit adapter precedence and bulk `List-Unsubscribe` header access contracts.
+- Verified with focused wire-equivalence/worker tests and the full outbound directory suite.
+
 ## Issues Encountered
 
 - Equal sync and async fixtures intentionally collide on the durable idempotency key. The test releases only the first fixture key after capturing its adapter input so it can execute an equivalent real queued job.
@@ -98,4 +104,4 @@ None - no external service configuration required.
 
 ## Self-Check: PASSED
 
-- Found `lib/mailglass/outbound.ex`, `test/mailglass/outbound/wire_equivalence_test.exs`, and task commits `7202e5b7` and `50e9c92d`.
+- Found `lib/mailglass/outbound.ex`, `test/mailglass/outbound/wire_equivalence_test.exs`, and task commits `7202e5b7`, `50e9c92d`, and `624da02f`.
