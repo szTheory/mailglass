@@ -41,6 +41,49 @@ defmodule Mailglass.Outbound.Payload do
     :legacy_queued
   ]
 
+  @type lifecycle_state ::
+          :recoverable
+          | :dispatching
+          | :scrubbed
+          | :expired
+          | :terminal
+          | :discarded
+          | :abandoned
+          | :uncertain
+          | :legacy
+
+  @type reason_class ::
+          :dispatch_claimed
+          | :accepted
+          | :retention_expired
+          | :provider_client_rejected
+          | :pre_dispatch_failure
+          | :payload_missing
+          | :payload_corrupt
+          | :payload_unsupported_version
+          | :payload_expired
+          | :payload_scrubbed
+          | :job_discarded
+          | :job_abandoned
+          | :provider_acceptance_unknown
+          | :legacy_queued
+
+  @type t :: %__MODULE__{
+          id: Ecto.UUID.t() | nil,
+          tenant_id: String.t() | nil,
+          delivery_id: Ecto.UUID.t() | nil,
+          envelope_version: integer() | nil,
+          envelope_digest: String.t() | nil,
+          envelope: map() | nil,
+          scrubbed_at: DateTime.t() | nil,
+          expires_at: DateTime.t() | nil,
+          lifecycle_state: lifecycle_state() | nil,
+          reason_class: reason_class() | nil,
+          claimed_at: DateTime.t() | nil,
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
+        }
+
   schema "mailglass_outbound_payloads" do
     field(:tenant_id, :string)
     field(:delivery_id, Ecto.UUID)
