@@ -2,7 +2,8 @@
   "status": "active",
   "release_packages": [
     "mailglass",
-    "mailglass_admin"
+    "mailglass_admin",
+    "mailglass_inbound"
   ],
   "packages": {
     "mailglass": "2.4.0",
