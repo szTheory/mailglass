@@ -3,6 +3,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
 
   alias Mailglass.Message
   alias Mailglass.Outbound.{Delivery, Payload, PayloadPruner}
+  require Logger
 
   defmodule Repo do
     use Ecto.Repo,
@@ -18,45 +19,52 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
     audit_absent_modules!()
     audit_optional_source_boundaries!()
 
-    configure!()
+    scratch_schema = scratch_schema!()
+    configure!(scratch_schema)
     start_runtime!()
-    migrate!()
+    public_before = public_snapshot!()
+    migration_version = migrate!()
 
-    :ok = Mailglass.Adapters.Fake.checkout()
-    before = observations!()
+    try do
+      :ok = Mailglass.Adapters.Fake.checkout()
+      before = observations!()
 
-    message =
-      Swoosh.Email.new()
-      |> Swoosh.Email.from({"Runtime Probe", "from@example.com"})
-      |> Swoosh.Email.to("no-optional-runtime@example.com")
-      |> Swoosh.Email.subject("No optional dependency proof")
-      |> Swoosh.Email.html_body("<p>body</p>")
-      |> Swoosh.Email.text_body("body")
-      |> Message.build(stream: :transactional)
+      message =
+        Swoosh.Email.new()
+        |> Swoosh.Email.from({"Runtime Probe", "from@example.com"})
+        |> Swoosh.Email.to("no-optional-runtime@example.com")
+        |> Swoosh.Email.subject("No optional dependency proof")
+        |> Swoosh.Email.html_body("<p>body</p>")
+        |> Swoosh.Email.text_body("body")
+        |> Message.build(stream: :transactional)
 
-    result = Mailglass.Outbound.deliver_later(message, async_adapter: :oban)
+      result = Mailglass.Outbound.deliver_later(message, async_adapter: :oban)
 
-    unless match?(
-             {:error,
-              %Mailglass.SendError{
-                type: :adapter_failure,
-                context: %{reason_class: :dependency_unavailable}
-              }},
-             result
-           ) do
-      raise "expected typed dependency_unavailable result, got: #{inspect(result)}"
+      unless match?(
+               {:error,
+                %Mailglass.SendError{
+                  type: :adapter_failure,
+                  context: %{reason_class: :dependency_unavailable}
+                }},
+               result
+             ) do
+        raise "expected typed dependency_unavailable result, got: #{inspect(result)}"
+      end
+
+      after_observations = observations!()
+
+      unless before == after_observations do
+        raise "dependency-free send caused durable, queue, provider, or task effects: " <>
+                "before=#{inspect(before)} after=#{inspect(after_observations)}"
+      end
+
+      prove_payload_pruning_without_oban!()
+      assert_public_snapshot!(public_before)
+
+      IO.puts("no-optional-deps public send runtime proof passed")
+    after
+      cleanup_scratch!(scratch_schema, migration_version)
     end
-
-    after_observations = observations!()
-
-    unless before == after_observations do
-      raise "dependency-free send caused durable, queue, provider, or task effects: " <>
-              "before=#{inspect(before)} after=#{inspect(after_observations)}"
-    end
-
-    prove_payload_pruning_without_oban!()
-
-    IO.puts("no-optional-deps public send runtime proof passed")
   end
 
   defp manifests! do
@@ -166,11 +174,13 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
     end)
   end
 
-  defp configure! do
+  defp configure!(scratch_schema) do
     config_path = Path.join(required_env!("MAILGLASS_NO_OPTIONAL_REPO_ROOT"), "config/config.exs")
     config = Config.Reader.read!(config_path, env: :test)
     Application.put_all_env(config)
     Application.put_env(:swoosh, :api_client, false)
+    Application.put_env(:mailglass, :schema, scratch_schema)
+    Logger.configure(level: :warning)
 
     repo_config =
       Application.fetch_env!(:mailglass, Mailglass.TestRepo)
@@ -193,11 +203,49 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
   end
 
   defp migrate! do
-    version = 20_260_803_150_009
+    version = System.system_time(:microsecond)
 
     case Ecto.Migrator.up(Repo, version, __MODULE__.Migration, log: false) do
-      :ok -> :ok
-      :already_up -> :ok
+      :ok -> version
+      :already_up -> raise "isolated migration version collision: #{version}"
+    end
+  end
+
+  defp scratch_schema! do
+    schema = "mailglass_no_optional_#{System.unique_integer([:positive])}"
+    validate_identifier!(schema)
+    schema
+  end
+
+  defp cleanup_scratch!(schema, version) do
+    validate_identifier!(schema)
+    Repo.query!("DROP SCHEMA IF EXISTS #{inspect(schema)} CASCADE")
+    Repo.query!("DELETE FROM public.schema_migrations WHERE version = $1", [version])
+  end
+
+  defp public_snapshot! do
+    catalog =
+      Repo.query!("""
+      SELECT c.relname, c.relkind, pg_catalog.obj_description(c.oid, 'pg_class')
+      FROM pg_catalog.pg_class AS c
+      JOIN pg_catalog.pg_namespace AS n ON n.oid = c.relnamespace
+      WHERE n.nspname = 'public' AND c.relname LIKE 'mailglass_%'
+      ORDER BY c.relname, c.relkind
+      """).rows
+
+    counts =
+      for table <-
+            ~w(mailglass_suppressions mailglass_deliveries mailglass_events mailglass_outbound_payloads) do
+        %{rows: [[count]]} = Repo.query!("SELECT COUNT(*) FROM public.#{table}")
+        {table, count}
+      end
+
+    %{catalog: catalog, counts: counts}
+  end
+
+  defp assert_public_snapshot!(snapshot) do
+    if public_snapshot!() != snapshot do
+      raise "isolated no-optional runtime mutated the configured public catalog or rows"
     end
   end
 
@@ -217,8 +265,8 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
         Mix.Tasks.Mailglass.Outbound.Payloads.Prune.run(["--tenant", tenant_id])
       end)
 
-    expired = Repo.get!(Payload, payload.id)
-    mix_expired = Repo.get!(Payload, mix_payload.id)
+    expired = Mailglass.Repo.get(Payload, payload.id)
+    mix_expired = Mailglass.Repo.get(Payload, mix_payload.id)
 
     unless expired.lifecycle_state == :expired and is_nil(expired.envelope) and
              mix_expired.lifecycle_state == :expired and is_nil(mix_expired.envelope) do
@@ -247,7 +295,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
         last_event_type: :queued,
         last_event_at: now
       })
-      |> Repo.insert()
+      |> Mailglass.Repo.insert()
 
     {:ok, payload} =
       Payload.changeset(%Payload{}, %{
@@ -260,7 +308,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
         reason_class: :pre_dispatch_failure,
         expires_at: DateTime.add(now, -1, :second)
       })
-      |> Repo.insert()
+      |> Mailglass.Repo.insert()
 
     payload
   end
