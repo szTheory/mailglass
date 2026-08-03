@@ -23,9 +23,11 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
     configure!(scratch_schema)
     start_runtime!()
     public_before = public_snapshot!()
-    migration_version = migrate!()
+    migration_version = System.system_time(:microsecond)
 
     try do
+      migrate!(migration_version)
+
       :ok = Mailglass.Adapters.Fake.checkout()
       before = observations!()
 
@@ -202,11 +204,9 @@ defmodule Mailglass.NoOptionalDepsPublicSendProbe do
     {:ok, _} = Repo.start_link()
   end
 
-  defp migrate! do
-    version = System.system_time(:microsecond)
-
+  defp migrate!(version) do
     case Ecto.Migrator.up(Repo, version, __MODULE__.Migration, log: false) do
-      :ok -> version
+      :ok -> :ok
       :already_up -> raise "isolated migration version collision: #{version}"
     end
   end
