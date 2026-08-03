@@ -76,7 +76,8 @@ defmodule Mailglass.Adapters.Swoosh do
              provider_status: status,
              provider_module: mod,
              body_preview: body_preview(body),
-             reason_class: classify_status(status)
+             reason_class: classify_status(status),
+             dispatch_evidence: :provider_response
            },
            cause: build_delivery_error({:api_error, status, body})
          )}
@@ -86,7 +87,8 @@ defmodule Mailglass.Adapters.Swoosh do
          Mailglass.SendError.new(:adapter_failure,
            context: %{
              provider_module: mod,
-             reason_class: classify_reason(reason)
+             reason_class: classify_reason(reason),
+             dispatch_evidence: :unknown
            },
            cause: reason_as_exception(reason)
          )}
@@ -124,8 +126,8 @@ defmodule Mailglass.Adapters.Swoosh do
   defp module_atom({mod, _opts}), do: mod
   defp module_atom(mod) when is_atom(mod), do: mod
 
-  defp classify_status(status) when status >= 500, do: :server_error
-  defp classify_status(status) when status >= 400, do: :client_error
+  defp classify_status(status) when is_integer(status) and status >= 500, do: :server_error
+  defp classify_status(status) when is_integer(status) and status >= 400, do: :client_error
   defp classify_status(_), do: :unknown
 
   defp classify_reason(:timeout), do: :transport

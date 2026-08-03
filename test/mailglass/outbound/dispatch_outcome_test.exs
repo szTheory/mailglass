@@ -58,7 +58,7 @@ defmodule Mailglass.Outbound.DispatchOutcomeTest do
       for error <- [
             SendError.new(:preflight_rejected, context: %{reason_class: :suppressed}),
             ConfigError.new(:missing, context: %{key: :adapter}),
-            SuppressedError.new(:email, context: %{})
+            SuppressedError.new(:address, context: %{})
           ] do
         assert %DispatchOutcome{class: :terminal, reason_class: :pre_dispatch_failure} =
                  DispatchOutcome.classify({:error, error})
