@@ -234,8 +234,10 @@ defmodule Mailglass.OutboundTest do
           assert delivery.status == :failed
           assert is_map(delivery.last_error)
 
-          assert Map.has_key?(delivery.last_error, "module") or
-                   Map.has_key?(delivery.last_error, :module)
+          assert delivery.last_error["module"] == "Elixir.Mailglass.SendError"
+          refute Map.has_key?(delivery.last_error, "message")
+          refute Map.has_key?(delivery.last_error, "body_preview")
+          refute Map.has_key?(delivery.last_error, "cause")
 
         [] ->
           # delivery row may not exist if adapter failed before Multi#1 — that's fine
