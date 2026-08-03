@@ -5,15 +5,15 @@ milestone_name: Outbound First-Adopter Correctness
 current_phase: 150
 current_phase_name: Private Envelope and Atomic Durable Enqueue
 status: verifying
-stopped_at: Completed 150-07-PLAN.md
-last_updated: "2026-08-03T01:15:14.481Z"
+stopped_at: Completed 150-09-PLAN.md
+last_updated: "2026-08-03T01:21:04.273Z"
 last_activity: 2026-08-02
 last_activity_desc: Completed 150-02 durable single and batch enqueue
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 13
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -32,7 +32,7 @@ Plan: 5 of 5
 Status: Phase complete — ready for verification
 Last activity: 2026-08-02 — Completed 150-02 durable single and batch enqueue
 
-Progress: [█████████░] 85%
+Progress: [█████████░] 92%
 
 ## v2.4 Milestone Intent
 
@@ -455,6 +455,7 @@ release debug campaign.
 - [Phase ?]: Payload-backed dispatch uses the envelope adapter_ref; a non-nil Delivery projection must agree.
 - [Phase ?]: Headers and attachment headers use ordered string-pair wire arrays to preserve duplicates.
 - [Phase ?]: V06 utc_datetime_usec catalog type is timestamp without time zone; no migration rewrite or backfill is needed.
+- [Phase ?]: No-optional runtime proof uses direct Elixir with a source-derived optional-app denylist and isolated allowlisted ebins.
 
 ## Quick Tasks Completed
 
@@ -525,6 +526,7 @@ release debug campaign.
 | Phase 150 P05 | 14min | 1 tasks | 9 files |
 | Phase 150 P06 | 12min | 2 tasks | 4 files |
 | Phase 150 P07 | 12 min | 1 tasks | 2 files |
+| Phase 150 P09 | 20min | 1 tasks | 4 files |
 
 ## Deferred Items
 
@@ -691,8 +693,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T01:15:14.473Z
-**Stopped at:** Completed 150-07-PLAN.md
+**Last session:** 2026-08-03T01:21:04.265Z
+**Stopped at:** Completed 150-09-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
