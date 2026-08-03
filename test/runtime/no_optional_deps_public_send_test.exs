@@ -4,6 +4,7 @@ defmodule Mailglass.NoOptionalDepsPublicSendTest do
   alias Mailglass.TestRepo
 
   @moduletag phase_151_task: "t151_06_02"
+  @public_tables ~w(mailglass_suppressions mailglass_deliveries mailglass_events mailglass_outbound_payloads)
 
   test "the isolated runtime preserves the public catalog and never logs its private fixture" do
     before = public_snapshot!()
@@ -29,10 +30,15 @@ defmodule Mailglass.NoOptionalDepsPublicSendTest do
       """).rows
 
     counts =
-      for table <-
-            ~w(mailglass_suppressions mailglass_deliveries mailglass_events mailglass_outbound_payloads) do
-        %{rows: [[count]]} = TestRepo.query!("SELECT COUNT(*) FROM public.#{table}")
-        {table, count}
+      for table <- @public_tables do
+        case TestRepo.query!("SELECT to_regclass($1)", ["public.#{table}"]).rows do
+          [[nil]] ->
+            {table, :missing}
+
+          [[_relation]] ->
+            %{rows: [[count]]} = TestRepo.query!("SELECT COUNT(*) FROM public.#{table}")
+            {table, count}
+        end
       end
 
     %{catalog: catalog, counts: counts}

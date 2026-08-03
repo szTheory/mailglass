@@ -80,6 +80,7 @@ defmodule Mailglass.V06MigrationTest do
     prefix: prefix,
     decoy_prefix: decoy_prefix
   } do
+    baseline_prefix = Mailglass.Config.schema()
     delivery_id = Ecto.UUID.generate()
 
     legacy_metadata = %{
@@ -97,9 +98,9 @@ defmodule Mailglass.V06MigrationTest do
     legacy_metadata_json = delivery_metadata_json!(prefix, delivery_id)
     create_decoy_objects!(decoy_prefix)
 
-    # `public` is the running test baseline. Its identically named V06 object
-    # proves that direct V06 execution must not follow ambient resolution.
-    assert table_exists?("public", "mailglass_outbound_payloads")
+    # The configured schema is the running test baseline. Its identically named
+    # V06 object proves that direct V06 execution must not follow ambient resolution.
+    assert table_exists?(baseline_prefix, "mailglass_outbound_payloads")
     assert table_exists?(decoy_prefix, "mailglass_outbound_payloads")
 
     with_hostile_search_path!(decoy_prefix, fn -> run_v06_step!(V06UpMigration) end)
@@ -125,7 +126,7 @@ defmodule Mailglass.V06MigrationTest do
     assert table_exists?(prefix, "mailglass_events")
     assert table_exists?(prefix, "mailglass_suppressions")
     assert index_exists?(prefix, "mailglass_deliveries_idempotency_key_unique_idx")
-    assert table_exists?("public", "mailglass_outbound_payloads")
+    assert table_exists?(baseline_prefix, "mailglass_outbound_payloads")
     assert table_exists?(decoy_prefix, "mailglass_outbound_payloads")
     assert index_exists?(decoy_prefix, "mailglass_outbound_payloads_delivery_id_idx")
 
