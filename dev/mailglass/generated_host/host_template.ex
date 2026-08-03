@@ -115,18 +115,18 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
     defmodule GeneratedHost.CaptureStore do
       use Agent
 
-      def start_link(_opts), do: Agent.start_link(fn -> [] end, name: __MODULE__)
+      def start_link(_opts), do: Agent.start_link(fn -> %{records: [], renders: 0} end, name: __MODULE__)
 
       def record(input) when is_map(input) do
-        Agent.get_and_update(__MODULE__, fn records ->
+        Agent.get_and_update(__MODULE__, fn %{records: records} = state ->
           sequence = length(records) + 1
           record = Map.put(input, :provider_message_id, "generated-host-\#{sequence}")
-          {record, records ++ [record]}
+          {record, %{state | records: records ++ [record]}}
         end)
       end
 
-      def all, do: Agent.get(__MODULE__, & &1)
-      def render_count, do: 0
+      def all, do: Agent.get(__MODULE__, & &1.records)
+      def render_count, do: Agent.get(__MODULE__, & &1.renders)
     end
     """
   end
