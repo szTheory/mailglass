@@ -1306,8 +1306,8 @@ Since: 0.1.0.
 | `send/2` | `{:ok, %Delivery{status: :sent}}` or `{:error, %Error{}}` | Canonical internal verb |
 | `deliver/2` | same as `send/2` | `defdelegate` alias (D-13) |
 | `deliver!/2` | `%Delivery{}` or raises | Bang variant; raises the error struct directly |
-| `deliver_later/2` | `{:ok, %Delivery{status: :queued}}` or `{:error, %Error{}}` | Always returns Delivery, never `%Oban.Job{}` (D-14) |
-| `deliver_many/2` | `{:ok, [%Delivery{}]}` or `{:error, %Error{}}` | v0.1 async-only |
+| `deliver_later/2` | `{:ok, %Delivery{status: :queued}}` or `{:error, %Error{}}` | Selected `:oban` is durable and fail-closed; explicit `:task_supervisor` is non-durable |
+| `deliver_many/2` | `{:ok, [%Delivery{}]}` or `{:error, %Error{}}` | v0.1 async-only; each `:oban` item is durable or fails closed |
 | `deliver_many!/2` | `[%Delivery{}]` or raises `%BatchFailed{}` | Bang batch variant |
 | `dispatch_by_id/1` | `{:ok, %Delivery{}}` or `{:error, %Error{}}` | Called by Outbound.Worker |
 
@@ -1319,7 +1319,11 @@ Top-level `Mailglass` module re-exports all five public verbs as `defdelegate`.
    `"default"`, enforces exactly one total native envelope recipient, requires
    that a sole `to`, `cc`, or `bcc` recipient retain its native field through
    current async rehydration, and requires nonblank supported HTML and/or
-   plaintext. Phase 150 still owns complete private durable-envelope fidelity.
+plaintext. Durable work persists the complete prepared envelope as private transport state: it is not a sent-message archive, admin viewer, or public
+`Payload` API. New Oban job args remain exactly `delivery_id` and
+`mailglass_tenant_id`; the canonical queue is `:mailglass_outbound`. The narrow
+legacy metadata reader remains forward-only for recognizable pre-v2.4 queued
+rows and does not claim complete envelope fidelity.
    Tenancy raises
    `%TenancyError{:unstamped}` for strict custom context; envelope/body failures
    return `%SendError{type: :preflight_rejected}`.
@@ -1365,12 +1369,17 @@ the adapter call inside `Repo.transact` is a blocking defect.
 **PII exclusion list** (verified by property test across 100 generated sends):
 `:to, :from, :body, :html_body, :subject, :headers, :recipient, :email`
 
-**`deliver_later/2` return shape invariant (D-14):** ALWAYS `{:ok, %Delivery{status: :queued}}`
-or `{:error, %Error{}}`. Never `%Oban.Job{}`. Oban types never leak into the public API.
+**`deliver_later/2` return shape invariant (D-14):** selected `:oban` either
+atomically returns `{:ok, %Delivery{status: :queued}}` or returns a typed
+adapter error with no queued work. It never falls back to Task.Supervisor.
+`:task_supervisor` is available only when explicitly selected and is
+non-durable. Never return `%Oban.Job{}`; Oban types never leak into the public
+API.
 
-**`deliver_many/2` v0.1 scope:** Async-only. Each message produces one Oban job (or one
-`Task.Supervisor` spawn when Oban absent). Sync-batch fan-out deferred to v0.5.
-`[ASSUMED — Plan 05 Task 4 decision]`
+**`deliver_many/2` v0.1 scope:** Async-only. Selected `:oban` commits one
+canonical-queue job per successful message or yields that message's typed failed
+result; it does not substitute Task.Supervisor. Explicit `:task_supervisor`
+remains non-durable. Sync-batch fan-out is deferred to v0.5.
 
 Since: 0.1.0.
 

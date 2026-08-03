@@ -107,9 +107,10 @@ defmodule Mailglass.Config do
       type: {:in, [:oban, :task_supervisor]},
       default: :oban,
       doc:
-        "Async delivery adapter for `deliver_later/2`. `:oban` (default, durable) or " <>
-          "`:task_supervisor` (non-durable fallback). Use `:task_supervisor` to silence " <>
-          "the boot warning when Oban is deliberately not in deps."
+        "Async delivery adapter for `deliver_later/2`. `:oban` is the default durable " <>
+          "selection and fails closed with a typed error when it is unavailable or unready; it never " <>
+          "changes adapters. `:task_supervisor` is explicitly selected, non-durable development/test " <>
+          "behavior and is rejected by `production_readiness/0`."
     ],
     rate_limit: [
       type: :keyword_list,

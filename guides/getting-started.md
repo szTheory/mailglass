@@ -100,10 +100,14 @@ To select the configured asynchronous path instead, call:
 ```
 
 `async_adapter: :task_supervisor` is explicitly non-durable and intended for
-development or test use. Phase 149 does not promise private-envelope fidelity
-or atomic durable enqueue; those are Phase 150 work. It also does not promise
-sync/async provider-wire equivalence, dispatch-outcome convergence, or payload
-lifecycle behavior; those are Phase 151 work.
+development or test use. The default `async_adapter: :oban` is durable: it
+either atomically records the Delivery, queued event, private transport state,
+and one `:mailglass_outbound` job, or returns a typed error without queued work.
+It never automatically changes to TaskSupervisor. Before production go-live,
+configure the canonical queue and run `Mailglass.Config.production_readiness/0`.
+The private transport state is not a sent-message archive, payload viewer, or
+public Payload API. Existing pre-v2.4 queued rows use only the narrow legacy
+reader; new jobs carry exactly `delivery_id` and `mailglass_tenant_id`.
 
 ## End-to-End Example
 

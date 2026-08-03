@@ -56,8 +56,10 @@ defmodule Mailglass.Outbound do
 
   ## deliver_many/2 scope (v0.1)
 
-  Async-only. Every message produces an Oban job (or Task.Supervisor spawn
-  when Oban absent). Sync-batch fan-out deferred to v0.5.
+  Async-only. With the default `:oban` adapter, every message either commits
+  its durable Oban job or returns a typed failure with no queued work. The
+  non-durable `:task_supervisor` path runs only when explicitly selected.
+  Sync-batch fan-out is deferred to v0.5.
   ## Heterogeneous-tenant batches
 
   `deliver_many/2` assumes all messages share the same tenant_id. Mixed-tenant
@@ -157,10 +159,12 @@ defmodule Mailglass.Outbound do
   # =========================================================
 
   @doc """
-  Async delivery. Runs preflight pipeline, persists the Delivery, and enqueues
-  an Oban job (or spawns a Task.Supervisor task when Oban is absent).
-  Always returns `{:ok, %Delivery{status: :queued}}` on success — never an
-  `%Oban.Job{}` ( return-shape lock).
+  Async delivery. Runs the preflight pipeline and then uses the explicitly
+  selected adapter. `:oban` is durable and either atomically queues its job or
+  returns a typed adapter failure with no queued work; it never downgrades to
+  `Task.Supervisor`. `:task_supervisor` runs only when explicitly selected and
+  is non-durable. Success returns `{:ok, %Delivery{status: :queued}}`, never
+  an `%Oban.Job{}` (return-shape lock).
   """
   @doc since: "0.1.0"
   @spec deliver_later(Message.t(), keyword()) ::
@@ -176,9 +180,11 @@ defmodule Mailglass.Outbound do
   # =========================================================
 
   @doc """
-  Async batch send. v0.1 scope: **async-only** — every
-  message in the batch produces an Oban job (or Task.Supervisor spawn
-  when Oban absent). Sync-batch fan-out deferred to v0.5.
+  Async batch send. v0.1 scope: **async-only** — with selected `:oban`, every
+  successful message commits its durable Oban job and unavailable Oban produces
+  a typed failed result rather than an adapter change. Explicit
+  `:task_supervisor` remains non-durable. Sync-batch fan-out is deferred to
+  v0.5.
 
   ## Return shape
 
@@ -244,7 +250,7 @@ defmodule Mailglass.Outbound do
   @doc """
   Hydrates a Delivery by id, calls the adapter OUTSIDE any transaction, and
   writes Multi#2. Called by `Mailglass.Outbound.Worker.perform/1` and by the
-  `Task.Supervisor` fallback in `enqueue_task_supervisor/2`.
+  explicitly selected non-durable `:task_supervisor` path.
 
   Declared public so the Worker can call it from outside this module.
   """

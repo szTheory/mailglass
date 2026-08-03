@@ -14,7 +14,7 @@ defmodule Mailglass.Application do
     maybe_warn_missing_oban_for_webhook_workers()
 
     # : PubSub first (Projector broadcasts depend on it), then Task.Supervisor
-    # (Oban-absent async fallback). The three optional supervisors are gated via
+    # (available only for explicitly selected non-durable async work). The three optional supervisors are gated via
     # Code.ensure_loaded?/1 so  can land first without Plans 02 + 03 having
     # shipped yet — and so both later plans can avoid patching this file (I-08).
     children =

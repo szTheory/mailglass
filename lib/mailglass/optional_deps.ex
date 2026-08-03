@@ -14,14 +14,17 @@ defmodule Mailglass.OptionalDeps do
   - **Compile-time:** `@compile {:no_warn_undefined, [Module.Name, ...]}` as
     the first declaration inside the gateway module, scoped to exactly the
     modules the gateway wraps.
-  - **Runtime:** `available?/0` delegates to `Code.ensure_loaded?/1` so callers
-    can branch between the real dep and a degraded fallback without compiling
-    against the optional dep.
+  - **Runtime:** `available?/0` delegates to `Code.ensure_loaded?/1` for
+    dependency detection without compiling against the optional dep. A gateway
+    may fail closed when its capability is selected; availability never grants
+    an outbound caller permission to substitute a different adapter.
 
   ## Gateway Modules
 
-  - `Mailglass.OptionalDeps.Oban` — gates `{:oban, "~> 2.21"}`. Fallback for
-    `deliver_later/2` is `Task.Supervisor` (lands ).
+  - `Mailglass.OptionalDeps.Oban` — gates `{:oban, "~> 2.21"}`. Selected
+    durable outbound work fails closed when Oban is unavailable; the
+    non-durable `:task_supervisor` adapter is available only by explicit
+    outbound configuration.
   - `Mailglass.OptionalDeps.OpenTelemetry` — gates `{:opentelemetry, "~> 1.7"}`.
     Adopter-owned bridge via `opentelemetry_telemetry`.
   - `Mailglass.OptionalDeps.Mjml` — gates `{:mjml, "~> 6.0"}` (Rust NIF). Used

@@ -192,7 +192,12 @@ replays to be boring instead of terrifying.
 
 Use `deliver_later/2` to select the configured asynchronous path. The explicit
 `:task_supervisor` adapter is non-durable and suited to development or test
-work; choose it intentionally rather than treating it as durable queueing.
+work; choose it intentionally rather than treating it as durable queueing. The
+default `:oban` selection is durable and fail-closed: it either atomically
+queues the private transport state and one `:mailglass_outbound` job, or returns
+a typed error with no queued work. It never automatically substitutes
+TaskSupervisor. Configure the canonical queue and run
+`Mailglass.Config.production_readiness/0` before production go-live.
 
 ```elixir
 %{email: "alice@example.com"}
@@ -201,10 +206,12 @@ work; choose it intentionally rather than treating it as durable queueing.
 ```
 
 **What this job really buys you:** the documented asynchronous selection path
-with the same preflight and renderer preparation as sync. Phase 149 does not
-promise a private complete envelope, atomic enqueue, provider-wire equivalence,
-converged dispatch outcomes, or payload lifecycle; Phase 150 owns durable
-envelope/enqueue work and Phase 151 owns dispatch and lifecycle work.
+with the same preflight and renderer preparation as sync. Its private transport
+state is recoverable implementation data, not a sent-message archive, admin
+viewer, or public Payload API. New durable job args are exactly `delivery_id`
+and `mailglass_tenant_id`; a narrow legacy reader exists only for recognizable
+pre-v2.4 queued rows. This does not promise provider-wire equivalence,
+dispatch-outcome convergence, or payload lifecycle behavior.
 
 **Go deeper →** [Testing](testing.md) · [Authoring Mailables](authoring-mailables.md)
 

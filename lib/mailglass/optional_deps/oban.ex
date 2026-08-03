@@ -2,10 +2,12 @@ defmodule Mailglass.OptionalDeps.Oban do
   @moduledoc """
   Gateway for the optional Oban dependency (`{:oban, "~> 2.21"}`).
 
-  When Oban is present, `available?/0` returns `true` and callers may safely
-  reference `Oban`, `Oban.Worker`, and `Oban.Job`. When absent,
-  `Mailglass.Outbound.deliver_later/2` falls back to `Task.Supervisor` with a
-  `Logger.warning` emitted at boot (see `Mailglass.Application`).
+  `available?/0` is dependency detection only: when Oban is present, it returns
+  `true` and this gateway may safely reference `Oban`, `Oban.Worker`, and
+  `Oban.Job`. It does not select an outbound adapter or authorize substitution.
+  Selected `:oban` outbound work uses `ready?/1` and `insert/4` to fail-closed
+  with typed errors when the dependency, configured instance, canonical queue,
+  or transactional job insertion is unavailable.
 
   Oban integration lands in  (Outbound). This gateway is delivered in
    so Config/Telemetry can reference it without forward-reference pain.
@@ -30,13 +32,14 @@ defmodule Mailglass.OptionalDeps.Oban do
 
   The Credo check `NoBareOptionalDepReference` flags direct `Oban.*` calls
   outside this module. All Oban interaction routes through the Outbound
-  facade, which consults `available?/0` before dispatching.
+  facade, which uses this gateway's canonical readiness and insertion seams.
   """
 
   @compile {:no_warn_undefined, [Oban, Oban.Worker, Oban.Job, Oban.Migrations, Oban.Testing]}
 
   @doc """
-  Returns `true` when `:oban` is loaded in the current runtime.
+  Returns `true` when `:oban` is loaded in the current runtime for dependency
+  detection. It is not a readiness result or an outbound fallback decision.
 
   Backed by `Code.ensure_loaded?/1`, so purge-aware and safe to call from
   compile-time callbacks (e.g. `Application.start/2`).
@@ -46,9 +49,9 @@ defmodule Mailglass.OptionalDeps.Oban do
   def available?, do: Code.ensure_loaded?(Oban)
 
   @doc """
-  Confirms that the configured default Oban instance can accept Mailglass's
-  canonical worker queue. This is deliberately a producer-readiness check;
-  successful `insert/4` remains the transactional proof of job creation.
+  Confirms canonical readiness: the configured default Oban instance can accept
+  Mailglass's canonical worker queue. This is deliberately a producer-readiness
+  check; successful `insert/4` remains the transactional proof of job creation.
   """
   @spec ready?(atom()) :: :ok | {:error, :dependency_unavailable | :instance_unavailable | :canonical_queue_unavailable}
   def ready?(canonical_queue) when is_atom(canonical_queue) do
@@ -89,6 +92,8 @@ defmodule Mailglass.OptionalDeps.Oban do
 
   The caller supplies the same step options used by Mailglass persistence so
   the Oban job is inserted in the configured schema inside the active Multi.
+  If Oban is unavailable, this adds a failed transaction step rather than
+  returning an unchanged Multi; selected durable work therefore fails closed.
   """
   @doc since: "2.4.0"
   @spec insert(Ecto.Multi.t(), atom(), (map() -> term()), keyword()) :: Ecto.Multi.t()
@@ -194,7 +199,7 @@ if Code.ensure_loaded?(Oban.Worker) do
         config :my_app, Oban,
           engine: Oban.Engines.Basic,
           middleware: [Mailglass.Oban.TenancyMiddleware],
-          queues: [mailglass: 10]
+          queues: [mailglass_outbound: 10]
 
     ## Contract
 

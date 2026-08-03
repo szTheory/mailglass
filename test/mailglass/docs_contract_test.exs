@@ -639,11 +639,11 @@ defmodule Mailglass.DocsContractTest do
 
   defp phase_150_outbound_seams do
     %{
-      optional_deps: File.read!("lib/mailglass/optional_deps.ex"),
-      oban: File.read!("lib/mailglass/optional_deps/oban.ex"),
-      outbound: File.read!("lib/mailglass/outbound.ex"),
-      application: File.read!("lib/mailglass/application.ex"),
-      config: File.read!("lib/mailglass/config.ex"),
+      optional_deps: extract_optional_deps_docs(),
+      oban: extract_oban_docs(),
+      outbound: extract_outbound_docs(),
+      application: extract_application_docs(),
+      config: extract_config_docs(),
       stability: extract_phase_150_stability_section(),
       getting_started: extract_async_guide_section("guides/getting-started.md"),
       jobs: extract_jobs_async_section()
@@ -666,7 +666,7 @@ defmodule Mailglass.DocsContractTest do
       seams.outbound =~ "non-durable",
       seams.outbound =~ "typed",
       seams.application =~ "durable deliver_later/2 sends fail closed",
-      seams.config =~ "explicitly selects non-durable",
+      seams.config =~ "explicitly selected, non-durable",
       seams.config =~ "fails closed",
       seams.stability =~ "private transport state",
       seams.stability =~ "not a sent-message archive",
@@ -689,6 +689,41 @@ defmodule Mailglass.DocsContractTest do
     "docs/api_stability.md"
     |> File.read!()
     |> extract_between("## §Outbound (Phase 3 Plan 05)", "## §Tracking.Token")
+  end
+
+  defp extract_optional_deps_docs do
+    "lib/mailglass/optional_deps.ex"
+    |> File.read!()
+    |> extract_between("@moduledoc", "\"\"\"\nend")
+  end
+
+  defp extract_oban_docs do
+    content = File.read!("lib/mailglass/optional_deps/oban.ex")
+
+    extract_between(content, "@moduledoc", "@compile") <>
+      extract_between(content, "Returns `true`", "defp configured_instance")
+  end
+
+  defp extract_outbound_docs do
+    content = File.read!("lib/mailglass/outbound.ex")
+
+    extract_between(content, "@moduledoc", "@oban_exports") <>
+      extract_between(content, "Async delivery.", "# Public API — batch path") <>
+      extract_between(content, "Async batch send.", "Bang variant of `deliver_many/2`") <>
+      extract_between(content, "Hydrates a Delivery by id", "# Internal — async path")
+  end
+
+  defp extract_application_docs do
+    content = File.read!("lib/mailglass/application.ex")
+
+    extract_between(content, "# : PubSub", "# Adds `child_spec`") <>
+      extract_between(content, "# : emit exactly once", "#  : Webhook Reconciler")
+  end
+
+  defp extract_config_docs do
+    "lib/mailglass/config.ex"
+    |> File.read!()
+    |> extract_between("async_adapter: [", "rate_limit: [")
   end
 
   defp extract_async_guide_section(path) do
