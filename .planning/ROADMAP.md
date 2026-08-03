@@ -36,7 +36,7 @@
 
 - [x] **Phase 149: First-Send Contract Foundation** - Make the documented no-stamp, one-recipient rendering contract true before any work is persisted or sent. (completed 2026-08-02)
 - [x] **Phase 150: Private Envelope and Atomic Durable Enqueue** - Persist the complete supported async message privately and atomically with durable queue work. (completed 2026-08-02)
-- [ ] **Phase 151: Unified Dispatch, Honest Outcomes, and Payload Lifecycle** - Dispatch the same prepared envelope honestly and bound private content for its full lifecycle.
+- [x] **Phase 151: Unified Dispatch, Honest Outcomes, and Payload Lifecycle** - Dispatch the same prepared envelope honestly and bound private content for its full lifecycle. (completed 2026-08-03)
 - [ ] **Phase 152: Atomic One-Click Suppression Convergence** - Make RFC 8058 POSTs atomically and immediately enforce stream-scoped suppression.
 - [ ] **Phase 153: Generated-Host Proof, Docs, and Release Gate** - Prove the published contract in a clean production-shaped host before releasing changed packages.
 
@@ -179,6 +179,6 @@ Plans:
 |-------|----------------|--------|-----------|
 | 149. First-Send Contract Foundation | 4/4 | Complete    | 2026-08-02 |
 | 150. Private Envelope and Atomic Durable Enqueue | 9/9 | Complete    | 2026-08-02 |
-| 151. Unified Dispatch, Honest Outcomes, and Payload Lifecycle | 8/8 | In Progress|  |
+| 151. Unified Dispatch, Honest Outcomes, and Payload Lifecycle | 8/8 | Complete    | 2026-08-03 |
 | 152. Atomic One-Click Suppression Convergence | 0/TBD | Not started | - |
 | 153. Generated-Host Proof, Docs, and Release Gate | 0/TBD | Not started | - |

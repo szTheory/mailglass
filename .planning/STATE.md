@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.4
 milestone_name: Outbound First-Adopter Correctness
-current_phase: 151
-current_phase_name: Unified Dispatch, Honest Outcomes, and Payload Lifecycle
+current_phase: 152
+current_phase_name: Atomic One-Click Suppression Convergence
 status: planning
 stopped_at: Completed 151-08-PLAN.md
-last_updated: "2026-08-03T13:41:38.640Z"
-last_activity: 2026-08-02
-last_activity_desc: Phase 150 complete, transitioned to Phase 151
+last_updated: "2026-08-03T13:51:47.973Z"
+last_activity: 2026-08-03
+last_activity_desc: Phase 151 complete, transitioned to Phase 152
 progress:
   total_phases: 3
   completed_phases: 3
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
 
 ## Current Position
 
-Phase: 151 — Unified Dispatch, Honest Outcomes, and Payload Lifecycle
-Plan: 8 of 8 complete
-Status: Phase execution complete
-Last activity: 2026-08-03 — Phase 151 Plan 08 completed
+Phase: 152 — Atomic One-Click Suppression Convergence
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-08-03 — Phase 151 complete, transitioned to Phase 152
 
 Progress: [██████████] 100%
 
