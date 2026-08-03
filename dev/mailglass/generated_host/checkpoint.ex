@@ -3,7 +3,9 @@ defmodule Mailglass.GeneratedHost.Checkpoint do
 
   @schema_version "generated_host_proof.v1"
 
-  @spec encode(map()) :: map()
+  # The proof maps are assembled by a disposable host and intentionally have a
+  # closed runtime shape. A broad map() contract is less precise than Dialyzer's
+  # inferred success type, so keep the executable validation as the contract.
   def encode(input) when is_map(input) do
     stages = Map.get(input, :stages, [])
 
@@ -20,7 +22,8 @@ defmodule Mailglass.GeneratedHost.Checkpoint do
     Map.put(payload, "checkpoint_sha256", sha(Jason.encode!(payload)))
   end
 
-  @spec async_parity!(map()) :: map()
+  # As above, required keys and values are validated before the bounded map is
+  # emitted; an underspecified map() contract would obscure that exact shape.
   def async_parity!(proof) when is_map(proof) do
     required =
       ~w(job_inserted job_terminal delivery_sent payload_scrubbed event_count capture_count transition_order sync_input_sha256 async_input_sha256)
