@@ -23,7 +23,9 @@ defmodule Mailglass.GeneratedHost.Journey do
     unsupported_payload unsupported_provider_options oversized_json
   )
 
-  @spec run!(keyword()) :: map()
+  # No @spec: every stage adds a different closed set of proof keys. With the
+  # repository's :underspecs Dialyzer flag, `map()` is an inaccurate supertype
+  # of that inferred union. Dialyzer still infers and checks every call site.
   def run!(opts \\ []) do
     schema = Keyword.fetch!(opts, :schema)
     stage = Keyword.get(opts, :stage, :migrate)
@@ -106,7 +108,7 @@ defmodule Mailglass.GeneratedHost.Journey do
   end
 
   defp negative_result!(name) when name in @input_controls do
-    message = GeneratedHost.SampleMailable.input_message(name)
+    message = generated_host_call!([GeneratedHost, SampleMailable], :input_message, [name])
     assert_input_rejected!(name, Mailglass.Outbound.deliver_later(message))
   end
 
@@ -130,8 +132,8 @@ defmodule Mailglass.GeneratedHost.Journey do
       deliveries: count!(repo, "SELECT count(*) FROM #{table}.mailglass_deliveries"),
       events: count!(repo, "SELECT count(*) FROM #{table}.mailglass_events"),
       payloads: count!(repo, "SELECT count(*) FROM #{table}.mailglass_outbound_payloads"),
-      captures: length(GeneratedHost.CaptureStore.all()),
-      renders: GeneratedHost.CaptureStore.render_count(),
+      captures: length(generated_host_call!([GeneratedHost, CaptureStore], :all)),
+      renders: generated_host_call!([GeneratedHost, CaptureStore], :render_count),
       tasks: supervised_task_count()
     }
   end
@@ -162,18 +164,20 @@ defmodule Mailglass.GeneratedHost.Journey do
     Mailglass.Tenancy.put_current(nil)
 
     {:ok, _sync_delivery} =
-      GeneratedHost.SampleMailable.sync_message() |> Mailglass.Outbound.deliver()
+      generated_host_call!([GeneratedHost, SampleMailable], :sync_message)
+      |> Mailglass.Outbound.deliver()
 
-    [sync_capture] = GeneratedHost.CaptureStore.all()
+    [sync_capture] = generated_host_call!([GeneratedHost, CaptureStore], :all)
 
     {:ok, async_delivery} =
-      GeneratedHost.SampleMailable.async_message() |> Mailglass.Outbound.deliver_later()
+      generated_host_call!([GeneratedHost, SampleMailable], :async_message)
+      |> Mailglass.Outbound.deliver_later()
 
     inserted_job = inserted_job!(repo, async_delivery.id)
 
     settled =
       poll_until!(fn ->
-        captures = GeneratedHost.CaptureStore.all()
+        captures = generated_host_call!([GeneratedHost, CaptureStore], :all)
 
         case terminal_snapshot(repo, proof.schema, async_delivery.id, inserted_job.id, captures) do
           %{terminal?: true} = snapshot -> {:ok, snapshot}
@@ -181,7 +185,7 @@ defmodule Mailglass.GeneratedHost.Journey do
         end
       end)
 
-    [^sync_capture, async_capture] = GeneratedHost.CaptureStore.all()
+    [^sync_capture, async_capture] = generated_host_call!([GeneratedHost, CaptureStore], :all)
 
     sync_input = normalize_provider_input(sync_capture)
     async_input = normalize_provider_input(async_capture)
@@ -260,8 +264,12 @@ defmodule Mailglass.GeneratedHost.Journey do
   defp one_click!(proof) do
     repo = Application.fetch_env!(:mailglass, :repo)
     table = quote_identifier(proof.schema)
-    captures_before = length(GeneratedHost.CaptureStore.all())
-    {:ok, delivery} = GeneratedHost.SampleMailable.bulk_message() |> Mailglass.Outbound.deliver()
+    captures_before = length(generated_host_call!([GeneratedHost, CaptureStore], :all))
+
+    {:ok, delivery} =
+      generated_host_call!([GeneratedHost, SampleMailable], :bulk_message)
+      |> Mailglass.Outbound.deliver()
+
     one_click_path = one_click_path!()
     first = http_post!(one_click_path, "List-Unsubscribe=One-Click", one_click_headers())
     second = http_post!(one_click_path, "List-Unsubscribe=One-Click", one_click_headers())
@@ -272,11 +280,24 @@ defmodule Mailglass.GeneratedHost.Journey do
       raise "generated-host one-click replay did not converge to one canonical pair"
     end
 
-    matching = Mailglass.Outbound.deliver(GeneratedHost.SampleMailable.bulk_message())
-    captures_after_matching = length(GeneratedHost.CaptureStore.all())
-    transactional = Mailglass.Outbound.deliver(GeneratedHost.SampleMailable.sync_message())
-    unrelated = Mailglass.Outbound.deliver(GeneratedHost.SampleMailable.operational_message())
-    captures_after_controls = length(GeneratedHost.CaptureStore.all())
+    matching =
+      Mailglass.Outbound.deliver(
+        generated_host_call!([GeneratedHost, SampleMailable], :bulk_message)
+      )
+
+    captures_after_matching = length(generated_host_call!([GeneratedHost, CaptureStore], :all))
+
+    transactional =
+      Mailglass.Outbound.deliver(
+        generated_host_call!([GeneratedHost, SampleMailable], :sync_message)
+      )
+
+    unrelated =
+      Mailglass.Outbound.deliver(
+        generated_host_call!([GeneratedHost, SampleMailable], :operational_message)
+      )
+
+    captures_after_controls = length(generated_host_call!([GeneratedHost, CaptureStore], :all))
 
     unless suppressed?(matching) and captures_after_matching == captures_before + 1 and
              sendable?(transactional) and sendable?(unrelated) and
@@ -402,7 +423,7 @@ defmodule Mailglass.GeneratedHost.Journey do
   end
 
   defp one_click_path! do
-    GeneratedHost.CaptureStore.all()
+    generated_host_call!([GeneratedHost, CaptureStore], :all)
     |> List.last()
     |> Map.fetch!(:headers)
     |> Enum.find_value(fn
@@ -440,6 +461,16 @@ defmodule Mailglass.GeneratedHost.Journey do
   defp suppressed?(_), do: false
   defp sendable?({:ok, _delivery}), do: true
   defp sendable?(_), do: false
+
+  # These modules belong to the disposable Phoenix host and are compiled only
+  # after this maintainer-side journey has been copied into it. Resolve them at
+  # the runtime boundary so Dialyzer does not mistake that deliberate lifecycle
+  # for calls to missing modules in the mailglass project itself.
+  defp generated_host_call!(module_parts, function, arguments \\ []) do
+    module_parts
+    |> Module.concat()
+    |> apply(function, arguments)
+  end
 
   defp run_mix!(args) do
     {output, status} = System.cmd("mix", args, stderr_to_stdout: true)
