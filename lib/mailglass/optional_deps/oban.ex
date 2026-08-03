@@ -97,7 +97,7 @@ defmodule Mailglass.OptionalDeps.Oban do
   If Oban is unavailable, this adds a failed transaction step rather than
   returning an unchanged Multi; selected durable work therefore fails closed.
   """
-  @doc since: "2.4.0"
+  @doc since: "2.4.1"
   @spec insert(Ecto.Multi.t(), atom(), (map() -> term()), keyword()) :: Ecto.Multi.t()
   def insert(multi, name, job_builder, opts)
       when is_atom(name) and is_function(job_builder, 1) and is_list(opts) do

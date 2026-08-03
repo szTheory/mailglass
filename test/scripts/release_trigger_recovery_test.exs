@@ -256,9 +256,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
              "status" => "active",
              "release_packages" => ["mailglass", "mailglass_admin", "mailglass_inbound"],
              "packages" => %{
-               "mailglass" => "2.4.0",
-               "mailglass_admin" => "2.4.0",
-               "mailglass_inbound" => "2.1.1"
+               "mailglass" => "2.4.1",
+               "mailglass_admin" => "2.4.1",
+               "mailglass_inbound" => "2.1.2"
              }
            }
 

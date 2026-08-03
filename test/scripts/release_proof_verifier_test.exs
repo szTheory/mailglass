@@ -19,7 +19,7 @@ defmodule Mailglass.Scripts.ReleaseProofVerifierTest do
           {"published_packages",
            [%{"name" => "mailglass", "version" => "9.9.9", "checksum" => @checksum}]},
           {"published_packages",
-           [%{"name" => "mailglass", "version" => "2.4.0", "checksum" => "bad-checksum"}]}
+           [%{"name" => "mailglass", "version" => "2.4.1", "checksum" => "bad-checksum"}]}
         ] do
       with_fixture(%{field => value}, fn ledger, fixture ->
         {output, status} = verify(ledger, fixture)
@@ -58,7 +58,7 @@ defmodule Mailglass.Scripts.ReleaseProofVerifierTest do
 
   defp ledger(candidate),
     do: %{
-      "candidate" => %{"sha" => candidate, "tag" => "mailglass-v2.4.0"},
+      "candidate" => %{"sha" => candidate, "tag" => "mailglass-v2.4.1"},
       "publication" => %{
         "workflow_path" => ".github/workflows/publish-hex.yml",
         "workflow_name" => "publish-hex",
@@ -68,9 +68,9 @@ defmodule Mailglass.Scripts.ReleaseProofVerifierTest do
       },
       "release_packages" => ["mailglass", "mailglass_admin", "mailglass_inbound"],
       "target_versions" => %{
-        "mailglass" => "2.4.0",
-        "mailglass_admin" => "2.4.0",
-        "mailglass_inbound" => "2.1.1"
+        "mailglass" => "2.4.1",
+        "mailglass_admin" => "2.4.1",
+        "mailglass_inbound" => "2.1.2"
       },
       "archive_checksums" => %{
         "mailglass" => @checksum,
@@ -92,7 +92,7 @@ defmodule Mailglass.Scripts.ReleaseProofVerifierTest do
       "publish_jobs" => ["publish-core", "publish-admin", "publish-inbound"],
       "published_packages" =>
         Enum.map(
-          [{"mailglass", "2.4.0"}, {"mailglass_admin", "2.4.0"}, {"mailglass_inbound", "2.1.1"}],
+          [{"mailglass", "2.4.1"}, {"mailglass_admin", "2.4.1"}, {"mailglass_inbound", "2.1.2"}],
           fn {name, version} -> %{"name" => name, "version" => version, "checksum" => @checksum} end
         ),
       "archive_checksum" => @checksum

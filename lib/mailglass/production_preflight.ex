@@ -28,7 +28,7 @@ defmodule Mailglass.ProductionPreflight do
   The check only performs read-only database and runtime observations. It does
   not migrate a schema, start a queue, schedule maintenance, or alter routing.
   """
-  @doc since: "2.4.0"
+  @doc since: "2.4.1"
   @spec run(keyword()) :: result()
   def run(_opts \\ []) do
     checks = [

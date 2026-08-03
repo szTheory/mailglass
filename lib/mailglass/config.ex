@@ -631,7 +631,7 @@ defmodule Mailglass.Config do
   `validate_at_boot!/0`: development and test applications may explicitly use
   the non-durable `:task_supervisor` adapter.
   """
-  @doc since: "2.4.0"
+  @doc since: "2.4.1"
   @spec production_readiness() :: :ok | {:error, Mailglass.ConfigError.t()}
   def production_readiness do
     case Application.get_env(:mailglass, :async_adapter, :oban) do
@@ -901,7 +901,7 @@ defmodule Mailglass.Config do
   is owned by system cron or an equivalent operator runbook). `:none` is the
   safe default for ordinary application boot and fails production preflight.
   """
-  @doc since: "2.4.0"
+  @doc since: "2.4.1"
   @spec outbound_payload_maintenance() :: :scheduled | :manual | :none
   def outbound_payload_maintenance do
     validated_config()
@@ -913,7 +913,7 @@ defmodule Mailglass.Config do
   one was configured. The callback must implement `authorize/2` when the
   production preflight is run.
   """
-  @doc since: "2.4.0"
+  @doc since: "2.4.1"
   @spec operator_auth() :: module() | nil
   def operator_auth do
     validated_config()

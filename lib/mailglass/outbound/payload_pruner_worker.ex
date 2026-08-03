@@ -13,7 +13,7 @@ if Code.ensure_loaded?(Oban.Worker) do
 
     alias Mailglass.Outbound.PayloadPruner
 
-    @doc since: "2.4.0"
+    @doc since: "2.4.1"
     @spec available?() :: true
     def available?, do: true
 
@@ -38,7 +38,7 @@ else
     from system cron when Oban is absent.
     """
 
-    @doc since: "2.4.0"
+    @doc since: "2.4.1"
     @spec available?() :: false
     def available?, do: false
   end
