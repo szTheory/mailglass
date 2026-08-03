@@ -712,6 +712,7 @@ defmodule Mailglass.DocsContractTest do
             "mix mailglass.preflight",
             "mailglass_outbound",
             "Task.Supervisor is not durable",
+            "signed feedback verification",
             "signed feedback",
             "one-click",
             "suppression",
