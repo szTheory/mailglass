@@ -217,7 +217,7 @@ defmodule Mailglass.OutboundTest do
               %Mailglass.SendError{
                 type: :adapter_failure,
                 context: %{reason_class: :provider_acceptance_unknown, outcome_class: :uncertain}
-              } = send_err} =
+              }} =
                Outbound.send(msg, adapter: {Mailglass.Adapters.AlwaysFail, []})
 
       # The delivery row should have status: :failed
