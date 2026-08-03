@@ -328,6 +328,17 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert [_suppression] = suppressions_for(delivery)
     end
 
+    test "reports already converged only when both canonical facts pre-exist" do
+      delivery = Generators.delivery_fixture(stream: :bulk)
+      insert_unsubscribe_event!(delivery)
+      insert_unsubscribe_suppression!(delivery)
+
+      assert {:ok, %{status: :already_converged, event: %Event{}, suppression: %Entry{}}} =
+               Tenancy.with_tenant(delivery.tenant_id, fn ->
+                 UnsubscribeConvergence.run(delivery)
+               end)
+    end
+
     test "returns empty 500 and rolls back both facts after the event step", %{conn: conn} do
       Application.put_env(:mailglass, :unsubscribe_convergence_failure_step, :after_event)
 
