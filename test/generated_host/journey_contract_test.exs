@@ -27,4 +27,47 @@ defmodule Mailglass.GeneratedHost.JourneyContractTest do
     assert template =~ "config/config.exs"
     assert template =~ "lib/generated_host/repo.ex"
   end
+
+  test "checkpoint is deterministic and contains only hashed bounded evidence" do
+    payload =
+      Mailglass.GeneratedHost.Checkpoint.encode(%{
+        dependency_mode: "local",
+        source_sha: "abc123",
+        packages: [%{"name" => "mailglass", "identity_sha256" => String.duplicate("a", 64)}],
+        stages: [
+          %{
+            "name" => "install",
+            "status" => "passed",
+            "command_sha256" => String.duplicate("b", 64)
+          }
+        ]
+      })
+
+    assert payload["schema_version"] == "generated_host_proof.v1"
+    assert payload["overall_status"] == "passed"
+    assert payload["checkpoint_sha256"] =~ ~r/\A[0-9a-f]{64}\z/
+    refute inspect(payload) =~ "recipient"
+  end
+
+  test "validator rejects privacy leaks and impossible successful stage claims" do
+    validator = Path.join(@project_root, "scripts/check_generated_host_proof.sh")
+
+    checkpoint =
+      Path.join(
+        System.tmp_dir!(),
+        "generated-host-invalid-#{System.unique_integer([:positive])}.json"
+      )
+
+    on_exit(fn -> File.rm(checkpoint) end)
+
+    File.write!(
+      checkpoint,
+      ~s({"schema_version":"generated_host_proof.v1","overall_status":"passed","stages":[{"name":"install","status":"failed","recipient":"a@example.com"}]})
+    )
+
+    {_output, status} =
+      System.cmd("bash", [validator, "--checkpoint", checkpoint], stderr_to_stdout: true)
+
+    assert status != 0
+  end
 end
