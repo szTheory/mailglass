@@ -61,7 +61,7 @@ defmodule Mailglass.GeneratedHost.Journey do
     controls = controls_for!(family)
 
     results = Enum.map(controls, &run_negative_control!(&1, proof.schema))
-    %{proof | negative_controls: results}
+    Map.put(proof, :negative_controls, results)
   end
 
   defp controls_for!(:queue_schema), do: @queue_schema_controls
