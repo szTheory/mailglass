@@ -2,11 +2,13 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
   use Mailglass.DataCase, async: false
 
   alias Mailglass.Compliance.Unsubscribe
+  alias Mailglass.Compliance.UnsubscribeConvergence
   alias Mailglass.Events.Event
   alias Mailglass.Generators
   alias Mailglass.Suppression.Entry
   alias Mailglass.TestRepo
   alias Mailglass.TestSupport.SandboxOwnership
+  alias Mailglass.Tenancy
 
   import Ecto.Query
   import Plug.Conn
@@ -295,6 +297,47 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
 
       assert count == 0
     end
+
+    test "repairs an event-only legacy state and reports created", %{conn: conn} do
+      delivery = Generators.delivery_fixture(stream: :bulk)
+      insert_unsubscribe_event!(delivery)
+
+      assert {:ok, %{status: :created, event: %Event{}, suppression: %Entry{}}} =
+               Tenancy.with_tenant(delivery.tenant_id, fn ->
+                 UnsubscribeConvergence.run(delivery)
+               end)
+
+      result_conn = post(conn, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}", %{})
+      assert response(result_conn, 200) == ""
+      assert [_event] = events_for(delivery)
+      assert [_suppression] = suppressions_for(delivery)
+    end
+
+    test "repairs a suppression-only legacy state and reports created", %{conn: conn} do
+      delivery = Generators.delivery_fixture(stream: :operational)
+      insert_unsubscribe_suppression!(delivery)
+
+      assert {:ok, %{status: :created, event: %Event{}, suppression: %Entry{}}} =
+               Tenancy.with_tenant(delivery.tenant_id, fn ->
+                 UnsubscribeConvergence.run(delivery)
+               end)
+
+      result_conn = post(conn, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}", %{})
+      assert response(result_conn, 200) == ""
+      assert [_event] = events_for(delivery)
+      assert [_suppression] = suppressions_for(delivery)
+    end
+
+    test "returns empty 500 and rolls back both facts after the event step", %{conn: conn} do
+      Application.put_env(:mailglass, :unsubscribe_convergence_failure_step, :after_event)
+
+      delivery = Generators.delivery_fixture(stream: :bulk)
+      result_conn = post(conn, "/mailglass/unsubscribe/#{Unsubscribe.sign_token(delivery.id)}", %{})
+
+      assert response(result_conn, 500) == ""
+      assert events_for(delivery) == []
+      assert suppressions_for(delivery) == []
+    end
   end
 
   defp tamper_token!(token) when is_binary(token) do
@@ -333,5 +376,34 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
             suppression.reason == :unsubscribe
       )
     )
+  end
+
+  defp insert_unsubscribe_event!(delivery) do
+    {:ok, _event} =
+      TestRepo.insert(
+        Event.changeset(%{
+          tenant_id: delivery.tenant_id,
+          delivery_id: delivery.id,
+          type: :unsubscribed,
+          occurred_at: Mailglass.Clock.utc_now(),
+          idempotency_key: "unsubscribe:#{delivery.id}",
+          normalized_payload: %{source: :unsubscribe}
+        })
+      )
+  end
+
+  defp insert_unsubscribe_suppression!(delivery) do
+    {:ok, _suppression} =
+      TestRepo.insert(
+        Entry.changeset(%{
+          tenant_id: delivery.tenant_id,
+          address: delivery.recipient,
+          scope: :address_stream,
+          stream: delivery.stream,
+          reason: :unsubscribe,
+          source: "compliance:one_click",
+          metadata: %{}
+        })
+      )
   end
 end
