@@ -383,11 +383,22 @@ defmodule Mailglass.Outbound.WorkerTest do
 
         TestRepo.update!(Ecto.Changeset.change(delivery, adapter_ref: "route_b"))
 
-        assert {:error,
-                %Mailglass.SendError{
-                  type: :serialization_failed,
-                  context: %{reason_class: :persisted_adapter_mismatch}
-                }} = Mailglass.Outbound.Worker.perform(job)
+        assert {:cancel, :pre_dispatch_failure} = Mailglass.Outbound.Worker.perform(job)
+
+        assert %Payload{
+                 lifecycle_state: :terminal,
+                 reason_class: :pre_dispatch_failure,
+                 expires_at: %DateTime{},
+                 claimed_at: nil
+               } = TestRepo.get_by!(Payload, delivery_id: delivery.id)
+
+        assert {:cancel, :pre_dispatch_failure} = Mailglass.Outbound.Worker.perform(job)
+
+        assert 2 =
+                 TestRepo.aggregate(
+                   from(event in Mailglass.Events.Event, where: event.delivery_id == ^delivery.id),
+                   :count
+                 )
 
         refute_receive {:stateful_adapter_delivery, _, _, _}
       end

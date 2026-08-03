@@ -81,6 +81,12 @@ if Code.ensure_loaded?(Oban.Worker) do
          ),
          do: {:cancel, err}
 
+    # A claim can observe a terminal payload fact written by an earlier
+    # attempt. Preserve that terminal classification rather than handing the
+    # typed lifecycle error back to Oban as retryable work.
+    defp worker_error_result(%Mailglass.SendError{context: %{outcome_class: :terminal}} = err),
+      do: worker_result(Mailglass.Outbound.DispatchOutcome.classify({:error, err}))
+
     defp worker_error_result(%Mailglass.SendError{context: %{reason_class: reason}} = err)
          when reason in [
                 :legacy_payload_unavailable,
@@ -89,7 +95,8 @@ if Code.ensure_loaded?(Oban.Worker) do
                 :payload_unsupported_version,
                 :payload_expired,
                 :payload_scrubbed,
-                :payload_dispatching
+                :payload_dispatching,
+                :persisted_adapter_mismatch
               ],
          do: worker_result(Mailglass.Outbound.DispatchOutcome.classify({:error, err}))
 
