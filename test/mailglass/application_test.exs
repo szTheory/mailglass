@@ -16,6 +16,12 @@ defmodule Mailglass.ApplicationTest do
       assert is_pid(pid), "Expected Mailglass.TaskSupervisor to be registered as a pid"
       assert Process.alive?(pid)
     end
+
+    @tag phase_150_task: "t150_04_01"
+    test "ordinary application boot has not imposed the production readiness gate" do
+      assert is_pid(Process.whereis(Mailglass.Supervisor))
+      assert is_pid(Process.whereis(Mailglass.TaskSupervisor))
+    end
   end
 
   describe "maybe_warn_missing_oban/0 idempotence" do

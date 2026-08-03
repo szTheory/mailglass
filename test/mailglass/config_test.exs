@@ -1,5 +1,5 @@
 defmodule Mailglass.ConfigTest do
-  use ExUnit.Case, async: true
+  use Mailglass.DataCase, async: false
 
   # CORE-02: Mailglass.Config is the sole caller of Application.compile_env*.
   # It validates the :mailglass Application env against a NimbleOptions schema
@@ -191,6 +191,101 @@ defmodule Mailglass.ConfigTest do
       # Theme keys are :colors and :fonts per D-19; both maps.
       assert %{} = Keyword.fetch!(theme, :colors)
       assert %{} = Keyword.fetch!(theme, :fonts)
+    end
+  end
+
+  describe "production_readiness/0" do
+    setup do
+      prior_async_adapter = Application.get_env(:mailglass, :async_adapter)
+
+      on_exit(fn ->
+        if is_nil(prior_async_adapter) do
+          Application.delete_env(:mailglass, :async_adapter)
+        else
+          Application.put_env(:mailglass, :async_adapter, prior_async_adapter)
+        end
+      end)
+
+      :ok
+    end
+
+    @tag phase_150_task: "t150_04_01"
+    test "rejects the explicit non-durable Task.Supervisor adapter without requiring Oban" do
+      Application.put_env(:mailglass, :async_adapter, :task_supervisor)
+
+      assert {:error,
+              %Mailglass.ConfigError{
+                type: :invalid,
+                context: %{key: :async_adapter, reason_class: :non_durable_async_adapter}
+              }} = Mailglass.Config.production_readiness()
+    end
+
+    @tag phase_150_task: "t150_04_01"
+    test "maps an unavailable default Oban instance to a bounded readiness error" do
+      Application.put_env(:mailglass, :async_adapter, :oban)
+
+      assert {:error,
+              %Mailglass.ConfigError{
+                type: :invalid,
+                context: %{key: :async_adapter, reason_class: :instance_unavailable}
+              }} = Mailglass.Config.production_readiness()
+    end
+
+    @tag phase_150_task: "t150_04_01"
+    test "accepts a running default Oban with the canonical outbound queue" do
+      if Code.ensure_loaded?(Oban) do
+        Application.put_env(:mailglass, :async_adapter, :oban)
+
+        start_supervised!(
+          {Oban, testing: :disabled, repo: Mailglass.TestRepo, queues: [mailglass_outbound: 10]}
+        )
+
+        assert :ok = Mailglass.Config.production_readiness()
+      else
+        :skip
+      end
+    end
+
+    @tag phase_150_task: "t150_04_01"
+    test "rejects an empty queue configuration" do
+      if Code.ensure_loaded?(Oban) do
+        Application.put_env(:mailglass, :async_adapter, :oban)
+        start_supervised!({Oban, testing: :disabled, repo: Mailglass.TestRepo, queues: []})
+
+        assert {:error,
+                %Mailglass.ConfigError{
+                  type: :invalid,
+                  context: %{key: :async_adapter, reason_class: :canonical_queue_unavailable}
+                }} = Mailglass.Config.production_readiness()
+      else
+        :skip
+      end
+    end
+
+    @tag phase_150_task: "t150_04_01"
+    test "rejects a wrong canonical queue configuration" do
+      if Code.ensure_loaded?(Oban) do
+        Application.put_env(:mailglass, :async_adapter, :oban)
+
+        start_supervised!(
+          {Oban, testing: :disabled, repo: Mailglass.TestRepo, queues: [other_queue: 10]}
+        )
+
+        assert {:error,
+                %Mailglass.ConfigError{
+                  type: :invalid,
+                  context: %{key: :async_adapter, reason_class: :canonical_queue_unavailable}
+                }} = Mailglass.Config.production_readiness()
+      else
+        :skip
+      end
+    end
+
+    @tag phase_150_task: "t150_04_01"
+    test "boot validation permits explicit Task.Supervisor without invoking production readiness" do
+      Application.put_env(:mailglass, :async_adapter, :task_supervisor)
+
+      assert :ok = Mailglass.Config.validate_at_boot!()
     end
   end
 
