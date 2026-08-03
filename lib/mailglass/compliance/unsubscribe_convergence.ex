@@ -8,6 +8,7 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
   alias Mailglass.Outbound.Delivery
   alias Mailglass.Repo
   alias Mailglass.Suppression.Entry
+  alias Postgrex.Error, as: PostgrexError
 
   @suppression_conflict_target {
     :unsafe_fragment,
@@ -18,10 +19,12 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
           {:ok, %{status: :created | :already_converged, event: Event.t(), suppression: Entry.t()}}
           | {:error, term()}
   def run(%Delivery{} = delivery) do
-    delivery
-    |> convergence_multi()
-    |> Repo.multi()
-    |> classify_result()
+    with_stale_type_retry(fn ->
+      delivery
+      |> convergence_multi()
+      |> Repo.multi()
+      |> classify_result()
+    end)
   end
 
   defp convergence_multi(%Delivery{} = delivery) do
@@ -207,6 +210,38 @@ defmodule Mailglass.Compliance.UnsubscribeConvergence do
   else
     defp maybe_raise_refetch_failure!, do: :ok
   end
+
+  # Migration round-trips can replace PostgreSQL's citext OID while a pooled
+  # connection still holds the old type metadata. The failed transaction is
+  # rolled back before Postgrex disconnects that connection, so replaying the
+  # complete idempotent convergence on a fresh checkout is safe. This mirrors
+  # the suppression store's bounded stale-type recovery.
+  @stale_type_retry_attempts 8
+
+  defp with_stale_type_retry(fun, attempts_left \\ @stale_type_retry_attempts)
+       when is_function(fun, 0) and is_integer(attempts_left) do
+    fun.()
+  rescue
+    error in PostgrexError ->
+      if stale_type_cache_error?(error) and attempts_left > 1 do
+        with_stale_type_retry(fun, attempts_left - 1)
+      else
+        reraise error, __STACKTRACE__
+      end
+  end
+
+  defp stale_type_cache_error?(%PostgrexError{postgres: %{code: :internal_error}}), do: true
+
+  defp stale_type_cache_error?(%PostgrexError{postgres: %{code: code}}) when code == "XX000",
+    do: true
+
+  defp stale_type_cache_error?(%PostgrexError{postgres: %{code: :feature_not_supported}}),
+    do: true
+
+  defp stale_type_cache_error?(%PostgrexError{postgres: %{code: code}}) when code == "0A000",
+    do: true
+
+  defp stale_type_cache_error?(_), do: false
 
   defp unsubscribe_idempotency_key(%Delivery{id: delivery_id}), do: "unsubscribe:#{delivery_id}"
 end
