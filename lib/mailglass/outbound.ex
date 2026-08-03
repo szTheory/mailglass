@@ -91,7 +91,7 @@ defmodule Mailglass.Outbound do
     Telemetry
   }
 
-  alias Mailglass.Outbound.{Delivery, Envelope, Payload, Preflight, Projector}
+  alias Mailglass.Outbound.{Delivery, DispatchOutcome, Envelope, Payload, Preflight, Projector}
   alias Mailglass.Tracking
 
   import Kernel, except: [send: 2]
@@ -260,11 +260,12 @@ defmodule Mailglass.Outbound do
   def dispatch_by_id(delivery_id) when is_binary(delivery_id) do
     result =
       with {:ok, delivery} <- load_delivery(delivery_id),
+           {:ok, payload} <- claim_payload(delivery),
            {:ok, %{message: rendered, adapter_ref: adapter_ref}} <-
-             load_payload_prepared(delivery),
+             load_claimed_payload_prepared(delivery, payload),
            prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
            {:ok, adapter} <- resolve_persisted_adapter(adapter_ref),
-           {:ok, updated} <- dispatch_prepared(delivery, prepared, adapter) do
+           {:ok, updated} <- dispatch_prepared(delivery, prepared, adapter, payload) do
         {:ok, updated}
       end
 
@@ -643,31 +644,32 @@ defmodule Mailglass.Outbound do
   # message; durable dispatch first restores the immutable payload and its
   # persisted adapter route, then reaches this same handoff.
   # Adapter I/O remains outside every Repo transaction.
-  defp dispatch_prepared(%Delivery{} = delivery, %Message{} = rendered, adapter) do
-    with {:ok, dispatch_result} <- call_adapter(rendered, adapter),
-         {:ok, %{delivery: updated}} <-
-           persist_dispatched_multi(delivery, dispatch_result, rendered) do
-      Projector.broadcast_delivery_updated(updated, :dispatched, %{
-        tenant_id: updated.tenant_id,
-        delivery_id: updated.id,
-        provider: provider_tag(dispatch_result.provider_response)
-      })
+  defp dispatch_prepared(%Delivery{} = delivery, %Message{} = rendered, adapter, payload \\ nil) do
+    outcome = DispatchOutcome.classify(call_adapter(rendered, adapter))
 
-      {:ok, updated}
-    else
-      {:error, %{__exception__: true} = err} ->
-        persist_failed_by_id(delivery.id, err)
-        {:error, err}
+    case outcome do
+      {:accepted, %{message_id: _pmid} = dispatch_result} ->
+        with {:ok, %{delivery: updated}} <-
+               persist_dispatched_multi(delivery, dispatch_result, payload) do
+          Projector.broadcast_delivery_updated(updated, :dispatched, %{
+            tenant_id: updated.tenant_id,
+            delivery_id: updated.id,
+            provider: provider_tag(dispatch_result.provider_response)
+          })
 
-      other ->
-        other
+          {:ok, updated}
+        end
+
+      %DispatchOutcome{} = classified ->
+        _ = persist_outcome_multi(delivery, payload, classified)
+        {:error, classified}
     end
   end
 
   defp persist_dispatched_multi(
          %Delivery{} = delivery,
          %{message_id: pmid, provider_response: _resp},
-         _rendered
+         payload
        ) do
     event_occurred_at = Clock.utc_now()
 
@@ -693,7 +695,7 @@ defmodule Mailglass.Outbound do
     Telemetry.persist_outbound_multi_span(
       %{step_name: :persist_dispatched, tenant_id: delivery.tenant_id},
       fn ->
-        Repo.multi(
+        multi =
           Ecto.Multi.new()
           |> Ecto.Multi.update(
             :delivery,
@@ -707,9 +709,72 @@ defmodule Mailglass.Outbound do
             Repo.multi_opts()
           )
           |> Events.append_multi(:event_dispatched, event_attrs)
-        )
+
+        multi =
+          if payload do
+            Ecto.Multi.update(multi, :payload, Payload.scrub_changeset(payload), Repo.multi_opts())
+          else
+            multi
+          end
+
+        Repo.multi(multi)
       end
     )
+  end
+
+  defp persist_outcome_multi(%Delivery{} = delivery, payload, %DispatchOutcome{} = outcome) do
+    occurred_at = Clock.utc_now()
+    projection = DispatchOutcome.safe_projection(outcome)
+    event_type = if outcome.class == :uncertain, do: :deferred, else: :failed
+
+    event = %Mailglass.Events.Event{
+      tenant_id: delivery.tenant_id,
+      delivery_id: delivery.id,
+      type: event_type,
+      occurred_at: occurred_at
+    }
+
+    multi =
+      Ecto.Multi.new()
+      |> Ecto.Multi.update(
+        :delivery,
+        Projector.update_projections(delivery, event)
+        |> Ecto.Changeset.change(%{
+          status: :failed,
+          last_error: projection,
+          terminal: outcome.class == :terminal
+        }),
+        Repo.multi_opts()
+      )
+      |> Events.append_multi(:event_outcome, %{
+        tenant_id: delivery.tenant_id,
+        delivery_id: delivery.id,
+        type: event_type,
+        occurred_at: occurred_at,
+        needs_reconciliation: outcome.class == :uncertain,
+        normalized_payload: projection
+      })
+
+    multi =
+      if payload do
+        state = if outcome.class == :uncertain, do: :uncertain, else: :terminal
+
+        reason =
+          if outcome.class == :uncertain,
+            do: :provider_acceptance_unknown,
+            else: :pre_dispatch_failure
+
+        Ecto.Multi.update(
+          multi,
+          :payload,
+          Payload.settle_changeset(payload, state, reason),
+          Repo.multi_opts()
+        )
+      else
+        multi
+      end
+
+    Repo.multi(multi)
   end
 
   defp persist_failed_by_id(delivery_id, %{__exception__: true} = err) do
@@ -820,8 +885,15 @@ defmodule Mailglass.Outbound do
   # Durable jobs are payload-first. The metadata reader below is deliberately
   # limited to old queued rows that carry the complete pre-v2.4 marker set;
   # modern rows never fall through to a lossy reconstruction path.
-  defp load_payload_prepared(%Delivery{} = delivery) do
-    case Payload.fetch_for_delivery(delivery.tenant_id, delivery.id) do
+  defp claim_payload(%Delivery{} = delivery) do
+    case Payload.claim(delivery.tenant_id, delivery.id) do
+      {:ok, payload} -> {:ok, payload}
+      {:error, reason} -> {:error, payload_lifecycle_error(reason)}
+    end
+  end
+
+  defp load_claimed_payload_prepared(%Delivery{} = delivery, %Payload{} = payload) do
+    case Payload.load_claimed(payload) do
       {:ok, %Envelope.Decoded{message: %Message{} = message, adapter_ref: adapter_ref}}
       when is_nil(delivery.adapter_ref) or adapter_ref == delivery.adapter_ref ->
         {:ok, %{message: message, adapter_ref: adapter_ref}}
@@ -831,11 +903,6 @@ defmodule Mailglass.Outbound do
          Mailglass.SendError.new(:serialization_failed,
            context: %{reason_class: :persisted_adapter_mismatch}
          )}
-
-      {:error, :not_found} ->
-        with {:ok, message} <- load_legacy_pre_v24_queued_message(delivery) do
-          {:ok, %{message: message, adapter_ref: delivery.adapter_ref}}
-        end
 
       {:error, :legacy_integrity_unverifiable} ->
         {:error,
@@ -853,6 +920,16 @@ defmodule Mailglass.Outbound do
          )}
     end
   end
+
+  defp payload_lifecycle_error(:not_found), do: payload_lifecycle_error(:payload_missing)
+  defp payload_lifecycle_error(:already_scrubbed), do: payload_lifecycle_error(:payload_scrubbed)
+  defp payload_lifecycle_error(:expired), do: payload_lifecycle_error(:payload_expired)
+
+  defp payload_lifecycle_error(:already_dispatching),
+    do: Mailglass.SendError.new(:adapter_failure, context: %{reason_class: :payload_dispatching})
+
+  defp payload_lifecycle_error(reason),
+    do: Mailglass.SendError.new(:adapter_failure, context: %{reason_class: reason})
 
   defp load_legacy_pre_v24_queued_message(%Delivery{status: :queued, metadata: metadata} = delivery)
        when is_map(metadata) do
