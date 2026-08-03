@@ -1,6 +1,8 @@
 defmodule Mailglass.Outbound.WorkerTest do
   use Mailglass.DataCase, async: false
 
+  import Ecto.Query
+
   # Only run these tests when Oban is available
   @moduletag :oban
 
@@ -19,6 +21,8 @@ defmodule Mailglass.Outbound.WorkerTest do
     Mailglass.Adapters.Fake.checkout()
     prior_adapter = Application.get_env(:mailglass, :adapter)
     prior_adapters = Application.get_env(:mailglass, :adapters)
+    prior_tenancy = Application.get_env(:mailglass, :tenancy)
+    prior_async_adapter = Application.get_env(:mailglass, :async_adapter)
 
     on_exit(fn ->
       Application.put_env(:mailglass, :adapter, prior_adapter)
@@ -28,6 +32,9 @@ defmodule Mailglass.Outbound.WorkerTest do
       else
         Application.put_env(:mailglass, :adapters, prior_adapters)
       end
+
+      Application.put_env(:mailglass, :tenancy, prior_tenancy)
+      Application.put_env(:mailglass, :async_adapter, prior_async_adapter)
     end)
 
     :ok
@@ -81,6 +88,132 @@ defmodule Mailglass.Outbound.WorkerTest do
   end
 
   describe "Worker.perform/1" do
+    @tag phase_150_task: "t150_08_01"
+    test "retries the real queued job with immutable rendered content and its persisted route" do
+      if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do
+        :skip
+      else
+        control = start_supervised!({Agent, fn -> %{body: "original", route: :route_a, renders: 0, routes: 0} end})
+        Application.put_env(:mailglass, :phase_150_worker_route_control, control)
+        Application.put_env(:mailglass, :async_adapter, :oban)
+        Application.put_env(:mailglass, :tenancy, Mailglass.Outbound.WorkerTest.StatefulRouteTenancy)
+
+        Application.put_env(:mailglass, :adapter,
+          {Mailglass.Outbound.WorkerTest.StatefulRouteAdapter, [test_pid: self(), route: :default]}
+        )
+
+        Application.put_env(:mailglass, :adapters,
+          route_a:
+            {Mailglass.Outbound.WorkerTest.StatefulRouteAdapter,
+             [test_pid: self(), route: :route_a]},
+          route_b:
+            {Mailglass.Outbound.WorkerTest.StatefulRouteAdapter,
+             [test_pid: self(), route: :route_b]}
+        )
+
+        start_supervised!(
+          {Oban, testing: :disabled, repo: TestRepo, queues: [mailglass_outbound: 10]}
+        )
+
+        subject = "queued original subject #{System.unique_integer([:positive])}"
+        attachment_marker = "attachment-original-#{System.unique_integer([:positive])}"
+
+        attachment =
+          Swoosh.Attachment.new({:data, attachment_marker},
+            filename: "immutable-marker.txt",
+            content_type: "text/plain"
+          )
+
+        message =
+          Swoosh.Email.new()
+          |> Swoosh.Email.from({"Worker", "from@example.com"})
+          |> Swoosh.Email.to("worker-#{System.unique_integer([:positive])}@example.com")
+          |> Swoosh.Email.subject(subject)
+          |> Swoosh.Email.html_body(fn _assigns ->
+            Agent.get_and_update(control, fn state ->
+              {"<p>rendered #{state.body}</p>", %{state | renders: state.renders + 1}}
+            end)
+          end)
+          |> Swoosh.Email.text_body("original text")
+          |> then(&%{&1 | attachments: [attachment]})
+          |> Message.build(tenant_id: "test-tenant", stream: :transactional)
+
+        assert {:ok, %Delivery{status: :queued} = delivery} = Outbound.deliver_later(message)
+
+        assert %Oban.Job{} =
+                 job =
+                   TestRepo.one!(
+                     from j in Oban.Job,
+                       where: j.queue == "mailglass_outbound" and j.args["delivery_id"] == ^delivery.id
+                   )
+
+        assert job.args == %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
+        assert %{renders: 1, routes: 1} = Agent.get(control, & &1)
+
+        Agent.update(control, &%{&1 | body: "changed", route: :route_b})
+
+        assert :ok = Mailglass.Outbound.Worker.perform(job)
+
+        delivery_id = delivery.id
+        assert_receive {:stateful_adapter_delivery, :route_a, ^delivery_id, sent}
+        assert sent.swoosh_email.subject == subject
+        assert sent.swoosh_email.html_body == "&lt;p&gt;rendered original&lt;/p&gt;"
+        assert [%Swoosh.Attachment{data: ^attachment_marker, filename: "immutable-marker.txt"}] =
+                 sent.swoosh_email.attachments
+        refute_receive {:stateful_adapter_delivery, :route_b, _, _}
+        assert %{renders: 1, routes: 1} = Agent.get(control, & &1)
+      end
+    end
+
+    @tag phase_150_task: "t150_08_01"
+    test "fails closed before adapter delivery when the public route projection disagrees with the envelope" do
+      if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do
+        :skip
+      else
+        Application.put_env(:mailglass, :async_adapter, :oban)
+        Application.put_env(:mailglass, :tenancy, Mailglass.TestTenancy.RouteA)
+
+        Application.put_env(:mailglass, :adapters,
+          route_a:
+            {Mailglass.Outbound.WorkerTest.StatefulRouteAdapter,
+             [test_pid: self(), route: :route_a]},
+          route_b:
+            {Mailglass.Outbound.WorkerTest.StatefulRouteAdapter,
+             [test_pid: self(), route: :route_b]}
+        )
+
+        start_supervised!(
+          {Oban, testing: :disabled, repo: TestRepo, queues: [mailglass_outbound: 10]}
+        )
+
+        assert {:ok, delivery} =
+                 Outbound.deliver_later(
+                   Swoosh.Email.new()
+                   |> Swoosh.Email.from({"Worker", "from@example.com"})
+                   |> Swoosh.Email.to("mismatch-#{System.unique_integer([:positive])}@example.com")
+                   |> Swoosh.Email.subject("projection mismatch")
+                   |> Swoosh.Email.text_body("stored private payload")
+                   |> Message.build(tenant_id: "test-tenant", stream: :transactional)
+                 )
+
+        job =
+          TestRepo.one!(
+            from j in Oban.Job,
+              where: j.queue == "mailglass_outbound" and j.args["delivery_id"] == ^delivery.id
+          )
+
+        TestRepo.update!(Ecto.Changeset.change(delivery, adapter_ref: "route_b"))
+
+        assert {:error,
+                %Mailglass.SendError{
+                  type: :serialization_failed,
+                  context: %{reason_class: :persisted_adapter_mismatch}
+                }} = Mailglass.Outbound.Worker.perform(job)
+
+        refute_receive {:stateful_adapter_delivery, _, _, _}
+      end
+    end
+
     @tag phase_150_task: "t150_03_01"
     test "dispatches immutable payload input before consulting legacy delivery metadata" do
       if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do
@@ -228,5 +361,37 @@ defmodule Mailglass.Outbound.WorkerTest do
       worker_available = Code.ensure_loaded?(Mailglass.Outbound.Worker)
       assert oban_available == worker_available
     end
+  end
+end
+
+defmodule Mailglass.Outbound.WorkerTest.StatefulRouteTenancy do
+  @moduledoc false
+  @behaviour Mailglass.Tenancy
+
+  @impl Mailglass.Tenancy
+  def scope(query, _context), do: query
+
+  @impl Mailglass.Tenancy
+  def resolve_outbound_adapter_ref(_context) do
+    control = Application.fetch_env!(:mailglass, :phase_150_worker_route_control)
+
+    Agent.get_and_update(control, fn state ->
+      {{:ok, state.route}, %{state | routes: state.routes + 1}}
+    end)
+  end
+end
+
+defmodule Mailglass.Outbound.WorkerTest.StatefulRouteAdapter do
+  @moduledoc false
+  @behaviour Mailglass.Adapter
+
+  @impl Mailglass.Adapter
+  def deliver(%Mailglass.Message{} = message, opts) do
+    route = Keyword.fetch!(opts, :route)
+    test_pid = Keyword.fetch!(opts, :test_pid)
+
+    send(test_pid, {:stateful_adapter_delivery, route, message.metadata[:delivery_id], message})
+
+    {:ok, %{message_id: "stateful-#{route}", provider_response: %{adapter: route}}}
   end
 end
