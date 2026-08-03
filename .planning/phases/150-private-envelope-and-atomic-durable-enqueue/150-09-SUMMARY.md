@@ -43,6 +43,7 @@ status: complete
 
 1. **Task 150-09-01 RED: add the no-optional runtime failure probe** — `9354794d` (`test`)
 2. **Task 150-09-01 GREEN: execute the public proof and require it in CI** — `c1620847` (`feat`)
+3. **Task 150-09-01 follow-up: run the proof from the production graph** — `2fab4008` (`fix`)
 
 ## Verification
 
@@ -84,4 +85,4 @@ None.
 ## Self-Check: PASSED
 
 - Confirmed the harness, runtime probe, Mix alias source, and CI workflow exist.
-- Confirmed task commits `9354794d` and `c1620847` exist.
+- Confirmed task commits `9354794d`, `c1620847`, and `2fab4008` exist.
