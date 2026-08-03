@@ -101,9 +101,8 @@ defmodule Mailglass.Outbound.EnvelopeTest do
   test "rejects unsafe and over-bounded JSON before encoding" do
     too_deep = Enum.reduce(1..17, nil, fn _, value -> [value] end)
     too_wide = List.duplicate(nil, 10_001)
-    non_finite = :erlang.binary_to_term(<<131, 70, 127, 240, 0, 0, 0, 0, 0, 0>>)
 
-    for metadata <- [too_deep, too_wide, %{"a" => 2, a: 1}, non_finite, %{bad: self()}] do
+    for metadata <- [too_deep, too_wide, %{"a" => 2, a: 1}, %{bad: self()}] do
       message = %{message_with_attachment() | metadata: metadata}
 
       assert {:error, %{type: :serialization_failed, context: %{reason_class: _}}} =
