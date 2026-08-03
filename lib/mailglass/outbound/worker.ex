@@ -72,15 +72,6 @@ if Code.ensure_loaded?(Oban.Worker) do
          when class in [:terminal, :uncertain],
          do: {:cancel, outcome.reason_class}
 
-    # Preserve the established callback-visible errors for legacy rows while
-    # making lifecycle-originated payload facts terminal/cancelled.
-    defp worker_error_result(
-           %Mailglass.SendError{
-             context: %{reason_class: :legacy_payload_integrity_unverifiable}
-           } = err
-         ),
-         do: {:cancel, err}
-
     # A claim can observe a terminal payload fact written by an earlier
     # attempt. Preserve that terminal classification rather than handing the
     # typed lifecycle error back to Oban as retryable work.
@@ -89,7 +80,7 @@ if Code.ensure_loaded?(Oban.Worker) do
 
     defp worker_error_result(%Mailglass.SendError{context: %{reason_class: reason}} = err)
          when reason in [
-                :legacy_payload_unavailable,
+                :legacy_payload_missing,
                 :payload_missing,
                 :payload_corrupt,
                 :payload_unsupported_version,

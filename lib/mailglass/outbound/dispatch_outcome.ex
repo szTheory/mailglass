@@ -27,6 +27,7 @@ defmodule Mailglass.Outbound.DispatchOutcome do
     :transport_before_acceptance,
     :provider_acceptance_unknown,
     :pre_dispatch_failure,
+    :legacy_payload_missing,
     :payload_missing,
     :payload_corrupt,
     :payload_unsupported_version,
@@ -42,6 +43,7 @@ defmodule Mailglass.Outbound.DispatchOutcome do
           | :transport_before_acceptance
           | :provider_acceptance_unknown
           | :pre_dispatch_failure
+          | :legacy_payload_missing
   @type acceptance :: %{required(:message_id) => String.t(), required(:provider_response) => term()}
   @type t :: %__MODULE__{class: class(), reason_class: reason_class(), context: map()}
 

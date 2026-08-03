@@ -95,15 +95,86 @@ defmodule Mailglass.Outbound.WorkerTest do
   end
 
   describe "Worker.perform/1" do
+    @tag phase_151_task: "t151_08_01"
+    test "fails closed and settles a historical no-Payload job without exposing its private sentinel" do
+      sentinel = "private-sentinel-#{System.unique_integer([:positive])}"
+
+      delivery =
+        Generators.delivery_fixture(
+          tenant_id: "test-tenant",
+          metadata: %{
+            "rendered_html" => "<p>#{sentinel}</p>",
+            "rendered_text" => sentinel,
+            "subject" => sentinel,
+            "headers" => %{"X-Private-Sentinel" => sentinel},
+            "recipient_field" => sentinel,
+            "private_sentinel" => sentinel
+          }
+        )
+
+      original_metadata = delivery.metadata
+
+      job = %Oban.Job{
+        args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
+      }
+
+      assert {:cancel, :legacy_payload_missing} = Mailglass.Outbound.Worker.perform(job)
+
+      assert %Delivery{
+               status: :failed,
+               terminal: true,
+               metadata: ^original_metadata,
+               last_error: last_error
+             } = TestRepo.get!(Delivery, delivery.id)
+
+      assert inspect(last_error) =~ "legacy_payload_missing"
+      refute inspect(last_error) =~ sentinel
+
+      assert [event] =
+               TestRepo.all(
+                 from(event in Mailglass.Events.Event,
+                   where: event.delivery_id == ^delivery.id and event.type == :failed
+                 )
+               )
+
+      assert event.normalized_payload["reason_class"] == "legacy_payload_missing"
+      refute inspect(event.normalized_payload) =~ sentinel
+      assert [] = Mailglass.Adapters.Fake.deliveries()
+      assert nil == TestRepo.get_by(Payload, tenant_id: "test-tenant", delivery_id: delivery.id)
+
+      assert {:cancel, :legacy_payload_missing} = Mailglass.Outbound.Worker.perform(job)
+
+      assert 1 ==
+               TestRepo.aggregate(
+                 from(event in Mailglass.Events.Event, where: event.delivery_id == ^delivery.id),
+                 :count
+               )
+
+      assert [] = Mailglass.Adapters.Fake.deliveries()
+      assert %Delivery{metadata: ^original_metadata} = TestRepo.get!(Delivery, delivery.id)
+
+      outbound_source = File.read!("lib/mailglass/outbound.ex")
+
+      for retired_helper <- [
+            "load_legacy_pre_v24_queued_message",
+            "rehydrate_message",
+            "build_rehydrated_message",
+            "put_rehydrated_recipient",
+            "put_rehydrated_headers"
+          ] do
+        refute outbound_source =~ retired_helper
+      end
+    end
+
     @tag phase_151_task: "t151_04_02"
-    test "cancels a modern missing payload rather than retrying or reconstructing it" do
+    test "cancels a modern missing payload with the unified terminal reason" do
       delivery = Generators.delivery_fixture(tenant_id: "test-tenant")
 
       job = %Oban.Job{
         args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
       }
 
-      assert {:cancel, :payload_missing} = Mailglass.Outbound.Worker.perform(job)
+      assert {:cancel, :legacy_payload_missing} = Mailglass.Outbound.Worker.perform(job)
     end
 
     @tag phase_150_task: "t150_10_01"
@@ -438,7 +509,7 @@ defmodule Mailglass.Outbound.WorkerTest do
       end
     end
 
-    test "perform/1 dispatches delivery and returns :ok on success" do
+    test "perform/1 fail-closes a queued Delivery without a private Payload" do
       if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do
         :skip
       else
@@ -459,12 +530,7 @@ defmodule Mailglass.Outbound.WorkerTest do
           args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
         }
 
-        result =
-          Mailglass.Oban.TenancyMiddleware.wrap_perform(job, fn ->
-            Outbound.dispatch_by_id(delivery.id)
-          end)
-
-        assert {:ok, %Delivery{}} = result
+        assert {:cancel, :legacy_payload_missing} = Mailglass.Outbound.Worker.perform(job)
       end
     end
 
@@ -501,7 +567,7 @@ defmodule Mailglass.Outbound.WorkerTest do
       end
     end
 
-    test "queued dispatch uses the persisted adapter_ref instead of rerunning tenancy routing" do
+    test "queued no-Payload work never resolves its persisted adapter route" do
       if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do
         :skip
       else
@@ -537,8 +603,8 @@ defmodule Mailglass.Outbound.WorkerTest do
           args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "worker-tenant"}
         }
 
-        assert :ok = Mailglass.Outbound.Worker.perform(job)
-        assert_receive {:adapter_route, :route_a, ^delivery_id, "worker-tenant"}
+        assert {:cancel, :legacy_payload_missing} = Mailglass.Outbound.Worker.perform(job)
+        refute_receive {:adapter_route, :route_a, ^delivery_id, "worker-tenant"}
       end
     end
   end

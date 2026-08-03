@@ -258,9 +258,12 @@ defmodule Mailglass.Outbound do
   @spec dispatch_by_id(binary()) ::
           {:ok, Delivery.t()} | {:error, Mailglass.Error.t()}
   def dispatch_by_id(delivery_id) when is_binary(delivery_id) do
-    with {:ok, delivery} <- load_delivery(delivery_id),
-         {:ok, payload} <- claim_payload(delivery) do
-      dispatch_claimed_payload(delivery, payload)
+    with {:ok, delivery} <- load_delivery(delivery_id) do
+      case claim_payload(delivery) do
+        {:ok, payload} -> dispatch_claimed_payload(delivery, payload)
+        {:error, :legacy_payload_missing} -> settle_missing_payload(delivery)
+        {:error, error} -> {:error, error}
+      end
     end
   end
 
@@ -647,26 +650,6 @@ defmodule Mailglass.Outbound do
     dispatch_outcome(delivery, payload, outcome)
   end
 
-  defp dispatch_claimed_payload(%Delivery{} = delivery, :legacy) do
-    result =
-      with {:ok, %{message: rendered, adapter_ref: adapter_ref}} <-
-             load_claimed_payload_prepared(delivery, :legacy),
-           prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
-           {:ok, adapter} <- resolve_persisted_adapter(adapter_ref),
-           {:ok, updated} <- dispatch_prepared(delivery, prepared, adapter) do
-        {:ok, updated}
-      end
-
-    case result do
-      {:error, %{__exception__: true} = err} ->
-        persist_failed_by_id(delivery.id, err)
-        {:error, err}
-
-      other ->
-        other
-    end
-  end
-
   defp dispatch_claimed_payload(%Delivery{} = delivery, %Payload{} = payload) do
     with {:ok, %{message: rendered, adapter_ref: adapter_ref}} <-
            load_claimed_payload_prepared(delivery, payload),
@@ -784,7 +767,11 @@ defmodule Mailglass.Outbound do
         Projector.update_projections(delivery, event)
         |> Ecto.Changeset.change(%{
           status: :failed,
-          last_error: serialize_error(outcome_error(outcome)),
+          last_error:
+            outcome
+            |> outcome_error()
+            |> serialize_error()
+            |> Map.put(:reason_class, outcome.reason_class),
           terminal: outcome.class == :terminal
         }),
         Repo.multi_opts()
@@ -825,45 +812,43 @@ defmodule Mailglass.Outbound do
     Repo.multi(multi)
   end
 
-  defp persist_failed_by_id(delivery_id, %{__exception__: true} = err) do
-    case load_delivery(delivery_id) do
-      {:ok, delivery} ->
-        event_occurred_at = Clock.utc_now()
+  # A missing private row is a terminal public fact, never a cue to inspect
+  # Delivery.metadata. The same Multi writes the bounded projection and ledger
+  # event; optimistic locking rolls back the whole settlement if the event or a
+  # concurrent update cannot commit. Repeated jobs observe the settled fact and
+  # return the same cancellation without appending another Event.
+  defp settle_missing_payload(%Delivery{} = delivery) do
+    outcome = DispatchOutcome.terminal(:legacy_payload_missing)
 
-        event = %Mailglass.Events.Event{
-          tenant_id: delivery.tenant_id,
-          delivery_id: delivery.id,
-          type: :failed,
-          occurred_at: event_occurred_at
-        }
-
-        Repo.multi(
-          Ecto.Multi.new()
-          |> Ecto.Multi.update(
-            :delivery,
-            Projector.update_projections(delivery, event)
-            |> Ecto.Changeset.change(%{
-              status: :failed,
-              last_error: serialize_error(err)
-            }),
-            Repo.multi_opts()
-          )
-          |> Events.append_multi(:event_failed, %{
-            tenant_id: delivery.tenant_id,
-            delivery_id: delivery.id,
-            type: :failed,
-            occurred_at: event_occurred_at,
-            normalized_payload: %{error_type: err.__struct__}
-          })
-        )
-
-      {:error, _} ->
-        # Delivery not found — cannot persist failure, log and move on
-        require Logger
-        Logger.warning("[mailglass] persist_failed_by_id: delivery #{delivery_id} not found")
-        :ok
+    if legacy_payload_missing_settled?(delivery) do
+      {:error, outcome_error(outcome)}
+    else
+      case persist_outcome_multi(delivery, nil, outcome) do
+        {:ok, _changes} -> {:error, outcome_error(outcome)}
+        {:error, _step, _reason, _changes} -> {:error, outcome_error(outcome)}
+      end
     end
   end
+
+  defp legacy_payload_missing_settled?(%Delivery{
+         status: :failed,
+         last_error: %{"reason_class" => "legacy_payload_missing"}
+       }),
+       do: true
+
+  defp legacy_payload_missing_settled?(%Delivery{
+         status: :failed,
+         last_error: %{reason_class: "legacy_payload_missing"}
+       }),
+       do: true
+
+  defp legacy_payload_missing_settled?(%Delivery{
+         status: :failed,
+         last_error: %{reason_class: :legacy_payload_missing}
+       }),
+       do: true
+
+  defp legacy_payload_missing_settled?(_delivery), do: false
 
   # =========================================================
   # Internal — error helpers
@@ -968,20 +953,11 @@ defmodule Mailglass.Outbound do
     end
   end
 
-  # Durable jobs are payload-first. The metadata reader below is deliberately
-  # limited to old queued rows that carry the complete pre-v2.4 marker set;
-  # modern rows never fall through to a lossy reconstruction path.
   defp claim_payload(%Delivery{} = delivery) do
     case Payload.claim(delivery.tenant_id, delivery.id) do
       {:ok, payload} -> {:ok, payload}
-      {:error, :not_found} -> {:ok, :legacy}
+      {:error, :not_found} -> {:error, :legacy_payload_missing}
       {:error, reason} -> {:error, payload_lifecycle_error(reason)}
-    end
-  end
-
-  defp load_claimed_payload_prepared(%Delivery{} = delivery, :legacy) do
-    with {:ok, message} <- load_legacy_pre_v24_queued_message(delivery) do
-      {:ok, %{message: message, adapter_ref: delivery.adapter_ref}}
     end
   end
 
@@ -1043,120 +1019,6 @@ defmodule Mailglass.Outbound do
 
   defp payload_lifecycle_error(reason),
     do: Mailglass.SendError.new(:adapter_failure, context: %{reason_class: reason})
-
-  defp load_legacy_pre_v24_queued_message(%Delivery{status: :queued, metadata: metadata} = delivery)
-       when is_map(metadata) do
-    legacy_keys = ["rendered_html", "rendered_text", "subject", "headers", "recipient_field"]
-
-    if Enum.all?(legacy_keys, &Map.has_key?(metadata, &1)) do
-      rehydrate_message(delivery)
-    else
-      {:error,
-       Mailglass.SendError.new(:adapter_failure,
-         context: %{reason_class: :legacy_payload_unavailable}
-       )}
-    end
-  end
-
-  defp load_legacy_pre_v24_queued_message(_delivery) do
-    {:error,
-     Mailglass.SendError.new(:adapter_failure,
-       context: %{reason_class: :legacy_payload_unavailable}
-     )}
-  end
-
-  defp rehydrate_message(%Delivery{} = delivery) do
-    # In the async path, the worker loads delivery by id. The rendered bytes
-    # are stored in delivery.metadata (rendered_html, rendered_text, subject)
-    # by base_delivery_attrs/2 at enqueue time. Reconstruct a minimal
-    # %Message{} sufficient for the adapter call.
-    #
-    # I-11: Use String.to_existing_atom/1 guarded by Code.ensure_loaded/1.
-    # If the mailable module was unloaded since dispatch, fail cleanly.
-    case delivery.mailable do
-      nil ->
-        {:error,
-         Mailglass.SendError.new(:adapter_failure,
-           context: %{
-             reason_class: :mailable_unresolvable,
-             delivery_id: delivery.id,
-             why: :nil_mailable
-           }
-         )}
-
-      mod_str when is_binary(mod_str) ->
-        # ME-03: Both resolution paths use String.to_existing_atom/1.
-        # String.to_atom/1 on a DB-sourced value is an atom-table exhaustion vector (T-3-12-01).
-        # Primary path: try "Elixir." <> mod_str (the canonical Elixir module atom form).
-        # Fallback path: try mod_str bare (for modules stored without the Elixir. prefix).
-        try do
-          mod_atom = String.to_existing_atom("Elixir." <> mod_str)
-
-          if Code.ensure_loaded?(mod_atom) do
-            {:ok, build_rehydrated_message(delivery, mod_atom)}
-          else
-            # Atom exists in atom table but module not loaded — try bare mod_str path.
-            try do
-              mod = String.to_existing_atom(mod_str)
-              {:ok, build_rehydrated_message(delivery, mod)}
-            rescue
-              ArgumentError ->
-                {:error,
-                 Mailglass.SendError.new(:adapter_failure,
-                   context: %{
-                     reason_class: :mailable_unresolvable,
-                     delivery_id: delivery.id,
-                     mailable: mod_str,
-                     why: :module_not_loaded
-                   }
-                 )}
-            end
-          end
-        rescue
-          ArgumentError ->
-            # "Elixir." <> mod_str atom not in atom table — try the bare mod_str path
-            # (e.g. "Mailglass.FakeFixtures.TestMailer" stored without Elixir. prefix).
-            try do
-              mod = String.to_existing_atom(mod_str)
-              {:ok, build_rehydrated_message(delivery, mod)}
-            rescue
-              ArgumentError ->
-                {:error,
-                 Mailglass.SendError.new(:adapter_failure,
-                   context: %{
-                     reason_class: :mailable_unresolvable,
-                     delivery_id: delivery.id,
-                     mailable: mod_str,
-                     why: :atom_not_found
-                   }
-                 )}
-            end
-        end
-    end
-  end
-
-  # Reconstruct a minimal %Message{} from persisted delivery metadata.
-  # Extracted to avoid duplicating Swoosh.Email assembly across both
-  # rehydration paths (ME-03 restructure).
-  defp build_rehydrated_message(%Delivery{} = delivery, mod_atom) do
-    metadata = rehydrated_metadata(delivery.metadata || %{})
-
-    email =
-      Swoosh.Email.new()
-      |> put_rehydrated_recipient(delivery.recipient, delivery.metadata || %{})
-      |> Swoosh.Email.subject(get_in(delivery.metadata, ["subject"]) || "")
-      |> Swoosh.Email.html_body(get_in(delivery.metadata, ["rendered_html"]))
-      |> Swoosh.Email.text_body(get_in(delivery.metadata, ["rendered_text"]))
-      |> put_rehydrated_headers(Map.get(delivery.metadata || %{}, "headers", %{}))
-
-    %Message{
-      swoosh_email: email,
-      mailable: mod_atom,
-      tenant_id: delivery.tenant_id,
-      stream: delivery.stream,
-      metadata: metadata
-    }
-  end
 
   defp resolve_sync_route(%Message{} = rendered, opts) do
     case Keyword.fetch(opts, :adapter) do
@@ -1430,35 +1292,6 @@ defmodule Mailglass.Outbound do
   end
 
   defp existing_delivery_id(%Message{}), do: nil
-
-  defp rehydrated_metadata(metadata) when is_map(metadata) do
-    case Map.get(metadata, "delivery_id") do
-      delivery_id when is_binary(delivery_id) ->
-        Map.put_new(metadata, :delivery_id, delivery_id)
-
-      _ ->
-        metadata
-    end
-  end
-
-  defp put_rehydrated_recipient(%Swoosh.Email{} = email, recipient, metadata) do
-    case Map.get(metadata, "recipient_field") || Map.get(metadata, :recipient_field) do
-      "cc" -> Swoosh.Email.cc(email, recipient)
-      "bcc" -> Swoosh.Email.bcc(email, recipient)
-      :cc -> Swoosh.Email.cc(email, recipient)
-      :bcc -> Swoosh.Email.bcc(email, recipient)
-      _ -> Swoosh.Email.to(email, recipient)
-    end
-  end
-
-  defp put_rehydrated_headers(%Swoosh.Email{} = email, headers)
-       when is_map(headers) or is_list(headers) do
-    Enum.reduce(headers, email, fn {key, value}, acc ->
-      Swoosh.Email.header(acc, key, value)
-    end)
-  end
-
-  defp put_rehydrated_headers(%Swoosh.Email{} = email, _headers), do: email
 
   # ME-05: Safe provider tag extraction from adapter dispatch result.
   # provider_response is adapter-defined (term()) — must not assume map shape.
