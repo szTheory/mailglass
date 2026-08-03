@@ -638,9 +638,10 @@ defmodule Mailglass.DocsContractTest do
   end
 
   describe "Phase 151 honest dispatch and payload lifecycle contract" do
-    @tag phase_151_task: "t151_07_01"
-    test "public guidance locks bounded dispatch, privacy, retention, and legacy semantics" do
+    @tag phase_151_task: "t151_08_02"
+    test "public guidance locks fail-closed no-Payload dispatch, privacy, and retention" do
       jobs = File.read!("guides/jobs.md")
+      getting_started = File.read!("guides/getting-started.md")
       checklist = File.read!("guides/production-go-live-checklist.md")
       compatibility = File.read!("guides/compatibility-and-deprecations.md")
       stability = File.read!("docs/api_stability.md")
@@ -661,7 +662,8 @@ defmodule Mailglass.DocsContractTest do
       assert jobs =~ "Reconcile, not resend"
       assert jobs =~ "no automatic resend"
 
-      for state <- ~w(recoverable dispatching scrubbed expired terminal discarded abandoned uncertain legacy) do
+      for state <-
+            ~w(recoverable dispatching scrubbed expired terminal discarded abandoned uncertain legacy) do
         assert jobs =~ "`#{state}`"
       end
 
@@ -673,23 +675,43 @@ defmodule Mailglass.DocsContractTest do
       assert jobs =~ "mix mailglass.outbound.payloads.prune --tenant TENANT_ID"
       assert jobs =~ "at most one batch"
       assert jobs =~ "tombstone"
-      assert jobs =~ "missing, corrupt, unsupported-version, expired, and scrubbed"
-      assert jobs =~ "Modern work never reconstructs"
+      assert jobs =~ "legacy_payload_missing"
+      assert jobs =~ "without a private Payload"
+      assert jobs =~ "never invokes the adapter"
+
+      assert jobs =~ "re-authoring/re-enqueueing"
+      assert Regex.match?(~r/authoritative\s+private source/, jobs)
+
+      refute jobs =~ "narrow legacy reader"
       assert jobs =~ "Delivery metadata"
+
+      assert getting_started =~ "legacy_payload_missing"
+      assert Regex.match?(~r/never\s+invokes the adapter/, getting_started)
+      assert Regex.match?(~r/authoritative\s+private source/, getting_started)
+      refute getting_started =~ "narrow legacy reader"
 
       assert checklist =~ "outbound_payload_retention"
       assert checklist =~ "--tenant TENANT_ID"
       assert checklist =~ ":mailglass_maintenance"
       assert checklist =~ "automatic resend"
 
-      assert compatibility =~ "finite forward cleanup"
+      assert compatibility =~ "legacy_payload_missing"
+      assert compatibility =~ "security/correctness exception"
+      assert Regex.match?(~r/authoritative\s+private source/, compatibility)
       assert compatibility =~ "14-day"
-      assert compatibility =~ "not a complete-envelope source"
+      refute compatibility =~ "narrow compatibility reader"
 
       assert stability =~ "Private outbound payload content"
       assert Regex.match?(~r/Delivery metadata, Events, and job arguments/, stability)
       assert stability =~ "Mailglass.Adapter"
       assert stability =~ "callback compatibility"
+
+      assert Regex.match?(
+               ~r/Historical queue dispatch\s+compatibility does not override/,
+               stability
+             )
+
+      refute stability =~ "legacy metadata reader remains"
     end
   end
 
@@ -737,7 +759,8 @@ defmodule Mailglass.DocsContractTest do
       seams.jobs =~ canonical_queue
     ]) and
       Enum.all?(Map.values(seams), fn seam ->
-        not (seam =~ "automatically falls back to Task.Supervisor" or seam =~ "queues: [mailglass: 10]")
+        not (seam =~ "automatically falls back to Task.Supervisor" or
+               seam =~ "queues: [mailglass: 10]")
       end)
   end
 
@@ -785,7 +808,10 @@ defmodule Mailglass.DocsContractTest do
   defp extract_async_guide_section(path) do
     path
     |> File.read!()
-    |> extract_between("To select the configured asynchronous path instead", "## End-to-End Example")
+    |> extract_between(
+      "To select the configured asynchronous path instead",
+      "## End-to-End Example"
+    )
   end
 
   defp extract_jobs_async_section do

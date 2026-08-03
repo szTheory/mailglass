@@ -87,9 +87,9 @@ This message has one native `to` recipient and both nonblank HTML and plaintext
 bodies. With the default `Mailglass.Tenancy.SingleTenant` resolver, no tenant
 stamp is required: the shared preflight records ownership as string `"default"`.
 `cc` and `bcc` count toward the same one-recipient total, and a sole recipient
-in any one of those native fields is supported. Current async rehydration
-retains that sole field marker; Phase 150 still owns complete private durable
-envelope fidelity for the broader Swoosh envelope.
+in any one of those native fields is supported. The complete supported async
+envelope is private durable state; public Delivery metadata is never used to
+reconstruct provider input.
 
 To select the configured asynchronous path instead, call:
 
@@ -106,8 +106,11 @@ and one `:mailglass_outbound` job, or returns a typed error without queued work.
 It never automatically changes to TaskSupervisor. Before production go-live,
 configure the canonical queue and run `Mailglass.Config.production_readiness/0`.
 The private transport state is not a sent-message archive, payload viewer, or
-public Payload API. Existing pre-v2.4 queued rows use only the narrow legacy
-reader; new jobs carry exactly `delivery_id` and `mailglass_tenant_id`.
+public Payload API. Any queued Delivery without that private Payload settles as
+`legacy_payload_missing`, preserves public Delivery/Event history, and never
+invokes the adapter. To send it later, an operator must re-author/re-enqueue it
+from an authoritative private source; new jobs carry exactly `delivery_id` and
+`mailglass_tenant_id`.
 
 ## End-to-End Example
 

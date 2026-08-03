@@ -1322,12 +1322,13 @@ Top-level `Mailglass` module re-exports all five public verbs as `defdelegate`.
 0. Shared tenancy, envelope, and body preflight — resolves `SingleTenant` to
    `"default"`, enforces exactly one total native envelope recipient, requires
    that a sole `to`, `cc`, or `bcc` recipient retain its native field through
-   current async rehydration, and requires nonblank supported HTML and/or
+   private durable envelope, and requires nonblank supported HTML and/or
 plaintext. Durable work persists the complete prepared envelope as private transport state: it is not a sent-message archive, admin viewer, or public
 `Payload` API. New Oban job args remain exactly `delivery_id` and
-`mailglass_tenant_id`; the canonical queue is `:mailglass_outbound`. The narrow
-legacy metadata reader remains forward-only for recognizable pre-v2.4 queued
-rows and does not claim complete envelope fidelity.
+`mailglass_tenant_id`; the canonical queue is `:mailglass_outbound`. Historical
+queue dispatch compatibility does not override the private payload boundary:
+every queued Delivery without a private Payload settles as
+`legacy_payload_missing` without adapter I/O or metadata reconstruction.
    Tenancy raises
    `%TenancyError{:unstamped}` for strict custom context; envelope/body failures
    return `%SendError{type: :preflight_rejected}`.
@@ -1398,9 +1399,13 @@ semantics, not a public guarantee that private adapter response data is exposed.
 Private content never belongs in Delivery metadata, Events, and job arguments.
 In particular, public projections exclude raw subject/body/header/token,
 attachment, provider-option, provider-payload, and arbitrary exception bytes.
-Modern missing, corrupt, unsupported-version, expired, and scrubbed payloads
-are distinct fail-closed terminal conditions; modern queued work never
-reconstructs a complete message from public metadata. See
+Missing, corrupt, unsupported-version, expired, and scrubbed payloads are
+distinct fail-closed terminal conditions. Historical queue dispatch
+compatibility does not override the private payload boundary: any queued
+Delivery without a private Payload settles as `legacy_payload_missing`, retains
+its public Delivery/Event history, never invokes an adapter, and must be
+re-author/re-enqueued from an authoritative private source if sending remains
+necessary. See
 [`guides/jobs.md`](../guides/jobs.md) for finite retention, tombstone, and
 tenant-required prune operations.
 

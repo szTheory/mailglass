@@ -209,8 +209,11 @@ TaskSupervisor. Configure the canonical queue and run
 with the same preflight and renderer preparation as sync. Its private transport
 state is recoverable implementation data, not a sent-message archive, admin
 viewer, or public Payload API. New durable job args are exactly `delivery_id`
-and `mailglass_tenant_id`; a narrow legacy reader exists only for recognizable
-pre-v2.4 queued rows.
+and `mailglass_tenant_id`. Any queued Delivery without a private Payload
+settles terminally as `legacy_payload_missing`, preserves its public Delivery
+and Event history, and never invokes the adapter. If sending is still desired,
+it requires explicit operator re-authoring/re-enqueueing from an authoritative
+private source.
 
 ### Dispatch outcome and private-payload operations
 
@@ -244,11 +247,13 @@ explain why a payload cannot be recovered.
 | `discarded` | A cancelled/discarded dispatch cannot be retried automatically. | Retain content for the terminal window, then prune. |
 | `abandoned` | A lifecycle transition ended the attempt without safe recovery. | Retain content for the terminal window, then prune. |
 | `uncertain` | Provider acceptance is not known. | Retain for reconciliation, never automatic resend. |
-| `legacy` | A recognizable pre-v2.4 queued row may use the narrow compatibility reader. | Retain only for forward cleanup; never reconstruct from public metadata. |
+| `legacy` | Real content-bearing pre-v2.4 private Payload rows remain eligible for bounded cleanup/tombstones. | `legacy_days` governs only that private content lifecycle; it never authorizes metadata dispatch. |
 
-Modern missing, corrupt, unsupported-version, expired, and scrubbed payloads
-are distinct terminal facts. Modern work never reconstructs a message from
-Delivery metadata. Public surfaces exclude private subject/body/header/token,
+Missing, corrupt, unsupported-version, expired, and scrubbed payloads are
+distinct terminal facts. A queued Delivery without a private Payload always
+settles as `legacy_payload_missing`, regardless of metadata shape; it does not
+fabricate a private envelope or reconstruct a message from Delivery metadata.
+Public surfaces exclude private subject/body/header/token,
 attachment, provider-option, provider-payload, and raw exception content from
 Delivery metadata, Events, and job arguments.
 
@@ -268,7 +273,7 @@ config :mailglass,
 Successful payloads are scrubbed immediately. The default terminal,
 discarded, and abandoned window is 14 days; the acceptance-uncertain
 reconciliation window is 30 days; recognizable legacy queued content has a
-14-day cleanup window. A prune call requires one explicit tenant and processes
+14-day cleanup window only when a real private legacy Payload exists. A prune call requires one explicit tenant and processes
 at most one batch (500 rows by default), turning content into tombstones rather
 than deleting the audit history:
 

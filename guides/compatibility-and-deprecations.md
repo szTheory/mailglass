@@ -76,14 +76,18 @@ controlled schedule.
 
 ### Legacy durable payload cleanup
 
-Recognizable pre-v2.4 queued rows retain a narrow compatibility reader solely
-for finite forward cleanup. Their private content has a 14-day cleanup window;
-after that, pruning preserves a non-content tombstone and an actionable
-lifecycle reason. Legacy queued metadata is not a complete-envelope source:
-new or incomplete rows must not be reconstructed from `Delivery.metadata`.
-This bridge does not create a public Payload API or extend the stable adapter
-callback; `Mailglass.Adapter` callback compatibility remains the public
-delivery seam.
+The former pre-v2.4 metadata dispatch bridge is retired under the
+security/correctness exception: recognizable public metadata is provenance, not
+private provider input. A queued Delivery without its private Payload settles
+idempotently as `legacy_payload_missing`, preserves Delivery/Event history,
+never calls an adapter, and cannot fabricate a private envelope. If it still
+needs sending, an operator must re-author/re-enqueue it from an authoritative
+private source.
+
+The 14-day legacy cleanup window applies only to real content-bearing legacy
+Payload rows and their tombstones; it is not a dispatch grace window. This
+retirement does not create a public Payload API or break `Mailglass.Adapter`
+callback compatibility, which remains the public delivery seam.
 
 ## Release guarantees
 
