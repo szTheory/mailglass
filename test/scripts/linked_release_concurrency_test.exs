@@ -210,6 +210,30 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
            ) < substring_index(mix_source, ~s("cmd env MIX_ENV=test mix ci.full"))
   end
 
+  test "mix ci provisions fixture projects before workspace-tagged root tests" do
+    mix_source = File.read!("mix.exs")
+
+    assert length(Regex.scan(~r/reference\/host_app env MIX_ENV=dev mix compile/, mix_source)) == 1
+
+    assert substring_index(
+             mix_source,
+             ~s("cmd --cd reference/host_app env MIX_ENV=dev mix compile")
+           ) <
+             substring_index(
+               mix_source,
+               ~s("cmd env MIX_ENV=test mix test --warnings-as-errors")
+             )
+
+    assert substring_index(
+             mix_source,
+             ~s("cmd --cd reference/demo_app env MIX_ENV=test mix deps.get --check-locked")
+           ) <
+             substring_index(
+               mix_source,
+               ~s("cmd env MIX_ENV=test mix test --warnings-as-errors")
+             )
+  end
+
   defp valid_static_concurrency?(source, expected_group) do
     concurrency = extract_top_level_concurrency!(source)
 

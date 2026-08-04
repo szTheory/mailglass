@@ -422,6 +422,12 @@ defmodule Mailglass.MixProject do
       "ci.full": [
         "cmd env MIX_ENV=test mix ci.setup",
         "cmd env MIX_ENV=test mix verify.support_contract.core",
+        # Workspace-tagged root tests load the sibling package beams from the
+        # reference host. Build it first so a clean runner has the same state as
+        # a warm local checkout.
+        "cmd --cd reference/host_app env MIX_ENV=dev mix deps.get --check-locked",
+        "cmd --cd reference/host_app env MIX_ENV=dev mix compile",
+        "cmd --cd reference/demo_app env MIX_ENV=test mix deps.get --check-locked",
         "cmd env MIX_ENV=test mix test --warnings-as-errors",
         "cmd --cd mailglass_admin mix deps.get --check-locked",
         "cmd --cd mailglass_admin mix verify.support_contract.admin",
@@ -443,8 +449,6 @@ defmodule Mailglass.MixProject do
         "cmd env MIX_ENV=test mix mailglass.audit --kind hex",
         "cmd env MIX_ENV=test mix mailglass.audit --kind deps",
         "cmd env MIX_ENV=test mix dialyzer",
-        "cmd --cd reference/host_app mix deps.get",
-        "cmd --cd reference/host_app env MIX_ENV=dev mix compile",
         "cmd env MIX_ENV=test mix verify.reference_host.journey",
         "cmd bash scripts/check_trust_runner_checkpoint.sh",
         "cmd bash scripts/preflight_network.sh",
