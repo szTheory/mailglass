@@ -42,15 +42,15 @@ jobs:
           GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_PAT || secrets.GITHUB_TOKEN }}
         run: |
           set -o pipefail
-          mix mailglass.repo.hygiene --check --format json | tee repo-hygiene.json
+          mix mailglass.repo.hygiene --check --format json | tee "$RUNNER_TEMP/repo-hygiene.json"
       - name: Write readiness summary
         if: always()
         run: |
           {
             echo "## repo hygiene"
             echo
-            if [ -f repo-hygiene.json ]; then
-              jq -r '.checks[] | "- \(.status) `\(.name)`: \(.message)"' repo-hygiene.json
+            if [ -f "$RUNNER_TEMP/repo-hygiene.json" ]; then
+              jq -r '.checks[] | "- \(.status) `\(.name)`: \(.message)"' "$RUNNER_TEMP/repo-hygiene.json"
             else
               echo "Repo hygiene did not produce an artifact."
             fi
@@ -60,5 +60,5 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: repo-hygiene
-          path: repo-hygiene.json
+          path: ${{ runner.temp }}/repo-hygiene.json
           if-no-files-found: error
