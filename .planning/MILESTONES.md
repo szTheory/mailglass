@@ -1,5 +1,88 @@
 # Milestones
 
+## v2.5 B2C Alpha Adoption Certification (Completed: 2026-08-04)
+
+**Delivered:** Fresh certification that the public `mailglass` 2.4.1, `mailglass_admin` 2.4.1, and
+`mailglass_inbound` 2.1.2 package family is ready for first-adopter integration at the library boundary.
+
+**Phases completed:** 1 phase, 1 certification run
+
+**Result:** Local package-shaped and exact-Hex generated-host journeys each passed all eight stages;
+core/provider/docs/schema/optional-runtime contracts and the 101-test safety-only admin suite passed.
+No source defect or package release was needed. Adopter-owned DNS, provider, auth, preference, alerting,
+and deployment gates remain mandatory before live traffic.
+
+**Audit:** `milestones/v2.5-MILESTONE-AUDIT.md`
+
+---
+
+## v2.4 Outbound First-Adopter Correctness (Shipped: 2026-08-04)
+
+**Delivered:** A correct, private, durable single-recipient outbound path with atomic one-click suppression and production-shaped exact-Hex release proof.
+
+**Phases completed:** 5 phases, 32 plans, 32 tasks
+
+**Stats:** 231 files changed; 25,267 insertions / 1,094 deletions; 52,123 lines across current Elixir library source; two-day implementation and release window.
+
+**Git range:** `0177a5cf` → `82493d63`
+
+**Archives:** `milestones/v2.4-ROADMAP.md`, `milestones/v2.4-REQUIREMENTS.md`, `milestones/v2.4-MILESTONE-AUDIT.md`, `milestones/v2.4-phases/`
+
+**Release:** `mailglass` 2.4.1 / `mailglass_admin` 2.4.1 / `mailglass_inbound` 2.1.2; immutable candidate `587c9d1a`; protected publish and exact-Hex post-publish journeys passed.
+
+**Key accomplishments:**
+
+- Resolver-aware outbound preflight normalizes unstamped SingleTenant messages to `"default"` while keeping every custom tenancy context fail-closed before outbound effects.
+- Shared outbound preflight now accepts exactly one untouched native envelope recipient and rejects invalid recipient/body shapes with bounded errors before any outbound side effect.
+- Renderer-owned body precedence now preserves authored plaintext, supports text-only messages, and applies validated plaintext/CSS switches identically in direct, sync, async, and preview consumers.
+- Public adopter documentation now describes the tested default-tenant, one-recipient first-send and shared-renderer contract while fencing durable-envelope and dispatch behavior to later phases.
+- A versioned, integrity-checked private outbound envelope now persists before the canonical Oban job, backed by prefix-qualified V06 payload storage.
+- Single and batch Oban sends now commit a private immutable payload, public delivery and event facts, and the canonical queued job as one prefix-aware transaction.
+- Durable worker jobs now recover immutable tenant-scoped Payloads first, while explicit Oban enqueue fails closed unless its canonical queue is configured.
+- A callable durable-deployment preflight now rejects non-durable Task.Supervisor, requires the canonical Oban queue, and leaves normal development/test boot unchanged.
+- Durable Oban, explicit non-durable TaskSupervisor, canonical queue, and private transport-state claims now agree across all active outbound source and adopter seams.
+- Lossless, bounded V1 durable envelope codec with immutable attachment bytes and persisted adapter-route dispatch.
+- Dedicated Postgres catalog proof now verifies V06 payload DDL remains prefix-bound, preserves legacy metadata without backfill, and rolls back/re-applies exactly.
+- A real disabled-mode Oban job now proves retries send the private V1 payload and its original route after mutable rendering and tenancy state change.
+- A direct production-graph Elixir runtime now proves selected-Oban `deliver_later/2` fails closed with a typed result and no durable, queue, provider, or Task fallback effects.
+- Sync and real queued Oban delivery now send the same envelope-normalized provider input through one canonical adapter handoff.
+- Closed, conservative outbound outcome classification that preserves Swoosh compatibility while excluding raw provider material from safe projections.
+- Prefix-safe V07 payload lifecycle schema with explicit tombstone states and lossless-only downgrade protection.
+- Durable outbound dispatch now claims private payloads before external I/O, atomically tombstones accepted payloads, and maps closed outcome classes to safe worker behavior.
+- Finite payload retention and fail-closed recovery semantics with deterministic, explicit-tenant tombstone pruning.
+- Tenant-explicit bounded payload pruning works manually everywhere and through an honest optional Oban maintenance worker.
+- Executable adopter guidance now states Mailglass's at-least-once provider boundary, reconciliation-first uncertainty policy, and finite private-payload lifecycle.
+- Payload-first durable dispatch now terminalizes every no-Payload row as `legacy_payload_missing`, with preserved public provenance and no metadata-to-adapter reconstruction.
+- One-click POSTs now atomically converge a delivery-keyed unsubscribe event with an immutable, stream-scoped suppression while preserving exact privacy no-ops.
+- One-click unsubscribe now emits bounded lifecycle and broadcast effects only after a newly created convergence commits, while real concurrent replays and send preflight stay tenant- and stream-isolated.
+- Executable public guidance now locks atomic canonical event plus stream suppression convergence, byte-empty outcomes, and compatible best-effort lifecycle effects.
+- Per-package reachable-tag release selection and a credential-free prepublish gate now bind every publish attempt to an auditable candidate.
+- The ledger-approved candidate shipped through GitHub's protected environment, and the exact public packages passed generated-host, trust, docs, and retirement checks.
+
+---
+
+## v2.3 B2C First-Adopter Readiness (Shipped: 2026-08-02)
+
+**Delivered:** An opinionated and observable B2C first-adopter path, published as core/admin 2.4.0 with inbound 2.1.1 proven compatible and intentionally unchanged.
+
+**Phases completed:** 4 phases, 8 plans, 18 tasks
+
+**Stats:** 203 files changed; 9,916 insertions / 988 deletions; 49,643 lines across current Elixir library source; one-day ship and verification window.
+
+**Git range:** `53211e8b` → `d5ab78ab`
+
+**Archives:** `milestones/v2.3-ROADMAP.md`, `milestones/v2.3-REQUIREMENTS.md`, `milestones/v2.3-MILESTONE-AUDIT.md`, `milestones/v2.3-phases/`
+
+**Key accomplishments:**
+
+- Published and package-tested the decisive B2C stream, suppression, single-tenant, pacing, tracking, and sibling-ownership guide.
+- Added a stable post-commit provider-feedback event with `%{count: 1}`, PII-free metadata, and replay convergence.
+- Made tenant-scoped outbound operator state refresh live without reloads or URL-state loss, with explicit foreign-tenant rejection.
+- Published `mailglass` and `mailglass_admin` 2.4.0 through protected automation while leaving `mailglass_inbound` at 2.1.1.
+- Passed a clean public-Hex consumer install, boot, HTTP 200 check, and five-stage trust journey for 2.4.0/2.4.0/2.1.1.
+
+---
+
 ## v2.2 CI Signal Integrity & Supply-Chain Hygiene (Shipped: 2026-07-31)
 
 **Delivered:** Trustworthy CI and release signals: classified lanes, fail-closed dependency audits, a repaired and release-gating core suite, and honest drift/recovery automation.

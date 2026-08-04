@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v2.5
 milestone_name: B2C Alpha Adoption Certification
-status: planning
+status: Awaiting next milestone
 last_updated: "2026-08-04T17:42:51.623Z"
 last_activity: 2026-08-04
 progress:
-  total_phases: 0
-  completed_phases: 0
+  total_phases: 1
+  completed_phases: 1
   total_plans: 0
   completed_plans: 0
   percent: 0
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-04 after starting v2.5)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Certify the released v2.4.1 package family for B2C alpha integration without expanding product scope.
+**Current focus:** Library certification is complete; awaiting a concrete adopter integration or next milestone.
 
 ## Current Position
 
-Phase: 154 — Executable Alpha Certification
+Phase: Milestone v2.5 complete
 Plan: —
-Status: Ready to plan and execute certification
-Last activity: 2026-08-04 — Defined Phase 154 certification roadmap
+Status: Awaiting next milestone
+Last activity: 2026-08-04 — Phase 154 certification completed with no library defect
 
 ## v2.4 Milestone Intent
 

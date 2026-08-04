@@ -7,15 +7,15 @@
 
 ### Certification Evidence
 
-- [ ] **CERT-01**: Maintainer can reproduce every generated-host certification stage from package-shaped local artifacts and record bounded, non-PII checkpoint evidence.
-- [ ] **CERT-02**: Maintainer can reproduce the complete generated-host journey from the exact public `mailglass` 2.4.1, `mailglass_admin` 2.4.1, and `mailglass_inbound` 2.1.2 package versions with no path or git dependency.
-- [ ] **CERT-03**: Maintainer can verify the documented first-adopter contracts for single-recipient send, durable async delivery, immutable payload lifecycle, provider feedback, and one-click suppression against the released package family.
+- [x] **CERT-01**: Maintainer can reproduce every generated-host certification stage from package-shaped local artifacts and record bounded, non-PII checkpoint evidence.
+- [x] **CERT-02**: Maintainer can reproduce the complete generated-host journey from the exact public `mailglass` 2.4.1, `mailglass_admin` 2.4.1, and `mailglass_inbound` 2.1.2 package versions with no path or git dependency.
+- [x] **CERT-03**: Maintainer can verify the documented first-adopter contracts for single-recipient send, durable async delivery, immutable payload lifecycle, provider feedback, and one-click suppression against the released package family.
 
 ### Integration Safety
 
-- [ ] **SAFE-01**: Maintainer can verify provider/webhook signature controls, schema isolation, optional-dependency isolation, and public documentation contracts without a false-green or unclassified failure.
-- [ ] **SAFE-02**: Maintainer can verify safety-only operator behavior: authenticated access, anonymous denial, preflight/readiness reporting, and delivery/suppression evidence visibility without requiring UI polish.
-- [ ] **SAFE-03**: Maintainer receives a go/no-go report that classifies each result as a library defect, evidence/test defect, or adopter-owned prerequisite and names the required owner.
+- [x] **SAFE-01**: Maintainer can verify provider/webhook signature controls, schema isolation, optional-dependency isolation, and public documentation contracts without a false-green or unclassified failure.
+- [x] **SAFE-02**: Maintainer can verify safety-only operator behavior: authenticated access, anonymous denial, preflight/readiness reporting, and delivery/suppression evidence visibility without requiring UI polish.
+- [x] **SAFE-03**: Maintainer receives a go/no-go report that classifies each result as a library defect, evidence/test defect, or adopter-owned prerequisite and names the required owner.
 
 ## Future Requirements
 
@@ -34,12 +34,12 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CERT-01 | Phase 154 | Pending |
-| CERT-02 | Phase 154 | Pending |
-| CERT-03 | Phase 154 | Pending |
-| SAFE-01 | Phase 154 | Pending |
-| SAFE-02 | Phase 154 | Pending |
-| SAFE-03 | Phase 154 | Pending |
+| CERT-01 | Phase 154 | Complete |
+| CERT-02 | Phase 154 | Complete |
+| CERT-03 | Phase 154 | Complete |
+| SAFE-01 | Phase 154 | Complete |
+| SAFE-02 | Phase 154 | Complete |
+| SAFE-03 | Phase 154 | Complete |
 
 **Coverage:**
 - v2.5 requirements: 6 total
@@ -48,4 +48,4 @@
 
 ---
 *Requirements defined: 2026-08-04*
-*Last updated: 2026-08-04 after v2.5 milestone definition*
+*Last updated: 2026-08-04 after Phase 154 certification*

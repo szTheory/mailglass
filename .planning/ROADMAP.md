@@ -31,11 +31,11 @@
 - ✅ **v2.2 CI Signal Integrity & Supply-Chain Hygiene** — Phases 141-144 (shipped 2026-07-31) — [archive](milestones/v2.2-ROADMAP.md)
 - ✅ **v2.3 B2C First-Adopter Readiness** — Phases 145-148 (shipped 2026-08-02) — [archive](milestones/v2.3-ROADMAP.md)
 - ✅ **v2.4 Outbound First-Adopter Correctness** — Phases 149-153 (shipped 2026-08-04) — [archive](milestones/v2.4-ROADMAP.md)
-- ◆ **v2.5 B2C Alpha Adoption Certification** — Phase 154 (in progress)
+- ✅ **v2.5 B2C Alpha Adoption Certification** — Phase 154 (completed 2026-08-04)
 
 ## Phases
 
-- [ ] **Phase 154: Executable Alpha Certification**
+- [x] **Phase 154: Executable Alpha Certification** — completed 2026-08-04
   - **Goal:** Produce fresh, reproducible evidence that the released v2.4.1 package family is safe to integrate, or isolate a proven defect without expanding scope.
   - **Requirements:** CERT-01, CERT-02, CERT-03, SAFE-01, SAFE-02, SAFE-03
   - **Success criteria:**
