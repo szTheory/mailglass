@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.3
-milestone_name: B2C First-Adopter Readiness
-current_phase: 148
-current_phase_name: release-and-adoption-proof
-status: phase_complete
-stopped_at: Completed and verified Phase 148
-last_updated: "2026-08-02T02:39:00Z"
-last_activity: 2026-08-02
-last_activity_desc: Phase 148 released and verified from public packages
+milestone: v2.5
+milestone_name: B2C Alpha Adoption Certification
+status: planning
+last_updated: "2026-08-04T17:42:51.623Z"
+last_activity: 2026-08-04
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,34 @@ See: .planning/PROJECT.md (updated 2026-07-31 - v2.3 milestone opened)
 
 ## Current Position
 
-Phase: 148 (release-and-adoption-proof) — COMPLETE
-Plan: 5 of 5
-Status: Verified from protected publication and public Hex consumer smoke
-Last activity: 2026-08-02 — Phase 148 released and verified from public packages
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-08-04 — Milestone v2.5 started
+
+## v2.4 Milestone Intent
+
+- **Goal:** Make the documented single-recipient sync/async B2C path correct, durable, privacy-bounded, and proven from a clean Phoenix host before Alpha adopts it.
+- **Execution order:** 149 First-Send Contract Foundation → 150 Private Envelope and Atomic Durable Enqueue → 151 Unified Dispatch, Honest Outcomes, and Payload Lifecycle → 152 Atomic One-Click Suppression Convergence → 153 Generated-Host Proof, Docs, and Release Gate.
+- **Locked contract:** exactly one envelope recipient total; `:oban` selected-but-unavailable fails closed; `Task.Supervisor` is explicitly non-durable; no Alpha policy, UI polish, HEEx assigns, providers, snapshot viewer, recipient fan-out, CI optimization, or ecosystem integrations.
+- **Proof bar:** Phase 153 uses an unassisted generated Phoenix/Ecto/Postgres host with the real running `mailglass_outbound` queue—never `MailerCase`, repo-local `TestRepo`, hidden tenant stamps, or inline-worker false greens.
+
+## v2.4 Roadmap Snapshot
+
+| Phase | Name | Requirements |
+|---|---|---|
+| 149 | First-Send Contract Foundation | FIRST-01..FIRST-07 |
+| 150 | Private Envelope and Atomic Durable Enqueue | ENVL-01, ENVL-02, ENVL-04..ENVL-08 |
+| 151 | Unified Dispatch, Honest Outcomes, and Payload Lifecycle | ENVL-03, DISP-01..DISP-04, PRIV-01..PRIV-04 |
+| 152 | Atomic One-Click Suppression Convergence | UNSUB-07..UNSUB-11 |
+| 153 | Generated-Host Proof, Docs, and Release Gate | ADOPT-01..ADOPT-06, REL-17 |
+
+## v2.3 Closeout
+
+- Audit passed: 15/15 requirements, 4/4 phases, 7/7 integration seams, and 5/5 end-to-end flows.
+- `mailglass` 2.4.0 and `mailglass_admin` 2.4.0 are public; `mailglass_inbound` remains at 2.1.1 by design.
+- Phase 145–148 lifecycle records, roadmap, requirements, and milestone audit are archived under `.planning/milestones/`.
+- No open blockers. One bounded test-strengthening note remains in the milestone audit: add a single webhook-to-LiveView browser-visible test if future regression risk justifies it.
 
 ## v2.3 Milestone Intent
 

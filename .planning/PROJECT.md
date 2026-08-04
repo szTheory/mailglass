@@ -19,11 +19,31 @@ Package boundaries are locked. Chimeway owns notification policy and preferences
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
 paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
 
-## Next Milestone Goals
+## Current Milestone: v2.5 B2C Alpha Adoption Certification
 
-Ship the Mailglass-owned B2C launch profile as linked core/admin 2.4.0, leaving inbound unchanged unless a
-real compatibility change is required. Production launch additionally requires the external Sigra,
-Chimeway, Parapet, Accrue, and host recovery gates recorded in `.planning/REQUIREMENTS.md`.
+**Goal:** Independently certify the published v2.4.1 package family as safe for first B2C SaaS integration,
+without adding product capability or undertaking admin/UI polish.
+
+**Target features:**
+- Reproducible generated-host and exact-Hex certification evidence for the released package family.
+- Core, provider, webhook, privacy, schema, and optional-runtime contract reconciliation.
+- Safety-only operator readiness verification: authenticated access, readiness, delivery-status, and
+  suppression evidence—not visual or workflow redesign.
+- A clear library go/no-go and a separately owned first-adopter launch checklist.
+
+## Active Requirements
+
+- [ ] Re-run the released package family through the complete generated-host and exact-Hex readiness journey.
+- [ ] Verify all first-adopter library contracts and classify every failure as a library defect, test/evidence
+  defect, or adopter-owned launch prerequisite.
+- [ ] Record a bounded go/no-go decision with explicit ownership for DNS, provider credentials, host auth,
+  notification policy, alerting, and deployment gates.
+
+Default posture remains convergence and adopter-pull: do not absorb notification policy,
+authentication, billing, support, mobile activation, or SRE ownership into Mailglass. The external
+Sigra, Chimeway, Parapet, Accrue, and host recovery gates remain production-adoption work owned by
+those systems, not unfinished Mailglass requirements. Admin visual polish, native HEEx assigns,
+provider breadth, ecosystem integrations, and sent-snapshot viewing are explicitly deferred.
 
 <details>
 <summary>Archived v2.2 milestone context</summary>
@@ -831,7 +851,8 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined.*
+*Last updated: 2026-08-04 after starting v2.5 B2C Alpha Adoption Certification.*
+<!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->
 <!-- prior footer: 2026-06-28 — v1.14 Phase 122 (Preview surface redesign) complete, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).* -->
