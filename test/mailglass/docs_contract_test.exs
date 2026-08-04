@@ -709,6 +709,7 @@ defmodule Mailglass.DocsContractTest do
       checklist = File.read!("guides/production-go-live-checklist.md")
       tenancy = File.read!("guides/multi-tenancy.md")
       compatibility = File.read!("guides/compatibility-and-deprecations.md")
+      readme = File.read!("README.md")
       admin = File.read!("mailglass_admin/README.md")
 
       for required <- [
@@ -728,6 +729,8 @@ defmodule Mailglass.DocsContractTest do
       assert tenancy =~ ~s("default")
       assert tenancy =~ "unstamped"
       assert compatibility =~ "2.x"
+      assert readme =~ "canonical `2.x` compatibility, deprecation, and support-matrix policy"
+      assert readme =~ "guides/compatibility-and-deprecations.md"
       assert compatibility =~ "legacy_payload_missing"
       refute compatibility =~ "v1.x"
       refute compatibility =~ "core `1.x` contract"
