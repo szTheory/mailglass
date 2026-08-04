@@ -134,7 +134,7 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     prepublish = extract_job!(source, "prepublish-summary")
 
     assert prepublish =~ "scripts/resolve_release_packages.exs"
-    assert prepublish =~ "Verify fetched dependency source integrity"
+    assert prepublish =~ "Verify dependency source integrity before repository CI"
     assert prepublish =~ "deps/yamerl/include/yamerl_tokens.hrl"
     assert prepublish =~ "mix hex.package fetch yamerl"
     assert prepublish =~ "DEP_MODE=local bash scripts/generated_host_proof.sh --stage all"
@@ -148,6 +148,15 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     assert prepublish =~ "mix ci"
 
     assert substring_index(prepublish, "generated_host_proof.sh --stage all") <
+             substring_index(
+               prepublish,
+               "Verify dependency source integrity before repository CI"
+             )
+
+    assert substring_index(
+             prepublish,
+             "Verify dependency source integrity before repository CI"
+           ) <
              substring_index(prepublish, "run: mix ci")
 
     assert prepublish =~ "mix mailglass.publish.check --package \"$package\""

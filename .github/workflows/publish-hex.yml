@@ -157,7 +157,27 @@ jobs:
           key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
       - name: Install deps (root)
         run: mix deps.get
-      - name: Verify fetched dependency source integrity
+      - name: Prove package-shaped local generated host journey
+        run: |
+          set -euo pipefail
+          proof_checkout="${RUNNER_TEMP}/mailglass-generated-host-proof-source"
+
+          cleanup_proof_checkout() {
+            git worktree remove --force "$proof_checkout" >/dev/null 2>&1 || true
+          }
+          trap cleanup_proof_checkout EXIT
+
+          # Package building exercises Mix/Hex in ways that may alter fetched
+          # dependency sources. Keep that proof physically separate from the
+          # exact checkout whose repository CI and publish checks must pass.
+          git worktree add --detach "$proof_checkout" "$GITHUB_SHA"
+          (
+            cd "$proof_checkout"
+            mix deps.get --check-locked
+            CHECKPOINT_OUT="${GITHUB_WORKSPACE}/tmp/generated-host-proof/checkpoint.json" \
+              DEP_MODE=local bash scripts/generated_host_proof.sh --stage all
+          )
+      - name: Verify dependency source integrity before repository CI
         run: |
           set -euo pipefail
           required_yamerl_headers=(
@@ -180,7 +200,7 @@ jobs:
               exit 1
             fi
 
-            echo "Fetched yamerl source is incomplete; restoring Hex package ${yamerl_version}"
+            echo "Root yamerl source is incomplete; restoring Hex package ${yamerl_version}"
             mix deps.clean yamerl
             mix hex.package fetch yamerl "$yamerl_version" --unpack --output deps/yamerl
           fi
@@ -188,26 +208,6 @@ jobs:
           for header in "${required_yamerl_headers[@]}"; do
             test -f "$header"
           done
-      - name: Prove package-shaped local generated host journey
-        run: |
-          set -euo pipefail
-          proof_checkout="${RUNNER_TEMP}/mailglass-generated-host-proof-source"
-
-          cleanup_proof_checkout() {
-            git worktree remove --force "$proof_checkout" >/dev/null 2>&1 || true
-          }
-          trap cleanup_proof_checkout EXIT
-
-          # Package building exercises Mix/Hex in ways that may alter fetched
-          # dependency sources. Keep that proof physically separate from the
-          # exact checkout whose repository CI and publish checks must pass.
-          git worktree add --detach "$proof_checkout" "$GITHUB_SHA"
-          (
-            cd "$proof_checkout"
-            mix deps.get --check-locked
-            CHECKPOINT_OUT="${GITHUB_WORKSPACE}/tmp/generated-host-proof/checkpoint.json" \
-              DEP_MODE=local bash scripts/generated_host_proof.sh --stage all
-          )
       - name: Run repository CI candidate gate
         run: mix ci
       - name: Wait for postgres + create test DB
