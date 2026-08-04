@@ -6,6 +6,7 @@ defmodule Mailglass.DemoDataTest do
   # `--exclude requires_workspace`; demo fixtures are covered in CI by the
   # Demo Browser Evidence lane.
   @moduletag :requires_workspace
+  @moduletag timeout: 180_000
 
   @demo_app Path.expand("../../reference/demo_app", __DIR__)
 

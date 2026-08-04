@@ -232,6 +232,22 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
                mix_source,
                ~s("cmd env MIX_ENV=test mix test --warnings-as-errors")
              )
+
+    assert length(
+             Regex.scan(
+               ~r/reference\/demo_app env MIX_ENV=test mix compile --warnings-as-errors/,
+               mix_source
+             )
+           ) == 1
+
+    assert substring_index(
+             mix_source,
+             ~s("cmd --cd reference/demo_app env MIX_ENV=test mix compile --warnings-as-errors")
+           ) <
+             substring_index(
+               mix_source,
+               ~s("cmd env MIX_ENV=test mix test --warnings-as-errors")
+             )
   end
 
   defp valid_static_concurrency?(source, expected_group) do

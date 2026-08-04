@@ -428,6 +428,7 @@ defmodule Mailglass.MixProject do
         "cmd --cd reference/host_app env MIX_ENV=dev mix deps.get --check-locked",
         "cmd --cd reference/host_app env MIX_ENV=dev mix compile",
         "cmd --cd reference/demo_app env MIX_ENV=test mix deps.get --check-locked",
+        "cmd --cd reference/demo_app env MIX_ENV=test mix compile --warnings-as-errors",
         "cmd env MIX_ENV=test mix test --warnings-as-errors",
         "cmd --cd mailglass_admin mix deps.get --check-locked",
         "cmd --cd mailglass_admin mix verify.support_contract.admin",
