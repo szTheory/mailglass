@@ -61,6 +61,18 @@ defmodule Mailglass.ProductionPreflightTest do
     assert Mailglass.Config.operator_auth() == OperatorAuth
   end
 
+  test "requires signing credentials for every explicitly configured webhook provider" do
+    Application.put_env(:mailglass, :webhook_providers, [:postmark, :sendgrid])
+    Application.put_env(:mailglass, :postmark, basic_auth: {"user", "preflight-secret"})
+    Application.put_env(:mailglass, :sendgrid, [])
+
+    result = ProductionPreflight.run()
+    signing = Enum.find(result.checks, &(&1.id == :webhook_signing))
+
+    assert signing.status == :failed
+    refute inspect(result) =~ "preflight-secret"
+  end
+
   test "does not make ordinary application startup invoke production preflight" do
     refute Process.whereis(Mailglass.ProductionPreflight)
     assert function_exported?(Mailglass.Application, :start, 2)

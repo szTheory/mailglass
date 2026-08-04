@@ -208,18 +208,41 @@ defmodule Mailglass.ProductionPreflight do
   end
 
   defp signing_configured? do
-    providers = [
-      {:postmark, :basic_auth},
-      {:sendgrid, :public_key},
-      {:mailgun, :signing_key},
-      {:resend, :secret}
-    ]
+    with {:ok, providers} <- configured_webhook_providers(),
+         true <- Enum.all?(providers, &provider_signing_configured?/1) do
+      true
+    else
+      _ -> false
+    end
+  end
 
-    Enum.any?(providers, fn {provider, credential} ->
-      Application.get_env(:mailglass, provider, [])
-      |> Keyword.get(credential)
-      |> present_secret?()
-    end)
+  # Router mounts are compile-time Phoenix macros and cannot be discovered
+  # reliably from a running release. Requiring this explicit, closed config
+  # makes the preflight fail closed rather than allowing one provider's secret
+  # to accidentally attest every mounted callback route.
+  defp configured_webhook_providers do
+    case Application.get_env(:mailglass, :webhook_providers) do
+      providers when is_list(providers) and providers != [] ->
+        if Enum.all?(providers, &(&1 in [:postmark, :sendgrid, :mailgun, :resend])) do
+          {:ok, Enum.uniq(providers)}
+        else
+          :error
+        end
+
+      _ ->
+        :error
+    end
+  end
+
+  defp provider_signing_configured?(:postmark), do: provider_secret?(:postmark, :basic_auth)
+  defp provider_signing_configured?(:sendgrid), do: provider_secret?(:sendgrid, :public_key)
+  defp provider_signing_configured?(:mailgun), do: provider_secret?(:mailgun, :signing_key)
+  defp provider_signing_configured?(:resend), do: provider_secret?(:resend, :secret)
+
+  defp provider_secret?(provider, credential) do
+    Application.get_env(:mailglass, provider, [])
+    |> Keyword.get(credential)
+    |> present_secret?()
   end
 
   defp present_secret?({username, password}) when is_binary(username) and is_binary(password),

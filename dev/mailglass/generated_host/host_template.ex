@@ -42,6 +42,7 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
       async_adapter: :oban,
       outbound_payload_maintenance: :scheduled,
       operator: [auth: GeneratedHost.OperatorAuth],
+      webhook_providers: [:postmark],
       postmark: [basic_auth: {"generated-host", "generated-host-signature"}],
       compliance: [
         endpoint: GeneratedHostWeb.Endpoint,
