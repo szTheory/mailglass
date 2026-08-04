@@ -127,6 +127,11 @@ defmodule Mailglass.GeneratedHost.Journey do
     end
   end
 
+  defp negative_result!(name) when name in @input_controls do
+    message = generated_host_call!([GeneratedHost, SampleMailable], :input_message, [name])
+    assert_input_rejected!(name, Mailglass.Outbound.deliver_later(message))
+  end
+
   defp with_mailglass_env(key, value, fun) when is_function(fun, 0) do
     previous = Application.get_env(:mailglass, key, :__missing__)
     Application.put_env(:mailglass, key, value)
@@ -138,11 +143,6 @@ defmodule Mailglass.GeneratedHost.Journey do
         do: Application.delete_env(:mailglass, key),
         else: Application.put_env(:mailglass, key, previous)
     end
-  end
-
-  defp negative_result!(name) when name in @input_controls do
-    message = generated_host_call!([GeneratedHost, SampleMailable], :input_message, [name])
-    assert_input_rejected!(name, Mailglass.Outbound.deliver_later(message))
   end
 
   defp assert_input_rejected!(name, {:error, %Mailglass.SendError{} = error}) do
