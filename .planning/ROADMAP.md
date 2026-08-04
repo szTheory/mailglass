@@ -38,7 +38,7 @@
 - [x] **Phase 150: Private Envelope and Atomic Durable Enqueue** - Persist the complete supported async message privately and atomically with durable queue work. (completed 2026-08-02)
 - [x] **Phase 151: Unified Dispatch, Honest Outcomes, and Payload Lifecycle** - Dispatch the same prepared envelope honestly and bound private content for its full lifecycle. (completed 2026-08-03)
 - [x] **Phase 152: Atomic One-Click Suppression Convergence** - Make RFC 8058 POSTs atomically and immediately enforce stream-scoped suppression. (completed 2026-08-03)
-- [ ] **Phase 153: Generated-Host Proof, Docs, and Release Gate** - Prove the published contract in a clean production-shaped host before releasing changed packages.
+- [x] **Phase 153: Generated-Host Proof, Docs, and Release Gate** - Prove the published contract in a clean production-shaped host before releasing changed packages. (completed 2026-08-04)
 
 ## Phase Details
 
@@ -198,4 +198,4 @@ Plans:
 | 150. Private Envelope and Atomic Durable Enqueue | 9/9 | Complete    | 2026-08-02 |
 | 151. Unified Dispatch, Honest Outcomes, and Payload Lifecycle | 8/8 | Complete    | 2026-08-03 |
 | 152. Atomic One-Click Suppression Convergence | 3/3 | Complete    | 2026-08-03 |
-| 153. Generated-Host Proof, Docs, and Release Gate | 8/8 | In Progress|  |
+| 153. Generated-Host Proof, Docs, and Release Gate | 8/8 | Complete    | 2026-08-04 |
