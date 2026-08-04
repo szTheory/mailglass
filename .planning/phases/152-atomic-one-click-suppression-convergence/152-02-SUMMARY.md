@@ -29,6 +29,7 @@ metrics:
   duration: 10min
   completed: 2026-08-03
 status: complete
+requirements-completed: [UNSUB-08, UNSUB-09, UNSUB-10, UNSUB-11]
 ---
 
 # Phase 152 Plan 02: Post-Commit One-Click Effects Summary

@@ -28,7 +28,7 @@ key-files:
 key-decisions:
   - "One-click lifecycle compatibility retains its callback and config shape but its returned Multi runs separately and best-effort only after convergence commits."
   - "Empty 200 is Mailglass privacy compatibility, while RFC 8058 is cited only for HTTPS POST/no-redirect interoperability."
-requirements-completed: []
+requirements-completed: [UNSUB-07, UNSUB-08, UNSUB-09, UNSUB-10, UNSUB-11]
 metrics:
   duration: 12min
   completed: 2026-08-03
