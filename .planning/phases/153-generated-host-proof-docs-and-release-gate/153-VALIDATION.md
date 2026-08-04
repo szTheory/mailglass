@@ -1,8 +1,8 @@
 ---
 phase: 153-generated-host-proof-docs-and-release-gate
-status: draft
+status: validated
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-08-03
 requirements: [ADOPT-01, ADOPT-02, ADOPT-03, ADOPT-04, ADOPT-05, ADOPT-06, REL-17]
 ---
@@ -17,13 +17,13 @@ The generated-host harness must create a new application in a temporary director
 
 ## Wave 0 Test Assets
 
-- [ ] `scripts/generated_host_proof.sh` — canonical isolated host lifecycle, package build/unpack, database allocation, stage selection, and cleanup.
-- [ ] `dev/mailglass/generated_host/journey.ex` — one shared local/Hex downstream journey.
-- [ ] `dev/mailglass/generated_host/host_template.ex` — fresh-host files and configuration driven by public APIs.
-- [ ] `test/generated_host/package_boundary_test.exs` — rejects repository-path/private-helper leakage and validates archive manifests.
-- [ ] `test/mailglass/migration_generator_divergence_test.exs` — generated migration equals canonical public migration behavior.
-- [ ] `test/mailglass/docs_contract_test.exs` — parses and executes marked documentation contracts.
-- [ ] `test/scripts/release_package_resolver_test.exs` — synthetic git histories for package selection.
+- [x] `scripts/generated_host_proof.sh` — canonical isolated host lifecycle, package build/unpack, database allocation, stage selection, and cleanup.
+- [x] `dev/mailglass/generated_host/journey.ex` — one shared local/Hex downstream journey.
+- [x] `dev/mailglass/generated_host/host_template.ex` — fresh-host files and configuration driven by public APIs.
+- [x] `test/generated_host/package_boundary_test.exs` — rejects repository-path/private-helper leakage and validates archive manifests.
+- [x] `test/mailglass/shipped_migration_divergence_test.exs` — generated migration equals canonical public migration behavior.
+- [x] `test/mailglass/docs_contract_test.exs` — parses and executes marked documentation contracts.
+- [x] `test/scripts/release_package_resolver_test.exs` — synthetic git histories for package selection.
 
 Wave 0 is incomplete until Plan 01 creates the generated-host harness and first boundary/migration contracts. Every later plan extends that same runner instead of introducing a parallel proof path.
 
@@ -111,3 +111,16 @@ No source item is missing, no deferred idea is planned, and no phase split is re
 - Publication occurs only through the protected workflow.
 - The same full journey passes using exact public Hex versions and HexDocs are visible.
 - `153-RELEASE-PROOF.md` contains observed evidence for every gate and no inferred success.
+
+## Validation Audit 2026-08-04
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+All seven requirements have automated coverage. Phase verification passed 13/13
+must-haves; the focused generated-host/release suite, the real local queue/schema
+negative-control journey, the exact-Hex post-publish workflow, and the ledger-bound
+release-proof verifier are green.
