@@ -4,6 +4,52 @@
 
 ---
 
+## Milestone: v2.4 — Outbound First-Adopter Correctness
+
+**Shipped 2026-08-04** — 5 phases (149–153), 32 plans, 88 planned tasks, 35 requirements; audit `status: passed`.
+
+### What Was Built
+
+- A shared fail-closed first-send contract for default/custom tenancy, exactly one envelope recipient, and explicit body/rendering semantics before effects.
+- A complete versioned private envelope committed atomically with delivery, queued ledger event, payload, and canonical ID-only Oban job.
+- One sync/async provider-input seam with conservative retry/permanent/uncertain outcomes, atomic success scrubbing, and bounded retention/recovery.
+- Atomic replay-safe RFC 8058 event/suppression convergence that immediately blocks later matching-stream sends.
+- A generated production-shaped Phoenix/Postgres/Oban host, production preflight, authenticated operator mount, executable docs, protected changed-package release, and exact-Hex post-publish proof.
+
+### What Worked
+
+- One generated-host runner served local package artifacts and exact public Hex versions, keeping prepublication and post-publication behavior comparable.
+- Zero-effect snapshots made negative controls falsifiable across jobs, deliveries, events, payloads, captures, renders, and supervised tasks.
+- The immutable candidate tag, protected environment evidence, archive checksums, and live workflow/job identities produced a release proof that could be re-verified independently.
+- Cross-phase design held: Phase 149 preflight, Phase 150 persistence, Phase 151 dispatch/lifecycle, and Phase 152 suppression were exercised through Phase 153 public APIs rather than duplicated fixtures.
+
+### What Was Inefficient
+
+- The monolithic publish path exposed cold-workspace assumptions hidden by ordinary split CI: native yamerl build state, fixture dependency preparation, demo compilation inside a 60-second test, and a dev/test environment mismatch.
+- The first post-publish run lacked PostgreSQL and failed before the complete journey; the corrected workflow had to run from a follow-up commit while preserving the already-published candidate tag.
+- Initial negative controls recorded expected labels instead of provoking every named failure. Code review required three fix passes plus a final real Oban-instance correction.
+- Planning evidence drift—unchecked requirements, stale Phase 150 statuses, and incomplete Phase 152 summary metadata—made otherwise-passing verification appear incomplete at milestone close.
+
+### Patterns Established
+
+- Release automation must reproduce a cold monolithic workspace, not assume caches or fixture preparation inherited from split CI jobs.
+- A negative control is evidence only when it mutates one real prerequisite/input, invokes the public boundary, asserts the exact failure class, and proves the complete effect vector is unchanged.
+- Post-publication proof may use a corrected workflow implementation while checking out the immutable release tag; the ledger must bind both the workflow SHA and release SHA explicitly.
+- Exact public artifact verification belongs in the canonical release ledger, including post-publish journey, trust artifact, HexDocs, checksum, and retirement state.
+
+### Key Lessons
+
+1. Precompile cold fixtures outside subprocess test timeouts and compile consumer hosts in the same Mix environment they will boot.
+2. Never pass a shared runner temp root to cleanup code; allocate an owned child and require an ownership marker before recursive removal.
+3. Keep requirement checkboxes, traceability rows, summary frontmatter, and verification reports synchronized as one evidence system.
+4. Publication success is necessary but insufficient—the exact registry versions must complete the adopter journey users actually run.
+
+### Cost Observations
+
+- Two-day implementation/release window from 2026-08-02 through 2026-08-04.
+- 231 files changed in the milestone range; 25,267 insertions and 1,094 deletions.
+- 5 phases, 32 plans, and 88 planned tasks; release recovery and proof-hardening carried most of the closeout cost.
+
 ## Milestone: v2.3 — B2C First-Adopter Readiness
 
 **Shipped 2026-08-02** — 4 phases (145–148), 8 plans, 18 tasks, 15 requirements; audit `status: passed`.
@@ -794,3 +840,4 @@ baseline: "I LOVE THE NEW BRANDBOOK."
 | v2.1 | 3 | 9 | Hostile-path and first-load proof expose false confidence hidden by friendly fixtures. |
 | v2.2 | 4 | 30 | CI truth requires fail-closed aggregation, negative controls, and runtime/source cross-checks. |
 | v2.3 | 4 | 8 | Release proof is strongest when policy, live observability, and public-consumer evidence converge without crossing package boundaries. |
+| v2.4 | 5 | 32 | Immutable release evidence needs real cold-host negative controls and exact-registry journeys, not labels or publication status alone. |
