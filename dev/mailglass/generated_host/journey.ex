@@ -94,7 +94,9 @@ defmodule Mailglass.GeneratedHost.Journey do
   defp negative_result!("instance_unavailable") do
     message = generated_host_call!([GeneratedHost, SampleMailable], :async_message)
 
-    with_mailglass_env(:async_adapter, :unavailable_adapter, fn ->
+    :ok = Supervisor.terminate_child(GeneratedHost.Supervisor, Oban)
+
+    try do
       case Mailglass.Outbound.deliver_later(message) do
         {:error,
          %Mailglass.SendError{
@@ -106,7 +108,9 @@ defmodule Mailglass.GeneratedHost.Journey do
         other ->
           raise "generated-host unavailable-instance control returned #{inspect(other)}"
       end
-    end)
+    after
+      {:ok, _pid} = Supervisor.restart_child(GeneratedHost.Supervisor, Oban)
+    end
   end
 
   defp negative_result!("schema_wrong") do
