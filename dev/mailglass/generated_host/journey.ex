@@ -14,8 +14,7 @@ defmodule Mailglass.GeneratedHost.Journey do
   )
 
   @queue_schema_controls ~w(
-    dependency_missing instance_unavailable canonical_queue_missing wrong_queue
-    migration_missing schema_wrong schema_version_behind schema_version_ahead
+    instance_unavailable schema_wrong
   )
 
   @input_controls ~w(
@@ -88,23 +87,57 @@ defmodule Mailglass.GeneratedHost.Journey do
     }
   end
 
-  defp negative_result!(name) when name in @queue_schema_controls do
-    # These are intentionally host-config mutations only. A public decoy or
-    # public search_path is never allowed to compensate for the configured
-    # schema, queue, or dependency prerequisite.
-    reason =
-      case name do
-        "dependency_missing" -> "dependency_unavailable"
-        "instance_unavailable" -> "instance_unavailable"
-        "canonical_queue_missing" -> "canonical_queue_unavailable"
-        "wrong_queue" -> "canonical_queue_unavailable"
-        "migration_missing" -> "schema_not_ready"
-        "schema_wrong" -> "schema_not_ready"
-        "schema_version_behind" -> "schema_version_drift"
-        "schema_version_ahead" -> "schema_version_drift"
-      end
+  # These controls are deliberately limited to failures this running generated
+  # host can truthfully create. Optional dependency absence and alternate Oban
+  # queue configurations require a separately built host, so they are not
+  # represented as successful evidence here.
+  defp negative_result!("instance_unavailable") do
+    message = generated_host_call!([GeneratedHost, SampleMailable], :async_message)
 
-    {reason, "rejected"}
+    with_mailglass_env(:async_adapter, :unavailable_adapter, fn ->
+      case Mailglass.Outbound.deliver_later(message) do
+        {:error,
+         %Mailglass.SendError{
+           type: :adapter_failure,
+           context: %{reason_class: :instance_unavailable}
+         }} ->
+          {"instance_unavailable", "rejected"}
+
+        other ->
+          raise "generated-host unavailable-instance control returned #{inspect(other)}"
+      end
+    end)
+  end
+
+  defp negative_result!("schema_wrong") do
+    wrong_schema = "generated_host_missing_#{System.unique_integer([:positive])}"
+
+    try do
+      with_mailglass_env(:schema, wrong_schema, fn ->
+        :persistent_term.erase({Mailglass.Config, :schema})
+        readiness = Mailglass.ProductionPreflight.run()
+
+        case Enum.find(readiness.checks, &(&1.id == :schema_access)) do
+          %{status: :failed} -> {"schema_access_failed", "rejected"}
+          other -> raise "generated-host wrong-schema control returned #{inspect(other)}"
+        end
+      end)
+    after
+      :persistent_term.erase({Mailglass.Config, :schema})
+    end
+  end
+
+  defp with_mailglass_env(key, value, fun) when is_function(fun, 0) do
+    previous = Application.get_env(:mailglass, key, :__missing__)
+    Application.put_env(:mailglass, key, value)
+
+    try do
+      fun.()
+    after
+      if previous == :__missing__,
+        do: Application.delete_env(:mailglass, key),
+        else: Application.put_env(:mailglass, key, previous)
+    end
   end
 
   defp negative_result!(name) when name in @input_controls do

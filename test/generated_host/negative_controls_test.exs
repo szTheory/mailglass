@@ -10,15 +10,19 @@ defmodule Mailglass.GeneratedHost.NegativeControlsTest do
     template = File.read!(Path.join(@project_root, "dev/mailglass/generated_host/host_template.ex"))
     runner = File.read!(Path.join(@project_root, "scripts/generated_host_proof.sh"))
 
-    for control <-
-          ~w(dependency_missing instance_unavailable canonical_queue_missing wrong_queue migration_missing schema_wrong schema_version_behind schema_version_ahead) do
+    for control <- ~w(instance_unavailable schema_wrong) do
       assert journey =~ control
     end
 
     assert journey =~ "effect_snapshot"
     assert journey =~ "assert_unchanged!"
-    assert journey =~ "public decoy"
-    assert template =~ "control_name"
+    assert journey =~ "with_mailglass_env"
+    assert journey =~ "Mailglass.ProductionPreflight.run()"
+    assert journey =~ ":unavailable_adapter"
+    refute journey =~ "dependency_missing"
+    refute journey =~ "canonical_queue_missing"
+    refute journey =~ "migration_missing"
+    assert template =~ "input_message"
     assert runner =~ "negative-controls"
     assert runner =~ "--family"
   end
@@ -103,7 +107,7 @@ defmodule Mailglass.GeneratedHost.NegativeControlsTest do
 
     for control <-
           ~w(to_cc duplicate_recipient multiple_recipients unsupported_attachment unsupported_payload unsupported_provider_options oversized_json) do
-      assert template =~ ~s(input_message("#{control}"))
+      assert template =~ ~s|input_message("#{control}")|
     end
 
     assert template =~ "Swoosh.Email.cc"
