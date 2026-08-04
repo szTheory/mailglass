@@ -3,7 +3,8 @@ defmodule Mailglass.Compliance.UnsubscribeController do
   Core RFC 8058 unsubscribe controller.
 
   GET renders the built-in confirmation page by default or redirects to the
-  configured escape hatch. POST handling lands in the next task.
+  configured escape hatch. POST atomically converges the canonical unsubscribe
+  event and stream-scoped suppression before running best-effort host effects.
   """
 
   use Phoenix.Controller, formats: [:html]
