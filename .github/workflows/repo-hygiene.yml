@@ -34,10 +34,12 @@ jobs:
           key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
       - name: Install deps
         run: mix deps.get
+      - name: Compile repo hygiene task
+        run: mix compile
       - name: Run repo hygiene audit
         id: hygiene
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_HYGIENE_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_PAT || secrets.GITHUB_TOKEN }}
         run: |
           set -o pipefail
           mix mailglass.repo.hygiene --check --format json | tee repo-hygiene.json

@@ -297,10 +297,11 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     """)
 
     File.write!(Path.join(workflows, "publish-hex.yml"), """
-    on: workflow_dispatch
-    jobs:
+      on: workflow_dispatch
+      jobs:
       publish-admin:
-        needs: [gate-ci-green, publish-core, publish-inbound]
+        needs: [gate-ci-green, publish-core]
+        if: needs.publish-core.result == 'skipped'
     """)
 
     File.write!(Path.join(workflows, "post-publish-smoke.yml"), """

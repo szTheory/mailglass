@@ -335,8 +335,13 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
       |> require_text(publish_hex, "workflow_dispatch", "publish-hex keeps fallback dispatch")
       |> require_text(
         publish_hex,
-        "needs: [gate-ci-green, publish-core, publish-inbound]",
-        "admin waits on inbound publish"
+        "needs: [gate-ci-green, publish-core]",
+        "admin waits on core publish"
+      )
+      |> require_text(
+        publish_hex,
+        "needs.publish-core.result == 'skipped'",
+        "admin permits intentional core skip for single-package releases"
       )
       |> require_text(smoke, "mailglass_inbound", "post-publish smoke checks inbound package")
 
