@@ -102,7 +102,10 @@ fi
 echo "OPS-01 guard passed."
 
 # --- compile (warnings are errors) ---------------------------------------------
-mix compile --warnings-as-errors 2>&1 | tee compile.log
+# The script can be called from `mix ci`, whose preferred environment is test.
+# Compile in the same environment used by phx.server so a cold release runner
+# does not start a second dependency build inside the endpoint deadline.
+MIX_ENV=dev mix compile --warnings-as-errors 2>&1 | tee compile.log
 if grep -F "UndefinedFunctionError" compile.log; then
   echo "Smoke failed: UndefinedFunctionError detected in compile output."
   exit 1

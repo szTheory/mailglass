@@ -37,7 +37,7 @@ defmodule Mailglass.Install.FirstPreviewSmokeTest do
              "mix phx.new sandbox --module Sandbox --app sandbox --no-ecto --no-mailer --install"
 
     assert script =~ "mix mailglass.install"
-    assert script =~ "mix compile --warnings-as-errors"
+    assert script =~ "MIX_ENV=dev mix compile --warnings-as-errors"
     assert script =~ "OPS-01 guard passed."
     assert script =~ "GET /dev/mail/ -> HTTP ${STATUS}"
 
