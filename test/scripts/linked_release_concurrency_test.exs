@@ -135,8 +135,7 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
 
     assert prepublish =~ "scripts/resolve_release_packages.exs"
     assert prepublish =~ "Verify dependency source integrity before repository CI"
-    assert prepublish =~ "deps/yamerl/include/yamerl_tokens.hrl"
-    assert prepublish =~ "mix hex.package fetch yamerl"
+    assert prepublish =~ "bash scripts/verify_dependency_source_integrity.sh"
     assert prepublish =~ "DEP_MODE=local bash scripts/generated_host_proof.sh --stage all"
     assert prepublish =~ "git worktree add --detach"
     assert prepublish =~ "git worktree remove --force"
@@ -171,6 +170,25 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     assert prepublish =~ "release_packages"
     assert prepublish =~ "steps.release-target.outputs.active == 'true'"
     refute prepublish =~ "HEX_API_KEY"
+  end
+
+  test "mix ci repairs incomplete root dependency sources after every refresh" do
+    mix_source = File.read!("mix.exs")
+    integrity_script = File.read!("scripts/verify_dependency_source_integrity.sh")
+
+    assert length(
+             Regex.scan(
+               ~r/"cmd mix deps\.get --check-locked",\s*"cmd bash scripts\/verify_dependency_source_integrity\.sh"/,
+               mix_source
+             )
+           ) == 2
+
+    assert integrity_script =~ "deps/yamerl/include/yamerl_tokens.hrl"
+    assert integrity_script =~ "deps/yamerl/include/yamerl_nodes.hrl"
+    assert integrity_script =~ "deps/yamerl/include/internal/yamerl_constr.hrl"
+    assert integrity_script =~ "mix deps.clean yamerl"
+    assert integrity_script =~ "mix hex.package fetch yamerl"
+    assert integrity_script =~ ~s(test -f "$header")
   end
 
   defp valid_static_concurrency?(source, expected_group) do

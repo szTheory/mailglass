@@ -398,6 +398,7 @@ defmodule Mailglass.MixProject do
         # Package-isolation tasks can leave local dev artifacts behind the
         # unchanged lock. Rehydrate them before the parity run starts.
         "cmd mix deps.get --check-locked",
+        "cmd bash scripts/verify_dependency_source_integrity.sh",
         # Keep the no-optional-deps compile in an isolated child build. Running
         # `ci.fast` inline unloads Hex from this parent Mix VM; sharing _build
         # would also delete optional dependency artifacts needed by later lanes.
@@ -407,6 +408,7 @@ defmodule Mailglass.MixProject do
         # the full suite in the parent VM makes Mix inspect stale dependency
         # metadata and report false lock mismatches.
         "cmd mix deps.get --check-locked",
+        "cmd bash scripts/verify_dependency_source_integrity.sh",
         "cmd env MIX_ENV=test mix ci.full"
       ],
 
