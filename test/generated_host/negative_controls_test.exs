@@ -34,6 +34,9 @@ defmodule Mailglass.GeneratedHost.NegativeControlsTest do
     end
 
     assert journey =~ "Mailglass.Outbound.deliver_later"
+    assert journey =~ "input_error_shape"
+    assert journey =~ ":serialization_failed"
+    assert journey =~ ":invalid_envelope"
     assert journey =~ "render_count"
     assert checkpoint =~ "negative_controls!"
     assert checkpoint =~ "before"
@@ -94,5 +97,17 @@ defmodule Mailglass.GeneratedHost.NegativeControlsTest do
     assert journey =~ "assert_input_rejected!"
     assert journey =~ "unsupported_provider_options"
     assert journey =~ "oversized_json"
+    assert journey =~ "error.context[:reason_class]"
+
+    template = File.read!(Path.join(@project_root, "dev/mailglass/generated_host/host_template.ex"))
+
+    for control <-
+          ~w(to_cc duplicate_recipient multiple_recipients unsupported_attachment unsupported_payload unsupported_provider_options oversized_json) do
+      assert template =~ ~s(input_message("#{control}"))
+    end
+
+    assert template =~ "Swoosh.Email.cc"
+    assert template =~ "Map.put(&1, :attachments, [%{}])"
+    assert template =~ "String.duplicate(\"x\", 1_048_577)"
   end
 end

@@ -112,16 +112,33 @@ defmodule Mailglass.GeneratedHost.Journey do
     assert_input_rejected!(name, Mailglass.Outbound.deliver_later(message))
   end
 
-  defp assert_input_rejected!(name, {:error, _error}), do: {input_reason_class(name), "rejected"}
+  defp assert_input_rejected!(name, {:error, %Mailglass.SendError{} = error}) do
+    {type, reason_class} = input_error_shape(name)
 
-  defp assert_input_rejected!(name, {:ok, _delivery}),
-    do: raise("generated-host negative control falsely queued: #{name}")
+    unless error.type == type and error.context[:reason_class] == reason_class do
+      raise(
+        "generated-host input control returned the wrong error: #{name} #{inspect(error)}"
+      )
+    end
 
-  defp input_reason_class(name)
+    {Atom.to_string(reason_class), "rejected"}
+  end
+
+  defp assert_input_rejected!(name, other),
+    do: raise("generated-host input control was not rejected: #{name} #{inspect(other)}")
+
+  defp input_error_shape(name)
        when name in ["zero_recipient", "to_cc", "duplicate_recipient", "multiple_recipients"],
-       do: "recipient_count_invalid"
+       do: {:preflight_rejected, :recipient_count_invalid}
 
-  defp input_reason_class(_name), do: "payload_invalid"
+  defp input_error_shape(name)
+       when name in [
+              "unsupported_attachment",
+              "unsupported_payload",
+              "unsupported_provider_options",
+              "oversized_json"
+            ],
+       do: {:serialization_failed, :invalid_envelope}
 
   defp effect_snapshot(schema) do
     repo = Application.fetch_env!(:mailglass, :repo)

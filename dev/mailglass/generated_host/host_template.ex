@@ -332,14 +332,59 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
       def bulk_message, do: GeneratedHost.BulkSampleMailable.message()
       def operational_message, do: GeneratedHost.OperationalSampleMailable.message()
 
-      # Negative controls all pass through the public outbound entrypoint. The
-      # malformed shape is represented in the control name; the absent envelope
-      # guarantees preflight rejects before a renderer, durable store, provider,
-      # or Task child can observe it.
-      def input_message(control_name) when is_binary(control_name) do
+      # Keep this vocabulary closed: each proof label constructs the exact
+      # malformed public message shape it claims to exercise.
+      def input_message("zero_recipient"), do: invalid_message()
+
+      def input_message("to_cc") do
+        invalid_message()
+        |> Mailglass.Message.update_swoosh(fn email ->
+          email
+          |> Swoosh.Email.to("to@example.test")
+          |> Swoosh.Email.cc("cc@example.test")
+        end)
+      end
+
+      def input_message("duplicate_recipient") do
+        invalid_message()
+        |> Mailglass.Message.update_swoosh(&Swoosh.Email.to(&1, ["same@example.test", "same@example.test"]))
+      end
+
+      def input_message("multiple_recipients") do
+        invalid_message()
+        |> Mailglass.Message.update_swoosh(&Swoosh.Email.to(&1, ["one@example.test", "two@example.test"]))
+      end
+
+      def input_message("unsupported_attachment") do
+        invalid_message()
+        |> Mailglass.Message.to("recipient@example.test")
+        |> Mailglass.Message.update_swoosh(&Map.put(&1, :attachments, [%{}]))
+      end
+
+      def input_message("unsupported_payload") do
+        invalid_message()
+        |> Mailglass.Message.to("recipient@example.test")
+        |> Mailglass.Message.put_metadata(:invalid_payload, self())
+      end
+
+      def input_message("unsupported_provider_options") do
+        invalid_message()
+        |> Mailglass.Message.to("recipient@example.test")
+        |> Mailglass.Message.update_swoosh(&Map.put(&1, :provider_options, %{invalid: self()}))
+      end
+
+      def input_message("oversized_json") do
+        invalid_message()
+        |> Mailglass.Message.to("recipient@example.test")
+        |> Mailglass.Message.put_metadata(:oversized, String.duplicate("x", 1_048_577))
+      end
+
+      def input_message(control_name), do: raise("unknown generated-host input control: #{inspect(control_name)}")
+
+      defp invalid_message do
         new()
         |> Mailglass.Message.from({"Generated Host", "sender@example.test"})
-        |> Mailglass.Message.subject("negative control " <> control_name)
+        |> Mailglass.Message.subject("generated-host negative control")
         |> Mailglass.Message.text_body("invalid control")
         |> Mailglass.Message.put_function(:message)
       end
