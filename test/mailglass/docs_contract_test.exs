@@ -730,6 +730,8 @@ defmodule Mailglass.DocsContractTest do
       assert compatibility =~ "2.x"
       assert compatibility =~ "legacy_payload_missing"
       refute compatibility =~ "v1.x"
+      refute compatibility =~ "core `1.x` contract"
+      refute compatibility =~ "Supported `1.x` posture"
 
       assert admin =~ "does not require mailglass_inbound"
       assert admin =~ "mailglass_admin consumes public mailglass APIs"

@@ -71,7 +71,7 @@ The compatibility lane is intentionally small. A retained path stays here only
 when the repository still documents a replacement, warning behavior, and a
 support horizon.
 
-Examples of retained bridges for the `1.x` transition:
+Examples of retained bridges during the `2.x` transition:
 
 - `Mailglass.Message.new/2`
 - `Mailglass.Outbound.send/2`
@@ -103,7 +103,7 @@ callback compatibility, which remains the public delivery seam.
 
 ### Patch releases
 
-Patch releases keep the documented `1.x` stable lane intact.
+Patch releases keep the documented `2.x` stable lane intact.
 
 Allowed in a patch release:
 
@@ -162,7 +162,7 @@ Mailglass supports strict adopters that compile and test with
 `--warnings-as-errors`.
 
 - Paths with explicit `@deprecated` metadata should be treated as migration work
-  you should schedule before tightening your `1.x` adoption baseline
+  you should schedule before tightening your `2.x` adoption baseline
 - Silent legacy bridges may remain temporarily when this guide still documents
   them as compatibility-lane surfaces with a support horizon
 - New code should prefer the stable lane even when a compatibility bridge still
@@ -179,7 +179,7 @@ This table is intentionally narrow. A row belongs here only if the repository
 proves it today through `mix.exs`, `mailglass_admin/mix.exs`,
 `scripts/verify_support_contract.sh`, or `.github/workflows/ci.yml`.
 
-| Surface | Supported `1.x` posture | Proof artifact |
+| Surface | Supported `2.x` posture | Proof artifact |
 | --- | --- | --- |
 | Elixir | `~> 1.18` | `mix.exs`, `mailglass_admin/mix.exs`, `.github/workflows/ci.yml` |
 | OTP | `27+` | `.github/workflows/ci.yml` |
@@ -204,11 +204,11 @@ the minimum runtime floor.
 Those integrations are documented and compiled as optional dependencies in
 `mix.exs`. They are supported when present in a compatible adopter app, but the
 repo does not claim that every project must install them to remain inside the
-core `1.x` contract.
+core `2.x` contract.
 
 ## Sibling-package policy
 
-`mailglass` and `mailglass_admin` ship as matched siblings. For the `1.x`
+`mailglass` and `mailglass_admin` ship as matched siblings. For the `2.x`
 contract, use matched release lines unless a future guide explicitly documents a
 different compatibility window.
 
@@ -247,7 +247,7 @@ tests. Reachability is not a compatibility promise.
 
 This guide does not promise:
 
-- `mailglass_inbound`'s contract within the `mailglass` / `mailglass_admin` `1.x` line covered here; `mailglass_inbound` has its own independent contract documented in `mailglass_inbound/docs/api_stability.md`
+- `mailglass_inbound`'s contract within the `mailglass` / `mailglass_admin` `2.x` line covered here; `mailglass_inbound` has its own independent contract documented in `mailglass_inbound/docs/api_stability.md`
 - broader Elixir, OTP, Phoenix, LiveView, Ecto, or Postgres ranges than the
   repository currently proves
 - that every exported or reachable function is stable
@@ -266,4 +266,4 @@ This guide does not promise:
 - Verifying repo truth: run `scripts/verify_support_contract.sh`
 
 If a compatibility claim is not documented here or in the package stability
-inventories, do not assume it is part of the `1.x` promise.
+inventories, do not assume it is part of the `2.x` promise.
