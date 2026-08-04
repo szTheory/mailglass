@@ -134,6 +134,9 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     prepublish = extract_job!(source, "prepublish-summary")
 
     assert prepublish =~ "scripts/resolve_release_packages.exs"
+    assert prepublish =~ "Verify fetched dependency source integrity"
+    assert prepublish =~ "deps/yamerl/include/yamerl_tokens.hrl"
+    assert prepublish =~ "mix hex.package fetch yamerl"
     assert prepublish =~ "DEP_MODE=local bash scripts/generated_host_proof.sh --stage all"
     assert prepublish =~ "git worktree add --detach"
     assert prepublish =~ "git worktree remove --force"
