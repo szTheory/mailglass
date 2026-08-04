@@ -33,6 +33,9 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
 
     assert consumer_install =~ "DEP_MODE: hex"
     assert consumer_install =~ "run: DEP_MODE=hex bash scripts/generated_host_proof.sh --stage all"
+    assert consumer_install =~ "image: postgres:16-alpine"
+    assert consumer_install =~ "POSTGRES_HOST: localhost"
+    assert consumer_install =~ "--health-cmd pg_isready"
   end
 
   test "exact resolver-selected Hex journey rejects floating and local dependencies" do
