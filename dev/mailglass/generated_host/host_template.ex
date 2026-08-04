@@ -379,7 +379,7 @@ defmodule Mailglass.GeneratedHost.HostTemplate do
         |> Mailglass.Message.put_metadata(:oversized, String.duplicate("x", 1_048_577))
       end
 
-      def input_message(control_name), do: raise("unknown generated-host input control: #{inspect(control_name)}")
+      def input_message(control_name), do: raise("unknown generated-host input control: \#{inspect(control_name)}")
 
       defp invalid_message do
         new()
