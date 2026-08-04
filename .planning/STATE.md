@@ -10,14 +10,14 @@ progress:
   completed_phases: 1
   total_plans: 0
   completed_plans: 0
-  percent: 0
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-04 after starting v2.5)
+See: .planning/PROJECT.md (updated 2026-08-04 after completing v2.5)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
 **Current focus:** Library certification is complete; awaiting a concrete adopter integration or next milestone.
