@@ -158,14 +158,25 @@ jobs:
       - name: Install deps (root)
         run: mix deps.get
       - name: Prove package-shaped local generated host journey
-        run: DEP_MODE=local bash scripts/generated_host_proof.sh --stage all
-      - name: Rehydrate root dependencies after package isolation
         run: |
-          # `mix hex.build --unpack` under the release toolchain can leave
-          # fetched rebar dependencies without source headers. Re-fetch the
-          # locked tree before `mix ci` switches to its isolated build path.
-          mix deps.clean --all
-          mix deps.get --check-locked
+          set -euo pipefail
+          proof_checkout="${RUNNER_TEMP}/mailglass-generated-host-proof-source"
+
+          cleanup_proof_checkout() {
+            git worktree remove --force "$proof_checkout" >/dev/null 2>&1 || true
+          }
+          trap cleanup_proof_checkout EXIT
+
+          # Package building exercises Mix/Hex in ways that may alter fetched
+          # dependency sources. Keep that proof physically separate from the
+          # exact checkout whose repository CI and publish checks must pass.
+          git worktree add --detach "$proof_checkout" "$GITHUB_SHA"
+          (
+            cd "$proof_checkout"
+            mix deps.get --check-locked
+            CHECKPOINT_OUT="${GITHUB_WORKSPACE}/tmp/generated-host-proof/checkpoint.json" \
+              DEP_MODE=local bash scripts/generated_host_proof.sh --stage all
+          )
       - name: Run repository CI candidate gate
         run: mix ci
       - name: Wait for postgres + create test DB

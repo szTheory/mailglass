@@ -135,15 +135,16 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
 
     assert prepublish =~ "scripts/resolve_release_packages.exs"
     assert prepublish =~ "DEP_MODE=local bash scripts/generated_host_proof.sh --stage all"
-    assert prepublish =~ "Rehydrate root dependencies after package isolation"
-    assert prepublish =~ "mix deps.clean --all"
+    assert prepublish =~ "git worktree add --detach"
+    assert prepublish =~ "git worktree remove --force"
     assert prepublish =~ "mix deps.get --check-locked"
+
+    assert prepublish =~
+             ~s(CHECKPOINT_OUT="${GITHUB_WORKSPACE}/tmp/generated-host-proof/checkpoint.json")
+
     assert prepublish =~ "mix ci"
 
     assert substring_index(prepublish, "generated_host_proof.sh --stage all") <
-             substring_index(prepublish, "mix deps.clean --all")
-
-    assert substring_index(prepublish, "mix deps.clean --all") <
              substring_index(prepublish, "run: mix ci")
 
     assert prepublish =~ "mix mailglass.publish.check --package \"$package\""
