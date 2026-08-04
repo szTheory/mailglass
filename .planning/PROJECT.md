@@ -10,38 +10,31 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**v2.3 B2C First-Adopter Readiness shipped 2026-08-02.** Mailglass now has an opinionated first-adopter
-consumer launch guide, a canonical post-commit provider-feedback event, tenant-scoped live outbound
-operator refresh, and published-package proof for the package family adopters install.
+**v2.4 Outbound First-Adopter Correctness shipped 2026-08-04.** Mailglass now proves the documented
+single-recipient sync/async journey from a generated production-shaped Phoenix/Postgres host. Durable
+delivery persists a complete private envelope atomically with its canonical Oban job, classifies provider
+outcomes honestly, bounds payload retention, and converges RFC 8058 one-click suppression before later
+matching sends.
 
-`mailglass` 2.4.0 and `mailglass_admin` 2.4.0 are live on Hex. `mailglass_inbound` intentionally remains
-at 2.1.1 and passed the clean consumer trust journey with the linked 2.4.0 packages. The v2.3 audit passed
-15/15 requirements, 7/7 cross-phase seams, and 5/5 end-to-end flows.
+`mailglass` 2.4.1, `mailglass_admin` 2.4.1, and `mailglass_inbound` 2.1.2 are live on Hex. The immutable
+`mailglass-v2.4.1` candidate passed protected publication, an exact-Hex generated-host journey, the
+published reference-host trust journey, HexDocs checks, and unretracted-package verification. The v2.4
+audit passed 35/35 requirements, 12/12 cross-phase seams, and 6/6 end-to-end flows.
 
 Package boundaries are locked. Chimeway owns notification policy and preferences; Sigra owns auth token
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
 paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
 
-## Current Milestone: v2.4 Outbound First-Adopter Correctness
+## Next Milestone Goals
 
-**Goal:** Make Mailglass's documented single-recipient sync/async B2C path correct, durable,
-privacy-bounded, and proven from a clean Phoenix host before Alpha adopts it.
-
-**Target features:**
-- First-send contract truth: correct Oban queue wiring, real zero-config single tenancy, and honest renderer/body semantics.
-- Durable async fidelity: one envelope recipient per delivery, complete wire-equivalent payloads, fail-closed durability, and honest retry behavior.
-- One-click compliance convergence: idempotent RFC 8058 POST produces the stream-scoped suppression future sends enforce.
-- Async payload privacy: internal queued content is lifecycle-bounded, scrubbed after successful dispatch, and separated from adopter metadata.
-- Unassisted adopter proof: a clean Phoenix/Postgres host installs, migrates, sends sync and async, ingests feedback, enforces unsubscribe, mounts production operations, and passes release proof without test-helper shortcuts.
+No next milestone is committed. Default posture is quiet maintenance and adopter-pull work: keep
+release automation, documentation, compatibility, and security evidence current; open new product scope
+only for a concrete adopter need or a demonstrated contract gap.
 
 ## Active Requirements
 
-- [ ] The documented single-tenant first-send path works without an explicit process tenant stamp, while custom tenancy remains fail-closed.
-- [ ] Synchronous and durable asynchronous delivery preserve the same supported message semantics for exactly one envelope recipient.
-- [ ] Built-in one-click unsubscribe atomically creates the correct stream-scoped suppression and remains replay-idempotent.
-- [ ] Explicit plaintext, text-only mail, and documented renderer options behave as published.
-- [ ] Async message content has an explicit internal storage, scrubbing, and bounded-retention contract.
-- [ ] A generated production-shaped Phoenix host proves the complete adopter journey and blocks release on configuration drift.
+No active requirements. Start the next milestone with fresh requirements only when adopter evidence
+justifies it.
 
 Default posture remains convergence and adopter-pull: do not absorb notification policy,
 authentication, billing, support, mobile activation, or SRE ownership into Mailglass. The external
@@ -594,9 +587,16 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 If everything else fails, the preview dashboard, normalized event ledger, and one-line `Mailglass.deliver/2 → deliver_later/2` ergonomics must work flawlessly.
 
-## Validated Requirements (through v2.3 — SHIPPED)
+## Validated Requirements (through v2.4 — SHIPPED)
 
 All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, 19 v1.7 REQ-IDs, 10 v1.10 REQ-IDs, and 34 v1.11 REQ-IDs satisfied. The v1.9 brand book shipped its 22 REQ-IDs (archived in `milestones/v1.9-REQUIREMENTS.md`); v1.8 validated 2 brand-audit requirements before closing superseded.
+
+**v2.4 Outbound First-Adopter Correctness:**
+- ✓ FIRST-01..07 — default-tenant first-send, exact recipient cardinality, body semantics, renderer parity, and zero-effect preflight failures.
+- ✓ ENVL-01..08 — complete private envelope, immutable routing/rendering, atomic canonical Oban enqueue, and fail-closed durability.
+- ✓ DISP-01..04 / PRIV-01..04 — structural provider outcomes, honest retry/reconciliation, payload scrubbing, bounded retention, and no public-content reconstruction.
+- ✓ UNSUB-07..11 — atomic replay-safe one-click event/suppression convergence with immediate tenant/stream-safe enforcement.
+- ✓ ADOPT-01..06 / REL-17 — production-shaped public-API host proof, callable preflight, authenticated operator mount, executable docs, protected changed-package publication, and exact-Hex post-publish proof.
 
 **v2.3 B2C First-Adopter Readiness:**
 - ✓ B2C-01..07 — stream mapping, suppression scope, RFC 8058 ownership, single-tenant identities, cold-domain pacing, privacy-first tracking, sibling ownership, external launch gates, and no `crosswake_mailglass`.
@@ -843,6 +843,11 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-31 | Provider feedback emits once from the existing post-commit projector chokepoint with a closed, PII-free metadata contract | Observability consumers need durable facts, not webhook-attempt noise or recipient/message data | ✓ Validated v2.3 — replay-safe event and metadata contract passed focused tests |
 | D-32 | The admin reuses existing tenant PubSub topics and refreshes read models; it does not add a second event bus or mutate URL navigation state | Existing projection topics are the canonical live signal and keep the one-maintainer architecture supportable | ✓ Validated v2.3 — current-tenant refresh and foreign-tenant rejection passed 79 LiveView tests |
 | D-33 | B2C release links core/admin 2.4.0 while inbound remains independently versioned at 2.1.1 | Inbound had no compatibility change and must not be republished merely because linked outbound/admin packages ship | ✓ Validated v2.3 — protected publication and clean public consumer smoke passed |
+| D-34 | The supported outbound envelope has exactly one recipient across `to`/`cc`/`bcc`, and invalid tenancy, recipient, or body shapes fail before effects | The first-adopter contract must be explicit and safely enforceable before rendering, rate limiting, persistence, queueing, or provider I/O | ✓ Validated v2.4 — shared preflight and generated-host negative controls pass |
+| D-35 | Durable Oban delivery stores a complete private, versioned envelope and commits its public projection, ledger event, payload, and ID-only job atomically | Retries must use immutable prepared truth without leaking content into public metadata or claiming queue success after a partial commit | ✓ Validated v2.4 — prefix-safe atomic enqueue, real job recovery, and payload privacy proofs pass |
+| D-36 | Provider outcomes use conservative structural classes; successful dispatch atomically settles and scrubs private payload content | Error-string guessing and blind retries can duplicate accepted mail, while unbounded payload retention violates the privacy contract | ✓ Validated v2.4 — sync/async parity, retry/cancel/reconciliation, retention, and scrub proofs pass |
+| D-37 | Built-in RFC 8058 POST atomically converges one canonical unsubscribe event and one stream-scoped suppression before best-effort host effects | Replay, concurrency, tenant isolation, and suppression enforcement must agree on one durable state transition | ✓ Validated v2.4 — concurrent replay and hostile-schema proofs pass |
+| D-38 | Release only the resolver-selected changed package set through protected automation, then accept the release only after an exact-Hex production-shaped journey | A green repository build is not proof that immutable public artifacts install and work together | ✓ Validated v2.4 — 2.4.1/2.4.1/2.1.2 published from immutable candidate `587c9d1`; exact-Hex and trust journeys passed |
 
 ## Evolution
 
@@ -865,7 +870,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-08-02 after opening v2.4 Outbound First-Adopter Correctness for Alpha readiness.*
+*Last updated: 2026-08-04 after shipping v2.4 Outbound First-Adopter Correctness.*
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->

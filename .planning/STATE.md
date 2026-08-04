@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v2.4
 milestone_name: Outbound First-Adopter Correctness
-current_phase: 153
-status: completed
+status: Awaiting next milestone
 stopped_at: Completed 153-07-PLAN.md
-last_updated: "2026-08-04T17:09:18.637Z"
+last_updated: "2026-08-04T17:19:57.194Z"
 last_activity: 2026-08-04
-last_activity_desc: Phase 153 complete
+last_activity_desc: Milestone v2.4 completed and archived
 progress:
   total_phases: 5
   completed_phases: 5
   total_plans: 32
   completed_plans: 32
+current_phase: 153
 current_phase_name: Generated-Host Proof, Docs, and Release Gate
 ---
 
@@ -20,19 +20,17 @@ current_phase_name: Generated-Host Proof, Docs, and Release Gate
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-02 after opening v2.4)
+See: .planning/PROJECT.md (updated 2026-08-04 after shipping v2.4)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 153 — generated-host-proof-docs-and-release-gate
+**Current focus:** Quiet maintenance; awaiting adopter-pull scope or the next milestone.
 
 ## Current Position
 
-Phase: 153
-Plan: Not started
-Status: All phases complete
-Last activity: 2026-08-04 — Phase 153 complete
-
-Progress: [██████████] 97%
+Phase: Milestone v2.4 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-08-04 — Milestone v2.4 completed and archived
 
 ## v2.4 Milestone Intent
 
