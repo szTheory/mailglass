@@ -373,7 +373,7 @@ jobs:
         # this with a reference-host or consumer-install shortcut.
         env:
           DEP_MODE: hex
-          WORK_DIR: ${{ runner.temp }}
+          WORK_DIR: ${{ runner.temp }}/mailglass-generated-host-${{ github.run_id }}
           VERSION: ${{ steps.release-target.outputs.mailglass_version }}
           VERSION_INBOUND: ${{ steps.release-target.outputs.mailglass_inbound_version }}
         run: DEP_MODE=hex bash scripts/generated_host_proof.sh --stage all

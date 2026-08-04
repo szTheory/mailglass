@@ -5,14 +5,11 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 DEP_MODE="${DEP_MODE:-local}"
 KEEP_HOST_ON_FAILURE="${KEEP_HOST_ON_FAILURE:-false}"
-WORK_DIR="${WORK_DIR:-$(mktemp -d "${TMPDIR:-/tmp}/mailglass-generated-host.XXXXXX")}"
+WORK_PARENT="${WORK_DIR:-${TMPDIR:-/tmp}}"
+WORK_DIR=""
 STAGE="boot"
 FAMILY="all"
-HOST_DIR="${WORK_DIR}/generated_host"
-ARTIFACT_DIR="${WORK_DIR}/artifacts"
 CHECKPOINT_OUT="${CHECKPOINT_OUT:-$ROOT_DIR/tmp/generated-host-proof/checkpoint.json}"
-export HEX_HOME="${WORK_DIR}/hex"
-export MIX_HOME="${WORK_DIR}/mix"
 
 usage() {
   echo "Usage: DEP_MODE=local|hex scripts/generated_host_proof.sh [--stage all|migrate|boot|docs|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness] [--family queue-schema|input]" >&2
@@ -30,7 +27,16 @@ done
 case "$DEP_MODE" in local|hex) ;; *) echo "generated-host proof blocked: DEP_MODE must be local|hex" >&2; exit 1 ;; esac
 case "$STAGE" in all|migrate|boot|docs|async-parity|negative-controls|feedback|feedback-unsubscribe|readiness) ;; *) echo "generated-host proof blocked: invalid --stage" >&2; exit 1 ;; esac
 case "$FAMILY" in all|queue-schema|input) ;; *) echo "generated-host proof blocked: invalid --family" >&2; exit 1 ;; esac
-case "$WORK_DIR" in ''|/|"$ROOT_DIR") echo "generated-host proof blocked: unsafe WORK_DIR" >&2; exit 1 ;; esac
+case "$WORK_PARENT" in ''|/|"$ROOT_DIR") echo "generated-host proof blocked: unsafe WORK_DIR parent" >&2; exit 1 ;; esac
+
+mkdir -p "$WORK_PARENT"
+WORK_DIR="$(mktemp -d "$WORK_PARENT/mailglass-generated-host.XXXXXX")"
+OWNERSHIP_MARKER="$WORK_DIR/.mailglass-generated-host-proof-owned"
+: > "$OWNERSHIP_MARKER"
+HOST_DIR="${WORK_DIR}/generated_host"
+ARTIFACT_DIR="${WORK_DIR}/artifacts"
+export HEX_HOME="${WORK_DIR}/hex"
+export MIX_HOME="${WORK_DIR}/mix"
 
 cleanup() {
   status=$?
@@ -47,7 +53,14 @@ cleanup() {
       fi
     fi
 
-    rm -rf "$WORK_DIR"
+    if [[ -f "$OWNERSHIP_MARKER" ]]; then
+      rm -rf "$WORK_DIR"
+    else
+      echo "generated-host proof cleanup refused to remove an unowned directory: $WORK_DIR" >&2
+      if [[ "$status" -eq 0 ]]; then
+        status=1
+      fi
+    fi
   fi
 
   exit "$status"
@@ -57,7 +70,7 @@ trap cleanup EXIT
 if [[ "$STAGE" == "all" ]]; then
   for stage in migrate boot docs async-parity negative-controls feedback feedback-unsubscribe readiness; do
     echo "generated-host proof: running stage=$stage"
-    WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mailglass-generated-host.XXXXXX")" \
+    WORK_DIR="$WORK_PARENT" \
       DEP_MODE="$DEP_MODE" KEEP_HOST_ON_FAILURE="$KEEP_HOST_ON_FAILURE" \
       CHECKPOINT_OUT="$CHECKPOINT_OUT" bash "$0" --stage "$stage" --family "$FAMILY"
   done
