@@ -29,51 +29,31 @@
 - ✅ **v2.0 Postgres Schema Isolation** — Phases 132-137 (shipped 2026-07-04) — [archive](milestones/v2.0-ROADMAP.md)
 - ✅ **v2.1 Postgres + Admin URL Hardening** — Phases 138-140 (shipped 2026-07-08) — [archive](milestones/v2.1-ROADMAP.md)
 - ✅ **v2.2 CI Signal Integrity & Supply-Chain Hygiene** — Phases 141-144 (shipped 2026-07-31) — [archive](milestones/v2.2-ROADMAP.md)
-- 🚧 **v2.3 B2C First-Adopter Readiness** — Phases 145-148 (active)
+- ✅ **v2.3 B2C First-Adopter Readiness** — Phases 145-148 (shipped 2026-08-02) — [archive](milestones/v2.3-ROADMAP.md)
+- ✅ **v2.4 Outbound First-Adopter Correctness** — Phases 149-153 (shipped 2026-08-04) — [archive](milestones/v2.4-ROADMAP.md)
+- ◆ **v2.5 B2C Alpha Adoption Certification** — Phase 154 (in progress)
 
-## Active Milestone: v2.3 B2C First-Adopter Readiness
+## Phases
 
-**Goal:** Make the safe single-tenant consumer launch path opinionated, automated, and observable while preserving ownership boundaries across the package family.
+- [ ] **Phase 154: Executable Alpha Certification**
+  - **Goal:** Produce fresh, reproducible evidence that the released v2.4.1 package family is safe to integrate, or isolate a proven defect without expanding scope.
+  - **Requirements:** CERT-01, CERT-02, CERT-03, SAFE-01, SAFE-02, SAFE-03
+  - **Success criteria:**
+    1. Package-shaped local and exact-Hex generated-host journeys pass every documented stage with bounded checkpoint evidence.
+    2. First-send, durable outbound, payload privacy/lifecycle, feedback, and one-click suppression contracts pass against the release baseline.
+    3. Provider/webhook, schema, optional-runtime, docs, and safety-only operator checks either pass or have a precisely classified, reproducible failure.
+    4. A final go/no-go report separates library readiness from adopter-owned deployment prerequisites and does not claim an unsupported production guarantee.
+    5. Any proven library defect is fixed with regression coverage and recertified; no release occurs if no source defect exists.
 
-- [x] **Phase 145: B2C Safety Profile** — Publish the stream, suppression, single-tenant, cold-domain, MPP, package-boundary, launch-gate, and Crosswake decisions.
-- [x] **Phase 146: Provider-Feedback Contract** — Add the stable PII-free post-commit feedback event with replay convergence.
-- [x] **Phase 147: Live Solo-Operator Admin** — Refresh tenant-scoped delivery and evidence state from existing PubSub signals without reloads.
-- [x] **Phase 148: Release and Adoption Proof** — Run suppression/docs/browser proofs, cut linked core/admin 2.4.0, and smoke the published consumer path without bumping inbound unnecessarily.
+<details>
+<summary>✅ v2.4 Outbound First-Adopter Correctness (Phases 149-153) — SHIPPED 2026-08-04</summary>
 
-**Execution order:** 145 → 146 → 147 → 148. Phase 148 release publication was gated by Mailglass's automated release checks; the external B2C launch checklist in `REQUIREMENTS.md` remains separate production-adoption work.
+- [x] Phase 149: First-Send Contract Foundation (4/4 plans) — completed 2026-08-02
+- [x] Phase 150: Private Envelope and Atomic Durable Enqueue (9/9 plans) — completed 2026-08-02
+- [x] Phase 151: Unified Dispatch, Honest Outcomes, and Payload Lifecycle (8/8 plans) — completed 2026-08-03
+- [x] Phase 152: Atomic One-Click Suppression Convergence (3/3 plans) — completed 2026-08-03
+- [x] Phase 153: Generated-Host Proof, Docs, and Release Gate (8/8 plans) — completed 2026-08-04
 
-### Phase 148: Release and Adoption Proof
+</details>
 
-**Goal**: Prove the locked suppression, documentation, and live-operator behaviors; release linked `mailglass` and `mailglass_admin` 2.4.0 without republishing `mailglass_inbound`; and validate a clean consumer install from the published packages.
-**Depends on**: Phase 145 (B2C safety and package-boundary decisions), Phase 146 (provider-feedback contract), and Phase 147 (live solo-operator admin proof)
-**Requirements**: PROOF-02, PROOF-03, REL-01
-**Success Criteria** (what must be TRUE):
-
-  1. Focused suppression evidence proves stream unsubscribe remains stream-scoped while complaint and hard-bounce suppression remains address-wide and blocks transactional delivery.
-  2. B2C documentation-contract evidence proves every published guide example parses against current APIs and `guides/b2c-first-adopter.md` remains in the HexDocs/package surface.
-  3. The release-proof bundle includes the tenant-scoped LiveView refresh and foreign-tenant rejection evidence delivered by Phase 147.
-  4. Release Please and protected Hex publication produce linked `mailglass` and `mailglass_admin` 2.4.0 releases while `mailglass_inbound` remains at 2.1.1 and is neither republished nor required for the core/admin publish fan-out to complete.
-  5. `scripts/consumer_install_smoke.sh` passes both the shift-left local-path proof and the post-publication Hex-mode proof from a clean consumer using the versions adopters actually install.
-
-**Plans**: 5/5 plans executed
-
-Plans:
-**Wave 1**
-
-- [x] 148-01-PLAN.md — Prove the protected core/admin release path and establish the evidence ledger.
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 148-02-PLAN.md — Isolate Release Please sync and upload sanitized prepublish proof.
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-- [x] 148-03-PLAN.md — Capture commit-bound behavioral, consumer, and release preflight evidence.
-
-**Wave 4** *(blocked on Wave 3 completion)*
-
-- [x] 148-04-PLAN.md — Run the machine-gated protected one-way release ceremony.
-
-**Wave 5** *(blocked on Wave 4 completion)*
-
-- [x] 148-05-PLAN.md — Verify Hex versions and finalize the published-consumer proof.
+No active milestone. Start the next milestone with `$gsd-new-milestone`.

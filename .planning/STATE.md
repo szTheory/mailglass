@@ -17,17 +17,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-31 - v2.3 milestone opened)
+See: .planning/PROJECT.md (updated 2026-08-04 after starting v2.5)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v2.3 milestone closeout after Phase 148 release verification
+**Current focus:** Certify the released v2.4.1 package family for B2C alpha integration without expanding product scope.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 154 — Executable Alpha Certification
 Plan: —
-Status: Defining requirements
-Last activity: 2026-08-04 — Milestone v2.5 started
+Status: Ready to plan and execute certification
+Last activity: 2026-08-04 — Defined Phase 154 certification roadmap
 
 ## v2.4 Milestone Intent
 
@@ -430,6 +430,51 @@ release debug campaign.
 - [Phase ?]: Document workflow_dispatch as the direct recovery path and manually creating missing GitHub releases as the last-resort canonical release: published fan-out.
 - [Phase ?]: Release events publish only linked core/admin packages; inbound remains dispatch-only recovery.
 - [Phase ?]: Published consumer proof pins inbound 2.1.1 and fails closed on unavailable or unrecognized compatibility.
+- [Phase ?]: Only configured SingleTenant may normalize an unstamped outbound message to default; custom resolvers require strict process-local tenant context.
+- [Phase ?]: Recipient cardinality counts untouched native to/cc/bcc entries; no selection, deduplication, sorting, or fan-out.
+- [Phase ?]: Preflight errors expose only bounded reason class plus recipient count or body-state metadata.
+- [Phase ?]: [149-03] Explicit nonblank plaintext is authoritative; only blank text may be generated from HTML.
+- [Phase ?]: [149-03] css_inliner :none skips only Premailex while retaining HEEx rendering and data-mg stripping.
+- [Phase ?]: SingleTenant first sends normalize to string "default"; custom tenancy remains fail-closed.
+- [Phase ?]: Phase 149 docs promise renderer preparation parity only; durable envelope and dispatch lifecycle remain Phase 150/151 work.
+- [Phase ?]: Payloads store an explicit envelope version and lowercase SHA-256 digest.
+- [Phase ?]: The Oban enqueue multi writes its private payload between queued event and job.
+- [Phase ?]: Oban job insertion receives Repo.multi_opts() inside the durable Multi.
+- [Phase ?]: Batch sends use independent per-envelope transactions and preserve input order.
+- [Phase ?]: Worker dispatch loads and validates the tenant-scoped private Payload before considering legacy metadata.
+- [Phase ?]: Explicit :oban only succeeds after a configured instance advertises Worker.queue/0; it never falls back to Task.Supervisor.
+- [Phase ?]: Production readiness is an explicit deployment preflight; ordinary boot remains usable with Task.Supervisor.
+- [Phase ?]: Production readiness reports only :async_adapter and a stable reason_class from canonical Oban readiness.
+- [Phase ?]: OptionalDeps.Oban keeps availability detection, canonical readiness, and fail-closed transactional insertion as distinct gateway responsibilities.
+- [Phase ?]: Selected Oban is durable and fail-closed; TaskSupervisor is explicit non-durable development/test behavior only.
+- [Phase ?]: Payload-backed dispatch uses the envelope adapter_ref; a non-nil Delivery projection must agree.
+- [Phase ?]: Headers and attachment headers use ordered string-pair wire arrays to preserve duplicates.
+- [Phase ?]: V06 utc_datetime_usec catalog type is timestamp without time zone; no migration rewrite or backfill is needed.
+- [Phase ?]: No-optional runtime proof uses direct Elixir with a source-derived optional-app denylist and isolated allowlisted ebins.
+- [Phase ?]: The no-optional public-send runtime proof compiles Mailglass under MIX_ENV=prod and uses a probe-local Repo, excluding maintainer/test tooling.
+- [Phase ?]: [150-08] Real queued-worker retry proof fetches the public API's persisted Oban job and proves the decoded V1 route and rendered payload stay authoritative after live-state mutation.
+- [Phase ?]: Only structured 4xx/5xx and explicit before-acceptance transport evidence establish terminal or retryable outcomes; opaque evidence is uncertain.
+- [Phase ?]: Safe dispatch projections allowlist closed reason classes and bounded correlation data only.
+- [Phase ?]: Sync uses the bounded Envelope codec in memory so it normalizes exactly as durable payload dispatch without writing a Payload.
+- [Phase ?]: Durable payload dispatch uses tenant-scoped CAS claims and settles accepted payloads atomically with Delivery and Event.
+- [Phase ?]: Provider idempotency and correlation reduce risk and enable reconciliation; they do not make delivery exactly-once.
+- [Phase ?]: Private payload lifecycle operations remain internal while public guidance documents their operational limits.
+- [Phase ?]: D-19/PRIV-04: missing private Payloads terminalize as legacy_payload_missing without metadata reconstruction.
+- [Phase ?]: One-click convergence uses a flat prefix-explicit Multi and inserted_at conflict sentinels for both canonical rows.
+- [Phase ?]: Only a fully pre-existing event/suppression pair reports already_converged; either half-state repair reports created.
+- [Phase ?]: One-click lifecycle compatibility runs as a separate best-effort Multi only after created convergence commits.
+- [Phase ?]: Canonical suppression refetch uses the table uniqueness identity and preserves stronger existing suppression reasons.
+- [Phase ?]: Generated migration wrappers delegate only to Mailglass.Migration.up/0 and down/0.
+- [Phase ?]: Generated-host parity uses distinct equivalent mailable modules to avoid idempotency convergence.
+- [Phase ?]: [153-03] Generated-host negative controls require a closed reason class and exact zero before/after effect vector.
+- [Phase ?]: [153-03] Negative checkpoint evidence stores counts and reason classes only.
+- [Phase ?]: Generated-host HTTP proof reads the active endpoint port and emits only status/count evidence.
+- [Phase ?]: Production preflight returns all bounded checks and remediations without secret/config values.
+- [Phase ?]: Generated production operator proof uses host-owned BasicAuth plus explicit MailglassAdmin auth/session whitelist, never dev_routes.
+- [Phase ?]: 153-06 marks public Elixir examples executable or syntax-only and proves them in a package-shaped generated host.
+- [Phase ?]: 153-06 makes mix mailglass.preflight the final production documentation gate and keeps operator authentication host-owned.
+- [Phase ?]: Release package selection uses per-package reachable tags with linked core/admin and independent inbound.
+- [Phase ?]: Hex publication is gated on resolver agreement, local host proof, CI, package checks, and protected candidate-SHA evidence.
 
 ## Quick Tasks Completed
 
@@ -489,6 +534,34 @@ release debug campaign.
 | Phase 148-release-and-adoption-proof P03 | 8min | 2 tasks | 1 file |
 | Phase 148-release-and-adoption-proof P04 | automated | 2 tasks | protected release chain |
 | Phase 148-release-and-adoption-proof P05 | automated | 1 task | registry and consumer proof |
+| Phase 149 P01 | 19m | 2 tasks | 6 files |
+| Phase 149 P02 | 4m | 2 tasks | 3 files |
+| Phase 149 P03 | 7m | 2 tasks | 6 files |
+| Phase 149 P04 | 8m | 2 tasks | 7 files |
+| Phase 150-private-envelope-and-atomic-durable-enqueue P01 | 8min | 2 tasks | 8 files |
+| Phase 150-private-envelope-and-atomic-durable-enqueue P02 | 12min | 2 tasks | 4 files |
+| Phase 150 P03 | 6min | 2 tasks | 6 files |
+| Phase 150-private-envelope-and-atomic-durable-enqueue P04 | 9min | 2 tasks | 6 files |
+| Phase 150 P05 | 14min | 1 tasks | 9 files |
+| Phase 150 P06 | 12min | 2 tasks | 4 files |
+| Phase 150 P07 | 12 min | 1 tasks | 2 files |
+| Phase 150 P09 | 20min | 1 tasks | 4 files |
+| Phase 150-private-envelope-and-atomic-durable-enqueue P08 | 4min | 1 tasks | 1 files |
+| Phase 151-unified-dispatch-honest-outcomes-and-payload-lifecycle P02 | 2min | 1 tasks | 4 files |
+| Phase 151 P01 | 6min | 1 tasks | 2 files |
+| Phase 151 P04 | 12min | 2 tasks | 6 files |
+| Phase 151 P07 | 6min | 1 tasks | 5 files |
+| Phase 151 P08 | 20min | 2 tasks | 9 files |
+| Phase 152-atomic-one-click-suppression-convergence P01 | 5min | 2 tasks | 3 files |
+| Phase 152 P02 | 10min | 3 tasks | 6 files |
+| Phase 152-atomic-one-click-suppression-convergence P03 | 12min | 2 tasks | 9 files |
+| Phase 153 P01 | 0h 12m | 2 tasks | 8 files |
+| Phase 153 P02 | 0m | 2 tasks | 6 files |
+| Phase 153 P03 | 14m | 2 tasks | 6 files |
+| Phase 153 P04 | 11m | 2 tasks | 6 files |
+| Phase 153 P05 | 12 min | 2 tasks | 12 files |
+| Phase 153 P06 | 7 min | 2 tasks | 11 files |
+| Phase 153 P07 | 9min | 2 tasks | 9 files |
 
 ## Deferred Items
 
@@ -655,8 +728,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-02T02:39:00Z
-**Stopped at:** Completed and verified Phase 148
+**Last session:** 2026-08-03T17:58:05.097Z
+**Stopped at:** Completed 153-07-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
