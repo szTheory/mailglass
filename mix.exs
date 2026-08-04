@@ -399,14 +399,17 @@ defmodule Mailglass.MixProject do
         # unchanged lock. Rehydrate them before the parity run starts.
         "cmd mix deps.get --check-locked",
         "cmd bash scripts/verify_dependency_source_integrity.sh",
-        # Keep the no-optional-deps compile in an isolated child build. Running
-        # `ci.fast` inline unloads Hex from this parent Mix VM; sharing _build
-        # would also delete optional dependency artifacts needed by later lanes.
-        "cmd env MIX_ENV=test MIX_BUILD_PATH=_build/ci_fast mix ci.fast",
-        # Run the remaining parity surface in a fresh Mix VM. The no-optional-deps
-        # compile above intentionally changes compiler/dependency state; keeping
-        # the full suite in the parent VM makes Mix inspect stale dependency
-        # metadata and report false lock mismatches.
+        # Run the fast gate in its native test build. Elixir 1.18 drops rebar
+        # config (including yamerl's include path) when MIX_BUILD_PATH points at
+        # the custom _build/ci_fast directory on a clean Linux runner.
+        "cmd env MIX_ENV=test mix ci.fast",
+        # The no-optional-deps lane intentionally changes dependency build state.
+        # Remove only compiled dependency artifacts before the full suite so it
+        # gets a clean native test build without deleting fetched sources.
+        "cmd env MIX_ENV=test mix deps.clean --all --build",
+        # Run the remaining parity surface in a fresh Mix VM. Keeping it in the
+        # parent VM makes Mix inspect stale dependency metadata and report false
+        # lock mismatches.
         "cmd mix deps.get --check-locked",
         "cmd bash scripts/verify_dependency_source_integrity.sh",
         "cmd env MIX_ENV=test mix ci.full"

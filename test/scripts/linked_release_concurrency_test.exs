@@ -191,6 +191,25 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     assert integrity_script =~ ~s(test -f "$header")
   end
 
+  test "mix ci uses the native test build and resets fast-lane artifacts" do
+    mix_source = File.read!("mix.exs")
+
+    assert mix_source =~ ~s("cmd env MIX_ENV=test mix ci.fast")
+    assert mix_source =~ ~s("cmd env MIX_ENV=test mix deps.clean --all --build")
+    refute mix_source =~ "MIX_BUILD_PATH=_build/ci_fast"
+
+    assert substring_index(mix_source, ~s("cmd env MIX_ENV=test mix ci.fast")) <
+             substring_index(
+               mix_source,
+               ~s("cmd env MIX_ENV=test mix deps.clean --all --build")
+             )
+
+    assert substring_index(
+             mix_source,
+             ~s("cmd env MIX_ENV=test mix deps.clean --all --build")
+           ) < substring_index(mix_source, ~s("cmd env MIX_ENV=test mix ci.full"))
+  end
+
   defp valid_static_concurrency?(source, expected_group) do
     concurrency = extract_top_level_concurrency!(source)
 
