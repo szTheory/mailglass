@@ -1,110 +1,111 @@
 ---
 phase: 152-atomic-one-click-suppression-convergence
-verified: 2026-08-03T15:23:15Z
+verified: 2026-08-04T17:17:53Z
 status: passed
 score: 10/10 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
+re_verification:
+  previous_status: passed
+  previous_score: 10/10
+  gaps_closed: []
+  gaps_remaining: []
+  regressions: []
 ---
 
 # Phase 152: Atomic One-Click Suppression Convergence — Verification Report
 
-**Phase Goal:** Make RFC 8058 POSTs atomically and immediately enforce stream-scoped suppression.
-**Verified:** 2026-08-03T15:23:15Z
+**Phase Goal:** A valid RFC 8058 one-click POST reliably converges into one tenant-safe, stream-scoped suppression that immediately prevents future matching sends.
+**Verified:** 2026-08-04T17:17:53Z
 **Status:** passed
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — evidence rechecked after metadata-only commit `98e5d1f1` and documentation-only commit `f8ab8c14`
 
 ## Goal Achievement
 
 ### Observable Truths
 
 | # | Truth | Status | Evidence |
-|---|---|---|---|
-| 1 | Valid POST atomically creates or reuses one canonical unsubscribe event and one `address_stream` suppression from the persisted Delivery. | VERIFIED | `UnsubscribeConvergence` composes event insert, canonical refetch, suppression insert, canonical refetch, and promotion in one `Ecto.Multi` ([`unsubscribe_convergence.ex`](../../../lib/mailglass/compliance/unsubscribe_convergence.ex)); the independently run phase matrix passed 120 tests. |
-| 2 | Invalid, expired, tampered, and missing targets remain byte-empty 200 privacy no-ops; genuine convergence failures are byte-empty 500. | VERIFIED | Controller resolution maps invalid/expired to `send_resp(conn, 200, "")`, while convergence errors map to `500` with an empty body ([`unsubscribe_controller.ex`](../../../lib/mailglass/compliance/unsubscribe_controller.ex)). Controller tests in the matrix exercise both classifications and rollback. |
-| 3 | Event-only and suppression-only legacy states repair to a complete pair, including permanent promotion of a same-identity temporary suppression. | VERIFIED | Classification marks any event/suppression insert or conditional promotion as `:created`; zero-row promotion losers refetch the permanent canonical row. Controller and four-way promotion tests passed. |
-| 4 | Serial replays and true concurrent POSTs converge to one event and one active suppression, with at most one lifecycle/broadcast emission. | VERIFIED | Barrier-coordinated four-task test asserts four empty 200s, exactly one durable event, one active suppression, and exactly one effect; property testing also covers 1–10 serial replays × 50 generated inputs ([`unsubscribe_post_idempotency_property_test.exs`](../../../test/mailglass/properties/unsubscribe_post_idempotency_property_test.exs)). |
-| 5 | The immediate next matching same-tenant/address/origin-stream send is blocked in real Outbound preflight, while normalized unrelated-stream, transactional, and other-tenant sends pass. | VERIFIED | `Outbound.send/1` calls `Suppression.check_before_send/1` before persistence/dispatch; the integration test creates a Delivery, posts its signed token, asserts no Fake-adapter growth for the matching bulk send, and asserts all isolation controls pass ([`preflight_test.exs`](../../../test/mailglass/outbound/preflight_test.exs)). |
-| 6 | Lifecycle compatibility and broadcast run only after a newly completed pair commits, under the Delivery tenant, and failures cannot undo success. | VERIFIED | Controller invokes effects only for `status: :created`; it restores tenant context, invokes `handle_event(Ecto.Multi.new(), attrs)`, executes returned work separately/best-effort, and rescues callback/broadcast failures. Matrix tests assert committed rows before observed effects, tenant restoration, and retained empty 200 after failure. |
-| 7 | Convergence is tenant- and schema-prefix-safe under a hostile `search_path`; decoys cannot redirect writes or canonical conflict refetches. | VERIFIED | Every convergence insert/query/update uses `Repo.multi_opts`; hostile-search-path tests post/replay and assert one configured-schema event and zero public-schema events. `mix verify.schema_prefix`'s 4 schema tests passed. |
-| 8 | Suppression source/metadata and post-commit attrs are bounded: no token, recipient, or private message content leaks. | VERIFIED | Stored metadata is exactly `delivery_id`, `event_id`, and `event_type`; effect attrs contain only tenant, delivery, event type, scope, and stream. No Phase-152 artifact has unresolved debt markers; docs prohibit token/content logging and docs contracts passed. |
-| 9 | The public lifecycle/config, route, response, scope, isolation, and production-verification documentation match runtime behavior. | VERIFIED | Lifecycle and config documentation state the separate best-effort transaction; unsubscribe, production, and API-stability guides state exact empty 200/500 and scope rules. `mix verify.docs.contract` passed (41 executed, 1 skip) and `mix verify.stability_contract` passed (210 executed, 1 property, 1 skip). |
-| 10 | The Phase 152 scope excludes generated-host/release proof and does not make arbitrary-host exactly-once claims. | VERIFIED | Roadmap assigns generated-host/release proof to Phase 153; Phase docs explicitly retain that boundary and the executable docs contracts pass. |
+| --- | --- | --- | --- |
+| 1 | A valid built-in POST atomically creates or reuses exactly one canonical unsubscribe event and `address_stream` suppression for the stored Delivery tenant, address, and stream. | ✓ VERIFIED | `UnsubscribeConvergence` builds one `Ecto.Multi`; its event identity is `unsubscribe:<delivery_id>` and its suppression attrs come only from `Delivery` ([unsubscribe_convergence.ex](/Users/jon/projects/mailglass/lib/mailglass/compliance/unsubscribe_convergence.ex:42)). The controller integration test asserts the empty `200`, exactly one event, and the canonical suppression fields ([unsubscribe_controller_test.exs](/Users/jon/projects/mailglass/test/mailglass/compliance/unsubscribe_controller_test.exs:221)). |
+| 2 | Invalid, expired, tampered, and missing targets are indistinguishable empty-`200` privacy no-ops; genuine convergence failure is an empty `500` with no partial pair. | ✓ VERIFIED | Token resolution maps invalid/expired outcomes to `send_resp(200, "")`, while convergence errors map to `send_resp(500, "")` ([unsubscribe_controller.ex](/Users/jon/projects/mailglass/lib/mailglass/compliance/unsubscribe_controller.ex:36)). Focused tests exercise expired/tampered no-write paths and injected failures after each Multi step with zero durable rows ([unsubscribe_controller_test.exs](/Users/jon/projects/mailglass/test/mailglass/compliance/unsubscribe_controller_test.exs:371)). |
+| 3 | Event-only and suppression-only legacy states repair to a complete canonical pair; a complete pair is classified as already converged. | ✓ VERIFIED | Canonical refetch and temporary-suppression promotion remain inside the Multi ([unsubscribe_convergence.ex](/Users/jon/projects/mailglass/lib/mailglass/compliance/unsubscribe_convergence.ex:100)); integration tests exercise both half-states and complete-pair classification ([unsubscribe_controller_test.exs](/Users/jon/projects/mailglass/test/mailglass/compliance/unsubscribe_controller_test.exs:419)). |
+| 4 | Serial replays and real concurrent POSTs return empty `200`, converge to one pair, and emit at most one lifecycle/broadcast effect. | ✓ VERIFIED | The property test runs serial replays over 50 generated cases and starts four POSTs behind a barrier with `max_concurrency: 4`; it asserts four empty responses, one event/suppression, and one created effect ([unsubscribe_post_idempotency_property_test.exs](/Users/jon/projects/mailglass/test/mailglass/properties/unsubscribe_post_idempotency_property_test.exs:134)). |
+| 5 | The next same-tenant, normalized-address, origin-stream send is preflight-blocked while transactional, unrelated-stream, and other-tenant sends remain allowed. | ✓ VERIFIED | Both sync and async send paths call `Suppression.check_before_send/1` before persistence or dispatch ([outbound.ex](/Users/jon/projects/mailglass/lib/mailglass/outbound.ex:274)). The real `Outbound.send/1` integration test posts a signed token, proves the matching bulk send does not reach the adapter, and exercises all three isolation controls ([preflight_test.exs](/Users/jon/projects/mailglass/test/mailglass/outbound/preflight_test.exs:383)). |
+| 6 | Lifecycle compatibility and broadcast execute only after a newly completed pair commits; their failure cannot undo durable success. | ✓ VERIFIED | Created-only effects receive a fresh `Ecto.Multi`, execute in a separate `Repo.multi`, and rescue failures; broadcast is likewise post-commit and best effort ([unsubscribe_controller.ex](/Users/jon/projects/mailglass/lib/mailglass/compliance/unsubscribe_controller.ex:121)). Tests observe committed rows before lifecycle/broadcast messages and retain empty `200` after lifecycle failure ([unsubscribe_controller_test.exs](/Users/jon/projects/mailglass/test/mailglass/compliance/unsubscribe_controller_test.exs:258)). |
+| 7 | Hostile `search_path` conditions cannot redirect writes or conflict refetches away from the configured schema. | ✓ VERIFIED | All convergence inserts, refetches, and promotion use `Repo.multi_opts` ([unsubscribe_convergence.ex](/Users/jon/projects/mailglass/lib/mailglass/compliance/unsubscribe_convergence.ex:57)). The hostile-`search_path` test performs POST/replay and asserts one configured-schema event/suppression and zero public-schema rows ([schema_prefix_hardening_test.exs](/Users/jon/projects/mailglass/test/mailglass/schema_prefix_hardening_test.exs:231)). |
+| 8 | Stored suppression metadata and post-commit attrs are bounded and omit token/private message content. | ✓ VERIFIED | Stored metadata is precisely `delivery_id`, `event_id`, and `event_type` ([unsubscribe_convergence.ex](/Users/jon/projects/mailglass/lib/mailglass/compliance/unsubscribe_convergence.ex:200)); the public POST test asserts that exact map, while effect tests assert bounded attrs ([unsubscribe_controller_test.exs](/Users/jon/projects/mailglass/test/mailglass/compliance/unsubscribe_controller_test.exs:251)). |
+| 9 | Published route, response, scope, lifecycle, and operator-verification guidance matches the implemented behavior. | ✓ VERIFIED | The guide describes Mailglass’s empty-`200`/empty-`500` contract, Delivery-derived scope, post-commit callback, and preflight verification ([unsubscribe.md](/Users/jon/projects/mailglass/guides/unsubscribe.md:70)); `docs/api_stability.md` states the same stable contract ([api_stability.md](/Users/jon/projects/mailglass/docs/api_stability.md:29)). Those documentation-contract tests are included in the passing focused suite. |
+| 10 | Phase scope makes no unsupported generated-host or arbitrary-host exactly-once claim. | ✓ VERIFIED | The Phase 152 guide limits its claims to this library behavior and routes generated-host proof to Phase 153; the roadmap assigns generated-host proof to Phase 153. No source or guide asserts arbitrary-host exactly-once delivery. |
 
 **Score:** 10/10 truths verified (0 present-but-behavior-unverified)
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
-|---|---|---|---|
-| `lib/mailglass/compliance/unsubscribe_convergence.ex` | Flat, canonical, prefix-explicit atomic convergence | VERIFIED | Substantive 276-line service; imported by controller; `Ecto.Multi` holds both durable facts and their canonical refetches/promotion. |
-| `lib/mailglass/compliance/unsubscribe_controller.ex` | Trust classification, HTTP mapping, post-commit orchestration | VERIFIED | Routes trusted Delivery through convergence under restored tenancy and maps outcomes; effects are created-only and failure-isolated. |
-| `test/mailglass/compliance/unsubscribe_controller_test.exs` | Public POST, privacy, repair, rollback, effects evidence | VERIFIED | Exercises response bodies, pair rows, bounded metadata, rollback, and tenant-restored effects. |
-| `test/mailglass/properties/unsubscribe_post_idempotency_property_test.exs` | Serial and actual concurrent convergence proof | VERIFIED | Uses generated replays and a four-task barrier; asserts durable event/suppression/effect cardinality. |
-| `test/mailglass/outbound/preflight_test.exs` | Real send-boundary enforcement/isolation | VERIFIED | Calls `Outbound.send/1`, not a store stub, and asserts no adapter dispatch on matching suppression. |
-| `test/mailglass/schema_prefix_hardening_test.exs` | Hostile-search-path/decoy proof | VERIFIED | Exercises POST/replay with public search path and checks configured vs public schema rows. |
-| `guides/unsubscribe.md`, `guides/production-go-live-checklist.md`, `docs/api_stability.md` | Accurate executable contract and privacy-safe operator guidance | VERIFIED | Locked by docs and stability contract tests; no Phase 153 promise introduced. |
+| --- | --- | --- | --- |
+| `lib/mailglass/compliance/unsubscribe_convergence.ex` | Atomic, prefix-explicit convergence | ✓ VERIFIED | Exists; substantive 276-line service; controller invokes it; persisted Delivery data flows into a real event/suppression transaction. |
+| `lib/mailglass/compliance/unsubscribe_controller.ex` | Trust classification, HTTP mapping, post-commit orchestration | ✓ VERIFIED | Exists; resolves opaque token to persisted Delivery, restores tenant context, maps empty responses, and runs created-only effects. |
+| `test/mailglass/compliance/unsubscribe_controller_test.exs` | Public POST/privacy/repair/rollback/effect evidence | ✓ VERIFIED | Exists; substantive integration coverage executed in the passing focused suite. |
+| `test/mailglass/properties/unsubscribe_post_idempotency_property_test.exs` | Replay and true concurrency evidence | ✓ VERIFIED | Exists; generated serial replay and barrier-coordinated concurrent POST tests executed. |
+| `test/mailglass/outbound/preflight_test.exs` | Real send-boundary enforcement/isolation | ✓ VERIFIED | Exists; calls real `Outbound.send/1`, verifies blocked adapter dispatch and isolation controls. |
+| `test/mailglass/schema_prefix_hardening_test.exs` | Hostile-schema and conflict-refetch proof | ✓ VERIFIED | Exists; tests POST/replay under `search_path = public` and checks configured/public schemas. |
+| `guides/unsubscribe.md`, `guides/production-go-live-checklist.md`, `docs/api_stability.md` | Public operational contract | ✓ VERIFIED | Exists; executable guide/docs/stability contract tests passed. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
-|---|---|---|---|---|
-| Controller | `UnsubscribeConvergence` | Trusted persisted Delivery after opaque-ID lookup and tenant restoration | WIRED | Direct alias/call in controller; controller integration tests exercise public POST through it. |
-| Convergence | Events + Suppression Entry | One `Ecto.Multi`, conflict-safe inserts, canonical refetches | WIRED | `Events.append_multi`, `repo.insert`, `repo.one`, and `repo.update_all` all run inside the same Multi using explicit multi options. |
-| Controller | Lifecycle + Projector | Created-only post-commit separate Multi and broadcast | WIRED | `maybe_run_post_commit_effects/2` is restricted to `:created`; tests prove ordering, one emission, tenant restoration, and failure isolation. |
-| Outbound | Suppression | Preflight before persistence/provider dispatch | WIRED | Both synchronous and async paths call `Suppression.check_before_send/1`; real-Outbound integration test proves the matching block. |
+| --- | --- | --- | --- | --- |
+| Controller | `UnsubscribeConvergence` | Trusted persisted Delivery after opaque-ID lookup and tenant restoration | WIRED | Alias/call at controller lines 13–14 and 100–101; public POST integration test traverses this path. |
+| Convergence | `Events` + `Suppression.Entry` | One Multi, conflict-safe inserts, canonical refetches, promotion | WIRED | `Events.append_multi`, `Entry.changeset`, `repo.insert`, `repo.one`, and `repo.update_all` occur in the same Multi with explicit options. |
+| Controller | Lifecycle + Projector | Created-only, post-commit separate Multi and broadcast | WIRED | `maybe_run_post_commit_effects/2` only matches `status: :created`; separate lifecycle `Repo.multi` precedes best-effort broadcast. |
+| Outbound | Suppression | Preflight before persistence/provider dispatch | WIRED | Sync and async paths call `Suppression.check_before_send/1`; integration test demonstrates the block through `Outbound.send/1`. |
 
-### Data-Flow Trace
+### Data-Flow Trace (Level 4)
 
-| Artifact | Data | Source | Produces Real Data | Status |
-|---|---|---|---|---|
-| Convergence service | tenant, recipient, stream, delivery ID | Persisted `Delivery` resolved from verified opaque token | DB event/suppression transaction | FLOWING |
-| Preflight gate | tenant/address/stream lookup key | Normalized outbound `Message` | Ecto suppression-store query | FLOWING |
-| Post-commit effects | bounded domain attrs | Completed convergence event plus persisted Delivery | Lifecycle Multi / PubSub broadcast | FLOWING |
+| Artifact | Data Variable | Source | Produces Real Data | Status |
+| --- | --- | --- | --- | --- |
+| Convergence | tenant, recipient, stream, delivery ID | Verified token resolves persisted `Delivery` | Event/suppression DB rows | ✓ FLOWING |
+| Preflight | tenant/address/stream key | Normalized outbound `Message` | Ecto suppression-store lookup | ✓ FLOWING |
+| Post-commit effects | bounded tenant/delivery/event/scope/stream attrs | Created convergence event + persisted Delivery | Lifecycle Multi and PubSub broadcast | ✓ FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
-|---|---|---|---|
-| Full Phase 152 behavior matrix | `mix test test/mailglass/compliance/unsubscribe_controller_test.exs test/mailglass/properties/unsubscribe_post_idempotency_property_test.exs test/mailglass/outbound/preflight_test.exs test/mailglass/schema_prefix_hardening_test.exs test/mailglass/docs/unsubscribe_guide_test.exs test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs test/mailglass/compliance/unsubscribe_test.exs --warnings-as-errors` | 1 property, 120 tests, 0 failures, 1 skipped | PASS |
-| Schema-prefix gate | `mix verify.schema_prefix` | Its 4 tagged schema tests and following 69 test gate passed; command later exits 28 only because pre-existing unrelated Credo findings remain in `lib/mailglass/outbound.ex`, `lib/mailglass/outbound/payload.ex`, `test/mailglass/v07_migration_test.exs`, and `test/runtime/no_optional_deps_public_send.exs`. | PASS (Phase 152 evidence); unrelated umbrella baseline retained |
-| Documentation contract | `mix verify.docs.contract` | 41 executed, 0 failures, 1 skip; inbound 23 tests passed | PASS |
-| Stability umbrella | `mix verify.stability_contract` | 1 property, 210 executed, 0 failures, 1 skip; admin 144 and inbound 30 tests passed | PASS |
-| Format umbrella | `mix format --check-formatted` | Fails only on pre-existing `lib/mailglass/optional_deps/oban.ex`, outside Phase 152 ownership | UNRELATED BASELINE |
+| --- | --- | --- | --- |
+| Phase 152 full behavioral matrix | `mix test test/mailglass/compliance/unsubscribe_controller_test.exs test/mailglass/properties/unsubscribe_post_idempotency_property_test.exs test/mailglass/outbound/preflight_test.exs test/mailglass/schema_prefix_hardening_test.exs test/mailglass/docs/unsubscribe_guide_test.exs test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs test/mailglass/compliance/unsubscribe_test.exs --warnings-as-errors` | `1 property, 123 tests, 0 failures, 1 skipped` (6.4 s; prior independent run) | ✓ PASS |
+| Corrected controller documentation and documentation contracts | `mix test test/mailglass/compliance/unsubscribe_controller_test.exs test/mailglass/docs/unsubscribe_guide_test.exs test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs test/mailglass/compliance/unsubscribe_test.exs --warnings-as-errors` | `89 tests, 0 failures, 1 skipped` (3.9 s) | ✓ PASS |
+
+### Probe Execution
+
+Step 7c: SKIPPED — no Phase 152 probe was declared and no `scripts/**/tests/probe-*.sh` file exists.
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
-|---|---|---|---|---|
-| UNSUB-07 | 152-01, 152-03 | Valid RFC 8058 POST atomically creates/reuses canonical event and address-stream suppression scoped from token Delivery. | SATISFIED | Flat Multi plus controller/public-row tests and docs contract. |
-| UNSUB-08 | 152-01, 152-02, 152-03 | Replay/concurrent POSTs return empty success, converge to one pair, and avoid duplicate effects. | SATISFIED | Generated replay property, four-way barrier test, pair/effect cardinality assertions. |
-| UNSUB-09 | 152-02, 152-03 | After commit, same stream is blocked; transactional and unrelated streams remain allowed. | SATISFIED | Real `Outbound.send/1` preflight integration, including normalized address and tenant control. |
-| UNSUB-10 | 152-02, 152-03 | DB pair commits before callbacks/broadcast; external effects cannot partially durable it. | SATISFIED | Created-only post-commit controller path, separate `Repo.multi`, ordering and failure-isolation tests. |
-| UNSUB-11 | 152-01, 152-02, 152-03 | Tenant/prefix safety under hostile search path; failed transaction has no success or partial mutation. | SATISFIED | Explicit `Repo.multi_opts`, hostile schema/decoy tests, injected rollback and empty-500 tests. |
+| --- | --- | --- | --- | --- |
+| UNSUB-07 | 152-01, 152-03 | Valid POST atomically creates/reuses canonical event and address-stream suppression from token Delivery. | ✓ SATISFIED | Multi/controller integration test and executed docs contracts. |
+| UNSUB-08 | 152-01, 152-02, 152-03 | Replay/concurrent POSTs return empty success, converge to one pair, and avoid duplicate effects. | ✓ SATISFIED | 50-case replay property and barrier-coordinated concurrency/effect test. |
+| UNSUB-09 | 152-02, 152-03 | After commit same stream blocks; transactional/unrelated streams are allowed. | ✓ SATISFIED | Real `Outbound.send/1` preflight isolation matrix. |
+| UNSUB-10 | 152-02, 152-03 | DB pair commits before lifecycle/broadcast and effects cannot partially durable it. | ✓ SATISFIED | Created-only separate-Multi implementation plus commit-order and failure-isolation tests. |
+| UNSUB-11 | 152-01, 152-02, 152-03 | Tenant/prefix safety under hostile `search_path`; failed transaction has no success/partial mutation. | ✓ SATISFIED | Explicit multi options, hostile-schema test, injected rollback/empty-500 tests. |
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
-|---|---|---|---|---|
-| `docs/api_stability.md` | 1512 | Existing “not yet implemented” tracking-hook note | INFO | Explicitly scoped to a v0.5 tracking feature, not one-click suppression; no Phase 152 debt marker. |
-| `lib/mailglass/optional_deps/oban.ex` | 56 | Formatting drift | INFO | Not Phase 152-owned; format umbrella failure does not affect one-click behavior. |
-| Credo findings in non-152 files | various | Existing readability/refactoring/warning findings | INFO | `mix verify.schema_prefix` exits non-zero after Phase 152 schema tests pass; none is in a Phase 152 implementation artifact. |
+| --- | --- | --- | --- | --- |
+| `docs/api_stability.md` | 1512 | Existing unrelated “not yet implemented” v0.5 tracking-hook note | ℹ️ Info | Not a Phase 152 debt marker or one-click behavior. |
 
 ### Disconfirmation Pass
 
-- **Partial-requirement check:** I checked temporary same-identity suppressions, a common hole where a valid unsubscribe can later expire. The convergence transaction conditionally promotes exactly one row to permanent; a four-way concurrency test proves the winner/loser behavior and one effect pair.
-- **Misleading-test check:** I did not accept serial replay evidence as concurrency proof. The retained test starts four tasks behind a shared barrier and asserts all responses, durable pair cardinality, and effect cardinality.
-- **Uncovered-error-path check:** I checked database/refetch exceptions and transaction failure after both insert points. Controller tests inject these paths and prove byte-empty 500 with no partial mutation/effects.
-
-### Metadata Note
-
-`ROADMAP.md` currently marks Plan 03 as unchecked and Phase 152 as in progress even though `152-03-SUMMARY.md`, its commits, focused contracts, and this verification show it complete. This is workflow metadata drift, not a functional Phase 152 gap; update the roadmap completion metadata after bundling this report.
+- **Partial-requirement check:** I tested the legacy half-state and temporary same-identity suppression paths rather than accepting only the happy path. The transaction repairs them and tests prove the permanent canonical outcome.
+- **Misleading-test check:** I did not treat serial replay as concurrency proof. The passing test coordinates four independent tasks behind a barrier and asserts durable/effect cardinality.
+- **Uncovered-error-path check:** Injected failures after each insert and a canonical-refetch exception produce the required empty `500`; rollback assertions prove the pair is not partially committed.
 
 ### Gaps Summary
 
-No Phase 152 gaps found. The remaining strict format/Credo umbrella failures are observable, documented, and isolated to unrelated baseline files; they do not block the phase goal or any UNSUB-07..11 truth.
+No Phase 152 functional gaps found. Commit `98e5d1f1` changed only planning evidence metadata (`REQUIREMENTS.md` and Phase 152 summaries); `f8ab8c14` corrected the stale controller module documentation without changing behavior. The current code and independently executed focused suites substantiate all five roadmap criteria and all plan must-haves.
 
 ---
 
-_Verified: 2026-08-03T15:23:15Z_
+_Verified: 2026-08-04T17:17:53Z_
 _Verifier: the agent (gsd-verifier)_
