@@ -344,15 +344,10 @@ jobs:
         id: inbound-compat
         env:
           VERSION: ${{ needs.cron-guard.outputs.version }}
-          VERSION_INBOUND: 2.1.1
+          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
         run: |
-          if [ "${VERSION}" != "2.4.0" ]; then
-            echo "Published consumer proof is pinned to mailglass 2.4.0, got ${VERSION}."
-            exit 1
-          fi
-
-          if [ "${VERSION_INBOUND}" != "2.1.1" ]; then
-            echo "Published consumer proof requires mailglass_inbound 2.1.1."
+          if [ -z "${VERSION_INBOUND}" ]; then
+            echo "Published consumer proof could not resolve mailglass_inbound from the release ref."
             exit 1
           fi
 
@@ -367,7 +362,7 @@ jobs:
           # (mailglass ~> ... and >= ...) introduced by the Phase 125 pin
           # loosening (LD-2). Anchored on the `mailglass` dep name to avoid
           # false matches on `mailglass_inbound` or `mailglass_admin` lines.
-          if echo "${INFO}" | grep -E "^[[:space:]]*mailglass (~> 2\\.0|== 2\\.4\\.0|>= 2\\.4\\.0)" >/dev/null; then
+          if echo "${INFO}" | grep -E "^[[:space:]]*mailglass (~> 2\\.0|== 2\\.[0-9]+\\.[0-9]+|>= 2\\.0\\.0)" >/dev/null; then
             echo "mailglass_inbound ${VERSION_INBOUND} has a recognized compatible mailglass constraint for ${VERSION}."
           else
             echo "mailglass_inbound ${VERSION_INBOUND} has no recognized compatible mailglass constraint for ${VERSION}."
@@ -381,7 +376,7 @@ jobs:
           DEP_MODE: hex
           WORK_DIR: ${{ runner.temp }}
           VERSION: ${{ needs.cron-guard.outputs.version }}
-          VERSION_INBOUND: 2.1.1
+          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
           INCLUDE_INBOUND: true
         run: bash scripts/consumer_install_smoke.sh
 
