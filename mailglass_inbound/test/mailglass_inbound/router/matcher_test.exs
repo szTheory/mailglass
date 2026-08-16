@@ -155,8 +155,7 @@ defmodule MailglassInbound.Router.MatcherTest do
     end
 
     # A header map whose values are LISTS (the normalized shape). The name pool
-    # is wider than the clause-name pool (and drawn from a roomy space so
-    # `map_of`'s unique-key requirement never exhausts), so the message headers
+    # is wider than the clause-name pool, so the message headers
     # overlap the clause names sometimes and miss them other times — exercising
     # both the present-header and the absent-header (`Map.get(.., [])`) paths.
     defp header_name_gen do
@@ -167,11 +166,14 @@ defmodule MailglassInbound.Router.MatcherTest do
     end
 
     defp headers_gen do
-      map_of(
-        header_name_gen(),
-        list_of(member_of(["high", "low", "gold", "silver"]), max_length: 3),
+      list_of(
+        tuple({
+          header_name_gen(),
+          list_of(member_of(["high", "low", "gold", "silver"]), max_length: 3)
+        }),
         max_length: 4
       )
+      |> map(&Map.new/1)
     end
 
     defp header_clauses_gen do
