@@ -236,7 +236,7 @@ defmodule Mailglass.MigrationGenerator do
   defp timestamp(options) do
     case Keyword.fetch(options, :now) do
       {:ok, now} when is_function(now, 0) -> now.()
-      :error -> DateTime.utc_now()
+      :error -> Mailglass.Clock.utc_now()
     end
     |> DateTime.truncate(:second)
     |> Calendar.strftime("%Y%m%d%H%M%S")

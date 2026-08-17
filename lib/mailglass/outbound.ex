@@ -657,8 +657,8 @@ defmodule Mailglass.Outbound do
   defp maybe_insert_batch_jobs(multi, :task_supervisor), do: multi
 
   # Oban jobs are inserted in the durable transaction above. This remains
-  # solely as the non-durable Task.Supervisor fallback; Plan 156-03 makes its
-  # admission result bounded and truthful.
+  # solely as the non-durable Task.Supervisor fallback, whose bounded admission
+  # result is checked before any delivery is reported as queued.
   defp enqueue_batch_tasks(deliveries) when is_list(deliveries) do
     Enum.reduce_while(deliveries, {:ok, %{}}, fn %Delivery{} = delivery, {:ok, updates} ->
       case dispatch_task(delivery.id, delivery.tenant_id) do

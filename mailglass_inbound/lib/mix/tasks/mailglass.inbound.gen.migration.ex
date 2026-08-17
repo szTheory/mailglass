@@ -1,4 +1,11 @@
 defmodule Mix.Tasks.Mailglass.Inbound.Gen.Migration do
+  @moduledoc """
+  Generates install or upgrade migration wrappers for mailglass_inbound.
+
+  Run `mix help mailglass.inbound.gen.migration` for the supported repository
+  and upgrade options.
+  """
+
   use Mix.Task
 
   @shortdoc "Generate mailglass_inbound migration wrappers for a configured Ecto repo"
