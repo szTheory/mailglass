@@ -43,12 +43,13 @@ defmodule Mailglass.Migration do
   end
 
   @doc """
-  Returns the currently-applied migration version (0 if none).
+  Returns the currently-applied migration version (0 only when its anchor is absent).
 
   This function is safe to call outside an `Ecto.Migrator` context —
   unlike `up/1` / `down/1`, it does not rely on the migration runner
   process (it issues a single `pg_catalog.obj_description` query against
-  the configured Repo and returns an integer).
+  the configured Repo and returns an integer). Raises
+  `Mailglass.MigrationVersionError` when catalog metadata cannot be trusted.
   """
   @doc since: "0.1.0"
   @spec migrated_version(keyword()) :: non_neg_integer()

@@ -488,11 +488,17 @@ defmodule Mailglass.MigrationTest do
         ] do
       test "raises a typed error for #{name}" do
         assert_raise Mailglass.MigrationVersionError, fn ->
-          MigrationRunner.migrated_version(prefix: "catalog_fixture", query_result: unquote(Macro.escape(result)))
+          MigrationRunner.migrated_version(
+            prefix: "catalog_fixture",
+            query_result: unquote(Macro.escape(result))
+          )
         end
 
-        assert %Mailglass.MigrationVersionError{reason: unquote(reason), package: :mailglass,
-                                                prefix: "catalog_fixture"} =
+        assert %Mailglass.MigrationVersionError{
+                 reason: unquote(reason),
+                 package: :mailglass,
+                 prefix: "catalog_fixture"
+               } =
                  catch_error(
                    MigrationRunner.migrated_version(
                      prefix: "catalog_fixture",
