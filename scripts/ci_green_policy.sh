@@ -31,6 +31,46 @@ fi
 seen_lanes=()
 blocked_results=()
 
+policy_lane_ids() {
+  local key="$1"
+
+  elixir -e '
+    {policy, _binding} = Code.eval_file("config/quality/ci_policy.exs")
+    lanes =
+      case System.argv() do
+        ["active_required"] -> policy.active_required
+        ["advisory"] -> policy.advisory
+      end
+
+    IO.puts(Enum.join(lanes, "\n"))
+  ' "$key"
+}
+
+while IFS= read -r lane; do
+  active_required_lanes+=("$lane")
+done < <(policy_lane_ids active_required)
+
+while IFS= read -r lane; do
+  advisory_lanes+=("$lane")
+done < <(policy_lane_ids advisory)
+
+if [ "${#active_required_lanes[@]}" -eq 0 ] || [ "${#advisory_lanes[@]}" -eq 0 ]; then
+  echo "CI Green blocked: policy manifest produced an empty required or advisory lane set" >&2
+  exit 1
+fi
+
+contains_lane() {
+  local candidate="$1"
+  local entry
+  shift
+
+  for entry in "$@"; do
+    [ "$entry" = "$candidate" ] && return 0
+  done
+
+  return 1
+}
+
 for lane_input in "$@"; do
   if [[ "$lane_input" != *=* ]]; then
     echo "CI Green blocked: malformed required lane input: $lane_input" >&2
@@ -42,6 +82,16 @@ for lane_input in "$@"; do
 
   if [[ ! "$lane" =~ ^[a-z_][a-z0-9_]*$ ]] || [[ "$result" == *"="* ]]; then
     echo "CI Green blocked: malformed required lane input: $lane_input" >&2
+    exit 1
+  fi
+
+  if contains_lane "$lane" "${advisory_lanes[@]}"; then
+    echo "CI Green blocked: advisory lane cannot be supplied as required evidence: $lane" >&2
+    exit 1
+  fi
+
+  if ! contains_lane "$lane" "${active_required_lanes[@]}"; then
+    echo "CI Green blocked: unknown required lane input: $lane" >&2
     exit 1
   fi
 
@@ -59,6 +109,12 @@ for lane_input in "$@"; do
     blocked_results+=("$lane=$result")
   elif [ "$code_output" = "false" ] && [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
     blocked_results+=("$lane=$result")
+  fi
+done
+
+for required_lane in "${active_required_lanes[@]}"; do
+  if ! contains_lane "$required_lane" "${seen_lanes[@]}"; then
+    blocked_results+=("$required_lane=(missing)")
   fi
 done
 
