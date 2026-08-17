@@ -80,7 +80,7 @@ defmodule Mailglass.Webhook.Replay do
 
         case Repo.multi(multi) do
           {:ok, changes} ->
-            {:ok, build_success_result(params, webhook_event, requested_audit, changes)}
+            {:ok, build_success_result(params, webhook_event, provider, requested_audit, changes)}
 
           {:error, _step, reason, _changes} ->
             {:error, reason}
@@ -355,7 +355,7 @@ defmodule Mailglass.Webhook.Replay do
     }
   end
 
-  defp build_success_result(params, webhook_event, requested_audit, changes) do
+  defp build_success_result(params, webhook_event, provider, requested_audit, changes) do
     outcome = Map.fetch!(changes, :outcome_summary)
     succeeded_audit = Map.fetch!(changes, :replay_success_audit)
 
@@ -363,7 +363,7 @@ defmodule Mailglass.Webhook.Replay do
       status: outcome.status,
       tenant_id: params.tenant_id,
       webhook_event_id: webhook_event.id,
-      provider: String.to_atom(webhook_event.provider),
+      provider: provider,
       delivery_id: params.delivery_id,
       requested_audit_event_id: requested_audit.id,
       succeeded_audit_event_id: succeeded_audit.id,
