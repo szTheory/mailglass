@@ -24,6 +24,7 @@ if Code.ensure_loaded?(Oban.Worker) do
           normalize_result(result)
         else
           {:error, :invalid_job_args} -> {:cancel, :permanent_failure}
+          {:error, :route_authority_unavailable} -> {:error, :route_authority_unavailable}
           {:error, reason} -> {:error, reason}
         end
       end)

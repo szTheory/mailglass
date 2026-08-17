@@ -310,7 +310,7 @@ defmodule MailglassInbound.Ingress.Plug do
 
     case persistence.persist(handoff, persistence_opts(opts)) do
       {:ok, result} ->
-        maybe_execute(execution, result)
+        maybe_execute(execution, result, opts)
 
         resp =
           send_json(conn, 200, %{
@@ -626,12 +626,17 @@ defmodule MailglassInbound.Ingress.Plug do
   defp route_status(%{status: status}) when is_atom(status), do: Atom.to_string(status)
   defp route_status(_), do: "unknown"
 
-  defp maybe_execute(_execution, %{status: :duplicate}), do: :ok
+  defp maybe_execute(_execution, %{status: :duplicate}, _opts), do: :ok
 
-  defp maybe_execute(execution, %{status: :inserted} = result) do
-    _ = execution.dispatch(result)
+  defp maybe_execute(execution, %{status: :inserted} = result, opts) do
+    _ = execution.dispatch(result, execution_opts(opts))
     _ = broadcast_inbound_inserted(result)
     :ok
+  end
+
+  defp execution_opts(opts) do
+    []
+    |> maybe_put(:router, Keyword.get(opts, :router))
   end
 
   # Post-commit fan-out. This runs in `maybe_execute/2`, which

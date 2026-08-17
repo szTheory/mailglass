@@ -26,14 +26,17 @@ defmodule MailglassInbound.Ingress.PlugTest do
   defmodule TestRouter do
     use MailglassInbound.Router
 
-    route SupportMailbox, recipient: "support@example.com"
+    route(SupportMailbox, recipient: "support@example.com")
   end
 
   defmodule FakePersistence do
     def persist(handoff, opts) do
       Process.put(:mailglass_inbound_last_handoff, handoff)
       Process.put(:mailglass_inbound_last_persist_opts, opts)
-      Process.put(:mailglass_inbound_execution_order, [:persist | Process.get(:mailglass_inbound_execution_order, [])])
+
+      Process.put(:mailglass_inbound_execution_order, [
+        :persist | Process.get(:mailglass_inbound_execution_order, [])
+      ])
 
       case Process.get(:mailglass_inbound_persist_error) do
         nil ->
@@ -55,9 +58,13 @@ defmodule MailglassInbound.Ingress.PlugTest do
   end
 
   defmodule FakeExecution do
-    def dispatch(result, _opts \\ []) do
+    def dispatch(result, opts \\ []) do
       Process.put(:mailglass_inbound_last_execution_result, result)
-      Process.put(:mailglass_inbound_execution_order, [:dispatch | Process.get(:mailglass_inbound_execution_order, [])])
+      Process.put(:mailglass_inbound_last_execution_opts, opts)
+
+      Process.put(:mailglass_inbound_execution_order, [
+        :dispatch | Process.get(:mailglass_inbound_execution_order, [])
+      ])
 
       case Process.get(:mailglass_inbound_execution_outcome, :accept) do
         :accept -> {:ok, %{status: :queued, mode: :oban}}
@@ -142,15 +149,14 @@ defmodule MailglassInbound.Ingress.PlugTest do
       ip_allowlist: []
     )
 
-    Application.put_env(:mailglass_inbound, :sendgrid,
-      basic_auth: {"sendgrid", "secret"}
-    )
+    Application.put_env(:mailglass_inbound, :sendgrid, basic_auth: {"sendgrid", "secret"})
 
     Process.delete(:mailglass_inbound_last_handoff)
     Process.delete(:mailglass_inbound_last_persist_opts)
     Process.delete(:mailglass_inbound_persist_status)
     Process.delete(:mailglass_inbound_tenant_resolved)
     Process.delete(:mailglass_inbound_last_execution_result)
+    Process.delete(:mailglass_inbound_last_execution_opts)
     Process.delete(:mailglass_inbound_execution_order)
     Process.delete(:mailglass_inbound_execution_outcome)
     Process.delete(:mailglass_inbound_stub_verify)
@@ -211,6 +217,9 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert execution_result.inbound_record.id == "record-123"
     assert execution_result.inbound_evidence.id == "evidence-123"
     assert execution_result.route == %{status: :matched, mailbox: SupportMailbox}
+
+    assert Keyword.fetch!(Process.get(:mailglass_inbound_last_execution_opts), :router) ==
+             TestRouter
   end
 
   test "maps duplicate persistence outcomes to 200 without pretending it is new work" do
@@ -265,7 +274,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     pii_changeset =
       {%{}, %{from: :string, to: :string, subject: :string}}
       |> Ecto.Changeset.cast(
-        %{from: "alice@secret.example", to: "bob@secret.example", subject: "Confidential merger terms"},
+        %{
+          from: "alice@secret.example",
+          to: "bob@secret.example",
+          subject: "Confidential merger terms"
+        },
         [:from, :to, :subject]
       )
       |> Ecto.Changeset.add_error(:subject, "is invalid")
@@ -310,7 +323,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
       |> Plug.Conn.put_private(:raw_body, postmark_payload())
       |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
 
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
 
     assert conn.status == 401
     assert Jason.decode!(conn.resp_body)["reason"] == "bad_credentials"
@@ -323,7 +337,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
       |> Plug.Conn.put_req_header("authorization", basic_auth("postmark", "secret"))
       |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
 
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
 
     assert conn.status == 500
     assert Jason.decode!(conn.resp_body)["reason"] == "webhook_caching_body_reader_missing"
@@ -331,7 +346,9 @@ defmodule MailglassInbound.Ingress.PlugTest do
 
   test "returns 422 when tenant resolution fails after verification" do
     conn = conn_with_auth(postmark_payload())
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
+
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
 
     assert conn.status == 422
     assert Jason.decode!(conn.resp_body)["reason"] == "webhook_tenant_unresolved"
@@ -400,7 +417,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
       |> Map.put(:params, sendgrid_params())
       |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
 
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
 
     assert conn.status == 401
     assert Jason.decode!(conn.resp_body)["reason"] == "bad_credentials"
@@ -412,7 +430,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
       sendgrid_conn(Map.delete(sendgrid_params(), "email"))
       |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
 
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
 
     body = Jason.decode!(conn.resp_body)
 
@@ -428,7 +447,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
       sendgrid_conn(sendgrid_params())
       |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
 
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
 
     assert conn.status == 500
     assert Jason.decode!(conn.resp_body)["reason"] == "webhook_verification_key_missing"
@@ -528,7 +548,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     conn =
       IngressPlug.call(
         conn,
-        IngressPlug.init(provider: :mailgun, provider_module: StubProvider, persistence: FakePersistence)
+        IngressPlug.init(
+          provider: :mailgun,
+          provider_module: StubProvider,
+          persistence: FakePersistence
+        )
       )
 
     assert conn.status == 401
@@ -545,7 +569,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     conn =
       IngressPlug.call(
         conn,
-        IngressPlug.init(provider: :ses, provider_module: StubProvider, persistence: FakePersistence)
+        IngressPlug.init(
+          provider: :ses,
+          provider_module: StubProvider,
+          persistence: FakePersistence
+        )
       )
 
     assert conn.status == 401
@@ -564,7 +592,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     conn =
       IngressPlug.call(
         conn,
-        IngressPlug.init(provider: :ses, provider_module: StubProvider, persistence: FakePersistence)
+        IngressPlug.init(
+          provider: :ses,
+          provider_module: StubProvider,
+          persistence: FakePersistence
+        )
       )
 
     body = Jason.decode!(conn.resp_body)
@@ -592,7 +624,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     conn =
       IngressPlug.call(
         conn,
-        IngressPlug.init(provider: :ses, provider_module: StubProvider, persistence: FakePersistence)
+        IngressPlug.init(
+          provider: :ses,
+          provider_module: StubProvider,
+          persistence: FakePersistence
+        )
       )
 
     body = Jason.decode!(conn.resp_body)
