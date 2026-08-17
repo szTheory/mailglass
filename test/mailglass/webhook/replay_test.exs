@@ -26,6 +26,14 @@ defmodule Mailglass.Webhook.ReplayTest do
       assert :erlang.system_info(:atom_count) == atom_count
     end
 
+    test "replay result construction never converts persisted provider strings to atoms" do
+      replay_source =
+        Path.expand("../../../lib/mailglass/webhook/replay.ex", __DIR__)
+        |> File.read!()
+
+      refute replay_source =~ "String.to_atom("
+    end
+
     test "successfully replays one stored webhook target and records requested and completed audit facts" do
       delivery = insert_delivery!(provider_message_id: "msg-replay-success")
 
@@ -48,6 +56,7 @@ defmodule Mailglass.Webhook.ReplayTest do
                })
 
       assert result.status == :replayed
+      assert result.provider == :postmark
       assert result.delivery_id == delivery.id
       assert result.replayed_event_count == 1
       assert result.new_event_count == 1
