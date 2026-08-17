@@ -80,18 +80,7 @@ defmodule MailglassInbound.MixProject do
   end
 
   defp elixirc_options do
-    # `Mailglass.Oban.TenancyMiddleware` is a cross-package reference from
-    # execution/worker.ex. It is runtime-safe — both the call site and the whole
-    # worker module sit inside `Code.ensure_loaded?/1` gates — but static xref
-    # cannot resolve it under `mix compile --no-optional-deps`, where Oban is
-    # stripped from both inbound's dep and the path-dep core (eliding the core
-    # module). Suppressing it here (project-level, so it takes effect even while
-    # the gated module body is elided) mirrors core mix.exs's own no_warn_undefined
-    # entry for the same module and keeps the inbound `--no-optional-deps
-    # --warnings-as-errors` lane green. List kept tight: only modules actually
-    # referenced from inbound code (do NOT add Mailglass.Outbound.Worker — no
-    # inbound reference exists).
-    [no_warn_undefined: [Oban, Oban.Job, Oban.Worker, Mailglass.Oban.TenancyMiddleware]]
+    [no_warn_undefined: [Oban, Oban.Job, Oban.Worker]]
   end
 
   # `test/support` carries MailglassInbound.TestRepo (the Postgres-backed test
@@ -107,7 +96,7 @@ defmodule MailglassInbound.MixProject do
       {:oban, "~> 2.21", optional: true},
       {:uuidv7, "~> 1.0"},
       # `:mimemail` (from gen_smtp) is exercised by the real MIME parser in Plan 03.
-      # All access goes through the core Mailglass.OptionalDeps.GenSmtp gateway, so
+      # All access goes through the inbound MailglassInbound.OptionalDeps.GenSmtp gateway, so
       # it is NOT added to elixirc_options no_warn_undefined here (no bare references
       # in inbound code). Pinned to the vetted 1.3.0 core lockfile resolution.
       {:gen_smtp, "~> 1.3", optional: true},

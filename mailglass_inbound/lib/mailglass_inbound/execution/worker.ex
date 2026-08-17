@@ -10,6 +10,7 @@ if Code.ensure_loaded?(Oban.Worker) do
       unique: [period: 3600, fields: [:args], keys: [:inbound_record_id, :source]]
 
     alias MailglassInbound.Execution
+    alias MailglassInbound.Ports
 
     @impl Oban.Worker
     def perform(job), do: perform(job, [])
@@ -47,11 +48,7 @@ if Code.ensure_loaded?(Oban.Worker) do
     end
 
     defp wrap_perform(job, fun) do
-      if Code.ensure_loaded?(Mailglass.Oban.TenancyMiddleware) do
-        Mailglass.Oban.TenancyMiddleware.wrap_perform(job, fun)
-      else
-        fun.()
-      end
+      Ports.Core.with_job_tenant(job, fun)
     end
 
     defp source_from_args(%{"source" => "fresh"}), do: {:ok, :fresh}

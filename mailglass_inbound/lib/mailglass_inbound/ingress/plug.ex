@@ -44,6 +44,7 @@ defmodule MailglassInbound.Ingress.Plug do
   alias MailglassInbound.S3FetchError
   alias MailglassInbound.Execution
   alias MailglassInbound.Ingress.{Request, VerifiedRequest}
+  alias MailglassInbound.Ports
 
   @impl Plug
   def init(opts) when is_list(opts) do
@@ -752,35 +753,10 @@ defmodule MailglassInbound.Ingress.Plug do
     payload =
       {:inbound_record_inserted, record_id, %{provider: provider, record_type: "inbound_record"}}
 
-    safe_broadcast(topic, payload)
+    Ports.Core.safe_broadcast(topic, payload)
   end
 
   defp broadcast_inbound_inserted(_result), do: :ok
-
-  # Copied verbatim from `Mailglass.Outbound.Projector.safe_broadcast/2`, changing
-  # only the log tag to `[mailglass_inbound]`. The rescue list and the
-  # `catch :exit` clause are both load-bearing: PubSub may be unreachable at
-  # shutdown/partition, and the committed row is the durable source of truth, so a
-  # broadcast failure must never crash the already-committed inbound pipeline.
-  defp safe_broadcast(topic, payload) do
-    Phoenix.PubSub.broadcast(Mailglass.PubSub, topic, payload)
-  rescue
-    e in [ArgumentError, RuntimeError] ->
-      require Logger
-
-      Logger.debug(
-        "[mailglass_inbound] PubSub broadcast failed (non-fatal): #{Exception.message(e)}"
-      )
-
-      :ok
-  catch
-    :exit, reason ->
-      require Logger
-
-      Logger.debug("[mailglass_inbound] PubSub broadcast exited (non-fatal): #{inspect(reason)}")
-
-      :ok
-  end
 
   defp send_json(conn, status, payload) do
     body = Jason.encode!(payload)

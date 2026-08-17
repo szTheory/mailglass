@@ -346,7 +346,7 @@ defmodule MailglassInbound.Internal.Doctor do
   # ---- MIME backend report (MIME-03) ----------------------------------------
 
   defp mime_findings do
-    available? = Mailglass.OptionalDeps.GenSmtp.available?()
+    available? = MailglassInbound.OptionalDeps.GenSmtp.available?()
     version = backend_version()
 
     {status, observed} =

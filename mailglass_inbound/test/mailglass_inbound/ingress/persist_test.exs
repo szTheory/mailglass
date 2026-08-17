@@ -423,6 +423,7 @@ defmodule MailglassInbound.Ingress.PersistTest do
     setup do
       previous = Application.get_env(:mailglass, :suppression_store)
       Application.put_env(:mailglass, :suppression_store, StubSuppressionStore)
+      Mailglass.Runtime.reset_for_test!()
 
       on_exit(fn ->
         if previous do
@@ -430,6 +431,8 @@ defmodule MailglassInbound.Ingress.PersistTest do
         else
           Application.delete_env(:mailglass, :suppression_store)
         end
+
+        Mailglass.Runtime.reset_for_test!()
 
         Process.delete(:mailglass_inbound_stub_suppression_reply)
       end)
