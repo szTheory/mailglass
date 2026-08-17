@@ -13,9 +13,8 @@ defmodule Mailglass.Outbound.TelemetryTest do
   end
 
   describe "telemetry spans fire correctly" do
-    test "[:mailglass, :outbound, :send, :start|:stop] and [:mailglass, :outbound, :dispatch, :start|:stop] fire" do
-      events_seen = :ets.new(:events_seen, [:set, :public])
-
+    test "one provider call emits exactly one dispatch start/stop pair" do
+      test_pid = self()
       handler_id = "test-outbound-spans-#{System.unique_integer()}"
 
       events_to_watch = [
@@ -28,8 +27,8 @@ defmodule Mailglass.Outbound.TelemetryTest do
       :telemetry.attach_many(
         handler_id,
         events_to_watch,
-        fn event, _measurements, _metadata, _config ->
-          :ets.insert(events_seen, {event, true})
+        fn event, measurements, metadata, _config ->
+          send(test_pid, {:outbound_span, event, measurements, metadata})
         end,
         nil
       )
@@ -40,11 +39,9 @@ defmodule Mailglass.Outbound.TelemetryTest do
       {:ok, _} = Outbound.send(msg)
 
       for event <- events_to_watch do
-        assert :ets.lookup(events_seen, event) != [],
-               "Expected event #{inspect(event)} to fire"
+        assert_receive {:outbound_span, ^event, _measurements, _metadata}
+        refute_receive {:outbound_span, ^event, _, _}, 0
       end
-
-      :ets.delete(events_seen)
     end
   end
 
