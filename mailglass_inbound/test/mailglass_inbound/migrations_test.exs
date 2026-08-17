@@ -16,6 +16,18 @@ defmodule MailglassInbound.MigrationsTest do
   alias MailglassInbound.Migrations.Postgres, as: MigrationRunner
   alias MailglassInbound.TestRepo
 
+  @v02_path Path.expand("../../../lib/mailglass_inbound/migrations/postgres/v02.ex", __DIR__)
+
+  test "V02 defines an additive SHA-256 expand/backfill contract without rewriting V01" do
+    assert File.exists?(@v02_path)
+
+    v02 = File.read!(@v02_path)
+    assert v02 =~ "raw_mime_sha256"
+    assert v02 =~ "CREATE INDEX CONCURRENTLY"
+    assert v02 =~ "mailglass_inbound_records_retention_idx"
+    assert v02 =~ "mailglass_inbound_evidence_retention_idx"
+  end
+
   # Distinct prefix — non-public so CREATE/DROP SCHEMA lifecycle is exercised;
   # avoids clashing with the suite's "public" schema or any future "mailglass" default.
   @prefix "inb_mig_test"
