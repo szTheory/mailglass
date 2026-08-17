@@ -35,6 +35,10 @@ defmodule MailglassInbound.Migration do
     migrator(opts).up(opts)
   end
 
+  @doc false
+  @spec requires_non_transactional_wrapper?() :: boolean()
+  def requires_non_transactional_wrapper?, do: true
+
   @doc "Rolls back inbound migrations down to the target version (default: 0)."
   @doc since: "2.0.0"
   @spec down(keyword()) :: :ok

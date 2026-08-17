@@ -4,7 +4,7 @@ defmodule MailglassInbound.Migrations.Postgres do
   use Ecto.Migration
 
   @initial_version 1
-  @current_version 1
+  @current_version 2
   @default_prefix "public"
 
   @doc false
@@ -114,7 +114,7 @@ defmodule MailglassInbound.Migrations.Postgres do
 
       [__MODULE__, "V#{pad_idx}"]
       |> Module.concat()
-      |> apply(direction, [opts])
+      |> apply(direction, [migration_opts(opts, index)])
     end
 
     case direction do
@@ -186,6 +186,14 @@ defmodule MailglassInbound.Migrations.Postgres do
       |> Map.put_new(:create_schema, o.prefix != @default_prefix)
     end)
   end
+
+  # V02 can safely expose concurrent DDL only when a generated host wrapper
+  # disables Ecto's migration transaction.  Plan 09 consumes this explicit
+  # contract; direct legacy wrappers remain transaction-safe meanwhile.
+  defp migration_opts(opts, 2),
+    do: Map.put(opts, :concurrent_indexes, Map.get(opts, :non_transactional_wrapper, false))
+
+  defp migration_opts(opts, _index), do: opts
 
   defp validate_identifier!(value, key), do: Mailglass.Identifier.validate!(value, key)
 end

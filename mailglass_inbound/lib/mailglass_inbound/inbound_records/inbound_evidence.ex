@@ -21,6 +21,9 @@ defmodule MailglassInbound.InboundRecords.InboundEvidence do
           raw_payload: map(),
           raw_headers: map(),
           raw_mime: binary() | nil,
+          raw_mime_sha256: binary() | nil,
+          terminal_failure_class: String.t() | nil,
+          terminal_context: map(),
           verification_facts: map(),
           parse_warnings: map(),
           attachment_blobs: map(),
@@ -29,23 +32,28 @@ defmodule MailglassInbound.InboundRecords.InboundEvidence do
         }
 
   schema "mailglass_inbound_evidence" do
-    field :tenant_id, :string
-    field :provider, :string
-    field :raw_payload, :map, default: %{}, redact: true
-    field :raw_headers, :map, default: %{}
-    field :raw_mime, :binary, redact: true
-    field :verification_facts, :map, default: %{}
-    field :parse_warnings, :map, default: %{}
-    field :attachment_blobs, :map, default: %{}
+    field(:tenant_id, :string)
+    field(:provider, :string)
+    field(:raw_payload, :map, default: %{}, redact: true)
+    field(:raw_headers, :map, default: %{})
+    field(:raw_mime, :binary, redact: true)
+    field(:raw_mime_fingerprint, :string)
+    field(:raw_mime_sha256, :binary, redact: true)
+    field(:terminal_failure_class, :string)
+    field(:terminal_context, :map, redact: true)
+    field(:verification_facts, :map, default: %{})
+    field(:parse_warnings, :map, default: %{})
+    field(:attachment_blobs, :map, default: %{})
 
-    belongs_to :inbound_record, InboundRecord
-    has_many :replay_runs, ReplayRun
+    belongs_to(:inbound_record, InboundRecord)
+    has_many(:replay_runs, ReplayRun)
 
     timestamps()
   end
 
   @required ~w[tenant_id inbound_record_id provider]a
-  @cast @required ++ ~w[raw_payload raw_headers raw_mime verification_facts parse_warnings attachment_blobs]a
+  @cast @required ++
+          ~w[raw_payload raw_headers raw_mime raw_mime_sha256 terminal_failure_class terminal_context verification_facts parse_warnings attachment_blobs]a
 
   @spec changeset(map()) :: Ecto.Changeset.t()
   def changeset(attrs) when is_map(attrs) do
@@ -70,5 +78,6 @@ defmodule MailglassInbound.InboundRecords.InboundEvidence do
     |> unique_constraint(:raw_mime_fingerprint,
       name: :mailglass_inbound_records_ses_fingerprint_idx
     )
+    |> unique_constraint(:raw_mime_sha256, name: :mailglass_inbound_evidence_sha256_idx)
   end
 end

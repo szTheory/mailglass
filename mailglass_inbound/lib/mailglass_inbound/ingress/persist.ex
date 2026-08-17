@@ -150,6 +150,8 @@ defmodule MailglassInbound.Ingress.Persist do
         nil
 
       fingerprint ->
+        sha256 = evidence_raw_mime_sha256(evidence)
+
         query =
           from(record in InboundRecord,
             join: inbound_evidence in InboundEvidence,
@@ -158,7 +160,9 @@ defmodule MailglassInbound.Ingress.Persist do
               record.tenant_id == ^tenant_id and
                 record.provider == ^"sendgrid" and
                 inbound_evidence.provider == ^"sendgrid" and
-                fragment("md5(?)", inbound_evidence.raw_mime) == ^fingerprint,
+                (inbound_evidence.raw_mime_sha256 == ^sha256 or
+                   (is_nil(inbound_evidence.raw_mime_sha256) and
+                      inbound_evidence.raw_mime_fingerprint == ^fingerprint)),
             limit: 1
           )
 
@@ -194,6 +198,8 @@ defmodule MailglassInbound.Ingress.Persist do
         nil
 
       fingerprint ->
+        sha256 = evidence_raw_mime_sha256(evidence)
+
         query =
           from(record in InboundRecord,
             join: inbound_evidence in InboundEvidence,
@@ -202,7 +208,9 @@ defmodule MailglassInbound.Ingress.Persist do
               record.tenant_id == ^tenant_id and
                 record.provider == ^"mailgun" and
                 inbound_evidence.provider == ^"mailgun" and
-                fragment("md5(?)", inbound_evidence.raw_mime) == ^fingerprint,
+                (inbound_evidence.raw_mime_sha256 == ^sha256 or
+                   (is_nil(inbound_evidence.raw_mime_sha256) and
+                      inbound_evidence.raw_mime_fingerprint == ^fingerprint)),
             limit: 1
           )
 
@@ -235,6 +243,8 @@ defmodule MailglassInbound.Ingress.Persist do
         nil
 
       fingerprint ->
+        sha256 = evidence_raw_mime_sha256(evidence)
+
         query =
           from(record in InboundRecord,
             join: inbound_evidence in InboundEvidence,
@@ -243,7 +253,9 @@ defmodule MailglassInbound.Ingress.Persist do
               record.tenant_id == ^tenant_id and
                 record.provider == ^"ses" and
                 inbound_evidence.provider == ^"ses" and
-                fragment("md5(?)", inbound_evidence.raw_mime) == ^fingerprint,
+                (inbound_evidence.raw_mime_sha256 == ^sha256 or
+                   (is_nil(inbound_evidence.raw_mime_sha256) and
+                      inbound_evidence.raw_mime_fingerprint == ^fingerprint)),
             limit: 1
           )
 
@@ -387,6 +399,7 @@ defmodule MailglassInbound.Ingress.Persist do
 
   defp insert_evidence(repo, tenant_id, provider, record, evidence) do
     raw_mime_fingerprint = evidence_raw_mime_fingerprint(evidence)
+    raw_mime_sha256 = evidence_raw_mime_sha256(evidence)
 
     attrs = %{
       tenant_id: tenant_id,
@@ -395,6 +408,7 @@ defmodule MailglassInbound.Ingress.Persist do
       raw_payload: Map.get(evidence, :raw_payload, %{}),
       raw_headers: Map.get(evidence, :raw_headers, %{}),
       raw_mime: Map.get(evidence, :raw_mime),
+      raw_mime_sha256: raw_mime_sha256,
       verification_facts:
         evidence
         |> Map.get(:verification_facts, %{})
@@ -402,6 +416,15 @@ defmodule MailglassInbound.Ingress.Persist do
       parse_warnings: Map.get(evidence, :parse_warnings, %{}),
       attachment_blobs: Map.get(evidence, :attachment_blobs, %{})
     }
+
+    attrs =
+      if Map.has_key?(evidence, :terminal_failure_class) do
+        attrs
+        |> Map.put(:terminal_failure_class, Map.get(evidence, :terminal_failure_class))
+        |> Map.put(:terminal_context, Map.get(evidence, :terminal_context, %{}))
+      else
+        attrs
+      end
 
     attrs
     |> InboundRecords.change_inbound_evidence()
@@ -476,7 +499,8 @@ defmodule MailglassInbound.Ingress.Persist do
   @fingerprint_constraints [
     "mailglass_inbound_records_mailgun_fingerprint_idx",
     "mailglass_inbound_records_sendgrid_fingerprint_idx",
-    "mailglass_inbound_records_ses_fingerprint_idx"
+    "mailglass_inbound_records_ses_fingerprint_idx",
+    "mailglass_inbound_evidence_sha256_idx"
   ]
 
   # CR-01: recognize an evidence-level fingerprint partial-unique-index violation
@@ -485,8 +509,11 @@ defmodule MailglassInbound.Ingress.Persist do
   # confusing it with any other future unique constraint on the same field.
   defp fingerprint_constraint?(changeset) do
     Enum.any?(changeset.errors, fn
-      {:raw_mime_fingerprint, {_msg, opts}} -> opts[:constraint_name] in @fingerprint_constraints
-      _ -> false
+      {field, {_msg, opts}} when field in [:raw_mime_fingerprint, :raw_mime_sha256] ->
+        opts[:constraint_name] in @fingerprint_constraints
+
+      _ ->
+        false
     end)
   end
 
@@ -499,6 +526,44 @@ defmodule MailglassInbound.Ingress.Persist do
 
       _ ->
         nil
+    end
+  end
+
+  defp evidence_raw_mime_sha256(evidence) when is_map(evidence) do
+    case Map.get(evidence, :raw_mime) do
+      raw_mime when is_binary(raw_mime) and raw_mime != "" -> :crypto.hash(:sha256, raw_mime)
+      _ -> nil
+    end
+  end
+
+  @doc false
+  @spec backfill_sha256(keyword()) :: {:ok, non_neg_integer()}
+  def backfill_sha256(opts \\ []) do
+    repo = Keyword.get(opts, :repo, MailglassInbound.Repo)
+    prefix = Keyword.get(opts, :prefix, MailglassInbound.Config.schema())
+    limit = Keyword.get(opts, :limit, 500)
+    after_id = Keyword.get(opts, :after_id)
+
+    {sql, params} =
+      if is_binary(after_id) do
+        {"""
+         WITH batch AS (SELECT id FROM #{inspect(prefix)}.mailglass_inbound_evidence
+           WHERE raw_mime_sha256 IS NULL AND raw_mime IS NOT NULL AND id > $1 ORDER BY id LIMIT $2)
+         UPDATE #{inspect(prefix)}.mailglass_inbound_evidence e SET raw_mime_sha256 = digest(e.raw_mime, 'sha256')
+         FROM batch WHERE e.id = batch.id
+         """, [after_id, limit]}
+      else
+        {"""
+         WITH batch AS (SELECT id FROM #{inspect(prefix)}.mailglass_inbound_evidence
+           WHERE raw_mime_sha256 IS NULL AND raw_mime IS NOT NULL ORDER BY id LIMIT $1)
+         UPDATE #{inspect(prefix)}.mailglass_inbound_evidence e SET raw_mime_sha256 = digest(e.raw_mime, 'sha256')
+         FROM batch WHERE e.id = batch.id
+         """, [limit]}
+      end
+
+    case repo.query(sql, params, log: false) do
+      {:ok, %{num_rows: count}} -> {:ok, count}
+      {:error, reason} -> {:error, reason}
     end
   end
 

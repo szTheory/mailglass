@@ -16,7 +16,7 @@ defmodule MailglassInbound.MigrationsTest do
   alias MailglassInbound.Migrations.Postgres, as: MigrationRunner
   alias MailglassInbound.TestRepo
 
-  @v02_path Path.expand("../../../lib/mailglass_inbound/migrations/postgres/v02.ex", __DIR__)
+  @v02_path Path.expand("../../lib/mailglass_inbound/migrations/postgres/v02.ex", __DIR__)
 
   test "V02 defines an additive SHA-256 expand/backfill contract without rewriting V01" do
     assert File.exists?(@v02_path)
@@ -448,7 +448,7 @@ defmodule MailglassInbound.MigrationsTest do
           {"a missing comment", {:ok, %{rows: [[nil]]}}, :missing_comment},
           {"a malformed comment", {:ok, %{rows: [["1extra"]]}}, :invalid_comment},
           {"multiple rows", {:ok, %{rows: [["1"], ["1"]]}}, :unexpected_result},
-          {"an out-of-range version", {:ok, %{rows: [["2"]]}}, :out_of_range},
+          {"an out-of-range version", {:ok, %{rows: [["3"]]}}, :out_of_range},
           {"a query error", {:error, :unavailable}, :query_failed}
         ] do
       test "raises the shared typed error for #{name}" do
