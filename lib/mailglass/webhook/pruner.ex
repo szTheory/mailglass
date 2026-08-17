@@ -64,7 +64,14 @@ if Code.ensure_loaded?(Oban.Worker) do
 
     @impl Oban.Worker
     def perform(_job) do
-      {:ok, %{succeeded: succeeded, dead: dead}} = prune()
+      {succeeded, dead} =
+        case prune() do
+          {:ok, %{succeeded: succeeded, dead: dead}} -> {succeeded, dead}
+          # A concurrent sweep holds the advisory lock. Oban should treat this
+          # as a successful no-op, with the same telemetry shape as an empty run.
+          {:ok, :locked_out} -> {0, 0}
+        end
+
       :ok = emit_telemetry(succeeded, dead)
       :ok
     end
