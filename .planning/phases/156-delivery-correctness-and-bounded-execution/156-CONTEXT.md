@@ -18,33 +18,33 @@ not change admin/operator UI or broaden the public product surface beyond additi
 ## Implementation Decisions
 
 ### Rate limiting and resource bounds
-- Core and inbound use one private atomic compare-and-swap token-bucket engine behind their existing
+- **D-01 — Shared private engine:** Core and inbound use one private atomic compare-and-swap token-bucket engine behind their existing
   public/package façades; independently released packages must remain usable on their own.
-- Refill math uses monotonic fixed-point time so concurrent callers cannot overspend and sub-token
+- **D-02 — Exact refill arithmetic:** Refill math uses monotonic fixed-point time so concurrent callers cannot overspend and sub-token
   elapsed time is retained.
-- Default maximum cardinality is 100,000 keys, idle expiry is one hour, and sweep cadence is 60 seconds.
-- At capacity, purge eligible idle entries first and fail closed if bounded capacity is still exhausted.
+- **D-03 — Bounded defaults:** Default maximum cardinality is 100,000 keys, idle expiry is one hour, and sweep cadence is 60 seconds.
+- **D-04 — Fail-closed admission:** At capacity, purge eligible idle entries first and fail closed if bounded capacity is still exhausted.
 
 ### Durable and fallback dispatch
-- Oban remains the durable default. Delivery projection, event, private payload, and job insertion commit
+- **D-05 — Atomic durable dispatch:** Oban remains the durable default. Delivery projection, event, private payload, and job insertion commit
   in one database transaction or the caller receives an error with no stranded queued row.
-- Task-supervisor fallback remains supported but is explicitly bounded to ten concurrent children per
+- **D-06 — Honest bounded fallback:** Task-supervisor fallback remains supported but is explicitly bounded to ten concurrent children per
   application by default. Every spawn result is inspected; saturation or supervisor failure is returned
   honestly and must never be reported as queued.
 
 ### Retry and privacy contract
-- `Mailglass.SendError` gains the additive reason `:dispatch_unavailable` and additive
+- **D-07 — Additive dispatch error contract:** `Mailglass.SendError` gains the additive reason `:dispatch_unavailable` and additive
   `retry_class: :transient | :permanent | nil`; existing serialized fields remain compatible.
-- Transport errors, timeouts, HTTP 429, and HTTP 5xx retry. Permanent failures are discarded. Any
+- **D-08 — Closed retry classes:** Transport errors, timeouts, HTTP 429, and HTTP 5xx retry. Permanent failures are discarded. Any
   provider-specific exceptional 4xx behavior must be explicit and adapter-aware rather than inferred by
   a broad fallback.
-- Serializable error context contains no provider response preview, recipient, or message content.
+- **D-09 — Privacy-safe errors:** Serializable error context contains no provider response preview, recipient, or message content.
 
 ### Telemetry and closed values
-- Tracking remains fail-open at the HTTP boundary, but `recorded` telemetry is emitted only after a
+- **D-10 — Truthful tracking telemetry:** Tracking remains fail-open at the HTTP boundary, but `recorded` telemetry is emitted only after a
   successful ledger write; failures receive distinct privacy-safe telemetry.
-- A provider dispatch has one authoritative span; remove the duplicate Swoosh façade/adapter span.
-- Persisted and job strings map through finite explicit lookup functions. No unbounded `String.to_atom/1`
+- **D-11 — One dispatch span:** A provider dispatch has one authoritative span; remove the duplicate Swoosh façade/adapter span.
+- **D-12 — Finite value decoding:** Persisted and job strings map through finite explicit lookup functions. No unbounded `String.to_atom/1`
   conversion is permitted.
 
 ### the agent's Discretion
