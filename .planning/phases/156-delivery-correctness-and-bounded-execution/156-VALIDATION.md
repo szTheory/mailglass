@@ -43,6 +43,8 @@ created: 2026-08-16
 | 156-04-02 | 4 | EXEC-07 | One dispatch span; tracking success/failure telemetry follows ledger while response is fail-open | `mix test test/mailglass/outbound/telemetry_test.exs test/mailglass/adapters/swoosh_test.exs test/mailglass/tracking/plug_test.exs --warnings-as-errors` | Add ledger injection and telemetry acknowledgements first |
 | 156-05-01 | 5 | EXEC-08 | Core/inbound stored-provider finite mapping and unchanged warmed atom count | `mix test test/mailglass/webhook/replay_test.exs --warnings-as-errors && (cd mailglass_inbound && mix test test/mailglass_inbound/mailbox_execution_test.exs --warnings-as-errors)` | Add supported/invalid/atom-count cases first |
 | 156-05-02 | 5 | EXEC-08 | Job source finite mapping, missing default, invalid stop-before-execute, unchanged atom count | `cd mailglass_inbound && mix test test/mailglass_inbound/worker_test.exs --warnings-as-errors` | Add worker source table and invalid execution spy first |
+| 156-06-01 | 6 | EXEC-01 | Core absent-table recovery plus restart and exact 50-of-100 contended admission | `mix test test/mailglass/rate_limiter_test.exs test/mailglass/rate_limiter_supervision_test.exs --warnings-as-errors` | Add monitored restart/barrier regression before engine/owner edits |
+| 156-06-02 | 6 | EXEC-01 | Inbound lifecycle parity and five consecutive combined focused green runs | `cd mailglass_inbound && for run in 1 2 3 4 5; do mix test test/mailglass_inbound/rate_limiter_test.exs test/mailglass_inbound/async_execution_test.exs test/mailglass_inbound/mailbox_execution_test.exs test/mailglass_inbound/worker_test.exs --warnings-as-errors || exit 1; done` | Add exact 50-of-100 restart regression before inbound owner edit |
 
 ## Wave 0 Requirements
 
@@ -53,6 +55,7 @@ created: 2026-08-16
 - [ ] `SendError` compatibility, provider decision table, worker outcome, and privacy sentinel cases.
 - [ ] Tracking ledger-result injection plus success/failure telemetry handlers.
 - [ ] Supported/invalid provider/source tables plus warmed atom-count assertions.
+- [ ] Real core/inbound owner-restart plus 100-caller/50-capacity barriers and absent-table owner-call cases.
 
 Wave 0 is performed test-first within each corresponding task; no implementation precedes its failing behavior proof.
 
@@ -61,7 +64,7 @@ Wave 0 is performed test-first within each corresponding task; no implementation
 | Source | ID | Feature / constraint | Plan | Status |
 |--------|----|----------------------|------|--------|
 | GOAL | — | Accurate, atomic, private, bounded delivery under concurrency/failure/saturation | 01–05 | COVERED |
-| REQ | EXEC-01 | Exact concurrent refill and fractional retention | 01 | COVERED |
+| REQ | EXEC-01 | Exact concurrent refill, fractional retention, and lifecycle/contention closure | 01, 06 | COVERED |
 | REQ | EXEC-02 | Idle eviction, bounded ETS, fail closed | 01 | COVERED |
 | REQ | EXEC-03 | Delivery/event/private metadata/job atomicity | 02 | COVERED |
 | REQ | EXEC-04 | Bounded honest fallback | 03 | COVERED |
