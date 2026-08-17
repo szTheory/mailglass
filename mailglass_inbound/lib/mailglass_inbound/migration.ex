@@ -40,7 +40,7 @@ defmodule MailglassInbound.Migration do
   end
 
   @doc false
-  @spec requires_non_transactional_wrapper?() :: boolean()
+  @spec requires_non_transactional_wrapper?() :: true
   def requires_non_transactional_wrapper?, do: true
 
   @doc "Rolls back inbound migrations down to the target version (default: 0)."
@@ -65,7 +65,7 @@ defmodule MailglassInbound.Migration do
   `mailglass_events` — the two packages maintain independent version lines.
   """
   @doc since: "2.0.0"
-  @spec migrated_version(keyword()) :: non_neg_integer()
+  @spec migrated_version(keyword()) :: 0 | 1 | 2
   def migrated_version(opts \\ []) when is_list(opts) do
     opts = Keyword.put_new(opts, :prefix, MailglassInbound.Config.schema())
     # Inject the configured Repo so the dispatcher can run the version

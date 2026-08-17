@@ -69,7 +69,7 @@ defmodule MailglassInbound.InboundRecords.ReplayRun do
     |> foreign_key_constraint(:inbound_evidence_id)
   end
 
-  @spec __outcomes__() :: [outcome()]
+  @spec __outcomes__() :: nonempty_list(outcome())
   def __outcomes__, do: @outcomes
 
   defp validate_outcome_shape(changeset) do

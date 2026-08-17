@@ -42,6 +42,7 @@ defmodule MailglassInbound.Internal.Operator.Records do
     |> order_by([record], asc: record.tenant_id)
     |> select([record], %{id: record.tenant_id, label: record.tenant_id})
     |> Repo.all()
+    |> Enum.map(&tenant_row!/1)
   end
 
   @spec list_records(filters(), keyword()) :: [map()]
@@ -68,8 +69,9 @@ defmodule MailglassInbound.Internal.Operator.Records do
         |> Tenancy.scope(tenant_id)
         |> group_by([rec: record], record.provider)
         |> order_by([rec: record], asc: record.provider)
-        |> select([rec: record], record.provider)
+        |> select([rec: record], %{provider: record.provider})
         |> Repo.all()
+        |> Enum.map(&provider_value!/1)
 
       :blank ->
         []
@@ -138,9 +140,19 @@ defmodule MailglassInbound.Internal.Operator.Records do
 
   defp count_records(query) do
     query
-    |> select([rec: record], count(record.id))
+    |> select([rec: record], %{count: count(record.id)})
     |> Repo.one()
+    |> count_value!()
   end
+
+  # The Repo facade deliberately has schema-shaped generic return types because it
+  # serves normal schema queries too. Keep Ecto projection decoding at this boundary
+  # so the public read model exposes the precise scalar/map values it promises.
+  defp tenant_row!(%{id: id, label: label}) when is_binary(id) and is_binary(label),
+    do: %{id: id, label: label}
+
+  defp provider_value!(%{provider: provider}) when is_binary(provider), do: provider
+  defp count_value!(%{count: count}) when is_integer(count) and count >= 0, do: count
 
   # Correlated subquery: the named `field` of the LATEST FRESH ExecutionRun for the
   # outer `:rec` record, tenant-scoped (T-48-01). Mirrors `Detail.latest_fresh_run/2`
