@@ -38,6 +38,14 @@ defmodule Mailglass.Webhook.Providers.SES.CertCache do
     now = Mailglass.Clock.utc_now()
 
     case :ets.lookup(@table, url) do
+      [{^url, {:negative, _reason}, %DateTime{} = expires_at}] ->
+        if DateTime.compare(expires_at, now) == :gt do
+          :miss
+        else
+          :ets.delete(@table, url)
+          :miss
+        end
+
       [{^url, public_key, %DateTime{} = expires_at}] ->
         if DateTime.compare(expires_at, now) == :gt do
           {:ok, public_key}

@@ -107,5 +107,24 @@ defmodule Mailglass.Webhook.Providers.SES.CertCacheTest do
                  max_entries: 1
                )
     end
+
+    test "reuses a negative cache entry without exposing it as a public key" do
+      attempts = :atomics.new(1, [])
+
+      fetch = fn ->
+        :atomics.add_get(attempts, 1, 1)
+        {:error, :timeout}
+      end
+
+      assert {:error, :timeout} =
+               CertCache.fetch_or_store(@url, fetch, negative_ttl_seconds: 60)
+
+      assert :miss = CertCache.fetch_public_key(@url)
+
+      assert {:error, :timeout} =
+               CertCache.fetch_or_store(@url, fetch, negative_ttl_seconds: 60)
+
+      assert :atomics.get(attempts, 1) == 1
+    end
   end
 end
