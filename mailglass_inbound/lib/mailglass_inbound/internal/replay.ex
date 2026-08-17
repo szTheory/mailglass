@@ -29,7 +29,7 @@ defmodule MailglassInbound.Internal.Replay do
 
     with %InboundRecord{} = record <- load_record(repo, inbound_record_id, tenant_id),
          %InboundEvidence{} = evidence <- load_evidence(repo, inbound_record_id, tenant_id),
-         {:ok, mailbox} <- resolve_mailbox(repo, inbound_record_id, tenant_id),
+         {:ok, mailbox} <- resolve_mailbox(repo, inbound_record_id, tenant_id, opts),
          payload = replay_payload(record, evidence, mailbox),
          {:ok, result} <- execution.execute(payload, source: :replay) do
       {:ok, result}
@@ -71,10 +71,10 @@ defmodule MailglassInbound.Internal.Replay do
     |> repo.one(schema_opts())
   end
 
-  defp resolve_mailbox(repo, inbound_record_id, tenant_id) do
+  defp resolve_mailbox(repo, inbound_record_id, tenant_id, opts) do
     case latest_matched_fresh_run(repo, inbound_record_id, tenant_id) do
       %ExecutionRun{mailbox: mailbox} when is_binary(mailbox) and mailbox != "" ->
-        resolve_mailbox_module(mailbox)
+        resolve_mailbox_module(mailbox, opts)
 
       nil ->
         case latest_fresh_run(repo, inbound_record_id, tenant_id) do
@@ -90,10 +90,17 @@ defmodule MailglassInbound.Internal.Replay do
     end
   end
 
-  defp resolve_mailbox_module(mailbox) do
-    {:ok, mailbox_module(mailbox)}
-  rescue
-    ArgumentError -> {:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}}
+  defp resolve_mailbox_module(mailbox, opts) do
+    case Execution.resolve_mailbox(mailbox, opts) do
+      {:ok, module} ->
+        {:ok, module}
+
+      {:error, :unavailable} ->
+        {:error, {:replay_mailbox_missing, %{reason: :authority_unavailable}}}
+
+      {:error, _reason} ->
+        {:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}}
+    end
   end
 
   defp latest_matched_fresh_run(repo, inbound_record_id, tenant_id) do
@@ -135,9 +142,4 @@ defmodule MailglassInbound.Internal.Replay do
       route: %{status: :matched, mailbox: mailbox}
     }
   end
-
-  defp mailbox_module("Elixir." <> _rest = mailbox), do: String.to_existing_atom(mailbox)
-
-  defp mailbox_module(mailbox) when is_binary(mailbox),
-    do: String.to_existing_atom("Elixir." <> mailbox)
 end
