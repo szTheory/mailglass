@@ -26,6 +26,12 @@ defmodule Mailglass.StabilityContractTest do
   defp json!(path), do: path |> File.read!() |> Jason.decode!()
 
   describe "stable core entrypoints expose since metadata" do
+    test "Webhook Plug remains an adopter-facing Plug façade" do
+      assert Code.ensure_loaded?(Mailglass.Webhook.Plug)
+      assert function_exported?(Mailglass.Webhook.Plug, :init, 1)
+      assert function_exported?(Mailglass.Webhook.Plug, :call, 2)
+    end
+
     test "Outbound keeps its public verb inventory while collaborators remain internal" do
       assert Code.ensure_loaded?(Mailglass.Outbound)
 
