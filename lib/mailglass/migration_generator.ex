@@ -96,6 +96,12 @@ defmodule Mailglass.MigrationGenerator do
   end
 
   defp generate_legacy_repair!(spec, repo, options) do
+    if Map.get(spec, :legacy_repair_supported, true) == false do
+      Mix.raise(
+        "Installation blocked: no recognized inbound legacy signature; no migration was written"
+      )
+    end
+
     app_module = Map.get(spec, :legacy_app_module, current_app_module())
     prefix = Map.get(spec, :legacy_prefix, "public")
     pattern = Path.join(migrations_path(repo, spec), "*_#{spec.install_suffix}.exs")
