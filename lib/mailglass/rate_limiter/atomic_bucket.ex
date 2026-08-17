@@ -34,8 +34,20 @@ defmodule Mailglass.RateLimiter.AtomicBucket do
     end
   end
 
-  defp consume_existing(_table, _owner, _key, _capacity, _per_minute, _now_us, @max_retries),
-    do: {:error, :denied}
+  defp consume_existing(table, owner, key, capacity, per_minute, now_us, @max_retries) do
+    # The CAS fast path is deliberately finite. Under exceptional contention the
+    # table owner serializes one transition from the newest complete tuple rather
+    # than converting available capacity into a false denial.
+    try do
+      GenServer.call(owner, {:consume_contended, key, capacity, per_minute, now_us})
+    catch
+      :exit, _reason ->
+        # A second lifecycle race is a genuine bounded fail-closed outcome; do
+        # not retry indefinitely or grant without an authoritative tuple.
+        _ = table
+        {:error, :denied}
+    end
+  end
 
   defp consume_existing(table, owner, key, capacity, per_minute, now_us, attempt) do
     case safe_lookup(table, key) do
@@ -72,6 +84,19 @@ defmodule Mailglass.RateLimiter.AtomicBucket do
 
     # At capacity elapsed time cannot buy an additional future burst.
     if available == capacity * @scale, do: {available, 0}, else: {available, next_remainder}
+  end
+
+  @doc false
+  @spec consume_taken(tuple(), non_neg_integer(), non_neg_integer(), integer()) ::
+          {:ok | :denied, tuple()}
+  def consume_taken({key, tokens, last_us, remainder, _last_seen}, capacity, per_minute, now_us) do
+    {available, next_remainder} =
+      refill(tokens, last_us, remainder, capacity, per_minute, now_us)
+
+    allowed? = available >= @scale
+    next_tokens = if allowed?, do: available - @scale, else: available
+
+    {if(allowed?, do: :ok, else: :denied), {key, next_tokens, now_us, next_remainder, now_us}}
   end
 
   defp replace_exact(table, observed, replacement) do
