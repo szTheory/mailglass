@@ -51,6 +51,7 @@ defmodule Mailglass.Webhook.Providers.SES do
   @default_cert_cache_negative_ttl_seconds 60
   @default_cert_cache_max_entries 1_024
   @default_cert_response_bytes 65_536
+  @maximum_cert_response_bytes 1_048_576
 
   # Byte-sorted signable fields per AWS SNS signature spec.
   # Subject is optional in Notification — filtered by Map.has_key? at runtime.
@@ -310,17 +311,26 @@ defmodule Mailglass.Webhook.Providers.SES do
   defp fetch_cert_via_httpc!(cert_url, config) do
     httpc_mod = httpc_client(config)
     ssl_opts = [verify: :verify_peer, cacerts: :public_key.cacerts_get()]
+    timeout_ms = bounded_cert_timeout!(config)
 
     http_opts = [
       ssl: ssl_opts,
       autoredirect: false,
-      timeout: @confirm_timeout_ms,
-      connect_timeout: @confirm_timeout_ms
+      timeout: timeout_ms,
+      connect_timeout: timeout_ms
     ]
 
     url_charlist = String.to_charlist(cert_url)
+    request_opts = [sync: false, stream: {self(), :once}]
 
-    case apply(httpc_mod, :request, [:get, {url_charlist, []}, http_opts, []]) do
+    case apply(httpc_mod, :request, [:get, {url_charlist, []}, http_opts, request_opts]) do
+      {:ok, request_id} when is_reference(request_id) ->
+        deadline_ms = System.monotonic_time(:millisecond) + timeout_ms
+        receive_cert_stream!(httpc_mod, request_id, config, deadline_ms)
+
+      # Retain compatibility with small injected clients that implement the
+      # historical synchronous result shape. Production :httpc always takes
+      # the streaming branch above.
       {:ok, {{_vsn, 200, _}, _headers, body}} when is_list(body) ->
         body |> IO.iodata_to_binary() |> limit_cert_body!(config)
 
@@ -341,17 +351,159 @@ defmodule Mailglass.Webhook.Providers.SES do
     end
   end
 
+  defp receive_cert_stream!(httpc_mod, request_id, config, deadline_ms) do
+    receive do
+      {:http, {^request_id, :stream_start, headers, handler_pid}} ->
+        reject_oversized_content_length!(httpc_mod, request_id, headers, config)
+        stream_next!(httpc_mod, handler_pid)
+        collect_cert_stream!(httpc_mod, request_id, handler_pid, config, deadline_ms, [], 0)
+
+      {:http, {^request_id, {{_vsn, status, _}, _headers, _body}}} ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "cert fetch returned HTTP #{status}"}
+              )
+
+      {:http, {^request_id, {:error, reason}}} ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "cert fetch failed", reason: inspect(reason)}
+              )
+    after
+      remaining_timeout_ms(deadline_ms) ->
+        cancel_request(httpc_mod, request_id)
+        raise_cert_timeout!()
+    end
+  end
+
+  defp collect_cert_stream!(
+         httpc_mod,
+         request_id,
+         handler_pid,
+         config,
+         deadline_ms,
+         chunks,
+         bytes
+       ) do
+    receive do
+      {:http, {^request_id, :stream, chunk}} when is_binary(chunk) ->
+        next_bytes = bytes + byte_size(chunk)
+
+        if next_bytes > cert_response_limit!(config) do
+          cancel_request(httpc_mod, request_id)
+          raise_cert_oversized!()
+        end
+
+        stream_next!(httpc_mod, handler_pid)
+
+        collect_cert_stream!(
+          httpc_mod,
+          request_id,
+          handler_pid,
+          config,
+          deadline_ms,
+          [chunk | chunks],
+          next_bytes
+        )
+
+      {:http, {^request_id, :stream_end, _headers}} ->
+        chunks |> Enum.reverse() |> IO.iodata_to_binary()
+
+      {:http, {^request_id, {:error, reason}}} ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "cert fetch failed", reason: inspect(reason)}
+              )
+    after
+      remaining_timeout_ms(deadline_ms) ->
+        cancel_request(httpc_mod, request_id)
+        raise_cert_timeout!()
+    end
+  end
+
+  defp reject_oversized_content_length!(httpc_mod, request_id, headers, config) do
+    content_length =
+      Enum.find_value(headers, fn
+        {name, value} when is_list(name) and is_list(value) ->
+          if String.downcase(List.to_string(name)) == "content-length" do
+            case Integer.parse(List.to_string(value)) do
+              {size, ""} -> size
+              _ -> nil
+            end
+          end
+
+        _ ->
+          nil
+      end)
+
+    if is_integer(content_length) and content_length > cert_response_limit!(config) do
+      cancel_request(httpc_mod, request_id)
+      raise_cert_oversized!()
+    end
+  end
+
+  defp stream_next!(httpc_mod, handler_pid), do: apply(httpc_mod, :stream_next, [handler_pid])
+
+  defp cancel_request(httpc_mod, request_id) do
+    if function_exported?(httpc_mod, :cancel_request, 1) do
+      _ = apply(httpc_mod, :cancel_request, [request_id])
+    end
+
+    :ok
+  end
+
+  defp remaining_timeout_ms(deadline_ms) do
+    max(deadline_ms - System.monotonic_time(:millisecond), 0)
+  end
+
   defp limit_cert_body!(body, config) when is_binary(body) do
-    max_bytes = Map.get(config, :cert_max_response_bytes, @default_cert_response_bytes)
+    max_bytes = cert_response_limit!(config)
 
     if byte_size(body) <= max_bytes do
       body
     else
-      raise SignatureError.new(:bad_signature,
-              provider: :ses,
-              context: %{detail: "cert fetch response exceeded maximum bytes"}
-            )
+      raise_cert_oversized!()
     end
+  end
+
+  defp cert_response_limit!(config) do
+    case Map.get(config, :cert_max_response_bytes, @default_cert_response_bytes) do
+      bytes when is_integer(bytes) and bytes > 0 and bytes <= @maximum_cert_response_bytes ->
+        bytes
+
+      _ ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "invalid cert response limit"}
+              )
+    end
+  end
+
+  defp bounded_cert_timeout!(config) do
+    case Map.get(config, :cert_request_timeout_ms, @confirm_timeout_ms) do
+      timeout when is_integer(timeout) and timeout > 0 and timeout <= 30_000 ->
+        timeout
+
+      _ ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "invalid cert request timeout"}
+              )
+    end
+  end
+
+  defp raise_cert_oversized! do
+    raise SignatureError.new(:bad_signature,
+            provider: :ses,
+            context: %{detail: "cert fetch response exceeded maximum bytes"}
+          )
+  end
+
+  defp raise_cert_timeout! do
+    raise SignatureError.new(:bad_signature,
+            provider: :ses,
+            context: %{detail: "cert fetch timed out"}
+          )
   end
 
   defp extract_public_key_from_pem!(pem_binary) when is_binary(pem_binary) do
