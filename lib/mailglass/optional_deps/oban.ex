@@ -93,7 +93,11 @@ defmodule Mailglass.OptionalDeps.Oban do
 
       nil ->
         if available?() do
-          Oban.insert_all(multi, name, jobs)
+          # Use the explicit Oban instance form to select the Multi-only
+          # contract. The overloaded three-argument form also admits the
+          # synchronous `[Oban.Job.t()]` return type in Oban's typespec even
+          # though a Multi is supplied as the first argument.
+          Oban.insert_all(Oban, multi, name, jobs)
         else
           Ecto.Multi.error(multi, name, :oban_unavailable)
         end
