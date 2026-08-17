@@ -12,6 +12,25 @@ defmodule Mailglass.Outbound.DeliverManyTest do
     def dispatch(_fun, _opts), do: {:error, :max_children}
   end
 
+  defmodule CountingSuppressionStore do
+    alias Mailglass.Suppression.Entry
+
+    def check_many(keys, _opts) do
+      send(Application.fetch_env!(:mailglass, :suppression_store_test_pid), {:bulk_check, keys})
+
+      Enum.map(keys, fn %{address: address} ->
+        if String.contains?(address, "blocked") do
+          {:suppressed, %Entry{tenant_id: "test-tenant", scope: :address, reason: :manual, source: "test"}}
+        else
+          :not_suppressed
+        end
+      end)
+    end
+
+    def check(_key, _opts), do: :not_suppressed
+    def record(_attrs, _opts), do: {:error, :unsupported}
+  end
+
   setup do
     Mailglass.Adapters.Fake.checkout()
     Mailglass.Adapters.Fake.set_shared(self())
@@ -176,6 +195,49 @@ defmodule Mailglass.Outbound.DeliverManyTest do
 
       assert hd(failed).recipient == blocked_addr
       assert hd(failed).last_error != nil
+    end
+  end
+
+  describe "deliver_many/2 — bounded suppression preflight" do
+    test "deduplicates keys into bounded bulk checks and restores input-order outcomes" do
+      prior_store = Application.get_env(:mailglass, :suppression_store)
+      prior_chunk_size = Application.get_env(:mailglass, :suppression_store_batch_size)
+
+      Application.put_env(:mailglass, :suppression_store, CountingSuppressionStore)
+      Application.put_env(:mailglass, :suppression_store_batch_size, 2)
+      Application.put_env(:mailglass, :suppression_store_test_pid, self())
+
+      on_exit(fn ->
+        Application.put_env(:mailglass, :suppression_store, prior_store)
+
+        if is_nil(prior_chunk_size) do
+          Application.delete_env(:mailglass, :suppression_store_batch_size)
+        else
+          Application.put_env(:mailglass, :suppression_store_batch_size, prior_chunk_size)
+        end
+
+        Application.delete_env(:mailglass, :suppression_store_test_pid)
+      end)
+
+      uid = unique_id()
+      duplicate = "duplicate-#{uid}@example.com"
+
+      messages = [
+        build_message(duplicate),
+        build_message("blocked-#{uid}@example.com"),
+        build_message(duplicate),
+        build_message("clean-#{uid}@example.com"),
+        build_message("another-#{uid}@example.com")
+      ]
+
+      assert {:ok, deliveries} = Outbound.deliver_many(messages, [])
+      assert Enum.map(deliveries, & &1.recipient) == Enum.map(messages, &recipient/1)
+      assert Enum.at(deliveries, 1).status == :failed
+
+      assert_receive {:bulk_check, first_chunk}
+      assert_receive {:bulk_check, second_chunk}
+      refute_receive {:bulk_check, _}
+      assert Enum.map([first_chunk, second_chunk], &length/1) == [2, 2]
     end
   end
 
@@ -370,6 +432,8 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       stream: :transactional
     )
   end
+
+  defp recipient(%Message{swoosh_email: %Swoosh.Email{to: [{_, address} | _]}}), do: address
 
   defp configure_routed_adapters(test_pid) do
     Application.put_env(
