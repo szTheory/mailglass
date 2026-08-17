@@ -141,9 +141,11 @@ EOF
 
   migrations_path="$(MIX_ENV=dev DATABASE_URL="${journey_url}" mix run --no-start -e 'IO.write(Ecto.Migrator.migrations_path(Host.Repo))')"
 
-  if ! rg -q 'Mailglass\.Migration\.up\(\)' "${migrations_path}"/*_mailglass_install.exs ||
-      ! rg -q 'MailglassInbound\.Migration\.up\(\)' "${migrations_path}"/*_mailglass_inbound_install.exs; then
-    echo "Generated wrappers did not delegate to both public package façades." >&2
+  if ! rg -q 'Mailglass\.Migration\.up\(repo: Host\.Repo\)' "${migrations_path}"/*_mailglass_install.exs ||
+      ! rg -q 'Mailglass\.Migration\.down\(repo: Host\.Repo\)' "${migrations_path}"/*_mailglass_install.exs ||
+      ! rg -q 'MailglassInbound\.Migration\.up\(repo: Host\.Repo\)' "${migrations_path}"/*_mailglass_inbound_install.exs ||
+      ! rg -q 'MailglassInbound\.Migration\.down\(repo: Host\.Repo\)' "${migrations_path}"/*_mailglass_inbound_install.exs; then
+    echo "Generated wrappers did not bind both public package façades to Host.Repo." >&2
     exit 1
   fi
 
