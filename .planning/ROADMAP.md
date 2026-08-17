@@ -51,7 +51,7 @@
 
 **Milestone Goal:** Raise the internal engineering bar while proving the generated first-adopter path, runtime correctness, data safety, architecture boundaries, and merge/release signals are honest. All changes remain additive-only; admin/operator behavior remains untouched.
 
-- [ ] **Phase 155: Restore Adopter and CI Truth** - Make migration generation and the CI signal that proves it trustworthy for real Ecto hosts.
+- [x] **Phase 155: Restore Adopter and CI Truth** - Make migration generation and the CI signal that proves it trustworthy for real Ecto hosts. (completed 2026-08-16)
 - [ ] **Phase 156: Delivery Correctness and Bounded Execution** - Make outbound execution atomic, honest, privacy-safe, and resource-bounded.
 - [ ] **Phase 157: Inbound, Database, and Lifecycle Hardening** - Bound untrusted inbound work and make data access, migration, webhook, and retention paths safe at scale.
 - [ ] **Phase 158: Simplify Architecture Without Breaking Adopters** - Clarify runtime and package ownership while preserving stable v2 entry points.
@@ -165,7 +165,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 155. Restore Adopter and CI Truth | 7/7 | In Progress|  |
+| 155. Restore Adopter and CI Truth | 7/7 | Complete    | 2026-08-16 |
 | 156. Delivery Correctness and Bounded Execution | 0/TBD | Not started | - |
 | 157. Inbound, Database, and Lifecycle Hardening | 0/TBD | Not started | - |
 | 158. Simplify Architecture Without Breaking Adopters | 0/TBD | Not started | - |

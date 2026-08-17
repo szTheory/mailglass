@@ -16,6 +16,13 @@ the previously green certification signal. The milestone restores generated-host
 then fixes bounded execution and data/security correctness, tightens architecture, and makes merge CI
 fail closed. The admin/operator UI remains explicitly untouched.
 
+**Phase 155 completed and verified 2026-08-16.** Core and inbound now generate real fresh and
+rollback-aware upgrade wrappers for an explicit host Repo, distinguish absent migration anchors from
+catalog failures, and provide a byte-exact fail-closed legacy-toy repair. Two fresh generated Phoenix/Ecto
+hosts proved both shared-schema rollback orders, and protected `CI Green` now fails if change detection or
+required code proof is skipped. Verification passed 5/5 after closing the shared-schema rollback gap and a
+deep review's three destructive/fail-open findings.
+
 **v2.5 B2C Alpha Adoption Certification completed 2026-08-04.** The published `mailglass` 2.4.1,
 `mailglass_admin` 2.4.1, and `mailglass_inbound` 2.1.2 package family passed its then-current package-shaped
 proof. The v2.6 audit supersedes the claim that no library defect remains: the migration generator and
@@ -866,6 +873,9 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-36 | Provider outcomes use conservative structural classes; successful dispatch atomically settles and scrubs private payload content | Error-string guessing and blind retries can duplicate accepted mail, while unbounded payload retention violates the privacy contract | ✓ Validated v2.4 — sync/async parity, retry/cancel/reconciliation, retention, and scrub proofs pass |
 | D-37 | Built-in RFC 8058 POST atomically converges one canonical unsubscribe event and one stream-scoped suppression before best-effort host effects | Replay, concurrency, tenant isolation, and suppression enforcement must agree on one durable state transition | ✓ Validated v2.4 — concurrent replay and hostile-schema proofs pass |
 | D-38 | Release only the resolver-selected changed package set through protected automation, then accept the release only after an exact-Hex production-shaped journey | A green repository build is not proof that immutable public artifacts install and work together | ✓ Validated v2.4 — 2.4.1/2.4.1/2.1.2 published from immutable candidate `587c9d1`; exact-Hex and trust journeys passed |
+| D-39 | Migration generation is additive and Repo-explicit: initial wrappers call public façades, upgrades are new timestamped files with a baked rollback version, and anchor corruption/query failure never means version zero | Applied Ecto migrations do not rerun after package upgrades, inferred Repo modules fail in custom/multi-repo hosts, and fail-open metadata can replay destructive DDL | ✓ Validated Phase 155 — core/inbound generator and catalog matrices pass; exact legacy repair is runtime-revalidated under lock |
+| D-40 | Core and inbound own only their relations inside a shared configured schema; down-to-zero drops the schema with RESTRICT only when it is empty | Either package may be rolled back first without deleting or blocking on sibling/host objects | ✓ Validated Phase 155 — two isolated generated Host.Repo journeys pass in both rollback orders |
+| D-41 | `CI Green` preserves its public identity but directly depends on successful change detection and exact success from every required code lane | A skipped or failed detector/leaf must not be interpreted as docs-only green | ✓ Validated Phase 155 — exhaustive policy/meta-tests, actionlint, and protected-lane wiring pass |
 
 ## Evolution
 
@@ -888,7 +898,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-08-16 after opening v2.6 Engineering Quality Ratchet.*
+*Last updated: 2026-08-16 after verified Phase 155.*
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->
