@@ -100,6 +100,24 @@ status: complete
 
 None - the extraction preserved the public contract and stayed within outbound core code; admin/operator UI was untouched.
 
+## Review Follow-up
+
+An independent Wave 3 review found that the first extraction still left async, batch, failure, and replay policy in the façade and that several characterization tests did not actually prove their named invariants. The follow-up completed the ownership boundary:
+
+- `Preflight.run_many/1` now owns bulk tracking, suppression, rate-limit, stream, render, and preparation order.
+- `Persistence` now owns queued, Oban, Task-fallback, batch, dispatched, and failed delivery/event/job composition plus replay loading/rehydration and synthetic failed outcomes.
+- `Dispatch` now owns synchronous adapter failure handling, async mode selection, Task execution, bounded admission refusal, and batch Task admission.
+- `Outbound` lost 647 lines of private policy and retains the stable public verbs, telemetry envelopes, result ordering, post-commit broadcasts, and high-level delivery flow.
+- Executable tests now assert `Repo.in_transaction?() == false` inside the provider adapter, exact rate-limit/render/suppression outcomes, bulk input-indexed results, and direct collaborator composition through queued and sent persistence.
+
+Follow-up commits:
+
+1. `1aad1519` — executable ownership and ordering contracts
+2. `b2820578` — bulk preflight ownership
+3. `dabdeb50` — complete persistence, dispatch, and replay ownership
+
+Fresh follow-up verification passed: 1 property plus 114 outbound/stability tests, 6 architecture-boundary tests, optional-dependency-free compilation, zero compile-connected cycles, formatter, and diff checks.
+
 ## User Setup Required
 
 None.
