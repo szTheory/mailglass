@@ -161,17 +161,41 @@ defmodule MailglassInbound.Execution do
 
     _ = MailglassInbound.Application.maybe_warn_fallback_mode(opts)
 
-    case task_supervisor.start_child(task_supervisor_name, fn ->
-           _ = execution.execute(persisted, execution_opts)
-           :ok
-         end) do
-      {:ok, _pid} ->
-        {:ok, %{status: :queued, mode: :task_supervisor, durability: :best_effort}}
+    try do
+      case task_supervisor.start_child(task_supervisor_name, fn ->
+             _ = execution.execute(persisted, execution_opts)
+             :ok
+           end) do
+        {:ok, _pid} ->
+          {:ok, %{status: :queued, mode: :task_supervisor, durability: :best_effort}}
 
-      {:error, reason} ->
-        {:error, reason}
+        :ok ->
+          {:ok, %{status: :queued, mode: :task_supervisor, durability: :best_effort}}
+
+        {:error, reason} ->
+          {:error, dispatch_unavailable_error(reason)}
+
+        _other ->
+          {:error, dispatch_unavailable_error(:start_child_failed)}
+      end
+    rescue
+      _error -> {:error, dispatch_unavailable_error(:supervisor_unavailable)}
+    catch
+      :exit, _reason -> {:error, dispatch_unavailable_error(:supervisor_unavailable)}
     end
   end
+
+  defp dispatch_unavailable_error(reason) do
+    Mailglass.SendError.new(:dispatch_unavailable,
+      retry_class: :transient,
+      context: %{reason_class: dispatch_reason_class(reason)}
+    )
+  end
+
+  defp dispatch_reason_class(:max_children), do: :capacity_reached
+  defp dispatch_reason_class(:noproc), do: :supervisor_unavailable
+  defp dispatch_reason_class(:supervisor_unavailable), do: :supervisor_unavailable
+  defp dispatch_reason_class(_reason), do: :start_child_failed
 
   defp enqueue_attrs(
          %{
