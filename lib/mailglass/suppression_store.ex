@@ -44,6 +44,47 @@ defmodule Mailglass.SuppressionStore do
   @callback check(lookup_key(), keyword()) ::
               {:suppressed, Entry.t()} | :not_suppressed | {:error, term()}
 
+  @doc """
+  Optionally checks multiple lookup keys in their original order.
+
+  Stores that implement this callback must return exactly one result for each
+  input key. `check_many/3` below probes this capability so existing stores
+  that only implement `check/2` remain compatible.
+  """
+  @callback check_many([lookup_key()], keyword()) ::
+              [{:suppressed, Entry.t()} | :not_suppressed | {:error, term()}]
+
   @callback record(record_attrs(), keyword()) ::
               {:ok, Entry.t()} | {:error, Ecto.Changeset.t() | term()}
+
+  @optional_callbacks check_many: 2
+
+  @default_batch_size 100
+
+  @doc """
+  Checks a list through an optional native bulk callback or a bounded legacy
+  `check/2` fallback. Results always correspond to the input positions.
+  """
+  @spec check_many(module(), [lookup_key()], keyword()) ::
+          [{:suppressed, Entry.t()} | :not_suppressed | {:error, term()}]
+  def check_many(store, keys, opts \\ []) when is_atom(store) and is_list(keys) and is_list(opts) do
+    if function_exported?(store, :check_many, 2) do
+      store.check_many(keys, opts)
+    else
+      keys
+      |> Enum.chunk_every(batch_size(opts))
+      |> Enum.flat_map(fn chunk -> Enum.map(chunk, &store.check(&1, opts)) end)
+    end
+  end
+
+  defp batch_size(opts) do
+    case Keyword.get(
+           opts,
+           :batch_size,
+           Application.get_env(:mailglass, :suppression_store_batch_size, @default_batch_size)
+         ) do
+      size when is_integer(size) and size > 0 -> size
+      _ -> @default_batch_size
+    end
+  end
 end
