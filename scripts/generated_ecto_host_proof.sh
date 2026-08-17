@@ -284,10 +284,16 @@ EOF
 
     {:ok, %{status: :duplicate}} = Persist.persist(handoff, repo: Host.Repo, routes: [])
 
-    {:ok, 1} = Persist.backfill_sha256(repo: Host.Repo, prefix: "mailglass", limit: 1)
+    {:ok, %{count: 1, done?: false, next_cursor: cursor}} =
+      Persist.backfill_sha256(repo: Host.Repo, prefix: "mailglass", limit: 1)
+
     %{rows: [[1]]} = Host.Repo.query!("SELECT count(*) FROM mailglass.mailglass_inbound_evidence WHERE raw_mime_sha256 IS NULL")
-    {:ok, 1} = Persist.backfill_sha256(repo: Host.Repo, prefix: "mailglass", limit: 1)
-    {:ok, 0} = Persist.backfill_sha256(repo: Host.Repo, prefix: "mailglass", limit: 1)
+
+    {:ok, %{count: 1, done?: true}} =
+      Persist.backfill_sha256(repo: Host.Repo, prefix: "mailglass", limit: 1, after_id: cursor)
+
+    {:ok, %{count: 0, done?: true}} =
+      Persist.backfill_sha256(repo: Host.Repo, prefix: "mailglass", limit: 1)
 
     raw_signed_body = <<0, 255, 13, 10, 123, 34, 98, 121, 116, 101, 115, 34, 125>>
     webhook_id = Ecto.UUID.generate()
