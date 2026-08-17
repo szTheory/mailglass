@@ -742,6 +742,7 @@ defmodule MailglassInbound.Ingress.PlugTest do
   test "resolve_config!(:ses, ...) threads :s3_retry_opts from opts config into verify config" do
     Process.delete(:mailglass_inbound_captured_config)
     retry_opts = [attempts: 5, backoff_ms: [0, 0, 0, 0]]
+    s3_max_bytes = 1_048_576
 
     conn = stub_provider_conn(:ses)
 
@@ -751,7 +752,12 @@ defmodule MailglassInbound.Ingress.PlugTest do
         provider: :ses,
         provider_module: ConfigCaptureProvider,
         persistence: FakePersistence,
-        config: [s3_fetcher: nil, cert_cache_ttl_seconds: 60, s3_retry_opts: retry_opts]
+        config: [
+          s3_fetcher: nil,
+          s3_max_bytes: s3_max_bytes,
+          cert_cache_ttl_seconds: 60,
+          s3_retry_opts: retry_opts
+        ]
       )
     )
 
@@ -759,6 +765,7 @@ defmodule MailglassInbound.Ingress.PlugTest do
 
     assert is_map(captured)
     assert captured[:s3_retry_opts] == retry_opts
+    assert captured[:s3_max_bytes] == s3_max_bytes
   end
 
   test "resolve_config!(:ses, ...) defaults :s3_retry_opts to [] when unset" do

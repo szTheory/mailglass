@@ -152,7 +152,8 @@ defmodule MailglassInbound.S3FetcherTest do
         {:error, :timeout},
         {:exit, :timeout},
         :throttled,
-        {:http_error, 503}
+        {:http_error, 503},
+        {:http_error, 503, "upstream unavailable"}
       ]
 
       for {reason, index} <- Enum.with_index(transient_reasons) do
@@ -176,6 +177,7 @@ defmodule MailglassInbound.S3FetcherTest do
         :s3_object_too_large,
         :invalid_content_length,
         {:http_error, 403},
+        {:http_error, 403, "forbidden"},
         {:unexpected, :adapter_shape}
       ]
 
