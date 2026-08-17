@@ -92,6 +92,30 @@ defmodule Mailglass.Webhook.IngestTest do
     end
   end
 
+  describe "signed-body evidence" do
+    test "persists the exact verified raw bytes alongside the decoded payload" do
+      raw_body = "{\"RecordType\":\"Delivery\",\"MessageID\":\"msg-bytes\",\"space\": \"kept\"}"
+
+      events = [
+        %Event{
+          type: :delivered,
+          metadata: %{
+            "provider" => "postmark",
+            "provider_event_id" => "Delivery:bytes",
+            "record_type" => "Delivery",
+            "message_id" => "msg-bytes"
+          }
+        }
+      ]
+
+      assert {:ok, _} = Ingest.ingest_multi(:postmark, raw_body, events)
+      [webhook_event] = Repo.all(WebhookEvent)
+
+      assert webhook_event.raw_signed_body == raw_body
+      assert webhook_event.raw_payload["space"] == "kept"
+    end
+  end
+
   describe "ingest_multi/3 orphan path (no matching delivery)" do
     test "inserts event with delivery_id: nil + needs_reconciliation: true; SKIPS projector" do
       events = [

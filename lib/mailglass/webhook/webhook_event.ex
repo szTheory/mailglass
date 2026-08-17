@@ -47,6 +47,8 @@ defmodule Mailglass.Webhook.WebhookEvent do
     field(:status, Ecto.Enum, values: @valid_statuses)
     # `redact: true` — `Inspect` output never leaks raw provider bytes.
     field(:raw_payload, :map, redact: true)
+    # Exact request bytes are evidence, never reconstructed from JSON.
+    field(:raw_signed_body, :binary, redact: true)
     field(:received_at, :utc_datetime_usec)
     field(:processed_at, :utc_datetime_usec)
 
@@ -54,7 +56,7 @@ defmodule Mailglass.Webhook.WebhookEvent do
   end
 
   @required ~w[tenant_id provider provider_event_id event_type_raw status raw_payload received_at]a
-  @cast @required ++ ~w[event_type_normalized processed_at]a
+  @cast @required ++ ~w[event_type_normalized processed_at raw_signed_body]a
 
   @doc """
   Builds a changeset for inserting a webhook_event row at ingest time.
