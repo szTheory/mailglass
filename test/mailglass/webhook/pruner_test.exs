@@ -154,6 +154,22 @@ defmodule Mailglass.Webhook.PrunerTest do
     end
   end
 
+  describe "bounded serialized batches" do
+    test "returns :locked_out without deleting when another session holds the prune lock" do
+      old_event = insert_webhook_event!(status: :succeeded, days_ago: 30)
+      {:ok, conn} = Postgrex.start_link(conn_opts())
+
+      %{rows: [[true]]} =
+        Postgrex.query!(conn, "SELECT pg_try_advisory_lock($1)", [Pruner.lock_key()])
+
+      assert {:ok, :locked_out} = Pruner.prune()
+      assert TestRepo.get(WebhookEvent, old_event.id)
+
+      Postgrex.query!(conn, "SELECT pg_advisory_unlock($1)", [Pruner.lock_key()])
+      GenServer.stop(conn)
+    end
+  end
+
   # ---- Test helpers --------------------------------------------------
 
   defp insert_webhook_event!(opts) do
@@ -177,5 +193,10 @@ defmodule Mailglass.Webhook.PrunerTest do
     |> Ecto.Changeset.put_change(:inserted_at, backdated_at)
     |> Ecto.Changeset.put_change(:updated_at, backdated_at)
     |> TestRepo.insert!()
+  end
+
+  defp conn_opts do
+    TestRepo.config()
+    |> Keyword.take([:username, :password, :hostname, :database, :port])
   end
 end
