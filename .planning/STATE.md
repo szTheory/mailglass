@@ -4,11 +4,11 @@ milestone: v2.6
 milestone_name: Engineering Quality Ratchet
 current_phase: 158
 current_phase_name: Simplify Architecture Without Breaking Adopters
-status: planning
+status: executing
 stopped_at: Phase 157 complete; Phase 158 planned and ready to execute
-last_updated: "2026-08-17T10:59:26.942Z"
+last_updated: "2026-08-17T11:00:36.566Z"
 last_activity: 2026-08-17
-last_activity_desc: Phase 157 complete, transitioned to Phase 158
+last_activity_desc: Phase 158 execution started
 progress:
   total_phases: 6
   completed_phases: 3
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-17 after Phase 157)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 158 — Simplify Architecture Without Breaking Adopters.
+**Current focus:** Phase 158 — Simplify Architecture Without Breaking Adopters
 
 ## Current Position
 
-Phase: 158 of 160 (Simplify Architecture Without Breaking Adopters)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-08-17 — Phase 157 complete, transitioned to Phase 158
+Phase: 158 (Simplify Architecture Without Breaking Adopters) — EXECUTING
+Plan: 1 of 6
+Status: Executing Phase 158
+Last activity: 2026-08-17 — Phase 158 execution started
 
 Progress: [████████████████░░░░] 22/28 plans (79%)
 
