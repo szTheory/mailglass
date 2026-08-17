@@ -45,6 +45,7 @@ defmodule Mailglass.RateLimiter do
   """
 
   alias Mailglass.RateLimitError
+  alias Mailglass.RateLimiter.AtomicBucket
 
   @table :mailglass_rate_limit
 
@@ -107,36 +108,20 @@ defmodule Mailglass.RateLimiter do
   end
 
   defp check_bucket(type, sub_key) do
-    {capacity, refill_per_ms} = limits_for(type, sub_key)
+    {capacity, per_minute} = limits_for(type, sub_key)
     key = {type, sub_key}
-    now_ms = System.monotonic_time(:millisecond)
+    now_us = clock_us()
 
-    # First-hit: seed bucket with full capacity if key doesn't exist yet.
-    :ets.insert_new(@table, {key, capacity, now_ms})
-
-    # Read current state to compute refill delta.
-    [{^key, tokens, last}] = :ets.lookup(@table, key)
-
-    restore = if tokens < 0, do: abs(tokens), else: 0
-    elapsed_ms = max(0, now_ms - last)
-    refilled = round(elapsed_ms * refill_per_ms)
-    total_add = min(restore + refilled, capacity - tokens)
-
-    result =
-      :ets.update_counter(
-        @table,
-        key,
-        [
-          {2, total_add, capacity, capacity},
-          {3, 0, 0, now_ms},
-          {2, -1}
-        ],
-        {key, capacity, now_ms}
-      )
-
-    case result do
-      [_refilled, _ts, new_tokens] when new_tokens >= 0 -> :ok
-      _ -> {:error, refill_per_ms}
+    case AtomicBucket.consume(
+           table: @table,
+           owner: Mailglass.RateLimiter.TableOwner,
+           key: key,
+           capacity: capacity,
+           per_minute: per_minute,
+           now_us: now_us
+         ) do
+      :ok -> :ok
+      {:error, :denied} -> {:error, per_minute}
     end
   end
 
@@ -156,7 +141,7 @@ defmodule Mailglass.RateLimiter do
           {Keyword.fetch!(default, :capacity), Keyword.fetch!(default, :per_minute)}
       end
 
-    {capacity, per_minute / 60_000}
+    {capacity, per_minute}
   end
 
   defp get_config do
@@ -177,8 +162,15 @@ defmodule Mailglass.RateLimiter do
   defp default_limits_for(:global_recipient), do: [capacity: 1000, per_minute: 1000]
   defp default_limits_for(:sender_domain), do: [capacity: 500, per_minute: 500]
 
-  defp retry_after_ms(refill_per_ms) when refill_per_ms > 0, do: ceil(1 / refill_per_ms)
+  defp retry_after_ms(per_minute) when per_minute > 0, do: ceil(60_000 / per_minute)
   defp retry_after_ms(_), do: 60_000
+
+  defp clock_us do
+    case Application.get_env(:mailglass, :rate_limit_clock) do
+      fun when is_function(fun, 0) -> fun.()
+      _ -> System.monotonic_time(:microsecond)
+    end
+  end
 
   defp emit_telemetry(duration_us, allowed, tenant_id) do
     :telemetry.execute(
