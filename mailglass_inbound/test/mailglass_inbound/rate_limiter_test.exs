@@ -36,6 +36,45 @@ defmodule MailglassInbound.RateLimiterTest do
   defp restore_env(key, value), do: Application.put_env(:mailglass_inbound, key, value)
 
   describe "shared atomic bucket" do
+    test "active-key overflow denies until idle expiry reclaims capacity" do
+      Application.put_env(:mailglass_inbound, :rate_limit_table_owner,
+        max_keys: 1,
+        idle_expiry_ms: 10,
+        sweep_interval_ms: 60_000
+      )
+
+      first_key = {:tenant, "bounded-first"}
+      second_key = {:tenant, "bounded-second"}
+      initial = fn key, now_us -> {key, 1_000_000, now_us, 0, now_us} end
+
+      assert :ok =
+               GenServer.call(
+                 MailglassInbound.RateLimiter.TableOwner,
+                 {:admit, first_key, initial.(first_key, 100_000), 100_000}
+               )
+
+      assert {:error, :denied} =
+               GenServer.call(
+                 MailglassInbound.RateLimiter.TableOwner,
+                 {:admit, second_key, initial.(second_key, 100_000), 100_000}
+               )
+
+      assert :ets.info(@table, :size) == 1
+      assert :ets.member(@table, first_key)
+
+      true = :ets.insert(@table, {first_key, 1_000_000, 0, 0, 0})
+
+      assert :ok =
+               GenServer.call(
+                 MailglassInbound.RateLimiter.TableOwner,
+                 {:admit, second_key, initial.(second_key, 20_000), 20_000}
+               )
+
+      assert :ets.info(@table, :size) == 1
+      refute :ets.member(@table, first_key)
+      assert :ets.member(@table, second_key)
+    end
+
     test "fast path preserves a depleted bucket across clock regression" do
       now = :atomics.new(1, [])
       :atomics.put(now, 1, 99)

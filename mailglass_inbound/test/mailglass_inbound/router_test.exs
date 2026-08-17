@@ -29,16 +29,18 @@ defmodule MailglassInbound.RouterTest do
   defmodule ExampleRouter do
     use MailglassInbound.Router
 
-    route SupportMailbox,
+    route(SupportMailbox,
       recipient: "support@example.com",
       subject: ~r/help/i,
       headers: [{"x-ticket-kind", "support"}]
+    )
 
-    route BillingMailbox,
+    route(BillingMailbox,
       recipient: ~r/^billing\+/,
       headers: [{"x-account-tier", ~r/^gold$/i}]
+    )
 
-    route FallbackMailbox, recipient: "support@example.com"
+    route(FallbackMailbox, recipient: "support@example.com")
   end
 
   test "router DSL compiles to ordered pure route data" do
@@ -47,6 +49,86 @@ defmodule MailglassInbound.RouterTest do
              %Route{mailbox: BillingMailbox},
              %Route{mailbox: FallbackMailbox}
            ] = ExampleRouter.__mailglass_inbound_routes__()
+
+    assert Enum.all?(ExampleRouter.__mailglass_inbound_routes__(), fn route ->
+             match?(
+               {file, line} when is_binary(file) and is_integer(line) and line > 0,
+               route.source
+             )
+           end)
+  end
+
+  test "route options reject executable AST without running it" do
+    sentinel = String.to_atom("router_side_effect_#{System.unique_integer([:positive])}")
+    Process.register(self(), sentinel)
+
+    module = unique_module("SideEffectRouter")
+
+    source = """
+    defmodule #{inspect(module)} do
+      use MailglassInbound.Router
+
+      route MailglassInbound.RouterTest.SupportMailbox,
+        subject: (send(Process.whereis(#{inspect(sentinel)}), :route_side_effect); "help")
+    end
+    """
+
+    assert_raise ArgumentError, ~r/route\/2 accepts only literal options/, fn ->
+      Code.compile_string(source)
+    end
+
+    refute_received :route_side_effect
+  end
+
+  test "mailbox declarations reject macros without expanding them" do
+    sentinel = String.to_atom("router_mailbox_side_effect_#{System.unique_integer([:positive])}")
+    Process.register(self(), sentinel)
+    module = unique_module("MailboxSideEffectRouter")
+
+    source = """
+    defmodule #{inspect(module)} do
+      use MailglassInbound.Router
+
+      defmacro executable_mailbox do
+        send(Process.whereis(#{inspect(sentinel)}), :mailbox_side_effect)
+        quote(do: MailglassInbound.RouterTest.SupportMailbox)
+      end
+
+      route executable_mailbox(), []
+    end
+    """
+
+    assert_raise ArgumentError, ~r/literal mailbox module alias/, fn ->
+      Code.compile_string(source)
+    end
+
+    refute_received :mailbox_side_effect
+  end
+
+  test "route options reject variables, calls, interpolation, and captures" do
+    expressions = [
+      "value",
+      "String.upcase(\"help\")",
+      "\"help-\#{value}\"",
+      "&String.upcase/1"
+    ]
+
+    Enum.each(expressions, fn expression ->
+      module = unique_module("NonLiteralRouter")
+
+      source = """
+      defmodule #{inspect(module)} do
+        use MailglassInbound.Router
+        value = "help"
+        _ = value
+        route MailglassInbound.RouterTest.SupportMailbox, subject: #{expression}
+      end
+      """
+
+      assert_raise ArgumentError, ~r/route\/2 accepts only literal options/, fn ->
+        Code.compile_string(source)
+      end
+    end)
   end
 
   test "matcher supports exact and regex matching across recipient, subject, and headers" do
@@ -88,5 +170,9 @@ defmodule MailglassInbound.RouterTest do
     }
 
     assert :no_match = Matcher.match(ExampleRouter.__mailglass_inbound_routes__(), message)
+  end
+
+  defp unique_module(prefix) do
+    Module.concat(__MODULE__, "#{prefix}#{System.unique_integer([:positive])}")
   end
 end
