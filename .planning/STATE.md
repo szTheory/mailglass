@@ -5,15 +5,15 @@ milestone_name: Engineering Quality Ratchet
 current_phase: 155
 current_phase_name: Restore Adopter and CI Truth
 status: planning
-stopped_at: Completed 155-01-PLAN.md
-last_updated: "2026-08-17T01:44:39.780Z"
+stopped_at: Completed 155-05-PLAN.md
+last_updated: "2026-08-17T02:23:29.810Z"
 last_activity: 2026-08-16
 last_activity_desc: v2.6 roadmap created; all 50 requirements mapped across phases 155-160
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 6
-  completed_plans: 1
+  completed_plans: 5
   percent: 0
 ---
 
@@ -33,7 +33,7 @@ Plan: —
 Status: Ready to plan
 Last activity: 2026-08-16 — v2.6 roadmap created; all 50 requirements mapped across phases 155-160
 
-Progress: [██░░░░░░░░] 17%
+Progress: [████████░░] 83%
 
 ## v2.6 Milestone Intent
 
@@ -490,6 +490,8 @@ release debug campaign.
 - [Phase ?]: Hex publication is gated on resolver agreement, local host proof, CI, package checks, and protected candidate-SHA evidence.
 - [Phase ?]: Migration generator matches --repo text only against configured repo modules and never creates atoms.
 - [Phase ?]: Offline --upgrade --from 0 is refused with initial-generation guidance; inbound version 1 has no offline upgrade predecessor.
+- [Phase ?]: Generated-host proof uses only explicit Host.Repo configuration and a validated scratch database.
+- [Phase ?]: Installer Host Smoke keeps its public identity while running both adopter proofs.
 
 ## Quick Tasks Completed
 
@@ -578,6 +580,7 @@ release debug campaign.
 | Phase 153 P06 | 7 min | 2 tasks | 11 files |
 | Phase 153 P07 | 9min | 2 tasks | 9 files |
 | Phase 155-restore-adopter-and-ci-truth P01 | 5 min | 2 tasks | 5 files |
+| Phase 155 P05 | 31min | 2 tasks | 4 files |
 
 ## Deferred Items
 
@@ -744,8 +747,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-17T01:44:39.771Z
-**Stopped at:** Completed 155-01-PLAN.md
+**Last session:** 2026-08-17T02:23:29.798Z
+**Stopped at:** Completed 155-05-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
