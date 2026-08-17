@@ -217,6 +217,24 @@ defmodule MailglassInbound.WorkerTest do
     refute Process.get(:mailglass_inbound_worker_execute_opts)
   end
 
+  test "cancels contradictory no-match job data before loader or mailbox invocation" do
+    args =
+      job_with_source("fresh").args
+      |> Map.put("route_status", "no_match")
+      |> Map.put("mailbox", Atom.to_string(LoadedProcessSentinel))
+
+    assert {:cancel, :permanent_failure} =
+             MailglassInbound.Execution.Worker.perform(
+               %Oban.Job{args: args},
+               loader: Loader,
+               execution: ExecutionSuccess
+             )
+
+    refute_received :sentinel_invoked
+    refute Process.get(:mailglass_inbound_worker_load_args)
+    refute Process.get(:mailglass_inbound_worker_execute_opts)
+  end
+
   defp job_with_source(:absent) do
     %Oban.Job{args: Map.delete(job_with_source("fresh").args, "source")}
   end
