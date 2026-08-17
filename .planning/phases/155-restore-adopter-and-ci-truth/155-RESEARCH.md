@@ -266,17 +266,15 @@ This must be a real Ecto host rather than the existing `--no-ecto` installer smo
 | A1 | `--from 0` should be rejected for `--upgrade` because zero is the fresh/absent-anchor state, not a prior applied package version. | Architecture Patterns | The exact CLI acceptance matrix may need a small adjustment; it does not alter the fail-closed rule. |
 | A2 | A reusable helper can reside in core without creating an inbound-to-core ownership violation. | Exact Integration Points | If packaging/compiler boundaries prohibit it, duplicate only the thin source-rendering adapter while keeping test vectors identical. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Exact legacy toy catalog signature**
-   - What we know: the source body creates only `mailglass_events(tenant_id, timestamps)` and is the named historical shape. [VERIFIED: codebase — core generator]
-   - What's unclear: whether any released host variants added database defaults/indexes after applying that toy file.
-   - Recommendation: encode the source fingerprint and a narrowly specified catalog signature in tests first; reject every variant not demonstrated by the fixture.
+1. **RESOLVED — Exact legacy toy catalog signature**
+   - Repair accepts only the byte-for-byte core migration body emitted before Phase 155, whose sole table is `mailglass_events(tenant_id, timestamps)`, together with its exact expected empty catalog shape.
+   - Any source or catalog variation, and any populated legacy table, fails closed with manual-remediation guidance.
 
-2. **Offline `--from 0` policy**
-   - What we know: locked context says zero means the anchor is genuinely absent.
-   - What's unclear: whether product intent calls `--upgrade --from 0` valid rather than directing users to initial mode.
-   - Recommendation: default to rejection with “run initial generation without `--upgrade`”; confirm during plan review if the release contract explicitly wants it accepted. [ASSUMED]
+2. **RESOLVED — Offline `--from 0` policy**
+   - `--upgrade --from 0` is invalid and fails with guidance to run initial generation without `--upgrade`.
+   - Upgrade mode requires a valid positive version older than the package's current migration version.
 
 ## Environment Availability
 

@@ -70,7 +70,15 @@
   3. An upgrade generates a new timestamped migration, accepts only a valid older offline version, and rolls back to the prior package schema without changing applied migrations.
   4. A legacy toy migration is detected with a fail-closed, non-destructive repair route, while malformed metadata and query failures remain distinguishable from an absent migration anchor.
   5. A code change cannot receive a passing protected merge signal when change detection fails or a required code lane was skipped.
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 155-01-PLAN.md — Generate truthful fresh and offline-upgrade wrappers with exact repo selection.
+- [ ] 155-02-PLAN.md — Distinguish absent migration anchors from malformed metadata and query failure.
+- [ ] 155-03-PLAN.md — Generate live upgrades from the selected repo's validated applied version.
+- [ ] 155-04-PLAN.md — Repair only the exact empty historical core toy migration, fail closed otherwise.
+- [ ] 155-05-PLAN.md — Prove generated core/inbound migrations and delivery persistence in a real Ecto host.
+- [ ] 155-06-PLAN.md — Make CI Green fail closed for detector failure and skipped required code lanes.
 
 ### Phase 156: Delivery Correctness and Bounded Execution
 **Goal**: Outbound delivery remains accurate, atomic, privacy-safe, and bounded under concurrency, provider failures, and saturated local execution.
@@ -137,7 +145,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 155. Restore Adopter and CI Truth | 0/TBD | Not started | - |
+| 155. Restore Adopter and CI Truth | 0/6 | Not started | - |
 | 156. Delivery Correctness and Bounded Execution | 0/TBD | Not started | - |
 | 157. Inbound, Database, and Lifecycle Hardening | 0/TBD | Not started | - |
 | 158. Simplify Architecture Without Breaking Adopters | 0/TBD | Not started | - |
