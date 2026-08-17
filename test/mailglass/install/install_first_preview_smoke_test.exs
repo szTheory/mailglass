@@ -34,9 +34,11 @@ defmodule Mailglass.Install.FirstPreviewSmokeTest do
     script = File.read!(script_path)
 
     assert script =~
-             "mix phx.new sandbox --module Sandbox --app sandbox --no-ecto --no-mailer --install"
+             "mix phx.new sandbox --module Sandbox --app sandbox --database postgres --no-mailer --install"
 
     assert script =~ "mix mailglass.install"
+    assert script =~ "mix ecto.create"
+    assert script =~ "mix ecto.migrate"
     assert script =~ "mix compile --warnings-as-errors"
     assert script =~ "OPS-01 guard passed."
     assert script =~ "GET /dev/mail/ -> HTTP ${STATUS}"
