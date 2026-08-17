@@ -127,10 +127,11 @@ defmodule MailglassInbound.FixturesTest do
       request = %Request{provider: :ses, raw_body: raw_body, headers: headers}
 
       # Real verifier — does NOT raise because the fixture primed the real CertCache.
-      assert {:ok, facts} = SES.verify!(request, config)
-      assert facts.auth == :sns_x509
+      assert {:ok, verified_request} = SES.verify!(request, config)
+      assert verified_request.verification_facts.auth == :sns_x509
 
-      %{message: message, evidence: evidence} = SES.normalize(request)
+      resolved_request = SES.resolve_content!(verified_request, config)
+      %{message: message, evidence: evidence} = SES.normalize(resolved_request)
       assert %InboundMessage{provider: :ses} = message
       assert message.subject == "SES inbound"
       # The Action:S3 body path served the raw MIME via the primed S3Fetcher.Fake.
