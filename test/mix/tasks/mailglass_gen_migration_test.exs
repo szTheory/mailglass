@@ -9,7 +9,7 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
 
     def query(query, params, options) do
       send(self(), {:host_query, query, params, options})
-      {:ok, %{rows: [["4"]]}}
+      Process.get(:host_catalog_result, {:ok, %{rows: [["4"]]}})
     end
   end
 
@@ -115,6 +115,46 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
 
     assert [path] = migration_paths()
     assert File.read!(path) =~ "def down, do: Mailglass.Migration.down(version: 4)"
+  end
+
+  test "keeps migration history unchanged when live startup or metadata inspection fails" do
+    Application.put_env(:mailglass, :ecto_repos, [HostRepo])
+    prior_repo = Application.get_env(:mailglass, :repo)
+    Application.put_env(:mailglass, :repo, HostRepo)
+
+    on_exit(fn -> restore_repo(:mailglass, prior_repo) end)
+
+    assert_raise Mix.Error, ~r/could not inspect the selected repo/, fn ->
+      Mailglass.MigrationGenerator.run(core_spec(), ["--upgrade"],
+        with_repo: fn _repo, _fun -> {:error, :unavailable} end
+      )
+    end
+
+    assert migration_paths() == []
+
+    for catalog_result <- [{:error, :database_down}, {:ok, %{rows: [["malformed"]]}}] do
+      Process.put(:host_catalog_result, catalog_result)
+
+      assert_raise Mailglass.MigrationVersionError, fn ->
+        Mailglass.MigrationGenerator.run(core_spec(), ["--upgrade"],
+          with_repo: fn repo, fun -> {:ok, fun.(repo), []} end
+        )
+      end
+
+      assert migration_paths() == []
+    end
+
+    Process.put(:host_catalog_result, {:ok, %{rows: [["5"]]}})
+
+    assert_raise Mix.Error, ~r/no upgrade is available/, fn ->
+      Mailglass.MigrationGenerator.run(core_spec(), ["--upgrade"],
+        with_repo: fn repo, fun -> {:ok, fun.(repo), []} end
+      )
+    end
+
+    assert migration_paths() == []
+  after
+    Process.delete(:host_catalog_result)
   end
 
   test "refuses invalid upgrade inputs before writing" do

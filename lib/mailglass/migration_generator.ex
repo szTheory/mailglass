@@ -86,38 +86,63 @@ defmodule Mailglass.MigrationGenerator do
   end
 
   defp generate_upgrade!(spec, repo, from, options) do
-    prior_version = validate_prior_version!(spec, from)
+    prior_version =
+      case from do
+        nil -> live_prior_version!(spec, repo, options)
+        version -> validate_prior_version!(spec, version)
+      end
+
     path = migration_path(repo, spec.upgrade_suffix, options)
     write_new!(path, upgrade_source(spec, repo, prior_version))
     Mix.shell().info("created #{path}")
   end
 
-  defp validate_prior_version!(_spec, nil),
-    do: Mix.raise("Installation blocked: --upgrade requires --from VERSION")
+  defp live_prior_version!(spec, repo, options) do
+    with_repo = Keyword.get(options, :with_repo, &Ecto.Migrator.with_repo/2)
+
+    case with_repo.(repo, fn started_repo ->
+           spec.migration_module.migrated_version(repo: started_repo)
+         end) do
+      {:ok, version, _started_apps} when is_integer(version) ->
+        validate_prior_version!(spec, version)
+
+      {:error, reason} ->
+        Mix.raise("Installation blocked: could not inspect the selected repo: #{inspect(reason)}")
+
+      result ->
+        Mix.raise("Installation blocked: could not inspect the selected repo: #{inspect(result)}")
+    end
+  end
 
   defp validate_prior_version!(spec, from) do
-    case Integer.parse(from) do
-      {version, ""} ->
-        initial_version = spec.initial_version.()
-        current_version = spec.current_version.()
+    version =
+      case from do
+        version when is_integer(version) ->
+          version
 
-        cond do
-          version == 0 ->
-            Mix.raise(
-              "Installation blocked: --upgrade --from 0 means no package anchor exists; run initial generation without --upgrade"
-            )
+        text ->
+          case Integer.parse(text) do
+            {version, ""} -> version
+            _ -> Mix.raise("Installation blocked: --from must be an integer package schema version")
+          end
+      end
 
-          version < initial_version or version >= current_version ->
-            Mix.raise(
-              "Installation blocked: no offline upgrade is available from #{version}; choose a version from #{initial_version} through #{current_version - 1}"
-            )
+    initial_version = spec.initial_version.()
+    current_version = spec.current_version.()
 
-          true ->
-            version
-        end
+    cond do
+      version == 0 ->
+        Mix.raise(
+          "Installation blocked: --upgrade --from 0 means no package anchor exists; run initial generation without --upgrade"
+        )
 
-      _ ->
-        Mix.raise("Installation blocked: --from must be an integer package schema version")
+      version < initial_version or version >= current_version ->
+        Mix.raise(
+          "Installation blocked: no upgrade is available from #{version}; choose a version from #{initial_version} through #{current_version - 1}"
+        )
+
+      true ->
+        version
     end
   end
 
