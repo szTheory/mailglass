@@ -20,13 +20,20 @@ defmodule Mailglass.Outbound.DeliverManyTest do
 
       Enum.map(keys, fn %{address: address} ->
         if String.contains?(address, "blocked") do
-          {:suppressed, %Entry{tenant_id: "test-tenant", scope: :address, reason: :manual, source: "test"}}
+          {:suppressed,
+           %Entry{tenant_id: "test-tenant", scope: :address, reason: :manual, source: "test"}}
         else
           :not_suppressed
         end
       end)
     end
 
+    def check(_key, _opts), do: :not_suppressed
+    def record(_attrs, _opts), do: {:error, :unsupported}
+  end
+
+  defmodule MalformedBulkSuppressionStore do
+    def check_many(_keys, _opts), do: []
     def check(_key, _opts), do: :not_suppressed
     def record(_attrs, _opts), do: {:error, :unsupported}
   end
@@ -238,6 +245,18 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       assert_receive {:bulk_check, second_chunk}
       refute_receive {:bulk_check, _}
       assert Enum.map([first_chunk, second_chunk], &length/1) == [2, 2]
+    end
+
+    test "fails closed when an optional bulk store violates the positional contract" do
+      prior_store = Application.get_env(:mailglass, :suppression_store)
+      Application.put_env(:mailglass, :suppression_store, MalformedBulkSuppressionStore)
+      on_exit(fn -> Application.put_env(:mailglass, :suppression_store, prior_store) end)
+
+      assert {:ok, [delivery]} =
+               Outbound.deliver_many([build_message("malformed-bulk@example.com")], [])
+
+      assert delivery.status == :failed
+      assert delivery.last_error[:type] == :preflight_rejected
     end
   end
 
