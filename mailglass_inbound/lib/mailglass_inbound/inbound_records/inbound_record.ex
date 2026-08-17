@@ -39,30 +39,30 @@ defmodule MailglassInbound.InboundRecords.InboundRecord do
         }
 
   schema "mailglass_inbound_records" do
-    field :tenant_id, :string
-    field :provider, :string
-    field :provider_message_id, :string
-    field :message_id, :string
-    field :envelope_recipient, :string
-    field :from, {:array, :map}, default: []
-    field :to, {:array, :map}, default: []
-    field :cc, {:array, :map}, default: []
-    field :bcc, {:array, :map}, default: []
-    field :reply_to, {:array, :map}, default: []
-    field :subject, :string
-    field :headers, :map, default: %{}
-    field :sent_at, :utc_datetime_usec
-    field :received_at, :utc_datetime_usec
-    field :text_body, :string
-    field :html_body, :string
-    field :attachments, {:array, :map}, default: []
+    field(:tenant_id, :string)
+    field(:provider, :string)
+    field(:provider_message_id, :string)
+    field(:message_id, :string)
+    field(:envelope_recipient, :string)
+    field(:from, {:array, :map}, default: [])
+    field(:to, {:array, :map}, default: [])
+    field(:cc, {:array, :map}, default: [])
+    field(:bcc, {:array, :map}, default: [])
+    field(:reply_to, {:array, :map}, default: [])
+    field(:subject, :string)
+    field(:headers, :map, default: %{})
+    field(:sent_at, :utc_datetime_usec)
+    field(:received_at, :utc_datetime_usec)
+    field(:text_body, :string)
+    field(:html_body, :string)
+    field(:attachments, {:array, :map}, default: [])
     # IOPS-05 (the design contract): diagnostic suppression flag, set once at INSERT by
     # `Ingress.Persist`. Settable (in @cast) but never required — it defaults to
     # false so a row inserted before the column existed reads false, never nil.
-    field :suppression_flagged, :boolean, default: false
+    field(:suppression_flagged, :boolean, default: false)
 
-    has_one :evidence, InboundEvidence
-    has_many :replay_runs, ReplayRun
+    has_one(:evidence, InboundEvidence)
+    has_many(:replay_runs, ReplayRun)
 
     timestamps()
   end

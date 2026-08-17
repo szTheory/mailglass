@@ -239,7 +239,10 @@ defmodule MailglassInbound.Ingress.Providers.Postmark do
 
   defp parse_warnings(payload, message) do
     warnings = %{}
-    warnings = maybe_put_warning(warnings, :missing_original_recipient, is_nil(message.envelope_recipient))
+
+    warnings =
+      maybe_put_warning(warnings, :missing_original_recipient, is_nil(message.envelope_recipient))
+
     warnings = maybe_put_warning(warnings, :missing_message_id_header, is_nil(message.message_id))
     maybe_put_warning(warnings, :bcc_partial_or_missing, (payload["BccFull"] || []) == [])
   end

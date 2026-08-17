@@ -85,6 +85,10 @@ defmodule MailglassInbound.Router.Matcher do
 
   defp matches_matcher?(nil, _value), do: true
   defp matches_matcher?(_matcher, nil), do: false
-  defp matches_matcher?(%Regex{} = matcher, value) when is_binary(value), do: Regex.match?(matcher, value)
-  defp matches_matcher?(matcher, value) when is_binary(matcher) and is_binary(value), do: matcher == value
+
+  defp matches_matcher?(%Regex{} = matcher, value) when is_binary(value),
+    do: Regex.match?(matcher, value)
+
+  defp matches_matcher?(matcher, value) when is_binary(matcher) and is_binary(value),
+    do: matcher == value
 end

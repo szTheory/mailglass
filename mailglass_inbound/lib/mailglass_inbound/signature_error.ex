@@ -44,7 +44,13 @@ defmodule MailglassInbound.SignatureError do
   version bump); removing a value requires a major version bump.
   """
 
-  @types [:bad_signature, :missing_header, :malformed_header, :timestamp_skew, :subscribe_url_untrusted]
+  @types [
+    :bad_signature,
+    :missing_header,
+    :malformed_header,
+    :timestamp_skew,
+    :subscribe_url_untrusted
+  ]
 
   @derive {Jason.Encoder, only: [:type, :message, :context]}
   defexception [:type, :message, :cause, :context, :provider]

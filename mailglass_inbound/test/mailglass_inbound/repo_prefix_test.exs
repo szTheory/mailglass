@@ -323,6 +323,8 @@ defmodule MailglassInbound.RepoPrefixTest do
   end
 
   defp truncate_tables do
-    TestRepo.query!("TRUNCATE mailglass_inbound_replay_runs, mailglass_inbound_evidence, mailglass_inbound_records CASCADE")
+    TestRepo.query!(
+      "TRUNCATE mailglass_inbound_replay_runs, mailglass_inbound_evidence, mailglass_inbound_records CASCADE"
+    )
   end
 end

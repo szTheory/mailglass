@@ -91,7 +91,9 @@ defmodule Mix.Tasks.Mailglass.Inbound.Prune do
       true
     else
       answer =
-        Mix.shell().prompt("This permanently deletes over-retention inbound rows. Type 'yes' to continue:")
+        Mix.shell().prompt(
+          "This permanently deletes over-retention inbound rows. Type 'yes' to continue:"
+        )
 
       String.trim(to_string(answer)) == "yes"
     end

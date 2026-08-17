@@ -55,7 +55,9 @@ defmodule MailglassInbound.SignatureErrorTest do
     assert Map.has_key?(decoded, "context")
     refute Map.has_key?(decoded, "cause"), "cause must not appear in JSON output (PII / secret)"
     refute Map.has_key?(decoded, "provider"), "provider must not appear in JSON output"
-    refute json =~ "secret-signing-key-fragment", "raw cause payload must not leak into encoded output"
+
+    refute json =~ "secret-signing-key-fragment",
+           "raw cause payload must not leak into encoded output"
   end
 
   test "new/2 validates the type against the closed set" do

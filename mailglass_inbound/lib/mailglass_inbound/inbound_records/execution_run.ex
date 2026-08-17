@@ -36,17 +36,17 @@ defmodule MailglassInbound.InboundRecords.ExecutionRun do
         }
 
   schema "mailglass_inbound_replay_runs" do
-    field :tenant_id, :string
-    field :source, Ecto.Enum, values: @sources
-    field :mailbox, :string
-    field :outcome, Ecto.Enum, values: @outcomes
-    field :outcome_reason, :string
-    field :failure, :map, default: %{}
-    field :executed_at, :utc_datetime_usec
-    field :metadata, :map, default: %{}
+    field(:tenant_id, :string)
+    field(:source, Ecto.Enum, values: @sources)
+    field(:mailbox, :string)
+    field(:outcome, Ecto.Enum, values: @outcomes)
+    field(:outcome_reason, :string)
+    field(:failure, :map, default: %{})
+    field(:executed_at, :utc_datetime_usec)
+    field(:metadata, :map, default: %{})
 
-    belongs_to :inbound_record, InboundRecord
-    belongs_to :inbound_evidence, InboundEvidence
+    belongs_to(:inbound_record, InboundRecord)
+    belongs_to(:inbound_evidence, InboundEvidence)
 
     timestamps()
   end
@@ -89,7 +89,7 @@ defmodule MailglassInbound.InboundRecords.ExecutionRun do
         changeset
 
       outcome in [:reject, :bounce] and present_string?(mailbox) and
-          present_string?(get_field(changeset, :outcome_reason)) and map_size(failure) == 0 ->
+        present_string?(get_field(changeset, :outcome_reason)) and map_size(failure) == 0 ->
         changeset
 
       outcome == :failed and map_size(failure) > 0 ->
