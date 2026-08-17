@@ -22,6 +22,7 @@ defmodule MailglassInbound.InboundRecords.InboundEvidence do
           raw_headers: map(),
           raw_mime: binary() | nil,
           raw_mime_sha256: binary() | nil,
+          raw_signed_request: binary() | nil,
           terminal_failure_class: String.t() | nil,
           terminal_context: map(),
           verification_facts: map(),
@@ -39,6 +40,7 @@ defmodule MailglassInbound.InboundRecords.InboundEvidence do
     field(:raw_mime, :binary, redact: true)
     field(:raw_mime_fingerprint, :string)
     field(:raw_mime_sha256, :binary, redact: true)
+    field(:raw_signed_request, :binary, redact: true)
     field(:terminal_failure_class, :string)
     field(:terminal_context, :map, redact: true)
     field(:verification_facts, :map, default: %{})
@@ -53,7 +55,7 @@ defmodule MailglassInbound.InboundRecords.InboundEvidence do
 
   @required ~w[tenant_id inbound_record_id provider]a
   @cast @required ++
-          ~w[raw_payload raw_headers raw_mime raw_mime_sha256 terminal_failure_class terminal_context verification_facts parse_warnings attachment_blobs]a
+          ~w[raw_payload raw_headers raw_mime raw_mime_sha256 raw_signed_request terminal_failure_class terminal_context verification_facts parse_warnings attachment_blobs]a
 
   @spec changeset(map()) :: Ecto.Changeset.t()
   def changeset(attrs) when is_map(attrs) do

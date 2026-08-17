@@ -87,25 +87,65 @@ defmodule MailglassInbound.Ingress.Persist do
   @doc false
   @spec persist_terminal_failure(String.t(), atom(), map(), map(), atom(), keyword()) ::
           {:ok, map()} | {:error, term()}
-  def persist_terminal_failure(tenant_id, provider, request, verified, failure_class, opts)
-      when is_binary(tenant_id) and is_atom(failure_class) do
+  def persist_terminal_failure(
+        tenant_id,
+        :ses = provider,
+        request,
+        verified,
+        :s3_fetch_failed,
+        opts
+      )
+      when is_binary(tenant_id) and is_map(request) and is_map(verified) and is_list(opts) do
+    with raw_signed_request when is_binary(raw_signed_request) <- Map.get(request, :raw_body),
+         %{} = envelope <- Map.get(verified, :envelope) do
+      do_persist_terminal_failure(
+        tenant_id,
+        provider,
+        request,
+        verified,
+        envelope,
+        raw_signed_request,
+        opts
+      )
+    else
+      _ -> {:error, :terminal_evidence_incomplete}
+    end
+  end
+
+  def persist_terminal_failure(_tenant_id, _provider, _request, _verified, _failure_class, _opts),
+    do: {:error, :terminal_failure_class_not_persistable}
+
+  defp do_persist_terminal_failure(
+         tenant_id,
+         provider,
+         request,
+         verified,
+         envelope,
+         raw_signed_request,
+         opts
+       ) do
     handoff = %{
       tenant_id: tenant_id,
       provider: provider,
       message: %InboundMessage{
         tenant_id: tenant_id,
         provider: provider,
-        provider_message_id: get_in(verified, [:envelope, "MessageId"]),
+        provider_message_id: terminal_provider_message_id(verified),
         received_at: DateTime.utc_now()
       },
       evidence: %{
-        raw_payload: Map.get(verified, :envelope, %{}),
-        raw_headers: Map.get(request, :headers, %{}),
+        raw_payload: envelope,
+        raw_headers: headers_to_map(Map.get(request, :headers, [])),
+        raw_signed_request: raw_signed_request,
         verification_facts: Map.get(verified, :verification_facts, %{}),
         parse_warnings: Map.get(verified, :warnings, %{}),
         attachment_blobs: %{},
-        terminal_failure_class: Atom.to_string(failure_class),
-        terminal_context: %{provider: Atom.to_string(provider), replayable: true}
+        terminal_failure_class: "s3_fetch_failed",
+        terminal_context: %{
+          "provider" => Atom.to_string(provider),
+          "replayable" => true,
+          "schema_version" => 1
+        }
       }
     }
 
@@ -437,6 +477,7 @@ defmodule MailglassInbound.Ingress.Persist do
       raw_headers: Map.get(evidence, :raw_headers, %{}),
       raw_mime: Map.get(evidence, :raw_mime),
       raw_mime_sha256: raw_mime_sha256,
+      raw_signed_request: Map.get(evidence, :raw_signed_request),
       verification_facts:
         evidence
         |> Map.get(:verification_facts, %{})
@@ -565,34 +606,130 @@ defmodule MailglassInbound.Ingress.Persist do
   end
 
   @doc false
-  @spec backfill_sha256(keyword()) :: {:ok, non_neg_integer()}
+  @spec backfill_sha256(keyword()) ::
+          {:ok,
+           %{
+             count: non_neg_integer(),
+             next_cursor: Ecto.UUID.t() | nil,
+             done?: boolean()
+           }}
+          | {:error, term()}
   def backfill_sha256(opts \\ []) do
     repo = Keyword.get(opts, :repo, MailglassInbound.Repo)
     prefix = Keyword.get(opts, :prefix, MailglassInbound.Config.schema())
     limit = Keyword.get(opts, :limit, 500)
     after_id = Keyword.get(opts, :after_id)
 
-    cursor = if is_binary(after_id), do: " AND id > $1", else: ""
-    params = if is_binary(after_id), do: [after_id, limit], else: [limit]
-    limit_param = if is_binary(after_id), do: "$2", else: "$1"
+    Mailglass.Identifier.validate!(prefix, :prefix)
 
-    with {:ok, %{rows: rows}} <-
-           repo.query(
-             "SELECT id, raw_mime FROM #{inspect(prefix)}.mailglass_inbound_evidence WHERE raw_mime_sha256 IS NULL AND raw_mime IS NOT NULL#{cursor} ORDER BY id LIMIT #{limit_param}",
-             params,
-             log: false
-           ) do
-      Enum.reduce_while(rows, {:ok, 0}, fn [id, raw], {:ok, count} ->
-        case repo.query(
-               "UPDATE #{inspect(prefix)}.mailglass_inbound_evidence SET raw_mime_sha256 = $1 WHERE id = $2",
-               [:crypto.hash(:sha256, raw), id],
-               log: false
-             ) do
-          {:ok, _} -> {:cont, {:ok, count + 1}}
-          {:error, reason} -> {:halt, {:error, reason}}
-        end
-      end)
+    unless is_integer(limit) and limit > 0 and limit <= 5_000 do
+      raise ArgumentError, ":limit must be an integer between 1 and 5000"
     end
+
+    unless is_nil(after_id) or match?({:ok, _uuid}, Ecto.UUID.cast(after_id)) do
+      raise ArgumentError, ":after_id must be a UUID string or nil"
+    end
+
+    repo.transact(fn -> backfill_sha256_batch(repo, prefix, limit, after_id) end)
+  end
+
+  defp backfill_sha256_batch(repo, prefix, limit, after_id) do
+    lock_key = "mailglass_inbound:sha256_backfill:#{prefix}"
+
+    with {:ok, %{rows: [[true]]}} <-
+           repo.query("SELECT pg_try_advisory_xact_lock(hashtext($1))", [lock_key], log: false),
+         {:ok, %{rows: rows, num_rows: count}} <-
+           run_sha256_batch(repo, prefix, limit, after_id) do
+      next_cursor = max_row_id(rows)
+      remaining_after = next_cursor || after_id
+
+      with {:ok, done?} <- backfill_done?(repo, prefix, remaining_after) do
+        {:ok, %{count: count, next_cursor: next_cursor, done?: done?}}
+      end
+    else
+      {:ok, %{rows: [[false]]}} -> {:error, :backfill_locked}
+      {:error, reason} -> {:error, reason}
+      _unexpected -> {:error, :backfill_lock_failed}
+    end
+  end
+
+  defp run_sha256_batch(repo, prefix, limit, after_id) do
+    {cursor_sql, params, limit_param} =
+      if is_binary(after_id) do
+        {" AND id > $1", [dump_uuid!(after_id), limit], "$2"}
+      else
+        {"", [limit], "$1"}
+      end
+
+    sql =
+      "WITH batch AS (" <>
+        "SELECT id FROM #{inspect(prefix)}.mailglass_inbound_evidence " <>
+        "WHERE raw_mime_sha256 IS NULL AND raw_mime IS NOT NULL#{cursor_sql} " <>
+        "ORDER BY id LIMIT #{limit_param} FOR UPDATE" <>
+        ") UPDATE #{inspect(prefix)}.mailglass_inbound_evidence AS evidence " <>
+        "SET raw_mime_sha256 = sha256(evidence.raw_mime) FROM batch " <>
+        "WHERE evidence.id = batch.id AND evidence.raw_mime_sha256 IS NULL " <>
+        "RETURNING evidence.id"
+
+    repo.query(sql, params, log: false)
+  end
+
+  defp backfill_done?(repo, prefix, after_id) do
+    {cursor_sql, params} =
+      if is_binary(after_id), do: {" AND id > $1", [dump_uuid!(after_id)]}, else: {"", []}
+
+    sql =
+      "SELECT EXISTS(SELECT 1 FROM #{inspect(prefix)}.mailglass_inbound_evidence " <>
+        "WHERE raw_mime_sha256 IS NULL AND raw_mime IS NOT NULL#{cursor_sql})"
+
+    case repo.query(sql, params, log: false) do
+      {:ok, %{rows: [[remaining?]]}} when is_boolean(remaining?) -> {:ok, not remaining?}
+      {:error, reason} -> {:error, reason}
+      _unexpected -> {:error, :backfill_remaining_check_failed}
+    end
+  end
+
+  defp max_row_id([]), do: nil
+
+  defp max_row_id(rows) do
+    id = rows |> Enum.map(&hd/1) |> Enum.max()
+
+    case Ecto.UUID.load(id) do
+      {:ok, uuid} -> uuid
+      :error -> id
+    end
+  end
+
+  defp dump_uuid!(uuid) do
+    {:ok, binary} = Ecto.UUID.dump(uuid)
+    binary
+  end
+
+  defp headers_to_map(headers) when is_list(headers) do
+    Enum.reduce(headers, %{}, fn
+      {name, value}, acc when is_binary(name) and is_binary(value) ->
+        Map.update(acc, String.downcase(name), [value], &(&1 ++ [value]))
+
+      _malformed, acc ->
+        acc
+    end)
+  end
+
+  defp headers_to_map(%{} = headers), do: headers
+  defp headers_to_map(_headers), do: %{}
+
+  defp terminal_provider_message_id(verified) do
+    envelope = Map.get(verified, :envelope, %{})
+
+    inner_id =
+      with message when is_binary(message) <- Map.get(envelope, "Message"),
+           {:ok, %{} = inner} <- Jason.decode(message) do
+        get_in(inner, ["mail", "messageId"])
+      else
+        _ -> nil
+      end
+
+    inner_id || Map.get(envelope, "MessageId")
   end
 
   defp maybe_put_fingerprint(verification_facts, nil), do: verification_facts

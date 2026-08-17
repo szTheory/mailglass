@@ -220,7 +220,13 @@ defmodule MailglassInbound.Ingress.Plug do
   defp resolve_content_or_terminal(provider, verified, config, opts) do
     {:ok, resolve_content_request!(provider, verified, config, opts)}
   rescue
-    error in S3FetchError -> {:terminal, error}
+    # Only the closed, authenticated permanent class is eligible for a
+    # provider-stopping acknowledgement. Retry exhaustion remains a 500 and
+    # creates no terminal row so provider redelivery stays alive.
+    error in S3FetchError ->
+      if error.type == :s3_fetch_failed,
+        do: {:terminal, error},
+        else: reraise(error, __STACKTRACE__)
   end
 
   defp terminal_failure_response(
@@ -242,7 +248,10 @@ defmodule MailglassInbound.Ingress.Plug do
            persistence_opts(opts)
          ) do
       {:ok, _} ->
-        {send_json(conn, 422, %{status: "s3_fetch_error", reason: Atom.to_string(type)}),
+        # SES/SNS stops redelivery only on 2xx. The permanent failure has already
+        # been committed as tenant-scoped replay evidence, so acknowledging it
+        # here is safe and prevents a futile retry storm.
+        {send_json(conn, 200, %{status: "terminal_evidence_committed", reason: Atom.to_string(type)}),
          %{provider: provider, tenant_id: tenant_id, status: :terminal_failure}}
 
       {:error, _} ->

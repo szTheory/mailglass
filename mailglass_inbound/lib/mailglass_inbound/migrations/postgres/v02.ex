@@ -23,9 +23,10 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
     Mailglass.Identifier.validate!(prefix, :prefix)
 
     alter table(:mailglass_inbound_evidence, prefix: prefix) do
-      add(:raw_mime_sha256, :binary)
-      add(:terminal_failure_class, :text)
-      add(:terminal_context, :map, null: false, default: %{})
+      add_if_not_exists(:raw_mime_sha256, :binary)
+      add_if_not_exists(:raw_signed_request, :binary)
+      add_if_not_exists(:terminal_failure_class, :text)
+      add_if_not_exists(:terminal_context, :map, null: false, default: %{})
     end
 
     # These are deliberately separate statements.  A generated wrapper that
@@ -45,38 +46,47 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
     alter table(:mailglass_inbound_evidence, prefix: prefix) do
       remove(:terminal_context)
       remove(:terminal_failure_class)
+      remove(:raw_signed_request)
       remove(:raw_mime_sha256)
     end
   end
 
   defp create_indexes(prefix, true) do
+    q = inspect(prefix)
+
+    # PostgreSQL leaves an INVALID shell behind when a concurrent build is
+    # interrupted. Dropping the package-owned fixed names first recovers that
+    # state and also makes a manually retried V02 deterministic.
+    for name <- @concurrent_indexes,
+        do: execute("DROP INDEX CONCURRENTLY IF EXISTS #{q}.#{name}")
+
     for sql <- concurrent_index_sql(prefix), do: execute(sql)
   end
 
   defp create_indexes(prefix, false) do
-    create(
+    create_if_not_exists(
       unique_index(:mailglass_inbound_evidence, [:tenant_id, :provider, :raw_mime_sha256],
-        where: "raw_mime_sha256 IS NOT NULL",
+        where: "provider IN ('sendgrid', 'mailgun', 'ses') AND raw_mime_sha256 IS NOT NULL",
         name: :mailglass_inbound_evidence_sha256_idx,
         prefix: prefix
       )
     )
 
-    create(
+    create_if_not_exists(
       index(:mailglass_inbound_records, [:inserted_at, :id],
         name: :mailglass_inbound_records_retention_idx,
         prefix: prefix
       )
     )
 
-    create(
+    create_if_not_exists(
       index(:mailglass_inbound_evidence, [:inserted_at, :id],
         name: :mailglass_inbound_evidence_retention_idx,
         prefix: prefix
       )
     )
 
-    create(
+    create_if_not_exists(
       index(:mailglass_inbound_replay_runs, [:source, :inserted_at, :id],
         name: :mailglass_inbound_replay_runs_retention_idx,
         prefix: prefix
@@ -88,7 +98,7 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
     q = inspect(prefix)
 
     [
-      "CREATE UNIQUE INDEX CONCURRENTLY mailglass_inbound_evidence_sha256_idx ON #{q}.mailglass_inbound_evidence (tenant_id, provider, raw_mime_sha256) WHERE raw_mime_sha256 IS NOT NULL",
+      "CREATE UNIQUE INDEX CONCURRENTLY mailglass_inbound_evidence_sha256_idx ON #{q}.mailglass_inbound_evidence (tenant_id, provider, raw_mime_sha256) WHERE provider IN ('sendgrid', 'mailgun', 'ses') AND raw_mime_sha256 IS NOT NULL",
       "CREATE INDEX CONCURRENTLY mailglass_inbound_records_retention_idx ON #{q}.mailglass_inbound_records (inserted_at, id)",
       "CREATE INDEX CONCURRENTLY mailglass_inbound_evidence_retention_idx ON #{q}.mailglass_inbound_evidence (inserted_at, id)",
       "CREATE INDEX CONCURRENTLY mailglass_inbound_replay_runs_retention_idx ON #{q}.mailglass_inbound_replay_runs (source, inserted_at, id)"
