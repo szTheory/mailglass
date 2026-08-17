@@ -15,17 +15,16 @@ defmodule MailglassInbound.OptionalDeps.GenSmtp do
 
   @compile {:no_warn_undefined, [:gen_smtp_client, :mimemail]}
 
-  # `:mimemail` is an optional Erlang dependency whose success contract is not
-  # available to Dialyzer when it builds this package's isolated PLT.
-  @dialyzer {:nowarn_function, decode: 2}
-
   @spec available?() :: boolean()
   def available?, do: Code.ensure_loaded?(:gen_smtp_client)
 
   @spec decode(binary(), keyword()) :: {:ok, tuple()} | {:error, term()}
   def decode(raw, opts \\ []) when is_binary(raw) do
     erl_opts = [{:allow_missing_version, true}, {:encoding, :none}] ++ opts
-    {:ok, :mimemail.decode(raw, erl_opts)}
+    # Dynamic dispatch is intentional at this optional-dependency boundary. It
+    # avoids importing incomplete third-party success typing while the caller
+    # retains the explicit availability check and degraded path.
+    {:ok, apply(:mimemail, :decode, [raw, erl_opts])}
   rescue
     e -> {:error, {:error, e}}
   catch

@@ -235,9 +235,6 @@ defmodule MailglassInbound.Ingress.Providers.SES do
 
       {:ok, _} ->
         raise_s3_metadata_error!()
-
-      {:error, reason} ->
-        raise_s3_fetch_error!(reason)
     end
 
     {:ok, body} = S3Fetcher.Retry.fetch_with_retry(fetcher, bucket, key, retry_opts)
@@ -262,6 +259,7 @@ defmodule MailglassInbound.Ingress.Providers.SES do
     end
   end
 
+  @spec raise_s3_size_error!(pos_integer()) :: no_return()
   defp raise_s3_size_error!(max_bytes) do
     raise %S3FetchError{
       type: :s3_fetch_failed,
@@ -270,19 +268,11 @@ defmodule MailglassInbound.Ingress.Providers.SES do
     }
   end
 
+  @spec raise_s3_metadata_error!() :: no_return()
   defp raise_s3_metadata_error! do
     raise %S3FetchError{
       type: :s3_fetch_failed,
       message: "Inbound SES S3 object metadata is malformed",
-      context: %{}
-    }
-  end
-
-  defp raise_s3_fetch_error!(reason) do
-    raise %S3FetchError{
-      type: :s3_fetch_failed,
-      message: "Inbound SES S3 metadata retrieval failed",
-      cause: reason,
       context: %{}
     }
   end
