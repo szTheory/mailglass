@@ -223,7 +223,25 @@ defmodule MailglassInbound.Ingress.Providers.SES do
   defp fetch_s3_body!(bucket, key, config) when is_binary(bucket) and is_binary(key) do
     fetcher = s3_fetcher(config)
     retry_opts = Map.get(config, :s3_retry_opts, [])
+    max_bytes = s3_max_bytes!(config)
+
+    case fetcher.head(bucket, key, retry_opts) do
+      {:ok, %{content_length: bytes}}
+      when is_integer(bytes) and bytes >= 0 and bytes <= max_bytes ->
+        :ok
+
+      {:ok, %{content_length: bytes}} when is_integer(bytes) and bytes > max_bytes ->
+        raise_s3_size_error!(max_bytes)
+
+      {:ok, _} ->
+        raise_s3_metadata_error!()
+
+      {:error, reason} ->
+        raise_s3_fetch_error!(reason)
+    end
+
     {:ok, body} = S3Fetcher.Retry.fetch_with_retry(fetcher, bucket, key, retry_opts)
+    if byte_size(body) > max_bytes, do: raise_s3_size_error!(max_bytes)
     body
   end
 
@@ -231,6 +249,40 @@ defmodule MailglassInbound.Ingress.Providers.SES do
     raise %S3FetchError{
       type: :s3_fetch_failed,
       message: "Inbound SES S3 action is missing bucketName/objectKey",
+      context: %{}
+    }
+  end
+
+  @default_s3_max_bytes 40 * 1024 * 1024
+
+  defp s3_max_bytes!(config) do
+    case Map.get(config, :s3_max_bytes, @default_s3_max_bytes) do
+      bytes when is_integer(bytes) and bytes > 0 -> bytes
+      _ -> raise_s3_metadata_error!()
+    end
+  end
+
+  defp raise_s3_size_error!(max_bytes) do
+    raise %S3FetchError{
+      type: :s3_fetch_failed,
+      message: "Inbound SES S3 object exceeds configured byte limit",
+      context: %{max_bytes: max_bytes}
+    }
+  end
+
+  defp raise_s3_metadata_error! do
+    raise %S3FetchError{
+      type: :s3_fetch_failed,
+      message: "Inbound SES S3 object metadata is malformed",
+      context: %{}
+    }
+  end
+
+  defp raise_s3_fetch_error!(reason) do
+    raise %S3FetchError{
+      type: :s3_fetch_failed,
+      message: "Inbound SES S3 metadata retrieval failed",
+      cause: reason,
       context: %{}
     }
   end

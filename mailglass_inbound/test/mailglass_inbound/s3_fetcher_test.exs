@@ -16,6 +16,13 @@ defmodule MailglassInbound.S3FetcherTest do
   end
 
   describe "S3Fetcher.Fake (test default)" do
+    test "returns configured metadata independently of the object body" do
+      S3Fetcher.Fake.put("inbound-bucket", "msg-key-1", "raw mime body")
+
+      assert {:ok, %{content_length: 13}} =
+               S3Fetcher.Fake.head("inbound-bucket", "msg-key-1", [])
+    end
+
     test "returns a configured {:ok, binary} for a canned bucket/key" do
       S3Fetcher.Fake.put("inbound-bucket", "msg-key-1", "raw mime body")
 
@@ -43,6 +50,13 @@ defmodule MailglassInbound.S3FetcherTest do
   end
 
   describe "S3Fetcher.ExAwsS3 (real adapter, gated)" do
+    test "extracts ContentLength from a metadata-only gateway response" do
+      stub = fn _bucket, _key -> {:ok, %{content_length: 42, body: "must not be used"}} end
+
+      assert {:ok, %{content_length: 42}} =
+               S3Fetcher.ExAwsS3.head("bucket", "key", gateway_head_object: stub)
+    end
+
     test "extracts :body from the gateway's {:ok, %{body: binary}} (D-46-15)" do
       # Inject a stub gateway via opts so we exercise the :body extraction
       # without ExAws being installed.
