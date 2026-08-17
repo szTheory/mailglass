@@ -78,18 +78,12 @@ defmodule Mailglass.Outbound do
     Clock,
     Events,
     Message,
-    Renderer,
     Repo,
-    Suppression,
-    RateLimiter,
-    Stream,
     Tenancy,
     Telemetry
   }
 
   alias Mailglass.Outbound.{Delivery, Dispatch, Persistence, Preflight, Projector, Routes}
-  alias Mailglass.Tracking
-
   import Kernel, except: [send: 2]
 
   # =========================================================
@@ -515,39 +509,7 @@ defmodule Mailglass.Outbound do
   end
 
   defp preflight_many(messages) do
-    tracking_passed =
-      messages
-      |> Enum.with_index()
-      |> Enum.map(fn {msg, index} ->
-        :ok = Tracking.Guard.assert_safe!(msg)
-        {:ok, index, msg}
-      end)
-
-    suppression_results =
-      tracking_passed
-      |> Enum.map(fn {:ok, _index, msg} -> msg end)
-      |> Suppression.check_many_before_send()
-
-    suppression_preflight =
-      tracking_passed
-      |> Enum.zip(suppression_results)
-      |> Enum.map(fn {{:ok, index, msg}, suppression_result} ->
-        preflight_after_suppression(msg, index, suppression_result)
-      end)
-
-    suppression_preflight
-  end
-
-  defp preflight_after_suppression(%Message{} = msg, index, suppression_result) do
-    with :ok <- suppression_result,
-         :ok <- RateLimiter.check(msg),
-         :ok <- Stream.policy_check(msg),
-         {:ok, rendered} <- Renderer.render(msg) do
-      {:ok, index, Preflight.prepare(rendered)}
-    else
-      {:error, err} -> {:error, index, err, msg}
-      {:error, _step, err, _} -> {:error, index, to_error(err), msg}
-    end
+    Preflight.run_many(messages)
   end
 
   defp restore_batch_order(route_indexes, deliveries, failed_deliveries) do
