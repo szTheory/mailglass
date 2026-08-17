@@ -108,6 +108,25 @@ defmodule MailglassInbound.Ingress.PersistTest do
     refute Enum.any?(inserts, &match?(%MailglassInbound.InboundRecords.ReplayRun{}, &1))
   end
 
+  test "persists a routes-only matched mailbox binding with the evidence row" do
+    {:ok, result} =
+      Persist.persist(valid_handoff(),
+        repo: FakeRepo,
+        routes: TestRouter.__mailglass_inbound_routes__()
+      )
+
+    evidence =
+      Process.get(:mailglass_inbound_inserts)
+      |> Enum.find(&match?(%InboundEvidence{}, &1))
+
+    assert result.status == :inserted
+
+    assert evidence.verification_facts["mailglass_execution_route"] == %{
+             "status" => "matched",
+             "mailbox" => Atom.to_string(SupportMailbox)
+           }
+  end
+
   test "collapses duplicates on the provider idempotency anchor without reinserting" do
     Process.put(
       :mailglass_inbound_duplicate_record,

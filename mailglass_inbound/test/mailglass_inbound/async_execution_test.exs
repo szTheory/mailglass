@@ -88,6 +88,22 @@ defmodule MailglassInbound.AsyncExecutionTest do
     end
   end
 
+  defmodule RoutesOnlyWorkerLoader do
+    def load(_args) do
+      {:ok,
+       %{
+         status: :inserted,
+         route: %{status: :matched, mailbox: TestMailbox},
+         message: %InboundMessage{tenant_id: "tenant-123", provider: :postmark},
+         inbound_record: %{id: "record-123", tenant_id: "tenant-123"},
+         inbound_evidence: %{
+           id: "evidence-123",
+           verification_facts: MailglassInbound.AsyncExecutionTest.routes_only_binding()
+         }
+       }}
+    end
+  end
+
   defmodule BarrierExecution do
     def execute(_persisted, _opts \\ []) do
       parent = Application.fetch_env!(:mailglass_inbound, :async_execution_test_pid)
@@ -185,6 +201,40 @@ defmodule MailglassInbound.AsyncExecutionTest do
     refute_received :worker_executed
   end
 
+  test "routes-only durable bindings enqueue, survive registry restart, and reject mailbox tampering" do
+    persisted = persisted_payload(routes_only_binding())
+
+    assert {:ok, %{status: :queued, mode: :oban}} =
+             Execution.dispatch(persisted,
+               optional_deps: ObanGateway,
+               routes: [%MailglassInbound.Router.Route{mailbox: TestMailbox}]
+             )
+
+    args = Process.get(:mailglass_inbound_async_enqueue_attrs)
+    assert is_map(args)
+
+    registry = Process.whereis(MailglassInbound.Execution.RouterRegistry)
+    Process.exit(registry, :kill)
+    wait_for_registry(registry)
+
+    assert :ok =
+             MailglassInbound.Execution.Worker.perform(%Oban.Job{args: args},
+               loader: RoutesOnlyWorkerLoader,
+               execution: WorkerExecution
+             )
+
+    assert_received :worker_executed
+
+    assert {:cancel, :permanent_failure} =
+             MailglassInbound.Execution.Worker.perform(
+               %Oban.Job{args: Map.put(args, "mailbox", Atom.to_string(OtherMailbox))},
+               loader: RoutesOnlyWorkerLoader,
+               execution: WorkerExecution
+             )
+
+    refute_received :worker_executed
+  end
+
   test "falls back to bounded task supervisor execution and marks the dispatch as best effort" do
     persisted = persisted_payload()
 
@@ -270,7 +320,7 @@ defmodule MailglassInbound.AsyncExecutionTest do
     assert log =~ "best-effort"
   end
 
-  defp persisted_payload do
+  defp persisted_payload(verification_facts \\ route_binding()) do
     %{
       status: :inserted,
       route: %{status: :matched, mailbox: TestMailbox},
@@ -280,7 +330,7 @@ defmodule MailglassInbound.AsyncExecutionTest do
         envelope_recipient: "support@example.com"
       },
       inbound_record: %{id: "record-123", tenant_id: "tenant-123"},
-      inbound_evidence: %{id: "evidence-123", verification_facts: route_binding()}
+      inbound_evidence: %{id: "evidence-123", verification_facts: verification_facts}
     }
   end
 
@@ -290,6 +340,15 @@ defmodule MailglassInbound.AsyncExecutionTest do
         "status" => "matched",
         "mailbox" => Atom.to_string(TestMailbox),
         "router" => Atom.to_string(TestRouter)
+      }
+    }
+  end
+
+  def routes_only_binding do
+    %{
+      "mailglass_execution_route" => %{
+        "status" => "matched",
+        "mailbox" => Atom.to_string(TestMailbox)
       }
     }
   end
