@@ -35,18 +35,31 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert consumer_install =~ "run: bash scripts/consumer_install_smoke.sh"
   end
 
-  test "2.4.0 consumer smoke fails closed while including inbound 2.1.1" do
+  test "consumer smoke resolves inbound from the checked-out release and fails closed" do
     workflow = File.read!(@workflow_path)
+    cron_guard = extract_job!(workflow, "cron-guard", "wait-for-index")
     consumer_install = extract_job!(workflow, "consumer-install", "published-trust-journey")
 
-    assert consumer_install =~ "VERSION_INBOUND: 2.1.1"
-    assert consumer_install =~ "mailglass_inbound 2.1.1"
+    assert cron_guard =~
+             "version_inbound: ${{ steps.read-inbound-version.outputs.version_inbound }}"
+
+    assert cron_guard =~ "ref: ${{ steps.guard.outputs.release_ref }}"
+    assert cron_guard =~ "id: read-inbound-version"
+    assert cron_guard =~ ~s(if [ -f mailglass_inbound/mix.exs ]; then)
+    assert cron_guard =~ ~s(echo "version_inbound=${VERSION_INBOUND}" >> "$GITHUB_OUTPUT")
+
+    assert consumer_install =~
+             "VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}"
+
+    assert consumer_install =~
+             "Published consumer proof could not resolve mailglass_inbound from the release ref."
+
+    assert consumer_install =~ ~s(mix hex.info mailglass_inbound "${VERSION_INBOUND}")
     assert consumer_install =~ "exit 1"
     refute consumer_install =~ "Skipping inbound consumer dependency"
 
     assert consumer_install =~ "DEP_MODE: hex"
     assert consumer_install =~ "VERSION: ${{ needs.cron-guard.outputs.version }}"
-    assert consumer_install =~ "VERSION_INBOUND: 2.1.1"
     assert consumer_install =~ "INCLUDE_INBOUND: true"
   end
 
