@@ -1,4 +1,11 @@
 defmodule Mix.Tasks.Mailglass.Gen.Migration do
+  @moduledoc """
+  Generates install or upgrade migration wrappers for a configured host Ecto repo.
+
+  Run `mix help mailglass.gen.migration` for the supported repository, upgrade,
+  offline-version, and legacy-repair options.
+  """
+
   use Boundary, classify_to: Mailglass
   use Mix.Task
 
