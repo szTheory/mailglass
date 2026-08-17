@@ -42,6 +42,20 @@ defmodule Mailglass.Migration do
     migrator(opts).down(opts)
   end
 
+  @doc false
+  @spec repair_legacy_up(keyword()) :: :ok
+  def repair_legacy_up(opts) when is_list(opts) do
+    opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
+    Mailglass.Migrations.LegacyToy.repair_up(opts)
+  end
+
+  @doc false
+  @spec repair_legacy_down(keyword()) :: :ok
+  def repair_legacy_down(opts) when is_list(opts) do
+    opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
+    Mailglass.Migrations.LegacyToy.repair_down(opts)
+  end
+
   @doc """
   Returns the currently-applied migration version (0 only when its anchor is absent).
 
