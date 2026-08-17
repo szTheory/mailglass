@@ -28,10 +28,10 @@ defmodule MailglassInbound.Execution do
       :oban ->
         worker = Keyword.get(opts, :worker, MailglassInbound.Execution.Worker)
 
-        with {:ok, route_authority} <- register_route_authority(persisted, opts) do
+        with {:ok, _binding} <- route_binding(persisted.inbound_evidence) do
           case optional_deps.enqueue_inbound_execution(
                  worker,
-                 enqueue_attrs(persisted, source, route_authority),
+                 enqueue_attrs(persisted, source),
                  opts
                ) do
             {:ok, _job} -> {:ok, %{status: :queued, mode: :oban}}
@@ -94,7 +94,7 @@ defmodule MailglassInbound.Execution do
          {:ok, provider} <- decode_provider(record.provider),
          %InboundEvidence{} = evidence <-
            load_evidence(repo, inbound_evidence_id, inbound_record_id, tenant_id),
-         {:ok, route} <- validate_job_route(job_args, opts) do
+         {:ok, route} <- validate_job_route(job_args, evidence, opts) do
       {:ok,
        %{
          status: :inserted,
@@ -113,49 +113,26 @@ defmodule MailglassInbound.Execution do
   def load(_job_args, _opts), do: {:error, :invalid_job_args}
 
   @doc false
-  @spec validate_job_route(map(), keyword()) ::
+  @spec validate_job_route(map(), InboundEvidence.t() | map(), keyword()) ::
           {:ok, map()} | {:error, :invalid_job_args | :route_authority_unavailable}
-  def validate_job_route(%{"route_status" => "no_match"} = job_args, _opts) do
-    # Existing no-match jobs predate the explicit nil mailbox field, but a
-    # non-empty value is contradictory job data and must not be accepted.
-    if Map.get(job_args, "mailbox") in [nil, ""] do
-      {:ok, %{status: :no_match}}
+  def validate_job_route(job_args, evidence, _opts) when is_map(job_args) do
+    with {:ok, binding} <- route_binding(evidence),
+         :ok <- selectors_match?(job_args, binding),
+         {:ok, route} <- route_from_binding(binding) do
+      {:ok, route}
     else
-      {:error, :invalid_job_args}
-    end
-  end
-
-  def validate_job_route(
-        %{"route_status" => "matched", "mailbox" => mailbox} = job_args,
-        opts
-      )
-      when is_binary(mailbox) and mailbox != "" and is_list(opts) do
-    case resolve_mailbox(
-           mailbox,
-           Keyword.put(opts, :route_authority, Map.get(job_args, "route_authority"))
-         ) do
-      {:ok, module} -> {:ok, %{status: :matched, mailbox: module}}
+      {:error, :missing_binding} -> {:error, :route_authority_unavailable}
       {:error, :unavailable} -> {:error, :route_authority_unavailable}
-      {:error, :not_authorized} -> {:error, :invalid_job_args}
-      {:error, :invalid_router} -> {:error, :invalid_job_args}
+      {:error, _reason} -> {:error, :invalid_job_args}
     end
   end
 
-  def validate_job_route(_job_args, _opts), do: {:error, :invalid_job_args}
+  def validate_job_route(_job_args, _evidence, _opts), do: {:error, :invalid_job_args}
 
   @doc false
-  @spec resolve_mailbox(String.t(), keyword()) :: {:ok, module()} | {:error, term()}
-  def resolve_mailbox(mailbox, opts \\ []) when is_binary(mailbox) and is_list(opts) do
-    case Keyword.get(opts, :route_authority) do
-      authority when is_binary(authority) and authority != "" ->
-        RouterRegistry.resolve(authority, mailbox)
-
-      nil ->
-        resolve_from_registered_or_configured_router(mailbox, opts)
-
-      _other ->
-        {:error, :not_authorized}
-    end
+  @spec route_from_evidence(InboundEvidence.t() | map()) :: {:ok, map()} | {:error, term()}
+  def route_from_evidence(evidence) do
+    with {:ok, binding} <- route_binding(evidence), do: route_from_binding(binding)
   end
 
   defp load_record(repo, inbound_record_id, tenant_id) do
@@ -266,15 +243,13 @@ defmodule MailglassInbound.Execution do
            inbound_record: %{id: inbound_record_id},
            inbound_evidence: %{id: inbound_evidence_id}
          },
-         source,
-         route_authority
+         source
        ) do
     %{
       "inbound_record_id" => inbound_record_id,
       "inbound_evidence_id" => inbound_evidence_id,
       "route_status" => route_status(route),
       "mailbox" => route_mailbox(route),
-      "route_authority" => route_authority,
       "source" => Atom.to_string(source),
       "mailglass_tenant_id" => message.tenant_id
     }
@@ -366,41 +341,86 @@ defmodule MailglassInbound.Execution do
     |> Map.new()
   end
 
-  defp register_route_authority(%{route: %{status: :no_match}}, _opts), do: {:ok, nil}
+  @route_binding_key "mailglass_execution_route"
 
-  defp register_route_authority(%{route: %{status: :matched}}, opts) do
-    router = Keyword.get(opts, :router, Application.get_env(:mailglass_inbound, :router))
+  defp route_binding(%{verification_facts: facts}) when is_map(facts),
+    do: route_binding_from_facts(facts)
 
-    case RouterRegistry.register_router(router) do
-      {:ok, authority} -> {:ok, authority}
-      {:error, _reason} -> {:error, :route_authority_unavailable}
+  defp route_binding(_evidence), do: {:error, :missing_binding}
+
+  defp route_binding_from_facts(facts) do
+    case Map.get(facts, @route_binding_key) do
+      %{"status" => "no_match"} = binding ->
+        {:ok, binding}
+
+      %{"status" => "matched", "mailbox" => mailbox, "router" => router} = binding
+      when is_binary(mailbox) and is_binary(router) ->
+        {:ok, binding}
+
+      _ ->
+        {:error, :missing_binding}
+    end
+  rescue
+    ArgumentError -> {:error, :missing_binding}
+  end
+
+  defp selectors_match?(job_args, %{"status" => "no_match"}) do
+    if Map.get(job_args, "route_status") == "no_match" and Map.get(job_args, "mailbox") in [nil, ""] do
+      :ok
+    else
+      {:error, :selector_mismatch}
     end
   end
 
-  defp register_route_authority(_persisted, _opts), do: {:error, :route_authority_unavailable}
-
-  # Persisted job and execution-run strings are never resolved into atoms. The
-  # finite registry is populated only from trusted router modules supplied to the
-  # Plug/dispatch boundary. App config remains an additive fallback for existing
-  # deployments that intentionally configure their router globally.
-  defp resolve_from_registered_or_configured_router(mailbox, opts) do
-    router = Keyword.get(opts, :router, Application.get_env(:mailglass_inbound, :router))
-
-    case router do
-      router when is_atom(router) ->
-        with {:ok, authority} <- RouterRegistry.register_router(router) do
-          case RouterRegistry.resolve(authority, mailbox) do
-            {:error, :unavailable} -> {:error, :not_authorized}
-            result -> result
-          end
-        end
-
-      nil ->
-        RouterRegistry.resolve_any(mailbox)
-
-      _other ->
-        {:error, :not_authorized}
+  defp selectors_match?(job_args, %{"status" => "matched", "mailbox" => mailbox}) do
+    if Map.get(job_args, "route_status") == "matched" and Map.get(job_args, "mailbox") == mailbox do
+      :ok
+    else
+      {:error, :selector_mismatch}
     end
+  end
+
+  defp route_from_binding(%{"status" => "no_match"}), do: {:ok, %{status: :no_match}}
+
+  defp route_from_binding(%{"status" => "matched", "mailbox" => mailbox, "router" => router}) do
+    case discover_bound_mailbox(router, mailbox) do
+      {:ok, module} -> {:ok, %{status: :matched, mailbox: module}}
+      error -> error
+    end
+  end
+
+  defp discover_bound_mailbox(router_name, mailbox_name) do
+    router =
+      :code.all_loaded()
+      |> Enum.find_value(fn {module, _path} ->
+        if Atom.to_string(module) == router_name and
+             function_exported?(module, :__mailglass_inbound_routes__, 0),
+           do: module
+      end)
+
+    with router when is_atom(router) and not is_nil(router) <- router,
+         {:ok, _authority} <- RouterRegistry.register_router(router),
+         module when is_atom(module) and not is_nil(module) <-
+           router.__mailglass_inbound_routes__()
+           |> Enum.find_value(fn
+             %{mailbox: module} when is_atom(module) ->
+               if Atom.to_string(module) == mailbox_name, do: module
+
+             _ ->
+               nil
+           end),
+         true <- mailbox_module?(module) do
+      {:ok, module}
+    else
+      nil -> {:error, :unavailable}
+      false -> {:error, :not_authorized}
+      {:error, _reason} = error -> error
+    end
+  end
+
+  defp mailbox_module?(module) do
+    function_exported?(module, :process, 1) and
+      MailglassInbound.Mailbox in (module.module_info(:attributes)[:behaviour] || [])
   end
 
   defp route_status(%{status: status}) when is_atom(status), do: Atom.to_string(status)

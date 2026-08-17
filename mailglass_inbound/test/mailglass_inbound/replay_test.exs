@@ -295,7 +295,11 @@ defmodule MailglassInbound.ReplayTest do
 
     test "fails explicitly when only no-match fresh history exists" do
       record = valid_inbound_record()
-      evidence = valid_inbound_evidence(record.id)
+
+      evidence = %{
+        valid_inbound_evidence(record.id)
+        | verification_facts: %{"mailglass_execution_route" => %{"status" => "no_match"}}
+      }
 
       no_match_run = %ExecutionRun{
         inbound_record_id: record.id,
@@ -319,7 +323,17 @@ defmodule MailglassInbound.ReplayTest do
 
     test "rejects a loaded non-mailbox persisted identity without invocation" do
       record = valid_inbound_record()
-      evidence = valid_inbound_evidence(record.id)
+
+      evidence = %{
+        valid_inbound_evidence(record.id)
+        | verification_facts: %{
+            "mailglass_execution_route" => %{
+              "status" => "matched",
+              "mailbox" => Atom.to_string(LoadedProcessSentinel),
+              "router" => Atom.to_string(ReplayRouter)
+            }
+          }
+      }
 
       sentinel_run = %ExecutionRun{
         inbound_record_id: record.id,
@@ -345,7 +359,7 @@ defmodule MailglassInbound.ReplayTest do
 
     test "fails explicitly when the record predates execution lineage capture" do
       record = valid_inbound_record()
-      evidence = valid_inbound_evidence(record.id)
+      evidence = %{valid_inbound_evidence(record.id) | verification_facts: %{auth: :basic_auth}}
 
       Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence, nil, nil])
 
@@ -427,7 +441,14 @@ defmodule MailglassInbound.ReplayTest do
       raw_payload: %{"from" => "sender@example.com"},
       raw_headers: %{"content-type" => ["multipart/form-data"]},
       raw_mime: "Message-ID: <rfc-message@example.com>\r\n\r\nhello",
-      verification_facts: %{auth: :basic_auth},
+      verification_facts: %{
+        "mailglass_execution_route" => %{
+          "status" => "matched",
+          "mailbox" => Atom.to_string(SupportMailbox),
+          "router" => Atom.to_string(ReplayRouter)
+        },
+        auth: :basic_auth
+      },
       parse_warnings: %{},
       attachment_blobs: %{}
     }

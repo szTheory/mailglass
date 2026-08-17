@@ -18,8 +18,8 @@ if Code.ensure_loaded?(Oban.Worker) do
         execution = Keyword.get(opts, :execution, Execution)
 
         with {:ok, source} <- source_from_args(args),
-             {:ok, _route} <- Execution.validate_job_route(args, []),
              {:ok, persisted} <- loader.load(args),
+             {:ok, _route} <- Execution.validate_job_route(args, persisted.inbound_evidence, []),
              {:ok, result} <- execution.execute(persisted, source: source) do
           normalize_result(result)
         else

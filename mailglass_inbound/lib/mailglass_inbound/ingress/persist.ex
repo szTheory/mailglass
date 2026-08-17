@@ -9,6 +9,8 @@ defmodule MailglassInbound.Ingress.Persist do
   alias MailglassInbound.InboundRecords.InboundRecord
   alias MailglassInbound.Router.Matcher
 
+  @route_binding_key "mailglass_execution_route"
+
   # Returns the schema-prefix option that must be passed to all direct repo
   # calls (insert, one, all) so they route to the configured Postgres schema
   # This mirrors what `MailglassInbound.Repo.put_prefix/1`
@@ -31,6 +33,8 @@ defmodule MailglassInbound.Ingress.Persist do
       when is_binary(tenant_id) and is_list(opts) do
     repo = Keyword.get(opts, :repo, MailglassInbound.Repo)
     provider = normalize_provider(provider)
+    route_result = route_compatibility(message, opts)
+    evidence = put_route_binding(handoff.evidence, route_result, opts)
 
     # WR-03: compute the diagnostic suppression flag BEFORE the write transaction.
     # The lookup hits the CORE suppression store (a different repo / connection
@@ -52,11 +56,11 @@ defmodule MailglassInbound.Ingress.Persist do
                 tenant_id,
                 provider,
                 message,
-                handoff.evidence,
+                evidence,
                 suppression_flagged
               )
             end)
-            |> resolve_fingerprint_race(repo, tenant_id, provider, message, handoff.evidence)
+            |> resolve_fingerprint_race(repo, tenant_id, provider, message, evidence)
 
           {transact_result,
            %{
@@ -70,8 +74,6 @@ defmodule MailglassInbound.Ingress.Persist do
 
     case result do
       {:ok, payload} ->
-        route_result = route_compatibility(message, opts)
-
         {:ok,
          payload
          |> Map.put(:route, route_result)
@@ -424,6 +426,42 @@ defmodule MailglassInbound.Ingress.Persist do
       :no_match -> %{status: :no_match}
     end
   end
+
+  # This binding is written with the canonical record and raw evidence in the
+  # same transaction. It is execution authority, not provider-supplied data.
+  # The worker rehydrates it from evidence and only uses job values as a
+  # mismatch check, never as a mailbox selector.
+  defp put_route_binding(evidence, %{status: :no_match}, _opts) do
+    Map.update(
+      evidence,
+      :verification_facts,
+      %{@route_binding_key => %{"status" => "no_match"}},
+      fn facts ->
+        Map.put(facts || %{}, @route_binding_key, %{"status" => "no_match"})
+      end
+    )
+  end
+
+  defp put_route_binding(evidence, %{status: :matched, mailbox: mailbox}, opts)
+       when is_atom(mailbox) do
+    router = Keyword.get(opts, :router)
+
+    binding =
+      case router_name(router) do
+        nil ->
+          %{"status" => "matched", "mailbox" => Atom.to_string(mailbox)}
+
+        router_name ->
+          %{"status" => "matched", "mailbox" => Atom.to_string(mailbox), "router" => router_name}
+      end
+
+    Map.update(evidence, :verification_facts, %{@route_binding_key => binding}, fn facts ->
+      Map.put(facts || %{}, @route_binding_key, binding)
+    end)
+  end
+
+  defp router_name(router) when is_atom(router) and not is_nil(router), do: Atom.to_string(router)
+  defp router_name(_router), do: nil
 
   defp duplicate_constraint?(changeset) do
     Enum.any?(changeset.errors, fn

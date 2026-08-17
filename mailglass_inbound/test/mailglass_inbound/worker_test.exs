@@ -24,7 +24,10 @@ defmodule MailglassInbound.WorkerTest do
            envelope_recipient: "support@example.com"
          },
          inbound_record: %{id: record_id, tenant_id: "tenant-123"},
-         inbound_evidence: %{id: evidence_id}
+         inbound_evidence: %{
+           id: evidence_id,
+           verification_facts: MailglassInbound.WorkerTest.route_binding()
+         }
        }}
     end
   end
@@ -74,7 +77,10 @@ defmodule MailglassInbound.WorkerTest do
            envelope_recipient: "support@example.com"
          },
          inbound_record: %{id: "record-123", tenant_id: "tenant-123"},
-         inbound_evidence: %{id: "evidence-123"}
+         inbound_evidence: %{
+           id: "evidence-123",
+           verification_facts: MailglassInbound.WorkerTest.route_binding()
+         }
        }}
     end
   end
@@ -213,7 +219,7 @@ defmodule MailglassInbound.WorkerTest do
              )
 
     refute_received :sentinel_invoked
-    refute Process.get(:mailglass_inbound_worker_load_args)
+    assert Process.get(:mailglass_inbound_worker_load_args)
     refute Process.get(:mailglass_inbound_worker_execute_opts)
   end
 
@@ -231,21 +237,21 @@ defmodule MailglassInbound.WorkerTest do
              )
 
     refute_received :sentinel_invoked
-    refute Process.get(:mailglass_inbound_worker_load_args)
+    assert Process.get(:mailglass_inbound_worker_load_args)
     refute Process.get(:mailglass_inbound_worker_execute_opts)
   end
 
-  test "retries when a registered route authority is unavailable instead of cancelling work" do
+  test "ignores legacy route authority selectors in favor of durable evidence" do
     args = Map.put(job_with_source("fresh").args, "route_authority", "Elixir.MissingRouter")
 
-    assert {:error, :route_authority_unavailable} =
+    assert :ok =
              MailglassInbound.Execution.Worker.perform(%Oban.Job{args: args},
                loader: Loader,
                execution: ExecutionSuccess
              )
 
-    refute Process.get(:mailglass_inbound_worker_load_args)
-    refute Process.get(:mailglass_inbound_worker_execute_opts)
+    assert Process.get(:mailglass_inbound_worker_load_args)
+    assert Process.get(:mailglass_inbound_worker_execute_opts)
   end
 
   defp job_with_source(:absent) do
@@ -261,6 +267,16 @@ defmodule MailglassInbound.WorkerTest do
         "mailbox" => "Elixir.MailglassInbound.WorkerTest.AcceptMailbox",
         "source" => source,
         "mailglass_tenant_id" => "tenant-123"
+      }
+    }
+  end
+
+  def route_binding do
+    %{
+      "mailglass_execution_route" => %{
+        "status" => "matched",
+        "mailbox" => Atom.to_string(AcceptMailbox),
+        "router" => Atom.to_string(Router)
       }
     }
   end

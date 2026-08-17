@@ -29,7 +29,7 @@ defmodule MailglassInbound.Internal.Replay do
 
     with %InboundRecord{} = record <- load_record(repo, inbound_record_id, tenant_id),
          %InboundEvidence{} = evidence <- load_evidence(repo, inbound_record_id, tenant_id),
-         {:ok, mailbox} <- resolve_mailbox(repo, inbound_record_id, tenant_id, opts),
+         {:ok, mailbox} <- resolve_mailbox(repo, inbound_record_id, tenant_id, evidence),
          payload = replay_payload(record, evidence, mailbox),
          {:ok, result} <- execution.execute(payload, source: :replay) do
       {:ok, result}
@@ -71,10 +71,24 @@ defmodule MailglassInbound.Internal.Replay do
     |> repo.one(schema_opts())
   end
 
-  defp resolve_mailbox(repo, inbound_record_id, tenant_id, opts) do
+  defp resolve_mailbox(repo, inbound_record_id, tenant_id, evidence) do
+    case Execution.route_from_evidence(evidence) do
+      {:ok, %{status: :matched, mailbox: mailbox}} ->
+        {:ok, mailbox}
+
+      {:ok, %{status: :no_match}} ->
+        {:error, {:replay_mailbox_missing, %{reason: :no_prior_match}}}
+
+      {:error, _reason} ->
+        legacy_replay_mailbox_error(repo, inbound_record_id, tenant_id)
+    end
+  end
+
+  defp legacy_replay_mailbox_error(repo, inbound_record_id, tenant_id) do
     case latest_matched_fresh_run(repo, inbound_record_id, tenant_id) do
       %ExecutionRun{mailbox: mailbox} when is_binary(mailbox) and mailbox != "" ->
-        resolve_mailbox_module(mailbox, opts)
+        # Pre-binding rows cannot safely resolve a persisted module name.
+        {:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}}
 
       nil ->
         case latest_fresh_run(repo, inbound_record_id, tenant_id) do
@@ -87,19 +101,6 @@ defmodule MailglassInbound.Internal.Replay do
           _other ->
             {:error, {:replay_mailbox_missing, %{reason: :no_prior_match}}}
         end
-    end
-  end
-
-  defp resolve_mailbox_module(mailbox, opts) do
-    case Execution.resolve_mailbox(mailbox, opts) do
-      {:ok, module} ->
-        {:ok, module}
-
-      {:error, :unavailable} ->
-        {:error, {:replay_mailbox_missing, %{reason: :authority_unavailable}}}
-
-      {:error, _reason} ->
-        {:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}}
     end
   end
 

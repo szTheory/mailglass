@@ -17,6 +17,17 @@ defmodule MailglassInbound.AsyncExecutionTest do
     route(TestMailbox, recipient: "support@example.com")
   end
 
+  defmodule OtherMailbox do
+    @behaviour MailglassInbound.Mailbox
+    def process(_message), do: :accept
+  end
+
+  defmodule OtherRouter do
+    use MailglassInbound.Router
+
+    route(OtherMailbox, recipient: "other@example.com")
+  end
+
   defmodule ObanGateway do
     def runner, do: :oban
 
@@ -62,7 +73,10 @@ defmodule MailglassInbound.AsyncExecutionTest do
          route: %{status: :matched, mailbox: TestMailbox},
          message: %InboundMessage{tenant_id: "tenant-123", provider: :postmark},
          inbound_record: %{id: "record-123", tenant_id: "tenant-123"},
-         inbound_evidence: %{id: "evidence-123"}
+         inbound_evidence: %{
+           id: "evidence-123",
+           verification_facts: MailglassInbound.AsyncExecutionTest.route_binding()
+         }
        }}
     end
   end
@@ -122,7 +136,6 @@ defmodule MailglassInbound.AsyncExecutionTest do
              "inbound_evidence_id" => "evidence-123",
              "route_status" => "matched",
              "mailbox" => "Elixir.MailglassInbound.AsyncExecutionTest.TestMailbox",
-             "route_authority" => "Elixir.MailglassInbound.AsyncExecutionTest.TestRouter",
              "source" => "fresh",
              "mailglass_tenant_id" => "tenant-123"
            }
@@ -138,6 +151,10 @@ defmodule MailglassInbound.AsyncExecutionTest do
     args = Process.get(:mailglass_inbound_async_enqueue_attrs)
     assert is_map(args)
 
+    registry = Process.whereis(MailglassInbound.Execution.RouterRegistry)
+    Process.exit(registry, :kill)
+    wait_for_registry(registry)
+
     assert :ok =
              MailglassInbound.Execution.Worker.perform(%Oban.Job{args: args},
                loader: WorkerLoader,
@@ -145,6 +162,27 @@ defmodule MailglassInbound.AsyncExecutionTest do
              )
 
     assert_received :worker_executed
+  end
+
+  test "durable evidence rejects a job switched to another registered router mailbox" do
+    persisted = persisted_payload()
+
+    assert {:ok, %{status: :queued, mode: :oban}} =
+             Execution.dispatch(persisted, optional_deps: ObanGateway, router: TestRouter)
+
+    assert {:ok, _} = MailglassInbound.Execution.RouterRegistry.register_router(OtherRouter)
+
+    args =
+      Process.get(:mailglass_inbound_async_enqueue_attrs)
+      |> Map.put("mailbox", Atom.to_string(OtherMailbox))
+
+    assert {:cancel, :permanent_failure} =
+             MailglassInbound.Execution.Worker.perform(%Oban.Job{args: args},
+               loader: WorkerLoader,
+               execution: WorkerExecution
+             )
+
+    refute_received :worker_executed
   end
 
   test "falls back to bounded task supervisor execution and marks the dispatch as best effort" do
@@ -242,7 +280,31 @@ defmodule MailglassInbound.AsyncExecutionTest do
         envelope_recipient: "support@example.com"
       },
       inbound_record: %{id: "record-123", tenant_id: "tenant-123"},
-      inbound_evidence: %{id: "evidence-123"}
+      inbound_evidence: %{id: "evidence-123", verification_facts: route_binding()}
     }
+  end
+
+  def route_binding do
+    %{
+      "mailglass_execution_route" => %{
+        "status" => "matched",
+        "mailbox" => Atom.to_string(TestMailbox),
+        "router" => Atom.to_string(TestRouter)
+      }
+    }
+  end
+
+  defp wait_for_registry(old_pid, attempts \\ 50)
+  defp wait_for_registry(_old_pid, 0), do: :ok
+
+  defp wait_for_registry(old_pid, attempts) do
+    case Process.whereis(MailglassInbound.Execution.RouterRegistry) do
+      pid when is_pid(pid) and pid != old_pid ->
+        :ok
+
+      _ ->
+        Process.sleep(10)
+        wait_for_registry(old_pid, attempts - 1)
+    end
   end
 end
