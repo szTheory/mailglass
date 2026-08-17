@@ -10,6 +10,7 @@ defmodule Mailglass.ConfigTest do
     test "accepts empty opts and uses all defaults" do
       assert config = Mailglass.Config.new!([])
       assert Keyword.get(config, :adapter) == {Mailglass.Adapters.Fake, []}
+      assert Keyword.get(config, :suppression_store) == Mailglass.SuppressionStore.Ecto
       assert Keyword.get(config, :adapters) == []
     end
 

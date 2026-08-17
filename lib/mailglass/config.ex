@@ -24,7 +24,7 @@ defmodule Mailglass.Config do
     ],
     adapter: [
       type: :any,
-      default: {Mailglass.Adapters.Fake, []},
+      default: {Module.concat([:Mailglass, :Adapters, :Fake]), []},
       doc: "Adapter module or `{module, opts}` tuple. Default: the Fake adapter."
     ],
     adapters: [
@@ -98,7 +98,7 @@ defmodule Mailglass.Config do
     ],
     suppression_store: [
       type: {:or, [:atom, nil]},
-      default: Mailglass.SuppressionStore.Ecto,
+      default: Module.concat([:Mailglass, :SuppressionStore, :Ecto]),
       doc:
         "Module implementing `Mailglass.SuppressionStore`. " <>
           "Default: `Mailglass.SuppressionStore.Ecto`."
