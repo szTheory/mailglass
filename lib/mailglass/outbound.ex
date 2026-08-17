@@ -775,50 +775,10 @@ defmodule Mailglass.Outbound do
 
   defp persist_dispatched_multi(
          %Delivery{} = delivery,
-         %{message_id: pmid, provider_response: _resp},
-         _rendered
+         %{message_id: _provider_message_id, provider_response: _response} = result,
+         %Message{} = rendered
        ) do
-    event_occurred_at = Clock.utc_now()
-
-    event_attrs = %{
-      tenant_id: delivery.tenant_id,
-      delivery_id: delivery.id,
-      type: :dispatched,
-      occurred_at: event_occurred_at,
-      normalized_payload: %{provider_message_id: pmid}
-    }
-
-    # Build a stubbed Event to feed update_projections/2 ( sig takes an Event struct).
-    event_for_projection = %Mailglass.Events.Event{
-      tenant_id: delivery.tenant_id,
-      delivery_id: delivery.id,
-      type: :dispatched,
-      occurred_at: event_occurred_at
-    }
-
-    # I-01: Multi#2 sets BOTH :status (public API snapshot) AND
-    # :last_event_type (projection). :status is what adopters
-    # pattern-match on per ROADMAP success criterion 1.
-    Telemetry.persist_outbound_multi_span(
-      %{step_name: :persist_dispatched, tenant_id: delivery.tenant_id},
-      fn ->
-        Repo.multi(
-          Ecto.Multi.new()
-          |> Ecto.Multi.update(
-            :delivery,
-            Projector.update_projections(delivery, event_for_projection)
-            |> Ecto.Changeset.change(%{
-              status: :sent,
-              last_event_type: :dispatched,
-              provider_message_id: pmid,
-              dispatched_at: event_occurred_at
-            }),
-            Repo.multi_opts()
-          )
-          |> Events.append_multi(:event_dispatched, event_attrs)
-        )
-      end
-    )
+    Persistence.persist_dispatched(delivery, result, rendered)
   end
 
   defp persist_failed_by_id(delivery_id, %{__exception__: true} = err) do
@@ -1039,49 +999,12 @@ defmodule Mailglass.Outbound do
 
   defp primary_recipient(_), do: ""
 
-  defp recipient_domain(msg) do
-    case String.split(primary_recipient(msg), "@", parts: 2) do
-      [_, d] -> String.downcase(d)
-      _ -> ""
-    end
-  end
-
   defp compute_idempotency_key(%Message{} = msg) do
-    tenant_id = msg.tenant_id || ""
-    mailable = inspect(msg.mailable)
-    recipient = primary_recipient(msg)
-
-    content_hash =
-      :crypto.hash(:sha256, [
-        msg.swoosh_email.text_body || "",
-        msg.swoosh_email.html_body || ""
-      ])
-      |> Base.encode16(case: :lower)
-
-    :crypto.hash(:sha256, [tenant_id, "|", mailable, "|", recipient, "|", content_hash])
-    |> Base.encode16(case: :lower)
+    Persistence.idempotency_key(msg)
   end
 
   defp base_delivery_attrs(%Message{} = rendered, ik, adapter_ref) do
-    %{
-      tenant_id: rendered.tenant_id,
-      mailable: inspect(rendered.mailable),
-      stream: rendered.stream,
-      recipient: primary_recipient(rendered),
-      recipient_domain: recipient_domain(rendered),
-      adapter_ref: adapter_ref,
-      status: :queued,
-      last_event_type: :queued,
-      last_event_at: Clock.utc_now(),
-      metadata:
-        Map.merge(rendered.metadata || %{}, %{
-          rendered_html: rendered.swoosh_email.html_body,
-          rendered_text: rendered.swoosh_email.text_body,
-          subject: rendered.swoosh_email.subject,
-          headers: rendered.swoosh_email.headers || %{}
-        }),
-      idempotency_key: ik
-    }
+    Persistence.base_delivery_attrs(rendered, ik, adapter_ref)
   end
 
   defp delivery_id!(%Message{} = rendered) do
