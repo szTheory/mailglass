@@ -64,7 +64,7 @@ defmodule MailglassInbound.Ingress.Plug do
     provider = Keyword.get(opts, :provider, :postmark)
 
     MailglassInbound.Telemetry.ingress_span(%{provider: provider}, fn ->
-      Pipeline.run(conn, provider, opts, &do_call/3)
+      do_call(conn, provider, opts)
     end)
   end
 
@@ -106,25 +106,20 @@ defmodule MailglassInbound.Ingress.Plug do
       # Replay and control-plane MUST be 200 no-ops — never SignatureError/401
       # (providers retry-storm on non-200; T-46-03). Forgery raises and is caught
       # by the rescue below (→ 401).
-      case verify_request!(provider, request, config, opts) do
+      case Pipeline.run(provider, request, config, opts, %{verify: &verify_request!/4}) do
         {:replay} ->
           resp = send_json(conn, 200, %{status: "replay"})
           {resp, %{provider: provider, status: :replay}}
 
-        {:control_plane, _http_status} ->
+        {:control_plane} ->
           resp = send_json(conn, 200, %{status: "control_plane"})
           {resp, %{provider: provider, status: :control_plane}}
 
-        {:ok, %VerifiedRequest{} = verified} ->
-          persist_verified_and_respond(conn, provider, verified, config, opts)
+        {:persist_verified, %VerifiedRequest{} = verified, pipeline_config, pipeline_opts} ->
+          persist_verified_and_respond(conn, provider, verified, pipeline_config, pipeline_opts)
 
-        {:ok, facts} when is_map(facts) ->
-          persist_and_respond(conn, provider, request, facts, opts)
-
-        facts when is_map(facts) ->
-          # Legacy bare-map return from Postmark/SendGrid verify! (unchanged
-          # shipped-v1.1 providers). Treated as a successful, persisting verify.
-          persist_and_respond(conn, provider, request, facts, opts)
+        {:persist, pipeline_request, facts} ->
+          persist_and_respond(conn, provider, pipeline_request, facts, opts)
       end
     rescue
       # Signature failures are terminal typed errors; do not recover in the plug.
