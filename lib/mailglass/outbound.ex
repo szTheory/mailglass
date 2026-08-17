@@ -527,7 +527,7 @@ defmodule Mailglass.Outbound do
         {fresh, _already_settled} =
           Enum.split_with(inserted_deliveries, fn d -> d.status == :queued end)
 
-        enqueue_batch_jobs(fresh)
+        enqueue_batch_tasks(fresh)
         {:ok, inserted_deliveries ++ failed_deliveries}
 
       {:error, _} = err ->
@@ -629,7 +629,14 @@ defmodule Mailglass.Outbound do
             Repo.all(Tenancy.scope(query))
           end
 
-        {:ok, all_rows, dispatch_mode}
+        rows_by_idempotency_key = Map.new(all_rows, &{&1.idempotency_key, &1})
+
+        # `Repo.all/1` has no ordering contract. Rebuild the response from
+        # the input rows so conflicts and fresh inserts remain in exact input
+        # correspondence (including duplicate keys in one batch).
+        ordered_rows = Enum.map(rows, &Map.fetch!(rows_by_idempotency_key, &1.idempotency_key))
+
+        {:ok, ordered_rows, dispatch_mode}
 
       {:error, _step, err, _} ->
         {:error, to_error(err)}
@@ -659,55 +666,42 @@ defmodule Mailglass.Outbound do
 
   defp maybe_insert_batch_jobs(multi, :task_supervisor), do: multi
 
-  defp enqueue_batch_jobs(deliveries) when is_list(deliveries) do
-    async_adapter = Application.get_env(:mailglass, :async_adapter, :oban)
-    use_oban = async_adapter != :task_supervisor and Mailglass.OptionalDeps.Oban.available?()
+  # Oban jobs are inserted in the durable transaction above. This remains
+  # solely as the non-durable Task.Supervisor fallback; Plan 156-03 makes its
+  # admission result bounded and truthful.
+  defp enqueue_batch_tasks(deliveries) when is_list(deliveries) do
+    Enum.each(deliveries, fn %Delivery{id: id, tenant_id: t} ->
+      # AsyncAdapter dispatch (-11). TaskSupervisor (prod) | Inline (test).
+      Mailglass.Outbound.AsyncAdapter.dispatch(
+        fn ->
+          Mailglass.Tenancy.with_tenant(t, fn ->
+            try do
+              case dispatch_by_id(id) do
+                {:ok, _} ->
+                  :ok
 
-    if use_oban do
-      jobs =
-        Enum.map(deliveries, fn %Delivery{id: id, tenant_id: t} ->
-          Mailglass.Outbound.Worker.new(%{
-            "delivery_id" => id,
-            "mailglass_tenant_id" => t
-          })
-        end)
-
-      _ = Mailglass.OptionalDeps.Oban.insert_all(jobs)
-      :ok
-    else
-      Enum.each(deliveries, fn %Delivery{id: id, tenant_id: t} ->
-        # AsyncAdapter dispatch (-11). TaskSupervisor (prod) | Inline (test).
-        Mailglass.Outbound.AsyncAdapter.dispatch(
-          fn ->
-            Mailglass.Tenancy.with_tenant(t, fn ->
-              try do
-                case dispatch_by_id(id) do
-                  {:ok, _} ->
-                    :ok
-
-                  {:error, err} ->
-                    require Logger
-
-                    Logger.warning(
-                      "[mailglass] Task.Supervisor batch dispatch failed for #{id}: #{Exception.message(err)}"
-                    )
-                end
-              rescue
-                err ->
+                {:error, err} ->
                   require Logger
 
                   Logger.warning(
-                    "[mailglass] Task.Supervisor batch dispatch raised for #{id}: #{Exception.message(err)}"
+                    "[mailglass] Task.Supervisor batch dispatch failed for #{id}: #{Exception.message(err)}"
                   )
               end
-            end)
-          end,
-          []
-        )
-      end)
+            rescue
+              err ->
+                require Logger
 
-      :ok
-    end
+                Logger.warning(
+                  "[mailglass] Task.Supervisor batch dispatch raised for #{id}: #{Exception.message(err)}"
+                )
+            end
+          end)
+        end,
+        []
+      )
+    end)
+
+    :ok
   end
 
   defp build_failed_delivery(%Message{} = msg, err) do
