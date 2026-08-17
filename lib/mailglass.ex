@@ -103,6 +103,8 @@ defmodule Mailglass do
         Adapters.Fake,
         Adapters.Swoosh,
         PubSub,
+        Ports.PubSub,
+        Ports.Suppression,
         PubSub.Topics,
         Mailable,
         Compliance,
