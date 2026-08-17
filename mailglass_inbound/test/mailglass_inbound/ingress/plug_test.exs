@@ -36,6 +36,17 @@ defmodule MailglassInbound.Ingress.PlugTest do
   end
 
   defmodule FakePersistence do
+    def persist_terminal_failure(tenant_id, provider, request, verified, failure, _opts) do
+      Process.put(
+        :mailglass_inbound_terminal_evidence,
+        {tenant_id, provider, request, verified, failure}
+      )
+
+      if Process.get(:mailglass_inbound_terminal_persist_error),
+        do: {:error, :db_down},
+        else: {:ok, %{status: :inserted}}
+    end
+
     def persist(handoff, opts) do
       Process.put(:mailglass_inbound_last_handoff, handoff)
       Process.put(:mailglass_inbound_last_persist_opts, opts)
@@ -578,7 +589,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert conn.status == 200
     assert Jason.decode!(conn.resp_body)["status"] == "replay"
     # No persistence, no execution — replay creates no state (T-46-02).
-    assert Process.get(:mailglass_inbound_last_handoff) == nil
+    assert Process.get(:mailglass_inbound_terminal_evidence) == nil
+
     assert Process.get(:mailglass_inbound_last_execution_result) == nil
   end
 
@@ -600,7 +612,9 @@ defmodule MailglassInbound.Ingress.PlugTest do
 
     assert conn.status == 200
     assert Jason.decode!(conn.resp_body)["status"] == "control_plane"
-    assert Process.get(:mailglass_inbound_last_handoff) == nil
+
+    assert Process.get(:mailglass_inbound_terminal_evidence) == nil
+
     assert Process.get(:mailglass_inbound_last_execution_result) == nil
   end
 

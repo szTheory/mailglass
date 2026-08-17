@@ -197,18 +197,58 @@ defmodule MailglassInbound.Ingress.Plug do
 
   defp persist_verified_and_respond(conn, provider, %VerifiedRequest{} = verified, config, opts) do
     tenant_id = resolve_tenant!(provider, conn, verified.request, verified.envelope)
-    verified = resolve_content_request!(provider, verified, config, opts)
-    normalized = normalize_request!(provider, verified, opts)
 
-    persist_normalized_and_respond(
-      conn,
-      provider,
-      verified.request,
-      tenant_id,
-      normalized,
-      verified.verification_facts,
-      opts
-    )
+    case resolve_content_or_terminal(provider, verified, config, opts) do
+      {:ok, resolved} ->
+        normalized = normalize_request!(provider, resolved, opts)
+
+        persist_normalized_and_respond(
+          conn,
+          provider,
+          resolved.request,
+          tenant_id,
+          normalized,
+          resolved.verification_facts,
+          opts
+        )
+
+      {:terminal, error} ->
+        terminal_failure_response(conn, provider, tenant_id, verified, error, opts)
+    end
+  end
+
+  defp resolve_content_or_terminal(provider, verified, config, opts) do
+    {:ok, resolve_content_request!(provider, verified, config, opts)}
+  rescue
+    error in S3FetchError -> {:terminal, error}
+  end
+
+  defp terminal_failure_response(
+         conn,
+         provider,
+         tenant_id,
+         verified,
+         %S3FetchError{type: type},
+         opts
+       ) do
+    persistence = Keyword.get(opts, :persistence, MailglassInbound.Ingress.Persist)
+
+    case persistence.persist_terminal_failure(
+           tenant_id,
+           provider,
+           verified.request,
+           verified,
+           type,
+           persistence_opts(opts)
+         ) do
+      {:ok, _} ->
+        {send_json(conn, 422, %{status: "s3_fetch_error", reason: Atom.to_string(type)}),
+         %{provider: provider, tenant_id: tenant_id, status: :terminal_failure}}
+
+      {:error, _} ->
+        {send_json(conn, 500, %{status: "error", reason: "persist_failed"}),
+         %{provider: provider, tenant_id: tenant_id, status: :error}}
+    end
   end
 
   defp persist_normalized_and_respond(
