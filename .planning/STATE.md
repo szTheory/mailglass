@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-08-17T01:12:23.853Z"
 last_activity: 2026-08-16
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,17 +17,26 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-04 after completing v2.5)
+See: .planning/PROJECT.md (updated 2026-08-16 for v2.6)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Library certification is complete; awaiting a concrete adopter integration or next milestone.
+**Current focus:** Phase 155 — Restore Adopter and CI Truth.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 155 of 160 (Restore Adopter and CI Truth)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-08-16 — Milestone v2.6 started
+Status: Ready to plan
+Last activity: 2026-08-16 — v2.6 roadmap created; all 50 requirements mapped across phases 155-160
+
+Progress: [░░░░░░░░░░] 0%
+
+## v2.6 Milestone Intent
+
+- **Goal:** Raise the internal engineering bar while proving generated-host migration truth, runtime and data correctness, architecture boundaries, and merge/release signals.
+- **Execution order:** 155 Restore Adopter and CI Truth → 156 Delivery Correctness and Bounded Execution → 157 Inbound, Database, and Lifecycle Hardening → 158 Simplify Architecture Without Breaking Adopters → 159 Raise and Simplify Engineering Gates → 160 Certification, Documentation, and Release.
+- **Scope lock:** Additive-only compatibility posture. Admin/operator behavior remains untouched; no new providers, policy, auth, billing, support, mobile, or SRE ownership; no changes to shipped migrations.
+- **Coverage:** 50/50 v2.6 requirements map exactly once in `.planning/ROADMAP.md` and `.planning/REQUIREMENTS.md`.
 
 ## v2.4 Milestone Intent
 
