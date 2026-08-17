@@ -298,14 +298,14 @@ defp source_from_args(_), do: {:error, :invalid_job_args}
 | A3 | Locked Oban worker version accepts a discard result for permanent errors. | Pattern 5 | Must verify exact result before worker edit. |
 | A4 | Fixed-point scale and clock injection can be internal without public API impact. | Patterns 1 and 5 | Test seam may need a package-private option instead. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Where is the private outbound payload write in the current delivery deployment?**
    - What we know: this checkout stores rendered values in delivery metadata and contains no obvious `OutboundPayload` schema. [VERIFIED: codebase]
-   - Recommendation: planner must include a discovery/compatibility test first; if the existing v2 private-payload contract is represented by delivery metadata, keep that write in the same Multi rather than inventing a schema. [ASSUMED]
+   - **Accepted answer:** Existing rendered delivery metadata is the current private outbound payload representation. Keep that write in the same Multi and do not invent a new schema. [RESOLVED: Phase 156 planning]
 2. **Which non-Swoosh adapters have a documented exceptional 4xx retry case?**
    - What we know: Phase decision permits exceptions only when explicit and adapter-aware. [VERIFIED: CONTEXT.md]
-   - Recommendation: implement default 4xx permanent for Swoosh in this phase; add no exception without provider-specific evidence and a test. [ASSUMED]
+   - **Accepted answer:** Swoosh 4xx outcomes are permanent by default. Add no exceptional retryable 4xx without provider-specific evidence and a regression test. [RESOLVED: Phase 156 planning]
 
 ## Environment Availability
 
@@ -375,7 +375,7 @@ defp source_from_args(_), do: {:error, :invalid_job_args}
 4. **Retry/privacy/telemetry correctness:** additive `SendError` contract and docs, Swoosh classification/redaction, worker discard behavior, one dispatch span, tracking success/failure telemetry (EXEC-05, EXEC-06, EXEC-07).
 5. **Finite persisted/job decoders:** inbound execution worker/provider and core webhook replay mappings with invalid-value regression tests (EXEC-08).
 
-The dependency order is 1 → 2/3 in parallel → 4 → 5, with final focused core and inbound validation. [ASSUMED]
+The executable dependency order is 1 → 2 → 3 → 4 → 5: Plans 2 and 3 both edit `Mailglass.Outbound`, while Plan 5 consumes the worker outcome convention established by Plan 4. Final focused validation covers core and inbound. [RESOLVED: Phase 156 planning]
 
 ## Sources
 
