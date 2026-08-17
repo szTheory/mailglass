@@ -142,7 +142,8 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
 
     assert_ci_green_policy_invocation!(ci_source)
 
-    without_invocation = String.replace(ci_source, "bash scripts/ci_green_policy.sh", "true", global: false)
+    without_invocation =
+      String.replace(ci_source, "bash scripts/ci_green_policy.sh", "true", global: false)
 
     assert_raise ExUnit.AssertionError, fn ->
       assert_ci_green_policy_invocation!(without_invocation)
@@ -156,6 +157,7 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
       ci_source
       |> parse_ci_green_needs()
       |> MapSet.delete(@structural_change_dependency)
+
     job_ifs = parse_ci_job_ifs(ci_source)
 
     Enum.each(needs_keys, fn key ->
