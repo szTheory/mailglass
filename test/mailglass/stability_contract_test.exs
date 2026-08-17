@@ -26,6 +26,31 @@ defmodule Mailglass.StabilityContractTest do
   defp json!(path), do: path |> File.read!() |> Jason.decode!()
 
   describe "stable core entrypoints expose since metadata" do
+    test "Outbound keeps its public verb inventory while collaborators remain internal" do
+      assert Code.ensure_loaded?(Mailglass.Outbound)
+
+      for {name, arity} <- [
+            {:send, 2},
+            {:deliver, 2},
+            {:deliver!, 2},
+            {:deliver_later, 2},
+            {:deliver_many, 2},
+            {:deliver_many!, 2},
+            {:dispatch_by_id, 1}
+          ] do
+        assert function_exported?(Mailglass.Outbound, name, arity)
+      end
+
+      for collaborator <- [
+            Mailglass.Outbound.Preflight,
+            Mailglass.Outbound.Routes,
+            Mailglass.Outbound.Persistence,
+            Mailglass.Outbound.Dispatch
+          ] do
+        assert {:docs_v1, _, :elixir, _, :hidden, _, _} = Code.fetch_docs(collaborator)
+      end
+    end
+
     test "Mailglass root delegates are annotated" do
       assert_module_since(Mailglass, "0.1.0")
 
