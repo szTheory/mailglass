@@ -5,6 +5,12 @@ defmodule Mix.Tasks.Mailglass.Inbound.Gen.Migration do
 
   @impl Mix.Task
   def run(argv) do
+    if "--repair-legacy" in argv do
+      Mix.raise(
+        "Installation blocked: no recognized inbound legacy signature; no migration was written"
+      )
+    end
+
     Mailglass.MigrationGenerator.run(
       %{
         task_name: "mailglass.inbound.gen.migration",
