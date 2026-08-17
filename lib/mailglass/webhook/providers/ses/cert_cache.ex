@@ -22,6 +22,8 @@ defmodule Mailglass.Webhook.Providers.SES.CertCache do
       end
   """
 
+  alias Mailglass.Webhook.Providers.SES.CertCache.TableOwner
+
   @table :mailglass_webhook_ses_cert_cache
 
   @doc """
@@ -58,14 +60,24 @@ defmodule Mailglass.Webhook.Providers.SES.CertCache do
   """
   @spec put(binary(), term(), DateTime.t()) :: :ok
   def put(url, public_key, %DateTime{} = expires_at) when is_binary(url) do
-    :ets.insert(@table, {url, public_key, expires_at})
+    TableOwner.put(url, public_key, expires_at)
     :ok
+  end
+
+  @doc false
+  @spec fetch_or_store(binary(), (-> {:ok, term()} | {:error, term()}), keyword()) ::
+          {:ok, term()} | {:error, :capacity | term()}
+  def fetch_or_store(url, fetch, opts \\ []) when is_binary(url) and is_function(fetch, 0) do
+    case fetch_public_key(url) do
+      {:ok, public_key} -> {:ok, public_key}
+      :miss -> TableOwner.fetch_or_store(url, fetch, opts)
+    end
   end
 
   @doc since: "0.3.0"
   @spec reset() :: :ok
   def reset do
-    :ets.delete_all_objects(@table)
+    TableOwner.reset()
     :ok
   end
 
