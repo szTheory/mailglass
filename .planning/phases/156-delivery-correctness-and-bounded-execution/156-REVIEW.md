@@ -1,8 +1,8 @@
 ---
 phase: 156-delivery-correctness-and-bounded-execution
-reviewed: 2026-08-17T06:42:02Z
+reviewed: 2026-08-17T07:09:26Z
 depth: deep
-files_reviewed: 49
+files_reviewed: 54
 files_reviewed_list:
   - docs/api_stability.md
   - lib/mailglass/adapters/swoosh.ex
@@ -50,20 +50,25 @@ files_reviewed_list:
   - test/example/README.md
   - test/mailglass/publish/post_publish_smoke_contract_test.exs
   - test/support/installer_fixture_helpers.ex
+  - scripts/consumer_install_smoke.sh
+  - scripts/generated_ecto_host_proof.sh
+  - mailglass_inbound/lib/mailglass_inbound/migration.ex
+  - mailglass_inbound/test/mix/tasks/mailglass_inbound_gen_migration_test.exs
+  - test/mailglass/install/install_first_preview_smoke_test.exs
 findings:
-  critical: 0
+  critical: 1
   warning: 0
   info: 0
-  total: 0
-status: clean
+  total: 1
+status: issues_found
 ---
 
 # Phase 156: Code Review Report
 
-**Reviewed:** 2026-08-17T06:42:02Z
+**Reviewed:** 2026-08-17T07:09:26Z
 **Depth:** deep
-**Files Reviewed:** 49
-**Status:** clean
+**Files Reviewed:** 54
+**Status:** issues_found
 
 ## Summary
 
@@ -73,12 +78,30 @@ The Plan 06 owner-serialized fallback restores the missing-table path, serialize
 
 Final CI-closure changes were also reviewed at deep depth. The Oban gateway now selects Oban's documented four-argument `Multi` overload (`Oban.insert_all(Oban, multi, name, jobs)`), preserving a single transaction rather than using the synchronous insertion contract. The migration changes only make the declared finite version and `:ok` result contracts match established runtime behavior. The installer fixture explicitly scopes its temporary repository configuration and restores the process-global setting. The inbound replay test now provides the same durable router/mailbox binding that production ingress persists; route resolution remains finite and atom-safe. No correctness, security, optional-dependency, or migration regression was found in this delta.
 
+The new repo-bound generated wrappers correctly pass their selected host Repo into both install and upgrade directions, and the consumer smoke's random database is scoped to its generated host. However, the separate generated-Ecto-host proof was not updated for the changed generated source and now rejects the valid wrappers before it can migrate them.
+
 ## Narrative Findings (AI reviewer)
 
-All reviewed files meet the applicable correctness and security standards. No issues found.
+## Critical Issues
+
+### CR-01: Generated-host CI proof rejects the newly generated repo-bound wrappers
+
+**File:** `scripts/generated_ecto_host_proof.sh:144-145`
+
+**Issue:** Commit `d7c5031c` changes generator output to `Mailglass.Migration.up(repo: Host.Repo)` and `MailglassInbound.Migration.up(repo: Host.Repo)`, but this required CI proof still requires the exact zero-argument text `Mailglass.Migration.up()` / `MailglassInbound.Migration.up()`. Those `rg` checks fail immediately for every newly generated host, so the `Generated Ecto host proof` step in the required `Installer Host Smoke` job exits before `mix ecto.migrate`. This makes main CI red and prevents the new adopter-smoke path from certifying the behavior it was intended to cover.
+
+**Fix:** Update the assertions to check the repo-bound calls (ideally the exact `Host.Repo` wrappers) and add a regression test covering the proof/source contract. For example:
+
+```bash
+if ! rg -q 'Mailglass\.Migration\.up\(repo: Host\.Repo\)' "${migrations_path}"/*_mailglass_install.exs ||
+    ! rg -q 'MailglassInbound\.Migration\.up\(repo: Host\.Repo\)' "${migrations_path}"/*_mailglass_inbound_install.exs; then
+  echo "Generated wrappers did not delegate to both public package façades with Host.Repo." >&2
+  exit 1
+fi
+```
 
 ---
 
-_Reviewed: 2026-08-17T06:42:02Z_
+_Reviewed: 2026-08-17T07:09:26Z_
 _Reviewer: gsd-code-reviewer_
 _Depth: deep_
