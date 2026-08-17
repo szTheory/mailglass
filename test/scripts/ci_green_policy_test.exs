@@ -2,6 +2,7 @@ defmodule Mailglass.Scripts.CIGreenPolicyTest do
   use ExUnit.Case, async: true
 
   @policy_path Path.expand("../../scripts/ci_green_policy.sh", __DIR__)
+  @ci_yml_path Path.expand("../../.github/workflows/ci.yml", __DIR__)
 
   test "detector failure blocks CI Green regardless of required leaf results" do
     assert {output, 1} = run_policy(["failure", "false", "hex_audit=skipped"])
@@ -48,6 +49,23 @@ defmodule Mailglass.Scripts.CIGreenPolicyTest do
     assert output =~ "CI Green blocked: unacceptable required lane result(s): hex_audit=failure"
   end
 
+  test "push change detection fails closed when git diff cannot establish the changed files" do
+    source = File.read!(@ci_yml_path)
+
+    assert_push_diff_failure_blocks!(source)
+
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_push_diff_failure_blocks!(
+        String.replace(
+          source,
+          "git diff --name-only \"${BEFORE}\" \"${AFTER}\"",
+          "false",
+          global: false
+        )
+      )
+    end
+  end
+
   test "malformed, duplicate, and empty required leaf inputs block CI Green" do
     assert {malformed_output, 1} = run_policy(["success", "true", "not-a-pair"])
     assert malformed_output =~ "CI Green blocked: malformed required lane input: not-a-pair"
@@ -63,5 +81,17 @@ defmodule Mailglass.Scripts.CIGreenPolicyTest do
 
   defp run_policy(arguments) do
     System.cmd("bash", [@policy_path | arguments], stderr_to_stdout: true)
+  end
+
+  defp assert_push_diff_failure_blocks!(source) do
+    [_before_push, push_branch] =
+      String.split(source, "# push event: compare against the before SHA", parts: 2)
+
+    assert push_branch =~
+             "if ! CHANGED=$(git diff --name-only \"${BEFORE}\" \"${AFTER}\" 2>/dev/null); then"
+
+    assert push_branch =~ "Unable to determine changed files for push"
+    assert push_branch =~ "exit 1"
+    refute push_branch =~ "git diff --name-only \"${BEFORE}\" \"${AFTER}\" 2>/dev/null || true"
   end
 end

@@ -53,7 +53,10 @@ jobs:
             if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
               echo "code=true" >> "$GITHUB_OUTPUT"
             else
-              CHANGED=$(git diff --name-only "${BEFORE}" "${AFTER}" 2>/dev/null || true)
+              if ! CHANGED=$(git diff --name-only "${BEFORE}" "${AFTER}" 2>/dev/null); then
+                echo "Unable to determine changed files for push ${BEFORE}..${AFTER}; refusing to classify it as docs-only." >&2
+                exit 1
+              fi
               NON_DOC=$(echo "$CHANGED" | grep -v '^\.planning/' | grep -v '^prompts/' || true)
               if [ -z "$NON_DOC" ]; then
                 echo "code=false" >> "$GITHUB_OUTPUT"
