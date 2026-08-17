@@ -6,6 +6,41 @@ defmodule Mailglass.HTTPCStub do
     do: {:ok, {{"HTTP/1.1", 200, "OK"}, [], ""}}
 end
 
+defmodule Mailglass.StreamingHTTPCStub do
+  @moduledoc false
+
+  def request(:get, _url_req, _http_opts, opts) do
+    true = Keyword.get(opts, :sync) == false
+    {_receiver, :once} = Keyword.fetch!(opts, :stream)
+    caller = self()
+    request_id = make_ref()
+    test_pid = Application.fetch_env!(:mailglass, :ses_stream_test_pid)
+
+    handler =
+      spawn(fn ->
+        receive do
+          :next ->
+            send(test_pid, {:cert_chunk_requested, 1})
+            send(caller, {:http, {request_id, :stream, :binary.copy("x", 17)}})
+
+            receive do
+              :next ->
+                send(test_pid, {:cert_chunk_requested, 2})
+                send(caller, {:http, {request_id, :stream, "never-needed"}})
+            after
+              100 -> :ok
+            end
+        end
+      end)
+
+    send(caller, {:http, {request_id, :stream_start, [], handler}})
+    {:ok, request_id}
+  end
+
+  def stream_next(handler), do: send(handler, :next)
+  def cancel_request(_request_id), do: :ok
+end
+
 defmodule Mailglass.Webhook.Providers.SESTest do
   use Mailglass.WebhookCase, async: false
 
@@ -25,6 +60,16 @@ defmodule Mailglass.Webhook.Providers.SESTest do
 
   setup do
     CertCache.reset()
+    prior_stream_test_pid = Application.get_env(:mailglass, :ses_stream_test_pid)
+
+    on_exit(fn ->
+      if is_nil(prior_stream_test_pid) do
+        Application.delete_env(:mailglass, :ses_stream_test_pid)
+      else
+        Application.put_env(:mailglass, :ses_stream_test_pid, prior_stream_test_pid)
+      end
+    end)
+
     :ok
   end
 
@@ -67,6 +112,32 @@ defmodule Mailglass.Webhook.Providers.SESTest do
   # -------- verify!/3 — SNS signature verification -----------------
 
   describe "verify!/3 SES SNS signature verification" do
+    test "aborts a streamed certificate response at the configured byte cap" do
+      Application.put_env(:mailglass, :ses_stream_test_pid, self())
+
+      raw =
+        Jason.encode!(%{
+          "Type" => "Notification",
+          "Message" => "{}",
+          "MessageId" => "stream-limit",
+          "Timestamp" => "2026-08-17T00:00:00Z",
+          "TopicArn" => "arn:aws:sns:us-east-1:123456789012:test",
+          "SigningCertURL" => @cert_url,
+          "SignatureVersion" => "2",
+          "Signature" => Base.encode64("invalid")
+        })
+
+      config = %{
+        cert_cache_ttl_seconds: 86_400,
+        cert_max_response_bytes: 16,
+        httpc_client: Mailglass.StreamingHTTPCStub
+      }
+
+      assert_raise SignatureError, fn -> SES.verify!(raw, [], config) end
+      assert_receive {:cert_chunk_requested, 1}
+      refute_receive {:cert_chunk_requested, 2}, 50
+    end
+
     test "returns :ok for a valid Notification payload" do
       {public_key, private_key} = generate_sns_keypair()
       future = DateTime.add(Mailglass.Clock.utc_now(), 86_400, :second)
