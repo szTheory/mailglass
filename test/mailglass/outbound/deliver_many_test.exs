@@ -98,12 +98,16 @@ defmodule Mailglass.Outbound.DeliverManyTest do
 
       {:ok, first_deliveries} = Outbound.deliver_many(msgs, [])
       first_ids = Enum.map(first_deliveries, & &1.id) |> Enum.sort()
+      assert TestRepo.aggregate(Event, :count, :id) == 2
+      assert TestRepo.aggregate(Oban.Job, :count, :id) == 2
 
       {:ok, second_deliveries} = Outbound.deliver_many(msgs, [])
       second_ids = Enum.map(second_deliveries, & &1.id) |> Enum.sort()
 
       # Same rows re-fetched — idempotency_key collisions are no-ops
       assert first_ids == second_ids
+      assert TestRepo.aggregate(Event, :count, :id) == 2
+      assert TestRepo.aggregate(Oban.Job, :count, :id) == 2
     end
   end
 
@@ -117,8 +121,14 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       {:ok, first_deliveries} = Outbound.deliver_many([msg1, msg2], [])
       first_ids = Enum.map(first_deliveries, & &1.id) |> MapSet.new()
 
-      {:ok, second_deliveries} = Outbound.deliver_many([msg1, msg2, msg3], [])
+      {:ok, second_deliveries} = Outbound.deliver_many([msg2, msg1, msg3], [])
       assert length(second_deliveries) == 3
+
+      assert Enum.map(second_deliveries, & &1.recipient) == [
+               "mixed2-#{uid}@example.com",
+               "mixed1-#{uid}@example.com",
+               "mixed3-#{uid}@example.com"
+             ]
 
       second_ids = Enum.map(second_deliveries, & &1.id) |> MapSet.new()
 
@@ -129,6 +139,8 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       # The 3rd row is new
       new_ids = MapSet.difference(second_ids, first_ids)
       assert MapSet.size(new_ids) == 1
+      assert TestRepo.aggregate(Event, :count, :id) == 3
+      assert TestRepo.aggregate(Oban.Job, :count, :id) == 3
     end
   end
 
