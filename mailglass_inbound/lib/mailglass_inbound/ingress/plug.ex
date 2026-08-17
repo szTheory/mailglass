@@ -44,6 +44,7 @@ defmodule MailglassInbound.Ingress.Plug do
   alias MailglassInbound.S3FetchError
   alias MailglassInbound.Execution
   alias MailglassInbound.Ingress.{Request, VerifiedRequest}
+  alias MailglassInbound.Ingress.Pipeline
   alias MailglassInbound.Ports
 
   @impl Plug
@@ -63,7 +64,7 @@ defmodule MailglassInbound.Ingress.Plug do
     provider = Keyword.get(opts, :provider, :postmark)
 
     MailglassInbound.Telemetry.ingress_span(%{provider: provider}, fn ->
-      do_call(conn, provider, opts)
+      Pipeline.run(conn, provider, opts, &do_call/3)
     end)
   end
 

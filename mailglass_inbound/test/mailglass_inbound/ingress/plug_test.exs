@@ -1095,4 +1095,12 @@ defmodule MailglassInbound.Ingress.PlugTest do
     ]
     |> IO.iodata_to_binary()
   end
+
+  test "public inbound Plug delegates lifecycle orchestration to its package-local pipeline" do
+    plug = File.read!("lib/mailglass_inbound/ingress/plug.ex")
+    pipeline = File.read!("lib/mailglass_inbound/ingress/pipeline.ex")
+
+    assert plug =~ "Ingress.Pipeline"
+    assert pipeline =~ "def run(conn, provider, opts, runner)"
+  end
 end
