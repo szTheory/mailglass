@@ -55,6 +55,16 @@ defmodule Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest do
     assert migration_paths() == []
   end
 
+  test "refuses every inbound offline upgrade because version one has no predecessor" do
+    Application.put_env(:mailglass_inbound, :ecto_repos, [HostRepo])
+
+    assert_raise Mix.Error, ~r/no offline upgrade is available/, fn ->
+      Mix.Tasks.Mailglass.Inbound.Gen.Migration.run(["--upgrade", "--from", "1"])
+    end
+
+    assert migration_paths() == []
+  end
+
   defp migration_paths do
     migrations_path()
     |> Path.join("*.exs")
