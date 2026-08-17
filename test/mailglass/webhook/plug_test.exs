@@ -371,4 +371,12 @@ defmodule Mailglass.Webhook.PlugTest do
       assert {:ok, "default"} = Mailglass.Tenancy.resolve_webhook_tenant(ctx)
     end
   end
+
+  test "public webhook Plug delegates request orchestration to its package-local pipeline" do
+    plug = File.read!("lib/mailglass/webhook/plug.ex")
+    pipeline = File.read!("lib/mailglass/webhook/pipeline.ex")
+
+    assert plug =~ "Webhook.Pipeline"
+    assert pipeline =~ "def run(conn, provider, opts, runner)"
+  end
 end
