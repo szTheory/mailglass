@@ -53,10 +53,65 @@ defmodule Mailglass.RateLimiter.TableOwner do
       decentralized_counters: true
     ])
 
+    schedule_sweep()
     {:ok, %{}}
+  end
+
+  @doc false
+  @spec admit(term(), tuple(), integer()) :: :ok | {:error, :denied}
+  def admit(key, initial, now_us) do
+    GenServer.call(__MODULE__, {:admit, key, initial, now_us})
+  end
+
+  @impl GenServer
+  def handle_call({:admit, key, initial, now_us}, _from, state) do
+    result =
+      case :ets.lookup(@table, key) do
+        [_] -> :ok
+        [] -> admit_missing(key, initial, now_us)
+      end
+
+    {:reply, result, state}
+  end
+
+  @impl GenServer
+  def handle_info(:sweep, state) do
+    purge_idle(System.monotonic_time(:microsecond))
+    schedule_sweep()
+    {:noreply, state}
   end
 
   @doc "Returns the ETS table name. Public so tests can inspect state."
   @doc since: "0.1.0"
   def table, do: @table
+
+  defp admit_missing(key, initial, now_us) do
+    opts = Application.get_env(:mailglass, :rate_limit_table_owner, [])
+    max_keys = Keyword.get(opts, :max_keys, 100_000)
+
+    if :ets.info(@table, :size) >= max_keys do
+      purge_idle(now_us)
+    end
+
+    if :ets.info(@table, :size) < max_keys and :ets.insert_new(@table, initial) do
+      :ok
+    else
+      # Another caller may have admitted this key while we were reclaiming.
+      if :ets.member(@table, key), do: :ok, else: {:error, :denied}
+    end
+  end
+
+  defp purge_idle(now_us) do
+    opts = Application.get_env(:mailglass, :rate_limit_table_owner, [])
+    expiry_us = Keyword.get(opts, :idle_expiry_ms, 3_600_000) * 1_000
+
+    :ets.select_delete(@table, [
+      {{:"$1", :"$2", :"$3", :"$4", :"$5"}, [{:<, :"$5", now_us - expiry_us}], [true]}
+    ])
+  end
+
+  defp schedule_sweep do
+    opts = Application.get_env(:mailglass, :rate_limit_table_owner, [])
+    Process.send_after(self(), :sweep, Keyword.get(opts, :sweep_interval_ms, 60_000))
+  end
 end

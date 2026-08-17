@@ -43,6 +43,7 @@ defmodule Mailglass.RateLimiterTest do
         for _ <- 1..40 do
           Task.async(fn ->
             send(parent, :ready)
+
             receive do
               :go -> RateLimiter.check("atomic", "exact.test", :operational)
             end
@@ -66,7 +67,7 @@ defmodule Mailglass.RateLimiterTest do
       now = :atomics.new(1, [])
       :atomics.put(now, 1, 0)
       Application.put_env(:mailglass, :rate_limit_clock, fn -> :atomics.get(now, 1) end)
-      Application.put_env(:mailglass, :rate_limit_table_owner, max_keys: 2, idle_expiry_ms: 100)
+      Application.put_env(:mailglass, :rate_limit_table_owner, max_keys: 4, idle_expiry_ms: 100)
       Application.put_env(:mailglass, :rate_limit, default: [capacity: 1, per_minute: 1])
 
       assert :ok = RateLimiter.check("a", "cap.test", :operational)
@@ -124,9 +125,11 @@ defmodule Mailglass.RateLimiterTest do
   end
 
   describe "check/3 token bucket — refill" do
-    test "Test 4: after over-limit, waiting refill_ms then calling again returns :ok" do
-      # Capacity 2, per_minute 120 => refill_per_ms = 120/60000 = 0.002 t/ms => 500ms to get 1 token
+    test "Test 4: deterministic elapsed time refills a depleted bucket" do
       Application.put_env(:mailglass, :rate_limit, default: [capacity: 2, per_minute: 120])
+      now = :atomics.new(1, [])
+      :atomics.put(now, 1, 0)
+      Application.put_env(:mailglass, :rate_limit_clock, fn -> :atomics.get(now, 1) end)
       :ets.delete_all_objects(:mailglass_rate_limit)
 
       # Drain
@@ -136,8 +139,8 @@ defmodule Mailglass.RateLimiterTest do
       assert {:error, %RateLimitError{}} =
                RateLimiter.check("tenant-refill", "refill.com", :operational)
 
-      # Wait 600ms for at least 1 token to refill (refill rate: 1 token per 500ms)
-      Process.sleep(600)
+      # 120/min refills one whole token after 500ms.
+      :atomics.put(now, 1, 500_000)
 
       assert :ok = RateLimiter.check("tenant-refill", "refill.com", :operational)
     end
