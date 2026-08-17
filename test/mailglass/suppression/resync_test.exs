@@ -34,15 +34,13 @@ defmodule Mailglass.Suppression.ResyncTest do
                  page_size: 2
                )
 
-      # The first two duplicate events share one page-local candidate; the
-      # third straddles a page boundary and remains a distinct candidate.
-      assert dry_run.scanned == 4
-      assert dry_run.would_insert == 3
+      # Duplicate suppression keys are deduplicated across page boundaries.
+      assert dry_run.scanned == 3
+      assert dry_run.would_insert == 2
       assert dry_run.existing == 1
       assert dry_run.inserted == 0
 
       assert Enum.sort(Enum.map(dry_run.candidates, & &1.address)) == [
-               "duplicate@example.com",
                "duplicate@example.com",
                "first@example.com",
                "second@example.com"
@@ -61,6 +59,36 @@ defmodule Mailglass.Suppression.ResyncTest do
       assert applied.existing == dry_run.existing
       assert applied.inserted == 2
       assert TestRepo.aggregate(Entry, :count) == 3
+    end
+
+    test "caps retained candidate detail across many pages while keeping complete counts" do
+      occurred_at = Clock.utc_now()
+
+      for index <- 1..125 do
+        delivery = insert_delivery!("bounded-#{index}@example.com")
+
+        event_id =
+          index
+          |> Integer.to_string()
+          |> String.pad_leading(12, "0")
+          |> then(&"00000000-0000-0000-0000-#{&1}")
+
+        insert_event!(delivery, event_id, occurred_at)
+      end
+
+      assert {:ok, result} =
+               Resync.run(
+                 tenant_id: @tenant_id,
+                 dry_run: true,
+                 from: DateTime.add(occurred_at, -1, :second),
+                 to: DateTime.add(occurred_at, 1, :second),
+                 page_size: 7
+               )
+
+      assert result.scanned == 125
+      assert result.would_insert == 125
+      assert length(result.candidates) == 100
+      assert result.candidates_truncated?
     end
 
     test "halts on a bounded write failure after prior pages committed" do

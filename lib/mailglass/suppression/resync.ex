@@ -14,6 +14,7 @@ defmodule Mailglass.Suppression.Resync do
   @default_window_days 90
   @default_page_size 100
   @max_page_size 100
+  @max_candidate_summaries 100
   @conflict_target {:unsafe_fragment, "(tenant_id, address, scope, COALESCE(stream, ''))"}
 
   @type result :: %{
@@ -25,7 +26,8 @@ defmodule Mailglass.Suppression.Resync do
           tenant_id: String.t(),
           from: DateTime.t(),
           to: DateTime.t(),
-          candidates: [map()]
+          candidates: [map()],
+          candidates_truncated?: boolean()
         }
 
   @spec run(keyword()) :: {:ok, result()} | {:error, term()}
@@ -33,8 +35,7 @@ defmodule Mailglass.Suppression.Resync do
     with {:ok, tenant_id} <- fetch_tenant_id(opts),
          {:ok, window} <- parse_window(opts),
          {:ok, totals} <- resync_pages(tenant_id, window, opts, initial_totals()) do
-      {:ok,
-       totals |> Map.drop([:missing_keys]) |> Map.merge(result_metadata(tenant_id, window, opts))}
+      {:ok, totals |> Map.drop([:seen_keys]) |> Map.merge(result_metadata(tenant_id, window, opts))}
     end
   end
 
@@ -80,10 +81,11 @@ defmodule Mailglass.Suppression.Resync do
         {:ok, totals}
 
       rows ->
-        with {:ok, candidates} <- candidates_for_page(tenant_id, rows),
-             {:ok, candidates} <- mark_existing(candidates, opts, totals.missing_keys),
+        with {:ok, candidates, seen_keys} <-
+               candidates_for_page(tenant_id, rows, totals.seen_keys),
+             {:ok, candidates} <- mark_existing(candidates, opts),
              {:ok, inserted} <- maybe_apply(candidates, opts),
-             {:ok, next_totals} <- accumulate(totals, candidates, inserted) do
+             {:ok, next_totals} <- accumulate(totals, candidates, inserted, seen_keys) do
           resync_pages(tenant_id, window, opts, next_totals, page_cursor(rows))
         end
     end
@@ -114,28 +116,28 @@ defmodule Mailglass.Suppression.Resync do
     )
   end
 
-  defp candidates_for_page(tenant_id, rows) do
+  defp candidates_for_page(tenant_id, rows, seen_keys) do
     rows
-    |> Enum.reduce([], fn {event, delivery}, candidates ->
+    |> Enum.reduce({[], seen_keys}, fn {event, delivery}, {candidates, seen} ->
       case AutoSuppress.build_attrs(event, delivery) do
         {:ok, :skip} ->
-          candidates
+          {candidates, seen}
 
         {:ok, attrs} ->
           candidate = %{event: event, attrs: attrs, tenant_id: tenant_id, status: nil}
+          key = candidate_key(candidate)
 
-          if Enum.any?(candidates, &(candidate_key(&1) == candidate_key(candidate))) do
-            candidates
+          if MapSet.member?(seen, key) do
+            {candidates, seen}
           else
-            [candidate | candidates]
+            {[candidate | candidates], MapSet.put(seen, key)}
           end
       end
     end)
-    |> Enum.reverse()
-    |> then(&{:ok, &1})
+    |> then(fn {candidates, seen} -> {:ok, Enum.reverse(candidates), seen} end)
   end
 
-  defp mark_existing(candidates, opts, missing_keys) do
+  defp mark_existing(candidates, opts) do
     keys = Enum.map(candidates, &lookup_key/1)
 
     results =
@@ -148,7 +150,7 @@ defmodule Mailglass.Suppression.Resync do
     candidates
     |> Enum.zip(results)
     |> Enum.reduce_while({:ok, []}, fn {candidate, result}, {:ok, marked} ->
-      case status_for(candidate, result, missing_keys) do
+      case status_for_unseen(candidate, result) do
         {:ok, status} -> {:cont, {:ok, [%{candidate | status: status} | marked]}}
         {:error, reason} -> {:halt, {:error, reason}}
       end
@@ -157,14 +159,6 @@ defmodule Mailglass.Suppression.Resync do
       {:ok, marked} -> {:ok, Enum.reverse(marked)}
       error -> error
     end)
-  end
-
-  defp status_for(candidate, result, missing_keys) do
-    if Map.has_key?(missing_keys, candidate_key(candidate)) do
-      {:ok, :missing}
-    else
-      status_for_unseen(candidate, result)
-    end
   end
 
   defp status_for_unseen(_candidate, :not_suppressed), do: {:ok, :missing}
@@ -229,10 +223,21 @@ defmodule Mailglass.Suppression.Resync do
   end
 
   defp initial_totals do
-    %{scanned: 0, would_insert: 0, inserted: 0, existing: 0, candidates: [], missing_keys: %{}}
+    %{
+      scanned: 0,
+      would_insert: 0,
+      inserted: 0,
+      existing: 0,
+      candidates: [],
+      candidates_truncated?: false,
+      seen_keys: MapSet.new()
+    }
   end
 
-  defp accumulate(totals, candidates, inserted) do
+  defp accumulate(totals, candidates, inserted, seen_keys) do
+    summaries = Enum.map(candidates, &candidate_summary/1)
+    remaining = max(@max_candidate_summaries - length(totals.candidates), 0)
+
     {:ok,
      %{
        totals
@@ -240,13 +245,9 @@ defmodule Mailglass.Suppression.Resync do
          would_insert: totals.would_insert + Enum.count(candidates, &(&1.status == :missing)),
          inserted: totals.inserted + inserted,
          existing: totals.existing + Enum.count(candidates, &(&1.status == :existing)),
-         candidates: totals.candidates ++ Enum.map(candidates, &candidate_summary/1),
-         missing_keys:
-           Enum.reduce(candidates, totals.missing_keys, fn candidate, missing_keys ->
-             if candidate.status == :missing,
-               do: Map.put(missing_keys, candidate_key(candidate), true),
-               else: missing_keys
-           end)
+         candidates: totals.candidates ++ Enum.take(summaries, remaining),
+         candidates_truncated?: totals.candidates_truncated? or length(summaries) > remaining,
+         seen_keys: seen_keys
      }}
   end
 
