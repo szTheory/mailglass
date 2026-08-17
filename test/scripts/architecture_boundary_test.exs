@@ -20,6 +20,15 @@ defmodule Mailglass.ArchitectureBoundaryTest do
            ]) == []
   end
 
+  test "the core safe broadcast capability has one owner" do
+    pub_sub = File.read!("lib/mailglass/pub_sub.ex")
+    projector = File.read!("lib/mailglass/outbound/projector.ex")
+
+    assert pub_sub =~ "def safe_broadcast(topic, payload)"
+    assert projector =~ "Mailglass.Ports.PubSub.safe_broadcast"
+    refute projector =~ "defp safe_broadcast"
+  end
+
   test "the compile-cycle parser fails closed and rejects a synthetic SCC" do
     assert cycle_free?("No cycles found\n")
     refute cycle_free?("1 cycles found:\nlib/a.ex\nlib/b.ex\n")
