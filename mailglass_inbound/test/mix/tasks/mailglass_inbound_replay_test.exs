@@ -162,8 +162,8 @@ defmodule Mix.Tasks.Mailglass.Inbound.ReplayTest do
 
   describe "append-only lineage (real replay)" do
     test "a replay appends an ExecutionRun with source: :replay (no UPDATE)" do
-      # Real DB path: seed a record + evidence + a prior matched fresh run so the
-      # shipped Internal.Replay.replay/2 can resolve the mailbox.
+      # Real DB path: seed the durable route binding written at ingress plus a
+      # prior matched fresh run, then prove replay appends rather than updates.
       {:ok, record} = insert_record("tenant-a")
       {:ok, evidence} = insert_evidence("tenant-a", record.id)
 
@@ -198,6 +198,12 @@ defmodule Mix.Tasks.Mailglass.Inbound.ReplayTest do
   defmodule ReplayCaptureMailbox do
     @behaviour MailglassInbound.Mailbox
     def process(_message), do: :accept
+  end
+
+  defmodule ReplayCaptureRouter do
+    use MailglassInbound.Router
+
+    route(ReplayCaptureMailbox, recipient: "support@example.com")
   end
 
   # ---- helpers --------------------------------------------------------------
@@ -270,7 +276,14 @@ defmodule Mix.Tasks.Mailglass.Inbound.ReplayTest do
       tenant_id: tenant_id,
       inbound_record_id: record_id,
       provider: "postmark",
-      raw_payload: %{"ok" => true}
+      raw_payload: %{"ok" => true},
+      verification_facts: %{
+        "mailglass_execution_route" => %{
+          "status" => "matched",
+          "mailbox" => Atom.to_string(ReplayCaptureMailbox),
+          "router" => Atom.to_string(ReplayCaptureRouter)
+        }
+      }
     })
   end
 end
