@@ -8,6 +8,25 @@ defmodule Mailglass.Adapters.AlwaysFail do
   end
 end
 
+defmodule Mailglass.Adapters.TransactionProbe do
+  @moduledoc false
+  @behaviour Mailglass.Adapter
+
+  @impl Mailglass.Adapter
+  def deliver(message, opts) do
+    send(
+      Keyword.fetch!(opts, :test_pid),
+      {:adapter_transaction, Mailglass.TestRepo.in_transaction?()}
+    )
+
+    {:ok,
+     %{
+       message_id: "transaction-probe",
+       provider_response: %{adapter: __MODULE__, delivery_id: message.metadata[:delivery_id]}
+     }}
+  end
+end
+
 defmodule Mailglass.OutboundTest do
   use Mailglass.DataCase, async: false
 
@@ -244,15 +263,15 @@ defmodule Mailglass.OutboundTest do
   end
 
   describe "adapter call outside transaction (D-20 / T-3-05-03)" do
-    test "Fake.deliver is called AFTER Repo.transact returns for Multi#1" do
-      # Verify by checking that Fake records exist after send completes
-      # (not inside a transaction that could roll back)
+    test "adapter observes no checked-out Ecto transaction after queued persistence commits" do
       msg = build_message("order@example.com")
-      assert {:ok, %Delivery{}} = Outbound.send(msg)
 
-      # Fake has the record — it was written outside the transaction
-      deliveries = Fake.deliveries()
-      assert length(deliveries) == 1
+      assert {:ok, %Delivery{status: :sent}} =
+               Outbound.send(msg,
+                 adapter: {Mailglass.Adapters.TransactionProbe, test_pid: self()}
+               )
+
+      assert_receive {:adapter_transaction, false}
     end
   end
 
