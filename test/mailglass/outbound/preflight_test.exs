@@ -2,7 +2,7 @@ defmodule Mailglass.Outbound.PreflightTest do
   use Mailglass.DataCase, async: false
 
   alias Mailglass.{Outbound, Message, TestRepo}
-  alias Mailglass.Outbound.Delivery
+  alias Mailglass.Outbound.{Delivery, Preflight}
 
   setup do
     Mailglass.Adapters.Fake.checkout()
@@ -12,9 +12,36 @@ defmodule Mailglass.Outbound.PreflightTest do
 
   test "architecture collaborators expose only the internal operations Outbound needs" do
     assert function_exported?(Mailglass.Outbound.Preflight, :run, 1)
+    assert function_exported?(Mailglass.Outbound.Preflight, :run_many, 1)
     assert function_exported?(Mailglass.Outbound.Routes, :resolve_sync, 2)
     assert function_exported?(Mailglass.Outbound.Persistence, :persist_queued, 2)
+    assert function_exported?(Mailglass.Outbound.Persistence, :enqueue_oban, 2)
+    assert function_exported?(Mailglass.Outbound.Persistence, :insert_batch, 2)
+    assert function_exported?(Mailglass.Outbound.Persistence, :persist_failed_by_id, 2)
     assert function_exported?(Mailglass.Outbound.Dispatch, :call_adapter, 2)
+    assert function_exported?(Mailglass.Outbound.Dispatch, :enqueue_one, 2)
+    assert function_exported?(Mailglass.Outbound.Dispatch, :enqueue_many, 2)
+  end
+
+  test "bulk preflight returns exact input-indexed outcomes after one suppression lookup" do
+    {:ok, _} =
+      insert_suppression!(%{
+        tenant_id: "test-tenant",
+        address: "blocked-bulk@example.com",
+        scope: :address,
+        reason: :manual,
+        source: "test"
+      })
+
+    allowed = build_message("allowed-bulk@example.com")
+    blocked = build_message("blocked-bulk@example.com")
+
+    assert [
+             {:ok, 0, %Message{metadata: %{delivery_id: delivery_id}}},
+             {:error, 1, %Mailglass.SuppressedError{}, ^blocked}
+           ] = Preflight.run_many([allowed, blocked])
+
+    assert is_binary(delivery_id)
   end
 
   describe "preflight stage 0 — Tenancy.assert_stamped!" do
@@ -96,22 +123,13 @@ defmodule Mailglass.Outbound.PreflightTest do
       end)
 
       # First send should consume the token
-      msg1 = build_message_for_stream("rl@ratelimited.test", :operational)
-      _first = Outbound.send(msg1)
+      :ets.delete_all_objects(:mailglass_rate_limit)
+      msg1 = build_message_for_stream("rl-first@ratelimited.test", :operational)
+      assert {:ok, %Delivery{status: :sent}} = Outbound.send(msg1)
 
       # Second send should hit the limit
-      msg2 = build_message_for_stream("rl@ratelimited.test", :operational)
-      result = Outbound.send(msg2)
-
-      case result do
-        {:error, %Mailglass.RateLimitError{}} ->
-          # Verify no Delivery row for the second attempt's block
-          :ok
-
-        {:ok, _} ->
-          # Rate limiter may not be strict in test context — accept either result
-          :ok
-      end
+      msg2 = build_message_for_stream("rl-second@ratelimited.test", :operational)
+      assert {:error, %Mailglass.RateLimitError{}} = Outbound.send(msg2)
     end
   end
 
@@ -129,6 +147,7 @@ defmodule Mailglass.Outbound.PreflightTest do
 
       Application.put_env(:mailglass, :rate_limit, default: [capacity: 1, per_minute: 1])
       on_exit(fn -> Application.delete_env(:mailglass, :rate_limit) end)
+      :ets.delete_all_objects(:mailglass_rate_limit)
 
       # Send to the suppressed address — should short-circuit at suppression
       msg = build_message_for_stream("order@example.com", :operational)
@@ -136,8 +155,7 @@ defmodule Mailglass.Outbound.PreflightTest do
 
       # Send a non-suppressed message — should still work (rate limit not consumed)
       msg2 = build_message_for_stream("notblocked@order.test", :operational)
-      # This may succeed or hit rate limit, but suppression failure did not consume limit
-      _result = Outbound.send(msg2)
+      assert {:ok, %Delivery{status: :sent}} = Outbound.send(msg2)
     end
   end
 
@@ -166,24 +184,17 @@ defmodule Mailglass.Outbound.PreflightTest do
 
       # Note: if Renderer.render returns {:error, _}, Outbound will short-circuit
       # before inserting a Delivery row
-      result = Outbound.send(msg)
+      assert {:error, %Mailglass.TemplateError{}} = Outbound.send(msg)
 
-      case result do
-        {:error, _err} ->
-          import Ecto.Query
+      import Ecto.Query
 
-          count =
-            TestRepo.aggregate(
-              from(d in Delivery, where: d.recipient == "render-fail@example.com"),
-              :count
-            )
+      count =
+        TestRepo.aggregate(
+          from(d in Delivery, where: d.recipient == "render-fail@example.com"),
+          :count
+        )
 
-          assert count == 0
-
-        {:ok, _} ->
-          # The Renderer may handle the error differently — test pass regardless
-          :ok
-      end
+      assert count == 0
     end
   end
 
