@@ -107,13 +107,15 @@ defmodule MailglassInbound.Execution do
 
   @doc false
   @spec validate_job_route(map(), keyword()) :: {:ok, map()} | {:error, :invalid_job_args}
-  def validate_job_route(%{"route_status" => "no_match", "mailbox" => mailbox}, _opts)
-      when mailbox in [nil, ""],
-      do: {:ok, %{status: :no_match}}
-
-  # Existing no-match jobs predate the explicit nil mailbox field.
-  def validate_job_route(%{"route_status" => "no_match"}, _opts),
-    do: {:ok, %{status: :no_match}}
+  def validate_job_route(%{"route_status" => "no_match"} = job_args, _opts) do
+    # Existing no-match jobs predate the explicit nil mailbox field, but a
+    # non-empty value is contradictory job data and must not be accepted.
+    if Map.get(job_args, "mailbox") in [nil, ""] do
+      {:ok, %{status: :no_match}}
+    else
+      {:error, :invalid_job_args}
+    end
+  end
 
   def validate_job_route(%{"route_status" => "matched", "mailbox" => mailbox}, opts)
       when is_binary(mailbox) and mailbox != "" and is_list(opts) do
