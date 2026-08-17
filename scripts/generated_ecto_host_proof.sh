@@ -7,7 +7,13 @@ set -euo pipefail
 
 MAILGLASS_PATH="${MAILGLASS_PATH:?MAILGLASS_PATH must point at the working tree}"
 DATABASE_URL="${DATABASE_URL:?DATABASE_URL must name the generated-host scratch database}"
-WORK_DIR="${WORK_DIR:-$(mktemp -d)}"
+
+if [ -n "${WORK_DIR:-}" ]; then
+  echo "WORK_DIR is not accepted: generated-host proof always creates its own scratch directory." >&2
+  exit 1
+fi
+
+WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mailglass-generated-ecto-host.XXXXXX")"
 HOST_DIR="${WORK_DIR}/host"
 
 database_name_from_url() {
@@ -47,7 +53,6 @@ if ! mix phx.new --version >/dev/null 2>&1; then
   mix archive.install hex phx_new --force
 fi
 
-rm -rf "${HOST_DIR}"
 (
   cd "${WORK_DIR}"
   mix phx.new host --module Host --app host --no-install --no-assets --no-html --no-mailer

@@ -46,6 +46,32 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     end)
   end
 
+  test "generated-host proof owns only a newly-created private scratch directory" do
+    source = File.read!(@script_path)
+
+    assert source =~ "if [ -n \"${WORK_DIR:-}\" ]; then"
+    assert source =~ "WORK_DIR is not accepted"
+    assert source =~ "mktemp -d \"${TMPDIR:-/tmp}/mailglass-generated-ecto-host.XXXXXX\""
+    assert source =~ "rm -rf \"${WORK_DIR}\""
+    refute source =~ "rm -rf \"${HOST_DIR}\""
+
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_owned_scratch_contract!(
+        String.replace(source, "WORK_DIR is not accepted", "caller directory is accepted",
+          global: false
+        )
+      )
+    end
+
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_owned_scratch_contract!(
+        String.replace(source, "mailglass-generated-ecto-host.XXXXXX", "caller-supplied.XXXXXX",
+          global: false
+        )
+      )
+    end
+  end
+
   test "Installer Host Smoke retains its identity and runs both adopter proofs" do
     ci_source = File.read!(@ci_yml_path)
     installer_job = extract_job_block(ci_source, "installer_host_smoke")
@@ -66,5 +92,13 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
       [_, rest] -> marker <> (rest |> String.split(~r/\n  [a-z_][a-z_-]*:\n/, parts: 2) |> hd())
       _ -> ""
     end
+  end
+
+  defp assert_owned_scratch_contract!(source) do
+    assert source =~ "if [ -n \"${WORK_DIR:-}\" ]; then"
+    assert source =~ "WORK_DIR is not accepted"
+    assert source =~ "mktemp -d \"${TMPDIR:-/tmp}/mailglass-generated-ecto-host.XXXXXX\""
+    assert source =~ "rm -rf \"${WORK_DIR}\""
+    refute source =~ "rm -rf \"${HOST_DIR}\""
   end
 end
