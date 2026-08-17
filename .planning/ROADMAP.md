@@ -98,7 +98,14 @@ Plans:
   4. Provider failures retry only for the defined transient outcomes, while permanent outcomes are discarded and delivery errors never expose recipient, message, or provider-body content.
   5. Tracking requests remain fail-open to callers while telemetry truthfully distinguishes successful from failed ledger writes, and persisted closed-set values do not create arbitrary atoms.
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 156-01-PLAN.md — Replace racy/unbounded core and inbound rate-limit state with a shared private fixed-point CAS engine.
+- [ ] 156-02-PLAN.md — Commit durable batch projections, events, rendered private metadata, and Oban jobs atomically.
+- [ ] 156-03-PLAN.md — Bound core/inbound Task fallback and report every rejected spawn honestly.
+- [ ] 156-04-PLAN.md — Close retry classes, redact errors, and make dispatch/tracking telemetry truthful.
+- [ ] 156-05-PLAN.md — Replace persisted/job runtime atom construction with finite provider/source decoders.
 
 ### Phase 157: Inbound, Database, and Lifecycle Hardening
 
