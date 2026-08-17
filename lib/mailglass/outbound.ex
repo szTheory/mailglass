@@ -517,8 +517,11 @@ defmodule Mailglass.Outbound do
         build_failed_delivery(msg, err)
       end)
 
-    case insert_batch(Enum.map(routable, fn {:ok, route} -> route end)) do
-      {:ok, inserted_deliveries} ->
+    case insert_batch(Enum.map(routable, fn {:ok, route} -> route end), opts) do
+      {:ok, inserted_deliveries, :oban} ->
+        {:ok, inserted_deliveries ++ failed_deliveries}
+
+      {:ok, inserted_deliveries, :task_supervisor} ->
         # I-13: Only re-enqueue :queued rows. On replay, some rows may already
         # be :sent/:failed — do NOT re-enqueue them (duplicate send risk).
         {fresh, _already_settled} =
@@ -545,10 +548,11 @@ defmodule Mailglass.Outbound do
     end
   end
 
-  defp insert_batch([]), do: {:ok, []}
+  defp insert_batch([], _opts), do: {:ok, [], :oban}
 
-  defp insert_batch(messages_with_refs) when is_list(messages_with_refs) do
+  defp insert_batch(messages_with_refs, opts) when is_list(messages_with_refs) do
     now = Clock.utc_now()
+    dispatch_mode = batch_dispatch_mode(opts)
 
     rows =
       Enum.map(messages_with_refs, fn {%Message{} = m, adapter_ref} ->
@@ -560,7 +564,7 @@ defmodule Mailglass.Outbound do
         |> Map.put(:updated_at, now)
       end)
 
-    result =
+    multi =
       Ecto.Multi.new()
       |> Ecto.Multi.insert_all(
         :deliveries,
@@ -604,6 +608,10 @@ defmodule Mailglass.Outbound do
 
         {:ok, n}
       end)
+
+    result =
+      multi
+      |> maybe_insert_batch_jobs(dispatch_mode)
       |> Repo.multi()
 
     case result do
@@ -621,12 +629,35 @@ defmodule Mailglass.Outbound do
             Repo.all(Tenancy.scope(query))
           end
 
-        {:ok, all_rows}
+        {:ok, all_rows, dispatch_mode}
 
       {:error, _step, err, _} ->
         {:error, to_error(err)}
     end
   end
+
+  defp batch_dispatch_mode(opts) do
+    async_adapter =
+      Keyword.get(opts, :async_adapter) ||
+        Application.get_env(:mailglass, :async_adapter, :oban)
+
+    if async_adapter != :task_supervisor and Mailglass.OptionalDeps.Oban.available?(),
+      do: :oban,
+      else: :task_supervisor
+  end
+
+  defp maybe_insert_batch_jobs(multi, :oban) do
+    Mailglass.OptionalDeps.Oban.insert_all(multi, :jobs, fn %{deliveries: {_count, inserted}} ->
+      Enum.map(inserted, fn %Delivery{id: id, tenant_id: tenant_id} ->
+        Mailglass.Outbound.Worker.new(%{
+          "delivery_id" => id,
+          "mailglass_tenant_id" => tenant_id
+        })
+      end)
+    end)
+  end
+
+  defp maybe_insert_batch_jobs(multi, :task_supervisor), do: multi
 
   defp enqueue_batch_jobs(deliveries) when is_list(deliveries) do
     async_adapter = Application.get_env(:mailglass, :async_adapter, :oban)

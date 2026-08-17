@@ -72,6 +72,33 @@ defmodule Mailglass.OptionalDeps.Oban do
       {:error, :oban_unavailable}
     end
   end
+
+  @doc """
+  Adds an `Oban.insert_all/4` operation to an existing `Ecto.Multi`.
+
+  The jobs may be a list or a function of prior Multi changes. When Oban is
+  unavailable the named step fails inside the Multi, rather than allowing a
+  caller to acknowledge a durable queue without a durable job.
+
+  `:oban_multi_insert_all` is a test-only failure seam. It receives the
+  Multi, name, and jobs builder and must return an Ecto.Multi operation
+  result; production applications leave it unset.
+  """
+  @doc since: "2.6.0"
+  @spec insert_all(Ecto.Multi.t(), atom(), [term()] | (map() -> [term()])) :: Ecto.Multi.t()
+  def insert_all(%Ecto.Multi{} = multi, name, jobs) when is_atom(name) do
+    case Application.get_env(:mailglass, :oban_multi_insert_all) do
+      override when is_function(override, 3) ->
+        Ecto.Multi.run(multi, name, fn _repo, _changes -> override.(multi, name, jobs) end)
+
+      nil ->
+        if available?() do
+          Oban.insert_all(multi, name, jobs)
+        else
+          Ecto.Multi.error(multi, name, :oban_unavailable)
+        end
+    end
+  end
 end
 
 # Conditionally-compiled middleware. The entire `defmodule` is elided when
