@@ -149,7 +149,16 @@ Plans:
   4. Existing Outbound, Config, and inbound Plug entry points preserve their public contracts while their distinct responsibilities are independently owned behind them.
   5. Shared business behavior has one clear owner without merging the independently released core and inbound packages.
 
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+
+- [ ] 158-01-PLAN.md — Establish the Runtime/Config tracer and anti-vacuous compile-cycle/package-edge guard.
+- [ ] 158-02-PLAN.md — Make Runtime the authoritative core configuration owner behind stable Config compatibility delegates.
+- [ ] 158-03-PLAN.md — Replace broad sibling imports with declared core ports and singular shared ownership.
+- [ ] 158-04-PLAN.md — Split Outbound implementation responsibilities behind unchanged public delivery façades.
+- [ ] 158-05-PLAN.md — Extract package-local webhook/inbound pipelines behind unchanged public Plugs.
+- [ ] 158-06-PLAN.md — Enforce architecture proof in an existing required lane and verify package/public compatibility.
 
 ### Phase 159: Raise and Simplify Engineering Gates
 
