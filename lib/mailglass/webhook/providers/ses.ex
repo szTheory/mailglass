@@ -350,7 +350,10 @@ defmodule Mailglass.Webhook.Providers.SES do
     ]
 
     url_charlist = String.to_charlist(cert_url)
-    request_opts = [sync: false, stream: {self(), :once}]
+    # `:httpc` expects the literal receiver selector `:self` here. Passing the
+    # caller pid looks plausible but is rejected as an invalid stream option,
+    # which silently falls back to buffering the entire response.
+    request_opts = [sync: false, stream: {:self, :once}]
 
     case apply(httpc_mod, :request, [:get, {url_charlist, []}, http_opts, request_opts]) do
       {:ok, request_id} when is_reference(request_id) ->

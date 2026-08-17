@@ -11,7 +11,7 @@ defmodule Mailglass.StreamingHTTPCStub do
 
   def request(:get, _url_req, _http_opts, opts) do
     true = Keyword.get(opts, :sync) == false
-    {_receiver, :once} = Keyword.fetch!(opts, :stream)
+    {:self, :once} = Keyword.fetch!(opts, :stream)
     caller = self()
     request_id = make_ref()
     test_pid = Application.fetch_env!(:mailglass, :ses_stream_test_pid)
