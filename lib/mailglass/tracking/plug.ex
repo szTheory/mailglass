@@ -24,9 +24,11 @@ defmodule Mailglass.Tracking.Plug do
 
   ## Telemetry
 
-  Emits `[:mailglass, :tracking, :open, :recorded]` and
-  `[:mailglass, :tracking, :click, :recorded]` on successful event record.
-  Metadata: `%{delivery_id: binary, tenant_id: binary}` — no PII.
+  Emits `[:mailglass, :tracking, kind, :recorded]` only after a successful
+  event-ledger append. Returned or raised ledger failures emit
+  `[:mailglass, :tracking, kind, :failed]` while retaining the GIF/redirect
+  response. Metadata is `%{delivery_id: binary, tenant_id: binary}` plus a
+  finite `:failure_class` on failed events — no PII.
   """
 
   use Plug.Router
@@ -85,51 +87,65 @@ defmodule Mailglass.Tracking.Plug do
   # --- Private helpers ---
 
   defp record_open_event(delivery_id, tenant_id) do
-    Mailglass.Tenancy.with_tenant(tenant_id, fn ->
-      result =
-        Mailglass.Events.append(%{
-          tenant_id: tenant_id,
-          delivery_id: delivery_id,
-          type: :opened,
-          occurred_at: Mailglass.Clock.utc_now(),
-          normalized_payload: %{source: :pixel}
-        })
-
-      :telemetry.execute(
-        [:mailglass, :tracking, :open, :recorded],
-        %{count: 1},
-        %{delivery_id: delivery_id, tenant_id: tenant_id}
-      )
-
-      result
-    end)
-  rescue
-    _ -> :ok
+    record_event(:open, delivery_id, tenant_id, %{
+      tenant_id: tenant_id,
+      delivery_id: delivery_id,
+      type: :opened,
+      occurred_at: Mailglass.Clock.utc_now(),
+      normalized_payload: %{source: :pixel}
+    })
   end
 
   defp record_click_event(delivery_id, tenant_id, target_url) do
-    Mailglass.Tenancy.with_tenant(tenant_id, fn ->
-      # Hash the URL to avoid storing PII-adjacent click targets in event metadata.
-      url_hash = :crypto.hash(:sha256, target_url) |> Base.encode16(case: :lower)
+    # Hash the URL to avoid storing PII-adjacent click targets in event metadata.
+    url_hash = :crypto.hash(:sha256, target_url) |> Base.encode16(case: :lower)
 
-      result =
-        Mailglass.Events.append(%{
-          tenant_id: tenant_id,
-          delivery_id: delivery_id,
-          type: :clicked,
-          occurred_at: Mailglass.Clock.utc_now(),
-          normalized_payload: %{source: :click, target_url_hash: url_hash}
-        })
+    record_event(:click, delivery_id, tenant_id, %{
+      tenant_id: tenant_id,
+      delivery_id: delivery_id,
+      type: :clicked,
+      occurred_at: Mailglass.Clock.utc_now(),
+      normalized_payload: %{source: :click, target_url_hash: url_hash}
+    })
+  end
 
-      :telemetry.execute(
-        [:mailglass, :tracking, :click, :recorded],
-        %{count: 1},
-        %{delivery_id: delivery_id, tenant_id: tenant_id}
-      )
+  defp record_event(kind, delivery_id, tenant_id, attrs) do
+    result =
+      Mailglass.Tenancy.with_tenant(tenant_id, fn ->
+        event_ledger().append(attrs)
+      end)
 
-      result
-    end)
+    case result do
+      {:ok, _event} ->
+        emit_recorded(kind, delivery_id, tenant_id)
+
+      {:error, _reason} ->
+        emit_failed(kind, delivery_id, tenant_id, :append_error)
+
+      _other ->
+        emit_failed(kind, delivery_id, tenant_id, :unexpected_result)
+    end
   rescue
-    _ -> :ok
+    _ -> emit_failed(kind, delivery_id, tenant_id, :exception)
+  end
+
+  defp event_ledger do
+    Application.get_env(:mailglass, :tracking_event_ledger, Mailglass.Events)
+  end
+
+  defp emit_recorded(kind, delivery_id, tenant_id) do
+    :telemetry.execute(
+      [:mailglass, :tracking, kind, :recorded],
+      %{count: 1},
+      %{delivery_id: delivery_id, tenant_id: tenant_id}
+    )
+  end
+
+  defp emit_failed(kind, delivery_id, tenant_id, failure_class) do
+    :telemetry.execute(
+      [:mailglass, :tracking, kind, :failed],
+      %{count: 1},
+      %{delivery_id: delivery_id, tenant_id: tenant_id, failure_class: failure_class}
+    )
   end
 end

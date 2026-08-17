@@ -1486,6 +1486,7 @@ in `normalized_payload`, never the raw URL (D-31 PII whitelist).
 **Telemetry:**
 - `[:mailglass, :tracking, :open, :recorded]` — measurements: `%{count: 1}`, metadata: `%{delivery_id, tenant_id}`
 - `[:mailglass, :tracking, :click, :recorded]` — same shape
+- `[:mailglass, :tracking, :open, :failed]` and `[:mailglass, :tracking, :click, :failed]` — same measurements; metadata adds finite `failure_class` (`:append_error`, `:unexpected_result`, or `:exception`) and never includes provider, recipient, message, URL, or exception text. Tracking remains fail-open: ledger failure does not change a valid GIF or redirect response.
 
 Since: 0.1.0.
 
