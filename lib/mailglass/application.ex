@@ -20,7 +20,7 @@ defmodule Mailglass.Application do
     children =
       [
         {Phoenix.PubSub, name: Mailglass.PubSub, adapter: Phoenix.PubSub.PG2},
-        {Task.Supervisor, name: Mailglass.TaskSupervisor}
+        {Task.Supervisor, name: Mailglass.TaskSupervisor, max_children: 10}
       ]
       |> maybe_add(Mailglass.Adapters.Fake.Supervisor, {Mailglass.Adapters.Fake.Supervisor, []})
       |> maybe_add(Mailglass.RateLimiter.Supervisor, {Mailglass.RateLimiter.Supervisor, []})

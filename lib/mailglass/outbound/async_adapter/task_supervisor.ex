@@ -10,7 +10,24 @@ defmodule Mailglass.Outbound.AsyncAdapter.TaskSupervisor do
   # the parent process-dict.
 
   @impl true
-  def dispatch(fun, _opts) when is_function(fun, 0) do
-    Task.Supervisor.start_child(Mailglass.TaskSupervisor, fun)
+  def dispatch(fun, opts) when is_function(fun, 0) do
+    supervisor = Keyword.get(opts, :task_supervisor_name, Mailglass.TaskSupervisor)
+
+    try do
+      case Task.Supervisor.start_child(supervisor, fun) do
+        {:ok, pid} when is_pid(pid) -> {:ok, pid}
+        :ok -> :ok
+        {:error, reason} -> {:error, normalize_reason(reason)}
+        other -> {:error, normalize_reason(other)}
+      end
+    rescue
+      _error -> {:error, :supervisor_unavailable}
+    catch
+      :exit, _reason -> {:error, :supervisor_unavailable}
+    end
   end
+
+  defp normalize_reason(:max_children), do: :max_children
+  defp normalize_reason(:noproc), do: :supervisor_unavailable
+  defp normalize_reason(_reason), do: :start_child_failed
 end

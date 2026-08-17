@@ -16,6 +16,37 @@ defmodule Mailglass.ApplicationTest do
       assert is_pid(pid), "Expected Mailglass.TaskSupervisor to be registered as a pid"
       assert Process.alive?(pid)
     end
+
+    test "Task.Supervisor rejects the eleventh held child" do
+      name = String.to_atom("mailglass_dispatch_test_#{System.unique_integer([:positive])}")
+      start_supervised!({Task.Supervisor, name: name, max_children: 10})
+      parent = self()
+
+      for _ <- 1..10 do
+        assert {:ok, _pid} =
+                 Mailglass.Outbound.AsyncAdapter.TaskSupervisor.dispatch(
+                   fn ->
+                     send(parent, :held)
+
+                     receive do
+                       :release -> :ok
+                     end
+                   end,
+                   task_supervisor_name: name
+                 )
+
+        assert_receive :held
+      end
+
+      assert {:error, :max_children} =
+               Mailglass.Outbound.AsyncAdapter.TaskSupervisor.dispatch(fn -> :ok end,
+                 task_supervisor_name: name
+               )
+
+      for {_id, pid, _type, _modules} <- Supervisor.which_children(name), is_pid(pid) do
+        send(pid, :release)
+      end
+    end
   end
 
   describe "maybe_warn_missing_oban/0 idempotence" do
