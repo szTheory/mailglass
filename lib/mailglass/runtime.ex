@@ -6,11 +6,12 @@ defmodule Mailglass.Runtime do
   @schema_key {Mailglass.Config, :schema}
   @theme_key {Mailglass.Config, :theme}
   @runtime_key {__MODULE__, :current}
+  @config_key {__MODULE__, :config}
 
   @test_env Mix.env() == :test
 
-  @opaque t :: %__MODULE__{config: keyword(), source: keyword()}
-  defstruct [:config, :source]
+  @opaque t :: %__MODULE__{source_fingerprint: binary()}
+  defstruct [:source_fingerprint]
 
   @doc false
   @spec validate!(keyword()) :: keyword()
@@ -28,12 +29,13 @@ defmodule Mailglass.Runtime do
 
     _schema = validated |> Keyword.fetch!(:schema) |> Mailglass.Identifier.validate!(:schema)
     validate_repo_adapter!(Keyword.fetch!(validated, :repo))
-    runtime = %__MODULE__{config: validated, source: opts}
+    runtime = %__MODULE__{source_fingerprint: source_fingerprint(opts)}
 
     # Publish only after the entire value is valid. The legacy keys remain for
     # compatibility with existing hot paths and test-support reset helpers.
     :persistent_term.put(@schema_key, Keyword.fetch!(validated, :schema))
     :persistent_term.put(@theme_key, Keyword.fetch!(validated, :theme))
+    :persistent_term.put(@config_key, validated)
     :persistent_term.put(@runtime_key, runtime)
 
     if Keyword.get(Keyword.fetch!(validated, :telemetry), :default_logger, false) do
@@ -54,7 +56,7 @@ defmodule Mailglass.Runtime do
 
   @doc false
   @spec fetch!(t(), atom()) :: term()
-  def fetch!(%__MODULE__{config: config}, key), do: Keyword.fetch!(config, key)
+  def fetch!(%__MODULE__{}, key), do: Keyword.fetch!(config!(), key)
 
   @doc false
   @spec fetch!(atom()) :: term()
@@ -70,7 +72,7 @@ defmodule Mailglass.Runtime do
     runtime = current()
 
     runtime =
-      if @test_env and runtime.source != source_config() do
+      if @test_env and runtime.source_fingerprint != source_fingerprint(source_config()) do
         bootstrap!()
       else
         runtime
@@ -81,7 +83,7 @@ defmodule Mailglass.Runtime do
 
   @doc false
   @spec get(atom(), term()) :: term()
-  def get(key, default \\ nil), do: current().config |> Keyword.get(key, default)
+  def get(key, default \\ nil), do: current() |> fetch_config_value(key, default)
 
   # Deliberately outside the validated public schema: tests/providers may
   # inject an HTTP client without turning that implementation hook into an
@@ -116,6 +118,7 @@ defmodule Mailglass.Runtime do
   def reset_for_test! do
     :persistent_term.erase(@schema_key)
     :persistent_term.erase(@theme_key)
+    :persistent_term.erase(@config_key)
     :persistent_term.erase(@runtime_key)
     :ok
   end
@@ -153,5 +156,13 @@ defmodule Mailglass.Runtime do
     :mailglass
     |> Application.get_all_env()
     |> Keyword.take(Schema.known_keys())
+  end
+
+  defp config!, do: :persistent_term.get(@config_key)
+
+  defp fetch_config_value(%__MODULE__{}, key, default), do: Keyword.get(config!(), key, default)
+
+  defp source_fingerprint(source) do
+    :crypto.hash(:sha256, :erlang.term_to_binary(source, [:deterministic]))
   end
 end

@@ -58,11 +58,27 @@ defmodule Mailglass.RuntimeTest do
     assert Runtime.fetch!(:tracking)[:host] == "track.example.test"
     assert Runtime.fetch!(:compliance)[:scheme] == "http"
 
+    refute Map.has_key?(runtime, :source)
+    refute inspect(runtime) =~ "track.example.test"
+
     Application.put_env(:mailglass, :tracking, host: "changed.example.test")
     assert Runtime.fetch!(:tracking)[:host] == "track.example.test"
 
     Runtime.reset_for_test!()
     assert Runtime.fetch!(:tracking)[:host] == "changed.example.test"
+  end
+
+  test "Config accessors refresh a changed test environment without exposing the raw source" do
+    Application.put_env(:mailglass, :tracking, host: "first-secret.example.test")
+    Runtime.reset_for_test!()
+
+    assert Mailglass.Config.tracking()[:host] == "first-secret.example.test"
+    assert inspect(Runtime.current()) =~ "source_fingerprint"
+    refute inspect(Runtime.current()) =~ "first-secret.example.test"
+
+    Application.put_env(:mailglass, :tracking, host: "second-secret.example.test")
+
+    assert Mailglass.Config.tracking()[:host] == "second-secret.example.test"
   end
 
   test "invalid full configuration never replaces the last valid runtime or legacy caches" do
