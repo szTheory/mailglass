@@ -247,6 +247,10 @@ jobs:
         run: mix verify.support_contract.core
       - name: Run architecture boundary contract
         run: mix test test/scripts/architecture_boundary_test.exs --warnings-as-errors
+      - name: Collect and enforce core coverage floor
+        run: |
+          mix coveralls.json --output-dir coverage/core test/mailglass --warnings-as-errors
+          bash scripts/check_coverage_floor.sh config/coverage_baselines/core.json coverage/core/excoveralls.json 1.18.4/27
 
   mix_task_tests:
     name: Mix Task Tests (Elixir 1.18 / OTP 27)
@@ -381,6 +385,12 @@ jobs:
         # is gated as its own step after the unit subset rather than folded in.
         working-directory: mailglass_inbound
         run: mix test --only property
+      - name: Collect and enforce inbound coverage floor
+        run: |
+          cd mailglass_inbound
+          mix coveralls.json --output-dir ../coverage/inbound test/mailglass_inbound --warnings-as-errors
+          cd ..
+          bash scripts/check_coverage_floor.sh config/coverage_baselines/inbound.json coverage/inbound/excoveralls.json 1.18.4/27
 
   inbound_compile_no_optional_deps:
     name: Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)

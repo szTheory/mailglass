@@ -1,0 +1,12 @@
+{
+  "package": "mailglass",
+  "cohort": "test/mailglass",
+  "covered_lines": 5357,
+  "relevant_lines": 8469,
+  "percentage": 63.254221,
+  "toolchain": "1.18.4/27",
+  "image": "hexpm/elixir:1.18.4-erlang-27.3.4-debian-bookworm-20250520-slim",
+  "command": "make toolchain CMD='mix coveralls.json test/mailglass --warnings-as-errors'",
+  "report_sha256": "c5ca06e889aba2d0db8be79103e7f98db7c7fb9eb8b3d0b12e4f72b5df49ffc0",
+  "measured_at": "2026-08-17"
+}
