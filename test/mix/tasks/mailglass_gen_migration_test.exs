@@ -146,7 +146,7 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
 
     Process.put(:host_catalog_result, {:ok, %{rows: [["5"]]}})
 
-    assert_raise Mix.Error, ~r/no upgrade is available/, fn ->
+    assert_raise Mix.Error, ~r/no live upgrade is available/, fn ->
       Mailglass.MigrationGenerator.run(core_spec(), ["--upgrade"],
         with_repo: fn repo, fun -> {:ok, fun.(repo), []} end
       )

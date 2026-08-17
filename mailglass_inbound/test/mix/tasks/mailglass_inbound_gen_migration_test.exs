@@ -6,6 +6,13 @@ defmodule Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest do
   defmodule HostRepo do
     def config,
       do: [otp_app: :mailglass_inbound, priv: "tmp/mailglass_inbound_gen_migration_test/priv/repo"]
+
+    def __adapter__, do: Ecto.Adapters.Postgres
+
+    def query(query, params, options) do
+      send(self(), {:host_query, query, params, options})
+      Process.get(:host_catalog_result, {:ok, %{rows: [["1"]]}})
+    end
   end
 
   defmodule OtherRepo do
@@ -14,6 +21,13 @@ defmodule Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest do
         otp_app: :mailglass_inbound,
         priv: "tmp/mailglass_inbound_gen_migration_test/priv/other_repo"
       ]
+
+    def __adapter__, do: UnsupportedAdapter
+
+    def query(_query, _params, _options) do
+      send(self(), :other_repo_called)
+      {:ok, %{rows: [["1"]]}}
+    end
   end
 
   setup do
@@ -65,6 +79,29 @@ defmodule Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest do
     assert migration_paths() == []
   end
 
+  test "uses the selected repo for live inbound inspection and refuses the current initial version" do
+    Application.put_env(:mailglass_inbound, :ecto_repos, [HostRepo])
+    prior_repo = Application.get_env(:mailglass_inbound, :repo)
+    Application.put_env(:mailglass_inbound, :repo, OtherRepo)
+
+    on_exit(fn -> restore_repo(:mailglass_inbound, prior_repo) end)
+
+    assert_raise Mix.Error, ~r/no live upgrade is available/, fn ->
+      Mailglass.MigrationGenerator.run(inbound_spec(), ["--upgrade"],
+        with_repo: fn repo, fun ->
+          send(self(), {:started_repo, repo})
+          {:ok, fun.(repo), []}
+        end
+      )
+    end
+
+    assert_received {:started_repo, HostRepo}
+    assert_received {:host_query, query, ["public"], [log: false]}
+    assert query =~ "mailglass_inbound_records"
+    refute_received :other_repo_called
+    assert migration_paths() == []
+  end
+
   defp migration_paths do
     migrations_path()
     |> Path.join("*.exs")
@@ -74,6 +111,22 @@ defmodule Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest do
 
   defp migrations_path, do: Ecto.Migrator.migrations_path(HostRepo)
 
+  defp inbound_spec do
+    %{
+      task_name: "mailglass.inbound.gen.migration",
+      install_suffix: "mailglass_inbound_install",
+      upgrade_suffix: "mailglass_inbound_upgrade",
+      install_module_suffix: "MailglassInboundInstall",
+      upgrade_module_suffix: "MailglassInboundUpgrade",
+      migration_module: MailglassInbound.Migration,
+      initial_version: &MailglassInbound.Migrations.Postgres.initial_version/0,
+      current_version: &MailglassInbound.Migrations.Postgres.current_version/0
+    }
+  end
+
   defp restore_ecto_repos(app, nil), do: Application.delete_env(app, :ecto_repos)
   defp restore_ecto_repos(app, repos), do: Application.put_env(app, :ecto_repos, repos)
+
+  defp restore_repo(app, nil), do: Application.delete_env(app, :repo)
+  defp restore_repo(app, repo), do: Application.put_env(app, :repo, repo)
 end
