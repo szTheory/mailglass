@@ -135,6 +135,33 @@ defmodule Mailglass.Webhook.PrunerTest do
       refute Map.has_key?(meta, :recipient)
       refute Map.has_key?(meta, :email)
     end
+
+    test "treats an advisory-lock miss as a successful no-op and emits stable telemetry" do
+      handler_id = "pruner-locked-out-test-#{System.unique_integer([:positive])}"
+      test_pid = self()
+
+      :telemetry.attach(
+        handler_id,
+        [:mailglass, :webhook, :prune, :stop],
+        fn _event, measurements, meta, _config ->
+          send(test_pid, {:prune_stop, measurements, meta})
+        end,
+        nil
+      )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      {:ok, conn} = Postgrex.start_link(conn_opts())
+
+      %{rows: [[true]]} =
+        Postgrex.query!(conn, "SELECT pg_try_advisory_lock($1)", [Pruner.lock_key()])
+
+      assert :ok = Pruner.perform(%Oban.Job{})
+      assert_receive {:prune_stop, %{succeeded_deleted: 0, dead_deleted: 0}, %{status: :ok}}, 500
+
+      Postgrex.query!(conn, "SELECT pg_advisory_unlock($1)", [Pruner.lock_key()])
+      GenServer.stop(conn)
+    end
   end
 
   describe "prune/0 multi-status sweep" do
