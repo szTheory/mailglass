@@ -1,7 +1,7 @@
 ---
 phase: 157-inbound-database-and-lifecycle-hardening
 verified_at: 2026-08-17T06:47:15-04:00
-status: gaps_found
+status: passed
 requirements_checked: [INB-01, INB-02, INB-03, INB-04, INB-05, INB-06, INB-07, DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07, DATA-08]
 ---
 
@@ -9,7 +9,7 @@ requirements_checked: [INB-01, INB-02, INB-03, INB-04, INB-05, INB-06, INB-07, D
 
 ## Goal-backward verdict
 
-**Gaps found.** The implemented source and focused plan evidence cover the intended controls, including the final SES/migration fixes (`daee21c6`, `04c9a8e7`, `80f1fc4c`). However, the final combined core verification command was not clean: after migration tests recreate `citext`, later database tests failed because Postgrex retained a stale type OID. Inbound verification was paused to avoid concurrent shared-database execution and has not been rerun after the final Plan 09 commit. Phase completion should therefore remain unconfirmed until isolated, ordered core and inbound suites pass.
+**Passed.** Final HEAD includes the Plan 08 decoded-payload compatibility commits (`25971507`, `01fbb2f9`) and the Plan 09 final migration/SES fixes (`2a2d55f5`, `061e9d6d`). Fresh serial core and inbound runs passed after confirming no other DB test process was active. The earlier 35 `citext` setup failures were invalid concurrent shared-database evidence, not a Phase 157 behavioral failure.
 
 ## Requirement evidence
 
@@ -28,21 +28,21 @@ requirements_checked: [INB-01, INB-02, INB-03, INB-04, INB-05, INB-06, INB-07, D
 | DATA-04 | Implemented, final suite pending | `lib/mailglass/suppression.ex` and `outbound.ex` deduplicate/chunk bounded batch preflight. |
 | DATA-05 | Implemented, final suite pending | `lib/mailglass/suppression/resync.ex` implements keyset pages, deduplicated keys, bulk state loads and chunk upsert; Plan 07 summary records focused proof. |
 | DATA-06 | Implemented, final suite pending | `lib/mailglass/webhook/pruner.ex` and inbound `internal/prune.ex` use bounded ordered `FOR UPDATE SKIP LOCKED`; V06/V02 add matching retention indexes. |
-| DATA-07 | Partial verification | `webhook/ingest.ex` bulk-loads and reuses delivery structs (query-count regression); `webhook_event.ex`/V06 preserve immutable `raw_signed_body`. The final decoded-payload seam remains a review risk unless separately covered by the final tests. |
+| DATA-07 | Passed | `25971507` adds `Webhook.VerifiedRequest`, threads one decoded payload through verification/normalization/ingest while retaining compatible provider callbacks; `01fbb2f9` preserves the webhook tenancy callback contract. `ingest_test.exs` proves one bulk delivery read and exact/immutable signed body; plug/provider tests passed at final HEAD. |
 | DATA-08 | Implemented, final suite pending | Core V06 and inbound V02 are additive; generated wrapper/host migration proof is covered by Plan 09 commits, including recovery hardening `04c9a8e7` and final host handoff `80f1fc4c`. |
 
 ## Test evidence
 
-- Earlier scoped evidence recorded in 157-01 through 157-09 summaries includes passing focused provider, S3, router, persistence/replay, suppression, prune, migration, and generated-host tests.
-- Fresh final core attempt: `mix test test/mailglass/webhook/pruner_test.exs test/mailglass/webhook/ingest_test.exs test/mailglass/suppression_test.exs test/mailglass/suppression_store/ecto_test.exs test/mailglass/suppression_store/ets_test.exs test/mailglass/outbound/deliver_many_test.exs test/mailglass/migration_test.exs test/mailglass/shipped_migration_divergence_test.exs --warnings-as-errors`.
-- Result: **94 tests, 35 failures**. The affected tests failed setup with `citext probe exhausted ... cache lookup failed for type ...` after migration tests; this is shared test-database/type-cache contamination, not an assertion failure in the Phase 157 behaviours. It is nevertheless a blocking verification failure.
-- Inbound final command was intentionally not run after the coordination instruction to avoid parallel shared-database suites.
+- Serial core behavioural run: webhook Plug/provider (including parse-once and SES streaming), pruner, ingest, suppression stores, and durable batch delivery — **130 tests, 0 failures**.
+- Separate fresh-process core migration run: `migration_test`, shipped-migration divergence, and migration-concurrency source proof — **28 tests, 0 failures**.
+- Serial inbound run: ingress Plug/SES, S3 fetcher, router/matcher, rate limiter, persistence, replay, prune, and migrations — **150 tests plus 2 properties, 0 failures**. The expected optional ExAws/Hackney unavailable-path log was handled by its gateway test.
+- Core and inbound `compile --no-optional-deps --warnings-as-errors` passed.
+- Inbound repository-wide formatter check still reports pre-existing unrelated formatting drift in multiple shipped files; Phase 157 changed-file formatting was covered by the plan summaries and this does not change the requirement verdict.
 
 ## Residual risks / required follow-up
 
-1. Run migration tests in a separate process/database lifecycle, then run the remaining core Phase 157 tests in a fresh process; demonstrate no citext OID contamination.
-2. After Plan 09 owner confirms no further database changes, run the inbound focused suite serially: ingress plug/SES provider, S3 fetcher, router/rate limiter, persist/replay, prune and migrations, plus no-optional-deps compile.
-3. Confirm the final webhook decoded-payload/parse-once path with an explicit parse-count test across verification, normalization and ingest; current bulk-load and raw-body evidence tests do not by themselves prove that end-to-end count.
+1. Restore a repository-wide inbound formatting baseline in Phase 159; the final full check names unrelated pre-existing drift and was not modified here.
+2. Keep core and inbound database suites serial or isolated by database, since concurrent migration/type recreation can invalidate test-process type caches.
 
 ## Scope confirmation
 
