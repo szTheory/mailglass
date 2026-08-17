@@ -10,12 +10,12 @@ created: 2026-08-17
 | Plan | Wave | Requirements | Proof |
 |---|---:|---|---|
 | 01 | 1 | QUAL-03,04,10 | CI policy fixtures/mutations and lane/parity contracts |
-| 02 | 1 | QUAL-01,05,10 | formatter scope mutation, both formatter checks, setup action contract |
-| 03 | 2 | QUAL-09 | bidirectional exception registry mutations and focused acknowledgement tests |
-| 04 | 2 | QUAL-06 | pinned-toolchain measurement then immutable coverage/critical-path floor tests |
-| 05 | 2 | QUAL-07,08 | inbound Dialyzer plus Credo/ignore/ledger mutation tests |
-| 06 | 3 | QUAL-03,04,05,10 | complete CI Green inventory and advisory-exclusion negative controls |
-| 07 | 3 | QUAL-05,10,11 | workflow/Docker/Dependabot/release-policy parser contracts |
+| 02 | 2 | QUAL-01,05,10 | formatter scope mutation, both formatter checks, setup action contract |
+| 03 | 3 | QUAL-09 | bidirectional exception registry mutations and focused acknowledgement tests |
+| 04 | 4 | QUAL-06 | pinned-toolchain measurement then immutable coverage/critical-path floor tests |
+| 05 | 5 | QUAL-07,08 | inbound Dialyzer plus Credo/ignore/ledger mutation tests |
+| 06 | 6 | QUAL-03,04,05,10 | complete CI Green inventory and advisory-exclusion negative controls |
+| 07 | 7 | QUAL-05,10,11 | workflow/Docker/Dependabot/release-policy parser contracts |
 
 ## Wave-zero rules
 
