@@ -27,7 +27,7 @@ defmodule MailglassInbound.MailboxExecutionTest do
 
   defmodule RaiseMailbox do
     @behaviour MailglassInbound.Mailbox
-    def process(_message), do: raise "boom"
+    def process(_message), do: raise("boom")
   end
 
   defmodule ExitMailbox do
@@ -52,8 +52,22 @@ defmodule MailglassInbound.MailboxExecutionTest do
     end
   end
 
+  defmodule RecordingRepo do
+    def one(_query, _opts) do
+      case Process.get(:mailglass_inbound_execution_load_rows, []) do
+        [row | remaining] ->
+          Process.put(:mailglass_inbound_execution_load_rows, remaining)
+          row
+
+        [] ->
+          nil
+      end
+    end
+  end
+
   setup do
     Process.delete(:mailglass_inbound_execution_attrs)
+    Process.delete(:mailglass_inbound_execution_load_rows)
     :ok
   end
 
@@ -130,6 +144,30 @@ defmodule MailglassInbound.MailboxExecutionTest do
       assert_failed_execution(ThrowMailbox, :throw)
       assert_failed_execution(InvalidMailbox, :invalid_return)
     end
+
+    test "loads every supported persisted provider through a finite map" do
+      for provider <- ["postmark", "sendgrid", "mailgun", "ses"] do
+        Process.put(:mailglass_inbound_execution_load_rows, [record(provider), evidence()])
+
+        assert {:ok, %{message: %{provider: provider_atom}}} =
+                 Execution.load(job_args(), repo: RecordingRepo)
+
+        assert provider_atom == String.to_existing_atom(provider)
+      end
+    end
+
+    test "rejects invalid persisted providers without allocating atoms" do
+      Process.put(:mailglass_inbound_execution_load_rows, [record("unknown-provider-warmup")])
+      assert {:error, :invalid_job_args} = Execution.load(job_args(), repo: RecordingRepo)
+      atom_count = :erlang.system_info(:atom_count)
+
+      for suffix <- 1..300 do
+        Process.put(:mailglass_inbound_execution_load_rows, [record("unknown-provider-#{suffix}")])
+        assert {:error, :invalid_job_args} = Execution.load(job_args(), repo: RecordingRepo)
+      end
+
+      assert :erlang.system_info(:atom_count) == atom_count
+    end
   end
 
   defp assert_failed_execution(mailbox, expected_kind) do
@@ -156,6 +194,33 @@ defmodule MailglassInbound.MailboxExecutionTest do
       },
       inbound_record: %{id: "record-123", tenant_id: "tenant-123"},
       inbound_evidence: %{id: "evidence-123"}
+    }
+  end
+
+  defp job_args do
+    %{
+      "inbound_record_id" => "record-123",
+      "inbound_evidence_id" => "evidence-123",
+      "route_status" => "no_match",
+      "mailglass_tenant_id" => "tenant-123"
+    }
+  end
+
+  defp record(provider) do
+    %MailglassInbound.InboundRecords.InboundRecord{
+      id: "record-123",
+      tenant_id: "tenant-123",
+      provider: provider,
+      received_at: DateTime.utc_now()
+    }
+  end
+
+  defp evidence do
+    %MailglassInbound.InboundRecords.InboundEvidence{
+      id: "evidence-123",
+      tenant_id: "tenant-123",
+      inbound_record_id: "record-123",
+      provider: "postmark"
     }
   end
 end

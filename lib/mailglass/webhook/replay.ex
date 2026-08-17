@@ -9,7 +9,7 @@ defmodule Mailglass.Webhook.Replay do
   alias Mailglass.{Clock, Events, IdempotencyKey, Repo, Tenancy}
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.{Delivery, Projector}
-  alias Mailglass.Webhook.WebhookEvent
+  alias Mailglass.Webhook.{ProviderName, WebhookEvent}
   @auto_suppress_module Mailglass.Suppression.AutoSuppress
 
   @provider_modules %{
@@ -185,14 +185,10 @@ defmodule Mailglass.Webhook.Replay do
 
   defp maybe_append_failed_audit(_attrs, _reason), do: :ok
 
-  defp provider_atom(provider) when is_binary(provider) do
-    case provider do
-      "postmark" -> {:ok, :postmark}
-      "sendgrid" -> {:ok, :sendgrid}
-      "mailgun" -> {:ok, :mailgun}
-      "ses" -> {:ok, :ses}
-      "resend" -> {:ok, :resend}
-      _ -> {:error, :unknown_provider}
+  defp provider_atom(provider) do
+    case ProviderName.decode(provider) do
+      {:ok, provider} -> {:ok, provider}
+      :error -> {:error, :unknown_provider}
     end
   end
 

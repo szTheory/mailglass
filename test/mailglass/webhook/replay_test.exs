@@ -5,10 +5,27 @@ defmodule Mailglass.Webhook.ReplayTest do
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.Delivery
   alias Mailglass.TestRepo
-  alias Mailglass.Webhook.{Ingest, Replay, WebhookEvent}
+  alias Mailglass.Webhook.{Ingest, ProviderName, Replay, WebhookEvent}
   alias Mailglass.Webhook.Providers.Postmark
 
   describe "execute/1" do
+    test "decodes every supported stored provider through the finite provider map" do
+      for provider <- [:postmark, :sendgrid, :mailgun, :ses, :resend] do
+        assert {:ok, ^provider} = ProviderName.decode(Atom.to_string(provider))
+      end
+    end
+
+    test "rejects invalid stored provider strings without allocating atoms" do
+      assert :error = ProviderName.decode("unknown-provider-warmup")
+      atom_count = :erlang.system_info(:atom_count)
+
+      for suffix <- 1..300 do
+        assert :error = ProviderName.decode("unknown-provider-#{suffix}")
+      end
+
+      assert :erlang.system_info(:atom_count) == atom_count
+    end
+
     test "successfully replays one stored webhook target and records requested and completed audit facts" do
       delivery = insert_delivery!(provider_message_id: "msg-replay-success")
 
