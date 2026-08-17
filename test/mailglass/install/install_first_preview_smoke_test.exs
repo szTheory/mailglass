@@ -39,6 +39,7 @@ defmodule Mailglass.Install.FirstPreviewSmokeTest do
     assert script =~ "mix mailglass.install"
     assert script =~ "mix ecto.create"
     assert script =~ "mix ecto.migrate"
+    assert script =~ "export MIX_ENV=dev"
     assert script =~ "mix compile --warnings-as-errors"
     assert script =~ "OPS-01 guard passed."
     assert script =~ "GET /dev/mail/ -> HTTP ${STATUS}"
