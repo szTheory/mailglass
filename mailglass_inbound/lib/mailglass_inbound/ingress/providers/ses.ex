@@ -9,15 +9,9 @@ defmodule MailglassInbound.Ingress.Providers.SES do
   #
   # ## Verify / normalize handoff
   #
-  # The plug calls `verify!(%Request{}, config)` then `normalize(%Request{})`
-  # separately, in the SAME request process. The S3 fetch happens during
-  # `verify!` (it needs the verified payload), so `verify!` stashes the verified
-  # SNS payload + the fetched/inline raw MIME bytes in the process dictionary;
-  # `normalize/1` reads them back — no double fetch, no double verify. If
-  # `normalize/1` is somehow called without a prior `verify!` in the same
-  # process, it falls back to re-parsing the SNS envelope from `request.raw_body`
-  # (signature already enforced by `verify!`) and re-resolving the body via the
-  # configured fetcher.
+  # Authentication returns an explicit private value. Content retrieval and
+  # normalization consume that same value; no request state is stored in the
+  # process dictionary and no fallback can refetch untrusted material.
   #
   # ## Trust reuse (do NOT re-supervise — the design contract)
   #
@@ -40,29 +34,24 @@ defmodule MailglassInbound.Ingress.Providers.SES do
   @behaviour MailglassInbound.Ingress.Provider
 
   alias MailglassInbound.{InboundMessage, S3FetchError, S3Fetcher, SignatureError}
-  alias MailglassInbound.Ingress.Request
+  alias MailglassInbound.Ingress.{Request, VerifiedRequest}
   alias Mailglass.Webhook.Providers.SES, as: CoreSES
   alias Mailglass.Webhook.Providers.SES.TrustPolicy
 
-  @pd_key {__MODULE__, :verified}
-
   @impl MailglassInbound.Ingress.Provider
-  def verify!(%Request{raw_body: raw_body} = _request, %{} = config) when is_binary(raw_body) do
-    # WR-01: clear any stale stash from a prior request before stashing this
-    # one. Under per-request processes (Cowboy/Bandit) the dictionary is fresh,
-    # but if the plug is ever driven from a long-lived/pooled process a leftover
-    # entry (e.g. a prior request whose tenant resolution raised between verify!
-    # and normalize/1, so normalize/1 never consumed the stash) must not bleed
-    # into this request. This makes the stash safe regardless of process model.
-    Process.delete(@pd_key)
-
+  def verify!(%Request{raw_body: raw_body} = request, %{} = config) when is_binary(raw_body) do
     payload = verify_envelope!(raw_body, config)
 
     case Map.get(payload, "Type") do
       "Notification" ->
-        {raw_mime, extraction_warnings} = extract_raw_mime!(payload, config)
-        stash(payload, raw_mime, extraction_warnings)
-        {:ok, %{auth: :sns_x509}}
+        {:ok,
+         %VerifiedRequest{
+           request: request,
+           raw_body: raw_body,
+           envelope: payload,
+           verification_facts: %{auth: :sns_x509},
+           warnings: %{}
+         }}
 
       type when type in ["SubscriptionConfirmation", "UnsubscribeConfirmation"] ->
         confirm_control_plane!(payload)
@@ -76,13 +65,21 @@ defmodule MailglassInbound.Ingress.Providers.SES do
     end
   end
 
-  # Struct-arity normalize (the entry the plug's `normalize_request!(:ses, ...)`
-  # calls). Not a formal behaviour callback — the behaviour declares the legacy
-  # `normalize/2` arity — so it carries `@impl false`, mirroring the SendGrid
-  # provider's struct-arity normalize.
+  @impl MailglassInbound.Ingress.Provider
+  def resolve_content!(%VerifiedRequest{raw_mime: raw_mime} = verified, _config)
+      when is_binary(raw_mime),
+      do: verified
+
+  @impl MailglassInbound.Ingress.Provider
+  def resolve_content!(%VerifiedRequest{} = verified, config) do
+    {raw_mime, warnings} = extract_raw_mime!(verified.envelope, config)
+    %{verified | raw_mime: raw_mime, warnings: Map.merge(verified.warnings, warnings)}
+  end
+
+  # The canonical normalization entry consumes a resolved verified value.
   @impl false
-  def normalize(%Request{raw_body: raw_body} = request) do
-    {payload, raw_mime, extraction_warnings} = fetch_verified(raw_body)
+  def normalize(%VerifiedRequest{request: request, envelope: payload, raw_mime: raw_mime} = verified)
+      when is_binary(raw_mime) do
 
     repr =
       case MailglassInbound.MIME.parse(raw_mime) do
@@ -121,7 +118,7 @@ defmodule MailglassInbound.Ingress.Providers.SES do
         raw_headers: select_safe_headers(request.headers),
         raw_mime: raw_mime,
         verification_facts: %{},
-        parse_warnings: Map.merge(parse_warnings(message), extraction_warnings),
+        parse_warnings: Map.merge(parse_warnings(message), verified.warnings),
         attachment_blobs: attachment_blobs
       }
     }
@@ -133,7 +130,16 @@ defmodule MailglassInbound.Ingress.Providers.SES do
   # delegates — mirroring SendGrid's `normalize/2` shim.
   @impl MailglassInbound.Ingress.Provider
   def normalize(raw_body, headers) when is_binary(raw_body) and is_list(headers) do
-    normalize(%Request{provider: :ses, raw_body: raw_body, headers: headers})
+    request = %Request{provider: :ses, raw_body: raw_body, headers: headers}
+
+    normalize(%VerifiedRequest{
+      request: request,
+      raw_body: raw_body,
+      envelope: %{},
+      verification_facts: %{},
+      warnings: %{},
+      raw_mime: raw_body
+    })
   end
 
   # ---- verify seam (re-raise as inbound SignatureError) ----------------
@@ -280,56 +286,6 @@ defmodule MailglassInbound.Ingress.Providers.SES do
     else
       S3Fetcher.ExAwsS3
     end
-  end
-
-  # ---- verify→normalize handoff (process-local) ------------------------
-
-  defp stash(payload, raw_mime, warnings) do
-    Process.put(@pd_key, {payload, raw_mime, warnings})
-    :ok
-  end
-
-  # Returns `{payload, raw_mime, extraction_warnings}`.
-  defp fetch_verified(raw_body) do
-    case Process.get(@pd_key) do
-      {payload, raw_mime, warnings} ->
-        Process.delete(@pd_key)
-        {payload, raw_mime, warnings}
-
-      _ ->
-        # Defensive fallback: the plug always calls verify!/2 (which stashes)
-        # before normalize/1 in the same request process, so this path is only
-        # reached via the legacy normalize/2 shim or a misuse. Honor the module's
-        # never-raise posture for body parsing (WR-01): a malformed SNS envelope
-        # degrades to an empty record rather than escaping as a Jason.DecodeError
-        # that the plug rescue would not catch (same leak class as CR-02). The
-        # SNS signature was already enforced by verify!/2 upstream.
-        case Jason.decode(raw_body) do
-          {:ok, %{} = payload} ->
-            # Thread the REAL resolved config (app env, incl. :s3_retry_opts)
-            # into the re-fetch instead of an empty %{}, so the configured
-            # fetcher + retry tuning are honored on this path too (WR-01).
-            {raw_mime, warnings} = extract_raw_mime!(payload, fallback_config())
-            {payload, raw_mime, warnings}
-
-          _ ->
-            {%{}, "", %{}}
-        end
-    end
-  end
-
-  # Build the SES config from app env for the defensive normalize/1 fallback.
-  # Mirrors the shape resolve_config!(:ses, ...) builds in the plug, so the
-  # fallback honors the adopter's configured fetcher and retry opts rather than
-  # silently defaulting (WR-01).
-  defp fallback_config do
-    config = Application.get_env(:mailglass_inbound, :ses, [])
-
-    %{
-      s3_fetcher: config[:s3_fetcher],
-      cert_cache_ttl_seconds: config[:cert_cache_ttl_seconds],
-      s3_retry_opts: config[:s3_retry_opts] || []
-    }
   end
 
   # ---- MIME repr → normalized fields -----------------------------------
