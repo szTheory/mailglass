@@ -94,7 +94,7 @@ if Code.ensure_loaded?(Oban.Worker) do
     def lock_key, do: @prune_lock_key
 
     def prune do
-      retention = Application.get_env(:mailglass, :webhook_retention, [])
+      retention = Mailglass.Config.webhook_retention()
       succeeded_days = Keyword.get(retention, :succeeded_days, 14)
       dead_days = Keyword.get(retention, :dead_days, 90)
 
@@ -115,7 +115,8 @@ if Code.ensure_loaded?(Oban.Worker) do
     end
 
     defp with_advisory_lock(fun) do
-      repo = Application.fetch_env!(:mailglass, :repo)
+      repo =
+        Mailglass.Config.repo() || raise Mailglass.ConfigError.new(:missing, context: %{key: :repo})
 
       repo.checkout(fn ->
         case repo.query!("SELECT pg_try_advisory_lock($1)", [@prune_lock_key]) do
@@ -133,7 +134,8 @@ if Code.ensure_loaded?(Oban.Worker) do
     end
 
     defp delete_batched(status, cutoff) do
-      repo = Application.fetch_env!(:mailglass, :repo)
+      repo =
+        Mailglass.Config.repo() || raise Mailglass.ConfigError.new(:missing, context: %{key: :repo})
 
       Stream.repeatedly(fn ->
         candidates =

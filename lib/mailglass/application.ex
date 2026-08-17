@@ -51,7 +51,7 @@ defmodule Mailglass.Application do
   # : emit exactly once per BEAM node lifetime via :persistent_term gate.
   # Subsequent Application.start/2 calls (supervisor restart, test harness) do not re-emit.
   defp maybe_warn_missing_oban do
-    configured = Application.get_env(:mailglass, :async_adapter)
+    configured = Mailglass.Config.async_adapter()
     already_warned? = :persistent_term.get({:mailglass, :oban_warning_emitted}, false)
 
     cond do

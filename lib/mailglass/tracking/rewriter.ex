@@ -206,7 +206,7 @@ defmodule Mailglass.Tracking.Rewriter do
   # --- Config helpers ---
 
   defp tracking_host do
-    case Application.get_env(:mailglass, :tracking, [])[:host] do
+    case Mailglass.Config.tracking()[:host] do
       host when is_binary(host) ->
         host
 
@@ -216,6 +216,6 @@ defmodule Mailglass.Tracking.Rewriter do
   end
 
   defp tracking_scheme do
-    Application.get_env(:mailglass, :tracking, [])[:scheme] || "https"
+    Mailglass.Config.tracking()[:scheme] || "https"
   end
 end

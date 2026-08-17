@@ -131,7 +131,7 @@ defmodule Mailglass.Suppression do
   def remove(_id, _opts), do: {:error, :invalid_id}
 
   defp store do
-    Application.get_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.Ecto)
+    Mailglass.Config.suppression_store()
   end
 
   defp lookup_key(%Message{} = msg) do

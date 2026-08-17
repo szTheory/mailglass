@@ -7,8 +7,10 @@ defmodule Mailglass.Runtime do
   @theme_key {Mailglass.Config, :theme}
   @runtime_key {__MODULE__, :current}
 
-  @opaque t :: %__MODULE__{config: keyword()}
-  defstruct [:config]
+  @test_env Mix.env() == :test
+
+  @opaque t :: %__MODULE__{config: keyword(), source: keyword()}
+  defstruct [:config, :source]
 
   @doc false
   @spec validate!(keyword()) :: keyword()
@@ -17,10 +19,7 @@ defmodule Mailglass.Runtime do
   @doc false
   @spec bootstrap!() :: t()
   def bootstrap! do
-    opts =
-      :mailglass
-      |> Application.get_all_env()
-      |> Keyword.take(Schema.known_keys())
+    opts = source_config()
 
     validated =
       opts
@@ -29,7 +28,7 @@ defmodule Mailglass.Runtime do
 
     _schema = validated |> Keyword.fetch!(:schema) |> Mailglass.Identifier.validate!(:schema)
     validate_repo_adapter!(Keyword.fetch!(validated, :repo))
-    runtime = %__MODULE__{config: validated}
+    runtime = %__MODULE__{config: validated, source: opts}
 
     # Publish only after the entire value is valid. The legacy keys remain for
     # compatibility with existing hot paths and test-support reset helpers.
@@ -61,16 +60,54 @@ defmodule Mailglass.Runtime do
   @spec fetch!(atom()) :: term()
   def fetch!(key), do: current() |> fetch!(key)
 
+  # Application-env mutation is unsupported after production boot, but the
+  # long-standing test façade relies on scoped put_env/restore blocks. Keep
+  # those tests honest by refreshing the whole validated value when its source
+  # changes, never by letting individual consumers read raw configuration.
+  @doc false
+  @spec fetch_config!(atom()) :: term()
+  def fetch_config!(key) do
+    runtime = current()
+
+    runtime =
+      if @test_env and runtime.source != source_config() do
+        bootstrap!()
+      else
+        runtime
+      end
+
+    fetch!(runtime, key)
+  end
+
   @doc false
   @spec get(atom(), term()) :: term()
   def get(key, default \\ nil), do: current().config |> Keyword.get(key, default)
+
+  # Deliberately outside the validated public schema: tests/providers may
+  # inject an HTTP client without turning that implementation hook into an
+  # adopter-facing configuration contract. Runtime remains the sole reader.
+  @doc false
+  @spec ses_http_client() :: module() | atom()
+  def ses_http_client do
+    :mailglass
+    |> Application.get_env(:ses, [])
+    |> Keyword.get(:httpc_client, :httpc)
+  end
 
   @doc false
   @spec schema() :: String.t()
   def schema do
     case :persistent_term.get(@schema_key, :__miss__) do
-      schema when is_binary(schema) -> schema
-      :__miss__ -> fetch!(:schema)
+      schema when is_binary(schema) ->
+        schema
+
+      :__miss__ ->
+        schema =
+          Application.get_env(:mailglass, :schema, "mailglass")
+          |> Mailglass.Identifier.validate!(:schema)
+
+        :persistent_term.put(@schema_key, schema)
+        schema
     end
   end
 
@@ -110,5 +147,11 @@ defmodule Mailglass.Runtime do
       module when is_atom(module) -> {module, []}
       {module, opts} -> {module, opts}
     end)
+  end
+
+  defp source_config do
+    :mailglass
+    |> Application.get_all_env()
+    |> Keyword.take(Schema.known_keys())
   end
 end

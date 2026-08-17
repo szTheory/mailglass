@@ -228,7 +228,7 @@ defmodule Mailglass.Webhook.Plug do
   # Step 1b: resolve per-tenant config (Application env at v0.1; v0.5 may
   # add per-route MFA).
   defp resolve_config!(:postmark, conn) do
-    env = Application.get_env(:mailglass, :postmark, [])
+    env = Mailglass.Config.webhook_provider(:postmark)
 
     %{
       basic_auth: env[:basic_auth],
@@ -238,7 +238,7 @@ defmodule Mailglass.Webhook.Plug do
   end
 
   defp resolve_config!(:sendgrid, _conn) do
-    env = Application.get_env(:mailglass, :sendgrid, [])
+    env = Mailglass.Config.webhook_provider(:sendgrid)
 
     %{
       public_key: env[:public_key],
@@ -247,7 +247,7 @@ defmodule Mailglass.Webhook.Plug do
   end
 
   defp resolve_config!(:mailgun, _conn) do
-    env = Application.get_env(:mailglass, :mailgun, [])
+    env = Mailglass.Config.webhook_provider(:mailgun)
 
     %{
       signing_key: env[:signing_key],
@@ -258,7 +258,7 @@ defmodule Mailglass.Webhook.Plug do
   end
 
   defp resolve_config!(:ses, _conn) do
-    env = Application.get_env(:mailglass, :ses, [])
+    env = Mailglass.Config.webhook_provider(:ses)
 
     %{
       cert_cache_ttl_seconds: env[:cert_cache_ttl_seconds] || 86_400
@@ -266,7 +266,7 @@ defmodule Mailglass.Webhook.Plug do
   end
 
   defp resolve_config!(:resend, _conn) do
-    env = Application.get_env(:mailglass, :resend, [])
+    env = Mailglass.Config.webhook_provider(:resend)
 
     %{
       secret: env[:secret],

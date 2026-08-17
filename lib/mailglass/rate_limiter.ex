@@ -145,7 +145,7 @@ defmodule Mailglass.RateLimiter do
   end
 
   defp get_config do
-    cfg = Application.get_env(:mailglass, :rate_limit, [])
+    cfg = Mailglass.Config.rate_limit()
 
     if Keyword.has_key?(cfg, :default) or Keyword.has_key?(cfg, :overrides) do
       # Backward compatibility: If :default or :overrides are present at the
