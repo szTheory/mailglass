@@ -273,6 +273,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
 
       assert Enum.all?(deliveries, fn delivery ->
                metadata = TestRepo.get!(Delivery, delivery.id).metadata
+
                metadata["rendered_html"] == "<p>Test body</p>" and
                  metadata["rendered_text"] == "Test body" and
                  metadata["subject"] == "Test batch"
