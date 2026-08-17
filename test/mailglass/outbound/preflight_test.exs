@@ -10,6 +10,13 @@ defmodule Mailglass.Outbound.PreflightTest do
     :ok
   end
 
+  test "architecture collaborators expose only the internal operations Outbound needs" do
+    assert function_exported?(Mailglass.Outbound.Preflight, :run, 1)
+    assert function_exported?(Mailglass.Outbound.Routes, :resolve_sync, 2)
+    assert function_exported?(Mailglass.Outbound.Persistence, :persist_queued, 2)
+    assert function_exported?(Mailglass.Outbound.Dispatch, :call_adapter, 2)
+  end
+
   describe "preflight stage 0 — Tenancy.assert_stamped!" do
     @tag tenant: :unset
     test "raises TenancyError when tenant is not stamped" do
