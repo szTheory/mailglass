@@ -4,10 +4,10 @@ defmodule Mailglass.Migrations.Postgres do
   use Ecto.Migration
 
   @initial_version 1
-  @current_version 5
+  @current_version 6
   @default_prefix "public"
 
-  @type version :: 0..5
+  @type version :: 0..6
 
   @doc false
   def initial_version, do: @initial_version
