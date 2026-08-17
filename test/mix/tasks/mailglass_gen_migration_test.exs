@@ -5,10 +5,22 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
 
   defmodule HostRepo do
     def config, do: [otp_app: :mailglass, priv: "tmp/mailglass_gen_migration_test/priv/repo"]
+    def __adapter__, do: Ecto.Adapters.Postgres
+
+    def query(query, params, options) do
+      send(self(), {:host_query, query, params, options})
+      {:ok, %{rows: [["4"]]}}
+    end
   end
 
   defmodule OtherRepo do
     def config, do: [otp_app: :mailglass, priv: "tmp/mailglass_gen_migration_test/priv/other_repo"]
+    def __adapter__, do: UnsupportedAdapter
+
+    def query(_query, _params, _options) do
+      send(self(), :other_repo_called)
+      {:ok, %{rows: [["1"]]}}
+    end
   end
 
   setup do
@@ -80,6 +92,31 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
     assert File.read!(upgrade_path) =~ "def down, do: Mailglass.Migration.down(version: 4)"
   end
 
+  test "uses the selected repo for live core upgrade inspection despite conflicting package config" do
+    Application.put_env(:mailglass, :ecto_repos, [HostRepo])
+    prior_repo = Application.get_env(:mailglass, :repo)
+    Application.put_env(:mailglass, :repo, OtherRepo)
+
+    on_exit(fn -> restore_repo(:mailglass, prior_repo) end)
+
+    assert capture_io(fn ->
+             Mailglass.MigrationGenerator.run(core_spec(), ["--upgrade"],
+               with_repo: fn repo, fun ->
+                 send(self(), {:started_repo, repo})
+                 {:ok, fun.(repo), []}
+               end
+             )
+           end) =~ "created"
+
+    assert_received {:started_repo, HostRepo}
+    assert_received {:host_query, query, ["public"], [log: false]}
+    assert query =~ "mailglass_events"
+    refute_received :other_repo_called
+
+    assert [path] = migration_paths()
+    assert File.read!(path) =~ "def down, do: Mailglass.Migration.down(version: 4)"
+  end
+
   test "refuses invalid upgrade inputs before writing" do
     Application.put_env(:mailglass, :ecto_repos, [HostRepo])
 
@@ -135,4 +172,7 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
 
   defp restore_ecto_repos(app, nil), do: Application.delete_env(app, :ecto_repos)
   defp restore_ecto_repos(app, repos), do: Application.put_env(app, :ecto_repos, repos)
+
+  defp restore_repo(app, nil), do: Application.delete_env(app, :repo)
+  defp restore_repo(app, repo), do: Application.put_env(app, :repo, repo)
 end
