@@ -191,6 +191,61 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     assert String.contains?(installer_job, "postgres:16-alpine")
   end
 
+  test "Phase 159 policy manifest exactly captures active, target, and advisory identities" do
+    policy = Mailglass.CIPolicy.load!()
+
+    assert Mailglass.CIPolicy.active_required_ids(policy) ==
+             MapSet.new([
+               "compile_no_optional_deps",
+               "installer_host_smoke",
+               "mix_task_tests",
+               "support_contract_core",
+               "support_contract_admin",
+               "trust_lane_repo_head",
+               "hex_audit",
+               "deps_audit_advisory"
+             ])
+
+    assert Mailglass.CIPolicy.target_behaviors(policy) ==
+             MapSet.new([
+               :formatting,
+               :warning_and_no_optional_builds,
+               :deterministic_core_suite,
+               :deterministic_inbound_suite,
+               :support_contracts,
+               :mix_tasks,
+               :credo_and_conformance,
+               :core_dialyzer,
+               :inbound_dialyzer,
+               :docs,
+               :audits,
+               :trust,
+               :installer_proofs
+             ])
+  end
+
+  test "Phase 159 policy manifest rejects omitted target behavior and advisory promotion" do
+    policy = Mailglass.CIPolicy.load!()
+
+    without_docs =
+      update_in(policy.target_required, fn lanes ->
+        Enum.reject(lanes, &(&1.behavior == :docs))
+      end)
+
+    assert_raise ArgumentError, ~r/missing target required behavior/, fn ->
+      Mailglass.CIPolicy.validate!(without_docs)
+    end
+
+    promoted_advisory =
+      update_in(policy.target_required, fn lanes ->
+        lanes ++ [%{id: "operator_browser_gate", behavior: :docs}]
+      end)
+
+    assert_raise ArgumentError, ~r/target required and advisory lane IDs overlap/, fn ->
+      Mailglass.CIPolicy.validate!(promoted_advisory)
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------

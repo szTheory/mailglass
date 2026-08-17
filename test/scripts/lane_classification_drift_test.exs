@@ -1225,6 +1225,21 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
     end
   end
 
+  test "Phase 159 policy keeps target required IDs disjoint from advisory-only IDs" do
+    policy = Mailglass.CIPolicy.load!()
+    target_ids = policy.target_required |> Enum.map(& &1.id) |> MapSet.new()
+    advisory_ids = MapSet.new(policy.advisory)
+
+    assert MapSet.disjoint?(target_ids, advisory_ids)
+
+    promoted =
+      update_in(policy.target_required, &(&1 ++ [%{id: "demo_browser_evidence", behavior: :docs}]))
+
+    assert_raise ArgumentError, ~r/target required and advisory lane IDs overlap/, fn ->
+      Mailglass.CIPolicy.validate!(promoted)
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------
