@@ -247,8 +247,11 @@ defmodule Mailglass.MigrationGenerator do
     defmodule #{inspect(migration_module(repo, spec.install_module_suffix))} do
       use Ecto.Migration
 
-      def up, do: #{inspect(spec.migration_module)}.up(repo: #{inspect(repo)})
-      def down, do: #{inspect(spec.migration_module)}.down(repo: #{inspect(repo)})
+      @disable_ddl_transaction true
+      @disable_migration_lock true
+
+      def up, do: #{inspect(spec.migration_module)}.up(repo: #{inspect(repo)}, non_transactional_wrapper: true)
+      def down, do: #{inspect(spec.migration_module)}.down(repo: #{inspect(repo)}, non_transactional_wrapper: true)
     end
     """
   end
@@ -258,8 +261,11 @@ defmodule Mailglass.MigrationGenerator do
     defmodule #{inspect(migration_module(repo, spec.upgrade_module_suffix))} do
       use Ecto.Migration
 
-      def up, do: #{inspect(spec.migration_module)}.up(repo: #{inspect(repo)})
-      def down, do: #{inspect(spec.migration_module)}.down(repo: #{inspect(repo)}, version: #{prior_version})
+      @disable_ddl_transaction true
+      @disable_migration_lock true
+
+      def up, do: #{inspect(spec.migration_module)}.up(repo: #{inspect(repo)}, non_transactional_wrapper: true)
+      def down, do: #{inspect(spec.migration_module)}.down(repo: #{inspect(repo)}, version: #{prior_version}, non_transactional_wrapper: true)
     end
     """
   end

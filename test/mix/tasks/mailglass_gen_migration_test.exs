@@ -46,8 +46,11 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
            defmodule Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo.Migrations.MailglassInstall do
              use Ecto.Migration
 
-             def up, do: Mailglass.Migration.up(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo)
-             def down, do: Mailglass.Migration.down(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo)
+             @disable_ddl_transaction true
+             @disable_migration_lock true
+
+             def up, do: Mailglass.Migration.up(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo, non_transactional_wrapper: true)
+             def down, do: Mailglass.Migration.down(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo, non_transactional_wrapper: true)
            end
            """
   end
@@ -91,7 +94,12 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
     assert upgrade_path =~ "_mailglass_upgrade.exs"
 
     assert File.read!(upgrade_path) =~
-             "def down, do: Mailglass.Migration.down(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo, version: 4)"
+             "def down, do: Mailglass.Migration.down(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo, version: 4, non_transactional_wrapper: true)"
+
+    upgrade_source = File.read!(upgrade_path)
+    assert upgrade_source =~ "@disable_ddl_transaction true"
+    assert upgrade_source =~ "@disable_migration_lock true"
+    assert upgrade_source =~ "non_transactional_wrapper: true"
   end
 
   test "uses the selected repo for live core upgrade inspection despite conflicting package config" do
@@ -118,7 +126,7 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
     assert [path] = migration_paths()
 
     assert File.read!(path) =~
-             "def down, do: Mailglass.Migration.down(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo, version: 4)"
+             "def down, do: Mailglass.Migration.down(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo, version: 4, non_transactional_wrapper: true)"
   end
 
   test "keeps migration history unchanged when live startup or metadata inspection fails" do
@@ -148,7 +156,7 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
       assert migration_paths() == []
     end
 
-    Process.put(:host_catalog_result, {:ok, %{rows: [["5"]]}})
+    Process.put(:host_catalog_result, {:ok, %{rows: [["6"]]}})
 
     assert_raise Mix.Error, ~r/no live upgrade is available/, fn ->
       Mailglass.MigrationGenerator.run(core_spec(), ["--upgrade"],
@@ -166,7 +174,7 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
 
     for argv <- [
           ["--upgrade", "--from", "0"],
-          ["--upgrade", "--from", "5"],
+          ["--upgrade", "--from", "6"],
           ["--from", "4"],
           ["--upgrade", "--from", "nope"],
           ["--repair-legacy"]

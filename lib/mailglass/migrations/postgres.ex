@@ -121,7 +121,7 @@ defmodule Mailglass.Migrations.Postgres do
 
       [__MODULE__, "V#{pad_idx}"]
       |> Module.concat()
-      |> apply(direction, [opts])
+      |> apply(direction, [migration_opts(opts, index)])
     end
 
     case direction do
@@ -195,6 +195,14 @@ defmodule Mailglass.Migrations.Postgres do
       |> Map.put_new(:create_schema, o.prefix != @default_prefix)
     end)
   end
+
+  # V06 builds indexes on populated adopter tables. Only newly generated
+  # wrappers opt out of Ecto's DDL transaction and may select the concurrent
+  # path; legacy/direct wrappers retain the transactional Ecto index path.
+  defp migration_opts(opts, 6),
+    do: Map.put(opts, :concurrent_indexes, Map.get(opts, :non_transactional_wrapper, false))
+
+  defp migration_opts(opts, _index), do: opts
 
   defp validate_identifier!(value, key), do: Mailglass.Identifier.validate!(value, key)
 end
