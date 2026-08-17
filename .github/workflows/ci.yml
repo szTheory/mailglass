@@ -74,20 +74,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - name: Set up OTP + Elixir
-        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
+      - name: Set up locked root validation dependencies
+        uses: ./.github/actions/setup-beam-mix
         with:
-          version-file: .tool-versions
-          version-type: strict
-      - name: Cache deps
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
-        with:
-          path: deps
-          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
-          restore-keys: |
-            mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
-      - name: Install deps
-        run: mix deps.get
+          package-dir: .
+          lockfile: mix.lock
+          mix-env: dev
+          build-path: _build
+          cache-namespace: mailglass-root
       - name: Run formatter check
         run: mix format --check-formatted
 
