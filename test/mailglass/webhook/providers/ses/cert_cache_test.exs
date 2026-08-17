@@ -68,4 +68,44 @@ defmodule Mailglass.Webhook.Providers.SES.CertCacheTest do
       assert :mailglass_webhook_ses_cert_cache = CertCache.table()
     end
   end
+
+  describe "fetch_or_store/4" do
+    test "shares one cold fetch among concurrent callers" do
+      parent = self()
+
+      fetch = fn ->
+        send(parent, :cert_fetch_started)
+
+        receive do
+          :release_cert_fetch -> {:ok, @fake_public_key}
+        end
+      end
+
+      tasks =
+        for _ <- 1..4 do
+          Task.async(fn -> CertCache.fetch_or_store(@url, fetch, positive_ttl_seconds: 60) end)
+        end
+
+      assert_receive :cert_fetch_started
+      refute_receive :cert_fetch_started, 50
+
+      send(
+        Process.whereis(Mailglass.Webhook.Providers.SES.CertCache.TableOwner),
+        :release_cert_fetch
+      )
+
+      assert Enum.map(tasks, &Task.await(&1, 1_000)) == List.duplicate({:ok, @fake_public_key}, 4)
+    end
+
+    test "fails closed when the finite cache is full" do
+      :ok =
+        CertCache.put("https://sns.us-east-1.amazonaws.com/a.pem", @fake_public_key, future_dt())
+
+      assert {:error, :capacity} =
+               CertCache.fetch_or_store(@url, fn -> {:ok, @fake_public_key} end,
+                 positive_ttl_seconds: 60,
+                 max_entries: 1
+               )
+    end
+  end
 end
