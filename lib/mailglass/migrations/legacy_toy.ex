@@ -45,9 +45,9 @@ defmodule Mailglass.Migrations.LegacyToy do
   @spec repair_up(keyword()) :: :ok
   def repair_up(opts) do
     prefix = Keyword.fetch!(opts, :prefix)
-    quoted_prefix = inspect(prefix)
+    quoted_prefix = quote_identifier(prefix)
 
-    execute("DROP TABLE #{quoted_prefix}.#{@legacy_table} RESTRICT")
+    runtime_preflight_and_drop!(prefix, quoted_prefix)
     flush()
     Mailglass.Migration.up(opts)
     flush()
@@ -56,7 +56,7 @@ defmodule Mailglass.Migrations.LegacyToy do
   @spec repair_down(keyword()) :: :ok
   def repair_down(opts) do
     prefix = Keyword.fetch!(opts, :prefix)
-    quoted_prefix = inspect(prefix)
+    quoted_prefix = quote_identifier(prefix)
 
     Mailglass.Migration.down(Keyword.put(opts, :version, 0))
 
@@ -133,6 +133,118 @@ defmodule Mailglass.Migrations.LegacyToy do
     _error in Postgrex.Error ->
       Mix.raise("Installation blocked: legacy catalog is unavailable; no migration was written")
   end
+
+  # This runs as one SQL command on Ecto's migration connection.  In
+  # particular, it must not use `repo.query/3`: that would acquire the lock on
+  # a pooled connection that can be released before the migration's DROP.
+  defp runtime_preflight_and_drop!(prefix, quoted_prefix) do
+    prefix_literal = String.replace(prefix, "'", "''")
+
+    execute("""
+    DO $$
+    DECLARE
+      attribute_count integer;
+      constraint_count integer;
+      index_count integer;
+    BEGIN
+      LOCK TABLE #{quoted_prefix}.#{@legacy_table} IN ACCESS EXCLUSIVE MODE;
+
+      SELECT count(*)
+        INTO attribute_count
+        FROM pg_catalog.pg_attribute attribute
+        LEFT JOIN pg_catalog.pg_attrdef default_value
+          ON default_value.adrelid = attribute.attrelid
+         AND default_value.adnum = attribute.attnum
+       WHERE attribute.attrelid = '#{quoted_prefix}.#{@legacy_table}'::regclass
+         AND attribute.attnum > 0
+         AND NOT attribute.attisdropped;
+
+      IF attribute_count <> 4
+         OR EXISTS (
+           SELECT 1
+             FROM pg_catalog.pg_attribute attribute
+             LEFT JOIN pg_catalog.pg_attrdef default_value
+               ON default_value.adrelid = attribute.attrelid
+              AND default_value.adnum = attribute.attnum
+            WHERE attribute.attrelid = '#{quoted_prefix}.#{@legacy_table}'::regclass
+              AND attribute.attnum > 0
+              AND NOT attribute.attisdropped
+              AND NOT (
+                (attribute.attname = 'id'
+                 AND pg_catalog.format_type(attribute.atttypid, attribute.atttypmod) = 'bigint'
+                 AND attribute.attnotnull
+                 AND attribute.attidentity = 'd'
+                 AND pg_catalog.pg_get_expr(default_value.adbin, default_value.adrelid) IS NULL)
+                OR (attribute.attname = 'tenant_id'
+                    AND pg_catalog.format_type(attribute.atttypid, attribute.atttypmod) = 'character varying'
+                    AND NOT attribute.attnotnull
+                    AND attribute.attidentity = chr(0)
+                    AND pg_catalog.pg_get_expr(default_value.adbin, default_value.adrelid) IS NULL)
+                OR (attribute.attname = 'inserted_at'
+                    AND pg_catalog.format_type(attribute.atttypid, attribute.atttypmod) = 'timestamp(6) without time zone'
+                    AND attribute.attnotnull
+                    AND attribute.attidentity = chr(0)
+                    AND pg_catalog.pg_get_expr(default_value.adbin, default_value.adrelid) IS NULL)
+                OR (attribute.attname = 'updated_at'
+                    AND pg_catalog.format_type(attribute.atttypid, attribute.atttypmod) = 'timestamp(6) without time zone'
+                    AND attribute.attnotnull
+                    AND attribute.attidentity = chr(0)
+                    AND pg_catalog.pg_get_expr(default_value.adbin, default_value.adrelid) IS NULL)
+              )
+         ) THEN
+        RAISE EXCEPTION 'Installation blocked: legacy catalog is ambiguous; repair was not applied';
+      END IF;
+
+      SELECT count(*)
+        INTO constraint_count
+        FROM pg_catalog.pg_constraint constraint
+       WHERE constraint.conrelid = '#{quoted_prefix}.#{@legacy_table}'::regclass;
+
+      IF constraint_count <> 1
+         OR NOT EXISTS (
+           SELECT 1
+             FROM pg_catalog.pg_constraint constraint
+            WHERE constraint.conrelid = '#{quoted_prefix}.#{@legacy_table}'::regclass
+              AND constraint.conname = 'mailglass_events_pkey'
+              AND constraint.contype = 'p'
+              AND pg_catalog.pg_get_constraintdef(constraint.oid, true) = 'PRIMARY KEY (id)'
+         ) THEN
+        RAISE EXCEPTION 'Installation blocked: legacy catalog is ambiguous; repair was not applied';
+      END IF;
+
+      SELECT count(*)
+        INTO index_count
+        FROM pg_catalog.pg_indexes indexes
+       WHERE indexes.schemaname = '#{prefix_literal}'
+         AND indexes.tablename = '#{@legacy_table}';
+
+      IF index_count <> 1
+         OR NOT EXISTS (
+           SELECT 1
+             FROM pg_catalog.pg_indexes indexes
+            WHERE indexes.schemaname = '#{prefix_literal}'
+              AND indexes.tablename = '#{@legacy_table}'
+              AND indexes.indexname = 'mailglass_events_pkey'
+              AND indexes.indexdef = format(
+                'CREATE UNIQUE INDEX mailglass_events_pkey ON %I.mailglass_events USING btree (id)',
+                #{quoted_prefix}
+              )
+         ) THEN
+        RAISE EXCEPTION 'Installation blocked: legacy catalog is ambiguous; repair was not applied';
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM #{quoted_prefix}.#{@legacy_table}) THEN
+        RAISE EXCEPTION 'Installation blocked: legacy table is populated; repair was not applied';
+      END IF;
+
+      DROP TABLE #{quoted_prefix}.#{@legacy_table} RESTRICT;
+    END
+    $$;
+    """)
+  end
+
+  defp quote_identifier(identifier),
+    do: ~s("#{String.replace(identifier, ~s("), ~s(""))}")
 
   defp query!(repo, prefix, query), do: query_with_params!(repo, query, [prefix])
 
