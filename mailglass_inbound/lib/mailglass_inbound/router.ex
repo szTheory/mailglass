@@ -49,9 +49,8 @@ defmodule MailglassInbound.Router do
 
   @doc since: "0.1.0"
   defmacro route(mailbox, opts) do
-    expanded_mailbox = Macro.expand(mailbox, __CALLER__)
-    {evaluated_opts, _binding} = Code.eval_quoted(opts, [], __CALLER__)
-    validated = validate_route_opts!(expanded_mailbox, evaluated_opts)
+    expanded_mailbox = expand_mailbox!(mailbox, __CALLER__)
+    validated = validate_route_opts!(expanded_mailbox, decode_literal!(opts))
     # Capture the declaration site at compile time so the doctor can name
     # `router.ex:LINE` in route-conflict findings (the design contract).
     route = %Route{
@@ -90,6 +89,62 @@ defmodule MailglassInbound.Router do
   defp validate_route_opts!(mailbox, _opts) do
     raise ArgumentError,
           "route/2 expects a mailbox module and keyword options, got: #{inspect(mailbox)}"
+  end
+
+  defp expand_mailbox!(mailbox, _caller) when is_atom(mailbox), do: mailbox
+
+  defp expand_mailbox!({:__aliases__, _meta, _parts} = mailbox, caller) do
+    case Macro.expand(mailbox, caller) do
+      expanded when is_atom(expanded) -> expanded
+      _other -> mailbox_error!(mailbox)
+    end
+  end
+
+  defp expand_mailbox!(mailbox, _caller), do: mailbox_error!(mailbox)
+
+  defp mailbox_error!(mailbox) do
+    raise ArgumentError,
+          "route/2 expects a literal mailbox module alias, got: #{Macro.to_string(mailbox)}"
+  end
+
+  # Route declarations are configuration data. Decode their quoted form without
+  # evaluating caller code so a malformed declaration cannot run at compile time.
+  defp decode_literal!(value)
+       when is_atom(value) or is_binary(value) or is_number(value),
+       do: value
+
+  defp decode_literal!(values) when is_list(values), do: Enum.map(values, &decode_literal!/1)
+
+  defp decode_literal!({:sigil_r, _meta, [{:<<>>, _binary_meta, parts}, modifiers]} = ast)
+       when is_list(parts) and is_list(modifiers) do
+    if Enum.all?(parts, &is_binary/1) and Enum.all?(modifiers, &is_integer/1) do
+      pattern = IO.iodata_to_binary(parts)
+
+      case Regex.compile(pattern, List.to_string(modifiers)) do
+        {:ok, regex} -> regex
+        {:error, reason} -> literal_error!(ast, "invalid regex: #{reason}")
+      end
+    else
+      literal_error!(ast, "regex interpolation is not allowed")
+    end
+  end
+
+  defp decode_literal!({:{}, _meta, values}) when is_list(values) do
+    values |> Enum.map(&decode_literal!/1) |> List.to_tuple()
+  end
+
+  # Two-element tuples (including keyword entries and header matchers) are
+  # already represented as literal tuples in quoted Elixir.
+  defp decode_literal!({left, right}) do
+    {decode_literal!(left), decode_literal!(right)}
+  end
+
+  defp decode_literal!(ast), do: literal_error!(ast, "executable expressions are not allowed")
+
+  defp literal_error!(ast, reason) do
+    raise ArgumentError,
+          "route/2 accepts only literal options (strings, nil, lists, tuples, and regex sigils); " <>
+            "#{reason}: #{Macro.to_string(ast)}"
   end
 
   @doc false
