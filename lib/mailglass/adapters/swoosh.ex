@@ -4,10 +4,9 @@ defmodule Mailglass.Adapters.Swoosh do
 
   Adopters configure their Swoosh adapter once and mailglass wraps it —
   they keep existing Postmark/SendGrid/Mailgun/SES/Resend/SMTP config.
-  mailglass adds error normalization into `%Mailglass.SendError{}` and
-  error normalization into `%Mailglass.SendError{}`. The authoritative dispatch
-  span belongs to `Mailglass.Outbound.call_adapter/2`, so a provider call emits
-  one span rather than a nested duplicate.
+  mailglass adds error normalization into `%Mailglass.SendError{}`. The
+  authoritative dispatch span belongs to the outbound facade's `call_adapter/2`,
+  so a provider call emits one span rather than a nested duplicate.
 
   Pure: no DB, no PubSub, no `Process.put`. Caller's process owns the
   HTTP request via Swoosh's `:api_client` (adopter-supplied, typically
