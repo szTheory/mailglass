@@ -467,9 +467,6 @@ defmodule Mailglass.Config do
     ]
   ]
 
-  # persistent_term key for the boot-validated Postgres schema name.
-  @schema_key {__MODULE__, :schema}
-
   @moduledoc """
   Runtime configuration for mailglass, validated at boot via NimbleOptions.
 
@@ -559,7 +556,7 @@ defmodule Mailglass.Config do
     # Cache the validated schema from the boot pipeline so boot and cache can
     # never disagree. `Identifier.validate!/2` fails fast on a bad identifier.
     schema = Keyword.get(validated, :schema, "mailglass")
-    :persistent_term.put(@schema_key, Mailglass.Identifier.validate!(schema, :schema))
+    _runtime = Mailglass.Runtime.bootstrap!(schema)
 
     telemetry_opts = Keyword.get(validated, :telemetry, [])
 
@@ -664,19 +661,7 @@ defmodule Mailglass.Config do
   """
   @doc since: "2.0.0"
   @spec schema() :: String.t()
-  def schema do
-    case :persistent_term.get(@schema_key, :__miss__) do
-      :__miss__ -> warm_schema()
-      schema -> schema
-    end
-  end
-
-  defp warm_schema do
-    schema = Application.get_env(:mailglass, :schema, "mailglass")
-    Mailglass.Identifier.validate!(schema, :schema)
-    :persistent_term.put(@schema_key, schema)
-    schema
-  end
+  def schema, do: Mailglass.Runtime.schema()
 
   @doc """
   Returns the validated global default adapter as `{module, opts}`.
