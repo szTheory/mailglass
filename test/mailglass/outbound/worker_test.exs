@@ -7,6 +7,35 @@ defmodule Mailglass.Outbound.WorkerTest do
   alias Mailglass.Outbound
   alias Mailglass.Outbound.Delivery
   alias Mailglass.Generators
+  alias Mailglass.SendError
+
+  defmodule PermanentFailureAdapter do
+    @behaviour Mailglass.Adapter
+
+    def deliver(_message, _opts) do
+      {:error, SendError.new(:adapter_failure, retry_class: :permanent)}
+    end
+  end
+
+  defmodule TransientFailureAdapter do
+    @behaviour Mailglass.Adapter
+
+    def deliver(_message, _opts) do
+      {:error, SendError.new(:adapter_failure, retry_class: :transient)}
+    end
+  end
+
+  defmodule ProviderBodyAdapter do
+    @behaviour Swoosh.Adapter
+
+    def deliver(_email, _config) do
+      {:error,
+       {:api_error, 502,
+        "provider-body-sentinel recipient-sentinel@example.com subject-sentinel rendered-body-sentinel"}}
+    end
+
+    def validate_config(_), do: :ok
+  end
 
   setup do
     if Code.ensure_loaded?(Oban.Testing) do
@@ -159,6 +188,83 @@ defmodule Mailglass.Outbound.WorkerTest do
 
         assert :ok = Mailglass.Outbound.Worker.perform(job)
         assert_receive {:adapter_route, :route_a, ^delivery_id, "worker-tenant"}
+      end
+    end
+
+    test "permanent send errors cancel rather than retry under locked Oban 2.23 semantics" do
+      Application.put_env(:mailglass, :adapter, {PermanentFailureAdapter, []})
+
+      delivery =
+        Generators.delivery_fixture(
+          tenant_id: "permanent-worker-tenant",
+          metadata: %{
+            "rendered_html" => "<p>Hello</p>",
+            "rendered_text" => "Hello",
+            "subject" => "Test"
+          }
+        )
+
+      job = %Oban.Job{
+        args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "permanent-worker-tenant"}
+      }
+
+      assert {:cancel, :permanent_failure} = Mailglass.Outbound.Worker.perform(job)
+    end
+
+    test "transient send errors return Oban's retry form" do
+      Application.put_env(:mailglass, :adapter, {TransientFailureAdapter, []})
+
+      delivery =
+        Generators.delivery_fixture(
+          tenant_id: "transient-worker-tenant",
+          metadata: %{
+            "rendered_html" => "<p>Hello</p>",
+            "rendered_text" => "Hello",
+            "subject" => "Test"
+          }
+        )
+
+      job = %Oban.Job{
+        args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "transient-worker-tenant"}
+      }
+
+      assert {:error, %SendError{retry_class: :transient}} = Mailglass.Outbound.Worker.perform(job)
+    end
+
+    test "provider response sentinels cannot enter persisted last_error" do
+      Application.put_env(
+        :mailglass,
+        :adapter,
+        {Mailglass.Adapters.Swoosh, swoosh_adapter: ProviderBodyAdapter}
+      )
+
+      delivery =
+        Generators.delivery_fixture(
+          tenant_id: "private-error-worker-tenant",
+          metadata: %{
+            "rendered_html" => "<p>Hello</p>",
+            "rendered_text" => "Hello",
+            "subject" => "Test"
+          }
+        )
+
+      job = %Oban.Job{
+        args: %{
+          "delivery_id" => delivery.id,
+          "mailglass_tenant_id" => "private-error-worker-tenant"
+        }
+      }
+
+      assert {:error, %SendError{retry_class: :transient}} = Mailglass.Outbound.Worker.perform(job)
+      persisted = Mailglass.Repo.get(Delivery, delivery.id).last_error |> inspect()
+
+      for sentinel <- [
+            "provider-body-sentinel",
+            "recipient-sentinel@example.com",
+            "subject-sentinel",
+            "rendered-body-sentinel"
+          ] do
+        refute String.contains?(persisted, sentinel)
       end
     end
   end

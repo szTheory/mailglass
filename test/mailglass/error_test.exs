@@ -79,6 +79,18 @@ defmodule Mailglass.ErrorTest do
            |> Enum.sort() == ["context", "message", "type"]
   end
 
+  test "retryable?/1 follows the explicit retry_class rather than adapter type" do
+    assert Mailglass.SendError.retryable?(
+             Mailglass.SendError.new(:adapter_failure, retry_class: :transient)
+           )
+
+    refute Mailglass.SendError.retryable?(
+             Mailglass.SendError.new(:adapter_failure, retry_class: :permanent)
+           )
+
+    refute Mailglass.SendError.retryable?(Mailglass.SendError.new(:adapter_failure))
+  end
+
   test "__types__/0 returns the closed atom set for TemplateError" do
     assert Mailglass.TemplateError.__types__() ==
              [:heex_compile, :missing_assign, :helper_undefined, :inliner_failed]

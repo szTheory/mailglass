@@ -59,6 +59,30 @@ defmodule Mailglass.Adapters.SwooshTest do
     def validate_config(_), do: :ok
   end
 
+  defmodule RateLimitedAdapter do
+    @behaviour Swoosh.Adapter
+    def deliver(_email, _config), do: {:error, {:api_error, 429, "rate limited"}}
+    def validate_config(_), do: :ok
+  end
+
+  defmodule UnknownFailureAdapter do
+    @behaviour Swoosh.Adapter
+    def deliver(_email, _config), do: {:error, {:unexpected, "untrusted reason text"}}
+    def validate_config(_), do: :ok
+  end
+
+  defmodule SentinelApiErrorAdapter do
+    @behaviour Swoosh.Adapter
+
+    def deliver(_email, _config) do
+      {:error,
+       {:api_error, 502,
+        "provider-body-sentinel recipient-sentinel@example.com subject-sentinel rendered-body-sentinel"}}
+    end
+
+    def validate_config(_), do: :ok
+  end
+
   describe "behaviour implementation" do
     test "Test 2: Mailglass.Adapters.Swoosh implements @behaviour Mailglass.Adapter" do
       attributes = Mailglass.Adapters.Swoosh.module_info(:attributes)
@@ -88,33 +112,67 @@ defmodule Mailglass.Adapters.SwooshTest do
   end
 
   describe "deliver/2 error mapping" do
-    test "Test 4: {:error, {:api_error, 500, body}} maps to SendError :adapter_failure with context" do
+    test "5xx errors are transient and retain only allowlisted metadata" do
       msg = make_message()
       result = SwooshAdapter.deliver(msg, swoosh_adapter: ApiErrorAdapter)
 
-      assert {:error, %SendError{type: :adapter_failure, context: ctx}} = result
+      assert {:error, %SendError{type: :adapter_failure, retry_class: :transient, context: ctx}} =
+               result
+
       assert ctx.provider_status == 500
       assert is_atom(ctx.provider_module)
-      assert is_binary(ctx.body_preview)
-      assert String.contains?(ctx.body_preview, "server down")
+      assert ctx.reason_class == :server_error
+      refute Map.has_key?(ctx, :body_preview)
     end
 
-    test "Test 5: {:error, :timeout} maps to SendError :adapter_failure with reason_class: :transport" do
+    test "timeout errors are transient" do
       msg = make_message()
       result = SwooshAdapter.deliver(msg, swoosh_adapter: TimeoutAdapter)
 
-      assert {:error, %SendError{type: :adapter_failure, context: ctx}} = result
+      assert {:error, %SendError{type: :adapter_failure, retry_class: :transient, context: ctx}} =
+               result
+
       assert ctx.reason_class == :transport
       assert is_atom(ctx.provider_module)
     end
 
-    test "4xx client error maps to SendError :adapter_failure with reason_class: :client_error" do
+    test "ordinary 4xx errors are permanent while 429 is transient" do
       msg = make_message()
       result = SwooshAdapter.deliver(msg, swoosh_adapter: ClientErrorAdapter)
 
-      assert {:error, %SendError{type: :adapter_failure, context: ctx}} = result
+      assert {:error, %SendError{type: :adapter_failure, retry_class: :permanent, context: ctx}} =
+               result
+
       assert ctx.provider_status == 422
       assert ctx.reason_class == :client_error
+
+      assert {:error, %SendError{retry_class: :transient, context: %{provider_status: 429}}} =
+               SwooshAdapter.deliver(msg, swoosh_adapter: RateLimitedAdapter)
+    end
+
+    test "malformed provider failures fail closed as permanent without reason-text heuristics" do
+      assert {:error, %SendError{retry_class: :permanent, context: %{reason_class: :unknown}}} =
+               SwooshAdapter.deliver(make_message(), swoosh_adapter: UnknownFailureAdapter)
+    end
+
+    test "provider-body and message sentinels never reach error representations" do
+      {:error, error} =
+        SwooshAdapter.deliver(make_message(), swoosh_adapter: SentinelApiErrorAdapter)
+
+      persisted_error = inspect(error)
+      json = Jason.encode!(error)
+
+      for sentinel <- [
+            "provider-body-sentinel",
+            "recipient-sentinel@example.com",
+            "subject-sentinel",
+            "rendered-body-sentinel"
+          ] do
+        refute String.contains?(error.message, sentinel)
+        refute String.contains?(inspect(error.context), sentinel)
+        refute String.contains?(persisted_error, sentinel)
+        refute String.contains?(json, sentinel)
+      end
     end
   end
 
@@ -171,7 +229,7 @@ defmodule Mailglass.Adapters.SwooshTest do
 
       # For api_error shapes, we can test via a single parametric module
       # since they all map to the same SendError :adapter_failure type
-      Enum.each(api_error_shapes, fn {:api_error, status, body} ->
+      Enum.each(api_error_shapes, fn {:api_error, status, _body} ->
         # Build result directly using the same logic as the Swoosh adapter
         # We test the contract by testing the error-mapped SendError context
         error =
@@ -179,7 +237,6 @@ defmodule Mailglass.Adapters.SwooshTest do
             context: %{
               provider_status: status,
               provider_module: SomeModule,
-              body_preview: String.slice(body, 0, 200),
               reason_class: if(status >= 500, do: :server_error, else: :client_error)
             }
           )
@@ -213,8 +270,8 @@ defmodule Mailglass.Adapters.SwooshTest do
     end
   end
 
-  describe "Test 7: dispatch_span telemetry" do
-    test "deliver/2 emits [:mailglass, :outbound, :dispatch, :stop] telemetry event" do
+  describe "dispatch span ownership" do
+    test "direct adapter delivery does not emit a duplicate outbound dispatch span" do
       test_pid = self()
       handler_id = "test-dispatch-#{System.unique_integer()}"
 
@@ -232,19 +289,7 @@ defmodule Mailglass.Adapters.SwooshTest do
       msg = make_message()
       _result = SwooshAdapter.deliver(msg, swoosh_adapter: SuccessAdapterWithId)
 
-      assert_receive {:telemetry_event, [:mailglass, :outbound, :dispatch, :stop], _measurements,
-                      metadata}
-
-      # Metadata should have tenant_id, mailable, provider (non-PII keys only)
-      assert Map.has_key?(metadata, :tenant_id)
-      assert Map.has_key?(metadata, :mailable)
-      assert Map.has_key?(metadata, :provider)
-
-      # No PII keys
-      Enum.each(@pii_forbidden_keys, fn key ->
-        refute Map.has_key?(metadata, key),
-               "PII key #{key} found in telemetry metadata"
-      end)
+      refute_receive {:telemetry_event, [:mailglass, :outbound, :dispatch, :stop], _, _}
 
       :telemetry.detach(handler_id)
     end
