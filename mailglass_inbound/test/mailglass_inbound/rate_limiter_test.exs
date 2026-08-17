@@ -36,6 +36,33 @@ defmodule MailglassInbound.RateLimiterTest do
   defp restore_env(key, value), do: Application.put_env(:mailglass_inbound, key, value)
 
   describe "shared atomic bucket" do
+    test "fast path preserves a depleted bucket across clock regression" do
+      now = :atomics.new(1, [])
+      :atomics.put(now, 1, 99)
+      Application.put_env(:mailglass_inbound, :rate_limit_clock, fn -> :atomics.get(now, 1) end)
+
+      Application.put_env(:mailglass_inbound, :rate_limit,
+        tenant: [capacity: 1, per_minute: 60_000_000],
+        recipient: [capacity: 1_000, per_minute: 0],
+        sender_domain: [capacity: 1_000, per_minute: 0]
+      )
+
+      key = {:tenant, "clock-regression"}
+      true = :ets.insert(@table, {key, 0, 100, 17, 100})
+
+      assert {:error, %RateLimitError{}} =
+               RateLimiter.check("clock-regression", "user@inbound.test", "sender.test")
+
+      assert [{^key, 0, 100, 17, 100}] = :ets.lookup(@table, key)
+
+      :atomics.put(now, 1, 100)
+
+      assert {:error, %RateLimitError{}} =
+               RateLimiter.check("clock-regression", "user@inbound.test", "sender.test")
+
+      assert [{^key, 0, 100, 17, 100}] = :ets.lookup(@table, key)
+    end
+
     test "recreates its ETS table instead of raising when admission sees it absent" do
       # Deleting a named ETS table immediately before admission exercises the
       # owner-side recovery path. It must recreate the canonical table before

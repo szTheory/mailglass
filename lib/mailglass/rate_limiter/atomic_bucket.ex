@@ -52,12 +52,21 @@ defmodule Mailglass.RateLimiter.AtomicBucket do
   defp consume_existing(table, owner, key, capacity, per_minute, now_us, attempt) do
     case safe_lookup(table, key) do
       [{^key, tokens, last_us, remainder, last_seen}] ->
+        effective_now_us = max(now_us, last_us)
+
         {available, next_remainder} =
-          refill(tokens, last_us, remainder, capacity, per_minute, now_us)
+          refill(tokens, last_us, remainder, capacity, per_minute, effective_now_us)
 
         allowed? = available >= @scale
         next_tokens = if allowed?, do: available - @scale, else: available
-        replacement = {key, next_tokens, now_us, next_remainder, now_us}
+
+        replacement = {
+          key,
+          next_tokens,
+          effective_now_us,
+          next_remainder,
+          max(last_seen, effective_now_us)
+        }
 
         if replace_exact(table, {key, tokens, last_us, remainder, last_seen}, replacement) do
           if allowed?, do: :ok, else: {:error, :denied}
@@ -89,14 +98,17 @@ defmodule Mailglass.RateLimiter.AtomicBucket do
   @doc false
   @spec consume_taken(tuple(), non_neg_integer(), non_neg_integer(), integer()) ::
           {:ok | :denied, tuple()}
-  def consume_taken({key, tokens, last_us, remainder, _last_seen}, capacity, per_minute, now_us) do
+  def consume_taken({key, tokens, last_us, remainder, last_seen}, capacity, per_minute, now_us) do
+    effective_now_us = max(now_us, last_us)
+
     {available, next_remainder} =
-      refill(tokens, last_us, remainder, capacity, per_minute, now_us)
+      refill(tokens, last_us, remainder, capacity, per_minute, effective_now_us)
 
     allowed? = available >= @scale
     next_tokens = if allowed?, do: available - @scale, else: available
 
-    {if(allowed?, do: :ok, else: :denied), {key, next_tokens, now_us, next_remainder, now_us}}
+    {if(allowed?, do: :ok, else: :denied),
+     {key, next_tokens, effective_now_us, next_remainder, max(last_seen, effective_now_us)}}
   end
 
   defp replace_exact(table, observed, replacement) do

@@ -2,6 +2,7 @@ defmodule Mailglass.RateLimiterTest do
   use ExUnit.Case, async: false
 
   alias Mailglass.{RateLimiter, RateLimitError}
+  alias Mailglass.RateLimiter.AtomicBucket
 
   setup do
     prev_config = Application.get_env(:mailglass, :rate_limit)
@@ -28,6 +29,16 @@ defmodule Mailglass.RateLimiterTest do
   defp restore_env(key, value), do: Application.put_env(:mailglass, key, value)
 
   describe "atomic fixed-point bucket" do
+    test "owner fallback never mints permits when a clock value regresses" do
+      bucket = {:clock_regression, 0, 100, 17, 100}
+
+      assert {:denied, {:clock_regression, 0, 100, 17, 100}} =
+               AtomicBucket.consume_taken(bucket, 1, 60_000_000, 99)
+
+      assert {:denied, {:clock_regression, 0, 100, 17, 100}} =
+               AtomicBucket.consume_taken(bucket, 1, 60_000_000, 100)
+    end
+
     test "recreates its ETS table instead of raising when admission sees it absent" do
       # Deleting a named ETS table immediately before admission exercises the
       # owner-side recovery path. It must recreate the canonical table before
