@@ -24,6 +24,9 @@ defmodule MailglassInbound.MigrationsTest do
     v02 = File.read!(@v02_path)
     assert v02 =~ "raw_mime_sha256"
     assert v02 =~ "CREATE INDEX CONCURRENTLY"
+    assert v02 =~ "DROP INDEX CONCURRENTLY IF EXISTS"
+    assert v02 =~ "configure_timeouts(concurrent_indexes)"
+    assert v02 =~ "reset_timeouts(concurrent_indexes)"
     assert v02 =~ "mailglass_inbound_records_retention_idx"
     assert v02 =~ "mailglass_inbound_evidence_retention_idx"
   end

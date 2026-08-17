@@ -76,12 +76,16 @@ and do not roll back after code or data has begun depending exclusively on the n
 Run the repository's real Postgres certification journey before release:
 
 ```sh
-MAILGLASS_PATH="$PWD" bash scripts/generated_ecto_host_proof.sh
+MAILGLASS_PATH="$PWD" \
+DATABASE_URL="postgres://postgres:postgres@localhost/mailglass_generated_ecto_host_local" \
+bash scripts/generated_ecto_host_proof.sh
 ```
 
 `scripts/generated_ecto_host_proof.sh` generates an isolated Phoenix/Ecto host, populates prior-version
 schemas, applies both public upgrade generators, exercises backfill and evidence behavior, validates
-indexes, and returns only the additive versions to their prior anchors.
+indexes, and returns only the additive versions to their prior anchors. `DATABASE_URL` must name a
+disposable `mailglass_generated_ecto_host_<suffix>` database: the proof creates and drops its
+`_core_first` and `_inbound_first` variants.
 
 ## Package and product boundaries
 

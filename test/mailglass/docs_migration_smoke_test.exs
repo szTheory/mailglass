@@ -19,6 +19,8 @@ defmodule Mailglass.DocsMigrationSmokeTest do
           "invalid indexes",
           "bounded, resumable backfill",
           "scripts/generated_ecto_host_proof.sh",
+          "DATABASE_URL=\"postgres://postgres:postgres@localhost/mailglass_generated_ecto_host_local\"",
+          "disposable `mailglass_generated_ecto_host_<suffix>` database",
           "core and inbound migrations are independent",
           "admin/operator schema or UI"
         ] do

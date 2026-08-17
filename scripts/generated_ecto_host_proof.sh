@@ -92,6 +92,7 @@ run_journey() {
   local core_upgrade_path
   local inbound_upgrade_path
   local core_upgrade_version
+  local inbound_upgrade_version
 
   case "${journey_name}" in
     core_first|inbound_first) ;;
@@ -119,9 +120,11 @@ run_journey() {
     path = System.fetch_env!("MAILGLASS_PATH")
     content = File.read!("mix.exs")
 
+    # `inspect/1` emits a valid Elixir literal for paths containing quotes,
+    # backslashes, or whitespace.
     deps =
-      ~s(      {:mailglass, path: "#{path}", override: true},\n) <>
-        ~s(      {:mailglass_inbound, path: "#{path}/mailglass_inbound"},\n)
+      "      {:mailglass, path: " <> inspect(path) <> ", override: true},\n" <>
+        "      {:mailglass_inbound, path: " <> inspect(Path.join(path, "mailglass_inbound")) <> "},\n"
 
     updated = String.replace(content, ~r/(defp deps do\n\s*\[\n)/, "\\1" <> deps, global: false)
     File.write!("mix.exs", updated)
@@ -405,6 +408,68 @@ EOF
 
     if length(rows) != length(names) or Enum.any?(rows, fn [_name, valid, ready] -> not valid or not ready end),
       do: raise("core invalid-index retry did not converge: #{inspect(rows)}")
+  '
+
+  # Exercise the inbound path independently: a failed concurrent build leaves
+  # an invalid index shell, which the generated V02 wrapper must remove before
+  # it can rebuild all package-owned indexes.
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    name = "mailglass_inbound_evidence_retention_idx"
+    Host.Repo.query!("DROP INDEX CONCURRENTLY IF EXISTS mailglass.#{name}")
+
+    try do
+      Host.Repo.query!(
+        "CREATE INDEX CONCURRENTLY #{name} ON mailglass.mailglass_inbound_evidence ((1 / (CASE WHEN provider = $mg$sendgrid$mg$ THEN 0 ELSE 1 END)))"
+      )
+
+      raise "invalid-index fixture unexpectedly succeeded"
+    rescue
+      error in Postgrex.Error ->
+        if error.postgres.code != :division_by_zero, do: reraise(error, __STACKTRACE__)
+    end
+
+    %{rows: [[false]]} = Host.Repo.query!(
+      """
+      SELECT i.indisvalid
+      FROM pg_index AS i
+      JOIN pg_class AS c ON c.oid = i.indexrelid
+      JOIN pg_namespace AS n ON n.oid = c.relnamespace
+      WHERE n.nspname = $mg$mailglass$mg$ AND c.relname = $1
+      """,
+      [name]
+    )
+  '
+
+  inbound_upgrade_version="$(basename "${inbound_upgrade_path}" | cut -d_ -f1)"
+
+  INBOUND_UPGRADE_VERSION="${inbound_upgrade_version}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    {version, ""} = System.fetch_env!("INBOUND_UPGRADE_VERSION") |> Integer.parse()
+    Host.Repo.query!("DELETE FROM schema_migrations WHERE version = $1", [version])
+    Host.Repo.query!("COMMENT ON TABLE mailglass.mailglass_inbound_records IS $mg$1$mg$")
+  '
+
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.Repo
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.Repo
+
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    if MailglassInbound.Migration.migrated_version(repo: Host.Repo) != 2,
+      do: raise("inbound invalid-index retry did not restore V02")
+
+    names = MailglassInbound.Migrations.Postgres.V02.concurrent_indexes()
+
+    %{rows: rows} = Host.Repo.query!(
+      """
+      SELECT c.relname, i.indisvalid, i.indisready
+      FROM pg_index AS i
+      JOIN pg_class AS c ON c.oid = i.indexrelid
+      JOIN pg_namespace AS n ON n.oid = c.relnamespace
+      WHERE n.nspname = $mg$mailglass$mg$ AND c.relname = ANY($1)
+      """,
+      [names]
+    )
+
+    if length(rows) != length(names) or Enum.any?(rows, fn [_name, valid, ready] -> not valid or not ready end),
+      do: raise("inbound invalid-index retry did not converge: #{inspect(rows)}")
   '
 
   FIRST_ROLLBACK_PACKAGE="${second_upgrade}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --step 1

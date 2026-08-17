@@ -18,44 +18,51 @@ defmodule Mailglass.Migrations.Postgres.V06 do
     Mailglass.Identifier.validate!(prefix, :prefix)
     q = inspect(prefix)
 
-    configure_timeouts(Map.get(opts, :concurrent_indexes, false))
+    concurrent_indexes = Map.get(opts, :concurrent_indexes, false)
+    configure_timeouts(concurrent_indexes)
 
-    alter table(:mailglass_webhook_events, prefix: prefix) do
-      add_if_not_exists(:raw_signed_body, :binary)
+    try do
+      alter table(:mailglass_webhook_events, prefix: prefix) do
+        add_if_not_exists(:raw_signed_body, :binary)
+      end
+
+      execute(
+        """
+        CREATE OR REPLACE FUNCTION #{q}.mailglass_webhook_signed_body_immutable()
+        RETURNS trigger
+        LANGUAGE plpgsql
+        SET search_path = ''
+        AS $$
+        BEGIN
+          IF OLD.raw_signed_body IS DISTINCT FROM NEW.raw_signed_body THEN
+            RAISE SQLSTATE '45A01'
+              USING MESSAGE = 'mailglass_webhook_events.raw_signed_body is immutable';
+          END IF;
+
+          RETURN NEW;
+        END;
+        $$;
+        """,
+        "DROP FUNCTION IF EXISTS #{q}.mailglass_webhook_signed_body_immutable()"
+      )
+
+      execute(
+        "DROP TRIGGER IF EXISTS mailglass_webhook_signed_body_immutable_trigger ON #{q}.mailglass_webhook_events"
+      )
+
+      execute("""
+      CREATE TRIGGER mailglass_webhook_signed_body_immutable_trigger
+        BEFORE UPDATE ON #{q}.mailglass_webhook_events
+        FOR EACH ROW EXECUTE FUNCTION #{q}.mailglass_webhook_signed_body_immutable();
+      """)
+
+      create_indexes(prefix, concurrent_indexes)
+    after
+      # The concurrent path is intentionally outside a transaction, so SET
+      # changes the checked-out connection. Always restore it before the Repo
+      # returns that connection to its pool, including failed-index retries.
+      reset_timeouts(concurrent_indexes)
     end
-
-    execute(
-      """
-      CREATE OR REPLACE FUNCTION #{q}.mailglass_webhook_signed_body_immutable()
-      RETURNS trigger
-      LANGUAGE plpgsql
-      SET search_path = ''
-      AS $$
-      BEGIN
-        IF OLD.raw_signed_body IS DISTINCT FROM NEW.raw_signed_body THEN
-          RAISE SQLSTATE '45A01'
-            USING MESSAGE = 'mailglass_webhook_events.raw_signed_body is immutable';
-        END IF;
-
-        RETURN NEW;
-      END;
-      $$;
-      """,
-      "DROP FUNCTION IF EXISTS #{q}.mailglass_webhook_signed_body_immutable()"
-    )
-
-    execute(
-      "DROP TRIGGER IF EXISTS mailglass_webhook_signed_body_immutable_trigger ON #{q}.mailglass_webhook_events"
-    )
-
-    execute("""
-    CREATE TRIGGER mailglass_webhook_signed_body_immutable_trigger
-      BEFORE UPDATE ON #{q}.mailglass_webhook_events
-      FOR EACH ROW EXECUTE FUNCTION #{q}.mailglass_webhook_signed_body_immutable();
-    """)
-
-    create_indexes(prefix, Map.get(opts, :concurrent_indexes, false))
-    reset_timeouts(Map.get(opts, :concurrent_indexes, false))
   end
 
   def down(opts \\ []) do

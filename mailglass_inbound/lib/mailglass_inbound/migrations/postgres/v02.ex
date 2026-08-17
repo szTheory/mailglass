@@ -21,34 +21,64 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
   def up(opts \\ []) do
     prefix = opts[:prefix]
     Mailglass.Identifier.validate!(prefix, :prefix)
+    concurrent_indexes = Map.get(opts, :concurrent_indexes, false)
 
-    alter table(:mailglass_inbound_evidence, prefix: prefix) do
-      add_if_not_exists(:raw_mime_sha256, :binary)
-      add_if_not_exists(:raw_signed_request, :binary)
-      add_if_not_exists(:terminal_failure_class, :text)
-      add_if_not_exists(:terminal_context, :map, null: false, default: %{})
+    configure_timeouts(concurrent_indexes)
+
+    try do
+      alter table(:mailglass_inbound_evidence, prefix: prefix) do
+        add_if_not_exists(:raw_mime_sha256, :binary)
+        add_if_not_exists(:raw_signed_request, :binary)
+        add_if_not_exists(:terminal_failure_class, :text)
+        add_if_not_exists(:terminal_context, :map, null: false, default: %{})
+      end
+
+      # These are deliberately separate statements.  A generated wrapper that
+      # advertises `@disable_ddl_transaction true` passes `concurrent_indexes: true`
+      # and gets the non-blocking path.  The existing facade remains compatible for
+      # transactional installer wrappers until that generator contract ships.
+      create_indexes(prefix, concurrent_indexes)
+    after
+      reset_timeouts(concurrent_indexes)
     end
-
-    # These are deliberately separate statements.  A generated wrapper that
-    # advertises `@disable_ddl_transaction true` passes `concurrent_indexes: true`
-    # and gets the non-blocking path.  The existing facade remains compatible for
-    # transactional installer wrappers until that generator contract ships.
-    create_indexes(prefix, Map.get(opts, :concurrent_indexes, false))
   end
 
   def down(opts \\ []) do
     prefix = opts[:prefix]
     Mailglass.Identifier.validate!(prefix, :prefix)
+    concurrent_indexes = Map.get(opts, :concurrent_indexes, false)
 
-    for name <- Enum.reverse(@concurrent_indexes),
-        do: execute("DROP INDEX IF EXISTS #{inspect(prefix)}.#{name}")
+    configure_timeouts(concurrent_indexes)
 
-    alter table(:mailglass_inbound_evidence, prefix: prefix) do
-      remove(:terminal_context)
-      remove(:terminal_failure_class)
-      remove(:raw_signed_request)
-      remove(:raw_mime_sha256)
+    try do
+      drop_indexes(prefix, concurrent_indexes)
+
+      alter table(:mailglass_inbound_evidence, prefix: prefix) do
+        remove(:terminal_context)
+        remove(:terminal_failure_class)
+        remove(:raw_signed_request)
+        remove(:raw_mime_sha256)
+      end
+    after
+      reset_timeouts(concurrent_indexes)
     end
+  end
+
+  defp configure_timeouts(false) do
+    execute("SET LOCAL lock_timeout = '500ms'")
+    execute("SET LOCAL statement_timeout = '2s'")
+  end
+
+  defp configure_timeouts(true) do
+    execute("SET lock_timeout = '500ms'")
+    execute("SET statement_timeout = '30s'")
+  end
+
+  defp reset_timeouts(false), do: :ok
+
+  defp reset_timeouts(true) do
+    execute("RESET lock_timeout")
+    execute("RESET statement_timeout")
   end
 
   defp create_indexes(prefix, true) do
@@ -92,6 +122,18 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
         prefix: prefix
       )
     )
+  end
+
+  defp drop_indexes(prefix, true) do
+    q = inspect(prefix)
+
+    for name <- Enum.reverse(@concurrent_indexes),
+        do: execute("DROP INDEX CONCURRENTLY IF EXISTS #{q}.#{name}")
+  end
+
+  defp drop_indexes(prefix, false) do
+    for name <- Enum.reverse(@concurrent_indexes),
+        do: execute("DROP INDEX IF EXISTS #{inspect(prefix)}.#{name}")
   end
 
   defp concurrent_index_sql(prefix) do
