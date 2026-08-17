@@ -46,8 +46,8 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
            defmodule Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo.Migrations.MailglassInstall do
              use Ecto.Migration
 
-             def up, do: Mailglass.Migration.up()
-             def down, do: Mailglass.Migration.down()
+             def up, do: Mailglass.Migration.up(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo)
+             def down, do: Mailglass.Migration.down(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo)
            end
            """
   end
@@ -89,7 +89,9 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
     assert [^install_path, upgrade_path] = migration_paths()
     assert File.read!(install_path) == install_source
     assert upgrade_path =~ "_mailglass_upgrade.exs"
-    assert File.read!(upgrade_path) =~ "def down, do: Mailglass.Migration.down(version: 4)"
+
+    assert File.read!(upgrade_path) =~
+             "def down, do: Mailglass.Migration.down(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo, version: 4)"
   end
 
   test "uses the selected repo for live core upgrade inspection despite conflicting package config" do
@@ -114,7 +116,9 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
     refute_received :other_repo_called
 
     assert [path] = migration_paths()
-    assert File.read!(path) =~ "def down, do: Mailglass.Migration.down(version: 4)"
+
+    assert File.read!(path) =~
+             "def down, do: Mailglass.Migration.down(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo, version: 4)"
   end
 
   test "keeps migration history unchanged when live startup or metadata inspection fails" do

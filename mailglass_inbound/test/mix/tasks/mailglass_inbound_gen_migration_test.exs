@@ -53,8 +53,8 @@ defmodule Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest do
            defmodule Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest.HostRepo.Migrations.MailglassInboundInstall do
              use Ecto.Migration
 
-             def up, do: MailglassInbound.Migration.up()
-             def down, do: MailglassInbound.Migration.down()
+             def up, do: MailglassInbound.Migration.up(repo: Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest.HostRepo)
+             def down, do: MailglassInbound.Migration.down(repo: Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest.HostRepo)
            end
            """
   end

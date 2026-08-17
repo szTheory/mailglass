@@ -7,8 +7,8 @@ defmodule Mailglass.Migration do
 
       defmodule MyApp.Repo.Migrations.AddMailglass do
         use Ecto.Migration
-        def up, do: Mailglass.Migration.up()
-        def down, do: Mailglass.Migration.down()
+        def up, do: Mailglass.Migration.up(repo: MyApp.Repo)
+        def down, do: Mailglass.Migration.down(repo: MyApp.Repo)
       end
 
   The wrapper stays stable across mailglass versions; per-version DDL

@@ -247,8 +247,8 @@ defmodule Mailglass.MigrationGenerator do
     defmodule #{inspect(migration_module(repo, spec.install_module_suffix))} do
       use Ecto.Migration
 
-      def up, do: #{inspect(spec.migration_module)}.up()
-      def down, do: #{inspect(spec.migration_module)}.down()
+      def up, do: #{inspect(spec.migration_module)}.up(repo: #{inspect(repo)})
+      def down, do: #{inspect(spec.migration_module)}.down(repo: #{inspect(repo)})
     end
     """
   end
@@ -258,8 +258,8 @@ defmodule Mailglass.MigrationGenerator do
     defmodule #{inspect(migration_module(repo, spec.upgrade_module_suffix))} do
       use Ecto.Migration
 
-      def up, do: #{inspect(spec.migration_module)}.up()
-      def down, do: #{inspect(spec.migration_module)}.down(version: #{prior_version})
+      def up, do: #{inspect(spec.migration_module)}.up(repo: #{inspect(repo)})
+      def down, do: #{inspect(spec.migration_module)}.down(repo: #{inspect(repo)}, version: #{prior_version})
     end
     """
   end
