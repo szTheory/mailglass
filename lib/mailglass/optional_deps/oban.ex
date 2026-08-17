@@ -7,10 +7,10 @@ defmodule Mailglass.OptionalDeps.Oban do
   `Mailglass.Outbound.deliver_later/2` falls back to `Task.Supervisor` with a
   `Logger.warning` emitted at boot (see `Mailglass.Application`).
 
-  Oban integration lands in  (Outbound). This gateway is delivered in
-   so Config/Telemetry can reference it without forward-reference pain.
+  Mailglass keeps Oban-specific calls behind this gateway so core delivery,
+  configuration, and telemetry code can compile cleanly when Oban is absent.
 
-  ##  addition — TenancyMiddleware
+  ## TenancyMiddleware
 
   `Mailglass.Oban.TenancyMiddleware` (defined as a sibling module in this
   file, conditionally compiled when `Oban.Worker` is loaded) serializes
@@ -74,7 +74,7 @@ defmodule Mailglass.OptionalDeps.Oban do
   end
 
   @doc """
-  Adds an `Oban.insert_all/4` operation to an existing `Ecto.Multi`.
+  Adds an `Oban.insert_all/3` operation to an existing `Ecto.Multi`.
 
   The jobs may be a list or a function of prior Multi changes. When Oban is
   unavailable the named step fails inside the Multi, rather than allowing a
