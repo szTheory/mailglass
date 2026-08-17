@@ -40,6 +40,7 @@ defmodule MailglassInbound.Ingress.Provider do
               {:ok, VerifiedRequest.t() | verification_facts()}
               | {:replay}
               | {:control_plane, http_status :: pos_integer()}
+              | verification_facts()
 
   # Legacy `verify!/3` arity, retained so Postmark (and SendGrid's compatibility
   # shim) keep a valid `@impl MailglassInbound.Ingress.Provider` annotation
