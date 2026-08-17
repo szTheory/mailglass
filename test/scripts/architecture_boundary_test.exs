@@ -9,15 +9,15 @@ defmodule Mailglass.ArchitectureBoundaryTest do
       |> Path.wildcard()
       |> Enum.map(fn path -> {path, File.read!(path)} end)
 
-    assert forbidden_package_references(:core, core_sources) == []
+    assert remote_reference_violations(core_sources, :MailglassInbound, %{}) == []
 
-    assert forbidden_package_references(:core, [
-             {"fixture.ex", "defmodule Fixture do\n  use MailglassInbound.Router\nend"}
-           ]) == ["fixture.ex"]
-
-    assert forbidden_package_references(:inbound, [
-             {"fixture.ex", "defmodule Fixture do\n  Mailglass.Config.schema()\nend"}
-           ]) == []
+    assert remote_reference_violations(
+             [
+               {"fixture.ex", "defmodule Fixture do\n  MailglassInbound.Router.call(conn, [])\nend"}
+             ],
+             :MailglassInbound,
+             %{}
+           ) == [{"fixture.ex", "MailglassInbound.Router"}]
   end
 
   test "the core safe broadcast capability has one owner" do
@@ -54,14 +54,28 @@ defmodule Mailglass.ArchitectureBoundaryTest do
            "xref reported a compile-connected cycle or unparseable output in #{project_root}:\n#{output}"
   end
 
-  defp forbidden_package_references(:core, sources) do
+  defp remote_reference_violations(sources, root, allowed_references_by_path) do
     for {path, source} <- sources,
-        source =~ ~r/\b(?:alias|import|require|use)\s+MailglassInbound\b/ or
-          source =~ ~r/\bMailglassInbound\.[A-Z]\w*\s*\(/,
-        do: path
+        reference <- remote_references(source, root),
+        reference not in Map.get(allowed_references_by_path, path, MapSet.new()),
+        do: {path, reference}
   end
 
-  defp forbidden_package_references(:inbound, _sources), do: []
+  defp remote_references(source, root) do
+    {:ok, ast} = Code.string_to_quoted(source)
+
+    {_ast, references} =
+      Macro.prewalk(ast, MapSet.new(), fn
+        {:__aliases__, _, [head | rest]} = node, refs when head == root ->
+          reference = Enum.join([Atom.to_string(root) | Enum.map(rest, &Atom.to_string/1)], ".")
+          {node, MapSet.put(refs, reference)}
+
+        node, refs ->
+          {node, refs}
+      end)
+
+    Enum.sort(references)
+  end
 
   defp cycle_free?(output) when is_binary(output) do
     Regex.match?(~r/^No cycles found\s*$/m, output) and
