@@ -1,8 +1,8 @@
 ---
 phase: 156-delivery-correctness-and-bounded-execution
-fixed_at: 2026-08-17T05:15:00Z
+fixed_at: 2026-08-17T05:25:00Z
 review_path: .planning/phases/156-delivery-correctness-and-bounded-execution/156-REVIEW.md
-iteration: 2
+iteration: 3
 findings_in_scope: 2
 fixed: 2
 skipped: 0
@@ -11,9 +11,9 @@ status: all_fixed
 
 # Phase 156: Code Review Fix Report
 
-**Fixed at:** 2026-08-17T05:15:00Z  
-**Source review:** `.planning/phases/156-delivery-correctness-and-bounded-execution/156-REVIEW.md`  
-**Iteration:** 2
+**Fixed at:** 2026-08-17T05:25:00Z
+**Source review:** `.planning/phases/156-delivery-correctness-and-bounded-execution/156-REVIEW.md`
+**Iteration:** 3
 
 **Summary:**
 
@@ -22,6 +22,14 @@ status: all_fixed
 - Skipped: 0
 
 ## Fixed Issues
+
+### Iteration 3
+
+#### CR-01 / CR-02: Durable route authority and tenant-bound job validation
+
+**Files modified:** `mailglass_inbound/lib/mailglass_inbound/ingress/persist.ex`, `mailglass_inbound/lib/mailglass_inbound/execution.ex`, `mailglass_inbound/lib/mailglass_inbound/execution/worker.ex`, `mailglass_inbound/lib/mailglass_inbound/internal/replay.ex`, and focused inbound tests.
+**Commit:** `512753de`
+**Applied fix:** Persisted the selected route status, mailbox identity, and router identity under the internal `verification_facts["mailglass_execution_route"]` key in the same record/evidence transaction. Workers now load tenant-scoped evidence before validation, derive their route exclusively from that binding, reject selector mismatches, and rediscover the exact loaded router/module after registry restart without creating atoms. Replay uses the same binding and treats unbound legacy mailbox strings as non-executable.
 
 ### Iteration 2
 
@@ -59,6 +67,6 @@ status: all_fixed
 
 ---
 
-_Fixed: 2026-08-17T05:15:00Z_  
-_Fixer: gsd-code-fixer_  
-_Iteration: 2_
+_Fixed: 2026-08-17T05:25:00Z_
+_Fixer: gsd-code-fixer_
+_Iteration: 3_
