@@ -8,6 +8,8 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
   # claim that `CREATE INDEX CONCURRENTLY` ran in a transaction.
   use Ecto.Migration
 
+  alias Mailglass.Migrations.Postgres.SessionTimeouts
+
   @concurrent_indexes [
     "mailglass_inbound_evidence_sha256_idx",
     "mailglass_inbound_records_retention_idx",
@@ -21,11 +23,14 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
   def up(opts \\ []) do
     prefix = opts[:prefix]
     Mailglass.Identifier.validate!(prefix, :prefix)
-    concurrent_indexes = Map.get(opts, :concurrent_indexes, false)
 
-    configure_timeouts(concurrent_indexes)
+    if Map.get(opts, :concurrent_indexes, false) do
+      execute(fn ->
+        SessionTimeouts.run(repo(), fn -> concurrent_up(repo(), inspect(prefix)) end)
+      end)
+    else
+      configure_transactional_timeouts()
 
-    try do
       alter table(:mailglass_inbound_evidence, prefix: prefix) do
         add_if_not_exists(:raw_mime_sha256, :binary)
         add_if_not_exists(:raw_signed_request, :binary)
@@ -33,25 +38,21 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
         add_if_not_exists(:terminal_context, :map, null: false, default: %{})
       end
 
-      # These are deliberately separate statements.  A generated wrapper that
-      # advertises `@disable_ddl_transaction true` passes `concurrent_indexes: true`
-      # and gets the non-blocking path.  The existing facade remains compatible for
-      # transactional installer wrappers until that generator contract ships.
-      create_indexes(prefix, concurrent_indexes)
-    after
-      reset_timeouts(concurrent_indexes)
+      create_transactional_indexes(prefix)
     end
   end
 
   def down(opts \\ []) do
     prefix = opts[:prefix]
     Mailglass.Identifier.validate!(prefix, :prefix)
-    concurrent_indexes = Map.get(opts, :concurrent_indexes, false)
 
-    configure_timeouts(concurrent_indexes)
-
-    try do
-      drop_indexes(prefix, concurrent_indexes)
+    if Map.get(opts, :concurrent_indexes, false) do
+      execute(fn ->
+        SessionTimeouts.run(repo(), fn -> concurrent_down(repo(), inspect(prefix)) end)
+      end)
+    else
+      configure_transactional_timeouts()
+      drop_transactional_indexes(prefix)
 
       alter table(:mailglass_inbound_evidence, prefix: prefix) do
         remove(:terminal_context)
@@ -59,41 +60,15 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
         remove(:raw_signed_request)
         remove(:raw_mime_sha256)
       end
-    after
-      reset_timeouts(concurrent_indexes)
     end
   end
 
-  defp configure_timeouts(false) do
+  defp configure_transactional_timeouts do
     execute("SET LOCAL lock_timeout = '500ms'")
     execute("SET LOCAL statement_timeout = '2s'")
   end
 
-  defp configure_timeouts(true) do
-    execute("SET lock_timeout = '500ms'")
-    execute("SET statement_timeout = '30s'")
-  end
-
-  defp reset_timeouts(false), do: :ok
-
-  defp reset_timeouts(true) do
-    execute("RESET lock_timeout")
-    execute("RESET statement_timeout")
-  end
-
-  defp create_indexes(prefix, true) do
-    q = inspect(prefix)
-
-    # PostgreSQL leaves an INVALID shell behind when a concurrent build is
-    # interrupted. Dropping the package-owned fixed names first recovers that
-    # state and also makes a manually retried V02 deterministic.
-    for name <- @concurrent_indexes,
-        do: execute("DROP INDEX CONCURRENTLY IF EXISTS #{q}.#{name}")
-
-    for sql <- concurrent_index_sql(prefix), do: execute(sql)
-  end
-
-  defp create_indexes(prefix, false) do
+  defp create_transactional_indexes(prefix) do
     create_if_not_exists(
       unique_index(:mailglass_inbound_evidence, [:tenant_id, :provider, :raw_mime_sha256],
         where: "provider IN ('sendgrid', 'mailgun', 'ses') AND raw_mime_sha256 IS NOT NULL",
@@ -124,26 +99,52 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
     )
   end
 
-  defp drop_indexes(prefix, true) do
-    q = inspect(prefix)
-
-    for name <- Enum.reverse(@concurrent_indexes),
-        do: execute("DROP INDEX CONCURRENTLY IF EXISTS #{q}.#{name}")
-  end
-
-  defp drop_indexes(prefix, false) do
+  defp drop_transactional_indexes(prefix) do
     for name <- Enum.reverse(@concurrent_indexes),
         do: execute("DROP INDEX IF EXISTS #{inspect(prefix)}.#{name}")
   end
 
-  defp concurrent_index_sql(prefix) do
-    q = inspect(prefix)
+  defp concurrent_up(repo, q) do
+    repo.query!("""
+    ALTER TABLE #{q}.mailglass_inbound_evidence
+      ADD COLUMN IF NOT EXISTS raw_mime_sha256 bytea,
+      ADD COLUMN IF NOT EXISTS raw_signed_request bytea,
+      ADD COLUMN IF NOT EXISTS terminal_failure_class text,
+      ADD COLUMN IF NOT EXISTS terminal_context jsonb NOT NULL DEFAULT '{}'::jsonb
+    """)
 
-    [
-      "CREATE UNIQUE INDEX CONCURRENTLY mailglass_inbound_evidence_sha256_idx ON #{q}.mailglass_inbound_evidence (tenant_id, provider, raw_mime_sha256) WHERE provider IN ('sendgrid', 'mailgun', 'ses') AND raw_mime_sha256 IS NOT NULL",
-      "CREATE INDEX CONCURRENTLY mailglass_inbound_records_retention_idx ON #{q}.mailglass_inbound_records (inserted_at, id)",
-      "CREATE INDEX CONCURRENTLY mailglass_inbound_evidence_retention_idx ON #{q}.mailglass_inbound_evidence (inserted_at, id)",
+    # PostgreSQL leaves an INVALID shell behind when a concurrent build is
+    # interrupted. Dropping the package-owned fixed names first recovers it.
+    for name <- @concurrent_indexes,
+        do: repo.query!("DROP INDEX CONCURRENTLY IF EXISTS #{q}.#{name}")
+
+    repo.query!(
+      "CREATE UNIQUE INDEX CONCURRENTLY mailglass_inbound_evidence_sha256_idx ON #{q}.mailglass_inbound_evidence (tenant_id, provider, raw_mime_sha256) WHERE provider IN ('sendgrid', 'mailgun', 'ses') AND raw_mime_sha256 IS NOT NULL"
+    )
+
+    repo.query!(
+      "CREATE INDEX CONCURRENTLY mailglass_inbound_records_retention_idx ON #{q}.mailglass_inbound_records (inserted_at, id)"
+    )
+
+    repo.query!(
+      "CREATE INDEX CONCURRENTLY mailglass_inbound_evidence_retention_idx ON #{q}.mailglass_inbound_evidence (inserted_at, id)"
+    )
+
+    repo.query!(
       "CREATE INDEX CONCURRENTLY mailglass_inbound_replay_runs_retention_idx ON #{q}.mailglass_inbound_replay_runs (source, inserted_at, id)"
-    ]
+    )
+  end
+
+  defp concurrent_down(repo, q) do
+    for name <- Enum.reverse(@concurrent_indexes),
+        do: repo.query!("DROP INDEX CONCURRENTLY IF EXISTS #{q}.#{name}")
+
+    repo.query!("""
+    ALTER TABLE #{q}.mailglass_inbound_evidence
+      DROP COLUMN IF EXISTS terminal_context,
+      DROP COLUMN IF EXISTS terminal_failure_class,
+      DROP COLUMN IF EXISTS raw_signed_request,
+      DROP COLUMN IF EXISTS raw_mime_sha256
+    """)
   end
 end
