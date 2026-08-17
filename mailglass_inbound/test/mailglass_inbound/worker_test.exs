@@ -1,6 +1,8 @@
 defmodule MailglassInbound.WorkerTest do
   use ExUnit.Case, async: false
 
+  import ExUnit.CaptureLog
+
   defmodule Loader do
     def load(%{
           "inbound_record_id" => record_id,
@@ -89,6 +91,21 @@ defmodule MailglassInbound.WorkerTest do
     def execute(_persisted, opts \\ []) do
       Process.put(:mailglass_inbound_worker_source_execute_opts, opts)
       {:ok, %{outcome: :accept}}
+    end
+  end
+
+  defmodule LegacyBindingLoader do
+    def load(args) do
+      Process.put(:mailglass_inbound_worker_legacy_load_args, args)
+
+      {:ok,
+       %{
+         status: :inserted,
+         route: %{status: :matched, mailbox: MailglassInbound.WorkerTest.AcceptMailbox},
+         message: %MailglassInbound.InboundMessage{tenant_id: "tenant-123", provider: :postmark},
+         inbound_record: %{id: "record-123", tenant_id: "tenant-123"},
+         inbound_evidence: %{id: "evidence-123", verification_facts: %{}}
+       }}
     end
   end
 
@@ -252,6 +269,23 @@ defmodule MailglassInbound.WorkerTest do
 
     assert Process.get(:mailglass_inbound_worker_load_args)
     assert Process.get(:mailglass_inbound_worker_execute_opts)
+  end
+
+  test "cancels pre-binding jobs once and logs tenant-scoped replay recovery" do
+    log =
+      capture_log(fn ->
+        assert {:cancel, :permanent_failure} =
+                 MailglassInbound.Execution.Worker.perform(job_with_source("fresh"),
+                   loader: LegacyBindingLoader,
+                   execution: ExecutionSuccess
+                 )
+      end)
+
+    assert Process.get(:mailglass_inbound_worker_legacy_load_args)
+    refute Process.get(:mailglass_inbound_worker_execute_opts)
+    assert log =~ "durable route binding is missing"
+    assert log =~ "tenant-scoped"
+    assert log =~ "replay"
   end
 
   defp job_with_source(:absent) do

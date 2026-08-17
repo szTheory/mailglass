@@ -2,6 +2,8 @@ if Code.ensure_loaded?(Oban.Worker) do
   defmodule MailglassInbound.Execution.Worker do
     @moduledoc false
 
+    require Logger
+
     use Oban.Worker,
       queue: :mailglass_inbound,
       max_attempts: 20,
@@ -24,6 +26,7 @@ if Code.ensure_loaded?(Oban.Worker) do
           normalize_result(result)
         else
           {:error, :invalid_job_args} -> {:cancel, :permanent_failure}
+          {:error, :legacy_route_binding_missing} -> legacy_route_binding_missing()
           {:error, :route_authority_unavailable} -> {:error, :route_authority_unavailable}
           {:error, reason} -> {:error, reason}
         end
@@ -34,6 +37,14 @@ if Code.ensure_loaded?(Oban.Worker) do
       do: {:error, failure}
 
     defp normalize_result(_result), do: :ok
+
+    defp legacy_route_binding_missing do
+      Logger.warning(
+        "[mailglass_inbound] inbound execution cancelled: durable route binding is missing; replay the tenant-scoped message after the route-binding migration"
+      )
+
+      {:cancel, :permanent_failure}
+    end
 
     defp wrap_perform(job, fun) do
       if Code.ensure_loaded?(Mailglass.Oban.TenancyMiddleware) do

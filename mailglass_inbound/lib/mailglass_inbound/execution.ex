@@ -114,14 +114,16 @@ defmodule MailglassInbound.Execution do
 
   @doc false
   @spec validate_job_route(map(), InboundEvidence.t() | map(), keyword()) ::
-          {:ok, map()} | {:error, :invalid_job_args | :route_authority_unavailable}
+          {:ok, map()}
+          | {:error,
+             :invalid_job_args | :legacy_route_binding_missing | :route_authority_unavailable}
   def validate_job_route(job_args, evidence, _opts) when is_map(job_args) do
     with {:ok, binding} <- route_binding(evidence),
          :ok <- selectors_match?(job_args, binding),
          {:ok, route} <- route_from_binding(binding) do
       {:ok, route}
     else
-      {:error, :missing_binding} -> {:error, :route_authority_unavailable}
+      {:error, :missing_binding} -> {:error, :legacy_route_binding_missing}
       {:error, :unavailable} -> {:error, :route_authority_unavailable}
       {:error, _reason} -> {:error, :invalid_job_args}
     end
@@ -357,6 +359,9 @@ defmodule MailglassInbound.Execution do
       when is_binary(mailbox) and is_binary(router) ->
         {:ok, binding}
 
+      %{"status" => "matched", "mailbox" => mailbox} = binding when is_binary(mailbox) ->
+        {:ok, binding}
+
       _ ->
         {:error, :missing_binding}
     end
@@ -389,6 +394,13 @@ defmodule MailglassInbound.Execution do
     end
   end
 
+  defp route_from_binding(%{"status" => "matched", "mailbox" => mailbox}) do
+    case discover_bound_mailbox(mailbox) do
+      {:ok, module} -> {:ok, %{status: :matched, mailbox: module}}
+      error -> error
+    end
+  end
+
   defp discover_bound_mailbox(router_name, mailbox_name) do
     router =
       :code.all_loaded()
@@ -415,6 +427,19 @@ defmodule MailglassInbound.Execution do
       nil -> {:error, :unavailable}
       false -> {:error, :not_authorized}
       {:error, _reason} = error -> error
+    end
+  end
+
+  # A lower-level `routes:` integration does not have a named router to bind.
+  # Its persisted evidence still supplies the exact mailbox module name, and we
+  # resolve it only from the finite set of loaded modules while requiring the
+  # Mailbox behaviour and callback. No job argument is ever converted to an atom.
+  defp discover_bound_mailbox(mailbox_name) do
+    case Enum.find_value(:code.all_loaded(), fn {module, _path} ->
+           if Atom.to_string(module) == mailbox_name and mailbox_module?(module), do: module
+         end) do
+      module when is_atom(module) -> {:ok, module}
+      nil -> {:error, :unavailable}
     end
   end
 
