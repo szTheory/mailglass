@@ -20,6 +20,25 @@ defmodule Mailglass.SuppressionStore.ETSTest do
     end
   end
 
+  describe "check_many/2" do
+    test "returns one result for every input position, including duplicates and mixed hits" do
+      {:ok, _} =
+        ETS.record(
+          %{tenant_id: "t1", address: "blocked@b.c", scope: :address, reason: :manual, source: "test"},
+          []
+        )
+
+      keys = [
+        %{tenant_id: "t1", address: "clean@b.c", stream: :transactional},
+        %{tenant_id: "t1", address: "blocked@b.c", stream: :transactional},
+        %{tenant_id: "t1", address: "clean@b.c", stream: :transactional}
+      ]
+
+      assert [:not_suppressed, {:suppressed, %Entry{scope: :address}}, :not_suppressed] =
+               ETS.check_many(keys, [])
+    end
+  end
+
   describe "record/2 + check/2 — address scope" do
     test "Test 2: record then check returns {:suppressed, %Entry{scope: :address}}" do
       assert {:ok, %Entry{scope: :address}} =
