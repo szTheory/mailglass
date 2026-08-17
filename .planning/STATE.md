@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.6
 milestone_name: Engineering Quality Ratchet
-current_phase: 155
-current_phase_name: Restore Adopter and CI Truth
+current_phase: 156
+current_phase_name: Delivery Correctness and Bounded Execution
 status: planning
 stopped_at: Completed 155-07-PLAN.md
-last_updated: "2026-08-17T03:06:03.690Z"
+last_updated: "2026-08-17T03:12:25.254Z"
 last_activity: 2026-08-16
-last_activity_desc: v2.6 roadmap created; all 50 requirements mapped across phases 155-160
+last_activity_desc: Phase 155 complete, transitioned to Phase 156
 progress:
   total_phases: 6
   completed_phases: 1
@@ -21,17 +21,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-16 for v2.6)
+See: .planning/PROJECT.md (updated 2026-08-16 after Phase 155)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 155 — Restore Adopter and CI Truth.
+**Current focus:** Phase 156 — Delivery Correctness and Bounded Execution.
 
 ## Current Position
 
-Phase: 155 of 160 (Restore Adopter and CI Truth)
-Plan: —
+Phase: 156 of 160 (Delivery Correctness and Bounded Execution)
+Plan: Not started
 Status: Ready to plan
-Last activity: 2026-08-16 — v2.6 roadmap created; all 50 requirements mapped across phases 155-160
+Last activity: 2026-08-16 — Phase 155 complete, transitioned to Phase 156
 
 Progress: [██████████] 100%
 
@@ -732,6 +732,12 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Roadmap Evolution
 
+- 2026-08-16: **Phase 155 complete and verified (5/5).** Real core/inbound fresh and upgrade wrappers,
+  fail-closed migration metadata, exact runtime-revalidated legacy repair, both shared-schema rollback
+  orders in fresh generated hosts, and fail-closed `CI Green` are shipped on main. Deep review found and
+  closed three blockers: repair TOCTOU data loss, caller-owned scratch deletion, and push diff fail-open.
+  Next: Phase 156 delivery correctness and bounded execution.
+
 - 2026-06-26: v1.14 roadmap created. Phases 118-124, numbering continues from v1.13 (last phase 117). All 14 REQ-IDs mapped to exactly one phase, 100% coverage (METHOD-01/02 + STORY-01/02 → 118; SHELL-01/02/03 → 119; DELIV-01 → 120; INB-01 → 121; PREV-01 → 122; COH-01/02 → 123; REL-01/02 → 124). Follows the maintainer-approved seed (`.planning/research/v1.14/MILESTONE-SEED.md` P0-P6) one-to-one: top-down, JTBD/IA-led, biggest-impact-first. Strictly sequential critical path 118 → … → 124. Binding sequencing: (1) Phase 118 (adversarial persona-critic harness + screenshot-backed defect register) is a HARD precondition for the keystone shell redesign (119) — the hit-list drives every surface redesign; (2) each surface redesign (120 → 121 → 122) inherits the prior surface's cleaned-up patterns; full pillar re-score + new judgment-gate arming (nav-active-correctness, no-nav-duplication) happens ONLY in Phase 123; release cut last (124). Cross-cutting acceptance criteria (light/dark/system × 320→wide × happy/empty/error/boundary; WCAG 2.2 AA; Emil-Kowalski motion; on-brand microcopy; idempotent only-forward inheriting the v1.13 ratchet floor) baked into every surface phase. Research flags: Phase 118 (persona-critic harness design + `phoenix_storybook` sandbox-CSS integration, `only: :dev`) + Phase 119 (GOV.UK IA + overview-as-triage) need light `/gsd-plan-phase` research; 120-124 plan directly. Release ACTUALLY CUT at close (D-28): admin-minor drags matched core+inbound; D-13 inbound exact-pin re-pin.
 - 2026-06-18: v1.13 roadmap created. Phases 109-117, numbering continues from v1.12 (last phase 108). All 36 REQ-IDs mapped to exactly one phase, 100% coverage (REL-01 precondition + FND-01..05 → 109; PRIM-01..07 → 110; FORM-01..03 → 111; SHELL-01..06 → 112; DATA-01..05 → 113; GROUP-01..03 → 114; FLOW-01..04 → 115; RATCHET-01..05 → 116; REL-02..03 → 117). Adopts the research-converged, adversarially-grounded dependency-ordered fractal build order A–H from `.planning/research/v1.13/SUMMARY.md`, mapped to 109–116, with H's release reqs split into a dedicated closeout phase 117 (v1.12 precedent) for cleaner success criteria. Strictly sequential critical path 109 → … → 117. Two binding sequencing constraints encoded as explicit dependencies: (1) merge PR #86 (REL-01) BEFORE Phase 109; (2) tighten gates BEFORE re-baselining — gates tightened inside each phase, full pillar re-score ONLY in Phase 116. RATCHET-01 multi-tenant stress cohort is the keystone dependency: lands late (116) but gates the final score. Research flags: Phase 112 (core `list_tenants` projection shape) + Phase 116 (axe-JSON baseline format + ratchet schema-v3 cell-count) need light `/gsd-plan-phase` research; 109/110/111/113/114/115 plan directly. Release ACTUALLY CUT at close (D-28): admin-minor drags matched core+inbound via linked-version releases; D-13 inbound exact-pin re-pin.
 - 2026-06-13: v1.11 roadmap created. Phases 94-103, numbering continues from v1.10 (last phase 93). All 34 REQ-IDs mapped to exactly one phase, 100% coverage (TOKEN-01..05 + RATCHET-03 → 94; RATCHET-01/02/04/05 → 95; RESEARCH-01..05 → 96; COMP-01..03 + GALLERY-01/02 → 97; cross-surface GROUP-01/PAGE-01/02/RESP-01/FLOW-01/02/A11Y-01/02 anchored on operator → 98; GROUP-02/03 → 99; PAGE-03 → 100; COPY-01 → 101; MOTION-01/02 → 102; 103 is closeout-only). Critical path 94 → 95 → 96 → 97 → {98,99,100 parallel} → {101,102 parallel} → 103. Cross-cutting GROUP/PAGE/RESP/FLOW/A11Y reqs counted once at their operator anchor (98) and re-applied per-surface on 99/100. Phase 94 tightens conformance gates FIRST (tighten-then-re-baseline) so the token re-baseline can't regress silently. Release prepare-only; admin-minor bump drags matched core+inbound via linked-version releases.
@@ -753,8 +759,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-17T03:06:03.681Z
-**Stopped at:** Completed 155-07-PLAN.md
+**Last session:** 2026-08-17T03:13:00Z
+**Stopped at:** Phase 155 complete and verified; ready to plan Phase 156
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
