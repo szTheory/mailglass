@@ -11,41 +11,45 @@ defmodule Mailglass.Scripts.CIGreenPolicyTest do
   end
 
   test "code changes require every required leaf to succeed exactly" do
-    assert {"", 0} = run_policy(["success", "true", "hex_audit=success", "deps_audit=success"])
+    assert {"", 0} = run_policy(policy_arguments(active_results()))
 
-    assert {output, 1} = run_policy(["success", "true", "hex_audit=skipped"])
+    assert {output, 1} = run_policy(policy_arguments(active_results(%{"hex_audit" => "skipped"})))
 
     assert output =~ "CI Green blocked: unacceptable required lane result(s): hex_audit=skipped"
   end
 
   test "missing, unknown, failed, and cancelled code-lane results block CI Green" do
     assert {output, 1} =
-             run_policy([
-               "success",
-               "true",
-               "hex_audit=",
-               "deps_audit=unknown",
-               "compile=failure",
-               "install=cancelled"
-             ])
+             run_policy(
+               policy_arguments(
+                 active_results(%{
+                   "hex_audit" => "",
+                   "deps_audit_advisory" => "unknown",
+                   "compile_no_optional_deps" => "failure",
+                   "installer_host_smoke" => "cancelled"
+                 })
+               )
+             )
 
     assert output =~ "hex_audit=(missing)"
-    assert output =~ "deps_audit=unknown"
-    assert output =~ "compile=failure"
-    assert output =~ "install=cancelled"
+    assert output =~ "deps_audit_advisory=unknown"
+    assert output =~ "compile_no_optional_deps=failure"
+    assert output =~ "installer_host_smoke=cancelled"
   end
 
   test "missing, empty, and non-boolean code classifications block CI Green" do
     for code <- ["", "false ", "unknown"] do
-      assert {output, 1} = run_policy(["success", code, "hex_audit=success"])
+      assert {output, 1} = run_policy(["success", code | active_results()])
       assert output =~ "CI Green blocked: change detector code output must be exactly true or false"
     end
   end
 
   test "only a successful docs-only classification permits skipped required leaves" do
-    assert {"", 0} = run_policy(["success", "false", "hex_audit=skipped", "deps_audit=success"])
+    assert {"", 0} = run_policy(["success", "false" | active_results(%{"hex_audit" => "skipped"})])
 
-    assert {output, 1} = run_policy(["success", "false", "hex_audit=failure"])
+    assert {output, 1} =
+             run_policy(["success", "false" | active_results(%{"hex_audit" => "failure"})])
+
     assert output =~ "CI Green blocked: unacceptable required lane result(s): hex_audit=failure"
   end
 
@@ -79,9 +83,39 @@ defmodule Mailglass.Scripts.CIGreenPolicyTest do
     assert empty_output =~ "CI Green blocked: no required lane results were supplied"
   end
 
+  test "unknown and advisory lane identities cannot be supplied as required evidence" do
+    assert {unknown_output, 1} =
+             run_policy(["success", "true", "unknown_lane=success"])
+
+    assert unknown_output =~ "CI Green blocked: unknown required lane input: unknown_lane"
+
+    assert {advisory_output, 1} =
+             run_policy(["success", "true", "operator_browser_gate=success"])
+
+    assert advisory_output =~
+             "CI Green blocked: advisory lane cannot be supplied as required evidence: operator_browser_gate"
+  end
+
   defp run_policy(arguments) do
     System.cmd("bash", [@policy_path | arguments], stderr_to_stdout: true)
   end
+
+  defp active_results(overrides \\ %{}) do
+    active_lanes = [
+      "compile_no_optional_deps",
+      "installer_host_smoke",
+      "mix_task_tests",
+      "support_contract_core",
+      "support_contract_admin",
+      "trust_lane_repo_head",
+      "hex_audit",
+      "deps_audit_advisory"
+    ]
+
+    Enum.map(active_lanes, fn lane -> "#{lane}=#{Map.get(overrides, lane, "success")}" end)
+  end
+
+  defp policy_arguments(results), do: ["success", "true" | results]
 
   defp assert_push_diff_failure_blocks!(source) do
     [_before_push, push_branch] =
