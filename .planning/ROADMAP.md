@@ -154,8 +154,8 @@ Plans:
 Plans:
 
 - [x] 158-01-PLAN.md — Establish the Runtime/Config tracer and anti-vacuous compile-cycle/package-edge guard.
-- [ ] 158-02-PLAN.md — Make Runtime the authoritative core configuration owner behind stable Config compatibility delegates.
-- [ ] 158-03-PLAN.md — Replace broad sibling imports with declared core ports and singular shared ownership.
+- [x] 158-02-PLAN.md — Make Runtime the authoritative core configuration owner behind stable Config compatibility delegates.
+- [x] 158-03-PLAN.md — Replace broad sibling imports with declared core ports and singular shared ownership.
 - [ ] 158-04-PLAN.md — Split Outbound implementation responsibilities behind unchanged public delivery façades.
 - [ ] 158-05-PLAN.md — Extract package-local webhook/inbound pipelines behind unchanged public Plugs.
 - [ ] 158-06-PLAN.md — Enforce architecture proof in an existing required lane and verify package/public compatibility.
@@ -198,6 +198,6 @@ Plans:
 | 155. Restore Adopter and CI Truth | 7/7 | Complete    | 2026-08-16 |
 | 156. Delivery Correctness and Bounded Execution | 6/6 | Complete    | 2026-08-17 |
 | 157. Inbound, Database, and Lifecycle Hardening | 9/9 | Complete    | 2026-08-17 |
-| 158. Simplify Architecture Without Breaking Adopters | 1/6 | In progress | 2026-08-17 |
+| 158. Simplify Architecture Without Breaking Adopters | 3/6 | In progress | 2026-08-17 |
 | 159. Raise and Simplify Engineering Gates | 0/TBD | Not started | - |
 | 160. Certification, Documentation, and Release | 0/TBD | Not started | - |
