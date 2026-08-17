@@ -15,6 +15,10 @@ defmodule MailglassInbound.OptionalDeps.GenSmtp do
 
   @compile {:no_warn_undefined, [:gen_smtp_client, :mimemail]}
 
+  # `:mimemail` is an optional Erlang dependency whose success contract is not
+  # available to Dialyzer when it builds this package's isolated PLT.
+  @dialyzer {:nowarn_function, decode: 2}
+
   @spec available?() :: boolean()
   def available?, do: Code.ensure_loaded?(:gen_smtp_client)
 
