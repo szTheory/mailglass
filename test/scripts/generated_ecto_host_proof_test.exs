@@ -14,7 +14,12 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     "Host.Repo.insert(Delivery.changeset",
     "Host.Repo.get!(Delivery, delivery.id, prefix: \"mailglass\")",
     "mix ecto.rollback -r Host.Repo",
-    "assert_relations_absent!"
+    "run_journey inbound_first core inbound",
+    "run_journey core_first inbound core",
+    "${SCRATCH_DATABASE}_${rollback_order}",
+    "assert_first_rollback_state!.(rolled_back)",
+    "assert_final_rollback_state!.()",
+    "to_regnamespace($1)"
   ]
 
   test "generated Ecto host proof pins the public generator-to-Postgres journey" do
@@ -44,6 +49,18 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
       refute Enum.all?(@required_script_snippets, &String.contains?(mutated, &1)),
              "removing #{inspect(snippet)} must invalidate the proof contract"
     end)
+  end
+
+  test "generated-host proof pins opposing generation and rollback orders" do
+    source = File.read!(@script_path)
+
+    assert source =~ "core_first|inbound_first"
+    assert source =~ "mailglass.gen.migration --repo Host.Repo"
+    assert source =~ "mailglass.inbound.gen.migration --repo Host.Repo"
+    assert source =~ "\"core\" ->"
+    assert source =~ "\"inbound\" ->"
+    assert source =~ "assert_first_rollback_state!.(rolled_back)"
+    assert source =~ "assert_final_rollback_state!.()"
   end
 
   test "generated-host proof owns only a newly-created private scratch directory" do
