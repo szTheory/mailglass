@@ -84,6 +84,34 @@ defmodule MailglassInbound.Ingress.Persist do
     end
   end
 
+  @doc false
+  @spec persist_terminal_failure(String.t(), atom(), map(), map(), atom(), keyword()) ::
+          {:ok, map()} | {:error, term()}
+  def persist_terminal_failure(tenant_id, provider, request, verified, failure_class, opts)
+      when is_binary(tenant_id) and is_atom(failure_class) do
+    handoff = %{
+      tenant_id: tenant_id,
+      provider: provider,
+      message: %InboundMessage{
+        tenant_id: tenant_id,
+        provider: provider,
+        provider_message_id: get_in(verified, [:envelope, "MessageId"]),
+        received_at: DateTime.utc_now()
+      },
+      evidence: %{
+        raw_payload: Map.get(verified, :envelope, %{}),
+        raw_headers: Map.get(request, :headers, %{}),
+        verification_facts: Map.get(verified, :verification_facts, %{}),
+        parse_warnings: Map.get(verified, :warnings, %{}),
+        attachment_blobs: %{},
+        terminal_failure_class: Atom.to_string(failure_class),
+        terminal_context: %{provider: Atom.to_string(provider), replayable: true}
+      }
+    }
+
+    persist(handoff, opts)
+  end
+
   defp persist_in_transaction(repo, tenant_id, provider, message, evidence, suppression_flagged) do
     case load_duplicate(repo, tenant_id, provider, message, evidence) do
       %InboundRecord{} = record ->
@@ -544,26 +572,26 @@ defmodule MailglassInbound.Ingress.Persist do
     limit = Keyword.get(opts, :limit, 500)
     after_id = Keyword.get(opts, :after_id)
 
-    {sql, params} =
-      if is_binary(after_id) do
-        {"""
-         WITH batch AS (SELECT id FROM #{inspect(prefix)}.mailglass_inbound_evidence
-           WHERE raw_mime_sha256 IS NULL AND raw_mime IS NOT NULL AND id > $1 ORDER BY id LIMIT $2)
-         UPDATE #{inspect(prefix)}.mailglass_inbound_evidence e SET raw_mime_sha256 = digest(e.raw_mime, 'sha256')
-         FROM batch WHERE e.id = batch.id
-         """, [after_id, limit]}
-      else
-        {"""
-         WITH batch AS (SELECT id FROM #{inspect(prefix)}.mailglass_inbound_evidence
-           WHERE raw_mime_sha256 IS NULL AND raw_mime IS NOT NULL ORDER BY id LIMIT $1)
-         UPDATE #{inspect(prefix)}.mailglass_inbound_evidence e SET raw_mime_sha256 = digest(e.raw_mime, 'sha256')
-         FROM batch WHERE e.id = batch.id
-         """, [limit]}
-      end
+    cursor = if is_binary(after_id), do: " AND id > $1", else: ""
+    params = if is_binary(after_id), do: [after_id, limit], else: [limit]
+    limit_param = if is_binary(after_id), do: "$2", else: "$1"
 
-    case repo.query(sql, params, log: false) do
-      {:ok, %{num_rows: count}} -> {:ok, count}
-      {:error, reason} -> {:error, reason}
+    with {:ok, %{rows: rows}} <-
+           repo.query(
+             "SELECT id, raw_mime FROM #{inspect(prefix)}.mailglass_inbound_evidence WHERE raw_mime_sha256 IS NULL AND raw_mime IS NOT NULL#{cursor} ORDER BY id LIMIT #{limit_param}",
+             params,
+             log: false
+           ) do
+      Enum.reduce_while(rows, {:ok, 0}, fn [id, raw], {:ok, count} ->
+        case repo.query(
+               "UPDATE #{inspect(prefix)}.mailglass_inbound_evidence SET raw_mime_sha256 = $1 WHERE id = $2",
+               [:crypto.hash(:sha256, raw), id],
+               log: false
+             ) do
+          {:ok, _} -> {:cont, {:ok, count + 1}}
+          {:error, reason} -> {:halt, {:error, reason}}
+        end
+      end)
     end
   end
 
