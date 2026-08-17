@@ -122,6 +122,29 @@ defmodule Mailglass.Webhook.PlugTest do
     end
   end
 
+  describe "decoded request reuse" do
+    test "decodes the outer webhook JSON exactly once across normalize and ingest" do
+      body = Mailglass.WebhookFixtures.load_postmark_fixture("delivered")
+      counter = start_supervised!({Agent, fn -> 0 end})
+
+      decoder = fn raw_body ->
+        Agent.update(counter, &(&1 + 1))
+        Jason.decode(raw_body)
+      end
+
+      conn = Mailglass.WebhookCase.mailglass_webhook_conn(:postmark, body)
+
+      result =
+        WebhookPlug.call(
+          conn,
+          WebhookPlug.init(provider: :postmark, json_decoder: decoder)
+        )
+
+      assert result.status == 200
+      assert Agent.get(counter, & &1) == 1
+    end
+  end
+
   describe "call/2 response code matrix — 422 tenant unresolved" do
     # Stub Tenancy module that returns {:error, :no_tenant_match} from
     # resolve_webhook_tenant/1 — exercises the 422 rescue clause directly.

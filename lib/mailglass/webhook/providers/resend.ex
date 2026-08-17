@@ -121,15 +121,15 @@ defmodule Mailglass.Webhook.Providers.Resend do
 
   @impl Mailglass.Webhook.Provider
   @spec normalize(binary(), [{String.t(), String.t()}]) :: [Event.t()]
-  def normalize(raw_body, _headers) when is_binary(raw_body) do
-    case Jason.decode(raw_body) do
-      {:ok, payload} when is_map(payload) ->
-        [build_event(payload)]
+  def normalize(raw_body, headers) when is_binary(raw_body),
+    do: normalize_decoded(Jason.decode(raw_body), headers)
 
-      _ ->
-        Logger.warning("[mailglass] Resend normalize: malformed JSON body")
-        []
-    end
+  @doc false
+  def normalize_decoded({:ok, payload}, _headers) when is_map(payload), do: [build_event(payload)]
+
+  def normalize_decoded(_decoded, _headers) do
+    Logger.warning("[mailglass] Resend normalize: malformed JSON body")
+    []
   end
 
   defp build_event(payload) do

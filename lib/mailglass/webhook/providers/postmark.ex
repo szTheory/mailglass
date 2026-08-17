@@ -155,19 +155,15 @@ defmodule Mailglass.Webhook.Providers.Postmark do
 
   @impl Mailglass.Webhook.Provider
   @spec normalize(binary(), [{String.t(), String.t()}]) :: [Event.t()]
-  def normalize(raw_body, _headers) when is_binary(raw_body) do
-    # Postmark sends ONE event per webhook (unlike SendGrid batches).
-    # Raw is a JSON object; decode then map.
-    case Jason.decode(raw_body) do
-      {:ok, payload} when is_map(payload) ->
-        [build_event(payload)]
+  def normalize(raw_body, headers) when is_binary(raw_body),
+    do: normalize_decoded(Jason.decode(raw_body), headers)
 
-      _ ->
-        # Malformed JSON shouldn't reach `normalize/2` (Plug.Parsers
-        # parses upstream), but if it does, emit nothing + audit trail.
-        Logger.warning("[mailglass] Postmark normalize: malformed JSON body")
-        []
-    end
+  @doc false
+  def normalize_decoded({:ok, payload}, _headers) when is_map(payload), do: [build_event(payload)]
+
+  def normalize_decoded(_decoded, _headers) do
+    Logger.warning("[mailglass] Postmark normalize: malformed JSON body")
+    []
   end
 
   defp build_event(payload) do
