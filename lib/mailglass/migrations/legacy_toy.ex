@@ -178,17 +178,17 @@ defmodule Mailglass.Migrations.LegacyToy do
                 OR (attribute.attname = 'tenant_id'
                     AND pg_catalog.format_type(attribute.atttypid, attribute.atttypmod) = 'character varying'
                     AND NOT attribute.attnotnull
-                    AND attribute.attidentity = chr(0)
+                    AND attribute.attidentity = ''::"char"
                     AND pg_catalog.pg_get_expr(default_value.adbin, default_value.adrelid) IS NULL)
                 OR (attribute.attname = 'inserted_at'
                     AND pg_catalog.format_type(attribute.atttypid, attribute.atttypmod) = 'timestamp(6) without time zone'
                     AND attribute.attnotnull
-                    AND attribute.attidentity = chr(0)
+                    AND attribute.attidentity = ''::"char"
                     AND pg_catalog.pg_get_expr(default_value.adbin, default_value.adrelid) IS NULL)
                 OR (attribute.attname = 'updated_at'
                     AND pg_catalog.format_type(attribute.atttypid, attribute.atttypmod) = 'timestamp(6) without time zone'
                     AND attribute.attnotnull
-                    AND attribute.attidentity = chr(0)
+                    AND attribute.attidentity = ''::"char"
                     AND pg_catalog.pg_get_expr(default_value.adbin, default_value.adrelid) IS NULL)
               )
          ) THEN
@@ -197,17 +197,17 @@ defmodule Mailglass.Migrations.LegacyToy do
 
       SELECT count(*)
         INTO constraint_count
-        FROM pg_catalog.pg_constraint constraint
-       WHERE constraint.conrelid = '#{quoted_prefix}.#{@legacy_table}'::regclass;
+        FROM pg_catalog.pg_constraint catalog_constraint
+       WHERE catalog_constraint.conrelid = '#{quoted_prefix}.#{@legacy_table}'::regclass;
 
       IF constraint_count <> 1
          OR NOT EXISTS (
            SELECT 1
-             FROM pg_catalog.pg_constraint constraint
-            WHERE constraint.conrelid = '#{quoted_prefix}.#{@legacy_table}'::regclass
-              AND constraint.conname = 'mailglass_events_pkey'
-              AND constraint.contype = 'p'
-              AND pg_catalog.pg_get_constraintdef(constraint.oid, true) = 'PRIMARY KEY (id)'
+             FROM pg_catalog.pg_constraint catalog_constraint
+            WHERE catalog_constraint.conrelid = '#{quoted_prefix}.#{@legacy_table}'::regclass
+              AND catalog_constraint.conname = 'mailglass_events_pkey'
+              AND catalog_constraint.contype = 'p'
+              AND pg_catalog.pg_get_constraintdef(catalog_constraint.oid, true) = 'PRIMARY KEY (id)'
          ) THEN
         RAISE EXCEPTION 'Installation blocked: legacy catalog is ambiguous; repair was not applied';
       END IF;
@@ -227,7 +227,7 @@ defmodule Mailglass.Migrations.LegacyToy do
               AND indexes.indexname = 'mailglass_events_pkey'
               AND indexes.indexdef = format(
                 'CREATE UNIQUE INDEX mailglass_events_pkey ON %I.mailglass_events USING btree (id)',
-                #{quoted_prefix}
+                '#{prefix_literal}'
               )
          ) THEN
         RAISE EXCEPTION 'Installation blocked: legacy catalog is ambiguous; repair was not applied';
