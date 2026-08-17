@@ -6,7 +6,7 @@
 
 ## User Constraints
 
-No Phase 158 `CONTEXT.md` exists. The following constraints are copied from the active milestone/requirements and are binding.
+Phase 158 now has a reconciled `158-CONTEXT.md`; the following constraints agree with that context and the active milestone/requirements and are binding.
 
 ### Locked Decisions
 
