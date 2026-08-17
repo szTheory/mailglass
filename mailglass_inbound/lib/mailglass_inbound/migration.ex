@@ -11,8 +11,11 @@ defmodule MailglassInbound.Migration do
         def down, do: MailglassInbound.Migration.down()
       end
 
-  The wrapper stays stable across mailglass_inbound versions; per-version DDL
-  lives in `MailglassInbound.Migrations.Postgres.VNN` modules, dispatched by
+  The initial-install wrapper stays stable and transactional across
+  mailglass_inbound versions. Populated upgrades generated with `--upgrade` use
+  a separate transaction-disabled wrapper so new versions can build indexes
+  concurrently. Per-version DDL lives in
+  `MailglassInbound.Migrations.Postgres.VNN` modules, dispatched by
   `MailglassInbound.Migrations.Postgres` tracking the current version in the
   `pg_class` comment on `mailglass_inbound_records`.
 
@@ -32,6 +35,7 @@ defmodule MailglassInbound.Migration do
     # default. The dispatcher's `with_defaults/2` supplies "public" + identifier
     # validation downstream for callers who pass neither.
     opts = Keyword.put_new(opts, :prefix, MailglassInbound.Config.schema())
+    ensure_non_transactional_wrapper!(opts)
     migrator(opts).up(opts)
   end
 
@@ -46,6 +50,7 @@ defmodule MailglassInbound.Migration do
     # Same runtime-prefix injection as `up/1` (INB-02) — explicit caller
     # `:prefix` wins via `Keyword.put_new`.
     opts = Keyword.put_new(opts, :prefix, MailglassInbound.Config.schema())
+    ensure_non_transactional_wrapper!(opts)
     migrator(opts).down(opts)
   end
 
@@ -91,5 +96,19 @@ defmodule MailglassInbound.Migration do
       mod when is_atom(mod) ->
         mod
     end
+  end
+
+  defp ensure_non_transactional_wrapper!(opts) do
+    if Keyword.get(opts, :non_transactional_wrapper, false) do
+      repo = resolve_repo(opts)
+
+      if repo.in_transaction?() do
+        raise ArgumentError,
+              "non_transactional_wrapper: true requires a generated migration with " <>
+                "@disable_ddl_transaction true; refusing concurrent DDL inside a transaction"
+      end
+    end
+
+    :ok
   end
 end
