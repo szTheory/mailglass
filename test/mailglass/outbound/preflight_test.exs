@@ -44,6 +44,25 @@ defmodule Mailglass.Outbound.PreflightTest do
     assert is_binary(delivery_id)
   end
 
+  test "collaborators compose queued persistence, dispatch, and sent persistence directly" do
+    message = build_message("collaborators@example.com")
+
+    assert {:ok, prepared} = Preflight.run(message)
+    assert {:ok, route} = Mailglass.Outbound.Routes.resolve_sync(prepared, [])
+
+    assert {:ok, %{delivery: %Delivery{status: :queued} = queued}} =
+             Mailglass.Outbound.Persistence.persist_queued(prepared, route.adapter_ref)
+
+    assert {:ok, dispatch_result} =
+             Mailglass.Outbound.Dispatch.call_adapter(prepared, route.adapter)
+
+    assert {:ok, %{delivery: %Delivery{status: :sent} = sent}} =
+             Mailglass.Outbound.Persistence.persist_dispatched(queued, dispatch_result)
+
+    assert sent.id == queued.id
+    assert sent.last_event_type == :dispatched
+  end
+
   describe "preflight stage 0 — Tenancy.assert_stamped!" do
     @tag tenant: :unset
     test "raises TenancyError when tenant is not stamped" do
