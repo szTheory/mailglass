@@ -159,6 +159,22 @@ jobs:
     # network-dependent (phx.new + the sandbox's own deps.get + server boot)
     # and slower than the other required lanes, but guards the install path
     # that the 1.4.3-1.4.5 bug stack shipped through.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: ecto://postgres:postgres@localhost/mailglass_generated_ecto_host_ci
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -174,6 +190,10 @@ jobs:
           MAILGLASS_PATH: ${{ github.workspace }}
           WORK_DIR: ${{ runner.temp }}
         run: bash scripts/consumer_install_smoke.sh
+      - name: Generated Ecto host proof (working tree, local path deps)
+        env:
+          MAILGLASS_PATH: ${{ github.workspace }}
+        run: bash scripts/generated_ecto_host_proof.sh
 
   support_contract_core:
     name: Support Contract Core (Elixir 1.18 / OTP 27)
