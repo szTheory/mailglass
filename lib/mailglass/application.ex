@@ -5,9 +5,9 @@ defmodule Mailglass.Application do
 
   @impl Application
   def start(_type, _args) do
-    if Code.ensure_loaded?(Mailglass.Config) and
-         function_exported?(Mailglass.Config, :validate_at_boot!, 0) do
-      Mailglass.Config.validate_at_boot!()
+    if Code.ensure_loaded?(Mailglass.Runtime) and
+         function_exported?(Mailglass.Runtime, :bootstrap!, 0) do
+      _runtime = Mailglass.Runtime.bootstrap!()
     end
 
     maybe_warn_missing_oban()
