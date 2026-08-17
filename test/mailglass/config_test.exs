@@ -193,6 +193,14 @@ defmodule Mailglass.ConfigTest do
       assert %{} = Keyword.fetch!(theme, :colors)
       assert %{} = Keyword.fetch!(theme, :fonts)
     end
+
+    test "warms the complete Runtime value before returning" do
+      :ok = Mailglass.Config.validate_at_boot!()
+
+      assert %Mailglass.Runtime{} = Mailglass.Runtime.current()
+      assert Mailglass.Config.default_adapter() == Mailglass.Runtime.fetch!(:adapter)
+      assert Mailglass.Config.compliance() == Mailglass.Runtime.fetch!(:compliance)
+    end
   end
 
   describe "get_theme/0" do
