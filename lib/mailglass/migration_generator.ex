@@ -27,9 +27,7 @@ defmodule Mailglass.MigrationGenerator do
 
     cond do
       opts[:repair_legacy] ->
-        Mix.raise(
-          "Installation blocked: --repair-legacy is not available until Plan 155-04; no migration was written"
-        )
+        generate_legacy_repair!(spec, repo, options)
 
       opts[:upgrade] ->
         generate_upgrade!(spec, repo, opts[:from], options)
@@ -95,6 +93,50 @@ defmodule Mailglass.MigrationGenerator do
     path = migration_path(repo, spec.upgrade_suffix, options)
     write_new!(path, upgrade_source(spec, repo, prior_version))
     Mix.shell().info("created #{path}")
+  end
+
+  defp generate_legacy_repair!(spec, repo, options) do
+    app_module = Map.get(spec, :legacy_app_module, current_app_module())
+    prefix = Map.get(spec, :legacy_prefix, "public")
+    pattern = Path.join(migrations_path(repo), "*_#{spec.install_suffix}.exs")
+    candidates = pattern |> Path.wildcard() |> Enum.sort()
+
+    case candidates do
+      [legacy_path] ->
+        with_repo = Keyword.get(options, :with_repo, &Ecto.Migrator.with_repo/2)
+
+        case with_repo.(repo, fn started_repo ->
+               Mailglass.Migrations.LegacyToy.preflight!(
+                 started_repo,
+                 prefix,
+                 legacy_path,
+                 app_module
+               )
+             end) do
+          {:ok, :ok, _started_apps} ->
+            path = migration_path(repo, "mailglass_legacy_repair", options)
+            write_new!(path, legacy_repair_source(repo, prefix))
+            Mix.shell().info("created #{path}")
+
+          {:error, reason} ->
+            Mix.raise(
+              "Installation blocked: legacy repo could not start (#{inspect(reason)}); no migration was written"
+            )
+
+          result ->
+            Mix.raise(
+              "Installation blocked: legacy preflight failed (#{inspect(result)}); no migration was written"
+            )
+        end
+
+      [] ->
+        Mix.raise("Installation blocked: legacy source is missing; no migration was written")
+
+      _ ->
+        Mix.raise(
+          "Installation blocked: multiple legacy source candidates are ambiguous; no migration was written"
+        )
+    end
   end
 
   defp live_prior_version!(spec, repo, options) do
@@ -209,6 +251,23 @@ defmodule Mailglass.MigrationGenerator do
       def down, do: #{inspect(spec.migration_module)}.down(version: #{prior_version})
     end
     """
+  end
+
+  defp legacy_repair_source(repo, prefix) do
+    """
+    defmodule #{inspect(migration_module(repo, "MailglassLegacyRepair"))} do
+      use Ecto.Migration
+
+      def up, do: Mailglass.Migration.repair_legacy_up(repo: #{inspect(repo)}, prefix: #{inspect(prefix)}, create_schema: false)
+      def down, do: Mailglass.Migration.repair_legacy_down(repo: #{inspect(repo)}, prefix: #{inspect(prefix)}, create_schema: false)
+    end
+    """
+  end
+
+  defp current_app_module do
+    Mix.Project.config()[:app]
+    |> Atom.to_string()
+    |> Macro.camelize()
   end
 
   defp migration_module(repo, suffix), do: Module.concat([repo, Migrations, suffix])
