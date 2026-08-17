@@ -43,11 +43,14 @@ defmodule Mailglass.Webhook.Providers.SES do
 
   require Logger
 
-  alias Mailglass.{Clock, SignatureError}
+  alias Mailglass.SignatureError
   alias Mailglass.Events.Event
   alias Mailglass.Webhook.Providers.SES.{CertCache, TrustPolicy}
 
   @default_cert_cache_ttl_seconds 86_400
+  @default_cert_cache_negative_ttl_seconds 60
+  @default_cert_cache_max_entries 1_024
+  @default_cert_response_bytes 65_536
 
   # Byte-sorted signable fields per AWS SNS signature spec.
   # Subject is optional in Notification — filtered by Map.has_key? at runtime.
@@ -273,42 +276,56 @@ defmodule Mailglass.Webhook.Providers.SES do
 
   # ---- Private: certificate fetching ----
 
-  # NOTE — cache-miss stampede: this is a check-then-act pattern. If N webhook
-  # requests arrive concurrently before the cert for a given URL is cached (cold
-  # start or after a TTL expiry), each caller independently sees :miss, issues its
-  # own :httpc request, and writes the result. ETS :insert is atomic so all writers
-  # converge on the same key; correctness is not affected. The impact is N
-  # simultaneous HTTP GETs to the SNS cert endpoint per cold burst — acceptable for
-  # the expected traffic pattern (one unique cert URL per SNS topic, rarely changes).
-  # If serialization is required in future, route the cache-miss path through a
-  # TableOwner GenServer call to serialize writers under the same cert URL.
   defp fetch_public_key!(cert_url, config) do
-    case CertCache.fetch_public_key(cert_url) do
+    fetch = fn ->
+      try do
+        {:ok, cert_url |> fetch_cert_via_httpc!(config) |> extract_public_key_from_pem!()}
+      rescue
+        error in [SignatureError] -> {:error, error.type}
+      end
+    end
+
+    case CertCache.fetch_or_store(cert_url, fetch,
+           positive_ttl_seconds:
+             Map.get(config, :cert_cache_ttl_seconds, @default_cert_cache_ttl_seconds),
+           negative_ttl_seconds:
+             Map.get(
+               config,
+               :cert_cache_negative_ttl_seconds,
+               @default_cert_cache_negative_ttl_seconds
+             ),
+           max_entries: Map.get(config, :cert_cache_max_entries, @default_cert_cache_max_entries)
+         ) do
       {:ok, public_key} ->
         public_key
 
-      :miss ->
-        pem_binary = fetch_cert_via_httpc!(cert_url, config)
-        public_key = extract_public_key_from_pem!(pem_binary)
-        ttl = Map.get(config, :cert_cache_ttl_seconds, @default_cert_cache_ttl_seconds)
-        expires_at = DateTime.add(Clock.utc_now(), ttl, :second)
-        CertCache.put(cert_url, public_key, expires_at)
-        public_key
+      {:error, reason} ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "cert fetch failed", reason: inspect(reason)}
+              )
     end
   end
 
   defp fetch_cert_via_httpc!(cert_url, config) do
     httpc_mod = httpc_client(config)
     ssl_opts = [verify: :verify_peer, cacerts: :public_key.cacerts_get()]
-    http_opts = [ssl: ssl_opts, autoredirect: false, timeout: @confirm_timeout_ms]
+
+    http_opts = [
+      ssl: ssl_opts,
+      autoredirect: false,
+      timeout: @confirm_timeout_ms,
+      connect_timeout: @confirm_timeout_ms
+    ]
+
     url_charlist = String.to_charlist(cert_url)
 
     case apply(httpc_mod, :request, [:get, {url_charlist, []}, http_opts, []]) do
       {:ok, {{_vsn, 200, _}, _headers, body}} when is_list(body) ->
-        IO.iodata_to_binary(body)
+        body |> IO.iodata_to_binary() |> limit_cert_body!(config)
 
       {:ok, {{_vsn, 200, _}, _headers, body}} when is_binary(body) ->
-        body
+        limit_cert_body!(body, config)
 
       {:ok, {{_vsn, status, _}, _, _}} ->
         raise SignatureError.new(:bad_signature,
@@ -321,6 +338,19 @@ defmodule Mailglass.Webhook.Providers.SES do
                 provider: :ses,
                 context: %{detail: "cert fetch failed", reason: inspect(reason)}
               )
+    end
+  end
+
+  defp limit_cert_body!(body, config) when is_binary(body) do
+    max_bytes = Map.get(config, :cert_max_response_bytes, @default_cert_response_bytes)
+
+    if byte_size(body) <= max_bytes do
+      body
+    else
+      raise SignatureError.new(:bad_signature,
+              provider: :ses,
+              context: %{detail: "cert fetch response exceeded maximum bytes"}
+            )
     end
   end
 
