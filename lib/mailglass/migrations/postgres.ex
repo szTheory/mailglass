@@ -146,7 +146,20 @@ defmodule Mailglass.Migrations.Postgres do
 
   defp maybe_drop_schema(%{prefix: prefix, create_schema: true}) do
     validate_identifier!(prefix, :prefix)
-    execute(~s(DROP SCHEMA IF EXISTS #{inspect(prefix)} RESTRICT))
+
+    # A configured schema may be shared with mailglass_inbound or contain
+    # adopter-owned relations. Keep the RESTRICT attempt inside PostgreSQL's
+    # exception block: it catches only 2BP01 without aborting Ecto's enclosing
+    # migration transaction, while every other database error still propagates.
+    execute("""
+    DO $$
+    BEGIN
+      DROP SCHEMA IF EXISTS #{inspect(prefix)} RESTRICT;
+    EXCEPTION WHEN dependent_objects_still_exist THEN
+      NULL;
+    END
+    $$;
+    """)
   end
 
   defp maybe_drop_schema(_), do: :ok
