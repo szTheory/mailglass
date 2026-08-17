@@ -48,12 +48,12 @@
 
 ### Architecture and Compatibility
 
-- [ ] **ARCH-01**: Core and inbound have zero compile-connected cycles, enforced in CI.
-- [ ] **ARCH-02**: Runtime configuration is validated once into an additive `%Mailglass.Runtime{}` value while existing application-env façades remain compatible.
-- [ ] **ARCH-03**: Core and inbound capability boundaries expose narrow APIs and explicit sibling integration ports rather than depending on the entire root implementation.
-- [ ] **ARCH-04**: Stable Outbound and Config modules remain public façades while mixed orchestration, persistence, dispatch, schema, and registry responsibilities move behind them.
-- [ ] **ARCH-05**: Inbound Plug retains its public Plug contract while provider verification, normalization, persistence, broadcast, and response policy move behind an explicit pipeline.
-- [ ] **ARCH-06**: Duplicated shared business logic has one owner without collapsing the independently released core and inbound packages.
+- [x] **ARCH-01**: Core and inbound have zero compile-connected cycles, enforced in CI.
+- [x] **ARCH-02**: Runtime configuration is validated once into an additive `%Mailglass.Runtime{}` value while existing application-env façades remain compatible.
+- [x] **ARCH-03**: Core and inbound capability boundaries expose narrow APIs and explicit sibling integration ports rather than depending on the entire root implementation.
+- [x] **ARCH-04**: Stable Outbound and Config modules remain public façades while mixed orchestration, persistence, dispatch, schema, and registry responsibilities move behind them.
+- [x] **ARCH-05**: Inbound Plug retains its public Plug contract while provider verification, normalization, persistence, broadcast, and response policy move behind an explicit pipeline.
+- [x] **ARCH-06**: Duplicated shared business logic has one owner without collapsing the independently released core and inbound packages.
 
 ### CI, Testing, and Maintainability Ratchets
 
@@ -121,12 +121,12 @@
 | DATA-06 | Phase 157 | Complete |
 | DATA-07 | Phase 157 | Complete |
 | DATA-08 | Phase 157 | Complete |
-| ARCH-01 | Phase 158 | Pending |
-| ARCH-02 | Phase 158 | Pending |
-| ARCH-03 | Phase 158 | Pending |
-| ARCH-04 | Phase 158 | Pending |
-| ARCH-05 | Phase 158 | Pending |
-| ARCH-06 | Phase 158 | Pending |
+| ARCH-01 | Phase 158 | Complete |
+| ARCH-02 | Phase 158 | Complete |
+| ARCH-03 | Phase 158 | Complete |
+| ARCH-04 | Phase 158 | Complete |
+| ARCH-05 | Phase 158 | Complete |
+| ARCH-06 | Phase 158 | Complete |
 | QUAL-01 | Phase 159 | Pending |
 | QUAL-03 | Phase 159 | Pending |
 | QUAL-04 | Phase 159 | Pending |

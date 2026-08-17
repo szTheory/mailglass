@@ -885,6 +885,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-41 | `CI Green` preserves its public identity but directly depends on successful change detection and exact success from every required code lane | A skipped or failed detector/leaf must not be interpreted as docs-only green | ✓ Validated Phase 155 — exhaustive policy/meta-tests, actionlint, and protected-lane wiring pass |
 | D-42 | Delivery and ingress resource limits are structural contracts: fixed-point atomic buckets, bounded task/certificate/cache/S3 work, and closed retry classifications fail safely under saturation | Correct happy-path behavior is insufficient when attacker-controlled cardinality, concurrency, or provider faults can exhaust a first adopter's host | ✓ Validated Phases 156-157 — isolated concurrency, saturation, cache, S3, and provider suites pass |
 | D-43 | Future populated-table changes use additive expand/contract migrations with bounded session timeouts and concurrent indexes, while exact raw signed input and replay evidence remain durable | Adopters need safe upgrades and forensic truth without rewriting already-applied migration history or retaining unbounded processing state | ✓ Validated Phase 157 — both generated-host package orders, interrupted/resumed backfills, rollback, rerun, and immutable-history checks pass |
+| D-44 | Stable v2 façades remain thin compatibility edges over validated Runtime state, cohesive package-local pipelines, and narrow sibling ports; executable AST/CI guards prevent ownership drift | Refactoring only raises quality when it removes policy duplication without forcing adopter migrations or creating ceremonial wrapper modules | ✓ Validated Phase 158 — independent review closed vacuous guards/trampolines and final core/inbound compatibility, no-optional, cycle, and scope suites pass |
 
 ## Evolution
 
@@ -907,7 +908,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-08-17 after verified Phase 157.*
+*Last updated: 2026-08-17 after verified Phase 158.*
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->

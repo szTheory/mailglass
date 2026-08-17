@@ -2,38 +2,38 @@
 gsd_state_version: 1.0
 milestone: v2.6
 milestone_name: Engineering Quality Ratchet
-current_phase: 158
-current_phase_name: Simplify Architecture Without Breaking Adopters
-status: executing
-stopped_at: Completed Plans 158-04 and 158-05; starting final integration gate
-last_updated: "2026-08-17T11:22:53Z"
+current_phase: 159
+current_phase_name: Raise and Simplify Engineering Gates
+status: planning
+stopped_at: Phase 158 verified complete; Phase 159 ready for planning
+last_updated: "2026-08-17T12:02:25.688Z"
 last_activity: 2026-08-17
-last_activity_desc: Completed Phase 158 Wave 3 outbound and Plug responsibility seams
+last_activity_desc: Phase 158 complete, transitioned to Phase 159
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 28
-  completed_plans: 27
-  percent: 96
+  completed_plans: 28
+  percent: 67
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-17 after Phase 157)
+See: .planning/PROJECT.md (updated 2026-08-17 after Phase 158)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 158 — Simplify Architecture Without Breaking Adopters
+**Current focus:** Phase 159 — Raise and Simplify Engineering Gates
 
 ## Current Position
 
-Phase: 158 (Simplify Architecture Without Breaking Adopters) — EXECUTING
-Plan: 6 of 6
-Status: Executing Phase 158
-Last activity: 2026-08-17 — Phase 158 Wave 3 complete
+Phase: 159 — Raise and Simplify Engineering Gates
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-08-17 — Phase 158 complete, transitioned to Phase 159
 
-Progress: [███████████████████░] 27/28 plans (96%)
+Progress: [████████████████████] 28/28 currently planned plans (100%); 4/6 phases complete
 
 ## v2.6 Milestone Intent
 
@@ -735,6 +735,13 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Roadmap Evolution
 
+- 2026-08-17: **Phase 158 complete and independently verified (6/6).** Core and inbound are
+  compile-cycle-free; CI enforces non-vacuous package-edge and scope contracts; Runtime is the single
+  validated core configuration owner behind stable Config APIs; sibling integration crosses narrow
+  ports; Outbound policy has cohesive preflight/persistence/dispatch owners; and both public Plugs adapt
+  explicit package-local lifecycle outcomes. Focused verification passed 1 property + 188 core tests and
+  115 inbound tests with both no-optional compiles. Next: Phase 159 engineering gates and baseline debt.
+
 - 2026-08-17: **Phase 157 complete and verified (5/5).** Untrusted inbound certificate, replay-cache,
   rate-limit, router, and S3 work is bounded; verified requests use an explicit value; authenticated
   terminal failures retain replayable evidence; suppression, retention, and webhook database work is
@@ -776,8 +783,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-17T10:59:26.942Z
-**Stopped at:** Phase 157 complete; Phase 158 planned and ready to execute
+**Last session:** 2026-08-17T12:02:25.688Z
+**Stopped at:** Phase 158 verified complete; Phase 159 ready for planning
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
@@ -894,5 +901,5 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Operator Next Steps
 
-- Execute the six planned Phase 158 architecture plans autonomously, then verify the public compatibility
-  and package-independence contracts before advancing to Phase 159.
+- Research, plan, and execute Phase 159's deterministic quality gates, then independently verify the full
+  protected merge signal before advancing to release certification.
