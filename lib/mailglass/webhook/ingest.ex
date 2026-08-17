@@ -148,7 +148,8 @@ defmodule Mailglass.Webhook.Ingest do
         _ = Repo.query!("SET LOCAL statement_timeout = '2s'", [])
         _ = Repo.query!("SET LOCAL lock_timeout = '500ms'", [])
 
-        multi = build_multi(provider, raw_body, events, tenant_id)
+        deliveries_by_message = load_deliveries(provider, events, tenant_id)
+        multi = build_multi(provider, raw_body, events, tenant_id, deliveries_by_message)
 
         case Repo.multi(multi) do
           {:ok, changes} ->
@@ -178,7 +179,7 @@ defmodule Mailglass.Webhook.Ingest do
 
   # ---- Multi composition ----------------------------------------------
 
-  defp build_multi(provider, raw_body, events, tenant_id) do
+  defp build_multi(provider, raw_body, events, tenant_id, deliveries_by_message) do
     provider_event_id = derive_webhook_provider_event_id(provider, raw_body, events)
     provider_str = Atom.to_string(provider)
 
@@ -209,6 +210,7 @@ defmodule Mailglass.Webhook.Ingest do
       event_type_normalized: derive_event_type_normalized(events),
       status: :processing,
       raw_payload: parse_raw_payload(raw_body),
+      raw_signed_body: raw_body,
       received_at: Clock.utc_now()
     }
 
@@ -227,7 +229,7 @@ defmodule Mailglass.Webhook.Ingest do
         returning: true
       )
     )
-    |> append_events_for_each(events, provider, tenant_id)
+    |> append_events_for_each(events, provider, tenant_id, deliveries_by_message)
     |> update_projections_for_each(events)
     |> Multi.update_all(
       :flip_status,
@@ -244,7 +246,7 @@ defmodule Mailglass.Webhook.Ingest do
   # Step 2: for each %Event{} in the normalized list, append an Events.append_multi
   # step that resolves delivery_id lazily from prior changes. Function-form
   # append_multi ( I-03) matches Multi.insert/4 + Oban.insert/2 shape.
-  defp append_events_for_each(multi, events, provider, tenant_id) do
+  defp append_events_for_each(multi, events, provider, tenant_id, deliveries_by_message) do
     events
     |> Enum.with_index()
     |> Enum.reduce(multi, fn {event, idx}, acc ->
@@ -254,7 +256,7 @@ defmodule Mailglass.Webhook.Ingest do
       # table growth is O(128) across the library's lifetime — safe.
       Events.append_multi(acc, event_step_name(idx), fn changes ->
         webhook_event = Map.fetch!(changes, :webhook_event)
-        delivery_id = resolve_delivery_id(provider, event)
+        delivery_id = resolve_delivery_id(event, deliveries_by_message)
 
         %{
           type: event.type,
@@ -447,32 +449,43 @@ defmodule Mailglass.Webhook.Ingest do
   defp maybe_put_replay_metadata(metadata, _key, value) when value in [nil, ""], do: metadata
   defp maybe_put_replay_metadata(metadata, key, value), do: Map.put(metadata, key, value)
 
-  # Look up the matching `%Delivery{}` id by (provider, provider_message_id).
-  # Per revision W9 — reads STRING keys ("message_id", "sg_message_id") first;
-  # atom-key fallback retained for defensive compatibility. Plans 04-02 +
-  # 04-03 normalize/2 standardized on string keys, so this is the happy path.
-  defp resolve_delivery_id(provider, %Event{metadata: meta}) when is_map(meta) do
-    message_id =
-      meta["sg_message_id"] || meta["message_id"] ||
-        Map.get(meta, :sg_message_id) || Map.get(meta, :message_id)
+  # Load delivery state once per provider batch. Event metadata can repeat a
+  # message id, so deduplicate before querying and resolve every event from the
+  # resulting in-memory map rather than issuing N point reads.
+  defp load_deliveries(provider, events, tenant_id) do
+    message_ids =
+      events
+      |> Enum.map(&message_id/1)
+      |> Enum.filter(&is_binary/1)
+      |> Enum.reject(&(&1 == ""))
+      |> Enum.uniq()
 
-    case message_id do
-      id when is_binary(id) and id != "" ->
+    case message_ids do
+      [] ->
+        %{}
+
+      ids ->
         query =
           from(d in Delivery,
-            where: d.provider == ^Atom.to_string(provider) and d.provider_message_id == ^id,
-            select: d.id,
-            limit: 1
+            where: d.provider == ^Atom.to_string(provider) and d.provider_message_id in ^ids
           )
 
-        Repo.one(Tenancy.scope(query))
-
-      _ ->
-        nil
+        query
+        |> Tenancy.scope(tenant_id)
+        |> Repo.all()
+        |> Map.new(&{&1.provider_message_id, &1.id})
     end
   end
 
-  defp resolve_delivery_id(_provider, _event), do: nil
+  defp resolve_delivery_id(event, deliveries_by_message),
+    do: Map.get(deliveries_by_message, message_id(event))
+
+  defp message_id(%Event{metadata: meta}) when is_map(meta) do
+    meta["sg_message_id"] || meta["message_id"] ||
+      Map.get(meta, :sg_message_id) || Map.get(meta, :message_id)
+  end
+
+  defp message_id(_event), do: nil
 
   # Build the final result map for the Plug. Per revision B7 — 3-tuples
   # {inserted_event, delivery_or_nil, orphan?} give downstream consumers
