@@ -11,10 +11,12 @@ defmodule Mailglass.Migration do
         def down, do: Mailglass.Migration.down(repo: MyApp.Repo)
       end
 
-  The wrapper stays stable across mailglass versions; per-version DDL
-  lives in `Mailglass.Migrations.Postgres.VNN` modules, dispatched by
-  `Mailglass.Migrations.Postgres` tracking the current version in the
-  `pg_class` comment on `mailglass_events`.
+  The initial-install wrapper stays stable and transactional across mailglass
+  versions. Populated upgrades generated with `--upgrade` use a separate
+  transaction-disabled wrapper so new versions can build indexes concurrently.
+  Per-version DDL lives in `Mailglass.Migrations.Postgres.VNN` modules,
+  dispatched by `Mailglass.Migrations.Postgres` tracking the current version in
+  the `pg_class` comment on `mailglass_events`.
 
   Postgres-only at v0.1 per PROJECT.md (MySQL/SQLite out of scope).
   """
