@@ -1096,11 +1096,31 @@ defmodule MailglassInbound.Ingress.PlugTest do
     |> IO.iodata_to_binary()
   end
 
-  test "public inbound Plug delegates lifecycle orchestration to its package-local pipeline" do
-    plug = File.read!("lib/mailglass_inbound/ingress/plug.ex")
-    pipeline = File.read!("lib/mailglass_inbound/ingress/pipeline.ex")
+  test "pipeline makes terminal verification outcomes before persistence work" do
+    deps = %{
+      verify: fn _, _, _, _ ->
+        send(self(), :verify)
+        {:replay}
+      end
+    }
 
-    assert plug =~ "Ingress.Pipeline"
-    assert pipeline =~ "def run(conn, provider, opts, runner)"
+    assert {:replay} =
+             MailglassInbound.Ingress.Pipeline.run(:postmark, :request, %{}, [], deps)
+
+    assert_receive :verify
+  end
+
+  test "pipeline passes only verified facts to the persistence lifecycle" do
+    deps = %{
+      verify: fn _, _, _, _ ->
+        send(self(), :verify)
+        %{provider_id: "verified"}
+      end
+    }
+
+    assert {:persist, :request, %{provider_id: "verified"}} =
+             MailglassInbound.Ingress.Pipeline.run(:postmark, :request, %{}, [], deps)
+
+    assert_receive :verify
   end
 end
