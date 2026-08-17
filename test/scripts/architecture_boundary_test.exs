@@ -40,6 +40,20 @@ defmodule Mailglass.ArchitectureBoundaryTest do
     assert_cycle_free!(Path.join(File.cwd!(), "mailglass_inbound"))
   end
 
+  test "a required core support lane executes the architecture contract without swallowing failure" do
+    ci = File.read!(".github/workflows/ci.yml")
+
+    assert_required_architecture_gate!(ci)
+
+    without_gate =
+      String.replace(
+        ci,
+        "mix test test/scripts/architecture_boundary_test.exs --warnings-as-errors",
+        "true", global: false)
+
+    assert_raise ExUnit.AssertionError, fn -> assert_required_architecture_gate!(without_gate) end
+  end
+
   defp assert_cycle_free!(project_root) do
     {output, status} =
       System.cmd("mix", ["xref", "graph", "--format", "cycles", "--label", "compile-connected"],
@@ -83,4 +97,17 @@ defmodule Mailglass.ArchitectureBoundaryTest do
   end
 
   defp cycle_free?(_), do: false
+
+  defp assert_required_architecture_gate!(ci) do
+    support_contract =
+      case String.split(ci, "  support_contract_core:\n", parts: 2) do
+        [_, rest] -> rest |> String.split(~r/\n  [a-z_][a-z_-]*:\n/, parts: 2) |> hd()
+        _ -> flunk("support_contract_core job is missing")
+      end
+
+    assert support_contract =~ "name: Support Contract Core (Elixir 1.18 / OTP 27)"
+
+    assert support_contract =~
+             "mix test test/scripts/architecture_boundary_test.exs --warnings-as-errors"
+  end
 end
