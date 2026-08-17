@@ -121,7 +121,7 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
                execution: ExecutionStub
              )
 
-    assert_prefixed_calls([:one, :one, :one])
+    assert_prefixed_calls([:one, :one])
   end
 
   test "Execution.load/2 tenant-scopes both raw repo loads" do
@@ -191,7 +191,7 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
       execution_run(record_id, evidence_id, mailbox)
     ])
 
-    assert {:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}} =
+    assert {:ok, %{status: :replayed}} =
              Replay.replay(record_id,
                tenant_id: "tenant-a",
                repo: CaptureRepo,
@@ -200,7 +200,7 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
              )
 
     refute existing_atom?("Elixir." <> mailbox)
-    assert_prefixed_calls([:one, :one, :one])
+    assert_prefixed_calls([:one, :one])
   end
 
   test "mix task selector resolution passes schema prefix opts to raw repo all call" do
@@ -231,7 +231,14 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
       id: id,
       tenant_id: "tenant-a",
       inbound_record_id: record_id,
-      provider: "postmark"
+      provider: "postmark",
+      verification_facts: %{
+        "mailglass_execution_route" => %{
+          "status" => "matched",
+          "mailbox" => Atom.to_string(TestMailbox),
+          "router" => Atom.to_string(TestRouter)
+        }
+      }
     }
   end
 

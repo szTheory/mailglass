@@ -220,7 +220,8 @@ defmodule MailglassInbound.MailboxExecutionTest do
       id: "evidence-123",
       tenant_id: "tenant-123",
       inbound_record_id: "record-123",
-      provider: "postmark"
+      provider: "postmark",
+      verification_facts: %{"mailglass_execution_route" => %{"status" => "no_match"}}
     }
   end
 end
