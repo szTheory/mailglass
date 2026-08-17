@@ -104,7 +104,7 @@ defmodule Mailglass.MigrationGenerator do
            spec.migration_module.migrated_version(repo: started_repo)
          end) do
       {:ok, version, _started_apps} when is_integer(version) ->
-        validate_prior_version!(spec, version)
+        validate_prior_version!(spec, version, :live)
 
       {:error, reason} ->
         Mix.raise("Installation blocked: could not inspect the selected repo: #{inspect(reason)}")
@@ -114,7 +114,7 @@ defmodule Mailglass.MigrationGenerator do
     end
   end
 
-  defp validate_prior_version!(spec, from) do
+  defp validate_prior_version!(spec, from, source \\ :offline) do
     version =
       case from do
         version when is_integer(version) ->
@@ -132,19 +132,30 @@ defmodule Mailglass.MigrationGenerator do
 
     cond do
       version == 0 ->
-        Mix.raise(
-          "Installation blocked: --upgrade --from 0 means no package anchor exists; run initial generation without --upgrade"
-        )
+        Mix.raise(absent_anchor_message(source))
 
       version < initial_version or version >= current_version ->
-        Mix.raise(
-          "Installation blocked: no upgrade is available from #{version}; choose a version from #{initial_version} through #{current_version - 1}"
-        )
+        Mix.raise(no_upgrade_message(source, version, initial_version, current_version))
 
       true ->
         version
     end
   end
+
+  defp absent_anchor_message(:offline),
+    do:
+      "Installation blocked: --upgrade --from 0 means no package anchor exists; run initial generation without --upgrade"
+
+  defp absent_anchor_message(:live),
+    do: "Installation blocked: no package anchor exists; run initial generation without --upgrade"
+
+  defp no_upgrade_message(:offline, version, initial_version, current_version),
+    do:
+      "Installation blocked: no offline upgrade is available from #{version}; choose a version from #{initial_version} through #{current_version - 1}"
+
+  defp no_upgrade_message(:live, version, initial_version, current_version),
+    do:
+      "Installation blocked: no live upgrade is available from #{version}; choose a version from #{initial_version} through #{current_version - 1}"
 
   defp write_new!(path, source) do
     File.mkdir_p!(Path.dirname(path))

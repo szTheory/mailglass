@@ -32,7 +32,7 @@ defmodule MailglassInbound.Migration do
     # default. The dispatcher's `with_defaults/2` supplies "public" + identifier
     # validation downstream for callers who pass neither.
     opts = Keyword.put_new(opts, :prefix, MailglassInbound.Config.schema())
-    migrator().up(opts)
+    migrator(opts).up(opts)
   end
 
   @doc "Rolls back inbound migrations down to the target version (default: 0)."
@@ -42,7 +42,7 @@ defmodule MailglassInbound.Migration do
     # Same runtime-prefix injection as `up/1` (INB-02) — explicit caller
     # `:prefix` wins via `Keyword.put_new`.
     opts = Keyword.put_new(opts, :prefix, MailglassInbound.Config.schema())
-    migrator().down(opts)
+    migrator(opts).down(opts)
   end
 
   @doc """
@@ -61,14 +61,14 @@ defmodule MailglassInbound.Migration do
     opts = Keyword.put_new(opts, :prefix, MailglassInbound.Config.schema())
     # Inject the configured Repo so the dispatcher can run the version
     # query without needing an active `use Ecto.Migration` runner.
-    opts = Keyword.put_new(opts, :repo, resolve_repo())
-    migrator().migrated_version(opts)
+    opts = Keyword.put_new(opts, :repo, resolve_repo(opts))
+    migrator(opts).migrated_version(opts)
   end
 
   # Resolves the version dispatcher based on the configured Repo's adapter.
   # Postgres-only at v2.0 per PROJECT.md — MySQL/SQLite are out of scope.
-  defp migrator do
-    case resolve_repo().__adapter__() do
+  defp migrator(opts) do
+    case resolve_repo(opts).__adapter__() do
       Ecto.Adapters.Postgres ->
         MailglassInbound.Migrations.Postgres
 
@@ -78,8 +78,8 @@ defmodule MailglassInbound.Migration do
     end
   end
 
-  defp resolve_repo do
-    case Application.get_env(:mailglass_inbound, :repo) do
+  defp resolve_repo(opts) do
+    case Keyword.get(opts, :repo) || Application.get_env(:mailglass_inbound, :repo) do
       nil ->
         raise RuntimeError,
               "mailglass_inbound requires config :mailglass_inbound, :repo to resolve its host repo"
