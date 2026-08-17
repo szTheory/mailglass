@@ -7,10 +7,10 @@
 
 ### Adopter and Migration Truth
 
-- [ ] **ADOPT-01**: A generated Ecto host receives the documented core and inbound `up/0`/`down/0` migration wrappers rather than hand-written or toy DDL.
-- [ ] **ADOPT-02**: An adopter can target an explicit repo with `--repo`; implicit inference succeeds only when exactly one configured Ecto repo exists.
-- [ ] **ADOPT-03**: `--upgrade` creates a fresh timestamped migration whose rollback returns to the previously applied package schema version, without rewriting applied migrations.
-- [ ] **ADOPT-04**: Offline upgrade generation accepts an explicit prior version and rejects invalid or non-older versions.
+- [x] **ADOPT-01**: A generated Ecto host receives the documented core and inbound `up/0`/`down/0` migration wrappers rather than hand-written or toy DDL.
+- [x] **ADOPT-02**: An adopter can target an explicit repo with `--repo`; implicit inference succeeds only when exactly one configured Ecto repo exists.
+- [x] **ADOPT-03**: `--upgrade` creates a fresh timestamped migration whose rollback returns to the previously applied package schema version, without rewriting applied migrations.
+- [x] **ADOPT-04**: Offline upgrade generation accepts an explicit prior version and rejects invalid or non-older versions.
 - [ ] **ADOPT-05**: The known legacy toy migration is detected and has an explicit fail-closed repair path that never destroys ambiguous or populated data.
 - [ ] **ADOPT-06**: Migration version detection distinguishes an absent anchor from malformed metadata or query failure and fails closed for the latter cases.
 
@@ -91,10 +91,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ADOPT-01 | Phase 155 | Pending |
-| ADOPT-02 | Phase 155 | Pending |
-| ADOPT-03 | Phase 155 | Pending |
-| ADOPT-04 | Phase 155 | Pending |
+| ADOPT-01 | Phase 155 | Complete |
+| ADOPT-02 | Phase 155 | Complete |
+| ADOPT-03 | Phase 155 | Complete |
+| ADOPT-04 | Phase 155 | Complete |
 | ADOPT-05 | Phase 155 | Pending |
 | ADOPT-06 | Phase 155 | Pending |
 | QUAL-02 | Phase 155 | Pending |
