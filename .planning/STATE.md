@@ -5,15 +5,15 @@ milestone_name: Engineering Quality Ratchet
 current_phase: 155
 current_phase_name: Restore Adopter and CI Truth
 status: planning
-stopped_at: Completed 155-06-PLAN.md
-last_updated: "2026-08-17T02:29:13.259Z"
+stopped_at: Completed 155-07-PLAN.md
+last_updated: "2026-08-17T03:06:03.690Z"
 last_activity: 2026-08-16
 last_activity_desc: v2.6 roadmap created; all 50 requirements mapped across phases 155-160
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 7
+  completed_plans: 7
   percent: 17
 ---
 
@@ -494,6 +494,8 @@ release debug campaign.
 - [Phase ?]: Installer Host Smoke keeps its public identity while running both adopter proofs.
 - [Phase ?]: CI Green now consumes explicit detector and required-leaf inputs through a fail-closed policy; skips are accepted only for successful code=false classification.
 - [Phase ?]: changes is structural in ci_green.needs and stays outside Mailglass.CILanes.required_lanes/0 plus branch-protection identity.
+- [Phase ?]: Shared package schemas use RESTRICT-only teardown and skip only SQLSTATE 2BP01.
+- [Phase ?]: Generated-host rollback proof runs separate core-first and inbound-first hosts.
 
 ## Quick Tasks Completed
 
@@ -584,6 +586,7 @@ release debug campaign.
 | Phase 155-restore-adopter-and-ci-truth P01 | 5 min | 2 tasks | 5 files |
 | Phase 155 P05 | 31min | 2 tasks | 4 files |
 | Phase 155 P06 | 5 min | 2 tasks | 4 files |
+| Phase 155 P07 | 33min | 2 tasks | 5 files |
 
 ## Deferred Items
 
@@ -750,8 +753,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-17T02:29:13.250Z
-**Stopped at:** Completed 155-06-PLAN.md
+**Last session:** 2026-08-17T03:06:03.681Z
+**Stopped at:** Completed 155-07-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
