@@ -244,7 +244,11 @@ defmodule MailglassInbound.Test.Ingress do
     {request, Keyword.get(opts, :config, %{})}
   end
 
-  defp build_request(:sendgrid, %{raw_mime: raw_mime, headers: headers, params: params} = payload, opts) do
+  defp build_request(
+         :sendgrid,
+         %{raw_mime: raw_mime, headers: headers, params: params} = payload,
+         opts
+       ) do
     request = %Request{
       provider: :sendgrid,
       raw_body: raw_mime,

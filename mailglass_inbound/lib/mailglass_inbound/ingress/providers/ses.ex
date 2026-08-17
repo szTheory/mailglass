@@ -78,9 +78,10 @@ defmodule MailglassInbound.Ingress.Providers.SES do
 
   # The canonical normalization entry consumes a resolved verified value.
   @impl false
-  def normalize(%VerifiedRequest{request: request, envelope: payload, raw_mime: raw_mime} = verified)
+  def normalize(
+        %VerifiedRequest{request: request, envelope: payload, raw_mime: raw_mime} = verified
+      )
       when is_binary(raw_mime) do
-
     repr =
       case MailglassInbound.MIME.parse(raw_mime) do
         {:ok, repr} -> repr
@@ -155,7 +156,8 @@ defmodule MailglassInbound.Ingress.Providers.SES do
       # exception preserves the original stacktrace (mirrors core SendGrid's
       # rewrap). Map a known :type through; everything else collapses to
       # :bad_signature. The core cause rides on `:cause` (excluded from JSON).
-      type = if e.type in MailglassInbound.SignatureError.__types__(), do: e.type, else: :bad_signature
+      type =
+        if e.type in MailglassInbound.SignatureError.__types__(), do: e.type, else: :bad_signature
 
       reraise SignatureError.new(type, provider: :ses, cause: e, context: e.context || %{}),
               __STACKTRACE__
@@ -197,7 +199,10 @@ defmodule MailglassInbound.Ingress.Providers.SES do
     cond do
       action_type == "S3" ->
         bucket = get_in(inner, ["receipt", "action", "bucketName"])
-        key = get_in(inner, ["receipt", "action", "objectKey"]) || get_in(inner, ["mail", "messageId"])
+
+        key =
+          get_in(inner, ["receipt", "action", "objectKey"]) || get_in(inner, ["mail", "messageId"])
+
         {fetch_s3_body!(bucket, key, config), %{}}
 
       is_binary(Map.get(inner, "content")) ->
@@ -305,9 +310,14 @@ defmodule MailglassInbound.Ingress.Providers.SES do
     {text, html} =
       Enum.reduce(leaves, {nil, nil}, fn part, {text, html} ->
         cond do
-          part.type == "text" and part.subtype == "plain" and is_nil(text) -> {to_text(part.body), html}
-          part.type == "text" and part.subtype == "html" and is_nil(html) -> {text, to_text(part.body)}
-          true -> {text, html}
+          part.type == "text" and part.subtype == "plain" and is_nil(text) ->
+            {to_text(part.body), html}
+
+          part.type == "text" and part.subtype == "html" and is_nil(html) ->
+            {text, to_text(part.body)}
+
+          true ->
+            {text, html}
         end
       end)
 
@@ -394,7 +404,8 @@ defmodule MailglassInbound.Ingress.Providers.SES do
          {hour_int, ""} <- Integer.parse(hour),
          {minute_int, ""} <- Integer.parse(minute),
          {second_int, ""} <- Integer.parse(second),
-         {:ok, naive} <- NaiveDateTime.new(year_int, month_int, day_int, hour_int, minute_int, second_int) do
+         {:ok, naive} <-
+           NaiveDateTime.new(year_int, month_int, day_int, hour_int, minute_int, second_int) do
       offset_seconds = utc_offset_seconds(offset)
       naive |> NaiveDateTime.add(-offset_seconds, :second) |> DateTime.from_naive!("Etc/UTC")
     else

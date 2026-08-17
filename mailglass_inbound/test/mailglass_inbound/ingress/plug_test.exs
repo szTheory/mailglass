@@ -2,6 +2,7 @@ defmodule MailglassInbound.Ingress.PlugTest do
   use ExUnit.Case, async: false
 
   alias MailglassInbound.Ingress.Plug, as: IngressPlug
+  alias MailglassInbound.Ingress.{Request, VerifiedRequest}
 
   defmodule TenantResolver do
     @behaviour Mailglass.Tenancy
@@ -12,6 +13,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     def resolve_webhook_tenant(%{path_params: %{"tenant_id" => tenant_id}})
         when is_binary(tenant_id) and tenant_id != "" do
       Process.put(:mailglass_inbound_tenant_resolved, true)
+
+      Process.put(:mailglass_inbound_pipeline_order, [
+        :tenant | Process.get(:mailglass_inbound_pipeline_order, [])
+      ])
+
       {:ok, tenant_id}
     end
 
@@ -137,6 +143,50 @@ defmodule MailglassInbound.Ingress.PlugTest do
     end
   end
 
+  defmodule OrderedVerifiedProvider do
+    def verify!(%Request{} = request, _config) do
+      record(:verify)
+
+      if Process.get(:mailglass_inbound_ordered_verify) == :reject do
+        raise MailglassInbound.SignatureError.new(:bad_signature, provider: :ses)
+      end
+
+      {:ok,
+       %VerifiedRequest{
+         request: request,
+         raw_body: request.raw_body,
+         envelope: %{message_id: "ordered"},
+         verification_facts: %{auth: :stub},
+         warnings: %{}
+       }}
+    end
+
+    def resolve_content!(%VerifiedRequest{} = verified, _config) do
+      record(:resolve_content)
+      %{verified | raw_mime: "From: sender@example.com\r\nTo: support@example.com\r\n\r\nbody"}
+    end
+
+    def normalize(%VerifiedRequest{}) do
+      record(:normalize)
+
+      %{
+        message: %MailglassInbound.InboundMessage{
+          provider: :ses,
+          provider_message_id: "ordered",
+          envelope_recipient: "support@example.com",
+          to: [%{address: "support@example.com", name: nil}]
+        },
+        evidence: %{verification_facts: %{}}
+      }
+    end
+
+    defp record(step) do
+      Process.put(:mailglass_inbound_pipeline_order, [
+        step | Process.get(:mailglass_inbound_pipeline_order, [])
+      ])
+    end
+  end
+
   setup do
     prior_tenancy = Application.get_env(:mailglass, :tenancy)
     prior_postmark = Application.get_env(:mailglass_inbound, :postmark)
@@ -161,6 +211,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
     Process.delete(:mailglass_inbound_execution_outcome)
     Process.delete(:mailglass_inbound_stub_verify)
     Process.delete(:mailglass_inbound_persist_error)
+    Process.delete(:mailglass_inbound_pipeline_order)
+    Process.delete(:mailglass_inbound_ordered_verify)
 
     on_exit(fn ->
       if is_nil(prior_tenancy) do
@@ -423,6 +475,46 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert conn.status == 401
     assert Jason.decode!(conn.resp_body)["reason"] == "bad_credentials"
     refute Process.get(:mailglass_inbound_tenant_resolved)
+  end
+
+  test "SES authenticates before tenant scope and resolves content only afterwards" do
+    conn =
+      conn_with_auth(postmark_payload())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(
+          provider: :ses,
+          provider_module: OrderedVerifiedProvider,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
+      )
+
+    assert conn.status == 200
+
+    assert Process.get(:mailglass_inbound_pipeline_order)
+           |> Enum.reverse() == [:verify, :tenant, :resolve_content, :normalize]
+  end
+
+  test "SES authentication failure performs neither tenant resolution nor content retrieval" do
+    Process.put(:mailglass_inbound_ordered_verify, :reject)
+
+    conn =
+      conn_with_auth(postmark_payload())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(provider: :ses, provider_module: OrderedVerifiedProvider)
+      )
+
+    assert conn.status == 401
+    refute Process.get(:mailglass_inbound_tenant_resolved)
+    assert Process.get(:mailglass_inbound_pipeline_order) |> Enum.reverse() == [:verify]
   end
 
   test "returns 500 when sendgrid raw mime delivery is not configured" do
