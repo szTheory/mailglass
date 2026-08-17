@@ -71,3 +71,21 @@ Introduced explicit package-local pipeline seams while preserving the stable cor
 ## Deviations from Plan
 
 None - plan executed exactly as written.
+
+## Review-Fix Addendum (ARCH-05)
+
+The original seams were callback pass-throughs. They were replaced with package-local,
+connection-free outcome pipelines:
+
+- `dfe08264` — core pipeline now owns verify → tenant → normalize → ingest → post-commit
+  broadcast sequencing and returns closed outcomes; the Plug retains raw-body adaptation,
+  telemetry, logging, and HTTP rendering.
+- `fb4efbd4` — inbound pipeline now owns the verification gate and maps only verified inputs
+  to closed persistence lifecycle outcomes; the Plug retains its terminal-evidence policy and
+  response rendering.
+
+The prior source-text assertions were replaced with executable pipeline sentinels. Core spies
+prove verification happens before tenant work and that broadcast follows a successful ingest;
+the existing inbound ordered provider/persistence tests continue to prove verification-before-
+tenant and persistence-before-dispatch behavior. Focused suites now pass at 24 core tests and
+53 inbound tests.
