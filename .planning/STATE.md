@@ -5,15 +5,15 @@ milestone_name: Engineering Quality Ratchet
 current_phase: 157
 current_phase_name: Inbound, Database, and Lifecycle Hardening
 status: planning
-stopped_at: Phase 156 complete and verified; ready to plan Phase 157
-last_updated: "2026-08-17T08:01:06.766Z"
+stopped_at: Completed 157-07-PLAN.md
+last_updated: "2026-08-17T09:01:17.295Z"
 last_activity: 2026-08-17
 last_activity_desc: Phase 156 complete, transitioned to Phase 157
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 22
+  completed_plans: 20
   percent: 33
 ---
 
@@ -33,7 +33,7 @@ Plan: Not started
 Status: Ready to plan
 Last activity: 2026-08-17 — Phase 156 complete, transitioned to Phase 157
 
-Progress: [███░░░░░░░] 33%
+Progress: [█████████░] 91%
 
 ## v2.6 Milestone Intent
 
@@ -496,6 +496,8 @@ release debug campaign.
 - [Phase ?]: changes is structural in ci_green.needs and stays outside Mailglass.CILanes.required_lanes/0 plus branch-protection identity.
 - [Phase ?]: Shared package schemas use RESTRICT-only teardown and skip only SQLSTATE 2BP01.
 - [Phase ?]: Generated-host rollback proof runs separate core-first and inbound-first hosts.
+- [Phase ?]: Suppression resync pages by (occurred_at, id) with page-local dedupe and bounded bulk reads/upserts.
+- [Phase ?]: Resync page size is application-configured; Mix task flags and output remain unchanged.
 
 ## Quick Tasks Completed
 
@@ -587,6 +589,7 @@ release debug campaign.
 | Phase 155 P05 | 31min | 2 tasks | 4 files |
 | Phase 155 P06 | 5 min | 2 tasks | 4 files |
 | Phase 155 P07 | 33min | 2 tasks | 5 files |
+| Phase 157-inbound-database-and-lifecycle-hardening P07 | 6min | 2 tasks | 5 files |
 
 ## Deferred Items
 
@@ -766,8 +769,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-17T03:13:00Z
-**Stopped at:** Phase 156 complete and verified; ready to plan Phase 157
+**Last session:** 2026-08-17T09:01:17.284Z
+**Stopped at:** Completed 157-07-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
