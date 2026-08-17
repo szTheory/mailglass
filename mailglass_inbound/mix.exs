@@ -114,6 +114,7 @@ defmodule MailglassInbound.MixProject do
       # StreamData backs the TELE-08 1000-run inbound convergence property
       # (test/mailglass_inbound/properties/). Test-only; mirrors core's 1.3 pin.
       {:stream_data, "~> 1.3", only: [:test]},
+      {:excoveralls, "~> 0.18", only: [:test]},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
     ]
   end
