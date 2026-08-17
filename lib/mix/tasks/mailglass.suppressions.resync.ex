@@ -39,6 +39,12 @@ defmodule Mix.Tasks.Mailglass.Suppressions.Resync do
           Enum.each(result.candidates, fn candidate ->
             Mix.shell().info(verbose_line(candidate))
           end)
+
+          if result.candidates_truncated? do
+            Mix.shell().info(
+              "candidate detail truncated at 100 entries; aggregate counts are complete"
+            )
+          end
         end
 
       {:error, :tenant_id_required} ->
