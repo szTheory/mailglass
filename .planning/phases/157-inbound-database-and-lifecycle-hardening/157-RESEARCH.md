@@ -311,20 +311,23 @@ from(e in InboundEvidence,
 | A2 | A new inbound migration version (`V02`) is the next available dispatcher slot. | Project Structure | Verify dispatcher/catalog before implementation. |
 | A3 | Core webhook retention should share inbound's session advisory-lock posture. | State of the Art | Lock ownership may need a distinct key/operational decision. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Exact certificate-cache bounds and negative TTL**
    - What we know: Phase 156 uses 100,000-key, idle-expiring table owner admission; SES needs much lower, config-validated limits.
    - What's unclear: desired production values and whether a single global in-flight budget or per-URL + global cap is preferred.
    - Recommendation: use conservative defaults, validate max entries/in-flight/response bytes, and make only values—not policy—configurable.
+   - **RESOLVED:** Use a per-URL single-flight coordinator plus a small configurable global in-flight cap, with conservative config-validated defaults for entry limits, positive/negative TTLs, timeouts, and response bytes. The policy is fixed; adopters may tune only bounded values.
 2. **Durable inbound terminal-failure representation**
    - What we know: evidence/record/replay tables already persist raw material and execution lineage.
    - What's unclear: whether to add a dedicated failure status/record or reuse `ExecutionRun` before mailbox execution.
    - Recommendation: choose the smallest additive representation that the existing replay command can load without inventing admin UI.
+   - **RESOLVED:** Extend the existing inbound evidence/replay representation additively in V02 with the minimum tenant-scoped terminal context, closed failure class, exact signed bytes, and verified facts needed by the existing replay path. Do not introduce a new operator/admin surface or a separate public API.
 3. **Bulk suppression callback surface**
    - What we know: current `SuppressionStore` has only `check/2` and `record/2`.
    - What's unclear: whether the public behaviour is semver-frozen tightly enough to require capability detection instead of a callback.
    - Recommendation: introduce an optional `bulk_check/2` guarded by `function_exported?/3`, retaining bounded `check/2` chunks.
+   - **RESOLVED:** Add an optional positional bulk capability detected with `function_exported?/3`; legacy stores that only expose `check/2` and `record/2` remain supported through configurable bounded chunks with identical positional results.
 
 ## Environment Availability
 
