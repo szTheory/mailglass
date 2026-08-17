@@ -249,6 +249,8 @@ jobs:
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run core support contract
         run: mix verify.support_contract.core
+      - name: Run architecture boundary contract
+        run: mix test test/scripts/architecture_boundary_test.exs --warnings-as-errors
 
   mix_task_tests:
     name: Mix Task Tests (Elixir 1.18 / OTP 27)
