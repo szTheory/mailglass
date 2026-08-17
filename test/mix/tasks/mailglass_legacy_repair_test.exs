@@ -131,6 +131,32 @@ defmodule Mix.Tasks.Mailglass.LegacyRepairTest do
              Repo.query("SELECT tenant_id FROM #{@prefix}.mailglass_events")
   end
 
+  test "revalidates immediately before repair and preserves rows added after generation", %{
+    source_path: source_path
+  } do
+    assert capture_io(fn ->
+             Mailglass.MigrationGenerator.run(core_spec(), ["--repair-legacy"],
+               with_repo: fn repo, fun -> {:ok, fun.(repo), []} end
+             )
+           end) =~ "created"
+
+    assert [^source_path, repair_path] = migration_paths()
+    {{:module, repair_module, _, _}, _} = Code.eval_string(File.read!(repair_path))
+    assert {:module, repair_module} = Code.ensure_loaded(repair_module)
+
+    {:ok, _} =
+      Repo.query(
+        "INSERT INTO #{@prefix}.mailglass_events (tenant_id, inserted_at, updated_at) VALUES ('generated-then-inserted', now(), now())"
+      )
+
+    assert_raise Postgrex.Error, ~r/legacy table is populated/, fn ->
+      Ecto.Migrator.up(Repo, @version, repair_module, log: false)
+    end
+
+    assert {:ok, %{rows: [["generated-then-inserted"]]}} =
+             Repo.query("SELECT tenant_id FROM #{@prefix}.mailglass_events")
+  end
+
   test "refuses altered catalog and missing source without writing" do
     {:ok, _} = Repo.query("ALTER TABLE #{@prefix}.mailglass_events ADD COLUMN forged text")
     before = migration_snapshot()
