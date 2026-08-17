@@ -4,7 +4,7 @@ defmodule Mailglass.SendError do
 
   ## Types
 
-  - `:adapter_failure` — the Swoosh adapter returned an error (retryable)
+  - `:adapter_failure` — the Swoosh adapter returned an error
   - `:rendering_failed` — HEEx or CSS-inlining pipeline failed
   - `:preflight_rejected` — suppression or rate-limit check blocked the send
   - `:serialization_failed` — message could not be serialized for the adapter
@@ -57,7 +57,7 @@ defmodule Mailglass.SendError do
   def type(%__MODULE__{type: t}), do: t
 
   @impl Mailglass.Error
-  def retryable?(%__MODULE__{type: :adapter_failure}), do: true
+  def retryable?(%__MODULE__{retry_class: :transient}), do: true
   def retryable?(%__MODULE__{}), do: false
 
   @impl true

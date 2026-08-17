@@ -232,10 +232,20 @@ Type atom set (per `Mailglass.SendError.__types__/0`):
 - `:rendering_failed`
 - `:preflight_rejected`
 - `:serialization_failed`
+- `:dispatch_unavailable`
 
 Per-kind fields: `delivery_id :: binary() | nil`.
 
-Retryable: `true` for `:adapter_failure`, `false` otherwise.
+`retry_class :: :transient | :permanent | nil` is an additive, non-JSON field.
+`retryable?/1` returns `true` only for `retry_class: :transient`; it fails closed
+for permanent, missing, or malformed classifications. JSON keys remain exactly
+`type`, `message`, and `context`.
+
+For Swoosh adapter failures, the closed decision table is: known transport and
+timeout failures, HTTP 429, and HTTP 500..599 are transient; ordinary HTTP
+400..499 are permanent; unknown or malformed outcomes are permanent. Provider
+response bodies and reason text must not enter error context, exception message,
+JSON, or persisted `last_error` data.
 
 Since: 0.1.0.
 
