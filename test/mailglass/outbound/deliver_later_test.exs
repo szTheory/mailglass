@@ -117,12 +117,12 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       msg = build_message("task-tenant-#{unique_id()}@example.com")
       {:ok, delivery} = Outbound.deliver_later(msg)
 
-      # Give the Task.Supervisor task time to run dispatch
+      # The task receives the tenant context asynchronously; this test's Fake
+      # adapter ownership is not safely observable without changing runtime
+      # dispatch. Registry: task-supervisor background-settle exception.
       Process.sleep(150)
 
-      # Check the delivery was updated to :sent
       reloaded = TestRepo.get!(Delivery, delivery.id)
-      # The task may have completed or still be running; accept either
       assert reloaded.status in [:queued, :sent]
     end
 
@@ -131,7 +131,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       {:ok, delivery} = Outbound.deliver_later(msg)
       delivery_id = delivery.id
 
-      Process.sleep(150)
+      assert_receive {:mail, _message}
 
       [record] = Mailglass.Adapters.Fake.deliveries()
       token = unsubscribe_token!(record.message)
@@ -179,7 +179,6 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       assert delivery.adapter_ref == "route_a"
 
       Application.put_env(:mailglass, :tenancy, Mailglass.TestTenancy.RouteB)
-      Process.sleep(150)
 
       assert_receive {:adapter_route, :route_a, ^delivery_id, "test-tenant"}
       reloaded = TestRepo.get!(Delivery, delivery.id)
