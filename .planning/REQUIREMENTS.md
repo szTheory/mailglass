@@ -41,7 +41,7 @@
 - [ ] **DATA-02**: Fingerprint and suppression lookups use their indexed columns without function-casting the indexed side.
 - [ ] **DATA-03**: Suppression stores may implement positional bulk lookup; stores without it retain a compatible chunked fallback.
 - [ ] **DATA-04**: Batch delivery performs bounded suppression-query work without changing single-batch outcome semantics.
-- [ ] **DATA-05**: Suppression resync pages records, deduplicates keys, bulk-loads existing rows, and upserts in bounded chunks.
+- [x] **DATA-05**: Suppression resync pages records, deduplicates keys, bulk-loads existing rows, and upserts in bounded chunks.
 - [ ] **DATA-06**: Core and inbound retention prune in bounded `SKIP LOCKED` batches backed by matching age/source indexes.
 - [ ] **DATA-07**: Webhook batches bulk-load delivery state and reuse parsed JSON while preserving the exact raw signed body.
 - [ ] **DATA-08**: Future populated-table migrations follow expand/contract, bounded lock/statement timeouts, and concurrent-index policy without modifying shipped migrations.
@@ -117,7 +117,7 @@
 | DATA-02 | Phase 157 | Pending |
 | DATA-03 | Phase 157 | Pending |
 | DATA-04 | Phase 157 | Pending |
-| DATA-05 | Phase 157 | Pending |
+| DATA-05 | Phase 157 | Complete |
 | DATA-06 | Phase 157 | Pending |
 | DATA-07 | Phase 157 | Pending |
 | DATA-08 | Phase 157 | Pending |

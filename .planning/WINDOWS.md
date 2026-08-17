@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 8
+open_count: 9
 waived_count: 0
 fixed_count: 10
-total_count: 18
-last_updated: 2026-07-31T15:09:13.698Z
+total_count: 19
+last_updated: 2026-08-17T09:01:29.628Z
 ---
 
 # Broken Windows Ledger
@@ -33,6 +33,7 @@ last_updated: 2026-07-31T15:09:13.698Z
 | 16 | 143 | unmet-truth | config/test.exs | 19 | config :mailglass, tenancy: is pinned to Mailglass.Tenancy.SingleTenant at boot, but mid-suite the key holds nil. Found when a mechanism-test precondition asserting get_env(:mailglass, :tenancy) != nil failed inside the full suite while passing standalone. Origin is the presence-blind restore chain: once any module leaves :tenancy absent or nil, every later 'prior_tenancy = get_env(...); put_env(..., prior_tenancy)' site propagates the nil forward. Benign today only because Mailglass.Tenancy.resolver/0 maps nil back to SingleTenant; it is still undetected global-state drift on a key config/test.exs pins, and it is what makes any get_env-with-default read of :tenancy resolve to nil instead of its default. | open |  | 2026-07-30T21:11:46.106Z |  |
 | 17 | 143 | unrun-verify | .github/workflows/publish-hex.yml |  | gate-ci-green's advisory-matrix dispatch-and-poll has never executed on a real release SHA; only a live release (or plan 143-14's rehearsal) can confirm the tag-ref dispatch, the shared 30-minute deadline, and the fan-out settle behave as designed | open |  | 2026-07-31T15:09:13.616Z |  |
 | 18 | 143 | lint-warning | test/support/suite_floor.ex |  | SuiteFloor executed_nudge fires on the gating toolchain: 1630 executed vs pinned floor 1575 on the mailglass axis, 55 above the 40-test nudge margin. Advisory only, halts nothing. Already over margin on main before this plan (run 30635221221 showed 1623 vs 1576). Re-pinning must be measured from a real CI run per 143-10's protocol, not locally | open |  | 2026-07-31T15:09:13.698Z |  |
+| 19 | 157 | deviation | lib/mailglass/suppression_store/ecto.ex | 205 | Nil stream bulk predicate bug auto-fixed during Plan 157-07. | open |  | 2026-08-17T09:01:29.628Z |  |
 
 ````json
 [
@@ -250,6 +251,18 @@ last_updated: 2026-07-31T15:09:13.698Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-07-31T15:09:13.698Z",
+    "resolved_at": null
+  },
+  {
+    "id": 19,
+    "kind": "deviation",
+    "phase": "157",
+    "file": "lib/mailglass/suppression_store/ecto.ex",
+    "line": 205,
+    "description": "Nil stream bulk predicate bug auto-fixed during Plan 157-07.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-17T09:01:29.628Z",
     "resolved_at": null
   }
 ]
