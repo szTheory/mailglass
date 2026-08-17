@@ -19,6 +19,19 @@ defmodule MailglassInbound.MigrationsTest do
   # Distinct prefix — non-public so CREATE/DROP SCHEMA lifecycle is exercised;
   # avoids clashing with the suite's "public" schema or any future "mailglass" default.
   @prefix "inb_mig_test"
+  @shared_prefix "inb_shared_mig_test"
+
+  @core_relations [
+    "mailglass_deliveries",
+    "mailglass_events",
+    "mailglass_suppressions",
+    "mailglass_webhook_events"
+  ]
+  @inbound_relations [
+    "mailglass_inbound_records",
+    "mailglass_inbound_evidence",
+    "mailglass_inbound_replay_runs"
+  ]
 
   # ---------------------------------------------------------------------------
   # Inline migration modules driven through Ecto.Migrator so the
@@ -71,6 +84,58 @@ defmodule MailglassInbound.MigrationsTest do
     def down, do: :ok
   end
 
+  defmodule SharedCoreUpMigration do
+    @moduledoc false
+    use Ecto.Migration
+
+    def up do
+      Mailglass.Migration.up(prefix: "inb_shared_mig_test", repo: MailglassInbound.TestRepo)
+    end
+
+    def down, do: :ok
+  end
+
+  defmodule SharedInboundUpMigration do
+    @moduledoc false
+    use Ecto.Migration
+
+    def up do
+      MailglassInbound.Migration.up(prefix: "inb_shared_mig_test", repo: MailglassInbound.TestRepo)
+    end
+
+    def down, do: :ok
+  end
+
+  defmodule SharedCoreDownDriver do
+    @moduledoc false
+    use Ecto.Migration
+
+    def up do
+      Mailglass.Migration.down(
+        prefix: "inb_shared_mig_test",
+        repo: MailglassInbound.TestRepo,
+        version: 0
+      )
+    end
+
+    def down, do: :ok
+  end
+
+  defmodule SharedInboundDownDriver do
+    @moduledoc false
+    use Ecto.Migration
+
+    def up do
+      MailglassInbound.Migration.down(
+        prefix: "inb_shared_mig_test",
+        repo: MailglassInbound.TestRepo,
+        version: 0
+      )
+    end
+
+    def down, do: :ok
+  end
+
   # ---------------------------------------------------------------------------
   # Setup / teardown
   # ---------------------------------------------------------------------------
@@ -85,14 +150,79 @@ defmodule MailglassInbound.MigrationsTest do
     # and the schema_migrations row.
     version = System.unique_integer([:positive, :monotonic]) + 80_000_000_000_000
 
+    _ =
+      TestRepo.query(
+        "DELETE FROM public.schema_migrations WHERE version >= 80000000000000 AND version < 90000000000000"
+      )
+
     on_exit(fn ->
       _ = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
+      _ = TestRepo.query("DROP SCHEMA IF EXISTS #{@shared_prefix} CASCADE")
       _ = TestRepo.query("DELETE FROM public.schema_migrations WHERE version = $1", [version])
+
+      _ =
+        TestRepo.query(
+          "DELETE FROM public.schema_migrations WHERE version >= 80000000000000 AND version < 90000000000000"
+        )
 
       Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
     {:ok, version: version}
+  end
+
+  describe "shared package-managed schema rollback" do
+    test "core-first rollback preserves inbound relations and removes the empty schema last", %{
+      version: version
+    } do
+      install_shared_packages!(version)
+
+      migrate!(SharedCoreDownDriver, migration_version())
+
+      assert_relations_absent!(@core_relations)
+      assert_relations_present!(@inbound_relations)
+      assert schema_exists?(@shared_prefix)
+
+      migrate!(SharedInboundDownDriver, migration_version())
+
+      assert_relations_absent!(@core_relations ++ @inbound_relations)
+      refute schema_exists?(@shared_prefix)
+    end
+
+    test "inbound-first rollback preserves core relations and removes the empty schema last", %{
+      version: version
+    } do
+      install_shared_packages!(version)
+
+      migrate!(SharedInboundDownDriver, migration_version())
+
+      assert_relations_absent!(@inbound_relations)
+      assert_relations_present!(@core_relations)
+      assert schema_exists?(@shared_prefix)
+
+      migrate!(SharedCoreDownDriver, migration_version())
+
+      assert_relations_absent!(@core_relations ++ @inbound_relations)
+      refute schema_exists?(@shared_prefix)
+    end
+
+    test "host-owned relations keep the shared schema after both package rollbacks", %{
+      version: version
+    } do
+      install_shared_packages!(version)
+      {:ok, _} = TestRepo.query("CREATE TABLE #{@shared_prefix}.host_sentinel (id integer)")
+
+      migrate!(SharedInboundDownDriver, migration_version())
+      assert_relations_absent!(@inbound_relations)
+      assert_relations_present!(@core_relations)
+      assert table_exists_in_schema?(@shared_prefix, "host_sentinel")
+      assert schema_exists?(@shared_prefix)
+
+      migrate!(SharedCoreDownDriver, migration_version())
+      assert_relations_absent!(@core_relations ++ @inbound_relations)
+      assert table_exists_in_schema?(@shared_prefix, "host_sentinel")
+      assert schema_exists?(@shared_prefix)
+    end
   end
 
   # ---------------------------------------------------------------------------
@@ -334,6 +464,31 @@ defmodule MailglassInbound.MigrationsTest do
       TestRepo.query("SELECT 1 FROM pg_namespace WHERE nspname = $1", [prefix])
 
     rows != []
+  end
+
+  defp install_shared_packages!(version) do
+    migrate!(SharedCoreUpMigration, version)
+    migrate!(SharedInboundUpMigration, migration_version())
+    assert_relations_present!(@core_relations ++ @inbound_relations)
+  end
+
+  defp migrate!(migration, version) do
+    {:ok, _, _} =
+      Ecto.Migrator.with_repo(TestRepo, fn repo ->
+        Ecto.Migrator.up(repo, version, migration, log: false)
+      end)
+  end
+
+  defp migration_version do
+    System.unique_integer([:positive, :monotonic]) + 80_000_000_000_000
+  end
+
+  defp assert_relations_present!(relations) do
+    Enum.each(relations, &assert(table_exists_in_schema?(@shared_prefix, &1)))
+  end
+
+  defp assert_relations_absent!(relations) do
+    Enum.each(relations, &refute(table_exists_in_schema?(@shared_prefix, &1)))
   end
 
   defp table_exists_in_schema?(prefix, table_name) do
