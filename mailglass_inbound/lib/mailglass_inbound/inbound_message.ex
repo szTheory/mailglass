@@ -52,7 +52,7 @@ defmodule MailglassInbound.InboundMessage do
 
   alias MailglassInbound.InboundMessage.Signals
 
-  @type provider :: :postmark | :sendgrid | String.t()
+  @type provider :: :postmark | :sendgrid | :mailgun | :ses | String.t()
 
   @type address :: %{
           required(:address) => String.t(),

@@ -78,13 +78,6 @@ defmodule MailglassInbound.MIME do
 
   @default_max_depth 100
 
-  # Dialyzer cannot infer a successful return from the optional Erlang
-  # `:mimemail` decoder. The runtime gateway checks availability and converts
-  # all decoder failures to MIMEError values; keep that third-party boundary
-  # narrow rather than weakening the public parse contract.
-  @dialyzer {:nowarn_function,
-             [parse: 1, parse: 2, decode_and_build: 2, to_internal: 2, collect_leaves: 3]}
-
   @typedoc "A single decoded leaf or container part in the internal representation."
   @type part :: %{
           type: binary(),
