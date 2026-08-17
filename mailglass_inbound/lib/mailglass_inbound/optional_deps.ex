@@ -105,7 +105,7 @@ defmodule MailglassInbound.OptionalDeps.ExAwsS3 do
   inbound code are forbidden so `mix compile --no-optional-deps
   --warnings-as-errors` stays green.
 
-  ## get_object/2 — never raises, gates on `available?/0`
+  ## head_object/2 and get_object/2 — never raise, gate on `available?/0`
 
   `get_object/2` short-circuits on `available?/0` (the documented normal
   degraded path) and only then wraps `ExAws.S3.get_object/2 |> ExAws.request/1`
@@ -158,6 +158,21 @@ defmodule MailglassInbound.OptionalDeps.ExAwsS3 do
     else
       # WR-06: the normal degraded path. Tag the absent dep distinctly so the
       # retry layer classifies it as non-retryable (config error, not transient).
+      {:error, {:s3_fetch_failed, :ex_aws_unavailable}}
+    end
+  rescue
+    e -> {:error, {:error, e}}
+  catch
+    :exit, reason -> {:error, {:exit, reason}}
+  end
+
+  @doc "Fetches S3 object metadata without downloading its body, never raising."
+  @doc since: "2.1.1"
+  @spec head_object(String.t(), String.t()) :: {:ok, map()} | {:error, term()}
+  def head_object(bucket, key) when is_binary(bucket) and is_binary(key) do
+    if available?() do
+      ExAws.S3.head_object(bucket, key) |> ExAws.request()
+    else
       {:error, {:s3_fetch_failed, :ex_aws_unavailable}}
     end
   rescue

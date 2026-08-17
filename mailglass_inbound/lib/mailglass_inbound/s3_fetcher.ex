@@ -12,6 +12,15 @@ defmodule MailglassInbound.S3Fetcher do
   # are built in this plan.
 
   @doc """
+  Fetch object metadata for `key` in `bucket` without materializing its body.
+
+  Returns `{:ok, %{content_length: non_neg_integer()}}` on success or
+  `{:error, term()}` on failure.
+  """
+  @callback head(bucket :: String.t(), key :: String.t(), opts :: keyword()) ::
+              {:ok, %{content_length: non_neg_integer()}} | {:error, term()}
+
+  @doc """
   Fetch the raw object bytes for `key` in `bucket`.
 
   Returns `{:ok, binary()}` on success or `{:error, term()}` on failure (the

@@ -54,6 +54,44 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     assert S3Fetcher.Fake.call_count(@bucket, "ses-msg-1") == 1
   end
 
+  test "rejects an S3 object larger than the default limit before body retrieval", %{
+    private_key: pk
+  } do
+    max_bytes = 40 * 1024 * 1024
+    S3Fetcher.Fake.put_head(@bucket, "ses-oversized", max_bytes + 1)
+    raw = signed_s3_notification(pk, "ses-oversized")
+
+    err =
+      assert_raise S3FetchError, fn ->
+        raw |> ses_request() |> verified_request!()
+      end
+
+    assert err.type == :s3_fetch_failed
+    assert S3Fetcher.Fake.call_count(@bucket, "ses-oversized") == 0
+  end
+
+  test "accepts an S3 object exactly at a configured byte limit", %{private_key: pk} do
+    raw_mime = "1234"
+    S3Fetcher.Fake.put(@bucket, "ses-exact-limit", raw_mime)
+    raw = signed_s3_notification(pk, "ses-exact-limit")
+    config = Map.put(ses_config(), :s3_max_bytes, byte_size(raw_mime))
+
+    {:ok, verified} = SES.verify!(ses_request(raw), config)
+    assert %{raw_mime: ^raw_mime} = SES.resolve_content!(verified, config)
+  end
+
+  test "rejects a dishonest S3 adapter body above the configured byte limit", %{private_key: pk} do
+    S3Fetcher.Fake.put_head(@bucket, "ses-dishonest", 4)
+    S3Fetcher.Fake.put(@bucket, "ses-dishonest", "12345")
+    raw = signed_s3_notification(pk, "ses-dishonest")
+    config = Map.put(ses_config(), :s3_max_bytes, 4)
+
+    {:ok, verified} = SES.verify!(ses_request(raw), config)
+
+    err = assert_raise S3FetchError, fn -> SES.resolve_content!(verified, config) end
+    assert err.type == :s3_fetch_failed
+  end
+
   test "forged SNS signature raises MailglassInbound.SignatureError :bad_signature" do
     {_pub, other_private} = generate_sns_keypair()
     raw = signed_s3_notification(other_private, "ses-msg-1")
