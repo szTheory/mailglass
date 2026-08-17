@@ -77,14 +77,16 @@ if Code.ensure_loaded?(Oban.Worker) do
     end
 
     @doc """
-    Run the prune sweep. Returns `{:ok, %{succeeded: n, dead: m}}`.
+    Run the prune sweep. Returns `{:ok, %{succeeded: n, dead: m}}`, or
+    `{:ok, :locked_out}` when another sweep holds the advisory lock.
 
     Exposed as a public function so `mix mailglass.webhooks.prune`
     invokes the same code path, and so ops engineers can trigger an
     out-of-band prune without waiting for the next cron tick.
     """
     @doc since: "0.1.0"
-    @spec prune() :: {:ok, %{succeeded: non_neg_integer(), dead: non_neg_integer()}}
+    @spec prune() ::
+            {:ok, %{succeeded: non_neg_integer(), dead: non_neg_integer()}} | {:ok, :locked_out}
     @batch_size 1_000
     @prune_lock_key 6_642_484_338_949_089_810
 
