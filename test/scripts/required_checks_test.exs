@@ -171,6 +171,16 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     end)
   end
 
+  test "Installer Host Smoke retains its public identity and executes both adopter proofs" do
+    installer_job = extract_job_block(File.read!(@ci_yml_path), "installer_host_smoke")
+
+    assert installer_job != "", "installer_host_smoke job parser returned an empty block"
+    assert parse_job_display_name(installer_job) == "Installer Host Smoke"
+    assert String.contains?(installer_job, "bash scripts/consumer_install_smoke.sh")
+    assert String.contains?(installer_job, "bash scripts/generated_ecto_host_proof.sh")
+    assert String.contains?(installer_job, "postgres:16-alpine")
+  end
+
   # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------
