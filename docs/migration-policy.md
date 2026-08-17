@@ -42,7 +42,10 @@ existing file.
 The generated source is intentionally non-transactional because PostgreSQL forbids concurrent index
 creation inside a transaction. Each package facade selects concurrent DDL only when the generated
 wrapper supplies `non_transactional_wrapper: true`; direct or historical wrappers keep the
-transactional compatibility path.
+transactional compatibility path. The nontransactional package path pins one Repo connection for its
+complete DDL sequence, applies finite session timeouts there, and restores that connection's exact
+prior timeout values even when a statement fails. Do not issue separate unscoped `SET` and `RESET`
+queries through the pool.
 
 ## Retry and invalid-index recovery
 
