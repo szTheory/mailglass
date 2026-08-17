@@ -461,6 +461,48 @@ defmodule Mailglass.MigrationTest do
     end
   end
 
+  describe "catalog version classification" do
+    alias Mailglass.Migrations.Postgres, as: MigrationRunner
+
+    test "returns zero only when the core anchor relation is absent" do
+      assert MigrationRunner.migrated_version(
+               prefix: "catalog_fixture",
+               query_result: {:ok, %{rows: []}}
+             ) == 0
+    end
+
+    test "returns a complete numeric comment inside the supported range" do
+      assert MigrationRunner.migrated_version(
+               prefix: "catalog_fixture",
+               query_result: {:ok, %{rows: [["3"]]}}
+             ) == 3
+    end
+
+    for {name, result, reason} <- [
+          {"a missing comment", {:ok, %{rows: [[nil]]}}, :missing_comment},
+          {"a blank comment", {:ok, %{rows: [["  "]]}}, :invalid_comment},
+          {"a non-numeric comment", {:ok, %{rows: [["3oops"]]}}, :invalid_comment},
+          {"multiple catalog rows", {:ok, %{rows: [["1"], ["2"]]}}, :unexpected_result},
+          {"an impossible version", {:ok, %{rows: [["0"]]}}, :out_of_range},
+          {"a query error", {:error, :unavailable}, :query_failed}
+        ] do
+      test "raises a typed error for #{name}" do
+        assert_raise Mailglass.MigrationVersionError, fn ->
+          MigrationRunner.migrated_version(prefix: "catalog_fixture", query_result: unquote(Macro.escape(result)))
+        end
+
+        assert %Mailglass.MigrationVersionError{reason: unquote(reason), package: :mailglass,
+                                                prefix: "catalog_fixture"} =
+                 catch_error(
+                   MigrationRunner.migrated_version(
+                     prefix: "catalog_fixture",
+                     query_result: unquote(Macro.escape(result))
+                   )
+                 )
+      end
+    end
+  end
+
   defp schema_exists?(prefix) do
     {:ok, %{rows: rows}} =
       TestRepo.query("SELECT 1 FROM pg_namespace WHERE nspname = $1", [prefix])
