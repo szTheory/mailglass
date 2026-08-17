@@ -32,6 +32,7 @@
 - ✅ **v2.3 B2C First-Adopter Readiness** — Phases 145-148 (shipped 2026-08-02) — [archive](milestones/v2.3-ROADMAP.md)
 - ✅ **v2.4 Outbound First-Adopter Correctness** — Phases 149-153 (shipped 2026-08-04) — [archive](milestones/v2.4-ROADMAP.md)
 - ✅ **v2.5 B2C Alpha Adoption Certification** — Phase 154 (shipped 2026-08-04) — [archive](milestones/v2.5-ROADMAP.md)
+- 📋 **v2.6 Engineering Quality Ratchet** — Phases 155-160 (planned)
 
 ## Phases
 
@@ -46,4 +47,99 @@
 
 </details>
 
-No active milestone. Start the next milestone with `$gsd-new-milestone`.
+### 📋 v2.6 Engineering Quality Ratchet (Planned)
+
+**Milestone Goal:** Raise the internal engineering bar while proving the generated first-adopter path, runtime correctness, data safety, architecture boundaries, and merge/release signals are honest. All changes remain additive-only; admin/operator behavior remains untouched.
+
+- [ ] **Phase 155: Restore Adopter and CI Truth** - Make migration generation and the CI signal that proves it trustworthy for real Ecto hosts.
+- [ ] **Phase 156: Delivery Correctness and Bounded Execution** - Make outbound execution atomic, honest, privacy-safe, and resource-bounded.
+- [ ] **Phase 157: Inbound, Database, and Lifecycle Hardening** - Bound untrusted inbound work and make data access, migration, webhook, and retention paths safe at scale.
+- [ ] **Phase 158: Simplify Architecture Without Breaking Adopters** - Clarify runtime and package ownership while preserving stable v2 entry points.
+- [ ] **Phase 159: Raise and Simplify Engineering Gates** - Make deterministic engineering proof comprehensive, repeatable, and genuinely merge-gating.
+- [ ] **Phase 160: Certification, Documentation, and Release** - Certify the full adopter journey, reconcile release truth, and publish the additive package family.
+
+## Phase Details
+
+### Phase 155: Restore Adopter and CI Truth
+**Goal**: Adopters can generate, upgrade, repair, and roll back the real package migrations safely, and code changes cannot claim passing proof when that required path was skipped.
+**Depends on**: Nothing (first phase)
+**Requirements**: ADOPT-01, ADOPT-02, ADOPT-03, ADOPT-04, ADOPT-05, ADOPT-06, QUAL-02
+**Success Criteria** (what must be TRUE):
+  1. A generated Ecto host runs the documented core and inbound migration wrappers for both applying and rolling back schema changes.
+  2. An adopter can select a repository explicitly, while automatic selection works only when one configured Ecto repository makes that choice unambiguous.
+  3. An upgrade generates a new timestamped migration, accepts only a valid older offline version, and rolls back to the prior package schema without changing applied migrations.
+  4. A legacy toy migration is detected with a fail-closed, non-destructive repair route, while malformed metadata and query failures remain distinguishable from an absent migration anchor.
+  5. A code change cannot receive a passing protected merge signal when change detection fails or a required code lane was skipped.
+**Plans**: TBD
+
+### Phase 156: Delivery Correctness and Bounded Execution
+**Goal**: Outbound delivery remains accurate, atomic, privacy-safe, and bounded under concurrency, provider failures, and saturated local execution.
+**Depends on**: Phase 155
+**Requirements**: EXEC-01, EXEC-02, EXEC-03, EXEC-04, EXEC-05, EXEC-06, EXEC-07, EXEC-08
+**Success Criteria** (what must be TRUE):
+  1. Concurrent core and inbound rate-limit activity never grants more capacity than configured, retains fractional elapsed time, and evicts or rejects excess attacker-controlled keys predictably.
+  2. A durable batch either atomically records its delivery state, events, private payloads, and job or reports failure without leaving queued work stranded.
+  3. Saturated task-supervisor fallback reports that it could not queue work instead of claiming delivery was queued.
+  4. Provider failures retry only for the defined transient outcomes, while permanent outcomes are discarded and delivery errors never expose recipient, message, or provider-body content.
+  5. Tracking requests remain fail-open to callers while telemetry truthfully distinguishes successful from failed ledger writes, and persisted closed-set values do not create arbitrary atoms.
+**Plans**: TBD
+
+### Phase 157: Inbound, Database, and Lifecycle Hardening
+**Goal**: Inbound processing and persistence remain secure, bounded, replayable, and efficient as untrusted traffic and stored data grow.
+**Depends on**: Phase 156
+**Requirements**: INB-01, INB-02, INB-03, INB-04, INB-05, INB-06, INB-07, DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07, DATA-08
+**Success Criteria** (what must be TRUE):
+  1. An inbound request cannot cause unbounded certificate, cache, rate-limit, macro-evaluation, or S3 work before it is verified, and oversized S3 objects are rejected before full download.
+  2. Inbound retries distinguish transient from permanent faults; an acknowledged permanent failure retains durable replayable evidence instead of losing the message.
+  3. Verified inbound requests flow through one explicit value and pipeline, with public provider router declarations accepting only validated literal configuration.
+  4. Existing installations transition MIME deduplication safely, while batch delivery, suppression resync, and lookup paths perform bounded indexed and bulk database work without changing outcomes.
+  5. Retention, webhook handling, and future populated-table migrations run in bounded, index-backed batches while preserving raw signed bodies and immutable shipped migration history.
+**Plans**: TBD
+
+### Phase 158: Simplify Architecture Without Breaking Adopters
+**Goal**: Core and inbound have explicit, cycle-free ownership and narrow integration seams while existing v2 public façades continue to work.
+**Depends on**: Phase 157
+**Requirements**: ARCH-01, ARCH-02, ARCH-03, ARCH-04, ARCH-05, ARCH-06
+**Success Criteria** (what must be TRUE):
+  1. Core and inbound compile without cycles, and the repository prevents a new compile-connected cycle from reaching users.
+  2. Existing application configuration continues to work while callers can use one validated additive runtime value.
+  3. Core and inbound integrate through explicit capability ports rather than broad root-implementation dependencies.
+  4. Existing Outbound, Config, and inbound Plug entry points preserve their public contracts while their distinct responsibilities are independently owned behind them.
+  5. Shared business behavior has one clear owner without merging the independently released core and inbound packages.
+**Plans**: TBD
+
+### Phase 159: Raise and Simplify Engineering Gates
+**Goal**: Maintainers receive one deterministic, fail-closed merge signal backed by complete quality checks and maintainable validation infrastructure.
+**Depends on**: Phase 158
+**Requirements**: QUAL-01, QUAL-03, QUAL-04, QUAL-05, QUAL-06, QUAL-07, QUAL-08, QUAL-09, QUAL-10, QUAL-11
+**Success Criteria** (what must be TRUE):
+  1. A code merge is blocked unless formatted core and inbound code, deterministic suites, support contracts, Mix tasks, static analysis, documentation, audits, trust checks, and installer smoke all pass.
+  2. Advisory evidence remains visibly non-gating and cannot be mistaken for merge proof, while required checks run with locked dependencies, compatible caches, and exact toolchains.
+  3. Core and inbound test proof maintains its measured coverage floor and critical-path contracts; shipped code has no ignored warnings and inbound passes Dialyzer.
+  4. New complexity exceptions cannot enter the repository, existing exceptions expire downward, and skipped or flaky tests have accountable, unexpired records and deterministic acknowledgements.
+  5. Repeated setup and release-policy logic is centralized and tested; dependency, Docker, timeout, and workflow-permission rules are consistently enforced across sibling packages.
+**Plans**: TBD
+
+### Phase 160: Certification, Documentation, and Release
+**Goal**: A real generated host and protected publication prove the additive v2.6 package family is accurate, documented, and adoptable from Hex.
+**Depends on**: Phase 159
+**Requirements**: REL-01, REL-02, REL-03, REL-04
+**Success Criteria** (what must be TRUE):
+  1. A generated Phoenix/Ecto/Postgres host proves fresh install, durable send/queue behavior, upgrades and rollbacks, idempotent reruns, custom modules, multiple repositories, and non-public schema prefixes.
+  2. Current v2 documentation accurately identifies additive interfaces, active deprecations, and v3 removal targets without stale milestone claims.
+  3. Repository manifests match live Hex versions before a protected release candidate is created.
+  4. The protected pipeline publishes additive core, admin, and inbound releases, and an exact-Hex host completes post-publish adoption proof with existing operator behavior preserved.
+**Plans**: TBD
+
+## Progress
+
+**Execution Order:** 155 → 156 → 157 → 158 → 159 → 160
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 155. Restore Adopter and CI Truth | 0/TBD | Not started | - |
+| 156. Delivery Correctness and Bounded Execution | 0/TBD | Not started | - |
+| 157. Inbound, Database, and Lifecycle Hardening | 0/TBD | Not started | - |
+| 158. Simplify Architecture Without Breaking Adopters | 0/TBD | Not started | - |
+| 159. Raise and Simplify Engineering Gates | 0/TBD | Not started | - |
+| 160. Certification, Documentation, and Release | 0/TBD | Not started | - |

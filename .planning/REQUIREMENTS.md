@@ -89,7 +89,58 @@
 
 ## Traceability
 
-Populated during roadmap creation. Every v2.6 requirement must map to exactly one phase.
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| ADOPT-01 | Phase 155 | Pending |
+| ADOPT-02 | Phase 155 | Pending |
+| ADOPT-03 | Phase 155 | Pending |
+| ADOPT-04 | Phase 155 | Pending |
+| ADOPT-05 | Phase 155 | Pending |
+| ADOPT-06 | Phase 155 | Pending |
+| QUAL-02 | Phase 155 | Pending |
+| EXEC-01 | Phase 156 | Pending |
+| EXEC-02 | Phase 156 | Pending |
+| EXEC-03 | Phase 156 | Pending |
+| EXEC-04 | Phase 156 | Pending |
+| EXEC-05 | Phase 156 | Pending |
+| EXEC-06 | Phase 156 | Pending |
+| EXEC-07 | Phase 156 | Pending |
+| EXEC-08 | Phase 156 | Pending |
+| INB-01 | Phase 157 | Pending |
+| INB-02 | Phase 157 | Pending |
+| INB-03 | Phase 157 | Pending |
+| INB-04 | Phase 157 | Pending |
+| INB-05 | Phase 157 | Pending |
+| INB-06 | Phase 157 | Pending |
+| INB-07 | Phase 157 | Pending |
+| DATA-01 | Phase 157 | Pending |
+| DATA-02 | Phase 157 | Pending |
+| DATA-03 | Phase 157 | Pending |
+| DATA-04 | Phase 157 | Pending |
+| DATA-05 | Phase 157 | Pending |
+| DATA-06 | Phase 157 | Pending |
+| DATA-07 | Phase 157 | Pending |
+| DATA-08 | Phase 157 | Pending |
+| ARCH-01 | Phase 158 | Pending |
+| ARCH-02 | Phase 158 | Pending |
+| ARCH-03 | Phase 158 | Pending |
+| ARCH-04 | Phase 158 | Pending |
+| ARCH-05 | Phase 158 | Pending |
+| ARCH-06 | Phase 158 | Pending |
+| QUAL-01 | Phase 159 | Pending |
+| QUAL-03 | Phase 159 | Pending |
+| QUAL-04 | Phase 159 | Pending |
+| QUAL-05 | Phase 159 | Pending |
+| QUAL-06 | Phase 159 | Pending |
+| QUAL-07 | Phase 159 | Pending |
+| QUAL-08 | Phase 159 | Pending |
+| QUAL-09 | Phase 159 | Pending |
+| QUAL-10 | Phase 159 | Pending |
+| QUAL-11 | Phase 159 | Pending |
+| REL-01 | Phase 160 | Pending |
+| REL-02 | Phase 160 | Pending |
+| REL-03 | Phase 160 | Pending |
+| REL-04 | Phase 160 | Pending |
 
 ---
 *Requirements defined: 2026-08-16*
