@@ -74,6 +74,12 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
     def process(_message), do: :accept
   end
 
+  defmodule TestRouter do
+    use MailglassInbound.Router
+
+    route(TestMailbox, recipient: "support@example.com")
+  end
+
   setup do
     prior_schema = Application.fetch_env(:mailglass_inbound, :schema)
     prior_shell = Mix.shell()
@@ -135,7 +141,8 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
                  "mailglass_tenant_id" => "tenant-a",
                  "mailbox" => Atom.to_string(TestMailbox)
                },
-               repo: CaptureRepo
+               repo: CaptureRepo,
+               router: TestRouter
              )
 
     assert_prefixed_calls([:one, :one])

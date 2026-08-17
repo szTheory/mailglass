@@ -87,7 +87,7 @@ defmodule MailglassInbound.Execution do
          {:ok, provider} <- decode_provider(record.provider),
          %InboundEvidence{} = evidence <-
            load_evidence(repo, inbound_evidence_id, inbound_record_id, tenant_id),
-         {:ok, route} <- decode_route(route_status, Map.get(job_args, "mailbox")) do
+         {:ok, route} <- validate_job_route(job_args, opts) do
       {:ok,
        %{
          status: :inserted,
@@ -104,6 +104,26 @@ defmodule MailglassInbound.Execution do
   end
 
   def load(_job_args, _opts), do: {:error, :invalid_job_args}
+
+  @doc false
+  @spec validate_job_route(map(), keyword()) :: {:ok, map()} | {:error, :invalid_job_args}
+  def validate_job_route(%{"route_status" => "no_match", "mailbox" => mailbox}, _opts)
+      when mailbox in [nil, ""],
+      do: {:ok, %{status: :no_match}}
+
+  # Existing no-match jobs predate the explicit nil mailbox field.
+  def validate_job_route(%{"route_status" => "no_match"}, _opts),
+    do: {:ok, %{status: :no_match}}
+
+  def validate_job_route(%{"route_status" => "matched", "mailbox" => mailbox}, opts)
+      when is_binary(mailbox) and mailbox != "" and is_list(opts) do
+    case trusted_mailbox(mailbox, opts) do
+      nil -> {:error, :invalid_job_args}
+      module -> {:ok, %{status: :matched, mailbox: module}}
+    end
+  end
+
+  def validate_job_route(_job_args, _opts), do: {:error, :invalid_job_args}
 
   defp load_record(repo, inbound_record_id, tenant_id) do
     from(record in InboundRecord,
@@ -311,20 +331,27 @@ defmodule MailglassInbound.Execution do
     |> Map.new()
   end
 
-  defp decode_route("no_match", _mailbox), do: {:ok, %{status: :no_match}}
+  # Oban arguments are persisted JSON, not authority to call an arbitrary loaded
+  # module. The configured router is already the adopter-owned source of mailbox
+  # authority; use its compiled route data as a finite allowlist and compare names
+  # as strings so decoding never allocates (or resolves) an atom from job data.
+  defp trusted_mailbox(mailbox, opts) do
+    router = Keyword.get(opts, :router, Application.get_env(:mailglass_inbound, :router))
 
-  defp decode_route("matched", mailbox) when is_binary(mailbox) and mailbox != "" do
-    {:ok, %{status: :matched, mailbox: mailbox_module(mailbox)}}
-  rescue
-    ArgumentError -> {:error, :invalid_job_args}
+    with router when is_atom(router) <- router,
+         true <- Code.ensure_loaded?(router),
+         true <- function_exported?(router, :__mailglass_inbound_routes__, 0) do
+      Enum.find_value(router.__mailglass_inbound_routes__(), fn
+        %{mailbox: module} when is_atom(module) ->
+          if Atom.to_string(module) == mailbox, do: module
+
+        _route ->
+          nil
+      end)
+    else
+      _ -> nil
+    end
   end
-
-  defp decode_route(_route_status, _mailbox), do: {:error, :invalid_job_args}
-
-  defp mailbox_module("Elixir." <> _rest = mailbox), do: String.to_existing_atom(mailbox)
-
-  defp mailbox_module(mailbox) when is_binary(mailbox),
-    do: String.to_existing_atom("Elixir." <> mailbox)
 
   defp route_status(%{status: status}) when is_atom(status), do: Atom.to_string(status)
   defp route_status(_route), do: "unknown"

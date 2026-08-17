@@ -34,6 +34,19 @@ defmodule MailglassInbound.WorkerTest do
     def process(_message), do: :accept
   end
 
+  defmodule Router do
+    use MailglassInbound.Router
+
+    route(AcceptMailbox, recipient: "support@example.com")
+  end
+
+  defmodule LoadedProcessSentinel do
+    def process(_message) do
+      send(Application.fetch_env!(:mailglass_inbound, :worker_test_pid), :sentinel_invoked)
+      :accept
+    end
+  end
+
   defmodule ExecutionSuccess do
     def execute(_persisted, opts \\ []) do
       Process.put(:mailglass_inbound_worker_execute_opts, opts)
@@ -71,6 +84,22 @@ defmodule MailglassInbound.WorkerTest do
       Process.put(:mailglass_inbound_worker_source_execute_opts, opts)
       {:ok, %{outcome: :accept}}
     end
+  end
+
+  setup do
+    prior_router = Application.get_env(:mailglass_inbound, :router)
+    Application.put_env(:mailglass_inbound, :router, Router)
+    Application.put_env(:mailglass_inbound, :worker_test_pid, self())
+
+    on_exit(fn ->
+      if is_nil(prior_router) do
+        Application.delete_env(:mailglass_inbound, :router)
+      else
+        Application.put_env(:mailglass_inbound, :router, prior_router)
+      end
+
+      Application.delete_env(:mailglass_inbound, :worker_test_pid)
+    end)
   end
 
   test "restores tenancy-safe worker args and returns :ok for successful executions" do
@@ -171,6 +200,21 @@ defmodule MailglassInbound.WorkerTest do
 
     refute Process.get(:mailglass_inbound_worker_source_load_args)
     refute Process.get(:mailglass_inbound_worker_source_execute_opts)
+  end
+
+  test "cancels a loaded non-mailbox process module before loader or mailbox invocation" do
+    sentinel_mailbox = Atom.to_string(LoadedProcessSentinel)
+
+    assert {:cancel, :permanent_failure} =
+             MailglassInbound.Execution.Worker.perform(
+               %Oban.Job{args: Map.put(job_with_source("fresh").args, "mailbox", sentinel_mailbox)},
+               loader: Loader,
+               execution: ExecutionSuccess
+             )
+
+    refute_received :sentinel_invoked
+    refute Process.get(:mailglass_inbound_worker_load_args)
+    refute Process.get(:mailglass_inbound_worker_execute_opts)
   end
 
   defp job_with_source(:absent) do
