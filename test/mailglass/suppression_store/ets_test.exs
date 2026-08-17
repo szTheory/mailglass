@@ -24,7 +24,13 @@ defmodule Mailglass.SuppressionStore.ETSTest do
     test "returns one result for every input position, including duplicates and mixed hits" do
       {:ok, _} =
         ETS.record(
-          %{tenant_id: "t1", address: "blocked@b.c", scope: :address, reason: :manual, source: "test"},
+          %{
+            tenant_id: "t1",
+            address: "blocked@b.c",
+            scope: :address,
+            reason: :manual,
+            source: "test"
+          },
           []
         )
 
