@@ -51,6 +51,7 @@ defmodule Mailglass.Migrations.LegacyToy do
     flush()
     Mailglass.Migration.up(opts)
     flush()
+    :ok
   end
 
   @spec repair_down(keyword()) :: :ok
