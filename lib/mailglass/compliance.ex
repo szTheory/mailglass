@@ -95,7 +95,7 @@ defmodule Mailglass.Compliance do
   @doc since: "0.2.0"
   @spec maybe_add_feedback_id(Mailglass.Message.t()) :: Mailglass.Message.t()
   def maybe_add_feedback_id(%Mailglass.Message{} = message) do
-    if feedback_id = Application.get_env(:mailglass, :feedback_id) do
+    if feedback_id = Mailglass.Config.feedback_id() do
       tenant_id = message.tenant_id || "default"
       mailable_str = extract_mailable_name(message.mailable)
       stream = message.stream

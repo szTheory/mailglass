@@ -312,6 +312,6 @@ defmodule Mailglass.Suppression.Resync do
   defp bounded_size(_size), do: @default_page_size
 
   defp suppression_store do
-    Application.get_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.Ecto)
+    Mailglass.Config.suppression_store()
   end
 end

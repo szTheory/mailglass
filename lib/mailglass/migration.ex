@@ -102,7 +102,7 @@ defmodule Mailglass.Migration do
   end
 
   defp resolve_repo(opts) do
-    case Keyword.get(opts, :repo) || Application.get_env(:mailglass, :repo) do
+    case Keyword.get(opts, :repo) || Mailglass.Config.repo() do
       nil -> raise Mailglass.ConfigError.new(:missing, context: %{key: :repo})
       mod when is_atom(mod) -> mod
     end

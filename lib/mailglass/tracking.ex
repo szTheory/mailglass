@@ -110,7 +110,7 @@ defmodule Mailglass.Tracking do
   @doc since: "0.1.0"
   @spec endpoint() :: module() | binary()
   def endpoint do
-    Application.get_env(:mailglass, :tracking, [])[:endpoint] ||
+    Mailglass.Config.tracking()[:endpoint] ||
       Application.get_env(:mailglass, :adapter_endpoint) ||
       raise Mailglass.ConfigError.new(:tracking_endpoint_missing,
               context: %{

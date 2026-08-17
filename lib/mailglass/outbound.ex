@@ -363,7 +363,7 @@ defmodule Mailglass.Outbound do
   defp enqueue_via_async_adapter(%Message{} = rendered, adapter_ref, opts) do
     async_adapter =
       Keyword.get(opts, :async_adapter) ||
-        Application.get_env(:mailglass, :async_adapter, :oban)
+        Mailglass.Config.async_adapter()
 
     cond do
       async_adapter == :task_supervisor ->
@@ -670,7 +670,7 @@ defmodule Mailglass.Outbound do
   defp batch_dispatch_mode(opts) do
     async_adapter =
       Keyword.get(opts, :async_adapter) ||
-        Application.get_env(:mailglass, :async_adapter, :oban)
+        Mailglass.Config.async_adapter()
 
     if async_adapter != :task_supervisor and Mailglass.OptionalDeps.Oban.available?(),
       do: :oban,

@@ -63,7 +63,7 @@ defmodule Mailglass.Tracking.ConfigValidator do
   end
 
   defp tracking_host_missing? do
-    case Application.get_env(:mailglass, :tracking, [])[:host] do
+    case Mailglass.Config.tracking()[:host] do
       nil -> true
       "" -> true
       _ -> false

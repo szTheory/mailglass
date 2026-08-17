@@ -98,7 +98,7 @@ defmodule Mailglass.Adapters.Swoosh do
         mod
 
       :error ->
-        case Application.get_env(:mailglass, :adapter) do
+        case Mailglass.Config.default_adapter() do
           {Mailglass.Adapters.Swoosh, kw} -> Keyword.fetch!(kw, :swoosh_adapter)
           _ -> raise Mailglass.ConfigError.new(:missing, context: %{key: :swoosh_adapter})
         end

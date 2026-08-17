@@ -384,7 +384,7 @@ defmodule Mailglass.Tenancy do
   end
 
   defp resolver do
-    case Application.get_env(:mailglass, :tenancy) do
+    case Mailglass.Config.tenancy() do
       nil -> Mailglass.Tenancy.SingleTenant
       mod when is_atom(mod) -> mod
     end

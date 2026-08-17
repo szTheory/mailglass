@@ -7,7 +7,7 @@ defmodule Mailglass.Clock do
   ## Three-tier resolution
 
   1. If `Process.get(:mailglass_clock_frozen_at)` is a `%DateTime{}` → return it.
-  2. Else if `Application.get_env(:mailglass, :clock)` is set → delegate to
+  2. Else if validated `config :mailglass, :clock` is set → delegate to
      that impl's `utc_now/0`.
   3. Else delegate to `Mailglass.Clock.System.utc_now/0` (wraps `DateTime.utc_now/0`).
 
@@ -30,7 +30,7 @@ defmodule Mailglass.Clock do
   end
 
   defp impl do
-    case Application.get_env(:mailglass, :clock) do
+    case Mailglass.Config.clock() do
       nil -> Mailglass.Clock.System
       mod when is_atom(mod) -> mod
     end

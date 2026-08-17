@@ -684,7 +684,7 @@ defmodule Mailglass.Config do
   @doc since: "0.4.0"
   @spec default_adapter() :: {module(), keyword()}
   def default_adapter do
-    Mailglass.Runtime.fetch!(:adapter)
+    Mailglass.Runtime.fetch_config!(:adapter)
   end
 
   @doc """
@@ -693,7 +693,7 @@ defmodule Mailglass.Config do
   @doc since: "0.4.0"
   @spec adapters() :: %{optional(atom() | String.t()) => {module(), keyword()}}
   def adapters do
-    Mailglass.Runtime.fetch!(:adapters)
+    Mailglass.Runtime.fetch_config!(:adapters)
     |> Enum.into(%{})
   end
 
@@ -724,7 +724,7 @@ defmodule Mailglass.Config do
   @doc since: "0.1.0"
   @spec compliance() :: keyword()
   def compliance do
-    Mailglass.Runtime.fetch!(:compliance)
+    Mailglass.Runtime.fetch_config!(:compliance)
   end
 
   @doc """
@@ -776,38 +776,41 @@ defmodule Mailglass.Config do
   @doc since: "0.1.0"
   @doc false
   @spec webhook_ingest_mode() :: :sync | :async
-  def webhook_ingest_mode, do: Mailglass.Runtime.fetch!(:webhook_ingest_mode)
+  def webhook_ingest_mode, do: Mailglass.Runtime.fetch_config!(:webhook_ingest_mode)
 
   @doc false
-  def feedback_id, do: Mailglass.Runtime.fetch!(:feedback_id)
+  def feedback_id, do: Mailglass.Runtime.fetch_config!(:feedback_id)
 
   @doc false
-  def repo, do: Mailglass.Runtime.fetch!(:repo)
+  def repo, do: Mailglass.Runtime.fetch_config!(:repo)
 
   @doc false
-  def clock, do: Mailglass.Runtime.fetch!(:clock)
+  def clock, do: Mailglass.Runtime.fetch_config!(:clock)
 
   @doc false
-  def tenancy, do: Mailglass.Runtime.fetch!(:tenancy)
+  def tenancy, do: Mailglass.Runtime.fetch_config!(:tenancy)
 
   @doc false
-  def suppression_store, do: Mailglass.Runtime.fetch!(:suppression_store)
+  def suppression_store, do: Mailglass.Runtime.fetch_config!(:suppression_store)
 
   @doc false
-  def async_adapter, do: Mailglass.Runtime.fetch!(:async_adapter)
+  def async_adapter, do: Mailglass.Runtime.fetch_config!(:async_adapter)
 
   @doc false
-  def rate_limit, do: Mailglass.Runtime.fetch!(:rate_limit)
+  def rate_limit, do: Mailglass.Runtime.fetch_config!(:rate_limit)
 
   @doc false
-  def tracking, do: Mailglass.Runtime.fetch!(:tracking)
+  def tracking, do: Mailglass.Runtime.fetch_config!(:tracking)
 
   @doc false
-  def webhook_retention, do: Mailglass.Runtime.fetch!(:webhook_retention)
+  def webhook_retention, do: Mailglass.Runtime.fetch_config!(:webhook_retention)
 
   @doc false
   def webhook_provider(provider) when provider in [:postmark, :sendgrid, :mailgun, :ses, :resend],
-    do: Mailglass.Runtime.fetch!(provider)
+    do: Mailglass.Runtime.fetch_config!(provider)
+
+  @doc false
+  def ses_http_client, do: Mailglass.Runtime.ses_http_client()
 
   defp normalize_adapter_ref_lookup(ref) when is_atom(ref), do: Atom.to_string(ref)
   defp normalize_adapter_ref_lookup(ref) when is_binary(ref), do: ref

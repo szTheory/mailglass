@@ -604,8 +604,7 @@ defmodule Mailglass.Webhook.Providers.SES do
         mod
 
       _ ->
-        ses_env = Application.get_env(:mailglass, :ses, [])
-        Keyword.get(ses_env, :httpc_client, :httpc)
+        Mailglass.Config.ses_http_client()
     end
   end
 

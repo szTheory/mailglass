@@ -147,7 +147,7 @@ defmodule Mailglass.Tracking.Token do
   end
 
   defp salts do
-    case Application.get_env(:mailglass, :tracking, [])[:salts] do
+    case Mailglass.Config.tracking()[:salts] do
       [_ | _] = s ->
         s
 
@@ -167,7 +167,7 @@ defmodule Mailglass.Tracking.Token do
   end
 
   defp verify_opts do
-    max_age = Application.get_env(:mailglass, :tracking, [])[:max_age] || 2 * 365 * 86_400
+    max_age = Mailglass.Config.tracking()[:max_age] || 2 * 365 * 86_400
     Keyword.put(@sign_opts, :max_age, max_age)
   end
 
