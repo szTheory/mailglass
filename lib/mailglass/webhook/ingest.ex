@@ -230,7 +230,7 @@ defmodule Mailglass.Webhook.Ingest do
       )
     )
     |> append_events_for_each(events, provider, tenant_id, deliveries_by_message)
-    |> update_projections_for_each(events)
+    |> update_projections_for_each(events, deliveries_by_message)
     |> Multi.update_all(
       :flip_status,
       &flip_status_query(&1, provider_str),
@@ -284,32 +284,30 @@ defmodule Mailglass.Webhook.Ingest do
   # inside Multi.run) broke transaction scoping — the outer transaction
   # couldn't roll back the inner writes if a later step failed. This keeps
   # everything in one transaction.
-  defp update_projections_for_each(multi, events) do
+  defp update_projections_for_each(multi, events, deliveries_by_message) do
     events
     |> Enum.with_index()
-    |> Enum.reduce(multi, fn {_event, idx}, acc ->
+    |> Enum.reduce(multi, fn {input_event, idx}, acc ->
       acc =
         Multi.run(acc, {:projector_categorize, idx}, fn _repo, changes ->
           inserted_event = Map.get(changes, event_step_name(idx))
+          delivery = Map.get(deliveries_by_message, message_id(input_event))
 
           cond do
             is_nil(inserted_event) ->
               {:ok, :no_event_row}
 
-            is_nil(inserted_event.delivery_id) ->
+            is_nil(inserted_event.delivery_id) or is_nil(delivery) ->
               {:ok, :orphan_skipped}
 
-            true ->
-              delivery_query =
-                from(d in Delivery,
-                  where: d.id == ^inserted_event.delivery_id,
-                  limit: 1
-                )
+            delivery.id == inserted_event.delivery_id ->
+              # `load_deliveries/3` is the one bounded provider-batch read.
+              # Reuse its full structs here so every projection avoids an
+              # additional point query by delivery id.
+              {:ok, {:matched, current_delivery(delivery, changes, idx), inserted_event}}
 
-              case Repo.one(Tenancy.scope(delivery_query)) do
-                nil -> {:ok, :orphan_skipped}
-                %Delivery{} = delivery -> {:ok, {:matched, delivery, inserted_event}}
-              end
+            true ->
+              {:ok, :orphan_skipped}
           end
         end)
 
@@ -324,7 +322,7 @@ defmodule Mailglass.Webhook.Ingest do
             # the projection UPDATE routes to the isolated schema's
             # mailglass_deliveries row.
             case repo.update(changeset, Repo.multi_opts()) do
-              {:ok, _projected} -> {:ok, {:matched, delivery, inserted_event}}
+              {:ok, projected} -> {:ok, {:matched, projected, inserted_event}}
               {:error, reason} -> {:error, reason}
             end
 
@@ -473,12 +471,30 @@ defmodule Mailglass.Webhook.Ingest do
         query
         |> Tenancy.scope(tenant_id)
         |> Repo.all()
-        |> Map.new(&{&1.provider_message_id, &1.id})
+        |> Map.new(&{&1.provider_message_id, &1})
     end
   end
 
-  defp resolve_delivery_id(event, deliveries_by_message),
-    do: Map.get(deliveries_by_message, message_id(event))
+  defp resolve_delivery_id(event, deliveries_by_message) do
+    case Map.get(deliveries_by_message, message_id(event)) do
+      %Delivery{id: id} -> id
+      nil -> nil
+    end
+  end
+
+  # A provider batch may contain several events for one delivery. Carry the
+  # latest projected struct through the Multi so optimistic locking still sees
+  # the incremented lock version without re-reading the delivery per event.
+  defp current_delivery(delivery, _changes, 0), do: delivery
+
+  defp current_delivery(delivery, changes, idx) do
+    Enum.find_value((idx - 1)..0//-1, delivery, fn previous_idx ->
+      case Map.get(changes, {:projector_apply, previous_idx}) do
+        {:matched, %Delivery{id: id} = projected, _event} when id == delivery.id -> projected
+        _other -> nil
+      end
+    end)
+  end
 
   defp message_id(%Event{metadata: meta}) when is_map(meta) do
     meta["sg_message_id"] || meta["message_id"] ||

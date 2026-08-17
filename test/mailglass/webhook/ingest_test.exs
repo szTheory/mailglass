@@ -213,8 +213,29 @@ defmodule Mailglass.Webhook.IngestTest do
         build_sg_event(:clicked, "evt_24", "msg_d")
       ]
 
+      handler_id = "ingest-delivery-query-test-#{System.unique_integer([:positive])}"
+      test_pid = self()
+
+      :telemetry.attach(
+        handler_id,
+        [:mailglass, :test_repo, :query],
+        fn _event, _measurements, metadata, _config ->
+          send(test_pid, {:repo_query, metadata.query})
+        end,
+        nil
+      )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
       assert {:ok, result} =
                Ingest.ingest_multi(:sendgrid, ~s([{"event":"processed"}]), events)
+
+      delivery_selects =
+        receive_queries()
+        |> Enum.filter(&String.contains?(&1, "mailglass_deliveries"))
+        |> Enum.filter(&String.starts_with?(&1, "SELECT"))
+
+      assert length(delivery_selects) == 1
 
       assert result.duplicate == false
       # All 5 events surface in events_with_deliveries regardless of matched/orphan.
@@ -314,5 +335,13 @@ defmodule Mailglass.Webhook.IngestTest do
         "sg_message_id" => sg_message_id
       }
     }
+  end
+
+  defp receive_queries(queries \\ []) do
+    receive do
+      {:repo_query, query} -> receive_queries([query | queries])
+    after
+      50 -> queries
+    end
   end
 end
