@@ -1,10 +1,9 @@
 defmodule Mailglass.RateLimiter.TableOwner do
   @moduledoc """
-  Init-and-idle GenServer owning the `:mailglass_rate_limit` ETS table
-  Owns nothing beyond ETS table creation — no `handle_call/3`,
-  `handle_cast/2`, or `handle_info/2` implementations. Hot-path reads
-  and writes happen directly from caller processes via
-  `:ets.update_counter/4` — NO GenServer mailbox serialization.
+  Owns the `:mailglass_rate_limit` ETS table and the small amount of work that
+  must be serialized: missing-key admission, the bounded contention fallback,
+  and idle sweeping. Callers use `AtomicBucket`'s compare-and-swap fast path;
+  only a caller that exhausts that finite budget enters this mailbox.
 
   ## ETS opts (OTP 27+)
 
@@ -17,11 +16,12 @@ defmodule Mailglass.RateLimiter.TableOwner do
 
   ## Crash semantics
 
-  If this process crashes, BEAM deletes the ETS table. Supervisor
-  restarts TableOwner; init/1 calls `:ets.new/2` anew. Counter state
-  resets to empty — acceptable per : "rate-limit state is not
-  load-bearing across crashes." Worst case is 1 minute of burst
-  allowance until refill restarts.
+  If this process crashes, BEAM deletes the ETS table. The supervisor restarts
+  TableOwner and `ensure_table/0` recreates the canonical table before every
+  owner ETS operation, including a caller that deleted the table immediately
+  before admission. Bucket state is intentionally ephemeral across a restart;
+  callers either re-admit through the replacement owner or receive the normal
+  bounded limiter denial, never an ETS exception.
 
   ## Reserved-singleton note
 
@@ -32,6 +32,8 @@ defmodule Mailglass.RateLimiter.TableOwner do
   module.
   """
   use GenServer
+
+  alias Mailglass.RateLimiter.AtomicBucket
 
   @table :mailglass_rate_limit
 
@@ -44,15 +46,7 @@ defmodule Mailglass.RateLimiter.TableOwner do
 
   @impl GenServer
   def init(:ok) do
-    :ets.new(@table, [
-      :set,
-      :public,
-      :named_table,
-      read_concurrency: true,
-      write_concurrency: :auto,
-      decentralized_counters: true
-    ])
-
+    ensure_table()
     schedule_sweep()
     {:ok, %{}}
   end
@@ -65,6 +59,8 @@ defmodule Mailglass.RateLimiter.TableOwner do
 
   @impl GenServer
   def handle_call({:admit, key, initial, now_us}, _from, state) do
+    ensure_table()
+
     result =
       case :ets.lookup(@table, key) do
         [_] -> :ok
@@ -75,7 +71,21 @@ defmodule Mailglass.RateLimiter.TableOwner do
   end
 
   @impl GenServer
+  def handle_call({:consume_contended, key, capacity, per_minute, now_us}, _from, state) do
+    ensure_table()
+
+    result =
+      case :ets.take(@table, key) do
+        [bucket] -> consume_and_reinsert(bucket, capacity, per_minute, now_us)
+        [] -> admit_and_consume(key, capacity, per_minute, now_us)
+      end
+
+    {:reply, result, state}
+  end
+
+  @impl GenServer
   def handle_info(:sweep, state) do
+    ensure_table()
     purge_idle(System.monotonic_time(:microsecond))
     schedule_sweep()
     {:noreply, state}
@@ -101,6 +111,27 @@ defmodule Mailglass.RateLimiter.TableOwner do
     end
   end
 
+  defp admit_and_consume(key, capacity, per_minute, now_us) do
+    initial = {key, capacity * 1_000_000, now_us, 0, now_us}
+
+    case admit_missing(key, initial, now_us) do
+      :ok ->
+        case :ets.take(@table, key) do
+          [bucket] -> consume_and_reinsert(bucket, capacity, per_minute, now_us)
+          [] -> {:error, :denied}
+        end
+
+      {:error, :denied} ->
+        {:error, :denied}
+    end
+  end
+
+  defp consume_and_reinsert(bucket, capacity, per_minute, now_us) do
+    {result, replacement} = AtomicBucket.consume_taken(bucket, capacity, per_minute, now_us)
+    true = :ets.insert(@table, replacement)
+    if result == :ok, do: :ok, else: {:error, :denied}
+  end
+
   defp purge_idle(now_us) do
     opts = Application.get_env(:mailglass, :rate_limit_table_owner, [])
     expiry_us = Keyword.get(opts, :idle_expiry_ms, 3_600_000) * 1_000
@@ -113,5 +144,20 @@ defmodule Mailglass.RateLimiter.TableOwner do
   defp schedule_sweep do
     opts = Application.get_env(:mailglass, :rate_limit_table_owner, [])
     Process.send_after(self(), :sweep, Keyword.get(opts, :sweep_interval_ms, 60_000))
+  end
+
+  defp ensure_table do
+    if :ets.whereis(@table) == :undefined do
+      :ets.new(@table, [
+        :set,
+        :public,
+        :named_table,
+        read_concurrency: true,
+        write_concurrency: :auto,
+        decentralized_counters: true
+      ])
+    else
+      @table
+    end
   end
 end

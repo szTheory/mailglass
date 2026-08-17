@@ -28,15 +28,14 @@ defmodule Mailglass.RateLimiterTest do
   defp restore_env(key, value), do: Application.put_env(:mailglass, key, value)
 
   describe "atomic fixed-point bucket" do
-    test "fails closed instead of raising while its ETS owner restarts" do
-      # Deleting a named ETS table simulates the narrow owner-restart window:
-      # callers must receive the normal limiter error, never :badarg.
+    test "recreates its ETS table instead of raising when admission sees it absent" do
+      # Deleting a named ETS table immediately before admission exercises the
+      # owner-side recovery path. It must recreate the canonical table before
+      # looking up or inserting the new bucket.
       :ets.delete(:mailglass_rate_limit)
 
-      assert {:error, %RateLimitError{}} =
-               RateLimiter.check("restart-window", "restart.test", :operational)
-
-      on_exit(fn -> await_table(:mailglass_rate_limit) end)
+      assert :ok = RateLimiter.check("restart-window", "restart.test", :operational)
+      refute :undefined == :ets.whereis(:mailglass_rate_limit)
     end
 
     test "concurrent callers receive exactly the refilled capacity without losing fractional time" do
@@ -351,18 +350,6 @@ defmodule Mailglass.RateLimiterTest do
                  stream: :operational,
                  swoosh_email: email3
                })
-    end
-  end
-
-  defp await_table(table, attempts \\ 50)
-  defp await_table(_table, 0), do: :ok
-
-  defp await_table(table, attempts) do
-    if :ets.whereis(table) == :undefined do
-      Process.sleep(10)
-      await_table(table, attempts - 1)
-    else
-      :ok
     end
   end
 end
