@@ -295,7 +295,16 @@ defmodule Mailglass.Suppression.Resync do
 
   defp same_suppression?(_attrs, _entry), do: false
 
-  defp page_size(opts), do: bounded_size(Keyword.get(opts, :page_size, @default_page_size))
+  defp page_size(opts) do
+    bounded_size(
+      Keyword.get(
+        opts,
+        :page_size,
+        Application.get_env(:mailglass, :suppression_resync_page_size, @default_page_size)
+      )
+    )
+  end
+
   defp batch_size(opts), do: bounded_size(Keyword.get(opts, :batch_size, @default_page_size))
 
   defp bounded_size(size) when is_integer(size) and size > 0, do: min(size, @max_page_size)
