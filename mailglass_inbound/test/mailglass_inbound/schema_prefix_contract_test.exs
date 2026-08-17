@@ -117,6 +117,7 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
              Replay.replay(record_id,
                tenant_id: "tenant-a",
                repo: CaptureRepo,
+               router: TestRouter,
                execution: ExecutionStub
              )
 
@@ -194,6 +195,7 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
              Replay.replay(record_id,
                tenant_id: "tenant-a",
                repo: CaptureRepo,
+               router: TestRouter,
                execution: ExecutionStub
              )
 

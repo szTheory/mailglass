@@ -29,6 +29,19 @@ defmodule MailglassInbound.ReplayTest do
     end
   end
 
+  defmodule ReplayRouter do
+    use MailglassInbound.Router
+
+    route(SupportMailbox, recipient: "support@example.com")
+  end
+
+  defmodule LoadedProcessSentinel do
+    def process(_message) do
+      send(Application.fetch_env!(:mailglass_inbound, :replay_test_pid), :sentinel_invoked)
+      :accept
+    end
+  end
+
   defmodule ReplayRepo do
     def one(_query, _opts \\ []) do
       case Process.get(:mailglass_inbound_replay_repo_sequence, []) do
@@ -86,6 +99,9 @@ defmodule MailglassInbound.ReplayTest do
     Process.delete(:mailglass_inbound_replay_last_message)
     Process.delete(:mailglass_inbound_persist_repo_sequence)
     Process.delete(:mailglass_inbound_persist_inserts)
+    Application.put_env(:mailglass_inbound, :replay_test_pid, self())
+
+    on_exit(fn -> Application.delete_env(:mailglass_inbound, :replay_test_pid) end)
     :ok
   end
 
@@ -261,6 +277,7 @@ defmodule MailglassInbound.ReplayTest do
                Replay.replay(record.id,
                  tenant_id: record.tenant_id,
                  repo: ReplayRepo,
+                 router: ReplayRouter,
                  execution: ReplayExecution
                )
 
@@ -297,6 +314,32 @@ defmodule MailglassInbound.ReplayTest do
                  execution: ReplayExecution
                )
 
+      assert Process.get(:mailglass_inbound_replay_execution_payload) == nil
+    end
+
+    test "rejects a loaded non-mailbox persisted identity without invocation" do
+      record = valid_inbound_record()
+      evidence = valid_inbound_evidence(record.id)
+
+      sentinel_run = %ExecutionRun{
+        inbound_record_id: record.id,
+        inbound_evidence_id: evidence.id,
+        source: :fresh,
+        mailbox: Atom.to_string(LoadedProcessSentinel),
+        outcome: :accept
+      }
+
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence, sentinel_run])
+
+      assert {:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}} =
+               Replay.replay(record.id,
+                 tenant_id: record.tenant_id,
+                 repo: ReplayRepo,
+                 router: ReplayRouter,
+                 execution: ReplayExecution
+               )
+
+      refute_received :sentinel_invoked
       assert Process.get(:mailglass_inbound_replay_execution_payload) == nil
     end
 
