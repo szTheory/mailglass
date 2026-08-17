@@ -21,6 +21,7 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
   # parity-drift test (D-LD-10). test/support is in elixirc_paths(:test), so the module
   # is compiled before this test and is available at module-attribute (compile) time.
   @required_leaf_names MapSet.new(Mailglass.CILanes.required_lanes())
+  @structural_change_dependency "changes"
 
   test "REQUIRED_CHECKS array and print_expected_text bullets stay in sync" do
     source = File.read!(@script_path)
@@ -112,42 +113,49 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
            "#{clean_baseline} must NOT be in ci_green.needs display names (D-04)"
   end
 
-  test "ci_green.needs set-equality: every key resolves to a defined job and display names match required leaf set (GATE-03)" do
+  test "ci_green.needs carries changes exactly once as a structural dependency and required leaves set-equal the registry (GATE-03)" do
     ci_source = File.read!(@ci_yml_path)
 
-    needs_keys = parse_ci_green_needs(ci_source)
-    job_names = parse_ci_job_names(ci_source)
+    assert_ci_green_needs_contract!(ci_source)
+  end
 
-    # Anti-vacuity guards for the new parsers.
-    assert MapSet.size(needs_keys) > 0,
-           "parse_ci_green_needs returned empty — ci.yml format changed or ci_green job missing"
+  test "negative controls: removing changes or a required leaf makes the ci_green needs contract fail" do
+    ci_source = File.read!(@ci_yml_path)
 
-    assert map_size(job_names) > 0,
-           "parse_ci_job_names returned empty — ci.yml format changed or no jobs found"
+    assert_ci_green_needs_contract!(ci_source)
 
-    # (i) Every key in ci_green.needs must be a real defined job.
-    all_job_keys = MapSet.new(Map.keys(job_names))
-    undefined_keys = MapSet.difference(needs_keys, all_job_keys)
+    without_changes = String.replace(ci_source, "      - changes\n", "", global: false)
 
-    assert MapSet.size(undefined_keys) == 0,
-           "ci_green.needs references nonexistent jobs: #{inspect(MapSet.to_list(undefined_keys))}"
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_ci_green_needs_contract!(without_changes)
+    end
 
-    # (ii) needs_display must set-equal @required_leaf_names.
-    needs_display = MapSet.new(needs_keys, fn key -> Map.fetch!(job_names, key) end)
+    without_required_leaf = String.replace(ci_source, "      - hex_audit\n", "", global: false)
 
-    only_in_needs = MapSet.difference(needs_display, @required_leaf_names)
-    only_in_required = MapSet.difference(@required_leaf_names, needs_display)
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_ci_green_needs_contract!(without_required_leaf)
+    end
+  end
 
-    assert MapSet.size(only_in_needs) == 0 and MapSet.size(only_in_required) == 0,
-           "ci_green.needs display names do not match required leaf set:\n" <>
-             "  Extra in needs (not in required set): #{inspect(MapSet.to_list(only_in_needs))}\n" <>
-             "  Missing from needs (in required set): #{inspect(MapSet.to_list(only_in_required))}"
+  test "negative control: deleting the CI Green policy invocation makes its contract fail" do
+    ci_source = File.read!(@ci_yml_path)
+
+    assert_ci_green_policy_invocation!(ci_source)
+
+    without_invocation = String.replace(ci_source, "bash scripts/ci_green_policy.sh", "true", global: false)
+
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_ci_green_policy_invocation!(without_invocation)
+    end
   end
 
   test "no required CI leaf is permanently if:-disabled (GATE-03)" do
     ci_source = File.read!(@ci_yml_path)
 
-    needs_keys = parse_ci_green_needs(ci_source)
+    needs_keys =
+      ci_source
+      |> parse_ci_green_needs()
+      |> MapSet.delete(@structural_change_dependency)
     job_ifs = parse_ci_job_ifs(ci_source)
 
     Enum.each(needs_keys, fn key ->
@@ -221,8 +229,69 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     |> MapSet.new()
   end
 
+  defp assert_ci_green_needs_contract!(ci_source) do
+    needs_list = parse_ci_green_needs_list(ci_source)
+    needs_keys = MapSet.new(needs_list)
+    job_names = parse_ci_job_names(ci_source)
+
+    assert Enum.count(needs_list, &(&1 == @structural_change_dependency)) == 1,
+           "ci_green.needs must contain changes exactly once as its structural dependency"
+
+    assert MapSet.size(needs_keys) > 1,
+           "parse_ci_green_needs returned no leaf dependencies — ci.yml format changed or ci_green job missing"
+
+    assert map_size(job_names) > 0,
+           "parse_ci_job_names returned empty — ci.yml format changed or no jobs found"
+
+    all_job_keys = MapSet.new(Map.keys(job_names))
+    undefined_keys = MapSet.difference(needs_keys, all_job_keys)
+
+    assert MapSet.size(undefined_keys) == 0,
+           "ci_green.needs references nonexistent jobs: #{inspect(MapSet.to_list(undefined_keys))}"
+
+    leaf_keys = MapSet.delete(needs_keys, @structural_change_dependency)
+    needs_display = MapSet.new(leaf_keys, fn key -> Map.fetch!(job_names, key) end)
+
+    only_in_needs = MapSet.difference(needs_display, @required_leaf_names)
+    only_in_required = MapSet.difference(@required_leaf_names, needs_display)
+
+    assert MapSet.size(only_in_needs) == 0 and MapSet.size(only_in_required) == 0,
+           "ci_green required-leaf display names do not match the required leaf set:\n" <>
+             "  Extra in needs (not in required set): #{inspect(MapSet.to_list(only_in_needs))}\n" <>
+             "  Missing from needs (in required set): #{inspect(MapSet.to_list(only_in_required))}"
+  end
+
+  defp assert_ci_green_policy_invocation!(ci_source) do
+    ci_green = extract_job_block(ci_source, "ci_green")
+
+    assert ci_green =~ "bash scripts/ci_green_policy.sh",
+           "ci_green must delegate its aggregate decision to scripts/ci_green_policy.sh"
+
+    assert ci_green =~ "${{ needs.changes.result }}",
+           "ci_green policy invocation must receive the changes job result"
+
+    assert ci_green =~ "${{ needs.changes.outputs.code }}",
+           "ci_green policy invocation must receive the exact changes code output"
+
+    for leaf <- MapSet.to_list(@required_leaf_names) do
+      {job_key, _display_name} =
+        ci_source
+        |> parse_ci_job_names()
+        |> Enum.find(fn {_key, display_name} -> display_name == leaf end)
+
+      assert ci_green =~ "#{job_key}=${{ needs.#{job_key}.result }}",
+             "ci_green policy invocation must receive required leaf #{job_key}"
+    end
+  end
+
   # Returns a MapSet of job KEY strings listed under ci_green.needs.
   defp parse_ci_green_needs(source) do
+    source
+    |> parse_ci_green_needs_list()
+    |> MapSet.new()
+  end
+
+  defp parse_ci_green_needs_list(source) do
     case String.split(source, "\n  ci_green:\n", parts: 2) do
       [_, rest] ->
         lines = String.split(rest, "\n")
@@ -254,10 +323,10 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
             end
           end)
 
-        MapSet.new(needs_lines)
+        Enum.reverse(needs_lines)
 
       _ ->
-        MapSet.new()
+        []
     end
   end
 

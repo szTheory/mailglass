@@ -41,6 +41,13 @@ defmodule Mailglass.Scripts.CIGreenPolicyTest do
     end
   end
 
+  test "only a successful docs-only classification permits skipped required leaves" do
+    assert {"", 0} = run_policy(["success", "false", "hex_audit=skipped", "deps_audit=success"])
+
+    assert {output, 1} = run_policy(["success", "false", "hex_audit=failure"])
+    assert output =~ "CI Green blocked: unacceptable required lane result(s): hex_audit=failure"
+  end
+
   test "malformed, duplicate, and empty required leaf inputs block CI Green" do
     assert {malformed_output, 1} = run_policy(["success", "true", "not-a-pair"])
     assert malformed_output =~ "CI Green blocked: malformed required lane input: not-a-pair"
