@@ -25,6 +25,7 @@ let covered = 0, relevant = 0;
 for (const file of files) for (const hit of Object.values(file.coverage || {})) {
   if (hit !== null) { relevant++; if (hit > 0) covered++; }
 }
-if (!Number.isInteger(base.covered_lines) || !Number.isInteger(base.relevant_lines)) throw new Error("baseline lacks measured line counts");
-if (covered < base.covered_lines || relevant < base.relevant_lines) throw new Error(`coverage regression: ${covered}/${relevant}, baseline ${base.covered_lines}/${base.relevant_lines}`);
+if (!Number.isInteger(base.covered_lines) || !Number.isInteger(base.relevant_lines) || typeof base.percentage !== "number") throw new Error("baseline lacks measured coverage counts");
+const percentage = covered / relevant * 100;
+if (covered < base.covered_lines || relevant < base.relevant_lines || percentage < base.percentage) throw new Error(`coverage regression: ${covered}/${relevant} (${percentage}), baseline ${base.covered_lines}/${base.relevant_lines} (${base.percentage})`);
 ' "$baseline" "$report"

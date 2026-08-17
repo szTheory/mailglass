@@ -19,6 +19,7 @@ defmodule MailglassInbound.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
+      test_coverage: [tool: ExCoveralls],
       name: "MailglassInbound",
       description: @description,
       source_url: @source_url,
