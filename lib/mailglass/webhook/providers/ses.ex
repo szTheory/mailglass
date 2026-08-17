@@ -65,12 +65,26 @@ defmodule Mailglass.Webhook.Providers.SES do
   @spec verify!(binary(), [{String.t(), String.t()}], map()) ::
           :ok | {:ok, :control_plane, :subscription_confirmed | :unsubscribe_confirmed}
   def verify!(raw_body, _headers, %{} = config) when is_binary(raw_body) do
+    verify_decoded!(Jason.decode(raw_body), [], config)
+  end
+
+  @doc false
+  @spec verify_decoded!({:ok, term()} | {:error, term()}, [{String.t(), String.t()}], map()) ::
+          :ok | {:ok, :control_plane, :subscription_confirmed | :unsubscribe_confirmed}
+  def verify_decoded!({:ok, %{} = payload}, _headers, %{} = config) do
     # Step 1: verify the SNS envelope (shared crypto seam, reused by inbound).
-    {:ok, payload} = verify_envelope!(raw_body, config)
+    :ok = verify_envelope_decoded!(payload, config)
     msg_type = fetch_required_field!(payload, "Type")
 
     # Step 2: dispatch on MessageType (all types verified above).
     dispatch_message_type(msg_type, payload, config)
+  end
+
+  def verify_decoded!(_decoded, _headers, %{} = _config) do
+    raise SignatureError.new(:malformed_header,
+            provider: :ses,
+            context: %{detail: "SNS payload is not valid JSON"}
+          )
   end
 
   @doc """
@@ -92,6 +106,13 @@ defmodule Mailglass.Webhook.Providers.SES do
   @spec verify_envelope!(binary(), map()) :: {:ok, map()}
   def verify_envelope!(raw_body, %{} = config) when is_binary(raw_body) do
     payload = decode_payload!(raw_body)
+    :ok = verify_envelope_decoded!(payload, config)
+    {:ok, payload}
+  end
+
+  @doc false
+  @spec verify_envelope_decoded!(map(), map()) :: :ok
+  def verify_envelope_decoded!(%{} = payload, %{} = config) do
     cert_url = fetch_required_field!(payload, "SigningCertURL")
     sig_version = Map.get(payload, "SignatureVersion", "1")
     signature_b64 = fetch_required_field!(payload, "Signature")
@@ -143,21 +164,24 @@ defmodule Mailglass.Webhook.Providers.SES do
       raise SignatureError.new(:bad_signature, provider: :ses)
     end
 
-    {:ok, payload}
+    :ok
   end
 
   @impl Mailglass.Webhook.Provider
   @spec normalize(binary(), [{String.t(), String.t()}]) :: [Event.t()]
-  def normalize(raw_body, _headers) when is_binary(raw_body) do
-    with {:ok, sns_payload} <- Jason.decode(raw_body),
-         "Notification" <- Map.get(sns_payload, "Type"),
+  def normalize(raw_body, headers) when is_binary(raw_body),
+    do: normalize_decoded(Jason.decode(raw_body), headers)
+
+  @doc false
+  def normalize_decoded({:ok, %{} = sns_payload}, _headers) do
+    with "Notification" <- Map.get(sns_payload, "Type"),
          message_str when is_binary(message_str) <- Map.get(sns_payload, "Message"),
          {:ok, ses_payload} <- Jason.decode(message_str) do
       sns_message_id = Map.get(sns_payload, "MessageId", "unknown")
       normalize_ses(ses_payload, sns_message_id)
     else
       {:error, _} ->
-        Logger.warning("[mailglass] SES normalize: malformed SNS envelope JSON")
+        Logger.warning("[mailglass] SES normalize: malformed nested SES Message JSON")
         []
 
       _other ->
@@ -167,6 +191,11 @@ defmodule Mailglass.Webhook.Providers.SES do
 
         []
     end
+  end
+
+  def normalize_decoded(_decoded, _headers) do
+    Logger.warning("[mailglass] SES normalize: malformed SNS envelope JSON")
+    []
   end
 
   # ---- Private: message type dispatch ----

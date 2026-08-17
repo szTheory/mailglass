@@ -121,6 +121,15 @@ defmodule Mailglass.Webhook.Ingest do
   def ingest_multi(provider, raw_body, events)
       when provider in [:postmark, :sendgrid, :mailgun, :ses, :resend] and is_binary(raw_body) and
              is_list(events) do
+    ingest_multi(provider, raw_body, Jason.decode(raw_body), events)
+  end
+
+  @doc false
+  @spec ingest_multi(atom(), binary(), {:ok, term()} | {:error, term()}, [Event.t()]) ::
+          {:ok, map()} | {:error, term()}
+  def ingest_multi(provider, raw_body, decoded_payload, events)
+      when provider in [:postmark, :sendgrid, :mailgun, :ses, :resend] and is_binary(raw_body) and
+             is_list(events) do
     # Tenancy.tenant_id!/0 is the fail-loud accessor — raises %TenancyError{:unstamped}
     # when the process-dict key is absent. Unlike Tenancy.current/0 (which falls back
     # to the SingleTenant "default" literal), tenant_id!/0 never auto-defaults. The
@@ -149,7 +158,9 @@ defmodule Mailglass.Webhook.Ingest do
         _ = Repo.query!("SET LOCAL lock_timeout = '500ms'", [])
 
         deliveries_by_message = load_deliveries(provider, events, tenant_id)
-        multi = build_multi(provider, raw_body, events, tenant_id, deliveries_by_message)
+
+        multi =
+          build_multi(provider, raw_body, decoded_payload, events, tenant_id, deliveries_by_message)
 
         case Repo.multi(multi) do
           {:ok, changes} ->
@@ -179,7 +190,7 @@ defmodule Mailglass.Webhook.Ingest do
 
   # ---- Multi composition ----------------------------------------------
 
-  defp build_multi(provider, raw_body, events, tenant_id, deliveries_by_message) do
+  defp build_multi(provider, raw_body, decoded_payload, events, tenant_id, deliveries_by_message) do
     provider_event_id = derive_webhook_provider_event_id(provider, raw_body, events)
     provider_str = Atom.to_string(provider)
 
@@ -209,7 +220,7 @@ defmodule Mailglass.Webhook.Ingest do
       event_type_raw: derive_event_type_raw(events),
       event_type_normalized: derive_event_type_normalized(events),
       status: :processing,
-      raw_payload: parse_raw_payload(raw_body),
+      raw_payload: parse_raw_payload(decoded_payload, raw_body),
       raw_signed_body: raw_body,
       received_at: Clock.utc_now()
     }
@@ -430,13 +441,13 @@ defmodule Mailglass.Webhook.Ingest do
     |> Enum.join(",")
   end
 
-  defp parse_raw_payload(raw_body) when is_binary(raw_body) do
-    case Jason.decode(raw_body) do
-      {:ok, payload} when is_map(payload) -> payload
-      {:ok, payload} when is_list(payload) -> %{"_batch" => payload}
-      _ -> %{"_raw" => raw_body}
-    end
-  end
+  defp parse_raw_payload({:ok, payload}, _raw_body) when is_map(payload), do: payload
+
+  defp parse_raw_payload({:ok, payload}, _raw_body) when is_list(payload),
+    do: %{"_batch" => payload}
+
+  defp parse_raw_payload(_decoded_payload, raw_body) when is_binary(raw_body),
+    do: %{"_raw" => raw_body}
 
   defp replay_metadata(metadata, %WebhookEvent{} = webhook_event) when is_map(metadata) do
     metadata

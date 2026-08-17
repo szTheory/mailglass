@@ -147,6 +147,18 @@ defmodule Mailglass.Webhook.Providers.SESTest do
       assert :ok = SES.verify!(raw, [], @config)
     end
 
+    test "reuses a caller-supplied decoded SNS envelope for verification and normalization" do
+      {public_key, private_key} = generate_sns_keypair()
+      future = DateTime.add(Mailglass.Clock.utc_now(), 86_400, :second)
+      CertCache.put(@cert_url, public_key, future)
+
+      decoded =
+        load_ses_fixture("notification_delivery") |> sign_fixture(private_key) |> Jason.decode()
+
+      assert :ok = SES.verify_decoded!(decoded, [], @config)
+      assert [_event] = SES.normalize_decoded(decoded, [])
+    end
+
     test "raises :bad_signature for a tampered Notification payload" do
       {public_key, private_key} = generate_sns_keypair()
       future = DateTime.add(Mailglass.Clock.utc_now(), 86_400, :second)

@@ -72,6 +72,7 @@ defmodule Mailglass.Webhook.Plug do
   alias Mailglass.Outbound.Projector
   alias Mailglass.Tenancy
   alias Mailglass.Webhook.Telemetry, as: WebhookTelemetry
+  alias Mailglass.Webhook.VerifiedRequest
 
   # Forward reference to the ingest module. Referenced at runtime and
   # silenced at compile time so `--warnings-as-errors` stays green
@@ -112,13 +113,18 @@ defmodule Mailglass.Webhook.Plug do
   # in `call/2` extracts the conn as the `result` and attaches the
   # stop_metadata to the `:stop` event.
 
-  defp do_call(conn, provider, _opts) do
+  defp do_call(conn, provider, opts) do
     try do
       {raw_body, headers} = extract_headers_and_raw_body!(conn)
       config = resolve_config!(provider, conn)
 
+      # Decode the untrusted outer JSON exactly once. Raw bytes remain the
+      # authoritative signature/evidence input; the decoded value is reused
+      # only after (or as part of) provider verification.
+      request = VerifiedRequest.decode(raw_body, Keyword.get(opts, :json_decoder, &Jason.decode/1))
+
       # Verify signature before tenant lookup to fail closed on spoofed payloads.
-      case verify_with_telemetry!(provider, raw_body, headers, config) do
+      case verify_with_telemetry!(provider, request, headers, config) do
         {:ok, :replay} ->
           conn = send_resp(conn, 200, "")
 
@@ -143,16 +149,13 @@ defmodule Mailglass.Webhook.Plug do
 
         :ok ->
           # Resolve tenant only after verification succeeds.
-          tenant_id = resolve_tenant!(provider, conn, raw_body, headers)
+          tenant_id = resolve_tenant!(provider, conn, request, headers)
 
           # Step 3: ingest under tenant scope (Pitfall 7 — block form)
           Tenancy.with_tenant(tenant_id, fn ->
-            events =
-              provider
-              |> provider_module()
-              |> apply(:normalize, [raw_body, headers])
+            events = normalize_decoded(provider, request.decoded, headers)
 
-            ingest_and_respond(conn, provider, raw_body, events, tenant_id)
+            ingest_and_respond(conn, provider, request, events, tenant_id)
           end)
       end
     rescue
@@ -277,25 +280,24 @@ defmodule Mailglass.Webhook.Plug do
   # :telemetry.span/3 (inside `verify_span/2`) reports via the :exception
   # event and re-raises — the outer SignatureError rescue in do_call/3
   # catches it and classifies the 401 response.
-  defp verify_with_telemetry!(provider, raw_body, headers, config) do
+  defp verify_with_telemetry!(provider, %VerifiedRequest{} = request, headers, config) do
     WebhookTelemetry.verify_span(
       %{provider: provider, status: :pending},
       fn ->
-        module = provider_module(provider)
-        apply(module, :verify!, [raw_body, headers, config])
+        verify_decoded!(provider, request, headers, config)
       end
     )
   end
 
   # Step 3: tenant resolution via Mailglass.Tenancy.resolve_webhook_tenant/1.
-  defp resolve_tenant!(provider, conn, raw_body, headers) do
+  defp resolve_tenant!(provider, conn, %VerifiedRequest{} = request, headers) do
     ctx = %{
       provider: provider,
       conn: conn,
-      raw_body: raw_body,
+      raw_body: request.raw_body,
       headers: headers,
       path_params: conn.path_params,
-      verified_payload: nil
+      verified_payload: VerifiedRequest.payload_or_nil(request)
     }
 
     case Tenancy.resolve_webhook_tenant(ctx) do
@@ -319,8 +321,8 @@ defmodule Mailglass.Webhook.Plug do
   # Local name `result` avoids shadowing Ecto.Multi's "changes"
   # terminology that the ingest module uses
   # internally.
-  defp ingest_and_respond(conn, provider, raw_body, events, tenant_id) do
-    case Mailglass.Webhook.Ingest.ingest_multi(provider, raw_body, events) do
+  defp ingest_and_respond(conn, provider, %VerifiedRequest{} = request, events, tenant_id) do
+    case Mailglass.Webhook.Ingest.ingest_multi(provider, request.raw_body, request.decoded, events) do
       {:ok, %{duplicate: true} = result} ->
         broadcast_post_commit(result)
 
@@ -403,4 +405,22 @@ defmodule Mailglass.Webhook.Plug do
   defp provider_module(:mailgun), do: Mailglass.Webhook.Providers.Mailgun
   defp provider_module(:ses), do: Mailglass.Webhook.Providers.SES
   defp provider_module(:resend), do: Mailglass.Webhook.Providers.Resend
+
+  defp verify_decoded!(:mailgun, %VerifiedRequest{decoded: decoded}, headers, config),
+    do: Mailglass.Webhook.Providers.Mailgun.verify_decoded!(decoded, headers, config)
+
+  defp verify_decoded!(:ses, %VerifiedRequest{decoded: decoded}, headers, config),
+    do: Mailglass.Webhook.Providers.SES.verify_decoded!(decoded, headers, config)
+
+  defp verify_decoded!(provider, %VerifiedRequest{raw_body: raw_body}, headers, config) do
+    provider
+    |> provider_module()
+    |> apply(:verify!, [raw_body, headers, config])
+  end
+
+  defp normalize_decoded(provider, decoded, headers) do
+    provider
+    |> provider_module()
+    |> apply(:normalize_decoded, [decoded, headers])
+  end
 end

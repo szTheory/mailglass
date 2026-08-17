@@ -26,6 +26,15 @@ defmodule Mailglass.Webhook.Providers.MailgunTest do
       assert :ok = Mailgun.verify!(body, [], @config)
     end
 
+    test "reuses a caller-supplied decoded payload for verification and normalization" do
+      body = signed_fixture("delivered", token: "decoded-mailgun-token")
+      decoded = Jason.decode(body)
+
+      assert :ok = Mailgun.verify_decoded!(decoded, [], @config)
+      [event] = Mailgun.normalize_decoded(decoded, [])
+      assert event.metadata["provider_event_id"] == "decoded-mailgun-token"
+    end
+
     test "raises :malformed_header when the signature object is missing" do
       body = load_mailgun_fixture("delivered")
 
