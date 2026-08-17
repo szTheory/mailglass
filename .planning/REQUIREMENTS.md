@@ -27,24 +27,24 @@
 
 ### Inbound Security and Failure Semantics
 
-- [ ] **INB-01**: Pre-verification SES certificate work has bounded concurrency, single-flight misses, strict SNS paths, short negative caching, timeouts, and response-size limits.
-- [ ] **INB-02**: Inbound S3 retrieval rejects objects larger than the configured 40 MiB default before full materialization.
-- [ ] **INB-03**: S3 transient and permanent failures are classified accurately and unknown exhausted failures retain the permanent failure shape.
-- [ ] **INB-04**: Authenticated permanent inbound failures create durable replayable dead evidence before an acknowledgement stops provider redelivery.
-- [ ] **INB-05**: Inbound verification and normalization use one explicit verified-request value with no process-dictionary or legacy arity coupling.
-- [ ] **INB-06**: Provider router macros evaluate only validated literal AST rather than unrestricted quoted code.
-- [ ] **INB-07**: Replay/certificate caches and inbound rate-limit tables cannot grow without bound under unique attacker-controlled keys.
+- [x] **INB-01**: Pre-verification SES certificate work has bounded concurrency, single-flight misses, strict SNS paths, short negative caching, timeouts, and response-size limits.
+- [x] **INB-02**: Inbound S3 retrieval rejects objects larger than the configured 40 MiB default before full materialization.
+- [x] **INB-03**: S3 transient and permanent failures are classified accurately and unknown exhausted failures retain the permanent failure shape.
+- [x] **INB-04**: Authenticated permanent inbound failures create durable replayable dead evidence before an acknowledgement stops provider redelivery.
+- [x] **INB-05**: Inbound verification and normalization use one explicit verified-request value with no process-dictionary or legacy arity coupling.
+- [x] **INB-06**: Provider router macros evaluate only validated literal AST rather than unrestricted quoted code.
+- [x] **INB-07**: Replay/certificate caches and inbound rate-limit tables cannot grow without bound under unique attacker-controlled keys.
 
 ### Data and Lifecycle Correctness
 
-- [ ] **DATA-01**: Inbound MIME deduplication uses explicit SHA-256 bytes with a dual-write/read and bounded backfill path; existing installs remain compatible through the transition.
-- [ ] **DATA-02**: Fingerprint and suppression lookups use their indexed columns without function-casting the indexed side.
-- [ ] **DATA-03**: Suppression stores may implement positional bulk lookup; stores without it retain a compatible chunked fallback.
-- [ ] **DATA-04**: Batch delivery performs bounded suppression-query work without changing single-batch outcome semantics.
+- [x] **DATA-01**: Inbound MIME deduplication uses explicit SHA-256 bytes with a dual-write/read and bounded backfill path; existing installs remain compatible through the transition.
+- [x] **DATA-02**: Fingerprint and suppression lookups use their indexed columns without function-casting the indexed side.
+- [x] **DATA-03**: Suppression stores may implement positional bulk lookup; stores without it retain a compatible chunked fallback.
+- [x] **DATA-04**: Batch delivery performs bounded suppression-query work without changing single-batch outcome semantics.
 - [x] **DATA-05**: Suppression resync pages records, deduplicates keys, bulk-loads existing rows, and upserts in bounded chunks.
-- [ ] **DATA-06**: Core and inbound retention prune in bounded `SKIP LOCKED` batches backed by matching age/source indexes.
-- [ ] **DATA-07**: Webhook batches bulk-load delivery state and reuse parsed JSON while preserving the exact raw signed body.
-- [ ] **DATA-08**: Future populated-table migrations follow expand/contract, bounded lock/statement timeouts, and concurrent-index policy without modifying shipped migrations.
+- [x] **DATA-06**: Core and inbound retention prune in bounded `SKIP LOCKED` batches backed by matching age/source indexes.
+- [x] **DATA-07**: Webhook batches bulk-load delivery state and reuse parsed JSON while preserving the exact raw signed body.
+- [x] **DATA-08**: Future populated-table migrations follow expand/contract, bounded lock/statement timeouts, and concurrent-index policy without modifying shipped migrations.
 
 ### Architecture and Compatibility
 
@@ -106,21 +106,21 @@
 | EXEC-06 | Phase 156 | Complete |
 | EXEC-07 | Phase 156 | Complete |
 | EXEC-08 | Phase 156 | Complete |
-| INB-01 | Phase 157 | Pending |
-| INB-02 | Phase 157 | Pending |
-| INB-03 | Phase 157 | Pending |
-| INB-04 | Phase 157 | Pending |
-| INB-05 | Phase 157 | Pending |
-| INB-06 | Phase 157 | Pending |
-| INB-07 | Phase 157 | Pending |
-| DATA-01 | Phase 157 | Pending |
-| DATA-02 | Phase 157 | Pending |
-| DATA-03 | Phase 157 | Pending |
-| DATA-04 | Phase 157 | Pending |
+| INB-01 | Phase 157 | Complete |
+| INB-02 | Phase 157 | Complete |
+| INB-03 | Phase 157 | Complete |
+| INB-04 | Phase 157 | Complete |
+| INB-05 | Phase 157 | Complete |
+| INB-06 | Phase 157 | Complete |
+| INB-07 | Phase 157 | Complete |
+| DATA-01 | Phase 157 | Complete |
+| DATA-02 | Phase 157 | Complete |
+| DATA-03 | Phase 157 | Complete |
+| DATA-04 | Phase 157 | Complete |
 | DATA-05 | Phase 157 | Complete |
-| DATA-06 | Phase 157 | Pending |
-| DATA-07 | Phase 157 | Pending |
-| DATA-08 | Phase 157 | Pending |
+| DATA-06 | Phase 157 | Complete |
+| DATA-07 | Phase 157 | Complete |
+| DATA-08 | Phase 157 | Complete |
 | ARCH-01 | Phase 158 | Pending |
 | ARCH-02 | Phase 158 | Pending |
 | ARCH-03 | Phase 158 | Pending |

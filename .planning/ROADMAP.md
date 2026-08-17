@@ -53,7 +53,7 @@
 
 - [x] **Phase 155: Restore Adopter and CI Truth** - Make migration generation and the CI signal that proves it trustworthy for real Ecto hosts. (completed 2026-08-16)
 - [x] **Phase 156: Delivery Correctness and Bounded Execution** - Make outbound execution atomic, honest, privacy-safe, and resource-bounded. (completed 2026-08-17)
-- [ ] **Phase 157: Inbound, Database, and Lifecycle Hardening** - Bound untrusted inbound work and make data access, migration, webhook, and retention paths safe at scale.
+- [x] **Phase 157: Inbound, Database, and Lifecycle Hardening** - Bound untrusted inbound work and make data access, migration, webhook, and retention paths safe at scale. (completed 2026-08-17)
 - [ ] **Phase 158: Simplify Architecture Without Breaking Adopters** - Clarify runtime and package ownership while preserving stable v2 entry points.
 - [ ] **Phase 159: Raise and Simplify Engineering Gates** - Make deterministic engineering proof comprehensive, repeatable, and genuinely merge-gating.
 - [ ] **Phase 160: Certification, Documentation, and Release** - Certify the full adopter journey, reconcile release truth, and publish the additive package family.
@@ -130,11 +130,11 @@ Plans:
 - [x] 157-02-PLAN.md — Gate S3 retrieval by metadata size and preserve closed retry classifications.
 - [x] 157-03-PLAN.md — Bound shared SES certificate and Mailgun replay cache work.
 - [x] 157-04-PLAN.md — Restrict route declarations to literal AST and pin inbound ETS bounds.
-- [ ] 157-05-PLAN.md — Add SHA-256 transition and durable replayable terminal evidence.
+- [x] 157-05-PLAN.md — Add SHA-256 transition and durable replayable terminal evidence.
 - [x] 157-06-PLAN.md — Add positional bulk suppression lookup and bounded batch preflight.
 - [x] 157-07-PLAN.md — Keyset-page suppression resync with bounded reads and upserts.
 - [x] 157-08-PLAN.md — Batch indexed retention and webhook projection while retaining exact signed bytes.
-- [ ] 157-09-PLAN.md — Prove populated generated-host upgrades and immutable shipped migrations.
+- [x] 157-09-PLAN.md — Prove populated generated-host upgrades and immutable shipped migrations.
 
 ### Phase 158: Simplify Architecture Without Breaking Adopters
 
@@ -197,7 +197,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 155. Restore Adopter and CI Truth | 7/7 | Complete    | 2026-08-16 |
 | 156. Delivery Correctness and Bounded Execution | 6/6 | Complete    | 2026-08-17 |
-| 157. Inbound, Database, and Lifecycle Hardening | 7/9 | In Progress|  |
-| 158. Simplify Architecture Without Breaking Adopters | 0/TBD | Not started | - |
+| 157. Inbound, Database, and Lifecycle Hardening | 9/9 | Complete    | 2026-08-17 |
+| 158. Simplify Architecture Without Breaking Adopters | 0/6 | Not started | - |
 | 159. Raise and Simplify Engineering Gates | 0/TBD | Not started | - |
 | 160. Certification, Documentation, and Release | 0/TBD | Not started | - |
