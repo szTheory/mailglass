@@ -32,11 +32,13 @@ defmodule Mailglass.RateLimiterTest do
     test "owner fallback never mints permits when a clock value regresses" do
       bucket = {:clock_regression, 0, 100, 17, 100}
 
-      assert {:denied, {:clock_regression, 0, 100, 17, 100}} =
+      assert {:denied, replacement} =
                AtomicBucket.consume_taken(bucket, 1, 60_000_000, 99)
 
+      assert replacement == {:clock_regression, 0, 100, 17, 100}
+
       assert {:denied, {:clock_regression, 0, 100, 17, 100}} =
-               AtomicBucket.consume_taken(bucket, 1, 60_000_000, 100)
+               AtomicBucket.consume_taken(replacement, 1, 60_000_000, 100)
     end
 
     test "recreates its ETS table instead of raising when admission sees it absent" do
