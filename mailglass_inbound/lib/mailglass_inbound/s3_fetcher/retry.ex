@@ -9,7 +9,7 @@ defmodule MailglassInbound.S3Fetcher.Retry do
   # deliberately small (default 3 attempts, short backoff): it smooths over a
   # rare not-yet-readable window, nothing more.
   #
-  # On exhaustion of a transient error it raises
+  # On exhaustion of a known transient error it raises
   # `MailglassInbound.S3FetchError` `:s3_object_not_ready` so the SES provider
   # surfaces a non-2xx (the caller does NOT ack → SNS redelivers, and the dedupe
   # layer absorbs the duplicate). A clearly non-retryable error short-circuits
@@ -19,9 +19,8 @@ defmodule MailglassInbound.S3Fetcher.Retry do
   #
   #   * `:s3_object_not_ready` / `{:s3_object_not_ready, _}` → TRANSIENT (retry).
   #   * `:s3_fetch_failed` / `{:s3_fetch_failed, _}`         → NON-RETRYABLE.
-  #   * any other reason                                     → treated as
-  #     transient (still bounded), then raised as `:s3_fetch_failed` on
-  #     exhaustion since the cause is unknown.
+  #   * transport, timeout, throttling, and 5xx outcomes     → TRANSIENT (retry).
+  #   * any other reason                                     → NON-RETRYABLE.
 
   alias MailglassInbound.S3FetchError
 
@@ -50,19 +49,47 @@ defmodule MailglassInbound.S3Fetcher.Retry do
     backoff = Keyword.get(opts, :backoff_ms, @default_backoff_ms)
     fetch_opts = Keyword.get(opts, :fetch_opts, [])
 
-    do_attempt(fetcher, bucket, key, fetch_opts, 1, attempts, backoff, nil)
+    do_attempt(fetcher, :fetch, bucket, key, fetch_opts, 1, attempts, backoff)
   end
 
-  defp do_attempt(fetcher, bucket, key, fetch_opts, attempt, max_attempts, backoff, _last) do
-    case fetcher.fetch(bucket, key, fetch_opts) do
+  @doc """
+  Fetch object metadata with the same bounded, closed retry classification used
+  for body retrieval. Legacy adapters without `head/3` fail closed before a GET.
+  """
+  @spec head_with_retry(module(), String.t(), String.t(), keyword()) ::
+          {:ok, %{content_length: non_neg_integer()}}
+  def head_with_retry(fetcher, bucket, key, opts \\ [])
+      when is_atom(fetcher) and is_binary(bucket) and is_binary(key) do
+    attempts = max(Keyword.get(opts, :attempts, @default_attempts), 1)
+    backoff = Keyword.get(opts, :backoff_ms, @default_backoff_ms)
+    fetch_opts = Keyword.get(opts, :fetch_opts, [])
+
+    do_attempt(fetcher, :head, bucket, key, fetch_opts, 1, attempts, backoff)
+  end
+
+  defp do_attempt(fetcher, operation, bucket, key, fetch_opts, attempt, max_attempts, backoff) do
+    case call_fetcher(fetcher, operation, bucket, key, fetch_opts) do
       {:ok, body} when is_binary(body) ->
         {:ok, body}
+
+      {:ok, %{content_length: bytes} = metadata} when is_integer(bytes) and bytes >= 0 ->
+        {:ok, metadata}
 
       {:error, reason} ->
         if retryable?(reason) do
           if attempt < max_attempts do
             sleep_for(backoff, attempt)
-            do_attempt(fetcher, bucket, key, fetch_opts, attempt + 1, max_attempts, backoff, reason)
+
+            do_attempt(
+              fetcher,
+              operation,
+              bucket,
+              key,
+              fetch_opts,
+              attempt + 1,
+              max_attempts,
+              backoff
+            )
           else
             raise s3_fetch_error(
                     :s3_object_not_ready,
@@ -79,6 +106,24 @@ defmodule MailglassInbound.S3Fetcher.Retry do
                   %{bucket: bucket, attempts: attempt}
                 )
         end
+
+      {:ok, other} ->
+        raise s3_fetch_error(
+                :s3_fetch_failed,
+                "Inbound S3 fetch failed: adapter returned malformed data",
+                {:malformed_response, other},
+                %{bucket: bucket, attempts: attempt}
+              )
+    end
+  end
+
+  defp call_fetcher(fetcher, :fetch, bucket, key, opts), do: fetcher.fetch(bucket, key, opts)
+
+  defp call_fetcher(fetcher, :head, bucket, key, opts) do
+    if function_exported?(fetcher, :head, 3) do
+      fetcher.head(bucket, key, opts)
+    else
+      {:error, {:s3_fetch_failed, :metadata_not_supported}}
     end
   end
 
@@ -92,11 +137,18 @@ defmodule MailglassInbound.S3Fetcher.Retry do
 
   defp retryable?(:s3_object_not_ready), do: true
   defp retryable?({:s3_object_not_ready, _}), do: true
-  defp retryable?(:s3_fetch_failed), do: false
-  defp retryable?({:s3_fetch_failed, _}), do: false
-  # Unknown reasons get the benefit of the bounded retry, but exhaust to
-  # :s3_fetch_failed (cause unknown) rather than :s3_object_not_ready.
-  defp retryable?(_other), do: true
+  defp retryable?(:timeout), do: true
+  defp retryable?({:timeout, _}), do: true
+  defp retryable?({:error, :timeout}), do: true
+  defp retryable?({:exit, :timeout}), do: true
+  defp retryable?(:throttled), do: true
+  defp retryable?({:throttled, _}), do: true
+  defp retryable?({:http_error, status}) when is_integer(status) and status in 500..599, do: true
+
+  defp retryable?({:s3_service_error, status}) when is_integer(status) and status in 500..599,
+    do: true
+
+  defp retryable?(_other), do: false
 
   # backoff is the wait BEFORE the next attempt; attempt N waits backoff[N-1].
   defp sleep_for(backoff, attempt) when is_list(backoff) do

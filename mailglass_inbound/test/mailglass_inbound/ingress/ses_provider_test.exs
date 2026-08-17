@@ -205,6 +205,21 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     assert err.type == :s3_object_not_ready
   end
 
+  test "retries a known transient metadata failure within the configured budget", %{
+    private_key: pk
+  } do
+    S3Fetcher.Fake.put_head_error(@bucket, "ses-head-timeout", :timeout)
+    raw = signed_s3_notification(pk, "ses-head-timeout")
+    config = Map.put(ses_config(), :s3_retry_opts, attempts: 3, backoff_ms: [0, 0])
+
+    {:ok, verified} = SES.verify!(ses_request(raw), config)
+
+    err = assert_raise S3FetchError, fn -> SES.resolve_content!(verified, config) end
+    assert err.type == :s3_object_not_ready
+    assert S3Fetcher.Fake.head_count(@bucket, "ses-head-timeout") == 3
+    assert S3Fetcher.Fake.call_count(@bucket, "ses-head-timeout") == 0
+  end
+
   test "normalize builds evidence with raw_payload=SNS envelope and raw_mime=fetched body", %{
     private_key: pk
   } do

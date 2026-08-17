@@ -225,7 +225,7 @@ defmodule MailglassInbound.Ingress.Providers.SES do
     retry_opts = Map.get(config, :s3_retry_opts, [])
     max_bytes = s3_max_bytes!(config)
 
-    case fetcher.head(bucket, key, retry_opts) do
+    case S3Fetcher.Retry.head_with_retry(fetcher, bucket, key, retry_opts) do
       {:ok, %{content_length: bytes}}
       when is_integer(bytes) and bytes >= 0 and bytes <= max_bytes ->
         :ok
