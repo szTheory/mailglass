@@ -1,27 +1,35 @@
 ---
 phase: 156-delivery-correctness-and-bounded-execution
-fixed_at: 2026-08-17T05:38:00Z
+fixed_at: 2026-08-17T06:02:00Z
 review_path: .planning/phases/156-delivery-correctness-and-bounded-execution/156-REVIEW.md
-iteration: 4
-findings_in_scope: 2
-fixed: 2
+iteration: 5
+findings_in_scope: 1
+fixed: 1
 skipped: 0
 status: all_fixed
 ---
 
 # Phase 156: Code Review Fix Report
 
-**Fixed at:** 2026-08-17T05:38:00Z
+**Fixed at:** 2026-08-17T06:02:00Z
 **Source review:** `.planning/phases/156-delivery-correctness-and-bounded-execution/156-REVIEW.md`
-**Iteration:** 4
+**Iteration:** 5
 
 **Summary:**
 
-- Findings in scope: 2
-- Fixed: 2
+- Findings in scope: 1
+- Fixed: 1
 - Skipped: 0
 
 ## Fixed Issues
+
+### Iteration 5
+
+#### CR-01: Clock-regression refill can mint a token
+
+**Files modified:** `lib/mailglass/rate_limiter/atomic_bucket.ex`, `test/mailglass/rate_limiter_test.exs`, `mailglass_inbound/test/mailglass_inbound/rate_limiter_test.exs`.
+**Commits:** `8abde9a7`, `b13b03c7`
+**Applied fix:** Both the CAS fast path and owner contention fallback now use `max(now_us, last_us)` as their effective clock, preserving the fixed-point remainder and monotonically advancing `last_us` and `last_seen`. Core fallback and inbound real-ETS regressions seed a depleted tuple at time 100, then exercise time 99 and 100 without minting a permit or regressing timestamps.
 
 ### Iteration 4
 
@@ -75,6 +83,6 @@ status: all_fixed
 
 ---
 
-_Fixed: 2026-08-17T05:38:00Z_
+_Fixed: 2026-08-17T06:02:00Z_
 _Fixer: gsd-code-fixer_
-_Iteration: 4_
+_Iteration: 5_
