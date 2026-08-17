@@ -72,6 +72,7 @@ defmodule Mailglass.Webhook.Plug do
   alias Mailglass.Outbound.Projector
   alias Mailglass.Tenancy
   alias Mailglass.Webhook.Telemetry, as: WebhookTelemetry
+  alias Mailglass.Webhook.Pipeline
   alias Mailglass.Webhook.VerifiedRequest
 
   # Forward reference to the ingest module. Referenced at runtime and
@@ -103,7 +104,7 @@ defmodule Mailglass.Webhook.Plug do
     # element (conn) is returned to `Plug.call/2`.
     WebhookTelemetry.ingest_span(
       %{provider: provider, status: :pending},
-      fn -> do_call(conn, provider, opts) end
+      fn -> Pipeline.run(conn, provider, opts, &do_call/3) end
     )
   end
 
