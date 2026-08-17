@@ -10,18 +10,27 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     "config :mailglass_inbound, repo: Host.Repo",
     "mailglass.gen.migration --repo Host.Repo",
     "mailglass.inbound.gen.migration --repo Host.Repo",
-    "Mailglass\\.Migration\\.up\\(repo: Host\\.Repo\\)",
-    "MailglassInbound\\.Migration\\.up\\(repo: Host\\.Repo\\)",
+    "Mailglass.Migration.up(repo: Host.Repo, version: 5)",
+    "MailglassInbound.Migration.up(repo: Host.Repo, version: 1)",
+    "@disable_ddl_transaction true",
+    "@disable_migration_lock true",
+    "non_transactional_wrapper: true",
     "mix ecto.migrate -r Host.Repo",
-    "Host.Repo.insert(Delivery.changeset",
-    "Host.Repo.get!(Delivery, delivery.id, prefix: \"mailglass\")",
+    "Persist.persist(handoff, repo: Host.Repo, routes: [])",
+    "Persist.backfill_sha256(repo: Host.Repo, prefix: \"mailglass\", limit: 1)",
+    "raw_signed_body = <<0, 255, 13, 10",
+    "Mailglass.Migrations.Postgres.V06.concurrent_indexes()",
+    "MailglassInbound.Migrations.Postgres.V02.concurrent_indexes()",
+    "EXPLAIN (FORMAT JSON)",
+    "i.indisvalid",
+    "error.postgres.code != :division_by_zero",
+    "DELETE FROM schema_migrations WHERE version = $1",
     "mix ecto.rollback -r Host.Repo",
-    "run_journey inbound_first core inbound",
-    "run_journey core_first inbound core",
-    "${SCRATCH_DATABASE}_${rollback_order}",
-    "assert_first_rollback_state!.(rolled_back)",
-    "assert_final_rollback_state!.()",
-    "to_regnamespace($1)"
+    "run_journey core_first core inbound",
+    "run_journey inbound_first inbound core",
+    "${SCRATCH_DATABASE}_${journey_name}",
+    "FIRST_ROLLBACK_PACKAGE",
+    "additive rollback removed prior relation"
   ]
 
   test "generated Ecto host proof pins the public generator-to-Postgres journey" do
@@ -59,10 +68,11 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     assert source =~ "core_first|inbound_first"
     assert source =~ "mailglass.gen.migration --repo Host.Repo"
     assert source =~ "mailglass.inbound.gen.migration --repo Host.Repo"
-    assert source =~ "\"core\" ->"
-    assert source =~ "\"inbound\" ->"
-    assert source =~ "assert_first_rollback_state!.(rolled_back)"
-    assert source =~ "assert_final_rollback_state!.()"
+    assert source =~ "run_journey core_first core inbound"
+    assert source =~ "run_journey inbound_first inbound core"
+    assert source =~ "FIRST_ROLLBACK_PACKAGE"
+    assert source =~ "5 = Mailglass.Migration.migrated_version"
+    assert source =~ "1 = MailglassInbound.Migration.migrated_version"
   end
 
   test "generated-host proof owns only a newly-created private scratch directory" do
