@@ -56,26 +56,41 @@ defmodule MailglassInbound.StabilityContractTest do
   end
 
   describe "adopter-facing entrypoints expose since metadata" do
+    test "Ingress Plug keeps its public Plug callbacks" do
+      assert Code.ensure_loaded?(MailglassInbound.Ingress.Plug)
+      assert function_exported?(MailglassInbound.Ingress.Plug, :init, 1)
+      assert function_exported?(MailglassInbound.Ingress.Plug, :call, 2)
+    end
+
     test "stable runtime function and macro entrypoints are annotated" do
       assert entry_meta!(MailglassInbound, :function, :version, 0)[:since] == "0.1.0"
 
-      assert entry_meta!(MailglassInbound.InboundMessage, :function, :suppression_flagged?, 1)[:since] ==
+      assert entry_meta!(MailglassInbound.InboundMessage, :function, :suppression_flagged?, 1)[
+               :since
+             ] ==
                "0.2.0"
 
-      assert entry_meta!(MailglassInbound.Ingress.CachingBodyReader, :function, :read_body, 2)[:since] ==
+      assert entry_meta!(MailglassInbound.Ingress.CachingBodyReader, :function, :read_body, 2)[
+               :since
+             ] ==
                "0.1.0"
 
       assert entry_meta!(MailglassInbound.Router, :macro, :__using__, 1)[:since] == "0.1.0"
       assert entry_meta!(MailglassInbound.Router, :macro, :route, 2)[:since] == "0.1.0"
       assert entry_meta!(MailglassInbound.Mailbox, :callback, :process, 1)[:since] == "0.1.0"
 
-      assert entry_meta!(MailglassInbound.PubSub.Topics, :function, :inbound_record_inserted, 1)[:since] ==
+      assert entry_meta!(MailglassInbound.PubSub.Topics, :function, :inbound_record_inserted, 1)[
+               :since
+             ] ==
                "0.2.0"
     end
 
     test "stable structured error closed-set functions are annotated" do
       assert entry_meta!(MailglassInbound.MIMEError, :function, :__types__, 0)[:since] == "0.2.0"
-      assert entry_meta!(MailglassInbound.SignatureError, :function, :__types__, 0)[:since] == "0.2.0"
+
+      assert entry_meta!(MailglassInbound.SignatureError, :function, :__types__, 0)[:since] ==
+               "0.2.0"
+
       assert entry_meta!(MailglassInbound.S3FetchError, :function, :__types__, 0)[:since] == "0.2.0"
     end
 
@@ -97,9 +112,12 @@ defmodule MailglassInbound.StabilityContractTest do
         assert entry_meta!(MailglassInbound.Fixtures, :function, name, arity)[:since] == "0.2.0"
       end
 
-      assert entry_meta!(MailglassInbound.Test.Ingress, :function, :receive_inbound, 2)[:since] == "0.2.0"
+      assert entry_meta!(MailglassInbound.Test.Ingress, :function, :receive_inbound, 2)[:since] ==
+               "0.2.0"
 
-      assert entry_meta!(MailglassInbound.Test.Ingress, :function, :receive_provider_payload, 3)[:since] ==
+      assert entry_meta!(MailglassInbound.Test.Ingress, :function, :receive_provider_payload, 3)[
+               :since
+             ] ==
                "0.2.0"
 
       for {name, arity} <- [
