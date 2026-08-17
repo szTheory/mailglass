@@ -179,6 +179,19 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
           Code.ensure_loaded!(module)
         end
 
+        # The checked-in reference host intentionally resolves the last
+        # published inbound package. When this proof loads the workspace Plug
+        # to validate an additive change, load any new private handoff structs
+        # from the workspace too instead of compiling the new Plug against the
+        # older Hex package's module set.
+        verified_request_path =
+          Path.expand(
+            "../../../mailglass_inbound/lib/mailglass_inbound/ingress/verified_request.ex",
+            __DIR__
+          )
+
+        Code.require_file(verified_request_path)
+
         plug_path =
           Path.expand("../../../mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex", __DIR__)
 
