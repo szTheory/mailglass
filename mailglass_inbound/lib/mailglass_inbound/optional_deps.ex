@@ -10,6 +10,26 @@ defmodule MailglassInbound.OptionalDeps do
   """
 end
 
+defmodule MailglassInbound.OptionalDeps.GenSmtp do
+  @moduledoc false
+
+  @compile {:no_warn_undefined, [:gen_smtp_client, :mimemail]}
+
+  @spec available?() :: boolean()
+  def available?, do: Code.ensure_loaded?(:gen_smtp_client)
+
+  @spec decode(binary(), keyword()) :: {:ok, tuple()} | {:error, term()}
+  def decode(raw, opts \\ []) when is_binary(raw) do
+    erl_opts = [{:allow_missing_version, true}, {:encoding, :none}] ++ opts
+    {:ok, :mimemail.decode(raw, erl_opts)}
+  rescue
+    e -> {:error, {:error, e}}
+  catch
+    :throw, reason -> {:error, {:throw, reason}}
+    :exit, reason -> {:error, {:exit, reason}}
+  end
+end
+
 defmodule MailglassInbound.OptionalDeps.Oban do
   @moduledoc """
   Gateway for the optional Oban dependency (`{:oban, "~> 2.21"}`).

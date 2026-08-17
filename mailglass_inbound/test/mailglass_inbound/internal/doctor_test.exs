@@ -112,6 +112,7 @@ defmodule MailglassInbound.Internal.DoctorTest do
       conflict = find_conflict_fail(result)
       assert conflict, "expected a conflict :fail finding for broad-before-narrow"
       assert conflict.status == :fail
+
       assert conflict.observed =~ "doctor_test.exs:" or conflict.observed =~ ".ex:",
              "conflict finding must name the source file:line (Route.:source, D-49-08)"
     end
@@ -181,7 +182,7 @@ defmodule MailglassInbound.Internal.DoctorTest do
       assert mime, "expected a :mime_backend finding"
       assert mime.observed =~ "gen_smtp"
 
-      if Mailglass.OptionalDeps.GenSmtp.available?() do
+      if MailglassInbound.OptionalDeps.GenSmtp.available?() do
         assert mime.status == :pass
         # version is reported when available
         assert mime.observed =~ ~r/\d+\.\d+/

@@ -7,6 +7,7 @@ defmodule MailglassInbound.Ingress.Persist do
   alias MailglassInbound.InboundRecords
   alias MailglassInbound.InboundRecords.InboundEvidence
   alias MailglassInbound.InboundRecords.InboundRecord
+  alias MailglassInbound.Ports
   alias MailglassInbound.Router.Matcher
 
   @route_binding_key "mailglass_execution_route"
@@ -434,26 +435,8 @@ defmodule MailglassInbound.Ingress.Persist do
         false
 
       address ->
-        store =
-          Application.get_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.Ecto)
-
-        check_suppression(store, tenant_id, address)
+        Ports.Core.suppressed_sender?(tenant_id, address)
     end
-  end
-
-  # A raised exception (e.g. the configured store's repo is unavailable in an
-  # inbound-only runtime) is the same hazard class as `{:error, _}` — a store
-  # hiccup must never block legitimate inbound mail, so we degrade OPEN here too.
-  defp check_suppression(store, tenant_id, address) do
-    case store.check(%{tenant_id: tenant_id, address: String.downcase(address)}) do
-      {:suppressed, _entry} -> true
-      :not_suppressed -> false
-      {:error, _reason} -> false
-    end
-  rescue
-    _error -> false
-  catch
-    _kind, _reason -> false
   end
 
   defp first_from_address([%{address: address} | _rest]) when is_binary(address) and address != "",
