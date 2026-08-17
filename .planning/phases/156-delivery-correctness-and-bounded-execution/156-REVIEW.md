@@ -1,6 +1,6 @@
 ---
 phase: 156-delivery-correctness-and-bounded-execution
-reviewed: 2026-08-17T07:37:20Z
+reviewed: 2026-08-17T07:52:00Z
 depth: deep
 files_reviewed: 54
 files_reviewed_list:
@@ -65,7 +65,7 @@ status: clean
 
 # Phase 156: Code Review Report
 
-**Reviewed:** 2026-08-17T07:37:20Z
+**Reviewed:** 2026-08-17T07:52:00Z
 **Depth:** deep
 **Files Reviewed:** 54
 **Status:** clean
@@ -80,12 +80,14 @@ Final CI-closure changes were also reviewed at deep depth. The Oban gateway now 
 
 The new repo-bound generated wrappers correctly pass their selected host Repo into both install and upgrade directions, and the consumer smoke's random database is scoped to its generated host. The generated-Ecto-host proof now asserts both repo-bound `up` and `down` calls for core and inbound wrappers, matching the generated source; it was additionally exercised across both generation/rollback orders. The previous proof/source mismatch is resolved.
 
+The canonical consumer-install script now explicitly exports `MIX_ENV=dev` before generating, compiling, migrating, and booting the temporary host. That keeps its warning-as-error compile gate and `mix phx.server` on the same build path even when invoked under `mix ci.full`'s inherited test environment; it does not change the smoke's path/Hex dependency selection or disposable database scope. The reported inherited-`MIX_ENV=test` end-to-end run completed with HTTP 200.
+
 ## Narrative Findings (AI reviewer)
 
 All reviewed files meet the applicable correctness and security standards. No issues found.
 
 ---
 
-_Reviewed: 2026-08-17T07:37:20Z_
+_Reviewed: 2026-08-17T07:52:00Z_
 _Reviewer: gsd-code-reviewer_
 _Depth: deep_
