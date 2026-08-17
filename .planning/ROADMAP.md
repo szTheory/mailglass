@@ -175,7 +175,7 @@ Plans:
 
 **Plans**:
 
-- [ ] 159-01-PLAN.md — tested required/advisory CI policy harness.
+- [x] 159-01-PLAN.md — tested required/advisory CI policy harness.
 - [ ] 159-02-PLAN.md — formatter baseline and package-scoped locked setup.
 - [ ] 159-03-PLAN.md — deterministic skip/flaky/sleep governance.
 - [ ] 159-04-PLAN.md — measurement-first coverage floors and critical contracts.
@@ -207,5 +207,5 @@ Plans:
 | 156. Delivery Correctness and Bounded Execution | 6/6 | Complete    | 2026-08-17 |
 | 157. Inbound, Database, and Lifecycle Hardening | 9/9 | Complete    | 2026-08-17 |
 | 158. Simplify Architecture Without Breaking Adopters | 6/6 | Complete    | 2026-08-17 |
-| 159. Raise and Simplify Engineering Gates | 0/7 | Not started | - |
+| 159. Raise and Simplify Engineering Gates | 1/7 | In progress | 2026-08-17 |
 | 160. Certification, Documentation, and Release | 0/TBD | Not started | - |
