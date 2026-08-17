@@ -83,7 +83,12 @@ defmodule Mailglass.SuppressionStore do
       end
 
     if is_list(result) and length(result) == length(keys) do
-      result
+      Enum.map(result, fn
+        :not_suppressed = valid -> valid
+        {:suppressed, %Entry{}} = valid -> valid
+        {:error, _reason} = valid -> valid
+        _invalid -> {:error, :invalid_bulk_result}
+      end)
     else
       List.duplicate({:error, :invalid_bulk_result}, length(keys))
     end

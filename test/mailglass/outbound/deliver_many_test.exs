@@ -38,6 +38,12 @@ defmodule Mailglass.Outbound.DeliverManyTest do
     def record(_attrs, _opts), do: {:error, :unsupported}
   end
 
+  defmodule InvalidValueBulkSuppressionStore do
+    def check_many(keys, _opts), do: Enum.map(keys, fn _key -> :invalid_result end)
+    def check(_key, _opts), do: :not_suppressed
+    def record(_attrs, _opts), do: {:error, :unsupported}
+  end
+
   setup do
     Mailglass.Adapters.Fake.checkout()
     Mailglass.Adapters.Fake.set_shared(self())
@@ -254,6 +260,18 @@ defmodule Mailglass.Outbound.DeliverManyTest do
 
       assert {:ok, [delivery]} =
                Outbound.deliver_many([build_message("malformed-bulk@example.com")], [])
+
+      assert delivery.status == :failed
+      assert delivery.last_error[:type] == :preflight_rejected
+    end
+
+    test "fails closed when a correctly sized bulk response contains an invalid value" do
+      prior_store = Application.get_env(:mailglass, :suppression_store)
+      Application.put_env(:mailglass, :suppression_store, InvalidValueBulkSuppressionStore)
+      on_exit(fn -> Application.put_env(:mailglass, :suppression_store, prior_store) end)
+
+      assert {:ok, [delivery]} =
+               Outbound.deliver_many([build_message("invalid-bulk-value@example.com")], [])
 
       assert delivery.status == :failed
       assert delivery.last_error[:type] == :preflight_rejected
