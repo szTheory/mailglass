@@ -2,38 +2,38 @@
 gsd_state_version: 1.0
 milestone: v2.6
 milestone_name: Engineering Quality Ratchet
-current_phase: 156
-current_phase_name: Delivery Correctness and Bounded Execution
+current_phase: 157
+current_phase_name: Inbound, Database, and Lifecycle Hardening
 status: planning
-stopped_at: Completed 155-07-PLAN.md
-last_updated: "2026-08-17T03:12:25.254Z"
-last_activity: 2026-08-16
-last_activity_desc: Phase 155 complete, transitioned to Phase 156
+stopped_at: Phase 156 complete and verified; ready to plan Phase 157
+last_updated: "2026-08-17T08:01:06.766Z"
+last_activity: 2026-08-17
+last_activity_desc: Phase 156 complete, transitioned to Phase 157
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 7
-  completed_plans: 7
-  percent: 17
+  completed_phases: 2
+  total_plans: 13
+  completed_plans: 13
+  percent: 33
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-16 after Phase 155)
+See: .planning/PROJECT.md (updated 2026-08-17 after Phase 156)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 156 — Delivery Correctness and Bounded Execution.
+**Current focus:** Phase 157 — Inbound, Database, and Lifecycle Hardening.
 
 ## Current Position
 
-Phase: 156 of 160 (Delivery Correctness and Bounded Execution)
+Phase: 157 of 160 (Inbound, Database, and Lifecycle Hardening)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-08-16 — Phase 155 complete, transitioned to Phase 156
+Last activity: 2026-08-17 — Phase 156 complete, transitioned to Phase 157
 
-Progress: [██████████] 100%
+Progress: [███░░░░░░░] 33%
 
 ## v2.6 Milestone Intent
 
@@ -732,6 +732,13 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Roadmap Evolution
 
+- 2026-08-17: **Phase 156 complete and verified (5/5).** Core and inbound rate limiting is exact,
+  bounded, and restart-safe; durable batches commit projections, events, private payloads, and jobs in
+  one transaction; Task fallback is bounded and honest; retry/error/telemetry semantics are closed and
+  privacy-safe; and persisted closed sets use finite decoders. The full root `mix ci` gate, cold generated
+  Phoenix/Ecto/Postgres adopter smoke, and both generated-host migration orders passed. Deep review closed
+  with 0 findings. Next: Phase 157 inbound, database, and lifecycle hardening.
+
 - 2026-08-16: **Phase 155 complete and verified (5/5).** Real core/inbound fresh and upgrade wrappers,
   fail-closed migration metadata, exact runtime-revalidated legacy repair, both shared-schema rollback
   orders in fresh generated hosts, and fail-closed `CI Green` are shipped on main. Deep review found and
@@ -760,7 +767,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 ## Session Continuity
 
 **Last session:** 2026-08-17T03:13:00Z
-**Stopped at:** Phase 155 complete and verified; ready to plan Phase 156
+**Stopped at:** Phase 156 complete and verified; ready to plan Phase 157
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
@@ -877,4 +884,4 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Research and plan Phase 157, then execute it autonomously.
