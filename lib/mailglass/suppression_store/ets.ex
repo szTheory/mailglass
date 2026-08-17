@@ -64,6 +64,16 @@ defmodule Mailglass.SuppressionStore.ETS do
   def check(_key, _opts), do: {:error, :invalid_key}
 
   @impl Mailglass.SuppressionStore
+  def check_many(keys, opts \\ []) when is_list(keys) and is_list(opts) do
+    results =
+      keys
+      |> Enum.uniq_by(&bulk_key/1)
+      |> Map.new(fn key -> {bulk_key(key), check(key, opts)} end)
+
+    Enum.map(keys, &Map.fetch!(results, bulk_key(&1)))
+  end
+
+  @impl Mailglass.SuppressionStore
   def record(attrs, opts \\ [])
 
   def record(attrs, _opts) when is_map(attrs) do
@@ -102,6 +112,12 @@ defmodule Mailglass.SuppressionStore.ETS do
       base
     end
   end
+
+  defp bulk_key(%{tenant_id: tid, address: address} = key)
+       when is_binary(tid) and is_binary(address),
+       do: {tid, String.downcase(address), Map.get(key, :stream)}
+
+  defp bulk_key(key), do: {:invalid, key}
 
   defp domain(address) do
     case String.split(address, "@", parts: 2) do
