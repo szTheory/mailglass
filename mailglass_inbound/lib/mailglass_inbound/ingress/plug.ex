@@ -557,6 +557,7 @@ defmodule MailglassInbound.Ingress.Plug do
 
     %{
       s3_fetcher: config[:s3_fetcher],
+      s3_max_bytes: config[:s3_max_bytes],
       cert_cache_ttl_seconds: config[:cert_cache_ttl_seconds],
       # WR-04: thread the documented retry tuning knob into the config map.
       # `fetch_s3_body!` reads `Map.get(config, :s3_retry_opts, [])`, but this

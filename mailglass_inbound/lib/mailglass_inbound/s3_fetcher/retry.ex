@@ -145,6 +145,11 @@ defmodule MailglassInbound.S3Fetcher.Retry do
   defp retryable?({:throttled, _}), do: true
   defp retryable?({:http_error, status}) when is_integer(status) and status in 500..599, do: true
 
+  # ExAws returns service responses as `{:http_error, status, body}`.
+  defp retryable?({:http_error, status, _body})
+       when is_integer(status) and status in 500..599,
+       do: true
+
   defp retryable?({:s3_service_error, status}) when is_integer(status) and status in 500..599,
     do: true
 
