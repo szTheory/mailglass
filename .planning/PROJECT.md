@@ -23,6 +23,13 @@ hosts proved both shared-schema rollback orders, and protected `CI Green` now fa
 required code proof is skipped. Verification passed 5/5 after closing the shared-schema rollback gap and a
 deep review's three destructive/fail-open findings.
 
+**Phase 156 completed and verified 2026-08-17.** Core and inbound rate limiting now has exact bounded
+admission and restart-safe lifecycle behavior; durable batches commit delivery projections, events,
+private payloads, and Oban jobs atomically; local fallback execution is bounded and reports saturation;
+and retry, error privacy, telemetry, and persisted closed-set decoding are explicit. The full root CI gate,
+a cold generated Phoenix/Ecto/Postgres adopter installation, and both generated-host migration orders are
+green. Independent verification passed 5/5 and deep review closed with no findings.
+
 **v2.5 B2C Alpha Adoption Certification completed 2026-08-04.** The published `mailglass` 2.4.1,
 `mailglass_admin` 2.4.1, and `mailglass_inbound` 2.1.2 package family passed its then-current package-shaped
 proof. The v2.6 audit supersedes the claim that no library defect remains: the migration generator and

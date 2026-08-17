@@ -16,14 +16,14 @@
 
 ### Delivery Correctness and Resource Bounds
 
-- [ ] **EXEC-01**: Concurrent core and inbound token-bucket refills cannot grant more capacity than configured and do not lose sub-token elapsed time.
-- [ ] **EXEC-02**: Rate-limit ETS storage evicts idle keys, has a bounded maximum cardinality, and fails closed when capacity remains exhausted.
-- [ ] **EXEC-03**: Durable batch delivery commits projections, events, private payloads, and Oban jobs atomically or reports failure without stranded queued rows.
-- [ ] **EXEC-04**: Task-supervisor fallback has bounded concurrency and reports spawn saturation/failure instead of claiming a delivery was queued.
-- [ ] **EXEC-05**: Provider outcomes carry a closed transient/permanent retry classification; transport, timeout, 429, and 5xx failures retry while permanent outcomes are discarded.
-- [ ] **EXEC-06**: Serializable delivery errors contain no provider body preview or recipient/message content.
-- [ ] **EXEC-07**: Tracking telemetry reports successful and failed ledger writes truthfully while preserving fail-open HTTP behavior.
-- [ ] **EXEC-08**: Persisted/job closed-set strings are converted through explicit mappings, never unbounded atom creation.
+- [x] **EXEC-01**: Concurrent core and inbound token-bucket refills cannot grant more capacity than configured and do not lose sub-token elapsed time.
+- [x] **EXEC-02**: Rate-limit ETS storage evicts idle keys, has a bounded maximum cardinality, and fails closed when capacity remains exhausted.
+- [x] **EXEC-03**: Durable batch delivery commits projections, events, private payloads, and Oban jobs atomically or reports failure without stranded queued rows.
+- [x] **EXEC-04**: Task-supervisor fallback has bounded concurrency and reports spawn saturation/failure instead of claiming a delivery was queued.
+- [x] **EXEC-05**: Provider outcomes carry a closed transient/permanent retry classification; transport, timeout, 429, and 5xx failures retry while permanent outcomes are discarded.
+- [x] **EXEC-06**: Serializable delivery errors contain no provider body preview or recipient/message content.
+- [x] **EXEC-07**: Tracking telemetry reports successful and failed ledger writes truthfully while preserving fail-open HTTP behavior.
+- [x] **EXEC-08**: Persisted/job closed-set strings are converted through explicit mappings, never unbounded atom creation.
 
 ### Inbound Security and Failure Semantics
 
@@ -98,14 +98,14 @@
 | ADOPT-05 | Phase 155 | Complete |
 | ADOPT-06 | Phase 155 | Complete |
 | QUAL-02 | Phase 155 | Complete |
-| EXEC-01 | Phase 156 | Pending |
-| EXEC-02 | Phase 156 | Pending |
-| EXEC-03 | Phase 156 | Pending |
-| EXEC-04 | Phase 156 | Pending |
-| EXEC-05 | Phase 156 | Pending |
-| EXEC-06 | Phase 156 | Pending |
-| EXEC-07 | Phase 156 | Pending |
-| EXEC-08 | Phase 156 | Pending |
+| EXEC-01 | Phase 156 | Complete |
+| EXEC-02 | Phase 156 | Complete |
+| EXEC-03 | Phase 156 | Complete |
+| EXEC-04 | Phase 156 | Complete |
+| EXEC-05 | Phase 156 | Complete |
+| EXEC-06 | Phase 156 | Complete |
+| EXEC-07 | Phase 156 | Complete |
+| EXEC-08 | Phase 156 | Complete |
 | INB-01 | Phase 157 | Pending |
 | INB-02 | Phase 157 | Pending |
 | INB-03 | Phase 157 | Pending |

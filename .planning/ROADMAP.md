@@ -52,7 +52,7 @@
 **Milestone Goal:** Raise the internal engineering bar while proving the generated first-adopter path, runtime correctness, data safety, architecture boundaries, and merge/release signals are honest. All changes remain additive-only; admin/operator behavior remains untouched.
 
 - [x] **Phase 155: Restore Adopter and CI Truth** - Make migration generation and the CI signal that proves it trustworthy for real Ecto hosts. (completed 2026-08-16)
-- [ ] **Phase 156: Delivery Correctness and Bounded Execution** - Make outbound execution atomic, honest, privacy-safe, and resource-bounded.
+- [x] **Phase 156: Delivery Correctness and Bounded Execution** - Make outbound execution atomic, honest, privacy-safe, and resource-bounded. (completed 2026-08-17)
 - [ ] **Phase 157: Inbound, Database, and Lifecycle Hardening** - Bound untrusted inbound work and make data access, migration, webhook, and retention paths safe at scale.
 - [ ] **Phase 158: Simplify Architecture Without Breaking Adopters** - Clarify runtime and package ownership while preserving stable v2 entry points.
 - [ ] **Phase 159: Raise and Simplify Engineering Gates** - Make deterministic engineering proof comprehensive, repeatable, and genuinely merge-gating.
@@ -101,12 +101,13 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [ ] 156-01-PLAN.md — Replace racy/unbounded core and inbound rate-limit state with a shared private fixed-point CAS engine.
-- [ ] 156-02-PLAN.md — Commit durable batch projections, events, rendered private metadata, and Oban jobs atomically.
-- [ ] 156-03-PLAN.md — Bound core/inbound Task fallback and report every rejected spawn honestly.
-- [ ] 156-04-PLAN.md — Close retry classes, redact errors, and make dispatch/tracking telemetry truthful.
-- [ ] 156-05-PLAN.md — Replace persisted/job runtime atom construction with finite provider/source decoders.
-- [ ] 156-06-PLAN.md — Close lifecycle/contention false denials with safe table recreation and exact restart concurrency proof.
+
+- [x] 156-01-PLAN.md — Replace racy/unbounded core and inbound rate-limit state with a shared private fixed-point CAS engine.
+- [x] 156-02-PLAN.md — Commit durable batch projections, events, rendered private metadata, and Oban jobs atomically.
+- [x] 156-03-PLAN.md — Bound core/inbound Task fallback and report every rejected spawn honestly.
+- [x] 156-04-PLAN.md — Close retry classes, redact errors, and make dispatch/tracking telemetry truthful.
+- [x] 156-05-PLAN.md — Replace persisted/job runtime atom construction with finite provider/source decoders.
+- [x] 156-06-PLAN.md — Close lifecycle/contention false denials with safe table recreation and exact restart concurrency proof.
 
 ### Phase 157: Inbound, Database, and Lifecycle Hardening
 
@@ -174,7 +175,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 155. Restore Adopter and CI Truth | 7/7 | Complete    | 2026-08-16 |
-| 156. Delivery Correctness and Bounded Execution | 0/TBD | Not started | - |
+| 156. Delivery Correctness and Bounded Execution | 6/6 | Complete    | 2026-08-17 |
 | 157. Inbound, Database, and Lifecycle Hardening | 0/TBD | Not started | - |
 | 158. Simplify Architecture Without Breaking Adopters | 0/TBD | Not started | - |
 | 159. Raise and Simplify Engineering Gates | 0/TBD | Not started | - |
