@@ -9,11 +9,14 @@ defmodule MailglassInbound.WorkerTest do
           "route_status" => route_status,
           "mailbox" => mailbox
         }) do
-      Process.put(:mailglass_inbound_worker_load_args, {record_id, evidence_id, source, route_status, mailbox})
+      Process.put(
+        :mailglass_inbound_worker_load_args,
+        {record_id, evidence_id, source, route_status, mailbox}
+      )
 
       {:ok,
        %{
-          status: :inserted,
+         status: :inserted,
          route: %{status: :matched, mailbox: MailglassInbound.WorkerTest.AcceptMailbox},
          message: %MailglassInbound.InboundMessage{
            tenant_id: "tenant-123",
@@ -41,6 +44,32 @@ defmodule MailglassInbound.WorkerTest do
   defmodule ExecutionFailure do
     def execute(_persisted, _opts \\ []) do
       {:ok, %{outcome: :failed, failure: %{kind: :error, reason: "boom"}}}
+    end
+  end
+
+  defmodule SourceLoader do
+    def load(args) do
+      Process.put(:mailglass_inbound_worker_source_load_args, args)
+
+      {:ok,
+       %{
+         status: :inserted,
+         route: %{status: :matched, mailbox: MailglassInbound.WorkerTest.AcceptMailbox},
+         message: %MailglassInbound.InboundMessage{
+           tenant_id: "tenant-123",
+           provider: :postmark,
+           envelope_recipient: "support@example.com"
+         },
+         inbound_record: %{id: "record-123", tenant_id: "tenant-123"},
+         inbound_evidence: %{id: "evidence-123"}
+       }}
+    end
+  end
+
+  defmodule SourceExecution do
+    def execute(_persisted, opts \\ []) do
+      Process.put(:mailglass_inbound_worker_source_execute_opts, opts)
+      {:ok, %{outcome: :accept}}
     end
   end
 
@@ -86,5 +115,78 @@ defmodule MailglassInbound.WorkerTest do
                loader: Loader,
                execution: ExecutionFailure
              )
+  end
+
+  test "decodes every emitted source through the finite source map" do
+    for {source, expected_source} <- [{"fresh", :fresh}, {"replay", :replay}] do
+      assert :ok =
+               MailglassInbound.Execution.Worker.perform(job_with_source(source),
+                 loader: SourceLoader,
+                 execution: SourceExecution
+               )
+
+      assert Keyword.fetch!(Process.get(:mailglass_inbound_worker_source_execute_opts), :source) ==
+               expected_source
+    end
+  end
+
+  test "defaults only absent source to fresh" do
+    assert :ok =
+             MailglassInbound.Execution.Worker.perform(job_with_source(:absent),
+               loader: SourceLoader,
+               execution: SourceExecution
+             )
+
+    assert Keyword.fetch!(Process.get(:mailglass_inbound_worker_source_execute_opts), :source) ==
+             :fresh
+  end
+
+  test "cancels invalid sources before loading or executing without allocating atoms" do
+    assert {:cancel, :permanent_failure} =
+             MailglassInbound.Execution.Worker.perform(job_with_source("invalid-source-warmup"),
+               loader: SourceLoader,
+               execution: SourceExecution
+             )
+
+    refute Process.get(:mailglass_inbound_worker_source_load_args)
+    refute Process.get(:mailglass_inbound_worker_source_execute_opts)
+    atom_count = :erlang.system_info(:atom_count)
+
+    for suffix <- 1..300 do
+      assert {:cancel, :permanent_failure} =
+               MailglassInbound.Execution.Worker.perform(
+                 job_with_source("invalid-source-#{suffix}"),
+                 loader: SourceLoader,
+                 execution: SourceExecution
+               )
+    end
+
+    assert :erlang.system_info(:atom_count) == atom_count
+
+    assert {:cancel, :permanent_failure} =
+             MailglassInbound.Execution.Worker.perform(job_with_source(123),
+               loader: SourceLoader,
+               execution: SourceExecution
+             )
+
+    refute Process.get(:mailglass_inbound_worker_source_load_args)
+    refute Process.get(:mailglass_inbound_worker_source_execute_opts)
+  end
+
+  defp job_with_source(:absent) do
+    %Oban.Job{args: Map.delete(job_with_source("fresh").args, "source")}
+  end
+
+  defp job_with_source(source) do
+    %Oban.Job{
+      args: %{
+        "inbound_record_id" => "record-123",
+        "inbound_evidence_id" => "evidence-123",
+        "route_status" => "matched",
+        "mailbox" => "Elixir.MailglassInbound.WorkerTest.AcceptMailbox",
+        "source" => source,
+        "mailglass_tenant_id" => "tenant-123"
+      }
+    }
   end
 end

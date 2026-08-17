@@ -16,12 +16,13 @@ if Code.ensure_loaded?(Oban.Worker) do
       wrap_perform(job, fn ->
         loader = Keyword.get(opts, :loader, Execution)
         execution = Keyword.get(opts, :execution, Execution)
-        execution_opts = [source: source_from_args(args)]
 
-        with {:ok, persisted} <- loader.load(args),
-             {:ok, result} <- execution.execute(persisted, execution_opts) do
+        with {:ok, source} <- source_from_args(args),
+             {:ok, persisted} <- loader.load(args),
+             {:ok, result} <- execution.execute(persisted, source: source) do
           normalize_result(result)
         else
+          {:error, :invalid_job_args} -> {:cancel, :permanent_failure}
           {:error, reason} -> {:error, reason}
         end
       end)
@@ -40,7 +41,10 @@ if Code.ensure_loaded?(Oban.Worker) do
       end
     end
 
-    defp source_from_args(%{"source" => source}) when is_binary(source), do: String.to_atom(source)
-    defp source_from_args(_args), do: :fresh
+    defp source_from_args(%{"source" => "fresh"}), do: {:ok, :fresh}
+    defp source_from_args(%{"source" => "replay"}), do: {:ok, :replay}
+    defp source_from_args(%{"source" => _source}), do: {:error, :invalid_job_args}
+    defp source_from_args(args) when is_map(args), do: {:ok, :fresh}
+    defp source_from_args(_args), do: {:error, :invalid_job_args}
   end
 end
