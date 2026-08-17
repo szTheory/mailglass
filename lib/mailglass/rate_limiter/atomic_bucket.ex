@@ -19,7 +19,7 @@ defmodule Mailglass.RateLimiter.AtomicBucket do
   end
 
   defp ensure_admitted(table, owner, key, capacity, now_us) do
-    case :ets.lookup(table, key) do
+    case safe_lookup(table, key) do
       [] ->
         initial = {key, capacity * @scale, now_us, 0, now_us}
 
@@ -38,7 +38,7 @@ defmodule Mailglass.RateLimiter.AtomicBucket do
     do: {:error, :denied}
 
   defp consume_existing(table, owner, key, capacity, per_minute, now_us, attempt) do
-    case :ets.lookup(table, key) do
+    case safe_lookup(table, key) do
       [{^key, tokens, last_us, remainder, last_seen}] ->
         {available, next_remainder} =
           refill(tokens, last_us, remainder, capacity, per_minute, now_us)
@@ -92,6 +92,21 @@ defmodule Mailglass.RateLimiter.AtomicBucket do
        ], [{{:"$1", next_tokens, next_last_us, next_remainder, next_last_seen}}]}
     ]
 
-    :ets.select_replace(table, match_spec) == 1
+    try do
+      :ets.select_replace(table, match_spec) == 1
+    catch
+      :error, :badarg -> false
+    end
+  end
+
+  # The table is intentionally ephemeral: its owner recreates it after a
+  # supervised restart. A caller racing that restart must deny rather than
+  # raise (or accidentally admit without the bounded state).
+  defp safe_lookup(table, key) do
+    try do
+      :ets.lookup(table, key)
+    catch
+      :error, :badarg -> []
+    end
   end
 end
