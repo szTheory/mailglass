@@ -49,7 +49,9 @@ defmodule Mailglass.ArchitectureBoundaryTest do
       String.replace(
         ci,
         "mix test test/scripts/architecture_boundary_test.exs --warnings-as-errors",
-        "true", global: false)
+        "true",
+        global: false
+      )
 
     assert_raise ExUnit.AssertionError, fn -> assert_required_architecture_gate!(without_gate) end
   end
