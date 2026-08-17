@@ -60,6 +60,7 @@ defmodule Mailglass.SuppressionStore do
   @optional_callbacks check_many: 2
 
   @default_batch_size 100
+  @max_batch_size 100
 
   @doc """
   Checks a list through an optional native bulk callback or a bounded legacy
@@ -68,12 +69,23 @@ defmodule Mailglass.SuppressionStore do
   @spec check_many(module(), [lookup_key()], keyword()) ::
           [{:suppressed, Entry.t()} | :not_suppressed | {:error, term()}]
   def check_many(store, keys, opts \\ []) when is_atom(store) and is_list(keys) and is_list(opts) do
-    if function_exported?(store, :check_many, 2) do
-      store.check_many(keys, opts)
+    keys
+    |> Enum.chunk_every(batch_size(opts))
+    |> Enum.flat_map(&check_chunk(store, &1, opts))
+  end
+
+  defp check_chunk(store, keys, opts) do
+    result =
+      if function_exported?(store, :check_many, 2) do
+        store.check_many(keys, opts)
+      else
+        Enum.map(keys, &store.check(&1, opts))
+      end
+
+    if is_list(result) and length(result) == length(keys) do
+      result
     else
-      keys
-      |> Enum.chunk_every(batch_size(opts))
-      |> Enum.flat_map(fn chunk -> Enum.map(chunk, &store.check(&1, opts)) end)
+      List.duplicate({:error, :invalid_bulk_result}, length(keys))
     end
   end
 
@@ -83,7 +95,7 @@ defmodule Mailglass.SuppressionStore do
            :batch_size,
            Application.get_env(:mailglass, :suppression_store_batch_size, @default_batch_size)
          ) do
-      size when is_integer(size) and size > 0 -> size
+      size when is_integer(size) and size > 0 -> min(size, @max_batch_size)
       _ -> @default_batch_size
     end
   end

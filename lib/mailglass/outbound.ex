@@ -475,35 +475,38 @@ defmodule Mailglass.Outbound do
   defp do_deliver_many(messages, opts) do
     {eligible, failed_preflight} =
       messages
-      |> Enum.map(&preflight_single/1)
+      |> preflight_many()
       |> Enum.split_with(fn
-        {:ok, _msg} -> true
-        {:error, _err, _msg} -> false
+        {:ok, _index, _msg} -> true
+        {:error, _index, _err, _msg} -> false
       end)
 
-    eligible_messages = Enum.map(eligible, fn {:ok, msg} -> msg end)
+    eligible_messages = Enum.map(eligible, fn {:ok, index, msg} -> {index, msg} end)
 
     {routable, failed_routes} =
       eligible_messages
-      |> Enum.map(fn %Message{} = msg ->
+      |> Enum.map(fn {index, %Message{} = msg} ->
         case resolve_async_adapter_ref(msg, opts) do
-          {:ok, adapter_ref} -> {:ok, {msg, adapter_ref}}
-          {:error, err} -> {:error, err, msg}
+          {:ok, adapter_ref} -> {:ok, index, {msg, adapter_ref}}
+          {:error, err} -> {:error, index, err, msg}
         end
       end)
       |> Enum.split_with(fn
-        {:ok, _} -> true
-        {:error, _err, _msg} -> false
+        {:ok, _index, _route} -> true
+        {:error, _index, _err, _msg} -> false
       end)
 
     failed_deliveries =
-      Enum.map(failed_preflight ++ failed_routes, fn {:error, err, msg} ->
-        build_failed_delivery(msg, err)
+      Enum.map(failed_preflight ++ failed_routes, fn {:error, index, err, msg} ->
+        {index, build_failed_delivery(msg, err)}
       end)
 
-    case insert_batch(Enum.map(routable, fn {:ok, route} -> route end), opts) do
+    routes = Enum.map(routable, fn {:ok, _index, route} -> route end)
+    route_indexes = Enum.map(routable, fn {:ok, index, _route} -> index end)
+
+    case insert_batch(routes, opts) do
       {:ok, inserted_deliveries, :oban} ->
-        {:ok, inserted_deliveries ++ failed_deliveries}
+        {:ok, restore_batch_order(route_indexes, inserted_deliveries, failed_deliveries)}
 
       {:ok, inserted_deliveries, :task_supervisor} ->
         # I-13: Only re-enqueue :queued rows. On replay, some rows may already
@@ -517,7 +520,7 @@ defmodule Mailglass.Outbound do
               Map.get(dispatch_updates, delivery.id, delivery)
             end)
 
-          {:ok, deliveries ++ failed_deliveries}
+          {:ok, restore_batch_order(route_indexes, deliveries, failed_deliveries)}
         end
 
       {:error, _} = err ->
@@ -525,17 +528,48 @@ defmodule Mailglass.Outbound do
     end
   end
 
-  defp preflight_single(%Message{} = msg) do
-    with :ok <- Tracking.Guard.assert_safe!(msg),
-         :ok <- Suppression.check_before_send(msg),
+  defp preflight_many(messages) do
+    tracking_passed =
+      messages
+      |> Enum.with_index()
+      |> Enum.map(fn {msg, index} ->
+        :ok = Tracking.Guard.assert_safe!(msg)
+        {:ok, index, msg}
+      end)
+
+    suppression_results =
+      tracking_passed
+      |> Enum.map(fn {:ok, _index, msg} -> msg end)
+      |> Suppression.check_many_before_send()
+
+    suppression_preflight =
+      tracking_passed
+      |> Enum.zip(suppression_results)
+      |> Enum.map(fn {{:ok, index, msg}, suppression_result} ->
+        preflight_after_suppression(msg, index, suppression_result)
+      end)
+
+    suppression_preflight
+  end
+
+  defp preflight_after_suppression(%Message{} = msg, index, suppression_result) do
+    with :ok <- suppression_result,
          :ok <- RateLimiter.check(msg),
          :ok <- Stream.policy_check(msg),
          {:ok, rendered} <- Renderer.render(msg) do
-      {:ok, prepare_outbound_message(rendered)}
+      {:ok, index, prepare_outbound_message(rendered)}
     else
-      {:error, err} -> {:error, err, msg}
-      {:error, _step, err, _} -> {:error, to_error(err), msg}
+      {:error, err} -> {:error, index, err, msg}
+      {:error, _step, err, _} -> {:error, index, to_error(err), msg}
     end
+  end
+
+  defp restore_batch_order(route_indexes, deliveries, failed_deliveries) do
+    route_indexes
+    |> Enum.zip(deliveries)
+    |> Kernel.++(failed_deliveries)
+    |> Enum.sort_by(&elem(&1, 0))
+    |> Enum.map(&elem(&1, 1))
   end
 
   defp insert_batch([], _opts), do: {:ok, [], :oban}
