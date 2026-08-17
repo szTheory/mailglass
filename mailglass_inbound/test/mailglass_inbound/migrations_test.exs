@@ -276,12 +276,52 @@ defmodule MailglassInbound.MigrationsTest do
       #
       # In the test env :repo is configured, so we confirm the function is
       # exported with arity 0 and arity 1.
+      Code.ensure_loaded!(MailglassInbound.Migration)
+
       assert function_exported?(MailglassInbound.Migration, :up, 0)
       assert function_exported?(MailglassInbound.Migration, :up, 1)
       assert function_exported?(MailglassInbound.Migration, :down, 0)
       assert function_exported?(MailglassInbound.Migration, :down, 1)
       assert function_exported?(MailglassInbound.Migration, :migrated_version, 0)
       assert function_exported?(MailglassInbound.Migration, :migrated_version, 1)
+    end
+  end
+
+  describe "catalog version classification" do
+    test "returns zero only when the inbound anchor relation is absent" do
+      assert MigrationRunner.migrated_version(
+               prefix: @prefix,
+               query_result: {:ok, %{rows: []}}
+             ) == 0
+    end
+
+    test "returns the independent inbound version from a complete numeric comment" do
+      assert MigrationRunner.migrated_version(
+               prefix: @prefix,
+               query_result: {:ok, %{rows: [["1"]]}}
+             ) == 1
+    end
+
+    for {name, result, reason} <- [
+          {"a missing comment", {:ok, %{rows: [[nil]]}}, :missing_comment},
+          {"a malformed comment", {:ok, %{rows: [["1extra"]]}}, :invalid_comment},
+          {"multiple rows", {:ok, %{rows: [["1"], ["1"]]}}, :unexpected_result},
+          {"an out-of-range version", {:ok, %{rows: [["2"]]}}, :out_of_range},
+          {"a query error", {:error, :unavailable}, :query_failed}
+        ] do
+      test "raises the shared typed error for #{name}" do
+        assert %Mailglass.MigrationVersionError{
+                 reason: unquote(reason),
+                 package: :mailglass_inbound,
+                 prefix: @prefix
+               } =
+                 catch_error(
+                   MigrationRunner.migrated_version(
+                     prefix: @prefix,
+                     query_result: unquote(Macro.escape(result))
+                   )
+                 )
+      end
     end
   end
 

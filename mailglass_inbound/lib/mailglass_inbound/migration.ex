@@ -46,17 +46,19 @@ defmodule MailglassInbound.Migration do
   end
 
   @doc """
-  Returns the currently-applied inbound migration version (0 if none).
+  Returns the currently-applied inbound migration version (0 only when its anchor is absent).
 
   This function is safe to call outside an `Ecto.Migrator` context —
   unlike `up/1` / `down/1`, it does not rely on the migration runner
   process (it issues a single pg_class query against the configured Repo
-  and returns an integer). Anchored on `mailglass_inbound_records`, not
+  and returns an integer). Raises `Mailglass.MigrationVersionError` when catalog
+  metadata cannot be trusted. Anchored on `mailglass_inbound_records`, not
   `mailglass_events` — the two packages maintain independent version lines.
   """
   @doc since: "2.0.0"
   @spec migrated_version(keyword()) :: non_neg_integer()
   def migrated_version(opts \\ []) when is_list(opts) do
+    opts = Keyword.put_new(opts, :prefix, MailglassInbound.Config.schema())
     # Inject the configured Repo so the dispatcher can run the version
     # query without needing an active `use Ecto.Migration` runner.
     opts = Keyword.put_new(opts, :repo, resolve_repo())

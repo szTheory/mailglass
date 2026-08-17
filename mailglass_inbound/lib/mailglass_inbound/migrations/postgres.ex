@@ -19,8 +19,8 @@ defmodule MailglassInbound.Migrations.Postgres do
     # First action: physically create the schema (INB-02) so the v01
     # `create table(prefix:)` DDL has a namespace to land in. No-op for the
     # default "public" prefix and for an explicit `create_schema: false`.
-    maybe_create_schema(opts)
     initial = migrated_version(opts)
+    maybe_create_schema(opts)
 
     cond do
       initial == 0 ->
@@ -50,7 +50,6 @@ defmodule MailglassInbound.Migrations.Postgres do
   def migrated_version(opts) do
     opts = with_defaults(opts, @initial_version)
 
-    repo = Map.get_lazy(opts, :repo, fn -> repo() end)
     prefix = Map.fetch!(opts, :prefix)
 
     validate_identifier!(prefix, :prefix)
@@ -68,10 +67,45 @@ defmodule MailglassInbound.Migrations.Postgres do
     AND pg_namespace.nspname = $1
     """
 
-    case repo.query(query, [prefix], log: false) do
-      {:ok, %{rows: [[version]]}} when is_binary(version) -> String.to_integer(version)
-      _ -> 0
+    case catalog_result(opts, query, prefix) do
+      {:ok, %{rows: []}} ->
+        0
+
+      {:ok, %{rows: [[nil]]}} ->
+        raise_version_error(:missing_comment, prefix)
+
+      {:ok, %{rows: [[version]]}} when is_binary(version) ->
+        parse_version!(version, prefix)
+
+      {:error, reason} ->
+        raise_version_error(:query_failed, prefix, reason)
+
+      result ->
+        raise_version_error(:unexpected_result, prefix, result)
     end
+  end
+
+  defp catalog_result(opts, query, prefix) do
+    case Map.fetch(opts, :query_result) do
+      {:ok, result} -> result
+      :error -> Map.get_lazy(opts, :repo, fn -> repo() end).query(query, [prefix], log: false)
+    end
+  end
+
+  defp parse_version!(version, prefix) do
+    case Integer.parse(version) do
+      {parsed, ""} when parsed >= @initial_version and parsed <= @current_version -> parsed
+      {_parsed, ""} -> raise_version_error(:out_of_range, prefix)
+      _ -> raise_version_error(:invalid_comment, prefix)
+    end
+  end
+
+  defp raise_version_error(reason, prefix, cause \\ nil) do
+    raise Mailglass.MigrationVersionError.new(reason,
+            package: :mailglass_inbound,
+            prefix: prefix,
+            cause: cause
+          )
   end
 
   defp change(range, direction, opts) do
