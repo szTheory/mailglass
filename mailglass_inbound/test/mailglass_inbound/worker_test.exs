@@ -235,6 +235,19 @@ defmodule MailglassInbound.WorkerTest do
     refute Process.get(:mailglass_inbound_worker_execute_opts)
   end
 
+  test "retries when a registered route authority is unavailable instead of cancelling work" do
+    args = Map.put(job_with_source("fresh").args, "route_authority", "Elixir.MissingRouter")
+
+    assert {:error, :route_authority_unavailable} =
+             MailglassInbound.Execution.Worker.perform(%Oban.Job{args: args},
+               loader: Loader,
+               execution: ExecutionSuccess
+             )
+
+    refute Process.get(:mailglass_inbound_worker_load_args)
+    refute Process.get(:mailglass_inbound_worker_execute_opts)
+  end
+
   defp job_with_source(:absent) do
     %Oban.Job{args: Map.delete(job_with_source("fresh").args, "source")}
   end

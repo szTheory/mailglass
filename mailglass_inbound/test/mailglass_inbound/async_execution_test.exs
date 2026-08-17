@@ -6,6 +6,17 @@ defmodule MailglassInbound.AsyncExecutionTest do
   alias MailglassInbound.Execution
   alias MailglassInbound.InboundMessage
 
+  defmodule TestMailbox do
+    @behaviour MailglassInbound.Mailbox
+    def process(_message), do: :accept
+  end
+
+  defmodule TestRouter do
+    use MailglassInbound.Router
+
+    route(TestMailbox, recipient: "support@example.com")
+  end
+
   defmodule ObanGateway do
     def runner, do: :oban
 
@@ -43,6 +54,26 @@ defmodule MailglassInbound.AsyncExecutionTest do
     end
   end
 
+  defmodule WorkerLoader do
+    def load(_args) do
+      {:ok,
+       %{
+         status: :inserted,
+         route: %{status: :matched, mailbox: TestMailbox},
+         message: %InboundMessage{tenant_id: "tenant-123", provider: :postmark},
+         inbound_record: %{id: "record-123", tenant_id: "tenant-123"},
+         inbound_evidence: %{id: "evidence-123"}
+       }}
+    end
+  end
+
+  defmodule WorkerExecution do
+    def execute(_persisted, _opts \\ []) do
+      send(Application.fetch_env!(:mailglass_inbound, :async_execution_test_pid), :worker_executed)
+      {:ok, %{outcome: :accept}}
+    end
+  end
+
   defmodule BarrierExecution do
     def execute(_persisted, _opts \\ []) do
       parent = Application.fetch_env!(:mailglass_inbound, :async_execution_test_pid)
@@ -59,12 +90,21 @@ defmodule MailglassInbound.AsyncExecutionTest do
   end
 
   setup do
+    prior_router = Application.get_env(:mailglass_inbound, :router)
     :persistent_term.erase({:mailglass_inbound, :fallback_warning_emitted})
     Process.delete(:mailglass_inbound_async_worker)
     Process.delete(:mailglass_inbound_async_enqueue_attrs)
     Application.put_env(:mailglass_inbound, :async_execution_test_pid, self())
 
-    on_exit(fn -> Application.delete_env(:mailglass_inbound, :async_execution_test_pid) end)
+    on_exit(fn ->
+      Application.delete_env(:mailglass_inbound, :async_execution_test_pid)
+
+      if is_nil(prior_router) do
+        Application.delete_env(:mailglass_inbound, :router)
+      else
+        Application.put_env(:mailglass_inbound, :router, prior_router)
+      end
+    end)
 
     :ok
   end
@@ -73,7 +113,7 @@ defmodule MailglassInbound.AsyncExecutionTest do
     persisted = persisted_payload()
 
     assert {:ok, %{status: :queued, mode: :oban}} =
-             Execution.dispatch(persisted, optional_deps: ObanGateway)
+             Execution.dispatch(persisted, optional_deps: ObanGateway, router: TestRouter)
 
     assert Process.get(:mailglass_inbound_async_worker) == MailglassInbound.Execution.Worker
 
@@ -81,10 +121,30 @@ defmodule MailglassInbound.AsyncExecutionTest do
              "inbound_record_id" => "record-123",
              "inbound_evidence_id" => "evidence-123",
              "route_status" => "matched",
-             "mailbox" => "Elixir.MailglassInbound.AsyncExecutionTest",
+             "mailbox" => "Elixir.MailglassInbound.AsyncExecutionTest.TestMailbox",
+             "route_authority" => "Elixir.MailglassInbound.AsyncExecutionTest.TestRouter",
              "source" => "fresh",
              "mailglass_tenant_id" => "tenant-123"
            }
+  end
+
+  test "Plug-only router authority survives enqueue and authorizes the worker without global config" do
+    Application.delete_env(:mailglass_inbound, :router)
+    persisted = persisted_payload()
+
+    assert {:ok, %{status: :queued, mode: :oban}} =
+             Execution.dispatch(persisted, optional_deps: ObanGateway, router: TestRouter)
+
+    args = Process.get(:mailglass_inbound_async_enqueue_attrs)
+    assert is_map(args)
+
+    assert :ok =
+             MailglassInbound.Execution.Worker.perform(%Oban.Job{args: args},
+               loader: WorkerLoader,
+               execution: WorkerExecution
+             )
+
+    assert_received :worker_executed
   end
 
   test "falls back to bounded task supervisor execution and marks the dispatch as best effort" do
@@ -175,7 +235,7 @@ defmodule MailglassInbound.AsyncExecutionTest do
   defp persisted_payload do
     %{
       status: :inserted,
-      route: %{status: :matched, mailbox: MailglassInbound.AsyncExecutionTest},
+      route: %{status: :matched, mailbox: TestMailbox},
       message: %InboundMessage{
         tenant_id: "tenant-123",
         provider: :postmark,

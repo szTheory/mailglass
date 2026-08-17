@@ -11,6 +11,7 @@ defmodule MailglassInbound.Execution do
   alias MailglassInbound.Mailbox
   alias MailglassInbound.OptionalDeps.Oban, as: OptionalOban
   alias MailglassInbound.Repo
+  alias MailglassInbound.Execution.RouterRegistry
 
   @compile {:no_warn_undefined, [MailglassInbound.Execution.Worker]}
 
@@ -27,9 +28,15 @@ defmodule MailglassInbound.Execution do
       :oban ->
         worker = Keyword.get(opts, :worker, MailglassInbound.Execution.Worker)
 
-        case optional_deps.enqueue_inbound_execution(worker, enqueue_attrs(persisted, source), opts) do
-          {:ok, _job} -> {:ok, %{status: :queued, mode: :oban}}
-          {:error, reason} -> {:error, reason}
+        with {:ok, route_authority} <- register_route_authority(persisted, opts) do
+          case optional_deps.enqueue_inbound_execution(
+                 worker,
+                 enqueue_attrs(persisted, source, route_authority),
+                 opts
+               ) do
+            {:ok, _job} -> {:ok, %{status: :queued, mode: :oban}}
+            {:error, reason} -> {:error, reason}
+          end
         end
 
       :task_supervisor ->
@@ -106,7 +113,8 @@ defmodule MailglassInbound.Execution do
   def load(_job_args, _opts), do: {:error, :invalid_job_args}
 
   @doc false
-  @spec validate_job_route(map(), keyword()) :: {:ok, map()} | {:error, :invalid_job_args}
+  @spec validate_job_route(map(), keyword()) ::
+          {:ok, map()} | {:error, :invalid_job_args | :route_authority_unavailable}
   def validate_job_route(%{"route_status" => "no_match"} = job_args, _opts) do
     # Existing no-match jobs predate the explicit nil mailbox field, but a
     # non-empty value is contradictory job data and must not be accepted.
@@ -117,15 +125,38 @@ defmodule MailglassInbound.Execution do
     end
   end
 
-  def validate_job_route(%{"route_status" => "matched", "mailbox" => mailbox}, opts)
+  def validate_job_route(
+        %{"route_status" => "matched", "mailbox" => mailbox} = job_args,
+        opts
+      )
       when is_binary(mailbox) and mailbox != "" and is_list(opts) do
-    case trusted_mailbox(mailbox, opts) do
-      nil -> {:error, :invalid_job_args}
-      module -> {:ok, %{status: :matched, mailbox: module}}
+    case resolve_mailbox(
+           mailbox,
+           Keyword.put(opts, :route_authority, Map.get(job_args, "route_authority"))
+         ) do
+      {:ok, module} -> {:ok, %{status: :matched, mailbox: module}}
+      {:error, :unavailable} -> {:error, :route_authority_unavailable}
+      {:error, :not_authorized} -> {:error, :invalid_job_args}
+      {:error, :invalid_router} -> {:error, :invalid_job_args}
     end
   end
 
   def validate_job_route(_job_args, _opts), do: {:error, :invalid_job_args}
+
+  @doc false
+  @spec resolve_mailbox(String.t(), keyword()) :: {:ok, module()} | {:error, term()}
+  def resolve_mailbox(mailbox, opts \\ []) when is_binary(mailbox) and is_list(opts) do
+    case Keyword.get(opts, :route_authority) do
+      authority when is_binary(authority) and authority != "" ->
+        RouterRegistry.resolve(authority, mailbox)
+
+      nil ->
+        resolve_from_registered_or_configured_router(mailbox, opts)
+
+      _other ->
+        {:error, :not_authorized}
+    end
+  end
 
   defp load_record(repo, inbound_record_id, tenant_id) do
     from(record in InboundRecord,
@@ -235,13 +266,15 @@ defmodule MailglassInbound.Execution do
            inbound_record: %{id: inbound_record_id},
            inbound_evidence: %{id: inbound_evidence_id}
          },
-         source
+         source,
+         route_authority
        ) do
     %{
       "inbound_record_id" => inbound_record_id,
       "inbound_evidence_id" => inbound_evidence_id,
       "route_status" => route_status(route),
       "mailbox" => route_mailbox(route),
+      "route_authority" => route_authority,
       "source" => Atom.to_string(source),
       "mailglass_tenant_id" => message.tenant_id
     }
@@ -333,25 +366,40 @@ defmodule MailglassInbound.Execution do
     |> Map.new()
   end
 
-  # Oban arguments are persisted JSON, not authority to call an arbitrary loaded
-  # module. The configured router is already the adopter-owned source of mailbox
-  # authority; use its compiled route data as a finite allowlist and compare names
-  # as strings so decoding never allocates (or resolves) an atom from job data.
-  defp trusted_mailbox(mailbox, opts) do
+  defp register_route_authority(%{route: %{status: :no_match}}, _opts), do: {:ok, nil}
+
+  defp register_route_authority(%{route: %{status: :matched}}, opts) do
     router = Keyword.get(opts, :router, Application.get_env(:mailglass_inbound, :router))
 
-    with router when is_atom(router) <- router,
-         true <- Code.ensure_loaded?(router),
-         true <- function_exported?(router, :__mailglass_inbound_routes__, 0) do
-      Enum.find_value(router.__mailglass_inbound_routes__(), fn
-        %{mailbox: module} when is_atom(module) ->
-          if Atom.to_string(module) == mailbox, do: module
+    case RouterRegistry.register_router(router) do
+      {:ok, authority} -> {:ok, authority}
+      {:error, _reason} -> {:error, :route_authority_unavailable}
+    end
+  end
 
-        _route ->
-          nil
-      end)
-    else
-      _ -> nil
+  defp register_route_authority(_persisted, _opts), do: {:error, :route_authority_unavailable}
+
+  # Persisted job and execution-run strings are never resolved into atoms. The
+  # finite registry is populated only from trusted router modules supplied to the
+  # Plug/dispatch boundary. App config remains an additive fallback for existing
+  # deployments that intentionally configure their router globally.
+  defp resolve_from_registered_or_configured_router(mailbox, opts) do
+    router = Keyword.get(opts, :router, Application.get_env(:mailglass_inbound, :router))
+
+    case router do
+      router when is_atom(router) ->
+        with {:ok, authority} <- RouterRegistry.register_router(router) do
+          case RouterRegistry.resolve(authority, mailbox) do
+            {:error, :unavailable} -> {:error, :not_authorized}
+            result -> result
+          end
+        end
+
+      nil ->
+        RouterRegistry.resolve_any(mailbox)
+
+      _other ->
+        {:error, :not_authorized}
     end
   end
 
