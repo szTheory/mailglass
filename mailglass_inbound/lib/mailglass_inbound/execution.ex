@@ -84,19 +84,21 @@ defmodule MailglassInbound.Execution do
     repo = Keyword.get(opts, :repo, Repo)
 
     with %InboundRecord{} = record <- load_record(repo, inbound_record_id, tenant_id),
+         {:ok, provider} <- decode_provider(record.provider),
          %InboundEvidence{} = evidence <-
            load_evidence(repo, inbound_evidence_id, inbound_record_id, tenant_id),
          {:ok, route} <- decode_route(route_status, Map.get(job_args, "mailbox")) do
       {:ok,
        %{
          status: :inserted,
-         message: message_from_record(record),
+         message: message_from_record(record, provider),
          inbound_record: record,
          inbound_evidence: evidence,
          route: route
        }}
     else
       nil -> {:error, :not_found}
+      :error -> {:error, :invalid_job_args}
       {:error, _reason} = error -> error
     end
   end
@@ -126,9 +128,16 @@ defmodule MailglassInbound.Execution do
 
   @spec message_from_record(InboundRecord.t()) :: InboundMessage.t()
   def message_from_record(record) do
+    case decode_provider(record.provider) do
+      {:ok, provider} -> message_from_record(record, provider)
+      :error -> raise ArgumentError, "invalid inbound provider"
+    end
+  end
+
+  defp message_from_record(record, provider) do
     %InboundMessage{
       tenant_id: record.tenant_id,
-      provider: normalize_provider(record.provider),
+      provider: provider,
       provider_message_id: record.provider_message_id,
       message_id: record.message_id,
       envelope_recipient: record.envelope_recipient,
@@ -326,6 +335,9 @@ defmodule MailglassInbound.Execution do
 
   defp route_mailbox(_route), do: nil
 
-  defp normalize_provider(provider) when is_binary(provider), do: String.to_atom(provider)
-  defp normalize_provider(provider), do: provider
+  defp decode_provider("postmark"), do: {:ok, :postmark}
+  defp decode_provider("sendgrid"), do: {:ok, :sendgrid}
+  defp decode_provider("mailgun"), do: {:ok, :mailgun}
+  defp decode_provider("ses"), do: {:ok, :ses}
+  defp decode_provider(_provider), do: :error
 end
