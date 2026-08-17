@@ -19,6 +19,8 @@ defmodule Mailglass.Migration do
   Postgres-only at v0.1 per PROJECT.md (MySQL/SQLite out of scope).
   """
 
+  @type version :: Mailglass.Migrations.Postgres.version()
+
   @doc "Runs all pending migrations up to the latest version."
   @doc since: "0.1.0"
   @spec up(keyword()) :: :ok
@@ -66,7 +68,7 @@ defmodule Mailglass.Migration do
   `Mailglass.MigrationVersionError` when catalog metadata cannot be trusted.
   """
   @doc since: "0.1.0"
-  @spec migrated_version(keyword()) :: non_neg_integer()
+  @spec migrated_version(keyword()) :: version()
   def migrated_version(opts \\ []) when is_list(opts) do
     # Inject the configured schema as the query prefix (same MIGR-01 default
     # `up/1`/`down/1` already apply above) — an explicit caller `:prefix`

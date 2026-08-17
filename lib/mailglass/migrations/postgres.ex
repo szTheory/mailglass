@@ -7,6 +7,8 @@ defmodule Mailglass.Migrations.Postgres do
   @current_version 5
   @default_prefix "public"
 
+  @type version :: 0..5
+
   @doc false
   def initial_version, do: @initial_version
 
@@ -46,7 +48,7 @@ defmodule Mailglass.Migrations.Postgres do
     end
   end
 
-  @spec migrated_version(map() | keyword()) :: non_neg_integer()
+  @spec migrated_version(map() | keyword()) :: version()
   def migrated_version(opts) do
     opts = with_defaults(opts, @initial_version)
 
@@ -72,7 +74,7 @@ defmodule Mailglass.Migrations.Postgres do
         0
 
       {:ok, %{rows: [[nil]]}} ->
-        raise_version_error(:missing_comment, prefix)
+        raise_version_error(:missing_comment, prefix, nil)
 
       {:ok, %{rows: [[version]]}} when is_binary(version) ->
         parse_version!(version, prefix)
@@ -95,12 +97,17 @@ defmodule Mailglass.Migrations.Postgres do
   defp parse_version!(version, prefix) do
     case Integer.parse(version) do
       {parsed, ""} when parsed >= @initial_version and parsed <= @current_version -> parsed
-      {_parsed, ""} -> raise_version_error(:out_of_range, prefix)
-      _ -> raise_version_error(:invalid_comment, prefix)
+      {_parsed, ""} -> raise_version_error(:out_of_range, prefix, nil)
+      _ -> raise_version_error(:invalid_comment, prefix, nil)
     end
   end
 
-  defp raise_version_error(reason, prefix, cause \\ nil) do
+  @spec raise_version_error(
+          Mailglass.MigrationVersionError.reason(),
+          String.t(),
+          term()
+        ) :: no_return()
+  defp raise_version_error(reason, prefix, cause) do
     raise Mailglass.MigrationVersionError.new(reason,
             package: :mailglass,
             prefix: prefix,
