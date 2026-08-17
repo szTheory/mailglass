@@ -392,6 +392,34 @@ defmodule Mailglass.MigrationTest do
                Mailglass.Migrations.Postgres.current_version()
     end
 
+    test "V06 makes raw signed webhook bytes immutable at the database boundary", %{
+      version: version
+    } do
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(TestRepo, fn repo ->
+          Ecto.Migrator.up(repo, version, PrefixUpMigration, log: false)
+        end)
+
+      id = Ecto.UUID.generate()
+
+      TestRepo.query!(
+        """
+        INSERT INTO #{@prefix}.mailglass_webhook_events
+          (id, tenant_id, provider, provider_event_id, event_type_raw, status,
+           raw_payload, raw_signed_body, received_at, inserted_at, updated_at)
+        VALUES ($1::uuid, 'tenant', 'postmark', 'immutable-body', 'Delivery',
+                'succeeded', '{}'::jsonb, 'original bytes', now(), now(), now())
+        """,
+        [Ecto.UUID.dump!(id)]
+      )
+
+      assert {:error, %Postgrex.Error{postgres: %{pg_code: "45A01"}}} =
+               TestRepo.query(
+                 "UPDATE #{@prefix}.mailglass_webhook_events SET raw_signed_body = 'tampered bytes' WHERE id = $1::uuid",
+                 [Ecto.UUID.dump!(id)]
+               )
+    end
+
     test "DROP SCHEMA RESTRICT refuses a non-empty schema and succeeds once empty" do
       # Proves MIGR-02's down-side data-safety contract: `maybe_drop_schema/1`
       # emits `DROP SCHEMA IF EXISTS "<prefix>" RESTRICT` (NEVER CASCADE) — so a

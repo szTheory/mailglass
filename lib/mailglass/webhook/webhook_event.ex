@@ -57,6 +57,7 @@ defmodule Mailglass.Webhook.WebhookEvent do
 
   @required ~w[tenant_id provider provider_event_id event_type_raw status raw_payload received_at]a
   @cast @required ++ ~w[event_type_normalized processed_at raw_signed_body]a
+  @update_cast @cast -- [:raw_signed_body]
 
   @doc """
   Builds a changeset for inserting a webhook_event row at ingest time.
@@ -79,6 +80,24 @@ defmodule Mailglass.Webhook.WebhookEvent do
     %__MODULE__{}
     |> cast(attrs_with_defaults, @cast)
     |> validate_required(@required)
+  end
+
+  @doc "Builds a mutable webhook-event changeset without allowing signed evidence replacement."
+  @doc since: "2.4.0"
+  @spec changeset(%__MODULE__{}, map()) :: Ecto.Changeset.t()
+  def changeset(%__MODULE__{} = webhook_event, attrs) when is_map(attrs) do
+    webhook_event
+    |> cast(attrs, @update_cast)
+    |> reject_signed_body_replacement(attrs)
+    |> validate_required(@required)
+  end
+
+  defp reject_signed_body_replacement(changeset, attrs) do
+    if Map.has_key?(attrs, :raw_signed_body) or Map.has_key?(attrs, "raw_signed_body") do
+      add_error(changeset, :raw_signed_body, "is immutable")
+    else
+      changeset
+    end
   end
 
   @doc "Closed set of valid `:status` atoms. Cross-checked in api_stability.md."

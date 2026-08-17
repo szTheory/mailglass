@@ -114,6 +114,15 @@ defmodule Mailglass.Webhook.IngestTest do
       assert webhook_event.raw_signed_body == raw_body
       assert webhook_event.raw_payload["space"] == "kept"
     end
+
+    test "rejects changeset attempts to replace persisted signed bytes" do
+      event = %WebhookEvent{raw_signed_body: "original bytes"}
+
+      changeset = WebhookEvent.changeset(event, %{raw_signed_body: "tampered bytes"})
+
+      assert {"is immutable", []} = changeset.errors[:raw_signed_body]
+      assert Ecto.Changeset.get_field(changeset, :raw_signed_body) == "original bytes"
+    end
   end
 
   describe "ingest_multi/3 orphan path (no matching delivery)" do
