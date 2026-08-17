@@ -6,6 +6,13 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   alias Mailglass.{Outbound, Message, TestRepo}
   alias Mailglass.Outbound.Delivery
 
+  defmodule RefusingAsyncAdapter do
+    @behaviour Mailglass.Outbound.AsyncAdapter
+
+    @impl true
+    def dispatch(_fun, _opts), do: {:error, :max_children}
+  end
+
   setup do
     # Use shared mode so Task.Supervisor background tasks can deliver via the Fake adapter.
     # async: false guarantees no other test owns the shared bucket during this test.
@@ -137,6 +144,26 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       result = Outbound.deliver_later(msg)
       # Must never return an %Oban.Job{} struct
       assert {:ok, %Delivery{status: :queued}} = result
+    end
+
+    test "refused fallback admission returns a typed failure and persists a failed projection" do
+      Application.put_env(:mailglass, :async_adapter_impl, RefusingAsyncAdapter)
+
+      on_exit(fn -> Application.delete_env(:mailglass, :async_adapter_impl) end)
+
+      msg = build_message("refused-#{unique_id()}@example.com")
+
+      assert {:error, %Mailglass.SendError{type: :dispatch_unavailable} = error} =
+               Outbound.deliver_later(msg)
+
+      assert error.context == %{reason_class: :capacity_reached}
+
+      [delivery] = TestRepo.all(Delivery)
+      assert delivery.status == :failed
+      assert delivery.last_event_type == :failed
+
+      assert delivery.last_error["type"] == "dispatch_unavailable" or
+               delivery.last_error[:type] == :dispatch_unavailable
     end
   end
 

@@ -5,6 +5,13 @@ defmodule Mailglass.Outbound.DeliverManyTest do
   alias Mailglass.{Events.Event, Outbound, Message, TestRepo}
   alias Mailglass.Outbound.Delivery
 
+  defmodule RefusingAsyncAdapter do
+    @behaviour Mailglass.Outbound.AsyncAdapter
+
+    @impl true
+    def dispatch(_fun, _opts), do: {:error, :max_children}
+  end
+
   setup do
     Mailglass.Adapters.Fake.checkout()
     Mailglass.Adapters.Fake.set_shared(self())
@@ -169,6 +176,24 @@ defmodule Mailglass.Outbound.DeliverManyTest do
 
       assert hd(failed).recipient == blocked_addr
       assert hd(failed).last_error != nil
+    end
+  end
+
+  describe "deliver_many/2 — Task.Supervisor admission" do
+    test "marks each refused fallback dispatch failed instead of claiming it queued" do
+      Application.put_env(:mailglass, :async_adapter_impl, RefusingAsyncAdapter)
+      on_exit(fn -> Application.delete_env(:mailglass, :async_adapter_impl) end)
+
+      uid = unique_id()
+
+      assert {:ok, [delivery]} =
+               Outbound.deliver_many([build_message("refused-batch-#{uid}@example.com")],
+                 async_adapter: :task_supervisor
+               )
+
+      assert delivery.status == :failed
+      assert delivery.last_event_type == :failed
+      assert delivery.last_error[:type] == :dispatch_unavailable
     end
   end
 

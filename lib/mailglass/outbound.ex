@@ -449,35 +449,19 @@ defmodule Mailglass.Outbound do
         # for both paths (-15) — Inline runs sync under caller, TaskSupervisor
         # runs in fresh process; with_tenant/2 stamps the executing process
         # either way.
-        Mailglass.Outbound.AsyncAdapter.dispatch(
-          fn ->
-            Mailglass.Tenancy.with_tenant(tenant_id, fn ->
-              try do
-                case dispatch_by_id(d.id) do
-                  {:ok, _} ->
-                    :ok
+        case dispatch_task(d.id, tenant_id) do
+          {:ok, _pid} ->
+            {:ok, %{d | status: :queued, last_event_type: :queued}}
 
-                  {:error, err} ->
-                    require Logger
+          :ok ->
+            {:ok, %{d | status: :queued, last_event_type: :queued}}
 
-                    Logger.warning(
-                      "[mailglass] Task.Supervisor dispatch failed: #{Exception.message(err)}"
-                    )
-                end
-              rescue
-                err ->
-                  require Logger
-
-                  Logger.warning(
-                    "[mailglass] Task.Supervisor dispatch raised: #{Exception.message(err)}"
-                  )
-              end
-            end)
-          end,
-          []
-        )
-
-        {:ok, %{d | status: :queued, last_event_type: :queued}}
+          {:error, reason} ->
+            case persist_dispatch_refusal(d, reason) do
+              {:ok, error, _failed_delivery} -> {:error, error}
+              {:error, persist_error} -> {:error, persist_error}
+            end
+        end
 
       {:error, _step, err, _} ->
         {:error, to_error(err)}
@@ -527,8 +511,14 @@ defmodule Mailglass.Outbound do
         {fresh, _already_settled} =
           Enum.split_with(inserted_deliveries, fn d -> d.status == :queued end)
 
-        enqueue_batch_tasks(fresh)
-        {:ok, inserted_deliveries ++ failed_deliveries}
+        with {:ok, dispatch_updates} <- enqueue_batch_tasks(fresh) do
+          deliveries =
+            Enum.map(inserted_deliveries, fn delivery ->
+              Map.get(dispatch_updates, delivery.id, delivery)
+            end)
+
+          {:ok, deliveries ++ failed_deliveries}
+        end
 
       {:error, _} = err ->
         err
@@ -670,39 +660,69 @@ defmodule Mailglass.Outbound do
   # solely as the non-durable Task.Supervisor fallback; Plan 156-03 makes its
   # admission result bounded and truthful.
   defp enqueue_batch_tasks(deliveries) when is_list(deliveries) do
-    Enum.each(deliveries, fn %Delivery{id: id, tenant_id: t} ->
-      # AsyncAdapter dispatch (-11). TaskSupervisor (prod) | Inline (test).
-      Mailglass.Outbound.AsyncAdapter.dispatch(
-        fn ->
-          Mailglass.Tenancy.with_tenant(t, fn ->
-            try do
-              case dispatch_by_id(id) do
-                {:ok, _} ->
-                  :ok
+    Enum.reduce_while(deliveries, {:ok, %{}}, fn %Delivery{} = delivery, {:ok, updates} ->
+      case dispatch_task(delivery.id, delivery.tenant_id) do
+        {:ok, _pid} ->
+          {:cont, {:ok, updates}}
 
-                {:error, err} ->
-                  require Logger
+        :ok ->
+          {:cont, {:ok, updates}}
 
-                  Logger.warning(
-                    "[mailglass] Task.Supervisor batch dispatch failed for #{id}: #{Exception.message(err)}"
-                  )
-              end
-            rescue
-              err ->
-                require Logger
+        {:error, reason} ->
+          case persist_dispatch_refusal(delivery, reason) do
+            {:error, _error} = error ->
+              {:halt, error}
 
-                Logger.warning(
-                  "[mailglass] Task.Supervisor batch dispatch raised for #{id}: #{Exception.message(err)}"
-                )
-            end
-          end)
-        end,
-        []
-      )
+            {:ok, _error, failed_delivery} ->
+              {:cont, {:ok, Map.put(updates, delivery.id, failed_delivery)}}
+          end
+      end
     end)
-
-    :ok
   end
+
+  defp dispatch_task(delivery_id, tenant_id) do
+    Mailglass.Outbound.AsyncAdapter.dispatch(
+      fn ->
+        Mailglass.Tenancy.with_tenant(tenant_id, fn ->
+          try do
+            case dispatch_by_id(delivery_id) do
+              {:ok, _} -> :ok
+              {:error, err} -> log_task_dispatch_failure(delivery_id, err)
+            end
+          rescue
+            err -> log_task_dispatch_failure(delivery_id, err)
+          end
+        end)
+      end,
+      []
+    )
+  end
+
+  defp log_task_dispatch_failure(delivery_id, err) do
+    require Logger
+
+    Logger.warning(
+      "[mailglass] Task.Supervisor dispatch failed for #{delivery_id}: #{Exception.message(err)}"
+    )
+  end
+
+  defp persist_dispatch_refusal(%Delivery{} = delivery, reason) do
+    error =
+      Mailglass.SendError.new(:dispatch_unavailable,
+        retry_class: :transient,
+        context: %{reason_class: dispatch_reason_class(reason)},
+        delivery_id: delivery.id
+      )
+
+    case persist_failed_by_id(delivery.id, error) do
+      {:ok, failed_delivery} -> {:ok, error, failed_delivery}
+      {:error, persist_error} -> {:error, persist_error}
+    end
+  end
+
+  defp dispatch_reason_class(:max_children), do: :capacity_reached
+  defp dispatch_reason_class(:supervisor_unavailable), do: :supervisor_unavailable
+  defp dispatch_reason_class(_reason), do: :start_child_failed
 
   defp build_failed_delivery(%Message{} = msg, err) do
     # NOT persisted — synthetic result-list entry for adopter observability.
@@ -842,31 +862,40 @@ defmodule Mailglass.Outbound do
           occurred_at: event_occurred_at
         }
 
-        Repo.multi(
-          Ecto.Multi.new()
-          |> Ecto.Multi.update(
-            :delivery,
-            Projector.update_projections(delivery, event)
-            |> Ecto.Changeset.change(%{
-              status: :failed,
-              last_error: serialize_error(err)
-            }),
-            Repo.multi_opts()
-          )
-          |> Events.append_multi(:event_failed, %{
-            tenant_id: delivery.tenant_id,
-            delivery_id: delivery.id,
-            type: :failed,
-            occurred_at: event_occurred_at,
-            normalized_payload: %{error_type: err.__struct__}
-          })
-        )
+        case Repo.multi(
+               Ecto.Multi.new()
+               |> Ecto.Multi.update(
+                 :delivery,
+                 Projector.update_projections(delivery, event)
+                 |> Ecto.Changeset.change(%{
+                   status: :failed,
+                   last_error: serialize_error(err)
+                 }),
+                 Repo.multi_opts()
+               )
+               |> Events.append_multi(:event_failed, %{
+                 tenant_id: delivery.tenant_id,
+                 delivery_id: delivery.id,
+                 type: :failed,
+                 occurred_at: event_occurred_at,
+                 normalized_payload: %{error_type: err.__struct__}
+               })
+             ) do
+          {:ok, %{delivery: updated}} -> {:ok, updated}
+          {:error, _step, persist_error, _changes} -> {:error, to_error(persist_error)}
+        end
 
       {:error, _} ->
         # Delivery not found — cannot persist failure, log and move on
         require Logger
         Logger.warning("[mailglass] persist_failed_by_id: delivery #{delivery_id} not found")
-        :ok
+
+        {:error,
+         Mailglass.SendError.new(:dispatch_unavailable,
+           retry_class: :transient,
+           context: %{reason_class: :delivery_not_found},
+           delivery_id: delivery_id
+         )}
     end
   end
 

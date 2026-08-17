@@ -8,6 +8,7 @@ defmodule Mailglass.SendError do
   - `:rendering_failed` — HEEx or CSS-inlining pipeline failed
   - `:preflight_rejected` — suppression or rate-limit check blocked the send
   - `:serialization_failed` — message could not be serialized for the adapter
+  - `:dispatch_unavailable` — local async admission was refused before work started
 
   ## Per-kind Fields
 
@@ -21,19 +22,31 @@ defmodule Mailglass.SendError do
 
   @behaviour Mailglass.Error
 
-  @types [:adapter_failure, :rendering_failed, :preflight_rejected, :serialization_failed]
+  @types [
+    :adapter_failure,
+    :rendering_failed,
+    :preflight_rejected,
+    :serialization_failed,
+    :dispatch_unavailable
+  ]
 
   #  / T-PII-002: `:cause` deliberately excluded from JSON serialization —
   # adapter errors wrapped in `:cause` may carry provider payloads with PII.
   @derive {Jason.Encoder, only: [:type, :message, :context]}
-  defexception [:type, :message, :cause, :context, :delivery_id]
+  defexception [:type, :message, :cause, :context, :delivery_id, retry_class: nil]
 
   @type t :: %__MODULE__{
-          type: :adapter_failure | :rendering_failed | :preflight_rejected | :serialization_failed,
+          type:
+            :adapter_failure
+            | :rendering_failed
+            | :preflight_rejected
+            | :serialization_failed
+            | :dispatch_unavailable,
           message: String.t(),
           cause: Exception.t() | nil,
           context: %{atom() => term()},
-          delivery_id: binary() | nil
+          delivery_id: binary() | nil,
+          retry_class: :transient | :permanent | nil
         }
 
   @doc "Returns the closed set of valid `:type` atoms. Tested against `docs/api_stability.md`."
@@ -60,18 +73,26 @@ defmodule Mailglass.SendError do
   - `:cause` — an underlying exception to wrap (kept out of JSON output).
   - `:context` — a map of non-PII metadata about the failure.
   - `:delivery_id` — the `%Mailglass.Delivery{}` id when available.
+  - `:retry_class` — `:transient`, `:permanent`, or `nil`; excluded from JSON output.
   """
   @doc since: "0.1.0"
   @spec new(atom(), keyword()) :: t()
   def new(type, opts \\ []) when type in @types do
     ctx = opts[:context] || %{}
+    retry_class = Keyword.get(opts, :retry_class)
+
+    unless retry_class in [nil, :transient, :permanent] do
+      raise ArgumentError,
+            "retry_class must be :transient, :permanent, or nil, got: #{inspect(retry_class)}"
+    end
 
     %__MODULE__{
       type: type,
       message: format_message(type, ctx),
       cause: opts[:cause],
       context: ctx,
-      delivery_id: opts[:delivery_id]
+      delivery_id: opts[:delivery_id],
+      retry_class: retry_class
     }
   end
 
@@ -85,4 +106,7 @@ defmodule Mailglass.SendError do
 
   defp format_message(:serialization_failed, _ctx),
     do: "Delivery failed: message could not be serialized"
+
+  defp format_message(:dispatch_unavailable, _ctx),
+    do: "Delivery failed: asynchronous dispatch is unavailable"
 end

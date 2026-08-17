@@ -1,5 +1,12 @@
 defmodule Mailglass.Outbound.AsyncAdapter do
-  @moduledoc false
+  @moduledoc """
+  Internal behaviour for non-durable asynchronous dispatch.
+
+  Dispatch returns `{:ok, pid()}` or `:ok` only after work admission succeeds.
+  A refusal is returned as `{:error, reason}` and callers must project that
+  failure instead of acknowledging queued work.
+  """
+
   # Internal — may move to public surface in  per -29.
   #
   # Pluggable behaviour for async dispatch in the Outbound pipeline.
@@ -25,7 +32,7 @@ defmodule Mailglass.Outbound.AsyncAdapter do
   #
   # The default (no config) uses TaskSupervisor — prod behaviour.
 
-  @callback dispatch(fun :: (-> any()), opts :: keyword()) :: {:ok, pid()} | :ok
+  @callback dispatch(fun :: (-> any()), opts :: keyword()) :: {:ok, pid()} | :ok | {:error, term()}
 
   @doc """
   Dispatches `fun` via the configured async adapter impl.
@@ -38,7 +45,7 @@ defmodule Mailglass.Outbound.AsyncAdapter do
   - `Inline`: runs synchronously in the caller's process; `with_tenant/2`
     re-stamps and restores on return.
   """
-  @spec dispatch((-> any()), keyword()) :: {:ok, pid()} | :ok
+  @spec dispatch((-> any()), keyword()) :: {:ok, pid()} | :ok | {:error, term()}
   def dispatch(fun, opts \\ []) when is_function(fun, 0) do
     impl().dispatch(fun, opts)
   end
