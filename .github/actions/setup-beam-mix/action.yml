@@ -1,0 +1,45 @@
+name: Setup Beam and Mix
+description: Package-scoped locked Beam, cache, and dependency setup.
+
+inputs:
+  package-dir:
+    description: Package directory relative to repository root.
+    required: true
+  lockfile:
+    description: Package lockfile relative to repository root.
+    required: true
+  mix-env:
+    description: Explicit Mix environment for dependency resolution.
+    required: true
+  build-path:
+    description: Build path identity for this package/environment.
+    required: true
+  cache-namespace:
+    description: Stable package-local cache namespace.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up OTP and Elixir
+      uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124
+      with:
+        version-file: .tool-versions
+        version-type: strict
+    - name: Cache package dependencies
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: |
+          ${{ inputs.package-dir }}/deps
+          ${{ inputs.package-dir }}/${{ inputs.build-path }}
+        key: mix-${{ runner.os }}-${{ inputs.cache-namespace }}-${{ hashFiles('.tool-versions') }}-${{ inputs.mix-env }}-${{ inputs.build-path }}-${{ hashFiles(inputs.lockfile) }}
+    - name: Install locked dependencies
+      shell: bash
+      env:
+        PACKAGE_DIR: ${{ inputs.package-dir }}
+        MIX_ENV: ${{ inputs.mix-env }}
+        MIX_BUILD_PATH: ${{ inputs.build-path }}
+      run: |
+        set -euo pipefail
+        cd "$PACKAGE_DIR"
+        mix deps.get --check-locked
