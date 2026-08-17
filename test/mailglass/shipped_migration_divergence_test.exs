@@ -16,6 +16,29 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
   # (with_defaults/2 sets create_schema: prefix != "public").
   @prefix "mailglass_shipped_path_test"
 
+  # Captured from the Phase 157 planning base (6014fdbd), before V06/V02
+  # implementation. These are source-byte hashes, not semantic snapshots:
+  # even a comment-only rewrite of shipped history must fail this contract.
+  @historical_migration_hashes %{
+    "lib/mailglass/migrations/postgres/v01.ex" =>
+      "cf4029d80178315f0dfc2238d1768186075833a9a6f49df6db5971522424ccd9",
+    "lib/mailglass/migrations/postgres/v02.ex" =>
+      "7fb7b42ca02e2cc9fc6d6f75cb6165ac58aa653a7b0d4ce351654ce12d7b25cc",
+    "lib/mailglass/migrations/postgres/v03.ex" =>
+      "d5e64092d657e0efed896c80bd3a0d7653945cd03bab3357c5d439534989eba9",
+    "lib/mailglass/migrations/postgres/v04.ex" =>
+      "6fbef81831f685dc8cd3d32814efe7ca84670432274d061410a52cfd01742696",
+    "lib/mailglass/migrations/postgres/v05.ex" =>
+      "1b0eda1c368292a6e6b1a06aa3362c7822bb9738d0d20000989f48fb4ffc7f71",
+    "mailglass_inbound/lib/mailglass_inbound/migrations/postgres/v01.ex" =>
+      "4f3bd6583d6818b16b7bc326452935a9ed6ad1970d07b7c60af9d1f56cc7699d"
+  }
+
+  @forward_migration_catalog [
+    "lib/mailglass/migrations/postgres/v06.ex",
+    "mailglass_inbound/lib/mailglass_inbound/migrations/postgres/v02.ex"
+  ]
+
   # Inline migration that mirrors the exact 8-line wrapper file
   # `mix mailglass.gen.migration` emits for adopters. Driving this through
   # `Ecto.Migrator` is the genuine adopter path — it stands up the
@@ -94,6 +117,25 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
   end
 
   describe "shipped Mailglass.Migration.up/1 → mailglass_deliveries DDL" do
+    test "historical core V01-V05 and inbound V01 remain byte-identical" do
+      Enum.each(@historical_migration_hashes, fn {path, expected} ->
+        actual =
+          path |> File.read!() |> then(&:crypto.hash(:sha256, &1)) |> Base.encode16(case: :lower)
+
+        assert actual == expected,
+               "shipped migration bytes diverged for #{path}; append a new version instead"
+      end)
+
+      assert Enum.all?(@forward_migration_catalog, &File.exists?/1)
+      assert Mailglass.Migrations.Postgres.current_version() == 6
+
+      assert File.read!("mailglass_inbound/lib/mailglass_inbound/migrations/postgres.ex") =~
+               "@current_version 2"
+
+      refute Enum.any?(@forward_migration_catalog, &Map.has_key?(@historical_migration_hashes, &1)),
+             "new forward versions must not be folded into the immutable historical baseline"
+    end
+
     test "deliveries has the idempotency_key column" do
       assert deliveries_column_exists?("idempotency_key"),
              "shipped dispatcher must create mailglass_deliveries.idempotency_key " <>

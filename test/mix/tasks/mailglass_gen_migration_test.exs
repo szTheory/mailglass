@@ -46,11 +46,8 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
            defmodule Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo.Migrations.MailglassInstall do
              use Ecto.Migration
 
-             @disable_ddl_transaction true
-             @disable_migration_lock true
-
-             def up, do: Mailglass.Migration.up(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo, non_transactional_wrapper: true)
-             def down, do: Mailglass.Migration.down(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo, non_transactional_wrapper: true)
+             def up, do: Mailglass.Migration.up(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo)
+             def down, do: Mailglass.Migration.down(repo: Mix.Tasks.Mailglass.Gen.MigrationTest.HostRepo)
            end
            """
   end

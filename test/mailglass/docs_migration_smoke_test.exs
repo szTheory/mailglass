@@ -4,6 +4,30 @@ defmodule Mailglass.DocsMigrationSmokeTest do
 
   @canonical_guide_path "guides/upgrading-to-v1_0.md"
   @guide_path "guides/migration-from-swoosh.md"
+  @migration_policy_path "docs/migration-policy.md"
+
+  test "populated-table migration policy stays aligned with executable wrappers" do
+    policy = File.read!(@migration_policy_path)
+
+    for required <- [
+          "mix mailglass.gen.migration --upgrade --from 5",
+          "mix mailglass.inbound.gen.migration --upgrade --from 1",
+          "@disable_ddl_transaction true",
+          "@disable_migration_lock true",
+          "non_transactional_wrapper: true",
+          "CREATE INDEX CONCURRENTLY",
+          "invalid indexes",
+          "bounded, resumable backfill",
+          "scripts/generated_ecto_host_proof.sh",
+          "core and inbound migrations are independent",
+          "admin/operator schema or UI"
+        ] do
+      assert policy =~ required, "migration policy is missing #{inspect(required)}"
+    end
+
+    refute policy =~ "DROP TABLE",
+           "the forward populated-table policy must not prescribe destructive contraction"
+  end
 
   test "migration guide steps are accurate" do
     code = extract_block_after_heading(@guide_path, "End-to-End Example")
