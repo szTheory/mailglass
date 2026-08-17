@@ -36,15 +36,14 @@ defmodule MailglassInbound.RateLimiterTest do
   defp restore_env(key, value), do: Application.put_env(:mailglass_inbound, key, value)
 
   describe "shared atomic bucket" do
-    test "fails closed instead of raising while its ETS owner restarts" do
-      # Deleting a named ETS table simulates the narrow owner-restart window:
-      # ingress gets its normal limiter error, never :badarg.
+    test "recreates its ETS table instead of raising when admission sees it absent" do
+      # Deleting a named ETS table immediately before admission exercises the
+      # owner-side recovery path. It must recreate the canonical table before
+      # looking up or inserting the new bucket.
       :ets.delete(@table)
 
-      assert {:error, %RateLimitError{}} =
-               RateLimiter.check("restart-window", "user@restart.test", "sender.test")
-
-      on_exit(fn -> await_table(@table) end)
+      assert :ok = RateLimiter.check("restart-window", "user@restart.test", "sender.test")
+      refute :undefined == :ets.whereis(@table)
     end
 
     test "concurrent inbound callers receive only the deterministic refilled capacity" do
@@ -78,6 +77,53 @@ defmodule MailglassInbound.RateLimiterTest do
       for _ <- tasks, do: assert_receive(:ready)
       Enum.each(tasks, &send(&1.pid, :go))
       assert Enum.count(Enum.map(tasks, &Task.await(&1, 5_000)), &(&1 == :ok)) == 10
+    end
+
+    test "a restarted owner admits exactly tenant capacity under barrier contention" do
+      capacity = 50
+
+      Application.put_env(:mailglass_inbound, :rate_limit,
+        tenant: [capacity: capacity, per_minute: 0],
+        recipient: [capacity: 100_000, per_minute: 0],
+        sender_domain: [capacity: 100_000, per_minute: 0]
+      )
+
+      old_owner = Process.whereis(MailglassInbound.RateLimiter.TableOwner)
+      owner_down = Process.monitor(old_owner)
+      Process.exit(old_owner, :kill)
+      assert_receive {:DOWN, ^owner_down, :process, ^old_owner, :killed}
+
+      children = Elixir.Supervisor.which_children(MailglassInbound.Supervisor)
+
+      {MailglassInbound.RateLimiter.TableOwner, new_owner, :worker, _} =
+        Enum.find(children, fn {id, _pid, _type, _modules} ->
+          id == MailglassInbound.RateLimiter.TableOwner
+        end)
+
+      assert is_pid(new_owner)
+      refute new_owner == old_owner
+      refute :undefined == :ets.whereis(@table)
+
+      parent = self()
+
+      tasks =
+        for _ <- 1..100 do
+          Task.async(fn ->
+            send(parent, :inbound_rate_limit_ready)
+
+            receive do
+              :inbound_rate_limit_go ->
+                RateLimiter.check("restart-contention", "user@restart.test", "sender.test")
+            end
+          end)
+        end
+
+      for _ <- tasks, do: assert_receive(:inbound_rate_limit_ready)
+      Enum.each(tasks, &send(&1.pid, :inbound_rate_limit_go))
+
+      results = Enum.map(tasks, &Task.await(&1, 5_000))
+      assert Enum.count(results, &(&1 == :ok)) == capacity
+      assert Enum.count(results, &match?({:error, %RateLimitError{}}, &1)) == 100 - capacity
     end
   end
 
@@ -243,18 +289,6 @@ defmodule MailglassInbound.RateLimiterTest do
 
       # A different tenant still has a fresh bucket.
       assert :ok = RateLimiter.check("tenant-y", "u@recipient.example", "sender.example")
-    end
-  end
-
-  defp await_table(table, attempts \\ 50)
-  defp await_table(_table, 0), do: :ok
-
-  defp await_table(table, attempts) do
-    if :ets.whereis(table) == :undefined do
-      Process.sleep(10)
-      await_table(table, attempts - 1)
-    else
-      :ok
     end
   end
 end
