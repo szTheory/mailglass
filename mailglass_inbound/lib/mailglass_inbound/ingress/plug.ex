@@ -43,7 +43,7 @@ defmodule MailglassInbound.Ingress.Plug do
   # response (CR-02) instead of letting it escape as an uncontrolled 500.
   alias MailglassInbound.S3FetchError
   alias MailglassInbound.Execution
-  alias MailglassInbound.Ingress.Request
+  alias MailglassInbound.Ingress.{Request, VerifiedRequest}
 
   @impl Plug
   def init(opts) when is_list(opts) do
@@ -113,6 +113,9 @@ defmodule MailglassInbound.Ingress.Plug do
           resp = send_json(conn, 200, %{status: "control_plane"})
           {resp, %{provider: provider, status: :control_plane}}
 
+        {:ok, %VerifiedRequest{} = verified} ->
+          persist_verified_and_respond(conn, provider, verified, config, opts)
+
         {:ok, facts} when is_map(facts) ->
           persist_and_respond(conn, provider, request, facts, opts)
 
@@ -181,6 +184,42 @@ defmodule MailglassInbound.Ingress.Plug do
     tenant_id = resolve_tenant!(provider, conn, request)
     normalized = normalize_request!(provider, request, opts)
 
+    persist_normalized_and_respond(
+      conn,
+      provider,
+      request,
+      tenant_id,
+      normalized,
+      verification_facts,
+      opts
+    )
+  end
+
+  defp persist_verified_and_respond(conn, provider, %VerifiedRequest{} = verified, config, opts) do
+    tenant_id = resolve_tenant!(provider, conn, verified.request, verified.envelope)
+    verified = resolve_content_request!(provider, verified, config, opts)
+    normalized = normalize_request!(provider, verified, opts)
+
+    persist_normalized_and_respond(
+      conn,
+      provider,
+      verified.request,
+      tenant_id,
+      normalized,
+      verified.verification_facts,
+      opts
+    )
+  end
+
+  defp persist_normalized_and_respond(
+         conn,
+         provider,
+         request,
+         tenant_id,
+         normalized,
+         verification_facts,
+         opts
+       ) do
     # Post-verify rate limiter. This branch is reached only on
     # a successful verify ({:ok, facts} / legacy bare-map), so a forged-payload
     # flood is rejected with 401 BEFORE any budget is read — the limiter is never
@@ -562,6 +601,10 @@ defmodule MailglassInbound.Ingress.Plug do
     resolve_provider_module(:ses, opts).normalize(request)
   end
 
+  defp resolve_content_request!(:ses, %VerifiedRequest{} = verified, config, opts) do
+    resolve_provider_module(:ses, opts).resolve_content!(verified, config)
+  end
+
   # Test seam: an opts `:provider_module` override lets tests inject a stub
   # provider to exercise the widened verify-result branches (replay /
   # control-plane / persist) without the real Mailgun/SES providers (which land
@@ -574,14 +617,14 @@ defmodule MailglassInbound.Ingress.Plug do
     end
   end
 
-  defp resolve_tenant!(provider, conn, request) do
+  defp resolve_tenant!(provider, conn, request, verified_payload \\ nil) do
     ctx = %{
       provider: provider,
       conn: conn,
       raw_body: request.raw_body,
       headers: request.headers,
       path_params: conn.path_params,
-      verified_payload: nil
+      verified_payload: verified_payload
     }
 
     case Tenancy.resolve_webhook_tenant(ctx) do
