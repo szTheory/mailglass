@@ -1,6 +1,6 @@
 ---
 phase: 156-delivery-correctness-and-bounded-execution
-reviewed: 2026-08-17T04:44:00Z
+reviewed: 2026-08-17T05:08:00Z
 depth: deep
 files_reviewed: 34
 files_reviewed_list:
@@ -40,55 +40,45 @@ files_reviewed_list:
   - test/mailglass/webhook/replay_test.exs
 findings:
   critical: 2
-  warning: 1
+  warning: 0
   info: 0
-  total: 3
+  total: 2
 status: issues_found
 ---
 
 # Phase 156: Code Review Report
 
-**Reviewed:** 2026-08-17T04:44:00Z
+**Reviewed:** 2026-08-17T05:08:00Z
 **Depth:** deep
 **Files Reviewed:** 34
 **Status:** issues_found
 
 ## Summary
 
-The atomic bucket, transactional Oban insertion, bounded task admission, and Swoosh/tracking paths were traced with their caller/worker boundaries. Focused core and inbound suites passed (93 tests total), but that does not cover two remaining untrusted-string boundaries. The phase cannot claim EXEC-08 or its closed/fail-closed security posture while those paths remain.
+The prior replay atom-allocation and ETS caller-crash findings are fixed: replay carries the finite-decoded provider through its result, and the shared bucket denies instead of raising during an absent-table window. Focused re-review suites passed (51 tests total). However, the new mailbox allowlist has made the documented ingress configuration unable to execute durable jobs, and the parallel internal replay path still resolves a persisted mailbox string into an arbitrary loaded module. The phase is not clean.
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01: Replay still allocates an atom from a persisted provider string
+### CR-01: The mailbox allowlist breaks every documented durable ingress configuration
 
-**File:** `lib/mailglass/webhook/replay.ex:366`
+**File:** `mailglass_inbound/lib/mailglass_inbound/execution/worker.ex:20-22`, `mailglass_inbound/lib/mailglass_inbound/execution.ex:341-353`
 
-**Issue:** The new `ProviderName.decode/1` correctly validates the stored provider before normalization, but `build_success_result/4` converts the original persisted `webhook_event.provider` with `String.to_atom/1`. A valid provider is only reached after validation today, yet this is still an unbounded atom-conversion sink on a database value and directly violates EXEC-08 / D-12. A future added provider, bypassed caller, or refactor that reaches the result builder before the current validation reintroduces atom-table exhaustion; the supplied atom-count test only exercises invalid values that fail before this line.
+**Issue:** The ingress documentation configures the router only on `MailglassInbound.Ingress.Plug` (for example `router: MyApp.MailglassInboundRouter` in `mailglass_inbound/README.md:143-155` and `docs/inbound-install.md:146-157`). `maybe_execute/2` then calls `Execution.dispatch(result)` without that option (`ingress/plug.ex:629-634`). The new worker pre-validates every durable job with `Execution.validate_job_route(args, [])`, which can only consult `Application.get_env(:mailglass_inbound, :router)`. `MailglassInbound.Config` neither declares nor validates that application key. Therefore an adopter following the documented, supported Plug-only setup will persist a matched inbound record, enqueue successfully, and have its Oban worker permanently cancel it before loading or executing the mailbox. The security control silently converts a supported normal path into message loss.
 
-**Fix:** Carry the already-decoded `provider` atom through `run_replay/5` into `build_success_result/5` and set `provider: provider`. Delete the `String.to_atom/1` call. Add a regression assertion (and a repository scan test if appropriate) proving no `String.to_atom/1` remains in the replay path.
+**Fix:** Preserve the router authority across the async boundary without trusting job input blindly. At minimum, make the router an explicit validated required application configuration for durable execution and update the documented installation/migration contract; preferably persist a stable router identity at enqueue and verify it against a configured allowlist before resolving the mailbox. Pass a test with no global `:mailglass_inbound, :router`, a router supplied only to the ingress Plug, and assert the resulting durable job executes rather than being cancelled.
 
-### CR-02: Inbound job data can select any already-loaded module as the mailbox
+### CR-02: Internal replay still invokes a mailbox selected from persisted data
 
-**File:** `mailglass_inbound/lib/mailglass_inbound/execution.ex:316-327`
+**File:** `mailglass_inbound/lib/mailglass_inbound/internal/replay.ex:74-97,139-142`
 
-**Issue:** `Execution.load/2` accepts the `"mailbox"` value from the Oban job, converts it with `String.to_existing_atom/1`, and later `classify_mailbox_result/3` invokes `mailbox.process(message)` (lines 277-280). `to_existing_atom/1` avoids atom growth but is not the required finite/authorized decoder: a tampered persisted job can select any already-loaded module that exports `process/1`, rather than the mailbox the router authorized for the stored inbound record. This crosses the job-JSON trust boundary as arbitrary module dispatch and lets corrupt job data produce execution outside the matched route.
+**Issue:** The new worker path no longer trusts the `"mailbox"` job argument, but `Internal.Replay` obtains `ExecutionRun.mailbox` from the database, converts it through `String.to_existing_atom/1`, and passes it to `Execution.execute/2`. That is the same arbitrary-loaded-module dispatch boundary the original CR-02 identified, just on the replay path: a corrupt execution-run record can select any loaded module with `process/1`. It also leaves a non-finite persisted-string decoder in the phase's purported closed-value coverage.
 
-**Fix:** Do not use the job-supplied module name as authority. Persist/rehydrate the matched route from a trusted record, or resolve the string through an application-configured allowlist of registered mailbox modules and verify it matches that record's route. Return `{:error, :invalid_job_args}` before `Execution.execute/2` for unknown or mismatched values. Add a worker test using a loaded non-mailbox `process/1` module and assert it is cancelled without invocation.
-
-## Warnings
-
-### WR-01: A rate-limiter table-owner restart raises callers instead of failing closed
-
-**File:** `lib/mailglass/rate_limiter/atomic_bucket.ex:21-23,40-42`
-
-**Issue:** Both admission and consume start with bare `:ets.lookup/2`. If the supervised `TableOwner` has crashed and its named ETS table has not yet been recreated, that call raises `ArgumentError`/`badarg`; only the subsequent `GenServer.call/2` is caught. A transient owner restart can therefore crash outbound callers rather than returning the documented denied/fail-closed result. Inbound uses this same shared engine and has the same failure mode.
-
-**Fix:** Wrap ETS access in a small safe lookup helper that maps a missing table to `[]`/a denied result, and ensure the retry/admission path catches both ETS and owner unavailability. Add a deterministic owner-restart test asserting core and inbound limit checks return their normal rate-limit error rather than exiting.
+**Fix:** Route replay mailbox resolution through the same trusted configured-router allowlist (extract a shared internal resolver rather than duplicating it), returning the existing `:replay_mailbox_missing` typed error for unknown or unauthorized names. Add a replay regression with a loaded sentinel module and a persisted mailbox string; assert it fails without invoking the sentinel or allocating atoms.
 
 ---
 
-_Reviewed: 2026-08-17T04:44:00Z_
+_Reviewed: 2026-08-17T05:08:00Z_
 _Reviewer: gsd-code-reviewer_
 _Depth: deep_
