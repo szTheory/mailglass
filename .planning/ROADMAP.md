@@ -122,7 +122,19 @@ Plans:
   4. Existing installations transition MIME deduplication safely, while batch delivery, suppression resync, and lookup paths perform bounded indexed and bulk database work without changing outcomes.
   5. Retention, webhook handling, and future populated-table migrations run in bounded, index-backed batches while preserving raw signed bodies and immutable shipped migration history.
 
-**Plans**: TBD
+**Plans**: 9 plans
+
+Plans:
+
+- [ ] 157-01-PLAN.md — Replace ambient inbound verification handoff with one explicit verified-request pipeline.
+- [ ] 157-02-PLAN.md — Gate S3 retrieval by metadata size and preserve closed retry classifications.
+- [ ] 157-03-PLAN.md — Bound shared SES certificate and Mailgun replay cache work.
+- [ ] 157-04-PLAN.md — Restrict route declarations to literal AST and pin inbound ETS bounds.
+- [ ] 157-05-PLAN.md — Add SHA-256 transition and durable replayable terminal evidence.
+- [ ] 157-06-PLAN.md — Add positional bulk suppression lookup and bounded batch preflight.
+- [ ] 157-07-PLAN.md — Keyset-page suppression resync with bounded reads and upserts.
+- [ ] 157-08-PLAN.md — Batch indexed retention and webhook projection while retaining exact signed bytes.
+- [ ] 157-09-PLAN.md — Prove populated generated-host upgrades and immutable shipped migrations.
 
 ### Phase 158: Simplify Architecture Without Breaking Adopters
 
@@ -176,7 +188,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 155. Restore Adopter and CI Truth | 7/7 | Complete    | 2026-08-16 |
 | 156. Delivery Correctness and Bounded Execution | 6/6 | Complete    | 2026-08-17 |
-| 157. Inbound, Database, and Lifecycle Hardening | 0/TBD | Not started | - |
+| 157. Inbound, Database, and Lifecycle Hardening | 0/9 | Not started | - |
 | 158. Simplify Architecture Without Breaking Adopters | 0/TBD | Not started | - |
 | 159. Raise and Simplify Engineering Gates | 0/TBD | Not started | - |
 | 160. Certification, Documentation, and Release | 0/TBD | Not started | - |
