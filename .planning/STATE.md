@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.5
-milestone_name: B2C Alpha Adoption Certification
-status: Awaiting next milestone
-stopped_at: Milestone v2.5 archived after passed certification audit
-last_updated: "2026-08-04T19:38:26.818Z"
-last_activity: 2026-08-04
-last_activity_desc: Milestone v2.5 completed and archived
+milestone: v2.6
+milestone_name: Engineering Quality Ratchet
+status: planning
+last_updated: "2026-08-17T01:12:23.853Z"
+last_activity: 2026-08-16
 progress:
-  total_phases: 1
-  completed_phases: 1
+  total_phases: 0
+  completed_phases: 0
   total_plans: 0
   completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-08-04 after completing v2.5)
 
 ## Current Position
 
-Phase: Milestone v2.5 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-08-04 — Milestone v2.5 completed and archived
+Status: Defining requirements
+Last activity: 2026-08-16 — Milestone v2.6 started
 
 ## v2.4 Milestone Intent
 

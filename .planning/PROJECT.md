@@ -10,11 +10,17 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
+**v2.6 Engineering Quality Ratchet opened 2026-08-16.** A multi-dimensional code, architecture,
+runtime, data, migration, test, and CI audit found concrete first-adopter and correctness defects beneath
+the previously green certification signal. The milestone restores generated-host migration truth first,
+then fixes bounded execution and data/security correctness, tightens architecture, and makes merge CI
+fail closed. The admin/operator UI remains explicitly untouched.
+
 **v2.5 B2C Alpha Adoption Certification completed 2026-08-04.** The published `mailglass` 2.4.1,
-`mailglass_admin` 2.4.1, and `mailglass_inbound` 2.1.2 package family passed fresh package-shaped local and
-exact-Hex generated-host journeys, release-support contracts, provider/webhook compatibility, schema
-isolation, optional-runtime isolation, executable docs, and safety-only operator checks. No library defect
-or release is required.
+`mailglass_admin` 2.4.1, and `mailglass_inbound` 2.1.2 package family passed its then-current package-shaped
+proof. The v2.6 audit supersedes the claim that no library defect remains: the migration generator and
+upgrade path were not exercised by a real Ecto host, and several deterministic quality lanes were not
+merge-gating.
 
 **v2.4 Outbound First-Adopter Correctness shipped 2026-08-04.** Mailglass now proves the documented
 single-recipient sync/async journey from a generated production-shaped Phoenix/Postgres host. Durable
@@ -31,17 +37,22 @@ Package boundaries are locked. Chimeway owns notification policy and preferences
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
 paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
 
-## Next Milestone Goals
+## Current Milestone: v2.6 Engineering Quality Ratchet
 
-No next milestone is committed. Mailglass is ready for first-adopter integration at the library boundary;
-the next work should be driven by a concrete adopter need, a demonstrated contract gap, or the separately
-scheduled admin/operator UX cleanup.
+**Goal:** Raise the internal engineering bar substantially while proving the generated first-adopter path,
+runtime correctness, data safety, architecture boundaries, and merge/release signals are honest.
+
+**Target features:**
+- Correct initial, upgrade, rollback, multi-repo, and legacy-remediation migration generation.
+- Bounded and honest delivery/inbound execution, retry classification, data access, and resource use.
+- Zero compile cycles, explicit runtime/boundary ownership, deterministic tests, and fail-closed CI.
+- Generated-host certification and additive-only package release without admin/operator UI changes.
 
 ## Active Requirements
 
-No active library requirements. Before live SaaS traffic, the adopter must complete its own DNS/provider,
-secret, auth, preference-policy, alerting, and production-deployment gates; those are host-owned rather
-than missing Mailglass work.
+The v2.6 requirements are defined in `.planning/REQUIREMENTS.md`. Work proceeds in phases 155-160:
+adopter/CI truth; delivery correctness; inbound/data hardening; architecture simplification; engineering
+gates; and certification/release.
 
 Default posture remains convergence and adopter-pull: do not absorb notification policy,
 authentication, billing, support, mobile activation, or SRE ownership into Mailglass. The external
@@ -877,7 +888,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-08-04 after completing v2.5 B2C Alpha Adoption Certification.*
+*Last updated: 2026-08-16 after opening v2.6 Engineering Quality Ratchet.*
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->
