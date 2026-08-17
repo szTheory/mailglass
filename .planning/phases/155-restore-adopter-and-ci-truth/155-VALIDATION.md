@@ -50,6 +50,8 @@ created: 2026-08-16
 | 155-05-02 | 05 | 5 | ADOPT-01 | T-155-13..15 | Existing Installer Host Smoke identity invokes both no-Ecto and Ecto proofs | YAML meta-test | `mix test test/scripts/generated_ecto_host_proof_test.exs test/scripts/required_checks_test.exs --warnings-as-errors` | Generated-host contract file from prior task |
 | 155-06-01 | 06 | 6 | QUAL-02 | T-155-16..18 | Detector failure, invalid code output, or any skipped/non-success code leaf fails | shell policy unit | `mix test test/scripts/ci_green_policy_test.exs --warnings-as-errors` | Create policy test before shell/workflow changes |
 | 155-06-02 | 06 | 6 | QUAL-02 | T-155-16..18 | Successful docs-only classification permits skips; structural changes need and leaf set remain exact | shell + YAML mutation meta-test | `mix test test/scripts/ci_green_policy_test.exs test/scripts/required_checks_test.exs test/scripts/lane_classification_drift_test.exs --warnings-as-errors` | Policy test and required-check mutation fixtures exist first |
+| 155-07-01 | 07 | 7 | ADOPT-01 | T-155-19..21 | Core-first and inbound-first shared-schema rollback removes only package objects; sibling/host objects survive; the final empty package-managed schema may drop | isolated Postgres integration | `cd mailglass_inbound && mix test test/mailglass_inbound/migrations_test.exs --warnings-as-errors` | Extend the inbound migration suite with both rollback orders and host-sentinel assertions before changing either runner |
+| 155-07-02 | 07 | 7 | ADOPT-01 | T-155-22 | Two fresh generated Host.Repo journeys make inbound-first and core-first rollback load-bearing: each preserves the sibling/schema after rollback one and removes package relations plus the empty schema after rollback two | source contract + two real E2E journeys | `mix test test/scripts/generated_ecto_host_proof_test.exs --warnings-as-errors && MAILGLASS_PATH="$PWD" bash scripts/generated_ecto_host_proof.sh` | Strengthen the generated-host source contract with both journey calls, opposing generation orders, and both intermediate/final assertion sets before changing the script |
 
 ## Wave 0 Requirements
 
@@ -59,6 +61,8 @@ created: 2026-08-16
 - [ ] `test/mix/tasks/mailglass_legacy_repair_test.exs` — exact historical bytes, real Postgres success, and destructive negative controls.
 - [ ] `test/scripts/generated_ecto_host_proof_test.exs` — anti-vacuity source/mutation contract including both package repo config entries and Host.Repo migrate/rollback.
 - [ ] `test/scripts/ci_green_policy_test.exs` — detector/code/docs decision-table tests.
+- [ ] `mailglass_inbound/test/mailglass_inbound/migrations_test.exs` — isolated shared-schema core-first/inbound-first rollback and host-object preservation matrix.
+- [ ] `test/scripts/generated_ecto_host_proof_test.exs` — mutation-backed anchors for two isolated real-host journeys, opposing generation/rollback orders, both sibling-survival states, and both final empty-schema removals.
 
 Wave 0 is performed test-first inside the corresponding tracer task; no production implementation may precede its listed failing proof.
 
