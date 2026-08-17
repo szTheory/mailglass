@@ -10,6 +10,8 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     "config :mailglass_inbound, repo: Host.Repo",
     "mailglass.gen.migration --repo Host.Repo",
     "mailglass.inbound.gen.migration --repo Host.Repo",
+    "Mailglass\\.Migration\\.up\\(repo: Host\\.Repo\\)",
+    "MailglassInbound\\.Migration\\.up\\(repo: Host\\.Repo\\)",
     "mix ecto.migrate -r Host.Repo",
     "Host.Repo.insert(Delivery.changeset",
     "Host.Repo.get!(Delivery, delivery.id, prefix: \"mailglass\")",
