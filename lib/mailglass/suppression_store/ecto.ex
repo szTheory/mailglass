@@ -202,7 +202,7 @@ defmodule Mailglass.SuppressionStore.Ecto do
 
         key_predicate =
           case key.stream do
-            stream when is_atom(stream) ->
+            stream when is_atom(stream) and not is_nil(stream) ->
               dynamic(
                 [e],
                 e.tenant_id == ^tenant_id and
