@@ -33,6 +33,7 @@ defmodule Mailglass.Migration do
     # default. The dispatcher's `with_defaults/2` supplies "public" + identifier
     # validation downstream for callers who pass neither.
     opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
+    ensure_non_transactional_wrapper!(opts)
     migrator(opts).up(opts)
   end
 
@@ -43,6 +44,7 @@ defmodule Mailglass.Migration do
     # Same runtime-prefix injection as `up/1` (MIGR-01) — explicit caller
     # `:prefix` wins via `Keyword.put_new`.
     opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
+    ensure_non_transactional_wrapper!(opts)
     migrator(opts).down(opts)
   end
 
@@ -104,5 +106,19 @@ defmodule Mailglass.Migration do
       nil -> raise Mailglass.ConfigError.new(:missing, context: %{key: :repo})
       mod when is_atom(mod) -> mod
     end
+  end
+
+  defp ensure_non_transactional_wrapper!(opts) do
+    if Keyword.get(opts, :non_transactional_wrapper, false) do
+      repo = resolve_repo(opts)
+
+      if repo.in_transaction?() do
+        raise ArgumentError,
+              "non_transactional_wrapper: true requires a generated migration with " <>
+                "@disable_ddl_transaction true; refusing concurrent DDL inside a transaction"
+      end
+    end
+
+    :ok
   end
 end

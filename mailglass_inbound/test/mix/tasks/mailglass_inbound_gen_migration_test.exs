@@ -69,37 +69,46 @@ defmodule Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest do
     assert migration_paths() == []
   end
 
-  test "refuses every inbound offline upgrade because version one has no predecessor" do
+  test "generates a transaction-disabled offline upgrade from V01" do
     Application.put_env(:mailglass_inbound, :ecto_repos, [HostRepo])
 
-    assert_raise Mix.Error, ~r/no offline upgrade is available/, fn ->
-      Mix.Tasks.Mailglass.Inbound.Gen.Migration.run(["--upgrade", "--from", "1"])
-    end
+    assert capture_io(fn ->
+             Mix.Tasks.Mailglass.Inbound.Gen.Migration.run(["--upgrade", "--from", "1"])
+           end) =~ "created"
 
-    assert migration_paths() == []
+    assert [path] = migration_paths()
+    source = File.read!(path)
+
+    assert source =~ "@disable_ddl_transaction true"
+    assert source =~ "@disable_migration_lock true"
+    assert source =~ "non_transactional_wrapper: true"
+
+    assert source =~
+             "MailglassInbound.Migration.down(repo: Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest.HostRepo, version: 1, non_transactional_wrapper: true)"
   end
 
-  test "uses the selected repo for live inbound inspection and refuses the current initial version" do
+  test "uses the selected repo for live inbound inspection and generates the V01 upgrade" do
     Application.put_env(:mailglass_inbound, :ecto_repos, [HostRepo])
     prior_repo = Application.get_env(:mailglass_inbound, :repo)
     Application.put_env(:mailglass_inbound, :repo, OtherRepo)
 
     on_exit(fn -> restore_repo(:mailglass_inbound, prior_repo) end)
 
-    assert_raise Mix.Error, ~r/no live upgrade is available/, fn ->
-      Mailglass.MigrationGenerator.run(inbound_spec(), ["--upgrade"],
-        with_repo: fn repo, fun ->
-          send(self(), {:started_repo, repo})
-          {:ok, fun.(repo), []}
-        end
-      )
-    end
+    assert capture_io(fn ->
+             Mailglass.MigrationGenerator.run(inbound_spec(), ["--upgrade"],
+               with_repo: fn repo, fun ->
+                 send(self(), {:started_repo, repo})
+                 {:ok, fun.(repo), []}
+               end
+             )
+           end) =~ "created"
 
     assert_received {:started_repo, HostRepo}
     assert_received {:host_query, query, ["public"], [log: false]}
     assert query =~ "mailglass_inbound_records"
     refute_received :other_repo_called
-    assert migration_paths() == []
+    assert [path] = migration_paths()
+    assert File.read!(path) =~ "version: 1, non_transactional_wrapper: true"
   end
 
   defp migration_paths do
