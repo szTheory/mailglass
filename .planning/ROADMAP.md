@@ -173,7 +173,15 @@ Plans:
   4. New complexity exceptions cannot enter the repository, existing exceptions expire downward, and skipped or flaky tests have accountable, unexpired records and deterministic acknowledgements.
   5. Repeated setup and release-policy logic is centralized and tested; dependency, Docker, timeout, and workflow-permission rules are consistently enforced across sibling packages.
 
-**Plans**: TBD
+**Plans**:
+
+- [ ] 159-01-PLAN.md — tested required/advisory CI policy harness.
+- [ ] 159-02-PLAN.md — formatter baseline and package-scoped locked setup.
+- [ ] 159-03-PLAN.md — deterministic skip/flaky/sleep governance.
+- [ ] 159-04-PLAN.md — measurement-first coverage floors and critical contracts.
+- [ ] 159-05-PLAN.md — inbound Dialyzer and static-analysis exception ratchet.
+- [ ] 159-06-PLAN.md — protected CI Green promotion and advisory exclusion.
+- [ ] 159-07-PLAN.md — workflow hardening and release-policy extraction.
 
 ### Phase 160: Certification, Documentation, and Release
 
@@ -199,5 +207,5 @@ Plans:
 | 156. Delivery Correctness and Bounded Execution | 6/6 | Complete    | 2026-08-17 |
 | 157. Inbound, Database, and Lifecycle Hardening | 9/9 | Complete    | 2026-08-17 |
 | 158. Simplify Architecture Without Breaking Adopters | 6/6 | Complete    | 2026-08-17 |
-| 159. Raise and Simplify Engineering Gates | 0/TBD | Not started | - |
+| 159. Raise and Simplify Engineering Gates | 0/7 | Not started | - |
 | 160. Certification, Documentation, and Release | 0/TBD | Not started | - |
