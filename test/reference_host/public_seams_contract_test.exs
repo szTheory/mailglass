@@ -41,6 +41,48 @@ defmodule Mailglass.ReferenceHost.PublicSeamsContractTest do
     end)
   end
 
+  test "Config keeps its documented public accessor inventory while Runtime remains internal" do
+    assert Code.ensure_loaded?(Mailglass.Config)
+
+    for {name, arity} <- [
+          {:new!, 0},
+          {:new!, 1},
+          {:validate_at_boot!, 0},
+          {:get_theme, 0},
+          {:schema, 0},
+          {:default_adapter, 0},
+          {:adapters, 0},
+          {:resolve_adapter_ref, 1},
+          {:compliance, 0},
+          {:compliance_endpoint, 0},
+          {:compliance_host, 0},
+          {:compliance_scheme, 0},
+          {:compliance_mount_path, 0},
+          {:compliance_previous_secrets, 0},
+          {:compliance_redirect, 0},
+          {:compliance_max_age, 0},
+          {:compliance_lifecycle, 0},
+          {:webhook_ingest_mode, 0}
+        ] do
+      assert function_exported?(Mailglass.Config, name, arity),
+             "stable Config accessor missing: #{name}/#{arity}"
+    end
+
+    for internal <- [
+          Mailglass.Runtime,
+          Mailglass.Runtime.Schema,
+          Mailglass.Outbound.Preflight,
+          Mailglass.Outbound.Routes,
+          Mailglass.Outbound.Persistence,
+          Mailglass.Outbound.Dispatch
+        ] do
+      assert {:docs_v1, _, :elixir, _, :hidden, _, _} = Code.fetch_docs(internal)
+    end
+
+    refute function_exported?(Mailglass, :runtime, 0)
+    refute function_exported?(Mailglass, :runtime_config, 0)
+  end
+
   defp token_present?(files_with_content, token) do
     Enum.any?(files_with_content, fn {_path, content} -> String.contains?(content, token) end)
   end
