@@ -13,6 +13,7 @@ defmodule Mix.Tasks.Mailglass.LegacyRepairTest do
 
   @prefix "mailglass_legacy_repair_test"
   @version 155_040_001
+  @migrations_path "tmp/mailglass_legacy_repair_test/migrations"
 
   alias LegacyRepairHost.Repo
 
@@ -24,8 +25,8 @@ defmodule Mix.Tasks.Mailglass.LegacyRepairTest do
     Application.put_env(:mailglass, :ecto_repos, [Repo])
     Application.put_env(:mailglass, Repo, repo_config())
 
-    source_path = Path.join(migrations_path(), "20240101000000_mailglass_install.exs")
-    File.rm_rf!(migrations_path())
+    source_path = Path.join(@migrations_path, "20240101000000_mailglass_install.exs")
+    File.rm_rf!(@migrations_path)
     File.mkdir_p!(Path.dirname(source_path))
     File.write!(source_path, legacy_source())
     {:ok, _pid} = Repo.start_link()
@@ -42,7 +43,7 @@ defmodule Mix.Tasks.Mailglass.LegacyRepairTest do
 
       restore_env(:ecto_repos, previous_repos)
       restore_env(Repo, previous_repo_config)
-      File.rm_rf!(migrations_path())
+      File.rm_rf!(@migrations_path)
     end)
 
     %{source_path: source_path}
@@ -107,13 +108,11 @@ defmodule Mix.Tasks.Mailglass.LegacyRepairTest do
   end
 
   defp migration_paths do
-    migrations_path()
+    @migrations_path
     |> Path.join("*.exs")
     |> Path.wildcard()
     |> Enum.sort()
   end
-
-  defp migrations_path, do: Ecto.Migrator.migrations_path(Repo)
 
   defp repo_config do
     Application.fetch_env!(:mailglass, Mailglass.TestRepo)
@@ -151,7 +150,8 @@ defmodule Mix.Tasks.Mailglass.LegacyRepairTest do
       initial_version: &Mailglass.Migrations.Postgres.initial_version/0,
       current_version: &Mailglass.Migrations.Postgres.current_version/0,
       legacy_app_module: LegacyRepairHost,
-      legacy_prefix: @prefix
+      legacy_prefix: @prefix,
+      migrations_path: fn Repo -> @migrations_path end
     }
   end
 end

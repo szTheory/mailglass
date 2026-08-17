@@ -70,11 +70,11 @@ defmodule Mailglass.MigrationGenerator do
   end
 
   defp generate_initial!(spec, repo, options) do
-    pattern = Path.join(migrations_path(repo), "*_#{spec.install_suffix}.exs")
+    pattern = Path.join(migrations_path(repo, spec), "*_#{spec.install_suffix}.exs")
 
     case pattern |> Path.wildcard() |> Enum.sort() |> List.first() do
       nil ->
-        path = migration_path(repo, spec.install_suffix, options)
+        path = migration_path(repo, spec.install_suffix, options, spec)
         write_new!(path, install_source(spec, repo))
         Mix.shell().info("created #{path}")
 
@@ -90,7 +90,7 @@ defmodule Mailglass.MigrationGenerator do
         version -> validate_prior_version!(spec, version)
       end
 
-    path = migration_path(repo, spec.upgrade_suffix, options)
+    path = migration_path(repo, spec.upgrade_suffix, options, spec)
     write_new!(path, upgrade_source(spec, repo, prior_version))
     Mix.shell().info("created #{path}")
   end
@@ -98,7 +98,7 @@ defmodule Mailglass.MigrationGenerator do
   defp generate_legacy_repair!(spec, repo, options) do
     app_module = Map.get(spec, :legacy_app_module, current_app_module())
     prefix = Map.get(spec, :legacy_prefix, "public")
-    pattern = Path.join(migrations_path(repo), "*_#{spec.install_suffix}.exs")
+    pattern = Path.join(migrations_path(repo, spec), "*_#{spec.install_suffix}.exs")
     candidates = pattern |> Path.wildcard() |> Enum.sort()
 
     case candidates do
@@ -114,7 +114,7 @@ defmodule Mailglass.MigrationGenerator do
                )
              end) do
           {:ok, :ok, _started_apps} ->
-            path = migration_path(repo, "mailglass_legacy_repair", options)
+            path = migration_path(repo, "mailglass_legacy_repair", options, spec)
             write_new!(path, legacy_repair_source(repo, prefix))
             Mix.shell().info("created #{path}")
 
@@ -216,11 +216,16 @@ defmodule Mailglass.MigrationGenerator do
     end
   end
 
-  defp migration_path(repo, suffix, options) do
-    Path.join(migrations_path(repo), "#{timestamp(options)}_#{suffix}.exs")
+  defp migration_path(repo, suffix, options, spec) do
+    Path.join(migrations_path(repo, spec), "#{timestamp(options)}_#{suffix}.exs")
   end
 
-  defp migrations_path(repo), do: Ecto.Migrator.migrations_path(repo)
+  defp migrations_path(repo, spec) do
+    case Map.get(spec, :migrations_path) do
+      fun when is_function(fun, 1) -> fun.(repo)
+      nil -> Ecto.Migrator.migrations_path(repo)
+    end
+  end
 
   defp timestamp(options) do
     case Keyword.fetch(options, :now) do
