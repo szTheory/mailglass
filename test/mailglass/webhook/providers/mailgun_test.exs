@@ -90,6 +90,21 @@ defmodule Mailglass.Webhook.Providers.MailgunTest do
 
       assert Enum.sort(results) == [:ok, {:ok, :replay}]
     end
+
+    test "reclaims expired tokens but refuses a new token when live capacity is full" do
+      now = Mailglass.Clock.utc_now()
+      Application.put_env(:mailglass, :mailgun_replay_cache, max_entries: 1)
+
+      on_exit(fn -> Application.delete_env(:mailglass, :mailgun_replay_cache) end)
+
+      assert :ok = MailgunReplayCache.check_and_put("expired", DateTime.add(now, -1, :second))
+      assert :ok = MailgunReplayCache.check_and_put("fresh", DateTime.add(now, 60, :second))
+
+      assert {:error, :replay} =
+               MailgunReplayCache.check_and_put("overflow", DateTime.add(now, 60, :second))
+
+      assert :ets.info(MailgunReplayCache.table(), :size) == 1
+    end
   end
 
   describe "normalize/2 Mailgun event mapping" do
