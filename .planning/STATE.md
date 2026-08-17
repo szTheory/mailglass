@@ -2,38 +2,38 @@
 gsd_state_version: 1.0
 milestone: v2.6
 milestone_name: Engineering Quality Ratchet
-current_phase: 157
-current_phase_name: Inbound, Database, and Lifecycle Hardening
+current_phase: 158
+current_phase_name: Simplify Architecture Without Breaking Adopters
 status: planning
-stopped_at: Completed 157-07-PLAN.md
-last_updated: "2026-08-17T09:01:17.295Z"
+stopped_at: Phase 157 complete; Phase 158 planned and ready to execute
+last_updated: "2026-08-17T10:59:26.942Z"
 last_activity: 2026-08-17
-last_activity_desc: Phase 156 complete, transitioned to Phase 157
+last_activity_desc: Phase 157 complete, transitioned to Phase 158
 progress:
   total_phases: 6
-  completed_phases: 2
-  total_plans: 22
-  completed_plans: 20
-  percent: 33
+  completed_phases: 3
+  total_plans: 28
+  completed_plans: 22
+  percent: 50
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-17 after Phase 156)
+See: .planning/PROJECT.md (updated 2026-08-17 after Phase 157)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 157 — Inbound, Database, and Lifecycle Hardening.
+**Current focus:** Phase 158 — Simplify Architecture Without Breaking Adopters.
 
 ## Current Position
 
-Phase: 157 of 160 (Inbound, Database, and Lifecycle Hardening)
+Phase: 158 of 160 (Simplify Architecture Without Breaking Adopters)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-08-17 — Phase 156 complete, transitioned to Phase 157
+Last activity: 2026-08-17 — Phase 157 complete, transitioned to Phase 158
 
-Progress: [█████████░] 91%
+Progress: [████████████████░░░░] 22/28 plans (79%)
 
 ## v2.6 Milestone Intent
 
@@ -735,6 +735,13 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Roadmap Evolution
 
+- 2026-08-17: **Phase 157 complete and verified (5/5).** Untrusted inbound certificate, replay-cache,
+  rate-limit, router, and S3 work is bounded; verified requests use an explicit value; authenticated
+  terminal failures retain replayable evidence; suppression, retention, and webhook database work is
+  bounded and index-backed; and populated generated-host upgrades pass in both package orders without
+  changing shipped migrations. Final isolated suites passed across core and inbound. Next: Phase 158
+  architecture simplification behind stable public façades.
+
 - 2026-08-17: **Phase 156 complete and verified (5/5).** Core and inbound rate limiting is exact,
   bounded, and restart-safe; durable batches commit projections, events, private payloads, and jobs in
   one transaction; Task fallback is bounded and honest; retry/error/telemetry semantics are closed and
@@ -769,8 +776,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-17T09:01:17.284Z
-**Stopped at:** Completed 157-07-PLAN.md
+**Last session:** 2026-08-17T10:59:26.942Z
+**Stopped at:** Phase 157 complete; Phase 158 planned and ready to execute
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
@@ -887,4 +894,5 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Operator Next Steps
 
-- Research and plan Phase 157, then execute it autonomously.
+- Execute the six planned Phase 158 architecture plans autonomously, then verify the public compatibility
+  and package-independence contracts before advancing to Phase 159.
