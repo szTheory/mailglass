@@ -123,6 +123,19 @@ defmodule Mailglass.Webhook.PlugTest do
   end
 
   describe "decoded request reuse" do
+    defmodule NilVerifiedPayloadTenancy do
+      @moduledoc false
+      @behaviour Mailglass.Tenancy
+
+      @impl Mailglass.Tenancy
+      def scope(query, _context), do: query
+
+      @impl Mailglass.Tenancy
+      def resolve_webhook_tenant(%{verified_payload: nil, decoded_payload: payload})
+          when is_map(payload),
+          do: {:ok, "default"}
+    end
+
     test "decodes the outer webhook JSON exactly once across normalize and ingest" do
       body = Mailglass.WebhookFixtures.load_postmark_fixture("delivered")
       counter = start_supervised!({Agent, fn -> 0 end})
@@ -142,6 +155,25 @@ defmodule Mailglass.Webhook.PlugTest do
 
       assert result.status == 200
       assert Agent.get(counter, & &1) == 1
+    end
+
+    test "preserves the reserved nil tenancy field while exposing decoded JSON separately" do
+      prior = Application.get_env(:mailglass, :tenancy)
+      Application.put_env(:mailglass, :tenancy, NilVerifiedPayloadTenancy)
+
+      on_exit(fn ->
+        if is_nil(prior) do
+          Application.delete_env(:mailglass, :tenancy)
+        else
+          Application.put_env(:mailglass, :tenancy, prior)
+        end
+      end)
+
+      body = Mailglass.WebhookFixtures.load_postmark_fixture("delivered")
+      conn = Mailglass.WebhookCase.mailglass_webhook_conn(:postmark, body)
+
+      assert %{status: 200} =
+               WebhookPlug.call(conn, WebhookPlug.init(provider: :postmark))
     end
   end
 

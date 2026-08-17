@@ -676,7 +676,8 @@ Since: 0.1.0.
             raw_body: binary(),
             headers: [{String.t(), String.t()}],
             path_params: map(),
-            verified_payload: map() | nil
+            verified_payload: nil,
+            decoded_payload: map() | list() | nil
           }) :: {:ok, String.t()} | {:error, term()}
 ```
 
@@ -709,7 +710,9 @@ fall through to `{:ok, "default"}` via the dispatcher's
 - `:raw_body` — verified raw bytes (signature passed)
 - `:headers` — `[{name, value}]` list
 - `:path_params` — adopter route's path params
-- `:verified_payload` — `nil` at v0.1; reserved for v0.5 Stripe-Connect-style strategies
+- `:verified_payload` — reserved compatibility field; remains `nil`
+- `:decoded_payload` — decoded outer JSON map/list after signature verification,
+  or `nil` when decoding failed; exact signed bytes remain in `:raw_body`
 
 Since: 0.1.0.
 

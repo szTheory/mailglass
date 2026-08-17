@@ -297,7 +297,12 @@ defmodule Mailglass.Webhook.Plug do
       raw_body: request.raw_body,
       headers: headers,
       path_params: conn.path_params,
-      verified_payload: VerifiedRequest.payload_or_nil(request)
+      # Preserve the adopter-facing v0.1 contract: existing resolvers may
+      # legitimately pattern-match this reserved field as nil. The decoded
+      # value has its own additive key so parse-once consumers do not break
+      # those callbacks.
+      verified_payload: nil,
+      decoded_payload: VerifiedRequest.payload_or_nil(request)
     }
 
     case Tenancy.resolve_webhook_tenant(ctx) do
