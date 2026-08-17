@@ -21,6 +21,7 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
   def concurrent_indexes, do: @concurrent_indexes
 
   def up(opts \\ []) do
+    opts = Map.new(opts)
     prefix = opts[:prefix]
     Mailglass.Identifier.validate!(prefix, :prefix)
 
@@ -43,6 +44,7 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
   end
 
   def down(opts \\ []) do
+    opts = Map.new(opts)
     prefix = opts[:prefix]
     Mailglass.Identifier.validate!(prefix, :prefix)
 

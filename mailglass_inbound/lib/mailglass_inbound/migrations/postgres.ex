@@ -100,7 +100,11 @@ defmodule MailglassInbound.Migrations.Postgres do
     end
   end
 
-  defp raise_version_error(reason, prefix, cause \\ nil) do
+  @spec raise_version_error(atom(), String.t()) :: no_return()
+  defp raise_version_error(reason, prefix), do: raise_version_error(reason, prefix, nil)
+
+  @spec raise_version_error(atom(), String.t(), term()) :: no_return()
+  defp raise_version_error(reason, prefix, cause) do
     raise Mailglass.MigrationVersionError.new(reason,
             package: :mailglass_inbound,
             prefix: prefix,

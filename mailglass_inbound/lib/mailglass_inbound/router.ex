@@ -102,6 +102,7 @@ defmodule MailglassInbound.Router do
 
   defp expand_mailbox!(mailbox, _caller), do: mailbox_error!(mailbox)
 
+  @spec mailbox_error!(Macro.t()) :: no_return()
   defp mailbox_error!(mailbox) do
     raise ArgumentError,
           "route/2 expects a literal mailbox module alias, got: #{Macro.to_string(mailbox)}"
@@ -141,6 +142,7 @@ defmodule MailglassInbound.Router do
 
   defp decode_literal!(ast), do: literal_error!(ast, "executable expressions are not allowed")
 
+  @spec literal_error!(Macro.t(), String.t()) :: no_return()
   defp literal_error!(ast, reason) do
     raise ArgumentError,
           "route/2 accepts only literal options (strings, nil, lists, tuples, and regex sigils); " <>
