@@ -35,17 +35,17 @@ defmodule MailglassInbound.InboundRecords.ReplayRun do
         }
 
   schema "mailglass_inbound_replay_runs" do
-    field :tenant_id, :string
-    field :replay_id, :string
-    field :mailbox, :string
-    field :outcome, Ecto.Enum, values: @outcomes
-    field :outcome_reason, :string
-    field :failure, :map, default: %{}
-    field :executed_at, :utc_datetime_usec
-    field :metadata, :map, default: %{}
+    field(:tenant_id, :string)
+    field(:replay_id, :string)
+    field(:mailbox, :string)
+    field(:outcome, Ecto.Enum, values: @outcomes)
+    field(:outcome_reason, :string)
+    field(:failure, :map, default: %{})
+    field(:executed_at, :utc_datetime_usec)
+    field(:metadata, :map, default: %{})
 
-    belongs_to :inbound_record, InboundRecord
-    belongs_to :inbound_evidence, InboundEvidence
+    belongs_to(:inbound_record, InboundRecord)
+    belongs_to(:inbound_evidence, InboundEvidence)
 
     timestamps()
   end

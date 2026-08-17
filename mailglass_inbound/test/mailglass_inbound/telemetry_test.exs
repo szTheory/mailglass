@@ -54,7 +54,7 @@ defmodule MailglassInbound.TelemetryTest do
   defmodule TestRouter do
     use MailglassInbound.Router
 
-    route SupportMailbox, recipient: "support@example.com"
+    route(SupportMailbox, recipient: "support@example.com")
   end
 
   defmodule RecordingInboundRecords do
@@ -109,7 +109,11 @@ defmodule MailglassInbound.TelemetryTest do
     prior_postmark = Application.get_env(:mailglass_inbound, :postmark)
 
     Application.put_env(:mailglass, :tenancy, TenantResolver)
-    Application.put_env(:mailglass_inbound, :postmark, basic_auth: {"postmark", "secret"}, ip_allowlist: [])
+
+    Application.put_env(:mailglass_inbound, :postmark,
+      basic_auth: {"postmark", "secret"},
+      ip_allowlist: []
+    )
 
     Process.delete(:mailglass_inbound_persist_status)
     Process.delete(:mailglass_inbound_duplicate_record)
@@ -124,7 +128,10 @@ defmodule MailglassInbound.TelemetryTest do
 
   describe "TELE-02 route span" do
     test "a matched route emits start+stop with {mailbox, candidate_count}, no PII" do
-      attach([[:mailglass_inbound, :route, :match, :start], [:mailglass_inbound, :route, :match, :stop]])
+      attach([
+        [:mailglass_inbound, :route, :match, :start],
+        [:mailglass_inbound, :route, :match, :stop]
+      ])
 
       routes = [%Route{mailbox: SupportMailbox, recipient: "support@example.com"}]
       assert {:ok, %Route{mailbox: SupportMailbox}} = Matcher.match(routes, message())

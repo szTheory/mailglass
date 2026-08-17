@@ -68,13 +68,28 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
     test "returns distinct providers for one tenant within the window" do
       now = DateTime.utc_now()
 
-      {:ok, _} = insert_record("tenant-prov", provider: "mailgun", received_at: DateTime.add(now, -1, :hour))
-      {:ok, _} = insert_record("tenant-prov", provider: "mailgun", received_at: DateTime.add(now, -2, :hour))
-      {:ok, _} = insert_record("tenant-prov", provider: "ses", received_at: DateTime.add(now, -3, :hour))
+      {:ok, _} =
+        insert_record("tenant-prov", provider: "mailgun", received_at: DateTime.add(now, -1, :hour))
+
+      {:ok, _} =
+        insert_record("tenant-prov", provider: "mailgun", received_at: DateTime.add(now, -2, :hour))
+
+      {:ok, _} =
+        insert_record("tenant-prov", provider: "ses", received_at: DateTime.add(now, -3, :hour))
+
       # Outside a 24h window — excluded.
-      {:ok, _} = insert_record("tenant-prov", provider: "postmark", received_at: DateTime.add(now, -48, :hour))
+      {:ok, _} =
+        insert_record("tenant-prov",
+          provider: "postmark",
+          received_at: DateTime.add(now, -48, :hour)
+        )
+
       # Another tenant — never leaks.
-      {:ok, _} = insert_record("tenant-other", provider: "sparkpost", received_at: DateTime.add(now, -1, :hour))
+      {:ok, _} =
+        insert_record("tenant-other",
+          provider: "sparkpost",
+          received_at: DateTime.add(now, -1, :hour)
+        )
 
       assert Records.list_providers(%{tenant_id: "tenant-prov", window_hours: 24}, []) ==
                ["mailgun", "ses"]
@@ -413,7 +428,10 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
       {:ok, record} = insert_record("tenant-a")
 
       ids =
-        Records.list_records(%{tenant_id: "tenant-a", outcome: "definitely-unknown-#{System.unique_integer()}"}, [])
+        Records.list_records(
+          %{tenant_id: "tenant-a", outcome: "definitely-unknown-#{System.unique_integer()}"},
+          []
+        )
         |> Enum.map(& &1.id)
 
       assert record.id in ids
@@ -522,7 +540,10 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
     attrs =
       base
       |> maybe_put(:mailbox, Keyword.get(opts, :mailbox, default_mailbox(base.outcome)))
-      |> maybe_put(:outcome_reason, Keyword.get(opts, :outcome_reason, default_reason(base.outcome)))
+      |> maybe_put(
+        :outcome_reason,
+        Keyword.get(opts, :outcome_reason, default_reason(base.outcome))
+      )
 
     InboundRecords.insert_execution_run(attrs)
   end

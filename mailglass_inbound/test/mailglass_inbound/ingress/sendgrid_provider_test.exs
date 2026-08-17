@@ -11,6 +11,7 @@ defmodule MailglassInbound.Ingress.SendgridProviderTest do
     facts = Sendgrid.verify!(request, %{basic_auth: {"sendgrid", "secret"}})
 
     assert facts.auth == :basic_auth
+
     assert_raise SignatureError, fn ->
       request
       |> Map.put(:headers, [{"authorization", basic_auth("wrong", "secret")}])
@@ -46,7 +47,14 @@ defmodule MailglassInbound.Ingress.SendgridProviderTest do
   test "keeps provider-only multipart fields, auth verdicts, raw mime, and blobs in evidence" do
     %{message: message, evidence: evidence} = Sendgrid.normalize(sendgrid_request())
 
-    assert [%{filename: "invoice.txt", content_type: "text/plain", disposition: :attachment, content_id: "cid-1"}] =
+    assert [
+             %{
+               filename: "invoice.txt",
+               content_type: "text/plain",
+               disposition: :attachment,
+               content_id: "cid-1"
+             }
+           ] =
              message.attachments
 
     refute Map.has_key?(message, :spam_score)

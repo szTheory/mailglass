@@ -184,13 +184,15 @@ defmodule MailglassInbound.Router.MatcherTest do
     end
 
     property "AND of explain/2 clause verdicts equals matches_route?/2" do
-      check all recipient <- matcher_gen(),
-                subject <- matcher_gen(),
-                header_clauses <- header_clauses_gen(),
-                envelope_recipient <- actual_gen(),
-                actual_subject <- actual_gen(),
-                headers <- headers_gen(),
-                max_runs: 500 do
+      check all(
+              recipient <- matcher_gen(),
+              subject <- matcher_gen(),
+              header_clauses <- header_clauses_gen(),
+              envelope_recipient <- actual_gen(),
+              actual_subject <- actual_gen(),
+              headers <- headers_gen(),
+              max_runs: 500
+            ) do
         route = %Route{
           mailbox: M,
           recipient: recipient,
@@ -212,13 +214,15 @@ defmodule MailglassInbound.Router.MatcherTest do
     end
 
     property "every clause verdict's last element is a boolean" do
-      check all recipient <- matcher_gen(),
-                subject <- matcher_gen(),
-                header_clauses <- header_clauses_gen(),
-                envelope_recipient <- actual_gen(),
-                actual_subject <- actual_gen(),
-                headers <- headers_gen(),
-                max_runs: 200 do
+      check all(
+              recipient <- matcher_gen(),
+              subject <- matcher_gen(),
+              header_clauses <- header_clauses_gen(),
+              envelope_recipient <- actual_gen(),
+              actual_subject <- actual_gen(),
+              headers <- headers_gen(),
+              max_runs: 200
+            ) do
         route = %Route{
           mailbox: M,
           recipient: recipient,

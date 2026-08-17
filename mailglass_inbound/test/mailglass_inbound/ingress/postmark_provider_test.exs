@@ -9,7 +9,11 @@ defmodule MailglassInbound.Ingress.PostmarkProviderTest do
       Postmark.verify!(
         postmark_payload(),
         [{"authorization", basic_auth("postmark", "secret")}],
-        %{basic_auth: {"postmark", "secret"}, ip_allowlist: ["127.0.0.0/24"], remote_ip: {127, 0, 0, 1}}
+        %{
+          basic_auth: {"postmark", "secret"},
+          ip_allowlist: ["127.0.0.0/24"],
+          remote_ip: {127, 0, 0, 1}
+        }
       )
 
     assert facts.auth == :basic_auth
@@ -27,7 +31,8 @@ defmodule MailglassInbound.Ingress.PostmarkProviderTest do
   end
 
   test "normalizes into the locked inbound message shape and keeps blobs in evidence" do
-    %{message: message, evidence: evidence} = Postmark.normalize(postmark_payload(), [{"content-type", "application/json"}])
+    %{message: message, evidence: evidence} =
+      Postmark.normalize(postmark_payload(), [{"content-type", "application/json"}])
 
     assert message.provider == :postmark
     assert message.provider_message_id == "pm-message-123"

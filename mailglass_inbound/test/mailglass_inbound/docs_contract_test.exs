@@ -503,7 +503,9 @@ defmodule MailglassInbound.DocsContractTest do
     # tightening that would exclude a released core will trip this assertion.
     [_, floor_constraint] =
       Regex.run(~r/\{:mailglass,\s*"([^"]+)"/, mixfile) ||
-        flunk("mailglass_inbound/mix.exs is missing the mailglass dep (checked for MIX_PUBLISH form)")
+        flunk(
+          "mailglass_inbound/mix.exs is missing the mailglass dep (checked for MIX_PUBLISH form)"
+        )
 
     assert Version.match?(core_version, floor_constraint),
            "The inbound compatibility floor (#{inspect(floor_constraint)}) does not admit " <>
