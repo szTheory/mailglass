@@ -19,6 +19,13 @@
 # real-compile + boot integration backstop.
 set -euo pipefail
 
+# `mix ci.full` runs under MIX_ENV=test. A generated adopter host must be built
+# and booted in its normal development environment, and the compile gate below
+# must warm the same build that `mix phx.server` will execute. Keeping this
+# explicit prevents a cold dev compilation from being charged against the
+# bounded endpoint-start deadline.
+export MIX_ENV=dev
+
 DEP_MODE="${DEP_MODE:-path}"
 WORK_DIR="${WORK_DIR:-$(mktemp -d)}"
 SANDBOX="${WORK_DIR}/sandbox"
