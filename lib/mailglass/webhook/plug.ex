@@ -68,7 +68,7 @@ defmodule Mailglass.Webhook.Plug do
 
   require Logger
 
-  alias Mailglass.{ConfigError, SignatureError, TenancyError}
+  alias Mailglass.{ConfigError, TenancyError}
   alias Mailglass.Outbound.Projector
   alias Mailglass.Tenancy
   alias Mailglass.Webhook.Telemetry, as: WebhookTelemetry
@@ -104,7 +104,7 @@ defmodule Mailglass.Webhook.Plug do
     # element (conn) is returned to `Plug.call/2`.
     WebhookTelemetry.ingest_span(
       %{provider: provider, status: :pending},
-      fn -> Pipeline.run(conn, provider, opts, &do_call/3) end
+      fn -> do_call(conn, provider, opts) end
     )
   end
 
@@ -124,82 +124,83 @@ defmodule Mailglass.Webhook.Plug do
       # only after (or as part of) provider verification.
       request = VerifiedRequest.decode(raw_body, Keyword.get(opts, :json_decoder, &Jason.decode/1))
 
-      # Verify signature before tenant lookup to fail closed on spoofed payloads.
-      case verify_with_telemetry!(provider, request, headers, config) do
-        {:ok, :replay} ->
-          conn = send_resp(conn, 200, "")
+      outcome =
+        Pipeline.run(provider, request, headers, %{
+          verify: fn pipeline_provider, pipeline_request, pipeline_headers ->
+            verify_with_telemetry!(pipeline_provider, pipeline_request, pipeline_headers, config)
+          end,
+          resolve_tenant: fn pipeline_provider, pipeline_request, pipeline_headers ->
+            resolve_tenant!(pipeline_provider, conn, pipeline_request, pipeline_headers)
+          end,
+          with_tenant: &Tenancy.with_tenant/2,
+          normalize: fn pipeline_provider, pipeline_request, pipeline_headers ->
+            normalize_decoded(pipeline_provider, pipeline_request.decoded, pipeline_headers)
+          end,
+          ingest: fn pipeline_provider, pipeline_request, events ->
+            Mailglass.Webhook.Ingest.ingest_multi(
+              pipeline_provider,
+              pipeline_request.raw_body,
+              pipeline_request.decoded,
+              events
+            )
+          end,
+          broadcast: &broadcast_post_commit/1
+        })
 
-          {conn,
-           %{
-             provider: provider,
-             status: :replay,
-             duplicate: true,
-             event_count: 0
-           }}
-
-        {:ok, :control_plane, outcome} ->
-          Logger.info("[mailglass] SNS control-plane: provider=#{provider} outcome=#{outcome}")
-          conn = send_resp(conn, 200, "")
-
-          {conn,
-           %{
-             provider: provider,
-             status: :control_plane,
-             outcome: outcome
-           }}
-
-        :ok ->
-          # Resolve tenant only after verification succeeds.
-          tenant_id = resolve_tenant!(provider, conn, request, headers)
-
-          # Step 3: ingest under tenant scope (Pitfall 7 — block form)
-          Tenancy.with_tenant(tenant_id, fn ->
-            events = normalize_decoded(provider, request.decoded, headers)
-
-            ingest_and_respond(conn, provider, request, events, tenant_id)
-          end)
-      end
+      render_outcome(conn, provider, outcome)
     rescue
-      e in SignatureError ->
-        # Signature failures are terminal typed errors; do not recover in the plug.
-        Logger.warning("Webhook signature failed: provider=#{provider} reason=#{e.type}")
-
-        conn = send_resp(conn, 401, "")
-
-        {conn,
-         %{
-           provider: provider,
-           status: :signature_failed,
-           failure_reason: e.type
-         }}
-
-      e in TenancyError ->
-        Logger.warning("Webhook tenant resolution failed: provider=#{provider} reason=#{e.type}")
-
-        conn = send_resp(conn, 422, "")
-
-        {conn,
-         %{
-           provider: provider,
-           status: :tenant_unresolved,
-           failure_reason: e.type
-         }}
-
       e in ConfigError ->
-        Logger.error(
-          "[mailglass] Webhook config error: provider=#{provider} " <>
-            "reason=#{e.type} message=#{Exception.message(e)}"
-        )
-
-        conn = send_resp(conn, 500, "")
-
-        {conn,
-         %{
-           provider: provider,
-           status: :config_error,
-           failure_reason: e.type
-         }}
+        render_outcome(conn, provider, {:config_error, e.type})
     end
+  end
+
+  defp render_outcome(conn, provider, {:replay}) do
+    {send_resp(conn, 200, ""),
+     %{provider: provider, status: :replay, duplicate: true, event_count: 0}}
+  end
+
+  defp render_outcome(conn, provider, {:control_plane, outcome}) do
+    Logger.info("[mailglass] SNS control-plane: provider=#{provider} outcome=#{outcome}")
+    {send_resp(conn, 200, ""), %{provider: provider, status: :control_plane, outcome: outcome}}
+  end
+
+  defp render_outcome(conn, provider, {:ingested, tenant_id, event_count, duplicate}) do
+    status = if duplicate, do: :duplicate, else: :ok
+
+    {send_resp(conn, 200, ""),
+     %{
+       provider: provider,
+       tenant_id: tenant_id,
+       status: status,
+       event_count: event_count,
+       duplicate: duplicate
+     }}
+  end
+
+  defp render_outcome(conn, provider, {:ingest_failed, tenant_id, event_count}) do
+    Logger.error("[mailglass] Webhook ingest failed: provider=#{provider}")
+
+    {send_resp(conn, 500, ""),
+     %{provider: provider, tenant_id: tenant_id, status: :ingest_failed, event_count: event_count}}
+  end
+
+  defp render_outcome(conn, provider, {:signature_failed, type}) do
+    Logger.warning("Webhook signature failed: provider=#{provider} reason=#{type}")
+
+    {send_resp(conn, 401, ""),
+     %{provider: provider, status: :signature_failed, failure_reason: type}}
+  end
+
+  defp render_outcome(conn, provider, {:tenant_unresolved, type}) do
+    Logger.warning("Webhook tenant resolution failed: provider=#{provider} reason=#{type}")
+
+    {send_resp(conn, 422, ""),
+     %{provider: provider, status: :tenant_unresolved, failure_reason: type}}
+  end
+
+  defp render_outcome(conn, provider, {:config_error, type}) do
+    Logger.error("[mailglass] Webhook config error: provider=#{provider} reason=#{type}")
+    {send_resp(conn, 500, ""), %{provider: provider, status: :config_error, failure_reason: type}}
   end
 
   # Step 1a: extract raw bytes + headers; fail fast if CachingBodyReader
@@ -314,63 +315,6 @@ defmodule Mailglass.Webhook.Plug do
         raise TenancyError.new(:webhook_tenant_unresolved,
                 context: %{provider: provider, reason: reason}
               )
-    end
-  end
-
-  # Step 4: normalize → ingest → respond
-  #
-  # Ingest contract: ingest_multi/3
-  # returns `{:ok, %{webhook_event: %WebhookEvent{}, duplicate: boolean,
-  # events_with_deliveries: [{event, delivery, orphan?}, ...],
-  # orphan_event_count: int}}`.
-  #
-  # Local name `result` avoids shadowing Ecto.Multi's "changes"
-  # terminology that the ingest module uses
-  # internally.
-  defp ingest_and_respond(conn, provider, %VerifiedRequest{} = request, events, tenant_id) do
-    case Mailglass.Webhook.Ingest.ingest_multi(provider, request.raw_body, request.decoded, events) do
-      {:ok, %{duplicate: true} = result} ->
-        broadcast_post_commit(result)
-
-        conn = send_resp(conn, 200, "")
-
-        {conn,
-         %{
-           provider: provider,
-           tenant_id: tenant_id,
-           status: :duplicate,
-           event_count: length(events),
-           duplicate: true
-         }}
-
-      {:ok, result} ->
-        broadcast_post_commit(result)
-
-        conn = send_resp(conn, 200, "")
-
-        {conn,
-         %{
-           provider: provider,
-           tenant_id: tenant_id,
-           status: :ok,
-           event_count: length(events),
-           duplicate: false
-         }}
-
-      {:error, reason} ->
-        Logger.error(
-          "[mailglass] Webhook ingest failed: provider=#{provider} reason=#{inspect(reason)}"
-        )
-
-        conn = send_resp(conn, 500, "")
-
-        {conn,
-         %{
-           provider: provider,
-           tenant_id: tenant_id,
-           status: :ingest_failed,
-           event_count: length(events)
-         }}
     end
   end
 

@@ -372,11 +372,58 @@ defmodule Mailglass.Webhook.PlugTest do
     end
   end
 
-  test "public webhook Plug delegates request orchestration to its package-local pipeline" do
-    plug = File.read!("lib/mailglass/webhook/plug.ex")
-    pipeline = File.read!("lib/mailglass/webhook/pipeline.ex")
+  test "pipeline verifies before tenant work and broadcasts only after a successful ingest" do
+    deps = %{
+      verify: fn _, _, _ ->
+        send(self(), :verify)
+        :ok
+      end,
+      resolve_tenant: fn _, _, _ ->
+        send(self(), :tenant)
+        "tenant-1"
+      end,
+      with_tenant: fn _, fun -> fun.() end,
+      normalize: fn _, _, _ ->
+        send(self(), :normalize)
+        [:event]
+      end,
+      ingest: fn _, _, _ ->
+        send(self(), :ingest)
+        send(self(), :commit)
+        {:ok, %{duplicate: false}}
+      end,
+      broadcast: fn _ -> send(self(), :broadcast) end
+    }
 
-    assert plug =~ "Webhook.Pipeline"
-    assert pipeline =~ "def run(conn, provider, opts, runner)"
+    assert {:ingested, "tenant-1", 1, false} =
+             Mailglass.Webhook.Pipeline.run(:postmark, :request, [], deps)
+
+    assert_receive :verify
+    assert_receive :tenant
+    assert_receive :normalize
+    assert_receive :ingest
+    assert_receive :commit
+    assert_receive :broadcast
+  end
+
+  test "pipeline does not resolve a tenant when verification is terminal" do
+    deps = %{
+      verify: fn _, _, _ ->
+        send(self(), :verify)
+        {:ok, :replay}
+      end,
+      resolve_tenant: fn _, _, _ ->
+        send(self(), :tenant)
+        "tenant-1"
+      end,
+      with_tenant: fn _, fun -> fun.() end,
+      normalize: fn _, _, _ -> [:event] end,
+      ingest: fn _, _, _ -> {:ok, %{duplicate: false}} end,
+      broadcast: fn _ -> :ok end
+    }
+
+    assert {:replay} = Mailglass.Webhook.Pipeline.run(:postmark, :request, [], deps)
+    assert_receive :verify
+    refute_receive :tenant
   end
 end
