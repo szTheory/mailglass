@@ -77,6 +77,20 @@ defmodule Mailglass.RateLimiterTest do
       :atomics.put(now, 1, 101_000)
       assert :ok = RateLimiter.check("c", "cap.test", :operational)
     end
+
+    test "concurrent compound keys cannot replace each other's observed state" do
+      Application.put_env(:mailglass, :rate_limit, default: [capacity: 10, per_minute: 0])
+
+      results =
+        for {tenant, domain} <- [{"tenant-a", "one.test"}, {"tenant-b", "two.test"}], _ <- 1..20 do
+          Task.async(fn -> RateLimiter.check(tenant, domain, :operational) end)
+        end
+        |> Enum.map(&Task.await(&1, 5_000))
+
+      assert Enum.count(results, &(&1 == :ok)) == 20
+      assert Enum.count(Enum.take(results, 20), &(&1 == :ok)) == 10
+      assert Enum.count(Enum.drop(results, 20), &(&1 == :ok)) == 10
+    end
   end
 
   describe "check/3 :transactional bypass (D-24)" do
