@@ -58,7 +58,7 @@
 ### CI, Testing, and Maintainability Ratchets
 
 - [ ] **QUAL-01**: Root formatting covers inbound and the repository has one formatted baseline.
-- [ ] **QUAL-02**: Protected `CI Green` fails when change detection fails or any code lane required for a code change is skipped.
+- [x] **QUAL-02**: Protected `CI Green` fails when change detection fails or any code lane required for a code change is skipped.
 - [ ] **QUAL-03**: Deterministic core/inbound suites, warning/no-optional builds, support contracts, Mix tasks, Credo, conformance, Dialyzer, docs, audits, trust, and installer smoke all block code merges through `CI Green`.
 - [ ] **QUAL-04**: Browser/demo/preview/admin-visual, next-toolchain, provider-live, clean-baseline, and publish-only evidence remain advisory and cannot masquerade as merge proof.
 - [ ] **QUAL-05**: Repository validation uses locked dependencies; package-scoped caches and exact toolchain pins cannot cross incompatible package/toolchain/environment boundaries.
@@ -97,7 +97,7 @@
 | ADOPT-04 | Phase 155 | Complete |
 | ADOPT-05 | Phase 155 | Complete |
 | ADOPT-06 | Phase 155 | Complete |
-| QUAL-02 | Phase 155 | Pending |
+| QUAL-02 | Phase 155 | Complete |
 | EXEC-01 | Phase 156 | Pending |
 | EXEC-02 | Phase 156 | Pending |
 | EXEC-03 | Phase 156 | Pending |
