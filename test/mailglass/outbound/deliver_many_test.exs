@@ -2,15 +2,18 @@ defmodule Mailglass.Outbound.DeliverManyTest do
   # async: false required — DB writes + Application.put_env
   use Mailglass.DataCase, async: false
 
-  alias Mailglass.{Outbound, Message, TestRepo}
+  alias Mailglass.{Events.Event, Outbound, Message, TestRepo}
   alias Mailglass.Outbound.Delivery
 
   setup do
     Mailglass.Adapters.Fake.checkout()
     Mailglass.Adapters.Fake.set_shared(self())
 
-    # Use task_supervisor so Oban is not required
-    Application.put_env(:mailglass, :async_adapter, :task_supervisor)
+    # The durable-batch path is only truthful when its rows and Oban jobs are
+    # committed together. Keep Oban manual so these assertions observe the
+    # committed queue without a worker racing the projection.
+    start_supervised!({Oban, testing: :manual, repo: TestRepo, queues: [mailglass_outbound: 10]})
+    Application.put_env(:mailglass, :async_adapter, :oban)
     # No raw Sandbox mode call switching to shared self-owned mode here: this
     # module `use`s Mailglass.DataCase with async disabled, so DataCase's own setup
     # (ExUnit.CaseTemplate composes the module's setup after the template's)
@@ -249,6 +252,48 @@ defmodule Mailglass.Outbound.DeliverManyTest do
         # accept :queued (still pending) or :sent (dispatch completed).
         assert reloaded.status in [:queued, :sent]
       end
+    end
+  end
+
+  describe "deliver_many/2 — durable transaction" do
+    test "commits delivery metadata, queued events, and Oban jobs together" do
+      uid = unique_id()
+
+      msgs = [
+        build_message("atomic-1-#{uid}@example.com"),
+        build_message("atomic-2-#{uid}@example.com")
+      ]
+
+      assert {:ok, deliveries} = Outbound.deliver_many(msgs, [])
+      assert length(deliveries) == 2
+
+      assert TestRepo.aggregate(Delivery, :count, :id) == 2
+      assert TestRepo.aggregate(Event, :count, :id) == 2
+      assert TestRepo.aggregate(Oban.Job, :count, :id) == 2
+
+      assert Enum.all?(deliveries, fn delivery ->
+               metadata = TestRepo.get!(Delivery, delivery.id).metadata
+               metadata["rendered_html"] == "<p>Test body</p>" and
+                 metadata["rendered_text"] == "Test body" and
+                 metadata["subject"] == "Test batch"
+             end)
+    end
+
+    test "rolls back deliveries, metadata, events, and jobs when the named Oban step fails" do
+      Application.put_env(:mailglass, :oban_multi_insert_all, fn _multi, _name, _jobs ->
+        {:error, :forced_oban_failure}
+      end)
+
+      on_exit(fn -> Application.delete_env(:mailglass, :oban_multi_insert_all) end)
+
+      uid = unique_id()
+
+      assert {:error, %{__exception__: true}} =
+               Outbound.deliver_many([build_message("rollback-#{uid}@example.com")], [])
+
+      assert TestRepo.aggregate(Delivery, :count, :id) == 0
+      assert TestRepo.aggregate(Event, :count, :id) == 0
+      assert TestRepo.aggregate(Oban.Job, :count, :id) == 0
     end
   end
 
