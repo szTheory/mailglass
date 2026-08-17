@@ -4,6 +4,19 @@ defmodule Mailglass.SuppressionStore.ETSTest do
   alias Mailglass.SuppressionStore.ETS
   alias Mailglass.Suppression.Entry
 
+  defmodule LegacyStore do
+    def check(key, _opts) do
+      send(
+        Application.fetch_env!(:mailglass, :legacy_suppression_store_test_pid),
+        {:legacy_check, key}
+      )
+
+      :not_suppressed
+    end
+
+    def record(_attrs, _opts), do: {:error, :unsupported}
+  end
+
   setup do
     # Ensure the ETS supervisor is running and table exists
     assert Process.whereis(Mailglass.SuppressionStore.ETS.TableOwner) != nil,
@@ -42,6 +55,26 @@ defmodule Mailglass.SuppressionStore.ETSTest do
 
       assert [:not_suppressed, {:suppressed, %Entry{scope: :address}}, :not_suppressed] =
                ETS.check_many(keys, [])
+    end
+  end
+
+  describe "Mailglass.SuppressionStore.check_many/3" do
+    test "uses a check/2-only legacy store without changing positional results" do
+      Application.put_env(:mailglass, :legacy_suppression_store_test_pid, self())
+      on_exit(fn -> Application.delete_env(:mailglass, :legacy_suppression_store_test_pid) end)
+
+      keys = [
+        %{tenant_id: "t1", address: "one@b.c"},
+        %{tenant_id: "t1", address: "two@b.c"},
+        %{tenant_id: "t1", address: "one@b.c"}
+      ]
+
+      assert [:not_suppressed, :not_suppressed, :not_suppressed] =
+               Mailglass.SuppressionStore.check_many(LegacyStore, keys, batch_size: 2)
+
+      assert_receive {:legacy_check, %{address: "one@b.c"}}
+      assert_receive {:legacy_check, %{address: "two@b.c"}}
+      assert_receive {:legacy_check, %{address: "one@b.c"}}
     end
   end
 
