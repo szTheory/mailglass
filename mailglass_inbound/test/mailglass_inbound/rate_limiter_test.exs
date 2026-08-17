@@ -12,6 +12,8 @@ defmodule MailglassInbound.RateLimiterTest do
 
   setup do
     prior_rate_limit = Application.get_env(:mailglass_inbound, :rate_limit)
+    prior_clock = Application.get_env(:mailglass_inbound, :rate_limit_clock)
+    prior_owner = Application.get_env(:mailglass_inbound, :rate_limit_table_owner)
 
     on_exit(fn ->
       if is_nil(prior_rate_limit) do
@@ -19,12 +21,53 @@ defmodule MailglassInbound.RateLimiterTest do
       else
         Application.put_env(:mailglass_inbound, :rate_limit, prior_rate_limit)
       end
+
+      restore_env(:rate_limit_clock, prior_clock)
+      restore_env(:rate_limit_table_owner, prior_owner)
     end)
 
     # The TableOwner (supervised by MailglassInbound.Application) creates the
     # table at boot; clear it between tests.
     :ets.delete_all_objects(@table)
     :ok
+  end
+
+  defp restore_env(key, nil), do: Application.delete_env(:mailglass_inbound, key)
+  defp restore_env(key, value), do: Application.put_env(:mailglass_inbound, key, value)
+
+  describe "shared atomic bucket" do
+    test "concurrent inbound callers receive only the deterministic refilled capacity" do
+      now = :atomics.new(1, [])
+      :atomics.put(now, 1, 0)
+      Application.put_env(:mailglass_inbound, :rate_limit_clock, fn -> :atomics.get(now, 1) end)
+
+      Application.put_env(:mailglass_inbound, :rate_limit,
+        tenant: [capacity: 10, per_minute: 10],
+        recipient: [capacity: 1_000, per_minute: 1_000],
+        sender_domain: [capacity: 1_000, per_minute: 1_000]
+      )
+
+      for _ <- 1..10,
+          do: assert(:ok = RateLimiter.check("atomic", "user@inbound.test", "sender.test"))
+
+      :atomics.put(now, 1, 60_000_000)
+      parent = self()
+
+      tasks =
+        for _ <- 1..40 do
+          Task.async(fn ->
+            send(parent, :ready)
+
+            receive do
+              :go -> RateLimiter.check("atomic", "user@inbound.test", "sender.test")
+            end
+          end)
+        end
+
+      for _ <- tasks, do: assert_receive(:ready)
+      Enum.each(tasks, &send(&1.pid, :go))
+      assert Enum.count(Enum.map(tasks, &Task.await(&1, 5_000)), &(&1 == :ok)) == 10
+    end
   end
 
   describe "check/3 fresh bucket allows up to capacity then errors" do
