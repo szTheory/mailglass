@@ -215,6 +215,7 @@ defmodule MailglassInbound.Ingress.PlugTest do
     prior_sendgrid = Application.get_env(:mailglass_inbound, :sendgrid)
 
     Application.put_env(:mailglass, :tenancy, TenantResolver)
+    Mailglass.Runtime.reset_for_test!()
 
     Application.put_env(:mailglass_inbound, :postmark,
       basic_auth: {"postmark", "secret"},
@@ -245,6 +246,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
       else
         Application.put_env(:mailglass, :tenancy, prior_tenancy)
       end
+
+      Mailglass.Runtime.reset_for_test!()
 
       if is_nil(prior_postmark) do
         Application.delete_env(:mailglass_inbound, :postmark)
