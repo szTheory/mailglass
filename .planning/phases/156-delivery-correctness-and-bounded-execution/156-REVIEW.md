@@ -1,6 +1,6 @@
 ---
 phase: 156-delivery-correctness-and-bounded-execution
-reviewed: 2026-08-17T05:08:00Z
+reviewed: 2026-08-17T05:18:00Z
 depth: deep
 files_reviewed: 34
 files_reviewed_list:
@@ -48,37 +48,37 @@ status: issues_found
 
 # Phase 156: Code Review Report
 
-**Reviewed:** 2026-08-17T05:08:00Z
+**Reviewed:** 2026-08-17T05:18:00Z
 **Depth:** deep
 **Files Reviewed:** 34
 **Status:** issues_found
 
 ## Summary
 
-The prior replay atom-allocation and ETS caller-crash findings are fixed: replay carries the finite-decoded provider through its result, and the shared bucket denies instead of raising during an absent-table window. Focused re-review suites passed (51 tests total). However, the new mailbox allowlist has made the documented ingress configuration unable to execute durable jobs, and the parallel internal replay path still resolves a persisted mailbox string into an arbitrary loaded module. The phase is not clean.
+The prior replay atom-allocation, ETS caller-crash, Plug-only router, and internal replay module-resolution findings are closed in the same-process path. Focused inbound router/worker/replay suites pass (53 tests). The RouterRegistry redesign is nevertheless not durable or bound to a specific record: an application restart empties its authority map, and job JSON can select a different registered route authority. The phase is not clean.
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01: The mailbox allowlist breaks every documented durable ingress configuration
+### CR-01: Router authority is lost on application restart, so durable jobs never recover
 
-**File:** `mailglass_inbound/lib/mailglass_inbound/execution/worker.ex:20-22`, `mailglass_inbound/lib/mailglass_inbound/execution.ex:341-353`
+**File:** `mailglass_inbound/lib/mailglass_inbound/execution/router_registry.ex:55-70`, `mailglass_inbound/lib/mailglass_inbound/execution.ex:149-152`, `mailglass_inbound/lib/mailglass_inbound/execution/worker.ex:26-28`
 
-**Issue:** The ingress documentation configures the router only on `MailglassInbound.Ingress.Plug` (for example `router: MyApp.MailglassInboundRouter` in `mailglass_inbound/README.md:143-155` and `docs/inbound-install.md:146-157`). `maybe_execute/2` then calls `Execution.dispatch(result)` without that option (`ingress/plug.ex:629-634`). The new worker pre-validates every durable job with `Execution.validate_job_route(args, [])`, which can only consult `Application.get_env(:mailglass_inbound, :router)`. `MailglassInbound.Config` neither declares nor validates that application key. Therefore an adopter following the documented, supported Plug-only setup will persist a matched inbound record, enqueue successfully, and have its Oban worker permanently cancel it before loading or executing the mailbox. The security control silently converts a supported normal path into message loss.
+**Issue:** `route_authority` is persisted in the job, but its mailbox index exists only in the RouterRegistry GenServer state. On application or registry restart, `init/1` resets that state to `%{}` (line 56); a queued job with a nonempty authority then calls `RouterRegistry.resolve/2`, receives `{:error, :unavailable}`, and the worker returns a retry (lines 26-28). Nothing repopulates that exact authority unless a new ingress request happens to register the same router. Retrying is therefore only temporary: after `max_attempts` the already-accepted durable message becomes dead work. This violates the durable execution/restart contract the Oban path is meant to provide.
 
-**Fix:** Preserve the router authority across the async boundary without trusting job input blindly. At minimum, make the router an explicit validated required application configuration for durable execution and update the documented installation/migration contract; preferably persist a stable router identity at enqueue and verify it against a configured allowlist before resolving the mailbox. Pass a test with no global `:mailglass_inbound, :router`, a router supplied only to the ingress Plug, and assert the resulting durable job executes rather than being cancelled.
+**Fix:** Make authoritative router data recoverable at boot, not just while the ingress process remains alive. For example, configure and validate the finite router set in application config and rebuild its indexes during registry initialization; map a persisted opaque router ID to that configured set. Add an integration test that enqueues through the Plug-only path, restarts the registry/application before `Worker.perform/1`, and proves the exact queued job executes (or has an explicit documented durable recovery path independent of new ingress traffic).
 
-### CR-02: Internal replay still invokes a mailbox selected from persisted data
+### CR-02: Tampered job args can switch a delivery to any currently registered mailbox
 
-**File:** `mailglass_inbound/lib/mailglass_inbound/internal/replay.ex:74-97,139-142`
+**File:** `mailglass_inbound/lib/mailglass_inbound/execution.ex:128-152`, `mailglass_inbound/lib/mailglass_inbound/execution/router_registry.ex:63-70`
 
-**Issue:** The new worker path no longer trusts the `"mailbox"` job argument, but `Internal.Replay` obtains `ExecutionRun.mailbox` from the database, converts it through `String.to_existing_atom/1`, and passes it to `Execution.execute/2`. That is the same arbitrary-loaded-module dispatch boundary the original CR-02 identified, just on the replay path: a corrupt execution-run record can select any loaded module with `process/1`. It also leaves a non-finite persisted-string decoder in the phase's purported closed-value coverage.
+**Issue:** The registry restricts a supplied `{route_authority, mailbox}` pair to registered modules, but both selector values still come from the Oban job (`validate_job_route/2` passes `job_args["route_authority"]` at lines 128-136). If two routers have been registered in the process, an attacker who modifies job JSON can replace both fields with Router B's authority ID and one of Router B's mailbox names. `resolve/2` then returns that module and production loading/execution invokes it. There is no record/evidence-bound router identity to prove the selected authority was the one that routed this inbound message. This is a confused-deputy version of the original arbitrary mailbox dispatch problem: job data selects any currently authorized handler, not merely the route recorded at ingress.
 
-**Fix:** Route replay mailbox resolution through the same trusted configured-router allowlist (extract a shared internal resolver rather than duplicating it), returning the existing `:replay_mailbox_missing` typed error for unknown or unauthorized names. Add a replay regression with a loaded sentinel module and a persisted mailbox string; assert it fails without invoking the sentinel or allocating atoms.
+**Fix:** Bind the selected router identity and mailbox to trusted persistence at ingress (or protect the durable job arguments with a keyed integrity proof verified before lookup). On perform, derive both from that trusted binding before registry lookup rather than trusting the job selectors. Add a two-router test that mutates an enqueued job to Router B/mailbox B and asserts it is rejected without loading or executing either mailbox.
 
 ---
 
-_Reviewed: 2026-08-17T05:08:00Z_
+_Reviewed: 2026-08-17T05:18:00Z_
 _Reviewer: gsd-code-reviewer_
 _Depth: deep_
