@@ -8,12 +8,12 @@ requires:
     provides: positional bounded suppression-store bulk lookup capability
 provides:
   - Stable `(occurred_at, id)` keyset-paged suppression resync
-  - Page-local candidate deduplication with bounded bulk existence reads and conflict-safe writes
+  - Cross-page candidate-key deduplication with bounded bulk existence reads and conflict-safe writes
   - Public Mix task proof of configured bounded pages without new CLI options
 affects: [suppression, outbound, lifecycle-hardening]
 tech-stack:
   added: []
-  patterns: [stable keyset cursor, page-local deduplication, bounded multi insert, fail-visible chunk writes]
+  patterns: [stable keyset cursor, cross-page key deduplication, bounded result preview, bounded multi insert, fail-visible chunk writes]
 key-files:
   created:
     - test/mailglass/suppression/resync_test.exs
@@ -28,7 +28,7 @@ key-decisions:
 requirements-completed: [DATA-05]
 coverage:
   - id: D1
-    description: Keyset-paged resync preserves equal-timestamp events, page-local duplicate treatment, existing/missing totals, and visible write failures.
+    description: Keyset-paged resync preserves equal-timestamp events, cross-page duplicate treatment, existing/missing totals, and visible write failures.
     requirement: DATA-05
     verification:
       - kind: integration
@@ -54,7 +54,7 @@ status: complete
 
 ## Accomplishments
 
-- Replaced full-window event loading and per-candidate queries with `(occurred_at, id)` keyset pages, page-local deduplication, and Plan 06 positional bulk reads.
+- Replaced full-window event loading and per-candidate queries with `(occurred_at, id)` keyset pages, cross-page key deduplication, a 100-entry result preview, and Plan 06 positional bulk reads.
 - Batched missing suppression rows into conflict-safe `insert_all` chunks; a real chunk write error stops the run without undoing earlier committed pages.
 - Proved equal-timestamp cursor traversal, duplicate handling across page boundaries, existing/missing totals, dry-run behavior, and unmodified CLI output.
 
@@ -74,7 +74,7 @@ status: complete
 ## Decisions Made
 
 - Kept page-size control internal to application configuration (`:suppression_resync_page_size`) so the public Mix task's accepted flags and output vocabulary do not change.
-- Retained page-local deduplication and cumulative missing-key state so page boundaries cannot alter dry-run versus apply candidate totals.
+- Retained compact cross-page key state so page boundaries cannot alter dry-run versus apply totals, while capping returned candidate detail at 100 entries with additive truncation metadata.
 
 ## Deviations from Plan
 
