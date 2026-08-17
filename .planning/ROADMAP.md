@@ -73,7 +73,7 @@
   4. A legacy toy migration is detected with a fail-closed, non-destructive repair route, while malformed metadata and query failures remain distinguishable from an absent migration anchor.
   5. A code change cannot receive a passing protected merge signal when change detection fails or a required code lane was skipped.
 
-**Plans**: 6/6 plans executed
+**Plans**: 6/7 plans executed; 1 gap-closure plan pending
 
 Plans:
 
@@ -83,6 +83,7 @@ Plans:
 - [x] 155-04-PLAN.md — Repair only the exact empty historical core toy migration, fail closed otherwise.
 - [x] 155-05-PLAN.md — Prove generated core/inbound migrations and delivery persistence in a real Ecto host.
 - [x] 155-06-PLAN.md — Make CI Green fail closed for detector failure and skipped required code lanes.
+- [ ] 155-07-PLAN.md — Make shared non-public schema rollback safe in both package orders and restore the generated-host proof.
 
 ### Phase 156: Delivery Correctness and Bounded Execution
 
