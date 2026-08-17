@@ -88,6 +88,15 @@ defmodule MailglassInbound.Ingress.PersistTest do
     end
   end
 
+  defmodule BackfillLockedRepo do
+    def transact(fun, _opts \\ []), do: fun.()
+
+    def query("SELECT pg_try_advisory_xact_lock" <> _rest, _params, _opts),
+      do: {:ok, %{rows: [[false]]}}
+
+    def query(_sql, _params, _opts), do: raise("backfill advanced without owning its lock")
+  end
+
   setup do
     Process.delete(:mailglass_inbound_duplicate_record)
     Process.delete(:mailglass_inbound_inserts)
@@ -288,6 +297,125 @@ defmodule MailglassInbound.Ingress.PersistTest do
       ses_index = Regex.run(~r/unique_index\([^()]*ses[^()]*\)/s, migration) |> List.first()
 
       refute ses_index =~ "generated:"
+    end
+  end
+
+  describe "V02 SHA-256 transition and terminal evidence" do
+    setup do
+      owner = Sandbox.start_owner!(TestRepo, shared: true)
+      truncate_all()
+      on_exit(fn -> Sandbox.stop_owner(owner) end)
+      :ok
+    end
+
+    test "mixed legacy and V02 rows dedupe while the legacy SHA-256 is still null" do
+      raw = "Subject: legacy transition\r\n\r\nsame bytes"
+      handoff = mailgun_handoff(provider_message_id: nil, raw_mime: raw)
+
+      assert {:ok, %{status: :inserted}} = Persist.persist(handoff, repo: TestRepo, routes: [])
+
+      TestRepo.query!(
+        "UPDATE mailglass_inbound_evidence SET raw_mime_sha256 = NULL",
+        []
+      )
+
+      assert {:ok, %{status: :duplicate}} = Persist.persist(handoff, repo: TestRepo, routes: [])
+      assert TestRepo.aggregate(InboundRecord, :count) == 1
+    end
+
+    test "bounded backfill returns a resume cursor and converges safely on rerun" do
+      for index <- 1..3 do
+        handoff =
+          mailgun_handoff(
+            provider_message_id: "backfill-#{index}",
+            raw_mime: "Subject: #{index}\r\n\r\nbody #{index}"
+          )
+
+        assert {:ok, %{status: :inserted}} = Persist.persist(handoff, repo: TestRepo, routes: [])
+      end
+
+      TestRepo.query!("UPDATE mailglass_inbound_evidence SET raw_mime_sha256 = NULL", [])
+
+      ordered_ids =
+        TestRepo.query!("SELECT id::text FROM mailglass_inbound_evidence ORDER BY id", []).rows
+        |> List.flatten()
+
+      assert {:ok, %{count: 2, next_cursor: cursor, done?: false}} =
+               Persist.backfill_sha256(repo: TestRepo, limit: 2)
+
+      assert cursor == Enum.at(ordered_ids, 1)
+
+      assert {:ok, %{count: 1, next_cursor: next_cursor, done?: true}} =
+               Persist.backfill_sha256(repo: TestRepo, limit: 2, after_id: cursor)
+
+      assert is_binary(next_cursor)
+      assert next_cursor == Enum.at(ordered_ids, 2)
+
+      assert {:ok, %{count: 0, next_cursor: nil, done?: true}} =
+               Persist.backfill_sha256(repo: TestRepo, limit: 2)
+
+      assert %{rows: [[3]]} =
+               TestRepo.query!(
+                 "SELECT count(*) FROM mailglass_inbound_evidence WHERE raw_mime_sha256 IS NOT NULL",
+                 []
+               )
+    end
+
+    test "a concurrent backfill runner cannot advance or issue a misleading cursor" do
+      assert {:error, :backfill_locked} =
+               Persist.backfill_sha256(repo: BackfillLockedRepo, limit: 2)
+    end
+
+    test "Postmark keeps provider-message-id semantics even when MIME bytes match" do
+      raw = "Subject: same\r\n\r\npostmark bytes"
+
+      first = valid_handoff()
+      first = %{first | message: %{first.message | provider_message_id: "pm-one"}}
+      first = %{first | evidence: Map.put(first.evidence, :raw_mime, raw)}
+
+      second = valid_handoff()
+      second = %{second | message: %{second.message | provider_message_id: "pm-two"}}
+      second = %{second | evidence: Map.put(second.evidence, :raw_mime, raw)}
+
+      assert {:ok, %{status: :inserted}} = Persist.persist(first, repo: TestRepo, routes: [])
+      assert {:ok, %{status: :inserted}} = Persist.persist(second, repo: TestRepo, routes: [])
+      assert TestRepo.aggregate(InboundRecord, :count) == 2
+    end
+
+    test "terminal persistence stores exact signed bytes and JSON-safe headers" do
+      raw = <<0, 255, 10, 13, 123, 125>>
+
+      request = %{
+        raw_body: raw,
+        headers: [
+          {"X-Test", "one"},
+          {"x-test", "two"},
+          {:malformed, :ignored}
+        ]
+      }
+
+      verified = %{
+        envelope: %{"Type" => "Notification", "MessageId" => "sns-1"},
+        verification_facts: %{"auth" => "sns_x509"},
+        warnings: %{}
+      }
+
+      assert {:ok, %{status: :inserted, inbound_evidence: evidence}} =
+               Persist.persist_terminal_failure(
+                 "tenant-terminal",
+                 :ses,
+                 request,
+                 verified,
+                 :s3_fetch_failed,
+                 repo: TestRepo,
+                 routes: []
+               )
+
+      persisted = TestRepo.get!(InboundEvidence, evidence.id)
+      assert persisted.raw_signed_request == raw
+      assert persisted.raw_headers == %{"x-test" => ["one", "two"]}
+      assert persisted.terminal_failure_class == "s3_fetch_failed"
+      assert persisted.terminal_context["replayable"] == true
     end
   end
 

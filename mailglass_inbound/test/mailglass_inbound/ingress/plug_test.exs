@@ -174,7 +174,18 @@ defmodule MailglassInbound.Ingress.PlugTest do
 
     def resolve_content!(%VerifiedRequest{} = verified, _config) do
       record(:resolve_content)
-      %{verified | raw_mime: "From: sender@example.com\r\nTo: support@example.com\r\n\r\nbody"}
+
+      case Process.get(:mailglass_inbound_resolve_content_failure) do
+        type when type in [:s3_object_not_ready, :s3_fetch_failed] ->
+          raise %MailglassInbound.S3FetchError{
+            type: type,
+            message: "scripted content failure",
+            context: %{}
+          }
+
+        _ ->
+          %{verified | raw_mime: "From: sender@example.com\r\nTo: support@example.com\r\n\r\nbody"}
+      end
     end
 
     def normalize(%VerifiedRequest{}) do
@@ -224,6 +235,9 @@ defmodule MailglassInbound.Ingress.PlugTest do
     Process.delete(:mailglass_inbound_persist_error)
     Process.delete(:mailglass_inbound_pipeline_order)
     Process.delete(:mailglass_inbound_ordered_verify)
+    Process.delete(:mailglass_inbound_resolve_content_failure)
+    Process.delete(:mailglass_inbound_terminal_evidence)
+    Process.delete(:mailglass_inbound_terminal_persist_error)
 
     on_exit(fn ->
       if is_nil(prior_tenancy) do
@@ -526,6 +540,59 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert conn.status == 401
     refute Process.get(:mailglass_inbound_tenant_resolved)
     assert Process.get(:mailglass_inbound_pipeline_order) |> Enum.reverse() == [:verify]
+  end
+
+  test "authenticated transient SES content failure stays retryable and persists no terminal evidence" do
+    Process.put(:mailglass_inbound_resolve_content_failure, :s3_object_not_ready)
+
+    conn =
+      conn_with_auth(postmark_payload())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+      |> IngressPlug.call(
+        IngressPlug.init(
+          provider: :ses,
+          provider_module: OrderedVerifiedProvider,
+          persistence: FakePersistence
+        )
+      )
+
+    assert conn.status == 500
+    assert Jason.decode!(conn.resp_body)["reason"] == "s3_object_not_ready"
+    assert Process.get(:mailglass_inbound_terminal_evidence) == nil
+  end
+
+  test "authenticated permanent SES content failure acks only after terminal evidence commits" do
+    Process.put(:mailglass_inbound_resolve_content_failure, :s3_fetch_failed)
+
+    opts =
+      IngressPlug.init(
+        provider: :ses,
+        provider_module: OrderedVerifiedProvider,
+        persistence: FakePersistence
+      )
+
+    conn =
+      conn_with_auth(postmark_payload())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+      |> IngressPlug.call(opts)
+
+    assert conn.status == 200
+    assert Jason.decode!(conn.resp_body)["status"] == "terminal_evidence_committed"
+
+    assert {"tenant-123", :ses, %Request{raw_body: raw}, %VerifiedRequest{}, :s3_fetch_failed} =
+             Process.get(:mailglass_inbound_terminal_evidence)
+
+    assert raw == postmark_payload()
+
+    Process.put(:mailglass_inbound_terminal_persist_error, true)
+
+    failed =
+      conn_with_auth(postmark_payload())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+      |> IngressPlug.call(opts)
+
+    assert failed.status == 500
+    assert Jason.decode!(failed.resp_body)["reason"] == "persist_failed"
   end
 
   test "returns 500 when sendgrid raw mime delivery is not configured" do

@@ -7,7 +7,10 @@ defmodule MailglassInbound.ReplayTest do
   alias MailglassInbound.InboundRecords.ExecutionRun
   alias MailglassInbound.InboundRecords.InboundRecord
   alias MailglassInbound.Ingress.Persist
+  alias MailglassInbound.Ingress.{Request, VerifiedRequest}
   alias MailglassInbound.Internal.Replay
+  alias MailglassInbound.TestRepo
+  alias Ecto.Adapters.SQL.Sandbox
 
   # Phase 135 collapsed the 7 loose historical migrations into a single final-state
   # V01 snapshot (D-08). The canonical schema DDL — records/evidence/replay_runs
@@ -63,6 +66,41 @@ defmodule MailglassInbound.ReplayTest do
     end
   end
 
+  defmodule TerminalRecoveryProvider do
+    def resolve_content!(%VerifiedRequest{} = verified, _config) do
+      Process.put(:mailglass_inbound_terminal_refetched, verified)
+
+      %{
+        verified
+        | raw_mime:
+            "Message-ID: <recovered@example.com>\r\nTo: support@example.com\r\n\r\nrecovered"
+      }
+    end
+
+    def normalize(%VerifiedRequest{raw_mime: raw_mime}) do
+      %{
+        message: %InboundMessage{
+          provider: :ses,
+          provider_message_id: "ses-recovered-1",
+          message_id: "<recovered@example.com>",
+          envelope_recipient: "support@example.com",
+          from: [%{address: "sender@example.com"}],
+          to: [%{address: "support@example.com"}],
+          subject: "Recovered",
+          headers: %{"message-id" => ["<recovered@example.com>"]},
+          received_at: DateTime.utc_now(),
+          text_body: "recovered"
+        },
+        evidence: %{
+          raw_mime: raw_mime,
+          verification_facts: %{"content" => "refetched"},
+          parse_warnings: %{},
+          attachment_blobs: %{}
+        }
+      }
+    end
+  end
+
   defmodule PersistRepo do
     def transact(fun, _opts \\ []), do: fun.()
 
@@ -99,6 +137,7 @@ defmodule MailglassInbound.ReplayTest do
     Process.delete(:mailglass_inbound_replay_last_message)
     Process.delete(:mailglass_inbound_persist_repo_sequence)
     Process.delete(:mailglass_inbound_persist_inserts)
+    Process.delete(:mailglass_inbound_terminal_refetched)
     Application.put_env(:mailglass_inbound, :replay_test_pid, self())
 
     on_exit(fn -> Application.delete_env(:mailglass_inbound, :replay_test_pid) end)
@@ -381,6 +420,67 @@ defmodule MailglassInbound.ReplayTest do
       assert_raise ArgumentError, ~r/requires a non-empty :tenant_id/, fn ->
         Replay.replay(record.id, tenant_id: "", repo: ReplayRepo, execution: ReplayExecution)
       end
+    end
+
+    test "real terminal evidence refetches, normalizes, updates, routes, and executes end to end" do
+      owner = Sandbox.start_owner!(TestRepo, shared: true)
+      TestRepo.query!("TRUNCATE TABLE mailglass_inbound_records CASCADE", [])
+      on_exit(fn -> Sandbox.stop_owner(owner) end)
+
+      exact_signed_request = <<123, 34, 84, 121, 112, 101, 34, 58, 34, 78, 34, 125, 10>>
+
+      request = %Request{
+        provider: :ses,
+        raw_body: exact_signed_request,
+        headers: [{"content-type", "application/json"}]
+      }
+
+      verified = %VerifiedRequest{
+        request: request,
+        raw_body: exact_signed_request,
+        envelope: %{"Type" => "Notification", "Message" => "{}"},
+        verification_facts: %{"auth" => "sns_x509"},
+        warnings: %{}
+      }
+
+      assert {:ok, terminal} =
+               Persist.persist_terminal_failure(
+                 "tenant-terminal-replay",
+                 :ses,
+                 request,
+                 verified,
+                 :s3_fetch_failed,
+                 repo: TestRepo,
+                 routes: []
+               )
+
+      record_id = terminal.inbound_record.id
+
+      assert {:ok, %{outcome: :accept}} =
+               Replay.replay(record_id,
+                 tenant_id: "tenant-terminal-replay",
+                 repo: TestRepo,
+                 router: ReplayRouter,
+                 provider_module: TerminalRecoveryProvider,
+                 provider_config: %{},
+                 execution: ReplayExecution
+               )
+
+      assert %VerifiedRequest{request: %Request{raw_body: ^exact_signed_request}} =
+               Process.get(:mailglass_inbound_terminal_refetched)
+
+      record = TestRepo.get!(InboundRecord, record_id)
+      evidence = TestRepo.get_by!(InboundEvidence, inbound_record_id: record_id)
+      execution_payload = Process.get(:mailglass_inbound_replay_execution_payload)
+
+      assert record.provider_message_id == "ses-recovered-1"
+      assert record.subject == "Recovered"
+      assert evidence.raw_signed_request == exact_signed_request
+      assert is_binary(evidence.raw_mime_sha256)
+      assert evidence.terminal_failure_class == nil
+      assert evidence.terminal_context["recovered"] == true
+      assert execution_payload.route == %{status: :matched, mailbox: SupportMailbox}
+      assert execution_payload.message.subject == "Recovered"
     end
   end
 
