@@ -41,6 +41,39 @@ defmodule Mailglass.StreamingHTTPCStub do
   def cancel_request(_request_id), do: :ok
 end
 
+defmodule Mailglass.SuccessfulStreamingHTTPCStub do
+  @moduledoc false
+
+  def request(:get, _url_req, _http_opts, opts) do
+    true = Keyword.get(opts, :sync) == false
+    {:self, :once} = Keyword.fetch!(opts, :stream)
+    caller = self()
+    request_id = make_ref()
+    chunks = Application.fetch_env!(:mailglass, :ses_success_stream_chunks)
+
+    handler = spawn(fn -> stream(caller, request_id, chunks) end)
+    send(caller, {:http, {request_id, :stream_start, [], handler}})
+    {:ok, request_id}
+  end
+
+  def stream_next(handler), do: send(handler, :next)
+  def cancel_request(_request_id), do: :ok
+
+  defp stream(caller, request_id, [chunk | rest]) do
+    receive do
+      :next ->
+        send(caller, {:http, {request_id, :stream, chunk}})
+        stream(caller, request_id, rest)
+    end
+  end
+
+  defp stream(caller, request_id, []) do
+    receive do
+      :next -> send(caller, {:http, {request_id, :stream_end, []}})
+    end
+  end
+end
+
 defmodule Mailglass.Webhook.Providers.SESTest do
   use Mailglass.WebhookCase, async: false
 
@@ -61,12 +94,19 @@ defmodule Mailglass.Webhook.Providers.SESTest do
   setup do
     CertCache.reset()
     prior_stream_test_pid = Application.get_env(:mailglass, :ses_stream_test_pid)
+    prior_success_chunks = Application.get_env(:mailglass, :ses_success_stream_chunks)
 
     on_exit(fn ->
       if is_nil(prior_stream_test_pid) do
         Application.delete_env(:mailglass, :ses_stream_test_pid)
       else
         Application.put_env(:mailglass, :ses_stream_test_pid, prior_stream_test_pid)
+      end
+
+      if is_nil(prior_success_chunks) do
+        Application.delete_env(:mailglass, :ses_success_stream_chunks)
+      else
+        Application.put_env(:mailglass, :ses_success_stream_chunks, prior_success_chunks)
       end
     end)
 
@@ -112,6 +152,33 @@ defmodule Mailglass.Webhook.Providers.SESTest do
   # -------- verify!/3 — SNS signature verification -----------------
 
   describe "verify!/3 SES SNS signature verification" do
+    test "verifies a cold-cache certificate delivered as a bounded successful stream" do
+      test_data =
+        :public_key.pkix_test_data(%{
+          root: [key: {:rsa, 2048, 65_537}],
+          peer: [key: {:rsa, 2048, 65_537}]
+        })
+
+      cert_der = Keyword.fetch!(test_data, :cert)
+      {:RSAPrivateKey, private_key_der} = Keyword.fetch!(test_data, :key)
+      private_key = :public_key.der_decode(:RSAPrivateKey, private_key_der)
+
+      pem = :public_key.pem_encode([{:Certificate, cert_der, :not_encrypted}])
+      split_at = div(byte_size(pem), 2)
+      <<first::binary-size(split_at), second::binary>> = pem
+      Application.put_env(:mailglass, :ses_success_stream_chunks, [first, second])
+
+      raw = sign_fixture(load_ses_fixture("notification_delivery"), private_key)
+
+      config = %{
+        cert_cache_ttl_seconds: 86_400,
+        cert_max_response_bytes: byte_size(pem) + 1,
+        httpc_client: Mailglass.SuccessfulStreamingHTTPCStub
+      }
+
+      assert :ok = SES.verify!(raw, [], config)
+    end
+
     test "aborts a streamed certificate response at the configured byte cap" do
       Application.put_env(:mailglass, :ses_stream_test_pid, self())
 
