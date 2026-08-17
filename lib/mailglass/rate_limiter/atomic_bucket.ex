@@ -75,7 +75,7 @@ defmodule Mailglass.RateLimiter.AtomicBucket do
   end
 
   defp replace_exact(table, observed, replacement) do
-    {_key, tokens, last_us, remainder, last_seen} = observed
+    {key, tokens, last_us, remainder, last_seen} = observed
     {_replacement_key, next_tokens, next_last_us, next_remainder, next_last_seen} = replacement
 
     # The table is a set and the caller performed a key lookup, so "$1" is the
@@ -84,6 +84,7 @@ defmodule Mailglass.RateLimiter.AtomicBucket do
     match_spec = [
       {{:"$1", :"$2", :"$3", :"$4", :"$5"},
        [
+         {:==, :"$1", {:const, key}},
          {:==, :"$2", tokens},
          {:==, :"$3", last_us},
          {:==, :"$4", remainder},
