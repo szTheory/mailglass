@@ -11,8 +11,8 @@
 - [x] **ADOPT-02**: An adopter can target an explicit repo with `--repo`; implicit inference succeeds only when exactly one configured Ecto repo exists.
 - [x] **ADOPT-03**: `--upgrade` creates a fresh timestamped migration whose rollback returns to the previously applied package schema version, without rewriting applied migrations.
 - [x] **ADOPT-04**: Offline upgrade generation accepts an explicit prior version and rejects invalid or non-older versions.
-- [ ] **ADOPT-05**: The known legacy toy migration is detected and has an explicit fail-closed repair path that never destroys ambiguous or populated data.
-- [ ] **ADOPT-06**: Migration version detection distinguishes an absent anchor from malformed metadata or query failure and fails closed for the latter cases.
+- [x] **ADOPT-05**: The known legacy toy migration is detected and has an explicit fail-closed repair path that never destroys ambiguous or populated data.
+- [x] **ADOPT-06**: Migration version detection distinguishes an absent anchor from malformed metadata or query failure and fails closed for the latter cases.
 
 ### Delivery Correctness and Resource Bounds
 
@@ -95,8 +95,8 @@
 | ADOPT-02 | Phase 155 | Complete |
 | ADOPT-03 | Phase 155 | Complete |
 | ADOPT-04 | Phase 155 | Complete |
-| ADOPT-05 | Phase 155 | Pending |
-| ADOPT-06 | Phase 155 | Pending |
+| ADOPT-05 | Phase 155 | Complete |
+| ADOPT-06 | Phase 155 | Complete |
 | QUAL-02 | Phase 155 | Pending |
 | EXEC-01 | Phase 156 | Pending |
 | EXEC-02 | Phase 156 | Pending |

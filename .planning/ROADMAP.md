@@ -73,15 +73,15 @@
   4. A legacy toy migration is detected with a fail-closed, non-destructive repair route, while malformed metadata and query failures remain distinguishable from an absent migration anchor.
   5. A code change cannot receive a passing protected merge signal when change detection fails or a required code lane was skipped.
 
-**Plans**: 1/6 plans executed
+**Plans**: 5/6 plans executed
 
 Plans:
 
 - [x] 155-01-PLAN.md — Generate truthful fresh and offline-upgrade wrappers with exact repo selection.
-- [ ] 155-02-PLAN.md — Distinguish absent migration anchors from malformed metadata and query failure.
-- [ ] 155-03-PLAN.md — Generate live upgrades from the selected repo's validated applied version.
-- [ ] 155-04-PLAN.md — Repair only the exact empty historical core toy migration, fail closed otherwise.
-- [ ] 155-05-PLAN.md — Prove generated core/inbound migrations and delivery persistence in a real Ecto host.
+- [x] 155-02-PLAN.md — Distinguish absent migration anchors from malformed metadata and query failure.
+- [x] 155-03-PLAN.md — Generate live upgrades from the selected repo's validated applied version.
+- [x] 155-04-PLAN.md — Repair only the exact empty historical core toy migration, fail closed otherwise.
+- [x] 155-05-PLAN.md — Prove generated core/inbound migrations and delivery persistence in a real Ecto host.
 - [ ] 155-06-PLAN.md — Make CI Green fail closed for detector failure and skipped required code lanes.
 
 ### Phase 156: Delivery Correctness and Bounded Execution
@@ -164,7 +164,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 155. Restore Adopter and CI Truth | 1/6 | In Progress|  |
+| 155. Restore Adopter and CI Truth | 5/6 | In Progress|  |
 | 156. Delivery Correctness and Bounded Execution | 0/TBD | Not started | - |
 | 157. Inbound, Database, and Lifecycle Hardening | 0/TBD | Not started | - |
 | 158. Simplify Architecture Without Breaking Adopters | 0/TBD | Not started | - |
