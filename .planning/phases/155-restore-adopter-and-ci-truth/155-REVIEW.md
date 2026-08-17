@@ -1,6 +1,6 @@
 ---
 phase: 155-restore-adopter-and-ci-truth
-reviewed: 2026-08-17T02:41:30Z
+reviewed: 2026-08-17T03:06:53Z
 depth: deep
 files_reviewed: 20
 files_reviewed_list:
@@ -34,21 +34,21 @@ status: clean
 
 # Phase 155: Code Review Report
 
-**Reviewed:** 2026-08-17T02:41:30Z
+**Reviewed:** 2026-08-17T03:06:53Z
 **Depth:** deep
 **Files Reviewed:** 20
 **Status:** clean
 
 ## Summary
 
-All three original blockers are closed. Repair now takes an `ACCESS EXCLUSIVE` lock and revalidates the exact table shape and emptiness on the migration connection immediately before its drop; the regression proves a row added after wrapper generation survives. The host proof rejects caller-owned `WORK_DIR` and cleans up only a private `mktemp` directory. Push diff errors now fail the detector, so CI Green cannot classify them as docs-only.
+All original blockers remain closed, and the final shared-schema gap closure is safe. Core and inbound retain `DROP SCHEMA ... RESTRICT`; a PostgreSQL-local handler suppresses only the expected `dependent_objects_still_exist` result, so sibling package and host-owned objects prevent schema removal while all other database errors still abort. The generated-host proof now runs separate core-first and inbound-first journeys on derived scratch databases, checks intermediate sibling preservation and final namespace removal, and retains the owned-scratch cleanup boundary.
 
-Focused verification passed: `mix test test/mix/tasks/mailglass_legacy_repair_test.exs test/scripts/ci_green_policy_test.exs test/scripts/generated_ecto_host_proof_test.exs --warnings-as-errors` (17 tests), `mix format --check-formatted`, `bash -n` for both scripts, and `git diff --check` over the correction range.
+Focused verification passed: `cd mailglass_inbound && mix test test/mailglass_inbound/migrations_test.exs --warnings-as-errors` (17 tests), `mix test test/scripts/generated_ecto_host_proof_test.exs --warnings-as-errors` (5 tests), `mix format --check-formatted`, `bash -n scripts/generated_ecto_host_proof.sh`, and `git diff --check ad462f72^..HEAD`.
 
 All reviewed fixes meet quality standards. No remaining issues found.
 
 ---
 
-_Reviewed: 2026-08-17T02:41:30Z_
+_Reviewed: 2026-08-17T03:06:53Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: deep_
