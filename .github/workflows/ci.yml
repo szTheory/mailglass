@@ -1149,6 +1149,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs:
+      - changes
       - compile_no_optional_deps
       - installer_host_smoke
       - mix_task_tests
@@ -1160,8 +1161,9 @@ jobs:
     steps:
       - name: Evaluate required lane results
         run: |
-          FAILED_LANES=""
-          for job_result in \
+          bash scripts/ci_green_policy.sh \
+            "${{ needs.changes.result }}" \
+            "${{ needs.changes.outputs.code }}" \
             "compile_no_optional_deps=${{ needs.compile_no_optional_deps.result }}" \
             "installer_host_smoke=${{ needs.installer_host_smoke.result }}" \
             "mix_task_tests=${{ needs.mix_task_tests.result }}" \
@@ -1170,15 +1172,3 @@ jobs:
             "trust_lane_repo_head=${{ needs.trust_lane_repo_head.result }}" \
             "hex_audit=${{ needs.hex_audit.result }}" \
             "deps_audit_advisory=${{ needs.deps_audit_advisory.result }}"
-          do
-            lane="${job_result%%=*}"
-            result="${job_result##*=}"
-            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
-              FAILED_LANES="${FAILED_LANES} ${lane}"
-            fi
-          done
-          if [ -n "$FAILED_LANES" ]; then
-            echo "Delivery blocked: required CI lane(s) did not pass:${FAILED_LANES}"
-            exit 1
-          fi
-          echo "All required CI lanes passed or were skipped."
