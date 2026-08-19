@@ -667,7 +667,7 @@ defmodule Mailglass.DocsContractTest do
 
     ui_claim =
       if Regex.match?(
-           ~r/(admin|operator) (dashboard|ui).*(ships|provides|supports|visibly)/i,
+           ~r/(admin|operator) (dashboard|ui)[^\n]*(ships|provides|supports|visibly)/i,
            adopter
          ),
          do: [:admin_operator_behavior_claim],

@@ -335,14 +335,11 @@ defmodule MailglassInbound.DocsContractTest do
     end
   end
 
-  test "install docs keep Mailgun and SES outside the current stable provider contract" do
+  test "install docs name all four stable provider lanes" do
     install = File.read!(@install_path)
 
-    assert install =~ "The stable provider lanes in this slice are `:postmark` and `:sendgrid`."
-    assert install =~ "Mailgun and SES guides are integration references"
-    assert install =~ "not part of the current stable provider contract"
-
-    refute install =~ "The four supported providers are `:postmark`, `:sendgrid`, `:mailgun`, and"
+    assert install =~
+             "The four stable provider lanes are `:postmark`, `:sendgrid`, `:mailgun`, and `:ses`."
   end
 
   test "admin operator trust docs lock replay boundaries, canonical routing, and internal-ui framing" do
@@ -697,7 +694,7 @@ defmodule MailglassInbound.DocsContractTest do
           do: kind
 
     fabricated =
-      if Regex.match?(~r/Status: deprecated in v2.*MailglassInbound\./is, combined),
+      if Regex.match?(~r/Status: deprecated in v2[^\n]*MailglassInbound\./i, combined),
         do: [:fabricated_deprecation],
         else: []
 
