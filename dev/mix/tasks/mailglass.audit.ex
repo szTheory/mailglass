@@ -23,7 +23,7 @@ defmodule Mix.Tasks.Mailglass.Audit do
   across all three directories, blocks delivery even when every live finding
   is otherwise accepted (D-10, VULN-06). `--kind deps` applies alias-aware
   suppression only — it does not independently re-litigate entry health,
-  because `mix deps.audit` does not natively detect these two entries (see
+  because `mix deps.audit` does not natively detect these entries (see
   `Mailglass.SupplyChain.AcceptedAdvisories`'s "Known limitation" moduledoc
   section).
   """

@@ -56,7 +56,7 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
         }
 
   # cowlib (transitive via cowboy/plug_cowboy/phoenix; unavoidable for any web
-  # server) — both entries have no upstream fix as of cowlib 2.19.0 per Hex's
+  # server) — these entries have no upstream fix as of cowlib 2.19.0 per Hex's
   # own hex.audit/EEF-CVE database.
   @entries [
     %{
@@ -86,6 +86,18 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
           "contradiction.",
       accepted_on: ~D[2026-07-28],
       recheck_by: ~D[2026-10-26]
+    },
+    %{
+      id: "EEF-CVE-2026-43971",
+      aliases: [],
+      package: "cowlib",
+      severity: "MEDIUM",
+      reason:
+        "Link Header Directive Smuggling via unescaped target/rel/attribute keys; no " <>
+          "upstream fix as of cowlib 2.19.0 (the latest Hex release on 2026-08-19); " <>
+          "transitive via cowboy/plug_cowboy/phoenix, unavoidable for any web server.",
+      accepted_on: ~D[2026-08-19],
+      recheck_by: ~D[2026-09-18]
     }
   ]
 
