@@ -77,4 +77,25 @@ defmodule Mailglass.UpgradeV2DocsTest do
       assert File.read!(@mix_exs) =~ "guides/upgrading-to-v2_0.md"
     end
   end
+
+  describe "v2.6 generated-host upgrade path" do
+    test "uses the exact Repo-explicit public generator commands" do
+      guide = File.read!(@guide)
+
+      assert guide =~ "mix mailglass.gen.migration --repo MyApp.Repo"
+      assert guide =~ "mix mailglass.inbound.gen.migration --repo MyApp.Repo"
+      assert guide =~ "scripts/generated_ecto_host_proof.sh"
+      assert guide =~ "Each package owns its migration history"
+      assert guide =~ "prefix: \"mailglass\""
+      assert guide =~ "prefix: \"mailglass_inbound\""
+    end
+
+    test "does not claim an unpublished release or phase-local workflow" do
+      guide = File.read!(@guide)
+
+      refute Regex.match?(~r/current release is v2\.6/i, guide)
+      refute Regex.match?(~r/Phase 15[5-9]/, guide)
+      refute Regex.match?(~r/Phase 160/, guide)
+    end
+  end
 end
