@@ -935,7 +935,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           mix hex.build >/dev/null
-          CHECKSUM=$(tar -xOf "mailglass-${VERSION}.tar" CHECKSUM | tr A-F a-f)
+          CHECKSUM=$(shasum -a 256 "mailglass-${VERSION}.tar" | awk '{print $1}')
           [[ "$CHECKSUM" =~ ^[0-9a-f]{64}$ ]]
           state=$(scripts/release_policy_hex_release_state.sh mailglass "${VERSION}" "$CHECKSUM")
           if [ "$state" = exists ]; then
@@ -1053,7 +1053,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           mix hex.build >/dev/null
-          CHECKSUM=$(tar -xOf "mailglass_admin-${VERSION}.tar" CHECKSUM | tr A-F a-f)
+          CHECKSUM=$(shasum -a 256 "mailglass_admin-${VERSION}.tar" | awk '{print $1}')
           [[ "$CHECKSUM" =~ ^[0-9a-f]{64}$ ]]
           state=$(../scripts/release_policy_hex_release_state.sh mailglass_admin "${VERSION}" "$CHECKSUM")
           if [ "$state" = exists ]; then
@@ -1159,7 +1159,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           mix hex.build >/dev/null
-          CHECKSUM=$(tar -xOf "mailglass_inbound-${VERSION}.tar" CHECKSUM | tr A-F a-f)
+          CHECKSUM=$(shasum -a 256 "mailglass_inbound-${VERSION}.tar" | awk '{print $1}')
           [[ "$CHECKSUM" =~ ^[0-9a-f]{64}$ ]]
           state=$(../scripts/release_policy_hex_release_state.sh mailglass_inbound "${VERSION}" "$CHECKSUM")
           if [ "$state" = exists ]; then
