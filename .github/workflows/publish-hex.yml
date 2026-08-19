@@ -104,6 +104,8 @@ jobs:
           version-type: strict
       - name: Install deps for policy
         run: mix deps.get
+      - name: Compile policy runtime
+        run: mix compile
       - name: Validate automated release target
         id: release-target
         env:
@@ -123,7 +125,7 @@ jobs:
             exit 0
           fi
 
-          if mix run --no-start --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-authorization "$target" "$digest" >> "$GITHUB_OUTPUT"; then
+          if mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-authorization "$target" "$digest" >> "$GITHUB_OUTPUT"; then
             echo "candidate_digest=$digest" >> "$GITHUB_OUTPUT"
           else
             echo "ERROR: protected candidate digest is invalid or unauthorized" >&2

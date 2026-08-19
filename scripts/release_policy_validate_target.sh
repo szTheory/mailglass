@@ -7,4 +7,4 @@ root=${3:-.}
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
 cd "$repo_root"
-exec mix run --no-start --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-target "$target" "$release_ref" "$root"
+exec mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-target "$target" "$release_ref" "$root"

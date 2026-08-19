@@ -61,18 +61,50 @@ jobs:
         with:
           version-file: .tool-versions
           version-type: strict
+      - name: Install deps for policy
+        run: mix deps.get
+      - name: Compile policy runtime
+        run: mix compile
       - name: Resolve completed target versions
         id: target
         env:
           EVENT_NAME: ${{ github.event_name }}
+          INPUT_CORE: ${{ github.event.inputs.core_version }}
+          INPUT_ADMIN: ${{ github.event.inputs.admin_version }}
+          INPUT_INBOUND: ${{ github.event.inputs.inbound_version }}
         run: |
           set -euo pipefail
-          command=completed-versions
-          if [ "$EVENT_NAME" != "schedule" ]; then command=authorized-versions; fi
-          if mix run --no-start --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "$command" .planning/release-target.json >> "$GITHUB_OUTPUT"; then
+          command="completed-versions"
+          if [ "$EVENT_NAME" != "schedule" ]; then command="authorized-versions"; fi
+          resolved=$(mktemp)
+          if mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "$command" .planning/release-target.json > "$resolved"; then
+            completed=$(awk -F= '$1 == "completed" {print $2}' "$resolved")
+            authorized=$(awk -F= '$1 == "authorized" {print $2}' "$resolved")
+            core=$(awk -F= '$1 == "core" {print $2}' "$resolved")
+            admin=$(awk -F= '$1 == "admin" {print $2}' "$resolved")
+            inbound=$(awk -F= '$1 == "inbound" {print $2}' "$resolved")
+            tag_sha=$(awk -F= '$1 == "tag_sha" {print $2}' "$resolved")
+            [[ "$core" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+            [[ "$admin" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+            [[ "$inbound" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+            if [ "$EVENT_NAME" = "schedule" ]; then
+              [ "$completed" = true ]
+              [[ "$tag_sha" =~ ^[0-9a-f]{40}$ ]]
+              authorized=false
+            else
+              [ "$completed" = false ]
+              [ "$authorized" = true ]
+              tag_sha=""
+            fi
+            if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+              [ -n "$INPUT_CORE" ] && [ "$INPUT_CORE" = "$core" ]
+              [ -n "$INPUT_ADMIN" ] && [ "$INPUT_ADMIN" = "$admin" ]
+              [ -n "$INPUT_INBOUND" ] && [ "$INPUT_INBOUND" = "$inbound" ]
+            fi
+            printf 'completed=%s\nauthorized=%s\ncore=%s\nadmin=%s\ninbound=%s\ntag_sha=%s\n' "$completed" "$authorized" "$core" "$admin" "$inbound" "$tag_sha" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          echo "completed=false" >> "$GITHUB_OUTPUT"
+          printf 'completed=false\nauthorized=false\n' >> "$GITHUB_OUTPUT"
 
   cron-guard:
     name: Cron 7-day window guard

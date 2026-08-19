@@ -253,6 +253,20 @@ defmodule Mailglass.ReleasePolicy do
     end
   end
 
+  def cli(["validate-protected-dispatch", target_path, digest]) do
+    with {:ok, json} <- File.read(target_path),
+         {:ok, target} <- Jason.decode(json),
+         {:ok, target} <- validate_authorization_digest(target, digest) do
+      IO.write("authorized=true\n")
+      IO.write("candidate_digest=#{digest}\n")
+      IO.write("content_digest=#{target["publishable_content"]["digest"]}\n")
+      IO.write("proposal_head=#{target["proposal_identity"]["head_sha"]}\n")
+      IO.write("source_sha=#{target["proposal_identity"]["source_sha"]}\n")
+    else
+      _ -> System.halt(1)
+    end
+  end
+
   def cli(_), do: System.halt(1)
 
   defp lifecycle(target) do

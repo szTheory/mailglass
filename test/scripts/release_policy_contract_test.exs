@@ -244,7 +244,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
   test "release preparation is proposal-only and disarms ordinary auto-merge" do
     release = File.read!(@release_please)
 
-    assert release =~ "skip-github-release: true"
+    assert release =~ "skip-github-release: ${{ github.event.inputs.candidate_digest == '' }}"
     assert release =~ "steps.release.outputs.prs"
     assert release =~ "proposal/source identity"
     assert release =~ "publishable-content digest"
@@ -267,9 +267,24 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert release =~ "Proposal mode bypasses historical baseline tag recovery"
     assert release =~ "Validate protected exact candidate dispatch"
     assert release =~ "validate-protected-dispatch"
+    assert release =~ "candidate_digest=$(awk -F= '$1 == \"candidate_digest\" {print $2}' \"$policy\")"
+    assert release =~ "content_digest=$(awk -F= '$1 == \"content_digest\" {print $2}' \"$policy\")"
+    assert release =~ "[ \"$candidate_digest\" = \"$CANDIDATE_DIGEST\" ]"
+    assert release =~ "git checkout --detach \"$proposal_head\""
+    assert release =~ "[ \"$actual_digest\" = \"$content_digest\" ]"
+    assert release =~ "[ \"$(jq -er 'length' <<<\"$prs\")\" -eq 1 ]"
+    assert release =~ "[ \"$merged_digest\" = \"$CONTENT_DIGEST\" ]"
+    assert release =~ "echo \"merge_tree_verified=true\" >> \"$GITHUB_OUTPUT\""
+    assert release =~ "--match-head-commit \"$PROPOSAL_HEAD\""
+    assert release =~ "validate-protected-dispatch .planning/release-target.json \"$CANDIDATE_DIGEST\" >/dev/null"
+    assert release =~ "Compile policy runtime"
+    refute release =~ "cat \"$policy\" >> \"$GITHUB_OUTPUT\""
     assert release =~ "Protected exact candidate dispatch may merge only the validated release PR"
     assert release =~ "steps.protected-dispatch.outputs.authorized == 'true'"
+    assert release =~ "steps.protected-merge.outcome == 'success'"
+    assert release =~ "steps.protected-merge.outputs.merge_tree_verified == 'true'"
     refute release =~ "gh pr merge \"$number\" --auto --squash"
+    refute release =~ "gh pr merge \"$NUMBER\" --auto"
   end
 
   test "publish workflow requires a protected exact-digest dispatch and keeps live jobs inert" do
@@ -296,6 +311,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     prepublish = extract_job!(publish, "prepublish-summary")
     refute prepublish =~ "environment: hex-publish"
     refute prepublish =~ "HEX_API_KEY"
+    assert prepublish =~ "Compile policy runtime"
     assert prepublish =~ "Pre-publish check for mailglass"
     assert prepublish =~ "Pre-publish check for mailglass_admin"
     assert prepublish =~ "Pre-publish check for mailglass_inbound"
