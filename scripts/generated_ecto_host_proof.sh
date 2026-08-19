@@ -3,10 +3,82 @@
 # Generated Ecto-host proof — upgrades populated prior-version schemas through
 # both public package generators, proves concurrent-index recovery, and rolls
 # back only the additive versions.
+# shellcheck disable=SC1010,SC2016 # `mix do` and single-quoted Elixir are intentional.
 set -euo pipefail
 
 FRESH_DELIVERY_STAGES=(fresh_install sync_send atomic_enqueue worker_run persisted_outcome)
 BOUNDARY_STAGES=(custom_modules multi_repo_prefixes upgrade rollback idempotent_rerun)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+validate_exact_version() {
+  local version="$1"
+  [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+render_package_dependencies() {
+  local mode="${1:-}"
+  shift || true
+
+  case "${mode}" in
+    path)
+      if [ "$#" -ne 1 ] || [ -z "$1" ]; then
+        echo "Path package mode requires exactly one non-empty working-tree path." >&2
+        return 2
+      fi
+
+      MAILGLASS_DEPENDENCY_PATH="$1" elixir -e '
+        path = System.fetch_env!("MAILGLASS_DEPENDENCY_PATH")
+
+        IO.write(
+          "      {:mailglass, path: " <> inspect(path) <> ", override: true},\n" <>
+            "      {:mailglass_inbound, path: " <>
+            inspect(Path.join(path, "mailglass_inbound")) <>
+            "},\n" <>
+            "      {:oban, \"~> 2.21\"},\n"
+        )
+      '
+      ;;
+    exact_hex)
+      if [ "$#" -ne 3 ]; then
+        echo "Exact-Hex package mode requires core, admin, and inbound versions." >&2
+        return 2
+      fi
+
+      local core_version="$1"
+      local admin_version="$2"
+      local inbound_version="$3"
+      local version
+
+      for version in "${core_version}" "${admin_version}" "${inbound_version}"; do
+        if ! validate_exact_version "${version}"; then
+          echo "Exact-Hex package versions must be stable x.y.z values." >&2
+          return 1
+        fi
+      done
+
+      MAILGLASS_EXACT_CORE_VERSION="${core_version}" \
+        MAILGLASS_EXACT_ADMIN_VERSION="${admin_version}" \
+        MAILGLASS_EXACT_INBOUND_VERSION="${inbound_version}" \
+        elixir -e '
+          core = System.fetch_env!("MAILGLASS_EXACT_CORE_VERSION")
+          admin = System.fetch_env!("MAILGLASS_EXACT_ADMIN_VERSION")
+          inbound = System.fetch_env!("MAILGLASS_EXACT_INBOUND_VERSION")
+
+          IO.write(
+            "      {:mailglass, \"== #{core}\", override: true},\n" <>
+              "      {:mailglass_admin, \"== #{admin}\"},\n" <>
+              "      {:mailglass_inbound, \"== #{inbound}\"},\n" <>
+              "      {:oban, \"~> 2.21\"},\n"
+          )
+        '
+      ;;
+    *)
+      echo "Package mode must be path or exact_hex." >&2
+      return 2
+      ;;
+  esac
+}
 
 validate_scratch_database_name() {
   local database_name="$1"
@@ -126,7 +198,34 @@ if [ "${1:-}" = "--validate-database-name" ]; then
   exit
 fi
 
-MAILGLASS_PATH="${MAILGLASS_PATH:?MAILGLASS_PATH must point at the working tree}"
+if [ "${1:-}" = "--render-package-dependencies" ]; then
+  render_package_dependencies "${@:2}"
+  exit
+fi
+
+MAILGLASS_PACKAGE_MODE="${MAILGLASS_PACKAGE_MODE:-path}"
+
+case "${MAILGLASS_PACKAGE_MODE}" in
+  path)
+    MAILGLASS_PATH="${MAILGLASS_PATH:?MAILGLASS_PATH must point at the working tree}"
+    PROOF_ASSET_ROOT="${MAILGLASS_PATH}"
+    PACKAGE_DEPENDENCIES="$(render_package_dependencies path "${MAILGLASS_PATH}")"
+    ;;
+  exact_hex)
+    CORE_VERSION="${MAILGLASS_EXACT_CORE_VERSION:-}"
+    ADMIN_VERSION="${MAILGLASS_EXACT_ADMIN_VERSION:-}"
+    INBOUND_VERSION="${MAILGLASS_EXACT_INBOUND_VERSION:-}"
+    PROOF_ASSET_ROOT="${PROJECT_ROOT}"
+    PACKAGE_DEPENDENCIES="$(
+      render_package_dependencies exact_hex "${CORE_VERSION}" "${ADMIN_VERSION}" "${INBOUND_VERSION}"
+    )"
+    ;;
+  *)
+    echo "MAILGLASS_PACKAGE_MODE must be path or exact_hex." >&2
+    exit 2
+    ;;
+esac
+
 DATABASE_URL="${DATABASE_URL:?DATABASE_URL must name the generated-host scratch database}"
 
 if [ -n "${WORK_DIR:-}" ]; then
@@ -344,18 +443,12 @@ run_journey() {
 
   cd "${host_dir}"
 
-  MAILGLASS_PATH="${MAILGLASS_PATH}" elixir -e '
-    path = System.fetch_env!("MAILGLASS_PATH")
+  PACKAGE_DEPENDENCIES="${PACKAGE_DEPENDENCIES}" elixir -e '
     content = File.read!("mix.exs")
-
-    # `inspect/1` emits a valid Elixir literal for paths containing quotes,
-    # backslashes, or whitespace.
-    deps =
-      "      {:mailglass, path: " <> inspect(path) <> ", override: true},\n" <>
-        "      {:mailglass_inbound, path: " <> inspect(Path.join(path, "mailglass_inbound")) <> "},\n" <>
-        "      {:oban, \"~> 2.21\"},\n"
+    deps = System.fetch_env!("PACKAGE_DEPENDENCIES")
 
     updated = String.replace(content, ~r/(defp deps do\n\s*\[\n)/, "\\1" <> deps, global: false)
+    if updated == content, do: raise("generated host dependency anchor missing")
     File.write!("mix.exs", updated)
   '
 
@@ -405,7 +498,7 @@ EOF
   '
 
   mkdir -p lib/host
-  cp "${MAILGLASS_PATH}/test/fixtures/generated_host/custom_modules.exs" lib/host/generated_host_modules.ex
+  cp "${PROOF_ASSET_ROOT}/test/fixtures/generated_host/custom_modules.exs" lib/host/generated_host_modules.ex
 
   elixir -e '
     path = "lib/host/application.ex"
@@ -422,6 +515,14 @@ EOF
   '
 
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix deps.get
+
+  if [ "${MAILGLASS_PACKAGE_MODE}" = exact_hex ]; then
+    MAILGLASS_EXPECTED_CORE_VERSION="${CORE_VERSION}" \
+      MAILGLASS_EXPECTED_ADMIN_VERSION="${ADMIN_VERSION}" \
+      MAILGLASS_EXPECTED_INBOUND_VERSION="${INBOUND_VERSION}" \
+      bash "${PROJECT_ROOT}/scripts/check_clean_baseline_hex_only.sh" mix.lock
+  fi
+
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix compile --warnings-as-errors
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.drop -r Host.Repo --quiet
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.create -r Host.Repo --quiet
