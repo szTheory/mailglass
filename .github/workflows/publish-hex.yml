@@ -71,6 +71,7 @@ jobs:
     outputs:
       authorized: ${{ steps.release-target.outputs.authorized }}
       candidate_digest: ${{ steps.release-target.outputs.candidate_digest }}
+      tag_sha: ${{ steps.release-target.outputs.tag_sha }}
     services:
       postgres:
         image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
@@ -125,8 +126,16 @@ jobs:
             exit 0
           fi
 
-          if mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-authorization "$target" "$digest" >> "$GITHUB_OUTPUT"; then
-            echo "candidate_digest=$digest" >> "$GITHUB_OUTPUT"
+          policy=$(mktemp)
+          if mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-protected-dispatch "$target" "$digest" > "$policy"; then
+            content_digest=$(awk -F= '$1 == "content_digest" {print $2}' "$policy")
+            [[ "$content_digest" =~ ^[0-9a-f]{64}$ ]]
+            tag_sha=$(git rev-parse "${RELEASE_REF}^{commit}")
+            [[ "$tag_sha" =~ ^[0-9a-f]{40}$ ]]
+            [ "$(git rev-parse HEAD)" = "$tag_sha" ]
+            actual_digest=$(git ls-files -z -- mix.exs mailglass_admin mailglass_inbound README.md mailglass_admin/README.md mailglass_inbound | LC_ALL=C sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}')
+            [ "$actual_digest" = "$content_digest" ]
+            printf 'authorized=true\ncandidate_digest=%s\ncontent_digest=%s\ntag_sha=%s\n' "$digest" "$content_digest" "$tag_sha" >> "$GITHUB_OUTPUT"
           else
             echo "ERROR: protected candidate digest is invalid or unauthorized" >&2
             exit 1
@@ -824,12 +833,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+          ref: ${{ needs.prepublish-summary.outputs.tag_sha }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
           version-file: .tool-versions
           version-type: strict
+      - name: Assert pinned protected release tree
+        run: test "$(git rev-parse HEAD)" = "${{ needs.prepublish-summary.outputs.tag_sha }}"
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
@@ -846,7 +857,7 @@ jobs:
         id: idempotency
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          if mix hex.info mailglass "${VERSION}" 2>/dev/null | grep -q "Released:"; then
+          if [ "$(scripts/release_policy_hex_release_state.sh mailglass "${VERSION}")" = exists ]; then
             echo "Nothing to do: version ${VERSION} of mailglass is already on Hex; skipping publish (idempotency guard)."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
@@ -896,12 +907,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+          ref: ${{ needs.prepublish-summary.outputs.tag_sha }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
           version-file: .tool-versions
           version-type: strict
+      - name: Assert pinned protected release tree
+        run: test "$(git rev-parse HEAD)" = "${{ needs.prepublish-summary.outputs.tag_sha }}"
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
@@ -955,7 +968,7 @@ jobs:
         id: idempotency
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          if mix hex.info mailglass_admin "${VERSION}" 2>/dev/null | grep -q "Released:"; then
+          if [ "$(scripts/release_policy_hex_release_state.sh mailglass_admin "${VERSION}")" = exists ]; then
             echo "Nothing to do: version ${VERSION} of mailglass_admin is already on Hex; skipping publish (idempotency guard)."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
@@ -994,12 +1007,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+          ref: ${{ needs.prepublish-summary.outputs.tag_sha }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
           version-file: .tool-versions
           version-type: strict
+      - name: Assert pinned protected release tree
+        run: test "$(git rev-parse HEAD)" = "${{ needs.prepublish-summary.outputs.tag_sha }}"
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
@@ -1052,7 +1067,7 @@ jobs:
         id: idempotency
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          if mix hex.info mailglass_inbound "${VERSION}" 2>/dev/null | grep -q "Released:"; then
+          if [ "$(scripts/release_policy_hex_release_state.sh mailglass_inbound "${VERSION}")" = exists ]; then
             echo "Nothing to do: version ${VERSION} of mailglass_inbound is already on Hex; skipping publish (idempotency guard)."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
