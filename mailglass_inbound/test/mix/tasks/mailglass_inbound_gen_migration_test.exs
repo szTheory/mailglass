@@ -104,7 +104,8 @@ defmodule Mix.Tasks.Mailglass.Inbound.Gen.MigrationTest do
            end) =~ "created"
 
     assert_received {:started_repo, HostRepo}
-    assert_received {:host_query, query, ["public"], [log: false]}
+    assert_received {:host_query, query, [schema], [log: false]}
+    assert schema == MailglassInbound.Config.schema()
     assert query =~ "mailglass_inbound_records"
     refute_received :other_repo_called
     assert [path] = migration_paths()
