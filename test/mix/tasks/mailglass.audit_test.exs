@@ -33,6 +33,7 @@ defmodule Mix.Tasks.Mailglass.AuditTest do
          Advisories:
            cowlib 2.19.0 - EEF-CVE-2026-43966 (MEDIUM)
            cowlib 2.19.0 - EEF-CVE-2026-43969 (LOW)
+           cowlib 2.19.0 - EEF-CVE-2026-43971 (MEDIUM)
          """, 1},
         {"mailglass_inbound", "No retired packages found", 0}
       ]
@@ -40,6 +41,7 @@ defmodule Mix.Tasks.Mailglass.AuditTest do
       assert {:ok, accepted} = Audit.evaluate(:hex, dir_outputs)
       assert Enum.any?(accepted, &(&1 =~ "EEF-CVE-2026-43966"))
       assert Enum.any?(accepted, &(&1 =~ "EEF-CVE-2026-43969"))
+      assert Enum.any?(accepted, &(&1 =~ "EEF-CVE-2026-43971"))
     end
 
     test "a clean scan everywhere except the still-accepted cowlib findings passes" do
@@ -55,6 +57,7 @@ defmodule Mix.Tasks.Mailglass.AuditTest do
          Advisories:
            cowlib 2.19.0 - EEF-CVE-2026-43966 (MEDIUM)
            cowlib 2.19.0 - EEF-CVE-2026-43969 (LOW)
+           cowlib 2.19.0 - EEF-CVE-2026-43971 (MEDIUM)
          """, 1},
         {"mailglass_inbound", "No retired packages found", 0}
       ]
@@ -80,6 +83,7 @@ defmodule Mix.Tasks.Mailglass.AuditTest do
          Advisories:
            cowlib 2.19.0 - EEF-CVE-2026-43966 (MEDIUM)
            cowlib 2.19.0 - EEF-CVE-2026-43969 (LOW)
+           cowlib 2.19.0 - EEF-CVE-2026-43971 (MEDIUM)
          """, 1},
         {"mailglass_admin", "registry unavailable", 1},
         {"mailglass_inbound", "No retired packages found", 0}

@@ -18,6 +18,8 @@ defmodule Mailglass.Publish.AuditAllowlistTest do
           HTTP Response Splitting via Non-VCHAR Bytes
         cowlib 2.17.1 - EEF-CVE-2026-43969 (LOW)
           aka: CVE-2026-43969, GHSA-g2wm-735q-3f56
+        cowlib 2.19.0 - EEF-CVE-2026-43971 (MEDIUM)
+          aka: CVE-2026-43971
       """
 
       assert Check.unaccepted_audit_findings(output) == []
