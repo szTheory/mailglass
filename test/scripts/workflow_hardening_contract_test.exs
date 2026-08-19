@@ -115,6 +115,28 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
     refute Map.fetch!(jobs, "ensure-live-ci-runs") =~ "secrets."
   end
 
+  test "inert release events cannot enter package preparation or proof steps" do
+    path = Path.join(@repo_root, ".github/workflows/publish-hex.yml")
+    prepublish = path |> File.read!() |> job_blocks() |> Map.fetch!("prepublish-summary")
+
+    eligible =
+      "steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true'"
+
+    for step <- [
+          "Install deps (root)",
+          "Wait for postgres + create test DB",
+          "Install deps (admin)",
+          "Pre-publish check for mailglass",
+          "Pre-publish check for mailglass_admin",
+          "Pre-publish check for mailglass_inbound",
+          "Run Phase 148 release proof suite",
+          "Write sanitized Phase 148 release proof"
+        ] do
+      block = extract_step!(prepublish, step)
+      assert block =~ eligible, "#{step} must be unreachable for an inert release event"
+    end
+  end
+
   test "all Postgres services and repository Dockerfiles use approved immutable inputs" do
     workflow_text = Enum.map_join(@workflow_paths, "\n", &File.read!/1)
 
@@ -218,6 +240,13 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
   end
 
   defp toolchain_matches?(image, elixir, otp), do: image =~ "hexpm/elixir:#{elixir}-erlang-#{otp}-"
+
+  defp extract_step!(job, name) do
+    marker = "      - name: #{name}\n"
+    [_before, rest] = String.split(job, marker, parts: 2)
+    [block | _] = String.split(rest, "\n      - name:", parts: 2)
+    marker <> block
+  end
 
   defp job_blocks(source) do
     [_before, jobs] = String.split(source, "\njobs:\n", parts: 2)
