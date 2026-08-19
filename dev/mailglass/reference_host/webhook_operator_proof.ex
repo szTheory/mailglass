@@ -144,6 +144,11 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
         add_reference_host_code_paths(["mailglass_admin"])
         add_workspace_core_code_path!()
         add_workspace_inbound_code_path!()
+
+      :published_siblings ->
+        # The root runner remains repo-head while the reference host supplies
+        # both sibling packages from its Hex-only lockfile.
+        add_reference_host_code_paths(["mailglass_admin", "mailglass_inbound"])
     end
 
     add_reference_host_code_paths(["mailglass_reference_host"])
@@ -173,9 +178,12 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
       "prepublication" ->
         :prepublication
 
+      "published_siblings" ->
+        :published_siblings
+
       nil ->
         raise ArgumentError,
-              "#{@package_mode_env} must explicitly select prepublication provenance"
+              "#{@package_mode_env} must explicitly select package provenance"
 
       "published" ->
         raise ArgumentError,
@@ -295,7 +303,7 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
           table -> :ets.delete(table)
         end
 
-        {:ok, pid} = MailglassInbound.RateLimiter.TableOwner.start_link()
+        {:ok, pid} = apply(MailglassInbound.RateLimiter.TableOwner, :start_link, [])
         Process.unlink(pid)
         :ok
 

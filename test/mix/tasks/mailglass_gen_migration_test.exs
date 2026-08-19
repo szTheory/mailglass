@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
 
   defmodule OtherRepo do
     def config, do: [otp_app: :mailglass, priv: "tmp/mailglass_gen_migration_test/priv/other_repo"]
-    def __adapter__, do: UnsupportedAdapter
+    def __adapter__, do: Ecto.Adapters.Postgres
 
     def query(_query, _params, _options) do
       send(self(), :other_repo_called)

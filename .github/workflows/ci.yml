@@ -236,12 +236,17 @@ jobs:
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
-          path: deps
+          path: |
+            deps
+            mailglass_inbound/deps
           key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
             mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
-      - name: Install deps
-        run: mix deps.get
+      - name: Install core deps
+        run: mix deps.get --check-locked
+      - name: Install inbound deps
+        working-directory: mailglass_inbound
+        run: mix deps.get --check-locked
       - name: Wait for postgres + create test DB
         env:
           PGPASSWORD: postgres
@@ -358,11 +363,26 @@ jobs:
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
-          path: deps
+          path: |
+            deps
+            mailglass_inbound/deps
+            reference/host_app/deps
+            reference/demo_app/deps
           key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
             mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
-      - name: Install locked deps
+      - name: Install core deps
+        run: mix deps.get --check-locked
+      - name: Install inbound deps
+        working-directory: mailglass_inbound
+        run: mix deps.get --check-locked
+      - name: Install reference host deps
+        working-directory: reference/host_app
+        env:
+          MIX_ENV: dev
+        run: mix deps.get --check-locked
+      - name: Install demo deps
+        working-directory: reference/demo_app
         run: mix deps.get --check-locked
       - name: Wait for postgres + create test DB
         env:
@@ -1212,6 +1232,8 @@ jobs:
         working-directory: reference/host_app
         run: bash ../../scripts/check_clean_baseline_hex_only.sh
       - name: Run reference-host trust journey
+        env:
+          MAILGLASS_REFERENCE_HOST_PACKAGE_MODE: published_siblings
         run: mix verify.reference_host.journey --host-root reference/host_app
       - name: Validate trust checkpoint contract
         run: bash scripts/check_trust_runner_checkpoint.sh
