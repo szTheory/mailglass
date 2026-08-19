@@ -817,9 +817,8 @@ jobs:
       github.event.inputs.dry_run != 'true' &&
       needs.prepublish-summary.outputs.authorized == 'true' &&
       github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest &&
-      (github.event_name == 'workflow_dispatch' &&
-       github.event.inputs.package != 'mailglass_admin' &&
-       github.event.inputs.package != 'mailglass_inbound')
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.package == 'all'
     environment: hex-publish
     steps:
       - name: Checkout
@@ -888,20 +887,10 @@ jobs:
       github.event.inputs.dry_run != 'true' &&
       needs.prepublish-summary.outputs.authorized == 'true' &&
       github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest &&
-      (
-        (github.event_name == 'workflow_dispatch' &&
-         github.event.inputs.package == 'mailglass_admin' &&
-         needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'skipped') ||
-        (github.event_name == 'workflow_dispatch' &&
-         github.event.inputs.package != 'mailglass' &&
-         github.event.inputs.package != 'mailglass_inbound' &&
-         needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'success') ||
-        (github.event_name == 'release' &&
-         needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'success')
-      )
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.package == 'all' &&
+      needs.gate-ci-green.result == 'success' &&
+      needs.publish-core.result == 'success'
     environment: hex-publish
     steps:
       - name: Checkout
@@ -986,7 +975,7 @@ jobs:
   publish-inbound:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    needs: [gate-ci-green, prepublish-summary, publish-core]
+    needs: [gate-ci-green, prepublish-summary, publish-core, publish-admin]
     # Inbound is independently versioned and can only be published by an
     # explicit recovery dispatch. A failed or skipped gate never exposes the
     # protected publishing environment.
@@ -995,17 +984,11 @@ jobs:
       github.event.inputs.dry_run != 'true' &&
       needs.prepublish-summary.outputs.authorized == 'true' &&
       github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest &&
-      (
-        (github.event_name == 'workflow_dispatch' &&
-         github.event.inputs.package == 'mailglass_inbound' &&
-         needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'skipped') ||
-        (github.event_name == 'workflow_dispatch' &&
-         github.event.inputs.package != 'mailglass' &&
-         github.event.inputs.package != 'mailglass_admin' &&
-         needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'success')
-      )
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.package == 'all' &&
+      needs.gate-ci-green.result == 'success' &&
+      needs.publish-core.result == 'success' &&
+      needs.publish-admin.result == 'success'
     environment: hex-publish
     steps:
       - name: Checkout
