@@ -5,15 +5,15 @@ milestone_name: Engineering Quality Ratchet
 current_phase: 159
 current_phase_name: Raise and Simplify Engineering Gates
 status: executing
-stopped_at: Completed 159-04 measured coverage floors; starting 159-05
-last_updated: "2026-08-17T14:00:00.000Z"
-last_activity: 2026-08-17
-last_activity_desc: Completed Plan 159-04 measured coverage floors
+stopped_at: Completed 159-05 static analysis ratchet; starting 159-06
+last_updated: "2026-08-18T00:25:00.000Z"
+last_activity: 2026-08-18
+last_activity_desc: Completed Plan 159-05 static analysis ratchet
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 35
-  completed_plans: 32
+  completed_plans: 33
   percent: 67
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-17 after Phase 158)
 ## Current Position
 
 Phase: 159 (Raise and Simplify Engineering Gates) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 Status: Executing Phase 159
-Last activity: 2026-08-17 — Plan 159-04 complete
+Last activity: 2026-08-18 — Plan 159-05 complete
 
-Progress: [██████████████████░░] 32/35 plans (91%); 4/6 phases complete
+Progress: [███████████████████░] 33/35 plans (94%); 4/6 phases complete
 
 ## v2.6 Milestone Intent
 
