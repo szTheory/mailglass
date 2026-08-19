@@ -115,6 +115,25 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
     refute Map.fetch!(jobs, "ensure-live-ci-runs") =~ "secrets."
   end
 
+  test "live release proof binds the protected candidate digest to its exact public identity" do
+    path = Path.join(@repo_root, ".github/workflows/publish-hex.yml")
+
+    prepublish =
+      path |> File.read!() |> job_blocks() |> Map.new() |> Map.fetch!("prepublish-summary")
+
+    proof = extract_step!(prepublish, "Write sanitized Phase 148 release proof")
+    upload = extract_step!(prepublish, "Upload Phase 148 release proof")
+
+    assert proof =~
+             "--arg candidate_digest \"${{ steps.release-target.outputs.candidate_digest }}\""
+
+    assert proof =~ "candidate_digest: $candidate_digest"
+    assert proof =~ "--arg sha \"$(git rev-parse HEAD)\""
+    assert proof =~ "packages: {"
+    assert upload =~ "phase-148-release-proof-${{ github.run_id }}"
+    assert upload =~ "if-no-files-found: error"
+  end
+
   test "inert release events cannot enter package preparation or proof steps" do
     path = Path.join(@repo_root, ".github/workflows/publish-hex.yml")
 
