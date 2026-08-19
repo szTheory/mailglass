@@ -76,7 +76,7 @@ defmodule Mailglass.CIPolicy do
     Enum.each(target, fn
       %{id: id, name: name, behavior: behavior} = lane
       when is_binary(id) and is_binary(name) and is_atom(behavior) ->
-        local? = is_binary(Map.get(lane, :local_alias))
+        local? = valid_local_alias?(Map.get(lane, :local_alias))
         ci_only? = is_binary(Map.get(lane, :ci_only_reason))
 
         if local? == ci_only? do
@@ -112,6 +112,13 @@ defmodule Mailglass.CIPolicy do
 
     set
   end
+
+  defp valid_local_alias?(value) when is_binary(value), do: value != ""
+
+  defp valid_local_alias?(value) when is_list(value),
+    do: value != [] and Enum.all?(value, &(is_binary(&1) and &1 != ""))
+
+  defp valid_local_alias?(_value), do: false
 
   defp ensure_subset!(left, right, message) do
     unless MapSet.subset?(left, right) do
