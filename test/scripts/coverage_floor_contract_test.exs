@@ -3,6 +3,23 @@ defmodule Mailglass.Scripts.CoverageFloorContractTest do
 
   @checker Path.expand("../../scripts/check_coverage_floor.sh", __DIR__)
 
+  @tag :tmp_dir
+  test "coverage checker executes successfully for a non-regressing report", %{tmp_dir: tmp_dir} do
+    baseline = Path.join(tmp_dir, "baseline.json")
+    report = Path.join(tmp_dir, "report.json")
+
+    File.write!(baseline, Jason.encode!(%{covered_lines: 1, relevant_lines: 2, percentage: 50.0}))
+
+    File.write!(
+      report,
+      Jason.encode!(%{source_files: [%{coverage: %{"1" => 1, "2" => 0}}]})
+    )
+
+    toolchain = System.version() <> "/" <> to_string(:erlang.system_info(:otp_release))
+
+    assert {"", 0} = System.cmd("bash", [@checker, baseline, report, toolchain])
+  end
+
   test "coverage checker requires an existing measured baseline, report, and exact toolchain" do
     source = File.read!(@checker)
     assert source =~ "coverage baseline missing"
