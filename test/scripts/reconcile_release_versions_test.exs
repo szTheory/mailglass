@@ -282,6 +282,69 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     assert {:ok, _} = apply(reconciler(), :validate_inactive_target, [target])
   end
 
+  test "repository metadata records only the exact live and historical-tag baselines" do
+    assert {:ok, records} = apply(reconciler(), :parse_repository, [@repo_root])
+
+    assert Map.new(records, &{&1["name"], &1["version"]}) == baseline_versions()
+
+    assert File.read!(Path.join(@repo_root, "CHANGELOG.md")) =~
+             "## [2.4.1](https://github.com/szTheory/mailglass/compare/mailglass-v2.4.0...mailglass-v2.4.1) (2026-08-03)"
+
+    assert File.read!(Path.join(@repo_root, "mailglass_admin/CHANGELOG.md")) =~
+             "## [2.4.1](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.4.0...mailglass_admin-v2.4.1) (2026-08-03)"
+
+    assert File.read!(Path.join(@repo_root, "mailglass_inbound/CHANGELOG.md")) =~
+             "## [2.1.2](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v2.1.1...mailglass_inbound-v2.1.2) (2026-08-03)"
+
+    expected_summaries = %{
+      "mailglass" => %{
+        "version" => "2.4.1",
+        "manifest_version" => "2.4.1",
+        "source_ref" => "v2.4.1",
+        "linked_versions" => baseline_versions()
+      },
+      "mailglass_admin" => %{
+        "version" => "2.4.1",
+        "manifest_version" => "2.4.1",
+        "source_ref" => "v2.4.1",
+        "linked_versions" => baseline_versions()
+      },
+      "mailglass_inbound" => %{
+        "version" => "2.1.2",
+        "manifest_version" => "2.1.2",
+        "source_ref" => "v2.1.2",
+        "linked_versions" => baseline_versions(),
+        "mailglass_inbound_publish_pin" => "~> 2.0"
+      }
+    }
+
+    for {name, expected} <- expected_summaries do
+      summary = read_json!(Path.join(@repo_root, ".planning/publish/#{name}-publish-summary.json"))
+      assert Map.take(summary, Map.keys(expected)) == expected
+    end
+
+    target = read_json!(Path.join(@repo_root, ".planning/release-target.json"))
+
+    assert target ==
+             apply(reconciler(), :inactive_target, [baseline_versions(), evidence_identifiers()])
+
+    assert {:ok, ^target} = apply(reconciler(), :validate_inactive_target, [target])
+  end
+
+  test "inactive target validation rejects unexpected top-level or evidence fields" do
+    target = apply(reconciler(), :inactive_target, [baseline_versions(), evidence_identifiers()])
+
+    mutations = [
+      Map.put(target, "release_packages", ["mailglass"]),
+      put_in(target, ["required_evidence_identifiers", "candidate_version"], "99.98.97")
+    ]
+
+    for mutated <- mutations do
+      assert {:error, %{reason: :invalid_package_set}} =
+               apply(reconciler(), :validate_inactive_target, [mutated])
+    end
+  end
+
   test "activation rejects every absent or automation-mismatched candidate identity" do
     reviewed = reviewed_candidate()
     complete = complete_candidate_target(reviewed)
@@ -430,6 +493,8 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     File.mkdir_p!(Path.dirname(path))
     File.write!(path, contents)
   end
+
+  defp read_json!(path), do: path |> File.read!() |> Jason.decode!()
 
   defp write_repository_sources!(root, core_source) do
     write!(root, "mix.exs", core_source)
