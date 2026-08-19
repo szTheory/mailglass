@@ -201,21 +201,24 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
 
   @impl Mailglass.Webhook.Provider
   @spec normalize(binary(), [{String.t(), String.t()}]) :: [Event.t()]
-  def normalize(raw_body, _headers) when is_binary(raw_body) do
-    case Jason.decode(raw_body) do
-      {:ok, events} when is_list(events) ->
-        events
-        |> Enum.with_index()
-        |> Enum.map(fn {payload, idx} -> build_event(payload, idx) end)
+  def normalize(raw_body, headers) when is_binary(raw_body),
+    do: normalize_decoded(Jason.decode(raw_body), headers)
 
-      {:ok, _other} ->
-        Logger.warning("[mailglass] SendGrid normalize: expected JSON array, got non-list")
-        []
+  @doc false
+  def normalize_decoded({:ok, events}, _headers) when is_list(events) do
+    events
+    |> Enum.with_index()
+    |> Enum.map(fn {payload, idx} -> build_event(payload, idx) end)
+  end
 
-      {:error, _} ->
-        Logger.warning("[mailglass] SendGrid normalize: malformed JSON body")
-        []
-    end
+  def normalize_decoded({:ok, _other}, _headers) do
+    Logger.warning("[mailglass] SendGrid normalize: expected JSON array, got non-list")
+    []
+  end
+
+  def normalize_decoded(_decoded, _headers) do
+    Logger.warning("[mailglass] SendGrid normalize: malformed JSON body")
+    []
   end
 
   defp build_event(payload, idx) when is_map(payload) do

@@ -19,6 +19,8 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisoriesTest do
           HTTP Response Splitting via Non-VCHAR Bytes
         cowlib 2.19.0 - EEF-CVE-2026-43969 (LOW)
           aka: CVE-2026-43969, GHSA-g2wm-735q-3f56
+        cowlib 2.19.0 - EEF-CVE-2026-43971 (MEDIUM)
+          aka: CVE-2026-43971
       """
 
       assert AcceptedAdvisories.unaccepted_audit_findings(output) == []
@@ -129,10 +131,15 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisoriesTest do
       Advisories:
         cowlib 2.19.0 - EEF-CVE-2026-43966 (MEDIUM)
         cowlib 2.19.0 - EEF-CVE-2026-43969 (LOW)
+        cowlib 2.19.0 - EEF-CVE-2026-43971 (MEDIUM)
       """
 
       assert AcceptedAdvisories.matched_hex_audit_ids(output) ==
-               MapSet.new(["EEF-CVE-2026-43966", "EEF-CVE-2026-43969"])
+               MapSet.new([
+                 "EEF-CVE-2026-43966",
+                 "EEF-CVE-2026-43969",
+                 "EEF-CVE-2026-43971"
+               ])
     end
 
     test "returns an empty set when nothing in the output matches any entry" do
@@ -144,14 +151,23 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisoriesTest do
 
   describe "expired_entries/1" do
     test "an entry whose recheck_by is exactly today is NOT flagged (strictly-after semantics)" do
-      assert AcceptedAdvisories.expired_entries(~D[2026-10-26]) == []
+      assert AcceptedAdvisories.expired_entries(~D[2026-09-18]) == []
     end
 
     test "an entry whose recheck_by was yesterday IS flagged" do
+      result = AcceptedAdvisories.expired_entries(~D[2026-09-19])
+
+      assert Enum.map(result, & &1.id) == ["EEF-CVE-2026-43971"]
+    end
+
+    test "reports every entry after the latest recheck date" do
       result = AcceptedAdvisories.expired_entries(~D[2026-10-27])
 
-      assert length(result) == 2
-      assert Enum.map(result, & &1.id) == ["EEF-CVE-2026-43966", "EEF-CVE-2026-43969"]
+      assert Enum.map(result, & &1.id) == [
+               "EEF-CVE-2026-43966",
+               "EEF-CVE-2026-43969",
+               "EEF-CVE-2026-43971"
+             ]
     end
 
     test "no entries are flagged before recheck_by has arrived" do
@@ -161,20 +177,25 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisoriesTest do
 
   describe "unused_entries/1" do
     test "returns [] when every entry matched a current finding" do
-      matched = MapSet.new(["EEF-CVE-2026-43966", "EEF-CVE-2026-43969"])
+      matched =
+        MapSet.new(["EEF-CVE-2026-43966", "EEF-CVE-2026-43969", "EEF-CVE-2026-43971"])
 
       assert AcceptedAdvisories.unused_entries(matched) == []
     end
 
-    test "with an empty matched_ids set, both entries are reported unused, in " <>
+    test "with an empty matched_ids set, all entries are reported unused, in " <>
            "entries/0's declared order (anti-vacuity + ordering)" do
       result = AcceptedAdvisories.unused_entries(MapSet.new())
 
-      assert Enum.map(result, & &1.id) == ["EEF-CVE-2026-43966", "EEF-CVE-2026-43969"]
+      assert Enum.map(result, & &1.id) == [
+               "EEF-CVE-2026-43966",
+               "EEF-CVE-2026-43969",
+               "EEF-CVE-2026-43971"
+             ]
     end
 
     test "reports only the entry that matched no finding" do
-      matched = MapSet.new(["EEF-CVE-2026-43966"])
+      matched = MapSet.new(["EEF-CVE-2026-43966", "EEF-CVE-2026-43971"])
 
       assert Enum.map(AcceptedAdvisories.unused_entries(matched), & &1.id) == [
                "EEF-CVE-2026-43969"
@@ -183,7 +204,7 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisoriesTest do
   end
 
   describe "entries/0" do
-    test "both entries carry the required allowlist fields" do
+    test "all entries carry the required allowlist fields" do
       for entry <- AcceptedAdvisories.entries() do
         assert is_binary(entry.id)
         assert is_list(entry.aliases)

@@ -1163,6 +1163,59 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   end
 
   @doc """
+  Restarts `repo` after a test changes a global PostgreSQL type definition,
+  then restores pool-wide `:auto` mode for the remainder of the calling
+  unsandboxed module's cleanup.
+
+  Dropping and recreating an extension such as `citext` assigns a new type
+  OID. Disconnecting individual Postgrex workers is insufficient because the
+  repo's shared type server can retain the old OID; restarting the repo
+  rebuilds the entire pool and type server together. This helper is reserved
+  for synchronous, pool-wide migration cleanup and is not a general-purpose
+  test reset.
+
+  The four operations are injectable so every refusal is testable without
+  stopping the suite's live repo. Each operation is fail-closed and names the
+  supplied `:caller`.
+  """
+  @spec restart_repo_after_global_type_change!(module(), keyword()) :: :ok
+  def restart_repo_after_global_type_change!(repo \\ Mailglass.TestRepo, opts \\ []) do
+    caller = Keyword.get(opts, :caller, __MODULE__)
+    stop_fun = Keyword.get(opts, :stop_fun, &apply(&1, :stop, []))
+    start_fun = Keyword.get(opts, :start_fun, &apply(&1, :start_link, []))
+    unlink_fun = Keyword.get(opts, :unlink_fun, &Process.unlink/1)
+    mode_fun = Keyword.get(opts, :mode_fun, &Ecto.Adapters.SQL.Sandbox.mode/2)
+
+    case stop_fun.(repo) do
+      :ok -> :ok
+      refusal -> raise restart_error(caller, :stop, refusal)
+    end
+
+    repo_pid =
+      case start_fun.(repo) do
+        {:ok, pid} when is_pid(pid) -> pid
+        refusal -> raise restart_error(caller, :start, refusal)
+      end
+
+    # The cleanup callback is a short-lived ExUnit process. Detach the new
+    # repo from that process so it remains alive for subsequent modules.
+    case unlink_fun.(repo_pid) do
+      true -> :ok
+      refusal -> raise restart_error(caller, :unlink, refusal)
+    end
+
+    case mode_fun.(repo, :auto) do
+      :ok -> :ok
+      refusal -> raise restart_error(caller, :restore_auto_mode, refusal)
+    end
+  end
+
+  defp restart_error(caller, operation, refusal) do
+    "#{inspect(caller)} could not #{operation} the repo after a global PostgreSQL " <>
+      "type change; refused with: #{inspect(refusal)}"
+  end
+
+  @doc """
   Runs `fun` outside the Sandbox transaction via
   `Ecto.Adapters.SQL.Sandbox.unboxed_run/2` — the preferred forward idiom
   (D-12) for a new test needing committed, non-transactional writes.

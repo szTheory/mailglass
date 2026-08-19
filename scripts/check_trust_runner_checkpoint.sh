@@ -4,6 +4,7 @@
 set -euo pipefail
 
 CHECKPOINT_PATH="tmp/mailglass_trust_runner/checkpoint.json"
+REQUIRE_COMPLETED=false
 
 usage() {
   cat <<'EOF'
@@ -14,6 +15,7 @@ and deterministic checkpoint hash.
 
 Options:
   --checkpoint PATH  Path to checkpoint.json
+  --require-completed  Require every stage to be completed with runtime evidence
   --help             Show this message
 EOF
 }
@@ -23,6 +25,10 @@ while [[ $# -gt 0 ]]; do
     --checkpoint)
       CHECKPOINT_PATH="${2:-}"
       shift 2
+      ;;
+    --require-completed)
+      REQUIRE_COMPLETED=true
+      shift
       ;;
     --help|-h)
       usage
@@ -41,13 +47,14 @@ if [[ ! -f "$CHECKPOINT_PATH" ]]; then
   exit 1
 fi
 
-python3 - "$CHECKPOINT_PATH" <<'PY'
+python3 - "$CHECKPOINT_PATH" "$REQUIRE_COMPLETED" <<'PY'
 import hashlib
 import json
 import pathlib
 import sys
 
 checkpoint_path = pathlib.Path(sys.argv[1])
+require_completed = sys.argv[2] == "true"
 expected_schema = "trust_runner.v1"
 expected_boundary = "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
 required_stages = [
@@ -118,6 +125,10 @@ for index, row in enumerate(checkpoints):
 
     if not isinstance(status, str) or status.strip() == "":
         errors.append(f"checkpoints[{index}].status must be a non-empty string")
+    elif require_completed and status != "completed":
+        errors.append(
+            f"checkpoints[{index}] ({stage!r}) must have completed status (got {status!r})"
+        )
 
     if not isinstance(fixture_id, str) or fixture_id.strip() == "":
         errors.append(f"checkpoints[{index}].fixture_id must be a non-empty string")
@@ -169,7 +180,10 @@ for stage_name, evidence in [
 ]:
     validate_no_forbidden_evidence_keys(evidence, f"{stage_name}.evidence")
 
-if webhook_evidence:
+    if require_completed and not evidence:
+        errors.append(f"{stage_name}.runtime evidence is required for a completed proof")
+
+if webhook_evidence or require_completed:
     if webhook_evidence.get("negative_status") != 401:
         errors.append("webhook_ingest.evidence.negative_status must be 401")
     if webhook_evidence.get("negative_reason") != "bad_credentials":
@@ -177,7 +191,7 @@ if webhook_evidence:
     if webhook_evidence.get("verified_before_tenant") is not True:
         errors.append("webhook_ingest.evidence.verified_before_tenant must be true")
 
-if operator_evidence:
+if operator_evidence or require_completed:
     expected_dimensions = ["recipient", "subject", "header:x-priority"]
     if operator_evidence.get("scenario") != "no_match":
         errors.append("operator_troubleshooting.evidence.scenario must be 'no_match'")
@@ -229,4 +243,5 @@ print("[trust-runner-checkpoint] OK: deterministic trust checkpoint contract ver
 print(f"[trust-runner-checkpoint] schema_version={expected_schema}")
 print(f"[trust-runner-checkpoint] checkpoint_count={checkpoint_count}")
 print(f"[trust-runner-checkpoint] stages={stages}")
+print(f"[trust-runner-checkpoint] completed evidence required={str(require_completed).lower()}")
 PY

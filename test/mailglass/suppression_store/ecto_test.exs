@@ -43,6 +43,60 @@ defmodule Mailglass.SuppressionStore.EctoTest do
     end
   end
 
+  describe "check_many/2" do
+    test "returns positional mixed results while preserving tenant and expiry semantics" do
+      {:ok, _} =
+        Store.record(%{
+          tenant_id: "test-tenant",
+          address: "blocked@example.com",
+          scope: :address,
+          reason: :manual,
+          source: "test"
+        })
+
+      {:ok, _} =
+        Store.record(%{
+          tenant_id: "other-tenant",
+          address: "blocked@example.com",
+          scope: :address,
+          reason: :manual,
+          source: "test"
+        })
+
+      keys = [
+        %{tenant_id: "test-tenant", address: "clean@example.com", stream: :transactional},
+        %{tenant_id: "test-tenant", address: "blocked@example.com", stream: :transactional},
+        %{tenant_id: "test-tenant", address: "clean@example.com", stream: :transactional}
+      ]
+
+      assert [:not_suppressed, {:suppressed, %Entry{tenant_id: "test-tenant"}}, :not_suppressed] =
+               Store.check_many(keys, [])
+    end
+
+    test "accepts omitted and nil streams without generating a nil comparison" do
+      {:ok, _} =
+        Store.record(%{
+          tenant_id: "test-tenant",
+          address: "address-only@example.com",
+          scope: :address,
+          reason: :manual,
+          source: "test"
+        })
+
+      assert [
+               {:suppressed, %Entry{address: "address-only@example.com"}},
+               {:suppressed, %Entry{address: "address-only@example.com"}}
+             ] =
+               Store.check_many(
+                 [
+                   %{tenant_id: "test-tenant", address: "address-only@example.com"},
+                   %{tenant_id: "test-tenant", address: "address-only@example.com", stream: nil}
+                 ],
+                 []
+               )
+    end
+  end
+
   describe "check/2 — domain scope" do
     test "returns {:suppressed, entry} when domain-scoped entry matches recipient domain" do
       {:ok, _} =

@@ -175,8 +175,14 @@ defmodule Mailglass.Outbound.Projector do
       when is_atom(event_type) and is_map(meta) and is_binary(delivery_id) do
     payload = {:delivery_updated, delivery_id, event_type, meta}
 
-    _ = safe_broadcast(Mailglass.PubSub.Topics.events(tenant_id), payload)
-    _ = safe_broadcast(Mailglass.PubSub.Topics.events(tenant_id, delivery_id), payload)
+    _ = Mailglass.Ports.PubSub.safe_broadcast(Mailglass.PubSub.Topics.events(tenant_id), payload)
+
+    _ =
+      Mailglass.Ports.PubSub.safe_broadcast(
+        Mailglass.PubSub.Topics.events(tenant_id, delivery_id),
+        payload
+      )
+
     emit_feedback(delivery, event_type, meta)
 
     :ok
@@ -199,26 +205,4 @@ defmodule Mailglass.Outbound.Projector do
   end
 
   defp emit_feedback(_delivery, _event_type, _meta), do: :ok
-
-  defp safe_broadcast(topic, payload) do
-    Phoenix.PubSub.broadcast(Mailglass.PubSub, topic, payload)
-  rescue
-    # PubSub not started, node partition, topic registration race — all best-effort.
-    e in [ArgumentError, RuntimeError] ->
-      require Logger
-
-      Logger.debug("[mailglass] PubSub broadcast failed (non-fatal): #{Exception.message(e)}")
-
-      :ok
-  catch
-    # ME-04: GenServer.call/3 inside Phoenix.PubSub.broadcast/3 exits when the
-    # PubSub server is stopped (e.g. application shutdown, supervisor restart).
-    # Delivery is already committed before broadcast — exit must not kill the caller.
-    :exit, reason ->
-      require Logger
-
-      Logger.debug("[mailglass] PubSub broadcast exited (non-fatal): #{inspect(reason)}")
-
-      :ok
-  end
 end

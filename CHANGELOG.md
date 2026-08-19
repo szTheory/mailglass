@@ -28,7 +28,7 @@ version line per [`guides/compatibility-and-deprecations.md`](guides/compatibili
 * **ci:** make missing gh fixture portable ([#167](https://github.com/szTheory/mailglass/issues/167)) ([c829c38](https://github.com/szTheory/mailglass/commit/c829c386c59a08a190ffb5243e5871f974548637))
 * **release:** sync inbound core compatibility pins ([#178](https://github.com/szTheory/mailglass/issues/178)) ([313455a](https://github.com/szTheory/mailglass/commit/313455a67b60c1b5221047190ed390f7449279f0))
 
-## [Unreleased]
+## [2.4.1](https://github.com/szTheory/mailglass/compare/mailglass-v2.4.0...mailglass-v2.4.1) (2026-08-03)
 
 ### Added
 

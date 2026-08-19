@@ -19,6 +19,13 @@
 # real-compile + boot integration backstop.
 set -euo pipefail
 
+# `mix ci.full` runs under MIX_ENV=test. A generated adopter host must be built
+# and booted in its normal development environment, and the compile gate below
+# must warm the same build that `mix phx.server` will execute. Keeping this
+# explicit prevents a cold dev compilation from being charged against the
+# bounded endpoint-start deadline.
+export MIX_ENV=dev
+
 DEP_MODE="${DEP_MODE:-path}"
 WORK_DIR="${WORK_DIR:-$(mktemp -d)}"
 SANDBOX="${WORK_DIR}/sandbox"
@@ -32,7 +39,7 @@ mix local.rebar --force
 mix archive.install hex phx_new --force
 
 rm -rf "${SANDBOX}"
-( cd "${WORK_DIR}" && mix phx.new sandbox --module Sandbox --app sandbox --no-ecto --no-mailer --install )
+( cd "${WORK_DIR}" && mix phx.new sandbox --module Sandbox --app sandbox --database postgres --no-mailer --install )
 
 cd "${SANDBOX}"
 
@@ -78,6 +85,34 @@ grep -F "mailglass" mix.exs
 
 mix deps.get
 
+# Give every smoke run its own disposable database. This keeps parallel CI jobs
+# and local maintainer runs isolated while exercising the same Ecto/Postgres
+# host shape that production adopters use.
+DB_NAME="mailglass_consumer_${PPID}_${RANDOM}"
+DB_NAME="${DB_NAME}" elixir -e '
+  path = "config/dev.exs"
+  database = System.fetch_env!("DB_NAME")
+  contents = File.read!(path)
+
+  unless String.contains?(contents, ~s(database: "sandbox_dev")) do
+    raise "generated Phoenix database configuration changed unexpectedly"
+  end
+
+  File.write!(path, String.replace(contents, ~s(database: "sandbox_dev"), ~s(database: "#{database}")))
+'
+
+SERVER_PID=""
+cleanup() {
+  if [ -n "${SERVER_PID}" ]; then
+    kill "${SERVER_PID}" 2>/dev/null || true
+  fi
+
+  mix ecto.drop --force >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+mix ecto.create
+
 # --- install -------------------------------------------------------------------
 # A stock `phx.new` endpoint ships `plug Plug.Parsers` without a :body_reader, so
 # the v1.12 fail-closed installer (INSTALL-01/02) correctly blocks a bare install.
@@ -85,6 +120,7 @@ mix deps.get
 # block ABOVE the existing one so the CachingBodyReader wins (Plug runs parsers in
 # source order). The post-install doctor/compile steps below verify the wiring.
 mix mailglass.install --force
+mix ecto.migrate
 
 # --- OPS-01 guard: a fresh --no-mailer install must stay HTTP-client-agnostic --
 if ! grep -F "config :swoosh, :api_client, false" config/runtime.exs; then
@@ -111,8 +147,6 @@ fi
 # --- boot endpoint and curl /dev/mail/ -----------------------------------------
 MIX_ENV=dev mix phx.server &
 SERVER_PID=$!
-# shellcheck disable=SC2064
-trap "kill ${SERVER_PID} 2>/dev/null || true" EXIT
 
 DEADLINE=$(( SECONDS + 30 ))
 until curl -fsI http://localhost:4000/dev/mail/ >/dev/null 2>&1; do

@@ -67,7 +67,7 @@ defmodule MailglassInbound.Internal.Prune do
   The session advisory-lock key the prune sweep acquires. Exposed so tests can
   acquire it from a separate connection to exercise the single-run guard.
   """
-  @spec lock_key() :: integer()
+  @spec lock_key() :: 6_318_741_290_553_217_001
   def lock_key, do: @prune_lock_key
 
   @doc """

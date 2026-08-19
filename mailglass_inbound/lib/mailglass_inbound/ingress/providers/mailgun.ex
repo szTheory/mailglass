@@ -106,9 +106,7 @@ defmodule MailglassInbound.Ingress.Providers.Mailgun do
       cc: normalize_address_header(params["cc"] || first_header(normalized_headers, "cc")),
       bcc: normalize_address_header(params["bcc"] || first_header(normalized_headers, "bcc")),
       reply_to:
-        normalize_address_header(
-          params["reply-to"] || first_header(normalized_headers, "reply-to")
-        ),
+        normalize_address_header(params["reply-to"] || first_header(normalized_headers, "reply-to")),
       subject: params["subject"] || first_header(normalized_headers, "subject"),
       headers: normalized_headers,
       sent_at: parse_datetime(first_header(normalized_headers, "date")),
@@ -148,7 +146,8 @@ defmodule MailglassInbound.Ingress.Providers.Mailgun do
            %{mime_parse_failed: Atom.to_string(error.type)}}
       end
 
-    provider_message_id = first_header(normalized_headers, "message-id") || extract_message_id(params)
+    provider_message_id =
+      first_header(normalized_headers, "message-id") || extract_message_id(params)
 
     message = %InboundMessage{
       provider: :mailgun,

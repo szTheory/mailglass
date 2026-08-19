@@ -3,6 +3,24 @@ defmodule Mailglass.Test.InstallerFixtureHelpers do
 
   @fixture_source Path.expand("../example", __DIR__)
 
+  # Installer fixtures run inside Mailglass's already-loaded Mix project even
+  # though their process-wide cwd points at the throwaway Example host. Model
+  # that host's single configured repo explicitly so the production migration
+  # generator can keep its fail-closed repo selection contract.
+  defmodule Elixir.Example.Repo do
+    @moduledoc false
+    use Boundary, deps: [], exports: []
+
+    def config do
+      app_dir = Application.app_dir(:mailglass)
+      fixture_priv = Path.join(File.cwd!(), "priv/repo")
+
+      [otp_app: :mailglass, priv: Path.relative_to(fixture_priv, app_dir, force: true)]
+    end
+
+    def __adapter__, do: Ecto.Adapters.Postgres
+  end
+
   def new_fixture_root!(name) when is_binary(name) do
     fixture_root = temp_fixture_root(name)
 
@@ -28,19 +46,21 @@ defmodule Mailglass.Test.InstallerFixtureHelpers do
               "rest=#{inspect(rest)} invalid=#{inspect(invalid)}"
     end
 
-    File.cd!(fixture_root, fn ->
-      plan =
-        Mailglass.Installer.Plan.build(opts, %{
-          oban_available?: Mailglass.OptionalDeps.Oban.available?()
-        })
+    with_fixture_repo(fn ->
+      File.cd!(fixture_root, fn ->
+        plan =
+          Mailglass.Installer.Plan.build(opts, %{
+            oban_available?: Mailglass.OptionalDeps.Oban.available?()
+          })
 
-      case Mailglass.Installer.Apply.run(plan, opts) do
-        {:ok, _result} ->
-          :ok
+        case Mailglass.Installer.Apply.run(plan, opts) do
+          {:ok, _result} ->
+            :ok
 
-        {:error, reason} ->
-          raise "installer fixture: Apply.run/2 failed with #{inspect(reason)}"
-      end
+          {:error, reason} ->
+            raise "installer fixture: Apply.run/2 failed with #{inspect(reason)}"
+        end
+      end)
     end)
 
     :ok
@@ -206,6 +226,21 @@ defmodule Mailglass.Test.InstallerFixtureHelpers do
     write_if_missing!(Path.join(fixture_root, "lib/example_web/router.ex"), host_router())
     write_if_missing!(Path.join(fixture_root, "lib/example_web/endpoint.ex"), host_endpoint())
     write_if_missing!(Path.join(fixture_root, "config/runtime.exs"), host_runtime())
+  end
+
+  defp with_fixture_repo(fun) when is_function(fun, 0) do
+    previous_repos = Application.get_env(:mailglass, :ecto_repos)
+    Application.put_env(:mailglass, :ecto_repos, [Example.Repo])
+
+    try do
+      fun.()
+    after
+      if previous_repos == nil do
+        Application.delete_env(:mailglass, :ecto_repos)
+      else
+        Application.put_env(:mailglass, :ecto_repos, previous_repos)
+      end
+    end
   end
 
   defp write_if_missing!(path, contents) do

@@ -42,8 +42,11 @@ Application.put_env(:swoosh, :api_client, false, persistent: true)
 # `Ecto.Migration.Runner` process. That runner is started by `Ecto.Migrator.up/4`.
 # We drive migration by defining an inline wrapper migration and calling
 # `Ecto.Migrator.up(repo, version, WrapperModule)` inside the `with_repo` block —
-# the same pattern `migrations_test.exs` uses. The version slot (99_000_000_000_000)
-# is large enough that it does not collide with any real adopter migration timestamp.
+# the same pattern `migrations_test.exs` uses. The version slot is derived from
+# the package's internal migration version so adding V02+ reruns the test
+# install wrapper against an existing developer/CI database. A fixed slot
+# would leave its physical schema stale while newly compiled queries expect
+# the latest columns.
 #
 # CREATE SCHEMA runs as the first statement inside with_repo (before Sandbox.mode
 # and any test checkout), so the schema exists before the SQL Sandbox owner
@@ -83,6 +86,9 @@ end
 
 test_repo_config = Application.get_env(:mailglass_inbound, MailglassInbound.TestRepo)
 
+install_version =
+  99_000_000_000_000 + MailglassInbound.Migrations.Postgres.current_version()
+
 # 4. For non-public schemas, update the TestRepo Postgrex connection parameters
 #    to set search_path = schema. This ensures raw SQL queries (e.g.
 #    `TRUNCATE TABLE mailglass_inbound_records CASCADE` in test setup blocks)
@@ -118,7 +124,39 @@ Application.put_env(
       Ecto.Adapters.SQL.query!(repo, ~s(CREATE SCHEMA IF NOT EXISTS "#{schema}"))
     end
 
-    Ecto.Migrator.up(repo, 99_000_000_000_000, MailglassInbound.TestMigration.Install, log: false)
+    # Developer test databases can outlive package versions. If an old or
+    # interrupted test install left package tables without the version anchor,
+    # the production dispatcher correctly fails closed. The test database is
+    # disposable, so recover it by removing only the three inbound-owned
+    # tables before the version-derived install wrapper runs.
+    Mailglass.Identifier.validate!(schema, :prefix)
+
+    anchor =
+      Ecto.Adapters.SQL.query!(
+        repo,
+        """
+        SELECT pg_catalog.obj_description(pg_class.oid, 'pg_class')
+        FROM pg_class
+        LEFT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+        WHERE pg_class.relname = 'mailglass_inbound_records'
+        AND pg_namespace.nspname = $1
+        """,
+        [schema]
+      ).rows
+
+    if anchor in [[], [[nil]]] do
+      quoted_schema = inspect(schema)
+
+      for table <- [
+            "mailglass_inbound_replay_runs",
+            "mailglass_inbound_evidence",
+            "mailglass_inbound_records"
+          ] do
+        Ecto.Adapters.SQL.query!(repo, "DROP TABLE IF EXISTS #{quoted_schema}.#{table} CASCADE")
+      end
+    end
+
+    Ecto.Migrator.up(repo, install_version, MailglassInbound.TestMigration.Install, log: false)
   end)
 
 # Restore original config (including the search_path patch for the long-lived
@@ -138,12 +176,12 @@ Application.put_env(:mailglass_inbound, MailglassInbound.TestRepo, patched_confi
 # migrations_test.exs assertions fail.
 #
 # Fix: after TestRepo starts, purge stale test-version entries from the non-public
-# `schema_migrations` table (keeping only our well-known install version slot
-# 99_000_000_000_000 which is legitimate and stable across runs).
+# `schema_migrations` table (keeping only the current package-version-derived
+# install slot, which is legitimate and stable until the next internal version).
 if schema != "public" do
   MailglassInbound.TestRepo.query!(
     "DELETE FROM schema_migrations WHERE version != $1",
-    [99_000_000_000_000]
+    [install_version]
   )
 end
 

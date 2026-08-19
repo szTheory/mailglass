@@ -10,11 +10,31 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
+**v2.6 Engineering Quality Ratchet opened 2026-08-16.** A multi-dimensional code, architecture,
+runtime, data, migration, test, and CI audit found concrete first-adopter and correctness defects beneath
+the previously green certification signal. The milestone restores generated-host migration truth first,
+then fixes bounded execution and data/security correctness, tightens architecture, and makes merge CI
+fail closed. The admin/operator UI remains explicitly untouched.
+
+**Phase 155 completed and verified 2026-08-16.** Core and inbound now generate real fresh and
+rollback-aware upgrade wrappers for an explicit host Repo, distinguish absent migration anchors from
+catalog failures, and provide a byte-exact fail-closed legacy-toy repair. Two fresh generated Phoenix/Ecto
+hosts proved both shared-schema rollback orders, and protected `CI Green` now fails if change detection or
+required code proof is skipped. Verification passed 5/5 after closing the shared-schema rollback gap and a
+deep review's three destructive/fail-open findings.
+
+**Phase 156 completed and verified 2026-08-17.** Core and inbound rate limiting now has exact bounded
+admission and restart-safe lifecycle behavior; durable batches commit delivery projections, events,
+private payloads, and Oban jobs atomically; local fallback execution is bounded and reports saturation;
+and retry, error privacy, telemetry, and persisted closed-set decoding are explicit. The full root CI gate,
+a cold generated Phoenix/Ecto/Postgres adopter installation, and both generated-host migration orders are
+green. Independent verification passed 5/5 and deep review closed with no findings.
+
 **v2.5 B2C Alpha Adoption Certification completed 2026-08-04.** The published `mailglass` 2.4.1,
-`mailglass_admin` 2.4.1, and `mailglass_inbound` 2.1.2 package family passed fresh package-shaped local and
-exact-Hex generated-host journeys, release-support contracts, provider/webhook compatibility, schema
-isolation, optional-runtime isolation, executable docs, and safety-only operator checks. No library defect
-or release is required.
+`mailglass_admin` 2.4.1, and `mailglass_inbound` 2.1.2 package family passed its then-current package-shaped
+proof. The v2.6 audit supersedes the claim that no library defect remains: the migration generator and
+upgrade path were not exercised by a real Ecto host, and several deterministic quality lanes were not
+merge-gating.
 
 **v2.4 Outbound First-Adopter Correctness shipped 2026-08-04.** Mailglass now proves the documented
 single-recipient sync/async journey from a generated production-shaped Phoenix/Postgres host. Durable
@@ -31,17 +51,22 @@ Package boundaries are locked. Chimeway owns notification policy and preferences
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
 paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
 
-## Next Milestone Goals
+## Current Milestone: v2.6 Engineering Quality Ratchet
 
-No next milestone is committed. Mailglass is ready for first-adopter integration at the library boundary;
-the next work should be driven by a concrete adopter need, a demonstrated contract gap, or the separately
-scheduled admin/operator UX cleanup.
+**Goal:** Raise the internal engineering bar substantially while proving the generated first-adopter path,
+runtime correctness, data safety, architecture boundaries, and merge/release signals are honest.
+
+**Target features:**
+- Correct initial, upgrade, rollback, multi-repo, and legacy-remediation migration generation.
+- Bounded and honest delivery/inbound execution, retry classification, data access, and resource use.
+- Zero compile cycles, explicit runtime/boundary ownership, deterministic tests, and fail-closed CI.
+- Generated-host certification and additive-only package release without admin/operator UI changes.
 
 ## Active Requirements
 
-No active library requirements. Before live SaaS traffic, the adopter must complete its own DNS/provider,
-secret, auth, preference-policy, alerting, and production-deployment gates; those are host-owned rather
-than missing Mailglass work.
+The v2.6 requirements are defined in `.planning/REQUIREMENTS.md`. Work proceeds in phases 155-160:
+adopter/CI truth; delivery correctness; inbound/data hardening; architecture simplification; engineering
+gates; and certification/release.
 
 Default posture remains convergence and adopter-pull: do not absorb notification policy,
 authentication, billing, support, mobile activation, or SRE ownership into Mailglass. The external
@@ -855,6 +880,12 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-36 | Provider outcomes use conservative structural classes; successful dispatch atomically settles and scrubs private payload content | Error-string guessing and blind retries can duplicate accepted mail, while unbounded payload retention violates the privacy contract | ✓ Validated v2.4 — sync/async parity, retry/cancel/reconciliation, retention, and scrub proofs pass |
 | D-37 | Built-in RFC 8058 POST atomically converges one canonical unsubscribe event and one stream-scoped suppression before best-effort host effects | Replay, concurrency, tenant isolation, and suppression enforcement must agree on one durable state transition | ✓ Validated v2.4 — concurrent replay and hostile-schema proofs pass |
 | D-38 | Release only the resolver-selected changed package set through protected automation, then accept the release only after an exact-Hex production-shaped journey | A green repository build is not proof that immutable public artifacts install and work together | ✓ Validated v2.4 — 2.4.1/2.4.1/2.1.2 published from immutable candidate `587c9d1`; exact-Hex and trust journeys passed |
+| D-39 | Migration generation is additive and Repo-explicit: initial wrappers call public façades, upgrades are new timestamped files with a baked rollback version, and anchor corruption/query failure never means version zero | Applied Ecto migrations do not rerun after package upgrades, inferred Repo modules fail in custom/multi-repo hosts, and fail-open metadata can replay destructive DDL | ✓ Validated Phase 155 — core/inbound generator and catalog matrices pass; exact legacy repair is runtime-revalidated under lock |
+| D-40 | Core and inbound own only their relations inside a shared configured schema; down-to-zero drops the schema with RESTRICT only when it is empty | Either package may be rolled back first without deleting or blocking on sibling/host objects | ✓ Validated Phase 155 — two isolated generated Host.Repo journeys pass in both rollback orders |
+| D-41 | `CI Green` preserves its public identity but directly depends on successful change detection and exact success from every required code lane | A skipped or failed detector/leaf must not be interpreted as docs-only green | ✓ Validated Phase 155 — exhaustive policy/meta-tests, actionlint, and protected-lane wiring pass |
+| D-42 | Delivery and ingress resource limits are structural contracts: fixed-point atomic buckets, bounded task/certificate/cache/S3 work, and closed retry classifications fail safely under saturation | Correct happy-path behavior is insufficient when attacker-controlled cardinality, concurrency, or provider faults can exhaust a first adopter's host | ✓ Validated Phases 156-157 — isolated concurrency, saturation, cache, S3, and provider suites pass |
+| D-43 | Future populated-table changes use additive expand/contract migrations with bounded session timeouts and concurrent indexes, while exact raw signed input and replay evidence remain durable | Adopters need safe upgrades and forensic truth without rewriting already-applied migration history or retaining unbounded processing state | ✓ Validated Phase 157 — both generated-host package orders, interrupted/resumed backfills, rollback, rerun, and immutable-history checks pass |
+| D-44 | Stable v2 façades remain thin compatibility edges over validated Runtime state, cohesive package-local pipelines, and narrow sibling ports; executable AST/CI guards prevent ownership drift | Refactoring only raises quality when it removes policy duplication without forcing adopter migrations or creating ceremonial wrapper modules | ✓ Validated Phase 158 — independent review closed vacuous guards/trampolines and final core/inbound compatibility, no-optional, cycle, and scope suites pass |
 
 ## Evolution
 
@@ -877,7 +908,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-08-04 after completing v2.5 B2C Alpha Adoption Certification.*
+*Last updated: 2026-08-17 after verified Phase 158.*
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->

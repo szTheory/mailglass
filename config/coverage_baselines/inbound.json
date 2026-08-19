@@ -1,0 +1,12 @@
+{
+  "package": "mailglass_inbound",
+  "cohort": "test/mailglass_inbound",
+  "covered_lines": 1891,
+  "relevant_lines": 2410,
+  "percentage": 78.464730,
+  "toolchain": "1.18.4/27",
+  "image": "hexpm/elixir:1.18.4-erlang-27.3.4-debian-bookworm-20250520-slim",
+  "command": "make toolchain CMD='cd mailglass_inbound && mix deps.get && mix ecto.create -r MailglassInbound.TestRepo --quiet && mix coveralls.json --output-dir /workspace/coverage/inbound test/mailglass_inbound --warnings-as-errors'",
+  "report_sha256": "f033a2bbcd540c135bf1492b7ff8ca6685c3f5c2a3e690e2693918da566f12b0",
+  "measured_at": "2026-08-17"
+}

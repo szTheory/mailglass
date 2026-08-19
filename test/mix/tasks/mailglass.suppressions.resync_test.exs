@@ -12,6 +12,15 @@ defmodule Mix.Tasks.Mailglass.Suppressions.ResyncTest do
   @tenant_id "resync-tenant"
   @other_tenant_id "other-tenant"
 
+  defmodule CountingSuppressionStore do
+    def check_many(keys, _opts) do
+      send(Application.fetch_env!(:mailglass, :resync_bulk_check_pid), {:resync_bulk_check, keys})
+      List.duplicate(:not_suppressed, length(keys))
+    end
+
+    def check(_key, _opts), do: :not_suppressed
+  end
+
   describe "Mailglass.Suppression.Resync.run/1" do
     test "uses one tenant-scoped candidate path for dry-run and apply" do
       complaint = insert_delivery!(tenant_id: @tenant_id, recipient: "complaint@example.com")
@@ -128,6 +137,39 @@ defmodule Mix.Tasks.Mailglass.Suppressions.ResyncTest do
       assert second_output =~ "existing=1"
       assert TestRepo.aggregate(Entry, :count) == 1
     end
+
+    test "uses bounded configured pages without changing CLI flags" do
+      prior_store = Application.get_env(:mailglass, :suppression_store)
+      prior_page_size = Application.get_env(:mailglass, :suppression_resync_page_size)
+
+      Application.put_env(:mailglass, :suppression_store, CountingSuppressionStore)
+      Application.put_env(:mailglass, :suppression_resync_page_size, 2)
+      Application.put_env(:mailglass, :resync_bulk_check_pid, self())
+
+      on_exit(fn ->
+        restore_env(:suppression_store, prior_store)
+        restore_env(:suppression_resync_page_size, prior_page_size)
+        Application.delete_env(:mailglass, :resync_bulk_check_pid)
+      end)
+
+      for index <- 1..5 do
+        delivery =
+          insert_delivery!(tenant_id: @tenant_id, recipient: "task-page-#{index}@example.com")
+
+        insert_event!(delivery, :complained, "evt-task-page-#{index}")
+      end
+
+      output =
+        capture_io(fn ->
+          Mix.Tasks.Mailglass.Suppressions.Resync.run(["--tenant-id", @tenant_id, "--dry-run"])
+        end)
+
+      assert output =~ "dry-run tenant=#{@tenant_id} scanned=5"
+      assert_receive {:resync_bulk_check, [_first, _second]}
+      assert_receive {:resync_bulk_check, [_third, _fourth]}
+      assert_receive {:resync_bulk_check, [_last]}
+      refute_receive {:resync_bulk_check, _keys}
+    end
   end
 
   defp insert_delivery!(attrs) do
@@ -183,4 +225,7 @@ defmodule Mix.Tasks.Mailglass.Suppressions.ResyncTest do
 
   defp reject_reason_for(:bounced), do: :bounced
   defp reject_reason_for(_type), do: nil
+
+  defp restore_env(key, nil), do: Application.delete_env(:mailglass, key)
+  defp restore_env(key, value), do: Application.put_env(:mailglass, key, value)
 end

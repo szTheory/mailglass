@@ -10,6 +10,29 @@ defmodule MailglassInbound.OptionalDeps do
   """
 end
 
+defmodule MailglassInbound.OptionalDeps.GenSmtp do
+  @moduledoc false
+
+  @compile {:no_warn_undefined, [:gen_smtp_client, :mimemail]}
+
+  @spec available?() :: boolean()
+  def available?, do: Code.ensure_loaded?(:gen_smtp_client)
+
+  @spec decode(binary(), keyword()) :: {:ok, tuple()} | {:error, term()}
+  def decode(raw, opts \\ []) when is_binary(raw) do
+    erl_opts = [{:allow_missing_version, true}, {:encoding, :none}] ++ opts
+    # Dynamic dispatch is intentional at this optional-dependency boundary. It
+    # avoids importing incomplete third-party success typing while the caller
+    # retains the explicit availability check and degraded path.
+    {:ok, apply(:mimemail, :decode, [raw, erl_opts])}
+  rescue
+    e -> {:error, {:error, e}}
+  catch
+    :throw, reason -> {:error, {:throw, reason}}
+    :exit, reason -> {:error, {:exit, reason}}
+  end
+end
+
 defmodule MailglassInbound.OptionalDeps.Oban do
   @moduledoc """
   Gateway for the optional Oban dependency (`{:oban, "~> 2.21"}`).
@@ -105,7 +128,7 @@ defmodule MailglassInbound.OptionalDeps.ExAwsS3 do
   inbound code are forbidden so `mix compile --no-optional-deps
   --warnings-as-errors` stays green.
 
-  ## get_object/2 — never raises, gates on `available?/0`
+  ## head_object/2 and get_object/2 — never raise, gate on `available?/0`
 
   `get_object/2` short-circuits on `available?/0` (the documented normal
   degraded path) and only then wraps `ExAws.S3.get_object/2 |> ExAws.request/1`
@@ -158,6 +181,21 @@ defmodule MailglassInbound.OptionalDeps.ExAwsS3 do
     else
       # WR-06: the normal degraded path. Tag the absent dep distinctly so the
       # retry layer classifies it as non-retryable (config error, not transient).
+      {:error, {:s3_fetch_failed, :ex_aws_unavailable}}
+    end
+  rescue
+    e -> {:error, {:error, e}}
+  catch
+    :exit, reason -> {:error, {:exit, reason}}
+  end
+
+  @doc "Fetches S3 object metadata without downloading its body, never raising."
+  @doc since: "2.1.1"
+  @spec head_object(String.t(), String.t()) :: {:ok, map()} | {:error, term()}
+  def head_object(bucket, key) when is_binary(bucket) and is_binary(key) do
+    if available?() do
+      ExAws.S3.head_object(bucket, key) |> ExAws.request()
+    else
       {:error, {:s3_fetch_failed, :ex_aws_unavailable}}
     end
   rescue

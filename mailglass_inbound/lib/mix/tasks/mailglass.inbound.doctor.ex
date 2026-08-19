@@ -37,6 +37,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Doctor do
   """
 
   @impl Mix.Task
+  @spec run([String.t()]) :: no_return()
   def run(argv) do
     {opts, rest, invalid} =
       OptionParser.parse(argv,

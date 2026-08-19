@@ -10,6 +10,52 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorPathTest do
   alias Mailglass.ReferenceHost.OperatorDiagnosisProof
   alias Mailglass.ReferenceHost.WebhookOperatorProof
 
+  @workspace_inbound_root Path.expand("../../mailglass_inbound", __DIR__)
+  @workspace_inbound_ebin Path.join(
+                            @workspace_inbound_root,
+                            "_build/test/lib/mailglass_inbound/ebin"
+                          )
+  @provenance_env [
+    "MAILGLASS_REFERENCE_HOST_PACKAGE_MODE",
+    "MAILGLASS_CORE_WORKSPACE_EBIN",
+    "MAILGLASS_INBOUND_WORKSPACE_EBIN"
+  ]
+
+  setup_all do
+    {output, exit_code} =
+      System.cmd("mix", ["compile", "--warnings-as-errors"],
+        cd: @workspace_inbound_root,
+        stderr_to_stdout: true,
+        env: [
+          {"MIX_ENV", "test"},
+          {"MIX_BUILD_PATH", nil},
+          {"MIX_DEPS_PATH", nil}
+        ]
+      )
+
+    assert exit_code == 0, "workspace inbound compile failed:\n#{output}"
+
+    saved_env = Map.new(@provenance_env, &{&1, System.get_env(&1)})
+
+    System.put_env("MAILGLASS_REFERENCE_HOST_PACKAGE_MODE", "prepublication")
+
+    System.put_env(
+      "MAILGLASS_CORE_WORKSPACE_EBIN",
+      Path.join(Mix.Project.build_path(), "lib/mailglass/ebin")
+    )
+
+    System.put_env("MAILGLASS_INBOUND_WORKSPACE_EBIN", @workspace_inbound_ebin)
+
+    on_exit(fn ->
+      Enum.each(saved_env, fn
+        {key, nil} -> System.delete_env(key)
+        {key, value} -> System.put_env(key, value)
+      end)
+    end)
+
+    :ok
+  end
+
   test "signed Postmark webhook enters the reference host router and persists" do
     proof = WebhookOperatorProof.run()
 

@@ -16,6 +16,16 @@ defmodule MailglassInbound.S3Fetcher.ExAwsS3 do
   alias MailglassInbound.OptionalDeps.ExAwsS3, as: Gateway
 
   @impl MailglassInbound.S3Fetcher
+  def head(bucket, key, opts \\ []) when is_binary(bucket) and is_binary(key) do
+    head_object = Keyword.get(opts, :gateway_head_object, &Gateway.head_object/2)
+
+    case head_object.(bucket, key) do
+      {:ok, response} -> extract_content_length(response)
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @impl MailglassInbound.S3Fetcher
   def fetch(bucket, key, opts \\ []) when is_binary(bucket) and is_binary(key) do
     # `:gateway_get_object` is a test seam (a 2-arity fun) so the `:body`
     # extraction is exercisable without ex_aws installed. Production passes no
@@ -36,4 +46,31 @@ defmodule MailglassInbound.S3Fetcher.ExAwsS3 do
         {:error, reason}
     end
   end
+
+  defp extract_content_length(%{content_length: bytes}) when is_integer(bytes) and bytes >= 0,
+    do: {:ok, %{content_length: bytes}}
+
+  defp extract_content_length(%{headers: headers}) when is_map(headers),
+    do:
+      extract_content_length(
+        Map.get(headers, "content-length") || Map.get(headers, :"content-length")
+      )
+
+  defp extract_content_length(%{headers: headers}) when is_list(headers) do
+    extract_content_length(
+      Enum.find_value(headers, fn
+        {name, value} when name in ["content-length", :"content-length"] -> value
+        _ -> nil
+      end)
+    )
+  end
+
+  defp extract_content_length(bytes) when is_binary(bytes) do
+    case Integer.parse(bytes) do
+      {value, ""} when value >= 0 -> {:ok, %{content_length: value}}
+      _ -> {:error, {:s3_fetch_failed, :invalid_content_length}}
+    end
+  end
+
+  defp extract_content_length(_), do: {:error, {:s3_fetch_failed, :missing_content_length}}
 end

@@ -40,6 +40,7 @@ defmodule MailglassInbound.RateLimiter do
   """
 
   alias Mailglass.RateLimitError
+  alias Mailglass.RateLimiter.AtomicBucket
 
   @table :mailglass_inbound_rate_limit
 
@@ -80,36 +81,20 @@ defmodule MailglassInbound.RateLimiter do
   # token-bucket logic). On trip, returns {:error, bucket, refill_per_ms} so the
   # caller can build the right error type + the bucket's OWN Retry-After.
   defp check_bucket(bucket, sub_key) do
-    {capacity, refill_per_ms} = limits_for(bucket)
+    {capacity, per_minute} = limits_for(bucket)
     key = {bucket, sub_key}
-    now_ms = System.monotonic_time(:millisecond)
+    now_us = clock_us()
 
-    # First-hit: seed bucket with full capacity if key doesn't exist yet.
-    :ets.insert_new(@table, {key, capacity, now_ms})
-
-    # Read current state to compute refill delta.
-    [{^key, tokens, last}] = :ets.lookup(@table, key)
-
-    restore = if tokens < 0, do: abs(tokens), else: 0
-    elapsed_ms = max(0, now_ms - last)
-    refilled = round(elapsed_ms * refill_per_ms)
-    total_add = min(restore + refilled, capacity - tokens)
-
-    result =
-      :ets.update_counter(
-        @table,
-        key,
-        [
-          {2, total_add, capacity, capacity},
-          {3, 0, 0, now_ms},
-          {2, -1}
-        ],
-        {key, capacity, now_ms}
-      )
-
-    case result do
-      [_refilled, _ts, new_tokens] when new_tokens >= 0 -> :ok
-      _ -> {:error, bucket, refill_per_ms}
+    case AtomicBucket.consume(
+           table: @table,
+           owner: MailglassInbound.RateLimiter.TableOwner,
+           key: key,
+           capacity: capacity,
+           per_minute: per_minute,
+           now_us: now_us
+         ) do
+      :ok -> :ok
+      {:error, :denied} -> {:error, bucket, per_minute}
     end
   end
 
@@ -119,7 +104,7 @@ defmodule MailglassInbound.RateLimiter do
     capacity = Keyword.fetch!(bucket_cfg, :capacity)
     per_minute = Keyword.fetch!(bucket_cfg, :per_minute)
 
-    {capacity, per_minute / 60_000}
+    {capacity, per_minute}
   end
 
   # Map a tripped bucket to the reused Mailglass.RateLimitError struct. The
@@ -137,6 +122,13 @@ defmodule MailglassInbound.RateLimiter do
     )
   end
 
-  defp retry_after_ms(refill_per_ms) when refill_per_ms > 0, do: ceil(1 / refill_per_ms)
+  defp retry_after_ms(per_minute) when per_minute > 0, do: ceil(60_000 / per_minute)
   defp retry_after_ms(_), do: 60_000
+
+  defp clock_us do
+    case Application.get_env(:mailglass_inbound, :rate_limit_clock) do
+      fun when is_function(fun, 0) -> fun.()
+      _ -> System.monotonic_time(:microsecond)
+    end
+  end
 end

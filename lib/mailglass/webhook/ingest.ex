@@ -121,6 +121,15 @@ defmodule Mailglass.Webhook.Ingest do
   def ingest_multi(provider, raw_body, events)
       when provider in [:postmark, :sendgrid, :mailgun, :ses, :resend] and is_binary(raw_body) and
              is_list(events) do
+    ingest_multi(provider, raw_body, Jason.decode(raw_body), events)
+  end
+
+  @doc false
+  @spec ingest_multi(atom(), binary(), {:ok, term()} | {:error, term()}, [Event.t()]) ::
+          {:ok, map()} | {:error, term()}
+  def ingest_multi(provider, raw_body, decoded_payload, events)
+      when provider in [:postmark, :sendgrid, :mailgun, :ses, :resend] and is_binary(raw_body) and
+             is_list(events) do
     # Tenancy.tenant_id!/0 is the fail-loud accessor — raises %TenancyError{:unstamped}
     # when the process-dict key is absent. Unlike Tenancy.current/0 (which falls back
     # to the SingleTenant "default" literal), tenant_id!/0 never auto-defaults. The
@@ -148,7 +157,10 @@ defmodule Mailglass.Webhook.Ingest do
         _ = Repo.query!("SET LOCAL statement_timeout = '2s'", [])
         _ = Repo.query!("SET LOCAL lock_timeout = '500ms'", [])
 
-        multi = build_multi(provider, raw_body, events, tenant_id)
+        deliveries_by_message = load_deliveries(provider, events, tenant_id)
+
+        multi =
+          build_multi(provider, raw_body, decoded_payload, events, tenant_id, deliveries_by_message)
 
         case Repo.multi(multi) do
           {:ok, changes} ->
@@ -178,7 +190,7 @@ defmodule Mailglass.Webhook.Ingest do
 
   # ---- Multi composition ----------------------------------------------
 
-  defp build_multi(provider, raw_body, events, tenant_id) do
+  defp build_multi(provider, raw_body, decoded_payload, events, tenant_id, deliveries_by_message) do
     provider_event_id = derive_webhook_provider_event_id(provider, raw_body, events)
     provider_str = Atom.to_string(provider)
 
@@ -208,7 +220,8 @@ defmodule Mailglass.Webhook.Ingest do
       event_type_raw: derive_event_type_raw(events),
       event_type_normalized: derive_event_type_normalized(events),
       status: :processing,
-      raw_payload: parse_raw_payload(raw_body),
+      raw_payload: parse_raw_payload(decoded_payload, raw_body),
+      raw_signed_body: raw_body,
       received_at: Clock.utc_now()
     }
 
@@ -227,8 +240,8 @@ defmodule Mailglass.Webhook.Ingest do
         returning: true
       )
     )
-    |> append_events_for_each(events, provider, tenant_id)
-    |> update_projections_for_each(events)
+    |> append_events_for_each(events, provider, tenant_id, deliveries_by_message)
+    |> update_projections_for_each(events, deliveries_by_message)
     |> Multi.update_all(
       :flip_status,
       &flip_status_query(&1, provider_str),
@@ -244,7 +257,7 @@ defmodule Mailglass.Webhook.Ingest do
   # Step 2: for each %Event{} in the normalized list, append an Events.append_multi
   # step that resolves delivery_id lazily from prior changes. Function-form
   # append_multi ( I-03) matches Multi.insert/4 + Oban.insert/2 shape.
-  defp append_events_for_each(multi, events, provider, tenant_id) do
+  defp append_events_for_each(multi, events, provider, tenant_id, deliveries_by_message) do
     events
     |> Enum.with_index()
     |> Enum.reduce(multi, fn {event, idx}, acc ->
@@ -254,7 +267,7 @@ defmodule Mailglass.Webhook.Ingest do
       # table growth is O(128) across the library's lifetime — safe.
       Events.append_multi(acc, event_step_name(idx), fn changes ->
         webhook_event = Map.fetch!(changes, :webhook_event)
-        delivery_id = resolve_delivery_id(provider, event)
+        delivery_id = resolve_delivery_id(event, deliveries_by_message)
 
         %{
           type: event.type,
@@ -282,32 +295,30 @@ defmodule Mailglass.Webhook.Ingest do
   # inside Multi.run) broke transaction scoping — the outer transaction
   # couldn't roll back the inner writes if a later step failed. This keeps
   # everything in one transaction.
-  defp update_projections_for_each(multi, events) do
+  defp update_projections_for_each(multi, events, deliveries_by_message) do
     events
     |> Enum.with_index()
-    |> Enum.reduce(multi, fn {_event, idx}, acc ->
+    |> Enum.reduce(multi, fn {input_event, idx}, acc ->
       acc =
         Multi.run(acc, {:projector_categorize, idx}, fn _repo, changes ->
           inserted_event = Map.get(changes, event_step_name(idx))
+          delivery = Map.get(deliveries_by_message, message_id(input_event))
 
           cond do
             is_nil(inserted_event) ->
               {:ok, :no_event_row}
 
-            is_nil(inserted_event.delivery_id) ->
+            is_nil(inserted_event.delivery_id) or is_nil(delivery) ->
               {:ok, :orphan_skipped}
 
-            true ->
-              delivery_query =
-                from(d in Delivery,
-                  where: d.id == ^inserted_event.delivery_id,
-                  limit: 1
-                )
+            delivery.id == inserted_event.delivery_id ->
+              # `load_deliveries/3` is the one bounded provider-batch read.
+              # Reuse its full structs here so every projection avoids an
+              # additional point query by delivery id.
+              {:ok, {:matched, current_delivery(delivery, changes, idx), inserted_event}}
 
-              case Repo.one(Tenancy.scope(delivery_query)) do
-                nil -> {:ok, :orphan_skipped}
-                %Delivery{} = delivery -> {:ok, {:matched, delivery, inserted_event}}
-              end
+            true ->
+              {:ok, :orphan_skipped}
           end
         end)
 
@@ -322,7 +333,7 @@ defmodule Mailglass.Webhook.Ingest do
             # the projection UPDATE routes to the isolated schema's
             # mailglass_deliveries row.
             case repo.update(changeset, Repo.multi_opts()) do
-              {:ok, _projected} -> {:ok, {:matched, delivery, inserted_event}}
+              {:ok, projected} -> {:ok, {:matched, projected, inserted_event}}
               {:error, reason} -> {:error, reason}
             end
 
@@ -430,13 +441,13 @@ defmodule Mailglass.Webhook.Ingest do
     |> Enum.join(",")
   end
 
-  defp parse_raw_payload(raw_body) when is_binary(raw_body) do
-    case Jason.decode(raw_body) do
-      {:ok, payload} when is_map(payload) -> payload
-      {:ok, payload} when is_list(payload) -> %{"_batch" => payload}
-      _ -> %{"_raw" => raw_body}
-    end
-  end
+  defp parse_raw_payload({:ok, payload}, _raw_body) when is_map(payload), do: payload
+
+  defp parse_raw_payload({:ok, payload}, _raw_body) when is_list(payload),
+    do: %{"_batch" => payload}
+
+  defp parse_raw_payload(_decoded_payload, raw_body) when is_binary(raw_body),
+    do: %{"_raw" => raw_body}
 
   defp replay_metadata(metadata, %WebhookEvent{} = webhook_event) when is_map(metadata) do
     metadata
@@ -447,32 +458,61 @@ defmodule Mailglass.Webhook.Ingest do
   defp maybe_put_replay_metadata(metadata, _key, value) when value in [nil, ""], do: metadata
   defp maybe_put_replay_metadata(metadata, key, value), do: Map.put(metadata, key, value)
 
-  # Look up the matching `%Delivery{}` id by (provider, provider_message_id).
-  # Per revision W9 — reads STRING keys ("message_id", "sg_message_id") first;
-  # atom-key fallback retained for defensive compatibility. Plans 04-02 +
-  # 04-03 normalize/2 standardized on string keys, so this is the happy path.
-  defp resolve_delivery_id(provider, %Event{metadata: meta}) when is_map(meta) do
-    message_id =
-      meta["sg_message_id"] || meta["message_id"] ||
-        Map.get(meta, :sg_message_id) || Map.get(meta, :message_id)
+  # Load delivery state once per provider batch. Event metadata can repeat a
+  # message id, so deduplicate before querying and resolve every event from the
+  # resulting in-memory map rather than issuing N point reads.
+  defp load_deliveries(provider, events, tenant_id) do
+    message_ids =
+      events
+      |> Enum.map(&message_id/1)
+      |> Enum.filter(&is_binary/1)
+      |> Enum.reject(&(&1 == ""))
+      |> Enum.uniq()
 
-    case message_id do
-      id when is_binary(id) and id != "" ->
+    case message_ids do
+      [] ->
+        %{}
+
+      ids ->
         query =
           from(d in Delivery,
-            where: d.provider == ^Atom.to_string(provider) and d.provider_message_id == ^id,
-            select: d.id,
-            limit: 1
+            where: d.provider == ^Atom.to_string(provider) and d.provider_message_id in ^ids
           )
 
-        Repo.one(Tenancy.scope(query))
-
-      _ ->
-        nil
+        query
+        |> Tenancy.scope(tenant_id)
+        |> Repo.all()
+        |> Map.new(&{&1.provider_message_id, &1})
     end
   end
 
-  defp resolve_delivery_id(_provider, _event), do: nil
+  defp resolve_delivery_id(event, deliveries_by_message) do
+    case Map.get(deliveries_by_message, message_id(event)) do
+      %Delivery{id: id} -> id
+      nil -> nil
+    end
+  end
+
+  # A provider batch may contain several events for one delivery. Carry the
+  # latest projected struct through the Multi so optimistic locking still sees
+  # the incremented lock version without re-reading the delivery per event.
+  defp current_delivery(delivery, _changes, 0), do: delivery
+
+  defp current_delivery(delivery, changes, idx) do
+    Enum.find_value((idx - 1)..0//-1, delivery, fn previous_idx ->
+      case Map.get(changes, {:projector_apply, previous_idx}) do
+        {:matched, %Delivery{id: id} = projected, _event} when id == delivery.id -> projected
+        _other -> nil
+      end
+    end)
+  end
+
+  defp message_id(%Event{metadata: meta}) when is_map(meta) do
+    meta["sg_message_id"] || meta["message_id"] ||
+      Map.get(meta, :sg_message_id) || Map.get(meta, :message_id)
+  end
+
+  defp message_id(_event), do: nil
 
   # Build the final result map for the Plug. Per revision B7 — 3-tuples
   # {inserted_event, delivery_or_nil, orphan?} give downstream consumers

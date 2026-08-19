@@ -2,7 +2,7 @@ defmodule MailglassInbound.Ingress.Provider do
   @moduledoc false
 
   alias MailglassInbound.InboundMessage
-  alias MailglassInbound.Ingress.Request
+  alias MailglassInbound.Ingress.{Request, VerifiedRequest}
 
   @type normalized_t :: %{
           required(:message) => InboundMessage.t(),
@@ -37,9 +37,10 @@ defmodule MailglassInbound.Ingress.Provider do
   # per-provider, so a mixed-arity transition is acceptable within this phase;
   # Plans 02/03 wire the new providers to the struct arity.
   @callback verify!(request :: Request.t(), config :: map()) ::
-              {:ok, verification_facts()}
+              {:ok, VerifiedRequest.t() | verification_facts()}
               | {:replay}
               | {:control_plane, http_status :: pos_integer()}
+              | verification_facts()
 
   # Legacy `verify!/3` arity, retained so Postmark (and SendGrid's compatibility
   # shim) keep a valid `@impl MailglassInbound.Ingress.Provider` annotation
@@ -58,11 +59,13 @@ defmodule MailglassInbound.Ingress.Provider do
               headers :: [{String.t(), String.t()}]
             ) :: normalized_t()
 
+  @callback resolve_content!(VerifiedRequest.t(), config :: map()) :: VerifiedRequest.t()
+
   # Mixed-arity transition (the design contract): a provider implements EXACTLY ONE `verify!`
   # arity — Postmark the legacy `verify!/3`, SendGrid/Mailgun/SES the struct
   # `verify!/2`. Marking both optional lets each provider compile warning-free
   # while the plug dispatches the right arity per provider. `normalize/2` stays
   # required for the legacy providers; struct-arity `normalize/1` callers (Mailgun
   # /SES) dispatch through the plug's per-provider `normalize_request!/2` clauses.
-  @optional_callbacks verify!: 2, verify!: 3
+  @optional_callbacks verify!: 2, verify!: 3, resolve_content!: 2
 end

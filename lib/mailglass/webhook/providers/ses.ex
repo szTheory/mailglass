@@ -43,11 +43,15 @@ defmodule Mailglass.Webhook.Providers.SES do
 
   require Logger
 
-  alias Mailglass.{Clock, SignatureError}
+  alias Mailglass.SignatureError
   alias Mailglass.Events.Event
   alias Mailglass.Webhook.Providers.SES.{CertCache, TrustPolicy}
 
   @default_cert_cache_ttl_seconds 86_400
+  @default_cert_cache_negative_ttl_seconds 60
+  @default_cert_cache_max_entries 1_024
+  @default_cert_response_bytes 65_536
+  @maximum_cert_response_bytes 1_048_576
 
   # Byte-sorted signable fields per AWS SNS signature spec.
   # Subject is optional in Notification — filtered by Map.has_key? at runtime.
@@ -61,12 +65,26 @@ defmodule Mailglass.Webhook.Providers.SES do
   @spec verify!(binary(), [{String.t(), String.t()}], map()) ::
           :ok | {:ok, :control_plane, :subscription_confirmed | :unsubscribe_confirmed}
   def verify!(raw_body, _headers, %{} = config) when is_binary(raw_body) do
+    verify_decoded!(Jason.decode(raw_body), [], config)
+  end
+
+  @doc false
+  @spec verify_decoded!({:ok, term()} | {:error, term()}, [{String.t(), String.t()}], map()) ::
+          :ok | {:ok, :control_plane, :subscription_confirmed | :unsubscribe_confirmed}
+  def verify_decoded!({:ok, %{} = payload}, _headers, %{} = config) do
     # Step 1: verify the SNS envelope (shared crypto seam, reused by inbound).
-    {:ok, payload} = verify_envelope!(raw_body, config)
+    :ok = verify_envelope_decoded!(payload, config)
     msg_type = fetch_required_field!(payload, "Type")
 
     # Step 2: dispatch on MessageType (all types verified above).
     dispatch_message_type(msg_type, payload, config)
+  end
+
+  def verify_decoded!(_decoded, _headers, %{} = _config) do
+    raise SignatureError.new(:malformed_header,
+            provider: :ses,
+            context: %{detail: "SNS payload is not valid JSON"}
+          )
   end
 
   @doc """
@@ -88,6 +106,13 @@ defmodule Mailglass.Webhook.Providers.SES do
   @spec verify_envelope!(binary(), map()) :: {:ok, map()}
   def verify_envelope!(raw_body, %{} = config) when is_binary(raw_body) do
     payload = decode_payload!(raw_body)
+    :ok = verify_envelope_decoded!(payload, config)
+    {:ok, payload}
+  end
+
+  @doc false
+  @spec verify_envelope_decoded!(map(), map()) :: :ok
+  def verify_envelope_decoded!(%{} = payload, %{} = config) do
     cert_url = fetch_required_field!(payload, "SigningCertURL")
     sig_version = Map.get(payload, "SignatureVersion", "1")
     signature_b64 = fetch_required_field!(payload, "Signature")
@@ -139,21 +164,24 @@ defmodule Mailglass.Webhook.Providers.SES do
       raise SignatureError.new(:bad_signature, provider: :ses)
     end
 
-    {:ok, payload}
+    :ok
   end
 
   @impl Mailglass.Webhook.Provider
   @spec normalize(binary(), [{String.t(), String.t()}]) :: [Event.t()]
-  def normalize(raw_body, _headers) when is_binary(raw_body) do
-    with {:ok, sns_payload} <- Jason.decode(raw_body),
-         "Notification" <- Map.get(sns_payload, "Type"),
+  def normalize(raw_body, headers) when is_binary(raw_body),
+    do: normalize_decoded(Jason.decode(raw_body), headers)
+
+  @doc false
+  def normalize_decoded({:ok, %{} = sns_payload}, _headers) do
+    with "Notification" <- Map.get(sns_payload, "Type"),
          message_str when is_binary(message_str) <- Map.get(sns_payload, "Message"),
          {:ok, ses_payload} <- Jason.decode(message_str) do
       sns_message_id = Map.get(sns_payload, "MessageId", "unknown")
       normalize_ses(ses_payload, sns_message_id)
     else
       {:error, _} ->
-        Logger.warning("[mailglass] SES normalize: malformed SNS envelope JSON")
+        Logger.warning("[mailglass] SES normalize: malformed nested SES Message JSON")
         []
 
       _other ->
@@ -163,6 +191,11 @@ defmodule Mailglass.Webhook.Providers.SES do
 
         []
     end
+  end
+
+  def normalize_decoded(_decoded, _headers) do
+    Logger.warning("[mailglass] SES normalize: malformed SNS envelope JSON")
+    []
   end
 
   # ---- Private: message type dispatch ----
@@ -273,42 +306,68 @@ defmodule Mailglass.Webhook.Providers.SES do
 
   # ---- Private: certificate fetching ----
 
-  # NOTE — cache-miss stampede: this is a check-then-act pattern. If N webhook
-  # requests arrive concurrently before the cert for a given URL is cached (cold
-  # start or after a TTL expiry), each caller independently sees :miss, issues its
-  # own :httpc request, and writes the result. ETS :insert is atomic so all writers
-  # converge on the same key; correctness is not affected. The impact is N
-  # simultaneous HTTP GETs to the SNS cert endpoint per cold burst — acceptable for
-  # the expected traffic pattern (one unique cert URL per SNS topic, rarely changes).
-  # If serialization is required in future, route the cache-miss path through a
-  # TableOwner GenServer call to serialize writers under the same cert URL.
   defp fetch_public_key!(cert_url, config) do
-    case CertCache.fetch_public_key(cert_url) do
+    fetch = fn ->
+      try do
+        {:ok, cert_url |> fetch_cert_via_httpc!(config) |> extract_public_key_from_pem!()}
+      rescue
+        error in [SignatureError] -> {:error, error.type}
+      end
+    end
+
+    case CertCache.fetch_or_store(cert_url, fetch,
+           positive_ttl_seconds:
+             Map.get(config, :cert_cache_ttl_seconds, @default_cert_cache_ttl_seconds),
+           negative_ttl_seconds:
+             Map.get(
+               config,
+               :cert_cache_negative_ttl_seconds,
+               @default_cert_cache_negative_ttl_seconds
+             ),
+           max_entries: Map.get(config, :cert_cache_max_entries, @default_cert_cache_max_entries)
+         ) do
       {:ok, public_key} ->
         public_key
 
-      :miss ->
-        pem_binary = fetch_cert_via_httpc!(cert_url, config)
-        public_key = extract_public_key_from_pem!(pem_binary)
-        ttl = Map.get(config, :cert_cache_ttl_seconds, @default_cert_cache_ttl_seconds)
-        expires_at = DateTime.add(Clock.utc_now(), ttl, :second)
-        CertCache.put(cert_url, public_key, expires_at)
-        public_key
+      {:error, reason} ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "cert fetch failed", reason: inspect(reason)}
+              )
     end
   end
 
   defp fetch_cert_via_httpc!(cert_url, config) do
     httpc_mod = httpc_client(config)
     ssl_opts = [verify: :verify_peer, cacerts: :public_key.cacerts_get()]
-    http_opts = [ssl: ssl_opts, autoredirect: false, timeout: @confirm_timeout_ms]
-    url_charlist = String.to_charlist(cert_url)
+    timeout_ms = bounded_cert_timeout!(config)
 
-    case apply(httpc_mod, :request, [:get, {url_charlist, []}, http_opts, []]) do
+    http_opts = [
+      ssl: ssl_opts,
+      autoredirect: false,
+      timeout: timeout_ms,
+      connect_timeout: timeout_ms
+    ]
+
+    url_charlist = String.to_charlist(cert_url)
+    # `:httpc` expects the literal receiver selector `:self` here. Passing the
+    # caller pid looks plausible but is rejected as an invalid stream option,
+    # which silently falls back to buffering the entire response.
+    request_opts = [sync: false, stream: {:self, :once}]
+
+    case apply(httpc_mod, :request, [:get, {url_charlist, []}, http_opts, request_opts]) do
+      {:ok, request_id} when is_reference(request_id) ->
+        deadline_ms = System.monotonic_time(:millisecond) + timeout_ms
+        receive_cert_stream!(httpc_mod, request_id, config, deadline_ms)
+
+      # Retain compatibility with small injected clients that implement the
+      # historical synchronous result shape. Production :httpc always takes
+      # the streaming branch above.
       {:ok, {{_vsn, 200, _}, _headers, body}} when is_list(body) ->
-        IO.iodata_to_binary(body)
+        body |> IO.iodata_to_binary() |> limit_cert_body!(config)
 
       {:ok, {{_vsn, 200, _}, _headers, body}} when is_binary(body) ->
-        body
+        limit_cert_body!(body, config)
 
       {:ok, {{_vsn, status, _}, _, _}} ->
         raise SignatureError.new(:bad_signature,
@@ -323,6 +382,161 @@ defmodule Mailglass.Webhook.Providers.SES do
               )
     end
   end
+
+  defp receive_cert_stream!(httpc_mod, request_id, config, deadline_ms) do
+    receive do
+      {:http, {^request_id, :stream_start, headers, handler_pid}} ->
+        reject_oversized_content_length!(httpc_mod, request_id, headers, config)
+        stream_next!(httpc_mod, handler_pid)
+        collect_cert_stream!(httpc_mod, request_id, handler_pid, config, deadline_ms, [], 0)
+
+      {:http, {^request_id, {{_vsn, status, _}, _headers, _body}}} ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "cert fetch returned HTTP #{status}"}
+              )
+
+      {:http, {^request_id, {:error, reason}}} ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "cert fetch failed", reason: inspect(reason)}
+              )
+    after
+      remaining_timeout_ms(deadline_ms) ->
+        cancel_request(httpc_mod, request_id)
+        raise cert_timeout_error()
+    end
+  end
+
+  defp collect_cert_stream!(
+         httpc_mod,
+         request_id,
+         handler_pid,
+         config,
+         deadline_ms,
+         chunks,
+         bytes
+       ) do
+    receive do
+      {:http, {^request_id, :stream, chunk}} when is_binary(chunk) ->
+        next_bytes = bytes + byte_size(chunk)
+
+        if next_bytes > cert_response_limit!(config) do
+          cancel_request(httpc_mod, request_id)
+          raise cert_oversized_error()
+        end
+
+        stream_next!(httpc_mod, handler_pid)
+
+        collect_cert_stream!(
+          httpc_mod,
+          request_id,
+          handler_pid,
+          config,
+          deadline_ms,
+          [chunk | chunks],
+          next_bytes
+        )
+
+      {:http, {^request_id, :stream_end, _headers}} ->
+        chunks |> Enum.reverse() |> IO.iodata_to_binary()
+
+      {:http, {^request_id, {:error, reason}}} ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "cert fetch failed", reason: inspect(reason)}
+              )
+    after
+      remaining_timeout_ms(deadline_ms) ->
+        cancel_request(httpc_mod, request_id)
+        raise cert_timeout_error()
+    end
+  end
+
+  defp reject_oversized_content_length!(httpc_mod, request_id, headers, config) do
+    content_length =
+      Enum.find_value(headers, fn
+        {name, value} when is_list(name) and is_list(value) ->
+          if String.downcase(List.to_string(name)) == "content-length" do
+            case Integer.parse(List.to_string(value)) do
+              {size, ""} -> size
+              _ -> nil
+            end
+          end
+
+        _ ->
+          nil
+      end)
+
+    if is_integer(content_length) and content_length > cert_response_limit!(config) do
+      cancel_request(httpc_mod, request_id)
+      raise cert_oversized_error()
+    end
+  end
+
+  defp stream_next!(httpc_mod, handler_pid), do: apply(httpc_mod, :stream_next, [handler_pid])
+
+  defp cancel_request(httpc_mod, request_id) do
+    if function_exported?(httpc_mod, :cancel_request, 1) do
+      _ = apply(httpc_mod, :cancel_request, [request_id])
+    end
+
+    :ok
+  end
+
+  defp remaining_timeout_ms(deadline_ms) do
+    max(deadline_ms - System.monotonic_time(:millisecond), 0)
+  end
+
+  defp limit_cert_body!(body, config) when is_binary(body) do
+    max_bytes = cert_response_limit!(config)
+
+    if byte_size(body) <= max_bytes do
+      body
+    else
+      raise cert_oversized_error()
+    end
+  end
+
+  defp cert_response_limit!(config) do
+    case Map.get(config, :cert_max_response_bytes, @default_cert_response_bytes) do
+      bytes when is_integer(bytes) and bytes > 0 and bytes <= @maximum_cert_response_bytes ->
+        bytes
+
+      _ ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "invalid cert response limit"}
+              )
+    end
+  end
+
+  defp bounded_cert_timeout!(config) do
+    case Map.get(config, :cert_request_timeout_ms, @confirm_timeout_ms) do
+      timeout when is_integer(timeout) and timeout > 0 and timeout <= 30_000 ->
+        timeout
+
+      _ ->
+        raise SignatureError.new(:bad_signature,
+                provider: :ses,
+                context: %{detail: "invalid cert request timeout"}
+              )
+    end
+  end
+
+  defp cert_oversized_error,
+    do:
+      SignatureError.new(:bad_signature,
+        provider: :ses,
+        context: %{detail: "cert fetch response exceeded maximum bytes"}
+      )
+
+  defp cert_timeout_error,
+    do:
+      SignatureError.new(:bad_signature,
+        provider: :ses,
+        context: %{detail: "cert fetch timed out"}
+      )
 
   defp extract_public_key_from_pem!(pem_binary) when is_binary(pem_binary) do
     case :public_key.pem_decode(pem_binary) do
@@ -390,8 +604,7 @@ defmodule Mailglass.Webhook.Providers.SES do
         mod
 
       _ ->
-        ses_env = Application.get_env(:mailglass, :ses, [])
-        Keyword.get(ses_env, :httpc_client, :httpc)
+        Mailglass.Config.ses_http_client()
     end
   end
 

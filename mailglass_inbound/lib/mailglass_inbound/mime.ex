@@ -73,7 +73,7 @@ defmodule MailglassInbound.MIME do
   # alias — recognizes this as a sanctioned gateway call rather than a bare
   # optional-dep reference (mirrors the `OptionalOban` alias idiom in
   # MailglassInbound.Execution).
-  alias Mailglass.OptionalDeps.GenSmtp, as: OptionalGenSmtp
+  alias MailglassInbound.OptionalDeps.GenSmtp, as: OptionalGenSmtp
   alias MailglassInbound.MIMEError
 
   @default_max_depth 100

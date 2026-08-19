@@ -2,6 +2,7 @@ defmodule MailglassInbound.Ingress.PlugTest do
   use ExUnit.Case, async: false
 
   alias MailglassInbound.Ingress.Plug, as: IngressPlug
+  alias MailglassInbound.Ingress.{Request, VerifiedRequest}
 
   defmodule TenantResolver do
     @behaviour Mailglass.Tenancy
@@ -12,6 +13,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     def resolve_webhook_tenant(%{path_params: %{"tenant_id" => tenant_id}})
         when is_binary(tenant_id) and tenant_id != "" do
       Process.put(:mailglass_inbound_tenant_resolved, true)
+
+      Process.put(:mailglass_inbound_pipeline_order, [
+        :tenant | Process.get(:mailglass_inbound_pipeline_order, [])
+      ])
+
       {:ok, tenant_id}
     end
 
@@ -26,14 +32,28 @@ defmodule MailglassInbound.Ingress.PlugTest do
   defmodule TestRouter do
     use MailglassInbound.Router
 
-    route SupportMailbox, recipient: "support@example.com"
+    route(SupportMailbox, recipient: "support@example.com")
   end
 
   defmodule FakePersistence do
+    def persist_terminal_failure(tenant_id, provider, request, verified, failure, _opts) do
+      Process.put(
+        :mailglass_inbound_terminal_evidence,
+        {tenant_id, provider, request, verified, failure}
+      )
+
+      if Process.get(:mailglass_inbound_terminal_persist_error),
+        do: {:error, :db_down},
+        else: {:ok, %{status: :inserted}}
+    end
+
     def persist(handoff, opts) do
       Process.put(:mailglass_inbound_last_handoff, handoff)
       Process.put(:mailglass_inbound_last_persist_opts, opts)
-      Process.put(:mailglass_inbound_execution_order, [:persist | Process.get(:mailglass_inbound_execution_order, [])])
+
+      Process.put(:mailglass_inbound_execution_order, [
+        :persist | Process.get(:mailglass_inbound_execution_order, [])
+      ])
 
       case Process.get(:mailglass_inbound_persist_error) do
         nil ->
@@ -55,9 +75,13 @@ defmodule MailglassInbound.Ingress.PlugTest do
   end
 
   defmodule FakeExecution do
-    def dispatch(result, _opts \\ []) do
+    def dispatch(result, opts \\ []) do
       Process.put(:mailglass_inbound_last_execution_result, result)
-      Process.put(:mailglass_inbound_execution_order, [:dispatch | Process.get(:mailglass_inbound_execution_order, [])])
+      Process.put(:mailglass_inbound_last_execution_opts, opts)
+
+      Process.put(:mailglass_inbound_execution_order, [
+        :dispatch | Process.get(:mailglass_inbound_execution_order, [])
+      ])
 
       case Process.get(:mailglass_inbound_execution_outcome, :accept) do
         :accept -> {:ok, %{status: :queued, mode: :oban}}
@@ -130,31 +154,91 @@ defmodule MailglassInbound.Ingress.PlugTest do
     end
   end
 
+  defmodule OrderedVerifiedProvider do
+    def verify!(%Request{} = request, _config) do
+      record(:verify)
+
+      if Process.get(:mailglass_inbound_ordered_verify) == :reject do
+        raise MailglassInbound.SignatureError.new(:bad_signature, provider: :ses)
+      end
+
+      {:ok,
+       %VerifiedRequest{
+         request: request,
+         raw_body: request.raw_body,
+         envelope: %{message_id: "ordered"},
+         verification_facts: %{auth: :stub},
+         warnings: %{}
+       }}
+    end
+
+    def resolve_content!(%VerifiedRequest{} = verified, _config) do
+      record(:resolve_content)
+
+      case Process.get(:mailglass_inbound_resolve_content_failure) do
+        type when type in [:s3_object_not_ready, :s3_fetch_failed] ->
+          raise %MailglassInbound.S3FetchError{
+            type: type,
+            message: "scripted content failure",
+            context: %{}
+          }
+
+        _ ->
+          %{verified | raw_mime: "From: sender@example.com\r\nTo: support@example.com\r\n\r\nbody"}
+      end
+    end
+
+    def normalize(%VerifiedRequest{}) do
+      record(:normalize)
+
+      %{
+        message: %MailglassInbound.InboundMessage{
+          provider: :ses,
+          provider_message_id: "ordered",
+          envelope_recipient: "support@example.com",
+          to: [%{address: "support@example.com", name: nil}]
+        },
+        evidence: %{verification_facts: %{}}
+      }
+    end
+
+    defp record(step) do
+      Process.put(:mailglass_inbound_pipeline_order, [
+        step | Process.get(:mailglass_inbound_pipeline_order, [])
+      ])
+    end
+  end
+
   setup do
     prior_tenancy = Application.get_env(:mailglass, :tenancy)
     prior_postmark = Application.get_env(:mailglass_inbound, :postmark)
     prior_sendgrid = Application.get_env(:mailglass_inbound, :sendgrid)
 
     Application.put_env(:mailglass, :tenancy, TenantResolver)
+    Mailglass.Runtime.reset_for_test!()
 
     Application.put_env(:mailglass_inbound, :postmark,
       basic_auth: {"postmark", "secret"},
       ip_allowlist: []
     )
 
-    Application.put_env(:mailglass_inbound, :sendgrid,
-      basic_auth: {"sendgrid", "secret"}
-    )
+    Application.put_env(:mailglass_inbound, :sendgrid, basic_auth: {"sendgrid", "secret"})
 
     Process.delete(:mailglass_inbound_last_handoff)
     Process.delete(:mailglass_inbound_last_persist_opts)
     Process.delete(:mailglass_inbound_persist_status)
     Process.delete(:mailglass_inbound_tenant_resolved)
     Process.delete(:mailglass_inbound_last_execution_result)
+    Process.delete(:mailglass_inbound_last_execution_opts)
     Process.delete(:mailglass_inbound_execution_order)
     Process.delete(:mailglass_inbound_execution_outcome)
     Process.delete(:mailglass_inbound_stub_verify)
     Process.delete(:mailglass_inbound_persist_error)
+    Process.delete(:mailglass_inbound_pipeline_order)
+    Process.delete(:mailglass_inbound_ordered_verify)
+    Process.delete(:mailglass_inbound_resolve_content_failure)
+    Process.delete(:mailglass_inbound_terminal_evidence)
+    Process.delete(:mailglass_inbound_terminal_persist_error)
 
     on_exit(fn ->
       if is_nil(prior_tenancy) do
@@ -162,6 +246,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
       else
         Application.put_env(:mailglass, :tenancy, prior_tenancy)
       end
+
+      Mailglass.Runtime.reset_for_test!()
 
       if is_nil(prior_postmark) do
         Application.delete_env(:mailglass_inbound, :postmark)
@@ -211,6 +297,9 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert execution_result.inbound_record.id == "record-123"
     assert execution_result.inbound_evidence.id == "evidence-123"
     assert execution_result.route == %{status: :matched, mailbox: SupportMailbox}
+
+    assert Keyword.fetch!(Process.get(:mailglass_inbound_last_execution_opts), :router) ==
+             TestRouter
   end
 
   test "maps duplicate persistence outcomes to 200 without pretending it is new work" do
@@ -265,7 +354,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     pii_changeset =
       {%{}, %{from: :string, to: :string, subject: :string}}
       |> Ecto.Changeset.cast(
-        %{from: "alice@secret.example", to: "bob@secret.example", subject: "Confidential merger terms"},
+        %{
+          from: "alice@secret.example",
+          to: "bob@secret.example",
+          subject: "Confidential merger terms"
+        },
         [:from, :to, :subject]
       )
       |> Ecto.Changeset.add_error(:subject, "is invalid")
@@ -310,7 +403,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
       |> Plug.Conn.put_private(:raw_body, postmark_payload())
       |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
 
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
 
     assert conn.status == 401
     assert Jason.decode!(conn.resp_body)["reason"] == "bad_credentials"
@@ -323,7 +417,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
       |> Plug.Conn.put_req_header("authorization", basic_auth("postmark", "secret"))
       |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
 
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
 
     assert conn.status == 500
     assert Jason.decode!(conn.resp_body)["reason"] == "webhook_caching_body_reader_missing"
@@ -331,7 +426,9 @@ defmodule MailglassInbound.Ingress.PlugTest do
 
   test "returns 422 when tenant resolution fails after verification" do
     conn = conn_with_auth(postmark_payload())
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
+
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :postmark, persistence: FakePersistence))
 
     assert conn.status == 422
     assert Jason.decode!(conn.resp_body)["reason"] == "webhook_tenant_unresolved"
@@ -400,11 +497,105 @@ defmodule MailglassInbound.Ingress.PlugTest do
       |> Map.put(:params, sendgrid_params())
       |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
 
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
 
     assert conn.status == 401
     assert Jason.decode!(conn.resp_body)["reason"] == "bad_credentials"
     refute Process.get(:mailglass_inbound_tenant_resolved)
+  end
+
+  test "SES authenticates before tenant scope and resolves content only afterwards" do
+    conn =
+      conn_with_auth(postmark_payload())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(
+          provider: :ses,
+          provider_module: OrderedVerifiedProvider,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
+      )
+
+    assert conn.status == 200
+
+    assert Process.get(:mailglass_inbound_pipeline_order)
+           |> Enum.reverse() == [:verify, :tenant, :resolve_content, :normalize]
+  end
+
+  test "SES authentication failure performs neither tenant resolution nor content retrieval" do
+    Process.put(:mailglass_inbound_ordered_verify, :reject)
+
+    conn =
+      conn_with_auth(postmark_payload())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(provider: :ses, provider_module: OrderedVerifiedProvider)
+      )
+
+    assert conn.status == 401
+    refute Process.get(:mailglass_inbound_tenant_resolved)
+    assert Process.get(:mailglass_inbound_pipeline_order) |> Enum.reverse() == [:verify]
+  end
+
+  test "authenticated transient SES content failure stays retryable and persists no terminal evidence" do
+    Process.put(:mailglass_inbound_resolve_content_failure, :s3_object_not_ready)
+
+    conn =
+      conn_with_auth(postmark_payload())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+      |> IngressPlug.call(
+        IngressPlug.init(
+          provider: :ses,
+          provider_module: OrderedVerifiedProvider,
+          persistence: FakePersistence
+        )
+      )
+
+    assert conn.status == 500
+    assert Jason.decode!(conn.resp_body)["reason"] == "s3_object_not_ready"
+    assert Process.get(:mailglass_inbound_terminal_evidence) == nil
+  end
+
+  test "authenticated permanent SES content failure acks only after terminal evidence commits" do
+    Process.put(:mailglass_inbound_resolve_content_failure, :s3_fetch_failed)
+
+    opts =
+      IngressPlug.init(
+        provider: :ses,
+        provider_module: OrderedVerifiedProvider,
+        persistence: FakePersistence
+      )
+
+    conn =
+      conn_with_auth(postmark_payload())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+      |> IngressPlug.call(opts)
+
+    assert conn.status == 200
+    assert Jason.decode!(conn.resp_body)["status"] == "terminal_evidence_committed"
+
+    assert {"tenant-123", :ses, %Request{raw_body: raw}, %VerifiedRequest{}, :s3_fetch_failed} =
+             Process.get(:mailglass_inbound_terminal_evidence)
+
+    assert raw == postmark_payload()
+
+    Process.put(:mailglass_inbound_terminal_persist_error, true)
+
+    failed =
+      conn_with_auth(postmark_payload())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+      |> IngressPlug.call(opts)
+
+    assert failed.status == 500
+    assert Jason.decode!(failed.resp_body)["reason"] == "persist_failed"
   end
 
   test "returns 500 when sendgrid raw mime delivery is not configured" do
@@ -412,7 +603,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
       sendgrid_conn(Map.delete(sendgrid_params(), "email"))
       |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
 
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
 
     body = Jason.decode!(conn.resp_body)
 
@@ -428,7 +620,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
       sendgrid_conn(sendgrid_params())
       |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
 
-    conn = IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
+    conn =
+      IngressPlug.call(conn, IngressPlug.init(provider: :sendgrid, persistence: FakePersistence))
 
     assert conn.status == 500
     assert Jason.decode!(conn.resp_body)["reason"] == "webhook_verification_key_missing"
@@ -466,7 +659,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert conn.status == 200
     assert Jason.decode!(conn.resp_body)["status"] == "replay"
     # No persistence, no execution — replay creates no state (T-46-02).
-    assert Process.get(:mailglass_inbound_last_handoff) == nil
+    assert Process.get(:mailglass_inbound_terminal_evidence) == nil
+
     assert Process.get(:mailglass_inbound_last_execution_result) == nil
   end
 
@@ -488,7 +682,9 @@ defmodule MailglassInbound.Ingress.PlugTest do
 
     assert conn.status == 200
     assert Jason.decode!(conn.resp_body)["status"] == "control_plane"
-    assert Process.get(:mailglass_inbound_last_handoff) == nil
+
+    assert Process.get(:mailglass_inbound_terminal_evidence) == nil
+
     assert Process.get(:mailglass_inbound_last_execution_result) == nil
   end
 
@@ -528,7 +724,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     conn =
       IngressPlug.call(
         conn,
-        IngressPlug.init(provider: :mailgun, provider_module: StubProvider, persistence: FakePersistence)
+        IngressPlug.init(
+          provider: :mailgun,
+          provider_module: StubProvider,
+          persistence: FakePersistence
+        )
       )
 
     assert conn.status == 401
@@ -545,7 +745,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     conn =
       IngressPlug.call(
         conn,
-        IngressPlug.init(provider: :ses, provider_module: StubProvider, persistence: FakePersistence)
+        IngressPlug.init(
+          provider: :ses,
+          provider_module: StubProvider,
+          persistence: FakePersistence
+        )
       )
 
     assert conn.status == 401
@@ -564,7 +768,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     conn =
       IngressPlug.call(
         conn,
-        IngressPlug.init(provider: :ses, provider_module: StubProvider, persistence: FakePersistence)
+        IngressPlug.init(
+          provider: :ses,
+          provider_module: StubProvider,
+          persistence: FakePersistence
+        )
       )
 
     body = Jason.decode!(conn.resp_body)
@@ -592,7 +800,11 @@ defmodule MailglassInbound.Ingress.PlugTest do
     conn =
       IngressPlug.call(
         conn,
-        IngressPlug.init(provider: :ses, provider_module: StubProvider, persistence: FakePersistence)
+        IngressPlug.init(
+          provider: :ses,
+          provider_module: StubProvider,
+          persistence: FakePersistence
+        )
       )
 
     body = Jason.decode!(conn.resp_body)
@@ -614,6 +826,7 @@ defmodule MailglassInbound.Ingress.PlugTest do
   test "resolve_config!(:ses, ...) threads :s3_retry_opts from opts config into verify config" do
     Process.delete(:mailglass_inbound_captured_config)
     retry_opts = [attempts: 5, backoff_ms: [0, 0, 0, 0]]
+    s3_max_bytes = 1_048_576
 
     conn = stub_provider_conn(:ses)
 
@@ -623,7 +836,12 @@ defmodule MailglassInbound.Ingress.PlugTest do
         provider: :ses,
         provider_module: ConfigCaptureProvider,
         persistence: FakePersistence,
-        config: [s3_fetcher: nil, cert_cache_ttl_seconds: 60, s3_retry_opts: retry_opts]
+        config: [
+          s3_fetcher: nil,
+          s3_max_bytes: s3_max_bytes,
+          cert_cache_ttl_seconds: 60,
+          s3_retry_opts: retry_opts
+        ]
       )
     )
 
@@ -631,6 +849,7 @@ defmodule MailglassInbound.Ingress.PlugTest do
 
     assert is_map(captured)
     assert captured[:s3_retry_opts] == retry_opts
+    assert captured[:s3_max_bytes] == s3_max_bytes
   end
 
   test "resolve_config!(:ses, ...) defaults :s3_retry_opts to [] when unset" do
@@ -875,5 +1094,33 @@ defmodule MailglassInbound.Ingress.PlugTest do
       "--alt42--\r\n"
     ]
     |> IO.iodata_to_binary()
+  end
+
+  test "pipeline makes terminal verification outcomes before persistence work" do
+    deps = %{
+      verify: fn _, _, _, _ ->
+        send(self(), :verify)
+        {:replay}
+      end
+    }
+
+    assert {:replay} =
+             MailglassInbound.Ingress.Pipeline.run(:postmark, :request, %{}, [], deps)
+
+    assert_receive :verify
+  end
+
+  test "pipeline passes only verified facts to the persistence lifecycle" do
+    deps = %{
+      verify: fn _, _, _, _ ->
+        send(self(), :verify)
+        %{provider_id: "verified"}
+      end
+    }
+
+    assert {:persist, :request, %{provider_id: "verified"}} =
+             MailglassInbound.Ingress.Pipeline.run(:postmark, :request, %{}, [], deps)
+
+    assert_receive :verify
   end
 end

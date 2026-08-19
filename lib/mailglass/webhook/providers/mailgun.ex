@@ -19,11 +19,22 @@ defmodule Mailglass.Webhook.Providers.Mailgun do
   @spec verify!(binary(), [{String.t(), String.t()}], map()) :: :ok | {:ok, :replay}
   def verify!(raw_body, _headers, %{} = config) when is_binary(raw_body) do
     signing_key = fetch_signing_key!(config)
+    verify_decoded_with_key!(Jason.decode(raw_body), signing_key, config)
+  end
+
+  @doc false
+  @spec verify_decoded!({:ok, term()} | {:error, term()}, [{String.t(), String.t()}], map()) ::
+          :ok | {:ok, :replay}
+  def verify_decoded!(decoded, _headers, %{} = config) do
+    signing_key = fetch_signing_key!(config)
+    verify_decoded_with_key!(decoded, signing_key, config)
+  end
+
+  defp verify_decoded_with_key!({:ok, %{} = payload}, signing_key, config) do
     tolerance = Map.get(config, :timestamp_tolerance_seconds, @default_tolerance_seconds)
     future_skew = Map.get(config, :future_skew_seconds, @default_future_skew_seconds)
     replay_ttl = Map.get(config, :replay_cache_ttl_seconds, @default_replay_cache_ttl_seconds)
 
-    payload = decode_payload!(raw_body)
     {timestamp, token, signature} = fetch_signature_fields!(payload)
 
     expected_signature =
@@ -44,21 +55,29 @@ defmodule Mailglass.Webhook.Providers.Mailgun do
     end
   end
 
+  defp verify_decoded_with_key!(_decoded, _signing_key, _config) do
+    raise SignatureError.new(:malformed_header,
+            provider: :mailgun,
+            context: %{detail: "signature payload is not valid Mailgun webhook JSON"}
+          )
+  end
+
   @impl Mailglass.Webhook.Provider
   @spec normalize(binary(), [{String.t(), String.t()}]) :: [Event.t()]
-  def normalize(raw_body, _headers) when is_binary(raw_body) do
-    case Jason.decode(raw_body) do
-      {:ok, %{} = payload} ->
-        [build_event(payload)]
+  def normalize(raw_body, headers) when is_binary(raw_body),
+    do: normalize_decoded(Jason.decode(raw_body), headers)
 
-      {:ok, _other} ->
-        Logger.warning("[mailglass] Mailgun normalize: expected JSON object payload")
-        []
+  @doc false
+  def normalize_decoded({:ok, %{} = payload}, _headers), do: [build_event(payload)]
 
-      {:error, _reason} ->
-        Logger.warning("[mailglass] Mailgun normalize: malformed JSON body")
-        []
-    end
+  def normalize_decoded({:ok, _other}, _headers) do
+    Logger.warning("[mailglass] Mailgun normalize: expected JSON object payload")
+    []
+  end
+
+  def normalize_decoded(_decoded, _headers) do
+    Logger.warning("[mailglass] Mailgun normalize: malformed JSON body")
+    []
   end
 
   defp fetch_signing_key!(config) do
@@ -77,19 +96,6 @@ defmodule Mailglass.Webhook.Providers.Mailgun do
 
       _other ->
         raise ConfigError.new(:invalid, context: %{key: :signing_key, provider: :mailgun})
-    end
-  end
-
-  defp decode_payload!(raw_body) do
-    case Jason.decode(raw_body) do
-      {:ok, %{} = payload} ->
-        payload
-
-      _ ->
-        raise SignatureError.new(:malformed_header,
-                provider: :mailgun,
-                context: %{detail: "signature payload is not valid Mailgun webhook JSON"}
-              )
     end
   end
 

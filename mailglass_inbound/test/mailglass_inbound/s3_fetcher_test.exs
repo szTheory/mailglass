@@ -16,6 +16,13 @@ defmodule MailglassInbound.S3FetcherTest do
   end
 
   describe "S3Fetcher.Fake (test default)" do
+    test "returns configured metadata independently of the object body" do
+      S3Fetcher.Fake.put("inbound-bucket", "msg-key-1", "raw mime body")
+
+      assert {:ok, %{content_length: 13}} =
+               S3Fetcher.Fake.head("inbound-bucket", "msg-key-1", [])
+    end
+
     test "returns a configured {:ok, binary} for a canned bucket/key" do
       S3Fetcher.Fake.put("inbound-bucket", "msg-key-1", "raw mime body")
 
@@ -43,6 +50,13 @@ defmodule MailglassInbound.S3FetcherTest do
   end
 
   describe "S3Fetcher.ExAwsS3 (real adapter, gated)" do
+    test "extracts ContentLength from a metadata-only gateway response" do
+      stub = fn _bucket, _key -> {:ok, %{content_length: 42, body: "must not be used"}} end
+
+      assert {:ok, %{content_length: 42}} =
+               S3Fetcher.ExAwsS3.head("bucket", "key", gateway_head_object: stub)
+    end
+
     test "extracts :body from the gateway's {:ok, %{body: binary}} (D-46-15)" do
       # Inject a stub gateway via opts so we exercise the :body extraction
       # without ExAws being installed.
@@ -128,6 +142,57 @@ defmodule MailglassInbound.S3FetcherTest do
       assert err.type == :s3_fetch_failed
       # only ONE attempt — the non-retryable error short-circuits
       assert S3Fetcher.Fake.call_count("b", "k") == 1
+    end
+
+    test "retries only the closed transient S3 outcome matrix" do
+      transient_reasons = [
+        :s3_object_not_ready,
+        {:s3_object_not_ready, :replica_lag},
+        :timeout,
+        {:error, :timeout},
+        {:exit, :timeout},
+        :throttled,
+        {:http_error, 503},
+        {:http_error, 503, "upstream unavailable"}
+      ]
+
+      for {reason, index} <- Enum.with_index(transient_reasons) do
+        key = "transient-#{index}"
+        S3Fetcher.Fake.put_error("b", key, reason)
+
+        err =
+          assert_raise S3FetchError, fn ->
+            S3Fetcher.Retry.fetch_with_retry(S3Fetcher.Fake, "b", key, @opts)
+          end
+
+        assert err.type == :s3_object_not_ready
+        assert S3Fetcher.Fake.call_count("b", key) == 3
+      end
+    end
+
+    test "does not retry permanent or unknown S3 outcomes" do
+      permanent_reasons = [
+        :access_denied,
+        :s3_not_found,
+        :s3_object_too_large,
+        :invalid_content_length,
+        {:http_error, 403},
+        {:http_error, 403, "forbidden"},
+        {:unexpected, :adapter_shape}
+      ]
+
+      for {reason, index} <- Enum.with_index(permanent_reasons) do
+        key = "permanent-#{index}"
+        S3Fetcher.Fake.put_error("b", key, reason)
+
+        err =
+          assert_raise S3FetchError, fn ->
+            S3Fetcher.Retry.fetch_with_retry(S3Fetcher.Fake, "b", key, @opts)
+          end
+
+        assert err.type == :s3_fetch_failed
+        assert S3Fetcher.Fake.call_count("b", key) == 1
+      end
     end
 
     # WR-06: an absent-ex_aws deployment must NOT burn the full retry budget +

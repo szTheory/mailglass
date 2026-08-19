@@ -4,6 +4,19 @@ defmodule Mailglass.SuppressionStore.ETSTest do
   alias Mailglass.SuppressionStore.ETS
   alias Mailglass.Suppression.Entry
 
+  defmodule LegacyStore do
+    def check(key, _opts) do
+      send(
+        Application.fetch_env!(:mailglass, :legacy_suppression_store_test_pid),
+        {:legacy_check, key}
+      )
+
+      :not_suppressed
+    end
+
+    def record(_attrs, _opts), do: {:error, :unsupported}
+  end
+
   setup do
     # Ensure the ETS supervisor is running and table exists
     assert Process.whereis(Mailglass.SuppressionStore.ETS.TableOwner) != nil,
@@ -17,6 +30,51 @@ defmodule Mailglass.SuppressionStore.ETSTest do
     test "Test 1: returns :not_suppressed for unknown address" do
       result = ETS.check(%{tenant_id: "t1", address: "a@b.c", stream: :transactional}, [])
       assert result == :not_suppressed
+    end
+  end
+
+  describe "check_many/2" do
+    test "returns one result for every input position, including duplicates and mixed hits" do
+      {:ok, _} =
+        ETS.record(
+          %{
+            tenant_id: "t1",
+            address: "blocked@b.c",
+            scope: :address,
+            reason: :manual,
+            source: "test"
+          },
+          []
+        )
+
+      keys = [
+        %{tenant_id: "t1", address: "clean@b.c", stream: :transactional},
+        %{tenant_id: "t1", address: "blocked@b.c", stream: :transactional},
+        %{tenant_id: "t1", address: "clean@b.c", stream: :transactional}
+      ]
+
+      assert [:not_suppressed, {:suppressed, %Entry{scope: :address}}, :not_suppressed] =
+               ETS.check_many(keys, [])
+    end
+  end
+
+  describe "Mailglass.SuppressionStore.check_many/3" do
+    test "uses a check/2-only legacy store without changing positional results" do
+      Application.put_env(:mailglass, :legacy_suppression_store_test_pid, self())
+      on_exit(fn -> Application.delete_env(:mailglass, :legacy_suppression_store_test_pid) end)
+
+      keys = [
+        %{tenant_id: "t1", address: "one@b.c"},
+        %{tenant_id: "t1", address: "two@b.c"},
+        %{tenant_id: "t1", address: "one@b.c"}
+      ]
+
+      assert [:not_suppressed, :not_suppressed, :not_suppressed] =
+               Mailglass.SuppressionStore.check_many(LegacyStore, keys, batch_size: 2)
+
+      assert_receive {:legacy_check, %{address: "one@b.c"}}
+      assert_receive {:legacy_check, %{address: "two@b.c"}}
+      assert_receive {:legacy_check, %{address: "one@b.c"}}
     end
   end
 

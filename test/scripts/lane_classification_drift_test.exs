@@ -72,7 +72,8 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   @advisory_matrix_gating_count 2
   @advisory_matrix_advisory_count 5
 
-  @required_lanes MapSet.new(Mailglass.CILanes.required_lanes())
+  @required_lanes MapSet.new(Mailglass.CILanes.release_required_lanes())
+  @merge_required_lanes MapSet.new(Mailglass.CILanes.required_lanes())
   @advisory_classified_lanes MapSet.new(Mailglass.CILanes.advisory_classified_lanes())
   @publish_gating_lanes MapSet.new(Mailglass.CILanes.publish_gating_lanes())
   @structural_lanes MapSet.new(Mailglass.CILanes.structural_lanes())
@@ -88,14 +89,14 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   # Tests
   # ---------------------------------------------------------------------------
 
-  test "REQUIRED_LANES (publish-hex.yml) set-equals Mailglass.CILanes.required_lanes/0" do
+  test "REQUIRED_LANES (publish-hex.yml) set-equals the release-required registry" do
     js_source = File.read!(@publish_hex_path)
     required_from_js = parse_js_array(js_source, "REQUIRED_LANES")
 
     {only_in_js, only_in_registry} = drift(required_from_js, @required_lanes)
 
     assert MapSet.size(only_in_js) == 0 and MapSet.size(only_in_registry) == 0,
-           "publish-hex.yml's REQUIRED_LANES and Mailglass.CILanes.required_lanes/0 " <>
+           "publish-hex.yml's REQUIRED_LANES and Mailglass.CILanes.release_required_lanes/0 " <>
              "have drifted:\n" <>
              "  In the JS array but missing from CILanes: #{inspect(MapSet.to_list(only_in_js))}\n" <>
              "  In CILanes but missing from the JS array: #{inspect(MapSet.to_list(only_in_registry))}"
@@ -281,23 +282,23 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
              "Mailglass.CILanes and publish-hex.yml): #{inspect(MapSet.to_list(only_in_registry))}"
   end
 
-  test "ci.yml parses to exactly 24 jobs and all_classified_lanes/0 returns exactly 24 distinct names" do
+  test "ci.yml parses to exactly 26 jobs and all_classified_lanes/0 returns exactly 26 distinct names" do
     ci_source = File.read!(@ci_yml_path)
     job_names = Mailglass.CIYaml.job_names(ci_source)
     classified = Mailglass.CILanes.all_classified_lanes()
 
-    assert map_size(job_names) == 24,
-           "expected exactly 24 ci.yml jobs (23 pre-existing + the conformance_gates job " <>
-             "added in Phase 141 plan 03) — got #{map_size(job_names)}. A future legitimate " <>
+    assert map_size(job_names) == 26,
+           "expected exactly 26 ci.yml jobs after deterministic-core and inbound-Dialyzer promotion " <>
+             "in Phase 159 — got #{map_size(job_names)}. A future legitimate " <>
              "job addition must update this count deliberately, not delete the guard."
 
-    assert length(classified) == 24,
-           "expected Mailglass.CILanes.all_classified_lanes/0 to return exactly 24 entries " <>
-             "(7 required + 3 advisory + 12 publish-gating + 2 structural) — got " <>
+    assert length(classified) == 26,
+           "expected Mailglass.CILanes.all_classified_lanes/0 to return exactly 26 entries " <>
+             "after deduplicating the merge and release axes — got " <>
              "#{length(classified)}"
 
-    assert MapSet.size(MapSet.new(classified)) == 24,
-           "all_classified_lanes/0 returned 24 entries but fewer than 24 distinct strings — " <>
+    assert MapSet.size(MapSet.new(classified)) == 26,
+           "all_classified_lanes/0 returned 26 entries but fewer than 26 distinct strings — " <>
              "a lane sits in two buckets, which classify/1 must never allow"
   end
 
@@ -1225,6 +1226,32 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
     end
   end
 
+  test "Phase 159 policy keeps target required IDs disjoint from advisory-only IDs" do
+    policy = Mailglass.CIPolicy.load!()
+    target_ids = policy.target_required |> Enum.map(& &1.id) |> MapSet.new()
+    advisory_ids = MapSet.new(policy.advisory)
+
+    assert MapSet.disjoint?(target_ids, advisory_ids)
+
+    promoted =
+      update_in(
+        policy.target_required,
+        &(&1 ++
+            [
+              %{
+                id: "demo_browser_evidence",
+                name: "Demo Browser Evidence (Docker Compose / Chromium)",
+                behavior: :docs,
+                ci_only_reason: "advisory"
+              }
+            ])
+      )
+
+    assert_raise ArgumentError, ~r/target required and advisory lane IDs overlap/, fn ->
+      Mailglass.CIPolicy.validate!(promoted)
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------
@@ -1292,9 +1319,13 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   # exactly one.
   defp classify_lane_buckets(name) do
     []
-    |> maybe_add(:required, name in @required_lanes)
+    |> maybe_add(:required, name in @merge_required_lanes)
     |> maybe_add(:advisory, prefix_match?(name, @advisory_classified_lanes))
-    |> maybe_add(:publish_gating, prefix_match?(name, @publish_gating_lanes))
+    |> maybe_add(
+      :publish_gating,
+      not prefix_match?(name, @merge_required_lanes) and
+        prefix_match?(name, @publish_gating_lanes)
+    )
     |> maybe_add(:structural, prefix_match?(name, @structural_lanes))
   end
 
@@ -1373,7 +1404,7 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   # classification accessors — read the lane names from CILanes, never
   # duplicate them as literals in this file.
   defp cilanes_classification_pairs do
-    required = Enum.map(Mailglass.CILanes.required_lanes(), &{&1, "required"})
+    required = Enum.map(Mailglass.CILanes.release_required_lanes(), &{&1, "required"})
     advisory = Enum.map(Mailglass.CILanes.advisory_classified_lanes(), &{&1, "advisory"})
     publish_gating = Enum.map(Mailglass.CILanes.publish_gating_lanes(), &{&1, "publish-gating"})
     structural = Enum.map(Mailglass.CILanes.structural_lanes(), &{&1, "structural"})

@@ -7,10 +7,10 @@ defmodule Mailglass.OptionalDeps.Oban do
   `Mailglass.Outbound.deliver_later/2` falls back to `Task.Supervisor` with a
   `Logger.warning` emitted at boot (see `Mailglass.Application`).
 
-  Oban integration lands in  (Outbound). This gateway is delivered in
-   so Config/Telemetry can reference it without forward-reference pain.
+  Mailglass keeps Oban-specific calls behind this gateway so core delivery,
+  configuration, and telemetry code can compile cleanly when Oban is absent.
 
-  ##  addition — TenancyMiddleware
+  ## TenancyMiddleware
 
   `Mailglass.Oban.TenancyMiddleware` (defined as a sibling module in this
   file, conditionally compiled when `Oban.Worker` is loaded) serializes
@@ -70,6 +70,37 @@ defmodule Mailglass.OptionalDeps.Oban do
       Oban.insert_all(jobs)
     else
       {:error, :oban_unavailable}
+    end
+  end
+
+  @doc """
+  Adds an `Oban.insert_all/3` operation to an existing `Ecto.Multi`.
+
+  The jobs may be a list or a function of prior Multi changes. When Oban is
+  unavailable the named step fails inside the Multi, rather than allowing a
+  caller to acknowledge a durable queue without a durable job.
+
+  `:oban_multi_insert_all` is a test-only failure seam. It receives the
+  Multi, name, and jobs builder and must return an Ecto.Multi operation
+  result; production applications leave it unset.
+  """
+  @doc since: "2.6.0"
+  @spec insert_all(Ecto.Multi.t(), atom(), [term()] | (map() -> [term()])) :: Ecto.Multi.t()
+  def insert_all(%Ecto.Multi{} = multi, name, jobs) when is_atom(name) do
+    case Application.get_env(:mailglass, :oban_multi_insert_all) do
+      override when is_function(override, 3) ->
+        Ecto.Multi.run(multi, name, fn _repo, _changes -> override.(multi, name, jobs) end)
+
+      nil ->
+        if available?() do
+          # Use the explicit Oban instance form to select the Multi-only
+          # contract. The overloaded three-argument form also admits the
+          # synchronous `[Oban.Job.t()]` return type in Oban's typespec even
+          # though a Multi is supplied as the first argument.
+          Oban.insert_all(Oban, multi, name, jobs)
+        else
+          Ecto.Multi.error(multi, name, :oban_unavailable)
+        end
     end
   end
 end

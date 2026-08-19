@@ -7,7 +7,10 @@ defmodule MailglassInbound.Ingress.Persist do
   alias MailglassInbound.InboundRecords
   alias MailglassInbound.InboundRecords.InboundEvidence
   alias MailglassInbound.InboundRecords.InboundRecord
+  alias MailglassInbound.Ports
   alias MailglassInbound.Router.Matcher
+
+  @route_binding_key "mailglass_execution_route"
 
   # Returns the schema-prefix option that must be passed to all direct repo
   # calls (insert, one, all) so they route to the configured Postgres schema
@@ -31,6 +34,8 @@ defmodule MailglassInbound.Ingress.Persist do
       when is_binary(tenant_id) and is_list(opts) do
     repo = Keyword.get(opts, :repo, MailglassInbound.Repo)
     provider = normalize_provider(provider)
+    route_result = route_compatibility(message, opts)
+    evidence = put_route_binding(handoff.evidence, route_result, opts)
 
     # WR-03: compute the diagnostic suppression flag BEFORE the write transaction.
     # The lookup hits the CORE suppression store (a different repo / connection
@@ -52,11 +57,11 @@ defmodule MailglassInbound.Ingress.Persist do
                 tenant_id,
                 provider,
                 message,
-                handoff.evidence,
+                evidence,
                 suppression_flagged
               )
             end)
-            |> resolve_fingerprint_race(repo, tenant_id, provider, message, handoff.evidence)
+            |> resolve_fingerprint_race(repo, tenant_id, provider, message, evidence)
 
           {transact_result,
            %{
@@ -70,8 +75,6 @@ defmodule MailglassInbound.Ingress.Persist do
 
     case result do
       {:ok, payload} ->
-        route_result = route_compatibility(message, opts)
-
         {:ok,
          payload
          |> Map.put(:route, route_result)
@@ -80,6 +83,74 @@ defmodule MailglassInbound.Ingress.Persist do
       other ->
         other
     end
+  end
+
+  @doc false
+  @spec persist_terminal_failure(String.t(), atom(), map(), map(), atom(), keyword()) ::
+          {:ok, map()} | {:error, term()}
+  def persist_terminal_failure(
+        tenant_id,
+        :ses = provider,
+        request,
+        verified,
+        :s3_fetch_failed,
+        opts
+      )
+      when is_binary(tenant_id) and is_map(request) and is_map(verified) and is_list(opts) do
+    with raw_signed_request when is_binary(raw_signed_request) <- Map.get(request, :raw_body),
+         %{} = envelope <- Map.get(verified, :envelope) do
+      do_persist_terminal_failure(
+        tenant_id,
+        provider,
+        request,
+        verified,
+        envelope,
+        raw_signed_request,
+        opts
+      )
+    else
+      _ -> {:error, :terminal_evidence_incomplete}
+    end
+  end
+
+  def persist_terminal_failure(_tenant_id, _provider, _request, _verified, _failure_class, _opts),
+    do: {:error, :terminal_failure_class_not_persistable}
+
+  defp do_persist_terminal_failure(
+         tenant_id,
+         provider,
+         request,
+         verified,
+         envelope,
+         raw_signed_request,
+         opts
+       ) do
+    handoff = %{
+      tenant_id: tenant_id,
+      provider: provider,
+      message: %InboundMessage{
+        tenant_id: tenant_id,
+        provider: provider,
+        provider_message_id: terminal_provider_message_id(verified),
+        received_at: DateTime.utc_now()
+      },
+      evidence: %{
+        raw_payload: envelope,
+        raw_headers: headers_to_map(Map.get(request, :headers, [])),
+        raw_signed_request: raw_signed_request,
+        verification_facts: Map.get(verified, :verification_facts, %{}),
+        parse_warnings: Map.get(verified, :warnings, %{}),
+        attachment_blobs: %{},
+        terminal_failure_class: "s3_fetch_failed",
+        terminal_context: %{
+          "provider" => Atom.to_string(provider),
+          "replayable" => true,
+          "schema_version" => 1
+        }
+      }
+    }
+
+    persist(handoff, opts)
   end
 
   defp persist_in_transaction(repo, tenant_id, provider, message, evidence, suppression_flagged) do
@@ -93,7 +164,8 @@ defmodule MailglassInbound.Ingress.Persist do
          }}
 
       nil ->
-        with {:ok, record} <- insert_record(repo, tenant_id, provider, message, suppression_flagged),
+        with {:ok, record} <-
+               insert_record(repo, tenant_id, provider, message, suppression_flagged),
              {:ok, evidence_row} <- insert_evidence(repo, tenant_id, provider, record, evidence) do
           {:ok,
            %{
@@ -148,6 +220,8 @@ defmodule MailglassInbound.Ingress.Persist do
         nil
 
       fingerprint ->
+        sha256 = evidence_raw_mime_sha256(evidence)
+
         query =
           from(record in InboundRecord,
             join: inbound_evidence in InboundEvidence,
@@ -156,7 +230,9 @@ defmodule MailglassInbound.Ingress.Persist do
               record.tenant_id == ^tenant_id and
                 record.provider == ^"sendgrid" and
                 inbound_evidence.provider == ^"sendgrid" and
-                fragment("md5(?)", inbound_evidence.raw_mime) == ^fingerprint,
+                (inbound_evidence.raw_mime_sha256 == ^sha256 or
+                   (is_nil(inbound_evidence.raw_mime_sha256) and
+                      inbound_evidence.raw_mime_fingerprint == ^fingerprint)),
             limit: 1
           )
 
@@ -192,6 +268,8 @@ defmodule MailglassInbound.Ingress.Persist do
         nil
 
       fingerprint ->
+        sha256 = evidence_raw_mime_sha256(evidence)
+
         query =
           from(record in InboundRecord,
             join: inbound_evidence in InboundEvidence,
@@ -200,7 +278,9 @@ defmodule MailglassInbound.Ingress.Persist do
               record.tenant_id == ^tenant_id and
                 record.provider == ^"mailgun" and
                 inbound_evidence.provider == ^"mailgun" and
-                fragment("md5(?)", inbound_evidence.raw_mime) == ^fingerprint,
+                (inbound_evidence.raw_mime_sha256 == ^sha256 or
+                   (is_nil(inbound_evidence.raw_mime_sha256) and
+                      inbound_evidence.raw_mime_fingerprint == ^fingerprint)),
             limit: 1
           )
 
@@ -233,6 +313,8 @@ defmodule MailglassInbound.Ingress.Persist do
         nil
 
       fingerprint ->
+        sha256 = evidence_raw_mime_sha256(evidence)
+
         query =
           from(record in InboundRecord,
             join: inbound_evidence in InboundEvidence,
@@ -241,7 +323,9 @@ defmodule MailglassInbound.Ingress.Persist do
               record.tenant_id == ^tenant_id and
                 record.provider == ^"ses" and
                 inbound_evidence.provider == ^"ses" and
-                fragment("md5(?)", inbound_evidence.raw_mime) == ^fingerprint,
+                (inbound_evidence.raw_mime_sha256 == ^sha256 or
+                   (is_nil(inbound_evidence.raw_mime_sha256) and
+                      inbound_evidence.raw_mime_fingerprint == ^fingerprint)),
             limit: 1
           )
 
@@ -352,26 +436,8 @@ defmodule MailglassInbound.Ingress.Persist do
         false
 
       address ->
-        store =
-          Application.get_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.Ecto)
-
-        check_suppression(store, tenant_id, address)
+        Ports.Core.suppressed_sender?(tenant_id, address)
     end
-  end
-
-  # A raised exception (e.g. the configured store's repo is unavailable in an
-  # inbound-only runtime) is the same hazard class as `{:error, _}` — a store
-  # hiccup must never block legitimate inbound mail, so we degrade OPEN here too.
-  defp check_suppression(store, tenant_id, address) do
-    case store.check(%{tenant_id: tenant_id, address: String.downcase(address)}) do
-      {:suppressed, _entry} -> true
-      :not_suppressed -> false
-      {:error, _reason} -> false
-    end
-  rescue
-    _error -> false
-  catch
-    _kind, _reason -> false
   end
 
   defp first_from_address([%{address: address} | _rest]) when is_binary(address) and address != "",
@@ -385,6 +451,7 @@ defmodule MailglassInbound.Ingress.Persist do
 
   defp insert_evidence(repo, tenant_id, provider, record, evidence) do
     raw_mime_fingerprint = evidence_raw_mime_fingerprint(evidence)
+    raw_mime_sha256 = evidence_raw_mime_sha256(evidence)
 
     attrs = %{
       tenant_id: tenant_id,
@@ -393,6 +460,8 @@ defmodule MailglassInbound.Ingress.Persist do
       raw_payload: Map.get(evidence, :raw_payload, %{}),
       raw_headers: Map.get(evidence, :raw_headers, %{}),
       raw_mime: Map.get(evidence, :raw_mime),
+      raw_mime_sha256: raw_mime_sha256,
+      raw_signed_request: Map.get(evidence, :raw_signed_request),
       verification_facts:
         evidence
         |> Map.get(:verification_facts, %{})
@@ -400,6 +469,15 @@ defmodule MailglassInbound.Ingress.Persist do
       parse_warnings: Map.get(evidence, :parse_warnings, %{}),
       attachment_blobs: Map.get(evidence, :attachment_blobs, %{})
     }
+
+    attrs =
+      if Map.has_key?(evidence, :terminal_failure_class) do
+        attrs
+        |> Map.put(:terminal_failure_class, Map.get(evidence, :terminal_failure_class))
+        |> Map.put(:terminal_context, Map.get(evidence, :terminal_context, %{}))
+      else
+        attrs
+      end
 
     attrs
     |> InboundRecords.change_inbound_evidence()
@@ -425,6 +503,42 @@ defmodule MailglassInbound.Ingress.Persist do
     end
   end
 
+  # This binding is written with the canonical record and raw evidence in the
+  # same transaction. It is execution authority, not provider-supplied data.
+  # The worker rehydrates it from evidence and only uses job values as a
+  # mismatch check, never as a mailbox selector.
+  defp put_route_binding(evidence, %{status: :no_match}, _opts) do
+    Map.update(
+      evidence,
+      :verification_facts,
+      %{@route_binding_key => %{"status" => "no_match"}},
+      fn facts ->
+        Map.put(facts || %{}, @route_binding_key, %{"status" => "no_match"})
+      end
+    )
+  end
+
+  defp put_route_binding(evidence, %{status: :matched, mailbox: mailbox}, opts)
+       when is_atom(mailbox) do
+    router = Keyword.get(opts, :router)
+
+    binding =
+      case router_name(router) do
+        nil ->
+          %{"status" => "matched", "mailbox" => Atom.to_string(mailbox)}
+
+        router_name ->
+          %{"status" => "matched", "mailbox" => Atom.to_string(mailbox), "router" => router_name}
+      end
+
+    Map.update(evidence, :verification_facts, %{@route_binding_key => binding}, fn facts ->
+      Map.put(facts || %{}, @route_binding_key, binding)
+    end)
+  end
+
+  defp router_name(router) when is_atom(router) and not is_nil(router), do: Atom.to_string(router)
+  defp router_name(_router), do: nil
+
   defp duplicate_constraint?(changeset) do
     Enum.any?(changeset.errors, fn
       {:provider_message_id, {_msg, opts}} ->
@@ -438,7 +552,8 @@ defmodule MailglassInbound.Ingress.Persist do
   @fingerprint_constraints [
     "mailglass_inbound_records_mailgun_fingerprint_idx",
     "mailglass_inbound_records_sendgrid_fingerprint_idx",
-    "mailglass_inbound_records_ses_fingerprint_idx"
+    "mailglass_inbound_records_ses_fingerprint_idx",
+    "mailglass_inbound_evidence_sha256_idx"
   ]
 
   # CR-01: recognize an evidence-level fingerprint partial-unique-index violation
@@ -447,8 +562,11 @@ defmodule MailglassInbound.Ingress.Persist do
   # confusing it with any other future unique constraint on the same field.
   defp fingerprint_constraint?(changeset) do
     Enum.any?(changeset.errors, fn
-      {:raw_mime_fingerprint, {_msg, opts}} -> opts[:constraint_name] in @fingerprint_constraints
-      _ -> false
+      {field, {_msg, opts}} when field in [:raw_mime_fingerprint, :raw_mime_sha256] ->
+        opts[:constraint_name] in @fingerprint_constraints
+
+      _ ->
+        false
     end)
   end
 
@@ -462,6 +580,140 @@ defmodule MailglassInbound.Ingress.Persist do
       _ ->
         nil
     end
+  end
+
+  defp evidence_raw_mime_sha256(evidence) when is_map(evidence) do
+    case Map.get(evidence, :raw_mime) do
+      raw_mime when is_binary(raw_mime) and raw_mime != "" -> :crypto.hash(:sha256, raw_mime)
+      _ -> nil
+    end
+  end
+
+  @doc false
+  @spec backfill_sha256(keyword()) ::
+          {:ok,
+           %{
+             count: non_neg_integer(),
+             next_cursor: Ecto.UUID.t() | nil,
+             done?: boolean()
+           }}
+          | {:error, term()}
+  def backfill_sha256(opts \\ []) do
+    repo = Keyword.get(opts, :repo, MailglassInbound.Repo)
+    prefix = Keyword.get(opts, :prefix, MailglassInbound.Config.schema())
+    limit = Keyword.get(opts, :limit, 500)
+    after_id = Keyword.get(opts, :after_id)
+
+    Mailglass.Identifier.validate!(prefix, :prefix)
+
+    unless is_integer(limit) and limit > 0 and limit <= 5_000 do
+      raise ArgumentError, ":limit must be an integer between 1 and 5000"
+    end
+
+    unless is_nil(after_id) or match?({:ok, _uuid}, Ecto.UUID.cast(after_id)) do
+      raise ArgumentError, ":after_id must be a UUID string or nil"
+    end
+
+    repo.transact(fn -> backfill_sha256_batch(repo, prefix, limit, after_id) end)
+  end
+
+  defp backfill_sha256_batch(repo, prefix, limit, after_id) do
+    lock_key = "mailglass_inbound:sha256_backfill:#{prefix}"
+
+    with {:ok, %{rows: [[true]]}} <-
+           repo.query("SELECT pg_try_advisory_xact_lock(hashtext($1))", [lock_key], log: false),
+         {:ok, %{rows: rows, num_rows: count}} <-
+           run_sha256_batch(repo, prefix, limit, after_id) do
+      next_cursor = max_row_id(rows)
+      remaining_after = next_cursor || after_id
+
+      with {:ok, done?} <- backfill_done?(repo, prefix, remaining_after) do
+        {:ok, %{count: count, next_cursor: next_cursor, done?: done?}}
+      end
+    else
+      {:ok, %{rows: [[false]]}} -> {:error, :backfill_locked}
+      {:error, reason} -> {:error, reason}
+      _unexpected -> {:error, :backfill_lock_failed}
+    end
+  end
+
+  defp run_sha256_batch(repo, prefix, limit, after_id) do
+    {cursor_sql, params, limit_param} =
+      if is_binary(after_id) do
+        {" AND id > $1", [dump_uuid!(after_id), limit], "$2"}
+      else
+        {"", [limit], "$1"}
+      end
+
+    sql =
+      "WITH batch AS (" <>
+        "SELECT id FROM #{inspect(prefix)}.mailglass_inbound_evidence " <>
+        "WHERE raw_mime_sha256 IS NULL AND raw_mime IS NOT NULL#{cursor_sql} " <>
+        "ORDER BY id LIMIT #{limit_param} FOR UPDATE" <>
+        ") UPDATE #{inspect(prefix)}.mailglass_inbound_evidence AS evidence " <>
+        "SET raw_mime_sha256 = sha256(evidence.raw_mime) FROM batch " <>
+        "WHERE evidence.id = batch.id AND evidence.raw_mime_sha256 IS NULL " <>
+        "RETURNING evidence.id"
+
+    repo.query(sql, params, log: false)
+  end
+
+  defp backfill_done?(repo, prefix, after_id) do
+    {cursor_sql, params} =
+      if is_binary(after_id), do: {" AND id > $1", [dump_uuid!(after_id)]}, else: {"", []}
+
+    sql =
+      "SELECT EXISTS(SELECT 1 FROM #{inspect(prefix)}.mailglass_inbound_evidence " <>
+        "WHERE raw_mime_sha256 IS NULL AND raw_mime IS NOT NULL#{cursor_sql})"
+
+    case repo.query(sql, params, log: false) do
+      {:ok, %{rows: [[remaining?]]}} when is_boolean(remaining?) -> {:ok, not remaining?}
+      {:error, reason} -> {:error, reason}
+      _unexpected -> {:error, :backfill_remaining_check_failed}
+    end
+  end
+
+  defp max_row_id([]), do: nil
+
+  defp max_row_id(rows) do
+    id = rows |> Enum.map(&hd/1) |> Enum.max()
+
+    case Ecto.UUID.load(id) do
+      {:ok, uuid} -> uuid
+      :error -> id
+    end
+  end
+
+  defp dump_uuid!(uuid) do
+    {:ok, binary} = Ecto.UUID.dump(uuid)
+    binary
+  end
+
+  defp headers_to_map(headers) when is_list(headers) do
+    Enum.reduce(headers, %{}, fn
+      {name, value}, acc when is_binary(name) and is_binary(value) ->
+        Map.update(acc, String.downcase(name), [value], &(&1 ++ [value]))
+
+      _malformed, acc ->
+        acc
+    end)
+  end
+
+  defp headers_to_map(%{} = headers), do: headers
+  defp headers_to_map(_headers), do: %{}
+
+  defp terminal_provider_message_id(verified) do
+    envelope = Map.get(verified, :envelope, %{})
+
+    inner_id =
+      with message when is_binary(message) <- Map.get(envelope, "Message"),
+           {:ok, %{} = inner} <- Jason.decode(message) do
+        get_in(inner, ["mail", "messageId"])
+      else
+        _ -> nil
+      end
+
+    inner_id || Map.get(envelope, "MessageId")
   end
 
   defp maybe_put_fingerprint(verification_facts, nil), do: verification_facts

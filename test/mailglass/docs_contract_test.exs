@@ -558,6 +558,48 @@ defmodule Mailglass.DocsContractTest do
     end
   end
 
+  describe "v2.6 public documentation contract" do
+    test "current snapshot owns every additive seam and keeps architecture internals private" do
+      core = File.read!("docs/api_stability.md")
+      compatibility = File.read!("guides/compatibility-and-deprecations.md")
+      adopter = File.read!("guides/b2c-first-adopter.md")
+
+      assert v26_contract_errors(core, compatibility, adopter) == []
+      assert Mix.Task.get("mailglass.gen.migration")
+      assert Code.ensure_loaded?(Mailglass.Migration)
+      assert function_exported?(Mailglass.Migration, :up, 1)
+      assert function_exported?(Mailglass.Migration, :down, 1)
+      assert function_exported?(Mailglass.Migration, :migrated_version, 1)
+      assert %Mailglass.MigrationVersionError{} = struct(Mailglass.MigrationVersionError)
+      assert :dispatch_unavailable in Mailglass.SendError.__types__()
+      assert Map.has_key?(struct(Mailglass.SendError), :retry_class)
+    end
+
+    test "negative controls reject missing inventory facts and unsafe claims" do
+      core = File.read!("docs/api_stability.md")
+      compatibility = File.read!("guides/compatibility-and-deprecations.md")
+      adopter = File.read!("guides/b2c-first-adopter.md")
+
+      for {kind, token} <- v26_required_contract_tokens() do
+        {changed_core, changed_compatibility} =
+          if String.contains?(core, token) do
+            {String.replace(core, token, ""), compatibility}
+          else
+            {core, String.replace(compatibility, token, "")}
+          end
+
+        assert kind in v26_contract_errors(changed_core, changed_compatibility, adopter),
+               "removing #{inspect(token)} did not trigger #{inspect(kind)}"
+      end
+
+      stale = compatibility <> "\nThe current stable line is v1.x.\n"
+      assert :stale_version_claim in v26_contract_errors(core, stale, adopter)
+
+      ui_promise = adopter <> "\nThe operator dashboard ships a live delivery console.\n"
+      assert :admin_operator_behavior_claim in v26_contract_errors(core, compatibility, ui_promise)
+    end
+  end
+
   describe "jobs.md contract" do
     # guides/jobs.md is the public JTBD ramp-up guide. Its snippets are a
     # projection of the canonical surface, so they must keep parsing and keep
@@ -616,5 +658,47 @@ defmodule Mailglass.DocsContractTest do
       assert send_block =~ "Mailglass.deliver()"
       refute send_block =~ "Swoosh.Email.to"
     end
+  end
+
+  defp v26_contract_errors(core, compatibility, adopter) do
+    combined = core <> "\n" <> compatibility
+
+    missing =
+      for {kind, token} <- v26_required_contract_tokens(),
+          not String.contains?(combined, token),
+          do: kind
+
+    stale =
+      if Regex.match?(~r/current stable line is v1\.x/i, combined),
+        do: [:stale_version_claim],
+        else: []
+
+    ui_claim =
+      if Regex.match?(
+           ~r/(admin|operator) (dashboard|ui)[^\n]*(ships|provides|supports|visibly)/i,
+           adopter
+         ),
+         do: [:admin_operator_behavior_claim],
+         else: []
+
+    Enum.uniq(missing ++ stale ++ ui_claim)
+  end
+
+  defp v26_required_contract_tokens do
+    [
+      {:package_owner, "Package owner: `mailglass`"},
+      {:additive_interface, "mix mailglass.gen.migration --repo MyApp.Repo"},
+      {:additive_interface, "Mailglass.Migration.up/1"},
+      {:additive_interface, "Mailglass.Migration.down/1"},
+      {:additive_interface, "Mailglass.Migration.migrated_version/1"},
+      {:additive_interface, "Mailglass.MigrationVersionError"},
+      {:additive_interface, "`:dispatch_unavailable`"},
+      {:additive_interface, "`retry_class`"},
+      {:deprecation_status, "Status: deprecated in v2"},
+      {:replacement, "Replacement: `Mailglass.deliver/2`"},
+      {:removal_target, "Removal target: v3.0"},
+      {:additive_only, "No public v2 API is removed or renamed by v2.6."},
+      {:internal_boundary, "runtime configuration owner remains internal"}
+    ]
   end
 end

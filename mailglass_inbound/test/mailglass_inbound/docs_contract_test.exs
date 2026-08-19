@@ -335,14 +335,11 @@ defmodule MailglassInbound.DocsContractTest do
     end
   end
 
-  test "install docs keep Mailgun and SES outside the current stable provider contract" do
+  test "install docs name all four stable provider lanes" do
     install = File.read!(@install_path)
 
-    assert install =~ "The stable provider lanes in this slice are `:postmark` and `:sendgrid`."
-    assert install =~ "Mailgun and SES guides are integration references"
-    assert install =~ "not part of the current stable provider contract"
-
-    refute install =~ "The four supported providers are `:postmark`, `:sendgrid`, `:mailgun`, and"
+    assert install =~
+             "The four stable provider lanes are `:postmark`, `:sendgrid`, `:mailgun`, and `:ses`."
   end
 
   test "admin operator trust docs lock replay boundaries, canonical routing, and internal-ui framing" do
@@ -503,7 +500,9 @@ defmodule MailglassInbound.DocsContractTest do
     # tightening that would exclude a released core will trip this assertion.
     [_, floor_constraint] =
       Regex.run(~r/\{:mailglass,\s*"([^"]+)"/, mixfile) ||
-        flunk("mailglass_inbound/mix.exs is missing the mailglass dep (checked for MIX_PUBLISH form)")
+        flunk(
+          "mailglass_inbound/mix.exs is missing the mailglass dep (checked for MIX_PUBLISH form)"
+        )
 
     assert Version.match?(core_version, floor_constraint),
            "The inbound compatibility floor (#{inspect(floor_constraint)}) does not admit " <>
@@ -563,7 +562,7 @@ defmodule MailglassInbound.DocsContractTest do
     end
 
     refute compatibility =~ "Through `mailglass_inbound` `0.x`"
-    assert compatibility =~ "Through `mailglass_inbound` `1.x`"
+    assert compatibility =~ "Through `mailglass_inbound` `2.x`"
 
     for forbidden <- [
           "../docs/compatibility-and-deprecations.md",
@@ -644,6 +643,39 @@ defmodule MailglassInbound.DocsContractTest do
     assert readme_deferred =~ "publicly stable replay/command-surface API"
   end
 
+  test "v2.6 snapshot owns additive migration seams and has no inbound deprecation fiction" do
+    stability = File.read!(@stability_path)
+    install = File.read!(@install_path)
+
+    assert inbound_v26_contract_errors(stability, install) == []
+    assert Mix.Task.get("mailglass.inbound.gen.migration")
+    assert Code.ensure_loaded?(MailglassInbound.Migration)
+    assert function_exported?(MailglassInbound.Migration, :up, 1)
+    assert function_exported?(MailglassInbound.Migration, :down, 1)
+    assert function_exported?(MailglassInbound.Migration, :migrated_version, 1)
+  end
+
+  test "v2.6 negative controls reject missing ownership and fabricated lifecycle claims" do
+    stability = File.read!(@stability_path)
+    install = File.read!(@install_path)
+
+    for {kind, token} <- inbound_v26_required_tokens() do
+      changed_stability = String.replace(stability, token, "")
+      changed_install = String.replace(install, token, "")
+
+      assert kind in inbound_v26_contract_errors(changed_stability, changed_install),
+             "removing #{inspect(token)} did not trigger #{inspect(kind)}"
+    end
+
+    fabricated =
+      stability <> "\nStatus: deprecated in v2; remove MailglassInbound.Router in v3.0.\n"
+
+    assert :fabricated_deprecation in inbound_v26_contract_errors(fabricated, install)
+
+    ui_promise = install <> "\nThe operator UI ships inbound replay controls.\n"
+    assert :admin_operator_behavior_claim in inbound_v26_contract_errors(stability, ui_promise)
+  end
+
   defp contract_section!(document, section_name) do
     escaped = Regex.escape(section_name)
     pattern = ~r/^### `#{escaped}`\n([\s\S]*?)(?=^### `|^## |\z)/m
@@ -652,6 +684,41 @@ defmodule MailglassInbound.DocsContractTest do
       [_, section] -> section
       _ -> flunk("Missing #{section_name} contract section")
     end
+  end
+
+  defp inbound_v26_contract_errors(stability, install) do
+    combined = stability <> "\n" <> install
+
+    missing =
+      for {kind, token} <- inbound_v26_required_tokens(),
+          not String.contains?(combined, token),
+          do: kind
+
+    fabricated =
+      if Regex.match?(~r/Status: deprecated in v2[^\n]*MailglassInbound\./i, combined),
+        do: [:fabricated_deprecation],
+        else: []
+
+    ui_claim =
+      if Regex.match?(~r/(admin|operator) (dashboard|ui).*(ships|provides|supports)/i, combined),
+        do: [:admin_operator_behavior_claim],
+        else: []
+
+    Enum.uniq(missing ++ fabricated ++ ui_claim)
+  end
+
+  defp inbound_v26_required_tokens do
+    [
+      {:package_owner, "Package owner: `mailglass_inbound`"},
+      {:additive_interface, "mix mailglass.inbound.gen.migration --repo MyApp.Repo"},
+      {:additive_interface, "MailglassInbound.Migration.up/1"},
+      {:additive_interface, "MailglassInbound.Migration.down/1"},
+      {:additive_interface, "MailglassInbound.Migration.migrated_version/1"},
+      {:package_boundary, "independent migration history"},
+      {:deprecation_status, "Active v2 deprecations: none"},
+      {:removal_target, "v3 removal targets: none"},
+      {:internal_boundary, "ingress pipeline remains internal"}
+    ]
   end
 
   defp split_once!(document, delimiter, doc_name) do

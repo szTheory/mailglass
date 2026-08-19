@@ -7,27 +7,26 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   @release_target_path Path.expand("../../.planning/release-target.json", __DIR__)
   @contributing_path Path.expand("../../CONTRIBUTING.md", __DIR__)
   @recovery_runbook_facts [
-    "GitHub-native auto-merge",
-    "GITHUB_TOKEN",
     "minute 17",
-    "hourly",
-    "up to one hour",
-    "roughly 30 minutes",
-    "all expected tags",
-    "autorelease: tagged",
-    "partial linked-tag state",
-    "requires reconciliation",
+    "proposal-only",
+    "cannot merge it, create a tag, or publish",
     "workflow_dispatch",
-    "Direct manual recovery",
-    "manually creating the missing GitHub releases",
-    "release: published"
+    "Protected exact-digest chain",
+    "authorization checkpoint",
+    "release-please.yml",
+    "publish-hex.yml",
+    "package=all",
+    "immutable proposal",
+    "core → admin → inbound",
+    "credential-free and read-only",
+    "Do not manually create"
   ]
 
   test "release-please retains the complete recovery trigger set" do
     source = workflow_source()
 
     assert extract_trigger_block!(source, "push") =~ "branches:\n      - main"
-    assert extract_trigger_block!(source, "workflow_dispatch") =~ "workflow_dispatch: {}"
+    assert extract_trigger_block!(source, "workflow_dispatch") =~ "candidate_digest:"
     assert extract_trigger_block!(source, "schedule") =~ "cron: \"17 * * * *\""
 
     Enum.each(["push", "workflow_dispatch", "schedule"], fn trigger ->
@@ -39,19 +38,21 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end)
   end
 
-  test "preflight derives active owned tags from the release target and converges every release state" do
+  test "preflight delegates exact tag derivation to the versioned policy owner and converges every release state" do
     source = workflow_source()
     preflight = extract_step_block!(source, "Detect already-tagged release PR")
+    policy = File.read!(Path.join(@repo_root, "scripts/release_policy.exs"))
 
     assert File.exists?(@manifest_path)
     assert preflight =~ ".release-please-manifest.json"
     assert preflight =~ ".planning/release-target.json"
-    assert preflight =~ "release_packages"
-    assert preflight =~ "Active release target owns these tags"
+    assert preflight =~ "scripts/release_policy_expected_tags.sh"
+    assert preflight =~ "Protected release target owns these tags"
     assert preflight =~ "release manifest is missing or unreadable"
     assert preflight =~ "release manifest yielded no expected release tags"
-    assert preflight =~ "to_entries[]"
-    assert preflight =~ "mailglass-v\\($version)"
+    assert policy =~ "def expected_tags"
+    assert policy =~ "def manifest_tags"
+    assert policy =~ "mailglass_inbound"
     assert preflight =~ "${#present_tags[@]}"
     assert preflight =~ "${#missing_tags[@]}"
 
@@ -85,6 +86,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     source = workflow_source()
     preflight = extract_step_block!(source, "Detect already-tagged release PR")
 
+    assert source =~ "- name: Checkout protected main for release preflight"
+    assert source =~ "ref: refs/heads/main"
+    assert source =~ "fetch-depth: 0"
     assert preflight =~ "GH_REPO: ${{ github.repository }}"
     assert preflight =~ "gh api --include \"repos/${GH_REPO}/releases/tags/${tag}\""
     assert checkout_precedes_preflight?(source)
@@ -97,7 +101,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       assert {output, 0} =
                System.cmd("bash", [script],
                  cd: @repo_root,
-                 env: Map.to_list(env),
+                 env: Map.to_list(Map.put(env, "CANDIDATE_DIGEST", String.duplicate("d", 64))),
                  stderr_to_stdout: true
                )
 
@@ -120,7 +124,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       assert {output, status} =
                System.cmd("bash", [script],
                  cd: temp_dir,
-                 env: Map.to_list(env),
+                 env: Map.to_list(Map.put(env, "CANDIDATE_DIGEST", String.duplicate("d", 64))),
                  stderr_to_stdout: true
                )
 
@@ -141,7 +145,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
         assert {_output, status} =
                  System.cmd("bash", [script],
                    cd: @repo_root,
-                   env: Map.to_list(env),
+                   env: Map.to_list(Map.put(env, "CANDIDATE_DIGEST", String.duplicate("d", 64))),
                    stderr_to_stdout: true
                  )
 
@@ -161,7 +165,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       assert {output, status} =
                System.cmd("bash", [script],
                  cd: @repo_root,
-                 env: Map.to_list(env),
+                 env: Map.to_list(Map.put(env, "CANDIDATE_DIGEST", String.duplicate("d", 64))),
                  stderr_to_stdout: true
                )
 
@@ -247,41 +251,38 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert sync =~ "sync linked package pins to core $CORE_VERSION"
   end
 
-  test "release target is machine-validated before hands-free auto-merge" do
+  test "release target remains versioned and inactive until protected candidate capture" do
     source = workflow_source()
-    validation = extract_step_block!(source, "Validate automated release target")
+
+    validation =
+      extract_step_block!(source, "Capture Release Please proposal identity without activation")
+
     target = Jason.decode!(File.read!(@release_target_path))
 
-    assert target == %{
-             "status" => "active",
-             "release_packages" => ["mailglass", "mailglass_admin"],
-             "packages" => %{
-               "mailglass" => "2.4.0",
-               "mailglass_admin" => "2.4.0",
-               "mailglass_inbound" => "2.1.1"
-             }
-           }
+    assert target["schema_version"] == 1
+    assert target["status"] == "inactive"
+    assert target["package_set"] == ["mailglass", "mailglass_admin", "mailglass_inbound"]
+    assert target["candidate_versions"] == nil
+    assert target["proposal_identity"] == %{"head_sha" => nil, "source_sha" => nil}
 
     assert validation =~ ".planning/release-target.json"
-    assert validation =~ "release_packages"
-    assert validation =~ "publish exactly mailglass and mailglass_admin"
-    assert validation =~ ".release-please-manifest.json"
-    assert validation =~ "mailglass_admin/mix.exs"
-    assert validation =~ "mailglass_inbound/mix.exs"
-    assert validation =~ "Release target mismatch"
+    assert validation =~ "gh pr list --head release-please--branches--main"
+    assert validation =~ "proposal-candidate.json"
+    assert validation =~ "capture-candidate"
+    assert validation =~ "proposal/source identity"
 
     assert step_precedes?(
              source,
-             "Validate automated release target",
-             "Arm auto-merge on the release PR"
+             "Sync sibling package -> mailglass dep pin on release-please branch",
+             "Capture Release Please proposal identity without activation"
            )
   end
 
-  test "contributing documents the bounded hourly recovery and manual fallbacks" do
+  test "contributing documents proposal-only triggers and the protected exact-digest chain" do
     recovery_runbook =
       extract_markdown_section!(
         File.read!(@contributing_path),
-        "If a release publishes but the tags/publish never fire"
+        "If a release proposal or protected delivery stalls"
       )
 
     assert recovery_runbook?(recovery_runbook)
@@ -291,13 +292,22 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
              String.replace(recovery_runbook, "minute 17", "minute 18", global: true)
            )
 
-    refute recovery_runbook?(
-             String.replace(recovery_runbook, "up to one hour", "immediately", global: false)
-           )
+    refute recovery_runbook =~ "schedule is a tag-recovery mechanism"
 
     refute recovery_runbook?(
              String.replace(recovery_runbook, "workflow_dispatch", "manual dispatch", global: true)
            )
+
+    {release_dispatch, _} = :binary.match(recovery_runbook, "gh workflow run release-please.yml")
+    {tag_wait, _} = :binary.match(recovery_runbook, "Wait until all three expected tags")
+    {publish_dispatch, _} = :binary.match(recovery_runbook, "gh workflow run publish-hex.yml")
+
+    assert release_dispatch < tag_wait
+    assert tag_wait < publish_dispatch
+    assert recovery_runbook =~ ~s(-f candidate_digest="$DIGEST")
+    assert recovery_runbook =~ ~s(-f tag="mailglass-v${CORE_VERSION}")
+    assert recovery_runbook =~ "-f dry_run=false"
+    assert recovery_runbook =~ "-f core_full_suite_gate_skip_reason=n/a"
   end
 
   test "contributing documents the PAT-backed CI trigger and fail-loud branch-protection outcome" do
@@ -325,7 +335,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     schedule = extract_trigger_block!(source, "schedule")
 
     push =~ "branches:\n      - main" and
-      manual =~ "workflow_dispatch: {}" and
+      manual =~ "candidate_digest:" and
       schedule =~ "cron: \"17 * * * *\""
   end
 
@@ -425,14 +435,16 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
     System.cmd("bash", [script],
       cd: @repo_root,
-      env: Map.to_list(env),
+      # Historical tag recovery runs only for the protected dispatch path. The
+      # ordinary proposal path intentionally exits before it queries GitHub.
+      env: Map.to_list(Map.put_new(env, "CANDIDATE_DIGEST", String.duplicate("d", 64))),
       stderr_to_stdout: true
     )
   end
 
   defp checkout_precedes_preflight?(source) do
     case {
-      :binary.match(source, "- name: Checkout triggering revision for release preflight"),
+      :binary.match(source, "- name: Checkout protected main for release preflight"),
       :binary.match(source, "- name: Detect already-tagged release PR")
     } do
       {{checkout, _}, {preflight, _}} -> checkout < preflight
@@ -510,7 +522,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     action = extract_action_block!(source, "release")
 
     action =~ "uses: googleapis/release-please-action@" and
-      action =~ "if: ${{ steps.release-preflight.outputs.should_run == 'true' }}"
+      action =~ "steps.release-preflight.outputs.should_run == 'true'" and
+      action =~ "steps.protected-dispatch.outputs.content_verified == 'true'" and
+      action =~ "steps.protected-merge.outcome == 'success'"
   end
 
   defp extract_trigger_block!(source, trigger) do

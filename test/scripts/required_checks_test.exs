@@ -20,7 +20,11 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
   # so the required-lane identity is defined once and shared with the MIXCI-03
   # parity-drift test (D-LD-10). test/support is in elixirc_paths(:test), so the module
   # is compiled before this test and is available at module-attribute (compile) time.
-  @required_leaf_names MapSet.new(Mailglass.CILanes.required_lanes())
+  @required_leaf_names Mailglass.CIPolicy.load!()
+                       |> Mailglass.CIPolicy.active_required_lanes()
+                       |> Enum.map(& &1.name)
+                       |> MapSet.new()
+  @structural_change_dependency "changes"
 
   test "REQUIRED_CHECKS array and print_expected_text bullets stay in sync" do
     source = File.read!(@script_path)
@@ -112,42 +116,81 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
            "#{clean_baseline} must NOT be in ci_green.needs display names (D-04)"
   end
 
-  test "ci_green.needs set-equality: every key resolves to a defined job and display names match required leaf set (GATE-03)" do
+  test "ci_green.needs carries changes exactly once as a structural dependency and required leaves set-equal the registry (GATE-03)" do
     ci_source = File.read!(@ci_yml_path)
 
-    needs_keys = parse_ci_green_needs(ci_source)
-    job_names = parse_ci_job_names(ci_source)
+    assert_ci_green_needs_contract!(ci_source)
+  end
 
-    # Anti-vacuity guards for the new parsers.
-    assert MapSet.size(needs_keys) > 0,
-           "parse_ci_green_needs returned empty — ci.yml format changed or ci_green job missing"
+  test "negative controls: removing changes or a required leaf makes the ci_green needs contract fail" do
+    ci_source = File.read!(@ci_yml_path)
 
-    assert map_size(job_names) > 0,
-           "parse_ci_job_names returned empty — ci.yml format changed or no jobs found"
+    assert_ci_green_needs_contract!(ci_source)
 
-    # (i) Every key in ci_green.needs must be a real defined job.
-    all_job_keys = MapSet.new(Map.keys(job_names))
-    undefined_keys = MapSet.difference(needs_keys, all_job_keys)
+    without_changes = String.replace(ci_source, "      - changes\n", "", global: false)
 
-    assert MapSet.size(undefined_keys) == 0,
-           "ci_green.needs references nonexistent jobs: #{inspect(MapSet.to_list(undefined_keys))}"
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_ci_green_needs_contract!(without_changes)
+    end
 
-    # (ii) needs_display must set-equal @required_leaf_names.
-    needs_display = MapSet.new(needs_keys, fn key -> Map.fetch!(job_names, key) end)
+    without_required_leaf = String.replace(ci_source, "      - hex_audit\n", "", global: false)
 
-    only_in_needs = MapSet.difference(needs_display, @required_leaf_names)
-    only_in_required = MapSet.difference(@required_leaf_names, needs_display)
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_ci_green_needs_contract!(without_required_leaf)
+    end
+  end
 
-    assert MapSet.size(only_in_needs) == 0 and MapSet.size(only_in_required) == 0,
-           "ci_green.needs display names do not match required leaf set:\n" <>
-             "  Extra in needs (not in required set): #{inspect(MapSet.to_list(only_in_needs))}\n" <>
-             "  Missing from needs (in required set): #{inspect(MapSet.to_list(only_in_required))}"
+  test "negative control: deleting the CI Green policy invocation makes its contract fail" do
+    ci_source = File.read!(@ci_yml_path)
+
+    assert_ci_green_policy_invocation!(ci_source)
+
+    without_invocation =
+      String.replace(ci_source, "bash scripts/ci_green_policy.sh", "true", global: false)
+
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_ci_green_policy_invocation!(without_invocation)
+    end
+
+    ci_green = extract_job_block(ci_source, "ci_green")
+
+    without_checkout_job =
+      String.replace(
+        ci_green,
+        "      - name: Checkout\n        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1\n",
+        "",
+        global: false
+      )
+
+    without_checkout = String.replace(ci_source, ci_green, without_checkout_job, global: false)
+
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_ci_green_policy_invocation!(without_checkout)
+    end
+
+    without_runtime_job =
+      String.replace(
+        ci_green,
+        "      - name: Set up OTP + Elixir\n        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1\n        with:\n          version-file: .tool-versions\n          version-type: strict\n",
+        "",
+        global: false
+      )
+
+    without_runtime = String.replace(ci_source, ci_green, without_runtime_job, global: false)
+
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_ci_green_policy_invocation!(without_runtime)
+    end
   end
 
   test "no required CI leaf is permanently if:-disabled (GATE-03)" do
     ci_source = File.read!(@ci_yml_path)
 
-    needs_keys = parse_ci_green_needs(ci_source)
+    needs_keys =
+      ci_source
+      |> parse_ci_green_needs()
+      |> MapSet.delete(@structural_change_dependency)
+
     job_ifs = parse_ci_job_ifs(ci_source)
 
     Enum.each(needs_keys, fn key ->
@@ -171,6 +214,175 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     end)
   end
 
+  test "Installer Host Smoke retains its public identity and executes both adopter proofs" do
+    installer_job = extract_job_block(File.read!(@ci_yml_path), "installer_host_smoke")
+
+    assert installer_job != "", "installer_host_smoke job parser returned an empty block"
+    assert parse_job_display_name(installer_job) == "Installer Host Smoke"
+    assert String.contains?(installer_job, "bash scripts/consumer_install_smoke.sh")
+    assert String.contains?(installer_job, "bash scripts/generated_ecto_host_proof.sh")
+    assert String.contains?(installer_job, "postgres:16-alpine")
+  end
+
+  test "core deterministic suite retains exact full-root command and inventory identity" do
+    source = File.read!(@ci_yml_path)
+    assert_core_deterministic_suite!(source)
+
+    narrowed =
+      String.replace(
+        source,
+        "run: mix test --warnings-as-errors",
+        "run: mix test test/mailglass --warnings-as-errors",
+        global: false
+      )
+
+    assert_raise ExUnit.AssertionError, fn -> assert_core_deterministic_suite!(narrowed) end
+
+    for setup_fragment <- [
+          "            mailglass_inbound/deps\n",
+          "            reference/host_app/deps\n",
+          "            reference/demo_app/deps\n",
+          "      - name: Install inbound deps\n        working-directory: mailglass_inbound\n        run: mix deps.get --check-locked\n",
+          "      - name: Install reference host deps\n        working-directory: reference/host_app\n        env:\n          MIX_ENV: dev\n        run: mix deps.get --check-locked\n",
+          "      - name: Install demo deps\n        working-directory: reference/demo_app\n        run: mix deps.get --check-locked\n",
+          "      - name: Compile inbound workspace\n        working-directory: mailglass_inbound\n        run: mix compile --warnings-as-errors\n",
+          "      - name: Compile reference host\n        working-directory: reference/host_app\n        env:\n          MIX_ENV: dev\n        run: mix compile --warnings-as-errors\n",
+          "      - name: Compile demo app\n        working-directory: reference/demo_app\n        run: mix compile --warnings-as-errors\n"
+        ] do
+      missing_setup = String.replace(source, setup_fragment, "", global: true)
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_core_deterministic_suite!(missing_setup)
+      end
+    end
+  end
+
+  test "Phase 159 policy manifest exactly captures active, target, and advisory identities" do
+    policy = Mailglass.CIPolicy.load!()
+
+    assert Mailglass.CIPolicy.active_required_ids(policy) ==
+             MapSet.new(Enum.map(policy.target_required, & &1.id))
+
+    assert Mailglass.CIPolicy.target_behaviors(policy) ==
+             MapSet.new([
+               :formatting,
+               :warning_and_no_optional_builds,
+               :deterministic_core_suite,
+               :deterministic_inbound_suite,
+               :support_contracts,
+               :mix_tasks,
+               :credo_and_conformance,
+               :core_dialyzer,
+               :inbound_dialyzer,
+               :docs,
+               :audits,
+               :trust,
+               :installer_proofs
+             ])
+  end
+
+  test "Phase 159 policy manifest rejects omitted target behavior and advisory promotion" do
+    policy = Mailglass.CIPolicy.load!()
+
+    without_docs = %{
+      policy
+      | active_required: List.delete(policy.active_required, "docs_warnings_as_errors"),
+        target_required: Enum.reject(policy.target_required, &(&1.behavior == :docs))
+    }
+
+    assert_raise ArgumentError, ~r/missing target required behavior/, fn ->
+      Mailglass.CIPolicy.validate!(without_docs)
+    end
+
+    promoted_advisory =
+      update_in(policy.target_required, fn lanes ->
+        lanes ++
+          [
+            %{
+              id: "operator_browser_gate",
+              name: "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)",
+              behavior: :docs,
+              ci_only_reason: "advisory"
+            }
+          ]
+      end)
+
+    assert_raise ArgumentError, ~r/target required and advisory lane IDs overlap/, fn ->
+      Mailglass.CIPolicy.validate!(promoted_advisory)
+    end
+  end
+
+  test "required leaves retain manifest names and cannot opt out with continue-on-error" do
+    source = File.read!(@ci_yml_path)
+    assert_required_leaf_integrity!(source)
+
+    lanes = Mailglass.CIPolicy.load!() |> Mailglass.CIPolicy.active_required_lanes()
+
+    renamed =
+      String.replace(source, lanes |> hd() |> Map.fetch!(:name), "Renamed Required Lane",
+        global: false
+      )
+
+    assert_raise ExUnit.AssertionError, fn -> assert_required_leaf_integrity!(renamed) end
+
+    opted_out =
+      String.replace(
+        source,
+        "  format_check:\n",
+        "  format_check:\n    continue-on-error: true\n",
+        global: false
+      )
+
+    assert_raise ExUnit.AssertionError, fn -> assert_required_leaf_integrity!(opted_out) end
+  end
+
+  test "advisory identities remain visible and cannot enter CI Green" do
+    policy = Mailglass.CIPolicy.load!()
+
+    expected =
+      MapSet.new(
+        ~w(operator_browser_gate demo_browser_evidence preview_capture_advisory provider_live core_full_suite_next_toolchain_advisory trust_lane_clean_baseline branch_protection_advisory publish_hex)
+      )
+
+    assert MapSet.new(policy.advisory) == expected
+    assert MapSet.disjoint?(Mailglass.CIPolicy.active_required_ids(policy), expected)
+
+    ci_source = File.read!(@ci_yml_path)
+    ci_needs = parse_ci_green_needs(ci_source)
+
+    for id <-
+          ~w(operator_browser_gate demo_browser_evidence preview_capture_advisory trust_lane_clean_baseline branch_protection_advisory) do
+      assert ci_source =~ "  #{id}:\n"
+      refute MapSet.member?(ci_needs, id)
+    end
+
+    assert File.read!(Path.expand("../../.github/workflows/provider-live.yml", __DIR__)) =~
+             "  provider_live:\n"
+
+    assert File.read!(Path.expand("../../.github/workflows/advisory-matrix.yml", __DIR__)) =~
+             "  core_full_suite_next_toolchain_advisory:\n"
+
+    assert File.read!(Path.expand("../../.github/workflows/publish-hex.yml", __DIR__)) =~
+             "  publish-core:\n"
+  end
+
+  test "promotion-ready manifest rejects a missing active target and malformed local parity declaration" do
+    policy = Mailglass.CIPolicy.load!()
+
+    missing_active = %{policy | active_required: tl(policy.active_required)}
+
+    assert_raise ArgumentError, ~r/requires active required and target required IDs to match/, fn ->
+      Mailglass.CIPolicy.validate!(missing_active)
+    end
+
+    [lane | rest] = policy.target_required
+    malformed = %{policy | target_required: [Map.put(lane, :ci_only_reason, "conflict") | rest]}
+
+    assert_raise ArgumentError, ~r/exactly one of local_alias or ci_only_reason/, fn ->
+      Mailglass.CIPolicy.validate!(malformed)
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------
@@ -182,6 +394,48 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     Regex.scan(~r/"([^"]+)"/, chunk)
     |> Enum.map(fn [_full, name] -> name end)
     |> MapSet.new()
+  end
+
+  defp assert_required_leaf_integrity!(source) do
+    jobs = Mailglass.CIYaml.job_names(source)
+    lanes = Mailglass.CIPolicy.load!() |> Mailglass.CIPolicy.active_required_lanes()
+
+    Enum.each(lanes, fn lane ->
+      assert Map.fetch!(jobs, lane.id) == lane.name,
+             "required job #{lane.id} display name drifted from the policy manifest"
+
+      refute extract_job_block(source, lane.id) =~ ~r/^    continue-on-error:\s*true\s*$/m,
+             "required job #{lane.id} must not continue on error"
+    end)
+  end
+
+  defp assert_core_deterministic_suite!(source) do
+    lane =
+      Mailglass.CIPolicy.load!().target_required
+      |> Enum.find(&(&1.id == "core_deterministic_suite"))
+
+    assert lane.name == "Core Deterministic Suite (Elixir 1.18 / OTP 27)"
+    assert lane.behavior == :deterministic_core_suite
+    assert lane.local_alias == "mix test --warnings-as-errors"
+
+    job = extract_job_block(source, lane.id)
+    assert job =~ "    name: #{lane.name}\n"
+    assert length(Regex.scan(~r/^        run: mix test --warnings-as-errors$/m, job)) == 1
+    refute job =~ ~r/^        run: mix test .*--(?:exclude|only|seed)/m
+
+    for required_fragment <- [
+          "            mailglass_inbound/deps\n",
+          "            reference/host_app/deps\n",
+          "            reference/demo_app/deps\n",
+          "      - name: Install inbound deps\n        working-directory: mailglass_inbound\n        run: mix deps.get --check-locked\n",
+          "      - name: Install reference host deps\n        working-directory: reference/host_app\n        env:\n          MIX_ENV: dev\n        run: mix deps.get --check-locked\n",
+          "      - name: Install demo deps\n        working-directory: reference/demo_app\n        run: mix deps.get --check-locked\n",
+          "      - name: Compile inbound workspace\n        working-directory: mailglass_inbound\n        run: mix compile --warnings-as-errors\n",
+          "      - name: Compile reference host\n        working-directory: reference/host_app\n        env:\n          MIX_ENV: dev\n        run: mix compile --warnings-as-errors\n",
+          "      - name: Compile demo app\n        working-directory: reference/demo_app\n        run: mix compile --warnings-as-errors\n"
+        ] do
+      assert job =~ required_fragment
+    end
   end
 
   defp extract_job_block(source, job_key) do
@@ -211,8 +465,77 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     |> MapSet.new()
   end
 
+  defp assert_ci_green_needs_contract!(ci_source) do
+    needs_list = parse_ci_green_needs_list(ci_source)
+    needs_keys = MapSet.new(needs_list)
+    job_names = parse_ci_job_names(ci_source)
+
+    assert Enum.count(needs_list, &(&1 == @structural_change_dependency)) == 1,
+           "ci_green.needs must contain changes exactly once as its structural dependency"
+
+    assert MapSet.size(needs_keys) > 1,
+           "parse_ci_green_needs returned no leaf dependencies — ci.yml format changed or ci_green job missing"
+
+    assert map_size(job_names) > 0,
+           "parse_ci_job_names returned empty — ci.yml format changed or no jobs found"
+
+    all_job_keys = MapSet.new(Map.keys(job_names))
+    undefined_keys = MapSet.difference(needs_keys, all_job_keys)
+
+    assert MapSet.size(undefined_keys) == 0,
+           "ci_green.needs references nonexistent jobs: #{inspect(MapSet.to_list(undefined_keys))}"
+
+    leaf_keys = MapSet.delete(needs_keys, @structural_change_dependency)
+    needs_display = MapSet.new(leaf_keys, fn key -> Map.fetch!(job_names, key) end)
+
+    only_in_needs = MapSet.difference(needs_display, @required_leaf_names)
+    only_in_required = MapSet.difference(@required_leaf_names, needs_display)
+
+    assert MapSet.size(only_in_needs) == 0 and MapSet.size(only_in_required) == 0,
+           "ci_green required-leaf display names do not match the required leaf set:\n" <>
+             "  Extra in needs (not in required set): #{inspect(MapSet.to_list(only_in_needs))}\n" <>
+             "  Missing from needs (in required set): #{inspect(MapSet.to_list(only_in_required))}"
+  end
+
+  defp assert_ci_green_policy_invocation!(ci_source) do
+    ci_green = extract_job_block(ci_source, "ci_green")
+
+    assert ci_green =~
+             "uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1",
+           "ci_green must check out the repository before invoking its policy script"
+
+    assert ci_green =~
+             "uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1",
+           "ci_green must install Elixir before evaluating its policy manifest"
+
+    assert ci_green =~ "bash scripts/ci_green_policy.sh",
+           "ci_green must delegate its aggregate decision to scripts/ci_green_policy.sh"
+
+    assert ci_green =~ "${{ needs.changes.result }}",
+           "ci_green policy invocation must receive the changes job result"
+
+    assert ci_green =~ "${{ needs.changes.outputs.code }}",
+           "ci_green policy invocation must receive the exact changes code output"
+
+    for leaf <- MapSet.to_list(@required_leaf_names) do
+      {job_key, _display_name} =
+        ci_source
+        |> parse_ci_job_names()
+        |> Enum.find(fn {_key, display_name} -> display_name == leaf end)
+
+      assert ci_green =~ "#{job_key}=${{ needs.#{job_key}.result }}",
+             "ci_green policy invocation must receive required leaf #{job_key}"
+    end
+  end
+
   # Returns a MapSet of job KEY strings listed under ci_green.needs.
   defp parse_ci_green_needs(source) do
+    source
+    |> parse_ci_green_needs_list()
+    |> MapSet.new()
+  end
+
+  defp parse_ci_green_needs_list(source) do
     case String.split(source, "\n  ci_green:\n", parts: 2) do
       [_, rest] ->
         lines = String.split(rest, "\n")
@@ -244,10 +567,10 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
             end
           end)
 
-        MapSet.new(needs_lines)
+        Enum.reverse(needs_lines)
 
       _ ->
-        MapSet.new()
+        []
     end
   end
 

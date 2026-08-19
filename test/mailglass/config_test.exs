@@ -10,6 +10,7 @@ defmodule Mailglass.ConfigTest do
     test "accepts empty opts and uses all defaults" do
       assert config = Mailglass.Config.new!([])
       assert Keyword.get(config, :adapter) == {Mailglass.Adapters.Fake, []}
+      assert Keyword.get(config, :suppression_store) == Mailglass.SuppressionStore.Ecto
       assert Keyword.get(config, :adapters) == []
     end
 
@@ -191,6 +192,14 @@ defmodule Mailglass.ConfigTest do
       # Theme keys are :colors and :fonts per D-19; both maps.
       assert %{} = Keyword.fetch!(theme, :colors)
       assert %{} = Keyword.fetch!(theme, :fonts)
+    end
+
+    test "warms the complete Runtime value before returning" do
+      :ok = Mailglass.Config.validate_at_boot!()
+
+      assert %Mailglass.Runtime{} = Mailglass.Runtime.current()
+      assert Mailglass.Config.default_adapter() == Mailglass.Runtime.fetch!(:adapter)
+      assert Mailglass.Config.compliance() == Mailglass.Runtime.fetch!(:compliance)
     end
   end
 

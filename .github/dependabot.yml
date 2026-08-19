@@ -16,3 +16,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/dev/toolchain"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/reference/demo_app"
+    schedule:
+      interval: "weekly"

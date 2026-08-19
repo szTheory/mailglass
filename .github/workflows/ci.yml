@@ -23,6 +23,7 @@ jobs:
   changes:
     name: Detect Non-Doc Changes
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
@@ -53,7 +54,10 @@ jobs:
             if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
               echo "code=true" >> "$GITHUB_OUTPUT"
             else
-              CHANGED=$(git diff --name-only "${BEFORE}" "${AFTER}" 2>/dev/null || true)
+              if ! CHANGED=$(git diff --name-only "${BEFORE}" "${AFTER}" 2>/dev/null); then
+                echo "Unable to determine changed files for push ${BEFORE}..${AFTER}; refusing to classify it as docs-only." >&2
+                exit 1
+              fi
               NON_DOC=$(echo "$CHANGED" | grep -v '^\.planning/' | grep -v '^prompts/' || true)
               if [ -z "$NON_DOC" ]; then
                 echo "code=false" >> "$GITHUB_OUTPUT"
@@ -66,31 +70,27 @@ jobs:
   format_check:
     name: Format Check (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - name: Set up OTP + Elixir
-        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
+      - name: Set up locked root validation dependencies
+        uses: ./.github/actions/setup-beam-mix
         with:
-          version-file: .tool-versions
-          version-type: strict
-      - name: Cache deps
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
-        with:
-          path: deps
-          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
-          restore-keys: |
-            mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
-      - name: Install deps
-        run: mix deps.get
+          package-dir: .
+          lockfile: mix.lock
+          mix-env: dev
+          build-path: _build
+          cache-namespace: mailglass-root
       - name: Run formatter check
         run: mix format --check-formatted
 
   compile_warnings:
     name: Compile Warnings as Errors (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
@@ -116,6 +116,7 @@ jobs:
   compile_no_optional_deps:
     name: Compile No Optional Deps (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Required leaf behind CI Green aggregate — keep matrix-free. A 1-combo matrix
@@ -159,6 +160,22 @@ jobs:
     # network-dependent (phx.new + the sandbox's own deps.get + server boot)
     # and slower than the other required lanes, but guards the install path
     # that the 1.4.3-1.4.5 bug stack shipped through.
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: ecto://postgres:postgres@localhost/mailglass_generated_ecto_host_ci
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -174,17 +191,22 @@ jobs:
           MAILGLASS_PATH: ${{ github.workspace }}
           WORK_DIR: ${{ runner.temp }}
         run: bash scripts/consumer_install_smoke.sh
+      - name: Generated Ecto host proof (working tree, local path deps)
+        env:
+          MAILGLASS_PATH: ${{ github.workspace }}
+        run: bash scripts/generated_ecto_host_proof.sh
 
   support_contract_core:
     name: Support Contract Core (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Required leaf behind CI Green aggregate — keep matrix-free (see
     # compile_no_optional_deps): a 1-combo matrix appends " (1.18, 27)" to the name.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -204,6 +226,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
@@ -212,12 +236,24 @@ jobs:
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
-          path: deps
+          path: |
+            deps
+            mailglass_inbound/deps
+            reference/demo_app/deps
           key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
             mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
-      - name: Install deps
-        run: mix deps.get
+      - name: Install core deps
+        run: mix deps.get --check-locked
+      - name: Install inbound deps
+        working-directory: mailglass_inbound
+        run: mix deps.get --check-locked
+      - name: Install demo deps
+        working-directory: reference/demo_app
+        run: mix deps.get --check-locked
+      - name: Compile demo app for coverage
+        working-directory: reference/demo_app
+        run: mix compile --warnings-as-errors
       - name: Wait for postgres + create test DB
         env:
           PGPASSWORD: postgres
@@ -226,15 +262,22 @@ jobs:
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run core support contract
         run: mix verify.support_contract.core
+      - name: Run architecture boundary contract
+        run: mix test test/scripts/architecture_boundary_test.exs ci/contracts/inbound_architecture_test.exs --warnings-as-errors
+      - name: Collect and enforce core coverage floor
+        run: |
+          mix coveralls.json --output-dir coverage/core test/mailglass --warnings-as-errors
+          bash scripts/check_coverage_floor.sh config/coverage_baselines/core.json coverage/core/excoveralls.json 1.18.4/27
 
   mix_task_tests:
     name: Mix Task Tests (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -291,14 +334,95 @@ jobs:
         # requires even though these meta-tests never touch the database.
         run: mix verify.ci_lane_contract
 
-  inbound_test:
-    name: Inbound Test (Elixir 1.18 / OTP 27)
+  core_deterministic_suite:
+    name: Core Deterministic Suite (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MIX_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - name: Cache deps
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: |
+            deps
+            mailglass_inbound/deps
+            reference/host_app/deps
+            reference/demo_app/deps
+          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
+      - name: Install core deps
+        run: mix deps.get --check-locked
+      - name: Install inbound deps
+        working-directory: mailglass_inbound
+        run: mix deps.get --check-locked
+      - name: Install reference host deps
+        working-directory: reference/host_app
+        env:
+          MIX_ENV: dev
+        run: mix deps.get --check-locked
+      - name: Install demo deps
+        working-directory: reference/demo_app
+        run: mix deps.get --check-locked
+      - name: Compile inbound workspace
+        working-directory: mailglass_inbound
+        run: mix compile --warnings-as-errors
+      - name: Compile reference host
+        working-directory: reference/host_app
+        env:
+          MIX_ENV: dev
+        run: mix compile --warnings-as-errors
+      - name: Compile demo app
+        working-directory: reference/demo_app
+        run: mix compile --warnings-as-errors
+      - name: Wait for postgres + create test DB
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: Run deterministic core suite
+        # Full root suite: no directory filter, exclusions, fixed seed, or
+        # advisory continuation. Suite-floor and skip-ledger contracts run as
+        # part of this invocation and reject silent scope erosion.
+        run: mix test --warnings-as-errors
+
+  inbound_test:
+    name: Inbound Test (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -360,6 +484,12 @@ jobs:
         # is gated as its own step after the unit subset rather than folded in.
         working-directory: mailglass_inbound
         run: mix test --only property
+      - name: Collect and enforce inbound coverage floor
+        run: |
+          cd mailglass_inbound
+          mix coveralls.json --output-dir ../coverage/inbound test/mailglass_inbound --warnings-as-errors
+          cd ..
+          bash scripts/check_coverage_floor.sh config/coverage_baselines/inbound.json coverage/inbound/excoveralls.json 1.18.4/27
 
   inbound_compile_no_optional_deps:
     name: Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)
@@ -373,6 +503,7 @@ jobs:
     # Separate job (not a step in inbound_test) so a compile-gate failure is legible
     # in the checks list and runs in parallel.
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -402,6 +533,7 @@ jobs:
   credo_strict:
     name: Credo Strict (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
@@ -425,12 +557,15 @@ jobs:
         # Fails CI if any {Credo.Check..., false} entry is missing
         # a `# Reason:` + `# Tracking:` comment block (D-08-18/D-08-19).
         run: bash scripts/check_credo_suppressions.sh
+      - name: Enforce expiring static-analysis ledger
+        run: mix run scripts/check_static_analysis_exceptions.exs
       - name: Run Credo strict
         run: mix credo --strict
 
   conformance_gates:
     name: Design System Conformance (shell gates)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
@@ -453,6 +588,7 @@ jobs:
   dialyzer:
     name: Dialyzer (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     strategy:
@@ -462,7 +598,7 @@ jobs:
             otp: "27"
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -515,9 +651,35 @@ jobs:
         if: steps.dialyzer.outcome == 'failure'
         run: rm -rf _build/test/*.plt && mix dialyzer --plt && mix dialyzer
 
+  inbound_dialyzer:
+    name: Inbound Dialyzer (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    env:
+      MIX_ENV: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Set up locked inbound analysis dependencies
+        uses: ./.github/actions/setup-beam-mix
+        with:
+          package-dir: mailglass_inbound
+          lockfile: mailglass_inbound/mix.lock
+          mix-env: test
+          build-path: _build/dialyzer-ci
+          cache-namespace: mailglass-inbound-dialyzer
+      - name: Verify package-local ignore ledger
+        run: bash scripts/check_dialyzer_ignore.sh
+      - name: Run inbound Dialyzer
+        working-directory: mailglass_inbound
+        run: mix dialyzer
+
   docs_warnings_as_errors:
     name: Docs Warnings as Errors (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
@@ -545,6 +707,7 @@ jobs:
   hex_audit:
     name: Hex Audit (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
@@ -570,6 +733,7 @@ jobs:
   deps_audit_advisory:
     name: Deps Audit (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Promoted to merge-gating (Phase 142/VULN-03); disposition recorded in
@@ -597,11 +761,12 @@ jobs:
   installer_golden_gate:
     name: Installer Golden Gate (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -647,13 +812,14 @@ jobs:
   support_contract_admin:
     name: Support Contract Admin (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Required leaf behind CI Green aggregate — keep matrix-free (see
     # compile_no_optional_deps): a 1-combo matrix appends " (1.18, 27)" to the name.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -708,6 +874,7 @@ jobs:
   operator_browser_gate:
     name: Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     strategy:
@@ -716,7 +883,7 @@ jobs:
           - node: "22"
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -807,6 +974,7 @@ jobs:
   preview_capture_advisory:
     name: Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     strategy:
@@ -815,7 +983,7 @@ jobs:
           - node: "22"
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -941,13 +1109,14 @@ jobs:
   trust_lane_repo_head:
     name: Trust Lane Repo Head (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Required leaf behind CI Green aggregate — keep matrix-free (see
     # compile_no_optional_deps): a 1-combo matrix appends " (1.18, 27)" to the name.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -987,17 +1156,25 @@ jobs:
         run: |
           until pg_isready -h localhost -U postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
-      - name: Build reference host (dev) so the journey can load sibling beams
-        # The trust runner's webhook/operator stages load MailglassInbound /
-        # MailglassAdmin from reference/host_app/_build/dev/lib/*/ebin
-        # (see Mailglass.ReferenceHost.WebhookOperatorProof). A fresh repo-head
-        # checkout has no such build, so this compiles the reference host in dev
-        # to populate the sibling beams the journey prepends at runtime.
+      - name: Build published Admin compatibility gate
+        # Repo-head trust is explicitly prepublication: core + inbound come
+        # from coherent workspace builds, while Admin remains the established
+        # published compatibility gate. Plan 160-06 owns exact all-published
+        # package-family certification.
         working-directory: reference/host_app
         env:
           MIX_ENV: dev
         run: mix deps.get && mix compile
+      - name: Build workspace inbound package
+        working-directory: mailglass_inbound
+        env:
+          MIX_ENV: test
+        run: mix deps.get --check-locked && mix compile --warnings-as-errors
       - name: Run reference-host trust journey
+        env:
+          MAILGLASS_REFERENCE_HOST_PACKAGE_MODE: prepublication
+          MAILGLASS_CORE_WORKSPACE_EBIN: ${{ github.workspace }}/_build/test/lib/mailglass/ebin
+          MAILGLASS_INBOUND_WORKSPACE_EBIN: ${{ github.workspace }}/mailglass_inbound/_build/test/lib/mailglass_inbound/ebin
         run: mix verify.reference_host.journey
       - name: Validate trust checkpoint contract
         run: bash scripts/check_trust_runner_checkpoint.sh
@@ -1017,13 +1194,14 @@ jobs:
   trust_lane_clean_baseline:
     name: Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Publish-gate-only: NOT in REQUIRED_CHECKS (D-04/A1 lock) and NOT in
     # ci_green.needs. Gated on changes so docs-only PRs skip it.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -1072,6 +1250,8 @@ jobs:
         working-directory: reference/host_app
         run: bash ../../scripts/check_clean_baseline_hex_only.sh
       - name: Run reference-host trust journey
+        env:
+          MAILGLASS_REFERENCE_HOST_PACKAGE_MODE: published_siblings
         run: mix verify.reference_host.journey --host-root reference/host_app
       - name: Validate trust checkpoint contract
         run: bash scripts/check_trust_runner_checkpoint.sh
@@ -1091,6 +1271,7 @@ jobs:
   branch_protection_advisory:
     name: Branch Protection Advisory
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check for BRANCH_PROTECTION_PAT secret
         id: check-pat
@@ -1127,38 +1308,58 @@ jobs:
   ci_green:
     name: CI Green
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: always()
     needs:
+      - changes
+      - format_check
+      - compile_warnings
       - compile_no_optional_deps
+      - inbound_compile_no_optional_deps
       - installer_host_smoke
+      - installer_golden_gate
       - mix_task_tests
       - support_contract_core
       - support_contract_admin
+      - inbound_test
+      - core_deterministic_suite
+      - credo_strict
+      - conformance_gates
+      - docs_warnings_as_errors
+      - dialyzer
+      - inbound_dialyzer
       - trust_lane_repo_head
       - hex_audit
       - deps_audit_advisory
     steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
+        with:
+          version-file: .tool-versions
+          version-type: strict
       - name: Evaluate required lane results
         run: |
-          FAILED_LANES=""
-          for job_result in \
+          bash scripts/ci_green_policy.sh \
+            "${{ needs.changes.result }}" \
+            "${{ needs.changes.outputs.code }}" \
+            "format_check=${{ needs.format_check.result }}" \
+            "compile_warnings=${{ needs.compile_warnings.result }}" \
             "compile_no_optional_deps=${{ needs.compile_no_optional_deps.result }}" \
+            "inbound_compile_no_optional_deps=${{ needs.inbound_compile_no_optional_deps.result }}" \
             "installer_host_smoke=${{ needs.installer_host_smoke.result }}" \
+            "installer_golden_gate=${{ needs.installer_golden_gate.result }}" \
             "mix_task_tests=${{ needs.mix_task_tests.result }}" \
             "support_contract_core=${{ needs.support_contract_core.result }}" \
             "support_contract_admin=${{ needs.support_contract_admin.result }}" \
+            "inbound_test=${{ needs.inbound_test.result }}" \
+            "core_deterministic_suite=${{ needs.core_deterministic_suite.result }}" \
+            "credo_strict=${{ needs.credo_strict.result }}" \
+            "conformance_gates=${{ needs.conformance_gates.result }}" \
+            "docs_warnings_as_errors=${{ needs.docs_warnings_as_errors.result }}" \
+            "dialyzer=${{ needs.dialyzer.result }}" \
+            "inbound_dialyzer=${{ needs.inbound_dialyzer.result }}" \
             "trust_lane_repo_head=${{ needs.trust_lane_repo_head.result }}" \
             "hex_audit=${{ needs.hex_audit.result }}" \
             "deps_audit_advisory=${{ needs.deps_audit_advisory.result }}"
-          do
-            lane="${job_result%%=*}"
-            result="${job_result##*=}"
-            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
-              FAILED_LANES="${FAILED_LANES} ${lane}"
-            fi
-          done
-          if [ -n "$FAILED_LANES" ]; then
-            echo "Delivery blocked: required CI lane(s) did not pass:${FAILED_LANES}"
-            exit 1
-          fi
-          echo "All required CI lanes passed or were skipped."

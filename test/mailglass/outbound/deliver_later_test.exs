@@ -6,6 +6,13 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   alias Mailglass.{Outbound, Message, TestRepo}
   alias Mailglass.Outbound.Delivery
 
+  defmodule RefusingAsyncAdapter do
+    @behaviour Mailglass.Outbound.AsyncAdapter
+
+    @impl true
+    def dispatch(_fun, _opts), do: {:error, :max_children}
+  end
+
   setup do
     # Use shared mode so Task.Supervisor background tasks can deliver via the Fake adapter.
     # async: false guarantees no other test owns the shared bucket during this test.
@@ -110,12 +117,12 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       msg = build_message("task-tenant-#{unique_id()}@example.com")
       {:ok, delivery} = Outbound.deliver_later(msg)
 
-      # Give the Task.Supervisor task time to run dispatch
+      # The task receives the tenant context asynchronously; this test's Fake
+      # adapter ownership is not safely observable without changing runtime
+      # dispatch. Registry: task-supervisor background-settle exception.
       Process.sleep(150)
 
-      # Check the delivery was updated to :sent
       reloaded = TestRepo.get!(Delivery, delivery.id)
-      # The task may have completed or still be running; accept either
       assert reloaded.status in [:queued, :sent]
     end
 
@@ -124,7 +131,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       {:ok, delivery} = Outbound.deliver_later(msg)
       delivery_id = delivery.id
 
-      Process.sleep(150)
+      assert_receive {:mail, _message}
 
       [record] = Mailglass.Adapters.Fake.deliveries()
       token = unsubscribe_token!(record.message)
@@ -137,6 +144,26 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       result = Outbound.deliver_later(msg)
       # Must never return an %Oban.Job{} struct
       assert {:ok, %Delivery{status: :queued}} = result
+    end
+
+    test "refused fallback admission returns a typed failure and persists a failed projection" do
+      Application.put_env(:mailglass, :async_adapter_impl, RefusingAsyncAdapter)
+
+      on_exit(fn -> Application.delete_env(:mailglass, :async_adapter_impl) end)
+
+      msg = build_message("refused-#{unique_id()}@example.com")
+
+      assert {:error, %Mailglass.SendError{type: :dispatch_unavailable} = error} =
+               Outbound.deliver_later(msg)
+
+      assert error.context == %{reason_class: :capacity_reached}
+
+      [delivery] = TestRepo.all(Delivery)
+      assert delivery.status == :failed
+      assert delivery.last_event_type == :failed
+
+      assert delivery.last_error["type"] == "dispatch_unavailable" or
+               delivery.last_error[:type] == :dispatch_unavailable
     end
   end
 
@@ -152,7 +179,6 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       assert delivery.adapter_ref == "route_a"
 
       Application.put_env(:mailglass, :tenancy, Mailglass.TestTenancy.RouteB)
-      Process.sleep(150)
 
       assert_receive {:adapter_route, :route_a, ^delivery_id, "test-tenant"}
       reloaded = TestRepo.get!(Delivery, delivery.id)

@@ -4,7 +4,7 @@ defmodule Mailglass.Repo do
 
   Mailglass does not own a Repo — the host application does. Every context
   module that needs Postgres routes through this facade, which resolves the
-  real Repo via `Application.get_env(:mailglass, :repo)` at call time.
+  real Repo through the validated `Mailglass.Config` runtime façade.
 
   Runtime resolution is deliberate: tests inject a test repo through
   `config/test.exs`, host apps inject their Repo through
@@ -213,7 +213,7 @@ defmodule Mailglass.Repo do
   # this error to fail fast when an adopter forgets the config wiring.
   @spec repo() :: module()
   defp repo do
-    case Application.get_env(:mailglass, :repo) do
+    case Mailglass.Config.repo() do
       nil -> raise Mailglass.ConfigError.new(:missing, context: %{key: :repo})
       mod when is_atom(mod) -> mod
     end

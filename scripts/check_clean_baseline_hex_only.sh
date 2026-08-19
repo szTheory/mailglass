@@ -58,24 +58,65 @@ MAILGLASS_LOCK_PATH="$LOCK_PATH" elixir -e '
   lock_path = System.fetch_env!("MAILGLASS_LOCK_PATH")
   lock = MailglassCleanBaselineLock.read!(lock_path)
 
-  # Version-agnostic by design: the baseline guarantee is "siblings resolve from
-  # :hex (a real published consumer), never a path:/git: dep" — NOT a frozen
-  # version literal. Asserting an exact version here forced a coordinated hand-edit
-  # of this script on every release; the committed mix.lock is the reproducible
-  # pin, and `elem(tuple, 2)` must merely be a well-formed (non-empty) version
-  # string. To refresh the baseline to a newer release, just regenerate the lock
-  # (`mix deps.update mailglass mailglass_admin mailglass_inbound`); no edits here.
   required = ["mailglass", "mailglass_admin", "mailglass_inbound"]
+
+  expected_versions = %{
+    "mailglass" => System.get_env("MAILGLASS_EXPECTED_CORE_VERSION"),
+    "mailglass_admin" => System.get_env("MAILGLASS_EXPECTED_ADMIN_VERSION"),
+    "mailglass_inbound" => System.get_env("MAILGLASS_EXPECTED_INBOUND_VERSION")
+  }
+
+  exact_mode? = Enum.any?(expected_versions, fn {_name, version} -> version not in [nil, ""] end)
+
+  if exact_mode? and Enum.any?(expected_versions, fn {_name, version} -> version in [nil, ""] end) do
+    IO.puts(:stderr, "Exact Hex lock check requires expected versions for all three packages")
+    System.halt(1)
+  end
 
   Enum.each(required, fn name ->
     case Map.get(lock, String.to_atom(name)) do
-      tuple when is_tuple(tuple) and tuple_size(tuple) < 3 ->
+      tuple when is_tuple(tuple) and tuple_size(tuple) < 8 ->
         IO.puts(:stderr, "Hex-first violation: #{name} lock tuple malformed")
         System.halt(1)
       tuple
-      when is_tuple(tuple) and tuple_size(tuple) > 2 and elem(tuple, 0) == :hex and
+      when is_tuple(tuple) and tuple_size(tuple) >= 8 and elem(tuple, 0) == :hex and
              is_binary(elem(tuple, 2)) and elem(tuple, 2) != "" ->
-        IO.puts("Hex-first OK: #{name} resolved via :hex (version: #{elem(tuple, 2)})")
+        version = elem(tuple, 2)
+        package_checksum = elem(tuple, 3)
+        registry_checksum = elem(tuple, 7)
+
+        unless is_binary(package_checksum) and
+                 Regex.match?(~r/\A[0-9a-f]{64}\z/, package_checksum) do
+          IO.puts(
+            :stderr,
+            "Hex-first violation: #{name} checksum is not a 64-character lowercase hex digest"
+          )
+
+          System.halt(1)
+        end
+
+        unless is_binary(registry_checksum) and
+                 Regex.match?(~r/\A[0-9a-f]{64}\z/, registry_checksum) do
+          IO.puts(
+            :stderr,
+            "Hex-first violation: #{name} registry checksum is not a 64-character lowercase hex digest"
+          )
+
+          System.halt(1)
+        end
+
+        if exact_mode? and version != expected_versions[name] do
+          IO.puts(
+            :stderr,
+            "Hex-first violation: #{name} exact version mismatch: expected #{expected_versions[name]}, got #{version}"
+          )
+
+          System.halt(1)
+        end
+
+        IO.puts(
+          "Hex-first OK: #{name} resolved via :hex (version: #{version}; checksums: verified)"
+        )
       tuple when is_tuple(tuple) and tuple_size(tuple) > 2 and elem(tuple, 0) == :hex ->
         IO.puts(:stderr, "Hex-first violation: #{name} version is not a well-formed string: #{inspect(elem(tuple, 2))}")
         System.halt(1)

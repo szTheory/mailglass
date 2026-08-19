@@ -122,6 +122,61 @@ defmodule Mailglass.Webhook.PlugTest do
     end
   end
 
+  describe "decoded request reuse" do
+    defmodule NilVerifiedPayloadTenancy do
+      @moduledoc false
+      @behaviour Mailglass.Tenancy
+
+      @impl Mailglass.Tenancy
+      def scope(query, _context), do: query
+
+      @impl Mailglass.Tenancy
+      def resolve_webhook_tenant(%{verified_payload: nil, decoded_payload: payload})
+          when is_map(payload),
+          do: {:ok, "default"}
+    end
+
+    test "decodes the outer webhook JSON exactly once across normalize and ingest" do
+      body = Mailglass.WebhookFixtures.load_postmark_fixture("delivered")
+      counter = start_supervised!({Agent, fn -> 0 end})
+
+      decoder = fn raw_body ->
+        Agent.update(counter, &(&1 + 1))
+        Jason.decode(raw_body)
+      end
+
+      conn = Mailglass.WebhookCase.mailglass_webhook_conn(:postmark, body)
+
+      result =
+        WebhookPlug.call(
+          conn,
+          WebhookPlug.init(provider: :postmark, json_decoder: decoder)
+        )
+
+      assert result.status == 200
+      assert Agent.get(counter, & &1) == 1
+    end
+
+    test "preserves the reserved nil tenancy field while exposing decoded JSON separately" do
+      prior = Application.get_env(:mailglass, :tenancy)
+      Application.put_env(:mailglass, :tenancy, NilVerifiedPayloadTenancy)
+
+      on_exit(fn ->
+        if is_nil(prior) do
+          Application.delete_env(:mailglass, :tenancy)
+        else
+          Application.put_env(:mailglass, :tenancy, prior)
+        end
+      end)
+
+      body = Mailglass.WebhookFixtures.load_postmark_fixture("delivered")
+      conn = Mailglass.WebhookCase.mailglass_webhook_conn(:postmark, body)
+
+      assert %{status: 200} =
+               WebhookPlug.call(conn, WebhookPlug.init(provider: :postmark))
+    end
+  end
+
   describe "call/2 response code matrix — 422 tenant unresolved" do
     # Stub Tenancy module that returns {:error, :no_tenant_match} from
     # resolve_webhook_tenant/1 — exercises the 422 rescue clause directly.
@@ -315,5 +370,60 @@ defmodule Mailglass.Webhook.PlugTest do
 
       assert {:ok, "default"} = Mailglass.Tenancy.resolve_webhook_tenant(ctx)
     end
+  end
+
+  test "pipeline verifies before tenant work and broadcasts only after a successful ingest" do
+    deps = %{
+      verify: fn _, _, _ ->
+        send(self(), :verify)
+        :ok
+      end,
+      resolve_tenant: fn _, _, _ ->
+        send(self(), :tenant)
+        "tenant-1"
+      end,
+      with_tenant: fn _, fun -> fun.() end,
+      normalize: fn _, _, _ ->
+        send(self(), :normalize)
+        [:event]
+      end,
+      ingest: fn _, _, _ ->
+        send(self(), :ingest)
+        send(self(), :commit)
+        {:ok, %{duplicate: false}}
+      end,
+      broadcast: fn _ -> send(self(), :broadcast) end
+    }
+
+    assert {:ingested, "tenant-1", 1, false} =
+             Mailglass.Webhook.Pipeline.run(:postmark, :request, [], deps)
+
+    assert_receive :verify
+    assert_receive :tenant
+    assert_receive :normalize
+    assert_receive :ingest
+    assert_receive :commit
+    assert_receive :broadcast
+  end
+
+  test "pipeline does not resolve a tenant when verification is terminal" do
+    deps = %{
+      verify: fn _, _, _ ->
+        send(self(), :verify)
+        {:ok, :replay}
+      end,
+      resolve_tenant: fn _, _, _ ->
+        send(self(), :tenant)
+        "tenant-1"
+      end,
+      with_tenant: fn _, fun -> fun.() end,
+      normalize: fn _, _, _ -> [:event] end,
+      ingest: fn _, _, _ -> {:ok, %{duplicate: false}} end,
+      broadcast: fn _ -> :ok end
+    }
+
+    assert {:replay} = Mailglass.Webhook.Pipeline.run(:postmark, :request, [], deps)
+    assert_receive :verify
+    refute_receive :tenant
   end
 end

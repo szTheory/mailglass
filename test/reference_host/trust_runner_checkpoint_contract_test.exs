@@ -14,6 +14,30 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
   @claim_boundary "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
   @row_hash_contract "stage|status|fixture_id"
   @stage_order ["install", "preview", "send", "webhook_ingest", "operator_troubleshooting"]
+  @generated_host_script_path Path.expand("../../scripts/generated_ecto_host_proof.sh", __DIR__)
+  @workspace_inbound_root Path.expand("../../mailglass_inbound", __DIR__)
+  @workspace_inbound_ebin Path.join(
+                            @workspace_inbound_root,
+                            "_build/test/lib/mailglass_inbound/ebin"
+                          )
+
+  setup_all do
+    {output, exit_code} =
+      System.cmd("mix", ["compile", "--warnings-as-errors"],
+        cd: @workspace_inbound_root,
+        stderr_to_stdout: true,
+        env: [
+          {"MIX_ENV", "test"},
+          {"MIX_BUILD_PATH", nil},
+          {"MIX_DEPS_PATH", nil}
+        ]
+      )
+
+    assert exit_code == 0, "workspace inbound compile failed:\n#{output}"
+    assert File.dir?(workspace_core_ebin())
+    assert File.dir?(@workspace_inbound_ebin)
+    :ok
+  end
 
   test "two dry runs emit deterministic equivalent checkpoints with stable hash" do
     checkpoint_dir = Path.join(@project_root, "tmp/mailglass_trust_runner")
@@ -29,7 +53,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
                ["verify.reference_host.journey", "--dry-run", "--checkpoint-out", checkpoint_1],
                cd: @project_root,
                stderr_to_stdout: true,
-               env: [{"MIX_ENV", "test"}]
+               env: workspace_runner_env()
              )
 
     assert {_, 0} =
@@ -38,7 +62,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
                ["verify.reference_host.journey", "--dry-run", "--checkpoint-out", checkpoint_2],
                cd: @project_root,
                stderr_to_stdout: true,
-               env: [{"MIX_ENV", "test"}]
+               env: workspace_runner_env()
              )
 
     payload_1 = decode!(checkpoint_1)
@@ -57,6 +81,22 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
                cd: @project_root,
                stderr_to_stdout: true
              )
+
+    assert {strict_output, strict_status} =
+             System.cmd(
+               "bash",
+               [
+                 "scripts/check_trust_runner_checkpoint.sh",
+                 "--require-completed",
+                 "--checkpoint",
+                 checkpoint_1
+               ],
+               cd: @project_root,
+               stderr_to_stdout: true
+             )
+
+    assert strict_status != 0
+    assert strict_output =~ "must have completed status"
   end
 
   test "checkpoint hash is based only on ordered stage status fixture_id rows" do
@@ -102,7 +142,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
                ["verify.reference_host.journey", "--checkpoint-out", checkpoint],
                cd: @project_root,
                stderr_to_stdout: true,
-               env: [{"MIX_ENV", "test"}]
+               env: workspace_runner_env()
              )
 
     payload = decode!(checkpoint)
@@ -117,12 +157,30 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
     assert webhook["evidence"]["verified_before_tenant"] == true
     assert operator["evidence"]["scenario"] == "no_match"
     assert operator["evidence"]["raw_payload_included"] == false
+
+    assert {strict_output, 0} =
+             System.cmd(
+               "bash",
+               [
+                 "scripts/check_trust_runner_checkpoint.sh",
+                 "--require-completed",
+                 "--checkpoint",
+                 checkpoint
+               ],
+               cd: @project_root,
+               stderr_to_stdout: true
+             )
+
+    assert strict_output =~ "completed evidence required=true"
   end
 
   test "checkpoint validator rejects malformed Phase 58 evidence" do
     checkpoint_dir = Path.join(@project_root, "tmp/mailglass_trust_runner")
     valid_checkpoint = Path.join(checkpoint_dir, "phase58-plan02-validator-valid.json")
     invalid_checkpoint = Path.join(checkpoint_dir, "phase58-plan02-validator-invalid.json")
+
+    empty_evidence_checkpoint =
+      Path.join(checkpoint_dir, "phase58-plan02-validator-empty-evidence.json")
 
     File.rm_rf!(checkpoint_dir)
     File.mkdir_p!(checkpoint_dir)
@@ -133,7 +191,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
                ["verify.reference_host.journey", "--checkpoint-out", valid_checkpoint],
                cd: @project_root,
                stderr_to_stdout: true,
-               env: [{"MIX_ENV", "test"}]
+               env: workspace_runner_env()
              )
 
     payload =
@@ -150,6 +208,25 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
       end)
 
     File.write!(invalid_checkpoint, Jason.encode_to_iodata!(payload, pretty: true))
+
+    empty_evidence_payload =
+      valid_checkpoint
+      |> decode!()
+      |> update_in(["checkpoints"], fn rows ->
+        Enum.map(rows, fn
+          %{"stage" => stage} = row
+          when stage in ["webhook_ingest", "operator_troubleshooting"] ->
+            Map.put(row, "evidence", %{})
+
+          row ->
+            row
+        end)
+      end)
+
+    File.write!(
+      empty_evidence_checkpoint,
+      Jason.encode_to_iodata!(empty_evidence_payload, pretty: true)
+    )
 
     assert {_, 0} =
              System.cmd(
@@ -169,6 +246,46 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
 
     assert exit_code != 0
     assert output =~ "forbidden evidence key"
+
+    assert {empty_output, empty_status} =
+             System.cmd(
+               "bash",
+               [
+                 "scripts/check_trust_runner_checkpoint.sh",
+                 "--require-completed",
+                 "--checkpoint",
+                 empty_evidence_checkpoint
+               ],
+               cd: @project_root,
+               stderr_to_stdout: true
+             )
+
+    assert empty_status != 0
+    assert empty_output =~ "runtime evidence is required"
+  end
+
+  test "REL-01 generated-host evidence closes every package boundary in exact order" do
+    source = File.read!(@generated_host_script_path)
+
+    expected = [
+      "fresh_install",
+      "sync_send",
+      "atomic_enqueue",
+      "worker_run",
+      "persisted_outcome",
+      "custom_modules",
+      "multi_repo_prefixes",
+      "upgrade",
+      "rollback",
+      "idempotent_rerun"
+    ]
+
+    Enum.each(expected, fn stage ->
+      assert source =~ stage, "generated-host proof is missing ordered stage #{stage}"
+    end)
+
+    assert source =~ "validate_checkpoint_file"
+    assert source =~ "core_first inbound_first"
   end
 
   defp decode!(path), do: path |> File.read!() |> Jason.decode!()
@@ -193,5 +310,18 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
     |> Enum.join("\n")
     |> then(&:crypto.hash(:sha256, &1))
     |> Base.encode16(case: :lower)
+  end
+
+  defp workspace_runner_env do
+    [
+      {"MIX_ENV", "test"},
+      {"MAILGLASS_REFERENCE_HOST_PACKAGE_MODE", "prepublication"},
+      {"MAILGLASS_CORE_WORKSPACE_EBIN", workspace_core_ebin()},
+      {"MAILGLASS_INBOUND_WORKSPACE_EBIN", @workspace_inbound_ebin}
+    ]
+  end
+
+  defp workspace_core_ebin do
+    Path.join(Mix.Project.build_path(), "lib/mailglass/ebin")
   end
 end

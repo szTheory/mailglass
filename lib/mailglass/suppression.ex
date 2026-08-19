@@ -25,7 +25,7 @@ defmodule Mailglass.Suppression do
 
   import Ecto.Query
 
-  alias Mailglass.{Message, SendError, SuppressedError}
+  alias Mailglass.{Message, SendError, SuppressedError, SuppressionStore}
   alias Mailglass.Repo
   alias Mailglass.Suppression.Entry
   alias Mailglass.Tenancy
@@ -40,13 +40,33 @@ defmodule Mailglass.Suppression do
   @spec check_before_send(Message.t()) :: :ok | {:error, SuppressedError.t()}
   def check_before_send(%Message{} = msg) do
     start = System.monotonic_time(:microsecond)
-
-    address = primary_recipient(msg)
-    key = %{tenant_id: msg.tenant_id, address: address, stream: msg.stream}
-
-    result = store().check(key, [])
+    result = SuppressionStore.check_many(store(), [lookup_key(msg)], []) |> hd()
     duration_us = System.monotonic_time(:microsecond) - start
 
+    result_to_preflight(result, msg, duration_us)
+  end
+
+  @doc false
+  @spec check_many_before_send([Message.t()]) :: [:ok | {:error, term()}]
+  def check_many_before_send(messages) when is_list(messages) do
+    start = System.monotonic_time(:microsecond)
+    keys = Enum.map(messages, &lookup_key/1)
+    unique_keys = Enum.uniq(keys)
+
+    results_by_key =
+      SuppressionStore.check_many(store(), unique_keys, [])
+      |> Enum.zip(unique_keys)
+      |> Map.new(fn {result, key} -> {key, result} end)
+
+    duration_us = System.monotonic_time(:microsecond) - start
+
+    Enum.zip(messages, keys)
+    |> Enum.map(fn {msg, key} ->
+      result_to_preflight(Map.fetch!(results_by_key, key), msg, duration_us)
+    end)
+  end
+
+  defp result_to_preflight(result, %Message{} = msg, duration_us) do
     case result do
       :not_suppressed ->
         emit_telemetry(duration_us, false, msg.tenant_id)
@@ -59,6 +79,14 @@ defmodule Mailglass.Suppression do
         {:error,
          SuppressedError.new(scope,
            context: error_context(msg, result)
+         )}
+
+      {:error, :invalid_bulk_result} ->
+        emit_telemetry(duration_us, false, msg.tenant_id)
+
+        {:error,
+         SendError.new(:preflight_rejected,
+           context: %{reason_class: :suppression_store_contract_violation}
          )}
 
       {:error, err} ->
@@ -103,7 +131,11 @@ defmodule Mailglass.Suppression do
   def remove(_id, _opts), do: {:error, :invalid_id}
 
   defp store do
-    Application.get_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.Ecto)
+    Mailglass.Config.suppression_store()
+  end
+
+  defp lookup_key(%Message{} = msg) do
+    %{tenant_id: msg.tenant_id, address: primary_recipient(msg), stream: msg.stream}
   end
 
   defp primary_recipient(%Message{swoosh_email: %Swoosh.Email{to: [{_, addr} | _]}}),

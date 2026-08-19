@@ -145,35 +145,57 @@ floor — asserting "verified against core 1.11" — before or alongside the rel
 **CI-trigger guarantee:** the sync checkout and push use `RELEASE_PLEASE_PAT`.
 That non-`GITHUB_TOKEN` identity deliberately triggers
 `pull_request: synchronize`, so the release PR's required CI checks report on
-the synchronized head. (The GitHub-native auto-merge itself still uses
-`GITHUB_TOKEN`, whose anti-recursion behavior is why the recovery path below
-exists.)
+the synchronized head. Proposal synchronization does not enable auto-merge;
+merging remains part of the separately authorized exact-candidate sequence.
 
-## If a release publishes but the tags/publish never fire
+## If a release proposal or protected delivery stalls
 
 `release-please.yml` runs on pushes to `main`, direct `workflow_dispatch`, and
-its hourly schedule at minute 17. When the **release PR** (`chore: release main`)
-is merged by GitHub-native auto-merge, the resulting push is authored by
-`GITHUB_TOKEN`; GitHub suppresses that recursive push event. Symptom: the
-manifest on `main` is at the new version and the release PR is merged with label
-`autorelease: pending`, but no `mailglass-vX.Y.Z` GitHub release exists and Hex
-still shows the prior version.
+its hourly schedule at minute 17. Pushes, schedules, and digestless dispatches
+may create or synchronize the **release PR** (`chore: release main`), but they
+never merge it, create tags or releases, or publish packages.
 
-**Automatic recovery:** the scheduled run at minute 17 checks this state hourly,
-so recovery waits for the next hourly run — up to one hour. The recorded
-incidents cost roughly 30 minutes. Its preflight is idempotent: all expected tags
-already present and an `autorelease: tagged` label are successful no-ops. A
-partial linked-tag state fails deliberately and requires reconciliation before
-another release action can run.
+**Ordinary runs are proposal-only:** pushes and the minute-17 schedule may update
+or synchronize a release proposal, but cannot merge it, create a tag, or publish.
+There is no ordinary auto-merge path, and the schedule is not a recovery or
+publication mechanism.
 
-**Direct manual recovery:** use `workflow_dispatch` for the existing
-release-please workflow when waiting for the hourly recovery is inappropriate.
-The preflight permits a pending untagged release and the `RELEASE_PLEASE_PAT`
-release creation emits the canonical `release: published` fan-out to
-`publish-hex.yml`.
+**Protected exact-digest chain:** after the candidate has passed its explicit
+authorization checkpoint, run the two distinct dispatches below. Reuse the
+same exact digest throughout; `CORE_VERSION` is the reviewed core/admin version
+from the candidate (not a newly selected version).
 
-**Last resort:** manually creating the missing GitHub releases remains the
-canonical `release: published` fan-out when the workflow path cannot be used.
+```bash
+DIGEST=<authorized-candidate-digest>
+CORE_VERSION=<authorized-core-version>
+
+gh workflow run release-please.yml --ref main \
+  -f candidate_digest="$DIGEST"
+
+# Wait until all three expected tags and GitHub releases exist at the same
+# protected merge SHA before starting delivery.
+gh workflow run publish-hex.yml --ref main \
+  -f tag="mailglass-v${CORE_VERSION}" \
+  -f package=all \
+  -f dry_run=false \
+  -f candidate_digest="$DIGEST" \
+  -f core_full_suite_gate_skip_reason=n/a
+```
+
+The first dispatch revalidates and merges only the immutable proposal generated
+by Release Please, then creates the three linked release tags/releases. It does not
+publish to Hex. After those tags are verified, the second dispatch revalidates
+the final tag SHA and runs the read-only CI gate before the ordered
+core → admin → inbound publish. Successful publication automatically hands the same exact
+versions and immutable SHA to `post-publish-smoke.yml`.
+
+The protected live predecessor may dispatch missing CI runs on that validated
+ref. Captured dry-runs are credential-free and read-only: they can inspect
+already-completed CI, but cannot self-dispatch it.
+
+If any lookup is missing, stale, ambiguous, or red, stop and replay the same
+exact-digest protected chain after correcting the cause. Do not manually create
+releases, tags, or a partial package fan-out as a substitute.
 
 ## One-time setup: branch protection automation
 

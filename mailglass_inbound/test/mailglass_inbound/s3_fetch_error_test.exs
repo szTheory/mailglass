@@ -44,7 +44,9 @@ defmodule MailglassInbound.S3FetchErrorTest do
     assert Map.has_key?(decoded, "message")
     assert Map.has_key?(decoded, "context")
     refute Map.has_key?(decoded, "cause"), "cause must not appear in JSON output"
-    refute json =~ "secret-bucket-internal-error", "raw cause payload must not leak into encoded output"
+
+    refute json =~ "secret-bucket-internal-error",
+           "raw cause payload must not leak into encoded output"
   end
 
   test "is package-local — does NOT implement the core Mailglass.Error behaviour" do

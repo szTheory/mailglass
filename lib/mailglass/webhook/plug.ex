@@ -68,10 +68,12 @@ defmodule Mailglass.Webhook.Plug do
 
   require Logger
 
-  alias Mailglass.{ConfigError, SignatureError, TenancyError}
+  alias Mailglass.{ConfigError, TenancyError}
   alias Mailglass.Outbound.Projector
   alias Mailglass.Tenancy
   alias Mailglass.Webhook.Telemetry, as: WebhookTelemetry
+  alias Mailglass.Webhook.Pipeline
+  alias Mailglass.Webhook.VerifiedRequest
 
   # Forward reference to the ingest module. Referenced at runtime and
   # silenced at compile time so `--warnings-as-errors` stays green
@@ -112,90 +114,93 @@ defmodule Mailglass.Webhook.Plug do
   # in `call/2` extracts the conn as the `result` and attaches the
   # stop_metadata to the `:stop` event.
 
-  defp do_call(conn, provider, _opts) do
+  defp do_call(conn, provider, opts) do
     try do
       {raw_body, headers} = extract_headers_and_raw_body!(conn)
       config = resolve_config!(provider, conn)
 
-      # Verify signature before tenant lookup to fail closed on spoofed payloads.
-      case verify_with_telemetry!(provider, raw_body, headers, config) do
-        {:ok, :replay} ->
-          conn = send_resp(conn, 200, "")
+      # Decode the untrusted outer JSON exactly once. Raw bytes remain the
+      # authoritative signature/evidence input; the decoded value is reused
+      # only after (or as part of) provider verification.
+      request = VerifiedRequest.decode(raw_body, Keyword.get(opts, :json_decoder, &Jason.decode/1))
 
-          {conn,
-           %{
-             provider: provider,
-             status: :replay,
-             duplicate: true,
-             event_count: 0
-           }}
+      outcome =
+        Pipeline.run(provider, request, headers, %{
+          verify: fn pipeline_provider, pipeline_request, pipeline_headers ->
+            verify_with_telemetry!(pipeline_provider, pipeline_request, pipeline_headers, config)
+          end,
+          resolve_tenant: fn pipeline_provider, pipeline_request, pipeline_headers ->
+            resolve_tenant!(pipeline_provider, conn, pipeline_request, pipeline_headers)
+          end,
+          with_tenant: &Tenancy.with_tenant/2,
+          normalize: fn pipeline_provider, pipeline_request, pipeline_headers ->
+            normalize_decoded(pipeline_provider, pipeline_request.decoded, pipeline_headers)
+          end,
+          ingest: fn pipeline_provider, pipeline_request, events ->
+            Mailglass.Webhook.Ingest.ingest_multi(
+              pipeline_provider,
+              pipeline_request.raw_body,
+              pipeline_request.decoded,
+              events
+            )
+          end,
+          broadcast: &broadcast_post_commit/1
+        })
 
-        {:ok, :control_plane, outcome} ->
-          Logger.info("[mailglass] SNS control-plane: provider=#{provider} outcome=#{outcome}")
-          conn = send_resp(conn, 200, "")
-
-          {conn,
-           %{
-             provider: provider,
-             status: :control_plane,
-             outcome: outcome
-           }}
-
-        :ok ->
-          # Resolve tenant only after verification succeeds.
-          tenant_id = resolve_tenant!(provider, conn, raw_body, headers)
-
-          # Step 3: ingest under tenant scope (Pitfall 7 — block form)
-          Tenancy.with_tenant(tenant_id, fn ->
-            events =
-              provider
-              |> provider_module()
-              |> apply(:normalize, [raw_body, headers])
-
-            ingest_and_respond(conn, provider, raw_body, events, tenant_id)
-          end)
-      end
+      render_outcome(conn, provider, outcome)
     rescue
-      e in SignatureError ->
-        # Signature failures are terminal typed errors; do not recover in the plug.
-        Logger.warning("Webhook signature failed: provider=#{provider} reason=#{e.type}")
-
-        conn = send_resp(conn, 401, "")
-
-        {conn,
-         %{
-           provider: provider,
-           status: :signature_failed,
-           failure_reason: e.type
-         }}
-
-      e in TenancyError ->
-        Logger.warning("Webhook tenant resolution failed: provider=#{provider} reason=#{e.type}")
-
-        conn = send_resp(conn, 422, "")
-
-        {conn,
-         %{
-           provider: provider,
-           status: :tenant_unresolved,
-           failure_reason: e.type
-         }}
-
       e in ConfigError ->
-        Logger.error(
-          "[mailglass] Webhook config error: provider=#{provider} " <>
-            "reason=#{e.type} message=#{Exception.message(e)}"
-        )
-
-        conn = send_resp(conn, 500, "")
-
-        {conn,
-         %{
-           provider: provider,
-           status: :config_error,
-           failure_reason: e.type
-         }}
+        render_outcome(conn, provider, {:config_error, e.type})
     end
+  end
+
+  defp render_outcome(conn, provider, {:replay}) do
+    {send_resp(conn, 200, ""),
+     %{provider: provider, status: :replay, duplicate: true, event_count: 0}}
+  end
+
+  defp render_outcome(conn, provider, {:control_plane, outcome}) do
+    Logger.info("[mailglass] SNS control-plane: provider=#{provider} outcome=#{outcome}")
+    {send_resp(conn, 200, ""), %{provider: provider, status: :control_plane, outcome: outcome}}
+  end
+
+  defp render_outcome(conn, provider, {:ingested, tenant_id, event_count, duplicate}) do
+    status = if duplicate, do: :duplicate, else: :ok
+
+    {send_resp(conn, 200, ""),
+     %{
+       provider: provider,
+       tenant_id: tenant_id,
+       status: status,
+       event_count: event_count,
+       duplicate: duplicate
+     }}
+  end
+
+  defp render_outcome(conn, provider, {:ingest_failed, tenant_id, event_count}) do
+    Logger.error("[mailglass] Webhook ingest failed: provider=#{provider}")
+
+    {send_resp(conn, 500, ""),
+     %{provider: provider, tenant_id: tenant_id, status: :ingest_failed, event_count: event_count}}
+  end
+
+  defp render_outcome(conn, provider, {:signature_failed, type}) do
+    Logger.warning("Webhook signature failed: provider=#{provider} reason=#{type}")
+
+    {send_resp(conn, 401, ""),
+     %{provider: provider, status: :signature_failed, failure_reason: type}}
+  end
+
+  defp render_outcome(conn, provider, {:tenant_unresolved, type}) do
+    Logger.warning("Webhook tenant resolution failed: provider=#{provider} reason=#{type}")
+
+    {send_resp(conn, 422, ""),
+     %{provider: provider, status: :tenant_unresolved, failure_reason: type}}
+  end
+
+  defp render_outcome(conn, provider, {:config_error, type}) do
+    Logger.error("[mailglass] Webhook config error: provider=#{provider} reason=#{type}")
+    {send_resp(conn, 500, ""), %{provider: provider, status: :config_error, failure_reason: type}}
   end
 
   # Step 1a: extract raw bytes + headers; fail fast if CachingBodyReader
@@ -225,7 +230,7 @@ defmodule Mailglass.Webhook.Plug do
   # Step 1b: resolve per-tenant config (Application env at v0.1; v0.5 may
   # add per-route MFA).
   defp resolve_config!(:postmark, conn) do
-    env = Application.get_env(:mailglass, :postmark, [])
+    env = Mailglass.Config.webhook_provider(:postmark)
 
     %{
       basic_auth: env[:basic_auth],
@@ -235,7 +240,7 @@ defmodule Mailglass.Webhook.Plug do
   end
 
   defp resolve_config!(:sendgrid, _conn) do
-    env = Application.get_env(:mailglass, :sendgrid, [])
+    env = Mailglass.Config.webhook_provider(:sendgrid)
 
     %{
       public_key: env[:public_key],
@@ -244,7 +249,7 @@ defmodule Mailglass.Webhook.Plug do
   end
 
   defp resolve_config!(:mailgun, _conn) do
-    env = Application.get_env(:mailglass, :mailgun, [])
+    env = Mailglass.Config.webhook_provider(:mailgun)
 
     %{
       signing_key: env[:signing_key],
@@ -255,7 +260,7 @@ defmodule Mailglass.Webhook.Plug do
   end
 
   defp resolve_config!(:ses, _conn) do
-    env = Application.get_env(:mailglass, :ses, [])
+    env = Mailglass.Config.webhook_provider(:ses)
 
     %{
       cert_cache_ttl_seconds: env[:cert_cache_ttl_seconds] || 86_400
@@ -263,7 +268,7 @@ defmodule Mailglass.Webhook.Plug do
   end
 
   defp resolve_config!(:resend, _conn) do
-    env = Application.get_env(:mailglass, :resend, [])
+    env = Mailglass.Config.webhook_provider(:resend)
 
     %{
       secret: env[:secret],
@@ -277,25 +282,29 @@ defmodule Mailglass.Webhook.Plug do
   # :telemetry.span/3 (inside `verify_span/2`) reports via the :exception
   # event and re-raises — the outer SignatureError rescue in do_call/3
   # catches it and classifies the 401 response.
-  defp verify_with_telemetry!(provider, raw_body, headers, config) do
+  defp verify_with_telemetry!(provider, %VerifiedRequest{} = request, headers, config) do
     WebhookTelemetry.verify_span(
       %{provider: provider, status: :pending},
       fn ->
-        module = provider_module(provider)
-        apply(module, :verify!, [raw_body, headers, config])
+        verify_decoded!(provider, request, headers, config)
       end
     )
   end
 
   # Step 3: tenant resolution via Mailglass.Tenancy.resolve_webhook_tenant/1.
-  defp resolve_tenant!(provider, conn, raw_body, headers) do
+  defp resolve_tenant!(provider, conn, %VerifiedRequest{} = request, headers) do
     ctx = %{
       provider: provider,
       conn: conn,
-      raw_body: raw_body,
+      raw_body: request.raw_body,
       headers: headers,
       path_params: conn.path_params,
-      verified_payload: nil
+      # Preserve the adopter-facing v0.1 contract: existing resolvers may
+      # legitimately pattern-match this reserved field as nil. The decoded
+      # value has its own additive key so parse-once consumers do not break
+      # those callbacks.
+      verified_payload: nil,
+      decoded_payload: VerifiedRequest.payload_or_nil(request)
     }
 
     case Tenancy.resolve_webhook_tenant(ctx) do
@@ -306,63 +315,6 @@ defmodule Mailglass.Webhook.Plug do
         raise TenancyError.new(:webhook_tenant_unresolved,
                 context: %{provider: provider, reason: reason}
               )
-    end
-  end
-
-  # Step 4: normalize → ingest → respond
-  #
-  # Ingest contract: ingest_multi/3
-  # returns `{:ok, %{webhook_event: %WebhookEvent{}, duplicate: boolean,
-  # events_with_deliveries: [{event, delivery, orphan?}, ...],
-  # orphan_event_count: int}}`.
-  #
-  # Local name `result` avoids shadowing Ecto.Multi's "changes"
-  # terminology that the ingest module uses
-  # internally.
-  defp ingest_and_respond(conn, provider, raw_body, events, tenant_id) do
-    case Mailglass.Webhook.Ingest.ingest_multi(provider, raw_body, events) do
-      {:ok, %{duplicate: true} = result} ->
-        broadcast_post_commit(result)
-
-        conn = send_resp(conn, 200, "")
-
-        {conn,
-         %{
-           provider: provider,
-           tenant_id: tenant_id,
-           status: :duplicate,
-           event_count: length(events),
-           duplicate: true
-         }}
-
-      {:ok, result} ->
-        broadcast_post_commit(result)
-
-        conn = send_resp(conn, 200, "")
-
-        {conn,
-         %{
-           provider: provider,
-           tenant_id: tenant_id,
-           status: :ok,
-           event_count: length(events),
-           duplicate: false
-         }}
-
-      {:error, reason} ->
-        Logger.error(
-          "[mailglass] Webhook ingest failed: provider=#{provider} reason=#{inspect(reason)}"
-        )
-
-        conn = send_resp(conn, 500, "")
-
-        {conn,
-         %{
-           provider: provider,
-           tenant_id: tenant_id,
-           status: :ingest_failed,
-           event_count: length(events)
-         }}
     end
   end
 
@@ -403,4 +355,22 @@ defmodule Mailglass.Webhook.Plug do
   defp provider_module(:mailgun), do: Mailglass.Webhook.Providers.Mailgun
   defp provider_module(:ses), do: Mailglass.Webhook.Providers.SES
   defp provider_module(:resend), do: Mailglass.Webhook.Providers.Resend
+
+  defp verify_decoded!(:mailgun, %VerifiedRequest{decoded: decoded}, headers, config),
+    do: Mailglass.Webhook.Providers.Mailgun.verify_decoded!(decoded, headers, config)
+
+  defp verify_decoded!(:ses, %VerifiedRequest{decoded: decoded}, headers, config),
+    do: Mailglass.Webhook.Providers.SES.verify_decoded!(decoded, headers, config)
+
+  defp verify_decoded!(provider, %VerifiedRequest{raw_body: raw_body}, headers, config) do
+    provider
+    |> provider_module()
+    |> apply(:verify!, [raw_body, headers, config])
+  end
+
+  defp normalize_decoded(provider, decoded, headers) do
+    provider
+    |> provider_module()
+    |> apply(:normalize_decoded, [decoded, headers])
+  end
 end

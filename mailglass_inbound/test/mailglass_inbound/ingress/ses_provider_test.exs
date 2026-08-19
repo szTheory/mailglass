@@ -3,7 +3,7 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
 
   alias MailglassInbound.{S3FetchError, S3Fetcher, SignatureError}
   alias MailglassInbound.Ingress.Providers.SES
-  alias MailglassInbound.Ingress.Request
+  alias MailglassInbound.Ingress.{Request, VerifiedRequest}
   alias Mailglass.Webhook.Providers.SES.CertCache
 
   # SES inbound provider tests. Envelopes are CODE-BUILT (no .eml): each test
@@ -34,20 +34,62 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
 
   # ---- behaviors -------------------------------------------------------
 
-  test "authentic Notification (Action:S3) verifies and fetches the S3 body, then MIME-parses", %{
+  test "authenticated SES values retain exact signed bytes and resolve MIME once", %{
     private_key: pk
   } do
     S3Fetcher.Fake.put(@bucket, "ses-msg-1", @raw_mime)
     raw = signed_s3_notification(pk, "ses-msg-1")
     request = ses_request(raw)
 
-    assert {:ok, facts} = SES.verify!(request, ses_config())
-    assert facts.auth == :sns_x509
+    assert {:ok, %VerifiedRequest{} = verified} = SES.verify!(request, ses_config())
+    assert verified.raw_body == raw
+    assert verified.verification_facts == %{auth: :sns_x509}
+    assert S3Fetcher.Fake.call_count(@bucket, "ses-msg-1") == 0
 
-    %{message: message, evidence: evidence} = SES.normalize(request)
+    verified = SES.resolve_content!(verified, ses_config())
+    %{message: message, evidence: evidence} = SES.normalize(verified)
     assert message.provider_message_id == "ses-msg-1"
     assert evidence.raw_mime == @raw_mime
     assert message.subject == "Inbound via SES"
+    assert S3Fetcher.Fake.call_count(@bucket, "ses-msg-1") == 1
+  end
+
+  test "rejects an S3 object larger than the default limit before body retrieval", %{
+    private_key: pk
+  } do
+    max_bytes = 40 * 1024 * 1024
+    S3Fetcher.Fake.put_head(@bucket, "ses-oversized", max_bytes + 1)
+    raw = signed_s3_notification(pk, "ses-oversized")
+
+    err =
+      assert_raise S3FetchError, fn ->
+        raw |> ses_request() |> verified_request!()
+      end
+
+    assert err.type == :s3_fetch_failed
+    assert S3Fetcher.Fake.call_count(@bucket, "ses-oversized") == 0
+  end
+
+  test "accepts an S3 object exactly at a configured byte limit", %{private_key: pk} do
+    raw_mime = "1234"
+    S3Fetcher.Fake.put(@bucket, "ses-exact-limit", raw_mime)
+    raw = signed_s3_notification(pk, "ses-exact-limit")
+    config = Map.put(ses_config(), :s3_max_bytes, byte_size(raw_mime))
+
+    {:ok, verified} = SES.verify!(ses_request(raw), config)
+    assert %{raw_mime: ^raw_mime} = SES.resolve_content!(verified, config)
+  end
+
+  test "rejects a dishonest S3 adapter body above the configured byte limit", %{private_key: pk} do
+    S3Fetcher.Fake.put_head(@bucket, "ses-dishonest", 4)
+    S3Fetcher.Fake.put(@bucket, "ses-dishonest", "12345")
+    raw = signed_s3_notification(pk, "ses-dishonest")
+    config = Map.put(ses_config(), :s3_max_bytes, 4)
+
+    {:ok, verified} = SES.verify!(ses_request(raw), config)
+
+    err = assert_raise S3FetchError, fn -> SES.resolve_content!(verified, config) end
+    assert err.type == :s3_fetch_failed
   end
 
   test "forged SNS signature raises MailglassInbound.SignatureError :bad_signature" do
@@ -101,10 +143,9 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     raw = signed_inline_notification(pk, "ses-inline-1", @raw_mime)
     request = ses_request(raw)
 
-    assert {:ok, facts} = SES.verify!(request, ses_config())
-    assert facts.auth == :sns_x509
+    verified = verified_request!(request)
 
-    %{message: message, evidence: evidence} = SES.normalize(request)
+    %{message: message, evidence: evidence} = SES.normalize(verified)
     assert message.provider_message_id == "ses-inline-1"
     assert evidence.raw_mime == @raw_mime
   end
@@ -114,8 +155,7 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     raw = signed_inline_notification(pk, "ses-inline-b64", encoded)
     request = ses_request(raw)
 
-    assert {:ok, _facts} = SES.verify!(request, ses_config())
-    %{evidence: evidence} = SES.normalize(request)
+    %{evidence: evidence} = request |> verified_request!() |> SES.normalize()
     assert evidence.raw_mime == @raw_mime
   end
 
@@ -128,8 +168,7 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     raw = signed_inline_notification(pk, "ses-inline-b64-warn", encoded)
     request = ses_request(raw)
 
-    assert {:ok, _facts} = SES.verify!(request, ses_config())
-    %{evidence: evidence} = SES.normalize(request)
+    %{evidence: evidence} = request |> verified_request!() |> SES.normalize()
 
     assert evidence.parse_warnings[:inline_content_base64_decoded] == true
   end
@@ -147,8 +186,7 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     raw = signed_inline_notification(pk, "ses-inline-raw", not_mime_but_base64)
     request = ses_request(raw)
 
-    assert {:ok, _facts} = SES.verify!(request, ses_config())
-    %{evidence: evidence} = SES.normalize(request)
+    %{evidence: evidence} = request |> verified_request!() |> SES.normalize()
 
     # Kept as raw content (the base64 form), NOT silently decoded.
     assert evidence.raw_mime == not_mime_but_base64
@@ -163,8 +201,23 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     raw = signed_s3_notification(pk, "ses-retry")
     request = ses_request(raw)
 
-    err = assert_raise S3FetchError, fn -> SES.verify!(request, ses_config()) end
+    err = assert_raise S3FetchError, fn -> request |> verified_request!() end
     assert err.type == :s3_object_not_ready
+  end
+
+  test "retries a known transient metadata failure within the configured budget", %{
+    private_key: pk
+  } do
+    S3Fetcher.Fake.put_head_error(@bucket, "ses-head-timeout", :timeout)
+    raw = signed_s3_notification(pk, "ses-head-timeout")
+    config = Map.put(ses_config(), :s3_retry_opts, attempts: 3, backoff_ms: [0, 0])
+
+    {:ok, verified} = SES.verify!(ses_request(raw), config)
+
+    err = assert_raise S3FetchError, fn -> SES.resolve_content!(verified, config) end
+    assert err.type == :s3_object_not_ready
+    assert S3Fetcher.Fake.head_count(@bucket, "ses-head-timeout") == 3
+    assert S3Fetcher.Fake.call_count(@bucket, "ses-head-timeout") == 0
   end
 
   test "normalize builds evidence with raw_payload=SNS envelope and raw_mime=fetched body", %{
@@ -174,8 +227,7 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     raw = signed_s3_notification(pk, "ses-ev")
     request = ses_request(raw)
 
-    assert {:ok, _} = SES.verify!(request, ses_config())
-    %{message: message, evidence: evidence} = SES.normalize(request)
+    %{message: message, evidence: evidence} = request |> verified_request!() |> SES.normalize()
 
     assert message.provider == :ses
     assert message.message_id == "<ses-inbound@example.com>"
@@ -194,50 +246,38 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     raw = signed_inline_notification_without_message_id(pk, @raw_mime)
     request = ses_request(raw)
 
-    assert {:ok, _facts} = SES.verify!(request, ses_config())
-    %{message: message, evidence: evidence} = SES.normalize(request)
+    %{message: message, evidence: evidence} = request |> verified_request!() |> SES.normalize()
 
     assert message.provider_message_id == nil
     assert evidence.parse_warnings[:missing_provider_message_id] == true
   end
 
-  # ---- WR-01: defensive normalize/1 fallback + stale-stash clearing ----
-
-  test "normalize/1 fallback degrades malformed JSON to an empty record instead of raising" do
-    # No prior verify! in this process, so normalize/1 takes the defensive
-    # fallback. A malformed SNS envelope must NOT raise Jason.DecodeError (which
-    # the plug rescue would not catch); it degrades to an empty record.
-    request = ses_request("{not valid json")
-
-    %{message: message, evidence: evidence} = SES.normalize(request)
-
-    assert message.provider == :ses
-    assert message.provider_message_id == nil
-    assert evidence.raw_mime == ""
-  end
-
-  test "verify! clears a stale stash from a prior request before stashing the new one", %{
+  test "verification ignores stale ambient values and normalization does not refetch", %{
     private_key: pk
   } do
-    # Simulate a pooled-process footgun: a leftover stash from a prior request
-    # whose normalize/1 never ran. A fresh verify! must overwrite it so the new
-    # request's normalize/1 reads the CURRENT body, never the stale one.
+    # A caller may have stale values in its process, but production flow never
+    # reads them because the verified value owns all authenticated material.
     Process.put({SES, :verified}, {%{"Type" => "Notification"}, "STALE BODY FROM PRIOR REQUEST"})
 
     S3Fetcher.Fake.put(@bucket, "ses-fresh", @raw_mime)
     raw = signed_s3_notification(pk, "ses-fresh")
     request = ses_request(raw)
 
-    assert {:ok, _facts} = SES.verify!(request, ses_config())
-    %{evidence: evidence} = SES.normalize(request)
+    %{evidence: evidence} = request |> verified_request!() |> SES.normalize()
 
     assert evidence.raw_mime == @raw_mime
     refute evidence.raw_mime == "STALE BODY FROM PRIOR REQUEST"
+    assert S3Fetcher.Fake.call_count(@bucket, "ses-fresh") == 1
   end
 
   # ---- helpers ---------------------------------------------------------
 
   defp ses_config, do: %{s3_fetcher: S3Fetcher.Fake, cert_cache_ttl_seconds: 86_400}
+
+  defp verified_request!(request) do
+    {:ok, verified} = SES.verify!(request, ses_config())
+    SES.resolve_content!(verified, ses_config())
+  end
 
   defp ses_request(raw) do
     %Request{provider: :ses, raw_body: raw, headers: [{"content-type", "text/plain"}]}

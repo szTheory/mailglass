@@ -42,31 +42,58 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     Enum.each(@packages, fn package ->
       job = extract_publish_job!(source, package)
 
-      assert job =~ "mix hex.info #{package} \"${VERSION}\""
-      assert job =~ "Released:"
+      assert job =~ "mix hex.build"
+      assert job =~ "CHECKSUM=$(shasum -a 256"
+      refute job =~ "tar -xOf"
+      assert job =~ "release_policy_hex_release_state.sh #{package} \"${VERSION}\" \"$CHECKSUM\""
       assert job =~ "skip=true"
       assert job =~ "steps.idempotency.outputs.skip != 'true'"
       assert job =~ ~r/nothing to do/i
     end)
   end
 
-  test "release events fan out only to the linked core and admin packages" do
+  test "protected exact-digest dispatch fans out core, admin, then independent inbound" do
     source = File.read!(@publish_path)
     core = extract_publish_job!(source, "mailglass")
     admin = extract_publish_job!(source, "mailglass_admin")
     inbound = extract_publish_job!(source, "mailglass_inbound")
 
-    assert core =~ "needs: [gate-ci-green]"
-    assert core =~ "github.event_name == 'release'"
+    assert core =~ "needs: [gate-ci-green, prepublish-summary]"
+    assert core =~ "github.event_name == 'workflow_dispatch'"
+    assert core =~ "needs.prepublish-summary.outputs.authorized == 'true'"
 
-    assert admin =~ "needs: [gate-ci-green, publish-core]"
+    assert admin =~ "needs: [gate-ci-green, prepublish-summary, publish-core]"
     assert admin =~ "needs.gate-ci-green.result == 'success'"
     assert admin =~ "needs.publish-core.result == 'success'"
-    assert admin =~ "github.event_name == 'release'"
-    refute admin =~ "needs: [gate-ci-green, publish-core, publish-inbound]"
 
-    refute inbound =~ "github.event_name == 'release'"
+    assert admin =~
+             "github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest"
+
+    refute admin =~ "publish-inbound]"
+
+    assert inbound =~ "needs: [gate-ci-green, prepublish-summary, publish-core, publish-admin]"
     assert inbound =~ "github.event_name == 'workflow_dispatch'"
+    assert inbound =~ "needs.prepublish-summary.outputs.authorized == 'true'"
+    assert inbound =~ "needs.publish-admin.result == 'success'"
+  end
+
+  test "CI self-heal is a live-only predecessor while captured rehearsal uses the read-only gate" do
+    source = File.read!(@publish_path)
+    self_heal = extract_job!(source, "ensure-live-ci-runs")
+    gate = extract_job!(source, "gate-ci-green")
+
+    assert self_heal =~ "needs: [prepublish-summary]"
+    assert self_heal =~ "github.event.inputs.dry_run != 'true'"
+    assert self_heal =~ "needs.prepublish-summary.outputs.authorized == 'true'"
+    assert self_heal =~ "actions: write"
+
+    assert gate =~ "needs: [prepublish-summary, ensure-live-ci-runs]"
+    assert gate =~ "always()"
+    assert gate =~ "github.event.inputs.dry_run == 'true'"
+    assert gate =~ "needs.prepublish-summary.outputs.pretag == 'true'"
+    assert gate =~ "needs.ensure-live-ci-runs.result == 'success'"
+    refute gate =~ "actions: write"
+    refute gate =~ "createWorkflowDispatch"
   end
 
   test "all publish jobs preserve the protected environment and step-local credential" do
@@ -78,6 +105,20 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
       assert job =~ "environment: hex-publish"
       assert job =~ "HEX_API_KEY: ${{ secrets.HEX_API_KEY }}"
     end)
+  end
+
+  test "only a successful ordered protected publish dispatches exact smoke inputs" do
+    source = File.read!(@publish_path)
+    handoff = extract_job!(source, "dispatch-post-publish-smoke")
+
+    assert handoff =~ "needs: [prepublish-summary, publish-inbound]"
+    assert handoff =~ "needs.publish-inbound.result == 'success'"
+    assert handoff =~ "github.event.inputs.dry_run != 'true'"
+    assert handoff =~ "needs.prepublish-summary.outputs.authorized == 'true'"
+    assert handoff =~ "actions: write"
+    assert handoff =~ "workflow_id: 'post-publish-smoke.yml'"
+    assert handoff =~ "target_ref: process.env.TARGET_REF"
+    assert handoff =~ "/^[0-9a-f]{40}$/"
   end
 
   test "prepublish summary uploads a credential-free Phase 148 proof artifact" do

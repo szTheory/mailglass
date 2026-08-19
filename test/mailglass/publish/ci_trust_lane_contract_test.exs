@@ -12,12 +12,15 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
     assert job =~ "name: Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)"
     assert job =~ "working-directory: reference/host_app"
     assert job =~ "run: bash ../../scripts/check_clean_baseline_hex_only.sh"
+    assert job =~ "MAILGLASS_REFERENCE_HOST_PACKAGE_MODE: published_siblings"
     assert job =~ "run: mix verify.reference_host.journey --host-root reference/host_app"
     assert job =~ "run: bash scripts/check_trust_runner_checkpoint.sh"
     assert job =~ "name: trust-runner-clean-baseline-${{ github.run_id }}"
     assert job =~ "if-no-files-found: error"
     assert job =~ "retention-days: 90"
     assert job =~ "path: tmp/mailglass_trust_runner/checkpoint.json"
+    refute job =~ "MAILGLASS_CORE_WORKSPACE_EBIN"
+    refute job =~ "MAILGLASS_INBOUND_WORKSPACE_EBIN"
 
     # Phase 126 (M1 CI/CD efficiency, commit db8761527) intentionally gated EVERY
     # lane — including this one — on the `changes` job so docs-only PRs skip the

@@ -2,9 +2,12 @@ defmodule Mailglass.RateLimiterTest do
   use ExUnit.Case, async: false
 
   alias Mailglass.{RateLimiter, RateLimitError}
+  alias Mailglass.RateLimiter.AtomicBucket
 
   setup do
     prev_config = Application.get_env(:mailglass, :rate_limit)
+    prev_clock = Application.get_env(:mailglass, :rate_limit_clock)
+    prev_owner = Application.get_env(:mailglass, :rate_limit_table_owner)
 
     on_exit(fn ->
       if prev_config do
@@ -12,11 +15,105 @@ defmodule Mailglass.RateLimiterTest do
       else
         Application.delete_env(:mailglass, :rate_limit)
       end
+
+      restore_env(:rate_limit_clock, prev_clock)
+      restore_env(:rate_limit_table_owner, prev_owner)
     end)
 
     # Reset the ETS table between tests by deleting all entries
     :ets.delete_all_objects(:mailglass_rate_limit)
     :ok
+  end
+
+  defp restore_env(key, nil), do: Application.delete_env(:mailglass, key)
+  defp restore_env(key, value), do: Application.put_env(:mailglass, key, value)
+
+  describe "atomic fixed-point bucket" do
+    test "owner fallback never mints permits when a clock value regresses" do
+      bucket = {:clock_regression, 0, 100, 17, 100}
+
+      assert {:denied, replacement} =
+               AtomicBucket.consume_taken(bucket, 1, 60_000_000, 99)
+
+      assert replacement == {:clock_regression, 0, 100, 17, 100}
+
+      assert {:denied, {:clock_regression, 0, 100, 17, 100}} =
+               AtomicBucket.consume_taken(replacement, 1, 60_000_000, 100)
+    end
+
+    test "recreates its ETS table instead of raising when admission sees it absent" do
+      # Deleting a named ETS table immediately before admission exercises the
+      # owner-side recovery path. It must recreate the canonical table before
+      # looking up or inserting the new bucket.
+      :ets.delete(:mailglass_rate_limit)
+
+      assert :ok = RateLimiter.check("restart-window", "restart.test", :operational)
+      refute :undefined == :ets.whereis(:mailglass_rate_limit)
+    end
+
+    test "concurrent callers receive exactly the refilled capacity without losing fractional time" do
+      now = :atomics.new(1, [])
+      :atomics.put(now, 1, 0)
+      Application.put_env(:mailglass, :rate_limit_clock, fn -> :atomics.get(now, 1) end)
+      Application.put_env(:mailglass, :rate_limit, default: [capacity: 10, per_minute: 10])
+
+      for _ <- 1..10, do: assert(:ok = RateLimiter.check("atomic", "exact.test", :operational))
+      :atomics.put(now, 1, 60_000_000)
+
+      parent = self()
+
+      tasks =
+        for _ <- 1..40 do
+          Task.async(fn ->
+            send(parent, :ready)
+
+            receive do
+              :go -> RateLimiter.check("atomic", "exact.test", :operational)
+            end
+          end)
+        end
+
+      for _ <- tasks, do: assert_receive(:ready)
+      Enum.each(tasks, &send(&1.pid, :go))
+
+      results = Enum.map(tasks, &Task.await(&1, 5_000))
+      assert Enum.count(results, &(&1 == :ok)) == 10
+
+      # 100 ms at 10/min is a retained fractional refill; a later 5.9 s completes it.
+      :atomics.put(now, 1, 60_100_000)
+      assert {:error, %RateLimitError{}} = RateLimiter.check("atomic", "exact.test", :operational)
+      :atomics.put(now, 1, 66_000_000)
+      assert :ok = RateLimiter.check("atomic", "exact.test", :operational)
+    end
+
+    test "full active table fails closed and idle entries are reclaimed" do
+      now = :atomics.new(1, [])
+      :atomics.put(now, 1, 0)
+      Application.put_env(:mailglass, :rate_limit_clock, fn -> :atomics.get(now, 1) end)
+      Application.put_env(:mailglass, :rate_limit_table_owner, max_keys: 4, idle_expiry_ms: 100)
+      Application.put_env(:mailglass, :rate_limit, default: [capacity: 1, per_minute: 1])
+
+      assert :ok = RateLimiter.check("a", "cap.test", :operational)
+      assert :ok = RateLimiter.check("b", "cap.test", :operational)
+      assert {:error, %RateLimitError{}} = RateLimiter.check("c", "cap.test", :operational)
+
+      :atomics.put(now, 1, 101_000)
+      assert :ok = RateLimiter.check("c", "cap.test", :operational)
+    end
+
+    test "concurrent compound keys cannot replace each other's observed state" do
+      Application.put_env(:mailglass, :rate_limit, default: [capacity: 10, per_minute: 0])
+
+      results =
+        for {tenant, domain} <- [{"tenant-a", "one.test"}, {"tenant-b", "two.test"}], _ <- 1..20 do
+          Task.async(fn -> RateLimiter.check(tenant, domain, :operational) end)
+        end
+        |> Enum.map(&Task.await(&1, 5_000))
+
+      assert Enum.count(results, &(&1 == :ok)) == 20
+      assert Enum.count(Enum.take(results, 20), &(&1 == :ok)) == 10
+      assert Enum.count(Enum.drop(results, 20), &(&1 == :ok)) == 10
+    end
   end
 
   describe "check/3 :transactional bypass (D-24)" do
@@ -65,9 +162,11 @@ defmodule Mailglass.RateLimiterTest do
   end
 
   describe "check/3 token bucket — refill" do
-    test "Test 4: after over-limit, waiting refill_ms then calling again returns :ok" do
-      # Capacity 2, per_minute 120 => refill_per_ms = 120/60000 = 0.002 t/ms => 500ms to get 1 token
+    test "Test 4: deterministic elapsed time refills a depleted bucket" do
       Application.put_env(:mailglass, :rate_limit, default: [capacity: 2, per_minute: 120])
+      now = :atomics.new(1, [])
+      :atomics.put(now, 1, 0)
+      Application.put_env(:mailglass, :rate_limit_clock, fn -> :atomics.get(now, 1) end)
       :ets.delete_all_objects(:mailglass_rate_limit)
 
       # Drain
@@ -77,8 +176,8 @@ defmodule Mailglass.RateLimiterTest do
       assert {:error, %RateLimitError{}} =
                RateLimiter.check("tenant-refill", "refill.com", :operational)
 
-      # Wait 600ms for at least 1 token to refill (refill rate: 1 token per 500ms)
-      Process.sleep(600)
+      # 120/min refills one whole token after 500ms.
+      :atomics.put(now, 1, 500_000)
 
       assert :ok = RateLimiter.check("tenant-refill", "refill.com", :operational)
     end

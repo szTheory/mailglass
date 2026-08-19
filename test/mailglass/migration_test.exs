@@ -50,6 +50,17 @@ defmodule Mailglass.MigrationTest do
       # teardown.
       _ = restore_suite_baseline_schema()
 
+      # The public down/up round-trip drops and recreates `citext`, which gives
+      # the type a new PostgreSQL OID. Restart the whole repo so its shared
+      # Postgrex type server cannot leak the old OID into later modules. The
+      # helper restores :auto for this callback; `unsandboxed_module/1` still
+      # performs the final :manual revert after this callback returns.
+      SandboxOwnership.restart_repo_after_global_type_change!(TestRepo,
+        caller: __MODULE__
+      )
+
+      Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
+
       # VERIFIED, not assumed: reuse the formatter's own probe rather than
       # re-implementing the check. A restore that could not complete raises
       # naming the relations it could not find — it never returns quietly.
@@ -94,8 +105,8 @@ defmodule Mailglass.MigrationTest do
                Mailglass.Migrations.Postgres.current_version()
     end
 
-    test "current version exposes V05 through the dispatcher" do
-      assert Mailglass.Migrations.Postgres.current_version() == 5
+    test "current version exposes V06 through the dispatcher" do
+      assert Mailglass.Migrations.Postgres.current_version() == 6
     end
 
     test "is idempotent — rerunning the migration is a no-op" do
@@ -392,6 +403,34 @@ defmodule Mailglass.MigrationTest do
                Mailglass.Migrations.Postgres.current_version()
     end
 
+    test "V06 makes raw signed webhook bytes immutable at the database boundary", %{
+      version: version
+    } do
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(TestRepo, fn repo ->
+          Ecto.Migrator.up(repo, version, PrefixUpMigration, log: false)
+        end)
+
+      id = Ecto.UUID.generate()
+
+      TestRepo.query!(
+        """
+        INSERT INTO #{@prefix}.mailglass_webhook_events
+          (id, tenant_id, provider, provider_event_id, event_type_raw, status,
+           raw_payload, raw_signed_body, received_at, inserted_at, updated_at)
+        VALUES ($1::uuid, 'tenant', 'postmark', 'immutable-body', 'Delivery',
+                'succeeded', '{}'::jsonb, 'original bytes', now(), now(), now())
+        """,
+        [Ecto.UUID.dump!(id)]
+      )
+
+      assert {:error, %Postgrex.Error{postgres: %{pg_code: "45A01"}}} =
+               TestRepo.query(
+                 "UPDATE #{@prefix}.mailglass_webhook_events SET raw_signed_body = 'tampered bytes' WHERE id = $1::uuid",
+                 [Ecto.UUID.dump!(id)]
+               )
+    end
+
     test "DROP SCHEMA RESTRICT refuses a non-empty schema and succeeds once empty" do
       # Proves MIGR-02's down-side data-safety contract: `maybe_drop_schema/1`
       # emits `DROP SCHEMA IF EXISTS "<prefix>" RESTRICT` (NEVER CASCADE) — so a
@@ -458,6 +497,54 @@ defmodule Mailglass.MigrationTest do
       # and there is no schema drop on this success path).
       assert schema_exists?(@prefix),
              "up/1 with create_schema: false must operate against the operator-owned schema"
+    end
+  end
+
+  describe "catalog version classification" do
+    alias Mailglass.Migrations.Postgres, as: MigrationRunner
+
+    test "returns zero only when the core anchor relation is absent" do
+      assert MigrationRunner.migrated_version(
+               prefix: "catalog_fixture",
+               query_result: {:ok, %{rows: []}}
+             ) == 0
+    end
+
+    test "returns a complete numeric comment inside the supported range" do
+      assert MigrationRunner.migrated_version(
+               prefix: "catalog_fixture",
+               query_result: {:ok, %{rows: [["3"]]}}
+             ) == 3
+    end
+
+    for {name, result, reason} <- [
+          {"a missing comment", {:ok, %{rows: [[nil]]}}, :missing_comment},
+          {"a blank comment", {:ok, %{rows: [["  "]]}}, :invalid_comment},
+          {"a non-numeric comment", {:ok, %{rows: [["3oops"]]}}, :invalid_comment},
+          {"multiple catalog rows", {:ok, %{rows: [["1"], ["2"]]}}, :unexpected_result},
+          {"an impossible version", {:ok, %{rows: [["0"]]}}, :out_of_range},
+          {"a query error", {:error, :unavailable}, :query_failed}
+        ] do
+      test "raises a typed error for #{name}" do
+        assert_raise Mailglass.MigrationVersionError, fn ->
+          MigrationRunner.migrated_version(
+            prefix: "catalog_fixture",
+            query_result: unquote(Macro.escape(result))
+          )
+        end
+
+        assert %Mailglass.MigrationVersionError{
+                 reason: unquote(reason),
+                 package: :mailglass,
+                 prefix: "catalog_fixture"
+               } =
+                 catch_error(
+                   MigrationRunner.migrated_version(
+                     prefix: "catalog_fixture",
+                     query_result: unquote(Macro.escape(result))
+                   )
+                 )
+      end
     end
   end
 

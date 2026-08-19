@@ -191,8 +191,7 @@ defmodule MailglassInbound.Test.Ingress do
     tenant_id = Keyword.get(opts, :tenant_id, @default_tenant_id)
     {request, config} = build_request(provider, payload, opts)
 
-    facts = verify_request!(provider, request, config)
-    normalized = normalize_request!(provider, request)
+    {facts, normalized} = verify_and_normalize!(provider, request, config)
 
     message =
       normalized.message
@@ -245,7 +244,11 @@ defmodule MailglassInbound.Test.Ingress do
     {request, Keyword.get(opts, :config, %{})}
   end
 
-  defp build_request(:sendgrid, %{raw_mime: raw_mime, headers: headers, params: params} = payload, opts) do
+  defp build_request(
+         :sendgrid,
+         %{raw_mime: raw_mime, headers: headers, params: params} = payload,
+         opts
+       ) do
     request = %Request{
       provider: :sendgrid,
       raw_body: raw_mime,
@@ -299,16 +302,22 @@ defmodule MailglassInbound.Test.Ingress do
   defp verify_request!(:mailgun, %Request{} = request, config),
     do: unwrap_facts(Mailgun.verify!(request, config))
 
-  defp verify_request!(:ses, %Request{} = request, config),
-    do: unwrap_facts(SES.verify!(request, config))
-
   defp unwrap_facts({:ok, facts}) when is_map(facts), do: facts
   defp unwrap_facts(facts) when is_map(facts), do: facts
+
+  defp verify_and_normalize!(:ses, %Request{} = request, config) do
+    {:ok, verified} = SES.verify!(request, config)
+    verified = SES.resolve_content!(verified, config)
+    {verified.verification_facts, SES.normalize(verified)}
+  end
+
+  defp verify_and_normalize!(provider, %Request{} = request, config) do
+    {verify_request!(provider, request, config), normalize_request!(provider, request)}
+  end
 
   defp normalize_request!(:postmark, %Request{} = request),
     do: Postmark.normalize(request.raw_body, request.headers)
 
   defp normalize_request!(:sendgrid, %Request{} = request), do: Sendgrid.normalize(request)
   defp normalize_request!(:mailgun, %Request{} = request), do: Mailgun.normalize(request)
-  defp normalize_request!(:ses, %Request{} = request), do: SES.normalize(request)
 end

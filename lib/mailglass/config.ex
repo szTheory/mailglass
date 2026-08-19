@@ -1,4 +1,6 @@
-defmodule Mailglass.Config do
+defmodule Mailglass.Runtime.Schema do
+  @moduledoc false
+
   # Schema is declared BEFORE @moduledoc so NimbleOptions.docs(@schema) can
   # interpolate into the module documentation.
   @schema [
@@ -24,7 +26,7 @@ defmodule Mailglass.Config do
     ],
     adapter: [
       type: :any,
-      default: {Mailglass.Adapters.Fake, []},
+      default: {Module.concat([:Mailglass, :Adapters, :Fake]), []},
       doc: "Adapter module or `{module, opts}` tuple. Default: the Fake adapter."
     ],
     adapters: [
@@ -98,7 +100,7 @@ defmodule Mailglass.Config do
     ],
     suppression_store: [
       type: {:or, [:atom, nil]},
-      default: Mailglass.SuppressionStore.Ecto,
+      default: Module.concat([:Mailglass, :SuppressionStore, :Ecto]),
       doc:
         "Module implementing `Mailglass.SuppressionStore`. " <>
           "Default: `Mailglass.SuppressionStore.Ecto`."
@@ -467,8 +469,120 @@ defmodule Mailglass.Config do
     ]
   ]
 
-  # persistent_term key for the boot-validated Postgres schema name.
-  @schema_key {__MODULE__, :schema}
+  @doc false
+  def definition, do: @schema
+
+  @doc false
+  def known_keys, do: Keyword.keys(@schema)
+
+  @doc false
+  def validate!(opts) when is_list(opts) do
+    opts
+    |> normalize_optional_keyword_subtrees()
+    |> NimbleOptions.validate!(@schema)
+    |> validate_adapter_config!()
+    |> validate_mailgun_replay_window!()
+  end
+
+  defp normalize_optional_keyword_subtrees(opts) do
+    Enum.reduce(
+      [:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance, :ses, :resend],
+      opts,
+      fn key, acc ->
+        case Keyword.get(acc, key, :__missing__) do
+          nil -> Keyword.put(acc, key, [])
+          _ -> acc
+        end
+      end
+    )
+    |> normalize_rate_limit_config()
+  end
+
+  defp normalize_rate_limit_config(opts) do
+    case Keyword.get(opts, :rate_limit) do
+      rate_limit when is_list(rate_limit) ->
+        if Keyword.has_key?(rate_limit, :default) or Keyword.has_key?(rate_limit, :overrides) do
+          tenant_recipient = Keyword.take(rate_limit, [:default, :overrides])
+          rest = Keyword.drop(rate_limit, [:default, :overrides])
+          Keyword.put(opts, :rate_limit, Keyword.put(rest, :tenant_recipient, tenant_recipient))
+        else
+          opts
+        end
+
+      _ ->
+        opts
+    end
+  end
+
+  defp validate_adapter_config!(validated) do
+    _ = normalize_adapter_entry!(Keyword.fetch!(validated, :adapter), :adapter)
+
+    adapters =
+      validated
+      |> Keyword.get(:adapters, [])
+      |> Enum.map(&normalize_registry_entry!/1)
+
+    Keyword.put(validated, :adapters, adapters)
+  end
+
+  defp normalize_registry_entry!({ref, adapter}) do
+    {normalize_adapter_ref!(ref), normalize_adapter_entry!(adapter, :adapters)}
+  end
+
+  defp normalize_registry_entry!(other) do
+    raise NimbleOptions.ValidationError,
+      key: :adapters,
+      message:
+        "expected entries like {ref, module} or {ref, {module, opts}}, got: #{inspect(other)}"
+  end
+
+  defp normalize_adapter_ref!(ref) when is_atom(ref) or is_binary(ref), do: ref
+
+  defp normalize_adapter_ref!(ref) do
+    raise NimbleOptions.ValidationError,
+      key: :adapters,
+      message: "adapter refs must be atoms or strings, got: #{inspect(ref)}"
+  end
+
+  defp normalize_adapter_entry!(adapter, key) do
+    case adapter do
+      mod when is_atom(mod) ->
+        {mod, []}
+
+      {mod, opts} when is_atom(mod) and is_list(opts) ->
+        if Keyword.keyword?(opts), do: {mod, opts}, else: invalid_adapter_entry!(key, adapter)
+
+      _ ->
+        invalid_adapter_entry!(key, adapter)
+    end
+  end
+
+  defp invalid_adapter_entry!(key, adapter) do
+    raise NimbleOptions.ValidationError,
+      key: key,
+      message:
+        "adapter entries must be a module or {module, keyword_opts}, got: #{inspect(adapter)}"
+  end
+
+  defp validate_mailgun_replay_window!(validated) do
+    mailgun = Keyword.get(validated, :mailgun, [])
+    ttl = Keyword.get(mailgun, :replay_cache_ttl_seconds, 28_800)
+    tolerance = Keyword.get(mailgun, :timestamp_tolerance_seconds, 28_800)
+
+    if ttl < tolerance do
+      raise NimbleOptions.ValidationError,
+        key: :mailgun,
+        message:
+          ":replay_cache_ttl_seconds must be greater than or equal to " <>
+            ":timestamp_tolerance_seconds"
+    end
+
+    validated
+  end
+end
+
+defmodule Mailglass.Config do
+  @schema Mailglass.Runtime.Schema.definition()
 
   @moduledoc """
   Runtime configuration for mailglass, validated at boot via NimbleOptions.
@@ -516,13 +630,7 @@ defmodule Mailglass.Config do
   """
   @doc since: "0.1.0"
   @spec new!(keyword()) :: keyword()
-  def new!(opts \\ []) when is_list(opts) do
-    opts
-    |> normalize_optional_keyword_subtrees()
-    |> NimbleOptions.validate!(@schema)
-    |> validate_adapter_config!()
-    |> validate_mailgun_replay_window!()
-  end
+  def new!(opts \\ []) when is_list(opts), do: Mailglass.Runtime.validate!(opts)
 
   @doc """
   Reads the `:mailglass` Application env, validates it against the schema,
@@ -537,104 +645,8 @@ defmodule Mailglass.Config do
   @doc since: "0.1.0"
   @spec validate_at_boot!() :: :ok
   def validate_at_boot! do
-    known_keys = Keyword.keys(@schema)
-
-    opts =
-      :mailglass
-      |> Application.get_all_env()
-      |> Keyword.take(known_keys)
-      |> normalize_optional_keyword_subtrees()
-
-    validated =
-      opts
-      |> NimbleOptions.validate!(@schema)
-      |> validate_adapter_config!()
-      |> validate_mailgun_replay_window!()
-
-    validate_repo_adapter!(Keyword.get(validated, :repo))
-
-    theme = Keyword.get(validated, :theme, [])
-    :persistent_term.put({__MODULE__, :theme}, theme)
-
-    # Cache the validated schema from the boot pipeline so boot and cache can
-    # never disagree. `Identifier.validate!/2` fails fast on a bad identifier.
-    schema = Keyword.get(validated, :schema, "mailglass")
-    :persistent_term.put(@schema_key, Mailglass.Identifier.validate!(schema, :schema))
-
-    telemetry_opts = Keyword.get(validated, :telemetry, [])
-
-    if Keyword.get(telemetry_opts, :default_logger, false) do
-      _ = Mailglass.Telemetry.attach_default_logger()
-    end
-
+    _runtime = Mailglass.Runtime.bootstrap!()
     :ok
-  end
-
-  defp normalize_optional_keyword_subtrees(opts) do
-    Enum.reduce(
-      [:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance, :ses, :resend],
-      opts,
-      fn key, acc ->
-        case Keyword.get(acc, key, :__missing__) do
-          nil -> Keyword.put(acc, key, [])
-          _ -> acc
-        end
-      end
-    )
-    |> normalize_rate_limit_config()
-  end
-
-  defp normalize_rate_limit_config(opts) do
-    case Keyword.get(opts, :rate_limit) do
-      rl when is_list(rl) ->
-        # Backward compatibility: If :default or :overrides are present at the
-        # top level of :rate_limit, wrap them into :tenant_recipient.
-        if Keyword.has_key?(rl, :default) or Keyword.has_key?(rl, :overrides) do
-          tenant_recipient = Keyword.take(rl, [:default, :overrides])
-          rest = Keyword.drop(rl, [:default, :overrides])
-          Keyword.put(opts, :rate_limit, Keyword.put(rest, :tenant_recipient, tenant_recipient))
-        else
-          opts
-        end
-
-      _ ->
-        opts
-    end
-  end
-
-  # Mailglass is Postgres-only at v0.1 per PROJECT.md (MySQL/SQLite out of
-  # scope). `Mailglass.Migration.migrator/0` already guards the migration
-  # path, but the runtime path (Events.append, Projector.update_projections,
-  # SuppressionStore.Ecto.*) does not — an adopter wiring
-  # `config :mailglass, repo: MyApp.SqliteRepo` would otherwise get
-  # confusing errors from Ecto/Postgrex layers on the first write
-  # (WR-04). Fail fast at boot with a typed ConfigError instead.
-  #
-  # `:repo` is optional at v0.1 (phases 0/1 don't need it) — skip the
-  # check when unset; the Repo facade will raise `:missing` on first
-  # use if a + code path needs it.
-  defp validate_repo_adapter!(nil), do: :ok
-
-  defp validate_repo_adapter!(repo) when is_atom(repo) do
-    if Code.ensure_loaded?(repo) and function_exported?(repo, :__adapter__, 0) do
-      case repo.__adapter__() do
-        Ecto.Adapters.Postgres ->
-          :ok
-
-        other ->
-          raise Mailglass.ConfigError.new(:invalid,
-                  context: %{
-                    key: :repo,
-                    adapter: other,
-                    reason: "Postgres only at v0.1"
-                  }
-                )
-      end
-    else
-      # Repo module not loaded or not an Ecto.Repo — defer to the
-      # NimbleOptions schema + runtime resolution to produce the error.
-      :ok
-    end
   end
 
   @doc """
@@ -664,19 +676,7 @@ defmodule Mailglass.Config do
   """
   @doc since: "2.0.0"
   @spec schema() :: String.t()
-  def schema do
-    case :persistent_term.get(@schema_key, :__miss__) do
-      :__miss__ -> warm_schema()
-      schema -> schema
-    end
-  end
-
-  defp warm_schema do
-    schema = Application.get_env(:mailglass, :schema, "mailglass")
-    Mailglass.Identifier.validate!(schema, :schema)
-    :persistent_term.put(@schema_key, schema)
-    schema
-  end
+  def schema, do: Mailglass.Runtime.schema()
 
   @doc """
   Returns the validated global default adapter as `{module, opts}`.
@@ -684,9 +684,7 @@ defmodule Mailglass.Config do
   @doc since: "0.4.0"
   @spec default_adapter() :: {module(), keyword()}
   def default_adapter do
-    validated_config()
-    |> Keyword.fetch!(:adapter)
-    |> normalize_adapter_entry!(:adapter)
+    Mailglass.Runtime.fetch_config!(:adapter)
   end
 
   @doc """
@@ -695,9 +693,8 @@ defmodule Mailglass.Config do
   @doc since: "0.4.0"
   @spec adapters() :: %{optional(atom() | String.t()) => {module(), keyword()}}
   def adapters do
-    validated_config()
-    |> Keyword.get(:adapters, [])
-    |> Enum.into(%{}, fn {ref, adapter} -> {ref, normalize_adapter_entry!(adapter, :adapters)} end)
+    Mailglass.Runtime.fetch_config!(:adapters)
+    |> Enum.into(%{})
   end
 
   @doc """
@@ -727,8 +724,7 @@ defmodule Mailglass.Config do
   @doc since: "0.1.0"
   @spec compliance() :: keyword()
   def compliance do
-    validated_config()
-    |> Keyword.fetch!(:compliance)
+    Mailglass.Runtime.fetch_config!(:compliance)
   end
 
   @doc """
@@ -780,92 +776,42 @@ defmodule Mailglass.Config do
   @doc since: "0.1.0"
   @doc false
   @spec webhook_ingest_mode() :: :sync | :async
-  def webhook_ingest_mode do
-    Application.get_env(:mailglass, :webhook_ingest_mode, :sync)
-  end
+  def webhook_ingest_mode, do: Mailglass.Runtime.fetch_config!(:webhook_ingest_mode)
 
-  defp validated_config do
-    known_keys = Keyword.keys(@schema)
+  @doc false
+  def feedback_id, do: Mailglass.Runtime.fetch_config!(:feedback_id)
 
-    :mailglass
-    |> Application.get_all_env()
-    |> Keyword.take(known_keys)
-    |> normalize_optional_keyword_subtrees()
-    |> NimbleOptions.validate!(@schema)
-    |> validate_adapter_config!()
-    |> validate_mailgun_replay_window!()
-  end
+  @doc false
+  def repo, do: Mailglass.Runtime.fetch_config!(:repo)
 
-  defp validate_adapter_config!(validated) do
-    _ = normalize_adapter_entry!(Keyword.fetch!(validated, :adapter), :adapter)
+  @doc false
+  def clock, do: Mailglass.Runtime.fetch_config!(:clock)
 
-    adapters =
-      validated
-      |> Keyword.get(:adapters, [])
-      |> Enum.map(&normalize_registry_entry!/1)
+  @doc false
+  def tenancy, do: Mailglass.Runtime.fetch_config!(:tenancy)
 
-    Keyword.put(validated, :adapters, adapters)
-  end
+  @doc false
+  def suppression_store, do: Mailglass.Runtime.fetch_config!(:suppression_store)
 
-  defp normalize_registry_entry!({ref, adapter}) do
-    {normalize_adapter_ref!(ref), normalize_adapter_entry!(adapter, :adapters)}
-  end
+  @doc false
+  def async_adapter, do: Mailglass.Runtime.fetch_config!(:async_adapter)
 
-  defp normalize_registry_entry!(other) do
-    raise NimbleOptions.ValidationError,
-      key: :adapters,
-      message:
-        "expected entries like {ref, module} or {ref, {module, opts}}, got: #{inspect(other)}"
-  end
+  @doc false
+  def rate_limit, do: Mailglass.Runtime.fetch_config!(:rate_limit)
+
+  @doc false
+  def tracking, do: Mailglass.Runtime.fetch_config!(:tracking)
+
+  @doc false
+  def webhook_retention, do: Mailglass.Runtime.fetch_config!(:webhook_retention)
+
+  @doc false
+  def webhook_provider(provider) when provider in [:postmark, :sendgrid, :mailgun, :ses, :resend],
+    do: Mailglass.Runtime.fetch_config!(provider)
+
+  @doc false
+  def ses_http_client, do: Mailglass.Runtime.ses_http_client()
 
   defp normalize_adapter_ref_lookup(ref) when is_atom(ref), do: Atom.to_string(ref)
   defp normalize_adapter_ref_lookup(ref) when is_binary(ref), do: ref
-
-  defp normalize_adapter_ref!(ref) when is_atom(ref) or is_binary(ref), do: ref
-
-  defp normalize_adapter_ref!(ref) do
-    raise NimbleOptions.ValidationError,
-      key: :adapters,
-      message: "adapter refs must be atoms or strings, got: #{inspect(ref)}"
-  end
-
-  defp normalize_adapter_entry!(adapter, key) do
-    case adapter do
-      mod when is_atom(mod) ->
-        {mod, []}
-
-      {mod, opts} when is_atom(mod) and is_list(opts) ->
-        if Keyword.keyword?(opts) do
-          {mod, opts}
-        else
-          invalid_adapter_entry!(key, adapter)
-        end
-
-      _ ->
-        invalid_adapter_entry!(key, adapter)
-    end
-  end
-
-  defp invalid_adapter_entry!(key, adapter) do
-    raise NimbleOptions.ValidationError,
-      key: key,
-      message:
-        "adapter entries must be a module or {module, keyword_opts}, got: #{inspect(adapter)}"
-  end
-
-  defp validate_mailgun_replay_window!(validated) do
-    mailgun = Keyword.get(validated, :mailgun, [])
-    ttl = Keyword.get(mailgun, :replay_cache_ttl_seconds, 28_800)
-    tolerance = Keyword.get(mailgun, :timestamp_tolerance_seconds, 28_800)
-
-    if ttl < tolerance do
-      raise NimbleOptions.ValidationError,
-        key: :mailgun,
-        message:
-          ":replay_cache_ttl_seconds must be greater than or equal to " <>
-            ":timestamp_tolerance_seconds"
-    end
-
-    validated
-  end
 end

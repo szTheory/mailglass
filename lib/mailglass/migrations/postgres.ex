@@ -4,8 +4,10 @@ defmodule Mailglass.Migrations.Postgres do
   use Ecto.Migration
 
   @initial_version 1
-  @current_version 5
+  @current_version 6
   @default_prefix "public"
+
+  @type version :: 0..6
 
   @doc false
   def initial_version, do: @initial_version
@@ -19,8 +21,8 @@ defmodule Mailglass.Migrations.Postgres do
     # First action: physically create the schema (MIGR-02) so the v01..v05
     # `create table(prefix:)` DDL has a namespace to land in. No-op for the
     # default "public" prefix and for an explicit `create_schema: false`.
-    maybe_create_schema(opts)
     initial = migrated_version(opts)
+    maybe_create_schema(opts)
 
     cond do
       initial == 0 ->
@@ -46,11 +48,10 @@ defmodule Mailglass.Migrations.Postgres do
     end
   end
 
-  @spec migrated_version(map() | keyword()) :: non_neg_integer()
+  @spec migrated_version(map() | keyword()) :: version()
   def migrated_version(opts) do
     opts = with_defaults(opts, @initial_version)
 
-    repo = Map.get_lazy(opts, :repo, fn -> repo() end)
     prefix = Map.fetch!(opts, :prefix)
 
     validate_identifier!(prefix, :prefix)
@@ -68,10 +69,50 @@ defmodule Mailglass.Migrations.Postgres do
     AND pg_namespace.nspname = $1
     """
 
-    case repo.query(query, [prefix], log: false) do
-      {:ok, %{rows: [[version]]}} when is_binary(version) -> String.to_integer(version)
-      _ -> 0
+    case catalog_result(opts, query, prefix) do
+      {:ok, %{rows: []}} ->
+        0
+
+      {:ok, %{rows: [[nil]]}} ->
+        raise_version_error(:missing_comment, prefix, nil)
+
+      {:ok, %{rows: [[version]]}} when is_binary(version) ->
+        parse_version!(version, prefix)
+
+      {:error, reason} ->
+        raise_version_error(:query_failed, prefix, reason)
+
+      result ->
+        raise_version_error(:unexpected_result, prefix, result)
     end
+  end
+
+  defp catalog_result(opts, query, prefix) do
+    case Map.fetch(opts, :query_result) do
+      {:ok, result} -> result
+      :error -> Map.get_lazy(opts, :repo, fn -> repo() end).query(query, [prefix], log: false)
+    end
+  end
+
+  defp parse_version!(version, prefix) do
+    case Integer.parse(version) do
+      {parsed, ""} when parsed >= @initial_version and parsed <= @current_version -> parsed
+      {_parsed, ""} -> raise_version_error(:out_of_range, prefix, nil)
+      _ -> raise_version_error(:invalid_comment, prefix, nil)
+    end
+  end
+
+  @spec raise_version_error(
+          Mailglass.MigrationVersionError.reason(),
+          String.t(),
+          term()
+        ) :: no_return()
+  defp raise_version_error(reason, prefix, cause) do
+    raise Mailglass.MigrationVersionError.new(reason,
+            package: :mailglass,
+            prefix: prefix,
+            cause: cause
+          )
   end
 
   defp change(range, direction, opts) do
@@ -80,7 +121,7 @@ defmodule Mailglass.Migrations.Postgres do
 
       [__MODULE__, "V#{pad_idx}"]
       |> Module.concat()
-      |> apply(direction, [opts])
+      |> apply(direction, [migration_opts(opts, index)])
     end
 
     case direction do
@@ -112,7 +153,20 @@ defmodule Mailglass.Migrations.Postgres do
 
   defp maybe_drop_schema(%{prefix: prefix, create_schema: true}) do
     validate_identifier!(prefix, :prefix)
-    execute(~s(DROP SCHEMA IF EXISTS #{inspect(prefix)} RESTRICT))
+
+    # A configured schema may be shared with mailglass_inbound or contain
+    # adopter-owned relations. Keep the RESTRICT attempt inside PostgreSQL's
+    # exception block: it catches only 2BP01 without aborting Ecto's enclosing
+    # migration transaction, while every other database error still propagates.
+    execute("""
+    DO $$
+    BEGIN
+      DROP SCHEMA IF EXISTS #{inspect(prefix)} RESTRICT;
+    EXCEPTION WHEN dependent_objects_still_exist THEN
+      NULL;
+    END
+    $$;
+    """)
   end
 
   defp maybe_drop_schema(_), do: :ok
@@ -141,6 +195,14 @@ defmodule Mailglass.Migrations.Postgres do
       |> Map.put_new(:create_schema, o.prefix != @default_prefix)
     end)
   end
+
+  # V06 builds indexes on populated adopter tables. Only newly generated
+  # wrappers opt out of Ecto's DDL transaction and may select the concurrent
+  # path; legacy/direct wrappers retain the transactional Ecto index path.
+  defp migration_opts(opts, 6),
+    do: Map.put(opts, :concurrent_indexes, Map.get(opts, :non_transactional_wrapper, false))
+
+  defp migration_opts(opts, _index), do: opts
 
   defp validate_identifier!(value, key), do: Mailglass.Identifier.validate!(value, key)
 end

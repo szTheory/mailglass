@@ -10,8 +10,22 @@ defmodule Mailglass.Tracking.PlugTest do
   @endpoint "mailglass-plug-test-secret"
   @tracking_host "track.test"
 
+  defmodule Ledger do
+    def append(attrs) do
+      send(Application.fetch_env!(:mailglass, :tracking_test_pid), {:tracking_append, attrs})
+
+      case Application.fetch_env!(:mailglass, :tracking_test_outcome) do
+        :raise -> raise "ledger failure sentinel"
+        outcome -> outcome
+      end
+    end
+  end
+
   setup do
     original = Application.get_env(:mailglass, :tracking)
+    original_ledger = Application.get_env(:mailglass, :tracking_event_ledger)
+    original_pid = Application.get_env(:mailglass, :tracking_test_pid)
+    original_outcome = Application.get_env(:mailglass, :tracking_test_outcome)
 
     Application.put_env(:mailglass, :tracking,
       salts: ["plug-salt-1"],
@@ -21,12 +35,20 @@ defmodule Mailglass.Tracking.PlugTest do
       endpoint: @endpoint
     )
 
+    Application.put_env(:mailglass, :tracking_event_ledger, Ledger)
+    Application.put_env(:mailglass, :tracking_test_pid, self())
+    Application.put_env(:mailglass, :tracking_test_outcome, {:ok, :recorded})
+
     on_exit(fn ->
       if original do
         Application.put_env(:mailglass, :tracking, original)
       else
         Application.delete_env(:mailglass, :tracking)
       end
+
+      restore_env(:tracking_event_ledger, original_ledger)
+      restore_env(:tracking_test_pid, original_pid)
+      restore_env(:tracking_test_outcome, original_outcome)
     end)
 
     :ok
@@ -35,6 +57,25 @@ defmodule Mailglass.Tracking.PlugTest do
   defp call(method, path) do
     conn(method, path)
     |> TrackingPlug.call(TrackingPlug.init([]))
+  end
+
+  defp restore_env(key, nil), do: Application.delete_env(:mailglass, key)
+  defp restore_env(key, value), do: Application.put_env(:mailglass, key, value)
+
+  defp attach_tracking_handler(events) do
+    test_pid = self()
+    handler_id = "tracking-telemetry-#{System.unique_integer()}"
+
+    :telemetry.attach_many(
+      handler_id,
+      events,
+      fn event, measurements, metadata, _config ->
+        send(test_pid, {:tracking_telemetry, event, measurements, metadata})
+      end,
+      nil
+    )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
   end
 
   # Test 1: GET /o/:token.gif with valid token returns 200 + image/gif + 43-byte GIF89a
@@ -50,6 +91,46 @@ defmodule Mailglass.Tracking.PlugTest do
 
     # Verify GIF89a magic bytes
     assert <<71, 73, 70, 56, 57, 97, _rest::binary>> = conn.resp_body
+  end
+
+  test "successful open ledger append emits recorded telemetry" do
+    attach_tracking_handler([
+      [:mailglass, :tracking, :open, :recorded],
+      [:mailglass, :tracking, :open, :failed]
+    ])
+
+    token = Token.sign_open(@endpoint, "delivery-open-recorded", "test-tenant")
+
+    assert %Plug.Conn{status: 200} = call(:get, "/o/#{token}.gif")
+    assert_receive {:tracking_append, %{delivery_id: "delivery-open-recorded", type: :opened}}
+
+    assert_receive {:tracking_telemetry, [:mailglass, :tracking, :open, :recorded], %{count: 1},
+                    %{delivery_id: "delivery-open-recorded", tenant_id: "test-tenant"}}
+
+    refute_receive {:tracking_telemetry, [:mailglass, :tracking, :open, :failed], _, _}, 0
+  end
+
+  test "open ledger errors emit bounded failed telemetry without changing the GIF response" do
+    Application.put_env(:mailglass, :tracking_test_outcome, {:error, :simulated_failure})
+
+    attach_tracking_handler([
+      [:mailglass, :tracking, :open, :recorded],
+      [:mailglass, :tracking, :open, :failed]
+    ])
+
+    token = Token.sign_open(@endpoint, "delivery-open-failed", "test-tenant")
+
+    assert %Plug.Conn{status: 200, resp_body: body} = call(:get, "/o/#{token}.gif")
+    assert byte_size(body) == 43
+
+    assert_receive {:tracking_telemetry, [:mailglass, :tracking, :open, :failed], %{count: 1},
+                    %{
+                      delivery_id: "delivery-open-failed",
+                      tenant_id: "test-tenant",
+                      failure_class: :append_error
+                    }}
+
+    refute_receive {:tracking_telemetry, [:mailglass, :tracking, :open, :recorded], _, _}, 0
   end
 
   # Test 2: Valid open token response has correct no-cache headers
@@ -83,6 +164,29 @@ defmodule Mailglass.Tracking.PlugTest do
 
     assert conn.status == 302
     assert get_resp_header(conn, "location") == [target_url]
+  end
+
+  test "click ledger raises emit bounded failed telemetry without changing the redirect" do
+    Application.put_env(:mailglass, :tracking_test_outcome, :raise)
+
+    attach_tracking_handler([
+      [:mailglass, :tracking, :click, :recorded],
+      [:mailglass, :tracking, :click, :failed]
+    ])
+
+    target_url = "https://example.com/private-target"
+    token = Token.sign_click(@endpoint, "delivery-click-failed", "test-tenant", target_url)
+
+    assert %Plug.Conn{status: 302} = call(:get, "/c/#{token}")
+
+    assert_receive {:tracking_telemetry, [:mailglass, :tracking, :click, :failed], %{count: 1},
+                    %{
+                      delivery_id: "delivery-click-failed",
+                      tenant_id: "test-tenant",
+                      failure_class: :exception
+                    }}
+
+    refute_receive {:tracking_telemetry, [:mailglass, :tracking, :click, :recorded], _, _}, 0
   end
 
   # Test 5: GET /c/:token with invalid token returns 404

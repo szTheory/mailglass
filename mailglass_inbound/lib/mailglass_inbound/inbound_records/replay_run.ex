@@ -35,17 +35,17 @@ defmodule MailglassInbound.InboundRecords.ReplayRun do
         }
 
   schema "mailglass_inbound_replay_runs" do
-    field :tenant_id, :string
-    field :replay_id, :string
-    field :mailbox, :string
-    field :outcome, Ecto.Enum, values: @outcomes
-    field :outcome_reason, :string
-    field :failure, :map, default: %{}
-    field :executed_at, :utc_datetime_usec
-    field :metadata, :map, default: %{}
+    field(:tenant_id, :string)
+    field(:replay_id, :string)
+    field(:mailbox, :string)
+    field(:outcome, Ecto.Enum, values: @outcomes)
+    field(:outcome_reason, :string)
+    field(:failure, :map, default: %{})
+    field(:executed_at, :utc_datetime_usec)
+    field(:metadata, :map, default: %{})
 
-    belongs_to :inbound_record, InboundRecord
-    belongs_to :inbound_evidence, InboundEvidence
+    belongs_to(:inbound_record, InboundRecord)
+    belongs_to(:inbound_evidence, InboundEvidence)
 
     timestamps()
   end
@@ -69,7 +69,7 @@ defmodule MailglassInbound.InboundRecords.ReplayRun do
     |> foreign_key_constraint(:inbound_evidence_id)
   end
 
-  @spec __outcomes__() :: [outcome()]
+  @spec __outcomes__() :: nonempty_list(outcome())
   def __outcomes__, do: @outcomes
 
   defp validate_outcome_shape(changeset) do

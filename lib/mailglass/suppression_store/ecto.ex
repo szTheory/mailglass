@@ -95,6 +95,34 @@ defmodule Mailglass.SuppressionStore.Ecto do
   # helper (WR-03).
   def check(_key, _opts), do: {:error, :invalid_key}
 
+  @impl Mailglass.SuppressionStore
+  def check_many(keys, opts \\ []) when is_list(keys) and is_list(opts) do
+    Mailglass.Telemetry.persist_span(
+      [:suppression, :check_many],
+      %{count: length(keys)},
+      fn ->
+        normalized = Enum.map(keys, &normalize_key/1)
+
+        entries_by_tenant =
+          normalized
+          |> Enum.flat_map(fn
+            {:ok, key} -> [key]
+            {:error, _} -> []
+          end)
+          |> Enum.uniq()
+          |> Enum.group_by(& &1.tenant_id)
+          |> Map.new(fn {tenant_id, tenant_keys} ->
+            {tenant_id, fetch_entries(tenant_id, tenant_keys, Clock.utc_now())}
+          end)
+
+        Enum.map(normalized, fn
+          {:error, reason} -> {:error, reason}
+          {:ok, key} -> result_for(key, Map.fetch!(entries_by_tenant, key.tenant_id))
+        end)
+      end
+    )
+  end
+
   # The address_stream branch is only included when a stream was passed.
   # Ecto refuses `e.stream == ^nil` at build time ("comparing with nil is
   # forbidden"), and a stream-less caller has no basis to match stream-
@@ -102,17 +130,17 @@ defmodule Mailglass.SuppressionStore.Ecto do
   defp union_predicates(base, address, recipient_domain, nil) do
     from(e in base,
       where:
-        (e.scope == :address and fragment("?::text", e.address) == ^address) or
-          (e.scope == :domain and fragment("?::text", e.address) == ^recipient_domain)
+        (e.scope == :address and e.address == ^address) or
+          (e.scope == :domain and e.address == ^recipient_domain)
     )
   end
 
   defp union_predicates(base, address, recipient_domain, stream) when is_atom(stream) do
     from(e in base,
       where:
-        (e.scope == :address and fragment("?::text", e.address) == ^address) or
-          (e.scope == :domain and fragment("?::text", e.address) == ^recipient_domain) or
-          (e.scope == :address_stream and fragment("?::text", e.address) == ^address and
+        (e.scope == :address and e.address == ^address) or
+          (e.scope == :domain and e.address == ^recipient_domain) or
+          (e.scope == :address_stream and e.address == ^address and
              e.stream == ^stream)
     )
   end
@@ -158,6 +186,84 @@ defmodule Mailglass.SuppressionStore.Ecto do
       _ -> ""
     end
   end
+
+  defp normalize_key(%{tenant_id: tenant_id, address: address} = key)
+       when is_binary(tenant_id) and is_binary(address) do
+    {:ok, %{tenant_id: tenant_id, address: String.downcase(address), stream: Map.get(key, :stream)}}
+  end
+
+  defp normalize_key(_key), do: {:error, :invalid_key}
+
+  defp fetch_entries(tenant_id, keys, now) do
+    predicate =
+      Enum.reduce(keys, dynamic(false), fn key, dynamic ->
+        address = key.address
+        recipient_domain = extract_domain(address)
+
+        key_predicate =
+          case key.stream do
+            stream when is_atom(stream) and not is_nil(stream) ->
+              dynamic(
+                [e],
+                e.tenant_id == ^tenant_id and
+                  ((e.scope == :address and e.address == ^address) or
+                     (e.scope == :domain and e.address == ^recipient_domain) or
+                     (e.scope == :address_stream and e.address == ^address and e.stream == ^stream))
+              )
+
+            _ ->
+              dynamic(
+                [e],
+                e.tenant_id == ^tenant_id and
+                  ((e.scope == :address and e.address == ^address) or
+                     (e.scope == :domain and e.address == ^recipient_domain))
+              )
+          end
+
+        dynamic([e], ^dynamic or ^key_predicate)
+      end)
+
+    query =
+      from(e in Entry,
+        where: is_nil(e.expires_at) or e.expires_at > ^now,
+        where: ^predicate,
+        select: %{
+          id: e.id,
+          tenant_id: e.tenant_id,
+          address: e.address,
+          scope: e.scope,
+          stream: e.stream,
+          reason: e.reason,
+          source: e.source,
+          expires_at: e.expires_at,
+          metadata: e.metadata,
+          inserted_at: e.inserted_at
+        }
+      )
+
+    with_stale_type_retry(fn -> Mailglass.Repo.all(Tenancy.scope(query, tenant_id)) end)
+  end
+
+  defp result_for(key, entries) do
+    case Enum.find(entries, &matches_key?(&1, key)) do
+      nil -> :not_suppressed
+      entry -> {:suppressed, entry_from_row(entry)}
+    end
+  end
+
+  defp matches_key?(%{scope: :address, address: address}, %{address: address}), do: true
+
+  defp matches_key?(%{scope: :domain, address: domain}, %{address: address}),
+    do: domain == extract_domain(address)
+
+  defp matches_key?(%{scope: :address_stream, address: address, stream: stream}, %{
+         address: address,
+         stream: stream
+       })
+       when is_atom(stream),
+       do: true
+
+  defp matches_key?(_entry, _key), do: false
 
   defp entry_from_row(attrs) when is_map(attrs) do
     struct(Entry, Map.put_new(attrs, :address, nil))

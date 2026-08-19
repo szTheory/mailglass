@@ -30,8 +30,7 @@ on:
         default: "25"
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
   checks: read
 
 jobs:
@@ -46,6 +45,10 @@ jobs:
     # hardcoded 30 cancelled run 30596060407 mid-poll, so it produced no
     # `result=` value at all.
     timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
     steps:
       # Runs BEFORE any branch or PR is created, so a rejected deadline leaves
       # nothing to clean up. Fails closed: a deadline the job timeout cannot

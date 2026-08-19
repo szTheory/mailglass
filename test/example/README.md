@@ -21,7 +21,7 @@ Refresh both snapshots with:
 - lib/example_web/endpoint.ex sha256:c22dda34967f59a6d76ded38751f70486f44aff9d57b31d9a4ec5c6ceedc7a4f
 - lib/example_web/router.ex sha256:4747d09df93dec9ea6a3188ba8c62ad218c8ecbe80337428c56361252fa10e83
 - mix.exs sha256:bac6a815dfa817a388e07ad7c2325f4ffa993e970f09c2471b61b3dfd8055ddc
-- priv/repo/migrations/<MIGRATION_TS>_mailglass_install.exs sha256:fb5ea9dcdef2d6c1724f20e136cfa04ddfb7b9f2c130d6b0e6ce79ecf1eba80d
+- priv/repo/migrations/<MIGRATION_TS>_mailglass_install.exs sha256:41582eab5cfb0677d5112e6418ffeac11e9ad5e2bb9871813cb743830b0d24c4
 
 # files
 @@ .gitignore
@@ -163,12 +163,8 @@ end
 defmodule Example.Repo.Migrations.MailglassInstall do
   use Ecto.Migration
 
-  def change do
-    create table(:mailglass_events) do
-      add :tenant_id, :string
-      timestamps(type: :utc_datetime_usec)
-    end
-  end
+  def up, do: Mailglass.Migration.up(repo: Example.Repo)
+  def down, do: Mailglass.Migration.down(repo: Example.Repo)
 end
 <!-- GOLDEN_FRESH_END -->
 
@@ -184,7 +180,7 @@ end
 - lib/example_web/endpoint.ex sha256:c22dda34967f59a6d76ded38751f70486f44aff9d57b31d9a4ec5c6ceedc7a4f
 - lib/example_web/router.ex sha256:c8c755dcbde7313b2a7e5eaec6655794be62d69cc403dc35eabf2c1e381c6675
 - mix.exs sha256:bac6a815dfa817a388e07ad7c2325f4ffa993e970f09c2471b61b3dfd8055ddc
-- priv/repo/migrations/<MIGRATION_TS>_mailglass_install.exs sha256:fb5ea9dcdef2d6c1724f20e136cfa04ddfb7b9f2c130d6b0e6ce79ecf1eba80d
+- priv/repo/migrations/<MIGRATION_TS>_mailglass_install.exs sha256:41582eab5cfb0677d5112e6418ffeac11e9ad5e2bb9871813cb743830b0d24c4
 
 # files
 @@ .gitignore
@@ -317,11 +313,7 @@ end
 defmodule Example.Repo.Migrations.MailglassInstall do
   use Ecto.Migration
 
-  def change do
-    create table(:mailglass_events) do
-      add :tenant_id, :string
-      timestamps(type: :utc_datetime_usec)
-    end
-  end
+  def up, do: Mailglass.Migration.up(repo: Example.Repo)
+  def down, do: Mailglass.Migration.down(repo: Example.Repo)
 end
 <!-- GOLDEN_NO_ADMIN_END -->

@@ -43,15 +43,25 @@ if Code.ensure_loaded?(Oban.Worker) do
             :ok
 
           {:ok, %Mailglass.Outbound.Delivery{status: :failed, last_error: err}} ->
-            {:error, err}
+            worker_outcome(err)
 
-          {:error, %{__exception__: true} = err} ->
-            {:error, err}
+          {:error, %Mailglass.SendError{} = err} ->
+            worker_outcome(err)
 
-          {:error, other} ->
-            {:error, inspect(other)}
+          {:error, _other} ->
+            permanent_discard()
         end
       end)
     end
+
+    defp worker_outcome(%Mailglass.SendError{} = err) do
+      if Mailglass.SendError.retryable?(err), do: {:error, err}, else: permanent_discard()
+    end
+
+    defp worker_outcome(_persisted_or_malformed_error), do: permanent_discard()
+
+    # Oban 2.23.1 documents `{:cancel, reason}` as the non-retrying return.
+    # Keep the reason finite so provider or message data cannot reach Oban logs.
+    defp permanent_discard, do: {:cancel, :permanent_failure}
   end
 end

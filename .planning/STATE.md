@@ -1,34 +1,46 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.5
-milestone_name: B2C Alpha Adoption Certification
-status: Awaiting next milestone
-stopped_at: Milestone v2.5 archived after passed certification audit
-last_updated: "2026-08-04T19:38:26.818Z"
-last_activity: 2026-08-04
-last_activity_desc: Milestone v2.5 completed and archived
+milestone: v2.6
+milestone_name: Engineering Quality Ratchet
+current_phase: 160
+current_phase_name: Certification, Documentation, and Release
+status: executing
+stopped_at: Plan 160-04 protected release preparation independently re-reviewed; awaiting Plan 160-05 candidate capture and human authorization
+last_updated: "2026-08-19T16:14:13.000Z"
+last_activity: 2026-08-19
+last_activity_desc: Plan 160-04 protected release policy and exact publication evidence gates completed
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 0
-  completed_plans: 0
+  total_phases: 6
+  completed_phases: 5
+  total_plans: 41
+  completed_plans: 39
+  percent: 95
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-04 after completing v2.5)
+See: .planning/PROJECT.md (updated 2026-08-17 after Phase 158)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Library certification is complete; awaiting a concrete adopter integration or next milestone.
+**Current focus:** Phase 160 — Certification, Documentation, and Release
 
 ## Current Position
 
-Phase: Milestone v2.5 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-08-04 — Milestone v2.5 completed and archived
+Phase: 160 (Certification, Documentation, and Release) — EXECUTING
+Plan: 5 of 6
+Status: Awaiting immutable candidate capture and explicit digest-bound authorization
+Last activity: 2026-08-19 — Plan 160-04 protected release preparation passed focused verification and independent review
+
+Progress: [███████████████████░] 39/41 plans (95%); 5/6 phases complete
+
+## v2.6 Milestone Intent
+
+- **Goal:** Raise the internal engineering bar while proving generated-host migration truth, runtime and data correctness, architecture boundaries, and merge/release signals.
+- **Execution order:** 155 Restore Adopter and CI Truth → 156 Delivery Correctness and Bounded Execution → 157 Inbound, Database, and Lifecycle Hardening → 158 Simplify Architecture Without Breaking Adopters → 159 Raise and Simplify Engineering Gates → 160 Certification, Documentation, and Release.
+- **Scope lock:** Additive-only compatibility posture. Admin/operator behavior remains untouched; no new providers, policy, auth, billing, support, mobile, or SRE ownership; no changes to shipped migrations.
+- **Coverage:** 50/50 v2.6 requirements map exactly once in `.planning/ROADMAP.md` and `.planning/REQUIREMENTS.md`.
 
 ## v2.4 Milestone Intent
 
@@ -476,6 +488,16 @@ release debug campaign.
 - [Phase ?]: 153-06 makes mix mailglass.preflight the final production documentation gate and keeps operator authentication host-owned.
 - [Phase ?]: Release package selection uses per-package reachable tags with linked core/admin and independent inbound.
 - [Phase ?]: Hex publication is gated on resolver agreement, local host proof, CI, package checks, and protected candidate-SHA evidence.
+- [Phase ?]: Migration generator matches --repo text only against configured repo modules and never creates atoms.
+- [Phase ?]: Offline --upgrade --from 0 is refused with initial-generation guidance; inbound version 1 has no offline upgrade predecessor.
+- [Phase ?]: Generated-host proof uses only explicit Host.Repo configuration and a validated scratch database.
+- [Phase ?]: Installer Host Smoke keeps its public identity while running both adopter proofs.
+- [Phase ?]: CI Green now consumes explicit detector and required-leaf inputs through a fail-closed policy; skips are accepted only for successful code=false classification.
+- [Phase ?]: changes is structural in ci_green.needs and stays outside Mailglass.CILanes.required_lanes/0 plus branch-protection identity.
+- [Phase ?]: Shared package schemas use RESTRICT-only teardown and skip only SQLSTATE 2BP01.
+- [Phase ?]: Generated-host rollback proof runs separate core-first and inbound-first hosts.
+- [Phase ?]: Suppression resync pages by (occurred_at, id) with page-local dedupe and bounded bulk reads/upserts.
+- [Phase ?]: Resync page size is application-configured; Mix task flags and output remain unchanged.
 
 ## Quick Tasks Completed
 
@@ -563,6 +585,11 @@ release debug campaign.
 | Phase 153 P05 | 12 min | 2 tasks | 12 files |
 | Phase 153 P06 | 7 min | 2 tasks | 11 files |
 | Phase 153 P07 | 9min | 2 tasks | 9 files |
+| Phase 155-restore-adopter-and-ci-truth P01 | 5 min | 2 tasks | 5 files |
+| Phase 155 P05 | 31min | 2 tasks | 4 files |
+| Phase 155 P06 | 5 min | 2 tasks | 4 files |
+| Phase 155 P07 | 33min | 2 tasks | 5 files |
+| Phase 157-inbound-database-and-lifecycle-hardening P07 | 6min | 2 tasks | 5 files |
 
 ## Deferred Items
 
@@ -708,6 +735,33 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Roadmap Evolution
 
+- 2026-08-17: **Phase 158 complete and independently verified (6/6).** Core and inbound are
+  compile-cycle-free; CI enforces non-vacuous package-edge and scope contracts; Runtime is the single
+  validated core configuration owner behind stable Config APIs; sibling integration crosses narrow
+  ports; Outbound policy has cohesive preflight/persistence/dispatch owners; and both public Plugs adapt
+  explicit package-local lifecycle outcomes. Focused verification passed 1 property + 188 core tests and
+  115 inbound tests with both no-optional compiles. Next: Phase 159 engineering gates and baseline debt.
+
+- 2026-08-17: **Phase 157 complete and verified (5/5).** Untrusted inbound certificate, replay-cache,
+  rate-limit, router, and S3 work is bounded; verified requests use an explicit value; authenticated
+  terminal failures retain replayable evidence; suppression, retention, and webhook database work is
+  bounded and index-backed; and populated generated-host upgrades pass in both package orders without
+  changing shipped migrations. Final isolated suites passed across core and inbound. Next: Phase 158
+  architecture simplification behind stable public façades.
+
+- 2026-08-17: **Phase 156 complete and verified (5/5).** Core and inbound rate limiting is exact,
+  bounded, and restart-safe; durable batches commit projections, events, private payloads, and jobs in
+  one transaction; Task fallback is bounded and honest; retry/error/telemetry semantics are closed and
+  privacy-safe; and persisted closed sets use finite decoders. The full root `mix ci` gate, cold generated
+  Phoenix/Ecto/Postgres adopter smoke, and both generated-host migration orders passed. Deep review closed
+  with 0 findings. Next: Phase 157 inbound, database, and lifecycle hardening.
+
+- 2026-08-16: **Phase 155 complete and verified (5/5).** Real core/inbound fresh and upgrade wrappers,
+  fail-closed migration metadata, exact runtime-revalidated legacy repair, both shared-schema rollback
+  orders in fresh generated hosts, and fail-closed `CI Green` are shipped on main. Deep review found and
+  closed three blockers: repair TOCTOU data loss, caller-owned scratch deletion, and push diff fail-open.
+  Next: Phase 156 delivery correctness and bounded execution.
+
 - 2026-06-26: v1.14 roadmap created. Phases 118-124, numbering continues from v1.13 (last phase 117). All 14 REQ-IDs mapped to exactly one phase, 100% coverage (METHOD-01/02 + STORY-01/02 → 118; SHELL-01/02/03 → 119; DELIV-01 → 120; INB-01 → 121; PREV-01 → 122; COH-01/02 → 123; REL-01/02 → 124). Follows the maintainer-approved seed (`.planning/research/v1.14/MILESTONE-SEED.md` P0-P6) one-to-one: top-down, JTBD/IA-led, biggest-impact-first. Strictly sequential critical path 118 → … → 124. Binding sequencing: (1) Phase 118 (adversarial persona-critic harness + screenshot-backed defect register) is a HARD precondition for the keystone shell redesign (119) — the hit-list drives every surface redesign; (2) each surface redesign (120 → 121 → 122) inherits the prior surface's cleaned-up patterns; full pillar re-score + new judgment-gate arming (nav-active-correctness, no-nav-duplication) happens ONLY in Phase 123; release cut last (124). Cross-cutting acceptance criteria (light/dark/system × 320→wide × happy/empty/error/boundary; WCAG 2.2 AA; Emil-Kowalski motion; on-brand microcopy; idempotent only-forward inheriting the v1.13 ratchet floor) baked into every surface phase. Research flags: Phase 118 (persona-critic harness design + `phoenix_storybook` sandbox-CSS integration, `only: :dev`) + Phase 119 (GOV.UK IA + overview-as-triage) need light `/gsd-plan-phase` research; 120-124 plan directly. Release ACTUALLY CUT at close (D-28): admin-minor drags matched core+inbound; D-13 inbound exact-pin re-pin.
 - 2026-06-18: v1.13 roadmap created. Phases 109-117, numbering continues from v1.12 (last phase 108). All 36 REQ-IDs mapped to exactly one phase, 100% coverage (REL-01 precondition + FND-01..05 → 109; PRIM-01..07 → 110; FORM-01..03 → 111; SHELL-01..06 → 112; DATA-01..05 → 113; GROUP-01..03 → 114; FLOW-01..04 → 115; RATCHET-01..05 → 116; REL-02..03 → 117). Adopts the research-converged, adversarially-grounded dependency-ordered fractal build order A–H from `.planning/research/v1.13/SUMMARY.md`, mapped to 109–116, with H's release reqs split into a dedicated closeout phase 117 (v1.12 precedent) for cleaner success criteria. Strictly sequential critical path 109 → … → 117. Two binding sequencing constraints encoded as explicit dependencies: (1) merge PR #86 (REL-01) BEFORE Phase 109; (2) tighten gates BEFORE re-baselining — gates tightened inside each phase, full pillar re-score ONLY in Phase 116. RATCHET-01 multi-tenant stress cohort is the keystone dependency: lands late (116) but gates the final score. Research flags: Phase 112 (core `list_tenants` projection shape) + Phase 116 (axe-JSON baseline format + ratchet schema-v3 cell-count) need light `/gsd-plan-phase` research; 109/110/111/113/114/115 plan directly. Release ACTUALLY CUT at close (D-28): admin-minor drags matched core+inbound via linked-version releases; D-13 inbound exact-pin re-pin.
 - 2026-06-13: v1.11 roadmap created. Phases 94-103, numbering continues from v1.10 (last phase 93). All 34 REQ-IDs mapped to exactly one phase, 100% coverage (TOKEN-01..05 + RATCHET-03 → 94; RATCHET-01/02/04/05 → 95; RESEARCH-01..05 → 96; COMP-01..03 + GALLERY-01/02 → 97; cross-surface GROUP-01/PAGE-01/02/RESP-01/FLOW-01/02/A11Y-01/02 anchored on operator → 98; GROUP-02/03 → 99; PAGE-03 → 100; COPY-01 → 101; MOTION-01/02 → 102; 103 is closeout-only). Critical path 94 → 95 → 96 → 97 → {98,99,100 parallel} → {101,102 parallel} → 103. Cross-cutting GROUP/PAGE/RESP/FLOW/A11Y reqs counted once at their operator anchor (98) and re-applied per-surface on 99/100. Phase 94 tightens conformance gates FIRST (tighten-then-re-baseline) so the token re-baseline can't regress silently. Release prepare-only; admin-minor bump drags matched core+inbound via linked-version releases.
@@ -729,8 +783,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-03T17:58:05.097Z
-**Stopped at:** Completed 153-07-PLAN.md
+**Last session:** 2026-08-17T12:02:25.688Z
+**Stopped at:** Phase 158 verified complete; Phase 159 ready for planning
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
@@ -847,4 +901,5 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Research, plan, and execute Phase 159's deterministic quality gates, then independently verify the full
+  protected merge signal before advancing to release certification.

@@ -24,6 +24,51 @@ contract. If you are installing mailglass fresh on `2.0`, you do not need this
 guide: the default `mailglass` schema is created for you and you never touch
 `public`.
 
+## Current v2 package migration path
+
+The schema-isolation move below remains the one-time `1.x` to `2.0` transition.
+Once an application is on v2, use the public package generators for fresh
+installs and additive package upgrades. Each package owns its migration history
+and version anchor; never copy one package's version into the other package's
+wrapper.
+
+Generate the initial Repo-explicit wrappers in the host application:
+
+```bash
+mix mailglass.gen.migration --repo MyApp.Repo
+mix mailglass.inbound.gen.migration --repo MyApp.Repo
+```
+
+Review the two generated files, then run `mix ecto.migrate`. The wrappers call
+only `Mailglass.Migration` and `MailglassInbound.Migration`; package DDL stays in
+the package that owns it. For a populated host moving to a later package schema
+version, generate a separate `--upgrade` wrapper for that package. Do not edit
+or replace its initial wrapper.
+
+Prefix selection is package-local and independent. A host that wants separate
+schemas can configure them explicitly:
+
+```elixir
+config :mailglass, :schema, "mailglass"
+config :mailglass_inbound, :schema, "mailglass_inbound"
+
+# Explicit inspection keeps Repo and prefix authority visible:
+Mailglass.Migration.migrated_version(repo: MyApp.Repo, prefix: "mailglass")
+MailglassInbound.Migration.migrated_version(
+  repo: MyApp.Repo,
+  prefix: "mailglass_inbound"
+)
+```
+
+If the host uses the packages' `:schema` keys instead of wrapper-level options,
+keep the same two values there. In either form, an explicit Repo remains the
+authority for catalog inspection and migration execution.
+
+The repository executes these exact public commands in
+`scripts/generated_ecto_host_proof.sh` against a generated Phoenix/Ecto/Postgres
+host, including both package orders, populated upgrades, recovery, and additive
+rollback. That script is certification evidence, not a second installation API.
+
 ## Route A — keep `public` (zero data movement)
 
 If you do not want to move data, opt out of the new default with one line:

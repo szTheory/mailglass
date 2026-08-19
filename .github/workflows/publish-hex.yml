@@ -4,15 +4,12 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-    # Trigger contract (per Phase 27, D-27-05/06):
-    #   - release: types: [published] is the CANONICAL publish path;
-    #     `github.event.release.tag_name` resolves the tag/ref to publish.
-    #   - workflow_dispatch is FALLBACK-ONLY for manual recovery; supply the
-    #     published tag (e.g. `mailglass-vX.Y.Z`) via `inputs.tag`. Never
-    #     dispatch against `main` — version resolution is tag-based.
+    # Protected exact-candidate path. Release events are compatibility no-ops;
+    # only a workflow_dispatch bound to the reviewed candidate digest and the
+    # complete package set may rehearse or publish from an immutable ref.
     inputs:
       tag:
-        description: "Git tag/ref to publish from; fallback-only (e.g. mailglass-vX.Y.Z)"
+        description: "Immutable proposal SHA (dry-run) or protected release tag/ref (live)"
         required: true
         type: string
       dry_run:
@@ -30,6 +27,10 @@ on:
           - mailglass_inbound
           - all
         default: all
+      candidate_digest:
+        description: "Protected candidate digest from dual authorization"
+        required: false
+        type: string
       # The Core Full Suite gate's pressure valve (Phase 143 / D-23). It exists
       # because gating those two legs also gates three steps that are network- and
       # service-dependent — the inbound `mix deps.get`, the inbound
@@ -38,13 +39,13 @@ on:
       # override must be usable WITHOUT a code change, or the maintainer's thirty
       # minutes becomes a day.
       #
-      # It is deliberately awkward to reach: dispatch-only, INERT on the release
-      # event so the hands-free path can never self-skip, reason REQUIRED, reason
-      # echoed to the run summary, and a warning naming it an exception. An
+      # It is deliberately awkward to reach: exact-digest live dispatch only,
+      # inert during captured rehearsal, reason REQUIRED, reason echoed to the
+      # run summary, and a warning naming it an exception. An
       # override reached for reflexively is a gate that has been removed without
       # anyone recording that it was (D-30).
       skip_core_full_suite_gate:
-        description: "EXCEPTION: publish without the Core Full Suite gate. Requires a written reason. Ignored on the automated release event."
+        description: "EXCEPTION: live publish without the Core Full Suite gate. Requires a written reason; ignored during rehearsal."
         required: false
         type: boolean
         default: false
@@ -63,9 +64,18 @@ concurrency:
 jobs:
   prepublish-summary:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      authorized: ${{ steps.release-target.outputs.authorized }}
+      pretag: ${{ steps.release-target.outputs.pretag }}
+      candidate_digest: ${{ steps.release-target.outputs.candidate_digest }}
+      tag_sha: ${{ steps.release-target.outputs.tag_sha }}
+      core: ${{ steps.release-target.outputs.core }}
+      admin: ${{ steps.release-target.outputs.admin }}
+      inbound: ${{ steps.release-target.outputs.inbound }}
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -82,73 +92,155 @@ jobs:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     steps:
-      - name: Checkout
+      - name: Checkout immutable release candidate
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           # Rehearsed fallback contract: checkout the known release tag when
           # using workflow_dispatch so publish runs against the reviewed release
           # commit, not a later `main` SHA.
           ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
-      - name: Validate automated release target
-        id: release-target
-        run: |
-          set -euo pipefail
-          target=.planning/release-target.json
-
-          if [ ! -r "$target" ]; then
-            echo "active=false" >> "$GITHUB_OUTPUT"
-            echo "No release target present; skipping milestone-specific proof."
-            exit 0
-          fi
-
-          status=$(jq -er '.status' "$target")
-          if [ "$status" != "active" ]; then
-            echo "active=false" >> "$GITHUB_OUTPUT"
-            echo "Release target is '$status'; skipping milestone-specific proof."
-            exit 0
-          fi
-
-          expected_core=$(jq -er '.packages.mailglass' "$target")
-          expected_admin=$(jq -er '.packages.mailglass_admin' "$target")
-          expected_inbound=$(jq -er '.packages.mailglass_inbound' "$target")
-          actual_core=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mix.exs | head -1)
-          actual_admin=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_admin/mix.exs | head -1)
-          actual_inbound=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_inbound/mix.exs | head -1)
-          release_ref="${{ github.event.release.tag_name || github.event.inputs.tag }}"
-
-          if [ "$actual_core" != "$expected_core" ] || \
-             [ "$actual_admin" != "$expected_admin" ] || \
-             [ "$actual_inbound" != "$expected_inbound" ]; then
-            echo "Release target mismatch: expected core/admin/inbound $expected_core/$expected_admin/$expected_inbound; source has $actual_core/$actual_admin/$actual_inbound" >&2
-            exit 1
-          fi
-
-          if [ "$release_ref" != "mailglass-v${expected_core}" ] && \
-             [ "$release_ref" != "mailglass_admin-v${expected_admin}" ]; then
-            echo "Release target mismatch: ref '$release_ref' is not an authorized linked release tag" >&2
-            exit 1
-          fi
-
-          {
-            echo "active=true"
-            echo "core=$actual_core"
-            echo "admin=$actual_admin"
-            echo "inbound=$actual_inbound"
-          } >> "$GITHUB_OUTPUT"
-      - name: Set up OTP + Elixir
+          fetch-depth: 0
+      - name: Checkout protected main release controls
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # The caller-selected candidate is data, never executable policy.
+          # Every authorization, digest, tag, and source-version decision below
+          # executes from this separate protected-main checkout.
+          ref: refs/heads/main
+          fetch-depth: 0
+          path: trusted-control
+      - name: Set up OTP + Elixir for policy
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
-          version-file: .tool-versions
+          version-file: trusted-control/.tool-versions
           version-type: strict
+      - name: Install deps for policy
+        working-directory: trusted-control
+        run: mix deps.get
+      - name: Compile policy runtime
+        working-directory: trusted-control
+        run: mix compile
+      - name: Validate automated release target
+        id: release-target
+        env:
+          RELEASE_REF: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+          EVENT_NAME: ${{ github.event_name }}
+          CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+          PACKAGE: ${{ github.event.inputs.package }}
+        run: |
+          set -euo pipefail
+          digest="${CANDIDATE_DIGEST:-}"
+
+          # Release events and legacy digest-free dispatches are deliberately
+          # inert. A requested rehearsal without a candidate is an error rather
+          # than a misleading successful dry run. Keep this before any checkout
+          # or policy work so compatibility events remain a true no-op.
+          if [ "${EVENT_NAME:-}" != workflow_dispatch ] || [ -z "$digest" ]; then
+            if [ "${EVENT_NAME:-}" = workflow_dispatch ] && [ "${DRY_RUN:-}" = true ]; then
+              echo "ERROR: protected dry-run requires candidate_digest" >&2
+              exit 1
+            fi
+            printf 'active=false\nauthorized=false\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          candidate_root="$GITHUB_WORKSPACE"
+          control_root="$GITHUB_WORKSPACE/trusted-control"
+          control_target="$control_root/.planning/release-target.json"
+
+          # Fail closed if protected main advanced while the control checkout
+          # was materialized. A retry gets one coherent policy/ledger snapshot.
+          git -C "$control_root" fetch --no-tags origin main:refs/remotes/origin/main
+          [ "$(git -C "$control_root" rev-parse HEAD)" = "$(git -C "$control_root" rev-parse origin/main)" ]
+
+          run_policy() {
+            (
+              cd "$control_root"
+              mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "$@"
+            )
+          }
+
+          # The release unit is always the exact three-package train. Keep this
+          # guard before the rehearsal branch so dry runs cannot prove only a
+          # caller-selected subset.
+          if [ "${PACKAGE:-}" != all ]; then
+            echo "ERROR: protected release validation requires package=all" >&2
+            exit 1
+          fi
+
+          # A pretag rehearsal accepts only a captured exact candidate. It
+          # verifies the proposal tree and all three source versions, but emits
+          # no authorization signal and therefore cannot enter live jobs.
+          if [ "${EVENT_NAME:-}" = workflow_dispatch ] && [ "${DRY_RUN:-}" = true ] && [ -n "$digest" ]; then
+            policy=$(mktemp)
+            captured_target="$control_target"
+            run_policy validate-captured-dispatch "$captured_target" "$digest" > "$policy"
+            candidate_digest=$(awk -F= '$1 == "candidate_digest" {print $2}' "$policy")
+            proposal_head=$(awk -F= '$1 == "proposal_head" {print $2}' "$policy")
+            content_digest=$(awk -F= '$1 == "content_digest" {print $2}' "$policy")
+            core=$(awk -F= '$1 == "core" {print $2}' "$policy")
+            admin=$(awk -F= '$1 == "admin" {print $2}' "$policy")
+            inbound=$(awk -F= '$1 == "inbound" {print $2}' "$policy")
+            [ "$candidate_digest" = "$digest" ]
+            [ "$(git -C "$candidate_root" rev-parse HEAD)" = "$proposal_head" ]
+            actual_digest=$("$control_root/scripts/release_policy_content_digest.sh" --repo "$candidate_root")
+            [ "$actual_digest" = "$content_digest" ]
+            for version in "$core" "$admin" "$inbound"; do [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; done
+            [ "$core" = "$admin" ]
+            proposal_versions=$(mktemp)
+            "$control_root/scripts/release_policy_validate_target.sh" "$captured_target" "mailglass-v${core}" "$candidate_root" > "$proposal_versions"
+            grep -Fqx "core=$core" "$proposal_versions"
+            grep -Fqx "admin=$admin" "$proposal_versions"
+            grep -Fqx "inbound=$inbound" "$proposal_versions"
+            printf 'active=false\nauthorized=false\npretag=true\ncandidate_digest=%s\ntag_sha=%s\ncore=%s\nadmin=%s\ninbound=%s\n' "$digest" "$proposal_head" "$core" "$admin" "$inbound" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          policy=$(mktemp)
+          cmp -s "$candidate_root/.planning/release-target.json" "$control_target"
+          if run_policy validate-protected-dispatch "$control_target" "$digest" > "$policy"; then
+            content_digest=$(awk -F= '$1 == "content_digest" {print $2}' "$policy")
+            [[ "$content_digest" =~ ^[0-9a-f]{64}$ ]]
+            core=$(jq -er '.candidate_versions.mailglass' "$control_target")
+            [ "${RELEASE_REF}" = "mailglass-v${core}" ]
+            tag_sha=$(git -C "$candidate_root" rev-parse "${RELEASE_REF}^{commit}")
+            [[ "$tag_sha" =~ ^[0-9a-f]{40}$ ]]
+            [ "$(git -C "$candidate_root" rev-parse HEAD)" = "$tag_sha" ]
+            expected_tags_text=$("$control_root/scripts/release_policy_expected_tags.sh" "$candidate_root/.release-please-manifest.json" "$control_target")
+            mapfile -t expected_tags <<<"$expected_tags_text"
+            [ "${#expected_tags[@]}" -eq 3 ]
+            for expected_tag in "${expected_tags[@]}"; do
+              [ -n "$expected_tag" ]
+              [ "$(git -C "$candidate_root" rev-parse "refs/tags/${expected_tag}^{commit}")" = "$tag_sha" ]
+            done
+            actual_digest=$("$control_root/scripts/release_policy_content_digest.sh" --repo "$candidate_root")
+            [ "$actual_digest" = "$content_digest" ]
+            printf 'authorized=true\ncandidate_digest=%s\ncontent_digest=%s\ntag_sha=%s\n' "$digest" "$content_digest" "$tag_sha" >> "$GITHUB_OUTPUT"
+          else
+            echo "ERROR: protected candidate digest is invalid or unauthorized" >&2
+            exit 1
+          fi
+
+          validator="$control_root/scripts/release_policy_validate_target.sh"
+          if "$validator" "$control_target" "$RELEASE_REF" "$candidate_root" >> "$GITHUB_OUTPUT"; then
+            echo "active=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "ERROR: protected candidate source/ref validation failed" >&2
+          exit 1
       - name: Cache deps
+        if: ${{ steps.release-target.outputs.active == 'true' }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: deps
           key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
       - name: Install deps (root)
+        if: ${{ steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true' }}
         run: mix deps.get
       - name: Wait for postgres + create test DB
-        if: ${{ github.event.inputs.package != 'mailglass_admin' }}
+        if: ${{ (steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true') && github.event.inputs.package != 'mailglass_admin' }}
         env:
           PGPASSWORD: postgres
         run: |
@@ -158,23 +250,23 @@ jobs:
           export MIX_ENV=test
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Install deps (admin)
-        if: ${{ github.event.inputs.package != 'mailglass' }}
+        if: ${{ (steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true') && github.event.inputs.package != 'mailglass' }}
         working-directory: mailglass_admin
         run: mix deps.get
       - name: Pre-publish check for mailglass
-        if: ${{ github.event.inputs.package != 'mailglass_admin' }}
+        if: ${{ (steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true') && github.event.inputs.package != 'mailglass_admin' }}
         run: |
           echo "## mailglass" >> "$GITHUB_STEP_SUMMARY"
           set -o pipefail
           mix mailglass.publish.check --package mailglass 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Pre-publish check for mailglass_admin
-        if: ${{ github.event.inputs.package != 'mailglass' }}
+        if: ${{ (steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true') && github.event.inputs.package != 'mailglass' }}
         run: |
           echo "## mailglass_admin" >> "$GITHUB_STEP_SUMMARY"
           set -o pipefail
           mix mailglass.publish.check --package mailglass_admin 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Pre-publish check for mailglass_inbound
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.package != 'mailglass' && github.event.inputs.package != 'mailglass_admin' }}
+        if: ${{ (steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true') && github.event_name == 'workflow_dispatch' && github.event.inputs.package != 'mailglass' && github.event.inputs.package != 'mailglass_admin' }}
         run: |
           echo "## mailglass_inbound" >> "$GITHUB_STEP_SUMMARY"
           set -o pipefail
@@ -183,7 +275,7 @@ jobs:
       # the focused behavioral suite on the protected release path without
       # retaining test output, environments, package credentials, or message data.
       - name: Run Phase 148 release proof suite
-        if: ${{ steps.release-target.outputs.active == 'true' }}
+        if: ${{ steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true' }}
         run: |
           mix test test/mailglass/webhook/ingest_auto_suppress_test.exs test/mailglass/suppression_test.exs test/mailglass/docs_contract_test.exs --warnings-as-errors
           (
@@ -191,13 +283,14 @@ jobs:
             mix test test/mailglass_admin/operator_live_test.exs --warnings-as-errors
           )
       - name: Write sanitized Phase 148 release proof
-        if: ${{ steps.release-target.outputs.active == 'true' }}
+        if: ${{ steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true' }}
         run: |
           set -euo pipefail
           mkdir -p tmp/release-proof
           jq -n \
             --arg ref "${{ github.event.release.tag_name || github.event.inputs.tag }}" \
             --arg sha "$(git rev-parse HEAD)" \
+            --arg candidate_digest "${{ steps.release-target.outputs.candidate_digest }}" \
             --arg core "${{ steps.release-target.outputs.core }}" \
             --arg admin "${{ steps.release-target.outputs.admin }}" \
             --arg inbound "${{ steps.release-target.outputs.inbound }}" \
@@ -206,6 +299,7 @@ jobs:
             --arg b2c_docs "passed" \
             --arg operator_live "passed" \
             '{
+              candidate_digest: $candidate_digest,
               ref: $ref,
               sha: $sha,
               packages: {
@@ -227,94 +321,77 @@ jobs:
           name: phase-148-release-proof-${{ github.run_id }}
           path: tmp/release-proof/phase-148.json
           if-no-files-found: error
+          overwrite: true
           retention-days: 90
 
-  gate-ci-green:
+  # The only job allowed to mutate Actions state. It is reachable only after the
+  # protected live candidate has been validated; release events, digestless
+  # dispatches, and captured rehearsals cannot enter it.
+  ensure-live-ci-runs:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [prepublish-summary]
-    # `actions: write` lets this job self-dispatch ci.yml AND advisory-matrix.yml
-    # on the tagged SHA when no run exists. That is the anti-recursion dead-end: a
-    # release-please PR auto-merged by GITHUB_TOKEN produces a `main` SHA whose
-    # `push` event is suppressed, so neither workflow ran on it; release-please then
-    # tags that SHA (via RELEASE_PLEASE_PAT) and `release: published` lands here with
-    # zero runs of either to gate on. See CONTRIBUTING.md "If a release publishes but
-    # the tags/publish never fire". The permission is NOT widened by Phase 143 —
-    # `actions: write` already covered exactly this dispatch, for one workflow
-    # instead of two.
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.dry_run != 'true' &&
+      github.event.inputs.package == 'all' &&
+      needs.prepublish-summary.outputs.authorized == 'true'
+    outputs:
+      sha: ${{ steps.resolve-sha.outputs.sha }}
+      ref: ${{ steps.resolve-sha.outputs.ref }}
     permissions:
       contents: read
       actions: write
-    # Both override inputs are bound here as ENVIRONMENT VALUES and read as
-    # environment values. Neither is ever string-concatenated into a `run:` body or
-    # spliced into an inline expression inside one — the reason is free text a
-    # dispatcher supplies. The release-event inertness is NOT expressed here; it is
-    # enforced once, in each consuming script, as `context.eventName !== 'release'`,
-    # so there is exactly one readable place where "the hands-free path can never
-    # self-skip" is stated.
     env:
       SKIP_CORE_FULL_SUITE_GATE: ${{ inputs.skip_core_full_suite_gate }}
       CORE_FULL_SUITE_GATE_SKIP_REASON: ${{ inputs.core_full_suite_gate_skip_reason }}
     steps:
-      - name: Resolve tagged SHA
+      - name: Resolve pinned live SHA and ref
         id: resolve-sha
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        env:
+          EXPECTED_SHA: ${{ needs.prepublish-summary.outputs.tag_sha }}
+          RELEASE_REF: ${{ github.event.inputs.tag }}
         with:
           script: |
-            const ref = context.payload.release?.tag_name || context.payload.inputs?.tag || context.sha;
+            const ref = process.env.RELEASE_REF || '';
+            const expected = process.env.EXPECTED_SHA || '';
+            if (!/^[0-9a-f]{40}$/.test(expected) || ref === '') {
+              core.setFailed('Refusing CI self-heal: protected SHA/ref is missing or malformed.');
+              return;
+            }
             const commit = await github.rest.repos.getCommit({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref
             });
+            if (commit.data.sha !== expected) {
+              core.setFailed(`Refusing CI self-heal: ${ref} resolves to ${commit.data.sha}, expected protected SHA ${expected}.`);
+              return;
+            }
             core.setOutput('sha', commit.data.sha);
             core.setOutput('ref', ref);
-      # DISPATCH IS THE DEFAULT PATH FOR BOTH WORKFLOWS, NOT AN EDGE CASE (D-22).
-      #
-      # release-please bot-merges the release PR, and GitHub does not trigger
-      # workflows for events raised with GITHUB_TOKEN. That suppresses the `push`
-      # trigger for ci.yml AND for advisory-matrix.yml, and advisory-matrix.yml has
-      # no `release:` trigger at all. So a release SHA has ZERO runs of either
-      # workflow, and a gate that merely LOOKS ONE UP would deadlock on every
-      # release. The two-SHA comparison that proves it:
-      #
-      #   SHA        commit                              ci.yml runs   advisory-matrix runs
-      #   25c74ca0   `chore: release main (#149)` (bot)  1 (this step) 0
-      #   3edc95f0   human-merged                        1 (push)      1 (push)
-      #
-      # Re-confirmed on 2026-07-31 against `e88daa15` (`chore: release main (#158)`,
-      # auto-merged, published mailglass 2.2.2): zero Advisory Matrix runs.
-      # See .planning/phases/143-test-harness-truth/143-MAIN-GREEN-EVIDENCE.md.
-      #
-      # A tag-shaped-ref dispatch of advisory-matrix.yml is rehearsed, not assumed:
-      # run 30595564984 dispatched it on a throwaway tag cut from green `main` and
-      # both gating legs went green.
-      - name: Ensure completed ci.yml and advisory-matrix.yml runs exist on tagged SHA
+      - name: Ensure completed ci.yml and advisory-matrix.yml runs exist on protected SHA
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         env:
           # Bound through env rather than interpolated into the script body: `ref`
           # is a tag name, and a `${{ }}` splice lands inside a JS string literal.
           RESOLVED_SHA: ${{ steps.resolve-sha.outputs.sha }}
           RESOLVED_REF: ${{ steps.resolve-sha.outputs.ref }}
+          CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
         with:
           script: |
-            // Self-heal the anti-recursion case before the green check below, for
-            // BOTH workflows the next step reads. If the tagged SHA has no run of a
-            // workflow, dispatch that workflow on the tag and wait for it. We do NOT
-            // judge pass/fail here — the next step owns the required-vs-advisory and
-            // gating-vs-advisory verdicts. Fail-safe: a red dispatched run simply
-            // makes "Verify CI is green" block the publish, exactly as a
-            // human-triggered red run would.
+            // Ensure BOTH workflows the read-only successor inspects have completed
+            // on the protected SHA. If no run exists, dispatch on the validated ref
+            // and wait. This step never judges pass/fail; the successor owns that
+            // verdict. A red run therefore blocks live publish at the read-only gate.
             //
             // ONE step, ONE shared deadline, both workflows polled in the SAME loop.
             // Not two serial waits: a second 30-minute deadline after the first turns
             // a 30-minute worst case into 60 on a pipeline nobody is watching.
             //
-            // The dispatch-only override (D-23) also lifts the WAIT, not just the
-            // verdict. Without that, an override could not rescue the case it most
-            // needs to: GitHub Actions itself unavailable, no advisory-matrix run
-            // obtainable, this step deadlining out 30 minutes later regardless of
-            // what the next step would have decided. INERT on the release event —
-            // the hands-free path can never self-skip.
+            // The explicit live-dispatch override lifts the advisory-matrix WAIT,
+            // not merely its verdict. Captured rehearsal never reaches this job.
             const skipCoreFullSuiteGate =
               process.env.SKIP_CORE_FULL_SUITE_GATE === 'true' && context.eventName !== 'release';
 
@@ -327,6 +404,7 @@ jobs:
 
             const sha = process.env.RESOLVED_SHA;
             const ref = process.env.RESOLVED_REF;
+            const digest = process.env.CANDIDATE_DIGEST;
             const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
             async function latestRun(workflowId) {
@@ -345,24 +423,12 @@ jobs:
               runs[wf] = await latestRun(wf);
             }
 
-            // FAN-OUT SAFETY. One linked-version release train publishes two tags,
-            // each firing its own `release: published` event, so two publish-hex runs
-            // can reach this step seconds apart. Both resolve to the SAME head SHA
-            // (both tags point at the release commit), both would find zero runs, and
-            // both would dispatch. Query on head_sha, settle a randomised interval,
-            // then RE-CHECK: if the sibling run's dispatch has landed, poll it instead
-            // of dispatching again. Worst case is one redundant matrix run.
-            //
-            // The fix is NOT to key advisory-matrix.yml's concurrency group on the
-            // SHA. That group has cancel-in-progress: true, so two same-SHA dispatches
-            // would land in one group and cancel each other — and a cancelled run is
-            // blocking, so both gates would then read `cancelled` and block the
-            // release. That is the exact unattended stall this self-heal exists to
-            // prevent. advisory-matrix.yml's own concurrency comment records this too.
+            // API visibility safety: query, settle briefly, and re-check before
+            // dispatching so a just-created run does not produce a duplicate.
             const absent = WORKFLOWS.filter((wf) => !runs[wf]);
             if (absent.length > 0) {
               const settleMs = Math.floor(Math.random() * 15000);
-              core.info(`No run on ${sha} for: ${absent.join(', ')}. Settling ${settleMs}ms before dispatch (fan-out safety), then re-checking.`);
+              core.info(`No run on ${sha} for: ${absent.join(', ')}. Settling ${settleMs}ms for API visibility, then re-checking.`);
               await sleep(settleMs);
 
               for (const wf of absent) {
@@ -392,7 +458,7 @@ jobs:
                 core.setFailed(
                   `Delivery blocked: no completed run of ${stalled.join(', ')} for SHA ${sha} within 30 minutes.\n` +
                   `Recovery — dispatch the workflow on the release ref, then re-dispatch this one:\n  ${recovery}\n` +
-                  `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false`
+                  `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false -f candidate_digest=${digest}`
                 );
                 return;
               }
@@ -405,7 +471,60 @@ jobs:
             for (const wf of WORKFLOWS) {
               core.info(`${wf} run ${runs[wf].id} on ${sha} completed with conclusion: ${runs[wf].conclusion}.`);
             }
-      - name: Verify CI is green on tagged SHA
+
+  # Read-only public gate. Live delivery reaches it after self-heal succeeds;
+  # captured pretag rehearsal reaches it with the self-heal job skipped and can
+  # only inspect already-completed runs. Inert compatibility events skip it.
+  gate-ci-green:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [prepublish-summary, ensure-live-ci-runs]
+    if: |
+      always() &&
+      needs.prepublish-summary.result == 'success' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.package == 'all' &&
+      (
+        (github.event.inputs.dry_run == 'true' && needs.prepublish-summary.outputs.pretag == 'true') ||
+        (github.event.inputs.dry_run != 'true' &&
+          needs.prepublish-summary.outputs.authorized == 'true' &&
+          needs.ensure-live-ci-runs.result == 'success')
+      )
+    permissions:
+      contents: read
+      actions: read
+    env:
+      SKIP_CORE_FULL_SUITE_GATE: ${{ inputs.skip_core_full_suite_gate }}
+      CORE_FULL_SUITE_GATE_SKIP_REASON: ${{ inputs.core_full_suite_gate_skip_reason }}
+      CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
+      DRY_RUN: ${{ github.event.inputs.dry_run }}
+    steps:
+      - name: Resolve inspected SHA and ref
+        id: resolve-sha
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        env:
+          EXPECTED_SHA: ${{ needs.prepublish-summary.outputs.tag_sha }}
+          RELEASE_REF: ${{ github.event.inputs.tag }}
+        with:
+          script: |
+            const ref = process.env.RELEASE_REF || '';
+            if (ref === '') {
+              core.setFailed('Refusing CI gate: inspected ref is missing.');
+              return;
+            }
+            const commit = await github.rest.repos.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref
+            });
+            const expected = process.env.EXPECTED_SHA || '';
+            if (!/^[0-9a-f]{40}$/.test(expected) || commit.data.sha !== expected) {
+              core.setFailed(`Refusing CI gate: ${ref} is not the validated immutable SHA ${expected}.`);
+              return;
+            }
+            core.setOutput('sha', commit.data.sha);
+            core.setOutput('ref', ref);
+      - name: Verify CI is green on protected SHA
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         env:
           # Read as an environment value by the advisory-matrix recovery messages
@@ -535,6 +654,12 @@ jobs:
             };
 
             const sha = '${{ steps.resolve-sha.outputs.sha }}';
+            const ref = process.env.RESOLVED_REF;
+            const digest = process.env.CANDIDATE_DIGEST;
+            const dryRun = process.env.DRY_RUN === 'true';
+            const replay =
+              `gh workflow run publish-hex.yml -f tag=${ref} -f package=all ` +
+              `-f dry_run=${dryRun} -f candidate_digest=${digest}`;
             const {data} = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -544,7 +669,7 @@ jobs:
             });
 
             if (data.total_count === 0) {
-              core.setFailed(`Delivery blocked: no ci.yml runs found for SHA ${sha}. Push the tagged commit and let CI complete before publishing.`);
+              core.setFailed(`Delivery blocked: no ci.yml runs found for SHA ${sha}. Run CI on the exact ref, then replay the same protected dispatch:\n  gh workflow run ci.yml --ref ${ref}\n  ${replay}`);
               return;
             }
 
@@ -627,17 +752,17 @@ jobs:
             // ===============================================================
             // advisory-matrix.yml verdict (Phase 143 / HARNESS-04, D-19/D-23).
             //
-            // Everything ABOVE this line is the pre-existing ci.yml verdict and is
-            // unchanged. Everything below is additive and reads a SECOND workflow.
-            // The previous step has already guaranteed a COMPLETED run exists on
-            // this SHA, dispatching one if the anti-recursion gap left none.
+            // Everything ABOVE this line is the ci.yml verdict. Everything below
+            // reads the second workflow without mutating Actions state.
+            // Live delivery's predecessor guarantees a completed run exists on
+            // this SHA. Captured rehearsal is deliberately read-only, so it fails
+            // closed here unless an exact-ref run already exists.
             //
             // The decision table, stated once:
             //   1. A gating leg that is ABSENT is not green. Missing, cancelled and
             //      skipped block with the same weight as failure.
-            //   2. Absent is never PERMANENTLY blocking — the previous step
-            //      self-heals by dispatch, its deadline is bounded, and every
-            //      message below names the exact recovery command.
+            //   2. Absence blocks, and every message names the exact recovery
+            //      command. Only the authorized live predecessor may self-heal.
             //   3. An advisory leg's absence is WARNED, not blocked, and the message
             //      says why.
             //   4. An unclassified advisory-matrix lane that is RED blocks; green
@@ -645,14 +770,10 @@ jobs:
             //      for an unclassified lane belongs in the drift meta-test on the
             //      pull request that adds the lane, not here.
             // ===============================================================
-            const ref = process.env.RESOLVED_REF;
-
-            // The dispatch-only override (D-23), inert on the release event so the
-            // hands-free path can never self-skip. It suspends ONLY the Core Full
-            // Suite verdict: every ci.yml lane verdict above already ran unchanged,
-            // and the unclassified-red rule below still blocks.
+            // The exception is live-only. Captured rehearsal must validate the full
+            // completed gate and cannot turn an override into a weaker proof.
             const skipCoreFullSuiteGate =
-              process.env.SKIP_CORE_FULL_SUITE_GATE === 'true' && context.eventName !== 'release';
+              process.env.SKIP_CORE_FULL_SUITE_GATE === 'true' && context.eventName !== 'release' && !dryRun;
 
             if (skipCoreFullSuiteGate) {
               const rawReason = (process.env.CORE_FULL_SUITE_GATE_SKIP_REASON || '').trim();
@@ -683,7 +804,7 @@ jobs:
             const amRunRecovery =
               `Recovery — re-run the lane, then re-dispatch this workflow:\n` +
               `  gh workflow run advisory-matrix.yml --ref ${ref}\n` +
-              `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false`;
+              `  ${replay}`;
 
             const amRuns = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
@@ -697,7 +818,7 @@ jobs:
             // above does. A check that cannot observe its subject must not report
             // success.
             if (amRuns.data.total_count === 0) {
-              const msg = `Delivery blocked: no advisory-matrix.yml runs found for SHA ${sha}. The self-heal step should have dispatched one — inspect its log before retrying.\n${amRunRecovery}`;
+              const msg = `Delivery blocked: no advisory-matrix.yml runs found for SHA ${sha}. Authorized live delivery self-heals this before gating; captured rehearsal remains read-only.\n${amRunRecovery}`;
               if (skipCoreFullSuiteGate) {
                 core.warning(`Override active — publishing without this check. It would otherwise have blocked:\n${msg}`);
                 return;
@@ -707,9 +828,8 @@ jobs:
             }
 
             // Prefer the newest COMPLETED run rather than the newest run outright:
-            // the fan-out can leave a second, still-running dispatch on the same
-            // SHA, and reading its null conclusions would block a release for a
-            // reason that is about timing, not about the tree. Every run on this
+            // a newer, still-running dispatch can exist on the same SHA, and reading
+            // its null conclusions would block for timing rather than the tree. Every run on this
             // SHA tests the same tree, so any completed one is a legitimate reading.
             const amCompleted = amRuns.data.workflow_runs.filter(r => r.status === 'completed');
 
@@ -781,7 +901,7 @@ jobs:
               const detail = amGatingBlocking.map(s => `  - ${s}`).join('\n');
               const overrideRecovery =
                 `Recovery — publish anyway (an EXCEPTION; the reason is required and is echoed to the run summary):\n` +
-                `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false \\\n` +
+                `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false -f candidate_digest=${digest} \\\n` +
                 `    -f skip_core_full_suite_gate=true -f core_full_suite_gate_skip_reason="<why>"`;
               const msg = `Delivery blocked: Core Full Suite gating lane(s) did not pass on SHA ${sha}:\n${detail}\nRun: ${amLatest.html_url}\n${amRunRecovery}\n${overrideRecovery}`;
 
@@ -809,23 +929,28 @@ jobs:
 
   publish-core:
     runs-on: ubuntu-latest
-    needs: [gate-ci-green]
+    timeout-minutes: 45
+    needs: [gate-ci-green, prepublish-summary]
     if: |
-      github.event_name == 'release' ||
-      (github.event_name == 'workflow_dispatch' &&
-       github.event.inputs.package != 'mailglass_admin' &&
-       github.event.inputs.package != 'mailglass_inbound')
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.dry_run != 'true' &&
+      needs.prepublish-summary.outputs.authorized == 'true' &&
+      github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest &&
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.package == 'all'
     environment: hex-publish
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+          ref: ${{ needs.prepublish-summary.outputs.tag_sha }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
           version-file: .tool-versions
           version-type: strict
+      - name: Assert pinned protected release tree
+        run: test "$(git rev-parse HEAD)" = "${{ needs.prepublish-summary.outputs.tag_sha }}"
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
@@ -842,7 +967,11 @@ jobs:
         id: idempotency
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          if mix hex.info mailglass "${VERSION}" 2>/dev/null | grep -q "Released:"; then
+          mix hex.build >/dev/null
+          CHECKSUM=$(shasum -a 256 "mailglass-${VERSION}.tar" | awk '{print $1}')
+          [[ "$CHECKSUM" =~ ^[0-9a-f]{64}$ ]]
+          state=$(scripts/release_policy_hex_release_state.sh mailglass "${VERSION}" "$CHECKSUM")
+          if [ "$state" = exists ]; then
             echo "Nothing to do: version ${VERSION} of mailglass is already on Hex; skipping publish (idempotency guard)."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
@@ -873,37 +1002,33 @@ jobs:
 
   publish-admin:
     runs-on: ubuntu-latest
-    needs: [gate-ci-green, publish-core]
+    timeout-minutes: 45
+    needs: [gate-ci-green, prepublish-summary, publish-core]
     # Linked core/admin releases publish admin only after a successful core
     # publish. Inbound is independently versioned and release-event ineligible;
     # dispatch-only recovery may still publish it or all packages explicitly.
     if: |
       always() &&
-      (
-        (github.event_name == 'workflow_dispatch' &&
-         github.event.inputs.package == 'mailglass_admin' &&
-         needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'skipped') ||
-        (github.event_name == 'workflow_dispatch' &&
-         github.event.inputs.package != 'mailglass' &&
-         github.event.inputs.package != 'mailglass_inbound' &&
-         needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'success') ||
-        (github.event_name == 'release' &&
-         needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'success')
-      )
+      github.event.inputs.dry_run != 'true' &&
+      needs.prepublish-summary.outputs.authorized == 'true' &&
+      github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest &&
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.package == 'all' &&
+      needs.gate-ci-green.result == 'success' &&
+      needs.publish-core.result == 'success'
     environment: hex-publish
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+          ref: ${{ needs.prepublish-summary.outputs.tag_sha }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
           version-file: .tool-versions
           version-type: strict
+      - name: Assert pinned protected release tree
+        run: test "$(git rev-parse HEAD)" = "${{ needs.prepublish-summary.outputs.tag_sha }}"
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
@@ -955,9 +1080,16 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
       - name: Skip if version already on Hex
         id: idempotency
+        working-directory: mailglass_admin
+        env:
+          MIX_PUBLISH: "true"
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          if mix hex.info mailglass_admin "${VERSION}" 2>/dev/null | grep -q "Released:"; then
+          mix hex.build >/dev/null
+          CHECKSUM=$(shasum -a 256 "mailglass_admin-${VERSION}.tar" | awk '{print $1}')
+          [[ "$CHECKSUM" =~ ^[0-9a-f]{64}$ ]]
+          state=$(../scripts/release_policy_hex_release_state.sh mailglass_admin "${VERSION}" "$CHECKSUM")
+          if [ "$state" = exists ]; then
             echo "Nothing to do: version ${VERSION} of mailglass_admin is already on Hex; skipping publish (idempotency guard)."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
@@ -976,34 +1108,34 @@ jobs:
 
   publish-inbound:
     runs-on: ubuntu-latest
-    needs: [gate-ci-green, publish-core]
+    timeout-minutes: 45
+    needs: [gate-ci-green, prepublish-summary, publish-core, publish-admin]
     # Inbound is independently versioned and can only be published by an
     # explicit recovery dispatch. A failed or skipped gate never exposes the
     # protected publishing environment.
     if: |
       always() &&
-      (
-        (github.event_name == 'workflow_dispatch' &&
-         github.event.inputs.package == 'mailglass_inbound' &&
-         needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'skipped') ||
-        (github.event_name == 'workflow_dispatch' &&
-         github.event.inputs.package != 'mailglass' &&
-         github.event.inputs.package != 'mailglass_admin' &&
-         needs.gate-ci-green.result == 'success' &&
-         needs.publish-core.result == 'success')
-      )
+      github.event.inputs.dry_run != 'true' &&
+      needs.prepublish-summary.outputs.authorized == 'true' &&
+      github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest &&
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.package == 'all' &&
+      needs.gate-ci-green.result == 'success' &&
+      needs.publish-core.result == 'success' &&
+      needs.publish-admin.result == 'success'
     environment: hex-publish
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+          ref: ${{ needs.prepublish-summary.outputs.tag_sha }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
           version-file: .tool-versions
           version-type: strict
+      - name: Assert pinned protected release tree
+        run: test "$(git rev-parse HEAD)" = "${{ needs.prepublish-summary.outputs.tag_sha }}"
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
@@ -1054,9 +1186,16 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
       - name: Skip if version already on Hex
         id: idempotency
+        working-directory: mailglass_inbound
+        env:
+          MIX_PUBLISH: "true"
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          if mix hex.info mailglass_inbound "${VERSION}" 2>/dev/null | grep -q "Released:"; then
+          mix hex.build >/dev/null
+          CHECKSUM=$(shasum -a 256 "mailglass_inbound-${VERSION}.tar" | awk '{print $1}')
+          [[ "$CHECKSUM" =~ ^[0-9a-f]{64}$ ]]
+          state=$(../scripts/release_policy_hex_release_state.sh mailglass_inbound "${VERSION}" "$CHECKSUM")
+          if [ "$state" = exists ]; then
             echo "Nothing to do: version ${VERSION} of mailglass_inbound is already on Hex; skipping publish (idempotency guard)."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
@@ -1072,3 +1211,40 @@ jobs:
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
           MIX_PUBLISH: "true"
+
+  dispatch-post-publish-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [prepublish-summary, publish-inbound]
+    if: ${{ always() && github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run != 'true' && github.event.inputs.package == 'all' && needs.prepublish-summary.outputs.authorized == 'true' && needs.publish-inbound.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Dispatch exact post-publish smoke handoff
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        env:
+          CORE_VERSION: ${{ needs.prepublish-summary.outputs.core }}
+          ADMIN_VERSION: ${{ needs.prepublish-summary.outputs.admin }}
+          INBOUND_VERSION: ${{ needs.prepublish-summary.outputs.inbound }}
+          TARGET_REF: ${{ needs.prepublish-summary.outputs.tag_sha }}
+        with:
+          script: |
+            const inputs = {
+              core_version: process.env.CORE_VERSION || '',
+              admin_version: process.env.ADMIN_VERSION || '',
+              inbound_version: process.env.INBOUND_VERSION || '',
+              target_ref: process.env.TARGET_REF || ''
+            };
+            if (![inputs.core_version, inputs.admin_version, inputs.inbound_version].every(v => /^\d+\.\d+\.\d+$/.test(v)) ||
+                inputs.core_version !== inputs.admin_version || !/^[0-9a-f]{40}$/.test(inputs.target_ref)) {
+              core.setFailed('Refusing smoke handoff: validated versions or immutable target_ref are malformed.');
+              return;
+            }
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'post-publish-smoke.yml',
+              ref: 'main',
+              inputs
+            });

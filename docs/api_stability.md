@@ -1,6 +1,6 @@
 # API Stability — mailglass
 
-This document is the canonical `v1.x` stability inventory for the core
+This document is the canonical `v2.x` stability inventory for the core
 `mailglass` package.
 
 For compatibility, deprecation, support-matrix, and upgrade-horizon policy, use
@@ -9,7 +9,7 @@ This file stays inventory-shaped on purpose.
 
 It answers two distinct questions:
 
-1. What adopters may treat as stable for the `v1.x` line.
+1. What adopters may treat as stable for the `v2.x` line.
 2. What is merely reachable or exported for framework wiring, sibling-package
    integration, or internal implementation.
 
@@ -18,15 +18,45 @@ the contract by themselves. The contract is the explicit inventory in this
 document plus the `@since` / deprecation metadata on the stable APIs named
 here.
 
-`mailglass_admin` has its own narrow contract surface and is documented
-separately in `mailglass_admin/docs/api_stability.md`. `mailglass_inbound`
-is not part of the `v1.x` stability promise for this milestone.
+`mailglass_admin` and `mailglass_inbound` are separately owned packages with
+their own contract inventories. Core CI compatibility-tests those package
+boundaries; it does not turn their reachable modules into core adopter APIs.
+
+## Current v2.6 Additive Contract
+
+Package owner: `mailglass`.
+
+No public v2 API is removed or renamed by v2.6. The following public seams were
+added or extended during the v2.6 engineering work:
+
+- `mix mailglass.gen.migration --repo MyApp.Repo` generates an immutable,
+  Repo-explicit wrapper around `Mailglass.Migration.up/1` and
+  `Mailglass.Migration.down/1`. A later populated upgrade uses the same task's
+  `--upgrade` path rather than rewriting the initial wrapper.
+- `Mailglass.Migration.migrated_version/1` reads the selected Repo and prefix,
+  and raises `Mailglass.MigrationVersionError` when catalog truth is missing,
+  malformed, unavailable, or outside the supported range. Only an absent
+  package anchor means version zero.
+- `Mailglass.SendError` additively includes `:dispatch_unavailable` and the
+  non-JSON `retry_class` field. Its stable JSON keys remain `type`, `message`,
+  and `context`.
+
+The public configuration entrypoint remains `Mailglass.Config`. The extracted
+<code>Mailglass&#46;Runtime</code> runtime configuration owner remains internal, as do the outbound preflight, routing,
+persistence, dispatch, webhook pipeline, PubSub port, and suppression port
+collaborators. Their existence does not create new adopter interfaces.
+
+Active v2 deprecations, their replacements, and their v3 removal targets live
+in [`guides/compatibility-and-deprecations.md`](../guides/compatibility-and-deprecations.md).
+The detailed sections below are the complete inventory, including historical
+`Since` notes; phase labels in those notes are historical provenance, not a
+claim about the current release.
 
 ## Contract Posture
 
 ### `stable`
 
-These surfaces are part of the documented `v1.x` adopter contract. Breaking
+These surfaces are part of the documented `v2.x` adopter contract. Breaking
 them requires a major-version change.
 
 - Root adopter entrypoint: `Mailglass.deliver/2`, `deliver!/2`,
@@ -35,6 +65,8 @@ them requires a major-version change.
   `Mailglass.Mailable`, and `Mailglass.Renderer`.
 - Delivery and provider seams: `Mailglass.Outbound`, `Mailglass.Adapter`,
   `Mailglass.Adapters.Fake`, and `Mailglass.Adapters.Swoosh`.
+- Migration seams: `Mailglass.Migration`, `Mailglass.MigrationVersionError`,
+  and the generated wrapper contract owned by `mix mailglass.gen.migration`.
 - Config and tenancy seams: `Mailglass.Config`, `Mailglass.Tenancy`,
   `Mailglass.TenancyError`, `Mailglass.Clock`, `Mailglass.Stream`,
   `Mailglass.RateLimiter`, `Mailglass.Suppression`, `Mailglass.Tracking`,
@@ -49,20 +81,22 @@ them requires a major-version change.
   packages: `Mailglass.Operator.Deliveries`,
   `Mailglass.Operator.ReplayHistory`, `Mailglass.Operator.ReplayTargets`,
   `Mailglass.Operator.Timeline`, and `Mailglass.Operator.Suppressions`.
-- Stable Mix tasks: `mix mailglass.install`, `mix mailglass.reconcile`,
+- Stable Mix tasks: `mix mailglass.install`, `mix mailglass.gen.migration`,
+  `mix mailglass.reconcile`,
   `mix mail.doctor`, `mix mailglass.publish.check`,
   `mix mailglass.docs.check`, and `mix mailglass.stability.check`.
 - Stable errors and closed atom/type sets documented below, including
   `Mailglass.Error`, `Mailglass.SendError`, `Mailglass.TemplateError`,
   `Mailglass.SignatureError`, `Mailglass.SuppressedError`,
   `Mailglass.RateLimitError`, `Mailglass.ConfigError`,
-  `Mailglass.EventLedgerImmutableError`, `Mailglass.TenancyError`,
-  `Mailglass.StreamPolicyError`, and `Mailglass.PublishError`.
+  `Mailglass.EventLedgerImmutableError`, `Mailglass.MigrationVersionError`,
+  `Mailglass.TenancyError`, `Mailglass.StreamPolicyError`, and
+  `Mailglass.PublishError`.
 
 ### `internal`
 
 These surfaces may be exported, visible in docs, or reachable in source, but
-they are not promised as stable adopter API for `v1.x`.
+they are not promised as stable adopter API for `v2.x`.
 
 - Internal implementation helpers and infrastructure such as
   `Mailglass.Outbound.Projector`, `Mailglass.PubSub`,
@@ -112,6 +146,7 @@ If a root-exported module is not called out here as `stable`, treat it as
 
 - Delivery: `Mailglass`, `Mailglass.Outbound`, `Mailglass.Adapter`,
   `Mailglass.Adapters.Fake`, `Mailglass.Adapters.Swoosh`
+- Migrations: `Mailglass.Migration`, `Mailglass.MigrationVersionError`
 - Message authoring/rendering: `Mailglass.Message`, `Mailglass.Mailable`,
   `Mailglass.Renderer`
 - Config/runtime: `Mailglass.Config`, `Mailglass.Clock`, `Mailglass.Tenancy`,
@@ -128,14 +163,16 @@ If a root-exported module is not called out here as `stable`, treat it as
 #### Mix tasks
 
 - `mix mailglass.install` — installer and first-app bootstrap contract
+- `mix mailglass.gen.migration` — Repo-explicit initial and additive upgrade
+  wrapper generation contract
 - `mix mailglass.reconcile` — stable reconciliation operator task
 - `mix mail.doctor` — DNS-only deliverability doctor contract
 - `mix mailglass.publish.check` — release-facing publish drift check
 - `mix mailglass.docs.check` — light docs-contract drift check
 - `mix mailglass.stability.check` — light public-surface drift check
 
-Generator and legacy-upgrade tasks remain useful tooling, but they are not part
-of the narrow `v1.x` stable contract unless and until they are listed here.
+Legacy-upgrade tasks remain useful tooling, but they are compatibility bridges,
+not part of the narrow `v2.x` stable contract unless listed here.
 
 #### Telemetry families
 
@@ -176,7 +213,7 @@ particular:
   sibling-package hooks that remain outside the adopter contract.
 - Hidden docs do not make a surface private. If a reachable helper is omitted
   from the stable inventory, it is intentionally non-contract.
-- Future `v1.x` minor releases may add stable APIs, atoms, fields, or tasks,
+- Future `v2.x` minor releases may add stable APIs, atoms, fields, or tasks,
   but only with matching doc metadata and updates to this inventory.
 
 ## `mailglass_admin` Contract Summary
@@ -232,10 +269,20 @@ Type atom set (per `Mailglass.SendError.__types__/0`):
 - `:rendering_failed`
 - `:preflight_rejected`
 - `:serialization_failed`
+- `:dispatch_unavailable`
 
 Per-kind fields: `delivery_id :: binary() | nil`.
 
-Retryable: `true` for `:adapter_failure`, `false` otherwise.
+`retry_class :: :transient | :permanent | nil` is an additive, non-JSON field.
+`retryable?/1` returns `true` only for `retry_class: :transient`; it fails closed
+for permanent, missing, or malformed classifications. JSON keys remain exactly
+`type`, `message`, and `context`.
+
+For Swoosh adapter failures, the closed decision table is: known transport and
+timeout failures, HTTP 429, and HTTP 500..599 are transient; ordinary HTTP
+400..499 are permanent; unknown or malformed outcomes are permanent. Provider
+response bodies and reason text must not enter error context, exception message,
+JSON, or persisted `last_error` data.
 
 Since: 0.1.0.
 
@@ -666,7 +713,8 @@ Since: 0.1.0.
             raw_body: binary(),
             headers: [{String.t(), String.t()}],
             path_params: map(),
-            verified_payload: map() | nil
+            verified_payload: nil,
+            decoded_payload: map() | list() | nil
           }) :: {:ok, String.t()} | {:error, term()}
 ```
 
@@ -699,7 +747,9 @@ fall through to `{:ok, "default"}` via the dispatcher's
 - `:raw_body` — verified raw bytes (signature passed)
 - `:headers` — `[{name, value}]` list
 - `:path_params` — adopter route's path params
-- `:verified_payload` — `nil` at v0.1; reserved for v0.5 Stripe-Connect-style strategies
+- `:verified_payload` — reserved compatibility field; remains `nil`
+- `:decoded_payload` — decoded outer JSON map/list after signature verification,
+  or `nil` when decoding failed; exact signed bytes remain in `:raw_body`
 
 Since: 0.1.0.
 
@@ -1476,6 +1526,7 @@ in `normalized_payload`, never the raw URL (D-31 PII whitelist).
 **Telemetry:**
 - `[:mailglass, :tracking, :open, :recorded]` — measurements: `%{count: 1}`, metadata: `%{delivery_id, tenant_id}`
 - `[:mailglass, :tracking, :click, :recorded]` — same shape
+- `[:mailglass, :tracking, :open, :failed]` and `[:mailglass, :tracking, :click, :failed]` — same measurements; metadata adds finite `failure_class` (`:append_error`, `:unexpected_result`, or `:exception`) and never includes provider, recipient, message, URL, or exception text. Tracking remains fail-open: ledger failure does not change a valid GIF or redirect response.
 
 Since: 0.1.0.
 

@@ -92,6 +92,39 @@ defmodule Mailglass.Webhook.IngestTest do
     end
   end
 
+  describe "signed-body evidence" do
+    test "persists the exact verified raw bytes alongside the decoded payload" do
+      raw_body = "{\"RecordType\":\"Delivery\",\"MessageID\":\"msg-bytes\",\"space\": \"kept\"}"
+
+      events = [
+        %Event{
+          type: :delivered,
+          metadata: %{
+            "provider" => "postmark",
+            "provider_event_id" => "Delivery:bytes",
+            "record_type" => "Delivery",
+            "message_id" => "msg-bytes"
+          }
+        }
+      ]
+
+      assert {:ok, _} = Ingest.ingest_multi(:postmark, raw_body, events)
+      [webhook_event] = Repo.all(WebhookEvent)
+
+      assert webhook_event.raw_signed_body == raw_body
+      assert webhook_event.raw_payload["space"] == "kept"
+    end
+
+    test "rejects changeset attempts to replace persisted signed bytes" do
+      event = %WebhookEvent{raw_signed_body: "original bytes"}
+
+      changeset = WebhookEvent.changeset(event, %{raw_signed_body: "tampered bytes"})
+
+      assert {"is immutable", []} = changeset.errors[:raw_signed_body]
+      assert Ecto.Changeset.get_field(changeset, :raw_signed_body) == "original bytes"
+    end
+  end
+
   describe "ingest_multi/3 orphan path (no matching delivery)" do
     test "inserts event with delivery_id: nil + needs_reconciliation: true; SKIPS projector" do
       events = [
@@ -189,8 +222,30 @@ defmodule Mailglass.Webhook.IngestTest do
         build_sg_event(:clicked, "evt_24", "msg_d")
       ]
 
+      handler_id = "ingest-delivery-query-test-#{System.unique_integer([:positive])}"
+      test_pid = self()
+
+      :telemetry.attach(
+        handler_id,
+        [:mailglass, :test_repo, :query],
+        fn _event, _measurements, metadata, _config ->
+          send(test_pid, {:repo_query, metadata.query})
+        end,
+        nil
+      )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
       assert {:ok, result} =
                Ingest.ingest_multi(:sendgrid, ~s([{"event":"processed"}]), events)
+
+      delivery_selects =
+        receive_queries()
+        |> Enum.filter(
+          &(String.contains?(&1, "mailglass_deliveries") and String.starts_with?(&1, "SELECT"))
+        )
+
+      assert length(delivery_selects) == 1
 
       assert result.duplicate == false
       # All 5 events surface in events_with_deliveries regardless of matched/orphan.
@@ -290,5 +345,13 @@ defmodule Mailglass.Webhook.IngestTest do
         "sg_message_id" => sg_message_id
       }
     }
+  end
+
+  defp receive_queries(queries \\ []) do
+    receive do
+      {:repo_query, query} -> receive_queries([query | queries])
+    after
+      50 -> queries
+    end
   end
 end

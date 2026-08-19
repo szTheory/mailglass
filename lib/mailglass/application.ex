@@ -5,9 +5,9 @@ defmodule Mailglass.Application do
 
   @impl Application
   def start(_type, _args) do
-    if Code.ensure_loaded?(Mailglass.Config) and
-         function_exported?(Mailglass.Config, :validate_at_boot!, 0) do
-      Mailglass.Config.validate_at_boot!()
+    if Code.ensure_loaded?(Mailglass.Runtime) and
+         function_exported?(Mailglass.Runtime, :bootstrap!, 0) do
+      _runtime = Mailglass.Runtime.bootstrap!()
     end
 
     maybe_warn_missing_oban()
@@ -20,7 +20,7 @@ defmodule Mailglass.Application do
     children =
       [
         {Phoenix.PubSub, name: Mailglass.PubSub, adapter: Phoenix.PubSub.PG2},
-        {Task.Supervisor, name: Mailglass.TaskSupervisor}
+        {Task.Supervisor, name: Mailglass.TaskSupervisor, max_children: 10}
       ]
       |> maybe_add(Mailglass.Adapters.Fake.Supervisor, {Mailglass.Adapters.Fake.Supervisor, []})
       |> maybe_add(Mailglass.RateLimiter.Supervisor, {Mailglass.RateLimiter.Supervisor, []})
@@ -51,7 +51,7 @@ defmodule Mailglass.Application do
   # : emit exactly once per BEAM node lifetime via :persistent_term gate.
   # Subsequent Application.start/2 calls (supervisor restart, test harness) do not re-emit.
   defp maybe_warn_missing_oban do
-    configured = Application.get_env(:mailglass, :async_adapter)
+    configured = Mailglass.Config.async_adapter()
     already_warned? = :persistent_term.get({:mailglass, :oban_warning_emitted}, false)
 
     cond do

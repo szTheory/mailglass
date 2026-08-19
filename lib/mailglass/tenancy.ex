@@ -112,11 +112,10 @@ defmodule Mailglass.Tenancy do
     * `:headers` — `[{name, value}]` list as produced by the verifier
     * `:path_params` — adopter route's path params
       (e.g. `%{"tenant_id" => "..."}`)
-    * `:verified_payload` — `nil` at v0.1 (the plug has not yet decoded
-      the JSON payload at callback time). v0.5 may set this to
-      `Jason.decode!/1` of `:raw_body` to support Stripe-Connect-style
-      strategies that inspect the provider event's `account` field
-      post-verify.
+    * `:verified_payload` — reserved compatibility field; remains `nil`
+    * `:decoded_payload` — the verified request's decoded outer JSON map or
+      list, or `nil` when decoding failed. Signature verification still uses
+      `:raw_body`; SES nested `Message` JSON is not exposed here.
 
   ## Examples
 
@@ -143,7 +142,8 @@ defmodule Mailglass.Tenancy do
                 raw_body: binary(),
                 headers: [{String.t(), String.t()}],
                 path_params: map(),
-                verified_payload: map() | nil
+                verified_payload: nil,
+                decoded_payload: map() | list() | nil
               }
             ) :: {:ok, String.t()} | {:error, term()}
 
@@ -311,7 +311,8 @@ defmodule Mailglass.Tenancy do
         raw_body: binary(),
         headers: [{String.t(), String.t()}],
         path_params: map(),
-        verified_payload: map() | nil
+        verified_payload: nil,
+        decoded_payload: map() | list() | nil
       }
 
   ## Fallback behaviour
@@ -383,7 +384,7 @@ defmodule Mailglass.Tenancy do
   end
 
   defp resolver do
-    case Application.get_env(:mailglass, :tenancy) do
+    case Mailglass.Config.tenancy() do
       nil -> Mailglass.Tenancy.SingleTenant
       mod when is_atom(mod) -> mod
     end

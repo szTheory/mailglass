@@ -3,7 +3,8 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
   Deterministic reference-host route proof for the Postmark webhook path.
   """
 
-  @compile {:no_warn_undefined, MailglassReferenceHostWeb.Router}
+  @compile {:no_warn_undefined,
+            [MailglassReferenceHostWeb.Router, MailglassInbound.RateLimiter.TableOwner]}
 
   defstruct [
     :provider,
@@ -21,6 +22,9 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
   ]
 
   @tenant_id "tenant-123"
+  @package_mode_env "MAILGLASS_REFERENCE_HOST_PACKAGE_MODE"
+  @workspace_core_ebin_env "MAILGLASS_CORE_WORKSPACE_EBIN"
+  @workspace_ebin_env "MAILGLASS_INBOUND_WORKSPACE_EBIN"
   @route "/inbound/:tenant_id/postmark"
   @path "/inbound/#{@tenant_id}/postmark"
   @marker_keys [
@@ -77,6 +81,7 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
       configure_proof_env()
       clear_markers()
       ensure_router_loaded!()
+      ensure_rate_limit_owner!()
 
       signed = call_signed_route()
       positive_body = Jason.decode!(signed.resp_body)
@@ -131,8 +136,21 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
   end
 
   defp ensure_router_loaded! do
-    add_reference_host_code_paths(["mailglass_admin", "mailglass_inbound"])
-    require_local_ingress_plug!()
+    case reference_host_package_mode!() do
+      :prepublication ->
+        # Admin remains the established published compatibility gate. Core and
+        # inbound are both verified workspace builds; exact all-published
+        # package-family certification belongs to Phase 160 Plan 06.
+        add_reference_host_code_paths(["mailglass_admin"])
+        add_workspace_core_code_path!()
+        add_workspace_inbound_code_path!()
+
+      :published_siblings ->
+        # The root runner remains repo-head while the reference host supplies
+        # both sibling packages from its Hex-only lockfile.
+        add_reference_host_code_paths(["mailglass_admin", "mailglass_inbound"])
+    end
+
     add_reference_host_code_paths(["mailglass_reference_host"])
 
     case Code.ensure_loaded(MailglassReferenceHostWeb.Router) do
@@ -155,6 +173,27 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
     end
   end
 
+  defp reference_host_package_mode! do
+    case System.get_env(@package_mode_env) do
+      "prepublication" ->
+        :prepublication
+
+      "published_siblings" ->
+        :published_siblings
+
+      nil ->
+        raise ArgumentError,
+              "#{@package_mode_env} must explicitly select package provenance"
+
+      "published" ->
+        raise ArgumentError,
+              "exact all-published trust proof is reserved for Phase 160 Plan 06"
+
+      value ->
+        raise ArgumentError, "unsupported #{@package_mode_env}=#{inspect(value)}"
+    end
+  end
+
   defp add_reference_host_code_paths(apps) do
     for app <- apps do
       ebin_path = Path.expand("../../../reference/host_app/_build/dev/lib/#{app}/ebin", __DIR__)
@@ -165,29 +204,49 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
     end
   end
 
-  defp require_local_ingress_plug! do
-    case :code.is_loaded(MailglassInbound.Ingress.Plug) do
-      false ->
-        for module <- [
-              MailglassInbound.Ingress.Request,
-              MailglassInbound.SignatureError,
-              MailglassInbound.S3FetchError,
-              MailglassInbound.Telemetry,
-              MailglassInbound.RateLimiter,
-              MailglassInbound.PubSub.Topics
-            ] do
-          Code.ensure_loaded!(module)
-        end
+  defp add_workspace_inbound_code_path! do
+    add_workspace_code_path!(@workspace_ebin_env, "inbound", [
+      MailglassInbound.Ingress.Plug,
+      MailglassInbound.Ingress.VerifiedRequest,
+      MailglassInbound.Ingress.Pipeline,
+      MailglassInbound.Ports.Core,
+      MailglassInbound.RateLimiter.TableOwner
+    ])
+  end
 
-        plug_path =
-          Path.expand("../../../mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex", __DIR__)
+  defp add_workspace_core_code_path! do
+    add_workspace_code_path!(@workspace_core_ebin_env, "core", [
+      Mailglass.Tenancy,
+      Mailglass.Ports.PubSub,
+      Mailglass.Ports.Suppression
+    ])
+  end
 
-        Code.require_file(plug_path)
-        :ok
+  defp add_workspace_code_path!(env_name, package, required_modules) do
+    ebin_path = env_name |> System.fetch_env!() |> Path.expand()
 
-      _loaded ->
-        :ok
+    unless File.dir?(ebin_path) do
+      raise ArgumentError, "workspace #{package} ebin does not exist: #{ebin_path}"
     end
+
+    Enum.each(required_modules, fn module ->
+      beam = Path.join(ebin_path, Atom.to_string(module) <> ".beam")
+
+      unless File.regular?(beam),
+        do: raise(ArgumentError, "workspace #{package} beam missing for #{inspect(module)}")
+    end)
+
+    Code.prepend_path(String.to_charlist(ebin_path))
+
+    Enum.each(required_modules, fn module ->
+      Code.ensure_loaded!(module)
+      loaded_path = module |> :code.which() |> List.to_string() |> Path.expand()
+
+      unless Path.dirname(loaded_path) == ebin_path do
+        raise ArgumentError,
+              "workspace #{package} module provenance mismatch for #{inspect(module)}"
+      end
+    end)
   end
 
   defp configure_proof_env do
@@ -214,11 +273,10 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
       postmark: Application.get_env(:mailglass_inbound, :postmark),
       persistence: Application.get_env(:mailglass_inbound, :ingress_persistence),
       execution: Application.get_env(:mailglass_inbound, :ingress_execution),
-      rate_limit_table?: :ets.whereis(:mailglass_inbound_rate_limit) != :undefined
+      rate_limit_owner: Process.whereis(MailglassInbound.RateLimiter.TableOwner)
     }
 
     try do
-      ensure_rate_limit_table!()
       fun.()
     after
       restore_env(:mailglass, :tenancy, saved.tenancy)
@@ -226,10 +284,10 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
       restore_env(:mailglass_inbound, :ingress_persistence, saved.persistence)
       restore_env(:mailglass_inbound, :ingress_execution, saved.execution)
 
-      unless saved.rate_limit_table? do
-        case :ets.whereis(:mailglass_inbound_rate_limit) do
-          :undefined -> :ok
-          table -> :ets.delete(table)
+      if is_nil(saved.rate_limit_owner) do
+        case Process.whereis(MailglassInbound.RateLimiter.TableOwner) do
+          nil -> :ok
+          pid -> GenServer.stop(pid)
         end
       end
 
@@ -237,17 +295,20 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
     end
   end
 
-  defp ensure_rate_limit_table! do
-    case :ets.whereis(:mailglass_inbound_rate_limit) do
-      :undefined ->
-        :ets.new(:mailglass_inbound_rate_limit, [
-          :named_table,
-          :public,
-          read_concurrency: true,
-          write_concurrency: true
-        ])
+  defp ensure_rate_limit_owner! do
+    case Process.whereis(MailglassInbound.RateLimiter.TableOwner) do
+      nil ->
+        case :ets.whereis(:mailglass_inbound_rate_limit) do
+          :undefined -> :ok
+          table -> :ets.delete(table)
+        end
 
-      _table ->
+        {:ok, pid} = apply(MailglassInbound.RateLimiter.TableOwner, :start_link, [])
+        Process.unlink(pid)
+        :ok
+
+      _pid ->
+        :ets.delete_all_objects(:mailglass_inbound_rate_limit)
         :ok
     end
   end

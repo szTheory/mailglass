@@ -37,6 +37,7 @@ jobs:
   core_full_suite:
     name: Core Full Suite (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }} / schema ${{ matrix.schema }})
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -59,7 +60,7 @@ jobs:
             schema: "mailglass"
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -176,6 +177,7 @@ jobs:
     # a PR's required-checks context (SUPPLY-05). push + cron + dispatch only.
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -194,7 +196,7 @@ jobs:
             schema: "mailglass"
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -273,6 +275,7 @@ jobs:
   provider_compatibility_advisory:
     name: Provider Compatibility Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -281,7 +284,7 @@ jobs:
             otp: "27"
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -331,6 +334,7 @@ jobs:
     # — this workflow is never a required PR check (fake-adapter-is-the-gate DNA).
     # The `schema` matrix axis mirrors core_full_suite's D-06 axis.
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -343,7 +347,7 @@ jobs:
             schema: "mailglass"
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres

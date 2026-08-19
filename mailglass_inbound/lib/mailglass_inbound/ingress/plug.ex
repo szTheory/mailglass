@@ -43,7 +43,9 @@ defmodule MailglassInbound.Ingress.Plug do
   # response (CR-02) instead of letting it escape as an uncontrolled 500.
   alias MailglassInbound.S3FetchError
   alias MailglassInbound.Execution
-  alias MailglassInbound.Ingress.Request
+  alias MailglassInbound.Ingress.{Request, VerifiedRequest}
+  alias MailglassInbound.Ingress.Pipeline
+  alias MailglassInbound.Ports
 
   @impl Plug
   def init(opts) when is_list(opts) do
@@ -104,22 +106,20 @@ defmodule MailglassInbound.Ingress.Plug do
       # Replay and control-plane MUST be 200 no-ops — never SignatureError/401
       # (providers retry-storm on non-200; T-46-03). Forgery raises and is caught
       # by the rescue below (→ 401).
-      case verify_request!(provider, request, config, opts) do
+      case Pipeline.run(provider, request, config, opts, %{verify: &verify_request!/4}) do
         {:replay} ->
           resp = send_json(conn, 200, %{status: "replay"})
           {resp, %{provider: provider, status: :replay}}
 
-        {:control_plane, _http_status} ->
+        {:control_plane} ->
           resp = send_json(conn, 200, %{status: "control_plane"})
           {resp, %{provider: provider, status: :control_plane}}
 
-        {:ok, facts} when is_map(facts) ->
-          persist_and_respond(conn, provider, request, facts, opts)
+        {:persist_verified, %VerifiedRequest{} = verified, pipeline_config, pipeline_opts} ->
+          persist_verified_and_respond(conn, provider, verified, pipeline_config, pipeline_opts)
 
-        facts when is_map(facts) ->
-          # Legacy bare-map return from Postmark/SendGrid verify! (unchanged
-          # shipped-v1.1 providers). Treated as a successful, persisting verify.
-          persist_and_respond(conn, provider, request, facts, opts)
+        {:persist, pipeline_request, facts} ->
+          persist_and_respond(conn, provider, pipeline_request, facts, opts)
       end
     rescue
       # Signature failures are terminal typed errors; do not recover in the plug.
@@ -181,6 +181,91 @@ defmodule MailglassInbound.Ingress.Plug do
     tenant_id = resolve_tenant!(provider, conn, request)
     normalized = normalize_request!(provider, request, opts)
 
+    persist_normalized_and_respond(
+      conn,
+      provider,
+      request,
+      tenant_id,
+      normalized,
+      verification_facts,
+      opts
+    )
+  end
+
+  defp persist_verified_and_respond(conn, provider, %VerifiedRequest{} = verified, config, opts) do
+    tenant_id = resolve_tenant!(provider, conn, verified.request, verified.envelope)
+
+    case resolve_content_or_terminal(provider, verified, config, opts) do
+      {:ok, resolved} ->
+        normalized = normalize_request!(provider, resolved, opts)
+
+        persist_normalized_and_respond(
+          conn,
+          provider,
+          resolved.request,
+          tenant_id,
+          normalized,
+          resolved.verification_facts,
+          opts
+        )
+
+      {:terminal, error} ->
+        terminal_failure_response(conn, provider, tenant_id, verified, error, opts)
+    end
+  end
+
+  defp resolve_content_or_terminal(provider, verified, config, opts) do
+    {:ok, resolve_content_request!(provider, verified, config, opts)}
+  rescue
+    # Only the closed, authenticated permanent class is eligible for a
+    # provider-stopping acknowledgement. Retry exhaustion remains a 500 and
+    # creates no terminal row so provider redelivery stays alive.
+    error in S3FetchError ->
+      if error.type == :s3_fetch_failed,
+        do: {:terminal, error},
+        else: reraise(error, __STACKTRACE__)
+  end
+
+  defp terminal_failure_response(
+         conn,
+         provider,
+         tenant_id,
+         verified,
+         %S3FetchError{type: type},
+         opts
+       ) do
+    persistence = Keyword.get(opts, :persistence, MailglassInbound.Ingress.Persist)
+
+    case persistence.persist_terminal_failure(
+           tenant_id,
+           provider,
+           verified.request,
+           verified,
+           type,
+           persistence_opts(opts)
+         ) do
+      {:ok, _} ->
+        # SES/SNS stops redelivery only on 2xx. The permanent failure has already
+        # been committed as tenant-scoped replay evidence, so acknowledging it
+        # here is safe and prevents a futile retry storm.
+        {send_json(conn, 200, %{status: "terminal_evidence_committed", reason: Atom.to_string(type)}),
+         %{provider: provider, tenant_id: tenant_id, status: :terminal_failure}}
+
+      {:error, _} ->
+        {send_json(conn, 500, %{status: "error", reason: "persist_failed"}),
+         %{provider: provider, tenant_id: tenant_id, status: :error}}
+    end
+  end
+
+  defp persist_normalized_and_respond(
+         conn,
+         provider,
+         request,
+         tenant_id,
+         normalized,
+         verification_facts,
+         opts
+       ) do
     # Post-verify rate limiter. This branch is reached only on
     # a successful verify ({:ok, facts} / legacy bare-map), so a forged-payload
     # flood is rejected with 401 BEFORE any budget is read — the limiter is never
@@ -310,7 +395,7 @@ defmodule MailglassInbound.Ingress.Plug do
 
     case persistence.persist(handoff, persistence_opts(opts)) do
       {:ok, result} ->
-        maybe_execute(execution, result)
+        maybe_execute(execution, result, opts)
 
         resp =
           send_json(conn, 200, %{
@@ -518,6 +603,7 @@ defmodule MailglassInbound.Ingress.Plug do
 
     %{
       s3_fetcher: config[:s3_fetcher],
+      s3_max_bytes: config[:s3_max_bytes],
       cert_cache_ttl_seconds: config[:cert_cache_ttl_seconds],
       # WR-04: thread the documented retry tuning knob into the config map.
       # `fetch_s3_body!` reads `Map.get(config, :s3_retry_opts, [])`, but this
@@ -562,6 +648,10 @@ defmodule MailglassInbound.Ingress.Plug do
     resolve_provider_module(:ses, opts).normalize(request)
   end
 
+  defp resolve_content_request!(:ses, %VerifiedRequest{} = verified, config, opts) do
+    resolve_provider_module(:ses, opts).resolve_content!(verified, config)
+  end
+
   # Test seam: an opts `:provider_module` override lets tests inject a stub
   # provider to exercise the widened verify-result branches (replay /
   # control-plane / persist) without the real Mailgun/SES providers (which land
@@ -574,14 +664,14 @@ defmodule MailglassInbound.Ingress.Plug do
     end
   end
 
-  defp resolve_tenant!(provider, conn, request) do
+  defp resolve_tenant!(provider, conn, request, verified_payload \\ nil) do
     ctx = %{
       provider: provider,
       conn: conn,
       raw_body: request.raw_body,
       headers: request.headers,
       path_params: conn.path_params,
-      verified_payload: nil
+      verified_payload: verified_payload
     }
 
     case Tenancy.resolve_webhook_tenant(ctx) do
@@ -626,12 +716,17 @@ defmodule MailglassInbound.Ingress.Plug do
   defp route_status(%{status: status}) when is_atom(status), do: Atom.to_string(status)
   defp route_status(_), do: "unknown"
 
-  defp maybe_execute(_execution, %{status: :duplicate}), do: :ok
+  defp maybe_execute(_execution, %{status: :duplicate}, _opts), do: :ok
 
-  defp maybe_execute(execution, %{status: :inserted} = result) do
-    _ = execution.dispatch(result)
+  defp maybe_execute(execution, %{status: :inserted} = result, opts) do
+    _ = execution.dispatch(result, execution_opts(opts))
     _ = broadcast_inbound_inserted(result)
     :ok
+  end
+
+  defp execution_opts(opts) do
+    []
+    |> maybe_put(:router, Keyword.get(opts, :router))
   end
 
   # Post-commit fan-out. This runs in `maybe_execute/2`, which
@@ -654,35 +749,10 @@ defmodule MailglassInbound.Ingress.Plug do
     payload =
       {:inbound_record_inserted, record_id, %{provider: provider, record_type: "inbound_record"}}
 
-    safe_broadcast(topic, payload)
+    Ports.Core.safe_broadcast(topic, payload)
   end
 
   defp broadcast_inbound_inserted(_result), do: :ok
-
-  # Copied verbatim from `Mailglass.Outbound.Projector.safe_broadcast/2`, changing
-  # only the log tag to `[mailglass_inbound]`. The rescue list and the
-  # `catch :exit` clause are both load-bearing: PubSub may be unreachable at
-  # shutdown/partition, and the committed row is the durable source of truth, so a
-  # broadcast failure must never crash the already-committed inbound pipeline.
-  defp safe_broadcast(topic, payload) do
-    Phoenix.PubSub.broadcast(Mailglass.PubSub, topic, payload)
-  rescue
-    e in [ArgumentError, RuntimeError] ->
-      require Logger
-
-      Logger.debug(
-        "[mailglass_inbound] PubSub broadcast failed (non-fatal): #{Exception.message(e)}"
-      )
-
-      :ok
-  catch
-    :exit, reason ->
-      require Logger
-
-      Logger.debug("[mailglass_inbound] PubSub broadcast exited (non-fatal): #{inspect(reason)}")
-
-      :ok
-  end
 
   defp send_json(conn, status, payload) do
     body = Jason.encode!(payload)

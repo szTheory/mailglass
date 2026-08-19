@@ -2,15 +2,57 @@ defmodule Mailglass.Outbound.DeliverManyTest do
   # async: false required — DB writes + Application.put_env
   use Mailglass.DataCase, async: false
 
-  alias Mailglass.{Outbound, Message, TestRepo}
+  alias Mailglass.{Events.Event, Outbound, Message, TestRepo}
   alias Mailglass.Outbound.Delivery
+
+  defmodule RefusingAsyncAdapter do
+    @behaviour Mailglass.Outbound.AsyncAdapter
+
+    @impl true
+    def dispatch(_fun, _opts), do: {:error, :max_children}
+  end
+
+  defmodule CountingSuppressionStore do
+    alias Mailglass.Suppression.Entry
+
+    def check_many(keys, _opts) do
+      send(Application.fetch_env!(:mailglass, :suppression_store_test_pid), {:bulk_check, keys})
+
+      Enum.map(keys, fn %{address: address} ->
+        if String.contains?(address, "blocked") do
+          {:suppressed,
+           %Entry{tenant_id: "test-tenant", scope: :address, reason: :manual, source: "test"}}
+        else
+          :not_suppressed
+        end
+      end)
+    end
+
+    def check(_key, _opts), do: :not_suppressed
+    def record(_attrs, _opts), do: {:error, :unsupported}
+  end
+
+  defmodule MalformedBulkSuppressionStore do
+    def check_many(_keys, _opts), do: []
+    def check(_key, _opts), do: :not_suppressed
+    def record(_attrs, _opts), do: {:error, :unsupported}
+  end
+
+  defmodule InvalidValueBulkSuppressionStore do
+    def check_many(keys, _opts), do: Enum.map(keys, fn _key -> :invalid_result end)
+    def check(_key, _opts), do: :not_suppressed
+    def record(_attrs, _opts), do: {:error, :unsupported}
+  end
 
   setup do
     Mailglass.Adapters.Fake.checkout()
     Mailglass.Adapters.Fake.set_shared(self())
 
-    # Use task_supervisor so Oban is not required
-    Application.put_env(:mailglass, :async_adapter, :task_supervisor)
+    # The durable-batch path is only truthful when its rows and Oban jobs are
+    # committed together. Keep Oban manual so these assertions observe the
+    # committed queue without a worker racing the projection.
+    start_supervised!({Oban, testing: :manual, repo: TestRepo, queues: [mailglass_outbound: 10]})
+    Application.put_env(:mailglass, :async_adapter, :oban)
     # No raw Sandbox mode call switching to shared self-owned mode here: this
     # module `use`s Mailglass.DataCase with async disabled, so DataCase's own setup
     # (ExUnit.CaseTemplate composes the module's setup after the template's)
@@ -95,12 +137,16 @@ defmodule Mailglass.Outbound.DeliverManyTest do
 
       {:ok, first_deliveries} = Outbound.deliver_many(msgs, [])
       first_ids = Enum.map(first_deliveries, & &1.id) |> Enum.sort()
+      assert TestRepo.aggregate(Event, :count, :id) == 2
+      assert TestRepo.aggregate(Oban.Job, :count, :id) == 2
 
       {:ok, second_deliveries} = Outbound.deliver_many(msgs, [])
       second_ids = Enum.map(second_deliveries, & &1.id) |> Enum.sort()
 
       # Same rows re-fetched — idempotency_key collisions are no-ops
       assert first_ids == second_ids
+      assert TestRepo.aggregate(Event, :count, :id) == 2
+      assert TestRepo.aggregate(Oban.Job, :count, :id) == 2
     end
   end
 
@@ -114,8 +160,14 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       {:ok, first_deliveries} = Outbound.deliver_many([msg1, msg2], [])
       first_ids = Enum.map(first_deliveries, & &1.id) |> MapSet.new()
 
-      {:ok, second_deliveries} = Outbound.deliver_many([msg1, msg2, msg3], [])
+      {:ok, second_deliveries} = Outbound.deliver_many([msg2, msg1, msg3], [])
       assert length(second_deliveries) == 3
+
+      assert Enum.map(second_deliveries, & &1.recipient) == [
+               "mixed2-#{uid}@example.com",
+               "mixed1-#{uid}@example.com",
+               "mixed3-#{uid}@example.com"
+             ]
 
       second_ids = Enum.map(second_deliveries, & &1.id) |> MapSet.new()
 
@@ -126,6 +178,8 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       # The 3rd row is new
       new_ids = MapSet.difference(second_ids, first_ids)
       assert MapSet.size(new_ids) == 1
+      assert TestRepo.aggregate(Event, :count, :id) == 3
+      assert TestRepo.aggregate(Oban.Job, :count, :id) == 3
     end
   end
 
@@ -154,6 +208,91 @@ defmodule Mailglass.Outbound.DeliverManyTest do
 
       assert hd(failed).recipient == blocked_addr
       assert hd(failed).last_error != nil
+    end
+  end
+
+  describe "deliver_many/2 — bounded suppression preflight" do
+    test "deduplicates keys into bounded bulk checks and restores input-order outcomes" do
+      prior_store = Application.get_env(:mailglass, :suppression_store)
+      prior_chunk_size = Application.get_env(:mailglass, :suppression_store_batch_size)
+
+      Application.put_env(:mailglass, :suppression_store, CountingSuppressionStore)
+      Application.put_env(:mailglass, :suppression_store_batch_size, 2)
+      Application.put_env(:mailglass, :suppression_store_test_pid, self())
+
+      on_exit(fn ->
+        Application.put_env(:mailglass, :suppression_store, prior_store)
+
+        if is_nil(prior_chunk_size) do
+          Application.delete_env(:mailglass, :suppression_store_batch_size)
+        else
+          Application.put_env(:mailglass, :suppression_store_batch_size, prior_chunk_size)
+        end
+
+        Application.delete_env(:mailglass, :suppression_store_test_pid)
+      end)
+
+      uid = unique_id()
+      duplicate = "duplicate-#{uid}@example.com"
+
+      messages = [
+        build_message(duplicate),
+        build_message("blocked-#{uid}@example.com"),
+        build_message(duplicate),
+        build_message("clean-#{uid}@example.com"),
+        build_message("another-#{uid}@example.com")
+      ]
+
+      assert {:ok, deliveries} = Outbound.deliver_many(messages, [])
+      assert Enum.map(deliveries, & &1.recipient) == Enum.map(messages, &recipient/1)
+      assert Enum.at(deliveries, 1).status == :failed
+
+      assert_receive {:bulk_check, first_chunk}
+      assert_receive {:bulk_check, second_chunk}
+      refute_receive {:bulk_check, _}
+      assert Enum.map([first_chunk, second_chunk], &length/1) == [2, 2]
+    end
+
+    test "fails closed when an optional bulk store violates the positional contract" do
+      prior_store = Application.get_env(:mailglass, :suppression_store)
+      Application.put_env(:mailglass, :suppression_store, MalformedBulkSuppressionStore)
+      on_exit(fn -> Application.put_env(:mailglass, :suppression_store, prior_store) end)
+
+      assert {:ok, [delivery]} =
+               Outbound.deliver_many([build_message("malformed-bulk@example.com")], [])
+
+      assert delivery.status == :failed
+      assert delivery.last_error[:type] == :preflight_rejected
+    end
+
+    test "fails closed when a correctly sized bulk response contains an invalid value" do
+      prior_store = Application.get_env(:mailglass, :suppression_store)
+      Application.put_env(:mailglass, :suppression_store, InvalidValueBulkSuppressionStore)
+      on_exit(fn -> Application.put_env(:mailglass, :suppression_store, prior_store) end)
+
+      assert {:ok, [delivery]} =
+               Outbound.deliver_many([build_message("invalid-bulk-value@example.com")], [])
+
+      assert delivery.status == :failed
+      assert delivery.last_error[:type] == :preflight_rejected
+    end
+  end
+
+  describe "deliver_many/2 — Task.Supervisor admission" do
+    test "marks each refused fallback dispatch failed instead of claiming it queued" do
+      Application.put_env(:mailglass, :async_adapter_impl, RefusingAsyncAdapter)
+      on_exit(fn -> Application.delete_env(:mailglass, :async_adapter_impl) end)
+
+      uid = unique_id()
+
+      assert {:ok, [delivery]} =
+               Outbound.deliver_many([build_message("refused-batch-#{uid}@example.com")],
+                 async_adapter: :task_supervisor
+               )
+
+      assert delivery.status == :failed
+      assert delivery.last_event_type == :failed
+      assert delivery.last_error[:type] == :dispatch_unavailable
     end
   end
 
@@ -252,6 +391,49 @@ defmodule Mailglass.Outbound.DeliverManyTest do
     end
   end
 
+  describe "deliver_many/2 — durable transaction" do
+    test "commits delivery metadata, queued events, and Oban jobs together" do
+      uid = unique_id()
+
+      msgs = [
+        build_message("atomic-1-#{uid}@example.com"),
+        build_message("atomic-2-#{uid}@example.com")
+      ]
+
+      assert {:ok, deliveries} = Outbound.deliver_many(msgs, [])
+      assert length(deliveries) == 2
+
+      assert TestRepo.aggregate(Delivery, :count, :id) == 2
+      assert TestRepo.aggregate(Event, :count, :id) == 2
+      assert TestRepo.aggregate(Oban.Job, :count, :id) == 2
+
+      assert Enum.all?(deliveries, fn delivery ->
+               metadata = TestRepo.get!(Delivery, delivery.id).metadata
+
+               metadata["rendered_html"] == "<p>Test body</p>" and
+                 metadata["rendered_text"] == "Test body" and
+                 metadata["subject"] == "Test batch"
+             end)
+    end
+
+    test "rolls back deliveries, metadata, events, and jobs when the named Oban step fails" do
+      Application.put_env(:mailglass, :oban_multi_insert_all, fn _multi, _name, _jobs ->
+        {:error, :forced_oban_failure}
+      end)
+
+      on_exit(fn -> Application.delete_env(:mailglass, :oban_multi_insert_all) end)
+
+      uid = unique_id()
+
+      assert {:error, %{__exception__: true}} =
+               Outbound.deliver_many([build_message("rollback-#{uid}@example.com")], [])
+
+      assert TestRepo.aggregate(Delivery, :count, :id) == 0
+      assert TestRepo.aggregate(Event, :count, :id) == 0
+      assert TestRepo.aggregate(Oban.Job, :count, :id) == 0
+    end
+  end
+
   describe "deliver_many/2 — tenant-aware routing" do
     test "persists adapter refs per message before queue handoff" do
       configure_routed_adapters(self())
@@ -287,6 +469,8 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       stream: :transactional
     )
   end
+
+  defp recipient(%Message{swoosh_email: %Swoosh.Email{to: [{_, address} | _]}}), do: address
 
   defp configure_routed_adapters(test_pid) do
     Application.put_env(

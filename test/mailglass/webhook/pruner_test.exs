@@ -135,6 +135,33 @@ defmodule Mailglass.Webhook.PrunerTest do
       refute Map.has_key?(meta, :recipient)
       refute Map.has_key?(meta, :email)
     end
+
+    test "treats an advisory-lock miss as a successful no-op and emits stable telemetry" do
+      handler_id = "pruner-locked-out-test-#{System.unique_integer([:positive])}"
+      test_pid = self()
+
+      :telemetry.attach(
+        handler_id,
+        [:mailglass, :webhook, :prune, :stop],
+        fn _event, measurements, meta, _config ->
+          send(test_pid, {:prune_stop, measurements, meta})
+        end,
+        nil
+      )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      {:ok, conn} = Postgrex.start_link(conn_opts())
+
+      %{rows: [[true]]} =
+        Postgrex.query!(conn, "SELECT pg_try_advisory_lock($1)", [Pruner.lock_key()])
+
+      assert :ok = Pruner.perform(%Oban.Job{})
+      assert_receive {:prune_stop, %{succeeded_deleted: 0, dead_deleted: 0}, %{status: :ok}}, 500
+
+      Postgrex.query!(conn, "SELECT pg_advisory_unlock($1)", [Pruner.lock_key()])
+      GenServer.stop(conn)
+    end
   end
 
   describe "prune/0 multi-status sweep" do
@@ -151,6 +178,22 @@ defmodule Mailglass.Webhook.PrunerTest do
       # Only the :failed row survives (default :infinity retention).
       [remaining] = Repo.all(WebhookEvent)
       assert remaining.status == :failed
+    end
+  end
+
+  describe "bounded serialized batches" do
+    test "returns :locked_out without deleting when another session holds the prune lock" do
+      old_event = insert_webhook_event!(status: :succeeded, days_ago: 30)
+      {:ok, conn} = Postgrex.start_link(conn_opts())
+
+      %{rows: [[true]]} =
+        Postgrex.query!(conn, "SELECT pg_try_advisory_lock($1)", [Pruner.lock_key()])
+
+      assert {:ok, :locked_out} = Pruner.prune()
+      assert TestRepo.get(WebhookEvent, old_event.id)
+
+      Postgrex.query!(conn, "SELECT pg_advisory_unlock($1)", [Pruner.lock_key()])
+      GenServer.stop(conn)
     end
   end
 
@@ -177,5 +220,10 @@ defmodule Mailglass.Webhook.PrunerTest do
     |> Ecto.Changeset.put_change(:inserted_at, backdated_at)
     |> Ecto.Changeset.put_change(:updated_at, backdated_at)
     |> TestRepo.insert!()
+  end
+
+  defp conn_opts do
+    TestRepo.config()
+    |> Keyword.take([:username, :password, :hostname, :database, :port])
   end
 end

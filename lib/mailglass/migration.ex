@@ -7,17 +7,21 @@ defmodule Mailglass.Migration do
 
       defmodule MyApp.Repo.Migrations.AddMailglass do
         use Ecto.Migration
-        def up, do: Mailglass.Migration.up()
-        def down, do: Mailglass.Migration.down()
+        def up, do: Mailglass.Migration.up(repo: MyApp.Repo)
+        def down, do: Mailglass.Migration.down(repo: MyApp.Repo)
       end
 
-  The wrapper stays stable across mailglass versions; per-version DDL
-  lives in `Mailglass.Migrations.Postgres.VNN` modules, dispatched by
-  `Mailglass.Migrations.Postgres` tracking the current version in the
-  `pg_class` comment on `mailglass_events`.
+  The initial-install wrapper stays stable and transactional across mailglass
+  versions. Populated upgrades generated with `--upgrade` use a separate
+  transaction-disabled wrapper so new versions can build indexes concurrently.
+  Per-version DDL lives in `Mailglass.Migrations.Postgres.VNN` modules,
+  dispatched by `Mailglass.Migrations.Postgres` tracking the current version in
+  the `pg_class` comment on `mailglass_events`.
 
   Postgres-only at v0.1 per PROJECT.md (MySQL/SQLite out of scope).
   """
+
+  @type version :: Mailglass.Migrations.Postgres.version()
 
   @doc "Runs all pending migrations up to the latest version."
   @doc since: "0.1.0"
@@ -29,7 +33,8 @@ defmodule Mailglass.Migration do
     # default. The dispatcher's `with_defaults/2` supplies "public" + identifier
     # validation downstream for callers who pass neither.
     opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
-    migrator().up(opts)
+    ensure_non_transactional_wrapper!(opts)
+    migrator(opts).up(opts)
   end
 
   @doc "Rolls back migrations down to the target version (default: 0)."
@@ -39,19 +44,35 @@ defmodule Mailglass.Migration do
     # Same runtime-prefix injection as `up/1` (MIGR-01) — explicit caller
     # `:prefix` wins via `Keyword.put_new`.
     opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
-    migrator().down(opts)
+    ensure_non_transactional_wrapper!(opts)
+    migrator(opts).down(opts)
+  end
+
+  @doc false
+  @spec repair_legacy_up(keyword()) :: :ok
+  def repair_legacy_up(opts) when is_list(opts) do
+    opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
+    Mailglass.Migrations.LegacyToy.repair_up(opts)
+  end
+
+  @doc false
+  @spec repair_legacy_down(keyword()) :: :ok
+  def repair_legacy_down(opts) when is_list(opts) do
+    opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
+    Mailglass.Migrations.LegacyToy.repair_down(opts)
   end
 
   @doc """
-  Returns the currently-applied migration version (0 if none).
+  Returns the currently-applied migration version (0 only when its anchor is absent).
 
   This function is safe to call outside an `Ecto.Migrator` context —
   unlike `up/1` / `down/1`, it does not rely on the migration runner
   process (it issues a single `pg_catalog.obj_description` query against
-  the configured Repo and returns an integer).
+  the configured Repo and returns an integer). Raises
+  `Mailglass.MigrationVersionError` when catalog metadata cannot be trusted.
   """
   @doc since: "0.1.0"
-  @spec migrated_version(keyword()) :: non_neg_integer()
+  @spec migrated_version(keyword()) :: version()
   def migrated_version(opts \\ []) when is_list(opts) do
     # Inject the configured schema as the query prefix (same MIGR-01 default
     # `up/1`/`down/1` already apply above) — an explicit caller `:prefix`
@@ -62,14 +83,14 @@ defmodule Mailglass.Migration do
     opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
     # Inject the configured Repo so the dispatcher can run the version
     # query without needing an active `use Ecto.Migration` runner.
-    opts = Keyword.put_new(opts, :repo, resolve_repo())
-    migrator().migrated_version(opts)
+    opts = Keyword.put_new(opts, :repo, resolve_repo(opts))
+    migrator(opts).migrated_version(opts)
   end
 
   # Resolves the version dispatcher based on the configured Repo's adapter.
   # Postgres-only at v0.1 per PROJECT.md — MySQL/SQLite are out of scope.
-  defp migrator do
-    case resolve_repo().__adapter__() do
+  defp migrator(opts) do
+    case resolve_repo(opts).__adapter__() do
       Ecto.Adapters.Postgres ->
         Mailglass.Migrations.Postgres
 
@@ -80,10 +101,24 @@ defmodule Mailglass.Migration do
     end
   end
 
-  defp resolve_repo do
-    case Application.get_env(:mailglass, :repo) do
+  defp resolve_repo(opts) do
+    case Keyword.get(opts, :repo) || Mailglass.Config.repo() do
       nil -> raise Mailglass.ConfigError.new(:missing, context: %{key: :repo})
       mod when is_atom(mod) -> mod
     end
+  end
+
+  defp ensure_non_transactional_wrapper!(opts) do
+    if Keyword.get(opts, :non_transactional_wrapper, false) do
+      repo = resolve_repo(opts)
+
+      if repo.in_transaction?() do
+        raise ArgumentError,
+              "non_transactional_wrapper: true requires a generated migration with " <>
+                "@disable_ddl_transaction true; refusing concurrent DDL inside a transaction"
+      end
+    end
+
+    :ok
   end
 end

@@ -4,8 +4,9 @@ defmodule Mailglass.Adapters.Swoosh do
 
   Adopters configure their Swoosh adapter once and mailglass wraps it —
   they keep existing Postmark/SendGrid/Mailgun/SES/Resend/SMTP config.
-  mailglass adds error normalization into `%Mailglass.SendError{}` and
-  telemetry instrumentation via `Mailglass.Telemetry.dispatch_span/2`.
+  mailglass adds error normalization into `%Mailglass.SendError{}`. The
+  authoritative dispatch span belongs to the outbound facade's `call_adapter/2`,
+  so a provider call emits one span rather than a nested duplicate.
 
   Pure: no DB, no PubSub, no `Process.put`. Caller's process owns the
   HTTP request via Swoosh's `:api_client` (adopter-supplied, typically
@@ -25,13 +26,13 @@ defmodule Mailglass.Adapters.Swoosh do
 
   | Swoosh shape | Mapped SendError `:type` | Context fields |
   |--------------|--------------------------|----------------|
-  | `{:api_error, status, body}` | `:adapter_failure` | `provider_status`, `body_preview` (200 bytes), `provider_module` |
-  | Other `{:error, reason}` atoms | `:adapter_failure` | `reason_class`, `provider_module` |
-  | Malformed responses | `:adapter_failure` | `reason_class: :malformed` |
+  | `{:api_error, 429, _}` or `500..599` | `:adapter_failure` / transient | `provider_status`, `reason_class`, `provider_module` |
+  | `{:api_error, 400..499, _}` | `:adapter_failure` / permanent | `provider_status`, `reason_class`, `provider_module` |
+  | Known transport/timeouts | `:adapter_failure` / transient | `reason_class: :transport`, `provider_module` |
+  | Unknown or malformed outcomes | `:adapter_failure` / permanent | `reason_class: :unknown`, `provider_module` |
 
-  **PII policy:** `body_preview` is a 200-byte head of the provider's
-  response body — may contain provider-emitted error strings (never
-  user-supplied content). The 8 forbidden keys
+  **PII policy:** Provider response bodies and reason text never enter error
+  context, exception messages, JSON, or persisted delivery errors. The 8 forbidden keys
   (`:to, :from, :body, :html_body, :subject, :headers, :recipient, :email`)
   NEVER appear in error context.  `NoPiiInTelemetryMeta`
   enforces.
@@ -50,13 +51,9 @@ defmodule Mailglass.Adapters.Swoosh do
   @impl Mailglass.Adapter
   def deliver(%Mailglass.Message{swoosh_email: %Swoosh.Email{} = email} = msg, opts) do
     swoosh_adapter = resolve_swoosh_adapter(opts)
+    _ = msg
 
-    Mailglass.Telemetry.dispatch_span(
-      %{tenant_id: msg.tenant_id, mailable: msg.mailable, provider: module_atom(swoosh_adapter)},
-      fn ->
-        raw_deliver(swoosh_adapter, email)
-      end
-    )
+    raw_deliver(swoosh_adapter, email)
   end
 
   defp raw_deliver(swoosh_adapter, email) do
@@ -69,16 +66,15 @@ defmodule Mailglass.Adapters.Swoosh do
       {:ok, response} when is_map(response) ->
         {:ok, %{message_id: synthetic_id(), provider_response: response}}
 
-      {:error, {:api_error, status, body}} ->
+      {:error, {:api_error, status, _body}} ->
         {:error,
          Mailglass.SendError.new(:adapter_failure,
            context: %{
              provider_status: status,
              provider_module: mod,
-             body_preview: body_preview(body),
              reason_class: classify_status(status)
            },
-           cause: build_delivery_error({:api_error, status, body})
+           retry_class: retry_class_for_status(status)
          )}
 
       {:error, reason} ->
@@ -88,7 +84,7 @@ defmodule Mailglass.Adapters.Swoosh do
              provider_module: mod,
              reason_class: classify_reason(reason)
            },
-           cause: reason_as_exception(reason)
+           retry_class: retry_class_for_reason(reason)
          )}
     end
   end
@@ -102,7 +98,7 @@ defmodule Mailglass.Adapters.Swoosh do
         mod
 
       :error ->
-        case Application.get_env(:mailglass, :adapter) do
+        case Mailglass.Config.default_adapter() do
           {Mailglass.Adapters.Swoosh, kw} -> Keyword.fetch!(kw, :swoosh_adapter)
           _ -> raise Mailglass.ConfigError.new(:missing, context: %{key: :swoosh_adapter})
         end
@@ -116,28 +112,29 @@ defmodule Mailglass.Adapters.Swoosh do
     "mailglass-synthetic-" <> (:crypto.strong_rand_bytes(16) |> Base.url_encode64(padding: false))
   end
 
-  defp body_preview(body) when is_binary(body),
-    do: binary_part(body, 0, min(200, byte_size(body)))
-
-  defp body_preview(body), do: inspect(body, limit: 50, printable_limit: 200)
-
-  defp module_atom({mod, _opts}), do: mod
-  defp module_atom(mod) when is_atom(mod), do: mod
-
-  defp classify_status(status) when status >= 500, do: :server_error
-  defp classify_status(status) when status >= 400, do: :client_error
+  defp classify_status(429), do: :rate_limited
+  defp classify_status(status) when is_integer(status) and status in 500..599, do: :server_error
+  defp classify_status(status) when is_integer(status) and status in 400..499, do: :client_error
   defp classify_status(_), do: :unknown
 
-  defp classify_reason(:timeout), do: :transport
+  defp retry_class_for_status(429), do: :transient
+  defp retry_class_for_status(status) when is_integer(status) and status in 500..599, do: :transient
+  defp retry_class_for_status(status) when is_integer(status) and status in 400..499, do: :permanent
+  defp retry_class_for_status(_), do: :permanent
+
+  defp classify_reason(reason)
+       when reason in [:timeout, :closed, :econnrefused, :enetunreach, :ehostunreach, :nxdomain],
+       do: :transport
+
   defp classify_reason({:tls_alert, _}), do: :transport
-  defp classify_reason(_other), do: :other
+  defp classify_reason({:failed_connect, _}), do: :transport
+  defp classify_reason(_), do: :unknown
 
-  defp reason_as_exception(%_{} = ex), do: ex
-  defp reason_as_exception(other), do: %RuntimeError{message: inspect(other, limit: 50)}
+  defp retry_class_for_reason(reason)
+       when reason in [:timeout, :closed, :econnrefused, :enetunreach, :ehostunreach, :nxdomain],
+       do: :transient
 
-  defp build_delivery_error({:api_error, status, body}) do
-    # Construct a descriptive exception without coupling to Swoosh.DeliveryError struct
-    # (Swoosh may change the shape). Use RuntimeError with a non-PII summary.
-    %RuntimeError{message: "Provider returned HTTP #{status}: #{body_preview(body)}"}
-  end
+  defp retry_class_for_reason({:tls_alert, _}), do: :transient
+  defp retry_class_for_reason({:failed_connect, _}), do: :transient
+  defp retry_class_for_reason(_), do: :permanent
 end

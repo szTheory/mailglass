@@ -55,7 +55,40 @@ defmodule Mailglass.ErrorTest do
 
   test "__types__/0 returns the closed atom set for SendError" do
     assert Mailglass.SendError.__types__() ==
-             [:adapter_failure, :rendering_failed, :preflight_rejected, :serialization_failed]
+             [
+               :adapter_failure,
+               :rendering_failed,
+               :preflight_rejected,
+               :serialization_failed,
+               :dispatch_unavailable
+             ]
+  end
+
+  test "dispatch-unavailable errors retain the stable JSON shape" do
+    error =
+      Mailglass.SendError.new(:dispatch_unavailable,
+        retry_class: :transient,
+        context: %{reason_class: :capacity_reached}
+      )
+
+    assert error.retry_class == :transient
+
+    assert Jason.encode!(error)
+           |> Jason.decode!()
+           |> Map.keys()
+           |> Enum.sort() == ["context", "message", "type"]
+  end
+
+  test "retryable?/1 follows the explicit retry_class rather than adapter type" do
+    assert Mailglass.SendError.retryable?(
+             Mailglass.SendError.new(:adapter_failure, retry_class: :transient)
+           )
+
+    refute Mailglass.SendError.retryable?(
+             Mailglass.SendError.new(:adapter_failure, retry_class: :permanent)
+           )
+
+    refute Mailglass.SendError.retryable?(Mailglass.SendError.new(:adapter_failure))
   end
 
   test "__types__/0 returns the closed atom set for TemplateError" do

@@ -16,7 +16,8 @@ defmodule MailglassInbound.Ingress.Providers.Sendgrid do
   end
 
   @impl MailglassInbound.Ingress.Provider
-  def verify!(raw_body, headers, config) when is_binary(raw_body) and is_list(headers) and is_map(config) do
+  def verify!(raw_body, headers, config)
+      when is_binary(raw_body) and is_list(headers) and is_map(config) do
     verify!(%Request{provider: :sendgrid, raw_mime: raw_body, headers: headers}, config)
   end
 
@@ -208,7 +209,8 @@ defmodule MailglassInbound.Ingress.Providers.Sendgrid do
   defp extract_parts(parts) do
     parts
     |> Enum.reduce({nil, nil, [], %{}, 0}, fn part,
-                                              {text_body, html_body, attachments, blobs, attachment_index} ->
+                                              {text_body, html_body, attachments, blobs,
+                                               attachment_index} ->
       content_type = content_type(part.headers)
       disposition = content_disposition(part.headers)
       filename = filename(disposition)
@@ -344,7 +346,8 @@ defmodule MailglassInbound.Ingress.Providers.Sendgrid do
          {hour_int, ""} <- Integer.parse(hour),
          {minute_int, ""} <- Integer.parse(minute),
          {second_int, ""} <- Integer.parse(second),
-         {:ok, naive} <- NaiveDateTime.new(year_int, month_int, day_int, hour_int, minute_int, second_int) do
+         {:ok, naive} <-
+           NaiveDateTime.new(year_int, month_int, day_int, hour_int, minute_int, second_int) do
       offset_seconds = utc_offset_seconds(offset)
       naive |> NaiveDateTime.add(-offset_seconds, :second) |> DateTime.from_naive!("Etc/UTC")
     else

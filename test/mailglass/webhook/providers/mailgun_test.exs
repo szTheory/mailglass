@@ -26,6 +26,15 @@ defmodule Mailglass.Webhook.Providers.MailgunTest do
       assert :ok = Mailgun.verify!(body, [], @config)
     end
 
+    test "reuses a caller-supplied decoded payload for verification and normalization" do
+      body = signed_fixture("delivered", token: "decoded-mailgun-token")
+      decoded = Jason.decode(body)
+
+      assert :ok = Mailgun.verify_decoded!(decoded, [], @config)
+      [event] = Mailgun.normalize_decoded(decoded, [])
+      assert event.metadata["provider_event_id"] == "decoded-mailgun-token"
+    end
+
     test "raises :malformed_header when the signature object is missing" do
       body = load_mailgun_fixture("delivered")
 
@@ -89,6 +98,21 @@ defmodule Mailglass.Webhook.Providers.MailgunTest do
         |> Enum.map(fn {:ok, result} -> result end)
 
       assert Enum.sort(results) == [:ok, {:ok, :replay}]
+    end
+
+    test "reclaims expired tokens but refuses a new token when live capacity is full" do
+      now = Mailglass.Clock.utc_now()
+      Application.put_env(:mailglass, :mailgun_replay_cache, max_entries: 1)
+
+      on_exit(fn -> Application.delete_env(:mailglass, :mailgun_replay_cache) end)
+
+      assert :ok = MailgunReplayCache.check_and_put("expired", DateTime.add(now, -1, :second))
+      assert :ok = MailgunReplayCache.check_and_put("fresh", DateTime.add(now, 60, :second))
+
+      assert {:error, :replay} =
+               MailgunReplayCache.check_and_put("overflow", DateTime.add(now, 60, :second))
+
+      assert :ets.info(MailgunReplayCache.table(), :size) == 1
     end
   end
 

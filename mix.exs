@@ -1,7 +1,7 @@
 defmodule Mailglass.MixProject do
   use Mix.Project
 
-  @version "2.4.0"
+  @version "2.4.1"
   @source_url "https://github.com/szTheory/mailglass"
   # Release-As path anchor (137-02, D-01): this root mix.exs touch attributes the
   # companion commit's `Release-As: 2.0.0` footer to the linked mailglass +
@@ -413,6 +413,7 @@ defmodule Mailglass.MixProject do
         "cmd --cd mailglass_inbound mix deps.get --check-locked",
         "cmd --cd mailglass_inbound mix compile --no-optional-deps --warnings-as-errors",
         "cmd --cd mailglass_inbound mix test --exclude property",
+        "cmd --cd mailglass_inbound mix test --only property",
         # ExDoc is intentionally a dev-only dependency; invoke the docs gates in
         # their native environment instead of inheriting ci.full's test env.
         "cmd env MIX_ENV=dev mix docs --warnings-as-errors",
@@ -428,12 +429,14 @@ defmodule Mailglass.MixProject do
         "cmd env MIX_ENV=test mix mailglass.audit --kind hex",
         "cmd env MIX_ENV=test mix mailglass.audit --kind deps",
         "cmd env MIX_ENV=test mix dialyzer",
+        "cmd --cd mailglass_inbound mix dialyzer",
         "cmd --cd reference/host_app mix deps.get",
         "cmd --cd reference/host_app env MIX_ENV=dev mix compile",
-        "cmd env MIX_ENV=test mix verify.reference_host.journey",
+        "cmd env MIX_ENV=test MAILGLASS_REFERENCE_HOST_PACKAGE_MODE=prepublication MAILGLASS_CORE_WORKSPACE_EBIN=#{File.cwd!()}/_build/test/lib/mailglass/ebin MAILGLASS_INBOUND_WORKSPACE_EBIN=#{File.cwd!()}/mailglass_inbound/_build/test/lib/mailglass_inbound/ebin mix verify.reference_host.journey",
         "cmd bash scripts/check_trust_runner_checkpoint.sh",
         "cmd bash scripts/preflight_network.sh",
-        "cmd env DEP_MODE=path MAILGLASS_PATH=#{File.cwd!()} bash scripts/consumer_install_smoke.sh"
+        "cmd env DEP_MODE=path MAILGLASS_PATH=#{File.cwd!()} bash scripts/consumer_install_smoke.sh",
+        "cmd env MAILGLASS_PATH=#{File.cwd!()} bash scripts/generated_ecto_host_proof.sh"
       ],
 
       # Opt-in browser gate (Node + Playwright). Advisory in CI; zero-Node is an

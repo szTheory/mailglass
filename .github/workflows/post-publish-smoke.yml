@@ -6,169 +6,230 @@ on:
   schedule:
     - cron: "0 12 * * *"
   workflow_dispatch:
-    # Trigger contract (per Phase 27, D-27-05/06/07):
-    #   - release: types: [published] is the CANONICAL release-day path; version
-    #     is resolved from `github.event.release.tag_name`.
-    #   - workflow_dispatch is FALLBACK-ONLY for manual recovery or rehearsal;
-    #     supply the published tag (e.g. `mailglass-vX.Y.Z`) via `inputs.tag`.
-    #   - schedule (`cron`) is an INDEPENDENT health-check that resolves the
-    #     latest published release on its own; it must not gate release-day
-    #     correctness.
+    # Protected post-publication proof. Candidate release events are deliberate
+    # no-ops because the three linked packages are published later by the
+    # explicit protected release path. The scheduled canary alone consumes a
+    # completed target; protected dispatch consumes the exact authorized target
+    # or its published, adoption-retry-safe successor.
     inputs:
-      tag:
-        description: "Tag to smoke-test (e.g. mailglass-vX.Y.Z); fallback path only"
-        required: false
+      core_version:
+        description: "Exact published mailglass version from the protected target"
+        required: true
+        type: string
+      admin_version:
+        description: "Exact published mailglass_admin version from the protected target"
+        required: true
+        type: string
+      inbound_version:
+        description: "Exact published mailglass_inbound version from the protected target"
+        required: true
+        type: string
+      target_ref:
+        description: "Immutable 40-character tag SHA validated by the protected publisher"
+        required: true
         type: string
 
 permissions:
   contents: read
-  issues: write
 
 concurrency:
   group: mailglass-linked-release-smoke
   cancel-in-progress: false
 
 jobs:
+  resolve-completed-target:
+    name: Resolve immutable completed release target
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      completed: ${{ steps.target.outputs.completed }}
+      authorized: ${{ steps.target.outputs.authorized }}
+      core: ${{ steps.target.outputs.core }}
+      admin: ${{ steps.target.outputs.admin }}
+      inbound: ${{ steps.target.outputs.inbound }}
+      target_ref: ${{ steps.target.outputs.target_ref }}
+    steps:
+      - name: Classify trigger
+        id: trigger
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TARGET_REF: ${{ github.event.inputs.target_ref }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            [[ "$INPUT_TARGET_REF" =~ ^[0-9a-f]{40}$ ]]
+          fi
+          case "$EVENT_NAME" in
+            release)
+              printf 'resolve=false\n' >> "$GITHUB_OUTPUT"
+              echo "Candidate release event is intentionally a no-op; protected dispatch starts exact proof after publication."
+              ;;
+            schedule|workflow_dispatch)
+              printf 'resolve=true\n' >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported post-publish smoke trigger: $EVENT_NAME" >&2
+              exit 1
+              ;;
+          esac
+      - name: Checkout immutable workflow control plane
+        if: ${{ steps.trigger.outputs.resolve == 'true' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+      - name: Checkout immutable published target
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.event.inputs.target_ref }}
+          path: immutable-target
+      - name: Set up OTP + Elixir
+        if: ${{ steps.trigger.outputs.resolve == 'true' }}
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - name: Install deps for policy
+        if: ${{ steps.trigger.outputs.resolve == 'true' }}
+        run: mix deps.get
+      - name: Compile policy runtime
+        if: ${{ steps.trigger.outputs.resolve == 'true' }}
+        run: mix compile
+      - name: Resolve protected target versions
+        if: ${{ steps.trigger.outputs.resolve == 'true' }}
+        id: target
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_CORE: ${{ github.event.inputs.core_version }}
+          INPUT_ADMIN: ${{ github.event.inputs.admin_version }}
+          INPUT_INBOUND: ${{ github.event.inputs.inbound_version }}
+          INPUT_TARGET_REF: ${{ github.event.inputs.target_ref }}
+        run: |
+          set -euo pipefail
+          command="authorized-versions"
+          if [ "$EVENT_NAME" = "schedule" ]; then command="completed-versions"; fi
+          control_target=.planning/release-target.json
+          target="$control_target"
+          target_repo=.
+          resolved=$(mktemp)
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            target=immutable-target/.planning/release-target.json
+            target_repo=immutable-target
+            control_resolved=$(mktemp)
+            mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "authorized-versions" "$control_target" > "$control_resolved"
+          fi
+          mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "$command" "$target" > "$resolved"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            for identity_key in core admin inbound candidate_digest content_digest proposal_head source_sha; do
+              control_value=$(awk -F= -v key="$identity_key" '$1 == key {print $2}' "$control_resolved")
+              target_value=$(awk -F= -v key="$identity_key" '$1 == key {print $2}' "$resolved")
+              [ -n "$control_value" ]
+              [ "$control_value" = "$target_value" ]
+            done
+
+            control_status=$(awk -F= '$1 == "status" {print $2}' "$control_resolved")
+            control_tag_sha=$(awk -F= '$1 == "tag_sha" {print $2}' "$control_resolved")
+            case "$control_status" in
+              authorized) [ -z "$control_tag_sha" ] ;;
+              published) [ "$control_tag_sha" = "$INPUT_TARGET_REF" ] ;;
+              *) echo "Unsupported protected target state: $control_status" >&2; exit 1 ;;
+            esac
+          fi
+          completed=$(awk -F= '$1 == "completed" {print $2}' "$resolved")
+          authorized=$(awk -F= '$1 == "authorized" {print $2}' "$resolved")
+          core=$(awk -F= '$1 == "core" {print $2}' "$resolved")
+          admin=$(awk -F= '$1 == "admin" {print $2}' "$resolved")
+          inbound=$(awk -F= '$1 == "inbound" {print $2}' "$resolved")
+          target_ref=""
+          [[ "$core" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$admin" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$inbound" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          if [ "$EVENT_NAME" = "schedule" ]; then
+            [ "$completed" = true ]
+            target_ref=$(awk -F= '$1 == "target_ref" {print $2}' "$resolved")
+          else
+            [ "$authorized" = true ]
+            [ -n "$INPUT_CORE" ]
+            [ -n "$INPUT_ADMIN" ]
+            [ -n "$INPUT_INBOUND" ]
+            [ "$INPUT_CORE" = "$core" ]
+            [ "$INPUT_ADMIN" = "$admin" ]
+            [ "$INPUT_INBOUND" = "$inbound" ]
+            [[ "$INPUT_TARGET_REF" =~ ^[0-9a-f]{40}$ ]]
+            target_ref="$INPUT_TARGET_REF"
+          fi
+          [[ "$target_ref" =~ ^[0-9a-f]{40}$ ]]
+          bash scripts/check_post_publish_target.sh \
+            --repo "$target_repo" \
+            --target "$target" \
+            --target-ref "$target_ref" \
+            --core "$core" \
+            --admin "$admin" \
+            --inbound "$inbound"
+          printf 'completed=%s\nauthorized=%s\ncore=%s\nadmin=%s\ninbound=%s\ntarget_ref=%s\n' "$completed" "$authorized" "$core" "$admin" "$inbound" "$target_ref" >> "$GITHUB_OUTPUT"
+
   cron-guard:
     name: Cron 7-day window guard
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [resolve-completed-target]
     outputs:
       should_run: ${{ steps.guard.outputs.should_run }}
-      version: ${{ steps.guard.outputs.version }}
       release_ref: ${{ steps.guard.outputs.release_ref }}
-      version_inbound: ${{ steps.read-inbound-version.outputs.version_inbound }}
+      version_core: ${{ needs.resolve-completed-target.outputs.core }}
+      version_admin: ${{ needs.resolve-completed-target.outputs.admin }}
+      version_inbound: ${{ needs.resolve-completed-target.outputs.inbound }}
     steps:
       - name: Determine if smoke should run
         id: guard
+        env:
+          COMPLETED: ${{ needs.resolve-completed-target.outputs.completed }}
+          AUTHORIZED: ${{ needs.resolve-completed-target.outputs.authorized }}
+          COMPLETED_CORE: ${{ needs.resolve-completed-target.outputs.core }}
+          COMPLETED_ADMIN: ${{ needs.resolve-completed-target.outputs.admin }}
+          COMPLETED_INBOUND: ${{ needs.resolve-completed-target.outputs.inbound }}
+          TARGET_REF: ${{ needs.resolve-completed-target.outputs.target_ref }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         with:
           script: |
-            const normalizeVersion = (value) => {
-              if (!value) return "";
-              const raw = String(value).trim();
-              const match = raw.match(/(?:^|[-/])v?(\d+\.\d+\.\d+(?:[-\w.+]+)?)/);
-              return match ? match[1] : raw.replace(/^v/, "");
-            };
-            const isCoreReleaseTag = (value) =>
-              /^mailglass-v\d+\.\d+\.\d+(?:[-\w.+]+)?$/.test(String(value || "").trim());
-
             const eventName = context.eventName;
 
             if (eventName === 'release') {
-              const tagName = context.payload?.release?.tag_name || "";
-              if (!isCoreReleaseTag(tagName)) {
-                core.setOutput('should_run', 'false');
-                core.setOutput('version', '');
-                core.setOutput('release_ref', '');
-                core.info(`Skipping non-core release tag '${tagName}'.`);
-                return;
-              }
-              const version = normalizeVersion(tagName);
-              if (version) {
-                core.setOutput('should_run', 'true');
-                core.setOutput('version', version);
-                core.setOutput('release_ref', tagName);
-                core.info(`Smoke triggered by release event; should_run=true; version='${version}'`);
-                return;
-              }
               core.setOutput('should_run', 'false');
-              core.setOutput('version', '');
               core.setOutput('release_ref', '');
-              core.warning(`Release event with unparseable tag_name='${tagName}'; skipping smoke.`);
+              core.info('Candidate release event is intentionally a no-op; exact proof waits for protected post-publication dispatch.');
               return;
             }
 
-            const inputTag = context.payload?.inputs?.tag || "";
-            const inputVersion = normalizeVersion(inputTag);
+            if (eventName === 'schedule' && process.env.COMPLETED !== 'true') {
+              core.setFailed('Scheduled smoke requires an immutable completed target.');
+              return;
+            }
 
-            if (eventName === 'workflow_dispatch' && inputVersion && isCoreReleaseTag(inputTag)) {
+            if (eventName === 'workflow_dispatch' && process.env.AUTHORIZED !== 'true') {
+              core.setFailed('Protected post-publication dispatch requires its exact authorized or published target.');
+              return;
+            }
+
+            const completedCore = process.env.COMPLETED_CORE || '';
+            const completedAdmin = process.env.COMPLETED_ADMIN || '';
+            const completedInbound = process.env.COMPLETED_INBOUND || '';
+            if (![completedCore, completedAdmin, completedInbound].every((version) => /^\d+\.\d+\.\d+$/.test(version))) {
+              core.setFailed('Immutable completed target did not provide three exact stable versions.');
+              return;
+            }
+
+            if (eventName === 'schedule' || eventName === 'workflow_dispatch') {
+              if (!/^[0-9a-f]{40}$/.test(process.env.TARGET_REF || '')) {
+                core.setFailed('Protected target did not provide an immutable 40-character ref.');
+                return;
+              }
               core.setOutput('should_run', 'true');
-              core.setOutput('version', inputVersion);
-              core.setOutput('release_ref', inputTag);
-              core.info(`Smoke triggered by workflow_dispatch; should_run=true; version='${inputVersion}'`);
+              core.setOutput('release_ref', process.env.TARGET_REF);
               return;
             }
-
-            // Historical note (2026-04-28 rehearsal, archived in
-            // .planning/milestones/v0.3-phases/18-ship-v0-3-0/): an older
-            // workflow_run-triggered path resolved VERSION=main and stalled on
-            // `mix hex.info mailglass main`. Per Phase 27 D-27-05/06: the
-            // fallback dispatch path stays tag-based so version resolution is
-            // deterministic from the supplied input.
-
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const {data: releases} = await github.rest.repos.listReleases({
-              owner,
-              repo,
-              per_page: 20
-            });
-
-            const latest = releases.find((release) => isCoreReleaseTag(release.tag_name));
-
-            if (!latest) {
-              core.setOutput('should_run', 'false');
-              core.setOutput('version', '');
-              core.setOutput('release_ref', '');
-              core.info('No core package releases found; skipping scheduled smoke.');
-              return;
-            }
-            const releasedAt = new Date(latest.published_at);
-            const ageDays = (Date.now() - releasedAt.getTime()) / (1000 * 60 * 60 * 24);
-            const version = normalizeVersion(latest.tag_name);
-
-            if (eventName === 'schedule' && ageDays > 7) {
-              core.setOutput('should_run', 'false');
-              core.setOutput('version', version);
-              core.setOutput('release_ref', latest.tag_name);
-              core.info(`Latest release ${latest.tag_name} is ${ageDays.toFixed(1)} days old; skipping scheduled smoke.`);
-              return;
-            }
-
-            if (eventName === 'schedule' && version) {
-              const response = await fetch('https://hex.pm/api/packages/mailglass');
-              if (!response.ok) {
-                core.warning(`Hex API lookup failed with status ${response.status}; skipping scheduled smoke for safety.`);
-                core.setOutput('should_run', 'false');
-                core.setOutput('version', version);
-                core.setOutput('release_ref', latest.tag_name);
-                return;
-              }
-
-              const hexPackage = await response.json();
-              const hexReleases = Array.isArray(hexPackage.releases) ? hexPackage.releases : [];
-              const onHex = hexReleases.some((release) => release.version === version);
-
-              if (!onHex) {
-                core.setOutput('should_run', 'false');
-                core.setOutput('version', version);
-                core.setOutput('release_ref', latest.tag_name);
-                core.warning(`Latest GitHub release ${latest.tag_name} is not on Hex.pm; skipping scheduled smoke until a public package exists.`);
-                return;
-              }
-            }
-
-            core.setOutput('should_run', 'true');
-            core.setOutput('version', version);
-            core.setOutput('release_ref', latest.tag_name);
-            core.info(`Latest release ${latest.tag_name} is ${ageDays.toFixed(1)} days old; running smoke for v${version}.`);
-      - name: Checkout release ref
-        if: ${{ steps.guard.outputs.should_run == 'true' && steps.guard.outputs.release_ref != '' }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          ref: ${{ steps.guard.outputs.release_ref }}
-      - name: Read mailglass_inbound version
-        id: read-inbound-version
-        if: ${{ steps.guard.outputs.should_run == 'true' && steps.guard.outputs.release_ref != '' }}
-        run: |
-          if [ -f mailglass_inbound/mix.exs ]; then
-            VERSION_INBOUND=$(grep -E '@version "[0-9]' mailglass_inbound/mix.exs | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
-            echo "version_inbound=${VERSION_INBOUND}" >> "$GITHUB_OUTPUT"
-            echo "Resolved mailglass_inbound version: ${VERSION_INBOUND}"
-          else
-            echo "version_inbound=" >> "$GITHUB_OUTPUT"
-            echo "mailglass_inbound/mix.exs not present at this ref; downstream inbound steps will skip."
-          fi
+            core.setOutput('should_run', 'false');
+            core.setOutput('release_ref', '');
 
   wait-for-index:
     name: Wait for Hex.pm index
@@ -176,66 +237,54 @@ jobs:
     needs: [cron-guard]
     if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
     timeout-minutes: 8
+    env:
+      VERSION_CORE: ${{ needs.cron-guard.outputs.version_core }}
+      VERSION_ADMIN: ${{ needs.cron-guard.outputs.version_admin }}
+      VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - name: Validate VERSION is semver
-        env:
-          VERSION: ${{ needs.cron-guard.outputs.version }}
+        with:
+          ref: ${{ needs.cron-guard.outputs.release_ref }}
+      - name: Validate exact package versions
         run: |
-          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9.]+)?$ ]]; then
-            echo "::error::VERSION='$VERSION' is not valid semver; refusing to run smoke. Check cron-guard version resolution."
-            exit 1
-          fi
+          for version in "$VERSION_CORE" "$VERSION_ADMIN" "$VERSION_INBOUND"; do
+            [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "::error::Invalid exact stable version '$version'."
+              exit 1
+            }
+          done
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
           version-file: .tool-versions
           version-type: strict
       - name: Wait for mailglass index
-        env:
-          VERSION: ${{ needs.cron-guard.outputs.version }}
         run: |
-          if [ -z "${VERSION}" ]; then
-            echo "No version resolved; skipping."
-            exit 0
-          fi
           DEADLINE=$(( SECONDS + 300 ))
-          until mix hex.info mailglass "${VERSION}" >/dev/null 2>&1; do
+          until mix hex.info mailglass "${VERSION_CORE}" >/dev/null 2>&1; do
             if [ $SECONDS -ge $DEADLINE ]; then
-              echo "Smoke aborted: Hex.pm did not index mailglass ${VERSION} within 5 minutes."
+              echo "Smoke aborted: Hex.pm did not index mailglass ${VERSION_CORE} within 5 minutes."
               exit 1
             fi
-            echo "Waiting for Hex.pm to index mailglass ${VERSION}..."
+            echo "Waiting for Hex.pm to index mailglass ${VERSION_CORE}..."
             sleep 30
           done
-          echo "Hex.pm indexed mailglass ${VERSION}."
+          echo "Hex.pm indexed mailglass ${VERSION_CORE}."
       - name: Wait for mailglass_admin index
-        env:
-          VERSION: ${{ needs.cron-guard.outputs.version }}
         run: |
-          if [ -z "${VERSION}" ]; then
-            echo "No version resolved; skipping."
-            exit 0
-          fi
           DEADLINE=$(( SECONDS + 300 ))
-          until mix hex.info mailglass_admin "${VERSION}" >/dev/null 2>&1; do
+          until mix hex.info mailglass_admin "${VERSION_ADMIN}" >/dev/null 2>&1; do
             if [ $SECONDS -ge $DEADLINE ]; then
-              echo "Smoke aborted: Hex.pm did not index mailglass_admin ${VERSION} within 5 minutes."
+              echo "Smoke aborted: Hex.pm did not index mailglass_admin ${VERSION_ADMIN} within 5 minutes."
               exit 1
             fi
-            echo "Waiting for Hex.pm to index mailglass_admin ${VERSION}..."
+            echo "Waiting for Hex.pm to index mailglass_admin ${VERSION_ADMIN}..."
             sleep 30
           done
-          echo "Hex.pm indexed mailglass_admin ${VERSION}."
+          echo "Hex.pm indexed mailglass_admin ${VERSION_ADMIN}."
       - name: Wait for mailglass_inbound index
-        env:
-          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
         run: |
-          if [ -z "${VERSION_INBOUND}" ]; then
-            echo "No inbound version resolved; skipping."
-            exit 0
-          fi
           DEADLINE=$(( SECONDS + 300 ))
           until mix hex.info mailglass_inbound "${VERSION_INBOUND}" >/dev/null 2>&1; do
             if [ $SECONDS -ge $DEADLINE ]; then
@@ -253,51 +302,37 @@ jobs:
     needs: [cron-guard, wait-for-index]
     if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
     timeout-minutes: 12
+    env:
+      VERSION_CORE: ${{ needs.cron-guard.outputs.version_core }}
+      VERSION_ADMIN: ${{ needs.cron-guard.outputs.version_admin }}
+      VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
     steps:
       - name: Wait for mailglass HexDocs
-        env:
-          VERSION: ${{ needs.cron-guard.outputs.version }}
         run: |
-          if [ -z "${VERSION}" ]; then
-            echo "No version resolved; skipping."
-            exit 0
-          fi
           DEADLINE=$(( SECONDS + 600 ))
-          until curl -fsI "https://hexdocs.pm/mailglass/${VERSION}/" >/dev/null 2>&1; do
+          until curl -fsI "https://hexdocs.pm/mailglass/${VERSION_CORE}/" >/dev/null 2>&1; do
             if [ $SECONDS -ge $DEADLINE ]; then
-              echo "Smoke aborted: HexDocs did not build mailglass ${VERSION} within 10 minutes."
+              echo "Smoke aborted: HexDocs did not build mailglass ${VERSION_CORE} within 10 minutes."
               exit 1
             fi
-            echo "Waiting for HexDocs to build mailglass ${VERSION}..."
+            echo "Waiting for HexDocs to build mailglass ${VERSION_CORE}..."
             sleep 60
           done
-          echo "HexDocs built mailglass ${VERSION}."
+          echo "HexDocs built mailglass ${VERSION_CORE}."
       - name: Wait for mailglass_admin HexDocs
-        env:
-          VERSION: ${{ needs.cron-guard.outputs.version }}
         run: |
-          if [ -z "${VERSION}" ]; then
-            echo "No version resolved; skipping."
-            exit 0
-          fi
           DEADLINE=$(( SECONDS + 600 ))
-          until curl -fsI "https://hexdocs.pm/mailglass_admin/${VERSION}/" >/dev/null 2>&1; do
+          until curl -fsI "https://hexdocs.pm/mailglass_admin/${VERSION_ADMIN}/" >/dev/null 2>&1; do
             if [ $SECONDS -ge $DEADLINE ]; then
-              echo "Smoke aborted: HexDocs did not build mailglass_admin ${VERSION} within 10 minutes."
+              echo "Smoke aborted: HexDocs did not build mailglass_admin ${VERSION_ADMIN} within 10 minutes."
               exit 1
             fi
-            echo "Waiting for HexDocs to build mailglass_admin ${VERSION}..."
+            echo "Waiting for HexDocs to build mailglass_admin ${VERSION_ADMIN}..."
             sleep 60
           done
-          echo "HexDocs built mailglass_admin ${VERSION}."
+          echo "HexDocs built mailglass_admin ${VERSION_ADMIN}."
       - name: Wait for mailglass_inbound HexDocs
-        env:
-          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
         run: |
-          if [ -z "${VERSION_INBOUND}" ]; then
-            echo "No inbound version resolved; skipping."
-            exit 0
-          fi
           DEADLINE=$(( SECONDS + 600 ))
           until curl -fsI "https://hexdocs.pm/mailglass_inbound/${VERSION_INBOUND}/" >/dev/null 2>&1; do
             if [ $SECONDS -ge $DEADLINE ]; then
@@ -326,10 +361,15 @@ jobs:
     if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
     timeout-minutes: 15
     env:
-      VERSION: ${{ needs.cron-guard.outputs.version }}
+      VERSION_CORE: ${{ needs.cron-guard.outputs.version_core }}
+      VERSION_ADMIN: ${{ needs.cron-guard.outputs.version_admin }}
+      VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
+      VERSION: ${{ needs.cron-guard.outputs.version_core }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ needs.cron-guard.outputs.release_ref }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
@@ -340,16 +380,14 @@ jobs:
         with:
           path: deps
           key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
-      - name: Check published inbound compatibility
+      - name: Check published sibling compatibility
         id: inbound-compat
-        env:
-          VERSION: ${{ needs.cron-guard.outputs.version }}
-          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
         run: |
-          if [ -z "${VERSION_INBOUND}" ]; then
-            echo "Published consumer proof could not resolve mailglass_inbound from the release ref."
+          INFO_ADMIN=$(mix hex.info mailglass_admin "${VERSION_ADMIN}" 2>&1) || {
+            echo "mailglass_admin ${VERSION_ADMIN} is not available on Hex.pm."
             exit 1
-          fi
+          }
+          echo "${INFO_ADMIN}"
 
           INFO=$(mix hex.info mailglass_inbound "${VERSION_INBOUND}" 2>&1) || {
             echo "mailglass_inbound ${VERSION_INBOUND} is not available on Hex.pm."
@@ -375,7 +413,7 @@ jobs:
         env:
           DEP_MODE: hex
           WORK_DIR: ${{ runner.temp }}
-          VERSION: ${{ needs.cron-guard.outputs.version }}
+          VERSION: ${{ needs.cron-guard.outputs.version_core }}
           VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
           INCLUDE_INBOUND: true
         run: bash scripts/consumer_install_smoke.sh
@@ -385,10 +423,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [cron-guard, consumer-install]
     if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
-    timeout-minutes: 20
+    timeout-minutes: 60
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -405,6 +443,12 @@ jobs:
       POSTGRES_HOST: localhost
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      VERSION_CORE: ${{ needs.cron-guard.outputs.version_core }}
+      VERSION_ADMIN: ${{ needs.cron-guard.outputs.version_admin }}
+      VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
+      MAILGLASS_EXPECTED_CORE_VERSION: ${{ needs.cron-guard.outputs.version_core }}
+      MAILGLASS_EXPECTED_ADMIN_VERSION: ${{ needs.cron-guard.outputs.version_admin }}
+      MAILGLASS_EXPECTED_INBOUND_VERSION: ${{ needs.cron-guard.outputs.version_inbound }}
     steps:
       - name: Checkout release ref
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -424,31 +468,117 @@ jobs:
             mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
       - name: Install deps
         run: mix deps.get
-      - name: Wait for postgres + create test DB
+      - name: Build disposable host with exact Hex siblings
         env:
+          HOST_ROOT: ${{ runner.temp }}/mailglass-published-host-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          rm -rf "${HOST_ROOT}"
+          cp -R reference/host_app "${HOST_ROOT}"
+          rm -rf "${HOST_ROOT}/deps" "${HOST_ROOT}/_build" "${HOST_ROOT}/mix.lock"
+          export CORE_DEP="{:mailglass, \"== ${VERSION_CORE}\"}"
+          export ADMIN_DEP="{:mailglass_admin, \"== ${VERSION_ADMIN}\"}"
+          export INBOUND_DEP="{:mailglass_inbound, \"== ${VERSION_INBOUND}\"}"
+          cd "${HOST_ROOT}"
+          elixir -e '
+            source = File.read!("mix.exs")
+
+            exact = [
+              {~r/\{:mailglass,\s*"[^"]+"\}/, System.fetch_env!("CORE_DEP")},
+              {~r/\{:mailglass_admin,\s*"[^"]+"\}/, System.fetch_env!("ADMIN_DEP")},
+              {~r/\{:mailglass_inbound,\s*"[^"]+"\}/, System.fetch_env!("INBOUND_DEP")}
+            ]
+
+            updated =
+              Enum.reduce(exact, source, fn {pattern, replacement}, content ->
+                if length(Regex.scan(pattern, content)) != 1,
+                  do: raise("expected exactly one sibling dependency for #{inspect(pattern)}")
+
+                Regex.replace(pattern, content, replacement)
+              end)
+
+            File.write!("mix.exs", updated)
+          '
+          MIX_ENV=dev mix deps.get
+          bash "${GITHUB_WORKSPACE}/scripts/check_clean_baseline_hex_only.sh" mix.lock
+          MIX_ENV=dev mix compile --warnings-as-errors
+          rm -rf "${GITHUB_WORKSPACE}/reference/host_app/_build"
+          ln -s "${HOST_ROOT}/_build" "${GITHUB_WORKSPACE}/reference/host_app/_build"
+      - name: Boot disposable exact-Hex host and run nonvisual compatibility gate
+        env:
+          DATABASE_URL: ecto://postgres:postgres@localhost/mailglass_published_host
+          HOST_ROOT: ${{ runner.temp }}/mailglass-published-host-${{ github.run_id }}
           PGPASSWORD: postgres
         run: |
+          set -euo pipefail
           until pg_isready -h localhost -U postgres; do sleep 1; done
-          mix ecto.create -r Mailglass.TestRepo --quiet
-      - name: Build reference host (dev) so the journey can load sibling beams
-        working-directory: reference/host_app
+          cd "${HOST_ROOT}"
+          MIX_ENV=dev mix ecto.create --quiet
+          MIX_ENV=dev mix run --no-start -e '
+            expected = %{
+              mailglass: System.fetch_env!("VERSION_CORE"),
+              mailglass_admin: System.fetch_env!("VERSION_ADMIN"),
+              mailglass_inbound: System.fetch_env!("VERSION_INBOUND")
+            }
+
+            Enum.each(expected, fn {app, version} ->
+              case Application.load(app) do
+                :ok -> :ok
+                {:error, {:already_loaded, ^app}} -> :ok
+              end
+
+              actual = Application.spec(app, :vsn) |> List.to_string()
+              if actual != version, do: raise("#{app} version mismatch: #{actual} != #{version}")
+            end)
+
+            {:ok, _started} = Application.ensure_all_started(:mailglass_reference_host)
+            %{rows: [[1]]} = MailglassReferenceHost.Repo.query!("SELECT 1")
+            IO.puts("Exact-Hex host booted with core, admin, and inbound compatibility loaded.")
+          '
+      - name: Execute 20-stage exact-Hex generated-host proof
         env:
-          MIX_ENV: dev
-        run: mix deps.get && mix compile
-      - name: Guard reference host resolves siblings from Hex
-        working-directory: reference/host_app
-        run: bash ../../scripts/check_clean_baseline_hex_only.sh
-      - name: Run published reference-host trust journey
-        run: mix verify.reference_host.journey --host-root reference/host_app
+          DATABASE_URL: ecto://postgres:postgres@localhost/mailglass_generated_ecto_host_published_${{ github.run_id }}
+          MAILGLASS_PACKAGE_MODE: exact_hex
+          MAILGLASS_EXACT_CORE_VERSION: ${{ needs.cron-guard.outputs.version_core }}
+          MAILGLASS_EXACT_ADMIN_VERSION: ${{ needs.cron-guard.outputs.version_admin }}
+          MAILGLASS_EXACT_INBOUND_VERSION: ${{ needs.cron-guard.outputs.version_inbound }}
+          MAILGLASS_GENERATED_HOST_CHECKPOINT_OUT: ${{ github.workspace }}/tmp/published-adoption-evidence/generated-host-checkpoint.txt
+        run: |
+          set -euo pipefail
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          bash scripts/generated_ecto_host_proof.sh
+      - name: Execute exact-Hex trust journey
+        env:
+          HOST_ROOT: ${{ runner.temp }}/mailglass-published-host-${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          export MAILGLASS_REFERENCE_HOST_PACKAGE_MODE=prepublication
+          export MAILGLASS_CORE_WORKSPACE_EBIN="${HOST_ROOT}/_build/dev/lib/mailglass/ebin"
+          export MAILGLASS_INBOUND_WORKSPACE_EBIN="${HOST_ROOT}/_build/dev/lib/mailglass_inbound/ebin"
+          test -d "$MAILGLASS_CORE_WORKSPACE_EBIN"
+          test -d "$MAILGLASS_INBOUND_WORKSPACE_EBIN"
+          mix verify.reference_host.journey --host-root "${HOST_ROOT}"
       - name: Validate trust checkpoint contract
-        run: bash scripts/check_trust_runner_checkpoint.sh
-      - name: Upload trust-runner published artifact
+        run: |
+          set -euo pipefail
+          bash scripts/check_trust_runner_checkpoint.sh --require-completed
+          evidence_dir=tmp/published-adoption-evidence
+          mkdir -p "$evidence_dir"
+          cp tmp/mailglass_trust_runner/checkpoint.json "$evidence_dir/trust-runner-checkpoint.json"
+          test -s "$evidence_dir/generated-host-checkpoint.txt"
+          test -s "$evidence_dir/trust-runner-checkpoint.json"
+          (
+            cd "$evidence_dir"
+            shasum -a 256 generated-host-checkpoint.txt trust-runner-checkpoint.json > SHA256SUMS
+          )
+          [ "$(wc -l < "$evidence_dir/SHA256SUMS" | tr -d ' ')" -eq 2 ]
+      - name: Upload published adoption evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: trust-runner-published-${{ github.run_id }}
+          name: published-adoption-evidence-${{ github.run_id }}
           if-no-files-found: error
           retention-days: 90
-          path: tmp/mailglass_trust_runner/checkpoint.json
+          path: tmp/published-adoption-evidence
 
   retracted-check:
     name: Verify package not retracted
@@ -457,10 +587,14 @@ jobs:
     if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
     timeout-minutes: 5
     env:
-      VERSION: ${{ needs.cron-guard.outputs.version }}
+      VERSION_CORE: ${{ needs.cron-guard.outputs.version_core }}
+      VERSION_ADMIN: ${{ needs.cron-guard.outputs.version_admin }}
+      VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ needs.cron-guard.outputs.release_ref }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
@@ -468,36 +602,22 @@ jobs:
           version-type: strict
       - name: Check mailglass not retired
         run: |
-          if [ -z "${VERSION}" ]; then
-            echo "No version resolved; skipping."
-            exit 0
-          fi
-          INFO=$(mix hex.info mailglass "${VERSION}" 2>&1)
+          INFO=$(mix hex.info mailglass "${VERSION_CORE}" 2>&1)
           echo "${INFO}"
           if echo "${INFO}" | grep -F "Retired"; then
-            echo "Smoke failed: mailglass ${VERSION} is retired between publish and smoke."
+            echo "Smoke failed: mailglass ${VERSION_CORE} is retired between publish and smoke."
             exit 1
           fi
       - name: Check mailglass_admin not retired
         run: |
-          if [ -z "${VERSION}" ]; then
-            echo "No version resolved; skipping."
-            exit 0
-          fi
-          INFO=$(mix hex.info mailglass_admin "${VERSION}" 2>&1)
+          INFO=$(mix hex.info mailglass_admin "${VERSION_ADMIN}" 2>&1)
           echo "${INFO}"
           if echo "${INFO}" | grep -F "Retired"; then
-            echo "Smoke failed: mailglass_admin ${VERSION} is retired between publish and smoke."
+            echo "Smoke failed: mailglass_admin ${VERSION_ADMIN} is retired between publish and smoke."
             exit 1
           fi
       - name: Check mailglass_inbound not retracted
-        env:
-          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
         run: |
-          if [ -z "${VERSION_INBOUND}" ]; then
-            echo "No inbound version resolved; skipping."
-            exit 0
-          fi
           INFO=$(mix hex.info mailglass_inbound "${VERSION_INBOUND}" 2>&1)
           echo "${INFO}"
           if echo "${INFO}" | grep -F "Retired"; then
@@ -508,6 +628,10 @@ jobs:
   notify-on-failure:
     name: Open issue on smoke failure
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
     needs: [cron-guard, wait-for-index, wait-for-hexdocs, consumer-install, published-trust-journey, retracted-check]
     if: failure() && needs.cron-guard.outputs.should_run == 'true'
     continue-on-error: true
@@ -517,7 +641,7 @@ jobs:
           {
             echo "## post-publish-smoke failure"
             echo
-            echo "Post-publish smoke failed for v${{ needs.cron-guard.outputs.version }}."
+            echo "Post-publish smoke failed for v${{ needs.cron-guard.outputs.version_core }}."
             echo "Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Open or update post-publish-smoke failure issue
@@ -529,7 +653,7 @@ jobs:
             const repo = context.repo.repo;
             const label = "publish-smoke-failed";
             const issueTitle = "publish-smoke failure tracker";
-            const version = "${{ needs.cron-guard.outputs.version }}";
+            const version = "${{ needs.cron-guard.outputs.version_core }}";
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
             const body = [
               `post-publish-smoke failure detected for v${version}.`,
@@ -586,6 +710,10 @@ jobs:
   close-publish-smoke-tracker-on-success:
     name: Close issue on smoke success
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      issues: write
     needs: [cron-guard, wait-for-index, wait-for-hexdocs, consumer-install, published-trust-journey, retracted-check]
     if: >-
       ${{
@@ -606,9 +734,9 @@ jobs:
             const repo = context.repo.repo;
             const label = "publish-smoke-failed";
             const issueTitle = "publish-smoke failure tracker";
-            const version = "${{ needs.cron-guard.outputs.version }}";
+            const version = "${{ needs.cron-guard.outputs.version_core }}";
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
-            const artifactName = `trust-runner-published-${context.runId}`;
+            const artifactName = `published-adoption-evidence-${context.runId}`;
 
             const {data: openIssues} = await github.rest.issues.listForRepo({
               owner,

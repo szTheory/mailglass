@@ -75,23 +75,12 @@ defmodule Mailglass.Outbound do
     exports: [Delivery, Projector] ++ @oban_exports
 
   alias Mailglass.{
-    Clock,
-    Compliance,
-    Config,
-    Events,
     Message,
-    Renderer,
-    Repo,
-    Suppression,
-    RateLimiter,
-    Stream,
     Tenancy,
     Telemetry
   }
 
-  alias Mailglass.Outbound.{Delivery, Projector}
-  alias Mailglass.Tracking
-
+  alias Mailglass.Outbound.{Delivery, Dispatch, Persistence, Preflight, Projector, Routes}
   import Kernel, except: [send: 2]
 
   # =========================================================
@@ -254,12 +243,12 @@ defmodule Mailglass.Outbound do
   @spec dispatch_by_id(binary()) ::
           {:ok, Delivery.t()} | {:error, Mailglass.Error.t()}
   def dispatch_by_id(delivery_id) when is_binary(delivery_id) do
-    with {:ok, delivery} <- load_delivery(delivery_id),
-         {:ok, rendered} <- rehydrate_message(delivery),
+    with {:ok, delivery} <- Persistence.fetch_delivery(delivery_id),
+         {:ok, rendered} <- Persistence.rehydrate_message(delivery),
          prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
-         {:ok, adapter} <- resolve_persisted_adapter(delivery.adapter_ref),
-         {:ok, dispatch_result} <- call_adapter(prepared, adapter) do
-      case persist_dispatched_multi(delivery, dispatch_result, rendered) do
+         {:ok, adapter} <- Routes.resolve_persisted(delivery.adapter_ref),
+         {:ok, dispatch_result} <- Dispatch.call_adapter(prepared, adapter) do
+      case Persistence.persist_dispatched(delivery, dispatch_result) do
         {:ok, %{delivery: updated}} ->
           Projector.broadcast_delivery_updated(updated, :dispatched, %{
             tenant_id: updated.tenant_id,
@@ -268,12 +257,12 @@ defmodule Mailglass.Outbound do
 
           {:ok, updated}
 
-        {:error, _step, err, _changes} ->
-          {:error, to_error(err)}
+        {:error, error} ->
+          {:error, error}
       end
     else
       {:error, %{__exception__: true} = err} ->
-        persist_failed_by_id(delivery_id, err)
+        Persistence.persist_failed_by_id(delivery_id, err)
         {:error, err}
 
       other ->
@@ -286,26 +275,20 @@ defmodule Mailglass.Outbound do
   # =========================================================
 
   defp do_send(%Message{} = msg, opts) do
-    # Preflight (stages 0-5) — no DB writes yet
-    with :ok <- Tenancy.assert_stamped!(),
-         :ok <- Tracking.Guard.assert_safe!(msg),
-         :ok <- Suppression.check_before_send(msg),
-         :ok <- RateLimiter.check(msg),
-         :ok <- Stream.policy_check(msg),
-         {:ok, rendered} <- Renderer.render(msg) do
-      do_send_after_preflight(prepare_outbound_message(rendered), opts)
+    with {:ok, rendered} <- Preflight.run(msg) do
+      do_send_after_preflight(rendered, opts)
     end
   end
 
   # Called only after all preflight stages pass. Multi#1 happens here, so we
   # can correctly persist :failed status when the adapter call fails (T-3-05-07).
   defp do_send_after_preflight(%Message{} = rendered, opts) do
-    with {:ok, route} <- resolve_sync_route(rendered, opts),
-         {:ok, %{delivery: delivery}} <- persist_queued(rendered, route.adapter_ref),
+    with {:ok, route} <- Routes.resolve_sync(rendered, opts),
+         {:ok, %{delivery: delivery}} <- Persistence.persist_queued(rendered, route.adapter_ref),
          {:ok, dispatch_result} <-
-           call_adapter_or_persist_failure(delivery, rendered, route.adapter),
+           Dispatch.call_adapter_or_persist_failure(delivery, rendered, route.adapter),
          {:ok, %{delivery: updated}} <-
-           persist_dispatched_multi(delivery, dispatch_result, rendered) do
+           Persistence.persist_dispatched(delivery, dispatch_result) do
       Projector.broadcast_delivery_updated(updated, :dispatched, %{
         tenant_id: updated.tenant_id,
         delivery_id: updated.id,
@@ -317,29 +300,8 @@ defmodule Mailglass.Outbound do
       {:error, %{__exception__: true} = err} ->
         {:error, err}
 
-      {:error, _step, changeset_or_err, _changes} ->
-        {:error, to_error(changeset_or_err)}
-
       other ->
         other
-    end
-  end
-
-  # Calls the adapter; on failure writes Multi#2 with :failed status (T-3-05-07).
-  # Adapter call is outside any transaction.
-  defp call_adapter_or_persist_failure(%Delivery{} = delivery, %Message{} = rendered, adapter) do
-    case call_adapter(rendered, adapter) do
-      {:ok, _} = ok ->
-        ok
-
-      {:error, %{__exception__: true} = err} ->
-        persist_failed_by_id(delivery.id, err)
-        {:error, err}
-
-      {:error, other} ->
-        send_err = to_error(other)
-        persist_failed_by_id(delivery.id, send_err)
-        {:error, send_err}
     end
   end
 
@@ -348,139 +310,21 @@ defmodule Mailglass.Outbound do
   # =========================================================
 
   defp do_deliver_later(%Message{} = msg, opts) do
-    with :ok <- Tenancy.assert_stamped!(),
-         :ok <- Tracking.Guard.assert_safe!(msg),
-         :ok <- Suppression.check_before_send(msg),
-         :ok <- RateLimiter.check(msg),
-         :ok <- Stream.policy_check(msg),
-         {:ok, rendered} <- Renderer.render(msg),
-         prepared = prepare_outbound_message(rendered),
-         {:ok, adapter_ref} <- resolve_async_adapter_ref(prepared, opts) do
+    with {:ok, prepared} <- Preflight.run(msg),
+         {:ok, adapter_ref} <- Routes.resolve_async(prepared, opts) do
       enqueue_via_async_adapter(prepared, adapter_ref, opts)
     end
   end
 
   defp enqueue_via_async_adapter(%Message{} = rendered, adapter_ref, opts) do
-    async_adapter =
-      Keyword.get(opts, :async_adapter) ||
-        Application.get_env(:mailglass, :async_adapter, :oban)
+    case Dispatch.async_mode(opts) do
+      :oban ->
+        Persistence.enqueue_oban(rendered, adapter_ref)
 
-    cond do
-      async_adapter == :task_supervisor ->
-        enqueue_task_supervisor(rendered, adapter_ref, opts)
-
-      Mailglass.OptionalDeps.Oban.available?() ->
-        enqueue_oban(rendered, adapter_ref, opts)
-
-      true ->
-        enqueue_task_supervisor(rendered, adapter_ref, opts)
-    end
-  end
-
-  defp enqueue_oban(%Message{} = rendered, adapter_ref, _opts) do
-    ik = compute_idempotency_key(rendered)
-    tenant_id = rendered.tenant_id
-    delivery_id = delivery_id!(rendered)
-
-    attrs = base_delivery_attrs(rendered, ik, adapter_ref)
-
-    result =
-      Ecto.Multi.new()
-      |> Ecto.Multi.insert(
-        :delivery,
-        Delivery.changeset(%Delivery{id: delivery_id}, attrs),
-        Repo.multi_opts()
-      )
-      |> Events.append_multi(:event_queued, fn %{delivery: d} ->
-        %{
-          tenant_id: tenant_id,
-          delivery_id: d.id,
-          type: :queued,
-          occurred_at: Clock.utc_now(),
-          idempotency_key: ik,
-          normalized_payload: %{}
-        }
-      end)
-      |> Mailglass.OptionalDeps.Oban.insert(:job, fn %{delivery: d} ->
-        Mailglass.Outbound.Worker.new(%{
-          "delivery_id" => d.id,
-          "mailglass_tenant_id" => tenant_id
-        })
-      end)
-      |> Repo.multi()
-
-    case result do
-      {:ok, %{delivery: d}} ->
-        {:ok, %{d | status: :queued, last_event_type: :queued}}
-
-      {:error, _step, err, _} ->
-        {:error, to_error(err)}
-    end
-  end
-
-  defp enqueue_task_supervisor(%Message{} = rendered, adapter_ref, _opts) do
-    ik = compute_idempotency_key(rendered)
-    tenant_id = rendered.tenant_id
-    delivery_id = delivery_id!(rendered)
-    attrs = base_delivery_attrs(rendered, ik, adapter_ref)
-
-    multi =
-      Ecto.Multi.new()
-      |> Ecto.Multi.insert(
-        :delivery,
-        Delivery.changeset(%Delivery{id: delivery_id}, attrs),
-        Repo.multi_opts()
-      )
-      |> Events.append_multi(:event_queued, fn %{delivery: d} ->
-        %{
-          tenant_id: tenant_id,
-          delivery_id: d.id,
-          type: :queued,
-          occurred_at: Clock.utc_now(),
-          idempotency_key: ik,
-          normalized_payload: %{}
-        }
-      end)
-
-    case Repo.multi(multi) do
-      {:ok, %{delivery: d}} ->
-        # AsyncAdapter dispatch (-11). TaskSupervisor impl is prod default;
-        # Inline impl is test default. Tenancy re-stamp inside the closure works
-        # for both paths (-15) — Inline runs sync under caller, TaskSupervisor
-        # runs in fresh process; with_tenant/2 stamps the executing process
-        # either way.
-        Mailglass.Outbound.AsyncAdapter.dispatch(
-          fn ->
-            Mailglass.Tenancy.with_tenant(tenant_id, fn ->
-              try do
-                case dispatch_by_id(d.id) do
-                  {:ok, _} ->
-                    :ok
-
-                  {:error, err} ->
-                    require Logger
-
-                    Logger.warning(
-                      "[mailglass] Task.Supervisor dispatch failed: #{Exception.message(err)}"
-                    )
-                end
-              rescue
-                err ->
-                  require Logger
-
-                  Logger.warning(
-                    "[mailglass] Task.Supervisor dispatch raised: #{Exception.message(err)}"
-                  )
-              end
-            end)
-          end,
-          []
-        )
-
-        {:ok, %{d | status: :queued, last_event_type: :queued}}
-
-      {:error, _step, err, _} ->
-        {:error, to_error(err)}
+      :task_supervisor ->
+        with {:ok, delivery} <- Persistence.persist_task_queued(rendered, adapter_ref) do
+          Dispatch.enqueue_one(delivery, &dispatch_by_id/1)
+        end
     end
   end
 
@@ -491,789 +335,70 @@ defmodule Mailglass.Outbound do
   defp do_deliver_many(messages, opts) do
     {eligible, failed_preflight} =
       messages
-      |> Enum.map(&preflight_single/1)
+      |> Preflight.run_many()
       |> Enum.split_with(fn
-        {:ok, _msg} -> true
-        {:error, _err, _msg} -> false
+        {:ok, _index, _msg} -> true
+        {:error, _index, _err, _msg} -> false
       end)
 
-    eligible_messages = Enum.map(eligible, fn {:ok, msg} -> msg end)
+    eligible_messages = Enum.map(eligible, fn {:ok, index, msg} -> {index, msg} end)
 
     {routable, failed_routes} =
       eligible_messages
-      |> Enum.map(fn %Message{} = msg ->
-        case resolve_async_adapter_ref(msg, opts) do
-          {:ok, adapter_ref} -> {:ok, {msg, adapter_ref}}
-          {:error, err} -> {:error, err, msg}
+      |> Enum.map(fn {index, %Message{} = msg} ->
+        case Routes.resolve_async(msg, opts) do
+          {:ok, adapter_ref} -> {:ok, index, {msg, adapter_ref}}
+          {:error, err} -> {:error, index, err, msg}
         end
       end)
       |> Enum.split_with(fn
-        {:ok, _} -> true
-        {:error, _err, _msg} -> false
+        {:ok, _index, _route} -> true
+        {:error, _index, _err, _msg} -> false
       end)
 
     failed_deliveries =
-      Enum.map(failed_preflight ++ failed_routes, fn {:error, err, msg} ->
-        build_failed_delivery(msg, err)
+      Enum.map(failed_preflight ++ failed_routes, fn {:error, index, err, msg} ->
+        {index, Persistence.build_failed_delivery(msg, err)}
       end)
 
-    case insert_batch(Enum.map(routable, fn {:ok, route} -> route end)) do
-      {:ok, inserted_deliveries} ->
+    routes = Enum.map(routable, fn {:ok, _index, route} -> route end)
+    route_indexes = Enum.map(routable, fn {:ok, index, _route} -> index end)
+
+    case Persistence.insert_batch(routes, Dispatch.async_mode(opts)) do
+      {:ok, inserted_deliveries, :oban} ->
+        {:ok, restore_batch_order(route_indexes, inserted_deliveries, failed_deliveries)}
+
+      {:ok, inserted_deliveries, :task_supervisor} ->
         # I-13: Only re-enqueue :queued rows. On replay, some rows may already
         # be :sent/:failed — do NOT re-enqueue them (duplicate send risk).
         {fresh, _already_settled} =
           Enum.split_with(inserted_deliveries, fn d -> d.status == :queued end)
 
-        enqueue_batch_jobs(fresh)
-        {:ok, inserted_deliveries ++ failed_deliveries}
+        with {:ok, dispatch_updates} <- Dispatch.enqueue_many(fresh, &dispatch_by_id/1) do
+          deliveries =
+            Enum.map(inserted_deliveries, fn delivery ->
+              Map.get(dispatch_updates, delivery.id, delivery)
+            end)
+
+          {:ok, restore_batch_order(route_indexes, deliveries, failed_deliveries)}
+        end
 
       {:error, _} = err ->
         err
     end
   end
 
-  defp preflight_single(%Message{} = msg) do
-    with :ok <- Tracking.Guard.assert_safe!(msg),
-         :ok <- Suppression.check_before_send(msg),
-         :ok <- RateLimiter.check(msg),
-         :ok <- Stream.policy_check(msg),
-         {:ok, rendered} <- Renderer.render(msg) do
-      {:ok, prepare_outbound_message(rendered)}
-    else
-      {:error, err} -> {:error, err, msg}
-      {:error, _step, err, _} -> {:error, to_error(err), msg}
-    end
-  end
-
-  defp insert_batch([]), do: {:ok, []}
-
-  defp insert_batch(messages_with_refs) when is_list(messages_with_refs) do
-    now = Clock.utc_now()
-
-    rows =
-      Enum.map(messages_with_refs, fn {%Message{} = m, adapter_ref} ->
-        ik = compute_idempotency_key(m)
-
-        base_delivery_attrs(m, ik, adapter_ref)
-        |> Map.put(:id, delivery_id!(m))
-        |> Map.put(:inserted_at, now)
-        |> Map.put(:updated_at, now)
-      end)
-
-    result =
-      Ecto.Multi.new()
-      |> Ecto.Multi.insert_all(
-        :deliveries,
-        Delivery,
-        rows,
-        Repo.multi_opts(
-          on_conflict: :nothing,
-          conflict_target:
-            {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
-          returning: true
-        )
-      )
-      |> Ecto.Multi.run(:events, fn repo, %{deliveries: {_count, inserted}} ->
-        event_rows =
-          Enum.map(inserted, fn d ->
-            %{
-              id: Ecto.UUID.generate(),
-              tenant_id: d.tenant_id,
-              delivery_id: d.id,
-              type: :queued,
-              occurred_at: now,
-              idempotency_key: d.idempotency_key,
-              normalized_payload: %{},
-              metadata: %{},
-              needs_reconciliation: false,
-              inserted_at: now
-            }
-          end)
-
-        {n, _} =
-          repo.insert_all(
-            Mailglass.Events.Event,
-            event_rows,
-            Repo.multi_opts(
-              on_conflict: :nothing,
-              conflict_target:
-                {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
-              returning: false
-            )
-          )
-
-        {:ok, n}
-      end)
-      |> Repo.multi()
-
-    case result do
-      {:ok, %{deliveries: {_count, _inserted_rows}}} ->
-        # Re-fetch all rows by idempotency_key (ON CONFLICT DO NOTHING doesn't return
-        # conflicting rows, so we need a SELECT to get the full result set on replay).
-        import Ecto.Query
-        idempotency_keys = Enum.map(rows, & &1.idempotency_key) |> Enum.reject(&is_nil/1)
-
-        all_rows =
-          if idempotency_keys == [] do
-            []
-          else
-            query = from(d in Delivery, where: d.idempotency_key in ^idempotency_keys)
-            Repo.all(Tenancy.scope(query))
-          end
-
-        {:ok, all_rows}
-
-      {:error, _step, err, _} ->
-        {:error, to_error(err)}
-    end
-  end
-
-  defp enqueue_batch_jobs(deliveries) when is_list(deliveries) do
-    async_adapter = Application.get_env(:mailglass, :async_adapter, :oban)
-    use_oban = async_adapter != :task_supervisor and Mailglass.OptionalDeps.Oban.available?()
-
-    if use_oban do
-      jobs =
-        Enum.map(deliveries, fn %Delivery{id: id, tenant_id: t} ->
-          Mailglass.Outbound.Worker.new(%{
-            "delivery_id" => id,
-            "mailglass_tenant_id" => t
-          })
-        end)
-
-      _ = Mailglass.OptionalDeps.Oban.insert_all(jobs)
-      :ok
-    else
-      Enum.each(deliveries, fn %Delivery{id: id, tenant_id: t} ->
-        # AsyncAdapter dispatch (-11). TaskSupervisor (prod) | Inline (test).
-        Mailglass.Outbound.AsyncAdapter.dispatch(
-          fn ->
-            Mailglass.Tenancy.with_tenant(t, fn ->
-              try do
-                case dispatch_by_id(id) do
-                  {:ok, _} ->
-                    :ok
-
-                  {:error, err} ->
-                    require Logger
-
-                    Logger.warning(
-                      "[mailglass] Task.Supervisor batch dispatch failed for #{id}: #{Exception.message(err)}"
-                    )
-                end
-              rescue
-                err ->
-                  require Logger
-
-                  Logger.warning(
-                    "[mailglass] Task.Supervisor batch dispatch raised for #{id}: #{Exception.message(err)}"
-                  )
-              end
-            end)
-          end,
-          []
-        )
-      end)
-
-      :ok
-    end
-  end
-
-  defp build_failed_delivery(%Message{} = msg, err) do
-    # NOT persisted — synthetic result-list entry for adopter observability.
-    # I-17: top-level :status + :last_error fields (I-01 from Task 1).
-    %Delivery{
-      id: Ecto.UUID.generate(),
-      tenant_id: msg.tenant_id,
-      mailable: inspect(msg.mailable),
-      stream: msg.stream,
-      recipient: primary_recipient(msg),
-      status: :failed,
-      last_event_type: :failed,
-      last_error: serialize_error(err),
-      last_event_at: Clock.utc_now(),
-      metadata: %{}
-    }
-  end
-
-  # =========================================================
-  # Internal — persistence helpers
-  # =========================================================
-
-  defp persist_queued(%Message{} = rendered, adapter_ref) do
-    ik = compute_idempotency_key(rendered)
-    tenant_id = rendered.tenant_id
-    delivery_id = delivery_id!(rendered)
-
-    # I-01: Multi#1 writes status: :queued (public API column) AND
-    # last_event_type: :queued (ledger projection).
-    Telemetry.persist_outbound_multi_span(
-      %{step_name: :persist_queued, tenant_id: tenant_id},
-      fn ->
-        Repo.multi(
-          Ecto.Multi.new()
-          |> Ecto.Multi.insert(
-            :delivery,
-            Delivery.changeset(%Delivery{id: delivery_id}, %{
-              tenant_id: tenant_id,
-              mailable: inspect(rendered.mailable),
-              stream: rendered.stream,
-              recipient: primary_recipient(rendered),
-              recipient_domain: recipient_domain(rendered),
-              adapter_ref: adapter_ref,
-              status: :queued,
-              last_event_type: :queued,
-              last_event_at: Clock.utc_now(),
-              metadata: rendered.metadata || %{},
-              idempotency_key: ik
-            }),
-            Repo.multi_opts()
-          )
-          |> Events.append_multi(:event_queued, fn %{delivery: d} ->
-            %{
-              tenant_id: tenant_id,
-              delivery_id: d.id,
-              type: :queued,
-              occurred_at: Clock.utc_now(),
-              idempotency_key: ik,
-              normalized_payload: %{}
-            }
-          end)
-        )
-      end
-    )
-  end
-
-  defp call_adapter(%Message{} = rendered, {adapter_mod, adapter_opts}) do
-    Telemetry.dispatch_span(
-      %{
-        tenant_id: rendered.tenant_id,
-        mailable: rendered.mailable,
-        provider: adapter_mod
-      },
-      fn ->
-        adapter_mod.deliver(rendered, adapter_opts)
-      end
-    )
-  end
-
-  defp persist_dispatched_multi(
-         %Delivery{} = delivery,
-         %{message_id: pmid, provider_response: _resp},
-         _rendered
-       ) do
-    event_occurred_at = Clock.utc_now()
-
-    event_attrs = %{
-      tenant_id: delivery.tenant_id,
-      delivery_id: delivery.id,
-      type: :dispatched,
-      occurred_at: event_occurred_at,
-      normalized_payload: %{provider_message_id: pmid}
-    }
-
-    # Build a stubbed Event to feed update_projections/2 ( sig takes an Event struct).
-    event_for_projection = %Mailglass.Events.Event{
-      tenant_id: delivery.tenant_id,
-      delivery_id: delivery.id,
-      type: :dispatched,
-      occurred_at: event_occurred_at
-    }
-
-    # I-01: Multi#2 sets BOTH :status (public API snapshot) AND
-    # :last_event_type (projection). :status is what adopters
-    # pattern-match on per ROADMAP success criterion 1.
-    Telemetry.persist_outbound_multi_span(
-      %{step_name: :persist_dispatched, tenant_id: delivery.tenant_id},
-      fn ->
-        Repo.multi(
-          Ecto.Multi.new()
-          |> Ecto.Multi.update(
-            :delivery,
-            Projector.update_projections(delivery, event_for_projection)
-            |> Ecto.Changeset.change(%{
-              status: :sent,
-              last_event_type: :dispatched,
-              provider_message_id: pmid,
-              dispatched_at: event_occurred_at
-            }),
-            Repo.multi_opts()
-          )
-          |> Events.append_multi(:event_dispatched, event_attrs)
-        )
-      end
-    )
-  end
-
-  defp persist_failed_by_id(delivery_id, %{__exception__: true} = err) do
-    case load_delivery(delivery_id) do
-      {:ok, delivery} ->
-        event_occurred_at = Clock.utc_now()
-
-        event = %Mailglass.Events.Event{
-          tenant_id: delivery.tenant_id,
-          delivery_id: delivery.id,
-          type: :failed,
-          occurred_at: event_occurred_at
-        }
-
-        Repo.multi(
-          Ecto.Multi.new()
-          |> Ecto.Multi.update(
-            :delivery,
-            Projector.update_projections(delivery, event)
-            |> Ecto.Changeset.change(%{
-              status: :failed,
-              last_error: serialize_error(err)
-            }),
-            Repo.multi_opts()
-          )
-          |> Events.append_multi(:event_failed, %{
-            tenant_id: delivery.tenant_id,
-            delivery_id: delivery.id,
-            type: :failed,
-            occurred_at: event_occurred_at,
-            normalized_payload: %{error_type: err.__struct__}
-          })
-        )
-
-      {:error, _} ->
-        # Delivery not found — cannot persist failure, log and move on
-        require Logger
-        Logger.warning("[mailglass] persist_failed_by_id: delivery #{delivery_id} not found")
-        :ok
-    end
-  end
-
-  # =========================================================
-  # Internal — error helpers
-  # =========================================================
-
-  # I-11: Serialize any %Mailglass.Error{} (or generic Exception) into a
-  # plain map suitable for the :last_error :map column. Shape: %{type: atom,
-  # message: binary, module: binary}. Adopters pattern-match on :type, never
-  # on :message string ( contract).
-  defp serialize_error(%{__exception__: true, __struct__: mod} = err) do
-    base = %{module: Atom.to_string(mod), message: Exception.message(err)}
-
-    case err do
-      %{type: t} when is_atom(t) -> Map.put(base, :type, t)
-      _ -> base
-    end
-  end
-
-  defp to_error(%{__exception__: true} = e), do: e
-
-  defp to_error(%Ecto.Changeset{} = cs),
-    do:
-      Mailglass.SendError.new(:adapter_failure,
-        context: %{reason_class: :persistence_failed, changeset: inspect(cs.errors)}
-      )
-
-  defp to_error(other),
-    do: Mailglass.SendError.new(:adapter_failure, context: %{wrapped: inspect(other)})
-
-  # =========================================================
-  # Internal — message helpers
-  # =========================================================
-
-  defp load_delivery(id) do
-    import Ecto.Query
-
-    query =
-      from(d in Delivery,
-        where: d.id == ^id,
-        limit: 1
-      )
-
-    case Repo.one(Tenancy.scope(query)) do
-      nil ->
-        {:error,
-         Mailglass.SendError.new(:adapter_failure,
-           context: %{reason_class: :delivery_not_found}
-         )}
-
-      %Delivery{} = d ->
-        {:ok, d}
-    end
-  end
-
-  defp rehydrate_message(%Delivery{} = delivery) do
-    # In the async path, the worker loads delivery by id. The rendered bytes
-    # are stored in delivery.metadata (rendered_html, rendered_text, subject)
-    # by base_delivery_attrs/2 at enqueue time. Reconstruct a minimal
-    # %Message{} sufficient for the adapter call.
-    #
-    # I-11: Use String.to_existing_atom/1 guarded by Code.ensure_loaded/1.
-    # If the mailable module was unloaded since dispatch, fail cleanly.
-    case delivery.mailable do
-      nil ->
-        {:error,
-         Mailglass.SendError.new(:adapter_failure,
-           context: %{
-             reason_class: :mailable_unresolvable,
-             delivery_id: delivery.id,
-             why: :nil_mailable
-           }
-         )}
-
-      mod_str when is_binary(mod_str) ->
-        # ME-03: Both resolution paths use String.to_existing_atom/1.
-        # String.to_atom/1 on a DB-sourced value is an atom-table exhaustion vector (T-3-12-01).
-        # Primary path: try "Elixir." <> mod_str (the canonical Elixir module atom form).
-        # Fallback path: try mod_str bare (for modules stored without the Elixir. prefix).
-        try do
-          mod_atom = String.to_existing_atom("Elixir." <> mod_str)
-
-          if Code.ensure_loaded?(mod_atom) do
-            {:ok, build_rehydrated_message(delivery, mod_atom)}
-          else
-            # Atom exists in atom table but module not loaded — try bare mod_str path.
-            try do
-              mod = String.to_existing_atom(mod_str)
-              {:ok, build_rehydrated_message(delivery, mod)}
-            rescue
-              ArgumentError ->
-                {:error,
-                 Mailglass.SendError.new(:adapter_failure,
-                   context: %{
-                     reason_class: :mailable_unresolvable,
-                     delivery_id: delivery.id,
-                     mailable: mod_str,
-                     why: :module_not_loaded
-                   }
-                 )}
-            end
-          end
-        rescue
-          ArgumentError ->
-            # "Elixir." <> mod_str atom not in atom table — try the bare mod_str path
-            # (e.g. "Mailglass.FakeFixtures.TestMailer" stored without Elixir. prefix).
-            try do
-              mod = String.to_existing_atom(mod_str)
-              {:ok, build_rehydrated_message(delivery, mod)}
-            rescue
-              ArgumentError ->
-                {:error,
-                 Mailglass.SendError.new(:adapter_failure,
-                   context: %{
-                     reason_class: :mailable_unresolvable,
-                     delivery_id: delivery.id,
-                     mailable: mod_str,
-                     why: :atom_not_found
-                   }
-                 )}
-            end
-        end
-    end
-  end
-
-  # Reconstruct a minimal %Message{} from persisted delivery metadata.
-  # Extracted to avoid duplicating Swoosh.Email assembly across both
-  # rehydration paths (ME-03 restructure).
-  defp build_rehydrated_message(%Delivery{} = delivery, mod_atom) do
-    metadata = rehydrated_metadata(delivery.metadata || %{})
-
-    email =
-      Swoosh.Email.new()
-      |> Swoosh.Email.to(delivery.recipient)
-      |> Swoosh.Email.subject(get_in(delivery.metadata, ["subject"]) || "")
-      |> Swoosh.Email.html_body(get_in(delivery.metadata, ["rendered_html"]))
-      |> Swoosh.Email.text_body(get_in(delivery.metadata, ["rendered_text"]))
-      |> put_rehydrated_headers(Map.get(delivery.metadata || %{}, "headers", %{}))
-
-    %Message{
-      swoosh_email: email,
-      mailable: mod_atom,
-      tenant_id: delivery.tenant_id,
-      stream: delivery.stream,
-      metadata: metadata
-    }
-  end
-
-  defp resolve_sync_route(%Message{} = rendered, opts) do
-    case Keyword.fetch(opts, :adapter) do
-      {:ok, adapter_override} ->
-        with {:ok, adapter} <- normalize_runtime_adapter(adapter_override) do
-          {:ok,
-           %{
-             adapter: adapter,
-             adapter_ref: persisted_adapter_ref_for_runtime_adapter(adapter)
-           }}
-        end
-
-      :error ->
-        case Keyword.fetch(opts, :adapter_ref) do
-          {:ok, adapter_ref} ->
-            build_named_route(adapter_ref)
-
-          :error ->
-            resolve_tenancy_or_default_route(rendered, :sync)
-        end
-    end
-  end
-
-  defp resolve_async_adapter_ref(%Message{} = rendered, opts) do
-    case Keyword.fetch(opts, :adapter) do
-      {:ok, adapter_override} ->
-        with {:ok, adapter} <- normalize_runtime_adapter(adapter_override) do
-          case persisted_adapter_ref_for_runtime_adapter(adapter) do
-            nil ->
-              {:error,
-               Mailglass.SendError.new(:adapter_failure,
-                 context: %{reason_class: :queued_adapter_override_not_persistable}
-               )}
-
-            adapter_ref ->
-              {:ok, adapter_ref}
-          end
-        end
-
-      :error ->
-        case Keyword.fetch(opts, :adapter_ref) do
-          {:ok, adapter_ref} ->
-            with {:ok, _adapter} <- safe_resolve_named_adapter(adapter_ref) do
-              {:ok, persisted_adapter_ref(adapter_ref)}
-            end
-
-          :error ->
-            case resolve_tenancy_outcome(rendered, :async) do
-              :default ->
-                {:ok, Delivery.default_adapter_ref()}
-
-              {:ok, adapter_ref} ->
-                with {:ok, _adapter} <- safe_resolve_named_adapter(adapter_ref) do
-                  {:ok, persisted_adapter_ref(adapter_ref)}
-                end
-
-              {:error, err} ->
-                {:error, err}
-            end
-        end
-    end
-  end
-
-  defp resolve_tenancy_or_default_route(%Message{} = rendered, mode) do
-    case resolve_tenancy_outcome(rendered, mode) do
-      :default ->
-        with {:ok, adapter} <- safe_default_adapter() do
-          {:ok, %{adapter: adapter, adapter_ref: Delivery.default_adapter_ref()}}
-        end
-
-      {:ok, adapter_ref} ->
-        build_named_route(adapter_ref)
-
-      {:error, err} ->
-        {:error, err}
-    end
-  end
-
-  defp resolve_tenancy_outcome(%Message{} = rendered, mode) do
-    context = %{tenant_id: rendered.tenant_id, message: rendered, mode: mode}
-
-    case Tenancy.resolve_outbound_adapter_ref(context) do
-      :default ->
-        :default
-
-      {:ok, adapter_ref} when is_atom(adapter_ref) or is_binary(adapter_ref) ->
-        {:ok, adapter_ref}
-
-      other ->
-        {:error,
-         Mailglass.SendError.new(:adapter_failure,
-           context: %{
-             reason_class: :invalid_adapter_ref_callback,
-             returned: inspect(other)
-           }
-         )}
-    end
-  end
-
-  defp build_named_route(adapter_ref) do
-    with {:ok, adapter} <- safe_resolve_named_adapter(adapter_ref) do
-      {:ok, %{adapter: adapter, adapter_ref: persisted_adapter_ref(adapter_ref)}}
-    end
-  end
-
-  defp resolve_persisted_adapter(nil), do: safe_default_adapter()
-
-  defp resolve_persisted_adapter(adapter_ref) do
-    if adapter_ref == Delivery.default_adapter_ref() do
-      safe_default_adapter()
-    else
-      safe_resolve_named_adapter(adapter_ref)
-    end
-  end
-
-  defp safe_default_adapter do
-    {:ok, Config.default_adapter()}
-  rescue
-    err in [Mailglass.ConfigError, NimbleOptions.ValidationError] ->
-      {:error, normalize_adapter_config_error(:adapter, nil, err)}
-  end
-
-  defp safe_resolve_named_adapter(adapter_ref) do
-    {:ok, Config.resolve_adapter_ref(adapter_ref)}
-  rescue
-    err in [Mailglass.ConfigError, NimbleOptions.ValidationError] ->
-      {:error, normalize_adapter_config_error(:adapters, adapter_ref, err)}
-  end
-
-  defp normalize_runtime_adapter(adapter) do
-    case adapter do
-      mod when is_atom(mod) ->
-        {:ok, {mod, []}}
-
-      {mod, opts} when is_atom(mod) and is_list(opts) ->
-        if Keyword.keyword?(opts) do
-          {:ok, {mod, opts}}
-        else
-          {:error, Mailglass.ConfigError.new(:invalid, context: %{key: :adapter})}
-        end
-
-      _ ->
-        {:error, Mailglass.ConfigError.new(:invalid, context: %{key: :adapter})}
-    end
-  end
-
-  defp persisted_adapter_ref_for_runtime_adapter(adapter) do
-    cond do
-      default_adapter_matches?(adapter) ->
-        Delivery.default_adapter_ref()
-
-      named_ref = matching_named_adapter_ref(adapter) ->
-        named_ref
-
-      true ->
-        nil
-    end
-  end
-
-  defp default_adapter_matches?(adapter) do
-    case safe_default_adapter() do
-      {:ok, default_adapter} -> default_adapter == adapter
-      {:error, _err} -> false
-    end
-  end
-
-  defp matching_named_adapter_ref(adapter) do
-    try do
-      Config.adapters()
-      |> Enum.find_value(fn {registered_ref, registered_adapter} ->
-        if registered_adapter == adapter, do: persisted_adapter_ref(registered_ref)
-      end)
-    rescue
-      _ -> nil
-    end
-  end
-
-  defp persisted_adapter_ref(adapter_ref) when is_atom(adapter_ref), do: Atom.to_string(adapter_ref)
-  defp persisted_adapter_ref(adapter_ref) when is_binary(adapter_ref), do: adapter_ref
-
-  defp normalize_adapter_config_error(_key, _adapter_ref, %Mailglass.ConfigError{} = err), do: err
-
-  defp normalize_adapter_config_error(key, adapter_ref, %NimbleOptions.ValidationError{} = err) do
-    Mailglass.ConfigError.new(:invalid,
-      context: %{
-        key: key,
-        adapter_ref: adapter_ref,
-        reason: Exception.message(err)
-      }
-    )
+  defp restore_batch_order(route_indexes, deliveries, failed_deliveries) do
+    route_indexes
+    |> Enum.zip(deliveries)
+    |> Kernel.++(failed_deliveries)
+    |> Enum.sort_by(&elem(&1, 0))
+    |> Enum.map(&elem(&1, 1))
   end
 
   defp metadata_for(%Message{} = msg) do
     %{tenant_id: msg.tenant_id, mailable: msg.mailable, stream: msg.stream}
   end
-
-  defp primary_recipient(%Message{swoosh_email: %Swoosh.Email{to: [{_, addr} | _]}}),
-    do: String.downcase(addr)
-
-  defp primary_recipient(_), do: ""
-
-  defp recipient_domain(msg) do
-    case String.split(primary_recipient(msg), "@", parts: 2) do
-      [_, d] -> String.downcase(d)
-      _ -> ""
-    end
-  end
-
-  defp compute_idempotency_key(%Message{} = msg) do
-    tenant_id = msg.tenant_id || ""
-    mailable = inspect(msg.mailable)
-    recipient = primary_recipient(msg)
-
-    content_hash =
-      :crypto.hash(:sha256, [
-        msg.swoosh_email.text_body || "",
-        msg.swoosh_email.html_body || ""
-      ])
-      |> Base.encode16(case: :lower)
-
-    :crypto.hash(:sha256, [tenant_id, "|", mailable, "|", recipient, "|", content_hash])
-    |> Base.encode16(case: :lower)
-  end
-
-  defp base_delivery_attrs(%Message{} = rendered, ik, adapter_ref) do
-    %{
-      tenant_id: rendered.tenant_id,
-      mailable: inspect(rendered.mailable),
-      stream: rendered.stream,
-      recipient: primary_recipient(rendered),
-      recipient_domain: recipient_domain(rendered),
-      adapter_ref: adapter_ref,
-      status: :queued,
-      last_event_type: :queued,
-      last_event_at: Clock.utc_now(),
-      metadata:
-        Map.merge(rendered.metadata || %{}, %{
-          rendered_html: rendered.swoosh_email.html_body,
-          rendered_text: rendered.swoosh_email.text_body,
-          subject: rendered.swoosh_email.subject,
-          headers: rendered.swoosh_email.headers || %{}
-        }),
-      idempotency_key: ik
-    }
-  end
-
-  defp prepare_outbound_message(%Message{} = rendered) do
-    delivery_id = existing_delivery_id(rendered) || Ecto.UUID.generate()
-
-    rendered
-    |> Message.put_metadata(:delivery_id, delivery_id)
-    |> Compliance.apply_outbound_headers()
-    |> Tracking.rewrite_if_enabled()
-  end
-
-  defp delivery_id!(%Message{} = rendered) do
-    existing_delivery_id(rendered) ||
-      raise ArgumentError, "delivery_id missing from message metadata before persistence"
-  end
-
-  defp existing_delivery_id(%Message{metadata: metadata}) when is_map(metadata) do
-    metadata[:delivery_id] || metadata["delivery_id"]
-  end
-
-  defp existing_delivery_id(%Message{}), do: nil
-
-  defp rehydrated_metadata(metadata) when is_map(metadata) do
-    case Map.get(metadata, "delivery_id") do
-      delivery_id when is_binary(delivery_id) ->
-        Map.put_new(metadata, :delivery_id, delivery_id)
-
-      _ ->
-        metadata
-    end
-  end
-
-  defp put_rehydrated_headers(%Swoosh.Email{} = email, headers)
-       when is_map(headers) or is_list(headers) do
-    Enum.reduce(headers, email, fn {key, value}, acc ->
-      Swoosh.Email.header(acc, key, value)
-    end)
-  end
-
-  defp put_rehydrated_headers(%Swoosh.Email{} = email, _headers), do: email
 
   # ME-05: Safe provider tag extraction from adapter dispatch result.
   # provider_response is adapter-defined (term()) — must not assume map shape.

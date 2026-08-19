@@ -1,0 +1,8 @@
+{
+  "required_commands": [
+    "mix test test/scripts --warnings-as-errors",
+    "mix verify.reference_host.journey",
+    "mix test test/scripts/release_trigger_recovery_test.exs --warnings-as-errors"
+  ],
+  "note": "External workflow and release contracts are required critical-path checks, not coverage-percentage inputs."
+}
