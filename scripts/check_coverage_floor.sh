@@ -8,7 +8,7 @@ expected_toolchain="${3:?exact Elixir/OTP toolchain required}"
 test -r "$baseline" || { echo "coverage baseline missing: $baseline" >&2; exit 1; }
 test -r "$report" || { echo "coverage report missing: $report" >&2; exit 1; }
 
-actual="$(elixir -e 'IO.write(System.version() <> "/" <> to_string(:erlang.system_info(:otp_release))')"
+actual="$(elixir -e 'IO.write(System.version() <> "/" <> to_string(:erlang.system_info(:otp_release)))')"
 test "$actual" = "$expected_toolchain" || {
   echo "coverage toolchain mismatch: expected $expected_toolchain, got $actual" >&2
   exit 1
