@@ -92,7 +92,7 @@ jobs:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     steps:
-      - name: Checkout
+      - name: Checkout immutable release candidate
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           # Rehearsed fallback contract: checkout the known release tag when
@@ -100,14 +100,25 @@ jobs:
           # commit, not a later `main` SHA.
           ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
           fetch-depth: 0
+      - name: Checkout protected main release controls
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # The caller-selected candidate is data, never executable policy.
+          # Every authorization, digest, tag, and source-version decision below
+          # executes from this separate protected-main checkout.
+          ref: refs/heads/main
+          fetch-depth: 0
+          path: trusted-control
       - name: Set up OTP + Elixir for policy
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
-          version-file: .tool-versions
+          version-file: trusted-control/.tool-versions
           version-type: strict
       - name: Install deps for policy
+        working-directory: trusted-control
         run: mix deps.get
       - name: Compile policy runtime
+        working-directory: trusted-control
         run: mix compile
       - name: Validate automated release target
         id: release-target
@@ -119,8 +130,22 @@ jobs:
           PACKAGE: ${{ github.event.inputs.package }}
         run: |
           set -euo pipefail
-          target=.planning/release-target.json
+          candidate_root="$GITHUB_WORKSPACE"
+          control_root="$GITHUB_WORKSPACE/trusted-control"
+          control_target="$control_root/.planning/release-target.json"
           digest="${CANDIDATE_DIGEST:-}"
+
+          # Fail closed if protected main advanced while the control checkout
+          # was materialized. A retry gets one coherent policy/ledger snapshot.
+          git -C "$control_root" fetch --no-tags origin main:refs/remotes/origin/main
+          [ "$(git -C "$control_root" rev-parse HEAD)" = "$(git -C "$control_root" rev-parse origin/main)" ]
+
+          run_policy() {
+            (
+              cd "$control_root"
+              mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "$@"
+            )
+          }
 
           # Release events and legacy digest-free dispatches are deliberately
           # inert. A requested rehearsal without a candidate is an error rather
@@ -147,10 +172,8 @@ jobs:
           # no authorization signal and therefore cannot enter live jobs.
           if [ "${EVENT_NAME:-}" = workflow_dispatch ] && [ "${DRY_RUN:-}" = true ] && [ -n "$digest" ]; then
             policy=$(mktemp)
-            captured_target=$(mktemp)
-            git fetch --no-tags origin main:refs/remotes/origin/main
-            git show origin/main:.planning/release-target.json > "$captured_target"
-            mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-captured-dispatch "$captured_target" "$digest" > "$policy"
+            captured_target="$control_target"
+            run_policy validate-captured-dispatch "$captured_target" "$digest" > "$policy"
             candidate_digest=$(awk -F= '$1 == "candidate_digest" {print $2}' "$policy")
             proposal_head=$(awk -F= '$1 == "proposal_head" {print $2}' "$policy")
             content_digest=$(awk -F= '$1 == "content_digest" {print $2}' "$policy")
@@ -158,31 +181,36 @@ jobs:
             admin=$(awk -F= '$1 == "admin" {print $2}' "$policy")
             inbound=$(awk -F= '$1 == "inbound" {print $2}' "$policy")
             [ "$candidate_digest" = "$digest" ]
-            [ "$(git rev-parse HEAD)" = "$proposal_head" ]
-            actual_digest=$(scripts/release_policy_content_digest.sh)
+            [ "$(git -C "$candidate_root" rev-parse HEAD)" = "$proposal_head" ]
+            actual_digest=$("$control_root/scripts/release_policy_content_digest.sh" --repo "$candidate_root")
             [ "$actual_digest" = "$content_digest" ]
             for version in "$core" "$admin" "$inbound"; do [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; done
             [ "$core" = "$admin" ]
-            printf 'active=false\nauthorized=false\npretag=true\ncandidate_digest=%s\ncore=%s\nadmin=%s\ninbound=%s\n' "$digest" "$core" "$admin" "$inbound" >> "$GITHUB_OUTPUT"
+            proposal_versions=$(mktemp)
+            "$control_root/scripts/release_policy_validate_target.sh" "$captured_target" "mailglass-v${core}" "$candidate_root" > "$proposal_versions"
+            grep -Fqx "core=$core" "$proposal_versions"
+            grep -Fqx "admin=$admin" "$proposal_versions"
+            grep -Fqx "inbound=$inbound" "$proposal_versions"
+            printf 'active=false\nauthorized=false\npretag=true\ncandidate_digest=%s\ntag_sha=%s\ncore=%s\nadmin=%s\ninbound=%s\n' "$digest" "$proposal_head" "$core" "$admin" "$inbound" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           policy=$(mktemp)
-          control_target=$(mktemp)
-          git fetch --no-tags origin main:refs/remotes/origin/main
-          git show origin/main:.planning/release-target.json > "$control_target"
-          cmp -s "$target" "$control_target"
-          if mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-protected-dispatch "$control_target" "$digest" > "$policy"; then
+          cmp -s "$candidate_root/.planning/release-target.json" "$control_target"
+          if run_policy validate-protected-dispatch "$control_target" "$digest" > "$policy"; then
             content_digest=$(awk -F= '$1 == "content_digest" {print $2}' "$policy")
             [[ "$content_digest" =~ ^[0-9a-f]{64}$ ]]
-            tag_sha=$(git rev-parse "${RELEASE_REF}^{commit}")
+            tag_sha=$(git -C "$candidate_root" rev-parse "${RELEASE_REF}^{commit}")
             [[ "$tag_sha" =~ ^[0-9a-f]{40}$ ]]
-            [ "$(git rev-parse HEAD)" = "$tag_sha" ]
-            while IFS= read -r expected_tag; do
+            [ "$(git -C "$candidate_root" rev-parse HEAD)" = "$tag_sha" ]
+            expected_tags_text=$("$control_root/scripts/release_policy_expected_tags.sh" "$candidate_root/.release-please-manifest.json" "$control_target")
+            mapfile -t expected_tags <<<"$expected_tags_text"
+            [ "${#expected_tags[@]}" -eq 3 ]
+            for expected_tag in "${expected_tags[@]}"; do
               [ -n "$expected_tag" ]
-              [ "$(git rev-parse "refs/tags/${expected_tag}^{commit}")" = "$tag_sha" ]
-            done < <(scripts/release_policy_expected_tags.sh .release-please-manifest.json "$control_target")
-            actual_digest=$(scripts/release_policy_content_digest.sh)
+              [ "$(git -C "$candidate_root" rev-parse "refs/tags/${expected_tag}^{commit}")" = "$tag_sha" ]
+            done
+            actual_digest=$("$control_root/scripts/release_policy_content_digest.sh" --repo "$candidate_root")
             [ "$actual_digest" = "$content_digest" ]
             printf 'authorized=true\ncandidate_digest=%s\ncontent_digest=%s\ntag_sha=%s\n' "$digest" "$content_digest" "$tag_sha" >> "$GITHUB_OUTPUT"
           else
@@ -190,8 +218,8 @@ jobs:
             exit 1
           fi
 
-          validator=scripts/release_policy_validate_target.sh
-          if "$validator" "$target" "$RELEASE_REF" >> "$GITHUB_OUTPUT"; then
+          validator="$control_root/scripts/release_policy_validate_target.sh"
+          if "$validator" "$control_target" "$RELEASE_REF" "$candidate_root" >> "$GITHUB_OUTPUT"; then
             echo "active=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -468,9 +496,8 @@ jobs:
         id: resolve-sha
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         env:
-          EXPECTED_LIVE_SHA: ${{ needs.prepublish-summary.outputs.tag_sha }}
+          EXPECTED_SHA: ${{ needs.prepublish-summary.outputs.tag_sha }}
           RELEASE_REF: ${{ github.event.inputs.tag }}
-          DRY_RUN_INPUT: ${{ github.event.inputs.dry_run }}
         with:
           script: |
             const ref = process.env.RELEASE_REF || '';
@@ -483,10 +510,9 @@ jobs:
               repo: context.repo.repo,
               ref
             });
-            const expected = process.env.EXPECTED_LIVE_SHA || '';
-            if (process.env.DRY_RUN_INPUT !== 'true' &&
-                (!/^[0-9a-f]{40}$/.test(expected) || commit.data.sha !== expected)) {
-              core.setFailed(`Refusing CI gate: ${ref} is not the protected live SHA ${expected}.`);
+            const expected = process.env.EXPECTED_SHA || '';
+            if (!/^[0-9a-f]{40}$/.test(expected) || commit.data.sha !== expected) {
+              core.setFailed(`Refusing CI gate: ${ref} is not the validated immutable SHA ${expected}.`);
               return;
             }
             core.setOutput('sha', commit.data.sha);
