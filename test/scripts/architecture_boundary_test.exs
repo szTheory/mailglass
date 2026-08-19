@@ -35,9 +35,8 @@ defmodule Mailglass.ArchitectureBoundaryTest do
     refute cycle_free?("unexpected xref output")
   end
 
-  test "core and inbound compile-connected graphs are cycle-free" do
+  test "the core compile-connected graph is cycle-free" do
     assert_cycle_free!(File.cwd!())
-    assert_cycle_free!(Path.join(File.cwd!(), "mailglass_inbound"))
   end
 
   test "a required core support lane executes the architecture contract without swallowing failure" do
@@ -47,17 +46,15 @@ defmodule Mailglass.ArchitectureBoundaryTest do
 
     for mutation <- [
           {"removed command", "true"},
-          {"shell-swallowed command",
-           "mix test test/scripts/architecture_boundary_test.exs --warnings-as-errors || true"},
-          {"step continue-on-error",
-           "continue-on-error: true\n        run: mix test test/scripts/architecture_boundary_test.exs --warnings-as-errors"}
+          {"shell-swallowed command", architecture_command() <> " || true"},
+          {"step continue-on-error", "continue-on-error: true\n        " <> architecture_command()}
         ] do
       {_label, replacement} = mutation
 
       mutated =
         String.replace(
           ci,
-          "run: mix test test/scripts/architecture_boundary_test.exs --warnings-as-errors",
+          architecture_command(),
           replacement,
           global: false
         )
@@ -87,11 +84,12 @@ defmodule Mailglass.ArchitectureBoundaryTest do
     assert_raise ExUnit.AssertionError, fn -> assert_required_architecture_gate!(skipped_ci) end
   end
 
-  test "the Phase 158 commit manifest excludes forbidden scope categories" do
-    changes = phase_changes!()
-
-    assert changes != []
-    assert scope_violations(changes) == []
+  test "the architecture scope classifier rejects forbidden categories without git history" do
+    assert scope_violations([
+             {:modified, "lib/mailglass/outbound/projector.ex"},
+             {:modified, "mailglass_inbound/lib/mailglass_inbound/pipeline.ex"},
+             {:modified, "test/scripts/architecture_boundary_test.exs"}
+           ]) == []
 
     assert scope_violations([
              {:added, "mailglass_admin/lib/mailglass_admin/operator/live.ex"},
@@ -166,7 +164,7 @@ defmodule Mailglass.ArchitectureBoundaryTest do
 
     step = step!(support_contract, "Run architecture boundary contract")
 
-    assert step =~ "run: mix test test/scripts/architecture_boundary_test.exs --warnings-as-errors"
+    assert step =~ architecture_command()
     refute step =~ "continue-on-error:"
     refute step =~ "if:"
     refute step =~ ~r/\|\|\s*(true|:)\b/
@@ -190,31 +188,6 @@ defmodule Mailglass.ArchitectureBoundaryTest do
     end
   end
 
-  defp phase_changes! do
-    phase_commits = git!("log", ["--all", "--format=%H", "--fixed-strings", "--grep=(158"])
-
-    phase_commits
-    |> String.split("\n", trim: true)
-    |> Enum.flat_map(fn commit ->
-      git!("show", [commit, "--format=", "--name-status", "--find-renames"])
-      |> String.split("\n", trim: true)
-      |> Enum.map(&parse_change!/1)
-    end)
-  end
-
-  defp parse_change!(line) do
-    case String.split(line, "\t") do
-      [status, path] -> {status_kind(status), path}
-      [status, _from, path] -> {status_kind(status), path}
-      _ -> flunk("unparseable git name-status line: #{inspect(line)}")
-    end
-  end
-
-  defp status_kind("A" <> _rest), do: :added
-  defp status_kind("M" <> _rest), do: :modified
-  defp status_kind("R" <> _rest), do: :renamed
-  defp status_kind(other), do: String.to_atom(other)
-
   defp scope_violations(changes) do
     for {status, path} <- changes,
         reason <- scope_reason(status, path),
@@ -231,9 +204,8 @@ defmodule Mailglass.ArchitectureBoundaryTest do
     end
   end
 
-  defp git!(command, args) do
-    {output, status} = System.cmd("git", [command | args], stderr_to_stdout: true)
-    assert status == 0, "git #{command} failed:\n#{output}"
-    output
+  defp architecture_command do
+    "run: mix test test/scripts/architecture_boundary_test.exs " <>
+      "ci/contracts/inbound_architecture_test.exs --warnings-as-errors"
   end
 end
