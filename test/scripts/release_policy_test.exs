@@ -111,6 +111,28 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
     end
   end
 
+  test "manifest versions must exactly equal all three source package versions" do
+    versions = captured_target()["candidate_versions"]
+
+    manifest = %{
+      "." => versions["mailglass"],
+      "mailglass_admin" => versions["mailglass_admin"],
+      "mailglass_inbound" => versions["mailglass_inbound"]
+    }
+
+    assert :ok = policy(:validate_manifest_source, [manifest, versions])
+
+    for mutation <- [
+          Map.put(manifest, ".", "99.0.0"),
+          Map.put(manifest, "mailglass_admin", "99.0.0"),
+          Map.put(manifest, "mailglass_inbound", "99.0.0"),
+          Map.put(manifest, "unknown", "1.0.0"),
+          Map.delete(manifest, "mailglass_inbound")
+        ] do
+      assert {:error, _} = policy(:validate_manifest_source, [mutation, versions])
+    end
+  end
+
   test "completed target carries a separately verified final tag SHA" do
     completed = completed_target()
 
@@ -135,8 +157,10 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
       put_in(published, ["final_identity", "adoption_evidence"], %{}),
       update_in(published, publication_path, &Map.delete(&1, "workflow_run_url")),
       put_in(published, publication_path ++ ["workflow_run_url"], "https://example.com/run/1"),
+      put_in(published, publication_path ++ ["candidate_digest"], String.duplicate("0", 64)),
       put_in(published, publication_path ++ ["release_ids", "mailglass"], 0),
       put_in(published, publication_path ++ ["release_ids", "mailglass_admin"], "123"),
+      put_in(published, publication_path ++ ["release_ids", "mailglass_admin"], 1000),
       put_in(published, publication_path ++ ["tag_shas", "mailglass"], String.duplicate("e", 40)),
       put_in(published, publication_path ++ ["hex_release_checksums", "mailglass"], "short"),
       put_in(published, publication_path ++ ["unknown"], true)
@@ -271,6 +295,15 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
     end)
   end
 
+  test "legacy direct script-style verification flags fail closed" do
+    for flag <- ["--validate-candidate", "--verify-published", "--verify-complete"] do
+      {output, status} = System.cmd("elixir", [@script, flag], stderr_to_stdout: true)
+
+      assert status == 64
+      assert output =~ "unsupported direct release-policy invocation"
+    end
+  end
+
   defp captured_target do
     %{
       "schema_version" => 1,
@@ -311,14 +344,17 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
 
   defp published_target do
     tag_sha = String.duplicate("d", 40)
+    target = captured_target()
+    {:ok, candidate_digest} = policy(:candidate_digest, [target])
 
-    captured_target()
+    target
     |> Map.put("status", "published")
     |> put_in(["states", "authorization"], "authorized")
     |> put_in(["states", "publication"], "published")
     |> Map.put("final_identity", %{
       "tag_sha" => tag_sha,
       "publication_evidence" => %{
+        "candidate_digest" => candidate_digest,
         "workflow_run_url" => "https://github.com/szTheory/mailglass/actions/runs/123456789",
         "release_ids" =>
           Map.new(@packages, &{&1, 1000 + Enum.find_index(@packages, fn p -> p == &1 end)}),

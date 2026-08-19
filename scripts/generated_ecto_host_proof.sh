@@ -236,6 +236,7 @@ fi
 WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mailglass-generated-ecto-host.XXXXXX")"
 CHECKPOINT_FILE="${WORK_DIR}/generated-host-checkpoints.txt"
 ATTESTATION_FILE="${WORK_DIR}/generated-host-attestations.txt"
+CHECKPOINT_OUTPUT="${MAILGLASS_GENERATED_HOST_CHECKPOINT_OUT:-}"
 CHECKPOINT_SEQUENCE=0
 JOURNEY_HOST_DIRS=()
 JOURNEY_DATABASE_URLS=()
@@ -1218,5 +1219,26 @@ run_journey core_first core inbound
 run_journey inbound_first inbound core
 
 validate_checkpoint_file "${CHECKPOINT_FILE}"
+
+if [ -n "${CHECKPOINT_OUTPUT}" ]; then
+  checkpoint_output_dir="$(dirname -- "${CHECKPOINT_OUTPUT}")"
+  mkdir -p "${checkpoint_output_dir}"
+  checkpoint_output_dir="$(cd "${checkpoint_output_dir}" && pwd)"
+  checkpoint_output_path="${checkpoint_output_dir}/$(basename -- "${CHECKPOINT_OUTPUT}")"
+
+  case "${checkpoint_output_path}" in
+    "${WORK_DIR}"/*)
+      echo "Generated-host checkpoint output must survive outside the scratch directory." >&2
+      exit 1
+      ;;
+  esac
+
+  checkpoint_output_tmp="${checkpoint_output_path}.tmp.$$"
+  cp "${CHECKPOINT_FILE}" "${checkpoint_output_tmp}"
+  chmod 0600 "${checkpoint_output_tmp}"
+  mv "${checkpoint_output_tmp}" "${checkpoint_output_path}"
+  validate_checkpoint_file "${checkpoint_output_path}"
+fi
+
 cat "${CHECKPOINT_FILE}"
 echo "Generated Ecto host proof passed."

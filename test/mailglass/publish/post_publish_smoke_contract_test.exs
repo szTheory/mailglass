@@ -96,7 +96,13 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert resolver =~ "target=immutable-target/.planning/release-target.json"
     assert resolver =~ ~s("authorized-versions" "$control_target")
     assert resolver =~ ~s("$command" "$target")
-    assert resolver =~ "cmp --silent \"$control_resolved\" \"$resolved\""
+
+    assert resolver =~
+             "for identity_key in core admin inbound candidate_digest content_digest proposal_head source_sha"
+
+    assert resolver =~ "[ \"$control_value\" = \"$target_value\" ]"
+    assert resolver =~ "published) [ \"$control_tag_sha\" = \"$INPUT_TARGET_REF\" ]"
+    refute resolver =~ "cmp --silent \"$control_resolved\" \"$resolved\""
     assert resolver =~ "bash scripts/check_post_publish_target.sh"
     assert resolver =~ "--target-ref \"$target_ref\""
     assert resolver =~ "--core \"$core\""
@@ -179,11 +185,11 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
              "MAILGLASS_INBOUND_WORKSPACE_EBIN=\"${HOST_ROOT}/_build/dev/lib/mailglass_inbound/ebin\""
 
     assert job =~ "mix verify.reference_host.journey --host-root \"${HOST_ROOT}\""
-    assert job =~ "run: bash scripts/check_trust_runner_checkpoint.sh --require-completed"
-    assert job =~ "name: trust-runner-published-${{ github.run_id }}"
+    assert job =~ "bash scripts/check_trust_runner_checkpoint.sh --require-completed"
+    assert job =~ "name: published-adoption-evidence-${{ github.run_id }}"
     assert job =~ "if-no-files-found: error"
     assert job =~ "retention-days: 90"
-    assert job =~ "path: tmp/mailglass_trust_runner/checkpoint.json"
+    assert job =~ "path: tmp/published-adoption-evidence"
 
     assert_ordered!(job, [
       "mix verify.reference_host.journey --host-root",
@@ -407,6 +413,12 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
 
     assert job =~ "mailglass_generated_ecto_host_published_${{ github.run_id }}"
     assert job =~ "bash scripts/generated_ecto_host_proof.sh"
+    assert job =~ "MAILGLASS_GENERATED_HOST_CHECKPOINT_OUT:"
+    assert job =~ "generated-host-checkpoint.txt"
+    assert job =~ "trust-runner-checkpoint.json"
+    assert job =~ "shasum -a 256 generated-host-checkpoint.txt trust-runner-checkpoint.json"
+    assert job =~ "name: Upload published adoption evidence"
+    assert job =~ "path: tmp/published-adoption-evidence"
 
     assert_ordered!(job, [
       "Boot disposable exact-Hex host and run nonvisual compatibility gate",

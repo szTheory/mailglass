@@ -234,6 +234,9 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     assert source =~ ~s(MAILGLASS_PACKAGE_MODE="${MAILGLASS_PACKAGE_MODE:-path}")
     assert source =~ "MAILGLASS_EXPECTED_CORE_VERSION"
     assert source =~ "check_clean_baseline_hex_only.sh"
+    assert source =~ ~s(CHECKPOINT_OUTPUT="${MAILGLASS_GENERATED_HOST_CHECKPOINT_OUT:-}")
+    assert source =~ "Generated-host checkpoint output must survive outside the scratch directory"
+    assert source =~ ~s(validate_checkpoint_file "${checkpoint_output_path}")
   end
 
   test "runtime checkpoints consume closed sanitized attestations with executable mutations" do

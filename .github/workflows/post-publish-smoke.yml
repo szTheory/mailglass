@@ -9,7 +9,8 @@ on:
     # Protected post-publication proof. Candidate release events are deliberate
     # no-ops because the three linked packages are published later by the
     # explicit protected release path. The scheduled canary alone consumes a
-    # completed target; protected dispatch consumes the still-authorized target.
+    # completed target; protected dispatch consumes the exact authorized target
+    # or its published, adoption-retry-safe successor.
     inputs:
       core_version:
         description: "Exact published mailglass version from the protected target"
@@ -119,7 +120,20 @@ jobs:
           fi
           mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "$command" "$target" > "$resolved"
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            cmp --silent "$control_resolved" "$resolved"
+            for identity_key in core admin inbound candidate_digest content_digest proposal_head source_sha; do
+              control_value=$(awk -F= -v key="$identity_key" '$1 == key {print $2}' "$control_resolved")
+              target_value=$(awk -F= -v key="$identity_key" '$1 == key {print $2}' "$resolved")
+              [ -n "$control_value" ]
+              [ "$control_value" = "$target_value" ]
+            done
+
+            control_status=$(awk -F= '$1 == "status" {print $2}' "$control_resolved")
+            control_tag_sha=$(awk -F= '$1 == "tag_sha" {print $2}' "$control_resolved")
+            case "$control_status" in
+              authorized) [ -z "$control_tag_sha" ] ;;
+              published) [ "$control_tag_sha" = "$INPUT_TARGET_REF" ] ;;
+              *) echo "Unsupported protected target state: $control_status" >&2; exit 1 ;;
+            esac
           fi
           completed=$(awk -F= '$1 == "completed" {print $2}' "$resolved")
           authorized=$(awk -F= '$1 == "authorized" {print $2}' "$resolved")
@@ -193,7 +207,7 @@ jobs:
             }
 
             if (eventName === 'workflow_dispatch' && process.env.AUTHORIZED !== 'true') {
-              core.setFailed('Protected post-publication dispatch requires its authorized target.');
+              core.setFailed('Protected post-publication dispatch requires its exact authorized or published target.');
               return;
             }
 
@@ -528,6 +542,7 @@ jobs:
           MAILGLASS_EXACT_CORE_VERSION: ${{ needs.cron-guard.outputs.version_core }}
           MAILGLASS_EXACT_ADMIN_VERSION: ${{ needs.cron-guard.outputs.version_admin }}
           MAILGLASS_EXACT_INBOUND_VERSION: ${{ needs.cron-guard.outputs.version_inbound }}
+          MAILGLASS_GENERATED_HOST_CHECKPOINT_OUT: ${{ github.workspace }}/tmp/published-adoption-evidence/generated-host-checkpoint.txt
         run: |
           set -euo pipefail
           until pg_isready -h localhost -U postgres; do sleep 1; done
@@ -544,14 +559,26 @@ jobs:
           test -d "$MAILGLASS_INBOUND_WORKSPACE_EBIN"
           mix verify.reference_host.journey --host-root "${HOST_ROOT}"
       - name: Validate trust checkpoint contract
-        run: bash scripts/check_trust_runner_checkpoint.sh --require-completed
-      - name: Upload trust-runner published artifact
+        run: |
+          set -euo pipefail
+          bash scripts/check_trust_runner_checkpoint.sh --require-completed
+          evidence_dir=tmp/published-adoption-evidence
+          mkdir -p "$evidence_dir"
+          cp tmp/mailglass_trust_runner/checkpoint.json "$evidence_dir/trust-runner-checkpoint.json"
+          test -s "$evidence_dir/generated-host-checkpoint.txt"
+          test -s "$evidence_dir/trust-runner-checkpoint.json"
+          (
+            cd "$evidence_dir"
+            shasum -a 256 generated-host-checkpoint.txt trust-runner-checkpoint.json > SHA256SUMS
+          )
+          [ "$(wc -l < "$evidence_dir/SHA256SUMS" | tr -d ' ')" -eq 2 ]
+      - name: Upload published adoption evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: trust-runner-published-${{ github.run_id }}
+          name: published-adoption-evidence-${{ github.run_id }}
           if-no-files-found: error
           retention-days: 90
-          path: tmp/mailglass_trust_runner/checkpoint.json
+          path: tmp/published-adoption-evidence
 
   retracted-check:
     name: Verify package not retracted

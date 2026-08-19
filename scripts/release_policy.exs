@@ -4,7 +4,7 @@ defmodule Mailglass.ReleasePolicy do
   @packages ~w(mailglass mailglass_admin mailglass_inbound)
   @target_keys ~w(schema_version status package_set baselines candidate_versions required_evidence_identifiers proposal_identity publishable_content final_identity states)
   @evidence_keys ~w(hex_package_endpoints hex_release_endpoints hex_release_checksums historical_tag historical_tag_sha)
-  @publication_evidence_keys ~w(workflow_run_url release_ids tag_shas hex_release_checksums)
+  @publication_evidence_keys ~w(candidate_digest workflow_run_url release_ids tag_shas hex_release_checksums)
   @adoption_evidence_keys ~w(workflow_run_url target_ref checkpoint_digests)
   @checkpoint_keys ~w(generated_host trust_runner)
   @sha1 ~r/\A[0-9a-f]{40}\z/
@@ -59,7 +59,7 @@ defmodule Mailglass.ReleasePolicy do
     end
   end
 
-  def manifest_tags(manifest) when is_map(manifest) do
+  def manifest_versions(manifest) when is_map(manifest) do
     expected = %{
       "." => "mailglass",
       "mailglass_admin" => "mailglass_admin",
@@ -75,14 +75,28 @@ defmodule Mailglass.ReleasePolicy do
              "mailglass" => manifest["."],
              "mailglass_admin" => manifest["mailglass_admin"]
            }) do
-      {:ok, Enum.map(@packages, fn package -> tag(package, manifest[manifest_key(package)]) end)}
+      {:ok, Map.new(@packages, fn package -> {package, manifest[manifest_key(package)]} end)}
     else
       false -> error(:invalid_manifest)
       {:error, _} = failure -> failure
     end
   end
 
-  def manifest_tags(_), do: error(:invalid_manifest)
+  def manifest_versions(_), do: error(:invalid_manifest)
+
+  def manifest_tags(manifest) do
+    with {:ok, versions} <- manifest_versions(manifest) do
+      {:ok, Enum.map(@packages, &tag(&1, versions[&1]))}
+    end
+  end
+
+  def validate_manifest_source(manifest, source_versions) do
+    with {:ok, manifest_versions} <- manifest_versions(manifest),
+         :ok <- versions(source_versions),
+         :ok <- exact_value(%{"versions" => manifest_versions}, "versions", source_versions) do
+      :ok
+    end
+  end
 
   def validate_release_ref(target, ref, source_versions)
       when is_binary(ref) and is_map(source_versions) do
@@ -118,19 +132,8 @@ defmodule Mailglass.ReleasePolicy do
 
   def candidate_digest(target) do
     with {:ok, target} <- validate_target(target),
-         :ok <- candidate_lifecycle(target) do
-      payload =
-        Map.take(target, [
-          "schema_version",
-          "package_set",
-          "baselines",
-          "candidate_versions",
-          "required_evidence_identifiers",
-          "proposal_identity",
-          "publishable_content"
-        ])
-
-      {:ok, :crypto.hash(:sha256, canonical_json(payload)) |> Base.encode16(case: :lower)}
+         :ok <- candidate_identity_lifecycle(target) do
+      {:ok, candidate_digest_value(target)}
     end
   end
 
@@ -194,6 +197,16 @@ defmodule Mailglass.ReleasePolicy do
     end
   end
 
+  def cli(["validate-source-manifest", manifest_path, root]) do
+    with {:ok, manifest} <- read_json(manifest_path),
+         {:ok, source_versions} <- source_versions(root),
+         :ok <- validate_manifest_source(manifest, source_versions) do
+      IO.write("manifest_valid=true\n")
+    else
+      _ -> System.halt(1)
+    end
+  end
+
   def cli(["verify-published", target_path]) do
     with {:ok, target} <- read_json(target_path),
          {:ok, target} <- validate_published_target(target) do
@@ -250,6 +263,8 @@ defmodule Mailglass.ReleasePolicy do
     with {:ok, json} <- File.read(target_path),
          {:ok, target} <- Jason.decode(json),
          {:ok, versions} <- source_versions(root),
+         {:ok, manifest} <- read_json(Path.join(root, ".release-please-manifest.json")),
+         :ok <- validate_manifest_source(manifest, versions),
          {:ok, versions} <- validate_release_ref(target, ref, versions) do
       IO.write("active=true\n")
 
@@ -324,6 +339,13 @@ defmodule Mailglass.ReleasePolicy do
       IO.write("core=#{target["candidate_versions"]["mailglass"]}\n")
       IO.write("admin=#{target["candidate_versions"]["mailglass_admin"]}\n")
       IO.write("inbound=#{target["candidate_versions"]["mailglass_inbound"]}\n")
+      {:ok, digest} = candidate_digest(target)
+      IO.write("status=#{target["status"]}\n")
+      IO.write("candidate_digest=#{digest}\n")
+      IO.write("content_digest=#{target["publishable_content"]["digest"]}\n")
+      IO.write("proposal_head=#{target["proposal_identity"]["head_sha"]}\n")
+      IO.write("source_sha=#{target["proposal_identity"]["source_sha"]}\n")
+      IO.write("tag_sha=#{target["final_identity"]["tag_sha"] || ""}\n")
     else
       _ -> System.halt(1)
     end
@@ -349,6 +371,8 @@ defmodule Mailglass.ReleasePolicy do
          {:ok, target} <- validate_target(target),
          :ok <- exact_value(target, "status", "inactive"),
          {:ok, versions} <- source_versions(root),
+         {:ok, manifest} <- read_json(Path.join(root, ".release-please-manifest.json")),
+         :ok <- validate_manifest_source(manifest, versions),
          :ok <- advances(target["baselines"], versions),
          true <- (sha1?(head_sha) and sha1?(source_sha)) or error(:invalid_proposal),
          true <- sha256?(content_digest) or error(:invalid_content) do
@@ -412,7 +436,7 @@ defmodule Mailglass.ReleasePolicy do
                  :ok <- linked_core_admin(target["candidate_versions"]),
                  :ok <- advances(target["baselines"], target["candidate_versions"]),
                  :ok <- reviewed_content(target["publishable_content"]),
-                 :ok <- published_final_identity(target["final_identity"], status),
+                 :ok <- published_final_identity(target, status),
                  do: :ok
           else
             error(:invalid_lifecycle)
@@ -426,6 +450,15 @@ defmodule Mailglass.ReleasePolicy do
 
   defp candidate_lifecycle(target) do
     if target["status"] in ["captured", "authorized"] and target["states"]["capture"] == "captured" do
+      :ok
+    else
+      error(:inactive_candidate)
+    end
+  end
+
+  defp candidate_identity_lifecycle(target) do
+    if target["status"] in ["captured", "authorized", "published", "completed"] and
+         target["states"]["capture"] == "captured" do
       :ok
     else
       error(:inactive_candidate)
@@ -519,10 +552,18 @@ defmodule Mailglass.ReleasePolicy do
     exact_value(%{"final_identity" => value}, "final_identity", %{"tag_sha" => nil})
   end
 
-  defp published_final_identity(value, status) when is_map(value) do
+  defp published_final_identity(target, status) when is_map(target) do
+    value = target["final_identity"]
+
     with :ok <- exact_keys(value, ~w(tag_sha publication_evidence adoption_evidence)),
          true <- sha1?(value["tag_sha"]) or error(:invalid_final_identity),
-         :ok <- publication_evidence(value["publication_evidence"], value["tag_sha"]),
+         candidate_digest = candidate_digest_value(target),
+         :ok <-
+           publication_evidence(
+             value["publication_evidence"],
+             value["tag_sha"],
+             candidate_digest
+           ),
          :ok <- adoption_evidence(value["adoption_evidence"], status, value["tag_sha"]) do
       :ok
     else
@@ -533,8 +574,9 @@ defmodule Mailglass.ReleasePolicy do
 
   defp published_final_identity(_, _), do: error(:invalid_final_identity)
 
-  defp publication_evidence(value, tag_sha) when is_map(value) do
+  defp publication_evidence(value, tag_sha, candidate_digest) when is_map(value) do
     with :ok <- exact_keys(value, @publication_evidence_keys),
+         :ok <- exact_value(value, "candidate_digest", candidate_digest),
          :ok <- workflow_run_url(value["workflow_run_url"]),
          :ok <- positive_integer_map(value["release_ids"]),
          :ok <- matching_tag_sha_map(value["tag_shas"], tag_sha),
@@ -543,7 +585,7 @@ defmodule Mailglass.ReleasePolicy do
     end
   end
 
-  defp publication_evidence(_, _), do: error(:invalid_publication_evidence)
+  defp publication_evidence(_, _, _), do: error(:invalid_publication_evidence)
 
   defp adoption_evidence(nil, "published", _tag_sha), do: :ok
 
@@ -566,7 +608,8 @@ defmodule Mailglass.ReleasePolicy do
 
   defp positive_integer_map(value) when is_map(value) do
     if exact_keys(value, @packages) == :ok and
-         Enum.all?(Map.values(value), &(is_integer(&1) and &1 > 0)),
+         Enum.all?(Map.values(value), &(is_integer(&1) and &1 > 0)) and
+         length(Enum.uniq(Map.values(value))) == length(@packages),
        do: :ok,
        else: error(:invalid_publication_evidence)
   end
@@ -640,6 +683,21 @@ defmodule Mailglass.ReleasePolicy do
 
   defp canonical_json(value), do: Jason.encode!(value)
 
+  defp candidate_digest_value(target) do
+    payload =
+      Map.take(target, [
+        "schema_version",
+        "package_set",
+        "baselines",
+        "candidate_versions",
+        "required_evidence_identifiers",
+        "proposal_identity",
+        "publishable_content"
+      ])
+
+    :crypto.hash(:sha256, canonical_json(payload)) |> Base.encode16(case: :lower)
+  end
+
   defp read_json(path) do
     with {:ok, json} <- File.read(path), {:ok, value} <- Jason.decode(json), do: {:ok, value}
   end
@@ -656,4 +714,18 @@ defmodule Mailglass.ReleasePolicy do
   end
 
   defp error(reason), do: {:error, %{reason: reason}}
+end
+
+# `mix run FILE --flag` only evaluates FILE; it does not call cli/1. Fail the
+# historical verification spellings loudly so they can never report a false
+# green. Supported callers use `--require FILE -e '...cli(System.argv())' --`
+# and pass command names without a leading `--`.
+case System.argv() do
+  [flag | _]
+  when flag in ["--validate-candidate", "--verify-published", "--verify-complete"] ->
+    IO.puts(:stderr, "unsupported direct release-policy invocation: #{flag}")
+    System.halt(64)
+
+  _ ->
+    :ok
 end
