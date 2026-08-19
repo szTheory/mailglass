@@ -5,10 +5,10 @@ milestone_name: Engineering Quality Ratchet
 current_phase: 160
 current_phase_name: Certification, Documentation, and Release
 status: executing
-stopped_at: Plan 160-04 protected release preparation independently re-reviewed; awaiting Plan 160-05 candidate capture and human authorization
-last_updated: "2026-08-19T16:14:13.000Z"
+stopped_at: PR #203 CI remediation pushed and locally verified; awaiting CI before Plan 160-05 candidate capture and human authorization
+last_updated: "2026-08-19T18:56:17.000Z"
 last_activity: 2026-08-19
-last_activity_desc: Plan 160-04 protected release policy and exact publication evidence gates completed
+last_activity_desc: PR #203 adopter and CI remediation locally verified and pushed
 progress:
   total_phases: 6
   completed_phases: 5
@@ -30,8 +30,8 @@ See: .planning/PROJECT.md (updated 2026-08-17 after Phase 158)
 
 Phase: 160 (Certification, Documentation, and Release) — EXECUTING
 Plan: 5 of 6
-Status: Awaiting immutable candidate capture and explicit digest-bound authorization
-Last activity: 2026-08-19 — Plan 160-04 protected release preparation passed focused verification and independent review
+Status: Awaiting PR #203 CI; release remains blocked on immutable candidate capture and explicit digest-bound authorization
+Last activity: 2026-08-19 — PR #203 adopter and CI remediation passed broad local verification and was pushed
 
 Progress: [███████████████████░] 39/41 plans (95%); 5/6 phases complete
 
@@ -773,7 +773,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Pending Todos
 
-- **Remove the cowlib advisory allowlist when upstream fixes** (`.planning/todos/pending/2026-06-30-remove-cowlib-advisory-allowlist-when-upstream-fixes.md`) — v1.14 added a narrow temporary allowlist in `publish.check` for 2 unfixable cowlib advisories (EEF-CVE-2026-43966/43969). Maintenance-tier `/gsd-quick` when cowlib ships a patch.
+- **Remove the cowlib advisory allowlist when upstream fixes** (`.planning/todos/pending/2026-06-30-remove-cowlib-advisory-allowlist-when-upstream-fixes.md`) — `publish.check` carries a narrow temporary allowlist for 3 currently unfixable cowlib advisories (EEF-CVE-2026-43966/43969/43971); 43971 must be rechecked by 2026-09-18. Maintenance-tier `/gsd-quick` when cowlib ships a patch.
 - **Run the UI browser/persona gate during phases, not only at release** (`.planning/backlog/ui-browser-gate-during-phases-not-only-at-release.md`) — v1.14 post-mortem: deferred phase verification let 7 browser-gate regressions reach the release ceremony. Fold into the next admin-UI milestone's method; surface via `/gsd-review-backlog`.
 - ~~Refresh outbound admin UI look and feel~~ — superseded by v1.11's fractal three-surface uplift + v1.14 operator IA redesign (resolved; the 2026-06-13 todo file is stale).
 
@@ -783,8 +783,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-17T12:02:25.688Z
-**Stopped at:** Phase 158 verified complete; Phase 159 ready for planning
+**Last session:** 2026-08-19T18:56:17.000Z
+**Stopped at:** PR #203 remediation pushed after full local verification; monitoring CI before merge. Plan 160-05 remains authorization-gated.
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
