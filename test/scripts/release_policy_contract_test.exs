@@ -8,7 +8,17 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
   @content_digest Path.join(@repo_root, "scripts/release_policy_content_digest.sh")
   @validate_target Path.join(@repo_root, "scripts/release_policy_validate_target.sh")
   @release_please Path.join(@repo_root, ".github/workflows/release-please.yml")
+  @release_please_config Path.join(@repo_root, "release-please-config.json")
   @publish Path.join(@repo_root, ".github/workflows/publish-hex.yml")
+
+  test "release history uses the protected post-baseline boundary" do
+    config = @release_please_config |> File.read!() |> Jason.decode!()
+    boundary = config["last-release-sha"]
+
+    refute Map.has_key?(config, "bootstrap-sha")
+    assert boundary == "c72721f8c041b8419711267291d3d70a8a0ff1c2"
+    assert boundary =~ ~r/^[0-9a-f]{40}$/
+  end
 
   test "captured target deterministically selects the exact three-package candidate tags" do
     in_tmp(fn dir ->
