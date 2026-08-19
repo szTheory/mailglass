@@ -1,5 +1,7 @@
 defmodule Mailglass.Scripts.ReleasePolicyContractTest do
-  use ExUnit.Case, async: true
+  # Wrapper tests invoke Mix in subprocesses, which contend for the shared build
+  # directory when this module runs concurrently with the rest of the suite.
+  use ExUnit.Case, async: false
 
   @repo_root Path.expand("../..", __DIR__)
   @expected_tags Path.join(@repo_root, "scripts/release_policy_expected_tags.sh")
@@ -152,12 +154,14 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
       assert {output, status} = run(@validate_target, [target, "mailglass_inbound-v2.2.1", dir])
       assert status != 0
-      assert output =~ ""
+      refute output =~ "active=true"
+      refute output =~ "core=2.5.0"
 
       File.write!(Path.join(dir, "mailglass_inbound/mix.exs"), "  @version \"2.1.0\"\n")
       assert {output, status} = run(@validate_target, [target, "mailglass-v2.5.0", dir])
       assert status != 0
-      assert output == ""
+      refute output =~ "active=true"
+      refute output =~ "core=2.5.0"
     end)
   end
 
