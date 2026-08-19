@@ -5,6 +5,8 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
 
   @workflow_path Path.expand("../../../.github/workflows/post-publish-smoke.yml", __DIR__)
   @hex_lock_guard Path.expand("../../../scripts/check_clean_baseline_hex_only.sh", __DIR__)
+  @target_guard Path.expand("../../../scripts/check_post_publish_target.sh", __DIR__)
+  @content_digest Path.expand("../../../scripts/release_policy_content_digest.sh", __DIR__)
   @reference_lock Path.expand("../../../reference/host_app/mix.lock", __DIR__)
 
   test "candidate release events are successful no-ops and protected dispatch requires three exact versions" do
@@ -95,6 +97,11 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert resolver =~ ~s("authorized-versions" "$control_target")
     assert resolver =~ ~s("$command" "$target")
     assert resolver =~ "cmp --silent \"$control_resolved\" \"$resolved\""
+    assert resolver =~ "bash scripts/check_post_publish_target.sh"
+    assert resolver =~ "--target-ref \"$target_ref\""
+    assert resolver =~ "--core \"$core\""
+    assert resolver =~ "--admin \"$admin\""
+    assert resolver =~ "--inbound \"$inbound\""
 
     for {job_name, next_job} <- [
           {"wait-for-index", "wait-for-hexdocs"},
@@ -165,16 +172,92 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert job =~ "mix compile --warnings-as-errors"
     assert job =~ "Application.ensure_all_started(:mailglass_reference_host)"
     assert job =~ "Application.spec(app, :vsn)"
-    assert job =~ "run: mix verify.reference_host.journey --dry-run --host-root"
-    assert job =~ "run: bash scripts/check_trust_runner_checkpoint.sh"
+    assert job =~ "MAILGLASS_CORE_WORKSPACE_EBIN=\"${HOST_ROOT}/_build/dev/lib/mailglass/ebin\""
+
+    assert job =~
+             "MAILGLASS_INBOUND_WORKSPACE_EBIN=\"${HOST_ROOT}/_build/dev/lib/mailglass_inbound/ebin\""
+
+    assert job =~ "mix verify.reference_host.journey --host-root \"${HOST_ROOT}\""
+    assert job =~ "run: bash scripts/check_trust_runner_checkpoint.sh --require-completed"
     assert job =~ "name: trust-runner-published-${{ github.run_id }}"
     assert job =~ "if-no-files-found: error"
     assert job =~ "retention-days: 90"
     assert job =~ "path: tmp/mailglass_trust_runner/checkpoint.json"
 
     refute job =~ "working-directory: reference/host_app"
+    refute job =~ "--dry-run"
     refute job =~ "mix verify.reference_host.journey --host-root reference/host_app"
     refute job =~ "mix deps.get && mix compile"
+  end
+
+  test "target guard rejects arbitrary commits, content drift, and incomplete tag sets" do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-post-publish-target-#{System.unique_integer([:positive])}"
+      )
+
+    repo = Path.join(root, "candidate")
+    remote = Path.join(root, "remote.git")
+    target = Path.join(repo, ".planning/release-target.json")
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    File.mkdir_p!(Path.join(repo, "mailglass_admin"))
+    File.mkdir_p!(Path.join(repo, "mailglass_inbound"))
+    File.mkdir_p!(Path.join(repo, "lib"))
+    git!(repo, ["init", "--initial-branch=main"])
+    git!(repo, ["config", "user.email", "smoke@example.com"])
+    git!(repo, ["config", "user.name", "Smoke Contract"])
+    File.write!(Path.join(repo, "mix.exs"), "defmodule Core do\nend\n")
+    File.write!(Path.join(repo, "mailglass_admin/mix.exs"), "defmodule Admin do\nend\n")
+    File.write!(Path.join(repo, "mailglass_inbound/mix.exs"), "defmodule Inbound do\nend\n")
+    File.write!(Path.join(repo, "lib/proof.ex"), "defmodule Proof do\nend\n")
+    git!(repo, ["add", "."])
+    git!(repo, ["commit", "-m", "candidate content"])
+
+    {digest, 0} = System.cmd("bash", [@content_digest, "--repo", repo])
+    File.mkdir_p!(Path.dirname(target))
+
+    File.write!(
+      target,
+      Jason.encode!(%{"publishable_content" => %{"digest" => String.trim(digest)}})
+    )
+
+    git!(repo, ["add", ".planning/release-target.json"])
+    git!(repo, ["commit", "-m", "authorized ledger"])
+    target_ref = git_output!(repo, ["rev-parse", "HEAD"])
+
+    tags = ["mailglass-v3.0.0", "mailglass_admin-v3.0.0", "mailglass_inbound-v2.2.0"]
+    Enum.each(tags, &git!(repo, ["tag", &1, target_ref]))
+    git!(root, ["init", "--bare", remote])
+    git!(repo, ["remote", "add", "origin", remote])
+    git!(repo, ["push", "origin", "main", "--tags"])
+
+    assert {valid_output, 0} = run_target_guard(repo, target, target_ref)
+    assert valid_output =~ "post-publish target verified"
+
+    File.write!(Path.join(repo, ".arbitrary"), "not authorized\n")
+    git!(repo, ["add", ".arbitrary"])
+    git!(repo, ["commit", "-m", "arbitrary sha"])
+    arbitrary_ref = git_output!(repo, ["rev-parse", "HEAD"])
+    assert {arbitrary_output, arbitrary_status} = run_target_guard(repo, target, arbitrary_ref)
+    assert arbitrary_status != 0
+    assert arbitrary_output =~ "does not resolve to target_ref"
+
+    File.write!(Path.join(repo, "lib/proof.ex"), "defmodule ChangedProof do\nend\n")
+    git!(repo, ["add", "lib/proof.ex"])
+    git!(repo, ["commit", "-m", "content drift"])
+    drift_ref = git_output!(repo, ["rev-parse", "HEAD"])
+    Enum.each(tags, &git!(repo, ["tag", "--force", &1, drift_ref]))
+    git!(repo, ["push", "--force", "origin", "--tags"])
+    assert {drift_output, drift_status} = run_target_guard(repo, target, drift_ref)
+    assert drift_status != 0
+    assert drift_output =~ "content digest mismatch"
+
+    git!(repo, ["push", "origin", ":refs/tags/mailglass_inbound-v2.2.0"])
+    assert {missing_output, missing_status} = run_target_guard(repo, target, drift_ref)
+    assert missing_status != 0
+    assert missing_output =~ "required tag is unavailable"
   end
 
   test "exact-Hex lock guard rejects a stale version and malformed checksum" do
@@ -261,4 +344,34 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     [step | _after] = String.split(checkout, "\n      - name:", parts: 2)
     step
   end
+
+  defp run_target_guard(repo, target, target_ref) do
+    System.cmd(
+      "bash",
+      [
+        @target_guard,
+        "--repo",
+        repo,
+        "--target",
+        target,
+        "--target-ref",
+        target_ref,
+        "--core",
+        "3.0.0",
+        "--admin",
+        "3.0.0",
+        "--inbound",
+        "2.2.0"
+      ],
+      stderr_to_stdout: true
+    )
+  end
+
+  defp git!(directory, args) do
+    {output, status} = System.cmd("git", args, cd: directory, stderr_to_stdout: true)
+    assert status == 0, "git #{Enum.join(args, " ")} failed:\n#{output}"
+    output
+  end
+
+  defp git_output!(directory, args), do: directory |> git!(args) |> String.trim()
 end
