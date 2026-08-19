@@ -6,6 +6,7 @@
 set -euo pipefail
 
 FRESH_DELIVERY_STAGES=(fresh_install sync_send atomic_enqueue worker_run persisted_outcome)
+BOUNDARY_STAGES=(custom_modules multi_repo_prefixes upgrade rollback idempotent_rerun)
 
 validate_checkpoint_file() {
   local checkpoint_path="$1"
@@ -17,6 +18,11 @@ validate_checkpoint_file() {
 
   for journey in core_first inbound_first; do
     for stage in "${FRESH_DELIVERY_STAGES[@]}"; do
+      sequence=$((sequence + 1))
+      expected_rows+=("${sequence}|${journey}|${stage}|passed")
+    done
+
+    for stage in "${BOUNDARY_STAGES[@]}"; do
       sequence=$((sequence + 1))
       expected_rows+=("${sequence}|${journey}|${stage}|passed")
     done
@@ -128,9 +134,23 @@ run_generator() {
 
   case "${package}" in
     core) MIX_ENV=dev DATABASE_URL="${journey_url}" mix do compile + mailglass.gen.migration --repo Host.Repo "$@" ;;
-    inbound) MIX_ENV=dev DATABASE_URL="${journey_url}" mix do compile + mailglass.inbound.gen.migration --repo Host.Repo "$@" ;;
+    inbound) MIX_ENV=dev DATABASE_URL="${journey_url}" mix do compile + mailglass.inbound.gen.migration --repo Host.InboundRepo "$@" ;;
     *)
       echo "Unknown package generator: ${package}" >&2
+      exit 1
+      ;;
+  esac
+}
+
+rollback_package() {
+  local package="$1"
+  local journey_url="$2"
+
+  case "${package}" in
+    core) MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --step 1 ;;
+    inbound) MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --step 1 ;;
+    *)
+      echo "Unknown rollback package: ${package}" >&2
       exit 1
       ;;
   esac
@@ -144,7 +164,8 @@ run_journey() {
   local journey_url
   local journey_dir="${WORK_DIR}/${journey_name}"
   local host_dir="${journey_dir}/host"
-  local migrations_path
+  local core_migrations_path
+  local inbound_migrations_path
   local core_install_path
   local inbound_install_path
   local core_upgrade_path
@@ -195,40 +216,47 @@ import Config
 if config_env() == :dev do
   database_url = System.fetch_env!("DATABASE_URL")
 
+  config :host, ecto_repos: [Host.Repo, Host.InboundRepo]
+
   config :host, Host.Repo,
     url: database_url,
-    pool_size: 10
+    pool_size: 10,
+    migration_source: "core_schema_migrations"
+
+  config :host, Host.InboundRepo,
+    url: database_url,
+    pool_size: 10,
+    migration_source: "inbound_schema_migrations"
 
   config :mailglass, repo: Host.Repo,
-    schema: "mailglass",
+    schema: "mailglass_core",
     adapter: {Host.GeneratedHostAdapter, []},
+    adapters: [generated: {Host.GeneratedHostAdapter, []}],
+    tenancy: Host.GeneratedHostTenancy,
     async_adapter: :oban
 
-  config :mailglass_inbound, repo: Host.Repo, schema: "mailglass"
+  config :mailglass_inbound, repo: Host.InboundRepo, schema: "mailglass_inbound"
   config :host, Oban, repo: Host.Repo, queues: [mailglass_outbound: 1]
   config :swoosh, :api_client, false
 end
 EOF
 
+  elixir -e '
+    path = "config/config.exs"
+    source = File.read!(path)
+    updated =
+      String.replace(
+        source,
+        "ecto_repos: [Host.Repo]",
+        "ecto_repos: [Host.Repo, Host.InboundRepo]",
+        global: false
+      )
+    if updated == source, do: raise("generated host ecto_repos anchor missing")
+    File.write!(path, updated)
+  '
+
   mkdir -p lib/host
-  cat > lib/host/generated_host_adapter.ex <<'EOF'
-defmodule Host.GeneratedHostAdapter do
-  @behaviour Mailglass.Adapter
-
-  @impl Mailglass.Adapter
-  def deliver(message, _opts) do
-    {:ok,
-     %{
-       message_id: "generated-host-#{message.metadata[:delivery_id]}",
-       provider_response: %{adapter: :generated_host}
-     }}
-  end
-end
-
-defmodule Host.GeneratedProof do
-  @moduledoc false
-end
-EOF
+  cp "${MAILGLASS_PATH}/test/fixtures/generated_host/custom_modules.exs" lib/host/generated_host_modules.ex
 
   elixir -e '
     path = "lib/host/application.ex"
@@ -237,7 +265,7 @@ EOF
       Regex.replace(
         ~r/^(\s+)Host\.Repo,\n/m,
         source,
-        "\\1Host.Repo,\n\\1{Oban, Application.fetch_env!(:host, Oban)},\n",
+        "\\1Host.Repo,\n\\1Host.InboundRepo,\n\\1{Oban, Application.fetch_env!(:host, Oban)},\n",
         global: false
       )
     if updated == source, do: raise("generated host application child anchor missing")
@@ -256,12 +284,13 @@ EOF
   sleep 1
   run_generator inbound "${journey_url}"
 
-  migrations_path="$(MIX_ENV=dev DATABASE_URL="${journey_url}" mix run --no-start --no-compile -e 'IO.write(Ecto.Migrator.migrations_path(Host.Repo))')"
-  core_install_path="$(find "${migrations_path}" -name '*_mailglass_install.exs' -print -quit)"
-  inbound_install_path="$(find "${migrations_path}" -name '*_mailglass_inbound_install.exs' -print -quit)"
+  core_migrations_path="$(MIX_ENV=dev DATABASE_URL="${journey_url}" mix run --no-start --no-compile -e 'IO.write(Ecto.Migrator.migrations_path(Host.Repo))')"
+  inbound_migrations_path="$(MIX_ENV=dev DATABASE_URL="${journey_url}" mix run --no-start --no-compile -e 'IO.write(Ecto.Migrator.migrations_path(Host.InboundRepo))')"
+  core_install_path="$(find "${core_migrations_path}" -name '*_mailglass_install.exs' -print -quit)"
+  inbound_install_path="$(find "${inbound_migrations_path}" -name '*_mailglass_inbound_install.exs' -print -quit)"
 
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.gen.migration install_oban -r Host.Repo
-  oban_migration_path="$(find "${migrations_path}" -name '*_install_oban.exs' -print -quit)"
+  oban_migration_path="$(find "${core_migrations_path}" -name '*_install_oban.exs' -print -quit)"
   cat > "${oban_migration_path}" <<'EOF'
 defmodule Host.Repo.Migrations.InstallOban do
   use Ecto.Migration
@@ -288,30 +317,31 @@ EOF
 
     rewrite!.(
       System.fetch_env!("INBOUND_INSTALL_PATH"),
-      "MailglassInbound.Migration.up(repo: Host.Repo)",
-      "MailglassInbound.Migration.up(repo: Host.Repo, version: 1)"
+      "MailglassInbound.Migration.up(repo: Host.InboundRepo)",
+      "MailglassInbound.Migration.up(repo: Host.InboundRepo, version: 1)"
     )
   '
 
-  if rg -q 'create table\(:mailglass_|CREATE TABLE[[:space:]]+mailglass_' "${migrations_path}"; then
+  if rg -q 'create table\(:mailglass_|CREATE TABLE[[:space:]]+mailglass_' "${core_migrations_path}" "${inbound_migrations_path}"; then
     echo "Generated wrappers must not contain copied package DDL." >&2
     exit 1
   fi
 
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.Repo
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.InboundRepo
 
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     if Mailglass.Migration.migrated_version(repo: Host.Repo) != 5,
       do: raise("core baseline did not stop at V05")
 
-    if MailglassInbound.Migration.migrated_version(repo: Host.Repo) != 1,
+    if MailglassInbound.Migration.migrated_version(repo: Host.InboundRepo) != 1,
       do: raise("inbound baseline did not stop at V01")
 
     webhook_id = Ecto.UUID.generate()
 
     Host.Repo.query!(
       """
-      INSERT INTO mailglass.mailglass_webhook_events
+      INSERT INTO mailglass_core.mailglass_webhook_events
         (id, tenant_id, provider, provider_event_id, event_type_raw, status,
          raw_payload, received_at, inserted_at, updated_at)
       VALUES ($1::uuid, $mg$generated-host$mg$, $mg$postmark$mg$, $mg$legacy-webhook$mg$, $mg$Delivery$mg$,
@@ -324,18 +354,18 @@ EOF
       record_id = Ecto.UUID.generate()
       evidence_id = Ecto.UUID.generate()
 
-      Host.Repo.query!(
+      Host.InboundRepo.query!(
         """
-        INSERT INTO mailglass.mailglass_inbound_records
+        INSERT INTO mailglass_inbound.mailglass_inbound_records
           (id, tenant_id, provider, received_at, inserted_at, updated_at)
         VALUES ($1::uuid, $mg$generated-host$mg$, $mg$sendgrid$mg$, now(), now(), now())
         """,
         [Ecto.UUID.dump!(record_id)]
       )
 
-      Host.Repo.query!(
+      Host.InboundRepo.query!(
         """
-        INSERT INTO mailglass.mailglass_inbound_evidence
+        INSERT INTO mailglass_inbound.mailglass_inbound_evidence
           (id, tenant_id, provider, inbound_record_id, raw_payload, raw_headers,
            raw_mime, verification_facts, parse_warnings, attachment_blobs,
            inserted_at, updated_at)
@@ -369,7 +399,7 @@ EOF
     true = delivery.provider_message_id == "generated-host-#{delivery.id}"
 
     %{rows: [["sent", 2]]} = Host.Repo.query!(
-      "SELECT d.status, count(e.id) FROM mailglass.mailglass_deliveries d JOIN mailglass.mailglass_events e ON e.delivery_id = d.id WHERE d.id = $1::uuid GROUP BY d.status",
+      "SELECT d.status, count(e.id) FROM mailglass_core.mailglass_deliveries d JOIN mailglass_core.mailglass_events e ON e.delivery_id = d.id WHERE d.id = $1::uuid GROUP BY d.status",
       [Ecto.UUID.dump!(delivery.id)]
     )
   '
@@ -398,7 +428,7 @@ EOF
     )
 
     %{rows: [[1]]} = Host.Repo.query!(
-      "SELECT count(*) FROM mailglass.mailglass_deliveries WHERE id = $1::uuid AND tenant_id = $mg$generated-host$mg$",
+      "SELECT count(*) FROM mailglass_core.mailglass_deliveries WHERE id = $1::uuid AND tenant_id = $mg$generated-host$mg$",
       [Ecto.UUID.dump!(delivery.id)]
     )
 
@@ -444,27 +474,64 @@ EOF
     delivery_id = System.fetch_env!("ASYNC_DELIVERY_ID")
 
     %{rows: [["sent", "dispatched", provider_message_id, 2]]} = Host.Repo.query!(
-      "SELECT d.status, d.last_event_type, d.provider_message_id, count(e.id) FROM mailglass.mailglass_deliveries d JOIN mailglass.mailglass_events e ON e.delivery_id = d.id WHERE d.id = $1::uuid GROUP BY d.status, d.last_event_type, d.provider_message_id",
+      "SELECT d.status, d.last_event_type, d.provider_message_id, count(e.id) FROM mailglass_core.mailglass_deliveries d JOIN mailglass_core.mailglass_events e ON e.delivery_id = d.id WHERE d.id = $1::uuid GROUP BY d.status, d.last_event_type, d.provider_message_id",
       [Ecto.UUID.dump!(delivery_id)]
     )
 
     true = provider_message_id == "generated-host-#{delivery_id}"
 
     %{rows: [[true]]} = Host.Repo.query!(
-      "SELECT EXISTS (SELECT 1 FROM mailglass.mailglass_deliveries WHERE id = $1::uuid AND metadata::text LIKE $mg$%generated async proof%$mg$)",
+      "SELECT EXISTS (SELECT 1 FROM mailglass_core.mailglass_deliveries WHERE id = $1::uuid AND metadata::text LIKE $mg$%generated async proof%$mg$)",
       [Ecto.UUID.dump!(delivery_id)]
     )
   '
 
   checkpoint "${journey_name}" persisted_outcome
 
+  ASYNC_DELIVERY_ID="${async_delivery_id}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    delivery_id = System.fetch_env!("ASYNC_DELIVERY_ID")
+    Ecto.Adapters.Postgres = Host.InboundRepo.__adapter__()
+    {:ok, :generated} =
+      Host.GeneratedHostTenancy.resolve_outbound_adapter_ref(%{tenant_id: "generated-host"})
+
+    %{rows: [["generated", provider_message_id]]} = Host.Repo.query!(
+      "SELECT adapter_ref, provider_message_id FROM mailglass_core.mailglass_deliveries WHERE id = $1::uuid",
+      [Ecto.UUID.dump!(delivery_id)]
+    )
+
+    true = provider_message_id == "generated-host-#{delivery_id}"
+  '
+
+  checkpoint "${journey_name}" custom_modules
+
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    Host.Repo.query!("CREATE TABLE IF NOT EXISTS public.generated_host_marker (id integer PRIMARY KEY)")
+
+    %{rows: [["mailglass_core.mailglass_deliveries"]]} =
+      Host.Repo.query!("SELECT to_regclass($mg$mailglass_core.mailglass_deliveries$mg$)::text")
+
+    %{rows: [["mailglass_inbound.mailglass_inbound_records"]]} =
+      Host.InboundRepo.query!("SELECT to_regclass($mg$mailglass_inbound.mailglass_inbound_records$mg$)::text")
+
+    %{rows: [[nil, nil]]} = Host.Repo.query!(
+      "SELECT to_regclass($mg$public.mailglass_deliveries$mg$), to_regclass($mg$public.mailglass_inbound_records$mg$)"
+    )
+
+    %{rows: [[2]]} = Host.Repo.query!(
+      "SELECT count(*) FROM information_schema.tables WHERE table_schema = $mg$public$mg$ AND table_name = ANY($1)",
+      [["core_schema_migrations", "inbound_schema_migrations"]]
+    )
+  '
+
+  checkpoint "${journey_name}" multi_repo_prefixes
+
   sleep 1
   run_generator "${first_upgrade}" "${journey_url}" --upgrade --from "$(if [ "${first_upgrade}" = core ]; then printf 5; else printf 1; fi)"
   sleep 1
   run_generator "${second_upgrade}" "${journey_url}" --upgrade --from "$(if [ "${second_upgrade}" = core ]; then printf 5; else printf 1; fi)"
 
-  core_upgrade_path="$(find "${migrations_path}" -name '*_mailglass_upgrade.exs' -print -quit)"
-  inbound_upgrade_path="$(find "${migrations_path}" -name '*_mailglass_inbound_upgrade.exs' -print -quit)"
+  core_upgrade_path="$(find "${core_migrations_path}" -name '*_mailglass_upgrade.exs' -print -quit)"
+  inbound_upgrade_path="$(find "${inbound_migrations_path}" -name '*_mailglass_inbound_upgrade.exs' -print -quit)"
 
   for upgrade_path in "${core_upgrade_path}" "${inbound_upgrade_path}"; do
     rg -q '@disable_ddl_transaction true' "${upgrade_path}"
@@ -473,9 +540,10 @@ EOF
   done
 
   rg -q 'Mailglass\.Migration\.down\(repo: Host\.Repo, version: 5, non_transactional_wrapper: true\)' "${core_upgrade_path}"
-  rg -q 'MailglassInbound\.Migration\.down\(repo: Host\.Repo, version: 1, non_transactional_wrapper: true\)' "${inbound_upgrade_path}"
+  rg -q 'MailglassInbound\.Migration\.down\(repo: Host\.InboundRepo, version: 1, non_transactional_wrapper: true\)' "${inbound_upgrade_path}"
 
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.Repo
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.InboundRepo
 
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     alias MailglassInbound.InboundMessage
@@ -484,7 +552,7 @@ EOF
     if Mailglass.Migration.migrated_version(repo: Host.Repo) != 6,
       do: raise("core upgrade did not reach V06")
 
-    if MailglassInbound.Migration.migrated_version(repo: Host.Repo) != 2,
+    if MailglassInbound.Migration.migrated_version(repo: Host.InboundRepo) != 2,
       do: raise("inbound upgrade did not reach V02")
 
     handoff = %{
@@ -501,25 +569,25 @@ EOF
       }
     }
 
-    {:ok, %{status: :duplicate}} = Persist.persist(handoff, repo: Host.Repo, routes: [])
+    {:ok, %{status: :duplicate}} = Persist.persist(handoff, repo: Host.InboundRepo, routes: [])
 
     {:ok, %{count: 1, done?: false, next_cursor: cursor}} =
-      Persist.backfill_sha256(repo: Host.Repo, prefix: "mailglass", limit: 1)
+      Persist.backfill_sha256(repo: Host.InboundRepo, prefix: "mailglass_inbound", limit: 1)
 
-    %{rows: [[1]]} = Host.Repo.query!("SELECT count(*) FROM mailglass.mailglass_inbound_evidence WHERE raw_mime_sha256 IS NULL")
+    %{rows: [[1]]} = Host.InboundRepo.query!("SELECT count(*) FROM mailglass_inbound.mailglass_inbound_evidence WHERE raw_mime_sha256 IS NULL")
 
     {:ok, %{count: 1, done?: true}} =
-      Persist.backfill_sha256(repo: Host.Repo, prefix: "mailglass", limit: 1, after_id: cursor)
+      Persist.backfill_sha256(repo: Host.InboundRepo, prefix: "mailglass_inbound", limit: 1, after_id: cursor)
 
     {:ok, %{count: 0, done?: true}} =
-      Persist.backfill_sha256(repo: Host.Repo, prefix: "mailglass", limit: 1)
+      Persist.backfill_sha256(repo: Host.InboundRepo, prefix: "mailglass_inbound", limit: 1)
 
     raw_signed_body = <<0, 255, 13, 10, 123, 34, 98, 121, 116, 101, 115, 34, 125>>
     webhook_id = Ecto.UUID.generate()
 
     Host.Repo.query!(
       """
-      INSERT INTO mailglass.mailglass_webhook_events
+      INSERT INTO mailglass_core.mailglass_webhook_events
         (id, tenant_id, provider, provider_event_id, event_type_raw, status,
          raw_payload, raw_signed_body, received_at, inserted_at, updated_at)
       VALUES ($1::uuid, $mg$generated-host$mg$, $mg$postmark$mg$, $mg$byte-proof$mg$, $mg$Delivery$mg$,
@@ -529,51 +597,74 @@ EOF
     )
 
     %{rows: [[^raw_signed_body]]} =
-      Host.Repo.query!("SELECT raw_signed_body FROM mailglass.mailglass_webhook_events WHERE id = $1::uuid", [Ecto.UUID.dump!(webhook_id)])
+      Host.Repo.query!("SELECT raw_signed_body FROM mailglass_core.mailglass_webhook_events WHERE id = $1::uuid", [Ecto.UUID.dump!(webhook_id)])
 
-    expected_indexes =
-      Mailglass.Migrations.Postgres.V06.concurrent_indexes() ++
-        MailglassInbound.Migrations.Postgres.V02.concurrent_indexes()
+    core_names = Mailglass.Migrations.Postgres.V06.concurrent_indexes()
+    inbound_names = MailglassInbound.Migrations.Postgres.V02.concurrent_indexes()
 
-    %{rows: index_rows} = Host.Repo.query!(
+    %{rows: core_index_rows} = Host.Repo.query!(
       """
       SELECT c.relname, i.indisvalid, i.indisready
       FROM pg_index AS i
       JOIN pg_class AS c ON c.oid = i.indexrelid
       JOIN pg_namespace AS n ON n.oid = c.relnamespace
-      WHERE n.nspname = $mg$mailglass$mg$ AND c.relname = ANY($1)
+      WHERE n.nspname = $mg$mailglass_core$mg$ AND c.relname = ANY($1)
       ORDER BY c.relname
       """,
-      [expected_indexes]
+      [core_names]
     )
 
-    if length(index_rows) != length(expected_indexes) or
-         Enum.any?(index_rows, fn [_name, valid, ready] -> not valid or not ready end),
-      do: raise("generated upgrade indexes are missing or invalid: #{inspect(index_rows)}")
+    %{rows: inbound_index_rows} = Host.InboundRepo.query!(
+      """
+      SELECT c.relname, i.indisvalid, i.indisready
+      FROM pg_index AS i
+      JOIN pg_class AS c ON c.oid = i.indexrelid
+      JOIN pg_namespace AS n ON n.oid = c.relnamespace
+      WHERE n.nspname = $mg$mailglass_inbound$mg$ AND c.relname = ANY($1)
+      ORDER BY c.relname
+      """,
+      [inbound_names]
+    )
+
+    if length(core_index_rows) != length(core_names) or
+         Enum.any?(core_index_rows, fn [_name, valid, ready] -> not valid or not ready end) or
+         length(inbound_index_rows) != length(inbound_names) or
+         Enum.any?(inbound_index_rows, fn [_name, valid, ready] -> not valid or not ready end),
+      do: raise("generated upgrade indexes are missing or invalid")
 
     Host.Repo.checkout(fn ->
       Host.Repo.query!("SET enable_seqscan = off")
-      webhook_plan = Host.Repo.query!("EXPLAIN (FORMAT JSON) SELECT id FROM mailglass.mailglass_webhook_events WHERE status = $mg$pending$mg$ ORDER BY inserted_at, id LIMIT 10")
-      inbound_plan = Host.Repo.query!("EXPLAIN (FORMAT JSON) SELECT id FROM mailglass.mailglass_inbound_evidence WHERE tenant_id = $mg$generated-host$mg$ AND provider = $mg$sendgrid$mg$ AND raw_mime_sha256 = decode(repeat($mg$00$mg$, 32), $mg$hex$mg$)")
-      plans = inspect(webhook_plan.rows) <> inspect(inbound_plan.rows)
+      webhook_plan = Host.Repo.query!("EXPLAIN (FORMAT JSON) SELECT id FROM mailglass_core.mailglass_webhook_events WHERE status = $mg$pending$mg$ ORDER BY inserted_at, id LIMIT 10")
+      plans = inspect(webhook_plan.rows)
 
-      unless String.contains?(plans, "mailglass_webhook_events_status_age_id_idx") and
-               String.contains?(plans, "mailglass_inbound_evidence_sha256_idx"),
+      unless String.contains?(plans, "mailglass_webhook_events_status_age_id_idx"),
         do: raise("expected generated indexes were absent from EXPLAIN plans: #{plans}")
 
       Host.Repo.query!("RESET enable_seqscan")
     end)
+
+    Host.InboundRepo.checkout(fn ->
+      Host.InboundRepo.query!("SET enable_seqscan = off")
+      inbound_plan = Host.InboundRepo.query!("EXPLAIN (FORMAT JSON) SELECT id FROM mailglass_inbound.mailglass_inbound_evidence WHERE tenant_id = $mg$generated-host$mg$ AND provider = $mg$sendgrid$mg$ AND raw_mime_sha256 = decode(repeat($mg$00$mg$, 32), $mg$hex$mg$)")
+
+      unless String.contains?(inspect(inbound_plan.rows), "mailglass_inbound_evidence_sha256_idx"),
+        do: raise("expected inbound generated index was absent from EXPLAIN plan")
+
+      Host.InboundRepo.query!("RESET enable_seqscan")
+    end)
   '
+
+  checkpoint "${journey_name}" upgrade
 
   # Create the exact PostgreSQL failure residue that CREATE INDEX CONCURRENTLY
   # leaves behind, then rerun the generated core wrapper from anchor V05.
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     name = "mailglass_webhook_events_status_age_id_idx"
-    Host.Repo.query!("DROP INDEX CONCURRENTLY IF EXISTS mailglass.#{name}")
+    Host.Repo.query!("DROP INDEX CONCURRENTLY IF EXISTS mailglass_core.#{name}")
 
     try do
       Host.Repo.query!(
-        "CREATE INDEX CONCURRENTLY #{name} ON mailglass.mailglass_webhook_events ((1 / (CASE WHEN status = $mg$succeeded$mg$ THEN 0 ELSE 1 END)))"
+        "CREATE INDEX CONCURRENTLY #{name} ON mailglass_core.mailglass_webhook_events ((1 / (CASE WHEN status = $mg$succeeded$mg$ THEN 0 ELSE 1 END)))"
       )
 
       raise "invalid-index fixture unexpectedly succeeded"
@@ -588,7 +679,7 @@ EOF
       FROM pg_index AS i
       JOIN pg_class AS c ON c.oid = i.indexrelid
       JOIN pg_namespace AS n ON n.oid = c.relnamespace
-      WHERE n.nspname = $mg$mailglass$mg$ AND c.relname = $1
+      WHERE n.nspname = $mg$mailglass_core$mg$ AND c.relname = $1
       """,
       [name]
     )
@@ -598,8 +689,8 @@ EOF
 
   CORE_UPGRADE_VERSION="${core_upgrade_version}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     {version, ""} = System.fetch_env!("CORE_UPGRADE_VERSION") |> Integer.parse()
-    Host.Repo.query!("DELETE FROM schema_migrations WHERE version = $1", [version])
-    Host.Repo.query!("COMMENT ON TABLE mailglass.mailglass_events IS $mg$5$mg$")
+    Host.Repo.query!("DELETE FROM core_schema_migrations WHERE version = $1", [version])
+    Host.Repo.query!("COMMENT ON TABLE mailglass_core.mailglass_events IS $mg$5$mg$")
   '
 
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.Repo
@@ -617,7 +708,7 @@ EOF
       FROM pg_index AS i
       JOIN pg_class AS c ON c.oid = i.indexrelid
       JOIN pg_namespace AS n ON n.oid = c.relnamespace
-      WHERE n.nspname = $mg$mailglass$mg$ AND c.relname = ANY($1)
+      WHERE n.nspname = $mg$mailglass_core$mg$ AND c.relname = ANY($1)
       """,
       [names]
     )
@@ -631,11 +722,11 @@ EOF
   # it can rebuild all package-owned indexes.
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     name = "mailglass_inbound_evidence_retention_idx"
-    Host.Repo.query!("DROP INDEX CONCURRENTLY IF EXISTS mailglass.#{name}")
+    Host.InboundRepo.query!("DROP INDEX CONCURRENTLY IF EXISTS mailglass_inbound.#{name}")
 
     try do
-      Host.Repo.query!(
-        "CREATE INDEX CONCURRENTLY #{name} ON mailglass.mailglass_inbound_evidence ((1 / (CASE WHEN provider = $mg$sendgrid$mg$ THEN 0 ELSE 1 END)))"
+      Host.InboundRepo.query!(
+        "CREATE INDEX CONCURRENTLY #{name} ON mailglass_inbound.mailglass_inbound_evidence ((1 / (CASE WHEN provider = $mg$sendgrid$mg$ THEN 0 ELSE 1 END)))"
       )
 
       raise "invalid-index fixture unexpectedly succeeded"
@@ -644,13 +735,13 @@ EOF
         if error.postgres.code != :division_by_zero, do: reraise(error, __STACKTRACE__)
     end
 
-    %{rows: [[false]]} = Host.Repo.query!(
+    %{rows: [[false]]} = Host.InboundRepo.query!(
       """
       SELECT i.indisvalid
       FROM pg_index AS i
       JOIN pg_class AS c ON c.oid = i.indexrelid
       JOIN pg_namespace AS n ON n.oid = c.relnamespace
-      WHERE n.nspname = $mg$mailglass$mg$ AND c.relname = $1
+      WHERE n.nspname = $mg$mailglass_inbound$mg$ AND c.relname = $1
       """,
       [name]
     )
@@ -660,26 +751,26 @@ EOF
 
   INBOUND_UPGRADE_VERSION="${inbound_upgrade_version}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     {version, ""} = System.fetch_env!("INBOUND_UPGRADE_VERSION") |> Integer.parse()
-    Host.Repo.query!("DELETE FROM schema_migrations WHERE version = $1", [version])
-    Host.Repo.query!("COMMENT ON TABLE mailglass.mailglass_inbound_records IS $mg$1$mg$")
+    Host.InboundRepo.query!("DELETE FROM inbound_schema_migrations WHERE version = $1", [version])
+    Host.InboundRepo.query!("COMMENT ON TABLE mailglass_inbound.mailglass_inbound_records IS $mg$1$mg$")
   '
 
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.Repo
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.Repo
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.InboundRepo
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.InboundRepo
 
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
-    if MailglassInbound.Migration.migrated_version(repo: Host.Repo) != 2,
+    if MailglassInbound.Migration.migrated_version(repo: Host.InboundRepo) != 2,
       do: raise("inbound invalid-index retry did not restore V02")
 
     names = MailglassInbound.Migrations.Postgres.V02.concurrent_indexes()
 
-    %{rows: rows} = Host.Repo.query!(
+    %{rows: rows} = Host.InboundRepo.query!(
       """
       SELECT c.relname, i.indisvalid, i.indisready
       FROM pg_index AS i
       JOIN pg_class AS c ON c.oid = i.indexrelid
       JOIN pg_namespace AS n ON n.oid = c.relnamespace
-      WHERE n.nspname = $mg$mailglass$mg$ AND c.relname = ANY($1)
+      WHERE n.nspname = $mg$mailglass_inbound$mg$ AND c.relname = ANY($1)
       """,
       [names]
     )
@@ -688,43 +779,71 @@ EOF
       do: raise("inbound invalid-index retry did not converge: #{inspect(rows)}")
   '
 
-  FIRST_ROLLBACK_PACKAGE="${second_upgrade}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --step 1
+  rollback_package "${second_upgrade}" "${journey_url}"
   FIRST_ROLLBACK_PACKAGE="${second_upgrade}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     case System.fetch_env!("FIRST_ROLLBACK_PACKAGE") do
       "core" ->
         5 = Mailglass.Migration.migrated_version(repo: Host.Repo)
-        2 = MailglassInbound.Migration.migrated_version(repo: Host.Repo)
+        2 = MailglassInbound.Migration.migrated_version(repo: Host.InboundRepo)
 
       "inbound" ->
         6 = Mailglass.Migration.migrated_version(repo: Host.Repo)
-        1 = MailglassInbound.Migration.migrated_version(repo: Host.Repo)
+        1 = MailglassInbound.Migration.migrated_version(repo: Host.InboundRepo)
     end
   '
 
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --step 1
+  rollback_package "${first_upgrade}" "${journey_url}"
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     5 = Mailglass.Migration.migrated_version(repo: Host.Repo)
-    1 = MailglassInbound.Migration.migrated_version(repo: Host.Repo)
+    1 = MailglassInbound.Migration.migrated_version(repo: Host.InboundRepo)
 
-    %{rows: [[nil]]} = Host.Repo.query!("SELECT to_regclass($mg$mailglass.mailglass_webhook_events_status_age_id_idx$mg$)")
-    %{rows: [[nil]]} = Host.Repo.query!("SELECT to_regclass($mg$mailglass.mailglass_inbound_evidence_sha256_idx$mg$)")
+    %{rows: [[nil]]} = Host.Repo.query!("SELECT to_regclass($mg$mailglass_core.mailglass_webhook_events_status_age_id_idx$mg$)")
+    %{rows: [[nil]]} = Host.InboundRepo.query!("SELECT to_regclass($mg$mailglass_inbound.mailglass_inbound_evidence_sha256_idx$mg$)")
 
     %{rows: [[0]]} = Host.Repo.query!(
       """
       SELECT count(*) FROM information_schema.columns
-      WHERE table_schema = $mg$mailglass$mg$ AND
-        ((table_name = $mg$mailglass_webhook_events$mg$ AND column_name = $mg$raw_signed_body$mg$) OR
-         (table_name = $mg$mailglass_inbound_evidence$mg$ AND column_name = $mg$raw_mime_sha256$mg$))
+      WHERE table_schema = $mg$mailglass_core$mg$ AND
+        table_name = $mg$mailglass_webhook_events$mg$ AND column_name = $mg$raw_signed_body$mg$
       """
     )
 
-    for relation <- ["mailglass_events", "mailglass_webhook_events", "mailglass_inbound_records", "mailglass_inbound_evidence"] do
-      %{rows: [[name]]} = Host.Repo.query!("SELECT to_regclass($1)", ["mailglass.#{relation}"])
+    %{rows: [[0]]} = Host.InboundRepo.query!(
+      """
+      SELECT count(*) FROM information_schema.columns
+      WHERE table_schema = $mg$mailglass_inbound$mg$ AND
+        table_name = $mg$mailglass_inbound_evidence$mg$ AND column_name = $mg$raw_mime_sha256$mg$
+      """
+    )
+
+    for relation <- ["mailglass_events", "mailglass_webhook_events"] do
+      %{rows: [[name]]} = Host.Repo.query!("SELECT to_regclass($1)", ["mailglass_core.#{relation}"])
       if is_nil(name), do: raise("additive rollback removed prior relation #{relation}")
     end
 
-    %{rows: [[2]]} = Host.Repo.query!("SELECT count(*) FROM mailglass.mailglass_inbound_evidence")
+    for relation <- ["mailglass_inbound_records", "mailglass_inbound_evidence"] do
+      %{rows: [[name]]} = Host.InboundRepo.query!("SELECT to_regclass($1)", ["mailglass_inbound.#{relation}"])
+      if is_nil(name), do: raise("additive rollback removed prior relation #{relation}")
+    end
+
+    %{rows: [[2]]} = Host.InboundRepo.query!("SELECT count(*) FROM mailglass_inbound.mailglass_inbound_evidence")
+    %{rows: [["generated_host_marker"]]} = Host.Repo.query!("SELECT to_regclass($mg$public.generated_host_marker$mg$)::text")
   '
+
+  checkpoint "${journey_name}" rollback
+
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}"
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}"
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}"
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}"
+
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    5 = Mailglass.Migration.migrated_version(repo: Host.Repo)
+    1 = MailglassInbound.Migration.migrated_version(repo: Host.InboundRepo)
+    %{rows: [["generated_host_marker"]]} = Host.Repo.query!("SELECT to_regclass($mg$public.generated_host_marker$mg$)::text")
+  '
+
+  checkpoint "${journey_name}" idempotent_rerun
 }
 
 # Opposing generator order proves package-independent upgrade and rollback.
