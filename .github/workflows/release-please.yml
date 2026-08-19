@@ -193,6 +193,12 @@ jobs:
           [[ "$number" =~ ^[0-9]+$ ]]
           [ "$head" = "$proposal_head" ]
           [ "$source" = "$source_sha" ]
+          git fetch --no-tags origin main "$source_sha"
+          git merge-base --is-ancestor "$source_sha" origin/main
+          # Planning/authorization commits may advance main; package content may
+          # not. A changed publishable set requires a newly captured candidate.
+          git diff --quiet "$source_sha" origin/main -- mix.exs mailglass_admin mailglass_inbound README.md mailglass_admin/README.md mailglass_inbound
+          [ "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main/protection/required_status_checks" --jq '.strict')" = true ]
           git fetch --no-tags origin "$proposal_head"
           git checkout --detach "$proposal_head"
           actual_digest=$(git ls-files -z | grep -zv '^\.planning/release-target\.json$' | LC_ALL=C sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}')
