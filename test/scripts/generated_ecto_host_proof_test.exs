@@ -23,18 +23,20 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
 
   @all_stages @fresh_delivery_stages ++ @boundary_stages
 
-  @checkpoint_observations %{
-    "fresh_install" =>
-      "SELECT sequence, package FROM public.generated_host_install_order ORDER BY sequence",
-    "sync_send" => "SELECT d.status, count(e.id) FROM mailglass_core.mailglass_deliveries",
-    "atomic_enqueue" => "generated_host_atomic_enqueue_failure",
-    "worker_run" => "state == \"completed\"",
-    "persisted_outcome" => "SELECT d.status, d.last_event_type, d.provider_message_id",
-    "custom_modules" => "Host.GeneratedHostTenancy.resolve_outbound_adapter_ref",
-    "multi_repo_prefixes" => "SELECT count(*) FROM information_schema.tables",
-    "upgrade" => "generated upgrade indexes are missing or invalid",
-    "rollback" => "additive rollback removed prior relation",
-    "idempotent_rerun" => "SELECT to_regclass($mg$public.generated_host_marker$mg$)::text"
+  @valid_attestations %{
+    "fresh_install" => %{
+      "core_first" => "install_order=core,inbound",
+      "inbound_first" => "install_order=inbound,core"
+    },
+    "sync_send" => "delivery=sent;events=2",
+    "atomic_enqueue" => "rollback=0,0,0;commit=1,1",
+    "worker_run" => "job=completed",
+    "persisted_outcome" => "delivery=sent;event=dispatched;events=2",
+    "custom_modules" => "repos=postgres;adapter=generated",
+    "multi_repo_prefixes" => "prefixes=isolated;migration_sources=2",
+    "upgrade" => "versions=6,2;indexes=valid",
+    "rollback" => "versions=5,1;host_marker=present",
+    "idempotent_rerun" => "versions=5,1;host_marker=present"
   }
 
   @required_script_snippets [
@@ -165,18 +167,24 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
            "the proof must exercise generated package wrappers, not hand-write package DDL"
   end
 
-  test "runtime checkpoints have load-bearing observable state controls" do
-    source = File.read!(@script_path)
+  test "runtime checkpoints consume closed sanitized attestations with executable mutations" do
+    for journey <- ["core_first", "inbound_first"],
+        {stage, configured_result} <- @valid_attestations do
+      result =
+        case configured_result do
+          result_by_journey when is_map(result_by_journey) -> Map.fetch!(result_by_journey, journey)
+          shared_result -> shared_result
+        end
 
-    Enum.each(@checkpoint_observations, fn {stage, observation} ->
-      assert_runtime_checkpoint_observation!(source, stage, observation)
+      assert_attestation_result(journey, stage, result, 0)
 
-      assert_raise ExUnit.AssertionError, fn ->
-        source
-        |> String.replace(observation, "removed observation", global: false)
-        |> assert_runtime_checkpoint_observation!(stage, observation)
+      for mutation <- ["", result <> ";forged", "verified"] do
+        assert_attestation_result(journey, stage, mutation, :failure)
       end
-    end)
+    end
+
+    assert_attestation_result("unknown", "fresh_install", "install_order=core,inbound", :failure)
+    assert_attestation_result("core_first", "unknown", "verified", :failure)
   end
 
   test "generated-host proof pins opposing generation and rollback orders" do
@@ -254,16 +262,18 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     refute source =~ "rm -rf \"${HOST_DIR}\""
   end
 
-  defp assert_runtime_checkpoint_observation!(source, stage, observation) do
-    checkpoint = ~s(checkpoint "${journey_name}" #{stage})
-    assert source =~ observation, "#{stage} is missing runtime observation #{inspect(observation)}"
-    assert source =~ checkpoint, "#{stage} checkpoint is missing"
+  defp assert_attestation_result(journey, stage, result, expected) do
+    {_output, exit_code} =
+      System.cmd(
+        "bash",
+        [@script_path, "--validate-attestation", journey, stage, result],
+        stderr_to_stdout: true
+      )
 
-    {observation_offset, _} = :binary.match(source, observation)
-    {checkpoint_offset, _} = :binary.match(source, checkpoint)
-
-    assert observation_offset < checkpoint_offset,
-           "#{stage} checkpoint must follow its observable runtime/database assertion"
+    case expected do
+      0 -> assert exit_code == 0
+      :failure -> assert exit_code != 0
+    end
   end
 
   defp assert_checkpoint_result(rows, expected) do

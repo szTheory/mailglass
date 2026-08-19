@@ -8,6 +8,48 @@ set -euo pipefail
 FRESH_DELIVERY_STAGES=(fresh_install sync_send atomic_enqueue worker_run persisted_outcome)
 BOUNDARY_STAGES=(custom_modules multi_repo_prefixes upgrade rollback idempotent_rerun)
 
+validate_stage_attestation() {
+  local journey="$1"
+  local stage="$2"
+  local result="$3"
+  local expected
+
+  case "${journey}|${stage}" in
+    core_first\|fresh_install) expected="install_order=core,inbound" ;;
+    inbound_first\|fresh_install) expected="install_order=inbound,core" ;;
+    core_first\|sync_send|inbound_first\|sync_send) expected="delivery=sent;events=2" ;;
+    core_first\|atomic_enqueue|inbound_first\|atomic_enqueue)
+      expected="rollback=0,0,0;commit=1,1"
+      ;;
+    core_first\|worker_run|inbound_first\|worker_run) expected="job=completed" ;;
+    core_first\|persisted_outcome|inbound_first\|persisted_outcome)
+      expected="delivery=sent;event=dispatched;events=2"
+      ;;
+    core_first\|custom_modules|inbound_first\|custom_modules)
+      expected="repos=postgres;adapter=generated"
+      ;;
+    core_first\|multi_repo_prefixes|inbound_first\|multi_repo_prefixes)
+      expected="prefixes=isolated;migration_sources=2"
+      ;;
+    core_first\|upgrade|inbound_first\|upgrade) expected="versions=6,2;indexes=valid" ;;
+    core_first\|rollback|inbound_first\|rollback)
+      expected="versions=5,1;host_marker=present"
+      ;;
+    core_first\|idempotent_rerun|inbound_first\|idempotent_rerun)
+      expected="versions=5,1;host_marker=present"
+      ;;
+    *)
+      echo "Generated-host attestation has an unknown journey/stage." >&2
+      return 1
+      ;;
+  esac
+
+  if [ "${result}" != "${expected}" ]; then
+    echo "Generated-host attestation mismatch for ${journey}/${stage}." >&2
+    return 1
+  fi
+}
+
 validate_checkpoint_file() {
   local checkpoint_path="$1"
   local expected_rows=()
@@ -59,6 +101,16 @@ if [ "${1:-}" = "--validate-checkpoints" ]; then
   exit
 fi
 
+if [ "${1:-}" = "--validate-attestation" ]; then
+  if [ "$#" -ne 4 ]; then
+    echo "Usage: $0 --validate-attestation JOURNEY STAGE RESULT" >&2
+    exit 2
+  fi
+
+  validate_stage_attestation "$2" "$3" "$4"
+  exit
+fi
+
 MAILGLASS_PATH="${MAILGLASS_PATH:?MAILGLASS_PATH must point at the working tree}"
 DATABASE_URL="${DATABASE_URL:?DATABASE_URL must name the generated-host scratch database}"
 
@@ -69,6 +121,7 @@ fi
 
 WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mailglass-generated-ecto-host.XXXXXX")"
 CHECKPOINT_FILE="${WORK_DIR}/generated-host-checkpoints.txt"
+ATTESTATION_FILE="${WORK_DIR}/generated-host-attestations.txt"
 CHECKPOINT_SEQUENCE=0
 JOURNEY_HOST_DIRS=()
 JOURNEY_DATABASE_URLS=()
@@ -76,8 +129,19 @@ JOURNEY_DATABASE_URLS=()
 checkpoint() {
   local journey="$1"
   local stage="$2"
+  local result_path="$3"
+  local result
+
+  if [ ! -f "${result_path}" ]; then
+    echo "Generated-host runtime attestation is missing for ${journey}/${stage}." >&2
+    return 1
+  fi
+
+  result="$(<"${result_path}")"
+  validate_stage_attestation "${journey}" "${stage}" "${result}"
 
   CHECKPOINT_SEQUENCE=$((CHECKPOINT_SEQUENCE + 1))
+  printf '%s|%s|%s|%s\n' "${CHECKPOINT_SEQUENCE}" "${journey}" "${stage}" "${result}" >> "${ATTESTATION_FILE}"
   printf '%s|%s|%s|passed\n' "${CHECKPOINT_SEQUENCE}" "${journey}" "${stage}" >> "${CHECKPOINT_FILE}"
 }
 
@@ -156,10 +220,55 @@ rollback_package() {
   esac
 }
 
+migrate_package() {
+  local package="$1"
+  local journey_url="$2"
+  local install_sequence="$3"
+  local repo
+
+  case "${package}" in
+    core) repo="Host.Repo" ;;
+    inbound) repo="Host.InboundRepo" ;;
+    *)
+      echo "Unknown migration package: ${package}" >&2
+      exit 1
+      ;;
+  esac
+
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r "${repo}"
+
+  INSTALL_PACKAGE="${package}" INSTALL_SEQUENCE="${install_sequence}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run --no-start -e '
+      package = System.fetch_env!("INSTALL_PACKAGE")
+      {sequence, ""} = System.fetch_env!("INSTALL_SEQUENCE") |> Integer.parse()
+      relation =
+        case package do
+          "core" -> "mailglass_core.mailglass_events"
+          "inbound" -> "mailglass_inbound.mailglass_inbound_records"
+        end
+
+      {:ok, _repo} = Host.Repo.start_link()
+      %{rows: [[^relation]]} = Host.Repo.query!("SELECT to_regclass($1)::text", [relation])
+
+      Host.Repo.query!("""
+      CREATE TABLE IF NOT EXISTS public.generated_host_install_order (
+        sequence integer PRIMARY KEY,
+        package text NOT NULL CHECK (package IN ($mg$core$mg$, $mg$inbound$mg$))
+      )
+      """)
+
+      %{num_rows: 1} =
+        Host.Repo.query!(
+          "INSERT INTO public.generated_host_install_order (sequence, package) VALUES ($1, $2)",
+          [sequence, package]
+        )
+    '
+}
+
 run_journey() {
   local journey_name="$1"
-  local first_upgrade="$2"
-  local second_upgrade="$3"
+  local first_package="$2"
+  local second_package="$3"
   local journey_database="${SCRATCH_DATABASE}_${journey_name}"
   local journey_url
   local journey_dir="${WORK_DIR}/${journey_name}"
@@ -172,6 +281,7 @@ run_journey() {
   local inbound_upgrade_path
   local core_upgrade_version
   local inbound_upgrade_version
+  local stage_attestation_path
 
   case "${journey_name}" in
     core_first|inbound_first) ;;
@@ -280,9 +390,9 @@ EOF
   # Public initial generators provide the real wrappers. Pin only their facade
   # target versions to construct the prior release baseline; no package DDL is
   # copied into the host.
-  run_generator core "${journey_url}"
+  run_generator "${first_package}" "${journey_url}"
   sleep 1
-  run_generator inbound "${journey_url}"
+  run_generator "${second_package}" "${journey_url}"
 
   core_migrations_path="$(MIX_ENV=dev DATABASE_URL="${journey_url}" mix run --no-start --no-compile -e 'IO.write(Ecto.Migrator.migrations_path(Host.Repo))')"
   inbound_migrations_path="$(MIX_ENV=dev DATABASE_URL="${journey_url}" mix run --no-start --no-compile -e 'IO.write(Ecto.Migrator.migrations_path(Host.InboundRepo))')"
@@ -327,15 +437,31 @@ EOF
     exit 1
   fi
 
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.Repo
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.InboundRepo
+  migrate_package "${first_package}" "${journey_url}" 1
+  migrate_package "${second_package}" "${journey_url}" 2
 
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+  stage_attestation_path="${journey_dir}/fresh-install.attestation"
+  STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
+    EXPECTED_FIRST_PACKAGE="${first_package}" EXPECTED_SECOND_PACKAGE="${second_package}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    expected_first = System.fetch_env!("EXPECTED_FIRST_PACKAGE")
+    expected_second = System.fetch_env!("EXPECTED_SECOND_PACKAGE")
+
     if Mailglass.Migration.migrated_version(repo: Host.Repo) != 5,
       do: raise("core baseline did not stop at V05")
 
     if MailglassInbound.Migration.migrated_version(repo: Host.InboundRepo) != 1,
       do: raise("inbound baseline did not stop at V01")
+
+    %{rows: [[1, ^expected_first], [2, ^expected_second]]} =
+      Host.Repo.query!(
+        "SELECT sequence, package FROM public.generated_host_install_order ORDER BY sequence"
+      )
+
+    File.write!(
+      System.fetch_env!("STAGE_ATTESTATION_PATH"),
+      "install_order=#{expected_first},#{expected_second}"
+    )
 
     webhook_id = Ecto.UUID.generate()
 
@@ -379,9 +505,11 @@ EOF
     %{rows: [["oban_jobs"]]} = Host.Repo.query!("SELECT to_regclass($mg$public.oban_jobs$mg$)::text")
   '
 
-  checkpoint "${journey_name}" fresh_install
+  checkpoint "${journey_name}" fresh_install "${stage_attestation_path}"
 
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+  stage_attestation_path="${journey_dir}/sync-send.attestation"
+  STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     Mailglass.Tenancy.put_current("generated-host")
 
     message =
@@ -402,13 +530,64 @@ EOF
       "SELECT d.status, count(e.id) FROM mailglass_core.mailglass_deliveries d JOIN mailglass_core.mailglass_events e ON e.delivery_id = d.id WHERE d.id = $1::uuid GROUP BY d.status",
       [Ecto.UUID.dump!(delivery.id)]
     )
+
+    File.write!(System.fetch_env!("STAGE_ATTESTATION_PATH"), "delivery=sent;events=2")
   '
 
-  checkpoint "${journey_name}" sync_send
+  checkpoint "${journey_name}" sync_send "${stage_attestation_path}"
+
+  # Force the final Oban step in the enqueue Multi to fail for one known
+  # delivery id. The preceding delivery and queued-event writes must roll back
+  # with it; success-only co-existence is not sufficient atomicity evidence.
+  stage_attestation_path="${journey_dir}/atomic-enqueue.attestation"
+  STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    Mailglass.Tenancy.put_current("generated-host")
+    failure_id = Ecto.UUID.generate()
+    constraint = "generated_host_atomic_enqueue_failure"
+
+    Host.Repo.query!("""
+    ALTER TABLE public.oban_jobs
+      ADD CONSTRAINT #{constraint}
+      CHECK ((args->>$mg$delivery_id$mg$) IS DISTINCT FROM $mg$#{failure_id}$mg$)
+    """)
+
+    try do
+      message =
+        Swoosh.Email.new()
+        |> Swoosh.Email.from({"Generated", "sender@example.invalid"})
+        |> Swoosh.Email.to("rollback@example.invalid")
+        |> Swoosh.Email.subject("generated atomic rollback proof")
+        |> Swoosh.Email.text_body("generated atomic rollback proof")
+        |> Mailglass.Message.build(
+          mailable: Host.GeneratedProof,
+          tenant_id: "generated-host",
+          metadata: %{delivery_id: failure_id}
+        )
+
+      {:error, %{__exception__: true}} = Mailglass.deliver_later(message)
+
+      %{rows: [[0, 0, 0]]} = Host.Repo.query!(
+        """
+        SELECT
+          (SELECT count(*) FROM mailglass_core.mailglass_deliveries WHERE id = $1::uuid),
+          (SELECT count(*) FROM mailglass_core.mailglass_events WHERE delivery_id = $1::uuid),
+          (SELECT count(*) FROM public.oban_jobs WHERE args->>$mg$delivery_id$mg$ = $2)
+        """,
+        [Ecto.UUID.dump!(failure_id), failure_id]
+      )
+
+      File.write!(System.fetch_env!("STAGE_ATTESTATION_PATH"), "rollback=0,0,0")
+    after
+      Host.Repo.query!("ALTER TABLE public.oban_jobs DROP CONSTRAINT #{constraint}")
+    end
+  '
 
   async_delivery_id_path="${journey_dir}/async-delivery-id"
 
-  ASYNC_DELIVERY_ID_PATH="${async_delivery_id_path}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+  ASYNC_DELIVERY_ID_PATH="${async_delivery_id_path}" \
+    STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     Mailglass.Tenancy.put_current("generated-host")
 
     message =
@@ -433,6 +612,7 @@ EOF
     )
 
     File.write!(System.fetch_env!("ASYNC_DELIVERY_ID_PATH"), delivery.id)
+    File.write!(System.fetch_env!("STAGE_ATTESTATION_PATH"), ";commit=1,1", [:append])
   '
 
   async_delivery_id="$(<"${async_delivery_id_path}")"
@@ -442,9 +622,11 @@ EOF
     exit 1
   fi
 
-  checkpoint "${journey_name}" atomic_enqueue
+  checkpoint "${journey_name}" atomic_enqueue "${stage_attestation_path}"
 
-  ASYNC_DELIVERY_ID="${async_delivery_id}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+  stage_attestation_path="${journey_dir}/worker-run.attestation"
+  ASYNC_DELIVERY_ID="${async_delivery_id}" STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     delivery_id = System.fetch_env!("ASYNC_DELIVERY_ID")
 
     wait_until = fn predicate, description ->
@@ -466,11 +648,15 @@ EOF
 
       state == "completed"
     end, "Oban worker completion")
+
+    File.write!(System.fetch_env!("STAGE_ATTESTATION_PATH"), "job=completed")
   '
 
-  checkpoint "${journey_name}" worker_run
+  checkpoint "${journey_name}" worker_run "${stage_attestation_path}"
 
-  ASYNC_DELIVERY_ID="${async_delivery_id}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+  stage_attestation_path="${journey_dir}/persisted-outcome.attestation"
+  ASYNC_DELIVERY_ID="${async_delivery_id}" STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     delivery_id = System.fetch_env!("ASYNC_DELIVERY_ID")
 
     %{rows: [["sent", "dispatched", provider_message_id, 2]]} = Host.Repo.query!(
@@ -484,11 +670,18 @@ EOF
       "SELECT EXISTS (SELECT 1 FROM mailglass_core.mailglass_deliveries WHERE id = $1::uuid AND metadata::text LIKE $mg$%generated async proof%$mg$)",
       [Ecto.UUID.dump!(delivery_id)]
     )
+
+    File.write!(
+      System.fetch_env!("STAGE_ATTESTATION_PATH"),
+      "delivery=sent;event=dispatched;events=2"
+    )
   '
 
-  checkpoint "${journey_name}" persisted_outcome
+  checkpoint "${journey_name}" persisted_outcome "${stage_attestation_path}"
 
-  ASYNC_DELIVERY_ID="${async_delivery_id}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+  stage_attestation_path="${journey_dir}/custom-modules.attestation"
+  ASYNC_DELIVERY_ID="${async_delivery_id}" STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     delivery_id = System.fetch_env!("ASYNC_DELIVERY_ID")
     Ecto.Adapters.Postgres = Host.InboundRepo.__adapter__()
     {:ok, :generated} =
@@ -500,11 +693,14 @@ EOF
     )
 
     true = provider_message_id == "generated-host-#{delivery_id}"
+    File.write!(System.fetch_env!("STAGE_ATTESTATION_PATH"), "repos=postgres;adapter=generated")
   '
 
-  checkpoint "${journey_name}" custom_modules
+  checkpoint "${journey_name}" custom_modules "${stage_attestation_path}"
 
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+  stage_attestation_path="${journey_dir}/multi-repo-prefixes.attestation"
+  STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     Host.Repo.query!("CREATE TABLE IF NOT EXISTS public.generated_host_marker (id integer PRIMARY KEY)")
 
     %{rows: [["mailglass_core.mailglass_deliveries"]]} =
@@ -521,14 +717,19 @@ EOF
       "SELECT count(*) FROM information_schema.tables WHERE table_schema = $mg$public$mg$ AND table_name = ANY($1)",
       [["core_schema_migrations", "inbound_schema_migrations"]]
     )
+
+    File.write!(
+      System.fetch_env!("STAGE_ATTESTATION_PATH"),
+      "prefixes=isolated;migration_sources=2"
+    )
   '
 
-  checkpoint "${journey_name}" multi_repo_prefixes
+  checkpoint "${journey_name}" multi_repo_prefixes "${stage_attestation_path}"
 
   sleep 1
-  run_generator "${first_upgrade}" "${journey_url}" --upgrade --from "$(if [ "${first_upgrade}" = core ]; then printf 5; else printf 1; fi)"
+  run_generator "${first_package}" "${journey_url}" --upgrade --from "$(if [ "${first_package}" = core ]; then printf 5; else printf 1; fi)"
   sleep 1
-  run_generator "${second_upgrade}" "${journey_url}" --upgrade --from "$(if [ "${second_upgrade}" = core ]; then printf 5; else printf 1; fi)"
+  run_generator "${second_package}" "${journey_url}" --upgrade --from "$(if [ "${second_package}" = core ]; then printf 5; else printf 1; fi)"
 
   core_upgrade_path="$(find "${core_migrations_path}" -name '*_mailglass_upgrade.exs' -print -quit)"
   inbound_upgrade_path="$(find "${inbound_migrations_path}" -name '*_mailglass_inbound_upgrade.exs' -print -quit)"
@@ -545,7 +746,9 @@ EOF
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.Repo
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.InboundRepo
 
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+  stage_attestation_path="${journey_dir}/upgrade.attestation"
+  STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     alias MailglassInbound.InboundMessage
     alias MailglassInbound.Ingress.Persist
 
@@ -652,9 +855,11 @@ EOF
 
       Host.InboundRepo.query!("RESET enable_seqscan")
     end)
+
+    File.write!(System.fetch_env!("STAGE_ATTESTATION_PATH"), "versions=6,2;indexes=valid")
   '
 
-  checkpoint "${journey_name}" upgrade
+  checkpoint "${journey_name}" upgrade "${stage_attestation_path}"
 
   # Create the exact PostgreSQL failure residue that CREATE INDEX CONCURRENTLY
   # leaves behind, then rerun the generated core wrapper from anchor V05.
@@ -779,8 +984,8 @@ EOF
       do: raise("inbound invalid-index retry did not converge: #{inspect(rows)}")
   '
 
-  rollback_package "${second_upgrade}" "${journey_url}"
-  FIRST_ROLLBACK_PACKAGE="${second_upgrade}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+  rollback_package "${second_package}" "${journey_url}"
+  FIRST_ROLLBACK_PACKAGE="${second_package}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     case System.fetch_env!("FIRST_ROLLBACK_PACKAGE") do
       "core" ->
         5 = Mailglass.Migration.migrated_version(repo: Host.Repo)
@@ -792,8 +997,10 @@ EOF
     end
   '
 
-  rollback_package "${first_upgrade}" "${journey_url}"
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+  rollback_package "${first_package}" "${journey_url}"
+  stage_attestation_path="${journey_dir}/rollback.attestation"
+  STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     5 = Mailglass.Migration.migrated_version(repo: Host.Repo)
     1 = MailglassInbound.Migration.migrated_version(repo: Host.InboundRepo)
 
@@ -828,25 +1035,36 @@ EOF
 
     %{rows: [[2]]} = Host.InboundRepo.query!("SELECT count(*) FROM mailglass_inbound.mailglass_inbound_evidence")
     %{rows: [["generated_host_marker"]]} = Host.Repo.query!("SELECT to_regclass($mg$public.generated_host_marker$mg$)::text")
+    File.write!(
+      System.fetch_env!("STAGE_ATTESTATION_PATH"),
+      "versions=5,1;host_marker=present"
+    )
   '
 
-  checkpoint "${journey_name}" rollback
+  checkpoint "${journey_name}" rollback "${stage_attestation_path}"
 
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}"
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}"
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}"
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}"
 
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+  stage_attestation_path="${journey_dir}/idempotent-rerun.attestation"
+  STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
     5 = Mailglass.Migration.migrated_version(repo: Host.Repo)
     1 = MailglassInbound.Migration.migrated_version(repo: Host.InboundRepo)
     %{rows: [["generated_host_marker"]]} = Host.Repo.query!("SELECT to_regclass($mg$public.generated_host_marker$mg$)::text")
+    File.write!(
+      System.fetch_env!("STAGE_ATTESTATION_PATH"),
+      "versions=5,1;host_marker=present"
+    )
   '
 
-  checkpoint "${journey_name}" idempotent_rerun
+  checkpoint "${journey_name}" idempotent_rerun "${stage_attestation_path}"
 }
 
-# Opposing generator order proves package-independent upgrade and rollback.
+# Opposing generator, initial migration, upgrade, and rollback order proves
+# package independence across the complete journey.
 run_journey core_first core inbound
 run_journey inbound_first inbound core
 

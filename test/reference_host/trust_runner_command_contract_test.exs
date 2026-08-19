@@ -117,7 +117,9 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
     source = File.read!(@webhook_proof_path)
 
     assert source =~ "MAILGLASS_REFERENCE_HOST_PACKAGE_MODE"
+    assert source =~ "MAILGLASS_CORE_WORKSPACE_EBIN"
     assert source =~ "MAILGLASS_INBOUND_WORKSPACE_EBIN"
+    assert source =~ "add_workspace_core_code_path!"
     assert source =~ "add_workspace_inbound_code_path!"
     assert source =~ ~s("workspace")
     assert source =~ ~s("published")
@@ -126,6 +128,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
     refute source =~ "ingress/verified_request.ex"
     refute source =~ "ingress/pipeline.ex"
     refute source =~ "ports/core.ex"
+    assert source =~ "Path.dirname(loaded_path) == ebin_path"
   end
 
   defp token_present?(files_with_content, token) do
