@@ -182,6 +182,58 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
            "the proof must exercise generated package wrappers, not hand-write package DDL"
   end
 
+  test "package resolution preserves local-path default and fails closed in exact-Hex mode" do
+    source = File.read!(@script_path)
+
+    {path_deps, 0} =
+      System.cmd("bash", [@script_path, "--render-package-dependencies", "path", "/tmp/mailglass source"],
+        stderr_to_stdout: true
+      )
+
+    assert path_deps =~ ~s({:mailglass, path: "/tmp/mailglass source", override: true})
+    assert path_deps =~ ~s({:mailglass_inbound, path: "/tmp/mailglass source/mailglass_inbound"})
+    refute path_deps =~ "mailglass_admin"
+    refute path_deps =~ "git:"
+
+    {hex_deps, 0} =
+      System.cmd(
+        "bash",
+        [
+          @script_path,
+          "--render-package-dependencies",
+          "exact_hex",
+          "3.1.2",
+          "3.1.2",
+          "2.4.0"
+        ],
+        stderr_to_stdout: true
+      )
+
+    assert hex_deps =~ ~s({:mailglass, "== 3.1.2", override: true})
+    assert hex_deps =~ ~s({:mailglass_admin, "== 3.1.2"})
+    assert hex_deps =~ ~s({:mailglass_inbound, "== 2.4.0"})
+    refute hex_deps =~ "path:"
+    refute hex_deps =~ "git:"
+
+    for invalid_args <- [
+          ["exact_hex", "3.1", "3.1.2", "2.4.0"],
+          ["exact_hex", "3.1.2-rc.1", "3.1.2", "2.4.0"],
+          ["exact_hex", "3.1.2", "", "2.4.0"],
+          ["hex", "3.1.2", "3.1.2", "2.4.0"]
+        ] do
+      {_output, status} =
+        System.cmd("bash", [@script_path, "--render-package-dependencies" | invalid_args],
+          stderr_to_stdout: true
+        )
+
+      assert status != 0
+    end
+
+    assert source =~ ~s(MAILGLASS_PACKAGE_MODE="${MAILGLASS_PACKAGE_MODE:-path}")
+    assert source =~ "MAILGLASS_EXPECTED_CORE_VERSION"
+    assert source =~ "check_clean_baseline_hex_only.sh"
+  end
+
   test "runtime checkpoints consume closed sanitized attestations with executable mutations" do
     for journey <- ["core_first", "inbound_first"],
         {stage, configured_result} <- @valid_attestations do
