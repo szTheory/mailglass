@@ -144,6 +144,18 @@ defmodule Mailglass.ReleasePolicy do
 
   def validate_authorization_digest(_, _), do: error(:authorization_digest_mismatch)
 
+  def validate_capture_digest(target, digest) when is_binary(digest) do
+    with {:ok, target} <- validate_target(target),
+         :ok <- exact_value(target, "status", "captured"),
+         {:ok, expected} <- candidate_digest(target),
+         true <- digest == expected or error(:capture_digest_mismatch) do
+      {:ok, target}
+    else
+      false -> error(:capture_digest_mismatch)
+      {:error, _} = failure -> failure
+    end
+  end
+
   def source_versions(root) when is_binary(root) do
     result =
       @packages
@@ -219,6 +231,24 @@ defmodule Mailglass.ReleasePolicy do
          {:ok, target} <- Jason.decode(json),
          {:ok, _target} <- validate_authorization_digest(target, digest) do
       IO.write("authorized=true\n")
+    else
+      _ -> System.halt(1)
+    end
+  end
+
+  def cli(["validate-captured-dispatch", target_path, digest]) do
+    with {:ok, json} <- File.read(target_path),
+         {:ok, target} <- Jason.decode(json),
+         {:ok, target} <- validate_capture_digest(target, digest) do
+      IO.write("captured=true\n")
+      IO.write("candidate_digest=#{digest}\n")
+      IO.write("content_digest=#{target["publishable_content"]["digest"]}\n")
+      IO.write("proposal_head=#{target["proposal_identity"]["head_sha"]}\n")
+      IO.write("source_sha=#{target["proposal_identity"]["source_sha"]}\n")
+      Enum.each(packages(), fn package ->
+        key = if package == "mailglass", do: "core", else: String.replace_prefix(package, "mailglass_", "")
+        IO.write("#{key}=#{target["candidate_versions"][package]}\n")
+      end)
     else
       _ -> System.halt(1)
     end
