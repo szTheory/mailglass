@@ -40,15 +40,51 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  resolve-completed-target:
+    name: Resolve immutable completed release target
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      completed: ${{ steps.target.outputs.completed }}
+      authorized: ${{ steps.target.outputs.authorized }}
+      core: ${{ steps.target.outputs.core }}
+      admin: ${{ steps.target.outputs.admin }}
+      inbound: ${{ steps.target.outputs.inbound }}
+      tag_sha: ${{ steps.target.outputs.tag_sha }}
+    steps:
+      - name: Checkout immutable release ref
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name || github.event.inputs.tag || github.sha }}
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - name: Resolve completed target versions
+        id: target
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          command=completed-versions
+          if [ "$EVENT_NAME" != "schedule" ]; then command=authorized-versions; fi
+          if mix run --no-start --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "$command" .planning/release-target.json >> "$GITHUB_OUTPUT"; then
+            exit 0
+          fi
+          echo "completed=false" >> "$GITHUB_OUTPUT"
+
   cron-guard:
     name: Cron 7-day window guard
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: [resolve-completed-target]
     outputs:
       should_run: ${{ steps.guard.outputs.should_run }}
       version: ${{ steps.guard.outputs.version }}
       release_ref: ${{ steps.guard.outputs.release_ref }}
-      version_inbound: ${{ steps.read-inbound-version.outputs.version_inbound }}
+      version_inbound: ${{ needs.resolve-completed-target.outputs.inbound }}
+      version_admin: ${{ needs.resolve-completed-target.outputs.admin }}
     steps:
       # Release/scheduled smoke must resolve all package versions from an
       # immutable completed target; never from package latest. The policy owner
@@ -56,135 +92,64 @@ jobs:
       # install uses the values below.
       - name: Determine if smoke should run
         id: guard
+        env:
+          COMPLETED: ${{ needs.resolve-completed-target.outputs.completed }}
+          AUTHORIZED: ${{ needs.resolve-completed-target.outputs.authorized }}
+          COMPLETED_CORE: ${{ needs.resolve-completed-target.outputs.core }}
+          COMPLETED_ADMIN: ${{ needs.resolve-completed-target.outputs.admin }}
+          COMPLETED_INBOUND: ${{ needs.resolve-completed-target.outputs.inbound }}
+          COMPLETED_TAG_SHA: ${{ needs.resolve-completed-target.outputs.tag_sha }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         with:
           script: |
-            const normalizeVersion = (value) => {
-              if (!value) return "";
-              const raw = String(value).trim();
-              const match = raw.match(/(?:^|[-/])v?(\d+\.\d+\.\d+(?:[-\w.+]+)?)/);
-              return match ? match[1] : raw.replace(/^v/, "");
-            };
-            const isCoreReleaseTag = (value) =>
-              /^mailglass-v\d+\.\d+\.\d+(?:[-\w.+]+)?$/.test(String(value || "").trim());
-
             const eventName = context.eventName;
 
-            if (eventName === 'release') {
-              const tagName = context.payload?.release?.tag_name || "";
-              if (!isCoreReleaseTag(tagName)) {
-                core.setOutput('should_run', 'false');
-                core.setOutput('version', '');
-                core.setOutput('release_ref', '');
-                core.info(`Skipping non-core release tag '${tagName}'.`);
-                return;
-              }
-              const version = normalizeVersion(tagName);
-              if (version) {
-                core.setOutput('should_run', 'true');
-                core.setOutput('version', version);
-                core.setOutput('release_ref', tagName);
-                core.info(`Smoke triggered by release event; should_run=true; version='${version}'`);
-                return;
-              }
+            if (eventName === 'schedule' && process.env.COMPLETED !== 'true') {
               core.setOutput('should_run', 'false');
               core.setOutput('version', '');
               core.setOutput('release_ref', '');
-              core.warning(`Release event with unparseable tag_name='${tagName}'; skipping smoke.`);
+              core.info('No immutable completed release target; skipping smoke.');
               return;
             }
 
-            const inputTag = context.payload?.inputs?.tag || "";
-            const inputVersion = normalizeVersion(inputTag);
+            const completedCore = process.env.COMPLETED_CORE || '';
+            const completedAdmin = process.env.COMPLETED_ADMIN || '';
+            const completedInbound = process.env.COMPLETED_INBOUND || '';
+            if (![completedCore, completedAdmin, completedInbound].every((version) => /^\d+\.\d+\.\d+$/.test(version))) {
+              core.setFailed('Immutable completed target did not provide three exact stable versions.');
+              return;
+            }
 
-            if (eventName === 'workflow_dispatch' && inputVersion && isCoreReleaseTag(inputTag)) {
+            const requestedRef = context.payload?.release?.tag_name || context.payload?.inputs?.tag || '';
+            if (eventName === 'release' || eventName === 'workflow_dispatch') {
+              if (process.env.AUTHORIZED !== 'true') {
+                core.setFailed('Release-day smoke requires an authorized immutable target.');
+                return;
+              }
+              if (requestedRef !== `mailglass-v${completedCore}`) {
+                core.setFailed(`Ref '${requestedRef}' does not match immutable completed target mailglass-v${completedCore}.`);
+                return;
+              }
               core.setOutput('should_run', 'true');
-              core.setOutput('version', inputVersion);
-              core.setOutput('release_ref', inputTag);
-              core.info(`Smoke triggered by workflow_dispatch; should_run=true; version='${inputVersion}'`);
+              core.setOutput('version', completedCore);
+              core.setOutput('release_ref', requestedRef);
               return;
             }
 
-            // Historical note (2026-04-28 rehearsal, archived in
-            // .planning/milestones/v0.3-phases/18-ship-v0-3-0/): an older
-            // workflow_run-triggered path resolved VERSION=main and stalled on
-            // `mix hex.info mailglass main`. Per Phase 27 D-27-05/06: the
-            // fallback dispatch path stays tag-based so version resolution is
-            // deterministic from the supplied input.
-
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const {data: releases} = await github.rest.repos.listReleases({
-              owner,
-              repo,
-              per_page: 20
-            });
-
-            const latest = releases.find((release) => isCoreReleaseTag(release.tag_name));
-
-            if (!latest) {
-              core.setOutput('should_run', 'false');
-              core.setOutput('version', '');
-              core.setOutput('release_ref', '');
-              core.info('No core package releases found; skipping scheduled smoke.');
+            if (eventName === 'schedule') {
+              core.setOutput('should_run', 'true');
+              core.setOutput('version', completedCore);
+              core.setOutput('release_ref', process.env.COMPLETED_TAG_SHA);
               return;
             }
-            const releasedAt = new Date(latest.published_at);
-            const ageDays = (Date.now() - releasedAt.getTime()) / (1000 * 60 * 60 * 24);
-            const version = normalizeVersion(latest.tag_name);
-
-            if (eventName === 'schedule' && ageDays > 7) {
-              core.setOutput('should_run', 'false');
-              core.setOutput('version', version);
-              core.setOutput('release_ref', latest.tag_name);
-              core.info(`Latest release ${latest.tag_name} is ${ageDays.toFixed(1)} days old; skipping scheduled smoke.`);
-              return;
-            }
-
-            if (eventName === 'schedule' && version) {
-              const response = await fetch('https://hex.pm/api/packages/mailglass');
-              if (!response.ok) {
-                core.warning(`Hex API lookup failed with status ${response.status}; skipping scheduled smoke for safety.`);
-                core.setOutput('should_run', 'false');
-                core.setOutput('version', version);
-                core.setOutput('release_ref', latest.tag_name);
-                return;
-              }
-
-              const hexPackage = await response.json();
-              const hexReleases = Array.isArray(hexPackage.releases) ? hexPackage.releases : [];
-              const onHex = hexReleases.some((release) => release.version === version);
-
-              if (!onHex) {
-                core.setOutput('should_run', 'false');
-                core.setOutput('version', version);
-                core.setOutput('release_ref', latest.tag_name);
-                core.warning(`Latest GitHub release ${latest.tag_name} is not on Hex.pm; skipping scheduled smoke until a public package exists.`);
-                return;
-              }
-            }
-
-            core.setOutput('should_run', 'true');
-            core.setOutput('version', version);
-            core.setOutput('release_ref', latest.tag_name);
-            core.info(`Latest release ${latest.tag_name} is ${ageDays.toFixed(1)} days old; running smoke for v${version}.`);
+            core.setOutput('should_run', 'false');
+            core.setOutput('version', '');
+            core.setOutput('release_ref', '');
       - name: Checkout release ref
         if: ${{ steps.guard.outputs.should_run == 'true' && steps.guard.outputs.release_ref != '' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: ${{ steps.guard.outputs.release_ref }}
-      - name: Read mailglass_inbound version
-        id: read-inbound-version
-        if: ${{ steps.guard.outputs.should_run == 'true' && steps.guard.outputs.release_ref != '' }}
-        run: |
-          if [ -f mailglass_inbound/mix.exs ]; then
-            VERSION_INBOUND=$(grep -E '@version "[0-9]' mailglass_inbound/mix.exs | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
-            echo "version_inbound=${VERSION_INBOUND}" >> "$GITHUB_OUTPUT"
-            echo "Resolved mailglass_inbound version: ${VERSION_INBOUND}"
-          else
-            echo "version_inbound=" >> "$GITHUB_OUTPUT"
-            echo "mailglass_inbound/mix.exs not present at this ref; downstream inbound steps will skip."
-          fi
 
   wait-for-index:
     name: Wait for Hex.pm index
