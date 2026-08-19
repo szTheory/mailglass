@@ -81,6 +81,54 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     end)
   end
 
+  test "legacy recovery tag without the versioned validator uses the fail-closed inline contract" do
+    step = extract_step_script!(File.read!(@publish), "Validate automated release target")
+
+    in_tmp(fn dir ->
+      File.mkdir_p!(Path.join(dir, ".planning"))
+      File.mkdir_p!(Path.join(dir, "mailglass_admin"))
+      File.mkdir_p!(Path.join(dir, "mailglass_inbound"))
+      File.write!(Path.join(dir, "mix.exs"), "  @version \"2.4.0\"\n")
+      File.write!(Path.join(dir, "mailglass_admin/mix.exs"), "  @version \"2.4.0\"\n")
+      File.write!(Path.join(dir, "mailglass_inbound/mix.exs"), "  @version \"2.1.1\"\n")
+
+      write_json(dir, ".planning/release-target.json", %{
+        "status" => "active",
+        "packages" => %{
+          "mailglass" => "2.4.0",
+          "mailglass_admin" => "2.4.0",
+          "mailglass_inbound" => "2.1.1"
+        }
+      })
+
+      refute File.exists?(Path.join(dir, "scripts/release_policy_validate_target.sh"))
+      output = Path.join(dir, "github-output")
+
+      assert {message, 0} =
+               System.cmd("bash", ["-c", step],
+                 cd: dir,
+                 env: [{"RELEASE_REF", "mailglass-v2.4.0"}, {"GITHUB_OUTPUT", output}],
+                 stderr_to_stdout: true
+               )
+
+      assert message =~ "inline compatibility validator"
+      assert File.read!(output) =~ "active=true\ncore=2.4.0\nadmin=2.4.0\ninbound=2.1.1\n"
+
+      assert {message, status} =
+               System.cmd("bash", ["-c", step],
+                 cd: dir,
+                 env: [
+                   {"RELEASE_REF", "mailglass_inbound-v2.1.1"},
+                   {"GITHUB_OUTPUT", Path.join(dir, "rejected-output")}
+                 ],
+                 stderr_to_stdout: true
+               )
+
+      assert status != 0
+      assert message =~ "not an authorized linked release tag"
+    end)
+  end
+
   test "workflows delegate only pure decisions and preserve release effects inline" do
     release = File.read!(@release_please)
     publish = File.read!(@publish)
@@ -110,6 +158,17 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
   end
 
   defp run(script, args), do: System.cmd("bash", [script | args], stderr_to_stdout: true)
+
+  defp extract_step_script!(source, name) do
+    marker = "      - name: #{name}\n"
+    [_before, rest] = String.split(source, marker, parts: 2)
+    [block | _] = String.split(rest, ~r/\n      - name:/, parts: 2)
+    [_before_run, script] = String.split(block, "        run: |\n", parts: 2)
+
+    script
+    |> String.split("\n")
+    |> Enum.map_join("\n", &String.replace_prefix(&1, "          ", ""))
+  end
 
   defp write_json(dir, name, value) do
     path = Path.join(dir, name)

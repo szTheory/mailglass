@@ -97,7 +97,53 @@ jobs:
         run: |
           set -euo pipefail
           target=.planning/release-target.json
-          scripts/release_policy_validate_target.sh "$target" "$RELEASE_REF" >> "$GITHUB_OUTPUT"
+          validator=scripts/release_policy_validate_target.sh
+
+          if [ -x "$validator" ]; then
+            "$validator" "$target" "$RELEASE_REF" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Compatibility path for a recovery dispatch against a release tag
+          # created before the versioned validator existed. The checkout above
+          # intentionally uses that historical tag, so sourcing a newer script
+          # from the mutable default branch would validate different code. Keep
+          # the same pure, fail-closed decision inline for those tags only.
+          echo "Release tag predates the versioned target validator; using the inline compatibility validator."
+
+          if [ ! -r "$target" ]; then
+            echo "active=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          status=$(jq -er '.status' "$target")
+          if [ "$status" != "active" ]; then
+            echo "active=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          expected_core=$(jq -er '.packages.mailglass' "$target")
+          expected_admin=$(jq -er '.packages.mailglass_admin' "$target")
+          expected_inbound=$(jq -er '.packages.mailglass_inbound' "$target")
+          actual_core=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mix.exs | head -1)
+          actual_admin=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_admin/mix.exs | head -1)
+          actual_inbound=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_inbound/mix.exs | head -1)
+
+          if [ "$actual_core" != "$expected_core" ] || \
+             [ "$actual_admin" != "$expected_admin" ] || \
+             [ "$actual_inbound" != "$expected_inbound" ]; then
+            echo "Release target mismatch: expected core/admin/inbound $expected_core/$expected_admin/$expected_inbound; source has $actual_core/$actual_admin/$actual_inbound" >&2
+            exit 1
+          fi
+
+          if [ "$RELEASE_REF" != "mailglass-v${expected_core}" ] && \
+             [ "$RELEASE_REF" != "mailglass_admin-v${expected_admin}" ]; then
+            echo "Release target mismatch: ref '$RELEASE_REF' is not an authorized linked release tag" >&2
+            exit 1
+          fi
+
+          printf 'active=true\ncore=%s\nadmin=%s\ninbound=%s\n' \
+            "$actual_core" "$actual_admin" "$actual_inbound" >> "$GITHUB_OUTPUT"
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
