@@ -7,7 +7,7 @@ defmodule MailglassInbound.Ingress.Pipeline do
           {:replay}
           | {:control_plane}
           | {:persist, term(), map()}
-          | {:persist_verified, VerifiedRequest.t(), map(), keyword()}
+          | {:persist_verified, %VerifiedRequest{}, map(), maybe_improper_list()}
 
   @doc false
   @spec run(atom(), term(), map(), keyword(), map()) :: outcome()

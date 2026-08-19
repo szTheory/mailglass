@@ -404,7 +404,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     after
       remaining_timeout_ms(deadline_ms) ->
         cancel_request(httpc_mod, request_id)
-        raise_cert_timeout!()
+        raise cert_timeout_error()
     end
   end
 
@@ -423,7 +423,7 @@ defmodule Mailglass.Webhook.Providers.SES do
 
         if next_bytes > cert_response_limit!(config) do
           cancel_request(httpc_mod, request_id)
-          raise_cert_oversized!()
+          raise cert_oversized_error()
         end
 
         stream_next!(httpc_mod, handler_pid)
@@ -449,7 +449,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     after
       remaining_timeout_ms(deadline_ms) ->
         cancel_request(httpc_mod, request_id)
-        raise_cert_timeout!()
+        raise cert_timeout_error()
     end
   end
 
@@ -470,7 +470,7 @@ defmodule Mailglass.Webhook.Providers.SES do
 
     if is_integer(content_length) and content_length > cert_response_limit!(config) do
       cancel_request(httpc_mod, request_id)
-      raise_cert_oversized!()
+      raise cert_oversized_error()
     end
   end
 
@@ -494,7 +494,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     if byte_size(body) <= max_bytes do
       body
     else
-      raise_cert_oversized!()
+      raise cert_oversized_error()
     end
   end
 
@@ -524,19 +524,19 @@ defmodule Mailglass.Webhook.Providers.SES do
     end
   end
 
-  defp raise_cert_oversized! do
-    raise SignatureError.new(:bad_signature,
-            provider: :ses,
-            context: %{detail: "cert fetch response exceeded maximum bytes"}
-          )
-  end
+  defp cert_oversized_error,
+    do:
+      SignatureError.new(:bad_signature,
+        provider: :ses,
+        context: %{detail: "cert fetch response exceeded maximum bytes"}
+      )
 
-  defp raise_cert_timeout! do
-    raise SignatureError.new(:bad_signature,
-            provider: :ses,
-            context: %{detail: "cert fetch timed out"}
-          )
-  end
+  defp cert_timeout_error,
+    do:
+      SignatureError.new(:bad_signature,
+        provider: :ses,
+        context: %{detail: "cert fetch timed out"}
+      )
 
   defp extract_public_key_from_pem!(pem_binary) when is_binary(pem_binary) do
     case :public_key.pem_decode(pem_binary) do

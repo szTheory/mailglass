@@ -16,6 +16,7 @@ defmodule Mailglass.Migrations.Postgres.V06 do
   # their historical JSON payload is retained and new verified requests write
   # the byte-for-byte signed body alongside it.
   def up(opts \\ []) do
+    opts = Map.new(opts)
     prefix = opts[:prefix]
     Mailglass.Identifier.validate!(prefix, :prefix)
     q = inspect(prefix)
@@ -66,6 +67,7 @@ defmodule Mailglass.Migrations.Postgres.V06 do
   end
 
   def down(opts \\ []) do
+    opts = Map.new(opts)
     prefix = opts[:prefix]
     Mailglass.Identifier.validate!(prefix, :prefix)
     q = inspect(prefix)

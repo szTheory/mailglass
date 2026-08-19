@@ -19,13 +19,11 @@ defmodule Mailglass.CIPolicy do
                         :installer_proofs
                       ])
 
-  @spec load!() :: map()
   def load! do
     {policy, _binding} = Code.eval_file(@policy_path)
     validate!(policy)
   end
 
-  @spec validate!(map()) :: map()
   def validate!(%{active_required: active, target_required: target, advisory: advisory} = policy)
       when is_list(active) and is_list(target) and is_list(advisory) do
     target_ids = target_lane_ids!(target)

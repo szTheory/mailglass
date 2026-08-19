@@ -283,21 +283,13 @@ extra_checks = [
             # Tracking: permanent (house style).
             {Credo.Check.Readability.PreferImplicitTry, false},
 
-            # Reason: nesting depth exceeds Credo's default in webhook/ingest.ex,
-            # suppression_store/ets.ex, tracking/rewriter.ex, tracking/token.ex,
-            # webhook/reconciler.ex, events/reconciler.ex, and outbound.ex — all
-            # structurally justified by the multi-step pipeline and error-propagation
-            # patterns. In-scope refactors (installer/apply.ex, postmark.ex) have
-            # been fixed; remaining sites are Phase-9-stable or lower-risk.
-            # Tracking: revisit after Phase 9 API redesign; reduce to 0 suppressions.
-            {Credo.Check.Refactor.Nesting, false},
-
-            # Reason: cyclomatic complexity exceeds 9 in webhook/ingest.ex and
-            # publish.check.ex — both have intentionally broad branching for
-            # provider event-type dispatch and tarball validation respectively.
-            # In-scope files (installer/apply.ex, postmark.ex) have been refactored.
-            # Tracking: revisit after Phase 9; extract provider dispatch to reduce score.
-            {Credo.Check.Refactor.CyclomaticComplexity, false},
+            # The default thresholds remain the debt-discovery thresholds in
+            # config/quality/credo_ratchet.exs.  The ordinary Credo run uses
+            # the measured repository maxima so acknowledged debt does not
+            # hide unrelated findings; scripts/check_static_analysis_exceptions.exs
+            # enforces the tighter, per-function no-growth ledger.
+            {Credo.Check.Refactor.Nesting, [max_nesting: 5]},
+            {Credo.Check.Refactor.CyclomaticComplexity, [max_complexity: 17]},
 
             # Reason: single-condition `cond do` used deliberately in
             # installer/apply.ex, events/reconciler.ex, and mailer_case.ex for

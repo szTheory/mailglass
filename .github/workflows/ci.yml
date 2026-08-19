@@ -456,6 +456,8 @@ jobs:
         # Fails CI if any {Credo.Check..., false} entry is missing
         # a `# Reason:` + `# Tracking:` comment block (D-08-18/D-08-19).
         run: bash scripts/check_credo_suppressions.sh
+      - name: Enforce expiring static-analysis ledger
+        run: mix run scripts/check_static_analysis_exceptions.exs
       - name: Run Credo strict
         run: mix credo --strict
 
@@ -545,6 +547,30 @@ jobs:
       - name: Evict stale PLT + rebuild
         if: steps.dialyzer.outcome == 'failure'
         run: rm -rf _build/test/*.plt && mix dialyzer --plt && mix dialyzer
+
+  inbound_dialyzer:
+    name: Inbound Dialyzer (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    env:
+      MIX_ENV: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Set up locked inbound analysis dependencies
+        uses: ./.github/actions/setup-beam-mix
+        with:
+          package-dir: mailglass_inbound
+          lockfile: mailglass_inbound/mix.lock
+          mix-env: test
+          build-path: _build/dialyzer-ci
+          cache-namespace: mailglass-inbound-dialyzer
+      - name: Verify package-local ignore ledger
+        run: bash scripts/check_dialyzer_ignore.sh
+      - name: Run inbound Dialyzer
+        working-directory: mailglass_inbound
+        run: mix dialyzer
 
   docs_warnings_as_errors:
     name: Docs Warnings as Errors (Elixir 1.18 / OTP 27)
