@@ -233,6 +233,7 @@ defmodule Mailglass.ReleasePolicy do
       IO.write("admin=#{target["candidate_versions"]["mailglass_admin"]}\n")
       IO.write("inbound=#{target["candidate_versions"]["mailglass_inbound"]}\n")
       IO.write("tag_sha=#{target["final_identity"]["tag_sha"]}\n")
+      IO.write("target_ref=#{target["final_identity"]["tag_sha"]}\n")
     else
       _ -> System.halt(1)
     end
