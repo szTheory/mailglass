@@ -151,6 +151,22 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     assert_raise ExUnit.AssertionError, fn ->
       assert_ci_green_policy_invocation!(without_invocation)
     end
+
+    ci_green = extract_job_block(ci_source, "ci_green")
+
+    without_checkout_job =
+      String.replace(
+        ci_green,
+        "      - name: Checkout\n        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1\n",
+        "",
+        global: false
+      )
+
+    without_checkout = String.replace(ci_source, ci_green, without_checkout_job, global: false)
+
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_ci_green_policy_invocation!(without_checkout)
+    end
   end
 
   test "no required CI leaf is permanently if:-disabled (GATE-03)" do
@@ -469,6 +485,10 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
 
   defp assert_ci_green_policy_invocation!(ci_source) do
     ci_green = extract_job_block(ci_source, "ci_green")
+
+    assert ci_green =~
+             "uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1",
+           "ci_green must check out the repository before invoking its policy script"
 
     assert ci_green =~ "bash scripts/ci_green_policy.sh",
            "ci_green must delegate its aggregate decision to scripts/ci_green_policy.sh"
