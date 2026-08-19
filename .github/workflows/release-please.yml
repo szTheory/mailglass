@@ -197,11 +197,13 @@ jobs:
           git merge-base --is-ancestor "$source_sha" origin/main
           # Planning/authorization commits may advance main; package content may
           # not. A changed publishable set requires a newly captured candidate.
-          git diff --quiet "$source_sha" origin/main -- mix.exs mailglass_admin mailglass_inbound README.md mailglass_admin/README.md mailglass_inbound
+          source_content_digest=$(scripts/release_policy_content_digest.sh --ref "$source_sha")
+          main_content_digest=$(scripts/release_policy_content_digest.sh --ref origin/main)
+          [ "$source_content_digest" = "$main_content_digest" ]
           [ "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main/protection/required_status_checks" --jq '.strict')" = true ]
           git fetch --no-tags origin "$proposal_head"
           git checkout --detach "$proposal_head"
-          actual_digest=$(git ls-files -z | grep -zv '^\.planning/release-target\.json$' | LC_ALL=C sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}')
+          actual_digest=$(scripts/release_policy_content_digest.sh)
           [ "$actual_digest" = "$content_digest" ]
           printf 'authorized=true\ncandidate_digest=%s\ncontent_digest=%s\nproposal_head=%s\nsource_sha=%s\nnumber=%s\ncontent_verified=true\n' "$candidate_digest" "$content_digest" "$proposal_head" "$source_sha" "$number" >> "$GITHUB_OUTPUT"
 
@@ -219,7 +221,7 @@ jobs:
           gh pr merge "$NUMBER" --squash --match-head-commit "$PROPOSAL_HEAD" --repo "$GITHUB_REPOSITORY"
           git fetch --no-tags origin main
           git checkout --detach origin/main
-          merged_digest=$(git ls-files -z | grep -zv '^\.planning/release-target\.json$' | LC_ALL=C sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}')
+          merged_digest=$(scripts/release_policy_content_digest.sh)
           [ "$merged_digest" = "$CONTENT_DIGEST" ]
           mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-protected-dispatch .planning/release-target.json "$CANDIDATE_DIGEST" >/dev/null
           echo "merge_tree_verified=true" >> "$GITHUB_OUTPUT"
@@ -391,11 +393,20 @@ jobs:
           [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]]
           git fetch --no-tags origin "$proposal_head"
           git checkout --detach "$proposal_head"
-          digest=$(git ls-files -z -- mix.exs mailglass_admin mailglass_inbound README.md mailglass_admin/README.md mailglass_inbound | LC_ALL=C sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}')
+          digest=$(scripts/release_policy_content_digest.sh)
           mkdir -p .planning/release-candidates
           mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- capture-candidate .planning/release-target.json . "$proposal_head" "$source_sha" "$digest" > .planning/release-candidates/proposal-candidate.json
           jq -e '.candidate_versions.mailglass == .candidate_versions.mailglass_admin' .planning/release-candidates/proposal-candidate.json >/dev/null
           printf '%s\n' "proposal candidate captured after sibling synchronization"
+
+      - name: Upload sanitized release proposal candidate
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: release-proposal-candidate-${{ github.run_id }}
+          path: .planning/release-candidates/proposal-candidate.json
+          if-no-files-found: error
+          retention-days: 30
 
       # A machine-readable target replaces the former human go/no-go. The
       # release PR may auto-merge only when Release Please produced the exact
