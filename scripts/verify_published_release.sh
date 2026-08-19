@@ -138,7 +138,17 @@ proof_size=$(unzip -l "$proof_zip" | awk '$NF == "phase-148.json" && $1 ~ /^[0-9
   fail "publication proof artifact uncompressed size is unavailable"
 awk -v size="$proof_size" 'BEGIN {exit !(size <= 1048576)}' ||
   fail "uncompressed publication proof exceeds the size limit"
-proof_json=$(unzip -p "$proof_zip" phase-148.json) ||
+proof_file="$proof_dir/phase-148.json"
+set +e
+unzip -p "$proof_zip" phase-148.json | head -c 1048577 >"$proof_file"
+extraction_status=("${PIPESTATUS[@]}")
+set -e
+actual_proof_size=$(wc -c <"$proof_file" | tr -d '[:space:]')
+[[ "$actual_proof_size" =~ ^[0-9]+$ ]] ||
+  fail "extracted publication proof size is unavailable"
+awk -v size="$actual_proof_size" 'BEGIN {exit !(size <= 1048576)}' ||
+  fail "extracted publication proof exceeds the size limit"
+[[ "${extraction_status[0]}" -eq 0 && "${extraction_status[1]}" -eq 0 ]] ||
   fail "publication proof artifact could not be read"
 
 expected_ref="mailglass-v${versions[0]}"
@@ -164,7 +174,7 @@ jq -e \
      "proof-02-transactional-suppression": "passed",
      "proof-02-webhook-suppression": "passed",
      "proof-03-b2c-docs": "passed"
-   }' <<<"$proof_json" >/dev/null ||
+   }' "$proof_file" >/dev/null ||
   fail "publication proof artifact does not match the exact candidate identity"
 
 release_ids=(
