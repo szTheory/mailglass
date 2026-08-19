@@ -52,6 +52,13 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
       String.replace(source, "  contents: read", "  contents: write", global: false)
 
     refute readonly_default?(globally_writable)
+
+    without_permissions =
+      Regex.replace(~r/^permissions:\n(?:  [a-z-]+: (?:read|none)\n)+\n/m, source, "",
+        global: false
+      )
+
+    refute readonly_default?(without_permissions)
   end
 
   test "all Postgres services and repository Dockerfiles use approved immutable inputs" do
@@ -132,7 +139,13 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
 
   defp readonly_default?(source) do
     top = source |> String.split("\njobs:\n", parts: 2) |> hd()
-    not Regex.match?(~r/^  [a-z-]+: write$/m, top)
+
+    case Regex.scan(~r/^permissions:\n((?:  [a-z-]+: (?:read|none)\n)+)/m, top,
+           capture: :all_but_first
+         ) do
+      [_mapping] -> not Regex.match?(~r/^  [a-z-]+: write$/m, top)
+      _ -> false
+    end
   end
 
   defp immutable_postgres?(source) do
