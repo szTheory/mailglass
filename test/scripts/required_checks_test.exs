@@ -214,7 +214,10 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
           "            reference/demo_app/deps\n",
           "      - name: Install inbound deps\n        working-directory: mailglass_inbound\n        run: mix deps.get --check-locked\n",
           "      - name: Install reference host deps\n        working-directory: reference/host_app\n        env:\n          MIX_ENV: dev\n        run: mix deps.get --check-locked\n",
-          "      - name: Install demo deps\n        working-directory: reference/demo_app\n        run: mix deps.get --check-locked\n"
+          "      - name: Install demo deps\n        working-directory: reference/demo_app\n        run: mix deps.get --check-locked\n",
+          "      - name: Compile inbound workspace\n        working-directory: mailglass_inbound\n        run: mix compile --warnings-as-errors\n",
+          "      - name: Compile reference host\n        working-directory: reference/host_app\n        env:\n          MIX_ENV: dev\n        run: mix compile --warnings-as-errors\n",
+          "      - name: Compile demo app\n        working-directory: reference/demo_app\n        run: mix compile --warnings-as-errors\n"
         ] do
       missing_setup = String.replace(source, setup_fragment, "", global: true)
 
@@ -396,7 +399,10 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
           "            reference/demo_app/deps\n",
           "      - name: Install inbound deps\n        working-directory: mailglass_inbound\n        run: mix deps.get --check-locked\n",
           "      - name: Install reference host deps\n        working-directory: reference/host_app\n        env:\n          MIX_ENV: dev\n        run: mix deps.get --check-locked\n",
-          "      - name: Install demo deps\n        working-directory: reference/demo_app\n        run: mix deps.get --check-locked\n"
+          "      - name: Install demo deps\n        working-directory: reference/demo_app\n        run: mix deps.get --check-locked\n",
+          "      - name: Compile inbound workspace\n        working-directory: mailglass_inbound\n        run: mix compile --warnings-as-errors\n",
+          "      - name: Compile reference host\n        working-directory: reference/host_app\n        env:\n          MIX_ENV: dev\n        run: mix compile --warnings-as-errors\n",
+          "      - name: Compile demo app\n        working-directory: reference/demo_app\n        run: mix compile --warnings-as-errors\n"
         ] do
       assert job =~ required_fragment
     end

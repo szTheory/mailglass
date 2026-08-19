@@ -93,7 +93,8 @@ defmodule Mailglass.ArchitectureBoundaryTest do
 
     for fragment <- [
           "            reference/demo_app/deps\n",
-          "      - name: Install demo deps\n        working-directory: reference/demo_app\n        run: mix deps.get --check-locked\n"
+          "      - name: Install demo deps\n        working-directory: reference/demo_app\n        run: mix deps.get --check-locked\n",
+          "      - name: Compile demo app for coverage\n        working-directory: reference/demo_app\n        run: mix compile --warnings-as-errors\n"
         ] do
       mutated_job = String.replace(support_contract, fragment, "", global: false)
       mutated_ci = String.replace(ci, support_contract, mutated_job, global: false)
@@ -195,20 +196,28 @@ defmodule Mailglass.ArchitectureBoundaryTest do
     support_contract = job!(ci, "support_contract_core")
     cache_step = step!(support_contract, "Cache deps")
     demo_deps_step = step!(support_contract, "Install demo deps")
+    demo_compile_step = step!(support_contract, "Compile demo app for coverage")
 
     assert cache_step =~ "reference/demo_app/deps"
     assert demo_deps_step =~ "working-directory: reference/demo_app"
     assert demo_deps_step =~ "run: mix deps.get --check-locked"
     refute demo_deps_step =~ "continue-on-error:"
     refute demo_deps_step =~ "if:"
+    assert demo_compile_step =~ "working-directory: reference/demo_app"
+    assert demo_compile_step =~ "run: mix compile --warnings-as-errors"
+    refute demo_compile_step =~ "continue-on-error:"
+    refute demo_compile_step =~ "if:"
 
     assert {install_offset, _length} =
              :binary.match(support_contract, "- name: Install demo deps")
 
+    assert {compile_offset, _length} =
+             :binary.match(support_contract, "- name: Compile demo app for coverage")
+
     assert {coverage_offset, _length} =
              :binary.match(support_contract, "- name: Collect and enforce core coverage floor")
 
-    assert install_offset < coverage_offset
+    assert install_offset < compile_offset and compile_offset < coverage_offset
   end
 
   defp job!(ci, name) do
