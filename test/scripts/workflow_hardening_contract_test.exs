@@ -9,7 +9,7 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
     "gate-self-test.yml" => %{"self-test" => ["contents", "pull-requests"]},
     "release-please.yml" => %{"release-please" => ["contents", "pull-requests"]},
     "publish-hex.yml" => %{
-      "gate-ci-green" => ["actions"],
+      "ensure-live-ci-runs" => ["actions"],
       "dispatch-post-publish-smoke" => ["actions"]
     },
     "provider-live.yml" => %{"notify_provider_live_failure" => ["issues"]},
@@ -62,6 +62,49 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
       )
 
     refute readonly_default?(without_permissions)
+  end
+
+  test "publish CI self-healing is live-only and the public gate remains read-only" do
+    path = Path.join(@repo_root, ".github/workflows/publish-hex.yml")
+    source = File.read!(path)
+    jobs = source |> job_blocks() |> Map.new()
+
+    self_heal = Map.fetch!(jobs, "ensure-live-ci-runs")
+    gate = Map.fetch!(jobs, "gate-ci-green")
+
+    assert self_heal =~ "needs: [prepublish-summary]"
+    assert self_heal =~ "github.event_name == 'workflow_dispatch'"
+    assert self_heal =~ "github.event.inputs.dry_run != 'true'"
+    assert self_heal =~ "github.event.inputs.package == 'all'"
+    assert self_heal =~ "needs.prepublish-summary.outputs.authorized == 'true'"
+    assert self_heal =~ "actions: write"
+    assert self_heal =~ "createWorkflowDispatch"
+
+    assert gate =~ "needs: [prepublish-summary, ensure-live-ci-runs]"
+    assert gate =~ "always()"
+    assert gate =~ "needs.ensure-live-ci-runs.result == 'success'"
+    assert gate =~ "github.event.inputs.dry_run == 'true'"
+    assert gate =~ "needs.prepublish-summary.outputs.pretag == 'true'"
+    assert gate =~ "actions: read"
+    refute gate =~ "actions: write"
+    refute gate =~ "createWorkflowDispatch"
+
+    assert length(Regex.scan(~r/createWorkflowDispatch/, source)) == 1
+  end
+
+  test "captured pretag dry-run does not upload an artifact or gain mutation credentials" do
+    path = Path.join(@repo_root, ".github/workflows/publish-hex.yml")
+    source = File.read!(path)
+    jobs = source |> job_blocks() |> Map.new()
+    prepublish = Map.fetch!(jobs, "prepublish-summary")
+    gate = Map.fetch!(jobs, "gate-ci-green")
+
+    assert prepublish =~
+             "if: ${{ steps.release-target.outputs.active == 'true' }}\n        uses: actions/upload-artifact@"
+
+    refute gate =~ "environment:"
+    refute gate =~ "secrets."
+    refute gate =~ "createWorkflowDispatch"
   end
 
   test "all Postgres services and repository Dockerfiles use approved immutable inputs" do
