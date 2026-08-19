@@ -260,6 +260,18 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert step_precedes?(release, "Install deps for policy", "Detect already-tagged release PR")
   end
 
+  test "proposal mode bypasses historical tag recovery while protected dispatch requires exact authorization" do
+    release = File.read!(@release_please)
+
+    assert release =~ "candidate_digest:"
+    assert release =~ "Proposal mode bypasses historical baseline tag recovery"
+    assert release =~ "Validate protected exact candidate dispatch"
+    assert release =~ "validate-protected-dispatch"
+    assert release =~ "Protected exact candidate dispatch may merge only the validated release PR"
+    assert release =~ "steps.protected-dispatch.outputs.authorized == 'true'"
+    refute release =~ "gh pr merge \"$number\" --auto --squash"
+  end
+
   test "publish workflow requires a protected exact-digest dispatch and keeps live jobs inert" do
     publish = File.read!(@publish)
 
