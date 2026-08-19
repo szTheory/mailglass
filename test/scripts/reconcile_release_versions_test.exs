@@ -372,10 +372,13 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     complete = complete_candidate_target(reviewed)
 
     target_mutations = [
+      Map.delete(complete, "status"),
       Map.delete(complete, "required_evidence_identifiers"),
       Map.put(complete, "unknown", true),
+      Map.delete(complete, "baselines"),
       drop_in(complete, ["baselines", "mailglass_inbound"]),
       put_in(complete, ["baselines", "unknown"], "1.0.0"),
+      Map.delete(complete, "candidate_versions"),
       drop_in(complete, ["candidate_versions", "mailglass_inbound"]),
       put_in(complete, ["candidate_versions", "unknown"], "1.0.0"),
       put_in(complete, ["required_evidence_identifiers", "unknown"], true),
@@ -400,14 +403,26 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
         ["required_evidence_identifiers", "hex_release_checksums", "unknown"],
         String.duplicate("a", 64)
       ),
+      put_in(
+        complete,
+        ["required_evidence_identifiers", "hex_release_checksums", "mailglass"],
+        "bad"
+      ),
       drop_in(complete, ["required_evidence_identifiers", "historical_tag"]),
       put_in(complete, ["required_evidence_identifiers", "historical_tag"], ""),
       drop_in(complete, ["required_evidence_identifiers", "historical_tag_sha"]),
       put_in(complete, ["required_evidence_identifiers", "historical_tag_sha"], "bad"),
+      Map.delete(complete, "proposal_identity"),
       drop_in(complete, ["proposal_identity", "source_sha"]),
+      Map.delete(complete, "publishable_content"),
       put_in(complete, ["publishable_content", "unknown"], true),
       drop_in(complete, ["publishable_content", "algorithm"]),
+      drop_in(complete, ["publishable_content", "digest"]),
+      drop_in(complete, ["publishable_content", "excludes"]),
+      Map.delete(complete, "final_identity"),
+      drop_in(complete, ["final_identity", "tag_sha"]),
       put_in(complete, ["final_identity", "unknown"], true),
+      Map.delete(complete, "states"),
       drop_in(complete, ["states", "publication"]),
       put_in(complete, ["states", "unknown"], true),
       put_in(complete, ["states", "publication"], "publishing"),

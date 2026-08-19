@@ -13,6 +13,23 @@ defmodule Mailglass.ReleaseVersionReconciler do
     "mailglass_inbound" => "mailglass_inbound/mix.exs"
   }
   @target_path ".planning/release-target.json"
+  @target_keys [
+    "schema_version",
+    "status",
+    "package_set",
+    "baselines",
+    "candidate_versions",
+    "required_evidence_identifiers",
+    "proposal_identity",
+    "publishable_content",
+    "final_identity",
+    "states"
+  ]
+  @proposal_identity_keys ["head_sha", "source_sha"]
+  @publishable_content_keys ["algorithm", "digest", "excludes"]
+  @final_identity_keys ["tag_sha"]
+  @state_keys ["capture", "authorization", "publication"]
+  @review_keys ["candidate_versions", "proposal_identity", "publishable_content"]
   @sha1 ~r/\A[0-9a-f]{40}\z/
   @sha256 ~r/\A[0-9a-f]{64}\z/
 
@@ -136,25 +153,9 @@ defmodule Mailglass.ReleaseVersionReconciler do
   end
 
   def validate_inactive_target(target) when is_map(target) do
-    with :ok <-
-           exact_keys(target, [
-             "schema_version",
-             "status",
-             "package_set",
-             "baselines",
-             "candidate_versions",
-             "required_evidence_identifiers",
-             "proposal_identity",
-             "publishable_content",
-             "final_identity",
-             "states"
-           ]),
-         :ok <- exact_value(target, "schema_version", 1),
+    with :ok <- validate_target_schema(target),
          :ok <- exact_value(target, "status", "inactive"),
-         :ok <- exact_value(target, "package_set", @packages),
-         :ok <- validate_versions(target["baselines"], :baseline),
          :ok <- exact_value(target, "candidate_versions", nil),
-         :ok <- validate_evidence(target["required_evidence_identifiers"], target["baselines"]),
          :ok <- exact_value(target, "proposal_identity", %{"head_sha" => nil, "source_sha" => nil}),
          :ok <-
            exact_value(target, "publishable_content", %{
@@ -176,10 +177,9 @@ defmodule Mailglass.ReleaseVersionReconciler do
   def validate_inactive_target(_), do: error(:invalid_target, "target must be an object")
 
   def validate_activation(target, reviewed) when is_map(target) and is_map(reviewed) do
-    with :ok <- exact_value(target, "schema_version", 1),
-         :ok <- exact_value(target, "status", "captured"),
-         :ok <- exact_value(target, "package_set", @packages),
-         :ok <- validate_versions(target["baselines"], :baseline),
+    with :ok <- validate_target_schema(target),
+         :ok <- validate_review_schema(reviewed),
+         :ok <- validate_activation_lifecycle(target),
          :ok <- validate_versions(target["candidate_versions"], :candidate),
          :ok <- validate_advances(target["baselines"], target["candidate_versions"]),
          :ok <- exact_value(target, "candidate_versions", reviewed["candidate_versions"]),
@@ -192,13 +192,7 @@ defmodule Mailglass.ReleaseVersionReconciler do
              "digest",
              get_in(reviewed, ["publishable_content", "digest"])
            ),
-         :ok <- exact_value(target, "final_identity", %{"tag_sha" => nil}),
-         :ok <-
-           exact_value(target, "states", %{
-             "capture" => "captured",
-             "authorization" => "unauthorized",
-             "publication" => "not_started"
-           }) do
+         :ok <- exact_value(target, "final_identity", %{"tag_sha" => nil}) do
       {:ok, target}
     end
   end
@@ -632,6 +626,54 @@ defmodule Mailglass.ReleaseVersionReconciler do
 
   defp validate_evidence(_, _), do: error(:invalid_evidence, "evidence must be an object")
 
+  defp validate_target_schema(target) do
+    with :ok <- exact_keys(target, @target_keys),
+         :ok <- exact_value(target, "schema_version", 1),
+         :ok <- exact_value(target, "package_set", @packages),
+         :ok <- validate_versions(target["baselines"], :baseline),
+         :ok <- validate_evidence(target["required_evidence_identifiers"], target["baselines"]),
+         :ok <- exact_keys(target["proposal_identity"], @proposal_identity_keys),
+         :ok <- exact_keys(target["publishable_content"], @publishable_content_keys),
+         :ok <- exact_keys(target["final_identity"], @final_identity_keys),
+         :ok <- exact_keys(target["states"], @state_keys) do
+      :ok
+    end
+  end
+
+  defp validate_review_schema(reviewed) do
+    with :ok <- exact_keys(reviewed, @review_keys),
+         :ok <- validate_versions(reviewed["candidate_versions"], :candidate),
+         :ok <- exact_keys(reviewed["proposal_identity"], @proposal_identity_keys),
+         :ok <- validate_proposal_identity(reviewed["proposal_identity"]),
+         :ok <- exact_keys(reviewed["publishable_content"], ["digest"]),
+         :ok <- validate_digest(reviewed["publishable_content"]["digest"]) do
+      :ok
+    end
+  end
+
+  defp validate_activation_lifecycle(target) do
+    case {target["status"], target["states"]} do
+      {"captured",
+       %{
+         "capture" => "captured",
+         "authorization" => "unauthorized",
+         "publication" => "not_started"
+       }} ->
+        :ok
+
+      {"authorized",
+       %{
+         "capture" => "captured",
+         "authorization" => "authorized",
+         "publication" => "not_started"
+       }} ->
+        :ok
+
+      _ ->
+        error(:invalid_lifecycle, "expected captured or authorized prepublication state")
+    end
+  end
+
   defp validate_versions(versions, kind) when is_map(versions) do
     cond do
       Map.keys(versions) |> Enum.sort() != Enum.sort(@packages) ->
@@ -674,14 +716,18 @@ defmodule Mailglass.ReleaseVersionReconciler do
          "digest" => digest,
          "excludes" => [@target_path]
        }) do
-    if is_binary(digest) and Regex.match?(@sha256, digest) do
-      :ok
-    else
-      error(:invalid_content_digest, "publishable content digest")
-    end
+    validate_digest(digest)
   end
 
   defp validate_publishable_content(_), do: error(:invalid_content_digest, "publishable content")
+
+  defp validate_digest(digest) when is_binary(digest) do
+    if Regex.match?(@sha256, digest),
+      do: :ok,
+      else: error(:invalid_content_digest, "publishable content digest")
+  end
+
+  defp validate_digest(_), do: error(:invalid_content_digest, "publishable content digest")
 
   defp exact_value(container, key, expected) when is_map(container) do
     if Map.get(container, key) == expected,
@@ -696,6 +742,8 @@ defmodule Mailglass.ReleaseVersionReconciler do
       do: :ok,
       else: error(:invalid_package_set, "target fields")
   end
+
+  defp exact_keys(_, _), do: error(:invalid_package_set, "target fields")
 
   defp stable_version?(value) when is_binary(value) do
     case Version.parse(value) do
