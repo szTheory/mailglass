@@ -461,10 +461,16 @@ defmodule Mailglass.ReleaseVersionReconciler do
         matching = Enum.filter(releases, &(is_map(&1) && &1["version"] == latest))
 
         case matching do
-          [%{"retirement" => nil}] -> {:ok, latest}
-          [%{}] -> error(:retired_hex, "#{name} #{latest}")
-          [] -> error(:missing_hex, "#{name} latest release record")
-          _ -> error(:duplicate_hex, "#{name} latest release record")
+          [%{} = summary] ->
+            if is_nil(summary["retirement"]),
+              do: {:ok, latest},
+              else: error(:retired_hex, "#{name} #{latest}")
+
+          [] ->
+            error(:missing_hex, "#{name} latest release record")
+
+          _ ->
+            error(:duplicate_hex, "#{name} latest release record")
         end
     end
   end
