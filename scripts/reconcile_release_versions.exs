@@ -136,7 +136,20 @@ defmodule Mailglass.ReleaseVersionReconciler do
   end
 
   def validate_inactive_target(target) when is_map(target) do
-    with :ok <- exact_value(target, "schema_version", 1),
+    with :ok <-
+           exact_keys(target, [
+             "schema_version",
+             "status",
+             "package_set",
+             "baselines",
+             "candidate_versions",
+             "required_evidence_identifiers",
+             "proposal_identity",
+             "publishable_content",
+             "final_identity",
+             "states"
+           ]),
+         :ok <- exact_value(target, "schema_version", 1),
          :ok <- exact_value(target, "status", "inactive"),
          :ok <- exact_value(target, "package_set", @packages),
          :ok <- validate_versions(target["baselines"], :baseline),
@@ -583,6 +596,16 @@ defmodule Mailglass.ReleaseVersionReconciler do
     historical_sha = evidence["historical_tag_sha"]
 
     cond do
+      Map.keys(evidence) |> Enum.sort() !=
+          Enum.sort([
+            "hex_package_endpoints",
+            "hex_release_endpoints",
+            "hex_release_checksums",
+            "historical_tag",
+            "historical_tag_sha"
+          ]) ->
+        error(:invalid_package_set, "evidence fields")
+
       package_endpoints != Map.new(@packages, &{&1, package_endpoint(&1)}) ->
         error(:invalid_evidence, "Hex package endpoints")
 
@@ -667,6 +690,12 @@ defmodule Mailglass.ReleaseVersionReconciler do
   end
 
   defp exact_value(_, key, _), do: error(:target_mismatch, "#{key} is absent")
+
+  defp exact_keys(container, expected) when is_map(container) do
+    if Enum.sort(Map.keys(container)) == Enum.sort(expected),
+      do: :ok,
+      else: error(:invalid_package_set, "target fields")
+  end
 
   defp stable_version?(value) when is_binary(value) do
     case Version.parse(value) do
