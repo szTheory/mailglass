@@ -1065,10 +1065,10 @@ EOF
 
   checkpoint "${journey_name}" rollback "${stage_attestation_path}"
 
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}" --pool-size 1
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}" --pool-size 1
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}" --pool-size 1
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}" --pool-size 1
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}" --pool-size 2
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}" --pool-size 2
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}" --pool-size 2
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}" --pool-size 2
 
   stage_attestation_path="${journey_dir}/idempotent-rerun.attestation"
   STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
