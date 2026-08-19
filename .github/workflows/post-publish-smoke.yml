@@ -19,6 +19,18 @@ on:
         description: "Tag to smoke-test (e.g. mailglass-vX.Y.Z); fallback path only"
         required: false
         type: string
+      core_version:
+        description: "Exact published mailglass version from an immutable completed target"
+        required: false
+        type: string
+      admin_version:
+        description: "Exact published mailglass_admin version from an immutable completed target"
+        required: false
+        type: string
+      inbound_version:
+        description: "Exact published mailglass_inbound version from an immutable completed target"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -38,6 +50,10 @@ jobs:
       release_ref: ${{ steps.guard.outputs.release_ref }}
       version_inbound: ${{ steps.read-inbound-version.outputs.version_inbound }}
     steps:
+      # Release/scheduled smoke must resolve all package versions from an
+      # immutable completed target; never from package latest. The policy owner
+      # validates this through `validate_completed_target` before any consumer
+      # install uses the values below.
       - name: Determine if smoke should run
         id: guard
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0

@@ -214,6 +214,16 @@ defmodule Mailglass.ReleasePolicy do
     end
   end
 
+  def cli(["validate-authorization", target_path, digest]) do
+    with {:ok, json} <- File.read(target_path),
+         {:ok, target} <- Jason.decode(json),
+         {:ok, _target} <- validate_authorization_digest(target, digest) do
+      IO.write("authorized=true\n")
+    else
+      _ -> System.halt(1)
+    end
+  end
+
   def cli(_), do: System.halt(1)
 
   defp lifecycle(target) do

@@ -30,6 +30,10 @@ on:
           - mailglass_inbound
           - all
         default: all
+      candidate_digest:
+        description: "Protected candidate digest from dual authorization"
+        required: false
+        type: string
       # The Core Full Suite gate's pressure valve (Phase 143 / D-23). It exists
       # because gating those two legs also gates three steps that are network- and
       # service-dependent — the inbound `mix deps.get`, the inbound
@@ -64,6 +68,9 @@ jobs:
   prepublish-summary:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    outputs:
+      authorized: ${{ steps.release-target.outputs.authorized }}
+      candidate_digest: ${{ steps.release-target.outputs.candidate_digest }}
     services:
       postgres:
         image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
@@ -90,65 +97,47 @@ jobs:
           # using workflow_dispatch so publish runs against the reviewed release
           # commit, not a later `main` SHA.
           ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
-      - name: Validate automated release target
-        id: release-target
-        env:
-          RELEASE_REF: ${{ github.event.release.tag_name || github.event.inputs.tag }}
-        run: |
-          set -euo pipefail
-          target=.planning/release-target.json
-          validator=scripts/release_policy_validate_target.sh
-
-          if [ -x "$validator" ]; then
-            "$validator" "$target" "$RELEASE_REF" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Compatibility path for a recovery dispatch against a release tag
-          # created before the versioned validator existed. The checkout above
-          # intentionally uses that historical tag, so sourcing a newer script
-          # from the mutable default branch would validate different code. Keep
-          # the same pure, fail-closed decision inline for those tags only.
-          echo "Release tag predates the versioned target validator; using the inline compatibility validator."
-
-          if [ ! -r "$target" ]; then
-            echo "active=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          status=$(jq -er '.status' "$target")
-          if [ "$status" != "active" ]; then
-            echo "active=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          expected_core=$(jq -er '.packages.mailglass' "$target")
-          expected_admin=$(jq -er '.packages.mailglass_admin' "$target")
-          expected_inbound=$(jq -er '.packages.mailglass_inbound' "$target")
-          actual_core=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mix.exs | head -1)
-          actual_admin=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_admin/mix.exs | head -1)
-          actual_inbound=$(sed -nE 's/^[[:space:]]*@version "([^"]+)"/\1/p' mailglass_inbound/mix.exs | head -1)
-
-          if [ "$actual_core" != "$expected_core" ] || \
-             [ "$actual_admin" != "$expected_admin" ] || \
-             [ "$actual_inbound" != "$expected_inbound" ]; then
-            echo "Release target mismatch: expected core/admin/inbound $expected_core/$expected_admin/$expected_inbound; source has $actual_core/$actual_admin/$actual_inbound" >&2
-            exit 1
-          fi
-
-          if [ "$RELEASE_REF" != "mailglass-v${expected_core}" ] && \
-             [ "$RELEASE_REF" != "mailglass_admin-v${expected_admin}" ]; then
-            echo "Release target mismatch: ref '$RELEASE_REF' is not an authorized linked release tag" >&2
-            exit 1
-          fi
-
-          printf 'active=true\ncore=%s\nadmin=%s\ninbound=%s\n' \
-            "$actual_core" "$actual_admin" "$actual_inbound" >> "$GITHUB_OUTPUT"
-      - name: Set up OTP + Elixir
+      - name: Set up OTP + Elixir for policy
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
           version-file: .tool-versions
           version-type: strict
+      - name: Install deps for policy
+        run: mix deps.get
+      - name: Validate automated release target
+        id: release-target
+        env:
+          RELEASE_REF: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+          EVENT_NAME: ${{ github.event_name }}
+          CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
+        run: |
+          set -euo pipefail
+          target=.planning/release-target.json
+          digest="${CANDIDATE_DIGEST:-}"
+
+          # Every live path is inert unless a later protected dispatch supplies
+          # the exact deterministic candidate digest. Release events, inactive
+          # targets, and singly-authorized targets cannot reach secrets.
+          if [ "${EVENT_NAME:-}" != "workflow_dispatch" ] || [ -z "$digest" ]; then
+            printf 'active=false\nauthorized=false\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if mix run --no-start --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-authorization "$target" "$digest" >> "$GITHUB_OUTPUT"; then
+            echo "candidate_digest=$digest" >> "$GITHUB_OUTPUT"
+          else
+            echo "ERROR: protected candidate digest is invalid or unauthorized" >&2
+            exit 1
+          fi
+
+          validator=scripts/release_policy_validate_target.sh
+          if "$validator" "$target" "$RELEASE_REF" >> "$GITHUB_OUTPUT"; then
+            echo "active=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "ERROR: protected candidate source/ref validation failed" >&2
+          exit 1
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
@@ -820,9 +809,11 @@ jobs:
   publish-core:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    needs: [gate-ci-green]
+    needs: [gate-ci-green, prepublish-summary]
     if: |
-      github.event_name == 'release' ||
+      github.event_name == 'workflow_dispatch' &&
+      needs.prepublish-summary.outputs.authorized == 'true' &&
+      github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest &&
       (github.event_name == 'workflow_dispatch' &&
        github.event.inputs.package != 'mailglass_admin' &&
        github.event.inputs.package != 'mailglass_inbound')
@@ -885,12 +876,14 @@ jobs:
   publish-admin:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    needs: [gate-ci-green, publish-core]
+    needs: [gate-ci-green, prepublish-summary, publish-core]
     # Linked core/admin releases publish admin only after a successful core
     # publish. Inbound is independently versioned and release-event ineligible;
     # dispatch-only recovery may still publish it or all packages explicitly.
     if: |
       always() &&
+      needs.prepublish-summary.outputs.authorized == 'true' &&
+      github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest &&
       (
         (github.event_name == 'workflow_dispatch' &&
          github.event.inputs.package == 'mailglass_admin' &&
@@ -989,12 +982,14 @@ jobs:
   publish-inbound:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    needs: [gate-ci-green, publish-core]
+    needs: [gate-ci-green, prepublish-summary, publish-core]
     # Inbound is independently versioned and can only be published by an
     # explicit recovery dispatch. A failed or skipped gate never exposes the
     # protected publishing environment.
     if: |
       always() &&
+      needs.prepublish-summary.outputs.authorized == 'true' &&
+      github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest &&
       (
         (github.event_name == 'workflow_dispatch' &&
          github.event.inputs.package == 'mailglass_inbound' &&

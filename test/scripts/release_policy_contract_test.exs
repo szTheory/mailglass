@@ -195,10 +195,10 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
                  stderr_to_stdout: true
                )
 
-      assert message =~ "inline compatibility validator"
-      assert File.read!(output) =~ "active=true\ncore=2.4.0\nadmin=2.4.0\ninbound=2.1.1\n"
+      assert message == ""
+      assert File.read!(output) =~ "authorized=false"
 
-      assert {message, status} =
+      assert {message, 0} =
                System.cmd("bash", ["-c", step],
                  cd: dir,
                  env: [
@@ -208,8 +208,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
                  stderr_to_stdout: true
                )
 
-      assert status != 0
-      assert message =~ "not an authorized linked release tag"
+      assert message == ""
     end)
   end
 
@@ -266,9 +265,9 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
     assert publish =~ "candidate_digest:"
     assert publish =~ "Protected candidate digest"
-    assert publish =~ "steps.release-target.outputs.authorized == 'true'"
+    assert publish =~ "needs.prepublish-summary.outputs.authorized == 'true'"
     assert publish =~ "github.event.inputs.candidate_digest"
-    assert publish =~ "false &&"
+    refute publish =~ "false &&"
     assert publish =~ "mailglass_inbound"
   end
 
