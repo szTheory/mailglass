@@ -372,8 +372,10 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert protected =~ "current_main_sha=$(git rev-parse origin/main)"
     assert protected =~ "[ \"$(git rev-parse HEAD)\" = \"$current_main_sha\" ]"
     assert protected =~ "control_target=$(mktemp)"
+
     assert protected =~
              "cp \"$control_root/.planning/release-target.json\" \"$control_target\""
+
     assert protected =~ "validate-protected-dispatch \"$control_target\""
 
     assert release =~
@@ -516,9 +518,12 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert prepublish =~ ~s(control_target="$control_root/.planning/release-target.json")
     assert prepublish =~ "scripts/release_policy_content_digest.sh"
     assert prepublish =~ "pretag=true"
+
     assert prepublish =~
              "[ \"$(git -C \"$candidate_root\" rev-parse HEAD)\" = \"$proposal_head\" ]"
+
     assert prepublish =~ "[ \"$actual_digest\" = \"$content_digest\" ]"
+
     assert prepublish =~
              "\"$control_root/scripts/release_policy_validate_target.sh\" \"$captured_target\" \"mailglass-v${core}\" \"$candidate_root\""
 
@@ -540,7 +545,10 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
     assert validation =~ ~s(control_root="$GITHUB_WORKSPACE/trusted-control")
     assert validation =~ ~s(candidate_root="$GITHUB_WORKSPACE")
-    assert validation =~ "[ \"$(git -C \"$control_root\" rev-parse HEAD)\" = \"$(git -C \"$control_root\" rev-parse origin/main)\" ]"
+
+    assert validation =~
+             "[ \"$(git -C \"$control_root\" rev-parse HEAD)\" = \"$(git -C \"$control_root\" rev-parse origin/main)\" ]"
+
     assert validation =~ "$control_root/scripts/release_policy_content_digest.sh"
     assert validation =~ "$control_root/scripts/release_policy_validate_target.sh"
     assert validation =~ "$control_root/scripts/release_policy_expected_tags.sh"
