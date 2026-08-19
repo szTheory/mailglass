@@ -232,6 +232,32 @@ rollback_package() {
   esac
 }
 
+idempotent_rollback_to() {
+  local repo="$1"
+  local version="$2"
+  local journey_url="$3"
+
+  IDEMPOTENT_REPO="${repo}" IDEMPOTENT_VERSION="${version}" \
+    MIX_ENV=dev DATABASE_URL="${journey_url}" mix run --no-start -e '
+      repo = Module.concat([System.fetch_env!("IDEMPOTENT_REPO")])
+      {version, ""} = System.fetch_env!("IDEMPOTENT_VERSION") |> Integer.parse()
+      {:ok, _started} = Application.ensure_all_started(:ecto_sql)
+      {:ok, repo_pid} = repo.start_link(pool_size: 2)
+
+      try do
+        [] =
+          Ecto.Migrator.run(
+            repo,
+            Ecto.Migrator.migrations_path(repo),
+            :down,
+            to: version
+          )
+      after
+        Supervisor.stop(repo_pid, :normal, 30_000)
+      end
+    '
+}
+
 migrate_package() {
   local package="$1"
   local journey_url="$2"
@@ -1065,10 +1091,10 @@ EOF
 
   checkpoint "${journey_name}" rollback "${stage_attestation_path}"
 
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}" --pool-size 2
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}" --pool-size 2
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}" --pool-size 2
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}" --pool-size 2
+  idempotent_rollback_to Host.Repo "${core_upgrade_version}" "${journey_url}"
+  idempotent_rollback_to Host.Repo "${core_upgrade_version}" "${journey_url}"
+  idempotent_rollback_to Host.InboundRepo "${inbound_upgrade_version}" "${journey_url}"
+  idempotent_rollback_to Host.InboundRepo "${inbound_upgrade_version}" "${journey_url}"
 
   stage_attestation_path="${journey_dir}/idempotent-rerun.attestation"
   STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
