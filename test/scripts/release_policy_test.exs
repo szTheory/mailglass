@@ -127,6 +127,68 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
              ])
   end
 
+  test "keeps core and admin linked across baselines, candidates, and every candidate lifecycle" do
+    captured = captured_target()
+
+    divergent_baseline = put_in(captured, ["baselines", "mailglass_admin"], "2.4.2")
+    divergent_candidate = put_in(captured, ["candidate_versions", "mailglass_admin"], "3.0.1")
+
+    for target <- [divergent_baseline, divergent_candidate] do
+      assert {:error, _} = policy(:validate_target, [target])
+    end
+
+    authorized =
+      divergent_candidate
+      |> Map.put("status", "authorized")
+      |> put_in(["states", "authorization"], "authorized")
+
+    completed =
+      authorized
+      |> Map.put("status", "completed")
+      |> put_in(["states", "publication"], "published")
+      |> put_in(["final_identity", "tag_sha"], String.duplicate("d", 40))
+
+    assert {:error, _} = policy(:validate_target, [authorized])
+    assert {:error, _} = policy(:validate_completed_target, [completed])
+  end
+
+  test "rejects prerelease, build, and Version-invalid release versions" do
+    for version <- [
+          "4.0.0-rc.1",
+          "4.0.0-01",
+          "4.0.0+build.1",
+          "04.0.0",
+          "4.0",
+          "4.0.0 trailing"
+        ] do
+      assert {:error, _} =
+               captured_target()
+               |> put_in(["candidate_versions", "mailglass"], version)
+               |> put_in(["candidate_versions", "mailglass_admin"], version)
+               |> then(&policy(:validate_target, [&1]))
+    end
+  end
+
+  test "reads exactly one full-line stable version declaration per package" do
+    in_tmp(fn root ->
+      write_versions(root, "2.5.0", "2.5.0", "2.2.0")
+      assert {:ok, _} = policy(:source_versions, [root])
+
+      File.write!(
+        Path.join(root, "mailglass_admin/mix.exs"),
+        "  @version \"2.5.0\"\n  @version \"2.5.1\"\n"
+      )
+
+      assert {:error, _} = policy(:source_versions, [root])
+
+      File.write!(Path.join(root, "mailglass_admin/mix.exs"), "  @version \"2.5.0\" # comment\n")
+      assert {:error, _} = policy(:source_versions, [root])
+
+      write_versions(root, "2.5.0", "2.5.1", "2.2.0")
+      assert {:error, _} = policy(:source_versions, [root])
+    end)
+  end
+
   defp captured_target do
     %{
       "schema_version" => 1,
@@ -184,5 +246,28 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
       "historical_tag" => "mailglass-v2.4.1",
       "historical_tag_sha" => String.duplicate("e", 40)
     }
+  end
+
+  defp write_versions(root, core, admin, inbound) do
+    for {path, version} <- [
+          {"mix.exs", core},
+          {"mailglass_admin/mix.exs", admin},
+          {"mailglass_inbound/mix.exs", inbound}
+        ] do
+      full_path = Path.join(root, path)
+      File.mkdir_p!(Path.dirname(full_path))
+      File.write!(full_path, "  @version \"#{version}\"\n")
+    end
+  end
+
+  defp in_tmp(fun) do
+    root = Path.join(System.tmp_dir!(), "release-policy-unit-#{System.unique_integer([:positive])}")
+    File.mkdir_p!(root)
+
+    try do
+      fun.(root)
+    after
+      File.rm_rf!(root)
+    end
   end
 end
