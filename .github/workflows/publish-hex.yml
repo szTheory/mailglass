@@ -903,11 +903,11 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
       - name: Skip if version already on Hex
         id: idempotency
-        working-directory: mailglass_admin
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           mix hex.build >/dev/null
-          CHECKSUM=$(shasum -a 256 "mailglass-${VERSION}.tar" | awk '{print $1}')
+          CHECKSUM=$(tar -xOf "mailglass-${VERSION}.tar" CHECKSUM | tr A-F a-f)
+          [[ "$CHECKSUM" =~ ^[0-9a-f]{64}$ ]]
           state=$(scripts/release_policy_hex_release_state.sh mailglass "${VERSION}" "$CHECKSUM")
           if [ "$state" = exists ]; then
             echo "Nothing to do: version ${VERSION} of mailglass is already on Hex; skipping publish (idempotency guard)."
@@ -1018,10 +1018,14 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
       - name: Skip if version already on Hex
         id: idempotency
+        working-directory: mailglass_admin
+        env:
+          MIX_PUBLISH: "true"
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           mix hex.build >/dev/null
-          CHECKSUM=$(shasum -a 256 "mailglass_admin-${VERSION}.tar" | awk '{print $1}')
+          CHECKSUM=$(tar -xOf "mailglass_admin-${VERSION}.tar" CHECKSUM | tr A-F a-f)
+          [[ "$CHECKSUM" =~ ^[0-9a-f]{64}$ ]]
           state=$(../scripts/release_policy_hex_release_state.sh mailglass_admin "${VERSION}" "$CHECKSUM")
           if [ "$state" = exists ]; then
             echo "Nothing to do: version ${VERSION} of mailglass_admin is already on Hex; skipping publish (idempotency guard)."
@@ -1121,10 +1125,13 @@ jobs:
       - name: Skip if version already on Hex
         id: idempotency
         working-directory: mailglass_inbound
+        env:
+          MIX_PUBLISH: "true"
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           mix hex.build >/dev/null
-          CHECKSUM=$(shasum -a 256 "mailglass_inbound-${VERSION}.tar" | awk '{print $1}')
+          CHECKSUM=$(tar -xOf "mailglass_inbound-${VERSION}.tar" CHECKSUM | tr A-F a-f)
+          [[ "$CHECKSUM" =~ ^[0-9a-f]{64}$ ]]
           state=$(../scripts/release_policy_hex_release_state.sh mailglass_inbound "${VERSION}" "$CHECKSUM")
           if [ "$state" = exists ]; then
             echo "Nothing to do: version ${VERSION} of mailglass_inbound is already on Hex; skipping publish (idempotency guard)."
