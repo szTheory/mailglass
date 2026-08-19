@@ -384,7 +384,8 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert publish =~ "github.event.inputs.candidate_digest"
     refute publish =~ "false &&"
     assert publish =~ "mailglass_inbound"
-    assert publish =~ "[ \"${PACKAGE:-}\" = all ]"
+    assert publish =~ "[ \"${PACKAGE:-}\" != all ]"
+    assert publish =~ "protected release validation requires package=all"
   end
 
   test "dry-run remains credential-free and outside every protected publish environment" do
