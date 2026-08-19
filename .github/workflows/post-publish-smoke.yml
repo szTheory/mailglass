@@ -22,7 +22,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 concurrency:
   group: mailglass-linked-release-smoke
@@ -32,6 +31,7 @@ jobs:
   cron-guard:
     name: Cron 7-day window guard
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       should_run: ${{ steps.guard.outputs.should_run }}
       version: ${{ steps.guard.outputs.version }}
@@ -388,7 +388,7 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -508,6 +508,10 @@ jobs:
   notify-on-failure:
     name: Open issue on smoke failure
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
     needs: [cron-guard, wait-for-index, wait-for-hexdocs, consumer-install, published-trust-journey, retracted-check]
     if: failure() && needs.cron-guard.outputs.should_run == 'true'
     continue-on-error: true
@@ -586,6 +590,10 @@ jobs:
   close-publish-smoke-tracker-on-success:
     name: Close issue on smoke success
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      issues: write
     needs: [cron-guard, wait-for-index, wait-for-hexdocs, consumer-install, published-trust-journey, retracted-check]
     if: >-
       ${{

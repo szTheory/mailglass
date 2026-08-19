@@ -10,13 +10,13 @@
 #
 # Base image is the SAME pin `reference/demo_app/Dockerfile` already uses, so the
 # repo has exactly one gating-toolchain string to keep current, not two.
-FROM hexpm/elixir:1.18.4-erlang-27.3.4-debian-bookworm-20250520-slim
+FROM hexpm/elixir:1.18.4-erlang-27.3.4.13-debian-bookworm-20260623-slim@sha256:ca09419f742ec4040ccb4d9949324f73d3d2c364cacad56686d68d6327eb45f2
 
 # git: hex/rebar fetches and any git-sourced dep. build-essential: NIF-bearing
 # deps. postgresql-client: `pg_isready` for the same readiness wait the CI job
 # performs before `mix ecto.create`.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends build-essential git ca-certificates postgresql-client \
+  && apt-get install -y --no-install-recommends build-essential git ca-certificates jq postgresql-client \
   && rm -rf /var/lib/apt/lists/*
 
 RUN mix local.hex --force && mix local.rebar --force

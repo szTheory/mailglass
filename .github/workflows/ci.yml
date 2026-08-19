@@ -23,6 +23,7 @@ jobs:
   changes:
     name: Detect Non-Doc Changes
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
@@ -69,6 +70,7 @@ jobs:
   format_check:
     name: Format Check (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
@@ -88,6 +90,7 @@ jobs:
   compile_warnings:
     name: Compile Warnings as Errors (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
@@ -113,6 +116,7 @@ jobs:
   compile_no_optional_deps:
     name: Compile No Optional Deps (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Required leaf behind CI Green aggregate — keep matrix-free. A 1-combo matrix
@@ -158,7 +162,7 @@ jobs:
     # that the 1.4.3-1.4.5 bug stack shipped through.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -195,13 +199,14 @@ jobs:
   support_contract_core:
     name: Support Contract Core (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Required leaf behind CI Green aggregate — keep matrix-free (see
     # compile_no_optional_deps): a 1-combo matrix appends " (1.18, 27)" to the name.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -255,11 +260,12 @@ jobs:
   mix_task_tests:
     name: Mix Task Tests (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -319,11 +325,12 @@ jobs:
   core_deterministic_suite:
     name: Core Deterministic Suite (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -372,11 +379,12 @@ jobs:
   inbound_test:
     name: Inbound Test (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -457,6 +465,7 @@ jobs:
     # Separate job (not a step in inbound_test) so a compile-gate failure is legible
     # in the checks list and runs in parallel.
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -486,6 +495,7 @@ jobs:
   credo_strict:
     name: Credo Strict (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
@@ -517,6 +527,7 @@ jobs:
   conformance_gates:
     name: Design System Conformance (shell gates)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
@@ -539,6 +550,7 @@ jobs:
   dialyzer:
     name: Dialyzer (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     strategy:
@@ -548,7 +560,7 @@ jobs:
             otp: "27"
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -604,6 +616,7 @@ jobs:
   inbound_dialyzer:
     name: Inbound Dialyzer (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     env:
@@ -628,6 +641,7 @@ jobs:
   docs_warnings_as_errors:
     name: Docs Warnings as Errors (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
@@ -655,6 +669,7 @@ jobs:
   hex_audit:
     name: Hex Audit (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     steps:
@@ -680,6 +695,7 @@ jobs:
   deps_audit_advisory:
     name: Deps Audit (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Promoted to merge-gating (Phase 142/VULN-03); disposition recorded in
@@ -707,11 +723,12 @@ jobs:
   installer_golden_gate:
     name: Installer Golden Gate (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -757,13 +774,14 @@ jobs:
   support_contract_admin:
     name: Support Contract Admin (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Required leaf behind CI Green aggregate — keep matrix-free (see
     # compile_no_optional_deps): a 1-combo matrix appends " (1.18, 27)" to the name.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -818,6 +836,7 @@ jobs:
   operator_browser_gate:
     name: Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     strategy:
@@ -826,7 +845,7 @@ jobs:
           - node: "22"
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -917,6 +936,7 @@ jobs:
   preview_capture_advisory:
     name: Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     strategy:
@@ -925,7 +945,7 @@ jobs:
           - node: "22"
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -1051,13 +1071,14 @@ jobs:
   trust_lane_repo_head:
     name: Trust Lane Repo Head (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Required leaf behind CI Green aggregate — keep matrix-free (see
     # compile_no_optional_deps): a 1-combo matrix appends " (1.18, 27)" to the name.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -1127,13 +1148,14 @@ jobs:
   trust_lane_clean_baseline:
     name: Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
     # Publish-gate-only: NOT in REQUIRED_CHECKS (D-04/A1 lock) and NOT in
     # ci_green.needs. Gated on changes so docs-only PRs skip it.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -1201,6 +1223,7 @@ jobs:
   branch_protection_advisory:
     name: Branch Protection Advisory
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check for BRANCH_PROTECTION_PAT secret
         id: check-pat
@@ -1237,6 +1260,7 @@ jobs:
   ci_green:
     name: CI Green
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: always()
     needs:
       - changes
