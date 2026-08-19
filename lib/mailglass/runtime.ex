@@ -91,8 +91,7 @@ defmodule Mailglass.Runtime do
   @doc false
   @spec ses_http_client() :: module() | atom()
   def ses_http_client do
-    :mailglass
-    |> Application.get_env(:ses, [])
+    Application.get_env(:mailglass, :ses, [])
     |> Keyword.get(:httpc_client, :httpc)
   end
 

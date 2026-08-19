@@ -3,7 +3,7 @@ defmodule MailglassInbound.Migrations.Postgres.V02 do
 
   # This version is intentionally expand-only.  The generated host wrapper must
   # opt out of Ecto's DDL transaction before asking this module to build the
-  # populated-table indexes concurrently (the Plan 09 generator contract).
+  # populated-table indexes concurrently (the generated migration contract).
   # Direct callers still receive correct transactional DDL, but never a false
   # claim that `CREATE INDEX CONCURRENTLY` ran in a transaction.
   use Ecto.Migration

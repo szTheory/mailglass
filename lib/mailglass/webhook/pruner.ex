@@ -90,7 +90,7 @@ if Code.ensure_loaded?(Oban.Worker) do
     @batch_size 1_000
     @prune_lock_key 6_642_484_338_949_089_810
 
-    @spec lock_key() :: integer()
+    @spec lock_key() :: 6_642_484_338_949_089_810
     def lock_key, do: @prune_lock_key
 
     def prune do

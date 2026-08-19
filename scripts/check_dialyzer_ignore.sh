@@ -8,7 +8,7 @@
 
 set -euo pipefail
 
-FILES=(".dialyzer_ignore.exs" "mailglass_admin/.dialyzer_ignore.exs")
+FILES=(".dialyzer_ignore.exs" "mailglass_admin/.dialyzer_ignore.exs" "mailglass_inbound/.dialyzer_ignore.exs")
 errors=0
 
 for file in "${FILES[@]}"; do

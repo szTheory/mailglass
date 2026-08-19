@@ -58,10 +58,8 @@ defmodule MailglassInbound.Internal.Replay do
          {:ok, provider} <- terminal_provider(evidence.provider),
          {:ok, normalized} <- resolve_and_normalize(provider, request, evidence, opts),
          message <- normalized_message(normalized.message, record.tenant_id, provider),
-         {:ok, route} <- route_recovered(message, opts),
-         {:ok, recovered} <-
-           persist_recovered(repo, record, evidence, message, normalized.evidence, route, opts) do
-      {:ok, recovered}
+         {:ok, route} <- route_recovered(message, opts) do
+      persist_recovered(repo, record, evidence, message, normalized.evidence, route, opts)
     end
   end
 

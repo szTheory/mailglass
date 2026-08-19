@@ -241,8 +241,9 @@ defmodule Mailglass.Webhook.IngestTest do
 
       delivery_selects =
         receive_queries()
-        |> Enum.filter(&String.contains?(&1, "mailglass_deliveries"))
-        |> Enum.filter(&String.starts_with?(&1, "SELECT"))
+        |> Enum.filter(
+          &(String.contains?(&1, "mailglass_deliveries") and String.starts_with?(&1, "SELECT"))
+        )
 
       assert length(delivery_selects) == 1
 

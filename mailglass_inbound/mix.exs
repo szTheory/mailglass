@@ -20,6 +20,7 @@ defmodule MailglassInbound.MixProject do
       deps: deps(),
       aliases: aliases(),
       test_coverage: [tool: ExCoveralls],
+      dialyzer: dialyzer(),
       name: "MailglassInbound",
       description: @description,
       source_url: @source_url,
@@ -84,6 +85,16 @@ defmodule MailglassInbound.MixProject do
     [no_warn_undefined: [Oban, Oban.Job, Oban.Worker]]
   end
 
+  defp dialyzer do
+    [
+      flags: [:error_handling, :missing_return, :no_opaque, :no_match, :underspecs],
+      ignore_file_strict: ".dialyzer_ignore.exs",
+      list_unused_filters: true,
+      plt_add_apps: [:ex_unit, :mix],
+      plt_file: {:no_warn, "_build/dialyxir/mailglass_inbound.plt"}
+    ]
+  end
+
   # `test/support` carries MailglassInbound.TestRepo (the Postgres-backed test
   # repo) so it must compile in the :test env. Mirror core mix.exs.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
@@ -116,6 +127,7 @@ defmodule MailglassInbound.MixProject do
       # (test/mailglass_inbound/properties/). Test-only; mirrors core's 1.3 pin.
       {:stream_data, "~> 1.3", only: [:test]},
       {:excoveralls, "~> 0.18", only: [:test]},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
     ]
   end
