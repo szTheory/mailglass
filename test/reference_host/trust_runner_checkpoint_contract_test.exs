@@ -15,7 +15,6 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
   @row_hash_contract "stage|status|fixture_id"
   @stage_order ["install", "preview", "send", "webhook_ingest", "operator_troubleshooting"]
   @generated_host_script_path Path.expand("../../scripts/generated_ecto_host_proof.sh", __DIR__)
-  @workspace_core_ebin Path.expand("../../_build/test/lib/mailglass/ebin", __DIR__)
   @workspace_inbound_root Path.expand("../../mailglass_inbound", __DIR__)
   @workspace_inbound_ebin Path.join(
                             @workspace_inbound_root,
@@ -35,7 +34,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
       )
 
     assert exit_code == 0, "workspace inbound compile failed:\n#{output}"
-    assert File.dir?(@workspace_core_ebin)
+    assert File.dir?(workspace_core_ebin())
     assert File.dir?(@workspace_inbound_ebin)
     :ok
   end
@@ -248,8 +247,12 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
     [
       {"MIX_ENV", "test"},
       {"MAILGLASS_REFERENCE_HOST_PACKAGE_MODE", "workspace"},
-      {"MAILGLASS_CORE_WORKSPACE_EBIN", @workspace_core_ebin},
+      {"MAILGLASS_CORE_WORKSPACE_EBIN", workspace_core_ebin()},
       {"MAILGLASS_INBOUND_WORKSPACE_EBIN", @workspace_inbound_ebin}
     ]
+  end
+
+  defp workspace_core_ebin do
+    Path.join(Mix.Project.build_path(), "lib/mailglass/ebin")
   end
 end
