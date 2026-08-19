@@ -517,6 +517,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert publish =~ "mailglass_inbound"
     assert validation =~ "[ \"${PACKAGE:-}\" != all ]"
     assert validation =~ "protected release validation requires package=all"
+    assert validation =~ ~s([ "${RELEASE_REF}" = "mailglass-v${core}" ])
 
     {package_guard, _} = :binary.match(validation, ~s(if [ "${PACKAGE:-}" != all ]))
     {captured_dry_run, _} = :binary.match(validation, "# A pretag rehearsal accepts")
