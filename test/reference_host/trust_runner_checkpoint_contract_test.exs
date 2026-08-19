@@ -246,7 +246,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
   defp workspace_runner_env do
     [
       {"MIX_ENV", "test"},
-      {"MAILGLASS_REFERENCE_HOST_PACKAGE_MODE", "workspace"},
+      {"MAILGLASS_REFERENCE_HOST_PACKAGE_MODE", "prepublication"},
       {"MAILGLASS_CORE_WORKSPACE_EBIN", workspace_core_ebin()},
       {"MAILGLASS_INBOUND_WORKSPACE_EBIN", @workspace_inbound_ebin}
     ]

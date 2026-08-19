@@ -128,6 +128,21 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     )
   end
 
+  test "scratch database namespace validator is fully anchored and rejects encoded/control suffixes" do
+    assert_database_name_result("mailglass_generated_ecto_host_review_01", 0)
+
+    for invalid <- [
+          "mailglass_generated_ecto_host_bad-name",
+          "mailglass_generated_ecto_host_bad%2Fescape",
+          "mailglass_generated_ecto_host_bad\nsuffix",
+          "prefix_mailglass_generated_ecto_host_valid",
+          "mailglass_generated_ecto_host_valid.trailing",
+          "mailglass_generated_ecto_host_"
+        ] do
+      assert_database_name_result(invalid, :failure)
+    end
+  end
+
   test "custom host modules are copied from one deterministic fixture and exercised at runtime" do
     source = File.read!(@script_path)
     fixture = File.read!(@custom_modules_path)
@@ -267,6 +282,18 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
       System.cmd(
         "bash",
         [@script_path, "--validate-attestation", journey, stage, result],
+        stderr_to_stdout: true
+      )
+
+    case expected do
+      0 -> assert exit_code == 0
+      :failure -> assert exit_code != 0
+    end
+  end
+
+  defp assert_database_name_result(database_name, expected) do
+    {_output, exit_code} =
+      System.cmd("bash", [@script_path, "--validate-database-name", database_name],
         stderr_to_stdout: true
       )
 
