@@ -287,6 +287,21 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     refute release =~ "gh pr merge \"$NUMBER\" --auto"
   end
 
+  test "proposal capture runs after synchronization and is the sole release-target policy path" do
+    release = File.read!(@release_please)
+
+    assert step_precedes?(
+             release,
+             "Sync sibling package -> mailglass dep pin on release-please branch",
+             "Capture Release Please proposal identity without activation"
+           )
+
+    assert release =~ "gh pr list --head release-please--branches--main"
+    assert release =~ "proposal-candidate.json"
+    refute release =~ "release_packages=$(jq"
+    refute release =~ "Phase 148 must publish exactly"
+  end
+
   test "publish workflow requires a protected exact-digest dispatch and keeps live jobs inert" do
     publish = File.read!(@publish)
 
