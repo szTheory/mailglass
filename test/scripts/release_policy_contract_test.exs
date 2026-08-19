@@ -271,6 +271,24 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert publish =~ "mailglass_inbound"
   end
 
+  test "dry-run remains credential-free and outside every protected publish environment" do
+    publish = File.read!(@publish)
+
+    for job <- ["publish-core", "publish-admin", "publish-inbound"] do
+      block = extract_job!(publish, job)
+      assert block =~ "github.event.inputs.dry_run != 'true'"
+      assert block =~ "environment: hex-publish"
+      assert block =~ "HEX_API_KEY: ${{ secrets.HEX_API_KEY }}"
+    end
+
+    prepublish = extract_job!(publish, "prepublish-summary")
+    refute prepublish =~ "environment: hex-publish"
+    refute prepublish =~ "HEX_API_KEY"
+    assert prepublish =~ "Pre-publish check for mailglass"
+    assert prepublish =~ "Pre-publish check for mailglass_admin"
+    assert prepublish =~ "Pre-publish check for mailglass_inbound"
+  end
+
   defp run(script, args), do: System.cmd("bash", [script | args], stderr_to_stdout: true)
 
   defp extract_step_script!(source, name) do
@@ -322,5 +340,12 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     {first_index, _} = :binary.match(source, "- name: #{first}")
     {second_index, _} = :binary.match(source, "- name: #{second}")
     first_index < second_index
+  end
+
+  defp extract_job!(source, job_name) do
+    marker = "  #{job_name}:\n"
+    [_before, rest] = String.split(source, marker, parts: 2)
+    [block | _] = String.split(rest, ~r/^  [a-z][a-z0-9-]*:$/m, parts: 2)
+    block
   end
 end
