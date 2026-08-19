@@ -167,7 +167,11 @@ jobs:
           fi
 
           policy=$(mktemp)
-          if mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-protected-dispatch "$target" "$digest" > "$policy"; then
+          control_target=$(mktemp)
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git show origin/main:.planning/release-target.json > "$control_target"
+          cmp -s "$target" "$control_target"
+          if mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-protected-dispatch "$control_target" "$digest" > "$policy"; then
             content_digest=$(awk -F= '$1 == "content_digest" {print $2}' "$policy")
             [[ "$content_digest" =~ ^[0-9a-f]{64}$ ]]
             tag_sha=$(git rev-parse "${RELEASE_REF}^{commit}")
