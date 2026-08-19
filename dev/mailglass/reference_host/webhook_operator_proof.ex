@@ -137,10 +137,10 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
 
   defp ensure_router_loaded! do
     case reference_host_package_mode!() do
-      :published ->
-        add_reference_host_code_paths(["mailglass_admin", "mailglass_inbound"])
-
-      :workspace ->
+      :prepublication ->
+        # Admin remains the established published compatibility gate. Core and
+        # inbound are both verified workspace builds; exact all-published
+        # package-family certification belongs to Phase 160 Plan 06.
         add_reference_host_code_paths(["mailglass_admin"])
         add_workspace_core_code_path!()
         add_workspace_inbound_code_path!()
@@ -170,10 +170,19 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
 
   defp reference_host_package_mode! do
     case System.get_env(@package_mode_env) do
-      nil -> :published
-      "published" -> :published
-      "workspace" -> :workspace
-      value -> raise ArgumentError, "unsupported #{@package_mode_env}=#{inspect(value)}"
+      "prepublication" ->
+        :prepublication
+
+      nil ->
+        raise ArgumentError,
+              "#{@package_mode_env} must explicitly select prepublication provenance"
+
+      "published" ->
+        raise ArgumentError,
+              "exact all-published trust proof is reserved for Phase 160 Plan 06"
+
+      value ->
+        raise ArgumentError, "unsupported #{@package_mode_env}=#{inspect(value)}"
     end
   end
 

@@ -1118,17 +1118,25 @@ jobs:
         run: |
           until pg_isready -h localhost -U postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
-      - name: Build reference host (dev) so the journey can load sibling beams
-        # The trust runner's webhook/operator stages load MailglassInbound /
-        # MailglassAdmin from reference/host_app/_build/dev/lib/*/ebin
-        # (see Mailglass.ReferenceHost.WebhookOperatorProof). A fresh repo-head
-        # checkout has no such build, so this compiles the reference host in dev
-        # to populate the sibling beams the journey prepends at runtime.
+      - name: Build published Admin compatibility gate
+        # Repo-head trust is explicitly prepublication: core + inbound come
+        # from coherent workspace builds, while Admin remains the established
+        # published compatibility gate. Plan 160-06 owns exact all-published
+        # package-family certification.
         working-directory: reference/host_app
         env:
           MIX_ENV: dev
         run: mix deps.get && mix compile
+      - name: Build workspace inbound package
+        working-directory: mailglass_inbound
+        env:
+          MIX_ENV: test
+        run: mix deps.get --check-locked && mix compile --warnings-as-errors
       - name: Run reference-host trust journey
+        env:
+          MAILGLASS_REFERENCE_HOST_PACKAGE_MODE: prepublication
+          MAILGLASS_CORE_WORKSPACE_EBIN: ${{ github.workspace }}/_build/test/lib/mailglass/ebin
+          MAILGLASS_INBOUND_WORKSPACE_EBIN: ${{ github.workspace }}/mailglass_inbound/_build/test/lib/mailglass_inbound/ebin
         run: mix verify.reference_host.journey
       - name: Validate trust checkpoint contract
         run: bash scripts/check_trust_runner_checkpoint.sh

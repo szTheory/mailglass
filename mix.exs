@@ -432,7 +432,7 @@ defmodule Mailglass.MixProject do
         "cmd --cd mailglass_inbound mix dialyzer",
         "cmd --cd reference/host_app mix deps.get",
         "cmd --cd reference/host_app env MIX_ENV=dev mix compile",
-        "cmd env MIX_ENV=test mix verify.reference_host.journey",
+        "cmd env MIX_ENV=test MAILGLASS_REFERENCE_HOST_PACKAGE_MODE=prepublication MAILGLASS_CORE_WORKSPACE_EBIN=#{File.cwd!()}/_build/test/lib/mailglass/ebin MAILGLASS_INBOUND_WORKSPACE_EBIN=#{File.cwd!()}/mailglass_inbound/_build/test/lib/mailglass_inbound/ebin mix verify.reference_host.journey",
         "cmd bash scripts/check_trust_runner_checkpoint.sh",
         "cmd bash scripts/preflight_network.sh",
         "cmd env DEP_MODE=path MAILGLASS_PATH=#{File.cwd!()} bash scripts/consumer_install_smoke.sh",

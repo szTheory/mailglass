@@ -6,6 +6,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
   @readme_path Path.expand("../../reference/host_app/README.md", __DIR__)
   @scope_path Path.expand("../../reference/host_app/SCOPE.md", __DIR__)
   @generated_host_script_path Path.expand("../../scripts/generated_ecto_host_proof.sh", __DIR__)
+  @ci_yml_path Path.expand("../../.github/workflows/ci.yml", __DIR__)
   @webhook_proof_path Path.expand(
                         "../../dev/mailglass/reference_host/webhook_operator_proof.ex",
                         __DIR__
@@ -113,22 +114,40 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
     end
   end
 
-  test "REL-01 trust proof selects one coherent inbound package provenance" do
+  test "REL-01 trust proof selects one explicit coherent prepublication provenance" do
     source = File.read!(@webhook_proof_path)
+    ci_source = File.read!(@ci_yml_path)
 
     assert source =~ "MAILGLASS_REFERENCE_HOST_PACKAGE_MODE"
     assert source =~ "MAILGLASS_CORE_WORKSPACE_EBIN"
     assert source =~ "MAILGLASS_INBOUND_WORKSPACE_EBIN"
     assert source =~ "add_workspace_core_code_path!"
     assert source =~ "add_workspace_inbound_code_path!"
-    assert source =~ ~s("workspace")
+    assert source =~ ~s("prepublication")
     assert source =~ ~s("published")
+    refute source =~ "nil -> :published"
+    assert source =~ "must explicitly select prepublication provenance"
+    assert source =~ "exact all-published trust proof is reserved for Phase 160 Plan 06"
 
     refute source =~ "require_local_ingress_plug!"
     refute source =~ "ingress/verified_request.ex"
     refute source =~ "ingress/pipeline.ex"
     refute source =~ "ports/core.ex"
     assert source =~ "Path.dirname(loaded_path) == ebin_path"
+
+    repo_head_job =
+      extract_job_block(ci_source, "trust_lane_repo_head", "trust_lane_clean_baseline")
+
+    assert repo_head_job =~ "MAILGLASS_REFERENCE_HOST_PACKAGE_MODE: prepublication"
+    assert repo_head_job =~ "MAILGLASS_CORE_WORKSPACE_EBIN"
+    assert repo_head_job =~ "MAILGLASS_INBOUND_WORKSPACE_EBIN"
+    assert repo_head_job =~ "working-directory: mailglass_inbound"
+  end
+
+  defp extract_job_block(source, job_key, next_job_key) do
+    [_, rest] = String.split(source, "  #{job_key}:\n", parts: 2)
+    [job, _] = String.split(rest, "\n  #{next_job_key}:\n", parts: 2)
+    job
   end
 
   defp token_present?(files_with_content, token) do

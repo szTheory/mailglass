@@ -8,6 +8,11 @@ set -euo pipefail
 FRESH_DELIVERY_STAGES=(fresh_install sync_send atomic_enqueue worker_run persisted_outcome)
 BOUNDARY_STAGES=(custom_modules multi_repo_prefixes upgrade rollback idempotent_rerun)
 
+validate_scratch_database_name() {
+  local database_name="$1"
+  [[ "${database_name}" =~ ^mailglass_generated_ecto_host_[a-z0-9_]+$ ]]
+}
+
 validate_stage_attestation() {
   local journey="$1"
   local stage="$2"
@@ -111,6 +116,16 @@ if [ "${1:-}" = "--validate-attestation" ]; then
   exit
 fi
 
+if [ "${1:-}" = "--validate-database-name" ]; then
+  if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 --validate-database-name DATABASE_NAME" >&2
+    exit 2
+  fi
+
+  validate_scratch_database_name "$2"
+  exit
+fi
+
 MAILGLASS_PATH="${MAILGLASS_PATH:?MAILGLASS_PATH must point at the working tree}"
 DATABASE_URL="${DATABASE_URL:?DATABASE_URL must name the generated-host scratch database}"
 
@@ -159,14 +174,11 @@ database_url_with_name() {
 
 SCRATCH_DATABASE="$(database_name_from_url)"
 
-case "${SCRATCH_DATABASE}" in
-  mailglass_generated_ecto_host_[a-z0-9_]*) ;;
-  *)
-    echo "Refusing to create or drop DATABASE_URL outside the generated-host scratch namespace." >&2
-    echo "Expected a database named mailglass_generated_ecto_host_<suffix>; got ${SCRATCH_DATABASE}." >&2
-    exit 1
-    ;;
-esac
+if ! validate_scratch_database_name "${SCRATCH_DATABASE}"; then
+  echo "Refusing to create or drop DATABASE_URL outside the generated-host scratch namespace." >&2
+  echo "Expected a database named mailglass_generated_ecto_host_<suffix>; got ${SCRATCH_DATABASE}." >&2
+  exit 1
+fi
 
 cleanup() {
   local index
@@ -1053,10 +1065,10 @@ EOF
 
   checkpoint "${journey_name}" rollback "${stage_attestation_path}"
 
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}"
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}"
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}"
-  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}"
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}" --pool-size 1
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}" --pool-size 1
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}" --pool-size 1
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}" --pool-size 1
 
   stage_attestation_path="${journey_dir}/idempotent-rerun.attestation"
   STAGE_ATTESTATION_PATH="${stage_attestation_path}" \
