@@ -116,7 +116,8 @@ defmodule Mix.Tasks.Mailglass.Gen.MigrationTest do
            end) =~ "created"
 
     assert_received {:started_repo, HostRepo}
-    assert_received {:host_query, query, ["public"], [log: false]}
+    assert_received {:host_query, query, [schema], [log: false]}
+    assert schema == Mailglass.Config.schema()
     assert query =~ "mailglass_events"
     refute_received :other_repo_called
 
