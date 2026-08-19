@@ -400,6 +400,9 @@ EOF
   core_install_path="$(find "${core_migrations_path}" -name '*_mailglass_install.exs' -print -quit)"
   inbound_install_path="$(find "${inbound_migrations_path}" -name '*_mailglass_inbound_install.exs' -print -quit)"
 
+  # Ecto migration versions have one-second resolution. Keep the host-owned
+  # Oban migration distinct from whichever package generator ran second.
+  sleep 1
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.gen.migration install_oban -r Host.Repo
   oban_migration_path="$(find "${core_migrations_path}" -name '*_install_oban.exs' -print -quit)"
   cat > "${oban_migration_path}" <<'EOF'
