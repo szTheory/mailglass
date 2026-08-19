@@ -189,7 +189,9 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
     hostile = [
       %{jobs_json: "not-json"},
       %{jobs_json: Jason.encode!(valid_jobs["jobs"])},
-      %{jobs_json: Jason.encode!(%{"total_count" => 4, "jobs" => Enum.take(valid_jobs["jobs"], 4)})},
+      %{
+        jobs_json: Jason.encode!(%{"total_count" => 4, "jobs" => Enum.take(valid_jobs["jobs"], 4)})
+      },
       %{
         jobs_json:
           Jason.encode!(%{
@@ -287,7 +289,8 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
 
     %{
       "total_count" => length(names),
-      "jobs" => Enum.map(names, &%{"name" => &1, "status" => "completed", "conclusion" => "success"})
+      "jobs" =>
+        Enum.map(names, &%{"name" => &1, "status" => "completed", "conclusion" => "success"})
     }
   end
 

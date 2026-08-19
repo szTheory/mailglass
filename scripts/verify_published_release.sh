@@ -36,12 +36,12 @@ workflow_run_url=$(jq -er '.final_identity.publication_evidence.workflow_run_url
 tag_sha=$(jq -er '.final_identity.tag_sha' "$target_path") ||
   fail "final tag SHA is missing"
 
-if [[ ! "$workflow_run_url" =~ ^https://github\.com/([^/]+/[^/]+)/actions/runs/([1-9][0-9]*)$ ]]; then
+repository=szTheory/mailglass
+if [[ ! "$workflow_run_url" =~ ^https://github\.com/szTheory/mailglass/actions/runs/([1-9][0-9]*)$ ]]; then
   fail "publication workflow run URL is not repository-bound"
 fi
 
-repository=${BASH_REMATCH[1]}
-run_id=${BASH_REMATCH[2]}
+run_id=${BASH_REMATCH[1]}
 workflow_json=$(gh api "repos/${repository}/actions/runs/${run_id}") ||
   fail "publication workflow run lookup failed"
 
@@ -62,6 +62,26 @@ jq -e \
    .path == ".github/workflows/publish-hex.yml"' \
   <<<"$workflow_json" >/dev/null ||
   fail "publication workflow run is malformed, unsuccessful, or identity-mismatched"
+
+# A successful run record alone is not publication provenance: dry runs and
+# compatibility no-ops can also conclude successfully. Require the complete,
+# current live job graph so the cited run proves it crossed the protected gate,
+# published every package in order, and dispatched the exact post-publish smoke.
+jobs_json=$(gh api "repos/${repository}/actions/runs/${run_id}/jobs?per_page=100&filter=latest") ||
+  fail "publication workflow job lookup failed"
+
+jq -e '
+  def required_jobs:
+    ["prepublish-summary", "ensure-live-ci-runs", "gate-ci-green",
+     "publish-core", "publish-admin", "publish-inbound",
+     "dispatch-post-publish-smoke"];
+  type == "object" and
+  .total_count == (required_jobs | length) and
+  (.jobs | type == "array" and length == (required_jobs | length)) and
+  ([.jobs[].name] | sort) == (required_jobs | sort) and
+  all(.jobs[]; .status == "completed" and .conclusion == "success")' \
+  <<<"$jobs_json" >/dev/null ||
+  fail "publication workflow did not complete the exact protected live job graph"
 
 workflow_head_sha=$(jq -er '.head_sha' <<<"$workflow_json") ||
   fail "publication workflow run head SHA is missing"
