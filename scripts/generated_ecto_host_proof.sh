@@ -247,6 +247,7 @@ migrate_package() {
           "inbound" -> "mailglass_inbound.mailglass_inbound_records"
         end
 
+      {:ok, _started} = Application.ensure_all_started(:postgrex)
       {:ok, _repo} = Host.Repo.start_link()
       %{rows: [[^relation]]} = Host.Repo.query!("SELECT to_regclass($1)::text", [relation])
 
