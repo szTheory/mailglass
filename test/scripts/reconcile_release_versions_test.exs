@@ -367,6 +367,119 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     end
   end
 
+  test "activation enforces the exact target and evidence schema at every layer" do
+    reviewed = reviewed_candidate()
+    complete = complete_candidate_target(reviewed)
+
+    target_mutations = [
+      Map.delete(complete, "required_evidence_identifiers"),
+      Map.put(complete, "unknown", true),
+      drop_in(complete, ["baselines", "mailglass_inbound"]),
+      put_in(complete, ["baselines", "unknown"], "1.0.0"),
+      drop_in(complete, ["candidate_versions", "mailglass_inbound"]),
+      put_in(complete, ["candidate_versions", "unknown"], "1.0.0"),
+      put_in(complete, ["required_evidence_identifiers", "unknown"], true),
+      drop_in(complete, ["required_evidence_identifiers", "hex_package_endpoints"]),
+      drop_in(complete, ["required_evidence_identifiers", "hex_package_endpoints", "mailglass"]),
+      put_in(
+        complete,
+        ["required_evidence_identifiers", "hex_package_endpoints", "unknown"],
+        "https://hex.pm/api/packages/unknown"
+      ),
+      drop_in(complete, ["required_evidence_identifiers", "hex_release_endpoints"]),
+      drop_in(complete, ["required_evidence_identifiers", "hex_release_endpoints", "mailglass"]),
+      put_in(
+        complete,
+        ["required_evidence_identifiers", "hex_release_endpoints", "unknown"],
+        "https://hex.pm/api/packages/unknown/releases/1.0.0"
+      ),
+      drop_in(complete, ["required_evidence_identifiers", "hex_release_checksums"]),
+      drop_in(complete, ["required_evidence_identifiers", "hex_release_checksums", "mailglass"]),
+      put_in(
+        complete,
+        ["required_evidence_identifiers", "hex_release_checksums", "unknown"],
+        String.duplicate("a", 64)
+      ),
+      drop_in(complete, ["required_evidence_identifiers", "historical_tag"]),
+      put_in(complete, ["required_evidence_identifiers", "historical_tag"], ""),
+      drop_in(complete, ["required_evidence_identifiers", "historical_tag_sha"]),
+      put_in(complete, ["required_evidence_identifiers", "historical_tag_sha"], "bad"),
+      drop_in(complete, ["proposal_identity", "source_sha"]),
+      put_in(complete, ["publishable_content", "unknown"], true),
+      drop_in(complete, ["publishable_content", "algorithm"]),
+      put_in(complete, ["final_identity", "unknown"], true),
+      drop_in(complete, ["states", "publication"]),
+      put_in(complete, ["states", "unknown"], true),
+      put_in(complete, ["states", "publication"], "publishing"),
+      Map.put(complete, "status", "publishing")
+    ]
+
+    for mutated <- target_mutations do
+      assert {:error, _} = apply(reconciler(), :validate_activation, [mutated, reviewed])
+    end
+
+    paired_mutations = [
+      {
+        put_in(complete, ["proposal_identity", "unknown"], true),
+        put_in(reviewed, ["proposal_identity", "unknown"], true)
+      },
+      {complete, Map.put(reviewed, "unknown", true)},
+      {complete, put_in(reviewed, ["publishable_content", "unknown"], true)}
+    ]
+
+    for {mutated_target, mutated_review} <- paired_mutations do
+      assert {:error, _} =
+               apply(reconciler(), :validate_activation, [mutated_target, mutated_review])
+    end
+  end
+
+  test "activation accepts only captured or authorized prepublication lifecycle states" do
+    reviewed = reviewed_candidate()
+    captured = complete_candidate_target(reviewed)
+
+    authorized =
+      captured
+      |> Map.put("status", "authorized")
+      |> put_in(["states", "authorization"], "authorized")
+
+    assert {:ok, ^captured} = apply(reconciler(), :validate_activation, [captured, reviewed])
+    assert {:ok, ^authorized} = apply(reconciler(), :validate_activation, [authorized, reviewed])
+
+    invalid = [
+      put_in(captured, ["states", "authorization"], "authorized"),
+      authorized |> Map.put("status", "captured"),
+      put_in(authorized, ["states", "publication"], "published")
+    ]
+
+    for mutated <- invalid do
+      assert {:error, _} = apply(reconciler(), :validate_activation, [mutated, reviewed])
+    end
+  end
+
+  test "activation requires every automation-proposed package to advance its baseline" do
+    reviewed = reviewed_candidate()
+    complete = complete_candidate_target(reviewed)
+
+    non_advancing_candidates = [
+      reviewed["candidate_versions"]
+      |> Map.put("mailglass", baseline_versions()["mailglass"])
+      |> Map.put("mailglass_admin", baseline_versions()["mailglass_admin"]),
+      Map.put(
+        reviewed["candidate_versions"],
+        "mailglass_inbound",
+        baseline_versions()["mailglass_inbound"]
+      )
+    ]
+
+    for candidate_versions <- non_advancing_candidates do
+      changed_review = Map.put(reviewed, "candidate_versions", candidate_versions)
+      changed_target = Map.put(complete, "candidate_versions", candidate_versions)
+
+      assert {:error, %{reason: :candidate_not_new}} =
+               apply(reconciler(), :validate_activation, [changed_target, changed_review])
+    end
+  end
+
   defp reconcile(repository, hex) do
     apply(reconciler(), :reconcile, [%{"repository" => repository, "hex" => hex}])
   end
@@ -499,6 +612,8 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
   end
 
   defp read_json!(path), do: path |> File.read!() |> Jason.decode!()
+
+  defp drop_in(map, path), do: map |> pop_in(path) |> elem(1)
 
   defp write_repository_sources!(root, core_source) do
     write!(root, "mix.exs", core_source)
