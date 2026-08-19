@@ -439,6 +439,18 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert capture =~ "source_target=$(mktemp)"
     assert capture =~ "git show \"$source_sha\":.planning/release-target.json > \"$source_target\""
     assert capture =~ "capture-candidate \"$source_target\" ."
+    assert capture =~ "captured|authorized)"
+
+    assert capture =~
+             "recorded_source_sha=$(jq -er '.proposal_identity.source_sha' \"$source_target\")"
+
+    assert capture =~ "git merge-base --is-ancestor \"$recorded_source_sha\" \"$source_sha\""
+    assert capture =~ "[ \"$proposal_head\" = \"$recorded_head\" ]"
+
+    assert capture =~
+             "scripts/release_policy_validate_target.sh \"$source_target\" \"mailglass-v${core}\" ."
+
+    assert capture =~ "jq -e '{candidate_versions, proposal_identity, publishable_content}'"
 
     assert appears_before?(
              capture,
