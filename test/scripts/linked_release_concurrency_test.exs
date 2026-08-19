@@ -42,7 +42,9 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     Enum.each(@packages, fn package ->
       job = extract_publish_job!(source, package)
 
-      assert job =~ "scripts/release_policy_hex_release_state.sh #{package} \"${VERSION}\""
+      assert job =~ "mix hex.build"
+      assert job =~ "CHECKSUM=$(shasum -a 256"
+      assert job =~ "release_policy_hex_release_state.sh #{package} \"${VERSION}\" \"$CHECKSUM\""
       assert job =~ "skip=true"
       assert job =~ "steps.idempotency.outputs.skip != 'true'"
       assert job =~ ~r/nothing to do/i
