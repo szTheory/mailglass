@@ -42,8 +42,7 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     Enum.each(@packages, fn package ->
       job = extract_publish_job!(source, package)
 
-      assert job =~ "mix hex.info #{package} \"${VERSION}\""
-      assert job =~ "Released:"
+      assert job =~ "scripts/release_policy_hex_release_state.sh #{package} \"${VERSION}\""
       assert job =~ "skip=true"
       assert job =~ "steps.idempotency.outputs.skip != 'true'"
       assert job =~ ~r/nothing to do/i
@@ -69,9 +68,10 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
 
     refute admin =~ "publish-inbound]"
 
-    assert inbound =~ "needs: [gate-ci-green, prepublish-summary, publish-core]"
+    assert inbound =~ "needs: [gate-ci-green, prepublish-summary, publish-core, publish-admin]"
     assert inbound =~ "github.event_name == 'workflow_dispatch'"
     assert inbound =~ "needs.prepublish-summary.outputs.authorized == 'true'"
+    assert inbound =~ "needs.publish-admin.result == 'success'"
   end
 
   test "all publish jobs preserve the protected environment and step-local credential" do

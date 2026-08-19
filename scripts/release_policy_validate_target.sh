@@ -7,6 +7,6 @@ root=${3:-.}
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
 cd "$repo_root"
-mix deps.get >&2
-mix compile >&2
+mix deps.get >/dev/null 2>&1
+mix compile >/dev/null 2>&1
 exec mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-target "$target" "$release_ref" "$root"

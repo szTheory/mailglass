@@ -330,6 +330,10 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert prepublish =~ "Pre-publish check for mailglass"
     assert prepublish =~ "Pre-publish check for mailglass_admin"
     assert prepublish =~ "Pre-publish check for mailglass_inbound"
+    assert prepublish =~ "validate-captured-dispatch"
+    assert prepublish =~ "pretag=true"
+    assert prepublish =~ "[ \"$(git rev-parse HEAD)\" = \"$proposal_head\" ]"
+    assert prepublish =~ "[ \"$actual_digest\" = \"$content_digest\" ]"
   end
 
   defp run(script, args), do: System.cmd("bash", [script | args], stderr_to_stdout: true)
