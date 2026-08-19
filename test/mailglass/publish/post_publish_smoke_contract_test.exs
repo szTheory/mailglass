@@ -170,6 +170,7 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert job =~ "MAILGLASS_EXPECTED_INBOUND_VERSION"
     assert job =~ "bash \"${GITHUB_WORKSPACE}/scripts/check_clean_baseline_hex_only.sh\" mix.lock"
     assert job =~ "mix compile --warnings-as-errors"
+    assert job =~ ~s(ln -s "${HOST_ROOT}/_build" "${GITHUB_WORKSPACE}/reference/host_app/_build")
     assert job =~ "Application.ensure_all_started(:mailglass_reference_host)"
     assert job =~ "Application.spec(app, :vsn)"
     assert job =~ "MAILGLASS_CORE_WORKSPACE_EBIN=\"${HOST_ROOT}/_build/dev/lib/mailglass/ebin\""
@@ -184,8 +185,15 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert job =~ "retention-days: 90"
     assert job =~ "path: tmp/mailglass_trust_runner/checkpoint.json"
 
+    assert_ordered!(job, [
+      "mix verify.reference_host.journey --host-root",
+      "bash scripts/check_trust_runner_checkpoint.sh --require-completed",
+      "uses: actions/upload-artifact@"
+    ])
+
     refute job =~ "working-directory: reference/host_app"
     refute job =~ "--dry-run"
+    refute job =~ "if: always()"
     refute job =~ "mix verify.reference_host.journey --host-root reference/host_app"
     refute job =~ "mix deps.get && mix compile"
   end
@@ -374,4 +382,11 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
   end
 
   defp git_output!(directory, args), do: directory |> git!(args) |> String.trim()
+
+  defp assert_ordered!(source, tokens) do
+    Enum.reduce(tokens, source, fn token, remaining ->
+      [_before, after_token] = String.split(remaining, token, parts: 2)
+      after_token
+    end)
+  end
 end

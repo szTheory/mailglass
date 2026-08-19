@@ -109,9 +109,11 @@ jobs:
           if [ "$EVENT_NAME" = "schedule" ]; then command="completed-versions"; fi
           control_target=.planning/release-target.json
           target="$control_target"
+          target_repo=.
           resolved=$(mktemp)
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             target=immutable-target/.planning/release-target.json
+            target_repo=immutable-target
             control_resolved=$(mktemp)
             mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "authorized-versions" "$control_target" > "$control_resolved"
           fi
@@ -143,6 +145,13 @@ jobs:
             target_ref="$INPUT_TARGET_REF"
           fi
           [[ "$target_ref" =~ ^[0-9a-f]{40}$ ]]
+          bash scripts/check_post_publish_target.sh \
+            --repo "$target_repo" \
+            --target "$target" \
+            --target-ref "$target_ref" \
+            --core "$core" \
+            --admin "$admin" \
+            --inbound "$inbound"
           printf 'completed=%s\nauthorized=%s\ncore=%s\nadmin=%s\ninbound=%s\ntarget_ref=%s\n' "$completed" "$authorized" "$core" "$admin" "$inbound" "$target_ref" >> "$GITHUB_OUTPUT"
 
   cron-guard:
@@ -479,6 +488,8 @@ jobs:
           MIX_ENV=dev mix deps.get
           bash "${GITHUB_WORKSPACE}/scripts/check_clean_baseline_hex_only.sh" mix.lock
           MIX_ENV=dev mix compile --warnings-as-errors
+          rm -rf "${GITHUB_WORKSPACE}/reference/host_app/_build"
+          ln -s "${HOST_ROOT}/_build" "${GITHUB_WORKSPACE}/reference/host_app/_build"
       - name: Boot disposable exact-Hex host and run nonvisual compatibility gate
         env:
           DATABASE_URL: ecto://postgres:postgres@localhost/mailglass_published_host
@@ -510,12 +521,19 @@ jobs:
             %{rows: [[1]]} = MailglassReferenceHost.Repo.query!("SELECT 1")
             IO.puts("Exact-Hex host booted with core, admin, and inbound compatibility loaded.")
           '
-      - name: Emit bounded trust checkpoint
+      - name: Execute exact-Hex trust journey
         env:
           HOST_ROOT: ${{ runner.temp }}/mailglass-published-host-${{ github.run_id }}
-        run: mix verify.reference_host.journey --dry-run --host-root "${HOST_ROOT}"
+        run: |
+          set -euo pipefail
+          export MAILGLASS_REFERENCE_HOST_PACKAGE_MODE=prepublication
+          export MAILGLASS_CORE_WORKSPACE_EBIN="${HOST_ROOT}/_build/dev/lib/mailglass/ebin"
+          export MAILGLASS_INBOUND_WORKSPACE_EBIN="${HOST_ROOT}/_build/dev/lib/mailglass_inbound/ebin"
+          test -d "$MAILGLASS_CORE_WORKSPACE_EBIN"
+          test -d "$MAILGLASS_INBOUND_WORKSPACE_EBIN"
+          mix verify.reference_host.journey --host-root "${HOST_ROOT}"
       - name: Validate trust checkpoint contract
-        run: bash scripts/check_trust_runner_checkpoint.sh
+        run: bash scripts/check_trust_runner_checkpoint.sh --require-completed
       - name: Upload trust-runner published artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
