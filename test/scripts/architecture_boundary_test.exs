@@ -84,6 +84,26 @@ defmodule Mailglass.ArchitectureBoundaryTest do
     assert_raise ExUnit.AssertionError, fn -> assert_required_architecture_gate!(skipped_ci) end
   end
 
+  test "the core support lane provisions demo dependencies before its coverage cohort" do
+    ci = File.read!(".github/workflows/ci.yml")
+
+    assert_support_coverage_prerequisites!(ci)
+
+    support_contract = job!(ci, "support_contract_core")
+
+    for fragment <- [
+          "            reference/demo_app/deps\n",
+          "      - name: Install demo deps\n        working-directory: reference/demo_app\n        run: mix deps.get --check-locked\n"
+        ] do
+      mutated_job = String.replace(support_contract, fragment, "", global: false)
+      mutated_ci = String.replace(ci, support_contract, mutated_job, global: false)
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_support_coverage_prerequisites!(mutated_ci)
+      end
+    end
+  end
+
   test "the architecture scope classifier rejects forbidden categories without git history" do
     assert scope_violations([
              {:modified, "lib/mailglass/outbound/projector.ex"},
@@ -169,6 +189,26 @@ defmodule Mailglass.ArchitectureBoundaryTest do
     refute step =~ "if:"
     refute step =~ ~r/\|\|\s*(true|:)\b/
     refute step =~ ~r/;\s*true\b/
+  end
+
+  defp assert_support_coverage_prerequisites!(ci) do
+    support_contract = job!(ci, "support_contract_core")
+    cache_step = step!(support_contract, "Cache deps")
+    demo_deps_step = step!(support_contract, "Install demo deps")
+
+    assert cache_step =~ "reference/demo_app/deps"
+    assert demo_deps_step =~ "working-directory: reference/demo_app"
+    assert demo_deps_step =~ "run: mix deps.get --check-locked"
+    refute demo_deps_step =~ "continue-on-error:"
+    refute demo_deps_step =~ "if:"
+
+    assert {install_offset, _length} =
+             :binary.match(support_contract, "- name: Install demo deps")
+
+    assert {coverage_offset, _length} =
+             :binary.match(support_contract, "- name: Collect and enforce core coverage floor")
+
+    assert install_offset < coverage_offset
   end
 
   defp job!(ci, name) do

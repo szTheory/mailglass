@@ -239,6 +239,7 @@ jobs:
           path: |
             deps
             mailglass_inbound/deps
+            reference/demo_app/deps
           key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
             mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
@@ -246,6 +247,9 @@ jobs:
         run: mix deps.get --check-locked
       - name: Install inbound deps
         working-directory: mailglass_inbound
+        run: mix deps.get --check-locked
+      - name: Install demo deps
+        working-directory: reference/demo_app
         run: mix deps.get --check-locked
       - name: Wait for postgres + create test DB
         env:
