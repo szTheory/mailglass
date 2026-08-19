@@ -698,7 +698,7 @@ defmodule Mailglass.DocsContractTest do
       {:replacement, "Replacement: `Mailglass.deliver/2`"},
       {:removal_target, "Removal target: v3.0"},
       {:additive_only, "No public v2 API is removed or renamed by v2.6."},
-      {:internal_boundary, "`Mailglass.Runtime` remains internal"}
+      {:internal_boundary, "runtime configuration owner remains internal"}
     ]
   end
 end

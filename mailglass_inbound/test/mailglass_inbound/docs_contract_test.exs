@@ -717,7 +717,7 @@ defmodule MailglassInbound.DocsContractTest do
       {:package_boundary, "independent migration history"},
       {:deprecation_status, "Active v2 deprecations: none"},
       {:removal_target, "v3 removal targets: none"},
-      {:internal_boundary, "`MailglassInbound.Ingress.Pipeline` remains internal"}
+      {:internal_boundary, "ingress pipeline remains internal"}
     ]
   end
 
