@@ -159,18 +159,14 @@ manifest on `main` is at the new version and the release PR is merged with label
 `autorelease: pending`, but no `mailglass-vX.Y.Z` GitHub release exists and Hex
 still shows the prior version.
 
-**Automatic recovery:** the scheduled run at minute 17 checks this state hourly,
-so recovery waits for the next hourly run — up to one hour. The recorded
-incidents cost roughly 30 minutes. Its preflight is idempotent: all expected tags
-already present and an `autorelease: tagged` label are successful no-ops. A
-partial linked-tag state fails deliberately and requires reconciliation before
-another release action can run.
+**Ordinary runs are proposal-only:** pushes and the minute-17 schedule may update
+or synchronize a release proposal, but cannot merge it, create a tag, or publish.
+The schedule is not a tag-recovery mechanism.
 
-**Direct manual recovery:** use `workflow_dispatch` for the existing
-release-please workflow when waiting for the hourly recovery is inappropriate.
-The preflight permits a pending untagged release and the `RELEASE_PLEASE_PAT`
-release creation emits the canonical `release: published` fan-out to
-`publish-hex.yml`.
+**Protected recovery:** use `workflow_dispatch` with the exact dual-authorized
+candidate digest. That path validates the immutable proposal head, source/base,
+and publishable content before it can merge or create a tag. A missing or wrong
+digest remains proposal-only.
 
 **Last resort:** manually creating the missing GitHub releases remains the
 canonical `release: published` fan-out when the workflow path cannot be used.
