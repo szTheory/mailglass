@@ -6,7 +6,6 @@ defmodule Mailglass.ReleasePolicy do
   @evidence_keys ~w(hex_package_endpoints hex_release_endpoints hex_release_checksums historical_tag historical_tag_sha)
   @sha1 ~r/\A[0-9a-f]{40}\z/
   @sha256 ~r/\A[0-9a-f]{64}\z/
-  @semver ~r/\A(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?\z/
 
   def packages, do: @packages
 
@@ -15,6 +14,7 @@ defmodule Mailglass.ReleasePolicy do
          :ok <- exact_value(target, "schema_version", 1),
          :ok <- exact_package_set(target["package_set"]),
          :ok <- versions(target["baselines"]),
+         :ok <- linked_core_admin(target["baselines"]),
          :ok <- evidence(target["required_evidence_identifiers"], target["baselines"]),
          :ok <- proposal(target["proposal_identity"]),
          :ok <- content(target["publishable_content"]),
@@ -30,6 +30,7 @@ defmodule Mailglass.ReleasePolicy do
     with {:ok, target} <- validate_target(target),
          :ok <- exact_keys(reviewed, ~w(candidate_versions proposal_identity publishable_content)),
          :ok <- versions(reviewed["candidate_versions"]),
+         :ok <- linked_core_admin(reviewed["candidate_versions"]),
          :ok <- proposal(reviewed["proposal_identity"]),
          :ok <- reviewed_content(reviewed["publishable_content"]),
          :ok <- exact_value(target, "candidate_versions", reviewed["candidate_versions"]),
@@ -64,7 +65,12 @@ defmodule Mailglass.ReleasePolicy do
     with :ok <- exact_keys(manifest, Map.keys(expected)),
          true <-
            Enum.all?(manifest, fn {_key, version} -> valid_version?(version) end) or
-             error(:invalid_manifest) do
+             error(:invalid_manifest),
+         :ok <-
+           linked_core_admin(%{
+             "mailglass" => manifest["."],
+             "mailglass_admin" => manifest["mailglass_admin"]
+           }) do
       {:ok, Enum.map(@packages, fn package -> tag(package, manifest[manifest_key(package)]) end)}
     else
       false -> error(:invalid_manifest)
@@ -79,6 +85,7 @@ defmodule Mailglass.ReleasePolicy do
     with {:ok, target} <- validate_target(target),
          :ok <- candidate_lifecycle(target),
          :ok <- versions(source_versions),
+         :ok <- linked_core_admin(source_versions),
          :ok <- exact_value(target, "candidate_versions", source_versions),
          {:ok, tags} <- expected_tags(target),
          true <- ref in tags or error(:untrusted_ref) do
@@ -138,18 +145,25 @@ defmodule Mailglass.ReleasePolicy do
   def validate_authorization_digest(_, _), do: error(:authorization_digest_mismatch)
 
   def source_versions(root) when is_binary(root) do
-    @packages
-    |> Enum.reduce_while({:ok, %{}}, fn package, {:ok, versions} ->
-      path = Path.join(root, mix_path(package))
+    result =
+      @packages
+      |> Enum.reduce_while({:ok, %{}}, fn package, {:ok, versions} ->
+        path = Path.join(root, mix_path(package))
 
-      with {:ok, source} <- File.read(path),
-           [version] <- Regex.run(~r/^\s*@version "([^"]+)"/m, source, capture: :all_but_first),
-           true <- valid_version?(version) do
-        {:cont, {:ok, Map.put(versions, package, version)}}
-      else
-        _ -> {:halt, error(:invalid_source_versions)}
-      end
-    end)
+        with {:ok, source} <- File.read(path),
+             [[version]] <-
+               Regex.scan(~r/^[\t ]*@version "([^"]+)"[\t ]*$/m, source, capture: :all_but_first),
+             true <- valid_version?(version) do
+          {:cont, {:ok, Map.put(versions, package, version)}}
+        else
+          _ -> {:halt, error(:invalid_source_versions)}
+        end
+      end)
+
+    with {:ok, versions} <- result,
+         :ok <- linked_core_admin(versions) do
+      {:ok, versions}
+    end
   end
 
   def cli(["expected-tags", manifest_path | target_paths]) when length(target_paths) <= 1 do
@@ -228,6 +242,7 @@ defmodule Mailglass.ReleasePolicy do
                authorization in ["unauthorized", "authorized"] ->
           if status == "authorized" == (authorization == "authorized") do
             with :ok <- versions(target["candidate_versions"]),
+                 :ok <- linked_core_admin(target["candidate_versions"]),
                  :ok <- advances(target["baselines"], target["candidate_versions"]),
                  :ok <- exact_value(target, "final_identity", %{"tag_sha" => nil}),
                  :ok <- reviewed_content(target["publishable_content"]),
@@ -239,6 +254,7 @@ defmodule Mailglass.ReleasePolicy do
         {"completed",
          %{"capture" => "captured", "authorization" => "authorized", "publication" => "published"}} ->
           with :ok <- versions(target["candidate_versions"]),
+               :ok <- linked_core_admin(target["candidate_versions"]),
                :ok <- advances(target["baselines"], target["candidate_versions"]),
                :ok <- reviewed_content(target["publishable_content"]),
                :ok <- final_tag_sha(target["final_identity"]["tag_sha"]),
@@ -272,6 +288,9 @@ defmodule Mailglass.ReleasePolicy do
   end
 
   defp versions(_), do: error(:invalid_versions)
+
+  defp linked_core_admin(%{"mailglass" => version, "mailglass_admin" => version}), do: :ok
+  defp linked_core_admin(_), do: error(:linked_versions_diverge)
 
   defp evidence(value, baselines) when is_map(value) do
     with :ok <- exact_keys(value, @evidence_keys),
@@ -356,17 +375,9 @@ defmodule Mailglass.ReleasePolicy do
   end
 
   defp compare_versions(left, right) do
-    [lmaj, lmin, lpatch | _] = Regex.run(@semver, left, capture: :all_but_first)
-    [rmaj, rmin, rpatch | _] = Regex.run(@semver, right, capture: :all_but_first)
-
-    Enum.zip([lmaj, lmin, lpatch], [rmaj, rmin, rpatch])
-    |> Enum.map(fn {a, b} -> {String.to_integer(a), String.to_integer(b)} end)
-    |> Enum.find(:eq, fn {a, b} -> a != b end)
-    |> case do
-      {a, b} when a > b -> :gt
-      {_, _} -> :lt
-      :eq -> :eq
-    end
+    {:ok, parsed_left} = Version.parse(left)
+    {:ok, parsed_right} = Version.parse(right)
+    Version.compare(parsed_left, parsed_right)
   end
 
   defp tag("mailglass", version), do: "mailglass-v#{version}"
@@ -375,7 +386,15 @@ defmodule Mailglass.ReleasePolicy do
   defp mix_path(package), do: "#{package}/mix.exs"
   defp manifest_key("mailglass"), do: "."
   defp manifest_key(package), do: package
-  defp valid_version?(value), do: is_binary(value) and Regex.match?(@semver, value)
+
+  defp valid_version?(value) when is_binary(value) do
+    case Version.parse(value) do
+      {:ok, %Version{pre: [], build: nil}} -> true
+      _ -> false
+    end
+  end
+
+  defp valid_version?(_), do: false
   defp sha1?(value), do: is_binary(value) and Regex.match?(@sha1, value)
   defp sha256?(value), do: is_binary(value) and Regex.match?(@sha256, value)
 
