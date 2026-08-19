@@ -382,8 +382,13 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert release =~ "[ \"$candidate_digest\" = \"$CANDIDATE_DIGEST\" ]"
     assert protected =~ "[ \"$base\" = \"$current_main_sha\" ]"
     assert protected =~ "git merge-base --is-ancestor \"$source_sha\" \"$current_main_sha\""
-    assert protected =~ "git checkout --detach \"$proposal_head\""
-    assert appears_before?(protected, "cp .planning/release-target.json", "git checkout --detach")
+    assert protected =~ ~s(control_root="$GITHUB_WORKSPACE/trusted-control")
+    assert protected =~ "git worktree add --detach \"$candidate_root\" \"$proposal_head\""
+
+    assert protected =~
+             "\"$control_root/scripts/release_policy_content_digest.sh\" --repo \"$candidate_root\""
+
+    refute protected =~ "git checkout --detach \"$proposal_head\""
     assert release =~ "[ \"$actual_digest\" = \"$content_digest\" ]"
     assert release =~ "[ \"$(jq -er 'length' <<<\"$prs\")\" -eq 1 ]"
     assert release =~ "[ \"$merged_digest\" = \"$CONTENT_DIGEST\" ]"
@@ -405,7 +410,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert protected =~ "authorized-versions \"$control_target\""
 
     assert protected =~
-             "scripts/release_policy_validate_target.sh \"$control_target\" \"mailglass-v${core}\" ."
+             "\"$control_root/scripts/release_policy_validate_target.sh\" \"$control_target\" \"mailglass-v${core}\" \"$candidate_root\""
 
     assert protected =~ "core=$core"
     assert protected =~ "admin=$admin"
@@ -435,10 +440,15 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert release =~ "id: capture-proposal"
     assert release =~ "captured=true"
     assert release =~ "steps.capture-proposal.outputs.captured == 'true'"
-    assert release =~ "digest=$(scripts/release_policy_content_digest.sh)"
+    assert capture =~ "git checkout --detach \"$source_sha\""
+    assert capture =~ "git worktree add --detach \"$candidate_root\" \"$proposal_head\""
+
+    assert capture =~
+             "digest=$(scripts/release_policy_content_digest.sh --repo \"$candidate_root\")"
+
     assert capture =~ "source_target=$(mktemp)"
     assert capture =~ "git show \"$source_sha\":.planning/release-target.json > \"$source_target\""
-    assert capture =~ "capture-candidate \"$source_target\" ."
+    assert capture =~ "capture-candidate \"$source_target\" \"$candidate_root\""
     assert capture =~ "captured|authorized)"
 
     assert capture =~
@@ -448,15 +458,17 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert capture =~ "[ \"$proposal_head\" = \"$recorded_head\" ]"
 
     assert capture =~
-             "scripts/release_policy_validate_target.sh \"$source_target\" \"mailglass-v${core}\" ."
+             "scripts/release_policy_validate_target.sh \"$source_target\" \"mailglass-v${core}\" \"$candidate_root\""
 
     assert capture =~ "jq -e '{candidate_versions, proposal_identity, publishable_content}'"
 
     assert appears_before?(
              capture,
              "git show \"$source_sha\":.planning/release-target.json",
-             "git checkout --detach"
+             "git checkout --detach \"$source_sha\""
            )
+
+    refute capture =~ "git checkout --detach \"$proposal_head\""
 
     refute capture =~ "capture-candidate .planning/release-target.json"
     refute release =~ "release_packages=$(jq"
