@@ -32,7 +32,7 @@ defmodule Mailglass.Scripts.ReleasePolicyHexReleaseStateTest do
     File.chmod!(curl, 0o755)
     on_exit(fn -> File.rm_rf!(root) end)
 
-    {:ok, bin: bin}
+    {:ok, bin: bin, root: root}
   end
 
   test "accepts only an active exact-checksum 200 response", %{bin: bin} do
@@ -97,6 +97,34 @@ defmodule Mailglass.Scripts.ReleasePolicyHexReleaseStateTest do
     assert output =~ "expected package checksum is malformed"
   end
 
+  test "registry checksum is the outer package archive digest, not its CHECKSUM member", %{
+    bin: bin,
+    root: root
+  } do
+    package_root = Path.join(root, "package")
+    File.mkdir_p!(package_root)
+    inner = String.duplicate("c", 64)
+    File.write!(Path.join(package_root, "CHECKSUM"), inner)
+    archive = Path.join(root, "mailglass-9.8.7.tar")
+
+    assert {_output, 0} =
+             System.cmd("tar", ["-cf", archive, "-C", package_root, "CHECKSUM"],
+               stderr_to_stdout: true
+             )
+
+    outer =
+      archive |> File.read!() |> then(&:crypto.hash(:sha256, &1)) |> Base.encode16(case: :lower)
+
+    refute outer == inner
+
+    body = Jason.encode!(%{"version" => "9.8.7", "retirement" => nil, "checksum" => outer})
+    assert {"exists\n", 0} = run(bin, "200", body, checksum: outer)
+
+    assert {output, status} = run(bin, "200", body, checksum: inner)
+    assert status != 0
+    assert output =~ "checksum-mismatched"
+  end
+
   defp run(bin, status, body, opts \\ []) do
     env = [
       {"PATH", bin <> ":" <> System.get_env("PATH", "")},
@@ -105,7 +133,9 @@ defmodule Mailglass.Scripts.ReleasePolicyHexReleaseStateTest do
       {"FAKE_TRANSPORT_FAIL", to_string(Keyword.get(opts, :transport_fail, false))}
     ]
 
-    System.cmd("bash", [@script, "mailglass", "9.8.7", @checksum],
+    checksum = Keyword.get(opts, :checksum, @checksum)
+
+    System.cmd("bash", [@script, "mailglass", "9.8.7", checksum],
       env: env,
       stderr_to_stdout: true
     )
