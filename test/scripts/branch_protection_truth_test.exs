@@ -75,6 +75,13 @@ defmodule Mailglass.Scripts.BranchProtectionTruthTest do
     end)
   end
 
+  test "the shared outcome seam classifies large drift reports without a pipefail SIGPIPE" do
+    with_fake_github("large_drift", fn temp_dir, env ->
+      assert {"drift\n", 0} = run_outcome(["probe", "main"], env)
+      refute gh_calls(temp_dir) =~ "-X PUT"
+    end)
+  end
+
   test "the shared outcome seam classifies missing token, gh, jq, and API failures as cannot_check" do
     with_fake_github("clean", fn _temp_dir, env ->
       assert {"cannot_check\n", 0} = run_outcome(["probe", "main"], Map.delete(env, "GH_TOKEN"))
@@ -182,9 +189,15 @@ defmodule Mailglass.Scripts.BranchProtectionTruthTest do
     fi
 
     strict=true
-    if [ "$FAKE_GH_MODE" = "drift" ]; then strict=false; fi
+    contexts='"CI Green","Guard Release Trigger"'
+    if [ "$FAKE_GH_MODE" = "drift" ] || [ "$FAKE_GH_MODE" = "large_drift" ]; then
+      strict=false
+    fi
+    if [ "$FAKE_GH_MODE" = "large_drift" ]; then
+      contexts+=$(printf ',"extra-%05d"' {1..5000})
+    fi
     cat <<JSON
-    {"required_status_checks":{"strict":$strict,"contexts":["CI Green","Guard Release Trigger"]},"enforce_admins":{"enabled":false},"required_pull_request_reviews":null,"restrictions":null,"allow_force_pushes":{"enabled":false},"allow_deletions":{"enabled":false},"block_creations":{"enabled":false},"required_conversation_resolution":{"enabled":false},"lock_branch":{"enabled":false},"allow_fork_syncing":{"enabled":false}}
+    {"required_status_checks":{"strict":$strict,"contexts":[$contexts]},"enforce_admins":{"enabled":false},"required_pull_request_reviews":null,"restrictions":null,"allow_force_pushes":{"enabled":false},"allow_deletions":{"enabled":false},"block_creations":{"enabled":false},"required_conversation_resolution":{"enabled":false},"lock_branch":{"enabled":false},"allow_fork_syncing":{"enabled":false}}
     JSON
     """)
 

@@ -37,7 +37,9 @@ probe() {
 
   if [ "${status}" -eq 0 ]; then
     classification="clean"
-  elif printf '%s\n' "${output}" | grep -q '^DRIFT:'; then
+  # Feed grep directly so `set -o pipefail` cannot turn an expected early
+  # `grep -q` exit into a producer-side SIGPIPE for large drift reports.
+  elif grep -q '^DRIFT:' <<< "${output}"; then
     classification="drift"
   else
     classification="cannot_check"
