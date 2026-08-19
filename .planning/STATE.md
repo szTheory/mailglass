@@ -5,16 +5,16 @@ milestone_name: Engineering Quality Ratchet
 current_phase: 160
 current_phase_name: Certification, Documentation, and Release
 status: executing
-stopped_at: Plan 160-03 independently re-reviewed PASS; executing Plan 160-04 protected release policy preparation
-last_updated: "2026-08-19T02:38:46.000Z"
-last_activity: 2026-08-18
-last_activity_desc: Plan 160-03 exact release-target schema passed focused proof and independent re-review
+stopped_at: Plan 160-04 protected release preparation independently re-reviewed; awaiting Plan 160-05 candidate capture and human authorization
+last_updated: "2026-08-19T16:14:13.000Z"
+last_activity: 2026-08-19
+last_activity_desc: Plan 160-04 protected release policy and exact publication evidence gates completed
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 41
-  completed_plans: 38
-  percent: 83
+  completed_plans: 39
+  percent: 95
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-17 after Phase 158)
 ## Current Position
 
 Phase: 160 (Certification, Documentation, and Release) — EXECUTING
-Plan: 4 of 6
-Status: Preparing the protected three-package release policy with publication disabled
-Last activity: 2026-08-18 — Plan 160-03 independent re-review passed
+Plan: 5 of 6
+Status: Awaiting immutable candidate capture and explicit digest-bound authorization
+Last activity: 2026-08-19 — Plan 160-04 protected release preparation passed focused verification and independent review
 
-Progress: [███████████████████░] 38/41 plans (93%); 5/6 phases complete
+Progress: [███████████████████░] 39/41 plans (95%); 5/6 phases complete
 
 ## v2.6 Milestone Intent
 
