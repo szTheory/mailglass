@@ -224,6 +224,35 @@ defmodule Mailglass.ReleasePolicy do
     end
   end
 
+  def cli(["completed-versions", target_path]) do
+    with {:ok, json} <- File.read(target_path),
+         {:ok, target} <- Jason.decode(json),
+         {:ok, target} <- validate_completed_target(target) do
+      IO.write("completed=true\n")
+      IO.write("core=#{target["candidate_versions"]["mailglass"]}\n")
+      IO.write("admin=#{target["candidate_versions"]["mailglass_admin"]}\n")
+      IO.write("inbound=#{target["candidate_versions"]["mailglass_inbound"]}\n")
+      IO.write("tag_sha=#{target["final_identity"]["tag_sha"]}\n")
+    else
+      _ -> System.halt(1)
+    end
+  end
+
+  def cli(["authorized-versions", target_path]) do
+    with {:ok, json} <- File.read(target_path),
+         {:ok, target} <- Jason.decode(json),
+         {:ok, target} <- validate_target(target),
+         :ok <- exact_value(target, "status", "authorized") do
+      IO.write("completed=false\n")
+      IO.write("authorized=true\n")
+      IO.write("core=#{target["candidate_versions"]["mailglass"]}\n")
+      IO.write("admin=#{target["candidate_versions"]["mailglass_admin"]}\n")
+      IO.write("inbound=#{target["candidate_versions"]["mailglass_inbound"]}\n")
+    else
+      _ -> System.halt(1)
+    end
+  end
+
   def cli(_), do: System.halt(1)
 
   defp lifecycle(target) do

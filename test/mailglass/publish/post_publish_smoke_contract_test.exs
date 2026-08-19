@@ -44,12 +44,16 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
              "version_inbound: ${{ needs.resolve-completed-target.outputs.inbound }}"
 
     assert workflow =~ "resolve-completed-target:"
-    assert workflow =~ "completed-versions .planning/release-target.json"
+    assert workflow =~ "command=completed-versions"
+    assert workflow =~ "command=authorized-versions"
+    assert workflow =~ "\"$command\" .planning/release-target.json"
     assert workflow =~ "validate_completed_target"
     assert cron_guard =~ "COMPLETED_CORE"
     assert cron_guard =~ "COMPLETED_ADMIN"
     assert cron_guard =~ "COMPLETED_INBOUND"
     refute cron_guard =~ "read-inbound-version"
+    refute cron_guard =~ "listReleases"
+    refute cron_guard =~ "const latest"
 
     assert consumer_install =~
              "VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}"
