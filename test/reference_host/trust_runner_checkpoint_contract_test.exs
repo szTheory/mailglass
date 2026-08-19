@@ -81,6 +81,22 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
                cd: @project_root,
                stderr_to_stdout: true
              )
+
+    assert {strict_output, strict_status} =
+             System.cmd(
+               "bash",
+               [
+                 "scripts/check_trust_runner_checkpoint.sh",
+                 "--require-completed",
+                 "--checkpoint",
+                 checkpoint_1
+               ],
+               cd: @project_root,
+               stderr_to_stdout: true
+             )
+
+    assert strict_status != 0
+    assert strict_output =~ "must have completed status"
   end
 
   test "checkpoint hash is based only on ordered stage status fixture_id rows" do
@@ -141,6 +157,21 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
     assert webhook["evidence"]["verified_before_tenant"] == true
     assert operator["evidence"]["scenario"] == "no_match"
     assert operator["evidence"]["raw_payload_included"] == false
+
+    assert {strict_output, 0} =
+             System.cmd(
+               "bash",
+               [
+                 "scripts/check_trust_runner_checkpoint.sh",
+                 "--require-completed",
+                 "--checkpoint",
+                 checkpoint
+               ],
+               cd: @project_root,
+               stderr_to_stdout: true
+             )
+
+    assert strict_output =~ "completed evidence required=true"
   end
 
   test "checkpoint validator rejects malformed Phase 58 evidence" do
