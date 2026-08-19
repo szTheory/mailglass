@@ -5,6 +5,54 @@
 # back only the additive versions.
 set -euo pipefail
 
+FRESH_DELIVERY_STAGES=(fresh_install sync_send atomic_enqueue worker_run persisted_outcome)
+
+validate_checkpoint_file() {
+  local checkpoint_path="$1"
+  local expected_rows=()
+  local journey
+  local stage
+  local sequence=0
+  local row_index=0
+
+  for journey in core_first inbound_first; do
+    for stage in "${FRESH_DELIVERY_STAGES[@]}"; do
+      sequence=$((sequence + 1))
+      expected_rows+=("${sequence}|${journey}|${stage}|passed")
+    done
+  done
+
+  if [ ! -f "${checkpoint_path}" ]; then
+    echo "Generated-host checkpoint file is missing." >&2
+    return 1
+  fi
+
+  while IFS= read -r checkpoint_row || [ -n "${checkpoint_row}" ]; do
+    if [ "${row_index}" -ge "${#expected_rows[@]}" ] ||
+       [ "${checkpoint_row}" != "${expected_rows[${row_index}]}" ]; then
+      echo "Generated-host checkpoint contract mismatch at row $((row_index + 1))." >&2
+      return 1
+    fi
+
+    row_index=$((row_index + 1))
+  done < "${checkpoint_path}"
+
+  if [ "${row_index}" -ne "${#expected_rows[@]}" ]; then
+    echo "Generated-host checkpoint contract is incomplete." >&2
+    return 1
+  fi
+}
+
+if [ "${1:-}" = "--validate-checkpoints" ]; then
+  if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 --validate-checkpoints CHECKPOINT_FILE" >&2
+    exit 2
+  fi
+
+  validate_checkpoint_file "$2"
+  exit
+fi
+
 MAILGLASS_PATH="${MAILGLASS_PATH:?MAILGLASS_PATH must point at the working tree}"
 DATABASE_URL="${DATABASE_URL:?DATABASE_URL must name the generated-host scratch database}"
 
@@ -14,8 +62,18 @@ if [ -n "${WORK_DIR:-}" ]; then
 fi
 
 WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mailglass-generated-ecto-host.XXXXXX")"
+CHECKPOINT_FILE="${WORK_DIR}/generated-host-checkpoints.txt"
+CHECKPOINT_SEQUENCE=0
 JOURNEY_HOST_DIRS=()
 JOURNEY_DATABASE_URLS=()
+
+checkpoint() {
+  local journey="$1"
+  local stage="$2"
+
+  CHECKPOINT_SEQUENCE=$((CHECKPOINT_SEQUENCE + 1))
+  printf '%s|%s|%s|passed\n' "${CHECKPOINT_SEQUENCE}" "${journey}" "${stage}" >> "${CHECKPOINT_FILE}"
+}
 
 database_name_from_url() {
   local url_without_query="${DATABASE_URL%%\?*}"
@@ -124,7 +182,8 @@ run_journey() {
     # backslashes, or whitespace.
     deps =
       "      {:mailglass, path: " <> inspect(path) <> ", override: true},\n" <>
-        "      {:mailglass_inbound, path: " <> inspect(Path.join(path, "mailglass_inbound")) <> "},\n"
+        "      {:mailglass_inbound, path: " <> inspect(Path.join(path, "mailglass_inbound")) <> "},\n" <>
+        "      {:oban, \"~> 2.21\"},\n"
 
     updated = String.replace(content, ~r/(defp deps do\n\s*\[\n)/, "\\1" <> deps, global: false)
     File.write!("mix.exs", updated)
@@ -142,13 +201,48 @@ if config_env() == :dev do
 
   config :mailglass, repo: Host.Repo,
     schema: "mailglass",
-    adapter: {Mailglass.Adapters.Fake, []},
-    async_adapter: :task_supervisor
+    adapter: {Host.GeneratedHostAdapter, []},
+    async_adapter: :oban
 
   config :mailglass_inbound, repo: Host.Repo, schema: "mailglass"
+  config :host, Oban, repo: Host.Repo, queues: [mailglass_outbound: 1]
   config :swoosh, :api_client, false
 end
 EOF
+
+  mkdir -p lib/host
+  cat > lib/host/generated_host_adapter.ex <<'EOF'
+defmodule Host.GeneratedHostAdapter do
+  @behaviour Mailglass.Adapter
+
+  @impl Mailglass.Adapter
+  def deliver(message, _opts) do
+    {:ok,
+     %{
+       message_id: "generated-host-#{message.metadata[:delivery_id]}",
+       provider_response: %{adapter: :generated_host}
+     }}
+  end
+end
+
+defmodule Host.GeneratedProof do
+  @moduledoc false
+end
+EOF
+
+  elixir -e '
+    path = "lib/host/application.ex"
+    source = File.read!(path)
+    updated =
+      Regex.replace(
+        ~r/^(\s+)Host\.Repo,\n/m,
+        source,
+        "\\1Host.Repo,\n\\1{Oban, Application.fetch_env!(:host, Oban)},\n",
+        global: false
+      )
+    if updated == source, do: raise("generated host application child anchor missing")
+    File.write!(path, updated)
+  '
 
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix deps.get
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix compile --warnings-as-errors
@@ -165,6 +259,17 @@ EOF
   migrations_path="$(MIX_ENV=dev DATABASE_URL="${journey_url}" mix run --no-start --no-compile -e 'IO.write(Ecto.Migrator.migrations_path(Host.Repo))')"
   core_install_path="$(find "${migrations_path}" -name '*_mailglass_install.exs' -print -quit)"
   inbound_install_path="$(find "${migrations_path}" -name '*_mailglass_inbound_install.exs' -print -quit)"
+
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.gen.migration install_oban -r Host.Repo
+  oban_migration_path="$(find "${migrations_path}" -name '*_install_oban.exs' -print -quit)"
+  cat > "${oban_migration_path}" <<'EOF'
+defmodule Host.Repo.Migrations.InstallOban do
+  use Ecto.Migration
+
+  def up, do: Oban.Migrations.up()
+  def down, do: Oban.Migrations.down()
+end
+EOF
 
   CORE_INSTALL_PATH="${core_install_path}" INBOUND_INSTALL_PATH="${inbound_install_path}" elixir -e '
     rewrite! = fn path, old, new ->
@@ -240,7 +345,118 @@ EOF
         [Ecto.UUID.dump!(evidence_id), Ecto.UUID.dump!(record_id), raw_mime]
       )
     end)
+
+    %{rows: [["oban_jobs"]]} = Host.Repo.query!("SELECT to_regclass($mg$public.oban_jobs$mg$)::text")
   '
+
+  checkpoint "${journey_name}" fresh_install
+
+  MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    Mailglass.Tenancy.put_current("generated-host")
+
+    message =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Generated", "sender@example.invalid"})
+      |> Swoosh.Email.to("sync@example.invalid")
+      |> Swoosh.Email.subject("generated sync proof")
+      |> Swoosh.Email.html_body("<p>generated sync proof</p>")
+      |> Swoosh.Email.text_body("generated sync proof")
+      |> Mailglass.Message.build(mailable: Host.GeneratedProof, tenant_id: "generated-host")
+
+    {:ok, delivery} = Mailglass.deliver(message)
+    true = delivery.status == :sent
+    true = delivery.last_event_type == :dispatched
+    true = delivery.provider_message_id == "generated-host-#{delivery.id}"
+
+    %{rows: [["sent", 2]]} = Host.Repo.query!(
+      "SELECT d.status, count(e.id) FROM mailglass.mailglass_deliveries d JOIN mailglass.mailglass_events e ON e.delivery_id = d.id WHERE d.id = $1::uuid GROUP BY d.status",
+      [Ecto.UUID.dump!(delivery.id)]
+    )
+  '
+
+  checkpoint "${journey_name}" sync_send
+
+  async_delivery_id_path="${journey_dir}/async-delivery-id"
+
+  ASYNC_DELIVERY_ID_PATH="${async_delivery_id_path}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    Mailglass.Tenancy.put_current("generated-host")
+
+    message =
+      Swoosh.Email.new()
+      |> Swoosh.Email.from({"Generated", "sender@example.invalid"})
+      |> Swoosh.Email.to("async@example.invalid")
+      |> Swoosh.Email.subject("generated async proof")
+      |> Swoosh.Email.html_body("<p>generated async proof</p>")
+      |> Swoosh.Email.text_body("generated async proof")
+      |> Mailglass.Message.build(mailable: Host.GeneratedProof, tenant_id: "generated-host")
+
+    {:ok, delivery} = Mailglass.deliver_later(message)
+
+    %{rows: [[1]]} = Host.Repo.query!(
+      "SELECT count(*) FROM public.oban_jobs WHERE args->>$mg$delivery_id$mg$ = $1",
+      [delivery.id]
+    )
+
+    %{rows: [[1]]} = Host.Repo.query!(
+      "SELECT count(*) FROM mailglass.mailglass_deliveries WHERE id = $1::uuid AND tenant_id = $mg$generated-host$mg$",
+      [Ecto.UUID.dump!(delivery.id)]
+    )
+
+    File.write!(System.fetch_env!("ASYNC_DELIVERY_ID_PATH"), delivery.id)
+  '
+
+  async_delivery_id="$(<"${async_delivery_id_path}")"
+
+  if ! printf '%s' "${async_delivery_id}" | rg -q '^[0-9a-f-]{36}$'; then
+    echo "Generated-host async delivery did not return a UUID." >&2
+    exit 1
+  fi
+
+  checkpoint "${journey_name}" atomic_enqueue
+
+  ASYNC_DELIVERY_ID="${async_delivery_id}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    delivery_id = System.fetch_env!("ASYNC_DELIVERY_ID")
+
+    wait_until = fn predicate, description ->
+      Enum.reduce_while(1..100, nil, fn _, _ ->
+        if predicate.() do
+          {:halt, :ok}
+        else
+          Process.sleep(100)
+          {:cont, nil}
+        end
+      end) || raise("timed out waiting for #{description}")
+    end
+
+    :ok = wait_until.(fn ->
+      %{rows: [[state]]} = Host.Repo.query!(
+        "SELECT state FROM public.oban_jobs WHERE args->>$mg$delivery_id$mg$ = $1",
+        [delivery_id]
+      )
+
+      state == "completed"
+    end, "Oban worker completion")
+  '
+
+  checkpoint "${journey_name}" worker_run
+
+  ASYNC_DELIVERY_ID="${async_delivery_id}" MIX_ENV=dev DATABASE_URL="${journey_url}" mix run -e '
+    delivery_id = System.fetch_env!("ASYNC_DELIVERY_ID")
+
+    %{rows: [["sent", "dispatched", provider_message_id, 2]]} = Host.Repo.query!(
+      "SELECT d.status, d.last_event_type, d.provider_message_id, count(e.id) FROM mailglass.mailglass_deliveries d JOIN mailglass.mailglass_events e ON e.delivery_id = d.id WHERE d.id = $1::uuid GROUP BY d.status, d.last_event_type, d.provider_message_id",
+      [Ecto.UUID.dump!(delivery_id)]
+    )
+
+    true = provider_message_id == "generated-host-#{delivery_id}"
+
+    %{rows: [[true]]} = Host.Repo.query!(
+      "SELECT EXISTS (SELECT 1 FROM mailglass.mailglass_deliveries WHERE id = $1::uuid AND metadata::text LIKE $mg$%generated async proof%$mg$)",
+      [Ecto.UUID.dump!(delivery_id)]
+    )
+  '
+
+  checkpoint "${journey_name}" persisted_outcome
 
   sleep 1
   run_generator "${first_upgrade}" "${journey_url}" --upgrade --from "$(if [ "${first_upgrade}" = core ]; then printf 5; else printf 1; fi)"
@@ -515,4 +731,6 @@ EOF
 run_journey core_first core inbound
 run_journey inbound_first inbound core
 
+validate_checkpoint_file "${CHECKPOINT_FILE}"
+cat "${CHECKPOINT_FILE}"
 echo "Generated Ecto host proof passed."
