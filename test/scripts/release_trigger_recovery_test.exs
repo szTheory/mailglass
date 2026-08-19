@@ -13,6 +13,8 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     "workflow_dispatch",
     "Protected exact-digest chain",
     "authorization checkpoint",
+    "release-please.yml",
+    "publish-hex.yml",
     "package=all",
     "immutable proposal",
     "core → admin → inbound",
@@ -295,6 +297,17 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     refute recovery_runbook?(
              String.replace(recovery_runbook, "workflow_dispatch", "manual dispatch", global: true)
            )
+
+    {release_dispatch, _} = :binary.match(recovery_runbook, "gh workflow run release-please.yml")
+    {tag_wait, _} = :binary.match(recovery_runbook, "Wait until all three expected tags")
+    {publish_dispatch, _} = :binary.match(recovery_runbook, "gh workflow run publish-hex.yml")
+
+    assert release_dispatch < tag_wait
+    assert tag_wait < publish_dispatch
+    assert recovery_runbook =~ ~s(-f candidate_digest="$DIGEST")
+    assert recovery_runbook =~ ~s(-f tag="mailglass-v${CORE_VERSION}")
+    assert recovery_runbook =~ "-f dry_run=false"
+    assert recovery_runbook =~ "-f core_full_suite_gate_skip_reason=n/a"
   end
 
   test "contributing documents the PAT-backed CI trigger and fail-loud branch-protection outcome" do
