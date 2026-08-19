@@ -55,7 +55,7 @@
 - [x] **Phase 156: Delivery Correctness and Bounded Execution** - Make outbound execution atomic, honest, privacy-safe, and resource-bounded. (completed 2026-08-17)
 - [x] **Phase 157: Inbound, Database, and Lifecycle Hardening** - Bound untrusted inbound work and make data access, migration, webhook, and retention paths safe at scale. (completed 2026-08-17)
 - [x] **Phase 158: Simplify Architecture Without Breaking Adopters** - Clarify runtime and package ownership while preserving stable v2 entry points. (completed 2026-08-17)
-- [ ] **Phase 159: Raise and Simplify Engineering Gates** - Make deterministic engineering proof comprehensive, repeatable, and genuinely merge-gating.
+- [x] **Phase 159: Raise and Simplify Engineering Gates** - Make deterministic engineering proof comprehensive, repeatable, and genuinely merge-gating. (completed 2026-08-18)
 - [ ] **Phase 160: Certification, Documentation, and Release** - Certify the full adopter journey, reconcile release truth, and publish the additive package family.
 
 ## Phase Details
@@ -216,5 +216,5 @@ Plans:
 | 156. Delivery Correctness and Bounded Execution | 6/6 | Complete    | 2026-08-17 |
 | 157. Inbound, Database, and Lifecycle Hardening | 9/9 | Complete    | 2026-08-17 |
 | 158. Simplify Architecture Without Breaking Adopters | 6/6 | Complete    | 2026-08-17 |
-| 159. Raise and Simplify Engineering Gates | 7/7 | Verifying | 2026-08-18 |
-| 160. Certification, Documentation, and Release | 0/TBD | Not started | - |
+| 159. Raise and Simplify Engineering Gates | 7/7 | Complete | 2026-08-18 |
+| 160. Certification, Documentation, and Release | 0/6 | Ready | - |
