@@ -52,8 +52,12 @@ jobs:
         id: trigger
         env:
           EVENT_NAME: ${{ github.event_name }}
+          INPUT_TARGET_REF: ${{ github.event.inputs.target_ref }}
         run: |
           set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            [[ "$INPUT_TARGET_REF" =~ ^[0-9a-f]{40}$ ]]
+          fi
           case "$EVENT_NAME" in
             release)
               printf 'resolve=false\n' >> "$GITHUB_OUTPUT"
@@ -67,11 +71,17 @@ jobs:
               exit 1
               ;;
           esac
-      - name: Checkout immutable release ref
+      - name: Checkout immutable workflow control plane
         if: ${{ steps.trigger.outputs.resolve == 'true' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.workflow_sha }}
+      - name: Checkout immutable published target
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.event.inputs.target_ref }}
+          path: immutable-target
       - name: Set up OTP + Elixir
         if: ${{ steps.trigger.outputs.resolve == 'true' }}
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
@@ -97,8 +107,18 @@ jobs:
           set -euo pipefail
           command="authorized-versions"
           if [ "$EVENT_NAME" = "schedule" ]; then command="completed-versions"; fi
+          control_target=.planning/release-target.json
+          target="$control_target"
           resolved=$(mktemp)
-          mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "$command" .planning/release-target.json > "$resolved"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            target=immutable-target/.planning/release-target.json
+            control_resolved=$(mktemp)
+            mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "authorized-versions" "$control_target" > "$control_resolved"
+          fi
+          mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "$command" "$target" > "$resolved"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            cmp --silent "$control_resolved" "$resolved"
+          fi
           completed=$(awk -F= '$1 == "completed" {print $2}' "$resolved")
           authorized=$(awk -F= '$1 == "authorized" {print $2}' "$resolved")
           core=$(awk -F= '$1 == "core" {print $2}' "$resolved")
@@ -201,6 +221,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ needs.cron-guard.outputs.release_ref }}
       - name: Validate exact package versions
         run: |
           for version in "$VERSION_CORE" "$VERSION_ADMIN" "$VERSION_INBOUND"; do
@@ -323,6 +345,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ needs.cron-guard.outputs.release_ref }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
@@ -513,6 +537,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ needs.cron-guard.outputs.release_ref }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
         with:
