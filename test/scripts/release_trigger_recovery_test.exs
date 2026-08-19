@@ -10,17 +10,12 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     "GitHub-native auto-merge",
     "GITHUB_TOKEN",
     "minute 17",
-    "hourly",
-    "up to one hour",
-    "roughly 30 minutes",
-    "all expected tags",
-    "autorelease: tagged",
-    "partial linked-tag state",
-    "requires reconciliation",
+    "proposal-only",
+    "cannot merge it, create a tag, or publish",
     "workflow_dispatch",
-    "Direct manual recovery",
-    "manually creating the missing GitHub releases",
-    "release: published"
+    "Protected recovery",
+    "exact dual-authorized",
+    "immutable proposal head"
   ]
 
   test "release-please retains the complete recovery trigger set" do
@@ -251,7 +246,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
   test "release target remains versioned and inactive until protected candidate capture" do
     source = workflow_source()
-    validation = extract_step_block!(source, "Validate automated release target")
+    validation = extract_step_block!(source, "Capture Release Please proposal identity without activation")
     target = Jason.decode!(File.read!(@release_target_path))
 
     assert target["schema_version"] == 1
@@ -261,21 +256,19 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert target["proposal_identity"] == %{"head_sha" => nil, "source_sha" => nil}
 
     assert validation =~ ".planning/release-target.json"
-    assert validation =~ "release_packages"
-    assert validation =~ "publish exactly mailglass and mailglass_admin"
-    assert validation =~ ".release-please-manifest.json"
-    assert validation =~ "mailglass_admin/mix.exs"
-    assert validation =~ "mailglass_inbound/mix.exs"
-    assert validation =~ "Release target mismatch"
+    assert validation =~ "gh pr list --head release-please--branches--main"
+    assert validation =~ "proposal-candidate.json"
+    assert validation =~ "capture-candidate"
+    assert validation =~ "proposal/source identity"
 
     assert step_precedes?(
              source,
-             "Validate automated release target",
-             "Arm auto-merge on the release PR"
+             "Sync sibling package -> mailglass dep pin on release-please branch",
+             "Capture Release Please proposal identity without activation"
            )
   end
 
-  test "contributing documents the bounded hourly recovery and manual fallbacks" do
+  test "contributing documents proposal-only schedule and protected digest recovery" do
     recovery_runbook =
       extract_markdown_section!(
         File.read!(@contributing_path),
@@ -289,9 +282,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
              String.replace(recovery_runbook, "minute 17", "minute 18", global: true)
            )
 
-    refute recovery_runbook?(
-             String.replace(recovery_runbook, "up to one hour", "immediately", global: false)
-           )
+    refute recovery_runbook =~ "schedule is a tag-recovery mechanism"
 
     refute recovery_runbook?(
              String.replace(recovery_runbook, "workflow_dispatch", "manual dispatch", global: true)
