@@ -256,7 +256,7 @@ jobs:
       - name: Run core support contract
         run: mix verify.support_contract.core
       - name: Run architecture boundary contract
-        run: mix test test/scripts/architecture_boundary_test.exs --warnings-as-errors
+        run: mix test test/scripts/architecture_boundary_test.exs ci/contracts/inbound_architecture_test.exs --warnings-as-errors
       - name: Collect and enforce core coverage floor
         run: |
           mix coveralls.json --output-dir coverage/core test/mailglass --warnings-as-errors
