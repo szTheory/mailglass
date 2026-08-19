@@ -42,16 +42,18 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   test "preflight derives active owned tags from the release target and converges every release state" do
     source = workflow_source()
     preflight = extract_step_block!(source, "Detect already-tagged release PR")
+    policy = File.read!(Path.join(@repo_root, "scripts/release_policy_expected_tags.sh"))
 
     assert File.exists?(@manifest_path)
     assert preflight =~ ".release-please-manifest.json"
     assert preflight =~ ".planning/release-target.json"
-    assert preflight =~ "release_packages"
+    assert preflight =~ "scripts/release_policy_expected_tags.sh"
     assert preflight =~ "Active release target owns these tags"
     assert preflight =~ "release manifest is missing or unreadable"
     assert preflight =~ "release manifest yielded no expected release tags"
-    assert preflight =~ "to_entries[]"
-    assert preflight =~ "mailglass-v\\($version)"
+    assert policy =~ "release_packages"
+    assert policy =~ "to_entries[]"
+    assert policy =~ "mailglass-v\\($version)"
     assert preflight =~ "${#present_tags[@]}"
     assert preflight =~ "${#missing_tags[@]}"
 
