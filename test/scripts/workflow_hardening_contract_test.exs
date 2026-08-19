@@ -132,6 +132,7 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
     assert proof =~ "packages: {"
     assert upload =~ "phase-148-release-proof-${{ github.run_id }}"
     assert upload =~ "if-no-files-found: error"
+    assert upload =~ "overwrite: true"
   end
 
   test "inert release events cannot enter package preparation or proof steps" do

@@ -290,6 +290,12 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       assert {_output, status} = run(context, %{artifact_zip: zip_path})
       assert status != 0, "unexpectedly accepted proof #{proof}"
     end)
+
+    oversized_zip = Path.join(context.root, "oversized-proof.zip")
+    write_proof_zip!(oversized_zip, String.duplicate(" ", 1_048_577))
+    assert {oversized_output, oversized_status} = run(context, %{artifact_zip: oversized_zip})
+    assert oversized_status != 0
+    assert oversized_output =~ "uncompressed publication proof exceeds the size limit"
   end
 
   test "fails closed on partial, ambiguous, retired, mismatched, or unavailable Hex evidence",
