@@ -5,6 +5,49 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v2.1.2...mailglass_inbound-v2.0.0) (2026-08-19)
+
+
+### Features
+
+* **125-01:** loosen sibling pins from == to ~&gt; (keystone atomic change) ([37dcaf1](https://github.com/szTheory/mailglass/commit/37dcaf11dfa1cea1f59ac7f247d71ff8bf9943bf))
+* **128-01:** add sibling-local ci/ci.fast aliases in admin + inbound ([dae016d](https://github.com/szTheory/mailglass/commit/dae016d9863db2d6aa3baa84fd073b3849286b5e))
+* **132-02:** add :schema key, schema/0 accessor, boot-warm to MailglassInbound.Config ([344230e](https://github.com/szTheory/mailglass/commit/344230e05bcd3c977ca11f72f9e06b815d8f609d))
+* **132-02:** wire MailglassInbound.Config.validate_at_boot!/0 into application start/2 ([9064711](https://github.com/szTheory/mailglass/commit/906471194c0f3b3e9db0e3235815615d1e39edf2))
+* **135-01:** thread put_prefix/1 through MailglassInbound.Repo facade ([fac03d2](https://github.com/szTheory/mailglass/commit/fac03d23b56a756028fe33a500a10fb31913365b))
+* **135-02:** MailglassInbound.Migration entrypoint + Postgres runner with CREATE/DROP SCHEMA ([9ffd8d2](https://github.com/szTheory/mailglass/commit/9ffd8d204eb49ed8b0c222ed4d65732ee3d5facc))
+* **135-02:** mix mailglass.inbound.gen.migration delegating-wrapper generator + migrations round-trip test ([65bde07](https://github.com/szTheory/mailglass/commit/65bde07d6a62bdf834d69e77c2d3f48cfab27beb))
+* **135-02:** V01 final-state snapshot + delete 7 loose migration files ([1c14a41](https://github.com/szTheory/mailglass/commit/1c14a41a709d059decc0a28ab7fa266b6ab4ce8e))
+* **135-03:** rewire test_helper to Migration.up/1 with MAILGLASS_SCHEMA dual-schema alignment ([ddefdc3](https://github.com/szTheory/mailglass/commit/ddefdc3376ca08fda9ca35f4903a7dd7e8a2077d))
+* **138-02:** pass inbound schema opts to raw repo paths ([398b72b](https://github.com/szTheory/mailglass/commit/398b72b48bd27c205ed18f6d3f914b7b59010d37))
+* complete v2.6 engineering quality ratchet ([#203](https://github.com/szTheory/mailglass/issues/203)) ([61e8c8e](https://github.com/szTheory/mailglass/commit/61e8c8e841306755ec637f84052f8dca4baadb76))
+* operator Quick view + Full detail record inspection ([#128](https://github.com/szTheory/mailglass/issues/128)) ([7a68501](https://github.com/szTheory/mailglass/commit/7a6850146f606c3e82bcb50bc7c146c830caf0e1))
+
+
+### Bug Fixes
+
+* **127-01:** MailboxCase — default async: false, drop shared:, remove async? (DET-01) ([2ec1ad4](https://github.com/szTheory/mailglass/commit/2ec1ad47be0c67479d96cc7973c80396d1e9c448))
+* **127-01:** PruneTest on_exit truncate — prevent sandbox: false row bleed into ReplayTest (DET-01) ([4b246a9](https://github.com/szTheory/mailglass/commit/4b246a9bc4b6763579620a63fa4c66bc31a38a57))
+* **128:** bound preflight TCP fallback; correct CONTRIBUTING + comment discipline ([90f1416](https://github.com/szTheory/mailglass/commit/90f1416813553aecd8ba67dd3223836a8f9f9444))
+* **135-01:** inline-qualify prune batched DELETE with schema prefix (D-02) ([a91c267](https://github.com/szTheory/mailglass/commit/a91c267c2a0bf0b9cd1184c7e76e8a9e03bd0ff3))
+* **135-01:** pin schema to public in inbound test env (Rule 2 - missing critical config) ([c35dd10](https://github.com/szTheory/mailglass/commit/c35dd10d729c7cb54b0ef6ff75d85de064d451bb))
+* **135:** repoint inbound migration-doc tests to V01 snapshot after loose-file collapse ([cd55cc0](https://github.com/szTheory/mailglass/commit/cd55cc05ec5c343fc948c0824ae59997dbb7f93a))
+* **137-02:** pre-create non-public schema before inbound migrator runs ([e831b70](https://github.com/szTheory/mailglass/commit/e831b709d177d318dff615d8271a43d77bfc92f6))
+* **138:** close raw guard and replay review gaps ([68f820c](https://github.com/szTheory/mailglass/commit/68f820c8493fa69be753e95440cd8fb6c2a0ee5f))
+* **138:** tenant-scope inbound execution load ([6b62f6e](https://github.com/szTheory/mailglass/commit/6b62f6e0f6babc465bc3e3128a2714cfd42cbfc5))
+* **deps:** bump admin + inbound deps to clear the EEF security advisory wave ([29a6155](https://github.com/szTheory/mailglass/commit/29a6155d854f9fcf3225e2f6afc68bdc67f4c161))
+* **deps:** bump plug to 1.19.3 for CVE-2026-54892 (HIGH) ([fc17fdf](https://github.com/szTheory/mailglass/commit/fc17fdfd05f2080301986fec14b1b26671ce09d4))
+* **inbound:** correct v2.0 package manifest for programmatic migrations ([a4d272f](https://github.com/szTheory/mailglass/commit/a4d272fa0350a53688ee895c3bb27188b22991e7))
+* **inbound:** re-pin to mailglass == 1.10.0 ([8c9d1ff](https://github.com/szTheory/mailglass/commit/8c9d1ffc4bf7a9d6bad746705634515b1d984d80))
+* **inbound:** re-pin to mailglass == 1.10.1 for the v1.14 release recovery ([caacffa](https://github.com/szTheory/mailglass/commit/caacffae9bfbff903951055e6b9e0d04dd7bba4b))
+* **inbound:** re-pin to mailglass == 1.10.2 for the 1.10.2 patch release ([e4cb8f3](https://github.com/szTheory/mailglass/commit/e4cb8f3e6c14e2b2eb4a9c685e8f8ad36b274dfe))
+* unblock the 2.1.0 publish — admin allowlist + 7 security advisories ([#134](https://github.com/szTheory/mailglass/issues/134)) ([eda8d00](https://github.com/szTheory/mailglass/commit/eda8d0032bf1976477c9f1bac18c4e1488ed57d7))
+
+
+### Miscellaneous Chores
+
+* **release:** trigger 2.0.0 major for standalone mailglass_inbound ([76998a7](https://github.com/szTheory/mailglass/commit/76998a7bb01c6a4fc7b2d918b95d4b78834360d4))
+
 ## [2.1.2](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v2.1.1...mailglass_inbound-v2.1.2) (2026-08-03)
 
 ### Fixed

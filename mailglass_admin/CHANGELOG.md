@@ -4,6 +4,62 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.5.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.4.1...mailglass_admin-v2.5.0) (2026-08-19)
+
+
+### Features
+
+* **119-01:** scaffold Wave-0 e2e assertions for drill-through + orientation strip ([f42d225](https://github.com/szTheory/mailglass/commit/f42d2255d682ee35fbe9a89e087015053db6d93d))
+* **119-01:** SHELL-01 Overview nav identity + active-state fix (TDD GREEN) ([b4fc5a0](https://github.com/szTheory/mailglass/commit/b4fc5a0cf9a08d7f3f916b54140f56db3babdd6b))
+* **119-01:** SHELL-02 delete Navigate block + drill-through health + orientation gate (TDD GREEN) ([3d7899a](https://github.com/szTheory/mailglass/commit/3d7899a8c5823e77cc2ed903efb2549f1a76c7ec))
+* **119-01:** SHELL-03 triage subtitle + calm copy + inbound_live overview_path fix (TDD GREEN) ([3c2feb0](https://github.com/szTheory/mailglass/commit/3c2feb0d7954ea53889cb50b3cb1d5227f8254e7))
+* **119-02:** arm both judgment gates — flip test.fixme→test + fix aria-current assertion (D-09) ([1d12b67](https://github.com/szTheory/mailglass/commit/1d12b673ff49a3744c89472d7eaaf5a285426861))
+* **120-01:** gate Deliveries to single-calm-pane on genuine no-data ([b8ab569](https://github.com/szTheory/mailglass/commit/b8ab569802e37a0347cabbc83cc740a470007ddc))
+* **121-01:** gate inbound else-branch into no-data/no-match/populated cond ([dd8e4c1](https://github.com/szTheory/mailglass/commit/dd8e4c1f14b642784e5db177576be63195ebcfb4))
+* **121-02:** re_redact_raw handler + PII-free reveal telemetry (D-11/D-12) ([082e1a9](https://github.com/szTheory/mailglass/commit/082e1a9727e96789de355bd72d3522ff18a62897))
+* **121-02:** reveal disclosure ARIA + re-redact button + aria-live region (D-11) ([10a5281](https://github.com/szTheory/mailglass/commit/10a5281556be4234a7824212ca89004247fe7c05))
+* **121-03:** add Tab/Shift+Tab focus-trap to both replay modals (D-14, lockstep) ([9aee4cf](https://github.com/szTheory/mailglass/commit/9aee4cfcaed6fd8911e2b92984861a5c1db55282))
+* **121-03:** double-submit pending-lock on both replay Confirm buttons (D-14) ([8cc386b](https://github.com/szTheory/mailglass/commit/8cc386b8181a25ed59ddab81f717fe7355baf700))
+* **122-01:** adopt theme_picker for Preview admin chrome via frame-aware path ([fc59dfb](https://github.com/szTheory/mailglass/commit/fc59dfb1bef4e3ab08483ff5c56f2319ae55b3fb))
+* **122-01:** harden email-backdrop toggle a11y (aria-pressed + label + aria-live) ([4f188aa](https://github.com/szTheory/mailglass/commit/4f188aa12c96b76bfb38b1b340fc06eb7b4c5600))
+* **122-02:** generalize render-error card copy + error-transition a11y ([ca376fb](https://github.com/szTheory/mailglass/commit/ca376fb306e3ef88dc286a19cc646fba31bd17cf))
+* **122-02:** re-voice empty-mailables onboarding + remove dead dark_chrome attr ([a7edcbf](https://github.com/szTheory/mailglass/commit/a7edcbfddfc5be3374985cc7289dc75bfbd4a53b))
+* **123-01:** promote + re-score 54-cell aesthetic ratchet baseline ([fcd5738](https://github.com/szTheory/mailglass/commit/fcd57384d6d50aad875ae2f1d75e2fc2c937c951))
+* **125-01:** loosen sibling pins from == to ~&gt; (keystone atomic change) ([37dcaf1](https://github.com/szTheory/mailglass/commit/37dcaf11dfa1cea1f59ac7f247d71ff8bf9943bf))
+* **128-01:** add sibling-local ci/ci.fast aliases in admin + inbound ([dae016d](https://github.com/szTheory/mailglass/commit/dae016d9863db2d6aa3baa84fd073b3849286b5e))
+* **133-02:** add FACADE-04 schema-isolation integration test + fix admin test.exs schema pin ([70a3e07](https://github.com/szTheory/mailglass/commit/70a3e0715ec69c44f9977025f7dd4bab8aaddf0f))
+* **133-02:** FACADE-03 admin zero-code-change render proof + D-08 bypass fix ([ee8e965](https://github.com/szTheory/mailglass/commit/ee8e965d54fd7bd2e86676c3e2cb0d4f697841b3))
+* complete v2.6 engineering quality ratchet ([#203](https://github.com/szTheory/mailglass/issues/203)) ([61e8c8e](https://github.com/szTheory/mailglass/commit/61e8c8e841306755ec637f84052f8dca4baadb76))
+* operator Quick view + Full detail record inspection ([#128](https://github.com/szTheory/mailglass/issues/128)) ([7a68501](https://github.com/szTheory/mailglass/commit/7a6850146f606c3e82bcb50bc7c146c830caf0e1))
+* ship B2C first-adopter readiness ([#165](https://github.com/szTheory/mailglass/issues/165)) ([53211e8](https://github.com/szTheory/mailglass/commit/53211e8bb9db2d2e16d5b2457868f2eefad249c5))
+
+
+### Bug Fixes
+
+* **119-02:** rewrite VERIF-02 — drop deleted operator-overview-nav assertion (D-09) ([b3e98af](https://github.com/szTheory/mailglass/commit/b3e98af37a6b7c6f1f72a3e7cc6fa8ff71da999c))
+* **121-01:** data_state must not hijack a loaded records list (D-09) ([a55eb5f](https://github.com/szTheory/mailglass/commit/a55eb5f1ea51578cdbf0a64e9dbc88943b2df945))
+* **121-01:** inbound truly-empty body uses the InboundMessage noun (D-07) ([bf91f8e](https://github.com/szTheory/mailglass/commit/bf91f8e81b6615ba80da67286f6c46577fd243fe))
+* **122:** IN-01 standardize onboarding code chips on font-mono ([94a6d5a](https://github.com/szTheory/mailglass/commit/94a6d5a1b76fd563ea6e599d14cc1f147b39e676))
+* **122:** IN-02 re-voice start-page legend to the control's own noun ([78979bb](https://github.com/szTheory/mailglass/commit/78979bb96324645ec8e42b48662fe9902cf327fc))
+* **122:** IN-03 document :admin_chrome_theme precedence contract ([d825d10](https://github.com/szTheory/mailglass/commit/d825d108cb8d2f2b140c47debc0e373f5846a102))
+* **122:** IN-04 give preview theme_picker an explicit stable name ([4509c87](https://github.com/szTheory/mailglass/commit/4509c870b8606c77a13a2a634f685ee1112d2e6a))
+* **122:** WR-01 scope render-error aria-live to sr-only announce span ([f9015d1](https://github.com/szTheory/mailglass/commit/f9015d18ae807d437885d3761c39788e60425e0b))
+* **122:** WR-02 derive preview theme mount base instead of /dev/mail literal ([6a31e99](https://github.com/szTheory/mailglass/commit/6a31e990cdb3896fcdbf1a6c325820ecf9ba3d43))
+* **122:** WR-03 add merge_assigns catch-all clause for non-map params ([2ecaf1e](https://github.com/szTheory/mailglass/commit/2ecaf1eeff794c9a83fcc75779d960c5582294a0))
+* **137:** migrate inbound tables via programmatic installer in browser harness ([5267fe4](https://github.com/szTheory/mailglass/commit/5267fe47c8a4e663dfea07c5520bd38e776c2df2))
+* **admin-test:** migrate inbound tables into admin test DB + pin inbound schema ([57237e6](https://github.com/szTheory/mailglass/commit/57237e618c5728c75985ac119edd13f2c79efafc))
+* **admin:** align operator browser gate specs to the v1.14 redesign contract ([8a10e58](https://github.com/szTheory/mailglass/commit/8a10e5842ae502ec1b51f57933643d7af56cc3aa))
+* **admin:** bump optional mailglass_inbound pin to ~&gt; 2.0 for linked v2.0 ([6d29f71](https://github.com/szTheory/mailglass/commit/6d29f7188da7c1e82a433781c258ebfe1e556298))
+* **admin:** clear the design-system and Dialyzer lanes blocking release ([#136](https://github.com/szTheory/mailglass/issues/136)) ([31588bb](https://github.com/szTheory/mailglass/commit/31588bb40343fc67200ca8bf4da7ffb3351248fa))
+* **admin:** expose true ARIA state on preview backdrop toggle + inbound reveal disclosure ([c8b1996](https://github.com/szTheory/mailglass/commit/c8b1996047a47cee52b15025a8075ed3c786b201))
+* **admin:** narrow re-redact button to px-sm to fix CI gallery overflow ([8bfb7ac](https://github.com/szTheory/mailglass/commit/8bfb7ac50e0c2b697e559a101f65089eb23297f5))
+* **admin:** wrap revealed raw-payload pre to prevent CI horizontal overflow ([fb36456](https://github.com/szTheory/mailglass/commit/fb364564cf9696a6bc29c88d0ea7e336cc87539e))
+* **deps:** bump admin + inbound deps to clear the EEF security advisory wave ([29a6155](https://github.com/szTheory/mailglass/commit/29a6155d854f9fcf3225e2f6afc68bdc67f4c161))
+* **deps:** bump plug to 1.19.3 for CVE-2026-54892 (HIGH) ([fc17fdf](https://github.com/szTheory/mailglass/commit/fc17fdfd05f2080301986fec14b1b26671ce09d4))
+* **deps:** patch new cowboy/cowlib advisories blocking the 2.1.2 publish ([#139](https://github.com/szTheory/mailglass/issues/139)) ([3c80ca8](https://github.com/szTheory/mailglass/commit/3c80ca805e6eedf8232817d3aa6e5786e364a669))
+* **test:** make the citext probe honest and restore the suite baseline ([#137](https://github.com/szTheory/mailglass/issues/137)) ([579ad37](https://github.com/szTheory/mailglass/commit/579ad379bc979a78870f2f56ce865c19f44f6a20))
+* unblock the 2.1.0 publish — admin allowlist + 7 security advisories ([#134](https://github.com/szTheory/mailglass/issues/134)) ([eda8d00](https://github.com/szTheory/mailglass/commit/eda8d0032bf1976477c9f1bac18c4e1488ed57d7))
+
 ## [2.4.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.3.0...mailglass_admin-v2.4.0) (2026-08-02)
 
 
