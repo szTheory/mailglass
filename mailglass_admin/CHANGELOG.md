@@ -11,7 +11,7 @@ Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
 * ship B2C first-adopter readiness ([#165](https://github.com/szTheory/mailglass/issues/165)) ([53211e8](https://github.com/szTheory/mailglass/commit/53211e8bb9db2d2e16d5b2457868f2eefad249c5))
 
-## [Unreleased]
+## [2.4.1](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.4.0...mailglass_admin-v2.4.1) (2026-08-03)
 
 ### Added
 

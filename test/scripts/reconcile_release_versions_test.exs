@@ -443,7 +443,11 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
         "mailglass_admin" => "https://hex.pm/api/packages/mailglass_admin/releases/2.4.1",
         "mailglass_inbound" => "https://hex.pm/api/packages/mailglass_inbound/releases/2.1.2"
       },
-      "hex_release_checksums" => Map.new(@packages, &{&1, String.duplicate("a", 64)}),
+      "hex_release_checksums" => %{
+        "mailglass" => "364bd0b97955dd021a71b685c44d9748e51bc01d6350fb6a475beaac95767268",
+        "mailglass_admin" => "50944118e771bceefc31a6ebcd097339fa2212f092eab49fa0903603d27f2589",
+        "mailglass_inbound" => "1c98e323d7cb65bf20a624893604b2f2e8314e462913027c80ac47a3e734d730"
+      },
       "historical_tag" => "mailglass-v2.4.1",
       "historical_tag_sha" => "587c9d1a09944de02220b3fa121ce937677a8c3a"
     }
