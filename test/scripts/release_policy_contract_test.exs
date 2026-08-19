@@ -163,6 +163,38 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
       assert status != 0
       refute output =~ "active=true"
       refute output =~ "core=2.5.0"
+
+      # Protected pre-merge validation consumes an authorized control target.
+      # Even a structurally valid target cannot substitute forged versions for
+      # the versions present in the exact proposal checkout.
+      File.write!(Path.join(dir, "mailglass_inbound/mix.exs"), "  @version \"2.2.0\"\n")
+
+      authorized =
+        target
+        |> File.read!()
+        |> Jason.decode!()
+        |> Map.put("status", "authorized")
+        |> put_in(["states", "authorization"], "authorized")
+
+      authorized_target = write_json(dir, "authorized-target.json", authorized)
+
+      assert {_output, 0} =
+               run(@validate_target, [authorized_target, "mailglass-v2.5.0", dir])
+
+      forged =
+        put_in(authorized["candidate_versions"], %{
+          "mailglass" => "2.5.1",
+          "mailglass_admin" => "2.5.1",
+          "mailglass_inbound" => "2.2.1"
+        })
+
+      forged_target = write_json(dir, "forged-target.json", forged)
+
+      assert {forged_output, forged_status} =
+               run(@validate_target, [forged_target, "mailglass-v2.5.1", dir])
+
+      assert forged_status != 0
+      refute forged_output =~ "active=true"
     end)
   end
 
@@ -329,18 +361,29 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
   test "proposal mode bypasses historical tag recovery while protected dispatch requires exact authorization" do
     release = File.read!(@release_please)
+    protected = extract_step_script!(release, "Validate protected exact candidate dispatch")
 
     assert release =~ "candidate_digest:"
+    assert release =~ "ref: refs/heads/main"
+    assert release =~ "fetch-depth: 0"
     assert release =~ "Proposal mode bypasses historical baseline tag recovery"
     assert release =~ "Validate protected exact candidate dispatch"
-    assert release =~ "validate-protected-dispatch"
+    assert protected =~ "git fetch --no-tags origin main:refs/remotes/origin/main"
+    assert protected =~ "current_main_sha=$(git rev-parse origin/main)"
+    assert protected =~ "[ \"$(git rev-parse HEAD)\" = \"$current_main_sha\" ]"
+    assert protected =~ "control_target=$(mktemp)"
+    assert protected =~ "cp .planning/release-target.json \"$control_target\""
+    assert protected =~ "validate-protected-dispatch \"$control_target\""
 
     assert release =~
              "candidate_digest=$(awk -F= '$1 == \"candidate_digest\" {print $2}' \"$policy\")"
 
     assert release =~ "content_digest=$(awk -F= '$1 == \"content_digest\" {print $2}' \"$policy\")"
     assert release =~ "[ \"$candidate_digest\" = \"$CANDIDATE_DIGEST\" ]"
-    assert release =~ "git checkout --detach \"$proposal_head\""
+    assert protected =~ "[ \"$base\" = \"$current_main_sha\" ]"
+    assert protected =~ "git merge-base --is-ancestor \"$source_sha\" \"$current_main_sha\""
+    assert protected =~ "git checkout --detach \"$proposal_head\""
+    assert appears_before?(protected, "cp .planning/release-target.json", "git checkout --detach")
     assert release =~ "[ \"$actual_digest\" = \"$content_digest\" ]"
     assert release =~ "[ \"$(jq -er 'length' <<<\"$prs\")\" -eq 1 ]"
     assert release =~ "[ \"$merged_digest\" = \"$CONTENT_DIGEST\" ]"
@@ -359,11 +402,22 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     refute release =~ "gh pr merge \"$number\" --auto --squash"
     refute release =~ "gh pr merge \"$NUMBER\" --auto"
     assert release =~ "scripts/release_policy_content_digest.sh"
+    assert protected =~ "authorized-versions \"$control_target\""
+
+    assert protected =~
+             "scripts/release_policy_validate_target.sh \"$control_target\" \"mailglass-v${core}\" ."
+
+    assert protected =~ "core=$core"
+    assert protected =~ "admin=$admin"
+    assert protected =~ "inbound=$inbound"
+    refute protected =~ "validate-protected-dispatch .planning/release-target.json"
+    refute protected =~ "branches/main/protection/required_status_checks"
     refute release =~ "git ls-files -z"
   end
 
   test "proposal capture runs after synchronization and is the sole release-target policy path" do
     release = File.read!(@release_please)
+    capture = extract_step_script!(release, "Capture Release Please proposal identity without activation")
 
     assert step_precedes?(
              release,
@@ -380,6 +434,11 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert release =~ "captured=true"
     assert release =~ "steps.capture-proposal.outputs.captured == 'true'"
     assert release =~ "digest=$(scripts/release_policy_content_digest.sh)"
+    assert capture =~ "source_target=$(mktemp)"
+    assert capture =~ "git show \"$source_sha\":.planning/release-target.json > \"$source_target\""
+    assert capture =~ "capture-candidate \"$source_target\" ."
+    assert appears_before?(capture, "git show \"$source_sha\":.planning/release-target.json", "git checkout --detach")
+    refute capture =~ "capture-candidate .planning/release-target.json"
     refute release =~ "release_packages=$(jq"
     refute release =~ "Phase 148 must publish exactly"
   end
@@ -433,6 +492,15 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
   defp git!(dir, args) do
     assert {_output, 0} = System.cmd("git", ["-C", dir | args], stderr_to_stdout: true)
+  end
+
+  defp appears_before?(source, first, second) do
+    with {first_at, _} <- :binary.match(source, first),
+         {second_at, _} <- :binary.match(source, second) do
+      first_at < second_at
+    else
+      :nomatch -> false
+    end
   end
 
   defp extract_step_script!(source, name) do
