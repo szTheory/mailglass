@@ -8,7 +8,10 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
   @job_write_permissions %{
     "gate-self-test.yml" => %{"self-test" => ["contents", "pull-requests"]},
     "release-please.yml" => %{"release-please" => ["contents", "pull-requests"]},
-    "publish-hex.yml" => %{"gate-ci-green" => ["actions"]},
+    "publish-hex.yml" => %{
+      "gate-ci-green" => ["actions"],
+      "dispatch-post-publish-smoke" => ["actions"]
+    },
     "provider-live.yml" => %{"notify_provider_live_failure" => ["issues"]},
     "post-publish-smoke.yml" => %{
       "notify-on-failure" => ["issues"],
