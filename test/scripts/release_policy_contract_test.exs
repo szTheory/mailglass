@@ -242,6 +242,36 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     refute broken =~ "scripts/release_policy_expected_tags.sh"
   end
 
+  test "release preparation is proposal-only and disarms ordinary auto-merge" do
+    release = File.read!(@release_please)
+
+    assert release =~ "skip-github-release: true"
+    assert release =~ "steps.release.outputs.prs"
+    assert release =~ "proposal/source identity"
+    assert release =~ "publishable-content digest"
+    assert release =~ "Disarmed ordinary auto-merge"
+    refute release =~ "gh pr merge \"$number\" --auto --squash"
+
+    assert step_precedes?(
+             release,
+             "Set up OTP + Elixir for policy",
+             "Detect already-tagged release PR"
+           )
+
+    assert step_precedes?(release, "Install deps for policy", "Detect already-tagged release PR")
+  end
+
+  test "publish workflow requires a protected exact-digest dispatch and keeps live jobs inert" do
+    publish = File.read!(@publish)
+
+    assert publish =~ "candidate_digest:"
+    assert publish =~ "Protected candidate digest"
+    assert publish =~ "steps.release-target.outputs.authorized == 'true'"
+    assert publish =~ "github.event.inputs.candidate_digest"
+    assert publish =~ "false &&"
+    assert publish =~ "mailglass_inbound"
+  end
+
   defp run(script, args), do: System.cmd("bash", [script | args], stderr_to_stdout: true)
 
   defp extract_step_script!(source, name) do
@@ -287,5 +317,11 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     after
       File.rm_rf!(dir)
     end
+  end
+
+  defp step_precedes?(source, first, second) do
+    {first_index, _} = :binary.match(source, "- name: #{first}")
+    {second_index, _} = :binary.match(source, "- name: #{second}")
+    first_index < second_index
   end
 end
