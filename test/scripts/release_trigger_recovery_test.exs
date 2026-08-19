@@ -7,15 +7,17 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   @release_target_path Path.expand("../../.planning/release-target.json", __DIR__)
   @contributing_path Path.expand("../../CONTRIBUTING.md", __DIR__)
   @recovery_runbook_facts [
-    "GitHub-native auto-merge",
-    "GITHUB_TOKEN",
     "minute 17",
     "proposal-only",
     "cannot merge it, create a tag, or publish",
     "workflow_dispatch",
-    "Protected recovery",
-    "exact dual-authorized",
-    "immutable proposal head"
+    "Protected exact-digest chain",
+    "authorization checkpoint",
+    "package=all",
+    "immutable proposal",
+    "core → admin → inbound",
+    "credential-free and read-only",
+    "Do not manually create"
   ]
 
   test "release-please retains the complete recovery trigger set" do
@@ -274,11 +276,11 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
            )
   end
 
-  test "contributing documents proposal-only schedule and protected digest recovery" do
+  test "contributing documents proposal-only triggers and the protected exact-digest chain" do
     recovery_runbook =
       extract_markdown_section!(
         File.read!(@contributing_path),
-        "If a release publishes but the tags/publish never fire"
+        "If a release proposal or protected delivery stalls"
       )
 
     assert recovery_runbook?(recovery_runbook)
