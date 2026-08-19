@@ -370,6 +370,9 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert release =~ "Upload sanitized release proposal candidate"
     assert release =~ "release-proposal-candidate-${{ github.run_id }}"
     assert release =~ "retention-days: 30"
+    assert release =~ "id: capture-proposal"
+    assert release =~ "captured=true"
+    assert release =~ "steps.capture-proposal.outputs.captured == 'true'"
     assert release =~ "digest=$(scripts/release_policy_content_digest.sh)"
     refute release =~ "release_packages=$(jq"
     refute release =~ "Phase 148 must publish exactly"
@@ -377,6 +380,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
   test "publish workflow requires a protected exact-digest dispatch and keeps live jobs inert" do
     publish = File.read!(@publish)
+    validation = extract_step_script!(publish, "Validate automated release target")
 
     assert publish =~ "candidate_digest:"
     assert publish =~ "Protected candidate digest"
@@ -384,8 +388,12 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert publish =~ "github.event.inputs.candidate_digest"
     refute publish =~ "false &&"
     assert publish =~ "mailglass_inbound"
-    assert publish =~ "[ \"${PACKAGE:-}\" != all ]"
-    assert publish =~ "protected release validation requires package=all"
+    assert validation =~ "[ \"${PACKAGE:-}\" != all ]"
+    assert validation =~ "protected release validation requires package=all"
+
+    {package_guard, _} = :binary.match(validation, ~s(if [ "${PACKAGE:-}" != all ]))
+    {captured_dry_run, _} = :binary.match(validation, "# A pretag rehearsal accepts")
+    assert package_guard < captured_dry_run
   end
 
   test "dry-run remains credential-free and outside every protected publish environment" do
