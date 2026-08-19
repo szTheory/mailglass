@@ -562,7 +562,7 @@ defmodule MailglassInbound.DocsContractTest do
     end
 
     refute compatibility =~ "Through `mailglass_inbound` `0.x`"
-    assert compatibility =~ "Through `mailglass_inbound` `1.x`"
+    assert compatibility =~ "Through `mailglass_inbound` `2.x`"
 
     for forbidden <- [
           "../docs/compatibility-and-deprecations.md",
@@ -657,9 +657,9 @@ defmodule MailglassInbound.DocsContractTest do
     for {kind, token} <- inbound_v26_required_tokens() do
       {changed_stability, changed_install} =
         if String.contains?(stability, token) do
-          {String.replace(stability, token, "", global: false), install}
+          {String.replace(stability, token, ""), install}
         else
-          {stability, String.replace(install, token, "", global: false)}
+          {stability, String.replace(install, token, "")}
         end
 
       assert kind in inbound_v26_contract_errors(changed_stability, changed_install),

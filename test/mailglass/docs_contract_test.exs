@@ -575,9 +575,9 @@ defmodule Mailglass.DocsContractTest do
       for {kind, token} <- v26_required_contract_tokens() do
         {changed_core, changed_compatibility} =
           if String.contains?(core, token) do
-            {String.replace(core, token, "", global: false), compatibility}
+            {String.replace(core, token, ""), compatibility}
           else
-            {core, String.replace(compatibility, token, "", global: false)}
+            {core, String.replace(compatibility, token, "")}
           end
 
         assert kind in v26_contract_errors(changed_core, changed_compatibility, adopter),
