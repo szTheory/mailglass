@@ -566,7 +566,13 @@ EOF
           metadata: %{delivery_id: failure_id}
         )
 
-      {:error, %{__exception__: true}} = Mailglass.deliver_later(message)
+      try do
+        result = Mailglass.deliver_later(message)
+        raise "atomic rollback fixture unexpectedly returned #{inspect(result)}"
+      rescue
+        error in Ecto.ConstraintError ->
+          if error.constraint != constraint, do: reraise(error, __STACKTRACE__)
+      end
 
       %{rows: [[0, 0, 0]]} = Host.Repo.query!(
         """
