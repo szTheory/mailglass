@@ -26,24 +26,25 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
   @required_script_snippets [
     "mix phx.new host --module Host --app host",
     "config :mailglass, repo: Host.Repo",
-    "config :mailglass_inbound, repo: Host.Repo",
+    "config :mailglass_inbound, repo: Host.InboundRepo",
     "mailglass.gen.migration --repo Host.Repo",
-    "mailglass.inbound.gen.migration --repo Host.Repo",
+    "mailglass.inbound.gen.migration --repo Host.InboundRepo",
     "Mailglass.Migration.up(repo: Host.Repo, version: 5)",
-    "MailglassInbound.Migration.up(repo: Host.Repo, version: 1)",
+    "MailglassInbound.Migration.up(repo: Host.InboundRepo, version: 1)",
     "@disable_ddl_transaction true",
     "@disable_migration_lock true",
     "non_transactional_wrapper: true",
     "mix ecto.migrate -r Host.Repo",
-    "Persist.persist(handoff, repo: Host.Repo, routes: [])",
-    "Persist.backfill_sha256(repo: Host.Repo, prefix: \"mailglass\", limit: 1)",
+    "Persist.persist(handoff, repo: Host.InboundRepo, routes: [])",
+    "Persist.backfill_sha256(repo: Host.InboundRepo, prefix: \"mailglass_inbound\", limit: 1)",
     "raw_signed_body = <<0, 255, 13, 10",
     "Mailglass.Migrations.Postgres.V06.concurrent_indexes()",
     "MailglassInbound.Migrations.Postgres.V02.concurrent_indexes()",
     "EXPLAIN (FORMAT JSON)",
     "i.indisvalid",
     "error.postgres.code != :division_by_zero",
-    "DELETE FROM schema_migrations WHERE version = $1",
+    "DELETE FROM core_schema_migrations WHERE version = $1",
+    "DELETE FROM inbound_schema_migrations WHERE version = $1",
     "INBOUND_UPGRADE_VERSION",
     "inbound invalid-index retry did not converge",
     "inspect(Path.join(path, \"mailglass_inbound\"))",
@@ -160,7 +161,7 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
 
     assert source =~ "core_first|inbound_first"
     assert source =~ "mailglass.gen.migration --repo Host.Repo"
-    assert source =~ "mailglass.inbound.gen.migration --repo Host.Repo"
+    assert source =~ "mailglass.inbound.gen.migration --repo Host.InboundRepo"
     assert source =~ "run_journey core_first core inbound"
     assert source =~ "run_journey inbound_first inbound core"
     assert source =~ "FIRST_ROLLBACK_PACKAGE"
