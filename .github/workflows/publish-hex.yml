@@ -177,6 +177,10 @@ jobs:
             tag_sha=$(git rev-parse "${RELEASE_REF}^{commit}")
             [[ "$tag_sha" =~ ^[0-9a-f]{40}$ ]]
             [ "$(git rev-parse HEAD)" = "$tag_sha" ]
+            while IFS= read -r expected_tag; do
+              [ -n "$expected_tag" ]
+              [ "$(git rev-parse "refs/tags/${expected_tag}^{commit}")" = "$tag_sha" ]
+            done < <(scripts/release_policy_expected_tags.sh .release-please-manifest.json "$control_target")
             actual_digest=$(scripts/release_policy_content_digest.sh)
             [ "$actual_digest" = "$content_digest" ]
             printf 'authorized=true\ncandidate_digest=%s\ncontent_digest=%s\ntag_sha=%s\n' "$digest" "$content_digest" "$tag_sha" >> "$GITHUB_OUTPUT"
