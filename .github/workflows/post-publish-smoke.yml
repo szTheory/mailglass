@@ -736,7 +736,7 @@ jobs:
             const issueTitle = "publish-smoke failure tracker";
             const version = "${{ needs.cron-guard.outputs.version_core }}";
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
-            const artifactName = `trust-runner-published-${context.runId}`;
+            const artifactName = `published-adoption-evidence-${context.runId}`;
 
             const {data: openIssues} = await github.rest.issues.listForRepo({
               owner,
