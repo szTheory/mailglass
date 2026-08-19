@@ -2,6 +2,14 @@ defmodule Mailglass.Scripts.TestExceptionsContractTest do
   use ExUnit.Case, async: true
 
   @script Path.expand("../../scripts/check_test_exceptions.sh", __DIR__)
+
+  test "uses runner-portable search tools" do
+    source = File.read!(@script)
+
+    assert source =~ "grep -REn"
+    refute source =~ ~r/(^|[[:space:]])rg[[:space:]]/m
+  end
+
   test "registry is bidirectional and unexpired" do
     assert {"OK: test exception registry is complete and unexpired.\n", 0} =
              System.cmd("bash", [@script], stderr_to_stdout: true)

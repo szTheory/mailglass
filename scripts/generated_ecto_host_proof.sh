@@ -576,7 +576,7 @@ EOF
     )
   '
 
-  if rg -q 'create table\(:mailglass_|CREATE TABLE[[:space:]]+mailglass_' "${core_migrations_path}" "${inbound_migrations_path}"; then
+  if grep -REq 'create table\(:mailglass_|CREATE TABLE[[:space:]]+mailglass_' "${core_migrations_path}" "${inbound_migrations_path}"; then
     echo "Generated wrappers must not contain copied package DDL." >&2
     exit 1
   fi
@@ -767,7 +767,7 @@ EOF
 
   async_delivery_id="$(<"${async_delivery_id_path}")"
 
-  if ! printf '%s' "${async_delivery_id}" | rg -q '^[0-9a-f-]{36}$'; then
+  if ! printf '%s' "${async_delivery_id}" | grep -Eq '^[0-9a-f-]{36}$'; then
     echo "Generated-host async delivery did not return a UUID." >&2
     exit 1
   fi
@@ -885,13 +885,13 @@ EOF
   inbound_upgrade_path="$(find "${inbound_migrations_path}" -name '*_mailglass_inbound_upgrade.exs' -print -quit)"
 
   for upgrade_path in "${core_upgrade_path}" "${inbound_upgrade_path}"; do
-    rg -q '@disable_ddl_transaction true' "${upgrade_path}"
-    rg -q '@disable_migration_lock true' "${upgrade_path}"
-    rg -q 'non_transactional_wrapper: true' "${upgrade_path}"
+    grep -Eq '@disable_ddl_transaction true' "${upgrade_path}"
+    grep -Eq '@disable_migration_lock true' "${upgrade_path}"
+    grep -Eq 'non_transactional_wrapper: true' "${upgrade_path}"
   done
 
-  rg -q 'Mailglass\.Migration\.down\(repo: Host\.Repo, version: 5, non_transactional_wrapper: true\)' "${core_upgrade_path}"
-  rg -q 'MailglassInbound\.Migration\.down\(repo: Host\.InboundRepo, version: 1, non_transactional_wrapper: true\)' "${inbound_upgrade_path}"
+  grep -Eq 'Mailglass\.Migration\.down\(repo: Host\.Repo, version: 5, non_transactional_wrapper: true\)' "${core_upgrade_path}"
+  grep -Eq 'MailglassInbound\.Migration\.down\(repo: Host\.InboundRepo, version: 1, non_transactional_wrapper: true\)' "${inbound_upgrade_path}"
 
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.Repo
   MIX_ENV=dev DATABASE_URL="${journey_url}" mix ecto.migrate -r Host.InboundRepo
