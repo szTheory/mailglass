@@ -77,6 +77,25 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     assert inbound =~ "needs.publish-admin.result == 'success'"
   end
 
+  test "CI self-heal is a live-only predecessor while captured rehearsal uses the read-only gate" do
+    source = File.read!(@publish_path)
+    self_heal = extract_job!(source, "ensure-live-ci-runs")
+    gate = extract_job!(source, "gate-ci-green")
+
+    assert self_heal =~ "needs: [prepublish-summary]"
+    assert self_heal =~ "github.event.inputs.dry_run != 'true'"
+    assert self_heal =~ "needs.prepublish-summary.outputs.authorized == 'true'"
+    assert self_heal =~ "actions: write"
+
+    assert gate =~ "needs: [prepublish-summary, ensure-live-ci-runs]"
+    assert gate =~ "always()"
+    assert gate =~ "github.event.inputs.dry_run == 'true'"
+    assert gate =~ "needs.prepublish-summary.outputs.pretag == 'true'"
+    assert gate =~ "needs.ensure-live-ci-runs.result == 'success'"
+    refute gate =~ "actions: write"
+    refute gate =~ "createWorkflowDispatch"
+  end
+
   test "all publish jobs preserve the protected environment and step-local credential" do
     source = File.read!(@publish_path)
 
