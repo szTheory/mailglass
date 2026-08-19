@@ -164,7 +164,8 @@ defmodule MailglassInbound.Ingress.Persist do
          }}
 
       nil ->
-        with {:ok, record} <- insert_record(repo, tenant_id, provider, message, suppression_flagged),
+        with {:ok, record} <-
+               insert_record(repo, tenant_id, provider, message, suppression_flagged),
              {:ok, evidence_row} <- insert_evidence(repo, tenant_id, provider, record, evidence) do
           {:ok,
            %{
