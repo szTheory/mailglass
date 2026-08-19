@@ -39,10 +39,10 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end)
   end
 
-  test "preflight derives active owned tags from the release target and converges every release state" do
+  test "preflight delegates exact tag derivation to the versioned policy owner and converges every release state" do
     source = workflow_source()
     preflight = extract_step_block!(source, "Detect already-tagged release PR")
-    policy = File.read!(Path.join(@repo_root, "scripts/release_policy_expected_tags.sh"))
+    policy = File.read!(Path.join(@repo_root, "scripts/release_policy.exs"))
 
     assert File.exists?(@manifest_path)
     assert preflight =~ ".release-please-manifest.json"
@@ -51,9 +51,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert preflight =~ "Active release target owns these tags"
     assert preflight =~ "release manifest is missing or unreadable"
     assert preflight =~ "release manifest yielded no expected release tags"
-    assert policy =~ "release_packages"
-    assert policy =~ "to_entries[]"
-    assert policy =~ "mailglass-v\\($version)"
+    assert policy =~ "def expected_tags"
+    assert policy =~ "def manifest_tags"
+    assert policy =~ "mailglass_inbound"
     assert preflight =~ "${#present_tags[@]}"
     assert preflight =~ "${#missing_tags[@]}"
 
@@ -249,20 +249,16 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert sync =~ "sync linked package pins to core $CORE_VERSION"
   end
 
-  test "release target is machine-validated before hands-free auto-merge" do
+  test "release target remains versioned and inactive until protected candidate capture" do
     source = workflow_source()
     validation = extract_step_block!(source, "Validate automated release target")
     target = Jason.decode!(File.read!(@release_target_path))
 
-    assert target == %{
-             "status" => "active",
-             "release_packages" => ["mailglass", "mailglass_admin"],
-             "packages" => %{
-               "mailglass" => "2.4.0",
-               "mailglass_admin" => "2.4.0",
-               "mailglass_inbound" => "2.1.1"
-             }
-           }
+    assert target["schema_version"] == 1
+    assert target["status"] == "inactive"
+    assert target["package_set"] == ["mailglass", "mailglass_admin", "mailglass_inbound"]
+    assert target["candidate_versions"] == nil
+    assert target["proposal_identity"] == %{"head_sha" => nil, "source_sha" => nil}
 
     assert validation =~ ".planning/release-target.json"
     assert validation =~ "release_packages"
