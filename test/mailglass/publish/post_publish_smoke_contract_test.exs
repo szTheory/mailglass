@@ -198,6 +198,27 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     refute job =~ "mix deps.get && mix compile"
   end
 
+  test "published trust journey executes the complete generated-host proof from exact Hex packages" do
+    workflow = File.read!(@workflow_path)
+    job = extract_job!(workflow, "published-trust-journey", "retracted-check")
+
+    assert_exact_hex_generated_proof!(job)
+
+    for mutation <- [
+          String.replace(job, "MAILGLASS_PACKAGE_MODE: exact_hex", "MAILGLASS_PACKAGE_MODE: path",
+            global: false
+          ),
+          String.replace(job, "MAILGLASS_EXACT_ADMIN_VERSION", "MAILGLASS_EXACT_CORE_VERSION",
+            global: false
+          ),
+          String.replace(job, "bash scripts/generated_ecto_host_proof.sh", "echo skipped",
+            global: false
+          )
+        ] do
+      assert_raise ExUnit.AssertionError, fn -> assert_exact_hex_generated_proof!(mutation) end
+    end
+  end
+
   test "target guard rejects arbitrary commits, content drift, and incomplete tag sets" do
     root =
       Path.join(
@@ -373,6 +394,25 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
       ],
       stderr_to_stdout: true
     )
+  end
+
+  defp assert_exact_hex_generated_proof!(job) do
+    assert job =~ "name: Execute 20-stage exact-Hex generated-host proof"
+    assert job =~ "MAILGLASS_PACKAGE_MODE: exact_hex"
+    assert job =~ "MAILGLASS_EXACT_CORE_VERSION: ${{ needs.cron-guard.outputs.version_core }}"
+    assert job =~ "MAILGLASS_EXACT_ADMIN_VERSION: ${{ needs.cron-guard.outputs.version_admin }}"
+
+    assert job =~
+             "MAILGLASS_EXACT_INBOUND_VERSION: ${{ needs.cron-guard.outputs.version_inbound }}"
+
+    assert job =~ "mailglass_generated_ecto_host_published_${{ github.run_id }}"
+    assert job =~ "bash scripts/generated_ecto_host_proof.sh"
+
+    assert_ordered!(job, [
+      "Boot disposable exact-Hex host and run nonvisual compatibility gate",
+      "Execute 20-stage exact-Hex generated-host proof",
+      "Execute exact-Hex trust journey"
+    ])
   end
 
   defp git!(directory, args) do
