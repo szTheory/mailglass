@@ -267,6 +267,31 @@ defmodule Mailglass.ReleasePolicy do
     end
   end
 
+  def cli(["capture-candidate", target_path, root, head_sha, source_sha, content_digest]) do
+    with {:ok, json} <- File.read(target_path),
+         {:ok, target} <- Jason.decode(json),
+         {:ok, target} <- validate_target(target),
+         :ok <- exact_value(target, "status", "inactive"),
+         {:ok, versions} <- source_versions(root),
+         :ok <- advances(target["baselines"], versions),
+         true <- sha1?(head_sha) and sha1?(source_sha) or error(:invalid_proposal),
+         true <- sha256?(content_digest) or error(:invalid_content) do
+      candidate = %{
+        "candidate_versions" => versions,
+        "proposal_identity" => %{"head_sha" => head_sha, "source_sha" => source_sha},
+        "publishable_content" => %{
+          "algorithm" => "sha256",
+          "digest" => content_digest,
+          "excludes" => [".planning/release-target.json"]
+        }
+      }
+
+      IO.puts(Jason.encode!(candidate))
+    else
+      _ -> System.halt(1)
+    end
+  end
+
   def cli(_), do: System.halt(1)
 
   defp lifecycle(target) do
