@@ -27,7 +27,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     source = workflow_source()
 
     assert extract_trigger_block!(source, "push") =~ "branches:\n      - main"
-    assert extract_trigger_block!(source, "workflow_dispatch") =~ "workflow_dispatch: {}"
+    assert extract_trigger_block!(source, "workflow_dispatch") =~ "candidate_digest:"
     assert extract_trigger_block!(source, "schedule") =~ "cron: \"17 * * * *\""
 
     Enum.each(["push", "workflow_dispatch", "schedule"], fn trigger ->
@@ -48,7 +48,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert preflight =~ ".release-please-manifest.json"
     assert preflight =~ ".planning/release-target.json"
     assert preflight =~ "scripts/release_policy_expected_tags.sh"
-    assert preflight =~ "Active release target owns these tags"
+    assert preflight =~ "Protected release target owns these tags"
     assert preflight =~ "release manifest is missing or unreadable"
     assert preflight =~ "release manifest yielded no expected release tags"
     assert policy =~ "def expected_tags"
@@ -99,7 +99,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       assert {output, 0} =
                System.cmd("bash", [script],
                  cd: @repo_root,
-                 env: Map.to_list(env),
+                 env: Map.to_list(Map.put(env, "CANDIDATE_DIGEST", String.duplicate("d", 64))),
                  stderr_to_stdout: true
                )
 
@@ -122,7 +122,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       assert {output, status} =
                System.cmd("bash", [script],
                  cd: temp_dir,
-                 env: Map.to_list(env),
+                 env: Map.to_list(Map.put(env, "CANDIDATE_DIGEST", String.duplicate("d", 64))),
                  stderr_to_stdout: true
                )
 
@@ -143,7 +143,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
         assert {_output, status} =
                  System.cmd("bash", [script],
                    cd: @repo_root,
-                   env: Map.to_list(env),
+                   env: Map.to_list(Map.put(env, "CANDIDATE_DIGEST", String.duplicate("d", 64))),
                    stderr_to_stdout: true
                  )
 
@@ -163,7 +163,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       assert {output, status} =
                System.cmd("bash", [script],
                  cd: @repo_root,
-                 env: Map.to_list(env),
+                 env: Map.to_list(Map.put(env, "CANDIDATE_DIGEST", String.duplicate("d", 64))),
                  stderr_to_stdout: true
                )
 
@@ -323,7 +323,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     schedule = extract_trigger_block!(source, "schedule")
 
     push =~ "branches:\n      - main" and
-      manual =~ "workflow_dispatch: {}" and
+      manual =~ "candidate_digest:" and
       schedule =~ "cron: \"17 * * * *\""
   end
 
@@ -423,7 +423,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
     System.cmd("bash", [script],
       cd: @repo_root,
-      env: Map.to_list(env),
+      # Historical tag recovery runs only for the protected dispatch path. The
+      # ordinary proposal path intentionally exits before it queries GitHub.
+      env: Map.to_list(Map.put_new(env, "CANDIDATE_DIGEST", String.duplicate("d", 64))),
       stderr_to_stdout: true
     )
   end
@@ -508,7 +510,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     action = extract_action_block!(source, "release")
 
     action =~ "uses: googleapis/release-please-action@" and
-      action =~ "if: ${{ steps.release-preflight.outputs.should_run == 'true' }}"
+      action =~ "steps.release-preflight.outputs.should_run == 'true'" and
+      action =~ "steps.protected-dispatch.outputs.content_verified == 'true'" and
+      action =~ "steps.protected-merge.outcome == 'success'"
   end
 
   defp extract_trigger_block!(source, trigger) do

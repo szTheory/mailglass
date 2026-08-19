@@ -15,7 +15,12 @@ on:
   #     when all expected tags already exist), so a no-op run is cheap and a
   #     merged-but-untagged release PR self-heals within the hour.
   # See CONTRIBUTING.md "If a release publishes but the tags/publish never fire".
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      candidate_digest:
+        description: "Protected exact candidate digest after dual authorization"
+        required: false
+        type: string
   schedule:
     - cron: "17 * * * *"
 
@@ -47,6 +52,8 @@ jobs:
           version-type: strict
       - name: Install deps for policy
         run: mix deps.get
+      - name: Compile policy runtime
+        run: mix compile
 
       # release-please reruns on a merged release PR can be stale if the
       # release was already tagged/published by an earlier run. That is the
@@ -67,6 +74,8 @@ jobs:
           # query rather than treating failed lookups as absent releases.
           GH_REPO: ${{ github.repository }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          EVENT_NAME: ${{ github.event_name }}
+          CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
         run: |
           set -euo pipefail
 
@@ -77,12 +86,18 @@ jobs:
             exit 1
           fi
 
-          if [ -r "$target" ] && [ "$(jq -r '.status // ""' "$target")" = "active" ]; then
+          if [ -z "${CANDIDATE_DIGEST:-}" ]; then
+            echo "Proposal mode bypasses historical baseline tag recovery."
+            echo "should_run=true" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -n "${CANDIDATE_DIGEST:-}" ]; then
             if ! expected_tags_text=$(scripts/release_policy_expected_tags.sh "$manifest" "$target"); then
-              echo "ERROR: active release target is invalid: $target" >&2
+              echo "ERROR: protected release target is invalid: $target" >&2
               exit 1
             fi
-            echo "Active release target owns these tags: ${expected_tags_text//$'\n'/,}"
+            echo "Protected release target owns these tags: ${expected_tags_text//$'\n'/,}"
           elif ! expected_tags_text=$(scripts/release_policy_expected_tags.sh "$manifest"); then
             echo "ERROR: release manifest is invalid: $manifest" >&2
             exit 1
@@ -150,6 +165,59 @@ jobs:
           echo "Release PR #$pr_number is not fully published yet; running release-please."
           echo "should_run=true" >>"$GITHUB_OUTPUT"
 
+      - name: Validate protected exact candidate dispatch
+        id: protected-dispatch
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.candidate_digest != '' }}
+        env:
+          CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          policy=$(mktemp)
+          mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-protected-dispatch .planning/release-target.json "$CANDIDATE_DIGEST" > "$policy"
+          candidate_digest=$(awk -F= '$1 == "candidate_digest" {print $2}' "$policy")
+          content_digest=$(awk -F= '$1 == "content_digest" {print $2}' "$policy")
+          proposal_head=$(awk -F= '$1 == "proposal_head" {print $2}' "$policy")
+          source_sha=$(awk -F= '$1 == "source_sha" {print $2}' "$policy")
+          [ "$candidate_digest" = "$CANDIDATE_DIGEST" ]
+          [[ "$candidate_digest" =~ ^[0-9a-f]{64}$ ]]
+          [[ "$content_digest" =~ ^[0-9a-f]{64}$ ]]
+          [[ "$proposal_head" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]]
+          prs=$(gh pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid)
+          [ "$(jq -er 'length' <<<"$prs")" -eq 1 ]
+          pr=$(jq -cer '.[0]' <<<"$prs")
+          number=$(jq -er '.number' <<<"$pr")
+          head=$(jq -er '.headRefOid' <<<"$pr")
+          source=$(jq -er '.baseRefOid' <<<"$pr")
+          [[ "$number" =~ ^[0-9]+$ ]]
+          [ "$head" = "$proposal_head" ]
+          [ "$source" = "$source_sha" ]
+          git fetch --no-tags origin "$proposal_head"
+          git checkout --detach "$proposal_head"
+          actual_digest=$(git ls-files -z | grep -zv '^\.planning/release-target\.json$' | LC_ALL=C sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}')
+          [ "$actual_digest" = "$content_digest" ]
+          printf 'authorized=true\ncandidate_digest=%s\ncontent_digest=%s\nproposal_head=%s\nsource_sha=%s\nnumber=%s\ncontent_verified=true\n' "$candidate_digest" "$content_digest" "$proposal_head" "$source_sha" "$number" >> "$GITHUB_OUTPUT"
+
+      - name: Protected exact candidate dispatch may merge only the validated release PR
+        id: protected-merge
+        if: ${{ steps.protected-dispatch.outputs.authorized == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NUMBER: ${{ steps.protected-dispatch.outputs.number }}
+          PROPOSAL_HEAD: ${{ steps.protected-dispatch.outputs.proposal_head }}
+          CANDIDATE_DIGEST: ${{ steps.protected-dispatch.outputs.candidate_digest }}
+          CONTENT_DIGEST: ${{ steps.protected-dispatch.outputs.content_digest }}
+        run: |
+          set -euo pipefail
+          gh pr merge "$NUMBER" --squash --match-head-commit "$PROPOSAL_HEAD" --repo "$GITHUB_REPOSITORY"
+          git fetch --no-tags origin main
+          git checkout --detach origin/main
+          merged_digest=$(git ls-files -z | grep -zv '^\.planning/release-target\.json$' | LC_ALL=C sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}')
+          [ "$merged_digest" = "$CONTENT_DIGEST" ]
+          mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-protected-dispatch .planning/release-target.json "$CANDIDATE_DIGEST" >/dev/null
+          echo "merge_tree_verified=true" >> "$GITHUB_OUTPUT"
+
       - id: release
         # DO NOT bump to v5 until Phase 13 release ceremony (per .planning/phases/08-release-engineering-hardening/08-CONTEXT.md D-08-26)
         # Rehearsed 2026-04-28: stay on the pinned v4 path for the v0.2.0 cut.
@@ -157,7 +225,7 @@ jobs:
         # release/published fan-out can trigger publish/smoke workflows.
         # Maintainers must still treat tag-pinned workflow_dispatch from the
         # release tag as the canonical fallback if downstream fan-out fails.
-        if: ${{ steps.release-preflight.outputs.should_run == 'true' }}
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && (github.event.inputs.candidate_digest == '' || (steps.protected-dispatch.outputs.authorized == 'true' && steps.protected-dispatch.outputs.content_verified == 'true' && steps.protected-merge.outputs.merge_tree_verified == 'true' && steps.protected-merge.outcome == 'success')) }}
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
         with:
           token: ${{ secrets.RELEASE_PLEASE_PAT }}
@@ -165,7 +233,7 @@ jobs:
           manifest-file: .release-please-manifest.json
           # Proposal mode only. This workflow may update a release PR but cannot
           # create a GitHub release or tag from an unreviewed candidate.
-          skip-github-release: true
+          skip-github-release: ${{ github.event.inputs.candidate_digest == '' }}
 
       - name: Capture Release Please proposal identity without activation
         if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release.outputs.prs_created == 'true' }}
