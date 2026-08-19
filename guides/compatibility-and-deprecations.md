@@ -1,11 +1,11 @@
 # Compatibility and Deprecations
 
-This guide is the canonical `1.x` compatibility, upgrade, and deprecation
+This guide is the canonical `2.x` compatibility, upgrade, and deprecation
 policy for Mailglass.
 
 Use this guide when you need to answer any of these questions:
 
-- Which Mailglass surfaces are the stable default path for `1.x`
+- Which Mailglass surfaces are the stable default path for `2.x`
 - Which older surfaces still work only as retained compatibility bridges
 - What a patch, minor, or major release may change
 - Which runtime, framework, database, and sibling-package combinations the
@@ -24,7 +24,7 @@ That inventory is the canonical stable/internal/deferred source for
 
 ## Contract shape
 
-Mailglass keeps a two-lane public posture for the `1.x` line:
+Mailglass keeps a two-lane public posture for the `2.x` line:
 
 - `stable lane`:
   [`Mailglass.deliver/2`](https://hexdocs.pm/mailglass/Mailglass.html#deliver/2),
@@ -36,14 +36,14 @@ Mailglass keeps a two-lane public posture for the `1.x` line:
   kept to make upgrades practical without promising that every historical path
   remains first-class forever
 
-If you are starting fresh on `1.x`, stay on the stable lane. The compatibility
-lane exists to help existing adopters land on `1.x` without rewriting
+If you are starting fresh on `2.x`, stay on the stable lane. The compatibility
+lane exists to help existing adopters land on `2.x` without rewriting
 everything in one release.
 
 ## Stable lane defaults
 
 The stable lane is the path maintainers intend adopters to build on throughout
-the `1.x` line.
+the `2.x` line.
 
 - Delivery entrypoint: `Mailglass.deliver*`
 - Message construction: native `Mailglass.Message` setters
@@ -53,7 +53,7 @@ the `1.x` line.
   `scripts/verify_support_contract.sh`
 
 The stable lane is the only lane that receives an affirmative compatibility
-promise across `1.x` minor releases.
+promise across `2.x` minor releases.
 
 ## Compatibility lane
 
@@ -61,14 +61,27 @@ The compatibility lane is intentionally small. A retained path stays here only
 when the repository still documents a replacement, warning behavior, and a
 support horizon.
 
-Examples of retained bridges for the `1.x` transition:
+The current v2 bridges are listed below. Every row names its present
+replacement and one concrete removal target; v2.6 does not remove any of them.
+
+| Compatibility surface | Status | Replacement | Removal target |
+| --- | --- | --- | --- |
+| `Mailglass.Message.new/2` | Status: deprecated in v2; compiler metadata emits a deprecation warning | Native `Mailglass.Message` setters from a mailable's `new/0` | Removal target: v3.0 |
+| `Mailglass.Outbound.send/2` | Status: compatibility-only in v2; retained without compiler metadata | Replacement: `Mailglass.deliver/2` | Removal target: v3.0 |
+| Raw `%Swoosh.Email{}` delivery | Status: compatibility-only in v2 | Build a `%Mailglass.Message{}` with native setters; use `update_swoosh/2` only for unsupported shaping | Removal target: v3.0 |
+| `mix mailglass.upgrade.v0_2` | Status: compatibility-only in v2 | Complete the canonical upgrade and keep new code on native setters | Removal target: v3.0 |
+| Legacy `Mailglass.SignatureError` atoms `:missing`, `:malformed`, and `:mismatch` | Status: compatibility-only in v2 | Pattern-match `:missing_header`, `:malformed_header`, and `:bad_signature` | Removal target: v3.0 |
+
+Historical repository-only `verify.phase_*` aliases are not package API. Use
+the semantic verification aliases named by `mix help`; repository maintenance
+may remove phase aliases independently of the adopter API lifecycle.
+
+The retained package bridges are:
 
 - `Mailglass.Message.new/2`
 - `Mailglass.Outbound.send/2`
 - delivering a raw `%Swoosh.Email{}`
 - the `mix mailglass.upgrade.v0_2` codemod
-- deprecated `verify.phase_*` aliases that forward to semantic verification
-  aliases for one release cycle
 
 Compatibility-lane support is not a promise that the older path remains the
 preferred API. It means the bridge still exists so adopters can migrate on a
@@ -78,7 +91,7 @@ controlled schedule.
 
 ### Patch releases
 
-Patch releases keep the documented `1.x` stable lane intact.
+Patch releases keep the documented `2.x` stable lane intact.
 
 Allowed in a patch release:
 
@@ -112,8 +125,8 @@ are true:
 ### Major releases
 
 Major releases may remove deprecated bridges, revise guarantees, or redesign
-the support matrix. If a path is only promised through `v2.0`, assume that
-removal can happen no earlier than the first `2.x` release.
+the support matrix. The active bridges above remain available throughout v2
+and have the explicit v3.0 removal target shown in the table.
 
 ## Security and correctness exception
 
@@ -137,7 +150,7 @@ Mailglass supports strict adopters that compile and test with
 `--warnings-as-errors`.
 
 - Paths with explicit `@deprecated` metadata should be treated as migration work
-  you should schedule before tightening your `1.x` adoption baseline
+  you should schedule before tightening your `2.x` adoption baseline
 - Silent legacy bridges may remain temporarily when this guide still documents
   them as compatibility-lane surfaces with a support horizon
 - New code should prefer the stable lane even when a compatibility bridge still
@@ -154,7 +167,7 @@ This table is intentionally narrow. A row belongs here only if the repository
 proves it today through `mix.exs`, `mailglass_admin/mix.exs`,
 `scripts/verify_support_contract.sh`, or `.github/workflows/ci.yml`.
 
-| Surface | Supported `1.x` posture | Proof artifact |
+| Surface | Supported `2.x` posture | Proof artifact |
 | --- | --- | --- |
 | Elixir | `~> 1.18` | `mix.exs`, `mailglass_admin/mix.exs`, `.github/workflows/ci.yml` |
 | OTP | `27+` | `.github/workflows/ci.yml` |
@@ -163,7 +176,7 @@ proves it today through `mix.exs`, `mailglass_admin/mix.exs`,
 | Ecto / Ecto SQL | `~> 3.13` | `mix.exs` |
 | PostgreSQL | 14+ for the documented contract; CI proves Postgres 16 and the repo requires trigger support | `README.md`, `mix.exs`, `.github/workflows/ci.yml` |
 | `mailglass_admin` | matched release line with the core package | `mailglass_admin/mix.exs` |
-| `mailglass_inbound` | independent `1.0` contract; see `mailglass_inbound/docs/api_stability.md` | `mailglass_inbound/docs/api_stability.md` |
+| `mailglass_inbound` | independent `2.x` contract and release line; see `mailglass_inbound/docs/api_stability.md` | `mailglass_inbound/docs/api_stability.md` |
 
 ### Optional dependency lanes
 
@@ -179,11 +192,11 @@ the minimum runtime floor.
 Those integrations are documented and compiled as optional dependencies in
 `mix.exs`. They are supported when present in a compatible adopter app, but the
 repo does not claim that every project must install them to remain inside the
-core `1.x` contract.
+core `2.x` contract.
 
 ## Sibling-package policy
 
-`mailglass` and `mailglass_admin` ship as matched siblings. For the `1.x`
+`mailglass` and `mailglass_admin` ship as matched siblings. For the `2.x`
 contract, use matched release lines unless a future guide explicitly documents a
 different compatibility window.
 
@@ -214,15 +227,15 @@ tests. Reachability is not a compatibility promise.
 
 | Surface | Bridge or replacement | Warning or migration channel | `--warnings-as-errors` impact | Support-until horizon | Proof artifact |
 | --- | --- | --- | --- | --- | --- |
-| `MailglassInbound.Ingress.CachingBodyReader` + required endpoint `body_reader` wiring | Keep stable path and preserve `MailglassInbound.Ingress.CachingBodyReader` semantics | Release notes + docs updates in README/install/operator guides | Missing or changed wiring can fail strict docs/support lanes; no silent compatibility fallback is promised | Through `mailglass_inbound` `1.x`; semantic break requires a deprecation bridge or a `mailglass_inbound` major-version change | `mailglass_inbound/docs/api_stability.md`, `mailglass_inbound/README.md`, `mailglass_inbound/docs/inbound-install.md`, `cd mailglass_inbound && mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors` |
-| `MailglassInbound.Router` + `MailglassInbound.Mailbox` contract (`process/1` outcomes) | Keep stable callback and documented matcher/outcome semantics; any narrowing requires a deprecation bridge or major change | Release notes + contract docs; docs-contract drift checks | Strict adopters fail on drift in docs-contract/support-contract lanes | Through `mailglass_inbound` `1.x`; semantic break requires a deprecation bridge or a `mailglass_inbound` major-version change | `mailglass_inbound/docs/api_stability.md`, `mix verify.stability_contract` |
-| `mix mailglass.inbound.doctor`, `mix mailglass.inbound.replay`, `mix mailglass.inbound.prune` command semantics | Preserve documented flags, tenant guards, confirmations, and exit semantics; internal modules remain non-contract | Operator guide updates + release notes | Strict adopters can fail docs lanes if command-semantics contract wording drifts | Through `mailglass_inbound` `1.x`; semantic break requires a deprecation bridge or a `mailglass_inbound` major-version change | `mailglass_inbound/docs/inbound-operator.md`, `mailglass_inbound/docs/api_stability.md`, `mix mailglass.docs.check` |
+| `MailglassInbound.Ingress.CachingBodyReader` + required endpoint `body_reader` wiring | Keep stable path and preserve `MailglassInbound.Ingress.CachingBodyReader` semantics | Release notes + docs updates in README/install/operator guides | Missing or changed wiring can fail strict docs/support lanes; no silent compatibility fallback is promised | Through `mailglass_inbound` `2.x`; semantic break requires a deprecation bridge or a `mailglass_inbound` major-version change | `mailglass_inbound/docs/api_stability.md`, `mailglass_inbound/README.md`, `mailglass_inbound/docs/inbound-install.md`, `cd mailglass_inbound && mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors` |
+| `MailglassInbound.Router` + `MailglassInbound.Mailbox` contract (`process/1` outcomes) | Keep stable callback and documented matcher/outcome semantics; any narrowing requires a deprecation bridge or major change | Release notes + contract docs; docs-contract drift checks | Strict adopters fail on drift in docs-contract/support-contract lanes | Through `mailglass_inbound` `2.x`; semantic break requires a deprecation bridge or a `mailglass_inbound` major-version change | `mailglass_inbound/docs/api_stability.md`, `mix verify.stability_contract` |
+| `mix mailglass.inbound.doctor`, `mix mailglass.inbound.replay`, `mix mailglass.inbound.prune` command semantics | Preserve documented flags, tenant guards, confirmations, and exit semantics; internal modules remain non-contract | Operator guide updates + release notes | Strict adopters can fail docs lanes if command-semantics contract wording drifts | Through `mailglass_inbound` `2.x`; semantic break requires a deprecation bridge or a `mailglass_inbound` major-version change | `mailglass_inbound/docs/inbound-operator.md`, `mailglass_inbound/docs/api_stability.md`, `mix mailglass.docs.check` |
 
 ## What this guide does not promise
 
 This guide does not promise:
 
-- `mailglass_inbound`'s contract within the `mailglass` / `mailglass_admin` `1.x` line covered here; `mailglass_inbound` has its own independent contract documented in `mailglass_inbound/docs/api_stability.md`
+- `mailglass_inbound`'s contract within the matched `mailglass` / `mailglass_admin` line; `mailglass_inbound` has its own independent contract documented in `mailglass_inbound/docs/api_stability.md`
 - broader Elixir, OTP, Phoenix, LiveView, Ecto, or Postgres ranges than the
   repository currently proves
 - that every exported or reachable function is stable
@@ -232,13 +245,14 @@ This guide does not promise:
 
 - Starting a new integration: stay on `Mailglass.deliver*` and native
   `Mailglass.Message` setters
-- Upgrading from `0.x`: use the canonical
-  [`guides/upgrading-to-v1_0.md`](upgrading-to-v1_0.md) path and treat older
-  migration guides as subordinate references
+- Upgrading from `0.x`: the historical independent `1.0` contract and its
+  canonical migration remain documented in
+  [`guides/upgrading-to-v1_0.md`](upgrading-to-v1_0.md); treat older migration
+  guides as subordinate references
 - Checking public surface promises: pair this guide with
   [`docs/api_stability.md`](../docs/api_stability.md) and
   [`mailglass_admin/docs/api_stability.md`](../mailglass_admin/docs/api_stability.md)
 - Verifying repo truth: run `scripts/verify_support_contract.sh`
 
 If a compatibility claim is not documented here or in the package stability
-inventories, do not assume it is part of the `1.x` promise.
+inventories, do not assume it is part of the `2.x` promise.

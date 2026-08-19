@@ -648,6 +648,11 @@ defmodule MailglassInbound.DocsContractTest do
     install = File.read!(@install_path)
 
     assert inbound_v26_contract_errors(stability, install) == []
+    assert Mix.Task.get("mailglass.inbound.gen.migration")
+    assert Code.ensure_loaded?(MailglassInbound.Migration)
+    assert function_exported?(MailglassInbound.Migration, :up, 1)
+    assert function_exported?(MailglassInbound.Migration, :down, 1)
+    assert function_exported?(MailglassInbound.Migration, :migrated_version, 1)
   end
 
   test "v2.6 negative controls reject missing ownership and fabricated lifecycle claims" do

@@ -41,12 +41,19 @@ mix deps.get
 ## 2. Run the migrations
 
 `mailglass_inbound` manages its own tables: normalized inbound records, raw
-evidence, and append-only execution lineage. Run the package migrations after
-fetching deps:
+evidence, and append-only execution lineage. Generate its Repo-explicit wrapper,
+review it, and then run the host migrations:
 
 ```bash
+mix mailglass.inbound.gen.migration --repo MyApp.Repo
 mix ecto.migrate
 ```
+
+The wrapper calls `MailglassInbound.Migration.up/1` and
+`MailglassInbound.Migration.down/1`. The facade resolves the explicit Repo and
+the inbound prefix; it does not reuse core's migration anchor. Initial wrappers
+are immutable. When a later package schema version needs a populated upgrade,
+generate a separate `--upgrade` wrapper instead of editing the initial file.
 
 ## 3. Configure the repository
 
@@ -156,8 +163,12 @@ forward "/inbound/:tenant_id/sendgrid",
   router: MyApp.MailglassInboundRouter
 ```
 
-The stable provider lanes in this slice are `:postmark` and `:sendgrid`.
-Mailgun and SES guides are integration references and are not part of the current stable provider contract.
+The four stable provider lanes are `:postmark`, `:sendgrid`, `:mailgun`, and `:ses`.
+The provider modules themselves remain internal; adopters configure the
+provider option on `MailglassInbound.Ingress.Plug` and follow the package guides.
+
+> Historical v2.0 note: “The stable provider lanes in this slice are `:postmark` and `:sendgrid`.” At that time, Mailgun and SES guides were integration references and “not part of the current stable provider contract.”
+> That statement is retained only as provenance; the four-lane sentence above is current.
 
 ## 8. Configure your provider
 

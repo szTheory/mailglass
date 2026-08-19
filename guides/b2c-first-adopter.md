@@ -132,7 +132,7 @@ Before the first paid subscription:
 4. Accrue's Stripe test-mode paths cover payment success, failure, action required, recovery, and missing tax location using [Stripe's subscription webhook state](https://docs.stripe.com/billing/subscriptions/webhooks) as authority.
 5. The host can replace a hard-bounced or complained-about email address through a separately verified recovery path.
 6. Production inbound processing uses Oban. The Task supervisor fallback is not durable enough for a production support mailbox.
-7. The operator dashboard visibly advances provider status and suppression evidence without a browser reload.
+7. A background check or alert consumes durable provider status and suppression evidence; launch does not depend on an admin or operator UI.
 
 ## Evidence that justifies more Mailglass
 
