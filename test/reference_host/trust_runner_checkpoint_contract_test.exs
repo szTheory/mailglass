@@ -15,6 +15,28 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
   @row_hash_contract "stage|status|fixture_id"
   @stage_order ["install", "preview", "send", "webhook_ingest", "operator_troubleshooting"]
   @generated_host_script_path Path.expand("../../scripts/generated_ecto_host_proof.sh", __DIR__)
+  @workspace_inbound_root Path.expand("../../mailglass_inbound", __DIR__)
+  @workspace_inbound_ebin Path.join(
+                            @workspace_inbound_root,
+                            "_build/test/lib/mailglass_inbound/ebin"
+                          )
+
+  setup_all do
+    {output, exit_code} =
+      System.cmd("mix", ["compile", "--warnings-as-errors"],
+        cd: @workspace_inbound_root,
+        stderr_to_stdout: true,
+        env: [
+          {"MIX_ENV", "test"},
+          {"MIX_BUILD_PATH", nil},
+          {"MIX_DEPS_PATH", nil}
+        ]
+      )
+
+    assert exit_code == 0, "workspace inbound compile failed:\n#{output}"
+    assert File.dir?(@workspace_inbound_ebin)
+    :ok
+  end
 
   test "two dry runs emit deterministic equivalent checkpoints with stable hash" do
     checkpoint_dir = Path.join(@project_root, "tmp/mailglass_trust_runner")
@@ -30,7 +52,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
                ["verify.reference_host.journey", "--dry-run", "--checkpoint-out", checkpoint_1],
                cd: @project_root,
                stderr_to_stdout: true,
-               env: [{"MIX_ENV", "test"}]
+               env: workspace_runner_env()
              )
 
     assert {_, 0} =
@@ -39,7 +61,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
                ["verify.reference_host.journey", "--dry-run", "--checkpoint-out", checkpoint_2],
                cd: @project_root,
                stderr_to_stdout: true,
-               env: [{"MIX_ENV", "test"}]
+               env: workspace_runner_env()
              )
 
     payload_1 = decode!(checkpoint_1)
@@ -103,7 +125,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
                ["verify.reference_host.journey", "--checkpoint-out", checkpoint],
                cd: @project_root,
                stderr_to_stdout: true,
-               env: [{"MIX_ENV", "test"}]
+               env: workspace_runner_env()
              )
 
     payload = decode!(checkpoint)
@@ -134,7 +156,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
                ["verify.reference_host.journey", "--checkpoint-out", valid_checkpoint],
                cd: @project_root,
                stderr_to_stdout: true,
-               env: [{"MIX_ENV", "test"}]
+               env: workspace_runner_env()
              )
 
     payload =
@@ -218,5 +240,13 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
     |> Enum.join("\n")
     |> then(&:crypto.hash(:sha256, &1))
     |> Base.encode16(case: :lower)
+  end
+
+  defp workspace_runner_env do
+    [
+      {"MIX_ENV", "test"},
+      {"MAILGLASS_REFERENCE_HOST_PACKAGE_MODE", "workspace"},
+      {"MAILGLASS_INBOUND_WORKSPACE_EBIN", @workspace_inbound_ebin}
+    ]
   end
 end

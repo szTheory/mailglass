@@ -23,6 +23,20 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
 
   @all_stages @fresh_delivery_stages ++ @boundary_stages
 
+  @checkpoint_observations %{
+    "fresh_install" =>
+      "SELECT sequence, package FROM public.generated_host_install_order ORDER BY sequence",
+    "sync_send" => "SELECT d.status, count(e.id) FROM mailglass_core.mailglass_deliveries",
+    "atomic_enqueue" => "generated_host_atomic_enqueue_failure",
+    "worker_run" => "state == \"completed\"",
+    "persisted_outcome" => "SELECT d.status, d.last_event_type, d.provider_message_id",
+    "custom_modules" => "Host.GeneratedHostTenancy.resolve_outbound_adapter_ref",
+    "multi_repo_prefixes" => "SELECT count(*) FROM information_schema.tables",
+    "upgrade" => "generated upgrade indexes are missing or invalid",
+    "rollback" => "additive rollback removed prior relation",
+    "idempotent_rerun" => "SELECT to_regclass($mg$public.generated_host_marker$mg$)::text"
+  }
+
   @required_script_snippets [
     "mix phx.new host --module Host --app host",
     "config :mailglass, repo: Host.Repo",
@@ -49,6 +63,12 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     "inbound invalid-index retry did not converge",
     "inspect(Path.join(path, \"mailglass_inbound\"))",
     "mix ecto.rollback -r Host.Repo",
+    "run_generator \"${first_package}\" \"${journey_url}\"",
+    "run_generator \"${second_package}\" \"${journey_url}\"",
+    "migrate_package \"${first_package}\" \"${journey_url}\" 1",
+    "migrate_package \"${second_package}\" \"${journey_url}\" 2",
+    "public.generated_host_install_order",
+    "generated_host_atomic_enqueue_failure",
     "run_journey core_first core inbound",
     "run_journey inbound_first inbound core",
     "${SCRATCH_DATABASE}_${journey_name}",
@@ -145,14 +165,17 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
            "the proof must exercise generated package wrappers, not hand-write package DDL"
   end
 
-  test "negative controls prove every public host-proof anchor is load-bearing" do
+  test "runtime checkpoints have load-bearing observable state controls" do
     source = File.read!(@script_path)
 
-    Enum.each(@required_script_snippets, fn snippet ->
-      mutated = String.replace(source, snippet, "")
+    Enum.each(@checkpoint_observations, fn {stage, observation} ->
+      assert_runtime_checkpoint_observation!(source, stage, observation)
 
-      refute Enum.all?(@required_script_snippets, &String.contains?(mutated, &1)),
-             "removing #{inspect(snippet)} must invalidate the proof contract"
+      assert_raise ExUnit.AssertionError, fn ->
+        source
+        |> String.replace(observation, "removed observation", global: false)
+        |> assert_runtime_checkpoint_observation!(stage, observation)
+      end
     end)
   end
 
@@ -164,6 +187,12 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     assert source =~ "mailglass.inbound.gen.migration --repo Host.InboundRepo"
     assert source =~ "run_journey core_first core inbound"
     assert source =~ "run_journey inbound_first inbound core"
+    assert source =~ "run_generator \"${first_package}\" \"${journey_url}\""
+    assert source =~ "run_generator \"${second_package}\" \"${journey_url}\""
+    assert source =~ "migrate_package \"${first_package}\" \"${journey_url}\" 1"
+    assert source =~ "migrate_package \"${second_package}\" \"${journey_url}\" 2"
+    refute source =~ "run_generator core \"${journey_url}\""
+    refute source =~ "run_generator inbound \"${journey_url}\""
     assert source =~ "FIRST_ROLLBACK_PACKAGE"
     assert source =~ "5 = Mailglass.Migration.migrated_version"
     assert source =~ "1 = MailglassInbound.Migration.migrated_version"
@@ -223,6 +252,18 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     assert source =~ "mktemp -d \"${TMPDIR:-/tmp}/mailglass-generated-ecto-host.XXXXXX\""
     assert source =~ "rm -rf \"${WORK_DIR}\""
     refute source =~ "rm -rf \"${HOST_DIR}\""
+  end
+
+  defp assert_runtime_checkpoint_observation!(source, stage, observation) do
+    checkpoint = ~s(checkpoint "${journey_name}" #{stage})
+    assert source =~ observation, "#{stage} is missing runtime observation #{inspect(observation)}"
+    assert source =~ checkpoint, "#{stage} checkpoint is missing"
+
+    {observation_offset, _} = :binary.match(source, observation)
+    {checkpoint_offset, _} = :binary.match(source, checkpoint)
+
+    assert observation_offset < checkpoint_offset,
+           "#{stage} checkpoint must follow its observable runtime/database assertion"
   end
 
   defp assert_checkpoint_result(rows, expected) do

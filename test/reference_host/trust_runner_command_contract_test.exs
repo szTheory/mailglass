@@ -6,6 +6,10 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
   @readme_path Path.expand("../../reference/host_app/README.md", __DIR__)
   @scope_path Path.expand("../../reference/host_app/SCOPE.md", __DIR__)
   @generated_host_script_path Path.expand("../../scripts/generated_ecto_host_proof.sh", __DIR__)
+  @webhook_proof_path Path.expand(
+                        "../../dev/mailglass/reference_host/webhook_operator_proof.ex",
+                        __DIR__
+                      )
   @claim_boundary "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
 
   test "JOUR-01 canonical command and deterministic stages are pinned" do
@@ -107,6 +111,21 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
       assert String.contains?(source, token),
              "REL-01 generated-host command is missing #{inspect(token)}"
     end
+  end
+
+  test "REL-01 trust proof selects one coherent inbound package provenance" do
+    source = File.read!(@webhook_proof_path)
+
+    assert source =~ "MAILGLASS_REFERENCE_HOST_PACKAGE_MODE"
+    assert source =~ "MAILGLASS_INBOUND_WORKSPACE_EBIN"
+    assert source =~ "add_workspace_inbound_code_path!"
+    assert source =~ ~s("workspace")
+    assert source =~ ~s("published")
+
+    refute source =~ "require_local_ingress_plug!"
+    refute source =~ "ingress/verified_request.ex"
+    refute source =~ "ingress/pipeline.ex"
+    refute source =~ "ports/core.ex"
   end
 
   defp token_present?(files_with_content, token) do
