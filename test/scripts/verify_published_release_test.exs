@@ -296,6 +296,13 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
     assert {oversized_output, oversized_status} = run(context, %{artifact_zip: oversized_zip})
     assert oversized_status != 0
     assert oversized_output =~ "uncompressed publication proof exceeds the size limit"
+
+    forged_zip = Path.join(context.root, "forged-size-proof.zip")
+    write_proof_zip!(forged_zip, String.duplicate(" ", 1_048_577))
+    forge_zip_uncompressed_size!(forged_zip, 64)
+    assert {forged_output, forged_status} = run(context, %{artifact_zip: forged_zip})
+    assert forged_status != 0
+    assert forged_output =~ "extracted publication proof exceeds the size limit"
   end
 
   test "fails closed on partial, ambiguous, retired, mismatched, or unavailable Hex evidence",
@@ -416,6 +423,24 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
     body = if is_binary(proof), do: proof, else: Jason.encode!(proof)
     {:ok, _} = :zip.create(String.to_charlist(path), [{~c"phase-148.json", body}])
     path
+  end
+
+  defp forge_zip_uncompressed_size!(path, declared_size) do
+    binary = File.read!(path)
+
+    forged =
+      binary
+      |> replace_zip_le32!(<<0x50, 0x4B, 0x03, 0x04>>, 22, declared_size)
+      |> replace_zip_le32!(<<0x50, 0x4B, 0x01, 0x02>>, 24, declared_size)
+
+    File.write!(path, forged)
+  end
+
+  defp replace_zip_le32!(binary, signature, field_offset, value) do
+    {header_offset, _length} = :binary.match(binary, signature)
+    offset = header_offset + field_offset
+    <<prefix::binary-size(offset), _old::little-unsigned-32, suffix::binary>> = binary
+    <<prefix::binary, value::little-unsigned-32, suffix::binary>>
   end
 
   defp valid_release(package, id) do
