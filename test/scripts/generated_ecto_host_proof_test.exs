@@ -182,6 +182,17 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
            "the proof must exercise generated package wrappers, not hand-write package DDL"
   end
 
+  test "generated Ecto host proof uses baseline runner tools only" do
+    source = File.read!(@script_path)
+
+    refute Regex.match?(~r/(?:^|[|;&]\s*|\s)rg\s/, source),
+           "the adopter proof must not require ripgrep on a stock CI runner"
+
+    assert source =~ "grep -Eq '^[0-9a-f-]{36}$'"
+    assert source =~ "grep -REq 'create table\\(:mailglass_"
+    assert source =~ "grep -Eq '@disable_ddl_transaction true'"
+  end
+
   test "package resolution preserves local-path default and fails closed in exact-Hex mode" do
     source = File.read!(@script_path)
 

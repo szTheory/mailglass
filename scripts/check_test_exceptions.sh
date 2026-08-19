@@ -16,7 +16,7 @@ registry_sources="$(elixir -e '
   end)
 ' "$registry" | sort)"
 
-found_sources="$(rg -n '^[[:space:]]*@tag :(skip|flaky)|Process\.sleep\(|pg_sleep\(' test/mailglass mailglass_inbound/test | sed -E 's/^([^:]+:[0-9]+):.*/\1/' | sort)"
+found_sources="$(grep -REn '^[[:space:]]*@tag :(skip|flaky)|Process\.sleep\(|pg_sleep\(' test/mailglass mailglass_inbound/test | sed -E 's/^([^:]+:[0-9]+):.*/\1/' | sort)"
 
 test "$registry_sources" = "$found_sources" || {
   echo "test exception registry drift" >&2
