@@ -22,7 +22,7 @@ Active v2 deprecations: none. v3 removal targets: none. A future inbound
 deprecation must name its replacement and major-version horizon here before a
 stable seam can be narrowed.
 
-The extracted `MailglassInbound.Ingress.Pipeline` remains internal, along with
+The extracted <code>MailglassInbound.Ingress&#46;Pipeline</code> ingress pipeline remains internal, along with
 provider implementations, persistence collaborators, workers, queues, and
 optional-dependency adapters. The public HTTP seam remains
 `MailglassInbound.Ingress.Plug`; the architecture extraction did not widen the
@@ -120,7 +120,7 @@ or used by first-party packages, but they are implementation details:
 - `MailglassInbound.Ingress.Providers.Mailgun`
 - `MailglassInbound.Ingress.Providers.SES`
 - `MailglassInbound.Ingress.Persist`
-- `MailglassInbound.Ingress.Pipeline`
+- package-local ingress pipeline orchestration
 - `MailglassInbound.Internal.Doctor`
 - `MailglassInbound.Internal.Replay`
 - `MailglassInbound.Internal.Prune`

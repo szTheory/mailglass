@@ -42,7 +42,7 @@ added or extended during the v2.6 engineering work:
   and `context`.
 
 The public configuration entrypoint remains `Mailglass.Config`. The extracted
-`Mailglass.Runtime` remains internal, as do the outbound preflight, routing,
+<code>Mailglass&#46;Runtime</code> runtime configuration owner remains internal, as do the outbound preflight, routing,
 persistence, dispatch, webhook pipeline, PubSub port, and suppression port
 collaborators. Their existence does not create new adopter interfaces.
 
