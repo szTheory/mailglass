@@ -417,7 +417,9 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
   test "proposal capture runs after synchronization and is the sole release-target policy path" do
     release = File.read!(@release_please)
-    capture = extract_step_script!(release, "Capture Release Please proposal identity without activation")
+
+    capture =
+      extract_step_script!(release, "Capture Release Please proposal identity without activation")
 
     assert step_precedes?(
              release,
@@ -437,7 +439,13 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert capture =~ "source_target=$(mktemp)"
     assert capture =~ "git show \"$source_sha\":.planning/release-target.json > \"$source_target\""
     assert capture =~ "capture-candidate \"$source_target\" ."
-    assert appears_before?(capture, "git show \"$source_sha\":.planning/release-target.json", "git checkout --detach")
+
+    assert appears_before?(
+             capture,
+             "git show \"$source_sha\":.planning/release-target.json",
+             "git checkout --detach"
+           )
+
     refute capture =~ "capture-candidate .planning/release-target.json"
     refute release =~ "release_packages=$(jq"
     refute release =~ "Phase 148 must publish exactly"

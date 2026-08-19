@@ -28,13 +28,14 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      # Scheduled and manual recovery runs have no workspace by default. Check
-      # out the triggering revision before preflight reads the manifest; the
-      # action's default ref is the event SHA/ref for each trigger type.
-      - name: Checkout triggering revision for release preflight
+      # Every trigger reads release policy from the protected default branch.
+      # In particular, workflow_dispatch callers cannot select a branch whose
+      # release-target ledger authorizes itself.
+      - name: Checkout protected main for release preflight
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          fetch-depth: 1
+          ref: refs/heads/main
+          fetch-depth: 0
 
       # Policy wrappers are Mix programs. Install the pinned runtime and deps
       # before any wrapper is called so their stdout is policy output only.
@@ -166,12 +167,23 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          current_main_sha=$(git rev-parse origin/main)
+          [ "$(git rev-parse HEAD)" = "$current_main_sha" ]
+          control_target=$(mktemp)
+          cp .planning/release-target.json "$control_target"
+
           policy=$(mktemp)
-          mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-protected-dispatch .planning/release-target.json "$CANDIDATE_DIGEST" > "$policy"
+          mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-protected-dispatch "$control_target" "$CANDIDATE_DIGEST" > "$policy"
           candidate_digest=$(awk -F= '$1 == "candidate_digest" {print $2}' "$policy")
           content_digest=$(awk -F= '$1 == "content_digest" {print $2}' "$policy")
           proposal_head=$(awk -F= '$1 == "proposal_head" {print $2}' "$policy")
           source_sha=$(awk -F= '$1 == "source_sha" {print $2}' "$policy")
+          authorized_versions=$(mktemp)
+          mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- authorized-versions "$control_target" > "$authorized_versions"
+          core=$(awk -F= '$1 == "core" {print $2}' "$authorized_versions")
+          admin=$(awk -F= '$1 == "admin" {print $2}' "$authorized_versions")
+          inbound=$(awk -F= '$1 == "inbound" {print $2}' "$authorized_versions")
           [ "$candidate_digest" = "$CANDIDATE_DIGEST" ]
           [[ "$candidate_digest" =~ ^[0-9a-f]{64}$ ]]
           [[ "$content_digest" =~ ^[0-9a-f]{64}$ ]]
@@ -182,22 +194,29 @@ jobs:
           pr=$(jq -cer '.[0]' <<<"$prs")
           number=$(jq -er '.number' <<<"$pr")
           head=$(jq -er '.headRefOid' <<<"$pr")
-          source=$(jq -er '.baseRefOid' <<<"$pr")
+          base=$(jq -er '.baseRefOid' <<<"$pr")
           [[ "$number" =~ ^[0-9]+$ ]]
           [ "$head" = "$proposal_head" ]
-          [ "$source" = "$source_sha" ]
-          git fetch --no-tags origin main "$source_sha"
-          git merge-base --is-ancestor "$source_sha" origin/main
+          [ "$base" = "$current_main_sha" ]
+          git fetch --no-tags origin "$source_sha" "$proposal_head"
+          git merge-base --is-ancestor "$source_sha" "$current_main_sha"
           # Planning/authorization commits may advance main; package content may
           # not. A changed publishable set requires a newly captured candidate.
           source_content_digest=$(scripts/release_policy_content_digest.sh --ref "$source_sha")
-          main_content_digest=$(scripts/release_policy_content_digest.sh --ref origin/main)
+          main_content_digest=$(scripts/release_policy_content_digest.sh --ref "$current_main_sha")
           [ "$source_content_digest" = "$main_content_digest" ]
-          [ "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main/protection/required_status_checks" --jq '.strict')" = true ]
-          git fetch --no-tags origin "$proposal_head"
+
+          # GitHub enforces required checks and strict base freshness when the
+          # exact-head merge below reaches the protected branch. Avoid a brittle
+          # branch-protection API read that GITHUB_TOKEN cannot reliably perform.
           git checkout --detach "$proposal_head"
           actual_digest=$(scripts/release_policy_content_digest.sh)
           [ "$actual_digest" = "$content_digest" ]
+          proposal_versions=$(mktemp)
+          scripts/release_policy_validate_target.sh "$control_target" "mailglass-v${core}" . > "$proposal_versions"
+          grep -Fqx "core=$core" "$proposal_versions"
+          grep -Fqx "admin=$admin" "$proposal_versions"
+          grep -Fqx "inbound=$inbound" "$proposal_versions"
           printf 'authorized=true\ncandidate_digest=%s\ncontent_digest=%s\nproposal_head=%s\nsource_sha=%s\nnumber=%s\ncontent_verified=true\n' "$candidate_digest" "$content_digest" "$proposal_head" "$source_sha" "$number" >> "$GITHUB_OUTPUT"
 
       - name: Protected exact candidate dispatch may merge only the validated release PR
@@ -385,11 +404,13 @@ jobs:
           source_sha=$(jq -er '.baseRefOid' <<<"$proposal")
           [[ "$proposal_head" =~ ^[0-9a-f]{40}$ ]]
           [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]]
-          git fetch --no-tags origin "$proposal_head"
+          git fetch --no-tags origin "$source_sha" "$proposal_head"
+          source_target=$(mktemp)
+          git show "$source_sha":.planning/release-target.json > "$source_target"
           git checkout --detach "$proposal_head"
           digest=$(scripts/release_policy_content_digest.sh)
           mkdir -p .planning/release-candidates
-          mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- capture-candidate .planning/release-target.json . "$proposal_head" "$source_sha" "$digest" > .planning/release-candidates/proposal-candidate.json
+          mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- capture-candidate "$source_target" . "$proposal_head" "$source_sha" "$digest" > .planning/release-candidates/proposal-candidate.json
           jq -e '.candidate_versions.mailglass == .candidate_versions.mailglass_admin' .planning/release-candidates/proposal-candidate.json >/dev/null
           echo "captured=true" >> "$GITHUB_OUTPUT"
           printf '%s\n' "proposal candidate captured after sibling synchronization"

@@ -82,6 +82,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     source = workflow_source()
     preflight = extract_step_block!(source, "Detect already-tagged release PR")
 
+    assert source =~ "- name: Checkout protected main for release preflight"
+    assert source =~ "ref: refs/heads/main"
+    assert source =~ "fetch-depth: 0"
     assert preflight =~ "GH_REPO: ${{ github.repository }}"
     assert preflight =~ "gh api --include \"repos/${GH_REPO}/releases/tags/${tag}\""
     assert checkout_precedes_preflight?(source)
@@ -426,7 +429,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
   defp checkout_precedes_preflight?(source) do
     case {
-      :binary.match(source, "- name: Checkout triggering revision for release preflight"),
+      :binary.match(source, "- name: Checkout protected main for release preflight"),
       :binary.match(source, "- name: Detect already-tagged release PR")
     } do
       {{checkout, _}, {preflight, _}} -> checkout < preflight
