@@ -130,10 +130,24 @@ jobs:
           PACKAGE: ${{ github.event.inputs.package }}
         run: |
           set -euo pipefail
+          digest="${CANDIDATE_DIGEST:-}"
+
+          # Release events and legacy digest-free dispatches are deliberately
+          # inert. A requested rehearsal without a candidate is an error rather
+          # than a misleading successful dry run. Keep this before any checkout
+          # or policy work so compatibility events remain a true no-op.
+          if [ "${EVENT_NAME:-}" != workflow_dispatch ] || [ -z "$digest" ]; then
+            if [ "${EVENT_NAME:-}" = workflow_dispatch ] && [ "${DRY_RUN:-}" = true ]; then
+              echo "ERROR: protected dry-run requires candidate_digest" >&2
+              exit 1
+            fi
+            printf 'active=false\nauthorized=false\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           candidate_root="$GITHUB_WORKSPACE"
           control_root="$GITHUB_WORKSPACE/trusted-control"
           control_target="$control_root/.planning/release-target.json"
-          digest="${CANDIDATE_DIGEST:-}"
 
           # Fail closed if protected main advanced while the control checkout
           # was materialized. A retry gets one coherent policy/ledger snapshot.
@@ -146,18 +160,6 @@ jobs:
               mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "$@"
             )
           }
-
-          # Release events and legacy digest-free dispatches are deliberately
-          # inert. A requested rehearsal without a candidate is an error rather
-          # than a misleading successful dry run.
-          if [ "${EVENT_NAME:-}" != workflow_dispatch ] || [ -z "$digest" ]; then
-            if [ "${EVENT_NAME:-}" = workflow_dispatch ] && [ "${DRY_RUN:-}" = true ]; then
-              echo "ERROR: protected dry-run requires candidate_digest" >&2
-              exit 1
-            fi
-            printf 'active=false\nauthorized=false\n' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
 
           # The release unit is always the exact three-package train. Keep this
           # guard before the rehearsal branch so dry runs cannot prove only a

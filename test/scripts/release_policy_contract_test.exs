@@ -499,14 +499,15 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert prepublish =~ "Pre-publish check for mailglass_admin"
     assert prepublish =~ "Pre-publish check for mailglass_inbound"
     assert prepublish =~ "validate-captured-dispatch"
-    assert prepublish =~ "git fetch --no-tags origin main"
-    assert prepublish =~ "git show origin/main:.planning/release-target.json"
+    assert prepublish =~ "git -C \"$control_root\" fetch --no-tags origin main"
+    assert prepublish =~ ~s(control_target="$control_root/.planning/release-target.json")
     assert prepublish =~ "scripts/release_policy_content_digest.sh"
     assert prepublish =~ "pretag=true"
-    assert prepublish =~ "[ \"$(git rev-parse HEAD)\" = \"$proposal_head\" ]"
+    assert prepublish =~
+             "[ \"$(git -C \"$candidate_root\" rev-parse HEAD)\" = \"$proposal_head\" ]"
     assert prepublish =~ "[ \"$actual_digest\" = \"$content_digest\" ]"
     assert prepublish =~
-             "$control_root/scripts/release_policy_validate_target.sh \"$captured_target\" \"mailglass-v${core}\" \"$candidate_root\""
+             "\"$control_root/scripts/release_policy_validate_target.sh\" \"$captured_target\" \"mailglass-v${core}\" \"$candidate_root\""
 
     assert prepublish =~ "tag_sha=%s"
     assert prepublish =~ ~s("$proposal_head")
