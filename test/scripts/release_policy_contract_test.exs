@@ -5,6 +5,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
   @repo_root Path.expand("../..", __DIR__)
   @expected_tags Path.join(@repo_root, "scripts/release_policy_expected_tags.sh")
+  @content_digest Path.join(@repo_root, "scripts/release_policy_content_digest.sh")
   @validate_target Path.join(@repo_root, "scripts/release_policy_validate_target.sh")
   @release_please Path.join(@repo_root, ".github/workflows/release-please.yml")
   @publish Path.join(@repo_root, ".github/workflows/publish-hex.yml")
@@ -260,6 +261,72 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert step_precedes?(release, "Install deps for policy", "Detect already-tagged release PR")
   end
 
+  test "one deterministic digest binds exactly the three Hex package whitelists" do
+    in_tmp(fn dir ->
+      tracked = %{
+        "mix.exs" => "core project",
+        "lib/mailglass.ex" => "core lib v1",
+        "guides/getting-started.md" => "core guide",
+        "mailglass_admin/mix.exs" => "admin project",
+        "mailglass_admin/lib/mailglass_admin.ex" => "admin lib v1",
+        "mailglass_admin/priv/static/app.css" => "admin static v1",
+        "mailglass_inbound/mix.exs" => "inbound project",
+        "mailglass_inbound/lib/mailglass_inbound.ex" => "inbound lib v1",
+        ".planning/release-target.json" => "planning v1",
+        "test/release_test.exs" => "test v1",
+        ".github/workflows/release.yml" => "workflow v1"
+      }
+
+      Enum.each(tracked, fn {path, body} ->
+        full_path = Path.join(dir, path)
+        File.mkdir_p!(Path.dirname(full_path))
+        File.write!(full_path, body)
+      end)
+
+      git!(dir, ["init", "-q"])
+      git!(dir, ["config", "user.email", "release-policy@example.test"])
+      git!(dir, ["config", "user.name", "Release Policy Test"])
+      git!(dir, ["add", "."])
+      git!(dir, ["commit", "-qm", "baseline"])
+
+      assert {baseline, 0} = run(@content_digest, ["--repo", dir])
+      baseline = String.trim(baseline)
+      assert baseline =~ ~r/^[0-9a-f]{64}$/
+      assert {^baseline <> "\n", 0} = run(@content_digest, ["--repo", dir])
+
+      included_paths = [
+        "lib/mailglass.ex",
+        "mailglass_admin/lib/mailglass_admin.ex",
+        "mailglass_admin/priv/static/app.css",
+        "mailglass_inbound/lib/mailglass_inbound.ex"
+      ]
+
+      last_digest =
+        Enum.reduce(included_paths, baseline, fn path, previous_digest ->
+          File.write!(Path.join(dir, path), "#{path} changed")
+          git!(dir, ["add", path])
+          git!(dir, ["commit", "-qm", "change #{path}"])
+          assert {digest, 0} = run(@content_digest, ["--repo", dir])
+          digest = String.trim(digest)
+          refute digest == previous_digest
+          digest
+        end)
+
+      for path <- [
+            ".planning/release-target.json",
+            "test/release_test.exs",
+            ".github/workflows/release.yml"
+          ] do
+        File.write!(Path.join(dir, path), "#{path} changed")
+      end
+
+      git!(dir, ["add", "."])
+      git!(dir, ["commit", "-qm", "change non-package files"])
+      assert {excluded_digest, 0} = run(@content_digest, ["--repo", dir])
+      assert String.trim(excluded_digest) == last_digest
+    end)
+  end
+
   test "proposal mode bypasses historical tag recovery while protected dispatch requires exact authorization" do
     release = File.read!(@release_please)
 
@@ -285,6 +352,8 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert release =~ "steps.protected-merge.outputs.merge_tree_verified == 'true'"
     refute release =~ "gh pr merge \"$number\" --auto --squash"
     refute release =~ "gh pr merge \"$NUMBER\" --auto"
+    assert release =~ "scripts/release_policy_content_digest.sh"
+    refute release =~ "git ls-files -z"
   end
 
   test "proposal capture runs after synchronization and is the sole release-target policy path" do
@@ -298,6 +367,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
     assert release =~ "gh pr list --head release-please--branches--main"
     assert release =~ "proposal-candidate.json"
+    assert release =~ "digest=$(scripts/release_policy_content_digest.sh)"
     refute release =~ "release_packages=$(jq"
     refute release =~ "Phase 148 must publish exactly"
   end
@@ -331,12 +401,20 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert prepublish =~ "Pre-publish check for mailglass_admin"
     assert prepublish =~ "Pre-publish check for mailglass_inbound"
     assert prepublish =~ "validate-captured-dispatch"
+    assert prepublish =~ "git fetch --no-tags origin main"
+    assert prepublish =~ "git show origin/main:.planning/release-target.json"
+    assert prepublish =~ "scripts/release_policy_content_digest.sh"
     assert prepublish =~ "pretag=true"
     assert prepublish =~ "[ \"$(git rev-parse HEAD)\" = \"$proposal_head\" ]"
     assert prepublish =~ "[ \"$actual_digest\" = \"$content_digest\" ]"
+    refute prepublish =~ "git ls-files -z"
   end
 
   defp run(script, args), do: System.cmd("bash", [script | args], stderr_to_stdout: true)
+
+  defp git!(dir, args) do
+    assert {_output, 0} = System.cmd("git", ["-C", dir | args], stderr_to_stdout: true)
+  end
 
   defp extract_step_script!(source, name) do
     marker = "      - name: #{name}\n"
