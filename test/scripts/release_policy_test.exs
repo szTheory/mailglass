@@ -112,12 +112,7 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
   end
 
   test "completed target carries a separately verified final tag SHA" do
-    completed =
-      captured_target()
-      |> Map.put("status", "completed")
-      |> put_in(["states", "authorization"], "authorized")
-      |> put_in(["states", "publication"], "published")
-      |> put_in(["final_identity", "tag_sha"], String.duplicate("d", 40))
+    completed = completed_target()
 
     assert {:ok, ^completed} = policy(:validate_completed_target, [completed])
 
@@ -125,6 +120,82 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
              policy(:validate_completed_target, [
                put_in(completed, ["final_identity", "tag_sha"], nil)
              ])
+  end
+
+  test "published lifecycle requires exact immutable workflow release tag and Hex evidence" do
+    published = published_target()
+
+    assert {:ok, ^published} = policy(:validate_published_target, [published])
+    assert {:error, _} = policy(:validate_completed_target, [published])
+
+    publication_path = ["final_identity", "publication_evidence"]
+
+    mutations = [
+      Map.put(published, "status", "completed"),
+      put_in(published, ["final_identity", "adoption_evidence"], %{}),
+      update_in(published, publication_path, &Map.delete(&1, "workflow_run_url")),
+      put_in(published, publication_path ++ ["workflow_run_url"], "https://example.com/run/1"),
+      put_in(published, publication_path ++ ["release_ids", "mailglass"], 0),
+      put_in(published, publication_path ++ ["release_ids", "mailglass_admin"], "123"),
+      put_in(published, publication_path ++ ["tag_shas", "mailglass"], String.duplicate("e", 40)),
+      put_in(published, publication_path ++ ["hex_release_checksums", "mailglass"], "short"),
+      put_in(published, publication_path ++ ["unknown"], true)
+    ]
+
+    for mutation <- mutations do
+      assert {:error, _} = policy(:validate_published_target, [mutation])
+    end
+  end
+
+  test "completion additionally requires both immutable adoption checkpoint digests" do
+    completed = completed_target()
+
+    assert {:ok, ^completed} = policy(:validate_completed_target, [completed])
+
+    adoption_path = ["final_identity", "adoption_evidence"]
+
+    mutations = [
+      put_in(completed, adoption_path, nil),
+      update_in(completed, adoption_path, &Map.delete(&1, "workflow_run_url")),
+      put_in(completed, adoption_path ++ ["workflow_run_url"], "http://github.com/run/123"),
+      update_in(completed, adoption_path ++ ["checkpoint_digests"], &Map.delete(&1, "generated_host")),
+      put_in(completed, adoption_path ++ ["checkpoint_digests", "trust_runner"], "bad"),
+      put_in(completed, adoption_path ++ ["checkpoint_digests", "unknown"], String.duplicate("f", 64)),
+      put_in(completed, adoption_path ++ ["unknown"], true)
+    ]
+
+    for mutation <- mutations do
+      assert {:error, _} = policy(:validate_completed_target, [mutation])
+    end
+  end
+
+  test "real CLI validates reviewed candidate published and complete artifacts" do
+    in_tmp(fn root ->
+      candidate = captured_target()
+      review = review_from(candidate)
+      published = published_target()
+      completed = completed_target()
+
+      candidate_path = write_json(root, "candidate.json", candidate)
+      review_path = write_json(root, "review.json", review)
+      published_path = write_json(root, "published.json", published)
+      completed_path = write_json(root, "completed.json", completed)
+
+      assert_cli(["validate-candidate", candidate_path, review_path], "candidate_valid=true")
+      assert_cli(["verify-published", published_path], "published=true")
+      assert_cli(["verify-complete", completed_path], "completed=true")
+
+      forged_review_path =
+        write_json(
+          root,
+          "forged-review.json",
+          put_in(review, ["publishable_content", "digest"], String.duplicate("0", 64))
+        )
+
+      refute_cli(["validate-candidate", candidate_path, forged_review_path])
+      refute_cli(["verify-published", completed_path])
+      refute_cli(["verify-complete", published_path])
+    end)
   end
 
   test "keeps core and admin linked across baselines, candidates, and every candidate lifecycle" do
@@ -143,10 +214,8 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
       |> put_in(["states", "authorization"], "authorized")
 
     completed =
-      authorized
-      |> Map.put("status", "completed")
-      |> put_in(["states", "publication"], "published")
-      |> put_in(["final_identity", "tag_sha"], String.duplicate("d", 40))
+      completed_target()
+      |> put_in(["candidate_versions", "mailglass_admin"], "3.0.1")
 
     assert {:error, _} = policy(:validate_target, [authorized])
     assert {:error, _} = policy(:validate_completed_target, [completed])
@@ -227,6 +296,37 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
     Map.take(target, ["candidate_versions", "proposal_identity", "publishable_content"])
   end
 
+  defp published_target do
+    tag_sha = String.duplicate("d", 40)
+
+    captured_target()
+    |> Map.put("status", "published")
+    |> put_in(["states", "authorization"], "authorized")
+    |> put_in(["states", "publication"], "published")
+    |> Map.put("final_identity", %{
+      "tag_sha" => tag_sha,
+      "publication_evidence" => %{
+        "workflow_run_url" => "https://github.com/szTheory/mailglass/actions/runs/123456789",
+        "release_ids" => Map.new(@packages, &{&1, 1000 + Enum.find_index(@packages, fn p -> p == &1 end)}),
+        "tag_shas" => Map.new(@packages, &{&1, tag_sha}),
+        "hex_release_checksums" => Map.new(@packages, &{&1, String.duplicate("e", 64)})
+      },
+      "adoption_evidence" => nil
+    })
+  end
+
+  defp completed_target do
+    published_target()
+    |> Map.put("status", "completed")
+    |> put_in(["final_identity", "adoption_evidence"], %{
+      "workflow_run_url" => "https://github.com/szTheory/mailglass/actions/runs/123456790",
+      "checkpoint_digests" => %{
+        "generated_host" => String.duplicate("f", 64),
+        "trust_runner" => String.duplicate("0", 64)
+      }
+    })
+  end
+
   defp policy(function, args), do: apply(Mailglass.ReleasePolicy, function, args)
 
   defp evidence do
@@ -258,6 +358,43 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
       File.mkdir_p!(Path.dirname(full_path))
       File.write!(full_path, "  @version \"#{version}\"\n")
     end
+  end
+
+  defp write_json(root, name, value) do
+    path = Path.join(root, name)
+    File.write!(path, Jason.encode!(value))
+    path
+  end
+
+  defp assert_cli(arguments, expected_output) do
+    {output, status} = run_cli(arguments)
+    assert status == 0, output
+    assert output =~ expected_output
+  end
+
+  defp refute_cli(arguments) do
+    {_output, status} = run_cli(arguments)
+    assert status != 0
+  end
+
+  defp run_cli(arguments) do
+    System.cmd(
+      "mix",
+      [
+        "run",
+        "--no-start",
+        "--no-compile",
+        "--no-deps-check",
+        "--require",
+        @script,
+        "-e",
+        "Mailglass.ReleasePolicy.cli(System.argv())",
+        "--"
+        | arguments
+      ],
+      cd: Path.expand("../..", __DIR__),
+      stderr_to_stdout: true
+    )
   end
 
   defp in_tmp(fun) do
