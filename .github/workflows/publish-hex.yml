@@ -205,9 +205,10 @@ jobs:
           path: deps
           key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
       - name: Install deps (root)
+        if: ${{ steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true' }}
         run: mix deps.get
       - name: Wait for postgres + create test DB
-        if: ${{ github.event.inputs.package != 'mailglass_admin' }}
+        if: ${{ (steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true') && github.event.inputs.package != 'mailglass_admin' }}
         env:
           PGPASSWORD: postgres
         run: |
@@ -217,23 +218,23 @@ jobs:
           export MIX_ENV=test
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Install deps (admin)
-        if: ${{ github.event.inputs.package != 'mailglass' }}
+        if: ${{ (steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true') && github.event.inputs.package != 'mailglass' }}
         working-directory: mailglass_admin
         run: mix deps.get
       - name: Pre-publish check for mailglass
-        if: ${{ github.event.inputs.package != 'mailglass_admin' }}
+        if: ${{ (steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true') && github.event.inputs.package != 'mailglass_admin' }}
         run: |
           echo "## mailglass" >> "$GITHUB_STEP_SUMMARY"
           set -o pipefail
           mix mailglass.publish.check --package mailglass 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Pre-publish check for mailglass_admin
-        if: ${{ github.event.inputs.package != 'mailglass' }}
+        if: ${{ (steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true') && github.event.inputs.package != 'mailglass' }}
         run: |
           echo "## mailglass_admin" >> "$GITHUB_STEP_SUMMARY"
           set -o pipefail
           mix mailglass.publish.check --package mailglass_admin 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Pre-publish check for mailglass_inbound
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.package != 'mailglass' && github.event.inputs.package != 'mailglass_admin' }}
+        if: ${{ (steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true') && github.event_name == 'workflow_dispatch' && github.event.inputs.package != 'mailglass' && github.event.inputs.package != 'mailglass_admin' }}
         run: |
           echo "## mailglass_inbound" >> "$GITHUB_STEP_SUMMARY"
           set -o pipefail
