@@ -13,9 +13,9 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
     target = captured_target()
 
     assert {:ok, ^target} = policy(:validate_target, [target])
+
     assert policy(:expected_tags, [target]) ==
-             {:ok,
-              ["mailglass-v3.0.0", "mailglass_admin-v3.0.0", "mailglass_inbound-v2.2.0"]}
+             {:ok, ["mailglass-v3.0.0", "mailglass_admin-v3.0.0", "mailglass_inbound-v2.2.0"]}
   end
 
   test "rejects empty, missing, duplicate, unknown, conflicting, and untrusted candidate inputs" do
@@ -30,6 +30,10 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
       put_in(target, ["candidate_versions", "mailglass_inbound"], "2.1.2"),
       put_in(target, ["proposal_identity", "head_sha"], "$(touch pwned)"),
       put_in(target, ["publishable_content", "digest"], "bad\nGITHUB_OUTPUT=owned"),
+      put_in(target, ["proposal_identity", "unknown"], true),
+      put_in(target, ["publishable_content", "unknown"], true),
+      put_in(target, ["final_identity", "unknown"], true),
+      put_in(target, ["states", "unknown"], true),
       Map.put(target, "unexpected", true)
     ]
 
@@ -57,6 +61,43 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
              ])
   end
 
+  test "derives one deterministic authorization digest from candidate, identity, content, and evidence" do
+    target = captured_target()
+    assert {:ok, digest} = policy(:candidate_digest, [target])
+    assert byte_size(digest) == 64
+
+    reordered_target =
+      target
+      |> Map.to_list()
+      |> Enum.reverse()
+      |> Map.new()
+      |> update_in(["required_evidence_identifiers"], fn evidence ->
+        evidence |> Map.to_list() |> Enum.reverse() |> Map.new()
+      end)
+
+    assert {:ok, ^digest} = policy(:candidate_digest, [reordered_target])
+
+    authorized =
+      target
+      |> Map.put("status", "authorized")
+      |> put_in(["states", "authorization"], "authorized")
+
+    assert {:ok, ^authorized} = policy(:validate_authorization_digest, [authorized, digest])
+
+    assert {:error, %{reason: :authorization_digest_mismatch}} =
+             policy(:validate_authorization_digest, [authorized, String.duplicate("0", 64)])
+
+    changed_evidence =
+      put_in(
+        authorized,
+        ["required_evidence_identifiers", "historical_tag_sha"],
+        String.duplicate("d", 40)
+      )
+
+    assert {:error, %{reason: :authorization_digest_mismatch}} =
+             policy(:validate_authorization_digest, [changed_evidence, digest])
+  end
+
   test "authorizes only exact candidate tag refs and source versions" do
     target = captured_target()
     versions = target["candidate_versions"]
@@ -68,6 +109,22 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
     for ref <- ["mailglass-v3.0.0;echo owned", "refs/tags/mailglass-v3.0.0", "mailglass-v3.0.1"] do
       assert {:error, _} = policy(:validate_release_ref, [target, ref, versions])
     end
+  end
+
+  test "completed target carries a separately verified final tag SHA" do
+    completed =
+      captured_target()
+      |> Map.put("status", "completed")
+      |> put_in(["states", "authorization"], "authorized")
+      |> put_in(["states", "publication"], "published")
+      |> put_in(["final_identity", "tag_sha"], String.duplicate("d", 40))
+
+    assert {:ok, ^completed} = policy(:validate_completed_target, [completed])
+
+    assert {:error, _} =
+             policy(:validate_completed_target, [
+               put_in(completed, ["final_identity", "tag_sha"], nil)
+             ])
   end
 
   defp captured_target do
@@ -111,7 +168,11 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
   defp policy(function, args), do: apply(Mailglass.ReleasePolicy, function, args)
 
   defp evidence do
-    baselines = %{"mailglass" => "2.4.1", "mailglass_admin" => "2.4.1", "mailglass_inbound" => "2.1.2"}
+    baselines = %{
+      "mailglass" => "2.4.1",
+      "mailglass_admin" => "2.4.1",
+      "mailglass_inbound" => "2.1.2"
+    }
 
     %{
       "hex_package_endpoints" => Map.new(@packages, &{&1, "https://hex.pm/api/packages/#{&1}"}),

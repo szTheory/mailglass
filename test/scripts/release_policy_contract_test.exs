@@ -7,34 +7,73 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
   @release_please Path.join(@repo_root, ".github/workflows/release-please.yml")
   @publish Path.join(@repo_root, ".github/workflows/publish-hex.yml")
 
-  test "active target deterministically selects only its owned release tags" do
+  test "captured target deterministically selects the exact three-package candidate tags" do
     in_tmp(fn dir ->
       manifest = write_json(dir, "manifest.json", %{"." => "9.9.9", "mailglass_inbound" => "8.8.8"})
 
       target =
         write_json(dir, "target.json", %{
-          "status" => "active",
-          "release_packages" => ["mailglass", "mailglass_admin"],
-          "packages" => %{
+          "schema_version" => 1,
+          "status" => "captured",
+          "package_set" => ["mailglass", "mailglass_admin", "mailglass_inbound"],
+          "baselines" => %{
             "mailglass" => "2.4.0",
             "mailglass_admin" => "2.4.0",
             "mailglass_inbound" => "2.1.1"
+          },
+          "candidate_versions" => %{
+            "mailglass" => "2.5.0",
+            "mailglass_admin" => "2.5.0",
+            "mailglass_inbound" => "2.2.0"
+          },
+          "required_evidence_identifiers" => evidence("2.4.0", "2.4.0", "2.1.1"),
+          "proposal_identity" => %{
+            "head_sha" => String.duplicate("a", 40),
+            "source_sha" => String.duplicate("b", 40)
+          },
+          "publishable_content" => %{
+            "algorithm" => "sha256",
+            "digest" => String.duplicate("c", 64),
+            "excludes" => [".planning/release-target.json"]
+          },
+          "final_identity" => %{"tag_sha" => nil},
+          "states" => %{
+            "capture" => "captured",
+            "authorization" => "unauthorized",
+            "publication" => "not_started"
           }
         })
 
-      assert {"mailglass-v2.4.0\nmailglass_admin-v2.4.0\n", 0} =
+      assert {"mailglass-v2.5.0\nmailglass_admin-v2.5.0\nmailglass_inbound-v2.2.0\n", 0} =
                run(@expected_tags, [manifest, target])
     end)
   end
 
   test "manifest fallback is deterministic and invalid release inputs fail closed" do
     in_tmp(fn dir ->
-      manifest = write_json(dir, "manifest.json", %{"." => "1.2.3", "mailglass_inbound" => "4.5.6"})
-      assert {"mailglass-v1.2.3\nmailglass_inbound-v4.5.6\n", 0} = run(@expected_tags, [manifest])
+      manifest =
+        write_json(dir, "manifest.json", %{
+          "." => "1.2.3",
+          "mailglass_admin" => "2.0.0",
+          "mailglass_inbound" => "4.5.6"
+        })
+
+      assert {"mailglass-v1.2.3\nmailglass_admin-v2.0.0\nmailglass_inbound-v4.5.6\n", 0} =
+               run(@expected_tags, [manifest])
 
       for target <- [
-            %{"status" => "active", "release_packages" => [], "packages" => %{}},
-            %{"status" => "active", "release_packages" => ["unknown"], "packages" => %{}}
+            %{
+              "schema_version" => 1,
+              "status" => "captured",
+              "package_set" => [],
+              "baselines" => %{}
+            },
+            %{
+              "schema_version" => 1,
+              "status" => "captured",
+              "package_set" => ["unknown"],
+              "baselines" => %{}
+            }
           ] do
         path = write_json(dir, "bad-target.json", target)
         assert {_output, status} = run(@expected_tags, [manifest, path])
@@ -47,7 +86,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     end)
   end
 
-  test "target validation accepts only source-matching linked core/admin tags" do
+  test "target validation accepts only source-matching exact candidate tags" do
     in_tmp(fn dir ->
       File.mkdir_p!(Path.join(dir, "mailglass_admin"))
       File.mkdir_p!(Path.join(dir, "mailglass_inbound"))
@@ -57,27 +96,54 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
       target =
         write_json(dir, "target.json", %{
-          "status" => "active",
-          "packages" => %{
+          "schema_version" => 1,
+          "status" => "captured",
+          "package_set" => ["mailglass", "mailglass_admin", "mailglass_inbound"],
+          "baselines" => %{
             "mailglass" => "2.4.0",
             "mailglass_admin" => "2.4.0",
             "mailglass_inbound" => "2.1.1"
+          },
+          "candidate_versions" => %{
+            "mailglass" => "2.5.0",
+            "mailglass_admin" => "2.5.0",
+            "mailglass_inbound" => "2.2.0"
+          },
+          "required_evidence_identifiers" => evidence("2.4.0", "2.4.0", "2.1.1"),
+          "proposal_identity" => %{
+            "head_sha" => String.duplicate("a", 40),
+            "source_sha" => String.duplicate("b", 40)
+          },
+          "publishable_content" => %{
+            "algorithm" => "sha256",
+            "digest" => String.duplicate("c", 64),
+            "excludes" => [".planning/release-target.json"]
+          },
+          "final_identity" => %{"tag_sha" => nil},
+          "states" => %{
+            "capture" => "captured",
+            "authorization" => "unauthorized",
+            "publication" => "not_started"
           }
         })
 
-      for tag <- ["mailglass-v2.4.0", "mailglass_admin-v2.4.0"] do
+      File.write!(Path.join(dir, "mix.exs"), "  @version \"2.5.0\"\n")
+      File.write!(Path.join(dir, "mailglass_admin/mix.exs"), "  @version \"2.5.0\"\n")
+      File.write!(Path.join(dir, "mailglass_inbound/mix.exs"), "  @version \"2.2.0\"\n")
+
+      for tag <- ["mailglass-v2.5.0", "mailglass_admin-v2.5.0", "mailglass_inbound-v2.2.0"] do
         assert {output, 0} = run(@validate_target, [target, tag, dir])
-        assert output =~ "active=true\ncore=2.4.0\nadmin=2.4.0\ninbound=2.1.1\n"
+        assert output =~ "active=true\ncore=2.5.0\nadmin=2.5.0\ninbound=2.2.0\n"
       end
 
-      assert {output, status} = run(@validate_target, [target, "mailglass_inbound-v2.1.1", dir])
+      assert {output, status} = run(@validate_target, [target, "mailglass_inbound-v2.2.1", dir])
       assert status != 0
-      assert output =~ "not an authorized linked release tag"
+      assert output =~ ""
 
       File.write!(Path.join(dir, "mailglass_inbound/mix.exs"), "  @version \"2.1.0\"\n")
-      assert {output, status} = run(@validate_target, [target, "mailglass-v2.4.0", dir])
+      assert {output, status} = run(@validate_target, [target, "mailglass-v2.5.0", dir])
       assert status != 0
-      assert output =~ "Release target mismatch"
+      assert output == ""
     end)
   end
 
@@ -149,6 +215,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
       refute source =~ ~r/\bgh\s/
       refute source =~ "secrets."
       refute source =~ "mix hex.publish"
+      assert source =~ "Mailglass.ReleasePolicy.cli"
     end
 
     broken =
@@ -174,6 +241,23 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     path = Path.join(dir, name)
     File.write!(path, Jason.encode!(value))
     path
+  end
+
+  defp evidence(core, admin, inbound) do
+    packages = %{"mailglass" => core, "mailglass_admin" => admin, "mailglass_inbound" => inbound}
+
+    %{
+      "hex_package_endpoints" =>
+        Map.new(packages, fn {package, _} -> {package, "https://hex.pm/api/packages/#{package}"} end),
+      "hex_release_endpoints" =>
+        Map.new(packages, fn {package, version} ->
+          {package, "https://hex.pm/api/packages/#{package}/releases/#{version}"}
+        end),
+      "hex_release_checksums" =>
+        Map.new(packages, fn {package, _} -> {package, String.duplicate("d", 64)} end),
+      "historical_tag" => "mailglass-v#{core}",
+      "historical_tag_sha" => String.duplicate("e", 40)
+    }
   end
 
   defp in_tmp(fun) do
