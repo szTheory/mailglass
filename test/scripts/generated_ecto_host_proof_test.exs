@@ -221,6 +221,15 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     assert source =~ "1 = MailglassInbound.Migration.migrated_version"
   end
 
+  test "idempotent rollback probes allow the temporary Repo time to stop cleanly" do
+    source = File.read!(@script_path)
+
+    assert source =~ "idempotent_rollback_to"
+    assert source =~ "Supervisor.stop(repo_pid, :normal, 30_000)"
+    refute source =~ ~s(mix ecto.rollback -r Host.Repo --to "${core_upgrade_version}")
+    refute source =~ ~s(mix ecto.rollback -r Host.InboundRepo --to "${inbound_upgrade_version}")
+  end
+
   test "generated-host proof owns only a newly-created private scratch directory" do
     source = File.read!(@script_path)
 
