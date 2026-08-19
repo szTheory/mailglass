@@ -50,23 +50,28 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     end)
   end
 
-  test "release events fan out only to the linked core and admin packages" do
+  test "protected exact-digest dispatch fans out core, admin, then independent inbound" do
     source = File.read!(@publish_path)
     core = extract_publish_job!(source, "mailglass")
     admin = extract_publish_job!(source, "mailglass_admin")
     inbound = extract_publish_job!(source, "mailglass_inbound")
 
-    assert core =~ "needs: [gate-ci-green]"
-    assert core =~ "github.event_name == 'release'"
+    assert core =~ "needs: [gate-ci-green, prepublish-summary]"
+    assert core =~ "github.event_name == 'workflow_dispatch'"
+    assert core =~ "needs.prepublish-summary.outputs.authorized == 'true'"
 
-    assert admin =~ "needs: [gate-ci-green, publish-core]"
+    assert admin =~ "needs: [gate-ci-green, prepublish-summary, publish-core]"
     assert admin =~ "needs.gate-ci-green.result == 'success'"
     assert admin =~ "needs.publish-core.result == 'success'"
-    assert admin =~ "github.event_name == 'release'"
-    refute admin =~ "needs: [gate-ci-green, publish-core, publish-inbound]"
 
-    refute inbound =~ "github.event_name == 'release'"
+    assert admin =~
+             "github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest"
+
+    refute admin =~ "publish-inbound]"
+
+    assert inbound =~ "needs: [gate-ci-green, prepublish-summary, publish-core]"
     assert inbound =~ "github.event_name == 'workflow_dispatch'"
+    assert inbound =~ "needs.prepublish-summary.outputs.authorized == 'true'"
   end
 
   test "all publish jobs preserve the protected environment and step-local credential" do

@@ -100,7 +100,8 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert workflow =~ "validate_completed_target"
     assert workflow =~ "mailglass_admin"
     assert workflow =~ "mailglass_inbound"
-    refute workflow =~ "latest"
+    cron_guard = extract_job!(workflow, "cron-guard", "wait-for-index")
+    refute cron_guard =~ "releases.list"
   end
 
   defp extract_job!(workflow, start_key, next_key) do
