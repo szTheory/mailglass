@@ -114,7 +114,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
     end
   end
 
-  test "REL-01 trust proof selects one explicit coherent prepublication provenance" do
+  test "REL-01 trust proof selects one explicit coherent package provenance" do
     source = File.read!(@webhook_proof_path)
     ci_source = File.read!(@ci_yml_path)
 
@@ -124,9 +124,10 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
     assert source =~ "add_workspace_core_code_path!"
     assert source =~ "add_workspace_inbound_code_path!"
     assert source =~ ~s("prepublication")
+    assert source =~ ~s("published_siblings")
     assert source =~ ~s("published")
     refute source =~ "nil -> :published"
-    assert source =~ "must explicitly select prepublication provenance"
+    assert source =~ "must explicitly select package provenance"
     assert source =~ "exact all-published trust proof is reserved for Phase 160 Plan 06"
 
     refute source =~ "require_local_ingress_plug!"
@@ -142,6 +143,13 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
     assert repo_head_job =~ "MAILGLASS_CORE_WORKSPACE_EBIN"
     assert repo_head_job =~ "MAILGLASS_INBOUND_WORKSPACE_EBIN"
     assert repo_head_job =~ "working-directory: mailglass_inbound"
+
+    clean_job =
+      extract_job_block(ci_source, "trust_lane_clean_baseline", "branch_protection_advisory")
+
+    assert clean_job =~ "MAILGLASS_REFERENCE_HOST_PACKAGE_MODE: published_siblings"
+    refute clean_job =~ "MAILGLASS_CORE_WORKSPACE_EBIN"
+    refute clean_job =~ "MAILGLASS_INBOUND_WORKSPACE_EBIN"
   end
 
   defp extract_job_block(source, job_key, next_job_key) do

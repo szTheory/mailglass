@@ -207,6 +207,21 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
       )
 
     assert_raise ExUnit.AssertionError, fn -> assert_core_deterministic_suite!(narrowed) end
+
+    for setup_fragment <- [
+          "            mailglass_inbound/deps\n",
+          "            reference/host_app/deps\n",
+          "            reference/demo_app/deps\n",
+          "      - name: Install inbound deps\n        working-directory: mailglass_inbound\n        run: mix deps.get --check-locked\n",
+          "      - name: Install reference host deps\n        working-directory: reference/host_app\n        env:\n          MIX_ENV: dev\n        run: mix deps.get --check-locked\n",
+          "      - name: Install demo deps\n        working-directory: reference/demo_app\n        run: mix deps.get --check-locked\n"
+        ] do
+      missing_setup = String.replace(source, setup_fragment, "", global: true)
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_core_deterministic_suite!(missing_setup)
+      end
+    end
   end
 
   test "Phase 159 policy manifest exactly captures active, target, and advisory identities" do
@@ -374,6 +389,17 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     assert job =~ "    name: #{lane.name}\n"
     assert length(Regex.scan(~r/^        run: mix test --warnings-as-errors$/m, job)) == 1
     refute job =~ ~r/^        run: mix test .*--(?:exclude|only|seed)/m
+
+    for required_fragment <- [
+          "            mailglass_inbound/deps\n",
+          "            reference/host_app/deps\n",
+          "            reference/demo_app/deps\n",
+          "      - name: Install inbound deps\n        working-directory: mailglass_inbound\n        run: mix deps.get --check-locked\n",
+          "      - name: Install reference host deps\n        working-directory: reference/host_app\n        env:\n          MIX_ENV: dev\n        run: mix deps.get --check-locked\n",
+          "      - name: Install demo deps\n        working-directory: reference/demo_app\n        run: mix deps.get --check-locked\n"
+        ] do
+      assert job =~ required_fragment
+    end
   end
 
   defp extract_job_block(source, job_key) do

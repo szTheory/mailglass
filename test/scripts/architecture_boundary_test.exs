@@ -67,6 +67,18 @@ defmodule Mailglass.ArchitectureBoundaryTest do
 
     support_contract = job!(ci, "support_contract_core")
 
+    missing_inbound_deps =
+      String.replace(
+        ci,
+        "      - name: Install inbound deps\n        working-directory: mailglass_inbound\n        run: mix deps.get --check-locked\n",
+        "",
+        global: false
+      )
+
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_required_architecture_gate!(missing_inbound_deps)
+    end
+
     skipped_job =
       String.replace(support_contract, "if: needs.changes.outputs.code == 'true'", "if: false")
 
@@ -144,6 +156,13 @@ defmodule Mailglass.ArchitectureBoundaryTest do
 
     assert support_contract =~ "name: Support Contract Core (Elixir 1.18 / OTP 27)"
     assert support_contract =~ "if: needs.changes.outputs.code == 'true'"
+
+    inbound_deps_step = step!(support_contract, "Install inbound deps")
+
+    assert inbound_deps_step =~ "working-directory: mailglass_inbound"
+    assert inbound_deps_step =~ "run: mix deps.get --check-locked"
+    refute inbound_deps_step =~ "continue-on-error:"
+    refute inbound_deps_step =~ "if:"
 
     step = step!(support_contract, "Run architecture boundary contract")
 
