@@ -176,7 +176,7 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     valid_package = %{
       "name" => "mailglass",
       "latest_stable_version" => "2.4.1",
-      "releases" => [%{"version" => "2.4.1", "retirement" => nil}]
+      "releases" => [%{"version" => "2.4.1"}]
     }
 
     valid_release = %{
@@ -217,6 +217,41 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
       getter = fixture_getter(valid_package, release_payload)
       assert {:error, %{reason: ^expected}} = apply(reconciler(), :fetch_live, [getter])
     end
+  end
+
+  test "live parser accepts active package summaries whose retirement is authoritative only on the exact release" do
+    getter = fn url ->
+      versions = baseline_versions()
+
+      case Enum.find(@packages, &String.ends_with?(url, "/#{&1}")) do
+        nil ->
+          name = Enum.find(@packages, &String.contains?(url, "/#{&1}/releases/"))
+          version = versions[name]
+
+          {:ok,
+           Jason.encode!(%{
+             "version" => version,
+             "retirement" => nil,
+             "checksum" => String.duplicate("a", 64),
+             "has_docs" => true
+           })}
+
+        name ->
+          version = versions[name]
+
+          {:ok,
+           Jason.encode!(%{
+             "name" => name,
+             "latest_stable_version" => version,
+             "releases" => [%{"version" => version, "has_docs" => true}]
+           })}
+      end
+    end
+
+    assert {:ok, records} = apply(reconciler(), :fetch_live, [getter])
+
+    assert Enum.map(records, &{&1["name"], &1["release_version"]}) ==
+             Enum.map(@packages, &{&1, baseline_versions()[&1]})
   end
 
   test "builds only the inactive version-neutral three-package target" do
