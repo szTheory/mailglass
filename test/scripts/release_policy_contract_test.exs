@@ -334,7 +334,10 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert release =~ "Proposal mode bypasses historical baseline tag recovery"
     assert release =~ "Validate protected exact candidate dispatch"
     assert release =~ "validate-protected-dispatch"
-    assert release =~ "candidate_digest=$(awk -F= '$1 == \"candidate_digest\" {print $2}' \"$policy\")"
+
+    assert release =~
+             "candidate_digest=$(awk -F= '$1 == \"candidate_digest\" {print $2}' \"$policy\")"
+
     assert release =~ "content_digest=$(awk -F= '$1 == \"content_digest\" {print $2}' \"$policy\")"
     assert release =~ "[ \"$candidate_digest\" = \"$CANDIDATE_DIGEST\" ]"
     assert release =~ "git checkout --detach \"$proposal_head\""
@@ -343,7 +346,10 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert release =~ "[ \"$merged_digest\" = \"$CONTENT_DIGEST\" ]"
     assert release =~ "echo \"merge_tree_verified=true\" >> \"$GITHUB_OUTPUT\""
     assert release =~ "--match-head-commit \"$PROPOSAL_HEAD\""
-    assert release =~ "validate-protected-dispatch .planning/release-target.json \"$CANDIDATE_DIGEST\" >/dev/null"
+
+    assert release =~
+             "validate-protected-dispatch .planning/release-target.json \"$CANDIDATE_DIGEST\" >/dev/null"
+
     assert release =~ "Compile policy runtime"
     refute release =~ "cat \"$policy\" >> \"$GITHUB_OUTPUT\""
     assert release =~ "Protected exact candidate dispatch may merge only the validated release PR"

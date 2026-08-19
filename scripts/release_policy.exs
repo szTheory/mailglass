@@ -245,8 +245,13 @@ defmodule Mailglass.ReleasePolicy do
       IO.write("content_digest=#{target["publishable_content"]["digest"]}\n")
       IO.write("proposal_head=#{target["proposal_identity"]["head_sha"]}\n")
       IO.write("source_sha=#{target["proposal_identity"]["source_sha"]}\n")
+
       Enum.each(packages(), fn package ->
-        key = if package == "mailglass", do: "core", else: String.replace_prefix(package, "mailglass_", "")
+        key =
+          if package == "mailglass",
+            do: "core",
+            else: String.replace_prefix(package, "mailglass_", "")
+
         IO.write("#{key}=#{target["candidate_versions"][package]}\n")
       end)
     else
@@ -305,7 +310,7 @@ defmodule Mailglass.ReleasePolicy do
          :ok <- exact_value(target, "status", "inactive"),
          {:ok, versions} <- source_versions(root),
          :ok <- advances(target["baselines"], versions),
-         true <- sha1?(head_sha) and sha1?(source_sha) or error(:invalid_proposal),
+         true <- (sha1?(head_sha) and sha1?(source_sha)) or error(:invalid_proposal),
          true <- sha256?(content_digest) or error(:invalid_content) do
       candidate = %{
         "candidate_versions" => versions,

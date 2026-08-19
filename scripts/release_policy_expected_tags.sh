@@ -3,7 +3,7 @@ set -euo pipefail
 
 manifest=${1:?usage: release_policy_expected_tags.sh MANIFEST [TARGET]}
 target=${2:-}
-repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+repo_root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 
 cd "$repo_root"
 mix deps.get >/dev/null 2>&1
