@@ -251,6 +251,9 @@ jobs:
       - name: Install demo deps
         working-directory: reference/demo_app
         run: mix deps.get --check-locked
+      - name: Compile demo app for coverage
+        working-directory: reference/demo_app
+        run: mix compile --warnings-as-errors
       - name: Wait for postgres + create test DB
         env:
           PGPASSWORD: postgres
@@ -388,6 +391,17 @@ jobs:
       - name: Install demo deps
         working-directory: reference/demo_app
         run: mix deps.get --check-locked
+      - name: Compile inbound workspace
+        working-directory: mailglass_inbound
+        run: mix compile --warnings-as-errors
+      - name: Compile reference host
+        working-directory: reference/host_app
+        env:
+          MIX_ENV: dev
+        run: mix compile --warnings-as-errors
+      - name: Compile demo app
+        working-directory: reference/demo_app
+        run: mix compile --warnings-as-errors
       - name: Wait for postgres + create test DB
         env:
           PGPASSWORD: postgres
