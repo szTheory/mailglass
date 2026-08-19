@@ -407,10 +407,44 @@ jobs:
           git fetch --no-tags origin "$source_sha" "$proposal_head"
           source_target=$(mktemp)
           git show "$source_sha":.planning/release-target.json > "$source_target"
-          git checkout --detach "$proposal_head"
-          digest=$(scripts/release_policy_content_digest.sh)
           mkdir -p .planning/release-candidates
-          mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- capture-candidate "$source_target" . "$proposal_head" "$source_sha" "$digest" > .planning/release-candidates/proposal-candidate.json
+          target_status=$(jq -er '.status' "$source_target")
+
+          case "$target_status" in
+            inactive)
+              git checkout --detach "$proposal_head"
+              digest=$(scripts/release_policy_content_digest.sh)
+              mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- capture-candidate "$source_target" . "$proposal_head" "$source_sha" "$digest" > .planning/release-candidates/proposal-candidate.json
+              ;;
+            captured|authorized)
+              # Plan 05 advances main only to record the already-reviewed
+              # candidate. Preserve that exact proposal instead of trying to
+              # recapture it through the inactive-only CLI.
+              recorded_head=$(jq -er '.proposal_identity.head_sha' "$source_target")
+              recorded_source_sha=$(jq -er '.proposal_identity.source_sha' "$source_target")
+              recorded_digest=$(jq -er '.publishable_content.digest' "$source_target")
+              core=$(jq -er '.candidate_versions.mailglass' "$source_target")
+              [[ "$recorded_head" =~ ^[0-9a-f]{40}$ ]]
+              [[ "$recorded_source_sha" =~ ^[0-9a-f]{40}$ ]]
+              [[ "$recorded_digest" =~ ^[0-9a-f]{64}$ ]]
+              [ "$proposal_head" = "$recorded_head" ]
+              git merge-base --is-ancestor "$recorded_source_sha" "$source_sha"
+              [ "$(scripts/release_policy_content_digest.sh --ref "$recorded_source_sha")" = "$(scripts/release_policy_content_digest.sh --ref "$source_sha")" ]
+              git checkout --detach "$proposal_head"
+              [ "$(scripts/release_policy_content_digest.sh)" = "$recorded_digest" ]
+              scripts/release_policy_validate_target.sh "$source_target" "mailglass-v${core}" . >/dev/null
+              jq -e '{candidate_versions, proposal_identity, publishable_content}' "$source_target" > .planning/release-candidates/proposal-candidate.json
+              ;;
+            completed)
+              echo "Completed release target needs no proposal capture."
+              exit 0
+              ;;
+            *)
+              echo "ERROR: unsupported release target status for proposal capture: $target_status" >&2
+              exit 1
+              ;;
+          esac
+
           jq -e '.candidate_versions.mailglass == .candidate_versions.mailglass_admin' .planning/release-candidates/proposal-candidate.json >/dev/null
           echo "captured=true" >> "$GITHUB_OUTPUT"
           printf '%s\n' "proposal candidate captured after sibling synchronization"
