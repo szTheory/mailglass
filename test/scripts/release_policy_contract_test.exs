@@ -372,7 +372,8 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert protected =~ "current_main_sha=$(git rev-parse origin/main)"
     assert protected =~ "[ \"$(git rev-parse HEAD)\" = \"$current_main_sha\" ]"
     assert protected =~ "control_target=$(mktemp)"
-    assert protected =~ "cp .planning/release-target.json \"$control_target\""
+    assert protected =~
+             "cp \"$control_root/.planning/release-target.json\" \"$control_target\""
     assert protected =~ "validate-protected-dispatch \"$control_target\""
 
     assert release =~
