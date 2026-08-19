@@ -92,6 +92,76 @@ versions=(
   "$(jq -er '.candidate_versions.mailglass_admin' "$target_path")"
   "$(jq -er '.candidate_versions.mailglass_inbound' "$target_path")"
 )
+
+# Bind the cited successful run to this exact target. GitHub's run and jobs
+# endpoints do not expose workflow_dispatch inputs, so the run-owned sanitized
+# proof artifact is the durable bridge from protected execution to candidate
+# digest, immutable tag SHA, and exact package versions.
+artifacts_json=$(gh api "repos/${repository}/actions/runs/${run_id}/artifacts?per_page=100") ||
+  fail "publication workflow artifact lookup failed"
+
+artifact_name="phase-148-release-proof-${run_id}"
+jq -e \
+  --argjson run_id "$run_id" \
+  --arg artifact_name "$artifact_name" \
+  --arg workflow_head_sha "$workflow_head_sha" \
+  --arg repository "$repository" \
+  'type == "object" and
+   .total_count == 1 and
+   (.artifacts | type == "array" and length == 1) and
+   (.artifacts[0] |
+     (.id | type == "number" and . > 0 and floor == .) and
+     .name == $artifact_name and
+     .expired == false and
+     (.size_in_bytes | type == "number" and . > 0 and . <= 1048576) and
+     .workflow_run.id == $run_id and
+     .workflow_run.head_sha == $workflow_head_sha and
+     .archive_download_url ==
+       ("https://api.github.com/repos/" + $repository + "/actions/artifacts/" + (.id | tostring) + "/zip"))' \
+  <<<"$artifacts_json" >/dev/null ||
+  fail "publication proof artifact is missing, ambiguous, expired, or identity-mismatched"
+
+artifact_id=$(jq -er '.artifacts[0].id' <<<"$artifacts_json") ||
+  fail "publication proof artifact ID is missing"
+proof_dir=$(mktemp -d)
+trap 'rm -rf "$proof_dir"' EXIT
+proof_zip="$proof_dir/phase-148.zip"
+
+gh api "repos/${repository}/actions/artifacts/${artifact_id}/zip" >"$proof_zip" ||
+  fail "publication proof artifact download failed"
+[[ $(wc -c <"$proof_zip") -le 1048576 ]] ||
+  fail "publication proof artifact archive is unexpectedly large"
+[[ $(unzip -Z1 "$proof_zip") == phase-148.json ]] ||
+  fail "publication proof artifact archive has an unexpected shape"
+proof_json=$(unzip -p "$proof_zip" phase-148.json) ||
+  fail "publication proof artifact could not be read"
+
+expected_ref="mailglass-v${versions[0]}"
+jq -e \
+  --arg candidate_digest "$candidate_digest" \
+  --arg expected_ref "$expected_ref" \
+  --arg tag_sha "$tag_sha" \
+  --arg core "${versions[0]}" \
+  --arg admin "${versions[1]}" \
+  --arg inbound "${versions[2]}" \
+  'type == "object" and
+   (keys | sort) == ["candidate_digest", "commands", "packages", "ref", "sha"] and
+   .candidate_digest == $candidate_digest and
+   .ref == $expected_ref and
+   .sha == $tag_sha and
+   .packages == {
+     "mailglass": $core,
+     "mailglass_admin": $admin,
+     "mailglass_inbound": $inbound
+   } and
+   .commands == {
+     "phase-147-operator-live": "passed",
+     "proof-02-transactional-suppression": "passed",
+     "proof-02-webhook-suppression": "passed",
+     "proof-03-b2c-docs": "passed"
+   }' <<<"$proof_json" >/dev/null ||
+  fail "publication proof artifact does not match the exact candidate identity"
+
 release_ids=(
   "$(jq -er '.final_identity.publication_evidence.release_ids.mailglass' "$target_path")"
   "$(jq -er '.final_identity.publication_evidence.release_ids.mailglass_admin' "$target_path")"
