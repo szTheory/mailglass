@@ -5,15 +5,15 @@ milestone_name: Engineering Quality Ratchet
 current_phase: 160
 current_phase_name: Certification, Documentation, and Release
 status: executing
-stopped_at: Plan 160-01 independently re-reviewed PASS; executing Plan 160-03 live baseline reconciliation
-last_updated: "2026-08-18T22:05:00.000Z"
+stopped_at: Plan 160-03 independently re-reviewed PASS; executing Plan 160-04 protected release policy preparation
+last_updated: "2026-08-19T02:38:46.000Z"
 last_activity: 2026-08-18
 last_activity_desc: Plan 160-01 review corrections passed pinned proof and independent re-review
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 41
-  completed_plans: 37
+  completed_plans: 38
   percent: 83
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-17 after Phase 158)
 ## Current Position
 
 Phase: 160 (Certification, Documentation, and Release) — EXECUTING
-Plan: 3 of 6
-Status: Reconciling repository and live published baselines
-Last activity: 2026-08-18 — Plan 160-01 independent re-review passed
+Plan: 4 of 6
+Status: Preparing the protected three-package release policy with publication disabled
+Last activity: 2026-08-18 — Plan 160-03 independent re-review passed
 
-Progress: [██████████████████░░] 37/41 plans (90%); 5/6 phases complete
+Progress: [███████████████████░] 38/41 plans (93%); 5/6 phases complete
 
 ## v2.6 Milestone Intent
 
