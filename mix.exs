@@ -428,6 +428,7 @@ defmodule Mailglass.MixProject do
         "cmd env MIX_ENV=test mix mailglass.audit --kind hex",
         "cmd env MIX_ENV=test mix mailglass.audit --kind deps",
         "cmd env MIX_ENV=test mix dialyzer",
+        "cmd --cd mailglass_inbound mix dialyzer",
         "cmd --cd reference/host_app mix deps.get",
         "cmd --cd reference/host_app env MIX_ENV=dev mix compile",
         "cmd env MIX_ENV=test mix verify.reference_host.journey",

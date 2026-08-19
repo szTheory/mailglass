@@ -20,7 +20,10 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
   # so the required-lane identity is defined once and shared with the MIXCI-03
   # parity-drift test (D-LD-10). test/support is in elixirc_paths(:test), so the module
   # is compiled before this test and is available at module-attribute (compile) time.
-  @required_leaf_names MapSet.new(Mailglass.CILanes.required_lanes())
+  @required_leaf_names Mailglass.CIPolicy.load!()
+                       |> Mailglass.CIPolicy.active_required_lanes()
+                       |> Enum.map(& &1.name)
+                       |> MapSet.new()
   @structural_change_dependency "changes"
 
   test "REQUIRED_CHECKS array and print_expected_text bullets stay in sync" do
@@ -195,16 +198,7 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     policy = Mailglass.CIPolicy.load!()
 
     assert Mailglass.CIPolicy.active_required_ids(policy) ==
-             MapSet.new([
-               "compile_no_optional_deps",
-               "installer_host_smoke",
-               "mix_task_tests",
-               "support_contract_core",
-               "support_contract_admin",
-               "trust_lane_repo_head",
-               "hex_audit",
-               "deps_audit_advisory"
-             ])
+             MapSet.new(Enum.map(policy.target_required, & &1.id))
 
     assert Mailglass.CIPolicy.target_behaviors(policy) ==
              MapSet.new([
@@ -227,10 +221,11 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
   test "Phase 159 policy manifest rejects omitted target behavior and advisory promotion" do
     policy = Mailglass.CIPolicy.load!()
 
-    without_docs =
-      update_in(policy.target_required, fn lanes ->
-        Enum.reject(lanes, &(&1.behavior == :docs))
-      end)
+    without_docs = %{
+      policy
+      | active_required: List.delete(policy.active_required, "docs_warnings_as_errors"),
+        target_required: Enum.reject(policy.target_required, &(&1.behavior == :docs))
+    }
 
     assert_raise ArgumentError, ~r/missing target required behavior/, fn ->
       Mailglass.CIPolicy.validate!(without_docs)
@@ -238,11 +233,90 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
 
     promoted_advisory =
       update_in(policy.target_required, fn lanes ->
-        lanes ++ [%{id: "operator_browser_gate", behavior: :docs}]
+        lanes ++
+          [
+            %{
+              id: "operator_browser_gate",
+              name: "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)",
+              behavior: :docs,
+              ci_only_reason: "advisory"
+            }
+          ]
       end)
 
     assert_raise ArgumentError, ~r/target required and advisory lane IDs overlap/, fn ->
       Mailglass.CIPolicy.validate!(promoted_advisory)
+    end
+  end
+
+  test "required leaves retain manifest names and cannot opt out with continue-on-error" do
+    source = File.read!(@ci_yml_path)
+    assert_required_leaf_integrity!(source)
+
+    lanes = Mailglass.CIPolicy.load!() |> Mailglass.CIPolicy.active_required_lanes()
+
+    renamed =
+      String.replace(source, lanes |> hd() |> Map.fetch!(:name), "Renamed Required Lane",
+        global: false
+      )
+
+    assert_raise ExUnit.AssertionError, fn -> assert_required_leaf_integrity!(renamed) end
+
+    opted_out =
+      String.replace(
+        source,
+        "  format_check:\n",
+        "  format_check:\n    continue-on-error: true\n",
+        global: false
+      )
+
+    assert_raise ExUnit.AssertionError, fn -> assert_required_leaf_integrity!(opted_out) end
+  end
+
+  test "advisory identities remain visible and cannot enter CI Green" do
+    policy = Mailglass.CIPolicy.load!()
+
+    expected =
+      MapSet.new(
+        ~w(operator_browser_gate demo_browser_evidence preview_capture_advisory provider_live core_full_suite_next_toolchain_advisory trust_lane_clean_baseline branch_protection_advisory publish_hex)
+      )
+
+    assert MapSet.new(policy.advisory) == expected
+    assert MapSet.disjoint?(Mailglass.CIPolicy.active_required_ids(policy), expected)
+
+    ci_source = File.read!(@ci_yml_path)
+    ci_needs = parse_ci_green_needs(ci_source)
+
+    for id <-
+          ~w(operator_browser_gate demo_browser_evidence preview_capture_advisory trust_lane_clean_baseline branch_protection_advisory) do
+      assert ci_source =~ "  #{id}:\n"
+      refute MapSet.member?(ci_needs, id)
+    end
+
+    assert File.read!(Path.expand("../../.github/workflows/provider-live.yml", __DIR__)) =~
+             "  provider_live:\n"
+
+    assert File.read!(Path.expand("../../.github/workflows/advisory-matrix.yml", __DIR__)) =~
+             "  core_full_suite_next_toolchain_advisory:\n"
+
+    assert File.read!(Path.expand("../../.github/workflows/publish-hex.yml", __DIR__)) =~
+             "  publish-core:\n"
+  end
+
+  test "promotion-ready manifest rejects a missing active target and malformed local parity declaration" do
+    policy = Mailglass.CIPolicy.load!()
+
+    missing_active = %{policy | active_required: tl(policy.active_required)}
+
+    assert_raise ArgumentError, ~r/requires active required and target required IDs to match/, fn ->
+      Mailglass.CIPolicy.validate!(missing_active)
+    end
+
+    [lane | rest] = policy.target_required
+    malformed = %{policy | target_required: [Map.put(lane, :ci_only_reason, "conflict") | rest]}
+
+    assert_raise ArgumentError, ~r/exactly one of local_alias or ci_only_reason/, fn ->
+      Mailglass.CIPolicy.validate!(malformed)
     end
   end
 
@@ -257,6 +331,19 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     Regex.scan(~r/"([^"]+)"/, chunk)
     |> Enum.map(fn [_full, name] -> name end)
     |> MapSet.new()
+  end
+
+  defp assert_required_leaf_integrity!(source) do
+    jobs = Mailglass.CIYaml.job_names(source)
+    lanes = Mailglass.CIPolicy.load!() |> Mailglass.CIPolicy.active_required_lanes()
+
+    Enum.each(lanes, fn lane ->
+      assert Map.fetch!(jobs, lane.id) == lane.name,
+             "required job #{lane.id} display name drifted from the policy manifest"
+
+      refute extract_job_block(source, lane.id) =~ ~r/^    continue-on-error:\s*true\s*$/m,
+             "required job #{lane.id} must not continue on error"
+    end)
   end
 
   defp extract_job_block(source, job_key) do

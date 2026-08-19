@@ -101,16 +101,10 @@ defmodule Mailglass.Scripts.CIGreenPolicyTest do
   end
 
   defp active_results(overrides \\ %{}) do
-    active_lanes = [
-      "compile_no_optional_deps",
-      "installer_host_smoke",
-      "mix_task_tests",
-      "support_contract_core",
-      "support_contract_admin",
-      "trust_lane_repo_head",
-      "hex_audit",
-      "deps_audit_advisory"
-    ]
+    active_lanes =
+      Mailglass.CIPolicy.load!()
+      |> Mailglass.CIPolicy.active_required_ids()
+      |> MapSet.to_list()
 
     Enum.map(active_lanes, fn lane -> "#{lane}=#{Map.get(overrides, lane, "success")}" end)
   end

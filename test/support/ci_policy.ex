@@ -38,6 +38,11 @@ defmodule Mailglass.CIPolicy do
 
     ensure_disjoint!(target_ids, advisory_ids, "target required and advisory lane IDs overlap")
 
+    if Map.get(policy, :promotion_ready) == true and active_ids != target_ids do
+      raise ArgumentError,
+            "promotion-ready policy requires active required and target required IDs to match exactly"
+    end
+
     behaviors =
       target
       |> Enum.map(&Map.fetch!(&1, :behavior))
@@ -62,11 +67,34 @@ defmodule Mailglass.CIPolicy do
   def target_behaviors(%{target_required: target}),
     do: target |> Enum.map(& &1.behavior) |> MapSet.new()
 
+  def active_required_lanes(%{active_required: active, target_required: target}) do
+    by_id = Map.new(target, &{&1.id, &1})
+    Enum.map(active, &Map.fetch!(by_id, &1))
+  end
+
   defp target_lane_ids!(target) do
     Enum.each(target, fn
-      %{id: id, behavior: behavior} when is_binary(id) and is_atom(behavior) -> :ok
-      lane -> raise ArgumentError, "invalid target required lane: #{inspect(lane)}"
+      %{id: id, name: name, behavior: behavior} = lane
+      when is_binary(id) and is_binary(name) and is_atom(behavior) ->
+        local? = is_binary(Map.get(lane, :local_alias))
+        ci_only? = is_binary(Map.get(lane, :ci_only_reason))
+
+        if local? == ci_only? do
+          raise ArgumentError,
+                "target required lane must declare exactly one of local_alias or ci_only_reason: #{inspect(lane)}"
+        end
+
+        :ok
+
+      lane ->
+        raise ArgumentError, "invalid target required lane: #{inspect(lane)}"
     end)
+
+    names = Enum.map(target, & &1.name)
+
+    if MapSet.size(MapSet.new(names)) != length(names) do
+      raise ArgumentError, "target required lane display names must be unique"
+    end
 
     ids!(Enum.map(target, & &1.id), "target required")
   end

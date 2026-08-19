@@ -316,6 +316,56 @@ jobs:
         # requires even though these meta-tests never touch the database.
         run: mix verify.ci_lane_contract
 
+  core_deterministic_suite:
+    name: Core Deterministic Suite (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MIX_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - name: Cache deps
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: deps
+          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
+      - name: Install locked deps
+        run: mix deps.get --check-locked
+      - name: Wait for postgres + create test DB
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: Run deterministic core suite
+        run: mix test --warnings-as-errors
+
   inbound_test:
     name: Inbound Test (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
@@ -1187,11 +1237,22 @@ jobs:
     if: always()
     needs:
       - changes
+      - format_check
+      - compile_warnings
       - compile_no_optional_deps
+      - inbound_compile_no_optional_deps
       - installer_host_smoke
+      - installer_golden_gate
       - mix_task_tests
       - support_contract_core
       - support_contract_admin
+      - inbound_test
+      - core_deterministic_suite
+      - credo_strict
+      - conformance_gates
+      - docs_warnings_as_errors
+      - dialyzer
+      - inbound_dialyzer
       - trust_lane_repo_head
       - hex_audit
       - deps_audit_advisory
@@ -1201,11 +1262,22 @@ jobs:
           bash scripts/ci_green_policy.sh \
             "${{ needs.changes.result }}" \
             "${{ needs.changes.outputs.code }}" \
+            "format_check=${{ needs.format_check.result }}" \
+            "compile_warnings=${{ needs.compile_warnings.result }}" \
             "compile_no_optional_deps=${{ needs.compile_no_optional_deps.result }}" \
+            "inbound_compile_no_optional_deps=${{ needs.inbound_compile_no_optional_deps.result }}" \
             "installer_host_smoke=${{ needs.installer_host_smoke.result }}" \
+            "installer_golden_gate=${{ needs.installer_golden_gate.result }}" \
             "mix_task_tests=${{ needs.mix_task_tests.result }}" \
             "support_contract_core=${{ needs.support_contract_core.result }}" \
             "support_contract_admin=${{ needs.support_contract_admin.result }}" \
+            "inbound_test=${{ needs.inbound_test.result }}" \
+            "core_deterministic_suite=${{ needs.core_deterministic_suite.result }}" \
+            "credo_strict=${{ needs.credo_strict.result }}" \
+            "conformance_gates=${{ needs.conformance_gates.result }}" \
+            "docs_warnings_as_errors=${{ needs.docs_warnings_as_errors.result }}" \
+            "dialyzer=${{ needs.dialyzer.result }}" \
+            "inbound_dialyzer=${{ needs.inbound_dialyzer.result }}" \
             "trust_lane_repo_head=${{ needs.trust_lane_repo_head.result }}" \
             "hex_audit=${{ needs.hex_audit.result }}" \
             "deps_audit_advisory=${{ needs.deps_audit_advisory.result }}"

@@ -2,9 +2,9 @@ defmodule Mailglass.CILanes do
   @moduledoc """
   The single Elixir-side source of truth for CI lane identity (MIXCI-03, D-LD-10).
 
-  "One definition of green." Branch-protection truth (the required leaf gates) and
-  the advisory hygiene lanes that `mix ci` / `mix ci.browser` reproduce are declared
-  here ONCE. Two meta-tests read this module:
+  "One definition of green." The required leaf gates come from
+  `config/quality/ci_policy.exs`; this module projects their display names and keeps
+  the independent release and local-parity classifications used by older seams.
 
     * `test/scripts/required_checks_test.exs` — the GATE-03 set-equality test, which
       verifies `ci.yml`'s `ci_green.needs` display names set-equal `required_lanes/0`.
@@ -13,7 +13,7 @@ defmodule Mailglass.CILanes do
       advisory lane by identity, failing loudly on drift.
 
   All names here are VERBATIM the `name:` fields in `.github/workflows/ci.yml`. The
-  authoritative required-vs-advisory split lives in `MAINTAINING.md` § "Required Checks";
+  authoritative merge-required-vs-advisory split lives in `config/quality/ci_policy.exs`;
   the parity-contract intent is in `.planning/research/milestone-cicd/DX-MIX-CI.md`.
 
   ## Why the YAML/script copies are NOT hoisted away
@@ -34,7 +34,7 @@ defmodule Mailglass.CILanes do
     * **Parity** (`advisory_lanes/0`, `advisory_lanes_ci/0`, `advisory_lanes_browser/0`) —
       "does `mix ci` reproduce this lane locally?" Consumed by `ci_parity_drift_test.exs`
       (MIXCI-03).
-    * **Classification** (`required_lanes/0`, `advisory_classified_lanes/0`,
+    * **Release classification** (`release_required_lanes/0`, `advisory_classified_lanes/0`,
       `publish_gating_lanes/0`, `structural_lanes/0`) — "what does this lane block?"
       Consumed by the drift meta-test (`test/scripts/lane_classification_drift_test.exs`)
       and mirrored in `publish-hex.yml`'s `gate-ci-green` and `MAINTAINING.md`.
@@ -93,7 +93,7 @@ defmodule Mailglass.CILanes do
   `mix ci.browser`, not `mix ci` (footgun #4 keeps it out of the default command).
   """
 
-  @required_lanes [
+  @release_required_lanes [
     "Support Contract Core (Elixir 1.18 / OTP 27)",
     "Support Contract Admin (Elixir 1.18 / OTP 27)",
     "Compile No Optional Deps (Elixir 1.18 / OTP 27)",
@@ -104,17 +104,10 @@ defmodule Mailglass.CILanes do
     "Mix Task Tests (Elixir 1.18 / OTP 27)"
   ]
 
-  # Hygiene lanes `mix ci` reproduces (verbatim ci.yml name:).
-  @advisory_lanes_ci [
-    "Format Check (Elixir 1.18 / OTP 27)",
-    "Compile Warnings as Errors (Elixir 1.18 / OTP 27)",
-    "Credo Strict (Elixir 1.18 / OTP 27)",
-    "Dialyzer (Elixir 1.18 / OTP 27)",
-    "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
-    "Mix Task Tests (Elixir 1.18 / OTP 27)",
-    "Inbound Test (Elixir 1.18 / OTP 27)",
-    "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)"
-  ]
+  # Every locally reproducible deterministic lane is now merge-required. Keep
+  # this parity bucket empty so a lane cannot masquerade as both advisory and
+  # required on the same policy axis.
+  @advisory_lanes_ci []
 
   # Browser-tier advisory lane covered by `mix ci.browser` (verbatim ci.yml name:).
   @advisory_lanes_browser [
@@ -131,8 +124,8 @@ defmodule Mailglass.CILanes do
     "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)"
   ]
 
-  # Lanes that block a Hex publish when red but do NOT block a PR merge.
-  # `gate-ci-green` (publish-hex.yml) enumerates these; `ci_green.needs` does not.
+  # Additional release-gating lanes. After Phase 159 promotion most also block a
+  # PR merge; clean-baseline and branch-protection advisory remain release-only.
   @publish_gating_lanes [
     "Format Check (Elixir 1.18 / OTP 27)",
     "Compile Warnings as Errors (Elixir 1.18 / OTP 27)",
@@ -224,11 +217,19 @@ defmodule Mailglass.CILanes do
   ]
 
   @doc """
-  The seven required branch-protection leaf display names, VERBATIM as they appear as
-  `name:` in `.github/workflows/ci.yml`.
+  Required CI Green leaf display names, derived from the authoritative policy
+  manifest and VERBATIM as they appear as `name:` in `.github/workflows/ci.yml`.
   """
   @spec required_lanes() :: [String.t()]
-  def required_lanes, do: @required_lanes
+  def required_lanes do
+    Mailglass.CIPolicy.load!()
+    |> Mailglass.CIPolicy.active_required_lanes()
+    |> Enum.map(& &1.name)
+  end
+
+  @doc "The pre-promotion exact-name release registry consumed by publish-hex.yml."
+  @spec release_required_lanes() :: [String.t()]
+  def release_required_lanes, do: @release_required_lanes
 
   @doc """
   The advisory lane display names the `mix ci` ∪ `mix ci.browser` parity claim covers,
@@ -263,9 +264,8 @@ defmodule Mailglass.CILanes do
   def advisory_classified_lanes, do: @advisory_classified_lanes
 
   @doc """
-  Lane display names that block a Hex publish when red but do NOT block a PR
-  merge. `gate-ci-green` (`publish-hex.yml`) enumerates these; `ci_green.needs`
-  (`ci.yml`) does not.
+  Additional lane display names that block a Hex publish when red. Some are also
+  merge-required; the release workflow keeps its independent classification axis.
   """
   @spec publish_gating_lanes() :: [String.t()]
   def publish_gating_lanes, do: @publish_gating_lanes
@@ -287,8 +287,9 @@ defmodule Mailglass.CILanes do
   @spec all_classified_lanes() :: [String.t()]
   def all_classified_lanes,
     do:
-      required_lanes() ++
-        advisory_classified_lanes() ++ publish_gating_lanes() ++ structural_lanes()
+      (required_lanes() ++
+         advisory_classified_lanes() ++ publish_gating_lanes() ++ structural_lanes())
+      |> Enum.uniq()
 
   @doc """
   The `advisory-matrix.yml` RUNTIME lane names HARNESS-04 gates a Hex publish on —
