@@ -181,7 +181,7 @@ Plans:
 - [x] 159-04-PLAN.md — measurement-first coverage floors and critical contracts.
 - [x] 159-05-PLAN.md — inbound Dialyzer and static-analysis exception ratchet.
 - [x] 159-06-PLAN.md — protected CI Green promotion and advisory exclusion.
-- [ ] 159-07-PLAN.md — workflow hardening and release-policy extraction.
+- [x] 159-07-PLAN.md — workflow hardening and release-policy extraction.
 
 ### Phase 160: Certification, Documentation, and Release
 
@@ -216,5 +216,5 @@ Plans:
 | 156. Delivery Correctness and Bounded Execution | 6/6 | Complete    | 2026-08-17 |
 | 157. Inbound, Database, and Lifecycle Hardening | 9/9 | Complete    | 2026-08-17 |
 | 158. Simplify Architecture Without Breaking Adopters | 6/6 | Complete    | 2026-08-17 |
-| 159. Raise and Simplify Engineering Gates | 6/7 | In progress | 2026-08-18 |
+| 159. Raise and Simplify Engineering Gates | 7/7 | Verifying | 2026-08-18 |
 | 160. Certification, Documentation, and Release | 0/TBD | Not started | - |
