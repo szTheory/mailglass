@@ -505,7 +505,51 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert prepublish =~ "pretag=true"
     assert prepublish =~ "[ \"$(git rev-parse HEAD)\" = \"$proposal_head\" ]"
     assert prepublish =~ "[ \"$actual_digest\" = \"$content_digest\" ]"
+    assert prepublish =~
+             "$control_root/scripts/release_policy_validate_target.sh \"$captured_target\" \"mailglass-v${core}\" \"$candidate_root\""
+
+    assert prepublish =~ "tag_sha=%s"
+    assert prepublish =~ ~s("$proposal_head")
     refute prepublish =~ "git ls-files -z"
+  end
+
+  test "publish decisions execute only protected-main controls and require exactly three pinned tags" do
+    publish = File.read!(@publish)
+    prepublish = extract_job!(publish, "prepublish-summary")
+    validation = extract_step_script!(publish, "Validate automated release target")
+
+    assert prepublish =~ "- name: Checkout protected main release controls"
+    assert prepublish =~ "ref: refs/heads/main"
+    assert prepublish =~ "path: trusted-control"
+    assert prepublish =~ "version-file: trusted-control/.tool-versions"
+    assert prepublish =~ "working-directory: trusted-control"
+
+    assert validation =~ ~s(control_root="$GITHUB_WORKSPACE/trusted-control")
+    assert validation =~ ~s(candidate_root="$GITHUB_WORKSPACE")
+    assert validation =~ "[ \"$(git -C \"$control_root\" rev-parse HEAD)\" = \"$(git -C \"$control_root\" rev-parse origin/main)\" ]"
+    assert validation =~ "$control_root/scripts/release_policy_content_digest.sh"
+    assert validation =~ "$control_root/scripts/release_policy_validate_target.sh"
+    assert validation =~ "$control_root/scripts/release_policy_expected_tags.sh"
+    assert validation =~ "expected_tags_text=$("
+    assert validation =~ "mapfile -t expected_tags <<<\"$expected_tags_text\""
+    assert validation =~ "[ \"${#expected_tags[@]}\" -eq 3 ]"
+    refute validation =~ "done < <("
+
+    # The candidate checkout is data. It must never supply executable policy.
+    refute Regex.match?(~r/^mix run .*scripts\/release_policy\.exs/m, validation)
+    refute Regex.match?(~r/^scripts\/release_policy_/m, validation)
+  end
+
+  test "the read-only CI gate binds dry-run and live inspection to the validated immutable SHA" do
+    publish = File.read!(@publish)
+    gate = extract_job!(publish, "gate-ci-green")
+
+    assert gate =~ "EXPECTED_SHA: ${{ needs.prepublish-summary.outputs.tag_sha }}"
+    assert gate =~ "!/^[0-9a-f]{40}$/.test(expected)"
+    assert gate =~ "commit.data.sha !== expected"
+    refute gate =~ "EXPECTED_LIVE_SHA"
+    refute gate =~ "DRY_RUN_INPUT"
+    refute gate =~ "process.env.DRY_RUN_INPUT !== 'true'"
   end
 
   defp run(script, args), do: System.cmd("bash", [script | args], stderr_to_stdout: true)
