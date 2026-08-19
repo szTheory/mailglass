@@ -3,6 +3,7 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
 
   @script_path Path.expand("../../scripts/generated_ecto_host_proof.sh", __DIR__)
   @ci_yml_path Path.expand("../../.github/workflows/ci.yml", __DIR__)
+  @custom_modules_path Path.expand("../fixtures/generated_host/custom_modules.exs", __DIR__)
 
   @fresh_delivery_stages [
     "fresh_install",
@@ -11,6 +12,16 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     "worker_run",
     "persisted_outcome"
   ]
+
+  @boundary_stages [
+    "custom_modules",
+    "multi_repo_prefixes",
+    "upgrade",
+    "rollback",
+    "idempotent_rerun"
+  ]
+
+  @all_stages @fresh_delivery_stages ++ @boundary_stages
 
   @required_script_snippets [
     "mix phx.new host --module Host --app host",
@@ -47,8 +58,8 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
   test "generated-host checkpoints fail closed on missing, duplicate, reordered, or equal-order evidence" do
     valid_rows =
       for {journey, journey_index} <- Enum.with_index(["core_first", "inbound_first"]),
-          {stage, stage_index} <- Enum.with_index(@fresh_delivery_stages) do
-        "#{journey_index * length(@fresh_delivery_stages) + stage_index + 1}|#{journey}|#{stage}|passed"
+          {stage, stage_index} <- Enum.with_index(@all_stages) do
+        "#{journey_index * length(@all_stages) + stage_index + 1}|#{journey}|#{stage}|passed"
       end
 
     assert_checkpoint_result(valid_rows, 0)
@@ -74,7 +85,7 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
   test "generated-host checkpoint contract is closed and sanitized" do
     source = File.read!(@script_path)
 
-    Enum.each(@fresh_delivery_stages, fn stage ->
+    Enum.each(@all_stages, fn stage ->
       assert source =~ stage
     end)
 
@@ -84,14 +95,35 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
 
     valid_rows =
       for {journey, journey_index} <- Enum.with_index(["core_first", "inbound_first"]),
-          {stage, stage_index} <- Enum.with_index(@fresh_delivery_stages) do
-        "#{journey_index * length(@fresh_delivery_stages) + stage_index + 1}|#{journey}|#{stage}|passed"
+          {stage, stage_index} <- Enum.with_index(@all_stages) do
+        "#{journey_index * length(@all_stages) + stage_index + 1}|#{journey}|#{stage}|passed"
       end
 
     assert_checkpoint_result(
       List.replace_at(valid_rows, 1, "2|core_first|sync_send|recipient@example.com"),
       :failure
     )
+  end
+
+  test "custom host modules are copied from one deterministic fixture and exercised at runtime" do
+    source = File.read!(@script_path)
+    fixture = File.read!(@custom_modules_path)
+
+    for token <- [
+          "defmodule Host.InboundRepo",
+          "defmodule Host.GeneratedHostTenancy",
+          "defmodule Host.GeneratedHostAdapter",
+          "@behaviour Mailglass.Tenancy",
+          "@behaviour Mailglass.Adapter"
+        ] do
+      assert fixture =~ token
+    end
+
+    assert source =~ "test/fixtures/generated_host/custom_modules.exs"
+    assert source =~ "Host.InboundRepo"
+    assert source =~ "mailglass_core"
+    assert source =~ "mailglass_inbound"
+    assert source =~ "Host.GeneratedHostTenancy"
   end
 
   test "generated Ecto host proof pins the public generator-to-Postgres journey" do
