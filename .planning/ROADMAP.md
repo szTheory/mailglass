@@ -199,7 +199,7 @@ Plans:
 
 Plans:
 
-- [x] 160-01-PLAN.md — Certify the complete generated-host install, delivery, migration, repo, and prefix journey.
+- [ ] 160-01-PLAN.md — Certify the complete generated-host install, delivery, migration, repo, and prefix journey. (review corrections in progress)
 - [x] 160-02-PLAN.md — Reconcile executable v2 API, deprecation, upgrade, and inbound documentation truth.
 - [ ] 160-03-PLAN.md — Reconcile repository manifests with live Hex without inventing candidate versions.
 - [ ] 160-04-PLAN.md — Prepare tested all-package release policy and exact-Hex workflow inputs without publication.
@@ -217,4 +217,4 @@ Plans:
 | 157. Inbound, Database, and Lifecycle Hardening | 9/9 | Complete    | 2026-08-17 |
 | 158. Simplify Architecture Without Breaking Adopters | 6/6 | Complete    | 2026-08-17 |
 | 159. Raise and Simplify Engineering Gates | 7/7 | Complete | 2026-08-18 |
-| 160. Certification, Documentation, and Release | 2/6 | In progress | - |
+| 160. Certification, Documentation, and Release | 1/6 | In progress | - |
