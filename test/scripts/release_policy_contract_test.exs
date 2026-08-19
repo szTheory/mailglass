@@ -111,6 +111,12 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
       File.write!(Path.join(dir, "mailglass_admin/mix.exs"), "  @version \"2.4.0\"\n")
       File.write!(Path.join(dir, "mailglass_inbound/mix.exs"), "  @version \"2.1.1\"\n")
 
+      write_json(dir, ".release-please-manifest.json", %{
+        "." => "2.4.0",
+        "mailglass_admin" => "2.4.0",
+        "mailglass_inbound" => "2.1.1"
+      })
+
       target =
         write_json(dir, "target.json", %{
           "schema_version" => 1,
@@ -147,6 +153,12 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
       File.write!(Path.join(dir, "mix.exs"), "  @version \"2.5.0\"\n")
       File.write!(Path.join(dir, "mailglass_admin/mix.exs"), "  @version \"2.5.0\"\n")
       File.write!(Path.join(dir, "mailglass_inbound/mix.exs"), "  @version \"2.2.0\"\n")
+
+      write_json(dir, ".release-please-manifest.json", %{
+        "." => "2.5.0",
+        "mailglass_admin" => "2.5.0",
+        "mailglass_inbound" => "2.2.0"
+      })
 
       for tag <- ["mailglass-v2.5.0", "mailglass_admin-v2.5.0", "mailglass_inbound-v2.2.0"] do
         assert {output, 0} = run(@validate_target, [target, tag, dir])
@@ -195,6 +207,18 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
       assert forged_status != 0
       refute forged_output =~ "active=true"
+
+      write_json(dir, ".release-please-manifest.json", %{
+        "." => "99.0.0",
+        "mailglass_admin" => "99.0.0",
+        "mailglass_inbound" => "98.0.0"
+      })
+
+      assert {manifest_output, manifest_status} =
+               run(@validate_target, [authorized_target, "mailglass-v2.5.0", dir])
+
+      assert manifest_status != 0
+      refute manifest_output =~ "active=true"
     end)
   end
 
@@ -444,6 +468,8 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert release =~ "captured=true"
     assert release =~ "steps.capture-proposal.outputs.captured == 'true'"
     assert capture =~ "git checkout --detach \"$source_sha\""
+    assert capture =~ "mix deps.get"
+    assert capture =~ "mix compile"
     assert capture =~ "git worktree add --detach \"$candidate_root\" \"$proposal_head\""
 
     assert capture =~
@@ -472,6 +498,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
            )
 
     refute capture =~ "git checkout --detach \"$proposal_head\""
+    assert appears_before?(capture, "mix compile", "capture-candidate")
 
     refute capture =~ "capture-candidate .planning/release-target.json"
     refute release =~ "release_packages=$(jq"

@@ -261,6 +261,7 @@ jobs:
           [ "$merged_digest" = "$CONTENT_DIGEST" ]
           (
             cd "$control_root"
+            mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-source-manifest "$GITHUB_WORKSPACE/.release-please-manifest.json" "$GITHUB_WORKSPACE" >/dev/null
             mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- validate-protected-dispatch .planning/release-target.json "$CANDIDATE_DIGEST" >/dev/null
           )
           echo "merge_tree_verified=true" >> "$GITHUB_OUTPUT"
@@ -435,6 +436,12 @@ jobs:
           source_target=$(mktemp)
           git show "$source_sha":.planning/release-target.json > "$source_target"
           git checkout --detach "$source_sha"
+          # The source SHA is the protected PR base and therefore the trusted
+          # policy owner for proposal capture. Build it explicitly: the earlier
+          # control checkout has its own isolated _build and a fresh runner has
+          # no root Jason/Version runtime available to --no-compile.
+          mix deps.get
+          mix compile
           candidate_root=$(mktemp -d)
           rmdir "$candidate_root"
           git worktree add --detach "$candidate_root" "$proposal_head"
