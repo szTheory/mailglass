@@ -54,11 +54,11 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
       manifest =
         write_json(dir, "manifest.json", %{
           "." => "1.2.3",
-          "mailglass_admin" => "2.0.0",
+          "mailglass_admin" => "1.2.3",
           "mailglass_inbound" => "4.5.6"
         })
 
-      assert {"mailglass-v1.2.3\nmailglass_admin-v2.0.0\nmailglass_inbound-v4.5.6\n", 0} =
+      assert {"mailglass-v1.2.3\nmailglass_admin-v1.2.3\nmailglass_inbound-v4.5.6\n", 0} =
                run(@expected_tags, [manifest])
 
       for target <- [
@@ -82,6 +82,20 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
       empty = write_json(dir, "empty.json", %{})
       assert {_output, status} = run(@expected_tags, [empty])
+      assert status != 0
+    end)
+  end
+
+  test "manifest rejects divergent linked core and admin versions" do
+    in_tmp(fn dir ->
+      manifest =
+        write_json(dir, "manifest.json", %{
+          "." => "1.2.3",
+          "mailglass_admin" => "1.2.4",
+          "mailglass_inbound" => "4.5.6"
+        })
+
+      assert {_output, status} = run(@expected_tags, [manifest])
       assert status != 0
     end)
   end
