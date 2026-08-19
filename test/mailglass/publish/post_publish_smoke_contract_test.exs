@@ -352,7 +352,7 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert workflow =~ "github.rest.issues.update"
     assert workflow =~ ~s(state: "closed")
     assert workflow =~ ~s(state_reason: "completed")
-    assert workflow =~ "trust-runner-published-${context.runId}"
+    assert workflow =~ "published-adoption-evidence-${context.runId}"
     refute workflow =~ "gh issue close"
   end
 
