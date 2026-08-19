@@ -194,6 +194,21 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     assert String.contains?(installer_job, "postgres:16-alpine")
   end
 
+  test "core deterministic suite retains exact full-root command and inventory identity" do
+    source = File.read!(@ci_yml_path)
+    assert_core_deterministic_suite!(source)
+
+    narrowed =
+      String.replace(
+        source,
+        "run: mix test --warnings-as-errors",
+        "run: mix test test/mailglass --warnings-as-errors",
+        global: false
+      )
+
+    assert_raise ExUnit.AssertionError, fn -> assert_core_deterministic_suite!(narrowed) end
+  end
+
   test "Phase 159 policy manifest exactly captures active, target, and advisory identities" do
     policy = Mailglass.CIPolicy.load!()
 
@@ -344,6 +359,21 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
       refute extract_job_block(source, lane.id) =~ ~r/^    continue-on-error:\s*true\s*$/m,
              "required job #{lane.id} must not continue on error"
     end)
+  end
+
+  defp assert_core_deterministic_suite!(source) do
+    lane =
+      Mailglass.CIPolicy.load!().target_required
+      |> Enum.find(&(&1.id == "core_deterministic_suite"))
+
+    assert lane.name == "Core Deterministic Suite (Elixir 1.18 / OTP 27)"
+    assert lane.behavior == :deterministic_core_suite
+    assert lane.local_alias == "mix test --warnings-as-errors"
+
+    job = extract_job_block(source, lane.id)
+    assert job =~ "    name: #{lane.name}\n"
+    assert length(Regex.scan(~r/^        run: mix test --warnings-as-errors$/m, job)) == 1
+    refute job =~ ~r/^        run: mix test .*--(?:exclude|only|seed)/m
   end
 
   defp extract_job_block(source, job_key) do

@@ -364,6 +364,9 @@ jobs:
           until pg_isready -h localhost -U postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run deterministic core suite
+        # Full root suite: no directory filter, exclusions, fixed seed, or
+        # advisory continuation. Suite-floor and skip-ledger contracts run as
+        # part of this invocation and reject silent scope erosion.
         run: mix test --warnings-as-errors
 
   inbound_test:

@@ -120,7 +120,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
 
     cond do
       local_lane ->
-        &any_step?(&1, local_lane.local_alias)
+        fn steps -> Enum.all?(List.wrap(local_lane.local_alias), &any_step?(steps, &1)) end
 
       lane == "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)" ->
         &any_step?(&1, "npm run test:operator-browser")
@@ -209,6 +209,24 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
     assert uncovered_lanes(broken_steps, [lane]) == [lane],
            "coverage function did not report '#{lane}' uncovered after removing its " <>
              "covering step — the fail-loud property is broken"
+
+    without_generated_proof =
+      Enum.reject(union_steps(), &String.contains?(&1, "generated_ecto_host_proof.sh"))
+
+    assert uncovered_lanes(without_generated_proof, [lane]) == [lane]
+  end
+
+  test "negative controls: either missing inbound test cohort reports parity drift" do
+    lane = "Inbound Test (Elixir 1.18 / OTP 27)"
+    assert uncovered_lanes(union_steps(), [lane]) == []
+
+    for marker <- [
+          "mailglass_inbound mix test --exclude property",
+          "mailglass_inbound mix test --only property"
+        ] do
+      broken_steps = Enum.reject(union_steps(), &String.contains?(&1, marker))
+      assert uncovered_lanes(broken_steps, [lane]) == [lane]
+    end
   end
 
   test "negative control: changing the inbound Dialyzer alias command reports parity drift" do

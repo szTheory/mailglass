@@ -62,7 +62,10 @@
       id: "inbound_test",
       name: "Inbound Test (Elixir 1.18 / OTP 27)",
       behavior: :deterministic_inbound_suite,
-      local_alias: "mailglass_inbound mix test --exclude property"
+      local_alias: [
+        "mailglass_inbound mix test --exclude property",
+        "mailglass_inbound mix test --only property"
+      ]
     },
     %{
       id: "core_deterministic_suite",
@@ -129,7 +132,7 @@
       id: "installer_host_smoke",
       name: "Installer Host Smoke",
       behavior: :installer_proofs,
-      local_alias: "consumer_install_smoke.sh"
+      local_alias: ["consumer_install_smoke.sh", "generated_ecto_host_proof.sh"]
     },
     %{
       id: "installer_golden_gate",

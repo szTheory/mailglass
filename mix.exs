@@ -413,6 +413,7 @@ defmodule Mailglass.MixProject do
         "cmd --cd mailglass_inbound mix deps.get --check-locked",
         "cmd --cd mailglass_inbound mix compile --no-optional-deps --warnings-as-errors",
         "cmd --cd mailglass_inbound mix test --exclude property",
+        "cmd --cd mailglass_inbound mix test --only property",
         # ExDoc is intentionally a dev-only dependency; invoke the docs gates in
         # their native environment instead of inheriting ci.full's test env.
         "cmd env MIX_ENV=dev mix docs --warnings-as-errors",
@@ -434,7 +435,8 @@ defmodule Mailglass.MixProject do
         "cmd env MIX_ENV=test mix verify.reference_host.journey",
         "cmd bash scripts/check_trust_runner_checkpoint.sh",
         "cmd bash scripts/preflight_network.sh",
-        "cmd env DEP_MODE=path MAILGLASS_PATH=#{File.cwd!()} bash scripts/consumer_install_smoke.sh"
+        "cmd env DEP_MODE=path MAILGLASS_PATH=#{File.cwd!()} bash scripts/consumer_install_smoke.sh",
+        "cmd env MAILGLASS_PATH=#{File.cwd!()} bash scripts/generated_ecto_host_proof.sh"
       ],
 
       # Opt-in browser gate (Node + Playwright). Advisory in CI; zero-Node is an
