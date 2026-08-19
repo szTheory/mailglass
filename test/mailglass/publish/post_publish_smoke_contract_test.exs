@@ -18,6 +18,10 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
       assert block =~ "type: string"
     end
 
+    target_ref = workflow_dispatch_input_block!(workflow, "target_ref")
+    assert target_ref =~ "required: true"
+    assert target_ref =~ "Immutable 40-character tag SHA"
+
     assert resolver =~ "name: Classify trigger"
     assert resolver =~ "EVENT_NAME: ${{ github.event_name }}"
     assert resolver =~ "release)"
@@ -47,12 +51,15 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
              "if [ \"$EVENT_NAME\" = \"schedule\" ]; then command=\"completed-versions\"; fi"
 
     assert resolver =~ ~s("$command" .planning/release-target.json)
+    assert resolver =~ ~s($1 == "target_ref")
     assert resolver =~ "[ -n \"$INPUT_CORE\" ]"
     assert resolver =~ "[ -n \"$INPUT_ADMIN\" ]"
     assert resolver =~ "[ -n \"$INPUT_INBOUND\" ]"
     assert resolver =~ "[ \"$INPUT_CORE\" = \"$core\" ]"
     assert resolver =~ "[ \"$INPUT_ADMIN\" = \"$admin\" ]"
     assert resolver =~ "[ \"$INPUT_INBOUND\" = \"$inbound\" ]"
+    assert resolver =~ "[[ \"$INPUT_TARGET_REF\" =~ ^[0-9a-f]{40}$ ]]"
+    assert resolver =~ "target_ref=\"$INPUT_TARGET_REF\""
     assert resolver =~ "ref: ${{ github.sha }}"
 
     for forbidden <- [
@@ -108,9 +115,12 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
 
     assert job =~ "HOST_ROOT: ${{ runner.temp }}/mailglass-published-host-${{ github.run_id }}"
     assert job =~ ~s(rm -rf "${HOST_ROOT}/deps" "${HOST_ROOT}/_build" "${HOST_ROOT}/mix.lock")
-    assert job =~ ~s({:mailglass, "== ${VERSION_CORE}"})
-    assert job =~ ~s({:mailglass_admin, "== ${VERSION_ADMIN}"})
-    assert job =~ ~s({:mailglass_inbound, "== ${VERSION_INBOUND}"})
+    assert job =~ "export CORE_DEP=\"{:mailglass, \\\"== ${VERSION_CORE}\\\"}\""
+    assert job =~ "export ADMIN_DEP=\"{:mailglass_admin, \\\"== ${VERSION_ADMIN}\\\"}\""
+
+    assert job =~
+             "export INBOUND_DEP=\"{:mailglass_inbound, \\\"== ${VERSION_INBOUND}\\\"}\""
+
     assert job =~ "mix deps.get"
     assert job =~ "MAILGLASS_EXPECTED_CORE_VERSION"
     assert job =~ "MAILGLASS_EXPECTED_ADMIN_VERSION"
@@ -158,7 +168,9 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
       |> File.read!()
       |> String.replace(
         ~r/("mailglass": \{:hex, :mailglass, "[^"]+", )"[0-9a-f]{64}"/,
-        "\\1\"short\"", global: false)
+        "\\1\"short\"",
+        global: false
+      )
 
     File.write!(malformed_lock, malformed)
 
