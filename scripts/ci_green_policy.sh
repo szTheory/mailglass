@@ -30,6 +30,8 @@ fi
 
 seen_lanes=()
 blocked_results=()
+active_required_lanes=()
+advisory_lanes=()
 
 policy_lane_ids() {
   local key="$1"
