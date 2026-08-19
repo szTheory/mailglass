@@ -167,6 +167,20 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     assert_raise ExUnit.AssertionError, fn ->
       assert_ci_green_policy_invocation!(without_checkout)
     end
+
+    without_runtime_job =
+      String.replace(
+        ci_green,
+        "      - name: Set up OTP + Elixir\n        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1\n        with:\n          version-file: .tool-versions\n          version-type: strict\n",
+        "",
+        global: false
+      )
+
+    without_runtime = String.replace(ci_source, ci_green, without_runtime_job, global: false)
+
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_ci_green_policy_invocation!(without_runtime)
+    end
   end
 
   test "no required CI leaf is permanently if:-disabled (GATE-03)" do
@@ -489,6 +503,10 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     assert ci_green =~
              "uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1",
            "ci_green must check out the repository before invoking its policy script"
+
+    assert ci_green =~
+             "uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124  # v1.24.1",
+           "ci_green must install Elixir before evaluating its policy manifest"
 
     assert ci_green =~ "bash scripts/ci_green_policy.sh",
            "ci_green must delegate its aggregate decision to scripts/ci_green_policy.sh"
