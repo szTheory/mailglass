@@ -246,7 +246,10 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
   test "release target remains versioned and inactive until protected candidate capture" do
     source = workflow_source()
-    validation = extract_step_block!(source, "Capture Release Please proposal identity without activation")
+
+    validation =
+      extract_step_block!(source, "Capture Release Please proposal identity without activation")
+
     target = Jason.decode!(File.read!(@release_target_path))
 
     assert target["schema_version"] == 1
