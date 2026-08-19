@@ -50,6 +50,17 @@ defmodule Mailglass.MigrationTest do
       # teardown.
       _ = restore_suite_baseline_schema()
 
+      # The public down/up round-trip drops and recreates `citext`, which gives
+      # the type a new PostgreSQL OID. Restart the whole repo so its shared
+      # Postgrex type server cannot leak the old OID into later modules. The
+      # helper restores :auto for this callback; `unsandboxed_module/1` still
+      # performs the final :manual revert after this callback returns.
+      SandboxOwnership.restart_repo_after_global_type_change!(TestRepo,
+        caller: __MODULE__
+      )
+
+      Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
+
       # VERIFIED, not assumed: reuse the formatter's own probe rather than
       # re-implementing the check. A restore that could not complete raises
       # naming the relations it could not find — it never returns quietly.

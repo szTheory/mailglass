@@ -454,6 +454,72 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
              :already_shared
   end
 
+  test "restart_repo_after_global_type_change!/2 runs stop, start, and auto mode in order" do
+    test_pid = self()
+
+    assert :ok =
+             SandboxOwnership.restart_repo_after_global_type_change!(:fake_repo,
+               caller: __MODULE__,
+               stop_fun: fn repo ->
+                 send(test_pid, {:restart_step, :stop, repo})
+                 :ok
+               end,
+               start_fun: fn repo ->
+                 send(test_pid, {:restart_step, :start, repo})
+                 {:ok, self()}
+               end,
+               unlink_fun: fn pid ->
+                 send(test_pid, {:restart_step, :unlink, pid})
+                 true
+               end,
+               mode_fun: fn repo, mode ->
+                 send(test_pid, {:restart_step, :mode, repo, mode})
+                 :ok
+               end
+             )
+
+    assert_receive {:restart_step, :stop, :fake_repo}
+    assert_receive {:restart_step, :start, :fake_repo}
+    assert_receive {:restart_step, :unlink, _pid}
+    assert_receive {:restart_step, :mode, :fake_repo, :auto}
+  end
+
+  test "restart_repo_after_global_type_change!/2 fails closed at each operation" do
+    assert_raise RuntimeError, ~r/could not stop.*:busy/, fn ->
+      SandboxOwnership.restart_repo_after_global_type_change!(:fake_repo,
+        caller: __MODULE__,
+        stop_fun: fn _repo -> :busy end
+      )
+    end
+
+    assert_raise RuntimeError, ~r/could not start.*:boom/, fn ->
+      SandboxOwnership.restart_repo_after_global_type_change!(:fake_repo,
+        caller: __MODULE__,
+        stop_fun: fn _repo -> :ok end,
+        start_fun: fn _repo -> {:error, :boom} end
+      )
+    end
+
+    assert_raise RuntimeError, ~r/could not restore_auto_mode.*:not_owner/, fn ->
+      SandboxOwnership.restart_repo_after_global_type_change!(:fake_repo,
+        caller: __MODULE__,
+        stop_fun: fn _repo -> :ok end,
+        start_fun: fn _repo -> {:ok, self()} end,
+        unlink_fun: fn _pid -> true end,
+        mode_fun: fn _repo, :auto -> :not_owner end
+      )
+    end
+
+    assert_raise RuntimeError, ~r/could not unlink.*false/, fn ->
+      SandboxOwnership.restart_repo_after_global_type_change!(:fake_repo,
+        caller: __MODULE__,
+        stop_fun: fn _repo -> :ok end,
+        start_fun: fn _repo -> {:ok, self()} end,
+        unlink_fun: fn _pid -> false end
+      )
+    end
+  end
+
   # 7c. Exhausted-bound classification (CI run 30555218236, job 90913824954,
   # seed 79310 -- the single failure on that advisory leg).
   #
