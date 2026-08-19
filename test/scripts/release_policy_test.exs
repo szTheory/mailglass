@@ -158,10 +158,20 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
       put_in(completed, adoption_path, nil),
       update_in(completed, adoption_path, &Map.delete(&1, "workflow_run_url")),
       put_in(completed, adoption_path ++ ["workflow_run_url"], "http://github.com/run/123"),
-      update_in(completed, adoption_path ++ ["checkpoint_digests"], &Map.delete(&1, "generated_host")),
+      put_in(completed, adoption_path ++ ["target_ref"], String.duplicate("a", 40)),
+      update_in(
+        completed,
+        adoption_path ++ ["checkpoint_digests"],
+        &Map.delete(&1, "generated_host")
+      ),
       put_in(completed, adoption_path ++ ["checkpoint_digests", "trust_runner"], "bad"),
-      put_in(completed, adoption_path ++ ["checkpoint_digests", "unknown"], String.duplicate("f", 64)),
-      put_in(completed, adoption_path ++ ["unknown"], true)
+      put_in(
+        completed,
+        adoption_path ++ ["checkpoint_digests", "unknown"],
+        String.duplicate("f", 64)
+      ),
+      put_in(completed, adoption_path ++ ["unknown"], true),
+      Map.put(completed, "final_identity", %{"tag_sha" => String.duplicate("d", 40)})
     ]
 
     for mutation <- mutations do
@@ -184,6 +194,7 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
       assert_cli(["validate-candidate", candidate_path, review_path], "candidate_valid=true")
       assert_cli(["verify-published", published_path], "published=true")
       assert_cli(["verify-complete", completed_path], "completed=true")
+      assert_cli(["authorized-versions", published_path], "authorized=true")
 
       forged_review_path =
         write_json(
@@ -193,8 +204,10 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
         )
 
       refute_cli(["validate-candidate", candidate_path, forged_review_path])
+      refute_cli(["validate-candidate", completed_path, review_path])
       refute_cli(["verify-published", completed_path])
       refute_cli(["verify-complete", published_path])
+      refute_cli(["authorized-versions", completed_path])
     end)
   end
 
@@ -307,7 +320,8 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
       "tag_sha" => tag_sha,
       "publication_evidence" => %{
         "workflow_run_url" => "https://github.com/szTheory/mailglass/actions/runs/123456789",
-        "release_ids" => Map.new(@packages, &{&1, 1000 + Enum.find_index(@packages, fn p -> p == &1 end)}),
+        "release_ids" =>
+          Map.new(@packages, &{&1, 1000 + Enum.find_index(@packages, fn p -> p == &1 end)}),
         "tag_shas" => Map.new(@packages, &{&1, tag_sha}),
         "hex_release_checksums" => Map.new(@packages, &{&1, String.duplicate("e", 64)})
       },
@@ -320,6 +334,7 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
     |> Map.put("status", "completed")
     |> put_in(["final_identity", "adoption_evidence"], %{
       "workflow_run_url" => "https://github.com/szTheory/mailglass/actions/runs/123456790",
+      "target_ref" => String.duplicate("d", 40),
       "checkpoint_digests" => %{
         "generated_host" => String.duplicate("f", 64),
         "trust_runner" => String.duplicate("0", 64)
