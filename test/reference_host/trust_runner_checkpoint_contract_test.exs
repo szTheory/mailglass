@@ -179,6 +179,9 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
     valid_checkpoint = Path.join(checkpoint_dir, "phase58-plan02-validator-valid.json")
     invalid_checkpoint = Path.join(checkpoint_dir, "phase58-plan02-validator-invalid.json")
 
+    empty_evidence_checkpoint =
+      Path.join(checkpoint_dir, "phase58-plan02-validator-empty-evidence.json")
+
     File.rm_rf!(checkpoint_dir)
     File.mkdir_p!(checkpoint_dir)
 
@@ -206,6 +209,25 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
 
     File.write!(invalid_checkpoint, Jason.encode_to_iodata!(payload, pretty: true))
 
+    empty_evidence_payload =
+      valid_checkpoint
+      |> decode!()
+      |> update_in(["checkpoints"], fn rows ->
+        Enum.map(rows, fn
+          %{"stage" => stage} = row
+          when stage in ["webhook_ingest", "operator_troubleshooting"] ->
+            Map.put(row, "evidence", %{})
+
+          row ->
+            row
+        end)
+      end)
+
+    File.write!(
+      empty_evidence_checkpoint,
+      Jason.encode_to_iodata!(empty_evidence_payload, pretty: true)
+    )
+
     assert {_, 0} =
              System.cmd(
                "bash",
@@ -224,6 +246,22 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
 
     assert exit_code != 0
     assert output =~ "forbidden evidence key"
+
+    assert {empty_output, empty_status} =
+             System.cmd(
+               "bash",
+               [
+                 "scripts/check_trust_runner_checkpoint.sh",
+                 "--require-completed",
+                 "--checkpoint",
+                 empty_evidence_checkpoint
+               ],
+               cd: @project_root,
+               stderr_to_stdout: true
+             )
+
+    assert empty_status != 0
+    assert empty_output =~ "runtime evidence is required"
   end
 
   test "REL-01 generated-host evidence closes every package boundary in exact order" do
