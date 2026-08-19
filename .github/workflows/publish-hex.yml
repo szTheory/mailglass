@@ -288,6 +288,7 @@ jobs:
           jq -n \
             --arg ref "${{ github.event.release.tag_name || github.event.inputs.tag }}" \
             --arg sha "$(git rev-parse HEAD)" \
+            --arg candidate_digest "${{ steps.release-target.outputs.candidate_digest }}" \
             --arg core "${{ steps.release-target.outputs.core }}" \
             --arg admin "${{ steps.release-target.outputs.admin }}" \
             --arg inbound "${{ steps.release-target.outputs.inbound }}" \
@@ -296,6 +297,7 @@ jobs:
             --arg b2c_docs "passed" \
             --arg operator_live "passed" \
             '{
+              candidate_digest: $candidate_digest,
               ref: $ref,
               sha: $sha,
               packages: {
