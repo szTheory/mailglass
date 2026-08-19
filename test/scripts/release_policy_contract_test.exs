@@ -367,6 +367,9 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
     assert release =~ "gh pr list --head release-please--branches--main"
     assert release =~ "proposal-candidate.json"
+    assert release =~ "Upload sanitized release proposal candidate"
+    assert release =~ "release-proposal-candidate-${{ github.run_id }}"
+    assert release =~ "retention-days: 30"
     assert release =~ "digest=$(scripts/release_policy_content_digest.sh)"
     refute release =~ "release_packages=$(jq"
     refute release =~ "Phase 148 must publish exactly"
@@ -381,6 +384,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert publish =~ "github.event.inputs.candidate_digest"
     refute publish =~ "false &&"
     assert publish =~ "mailglass_inbound"
+    assert publish =~ "[ \"${PACKAGE:-}\" = all ]"
   end
 
   test "dry-run remains credential-free and outside every protected publish environment" do
