@@ -50,7 +50,7 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert resolver =~
              "if [ \"$EVENT_NAME\" = \"schedule\" ]; then command=\"completed-versions\"; fi"
 
-    assert resolver =~ ~s("$command" .planning/release-target.json)
+    assert resolver =~ ~s("$command" "$target")
     assert resolver =~ ~s($1 == "target_ref")
     assert resolver =~ "[ -n \"$INPUT_CORE\" ]"
     assert resolver =~ "[ -n \"$INPUT_ADMIN\" ]"
@@ -60,7 +60,7 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert resolver =~ "[ \"$INPUT_INBOUND\" = \"$inbound\" ]"
     assert resolver =~ "[[ \"$INPUT_TARGET_REF\" =~ ^[0-9a-f]{40}$ ]]"
     assert resolver =~ "target_ref=\"$INPUT_TARGET_REF\""
-    assert resolver =~ "ref: ${{ github.sha }}"
+    assert resolver =~ "ref: ${{ github.workflow_sha }}"
 
     for forbidden <- [
           "listReleases",
