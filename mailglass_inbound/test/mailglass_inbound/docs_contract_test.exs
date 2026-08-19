@@ -655,12 +655,8 @@ defmodule MailglassInbound.DocsContractTest do
     install = File.read!(@install_path)
 
     for {kind, token} <- inbound_v26_required_tokens() do
-      {changed_stability, changed_install} =
-        if String.contains?(stability, token) do
-          {String.replace(stability, token, ""), install}
-        else
-          {stability, String.replace(install, token, "")}
-        end
+      changed_stability = String.replace(stability, token, "")
+      changed_install = String.replace(install, token, "")
 
       assert kind in inbound_v26_contract_errors(changed_stability, changed_install),
              "removing #{inspect(token)} did not trigger #{inspect(kind)}"
