@@ -37,6 +37,7 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       failure:*) exit 1 ;;
       partial:repos/szTheory/mailglass/releases/1002) exit 1 ;;
       *:repos/szTheory/mailglass/actions/runs/123456789) printf '%s' "$FAKE_RUN_JSON" ;;
+      *:repos/szTheory/mailglass/actions/runs/123456789/jobs*) printf '%s' "$FAKE_JOBS_JSON" ;;
       *:repos/szTheory/mailglass/releases/1001) printf '%s' "$FAKE_CORE_RELEASE_JSON" ;;
       *:repos/szTheory/mailglass/releases/1002) printf '%s' "$FAKE_ADMIN_RELEASE_JSON" ;;
       *:repos/szTheory/mailglass/releases/1003) printf '%s' "$FAKE_INBOUND_RELEASE_JSON" ;;
@@ -109,6 +110,7 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
     assert context.root |> Path.join("gh.log") |> File.read!() |> String.split("\n", trim: true) ==
              [
                "repos/szTheory/mailglass/actions/runs/123456789",
+               "repos/szTheory/mailglass/actions/runs/123456789/jobs?per_page=100&filter=latest",
                "repos/szTheory/mailglass/releases/1001",
                "repos/szTheory/mailglass/git/ref/tags/mailglass-v3.0.0",
                "repos/szTheory/mailglass/releases/1002",
@@ -180,6 +182,40 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
     end)
   end
 
+  test "rejects successful inert, dry-run, partial, duplicate, or failed publish job evidence",
+       context do
+    valid_jobs = valid_jobs()
+
+    hostile = [
+      %{jobs_json: "not-json"},
+      %{jobs_json: Jason.encode!(valid_jobs["jobs"])},
+      %{jobs_json: Jason.encode!(%{"total_count" => 4, "jobs" => Enum.take(valid_jobs["jobs"], 4)})},
+      %{
+        jobs_json:
+          Jason.encode!(%{
+            "total_count" => 7,
+            "jobs" =>
+              Enum.map(valid_jobs["jobs"], fn
+                %{"name" => "publish-admin"} = job -> %{job | "conclusion" => "skipped"}
+                job -> job
+              end)
+          })
+      },
+      %{
+        jobs_json:
+          Jason.encode!(%{
+            "total_count" => 8,
+            "jobs" => [hd(valid_jobs["jobs"]) | valid_jobs["jobs"]]
+          })
+      }
+    ]
+
+    Enum.each(hostile, fn overrides ->
+      assert {_output, status} = run(context, overrides)
+      assert status != 0, "unexpectedly accepted publish jobs #{inspect(overrides)}"
+    end)
+  end
+
   test "fails closed on partial, ambiguous, retired, mismatched, or unavailable Hex evidence",
        context do
     for mode <- ~w(partial ambiguous retired wrong failure) do
@@ -211,6 +247,7 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       "FAKE_HEX_CHECKSUM" => @checksum,
       "FAKE_WRONG_CHECKSUM" => String.duplicate("f", 64),
       "FAKE_RUN_JSON" => Jason.encode!(valid_run()),
+      "FAKE_JOBS_JSON" => Jason.encode!(valid_jobs()),
       "FAKE_CORE_RELEASE_JSON" => Jason.encode!(valid_release("mailglass", 1001)),
       "FAKE_ADMIN_RELEASE_JSON" => Jason.encode!(valid_release("mailglass_admin", 1002)),
       "FAKE_INBOUND_RELEASE_JSON" => Jason.encode!(valid_release("mailglass_inbound", 1003)),
@@ -234,6 +271,23 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       "head_branch" => "main",
       "head_repository" => %{"full_name" => "szTheory/mailglass"},
       "path" => ".github/workflows/publish-hex.yml"
+    }
+  end
+
+  defp valid_jobs do
+    names = [
+      "prepublish-summary",
+      "ensure-live-ci-runs",
+      "gate-ci-green",
+      "publish-core",
+      "publish-admin",
+      "publish-inbound",
+      "dispatch-post-publish-smoke"
+    ]
+
+    %{
+      "total_count" => length(names),
+      "jobs" => Enum.map(names, &%{"name" => &1, "status" => "completed", "conclusion" => "success"})
     }
   end
 
