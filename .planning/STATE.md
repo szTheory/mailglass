@@ -4,16 +4,16 @@ milestone: v2.6
 milestone_name: Engineering Quality Ratchet
 current_phase: 160
 current_phase_name: Certification, Documentation, and Release
-status: ready
-stopped_at: Phase 159 verified complete; Phase 160 ready for execution
-last_updated: "2026-08-18T01:30:00.000Z"
+status: executing
+stopped_at: Plans 160-01 and 160-02 complete; executing 160-03 release baseline reconciliation
+last_updated: "2026-08-18T21:30:00.000Z"
 last_activity: 2026-08-18
-last_activity_desc: Completed Plan 159-07 workflow hardening
+last_activity_desc: Completed Phase 160 generated-host certification and v2 documentation reconciliation
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 41
-  completed_plans: 35
+  completed_plans: 37
   percent: 83
 ---
 
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-08-17 after Phase 158)
 
 ## Current Position
 
-Phase: 160 (Certification, Documentation, and Release) — READY
-Plan: 1 of 6
-Status: Phase 159 verified; Phase 160 ready for execution
-Last activity: 2026-08-18 — Phase 159 verification passed (10/10 requirements)
+Phase: 160 (Certification, Documentation, and Release) — EXECUTING
+Plan: 3 of 6
+Status: Reconciling repository and live published baselines
+Last activity: 2026-08-18 — Plans 160-01 and 160-02 complete
 
-Progress: [█████████████████░░░] 35/41 plans (85%); 5/6 phases complete
+Progress: [██████████████████░░] 37/41 plans (90%); 5/6 phases complete
 
 ## v2.6 Milestone Intent
 
