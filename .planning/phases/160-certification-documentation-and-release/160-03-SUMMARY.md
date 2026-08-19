@@ -65,9 +65,11 @@ or authorized candidate.
   three-package schema. `candidate_versions`, proposal head/source SHAs,
   publishable-content digest, and final tag SHA are all null; authorization is
   `unauthorized` and publication is `not_started`.
-- Added strict schema validation that rejects unexpected top-level or evidence
-  fields, plus activation tests that reject absent or automation-mismatched
-  candidate identity.
+- Added strict shared target and review schema validation that rejects missing
+  or unexpected fields at every layer, including evidence endpoint/checksum/tag
+  identifiers. Activation accepts only exact captured or authorized
+  prepublication lifecycle state and still requires every automation-proposed
+  package to advance its baseline.
 
 ## Commits
 
@@ -76,6 +78,8 @@ or authorized candidate.
 - `9182cf2f` — accept active Hex package summaries while retaining exact-release retirement authority
 - `f17bbfb9` — require exact reconciled baseline metadata (Task 2 TDD red)
 - `6c8ec1db` — reconcile published package baselines (Task 2 TDD green)
+- `27ec9518` — expose activation schema bypasses (review TDD red)
+- `1fa44e14` — enforce exact activation and reviewed-output schemas (review TDD green)
 
 ## Verification
 
@@ -83,7 +87,7 @@ or authorized candidate.
   `ok`, repository/live baselines equal at `2.4.1/2.4.1/2.1.2`, empty drift,
   and all three public checksums matched.
 - `mix test test/scripts/reconcile_release_versions_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors`
-  — 21 tests, 0 failures.
+  — 24 tests, 0 failures.
 - `cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors`
   — 5 tests, 0 failures.
 - `cd mailglass_inbound && mix test test/mailglass_inbound/stability_contract_test.exs --warnings-as-errors`
@@ -108,6 +112,17 @@ The immutable historical tag proves the missing changelog entries and
 version-coupled publish-summary fields. Existing file inventories, tarball
 sizes, and other artifact metadata were deliberately preserved rather than
 copying unrelated historical-tag source.
+
+### Independent activation-schema review
+
+Independent review found that the original activation validator checked
+candidate identity but did not reuse the inactive target's exact base schema;
+missing evidence and unknown target/review fields could therefore pass. The
+review correction added mutation-first coverage for every target layer,
+required endpoint/checksum/tag evidence, reviewed automation output, lifecycle
+state, and the all-three advance rule. Both captured/unauthorized and
+authorized prepublication targets validate only with exact nested schemas;
+publication state remains `not_started`.
 
 ## Scope Confirmation
 
