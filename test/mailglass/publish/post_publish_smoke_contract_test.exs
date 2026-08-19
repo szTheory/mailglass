@@ -35,18 +35,21 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert consumer_install =~ "run: bash scripts/consumer_install_smoke.sh"
   end
 
-  test "consumer smoke resolves inbound from the checked-out release and fails closed" do
+  test "consumer smoke resolves all exact packages from an immutable completed target" do
     workflow = File.read!(@workflow_path)
     cron_guard = extract_job!(workflow, "cron-guard", "wait-for-index")
     consumer_install = extract_job!(workflow, "consumer-install", "published-trust-journey")
 
     assert cron_guard =~
-             "version_inbound: ${{ steps.read-inbound-version.outputs.version_inbound }}"
+             "version_inbound: ${{ needs.resolve-completed-target.outputs.inbound }}"
 
-    assert cron_guard =~ "ref: ${{ steps.guard.outputs.release_ref }}"
-    assert cron_guard =~ "id: read-inbound-version"
-    assert cron_guard =~ ~s(if [ -f mailglass_inbound/mix.exs ]; then)
-    assert cron_guard =~ ~s(echo "version_inbound=${VERSION_INBOUND}" >> "$GITHUB_OUTPUT")
+    assert workflow =~ "resolve-completed-target:"
+    assert workflow =~ "completed-versions .planning/release-target.json"
+    assert workflow =~ "validate_completed_target"
+    assert cron_guard =~ "COMPLETED_CORE"
+    assert cron_guard =~ "COMPLETED_ADMIN"
+    assert cron_guard =~ "COMPLETED_INBOUND"
+    refute cron_guard =~ "read-inbound-version"
 
     assert consumer_install =~
              "VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}"
