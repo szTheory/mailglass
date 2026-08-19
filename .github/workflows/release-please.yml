@@ -4,17 +4,10 @@ on:
   push:
     branches:
       - main
-  # Self-healing recovery for the anti-recursion miss: when the release PR is
-  # merged by GitHub-native auto-merge, that push is authored by GITHUB_TOKEN and
-  # is anti-recursion-suppressed, so the `push` trigger above does NOT re-run
-  # release-please to tag/publish. These two triggers recover that case WITHOUT
-  # weakening security — release creation still uses RELEASE_PLEASE_PAT, so a run
-  # started here still cascades to `publish-hex.yml` via `release: published`:
-  #   * workflow_dispatch — one-click manual recovery (anti-recursion exception).
-  #   * schedule — hourly dead-man's-switch; the preflight is idempotent (skips
-  #     when all expected tags already exist), so a no-op run is cheap and a
-  #     merged-but-untagged release PR self-heals within the hour.
-  # See CONTRIBUTING.md "If a release publishes but the tags/publish never fire".
+  # Pushes, digest-free manual runs, and the hourly schedule are proposal-only.
+  # They may create or synchronize the release PR, but cannot merge it or create
+  # tags/releases. Only a later protected workflow_dispatch carrying the exact
+  # dual-authorized candidate digest may cross that boundary.
   workflow_dispatch:
     inputs:
       candidate_digest:
@@ -375,6 +368,7 @@ jobs:
           git push origin "$BRANCH"
 
       - name: Capture Release Please proposal identity without activation
+        id: capture-proposal
         if: ${{ steps.release-preflight.outputs.should_run == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -397,10 +391,11 @@ jobs:
           mkdir -p .planning/release-candidates
           mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- capture-candidate .planning/release-target.json . "$proposal_head" "$source_sha" "$digest" > .planning/release-candidates/proposal-candidate.json
           jq -e '.candidate_versions.mailglass == .candidate_versions.mailglass_admin' .planning/release-candidates/proposal-candidate.json >/dev/null
+          echo "captured=true" >> "$GITHUB_OUTPUT"
           printf '%s\n' "proposal candidate captured after sibling synchronization"
 
       - name: Upload sanitized release proposal candidate
-        if: ${{ steps.release-preflight.outputs.should_run == 'true' }}
+        if: ${{ steps.capture-proposal.outputs.captured == 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: release-proposal-candidate-${{ github.run_id }}
@@ -408,13 +403,9 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      # A machine-readable target replaces the former human go/no-go. The
-      # release PR may auto-merge only when Release Please produced the exact
-      # package set the active milestone authorized.
-      # Hands-free release: arm squash auto-merge so the release PR ships the
-      # moment its required checks go green. The Hex publish itself has no
-      # environment gate (intentional — see CLAUDE.md), so this completes the
-      # automated path. Idempotent: re-arming an already-armed PR is a no-op.
+      # Preserve the historical step identity for workflow compatibility while
+      # explicitly disarming ordinary auto-merge. The protected exact-digest
+      # dispatch above is the sole merge/tag boundary.
       - name: Arm auto-merge on the release PR
         if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release.outputs.prs_created == 'true' }}
         env:
