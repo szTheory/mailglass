@@ -109,6 +109,7 @@ defmodule MailglassInbound.TelemetryTest do
     prior_postmark = Application.get_env(:mailglass_inbound, :postmark)
 
     Application.put_env(:mailglass, :tenancy, TenantResolver)
+    Mailglass.Runtime.reset_for_test!()
 
     Application.put_env(:mailglass_inbound, :postmark,
       basic_auth: {"postmark", "secret"},
@@ -120,6 +121,7 @@ defmodule MailglassInbound.TelemetryTest do
 
     on_exit(fn ->
       restore_env(:mailglass, :tenancy, prior_tenancy)
+      Mailglass.Runtime.reset_for_test!()
       restore_env(:mailglass_inbound, :postmark, prior_postmark)
     end)
 
