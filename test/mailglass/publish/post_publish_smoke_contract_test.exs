@@ -77,6 +77,42 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     end
   end
 
+  test "policy and every repository-backed proof stay on immutable control and target refs" do
+    workflow = File.read!(@workflow_path)
+    resolver = extract_job!(workflow, "resolve-completed-target", "cron-guard")
+
+    assert resolver =~ "name: Checkout immutable workflow control plane"
+    assert resolver =~ "ref: ${{ github.workflow_sha }}"
+    refute resolver =~ "ref: ${{ github.sha }}"
+    refute resolver =~ "ref: main"
+
+    assert resolver =~ "name: Checkout immutable published target"
+    assert resolver =~ "if: ${{ github.event_name == 'workflow_dispatch' }}"
+    assert resolver =~ "ref: ${{ github.event.inputs.target_ref }}"
+    assert resolver =~ "path: immutable-target"
+    assert resolver =~ "control_target=.planning/release-target.json"
+    assert resolver =~ "target=immutable-target/.planning/release-target.json"
+    assert resolver =~ ~s("authorized-versions" "$control_target")
+    assert resolver =~ ~s("$command" "$target")
+    assert resolver =~ "cmp --silent \"$control_resolved\" \"$resolved\""
+
+    for {job_name, next_job} <- [
+          {"wait-for-index", "wait-for-hexdocs"},
+          {"consumer-install", "published-trust-journey"},
+          {"published-trust-journey", "retracted-check"},
+          {"retracted-check", "notify-on-failure"}
+        ] do
+      job = extract_job!(workflow, job_name, next_job)
+      checkout = checkout_step!(job)
+
+      assert checkout =~ "ref: ${{ needs.cron-guard.outputs.release_ref }}",
+             "#{job_name} must checkout the validated immutable release_ref"
+
+      refute checkout =~ "ref: main"
+      refute checkout =~ "ref: ${{ github.sha }}"
+    end
+  end
+
   test "every wait install and package check consumes three separately named exact outputs" do
     workflow = File.read!(@workflow_path)
     cron_guard = extract_job!(workflow, "cron-guard", "wait-for-index")
@@ -218,5 +254,11 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     [_before, rest] = String.split(source, "#{branch})", parts: 2)
     [block | _after] = String.split(rest, "#{next_branch})", parts: 2)
     block
+  end
+
+  defp checkout_step!(job) do
+    [_before, checkout] = String.split(job, "uses: actions/checkout@", parts: 2)
+    [step | _after] = String.split(checkout, "\n      - name:", parts: 2)
+    step
   end
 end
