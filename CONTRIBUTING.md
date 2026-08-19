@@ -161,10 +161,34 @@ There is no ordinary auto-merge path, and the schedule is not a recovery or
 publication mechanism.
 
 **Protected exact-digest chain:** after the candidate has passed its explicit
-authorization checkpoint, use `workflow_dispatch` with that exact digest and
-the complete `package=all` train. The chain revalidates the immutable proposal
-head, source/base, publishable content, versions, and final tag SHA; then its
-read-only CI gate must pass before the ordered core → admin → inbound publish.
+authorization checkpoint, run the two distinct dispatches below. Reuse the
+same exact digest throughout; `CORE_VERSION` is the reviewed core/admin version
+from the candidate (not a newly selected version).
+
+```bash
+DIGEST=<authorized-candidate-digest>
+CORE_VERSION=<authorized-core-version>
+
+gh workflow run release-please.yml --ref main \
+  -f candidate_digest="$DIGEST"
+
+# Wait until all three expected tags and GitHub releases exist at the same
+# protected merge SHA before starting delivery.
+gh workflow run publish-hex.yml --ref main \
+  -f tag="mailglass-v${CORE_VERSION}" \
+  -f package=all \
+  -f dry_run=false \
+  -f candidate_digest="$DIGEST" \
+  -f core_full_suite_gate_skip_reason=n/a
+```
+
+The first dispatch revalidates and merges only the immutable proposal generated
+by Release Please, then creates the three linked release tags/releases. It does not
+publish to Hex. After those tags are verified, the second dispatch revalidates
+the final tag SHA and runs the read-only CI gate before the ordered
+core → admin → inbound publish. Successful publication automatically hands the same exact
+versions and immutable SHA to `post-publish-smoke.yml`.
+
 The protected live predecessor may dispatch missing CI runs on that validated
 ref. Captured dry-runs are credential-free and read-only: they can inspect
 already-completed CI, but cannot self-dispatch it.
