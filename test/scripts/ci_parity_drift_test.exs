@@ -116,40 +116,28 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   # Built programmatically off Mailglass.CILanes so the keys are never a second
   # copy of the lane list.
   defp matcher_for(lane) do
-    %{
-      "Support Contract Core (Elixir 1.18 / OTP 27)" =>
-        &any_step?(&1, "verify.support_contract.core"),
-      "Support Contract Admin (Elixir 1.18 / OTP 27)" =>
-        &any_step?(&1, "verify.support_contract.admin"),
-      "Compile No Optional Deps (Elixir 1.18 / OTP 27)" =>
-        &any_step?(&1, "compile --no-optional-deps --warnings-as-errors"),
-      "Trust Lane Repo Head (Elixir 1.18 / OTP 27)" => fn steps ->
-        any_step?(steps, "verify.reference_host.journey") and
-          any_step?(steps, "check_trust_runner_checkpoint.sh")
-      end,
-      "Installer Host Smoke" => &any_step?(&1, "consumer_install_smoke.sh"),
-      "Format Check (Elixir 1.18 / OTP 27)" => &any_step?(&1, "format --check-formatted"),
-      "Compile Warnings as Errors (Elixir 1.18 / OTP 27)" =>
-        &any_step?(&1, "compile --warnings-as-errors"),
-      "Credo Strict (Elixir 1.18 / OTP 27)" => &any_step?(&1, "credo --strict"),
-      "Dialyzer (Elixir 1.18 / OTP 27)" => &any_step?(&1, "dialyzer"),
-      "Docs Warnings as Errors (Elixir 1.18 / OTP 27)" =>
-        &any_step?(&1, "docs --warnings-as-errors"),
-      "Hex Audit (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mailglass.audit --kind hex"),
-      "Deps Audit (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mailglass.audit --kind deps"),
-      "Mix Task Tests (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mix test --warnings-as-errors"),
-      "Inbound Test (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mailglass_inbound mix test"),
-      "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)" =>
-        &any_step?(&1, "mailglass_inbound mix compile --no-optional-deps")
-    }
-    |> Map.merge(%{
-      "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)" =>
+    local_lane = Enum.find(local_required_lanes(), &(&1.name == lane))
+
+    cond do
+      local_lane ->
+        &any_step?(&1, local_lane.local_alias)
+
+      lane == "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)" ->
         &any_step?(&1, "npm run test:operator-browser")
-    })
-    |> Map.get(lane)
+
+      true ->
+        nil
+    end
   end
 
-  defp all_lanes, do: Mailglass.CILanes.required_lanes() ++ Mailglass.CILanes.advisory_lanes()
+  defp local_required_lanes do
+    Mailglass.CIPolicy.load!()
+    |> Mailglass.CIPolicy.active_required_lanes()
+    |> Enum.filter(&Map.has_key?(&1, :local_alias))
+  end
+
+  defp all_lanes,
+    do: Enum.map(local_required_lanes(), & &1.name) ++ Mailglass.CILanes.advisory_lanes()
 
   # Returns the list of lanes NOT covered by the given step-set.
   defp uncovered_lanes(steps, lanes) do
@@ -182,8 +170,8 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
 
     lanes = all_lanes()
 
-    assert length(Mailglass.CILanes.required_lanes()) == 8,
-           "expected exactly 8 required lanes from Mailglass.CILanes"
+    assert length(Mailglass.CILanes.required_lanes()) == 19,
+           "expected exactly 19 required lanes from the promoted CI policy"
 
     # Every ci_lanes lane must have a matcher (no lane silently ignored)...
     lanes_without_matcher =
@@ -196,25 +184,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
     # ...and no matcher may reference a lane absent from ci_lanes (no stale matcher).
     known = MapSet.new(lanes)
 
-    matcher_lanes =
-      MapSet.new([
-        "Support Contract Core (Elixir 1.18 / OTP 27)",
-        "Support Contract Admin (Elixir 1.18 / OTP 27)",
-        "Compile No Optional Deps (Elixir 1.18 / OTP 27)",
-        "Trust Lane Repo Head (Elixir 1.18 / OTP 27)",
-        "Installer Host Smoke",
-        "Format Check (Elixir 1.18 / OTP 27)",
-        "Compile Warnings as Errors (Elixir 1.18 / OTP 27)",
-        "Credo Strict (Elixir 1.18 / OTP 27)",
-        "Dialyzer (Elixir 1.18 / OTP 27)",
-        "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
-        "Hex Audit (Elixir 1.18 / OTP 27)",
-        "Deps Audit (Elixir 1.18 / OTP 27)",
-        "Mix Task Tests (Elixir 1.18 / OTP 27)",
-        "Inbound Test (Elixir 1.18 / OTP 27)",
-        "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)",
-        "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)"
-      ])
+    matcher_lanes = MapSet.new(lanes)
 
     stale = MapSet.difference(matcher_lanes, known)
 
@@ -239,6 +209,19 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
     assert uncovered_lanes(broken_steps, [lane]) == [lane],
            "coverage function did not report '#{lane}' uncovered after removing its " <>
              "covering step — the fail-loud property is broken"
+  end
+
+  test "negative control: changing the inbound Dialyzer alias command reports parity drift" do
+    lane = "Inbound Dialyzer (Elixir 1.18 / OTP 27)"
+    assert uncovered_lanes(union_steps(), [lane]) == []
+
+    broken_steps =
+      Enum.map(
+        union_steps(),
+        &String.replace(&1, "mailglass_inbound mix dialyzer", "mailglass_inbound mix test")
+      )
+
+    assert uncovered_lanes(broken_steps, [lane]) == [lane]
   end
 
   test "durable determinism guard: the flattened root ci alias step-set pins no fixed seed (DET-02)" do
