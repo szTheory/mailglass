@@ -90,6 +90,19 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     refute workflow =~ "gh issue close"
   end
 
+  test "smoke accepts three explicit exact versions and resolves automation paths from completed targets" do
+    workflow = File.read!(@workflow_path)
+
+    for input <- ["core_version:", "admin_version:", "inbound_version:"] do
+      assert workflow =~ input
+    end
+
+    assert workflow =~ "validate_completed_target"
+    assert workflow =~ "mailglass_admin"
+    assert workflow =~ "mailglass_inbound"
+    refute workflow =~ "latest"
+  end
+
   defp extract_job!(workflow, start_key, next_key) do
     [_before, rest] = String.split(workflow, "\n  #{start_key}:\n", parts: 2)
     [job | _after] = String.split(rest, "\n  #{next_key}:\n", parts: 2)
