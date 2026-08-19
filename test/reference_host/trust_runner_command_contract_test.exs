@@ -5,6 +5,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
   @task_path Path.expand("../../dev/mix/tasks/mailglass.trust.run.ex", __DIR__)
   @readme_path Path.expand("../../reference/host_app/README.md", __DIR__)
   @scope_path Path.expand("../../reference/host_app/SCOPE.md", __DIR__)
+  @generated_host_script_path Path.expand("../../scripts/generated_ecto_host_proof.sh", __DIR__)
   @claim_boundary "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
 
   test "JOUR-01 canonical command and deterministic stages are pinned" do
@@ -90,6 +91,22 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
       refute token_present?(docs_with_content, phrase),
              "Phase boundary drift: overreach phrase present #{inspect(phrase)}"
     end)
+  end
+
+  test "REL-01 generated-host command exposes a fail-closed checkpoint validator" do
+    source = File.read!(@generated_host_script_path)
+
+    for token <- [
+          "--validate-checkpoints",
+          "fresh_install",
+          "sync_send",
+          "atomic_enqueue",
+          "worker_run",
+          "persisted_outcome"
+        ] do
+      assert String.contains?(source, token),
+             "REL-01 generated-host command is missing #{inspect(token)}"
+    end
   end
 
   defp token_present?(files_with_content, token) do

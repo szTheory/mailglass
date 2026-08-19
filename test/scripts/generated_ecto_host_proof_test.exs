@@ -4,6 +4,14 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
   @script_path Path.expand("../../scripts/generated_ecto_host_proof.sh", __DIR__)
   @ci_yml_path Path.expand("../../.github/workflows/ci.yml", __DIR__)
 
+  @fresh_delivery_stages [
+    "fresh_install",
+    "sync_send",
+    "atomic_enqueue",
+    "worker_run",
+    "persisted_outcome"
+  ]
+
   @required_script_snippets [
     "mix phx.new host --module Host --app host",
     "config :mailglass, repo: Host.Repo",
@@ -35,6 +43,56 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     "FIRST_ROLLBACK_PACKAGE",
     "additive rollback removed prior relation"
   ]
+
+  test "generated-host checkpoints fail closed on missing, duplicate, reordered, or equal-order evidence" do
+    valid_rows =
+      for {journey, journey_index} <- Enum.with_index(["core_first", "inbound_first"]),
+          {stage, stage_index} <- Enum.with_index(@fresh_delivery_stages) do
+        "#{journey_index * length(@fresh_delivery_stages) + stage_index + 1}|#{journey}|#{stage}|passed"
+      end
+
+    assert_checkpoint_result(valid_rows, 0)
+
+    assert_checkpoint_result(List.delete_at(valid_rows, 2), :failure)
+    assert_checkpoint_result(List.insert_at(valid_rows, 3, Enum.at(valid_rows, 2)), :failure)
+
+    reordered =
+      List.replace_at(valid_rows, 1, Enum.at(valid_rows, 2))
+      |> List.replace_at(2, Enum.at(valid_rows, 1))
+
+    assert_checkpoint_result(reordered, :failure)
+
+    equal_order =
+      List.update_at(valid_rows, 1, fn row ->
+        [_order | rest] = String.split(row, "|")
+        Enum.join(["1" | rest], "|")
+      end)
+
+    assert_checkpoint_result(equal_order, :failure)
+  end
+
+  test "generated-host checkpoint contract is closed and sanitized" do
+    source = File.read!(@script_path)
+
+    Enum.each(@fresh_delivery_stages, fn stage ->
+      assert source =~ stage
+    end)
+
+    assert source =~ "--validate-checkpoints"
+    assert source =~ "CHECKPOINT_FILE"
+    assert source =~ "checkpoint"
+
+    valid_rows =
+      for {journey, journey_index} <- Enum.with_index(["core_first", "inbound_first"]),
+          {stage, stage_index} <- Enum.with_index(@fresh_delivery_stages) do
+        "#{journey_index * length(@fresh_delivery_stages) + stage_index + 1}|#{journey}|#{stage}|passed"
+      end
+
+    assert_checkpoint_result(
+      List.replace_at(valid_rows, 1, "2|core_first|sync_send|recipient@example.com"),
+      :failure
+    )
+  end
 
   test "generated Ecto host proof pins the public generator-to-Postgres journey" do
     source = File.read!(@script_path)
@@ -132,5 +190,27 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     assert source =~ "mktemp -d \"${TMPDIR:-/tmp}/mailglass-generated-ecto-host.XXXXXX\""
     assert source =~ "rm -rf \"${WORK_DIR}\""
     refute source =~ "rm -rf \"${HOST_DIR}\""
+  end
+
+  defp assert_checkpoint_result(rows, expected) do
+    checkpoint_path =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-generated-host-checkpoint-#{System.unique_integer([:positive])}.txt"
+      )
+
+    File.write!(checkpoint_path, Enum.join(rows, "\n") <> "\n")
+
+    {_output, exit_code} =
+      System.cmd("bash", [@script_path, "--validate-checkpoints", checkpoint_path],
+        stderr_to_stdout: true
+      )
+
+    File.rm!(checkpoint_path)
+
+    case expected do
+      0 -> assert exit_code == 0
+      :failure -> assert exit_code != 0
+    end
   end
 end
