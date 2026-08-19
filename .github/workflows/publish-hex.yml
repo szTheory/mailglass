@@ -72,6 +72,9 @@ jobs:
       authorized: ${{ steps.release-target.outputs.authorized }}
       candidate_digest: ${{ steps.release-target.outputs.candidate_digest }}
       tag_sha: ${{ steps.release-target.outputs.tag_sha }}
+      core: ${{ steps.release-target.outputs.core }}
+      admin: ${{ steps.release-target.outputs.admin }}
+      inbound: ${{ steps.release-target.outputs.inbound }}
     services:
       postgres:
         image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
@@ -1104,3 +1107,40 @@ jobs:
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
           MIX_PUBLISH: "true"
+
+  dispatch-post-publish-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [prepublish-summary, publish-inbound]
+    if: ${{ always() && github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run != 'true' && github.event.inputs.package == 'all' && needs.prepublish-summary.outputs.authorized == 'true' && needs.publish-inbound.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Dispatch exact post-publish smoke handoff
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        env:
+          CORE_VERSION: ${{ needs.prepublish-summary.outputs.core }}
+          ADMIN_VERSION: ${{ needs.prepublish-summary.outputs.admin }}
+          INBOUND_VERSION: ${{ needs.prepublish-summary.outputs.inbound }}
+          TARGET_REF: ${{ needs.prepublish-summary.outputs.tag_sha }}
+        with:
+          script: |
+            const inputs = {
+              core_version: process.env.CORE_VERSION || '',
+              admin_version: process.env.ADMIN_VERSION || '',
+              inbound_version: process.env.INBOUND_VERSION || '',
+              target_ref: process.env.TARGET_REF || ''
+            };
+            if (![inputs.core_version, inputs.admin_version, inputs.inbound_version].every(v => /^\d+\.\d+\.\d+$/.test(v)) ||
+                inputs.core_version !== inputs.admin_version || !/^[0-9a-f]{40}$/.test(inputs.target_ref)) {
+              core.setFailed('Refusing smoke handoff: validated versions or immutable target_ref are malformed.');
+              return;
+            }
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'post-publish-smoke.yml',
+              ref: 'main',
+              inputs
+            });

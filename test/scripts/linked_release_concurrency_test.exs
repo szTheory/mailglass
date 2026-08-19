@@ -85,6 +85,20 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     end)
   end
 
+  test "only a successful ordered protected publish dispatches exact smoke inputs" do
+    source = File.read!(@publish_path)
+    handoff = extract_job!(source, "dispatch-post-publish-smoke")
+
+    assert handoff =~ "needs: [prepublish-summary, publish-inbound]"
+    assert handoff =~ "needs.publish-inbound.result == 'success'"
+    assert handoff =~ "github.event.inputs.dry_run != 'true'"
+    assert handoff =~ "needs.prepublish-summary.outputs.authorized == 'true'"
+    assert handoff =~ "actions: write"
+    assert handoff =~ "workflow_id: 'post-publish-smoke.yml'"
+    assert handoff =~ "target_ref: process.env.TARGET_REF"
+    assert handoff =~ "/^[0-9a-f]{40}$/"
+  end
+
   test "prepublish summary uploads a credential-free Phase 148 proof artifact" do
     source = File.read!(@publish_path)
     prepublish = extract_job!(source, "prepublish-summary")
