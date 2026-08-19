@@ -71,6 +71,7 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
 
     self_heal = Map.fetch!(jobs, "ensure-live-ci-runs")
     gate = Map.fetch!(jobs, "gate-ci-green")
+    smoke_handoff = Map.fetch!(jobs, "dispatch-post-publish-smoke")
 
     assert self_heal =~ "needs: [prepublish-summary]"
     assert self_heal =~ "github.event_name == 'workflow_dispatch'"
@@ -89,7 +90,9 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
     refute gate =~ "actions: write"
     refute gate =~ "createWorkflowDispatch"
 
-    assert length(Regex.scan(~r/createWorkflowDispatch/, source)) == 1
+    assert length(Regex.scan(~r/createWorkflowDispatch/, self_heal)) == 1
+    assert length(Regex.scan(~r/createWorkflowDispatch/, smoke_handoff)) == 1
+    assert length(Regex.scan(~r/createWorkflowDispatch/, source)) == 2
   end
 
   test "captured pretag dry-run does not upload an artifact or gain mutation credentials" do
@@ -102,9 +105,14 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
     assert prepublish =~
              "if: ${{ steps.release-target.outputs.active == 'true' }}\n        uses: actions/upload-artifact@"
 
+    assert prepublish =~
+             "- name: Cache deps\n        if: ${{ steps.release-target.outputs.active == 'true' }}\n        uses: actions/cache@"
+
     refute gate =~ "environment:"
     refute gate =~ "secrets."
     refute gate =~ "createWorkflowDispatch"
+    refute Map.fetch!(jobs, "ensure-live-ci-runs") =~ "environment:"
+    refute Map.fetch!(jobs, "ensure-live-ci-runs") =~ "secrets."
   end
 
   test "all Postgres services and repository Dockerfiles use approved immutable inputs" do

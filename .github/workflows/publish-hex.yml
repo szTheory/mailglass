@@ -9,7 +9,7 @@ on:
     # complete package set may rehearse or publish from an immutable ref.
     inputs:
       tag:
-        description: "Git tag/ref to publish from; fallback-only (e.g. mailglass-vX.Y.Z)"
+        description: "Immutable proposal SHA (dry-run) or protected release tag/ref (live)"
         required: true
         type: string
       dry_run:
@@ -39,13 +39,13 @@ on:
       # override must be usable WITHOUT a code change, or the maintainer's thirty
       # minutes becomes a day.
       #
-      # It is deliberately awkward to reach: dispatch-only, INERT on the release
-      # event so the hands-free path can never self-skip, reason REQUIRED, reason
-      # echoed to the run summary, and a warning naming it an exception. An
+      # It is deliberately awkward to reach: exact-digest live dispatch only,
+      # inert during captured rehearsal, reason REQUIRED, reason echoed to the
+      # run summary, and a warning naming it an exception. An
       # override reached for reflexively is a gate that has been removed without
       # anyone recording that it was (D-30).
       skip_core_full_suite_gate:
-        description: "EXCEPTION: publish without the Core Full Suite gate. Requires a written reason. Ignored on the automated release event."
+        description: "EXCEPTION: live publish without the Core Full Suite gate. Requires a written reason; ignored during rehearsal."
         required: false
         type: boolean
         default: false
@@ -67,6 +67,7 @@ jobs:
     timeout-minutes: 45
     outputs:
       authorized: ${{ steps.release-target.outputs.authorized }}
+      pretag: ${{ steps.release-target.outputs.pretag }}
       candidate_digest: ${{ steps.release-target.outputs.candidate_digest }}
       tag_sha: ${{ steps.release-target.outputs.tag_sha }}
       core: ${{ steps.release-target.outputs.core }}
@@ -198,6 +199,7 @@ jobs:
           echo "ERROR: protected candidate source/ref validation failed" >&2
           exit 1
       - name: Cache deps
+        if: ${{ steps.release-target.outputs.active == 'true' }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: deps
@@ -278,7 +280,7 @@ jobs:
               }
             }' > tmp/release-proof/phase-148.json
       - name: Upload Phase 148 release proof
-        if: ${{ steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true' }}
+        if: ${{ steps.release-target.outputs.active == 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: phase-148-release-proof-${{ github.run_id }}
@@ -286,93 +288,74 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-  gate-ci-green:
+  # The only job allowed to mutate Actions state. It is reachable only after the
+  # protected live candidate has been validated; release events, digestless
+  # dispatches, and captured rehearsals cannot enter it.
+  ensure-live-ci-runs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [prepublish-summary]
-    # `actions: write` lets this job self-dispatch ci.yml AND advisory-matrix.yml
-    # on the tagged SHA when no run exists. That is the anti-recursion dead-end: a
-    # release-please PR auto-merged by GITHUB_TOKEN produces a `main` SHA whose
-    # `push` event is suppressed, so neither workflow ran on it; release-please then
-    # tags that SHA (via RELEASE_PLEASE_PAT) and `release: published` lands here with
-    # zero runs of either to gate on. See CONTRIBUTING.md "If a release publishes but
-    # the tags/publish never fire". The permission is NOT widened by Phase 143 —
-    # `actions: write` already covered exactly this dispatch, for one workflow
-    # instead of two.
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.dry_run != 'true' &&
+      github.event.inputs.package == 'all' &&
+      needs.prepublish-summary.outputs.authorized == 'true'
+    outputs:
+      sha: ${{ steps.resolve-sha.outputs.sha }}
+      ref: ${{ steps.resolve-sha.outputs.ref }}
     permissions:
       contents: read
       actions: write
-    # Both override inputs are bound here as ENVIRONMENT VALUES and read as
-    # environment values. Neither is ever string-concatenated into a `run:` body or
-    # spliced into an inline expression inside one — the reason is free text a
-    # dispatcher supplies. The release-event inertness is NOT expressed here; it is
-    # enforced once, in each consuming script, as `context.eventName !== 'release'`,
-    # so there is exactly one readable place where "the hands-free path can never
-    # self-skip" is stated.
     env:
       SKIP_CORE_FULL_SUITE_GATE: ${{ inputs.skip_core_full_suite_gate }}
       CORE_FULL_SUITE_GATE_SKIP_REASON: ${{ inputs.core_full_suite_gate_skip_reason }}
     steps:
-      - name: Resolve tagged SHA
+      - name: Resolve pinned live SHA and ref
         id: resolve-sha
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        env:
+          EXPECTED_SHA: ${{ needs.prepublish-summary.outputs.tag_sha }}
+          RELEASE_REF: ${{ github.event.inputs.tag }}
         with:
           script: |
-            const ref = context.payload.release?.tag_name || context.payload.inputs?.tag || context.sha;
+            const ref = process.env.RELEASE_REF || '';
+            const expected = process.env.EXPECTED_SHA || '';
+            if (!/^[0-9a-f]{40}$/.test(expected) || ref === '') {
+              core.setFailed('Refusing CI self-heal: protected SHA/ref is missing or malformed.');
+              return;
+            }
             const commit = await github.rest.repos.getCommit({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref
             });
+            if (commit.data.sha !== expected) {
+              core.setFailed(`Refusing CI self-heal: ${ref} resolves to ${commit.data.sha}, expected protected SHA ${expected}.`);
+              return;
+            }
             core.setOutput('sha', commit.data.sha);
             core.setOutput('ref', ref);
-      # DISPATCH IS THE DEFAULT PATH FOR BOTH WORKFLOWS, NOT AN EDGE CASE (D-22).
-      #
-      # release-please bot-merges the release PR, and GitHub does not trigger
-      # workflows for events raised with GITHUB_TOKEN. That suppresses the `push`
-      # trigger for ci.yml AND for advisory-matrix.yml, and advisory-matrix.yml has
-      # no `release:` trigger at all. So a release SHA has ZERO runs of either
-      # workflow, and a gate that merely LOOKS ONE UP would deadlock on every
-      # release. The two-SHA comparison that proves it:
-      #
-      #   SHA        commit                              ci.yml runs   advisory-matrix runs
-      #   25c74ca0   `chore: release main (#149)` (bot)  1 (this step) 0
-      #   3edc95f0   human-merged                        1 (push)      1 (push)
-      #
-      # Re-confirmed on 2026-07-31 against `e88daa15` (`chore: release main (#158)`,
-      # auto-merged, published mailglass 2.2.2): zero Advisory Matrix runs.
-      # See .planning/phases/143-test-harness-truth/143-MAIN-GREEN-EVIDENCE.md.
-      #
-      # A tag-shaped-ref dispatch of advisory-matrix.yml is rehearsed, not assumed:
-      # run 30595564984 dispatched it on a throwaway tag cut from green `main` and
-      # both gating legs went green.
-      - name: Ensure completed ci.yml and advisory-matrix.yml runs exist on tagged SHA
+      - name: Ensure completed ci.yml and advisory-matrix.yml runs exist on protected SHA
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         env:
           # Bound through env rather than interpolated into the script body: `ref`
           # is a tag name, and a `${{ }}` splice lands inside a JS string literal.
           RESOLVED_SHA: ${{ steps.resolve-sha.outputs.sha }}
           RESOLVED_REF: ${{ steps.resolve-sha.outputs.ref }}
+          CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
         with:
           script: |
-            // Self-heal the anti-recursion case before the green check below, for
-            // BOTH workflows the next step reads. If the tagged SHA has no run of a
-            // workflow, dispatch that workflow on the tag and wait for it. We do NOT
-            // judge pass/fail here — the next step owns the required-vs-advisory and
-            // gating-vs-advisory verdicts. Fail-safe: a red dispatched run simply
-            // makes "Verify CI is green" block the publish, exactly as a
-            // human-triggered red run would.
+            // Ensure BOTH workflows the read-only successor inspects have completed
+            // on the protected SHA. If no run exists, dispatch on the validated ref
+            // and wait. This step never judges pass/fail; the successor owns that
+            // verdict. A red run therefore blocks live publish at the read-only gate.
             //
             // ONE step, ONE shared deadline, both workflows polled in the SAME loop.
             // Not two serial waits: a second 30-minute deadline after the first turns
             // a 30-minute worst case into 60 on a pipeline nobody is watching.
             //
-            // The dispatch-only override (D-23) also lifts the WAIT, not just the
-            // verdict. Without that, an override could not rescue the case it most
-            // needs to: GitHub Actions itself unavailable, no advisory-matrix run
-            // obtainable, this step deadlining out 30 minutes later regardless of
-            // what the next step would have decided. INERT on the release event —
-            // the hands-free path can never self-skip.
+            // The explicit live-dispatch override lifts the advisory-matrix WAIT,
+            // not merely its verdict. Captured rehearsal never reaches this job.
             const skipCoreFullSuiteGate =
               process.env.SKIP_CORE_FULL_SUITE_GATE === 'true' && context.eventName !== 'release';
 
@@ -385,6 +368,7 @@ jobs:
 
             const sha = process.env.RESOLVED_SHA;
             const ref = process.env.RESOLVED_REF;
+            const digest = process.env.CANDIDATE_DIGEST;
             const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
             async function latestRun(workflowId) {
@@ -403,24 +387,12 @@ jobs:
               runs[wf] = await latestRun(wf);
             }
 
-            // FAN-OUT SAFETY. One linked-version release train publishes two tags,
-            // each firing its own `release: published` event, so two publish-hex runs
-            // can reach this step seconds apart. Both resolve to the SAME head SHA
-            // (both tags point at the release commit), both would find zero runs, and
-            // both would dispatch. Query on head_sha, settle a randomised interval,
-            // then RE-CHECK: if the sibling run's dispatch has landed, poll it instead
-            // of dispatching again. Worst case is one redundant matrix run.
-            //
-            // The fix is NOT to key advisory-matrix.yml's concurrency group on the
-            // SHA. That group has cancel-in-progress: true, so two same-SHA dispatches
-            // would land in one group and cancel each other — and a cancelled run is
-            // blocking, so both gates would then read `cancelled` and block the
-            // release. That is the exact unattended stall this self-heal exists to
-            // prevent. advisory-matrix.yml's own concurrency comment records this too.
+            // API visibility safety: query, settle briefly, and re-check before
+            // dispatching so a just-created run does not produce a duplicate.
             const absent = WORKFLOWS.filter((wf) => !runs[wf]);
             if (absent.length > 0) {
               const settleMs = Math.floor(Math.random() * 15000);
-              core.info(`No run on ${sha} for: ${absent.join(', ')}. Settling ${settleMs}ms before dispatch (fan-out safety), then re-checking.`);
+              core.info(`No run on ${sha} for: ${absent.join(', ')}. Settling ${settleMs}ms for API visibility, then re-checking.`);
               await sleep(settleMs);
 
               for (const wf of absent) {
@@ -450,7 +422,7 @@ jobs:
                 core.setFailed(
                   `Delivery blocked: no completed run of ${stalled.join(', ')} for SHA ${sha} within 30 minutes.\n` +
                   `Recovery — dispatch the workflow on the release ref, then re-dispatch this one:\n  ${recovery}\n` +
-                  `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false`
+                  `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false -f candidate_digest=${digest}`
                 );
                 return;
               }
@@ -463,7 +435,62 @@ jobs:
             for (const wf of WORKFLOWS) {
               core.info(`${wf} run ${runs[wf].id} on ${sha} completed with conclusion: ${runs[wf].conclusion}.`);
             }
-      - name: Verify CI is green on tagged SHA
+
+  # Read-only public gate. Live delivery reaches it after self-heal succeeds;
+  # captured pretag rehearsal reaches it with the self-heal job skipped and can
+  # only inspect already-completed runs. Inert compatibility events skip it.
+  gate-ci-green:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [prepublish-summary, ensure-live-ci-runs]
+    if: |
+      always() &&
+      needs.prepublish-summary.result == 'success' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.package == 'all' &&
+      (
+        (github.event.inputs.dry_run == 'true' && needs.prepublish-summary.outputs.pretag == 'true') ||
+        (github.event.inputs.dry_run != 'true' &&
+          needs.prepublish-summary.outputs.authorized == 'true' &&
+          needs.ensure-live-ci-runs.result == 'success')
+      )
+    permissions:
+      contents: read
+      actions: read
+    env:
+      SKIP_CORE_FULL_SUITE_GATE: ${{ inputs.skip_core_full_suite_gate }}
+      CORE_FULL_SUITE_GATE_SKIP_REASON: ${{ inputs.core_full_suite_gate_skip_reason }}
+      CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
+      DRY_RUN: ${{ github.event.inputs.dry_run }}
+    steps:
+      - name: Resolve inspected SHA and ref
+        id: resolve-sha
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        env:
+          EXPECTED_LIVE_SHA: ${{ needs.prepublish-summary.outputs.tag_sha }}
+          RELEASE_REF: ${{ github.event.inputs.tag }}
+          DRY_RUN_INPUT: ${{ github.event.inputs.dry_run }}
+        with:
+          script: |
+            const ref = process.env.RELEASE_REF || '';
+            if (ref === '') {
+              core.setFailed('Refusing CI gate: inspected ref is missing.');
+              return;
+            }
+            const commit = await github.rest.repos.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref
+            });
+            const expected = process.env.EXPECTED_LIVE_SHA || '';
+            if (process.env.DRY_RUN_INPUT !== 'true' &&
+                (!/^[0-9a-f]{40}$/.test(expected) || commit.data.sha !== expected)) {
+              core.setFailed(`Refusing CI gate: ${ref} is not the protected live SHA ${expected}.`);
+              return;
+            }
+            core.setOutput('sha', commit.data.sha);
+            core.setOutput('ref', ref);
+      - name: Verify CI is green on protected SHA
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         env:
           # Read as an environment value by the advisory-matrix recovery messages
@@ -593,6 +620,12 @@ jobs:
             };
 
             const sha = '${{ steps.resolve-sha.outputs.sha }}';
+            const ref = process.env.RESOLVED_REF;
+            const digest = process.env.CANDIDATE_DIGEST;
+            const dryRun = process.env.DRY_RUN === 'true';
+            const replay =
+              `gh workflow run publish-hex.yml -f tag=${ref} -f package=all ` +
+              `-f dry_run=${dryRun} -f candidate_digest=${digest}`;
             const {data} = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -602,7 +635,7 @@ jobs:
             });
 
             if (data.total_count === 0) {
-              core.setFailed(`Delivery blocked: no ci.yml runs found for SHA ${sha}. Push the tagged commit and let CI complete before publishing.`);
+              core.setFailed(`Delivery blocked: no ci.yml runs found for SHA ${sha}. Run CI on the exact ref, then replay the same protected dispatch:\n  gh workflow run ci.yml --ref ${ref}\n  ${replay}`);
               return;
             }
 
@@ -685,17 +718,17 @@ jobs:
             // ===============================================================
             // advisory-matrix.yml verdict (Phase 143 / HARNESS-04, D-19/D-23).
             //
-            // Everything ABOVE this line is the pre-existing ci.yml verdict and is
-            // unchanged. Everything below is additive and reads a SECOND workflow.
-            // The previous step has already guaranteed a COMPLETED run exists on
-            // this SHA, dispatching one if the anti-recursion gap left none.
+            // Everything ABOVE this line is the ci.yml verdict. Everything below
+            // reads the second workflow without mutating Actions state.
+            // Live delivery's predecessor guarantees a completed run exists on
+            // this SHA. Captured rehearsal is deliberately read-only, so it fails
+            // closed here unless an exact-ref run already exists.
             //
             // The decision table, stated once:
             //   1. A gating leg that is ABSENT is not green. Missing, cancelled and
             //      skipped block with the same weight as failure.
-            //   2. Absent is never PERMANENTLY blocking — the previous step
-            //      self-heals by dispatch, its deadline is bounded, and every
-            //      message below names the exact recovery command.
+            //   2. Absence blocks, and every message names the exact recovery
+            //      command. Only the authorized live predecessor may self-heal.
             //   3. An advisory leg's absence is WARNED, not blocked, and the message
             //      says why.
             //   4. An unclassified advisory-matrix lane that is RED blocks; green
@@ -703,14 +736,10 @@ jobs:
             //      for an unclassified lane belongs in the drift meta-test on the
             //      pull request that adds the lane, not here.
             // ===============================================================
-            const ref = process.env.RESOLVED_REF;
-
-            // The dispatch-only override (D-23), inert on the release event so the
-            // hands-free path can never self-skip. It suspends ONLY the Core Full
-            // Suite verdict: every ci.yml lane verdict above already ran unchanged,
-            // and the unclassified-red rule below still blocks.
+            // The exception is live-only. Captured rehearsal must validate the full
+            // completed gate and cannot turn an override into a weaker proof.
             const skipCoreFullSuiteGate =
-              process.env.SKIP_CORE_FULL_SUITE_GATE === 'true' && context.eventName !== 'release';
+              process.env.SKIP_CORE_FULL_SUITE_GATE === 'true' && context.eventName !== 'release' && !dryRun;
 
             if (skipCoreFullSuiteGate) {
               const rawReason = (process.env.CORE_FULL_SUITE_GATE_SKIP_REASON || '').trim();
@@ -741,7 +770,7 @@ jobs:
             const amRunRecovery =
               `Recovery — re-run the lane, then re-dispatch this workflow:\n` +
               `  gh workflow run advisory-matrix.yml --ref ${ref}\n` +
-              `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false`;
+              `  ${replay}`;
 
             const amRuns = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
@@ -755,7 +784,7 @@ jobs:
             // above does. A check that cannot observe its subject must not report
             // success.
             if (amRuns.data.total_count === 0) {
-              const msg = `Delivery blocked: no advisory-matrix.yml runs found for SHA ${sha}. The self-heal step should have dispatched one — inspect its log before retrying.\n${amRunRecovery}`;
+              const msg = `Delivery blocked: no advisory-matrix.yml runs found for SHA ${sha}. Authorized live delivery self-heals this before gating; captured rehearsal remains read-only.\n${amRunRecovery}`;
               if (skipCoreFullSuiteGate) {
                 core.warning(`Override active — publishing without this check. It would otherwise have blocked:\n${msg}`);
                 return;
@@ -765,9 +794,8 @@ jobs:
             }
 
             // Prefer the newest COMPLETED run rather than the newest run outright:
-            // the fan-out can leave a second, still-running dispatch on the same
-            // SHA, and reading its null conclusions would block a release for a
-            // reason that is about timing, not about the tree. Every run on this
+            // a newer, still-running dispatch can exist on the same SHA, and reading
+            // its null conclusions would block for timing rather than the tree. Every run on this
             // SHA tests the same tree, so any completed one is a legitimate reading.
             const amCompleted = amRuns.data.workflow_runs.filter(r => r.status === 'completed');
 
@@ -839,7 +867,7 @@ jobs:
               const detail = amGatingBlocking.map(s => `  - ${s}`).join('\n');
               const overrideRecovery =
                 `Recovery — publish anyway (an EXCEPTION; the reason is required and is echoed to the run summary):\n` +
-                `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false \\\n` +
+                `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false -f candidate_digest=${digest} \\\n` +
                 `    -f skip_core_full_suite_gate=true -f core_full_suite_gate_skip_reason="<why>"`;
               const msg = `Delivery blocked: Core Full Suite gating lane(s) did not pass on SHA ${sha}:\n${detail}\nRun: ${amLatest.html_url}\n${amRunRecovery}\n${overrideRecovery}`;
 

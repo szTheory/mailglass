@@ -145,31 +145,33 @@ floor — asserting "verified against core 1.11" — before or alongside the rel
 **CI-trigger guarantee:** the sync checkout and push use `RELEASE_PLEASE_PAT`.
 That non-`GITHUB_TOKEN` identity deliberately triggers
 `pull_request: synchronize`, so the release PR's required CI checks report on
-the synchronized head. (The GitHub-native auto-merge itself still uses
-`GITHUB_TOKEN`, whose anti-recursion behavior is why the recovery path below
-exists.)
+the synchronized head. Proposal synchronization does not enable auto-merge;
+merging remains part of the separately authorized exact-candidate sequence.
 
-## If a release publishes but the tags/publish never fire
+## If a release proposal or protected delivery stalls
 
 `release-please.yml` runs on pushes to `main`, direct `workflow_dispatch`, and
-its hourly schedule at minute 17. When the **release PR** (`chore: release main`)
-is merged by GitHub-native auto-merge, the resulting push is authored by
-`GITHUB_TOKEN`; GitHub suppresses that recursive push event. Symptom: the
-manifest on `main` is at the new version and the release PR is merged with label
-`autorelease: pending`, but no `mailglass-vX.Y.Z` GitHub release exists and Hex
-still shows the prior version.
+its hourly schedule at minute 17. Pushes, schedules, and digestless dispatches
+may create or synchronize the **release PR** (`chore: release main`), but they
+never merge it, create tags or releases, or publish packages.
 
 **Ordinary runs are proposal-only:** pushes and the minute-17 schedule may update
 or synchronize a release proposal, but cannot merge it, create a tag, or publish.
-The schedule is not a tag-recovery mechanism.
+There is no ordinary auto-merge path, and the schedule is not a recovery or
+publication mechanism.
 
-**Protected recovery:** use `workflow_dispatch` with the exact dual-authorized
-candidate digest. That path validates the immutable proposal head, source/base,
-and publishable content before it can merge or create a tag. A missing or wrong
-digest remains proposal-only.
+**Protected exact-digest chain:** after the candidate has passed its explicit
+authorization checkpoint, use `workflow_dispatch` with that exact digest and
+the complete `package=all` train. The chain revalidates the immutable proposal
+head, source/base, publishable content, versions, and final tag SHA; then its
+read-only CI gate must pass before the ordered core → admin → inbound publish.
+The protected live predecessor may dispatch missing CI runs on that validated
+ref. Captured dry-runs are credential-free and read-only: they can inspect
+already-completed CI, but cannot self-dispatch it.
 
-**Last resort:** manually creating the missing GitHub releases remains the
-canonical `release: published` fan-out when the workflow path cannot be used.
+If any lookup is missing, stale, ambiguous, or red, stop and replay the same
+exact-digest protected chain after correcting the cause. Do not manually create
+releases, tags, or a partial package fan-out as a substitute.
 
 ## One-time setup: branch protection automation
 
