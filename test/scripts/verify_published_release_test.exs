@@ -38,6 +38,8 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       partial:repos/szTheory/mailglass/releases/1002) exit 1 ;;
       *:repos/szTheory/mailglass/actions/runs/123456789) printf '%s' "$FAKE_RUN_JSON" ;;
       *:repos/szTheory/mailglass/actions/runs/123456789/jobs*) printf '%s' "$FAKE_JOBS_JSON" ;;
+      *:repos/szTheory/mailglass/actions/runs/123456789/artifacts*) printf '%s' "$FAKE_ARTIFACTS_JSON" ;;
+      *:repos/szTheory/mailglass/actions/artifacts/7001/zip) cat "$FAKE_ARTIFACT_ZIP" ;;
       *:repos/szTheory/mailglass/releases/1001) printf '%s' "$FAKE_CORE_RELEASE_JSON" ;;
       *:repos/szTheory/mailglass/releases/1002) printf '%s' "$FAKE_ADMIN_RELEASE_JSON" ;;
       *:repos/szTheory/mailglass/releases/1003) printf '%s' "$FAKE_INBOUND_RELEASE_JSON" ;;
@@ -96,8 +98,11 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
     target = published_target()
     target_path = Path.join(root, "published.json")
     File.write!(target_path, Jason.encode!(target))
+    artifact_zip = Path.join(root, "phase-148.zip")
+    write_proof_zip!(artifact_zip, valid_proof(target))
 
-    {:ok, root: root, bin: bin, target: target, target_path: target_path}
+    {:ok,
+     root: root, bin: bin, target: target, target_path: target_path, artifact_zip: artifact_zip}
   end
 
   test "accepts only the exact successful protected run, releases, tags, and active Hex records",
@@ -111,6 +116,8 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
              [
                "repos/szTheory/mailglass/actions/runs/123456789",
                "repos/szTheory/mailglass/actions/runs/123456789/jobs?per_page=100&filter=latest",
+               "repos/szTheory/mailglass/actions/runs/123456789/artifacts?per_page=100",
+               "repos/szTheory/mailglass/actions/artifacts/7001/zip",
                "repos/szTheory/mailglass/releases/1001",
                "repos/szTheory/mailglass/git/ref/tags/mailglass-v3.0.0",
                "repos/szTheory/mailglass/releases/1002",
@@ -218,6 +225,73 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
     end)
   end
 
+  test "binds the cited workflow artifact to the exact digest, tag SHA, and package versions",
+       context do
+    valid_artifacts = valid_artifacts()
+
+    hostile_metadata = [
+      %{artifacts_json: "not-json"},
+      %{artifacts_json: Jason.encode!(valid_artifacts["artifacts"])},
+      %{artifacts_json: Jason.encode!(%{"total_count" => 0, "artifacts" => []})},
+      %{
+        artifacts_json:
+          Jason.encode!(%{
+            "total_count" => 2,
+            "artifacts" => valid_artifacts["artifacts"] ++ valid_artifacts["artifacts"]
+          })
+      },
+      %{
+        artifacts_json:
+          Jason.encode!(put_in(valid_artifacts, ["artifacts", Access.at(0), "expired"], true))
+      },
+      %{
+        artifacts_json:
+          Jason.encode!(
+            put_in(
+              valid_artifacts,
+              ["artifacts", Access.at(0), "workflow_run", "id"],
+              @run_id + 1
+            )
+          )
+      },
+      %{
+        artifacts_json:
+          Jason.encode!(
+            put_in(
+              valid_artifacts,
+              ["artifacts", Access.at(0), "workflow_run", "head_sha"],
+              String.duplicate("8", 40)
+            )
+          )
+      }
+    ]
+
+    Enum.each(hostile_metadata, fn overrides ->
+      assert {_output, status} = run(context, overrides)
+      assert status != 0, "unexpectedly accepted artifact metadata #{inspect(overrides)}"
+    end)
+
+    hostile_proofs = [
+      "not-json",
+      Jason.encode!([valid_proof(context.target)]),
+      Jason.encode!(%{
+        valid_proof(context.target)
+        | "candidate_digest" => String.duplicate("0", 64)
+      }),
+      Jason.encode!(%{valid_proof(context.target) | "sha" => String.duplicate("1", 40)}),
+      Jason.encode!(put_in(valid_proof(context.target), ["packages", "mailglass_inbound"], "9.9.9"))
+    ]
+
+    hostile_proofs
+    |> Enum.with_index()
+    |> Enum.each(fn {proof, index} ->
+      zip_path = Path.join(context.root, "hostile-proof-#{index}.zip")
+      write_proof_zip!(zip_path, proof)
+      assert {_output, status} = run(context, %{artifact_zip: zip_path})
+      assert status != 0, "unexpectedly accepted proof #{proof}"
+    end)
+  end
+
   test "fails closed on partial, ambiguous, retired, mismatched, or unavailable Hex evidence",
        context do
     for mode <- ~w(partial ambiguous retired wrong failure) do
@@ -250,6 +324,8 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       "FAKE_WRONG_CHECKSUM" => String.duplicate("f", 64),
       "FAKE_RUN_JSON" => Jason.encode!(valid_run()),
       "FAKE_JOBS_JSON" => Jason.encode!(valid_jobs()),
+      "FAKE_ARTIFACTS_JSON" => Jason.encode!(valid_artifacts()),
+      "FAKE_ARTIFACT_ZIP" => context.artifact_zip,
       "FAKE_CORE_RELEASE_JSON" => Jason.encode!(valid_release("mailglass", 1001)),
       "FAKE_ADMIN_RELEASE_JSON" => Jason.encode!(valid_release("mailglass_admin", 1002)),
       "FAKE_INBOUND_RELEASE_JSON" => Jason.encode!(valid_release("mailglass_inbound", 1003)),
@@ -292,6 +368,48 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       "jobs" =>
         Enum.map(names, &%{"name" => &1, "status" => "completed", "conclusion" => "success"})
     }
+  end
+
+  defp valid_artifacts do
+    %{
+      "total_count" => 1,
+      "artifacts" => [
+        %{
+          "id" => 7001,
+          "name" => "phase-148-release-proof-#{@run_id}",
+          "expired" => false,
+          "size_in_bytes" => 512,
+          "archive_download_url" =>
+            "https://api.github.com/repos/szTheory/mailglass/actions/artifacts/7001/zip",
+          "workflow_run" => %{"id" => @run_id, "head_sha" => @workflow_head_sha}
+        }
+      ]
+    }
+  end
+
+  defp valid_proof(target) do
+    %{
+      "candidate_digest" => candidate_digest(target),
+      "ref" => "mailglass-v3.0.0",
+      "sha" => @tag_sha,
+      "packages" => %{
+        "mailglass" => "3.0.0",
+        "mailglass_admin" => "3.0.0",
+        "mailglass_inbound" => "2.2.0"
+      },
+      "commands" => %{
+        "proof-02-webhook-suppression" => "passed",
+        "proof-02-transactional-suppression" => "passed",
+        "proof-03-b2c-docs" => "passed",
+        "phase-147-operator-live" => "passed"
+      }
+    }
+  end
+
+  defp write_proof_zip!(path, proof) do
+    body = if is_binary(proof), do: proof, else: Jason.encode!(proof)
+    {:ok, _} = :zip.create(String.to_charlist(path), [{~c"phase-148.json", body}])
+    path
   end
 
   defp valid_release(package, id) do
