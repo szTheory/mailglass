@@ -186,7 +186,9 @@ defmodule Mailglass.Scripts.GeneratedEctoHostProofTest do
     source = File.read!(@script_path)
 
     {path_deps, 0} =
-      System.cmd("bash", [@script_path, "--render-package-dependencies", "path", "/tmp/mailglass source"],
+      System.cmd(
+        "bash",
+        [@script_path, "--render-package-dependencies", "path", "/tmp/mailglass source"],
         stderr_to_stdout: true
       )
 

@@ -409,7 +409,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [cron-guard, consumer-install]
     if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
-    timeout-minutes: 20
+    timeout-minutes: 60
     services:
       postgres:
         image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
@@ -521,6 +521,17 @@ jobs:
             %{rows: [[1]]} = MailglassReferenceHost.Repo.query!("SELECT 1")
             IO.puts("Exact-Hex host booted with core, admin, and inbound compatibility loaded.")
           '
+      - name: Execute 20-stage exact-Hex generated-host proof
+        env:
+          DATABASE_URL: ecto://postgres:postgres@localhost/mailglass_generated_ecto_host_published_${{ github.run_id }}
+          MAILGLASS_PACKAGE_MODE: exact_hex
+          MAILGLASS_EXACT_CORE_VERSION: ${{ needs.cron-guard.outputs.version_core }}
+          MAILGLASS_EXACT_ADMIN_VERSION: ${{ needs.cron-guard.outputs.version_admin }}
+          MAILGLASS_EXACT_INBOUND_VERSION: ${{ needs.cron-guard.outputs.version_inbound }}
+        run: |
+          set -euo pipefail
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          bash scripts/generated_ecto_host_proof.sh
       - name: Execute exact-Hex trust journey
         env:
           HOST_ROOT: ${{ runner.temp }}/mailglass-published-host-${{ github.run_id }}
