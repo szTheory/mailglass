@@ -3,6 +3,31 @@
 This document is the canonical contract inventory for the shipped
 `mailglass_inbound` slice.
 
+## Current v2.6 Additive Contract
+
+Package owner: `mailglass_inbound`.
+
+The package keeps an independent migration history and package release line.
+Its v2.6 additive public migration seams are:
+
+- `mix mailglass.inbound.gen.migration --repo MyApp.Repo`, which generates a
+  Repo-explicit wrapper owned by the host;
+- `MailglassInbound.Migration.up/1` and
+  `MailglassInbound.Migration.down/1`, called by generated wrappers; and
+- `MailglassInbound.Migration.migrated_version/1`, which reads the inbound
+  package anchor independently of core and fails closed through
+  `Mailglass.MigrationVersionError` when catalog truth is not trustworthy.
+
+Active v2 deprecations: none. v3 removal targets: none. A future inbound
+deprecation must name its replacement and major-version horizon here before a
+stable seam can be narrowed.
+
+The extracted `MailglassInbound.Ingress.Pipeline` remains internal, along with
+provider implementations, persistence collaborators, workers, queues, and
+optional-dependency adapters. The public HTTP seam remains
+`MailglassInbound.Ingress.Plug`; the architecture extraction did not widen the
+adopter contract.
+
 For this package, stability is semantics-first. ExDoc visibility, generated
 documentation reachability, and module reachability do not define the contract
 by themselves. The contract is the explicit inventory in this file plus the
@@ -30,7 +55,9 @@ These surfaces are part of the documented inbound adopter contract:
 - `MailglassInbound.Mailbox`
 - `MailglassInbound.PubSub.Topics`
 - stable Mix task behavior for `mix mailglass.inbound.doctor`,
-  `mix mailglass.inbound.replay`, and `mix mailglass.inbound.prune`
+  `mix mailglass.inbound.replay`, `mix mailglass.inbound.prune`, and
+  `mix mailglass.inbound.gen.migration`
+- the public migration facade `MailglassInbound.Migration`
 - PII-safe telemetry families under the `[:mailglass_inbound, ...]` names
   documented below
 - stable structured errors `MailglassInbound.MIMEError`,
@@ -93,6 +120,7 @@ or used by first-party packages, but they are implementation details:
 - `MailglassInbound.Ingress.Providers.Mailgun`
 - `MailglassInbound.Ingress.Providers.SES`
 - `MailglassInbound.Ingress.Persist`
+- `MailglassInbound.Ingress.Pipeline`
 - `MailglassInbound.Internal.Doctor`
 - `MailglassInbound.Internal.Replay`
 - `MailglassInbound.Internal.Prune`

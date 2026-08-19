@@ -565,6 +565,14 @@ defmodule Mailglass.DocsContractTest do
       adopter = File.read!("guides/b2c-first-adopter.md")
 
       assert v26_contract_errors(core, compatibility, adopter) == []
+      assert Mix.Task.get("mailglass.gen.migration")
+      assert Code.ensure_loaded?(Mailglass.Migration)
+      assert function_exported?(Mailglass.Migration, :up, 1)
+      assert function_exported?(Mailglass.Migration, :down, 1)
+      assert function_exported?(Mailglass.Migration, :migrated_version, 1)
+      assert %Mailglass.MigrationVersionError{} = struct(Mailglass.MigrationVersionError)
+      assert :dispatch_unavailable in Mailglass.SendError.__types__()
+      assert Map.has_key?(struct(Mailglass.SendError), :retry_class)
     end
 
     test "negative controls reject missing inventory facts and unsafe claims" do
