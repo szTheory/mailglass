@@ -117,7 +117,9 @@ defmodule Mailglass.Scripts.WorkflowHardeningContractTest do
 
   test "inert release events cannot enter package preparation or proof steps" do
     path = Path.join(@repo_root, ".github/workflows/publish-hex.yml")
-    prepublish = path |> File.read!() |> job_blocks() |> Map.fetch!("prepublish-summary")
+
+    prepublish =
+      path |> File.read!() |> job_blocks() |> Map.new() |> Map.fetch!("prepublish-summary")
 
     eligible =
       "steps.release-target.outputs.active == 'true' || steps.release-target.outputs.pretag == 'true'"
