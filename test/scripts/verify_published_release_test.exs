@@ -6,6 +6,7 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
   @policy Path.join(@repo_root, "scripts/release_policy.exs")
   @packages ~w(mailglass mailglass_admin mailglass_inbound)
   @tag_sha String.duplicate("d", 40)
+  @workflow_head_sha String.duplicate("9", 40)
   @checksum String.duplicate("e", 64)
   @run_id 123_456_789
   @run_url "https://github.com/szTheory/mailglass/actions/runs/#{@run_id}"
@@ -103,6 +104,7 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
     assert {output, 0} = run(context)
     assert output =~ "published_release_verified=true"
     assert output =~ "candidate_digest=#{candidate_digest(context.target)}"
+    assert output =~ "workflow_head_sha=#{@workflow_head_sha}"
 
     assert context.root |> Path.join("gh.log") |> File.read!() |> String.split("\n", trim: true) ==
              [
@@ -141,7 +143,15 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       %{run_json: Jason.encode!(%{valid_run() | "conclusion" => "failure"})},
       %{run_json: Jason.encode!(%{valid_run() | "event" => "push"})},
       %{run_json: Jason.encode!(%{valid_run() | "path" => ".github/workflows/ci.yml"})},
-      %{run_json: Jason.encode!(%{valid_run() | "head_sha" => String.duplicate("a", 40)})},
+      %{run_json: Jason.encode!(%{valid_run() | "head_sha" => "not-a-sha"})},
+      %{run_json: Jason.encode!(%{valid_run() | "head_branch" => "release-candidate"})},
+      %{
+        run_json:
+          Jason.encode!(%{
+            valid_run()
+            | "head_repository" => %{"full_name" => "attacker/fork"}
+          })
+      },
       %{gh_mode: "partial"},
       %{admin_release_json: Jason.encode!([valid_release("mailglass_admin", 1002)])},
       %{
@@ -220,7 +230,9 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       "event" => "workflow_dispatch",
       "status" => "completed",
       "conclusion" => "success",
-      "head_sha" => @tag_sha,
+      "head_sha" => @workflow_head_sha,
+      "head_branch" => "main",
+      "head_repository" => %{"full_name" => "szTheory/mailglass"},
       "path" => ".github/workflows/publish-hex.yml"
     }
   end
@@ -302,7 +314,7 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
   end
 
   defp candidate_digest(target) do
-    {:ok, digest} = Mailglass.ReleasePolicy.candidate_digest(target)
+    {:ok, digest} = apply(Mailglass.ReleasePolicy, :candidate_digest, [target])
     digest
   end
 
