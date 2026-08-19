@@ -133,6 +133,11 @@ gh api "repos/${repository}/actions/artifacts/${artifact_id}/zip" >"$proof_zip" 
   fail "publication proof artifact archive is unexpectedly large"
 [[ $(unzip -Z1 "$proof_zip") == phase-148.json ]] ||
   fail "publication proof artifact archive has an unexpected shape"
+proof_size=$(unzip -l "$proof_zip" | awk '$NF == "phase-148.json" && $1 ~ /^[0-9]+$/ {print $1}')
+[[ "$proof_size" =~ ^[0-9]+$ ]] ||
+  fail "publication proof artifact uncompressed size is unavailable"
+awk -v size="$proof_size" 'BEGIN {exit !(size <= 1048576)}' ||
+  fail "uncompressed publication proof exceeds the size limit"
 proof_json=$(unzip -p "$proof_zip" phase-148.json) ||
   fail "publication proof artifact could not be read"
 

@@ -202,6 +202,8 @@ jobs:
           if run_policy validate-protected-dispatch "$control_target" "$digest" > "$policy"; then
             content_digest=$(awk -F= '$1 == "content_digest" {print $2}' "$policy")
             [[ "$content_digest" =~ ^[0-9a-f]{64}$ ]]
+            core=$(jq -er '.candidate_versions.mailglass' "$control_target")
+            [ "${RELEASE_REF}" = "mailglass-v${core}" ]
             tag_sha=$(git -C "$candidate_root" rev-parse "${RELEASE_REF}^{commit}")
             [[ "$tag_sha" =~ ^[0-9a-f]{40}$ ]]
             [ "$(git -C "$candidate_root" rev-parse HEAD)" = "$tag_sha" ]
@@ -319,6 +321,7 @@ jobs:
           name: phase-148-release-proof-${{ github.run_id }}
           path: tmp/release-proof/phase-148.json
           if-no-files-found: error
+          overwrite: true
           retention-days: 90
 
   # The only job allowed to mutate Actions state. It is reachable only after the
