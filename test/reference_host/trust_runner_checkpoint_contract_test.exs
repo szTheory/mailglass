@@ -14,6 +14,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
   @claim_boundary "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
   @row_hash_contract "stage|status|fixture_id"
   @stage_order ["install", "preview", "send", "webhook_ingest", "operator_troubleshooting"]
+  @generated_host_script_path Path.expand("../../scripts/generated_ecto_host_proof.sh", __DIR__)
 
   test "two dry runs emit deterministic equivalent checkpoints with stable hash" do
     checkpoint_dir = Path.join(@project_root, "tmp/mailglass_trust_runner")
@@ -169,6 +170,30 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
 
     assert exit_code != 0
     assert output =~ "forbidden evidence key"
+  end
+
+  test "REL-01 generated-host evidence closes every package boundary in exact order" do
+    source = File.read!(@generated_host_script_path)
+
+    expected = [
+      "fresh_install",
+      "sync_send",
+      "atomic_enqueue",
+      "worker_run",
+      "persisted_outcome",
+      "custom_modules",
+      "multi_repo_prefixes",
+      "upgrade",
+      "rollback",
+      "idempotent_rerun"
+    ]
+
+    Enum.each(expected, fn stage ->
+      assert source =~ stage, "generated-host proof is missing ordered stage #{stage}"
+    end)
+
+    assert source =~ "validate_checkpoint_file"
+    assert source =~ "core_first inbound_first"
   end
 
   defp decode!(path), do: path |> File.read!() |> Jason.decode!()
