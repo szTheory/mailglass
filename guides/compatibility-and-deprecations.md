@@ -178,6 +178,10 @@ proves it today through `mix.exs`, `mailglass_admin/mix.exs`,
 | `mailglass_admin` | matched release line with the core package | `mailglass_admin/mix.exs` |
 | `mailglass_inbound` | independent `2.x` contract and release line; see `mailglass_inbound/docs/api_stability.md` | `mailglass_inbound/docs/api_stability.md` |
 
+Historical provenance: before the v2 package line, the support-matrix row read
+`mailglass_inbound` | independent `1.0` contract. That sentence records the
+entry contract only; the v2 row above is current.
+
 ### Optional dependency lanes
 
 Optional dependencies are supported integration lanes when present, not part of
