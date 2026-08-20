@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "published",
+  "status": "completed",
   "package_set": [
     "mailglass",
     "mailglass_admin",
@@ -67,7 +67,14 @@
         "mailglass_inbound": "b3261d51b58fa8d69ffee7045507f9a0e2c57ea4b09be7f796378f267ad84cc2"
       }
     },
-    "adoption_evidence": null
+    "adoption_evidence": {
+      "workflow_run_url": "https://github.com/szTheory/mailglass/actions/runs/32425143336",
+      "target_ref": "0f0b06861b1cbb2e89f44ea4f40db754effc4017",
+      "checkpoint_digests": {
+        "generated_host": "0dc107c1c555c760646d61ed0212a945c89b1395dedcb22a3e4f2a13b3157fc0",
+        "trust_runner": "24858ca83da8ba49e7c2a2b500bc4c5aae676134f408b7e2928ea0bf95b2e29a"
+      }
+    }
   },
   "states": {
     "capture": "captured",
