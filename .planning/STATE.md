@@ -5,16 +5,16 @@ milestone_name: Engineering Quality Ratchet
 current_phase: 160
 current_phase_name: Certification, Documentation, and Release
 status: executing
-stopped_at: Plan 160-05 exact candidate captured and validated; awaiting explicit digest-bound authorization
-last_updated: "2026-08-20T13:34:50.000Z"
+stopped_at: Plan 160-06 protected publication checkpoint; awaiting separate explicit publish decision
+last_updated: "2026-08-20T13:41:01.000Z"
 last_activity: 2026-08-20
-last_activity_desc: Corrective allowlists merged and exact synchronized Release Please candidate passed all evidence gates
+last_activity_desc: Exact synchronized candidate authorized; no release merge, tag, release, or publication performed
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 41
-  completed_plans: 39
-  percent: 95
+  completed_plans: 40
+  percent: 98
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-17 after Phase 158)
 ## Current Position
 
 Phase: 160 (Certification, Documentation, and Release) — EXECUTING
-Plan: 5 of 6
-Status: Blocking human checkpoint; exact candidate digest awaits explicit authorization
-Last activity: 2026-08-20 — PR #214 merged the 21-entry allowlist fix; synchronized Release Please PR #209 and exact three-package rehearsal are green
+Plan: 6 of 6
+Status: Blocking human checkpoint; authorized candidate awaits separate explicit publication approval
+Last activity: 2026-08-20 — Candidate `372e6ae6…` authorized exactly; protected publication has not started
 
-Progress: [███████████████████░] 39/41 plans (95%); 5/6 phases complete
+Progress: [███████████████████░] 40/41 plans (98%); 5/6 phases complete
 
 ## v2.6 Milestone Intent
 
@@ -195,7 +195,7 @@ release debug campaign.
 ## Decisions
 
 - [160-05] Rejected candidate digest `5814bd255019d3e79a773f6ca3b0593bdf7bfc293e0ae9f7d4700b64dd7fe498` after the credential-free rehearsal found 16 core and 5 inbound source files missing from publish allowlists. PR #214 landed the focused fix on `main`; the regenerated synchronized proposal replaced the rejected identity.
-- [160-05] Captured candidate digest `372e6ae676e9cd8bdc15de9830da66d49f256327215dcbd73a480060e89fa450` for Release Please PR #209 at head `30f576536bd77cde3231d1e74608eda6cd553bb4`, source `f338bcedab186e5423fa9eaadf7406c71377bdf9`, versions 2.5.0 / 2.5.0 / 2.2.0, and content digest `90cf4e86b3573e42acf1cfe2f6ff28315e951a5e315e8ac91c53b59734d9c270`. Exact PR CI, live Hex reconciliation, release-policy tests, and all three package rehearsals passed; authorization remains explicit and pending.
+- [160-05] Authorized candidate digest `372e6ae676e9cd8bdc15de9830da66d49f256327215dcbd73a480060e89fa450` for Release Please PR #209 at head `30f576536bd77cde3231d1e74608eda6cd553bb4`, source `f338bcedab186e5423fa9eaadf7406c71377bdf9`, versions 2.5.0 / 2.5.0 / 2.2.0, and content digest `90cf4e86b3573e42acf1cfe2f6ff28315e951a5e315e8ac91c53b59734d9c270`. Exact PR CI, live Hex reconciliation, release-policy tests, and all three package rehearsals passed; Plan 160-06 publication remains separately gated.
 - [109-03] BORDER-GATE uses an explicit raw Tailwind palette list rather than a generic `[a-z]+-[0-9]` suffix so semantic DaisyUI tokens like `border-base-300` remain valid.
 - [109-03] Ratchet schema v3 seeds the `system` axis from each block's existing light score and preserves prior/current run IDs; Phase 109 does not perform a pillar re-score.
 - [109-04] System/default theme proof remains structural: no explicit `data-theme` under OS light/dark emulation, no JS hook/storage/picker, and no `data-theme="system"`.
@@ -785,8 +785,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-20T13:34:50.000Z
-**Stopped at:** Plan 160-05 exact candidate `372e6ae676e9cd8bdc15de9830da66d49f256327215dcbd73a480060e89fa450` is captured and fully validated. Await explicit `authorize <candidate_digest>` before changing the target to authorized; no release PR merge, tag, release, or publication has occurred.
+**Last session:** 2026-08-20T13:41:01.000Z
+**Stopped at:** Plan 160-06 publication checkpoint. Candidate `372e6ae676e9cd8bdc15de9830da66d49f256327215dcbd73a480060e89fa450` is authorized, but no protected release workflow has been dispatched. Await separate explicit `publish <candidate_digest>` approval.
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
