@@ -5,10 +5,10 @@ milestone_name: Engineering Quality Ratchet
 current_phase: 160
 current_phase_name: Certification, Documentation, and Release
 status: executing
-stopped_at: PR #203 CI remediation pushed and locally verified; awaiting CI before Plan 160-05 candidate capture and human authorization
-last_updated: "2026-08-19T18:56:17.000Z"
+stopped_at: Plan 160-05 rehearsal found stale package allowlists; fix 2fc51f5b must land on main before candidate regeneration
+last_updated: "2026-08-20T02:15:27.000Z"
 last_activity: 2026-08-19
-last_activity_desc: PR #203 adopter and CI remediation locally verified and pushed
+last_activity_desc: Plan 160-05 rejected stale candidate and refreshed core/inbound publish allowlists
 progress:
   total_phases: 6
   completed_phases: 5
@@ -30,8 +30,8 @@ See: .planning/PROJECT.md (updated 2026-08-17 after Phase 158)
 
 Phase: 160 (Certification, Documentation, and Release) — EXECUTING
 Plan: 5 of 6
-Status: Awaiting PR #203 CI; release remains blocked on immutable candidate capture and explicit digest-bound authorization
-Last activity: 2026-08-19 — PR #203 adopter and CI remediation passed broad local verification and was pushed
+Status: Blocked before candidate capture; publish allowlist fix 2fc51f5b must land on main and regenerate Release Please evidence
+Last activity: 2026-08-19 — Candidate rehearsal failed closed on 21 missing package allowlist entries; focused fix verified across all three packages
 
 Progress: [███████████████████░] 39/41 plans (95%); 5/6 phases complete
 
@@ -194,6 +194,7 @@ release debug campaign.
 
 ## Decisions
 
+- [160-05] Rejected candidate digest `5814bd255019d3e79a773f6ca3b0593bdf7bfc293e0ae9f7d4700b64dd7fe498` after the credential-free rehearsal found 16 core and 5 inbound source files missing from publish allowlists. Commit `2fc51f5b` refreshes only those allowlists and passes all three package publish checks from protected-main state; the release target remains inactive until that fix lands and Release Please emits a new proposal head/content digest.
 - [109-03] BORDER-GATE uses an explicit raw Tailwind palette list rather than a generic `[a-z]+-[0-9]` suffix so semantic DaisyUI tokens like `border-base-300` remain valid.
 - [109-03] Ratchet schema v3 seeds the `system` axis from each block's existing light score and preserves prior/current run IDs; Phase 109 does not perform a pillar re-score.
 - [109-04] System/default theme proof remains structural: no explicit `data-theme` under OS light/dark emulation, no JS hook/storage/picker, and no `data-theme="system"`.
@@ -783,8 +784,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-19T18:56:17.000Z
-**Stopped at:** PR #203 remediation pushed after full local verification; monitoring CI before merge. Plan 160-05 remains authorization-gated.
+**Last session:** 2026-08-20T02:15:27.000Z
+**Stopped at:** Plan 160-05 candidate rehearsal failed closed on stale publish allowlists. Fix `2fc51f5b` is locally verified and must land on `main`; then regenerate and re-review the Release Please candidate before any digest-bound authorization.
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
