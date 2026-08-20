@@ -191,6 +191,15 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert job =~
              "MAILGLASS_INBOUND_WORKSPACE_EBIN=\"${HOST_ROOT}/_build/dev/lib/mailglass_inbound/ebin\""
 
+    assert job =~ "refusing an ambiguous override"
+    assert job =~ "config :swoosh, :api_client, false"
+
+    assert_ordered!(job, [
+      ~s|File.write!("mix.exs", updated)|,
+      "config :swoosh, :api_client, false",
+      "MIX_ENV=dev mix deps.get"
+    ])
+
     assert job =~ "mix verify.reference_host.journey --host-root \"${HOST_ROOT}\""
     assert job =~ "bash scripts/check_trust_runner_checkpoint.sh --require-completed"
     assert job =~ "name: published-adoption-evidence-${{ github.run_id }}"

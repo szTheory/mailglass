@@ -513,6 +513,11 @@ jobs:
 
             File.write!("mix.exs", updated)
           '
+          if grep -Eq '^[[:space:]]*config :swoosh, :api_client,' config/runtime.exs; then
+            echo "Disposable host already defines a Swoosh API client; refusing an ambiguous override."
+            exit 1
+          fi
+          printf '\n# Fresh --no-mailer adopter hosts do not resolve an HTTP client.\nconfig :swoosh, :api_client, false\n' >> config/runtime.exs
           MIX_ENV=dev mix deps.get
           bash "${GITHUB_WORKSPACE}/scripts/check_clean_baseline_hex_only.sh" mix.lock
           MIX_ENV=dev mix compile --warnings-as-errors
