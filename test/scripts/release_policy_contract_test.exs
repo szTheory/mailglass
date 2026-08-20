@@ -417,7 +417,9 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
     assert release =~ "content_digest=$(awk -F= '$1 == \"content_digest\" {print $2}' \"$policy\")"
     assert release =~ "[ \"$candidate_digest\" = \"$CANDIDATE_DIGEST\" ]"
-    assert protected =~ "[ \"$base\" = \"$current_main_sha\" ]"
+    assert protected =~ "[ \"$base\" = \"$source_sha\" ]"
+    refute protected =~ "[ \"$base\" = \"$current_main_sha\" ]"
+    assert protected =~ "gh pr checks \"$number\" --required"
     assert protected =~ "git merge-base --is-ancestor \"$source_sha\" \"$current_main_sha\""
     assert protected =~ ~s(control_root="$GITHUB_WORKSPACE/trusted-control")
     assert protected =~ "git worktree add --detach \"$candidate_root\" \"$proposal_head\""
@@ -438,6 +440,8 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert release =~ "Compile policy runtime"
     refute release =~ "cat \"$policy\" >> \"$GITHUB_OUTPUT\""
     assert release =~ "Protected exact candidate dispatch may merge only the validated release PR"
+    assert release =~ "GH_TOKEN: ${{ secrets.RELEASE_PLEASE_PAT }}"
+    assert release =~ "gh pr merge \"$NUMBER\" --admin --squash"
     assert release =~ "steps.protected-dispatch.outputs.authorized == 'true'"
     assert release =~ "steps.protected-merge.outcome == 'success'"
     assert release =~ "steps.protected-merge.outputs.merge_tree_verified == 'true'"
