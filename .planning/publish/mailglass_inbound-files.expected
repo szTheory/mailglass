@@ -16,6 +16,7 @@ lib/mailglass_inbound.ex
 lib/mailglass_inbound/application.ex
 lib/mailglass_inbound/config.ex
 lib/mailglass_inbound/execution.ex
+lib/mailglass_inbound/execution/router_registry.ex
 lib/mailglass_inbound/execution/worker.ex
 lib/mailglass_inbound/fixtures.ex
 lib/mailglass_inbound/inbound_message.ex
@@ -27,6 +28,7 @@ lib/mailglass_inbound/inbound_records/inbound_record.ex
 lib/mailglass_inbound/inbound_records/replay_run.ex
 lib/mailglass_inbound/ingress/caching_body_reader.ex
 lib/mailglass_inbound/ingress/persist.ex
+lib/mailglass_inbound/ingress/pipeline.ex
 lib/mailglass_inbound/ingress/plug.ex
 lib/mailglass_inbound/ingress/provider.ex
 lib/mailglass_inbound/ingress/providers/mailgun.ex
@@ -34,6 +36,7 @@ lib/mailglass_inbound/ingress/providers/postmark.ex
 lib/mailglass_inbound/ingress/providers/sendgrid.ex
 lib/mailglass_inbound/ingress/providers/ses.ex
 lib/mailglass_inbound/ingress/request.ex
+lib/mailglass_inbound/ingress/verified_request.ex
 lib/mailglass_inbound/internal/doctor.ex
 lib/mailglass_inbound/internal/operator/detail.ex
 lib/mailglass_inbound/internal/operator/records.ex
@@ -46,10 +49,12 @@ lib/mailglass_inbound/mailbox_case.ex
 lib/mailglass_inbound/migration.ex
 lib/mailglass_inbound/migrations/postgres.ex
 lib/mailglass_inbound/migrations/postgres/v01.ex
+lib/mailglass_inbound/migrations/postgres/v02.ex
 lib/mailglass_inbound/mime.ex
 lib/mailglass_inbound/mime_error.ex
 lib/mailglass_inbound/operator/formatter.ex
 lib/mailglass_inbound/optional_deps.ex
+lib/mailglass_inbound/ports/core.ex
 lib/mailglass_inbound/prune/worker.ex
 lib/mailglass_inbound/pub_sub/topics.ex
 lib/mailglass_inbound/rate_limiter.ex
