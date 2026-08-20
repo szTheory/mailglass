@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "authorized",
+  "status": "published",
   "package_set": [
     "mailglass",
     "mailglass_admin",
@@ -47,11 +47,31 @@
     ]
   },
   "final_identity": {
-    "tag_sha": null
+    "tag_sha": "0f0b06861b1cbb2e89f44ea4f40db754effc4017",
+    "publication_evidence": {
+      "candidate_digest": "91353fe852bdace582d3d19e6f5f53583ffd53ec9317db7cc37c6d55e574a1e4",
+      "workflow_run_url": "https://github.com/szTheory/mailglass/actions/runs/32416453778",
+      "release_ids": {
+        "mailglass": 373992285,
+        "mailglass_admin": 373992294,
+        "mailglass_inbound": 373992305
+      },
+      "tag_shas": {
+        "mailglass": "0f0b06861b1cbb2e89f44ea4f40db754effc4017",
+        "mailglass_admin": "0f0b06861b1cbb2e89f44ea4f40db754effc4017",
+        "mailglass_inbound": "0f0b06861b1cbb2e89f44ea4f40db754effc4017"
+      },
+      "hex_release_checksums": {
+        "mailglass": "8ffab2c0708b5eb3b18693ec6df1b4ad105abc38d7041f1f7b7650cb046f05de",
+        "mailglass_admin": "19a4400bb76631605424f6edba30905de50c1d31e8db6667ec31007222ba832c",
+        "mailglass_inbound": "b3261d51b58fa8d69ffee7045507f9a0e2c57ea4b09be7f796378f267ad84cc2"
+      }
+    },
+    "adoption_evidence": null
   },
   "states": {
     "capture": "captured",
     "authorization": "authorized",
-    "publication": "not_started"
+    "publication": "published"
   }
 }
