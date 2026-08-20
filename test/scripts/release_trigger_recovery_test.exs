@@ -251,19 +251,31 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert sync =~ "sync linked package pins to core $CORE_VERSION"
   end
 
-  test "release target remains versioned and inactive until protected candidate capture" do
+  test "release target stays versioned and policy-valid after protected candidate lifecycle" do
     source = workflow_source()
 
     validation =
       extract_step_block!(source, "Capture Release Please proposal identity without activation")
 
     target = Jason.decode!(File.read!(@release_target_path))
+    Code.require_file(Path.join(@repo_root, "scripts/release_policy.exs"))
 
     assert target["schema_version"] == 1
-    assert target["status"] == "inactive"
+    assert {:ok, ^target} = apply(Mailglass.ReleasePolicy, :validate_target, [target])
+    assert target["status"] == "completed"
     assert target["package_set"] == ["mailglass", "mailglass_admin", "mailglass_inbound"]
-    assert target["candidate_versions"] == nil
-    assert target["proposal_identity"] == %{"head_sha" => nil, "source_sha" => nil}
+
+    assert target["candidate_versions"] == %{
+             "mailglass" => "2.5.0",
+             "mailglass_admin" => "2.5.0",
+             "mailglass_inbound" => "2.2.0"
+           }
+
+    assert target["states"] == %{
+             "capture" => "captured",
+             "authorization" => "authorized",
+             "publication" => "published"
+           }
 
     assert validation =~ ".planning/release-target.json"
     assert validation =~ "gh pr list --head release-please--branches--main"
