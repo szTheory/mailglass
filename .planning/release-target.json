@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "authorized",
+  "status": "captured",
   "package_set": [
     "mailglass",
     "mailglass_admin",
@@ -36,8 +36,8 @@
     "historical_tag_sha": "587c9d1a09944de02220b3fa121ce937677a8c3a"
   },
   "proposal_identity": {
-    "head_sha": "30f576536bd77cde3231d1e74608eda6cd553bb4",
-    "source_sha": "f338bcedab186e5423fa9eaadf7406c71377bdf9"
+    "head_sha": "2462a045f22e180d6cb323813ccf581696c68332",
+    "source_sha": "629f6c4ffba4cf7bc453f03ad22de54f63c341b6"
   },
   "publishable_content": {
     "algorithm": "sha256",
@@ -51,7 +51,7 @@
   },
   "states": {
     "capture": "captured",
-    "authorization": "authorized",
+    "authorization": "unauthorized",
     "publication": "not_started"
   }
 }
