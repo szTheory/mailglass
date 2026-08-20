@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "inactive",
+  "status": "captured",
   "package_set": [
     "mailglass",
     "mailglass_admin",
@@ -11,7 +11,11 @@
     "mailglass_admin": "2.4.1",
     "mailglass_inbound": "2.1.2"
   },
-  "candidate_versions": null,
+  "candidate_versions": {
+    "mailglass": "2.5.0",
+    "mailglass_admin": "2.5.0",
+    "mailglass_inbound": "2.2.0"
+  },
   "required_evidence_identifiers": {
     "hex_package_endpoints": {
       "mailglass": "https://hex.pm/api/packages/mailglass",
@@ -32,12 +36,12 @@
     "historical_tag_sha": "587c9d1a09944de02220b3fa121ce937677a8c3a"
   },
   "proposal_identity": {
-    "head_sha": null,
-    "source_sha": null
+    "head_sha": "30f576536bd77cde3231d1e74608eda6cd553bb4",
+    "source_sha": "f338bcedab186e5423fa9eaadf7406c71377bdf9"
   },
   "publishable_content": {
     "algorithm": "sha256",
-    "digest": null,
+    "digest": "90cf4e86b3573e42acf1cfe2f6ff28315e951a5e315e8ac91c53b59734d9c270",
     "excludes": [
       ".planning/release-target.json"
     ]
@@ -46,7 +50,7 @@
     "tag_sha": null
   },
   "states": {
-    "capture": "inactive",
+    "capture": "captured",
     "authorization": "unauthorized",
     "publication": "not_started"
   }
