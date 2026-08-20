@@ -3,10 +3,12 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
 
   @repo_root Path.expand("../..", __DIR__)
   @script Path.join(@repo_root, "scripts/reconcile_release_versions.exs")
+  @release_policy_script Path.join(@repo_root, "scripts/release_policy.exs")
   @packages ~w(mailglass mailglass_admin mailglass_inbound)
 
   setup_all do
     Code.require_file(@script)
+    Code.require_file(@release_policy_script)
     :ok
   end
 
@@ -328,11 +330,31 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
 
     target = read_json!(Path.join(@repo_root, ".planning/release-target.json"))
 
-    assert target ==
-             apply(reconciler(), :inactive_target, [baseline_versions(), evidence_identifiers()])
+    assert target["baselines"] == baseline_versions()
+    assert {:ok, ^target} = apply(release_policy(), :validate_target, [target])
 
-    assert {:ok, ^target} = apply(reconciler(), :validate_inactive_target, [target])
+    case target["status"] do
+      "inactive" ->
+        assert target ==
+                 apply(reconciler(), :inactive_target, [baseline_versions(), evidence_identifiers()])
+
+        assert {:ok, ^target} = apply(reconciler(), :validate_inactive_target, [target])
+
+      status when status in ["captured", "authorized"] ->
+        reviewed = %{
+          "candidate_versions" => target["candidate_versions"],
+          "proposal_identity" => target["proposal_identity"],
+          "publishable_content" => %{"digest" => target["publishable_content"]["digest"]}
+        }
+
+        assert {:ok, ^target} = apply(reconciler(), :validate_activation, [target, reviewed])
+
+      status when status in ["published", "completed"] ->
+        assert target["states"]["publication"] == "published"
+    end
   end
+
+  defp release_policy, do: Module.concat([Mailglass, ReleasePolicy])
 
   test "inactive target validation rejects unexpected top-level or evidence fields" do
     target = apply(reconciler(), :inactive_target, [baseline_versions(), evidence_identifiers()])

@@ -5,6 +5,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   @workflow_path Path.expand("../../.github/workflows/release-please.yml", __DIR__)
   @manifest_path Path.expand("../../.release-please-manifest.json", __DIR__)
   @release_target_path Path.expand("../../.planning/release-target.json", __DIR__)
+  @release_policy_path Path.expand("../../scripts/release_policy.exs", __DIR__)
   @contributing_path Path.expand("../../CONTRIBUTING.md", __DIR__)
   @recovery_runbook_facts [
     "minute 17",
@@ -21,6 +22,11 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     "credential-free and read-only",
     "Do not manually create"
   ]
+
+  setup_all do
+    Code.require_file(@release_policy_path)
+    :ok
+  end
 
   test "release-please retains the complete recovery trigger set" do
     source = workflow_source()
@@ -251,7 +257,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert sync =~ "sync linked package pins to core $CORE_VERSION"
   end
 
-  test "release target remains versioned and inactive until protected candidate capture" do
+  test "versioned release target and proposal-only capture stay lifecycle-safe" do
     source = workflow_source()
 
     validation =
@@ -260,15 +266,15 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     target = Jason.decode!(File.read!(@release_target_path))
 
     assert target["schema_version"] == 1
-    assert target["status"] == "inactive"
     assert target["package_set"] == ["mailglass", "mailglass_admin", "mailglass_inbound"]
-    assert target["candidate_versions"] == nil
-    assert target["proposal_identity"] == %{"head_sha" => nil, "source_sha" => nil}
+    assert {:ok, ^target} = apply(release_policy(), :validate_target, [target])
 
     assert validation =~ ".planning/release-target.json"
     assert validation =~ "gh pr list --head release-please--branches--main"
     assert validation =~ "proposal-candidate.json"
     assert validation =~ "capture-candidate"
+    assert validation =~ "captured|authorized)"
+    assert validation =~ "completed)"
     assert validation =~ "proposal/source identity"
 
     assert step_precedes?(
@@ -340,6 +346,8 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   end
 
   defp workflow_source, do: File.read!(@workflow_path)
+
+  defp release_policy, do: Module.concat([Mailglass, ReleasePolicy])
 
   defp step_precedes?(source, first_name, second_name) do
     {first, _} = :binary.match(source, "- name: #{first_name}")
