@@ -74,7 +74,7 @@
 - [ ] **REL-01**: A real generated Phoenix/Ecto/Postgres host proves fresh install, send/queue persistence, schema upgrade, rollback, idempotent rerun, custom module, multi-repo, and non-public prefix behavior.
 - [ ] **REL-02**: Current v2 API/stability documentation identifies additive interfaces, real deprecations, and v3 removal targets without stale phase/version claims.
 - [ ] **REL-03**: Live Hex versions and repository manifests are reconciled before the protected release candidate is created.
-- [ ] **REL-04**: The protected pipeline publishes additive core/admin and inbound releases and passes exact-Hex post-publish adoption proof without admin/operator UI changes.
+- [x] **REL-04**: The protected pipeline publishes additive core/admin and inbound releases and passes exact-Hex post-publish adoption proof without admin/operator UI changes.
 
 ## Out of Scope
 
@@ -140,7 +140,7 @@
 | REL-01 | Phase 160 | Pending |
 | REL-02 | Phase 160 | Pending |
 | REL-03 | Phase 160 | Pending |
-| REL-04 | Phase 160 | Pending |
+| REL-04 | Phase 160 | Complete |
 
 ---
 *Requirements defined: 2026-08-16*

@@ -195,7 +195,7 @@ Plans:
   3. Repository manifests match live Hex versions before a protected release candidate is created.
   4. The protected pipeline publishes additive core, admin, and inbound releases, and an exact-Hex host completes post-publish adoption proof with existing operator behavior preserved.
 
-**Plans**: 6 plans
+**Plans**: 6/6 plans executed
 
 Plans:
 
@@ -204,7 +204,7 @@ Plans:
 - [x] 160-03-PLAN.md — Reconcile repository manifests with live Hex without inventing candidate versions.
 - [x] 160-04-PLAN.md — Prepare tested all-package release policy and exact-Hex workflow inputs without publication.
 - [x] 160-05-PLAN.md — Capture and explicitly authorize one immutable automation-proposed candidate.
-- [ ] 160-06-PLAN.md — Explicitly authorize protected publication and prove the exact-Hex adopter journey.
+- [x] 160-06-PLAN.md — Explicitly authorize protected publication and prove the exact-Hex adopter journey.
 
 ## Progress
 
@@ -217,4 +217,4 @@ Plans:
 | 157. Inbound, Database, and Lifecycle Hardening | 9/9 | Complete    | 2026-08-17 |
 | 158. Simplify Architecture Without Breaking Adopters | 6/6 | Complete    | 2026-08-17 |
 | 159. Raise and Simplify Engineering Gates | 7/7 | Complete | 2026-08-18 |
-| 160. Certification, Documentation, and Release | 5/6 | In progress | - |
+| 160. Certification, Documentation, and Release | 6/6 | In Progress|  |

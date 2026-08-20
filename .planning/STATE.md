@@ -5,16 +5,16 @@ milestone_name: Engineering Quality Ratchet
 current_phase: 160
 current_phase_name: Certification, Documentation, and Release
 status: executing
-stopped_at: Plan 160-06 protected publication checkpoint; awaiting separate explicit publish decision
-last_updated: "2026-08-20T13:41:01.000Z"
+stopped_at: Completed 160-06-PLAN.md
+last_updated: "2026-08-20T22:57:09.972Z"
 last_activity: 2026-08-20
-last_activity_desc: Exact synchronized candidate authorized; no release merge, tag, release, or publication performed
+last_activity_desc: Candidate `372e6ae6…` authorized exactly; protected publication has not started
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 41
-  completed_plans: 40
-  percent: 98
+  completed_plans: 41
+  percent: 100
 ---
 
 # Project State
@@ -33,7 +33,7 @@ Plan: 6 of 6
 Status: Blocking human checkpoint; authorized candidate awaits separate explicit publication approval
 Last activity: 2026-08-20 — Candidate `372e6ae6…` authorized exactly; protected publication has not started
 
-Progress: [███████████████████░] 40/41 plans (98%); 5/6 phases complete
+Progress: [███████████████████░] 40/41 plans ([██████████] 100%); 5/6 phases complete
 
 ## v2.6 Milestone Intent
 
@@ -500,6 +500,9 @@ release debug campaign.
 - [Phase ?]: Generated-host rollback proof runs separate core-first and inbound-first hosts.
 - [Phase ?]: Suppression resync pages by (occurred_at, id) with page-local dedupe and bounded bulk reads/upserts.
 - [Phase ?]: Resync page size is application-configured; Mix task flags and output remain unchanged.
+- [Phase 160]: Publication remained bound exclusively to candidate digest 91353fe852bdace582d3d19e6f5f53583ffd53ec9317db7cc37c6d55e574a1e4 and immutable tag SHA 0f0b06861b1cbb2e89f44ea4f40db754effc4017. — Retired candidate identities were never reusable, and irreversible publication authority had to remain exact.
+- [Phase 160]: Immutable-tag CI recovery used a protected main control plane only after proving tag ancestry and exact publishable-content equality; every publish job still checked out the immutable tag. — The public tag could not be rewritten, so recovery had to fix workflow control without changing shipped package content.
+- [Phase 160]: The release target closed only after the successful smoke artifact checkpoint hashes were independently verified and recorded. — A green run alone was insufficient for the durable REL-04 evidence ledger.
 
 ## Quick Tasks Completed
 
@@ -592,6 +595,7 @@ release debug campaign.
 | Phase 155 P06 | 5 min | 2 tasks | 4 files |
 | Phase 155 P07 | 33min | 2 tasks | 5 files |
 | Phase 157-inbound-database-and-lifecycle-hardening P07 | 6min | 2 tasks | 5 files |
+| Phase 160 P06 | 5h 14m | 3 tasks | 7 files |
 
 ## Deferred Items
 
@@ -785,8 +789,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-20T13:41:01.000Z
-**Stopped at:** Plan 160-06 publication checkpoint. Candidate `372e6ae676e9cd8bdc15de9830da66d49f256327215dcbd73a480060e89fa450` is authorized, but no protected release workflow has been dispatched. Await separate explicit `publish <candidate_digest>` approval.
+**Last session:** 2026-08-20T22:56:29.671Z
+**Stopped at:** Completed 160-06-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
