@@ -4,6 +4,13 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.5.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.4.1...mailglass_admin-v2.5.0) (2026-08-20)
+
+
+### Features
+
+* complete v2.6 engineering quality ratchet ([#203](https://github.com/szTheory/mailglass/issues/203)) ([61e8c8e](https://github.com/szTheory/mailglass/commit/61e8c8e841306755ec637f84052f8dca4baadb76))
+
 ## [2.4.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.3.0...mailglass_admin-v2.4.0) (2026-08-02)
 
 

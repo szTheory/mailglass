@@ -14,6 +14,20 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.5.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.4.1...mailglass-v2.5.0) (2026-08-20)
+
+
+### Features
+
+* complete v2.6 engineering quality ratchet ([#203](https://github.com/szTheory/mailglass/issues/203)) ([61e8c8e](https://github.com/szTheory/mailglass/commit/61e8c8e841306755ec637f84052f8dca4baadb76))
+
+
+### Bug Fixes
+
+* **160-06:** unblock exact protected release merge ([856d661](https://github.com/szTheory/mailglass/commit/856d661c094ceffc22f7bb7a8e5812aeb25de9f5))
+* **ci:** avoid branch protection probe sigpipe ([#211](https://github.com/szTheory/mailglass/issues/211)) ([f14cd66](https://github.com/szTheory/mailglass/commit/f14cd6601d03036cbfef7d29a91ee9783cb1272b))
+* **release:** bound proposal history after published baselines ([#208](https://github.com/szTheory/mailglass/issues/208)) ([d44d891](https://github.com/szTheory/mailglass/commit/d44d891d4cf2106e9cda8677dd1932b4bc032229))
+
 ## [2.4.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.3.0...mailglass-v2.4.0) (2026-08-02)
 
 
