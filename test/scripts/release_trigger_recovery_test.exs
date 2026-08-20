@@ -225,6 +225,29 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
            )
   end
 
+  test "protected exact dispatch survives the authorization-only main advance without weakening identity" do
+    source = workflow_source()
+
+    validation = extract_step_block!(source, "Validate protected exact candidate dispatch")
+
+    merge =
+      extract_step_block!(
+        source,
+        "Protected exact candidate dispatch may merge only the validated release PR"
+      )
+
+    assert validation =~ ~s([ "$base" = "$source_sha" ])
+    refute validation =~ ~s([ "$base" = "$current_main_sha" ])
+    assert validation =~ ~s(gh pr checks "$number" --required)
+    assert validation =~ ~s(git merge-base --is-ancestor "$source_sha" "$current_main_sha")
+    assert validation =~ "source_content_digest"
+    assert validation =~ "main_content_digest"
+
+    assert merge =~ "GH_TOKEN: ${{ secrets.RELEASE_PLEASE_PAT }}"
+    assert merge =~ ~s(gh pr merge "$NUMBER" --admin --squash)
+    assert merge =~ ~s(--match-head-commit "$PROPOSAL_HEAD")
+  end
+
   test "core/admin-only release synchronization refreshes inbound compatibility without bumping inbound" do
     sync =
       extract_step_block!(

@@ -219,7 +219,11 @@ jobs:
           base=$(jq -er '.baseRefOid' <<<"$pr")
           [[ "$number" =~ ^[0-9]+$ ]]
           [ "$head" = "$proposal_head" ]
-          [ "$base" = "$current_main_sha" ]
+          [ "$base" = "$source_sha" ]
+          if ! gh pr checks "$number" --required --repo "$GITHUB_REPOSITORY"; then
+            echo "ERROR: exact release proposal required checks are not green" >&2
+            exit 1
+          fi
           git fetch --no-tags origin "$source_sha" "$proposal_head"
           git merge-base --is-ancestor "$source_sha" "$current_main_sha"
           # Planning/authorization commits may advance main; package content may
@@ -228,9 +232,11 @@ jobs:
           main_content_digest=$("$control_root/scripts/release_policy_content_digest.sh" --repo "$GITHUB_WORKSPACE" --ref "$current_main_sha")
           [ "$source_content_digest" = "$main_content_digest" ]
 
-          # GitHub enforces required checks and strict base freshness when the
-          # exact-head merge below reaches the protected branch. Avoid a brittle
-          # branch-protection API read that GITHUB_TOKEN cannot reliably perform.
+          # Authorization necessarily advances protected main after the exact
+          # proposal head is captured. The source/current-main digest equality
+          # above proves that advance did not change publishable package content;
+          # the exact-head and required-check assertions keep the reviewed
+          # proposal immutable even though strict branch freshness is now stale.
           git worktree add --detach "$candidate_root" "$proposal_head"
           actual_digest=$("$control_root/scripts/release_policy_content_digest.sh" --repo "$candidate_root")
           [ "$actual_digest" = "$content_digest" ]
@@ -245,7 +251,11 @@ jobs:
         id: protected-merge
         if: ${{ steps.protected-dispatch.outputs.authorized == 'true' }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The exact proposal is deliberately behind only by the protected
+          # authorization/control commits validated above. The maintainer PAT
+          # supplies the narrow branch-protection bypass needed to merge that
+          # exact reviewed head without rewriting it and invalidating authority.
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_PAT }}
           NUMBER: ${{ steps.protected-dispatch.outputs.number }}
           PROPOSAL_HEAD: ${{ steps.protected-dispatch.outputs.proposal_head }}
           CANDIDATE_DIGEST: ${{ steps.protected-dispatch.outputs.candidate_digest }}
@@ -253,7 +263,7 @@ jobs:
         run: |
           set -euo pipefail
           control_root="$GITHUB_WORKSPACE/trusted-control"
-          gh pr merge "$NUMBER" --squash --match-head-commit "$PROPOSAL_HEAD" --repo "$GITHUB_REPOSITORY"
+          gh pr merge "$NUMBER" --admin --squash --match-head-commit "$PROPOSAL_HEAD" --repo "$GITHUB_REPOSITORY"
           git fetch --no-tags origin main
           git checkout --detach origin/main
           cmp -s .planning/release-target.json "$control_root/.planning/release-target.json"
