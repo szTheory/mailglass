@@ -3,10 +3,12 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
 
   @repo_root Path.expand("../..", __DIR__)
   @script Path.join(@repo_root, "scripts/reconcile_release_versions.exs")
+  @policy Path.join(@repo_root, "scripts/release_policy.exs")
   @packages ~w(mailglass mailglass_admin mailglass_inbound)
 
   setup_all do
     Code.require_file(@script)
+    Code.require_file(@policy)
     :ok
   end
 
@@ -325,10 +327,9 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
 
     target = read_json!(Path.join(@repo_root, ".planning/release-target.json"))
 
-    assert target ==
-             apply(reconciler(), :inactive_target, [baseline_versions(), evidence_identifiers()])
-
-    assert {:ok, ^target} = apply(reconciler(), :validate_inactive_target, [target])
+    assert {:ok, ^target} = apply(Mailglass.ReleasePolicy, :validate_target, [target])
+    assert target["baselines"] == baseline_versions()
+    assert target["required_evidence_identifiers"] == evidence_identifiers()
   end
 
   test "inactive target validation rejects unexpected top-level or evidence fields" do
