@@ -155,6 +155,13 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert consumer =~ ~s(mix hex.info mailglass_admin "${VERSION_ADMIN}")
     assert consumer =~ "VERSION: ${{ needs.cron-guard.outputs.version_core }}"
     assert consumer =~ "VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}"
+    assert consumer =~ "services:"
+    assert consumer =~ "image: postgres:16-alpine@sha256:"
+    assert consumer =~ "POSTGRES_USER: postgres"
+    assert consumer =~ "POSTGRES_PASSWORD: postgres"
+    assert consumer =~ "POSTGRES_DB: postgres"
+    assert consumer =~ "- 5432:5432"
+    assert consumer =~ "--health-cmd pg_isready"
     assert retracted =~ ~s(mix hex.info mailglass_admin "${VERSION_ADMIN}")
   end
 
