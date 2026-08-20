@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "captured",
+  "status": "authorized",
   "package_set": [
     "mailglass",
     "mailglass_admin",
@@ -51,7 +51,7 @@
   },
   "states": {
     "capture": "captured",
-    "authorization": "unauthorized",
+    "authorization": "authorized",
     "publication": "not_started"
   }
 }
