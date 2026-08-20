@@ -282,10 +282,19 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     assert {:ok, _} = apply(reconciler(), :validate_inactive_target, [target])
   end
 
-  test "repository metadata records only the exact live and historical-tag baselines" do
+  test "repository metadata preserves published baselines or an exact generated proposal" do
     assert {:ok, records} = apply(reconciler(), :parse_repository, [@repo_root])
 
-    assert Map.new(records, &{&1["name"], &1["version"]}) == baseline_versions()
+    repository_versions = Map.new(records, &{&1["name"], &1["version"]})
+
+    if release_proposal?() do
+      for name <- @packages do
+        assert Version.compare(repository_versions[name], baseline_versions()[name]) == :gt,
+               "canonical release proposal must advance #{name} beyond its published baseline"
+      end
+    else
+      assert repository_versions == baseline_versions()
+    end
 
     assert File.read!(Path.join(@repo_root, "CHANGELOG.md")) =~
              "## [2.4.1](https://github.com/szTheory/mailglass/compare/mailglass-v2.4.0...mailglass-v2.4.1) (2026-08-03)"
@@ -309,13 +318,7 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
         "source_ref" => "v2.4.1",
         "linked_versions" => baseline_versions()
       },
-      "mailglass_inbound" => %{
-        "version" => "2.1.2",
-        "manifest_version" => "2.1.2",
-        "source_ref" => "v2.1.2",
-        "linked_versions" => baseline_versions(),
-        "mailglass_inbound_publish_pin" => "~> 2.0"
-      }
+      "mailglass_inbound" => inbound_summary_expectation(repository_versions)
     }
 
     for {name, expected} <- expected_summaries do
@@ -557,6 +560,35 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
 
   defp baseline_versions do
     %{"mailglass" => "2.4.1", "mailglass_admin" => "2.4.1", "mailglass_inbound" => "2.1.2"}
+  end
+
+  defp release_proposal? do
+    System.get_env("GITHUB_HEAD_REF") == "release-please--branches--main"
+  end
+
+  defp inbound_summary_expectation(repository_versions) do
+    if release_proposal?() do
+      core_version = repository_versions["mailglass"]
+      inbound_version = repository_versions["mailglass_inbound"]
+      {:ok, parsed_core} = Version.parse(core_version)
+
+      %{
+        "version" => inbound_version,
+        "manifest_version" => inbound_version,
+        "source_ref" => "v#{inbound_version}",
+        "linked_versions" => repository_versions,
+        "mailglass_inbound_publish_pin" =>
+          "~> #{parsed_core.major}.#{parsed_core.minor} and >= #{core_version}"
+      }
+    else
+      %{
+        "version" => "2.1.2",
+        "manifest_version" => "2.1.2",
+        "source_ref" => "v2.1.2",
+        "linked_versions" => baseline_versions(),
+        "mailglass_inbound_publish_pin" => "~> 2.0"
+      }
+    end
   end
 
   defp manifest_versions do
