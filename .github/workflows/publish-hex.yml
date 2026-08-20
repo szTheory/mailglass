@@ -31,6 +31,11 @@ on:
         description: "Protected candidate digest from dual authorization"
         required: false
         type: string
+      use_control_sha_for_ci_recovery:
+        description: "IMMUTABLE-TAG RECOVERY: gate protected main after proving it descends from the tag and has identical package content"
+        required: false
+        type: boolean
+        default: false
       # The Core Full Suite gate's pressure valve (Phase 143 / D-23). It exists
       # because gating those two legs also gates three steps that are network- and
       # service-dependent — the inbound `mix deps.get`, the inbound
@@ -70,6 +75,8 @@ jobs:
       pretag: ${{ steps.release-target.outputs.pretag }}
       candidate_digest: ${{ steps.release-target.outputs.candidate_digest }}
       tag_sha: ${{ steps.release-target.outputs.tag_sha }}
+      ci_sha: ${{ steps.release-target.outputs.ci_sha }}
+      ci_ref: ${{ steps.release-target.outputs.ci_ref }}
       core: ${{ steps.release-target.outputs.core }}
       admin: ${{ steps.release-target.outputs.admin }}
       inbound: ${{ steps.release-target.outputs.inbound }}
@@ -128,6 +135,7 @@ jobs:
           CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
           DRY_RUN: ${{ github.event.inputs.dry_run }}
           PACKAGE: ${{ github.event.inputs.package }}
+          USE_CONTROL_SHA_FOR_CI_RECOVERY: ${{ github.event.inputs.use_control_sha_for_ci_recovery }}
         run: |
           set -euo pipefail
           digest="${CANDIDATE_DIGEST:-}"
@@ -193,7 +201,7 @@ jobs:
             grep -Fqx "core=$core" "$proposal_versions"
             grep -Fqx "admin=$admin" "$proposal_versions"
             grep -Fqx "inbound=$inbound" "$proposal_versions"
-            printf 'active=false\nauthorized=false\npretag=true\ncandidate_digest=%s\ntag_sha=%s\ncore=%s\nadmin=%s\ninbound=%s\n' "$digest" "$proposal_head" "$core" "$admin" "$inbound" >> "$GITHUB_OUTPUT"
+            printf 'active=false\nauthorized=false\npretag=true\ncandidate_digest=%s\ntag_sha=%s\nci_sha=%s\nci_ref=%s\ncore=%s\nadmin=%s\ninbound=%s\n' "$digest" "$proposal_head" "$proposal_head" "$RELEASE_REF" "$core" "$admin" "$inbound" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -216,7 +224,25 @@ jobs:
             done
             actual_digest=$("$control_root/scripts/release_policy_content_digest.sh" --repo "$candidate_root")
             [ "$actual_digest" = "$content_digest" ]
-            printf 'authorized=true\ncandidate_digest=%s\ncontent_digest=%s\ntag_sha=%s\n' "$digest" "$content_digest" "$tag_sha" >> "$GITHUB_OUTPUT"
+
+            # A public immutable tag cannot absorb a later fix to release-only
+            # tests, locks, or workflow controls. Recovery therefore gates a
+            # protected-main descendant only after proving that its complete Hex
+            # package payload is byte-identical to the authorized tag. The tag
+            # remains the sole checkout used by every publish job.
+            ci_ref="$RELEASE_REF"
+            ci_sha="$tag_sha"
+            if [ "${USE_CONTROL_SHA_FOR_CI_RECOVERY:-false}" = true ]; then
+              [ "${DRY_RUN:-false}" != true ]
+              ci_ref=main
+              ci_sha=$(git -C "$control_root" rev-parse HEAD)
+              [[ "$ci_sha" =~ ^[0-9a-f]{40}$ ]]
+              git -C "$control_root" merge-base --is-ancestor "$tag_sha" "$ci_sha"
+              recovery_digest=$("$control_root/scripts/release_policy_content_digest.sh" --repo "$control_root" --ref "$ci_sha")
+              [ "$recovery_digest" = "$content_digest" ]
+            fi
+
+            printf 'authorized=true\ncandidate_digest=%s\ncontent_digest=%s\ntag_sha=%s\nci_sha=%s\nci_ref=%s\n' "$digest" "$content_digest" "$tag_sha" "$ci_sha" "$ci_ref" >> "$GITHUB_OUTPUT"
           else
             echo "ERROR: protected candidate digest is invalid or unauthorized" >&2
             exit 1
@@ -350,8 +376,8 @@ jobs:
         id: resolve-sha
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         env:
-          EXPECTED_SHA: ${{ needs.prepublish-summary.outputs.tag_sha }}
-          RELEASE_REF: ${{ github.event.inputs.tag }}
+          EXPECTED_SHA: ${{ needs.prepublish-summary.outputs.ci_sha }}
+          RELEASE_REF: ${{ needs.prepublish-summary.outputs.ci_ref }}
         with:
           script: |
             const ref = process.env.RELEASE_REF || '';
@@ -375,10 +401,13 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         env:
           # Bound through env rather than interpolated into the script body: `ref`
-          # is a tag name, and a `${{ }}` splice lands inside a JS string literal.
+          # is a tag during normal delivery and protected main during immutable-tag
+          # recovery; either value must stay out of the JS source literal.
           RESOLVED_SHA: ${{ steps.resolve-sha.outputs.sha }}
           RESOLVED_REF: ${{ steps.resolve-sha.outputs.ref }}
           CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
+          RELEASE_TAG: ${{ github.event.inputs.tag }}
+          USE_CONTROL_SHA_FOR_CI_RECOVERY: ${{ github.event.inputs.use_control_sha_for_ci_recovery }}
         with:
           script: |
             // Ensure BOTH workflows the read-only successor inspects have completed
@@ -405,6 +434,10 @@ jobs:
             const sha = process.env.RESOLVED_SHA;
             const ref = process.env.RESOLVED_REF;
             const digest = process.env.CANDIDATE_DIGEST;
+            const releaseTag = process.env.RELEASE_TAG;
+            const recoveryArg = process.env.USE_CONTROL_SHA_FOR_CI_RECOVERY === 'true'
+              ? ' -f use_control_sha_for_ci_recovery=true'
+              : '';
             const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
             async function latestRun(workflowId) {
@@ -457,8 +490,8 @@ jobs:
                 const recovery = stalled.map((wf) => `gh workflow run ${wf} --ref ${ref}`).join('\n  ');
                 core.setFailed(
                   `Delivery blocked: no completed run of ${stalled.join(', ')} for SHA ${sha} within 30 minutes.\n` +
-                  `Recovery — dispatch the workflow on the release ref, then re-dispatch this one:\n  ${recovery}\n` +
-                  `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false -f candidate_digest=${digest}`
+                  `Recovery — dispatch the workflow on the inspected CI ref, then re-dispatch this one:\n  ${recovery}\n` +
+                  `  gh workflow run publish-hex.yml -f tag=${releaseTag} -f package=all -f dry_run=false -f candidate_digest=${digest}${recoveryArg}`
                 );
                 return;
               }
@@ -498,13 +531,15 @@ jobs:
       CORE_FULL_SUITE_GATE_SKIP_REASON: ${{ inputs.core_full_suite_gate_skip_reason }}
       CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
       DRY_RUN: ${{ github.event.inputs.dry_run }}
+      USE_CONTROL_SHA_FOR_CI_RECOVERY: ${{ github.event.inputs.use_control_sha_for_ci_recovery }}
+      RELEASE_TAG: ${{ github.event.inputs.tag }}
     steps:
       - name: Resolve inspected SHA and ref
         id: resolve-sha
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         env:
-          EXPECTED_SHA: ${{ needs.prepublish-summary.outputs.tag_sha }}
-          RELEASE_REF: ${{ github.event.inputs.tag }}
+          EXPECTED_SHA: ${{ needs.prepublish-summary.outputs.ci_sha }}
+          RELEASE_REF: ${{ needs.prepublish-summary.outputs.ci_ref }}
         with:
           script: |
             const ref = process.env.RELEASE_REF || '';
@@ -655,11 +690,14 @@ jobs:
 
             const sha = '${{ steps.resolve-sha.outputs.sha }}';
             const ref = process.env.RESOLVED_REF;
+            const releaseTag = process.env.RELEASE_TAG;
             const digest = process.env.CANDIDATE_DIGEST;
             const dryRun = process.env.DRY_RUN === 'true';
+            const ciRecovery = process.env.USE_CONTROL_SHA_FOR_CI_RECOVERY === 'true';
+            const recoveryArg = ciRecovery ? ' -f use_control_sha_for_ci_recovery=true' : '';
             const replay =
-              `gh workflow run publish-hex.yml -f tag=${ref} -f package=all ` +
-              `-f dry_run=${dryRun} -f candidate_digest=${digest}`;
+              `gh workflow run publish-hex.yml -f tag=${releaseTag} -f package=all ` +
+              `-f dry_run=${dryRun} -f candidate_digest=${digest}${recoveryArg}`;
             const {data} = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -901,7 +939,7 @@ jobs:
               const detail = amGatingBlocking.map(s => `  - ${s}`).join('\n');
               const overrideRecovery =
                 `Recovery — publish anyway (an EXCEPTION; the reason is required and is echoed to the run summary):\n` +
-                `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false -f candidate_digest=${digest} \\\n` +
+                `  gh workflow run publish-hex.yml -f tag=${releaseTag} -f package=all -f dry_run=false -f candidate_digest=${digest}${recoveryArg} \\\n` +
                 `    -f skip_core_full_suite_gate=true -f core_full_suite_gate_skip_reason="<why>"`;
               const msg = `Delivery blocked: Core Full Suite gating lane(s) did not pass on SHA ${sha}:\n${detail}\nRun: ${amLatest.html_url}\n${amRunRecovery}\n${overrideRecovery}`;
 

@@ -289,7 +289,7 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
 
     repository_versions = Map.new(records, &{&1["name"], &1["version"]})
 
-    if release_proposal?() do
+    if release_candidate_tree?(repository_versions) do
       for name <- @packages do
         assert Version.compare(repository_versions[name], baseline_versions()[name]) == :gt,
                "canonical release proposal must advance #{name} beyond its published baseline"
@@ -584,12 +584,16 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     %{"mailglass" => "2.4.1", "mailglass_admin" => "2.4.1", "mailglass_inbound" => "2.1.2"}
   end
 
-  defp release_proposal? do
-    System.get_env("GITHUB_HEAD_REF") == "release-please--branches--main"
+  defp release_candidate_tree?(repository_versions) do
+    target = read_json!(Path.join(@repo_root, ".planning/release-target.json"))
+
+    System.get_env("GITHUB_HEAD_REF") == "release-please--branches--main" or
+      (target["status"] in ["captured", "authorized", "published", "completed"] and
+         target["candidate_versions"] == repository_versions)
   end
 
   defp inbound_summary_expectation(repository_versions) do
-    if release_proposal?() do
+    if release_candidate_tree?(repository_versions) do
       core_version = repository_versions["mailglass"]
       inbound_version = repository_versions["mailglass_inbound"]
       {:ok, parsed_core} = Version.parse(core_version)

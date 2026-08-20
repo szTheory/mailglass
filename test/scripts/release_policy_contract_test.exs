@@ -525,6 +525,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
     assert publish =~ "candidate_digest:"
     assert publish =~ "Protected candidate digest"
+    assert publish =~ "use_control_sha_for_ci_recovery:"
     assert publish =~ "needs.prepublish-summary.outputs.authorized == 'true'"
     assert publish =~ "github.event.inputs.candidate_digest"
     refute publish =~ "false &&"
@@ -606,11 +607,26 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
   test "the read-only CI gate binds dry-run and live inspection to the validated immutable SHA" do
     publish = File.read!(@publish)
+    validation = extract_step_script!(publish, "Validate automated release target")
     gate = extract_job!(publish, "gate-ci-green")
 
-    assert gate =~ "EXPECTED_SHA: ${{ needs.prepublish-summary.outputs.tag_sha }}"
+    assert gate =~ "EXPECTED_SHA: ${{ needs.prepublish-summary.outputs.ci_sha }}"
+    assert gate =~ "RELEASE_REF: ${{ needs.prepublish-summary.outputs.ci_ref }}"
     assert gate =~ "!/^[0-9a-f]{40}$/.test(expected)"
     assert gate =~ "commit.data.sha !== expected"
+    assert validation =~ ~s([ "${USE_CONTROL_SHA_FOR_CI_RECOVERY:-false}" = true ])
+
+    assert validation =~
+             "git -C \"$control_root\" merge-base --is-ancestor \"$tag_sha\" \"$ci_sha\""
+
+    assert validation =~
+             "release_policy_content_digest.sh\" --repo \"$control_root\" --ref \"$ci_sha\""
+
+    assert validation =~ ~s([ "$recovery_digest" = "$content_digest" ])
+    assert validation =~ "ci_sha=%s"
+    assert validation =~ "ci_ref=%s"
+    assert gate =~ "USE_CONTROL_SHA_FOR_CI_RECOVERY"
+    assert gate =~ "RELEASE_TAG"
     refute gate =~ "EXPECTED_LIVE_SHA"
     refute gate =~ "DRY_RUN_INPUT"
     refute gate =~ "process.env.DRY_RUN_INPUT !== 'true'"
