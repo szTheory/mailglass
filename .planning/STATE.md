@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.6
-milestone_name: Engineering Quality Ratchet
-status: Awaiting next milestone
-stopped_at: Completed 160-06-PLAN.md
-last_updated: "2026-08-21T16:24:43.856Z"
+milestone: v2.7
+milestone_name: Repository Stewardship & Operational Hygiene
+status: planning
+last_updated: "2026-08-21T21:17:31.621Z"
 last_activity: 2026-08-21
-last_activity_desc: Milestone v2.6 completed and archived
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 41
-  completed_plans: 41
-  percent: 100
-current_phase: 160
-current_phase_name: Certification, Documentation, and Release
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-08-21 after v2.6 archive)
 
 ## Current Position
 
-Phase: Milestone v2.6 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-08-21 — Milestone v2.6 completed and archived
+Status: Defining requirements
+Last activity: 2026-08-21 — Milestone v2.7 started
 
 ## v2.6 Milestone Intent
 

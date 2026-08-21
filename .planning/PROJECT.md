@@ -10,6 +10,11 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
+**v2.7 Repository Stewardship & Operational Hygiene opened 2026-08-21.** This is a bounded maintenance
+milestone: restore quiet, trustworthy repository operations; disposition release and workspace residue;
+and make documentation and tracked artifacts tell the truth. It does not expand the product, redesign
+architecture, overhaul CI for speed, or force a Hex release without an adopter-facing correction.
+
 **v2.6 Engineering Quality Ratchet shipped and passed its milestone audit 2026-08-21.** The milestone restored
 generated-host migration truth, bounded execution and data/security correctness, tightened architecture,
 and made merge and release signals fail closed. The canonical `mix ci` path passed 1,914 tests, 23
@@ -56,6 +61,31 @@ audit passed 35/35 requirements, 12/12 cross-phase seams, and 6/6 end-to-end flo
 Package boundaries are locked. Chimeway owns notification policy and preferences; Sigra owns auth token
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
 paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
+
+## Current Milestone: v2.7 Repository Stewardship & Operational Hygiene
+
+**Goal:** Leave Mailglass in a clean, quiet, trustworthy maintenance posture after v2.6 without product
+expansion or speculative refactoring.
+
+**Target features:**
+- Establish one canonical `main` workspace and safely disposition temporary worktrees, stashes, divergent
+  branches, and release leftovers after auditing each for unique work.
+- Recover scheduled release-please, repository-hygiene, and post-publish automation while preserving the
+  already-green protected main CI path.
+- Triage the blocked release PR and related stale branches/checks to explicit, evidence-backed outcomes.
+- Repair the observed database property-test timeout and browser-gallery timeout only where they affect the
+  release path; do not broaden this into a CI-performance or test-architecture redesign.
+- Reconcile versions, release state, maintenance guidance, tracked/generated artifacts, ignore rules, and
+  repository organization; remove only demonstrable junk or stale claims.
+- Close with a clean working state, accurate docs, no unexplained red automation, and an explicit disposition
+  for every audited item.
+
+## Active Requirements: v2.7
+
+Detailed v2.7 requirements will be defined from the approved stewardship scope before roadmap creation.
+The milestone is constrained to recoverability-first, low-controversy maintenance. Product/API/schema/UI
+expansion, dependency churn, speculative architecture, cosmetic busywork, a CI-efficiency overhaul, and a
+release performed only for ceremony are out of scope.
 
 ## Completed Milestone: v2.6 Engineering Quality Ratchet
 
@@ -923,7 +953,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-08-21 after the passing v2.6 milestone audit and archive.*
+*Last updated: 2026-08-21 after opening v2.7 Repository Stewardship & Operational Hygiene.*
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->
