@@ -274,20 +274,28 @@ defmodule Mailglass.Adapters.SwooshTest do
     test "direct adapter delivery does not emit a duplicate outbound dispatch span" do
       test_pid = self()
       handler_id = "test-dispatch-#{System.unique_integer()}"
+      msg = make_message()
 
       :telemetry.attach(
         handler_id,
         [:mailglass, :outbound, :dispatch, :stop],
-        fn event, measurements, metadata, _ ->
-          send(test_pid, {:telemetry_event, event, measurements, metadata})
+        fn event, measurements, metadata, {pid, mailable, tenant_id} ->
+          if metadata[:mailable] == mailable and metadata[:tenant_id] == tenant_id do
+            send(pid, {:telemetry_event, event, measurements, metadata})
+          end
         end,
-        nil
+        {test_pid, msg.mailable, msg.tenant_id}
       )
 
       on_exit(fn -> :telemetry.detach(handler_id) end)
 
-      msg = make_message()
       _result = SwooshAdapter.deliver(msg, swoosh_adapter: SuccessAdapterWithId)
+
+      :telemetry.execute(
+        [:mailglass, :outbound, :dispatch, :stop],
+        %{duration: 1},
+        %{mailable: UnrelatedMailer, tenant_id: "another-tenant"}
+      )
 
       refute_receive {:telemetry_event, [:mailglass, :outbound, :dispatch, :stop], _, _}
 

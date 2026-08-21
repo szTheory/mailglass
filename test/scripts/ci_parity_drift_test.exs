@@ -216,6 +216,16 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
     assert uncovered_lanes(without_generated_proof, [lane]) == [lane]
   end
 
+  test "local generated-host parity owns a dedicated scratch database URL" do
+    generated_host_step =
+      Enum.find(ci_steps(), &String.contains?(&1, "generated_ecto_host_proof.sh"))
+
+    assert generated_host_step != nil
+
+    assert generated_host_step =~
+             "DATABASE_URL=ecto://postgres:postgres@localhost/mailglass_generated_ecto_host_local"
+  end
+
   test "negative controls: either missing inbound test cohort reports parity drift" do
     lane = "Inbound Test (Elixir 1.18 / OTP 27)"
     assert uncovered_lanes(union_steps(), [lane]) == []

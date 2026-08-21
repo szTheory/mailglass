@@ -436,7 +436,7 @@ defmodule Mailglass.MixProject do
         "cmd bash scripts/check_trust_runner_checkpoint.sh",
         "cmd bash scripts/preflight_network.sh",
         "cmd env DEP_MODE=path MAILGLASS_PATH=#{File.cwd!()} bash scripts/consumer_install_smoke.sh",
-        "cmd env MAILGLASS_PATH=#{File.cwd!()} bash scripts/generated_ecto_host_proof.sh"
+        "cmd env MAILGLASS_PATH=#{File.cwd!()} DATABASE_URL=ecto://postgres:postgres@localhost/mailglass_generated_ecto_host_local bash scripts/generated_ecto_host_proof.sh"
       ],
 
       # Opt-in browser gate (Node + Playwright). Advisory in CI; zero-Node is an
