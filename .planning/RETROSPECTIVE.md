@@ -4,6 +4,48 @@
 
 ---
 
+## Milestone: v2.6 — Engineering Quality Ratchet
+
+**Shipped 2026-08-21** — 6 phases (155–160), 41 plans, 50 requirements; audit `status: passed`.
+
+### What Was Built
+
+- Repo-explicit generated migrations, safe offline/live upgrades, exact legacy repair, and both shared-schema rollback orders proven in generated Ecto hosts.
+- Atomic, privacy-safe, bounded outbound execution plus bounded inbound verification, retrieval, caches, persistence, replay, retention, and database lifecycle work.
+- Cycle-free Runtime/configuration ownership, narrow sibling ports, and stable public v2 façades.
+- One deterministic fail-closed merge proof with coverage, Dialyzer, Credo, docs, architecture, installer, and generated-host gates.
+- Protected publication of `mailglass` 2.5.0, `mailglass_admin` 2.5.0, and `mailglass_inbound` 2.2.0, followed by exact-Hex adopter proof.
+
+### What Worked
+
+- Behavior-first negative controls exposed false-green migration, CI, architecture, and release paths before they became adopter failures.
+- Generated-host proof stayed load-bearing across migration, persistence, rollback, and exact-Hex adoption instead of relying on repository-only fixtures.
+- The milestone audit caught the one remaining cross-test telemetry leak after every phase verifier had passed; remediation and a second integration audit closed it cleanly.
+
+### What Was Inefficient
+
+- Legacy `status: ready` validation metadata for Phases 155–159 required closeout reconciliation despite complete automated evidence.
+- The first canonical full-CI rerun exposed two local-environment parity defects sequentially: a stale Dialyzer PLT and a missing dedicated generated-host database URL.
+- Several summary one-liners were malformed or absent, so the generated milestone entry required editorial cleanup.
+
+### Patterns Established
+
+- Global telemetry assertions must identify the operation under test; unrelated concurrent events are valid negative-control traffic, not test failures.
+- Local parity commands own their scratch infrastructure explicitly, including database identity, rather than inheriting CI-only environment assumptions.
+- Release completion is an immutable evidence chain: authorized digest → tag SHA → ordered publication → exact-Hex host and trust-runner proof.
+
+### Key Lessons
+
+- Phase-local green is necessary but not sufficient; milestone-wide executable integration remains the strongest detector of order dependence and environmental drift.
+- Validation lifecycle metadata should be promoted at phase completion, not repaired during archival.
+- A quality ratchet earns its cost when the same command works for contributors, protected CI, and release certification.
+
+### Cost Observations
+
+- 397 files changed, 35,481 insertions, and 3,760 deletions across six calendar days.
+- 6 phases and 41 plans; release recovery and generated-host proof carried most of the wall-clock cost.
+- One audit remediation cycle (`gaps_found` → deterministic fix → `passed`) prevented an order-dependent merge signal from being archived as trustworthy.
+
 ## Milestone: v2.2 — CI Signal Integrity & Supply-Chain Hygiene
 
 **Shipped 2026-07-31** — 4 phases (141–144), 30 plans, 63 tasks, 20 requirements; audit `status: passed`.
@@ -752,3 +794,4 @@ baseline: "I LOVE THE NEW BRANDBOOK."
 |-----------|-------:|------:|----------------|
 | v2.1 | 3 | 9 | Hostile-path and first-load proof expose false confidence hidden by friendly fixtures. |
 | v2.2 | 4 | 30 | CI truth requires fail-closed aggregation, negative controls, and runtime/source cross-checks. |
+| v2.6 | 6 | 41 | Milestone-wide executable integration catches order dependence and local/CI environment drift after phase-local gates pass. |
