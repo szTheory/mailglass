@@ -1,10 +1,11 @@
 ---
 phase: 155
 slug: restore-adopter-and-ci-truth
-status: ready
+status: validated
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-08-16
+validated: 2026-08-21
 ---
 
 # Phase 155 — Validation Strategy
@@ -89,3 +90,13 @@ All scoped behaviors have automated verification. The remote `Installer Host Smo
 - [x] `nyquist_compliant: true` is set.
 
 **Approval:** ready for Wave-0-first execution.
+
+## Validation Audit 2026-08-21
+
+Phase verification and the milestone-wide `mix ci` gate confirm the planned automated coverage was implemented and remains green.
+
+| Metric | Count |
+|---|---:|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
