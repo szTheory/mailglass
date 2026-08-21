@@ -1,10 +1,11 @@
 ---
 phase: 157
 slug: inbound-database-and-lifecycle-hardening
-status: ready
+status: validated
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-08-17
+validated: 2026-08-21
 ---
 
 # Phase 157 — Validation Strategy
@@ -87,3 +88,13 @@ Excluded correctly: Phase 158 ownership refactors; Phase 159 broad gates/depende
 - [x] Public v2 façades, package independence, Phase 156 behavior, schema prefixes, and shipped migration immutability are explicit invariants.
 - [x] Generated-host upgrade proof is load-bearing and cannot be replaced by repo-local TestRepo or hand-written DDL.
 - [x] No package installs or human-only verification are required.
+
+## Validation Audit 2026-08-21
+
+Phase verification and the milestone-wide `mix ci` gate confirm the planned automated coverage was implemented and remains green.
+
+| Metric | Count |
+|---|---:|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
