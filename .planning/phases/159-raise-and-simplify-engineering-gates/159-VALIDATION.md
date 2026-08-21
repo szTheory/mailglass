@@ -1,9 +1,11 @@
 ---
 phase: 159
 slug: raise-and-simplify-engineering-gates
-status: ready
+status: validated
 nyquist_compliant: true
+wave_0_complete: true
 created: 2026-08-17
+validated: 2026-08-21
 ---
 # Phase 159 — Validation Strategy
 
@@ -31,3 +33,13 @@ created: 2026-08-17
 ## Final phase verification
 
 Run all focused contract suites, both package formatter/no-optional/static-analysis commands, the new coverage floor commands, `mix ci`, inbound `mix ci`, workflow-policy/release-policy tests, and `git diff --check`. Phase completion requires CI Green policy fixtures to prove that missing/failed/duplicate required results fail and advisory results cannot pass the aggregate.
+
+## Validation Audit 2026-08-21
+
+Phase verification and the milestone-wide `mix ci` gate confirm the planned automated coverage was implemented and remains green.
+
+| Metric | Count |
+|---|---:|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
