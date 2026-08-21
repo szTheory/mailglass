@@ -1,124 +1,118 @@
-# Technology Stack
+# Stack Research
 
-**Project:** mailglass  
-**Researched:** 2026-05-27  
-**Milestone scope:** v1.3 Adopter Trust Proof (maintained Phoenix reference host app + clean-baseline CI journey)
+**Domain:** Repository stewardship and operational hygiene for an existing Phoenix/Elixir monorepo
+**Researched:** 2026-08-21
+**Confidence:** HIGH for repository-local stack; MEDIUM for hosted scheduled-workflow behavior
 
 ## Recommendation
 
-For v1.3, keep the shipped `mailglass`/`mailglass_admin`/`mailglass_inbound`
-runtime stack intact and add a thin, maintained **reference host app proof
-layer** around it.
+**Add no runtime, development, CI, or SaaS dependencies.** v2.7 should repair and reconcile the
+existing GitHub Actions + GitHub CLI + pinned Beam/Mix toolchain. It already has the exact mechanisms
+needed to audit state, recover schedules, prove release identity, run the two affected test paths, and
+close with a clean tree. Any package or service addition would be dependency churn outside the approved
+maintenance boundary.
 
-This milestone should add:
+## Recommended Stack
 
-1. one committed Phoenix reference host app artifact (maintained, not throwaway),
-2. one required CI lane proving the full adopter journey in-repo, and
-3. one clean-baseline CI lane proving the same journey from a fresh host app.
+### Core Technologies
 
-This milestone should **not** add new transport classes, broad provider
-expansion, or product-like UI scope.
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| Git + native worktrees/stash/branches | Local Git installation; repository currently uses Git worktrees | Inventory and recover/dispose temporary release worktrees, stashes, divergent branches, and release leftovers | Git already owns all relevant state. Use read-only `git worktree list --porcelain`, `git status --short`, `git branch -vv --all`, `git stash list`, reachability/log checks, then remove only evidence-backed residue. Do not introduce a worktree manager. |
+| GitHub Actions | Hosted service; pinned action SHAs in workflow YAML | Scheduled release proposal, hygiene audit, post-publish canary, protected CI | All three affected automations already exist and run from `main`: release-please hourly at minute 17, repo hygiene daily at 12:30 UTC, and post-publish smoke daily at 12:00 UTC. GitHub scheduled workflows run from the default branch, so recovery is configuration/state validation—not a new scheduler. |
+| Elixir + Erlang/OTP | Elixir 1.18.4; Erlang/OTP 27.3.4.13 (`.tool-versions`) | Execute existing Mix policy/audit tasks and deterministic test lanes | Existing workflows use `erlef/setup-beam` v1.24.1 in strict version-file mode. Preserve this pin and the root toolchain; do not upgrade Beam as incidental hygiene. |
+| Mix + repository-local policy scripts | Existing; package versions from `mix.lock` | Release validation, repo hygiene, canonical `mix ci`, test execution | The repository already exposes `mix mailglass.repo.hygiene --check --format json`, `mix ci`, `mix ci.browser`, and `scripts/release_policy.exs` wrappers. These are the correct integration seams because their outputs are already used by CI and release workflows. |
 
-## Keep As-Is (No New Foundational Research)
+### Supporting Libraries and Actions
 
-- Elixir floor: `~> 1.18`
-- OTP floor: `27+`
-- Phoenix stack: `phoenix ~> 1.8`, `phoenix_live_view ~> 1.1`, `plug ~> 1.18`
-- Persistence: Postgres-only (`ecto_sql ~> 3.13`, `postgrex ~> 0.22`)
-- Core mail layer: `swoosh ~> 1.25`
-- Optional dependency gateway policy remains unchanged (`Mailglass.OptionalDeps.*`)
-- CI realism posture remains: required lanes for deterministic proof, advisory
-  lanes for broader ecosystem drift detection
+| Library / action | Version pinned in repository | Purpose | When to Use |
+|------------------|------------------------------|---------|-------------|
+| `googleapis/release-please-action` | v5.0.0, commit `45996ed1f6d02564a971a2fa1b5860e934307cf7` | Manifest-driven release PR proposal; protected release dispatch is layered around it | Keep the existing action and custom release policy. Diagnose/repair the blocked proposal and schedule only through `.github/workflows/release-please.yml`, `release-please-config.json`, `.release-please-manifest.json`, and `.planning/release-target.json`. |
+| `actions/checkout` | v7.0.1, commit `3d3c42e5aac5ba805825da76410c181273ba90b1` | Immutable/checkpointed workflow checkouts | Retain the existing SHA pin. Release and post-publish workflows deliberately select protected main, `github.workflow_sha`, proposal heads, or exact tag SHAs; do not replace these with floating tags. |
+| `erlef/setup-beam` | v1.24.1, commit `54075bcc5e249e4758d363f27d099f55d843f124` | Strict Beam setup | Retain for all workflow recovery validation. |
+| `actions/cache` | v6.1.0, commit `55cc8345863c7cc4c66a329aec7e433d2d1c52a9` | Mix dependency cache | Leave unchanged; cache redesign is explicitly out of scope. |
+| `actions/upload-artifact` | v7.0.1, commit `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` | Preserve repo-hygiene JSON evidence | Retain the artifact as the audit closeout record; correct its inputs only if the existing workflow cannot produce the already-required JSON. |
+| `rhysd/actionlint` | v1.7.12, commit `914e7df21a07ef503a81201c76d2b11c789d3fca` | Validate workflow syntax | Run the existing actionlint workflow after YAML changes; do not add another YAML linter. |
+| PostgreSQL service image | PostgreSQL 16 Alpine, digest-pinned in CI | Existing property-test database backing | Reproduce and narrowly repair the observed statement timeout in the existing `mix test --only property` lane; no database product, ORM, pooler, or test framework addition is warranted. |
+| Playwright + Axe | `@playwright/test` ^1.59.1; `@axe-core/playwright` ^4.11.2 | Existing advisory operator browser gallery test | Use `mailglass_admin`'s `npm run test:operator-browser`, already serialized with `--workers=1`; repair the observed gallery timeout at its existing runner/config/test boundary only. Do not add a browser service, visual-test vendor, or another e2e runner. |
 
-These are already shipped and validated; v1.3 work is integration proof, not
-stack re-foundation.
+### Existing Integration Surfaces
 
-## v1.3 Stack Additions and Changes (New Work Only)
+| Work item | Canonical surfaces | Stewardship approach |
+|-----------|-------------------|----------------------|
+| Canonical workspace and residue | `git worktree`, `git stash`, branch graph/remotes, root `.gitignore`, package `.gitignore` files | Audit unique commits and untracked/ignored artifacts before pruning. The current root worktree is `main`; five temporary release worktrees and one legacy stash are observable repository state, not proof of junk. |
+| Release proposal recovery | `.github/workflows/release-please.yml`; `release-please-config.json`; `.release-please-manifest.json`; `.planning/release-target.json`; `scripts/release_policy*.{exs,sh}` | Keep proposal mode (`skip-github-release` when digest is absent), the existing exact-candidate authorization, and SHA-pinned actions. Disposition the release PR only after checking policy lifecycle, required checks, release labels/tags, and candidate/content identity. |
+| Scheduled hygiene recovery | `.github/workflows/repo-hygiene.yml`; `dev/mix/tasks/mailglass.repo.hygiene.ex`; workflow artifact `repo-hygiene.json` | Validate the existing schedule/dispatch, token availability, compile, JSON output, summary, and artifact upload. Its non-cancelling `repo-hygiene-${{ github.ref }}` group is appropriate for an audit that should serialize rather than be cancelled. |
+| Post-publish recovery | `.github/workflows/post-publish-smoke.yml`; `scripts/check_post_publish_target.sh`; `scripts/verify_published_release.sh` | Preserve exact immutable target/ref binding and the non-cancelling linked-release concurrency group. Scheduled smoke requires a completed target, so a red schedule can be a truthful invalid-state signal—not something to paper over. |
+| Property-test timeout | `.github/workflows/ci.yml` property lane; `mix ci.full`; `mailglass_inbound/test/mailglass_inbound/properties/inbound_idempotency_convergence_test.exs` | Keep the 1000-run StreamData property lane and its existing `timeout: :infinity`; identify the database statement that exceeds its server limit, then make a deterministic fixture/query/config correction with a focused regression proof. Do not raise every job/test timeout or weaken iteration count. |
+| Browser-gallery timeout | `.github/workflows/ci.yml` browser lane; `mix ci.browser`; `mailglass_admin/package.json`; `mailglass_admin/playwright.config.cjs` | Keep the current single-worker Playwright command and advisory status. Diagnose the gallery's awaited readiness/request and alter only the deterministic cause or that test's bounded timeout. Do not make the whole CI job broadly longer. |
+| Docs and artifact truth | package `mix.exs` `@version` and `package.files`; README/CHANGELOG/MAINTAINING docs; `git ls-files`; `.gitignore` | Reconcile tracked artifacts with package allowlists and generated/untracked artifacts with ignore rules. The tracked `.github/.DS_Store` is demonstrable cleanup evidence (`git ls-files -ci` and `.gitignore` both identify it); apply the same evidence threshold to every proposed deletion. |
 
-| Tool / Library / Service | Version awareness | Why it matters | Integration points |
-|---|---|---|---|
-| Phoenix reference host app (committed artifact in repo) | Generate with Phoenix 1.8 toolchain; keep Elixir/OTP floors aligned with core | Creates a durable, inspectable adopter-proof app instead of fixture snapshots only | New `examples/` (or equivalent) app wired with `mailglass`, `mailglass_admin`, and optional `mailglass_inbound` seams |
-| `phx_new` archive in CI for clean-baseline generation | Pin to vetted `1.8.x` patch in required lane; run latest `1.8.x` in advisory lane | Proves "fresh adopter can install and run" against current Phoenix generator behavior | Clean-baseline workflow step: generate app -> add deps -> run install -> execute proof scenario |
-| `mix mailglass.install` as canonical integration entrypoint | Use shipped installer; no forked install script | Keeps trust proof coupled to real adoption path and catches installer regressions | Both committed reference app refresh process and clean-baseline lane run installer directly |
-| Outbound send proof via `Mailglass.Adapters.Fake` + `config :swoosh, :api_client, false` | No new provider SDK versions required | Proves send path and event persistence without external network/provider flakiness | Reference scenario triggers send and asserts persisted delivery/event behavior locally |
-| Webhook ingest proof via signed fixture payloads (single representative provider path) | Reuse existing provider verifier stack; no provider matrix expansion in v1.3 | Demonstrates ingest + normalization + troubleshooting loop deterministically | Scenario posts signed webhook payload to host app webhook endpoint and verifies ledger/admin visibility |
-| Postgres service container in CI (`postgres:16-alpine`) | Match existing CI service version to avoid environment skew | Full trust path (send + webhook + operator troubleshooting) needs real DB-backed state | Required CI lane boots Postgres, runs migrations, executes end-to-end scenario |
-| ExUnit + ConnTest/LiveView assertions for operator troubleshooting proof | Stay on current Phoenix testing stack; do not introduce browser-E2E requirement | Gives stable operator-proof checks without adding Node/browser flake to required lane | Scenario asserts key operator surfaces (events timeline/evidence/replayability) through server-side tests |
-| Dedicated trust-proof verify alias (e.g. `mix verify.reference_host`) | Keep preferred env explicit (`:test`) like existing `verify.*` aliases | Makes the milestone proof repeatable locally and in CI with one command | Root mix aliases + CI job invoke single trust-proof gate |
+## Installation
 
-## CI Shape for Trust Proof
+No installation is recommended.
 
-### Required lane (new)
+```bash
+# Use the repository's locked, existing toolchain.
+asdf install
+mix deps.get --check-locked
+mix ci
 
-Add one required CI job that proves:
+# Existing targeted proofs when investigating the two observed failures.
+cd mailglass_inbound && mix test --only property
+cd ../mailglass_admin && npm ci && npm run test:operator-browser
+```
 
-1. install (`mix mailglass.install`)
-2. preview route boots
-3. send persists evidence
-4. webhook ingest appends normalized event(s)
-5. operator troubleshooting surface can inspect that evidence
+Do not update `mix.lock`, npm dependencies, action versions, PostgreSQL image digests, or the Beam version
+as part of v2.7 unless a proven in-scope defect requires the exact change.
 
-Use a real Postgres service container and deterministic fixtures; do not call
-external provider APIs.
+## Alternatives Considered
 
-### Clean-baseline lane (new or expanded from existing smoke)
+| Recommended | Alternative | When to Use Alternative |
+|-------------|-------------|-------------------------|
+| Native Git audit and selective cleanup | Worktree-management CLI / repository-cleanup SaaS | Never for this milestone. Consider only if recurring multi-worktree administration becomes a separately approved operational capability. |
+| Existing GitHub Actions schedules | External cron, queue, or monitoring service | Only after evidence that GitHub Actions cannot meet an approved availability requirement. No such requirement exists here. |
+| Existing release-please v5 + custom policy | Replace release-please or build a new release orchestrator | Only for a separately scoped release-process redesign. Current controls intentionally handle proposal-only and protected publication boundaries. |
+| Existing StreamData/PostgreSQL lane | New property testing library, DB proxy, or global timeout increase | Only if a root-cause investigation proves a product bug that cannot be fixed within the existing test/query/config seam. |
+| Existing Playwright single-worker runner | Visual-regression vendor, second browser framework, retries-as-policy | Only for an approved test-strategy expansion. The observed work is a narrow release-path timeout repair. |
 
-Keep the existing "fresh host" posture, but expand from preview-only smoke into
-the full trust journey. The lane should still generate a brand-new Phoenix app
-instead of relying only on committed app files.
+## What NOT to Use
 
-### Advisory lane (optional but recommended)
+| Avoid | Why | Use Instead |
+|-------|-----|-------------|
+| New Hex packages, npm packages, GitHub Actions, or third-party SaaS | Adds supply-chain surface and maintenance burden without covering a missing capability | Existing Mix scripts, GitHub Actions, `gh`, Git, Playwright, and PostgreSQL test service |
+| Beam/Elixir, dependency, action-SHA, Docker-image, or lockfile upgrades | Dependency churn is expressly excluded and would confound recovery evidence | Current strict `.tool-versions`, lockfiles, and SHA pins |
+| Global CI timeout increases or blanket retries | Converts a specific failure into a longer/more ambiguous signal and undermines deterministic quality lanes | Targeted root-cause repair plus bounded regression proof |
+| CI topology/cache/concurrency redesign | Existing workflow architecture is validated and redesign is out of scope | Minimal repair of failing triggers, credentials, checks, or state assumptions |
+| Force deletion of worktrees, stashes, branches, or artifacts | Could destroy unique release evidence or unmerged work | Evidence-backed disposition after reachability, diff, remote/PR, and artifact checks |
+| Ceremonial release / manifest bump | Publication without an adopter-facing correction is explicitly out of scope | Explicitly close or retain the release PR based on audited release-policy evidence |
 
-Run the same clean-baseline flow on a schedule with latest compatible generator
-patches to detect ecosystem drift early without blocking every PR.
+## Version Compatibility
 
-## Version and Currentness Verification Strategy
+| Package / tool | Compatible With | Notes |
+|----------------|-----------------|-------|
+| Elixir 1.18.4 | Erlang/OTP 27.3.4.13 | Repository-local source of truth is `.tool-versions`; workflows enforce it through `erlef/setup-beam` strict version-file mode. |
+| `mailglass` 2.5.0 | `mailglass_admin` 2.5.0 | Linked core/admin version pair, enforced by release policy. Preserve the currently shipped release state unless an in-scope correction creates a justified proposal. |
+| `mailglass` 2.x | `mailglass_inbound` 2.2.0 | Inbound remains independently versioned with an existing floating `~> 2.0` core compatibility declaration; do not re-pin it during hygiene. |
+| release-please action v5.0.0 | Existing manifest/config and protected policy wrapper | The repository already pins v5 by full commit. Its manifest workflow and `skip-github-release` support the existing proposal-vs-publication separation. |
+| Playwright ^1.59.1 | Current `mailglass_admin` browser test script | Use the lockfile-resolved installation via `npm ci`; do not bump Playwright merely to address a test timeout. |
 
-Use a lightweight, explicit verification loop so stack guidance stays current:
+## Evidence and Sources
 
-1. **Milestone-open snapshot:** record current versions for Phoenix stack,
-   `phx_new`, Elixir/OTP, and CI action SHAs.
-2. **Required-lane pinning:** keep required trust-proof lane pinned to vetted
-   Elixir/OTP and `phx_new` patch versions for deterministic gating.
-3. **Advisory drift checks:** schedule a non-blocking run using latest allowed
-   patch versions in the same major/minor compatibility window.
-4. **Dependency audits:** run `mix hex.outdated` and `mix hex.audit` on cadence;
-   promote upgrades only when trust-proof lanes stay green.
-5. **Workflow pin hygiene:** continue SHA-pinning third-party GitHub Actions and
-   refresh pins deliberately (not ad hoc) with rerun evidence.
+### Repository-local evidence (HIGH)
 
-## What Not To Add In v1.3
+- `.tool-versions` pins Erlang 27.3.4.13 and Elixir 1.18.4.
+- Root, admin, and inbound `mix.exs`; their lockfiles; and `mailglass_admin/package.json` establish the existing package/test toolchains.
+- `.github/workflows/release-please.yml`, `repo-hygiene.yml`, `post-publish-smoke.yml`, `ci.yml`, `actionlint.yml`, and the local composite action establish the existing automation seams and pinned action revisions.
+- `scripts/release_policy.exs`, `scripts/check_post_publish_target.sh`, and `scripts/verify_published_release.sh` establish the existing release-identity and post-publish proof model.
+- Live local audit at research time found root `main`, five temporary `/private/tmp/mailglass-release-*` worktrees, one stash, and several release-related branches; these are inputs to an audit, not authorization for deletion.
 
-- No new foundational runtime dependencies in core packages.
-- No transport-class expansion (`gen_smtp` listener work stays out of this milestone).
-- No broad provider matrix expansion for reference proof (one representative
-  webhook ingest path is enough).
-- No Cloudflare forwarding slice in this milestone.
-- No synthetic inbound composer/devtool expansion here.
-- No second-product UI ambition for the reference app; keep it a proof host, not
-  a polished demo app.
-- No browser/Playwright-only required gate for v1.3 trust proof (keep required
-  lane server-side deterministic; browser checks can remain advisory).
+### External documentation (MEDIUM; verified official sources)
 
-## Maintainer Sustainability Notes
+- [GitHub Actions scheduled events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows) — scheduled workflows use the default branch/latest default-branch commit; runs can be delayed/dropped under load and public-repository schedules can be disabled after inactivity.
+- [GitHub Actions concurrency](https://docs.github.com/en/actions/concepts/workflows-and-actions/concurrency) — concurrency groups serialize conflicting runs.
+- [release-please action README](https://github.com/googleapis/release-please-action) and [manifest releaser documentation](https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md) — manifest configuration, proposal-only `skip-github-release`, and PAT-trigger behavior.
 
-- Keep the reference host app thin and contract-oriented so it remains
-  maintainable by one maintainer.
-- Prefer fixture-driven deterministic tests over live-provider integration for
-  required CI.
-- Keep "API contract truth" in core docs and contract tests; reference app is
-  usage/operations proof, not a replacement contract source.
-
-## Sources
-
-- `.planning/PROJECT.md`
-- `.planning/STATE.md`
-- `.planning/MILESTONE-ARC.md`
-- `.planning/research/milestone-candidates/06-adopter-trust-proof.md`
-- `.planning/research/milestone-candidates/SYNTHESIS.md`
-- `.planning/threads/next-milestone-adopter-trust-proof.md`
-- `.github/workflows/ci.yml`
-- `.github/workflows/post-publish-smoke.yml`
-- `mix.exs`
-- `mailglass_admin/mix.exs`
-- `mailglass_inbound/mix.exs`
+---
+*Stack research for: Mailglass v2.7 Repository Stewardship & Operational Hygiene*
+*Researched: 2026-08-21*
