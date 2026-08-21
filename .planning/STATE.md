@@ -2,45 +2,43 @@
 gsd_state_version: 1.0
 milestone: v2.6
 milestone_name: Engineering Quality Ratchet
-current_phase: 160
-current_phase_name: Certification, Documentation, and Release
-status: executing
-stopped_at: Plan 160-04 protected release preparation independently re-reviewed; awaiting Plan 160-05 candidate capture and human authorization
-last_updated: "2026-08-19T16:14:13.000Z"
-last_activity: 2026-08-19
-last_activity_desc: Plan 160-04 protected release policy and exact publication evidence gates completed
+status: Awaiting next milestone
+stopped_at: Completed 160-06-PLAN.md
+last_updated: "2026-08-21T16:24:43.856Z"
+last_activity: 2026-08-21
+last_activity_desc: Milestone v2.6 completed and archived
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 41
-  completed_plans: 39
-  percent: 95
+  completed_plans: 41
+  percent: 100
+current_phase: 160
+current_phase_name: Certification, Documentation, and Release
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-17 after Phase 158)
+See: .planning/PROJECT.md (updated 2026-08-21 after v2.6 archive)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 160 — Certification, Documentation, and Release
+**Current focus:** Planning the next milestone; no feature scope is currently committed.
 
 ## Current Position
 
-Phase: 160 (Certification, Documentation, and Release) — EXECUTING
-Plan: 5 of 6
-Status: Awaiting immutable candidate capture and explicit digest-bound authorization
-Last activity: 2026-08-19 — Plan 160-04 protected release preparation passed focused verification and independent review
-
-Progress: [███████████████████░] 39/41 plans (95%); 5/6 phases complete
+Phase: Milestone v2.6 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-08-21 — Milestone v2.6 completed and archived
 
 ## v2.6 Milestone Intent
 
 - **Goal:** Raise the internal engineering bar while proving generated-host migration truth, runtime and data correctness, architecture boundaries, and merge/release signals.
 - **Execution order:** 155 Restore Adopter and CI Truth → 156 Delivery Correctness and Bounded Execution → 157 Inbound, Database, and Lifecycle Hardening → 158 Simplify Architecture Without Breaking Adopters → 159 Raise and Simplify Engineering Gates → 160 Certification, Documentation, and Release.
 - **Scope lock:** Additive-only compatibility posture. Admin/operator behavior remains untouched; no new providers, policy, auth, billing, support, mobile, or SRE ownership; no changes to shipped migrations.
-- **Coverage:** 50/50 v2.6 requirements map exactly once in `.planning/ROADMAP.md` and `.planning/REQUIREMENTS.md`.
+- **Coverage:** 50/50 v2.6 requirements passed and are archived in `.planning/milestones/v2.6-REQUIREMENTS.md`; audit passed 6/6 integration seams and 6/6 end-to-end flows.
 
 ## v2.4 Milestone Intent
 
@@ -194,6 +192,8 @@ release debug campaign.
 
 ## Decisions
 
+- [160-05] Rejected candidate digest `5814bd255019d3e79a773f6ca3b0593bdf7bfc293e0ae9f7d4700b64dd7fe498` after the credential-free rehearsal found 16 core and 5 inbound source files missing from publish allowlists. PR #214 landed the focused fix on `main`; the regenerated synchronized proposal replaced the rejected identity.
+- [160-05] Authorized candidate digest `372e6ae676e9cd8bdc15de9830da66d49f256327215dcbd73a480060e89fa450` for Release Please PR #209 at head `30f576536bd77cde3231d1e74608eda6cd553bb4`, source `f338bcedab186e5423fa9eaadf7406c71377bdf9`, versions 2.5.0 / 2.5.0 / 2.2.0, and content digest `90cf4e86b3573e42acf1cfe2f6ff28315e951a5e315e8ac91c53b59734d9c270`. Exact PR CI, live Hex reconciliation, release-policy tests, and all three package rehearsals passed; Plan 160-06 publication remains separately gated.
 - [109-03] BORDER-GATE uses an explicit raw Tailwind palette list rather than a generic `[a-z]+-[0-9]` suffix so semantic DaisyUI tokens like `border-base-300` remain valid.
 - [109-03] Ratchet schema v3 seeds the `system` axis from each block's existing light score and preserves prior/current run IDs; Phase 109 does not perform a pillar re-score.
 - [109-04] System/default theme proof remains structural: no explicit `data-theme` under OS light/dark emulation, no JS hook/storage/picker, and no `data-theme="system"`.
@@ -498,6 +498,9 @@ release debug campaign.
 - [Phase ?]: Generated-host rollback proof runs separate core-first and inbound-first hosts.
 - [Phase ?]: Suppression resync pages by (occurred_at, id) with page-local dedupe and bounded bulk reads/upserts.
 - [Phase ?]: Resync page size is application-configured; Mix task flags and output remain unchanged.
+- [Phase 160]: Publication remained bound exclusively to candidate digest 91353fe852bdace582d3d19e6f5f53583ffd53ec9317db7cc37c6d55e574a1e4 and immutable tag SHA 0f0b06861b1cbb2e89f44ea4f40db754effc4017. — Retired candidate identities were never reusable, and irreversible publication authority had to remain exact.
+- [Phase 160]: Immutable-tag CI recovery used a protected main control plane only after proving tag ancestry and exact publishable-content equality; every publish job still checked out the immutable tag. — The public tag could not be rewritten, so recovery had to fix workflow control without changing shipped package content.
+- [Phase 160]: The release target closed only after the successful smoke artifact checkpoint hashes were independently verified and recorded. — A green run alone was insufficient for the durable REL-04 evidence ledger.
 
 ## Quick Tasks Completed
 
@@ -590,6 +593,7 @@ release debug campaign.
 | Phase 155 P06 | 5 min | 2 tasks | 4 files |
 | Phase 155 P07 | 33min | 2 tasks | 5 files |
 | Phase 157-inbound-database-and-lifecycle-hardening P07 | 6min | 2 tasks | 5 files |
+| Phase 160 P06 | 5h 14m | 3 tasks | 7 files |
 
 ## Deferred Items
 
@@ -773,7 +777,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Pending Todos
 
-- **Remove the cowlib advisory allowlist when upstream fixes** (`.planning/todos/pending/2026-06-30-remove-cowlib-advisory-allowlist-when-upstream-fixes.md`) — v1.14 added a narrow temporary allowlist in `publish.check` for 2 unfixable cowlib advisories (EEF-CVE-2026-43966/43969). Maintenance-tier `/gsd-quick` when cowlib ships a patch.
+- **Remove the cowlib advisory allowlist when upstream fixes** (`.planning/todos/pending/2026-06-30-remove-cowlib-advisory-allowlist-when-upstream-fixes.md`) — `publish.check` carries a narrow temporary allowlist for 3 currently unfixable cowlib advisories (EEF-CVE-2026-43966/43969/43971); 43971 must be rechecked by 2026-09-18. Maintenance-tier `/gsd-quick` when cowlib ships a patch.
 - **Run the UI browser/persona gate during phases, not only at release** (`.planning/backlog/ui-browser-gate-during-phases-not-only-at-release.md`) — v1.14 post-mortem: deferred phase verification let 7 browser-gate regressions reach the release ceremony. Fold into the next admin-UI milestone's method; surface via `/gsd-review-backlog`.
 - ~~Refresh outbound admin UI look and feel~~ — superseded by v1.11's fractal three-surface uplift + v1.14 operator IA redesign (resolved; the 2026-06-13 todo file is stale).
 
@@ -783,8 +787,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-08-17T12:02:25.688Z
-**Stopped at:** Phase 158 verified complete; Phase 159 ready for planning
+**Last session:** 2026-08-20T22:56:29.671Z
+**Stopped at:** Completed 160-06-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
@@ -901,5 +905,5 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Operator Next Steps
 
-- Research, plan, and execute Phase 159's deterministic quality gates, then independently verify the full
-  protected merge signal before advancing to release certification.
+- Start a new milestone only when adopter pull or a concrete maintenance need justifies it; otherwise keep the shipped v2.6 package family in quiet maintenance.
+- Use `$gsd-new-milestone` when that scope is ready.
