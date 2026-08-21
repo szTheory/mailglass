@@ -1,10 +1,11 @@
 ---
 phase: 158
 slug: simplify-architecture-without-breaking-adopters
-status: ready
+status: validated
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-08-17
+validated: 2026-08-21
 ---
 
 # Phase 158 — Validation Strategy
@@ -73,3 +74,13 @@ None. The phase is source/contract/refactor work; all acceptance claims have a r
 - [x] No-optional compilation and independent package compilation are explicit gates.
 - [x] Admin/operator UI paths are excluded from planned file ownership.
 - [x] No package install or manual checkpoint is required.
+
+## Validation Audit 2026-08-21
+
+Phase verification and the milestone-wide `mix ci` gate confirm the planned automated coverage was implemented and remains green.
+
+| Metric | Count |
+|---|---:|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
