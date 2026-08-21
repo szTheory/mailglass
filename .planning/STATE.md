@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v2.6
 milestone_name: Engineering Quality Ratchet
-current_phase: 160
-status: completed
+status: Awaiting next milestone
 stopped_at: Completed 160-06-PLAN.md
-last_updated: "2026-08-20T23:21:13.140Z"
-last_activity: 2026-08-20
-last_activity_desc: Phase 160 complete
+last_updated: "2026-08-21T16:24:43.856Z"
+last_activity: 2026-08-21
+last_activity_desc: Milestone v2.6 completed and archived
 progress:
   total_phases: 6
   completed_phases: 6
   total_plans: 41
   completed_plans: 41
   percent: 100
+current_phase: 160
 current_phase_name: Certification, Documentation, and Release
 ---
 
@@ -21,26 +21,24 @@ current_phase_name: Certification, Documentation, and Release
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-17 after Phase 158)
+See: .planning/PROJECT.md (updated 2026-08-21 after v2.6 archive)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 160 — Certification, Documentation, and Release
+**Current focus:** Planning the next milestone; no feature scope is currently committed.
 
 ## Current Position
 
-Phase: 160
-Plan: 6 of 6 — complete
-Status: All phases complete
-Last activity: 2026-08-20 — Phase 160 complete
-
-Progress: [████████████████████] 41/41 plans ([██████████] 100%); 6/6 phases complete
+Phase: Milestone v2.6 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-08-21 — Milestone v2.6 completed and archived
 
 ## v2.6 Milestone Intent
 
 - **Goal:** Raise the internal engineering bar while proving generated-host migration truth, runtime and data correctness, architecture boundaries, and merge/release signals.
 - **Execution order:** 155 Restore Adopter and CI Truth → 156 Delivery Correctness and Bounded Execution → 157 Inbound, Database, and Lifecycle Hardening → 158 Simplify Architecture Without Breaking Adopters → 159 Raise and Simplify Engineering Gates → 160 Certification, Documentation, and Release.
 - **Scope lock:** Additive-only compatibility posture. Admin/operator behavior remains untouched; no new providers, policy, auth, billing, support, mobile, or SRE ownership; no changes to shipped migrations.
-- **Coverage:** 50/50 v2.6 requirements map exactly once in `.planning/ROADMAP.md` and `.planning/REQUIREMENTS.md`.
+- **Coverage:** 50/50 v2.6 requirements passed and are archived in `.planning/milestones/v2.6-REQUIREMENTS.md`; audit passed 6/6 integration seams and 6/6 end-to-end flows.
 
 ## v2.4 Milestone Intent
 
@@ -907,5 +905,5 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Operator Next Steps
 
-- Research, plan, and execute Phase 159's deterministic quality gates, then independently verify the full
-  protected merge signal before advancing to release certification.
+- Start a new milestone only when adopter pull or a concrete maintenance need justifies it; otherwise keep the shipped v2.6 package family in quiet maintenance.
+- Use `$gsd-new-milestone` when that scope is ready.
