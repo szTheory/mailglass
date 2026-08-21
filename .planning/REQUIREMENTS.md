@@ -57,17 +57,17 @@
 
 ### CI, Testing, and Maintainability Ratchets
 
-- [ ] **QUAL-01**: Root formatting covers inbound and the repository has one formatted baseline.
+- [x] **QUAL-01**: Root formatting covers inbound and the repository has one formatted baseline.
 - [x] **QUAL-02**: Protected `CI Green` fails when change detection fails or any code lane required for a code change is skipped.
 - [ ] **QUAL-03**: Deterministic core/inbound suites, warning/no-optional builds, support contracts, Mix tasks, Credo, conformance, Dialyzer, docs, audits, trust, and installer smoke all block code merges through `CI Green`.
-- [ ] **QUAL-04**: Browser/demo/preview/admin-visual, next-toolchain, provider-live, clean-baseline, and publish-only evidence remain advisory and cannot masquerade as merge proof.
-- [ ] **QUAL-05**: Repository validation uses locked dependencies; package-scoped caches and exact toolchain pins cannot cross incompatible package/toolchain/environment boundaries.
-- [ ] **QUAL-06**: Core and inbound test jobs enforce a measured non-decreasing coverage floor plus explicit critical-path contract tests.
-- [ ] **QUAL-07**: Inbound ships under Dialyzer; shipped-library code has no ignored warnings and maintainer-only ignores cannot increase.
-- [ ] **QUAL-08**: Standard complexity/nesting checks permit no new exceptions and existing expiring exceptions ratchet downward.
+- [x] **QUAL-04**: Browser/demo/preview/admin-visual, next-toolchain, provider-live, clean-baseline, and publish-only evidence remain advisory and cannot masquerade as merge proof.
+- [x] **QUAL-05**: Repository validation uses locked dependencies; package-scoped caches and exact toolchain pins cannot cross incompatible package/toolchain/environment boundaries.
+- [x] **QUAL-06**: Core and inbound test jobs enforce a measured non-decreasing coverage floor plus explicit critical-path contract tests.
+- [x] **QUAL-07**: Inbound ships under Dialyzer; shipped-library code has no ignored warnings and maintainer-only ignores cannot increase.
+- [x] **QUAL-08**: Standard complexity/nesting checks permit no new exceptions and existing expiring exceptions ratchet downward.
 - [ ] **QUAL-09**: Every skipped/flaky test has an owner, reason, and expiry; expired entries fail CI, and async behavior tests use deterministic acknowledgements instead of sleeps/permissive states.
-- [ ] **QUAL-10**: Repeated Beam/cache/dependency setup is centralized without changing required check identity, and release policy logic is versioned/tested outside large inline YAML scripts.
-- [ ] **QUAL-11**: Dependency updates are grouped across sibling packages, Docker inputs are tracked, job timeouts are explicit, and write permissions exist only on mutation jobs.
+- [x] **QUAL-10**: Repeated Beam/cache/dependency setup is centralized without changing required check identity, and release policy logic is versioned/tested outside large inline YAML scripts.
+- [x] **QUAL-11**: Dependency updates are grouped across sibling packages, Docker inputs are tracked, job timeouts are explicit, and write permissions exist only on mutation jobs.
 
 ### Certification and Release
 
@@ -127,16 +127,16 @@
 | ARCH-04 | Phase 158 | Complete |
 | ARCH-05 | Phase 158 | Complete |
 | ARCH-06 | Phase 158 | Complete |
-| QUAL-01 | Phase 159 | Pending |
+| QUAL-01 | Phase 159 | Complete |
 | QUAL-03 | Phase 159 | Pending |
-| QUAL-04 | Phase 159 | Pending |
-| QUAL-05 | Phase 159 | Pending |
-| QUAL-06 | Phase 159 | Pending |
-| QUAL-07 | Phase 159 | Pending |
-| QUAL-08 | Phase 159 | Pending |
+| QUAL-04 | Phase 159 | Complete |
+| QUAL-05 | Phase 159 | Complete |
+| QUAL-06 | Phase 159 | Complete |
+| QUAL-07 | Phase 159 | Complete |
+| QUAL-08 | Phase 159 | Complete |
 | QUAL-09 | Phase 159 | Pending |
-| QUAL-10 | Phase 159 | Pending |
-| QUAL-11 | Phase 159 | Pending |
+| QUAL-10 | Phase 159 | Complete |
+| QUAL-11 | Phase 159 | Complete |
 | REL-01 | Phase 160 | Complete |
 | REL-02 | Phase 160 | Complete |
 | REL-03 | Phase 160 | Complete |
