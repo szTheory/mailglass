@@ -1,134 +1,171 @@
 ---
 phase: 161-canonical-workspace-and-evidence-preservation
-verified: 2026-08-22T17:10:00Z
-status: gaps_found
-score: 16/21 must-haves verified
+verified: 2026-08-22T16:35:30Z
+status: human_needed
+score: 17/21 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
-gaps:
-  - truth: "A maintainer can use one documented canonical `main` checkout whose upstream, ahead/behind state, and clean working tree are explained."
-    status: failed
-    reason: "The immutable final capture records `origin/main` divergence as behind 0 / ahead 29 at HEAD e2be2c94, but live Git is clean main at HEAD e569f4d0 and behind 0 / ahead 31. The two subsequent Phase 161 commits are not appended as a new current-state capture."
-    artifacts:
-      - path: ".planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md"
-        issue: "Final Reconciliation is stale for the live canonical HEAD and ahead count."
-    missing:
-      - "Append a timestamped, read-only canonical-main recapture at e569f4d0 (or current HEAD), including status, upstream, ahead/behind count, and the non-release-clean verdict."
-behavior_unverified_items:
-  - truth: "WSPC-01 coverage is complete only when fresh worktree, stash, ref, divergent-range, release-leftover, and selected unreachable-object outputs reconcile to ledger rows."
-    test: "Independently compare each fresh enumerator's complete identity set with the ledger, including the policy boundary for selected trees/blobs."
-    expected: "Every applicable live identity maps once to the ledger or an explicit zero sentinel; no source category is silently aggregated beyond its stated policy."
-    why_human: "This plan labels the completeness predicate `verification: backstop`; row counts and symbol checks cannot establish the intended selection policy."
-  - truth: "WSPC-03 concurrency safety requires abort-and-recapture if canonical HEAD, stash OIDs, worktree registrations, or assessed ref OIDs change during assessment."
-    test: "Change one monitored Git input during a controlled assessment attempt."
-    expected: "Assessment aborts and requires a full new snapshot rather than retaining a mixed capture."
-    why_human: "This is a backstop invariant; the evidence ledger records a successful static capture, not an exercised concurrent-change path."
-  - truth: "WSPC-04 preservation proof is complete only when every archive/remove prerequisite resolves to the recorded OID or committed dirty-content tree."
-    test: "Review each reconciliation row against its cited evidence, including the dirty-worktree handoff boundary."
-    expected: "Each prerequisite has either an exact ref/OID match or concrete recoverable handoff evidence."
-    why_human: "The shell gate proves its declared TSV set and exact ref OIDs, but the plan marks the broader proof predicate as a backstop."
-  - truth: "Phase completion requires a reviewer to compare final live Git enumeration with the full pre-mutation ledger and preservation manifest."
-    test: "Perform the final identity-by-identity review after the canonical recapture is corrected."
-    expected: "All remaining identities and outcomes reconcile without relying on stale final-state claims."
-    why_human: "The required reviewer comparison is expressly a backstop and cannot be inferred from documentation alone."
+re_verification:
+  previous_status: gaps_found
+  previous_score: 16/21
+  gaps_closed:
+    - "A maintainer can use one documented canonical main checkout whose upstream, ahead/behind state, and clean working tree are explained."
+  gaps_remaining: []
+  regressions: []
 human_verification:
-  - test: "Resolve the canonical-main recapture gap, then perform the four backstop reviews above and review the judgment-tier preservation prohibitions."
-    expected: "The current clean canonical checkout is accurately captured and no evidence was treated as settled, disposable, or recoverable solely through temporary/unreachable state."
-    why_human: "Completeness, concurrent-change handling, preservation adequacy, and the eight judgment-tier must-NOT constraints need maintainer judgment after the automated gap is closed."
+  - test: "Independently compare fresh worktree, stash, ref, range, release-leftover, and selected unreachable-object enumerations with the ledger."
+    expected: "Every applicable identity maps once to a ledger row or explicit zero sentinel; the selected-object policy is accepted."
+    why_human: "WSPC-01 completeness is explicitly a backstop judgment."
+  - test: "Change one monitored assessment input during a controlled rerun."
+    expected: "The assessment aborts and requires a full append-only recapture."
+    why_human: "The concurrent-change invariant has no exercised test."
+  - test: "Review every archive/remove prerequisite against its cited OID or dirty-content handoff."
+    expected: "Each claimed prerequisite is adequate recoverable evidence, not merely a matching TSV field."
+    why_human: "WSPC-04 proof adequacy is explicitly a backstop judgment."
+  - test: "Perform the final identity-by-identity comparison of live Git enumeration with the pre-mutation ledger and manifest."
+    expected: "All remaining identities and final outcomes reconcile."
+    why_human: "The Plan 04 reviewer comparison is explicitly a backstop."
+  - test: "Review the Plan 01 stale-evidence prohibition."
+    expected: "No missing, unreadable, or stale evidence is represented as empty or settled."
+    why_human: "Judgment-tier prohibition."
+  - test: "Review the Plan 01 release-clean prohibition."
+    expected: "A clean tree is never presented as release-clean while upstream settlement remains outstanding."
+    why_human: "Judgment-tier prohibition."
+  - test: "Review the Plan 02 disposable-work prohibition."
+    expected: "Age, detached state, absence from main, or fsck output alone did not authorize removal."
+    why_human: "Judgment-tier prohibition."
+  - test: "Review the Plan 02 identity-collapse prohibition."
+    expected: "Distinct worktree/ref identities remain separately dispositioned even when OIDs match."
+    why_human: "Judgment-tier prohibition."
+  - test: "Review the Plan 03 durable-recoverability prohibition."
+    expected: "Recovery does not rely solely on temporary paths, reflogs, or unreachable loose objects."
+    why_human: "Judgment-tier prohibition."
+  - test: "Review the Plan 03 preservation-mutation prohibition."
+    expected: "No existing ref was overwritten, stash consumed, or canonical history changed to preserve evidence."
+    why_human: "Judgment-tier prohibition."
+  - test: "Review the Plan 04 destructive-cleanup prohibition."
+    expected: "No force removal/deletion, reset, force-push, prune, or garbage collection manufactured cleanliness."
+    why_human: "Judgment-tier prohibition."
+  - test: "Review the Plan 04 immutable-evidence prohibition."
+    expected: "Pre-mutation evidence is retained and final state is appended separately."
+    why_human: "Judgment-tier prohibition."
+  - test: "Review the Plan 05 historical-capture prohibition."
+    expected: "The e2be2c94 Final Reconciliation was not rewritten, deleted, or silently corrected."
+    why_human: "Judgment-tier prohibition."
+  - test: "Review the Plan 05 capture-method prohibition."
+    expected: "The recapture did not use Git or remote operations to manufacture its state."
+    why_human: "Judgment-tier prohibition."
+  - test: "Review the Plan 05 release-verdict prohibition."
+    expected: "The empty porcelain result is kept distinct from the non-release-clean verdict."
+    why_human: "Judgment-tier prohibition."
 ---
 
 # Phase 161: Canonical Workspace and Evidence Preservation Verification Report
 
 **Phase Goal:** Maintainers have one explained, clean canonical `main` and can safely account for every workspace, Git object, and release leftover without losing recoverable work.
-**Verified:** 2026-08-22T17:10:00Z
-**Status:** gaps_found
-**Re-verification:** No — initial verification
+**Verified:** 2026-08-22T16:35:30Z
+**Status:** human_needed
+**Re-verification:** Yes — after gap closure
 
 ## Goal Achievement
+
+The former canonical-state gap is closed. The Phase 161-05 recapture deliberately records its *pre-append* execution-time HEAD `aa0ca353...` and `origin/main...HEAD` result `behind 0 / ahead 36`. `4402d789` then appended only that evidence block. Recomputing the historical divergence for `origin/main...aa0ca353...` returns `0 36`; the commit diff has 16 additions and no removals. The later documentation commits explain the verifier-time `HEAD 7b2931cd...` / `0 40` state rather than contradicting the capture.
 
 ### Observable Truths
 
 | # | Truth | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | A maintainer can inspect an inventory of every linked worktree, stash, relevant branch, divergent range, and release leftover before cleanup occurs. | ✓ VERIFIED | Live: 6 worktrees, 1 stash, 167 refs, 10 named ranges; ledger retains 6 `WT-*`, 1 `STASH-*`, relevant `REF-*`/`RANGE-*`, and 5 `REL-*` rows. |
-| 2 | A maintainer can use one documented canonical `main` checkout whose upstream, ahead/behind state, and clean working tree are explained. | ✗ FAILED | Live `main` is clean, tracks `origin/main`, and is `0/31`; Final Reconciliation states `0/29` at older HEAD `e2be2c94`. |
-| 3 | Every inventoried workspace or Git object has an allowed outcome backed by unique-work and reachability evidence. | ✓ VERIFIED | Inventory's 1,849 non-sentinel rows state an `EVID-*` reference and allowed disposition. Live unreachable-commit set is exactly 1,805 OIDs, matching its `OBJ-*` rows. |
-| 4 | Approved cleanup preserves unique or uncertain work on a recoverable ref or documented handoff before normal Git-managed removal. | ✓ VERIFIED | Complete reconciliation gate passed: `12 eligible, 12 required, 12 refs`; the `remove` queue is empty and no Git removal occurred. |
-| 5 | The pre-mutation ledger identifies the sole canonical root and every Git-registered linked worktree. | ✓ VERIFIED | `git worktree list --porcelain` yields six paths and matches `WT-01`–`WT-06`; one `CANONICAL` row names the root. |
-| 6 | The ledger preserves equal identities/ranges separately and has an explicit empty-input policy. | ✓ VERIFIED | Equal-OID release tags have individual rows; ledger records no enumerated empty category at capture and requires `NONE-*` rows on a future zero result. |
-| 7 | No item is considered disposable solely because it is old, detached, absent from `main`, or fsck-unreachable. | ✓ VERIFIED | The dirty detached `WT-03`, stash, and 1,805 unreachable commits are retained/handoff, with no `remove` disposition. |
-| 8 | Assessment is idempotent at an unchanged capture and each assessed non-sentinel row has content, uniqueness, reachability, evidence, and one disposition. | ✓ VERIFIED | The ledger records 1,849 rows with evidence/dispositions; its final reconciliation describes no altered original identity. |
-| 9 | Archive/remove prerequisites are one-to-one and fail closed on missing, duplicate, mismatched, or incomplete evidence. | ✓ VERIFIED | Both `partial` and `complete` runs of the phase script passed; its source rejects empty eligibility, duplicate source rows, mismatches, unresolved refs, and incomplete handoffs. |
-| 10 | Cleanup uses only ordinary non-force operations for eligible `remove` rows; all pre-mutation identities have a final outcome. | ✓ VERIFIED | Git history from phase base is evidence/planning commits only; Final Reconciliation reports zero authorized removals and preserves the original matrix/outcome mapping. |
-| 11 | Complete inventory coverage has an independently exercised held-out proof. | ⚠️ INSUFFICIENT_SPEC | `verification: backstop`; live count/OID sampling is strong but not the specified human completeness judgment. |
-| 12 | Assessment aborts and recaptures when its inputs change concurrently. | ⚠️ INSUFFICIENT_SPEC | `verification: backstop`; no controlled concurrent-change test exists. |
-| 13 | Preservation proof is complete beyond the declared TSV/ref checks. | ⚠️ INSUFFICIENT_SPEC | `verification: backstop`; exact-OID gate passes but adequacy remains reviewer judgment. |
-| 14 | A reviewer has compared final live Git enumeration with the complete pre-mutation ledger and manifest. | ⚠️ INSUFFICIENT_SPEC | `verification: backstop`; no independent reviewer evidence, and the current state has drifted past the final capture. |
+| 1 | Inventory covers linked worktrees, stash, relevant branches, ranges, and release leftovers before cleanup. | ✓ VERIFIED | Live counts: 6 worktrees, 1 stash, 167 refs; final reconciliation has corresponding `WT-*`, `STASH-*`, `REF-*`, `RANGE-*`, and `REL-*` evidence. |
+| 2 | One explained, clean canonical `main` records upstream and divergence. | ✓ VERIFIED | Live canonical root is clean `main`, tracks `origin/main`, and is `0/40`; the append-only execution capture records its own exact `aa0ca353...` / `0/36` facts. |
+| 3 | Every inventoried workspace/object has an evidence-backed allowed outcome. | ✓ VERIFIED | The disposition coverage records 1,849 non-sentinel rows: 1,810 retain, 27 handoff, 12 archive, 0 remove/pending. |
+| 4 | Approved cleanup preserves unique or uncertain work before normal removal. | ✓ VERIFIED | The complete reconciliation gate passes with 12 required exact-OID refs; the removal queue is empty. |
+| 5 | Equal OIDs/ranges retain distinct stable identity rows. | ✓ VERIFIED | Inventory declares category/bytewise ordering and separate equal-OID release-tag/range rows. |
+| 6 | Empty enumerator results require explicit zero sentinels. | ✓ VERIFIED | The inventory's `NONE` contract explicitly forbids treating omission as empty. |
+| 7 | Complete inventory coverage reconciles fresh enumerators to ledger identities. | ⚠️ UNCERTAIN | The plan labels this a `backstop`; count/OID checks are strong but cannot decide the selected-object policy. |
+| 8 | Age, detached state, absence from `main`, or fsck unreachability alone never authorize removal. | ✓ VERIFIED | The dirty detached worktree, stash, and all 1,805 unreachable commits remain retain/handoff; no row is `remove`. |
+| 9 | Shared OIDs/evidence never collapse distinct disposition identities. | ✓ VERIFIED | `REF-*` and `RANGE-*` archive rows remain distinct while their preservation refs can resolve to the same OID. |
+| 10 | Assessment retains explicit zero categories and does not fabricate object dispositions. | ✓ VERIFIED | The ledger's zero-result policy and `NONE-*` sentinel contract are present. |
+| 11 | Assessment at an unchanged capture is idempotent and non-mutating. | ✓ VERIFIED | The assessment section states stable identities/no duplicates; no cleanup queue exists and only documented preservation refs were added. |
+| 12 | Input changes during assessment abort and require recapture. | ⚠️ UNCERTAIN | Required concurrency behavior is a plan-declared `backstop`; no controlled-change test exists. |
+| 13 | Retained/handed-off evidence remains reachable through its recorded location. | ✓ VERIFIED | Stash remains present; 12 `preserve/phase-161-*` refs resolve live; dirty WT-03 is retained at its recorded detached HEAD. |
+| 14 | Preservation proof is adequate for every archive/remove prerequisite. | ⚠️ UNCERTAIN | Exact OID verification passes, but the broader adequacy predicate is a `backstop` judgment. |
+| 15 | Reconciliation fails closed for malformed, missing, duplicate, mismatched, or incomplete evidence. | ✓ VERIFIED | Both modes pass (`12 eligible, 12 required, 12 refs`); source checks empty sets, duplicates, malformed TSV, ref/OID mismatches, and incomplete handoffs. |
+| 16 | Only `remove` rows with complete preservation can be acted upon by ordinary Git commands. | ✓ VERIFIED | Script derives its eligible set from the inventory/TSV; inventory has zero `remove` rows and the execution log records no Git-managed removal. |
+| 17 | Final outcomes cover every pre-mutation identity and remaining live identity. | ✓ VERIFIED | Final Reconciliation retains 1,849 outcomes and names each surviving category; live worktree/stash/ref/object counts still match its captured sets apart from documented canonical documentation commits. |
+| 18 | A reviewer has independently completed the final full-ledger comparison. | ⚠️ UNCERTAIN | This is the Plan 04 `backstop`, requiring maintainer review. |
+| 19 | The stale `e2be2c94` final capture remains immutable historical evidence. | ✓ VERIFIED | `4402d789` contains additions only; it retains the original `e2be2c94` block and adds a separate recapture. |
+| 20 | The newest recapture's path, branch, HEAD, upstream, and divergence agree at capture time. | ✓ VERIFIED | Recapture fields name the root, `main`, `aa0ca353...`, `origin/main`, `0/36`; `git rev-list --left-right --count origin/main...aa0ca353...` now returns `0 36`. |
+| 21 | Clean working tree remains distinct from the non-release-clean verdict. | ✓ VERIFIED | The recapture has independent `Working tree: clean` and `Release verdict: non-release-clean` fields; current root is also clean while divergence remains nonzero. |
 
-**Score:** 16/21 truths verified (0 present, behavior-unverified; four non-inferable backstops abstained).
+**Score:** 17/21 truths verified (4 non-inferable backstops require human review).
 
-## Required Artifacts
+### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 | --- | --- | --- | --- |
-| `161-WORKSPACE-INVENTORY.md` | Pre-mutation/final Git evidence ledger | ⚠️ STALE | Substantive (2,079 lines), tracked and used by the reconciliation script; final canonical count/head need recapture. |
-| `161-VALIDATION.md` | Requirement-to-evidence sampling contract | ✓ VERIFIED | Substantive, tracked 99-line validation contract; references the shared reconciliation commands. |
-| `161-PRESERVATION-RECONCILIATION.tsv` | One-to-one recovery map | ✓ VERIFIED | Exact 12-column TSV, 12 verified archive rows, consumed by the gate. |
-| `161-verify-preservation-reconciliation.sh` | Fail-closed reconciliation verifier | ✓ VERIFIED | Substantive 84-line script; both modes executed successfully against live refs. |
+| `161-WORKSPACE-INVENTORY.md` | Immutable ledger, dispositions, final recapture | ✓ VERIFIED | 2,095 lines; substantive tracked evidence, append-only recapture, and current live data trace. |
+| `161-VALIDATION.md` | Requirement-to-evidence validation contract | ✓ VERIFIED | 99-line contract with per-plan gates and manual-verification boundary. |
+| `161-PRESERVATION-RECONCILIATION.tsv` | One-to-one recovery map | ✓ VERIFIED | Exact 12-column schema; 12 archive identities and matching live OIDs. |
+| `161-verify-preservation-reconciliation.sh` | Fail-closed recovery verifier | ✓ VERIFIED | 84-line executable logic; invoked successfully in both `partial` and `complete` modes. |
 
-## Key Link Verification
+### Key Link Verification
 
 | From | To | Via | Status | Details |
 | --- | --- | --- | --- | --- |
-| `git worktree list --porcelain -z` | Inventory | `WT-*` rows | ✓ WIRED | Live porcelain count is 6 and matches `WT-01`–`WT-06`. |
-| Upstream divergence command | Inventory | Canonical Main / Final Reconciliation | ✗ STALE | Connection exists, but currently reports `0 31` while last recorded final evidence is `0 29`. |
-| Archive/remove dispositions | Preservation refs | TSV and gate | ✓ WIRED | Script joins the inventory set to TSV and resolves all 12 `preserve/phase-161-*` refs to expected OIDs. |
-| Cleanup eligibility | Normal Git actions | Gate before queue | ✓ WIRED | Gate passes but finds zero `remove` rows; therefore no removal action is permitted or performed. |
+| Git worktree porcelain | Inventory `WT-*` rows | One row per registered record | ✓ WIRED | Fresh porcelain yields six records matching the declared six-worktree inventory. |
+| Git branch/status/HEAD/upstream/divergence | Canonical Main Recapture | Field-by-field execution snapshot | ✓ WIRED | Capture commit is append-only; parent history recomputes to its recorded `0/36` divergence. |
+| Archive/remove dispositions | TSV and preserve refs | Exact source-row/OID reconciliation | ✓ WIRED | Both gates resolve all 12 required `preserve/phase-161-*` refs exactly. |
+| Cleanup eligibility | Normal Git actions | Empty remove queue after gate | ✓ WIRED | Zero `remove` rows means no ordinary removal operation is authorized or recorded. |
 
-## Data-Flow Trace (Level 4)
+### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
 | --- | --- | --- | --- | --- |
-| Inventory | Workspace/ref/stash/object rows | Read-only Git porcelain, refs, stash, ranges, fsck | Yes; live worktree/stash/ref and unreachable-commit checks match the captured identity sets | ⚠️ Current canonical divergence is stale |
-| Reconciliation TSV + script | Eligible archive/remove rows and ref OIDs | Inventory rows and live `git rev-parse` | Yes; 12 exact live ref/OID matches | ✓ FLOWING |
+| Inventory | Worktree/stash/ref/range/release/object rows | Read-only Git porcelain, refs, stash, ranges, and fsck | Yes: current counts are 6/1/167/1,805; the capture-time canonical facts are separately timestamped. | ✓ FLOWING |
+| TSV + reconciliation script | Eligible identity → preservation ref/OID | Inventory table plus live `git rev-parse` | Yes: 12 required rows resolve to the listed exact OIDs. | ✓ FLOWING |
 
-## Behavioral Spot-Checks
+### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
-| Fail-closed reconciliation (partial) | `bash 161-verify-preservation-reconciliation.sh partial INVENTORY TSV` | `PASS (12 eligible, 12 required, 12 refs)` | ✓ PASS |
-| Fail-closed reconciliation (complete) | `bash 161-verify-preservation-reconciliation.sh complete INVENTORY TSV` | `PASS (12 eligible, 12 required, 12 refs)` | ✓ PASS |
-| Canonical state agrees with final capture | `git status --short --branch; git rev-list --left-right --count '@{upstream}...HEAD'` | Clean `main`, `0 31`; ledger final says `0/29` | ✗ FAIL |
-| Unreachable commit accounting | `git fsck --full --no-reflogs --unreachable --no-dangling` compared to `OBJ-*` OIDs | 1,805 live commits; 1,805 ledger OIDs; no set difference | ✓ PASS |
+| Partial preservation reconciliation | `bash 161-verify-preservation-reconciliation.sh partial INVENTORY TSV` | `PASS (12 eligible, 12 required, 12 refs)` | ✓ PASS |
+| Complete preservation reconciliation | `bash 161-verify-preservation-reconciliation.sh complete INVENTORY TSV` | `PASS (12 eligible, 12 required, 12 refs)` | ✓ PASS |
+| Historical canonical recapture | `git rev-list --left-right --count origin/main...aa0ca353...` | `0 36`, exactly matching the execution-time evidence | ✓ PASS |
+| Current canonical workspace | `git status --short --branch`; divergence command | Clean `main...origin/main [ahead 40]`; `0 40` | ✓ PASS |
+| Unreachable-object accounting | `git fsck --full --no-reflogs --unreachable --no-dangling` | 1,805 commits, matching `OBJ-0001`–`OBJ-1805` | ✓ PASS |
 
-## Requirements Coverage
+### Probe Execution
+
+No phase-declared `probe-*.sh` files exist. The reconciliation script is the runnable phase gate and was executed above.
+
+### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 | --- | --- | --- | --- | --- |
-| WSPC-01 | 161-01, 161-04 | Complete pre-cleanup workspace/Git evidence inventory | ✓ SATISFIED | Live worktree/stash/ref/object checks reconcile to its captured identity rows. |
-| WSPC-02 | 161-01, 161-04 | Explained canonical main/upstream/divergence and no unexplained changes | ✗ BLOCKED | Working tree is clean, but documented final divergence is stale by two commits. |
-| WSPC-03 | 161-02, 161-04 | Evidence-backed per-item disposition | ✓ SATISFIED | All inventoried non-sentinel identities are dispositioned with evidence and no unsafe `remove`. |
-| WSPC-04 | 161-03, 161-04 | Preservation before normal cleanup | ✓ SATISFIED | Exact-OID reconciliation passes; no removal became eligible. |
+| WSPC-01 | 161-01, 161-04 | Complete pre-cleanup workspace/Git evidence inventory | ✓ SATISFIED | Live worktree/stash/ref/unreachable counts reconcile to inventory categories; completeness-policy review remains human-required. |
+| WSPC-02 | 161-01, 161-04, 161-05 | Explained canonical main/upstream/divergence and no unexplained changes | ✓ SATISFIED | Historical capture-time equality and independent current clean-tree check pass; later commits correctly advance only live counts. |
+| WSPC-03 | 161-02, 161-04 | Evidence-backed disposition for every inventoried identity | ✓ SATISFIED | 1,849 rows have allowed outcomes and `EVID-*` references; concurrency invariant remains human-required. |
+| WSPC-04 | 161-03, 161-04 | Recoverability before normal cleanup | ✓ SATISFIED | Exact-OID gate passes and no removal is eligible; preservation adequacy remains human-required. |
 
-No orphaned Phase 161 requirement IDs were found: all four roadmap-mapped IDs appear in plan frontmatter.
+No orphaned Phase 161 requirement IDs were found: all four roadmap-mapped IDs occur in plan frontmatter.
 
-## Anti-Patterns Found
+### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 | --- | --- | --- | --- | --- |
-| `161-WORKSPACE-INVENTORY.md` | 2050–2068 | Final live-state evidence is not append-recaptured after two additional Phase 161 commits | 🛑 Blocker | Makes the documented current canonical divergence false (`29` vs live `31`). |
+| — | — | No `TBD`, `FIXME`, or `XXX` marker in phase-deliverable artifacts; no placeholder/empty implementation found. | ℹ️ Info | No automated blocker. |
 
-No `TBD`, `FIXME`, or `XXX` debt markers were found in phase-modified artifacts. Generic key-link tooling could not parse prose-valued `from` fields; the links above were manually traced instead.
+The generic key-link tool reports prose-valued `from` fields as non-files; those links were manually traced above rather than treated as broken wiring.
 
 ## Human Verification Required
 
-After correcting the canonical recapture, a maintainer must complete the four backstop checks in frontmatter and explicitly review the judgment-tier prohibitions: stale/missing evidence must not be treated as settled; clean `main` must remain non-release-clean while drift exists; no distinct identity may be collapsed; and no temporary/reflog/unreachable-only preservation may be accepted as durable. These are escalation-gate items, not automated passes.
+Fifteen escalation-gate items remain in frontmatter: four plan-declared backstops and eleven judgment-tier must-NOT constraints. They are not implementation failures, but must be explicitly accepted by a maintainer before this phase can be marked passed.
 
 ## Gaps Summary
 
-The phase has durable inventory and preservation machinery, and the live recovery references reconcile. Its canonical-main claim is nevertheless stale: the last final capture is at `e2be2c94`, ahead 29, while live clean `main` is `e569f4d0`, ahead 31. Append a new read-only final recapture rather than rewriting the prior evidence, then route the backstop and prohibition judgments to maintainer review.
+No automated implementation gap remains. The previous stale-canonical-capture gap is closed by the append-only Plan 05 record. Status is `human_needed`, not `passed`, because the roadmap/plan leave four non-inferable proof predicates and eleven judgment-tier safety prohibitions for maintainer decision.
 
 ---
 
-_Verified: 2026-08-22T17:10:00Z_
+_Verified: 2026-08-22T16:35:30Z_
 _Verifier: the agent (gsd-verifier)_
