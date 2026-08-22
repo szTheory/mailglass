@@ -102,11 +102,8 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
       assert resolver =~ "\"#{field}\":"
     end
 
-    assert_ordered!(resolver, [
-      "authorized-versions\" \"$control_target\"",
-      "post-publish-resolution.json",
-      "exit 1"
-    ])
+    assert resolver =~
+             "write_scheduled_blocked_resolution\n                  echo \"Scheduled target is authorized but unpublished; wrote blocked resolution evidence.\" >&2\n                  exit 1"
 
     assert resolver =~ "if: ${{ always() }}"
     assert resolver =~ "name: Upload post-publish resolution"

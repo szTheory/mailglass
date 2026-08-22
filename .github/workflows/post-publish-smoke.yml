@@ -112,13 +112,48 @@ jobs:
           target="$control_target"
           target_repo=.
           resolved=$(mktemp)
+          resolution_path="$RUNNER_TEMP/post-publish-resolution.json"
+
+          write_scheduled_blocked_resolution() {
+            printf '{"status":"blocked","reason":"scheduled_target_not_published","event_name":"%s","run_id":"%s","ledger_status":"%s","publication_status":"%s","target_ref":"%s","core":"%s","admin":"%s","inbound":"%s"}\n' \
+              "$EVENT_NAME" "$RUN_ID" "$ledger_status" "$publication_status" "$target_ref" "$core" "$admin" "$inbound" \
+              > "$resolution_path"
+          }
+
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             target=immutable-target/.planning/release-target.json
             target_repo=immutable-target
             control_resolved=$(mktemp)
             mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "authorized-versions" "$control_target" > "$control_resolved"
           fi
+          set +e
           mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "$command" "$target" > "$resolved"
+          resolution_status=$?
+          set -e
+
+          if [ "$resolution_status" -ne 0 ]; then
+            if [ "$EVENT_NAME" = "schedule" ]; then
+              authorized_resolved=$(mktemp)
+
+              if mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- "authorized-versions" "$control_target" > "$authorized_resolved"; then
+                ledger_status=$(awk -F= '$1 == "status" {print $2}' "$authorized_resolved")
+                publication_status=$(mix run --no-start --no-compile --no-deps-check -e 'target = File.read!(".planning/release-target.json") |> Jason.decode!(); IO.write(target["states"]["publication"])')
+
+                if [ "$ledger_status" = "authorized" ] && [ "$publication_status" = "not_started" ]; then
+                  core=$(awk -F= '$1 == "core" {print $2}' "$authorized_resolved")
+                  admin=$(awk -F= '$1 == "admin" {print $2}' "$authorized_resolved")
+                  inbound=$(awk -F= '$1 == "inbound" {print $2}' "$authorized_resolved")
+                  target_ref=""
+                  write_scheduled_blocked_resolution
+                  echo "Scheduled target is authorized but unpublished; wrote blocked resolution evidence." >&2
+                  exit 1
+                fi
+              fi
+            fi
+
+            exit "$resolution_status"
+          fi
+
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             for identity_key in core admin inbound candidate_digest content_digest proposal_head source_sha; do
               control_value=$(awk -F= -v key="$identity_key" '$1 == key {print $2}' "$control_resolved")
@@ -167,6 +202,26 @@ jobs:
             --admin "$admin" \
             --inbound "$inbound"
           printf 'completed=%s\nauthorized=%s\ncore=%s\nadmin=%s\ninbound=%s\ntarget_ref=%s\n' "$completed" "$authorized" "$core" "$admin" "$inbound" "$target_ref" >> "$GITHUB_OUTPUT"
+      - name: Summarize post-publish resolution
+        if: ${{ always() }}
+        run: |
+          if [ -f "$RUNNER_TEMP/post-publish-resolution.json" ]; then
+            {
+              echo "## post-publish resolution"
+              echo
+              echo '```json'
+              cat "$RUNNER_TEMP/post-publish-resolution.json"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload post-publish resolution
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: post-publish-resolution-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 90
+          path: ${{ runner.temp }}/post-publish-resolution.json
 
   cron-guard:
     name: Cron 7-day window guard
