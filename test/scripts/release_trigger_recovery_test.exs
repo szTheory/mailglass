@@ -544,7 +544,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   end
 
   defp with_proposal_result_env(outcome, status, reason, fun) do
-    temp_dir = Path.join(System.tmp_dir!(), "release-proposal-result-#{System.unique_integer([:positive])}")
+    temp_dir =
+      Path.join(System.tmp_dir!(), "release-proposal-result-#{System.unique_integer([:positive])}")
+
     File.mkdir_p!(temp_dir)
 
     env = %{
