@@ -1,9 +1,9 @@
 ---
 phase: 161
 slug: canonical-workspace-and-evidence-preservation
-status: draft
+status: active
 nyquist_compliant: false
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-08-21
 ---
 
@@ -38,8 +38,8 @@ created: 2026-08-21
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 161-01-01 | 01 | 1 | WSPC-01, WSPC-02 | T-161-02 | Inventory captures all linked worktrees before mutation. | shell integration | `git worktree list --porcelain -z` | ❌ W0 inventory | ⬜ pending |
-| 161-01-02 | 01 | 1 | WSPC-01 | T-161-02 | Inventory captures stashes, relevant refs/ranges, release leftovers, and selected unreachable candidates. | shell integration | `git stash list && git for-each-ref --format='%(refname) %(objectname)' refs/heads refs/remotes refs/tags && git fsck --no-reflogs --unreachable --no-dangling` | ❌ W0 inventory | ⬜ pending |
+| 161-01-01 | 01 | 0 | WSPC-01, WSPC-02 | T-161-02 | Inventory captures all linked worktrees before mutation. | shell integration | `git worktree list --porcelain -z` | ✅ `161-WORKSPACE-INVENTORY.md` | ✅ green |
+| 161-01-02 | 01 | 0 | WSPC-01 | T-161-02 | Inventory captures stashes, relevant refs/ranges, release leftovers, and selected unreachable candidates. | shell integration | `git stash list && git for-each-ref --format='%(refname) %(objectname)' refs/heads refs/remotes refs/tags && git fsck --no-reflogs --unreachable --no-dangling` | ✅ `161-WORKSPACE-INVENTORY.md` | ✅ green |
 | 161-02-01 | 02 | 2 | WSPC-03 | T-161-01 | Every inventoried identity has `EVID-*`-backed content, unique-work, and exact reachability evidence before disposition. | artifact schema + shell evidence | `inventory=.planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md; rg -n 'Content and Unique-Work Evidence&#124;Reachability Evidence&#124;git branch --contains&#124;git tag --contains&#124;git merge-base --is-ancestor&#124;git log --left-right --cherry-mark' "$inventory" && test "$(rg -c '^\&#124; (WT&#124;STASH&#124;REF&#124;RANGE&#124;REL&#124;OBJ)-' "$inventory")" -eq "$(rg -c '^\&#124; (WT&#124;STASH&#124;REF&#124;RANGE&#124;REL&#124;OBJ)-.*\&#124; EVID-[^&#124;]+\&#124;' "$inventory")"` | ❌ W0 inventory | ⬜ pending |
 | 161-02-02 | 02 | 2 | WSPC-03 | T-161-02 | Every inventory row records an allowed disposition plus content, unique-work, reachability, and evidence. | artifact schema | `rg -n 'retain|handoff|merge|archive|remove' .planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md` | ❌ W0 inventory | ⬜ pending |
 | 161-03-01 | 03 | 3 | WSPC-04 | T-161-01 | Every eligible archive/remove row maps one-to-one to an exact-OID ref, concrete handoff, or evidence-backed not-required determination; eligible and required counts are nonzero. | TSV reconciliation + shell integration | `bash .planning/phases/161-canonical-workspace-and-evidence-preservation/161-verify-preservation-reconciliation.sh partial .planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md .planning/phases/161-canonical-workspace-and-evidence-preservation/161-PRESERVATION-RECONCILIATION.tsv` | ❌ W0 reconciliation TSV + verifier | ⬜ pending |
@@ -53,8 +53,8 @@ created: 2026-08-21
 
 ## Wave 0 Requirements
 
-- [ ] `161-WORKSPACE-INVENTORY.md` — durable schema and initial pre-mutation snapshot covering WSPC-01 through WSPC-04.
-- [ ] Inventory schema includes identity/path, current ref or detached commit, clean/dirty state, content summary, unique-work evidence, reachability evidence, evidence reference, and disposition.
+- [x] `161-WORKSPACE-INVENTORY.md` — durable schema and initial pre-mutation snapshot covering WSPC-01 through WSPC-04.
+- [x] Inventory schema includes identity/path, current ref or detached commit, clean/dirty state, content summary, unique-work evidence, reachability evidence, evidence reference, and disposition.
 - [ ] Preservation-before-removal checklist requires a verified `preserve/*` ref or documented handoff for every unique or uncertain candidate.
 - [ ] `161-PRESERVATION-RECONCILIATION.tsv` uses the fixed schema from Plan 03, contains exactly one row per archive/remove ledger identity, contains at least one eligible and one `required` row for the known evidence set, and fails on ref/OID mismatch or incomplete handoff fields.
 - [ ] `161-verify-preservation-reconciliation.sh` provides the shared `partial` and `complete` fail-closed gates used by both Plan 03 and Plan 04; no second cleanup-specific interpretation is allowed.
@@ -93,4 +93,4 @@ created: 2026-08-21
 - [ ] Feedback latency is under 30 seconds for read-only Git checks.
 - [ ] `nyquist_compliant: true` is set only after task IDs and commands match finalized plans.
 
-**Approval:** pending
+**Approval:** Wave 0 complete — 2026-08-22T15:36:55Z reconciliation passed; later waves remain pending their own evidence and preservation gates.
