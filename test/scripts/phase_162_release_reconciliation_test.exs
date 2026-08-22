@@ -126,6 +126,18 @@ defmodule Mailglass.Scripts.Phase162ReleaseReconciliationTest do
     assert ledger =~ "Phase result: blocked"
   end
 
+  test "every Phase 162 threat has an explicit final closure and each pending schedule names its cron" do
+    ledger = File.read!(@ledger)
+
+    for number <- 1..20 do
+      assert ledger =~ "T-162-#{String.pad_leading(Integer.to_string(number), 2, "0")}"
+    end
+
+    for cron <- ["17 * * * *", "30 12 * * *", "0 12 * * *"] do
+      assert ledger =~ cron
+    end
+  end
+
   defp matrix_rows(ledger, title) do
     [_, table] = String.split(ledger, "### #{title}\n\n", parts: 2)
 
