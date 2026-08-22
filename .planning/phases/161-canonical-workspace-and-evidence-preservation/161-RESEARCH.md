@@ -260,17 +260,15 @@ git tag --contains <object-id>
 |---|-------|---------|---------------|
 | A1 | None. | — | All implementation-relevant claims were verified locally or cited from official Git documentation. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **How should the inventory state the canonical ahead count?**
    - What we know: the locked decision describes an explained `ahead 7` archive/initialization range; current inspection is `ahead 9`, including two Phase 161 context/state commits. [VERIFIED: local Git inspection] [VERIFIED: codebase grep]
-   - What's unclear: the exact count will change again when the inventory itself is committed.
-   - Recommendation: state the measurement timestamp and full commit list, then separately identify the fixed seven-commit semantic range and later planning commits. This preserves the locked decision without presenting a stale count as a live measurement. [VERIFIED: local Git inspection]
+   - **RESOLVED:** Treat the pre-existing seven-commit v2.6 archive/retrospective and v2.7 initialization range as the stable captured semantic range required by D-05. Record the live ahead/behind count, capture timestamp, HEAD, and full commit list separately at every inventory or final-reconciliation capture. Phase 161 documentation commits legitimately increase the live ahead count and must be identified as later commits rather than folded into or used to rewrite the seven-commit range. [VERIFIED: local Git inspection]
 
 2. **Which unreachable commits merit named preservation refs versus documented removal?**
    - What we know: the object database contains many unreachable commits across historical phases. [VERIFIED: local Git inspection]
-   - What's unclear: content/reachability classification has not yet been recorded per selected candidate.
-   - Recommendation: triage commits first by `git show`, `branch --contains`, `tag --contains`, and patch/ancestry comparison; preserve whenever evidence is incomplete or non-duplicate. [CITED: https://git-scm.com/docs/git-fsck] [CITED: https://git-scm.com/docs/git-branch]
+   - **RESOLVED:** Apply a fail-closed per-object rule. Inspect content, branch/tag containment, ancestry, and patch equivalence first. Preserve the candidate on an exact-OID named ref, or keep it under a concrete documented handoff, whenever evidence shows unique recoverable value or remains incomplete, ambiguous, or uncertain. A candidate may be marked `remove`/not preservation-required only when recorded reachability and content/patch evidence proves it contains no unique recoverable value; age, absence from `main`, or `fsck` unreachability alone never qualifies. No removal may execute until the row-level preservation reconciliation proves the applicable ref or handoff. [CITED: https://git-scm.com/docs/git-fsck] [CITED: https://git-scm.com/docs/git-branch]
 
 ## Environment Availability
 

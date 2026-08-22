@@ -42,7 +42,10 @@ created: 2026-08-21
 | 161-01-02 | 01 | 1 | WSPC-01 | T-161-02 | Inventory captures stashes, relevant refs/ranges, release leftovers, and selected unreachable candidates. | shell integration | `git stash list && git for-each-ref --format='%(refname) %(objectname)' refs/heads refs/remotes refs/tags && git fsck --no-reflogs --unreachable --no-dangling` | ❌ W0 inventory | ⬜ pending |
 | 161-02-01 | 02 | 2 | WSPC-02 | T-161-01 | Canonical root is `main`, clean, upstream-bearing, and its exact divergence is explained. | shell integration | `git status --short --branch && git rev-list --left-right --count '@{upstream}...HEAD'` | ❌ W0 inventory | ⬜ pending |
 | 161-02-02 | 02 | 2 | WSPC-03 | T-161-02 | Every inventory row records an allowed disposition plus content, unique-work, reachability, and evidence. | artifact schema | `rg -n 'retain|handoff|merge|archive|remove' .planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md` | ❌ W0 inventory | ⬜ pending |
-| 161-03-01 | 03 | 3 | WSPC-04 | T-161-01 | Unique or uncertain work is preserved before normal Git-managed removal. | shell integration + safety review | `git show-ref --verify refs/heads/preserve/<name>` or verify the documented handoff before removal | ❌ preservation refs depend on evidence | ⬜ pending |
+| 161-03-01 | 03 | 3 | WSPC-04 | T-161-01 | Every eligible archive/remove row maps one-to-one to an exact-OID ref, concrete handoff, or evidence-backed not-required determination; eligible and required counts are nonzero. | TSV reconciliation + shell integration | `bash .planning/phases/161-canonical-workspace-and-evidence-preservation/161-verify-preservation-reconciliation.sh partial .planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md .planning/phases/161-canonical-workspace-and-evidence-preservation/161-PRESERVATION-RECONCILIATION.tsv` | ❌ W0 reconciliation TSV + verifier | ⬜ pending |
+| 161-03-02 | 03 | 3 | WSPC-04 | T-161-01 | Dirty evidence is committed to the exact ref/OID or represented by a concrete handoff with location, blocker, and permitted next action. | TSV reconciliation + artifact schema | `bash .planning/phases/161-canonical-workspace-and-evidence-preservation/161-verify-preservation-reconciliation.sh complete .planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md .planning/phases/161-canonical-workspace-and-evidence-preservation/161-PRESERVATION-RECONCILIATION.tsv` and require inventory `pending: 0`. | ❌ preservation refs/handoffs depend on evidence | ⬜ pending |
+| 161-04-01 | 04 | 4 | WSPC-04 | T-161-01 | Cleanup eligibility consumes the unchanged Plan 03 row-level reconciliation before any action. | shell integration + safety gate | Run the same `161-verify-preservation-reconciliation.sh complete` command before constructing the cleanup queue; failure blocks all mutation. | ❌ depends on Plan 03 reconciliation | ⬜ pending |
+| 161-04-02 | 04 | 4 | WSPC-01, WSPC-02, WSPC-03, WSPC-04 | T-161-02 | Final recapture preserves the stable seven-commit semantic range, current live ahead count, all outcomes, and surviving recovery anchors. | shell integration + artifact reconciliation | Re-run all inventory enumerators and the same `161-verify-preservation-reconciliation.sh complete` command, then compare every original row to one final outcome. | ❌ depends on final reconciliation | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -53,6 +56,8 @@ created: 2026-08-21
 - [ ] `161-WORKSPACE-INVENTORY.md` — durable schema and initial pre-mutation snapshot covering WSPC-01 through WSPC-04.
 - [ ] Inventory schema includes identity/path, current ref or detached commit, clean/dirty state, content summary, unique-work evidence, reachability evidence, evidence reference, and disposition.
 - [ ] Preservation-before-removal checklist requires a verified `preserve/*` ref or documented handoff for every unique or uncertain candidate.
+- [ ] `161-PRESERVATION-RECONCILIATION.tsv` uses the fixed schema from Plan 03, contains exactly one row per archive/remove ledger identity, contains at least one eligible and one `required` row for the known evidence set, and fails on ref/OID mismatch or incomplete handoff fields.
+- [ ] `161-verify-preservation-reconciliation.sh` provides the shared `partial` and `complete` fail-closed gates used by both Plan 03 and Plan 04; no second cleanup-specific interpretation is allowed.
 - [ ] Resolve the pre-existing `req` and `swoosh` dependency lock mismatch before treating the ExUnit hygiene-task regression command as an executable phase gate; dependency changes are outside Phase 161.
 
 ---
@@ -62,7 +67,7 @@ created: 2026-08-21
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
 | Inventory completeness and evidence quality | WSPC-01, WSPC-03 | Git commands enumerate candidates but cannot judge whether content summaries and dispositions are adequate. | Compare each command result against exactly one inventory row; inspect each row for content, unique-work, reachability, evidence reference, and allowed disposition. |
-| Preservation precedes any cleanup | WSPC-04 | Whether a handoff is adequate and whether uncertain work is preserved requires maintainer judgment. | Before each removal, verify the named `preserve/*` ref with `git show-ref --verify` or inspect the documented handoff; then use normal `git worktree remove` or `git branch -d` only when evidence permits. |
+| Preservation evidence quality | WSPC-04 | Automation proves one-to-one mapping and exact ref/OID equality, but a maintainer still judges whether the cited content/patch evidence justifies a `not-required` determination. | Review every `not-required` TSV row against its `EVID-*` content and reachability evidence; automation handles required refs and concrete handoff field completeness. |
 | Canonical `main` explanation is accurate | WSPC-02 | Later Phase 161 documentation commits can legitimately change the ahead count. | Re-run status and divergence commands immediately before sign-off and update the exact count/range explanation without rewriting history. |
 
 ---
@@ -83,6 +88,7 @@ created: 2026-08-21
 - [ ] All tasks have `<automated>` verification or Wave 0 dependencies.
 - [ ] Sampling continuity: no 3 consecutive tasks without automated verification.
 - [ ] Wave 0 covers all missing references.
+- [ ] Plan 03 and Plan 04 execute the same fail-closed row-level reconciliation over `161-PRESERVATION-RECONCILIATION.tsv` before cleanup eligibility and final sign-off.
 - [ ] No watch-mode flags.
 - [ ] Feedback latency is under 30 seconds for read-only Git checks.
 - [ ] `nyquist_compliant: true` is set only after task IDs and commands match finalized plans.
