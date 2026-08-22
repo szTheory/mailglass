@@ -1,6 +1,6 @@
 ---
 phase: 162-protected-release-and-scheduled-control-recovery
-reviewed: 2026-08-22T15:31:00Z
+reviewed: 2026-08-22T20:49:19Z
 depth: standard
 files_reviewed: 8
 files_reviewed_list:
@@ -14,60 +14,63 @@ files_reviewed_list:
   - test/scripts/release_trigger_recovery_test.exs
 findings:
   critical: 2
-  warning: 1
+  warning: 2
   info: 0
-  total: 3
+  total: 4
 status: issues_found
 ---
 
 # Phase 162: Code Review Report
 
-**Reviewed:** 2026-08-22T15:31:00Z
+**Reviewed:** 2026-08-22T20:49:19Z
 **Depth:** standard
 **Files Reviewed:** 8
 **Status:** issues_found
 
 ## Summary
 
-The new evidence paths are not executable on their normal success paths. The proposal-capture step overwrites its output-emitting `EXIT` trap, causing every capture that reaches worktree setup to be reported as `cannot-check`; and the smoke workflow requires a resolution artifact that it only creates for one blocked schedule state. Consequently, successful published/dispatch/scheduled smoke runs fail at artifact upload before downstream proof jobs can start. The focused tests pass because they inspect fragments or supply synthetic step outputs rather than exercise these workflow paths.
+The new scheduled control paths do not converge in their normal idle state. In particular, the hourly release workflow turns an expected absence of a release proposal into a required failing result, and the scheduled hygiene workflow asks GitHub CLI for a branch name that `actions/checkout` does not provide in its detached-HEAD checkout. The post-publish index polling also has an insufficient job timeout for its three serial waits.
+
+## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01: Proposal capture replaces the trap that publishes its control result
+### CR-01: Idle scheduled release runs are forced to fail
 
-**File:** `.github/workflows/release-please.yml:453`
-**Issue:** The capture step installs `trap emit_capture_outputs EXIT`, but line 487 installs a second `EXIT` trap for worktree cleanup. In Bash, the latter replaces the former. Every path that creates the candidate worktree—including the normal successful capture path—therefore never writes `result_status=pass`, identity fields, or `captured=true` to `GITHUB_OUTPUT`. The following result writer defaults the run to `cannot-check`, and line 609 fails it. A real proposal-only run can never succeed and a known identity mismatch is misclassified as `cannot-check`.
+**File:** `.github/workflows/release-please.yml:92`
 
-**Fix:** Use one cleanup/output trap, or explicitly chain both operations:
+**Issue:** On every schedule trigger `candidate_digest` is empty, so preflight immediately writes `should_run=true` and exits without checking whether a proposal exists. That unconditionally runs `capture-proposal` (line 427); when the normal state has no open release PR, it sets `result_status=blocked` / `proposal_missing` (lines 474-477). The result-writer then exits non-zero for that status (lines 613-618). Consequently the hourly control-recovery workflow remains red whenever there is nothing to release, rather than producing the documented pending observation outcome. The existing recovery test hides this path: `run_preflight/3` injects a nonempty digest by default at `test/scripts/release_trigger_recovery_test.exs:813`.
 
-```bash
-cleanup_capture() {
-  git worktree remove --force "$candidate_root" >/dev/null 2>&1 || true
-  emit_capture_outputs
-}
-trap cleanup_capture EXIT
-```
+**Fix:** Give schedules an explicit idle path. For example, have preflight query for an open release PR and write `should_run=false` when none exists; then have the result writer emit `pending/scheduled_observation_not_elapsed` for that skipped scheduled run. Add an executable test for an empty `CANDIDATE_DIGEST` plus an empty PR list and assert a successful/pending scheduled result.
 
-Install this only after `candidate_root` is initialized (or guard the cleanup for an empty value), and add an integration test that runs the capture script through worktree creation and asserts its GitHub outputs and the emitted artifact are `pass`.
+### CR-02: Scheduled repo-hygiene cannot identify the checked-out branch
 
-### CR-02: The smoke workflow makes normal runs fail because its required artifact is never written
+**File:** `dev/mix/tasks/mailglass.repo.hygiene.ex:160`
 
-**File:** `.github/workflows/post-publish-smoke.yml:217`
-**Issue:** `Upload post-publish resolution` always runs with `if-no-files-found: error`, but `post-publish-resolution.json` is written only in the scheduled, authorized-but-unpublished branch at lines 134–149. A normal protected dispatch, a completed scheduled canary, and even the intentional release-event no-op create no file. The upload step then fails `resolve-completed-target`; all dependent smoke jobs are skipped. This violates both the successful no-op contract and artifact-before-fail recovery behavior.
+**Issue:** `actions/checkout` leaves the scheduled workflow detached at a commit (`.github/workflows/repo-hygiene.yml:22-25`), so `git branch --show-current` is empty. `ci_state/1` passes that empty string to `gh run list --branch` (lines 170-180), which either fails argument validation or returns an unrelated latest run. It therefore reports `cannot-check` or `blocked` instead of finding CI for the actual checked-out SHA. The daily scheduled hygiene control cannot become green in its intended execution environment.
 
-**Fix:** Write one resolution artifact for every trigger/result before any exit, including `pass`, release-event `pending/no-op`, `blocked`, and `cannot-check` cases; then keep the artifact upload required. For example, initialize an atomic result file at the start of the resolver and use a single `EXIT` handler to serialize the final status/reason before the upload step.
+**Fix:** Pass the default branch explicitly from the workflow (for example `REPOSITORY_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}`) and use it when available, or query CI by `--commit "$sha"` and verify that returned run's `headSha` equals `sha`. Add a detached-HEAD integration fixture to the task tests.
 
 ## Warnings
 
-### WR-01: Contract tests can pass while the two workflow failures above remain
+### WR-01: Index gate times out before its documented retries can finish
 
-**File:** `test/scripts/release_trigger_recovery_test.exs:347`
-**Issue:** The test executes only the isolated result-writer script with synthetic `CAPTURE_STATUS` and `CAPTURE_REASON` values. It never executes the capture step, so it cannot detect that line 487 replaces the output trap. Likewise, the smoke contract test at `test/mailglass/publish/post_publish_smoke_contract_test.exs:82` checks text presence but never verifies that a successful resolver path writes the artifact required at line 217. The focused suite passes despite both production paths being broken.
+**File:** `.github/workflows/post-publish-smoke.yml:327`
 
-**Fix:** Add executable workflow-script tests with a fake `gh`/git worktree fixture: assert a successful capture emits all five outputs and yields a `pass` artifact; separately execute resolver success/no-op/blocked branches and assert each produces valid JSON before the upload contract is evaluated.
+**Issue:** `wait-for-index` has an eight-minute job timeout, but it performs three serial polling loops that each permit up to five minutes (`lines 350-385`). A normal propagation delay in the first two packages can make the job hit GitHub's hard timeout before it finishes checking the inbound package, even though each package remains within its own stated allowance.
+
+**Fix:** Poll the three package endpoints concurrently with one shared deadline, or raise the job timeout to cover the serial maximum plus setup overhead (at least 16 minutes).
+
+### WR-02: Stale branches are collected but never affect readiness
+
+**File:** `dev/mix/tasks/mailglass.repo.hygiene.ex:321`
+
+**Issue:** The audit calculates branches older than 30 days, but always returns a passing `:stale_branches` check at lines 323-328. Thus a stale inventory is reported as release-ready and cannot influence the aggregate result, despite this task being the repository hygiene release gate.
+
+**Fix:** Return `:blocked` when `stale` is nonempty (or explicitly rename this to informational inventory and remove it from release-readiness claims). Add tests for both a fresh and an older-than-30-days branch.
 
 ---
 
-_Reviewed: 2026-08-22T15:31:00Z_
+_Reviewed: 2026-08-22T20:49:19Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
