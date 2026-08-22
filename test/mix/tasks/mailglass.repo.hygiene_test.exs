@@ -60,17 +60,17 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     assert Jason.decode!(json)["status"] == "pass"
   end
 
-  test "reports missing branch-protection verifier as cannot-check and aggregate non-success" do
+  test "reports missing branch-protection verifier as cannot-check and aggregate cannot-check" do
     repo = ready_repo!()
 
     result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
 
-    assert result.status == :blocked
-    assert check(result, :branch_protection).status == :unknown
+    assert result.status == :cannot_check
+    assert check(result, :branch_protection).status == :cannot_check
     assert check(result, :branch_protection).message =~ "verifier is missing"
   end
 
-  test "reports a missing git upstream as cannot-check and aggregate non-success" do
+  test "reports a missing git upstream as cannot-check and aggregate cannot-check" do
     repo = git_repo!()
     write_release_workflows!(repo)
 
@@ -83,8 +83,8 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
 
     result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
 
-    assert result.status == :blocked
-    assert check(result, :git_state).status == :unknown
+    assert result.status == :cannot_check
+    assert check(result, :git_state).status == :cannot_check
     assert check(result, :git_state).message =~ "upstream comparison"
   end
 
@@ -97,8 +97,8 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
         with_env("GH_TOKEN", "test-token", fn -> Hygiene.audit(repo) end)
       end)
 
-    assert result.status == :blocked
-    assert check(result, :branch_protection).status == :unknown
+    assert result.status == :cannot_check
+    assert check(result, :branch_protection).status == :cannot_check
     assert check(result, :branch_protection).message =~ "gh"
   end
 
@@ -111,8 +111,8 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
         with_env("GH_TOKEN", nil, fn -> Hygiene.audit(repo) end)
       end)
 
-    assert result.status == :blocked
-    assert check(result, :branch_protection).status == :unknown
+    assert result.status == :cannot_check
+    assert check(result, :branch_protection).status == :cannot_check
     assert check(result, :branch_protection).message =~ "GH_TOKEN"
   end
 
@@ -122,8 +122,8 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
 
     result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
 
-    assert result.status == :blocked
-    assert check(result, :branch_protection).status == :unknown
+    assert result.status == :cannot_check
+    assert check(result, :branch_protection).status == :cannot_check
     assert check(result, :branch_protection).message =~ "could not be verified"
   end
 
@@ -136,6 +136,33 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     assert result.status == :blocked
     assert check(result, :branch_protection).status == :blocked
     assert check(result, :branch_protection).message =~ "differs from expected"
+  end
+
+  test "cannot-check takes precedence over a confirmed policy block" do
+    repo = ready_repo!()
+    File.write!(Path.join(repo, "dirty.txt"), "dirty\n")
+
+    result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
+
+    assert check(result, :git_state).status == :blocked
+    assert check(result, :branch_protection).status == :cannot_check
+    assert result.status == :cannot_check
+  end
+
+  test "renders cannot-check at text and JSON boundaries and exits nonzero" do
+    repo = ready_repo!()
+
+    {text, text_exit} = run_hygiene(repo, ["--check"])
+    {json, json_exit} = run_hygiene(repo, ["--check", "--format", "json"])
+
+    assert text_exit == {:shutdown, 1}
+    assert json_exit == {:shutdown, 1}
+    assert text =~ "Repo hygiene: cannot-check"
+    assert text =~ "cannot-check branch_protection:"
+    assert Jason.decode!(json)["status"] == "cannot-check"
+
+    assert Enum.find(Jason.decode!(json)["checks"], &(&1["name"] == "branch_protection"))["status"] ==
+             "cannot-check"
   end
 
   test "reports clean branch protection as pass with JSON-safe distinct statuses" do
@@ -286,6 +313,15 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     after
       File.cd!(previous)
     end
+  end
+
+  defp run_hygiene(repo, argv) do
+    with_hygiene_environment(repo, fn ->
+      in_repo(repo, fn ->
+        exit = catch_exit(Hygiene.run(argv))
+        {capture_io(fn -> catch_exit(Hygiene.run(argv)) end), exit}
+      end)
+    end)
   end
 
   defp write_release_workflows!(repo) do
