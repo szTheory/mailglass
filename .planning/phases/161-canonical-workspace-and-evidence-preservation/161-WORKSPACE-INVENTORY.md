@@ -2093,3 +2093,19 @@ This handoff records local facts and recovery conditions only. It intentionally 
 | Release verdict | `non-release-clean` |
 
 This block supersedes older captures only for current-state reporting. The earlier Final Reconciliation capture at `e2be2c941300fb0de3194bef6d62e087e96b5722`, including its `behind 0 / ahead 29` result, remains immutable historical evidence. The canonical working tree was clean at capture time, but its unsettled divergence from `origin/main` (including nonzero drift when present) keeps the release verdict honestly `non-release-clean`; upstream settlement remains Phase 162 work.
+
+## Automated Evidence Recapture — 2026-08-22T17:20:19Z
+
+The reusable workspace-evidence auditor found that `REL-0003`'s historical SHA-256
+contains a one-nibble transcription error. The tracked file at the original capture
+commit and at this recapture both hash to the observed value below. The historical
+row remains immutable; this append-only record supersedes only its current-state hash.
+
+| ID | field | historical value | observed value | policy |
+| --- | --- | --- | --- | --- |
+| REL-0003 | sha256 | `3e706de40d0eebb19d3de88d3f1f5f24eeceea9db3c08cb27771efa187c205cf` | `3e706de40d0eebb19d3de88d3f1f5c24eeceea9db3c08cb27771efa187c205cf` | append-only correction; historical row immutable |
+
+Verification source: `shasum -a 256` over the tracked canonical file plus
+`git show 3e7ac266:.planning/publish/mailglass_admin-publish-summary.json | shasum -a 256`.
+Both returned the observed value. No release artifact, ref, stash, worktree, or Git
+object was mutated to produce this correction.
