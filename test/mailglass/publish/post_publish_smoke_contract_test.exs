@@ -111,6 +111,55 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert resolver =~ "path: ${{ runner.temp }}/post-publish-resolution.json"
   end
 
+  test "post-publish resolver paths materialize one bounded resolution before upload" do
+    workflow = File.read!(@workflow_path)
+    classify = workflow_step_script!(workflow, "Classify trigger")
+
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-post-publish-resolution-#{System.unique_integer([:positive])}"
+      )
+
+    on_exit(fn -> File.rm_rf!(root) end)
+    File.mkdir_p!(root)
+
+    for {event_name, expected_status, expected_reason} <- [
+          {"release", "pending", "release_event_noop"},
+          {"schedule", "cannot-check", "resolver_not_started"},
+          {"workflow_dispatch", "cannot-check", "resolver_not_started"}
+        ] do
+      runner_temp = Path.join(root, event_name)
+      output = Path.join(runner_temp, "github-output")
+      File.mkdir_p!(runner_temp)
+      File.write!(output, "")
+
+      assert {_, 0} =
+               System.cmd("bash", ["-c", classify],
+                 env: [
+                   {"EVENT_NAME", event_name},
+                   {"INPUT_TARGET_REF", String.duplicate("a", 40)},
+                   {"RUNNER_TEMP", runner_temp},
+                   {"RUN_ID", "fixture-run"},
+                   {"GITHUB_OUTPUT", output}
+                 ],
+                 stderr_to_stdout: true
+               )
+
+      resolution_path = Path.join(runner_temp, "post-publish-resolution.json")
+      assert File.exists?(resolution_path)
+      assert {:ok, resolution} = resolution_path |> File.read!() |> Jason.decode()
+      assert resolution["status"] == expected_status
+      assert resolution["reason"] == expected_reason
+      assert resolution["event_name"] == event_name
+      assert resolution["run_id"] == "fixture-run"
+      assert resolution["target_ref"] == ""
+      assert resolution["core"] == ""
+      assert resolution["admin"] == ""
+      assert resolution["inbound"] == ""
+    end
+  end
+
   test "policy and every repository-backed proof stay on immutable control and target refs" do
     workflow = File.read!(@workflow_path)
     resolver = extract_job!(workflow, "resolve-completed-target", "cron-guard")
@@ -408,6 +457,16 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     [_before, rest] = String.split(workflow, "\n  #{start_key}:\n", parts: 2)
     [job | _after] = String.split(rest, "\n  #{next_key}:\n", parts: 2)
     job
+  end
+
+  defp workflow_step_script!(workflow, step_name) do
+    [_before, rest] = String.split(workflow, "\n      - name: #{step_name}\n", parts: 2)
+    [_before, script_and_after] = String.split(rest, "        run: |\n", parts: 2)
+    [script | _after] = String.split(script_and_after, "\n      - name:", parts: 2)
+
+    script
+    |> String.split("\n")
+    |> Enum.map_join("\n", &String.replace_prefix(&1, "          ", ""))
   end
 
   defp workflow_dispatch_input_block!(workflow, input) do
