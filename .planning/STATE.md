@@ -4,15 +4,15 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 161
 current_phase_name: canonical-workspace-and-evidence-preservation
-status: verifying
+status: executing
 stopped_at: Completed 161-04-PLAN.md
-last_updated: "2026-08-22T15:59:40.219Z"
+last_updated: "2026-08-22T16:21:26.544Z"
 last_activity: 2026-08-22
 last_activity_desc: Phase 161 execution started
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 4
+  total_plans: 5
   completed_plans: 4
   percent: 25
 ---
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-21)
 ## Current Position
 
 Phase: 161 (canonical-workspace-and-evidence-preservation) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
+Plan: 5 of 5
+Status: Ready to execute
 Last activity: 2026-08-22 — Phase 161 execution started
 
-Progress: [██████████] 100%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
