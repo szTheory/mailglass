@@ -50,7 +50,7 @@ coverage:
 ## Accomplishments
 
 - Appended one timestamped `Canonical Main Recapture` block to the workspace inventory without altering prior evidence.
-- Confirmed the approved task commit is append-only and that captured canonical path, branch, HEAD, upstream, divergence, status, and verdict match fresh local Git output.
+- Confirmed the approved task commit is append-only; its tracer gate compared the captured canonical path, branch, HEAD, upstream, divergence, status, and verdict to fresh local Git output at execution time.
 - Kept the earlier `e2be2c94` / behind `0` / ahead `29` final reconciliation immutable while documenting that only current-state reporting is superseded.
 
 ## Task Commits
