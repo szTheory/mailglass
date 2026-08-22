@@ -2077,3 +2077,19 @@ The immutable seven-commit v2.6/v2.7 semantic subrange remains the separately re
 | PR #222 checks, release-please, repository-hygiene, and scheduled controls | This inventory, `161-PRESERVATION-RECONCILIATION.tsv`, all `preserve/phase-161-*` refs, and `MAINTAINING.md` | Gather fresh protected PR/check/Actions/scheduled-run evidence; a manual control run does not substitute for applicable scheduled proof. |
 
 This handoff records local facts and recovery conditions only. It intentionally does not decide PR, check, tag, Hex, or scheduled-control meaning.
+
+## Canonical Main Recapture — 2026-08-22T16:25:33Z
+
+| Capture timestamp (UTC) | `2026-08-22T16:25:33Z` |
+| Canonical path | `/Users/jon/projects/mailglass` |
+| Branch | `main` |
+| HEAD | `aa0ca353c3d99db5903c9e40cebbde91fc19f84e` |
+| Status command | `git status --porcelain --untracked-files=all` |
+| Porcelain status record count | `0` |
+| Working tree | `clean` |
+| Upstream | `origin/main` |
+| Behind | `0` |
+| Ahead | `36` |
+| Release verdict | `non-release-clean` |
+
+This block supersedes older captures only for current-state reporting. The earlier Final Reconciliation capture at `e2be2c941300fb0de3194bef6d62e087e96b5722`, including its `behind 0 / ahead 29` result, remains immutable historical evidence. The canonical working tree was clean at capture time, but its unsettled divergence from `origin/main` (including nonzero drift when present) keeps the release verdict honestly `non-release-clean`; upstream settlement remains Phase 162 work.
