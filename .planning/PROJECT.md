@@ -82,10 +82,11 @@ expansion or speculative refactoring.
 
 ## Active Requirements: v2.7
 
-Detailed v2.7 requirements will be defined from the approved stewardship scope before roadmap creation.
-The milestone is constrained to recoverability-first, low-controversy maintenance. Product/API/schema/UI
-expansion, dependency churn, speculative architecture, cosmetic busywork, a CI-efficiency overhaul, and a
-release performed only for ceremony are out of scope.
+The 16 committed v2.7 requirements in `.planning/REQUIREMENTS.md` cover workspace integrity, automation and
+release truth, deterministic release-path gates, and repository truth/closeout. The milestone is constrained
+to recoverability-first, low-controversy maintenance. Product/API/schema/UI expansion, dependency churn,
+speculative architecture, cosmetic busywork, a CI-efficiency overhaul, and a release performed only for
+ceremony are out of scope.
 
 ## Completed Milestone: v2.6 Engineering Quality Ratchet
 

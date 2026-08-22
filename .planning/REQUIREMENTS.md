@@ -54,31 +54,31 @@ No future capabilities are promoted by this milestone. New needs discovered duri
 
 ## Traceability
 
-Roadmap phase mapping will be populated during roadmap creation.
+Every v2.7 requirement is assigned to exactly one planned phase.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| WSPC-01 | TBD | Pending |
-| WSPC-02 | TBD | Pending |
-| WSPC-03 | TBD | Pending |
-| WSPC-04 | TBD | Pending |
-| AUTO-01 | TBD | Pending |
-| AUTO-02 | TBD | Pending |
-| AUTO-03 | TBD | Pending |
-| AUTO-04 | TBD | Pending |
-| AUTO-05 | TBD | Pending |
-| DTRM-01 | TBD | Pending |
-| DTRM-02 | TBD | Pending |
-| DTRM-03 | TBD | Pending |
-| DTRM-04 | TBD | Pending |
-| TRTH-01 | TBD | Pending |
-| TRTH-02 | TBD | Pending |
-| TRTH-03 | TBD | Pending |
+| WSPC-01 | Phase 161 | Pending |
+| WSPC-02 | Phase 161 | Pending |
+| WSPC-03 | Phase 161 | Pending |
+| WSPC-04 | Phase 161 | Pending |
+| AUTO-01 | Phase 162 | Pending |
+| AUTO-02 | Phase 162 | Pending |
+| AUTO-03 | Phase 162 | Pending |
+| AUTO-04 | Phase 162 | Pending |
+| AUTO-05 | Phase 162 | Pending |
+| DTRM-01 | Phase 163 | Pending |
+| DTRM-02 | Phase 163 | Pending |
+| DTRM-03 | Phase 163 | Pending |
+| DTRM-04 | Phase 163 | Pending |
+| TRTH-01 | Phase 164 | Pending |
+| TRTH-02 | Phase 164 | Pending |
+| TRTH-03 | Phase 164 | Pending |
 
 **Coverage:**
 - v2.7 requirements: 16 total
-- Mapped to phases: 0
-- Unmapped: 16 — pending roadmap creation
+- Mapped to phases: 16
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-08-21*
