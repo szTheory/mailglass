@@ -15,7 +15,7 @@ defmodule Mailglass.Scripts.Phase162ReleaseReconciliationTest do
     assert ledger =~ "auto-merge: null"
     assert ledger =~ "protected-merge"
     assert ledger =~ "exact candidate-digest protected dispatch"
-    assert ledger =~ "authorized" <> " plus `publication: not_started`"
+    assert ledger =~ "`authorized` plus `publication: not_started`"
   end
 
   test "unavailable GitHub acquisition is explicitly cannot-check and names a recovery command" do
