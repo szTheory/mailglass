@@ -57,8 +57,8 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
 
         String.replace(
           source,
-          "\n## Final Reconciliation",
-          "\n#{duplicate}\n\n## Final Reconciliation"
+          "\n## Expansion Command Evidence",
+          "\n#{duplicate}\n\n## Expansion Command Evidence"
         )
       end)
 
@@ -89,6 +89,21 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
       end)
 
     assert_failed(dishonest, fixture.tsv, "non-release-clean")
+  end
+
+  test "an append-only recapture binds a corrected live hash to the immutable historical value" do
+    fixture = fixture!()
+
+    without_recapture =
+      mutate_copy!(fixture.inventory, fn source ->
+        source
+        |> String.split("\n## Automated Evidence Recapture", parts: 2)
+        |> hd()
+      end)
+
+    assert {output, status} = run(["live", fixture.repo, without_recapture, fixture.tsv])
+    assert status != 0
+    assert output =~ "REL-0001 release evidence hash differs"
   end
 
   test "live ref drift and a mid-assessment mutation both abort" do
@@ -152,7 +167,8 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
     git!(repo, ["config", "user.email", "test@example.test"])
     git!(repo, ["config", "user.name", "Mailglass Test"])
     File.write!(Path.join(repo, "tracked.txt"), "base\n")
-    git!(repo, ["add", "tracked.txt"])
+    File.write!(Path.join(repo, "release-proof.txt"), "durable release proof\n")
+    git!(repo, ["add", "tracked.txt", "release-proof.txt"])
     git!(repo, ["commit", "-m", "base"])
     base = git_output!(repo, ["rev-parse", "HEAD"])
 
@@ -168,18 +184,19 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
     git!(repo, ["branch", "preserve/fixture-range", base])
     git!(repo, ["tag", "-a", "v-fixture", base, "-m", "fixture tag"])
     tag_oid = git_output!(repo, ["rev-parse", "refs/tags/v-fixture"])
+    release_hash = sha256!(Path.join(repo, "release-proof.txt"))
 
     inventory = Path.join(root, "INVENTORY.md")
     tsv = Path.join(root, "RECONCILIATION.tsv")
 
-    File.write!(inventory, inventory(repo, head, base, tag_oid))
+    File.write!(inventory, inventory(repo, head, base, tag_oid, release_hash))
     File.write!(tsv, reconciliation(base))
     on_exit(fn -> File.rm_rf!(root) end)
 
     %{repo: repo, inventory: inventory, tsv: tsv}
   end
 
-  defp inventory(repo, head, base, tag_oid) do
+  defp inventory(repo, head, base, tag_oid, release_hash) do
     """
     # Workspace Evidence Fixture
 
@@ -193,8 +210,12 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
     | REF-0001 | archive ref | `archive/source` | `#{base}` | source identity retained independently | source commit remains reachable | EVID-REF-GRAPH | archive | named recovery ref | retain | captured |
     | REF-0002 | milestone tag | `v-fixture` | `#{tag_oid}` | annotated tag identity retained | tag object remains reachable | EVID-REF-TAG | retain | named tag object | retain | captured |
     | RANGE-0001 | archive range | `main...archive/source` | fixed range | range identity retained independently | both endpoints resolve | EVID-RANGE-GRAPH | archive | named recovery ref | retain | captured |
-    | NONE-RELEASE | release proof | `NONE` | explicit zero sentinel | no release artifacts selected | fresh empty release enumeration | EVID-ZERO-RELEASE | retain | no preservation required | recapture if non-empty | captured |
+    | REL-0001 | release proof | `release-proof.txt` | tracked SHA-256 `#{String.duplicate("f", 64)}` | durable fixture proof | tracked in canonical history | EVID-RELEASE-CONTENT | retain | tracked evidence | retain | captured |
     | NONE-OBJECT | unreachable commit | `NONE` | explicit zero sentinel | no unreachable commits selected | fresh empty fsck enumeration | EVID-ZERO-OBJECT | retain | no preservation required | recapture if non-empty | captured |
+
+    ## Expansion Command Evidence
+
+    The identity table above is the immutable pre-mutation capture.
 
     ## Final Reconciliation
 
@@ -202,6 +223,12 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
     force-push, prune, garbage collection, stash consumption, ref overwrite, or canonical
     history rewrite occurred. Pre-mutation evidence remains immutable and final state is
     appended separately. A clean tree remains **non-release-clean** while divergence exists.
+
+    ## Automated Evidence Recapture — fixture
+
+    | ID | field | historical value | observed value | policy |
+    | --- | --- | --- | --- | --- |
+    | REL-0001 | sha256 | `#{String.duplicate("f", 64)}` | `#{release_hash}` | append-only correction; historical row immutable |
     """
   end
 
@@ -256,6 +283,11 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
     path = Path.join(System.tmp_dir!(), "#{prefix}-#{System.unique_integer([:positive])}")
     File.mkdir_p!(path)
     path
+  end
+
+  defp sha256!(path) do
+    assert {output, 0} = System.cmd("shasum", ["-a", "256", path], stderr_to_stdout: true)
+    output |> String.split() |> hd()
   end
 
   defp wait_for!(path, attempts \\ 100)

@@ -170,6 +170,23 @@ grep -Eiq '(existing ref|preservation ref).*(moved|mutated|overwrit|force)|ref o
 grep -Eiq '(immutable|append-only|appended separately)' "$inventory" || fail "immutable evidence policy is missing"
 grep -Fq 'non-release-clean' "$inventory" || fail "release verdict separation is missing"
 
+awk -F '|' '
+  function trim(value) {
+    sub(/^[[:space:]]+/, "", value)
+    sub(/[[:space:]]+$/, "", value)
+    gsub(/`/, "", value)
+    return value
+  }
+  /^## Automated Evidence Recapture/ { in_recapture = 1; next }
+  in_recapture && /^## / { in_recapture = 0 }
+  in_recapture && /^\|[[:space:]]*(REL-[0-9]+)/ {
+    id = trim($2); field = trim($3); historical = trim($4); observed = trim($5); policy = tolower(trim($6))
+    if (field != "sha256" || historical !~ /^[0-9a-f]{64}$/ || observed !~ /^[0-9a-f]{64}$/ || policy !~ /(immutable|append-only)/) exit 1
+    count[id]++
+  }
+  END { for (id in count) if (count[id] != 1) exit 1 }
+' "$inventory" || fail "automated evidence recapture is malformed or duplicates an identity"
+
 printf 'workspace evidence static contract: PASS (%s identities, %s preservation rows)\n' \
   "$(wc -l < "$rows" | tr -d ' ')" "$(tail -n +2 "$tsv" | wc -l | tr -d ' ')"
 
@@ -253,6 +270,34 @@ done < <(awk -F '\t' '$1 ~ /^RANGE-/ { print }' "$rows")
 while IFS=$'\t' read -r id _category identity observed _rest; do
   path=$(code_value "$identity")
   expected_hash=$(printf '%s\n' "$observed" | grep -Eo '[0-9a-f]{64}' | head -1)
+  override=$(awk -F '|' -v wanted="$id" '
+    function trim(value) {
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      gsub(/`/, "", value)
+      return value
+    }
+    /^## Automated Evidence Recapture/ { in_recapture = 1; next }
+    in_recapture && /^## / { in_recapture = 0 }
+    in_recapture && trim($2) == wanted && trim($3) == "sha256" { value = trim($5) }
+    END { print value }
+  ' "$inventory")
+  if [ -n "$override" ]; then
+    historical=$(awk -F '|' -v wanted="$id" '
+      function trim(value) {
+        sub(/^[[:space:]]+/, "", value)
+        sub(/[[:space:]]+$/, "", value)
+        gsub(/`/, "", value)
+        return value
+      }
+      /^## Automated Evidence Recapture/ { in_recapture = 1; next }
+      in_recapture && /^## / { in_recapture = 0 }
+      in_recapture && trim($2) == wanted && trim($3) == "sha256" { value = trim($4) }
+      END { print value }
+    ' "$inventory")
+    [ "$historical" = "$expected_hash" ] || fail "$id recapture does not bind the historical hash"
+    expected_hash=$override
+  fi
   [ -f "$repo/$path" ] || fail "$id release evidence is missing: $path"
   actual_hash=$(shasum -a 256 "$repo/$path" | awk '{ print $1 }')
   [ "$actual_hash" = "$expected_hash" ] || fail "$id release evidence hash differs: $path"
