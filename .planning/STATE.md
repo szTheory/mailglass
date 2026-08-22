@@ -5,15 +5,15 @@ milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 161
 current_phase_name: canonical-workspace-and-evidence-preservation
 status: executing
-stopped_at: Completed 161-02-PLAN.md
-last_updated: "2026-08-22T15:47:19.449Z"
+stopped_at: Completed 161-03-PLAN.md
+last_updated: "2026-08-22T16:12:00Z"
 last_activity: 2026-08-22
 last_activity_desc: Phase 161 execution started
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -29,25 +29,25 @@ See: .planning/PROJECT.md (updated 2026-08-21)
 ## Current Position
 
 Phase: 161 (canonical-workspace-and-evidence-preservation) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-08-22 — Phase 161 execution started
 
-Progress: [█████░░░░░] 50%
+Progress: [███████░░░] 75%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: —
+- Total plans completed: 3
+- Average duration: 16m
+- Total execution time: 48m
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 161. Canonical Workspace and Evidence Preservation | 0 | — | — |
+| 161. Canonical Workspace and Evidence Preservation | 3 | 48m | 16m |
 | 162. Protected Release and Scheduled-Control Recovery | 0 | — | — |
 | 163. Deterministic Release-Path Timeout Repairs | 0 | — | — |
 | 164. Repository Truth Reconciliation and Closeout | 0 | — | — |
@@ -57,6 +57,7 @@ Progress: [█████░░░░░] 50%
 |------|----------|-------|-------|
 | Phase 161 P01 | 12m | 2 tasks | 2 files |
 | Phase 161 P02 | 24m | 2 tasks | 2 files |
+| Phase 161 P03 | 12m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Progress: [█████░░░░░] 50%
 - [Phase ?]: All dirty, detached, stash, and unreachable evidence remains retained pending Plan 02 assessment; no cleanup is eligible.
 - [Phase ?]: All dirty, stash, detached, release, and unreachable evidence remains preserved unless later content- and graph-aware review proves a safe action.
 - [Phase ?]: Phase 162 owns unresolved remote and release interpretation; no assessment row authorizes cleanup merely from age, absence from main, detached state, or fsck output.
+- [Phase 161]: All 12 archive identities have independent named preservation refs; no eligible remove row exists.
+- [Phase 161]: WT-03 dirty publish-summary evidence remains retained; Phase 162 owns release interpretation.
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-22T15:47:19.441Z
-Stopped at: Completed 161-02-PLAN.md
+Last session: 2026-08-22T16:12:00Z
+Stopped at: Completed 161-03-PLAN.md
 Resume file: None

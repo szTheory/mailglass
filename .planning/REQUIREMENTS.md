@@ -61,7 +61,7 @@ Every v2.7 requirement is assigned to exactly one planned phase.
 | WSPC-01 | Phase 161 | Complete |
 | WSPC-02 | Phase 161 | Complete |
 | WSPC-03 | Phase 161 | Complete |
-| WSPC-04 | Phase 161 | Pending |
+| WSPC-04 | Phase 161 | Complete |
 | AUTO-01 | Phase 162 | Pending |
 | AUTO-02 | Phase 162 | Pending |
 | AUTO-03 | Phase 162 | Pending |

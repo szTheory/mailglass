@@ -85,7 +85,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 161-03-PLAN.md — Preserve unique or uncertain work on named refs/commits or documented handoffs.
+- [x] 161-03-PLAN.md — Preserve unique or uncertain work on named refs/commits or documented handoffs.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -139,7 +139,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 161. Canonical Workspace and Evidence Preservation | 2/4 | In Progress|  |
+| 161. Canonical Workspace and Evidence Preservation | 3/4 | In Progress|  |
 | 162. Protected Release and Scheduled-Control Recovery | 0/TBD | Not started | - |
 | 163. Deterministic Release-Path Timeout Repairs | 0/TBD | Not started | - |
 | 164. Repository Truth Reconciliation and Closeout | 0/TBD | Not started | - |
