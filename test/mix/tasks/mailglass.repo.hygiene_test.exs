@@ -161,9 +161,22 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     assert text =~ "Repo hygiene: cannot-check"
     assert text =~ "cannot-check branch_protection:"
     assert Jason.decode!(json)["status"] == "cannot-check"
+    assert Jason.decode!(json)["reason"] =~ "verifier is missing"
 
     assert Enum.find(Jason.decode!(json)["checks"], &(&1["name"] == "branch_protection"))["status"] ==
              "cannot-check"
+  end
+
+  test "workflow summary reads aggregate result and checks from the audit JSON artifact" do
+    workflow = File.read!(Path.expand("../../../.github/workflows/repo-hygiene.yml", __DIR__))
+
+    assert workflow =~ "$RUNNER_TEMP/repo-hygiene.json"
+    assert workflow =~ "jq -r '.status' \"$RUNNER_TEMP/repo-hygiene.json\""
+    assert workflow =~ "jq -r '.reason' \"$RUNNER_TEMP/repo-hygiene.json\""
+    assert workflow =~ "jq -r '.checks[] | \"- \\(.status) `\\(.name)`: \\(.message)\"'"
+    assert workflow =~ "if-no-files-found: error"
+    assert workflow =~ "if: always()"
+    refute workflow =~ "steps.hygiene.outcome"
   end
 
   test "reports clean branch protection as pass with JSON-safe distinct statuses" do

@@ -51,6 +51,10 @@ jobs:
             echo "## repo hygiene"
             echo
             if [ -f "$RUNNER_TEMP/repo-hygiene.json" ]; then
+              status="$(jq -r '.status' "$RUNNER_TEMP/repo-hygiene.json")"
+              reason="$(jq -r '.reason' "$RUNNER_TEMP/repo-hygiene.json")"
+              echo "- **Status:** \`$status\`"
+              echo "- **Reason:** $reason"
               jq -r '.checks[] | "- \(.status) `\(.name)`: \(.message)"' "$RUNNER_TEMP/repo-hygiene.json"
             else
               echo "Repo hygiene did not produce an artifact."

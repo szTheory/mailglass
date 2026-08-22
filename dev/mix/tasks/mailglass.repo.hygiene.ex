@@ -60,6 +60,7 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
 
     %{
       status: status(checks),
+      reason: reason(checks),
       generated_at: DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601(),
       repo: repo,
       checks: checks
@@ -398,6 +399,18 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
       Enum.any?(checks, &(&1.status == :cannot_check)) -> :cannot_check
       Enum.any?(checks, &(&1.status == :blocked)) -> :blocked
       true -> :pass
+    end
+  end
+
+  defp reason(checks) do
+    case status(checks) do
+      :pass ->
+        "All repository hygiene checks passed."
+
+      aggregate_status ->
+        checks
+        |> Enum.find(&(&1.status == aggregate_status))
+        |> Map.fetch!(:message)
     end
   end
 
