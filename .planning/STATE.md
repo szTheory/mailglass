@@ -5,15 +5,15 @@ milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 162
 current_phase_name: Protected Release and Scheduled-Control Recovery
 status: executing
-stopped_at: Phase 162 context gathered (assumptions mode)
-last_updated: "2026-08-22T18:40:28.303Z"
+stopped_at: Completed 162-01-PLAN.md
+last_updated: "2026-08-22T18:49:50.886Z"
 last_activity: 2026-08-22
-last_activity_desc: Phase 161 complete, transitioned to Phase 162
+last_activity_desc: Phase 162 execution started
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 10
-  completed_plans: 5
+  completed_plans: 6
   percent: 25
 ---
 
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-08-22)
 
 ## Current Position
 
-Phase: 162 — Protected Release and Scheduled-Control Recovery
-Plan: Not started
+Phase: 162 (Protected Release and Scheduled-Control Recovery) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-08-22 — Phase 161 complete, transitioned to Phase 162
+Last activity: 2026-08-22 — Phase 162 execution started
 
-Progress: [██████████] 100%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [██████████] 100%
 | Phase 161 P03 | 12m | 2 tasks | 3 files |
 | Phase 161 P04 | 20m | 2 tasks | 2 files |
 | Phase 161 P05 | 4m | 1 tasks | 2 files |
+| Phase 162-protected-release-and-scheduled-control-recovery P01 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,8 @@ Progress: [██████████] 100%
 - [Phase 161]: All 12 archive identities have independent named preservation refs; the verified cleanup queue had no eligible `remove` row.
 - [Phase 161]: WT-03 dirty publish-summary evidence remains retained; Phase 162 owns release interpretation.
 - [Phase 161]: Workspace/evidence verification is automated through the live Git auditor and disposable-repository CI contracts; 15/15 UAT checks require no human review.
+- [Phase ?]: PR #222 remains retained only for a future exact candidate-digest protected dispatch because its fresh head SHA differs from the ledger proposal SHA.
+- [Phase ?]: Authorized plus publication:not_started is blocked evidence, never merge, tag, or publish authority.
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-22T17:49:22.650Z
-Stopped at: Phase 162 context gathered (assumptions mode)
-Resume file: .planning/phases/162-protected-release-and-scheduled-control-recovery/162-CONTEXT.md
+Last session: 2026-08-22T18:49:50.877Z
+Stopped at: Completed 162-01-PLAN.md
+Resume file: None
