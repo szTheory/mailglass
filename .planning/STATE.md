@@ -4,17 +4,17 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 162
 current_phase_name: Protected Release and Scheduled-Control Recovery
-status: executing
-stopped_at: Completed 162-04-PLAN.md
-last_updated: "2026-08-22T19:11:28.790Z"
+status: verifying
+stopped_at: Completed 162-05-PLAN.md
+last_updated: "2026-08-22T19:26:47.073Z"
 last_activity: 2026-08-22
 last_activity_desc: Phase 162 execution started
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 10
-  completed_plans: 9
-  percent: 25
+  completed_plans: 10
+  percent: 50
 ---
 
 # Project State
@@ -30,10 +30,10 @@ See: .planning/PROJECT.md (updated 2026-08-22)
 
 Phase: 162 (Protected Release and Scheduled-Control Recovery) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-08-22 — Phase 162 execution started
 
-Progress: [█████████░] 90%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [█████████░] 90%
 | Phase 162-protected-release-and-scheduled-control-recovery P02 | 9m | 1 tasks | 2 files |
 | Phase 162-protected-release-and-scheduled-control-recovery P03 | 4m | 2 tasks | 3 files |
 | Phase 162 P04 | 4m | 1 tasks | 2 files |
+| Phase 162 P05 | 45min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,8 @@ Progress: [█████████░] 90%
 - [Phase ?]: Repository hygiene uses cannot-check over blocked over pass; unavailable evidence never becomes a complete policy verdict.
 - [Phase ?]: Repository-hygiene Actions summary and artifact are rendered from the Mix task JSON result map.
 - [Phase ?]: Scheduled authorized plus publication:not_started is blocked evidence, never a fallback target or release authority.
+- [Phase ?]: PR #222 remains retained only for the existing exact candidate-digest protected dispatch; current distinct identities prohibit ordinary release action.
+- [Phase ?]: Post-change scheduled observations remain pending with named cron conditions; manual dispatch is never schedule proof.
 
 ### Pending Todos
 
@@ -102,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-22T19:11:28.784Z
-Stopped at: Completed 162-04-PLAN.md
+Last session: 2026-08-22T19:26:47.067Z
+Stopped at: Completed 162-05-PLAN.md
 Resume file: None
