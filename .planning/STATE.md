@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 162
-current_phase_name: Protected Release and Scheduled-Control Recovery
+current_phase_name: protected-release-and-scheduled-control-recovery
 status: executing
-stopped_at: Phase 162 gap-closure planning complete — 2 plans ready
-last_updated: "2026-08-22T20:23:38.525Z"
+stopped_at: Completed 162-06-PLAN.md
+last_updated: "2026-08-22T20:33:16.304Z"
 last_activity: 2026-08-22
-last_activity_desc: Phase 162 gap-closure planning complete — 2 plans ready
+last_activity_desc: Phase 162 execution started
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 1
   total_plans: 12
-  completed_plans: 10
-  percent: 50
+  completed_plans: 11
+  percent: 25
 ---
 
 # Project State
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-22)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 162 — Protected Release and Scheduled-Control Recovery
+**Current focus:** Phase 162 — protected-release-and-scheduled-control-recovery
 
 ## Current Position
 
-Phase: 162 (Protected Release and Scheduled-Control Recovery) — EXECUTING
-Plan: 5 of 7
+Phase: 162 (protected-release-and-scheduled-control-recovery) — EXECUTING
+Plan: 2 of 7
 Status: Ready to execute
-Last activity: 2026-08-22 — Phase 162 gap-closure planning complete
+Last activity: 2026-08-22 — Phase 162 execution started
 
-Progress: [███████░░░] 71%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [███████░░░] 71%
 | Phase 162-protected-release-and-scheduled-control-recovery P03 | 4m | 2 tasks | 3 files |
 | Phase 162 P04 | 4m | 1 tasks | 2 files |
 | Phase 162 P05 | 45min | 2 tasks | 3 files |
+| Phase 162-protected-release-and-scheduled-control-recovery P06 | 8m | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,8 @@ Progress: [███████░░░] 71%
 - [Phase ?]: Scheduled authorized plus publication:not_started is blocked evidence, never a fallback target or release authority.
 - [Phase ?]: PR #222 remains retained only for the existing exact candidate-digest protected dispatch; current distinct identities prohibit ordinary release action.
 - [Phase ?]: Post-change scheduled observations remain pending with named cron conditions; manual dispatch is never schedule proof.
+- [Phase ?]: Proposal capture owns one status-preserving EXIT handler so cleanup cannot replace output publication.
+- [Phase ?]: Only exact proposal identity equality passes; identity mismatch remains blocked and retains observed fields.
 
 ### Pending Todos
 
@@ -105,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-22T19:26:47.067Z
-Stopped at: Completed 162-05-PLAN.md
+Last session: 2026-08-22T20:33:16.288Z
+Stopped at: Completed 162-06-PLAN.md
 Resume file: None
