@@ -9,7 +9,7 @@
 
 - [x] **WSPC-01**: A maintainer can inspect a recorded inventory of every linked worktree, stash, relevant local/remote branch, divergent commit range, and release leftover before any cleanup mutates it.
 - [x] **WSPC-02**: A maintainer has one documented canonical `main` checkout whose upstream and ahead/behind state are explained and whose working tree contains no unexplained changes.
-- [ ] **WSPC-03**: Every inventoried workspace or Git object has an explicit retain, handoff, merge, archive, or remove disposition backed by unique-work and reachability evidence.
+- [x] **WSPC-03**: Every inventoried workspace or Git object has an explicit retain, handoff, merge, archive, or remove disposition backed by unique-work and reachability evidence.
 - [ ] **WSPC-04**: Approved cleanup uses normal Git-managed operations and preserves any unique or uncertain work on a recoverable ref or documented handoff before removal.
 
 ### Automation and Release Truth
@@ -60,7 +60,7 @@ Every v2.7 requirement is assigned to exactly one planned phase.
 |-------------|-------|--------|
 | WSPC-01 | Phase 161 | Complete |
 | WSPC-02 | Phase 161 | Complete |
-| WSPC-03 | Phase 161 | Pending |
+| WSPC-03 | Phase 161 | Complete |
 | WSPC-04 | Phase 161 | Pending |
 | AUTO-01 | Phase 162 | Pending |
 | AUTO-02 | Phase 162 | Pending |

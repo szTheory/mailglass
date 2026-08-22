@@ -5,15 +5,15 @@ milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 161
 current_phase_name: canonical-workspace-and-evidence-preservation
 status: executing
-stopped_at: Completed 161-01-PLAN.md
-last_updated: "2026-08-22T15:40:58.929Z"
+stopped_at: Completed 161-02-PLAN.md
+last_updated: "2026-08-22T15:47:19.449Z"
 last_activity: 2026-08-22
 last_activity_desc: Phase 161 execution started
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-21)
 ## Current Position
 
 Phase: 161 (canonical-workspace-and-evidence-preservation) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-08-22 — Phase 161 execution started
 
-Progress: [███░░░░░░░] 25%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [███░░░░░░░] 25%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 161 P01 | 12m | 2 tasks | 2 files |
+| Phase 161 P02 | 24m | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Progress: [███░░░░░░░] 25%
 - A manual dispatch does not substitute for applicable observed scheduled-run evidence; unavailable automation must report an honest blocked or cannot-check outcome.
 - [Phase ?]: Canonical main remains non-release-clean until Phase 162 settles upstream drift; the seven-commit v2.6/v2.7 semantic range is immutable evidence.
 - [Phase ?]: All dirty, detached, stash, and unreachable evidence remains retained pending Plan 02 assessment; no cleanup is eligible.
+- [Phase ?]: All dirty, stash, detached, release, and unreachable evidence remains preserved unless later content- and graph-aware review proves a safe action.
+- [Phase ?]: Phase 162 owns unresolved remote and release interpretation; no assessment row authorizes cleanup merely from age, absence from main, detached state, or fsck output.
 
 ### Pending Todos
 
@@ -84,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-22T15:40:58.921Z
-Stopped at: Completed 161-01-PLAN.md
+Last session: 2026-08-22T15:47:19.441Z
+Stopped at: Completed 161-02-PLAN.md
 Resume file: None

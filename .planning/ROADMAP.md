@@ -72,7 +72,7 @@
   3. Every inventoried workspace or Git object has a recorded retain, handoff, merge, archive, or remove outcome backed by unique-work and reachability evidence.
   4. Any approved cleanup preserves unique or uncertain work on a recoverable ref or documented handoff before normal Git-managed removal.
 
-**Plans**: 1/4 plans executed
+**Plans**: 2/4 plans executed
 
 Plans:
 **Wave 1**
@@ -81,7 +81,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 161-02-PLAN.md — Assess content and reachability, then disposition every inventoried identity.
+- [x] 161-02-PLAN.md — Assess content and reachability, then disposition every inventoried identity.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -139,7 +139,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 161. Canonical Workspace and Evidence Preservation | 1/4 | In Progress|  |
+| 161. Canonical Workspace and Evidence Preservation | 2/4 | In Progress|  |
 | 162. Protected Release and Scheduled-Control Recovery | 0/TBD | Not started | - |
 | 163. Deterministic Release-Path Timeout Repairs | 0/TBD | Not started | - |
 | 164. Repository Truth Reconciliation and Closeout | 0/TBD | Not started | - |
