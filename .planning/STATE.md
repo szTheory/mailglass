@@ -5,15 +5,15 @@ milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 162
 current_phase_name: Protected Release and Scheduled-Control Recovery
 status: executing
-stopped_at: Completed 162-01-PLAN.md
-last_updated: "2026-08-22T18:49:50.886Z"
+stopped_at: Completed 162-02-PLAN.md
+last_updated: "2026-08-22T19:00:09.636Z"
 last_activity: 2026-08-22
 last_activity_desc: Phase 162 execution started
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 10
-  completed_plans: 6
+  completed_plans: 7
   percent: 25
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-22)
 ## Current Position
 
 Phase: 162 (Protected Release and Scheduled-Control Recovery) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-08-22 — Phase 162 execution started
 
-Progress: [██████░░░░] 60%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [██████░░░░] 60%
 | Phase 161 P04 | 20m | 2 tasks | 2 files |
 | Phase 161 P05 | 4m | 1 tasks | 2 files |
 | Phase 162-protected-release-and-scheduled-control-recovery P01 | 5min | 2 tasks | 3 files |
+| Phase 162-protected-release-and-scheduled-control-recovery P02 | 9m | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,8 @@ Progress: [██████░░░░] 60%
 - [Phase 161]: Workspace/evidence verification is automated through the live Git auditor and disposable-repository CI contracts; 15/15 UAT checks require no human review.
 - [Phase ?]: PR #222 remains retained only for a future exact candidate-digest protected dispatch because its fresh head SHA differs from the ledger proposal SHA.
 - [Phase ?]: Authorized plus publication:not_started is blocked evidence, never merge, tag, or publish authority.
+- [Phase ?]: Proposal control JSON is written before non-pass exits and is the sole source for its summary and artifact.
+- [Phase ?]: Ordinary release-please entries remain proposal-only; exact candidate-digest dispatch remains the sole merge boundary.
 
 ### Pending Todos
 
@@ -94,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-22T18:49:50.877Z
-Stopped at: Completed 162-01-PLAN.md
+Last session: 2026-08-22T19:00:09.631Z
+Stopped at: Completed 162-02-PLAN.md
 Resume file: None
