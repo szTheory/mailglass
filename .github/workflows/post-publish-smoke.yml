@@ -54,17 +54,36 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_TARGET_REF: ${{ github.event.inputs.target_ref }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
+
+          write_resolution() {
+            local status="$1" reason="$2" lifecycle="$3" ledger_status="$4" publication_status="$5" target_ref="$6" core="$7" admin="$8" inbound="$9"
+            local resolution_path="$RUNNER_TEMP/post-publish-resolution.json"
+            local temporary_path
+            temporary_path=$(mktemp "$RUNNER_TEMP/post-publish-resolution.XXXXXX")
+
+            printf '{"status":"%s","reason":"%s","event_name":"%s","run_id":"%s","lifecycle":"%s","ledger_status":"%s","publication_status":"%s","target_ref":"%s","core":"%s","admin":"%s","inbound":"%s"}\n' \
+              "$status" "$reason" "$EVENT_NAME" "$RUN_ID" "$lifecycle" "$ledger_status" "$publication_status" "$target_ref" "$core" "$admin" "$inbound" \
+              > "$temporary_path"
+            mv "$temporary_path" "$resolution_path"
+          }
+
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            [[ "$INPUT_TARGET_REF" =~ ^[0-9a-f]{40}$ ]]
+            if ! [[ "$INPUT_TARGET_REF" =~ ^[0-9a-f]{40}$ ]]; then
+              write_resolution "cannot-check" "invalid_protected_target_ref" "invalid" "" "" "" "" "" ""
+              exit 1
+            fi
           fi
           case "$EVENT_NAME" in
             release)
+              write_resolution "pending" "release_event_noop" "not_applicable" "" "" "" "" "" ""
               printf 'resolve=false\n' >> "$GITHUB_OUTPUT"
               echo "Candidate release event is intentionally a no-op; protected dispatch starts exact proof after publication."
               ;;
             schedule|workflow_dispatch)
+              write_resolution "cannot-check" "resolver_not_started" "pending" "" "" "" "" "" ""
               printf 'resolve=true\n' >> "$GITHUB_OUTPUT"
               ;;
             *)
@@ -104,6 +123,7 @@ jobs:
           INPUT_ADMIN: ${{ github.event.inputs.admin_version }}
           INPUT_INBOUND: ${{ github.event.inputs.inbound_version }}
           INPUT_TARGET_REF: ${{ github.event.inputs.target_ref }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
           command="authorized-versions"
@@ -113,12 +133,20 @@ jobs:
           target_repo=.
           resolved=$(mktemp)
           resolution_path="$RUNNER_TEMP/post-publish-resolution.json"
+          resolution_finalized=false
 
-          write_scheduled_blocked_resolution() {
-            printf '{"status":"blocked","reason":"scheduled_target_not_published","event_name":"%s","run_id":"%s","ledger_status":"%s","publication_status":"%s","target_ref":"%s","core":"%s","admin":"%s","inbound":"%s"}\n' \
-              "$EVENT_NAME" "$RUN_ID" "$ledger_status" "$publication_status" "$target_ref" "$core" "$admin" "$inbound" \
-              > "$resolution_path"
+          write_resolution() {
+            local status="$1" reason="$2" lifecycle="$3" ledger_status="$4" publication_status="$5" target_ref="$6" core="$7" admin="$8" inbound="$9"
+            local temporary_path
+            temporary_path=$(mktemp "$RUNNER_TEMP/post-publish-resolution.XXXXXX")
+
+            printf '{"status":"%s","reason":"%s","event_name":"%s","run_id":"%s","lifecycle":"%s","ledger_status":"%s","publication_status":"%s","target_ref":"%s","core":"%s","admin":"%s","inbound":"%s"}\n' \
+              "$status" "$reason" "$EVENT_NAME" "$RUN_ID" "$lifecycle" "$ledger_status" "$publication_status" "$target_ref" "$core" "$admin" "$inbound" \
+              > "$temporary_path"
+            mv "$temporary_path" "$resolution_path"
           }
+
+          trap 'exit_status=$?; trap - EXIT; if [ "$resolution_finalized" != true ]; then write_resolution "cannot-check" "resolver_failed" "error" "" "" "" "" "" ""; fi; exit "$exit_status"' EXIT
 
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             target=immutable-target/.planning/release-target.json
@@ -144,7 +172,8 @@ jobs:
                   admin=$(awk -F= '$1 == "admin" {print $2}' "$authorized_resolved")
                   inbound=$(awk -F= '$1 == "inbound" {print $2}' "$authorized_resolved")
                   target_ref=""
-                  write_scheduled_blocked_resolution
+                  write_resolution "blocked" "scheduled_target_not_published" "authorized" "$ledger_status" "$publication_status" "$target_ref" "$core" "$admin" "$inbound"
+                  resolution_finalized=true
                   echo "Scheduled target is authorized but unpublished; wrote blocked resolution evidence." >&2
                   exit 1
                 fi
@@ -201,6 +230,10 @@ jobs:
             --core "$core" \
             --admin "$admin" \
             --inbound "$inbound"
+          lifecycle="completed"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then lifecycle="$control_status"; fi
+          write_resolution "pass" "exact_target_verified" "$lifecycle" "$lifecycle" "published" "$target_ref" "$core" "$admin" "$inbound"
+          resolution_finalized=true
           printf 'completed=%s\nauthorized=%s\ncore=%s\nadmin=%s\ninbound=%s\ntarget_ref=%s\n' "$completed" "$authorized" "$core" "$admin" "$inbound" "$target_ref" >> "$GITHUB_OUTPUT"
       - name: Summarize post-publish resolution
         if: ${{ always() }}
