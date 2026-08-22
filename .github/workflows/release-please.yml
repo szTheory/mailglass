@@ -427,16 +427,45 @@ jobs:
       - name: Capture Release Please proposal identity without activation
         id: capture-proposal
         if: ${{ steps.release-preflight.outputs.should_run == 'true' }}
+        # The result writer below is the single inspection surface for this
+        # proposal-only path. Keep this step running long enough to expose its
+        # bounded evidence before a non-pass makes the job fail.
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
         run: |
           set -euo pipefail
+          result_status=cannot-check
+          result_reason=github_evidence_unavailable
+          proposal_head=""
+          source_sha=""
+          candidate_digest="${CANDIDATE_DIGEST:-}"
+
+          emit_capture_outputs() {
+            printf 'result_status=%s\n' "$result_status" >> "$GITHUB_OUTPUT"
+            printf 'result_reason=%s\n' "$result_reason" >> "$GITHUB_OUTPUT"
+            printf 'proposal_head=%s\n' "$proposal_head" >> "$GITHUB_OUTPUT"
+            printf 'source_sha=%s\n' "$source_sha" >> "$GITHUB_OUTPUT"
+            printf 'candidate_digest=%s\n' "$candidate_digest" >> "$GITHUB_OUTPUT"
+          }
+
+          trap emit_capture_outputs EXIT
           # Capture proposal/source identity only after the sibling-pin sync
           # has settled the release branch; its publishable-content digest is
           # Plan 05 input.
           prs=$(gh pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid)
-          [ "$(jq -er 'length' <<<"$prs")" -le 1 ]
-          [ "$(jq -er 'length' <<<"$prs")" -eq 1 ] || exit 0
+          if [ "$(jq -er 'length' <<<"$prs")" -gt 1 ]; then
+            result_status=blocked
+            result_reason=multiple_open_proposals
+            exit 1
+          fi
+
+          if [ "$(jq -er 'length' <<<"$prs")" -ne 1 ]; then
+            result_status=blocked
+            result_reason=proposal_missing
+            exit 1
+          fi
           proposal=$(jq -cer '.[0]' <<<"$prs")
           proposal_head=$(jq -er '.headRefOid' <<<"$proposal")
           source_sha=$(jq -er '.baseRefOid' <<<"$proposal")
@@ -475,16 +504,21 @@ jobs:
               [[ "$recorded_head" =~ ^[0-9a-f]{40}$ ]]
               [[ "$recorded_source_sha" =~ ^[0-9a-f]{40}$ ]]
               [[ "$recorded_digest" =~ ^[0-9a-f]{64}$ ]]
-              [ "$proposal_head" = "$recorded_head" ]
-              git merge-base --is-ancestor "$recorded_source_sha" "$source_sha"
-              [ "$(scripts/release_policy_content_digest.sh --ref "$recorded_source_sha")" = "$(scripts/release_policy_content_digest.sh --ref "$source_sha")" ]
-              [ "$(scripts/release_policy_content_digest.sh --repo "$candidate_root")" = "$recorded_digest" ]
-              scripts/release_policy_validate_target.sh "$source_target" "mailglass-v${core}" "$candidate_root" >/dev/null
+              if ! [ "$proposal_head" = "$recorded_head" ] || \
+                 ! git merge-base --is-ancestor "$recorded_source_sha" "$source_sha" || \
+                 ! [ "$(scripts/release_policy_content_digest.sh --ref "$recorded_source_sha")" = "$(scripts/release_policy_content_digest.sh --ref "$source_sha")" ] || \
+                 ! [ "$(scripts/release_policy_content_digest.sh --repo "$candidate_root")" = "$recorded_digest" ] || \
+                 ! scripts/release_policy_validate_target.sh "$source_target" "mailglass-v${core}" "$candidate_root" >/dev/null; then
+                result_status=blocked
+                result_reason=proposal_identity_mismatch
+                exit 1
+              fi
               jq -e '{candidate_versions, proposal_identity, publishable_content}' "$source_target" > .planning/release-candidates/proposal-candidate.json
               ;;
             completed)
-              echo "Completed release target needs no proposal capture."
-              exit 0
+              result_status=blocked
+              result_reason=release_target_completed
+              exit 1
               ;;
             *)
               echo "ERROR: unsupported release target status for proposal capture: $target_status" >&2
@@ -493,8 +527,86 @@ jobs:
           esac
 
           jq -e '.candidate_versions.mailglass == .candidate_versions.mailglass_admin' .planning/release-candidates/proposal-candidate.json >/dev/null
+          candidate_digest=$(jq -er '.publishable_content.digest' .planning/release-candidates/proposal-candidate.json)
+          result_status=pass
+          result_reason=proposal_captured
           echo "captured=true" >> "$GITHUB_OUTPUT"
           printf '%s\n' "proposal candidate captured after sibling synchronization"
+
+      - name: Write proposal-only release control result
+        id: proposal-control-result
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          CAPTURE_OUTCOME: ${{ steps.capture-proposal.outcome }}
+          CAPTURE_STATUS: ${{ steps.capture-proposal.outputs.result_status }}
+          CAPTURE_REASON: ${{ steps.capture-proposal.outputs.result_reason }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_ID: ${{ github.run_id }}
+          PROPOSAL_HEAD: ${{ steps.capture-proposal.outputs.proposal_head }}
+          SOURCE_SHA: ${{ steps.capture-proposal.outputs.source_sha }}
+          CANDIDATE_DIGEST: ${{ steps.capture-proposal.outputs.candidate_digest }}
+        run: |
+          set -euo pipefail
+          result="$RUNNER_TEMP/release-proposal-control-result.json"
+          status="${CAPTURE_STATUS:-cannot-check}"
+          reason="${CAPTURE_REASON:-github_evidence_unavailable}"
+
+          if [ "${CAPTURE_OUTCOME:-skipped}" = skipped ] && [ "$EVENT_NAME" = schedule ]; then
+            status=pending
+            reason=scheduled_observation_not_elapsed
+          fi
+
+          case "$status" in
+            pass|blocked|cannot-check|pending) ;;
+            *) status=cannot-check; reason=invalid_capture_result ;;
+          esac
+
+          jq -n \
+            --arg status "$status" \
+            --arg reason "$reason" \
+            --arg event_name "$EVENT_NAME" \
+            --arg run_id "$RUN_ID" \
+            --arg proposal_head "${PROPOSAL_HEAD:-}" \
+            --arg source_sha "${SOURCE_SHA:-}" \
+            --arg candidate_digest "${CANDIDATE_DIGEST:-}" \
+            '{status: $status, reason: $reason, event_name: $event_name, run_id: $run_id, proposal_head: $proposal_head, source_sha: $source_sha, candidate_digest: $candidate_digest, probes: [
+              {name: "attempted_candidates", status: $status, source: "capture-proposal", recovery: "inspect exact proposal identity"},
+              {name: "required_checks", status: (if $status == "pass" then "pass" else "cannot-check" end), source: "GitHub PR checks", recovery: "query required checks for the exact proposal"},
+              {name: "permissions", status: "pass", source: "workflow permissions", recovery: "inspect protected workflow permissions"},
+              {name: "trigger", status: "pass", source: "github.event_name", recovery: "record control and schedule runs separately"},
+              {name: "result_artifact", status: "pass", source: "release-proposal-control-result", recovery: "download this run artifact"}
+            ]}' > "$result"
+
+          printf 'result_path=%s\n' "$result" >> "$GITHUB_OUTPUT"
+          printf 'status=%s\n' "$status" >> "$GITHUB_OUTPUT"
+          [ "$status" = pass ]
+
+      - name: Summarize proposal-only release control result
+        if: ${{ always() }}
+        run: |
+          result="$RUNNER_TEMP/release-proposal-control-result.json"
+          if [ -r "$result" ]; then
+            jq -r '"## Release proposal control result\n\n- status: `\(.status)`\n- reason: `\(.reason)`\n- event: `\(.event_name)`\n- run: `\(.run_id)`\n\n### Evidence probes\n" + (.probes[] | "- \(.status) `\(.name)`: \(.source)")' "$result" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Release proposal control result\n\n- status: `cannot-check`\n- reason: result artifact was not written" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload proposal-only release control result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: release-proposal-control-result-${{ github.run_id }}
+          path: ${{ runner.temp }}/release-proposal-control-result.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Fail non-pass proposal control result after evidence upload
+        if: ${{ always() }}
+        env:
+          RESULT_STATUS: ${{ steps.proposal-control-result.outputs.status }}
+        run: |
+          [ "$RESULT_STATUS" = pass ]
 
       - name: Upload sanitized release proposal candidate
         if: ${{ steps.capture-proposal.outputs.captured == 'true' }}

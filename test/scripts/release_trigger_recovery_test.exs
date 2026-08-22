@@ -355,12 +355,14 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
           script = Path.join(temp_dir, "proposal-result.sh")
           File.write!(script, proposal_result_script(result))
 
-          assert {_output, 0} =
-                   System.cmd("bash", [script],
-                     cd: @repo_root,
-                     env: Map.to_list(env),
-                     stderr_to_stdout: true
-                   )
+          {_, command_status} =
+            System.cmd("bash", [script],
+              cd: @repo_root,
+              env: Map.to_list(env),
+              stderr_to_stdout: true
+            )
+
+          assert command_status == if(expected_status == "pass", do: 0, else: 1)
 
           outcome_json =
             temp_dir
@@ -554,7 +556,8 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       "PROPOSAL_HEAD" => String.duplicate("b", 40),
       "SOURCE_SHA" => String.duplicate("c", 40),
       "CANDIDATE_DIGEST" => String.duplicate("a", 64),
-      "RUNNER_TEMP" => temp_dir
+      "RUNNER_TEMP" => temp_dir,
+      "GITHUB_OUTPUT" => Path.join(temp_dir, "github-output")
     }
 
     try do
