@@ -112,3 +112,77 @@ authority.
 | tag | `mailglass_admin-v2.5.0` @ `0f0b06861b1cbb2e89f44ea4f40db754effc4017` | retain | immutable published tag; equal SHA remains a separate identity |
 | tag | `mailglass_inbound-v2.2.0` @ `0f0b06861b1cbb2e89f44ea4f40db754effc4017` | retain | immutable published tag; equal SHA remains a separate identity |
 | wt | WT-03 detached SHA `d0369ba76c1f5d033d4d10b804050fa76c784756` | retain | preserve dirty three-file evidence and rerun exact diff hashes before any later interpretation |
+
+## Final Control Recovery Capture
+
+**Captured UTC:** `2026-08-22T19:13:48Z`
+**Canonical HEAD:** `c3c388e9479b4f4dfdbb222401669201b9f6194b`
+**Method:** fixed-argument, read-only `gh`, `git`, `jq`, `curl`, and `shasum` commands.
+All earlier capture blocks remain byte-present above. This capture does not merge or close PR #222,
+enable auto-merge, dispatch a protected release, create/delete refs or tags, push, publish, edit
+the lifecycle ledger, or rewrite the retained WT-03 or publish-summary evidence.
+
+### Final source ledger
+
+| Source | Fresh immutable identity | Observation | Final status | Recovery / observation condition |
+| --- | --- | --- | --- | --- |
+| PR #222 | head `7253bc278fd25066d8e0ffcd82f08944a2f2329b`; base `6c4b2846d4d3af062ae27579394ccfe7e9c27f20` | OPEN/CLEAN; auto-merge null; required checks pass, advisory Next Toolchain skipped | blocked | Rerun `gh pr view 222 --json number,state,headRefName,headRefOid,baseRefName,baseRefOid,mergeStateStatus,autoMergeRequest,url` and `gh pr checks 222 --json name,state,link,bucket` immediately before the existing exact candidate-digest protected dispatch. |
+| release ledger | proposal `d0369ba76c1f5d033d4d10b804050fa76c784756`; source `77774f1085e6f07ecaa9e595116cd33827b750a2`; digest `1f2202e829cbb26b876fee41c6730f9c5dab7a5dcb04a9aeb9cb5368088e6831` | `authorized` / `publication: not_started`; ledger proposal is distinct from PR and published SHA | blocked | Rerun `jq '{status,proposal_identity,publishable_content,states}' .planning/release-target.json`; only the protected exact candidate-digest path can evaluate authority. |
+| published tags/releases | all three tags at `0f0b06861b1cbb2e89f44ea4f40db754effc4017`; three releases published 2026-08-20 | immutable public release train differs from ledger and PR | pass | Rerun `git ls-remote --tags origin` and `gh release view <tag> --json tagName,targetCommitish,url,isDraft,isPrerelease,publishedAt`. |
+| Hex packages | `mailglass` `2.5.0`, `mailglass_admin` `2.5.0`, `mailglass_inbound` `2.2.0`; public release endpoints returned versions and insertion times | public facts exist; release endpoint omits a checksum field, so historical exact checksum remains retained evidence rather than a fresh checksum assertion | cannot-check | Retry `curl --fail --silent --show-error https://hex.pm/api/packages/<package>/releases/<version>` and record a checksum only if the public endpoint exposes one. |
+| Phase 161 / WT-03 | both named preservation refs `2f86fa2b7ac1d47fa70f458beecf83b61e217632`; WT-03 `d0369ba76c1f5d033d4d10b804050fa76c784756`; diff SHA-256 `75ea168315ebff101a2dd060499f86a73f688ca5597837bb22dec1dc5b16ce69` | retained local proof remains unchanged and discoverable | pass | Rerun the recorded Phase 161 `git rev-parse` and WT-03 diff/hash commands. |
+| canonical publish summaries | `mailglass` SHA-256 `dab6be5659e195b8fca0d532a7a5334acc7d6679ca190d2d64ecddc11ccfbd0c`; admin `3e706de40d0eebb19d3de88d3f1f5c24eeceea9db3c08cb27771efa187c205cf`; inbound `52ea66c1b3dc4d7cb1bfeb9cf8f43d4737eac1308157e41a21d9eded73ef7234` | canonical historical facts are intact; none was rewritten | pass | Rerun `shasum -a 256 .planning/publish/*-publish-summary.json`. |
+
+### Final disposition matrix
+
+| Category | Immutable identity | Outcome | Evidence or named recovery condition |
+| --- | --- | --- |
+| branch | `chore/authorize-release-91353` @ `256af3e1030c3cf0070207643809e36d715300eb` | retain | Fresh remote response confirms it is unprotected; retain until a protected exact-candidate recovery condition identifies an owner. |
+| branch | `chore/retire-invalid-release-candidate` @ `40c5c888f29f987dc589e120bd131c67bbfb503c` | retain | GitHub branch API returned 404, which is `cannot-check`, not absence; rerun `gh api repos/szTheory/mailglass/branches/chore/retire-invalid-release-candidate` before any retirement. |
+| branch | `fix/protected-release-freshness` @ `63ed7997030012695c900b24f93075038e8d940d` | retain | GitHub branch API returned 404, which is `cannot-check`, not absence; rerun the exact branch API read before any retirement. |
+| branch | `fix/release-ci-recovery` @ `271f4145bb4d06366023bf7fb6ae53b473691453` | retain | Fresh remote response confirms it is unprotected; preserve recovery evidence pending independent control verification. |
+| branch | `release-please--branches--main` @ `7253bc278fd25066d8e0ffcd82f08944a2f2329b` | retain | PR #222 remains OPEN/CLEAN with auto-merge null, but its head differs from the ledger proposal; only the existing protected exact candidate-digest dispatch can evaluate it. |
+| check | `CI Green` at `7253bc278fd25066d8e0ffcd82f08944a2f2329b` | retain | SUCCESS is non-authorizing evidence; refresh required checks at the exact head before protected dispatch. |
+| check | `Guard Release Trigger` at `7253bc278fd25066d8e0ffcd82f08944a2f2329b` | retain | SUCCESS confirms ordinary trigger guard evidence only; it grants no merge, tag, or release authority. |
+| check | `Branch Protection Advisory` at `7253bc278fd25066d8e0ffcd82f08944a2f2329b` | retain | SUCCESS is observed evidence only; branch protection remains a live control-plane read. |
+| ledger | proposal `d0369ba76c1f5d033d4d10b804050fa76c784756` | retain | `authorized` plus `publication: not_started` is blocked evidence, never publication or merge authority. |
+| pr | PR #222 head `7253bc278fd25066d8e0ffcd82f08944a2f2329b`; base `6c4b2846d4d3af062ae27579394ccfe7e9c27f20` | retain | Retain only for the existing protected exact candidate-digest dispatch after a fresh head/base/content-digest/required-check equality comparison; this capture never merges it. |
+| ref | `preserve/phase-161-archive-range-pre-cleanup-main-20260822` @ `2f86fa2b7ac1d47fa70f458beecf83b61e217632` | retain | Immutable preservation evidence remains binding; do not rewrite or delete it. |
+| ref | `preserve/phase-161-archive-ref-pre-cleanup-main-20260822` @ `2f86fa2b7ac1d47fa70f458beecf83b61e217632` | retain | Equal OID does not combine this distinct preservation identity with its range counterpart. |
+| tag | `mailglass-v2.5.0` @ `0f0b06861b1cbb2e89f44ea4f40db754effc4017` | retain | Immutable published tag; never substitute it for ledger or PR identity. |
+| tag | `mailglass_admin-v2.5.0` @ `0f0b06861b1cbb2e89f44ea4f40db754effc4017` | retain | Immutable published tag; equal SHA remains a distinct package identity. |
+| tag | `mailglass_inbound-v2.2.0` @ `0f0b06861b1cbb2e89f44ea4f40db754effc4017` | retain | Immutable published tag; equal SHA remains a distinct package identity. |
+| wt | WT-03 detached SHA `d0369ba76c1f5d033d4d10b804050fa76c784756` | retain | Dirty three-file evidence has unchanged SHA-256 `75ea168315ebff101a2dd060499f86a73f688ca5597837bb22dec1dc5b16ce69`; preserve it. |
+
+### Final run evidence
+
+| Workflow | Event | Run ID | Workflow / head SHA | Conclusion | Machine status | Artifact SHA-256 | Summary agreement | Status | Disposition / recovery condition |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| release-please | workflow_dispatch | `32410583921` | `a1c225f4f64519f791a64827e4f4e34c7abaad65` | success | completed | `cannot-check: no valid artifact retained` | run summary is success; no machine artifact was downloadable | cannot-check | Control-only historical run; retry `gh run download 32410583921`. It is not scheduled proof. |
+| release-please | schedule | `32590859394` | `6c4b2846d4d3af062ae27579394ccfe7e9c27f20` | failure | completed | `cannot-check: no valid artifact retained` | failed log records proposal capture exit; no machine artifact was downloadable | cannot-check | Historical schedule proves only the old control revision. Revised workflow is not on a protected remote ref; observe cron `17 * * * *` after it is reachable with `gh run list --workflow release-please.yml --event schedule`. |
+| repo-hygiene | workflow_dispatch | `31975550700` | `c72721f8c041b8419711267291d3d70a8a0ff1c2` | success | completed | `8343abe711cda622122530ea008d39cd2ca3244a1b5d0006626642ca243ec209` | downloaded JSON status `pass` agrees with successful run | pass | Historical control-only evidence; manual dispatch is not scheduled proof. |
+| repo-hygiene | schedule | `32573781732` | `6c4b2846d4d3af062ae27579394ccfe7e9c27f20` | failure | completed | `17fc847f11543065abec116f3626956c484f13ce2d0f06ce32d27044bcab990f` | downloaded JSON status `blocked` agrees with failed run and its summary/log | blocked | Historical schedule detects open PR and workflow findings. Revised artifact-first workflow is not reachable; observe cron `30 12 * * *` after protected remote reachability. |
+| post-publish-smoke | workflow_dispatch | `32425143336` | `6c4b2846d4d3af062ae27579394ccfe7e9c27f20` | success | completed | `5ad4ecc07e14e4c0d0a056e29b01c7355da4728b3892e2701e94a5ce936d01c3` | downloaded adoption evidence has five completed checkpoints and agrees with successful run | pass | Historical control-only consumer proof for the completed release train; it is not evidence for the authorized/unpublished ledger target. |
+| post-publish-smoke | schedule | `32572135200` | `6c4b2846d4d3af062ae27579394ccfe7e9c27f20` | failure | completed | `cannot-check: no valid artifact retained` | failed resolver log confirms `EVENT_NAME=schedule` then no completed target; old revision produced no bounded artifact | cannot-check | Revised blocked-result workflow is not reachable; observe cron `0 12 * * *` after protected remote reachability. A release-event no-op is never consumer proof. |
+| release-please | schedule | pending | required workflow SHA `c3c388e9479b4f4dfdbb222401669201b9f6194b` | pending | pending | pending: no post-change run | pending: schedule has not observed this protected revision | pending | Wait for the next applicable `17 * * * *` execution after this workflow reaches protected remote `main`; query `gh run list --workflow release-please.yml --event schedule --limit 1`. |
+| repo-hygiene | schedule | pending | required workflow SHA `c3c388e9479b4f4dfdbb222401669201b9f6194b` | pending | pending | pending: no post-change run | pending: schedule has not observed this protected revision | pending | Wait for the next applicable `30 12 * * *` execution after this workflow reaches protected remote `main`; query `gh run list --workflow repo-hygiene.yml --event schedule --limit 1`. |
+| post-publish-smoke | schedule | pending | required workflow SHA `c3c388e9479b4f4dfdbb222401669201b9f6194b` | pending | pending | pending: no post-change run | pending: schedule has not observed this protected revision | pending | Wait for the next applicable `0 12 * * *` execution after this workflow reaches protected remote `main`; query `gh run list --workflow post-publish-smoke.yml --event schedule --limit 1`. |
+
+Manual dispatch is not scheduled proof. Ordinary push, hourly schedule, and digest-free dispatch
+remain proposal-only; the existing exact candidate-digest protected dispatch is the sole merge/tag
+boundary. The authorized and unpublished ledger target remains blocked and does not substitute
+`main`, the published tag SHA, or a release-event no-op.
+
+## Threat closure
+
+| Threat | Severity | Closure evidence | Status |
+| --- | --- | --- | --- |
+| T-162-01 through T-162-16 | medium/high | Plans 01-04 focused contracts plus the retained source/disposition matrices above | mitigated |
+| T-162-17 | high | Final run evidence separates `workflow_dispatch` and `schedule`, with no repeated real run ID and explicit pending rows | mitigated |
+| T-162-18 | high | Downloaded repo-hygiene and post-publish artifacts have recorded SHA-256 values and agreement observations; unavailable artifacts are `cannot-check` | mitigated |
+| T-162-19 | high | Capture commands were read-only; no protected dispatch, merge, tag, push, publish, or ledger mutation occurred | mitigated |
+| T-162-20 | medium | Post-change schedule rows are pending with exact cron, required SHA, and observation command | mitigated |
+
+**Phase result: blocked.** Existing evidence is captured and bounded, but post-change scheduled
+observations cannot be claimed until these revisions reach protected remote `main` and their named
+cron executions elapse. Pending and cannot-check rows are non-success evidence, not omissions.

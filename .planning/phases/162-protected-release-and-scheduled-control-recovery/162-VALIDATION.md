@@ -5,7 +5,7 @@ slug: protected-release-and-scheduled-control-recovery
 # audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: false) (#2117)
 status: draft
 nyquist_compliant: false
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-08-22
 ---
 
@@ -40,13 +40,13 @@ created: 2026-08-22
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 162-01-01 | 01 | 1 | AUTO-01 | T-162-01 | Evidence rows require capture time, source, immutable identity, observation, and one disposition. | contract | `mix test test/scripts/phase_162_release_reconciliation_test.exs` | ❌ Plan 01 creates | ⬜ pending |
-| 162-01-02 | 01 | 1 | AUTO-02 | T-162-02 | PR/branch/check rows cannot be left auto-merge-armed or without merge/retire/retain outcome; validation remains incomplete. | contract | `mix test test/scripts/phase_162_release_reconciliation_test.exs test/scripts/release_policy_test.exs test/scripts/release_policy_contract_test.exs` | ❌ Plan 01 expands | ⬜ pending |
-| 162-02-01 | 02 | 2 | AUTO-03 | T-162-05 | Push, schedule, and digest-free dispatch remain proposal-only; every spec-less probe has an explicit status and only protected exact-digest dispatch has merge/tag/release authority. | workflow contract | `mix test test/scripts/release_trigger_recovery_test.exs test/scripts/release_policy_contract_test.exs` | ✅ base / ❌ Plan 02 cases | ⬜ pending |
-| 162-03-01 | 03 | 2 | AUTO-04 | T-162-09 | Aggregate JSON, text, and exit policy distinguish `pass`, `blocked`, and `cannot-check`. | unit contract | `mix test test/mix/tasks/mailglass.repo.hygiene_test.exs` | ✅ base / ❌ Plan 03 cases | ⬜ pending |
-| 162-03-02 | 03 | 2 | AUTO-04 | T-162-10 | Workflow artifact and summary derive from the same Mix task result without independent verdict computation. | workflow contract | `mix test test/mix/tasks/mailglass.repo.hygiene_test.exs` | ✅ base / ❌ Plan 03 cases | ⬜ pending |
-| 162-04-01 | 04 | 2 | AUTO-05 | T-162-16 | Scheduled authorized/not-started emits top-level `blocked`; completed/dispatch recovery retains exact versions, all-tags-one-SHA, and content-digest checks without `main` fallback. | workflow/script contract | `mix test test/mailglass/publish/post_publish_smoke_contract_test.exs test/scripts/verify_published_release_test.exs` | ✅ base / ❌ Plan 04 case | ⬜ pending |
-| 162-05-01 | 05 | 3 | AUTO-01..05 | All Plan 01-04 contract cases exist and pass before the completion gate flips; live evidence refresh remains read-only. | completion gate + live evidence audit | `mix test test/scripts/phase_162_release_reconciliation_test.exs test/scripts/release_trigger_recovery_test.exs test/mix/tasks/mailglass.repo.hygiene_test.exs test/mailglass/publish/post_publish_smoke_contract_test.exs` | ❌ Plan 05 gate | ⬜ pending |
+| 162-01-01 | 01 | 1 | AUTO-01 | T-162-01 | Evidence rows require capture time, source, immutable identity, observation, and one disposition. | contract | `mix test test/scripts/phase_162_release_reconciliation_test.exs` | ✅ | ✅ green |
+| 162-01-02 | 01 | 1 | AUTO-02 | T-162-02 | PR/branch/check rows cannot be left auto-merge-armed or without merge/retire/retain outcome; validation remains incomplete. | contract | `mix test test/scripts/phase_162_release_reconciliation_test.exs test/scripts/release_policy_test.exs test/scripts/release_policy_contract_test.exs` | ✅ | ✅ green |
+| 162-02-01 | 02 | 2 | AUTO-03 | T-162-05 | Push, schedule, and digest-free dispatch remain proposal-only; every spec-less probe has an explicit status and only protected exact-digest dispatch has merge/tag/release authority. | workflow contract | `mix test test/scripts/release_trigger_recovery_test.exs test/scripts/release_policy_contract_test.exs` | ✅ | ✅ green |
+| 162-03-01 | 03 | 2 | AUTO-04 | T-162-09 | Aggregate JSON, text, and exit policy distinguish `pass`, `blocked`, and `cannot-check`. | unit contract | `mix test test/mix/tasks/mailglass.repo.hygiene_test.exs` | ✅ | ✅ green |
+| 162-03-02 | 03 | 2 | AUTO-04 | T-162-10 | Workflow artifact and summary derive from the same Mix task result without independent verdict computation. | workflow contract | `mix test test/mix/tasks/mailglass.repo.hygiene_test.exs` | ✅ | ✅ green |
+| 162-04-01 | 04 | 2 | AUTO-05 | T-162-16 | Scheduled authorized/not-started emits top-level `blocked`; completed/dispatch recovery retains exact versions, all-tags-one-SHA, and content-digest checks without `main` fallback. | workflow/script contract | `mix test test/mailglass/publish/post_publish_smoke_contract_test.exs test/scripts/verify_published_release_test.exs` | ✅ | ✅ green |
+| 162-05-01 | 05 | 3 | AUTO-01..05 | All Plan 01-04 contract cases exist and pass before the completion gate flips; live evidence refresh remains read-only. | completion gate + live evidence audit | `mix test test/scripts/phase_162_release_reconciliation_test.exs test/scripts/release_trigger_recovery_test.exs test/mix/tasks/mailglass.repo.hygiene_test.exs test/mailglass/publish/post_publish_smoke_contract_test.exs` | ✅ | ✅ green |
 | 162-05-02 | 05 | 3 | AUTO-01..05 | Separate control/scheduled rows preserve real provenance; every probe is present and unavailable/unelapsed proof is explicit. | contract + live evidence audit | `mix test test/scripts/phase_162_release_reconciliation_test.exs test/scripts/release_trigger_recovery_test.exs test/mix/tasks/mailglass.repo.hygiene_test.exs test/mailglass/publish/post_publish_smoke_contract_test.exs` | ❌ Plan 05 expands | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
@@ -59,11 +59,11 @@ Plan 01 owns only the reconciliation-artifact contract in Wave 1. Plans 02–04 
 their separately listed missing control cases, and only Plan 05 Task 1 may set
 `wave_0_complete: true` after all four focused contracts exist and pass.
 
-- [ ] Plan 01 / Wave 1: add a reconciliation-artifact contract test or deterministic checker for source, capture time, immutable identity, observation, and exactly one outcome/recovery condition; retain `wave_0_complete: false`.
-- [ ] Plan 02 / Wave 2: extend `test/scripts/release_trigger_recovery_test.exs` with capture-mismatch, unavailable/pending probe reporting, exhaustive no-silent-drop coverage, and proof that proposal-only triggers gain no merge/tag/release authority.
-- [ ] Plan 03 / Wave 2: extend `test/mix/tasks/mailglass.repo.hygiene_test.exs` with separate aggregate `cannot-check`, policy `blocked`, JSON string, text output, and nonzero-exit cases; retain `wave_0_complete: false`.
-- [ ] Plan 04 / Wave 2: extend `test/mailglass/publish/post_publish_smoke_contract_test.exs` with scheduled `authorized`/`publication: not_started` top-level `blocked` coverage and a no-`main`-substitution assertion.
-- [ ] Plan 05 Task 1 / Wave 3: run the focused four-file completion command after Plans 01-04; only when every required case exists and passes, check the four items above and set `wave_0_complete: true`.
+- [x] Plan 01 / Wave 1: reconciliation artifact contract covers source, capture time, immutable identity, observation, and exactly one outcome/recovery condition.
+- [x] Plan 02 / Wave 2: release-trigger contract covers capture mismatch, unavailable/pending probes, exhaustive coverage, and proposal-only authority.
+- [x] Plan 03 / Wave 2: repo-hygiene contract covers `cannot-check`, `blocked`, JSON, text, and fail-closed exits.
+- [x] Plan 04 / Wave 2: post-publish contract covers scheduled `authorized`/`publication: not_started` blocking and no `main` substitution.
+- [x] Plan 05 Task 1 / Wave 3: focused completion contracts passed before `wave_0_complete: true` was set; actual execution waves remain 01=1, 02-04=2, 05=3.
 
 ---
 

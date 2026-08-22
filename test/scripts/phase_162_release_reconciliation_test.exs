@@ -1,7 +1,10 @@
 defmodule Mailglass.Scripts.Phase162ReleaseReconciliationTest do
   use ExUnit.Case, async: true
 
-  @ledger Path.expand("../../.planning/phases/162-protected-release-and-scheduled-control-recovery/162-RELEASE-RECONCILIATION.md", __DIR__)
+  @ledger Path.expand(
+            "../../.planning/phases/162-protected-release-and-scheduled-control-recovery/162-RELEASE-RECONCILIATION.md",
+            __DIR__
+          )
 
   test "the PR #222 tracer has complete source, identity, observation, and disposition evidence" do
     ledger = File.read!(@ledger)
@@ -47,7 +50,11 @@ defmodule Mailglass.Scripts.Phase162ReleaseReconciliationTest do
     assert rows != []
 
     identities = Enum.map(rows, & &1["Immutable identity"])
-    assert Enum.map(rows, &{&1["Category"], &1["Immutable identity"]}) == Enum.sort_by(rows, &{&1["Category"], &1["Immutable identity"]}) |> Enum.map(&{&1["Category"], &1["Immutable identity"]})
+
+    assert Enum.map(rows, &{&1["Category"], &1["Immutable identity"]}) ==
+             Enum.sort_by(rows, &{&1["Category"], &1["Immutable identity"]})
+             |> Enum.map(&{&1["Category"], &1["Immutable identity"]})
+
     assert Enum.all?(identities, &(&1 != ""))
   end
 
@@ -100,11 +107,19 @@ defmodule Mailglass.Scripts.Phase162ReleaseReconciliationTest do
 
     assert Enum.any?(rows, &(&1["Event"] == "workflow_dispatch"))
     assert Enum.any?(rows, &(&1["Event"] == "schedule"))
+
     assert Enum.all?(rows, fn row ->
              row["Status"] == "pending" or String.trim(row["Run ID"]) != ""
            end)
+
     assert Enum.all?(rows, &(String.trim(&1["Artifact SHA-256"]) != ""))
-    assert Enum.uniq(Enum.map(rows, & &1["Run ID"])) == Enum.map(rows, & &1["Run ID"])
+
+    real_run_ids =
+      rows
+      |> Enum.reject(&(&1["Status"] == "pending"))
+      |> Enum.map(& &1["Run ID"])
+
+    assert Enum.uniq(real_run_ids) == real_run_ids
     assert ledger =~ "manual dispatch is not scheduled proof"
     assert ledger =~ "## Threat closure"
     assert ledger =~ "T-162-20"
