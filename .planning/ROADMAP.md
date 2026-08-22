@@ -61,53 +61,76 @@
 ## Phase Details
 
 ### Phase 161: Canonical Workspace and Evidence Preservation
+
 **Goal**: Maintainers have one explained, clean canonical `main` and can safely account for every workspace, Git object, and release leftover without losing recoverable work.
 **Depends on**: Nothing (first phase)
 **Requirements**: WSPC-01, WSPC-02, WSPC-03, WSPC-04
 **Success Criteria** (what must be TRUE):
+
   1. A maintainer can inspect an inventory of every linked worktree, stash, relevant branch, divergent range, and release leftover before cleanup occurs.
   2. A maintainer can use one documented canonical `main` checkout whose upstream, ahead/behind state, and clean working tree are explained.
   3. Every inventoried workspace or Git object has a recorded retain, handoff, merge, archive, or remove outcome backed by unique-work and reachability evidence.
   4. Any approved cleanup preserves unique or uncertain work on a recoverable ref or documented handoff before normal Git-managed removal.
+
 **Plans**: 4 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 161-01-PLAN.md — Capture the canonical `main` and full pre-mutation workspace/Git evidence ledger.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 161-02-PLAN.md — Assess content and reachability, then disposition every inventoried identity.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 161-03-PLAN.md — Preserve unique or uncertain work on named refs/commits or documented handoffs.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 161-04-PLAN.md — Retire only approved residue and append the final reconciliation and Phase 162 handoff.
 
 ### Phase 162: Protected Release and Scheduled-Control Recovery
+
 **Goal**: Maintainers can explain and safely disposition the blocked release state while existing release and repository controls report only truthful, bounded outcomes.
 **Depends on**: Phase 161
 **Requirements**: AUTO-01, AUTO-02, AUTO-03, AUTO-04, AUTO-05
 **Success Criteria** (what must be TRUE):
+
   1. A maintainer can reconcile PR #222, its commits and checks, tags, published Hex versions, and `.planning/release-target.json` into one evidence-backed release narrative.
   2. PR #222 and every stale release branch or check have a protected merge, recorded retirement reason, or named recovery condition; none remain unexplained or auto-merge-armed in limbo.
   3. Release-please gives a truthful proposal-only result through its control and scheduled entry points without gaining merge, tag, publish, or protected-dispatch authority.
   4. Repository-hygiene reports an inspectable pass, policy block, or cannot-check outcome with agreeing logs and JSON evidence, including control and applicable scheduled-run proof.
   5. Post-publish validation checks the exact immutable published target through its recovery path, or records an evidence-backed inapplicable or blocked result without substituting `main` or forcing publication.
+
 **Plans**: TBD
 
 ### Phase 163: Deterministic Release-Path Timeout Repairs
+
 **Goal**: Maintainers can repeatedly obtain honest database-property and gallery-matrix proof without weakening their invariants, coverage, or bounded execution.
 **Depends on**: Phase 162
 **Requirements**: DTRM-01, DTRM-02, DTRM-03, DTRM-04
 **Success Criteria** (what must be TRUE):
+
   1. A maintainer can reproduce the PostgreSQL SQLSTATE 57014 property failure and verify its narrow fixture, session, isolation, or query-boundary repair while all 1,000 property executions retain the invariant.
   2. Repeated focused property proof and the canonical protected CI path pass without seed-pinning, skips, product-schema/API changes, or global database/job timeout relaxation.
   3. A maintainer can reproduce the gallery-matrix timeout and verify a narrow readiness, test, or Playwright-boundary repair while discovered specimens, viewport, theme, stress, and overflow coverage remain intact.
   4. Repeated focused browser proof and the relevant operator-browser gate pass without matrix removal, broad retries, visual changes, or unlimited/global timeout expansion.
+
 **Plans**: TBD
 
 ### Phase 164: Repository Truth Reconciliation and Closeout
+
 **Goal**: Maintainers can rely on documentation, tracked artifacts, ignore rules, and final evidence to describe the repository's actual supported and operational state.
 **Depends on**: Phase 163
 **Requirements**: TRTH-01, TRTH-02, TRTH-03
 **Success Criteria** (what must be TRUE):
+
   1. Maintainer, version, release, recovery, and package guidance agrees with the settled protected-release workflow, published package state, and supported commands.
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
+
 **Plans**: TBD
 
 ## Progress
