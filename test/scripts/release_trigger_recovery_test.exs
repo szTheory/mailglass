@@ -307,6 +307,92 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
            )
   end
 
+  test "proposal capture persists one bounded proposal-only result before any non-pass exit" do
+    source = workflow_source()
+
+    capture =
+      extract_step_block!(source, "Capture Release Please proposal identity without activation")
+
+    result =
+      extract_step_block!(source, "Write proposal-only release control result")
+
+    summary = extract_step_block!(source, "Summarize proposal-only release control result")
+    upload = extract_step_block!(source, "Upload proposal-only release control result")
+
+    assert capture =~ "continue-on-error: true"
+    assert capture =~ "result_status"
+    assert capture =~ "result_reason"
+
+    assert result =~ "release-proposal-control-result.json"
+    assert result =~ "status"
+    assert result =~ "reason"
+    assert result =~ "event_name"
+    assert result =~ "run_id"
+    assert result =~ "proposal_head"
+    assert result =~ "source_sha"
+    assert result =~ "candidate_digest"
+    assert result =~ "attempted_candidates"
+    assert result =~ "required_checks"
+    assert result =~ "permissions"
+    assert result =~ "trigger"
+    assert result =~ "result_artifact"
+    assert result =~ "pending"
+    assert result =~ "cannot-check"
+    assert result =~ "blocked"
+    assert summary =~ "if: ${{ always() }}"
+    assert summary =~ "release-proposal-control-result.json"
+    assert upload =~ "if: ${{ always() }}"
+    assert upload =~ "release-proposal-control-result-${{ github.run_id }}"
+
+    Enum.each(
+      [
+        {"success", "pass", "proposal_captured"},
+        {"blocked", "blocked", "proposal_identity_mismatch"},
+        {"failure", "cannot-check", "github_evidence_unavailable"}
+      ],
+      fn {outcome, expected_status, expected_reason} ->
+        with_proposal_result_env(outcome, expected_status, expected_reason, fn temp_dir, env ->
+          script = Path.join(temp_dir, "proposal-result.sh")
+          File.write!(script, proposal_result_script(result))
+
+          assert {_output, 0} =
+                   System.cmd("bash", [script],
+                     cd: @repo_root,
+                     env: Map.to_list(env),
+                     stderr_to_stdout: true
+                   )
+
+          outcome_json =
+            temp_dir
+            |> Path.join("release-proposal-control-result.json")
+            |> File.read!()
+            |> Jason.decode!()
+
+          assert outcome_json["status"] == expected_status
+          assert outcome_json["reason"] == expected_reason
+          assert outcome_json["event_name"] == "workflow_dispatch"
+          assert outcome_json["run_id"] == "16202"
+          assert outcome_json["candidate_digest"] == String.duplicate("a", 64)
+          assert Enum.all?(outcome_json["probes"], &Map.has_key?(&1, "source"))
+          assert Enum.all?(outcome_json["probes"], &Map.has_key?(&1, "status"))
+        end)
+      end
+    )
+
+    protected =
+      extract_step_block!(source, "Validate protected exact candidate dispatch") <>
+        extract_step_block!(
+          source,
+          "Protected exact candidate dispatch may merge only the validated release PR"
+        )
+
+    assert protected =~ "gh pr merge"
+    assert protected =~ "CANDIDATE_DIGEST"
+    refute result =~ "gh pr merge"
+    refute result =~ "git tag"
+    refute result =~ "gh release"
+  end
+
   test "contributing documents proposal-only triggers and the protected exact-digest chain" do
     recovery_runbook =
       extract_markdown_section!(
@@ -455,6 +541,29 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end
   end
 
+  defp with_proposal_result_env(outcome, status, reason, fun) do
+    temp_dir = Path.join(System.tmp_dir!(), "release-proposal-result-#{System.unique_integer([:positive])}")
+    File.mkdir_p!(temp_dir)
+
+    env = %{
+      "CAPTURE_OUTCOME" => outcome,
+      "CAPTURE_STATUS" => status,
+      "CAPTURE_REASON" => reason,
+      "EVENT_NAME" => "workflow_dispatch",
+      "RUN_ID" => "16202",
+      "PROPOSAL_HEAD" => String.duplicate("b", 40),
+      "SOURCE_SHA" => String.duplicate("c", 40),
+      "CANDIDATE_DIGEST" => String.duplicate("a", 64),
+      "RUNNER_TEMP" => temp_dir
+    }
+
+    try do
+      fun.(temp_dir, env)
+    after
+      File.rm_rf!(temp_dir)
+    end
+  end
+
   defp should_run?(temp_dir) do
     output = Path.join(temp_dir, "github-output")
     File.exists?(output) and File.read!(output) =~ "should_run=true"
@@ -518,6 +627,18 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
       _ ->
         raise ArgumentError, "could not extract the release preflight shell script"
+    end
+  end
+
+  defp proposal_result_script(result) do
+    case String.split(result, ~r/^\s*run: \|\n/m, parts: 2) do
+      [_, script] when script != "" ->
+        script
+        |> String.split("\n")
+        |> Enum.map_join("\n", &String.replace_prefix(&1, "          ", ""))
+
+      _ ->
+        raise ArgumentError, "could not extract the proposal result shell script"
     end
   end
 
