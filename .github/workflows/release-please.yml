@@ -441,6 +441,7 @@ jobs:
           proposal_head=""
           source_sha=""
           candidate_digest="${CANDIDATE_DIGEST:-}"
+          candidate_root=""
 
           emit_capture_outputs() {
             printf 'result_status=%s\n' "$result_status" >> "$GITHUB_OUTPUT"
@@ -450,7 +451,16 @@ jobs:
             printf 'candidate_digest=%s\n' "$candidate_digest" >> "$GITHUB_OUTPUT"
           }
 
-          trap emit_capture_outputs EXIT
+          cleanup_and_emit_capture_outputs() {
+            capture_exit_status=$?
+            if [ -n "$candidate_root" ] && [ -d "$candidate_root" ]; then
+              git worktree remove --force "$candidate_root" >/dev/null 2>&1 || true
+            fi
+            emit_capture_outputs
+            return "$capture_exit_status"
+          }
+
+          trap cleanup_and_emit_capture_outputs EXIT
           # Capture proposal/source identity only after the sibling-pin sync
           # has settled the release branch; its publishable-content digest is
           # Plan 05 input.
@@ -484,7 +494,6 @@ jobs:
           candidate_root=$(mktemp -d)
           rmdir "$candidate_root"
           git worktree add --detach "$candidate_root" "$proposal_head"
-          trap 'git worktree remove --force "$candidate_root" >/dev/null 2>&1 || true' EXIT
           mkdir -p .planning/release-candidates
           target_status=$(jq -er '.status' "$source_target")
 
