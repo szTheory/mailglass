@@ -108,7 +108,22 @@ Plans:
   4. Repository-hygiene reports an inspectable pass, policy block, or cannot-check outcome with agreeing logs and JSON evidence, including control and applicable scheduled-run proof.
   5. Post-publish validation checks the exact immutable published target through its recovery path, or records an evidence-backed inapplicable or blocked result without substituting `main` or forcing publication.
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 162-01-PLAN.md — Trace one release identity end to end, then complete the append-only reconciliation and disposition ledger.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 162-02-PLAN.md — Emit bounded release-please proposal results without expanding ordinary-trigger authority.
+- [ ] 162-03-PLAN.md — Restore three-state repository-hygiene CLI, summary, and JSON artifact agreement.
+- [ ] 162-04-PLAN.md — Report unpublished scheduled post-publish state while retaining exact immutable-target proof.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 162-05-PLAN.md — Append final live release/control/scheduled evidence and enforce honest pending or cannot-check states.
 
 ### Phase 163: Deterministic Release-Path Timeout Repairs
 

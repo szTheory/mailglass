@@ -15,7 +15,7 @@
 - **D-05:** Record control-run and applicable observed scheduled-run evidence separately. A manual dispatch may prove the control path but never substitutes for scheduled execution; pending elapsed-time evidence remains pending, and unavailable evidence reports `cannot-check`.
 - **D-06:** Release-please and repository-hygiene must expose bounded, inspectable outcomes through agreeing logs and machine-readable evidence. Preserve the existing `pass`, policy `blocked`, and `cannot-check` semantics, make the narrowest changes needed for truthful results, and do not redesign workflow topology or weaken the already-green protected `CI Green` path.
 - **D-07:** Post-publish recovery is valid only for an exact immutable target whose tracked release state and public package facts prove publication. The existing recovery path must resolve all expected package tags to the same target SHA and verify the authorized content digest.
-- **D-08:** While the target remains authorized but unpublished, record post-publish as blocked or inapplicable. Do not substitute `main`, reinterpret a release-event no-op as consumer proof, or force a new release solely to satisfy this phase.
+- **D-08 resolution:** While the target remains authorized but unpublished, record post-publish as top-level `blocked`. Do not substitute `main`, reinterpret a release-event no-op as consumer proof, or force a new release solely to satisfy this phase.
 
 ### the agent's Discretion
 - Exact filename and schema for the append-only Phase 162 reconciliation artifact, provided every claim cites its source, capture time, immutable identity, and outcome.
@@ -37,7 +37,7 @@
 | AUTO-02 | Dispose every stale release branch/check with no auto-merge limbo. | Branch/PR/check disposition rows and explicit recovery-condition vocabulary. |
 | AUTO-03 | Truthful proposal-only release-please control and schedule. | Preserve existing trigger/authority split; repair failed candidate-capture reporting only. |
 | AUTO-04 | Inspectable pass/blocked/cannot-check hygiene outcomes with agreeing JSON/logs. | Make aggregate status three-valued and have workflow summary render the JSON report. |
-| AUTO-05 | Exact immutable post-publish recovery or evidence-backed blocked/inapplicable state. | Keep all-tags-to-one-SHA/content-digest guard; make unpublished scheduled resolution non-successful but explicit. |
+| AUTO-05 | Exact immutable post-publish recovery or evidence-backed blocked state. | Keep all-tags-to-one-SHA/content-digest guard; make unpublished scheduled resolution non-successful but explicit. |
 </phase_requirements>
 
 ## Summary
@@ -171,7 +171,7 @@ test/mix/tasks/ and test/scripts/      # executable reporting/authority contract
 ### Pitfall 3: Treating scheduled unpublished smoke as a generic crash
 **What goes wrong:** The scheduled smoke resolver fails on `completed-versions` when the ledger remains authorized/not-started, skipping all downstream jobs without a bounded outcome record.
 **Why it happens:** The current workflow uses a hard shell assertion before outputs/summary. [VERIFIED: live run `32572135200`; `post-publish-smoke.yml`]
-**How to avoid:** Keep the exact completed-target requirement, but emit an explicit inapplicable/blocked result with source identities before ending non-success or deliberately no-oping according to a tested contract.
+**How to avoid:** Keep the exact completed-target requirement, but emit an explicit `blocked` result with source identities before ending non-success according to a tested contract.
 **Warning signs:** Resolver’s only visible conclusion is exit code 1 and downstream skipped.
 
 ### Pitfall 4: Trying to solve release-please failure by granting ordinary triggers authority
@@ -217,17 +217,12 @@ The implementation must make its machine-readable result the source used by the 
 
 | # | Claim | Section | Risk if Wrong |
 |---|-------|---------|---------------|
-| A1 | The minimal repair will be able to emit a structured scheduled post-publish inapplicable/blocked result without introducing a new workflow or external service. | Architecture Patterns | Planner may need to choose the exact existing workflow artifact/summary seam after implementation inspection. |
+| A1 | The minimal repair will be able to emit a structured scheduled post-publish `blocked` result without introducing a new workflow or external service. | Architecture Patterns | Planner may need to choose the exact existing workflow artifact/summary seam after implementation inspection. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Which exact disposition should PR #222 receive after the execution-time refresh?**
-   - What we know: it is open, clean, fully checked, and not auto-merge armed as captured on 2026-08-22. [VERIFIED: GitHub API]
-   - What's unclear: whether its head/content can still satisfy the ledger’s named protected recovery condition.
-   - Recommendation: capture fresh SHA/digest/required-check facts during the plan’s first task and record `retain` with exact-digest recovery or `retire` with mismatch reason; do not merge it in this phase absent the protected dispatch path.
-2. **Should expected unpublished scheduled smoke be `blocked` or `inapplicable` at top level?**
-   - What we know: requirements accept evidence-backed inapplicable/blocked; a completed target is required for scheduled consumer proof. [VERIFIED: AUTO-05; workflow]
-   - Recommendation: encode an explicit reason and stable machine result; choose one documented term consistently across workflow summary, artifact, and reconciliation record.
+1. **PR #222 disposition rule:** Execution performs a fresh exact capture. If the PR head SHA, base SHA, content digest, and required checks satisfy the named protected recovery condition, retain PR #222 for the existing exact candidate-digest protected dispatch. If any immutable identity or policy prerequisite mismatches, retire it with the exact mismatch reason. Evidence capture never merges it, and no push, schedule, digest-free dispatch, or other ordinary trigger gains release authority.
+2. **Scheduled authorized/not-started vocabulary:** Use top-level `blocked` consistently in result JSON, logs, summary, reconciliation, and plans. This is a non-success policy outcome because no completed immutable target exists; no alternate top-level term is permitted for this state.
 
 ## Environment Availability
 
