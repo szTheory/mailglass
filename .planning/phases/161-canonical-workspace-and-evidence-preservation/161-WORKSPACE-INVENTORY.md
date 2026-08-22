@@ -2044,3 +2044,36 @@ The shared Plan 03 gate is the sole queue input. The inventory/TSV join has 12 i
 - No preservation ref, archive ref, unreachable object, canonical `main`, `retain`, `handoff`, `merge`, or `archive` row was mutated.
 
 **Execution outcome:** `removed: 0`; `retained: 1,849`; `blocked: 0`. The empty action queue is an evidence-backed no-op, not authority to reinterpret archive, handoff, or retain rows as disposable.
+
+## Final Reconciliation
+
+**Final capture time (UTC):** `2026-08-22T15:56:05Z`
+**Final capture HEAD:** `e2be2c941300fb0de3194bef6d62e087e96b5722` (`docs(161-04): record evidence-approved cleanup outcome`)
+**Method:** the fixed Plan 01 read-only enumerators, exact quoted range checks, and the unchanged shared complete reconciliation gate. No remote operation or cleanup mutation was run.
+
+| Final enumerator | Capture result | Reconciliation outcome |
+| --- | --- | --- |
+| canonical status | `/Users/jon/projects/mailglass` is clean on `main`, tracking `origin/main`; `behind 0 / ahead 29` | Sole canonical workspace under D-04; clean does not override the non-release-clean verdict. |
+| linked worktrees | 6 registered records | `WT-01` remains canonical; `WT-02` through `WT-06` remain exactly registered at their pre-mutation paths, branches/HEADs, and dispositions. |
+| stash | 1 record: `stash@{0}` = `024fc1ba0379d6bfb9b466fab407d94a94a2fa5a` | `STASH-0001` remains retained, unchanged, and recoverable. |
+| refs | 167 refs: the pre-mutation 155 plus 12 `preserve/phase-161-*` recovery refs | Each original named ref/range retains its original disposition; all 12 preservation refs resolve exactly to their TSV OIDs. |
+| divergent ranges | 10 fixed `main...<ref>` checks exited 0 | `RANGE-0001` through `RANGE-0010` remain represented and none was merged or deleted. |
+| local release proof | 5 inventoried release-proof rows | `REL-*` evidence, `release-target.json`, and the WT-03 publish-summary deltas remain retained/handoff evidence. |
+| unreachable objects | 1,805 unreachable commits | `OBJ-0001` through `OBJ-1805` remain retained; no prune, gc, reset, or object mutation occurred. |
+
+### Final Outcome Mapping
+
+The pre-mutation matrix remains byte-preserved and is the exact per-identity outcome source. The final capture contains no removed identity and no new unaccounted-for workspace or object class. Consequently every original row has one final outcome without a rewrite: the canonical and `retain` rows remain retained, the 27 `handoff` rows remain handed to Phase 162, the 12 `archive` rows remain archived and additionally recoverable through the 12 verified preservation refs, and the `remove` outcome set remains empty. The final enumeration adds only those documented preservation refs; it does not alter any pre-mutation identity or disposition.
+
+The immutable seven-commit v2.6/v2.7 semantic subrange remains the separately recorded commits `7e039bc6`, `5a19ddfb`, `c723f357`, `5a5e0950`, `d6a050a0`, `d583fa0c`, and `06ac996c`. It is not the live ahead count. The live `ahead 29` count includes later Phase 161 documentation/evidence commits; upstream drift is therefore still explicitly **non-release-clean** under D-06.
+
+### Phase 162 Handoff
+
+| Retained candidate / question | Local evidence retained here | Recovery condition for Phase 162 |
+| --- | --- | --- |
+| WT-03 detached release candidate and its three dirty publish summaries | `WT-03`, `EVID-WT-WT-03`, `EVID-RELEASE-CONTENT`, exact diff `75ea168315ebff101a2dd060499f86a73f688ca5597837bb22dec1dc5b16ce69`, and `.planning/publish/*-publish-summary.json` | Compare the detached proposal identity to PR #222, tags, and published package facts before any disposition. |
+| Attached release/recovery worktrees and branches (`WT-02`, `WT-04`–`WT-06`; `REF-0007`–`REF-0012`) | Worktree matrix, range rows, `EVID-REF-GRAPH`, and the unchanged registered paths/HEADs | Refresh remote branch/PR/protection/check evidence and use only the protected path or an explicitly recorded retirement outcome. |
+| Release tags, `release-target.json`, and Hex publication state | `REF-0018`–`REF-0021`, `.planning/release-target.json`, local release-proof rows, and Phase 160 certification history | Query the exact tag and Hex endpoints listed in `release-target.json`; do not infer publication or tag meaning from local names. |
+| PR #222 checks, release-please, repository-hygiene, and scheduled controls | This inventory, `161-PRESERVATION-RECONCILIATION.tsv`, all `preserve/phase-161-*` refs, and `MAINTAINING.md` | Gather fresh protected PR/check/Actions/scheduled-run evidence; a manual control run does not substitute for applicable scheduled proof. |
+
+This handoff records local facts and recovery conditions only. It intentionally does not decide PR, check, tag, Hex, or scheduled-control meaning.
