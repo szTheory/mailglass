@@ -25,4 +25,76 @@ defmodule Mailglass.Scripts.Phase162ReleaseReconciliationTest do
     assert ledger =~ "gh pr view 222"
     assert ledger =~ "Recovery command"
   end
+
+  test "the expanded ledger covers every canonical source in stable category and identity order" do
+    ledger = File.read!(@ledger)
+
+    for source <- [
+          "GitHub PR API",
+          "GitHub Checks API",
+          "Git refs",
+          "Git tags/releases",
+          "Hex package API",
+          "release-target.json",
+          "canonical publish summaries",
+          "WT-03 retained diff",
+          "Phase 161 recovery refs"
+        ] do
+      assert ledger =~ source
+    end
+
+    rows = matrix_rows(ledger, "Expanded evidence matrix")
+    assert rows != []
+
+    identities = Enum.map(rows, & &1["Immutable identity"])
+    assert Enum.map(rows, &{&1["Category"], &1["Immutable identity"]}) == Enum.sort_by(rows, &{&1["Category"], &1["Immutable identity"]}) |> Enum.map(&{&1["Category"], &1["Immutable identity"]})
+    assert Enum.all?(identities, &(&1 != ""))
+  end
+
+  test "every scoped disposition is singular and empty scoped categories are explicit" do
+    ledger = File.read!(@ledger)
+    rows = matrix_rows(ledger, "Expanded disposition matrix")
+
+    assert rows != []
+    assert Enum.all?(rows, &(&1["Outcome"] in ["retain", "retire", "protected-merge"]))
+    assert Enum.uniq_by(rows, &{&1["Category"], &1["Immutable identity"]}) == rows
+
+    for empty_category <- ["NONE-stale-release-branches", "NONE-unavailable-remote-response"] do
+      assert Enum.any?(rows, &(&1["Immutable identity"] == empty_category))
+    end
+  end
+
+  test "publication rows preserve all three exact versions and checksums without creating authority" do
+    ledger = File.read!(@ledger)
+
+    for checksum <- [
+          "8ffab2c0708b5eb3b18693ec6df1b4ad105abc38d7041f1f7b7650cb046f05de",
+          "19a4400bb76631605424f6edba30905de50c1d31e8db6667ec31007222ba832c",
+          "b3261d51b58fa8d69ffee7045507f9a0e2c57ea4b09be7f796378f267ad84cc2"
+        ] do
+      assert ledger =~ checksum
+    end
+
+    assert ledger =~ "publication: not_started"
+    refute ledger =~ "authorized release authority"
+  end
+
+  defp matrix_rows(ledger, title) do
+    [_, table] = String.split(ledger, "### #{title}\n\n", parts: 2)
+
+    [header, _separator | rows] =
+      table
+      |> String.split("\n")
+      |> Enum.take_while(&String.starts_with?(&1, "|"))
+      |> Enum.map(&parse_row/1)
+
+    Enum.map(rows, &Map.new(Enum.zip(header, &1)))
+  end
+
+  defp parse_row(row) do
+    row
+    |> String.trim("|")
+    |> String.split("|")
+    |> Enum.map(&String.trim/1)
+  end
 end
