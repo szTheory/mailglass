@@ -79,6 +79,38 @@ defmodule Mailglass.Scripts.Phase162ReleaseReconciliationTest do
     refute ledger =~ "authorized release authority"
   end
 
+  test "a final control recovery capture preserves prior blocks and records final outcomes" do
+    ledger = File.read!(@ledger)
+
+    assert ledger =~ "## Capture 2026-08-22T18:43:11Z"
+    assert ledger =~ "## Capture 2026-08-22T18:45:01Z — Expanded scope"
+    assert ledger =~ "## Final Control Recovery Capture"
+    assert ledger =~ ~r/\*\*Captured UTC:\*\* `\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z`/
+    assert ledger =~ "**Canonical HEAD:**"
+
+    rows = matrix_rows(ledger, "Final disposition matrix")
+    assert rows != []
+    assert Enum.all?(rows, &(&1["Outcome"] in ["retain", "retire", "protected-merge"]))
+    assert Enum.uniq_by(rows, &{&1["Category"], &1["Immutable identity"]}) == rows
+  end
+
+  test "final run evidence keeps control and schedule provenance distinct and blocks unresolved threats" do
+    ledger = File.read!(@ledger)
+    rows = matrix_rows(ledger, "Final run evidence")
+
+    assert Enum.any?(rows, &(&1["Event"] == "workflow_dispatch"))
+    assert Enum.any?(rows, &(&1["Event"] == "schedule"))
+    assert Enum.all?(rows, fn row ->
+             row["Status"] == "pending" or String.trim(row["Run ID"]) != ""
+           end)
+    assert Enum.all?(rows, &(String.trim(&1["Artifact SHA-256"]) != ""))
+    assert Enum.uniq(Enum.map(rows, & &1["Run ID"])) == Enum.map(rows, & &1["Run ID"])
+    assert ledger =~ "manual dispatch is not scheduled proof"
+    assert ledger =~ "## Threat closure"
+    assert ledger =~ "T-162-20"
+    assert ledger =~ "Phase result: blocked"
+  end
+
   defp matrix_rows(ledger, title) do
     [_, table] = String.split(ledger, "### #{title}\n\n", parts: 2)
 
