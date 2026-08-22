@@ -53,7 +53,7 @@
 
 **Milestone Goal:** Leave Mailglass in a clean, quiet, trustworthy maintenance posture after v2.6 without product expansion, speculative refactoring, or a ceremonial release.
 
-- [ ] **Phase 161: Canonical Workspace and Evidence Preservation** - Establish an auditable canonical `main` and recoverably disposition all workspace and Git residue.
+- [x] **Phase 161: Canonical Workspace and Evidence Preservation** - Establish an auditable canonical `main` and recoverably disposition all workspace and Git residue. (completed 2026-08-22)
 - [ ] **Phase 162: Protected Release and Scheduled-Control Recovery** - Reconcile release state and restore truthful proposal, hygiene, and post-publish outcomes through existing protected controls.
 - [ ] **Phase 163: Deterministic Release-Path Timeout Repairs** - Repair the two observed timeout failures narrowly while retaining their complete proof contracts.
 - [ ] **Phase 164: Repository Truth Reconciliation and Closeout** - Align maintenance evidence with settled facts and prove the final quiet repository state.
@@ -143,7 +143,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 161. Canonical Workspace and Evidence Preservation | 5/5 | In Progress|  |
+| 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 0/TBD | Not started | - |
 | 163. Deterministic Release-Path Timeout Repairs | 0/TBD | Not started | - |
 | 164. Repository Truth Reconciliation and Closeout | 0/TBD | Not started | - |

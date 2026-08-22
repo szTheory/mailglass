@@ -15,6 +15,13 @@ milestone: restore quiet, trustworthy repository operations; disposition release
 and make documentation and tracked artifacts tell the truth. It does not expand the product, redesign
 architecture, overhaul CI for speed, or force a Hex release without an adopter-facing correction.
 
+**Phase 161 completed and verified 2026-08-22.** The canonical workspace, linked worktrees, stashes,
+refs, divergent ranges, release leftovers, and selected unreachable objects now have an append-only,
+recoverability-first evidence ledger. Twelve preservation refs protect archive candidates; no unsafe
+cleanup was authorized. The 15 former conversational UAT checkpoints are now enforced by a reusable live
+Git auditor and disposable-repository contract tests in the existing required CI lane, which passed 283
+tests with zero failures. Verification passed 21/21 with no human verification remaining.
+
 **v2.6 Engineering Quality Ratchet shipped and passed its milestone audit 2026-08-21.** The milestone restored
 generated-host migration truth, bounded execution and data/security correctness, tightened architecture,
 and made merge and release signals fail closed. The canonical `mix ci` path passed 1,914 tests, 23
@@ -87,6 +94,12 @@ release truth, deterministic release-path gates, and repository truth/closeout. 
 to recoverability-first, low-controversy maintenance. Product/API/schema/UI expansion, dependency churn,
 speculative architecture, cosmetic busywork, a CI-efficiency overhaul, and a release performed only for
 ceremony are out of scope.
+
+## Validated Requirements: v2.7 (in progress)
+
+- ✓ WSPC-01..04 — complete pre-mutation workspace evidence, an explained canonical `main`, one
+  evidence-backed disposition per identity, and verified preservation before any cleanup — validated in
+  Phase 161. The phase's 15 UAT checks are deterministic local/CI contracts; no human UAT remains.
 
 ## Completed Milestone: v2.6 Engineering Quality Ratchet
 
@@ -932,6 +945,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-44 | Stable v2 façades remain thin compatibility edges over validated Runtime state, cohesive package-local pipelines, and narrow sibling ports; executable AST/CI guards prevent ownership drift | Refactoring only raises quality when it removes policy duplication without forcing adopter migrations or creating ceremonial wrapper modules | ✓ Validated Phase 158 — independent review closed vacuous guards/trampolines and final core/inbound compatibility, no-optional, cycle, and scope suites pass |
 | D-45 | One canonical local `mix ci` path and the protected `CI Green` aggregate must cover the same required deterministic evidence, with explicit ownership for every exception | Maintainers need a single reproducible merge signal whose green state cannot be manufactured by skipped, stale, or cross-test evidence | ✓ Validated Phase 159 and milestone re-audit — scoped telemetry regression, policy checks, and uninterrupted full CI passed |
 | D-46 | Publication authority is bound to one authorized candidate digest and immutable tag, and success requires exact-Hex generated-host and trust-runner evidence | Repository green is not sufficient proof that the public three-package family is installable and behaviorally identical | ✓ Validated Phase 160 — 2.5.0 / 2.5.0 / 2.2.0 published and exact-Hex adoption passed from immutable tag SHA `0f0b0686` |
+| D-47 | Workspace and release-evidence verification is machine-enforced through live identity reconciliation plus disposable-repository CI contracts; evidence corrections append instead of rewriting history | Git identity, reachability, preservation, and release-verdict invariants are deterministic and recurring, so manual UAT adds delay without adding judgment value | ✓ Validated Phase 161 — 21/21 verification truths and 15/15 automated UAT checks passed; the auditor caught and append-only corrected one historical evidence hash typo |
 
 ## Evolution
 
@@ -954,7 +968,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-08-21 after opening v2.7 Repository Stewardship & Operational Hygiene.*
+*Last updated: 2026-08-22 after Phase 161.*
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->
