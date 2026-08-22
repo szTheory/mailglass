@@ -53,7 +53,7 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
           source
           |> String.split("\n")
           |> Enum.find(&String.starts_with?(&1, "| REF-0001 "))
-          |> String.replace("REF-0001", "REF-0002", global: false)
+          |> String.replace("REF-0001", "REF-0003", global: false)
 
         String.replace(
           source,
@@ -166,18 +166,20 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
     git!(repo, ["branch", "archive/source", base])
     git!(repo, ["branch", "preserve/fixture-ref", base])
     git!(repo, ["branch", "preserve/fixture-range", base])
+    git!(repo, ["tag", "-a", "v-fixture", base, "-m", "fixture tag"])
+    tag_oid = git_output!(repo, ["rev-parse", "refs/tags/v-fixture"])
 
     inventory = Path.join(root, "INVENTORY.md")
     tsv = Path.join(root, "RECONCILIATION.tsv")
 
-    File.write!(inventory, inventory(repo, head, base))
+    File.write!(inventory, inventory(repo, head, base, tag_oid))
     File.write!(tsv, reconciliation(base))
     on_exit(fn -> File.rm_rf!(root) end)
 
     %{repo: repo, inventory: inventory, tsv: tsv}
   end
 
-  defp inventory(repo, head, base) do
+  defp inventory(repo, head, base, tag_oid) do
     """
     # Workspace Evidence Fixture
 
@@ -189,6 +191,7 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
     | WT-01 | linked worktree | `#{repo}` | canonical `main`; clean | clean fixture worktree | `git rev-parse HEAD` = `#{head}` | EVID-WT-ROOT | retain | canonical fixture | append evidence only | captured |
     | NONE-STASH | stash | `NONE` | explicit zero sentinel | no stash returned by the enumerator | fresh empty stash enumeration | EVID-ZERO-STASH | retain | no preservation required | recapture if non-empty | captured |
     | REF-0001 | archive ref | `archive/source` | `#{base}` | source identity retained independently | source commit remains reachable | EVID-REF-GRAPH | archive | named recovery ref | retain | captured |
+    | REF-0002 | milestone tag | `v-fixture` | `#{tag_oid}` | annotated tag identity retained | tag object remains reachable | EVID-REF-TAG | retain | named tag object | retain | captured |
     | RANGE-0001 | archive range | `main...archive/source` | fixed range | range identity retained independently | both endpoints resolve | EVID-RANGE-GRAPH | archive | named recovery ref | retain | captured |
     | NONE-RELEASE | release proof | `NONE` | explicit zero sentinel | no release artifacts selected | fresh empty release enumeration | EVID-ZERO-RELEASE | retain | no preservation required | recapture if non-empty | captured |
     | NONE-OBJECT | unreachable commit | `NONE` | explicit zero sentinel | no unreachable commits selected | fresh empty fsck enumeration | EVID-ZERO-OBJECT | retain | no preservation required | recapture if non-empty | captured |

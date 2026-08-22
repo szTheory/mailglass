@@ -241,7 +241,7 @@ while IFS=$'\t' read -r id category identity observed _content _reachability _ev
     'release tag'|'milestone tag') ref="refs/tags/$name" ;;
     *) continue ;;
   esac
-  actual_oid=$(git -C "$repo" rev-parse "${ref}^{commit}" 2>/dev/null) || fail "$id ref does not resolve: $ref"
+  actual_oid=$(git -C "$repo" rev-parse "$ref" 2>/dev/null) || fail "$id ref does not resolve: $ref"
   [ "$actual_oid" = "$expected_oid" ] || fail "$id ref $name differs from captured OID"
 done < <(awk -F '\t' '$1 ~ /^REF-[0-9]+$/ { print }' "$rows")
 
