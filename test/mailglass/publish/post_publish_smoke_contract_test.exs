@@ -79,6 +79,41 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     end
   end
 
+  test "scheduled authorized unpublished targets persist one blocked resolution before failing closed" do
+    workflow = File.read!(@workflow_path)
+    resolver = extract_job!(workflow, "resolve-completed-target", "cron-guard")
+
+    assert resolver =~ "post-publish-resolution.json"
+    assert resolver =~ "command=\"completed-versions\""
+    assert resolver =~ "authorized-versions\" \"$control_target\""
+    assert resolver =~ "status\":\"blocked\""
+    assert resolver =~ "reason\":\"scheduled_target_not_published\""
+
+    for field <- [
+          "event_name",
+          "run_id",
+          "ledger_status",
+          "publication_status",
+          "target_ref",
+          "core",
+          "admin",
+          "inbound"
+        ] do
+      assert resolver =~ "\"#{field}\":"
+    end
+
+    assert_ordered!(resolver, [
+      "authorized-versions\" \"$control_target\"",
+      "post-publish-resolution.json",
+      "exit 1"
+    ])
+
+    assert resolver =~ "if: ${{ always() }}"
+    assert resolver =~ "name: Upload post-publish resolution"
+    assert resolver =~ "name: Summarize post-publish resolution"
+    assert resolver =~ "path: ${{ runner.temp }}/post-publish-resolution.json"
+  end
+
   test "policy and every repository-backed proof stay on immutable control and target refs" do
     workflow = File.read!(@workflow_path)
     resolver = extract_job!(workflow, "resolve-completed-target", "cron-guard")
