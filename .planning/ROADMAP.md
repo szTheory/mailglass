@@ -69,7 +69,13 @@
   2. A maintainer can use one documented canonical `main` checkout whose upstream, ahead/behind state, and clean working tree are explained.
   3. Every inventoried workspace or Git object has a recorded retain, handoff, merge, archive, or remove outcome backed by unique-work and reachability evidence.
   4. Any approved cleanup preserves unique or uncertain work on a recoverable ref or documented handoff before normal Git-managed removal.
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 161-01-PLAN.md — Capture the canonical `main` and full pre-mutation workspace/Git evidence ledger.
+- [ ] 161-02-PLAN.md — Assess content and reachability, then disposition every inventoried identity.
+- [ ] 161-03-PLAN.md — Preserve unique or uncertain work on named refs/commits or documented handoffs.
+- [ ] 161-04-PLAN.md — Retire only approved residue and append the final reconciliation and Phase 162 handoff.
 
 ### Phase 162: Protected Release and Scheduled-Control Recovery
 **Goal**: Maintainers can explain and safely disposition the blocked release state while existing release and repository controls report only truthful, bounded outcomes.
