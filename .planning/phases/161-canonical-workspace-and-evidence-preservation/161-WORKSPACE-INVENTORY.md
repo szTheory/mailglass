@@ -1984,3 +1984,9 @@ Each non-sentinel row now has exactly one permitted disposition, an `EVID-*` cit
 | pending | 0 |
 
 Stable key/order is `category + identity`; the existing category blocks and bytewise identities were retained. The assessment is idempotent at this capture HEAD: it updates existing stable rows, creates no duplicate identities, and performs no branch/ref creation, merge, removal, stash change, reset, force action, garbage collection, or history rewrite.
+
+### Assessment Matrix Validation
+
+The fresh enumerators reconcile to the stable ledger: 6 worktrees, 1 stash, 155 enumerated refs (including the separately represented equal-OID release tags), 10 divergent ranges, 5 local release-proof rows, and 1,805 unreachable-object rows. Their 1,849 non-sentinel item rows have 1,849 `EVID-*` references and 1,849 allowed dispositions. Category/identity duplicate detection returned zero duplicates, and the category blocks retain their capture ordering; shared OIDs only share evidence, never a disposition row.
+
+The permitted next action is deliberately non-executing for all rows in this phase. In particular, no `remove` decision is inferred from age, a detached worktree, absence from `main`, or `fsck --no-reflogs` output. Phase 162 owns the named remote/release handoffs; a later cleanup phase may act only after its stated preservation and graph/content prerequisites are met.
