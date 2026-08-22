@@ -177,7 +177,22 @@ boundary. The authorized and unpublished ledger target remains blocked and does 
 
 | Threat | Severity | Closure evidence | Status |
 | --- | --- | --- | --- |
-| T-162-01 through T-162-16 | medium/high | Plans 01-04 focused contracts plus the retained source/disposition matrices above | mitigated |
+| T-162-01 | high | Reconciliation contract requires source, capture time, immutable identity, observation, and outcome | mitigated |
+| T-162-02 | high | Final disposition matrix gives every scoped PR, branch, check, tag, ref, ledger, and WT row one outcome | mitigated |
+| T-162-03 | medium | Final source ledger distinguishes PR, ledger, published, Hex, canonical summaries, and WT-03 identities | mitigated |
+| T-162-04 | medium | Prior capture blocks remain byte-present and final capture is append-only | mitigated |
+| T-162-05 | high | Release-trigger contract preserves proposal-only ordinary triggers and exact protected dispatch boundary | mitigated |
+| T-162-06 | high | PR #222 is retained only for fresh exact head/base/digest/check equality at protected dispatch | mitigated |
+| T-162-07 | medium | Observed checks are retained as non-authorizing evidence and auto-merge remains null | mitigated |
+| T-162-08 | medium | Missing branch and artifact observations remain cannot-check with exact retry commands | mitigated |
+| T-162-09 | high | Hygiene contract preserves explicit pass, blocked, and cannot-check semantics | mitigated |
+| T-162-10 | high | Hygiene summary and uploaded JSON derive from the same result map | mitigated |
+| T-162-11 | medium | Downloaded hygiene artifact hashes and run conclusions are independently cited | mitigated |
+| T-162-12 | medium | Historical schedule failure is recorded as blocked/cannot-check, never collapsed into success | mitigated |
+| T-162-13 | high | Post-publish contract requires completed immutable target and exact package identities | mitigated |
+| T-162-14 | high | Authorized/unpublished scheduled resolution is bounded blocked evidence without a `main` fallback | mitigated |
+| T-162-15 | medium | Release-event no-op and historical manual control evidence are never consumer or schedule proof | mitigated |
+| T-162-16 | high | Three published tags resolve to one SHA while remaining distinct identity rows | mitigated |
 | T-162-17 | high | Final run evidence separates `workflow_dispatch` and `schedule`, with no repeated real run ID and explicit pending rows | mitigated |
 | T-162-18 | high | Downloaded repo-hygiene and post-publish artifacts have recorded SHA-256 values and agreement observations; unavailable artifacts are `cannot-check` | mitigated |
 | T-162-19 | high | Capture commands were read-only; no protected dispatch, merge, tag, push, publish, or ledger mutation occurred | mitigated |

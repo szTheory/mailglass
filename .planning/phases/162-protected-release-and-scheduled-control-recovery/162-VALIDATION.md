@@ -3,8 +3,8 @@ phase: 162
 slug: protected-release-and-scheduled-control-recovery
 # status lifecycle: draft (seeded by plan-phase) → validated (set by validate-phase §6)
 # audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: false) (#2117)
-status: draft
-nyquist_compliant: false
+status: validated
+nyquist_compliant: true
 wave_0_complete: true
 created: 2026-08-22
 ---
@@ -47,7 +47,7 @@ created: 2026-08-22
 | 162-03-02 | 03 | 2 | AUTO-04 | T-162-10 | Workflow artifact and summary derive from the same Mix task result without independent verdict computation. | workflow contract | `mix test test/mix/tasks/mailglass.repo.hygiene_test.exs` | ✅ | ✅ green |
 | 162-04-01 | 04 | 2 | AUTO-05 | T-162-16 | Scheduled authorized/not-started emits top-level `blocked`; completed/dispatch recovery retains exact versions, all-tags-one-SHA, and content-digest checks without `main` fallback. | workflow/script contract | `mix test test/mailglass/publish/post_publish_smoke_contract_test.exs test/scripts/verify_published_release_test.exs` | ✅ | ✅ green |
 | 162-05-01 | 05 | 3 | AUTO-01..05 | All Plan 01-04 contract cases exist and pass before the completion gate flips; live evidence refresh remains read-only. | completion gate + live evidence audit | `mix test test/scripts/phase_162_release_reconciliation_test.exs test/scripts/release_trigger_recovery_test.exs test/mix/tasks/mailglass.repo.hygiene_test.exs test/mailglass/publish/post_publish_smoke_contract_test.exs` | ✅ | ✅ green |
-| 162-05-02 | 05 | 3 | AUTO-01..05 | Separate control/scheduled rows preserve real provenance; every probe is present and unavailable/unelapsed proof is explicit. | contract + live evidence audit | `mix test test/scripts/phase_162_release_reconciliation_test.exs test/scripts/release_trigger_recovery_test.exs test/mix/tasks/mailglass.repo.hygiene_test.exs test/mailglass/publish/post_publish_smoke_contract_test.exs` | ❌ Plan 05 expands | ⬜ pending |
+| 162-05-02 | 05 | 3 | AUTO-01..05 | Separate control/scheduled rows preserve real provenance; every probe is present and unavailable/unelapsed proof is explicit. | contract + live evidence audit | `mix test test/scripts/phase_162_release_reconciliation_test.exs test/scripts/release_trigger_recovery_test.exs test/mix/tasks/mailglass.repo.hygiene_test.exs test/mailglass/publish/post_publish_smoke_contract_test.exs` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -79,11 +79,11 @@ their separately listed missing control cases, and only Plan 05 Task 1 may set
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Focused feedback latency < 180 seconds
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Focused feedback latency < 180 seconds
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** validation coverage approved. The phase result remains blocked on the explicitly named post-change scheduled observations; pending is not a passing release disposition.
