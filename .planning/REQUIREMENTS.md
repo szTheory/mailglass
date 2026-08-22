@@ -18,7 +18,7 @@
 - [x] **AUTO-02**: PR #222 and each stale release branch/check are merged only through the protected path, retired with a recorded reason, or retained with a named recovery condition; no auto-merge or check remains in unexplained limbo.
 - [x] **AUTO-03**: Release-please produces a truthful proposal-only result through its current control and scheduled entry points without gaining merge, tag, publish, or protected-dispatch authority.
 - [ ] **AUTO-04**: Repository-hygiene automation reports an inspectable pass, policy block, or cannot-check result whose logs and JSON artifact agree, with both a control run and an observed scheduled run when scheduling is applicable.
-- [ ] **AUTO-05**: Post-publish automation validates the exact immutable published target through its existing recovery path, or records an evidence-backed inapplicable/blocked disposition without substituting `main` or forcing a release.
+- [x] **AUTO-05**: Post-publish automation validates the exact immutable published target through its existing recovery path, or records an evidence-backed inapplicable/blocked disposition without substituting `main` or forcing a release.
 
 ### Deterministic Release-Path Gates
 
@@ -66,7 +66,7 @@ Every v2.7 requirement is assigned to exactly one planned phase.
 | AUTO-02 | Phase 162 | Complete |
 | AUTO-03 | Phase 162 | Complete |
 | AUTO-04 | Phase 162 | Pending |
-| AUTO-05 | Phase 162 | Pending |
+| AUTO-05 | Phase 162 | Complete |
 | DTRM-01 | Phase 163 | Pending |
 | DTRM-02 | Phase 163 | Pending |
 | DTRM-03 | Phase 163 | Pending |
