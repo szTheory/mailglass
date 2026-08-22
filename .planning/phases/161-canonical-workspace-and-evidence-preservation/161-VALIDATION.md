@@ -62,13 +62,18 @@ created: 2026-08-21
 
 ---
 
-## Manual-Only Verifications
+## Automated UAT Closure
 
-| Behavior | Requirement | Why Manual | Test Instructions |
-|----------|-------------|------------|-------------------|
-| Inventory completeness and evidence quality | WSPC-01, WSPC-03 | Git commands enumerate candidates but cannot judge whether content summaries and dispositions are adequate. | Compare each command result against exactly one inventory row; inspect each row for content, unique-work, reachability, evidence reference, and allowed disposition. |
-| Preservation evidence quality | WSPC-04 | Automation proves one-to-one mapping and exact ref/OID equality, but a maintainer still judges whether the cited content/patch evidence justifies a `not-required` determination. | Review every `not-required` TSV row against its `EVID-*` content and reachability evidence; automation handles required refs and concrete handoff field completeness. |
-| Canonical `main` explanation is accurate | WSPC-02 | Later Phase 161 documentation commits can legitimately change the ahead count. | Re-run status and divergence commands immediately before sign-off and update the exact count/range explanation without rewriting history. |
+| Behavior | Requirement | Automated proof |
+|----------|-------------|-----------------|
+| Inventory completeness and evidence quality | WSPC-01, WSPC-03 | `scripts/verify_workspace_evidence.sh live` maps every live worktree, stash, selected ref/range, release artifact, and unreachable commit to one stable row or explicit zero sentinel; incomplete, stale, duplicate, and collapsed fixtures fail closed. |
+| Preservation evidence quality | WSPC-04 | The auditor joins every archive/remove row to one verified TSV record, requires a durable named ref or complete stable handoff, resolves exact OIDs live, and rejects removal without positive safe-removal proof. |
+| Canonical `main` explanation is accurate | WSPC-02 | The auditor re-reads branch, upstream, status, and divergence from the live checkout and requires `non-release-clean` whenever behind/ahead drift is nonzero. Historical corrections must be append-only and bind old and new values. |
+| Concurrent assessment safety | WSPC-03 | `test/scripts/workspace_evidence_contract_test.exs` synchronizes a ref mutation between the auditor's two snapshots and asserts a mandatory full-recapture abort. |
+
+**CI collection:** `test/scripts/workspace_evidence_contract_test.exs` is automatically
+included by the directory-scoped `mix verify.ci_lane_contract` alias and its required
+`mix_task_tests` job; no workflow YAML change is necessary.
 
 ---
 
