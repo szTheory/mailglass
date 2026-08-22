@@ -4,17 +4,17 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 161
 current_phase_name: canonical-workspace-and-evidence-preservation
-status: executing
-stopped_at: Completed 161-04-PLAN.md
-last_updated: "2026-08-22T16:24:03.678Z"
+status: verifying
+stopped_at: Completed 161-05-PLAN.md
+last_updated: "2026-08-22T16:30:30.712Z"
 last_activity: 2026-08-22
 last_activity_desc: Phase 161 execution started
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
-  percent: 0
+  completed_plans: 5
+  percent: 25
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-21)
 ## Current Position
 
 Phase: 161 (canonical-workspace-and-evidence-preservation) — EXECUTING
-Plan: 1 of 5
-Status: Executing Phase 161
+Plan: 5 of 5
+Status: Phase complete — ready for verification
 Last activity: 2026-08-22 — Phase 161 execution started
 
-Progress: [████████░░] 80%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [████████░░] 80%
 | Phase 161 P02 | 24m | 2 tasks | 2 files |
 | Phase 161 P03 | 12m | 2 tasks | 3 files |
 | Phase 161 P04 | 20m | 2 tasks | 2 files |
+| Phase 161 P05 | 4m | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Progress: [████████░░] 80%
 - [Phase 161]: WT-03 dirty publish-summary evidence remains retained; Phase 162 owns release interpretation.
 - [Phase ?]: The verified cleanup queue is empty because no ledger row has disposition remove; no Git deletion is authorized.
 - [Phase ?]: Canonical main is clean at final capture but remains non-release-clean while upstream drift exists.
+- [Phase ?]: Clean canonical main is distinct from release-clean; unresolved upstream divergence preserves the non-release-clean verdict.
+- [Phase ?]: The e2be2c94 / behind 0 / ahead 29 reconciliation remains immutable history; only current-state reporting is superseded by an append-only recapture.
 
 ### Pending Todos
 
@@ -93,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-22T15:59:40.211Z
-Stopped at: Completed 161-04-PLAN.md
+Last session: 2026-08-22T16:29:58.421Z
+Stopped at: Completed 161-05-PLAN.md
 Resume file: None
