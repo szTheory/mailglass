@@ -2024,3 +2024,9 @@ The permitted next action is deliberately non-executing for all rows in this pha
 | pending | 0 |
 
 The existing stash remains listed at `stash@{0}` with commit `024fc1ba0379d6bfb9b466fab407d94a94a2fa5a`; no stash operation occurred. Every archive source identity has exactly one independently named recovery ref. There are no `remove` rows and no dirty remove candidate, so no worktree preservation commit or Phase 162 release interpretation was attempted. The unresolved remote PR, check, tag, Hex, and scheduled-automation questions remain Phase 162 handoffs under D-09.
+
+### Complete Reconciliation Confirmation
+
+**Complete verifier run (UTC):** `2026-08-22T16:09:00Z` — `161-verify-preservation-reconciliation.sh complete` passed with `12 eligible`, `12 required`, `12 refs`, `0 handoffs`, `0 not-required`, and `pending: 0`.
+
+The only dirty registered worktree, `WT-03`, is `retain` rather than a later `remove` candidate. Its detached `HEAD` remains `d0369ba76c1f5d033d4d10b804050fa76c784756`; its exact three-path binary diff remains `75ea168315ebff101a2dd060499f86a73f688ca5597837bb22dec1dc5b16ce69`; and its changed paths remain `.planning/publish/mailglass-publish-summary.json`, `.planning/publish/mailglass_admin-publish-summary.json`, and `.planning/publish/mailglass_inbound-publish-summary.json`. It was neither staged nor committed. This preserves local release proof while leaving PR #222, checks, tags, Hex, and scheduled automation explicitly unresolved for Phase 162.
