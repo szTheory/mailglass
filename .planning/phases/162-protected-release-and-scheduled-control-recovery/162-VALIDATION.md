@@ -55,6 +55,10 @@ created: 2026-08-22
 
 ## Wave 0 Requirements and Ownership
 
+Plan 01 owns only the reconciliation-artifact contract in Wave 1. Plans 02–04 retain
+their separately listed missing control cases, and only Plan 05 Task 1 may set
+`wave_0_complete: true` after all four focused contracts exist and pass.
+
 - [ ] Plan 01 / Wave 1: add a reconciliation-artifact contract test or deterministic checker for source, capture time, immutable identity, observation, and exactly one outcome/recovery condition; retain `wave_0_complete: false`.
 - [ ] Plan 02 / Wave 2: extend `test/scripts/release_trigger_recovery_test.exs` with capture-mismatch, unavailable/pending probe reporting, exhaustive no-silent-drop coverage, and proof that proposal-only triggers gain no merge/tag/release authority.
 - [ ] Plan 03 / Wave 2: extend `test/mix/tasks/mailglass.repo.hygiene_test.exs` with separate aggregate `cannot-check`, policy `blocked`, JSON string, text output, and nonzero-exit cases; retain `wave_0_complete: false`.
