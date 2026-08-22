@@ -395,6 +395,98 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     refute result =~ "gh release"
   end
 
+  test "proposal capture emits its real post-worktree outcome before cleanup and the writer preserves it" do
+    source = workflow_source()
+
+    capture =
+      extract_step_block!(source, "Capture Release Please proposal identity without activation")
+
+    result = extract_step_block!(source, "Write proposal-only release control result")
+
+    assert capture =~ "git worktree add --detach"
+    assert length(Regex.scan(~r/^\s*trap .* EXIT$/m, capture)) == 1
+
+    for {fixture, expected_status, expected_reason} <- [
+          {:pass, "pass", "proposal_captured"},
+          {:identity_mismatch, "blocked", "proposal_identity_mismatch"}
+        ] do
+      with_capture_fixture(fixture, capture, result, fn temp_dir, capture_env ->
+        {capture_output, capture_status} = run_capture(capture, temp_dir, capture_env)
+
+        assert capture_status == if(fixture == :pass, do: 0, else: 1)
+
+        emitted = read_output!(Path.join(temp_dir, "capture-output"))
+        assert emitted["result_status"] == expected_status
+        assert emitted["result_reason"] == expected_reason
+        assert emitted["proposal_head"] == String.duplicate("b", 40)
+        assert emitted["source_sha"] == String.duplicate("c", 40)
+        assert emitted["candidate_digest"] == String.duplicate("a", 64)
+
+        if fixture == :pass do
+          assert emitted["captured"] == "true"
+        else
+          refute Map.has_key?(emitted, "captured")
+        end
+
+        assert capture_output =~ "proposal candidate captured after sibling synchronization" or
+                 fixture == :identity_mismatch
+
+        git_log = File.read!(Path.join(temp_dir, "git.log"))
+        assert git_log =~ "worktree add"
+        assert git_log =~ "worktree remove"
+        refute File.exists?(capture_worktree_path!(git_log))
+
+        writer_env =
+          capture_env
+          |> Map.merge(%{
+            "CAPTURE_OUTCOME" => if(fixture == :pass, do: "success", else: "failure"),
+            "CAPTURE_STATUS" => emitted["result_status"],
+            "CAPTURE_REASON" => emitted["result_reason"],
+            "PROPOSAL_HEAD" => emitted["proposal_head"],
+            "SOURCE_SHA" => emitted["source_sha"],
+            "CANDIDATE_DIGEST" => emitted["candidate_digest"],
+            "RUNNER_TEMP" => temp_dir,
+            "GITHUB_OUTPUT" => Path.join(temp_dir, "writer-output")
+          })
+
+        {_, writer_status} = run_proposal_writer(result, temp_dir, writer_env)
+        assert writer_status == if(fixture == :pass, do: 0, else: 1)
+
+        result_json =
+          temp_dir
+          |> Path.join("release-proposal-control-result.json")
+          |> File.read!()
+          |> Jason.decode!()
+
+        assert Map.take(result_json, [
+                 "status",
+                 "reason",
+                 "proposal_head",
+                 "source_sha",
+                 "candidate_digest"
+               ]) ==
+                 Map.take(emitted, [
+                   "result_status",
+                   "result_reason",
+                   "proposal_head",
+                   "source_sha",
+                   "candidate_digest"
+                 ])
+                 |> Map.new(fn
+                   {"result_status", value} -> {"status", value}
+                   {"result_reason", value} -> {"reason", value}
+                   {key, value} -> {key, value}
+                 end)
+
+        command_log = File.read!(Path.join(temp_dir, "command.log"))
+        refute command_log =~ "gh pr merge"
+        refute command_log =~ "git tag"
+        refute command_log =~ "gh release"
+        refute command_log =~ "git push"
+      end)
+    end
+  end
+
   test "contributing documents proposal-only triggers and the protected exact-digest chain" do
     recovery_runbook =
       extract_markdown_section!(
@@ -567,6 +659,142 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     after
       File.rm_rf!(temp_dir)
     end
+  end
+
+  defp with_capture_fixture(fixture, capture, result, fun) do
+    temp_dir =
+      Path.join(System.tmp_dir!(), "release-capture-#{System.unique_integer([:positive])}")
+
+    File.mkdir_p!(Path.join(temp_dir, "bin"))
+    File.mkdir_p!(Path.join(temp_dir, "scripts"))
+
+    proposal_head = String.duplicate("b", 40)
+    source_sha = String.duplicate("c", 40)
+    recorded_head = if fixture == :pass, do: proposal_head, else: String.duplicate("e", 40)
+
+    target = %{
+      "status" => "captured",
+      "candidate_versions" => %{"mailglass" => "2.5.0", "mailglass_admin" => "2.5.0"},
+      "proposal_identity" => %{"head_sha" => recorded_head, "source_sha" => source_sha},
+      "publishable_content" => %{"digest" => String.duplicate("a", 64)}
+    }
+
+    File.write!(Path.join(temp_dir, "target.json"), Jason.encode!(target))
+    File.write!(Path.join(temp_dir, "capture.sh"), capture_script(capture))
+    File.write!(Path.join(temp_dir, "proposal-result.sh"), proposal_result_script(result))
+
+    write_capture_shims!(temp_dir)
+
+    env = %{
+      "PATH" => Path.join(temp_dir, "bin") <> ":" <> System.get_env("PATH"),
+      "CANDIDATE_DIGEST" => String.duplicate("a", 64),
+      "EVENT_NAME" => "workflow_dispatch",
+      "RUN_ID" => "16206",
+      "GITHUB_OUTPUT" => Path.join(temp_dir, "capture-output"),
+      "FAKE_TARGET" => Path.join(temp_dir, "target.json"),
+      "GIT_LOG" => Path.join(temp_dir, "git.log"),
+      "COMMAND_LOG" => Path.join(temp_dir, "command.log")
+    }
+
+    try do
+      fun.(temp_dir, env)
+    after
+      File.rm_rf!(temp_dir)
+    end
+  end
+
+  defp write_capture_shims!(temp_dir) do
+    bin = Path.join(temp_dir, "bin")
+
+    File.write!(Path.join(bin, "gh"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'gh %s\\n' "$*" >> "$COMMAND_LOG"
+    printf '[{"number":222,"headRefOid":"%s","baseRefOid":"%s"}]\\n' "$(printf 'b%.0s' {1..40})" "$(printf 'c%.0s' {1..40})"
+    """)
+
+    File.write!(Path.join(bin, "git"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'git %s\\n' "$*" >> "$COMMAND_LOG"
+    case "$1:$2" in
+      fetch:*|checkout:*) exit 0 ;;
+      show:*) cat "$FAKE_TARGET" ;;
+      merge-base:*) exit 0 ;;
+      worktree:add)
+        printf 'worktree add %s\\n' "$4" >> "$GIT_LOG"
+        mkdir -p "$4"
+        ;;
+      worktree:remove)
+        printf 'worktree remove %s\\n' "$4" >> "$GIT_LOG"
+        rmdir "$4"
+        ;;
+      *) printf 'unexpected git command: %s\\n' "$*" >&2; exit 64 ;;
+    esac
+    """)
+
+    File.write!(Path.join(bin, "mix"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'mix %s\\n' "$*" >> "$COMMAND_LOG"
+    """)
+
+    File.write!(Path.join(temp_dir, "scripts/release_policy_content_digest.sh"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'digest %s\\n' "$*" >> "$COMMAND_LOG"
+    printf '%s\\n' "$(printf 'a%.0s' {1..64})"
+    """)
+
+    File.write!(Path.join(temp_dir, "scripts/release_policy_validate_target.sh"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'validate-target %s\\n' "$*" >> "$COMMAND_LOG"
+    """)
+
+    for path <- [Path.join(bin, "gh"), Path.join(bin, "git"), Path.join(bin, "mix")] do
+      File.chmod!(path, 0o755)
+    end
+
+    for path <- [
+          Path.join(temp_dir, "scripts/release_policy_content_digest.sh"),
+          Path.join(temp_dir, "scripts/release_policy_validate_target.sh")
+        ] do
+      File.chmod!(path, 0o755)
+    end
+  end
+
+  defp run_capture(_capture, temp_dir, env) do
+    System.cmd("bash", [Path.join(temp_dir, "capture.sh")],
+      cd: temp_dir,
+      env: Map.to_list(env),
+      stderr_to_stdout: true
+    )
+  end
+
+  defp run_proposal_writer(_result, temp_dir, env) do
+    System.cmd("bash", [Path.join(temp_dir, "proposal-result.sh")],
+      cd: temp_dir,
+      env: Map.to_list(env),
+      stderr_to_stdout: true
+    )
+  end
+
+  defp capture_script(capture), do: proposal_result_script(capture)
+
+  defp read_output!(path) do
+    path
+    |> File.read!()
+    |> String.split("\n", trim: true)
+    |> Map.new(fn line ->
+      [key, value] = String.split(line, "=", parts: 2)
+      {key, value}
+    end)
+  end
+
+  defp capture_worktree_path!(git_log) do
+    [_, path] = Regex.run(~r/worktree add (.+)/, git_log)
+    path
   end
 
   defp should_run?(temp_dir) do
