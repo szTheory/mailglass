@@ -24,12 +24,13 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
   end
 
   test "blocks on dirty local state" do
-    repo = git_repo!()
-    write_release_workflows!(repo)
-    commit_all!(repo, "initial")
+    repo = ready_repo!()
+    write_branch_protection_verifier!(repo, "echo 'OK'\n")
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
     File.write!(Path.join(repo, "dirty.txt"), "dirty\n")
 
-    result = Hygiene.audit(repo)
+    result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
 
     assert result.status == :blocked
 
@@ -318,8 +319,15 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
   defp run_hygiene(repo, argv) do
     with_hygiene_environment(repo, fn ->
       in_repo(repo, fn ->
-        exit = catch_exit(Hygiene.run(argv))
-        {capture_io(fn -> catch_exit(Hygiene.run(argv)) end), exit}
+        test_process = self()
+
+        output =
+          capture_io(fn ->
+            send(test_process, {:hygiene_exit, catch_exit(Hygiene.run(argv))})
+          end)
+
+        assert_receive {:hygiene_exit, exit}
+        {output, exit}
       end)
     end)
   end

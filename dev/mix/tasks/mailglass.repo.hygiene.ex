@@ -116,7 +116,7 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
           {ahead, behind, :ok}
 
         {output, _} ->
-          {0, 0, %{status: "unknown", message: String.trim(output)}}
+          {0, 0, %{status: "cannot-check", message: String.trim(output)}}
       end
 
     dirty? = String.trim(dirty_output) != ""
@@ -147,7 +147,7 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
         check(:git_state, :blocked, "Local git state is not release-clean.", details)
 
       _ ->
-        unknown(
+        cannot_check(
           :git_state,
           "Git upstream comparison could not be established; configure a resolvable upstream and retry.",
           details
@@ -161,7 +161,9 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
 
     cond do
       System.find_executable("gh") == nil ->
-        unknown(:ci_state, "GitHub CLI is not installed; CI state was not checked.", %{sha: sha})
+        cannot_check(:ci_state, "GitHub CLI is not installed; CI state was not checked.", %{
+          sha: sha
+        })
 
       true ->
         args = [
@@ -196,7 +198,9 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
             end
 
           {output, _} ->
-            unknown(:ci_state, "GitHub CI state was not checked.", %{error: String.trim(output)})
+            cannot_check(:ci_state, "GitHub CI state was not checked.", %{
+              error: String.trim(output)
+            })
         end
     end
   end
@@ -206,17 +210,17 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
 
     cond do
       !File.exists?(script) ->
-        unknown(:branch_protection, "Branch-protection verifier is missing.", %{})
+        cannot_check(:branch_protection, "Branch-protection verifier is missing.", %{})
 
       System.find_executable("gh") == nil ->
-        unknown(
+        cannot_check(
           :branch_protection,
           "GitHub CLI is not installed; install gh before verifying branch protection.",
           %{}
         )
 
       System.get_env("GH_TOKEN") in [nil, ""] ->
-        unknown(
+        cannot_check(
           :branch_protection,
           "GH_TOKEN is missing; set a token with branch-protection read access before verifying.",
           %{}
@@ -242,7 +246,7 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
                 }
               )
             else
-              unknown(
+              cannot_check(
                 :branch_protection,
                 "Branch protection could not be verified; check GitHub access and retry.",
                 %{output: trimmed_output}
@@ -254,7 +258,7 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
 
   defp pull_requests(repo) do
     if System.find_executable("gh") == nil do
-      unknown(:pull_requests, "GitHub CLI is not installed; open PRs were not checked.", %{})
+      cannot_check(:pull_requests, "GitHub CLI is not installed; open PRs were not checked.", %{})
     else
       args = [
         "pr",
@@ -284,7 +288,9 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
           })
 
         {output, _} ->
-          unknown(:pull_requests, "Open PR state was not checked.", %{error: String.trim(output)})
+          cannot_check(:pull_requests, "Open PR state was not checked.", %{
+            error: String.trim(output)
+          })
       end
     end
   end
@@ -298,7 +304,9 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
       ])
 
     if status != 0 do
-      unknown(:stale_branches, "Local branches were not checked.", %{error: String.trim(output)})
+      cannot_check(:stale_branches, "Local branches were not checked.", %{
+        error: String.trim(output)
+      })
     else
       now = DateTime.utc_now() |> DateTime.to_unix()
       max_age = 30 * 24 * 60 * 60
@@ -386,15 +394,19 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
   defp blank_to_nil(value), do: value
 
   defp status(checks) do
-    if Enum.all?(checks, &(&1.status == :pass)), do: :pass, else: :blocked
+    cond do
+      Enum.any?(checks, &(&1.status == :cannot_check)) -> :cannot_check
+      Enum.any?(checks, &(&1.status == :blocked)) -> :blocked
+      true -> :pass
+    end
   end
 
   defp check(name, status, message, details) do
     %{name: name, status: status, message: message, details: details}
   end
 
-  defp unknown(name, message, details) do
-    check(name, :unknown, message, details)
+  defp cannot_check(name, message, details) do
+    check(name, :cannot_check, message, details)
   end
 
   defp emit(result, "json") do
@@ -405,18 +417,21 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
   end
 
   defp emit(result, "text") do
-    Mix.shell().info("Repo hygiene: #{result.status}")
+    Mix.shell().info("Repo hygiene: #{external_status(result.status)}")
 
     Enum.each(result.checks, fn check ->
-      Mix.shell().info("#{check.status} #{check.name}: #{check.message}")
+      Mix.shell().info("#{external_status(check.status)} #{check.name}: #{check.message}")
     end)
   end
 
   defp encode_statuses(%{checks: checks} = result) do
-    %{result | status: to_string(result.status), checks: Enum.map(checks, &encode_statuses/1)}
+    %{result | status: external_status(result.status), checks: Enum.map(checks, &encode_statuses/1)}
   end
 
-  defp encode_statuses(%{status: status} = check), do: %{check | status: to_string(status)}
+  defp encode_statuses(%{status: status} = check), do: %{check | status: external_status(status)}
+
+  defp external_status(:cannot_check), do: "cannot-check"
+  defp external_status(status), do: to_string(status)
 
   defp timestamp do
     DateTime.utc_now()
