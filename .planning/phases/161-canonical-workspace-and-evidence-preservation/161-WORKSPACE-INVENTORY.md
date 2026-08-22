@@ -1990,3 +1990,37 @@ Stable key/order is `category + identity`; the existing category blocks and byte
 The fresh enumerators reconcile to the stable ledger: 6 worktrees, 1 stash, 155 enumerated refs (including the separately represented equal-OID release tags), 10 divergent ranges, 5 local release-proof rows, and 1,805 unreachable-object rows. Their 1,849 non-sentinel item rows have 1,849 `EVID-*` references and 1,849 allowed dispositions. Category/identity duplicate detection returned zero duplicates, and the category blocks retain their capture ordering; shared OIDs only share evidence, never a disposition row.
 
 The permitted next action is deliberately non-executing for all rows in this phase. In particular, no `remove` decision is inferred from age, a detached worktree, absence from `main`, or `fsck --no-reflogs` output. Phase 162 owns the named remote/release handoffs; a later cleanup phase may act only after its stated preservation and graph/content prerequisites are met.
+
+## Preservation Manifest
+
+**Preservation capture time (UTC):** `2026-08-22T16:05:00Z`
+**Canonical branch/HEAD before ref creation:** `main` / `bd2bf8522aaa07946a60d1fc5f2282b63ddbc2e2`
+**Mutation boundary:** only new collision-checked `refs/heads/preserve/phase-161-*` refs were created. No existing ref, stash, worktree, canonical `main` history, or release artifact was moved, consumed, reset, merged, deleted, force-updated, or pushed.
+
+| source row | evidence ref | preservation ref | expected OID | actual OID | creation command / exit | timestamp (UTC) |
+| --- | --- | --- | --- | --- | --- | --- |
+| REF-0001 | EVID-REF-GRAPH | `refs/heads/preserve/phase-161-archive-ref-operator-detail-local-20260822` | `5c1c16c634575e2dfe72348c7a771a92fe719887` | `5c1c16c634575e2dfe72348c7a771a92fe719887` | `git branch preserve/phase-161-archive-ref-operator-detail-local-20260822 5c1c16c634575e2dfe72348c7a771a92fe719887` / 0 | 2026-08-22T16:05:00Z |
+| REF-0002 | EVID-REF-GRAPH | `refs/heads/preserve/phase-161-archive-ref-phase-143-plan-local-20260822` | `c34765887d56cae15c94382c4c77c1098f74f692` | `c34765887d56cae15c94382c4c77c1098f74f692` | `git branch preserve/phase-161-archive-ref-phase-143-plan-local-20260822 c34765887d56cae15c94382c4c77c1098f74f692` / 0 | 2026-08-22T16:05:00Z |
+| REF-0003 | EVID-REF-GRAPH | `refs/heads/preserve/phase-161-archive-ref-phase-148-local-20260822` | `b3141cec7e6b9ee7810a01a2055ea74f21d13d61` | `b3141cec7e6b9ee7810a01a2055ea74f21d13d61` | `git branch preserve/phase-161-archive-ref-phase-148-local-20260822 b3141cec7e6b9ee7810a01a2055ea74f21d13d61` / 0 | 2026-08-22T16:05:00Z |
+| REF-0004 | EVID-REF-GRAPH | `refs/heads/preserve/phase-161-archive-ref-phase-153-remote-20260822` | `cca6b0619120de0b0f53d4d335adb7ca304813d7` | `cca6b0619120de0b0f53d4d335adb7ca304813d7` | `git branch preserve/phase-161-archive-ref-phase-153-remote-20260822 cca6b0619120de0b0f53d4d335adb7ca304813d7` / 0 | 2026-08-22T16:05:00Z |
+| REF-0005 | EVID-REF-GRAPH | `refs/heads/preserve/phase-161-archive-ref-phase-92-remote-20260822` | `8f14bb9e0105f42ee757e2b4a1a3c89e4374c689` | `8f14bb9e0105f42ee757e2b4a1a3c89e4374c689` | `git branch preserve/phase-161-archive-ref-phase-92-remote-20260822 8f14bb9e0105f42ee757e2b4a1a3c89e4374c689` / 0 | 2026-08-22T16:05:00Z |
+| REF-0006 | EVID-REF-GRAPH | `refs/heads/preserve/phase-161-archive-ref-pre-cleanup-main-20260822` | `2f86fa2b7ac1d47fa70f458beecf83b61e217632` | `2f86fa2b7ac1d47fa70f458beecf83b61e217632` | `git branch preserve/phase-161-archive-ref-pre-cleanup-main-20260822 2f86fa2b7ac1d47fa70f458beecf83b61e217632` / 0 | 2026-08-22T16:05:00Z |
+| RANGE-0001 | EVID-RANGE-GRAPH | `refs/heads/preserve/phase-161-archive-range-operator-detail-local-20260822` | `5c1c16c634575e2dfe72348c7a771a92fe719887` | `5c1c16c634575e2dfe72348c7a771a92fe719887` | `git branch preserve/phase-161-archive-range-operator-detail-local-20260822 5c1c16c634575e2dfe72348c7a771a92fe719887` / 0 | 2026-08-22T16:05:00Z |
+| RANGE-0002 | EVID-RANGE-GRAPH | `refs/heads/preserve/phase-161-archive-range-phase-143-plan-local-20260822` | `c34765887d56cae15c94382c4c77c1098f74f692` | `c34765887d56cae15c94382c4c77c1098f74f692` | `git branch preserve/phase-161-archive-range-phase-143-plan-local-20260822 c34765887d56cae15c94382c4c77c1098f74f692` / 0 | 2026-08-22T16:05:00Z |
+| RANGE-0003 | EVID-RANGE-GRAPH | `refs/heads/preserve/phase-161-archive-range-phase-148-local-20260822` | `b3141cec7e6b9ee7810a01a2055ea74f21d13d61` | `b3141cec7e6b9ee7810a01a2055ea74f21d13d61` | `git branch preserve/phase-161-archive-range-phase-148-local-20260822 b3141cec7e6b9ee7810a01a2055ea74f21d13d61` / 0 | 2026-08-22T16:05:00Z |
+| RANGE-0004 | EVID-RANGE-GRAPH | `refs/heads/preserve/phase-161-archive-range-phase-153-remote-20260822` | `cca6b0619120de0b0f53d4d335adb7ca304813d7` | `cca6b0619120de0b0f53d4d335adb7ca304813d7` | `git branch preserve/phase-161-archive-range-phase-153-remote-20260822 cca6b0619120de0b0f53d4d335adb7ca304813d7` / 0 | 2026-08-22T16:05:00Z |
+| RANGE-0005 | EVID-RANGE-GRAPH | `refs/heads/preserve/phase-161-archive-range-phase-92-remote-20260822` | `8f14bb9e0105f42ee757e2b4a1a3c89e4374c689` | `8f14bb9e0105f42ee757e2b4a1a3c89e4374c689` | `git branch preserve/phase-161-archive-range-phase-92-remote-20260822 8f14bb9e0105f42ee757e2b4a1a3c89e4374c689` / 0 | 2026-08-22T16:05:00Z |
+| RANGE-0006 | EVID-RANGE-GRAPH | `refs/heads/preserve/phase-161-archive-range-pre-cleanup-main-20260822` | `2f86fa2b7ac1d47fa70f458beecf83b61e217632` | `2f86fa2b7ac1d47fa70f458beecf83b61e217632` | `git branch preserve/phase-161-archive-range-pre-cleanup-main-20260822 2f86fa2b7ac1d47fa70f458beecf83b61e217632` / 0 | 2026-08-22T16:05:00Z |
+
+### Preservation Coverage
+
+| metric | count |
+| --- | ---: |
+| eligible archive/remove rows | 12 |
+| required | 12 |
+| ref | 12 |
+| handoff | 0 |
+| not-required | 0 |
+| pending | 0 |
+
+The existing stash remains listed at `stash@{0}` with commit `024fc1ba0379d6bfb9b466fab407d94a94a2fa5a`; no stash operation occurred. Every archive source identity has exactly one independently named recovery ref. There are no `remove` rows and no dirty remove candidate, so no worktree preservation commit or Phase 162 release interpretation was attempted. The unresolved remote PR, check, tag, Hex, and scheduled-automation questions remain Phase 162 handoffs under D-09.
