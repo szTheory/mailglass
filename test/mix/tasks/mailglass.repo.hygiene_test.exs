@@ -309,6 +309,58 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     end
   end
 
+  test "bounds malformed and non-list successful PR responses as cannot-check JSON evidence" do
+    repo = ready_repo!()
+    write_branch_protection_verifier!(repo, "echo 'OK'\n")
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
+
+    for {pr_response, diagnostic} <- [
+          {"{not-json", "malformed GitHub PR response"},
+          {"{\"number\":222}", "unexpected GitHub PR response"}
+        ] do
+      result =
+        with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+          pr_response: pr_response
+        )
+
+      pull_requests = check(result, :pull_requests)
+      assert result.status == :cannot_check
+      assert pull_requests.status == :cannot_check
+      assert pull_requests.message =~ diagnostic
+      assert pull_requests.message =~ "retry"
+
+      {json, exit} =
+        run_hygiene(repo, ["--check", "--format", "json"], pr_response: pr_response)
+
+      decoded = Jason.decode!(json)
+
+      assert exit == {:shutdown, 1}
+      assert decoded["status"] == "cannot-check"
+      assert decoded["reason"] =~ diagnostic
+
+      assert Enum.find(decoded["checks"], &(&1["name"] == "pull_requests"))["status"] ==
+               "cannot-check"
+    end
+
+    empty =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+        pr_response: "[]"
+      )
+
+    assert check(empty, :pull_requests).status == :pass
+    assert check(empty, :pull_requests).details == %{open_count: 0, prs: []}
+
+    prs =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+        pr_response: "[{\"number\":222,\"title\":\"Candidate\"}]"
+      )
+
+    assert check(prs, :pull_requests).status == :blocked
+    assert check(prs, :pull_requests).details.open_count == 1
+    assert check(prs, :pull_requests).details.prs == [%{"number" => 222, "title" => "Candidate"}]
+  end
+
   defp check(result, name), do: Enum.find(result.checks, &(&1.name == name))
 
   defp git_repo! do
@@ -374,14 +426,26 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
 
     argv_log = Keyword.get(opts, :argv_log, Path.join(bin, "gh-argv.log"))
     query_exit = Keyword.get(opts, :query_exit, 0)
+    pr_response = Keyword.get(opts, :pr_response, "[]")
+    pr_query_exit = Keyword.get(opts, :pr_query_exit, 0)
 
     File.write!(gh, """
     #!/usr/bin/env bash
     set -eu
 
-    if [ "$1" != "run" ]; then
-      echo '[]'
+    if [ "$1" = "pr" ] && [ "$2" = "list" ]; then
+      if [ "#{pr_query_exit}" -ne 0 ]; then
+        echo 'PR query unavailable' >&2
+        exit #{pr_query_exit}
+      fi
+
+      echo '#{pr_response}'
       exit 0
+    fi
+
+    if [ "$1" != "run" ]; then
+      echo 'invalid gh command' >&2
+      exit 64
     fi
 
     printf '%s\\n' "$@" > #{argv_log}
