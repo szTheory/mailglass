@@ -395,6 +395,98 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     refute result =~ "gh release"
   end
 
+  test "an empty-digest schedule records bounded pending evidence when no Release Please proposal is open" do
+    source = workflow_source()
+    preflight = extract_step_block!(source, "Detect already-tagged release PR")
+
+    discovery =
+      extract_step_block!(source, "Discover scheduled Release Please proposal before capture")
+
+    result = extract_step_block!(source, "Write proposal-only release control result")
+    summary = extract_step_block!(source, "Summarize proposal-only release control result")
+    upload = extract_step_block!(source, "Upload proposal-only release control result")
+    gate = extract_step_block!(source, "Fail non-pass proposal control result after evidence upload")
+
+    assert summary =~ "release-proposal-control-result.json"
+    assert upload =~ "release-proposal-control-result-${{ github.run_id }}"
+
+    assert step_precedes?(source, "Sync sibling package -> mailglass dep pin on release-please branch", "Discover scheduled Release Please proposal before capture")
+    assert step_precedes?(source, "Discover scheduled Release Please proposal before capture", "Capture Release Please proposal identity without activation")
+    assert step_precedes?(source, "Write proposal-only release control result", "Summarize proposal-only release control result")
+    assert step_precedes?(source, "Summarize proposal-only release control result", "Upload proposal-only release control result")
+    assert step_precedes?(source, "Upload proposal-only release control result", "Fail non-pass proposal control result after evidence upload")
+
+    with_idle_schedule_fixture(fn temp_dir, env ->
+      File.write!(Path.join(temp_dir, "preflight.sh"), preflight_script(preflight))
+      File.write!(Path.join(temp_dir, "discovery.sh"), proposal_result_script(discovery))
+      File.write!(Path.join(temp_dir, "result.sh"), proposal_result_script(result))
+      File.write!(Path.join(temp_dir, "gate.sh"), proposal_result_script(gate))
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "preflight.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(env),
+                 stderr_to_stdout: true
+               )
+
+      assert read_output!(env["GITHUB_OUTPUT"])["should_run"] == "true"
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "discovery.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(env),
+                 stderr_to_stdout: true
+               )
+
+      discovery_outputs = read_output!(env["GITHUB_OUTPUT"])
+      assert discovery_outputs["should_capture"] == "false"
+      assert discovery_outputs["result_status"] == "pending"
+      assert discovery_outputs["result_reason"] == "no_open_proposal"
+
+      writer_env =
+        env
+        |> Map.merge(%{
+          "CAPTURE_OUTCOME" => "skipped",
+          "CAPTURE_STATUS" => "",
+          "CAPTURE_REASON" => "",
+          "DISCOVERY_STATUS" => discovery_outputs["result_status"],
+          "DISCOVERY_REASON" => discovery_outputs["result_reason"],
+          "PROPOSAL_HEAD" => "",
+          "SOURCE_SHA" => ""
+        })
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "result.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(writer_env),
+                 stderr_to_stdout: true
+               )
+
+      json =
+        temp_dir
+        |> Path.join("release-proposal-control-result.json")
+        |> File.read!()
+        |> Jason.decode!()
+
+      assert Map.take(json, ["status", "reason", "event_name", "run_id", "proposal_head", "source_sha", "candidate_digest"]) == %{
+               "status" => "pending",
+               "reason" => "no_open_proposal",
+               "event_name" => "schedule",
+               "run_id" => "16208",
+               "proposal_head" => "",
+               "source_sha" => "",
+               "candidate_digest" => ""
+             }
+
+      gate_env = %{"RESULT_STATUS" => "pending", "RESULT_REASON" => "no_open_proposal"}
+      assert {_, 0} = System.cmd("bash", [Path.join(temp_dir, "gate.sh")], env: Map.to_list(gate_env), stderr_to_stdout: true)
+
+      calls = File.read!(env["GH_LOG"])
+      assert calls == "pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid\n"
+      refute File.read!(env["COMMAND_LOG"]) =~ ~r/(gh pr merge|git tag|gh release|git push|protected-dispatch)/
+    end)
+  end
+
   test "proposal capture emits its real post-worktree outcome before cleanup and the writer preserves it" do
     source = workflow_source()
 
@@ -652,6 +744,54 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       "CANDIDATE_DIGEST" => String.duplicate("a", 64),
       "RUNNER_TEMP" => temp_dir,
       "GITHUB_OUTPUT" => Path.join(temp_dir, "github-output")
+    }
+
+    try do
+      fun.(temp_dir, env)
+    after
+      File.rm_rf!(temp_dir)
+    end
+  end
+
+  defp with_idle_schedule_fixture(fun) do
+    temp_dir = Path.join(System.tmp_dir!(), "release-idle-schedule-#{System.unique_integer([:positive])}")
+    fake_bin = Path.join(temp_dir, "bin")
+    File.mkdir_p!(fake_bin)
+
+    File.write!(Path.join(fake_bin, "gh"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf '%s\\n' "$*" >> "$GH_LOG"
+    if [ "$*" = "pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid" ]; then
+      printf '[]\\n'
+      exit 0
+    fi
+    printf 'unexpected gh invocation: %s\\n' "$*" >&2
+    exit 64
+    """)
+
+    File.write!(Path.join(fake_bin, "git"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'git %s\\n' "$*" >> "$COMMAND_LOG"
+    exit 64
+    """)
+
+    File.chmod!(Path.join(fake_bin, "gh"), 0o755)
+    File.chmod!(Path.join(fake_bin, "git"), 0o755)
+
+    env = %{
+      "PATH" => fake_bin <> ":" <> System.get_env("PATH"),
+      "GH_REPO" => "test-owner/test-repo",
+      "GH_LOG" => Path.join(temp_dir, "gh.log"),
+      "COMMAND_LOG" => Path.join(temp_dir, "command.log"),
+      "GITHUB_OUTPUT" => Path.join(temp_dir, "github-output"),
+      "GITHUB_STEP_SUMMARY" => Path.join(temp_dir, "summary"),
+      "RUNNER_TEMP" => temp_dir,
+      "EVENT_NAME" => "schedule",
+      "RUN_ID" => "16208",
+      "CANDIDATE_DIGEST" => "",
+      "COMMIT_MESSAGE" => ""
     }
 
     try do
