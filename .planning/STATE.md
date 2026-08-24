@@ -5,16 +5,16 @@ milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 162
 current_phase_name: protected-release-and-scheduled-control-recovery
 status: executing
-stopped_at: Completed 162-08-PLAN.md
-last_updated: "2026-08-24T18:40:02.429Z"
+stopped_at: Completed 162-09-PLAN.md
+last_updated: "2026-08-24T18:46:09.403Z"
 last_activity: 2026-08-24
 last_activity_desc: Phase 162 execution started
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 14
-  completed_plans: 13
-  percent: 25
+  completed_plans: 14
+  percent: 50
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-22)
 ## Current Position
 
 Phase: 162 (protected-release-and-scheduled-control-recovery) — EXECUTING
-Plan: 2 of 9
+Plan: 3 of 9
 Status: Ready to execute
 Last activity: 2026-08-24 — Phase 162 execution started
 
-Progress: [█████████░] 93%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [█████████░] 93%
 | Phase 162-protected-release-and-scheduled-control-recovery P06 | 8m | 1 tasks | 2 files |
 | Phase 162-protected-release-and-scheduled-control-recovery P07 | 16m | 1 tasks | 2 files |
 | Phase 162 P08 | 15m | 1 tasks | 2 files |
+| Phase 162 P09 | 5min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,7 @@ Progress: [█████████░] 93%
 - [Phase ?]: Release events remain successful pending no-ops with empty target identity and no consumer-proof outputs.
 - [Phase ?]: Only an exact zero-row scheduled proposal query may skip capture as pending/no_open_proposal.
 - [Phase ?]: The final proposal-control gate accepts pending only when its reason is no_open_proposal.
+- [Phase ?]: Scheduled hygiene CI evidence is selected with exact HEAD SHA via gh --commit, never an inferred branch.
 
 ### Pending Todos
 
@@ -114,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-24T18:40:02.420Z
-Stopped at: Completed 162-08-PLAN.md
+Last session: 2026-08-24T18:46:09.393Z
+Stopped at: Completed 162-09-PLAN.md
 Resume file: None
