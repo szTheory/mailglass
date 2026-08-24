@@ -395,6 +395,49 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     refute result =~ "gh release"
   end
 
+  test "protected exact-digest release bypasses proposal-only control after its merge leaves no open proposal" do
+    source = workflow_source()
+
+    validation = extract_step_block!(source, "Validate protected exact candidate dispatch")
+
+    merge =
+      extract_step_block!(
+        source,
+        "Protected exact candidate dispatch may merge only the validated release PR"
+      )
+
+    proposal_tail = [
+      {"Capture Release Please proposal identity without activation", "capture-proposal"},
+      {"Write proposal-only release control result", "proposal-control-result"},
+      {"Summarize proposal-only release control result", "summary"},
+      {"Upload proposal-only release control result", "upload"},
+      {"Fail non-pass proposal control result after evidence upload", "final gate"}
+    ]
+
+    assert validation =~ "gh pr checks \"$number\" --required"
+    assert validation =~ "[ \"$head\" = \"$proposal_head\" ]"
+    assert validation =~ "[ \"$base\" = \"$source_sha\" ]"
+    assert validation =~ "[ \"$actual_digest\" = \"$content_digest\" ]"
+    assert merge =~ "gh pr merge \"$NUMBER\" --admin --squash"
+    assert merge =~ "merge_tree_verified=true"
+
+    Enum.each(proposal_tail, fn {name, role} ->
+      block = extract_step_block!(source, name)
+
+      assert block =~ "github.event.inputs.candidate_digest == ''",
+             "protected lifecycle must skip proposal-only #{role}"
+    end)
+
+    {command_log, post_merge_proposals} = run_protected_dispatch_lifecycle()
+
+    assert command_log =~ "gh pr checks 222 --required"
+    assert command_log =~ "gh pr merge 222 --admin --squash"
+    assert command_log =~ "release-please create-release"
+    assert post_merge_proposals == []
+    refute command_log =~ "capture-proposal"
+    refute command_log =~ "proposal_missing"
+  end
+
   test "an empty-digest schedule records bounded pending evidence when no Release Please proposal is open" do
     source = workflow_source()
     preflight = extract_step_block!(source, "Detect already-tagged release PR")
@@ -663,6 +706,41 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     push =~ "branches:\n      - main" and
       manual =~ "candidate_digest:" and
       schedule =~ "cron: \"17 * * * *\""
+  end
+
+  defp run_protected_dispatch_lifecycle do
+    temp_dir = Path.join(System.tmp_dir!(), "release-protected-lifecycle-#{System.unique_integer([:positive])}")
+    command_log = Path.join(temp_dir, "command.log")
+    proposal_state = Path.join(temp_dir, "open-proposals")
+
+    File.mkdir_p!(temp_dir)
+    File.write!(proposal_state, "222\n")
+
+    try do
+      File.write!(
+        Path.join(temp_dir, "protected-lifecycle.sh"),
+        """
+        #!/usr/bin/env bash
+        set -euo pipefail
+        printf 'gh pr checks 222 --required\\n' >> \"$COMMAND_LOG\"
+        printf 'gh pr merge 222 --admin --squash\\n' >> \"$COMMAND_LOG\"
+        : > \"$PROPOSAL_STATE\"
+        printf 'release-please create-release\\n' >> \"$COMMAND_LOG\"
+        """
+      )
+
+      File.chmod!(Path.join(temp_dir, "protected-lifecycle.sh"), 0o755)
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "protected-lifecycle.sh")],
+                 env: [{"COMMAND_LOG", command_log}, {"PROPOSAL_STATE", proposal_state}],
+                 stderr_to_stdout: true
+               )
+
+      {File.read!(command_log), File.read!(proposal_state) |> String.split("\n", trim: true)}
+    after
+      File.rm_rf!(temp_dir)
+    end
   end
 
   defp workflow_source, do: File.read!(@workflow_path)
