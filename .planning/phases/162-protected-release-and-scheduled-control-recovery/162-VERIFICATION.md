@@ -1,6 +1,6 @@
 ---
 phase: 162-protected-release-and-scheduled-control-recovery
-verified: 2026-08-24T18:52:47Z
+verified: 2026-08-24T19:59:42Z
 status: gaps_found
 score: 3/5 must-haves verified
 behavior_unverified: 0
@@ -9,51 +9,41 @@ re_verification:
   previous_status: gaps_found
   previous_score: 3/5
   gaps_closed:
-    - "An idle scheduled release run with no open proposal now emits a successful pending/no_open_proposal result without entering capture."
-    - "Scheduled repository hygiene now queries ci.yml by the detached checkout SHA and verifies the returned headSha."
-  gaps_remaining:
-    - "Protected exact-digest dispatch runs proposal capture after merging its release PR, so a successful protected release is turned into proposal_missing failure."
-    - "A zero-exit malformed gh CI response raises through Jason.decode! instead of becoming a bounded cannot-check hygiene result."
-  regressions:
-    - "The protected-dispatch lifecycle is not exercised by the green release-trigger tests."
+    - "A protected exact-digest release now skips the proposal-only tail after its merge, so zero open proposals cannot retroactively fail the release."
+    - "Malformed or non-list zero-exit ci.yml run-list output now becomes serialized cannot-check evidence."
+  gaps_remaining: []
+  regressions: []
 gaps:
   - truth: "Release-please gives a truthful proposal-only result through its control and scheduled entry points without gaining merge, tag, publish, or protected-dispatch authority."
     status: failed
-    reason: "The protected exact-digest dispatch merges/releases before the unconditional non-scheduled proposal capture. That capture requires an open release PR, so the normal post-merge zero-row result is classified blocked/proposal_missing and the final gate fails the completed protected release."
+    reason: "Any collaborator allowed to dispatch workflows can supply the non-secret candidate digest and activate RELEASE_PLEASE_PAT-backed admin merge and release creation; exact candidate integrity is not authorization of the dispatcher."
     artifacts:
       - path: ".github/workflows/release-please.yml"
-        issue: "Protected merge/release occurs at lines 250-311, while capture at lines 471-522 still runs for workflow_dispatch and final gate at lines 660-666 rejects proposal_missing."
+        issue: "The only protected-dispatch condition is workflow_dispatch plus nonempty candidate_digest; the PAT-backed merge/release steps have neither protected environment approval nor actor/team authorization."
       - path: "test/scripts/release_trigger_recovery_test.exs"
-        issue: "Tests exercise pre-merge capture and idle schedule behavior but no protected merge followed by zero open release proposals."
+        issue: "The green protected-lifecycle test verifies exact identity and proposal-tail exclusion, but never verifies dispatcher authorization or an environment gate."
     missing:
-      - "Restrict discovery/capture/result gating to proposal-only runs, or serialize an explicit successful protected-dispatch outcome after merge/release."
-      - "Add an executable protected-dispatch lifecycle fixture proving a post-merge zero-proposal query cannot fail the completed protected release."
+      - "Put PAT-backed merge and release creation in a GitHub Environment requiring release-maintainer approval, or enforce an equivalent durable GitHub/team authorization check before the secret is exposed."
+      - "Add a contract test proving unapproved dispatchers cannot reach PAT-backed merge/release steps."
   - truth: "Repository-hygiene reports an inspectable pass, policy block, or cannot-check outcome with agreeing logs and JSON evidence, including control and applicable scheduled-run proof."
     status: failed
-    reason: "A successful but malformed gh run-list response raises at Jason.decode! and terminates the Mix task before it can render the documented cannot-check JSON/summary/artifact."
+    reason: "A successful malformed gh pr list response calls Jason.decode! and raises before aggregate rendering, JSON output, workflow summary, or artifact upload."
     artifacts:
       - path: "dev/mix/tasks/mailglass.repo.hygiene.ex"
-        issue: "ci_state/1 calls Jason.decode! at lines 182-185 with no decode/list validation or cannot-check branch."
+        issue: "pull_requests/1 decodes zero-exit output with Jason.decode! at line 292 without list-shape validation or a cannot-check branch."
       - path: "test/mix/tasks/mailglass.repo.hygiene_test.exs"
-        issue: "Detached SHA, absent, failed, mismatch, and nonzero-gh cases are covered, but zero-exit malformed JSON is not."
+        issue: "Malformed successful CI run-list responses are covered, but no malformed/non-list gh pr list fixture exists."
     missing:
-      - "Use Jason.decode/1, validate a list result, and map malformed successful output to cannot-check with recovery detail."
-      - "Add a malformed zero-exit gh fixture that proves JSON output and the nonzero cannot-check policy remain intact."
-human_verification:
-  - test: "After the two blockers are repaired and deployed to protected main, inspect the next applicable release-please and repo-hygiene scheduled runs and download their JSON artifacts."
-    expected: "Each artifact, summary, event name, run ID, and workflow SHA agrees; a control dispatch is not substituted for scheduled evidence."
-    why_human: "GitHub Actions scheduling, protected-main reachability, and uploaded remote artifacts cannot be established by local fixtures."
-  - test: "Review the unique judgment-tier MUST NOT assertions declared across Plans 01-09 (retained evidence preservation, stale/manual-proof handling, ordinary-trigger authority, forced publication, and CI identity substitution)."
-    expected: "The developer explicitly accepts or rejects each prohibition; no non-authoritative LLM judgment is treated as a silent pass."
-    why_human: "These plans provide judgment-tier prohibitions with no wired negative-test enforcement or accepted override."
+      - "Use Jason.decode/1, require a list, and convert malformed zero-exit PR-list output into cannot-check with recovery detail."
+      - "Add malformed and non-list PR-list fixtures that prove decodable JSON and the documented nonzero cannot-check exit."
 ---
 
 # Phase 162: Protected Release and Scheduled-Control Recovery Verification Report
 
 **Phase Goal:** Maintainers can explain and safely disposition the blocked release state while existing release and repository controls report only truthful, bounded outcomes.
-**Verified:** 2026-08-24T18:52:47Z
+**Verified:** 2026-08-24T19:59:42Z
 **Status:** gaps_found
-**Re-verification:** Yes — after gap closure
+**Re-verification:** Yes — after Wave 6 gap closure
 
 ## Goal Achievement
 
@@ -61,11 +51,11 @@ human_verification:
 
 | # | Truth | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | A maintainer can reconcile PR #222, its commits/checks, tags, Hex versions, and the target ledger into one evidence-backed narrative. | ✓ VERIFIED | `162-RELEASE-RECONCILIATION.md` contains timestamped source, identity, observation, and disposition rows; its eight parser/coverage tests passed in the focused run. |
-| 2 | PR #222 and every stale release branch or check have a protected merge, recorded retirement reason, or named recovery condition; none remain unexplained or auto-merge-armed in limbo. | ✓ VERIFIED | The final disposition matrix gives every scoped identity one outcome and `release-please.yml:677-` retains the ordinary auto-merge disarm. |
-| 3 | Release-please gives a truthful proposal-only result through its control and scheduled entry points without gaining release authority. | ✗ FAILED — BLOCKER | The idle-schedule repair is real, but protected dispatch merges/releases before the non-scheduled capture that then requires an open PR. A normal zero-row post-merge lookup becomes `blocked/proposal_missing`, and the final gate fails. |
-| 4 | Repository-hygiene reports pass, blocked, or cannot-check consistently in CLI, summary, JSON, and retained evidence, with control and applicable scheduled provenance kept distinct. | ✗ FAILED — BLOCKER | Exact-SHA detached-head selection is wired and tested, but `Jason.decode!` on a zero-exit malformed `gh` response crashes instead of producing the required bounded `cannot-check` result/artifact. |
-| 5 | Post-publish uses only the exact immutable target and provides bounded blocked/inapplicable evidence without `main` fallback or forced publication. | ✓ VERIFIED | Resolver tests passed for pass, blocked, cannot-check, and pending/no-op paths; `.github/workflows/post-publish-smoke.yml:138-257` serializes one resolution before summary/upload and invokes the exact-target guard. |
+| 1 | A maintainer can reconcile PR #222, its commits/checks, tags, Hex versions, and the target ledger into one evidence-backed narrative. | ✓ VERIFIED | `162-RELEASE-RECONCILIATION.md` has timestamped PR, tag, Hex, ledger, identity, observation, and recovery rows; the reconciliation contract remains substantive. |
+| 2 | PR #222 and every stale release branch or check have a protected merge, recorded retirement reason, or named recovery condition; none remain unexplained or auto-merge-armed in limbo. | ✓ VERIFIED | The ledger gives each scoped identity one disposition; PR #222 records `auto-merge: null` and a named exact-digest recovery condition. |
+| 3 | Release-please gives a truthful proposal-only result through its control and scheduled entry points without gaining merge, tag, publish, or protected-dispatch authority. | ✗ FAILED — BLOCKER | The workflow correctly excludes protected dispatch from the proposal-only tail, but its sole activation condition is a nonempty digest. It then exposes `RELEASE_PLEASE_PAT` for `gh pr merge --admin` and release creation without an Environment or actor authorization gate. |
+| 4 | Repository-hygiene reports an inspectable pass, policy block, or cannot-check outcome with agreeing logs and JSON evidence, including control and applicable scheduled-run proof. | ✗ FAILED — BLOCKER | `ci_state/1` now bounds malformed CI data, but `pull_requests/1` still uses `Jason.decode!` for a zero-exit PR list and can prevent the required result/artifact. |
+| 5 | Post-publish validation checks the exact immutable published target through its recovery path, or records an evidence-backed inapplicable or blocked result without substituting `main` or forcing publication. | ✓ VERIFIED | The resolver writes one resolution before summary/upload; exact 40-character target validation and `check_post_publish_target.sh` occur before pass-only outputs, with no `main` fallback. |
 
 **Score:** 3/5 truths verified (0 present, behavior-unverified).
 
@@ -73,76 +63,75 @@ human_verification:
 
 | Artifact | Expected | Status | Details |
 | --- | --- | --- | --- |
-| `162-RELEASE-RECONCILIATION.md` + reconciliation test | Evidence-backed release/disposition ledger | ✓ VERIFIED | Substantive append-only matrices and runnable parser contract. |
-| `.github/workflows/release-please.yml` + recovery test | Truthful bounded proposal/control result | ⚠️ PARTIAL | Scheduled idle discovery is correct, but protected dispatch is wired into an invalid post-merge capture/fail path. |
-| `dev/mix/tasks/mailglass.repo.hygiene.ex` + workflow/test | Three-state hygiene result and artifact-first reporting | ⚠️ PARTIAL | Detached SHA flow and JSON/summary wiring are substantive; malformed successful remote output is unbounded. |
-| `.github/workflows/post-publish-smoke.yml` + contract test | Exact target resolution before mandatory upload | ✓ VERIFIED | Writer, summary, upload, and target guard consume the same resolution. |
+| `162-RELEASE-RECONCILIATION.md` and reconciliation test | Evidence and disposition ledger | ✓ VERIFIED | Exists, substantive, and the test covers its schema/identity rows. |
+| `.github/workflows/release-please.yml` and trigger-recovery test | Bounded proposal/control result without authority expansion | ⚠️ PARTIAL | Capture/result tail wiring is now safely exclusive; privileged dispatch authorization remains absent. |
+| `dev/mix/tasks/mailglass.repo.hygiene.ex`, workflow, and test | Three-state CLI/JSON/artifact agreement | ⚠️ PARTIAL | CI malformed-response handling and exact-SHA flow are wired; malformed PR-list data crashes. |
+| `.github/workflows/post-publish-smoke.yml` and contract test | Exact-target recovery resolution | ✓ VERIFIED | Resolution JSON flows to summary/upload and target guard consumes the resolved immutable target. |
 
-`verify.artifacts` marked the Plan 09 test's literal `checkout --detach` pattern missing, but this is a false negative: the substantive executable test calls `git!(repo, ["checkout", "--detach", sha])` at `mailglass.repo.hygiene_test.exs:221` and asserts detached HEAD. It is not a stub.
+`verify.artifacts` reported literal-pattern misses for Plan 09 (`checkout --detach`) and Plan 10 (`post-merge`). These are false negatives, not stubs: the tests execute `git!(repo, ["checkout", "--detach", sha])` and define the protected “after its merge” lifecycle at line 398. All remaining declared artifacts exist and are substantive.
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 | --- | --- | --- | --- | --- |
-| Scheduled proposal discovery | Capture/result/final gate | `should_capture`, discovery outputs, JSON status | ✓ WIRED | `no_open_proposal` skips capture; writer preserves discovery status; final gate permits only bounded pending. |
-| Protected dispatch | Capture/result/final gate | Non-schedule condition | ✗ NOT WIRED SAFELY | The same condition includes protected workflow dispatch after protected merge/release, causing the failed lifecycle above. |
-| Detached checkout SHA | `gh run list --commit` | exact SHA and returned `headSha` validation | ✓ WIRED | `repo.hygiene.ex:160-190`; detached fixture asserts exact argv and success/mismatch/unavailable outcomes. |
-| `audit/1` result map | JSON → Actions summary/upload | One JSON file consumed by `jq` | ✓ WIRED | `repo-hygiene.yml:40-69` consumes `$RUNNER_TEMP/repo-hygiene.json`; malformed-decode path prevents producing it. |
-| Exact protected target | post-publish resolution → summary/upload | resolver serializer and target guard | ✓ WIRED | Resolution is finalized before the `always()` consumers. |
+| Protected digest classification | proposal capture/result/summary/upload/final gate | `candidate_digest == ''` predicate | ✓ WIRED | Each proposal-only tail step carries the empty-digest predicate; the focused protected lifecycle test passes. |
+| Protected dispatch | PAT-backed merge and release | `protected-dispatch` outputs | ✗ NOT SAFELY WIRED | Candidate identity gates the action, but no authorization gate protects the dispatcher or secret. |
+| `git rev-parse HEAD` | `gh run list --commit` → CI state | exact SHA and returned `headSha` | ✓ WIRED | `ci_state/1` validates exact SHA/completed/success; malformed CI test passes. |
+| `audit/1` result map | JSON → Actions summary/upload | `$RUNNER_TEMP/repo-hygiene.json` | ⚠️ PARTIAL | Valid and CI-malformed paths serialize one map; malformed PR-list decoding aborts first. |
+| Exact target resolver | post-publish JSON → summary/upload/guard | serialized resolution | ✓ WIRED | Resolution is finalized before `always()` consumers and pass-only guard. |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
 | --- | --- | --- | --- | --- |
-| Reconciliation ledger | Source/disposition rows | Read-only GitHub, Git, Hex, ledger, and retained evidence | Yes | ✓ FLOWING |
-| Release proposal result | Capture/discovery status and identities | GitHub proposal query → output → JSON writer | Yes for idle schedule and proposal capture; invalid for protected post-merge lifecycle | ⚠️ PARTIAL |
-| Hygiene result | `%{status, reason, checks}` | `audit/1` → JSON → summary/artifact | Yes for valid and nonzero-`gh` inputs; malformed zero-exit data crashes | ⚠️ PARTIAL |
-| Post-publish resolution | Resolution JSON | Resolver → summary/upload | Yes | ✓ FLOWING |
+| Reconciliation ledger | source/disposition rows | GitHub/Git/Hex/ledger evidence | Yes | ✓ FLOWING |
+| Release proposal control result | capture/discovery output | exact proposal query → JSON writer | Yes for ordinary paths; protected tail excluded | ✓ FLOWING |
+| Hygiene result | `%{status, reason, checks}` | `audit/1` → JSON → workflow consumers | Not for malformed successful PR-list data | ⚠️ HOLLOW ERROR PATH |
+| Post-publish resolution | resolution JSON | target resolver → summary/upload | Yes | ✓ FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
-| Focused Phase 162 contracts | `mix test test/scripts/phase_162_release_reconciliation_test.exs test/scripts/release_trigger_recovery_test.exs test/mix/tasks/mailglass.repo.hygiene_test.exs test/mailglass/publish/post_publish_smoke_contract_test.exs --warnings-as-errors --no-deps-check` | Passed; only known OTLP exporter warnings were emitted. | ✓ PASS |
-| Idle scheduled proposal discovery | Executable fixture `release_trigger_recovery_test.exs:398` | Empty digest plus argument-sensitive zero-proposal query emits `pending/no_open_proposal`, uploads evidence, and does not invoke protected operations. | ✓ PASS |
-| Detached scheduled CI evidence | Executable fixture `mailglass.repo.hygiene_test.exs:214` | Detached HEAD passes its SHA through `--commit`; matching completed success passes and other tested outcomes do not. | ✓ PASS |
-| Protected merge then proposal capture | Workflow control-flow trace | `protected-merge`/release precede capture; capture queries only open PRs and final gate rejects its `proposal_missing` result. No test exercises this path. | ✗ FAIL |
-| Malformed successful CI response | Source/error-path trace | `Jason.decode!` at `repo.hygiene.ex:184` necessarily raises before the result map can serialize; no test covers it. | ✗ FAIL |
+| Protected merge then zero open proposal | `mix test test/scripts/release_trigger_recovery_test.exs:398 --warnings-as-errors --no-deps-check` | 1 test, 0 failures; verifies no proposal-tail invocation after merge. | ✓ PASS |
+| Malformed/non-list successful CI response | `mix test test/mix/tasks/mailglass.repo.hygiene_test.exs:276 --warnings-as-errors --no-deps-check` | 1 test, 0 failures; verifies cannot-check JSON/nonzero exit. | ✓ PASS |
+| Dispatcher authorization boundary | workflow control-flow trace | No `environment`, actor, or team check before PAT-backed merge/release; tests do not exercise this boundary. | ✗ FAIL |
+| Malformed successful PR-list response | source/error-path trace | `Jason.decode!` necessarily raises before `audit/1` can render the result map. | ✗ FAIL |
 
-No declared or conventional `probe-*.sh` files apply to this phase.
+No declared or conventional `probe-*.sh` file applies to this phase.
 
 ### Requirements Coverage
 
 | Requirement | Source Plan(s) | Description | Status | Evidence |
 | --- | --- | --- | --- | --- |
-| AUTO-01 | 162-01, 162-05 | Evidence-backed release-state narrative | ✓ SATISFIED | Append-only reconciliation ledger and focused schema/coverage tests. |
-| AUTO-02 | 162-01, 162-05 | Safe explicit PR/branch/check dispositions | ✓ SATISFIED | Singular disposition and explicit-empty-category contracts; ordinary auto-merge disarmed. |
-| AUTO-03 | 162-02, 162-05, 162-06, 162-08 | Truthful proposal-only control/schedule result without authority expansion | ✗ BLOCKED | Scheduled idle repair passes, but a protected successful dispatch is subsequently converted to a false proposal-missing failure. |
-| AUTO-04 | 162-03, 162-05, 162-09 | Inspectable three-state hygiene result with control/scheduled evidence | ✗ BLOCKED | Detached exact-SHA query is correct, but malformed successful remote output has no bounded cannot-check result. |
-| AUTO-05 | 162-04, 162-05, 162-07 | Exact immutable post-publish proof or bounded blocked/inapplicable outcome | ✓ SATISFIED | Behavioral resolver fixtures and exact-target/no-fallback workflow wiring. |
+| AUTO-01 | 01, 05 | Evidence-backed release-state narrative | ✓ SATISFIED | Reconciliation ledger and contract. |
+| AUTO-02 | 01, 05 | Explicit safe PR/branch/check dispositions | ✓ SATISFIED | One-outcome matrix, recovery conditions, auto-merge null. |
+| AUTO-03 | 02, 05, 06, 08, 10 | Truthful proposal-only controls without authority expansion | ✗ BLOCKED | A workflow dispatcher can activate PAT-backed protected release using the exposed/non-secret digest. |
+| AUTO-04 | 03, 05, 09, 11 | Inspectable three-state hygiene evidence | ✗ BLOCKED | Successful malformed PR-list data has no bounded result. |
+| AUTO-05 | 04, 05, 07 | Exact immutable post-publish proof or bounded outcome | ✓ SATISFIED | Resolver serialization and exact target guard. |
 
-All five Phase 162 requirement IDs declared by plan frontmatter are accounted for. No orphaned Phase 162 requirements were found. Phase 163 concerns timeout repairs, not either failed control path, so neither gap is deferred.
+Every ID declared across all 11 plan frontmatters is one of AUTO-01 through AUTO-05 and is accounted for above. REQUIREMENTS.md assigns exactly those five IDs to Phase 162; no orphaned Phase 162 requirement was found.
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 | --- | --- | --- | --- | --- |
-| `.github/workflows/release-please.yml` | 250-311, 471-522, 660-666 | Protected merge/release followed by proposal-only open-PR capture and non-pass gate | 🛑 BLOCKER | A valid protected release reports failure after succeeding. |
-| `dev/mix/tasks/mailglass.repo.hygiene.ex` | 182-185 | Bang JSON decoder at an external command boundary | 🛑 BLOCKER | Required cannot-check evidence/artifact is skipped on malformed zero-exit output. |
-| `dev/mix/tasks/mailglass.repo.hygiene.ex` | 95-98 | `--apply` branch does not preserve uncommitted/untracked work | ⚠️ WARNING | The advertised preservation action does not protect dirty work; outside the scheduled CI truth but needs correction or narrowed documentation. |
-| `.github/workflows/post-publish-smoke.yml` | 327, 350-385 | Eight-minute job contains three serial five-minute index waits | ⚠️ WARNING | The job can time out before its stated per-package polling windows complete. |
+| `.github/workflows/release-please.yml` | 171-289 | Non-secret dispatch digest is the only gate before PAT-backed `gh pr merge --admin` and release action | 🛑 BLOCKER | Broad workflow-dispatch permission becomes protected-release authority. |
+| `dev/mix/tasks/mailglass.repo.hygiene.ex` | 290-304 | Bang JSON decoder at external PR-list boundary | 🛑 BLOCKER | A truthful bounded cannot-check result, summary, and artifact are skipped. |
 
-No unreferenced `TBD`, `FIXME`, or `XXX` marker was found in phase-delivered code. The two `not available` strings are genuine Hex diagnostics, not placeholders.
+No unreferenced `TBD`, `FIXME`, or `XXX` debt marker was found in phase-delivered implementation files. The two `not available` messages in post-publish are real Hex diagnostics, not placeholders.
 
 ### Human Verification Required
 
-The two items in the frontmatter must be performed after blocker repair. In addition, the plans contain judgment-tier MUST NOT prohibitions without test-tier enforcement or accepted overrides. Those prohibitions are non-authoritative LLM-judge observations and require maintainer review; they are not silently passed.
+After both blockers are repaired on protected `main`, inspect an applicable scheduled release-please and repository-hygiene run plus their JSON artifacts. Confirm that event name, run ID, workflow SHA, summary, and retained artifact agree, and do not treat a manual dispatch as scheduled proof.
+
+The plans also declare judgment-tier MUST NOT prohibitions (evidence preservation, stale/manual-proof handling, trigger authority, forced publication, and CI identity substitution). They have no test-tier enforcement or accepted override, so a maintainer must explicitly review them; this report does not silently pass those judgments.
 
 ### Gaps Summary
 
-The Wave 5 fixes close both prior verification gaps: idle schedules now produce a truthful successful pending result, and detached scheduled hygiene uses exact SHA selection. However, independent code tracing confirms the review's blocker: protected dispatch invokes an open-proposal capture after it has merged the only proposal. A second independently validated blocker exists in hygiene's unhandled malformed-successful-`gh` path. Both violate the phase goal's requirement that controls report only truthful, bounded outcomes. This is an escalation gate: do not advance Phase 162 until the two structured gaps are repaired and re-verified.
+Wave 6 genuinely closed the previous functional gaps: protected releases now bypass the proposal-only post-merge tail, and malformed CI-run output becomes `cannot-check`. The phase still fails its safety/observability goal for two independent, observable error/authority paths. These gaps are not deferred: Phase 163 addresses timeout repairs, not release authorization or repository-hygiene PR-list decoding. This is an escalation gate; do not advance Phase 162 until both structured gaps are repaired and re-verified.
 
 ---
 
-_Verified: 2026-08-24T18:52:47Z_
+_Verified: 2026-08-24T19:59:42Z_
 _Verifier: the agent (gsd-verifier)_
