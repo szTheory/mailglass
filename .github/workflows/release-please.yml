@@ -424,9 +424,53 @@ jobs:
           git commit -m "$COMMIT_MESSAGE"
           git push origin "$BRANCH"
 
+      # An hourly proposal-only run normally has no release PR to capture. Make
+      # that absence an evidence-backed pending observation, not a failed
+      # `proposal_missing` capture. The exact head/base query is deliberately
+      # narrow: an empty digest alone never proves that no proposal exists.
+      - name: Discover scheduled Release Please proposal before capture
+        id: scheduled-proposal
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && github.event_name == 'schedule' && github.event.inputs.candidate_digest == '' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          should_capture=true
+          result_status=""
+          result_reason=""
+
+          if ! prs=$(gh pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid); then
+            should_capture=false
+            result_status=cannot-check
+            result_reason=github_evidence_unavailable
+            printf 'should_capture=%s\nresult_status=%s\nresult_reason=%s\n' "$should_capture" "$result_status" "$result_reason" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          count=$(jq -er 'length' <<<"$prs")
+          case "$count" in
+            0)
+              should_capture=false
+              result_status=pending
+              result_reason=no_open_proposal
+              ;;
+            1)
+              # Capture retains the existing exact identity and candidate
+              # validation semantics for an active proposal.
+              ;;
+            *)
+              # Keep capture authoritative for the existing multiple-proposal
+              # blocked classification rather than converting ambiguity into
+              # a successful pending observation.
+              ;;
+          esac
+
+          printf 'should_capture=%s\nresult_status=%s\nresult_reason=%s\n' "$should_capture" "$result_status" "$result_reason" >> "$GITHUB_OUTPUT"
+
       - name: Capture Release Please proposal identity without activation
         id: capture-proposal
-        if: ${{ steps.release-preflight.outputs.should_run == 'true' }}
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && (github.event_name != 'schedule' || github.event.inputs.candidate_digest != '' || steps.scheduled-proposal.outputs.should_capture == 'true') }}
         # The result writer below is the single inspection surface for this
         # proposal-only path. Keep this step running long enough to expose its
         # bounded evidence before a non-pass makes the job fail.
@@ -550,6 +594,8 @@ jobs:
           CAPTURE_OUTCOME: ${{ steps.capture-proposal.outcome }}
           CAPTURE_STATUS: ${{ steps.capture-proposal.outputs.result_status }}
           CAPTURE_REASON: ${{ steps.capture-proposal.outputs.result_reason }}
+          DISCOVERY_STATUS: ${{ steps.scheduled-proposal.outputs.result_status }}
+          DISCOVERY_REASON: ${{ steps.scheduled-proposal.outputs.result_reason }}
           EVENT_NAME: ${{ github.event_name }}
           RUN_ID: ${{ github.run_id }}
           PROPOSAL_HEAD: ${{ steps.capture-proposal.outputs.proposal_head }}
@@ -561,9 +607,9 @@ jobs:
           status="${CAPTURE_STATUS:-cannot-check}"
           reason="${CAPTURE_REASON:-github_evidence_unavailable}"
 
-          if [ "${CAPTURE_OUTCOME:-skipped}" = skipped ] && [ "$EVENT_NAME" = schedule ]; then
-            status=pending
-            reason=scheduled_observation_not_elapsed
+          if [ "${CAPTURE_OUTCOME:-skipped}" = skipped ] && [ "$EVENT_NAME" = schedule ] && [ -z "${CANDIDATE_DIGEST:-}" ] && [ -n "${DISCOVERY_STATUS:-}" ] && [ -n "${DISCOVERY_REASON:-}" ]; then
+            status="$DISCOVERY_STATUS"
+            reason="$DISCOVERY_REASON"
           fi
 
           case "$status" in
@@ -589,7 +635,8 @@ jobs:
 
           printf 'result_path=%s\n' "$result" >> "$GITHUB_OUTPUT"
           printf 'status=%s\n' "$status" >> "$GITHUB_OUTPUT"
-          [ "$status" = pass ]
+          printf 'reason=%s\n' "$reason" >> "$GITHUB_OUTPUT"
+          [ "$status" = pass ] || { [ "$status" = pending ] && [ "$reason" = no_open_proposal ]; }
 
       - name: Summarize proposal-only release control result
         if: ${{ always() }}
@@ -614,8 +661,9 @@ jobs:
         if: ${{ always() }}
         env:
           RESULT_STATUS: ${{ steps.proposal-control-result.outputs.status }}
+          RESULT_REASON: ${{ steps.proposal-control-result.outputs.reason }}
         run: |
-          [ "$RESULT_STATUS" = pass ]
+          [ "$RESULT_STATUS" = pass ] || { [ "$RESULT_STATUS" = pending ] && [ "$RESULT_REASON" = no_open_proposal ]; }
 
       - name: Upload sanitized release proposal candidate
         if: ${{ steps.capture-proposal.outputs.captured == 'true' }}

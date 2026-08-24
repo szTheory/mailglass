@@ -416,7 +416,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert step_precedes?(source, "Summarize proposal-only release control result", "Upload proposal-only release control result")
     assert step_precedes?(source, "Upload proposal-only release control result", "Fail non-pass proposal control result after evidence upload")
 
-    with_idle_schedule_fixture(fn temp_dir, env ->
+    with_idle_schedule_fixture(:none, fn temp_dir, env ->
       File.write!(Path.join(temp_dir, "preflight.sh"), preflight_script(preflight))
       File.write!(Path.join(temp_dir, "discovery.sh"), proposal_result_script(discovery))
       File.write!(Path.join(temp_dir, "result.sh"), proposal_result_script(result))
@@ -485,6 +485,31 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       assert calls == "pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid\n"
       refute File.read!(env["COMMAND_LOG"]) =~ ~r/(gh pr merge|git tag|gh release|git push|protected-dispatch)/
     end)
+  end
+
+  test "scheduled discovery preserves capture for active or ambiguous proposals and fails unavailable evidence" do
+    discovery =
+      workflow_source()
+      |> extract_step_block!("Discover scheduled Release Please proposal before capture")
+
+    for {mode, expected_capture, expected_status, expected_reason, expected_exit} <- [
+          {:one, "true", "", "", 0},
+          {:many, "true", "", "", 0},
+          {:unavailable, "false", "cannot-check", "github_evidence_unavailable", 1}
+        ] do
+      with_idle_schedule_fixture(mode, fn temp_dir, env ->
+        script = Path.join(temp_dir, "discovery.sh")
+        File.write!(script, proposal_result_script(discovery))
+
+        assert {_, ^expected_exit} =
+                 System.cmd("bash", [script], cd: @repo_root, env: Map.to_list(env), stderr_to_stdout: true)
+
+        outputs = read_output!(env["GITHUB_OUTPUT"])
+        assert outputs["should_capture"] == expected_capture
+        assert outputs["result_status"] == expected_status
+        assert outputs["result_reason"] == expected_reason
+      end)
+    end
   end
 
   test "proposal capture emits its real post-worktree outcome before cleanup and the writer preserves it" do
@@ -753,7 +778,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end
   end
 
-  defp with_idle_schedule_fixture(fun) do
+  defp with_idle_schedule_fixture(mode, fun) do
     temp_dir = Path.join(System.tmp_dir!(), "release-idle-schedule-#{System.unique_integer([:positive])}")
     fake_bin = Path.join(temp_dir, "bin")
     File.mkdir_p!(fake_bin)
@@ -763,7 +788,12 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     set -euo pipefail
     printf '%s\\n' "$*" >> "$GH_LOG"
     if [ "$*" = "pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid" ]; then
-      printf '[]\\n'
+      case "$FAKE_DISCOVERY" in
+        none) printf '[]\\n' ;;
+        one) printf '[{"number":222,"headRefOid":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","baseRefOid":"cccccccccccccccccccccccccccccccccccccccc"}]\\n' ;;
+        many) printf '[{"number":222},{"number":223}]\\n' ;;
+        unavailable) printf 'simulated GitHub API failure\\n' >&2; exit 1 ;;
+      esac
       exit 0
     fi
     printf 'unexpected gh invocation: %s\\n' "$*" >&2
@@ -779,6 +809,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
     File.chmod!(Path.join(fake_bin, "gh"), 0o755)
     File.chmod!(Path.join(fake_bin, "git"), 0o755)
+    File.write!(Path.join(temp_dir, "command.log"), "")
 
     env = %{
       "PATH" => fake_bin <> ":" <> System.get_env("PATH"),
@@ -791,7 +822,8 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       "EVENT_NAME" => "schedule",
       "RUN_ID" => "16208",
       "CANDIDATE_DIGEST" => "",
-      "COMMIT_MESSAGE" => ""
+      "COMMIT_MESSAGE" => "",
+      "FAKE_DISCOVERY" => Atom.to_string(mode)
     }
 
     try do
