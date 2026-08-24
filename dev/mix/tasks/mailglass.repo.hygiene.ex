@@ -157,7 +157,6 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
   end
 
   defp ci_state(repo) do
-    branch = git_output(repo, ["branch", "--show-current"]) |> String.trim()
     sha = git_output(repo, ["rev-parse", "HEAD"]) |> String.trim()
 
     cond do
@@ -172,8 +171,8 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
           "list",
           "--workflow",
           "ci.yml",
-          "--branch",
-          branch,
+          "--commit",
+          sha,
           "--limit",
           "1",
           "--json",
@@ -184,7 +183,7 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
           {json, 0} ->
             run = json |> Jason.decode!() |> List.first()
 
-            ci_details = %{branch: branch, sha: sha, latest: run}
+            ci_details = %{sha: sha, latest: run}
 
             if run && run["headSha"] == sha && run["status"] == "completed" &&
                  run["conclusion"] == "success" do

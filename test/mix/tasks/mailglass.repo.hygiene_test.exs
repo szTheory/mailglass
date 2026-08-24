@@ -341,6 +341,12 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     File.write!(gh, """
     #!/usr/bin/env bash
     set -eu
+
+    if [ "$1" != "run" ]; then
+      echo '[]'
+      exit 0
+    fi
+
     printf '%s\\n' "$@" > #{argv_log}
 
     if [ "$#" -ne 10 ] || [ "$1" != "run" ] || [ "$2" != "list" ] ||
@@ -352,7 +358,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
       exit 64
     fi
 
-    if [ "$10" != "headSha,conclusion,status,url" ]; then
+    if [ "${10}" != "headSha,conclusion,status,url" ]; then
       echo 'invalid gh run list fields' >&2
       exit 64
     fi
