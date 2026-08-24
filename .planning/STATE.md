@@ -4,17 +4,17 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 162
 current_phase_name: protected-release-and-scheduled-control-recovery
-status: ready_to_execute
-stopped_at: Phase 162 gap closure planned
-last_updated: "2026-08-24T19:29:25Z"
+status: executing
+stopped_at: Completed 162-10-PLAN.md
+last_updated: "2026-08-24T19:48:50.050Z"
 last_activity: 2026-08-24
-last_activity_desc: Phase 162 gap closure planned with 2 plans
+last_activity_desc: Phase 162 execution started
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 1
   total_plans: 16
-  completed_plans: 14
-  percent: 50
+  completed_plans: 15
+  percent: 25
 ---
 
 # Project State
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-08-22)
 
 ## Current Position
 
-Phase: 162 (protected-release-and-scheduled-control-recovery) — PLANNED
-Plan: 2 gap-closure plans ready (9 of 11 executed)
+Phase: 162 (protected-release-and-scheduled-control-recovery) — EXECUTING
+Plan: 11 of 11
 Status: Ready to execute
-Last activity: 2026-08-24 — Phase 162 gap closure planned
+Last activity: 2026-08-24 — Phase 162 execution started
 
-Progress: [████████░░] 82%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
@@ -69,6 +69,7 @@ Progress: [████████░░] 82%
 | Phase 162-protected-release-and-scheduled-control-recovery P07 | 16m | 1 tasks | 2 files |
 | Phase 162 P08 | 15m | 1 tasks | 2 files |
 | Phase 162 P09 | 5min | 1 tasks | 2 files |
+| Phase 162-protected-release-and-scheduled-control-recovery P10 | 4m | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,7 @@ Progress: [████████░░] 82%
 - [Phase ?]: Only an exact zero-row scheduled proposal query may skip capture as pending/no_open_proposal.
 - [Phase ?]: The final proposal-control gate accepts pending only when its reason is no_open_proposal.
 - [Phase ?]: Scheduled hygiene CI evidence is selected with exact HEAD SHA via gh --commit, never an inferred branch.
+- [Phase ?]: Protected exact-digest releases skip proposal-only capture, reporting, upload, and final gating; empty digests retain the existing bounded control tail.
 
 ### Pending Todos
 
@@ -116,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-24T18:46:09.393Z
-Stopped at: Completed 162-09-PLAN.md
+Last session: 2026-08-24T19:48:00.042Z
+Stopped at: Completed 162-10-PLAN.md
 Resume file: None

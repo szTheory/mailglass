@@ -108,7 +108,7 @@ Plans:
   4. Repository-hygiene reports an inspectable pass, policy block, or cannot-check outcome with agreeing logs and JSON evidence, including control and applicable scheduled-run proof.
   5. Post-publish validation checks the exact immutable published target through its recovery path, or records an evidence-backed inapplicable or blocked result without substituting `main` or forcing publication.
 
-**Plans**: 9/11 plans executed
+**Plans**: 10/11 plans executed
 
 Plans:
 
@@ -138,7 +138,7 @@ Plans:
 
 **Wave 6** *(verification gap closure; blocked on Wave 5 completion)*
 
-- [ ] 162-10-PLAN.md — Prevent a completed protected exact-digest release from entering the proposal-only post-merge failure tail.
+- [x] 162-10-PLAN.md — Prevent a completed protected exact-digest release from entering the proposal-only post-merge failure tail.
 - [ ] 162-11-PLAN.md — Convert malformed successful GitHub run-list output into bounded repository-hygiene cannot-check evidence.
 
 ### Phase 163: Deterministic Release-Path Timeout Repairs
@@ -175,6 +175,6 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
-| 162. Protected Release and Scheduled-Control Recovery | 9/11 | In Progress|  |
+| 162. Protected Release and Scheduled-Control Recovery | 10/11 | In Progress|  |
 | 163. Deterministic Release-Path Timeout Repairs | 0/TBD | Not started | - |
 | 164. Repository Truth Reconciliation and Closeout | 0/TBD | Not started | - |
