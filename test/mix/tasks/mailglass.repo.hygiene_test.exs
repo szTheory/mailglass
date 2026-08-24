@@ -211,6 +211,68 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     assert Jason.decode!(json)["status"] == "pass"
   end
 
+  test "uses the detached checkout SHA to find a matching completed CI run" do
+    repo = ready_repo!()
+    write_branch_protection_verifier!(repo, "echo 'OK'\n")
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
+
+    sha = git_output!(repo, ["rev-parse", "HEAD"])
+    git!(repo, ["checkout", "--detach", sha])
+    assert git_output!(repo, ["branch", "--show-current"]) == ""
+
+    argv_log = Path.join(repo, "gh-argv.log")
+
+    result =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+        expected_sha: sha,
+        argv_log: argv_log
+      )
+
+    assert check(result, :ci_state).status == :pass
+
+    assert File.read!(argv_log) ==
+             "run\nlist\n--workflow\nci.yml\n--commit\n#{sha}\n--limit\n1\n--json\nheadSha,conclusion,status,url\n"
+  end
+
+  test "blocks detached CI evidence when the returned run is absent, incomplete, failed, or on another SHA" do
+    repo = ready_repo!()
+    sha = git_output!(repo, ["rev-parse", "HEAD"])
+    git!(repo, ["checkout", "--detach", sha])
+    assert git_output!(repo, ["branch", "--show-current"]) == ""
+
+    for response <- [
+          "[]",
+          "[{\"headSha\":\"#{sha}\",\"conclusion\":null,\"status\":\"in_progress\",\"url\":\"https://example.test/run\"}]",
+          "[{\"headSha\":\"#{sha}\",\"conclusion\":\"failure\",\"status\":\"completed\",\"url\":\"https://example.test/run\"}]",
+          "[{\"headSha\":\"#{String.duplicate("f", 40)}\",\"conclusion\":\"success\",\"status\":\"completed\",\"url\":\"https://example.test/run\"}]"
+        ] do
+      result =
+        with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+          expected_sha: sha,
+          response: response
+        )
+
+      assert check(result, :ci_state).status == :blocked
+    end
+  end
+
+  test "reports an unavailable detached CI query as cannot-check" do
+    repo = ready_repo!()
+    sha = git_output!(repo, ["rev-parse", "HEAD"])
+    git!(repo, ["checkout", "--detach", sha])
+    assert git_output!(repo, ["branch", "--show-current"]) == ""
+
+    result =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+        expected_sha: sha,
+        query_exit: 1
+      )
+
+    assert check(result, :ci_state).status == :cannot_check
+    assert check(result, :ci_state).details.error =~ "unavailable"
+  end
+
   defp check(result, name), do: Enum.find(result.checks, &(&1.name == name))
 
   defp git_repo! do
@@ -256,7 +318,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     File.chmod!(verifier, 0o755)
   end
 
-  defp with_hygiene_environment(_repo, fun) do
+  defp with_hygiene_environment(repo, fun, opts \\ []) do
     bin =
       Path.join(
         System.tmp_dir!(),
@@ -265,14 +327,42 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
 
     File.mkdir_p!(bin)
     gh = Path.join(bin, "gh")
+    expected_sha = Keyword.get(opts, :expected_sha, git_output!(repo, ["rev-parse", "HEAD"]))
+    response =
+      Keyword.get(
+        opts,
+        :response,
+        "[{\"headSha\":\"#{expected_sha}\",\"conclusion\":\"success\",\"status\":\"completed\",\"url\":\"https://example.test/run\"}]"
+      )
+
+    argv_log = Keyword.get(opts, :argv_log, Path.join(bin, "gh-argv.log"))
+    query_exit = Keyword.get(opts, :query_exit, 0)
 
     File.write!(gh, """
     #!/usr/bin/env bash
-    if [ "$1" = "run" ]; then
-      printf '[{"headSha":"%s","conclusion":"success","status":"completed","url":"https://example.test/run"}]\\n' "$(git rev-parse HEAD)"
-    else
-      echo '[]'
+    set -eu
+    printf '%s\\n' "$@" > #{argv_log}
+
+    if [ "$#" -ne 10 ] || [ "$1" != "run" ] || [ "$2" != "list" ] ||
+       [ "$3" != "--workflow" ] || [ "$4" != "ci.yml" ] ||
+       [ "$5" != "--commit" ] || [ "$6" != "#{expected_sha}" ] ||
+       [ "$7" != "--limit" ] || [ "$8" != "1" ] ||
+       [ "$9" != "--json" ]; then
+      echo 'invalid gh run list selector' >&2
+      exit 64
     fi
+
+    if [ "$10" != "headSha,conclusion,status,url" ]; then
+      echo 'invalid gh run list fields' >&2
+      exit 64
+    fi
+
+    if [ "#{query_exit}" -ne 0 ]; then
+      echo 'query unavailable' >&2
+      exit #{query_exit}
+    fi
+
+    echo '#{response}'
     """)
 
     File.chmod!(gh, 0o755)
@@ -373,6 +463,11 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
 
   defp git!(repo, args) do
     {_output, 0} = System.cmd("git", args, cd: repo, stderr_to_stdout: true)
+  end
+
+  defp git_output!(repo, args) do
+    {output, 0} = System.cmd("git", args, cd: repo, stderr_to_stdout: true)
+    String.trim(output)
   end
 
   defp normalize_statuses(%{checks: checks} = result) do
