@@ -168,9 +168,21 @@ jobs:
           echo "Release PR #$pr_number is not fully published yet; running release-please."
           echo "should_run=true" >>"$GITHUB_OUTPUT"
 
+      - name: Authorize protected release dispatcher
+        id: protected-dispatcher
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.candidate_digest != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          permission=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$GITHUB_ACTOR/permission")
+          jq -e '.permission == "admin" and .user.permissions.admin == true' <<<"$permission" >/dev/null
+          echo "authorized=true" >> "$GITHUB_OUTPUT"
+
       - name: Validate protected exact candidate dispatch
         id: protected-dispatch
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.candidate_digest != '' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.candidate_digest != '' && steps.protected-dispatcher.outputs.authorized == 'true' }}
         env:
           CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -249,7 +261,7 @@ jobs:
 
       - name: Protected exact candidate dispatch may merge only the validated release PR
         id: protected-merge
-        if: ${{ steps.protected-dispatch.outputs.authorized == 'true' }}
+        if: ${{ steps.protected-dispatcher.outputs.authorized == 'true' && steps.protected-dispatch.outputs.authorized == 'true' }}
         env:
           # The exact proposal is deliberately behind only by the protected
           # authorization/control commits validated above. The maintainer PAT
@@ -283,7 +295,7 @@ jobs:
         # release/published fan-out can trigger publish/smoke workflows.
         # Maintainers must still treat tag-pinned workflow_dispatch from the
         # release tag as the canonical fallback if downstream fan-out fails.
-        if: ${{ steps.release-preflight.outputs.should_run == 'true' && (github.event.inputs.candidate_digest == '' || (steps.protected-dispatch.outputs.authorized == 'true' && steps.protected-dispatch.outputs.content_verified == 'true' && steps.protected-merge.outputs.merge_tree_verified == 'true' && steps.protected-merge.outcome == 'success')) }}
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && (github.event.inputs.candidate_digest == '' || (steps.protected-dispatcher.outputs.authorized == 'true' && steps.protected-dispatch.outputs.authorized == 'true' && steps.protected-dispatch.outputs.content_verified == 'true' && steps.protected-merge.outputs.merge_tree_verified == 'true' && steps.protected-merge.outcome == 'success')) }}
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
         with:
           token: ${{ secrets.RELEASE_PLEASE_PAT }}
@@ -311,7 +323,7 @@ jobs:
       # suppressed by anti-recursion, leaving the PR with "no checks reported" and
       # auto-merge unable to fire.
       - name: Checkout main for sync step
-        if: ${{ steps.release-preflight.outputs.should_run == 'true' }}
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && (github.event.inputs.candidate_digest == '' || steps.protected-dispatcher.outputs.authorized == 'true') }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
