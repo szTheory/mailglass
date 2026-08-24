@@ -181,20 +181,36 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
 
         case cmd(repo, "gh", args) do
           {json, 0} ->
-            run = json |> Jason.decode!() |> List.first()
+            case Jason.decode(json) do
+              {:ok, runs} when is_list(runs) ->
+                run = List.first(runs)
+                ci_details = %{sha: sha, latest: run}
 
-            ci_details = %{sha: sha, latest: run}
+                if run && run["headSha"] == sha && run["status"] == "completed" &&
+                     run["conclusion"] == "success" do
+                  check(:ci_state, :pass, "Latest CI is green on this SHA.", ci_details)
+                else
+                  check(
+                    :ci_state,
+                    :blocked,
+                    "No successful ci.yml run was found on this SHA.",
+                    ci_details
+                  )
+                end
 
-            if run && run["headSha"] == sha && run["status"] == "completed" &&
-                 run["conclusion"] == "success" do
-              check(:ci_state, :pass, "Latest CI is green on this SHA.", ci_details)
-            else
-              check(
-                :ci_state,
-                :blocked,
-                "No successful ci.yml run was found on this SHA.",
-                ci_details
-              )
+              {:ok, _response} ->
+                cannot_check(
+                  :ci_state,
+                  "GitHub CI returned an unexpected GitHub CI response; inspect the run-list output and retry.",
+                  %{sha: sha}
+                )
+
+              {:error, _reason} ->
+                cannot_check(
+                  :ci_state,
+                  "GitHub CI returned a malformed GitHub CI response; inspect the run-list output and retry.",
+                  %{sha: sha}
+                )
             end
 
           {output, _} ->

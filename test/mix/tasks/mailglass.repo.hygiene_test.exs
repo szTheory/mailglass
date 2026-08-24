@@ -364,6 +364,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     File.mkdir_p!(bin)
     gh = Path.join(bin, "gh")
     expected_sha = Keyword.get(opts, :expected_sha, git_output!(repo, ["rev-parse", "HEAD"]))
+
     response =
       Keyword.get(
         opts,
@@ -462,19 +463,23 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
   end
 
   defp run_hygiene(repo, argv, opts \\ []) do
-    with_hygiene_environment(repo, fn ->
-      in_repo(repo, fn ->
-        test_process = self()
+    with_hygiene_environment(
+      repo,
+      fn ->
+        in_repo(repo, fn ->
+          test_process = self()
 
-        output =
-          capture_io(fn ->
-            send(test_process, {:hygiene_exit, catch_exit(Hygiene.run(argv))})
-          end)
+          output =
+            capture_io(fn ->
+              send(test_process, {:hygiene_exit, catch_exit(Hygiene.run(argv))})
+            end)
 
-        assert_receive {:hygiene_exit, exit}
-        {output, exit}
-      end)
-    end, opts)
+          assert_receive {:hygiene_exit, exit}
+          {output, exit}
+        end)
+      end,
+      opts
+    )
   end
 
   defp write_release_workflows!(repo) do
