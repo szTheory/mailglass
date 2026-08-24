@@ -289,19 +289,34 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
 
       case cmd(repo, "gh", args) do
         {json, 0} ->
-          prs = Jason.decode!(json)
+          case Jason.decode(json) do
+            {:ok, prs} when is_list(prs) ->
+              status =
+                if Enum.empty?(prs) do
+                  :pass
+                else
+                  :blocked
+                end
 
-          status =
-            if Enum.empty?(prs) do
-              :pass
-            else
-              :blocked
-            end
+              check(:pull_requests, status, pr_message(prs), %{
+                open_count: length(prs),
+                prs: prs
+              })
 
-          check(:pull_requests, status, pr_message(prs), %{
-            open_count: length(prs),
-            prs: prs
-          })
+            {:ok, _response} ->
+              cannot_check(
+                :pull_requests,
+                "GitHub PR list returned an unexpected GitHub PR response; inspect the PR-list output and retry.",
+                %{}
+              )
+
+            {:error, _reason} ->
+              cannot_check(
+                :pull_requests,
+                "GitHub PR list returned a malformed GitHub PR response; inspect the PR-list output and retry.",
+                %{}
+              )
+          end
 
         {output, _} ->
           cannot_check(:pull_requests, "Open PR state was not checked.", %{
