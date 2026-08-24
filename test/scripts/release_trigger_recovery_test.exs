@@ -339,9 +339,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert result =~ "pending"
     assert result =~ "cannot-check"
     assert result =~ "blocked"
-    assert summary =~ "if: ${{ always() }}"
+    assert summary =~ "if: ${{ always() && github.event.inputs.candidate_digest == '' }}"
     assert summary =~ "release-proposal-control-result.json"
-    assert upload =~ "if: ${{ always() }}"
+    assert upload =~ "if: ${{ always() && github.event.inputs.candidate_digest == '' }}"
     assert upload =~ "release-proposal-control-result-${{ github.run_id }}"
 
     Enum.each(
