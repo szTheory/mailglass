@@ -248,6 +248,69 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert merge =~ ~s(--match-head-commit "$PROPOSAL_HEAD")
   end
 
+  test "unapproved dispatcher cannot reach PAT-backed protected release steps" do
+    source = workflow_source()
+
+    dispatcher =
+      extract_step_block!(source, "Authorize protected release dispatcher")
+
+    validation = extract_step_block!(source, "Validate protected exact candidate dispatch")
+
+    merge =
+      extract_step_block!(
+        source,
+        "Protected exact candidate dispatch may merge only the validated release PR"
+      )
+
+    release = extract_action_block!(source, "release")
+    checkout = extract_step_block!(source, "Checkout main for sync step")
+
+    assert dispatcher =~ "id: protected-dispatcher"
+    assert dispatcher =~ "github.event_name == 'workflow_dispatch'"
+    assert dispatcher =~ "github.event.inputs.candidate_digest != ''"
+    assert dispatcher =~ "GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}"
+    assert dispatcher =~ "GITHUB_ACTOR"
+    assert dispatcher =~ "collaborators/$GITHUB_ACTOR/permission"
+    assert dispatcher =~ ~s(.permission == "admin")
+    assert dispatcher =~ ".user.permissions.admin == true"
+    assert dispatcher =~ "authorized=true"
+    assert step_precedes?(source, "Authorize protected release dispatcher", "Validate protected exact candidate dispatch")
+    assert validation =~ "steps.protected-dispatcher.outputs.authorized == 'true'"
+
+    for protected <- [merge, release, checkout] do
+      assert protected =~ "steps.protected-dispatcher.outputs.authorized == 'true'"
+    end
+
+    with_dispatcher_permission_fixture(:admin, fn temp_dir, env ->
+      script = Path.join(temp_dir, "dispatcher.sh")
+      File.write!(script, dispatcher_script(dispatcher))
+
+      assert {_, 0} =
+               System.cmd("bash", [script], env: Map.to_list(env), stderr_to_stdout: true)
+
+      assert read_output!(env["GITHUB_OUTPUT"])["authorized"] == "true"
+      assert File.read!(env["GH_LOG"]) ==
+               "api repos/test-owner/test-repo/collaborators/test-admin/permission\n"
+    end)
+
+    for mode <- [:maintain, :write, :malformed, :unavailable] do
+      with_dispatcher_permission_fixture(mode, fn temp_dir, env ->
+        script = Path.join(temp_dir, "dispatcher.sh")
+        File.write!(script, dispatcher_script(dispatcher))
+
+        assert {_, status} =
+                 System.cmd("bash", [script], env: Map.to_list(env), stderr_to_stdout: true)
+
+        assert status != 0
+        refute File.exists?(env["GITHUB_OUTPUT"])
+
+        calls = File.read!(env["GH_LOG"])
+        assert calls == "api repos/test-owner/test-repo/collaborators/test-admin/permission\n"
+        refute calls =~ ~r/(protected-dispatch|gh pr merge|gh release|RELEASE_PLEASE_PAT|checkout)/
+      end)
+    end
+  end
+
   test "core/admin-only release synchronization refreshes inbound compatibility without bumping inbound" do
     sync =
       extract_step_block!(
@@ -830,6 +893,46 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end
   end
 
+  defp with_dispatcher_permission_fixture(mode, fun) do
+    temp_dir =
+      Path.join(System.tmp_dir!(), "release-dispatcher-permission-#{System.unique_integer([:positive])}")
+
+    fake_bin = Path.join(temp_dir, "bin")
+    File.mkdir_p!(fake_bin)
+
+    File.write!(Path.join(fake_bin, "gh"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf '%s\\n' "$*" >> "$GH_LOG"
+    [ "$*" = "api repos/test-owner/test-repo/collaborators/test-admin/permission" ] || exit 64
+    case "$FAKE_DISPATCHER_PERMISSION" in
+      admin) printf '{"permission":"admin","user":{"permissions":{"admin":true}}}\\n' ;;
+      maintain) printf '{"permission":"maintain","user":{"permissions":{"admin":false}}}\\n' ;;
+      write) printf '{"permission":"write","user":{"permissions":{"admin":false}}}\\n' ;;
+      malformed) printf '{"permission":"admin","user":{}}\\n' ;;
+      unavailable) printf 'simulated GitHub API failure\\n' >&2; exit 1 ;;
+      *) exit 64 ;;
+    esac
+    """)
+
+    File.chmod!(Path.join(fake_bin, "gh"), 0o755)
+
+    env = %{
+      "PATH" => fake_bin <> ":" <> System.get_env("PATH"),
+      "GH_LOG" => Path.join(temp_dir, "gh.log"),
+      "FAKE_DISPATCHER_PERMISSION" => Atom.to_string(mode),
+      "GITHUB_ACTOR" => "test-admin",
+      "GITHUB_REPOSITORY" => "test-owner/test-repo",
+      "GITHUB_OUTPUT" => Path.join(temp_dir, "github-output")
+    }
+
+    try do
+      fun.(temp_dir, env)
+    after
+      File.rm_rf!(temp_dir)
+    end
+  end
+
   defp with_proposal_result_env(outcome, status, reason, fun) do
     temp_dir =
       Path.join(System.tmp_dir!(), "release-proposal-result-#{System.unique_integer([:positive])}")
@@ -1110,6 +1213,18 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
       _ ->
         raise ArgumentError, "could not extract the release preflight shell script"
+    end
+  end
+
+  defp dispatcher_script(dispatcher) do
+    case String.split(dispatcher, ~r/^\s*run: \|\n/m, parts: 2) do
+      [_, script] when script != "" ->
+        script
+        |> String.split("\n")
+        |> Enum.map_join("\n", &String.replace_prefix(&1, "          ", ""))
+
+      _ ->
+        raise ArgumentError, "could not extract the protected dispatcher shell script"
     end
   end
 
