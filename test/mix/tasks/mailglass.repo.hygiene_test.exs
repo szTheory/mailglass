@@ -273,6 +273,42 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     assert check(result, :ci_state).details.error =~ "unavailable"
   end
 
+  test "bounds malformed and non-list successful CI responses as cannot-check JSON evidence" do
+    repo = ready_repo!()
+    write_branch_protection_verifier!(repo, "echo 'OK'\n")
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
+
+    sha = git_output!(repo, ["rev-parse", "HEAD"])
+
+    for {response, diagnostic} <- [
+          {"{not-json", "malformed GitHub CI response"},
+          {"{\"headSha\":\"#{sha}\"}", "unexpected GitHub CI response"}
+        ] do
+      result =
+        with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+          expected_sha: sha,
+          response: response
+        )
+
+      ci_state = check(result, :ci_state)
+      assert result.status == :cannot_check
+      assert ci_state.status == :cannot_check
+      assert ci_state.details.sha == sha
+      assert ci_state.message =~ diagnostic
+      assert ci_state.message =~ "retry"
+
+      {json, exit} = run_hygiene(repo, ["--check", "--format", "json"], response: response)
+      decoded = Jason.decode!(json)
+
+      assert exit == {:shutdown, 1}
+      assert decoded["status"] == "cannot-check"
+
+      assert Enum.find(decoded["checks"], &(&1["name"] == "ci_state"))["status"] ==
+               "cannot-check"
+    end
+  end
+
   defp check(result, name), do: Enum.find(result.checks, &(&1.name == name))
 
   defp git_repo! do
@@ -425,7 +461,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     end
   end
 
-  defp run_hygiene(repo, argv) do
+  defp run_hygiene(repo, argv, opts \\ []) do
     with_hygiene_environment(repo, fn ->
       in_repo(repo, fn ->
         test_process = self()
@@ -438,7 +474,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
         assert_receive {:hygiene_exit, exit}
         {output, exit}
       end)
-    end)
+    end, opts)
   end
 
   defp write_release_workflows!(repo) do
