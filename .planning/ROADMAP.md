@@ -108,7 +108,7 @@ Plans:
   4. Repository-hygiene reports an inspectable pass, policy block, or cannot-check outcome with agreeing logs and JSON evidence, including control and applicable scheduled-run proof.
   5. Post-publish validation checks the exact immutable published target through its recovery path, or records an evidence-backed inapplicable or blocked result without substituting `main` or forcing publication.
 
-**Plans**: 11/11 plans executed
+**Plans**: 11/13 plans executed
 
 Plans:
 
@@ -140,6 +140,11 @@ Plans:
 
 - [x] 162-10-PLAN.md — Prevent a completed protected exact-digest release from entering the proposal-only post-merge failure tail.
 - [x] 162-11-PLAN.md — Convert malformed successful GitHub run-list output into bounded repository-hygiene cannot-check evidence.
+
+**Wave 7** *(verification gap closure; blocked on Wave 6 completion)*
+
+- [ ] 162-12-PLAN.md — Require durable dispatcher authorization before protected release steps can receive the privileged PAT.
+- [ ] 162-13-PLAN.md — Convert malformed successful GitHub PR-list output into bounded repository-hygiene cannot-check evidence.
 
 ### Phase 163: Deterministic Release-Path Timeout Repairs
 
