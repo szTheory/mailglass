@@ -500,11 +500,13 @@ jobs:
           candidate_root=""
 
           emit_capture_outputs() {
-            printf 'result_status=%s\n' "$result_status" >> "$GITHUB_OUTPUT"
-            printf 'result_reason=%s\n' "$result_reason" >> "$GITHUB_OUTPUT"
-            printf 'proposal_head=%s\n' "$proposal_head" >> "$GITHUB_OUTPUT"
-            printf 'source_sha=%s\n' "$source_sha" >> "$GITHUB_OUTPUT"
-            printf 'candidate_digest=%s\n' "$candidate_digest" >> "$GITHUB_OUTPUT"
+            {
+              printf 'result_status=%s\n' "$result_status"
+              printf 'result_reason=%s\n' "$result_reason"
+              printf 'proposal_head=%s\n' "$proposal_head"
+              printf 'source_sha=%s\n' "$source_sha"
+              printf 'candidate_digest=%s\n' "$candidate_digest"
+            } >> "$GITHUB_OUTPUT"
           }
 
           cleanup_and_emit_capture_outputs() {
@@ -645,20 +647,23 @@ jobs:
               {name: "result_artifact", status: "pass", source: "release-proposal-control-result", recovery: "download this run artifact"}
             ]}' > "$result"
 
-          printf 'result_path=%s\n' "$result" >> "$GITHUB_OUTPUT"
-          printf 'status=%s\n' "$status" >> "$GITHUB_OUTPUT"
-          printf 'reason=%s\n' "$reason" >> "$GITHUB_OUTPUT"
+          {
+            printf 'result_path=%s\n' "$result"
+            printf 'status=%s\n' "$status"
+            printf 'reason=%s\n' "$reason"
+          } >> "$GITHUB_OUTPUT"
           [ "$status" = pass ] || { [ "$status" = pending ] && [ "$reason" = no_open_proposal ]; }
 
       - name: Summarize proposal-only release control result
         if: ${{ always() && github.event.inputs.candidate_digest == '' }}
+        env:
+          GITHUB_WORKFLOW_SHA: ${{ github.workflow_sha }}
         run: |
-          result="$RUNNER_TEMP/release-proposal-control-result.json"
-          if [ -r "$result" ]; then
-            jq -r '"## Release proposal control result\n\n- status: `\(.status)`\n- reason: `\(.reason)`\n- event: `\(.event_name)`\n- run: `\(.run_id)`\n\n### Evidence probes\n" + (.probes[] | "- \(.status) `\(.name)`: \(.source)")' "$result" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "## Release proposal control result\n\n- status: `cannot-check`\n- reason: result artifact was not written" >> "$GITHUB_STEP_SUMMARY"
-          fi
+          set -o pipefail
+          bash scripts/scheduled_control_evidence.sh bind \
+            --control release-please \
+            --artifact "$RUNNER_TEMP/release-proposal-control-result.json" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Upload proposal-only release control result
         if: ${{ always() && github.event.inputs.candidate_digest == '' }}

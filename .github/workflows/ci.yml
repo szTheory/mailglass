@@ -67,6 +67,31 @@ jobs:
             fi
           fi
 
+      - name: Enforce append-only retained evidence
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BASE_SHA: ${{ github.event.before }}
+          PUSH_HEAD_SHA: ${{ github.sha }}
+        run: |
+          case "$EVENT_NAME" in
+            pull_request)
+              base_sha="$PR_BASE_SHA"
+              head_sha="$PR_HEAD_SHA"
+              ;;
+            push)
+              base_sha="$PUSH_BASE_SHA"
+              head_sha="$PUSH_HEAD_SHA"
+              ;;
+            *)
+              echo "Append-only retained evidence check is not applicable to $EVENT_NAME."
+              exit 0
+              ;;
+          esac
+
+          bash scripts/check_append_only_evidence.sh "$base_sha" "$head_sha"
+
   format_check:
     name: Format Check (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest

@@ -274,7 +274,13 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert dispatcher =~ ~s(.permission == "admin")
     assert dispatcher =~ ".user.permissions.admin == true"
     assert dispatcher =~ "authorized=true"
-    assert step_precedes?(source, "Authorize protected release dispatcher", "Validate protected exact candidate dispatch")
+
+    assert step_precedes?(
+             source,
+             "Authorize protected release dispatcher",
+             "Validate protected exact candidate dispatch"
+           )
+
     assert validation =~ "steps.protected-dispatcher.outputs.authorized == 'true'"
 
     for protected <- [merge, release, checkout] do
@@ -289,6 +295,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
                System.cmd("bash", [script], env: Map.to_list(env), stderr_to_stdout: true)
 
       assert read_output!(env["GITHUB_OUTPUT"])["authorized"] == "true"
+
       assert File.read!(env["GH_LOG"]) ==
                "api repos/test-owner/test-repo/collaborators/test-admin/permission\n"
     end)
@@ -511,16 +518,42 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     result = extract_step_block!(source, "Write proposal-only release control result")
     summary = extract_step_block!(source, "Summarize proposal-only release control result")
     upload = extract_step_block!(source, "Upload proposal-only release control result")
-    gate = extract_step_block!(source, "Fail non-pass proposal control result after evidence upload")
+
+    gate =
+      extract_step_block!(source, "Fail non-pass proposal control result after evidence upload")
 
     assert summary =~ "release-proposal-control-result.json"
     assert upload =~ "release-proposal-control-result-${{ github.run_id }}"
 
-    assert step_precedes?(source, "Sync sibling package -> mailglass dep pin on release-please branch", "Discover scheduled Release Please proposal before capture")
-    assert step_precedes?(source, "Discover scheduled Release Please proposal before capture", "Capture Release Please proposal identity without activation")
-    assert step_precedes?(source, "Write proposal-only release control result", "Summarize proposal-only release control result")
-    assert step_precedes?(source, "Summarize proposal-only release control result", "Upload proposal-only release control result")
-    assert step_precedes?(source, "Upload proposal-only release control result", "Fail non-pass proposal control result after evidence upload")
+    assert step_precedes?(
+             source,
+             "Sync sibling package -> mailglass dep pin on release-please branch",
+             "Discover scheduled Release Please proposal before capture"
+           )
+
+    assert step_precedes?(
+             source,
+             "Discover scheduled Release Please proposal before capture",
+             "Capture Release Please proposal identity without activation"
+           )
+
+    assert step_precedes?(
+             source,
+             "Write proposal-only release control result",
+             "Summarize proposal-only release control result"
+           )
+
+    assert step_precedes?(
+             source,
+             "Summarize proposal-only release control result",
+             "Upload proposal-only release control result"
+           )
+
+    assert step_precedes?(
+             source,
+             "Upload proposal-only release control result",
+             "Fail non-pass proposal control result after evidence upload"
+           )
 
     with_idle_schedule_fixture(:none, fn temp_dir, env ->
       File.write!(Path.join(temp_dir, "preflight.sh"), preflight_script(preflight))
@@ -574,7 +607,15 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
         |> File.read!()
         |> Jason.decode!()
 
-      assert Map.take(json, ["status", "reason", "event_name", "run_id", "proposal_head", "source_sha", "candidate_digest"]) == %{
+      assert Map.take(json, [
+               "status",
+               "reason",
+               "event_name",
+               "run_id",
+               "proposal_head",
+               "source_sha",
+               "candidate_digest"
+             ]) == %{
                "status" => "pending",
                "reason" => "no_open_proposal",
                "event_name" => "schedule",
@@ -585,11 +626,20 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
              }
 
       gate_env = %{"RESULT_STATUS" => "pending", "RESULT_REASON" => "no_open_proposal"}
-      assert {_, 0} = System.cmd("bash", [Path.join(temp_dir, "gate.sh")], env: Map.to_list(gate_env), stderr_to_stdout: true)
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "gate.sh")],
+                 env: Map.to_list(gate_env),
+                 stderr_to_stdout: true
+               )
 
       calls = File.read!(env["GH_LOG"])
-      assert calls == "pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid\n"
-      refute File.read!(env["COMMAND_LOG"]) =~ ~r/(gh pr merge|git tag|gh release|git push|protected-dispatch)/
+
+      assert calls ==
+               "pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid\n"
+
+      refute File.read!(env["COMMAND_LOG"]) =~
+               ~r/(gh pr merge|git tag|gh release|git push|protected-dispatch)/
     end)
   end
 
@@ -608,7 +658,11 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
         File.write!(script, proposal_result_script(discovery))
 
         assert {_, ^expected_exit} =
-                 System.cmd("bash", [script], cd: @repo_root, env: Map.to_list(env), stderr_to_stdout: true)
+                 System.cmd("bash", [script],
+                   cd: @repo_root,
+                   env: Map.to_list(env),
+                   stderr_to_stdout: true
+                 )
 
         outputs = read_output!(env["GITHUB_OUTPUT"])
         assert outputs["should_capture"] == expected_capture
@@ -772,7 +826,12 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   end
 
   defp run_protected_dispatch_lifecycle do
-    temp_dir = Path.join(System.tmp_dir!(), "release-protected-lifecycle-#{System.unique_integer([:positive])}")
+    temp_dir =
+      Path.join(
+        System.tmp_dir!(),
+        "release-protected-lifecycle-#{System.unique_integer([:positive])}"
+      )
+
     command_log = Path.join(temp_dir, "command.log")
     proposal_state = Path.join(temp_dir, "open-proposals")
 
@@ -895,7 +954,10 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
   defp with_dispatcher_permission_fixture(mode, fun) do
     temp_dir =
-      Path.join(System.tmp_dir!(), "release-dispatcher-permission-#{System.unique_integer([:positive])}")
+      Path.join(
+        System.tmp_dir!(),
+        "release-dispatcher-permission-#{System.unique_integer([:positive])}"
+      )
 
     fake_bin = Path.join(temp_dir, "bin")
     File.mkdir_p!(fake_bin)
@@ -960,7 +1022,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   end
 
   defp with_idle_schedule_fixture(mode, fun) do
-    temp_dir = Path.join(System.tmp_dir!(), "release-idle-schedule-#{System.unique_integer([:positive])}")
+    temp_dir =
+      Path.join(System.tmp_dir!(), "release-idle-schedule-#{System.unique_integer([:positive])}")
+
     fake_bin = Path.join(temp_dir, "bin")
     File.mkdir_p!(fake_bin)
 

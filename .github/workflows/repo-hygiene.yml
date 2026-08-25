@@ -44,22 +44,16 @@ jobs:
         run: |
           set -o pipefail
           mix mailglass.repo.hygiene --check --format json | tee "$RUNNER_TEMP/repo-hygiene.json"
-      - name: Write readiness summary
+      - name: Bind and summarize scheduled-control evidence
         if: always()
+        env:
+          GITHUB_WORKFLOW_SHA: ${{ github.workflow_sha }}
         run: |
-          {
-            echo "## repo hygiene"
-            echo
-            if [ -f "$RUNNER_TEMP/repo-hygiene.json" ]; then
-              status="$(jq -r '.status' "$RUNNER_TEMP/repo-hygiene.json")"
-              reason="$(jq -r '.reason' "$RUNNER_TEMP/repo-hygiene.json")"
-              echo "- **Status:** \`$status\`"
-              echo "- **Reason:** $reason"
-              jq -r '.checks[] | "- \(.status) `\(.name)`: \(.message)"' "$RUNNER_TEMP/repo-hygiene.json"
-            else
-              echo "Repo hygiene did not produce an artifact."
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          set -o pipefail
+          bash scripts/scheduled_control_evidence.sh bind \
+            --control repo-hygiene \
+            --artifact "$RUNNER_TEMP/repo-hygiene.json" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Upload hygiene artifact
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1

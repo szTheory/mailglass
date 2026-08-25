@@ -106,7 +106,10 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
 
     assert resolver =~ "if: ${{ always() }}"
     assert resolver =~ "name: Upload post-publish resolution"
-    assert resolver =~ "name: Summarize post-publish resolution"
+    assert resolver =~ "name: Bind and summarize scheduled-control evidence"
+    assert resolver =~ "scheduled_control_evidence.sh bind"
+    assert resolver =~ "--control post-publish-smoke"
+    assert resolver =~ "tee -a \"$GITHUB_STEP_SUMMARY\""
     assert resolver =~ "path: ${{ runner.temp }}/post-publish-resolution.json"
   end
 
@@ -531,6 +534,7 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
 
     event_name = Keyword.fetch!(options, :event_name)
     expected_status = Keyword.fetch!(options, :expected_status)
+
     {expected_resolution_status, expected_reason, expected_target_ref} =
       Keyword.fetch!(options, :expected_resolution)
 
@@ -562,8 +566,11 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert resolution["event_name"] == event_name
     assert resolution["run_id"] == "fixture-run"
     assert resolution["target_ref"] == expected_target_ref
+
     expected_versions =
-      if expected_resolution_status == "cannot-check", do: {"", "", ""}, else: {"3.0.0", "3.0.0", "2.2.0"}
+      if expected_resolution_status == "cannot-check",
+        do: {"", "", ""},
+        else: {"3.0.0", "3.0.0", "2.2.0"}
 
     {expected_core, expected_admin, expected_inbound} = expected_versions
     assert resolution["core"] == expected_core

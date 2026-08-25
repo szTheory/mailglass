@@ -171,9 +171,9 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     workflow = File.read!(Path.expand("../../../.github/workflows/repo-hygiene.yml", __DIR__))
 
     assert workflow =~ "$RUNNER_TEMP/repo-hygiene.json"
-    assert workflow =~ "jq -r '.status' \"$RUNNER_TEMP/repo-hygiene.json\""
-    assert workflow =~ "jq -r '.reason' \"$RUNNER_TEMP/repo-hygiene.json\""
-    assert workflow =~ "jq -r '.checks[] | \"- \\(.status) `\\(.name)`: \\(.message)\"'"
+    assert workflow =~ "scheduled_control_evidence.sh bind"
+    assert workflow =~ "--control repo-hygiene"
+    assert workflow =~ "tee -a \"$GITHUB_STEP_SUMMARY\""
     assert workflow =~ "if-no-files-found: error"
     assert workflow =~ "if: always()"
     refute workflow =~ "steps.hygiene.outcome"
@@ -320,9 +320,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
           {"{\"number\":222}", "unexpected GitHub PR response"}
         ] do
       result =
-        with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
-          pr_response: pr_response
-        )
+        with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_response: pr_response)
 
       pull_requests = check(result, :pull_requests)
       assert result.status == :cannot_check
@@ -344,9 +342,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     end
 
     empty =
-      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
-        pr_response: "[]"
-      )
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_response: "[]")
 
     assert check(empty, :pull_requests).status == :pass
     assert check(empty, :pull_requests).details == %{open_count: 0, prs: []}

@@ -235,17 +235,21 @@ jobs:
           write_resolution "pass" "exact_target_verified" "$lifecycle" "$lifecycle" "published" "$target_ref" "$core" "$admin" "$inbound"
           resolution_finalized=true
           printf 'completed=%s\nauthorized=%s\ncore=%s\nadmin=%s\ninbound=%s\ntarget_ref=%s\n' "$completed" "$authorized" "$core" "$admin" "$inbound" "$target_ref" >> "$GITHUB_OUTPUT"
-      - name: Summarize post-publish resolution
-        if: ${{ always() }}
+      - name: Bind and summarize scheduled-control evidence
+        if: ${{ always() && github.event_name != 'release' }}
+        env:
+          GITHUB_WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -o pipefail
+          bash scripts/scheduled_control_evidence.sh bind \
+            --control post-publish-smoke \
+            --artifact "$RUNNER_TEMP/post-publish-resolution.json" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Summarize release-event no-op
+        if: ${{ always() && github.event_name == 'release' }}
         run: |
           if [ -f "$RUNNER_TEMP/post-publish-resolution.json" ]; then
-            {
-              echo "## post-publish resolution"
-              echo
-              echo '```json'
-              cat "$RUNNER_TEMP/post-publish-resolution.json"
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
+            jq . "$RUNNER_TEMP/post-publish-resolution.json" | tee -a "$GITHUB_STEP_SUMMARY"
           fi
       - name: Upload post-publish resolution
         if: ${{ always() }}

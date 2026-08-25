@@ -6,7 +6,10 @@ on:
     paths:
       - ".github/workflows/*.yml"
       - ".github/workflows/*.yaml"
+      - ".github/scheduled-controls.json"
+      - "scripts/check_append_only_evidence.sh"
       - "scripts/check_tests_gate.sh"
+      - "scripts/scheduled_control_evidence.sh"
   workflow_dispatch:
 
 permissions:
