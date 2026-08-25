@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "evidence_schema": "mailglass.scheduled-control/v1",
-  "verification_schema": "mailglass.scheduled-control-verification/v1",
+  "verification_schema": "mailglass.scheduled-control-verification/v2",
   "controls": [
     {
       "id": "release-please",

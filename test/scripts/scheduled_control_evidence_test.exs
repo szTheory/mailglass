@@ -70,6 +70,7 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
                )
 
       report = output |> File.read!() |> Jason.decode!()
+      assert report["kind"] == "run"
       assert report["evidence_valid"]
       assert report["source_run"]["conclusion"] == "failure"
       assert report["result"]["status"] == "blocked"
@@ -101,6 +102,43 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
     end)
   end
 
+  test "sweep binds current protected main and emits bounded pending pre-deployment evidence" do
+    in_tmp(fn temp_dir ->
+      run_sha = String.duplicate("a", 40)
+      main_sha = String.duplicate("b", 40)
+
+      current_fixture =
+        write_sweep_fixture!(Path.join(temp_dir, "current"), run_sha, run_sha)
+
+      assert {_, 0} = run_sweep(current_fixture)
+
+      current_report = current_fixture.output |> File.read!() |> Jason.decode!()
+      assert current_report["kind"] == "sweep"
+      assert current_report["expected_main_sha"] == run_sha
+      assert get_in(current_report, ["controls", Access.at(0), "source_run", "head_sha"]) == run_sha
+
+      fixture = write_sweep_fixture!(Path.join(temp_dir, "stale"), run_sha, main_sha)
+
+      {output, status} = run_sweep(fixture)
+
+      assert status != 0
+      assert output =~ "awaiting_current_main_schedule"
+
+      pending_report = fixture.output |> File.read!() |> Jason.decode!()
+      assert pending_report["kind"] == "sweep"
+      assert pending_report["status"] == "pending"
+      refute pending_report["evidence_valid"]
+      assert pending_report["expected_main_sha"] == main_sha
+
+      assert [pending_control] = pending_report["controls"]
+      assert pending_control["control"] == "release-please"
+      refute pending_control["evidence_valid"]
+      assert pending_control["source_run"]["head_sha"] == run_sha
+      assert pending_control["result"]["status"] == "pending"
+      assert pending_control["result"]["reason"] == "awaiting_current_main_schedule"
+    end)
+  end
+
   test "monitor is read-only, consumes trusted code, and covers every scheduled control" do
     workflow = File.read!(@monitor_workflow)
     verifier = File.read!(@evidence_script)
@@ -115,6 +153,9 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
     assert workflow =~ "ref: refs/heads/main"
     assert workflow =~ "scheduled_control_evidence.sh verify-run"
     assert workflow =~ "scheduled_control_evidence.sh sweep"
+    assert workflow =~ "sweep_status=$?"
+    assert workflow =~ ~s(exit "$sweep_status")
+    assert workflow =~ "if: ${{ always() }}"
     assert verifier =~ ~s([ "$artifact_digest" = "sha256:$archive_sha" ])
     assert verifier =~ "logs do not contain the retained payload digest"
 
@@ -123,6 +164,9 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
       |> Path.join(".github/scheduled-controls.json")
       |> File.read!()
       |> Jason.decode!()
+
+    assert config["evidence_schema"] == "mailglass.scheduled-control/v1"
+    assert config["verification_schema"] == "mailglass.scheduled-control-verification/v2"
 
     assert Enum.map(config["controls"], & &1["id"]) == [
              "release-please",
@@ -243,6 +287,134 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
       )
 
     status
+  end
+
+  defp write_sweep_fixture!(temp_dir, run_sha, main_sha) do
+    File.mkdir_p!(temp_dir)
+    bin_dir = Path.join(temp_dir, "bin")
+    File.mkdir_p!(bin_dir)
+    config = Path.join(temp_dir, "scheduled-controls.json")
+    artifact = Path.join(temp_dir, "release-proposal-control-result.json")
+    artifact_zip = Path.join(temp_dir, "artifact.zip")
+    logs = Path.join(temp_dir, "logs.txt")
+    logs_zip = Path.join(temp_dir, "logs.zip")
+    output = Path.join(temp_dir, "sweep.json")
+    run_json = Path.join(temp_dir, "run.json")
+    artifacts_json = Path.join(temp_dir, "artifacts.json")
+
+    File.write!(
+      config,
+      Jason.encode!(%{
+        "schema_version" => 1,
+        "evidence_schema" => "mailglass.scheduled-control/v1",
+        "verification_schema" => "mailglass.scheduled-control-verification/v2",
+        "controls" => [
+          %{
+            "id" => "release-please",
+            "workflow_name" => "release-please",
+            "workflow_file" => "release-please.yml",
+            "artifact_name" => "release-proposal-control-result-{run_id}",
+            "artifact_file" => "release-proposal-control-result.json",
+            "max_age_seconds" => 10_800
+          }
+        ]
+      })
+    )
+
+    File.write!(
+      artifact,
+      Jason.encode!(%{
+        "evidence_schema" => "mailglass.scheduled-control/v1",
+        "control" => "release-please",
+        "event_name" => "schedule",
+        "run_id" => "16214",
+        "workflow_sha" => run_sha,
+        "head_sha" => run_sha,
+        "status" => "blocked",
+        "reason" => "proposal_identity_mismatch"
+      })
+    )
+
+    zip!(artifact_zip, artifact)
+    artifact_archive_digest = sha256!(artifact_zip)
+    payload_digest = sha256!(artifact)
+    File.write!(logs, "payload-sha256: `#{payload_digest}`\n")
+    zip!(logs_zip, logs)
+
+    File.write!(
+      run_json,
+      Jason.encode!(%{
+        "id" => 16_214,
+        "name" => "release-please",
+        "event" => "schedule",
+        "status" => "completed",
+        "conclusion" => "failure",
+        "head_branch" => "main",
+        "head_sha" => run_sha,
+        "html_url" => "https://github.com/example/mailglass/actions/runs/16214",
+        "updated_at" => DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+      })
+    )
+
+    File.write!(
+      artifacts_json,
+      Jason.encode!(%{
+        "artifacts" => [
+          %{
+            "id" => 99,
+            "name" => "release-proposal-control-result-16214",
+            "expired" => false,
+            "digest" => "sha256:#{artifact_archive_digest}"
+          }
+        ]
+      })
+    )
+
+    gh = Path.join(bin_dir, "gh")
+
+    File.write!(
+      gh,
+      """
+      #!/usr/bin/env bash
+      set -euo pipefail
+      case "$*" in
+        "api repos/example/mailglass/actions/workflows/release-please.yml/runs?event=schedule&per_page=1 --jq .workflow_runs[0].id") printf '16214\\n' ;;
+        "api repos/example/mailglass/actions/runs/16214") cat '#{run_json}' ;;
+        "api repos/example/mailglass/actions/runs/16214/artifacts?per_page=100") cat '#{artifacts_json}' ;;
+        "api repos/example/mailglass/actions/artifacts/99/zip") cat '#{artifact_zip}' ;;
+        "api repos/example/mailglass/actions/runs/16214/logs") cat '#{logs_zip}' ;;
+        "api repos/example/mailglass/git/ref/heads/main --jq .object.sha") printf '%s\\n' '#{main_sha}' ;;
+        *) printf 'unexpected gh call: %s\\n' "$*" >&2; exit 64 ;;
+      esac
+      """
+    )
+
+    File.chmod!(gh, 0o755)
+
+    %{bin_dir: bin_dir, config: config, output: output}
+  end
+
+  defp run_sweep(fixture) do
+    System.cmd(
+      "bash",
+      [@evidence_script, "sweep", "--output", fixture.output],
+      cd: @repo_root,
+      env: [
+        {"PATH", "#{fixture.bin_dir}:#{System.fetch_env!("PATH")}"},
+        {"GITHUB_REPOSITORY", "example/mailglass"},
+        {"SCHEDULED_CONTROL_CONFIG", fixture.config}
+      ],
+      stderr_to_stdout: true
+    )
+  end
+
+  defp zip!(archive, file) do
+    {_, 0} = System.cmd("zip", ["-q", "-j", archive, file])
+  end
+
+  defp sha256!(file) do
+    {digest, 0} = System.cmd("shasum", ["-a", "256", file])
+    digest |> String.split() |> hd()
   end
 
   defp run(workflow_name) do

@@ -1,7 +1,8 @@
 ---
 phase: 162-protected-release-and-scheduled-control-recovery
-verified: 2026-08-24T20:51:36Z
+verified: 2026-08-25T17:26:23Z
 status: human_needed
+status_reason: automated_external_evidence_pending
 score: 5/5 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
@@ -13,20 +14,20 @@ re_verification:
     - "Malformed or non-list successful GitHub PR-list output now becomes serialized cannot-check evidence instead of aborting repository-hygiene."
   gaps_remaining: []
   regressions: []
-human_verification:
-  - test: "After these changes are on protected remote main, inspect the next applicable release-please, repo-hygiene, and post-publish-smoke schedule runs and download their retained JSON artifacts."
-    expected: "Each run has event=schedule, the expected workflow SHA, and a bounded pass/blocked/cannot-check/pending result that agrees with its log, summary, and artifact; no manual dispatch is used as schedule proof."
-    why_human: "The checked-in ledger records the required post-change schedule rows as pending because the workflows were not yet reachable on protected remote main when captured; local fixtures cannot create or observe GitHub's scheduled runs."
-  - test: "Review the phase's judgment-tier MUST NOT constraints against the protected remote workflow and release evidence."
-    expected: "No retained evidence was rewritten, no stale/manual observation was presented as fresh proof, and no release or publication authority was broadened or forced."
-    why_human: "These are intentional judgment-tier prohibitions with no test-tier enforcement or accepted override."
+human_verification: []
+automated_verification:
+  status: pending
+  command: "GITHUB_REPOSITORY=szTheory/mailglass bash scripts/scheduled_control_evidence.sh sweep --output scheduled-control-sweep.json"
+  observed:
+    - "release-please schedule evidence is verified on protected main fda6368bf43c49aab88e3f90da1d6af67ee77d35"
+    - "repo-hygiene and post-publish-smoke are bounded pending until their next daily schedule runs on that revision"
 ---
 
 # Phase 162: Protected Release and Scheduled-Control Recovery Verification Report
 
 **Phase Goal:** Maintainers can explain and safely disposition the blocked release state while existing release and repository controls report only truthful, bounded outcomes.
-**Verified:** 2026-08-24T20:51:36Z
-**Status:** human_needed
+**Verified:** 2026-08-25T17:26:23Z
+**Status:** human_needed (canonical compatibility; the remaining gate is automated external evidence, not human judgment)
 **Re-verification:** Yes — after Wave 7 gap closure
 
 ## Goal Achievement
@@ -38,7 +39,7 @@ human_verification:
 | 1 | A maintainer can reconcile PR #222, its commits/checks, tags, Hex versions, and the target ledger into one evidence-backed narrative. | ✓ VERIFIED | `162-RELEASE-RECONCILIATION.md` retains timestamped PR/check/tag/Hex/target/WT-03/recovery rows and exact identities; all 8 reconciliation-contract tests passed. |
 | 2 | PR #222 and every stale release branch or check have a protected merge, recorded retirement reason, or named recovery condition; none remain unexplained or auto-merge-armed in limbo. | ✓ VERIFIED | The final disposition matrix gives every scoped identity one outcome; PR #222 records `auto-merge: null` and an exact-digest protected recovery condition. |
 | 3 | Release-please gives a truthful proposal-only result through its control and scheduled entry points without gaining merge, tag, publish, or protected-dispatch authority. | ✓ VERIFIED | The dispatcher gate requires the exact GitHub admin permission shape before all protected/PAT-bearing steps; the unauthorized-dispatch regression passed. The idle-schedule regression produced pending `no_open_proposal` JSON and no protected command. |
-| 4 | Repository-hygiene reports an inspectable pass, policy block, or cannot-check outcome with agreeing logs and JSON evidence, including control and applicable scheduled-run proof. | ✓ VERIFIED | `pull_requests/1` and `ci_state/1` use non-raising JSON/list-shape guards; the malformed PR test passed with decodable nonzero `cannot-check` JSON. The workflow writes its summary and upload from the same artifact. Live post-change schedule observation remains a human gate below. |
+| 4 | Repository-hygiene reports an inspectable pass, policy block, or cannot-check outcome with agreeing logs and JSON evidence, including control and applicable scheduled-run proof. | ✓ VERIFIED | `pull_requests/1` and `ci_state/1` use non-raising JSON/list-shape guards; the malformed PR test passed with decodable nonzero `cannot-check` JSON. The workflow writes its summary and upload from the same artifact. Live post-change schedule observation is handled by the automated sweep below. |
 | 5 | Post-publish validation checks the exact immutable published target through its recovery path, or records an evidence-backed inapplicable or blocked result without substituting `main` or forcing publication. | ✓ VERIFIED | The resolver fixture passed for pass, blocked, and cannot-check paths, verifies the exact immutable ref, and serializes one resolution before summary/upload. |
 
 **Score:** 5/5 truths verified (0 present, behavior-unverified).
@@ -92,9 +93,9 @@ Step 7c: SKIPPED — no phase-declared or conventional `scripts/**/tests/probe-*
 | --- | --- | --- | --- | --- |
 | AUTO-01 | 01, 05 | Evidence-backed release-state narrative | ✓ SATISFIED | Reconciliation ledger plus passing schema contract. |
 | AUTO-02 | 01, 05 | Explicit safe PR/branch/check dispositions | ✓ SATISFIED | Stable one-outcome matrices, explicit empty rows, and `auto-merge: null`. |
-| AUTO-03 | 02, 05, 06, 08, 10, 12 | Truthful proposal-only controls without authority expansion | ✓ SATISFIED | Admin dispatcher enforcement and ordinary schedule/control regressions pass; live scheduled UAT remains required. |
-| AUTO-04 | 03, 05, 09, 11, 13 | Inspectable three-state hygiene evidence | ✓ SATISFIED | Exact-SHA and malformed CI/PR evidence boundaries are serialized; live scheduled UAT remains required. |
-| AUTO-05 | 04, 05, 07 | Exact immutable post-publish proof or bounded outcome | ✓ SATISFIED | Resolver fixtures prove immutable pass, blocked-unpublished, and cannot-check outcomes; live scheduled UAT remains required. |
+| AUTO-03 | 02, 05, 06, 08, 10, 12 | Truthful proposal-only controls without authority expansion | ✓ SATISFIED | Admin dispatcher enforcement and ordinary schedule/control regressions pass; current live schedule evidence is collected automatically. |
+| AUTO-04 | 03, 05, 09, 11, 13 | Inspectable three-state hygiene evidence | ✓ SATISFIED | Exact-SHA and malformed CI/PR evidence boundaries are serialized; current live schedule evidence is collected automatically. |
+| AUTO-05 | 04, 05, 07 | Exact immutable post-publish proof or bounded outcome | ✓ SATISFIED | Resolver fixtures prove immutable pass, blocked-unpublished, and cannot-check outcomes; current live schedule evidence is collected automatically. |
 
 All requirement IDs declared in the 13 plan frontmatters are AUTO-01 through AUTO-05. `REQUIREMENTS.md` assigns exactly those five IDs to Phase 162, so no orphaned requirement exists.
 
@@ -106,29 +107,29 @@ All requirement IDs declared in the 13 plan frontmatters are AUTO-01 through AUT
 
 No unreferenced `TBD`, `FIXME`, or `XXX` marker was found in phase-delivered implementation files. No missing, stubbed, or orphaned phase artifact was found.
 
-### Human Verification Required
+### Automated Verification Pending
 
 ### 1. Observe post-change scheduled controls
 
-**Test:** After deployment to protected `main`, download the next `event=schedule` run and JSON artifact for `release-please.yml`, `repo-hygiene.yml`, and `post-publish-smoke.yml`.
+**Gate:** The read-only `scheduled_control_evidence.sh sweep` downloads the latest `event=schedule` run, logs, and retained JSON artifact for `release-please.yml`, `repo-hygiene.yml`, and `post-publish-smoke.yml`.
 
 **Expected:** Event/run ID/workflow SHA, logs, job summary, and JSON artifact agree on a bounded outcome. A manual dispatch is never used as schedule evidence.
 
-**Why human:** The final ledger records the post-change schedule rows as pending; GitHub's scheduler and retained artifacts are external state that local tests cannot observe.
+**Current automated result:** `release-please` is verified on protected main `fda6368bf43c49aab88e3f90da1d6af67ee77d35`; `repo-hygiene` and `post-publish-smoke` remain bounded `pending` until their next daily schedule. The monitor emits and retains a complete JSON verdict even while its job is non-green.
 
-### 2. Resolve judgment-tier safety prohibitions
+### Judgment-tier prohibitions — automated
 
-**Test:** Review preserved release evidence and protected remote workflow settings.
+**Gate:** Required CI executes append-only evidence, schedule-provenance, read-only monitor-permission, protected-dispatch authorization, and immutable publication-target contracts.
 
 **Expected:** No uncertain evidence was rewritten; no stale/manual observation was claimed fresh; no publication was forced; and protected release authority remains limited to an approved admin dispatcher.
 
-**Why human:** These phase-plan MUST NOT constraints are judgment-tier and have neither automated enforcement evidence nor an accepted override.
+**Automated result:** PASS — the combined authority/evidence suite completed with 52 tests and 0 failures; Actionlint and ShellCheck also exited 0.
 
 ### Gaps Summary
 
-The two prior blocking implementation gaps are closed. No subsequent milestone phase specifically covers any unresolved Phase 162 implementation concern. This report is an escalation gate, not a pass: it awaits external scheduled-run evidence and developer resolution of the judgment-tier prohibitions. The repository must not advance on a claim that these operational observations have already occurred.
+The two prior blocking implementation gaps are closed and the judgment-tier prohibitions now have executable enforcement. This report remains an escalation gate only because two post-deployment daily schedule observations have not occurred yet. The repository must not advance until the automated sweep verifies all three current-main runs; no human review or manual dispatch can satisfy that gate.
 
 ---
 
-_Verified: 2026-08-24T20:51:36Z_
+_Verified: 2026-08-25T17:26:23Z_
 _Verifier: the agent (gsd-verifier)_

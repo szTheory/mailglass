@@ -193,6 +193,7 @@ verify_file() {
     --slurpfile artifact "$artifact" '
       {
         schema: $schema,
+        kind: "run",
         verified_at: $verified_at,
         evidence_valid: true,
         control: $control,
@@ -281,17 +282,65 @@ download_run_evidence() {
 }
 
 sweep_controls() {
-  local output="$1" temporary control workflow_file run_id max_age report updated_at
+  local output="$1" temporary control control_id workflow_file run_id max_age report run_json updated_at
+  local expected_main_sha observed_head_sha
   temporary=$(mktemp -d)
   trap 'rm -rf "$temporary"' RETURN
 
+  expected_main_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+  [[ "$expected_main_sha" =~ ^[0-9a-f]{40}$ ]] || {
+    echo "Protected main has an invalid SHA: $expected_main_sha" >&2
+    return 1
+  }
+
   while IFS= read -r control; do
     workflow_file=$(jq -r '.workflow_file' <<<"$control")
+    control_id=$(jq -r '.id' <<<"$control")
     max_age=$(jq -r '.max_age_seconds' <<<"$control")
     run_id=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow_file/runs?event=schedule&per_page=1" --jq '.workflow_runs[0].id')
     [[ "$run_id" =~ ^[0-9]+$ ]] || { echo "No scheduled run found for $workflow_file." >&2; return 1; }
-    report="$temporary/$(jq -r '.id' <<<"$control").json"
+    report="$temporary/$control_id.json"
+    run_json="$temporary/$control_id-run.json"
+    gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" >"$run_json"
+    observed_head_sha=$(jq -er '.head_sha' "$run_json")
+
+    if [ "$observed_head_sha" != "$expected_main_sha" ]; then
+      jq -n \
+        --arg schema "$(jq -er '.verification_schema' "$config_path")" \
+        --arg control "$control_id" \
+        --arg expected_main_sha "$expected_main_sha" \
+        --slurpfile run "$run_json" '
+          {
+            schema: $schema,
+            kind: "run",
+            verified_at: (now | todateiso8601),
+            evidence_valid: false,
+            control: $control,
+            expected_main_sha: $expected_main_sha,
+            source_run: {
+              id: ($run[0].id | tostring),
+              name: $run[0].name,
+              event: $run[0].event,
+              status: $run[0].status,
+              conclusion: $run[0].conclusion,
+              head_branch: $run[0].head_branch,
+              head_sha: $run[0].head_sha,
+              html_url: $run[0].html_url,
+              updated_at: $run[0].updated_at
+            },
+            result: {
+              status: "pending",
+              reason: "awaiting_current_main_schedule",
+              workflow_sha: $run[0].head_sha
+            }
+          }
+        ' >"$report"
+      rm -f "$run_json"
+      continue
+    fi
+
     download_run_evidence "$run_id" "$report"
+    rm -f "$run_json"
     updated_at=$(jq -er '.source_run.updated_at' "$report")
     jq -ne --arg updated_at "$updated_at" --argjson max_age "$max_age" \
       '(now - ($updated_at | fromdateiso8601)) <= $max_age' >/dev/null || {
@@ -302,9 +351,25 @@ sweep_controls() {
 
   jq -s \
     --arg schema "$(jq -er '.verification_schema' "$config_path")" \
-    '{schema: $schema, evidence_valid: true, controls: .}' "$temporary"/*.json >"$output"
+    --arg expected_main_sha "$expected_main_sha" \
+    '(. | all(.evidence_valid == true)) as $valid |
+      {
+        schema: $schema,
+        kind: "sweep",
+        status: (if $valid then "pass" else "pending" end),
+        reason: (if $valid then "all_controls_current" else "awaiting_current_main_schedule" end),
+        evidence_valid: $valid,
+        expected_main_sha: $expected_main_sha,
+        controls: .
+      }' \
+    "$temporary"/*.json >"$output"
   rm -rf "$temporary"
   trap - RETURN
+
+  if ! jq -e '.status == "pass"' "$output" >/dev/null; then
+    jq -r '.reason' "$output" >&2
+    return 1
+  fi
 }
 
 command="${1:-}"
