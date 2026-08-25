@@ -86,6 +86,8 @@ Progress: [██████████] 100%
 - [Phase 161]: All 12 archive identities have independent named preservation refs; the verified cleanup queue had no eligible `remove` row.
 - [Phase 161]: WT-03 dirty publish-summary evidence remains retained; Phase 162 owns release interpretation.
 - [Phase 161]: Workspace/evidence verification is automated through the live Git auditor and disposable-repository CI contracts; 15/15 UAT checks require no human review.
+- [Phase 162]: Machine-observable verification defaults to deterministic CI, browser/integration evidence, or a read-only recurring monitor; human_needed requires an explicit irreducible judgment rationale.
+- [Phase 162]: Scheduled-control liveness must bind every latest schedule run to the exact current protected-main SHA before its sweep can satisfy UAT; recent pre-deployment runs remain pending rather than passing on age alone.
 - [Phase ?]: PR #222 remains retained only for a future exact candidate-digest protected dispatch because its fresh head SHA differs from the ledger proposal SHA.
 - [Phase ?]: Authorized plus publication:not_started is blocked evidence, never merge, tag, or publish authority.
 - [Phase ?]: Proposal control JSON is written before non-pass exits and is the sole source for its summary and artifact.
