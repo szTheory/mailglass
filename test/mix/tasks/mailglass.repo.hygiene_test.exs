@@ -525,21 +525,21 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
   defp run_hygiene(repo, argv, opts \\ []) do
     with_hygiene_environment(
       repo,
-      fn ->
-        in_repo(repo, fn ->
-          test_process = self()
-
-          output =
-            capture_io(fn ->
-              send(test_process, {:hygiene_exit, catch_exit(Hygiene.run(argv))})
-            end)
-
-          assert_receive {:hygiene_exit, exit}
-          {output, exit}
-        end)
-      end,
+      fn -> in_repo(repo, fn -> capture_hygiene_run(argv) end) end,
       opts
     )
+  end
+
+  defp capture_hygiene_run(argv) do
+    test_process = self()
+
+    output =
+      capture_io(fn ->
+        send(test_process, {:hygiene_exit, catch_exit(Hygiene.run(argv))})
+      end)
+
+    assert_receive {:hygiene_exit, exit}
+    {output, exit}
   end
 
   defp write_release_workflows!(repo) do
