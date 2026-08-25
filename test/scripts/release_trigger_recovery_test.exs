@@ -248,6 +248,76 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert merge =~ ~s(--match-head-commit "$PROPOSAL_HEAD")
   end
 
+  test "unapproved dispatcher cannot reach PAT-backed protected release steps" do
+    source = workflow_source()
+
+    dispatcher =
+      extract_step_block!(source, "Authorize protected release dispatcher")
+
+    validation = extract_step_block!(source, "Validate protected exact candidate dispatch")
+
+    merge =
+      extract_step_block!(
+        source,
+        "Protected exact candidate dispatch may merge only the validated release PR"
+      )
+
+    release = extract_action_block!(source, "release")
+    checkout = extract_step_block!(source, "Checkout main for sync step")
+
+    assert dispatcher =~ "id: protected-dispatcher"
+    assert dispatcher =~ "github.event_name == 'workflow_dispatch'"
+    assert dispatcher =~ "github.event.inputs.candidate_digest != ''"
+    assert dispatcher =~ "GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}"
+    assert dispatcher =~ "GITHUB_ACTOR"
+    assert dispatcher =~ "collaborators/$GITHUB_ACTOR/permission"
+    assert dispatcher =~ ~s(.permission == "admin")
+    assert dispatcher =~ ".user.permissions.admin == true"
+    assert dispatcher =~ "authorized=true"
+
+    assert step_precedes?(
+             source,
+             "Authorize protected release dispatcher",
+             "Validate protected exact candidate dispatch"
+           )
+
+    assert validation =~ "steps.protected-dispatcher.outputs.authorized == 'true'"
+
+    for protected <- [merge, release, checkout] do
+      assert protected =~ "steps.protected-dispatcher.outputs.authorized == 'true'"
+    end
+
+    with_dispatcher_permission_fixture(:admin, fn temp_dir, env ->
+      script = Path.join(temp_dir, "dispatcher.sh")
+      File.write!(script, dispatcher_script(dispatcher))
+
+      assert {_, 0} =
+               System.cmd("bash", [script], env: Map.to_list(env), stderr_to_stdout: true)
+
+      assert read_output!(env["GITHUB_OUTPUT"])["authorized"] == "true"
+
+      assert File.read!(env["GH_LOG"]) ==
+               "api repos/test-owner/test-repo/collaborators/test-admin/permission\n"
+    end)
+
+    for mode <- [:maintain, :write, :malformed, :unavailable] do
+      with_dispatcher_permission_fixture(mode, fn temp_dir, env ->
+        script = Path.join(temp_dir, "dispatcher.sh")
+        File.write!(script, dispatcher_script(dispatcher))
+
+        assert {_, status} =
+                 System.cmd("bash", [script], env: Map.to_list(env), stderr_to_stdout: true)
+
+        assert status != 0
+        refute File.exists?(env["GITHUB_OUTPUT"])
+
+        calls = File.read!(env["GH_LOG"])
+        assert calls == "api repos/test-owner/test-repo/collaborators/test-admin/permission\n"
+        refute calls =~ ~r/(protected-dispatch|gh pr merge|gh release|RELEASE_PLEASE_PAT|checkout)/
+      end)
+    end
+  end
+
   test "core/admin-only release synchronization refreshes inbound compatibility without bumping inbound" do
     sync =
       extract_step_block!(
@@ -305,6 +375,393 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
              "Sync sibling package -> mailglass dep pin on release-please branch",
              "Capture Release Please proposal identity without activation"
            )
+  end
+
+  test "proposal capture persists one bounded proposal-only result before any non-pass exit" do
+    source = workflow_source()
+
+    capture =
+      extract_step_block!(source, "Capture Release Please proposal identity without activation")
+
+    result =
+      extract_step_block!(source, "Write proposal-only release control result")
+
+    summary = extract_step_block!(source, "Summarize proposal-only release control result")
+    upload = extract_step_block!(source, "Upload proposal-only release control result")
+
+    assert capture =~ "continue-on-error: true"
+    assert capture =~ "result_status"
+    assert capture =~ "result_reason"
+
+    assert result =~ "release-proposal-control-result.json"
+    assert result =~ "status"
+    assert result =~ "reason"
+    assert result =~ "event_name"
+    assert result =~ "run_id"
+    assert result =~ "proposal_head"
+    assert result =~ "source_sha"
+    assert result =~ "candidate_digest"
+    assert result =~ "attempted_candidates"
+    assert result =~ "required_checks"
+    assert result =~ "permissions"
+    assert result =~ "trigger"
+    assert result =~ "result_artifact"
+    assert result =~ "pending"
+    assert result =~ "cannot-check"
+    assert result =~ "blocked"
+    assert summary =~ "if: ${{ always() && github.event.inputs.candidate_digest == '' }}"
+    assert summary =~ "release-proposal-control-result.json"
+    assert upload =~ "if: ${{ always() && github.event.inputs.candidate_digest == '' }}"
+    assert upload =~ "release-proposal-control-result-${{ github.run_id }}"
+
+    Enum.each(
+      [
+        {"success", "pass", "proposal_captured"},
+        {"blocked", "blocked", "proposal_identity_mismatch"},
+        {"failure", "cannot-check", "github_evidence_unavailable"}
+      ],
+      fn {outcome, expected_status, expected_reason} ->
+        with_proposal_result_env(outcome, expected_status, expected_reason, fn temp_dir, env ->
+          script = Path.join(temp_dir, "proposal-result.sh")
+          File.write!(script, proposal_result_script(result))
+
+          {_, command_status} =
+            System.cmd("bash", [script],
+              cd: @repo_root,
+              env: Map.to_list(env),
+              stderr_to_stdout: true
+            )
+
+          assert command_status == if(expected_status == "pass", do: 0, else: 1)
+
+          outcome_json =
+            temp_dir
+            |> Path.join("release-proposal-control-result.json")
+            |> File.read!()
+            |> Jason.decode!()
+
+          assert outcome_json["status"] == expected_status
+          assert outcome_json["reason"] == expected_reason
+          assert outcome_json["event_name"] == "workflow_dispatch"
+          assert outcome_json["run_id"] == "16202"
+          assert outcome_json["candidate_digest"] == String.duplicate("a", 64)
+          assert Enum.all?(outcome_json["probes"], &Map.has_key?(&1, "source"))
+          assert Enum.all?(outcome_json["probes"], &Map.has_key?(&1, "status"))
+        end)
+      end
+    )
+
+    protected =
+      extract_step_block!(source, "Validate protected exact candidate dispatch") <>
+        extract_step_block!(
+          source,
+          "Protected exact candidate dispatch may merge only the validated release PR"
+        )
+
+    assert protected =~ "gh pr merge"
+    assert protected =~ "CANDIDATE_DIGEST"
+    refute result =~ "gh pr merge"
+    refute result =~ "git tag"
+    refute result =~ "gh release"
+  end
+
+  test "protected exact-digest release bypasses proposal-only control after its merge leaves no open proposal" do
+    source = workflow_source()
+
+    validation = extract_step_block!(source, "Validate protected exact candidate dispatch")
+
+    merge =
+      extract_step_block!(
+        source,
+        "Protected exact candidate dispatch may merge only the validated release PR"
+      )
+
+    proposal_tail = [
+      {"Capture Release Please proposal identity without activation", "capture-proposal"},
+      {"Write proposal-only release control result", "proposal-control-result"},
+      {"Summarize proposal-only release control result", "summary"},
+      {"Upload proposal-only release control result", "upload"},
+      {"Fail non-pass proposal control result after evidence upload", "final gate"}
+    ]
+
+    assert validation =~ "gh pr checks \"$number\" --required"
+    assert validation =~ "[ \"$head\" = \"$proposal_head\" ]"
+    assert validation =~ "[ \"$base\" = \"$source_sha\" ]"
+    assert validation =~ "[ \"$actual_digest\" = \"$content_digest\" ]"
+    assert merge =~ "gh pr merge \"$NUMBER\" --admin --squash"
+    assert merge =~ "merge_tree_verified=true"
+
+    Enum.each(proposal_tail, fn {name, role} ->
+      block = extract_step_block!(source, name)
+
+      assert block =~ "github.event.inputs.candidate_digest == ''",
+             "protected lifecycle must skip proposal-only #{role}"
+    end)
+
+    {command_log, post_merge_proposals} = run_protected_dispatch_lifecycle()
+
+    assert command_log =~ "gh pr checks 222 --required"
+    assert command_log =~ "gh pr merge 222 --admin --squash"
+    assert command_log =~ "release-please create-release"
+    assert post_merge_proposals == []
+    refute command_log =~ "capture-proposal"
+    refute command_log =~ "proposal_missing"
+  end
+
+  test "an empty-digest schedule records bounded pending evidence when no Release Please proposal is open" do
+    source = workflow_source()
+    preflight = extract_step_block!(source, "Detect already-tagged release PR")
+
+    discovery =
+      extract_step_block!(source, "Discover scheduled Release Please proposal before capture")
+
+    result = extract_step_block!(source, "Write proposal-only release control result")
+    summary = extract_step_block!(source, "Summarize proposal-only release control result")
+    upload = extract_step_block!(source, "Upload proposal-only release control result")
+
+    gate =
+      extract_step_block!(source, "Fail non-pass proposal control result after evidence upload")
+
+    assert summary =~ "release-proposal-control-result.json"
+    assert upload =~ "release-proposal-control-result-${{ github.run_id }}"
+
+    assert step_precedes?(
+             source,
+             "Sync sibling package -> mailglass dep pin on release-please branch",
+             "Discover scheduled Release Please proposal before capture"
+           )
+
+    assert step_precedes?(
+             source,
+             "Discover scheduled Release Please proposal before capture",
+             "Capture Release Please proposal identity without activation"
+           )
+
+    assert step_precedes?(
+             source,
+             "Write proposal-only release control result",
+             "Summarize proposal-only release control result"
+           )
+
+    assert step_precedes?(
+             source,
+             "Summarize proposal-only release control result",
+             "Upload proposal-only release control result"
+           )
+
+    assert step_precedes?(
+             source,
+             "Upload proposal-only release control result",
+             "Fail non-pass proposal control result after evidence upload"
+           )
+
+    with_idle_schedule_fixture(:none, fn temp_dir, env ->
+      File.write!(Path.join(temp_dir, "preflight.sh"), preflight_script(preflight))
+      File.write!(Path.join(temp_dir, "discovery.sh"), proposal_result_script(discovery))
+      File.write!(Path.join(temp_dir, "result.sh"), proposal_result_script(result))
+      File.write!(Path.join(temp_dir, "gate.sh"), proposal_result_script(gate))
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "preflight.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(env),
+                 stderr_to_stdout: true
+               )
+
+      assert read_output!(env["GITHUB_OUTPUT"])["should_run"] == "true"
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "discovery.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(env),
+                 stderr_to_stdout: true
+               )
+
+      discovery_outputs = read_output!(env["GITHUB_OUTPUT"])
+      assert discovery_outputs["should_capture"] == "false"
+      assert discovery_outputs["result_status"] == "pending"
+      assert discovery_outputs["result_reason"] == "no_open_proposal"
+
+      writer_env =
+        env
+        |> Map.merge(%{
+          "CAPTURE_OUTCOME" => "skipped",
+          "CAPTURE_STATUS" => "",
+          "CAPTURE_REASON" => "",
+          "DISCOVERY_STATUS" => discovery_outputs["result_status"],
+          "DISCOVERY_REASON" => discovery_outputs["result_reason"],
+          "PROPOSAL_HEAD" => "",
+          "SOURCE_SHA" => ""
+        })
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "result.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(writer_env),
+                 stderr_to_stdout: true
+               )
+
+      json =
+        temp_dir
+        |> Path.join("release-proposal-control-result.json")
+        |> File.read!()
+        |> Jason.decode!()
+
+      assert Map.take(json, [
+               "status",
+               "reason",
+               "event_name",
+               "run_id",
+               "proposal_head",
+               "source_sha",
+               "candidate_digest"
+             ]) == %{
+               "status" => "pending",
+               "reason" => "no_open_proposal",
+               "event_name" => "schedule",
+               "run_id" => "16208",
+               "proposal_head" => "",
+               "source_sha" => "",
+               "candidate_digest" => ""
+             }
+
+      gate_env = %{"RESULT_STATUS" => "pending", "RESULT_REASON" => "no_open_proposal"}
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "gate.sh")],
+                 env: Map.to_list(gate_env),
+                 stderr_to_stdout: true
+               )
+
+      calls = File.read!(env["GH_LOG"])
+
+      assert calls ==
+               "pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid\n"
+
+      refute File.read!(env["COMMAND_LOG"]) =~
+               ~r/(gh pr merge|git tag|gh release|git push|protected-dispatch)/
+    end)
+  end
+
+  test "scheduled discovery preserves capture for active or ambiguous proposals and fails unavailable evidence" do
+    discovery =
+      workflow_source()
+      |> extract_step_block!("Discover scheduled Release Please proposal before capture")
+
+    for {mode, expected_capture, expected_status, expected_reason, expected_exit} <- [
+          {:one, "true", "", "", 0},
+          {:many, "true", "", "", 0},
+          {:unavailable, "false", "cannot-check", "github_evidence_unavailable", 1}
+        ] do
+      with_idle_schedule_fixture(mode, fn temp_dir, env ->
+        script = Path.join(temp_dir, "discovery.sh")
+        File.write!(script, proposal_result_script(discovery))
+
+        assert {_, ^expected_exit} =
+                 System.cmd("bash", [script],
+                   cd: @repo_root,
+                   env: Map.to_list(env),
+                   stderr_to_stdout: true
+                 )
+
+        outputs = read_output!(env["GITHUB_OUTPUT"])
+        assert outputs["should_capture"] == expected_capture
+        assert outputs["result_status"] == expected_status
+        assert outputs["result_reason"] == expected_reason
+      end)
+    end
+  end
+
+  test "proposal capture emits its real post-worktree outcome before cleanup and the writer preserves it" do
+    source = workflow_source()
+
+    capture =
+      extract_step_block!(source, "Capture Release Please proposal identity without activation")
+
+    result = extract_step_block!(source, "Write proposal-only release control result")
+
+    assert capture =~ "git worktree add --detach"
+    assert length(Regex.scan(~r/^\s*trap .* EXIT$/m, capture)) == 1
+
+    for {fixture, expected_status, expected_reason} <- [
+          {:pass, "pass", "proposal_captured"},
+          {:identity_mismatch, "blocked", "proposal_identity_mismatch"}
+        ] do
+      with_capture_fixture(fixture, capture, result, fn temp_dir, capture_env ->
+        {capture_output, capture_status} = run_capture(capture, temp_dir, capture_env)
+
+        assert capture_status == if(fixture == :pass, do: 0, else: 1)
+
+        emitted = read_output!(Path.join(temp_dir, "capture-output"))
+        assert emitted["result_status"] == expected_status
+        assert emitted["result_reason"] == expected_reason
+        assert emitted["proposal_head"] == String.duplicate("b", 40)
+        assert emitted["source_sha"] == String.duplicate("c", 40)
+        assert emitted["candidate_digest"] == String.duplicate("a", 64)
+
+        if fixture == :pass do
+          assert emitted["captured"] == "true"
+        else
+          refute Map.has_key?(emitted, "captured")
+        end
+
+        assert capture_output =~ "proposal candidate captured after sibling synchronization" or
+                 fixture == :identity_mismatch
+
+        git_log = File.read!(Path.join(temp_dir, "git.log"))
+        assert git_log =~ "worktree add"
+        assert git_log =~ "worktree remove"
+        refute File.exists?(capture_worktree_path!(git_log))
+
+        writer_env =
+          capture_env
+          |> Map.merge(%{
+            "CAPTURE_OUTCOME" => if(fixture == :pass, do: "success", else: "failure"),
+            "CAPTURE_STATUS" => emitted["result_status"],
+            "CAPTURE_REASON" => emitted["result_reason"],
+            "PROPOSAL_HEAD" => emitted["proposal_head"],
+            "SOURCE_SHA" => emitted["source_sha"],
+            "CANDIDATE_DIGEST" => emitted["candidate_digest"],
+            "RUNNER_TEMP" => temp_dir,
+            "GITHUB_OUTPUT" => Path.join(temp_dir, "writer-output")
+          })
+
+        {_, writer_status} = run_proposal_writer(result, temp_dir, writer_env)
+        assert writer_status == if(fixture == :pass, do: 0, else: 1)
+
+        result_json =
+          temp_dir
+          |> Path.join("release-proposal-control-result.json")
+          |> File.read!()
+          |> Jason.decode!()
+
+        assert Map.take(result_json, [
+                 "status",
+                 "reason",
+                 "proposal_head",
+                 "source_sha",
+                 "candidate_digest"
+               ]) ==
+                 Map.take(emitted, [
+                   "result_status",
+                   "result_reason",
+                   "proposal_head",
+                   "source_sha",
+                   "candidate_digest"
+                 ])
+                 |> Map.new(fn
+                   {"result_status", value} -> {"status", value}
+                   {"result_reason", value} -> {"reason", value}
+                   {key, value} -> {key, value}
+                 end)
+
+        command_log = File.read!(Path.join(temp_dir, "command.log"))
+        refute command_log =~ "gh pr merge"
+        refute command_log =~ "git tag"
+        refute command_log =~ "gh release"
+        refute command_log =~ "git push"
+      end)
+    end
   end
 
   test "contributing documents proposal-only triggers and the protected exact-digest chain" do
@@ -366,6 +823,46 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     push =~ "branches:\n      - main" and
       manual =~ "candidate_digest:" and
       schedule =~ "cron: \"17 * * * *\""
+  end
+
+  defp run_protected_dispatch_lifecycle do
+    temp_dir =
+      Path.join(
+        System.tmp_dir!(),
+        "release-protected-lifecycle-#{System.unique_integer([:positive])}"
+      )
+
+    command_log = Path.join(temp_dir, "command.log")
+    proposal_state = Path.join(temp_dir, "open-proposals")
+
+    File.mkdir_p!(temp_dir)
+    File.write!(proposal_state, "222\n")
+
+    try do
+      File.write!(
+        Path.join(temp_dir, "protected-lifecycle.sh"),
+        """
+        #!/usr/bin/env bash
+        set -euo pipefail
+        printf 'gh pr checks 222 --required\\n' >> \"$COMMAND_LOG\"
+        printf 'gh pr merge 222 --admin --squash\\n' >> \"$COMMAND_LOG\"
+        : > \"$PROPOSAL_STATE\"
+        printf 'release-please create-release\\n' >> \"$COMMAND_LOG\"
+        """
+      )
+
+      File.chmod!(Path.join(temp_dir, "protected-lifecycle.sh"), 0o755)
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "protected-lifecycle.sh")],
+                 env: [{"COMMAND_LOG", command_log}, {"PROPOSAL_STATE", proposal_state}],
+                 stderr_to_stdout: true
+               )
+
+      {File.read!(command_log), File.read!(proposal_state) |> String.split("\n", trim: true)}
+    after
+      File.rm_rf!(temp_dir)
+    end
   end
 
   defp workflow_source, do: File.read!(@workflow_path)
@@ -455,6 +952,268 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end
   end
 
+  defp with_dispatcher_permission_fixture(mode, fun) do
+    temp_dir =
+      Path.join(
+        System.tmp_dir!(),
+        "release-dispatcher-permission-#{System.unique_integer([:positive])}"
+      )
+
+    fake_bin = Path.join(temp_dir, "bin")
+    File.mkdir_p!(fake_bin)
+
+    File.write!(Path.join(fake_bin, "gh"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf '%s\\n' "$*" >> "$GH_LOG"
+    [ "$*" = "api repos/test-owner/test-repo/collaborators/test-admin/permission" ] || exit 64
+    case "$FAKE_DISPATCHER_PERMISSION" in
+      admin) printf '{"permission":"admin","user":{"permissions":{"admin":true}}}\\n' ;;
+      maintain) printf '{"permission":"maintain","user":{"permissions":{"admin":false}}}\\n' ;;
+      write) printf '{"permission":"write","user":{"permissions":{"admin":false}}}\\n' ;;
+      malformed) printf '{"permission":"admin","user":{}}\\n' ;;
+      unavailable) printf 'simulated GitHub API failure\\n' >&2; exit 1 ;;
+      *) exit 64 ;;
+    esac
+    """)
+
+    File.chmod!(Path.join(fake_bin, "gh"), 0o755)
+
+    env = %{
+      "PATH" => fake_bin <> ":" <> System.get_env("PATH"),
+      "GH_LOG" => Path.join(temp_dir, "gh.log"),
+      "FAKE_DISPATCHER_PERMISSION" => Atom.to_string(mode),
+      "GITHUB_ACTOR" => "test-admin",
+      "GITHUB_REPOSITORY" => "test-owner/test-repo",
+      "GITHUB_OUTPUT" => Path.join(temp_dir, "github-output")
+    }
+
+    try do
+      fun.(temp_dir, env)
+    after
+      File.rm_rf!(temp_dir)
+    end
+  end
+
+  defp with_proposal_result_env(outcome, status, reason, fun) do
+    temp_dir =
+      Path.join(System.tmp_dir!(), "release-proposal-result-#{System.unique_integer([:positive])}")
+
+    File.mkdir_p!(temp_dir)
+
+    env = %{
+      "CAPTURE_OUTCOME" => outcome,
+      "CAPTURE_STATUS" => status,
+      "CAPTURE_REASON" => reason,
+      "EVENT_NAME" => "workflow_dispatch",
+      "RUN_ID" => "16202",
+      "PROPOSAL_HEAD" => String.duplicate("b", 40),
+      "SOURCE_SHA" => String.duplicate("c", 40),
+      "CANDIDATE_DIGEST" => String.duplicate("a", 64),
+      "RUNNER_TEMP" => temp_dir,
+      "GITHUB_OUTPUT" => Path.join(temp_dir, "github-output")
+    }
+
+    try do
+      fun.(temp_dir, env)
+    after
+      File.rm_rf!(temp_dir)
+    end
+  end
+
+  defp with_idle_schedule_fixture(mode, fun) do
+    temp_dir =
+      Path.join(System.tmp_dir!(), "release-idle-schedule-#{System.unique_integer([:positive])}")
+
+    fake_bin = Path.join(temp_dir, "bin")
+    File.mkdir_p!(fake_bin)
+
+    File.write!(Path.join(fake_bin, "gh"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf '%s\\n' "$*" >> "$GH_LOG"
+    if [ "$*" = "pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid" ]; then
+      case "$FAKE_DISCOVERY" in
+        none) printf '[]\\n' ;;
+        one) printf '[{"number":222,"headRefOid":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","baseRefOid":"cccccccccccccccccccccccccccccccccccccccc"}]\\n' ;;
+        many) printf '[{"number":222},{"number":223}]\\n' ;;
+        unavailable) printf 'simulated GitHub API failure\\n' >&2; exit 1 ;;
+      esac
+      exit 0
+    fi
+    printf 'unexpected gh invocation: %s\\n' "$*" >&2
+    exit 64
+    """)
+
+    File.write!(Path.join(fake_bin, "git"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'git %s\\n' "$*" >> "$COMMAND_LOG"
+    exit 64
+    """)
+
+    File.chmod!(Path.join(fake_bin, "gh"), 0o755)
+    File.chmod!(Path.join(fake_bin, "git"), 0o755)
+    File.write!(Path.join(temp_dir, "command.log"), "")
+
+    env = %{
+      "PATH" => fake_bin <> ":" <> System.get_env("PATH"),
+      "GH_REPO" => "test-owner/test-repo",
+      "GH_LOG" => Path.join(temp_dir, "gh.log"),
+      "COMMAND_LOG" => Path.join(temp_dir, "command.log"),
+      "GITHUB_OUTPUT" => Path.join(temp_dir, "github-output"),
+      "GITHUB_STEP_SUMMARY" => Path.join(temp_dir, "summary"),
+      "RUNNER_TEMP" => temp_dir,
+      "EVENT_NAME" => "schedule",
+      "RUN_ID" => "16208",
+      "CANDIDATE_DIGEST" => "",
+      "COMMIT_MESSAGE" => "",
+      "FAKE_DISCOVERY" => Atom.to_string(mode)
+    }
+
+    try do
+      fun.(temp_dir, env)
+    after
+      File.rm_rf!(temp_dir)
+    end
+  end
+
+  defp with_capture_fixture(fixture, capture, result, fun) do
+    temp_dir =
+      Path.join(System.tmp_dir!(), "release-capture-#{System.unique_integer([:positive])}")
+
+    File.mkdir_p!(Path.join(temp_dir, "bin"))
+    File.mkdir_p!(Path.join(temp_dir, "scripts"))
+
+    proposal_head = String.duplicate("b", 40)
+    source_sha = String.duplicate("c", 40)
+    recorded_head = if fixture == :pass, do: proposal_head, else: String.duplicate("e", 40)
+
+    target = %{
+      "status" => "captured",
+      "candidate_versions" => %{"mailglass" => "2.5.0", "mailglass_admin" => "2.5.0"},
+      "proposal_identity" => %{"head_sha" => recorded_head, "source_sha" => source_sha},
+      "publishable_content" => %{"digest" => String.duplicate("a", 64)}
+    }
+
+    File.write!(Path.join(temp_dir, "target.json"), Jason.encode!(target))
+    File.write!(Path.join(temp_dir, "capture.sh"), capture_script(capture))
+    File.write!(Path.join(temp_dir, "proposal-result.sh"), proposal_result_script(result))
+
+    write_capture_shims!(temp_dir)
+
+    env = %{
+      "PATH" => Path.join(temp_dir, "bin") <> ":" <> System.get_env("PATH"),
+      "CANDIDATE_DIGEST" => String.duplicate("a", 64),
+      "EVENT_NAME" => "workflow_dispatch",
+      "RUN_ID" => "16206",
+      "GITHUB_OUTPUT" => Path.join(temp_dir, "capture-output"),
+      "FAKE_TARGET" => Path.join(temp_dir, "target.json"),
+      "GIT_LOG" => Path.join(temp_dir, "git.log"),
+      "COMMAND_LOG" => Path.join(temp_dir, "command.log")
+    }
+
+    try do
+      fun.(temp_dir, env)
+    after
+      File.rm_rf!(temp_dir)
+    end
+  end
+
+  defp write_capture_shims!(temp_dir) do
+    bin = Path.join(temp_dir, "bin")
+
+    File.write!(Path.join(bin, "gh"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'gh %s\\n' "$*" >> "$COMMAND_LOG"
+    printf '[{"number":222,"headRefOid":"%s","baseRefOid":"%s"}]\\n' "$(printf 'b%.0s' {1..40})" "$(printf 'c%.0s' {1..40})"
+    """)
+
+    File.write!(Path.join(bin, "git"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'git %s\\n' "$*" >> "$COMMAND_LOG"
+    case "$1:$2" in
+      fetch:*|checkout:*) exit 0 ;;
+      show:*) cat "$FAKE_TARGET" ;;
+      merge-base:*) exit 0 ;;
+      worktree:add)
+        printf 'worktree add %s\\n' "$4" >> "$GIT_LOG"
+        mkdir -p "$4"
+        ;;
+      worktree:remove)
+        printf 'worktree remove %s\\n' "$4" >> "$GIT_LOG"
+        rmdir "$4"
+        ;;
+      *) printf 'unexpected git command: %s\\n' "$*" >&2; exit 64 ;;
+    esac
+    """)
+
+    File.write!(Path.join(bin, "mix"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'mix %s\\n' "$*" >> "$COMMAND_LOG"
+    """)
+
+    File.write!(Path.join(temp_dir, "scripts/release_policy_content_digest.sh"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'digest %s\\n' "$*" >> "$COMMAND_LOG"
+    printf '%s\\n' "$(printf 'a%.0s' {1..64})"
+    """)
+
+    File.write!(Path.join(temp_dir, "scripts/release_policy_validate_target.sh"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf 'validate-target %s\\n' "$*" >> "$COMMAND_LOG"
+    """)
+
+    for path <- [Path.join(bin, "gh"), Path.join(bin, "git"), Path.join(bin, "mix")] do
+      File.chmod!(path, 0o755)
+    end
+
+    for path <- [
+          Path.join(temp_dir, "scripts/release_policy_content_digest.sh"),
+          Path.join(temp_dir, "scripts/release_policy_validate_target.sh")
+        ] do
+      File.chmod!(path, 0o755)
+    end
+  end
+
+  defp run_capture(_capture, temp_dir, env) do
+    System.cmd("bash", [Path.join(temp_dir, "capture.sh")],
+      cd: temp_dir,
+      env: Map.to_list(env),
+      stderr_to_stdout: true
+    )
+  end
+
+  defp run_proposal_writer(_result, temp_dir, env) do
+    System.cmd("bash", [Path.join(temp_dir, "proposal-result.sh")],
+      cd: temp_dir,
+      env: Map.to_list(env),
+      stderr_to_stdout: true
+    )
+  end
+
+  defp capture_script(capture), do: proposal_result_script(capture)
+
+  defp read_output!(path) do
+    path
+    |> File.read!()
+    |> String.split("\n", trim: true)
+    |> Map.new(fn line ->
+      [key, value] = String.split(line, "=", parts: 2)
+      {key, value}
+    end)
+  end
+
+  defp capture_worktree_path!(git_log) do
+    [_, path] = Regex.run(~r/worktree add (.+)/, git_log)
+    path
+  end
+
   defp should_run?(temp_dir) do
     output = Path.join(temp_dir, "github-output")
     File.exists?(output) and File.read!(output) =~ "should_run=true"
@@ -518,6 +1277,30 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
       _ ->
         raise ArgumentError, "could not extract the release preflight shell script"
+    end
+  end
+
+  defp dispatcher_script(dispatcher) do
+    case String.split(dispatcher, ~r/^\s*run: \|\n/m, parts: 2) do
+      [_, script] when script != "" ->
+        script
+        |> String.split("\n")
+        |> Enum.map_join("\n", &String.replace_prefix(&1, "          ", ""))
+
+      _ ->
+        raise ArgumentError, "could not extract the protected dispatcher shell script"
+    end
+  end
+
+  defp proposal_result_script(result) do
+    case String.split(result, ~r/^\s*run: \|\n/m, parts: 2) do
+      [_, script] when script != "" ->
+        script
+        |> String.split("\n")
+        |> Enum.map_join("\n", &String.replace_prefix(&1, "          ", ""))
+
+      _ ->
+        raise ArgumentError, "could not extract the proposal result shell script"
     end
   end
 

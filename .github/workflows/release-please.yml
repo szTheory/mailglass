@@ -168,9 +168,21 @@ jobs:
           echo "Release PR #$pr_number is not fully published yet; running release-please."
           echo "should_run=true" >>"$GITHUB_OUTPUT"
 
+      - name: Authorize protected release dispatcher
+        id: protected-dispatcher
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.candidate_digest != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          permission=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$GITHUB_ACTOR/permission")
+          jq -e '.permission == "admin" and .user.permissions.admin == true' <<<"$permission" >/dev/null
+          echo "authorized=true" >> "$GITHUB_OUTPUT"
+
       - name: Validate protected exact candidate dispatch
         id: protected-dispatch
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.candidate_digest != '' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.candidate_digest != '' && steps.protected-dispatcher.outputs.authorized == 'true' }}
         env:
           CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -249,7 +261,7 @@ jobs:
 
       - name: Protected exact candidate dispatch may merge only the validated release PR
         id: protected-merge
-        if: ${{ steps.protected-dispatch.outputs.authorized == 'true' }}
+        if: ${{ steps.protected-dispatcher.outputs.authorized == 'true' && steps.protected-dispatch.outputs.authorized == 'true' }}
         env:
           # The exact proposal is deliberately behind only by the protected
           # authorization/control commits validated above. The maintainer PAT
@@ -283,7 +295,7 @@ jobs:
         # release/published fan-out can trigger publish/smoke workflows.
         # Maintainers must still treat tag-pinned workflow_dispatch from the
         # release tag as the canonical fallback if downstream fan-out fails.
-        if: ${{ steps.release-preflight.outputs.should_run == 'true' && (github.event.inputs.candidate_digest == '' || (steps.protected-dispatch.outputs.authorized == 'true' && steps.protected-dispatch.outputs.content_verified == 'true' && steps.protected-merge.outputs.merge_tree_verified == 'true' && steps.protected-merge.outcome == 'success')) }}
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && (github.event.inputs.candidate_digest == '' || (steps.protected-dispatcher.outputs.authorized == 'true' && steps.protected-dispatch.outputs.authorized == 'true' && steps.protected-dispatch.outputs.content_verified == 'true' && steps.protected-merge.outputs.merge_tree_verified == 'true' && steps.protected-merge.outcome == 'success')) }}
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
         with:
           token: ${{ secrets.RELEASE_PLEASE_PAT }}
@@ -311,7 +323,7 @@ jobs:
       # suppressed by anti-recursion, leaving the PR with "no checks reported" and
       # auto-merge unable to fire.
       - name: Checkout main for sync step
-        if: ${{ steps.release-preflight.outputs.should_run == 'true' }}
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && (github.event.inputs.candidate_digest == '' || steps.protected-dispatcher.outputs.authorized == 'true') }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
@@ -424,19 +436,104 @@ jobs:
           git commit -m "$COMMIT_MESSAGE"
           git push origin "$BRANCH"
 
-      - name: Capture Release Please proposal identity without activation
-        id: capture-proposal
-        if: ${{ steps.release-preflight.outputs.should_run == 'true' }}
+      # An hourly proposal-only run normally has no release PR to capture. Make
+      # that absence an evidence-backed pending observation, not a failed
+      # `proposal_missing` capture. The exact head/base query is deliberately
+      # narrow: an empty digest alone never proves that no proposal exists.
+      - name: Discover scheduled Release Please proposal before capture
+        id: scheduled-proposal
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && github.event_name == 'schedule' && github.event.inputs.candidate_digest == '' }}
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          should_capture=true
+          result_status=""
+          result_reason=""
+
+          if ! prs=$(gh pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid); then
+            should_capture=false
+            result_status=cannot-check
+            result_reason=github_evidence_unavailable
+            printf 'should_capture=%s\nresult_status=%s\nresult_reason=%s\n' "$should_capture" "$result_status" "$result_reason" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          count=$(jq -er 'length' <<<"$prs")
+          case "$count" in
+            0)
+              should_capture=false
+              result_status=pending
+              result_reason=no_open_proposal
+              ;;
+            1)
+              # Capture retains the existing exact identity and candidate
+              # validation semantics for an active proposal.
+              ;;
+            *)
+              # Keep capture authoritative for the existing multiple-proposal
+              # blocked classification rather than converting ambiguity into
+              # a successful pending observation.
+              ;;
+          esac
+
+          printf 'should_capture=%s\nresult_status=%s\nresult_reason=%s\n' "$should_capture" "$result_status" "$result_reason" >> "$GITHUB_OUTPUT"
+
+      - name: Capture Release Please proposal identity without activation
+        id: capture-proposal
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && github.event.inputs.candidate_digest == '' && (github.event_name != 'schedule' || steps.scheduled-proposal.outputs.should_capture == 'true') }}
+        # The result writer below is the single inspection surface for this
+        # proposal-only path. Keep this step running long enough to expose its
+        # bounded evidence before a non-pass makes the job fail.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CANDIDATE_DIGEST: ${{ github.event.inputs.candidate_digest }}
+        run: |
+          set -euo pipefail
+          result_status=cannot-check
+          result_reason=github_evidence_unavailable
+          proposal_head=""
+          source_sha=""
+          candidate_digest="${CANDIDATE_DIGEST:-}"
+          candidate_root=""
+
+          emit_capture_outputs() {
+            {
+              printf 'result_status=%s\n' "$result_status"
+              printf 'result_reason=%s\n' "$result_reason"
+              printf 'proposal_head=%s\n' "$proposal_head"
+              printf 'source_sha=%s\n' "$source_sha"
+              printf 'candidate_digest=%s\n' "$candidate_digest"
+            } >> "$GITHUB_OUTPUT"
+          }
+
+          cleanup_and_emit_capture_outputs() {
+            capture_exit_status=$?
+            if [ -n "$candidate_root" ] && [ -d "$candidate_root" ]; then
+              git worktree remove --force "$candidate_root" >/dev/null 2>&1 || true
+            fi
+            emit_capture_outputs
+            return "$capture_exit_status"
+          }
+
+          trap cleanup_and_emit_capture_outputs EXIT
           # Capture proposal/source identity only after the sibling-pin sync
           # has settled the release branch; its publishable-content digest is
           # Plan 05 input.
           prs=$(gh pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid)
-          [ "$(jq -er 'length' <<<"$prs")" -le 1 ]
-          [ "$(jq -er 'length' <<<"$prs")" -eq 1 ] || exit 0
+          if [ "$(jq -er 'length' <<<"$prs")" -gt 1 ]; then
+            result_status=blocked
+            result_reason=multiple_open_proposals
+            exit 1
+          fi
+
+          if [ "$(jq -er 'length' <<<"$prs")" -ne 1 ]; then
+            result_status=blocked
+            result_reason=proposal_missing
+            exit 1
+          fi
           proposal=$(jq -cer '.[0]' <<<"$prs")
           proposal_head=$(jq -er '.headRefOid' <<<"$proposal")
           source_sha=$(jq -er '.baseRefOid' <<<"$proposal")
@@ -455,7 +552,6 @@ jobs:
           candidate_root=$(mktemp -d)
           rmdir "$candidate_root"
           git worktree add --detach "$candidate_root" "$proposal_head"
-          trap 'git worktree remove --force "$candidate_root" >/dev/null 2>&1 || true' EXIT
           mkdir -p .planning/release-candidates
           target_status=$(jq -er '.status' "$source_target")
 
@@ -475,16 +571,21 @@ jobs:
               [[ "$recorded_head" =~ ^[0-9a-f]{40}$ ]]
               [[ "$recorded_source_sha" =~ ^[0-9a-f]{40}$ ]]
               [[ "$recorded_digest" =~ ^[0-9a-f]{64}$ ]]
-              [ "$proposal_head" = "$recorded_head" ]
-              git merge-base --is-ancestor "$recorded_source_sha" "$source_sha"
-              [ "$(scripts/release_policy_content_digest.sh --ref "$recorded_source_sha")" = "$(scripts/release_policy_content_digest.sh --ref "$source_sha")" ]
-              [ "$(scripts/release_policy_content_digest.sh --repo "$candidate_root")" = "$recorded_digest" ]
-              scripts/release_policy_validate_target.sh "$source_target" "mailglass-v${core}" "$candidate_root" >/dev/null
+              if ! [ "$proposal_head" = "$recorded_head" ] || \
+                 ! git merge-base --is-ancestor "$recorded_source_sha" "$source_sha" || \
+                 ! [ "$(scripts/release_policy_content_digest.sh --ref "$recorded_source_sha")" = "$(scripts/release_policy_content_digest.sh --ref "$source_sha")" ] || \
+                 ! [ "$(scripts/release_policy_content_digest.sh --repo "$candidate_root")" = "$recorded_digest" ] || \
+                 ! scripts/release_policy_validate_target.sh "$source_target" "mailglass-v${core}" "$candidate_root" >/dev/null; then
+                result_status=blocked
+                result_reason=proposal_identity_mismatch
+                exit 1
+              fi
               jq -e '{candidate_versions, proposal_identity, publishable_content}' "$source_target" > .planning/release-candidates/proposal-candidate.json
               ;;
             completed)
-              echo "Completed release target needs no proposal capture."
-              exit 0
+              result_status=blocked
+              result_reason=release_target_completed
+              exit 1
               ;;
             *)
               echo "ERROR: unsupported release target status for proposal capture: $target_status" >&2
@@ -493,11 +594,96 @@ jobs:
           esac
 
           jq -e '.candidate_versions.mailglass == .candidate_versions.mailglass_admin' .planning/release-candidates/proposal-candidate.json >/dev/null
+          candidate_digest=$(jq -er '.publishable_content.digest' .planning/release-candidates/proposal-candidate.json)
+          result_status=pass
+          result_reason=proposal_captured
           echo "captured=true" >> "$GITHUB_OUTPUT"
           printf '%s\n' "proposal candidate captured after sibling synchronization"
 
+      - name: Write proposal-only release control result
+        id: proposal-control-result
+        if: ${{ always() && github.event.inputs.candidate_digest == '' }}
+        continue-on-error: true
+        env:
+          CAPTURE_OUTCOME: ${{ steps.capture-proposal.outcome }}
+          CAPTURE_STATUS: ${{ steps.capture-proposal.outputs.result_status }}
+          CAPTURE_REASON: ${{ steps.capture-proposal.outputs.result_reason }}
+          DISCOVERY_STATUS: ${{ steps.scheduled-proposal.outputs.result_status }}
+          DISCOVERY_REASON: ${{ steps.scheduled-proposal.outputs.result_reason }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_ID: ${{ github.run_id }}
+          PROPOSAL_HEAD: ${{ steps.capture-proposal.outputs.proposal_head }}
+          SOURCE_SHA: ${{ steps.capture-proposal.outputs.source_sha }}
+          CANDIDATE_DIGEST: ${{ steps.capture-proposal.outputs.candidate_digest }}
+        run: |
+          set -euo pipefail
+          result="$RUNNER_TEMP/release-proposal-control-result.json"
+          status="${CAPTURE_STATUS:-cannot-check}"
+          reason="${CAPTURE_REASON:-github_evidence_unavailable}"
+
+          if [ "${CAPTURE_OUTCOME:-skipped}" = skipped ] && [ "$EVENT_NAME" = schedule ] && [ -z "${CANDIDATE_DIGEST:-}" ] && [ -n "${DISCOVERY_STATUS:-}" ] && [ -n "${DISCOVERY_REASON:-}" ]; then
+            status="$DISCOVERY_STATUS"
+            reason="$DISCOVERY_REASON"
+          fi
+
+          case "$status" in
+            pass|blocked|cannot-check|pending) ;;
+            *) status=cannot-check; reason=invalid_capture_result ;;
+          esac
+
+          jq -n \
+            --arg status "$status" \
+            --arg reason "$reason" \
+            --arg event_name "$EVENT_NAME" \
+            --arg run_id "$RUN_ID" \
+            --arg proposal_head "${PROPOSAL_HEAD:-}" \
+            --arg source_sha "${SOURCE_SHA:-}" \
+            --arg candidate_digest "${CANDIDATE_DIGEST:-}" \
+            '{status: $status, reason: $reason, event_name: $event_name, run_id: $run_id, proposal_head: $proposal_head, source_sha: $source_sha, candidate_digest: $candidate_digest, probes: [
+              {name: "attempted_candidates", status: $status, source: "capture-proposal", recovery: "inspect exact proposal identity"},
+              {name: "required_checks", status: (if $status == "pass" then "pass" else "cannot-check" end), source: "GitHub PR checks", recovery: "query required checks for the exact proposal"},
+              {name: "permissions", status: "pass", source: "workflow permissions", recovery: "inspect protected workflow permissions"},
+              {name: "trigger", status: "pass", source: "github.event_name", recovery: "record control and schedule runs separately"},
+              {name: "result_artifact", status: "pass", source: "release-proposal-control-result", recovery: "download this run artifact"}
+            ]}' > "$result"
+
+          {
+            printf 'result_path=%s\n' "$result"
+            printf 'status=%s\n' "$status"
+            printf 'reason=%s\n' "$reason"
+          } >> "$GITHUB_OUTPUT"
+          [ "$status" = pass ] || { [ "$status" = pending ] && [ "$reason" = no_open_proposal ]; }
+
+      - name: Summarize proposal-only release control result
+        if: ${{ always() && github.event.inputs.candidate_digest == '' }}
+        env:
+          GITHUB_WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -o pipefail
+          bash scripts/scheduled_control_evidence.sh bind \
+            --control release-please \
+            --artifact "$RUNNER_TEMP/release-proposal-control-result.json" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload proposal-only release control result
+        if: ${{ always() && github.event.inputs.candidate_digest == '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: release-proposal-control-result-${{ github.run_id }}
+          path: ${{ runner.temp }}/release-proposal-control-result.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Fail non-pass proposal control result after evidence upload
+        if: ${{ always() && github.event.inputs.candidate_digest == '' }}
+        env:
+          RESULT_STATUS: ${{ steps.proposal-control-result.outputs.status }}
+          RESULT_REASON: ${{ steps.proposal-control-result.outputs.reason }}
+        run: |
+          [ "$RESULT_STATUS" = pass ] || { [ "$RESULT_STATUS" = pending ] && [ "$RESULT_REASON" = no_open_proposal ]; }
+
       - name: Upload sanitized release proposal candidate
-        if: ${{ steps.capture-proposal.outputs.captured == 'true' }}
+        if: ${{ github.event.inputs.candidate_digest == '' && steps.capture-proposal.outputs.captured == 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: release-proposal-candidate-${{ github.run_id }}

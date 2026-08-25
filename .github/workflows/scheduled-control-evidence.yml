@@ -1,0 +1,70 @@
+name: Scheduled Control Evidence
+
+on:
+  workflow_run:
+    workflows: [release-please, repo-hygiene, post-publish-smoke]
+    types: [completed]
+  schedule:
+    - cron: "47 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: scheduled-control-evidence-${{ github.event_name }}-${{ github.event.workflow_run.id || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  verify-completed-schedule:
+    name: Verify completed scheduled control
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.event == 'schedule' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout trusted verifier from protected main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: refs/heads/main
+      - name: Verify retained scheduled-control evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          bash scripts/scheduled_control_evidence.sh verify-run \
+            --run-id "$SOURCE_RUN_ID" \
+            --output "$RUNNER_TEMP/scheduled-control-verification.json"
+          jq . "$RUNNER_TEMP/scheduled-control-verification.json" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Upload normalized scheduled-control verification
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: scheduled-control-verification-${{ github.event.workflow_run.id }}
+          path: ${{ runner.temp }}/scheduled-control-verification.json
+          if-no-files-found: error
+          retention-days: 90
+
+  sweep-liveness:
+    name: Sweep scheduled-control liveness
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout trusted verifier from protected main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: refs/heads/main
+      - name: Verify all latest scheduled controls
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bash scripts/scheduled_control_evidence.sh sweep \
+            --output "$RUNNER_TEMP/scheduled-control-sweep.json"
+          jq . "$RUNNER_TEMP/scheduled-control-sweep.json" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Upload normalized scheduled-control sweep
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: scheduled-control-sweep-${{ github.run_id }}
+          path: ${{ runner.temp }}/scheduled-control-sweep.json
+          if-no-files-found: error
+          retention-days: 90

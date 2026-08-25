@@ -10,11 +10,23 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**v2.6 Engineering Quality Ratchet opened 2026-08-16.** A multi-dimensional code, architecture,
-runtime, data, migration, test, and CI audit found concrete first-adopter and correctness defects beneath
-the previously green certification signal. The milestone restores generated-host migration truth first,
-then fixes bounded execution and data/security correctness, tightens architecture, and makes merge CI
-fail closed. The admin/operator UI remains explicitly untouched.
+**v2.7 Repository Stewardship & Operational Hygiene opened 2026-08-21.** This is a bounded maintenance
+milestone: restore quiet, trustworthy repository operations; disposition release and workspace residue;
+and make documentation and tracked artifacts tell the truth. It does not expand the product, redesign
+architecture, overhaul CI for speed, or force a Hex release without an adopter-facing correction.
+
+**Phase 161 completed and verified 2026-08-22.** The canonical workspace, linked worktrees, stashes,
+refs, divergent ranges, release leftovers, and selected unreachable objects now have an append-only,
+recoverability-first evidence ledger. Twelve preservation refs protect archive candidates; no unsafe
+cleanup was authorized. The 15 former conversational UAT checkpoints are now enforced by a reusable live
+Git auditor and disposable-repository contract tests in the existing required CI lane, which passed 283
+tests with zero failures. Verification passed 21/21 with no human verification remaining.
+
+**v2.6 Engineering Quality Ratchet shipped and passed its milestone audit 2026-08-21.** The milestone restored
+generated-host migration truth, bounded execution and data/security correctness, tightened architecture,
+and made merge and release signals fail closed. The canonical `mix ci` path passed 1,914 tests, 23
+properties, and all 20 generated-host stages after its final deterministic-parity repair. The
+admin/operator UI remained explicitly untouched. No next feature milestone is currently committed.
 
 **Phase 155 completed and verified 2026-08-16.** Core and inbound now generate real fresh and
 rollback-aware upgrade wrappers for an explicit host Repo, distinguish absent migration anchors from
@@ -29,6 +41,12 @@ private payloads, and Oban jobs atomically; local fallback execution is bounded 
 and retry, error privacy, telemetry, and persisted closed-set decoding are explicit. The full root CI gate,
 a cold generated Phoenix/Ecto/Postgres adopter installation, and both generated-host migration orders are
 green. Independent verification passed 5/5 and deep review closed with no findings.
+
+**Phase 160 completed and verified 2026-08-20.** A production-shaped generated host and protected
+publication certified the additive package family. `mailglass` 2.5.0, `mailglass_admin` 2.5.0, and
+`mailglass_inbound` 2.2.0 are public on Hex from one immutable tag, and an exact-Hex adopter host passed
+the generated-host and trust-runner journeys. Verification passed 4/4; the code review was clean, all 18
+planned threats were closed, and all 13 phase tasks have automated or immutable evidence.
 
 **v2.5 B2C Alpha Adoption Certification completed 2026-08-04.** The published `mailglass` 2.4.1,
 `mailglass_admin` 2.4.1, and `mailglass_inbound` 2.1.2 package family passed its then-current package-shaped
@@ -51,22 +69,55 @@ Package boundaries are locked. Chimeway owns notification policy and preferences
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
 paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
 
-## Current Milestone: v2.6 Engineering Quality Ratchet
+## Current Milestone: v2.7 Repository Stewardship & Operational Hygiene
+
+**Goal:** Leave Mailglass in a clean, quiet, trustworthy maintenance posture after v2.6 without product
+expansion or speculative refactoring.
+
+**Target features:**
+- Establish one canonical `main` workspace and safely disposition temporary worktrees, stashes, divergent
+  branches, and release leftovers after auditing each for unique work.
+- Recover scheduled release-please, repository-hygiene, and post-publish automation while preserving the
+  already-green protected main CI path.
+- Triage the blocked release PR and related stale branches/checks to explicit, evidence-backed outcomes.
+- Repair the observed database property-test timeout and browser-gallery timeout only where they affect the
+  release path; do not broaden this into a CI-performance or test-architecture redesign.
+- Reconcile versions, release state, maintenance guidance, tracked/generated artifacts, ignore rules, and
+  repository organization; remove only demonstrable junk or stale claims.
+- Close with a clean working state, accurate docs, no unexplained red automation, and an explicit disposition
+  for every audited item.
+
+## Active Requirements: v2.7
+
+The 16 committed v2.7 requirements in `.planning/REQUIREMENTS.md` cover workspace integrity, automation and
+release truth, deterministic release-path gates, and repository truth/closeout. The milestone is constrained
+to recoverability-first, low-controversy maintenance. Product/API/schema/UI expansion, dependency churn,
+speculative architecture, cosmetic busywork, a CI-efficiency overhaul, and a release performed only for
+ceremony are out of scope.
+
+## Validated Requirements: v2.7 (in progress)
+
+- ✓ WSPC-01..04 — complete pre-mutation workspace evidence, an explained canonical `main`, one
+  evidence-backed disposition per identity, and verified preservation before any cleanup — validated in
+  Phase 161. The phase's 15 UAT checks are deterministic local/CI contracts; no human UAT remains.
+
+## Completed Milestone: v2.6 Engineering Quality Ratchet
 
 **Goal:** Raise the internal engineering bar substantially while proving the generated first-adopter path,
 runtime correctness, data safety, architecture boundaries, and merge/release signals are honest.
 
-**Target features:**
+**Delivered features:**
 - Correct initial, upgrade, rollback, multi-repo, and legacy-remediation migration generation.
 - Bounded and honest delivery/inbound execution, retry classification, data access, and resource use.
 - Zero compile cycles, explicit runtime/boundary ownership, deterministic tests, and fail-closed CI.
 - Generated-host certification and additive-only package release without admin/operator UI changes.
 
-## Active Requirements
+## Validated Requirements: v2.6
 
-The v2.6 requirements are defined in `.planning/REQUIREMENTS.md`. Work proceeds in phases 155-160:
+All 50 v2.6 requirements in `.planning/milestones/v2.6-REQUIREMENTS.md` are validated across Phases 155-160:
 adopter/CI truth; delivery correctness; inbound/data hardening; architecture simplification; engineering
-gates; and certification/release.
+gates; and certification/release. Phase 160 validated REL-01 through REL-04 and completed the protected
+three-package release.
 
 Default posture remains convergence and adopter-pull: do not absorb notification policy,
 authentication, billing, support, mobile activation, or SRE ownership into Mailglass. The external
@@ -619,9 +670,15 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 If everything else fails, the preview dashboard, normalized event ledger, and one-line `Mailglass.deliver/2 → deliver_later/2` ergonomics must work flawlessly.
 
-## Validated Requirements (through v2.4 — SHIPPED)
+## Validated Requirements (through v2.6 — SHIPPED)
 
 All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, 19 v1.7 REQ-IDs, 10 v1.10 REQ-IDs, and 34 v1.11 REQ-IDs satisfied. The v1.9 brand book shipped its 22 REQ-IDs (archived in `milestones/v1.9-REQUIREMENTS.md`); v1.8 validated 2 brand-audit requirements before closing superseded.
+
+**v2.6 Engineering Quality Ratchet:**
+- ✓ ADOPT-01..06 / EXEC-01..08 — real Repo-explicit migration generation, fail-closed upgrade/repair truth, atomic bounded delivery, private errors, truthful telemetry, and finite persisted decoders.
+- ✓ INB-01..07 / DATA-01..08 — bounded pre-verification work, durable terminal evidence, safe MIME transition, indexed/bulk database work, bounded retention, and expand/contract migration policy.
+- ✓ ARCH-01..06 / QUAL-01..11 — cycle-free ownership behind stable façades plus deterministic, fail-closed local and protected merge proof.
+- ✓ REL-01..04 — production-shaped generated-host certification and protected exact-Hex adoption for `mailglass` 2.5.0, `mailglass_admin` 2.5.0, and `mailglass_inbound` 2.2.0.
 
 **v2.4 Outbound First-Adopter Correctness:**
 - ✓ FIRST-01..07 — default-tenant first-send, exact recipient cardinality, body semantics, renderer parity, and zero-effect preflight failures.
@@ -886,6 +943,9 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-42 | Delivery and ingress resource limits are structural contracts: fixed-point atomic buckets, bounded task/certificate/cache/S3 work, and closed retry classifications fail safely under saturation | Correct happy-path behavior is insufficient when attacker-controlled cardinality, concurrency, or provider faults can exhaust a first adopter's host | ✓ Validated Phases 156-157 — isolated concurrency, saturation, cache, S3, and provider suites pass |
 | D-43 | Future populated-table changes use additive expand/contract migrations with bounded session timeouts and concurrent indexes, while exact raw signed input and replay evidence remain durable | Adopters need safe upgrades and forensic truth without rewriting already-applied migration history or retaining unbounded processing state | ✓ Validated Phase 157 — both generated-host package orders, interrupted/resumed backfills, rollback, rerun, and immutable-history checks pass |
 | D-44 | Stable v2 façades remain thin compatibility edges over validated Runtime state, cohesive package-local pipelines, and narrow sibling ports; executable AST/CI guards prevent ownership drift | Refactoring only raises quality when it removes policy duplication without forcing adopter migrations or creating ceremonial wrapper modules | ✓ Validated Phase 158 — independent review closed vacuous guards/trampolines and final core/inbound compatibility, no-optional, cycle, and scope suites pass |
+| D-45 | One canonical local `mix ci` path and the protected `CI Green` aggregate must cover the same required deterministic evidence, with explicit ownership for every exception | Maintainers need a single reproducible merge signal whose green state cannot be manufactured by skipped, stale, or cross-test evidence | ✓ Validated Phase 159 and milestone re-audit — scoped telemetry regression, policy checks, and uninterrupted full CI passed |
+| D-46 | Publication authority is bound to one authorized candidate digest and immutable tag, and success requires exact-Hex generated-host and trust-runner evidence | Repository green is not sufficient proof that the public three-package family is installable and behaviorally identical | ✓ Validated Phase 160 — 2.5.0 / 2.5.0 / 2.2.0 published and exact-Hex adoption passed from immutable tag SHA `0f0b0686` |
+| D-47 | Workspace and release-evidence verification is machine-enforced through live identity reconciliation plus disposable-repository CI contracts; evidence corrections append instead of rewriting history | Git identity, reachability, preservation, and release-verdict invariants are deterministic and recurring, so manual UAT adds delay without adding judgment value | ✓ Validated Phase 161 — 21/21 verification truths and 15/15 automated UAT checks passed; the auditor caught and append-only corrected one historical evidence hash typo |
 
 ## Evolution
 
@@ -908,7 +968,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-08-17 after verified Phase 158.*
+*Last updated: 2026-08-22 after Phase 161.*
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->

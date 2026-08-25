@@ -1,164 +1,161 @@
-# Architecture Research: v1.3 Adopter Trust Proof
+# Architecture Research: v2.7 Repository Stewardship & Operational Hygiene
 
-**Project:** mailglass  
-**Domain:** maintained Phoenix reference host app + clean-baseline CI trust lane  
-**Researched:** 2026-05-27  
-**Confidence:** HIGH
+**Domain:** repository stewardship and release-operation recovery for the Mailglass Phoenix/Elixir sibling-package repository
+**Researched:** 2026-08-21
+**Confidence:** HIGH for repository seams and observed failures; MEDIUM for GitHub scheduled-trigger behavior.
 
 ## Recommendation
 
-Treat v1.3 as an **integration-proof architecture milestone**, not a core-runtime milestone.
+Treat v2.7 as a recovery-and-evidence pass over the existing control plane. Do not add a maintenance service, release path, CI topology, or product code boundary. The canonical `main` worktree is the only integration root; the repo-hygiene Mix task is the inventory/reporting seam; protected-main release policy plus `.planning/release-target.json` is the release-state authority; and the three existing scheduled workflows are the recovery proofs.
 
-The right architecture is:
+The milestone should first preserve and classify state, then make the smallest deterministic repairs, then invoke existing manual/scheduled workflow entry points to establish current evidence. A clean git state is the final outcome, not an assumption made before examining temporary worktrees, branches, stashes, the open release PR, and release-ledger status.
 
-1. Add one thin, maintained Phoenix reference host app that composes existing `mailglass` seams.
-2. Add one deterministic trust-journey runner that proves install -> preview -> send -> webhook ingest -> operator troubleshooting.
-3. Reuse that same runner in CI across two contexts: repo-head verification and published-version clean-baseline verification.
-4. Keep API-contract truth in existing contract docs/tests (`docs/api_stability.md`, support-contract lanes), and label the reference app as usage proof only.
+## Existing System Overview
 
-Everything below is **new work delta from shipped v1.2**; no core library behavior is re-implemented.
+```
+                         protected main (canonical workspace)
+                                      │
+             ┌────────────────────────┼────────────────────────┐
+             │                        │                        │
+       repository truth          release policy           product-package proof
+             │                        │                        │
+  dev/mix/tasks/...hygiene   scripts/release_policy.exs     CI / browser / DB tests
+             │                        │                        │
+  git + gh inventory          release-target.json       root, admin, inbound
+             │                        │                        │
+       repo-hygiene.yml ──────┼────── publish-hex.yml ────┘
+             │                │             │
+             │                │             └─ protected publish only
+             │                │
+             └──────────── release-please.yml
+                              proposal/capture only
+                                      │
+                         post-publish-smoke.yml
+                         immutable completed target
+```
 
-## Integration Model (Delta-Only)
+### Ownership Boundaries
 
-| Layer | Existing architecture reused | New v1.3 integration role |
-|---|---|---|
-| Core mail runtime | `Mailglass.deliver*`, installer wiring, webhook ingest, append-only ledger | Consumed as-is by the reference host app |
-| Admin/operator runtime | `MailglassAdmin.Router` mount + operator views/evidence/timelines | Used as troubleshooting proof endpoint in the journey |
-| Inbound sibling package | Existing package remains available, but not required for the thin trust claim | Explicitly optional in v1.3 reference proof path |
-| Host app surface | Existing `test/example` installer fixture proves installer snapshots only | New maintained reference host app proves operational journey end to end |
-| CI surface | Existing `ci.yml` + `post-publish-smoke.yml` | New trust-proof lane and release-time published-version trust check |
+| Boundary | Existing owner / authority | v2.7 responsibility | Status |
+|---|---|---|---|
+| Canonical checkout | root `main`, Git worktree metadata | Audit all auxiliary worktrees/branches/stashes for unique commits before removing; retain or preserve only evidence-backed work | Modified state, no new component |
+| Repository inventory | `dev/mix/tasks/mailglass.repo.hygiene.ex` | Use `--check --format json` as the reusable disposition report; only use its `--apply` preservation-branch action if local state requires it | Existing component, possibly narrow check correction |
+| Protected merge proof | `.github/workflows/ci.yml` and `Guard Release Trigger` | Preserve `CI Green` / `Guard Release Trigger` semantics; repair only the two demonstrated test failures that prevent the release path | Existing workflows and focused tests |
+| Release proposal | `.github/workflows/release-please.yml`, Release Please config/manifest | Recover proposal capture against valid ledger state; do not let scheduled retries authorize or publish | Existing workflow, modified only if diagnosis proves it |
+| Release authorization/publication | `.planning/release-target.json`, `scripts/release_policy.exs`, `publish-hex.yml` | Keep protected-main policy as executable authority; disposition stale/captured/authorized state rather than manufacture a new release | Existing artifacts, state reconciliation |
+| Post-publication proof | `post-publish-smoke.yml`, `check_post_publish_target.sh`, consumer/trust scripts | Recover scheduled/manual proof only against an immutable completed target; keep failure issue lifecycle as evidence | Existing workflow, modified only if exact defect is established |
+| Documentation/artifacts | `MAINTAINING.md`, release ledger/candidate records, `.gitignore`, tracked generated files | Correct only claims/artifacts contradicted by current state; retain planning history | Existing docs/config, modified selectively |
 
-## New vs Modified Components
+## Evidence and Data Flow
 
-### New Components
+### 1. Recovery inventory
 
-1. **Reference host app (maintained artifact)**  
-   Suggested location: `reference/host_app/` (separate from `test/example` fixture seed).
-2. **Reference integration boundary module(s)**  
-   App-local boundary (for example `ReferenceHost.Mailing`) that calls stable public Mailglass APIs only.
-3. **Deterministic trust fixtures**  
-   Seed and webhook payload fixtures with stable IDs to make troubleshooting reproducible.
-4. **Trust journey runner**  
-   One script/task/test command that executes the whole proof journey and emits machine-checkable checkpoints.
-5. **Trust-proof CI job**  
-   Clean host-baseline lane that runs the journey non-interactively and fails hard on drift.
+```
+git status / worktree list / refs / stash list / GH PR + runs
+                  ↓
+unique-work audit and explicit disposition record
+                  ↓
+canonical main + no unexplained auxiliary state
+                  ↓
+mix mailglass.repo.hygiene --check --format json
+                  ↓
+scheduled repo-hygiene artifact + workflow summary
+```
 
-### Modified Components
+The task already reports git alignment, CI state at `HEAD`, branch protection, open PRs, local branch age, and textual release-workflow readiness. It must remain a read-only reporter in CI. Its `--apply` mode merely creates a preservation branch for dirty/ahead state; it is not a branch/worktree deletion mechanism and should not be expanded into one.
 
-1. **`.github/workflows/ci.yml`**  
-   Add required trust-proof job for PR/push.
-2. **`.github/workflows/post-publish-smoke.yml`**  
-   Extend with published-version trust journey (beyond first-preview smoke).
-3. **Docs positioning** (`README.md`, adoption guide, maintaining runbook)  
-   Add explicit wording: reference app = usage/operations proof, contract truth = core stability docs/tests.
-4. **Release checklist artifacts**  
-   Include trust-proof lane result as release evidence so sibling-version skew cannot hide.
+### 2. Release-state recovery
 
-## Component Boundaries
+```
+release-please schedule/manual proposal
+  → protected-main checkout + policy compile
+  → proposal identity / candidate capture
+  → .planning/release-target.json (captured → authorized → published)
+  → protected workflow_dispatch of publish-hex
+  → exact tags and Hex state
+  → dispatch post-publish-smoke with immutable SHA + three exact versions
+```
 
-### 1) Keep Library Boundaries Intact
+Caller inputs remain data: `publish-hex.yml` separately checks out protected `main` controls and validates the candidate/content digest before any live job. `post-publish-smoke.yml` resolves either the completed target for schedule or matching immutable target and control-plane identities for dispatch. Preserve those double-checkouts and digest checks. A release event is intentionally a no-op for smoke; scheduled/manual recovery is the designed proof path.
 
-The reference app must integrate only through existing public seams:
+The current ledger is `authorized` for 2.5.0/2.5.0/2.2.0 while those tags already exist, and scheduled `release-please` fails proposal capture because the target status is unsupported. Therefore ledger disposition is a prerequisite to restoring schedule health; changing cron, bypassing policy, or cutting a ceremonial 2.5.1 is not.
 
-- `mix mailglass.install`
-- `Mailglass.Mailable` + `Mailglass.deliver*`
-- webhook router mount (`mailglass_webhook_routes`)
-- admin mount (`mailglass_admin_routes`)
+### 3. Focused failure repair and proof
 
-Do not copy provider verifiers, event projection logic, or operator internals into the app.
+```
+observed failed CI run
+  → exact failing test + bounded correction
+  → focused local reproduction
+  → protected CI on resulting SHA
+  → release PR disposition / scheduled workflow recovery
+  → hygiene JSON, workflow URLs, clean git state
+```
 
-### 2) Separate Fixture Seed vs Maintained Reference App
+The only observed release-path defects belong to existing test boundaries:
 
-- `test/example` remains a deterministic installer fixture for snapshot tests.
-- The new reference app is a maintained adopter-facing artifact with realistic routes, seed data, and troubleshooting flow.
-- This prevents two incompatible concerns (golden snapshots vs runnable operations demo) from colliding.
+- `test/mailglass/properties/webhook_idempotency_convergence_test.exs` failed after 966 generated cases with PostgreSQL SQLSTATE 57014. The repair belongs in that property’s transaction/session-timeout isolation or deterministic test fixture, with the actual application `SET LOCAL statement_timeout = '2s'` behavior left intact.
+- `mailglass_admin/e2e/gallery-matrix.spec.js` executes a full all-cell × viewport × theme loop and hit Playwright’s 30-second test limit twice. The separately focused stress test passed. The repair belongs in the one matrix test’s bounded execution budget or deterministic loop mechanics, while retaining every discovered-cell assertion and fail-closed overflow invariant. It is not a gallery/UI redesign.
 
-### 3) Proof Harness Boundary
+## Exact Integration Points
 
-Define one trust runner that both humans and CI call. The runner owns:
+| Area | Concrete files / seam | Modified vs. new | Dependency / recovery constraint |
+|---|---|---|---|
+| Workspace truth | Git worktree metadata; root `.gitignore`; existing branches/worktrees | State cleanup; no new files required | Audit commit ancestry/untracked work first; remove only duplicates or explicitly preserved work |
+| Hygiene proof | `dev/mix/tasks/mailglass.repo.hygiene.ex`, `.github/workflows/repo-hygiene.yml` | Reuse; modify only a proven false readiness assertion or missing evidence | Run after workspace/PR disposition; preserve JSON artifact and step summary |
+| Blocked PR | PR #222 / `release-please--branches--main` | Remote-state disposition, no code component | The PR remains blocked because `CI Green` saw the property timeout; resolve/close only after exact replacement evidence or explicit stale-PR decision |
+| Release proposal schedule | `.github/workflows/release-please.yml`; `.release-please-manifest.json`; `release-please-config.json` | Existing workflow/policy; narrow fix only if ledger lifecycle lacks a valid terminal path | First reconcile `.planning/release-target.json`; never make schedule publish-capable |
+| Release authorization | `.planning/release-target.json`; `scripts/release_policy.exs`; `scripts/reconcile_release_versions.exs`; policy contract tests | State/documentation reconciliation, perhaps tests | Preserve immutable tags, package payload digest, and three-package atomic unit |
+| Protected publication | `.github/workflows/publish-hex.yml`; `scripts/release_policy_validate_target.sh` | No change expected | Do not dispatch/cut a release merely to turn automation green |
+| Published smoke | `.github/workflows/post-publish-smoke.yml`; `scripts/check_post_publish_target.sh`; `scripts/consumer_install_smoke.sh` | Existing workflow; narrow diagnosis-driven recovery | Requires a completed immutable target; manual input must agree with control policy |
+| Deterministic core proof | `test/mailglass/properties/webhook_idempotency_convergence_test.exs` and its test setup | Focused test change | Validate failure/reproduction under Postgres; retain 1,000-case property and invariant |
+| Browser proof | `mailglass_admin/e2e/gallery-matrix.spec.js`, `mailglass_admin/playwright.config.cjs` | Focused test/config change | Keep retry, trace, all-cell discovery, widths, themes, and overflow checks; no UI surface work |
+| Documentation and artifacts | `MAINTAINING.md`, release records/ledger, `.gitignore`, tracked generated artifacts | Selective modifications only | Every claim must point to current manifest/tag/run/working-tree evidence; do not delete archived GSD records |
 
-- journey setup order
-- deterministic fixture loading
-- checkpoint assertions
-- machine-readable pass/fail output
+## Dependency-Aware Build Order
 
-This avoids docs saying one thing while CI tests another.
+1. **Preserve and inventory local/remote state.** Record the canonical `main` SHA, worktrees, stashes, divergent refs, open PR #222, and workflow runs. Create preservation branches only where the existing hygiene action dictates. This makes later cleanup reversible.
+2. **Classify release ledger and PR state.** Reconcile the authorized-but-already-published v2.6 target with immutable tags and the stale 2.5.1 Release Please proposal. Decide explicit close/retire/recover outcomes before changing a workflow, because the recurring schedule failures originate at this boundary.
+3. **Repair the two observed deterministic test failures.** Work independently in the root property test and admin gallery test. Each must retain its semantic invariant and have a focused reproduction before broader CI.
+4. **Prove protected CI and then recover scheduled control-plane checks.** First obtain a green `CI Green` on the exact `main` SHA; then run/observe repo-hygiene, release-please proposal mode, and post-publish-smoke according to their immutable-input contracts. A scheduled run is evidence, not authority.
+5. **Reconcile docs, generated/tracked artifacts, and ignores.** Make this follow corrected state, so docs do not freeze an intermediate branch or candidate. Remove only demonstrably stale/generated junk after proving it has no unique work or evidence role.
+6. **Close out from the canonical workspace.** Capture workflow URLs/JSON artifacts, exact release-PR outcome, remaining intentional exceptions, `git status`, worktree list, and upstream alignment. Re-run repo hygiene last.
 
-### 4) Dependency Boundary for Trust Claims
+## Anti-Patterns
 
-- Trust-proof default should resolve published Hex packages (no committed path deps).
-- Local development overrides may exist, but they are explicitly non-proof paths.
-- CI must fail if committed trust lane inputs contain path dependency coupling.
+### Treating schedule recovery as release authorization
 
-## Data Flow: End-to-End Trust Journey
+**Why it is wrong:** GitHub schedules execute from default-branch workflow state and may be delayed/dropped. Mailglass’s policy intentionally makes schedules proposal/canary paths and makes live publication a digest-bound protected dispatch.
 
-1. **Bootstrap**: create or reset clean host app baseline; fetch deps; run `mix mailglass.install`; run migrations.
-2. **Preview proof**: boot host app and assert preview mount responds (dev route path).
-3. **Send proof**: execute one deterministic mailable send through `Mailglass.deliver/1` (or `deliver_later/1` if queued path is in scope).
-4. **Ledger proof**: assert delivery/event records were persisted via existing append-only event pipeline.
-5. **Webhook ingest proof**: POST signed provider fixture to mounted webhook route; run through endpoint parser + cached body + verify-first provider path.
-6. **Normalization/projection proof**: assert normalized event and downstream projection side effects are visible through public/operator read models.
-7. **Operator troubleshooting proof**: assert deterministic symptom -> evidence -> diagnosis path in admin/operator surface (at least one non-happy path, such as signature failure or bounce-driven incident context).
-8. **Result emission**: persist checkpoint results for CI and release evidence.
+**Do this instead:** Reconcile ledger status and dispatch the existing workflow only with its validated immutable inputs. Record the run, but do not relax policy or create a release just to make the scheduled history green.
 
-## Data Flow: CI Journey (Clean Baseline)
+### Deleting worktrees or branches before provenance review
 
-1. **Trigger**: PR/push/release workflow starts trust-proof job.
-2. **Environment**: provision Postgres and clean workspace (no pre-existing host app artifacts).
-3. **Baseline creation**: generate clean Phoenix host baseline (same command family already used in post-publish smoke) or reset committed reference app to pristine state.
-4. **Dependency resolution policy**:
-   - repo-head lane: validates current branch integration behavior
-   - published-version lane: validates real adopter install posture from Hex tags
-5. **Journey execution**: run the single trust runner command.
-6. **Assertions**: fail on missing checkpoints, path-dep leakage, nondeterministic IDs, or operator-flow ambiguity.
-7. **Artifacts**: upload logs/checkpoint JSON for release/audit evidence.
-8. **Gate behavior**: required on CI for drift prevention; required in release ceremony for published trust claim.
+**Why it is wrong:** the auxiliary worktrees contain recovery/freshness/retirement commits that may be unique relative to `main`; deletion destroys the only local evidence or fix.
 
-## Suggested Build Order
+**Do this instead:** compare each ref to `main`, inspect worktree dirtiness and remote status, then retain, merge, archive/preserve, or remove with an explicit outcome.
 
-1. **Reference app baseline + scope lock**
-   - Create `reference/host_app` and document strict non-goals.
-   - Keep path-dep overrides out of committed proof defaults.
-2. **Journey wiring (happy path)**
-   - Install -> preview -> send checkpoints through existing public APIs.
-3. **Webhook + operator proof wiring**
-   - Add signed webhook fixtures and one deterministic troubleshooting path.
-4. **Trust runner extraction**
-   - Centralize journey execution in one command used by docs and CI.
-5. **CI integration**
-   - Add required trust job in `ci.yml`.
-   - Add published-version trust proof in `post-publish-smoke.yml`.
-6. **Docs/contract positioning**
-   - Explicitly separate usage proof from API contract truth.
-7. **Drift-prevention cadence**
-   - Tie trust lane green status to release checklist and routine maintenance cadence.
+### Raising global timeouts or weakening assertions
 
-## Architecture Decisions to Lock Early
+**Why it is wrong:** it hides a property-test session leak or turns the gallery matrix into incomplete proof. The current evidence identifies one PostgreSQL timeout and one 30-second all-cell Playwright loop, not an architectural need for slower CI.
 
-1. **One reference app only** (not multiple provider permutations in v1.3).
-2. **One deterministic troubleshooting scenario** (not broad operator matrix yet).
-3. **One shared proof runner** (avoid duplicate scripts per workflow).
-4. **Hex-first trust claim** with explicit non-proof local overrides.
-5. **No new product surface** in reference app beyond trust journey support.
+**Do this instead:** change only the isolated test boundary after confirming the invariant is still fully exercised; retain the existing required/advisory topology.
 
-## Out of Scope for This Architecture Slice
+### Treating historical planning records as generated junk
 
-- Transport-class expansion (`gen_smtp` listener).
-- Broad provider matrix expansion.
-- Ecosystem integration grab-bag (`SEED-003` auto-promotion).
-- Core API redesign or contract redefinition.
-- Treating reference-app internals as stable API surface.
+**Why it is wrong:** archived GSD artifacts explain policy and release-state decisions. The repo’s ignores already scope screenshot cache exclusion tightly under research `.cache` directories.
+
+**Do this instead:** remove only artifacts demonstrably regenerated, unreferenced, and not evidence; update ignores narrowly, preserving tracked policy/ledger/history.
+
+## Scalability / Operational Posture
+
+This is a single-repository maintenance operation, not a scaling project. At the current scale, the useful guard is a complete disposition ledger plus existing workflow artifacts. Do not introduce a database, service, dashboard, or orchestration layer. The first operational bottleneck is stale/contradictory release state; the second is test proof that is correct but not reliably bounded in CI. Both have local owners and existing executable seams.
 
 ## Sources
 
-- `.planning/PROJECT.md`
-- `.planning/STATE.md`
-- `.planning/MILESTONE-ARC.md`
-- `.planning/research/milestone-candidates/06-adopter-trust-proof.md`
-- `.planning/research/milestone-candidates/SYNTHESIS.md`
-- `.planning/research/FEATURES.md`
-- `.planning/research/PITFALLS.md`
-- `.github/workflows/ci.yml`
-- `.github/workflows/post-publish-smoke.yml`
-- `test/example/README.md`
-- `test/mailglass/install/install_first_preview_smoke_test.exs`
+- Local: [`dev/mix/tasks/mailglass.repo.hygiene.ex`](../../dev/mix/tasks/mailglass.repo.hygiene.ex), [`.github/workflows/release-please.yml`](../../.github/workflows/release-please.yml), [`.github/workflows/repo-hygiene.yml`](../../.github/workflows/repo-hygiene.yml), [`.github/workflows/publish-hex.yml`](../../.github/workflows/publish-hex.yml), [`.github/workflows/post-publish-smoke.yml`](../../.github/workflows/post-publish-smoke.yml), [`.planning/release-target.json`](../release-target.json), [`MAINTAINING.md`](../../MAINTAINING.md). HIGH: direct repository configuration and 2026-08-21 workflow/PR evidence.
+- Local observed failures: `CI` run 32433156236 (Core Deterministic Suite SQLSTATE 57014; Operator Browser Gate 30-second gallery matrix timeout), `release-please` run 32523718397 (unsupported authorized target state), and scheduled `repo-hygiene` / `post-publish-smoke` runs on 2026-08-21. HIGH: direct run logs.
+- [GitHub Actions event documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows), [manual workflow inputs](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow). MEDIUM: official behavior cross-checked through the research seam; confirms default-branch scheduling, potential schedule delay/drop, and dispatch inputs.
+
+---
+*Architecture research for: Mailglass v2.7 repository stewardship and operational hygiene*
+*Researched: 2026-08-21*

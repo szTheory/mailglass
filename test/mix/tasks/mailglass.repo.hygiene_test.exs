@@ -24,12 +24,13 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
   end
 
   test "blocks on dirty local state" do
-    repo = git_repo!()
-    write_release_workflows!(repo)
-    commit_all!(repo, "initial")
+    repo = ready_repo!()
+    write_branch_protection_verifier!(repo, "echo 'OK'\n")
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
     File.write!(Path.join(repo, "dirty.txt"), "dirty\n")
 
-    result = Hygiene.audit(repo)
+    result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
 
     assert result.status == :blocked
 
@@ -60,17 +61,17 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     assert Jason.decode!(json)["status"] == "pass"
   end
 
-  test "reports missing branch-protection verifier as cannot-check and aggregate non-success" do
+  test "reports missing branch-protection verifier as cannot-check and aggregate cannot-check" do
     repo = ready_repo!()
 
     result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
 
-    assert result.status == :blocked
-    assert check(result, :branch_protection).status == :unknown
+    assert result.status == :cannot_check
+    assert check(result, :branch_protection).status == :cannot_check
     assert check(result, :branch_protection).message =~ "verifier is missing"
   end
 
-  test "reports a missing git upstream as cannot-check and aggregate non-success" do
+  test "reports a missing git upstream as cannot-check and aggregate cannot-check" do
     repo = git_repo!()
     write_release_workflows!(repo)
 
@@ -83,8 +84,8 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
 
     result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
 
-    assert result.status == :blocked
-    assert check(result, :git_state).status == :unknown
+    assert result.status == :cannot_check
+    assert check(result, :git_state).status == :cannot_check
     assert check(result, :git_state).message =~ "upstream comparison"
   end
 
@@ -97,8 +98,8 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
         with_env("GH_TOKEN", "test-token", fn -> Hygiene.audit(repo) end)
       end)
 
-    assert result.status == :blocked
-    assert check(result, :branch_protection).status == :unknown
+    assert result.status == :cannot_check
+    assert check(result, :branch_protection).status == :cannot_check
     assert check(result, :branch_protection).message =~ "gh"
   end
 
@@ -111,8 +112,8 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
         with_env("GH_TOKEN", nil, fn -> Hygiene.audit(repo) end)
       end)
 
-    assert result.status == :blocked
-    assert check(result, :branch_protection).status == :unknown
+    assert result.status == :cannot_check
+    assert check(result, :branch_protection).status == :cannot_check
     assert check(result, :branch_protection).message =~ "GH_TOKEN"
   end
 
@@ -122,8 +123,8 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
 
     result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
 
-    assert result.status == :blocked
-    assert check(result, :branch_protection).status == :unknown
+    assert result.status == :cannot_check
+    assert check(result, :branch_protection).status == :cannot_check
     assert check(result, :branch_protection).message =~ "could not be verified"
   end
 
@@ -136,6 +137,46 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     assert result.status == :blocked
     assert check(result, :branch_protection).status == :blocked
     assert check(result, :branch_protection).message =~ "differs from expected"
+  end
+
+  test "cannot-check takes precedence over a confirmed policy block" do
+    repo = ready_repo!()
+    File.write!(Path.join(repo, "dirty.txt"), "dirty\n")
+
+    result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
+
+    assert check(result, :git_state).status == :blocked
+    assert check(result, :branch_protection).status == :cannot_check
+    assert result.status == :cannot_check
+  end
+
+  test "renders cannot-check at text and JSON boundaries and exits nonzero" do
+    repo = ready_repo!()
+
+    {text, text_exit} = run_hygiene(repo, ["--check"])
+    {json, json_exit} = run_hygiene(repo, ["--check", "--format", "json"])
+
+    assert text_exit == {:shutdown, 1}
+    assert json_exit == {:shutdown, 1}
+    assert text =~ "Repo hygiene: cannot-check"
+    assert text =~ "cannot-check branch_protection:"
+    assert Jason.decode!(json)["status"] == "cannot-check"
+    assert Jason.decode!(json)["reason"] =~ "verifier is missing"
+
+    assert Enum.find(Jason.decode!(json)["checks"], &(&1["name"] == "branch_protection"))["status"] ==
+             "cannot-check"
+  end
+
+  test "workflow summary reads aggregate result and checks from the audit JSON artifact" do
+    workflow = File.read!(Path.expand("../../../.github/workflows/repo-hygiene.yml", __DIR__))
+
+    assert workflow =~ "$RUNNER_TEMP/repo-hygiene.json"
+    assert workflow =~ "scheduled_control_evidence.sh bind"
+    assert workflow =~ "--control repo-hygiene"
+    assert workflow =~ "tee -a \"$GITHUB_STEP_SUMMARY\""
+    assert workflow =~ "if-no-files-found: error"
+    assert workflow =~ "if: always()"
+    refute workflow =~ "steps.hygiene.outcome"
   end
 
   test "reports clean branch protection as pass with JSON-safe distinct statuses" do
@@ -168,6 +209,152 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     assert text =~ "Repo hygiene: pass"
     assert text =~ "pass branch_protection:"
     assert Jason.decode!(json)["status"] == "pass"
+  end
+
+  test "uses the detached checkout SHA to find a matching completed CI run" do
+    repo = ready_repo!()
+    write_branch_protection_verifier!(repo, "echo 'OK'\n")
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
+
+    sha = git_output!(repo, ["rev-parse", "HEAD"])
+    git!(repo, ["checkout", "--detach", sha])
+    assert git_output!(repo, ["branch", "--show-current"]) == ""
+
+    argv_log = Path.join(repo, "gh-argv.log")
+
+    result =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+        expected_sha: sha,
+        argv_log: argv_log
+      )
+
+    assert check(result, :ci_state).status == :pass
+
+    assert File.read!(argv_log) ==
+             "run\nlist\n--workflow\nci.yml\n--commit\n#{sha}\n--limit\n1\n--json\nheadSha,conclusion,status,url\n"
+  end
+
+  test "blocks detached CI evidence when the returned run is absent, incomplete, failed, or on another SHA" do
+    repo = ready_repo!()
+    sha = git_output!(repo, ["rev-parse", "HEAD"])
+    git!(repo, ["checkout", "--detach", sha])
+    assert git_output!(repo, ["branch", "--show-current"]) == ""
+
+    for response <- [
+          "[]",
+          "[{\"headSha\":\"#{sha}\",\"conclusion\":null,\"status\":\"in_progress\",\"url\":\"https://example.test/run\"}]",
+          "[{\"headSha\":\"#{sha}\",\"conclusion\":\"failure\",\"status\":\"completed\",\"url\":\"https://example.test/run\"}]",
+          "[{\"headSha\":\"#{String.duplicate("f", 40)}\",\"conclusion\":\"success\",\"status\":\"completed\",\"url\":\"https://example.test/run\"}]"
+        ] do
+      result =
+        with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+          expected_sha: sha,
+          response: response
+        )
+
+      assert check(result, :ci_state).status == :blocked
+    end
+  end
+
+  test "reports an unavailable detached CI query as cannot-check" do
+    repo = ready_repo!()
+    sha = git_output!(repo, ["rev-parse", "HEAD"])
+    git!(repo, ["checkout", "--detach", sha])
+    assert git_output!(repo, ["branch", "--show-current"]) == ""
+
+    result =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+        expected_sha: sha,
+        query_exit: 1
+      )
+
+    assert check(result, :ci_state).status == :cannot_check
+    assert check(result, :ci_state).details.error =~ "unavailable"
+  end
+
+  test "bounds malformed and non-list successful CI responses as cannot-check JSON evidence" do
+    repo = ready_repo!()
+    write_branch_protection_verifier!(repo, "echo 'OK'\n")
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
+
+    sha = git_output!(repo, ["rev-parse", "HEAD"])
+
+    for {response, diagnostic} <- [
+          {"{not-json", "malformed GitHub CI response"},
+          {"{\"headSha\":\"#{sha}\"}", "unexpected GitHub CI response"}
+        ] do
+      result =
+        with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+          expected_sha: sha,
+          response: response
+        )
+
+      ci_state = check(result, :ci_state)
+      assert result.status == :cannot_check
+      assert ci_state.status == :cannot_check
+      assert ci_state.details.sha == sha
+      assert ci_state.message =~ diagnostic
+      assert ci_state.message =~ "retry"
+
+      {json, exit} = run_hygiene(repo, ["--check", "--format", "json"], response: response)
+      decoded = Jason.decode!(json)
+
+      assert exit == {:shutdown, 1}
+      assert decoded["status"] == "cannot-check"
+
+      assert Enum.find(decoded["checks"], &(&1["name"] == "ci_state"))["status"] ==
+               "cannot-check"
+    end
+  end
+
+  test "bounds malformed and non-list successful PR responses as cannot-check JSON evidence" do
+    repo = ready_repo!()
+    write_branch_protection_verifier!(repo, "echo 'OK'\n")
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
+
+    for {pr_response, diagnostic} <- [
+          {"{not-json", "malformed GitHub PR response"},
+          {"{\"number\":222}", "unexpected GitHub PR response"}
+        ] do
+      result =
+        with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_response: pr_response)
+
+      pull_requests = check(result, :pull_requests)
+      assert result.status == :cannot_check
+      assert pull_requests.status == :cannot_check
+      assert pull_requests.message =~ diagnostic
+      assert pull_requests.message =~ "retry"
+
+      {json, exit} =
+        run_hygiene(repo, ["--check", "--format", "json"], pr_response: pr_response)
+
+      decoded = Jason.decode!(json)
+
+      assert exit == {:shutdown, 1}
+      assert decoded["status"] == "cannot-check"
+      assert decoded["reason"] =~ diagnostic
+
+      assert Enum.find(decoded["checks"], &(&1["name"] == "pull_requests"))["status"] ==
+               "cannot-check"
+    end
+
+    empty =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_response: "[]")
+
+    assert check(empty, :pull_requests).status == :pass
+    assert check(empty, :pull_requests).details == %{open_count: 0, prs: []}
+
+    prs =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
+        pr_response: "[{\"number\":222,\"title\":\"Candidate\"}]"
+      )
+
+    assert check(prs, :pull_requests).status == :blocked
+    assert check(prs, :pull_requests).details.open_count == 1
+    assert check(prs, :pull_requests).details.prs == [%{"number" => 222, "title" => "Candidate"}]
   end
 
   defp check(result, name), do: Enum.find(result.checks, &(&1.name == name))
@@ -215,7 +402,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     File.chmod!(verifier, 0o755)
   end
 
-  defp with_hygiene_environment(_repo, fun) do
+  defp with_hygiene_environment(repo, fun, opts \\ []) do
     bin =
       Path.join(
         System.tmp_dir!(),
@@ -224,14 +411,61 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
 
     File.mkdir_p!(bin)
     gh = Path.join(bin, "gh")
+    expected_sha = Keyword.get(opts, :expected_sha, git_output!(repo, ["rev-parse", "HEAD"]))
+
+    response =
+      Keyword.get(
+        opts,
+        :response,
+        "[{\"headSha\":\"#{expected_sha}\",\"conclusion\":\"success\",\"status\":\"completed\",\"url\":\"https://example.test/run\"}]"
+      )
+
+    argv_log = Keyword.get(opts, :argv_log, Path.join(bin, "gh-argv.log"))
+    query_exit = Keyword.get(opts, :query_exit, 0)
+    pr_response = Keyword.get(opts, :pr_response, "[]")
+    pr_query_exit = Keyword.get(opts, :pr_query_exit, 0)
 
     File.write!(gh, """
     #!/usr/bin/env bash
-    if [ "$1" = "run" ]; then
-      printf '[{"headSha":"%s","conclusion":"success","status":"completed","url":"https://example.test/run"}]\\n' "$(git rev-parse HEAD)"
-    else
-      echo '[]'
+    set -eu
+
+    if [ "$1" = "pr" ] && [ "$2" = "list" ]; then
+      if [ "#{pr_query_exit}" -ne 0 ]; then
+        echo 'PR query unavailable' >&2
+        exit #{pr_query_exit}
+      fi
+
+      echo '#{pr_response}'
+      exit 0
     fi
+
+    if [ "$1" != "run" ]; then
+      echo 'invalid gh command' >&2
+      exit 64
+    fi
+
+    printf '%s\\n' "$@" > #{argv_log}
+
+    if [ "$#" -ne 10 ] || [ "$1" != "run" ] || [ "$2" != "list" ] ||
+       [ "$3" != "--workflow" ] || [ "$4" != "ci.yml" ] ||
+       [ "$5" != "--commit" ] || [ "$6" != "#{expected_sha}" ] ||
+       [ "$7" != "--limit" ] || [ "$8" != "1" ] ||
+       [ "$9" != "--json" ]; then
+      echo 'invalid gh run list selector' >&2
+      exit 64
+    fi
+
+    if [ "${10}" != "headSha,conclusion,status,url" ]; then
+      echo 'invalid gh run list fields' >&2
+      exit 64
+    fi
+
+    if [ "#{query_exit}" -ne 0 ]; then
+      echo 'query unavailable' >&2
+      exit #{query_exit}
+    fi
+
+    echo '#{response}'
     """)
 
     File.chmod!(gh, 0o755)
@@ -288,6 +522,26 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     end
   end
 
+  defp run_hygiene(repo, argv, opts \\ []) do
+    with_hygiene_environment(
+      repo,
+      fn -> in_repo(repo, fn -> capture_hygiene_run(argv) end) end,
+      opts
+    )
+  end
+
+  defp capture_hygiene_run(argv) do
+    test_process = self()
+
+    output =
+      capture_io(fn ->
+        send(test_process, {:hygiene_exit, catch_exit(Hygiene.run(argv))})
+      end)
+
+    assert_receive {:hygiene_exit, exit}
+    {output, exit}
+  end
+
   defp write_release_workflows!(repo) do
     workflows = Path.join(repo, ".github/workflows")
     File.mkdir_p!(workflows)
@@ -316,6 +570,11 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
 
   defp git!(repo, args) do
     {_output, 0} = System.cmd("git", args, cd: repo, stderr_to_stdout: true)
+  end
+
+  defp git_output!(repo, args) do
+    {output, 0} = System.cmd("git", args, cd: repo, stderr_to_stdout: true)
+    String.trim(output)
   end
 
   defp normalize_statuses(%{checks: checks} = result) do

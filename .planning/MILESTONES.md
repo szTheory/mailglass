@@ -1,5 +1,30 @@
 # Milestones
 
+## v2.6 Engineering Quality Ratchet (Shipped: 2026-08-21)
+
+**Delivered:** A truthful, bounded, cycle-free package family whose migration, merge, release, and exact-Hex adopter paths are all executable and fail closed.
+
+**Phases completed:** 6 phases, 41 plans, 21 tasks
+
+**Stats:** 397 files changed; 35,481 insertions / 3,760 deletions; six-day implementation, release, and closeout window.
+
+**Git range:** `7f728d38` → `f1387192`
+
+**Archives:** `milestones/v2.6-ROADMAP.md`, `milestones/v2.6-REQUIREMENTS.md`, `milestones/v2.6-MILESTONE-AUDIT.md`, `milestones/v2.6-phases/`
+
+**Release:** `mailglass` 2.5.0 / `mailglass_admin` 2.5.0 / `mailglass_inbound` 2.2.0; protected publication and exact-Hex adoption passed from immutable tag SHA `0f0b0686`.
+
+**Key accomplishments:**
+
+- Real core/inbound migration wrappers now support explicit Repos, safe initial/live/offline upgrades, byte-exact legacy repair, and both shared-schema rollback orders.
+- Outbound and inbound execution is atomic, privacy-safe, replayable, and structurally bounded across concurrency, caches, retrieval, retries, retention, and database work.
+- Runtime/configuration ownership and sibling integration ports are explicit and cycle-free while stable v2 façades remain compatible.
+- One deterministic local `mix ci` command matches the protected merge surface and fails closed on missing, skipped, stale, or malformed required evidence.
+- A production-shaped generated host certifies install, upgrade, delivery, rollback, and rerun behavior against repository packages and exact Hex artifacts.
+- The protected pipeline published the additive three-package family and independently verified its immutable smoke-artifact evidence.
+
+---
+
 ## v2.5 B2C Alpha Adoption Certification (Completed: 2026-08-04)
 
 **Delivered:** Fresh certification that the public `mailglass` 2.4.1, `mailglass_admin` 2.4.1, and

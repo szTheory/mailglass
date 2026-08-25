@@ -79,6 +79,130 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     end
   end
 
+  test "scheduled authorized unpublished targets persist one blocked resolution before failing closed" do
+    workflow = File.read!(@workflow_path)
+    resolver = extract_job!(workflow, "resolve-completed-target", "cron-guard")
+
+    assert resolver =~ "post-publish-resolution.json"
+    assert resolver =~ "command=\"completed-versions\""
+    assert resolver =~ "authorized-versions\" \"$control_target\""
+    assert resolver =~ "write_resolution \"blocked\" \"scheduled_target_not_published\""
+
+    for field <- [
+          "event_name",
+          "run_id",
+          "ledger_status",
+          "publication_status",
+          "target_ref",
+          "core",
+          "admin",
+          "inbound"
+        ] do
+      assert resolver =~ "\"#{field}\":"
+    end
+
+    assert resolver =~
+             "resolution_finalized=true\n                  echo \"Scheduled target is authorized but unpublished; wrote blocked resolution evidence.\" >&2\n                  exit 1"
+
+    assert resolver =~ "if: ${{ always() }}"
+    assert resolver =~ "name: Upload post-publish resolution"
+    assert resolver =~ "name: Bind and summarize scheduled-control evidence"
+    assert resolver =~ "scheduled_control_evidence.sh bind"
+    assert resolver =~ "--control post-publish-smoke"
+    assert resolver =~ "tee -a \"$GITHUB_STEP_SUMMARY\""
+    assert resolver =~ "path: ${{ runner.temp }}/post-publish-resolution.json"
+  end
+
+  test "post-publish resolver paths materialize one bounded resolution before upload" do
+    workflow = File.read!(@workflow_path)
+    classify = workflow_step_script!(workflow, "Classify trigger")
+
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-post-publish-resolution-#{System.unique_integer([:positive])}"
+      )
+
+    on_exit(fn -> File.rm_rf!(root) end)
+    File.mkdir_p!(root)
+
+    for {event_name, expected_status, expected_reason} <- [
+          {"release", "pending", "release_event_noop"},
+          {"schedule", "cannot-check", "resolver_not_started"},
+          {"workflow_dispatch", "cannot-check", "resolver_not_started"}
+        ] do
+      runner_temp = Path.join(root, event_name)
+      output = Path.join(runner_temp, "github-output")
+      File.mkdir_p!(runner_temp)
+      File.write!(output, "")
+
+      assert {_, 0} =
+               System.cmd("bash", ["-c", classify],
+                 env: [
+                   {"EVENT_NAME", event_name},
+                   {"INPUT_TARGET_REF", String.duplicate("a", 40)},
+                   {"RUNNER_TEMP", runner_temp},
+                   {"RUN_ID", "fixture-run"},
+                   {"GITHUB_OUTPUT", output}
+                 ],
+                 stderr_to_stdout: true
+               )
+
+      resolution_path = Path.join(runner_temp, "post-publish-resolution.json")
+      assert File.exists?(resolution_path)
+      assert {:ok, resolution} = resolution_path |> File.read!() |> Jason.decode()
+      assert resolution["status"] == expected_status
+      assert resolution["reason"] == expected_reason
+      assert resolution["event_name"] == event_name
+      assert resolution["run_id"] == "fixture-run"
+      assert resolution["target_ref"] == ""
+      assert resolution["core"] == ""
+      assert resolution["admin"] == ""
+      assert resolution["inbound"] == ""
+    end
+  end
+
+  test "real resolver shell preserves pass, blocked, and cannot-check resolution semantics" do
+    workflow = File.read!(@workflow_path)
+    resolver = workflow_step_script!(workflow, "Resolve protected target versions")
+    target_ref = String.duplicate("a", 40)
+
+    assert_resolution_fixture!(resolver, "schedule-pass",
+      event_name: "schedule",
+      completed_result: policy_result(completed: true, target_ref: target_ref),
+      expected_status: 0,
+      expected_resolution: {"pass", "exact_target_verified", target_ref}
+    )
+
+    assert_resolution_fixture!(resolver, "schedule-blocked",
+      event_name: "schedule",
+      completed_status: 1,
+      authorized_result: policy_result(status: "authorized"),
+      publication_status: "not_started",
+      expected_status: 1,
+      expected_resolution: {"blocked", "scheduled_target_not_published", ""}
+    )
+
+    assert_resolution_fixture!(resolver, "schedule-cannot-check",
+      event_name: "schedule",
+      completed_status: 17,
+      authorized_result: policy_result(status: "unknown"),
+      expected_status: 17,
+      expected_resolution: {"cannot-check", "resolver_failed", ""}
+    )
+
+    assert_resolution_fixture!(resolver, "protected-dispatch-pass",
+      event_name: "workflow_dispatch",
+      input_target_ref: target_ref,
+      input_core: "3.0.0",
+      input_admin: "3.0.0",
+      input_inbound: "2.2.0",
+      authorized_result: policy_result(status: "authorized", completed: false, authorized: true),
+      expected_status: 0,
+      expected_resolution: {"pass", "exact_target_verified", target_ref}
+    )
+  end
+
   test "policy and every repository-backed proof stay on immutable control and target refs" do
     workflow = File.read!(@workflow_path)
     resolver = extract_job!(workflow, "resolve-completed-target", "cron-guard")
@@ -376,6 +500,146 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     [_before, rest] = String.split(workflow, "\n  #{start_key}:\n", parts: 2)
     [job | _after] = String.split(rest, "\n  #{next_key}:\n", parts: 2)
     job
+  end
+
+  defp workflow_step_script!(workflow, step_name) do
+    [_before, rest] = String.split(workflow, "\n      - name: #{step_name}\n", parts: 2)
+    [_before, script_and_after] = String.split(rest, "        run: |\n", parts: 2)
+    [script | _after] = String.split(script_and_after, "\n      - name:", parts: 2)
+
+    script
+    |> String.split("\n")
+    |> Enum.map_join("\n", &String.replace_prefix(&1, "          ", ""))
+  end
+
+  defp assert_resolution_fixture!(resolver, name, options) do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-post-publish-resolver-#{name}-#{System.unique_integer([:positive])}"
+      )
+
+    on_exit(fn -> File.rm_rf!(root) end)
+    bin = Path.join(root, "bin")
+    runner_temp = Path.join(root, "runner-temp")
+    github_output = Path.join(root, "github-output")
+    File.mkdir_p!(bin)
+    File.mkdir_p!(runner_temp)
+    File.write!(github_output, "")
+
+    File.write!(Path.join(bin, "mix"), mix_fixture_shim())
+    File.write!(Path.join(bin, "bash"), target_guard_fixture_shim())
+    File.chmod!(Path.join(bin, "mix"), 0o755)
+    File.chmod!(Path.join(bin, "bash"), 0o755)
+
+    event_name = Keyword.fetch!(options, :event_name)
+    expected_status = Keyword.fetch!(options, :expected_status)
+
+    {expected_resolution_status, expected_reason, expected_target_ref} =
+      Keyword.fetch!(options, :expected_resolution)
+
+    env = [
+      {"PATH", "#{bin}:#{System.get_env("PATH")}"},
+      {"EVENT_NAME", event_name},
+      {"RUN_ID", "fixture-run"},
+      {"RUNNER_TEMP", runner_temp},
+      {"GITHUB_OUTPUT", github_output},
+      {"INPUT_TARGET_REF", Keyword.get(options, :input_target_ref, "")},
+      {"INPUT_CORE", Keyword.get(options, :input_core, "")},
+      {"INPUT_ADMIN", Keyword.get(options, :input_admin, "")},
+      {"INPUT_INBOUND", Keyword.get(options, :input_inbound, "")},
+      {"COMPLETED_RESULT", Keyword.get(options, :completed_result, "")},
+      {"COMPLETED_STATUS", to_string(Keyword.get(options, :completed_status, 0))},
+      {"AUTHORIZED_RESULT", Keyword.get(options, :authorized_result, policy_result())},
+      {"PUBLICATION_STATUS", Keyword.get(options, :publication_status, "published")}
+    ]
+
+    {resolver_output, status} =
+      System.cmd("/bin/bash", ["-c", resolver], env: env, cd: root, stderr_to_stdout: true)
+
+    assert status == expected_status, "resolver fixture output:\n#{resolver_output}"
+
+    resolution_path = Path.join(runner_temp, "post-publish-resolution.json")
+    assert {:ok, resolution} = resolution_path |> File.read!() |> Jason.decode()
+    assert resolution["status"] == expected_resolution_status
+    assert resolution["reason"] == expected_reason
+    assert resolution["event_name"] == event_name
+    assert resolution["run_id"] == "fixture-run"
+    assert resolution["target_ref"] == expected_target_ref
+
+    expected_versions =
+      if expected_resolution_status == "cannot-check",
+        do: {"", "", ""},
+        else: {"3.0.0", "3.0.0", "2.2.0"}
+
+    {expected_core, expected_admin, expected_inbound} = expected_versions
+    assert resolution["core"] == expected_core
+    assert resolution["admin"] == expected_admin
+    assert resolution["inbound"] == expected_inbound
+
+    if expected_resolution_status == "pass" do
+      assert File.read!(github_output) =~ "target_ref=#{expected_target_ref}"
+    else
+      assert File.read!(github_output) == ""
+    end
+  end
+
+  defp policy_result(overrides \\ []) do
+    defaults = %{
+      status: "completed",
+      completed: true,
+      authorized: false,
+      core: "3.0.0",
+      admin: "3.0.0",
+      inbound: "2.2.0",
+      target_ref: String.duplicate("a", 40),
+      candidate_digest: "candidate",
+      content_digest: "content",
+      proposal_head: "proposal",
+      source_sha: "source",
+      tag_sha: ""
+    }
+
+    values = Enum.into(overrides, defaults)
+
+    [
+      "status=#{values.status}",
+      "completed=#{values.completed}",
+      "authorized=#{values.authorized}",
+      "core=#{values.core}",
+      "admin=#{values.admin}",
+      "inbound=#{values.inbound}",
+      "target_ref=#{values.target_ref}",
+      "candidate_digest=#{values.candidate_digest}",
+      "content_digest=#{values.content_digest}",
+      "proposal_head=#{values.proposal_head}",
+      "source_sha=#{values.source_sha}",
+      "tag_sha=#{values.tag_sha}"
+    ]
+    |> Enum.join("\n")
+    |> Kernel.<>("\n")
+  end
+
+  defp mix_fixture_shim do
+    """
+    #!/bin/bash
+    set -euo pipefail
+    case "$*" in
+      *completed-versions*) printf '%s' "${COMPLETED_RESULT:-}"; exit "$COMPLETED_STATUS" ;;
+      *authorized-versions*) printf '%s' "${AUTHORIZED_RESULT:-}"; exit 0 ;;
+      *Jason.decode*) printf '%s' "$PUBLICATION_STATUS"; exit 0 ;;
+      *) exit 0 ;;
+    esac
+    """
+  end
+
+  defp target_guard_fixture_shim do
+    """
+    #!/bin/bash
+    set -euo pipefail
+    if [ "$1" = "scripts/check_post_publish_target.sh" ]; then exit 0; fi
+    exec /bin/bash "$@"
+    """
   end
 
   defp workflow_dispatch_input_block!(workflow, input) do
