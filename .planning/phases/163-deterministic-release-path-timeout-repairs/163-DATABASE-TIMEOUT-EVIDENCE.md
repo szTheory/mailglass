@@ -97,3 +97,90 @@ completed unseeded on its first attempt:
 
 This confirms the tracer verification but does not alter the `unattributed`
 verdict or authorize Task 2.
+
+## 163-04 immutable historical reconstruction (2026-08-26)
+
+### Search scope and immutable identity
+
+The retained local architecture evidence named CI run
+[`32433156236`](https://github.com/szTheory/mailglass/actions/runs/32433156236).
+Read-only GitHub Actions inspection confirmed its terminal identity without
+persisting generated event values or raw exception text:
+
+| Field | Recorded value |
+| --- | --- |
+| protected-run event | `pull_request` |
+| run / job | `32433156236` / `96628985134` |
+| terminal URLs | `https://github.com/szTheory/mailglass/actions/runs/32433156236` / `https://github.com/szTheory/mailglass/actions/runs/32433156236/job/96628985134` |
+| `failing_sha` | `81e738e74d59d1ab36c3e1dc3adc03ad6d0c0b84` |
+| job identity | `Core Deterministic Suite (Elixir 1.18 / OTP 27)` — failed in `Run deterministic core suite` |
+| command / toolchain | `mix test --warnings-as-errors`; Elixir `1.18.4`, OTP `27.3.4.13`, PostgreSQL 16-alpine image pinned to `sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685` |
+| structured evidence available | `%Postgrex.Error{postgres: %{code: :query_canceled}}` / SQLSTATE `57014`; the hosted log did not expose structured severity or routine fields |
+| historical property context | `Mailglass.Properties.WebhookIdempotencyConvergenceTest`, after 966 successful generated cases; the historical stack location was its per-iteration normalized shape `TRUNCATE TABLE mailglass_webhook_events CASCADE` |
+
+The historical log also contained unrelated server-log entries and generated
+values. They were deliberately excluded from this ledger. Its recorded
+historical ExUnit seed was `674219`; it is retained only as a possible
+reconstruction input and was not used for any proof run below.
+
+### Bounded failed-run screening
+
+The following ten most recent failed `CI` runs on `main` were screened
+read-only. A run is not a database candidate when the deterministic job
+succeeded, was absent, or never reached its test step. This screen therefore
+does not treat a run-level failure as database evidence.
+
+| Run | Head SHA | Deterministic-core observation | SQLSTATE 57014 authority |
+| ---: | --- | --- | --- |
+| 32865270291 | `fda6368bf43c49aab88e3f90da1d6af67ee77d35` | job succeeded | none |
+| 32410997663 | `0f0b06861b1cbb2e89f44ea4f40db754effc4017` | failed before `Run deterministic core suite` | none |
+| 32317995439 | `54aff6dc93f0b803f051d566e58c0dcae68d2ef1` | job succeeded | unrelated support-contract server log only |
+| 30941753850 | `450dc6f4552863cec48d303209cc4e2a5ae8c1ae` | deterministic job absent | none |
+| 30939432520 | `74baa55683b8ea779ceaa6c9d3c5ce838edf6e80` | deterministic job absent | none |
+| 30728159087 | `f779a50fb2762eebc44f3dd5cdb4a3b53e606ab1` | deterministic job absent | none |
+| 30726352828 | `313455a67b60c1b5221047190ed390f7449279f0` | deterministic job absent | none |
+| 30656043835 | `1ca6bccacba364a33a5317b3268750852a406b3e` | deterministic job absent | none |
+| 30642601790 | `34008138fdb779d01109da086dea0c468d5c75d9` | deterministic job absent | none |
+| 30635221236 | `981b9343a8fec7eb82d0d7df3f3e06467b04f90a` | deterministic job absent | none |
+
+### Disposable exact-SHA reconstruction
+
+The exact SHA was fetched by object ID and checked out detached in a disposable
+temporary worktree. The historical property source and current source retain
+the same `SandboxOwnership.checkout!/1` ownership door, ten-minute owner
+bound, cleanup/settle structure, generators, and `max_runs: 1000` contract.
+No temporary operation labels or current source changes were needed.
+
+Each attempt used the pinned `make toolchain` environment and only the affected
+webhook property. All were unseeded, first-only attempts; no retry, exclusion,
+reduced property count, deadline change, or global setting was used.
+
+| Attempt | Command | Seed mode | Exit | Test elapsed | Structured 57014 | Cleanup |
+| ---: | --- | --- | ---: | ---: | --- | --- |
+| 1 | `make toolchain CMD='mix test test/mailglass/properties/webhook_idempotency_convergence_test.exs --warnings-as-errors'` | unseeded | 0 | 111900ms | not observed | disposable database reset by toolchain |
+| 2 | same | unseeded | 0 | 262500ms | not observed | disposable database reset by toolchain |
+| 3 | same | unseeded | 0 | 240000ms | not observed | disposable database reset by toolchain |
+
+Effective transaction settings remained the historical finite local guards
+inside `Repo.transact/1`: `statement_timeout = 2s` and `lock_timeout = 500ms`.
+The original log's stack location is compatible with the per-iteration
+`TRUNCATE` shape, but the reproduction captured no cancellation and the
+available historical metadata lacks severity/routine. It therefore cannot
+uniquely distinguish fixture cleanup, session contention, or query ownership.
+
+### Search verdict
+
+**Verdict: `inconclusive`.** The immutable run proves that a structured 57014
+once occurred at the stated SHA and property, but all three allowed disposable
+first attempts passed without a structured cancellation. No single current
+fixture/session/isolation/query owner is attributed, and no repair, regression,
+threshold, or post-repair three-run proof is authorized.
+
+- **DTRM-01 boundary and precision remain flagged:** there is no reproduced
+  cancellation from which to measure below/equal/above behavior; equality
+  remains unproven and must not be treated as success.
+- **DTRM-02 remains blocked:** the three passes above are historical
+  reconstruction diagnostics, not post-repair proof.
+- **Next action:** Task 2 requires a maintainer to either supply additional
+  immutable structured evidence that enables a unique reproduction or explicitly
+  re-scope/defer DTRM-01 through planning artifacts.
