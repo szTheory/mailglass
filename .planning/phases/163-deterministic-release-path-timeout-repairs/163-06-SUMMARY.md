@@ -13,7 +13,7 @@ key-files:
   modified:
     - .github/workflows/ci.yml
 key-decisions:
-  - Freeze 5d125ad2 as the code-only repair SHA and obtain protected evidence through a normal PR trigger.
+  - Freeze cf91502b as the code-only repair SHA and obtain protected evidence through a normal PR trigger.
 requirements-completed: []
 completed: 2026-08-26
 status: complete
@@ -21,7 +21,7 @@ status: complete
 
 # Phase 163 Plan 06: Local Integration Summary
 
-**Both unchanged complete release-path gates passed first attempt, and the code-only implementation is frozen at `5d125ad210ef5ff2afb3c537dce03e9b312ae533` for protected PR evidence.**
+**Both unchanged complete release-path gates passed first attempt, and the code-only implementation is frozen at `cf91502b282af884a7d12877977e1258a2b2ec94` for protected PR evidence.**
 
 ## Local integration
 
@@ -34,7 +34,7 @@ The browser run reached readiness in 204ms, passed the repaired 117-cell body in
 
 ## Automated protected handoff
 
-Commits `9b1a7c0c`, `7b51ba44`, and `5d125ad2` add `scripts/ci_monitor.cjs` and five Node contract tests, then roll those tests into the existing Node-enabled operator-browser job. The wrapper exposes workflow state, bounded `runs`, exact-run `inspect`, PR identity/check inspection, `watch`/`fail-fast`, failed logs, and file-backed PR creation; it never dispatches, merges, or releases.
+Commits `9b1a7c0c`, `7b51ba44`, `5d125ad2`, and `cf91502b` add `scripts/ci_monitor.cjs` and five Node contract tests, then roll those tests into the existing Node-enabled operator-browser job. The wrapper exposes workflow state, bounded `runs`, exact-run `inspect`, PR identity/check inspection, policy-safe title repair, `watch`/`fail-fast`, failed logs, and file-backed PR creation; it never dispatches, merges, or releases.
 
 Branch `phase-163-deterministic-timeout-repairs` was pushed and PR #228 opened through that observable path. DTRM-02 and DTRM-04 remain pending only until their normally triggered exact-SHA jobs are terminal and successful.
 

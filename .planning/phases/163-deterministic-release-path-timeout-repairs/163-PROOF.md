@@ -1,6 +1,6 @@
 ---
 phase: 163-deterministic-release-path-timeout-repairs
-repair_sha: 5d125ad210ef5ff2afb3c537dce03e9b312ae533
+repair_sha: cf91502b282af884a7d12877977e1258a2b2ec94
 protected_run_id: pending
 protected_verdict: pending
 human_uat_required: false
@@ -19,7 +19,7 @@ The maintainer approved automatic resolution with machine verification only:
 
 ## Frozen code identity
 
-`repair_sha: 5d125ad210ef5ff2afb3c537dce03e9b312ae533`
+`repair_sha: cf91502b282af884a7d12877977e1258a2b2ec94`
 
 The repair identity contains four implementation commits:
 
@@ -31,6 +31,7 @@ The repair identity contains four implementation commits:
 | `9b1a7c0c` | Observable exact-run monitor and CI contract test |
 | `7b51ba44` | Exact PR identity and check-rollup inspection |
 | `5d125ad2` | Read-only workflow activation-state inspection |
+| `cf91502b` | Observable conventional-title repair after the PR policy gate failed |
 
 ## Focused proof
 
