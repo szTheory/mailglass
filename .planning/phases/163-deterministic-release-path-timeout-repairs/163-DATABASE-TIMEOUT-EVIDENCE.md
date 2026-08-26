@@ -184,3 +184,54 @@ threshold, or post-repair three-run proof is authorized.
 - **Next action:** Task 2 requires a maintainer to either supply additional
   immutable structured evidence that enables a unique reproduction or explicitly
   re-scope/defer DTRM-01 through planning artifacts.
+
+## Automated maintainer decision and recurrent evidence capture (2026-08-26)
+
+The maintainer approved the `re-scope/defer-dtrm-01` branch with a concrete
+replacement outcome: bounded non-reproduction is accepted without a speculative
+database repair, provided the next recurrence produces safe, exact-run evidence
+automatically and the complete deterministic property contract remains enforced.
+No human UAT or manual failure classification is required.
+
+### Implemented evidence boundary
+
+Commit `29eb8b3f` adds a failure-observation seam around the two existing
+1,000-run properties without changing their generators, owner bounds, cleanup,
+database settings, schemas, APIs, or assertions. When
+`MAILGLASS_TIMEOUT_EVIDENCE_PATH` is set, the suite writes a versioned manifest
+bound to `GITHUB_RUN_ID`, `GITHUB_JOB`, `GITHUB_SHA`, event, exact command, and
+Elixir/OTP versions. A structured PostgreSQL cancellation appends only:
+
+- stable allowlisted operation identifier;
+- SQLSTATE `57014` / code `query_canceled`;
+- structured severity and routine when Postgrex supplies them.
+
+Raw exception messages, SQL, generated values, recipients, payloads, tenant
+identities, and secrets are never persisted. The original `%Postgrex.Error` is
+re-raised with its stacktrace, so observation cannot turn a failure green.
+
+Commit `f46aad8b` wires the existing `Core Deterministic Suite` step to upload
+`database-timeout-evidence-${GITHUB_RUN_ID}` only when that exact step fails.
+Missing evidence is an upload error, retention is 90 days, and the action is
+pinned by full commit digest. No schedule, retry, seed, exclusion, new job,
+global timeout, or database setting was added.
+
+### Current-tree proof
+
+| Command | Result | Timeout observation |
+| --- | --- | --- |
+| `mix test test/mailglass/test_support/timeout_evidence_test.exs test/scripts/timeout_evidence_ci_contract_test.exs test/mailglass/properties/idempotency_convergence_test.exs test/mailglass/properties/webhook_idempotency_convergence_test.exs` | 2 properties, 6 tests, 0 failures in 64.4s | none |
+| `mix test --warnings-as-errors` | 23 properties, 1,964 tests, 0 failures, 7 intentional skips in 174.7s | manifest only; no SQLSTATE 57014 record |
+
+The recorder contract also proves that a synthetic structured 57014 is
+sanitized, appended at the stable operation boundary, and re-raised; unsafe
+free-form operation labels are rejected before execution.
+
+### Final database verdict
+
+**Verdict: `bounded-non-reproduced-with-recurrence-capture`.** The immutable
+historical failure remains real, the three exact-SHA attempts and complete
+current suite did not reproduce it, and no current database owner is uniquely
+attributable. Therefore no database repair is made. DTRM-01 is satisfied by the
+approved rescope: the invariant is retained and a future protected recurrence
+will carry exact, non-PII structured evidence into the already-required CI lane.

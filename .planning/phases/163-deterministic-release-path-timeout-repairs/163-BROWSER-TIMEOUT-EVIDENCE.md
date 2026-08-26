@@ -105,3 +105,68 @@ timeout, retry, worker, UI, package-script, configuration-global, lifecycle, CI-
 or deadline change is authorized. This entry supersedes neither the prior `unattributed`
 diagnostic verdict nor its no-repair decision; it supplies the bounded evidence required
 for the Task 2 maintainer decision.
+
+## Current CI-mode reproduction and narrow repair (2026-08-26)
+
+The maintainer authorized automatic selection of the evidence-backed local repair
+and explicitly rejected human UAT as a completion gate. A complete current-tree
+`CI=true npm run test:operator-browser` run then reproduced the timeout at one
+named owner:
+
+| Observation | Value |
+| --- | ---: |
+| Server readiness | 243ms |
+| Discovered cells | 117 |
+| Full matrix first attempt | timed out at 30,002ms |
+| Existing CI retry | timed out at 30,083ms |
+| Sibling stress-only body | passed in 3,697ms |
+
+The two exhausted attempts shared the exact title `every gallery specimen renders
+without horizontal overflow across 320/390/768/1440 × light/dark/system`.
+Readiness and the sibling body were both healthy, which uniquely attributes the
+current failure to the complete 117-cell matrix body rather than boot, fixture
+seeding, Playwright lifecycle, or the global suite.
+
+### Repair
+
+Commit `7b9da5b7` gives only that named body a finite `60,000ms` timeout. The
+configured global test timeout remains `30,000ms`, CI retries remain one, local
+retries remain zero, the web-server lifecycle remains `300,000ms`, the workflow
+job remains 30 minutes, and execution remains one worker. No UI, locator,
+viewport, theme, stress specimen, discovered cell, overflow assertion, package,
+dependency, or schedule changed.
+
+The bound is approximately twice the reproduced expiry and remains above all
+three current first-attempt observations. Equality is still exhaustion under
+Playwright; the repair does not convert the limit to an unlimited timeout.
+
+### Three focused first-attempt passes
+
+Each command was `CI=true npx playwright test e2e/gallery-matrix.spec.js
+--config=playwright.config.cjs --workers=1`. The existing CI retry was available
+but never used because every first attempt passed.
+
+| Run | Readiness | Full 117-cell matrix | Stress body | Result |
+| ---: | ---: | ---: | ---: | --- |
+| 1 | 236ms | 44,027ms | 4,604ms | 2 passed, first attempt |
+| 2 | 375ms | 47,553ms | 3,685ms | 2 passed, first attempt |
+| 3 | 232ms | 50,256ms | 3,751ms | 2 passed, first attempt |
+
+### Complete operator-browser integration
+
+At code SHA `f46aad8be34fffd2acb7dba52cc3191d8e16a5ce`, the unchanged
+`CI=true npm run test:operator-browser` command passed 176 tests with one
+intentional skip in 3.3 minutes. Readiness completed in 204ms, the repaired
+117-cell matrix passed first attempt in 37,344ms, and its sibling passed in
+3,041ms. No retry ran.
+
+The CI reporter and server recorder now produce versioned exact-run manifests,
+safe stage durations, test title/status/retry/duration, and trace basenames. On
+an operator-browser step failure, commit `f46aad8b` uploads the unique run/node
+artifact for 90 days with strict missing-file behavior. Raw errors, page output,
+payloads, and free-form application logs are excluded.
+
+**Final browser verdict: `reproduced-repaired-proven`.** DTRM-03 is satisfied by
+an observed current red result, a single test-local finite repair, three focused
+first-attempt passes, and the complete first-attempt operator-browser pass with
+all matrix dimensions intact.

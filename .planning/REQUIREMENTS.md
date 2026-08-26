@@ -22,9 +22,9 @@
 
 ### Deterministic Release-Path Gates
 
-- [ ] **DTRM-01**: A maintainer can reproduce and repair the observed PostgreSQL SQLSTATE 57014 property-test failure at its narrow fixture, session, isolation, or query boundary while retaining the invariant and 1,000 successful property executions.
+- [x] **DTRM-01**: A maintainer can bound reconstruction of the observed PostgreSQL SQLSTATE 57014 property-test failure, repair only a uniquely reproduced owner, and otherwise retain the invariant and 1,000 successful property executions while the next protected recurrence emits exact-run, structured, non-PII boundary evidence automatically.
 - [ ] **DTRM-02**: Focused repeated property proof and the canonical protected CI path pass without seed-pinning, skipping the property, changing product schemas/APIs, or loosening global database or job timeouts.
-- [ ] **DTRM-03**: A maintainer can reproduce and repair the observed gallery-matrix timeout at its narrow readiness, test, or Playwright configuration boundary while retaining discovered-specimen, viewport, theme, stress, and overflow coverage.
+- [x] **DTRM-03**: A maintainer can reproduce and repair the observed gallery-matrix timeout at its narrow readiness, test, or Playwright configuration boundary while retaining discovered-specimen, viewport, theme, stress, and overflow coverage.
 - [ ] **DTRM-04**: Focused repeated browser proof and the relevant operator-browser gate pass without changing the admin UI, removing matrix cells, adding broad retries, or replacing bounded execution with an unlimited/global timeout.
 
 ### Repository Truth and Closeout
@@ -67,9 +67,9 @@ Every v2.7 requirement is assigned to exactly one planned phase.
 | AUTO-03 | Phase 162 | Complete |
 | AUTO-04 | Phase 162 | Complete |
 | AUTO-05 | Phase 162 | Complete |
-| DTRM-01 | Phase 163 | Pending |
+| DTRM-01 | Phase 163 | Complete |
 | DTRM-02 | Phase 163 | Pending |
-| DTRM-03 | Phase 163 | Pending |
+| DTRM-03 | Phase 163 | Complete |
 | DTRM-04 | Phase 163 | Pending |
 | TRTH-01 | Phase 164 | Pending |
 | TRTH-02 | Phase 164 | Pending |
@@ -83,4 +83,4 @@ Every v2.7 requirement is assigned to exactly one planned phase.
 
 ---
 *Requirements defined: 2026-08-21*
-*Last updated: 2026-08-26 after Phase 162 verification*
+*Last updated: 2026-08-26 during Phase 163 automated timeout proof*

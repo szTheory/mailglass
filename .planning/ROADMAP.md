@@ -55,7 +55,7 @@
 
 - [x] **Phase 161: Canonical Workspace and Evidence Preservation** - Establish an auditable canonical `main` and recoverably disposition all workspace and Git residue. (completed 2026-08-22)
 - [x] **Phase 162: Protected Release and Scheduled-Control Recovery** - Reconcile release state and restore truthful proposal, hygiene, and post-publish outcomes through existing protected controls. (completed 2026-08-26)
-- [ ] **Phase 163: Deterministic Release-Path Timeout Repairs** - Repair the two observed timeout failures narrowly while retaining their complete proof contracts.
+- [ ] **Phase 163: Deterministic Release-Path Timeout Repairs** - Repair uniquely reproduced timeout owners, retain complete proof contracts, and capture safe structured evidence automatically when bounded reconstruction does not recur.
 - [ ] **Phase 164: Repository Truth Reconciliation and Closeout** - Align maintenance evidence with settled facts and prove the final quiet repository state.
 
 ## Phase Details
@@ -153,23 +153,23 @@ Plans:
 **Requirements**: DTRM-01, DTRM-02, DTRM-03, DTRM-04
 **Success Criteria** (what must be TRUE):
 
-  1. A maintainer can reproduce the PostgreSQL SQLSTATE 57014 property failure and verify its narrow fixture, session, isolation, or query-boundary repair while all 1,000 property executions retain the invariant.
+  1. A maintainer can bound exact-SHA reconstruction of the PostgreSQL SQLSTATE 57014 property failure, repair only a uniquely reproduced owner, and otherwise capture the next protected recurrence automatically while all 1,000 property executions retain the invariant.
   2. Repeated focused property proof and the canonical protected CI path pass without seed-pinning, skips, product-schema/API changes, or global database/job timeout relaxation.
   3. A maintainer can reproduce the gallery-matrix timeout and verify a narrow readiness, test, or Playwright-boundary repair while discovered specimens, viewport, theme, stress, and overflow coverage remain intact.
   4. Repeated focused browser proof and the relevant operator-browser gate pass without matrix removal, broad retries, visual changes, or unlimited/global timeout expansion.
 
-**Plans**: 3/8 plans executed
+**Plans**: 6/8 plans executed
 **Wave 1**
 
 - [x] 163-01-PLAN.md
 - [x] 163-02-PLAN.md
-- [ ] 163-04-PLAN.md
-- [ ] 163-05-PLAN.md
+- [x] 163-04-PLAN.md
+- [x] 163-05-PLAN.md
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 163-03-PLAN.md
-- [ ] 163-06-PLAN.md
+- [x] 163-06-PLAN.md
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -200,5 +200,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
-| 163. Deterministic Release-Path Timeout Repairs | 3/8 | In Progress|  |
+| 163. Deterministic Release-Path Timeout Repairs | 6/8 | In Progress |  |
 | 164. Repository Truth Reconciliation and Closeout | 0/TBD | Not started | - |

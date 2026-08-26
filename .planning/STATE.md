@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 163
-current_phase_name: Deterministic Release-Path Timeout Repairs
-status: ready_to_execute
-stopped_at: Phase 163 gap-closure plans verified and ready for execution
-last_updated: "2026-08-26T15:54:57Z"
+current_phase_name: deterministic-release-path-timeout-repairs
+status: verifying
+stopped_at: Phase 163 exact-SHA protected PR run pending
+last_updated: "2026-08-26T17:12:00Z"
 last_activity: 2026-08-26
-last_activity_desc: Phase 163 gap-closure planning complete — 5 plans ready
+last_activity_desc: Phase 163 local integration passed and PR #228 opened for protected proof
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 26
-  completed_plans: 18
+  completed_plans: 24
   percent: 50
 ---
 
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-26)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 163 — Deterministic Release-Path Timeout Repairs
+**Current focus:** Phase 163 — deterministic-release-path-timeout-repairs
 
 ## Current Position
 
-Phase: 163 — Deterministic Release-Path Timeout Repairs
-Plan: 3 of 8 complete (5 gap-closure plans ready)
-Status: Ready to execute
-Last activity: 2026-08-26 — Phase 163 gap-closure planning complete
+Phase: 163 (deterministic-release-path-timeout-repairs) — VERIFYING
+Plan: 7 of 8
+Status: Awaiting normal protected PR result
+Last activity: 2026-08-26 — local integration passed; PR #228 opened automatically
 
-Progress: [██████████████░░░░░░] 18/26 plans (69%)
+Progress: [██████████████████░░] 24/26 plans (92%)
 
 ## Performance Metrics
 
@@ -49,7 +49,7 @@ Progress: [██████████████░░░░░░] 18/26 p
 |-------|-------|-------|----------|
 | 161. Canonical Workspace and Evidence Preservation | 5 | 72m | 14m |
 | 162. Protected Release and Scheduled-Control Recovery | 13 | — | — |
-| 163. Deterministic Release-Path Timeout Repairs | 0 | — | — |
+| 163. Deterministic Release-Path Timeout Repairs | 6 | — | — |
 | 164. Repository Truth Reconciliation and Closeout | 0 | — | — |
 **Per-Plan Metrics:**
 
@@ -73,6 +73,12 @@ Progress: [██████████████░░░░░░] 18/26 p
 | Phase 162 P11 | 3m | 1 tasks | 2 files |
 | Phase 162 P12 | 8m | 1 tasks | 2 files |
 | Phase 162 P13 | 4min | 1 tasks | 2 files |
+| Phase 163 P01 | blocked close-out | 1 task | 2 files |
+| Phase 163 P02 | 5m | 1 task | 3 files |
+| Phase 163 P03 | blocked close-out | 0 tasks | 1 file |
+| Phase 163 P04 | continuation | 3 tasks | 8 files |
+| Phase 163 P05 | continuation | 3 tasks | 8 files |
+| Phase 163 P06 | 8m | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -90,6 +96,9 @@ Progress: [██████████████░░░░░░] 18/26 p
 - [Phase 162]: Only a fresh exact repository-admin response authorizes protected release steps; ordinary push, schedule, and empty-digest dispatch paths remain proposal-only.
 - [Phase 162]: External GitHub bytes require decode and list-shape validation; unavailable evidence is `cannot-check`, and summaries consume the same persisted result as retained artifacts.
 - [Phase 162]: Scheduled-control UAT binds event, run, and workflow SHA to protected `main`; all three current-main evidence chains verified on 2026-08-26 without manual substitution.
+- [Phase 163]: Bounded non-reproduction of the historical database cancellation authorizes no speculative repair; the existing deterministic lane now captures the next structured recurrence automatically.
+- [Phase 163]: The current gallery timeout belongs to the complete 117-cell body; only that test receives a finite 60-second bound while global policy and coverage remain unchanged.
+- [Phase 163]: Human UAT is removed from timeout proof; local integration and normally triggered exact-SHA protected jobs are the release-path authority.
 
 ### Pending Todos
 
@@ -97,7 +106,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 163's original diagnostics did not reproduce either timeout. Gap-closure Plans 163-04 and 163-05 now perform bounded immutable-evidence reconstruction and block for an explicit evidence-or-rescope decision before any repair; speculative changes remain unauthorized.
+- PR #228's normal protected run must finish successfully for the frozen Phase 163 repair branch before DTRM-02/DTRM-04 and final validation can close.
 
 ## Deferred Items
 
@@ -108,5 +117,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-08-26T15:54:57Z
-Stopped at: Phase 163 gap-closure plans verified and ready for execution
-Resume file: .planning/phases/163-deterministic-release-path-timeout-repairs/163-04-PLAN.md
+Stopped at: Phase 163 exact-SHA protected PR run pending
+Resume file: .planning/phases/163-deterministic-release-path-timeout-repairs/163-07-PLAN.md
