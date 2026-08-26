@@ -5,15 +5,15 @@ milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 164
 current_phase_name: repository-truth-reconciliation-and-closeout
 status: executing
-stopped_at: Completed 164-04-PLAN.md
-last_updated: "2026-08-26T21:23:59.985Z"
+stopped_at: Completed 164-05-PLAN.md
+last_updated: "2026-08-26T21:39:27.204Z"
 last_activity: 2026-08-26
 last_activity_desc: Completed 164-01 locked stale-sweep tracer
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 33
-  completed_plans: 30
+  completed_plans: 31
   percent: 75
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (repository-truth-reconciliation-and-closeout) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 Status: Ready to execute
 Last activity: 2026-08-26 — Completed 164-01 locked stale-sweep tracer
 
-Progress: [████████░░] 27/33 planned plans ([█████████░] 91%)
+Progress: [████████░░] 27/33 planned plans ([█████████░] 94%)
 
 ## Performance Metrics
 
@@ -85,6 +85,7 @@ Progress: [████████░░] 27/33 planned plans ([█████
 | Phase 164-repository-truth-reconciliation-and-closeout P02 | 3m | 1 tasks | 2 files |
 | Phase 164-repository-truth-reconciliation-and-closeout P03 | 3m | 1 tasks | 4 files |
 | Phase 164 P04 | 8m | 1 tasks | 2 files |
+| Phase 164 P05 | 9m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,8 @@ Progress: [████████░░] 27/33 planned plans ([█████
 - [Phase ?]: Current package compatibility guidance is scoped in each README and derives expected major.minor values from package manifests.
 - [Phase ?]: Historical and upgrade-bounded version evidence remains untouched.
 - [Phase ?]: Repository-truth audit scope derives from committed ignore rules, Git-tracked proof, and Phase 164 plan files.
+- [Phase ?]: Closeout remains read-only and writes volatile report evidence under the existing ignored tmp/ rule.
+- [Phase ?]: A quiet verdict requires exact main, exact successful CI, current provenance-valid controls, and a valid exact-one ledger.
 
 ### Pending Todos
 
@@ -129,6 +132,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-08-26T21:23:59.969Z
-Stopped at: Completed 164-04-PLAN.md
+Last session: 2026-08-26T21:39:27.193Z
+Stopped at: Completed 164-05-PLAN.md
 Resume file: None
