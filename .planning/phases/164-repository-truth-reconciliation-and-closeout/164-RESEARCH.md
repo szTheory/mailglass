@@ -1,7 +1,7 @@
 # Phase 164: Repository Truth Reconciliation and Closeout - Research
 
-**Researched:** 2026-08-26  
-**Domain:** Repository-operational truth, durable evidence, and maintainer closeout  
+**Researched:** 2026-08-26
+**Domain:** Repository-operational truth, durable evidence, and maintainer closeout
 **Confidence:** HIGH
 
 <user_constraints>
@@ -384,5 +384,5 @@ Use the actual chosen parser/schema rather than a new runtime dependency. [VERIF
 - Architecture: HIGH — locked decisions prescribe a dual-proof composition over the existing controls. [VERIFIED: Phase 164 CONTEXT.md]
 - Pitfalls: HIGH — each is evidenced by current stale output, existing three-state controls, or historical/current documentation split. [VERIFIED: repository inspection]
 
-**Research date:** 2026-08-26  
+**Research date:** 2026-08-26
 **Valid until:** 2026-09-02 for live GitHub/Hex identities; repository-structure findings remain valid until the phase changes them. [VERIFIED: GitHub API; Hex API]
