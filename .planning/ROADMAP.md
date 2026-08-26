@@ -190,7 +190,7 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 1/7 plans executed
+**Plans**: 2/7 plans executed
 
 Plans:
 
@@ -200,7 +200,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 164-02-PLAN.md — Reconcile the current protected release/recovery maintainer path and bound historical procedures.
+- [x] 164-02-PLAN.md — Reconcile the current protected release/recovery maintainer path and bound historical procedures.
 - [ ] 164-03-PLAN.md — Bind current package README constraints to authoritative manifests.
 - [ ] 164-04-PLAN.md — Complete the exact-one artifact and ignore-rule disposition ledger.
 
@@ -225,4 +225,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 1/7 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 2/7 | In Progress|  |
