@@ -3,6 +3,39 @@ defmodule Mailglass.DocsContractTest do
   import Mailglass.DocsHelpers
 
   describe "README.md contract" do
+    test "current package compatibility guidance is derived from every package manifest" do
+      core_version = package_major_minor!("mix.exs")
+      admin_version = package_major_minor!("mailglass_admin/mix.exs")
+      inbound_version = package_major_minor!("mailglass_inbound/mix.exs")
+
+      root_guidance = current_compatibility_section!(File.read!("README.md"), "README.md")
+
+      assert dependency_constraint!(root_guidance, "mailglass", "README.md") == core_version
+      assert dependency_constraint!(root_guidance, "mailglass_admin", "README.md") == admin_version
+      assert dependency_constraint!(root_guidance, "mailglass_inbound", "README.md") == inbound_version
+
+      admin_guidance =
+        current_compatibility_section!(File.read!("mailglass_admin/README.md"), "mailglass_admin/README.md")
+
+      assert dependency_constraint!(admin_guidance, "mailglass", "mailglass_admin/README.md") ==
+               core_version
+
+      assert dependency_constraint!(admin_guidance, "mailglass_admin", "mailglass_admin/README.md") ==
+               admin_version
+
+      inbound_guidance =
+        current_compatibility_section!(
+          File.read!("mailglass_inbound/README.md"),
+          "mailglass_inbound/README.md"
+        )
+
+      assert dependency_constraint!(inbound_guidance, "mailglass_inbound", "mailglass_inbound/README.md") ==
+               inbound_version
+
+      assert dependency_constraint!(inbound_guidance, "mailglass", "mailglass_inbound/README.md") ==
+               core_version
+    end
+
     test "installation snippet targets the current stable surface" do
       blocks = extract_code_blocks("README.md")
       install_block = Enum.find(blocks, &(&1 =~ "mix mailglass.install"))
@@ -682,6 +715,33 @@ defmodule Mailglass.DocsContractTest do
          else: []
 
     Enum.uniq(missing ++ stale ++ ui_claim)
+  end
+
+  defp package_major_minor!(mixfile_path) do
+    mixfile = File.read!(mixfile_path)
+
+    [_, version] =
+      Regex.run(~r/@version\s+"(\d+\.\d+\.\d+)"/, mixfile) ||
+        flunk("#{mixfile_path} is missing an @version X.Y.Z manifest value")
+
+    version
+    |> String.split(".")
+    |> Enum.take(2)
+    |> Enum.join(".")
+  end
+
+  defp current_compatibility_section!(readme, path) do
+    case Regex.run(~r/^## Current package compatibility\n\n([\s\S]*?)(?=^## |\z)/m, readme) do
+      [_, section] -> section
+      _ -> flunk("#{path} is missing its current package compatibility section")
+    end
+  end
+
+  defp dependency_constraint!(section, dependency, path) do
+    case Regex.run(~r/\{:#{dependency},\s*"~>\s*(\d+\.\d+)/, section) do
+      [_, major_minor] -> major_minor
+      _ -> flunk("#{path} is missing a current {:#{dependency}, \"~> X.Y\"} constraint")
+    end
   end
 
   defp v26_required_contract_tokens do
