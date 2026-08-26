@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene
-current_phase: 162
-current_phase_name: protected-release-and-scheduled-control-recovery
-status: executing
-stopped_at: Completed 162-13-PLAN.md
-last_updated: "2026-08-24T20:42:17.831Z"
-last_activity: 2026-08-24
-last_activity_desc: Phase 162 execution started
+current_phase: 163
+current_phase_name: Deterministic Release-Path Timeout Repairs
+status: planning
+stopped_at: Phase 162 complete, ready to plan Phase 163
+last_updated: "2026-08-26T14:17:54.499Z"
+last_activity: 2026-08-26
+last_activity_desc: Phase 162 complete, transitioned to Phase 163
 progress:
   total_phases: 4
   completed_phases: 2
@@ -21,25 +21,25 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-22)
+See: .planning/PROJECT.md (updated 2026-08-26)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 162 — protected-release-and-scheduled-control-recovery
+**Current focus:** Phase 163 — Deterministic Release-Path Timeout Repairs
 
 ## Current Position
 
-Phase: 162 (protected-release-and-scheduled-control-recovery) — EXECUTING
-Plan: 3 of 13
-Status: Ready to execute
-Last activity: 2026-08-24 — Phase 162 execution started
+Phase: 163 — Deterministic Release-Path Timeout Repairs
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-08-26 — Phase 162 complete, transitioned to Phase 163
 
-Progress: [██████████] 100%
+Progress: [████████████████████] 18/18 plans (100%)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 5
+- Total plans completed: 18
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -48,7 +48,7 @@ Progress: [██████████] 100%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 161. Canonical Workspace and Evidence Preservation | 5 | 72m | 14m |
-| 162. Protected Release and Scheduled-Control Recovery | 0 | — | — |
+| 162. Protected Release and Scheduled-Control Recovery | 13 | — | — |
 | 163. Deterministic Release-Path Timeout Repairs | 0 | — | — |
 | 164. Repository Truth Reconciliation and Closeout | 0 | — | — |
 **Per-Plan Metrics:**
@@ -86,29 +86,10 @@ Progress: [██████████] 100%
 - [Phase 161]: All 12 archive identities have independent named preservation refs; the verified cleanup queue had no eligible `remove` row.
 - [Phase 161]: WT-03 dirty publish-summary evidence remains retained; Phase 162 owns release interpretation.
 - [Phase 161]: Workspace/evidence verification is automated through the live Git auditor and disposable-repository CI contracts; 15/15 UAT checks require no human review.
-- [Phase 162]: Machine-observable verification defaults to deterministic CI, browser/integration evidence, or a read-only recurring monitor; human_needed requires an explicit irreducible judgment rationale.
-- [Phase 162]: Scheduled-control liveness must bind every latest schedule run to the exact current protected-main SHA before its sweep can satisfy UAT; recent pre-deployment runs remain pending rather than passing on age alone.
-- [Phase ?]: PR #222 remains retained only for a future exact candidate-digest protected dispatch because its fresh head SHA differs from the ledger proposal SHA.
-- [Phase ?]: Authorized plus publication:not_started is blocked evidence, never merge, tag, or publish authority.
-- [Phase ?]: Proposal control JSON is written before non-pass exits and is the sole source for its summary and artifact.
-- [Phase ?]: Ordinary release-please entries remain proposal-only; exact candidate-digest dispatch remains the sole merge boundary.
-- [Phase ?]: Repository hygiene uses cannot-check over blocked over pass; unavailable evidence never becomes a complete policy verdict.
-- [Phase ?]: Repository-hygiene Actions summary and artifact are rendered from the Mix task JSON result map.
-- [Phase ?]: Scheduled authorized plus publication:not_started is blocked evidence, never a fallback target or release authority.
-- [Phase ?]: PR #222 remains retained only for the existing exact candidate-digest protected dispatch; current distinct identities prohibit ordinary release action.
-- [Phase ?]: Post-change scheduled observations remain pending with named cron conditions; manual dispatch is never schedule proof.
-- [Phase ?]: Proposal capture owns one status-preserving EXIT handler so cleanup cannot replace output publication.
-- [Phase ?]: Only exact proposal identity equality passes; identity mismatch remains blocked and retains observed fields.
-- [Phase ?]: Post-publish classification writes a bounded artifact before resolver work, while only exact immutable validation can finalize pass.
-- [Phase ?]: Release events remain successful pending no-ops with empty target identity and no consumer-proof outputs.
-- [Phase ?]: Only an exact zero-row scheduled proposal query may skip capture as pending/no_open_proposal.
-- [Phase ?]: The final proposal-control gate accepts pending only when its reason is no_open_proposal.
-- [Phase ?]: Scheduled hygiene CI evidence is selected with exact HEAD SHA via gh --commit, never an inferred branch.
-- [Phase ?]: Protected exact-digest releases skip proposal-only capture, reporting, upload, and final gating; empty digests retain the existing bounded control tail.
-- [Phase ?]: Malformed and non-list gh run-list responses are unavailable cannot-check evidence, while valid run lists retain exact SHA, completed, and success validation.
-- [Phase ?]: Only an exact GitHub repository-admin permission response authorizes a nonempty-digest protected release path.
-- [Phase ?]: Proposal-only push, schedule, and empty-digest dispatch paths retain their existing PAT use and behavior.
-- [Phase ?]: Successful gh pr list output must decode to a JSON list before policy classification; malformed and non-list output remains cannot-check evidence.
+- [Phase 162]: PR #222 remains retained only for a future exact candidate-digest protected dispatch; its live head and authorized ledger candidate are distinct identities.
+- [Phase 162]: Only a fresh exact repository-admin response authorizes protected release steps; ordinary push, schedule, and empty-digest dispatch paths remain proposal-only.
+- [Phase 162]: External GitHub bytes require decode and list-shape validation; unavailable evidence is `cannot-check`, and summaries consume the same persisted result as retained artifacts.
+- [Phase 162]: Scheduled-control UAT binds event, run, and workflow SHA to protected `main`; all three current-main evidence chains verified on 2026-08-26 without manual substitution.
 
 ### Pending Todos
 
@@ -116,8 +97,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 162 must refresh time-sensitive remote PR, branch-protection, Actions-run, tag/Hex, and release-target evidence before deciding any recovery outcome.
-- Applicable scheduled-run proof may require elapsed time; it must remain explicitly pending or cannot-check rather than inferred from a control run.
+- Phase 163 must reproduce the SQLSTATE 57014 property and gallery-matrix timeouts at their narrow boundaries without broad timeout increases, retries, property-count reduction, or matrix removal.
 
 ## Deferred Items
 
@@ -127,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-24T20:42:17.812Z
-Stopped at: Completed 162-13-PLAN.md
+Last session: 2026-08-26T14:17:54.499Z
+Stopped at: Phase 162 complete, ready to plan Phase 163
 Resume file: None
