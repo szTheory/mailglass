@@ -2,7 +2,10 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   use ExUnit.Case, async: true
 
   @repo_root Path.expand("../..", __DIR__)
-  @ledger Path.join(@repo_root, ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv")
+  @ledger Path.join(
+            @repo_root,
+            ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
+          )
   @headers [
     "stable_id",
     "subject",
@@ -44,21 +47,28 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   end
 
   @tag :tmp_dir
-  test "the parser rejects duplicate subjects, blank required fields, and unknown dispositions", %{tmp_dir: tmp_dir} do
+  test "the parser rejects duplicate subjects, blank required fields, and unknown dispositions", %{
+    tmp_dir: tmp_dir
+  } do
     valid = valid_ledger_row()
     duplicate_subject = String.replace(valid, "D-08", "D-09")
 
     malformed_ledger = Path.join(tmp_dir, "malformed-ledger.tsv")
 
     File.write!(malformed_ledger, header_line() <> "\n" <> valid <> "\n" <> duplicate_subject)
+
     assert {:error, {:duplicate_subject, "scheduled-control-sweep.json"}} =
              malformed_ledger |> File.read!() |> parse_ledger()
 
     blank_required_field = String.replace(valid, "generated-output", "")
-    assert {:error, {:blank_required_field, "kind"}} = parse_ledger(header_line() <> "\n" <> blank_required_field)
+
+    assert {:error, {:blank_required_field, "kind"}} =
+             parse_ledger(header_line() <> "\n" <> blank_required_field)
 
     invalid_disposition = String.replace(valid, "\tremove\t", "\tdestroy\t")
-    assert {:error, {:invalid_disposition, "destroy"}} = parse_ledger(header_line() <> "\n" <> invalid_disposition)
+
+    assert {:error, {:invalid_disposition, "destroy"}} =
+             parse_ledger(header_line() <> "\n" <> invalid_disposition)
   end
 
   test "the stale sweep is removed without adding a proof-hiding ignore rule" do
