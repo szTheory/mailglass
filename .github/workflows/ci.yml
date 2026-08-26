@@ -445,7 +445,19 @@ jobs:
         # Full root suite: no directory filter, exclusions, fixed seed, or
         # advisory continuation. Suite-floor and skip-ledger contracts run as
         # part of this invocation and reject silent scope erosion.
+        id: deterministic-core
+        env:
+          MAILGLASS_TIMEOUT_EVIDENCE_PATH: tmp/timeout-evidence/database.ndjson
+          MAILGLASS_TIMEOUT_EVIDENCE_COMMAND: mix test --warnings-as-errors
         run: mix test --warnings-as-errors
+      - name: Upload deterministic timeout evidence
+        if: ${{ failure() && steps.deterministic-core.outcome == 'failure' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: database-timeout-evidence-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 90
+          path: tmp/timeout-evidence/database.ndjson
 
   inbound_test:
     name: Inbound Test (Elixir 1.18 / OTP 27)
@@ -976,7 +988,19 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run operator browser gate
         working-directory: mailglass_admin
+        id: operator-browser
+        env:
+          MAILGLASS_BROWSER_EVIDENCE_COMMAND: npm run test:operator-browser
+          MAILGLASS_BROWSER_SERVER_EVIDENCE_PATH: test-results/operator-browser-server.ndjson
         run: npm run test:operator-browser
+      - name: Upload operator browser timeout evidence
+        if: ${{ failure() && steps.operator-browser.outcome == 'failure' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: operator-browser-timeout-evidence-${{ github.run_id }}-node-${{ matrix.node }}
+          if-no-files-found: error
+          retention-days: 90
+          path: mailglass_admin/test-results
 
   demo_browser_evidence:
     name: Demo Browser Evidence (Docker Compose / Chromium)
