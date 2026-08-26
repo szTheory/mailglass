@@ -124,9 +124,11 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   defp write_fixture_scripts!(repo, bin, mutation) do
     hygiene =
-      if mutation == :malformed_hygiene,
-        do: "{not-json",
-        else: ~s({"status":"pass","reason":"clean"})
+      case mutation do
+        :malformed_hygiene -> "{not-json"
+        :hygiene -> ~s({"status":"blocked","reason":"not_clean"})
+        _ -> ~s({"status":"pass","reason":"clean"})
+      end
 
     ci_sha = if mutation == :ci, do: String.duplicate("b", 40), else: "$(git rev-parse HEAD)"
     scheduled = scheduled_script_json(mutation)
@@ -148,7 +150,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     File.write!(
       Path.join(repo, "scripts/scheduled_control_evidence.sh"),
-      "#!/usr/bin/env bash\nhead=$(git rev-parse HEAD)\nmkdir -p \"$(dirname \"$4\")\"\nprintf '#{scheduled}\\n' \"$head\" \"$head\" \"$head\" > \"$4\"\nexit 0\n"
+      "#!/usr/bin/env bash\nhead=$(git rev-parse HEAD)\nmkdir -p \"$(dirname \"$3\")\"\nprintf '#{scheduled}\\n' \"$head\" \"$head\" \"$head\" > \"$3\"\nexit 0\n"
     )
 
     File.chmod!(Path.join(repo, "scripts/verify_workspace_evidence.sh"), 0o755)
@@ -157,7 +159,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   defp scheduled_script_json(mutation) do
     status =
-      if mutation in [:scheduled_pending, :scheduled_cannot_check],
+      if mutation in [:scheduled, :scheduled_pending, :scheduled_cannot_check],
         do: String.replace(to_string(mutation), "scheduled_", ""),
         else: "pass"
 
@@ -166,7 +168,9 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     result_status = if mutation == :scheduled_blocked_incomplete, do: "blocked", else: status
 
     updated =
-      if mutation == :scheduled_stale, do: "2000-01-01T00:00:00Z", else: "2026-08-26T00:00:00Z"
+      if mutation == :scheduled_stale,
+        do: "2000-01-01T00:00:00Z",
+        else: DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
 
     payload =
       if mutation == :scheduled_blocked_incomplete,
