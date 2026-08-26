@@ -158,7 +158,26 @@ Plans:
   3. A maintainer can reproduce the gallery-matrix timeout and verify a narrow readiness, test, or Playwright-boundary repair while discovered specimens, viewport, theme, stress, and overflow coverage remain intact.
   4. Repeated focused browser proof and the relevant operator-browser gate pass without matrix removal, broad retries, visual changes, or unlimited/global timeout expansion.
 
-**Plans**: TBD
+**Plans**: 3/8 plans executed
+**Wave 1**
+
+- [x] 163-01-PLAN.md
+- [x] 163-02-PLAN.md
+- [ ] 163-04-PLAN.md
+- [ ] 163-05-PLAN.md
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 163-03-PLAN.md
+- [ ] 163-06-PLAN.md
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 163-07-PLAN.md
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 163-08-PLAN.md
 
 ### Phase 164: Repository Truth Reconciliation and Closeout
 
@@ -181,5 +200,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
-| 163. Deterministic Release-Path Timeout Repairs | 0/TBD | Not started | - |
+| 163. Deterministic Release-Path Timeout Repairs | 3/8 | In Progress|  |
 | 164. Repository Truth Reconciliation and Closeout | 0/TBD | Not started | - |

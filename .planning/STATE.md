@@ -4,15 +4,15 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 163
 current_phase_name: Deterministic Release-Path Timeout Repairs
-status: blocked
-stopped_at: Phase 163 verification found gaps because neither timeout reproduced
-last_updated: "2026-08-26T15:27:34Z"
+status: ready_to_execute
+stopped_at: Phase 163 gap-closure plans verified and ready for execution
+last_updated: "2026-08-26T15:54:57Z"
 last_activity: 2026-08-26
-last_activity_desc: Phase 163 verification found 4 blocked requirements
+last_activity_desc: Phase 163 gap-closure planning complete — 5 plans ready
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 21
+  total_plans: 26
   completed_plans: 18
   percent: 50
 ---
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 163 — Deterministic Release-Path Timeout Repairs
-Plan: 0 of 3 complete (3 evidence-gated plans closed as blocked)
-Status: Gaps found — waiting for reproducible timeout evidence
-Last activity: 2026-08-26 — Phase 163 verification found 4 blocked requirements
+Plan: 3 of 8 complete (5 gap-closure plans ready)
+Status: Ready to execute
+Last activity: 2026-08-26 — Phase 163 gap-closure planning complete
 
-Progress: [█████████████████░░░] 18/21 plans (86%)
+Progress: [██████████████░░░░░░] 18/26 plans (69%)
 
 ## Performance Metrics
 
@@ -97,7 +97,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 163 diagnostics did not reproduce either SQLSTATE 57014 or the gallery-matrix timeout within their finite budgets. No narrow owner or repair is authorized; DTRM-01 through DTRM-04 remain pending.
+- Phase 163's original diagnostics did not reproduce either timeout. Gap-closure Plans 163-04 and 163-05 now perform bounded immutable-evidence reconstruction and block for an explicit evidence-or-rescope decision before any repair; speculative changes remain unauthorized.
 
 ## Deferred Items
 
@@ -107,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-26T15:27:34Z
-Stopped at: Phase 163 verification gaps found; both timeout paths remain unattributed
-Resume file: .planning/phases/163-deterministic-release-path-timeout-repairs/163-VERIFICATION.md
+Last session: 2026-08-26T15:54:57Z
+Stopped at: Phase 163 gap-closure plans verified and ready for execution
+Resume file: .planning/phases/163-deterministic-release-path-timeout-repairs/163-04-PLAN.md
