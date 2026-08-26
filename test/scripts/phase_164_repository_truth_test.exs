@@ -43,12 +43,16 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     assert row["durable_consumer"] == "none"
   end
 
-  test "the parser rejects duplicate subjects, blank required fields, and unknown dispositions" do
+  @tag :tmp_dir
+  test "the parser rejects duplicate subjects, blank required fields, and unknown dispositions", %{tmp_dir: tmp_dir} do
     valid = valid_ledger_row()
     duplicate_subject = String.replace(valid, "D-08", "D-09")
 
+    malformed_ledger = Path.join(tmp_dir, "malformed-ledger.tsv")
+
+    File.write!(malformed_ledger, header_line() <> "\n" <> valid <> "\n" <> duplicate_subject)
     assert {:error, {:duplicate_subject, "scheduled-control-sweep.json"}} =
-             parse_ledger(header_line() <> "\n" <> valid <> "\n" <> duplicate_subject)
+             malformed_ledger |> File.read!() |> parse_ledger()
 
     blank_required_field = String.replace(valid, "generated-output", "")
     assert {:error, {:blank_required_field, "kind"}} = parse_ledger(header_line() <> "\n" <> blank_required_field)
