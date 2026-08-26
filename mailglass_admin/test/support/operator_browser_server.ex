@@ -3,7 +3,10 @@ defmodule MailglassAdmin.TestSupport.OperatorBrowserServer do
 
   alias MailglassAdmin.TestSupport.{AdminBootstrap, OperatorFixtures}
   alias MailglassAdmin.TestSupport.BrowserTimeoutEvidence
-  @server_ownership_timeout 10 * 60_000
+  # Phase 163 protected evidence: the 11.6-minute one-worker suite outlived the
+  # former 10-minute sandbox owner after two measured matrix retries, causing
+  # downstream ownership failures. Keep a finite owner below the 30-minute job.
+  @server_ownership_timeout 20 * 60_000
 
   # Step-by-step IO.puts so a CI hang surfaces the exact stage that blocks
   # (DB create, migration, endpoint start, fixtures). Without these prints

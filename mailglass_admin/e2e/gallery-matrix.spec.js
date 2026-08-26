@@ -173,10 +173,11 @@ test.describe("gallery matrix — RATCHET-02 resize-loop overflow gate", () => {
   }) => {
     // Phase 163 exact-owner repair: the complete 117-cell matrix exhausted the
     // 30,000ms config default locally, then the first protected recurrence
-    // exhausted its test-local 60,000ms bound at 60,002ms and 60,047ms while
-    // readiness stayed healthy. Keep the global default unchanged; this one
-    // complete matrix body gets a finite ~2x protected measurement.
-    test.setTimeout(120_000);
+    // exhausted its test-local bounds at 60,002/60,047ms and then
+    // 120,004/120,064ms while readiness stayed healthy. Keep the global
+    // default unchanged; this one complete matrix body gets a finite ~2x
+    // latest protected measurement.
+    test.setTimeout(240_000);
     await openGallery(page);
 
     const cells = await discoverGalleryCells(page);

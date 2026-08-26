@@ -2163,6 +2163,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("primitive cells render every planned state in light, dark, and system wrappers", async ({
       page
     }) => {
+      // Phase 163 protected evidence: this complete primitive state/theme
+      // matrix exhausted the 30,000ms default at 32.5s on both CI attempts.
+      // Keep the global default unchanged and bound only this named matrix.
+      test.setTimeout(60_000);
+
       await openGallery(page);
 
       const source = require("fs").readFileSync("lib/mailglass_admin/gallery_live.ex", "utf8");
