@@ -22,6 +22,14 @@ test("builds observable run-list and exact-run inspection commands", () => {
     "--json",
     "databaseId,workflowName,headBranch,headSha,event,status,conclusion,url,jobs"
   ]);
+
+  assert.deepEqual(buildCommand(["workflows"]), [
+    "workflow",
+    "list",
+    "--all",
+    "--json",
+    "id,name,path,state"
+  ]);
 });
 
 test("keeps watch fail-fast and failed-log operations exact-run scoped", () => {

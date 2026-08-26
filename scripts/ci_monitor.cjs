@@ -10,6 +10,7 @@ const RUN_VIEW_FIELDS =
 const HELP = `Usage: node scripts/ci_monitor.cjs <command> [arguments]
 
 Commands:
+  workflows                    List workflow identities and enabled state as JSON.
   runs [--branch <name>]       List the 20 most recent workflow runs as JSON.
   inspect <run-id>             Inspect one exact run and its jobs as JSON.
   watch <run-id>               Watch one exact run and fail on non-success.
@@ -25,6 +26,10 @@ function buildCommand(argv) {
   const [command, ...args] = argv;
 
   switch (command) {
+    case "workflows":
+      if (args.length !== 0) throw new Error("workflows accepts no arguments");
+      return ["workflow", "list", "--all", "--json", "id,name,path,state"];
+
     case "runs":
       return buildRuns(args);
 
