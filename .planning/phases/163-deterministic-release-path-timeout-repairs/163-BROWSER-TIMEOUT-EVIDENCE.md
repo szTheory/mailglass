@@ -1,7 +1,7 @@
 # Phase 163 Browser Timeout Evidence
 
 **Recorded:** 2026-08-26  
-**Scope:** `mailglass_admin/e2e/gallery-matrix.spec.js` only; one Playwright worker; no added retries, selectors, workers, global deadlines, UI changes, dependencies, or CI changes.
+**Scope:** Two evidence-owned Playwright bodies only; one Playwright worker; no added retries, selectors, workers, global deadlines, UI changes, dependencies, or CI topology changes.
 
 ## Instrumentation
 
@@ -170,3 +170,35 @@ payloads, and free-form application logs are excluded.
 an observed current red result, a single test-local finite repair, three focused
 first-attempt passes, and the complete first-attempt operator-browser pass with
 all matrix dimensions intact.
+
+## Protected recurrence and exact-owner repair (2026-08-26)
+
+Normally triggered PR run `32994318111` checked the source head
+`bd8234f8f187f05d6aa43a58f8f8c9fe89b8f65c` through merge checkout
+`cdc4ed4b4040...`. Operator Browser Gate job `98259840268` published the strict
+failure-only artifact `operator-browser-timeout-evidence-32994318111-node-22`.
+The safe manifest established healthy readiness in `1,982ms` and two exact
+test-body owners:
+
+| Exact owner | First attempt | Existing CI retry | Selected local bound |
+| --- | ---: | ---: | ---: |
+| Complete 117-cell gallery matrix | 60,002ms | 60,047ms | 120,000ms |
+| `Inbound: WCAG AA contrast matrix covers light/dark themes at 390/768/1440` | 31,348ms | 31,336ms | 60,000ms |
+
+The gallery recurrence exhausted its first 60-second local repair on both
+protected attempts. The separately named two-theme by three-viewport contrast
+body exhausted only the unchanged 30-second global default. Commit `e8c6260f`
+therefore raises only those two bodies to approximately twice their protected
+measurements. It does not change the 30-second global default, retry policy,
+worker count, server lifecycle, job deadline, coverage axes, assertions, or UI.
+
+The exact two-body CI-mode command then passed first attempt: gallery in
+`48,198ms`, structural contrast in `18.0s`, 2 passed in 1.1 minutes. The complete
+`CI=true npm run test:operator-browser` lane also passed first attempt with 176
+passed and one intentional skip in 3.6 minutes; readiness was `239ms`, gallery
+was `45,938ms`, and its sibling stress body was `3,648ms`.
+
+Commit `d27de4b6` adds contract-tested exact-run job-log, artifact-list, and
+named-artifact download operations to the repository-local CI monitor. This is
+read-only recurrence diagnosis rolled into the existing protected lane; it does
+not dispatch, retry, merge, release, or create another workflow.

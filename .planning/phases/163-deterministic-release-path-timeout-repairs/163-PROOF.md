@@ -1,6 +1,6 @@
 ---
 phase: 163-deterministic-release-path-timeout-repairs
-repair_sha: cf91502b282af884a7d12877977e1258a2b2ec94
+repair_sha: d27de4b6afed8d206077a703d7f3f92369e436ba
 protected_run_id: pending
 protected_verdict: pending
 human_uat_required: false
@@ -19,9 +19,9 @@ The maintainer approved automatic resolution with machine verification only:
 
 ## Frozen code identity
 
-`repair_sha: cf91502b282af884a7d12877977e1258a2b2ec94`
+`repair_sha: d27de4b6afed8d206077a703d7f3f92369e436ba`
 
-The repair identity contains four implementation commits:
+The repair identity contains these implementation commits:
 
 | Commit | Purpose |
 | --- | --- |
@@ -32,6 +32,8 @@ The repair identity contains four implementation commits:
 | `7b51ba44` | Exact PR identity and check-rollup inspection |
 | `5d125ad2` | Read-only workflow activation-state inspection |
 | `cf91502b` | Observable conventional-title repair after the PR policy gate failed |
+| `e8c6260f` | Exact-title repairs for the protected gallery and contrast-matrix recurrences |
+| `d27de4b6` | Read-only exact-job log and failure-artifact inspection |
 
 ## Focused proof
 
@@ -46,15 +48,18 @@ The repair identity contains four implementation commits:
 
 - Historical run `32865270291` / job `97858959632` / SHA `fda6368bf43c49aab88e3f90da1d6af67ee77d35` confirms the original timeout.
 - Current CI-mode reproduction: readiness 243ms, 117 cells, named full body exhausted at 30,002ms and 30,083ms; sibling passed in 3,697ms.
-- Repair: only that named body receives `test.setTimeout(60_000)`.
+- Initial repair: only that named body received `test.setTimeout(60_000)`.
 - Three focused first attempts passed in 44,027ms, 47,553ms, and 50,256ms; no retry.
+- Protected run `32994318111` then exhausted that local gallery bound at 60,002ms and 60,047ms, and independently exhausted the unchanged global bound for the named contrast matrix at 31,348ms and 31,336ms; readiness was healthy at 1,982ms.
+- Final repair: only the gallery body receives `120,000ms`, and only the named contrast body receives `60,000ms`.
+- The repaired pair passed first attempt in 48,198ms and 18.0s; the complete lane passed 176 with one intentional skip in 3.6m, no retry.
 
 ## Complete local integration
 
 | Gate | Result |
 | --- | --- |
 | `mix test --warnings-as-errors` | 23 properties, 1,964 tests, 0 failures, 7 intentional skips in 174.7s |
-| `CI=true npm run test:operator-browser` | 176 passed, 1 intentional skip in 3.3m; no retry |
+| `CI=true npm run test:operator-browser` | 176 passed, 1 intentional skip in 3.6m after protected recurrence repair; no retry |
 | Phase evidence contracts | ExUnit recorder/workflow contracts, admin recorder tests, Node reporter/monitor tests all pass |
 | Workflow validity | `actionlint .github/workflows/ci.yml` and `git diff --check` pass |
 
@@ -70,6 +75,7 @@ The repair identity contains four implementation commits:
 PR: https://github.com/szTheory/mailglass/pull/228
 
 The PR was opened from `phase-163-deterministic-timeout-repairs` through the
-repository-local observable monitor. The normally triggered run and its two
-named protected job conclusions are pending; no manual workflow dispatch is
-authorized or required.
+repository-local observable monitor. Normally triggered run `32994318111`
+published the recurrence evidence used by commit `e8c6260f`; its successor at
+code identity `d27de4b6` and the two named protected job conclusions are
+pending. No manual workflow dispatch is authorized or required.
