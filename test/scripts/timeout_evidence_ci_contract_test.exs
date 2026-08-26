@@ -72,6 +72,12 @@ defmodule Mailglass.Scripts.TimeoutEvidenceCIContractTest do
     assert structural =~
              ~r/primitive cells render every planned state in light, dark, and system wrappers[\s\S]{0,800}test\.setTimeout\(60_000\)/
 
+    assert structural =~
+             ~r/interactive primitive hover, focus, disabled, and target-size contracts hold[\s\S]{0,800}test\.setTimeout\(60_000\)/
+
+    assert structural =~
+             ~r/stat_card shape, icon meaning, and overflow contracts hold at primitive widths[\s\S]{0,800}test\.setTimeout\(60_000\)/
+
     assert server =~ "@server_ownership_timeout 20 * 60_000"
     assert server =~ "ownership_timeout: @server_ownership_timeout"
   end

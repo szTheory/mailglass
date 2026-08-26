@@ -2239,6 +2239,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("interactive primitive hover, focus, disabled, and target-size contracts hold", async ({
       page
     }) => {
+      // Phase 163 final-head evidence: this complete interaction matrix
+      // exhausted the 30,000ms default at 32.1s and 32.3s. Keep the global
+      // default unchanged and bound only this named matrix.
+      test.setTimeout(60_000);
+
       await openGallery(page);
 
       for (const viewport of PRIMITIVE_VIEWPORTS) {
@@ -2311,6 +2316,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("stat_card shape, icon meaning, and overflow contracts hold at primitive widths", async ({
       page
     }) => {
+      // Phase 163 final-head evidence: this complete shape/contrast matrix
+      // exhausted the 30,000ms default at 32.2s and 32.1s. Keep the global
+      // default unchanged and bound only this named matrix.
+      test.setTimeout(60_000);
+
       await openGallery(page);
 
       for (const viewport of PRIMITIVE_VIEWPORTS) {
