@@ -16,8 +16,8 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
     assert current =~ "scheduled-control evidence"
     assert current =~ "immutable post-publish target validation"
 
-    assert current =~ "ordinary push, schedule, and blank-digest dispatch are proposal-only"
-    assert current =~ "cannot merge, tag, or publish"
+    assert current =~ ~r/ordinary push, schedule, and blank-digest dispatch are proposal-only/i
+    assert current =~ ~r/cannot merge, tag,\s+or publish/
 
     assert current =~ "cannot-check"
     assert current =~ "non-success"

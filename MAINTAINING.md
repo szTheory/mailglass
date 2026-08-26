@@ -2,28 +2,50 @@
 
 This document covers the release flow and maintenance protocols for Mailglass.
 
-## Release Flow
+## Current protected release and recovery path
 
-Mailglass uses [Release Please](https://github.com/googleapis/release-please) to automate versioning and changelogs.
+Executable controls and exact GitHub, Git, and Hex evidence are authoritative;
+this section is the human entry point for that current state-based path. It does
+not grant release authority that the controls do not grant.
 
-Before release work starts, run:
+1. Start from a preserved, clean repository state and run:
 
-    mix mailglass.repo.hygiene --check
+       mix mailglass.repo.hygiene --check --format json
 
-The release branch must start from a clean worktree with no local ahead/behind
-drift from `origin/main`. If local work exists, preserve it on a named
-`preserve/*` branch before release work continues.
+   Treat a malformed, unavailable, pending, stale, wrong-SHA, or mismatched
+   artifact/summary result as non-success. Record unavailable acquisition as
+   `cannot-check`; do not translate it into an absent condition or a pass.
+2. Ordinary push, schedule, and blank-digest dispatch are proposal-only: they
+   may create or synchronize a Release Please proposal, but cannot merge, tag,
+   or publish. Review that proposal and its exact identity without treating a
+   release-please run as protected authority.
+3. The only release boundary is a **protected exact-candidate dispatch** of
+   `.github/workflows/release-please.yml` with a nonempty candidate digest.
+   That digest must exactly validate the tracked release target, and the
+   dispatcher must receive a fresh exact repository-admin authorization from
+   GitHub. A candidate mismatch, blank digest, unavailable authorization, or
+   non-admin response is non-success, never a recovery shortcut.
+4. Inspect the resulting exact run/SHA rather than a branch name or a latest
+   run. Use `node scripts/ci_monitor.cjs inspect <run-id>` and
+   `node scripts/ci_monitor.cjs artifacts <run-id>` to bind the conclusion and
+   retained artifacts to that exact run. Any malformed, stale, wrong-SHA, or
+   mismatched artifact/summary evidence is non-success.
+5. Require current-main scheduled-control evidence for `release-please`,
+   `repo-hygiene`, and `post-publish-smoke`; a manual dispatch does not replace
+   scheduled evidence. Each applicable row must have matching event, run,
+   workflow-SHA, and retained-artifact provenance, ending in pass or its
+   defined evidence-backed blocked disposition. `pending` and `cannot-check`
+   do not satisfy the requirement.
+6. After publication, perform immutable post-publish target validation through
+   the protected `post-publish-smoke` path. Its explicit dispatch inputs are
+   the exact published versions and immutable 40-character target SHA; do not
+   substitute `main`, a release-event no-op, or a different identity. Preserve
+   the exact target result and its artifacts before describing recovery as
+   complete.
 
-1. Merge feature branches into `main` using Conventional Commits.
-2. Release Please will open a "Release PR" with the version bump and updated `CHANGELOG.md`.
-3. Merging the Release PR creates the GitHub Release with `RELEASE_PLEASE_TOKEN`
-   so `release: published` fan-out can trigger publish and smoke workflows.
-   If downstream workflow fan-out does not happen,
-   `workflow_dispatch` with the core release tag (`mailglass-v<version>`) is the canonical maintainer
-   fallback.
-4. Publishing is hands-free after CI is green: `release-please` auto-merges the
-   release PR, `gate-ci-green` is the publish gate, and the `hex-publish`
-   environment has no required reviewers.
+Historical procedures below remain provenance only. They are not an alternate
+current runbook and do not supersede the protected exact-candidate and
+repository-admin conditions above.
 
 ## Trust runner checkpoint handoff
 
@@ -449,10 +471,16 @@ Critical issue classes are listed in `SECURITY.md` (`## Critical Classes`).
 Reports go through the disclosure address documented there or via GitHub
 Private Vulnerability Reporting if no email is reachable.
 
-## Release Runbook
+## Historical release procedures
 
-Five steps. Step 4 has a literal 60-minute timer — that is the last revert
-window before the published artifact becomes permanent.
+The following Phase 38 and Phase 73 v1 procedures are retained for historical
+provenance and their original-version applicability only. They are non-current:
+do not use their auto-merge, fan-out, manual smoke, tag, or fallback language as
+authority for a current release or recovery. The current protected path is the
+one at the start of this document.
+
+Five historical steps. Step 4 had a literal 60-minute timer — that was the last
+revert window before the published artifact became permanent.
 
 Use the Phase 38 release-day proof forms while running these steps:
 - `.planning/milestones/v1.0-phases/38-release-rehearsal-and-proof-artifacts/38-03-RELEASE-CHECKLIST.md`
