@@ -171,6 +171,12 @@ test.describe("gallery matrix — RATCHET-02 resize-loop overflow gate", () => {
   test("every gallery specimen renders without horizontal overflow across 320/390/768/1440 × light/dark/system", async ({
     page
   }) => {
+    // Phase 163 exact-owner repair: the complete 117-cell matrix exhausted the
+    // 30,000ms config default at 30,002ms and 30,083ms while readiness finished
+    // in 243ms and the sibling stress-only body finished in 3.7s. Keep the
+    // global default unchanged; this one complete matrix body gets a finite
+    // ~2x measured bound so runner variance stays visible without false expiry.
+    test.setTimeout(60_000);
     await openGallery(page);
 
     const cells = await discoverGalleryCells(page);
@@ -181,6 +187,7 @@ test.describe("gallery matrix — RATCHET-02 resize-loop overflow gate", () => {
     for (const stress of STRESS_CELLS) {
       expect(cells, `gallery includes stress cell ${stress}`).toContain(stress);
     }
+    console.log(`[gallery-matrix] stage=matrix_discovered cells=${cells.length}`);
 
     for (const width of MATRIX_WIDTHS) {
       await page.setViewportSize({ width, height: MATRIX_HEIGHT });

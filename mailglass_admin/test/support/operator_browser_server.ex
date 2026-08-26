@@ -2,6 +2,7 @@ defmodule MailglassAdmin.TestSupport.OperatorBrowserServer do
   @moduledoc false
 
   alias MailglassAdmin.TestSupport.{AdminBootstrap, OperatorFixtures}
+  alias MailglassAdmin.TestSupport.BrowserTimeoutEvidence
   @server_ownership_timeout 10 * 60_000
 
   # Step-by-step IO.puts so a CI hang surfaces the exact stage that blocks
@@ -87,6 +88,7 @@ defmodule MailglassAdmin.TestSupport.OperatorBrowserServer do
     elapsed_ms = System.monotonic_time(:millisecond) - started_at_ms
     suffix = if details, do: " #{details}", else: ""
 
+    BrowserTimeoutEvidence.record(stage, elapsed_ms)
     IO.puts("[operator-browser-server] stage=#{stage} elapsed_ms=#{elapsed_ms}#{suffix}")
   end
 end
