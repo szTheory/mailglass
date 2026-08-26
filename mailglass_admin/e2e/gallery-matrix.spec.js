@@ -39,6 +39,17 @@ const { test, expect } = require("@playwright/test");
 const MATRIX_WIDTHS = [320, 390, 768, 1440];
 const MATRIX_THEMES = ["light", "dark", "system"];
 const MATRIX_HEIGHT = 900;
+let testBodyStartedAtNs;
+
+test.beforeEach(async ({}, testInfo) => {
+  testBodyStartedAtNs = process.hrtime.bigint();
+  console.log(`[gallery-matrix] stage=test_body_start test_id=${testInfo.title}`);
+});
+
+test.afterEach(async ({}, testInfo) => {
+  const elapsedMs = Number((process.hrtime.bigint() - testBodyStartedAtNs) / 1_000_000n);
+  console.log(`[gallery-matrix] stage=test_body_finish test_id=${testInfo.title} elapsed_ms=${elapsedMs}`);
+});
 
 // Specimens that carry the fjordline-aps persona mirror + the pre-existing
 // stress specimens. These MUST render without overflow at every width — they
