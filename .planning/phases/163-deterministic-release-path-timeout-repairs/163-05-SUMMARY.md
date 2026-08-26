@@ -15,7 +15,7 @@ key-files:
     - mailglass_admin/playwright.config.cjs
     - mailglass_admin/test/support/operator_browser_server.ex
 key-decisions:
-  - Raise only the named complete-matrix body to 120 seconds and the named contrast matrix to 60 seconds after protected recurrence; retain every global bound and coverage axis.
+  - Raise only the named complete-matrix body to 240 seconds, two named structural matrices to 60 seconds, and browser sandbox ownership to 20 minutes after protected recurrence; retain every global bound and coverage axis.
 requirements-completed: [DTRM-03]
 completed: 2026-08-26
 status: complete
@@ -32,6 +32,7 @@ status: complete
 - Kept live discovery, the `>50` guard, all 117 cells, stress fixtures, 320/390/768/1440 widths, light/dark/system themes, overflow checks, and 320px clipping proof.
 - Added safe first-attempt reporter/server evidence and failure-only CI artifacts.
 - Used protected run `32994318111` to attribute a 60-second gallery recurrence and an independent 31.3-second contrast-matrix expiry, then raised only those bodies to 120 and 60 seconds respectively.
+- Used protected run `32996524975` to attribute the 120-second gallery recurrence, a 32.6-second primitive-matrix expiry, and downstream sandbox-owner loss after 10 minutes; selected finite 240-second, 60-second, and 20-minute local bounds.
 
 ## Focused proof
 
@@ -45,11 +46,11 @@ Three CI-mode, one-worker first attempts passed without retry:
 
 ## Guardrails retained
 
-The global test default remains 30 seconds, CI retry policy remains one, local retries remain zero, the web-server lifecycle remains 300 seconds, the job remains 30 minutes, and execution remains one worker. No UI, package, dependency, locator, or workflow topology change was made.
+The global test default remains 30 seconds, CI retry policy remains one, local retries remain zero, Playwright startup remains 300 seconds, the job remains 30 minutes, and execution remains one worker. Browser sandbox ownership is now a measured 20 minutes. No UI, package, dependency, locator, or workflow topology change was made.
 
 ## Protected recurrence proof
 
-The exact repaired pair passed first attempt in CI mode (gallery `48,198ms`, contrast `18.0s`). The complete operator-browser lane then passed first attempt with 176 passed and one intentional skip in 3.6 minutes; gallery completed in `45,938ms` and no retry ran.
+The final exact repaired trio passed first attempt in CI mode (gallery `47.7s`, contrast `17.8s`, primitive matrix `12.2s`). The complete operator-browser lane then passed first attempt with 176 passed and one intentional skip in 3.8 minutes; gallery completed in `47.8s` and no retry ran.
 
 ## Commits
 
@@ -58,6 +59,7 @@ The exact repaired pair passed first attempt in CI mode (gallery `48,198ms`, con
 - `f46aad8b` — strict failure-only artifact upload.
 - `e8c6260f` — protected recurrence repairs scoped to the two exact test titles.
 - `d27de4b6` — exact-run job log and failure-artifact inspection.
+- `9d0bcacf` — second protected matrix and browser-owner recurrence repair.
 
 ---
 *Plan status: complete without human UAT*

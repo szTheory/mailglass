@@ -202,3 +202,36 @@ Commit `d27de4b6` adds contract-tested exact-run job-log, artifact-list, and
 named-artifact download operations to the repository-local CI monitor. This is
 read-only recurrence diagnosis rolled into the existing protected lane; it does
 not dispatch, retry, merge, release, or create another workflow.
+
+## Second protected recurrence and ownership repair (2026-08-26)
+
+Normally triggered PR run `32996524975` evaluated source head
+`606f4e76c97f488dc1544aae343d55e69e1ed485` through merge checkout
+`0d13dbcbfe6cda02f0ea302c0c4d046e1465e056`. Core Deterministic Suite job
+`98267261352` passed. Operator Browser Gate job `98267261771` published artifact
+`operator-browser-timeout-evidence-32996524975-node-22`; readiness was healthy
+at `676ms`.
+
+The manifest recorded 136 passing results before/among four exact timeouts:
+
+| Exact owner | First attempt | Existing CI retry | Final finite bound |
+| --- | ---: | ---: | ---: |
+| Complete 117-cell gallery matrix | body `120,004ms` (`127,563ms` runner) | body `120,064ms` (`126,873ms` runner) | `240,000ms` |
+| `primitive cells render every planned state in light, dark, and system wrappers` | `32,530ms` | `32,670ms` | `60,000ms` |
+
+The two gallery attempts and the remaining suite extended total execution beyond
+the sandbox owner's fixed 10-minute `ownership_timeout`. The owner terminated,
+after which 39 later tests failed quickly with `DBConnection.OwnershipError`;
+these were downstream effects, not 39 independent product defects. Commit
+`9d0bcacf` sets only the browser server owner's finite timeout to 20 minutes,
+still below the unchanged 30-minute workflow job. It also doubles only the two
+measured matrix bodies. The global Playwright timeout remains 30 seconds,
+retries remain one in CI and zero locally, execution remains one worker, and
+every coverage assertion remains intact.
+
+The three exact affected bodies passed together first attempt in CI mode:
+gallery `47.7s`, inbound contrast `17.8s`, and primitive matrix `12.2s` (3 passed
+in 1.3 minutes). The complete `CI=true npm run test:operator-browser` lane then
+passed first attempt with 176 passed and one intentional skip in 3.8 minutes;
+readiness was `240ms`, gallery `47.8s`, primitive matrix `14.4s`, and no retry
+ran. The server emitted the selected `ownership_timeout_ms=1200000` identity.

@@ -1,6 +1,6 @@
 ---
 phase: 163-deterministic-release-path-timeout-repairs
-repair_sha: d27de4b6afed8d206077a703d7f3f92369e436ba
+repair_sha: 9d0bcacf875ad0c88155bd16bad2996c1c57b926
 protected_run_id: pending
 protected_verdict: pending
 human_uat_required: false
@@ -19,7 +19,7 @@ The maintainer approved automatic resolution with machine verification only:
 
 ## Frozen code identity
 
-`repair_sha: d27de4b6afed8d206077a703d7f3f92369e436ba`
+`repair_sha: 9d0bcacf875ad0c88155bd16bad2996c1c57b926`
 
 The repair identity contains these implementation commits:
 
@@ -34,6 +34,7 @@ The repair identity contains these implementation commits:
 | `cf91502b` | Observable conventional-title repair after the PR policy gate failed |
 | `e8c6260f` | Exact-title repairs for the protected gallery and contrast-matrix recurrences |
 | `d27de4b6` | Read-only exact-job log and failure-artifact inspection |
+| `9d0bcacf` | Second protected gallery/primitive-matrix bounds and browser-owner lifetime repair |
 
 ## Focused proof
 
@@ -51,22 +52,25 @@ The repair identity contains these implementation commits:
 - Initial repair: only that named body received `test.setTimeout(60_000)`.
 - Three focused first attempts passed in 44,027ms, 47,553ms, and 50,256ms; no retry.
 - Protected run `32994318111` then exhausted that local gallery bound at 60,002ms and 60,047ms, and independently exhausted the unchanged global bound for the named contrast matrix at 31,348ms and 31,336ms; readiness was healthy at 1,982ms.
-- Final repair: only the gallery body receives `120,000ms`, and only the named contrast body receives `60,000ms`.
+- First protected repair: only the gallery body received `120,000ms`, and only the named contrast body received `60,000ms`.
 - The repaired pair passed first attempt in 48,198ms and 18.0s; the complete lane passed 176 with one intentional skip in 3.6m, no retry.
+- Protected run `32996524975` exhausted gallery `120,000ms` twice and the primitive matrix global `30,000ms` twice; the resulting 11.6-minute run outlived the fixed 10-minute sandbox owner and produced downstream ownership failures.
+- Final bounded repair: gallery `240,000ms`, both evidence-owned structural matrices `60,000ms`, and browser-only sandbox ownership `20 minutes`; global test and job limits remain unchanged.
+- The exact trio passed first attempt in 1.3m, and the complete lane passed 176 with one intentional skip in 3.8m, no retry.
 
 ## Complete local integration
 
 | Gate | Result |
 | --- | --- |
 | `mix test --warnings-as-errors` | 23 properties, 1,964 tests, 0 failures, 7 intentional skips in 174.7s |
-| `CI=true npm run test:operator-browser` | 176 passed, 1 intentional skip in 3.6m after protected recurrence repair; no retry |
+| `CI=true npm run test:operator-browser` | 176 passed, 1 intentional skip in 3.8m after final protected recurrence repair; no retry |
 | Phase evidence contracts | ExUnit recorder/workflow contracts, admin recorder tests, Node reporter/monitor tests all pass |
 | Workflow validity | `actionlint .github/workflows/ci.yml` and `git diff --check` pass |
 
 ## Policy backstop
 
 - No schema, public API, admin UI, package, lockfile, dependency, action upgrade, schedule, new workflow job, manual dispatch, seed pin, property exclusion, skipped matrix cell, worker increase, or unlimited timeout.
-- Global Playwright timeout remains 30 seconds; existing CI retry remains one; local retry remains zero; server lifecycle remains 300 seconds; browser job remains 30 minutes.
+- Global Playwright timeout remains 30 seconds; existing CI retry remains one; local retry remains zero; server startup remains 300 seconds; browser sandbox ownership is a finite 20 minutes; browser job remains 30 minutes.
 - Database owner limits, transaction settings, generators, and global/job limits remain unchanged.
 - Evidence artifacts upload only after the exact owning step fails, use strict missing-file behavior, unique run identity, 90-day retention, and full action digest.
 
@@ -76,6 +80,7 @@ PR: https://github.com/szTheory/mailglass/pull/228
 
 The PR was opened from `phase-163-deterministic-timeout-repairs` through the
 repository-local observable monitor. Normally triggered run `32994318111`
-published the recurrence evidence used by commit `e8c6260f`; its successor at
-code identity `d27de4b6` and the two named protected job conclusions are
+published the first recurrence evidence used by commit `e8c6260f`. Run
+`32996524975` passed Core Deterministic and published the second browser-owner
+evidence used by `9d0bcacf`; its successor and the two named protected jobs are
 pending. No manual workflow dispatch is authorized or required.
