@@ -279,20 +279,20 @@ Use the actual chosen parser/schema rather than a new runtime dependency. [VERIF
 
 | # | Claim | Section | Risk if Wrong |
 |---|---|---|---|
-| A1 | The planner may select a TSV, JSON, or Markdown-plus-parser ledger format so long as it is tracked, diffable, machine-checkable, and complete. | Architecture Patterns | Low; the format is explicitly delegated, but its contract must be tested. [ASSUMED] |
-| A2 | A focused wrapper can reuse existing tools without a new service; its exact filename and output directory remain implementation discretion. | Recommended Project Structure | Low; must be confirmed against the final plan and ignore rules. [ASSUMED] |
+| A1 | RESOLVED by Plans 164-01 and 164-04: use one tracked TSV ledger with an ExUnit parser/contract. | Architecture Patterns | The Phase 161 TSV analog already fits repository conventions, exposes every D-05 field directly, and supports deterministic uniqueness, enum, and completeness assertions without a conversion layer. [VERIFIED: plan-backed resolution] |
+| A2 | RESOLVED by Plans 164-05 and 164-07: use `scripts/closeout_repository_truth.sh` and write volatile output beneath existing ignored `tmp/`, specifically `tmp/phase-164-closeout/report.json`. | Recommended Project Structure | This reuses the root `/tmp/` producer-owned ignore rule, adds no new ignore entry, and preserves D-09's durable-ledger/volatile-report boundary. [VERIFIED: plan-backed resolution] |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Which exact checked-in ledger format best fits the existing test helpers?**
+1. **RESOLVED — Which exact checked-in ledger format best fits the existing test helpers?**
    - What we know: Phase 161 uses Markdown inventory plus TSV reconciliation and validates both from shell; Phase 162 parses Markdown tables in ExUnit. [VERIFIED: repository inspection]
-   - What's unclear: whether a Phase 164 TSV-only ledger or Markdown table with an ExUnit parser is lowest maintenance.
-   - Recommendation: Choose the smallest format that makes all D-05 fields, unique subject key, and enum/completeness assertions deterministic; avoid a format conversion layer. [VERIFIED: Phase 164 CONTEXT.md D-05, D-12]
+   - Selected resolution: Plans 164-01 and 164-04 use `.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv` with an ExUnit parser in `test/scripts/phase_164_repository_truth_test.exs`.
+   - Rationale: TSV matches the Phase 161 reconciliation analog, represents the twelve D-05 columns directly, and makes D-12 uniqueness, enum, and completeness assertions deterministic without a format conversion layer. [VERIFIED: Phase 164 CONTEXT.md D-05/D-12; Plans 164-01/164-04]
 
-2. **What is the exact final report path and ignore treatment?**
+2. **RESOLVED — What is the exact final report path and ignore treatment?**
    - What we know: final volatile proof cannot be committed, and broad evidence ignores are prohibited. [VERIFIED: Phase 164 CONTEXT.md D-07, D-09]
-   - What's unclear: whether an existing narrowly ignored `tmp/` path is sufficient for the chosen report shape.
-   - Recommendation: Write under an existing ignored machine-local producer directory when possible; if a new ignore is necessary, ledger and test its narrow producer/path rationale. [VERIFIED: repository inspection; Phase 164 CONTEXT.md D-07]
+   - Selected resolution: Plans 164-05 and 164-07 write `tmp/phase-164-closeout/report.json` beneath the repository's existing root `/tmp/` ignore treatment; no new ignore rule is added.
+   - Rationale: the report is machine-local, rerunnable, and intentionally volatile, while the tracked ledger and usage contract remain durable. Reusing the existing narrow producer directory avoids both a self-referential committed snapshot and a new/broad proof exclusion. [VERIFIED: Phase 164 CONTEXT.md D-07/D-09; Plans 164-05/164-07]
 
 ## Environment Availability
 
