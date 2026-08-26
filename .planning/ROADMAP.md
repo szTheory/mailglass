@@ -190,7 +190,31 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: TBD
+**Plans**: 7 plans
+
+Plans:
+
+**Wave 1**
+
+- [ ] 164-01-PLAN.md — Trace the locked stale sweep through the tracked disposition contract and evidence-backed removal.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 164-02-PLAN.md — Reconcile the current protected release/recovery maintainer path and bound historical procedures.
+- [ ] 164-03-PLAN.md — Bind current package README constraints to authoritative manifests.
+- [ ] 164-04-PLAN.md — Complete the exact-one artifact and ignore-rule disposition ledger.
+
+**Wave 3** *(blocked on Wave 2 ledger completion)*
+
+- [ ] 164-05-PLAN.md — Compose existing authorities into a fixture-proven rerunnable closeout report.
+
+**Wave 4** *(blocked on all durable implementation)*
+
+- [ ] 164-06-PLAN.md — Await protected-main integration, exact-SHA CI, and applicable scheduled evidence.
+
+**Wave 5** *(blocked on protected evidence handoff)*
+
+- [ ] 164-07-PLAN.md — Run the read-only exact-main closeout and emit the volatile quiet verdict.
 
 ## Progress
 
