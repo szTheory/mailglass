@@ -44,6 +44,7 @@ created: 2026-08-26
 | 163-02-01 | 02 | 1 | DTRM-03 | T-163-02 | Distinguish readiness from matrix execution without reducing coverage | browser diagnosis | `cd mailglass_admin && npx playwright test e2e/gallery-matrix.spec.js --config=playwright.config.cjs --workers=1` | ✅ | ⬜ pending |
 | 163-02-02 | 02 | 1 | DTRM-03, DTRM-04 | T-163-02 | Keep any timing change finite and local; preserve live discovery and all axes | browser regression + repetition | `cd mailglass_admin && npx playwright test e2e/gallery-matrix.spec.js --config=playwright.config.cjs --workers=1` | ✅ | ⬜ pending |
 | 163-03-01 | 03 | 2 | DTRM-02, DTRM-04 | T-163-01, T-163-02 | Do not broaden protected CI topology, retries, or job deadlines | integration | Unchanged deterministic core suite and `cd mailglass_admin && npm run test:operator-browser` | ✅ | ⬜ pending |
+| 163-03-02 | 03 | 2 | DTRM-02, DTRM-04 | T-163-10 | Bind protected evidence to the immutable post-Task-1 repair SHA; exact-SHA success may sign off, while pending/blocked/cannot-check remains recorded with both validation flags false | protected exact-SHA reconciliation | Read-only `gh run view &lt;protected_run_id&gt; --json headSha,event,status,conclusion,url,jobs` plus the Task 2 verdict-branch command in `163-03-PLAN.md` | ✅ | ⬜ pending — pass only for the exact SHA with both named jobs successful; every other verdict is a truthful non-pass, not an implementation error |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
