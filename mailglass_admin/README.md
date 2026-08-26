@@ -39,9 +39,10 @@ semantics. Use the compatibility guide for release-line matching,
 support-matrix truth, retained compatibility bridges, and upgrade posture. Use
 the admin stability page only for the package surface inventory.
 
-## Installation
+## Current package compatibility
 
-Add `mailglass_admin` to your adopter app's `mix.exs`:
+For the current linked core/admin package line, add `mailglass_admin` to your
+adopter app's `mix.exs`:
 
     def deps do
       [
