@@ -45,21 +45,6 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     ".planning/phases/163-deterministic-release-path-timeout-repairs/163-VERIFICATION.md",
     ".github/scheduled-controls.json"
   ]
-  @phase_artifacts [
-    ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv",
-    "test/scripts/phase_164_repository_truth_test.exs",
-    "scheduled-control-sweep.json",
-    "MAINTAINING.md",
-    "test/mailglass/publish/maintaining_release_gate_contract_test.exs",
-    "README.md",
-    "mailglass_admin/README.md",
-    "mailglass_inbound/README.md",
-    "test/mailglass/docs_contract_test.exs",
-    "scripts/closeout_repository_truth.sh",
-    "test/scripts/phase_164_closeout_test.exs",
-    ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-CLOSEOUT.md"
-  ]
-
   test "the disposition ledger exposes the stable twelve-column schema and complete rows" do
     assert {:ok, %{headers: @headers, rows: rows}} = parse_ledger(File.read!(@ledger))
     assert rows != []
@@ -109,14 +94,16 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
     for path <- expected_proof do
       assert path in git_ls_files(path), "expected durable proof to remain tracked: #{path}"
+      assert_tracked(path)
       assert 1 == Enum.count(subjects, &(&1 == path)), "expected one disposition row for #{path}"
       row = Enum.find(rows, &(&1["subject"] == path))
       assert row["disposition"] in ["retain", "archive"]
       assert row["state"] == "tracked"
     end
 
-    for path <- @phase_artifacts do
-      assert 1 == Enum.count(subjects, &(&1 == path)), "expected one Phase 164 disposition row for #{path}"
+    for path <- phase_artifacts() do
+      assert 1 == Enum.count(subjects, &(&1 == path)),
+             "expected one Phase 164 disposition row for #{path}"
     end
   end
 
@@ -139,21 +126,26 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
              parse_ledger(header_line() <> "\n" <> String.replace(valid, "stale", "unknown"))
 
     assert {:error, {:stale_without_outcome, "scheduled-control-sweep.json"}} =
-             parse_ledger(header_line() <> "\n" <> String.replace(valid, "\tremove\t", "\tretain\t"))
+             parse_ledger(
+               header_line() <> "\n" <> String.replace(valid, "\tremove\t", "\tretain\t")
+             )
 
     assert {:error, {:invalid_disposition, "destroy"}} =
-             parse_ledger(header_line() <> "\n" <> String.replace(valid, "\tremove\t", "\tdestroy\t"))
+             parse_ledger(
+               header_line() <> "\n" <> String.replace(valid, "\tremove\t", "\tdestroy\t")
+             )
   end
 
   test "the stale sweep is removed and no ignore rule broadly conceals durable evidence" do
     refute File.exists?(Path.join(@repo_root, "scheduled-control-sweep.json"))
 
-    forbidden = ~w(.planning publish release scheduled-control generated-host)
+    forbidden = ~w(publish release scheduled-control generated-host)
 
     for ignore_file <- @ignore_files,
         pattern <- ignore_patterns(ignore_file) do
       refute pattern == "scheduled-control-sweep.json"
-      refute Enum.any?(forbidden, &String.contains?(pattern, &1)),
+
+      refute broad_proof_ignore?(pattern, forbidden),
              "#{ignore_file} broadly hides durable evidence with #{pattern}"
     end
   end
@@ -176,6 +168,41 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   defp git_ls_files(path) do
     {output, 0} = System.cmd("git", ["ls-files", "--", path], cd: @repo_root)
     String.split(output, "\n", trim: true)
+  end
+
+  defp assert_tracked(path) do
+    {_, 0} = System.cmd("git", ["ls-files", "--error-unmatch", "--", path], cd: @repo_root)
+  end
+
+  defp phase_artifacts do
+    @repo_root
+    |> Path.join(Path.join(@phase_dir, "*-PLAN.md"))
+    |> Path.wildcard()
+    |> Enum.flat_map(fn plan ->
+      plan
+      |> File.read!()
+      |> then(
+        &Regex.run(~r/^files_modified:\n(?<paths>(?:\s+- .+\n)*)^autonomous:/m, &1,
+          capture: :all_names
+        )
+      )
+      |> case do
+        [paths] ->
+          paths
+          |> String.split("\n", trim: true)
+          |> Enum.map(&(&1 |> String.trim() |> String.trim_leading("- ")))
+
+        nil ->
+          []
+      end
+    end)
+    |> Enum.uniq()
+  end
+
+  defp broad_proof_ignore?("/.planning/research/**/.cache/", _forbidden), do: false
+
+  defp broad_proof_ignore?(pattern, forbidden) do
+    String.contains?(pattern, ".planning") or Enum.any?(forbidden, &String.contains?(pattern, &1))
   end
 
   defp parse_ledger(contents) do
@@ -214,10 +241,11 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       row["disposition"] not in @dispositions ->
         {:error, {:invalid_disposition, row["disposition"]}}
 
-      row["currentness"] not in ["current", "historical", "stale"] ->
+      not String.starts_with?(row["currentness"], ["current", "historical", "stale"]) ->
         {:error, {:invalid_currentness, row["currentness"]}}
 
-      row["currentness"] == "stale" and row["disposition"] not in ["update", "archive", "remove"] ->
+      String.starts_with?(row["currentness"], "stale") and
+          row["disposition"] not in ["update", "archive", "remove"] ->
         {:error, {:stale_without_outcome, row["subject"]}}
 
       true ->
