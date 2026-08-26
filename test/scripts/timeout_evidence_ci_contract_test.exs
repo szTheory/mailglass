@@ -36,6 +36,7 @@ defmodule Mailglass.Scripts.TimeoutEvidenceCIContractTest do
 
     assert ci =~ "name: Core Deterministic Suite (Elixir 1.18 / OTP 27)"
     assert ci =~ "name: Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)"
+    assert ci =~ "run: node --test test_js/ci-monitor.test.cjs"
     assert ci =~ "timeout-minutes: 30"
   end
 

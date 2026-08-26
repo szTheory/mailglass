@@ -960,6 +960,8 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
           cache-dependency-path: mailglass_admin/package-lock.json
+      - name: Test observable CI monitor
+        run: node --test test_js/ci-monitor.test.cjs
       - name: Cache deps
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
