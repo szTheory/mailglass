@@ -1198,16 +1198,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
       await expect(page.getByTestId("inbound-detail-back")).toBeVisible();
 
-      const filterToggleBox = await page.getByTestId("inbound-filters-toggle").boundingBox();
-      const backBox = await page.getByTestId("inbound-detail-back").boundingBox();
-      expect(filterToggleBox).not.toBeNull();
-      expect(backBox).not.toBeNull();
-      // Round to the rendered pixel: Chromium reports a 44px CSS floor as
-      // 43.99998px after subpixel layout — a target rendered at 43.99998px IS a
-      // 44px target for WCAG 2.2 target-size. Matches the checkTargetSize helper
-      // (lines ~365-366) and flows.spec.js:283, which already round.
-      expect(Math.round(filterToggleBox.height)).toBeGreaterThanOrEqual(44);
-      expect(Math.round(backBox.height)).toBeGreaterThanOrEqual(44);
+      await assertTouchTarget(page.getByTestId("inbound-filters-toggle"), "inbound filter toggle");
+      await assertTouchTarget(page.getByTestId("inbound-detail-back"), "inbound detail back");
     });
 
     test("Inbound: no-tenant truly-empty filtered-empty detail-error loading contract and selected/detail flow are named", async ({
