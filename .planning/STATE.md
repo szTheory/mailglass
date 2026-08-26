@@ -4,16 +4,16 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 164
 current_phase_name: repository-truth-reconciliation-and-closeout
-status: ready
-stopped_at: Phase 164 context gathered
-last_updated: "2026-08-26T20:23:32.690Z"
+status: executing
+stopped_at: Completed 164-01-PLAN.md
+last_updated: "2026-08-26T21:09:27.478Z"
 last_activity: 2026-08-26
-last_activity_desc: exact-code protected run 33002642359 and both release-path jobs passed
+last_activity_desc: Phase 164 execution started
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 26
-  completed_plans: 26
+  total_plans: 33
+  completed_plans: 27
   percent: 75
 ---
 
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (repository-truth-reconciliation-and-closeout) — READY
-Plan: not yet planned
-Status: Phase 163 machine-verified; ready for Phase 164 planning
-Last activity: 2026-08-26 — exact-code protected run 33002642359 and both release-path jobs passed
+Phase: 164 (repository-truth-reconciliation-and-closeout) — EXECUTING
+Plan: 2 of 7
+Status: Ready to execute
+Last activity: 2026-08-26 — Phase 164 execution started
 
-Progress: [████████████████████] 26/26 planned plans (100%)
+Progress: [████████████████████] 26/26 planned plans ([████████░░] 82%)
 
 ## Performance Metrics
 
@@ -81,6 +81,7 @@ Progress: [████████████████████] 26/26 p
 | Phase 163 P06 | 8m | 2 tasks | 5 files |
 | Phase 163 P07 | protected wait | 1 task | 1 file |
 | Phase 163 P08 | 8m | 2 tasks | 7 files |
+| Phase 164 P01 | 4m | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,8 @@ Progress: [████████████████████] 26/26 p
 - [Phase 163]: Protected recurrence evidence selected finite exact-owner bounds: 240 seconds for the complete gallery, 60 seconds for four structural test bodies, and 20 minutes for browser-only sandbox ownership; global timeout, retry, worker, and job policy remain unchanged.
 - [Phase 163]: Human UAT is removed from timeout proof; local integration and normally triggered exact-SHA protected jobs are the release-path authority.
 - [Phase 163]: Normal PR run 33002642359 passed Core Deterministic and Operator Browser at exact final repair SHA f8bf029f; all four DTRM requirements and Nyquist validation are complete.
+- [Phase ?]: D-08 removes only the verified stale root sweep and retains Phase 162 proof as the durable source.
+- [Phase ?]: Disposition rows require a complete twelve-column schema, unique subjects, and a closed disposition enum.
 
 ### Pending Todos
 
@@ -119,6 +122,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-08-26T20:23:32.675Z
-Stopped at: Phase 164 context gathered
-Resume file: .planning/phases/164-repository-truth-reconciliation-and-closeout/164-CONTEXT.md
+Last session: 2026-08-26T21:09:27.464Z
+Stopped at: Completed 164-01-PLAN.md
+Resume file: None

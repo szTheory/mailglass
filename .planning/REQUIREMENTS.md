@@ -30,7 +30,7 @@
 ### Repository Truth and Closeout
 
 - [ ] **TRTH-01**: Maintainer, version, release, recovery, and package guidance agrees with the settled protected-release workflow, published package state, and actual supported commands.
-- [ ] **TRTH-02**: Every changed tracked/generated artifact and ignore rule has an evidence-backed classification; only demonstrable junk or stale output is removed, and planning/release proof remains tracked and discoverable.
+- [x] **TRTH-02**: Every changed tracked/generated artifact and ignore rule has an evidence-backed classification; only demonstrable junk or stale output is removed, and planning/release proof remains tracked and discoverable.
 - [ ] **TRTH-03**: A maintainer can reproduce final closeout evidence showing the canonical workspace clean, protected main CI green, scheduled/recovery outcomes explained, and every audited item dispositioned.
 
 ## Future Requirements
@@ -72,7 +72,7 @@ Every v2.7 requirement is assigned to exactly one planned phase.
 | DTRM-03 | Phase 163 | Complete |
 | DTRM-04 | Phase 163 | Complete |
 | TRTH-01 | Phase 164 | Pending |
-| TRTH-02 | Phase 164 | Pending |
+| TRTH-02 | Phase 164 | Complete |
 | TRTH-03 | Phase 164 | Pending |
 
 **Coverage:**
