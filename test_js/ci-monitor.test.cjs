@@ -42,6 +42,16 @@ test("keeps watch fail-fast and failed-log operations exact-run scoped", () => {
   ]);
 });
 
+test("inspects exact PR identity and check rollup without mutating it", () => {
+  assert.deepEqual(buildCommand(["pr-inspect", "228"]), [
+    "pr",
+    "view",
+    "228",
+    "--json",
+    "number,state,isDraft,headRefName,headRefOid,baseRefName,url,statusCheckRollup"
+  ]);
+});
+
 test("builds a bounded PR creation command without an inline body", () => {
   assert.deepEqual(
     buildCommand([
@@ -72,6 +82,7 @@ test("builds a bounded PR creation command without an inline body", () => {
 
 test("rejects unknown commands and malformed identifiers", () => {
   assert.throws(() => buildCommand(["inspect", "not-a-run"]), /positive integer/);
+  assert.throws(() => buildCommand(["pr-inspect", "0"]), /positive integer/);
   assert.throws(() => buildCommand(["runs", "--limit", "500"]), /unknown argument/);
   assert.throws(() => buildCommand(["dispatch"]), /unknown command/);
 });

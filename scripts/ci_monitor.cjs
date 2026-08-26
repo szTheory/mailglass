@@ -15,6 +15,7 @@ Commands:
   watch <run-id>               Watch one exact run and fail on non-success.
   fail-fast <run-id>           Alias for watch.
   log-failed <run-id>          Print logs for failed steps in one exact run.
+  pr-inspect <pr-number>       Inspect exact PR identity and check rollup as JSON.
   pr-create --base <branch> --head <branch> --title <text> --body-file <path>
                                Open a PR using a file-backed body.
   --help                       Show this help.
@@ -44,6 +45,15 @@ function buildCommand(argv) {
     case "log-failed":
       return ["run", "view", exactRunId(args), "--log-failed"];
 
+    case "pr-inspect":
+      return [
+        "pr",
+        "view",
+        exactPositiveInteger(args, "pr-number"),
+        "--json",
+        "number,state,isDraft,headRefName,headRefOid,baseRefName,url,statusCheckRollup"
+      ];
+
     case "pr-create":
       return buildPrCreate(args);
 
@@ -64,8 +74,12 @@ function buildRuns(args) {
 }
 
 function exactRunId(args) {
+  return exactPositiveInteger(args, "run-id");
+}
+
+function exactPositiveInteger(args, name) {
   if (args.length !== 1 || !/^[1-9][0-9]*$/.test(args[0])) {
-    throw new Error("run-id must be a positive integer");
+    throw new Error(`${name} must be a positive integer`);
   }
 
   return args[0];
