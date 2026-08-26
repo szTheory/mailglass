@@ -59,7 +59,7 @@ defmodule MyApp.WelcomeMailboxTest do
 end
 ```
 
-## Manual Setup
+## Current package compatibility
 
 Inbound setup is manual in this phase. There is no generated setup path for
 `mailglass_inbound`, so adopters should wire the package explicitly.

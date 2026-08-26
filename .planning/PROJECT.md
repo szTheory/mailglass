@@ -22,6 +22,12 @@ cleanup was authorized. The 15 former conversational UAT checkpoints are now enf
 Git auditor and disposable-repository contract tests in the existing required CI lane, which passed 283
 tests with zero failures. Verification passed 21/21 with no human verification remaining.
 
+**Phase 162 completed and verified 2026-08-26.** The blocked release state now has an append-only,
+identity-bound disposition; proposal, repository-hygiene, and post-publish controls emit truthful bounded
+results without gaining release authority. The read-only scheduled-control sweep verified all three
+current-protected-`main` runs, including matching log, summary, and retained artifact digests. Verification
+passed 5/5 and UAT passed 2/2 with no human judgment or open security threats remaining.
+
 **v2.6 Engineering Quality Ratchet shipped and passed its milestone audit 2026-08-21.** The milestone restored
 generated-host migration truth, bounded execution and data/security correctness, tightened architecture,
 and made merge and release signals fail closed. The canonical `mix ci` path passed 1,914 tests, 23
@@ -100,6 +106,9 @@ ceremony are out of scope.
 - ✓ WSPC-01..04 — complete pre-mutation workspace evidence, an explained canonical `main`, one
   evidence-backed disposition per identity, and verified preservation before any cleanup — validated in
   Phase 161. The phase's 15 UAT checks are deterministic local/CI contracts; no human UAT remains.
+- ✓ AUTO-01..05 — reconciled release identities and explicit dispositions; proposal-only protected
+  authority; three-state repository-hygiene evidence; and exact-target post-publish recovery — validated
+  in Phase 162. All three current-main scheduled controls passed provenance and artifact-agreement UAT.
 
 ## Completed Milestone: v2.6 Engineering Quality Ratchet
 
@@ -946,7 +955,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-45 | One canonical local `mix ci` path and the protected `CI Green` aggregate must cover the same required deterministic evidence, with explicit ownership for every exception | Maintainers need a single reproducible merge signal whose green state cannot be manufactured by skipped, stale, or cross-test evidence | ✓ Validated Phase 159 and milestone re-audit — scoped telemetry regression, policy checks, and uninterrupted full CI passed |
 | D-46 | Publication authority is bound to one authorized candidate digest and immutable tag, and success requires exact-Hex generated-host and trust-runner evidence | Repository green is not sufficient proof that the public three-package family is installable and behaviorally identical | ✓ Validated Phase 160 — 2.5.0 / 2.5.0 / 2.2.0 published and exact-Hex adoption passed from immutable tag SHA `0f0b0686` |
 | D-47 | Workspace and release-evidence verification is machine-enforced through live identity reconciliation plus disposable-repository CI contracts; evidence corrections append instead of rewriting history | Git identity, reachability, preservation, and release-verdict invariants are deterministic and recurring, so manual UAT adds delay without adding judgment value | ✓ Validated Phase 161 — 21/21 verification truths and 15/15 automated UAT checks passed; the auditor caught and append-only corrected one historical evidence hash typo |
-| D-48 | Verification is automated by default: every machine-observable acceptance criterion must resolve through required deterministic CI, browser/integration evidence, or a read-only recurring monitor; `human_needed` is reserved for explicitly documented irreducible product, legal, or subjective judgment | Waiting for a person to repeat a query or inspect deterministic evidence delays maintenance and lets stale state masquerade as proof; automated evidence can stay bounded, current, and rerunnable | — Adopted during Phase 162; current-main scheduled-control freshness is implemented and awaits its first complete live sweep before validation |
+| D-48 | Verification is automated by default: every machine-observable acceptance criterion must resolve through required deterministic CI, browser/integration evidence, or a read-only recurring monitor; `human_needed` is reserved for explicitly documented irreducible product, legal, or subjective judgment | Waiting for a person to repeat a query or inspect deterministic evidence delays maintenance and lets stale state masquerade as proof; automated evidence can stay bounded, current, and rerunnable | ✓ Validated Phase 162 — the read-only sweep verified all three current-main schedule runs and their retained evidence chains without manual substitution |
 
 ## Evolution
 
@@ -969,7 +978,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-08-25 during Phase 162.*
+*Last updated: 2026-08-26 after Phase 162.*
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->

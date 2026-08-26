@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 10
 waived_count: 0
-fixed_count: 10
-total_count: 20
-last_updated: 2026-08-24T20:37:02.538Z
+fixed_count: 12
+total_count: 22
+last_updated: 2026-08-26T21:30:58.767Z
 ---
 
 # Broken Windows Ledger
@@ -35,6 +35,8 @@ last_updated: 2026-08-24T20:37:02.538Z
 | 18 | 143 | lint-warning | test/support/suite_floor.ex |  | SuiteFloor executed_nudge fires on the gating toolchain: 1630 executed vs pinned floor 1575 on the mailglass axis, 55 above the 40-test nudge margin. Advisory only, halts nothing. Already over margin on main before this plan (run 30635221221 showed 1623 vs 1576). Re-pinning must be measured from a real CI run per 143-10's protocol, not locally | open |  | 2026-07-31T15:09:13.698Z |  |
 | 19 | 157 | deviation | lib/mailglass/suppression_store/ecto.ex | 205 | Nil stream bulk predicate bug auto-fixed during Plan 157-07. | open |  | 2026-08-17T09:01:29.628Z |  |
 | 20 | 162 | unrun-verify | test/scripts/release_trigger_recovery_test.exs |  | Complete release-trigger recovery test file exceeded the interactive runner window before final completion. | open |  | 2026-08-24T20:37:02.538Z |  |
+| 21 | 164 | unrun-verify | test/mailglass/docs_contract_test.exs |  | mix ci.fast blocked by pre-existing formatting drift in Phase 164-03 contract test | fixed |  | 2026-08-26T21:23:27.723Z | 2026-08-26T21:30:58.688Z |
+| 22 | 164 | unrun-verify | test/mailglass/publish/maintaining_release_gate_contract_test.exs |  | mix ci.fast blocked by pre-existing formatting drift in Phase 164-02 contract test | fixed |  | 2026-08-26T21:23:27.812Z | 2026-08-26T21:30:58.767Z |
 
 ````json
 [
@@ -277,6 +279,30 @@ last_updated: 2026-08-24T20:37:02.538Z
     "reason": "",
     "recorded_at": "2026-08-24T20:37:02.538Z",
     "resolved_at": null
+  },
+  {
+    "id": 21,
+    "kind": "unrun-verify",
+    "phase": "164",
+    "file": "test/mailglass/docs_contract_test.exs",
+    "line": null,
+    "description": "mix ci.fast blocked by pre-existing formatting drift in Phase 164-03 contract test",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-08-26T21:23:27.723Z",
+    "resolved_at": "2026-08-26T21:30:58.688Z"
+  },
+  {
+    "id": 22,
+    "kind": "unrun-verify",
+    "phase": "164",
+    "file": "test/mailglass/publish/maintaining_release_gate_contract_test.exs",
+    "line": null,
+    "description": "mix ci.fast blocked by pre-existing formatting drift in Phase 164-02 contract test",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-08-26T21:23:27.812Z",
+    "resolved_at": "2026-08-26T21:30:58.767Z"
   }
 ]
 ````

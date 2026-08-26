@@ -39,6 +39,17 @@ const { test, expect } = require("@playwright/test");
 const MATRIX_WIDTHS = [320, 390, 768, 1440];
 const MATRIX_THEMES = ["light", "dark", "system"];
 const MATRIX_HEIGHT = 900;
+let testBodyStartedAtNs;
+
+test.beforeEach(async ({}, testInfo) => {
+  testBodyStartedAtNs = process.hrtime.bigint();
+  console.log(`[gallery-matrix] stage=test_body_start test_id=${testInfo.title}`);
+});
+
+test.afterEach(async ({}, testInfo) => {
+  const elapsedMs = Number((process.hrtime.bigint() - testBodyStartedAtNs) / 1_000_000n);
+  console.log(`[gallery-matrix] stage=test_body_finish test_id=${testInfo.title} elapsed_ms=${elapsedMs}`);
+});
 
 // Specimens that carry the fjordline-aps persona mirror + the pre-existing
 // stress specimens. These MUST render without overflow at every width — they
@@ -160,6 +171,13 @@ test.describe("gallery matrix — RATCHET-02 resize-loop overflow gate", () => {
   test("every gallery specimen renders without horizontal overflow across 320/390/768/1440 × light/dark/system", async ({
     page
   }) => {
+    // Phase 163 exact-owner repair: the complete 117-cell matrix exhausted the
+    // 30,000ms config default locally, then the first protected recurrence
+    // exhausted its test-local bounds at 60,002/60,047ms and then
+    // 120,004/120,064ms while readiness stayed healthy. Keep the global
+    // default unchanged; this one complete matrix body gets a finite ~2x
+    // latest protected measurement.
+    test.setTimeout(240_000);
     await openGallery(page);
 
     const cells = await discoverGalleryCells(page);
@@ -170,6 +188,7 @@ test.describe("gallery matrix — RATCHET-02 resize-loop overflow gate", () => {
     for (const stress of STRESS_CELLS) {
       expect(cells, `gallery includes stress cell ${stress}`).toContain(stress);
     }
+    console.log(`[gallery-matrix] stage=matrix_discovered cells=${cells.length}`);
 
     for (const width of MATRIX_WIDTHS) {
       await page.setViewportSize({ width, height: MATRIX_HEIGHT });

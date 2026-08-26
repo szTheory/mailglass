@@ -1198,16 +1198,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
       await expect(page.getByTestId("inbound-detail-back")).toBeVisible();
 
-      const filterToggleBox = await page.getByTestId("inbound-filters-toggle").boundingBox();
-      const backBox = await page.getByTestId("inbound-detail-back").boundingBox();
-      expect(filterToggleBox).not.toBeNull();
-      expect(backBox).not.toBeNull();
-      // Round to the rendered pixel: Chromium reports a 44px CSS floor as
-      // 43.99998px after subpixel layout — a target rendered at 43.99998px IS a
-      // 44px target for WCAG 2.2 target-size. Matches the checkTargetSize helper
-      // (lines ~365-366) and flows.spec.js:283, which already round.
-      expect(Math.round(filterToggleBox.height)).toBeGreaterThanOrEqual(44);
-      expect(Math.round(backBox.height)).toBeGreaterThanOrEqual(44);
+      await assertTouchTarget(page.getByTestId("inbound-filters-toggle"), "inbound filter toggle");
+      await assertTouchTarget(page.getByTestId("inbound-detail-back"), "inbound detail back");
     });
 
     test("Inbound: no-tenant truly-empty filtered-empty detail-error loading contract and selected/detail flow are named", async ({
@@ -1261,6 +1253,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       page,
       browser
     }) => {
+      // Phase 163 protected evidence: this complete 2-theme × 3-viewport body
+      // exhausted the 30,000ms default at 31.3s on both CI attempts while the
+      // same body passed locally in 16.9s. Keep the global default unchanged
+      // and give only this named matrix a finite ~2x protected bound.
+      test.setTimeout(60_000);
+
       const themes = [
         { name: "light", query: "theme=light", expectedTheme: "mailglass-light" },
         { name: "dark", query: "theme=dark", expectedTheme: "mailglass-dark" }
@@ -2157,6 +2155,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("primitive cells render every planned state in light, dark, and system wrappers", async ({
       page
     }) => {
+      // Phase 163 protected evidence: this complete primitive state/theme
+      // matrix exhausted the 30,000ms default at 32.5s on both CI attempts.
+      // Keep the global default unchanged and bound only this named matrix.
+      test.setTimeout(60_000);
+
       await openGallery(page);
 
       const source = require("fs").readFileSync("lib/mailglass_admin/gallery_live.ex", "utf8");
@@ -2228,6 +2231,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("interactive primitive hover, focus, disabled, and target-size contracts hold", async ({
       page
     }) => {
+      // Phase 163 final-head evidence: this complete interaction matrix
+      // exhausted the 30,000ms default at 32.1s and 32.3s. Keep the global
+      // default unchanged and bound only this named matrix.
+      test.setTimeout(60_000);
+
       await openGallery(page);
 
       for (const viewport of PRIMITIVE_VIEWPORTS) {
@@ -2300,6 +2308,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("stat_card shape, icon meaning, and overflow contracts hold at primitive widths", async ({
       page
     }) => {
+      // Phase 163 final-head evidence: this complete shape/contrast matrix
+      // exhausted the 30,000ms default at 32.2s and 32.1s. Keep the global
+      // default unchanged and bound only this named matrix.
+      test.setTimeout(60_000);
+
       await openGallery(page);
 
       for (const viewport of PRIMITIVE_VIEWPORTS) {

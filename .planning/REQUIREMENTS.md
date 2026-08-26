@@ -14,24 +14,24 @@
 
 ### Automation and Release Truth
 
-- [ ] **AUTO-01**: A maintainer can reconcile PR #222, its head/base commits and checks, tags, published Hex versions, and `.planning/release-target.json` to one evidence-backed release-state narrative.
-- [ ] **AUTO-02**: PR #222 and each stale release branch/check are merged only through the protected path, retired with a recorded reason, or retained with a named recovery condition; no auto-merge or check remains in unexplained limbo.
+- [x] **AUTO-01**: A maintainer can reconcile PR #222, its head/base commits and checks, tags, published Hex versions, and `.planning/release-target.json` to one evidence-backed release-state narrative.
+- [x] **AUTO-02**: PR #222 and each stale release branch/check are merged only through the protected path, retired with a recorded reason, or retained with a named recovery condition; no auto-merge or check remains in unexplained limbo.
 - [x] **AUTO-03**: Release-please produces a truthful proposal-only result through its current control and scheduled entry points without gaining merge, tag, publish, or protected-dispatch authority.
 - [x] **AUTO-04**: Repository-hygiene automation reports an inspectable pass, policy block, or cannot-check result whose logs and JSON artifact agree, with both a control run and an observed scheduled run when scheduling is applicable.
-- [ ] **AUTO-05**: Post-publish automation validates the exact immutable published target through its existing recovery path, or records an evidence-backed inapplicable/blocked disposition without substituting `main` or forcing a release.
+- [x] **AUTO-05**: Post-publish automation validates the exact immutable published target through its existing recovery path, or records an evidence-backed inapplicable/blocked disposition without substituting `main` or forcing a release.
 
 ### Deterministic Release-Path Gates
 
-- [ ] **DTRM-01**: A maintainer can reproduce and repair the observed PostgreSQL SQLSTATE 57014 property-test failure at its narrow fixture, session, isolation, or query boundary while retaining the invariant and 1,000 successful property executions.
-- [ ] **DTRM-02**: Focused repeated property proof and the canonical protected CI path pass without seed-pinning, skipping the property, changing product schemas/APIs, or loosening global database or job timeouts.
-- [ ] **DTRM-03**: A maintainer can reproduce and repair the observed gallery-matrix timeout at its narrow readiness, test, or Playwright configuration boundary while retaining discovered-specimen, viewport, theme, stress, and overflow coverage.
-- [ ] **DTRM-04**: Focused repeated browser proof and the relevant operator-browser gate pass without changing the admin UI, removing matrix cells, adding broad retries, or replacing bounded execution with an unlimited/global timeout.
+- [x] **DTRM-01**: A maintainer can bound reconstruction of the observed PostgreSQL SQLSTATE 57014 property-test failure, repair only a uniquely reproduced owner, and otherwise retain the invariant and 1,000 successful property executions while the next protected recurrence emits exact-run, structured, non-PII boundary evidence automatically.
+- [x] **DTRM-02**: Focused repeated property proof and the canonical protected CI path pass without seed-pinning, skipping the property, changing product schemas/APIs, or loosening global database or job timeouts.
+- [x] **DTRM-03**: A maintainer can reproduce and repair the observed gallery-matrix timeout at its narrow readiness, test, or Playwright configuration boundary while retaining discovered-specimen, viewport, theme, stress, and overflow coverage.
+- [x] **DTRM-04**: Focused repeated browser proof and the relevant operator-browser gate pass without changing the admin UI, removing matrix cells, adding broad retries, or replacing bounded execution with an unlimited/global timeout.
 
 ### Repository Truth and Closeout
 
-- [ ] **TRTH-01**: Maintainer, version, release, recovery, and package guidance agrees with the settled protected-release workflow, published package state, and actual supported commands.
-- [ ] **TRTH-02**: Every changed tracked/generated artifact and ignore rule has an evidence-backed classification; only demonstrable junk or stale output is removed, and planning/release proof remains tracked and discoverable.
-- [ ] **TRTH-03**: A maintainer can reproduce final closeout evidence showing the canonical workspace clean, protected main CI green, scheduled/recovery outcomes explained, and every audited item dispositioned.
+- [x] **TRTH-01**: Maintainer, version, release, recovery, and package guidance agrees with the settled protected-release workflow, published package state, and actual supported commands.
+- [x] **TRTH-02**: Every changed tracked/generated artifact and ignore rule has an evidence-backed classification; only demonstrable junk or stale output is removed, and planning/release proof remains tracked and discoverable.
+- [x] **TRTH-03**: A maintainer can reproduce final closeout evidence showing the canonical workspace clean, protected main CI green, scheduled/recovery outcomes explained, and every audited item dispositioned.
 
 ## Future Requirements
 
@@ -62,18 +62,18 @@ Every v2.7 requirement is assigned to exactly one planned phase.
 | WSPC-02 | Phase 161 | Complete |
 | WSPC-03 | Phase 161 | Complete |
 | WSPC-04 | Phase 161 | Complete |
-| AUTO-01 | Phase 162 | Gaps Found |
-| AUTO-02 | Phase 162 | Gaps Found |
-| AUTO-03 | Phase 162 | Gaps Found |
-| AUTO-04 | Phase 162 | Gaps Found |
-| AUTO-05 | Phase 162 | Gaps Found |
-| DTRM-01 | Phase 163 | Pending |
-| DTRM-02 | Phase 163 | Pending |
-| DTRM-03 | Phase 163 | Pending |
-| DTRM-04 | Phase 163 | Pending |
-| TRTH-01 | Phase 164 | Pending |
-| TRTH-02 | Phase 164 | Pending |
-| TRTH-03 | Phase 164 | Pending |
+| AUTO-01 | Phase 162 | Complete |
+| AUTO-02 | Phase 162 | Complete |
+| AUTO-03 | Phase 162 | Complete |
+| AUTO-04 | Phase 162 | Complete |
+| AUTO-05 | Phase 162 | Complete |
+| DTRM-01 | Phase 163 | Complete |
+| DTRM-02 | Phase 163 | Complete |
+| DTRM-03 | Phase 163 | Complete |
+| DTRM-04 | Phase 163 | Complete |
+| TRTH-01 | Phase 164 | Complete |
+| TRTH-02 | Phase 164 | Complete |
+| TRTH-03 | Phase 164 | Complete |
 
 **Coverage:**
 
@@ -83,4 +83,4 @@ Every v2.7 requirement is assigned to exactly one planned phase.
 
 ---
 *Requirements defined: 2026-08-21*
-*Last updated: 2026-08-22 after Phase 161 verification*
+*Last updated: 2026-08-26 after Phase 163 protected machine verification*

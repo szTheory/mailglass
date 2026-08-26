@@ -6,6 +6,14 @@ const browserReadyPath = "/ops/browser-ready";
 const browserLoginPath = `/ops/browser-login?tenant_id=browser-tenant&return_to=${encodeURIComponent(
   "/ops/mail?tenant_id=browser-tenant"
 )}`;
+const ciReporters = [
+  ["github"],
+  ["list"],
+  [
+    "./e2e/support/timeout-evidence-reporter.cjs",
+    { outputFile: "test-results/operator-browser-evidence.json" }
+  ]
+];
 
 module.exports = defineConfig({
   testDir: "./e2e",
@@ -14,10 +22,10 @@ module.exports = defineConfig({
     timeout: 5_000
   },
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? [["github"], ["list"]] : "list",
+  reporter: process.env.CI ? ciReporters : "list",
   use: {
     baseURL,
-    trace: "on-first-retry"
+    trace: process.env.CI ? "retain-on-failure" : "on-first-retry"
   },
   webServer: {
     command: 'MIX_ENV=test mix run --no-halt -e "MailglassAdmin.TestSupport.OperatorBrowserServer.run!()"',
@@ -25,7 +33,14 @@ module.exports = defineConfig({
     env: {
       ...process.env,
       MIX_ENV: "test",
-      BROWSER_SERVER_PORT: port
+      BROWSER_SERVER_PORT: port,
+      ...(process.env.CI
+        ? {
+            MAILGLASS_BROWSER_SERVER_EVIDENCE_PATH:
+              process.env.MAILGLASS_BROWSER_SERVER_EVIDENCE_PATH ||
+              "test-results/operator-browser-server.ndjson"
+          }
+        : {})
     },
     url: `${baseURL}${browserReadyPath}`,
     // CI-cold start runs `mix run` which compiles every transitive dep in

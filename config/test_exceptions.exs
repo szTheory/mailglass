@@ -153,7 +153,7 @@
       category: :liveness
     },
     %{
-      source: "test/mailglass/docs_contract_test.exs:408",
+      source: "test/mailglass/docs_contract_test.exs:450",
       kind: :skip,
       owner: "core",
       reason: "documented compatibility fixture",

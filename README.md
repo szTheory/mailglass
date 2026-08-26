@@ -54,16 +54,18 @@ see [`guides/run-the-demo.md`](guides/run-the-demo.md) for the full walkthrough.
 The demo lives in `reference/demo_app`; the narrower `reference/host_app` remains
 the maintained trust-proof baseline.
 
-## Installation
+## Current package compatibility
 
-Add `mailglass` to your dependencies:
+For the current package line, add the linked core and admin packages together.
+Add the independently released inbound package when your app receives mail:
 
 ```elixir
 # mix.exs
 def deps do
   [
     {:mailglass, "~> 2.5"},
-    {:mailglass_admin, "~> 2.5", only: [:dev]}
+    {:mailglass_admin, "~> 2.5", only: [:dev]},
+    {:mailglass_inbound, "~> 2.2"}
   ]
 end
 ```

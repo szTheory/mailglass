@@ -1,8 +1,8 @@
 ---
 phase: 162-protected-release-and-scheduled-control-recovery
-verified: 2026-08-25T17:26:23Z
-status: human_needed
-status_reason: automated_external_evidence_pending
+verified: 2026-08-26T14:16:22Z
+status: passed
+status_reason: all_scheduled_controls_current
 score: 5/5 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
@@ -16,18 +16,19 @@ re_verification:
   regressions: []
 human_verification: []
 automated_verification:
-  status: pending
+  status: passed
   command: "GITHUB_REPOSITORY=szTheory/mailglass bash scripts/scheduled_control_evidence.sh sweep --output scheduled-control-sweep.json"
   observed:
-    - "release-please schedule evidence is verified on protected main fda6368bf43c49aab88e3f90da1d6af67ee77d35"
-    - "repo-hygiene and post-publish-smoke are bounded pending until their next daily schedule runs on that revision"
+    - "release-please schedule run 32975367369 verified blocked/proposal_identity_mismatch on protected main 291686cde9db750e4eb6f5de8ed893f7551b867b"
+    - "repo-hygiene schedule run 32970286260 verified blocked because one open PR requires disposition on the same protected main"
+    - "post-publish-smoke schedule run 32967274210 verified blocked/scheduled_target_not_published on the same protected main"
 ---
 
 # Phase 162: Protected Release and Scheduled-Control Recovery Verification Report
 
 **Phase Goal:** Maintainers can explain and safely disposition the blocked release state while existing release and repository controls report only truthful, bounded outcomes.
-**Verified:** 2026-08-25T17:26:23Z
-**Status:** human_needed (canonical compatibility; the remaining gate is automated external evidence, not human judgment)
+**Verified:** 2026-08-26T14:16:22Z
+**Status:** passed — the automated current-main scheduled-control sweep verified all three retained evidence chains.
 **Re-verification:** Yes — after Wave 7 gap closure
 
 ## Goal Achievement
@@ -107,7 +108,7 @@ All requirement IDs declared in the 13 plan frontmatters are AUTO-01 through AUT
 
 No unreferenced `TBD`, `FIXME`, or `XXX` marker was found in phase-delivered implementation files. No missing, stubbed, or orphaned phase artifact was found.
 
-### Automated Verification Pending
+### Automated Verification Complete
 
 ### 1. Observe post-change scheduled controls
 
@@ -115,7 +116,7 @@ No unreferenced `TBD`, `FIXME`, or `XXX` marker was found in phase-delivered imp
 
 **Expected:** Event/run ID/workflow SHA, logs, job summary, and JSON artifact agree on a bounded outcome. A manual dispatch is never used as schedule evidence.
 
-**Current automated result:** `release-please` is verified on protected main `fda6368bf43c49aab88e3f90da1d6af67ee77d35`; `repo-hygiene` and `post-publish-smoke` remain bounded `pending` until their next daily schedule. The monitor emits and retains a complete JSON verdict even while its job is non-green.
+**Current automated result:** PASS — release-please run `32975367369`, repo-hygiene run `32970286260`, and post-publish-smoke run `32967274210` are completed schedule events on protected main `291686cde9db750e4eb6f5de8ed893f7551b867b`. Their bounded results and retained artifact digests agree with their logs and summaries.
 
 ### Judgment-tier prohibitions — automated
 
@@ -127,9 +128,9 @@ No unreferenced `TBD`, `FIXME`, or `XXX` marker was found in phase-delivered imp
 
 ### Gaps Summary
 
-The two prior blocking implementation gaps are closed and the judgment-tier prohibitions now have executable enforcement. This report remains an escalation gate only because two post-deployment daily schedule observations have not occurred yet. The repository must not advance until the automated sweep verifies all three current-main runs; no human review or manual dispatch can satisfy that gate.
+The two prior blocking implementation gaps are closed, the judgment-tier prohibitions have executable enforcement, and the read-only sweep verified all three current-main scheduled runs. No human review or manual-dispatch substitution remains.
 
 ---
 
-_Verified: 2026-08-25T17:26:23Z_
+_Verified: 2026-08-26T14:16:22Z_
 _Verifier: the agent (gsd-verifier)_
