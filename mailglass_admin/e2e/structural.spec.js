@@ -1261,6 +1261,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       page,
       browser
     }) => {
+      // Phase 163 protected evidence: this complete 2-theme × 3-viewport body
+      // exhausted the 30,000ms default at 31.3s on both CI attempts while the
+      // same body passed locally in 16.9s. Keep the global default unchanged
+      // and give only this named matrix a finite ~2x protected bound.
+      test.setTimeout(60_000);
+
       const themes = [
         { name: "light", query: "theme=light", expectedTheme: "mailglass-light" },
         { name: "dark", query: "theme=dark", expectedTheme: "mailglass-dark" }

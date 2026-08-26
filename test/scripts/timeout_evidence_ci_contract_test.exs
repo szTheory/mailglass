@@ -5,6 +5,7 @@ defmodule Mailglass.Scripts.TimeoutEvidenceCIContractTest do
   @ci_path Path.join(@repo_root, ".github/workflows/ci.yml")
   @playwright_path Path.join(@repo_root, "mailglass_admin/playwright.config.cjs")
   @gallery_path Path.join(@repo_root, "mailglass_admin/e2e/gallery-matrix.spec.js")
+  @structural_path Path.join(@repo_root, "mailglass_admin/e2e/structural.spec.js")
 
   test "existing deterministic and browser lanes upload strict evidence only when their gate fails" do
     ci = File.read!(@ci_path)
@@ -51,12 +52,16 @@ defmodule Mailglass.Scripts.TimeoutEvidenceCIContractTest do
     assert config =~ "operator-browser-evidence.json"
   end
 
-  test "the reproduced gallery timeout is repaired only at the named matrix body" do
+  test "reproduced browser timeouts are repaired only at their named matrix bodies" do
     gallery = File.read!(@gallery_path)
+    structural = File.read!(@structural_path)
 
-    assert gallery =~ "test.setTimeout(60_000)"
+    assert gallery =~ "test.setTimeout(120_000)"
     assert gallery =~ "const MATRIX_WIDTHS = [320, 390, 768, 1440]"
     assert gallery =~ ~s(const MATRIX_THEMES = ["light", "dark", "system"])
     assert gallery =~ "expect(cells.length, \"gallery exposes specimen cells\").toBeGreaterThan(50)"
+
+    assert structural =~
+             ~r/Inbound: WCAG AA contrast matrix covers light\/dark themes at 390\/768\/1440[\s\S]{0,800}test\.setTimeout\(60_000\)/
   end
 end
