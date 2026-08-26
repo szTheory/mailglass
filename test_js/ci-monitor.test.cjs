@@ -48,6 +48,37 @@ test("keeps watch fail-fast and failed-log operations exact-run scoped", () => {
     "4242",
     "--log-failed"
   ]);
+
+  assert.deepEqual(buildCommand(["job-log", "98259840268"]), [
+    "run",
+    "view",
+    "--job",
+    "98259840268",
+    "--log"
+  ]);
+
+  assert.deepEqual(buildCommand(["artifacts", "4242"]), [
+    "api",
+    "repos/{owner}/{repo}/actions/runs/4242/artifacts?per_page=100"
+  ]);
+
+  assert.deepEqual(
+    buildCommand([
+      "artifact-download",
+      "4242",
+      "operator-browser-timeout-evidence-4242-node-22",
+      "/tmp/phase-163-artifact"
+    ]),
+    [
+      "run",
+      "download",
+      "4242",
+      "--name",
+      "operator-browser-timeout-evidence-4242-node-22",
+      "--dir",
+      "/tmp/phase-163-artifact"
+    ]
+  );
 });
 
 test("inspects exact PR identity and check rollup without mutating it", () => {

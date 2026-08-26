@@ -16,6 +16,10 @@ Commands:
   watch <run-id>               Watch one exact run and fail on non-success.
   fail-fast <run-id>           Alias for watch.
   log-failed <run-id>          Print logs for failed steps in one exact run.
+  job-log <job-id>             Print the log for one completed exact job.
+  artifacts <run-id>           List artifacts already published by an exact run.
+  artifact-download <run-id> <name> <directory>
+                               Download one named exact-run artifact.
   pr-inspect <pr-number>       Inspect exact PR identity and check rollup as JSON.
   pr-set-title <pr-number> <title>
                                Replace a PR title after policy validation fails.
@@ -51,6 +55,29 @@ function buildCommand(argv) {
 
     case "log-failed":
       return ["run", "view", exactRunId(args), "--log-failed"];
+
+    case "job-log":
+      return ["run", "view", "--job", exactPositiveInteger(args, "job-id"), "--log"];
+
+    case "artifacts":
+      return [
+        "api",
+        `repos/{owner}/{repo}/actions/runs/${exactRunId(args)}/artifacts?per_page=100`
+      ];
+
+    case "artifact-download":
+      if (args.length !== 3) {
+        throw new Error("artifact-download requires run-id, name, and directory");
+      }
+      return [
+        "run",
+        "download",
+        exactPositiveInteger([args[0]], "run-id"),
+        "--name",
+        stableValue("artifact name", args[1]),
+        "--dir",
+        stableValue("directory", args[2])
+      ];
 
     case "pr-inspect":
       return [
