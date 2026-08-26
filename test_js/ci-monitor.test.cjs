@@ -58,6 +58,11 @@ test("inspects exact PR identity and check rollup without mutating it", () => {
     "--json",
     "number,state,isDraft,headRefName,headRefOid,baseRefName,url,statusCheckRollup"
   ]);
+
+  assert.deepEqual(
+    buildCommand(["pr-set-title", "228", "ci(163): automate timeout proof"]),
+    ["pr", "edit", "228", "--title", "ci(163): automate timeout proof"]
+  );
 });
 
 test("builds a bounded PR creation command without an inline body", () => {

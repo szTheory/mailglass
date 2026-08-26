@@ -17,6 +17,8 @@ Commands:
   fail-fast <run-id>           Alias for watch.
   log-failed <run-id>          Print logs for failed steps in one exact run.
   pr-inspect <pr-number>       Inspect exact PR identity and check rollup as JSON.
+  pr-set-title <pr-number> <title>
+                               Replace a PR title after policy validation fails.
   pr-create --base <branch> --head <branch> --title <text> --body-file <path>
                                Open a PR using a file-backed body.
   --help                       Show this help.
@@ -57,6 +59,18 @@ function buildCommand(argv) {
         exactPositiveInteger(args, "pr-number"),
         "--json",
         "number,state,isDraft,headRefName,headRefOid,baseRefName,url,statusCheckRollup"
+      ];
+
+    case "pr-set-title":
+      if (args.length !== 2) {
+        throw new Error("pr-set-title requires a PR number and title");
+      }
+      return [
+        "pr",
+        "edit",
+        exactPositiveInteger([args[0]], "pr-number"),
+        "--title",
+        stableValue("title", args[1])
       ];
 
     case "pr-create":
