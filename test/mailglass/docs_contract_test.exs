@@ -12,10 +12,15 @@ defmodule Mailglass.DocsContractTest do
 
       assert dependency_constraint!(root_guidance, "mailglass", "README.md") == core_version
       assert dependency_constraint!(root_guidance, "mailglass_admin", "README.md") == admin_version
-      assert dependency_constraint!(root_guidance, "mailglass_inbound", "README.md") == inbound_version
+
+      assert dependency_constraint!(root_guidance, "mailglass_inbound", "README.md") ==
+               inbound_version
 
       admin_guidance =
-        current_compatibility_section!(File.read!("mailglass_admin/README.md"), "mailglass_admin/README.md")
+        current_compatibility_section!(
+          File.read!("mailglass_admin/README.md"),
+          "mailglass_admin/README.md"
+        )
 
       assert dependency_constraint!(admin_guidance, "mailglass", "mailglass_admin/README.md") ==
                core_version
@@ -29,7 +34,11 @@ defmodule Mailglass.DocsContractTest do
           "mailglass_inbound/README.md"
         )
 
-      assert dependency_constraint!(inbound_guidance, "mailglass_inbound", "mailglass_inbound/README.md") ==
+      assert dependency_constraint!(
+               inbound_guidance,
+               "mailglass_inbound",
+               "mailglass_inbound/README.md"
+             ) ==
                inbound_version
 
       assert dependency_constraint!(inbound_guidance, "mailglass", "mailglass_inbound/README.md") ==

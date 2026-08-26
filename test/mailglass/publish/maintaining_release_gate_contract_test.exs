@@ -5,7 +5,13 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
 
   test "current protected release and recovery path records exact authority and fail-closed evidence" do
     maintaining = File.read!(@maintaining_path)
-    current = section!(maintaining, "Current protected release and recovery path", "Historical release procedures")
+
+    current =
+      section!(
+        maintaining,
+        "Current protected release and recovery path",
+        "Historical release procedures"
+      )
 
     assert current =~ "mix mailglass.repo.hygiene --check --format json"
     assert current =~ "protected exact-candidate dispatch"
@@ -40,7 +46,11 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
     assert historical =~ "~> 1.0"
     assert historical =~ "non-current"
 
-    refute section!(maintaining, "Current protected release and recovery path", "Historical release procedures") =~
+    refute section!(
+             maintaining,
+             "Current protected release and recovery path",
+             "Historical release procedures"
+           ) =~
              "~> 1.3"
   end
 
