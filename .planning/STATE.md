@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene
-current_phase: 163
-current_phase_name: deterministic-release-path-timeout-repairs
-status: verifying
-stopped_at: Phase 163 exact-SHA protected PR run pending
-last_updated: "2026-08-26T17:12:00Z"
+current_phase: 164
+current_phase_name: repository-truth-reconciliation-and-closeout
+status: ready
+stopped_at: Phase 163 complete; Phase 164 ready to plan
+last_updated: "2026-08-26T18:31:50Z"
 last_activity: 2026-08-26
-last_activity_desc: Phase 163 local integration passed and PR #228 opened for protected proof
+last_activity_desc: Phase 163 exact-head protected CI passed with zero human UAT
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 26
-  completed_plans: 24
-  percent: 50
+  completed_plans: 26
+  percent: 75
 ---
 
 # Project State
@@ -24,22 +24,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-26)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 163 — deterministic-release-path-timeout-repairs
+**Current focus:** Phase 164 — repository-truth-reconciliation-and-closeout
 
 ## Current Position
 
-Phase: 163 (deterministic-release-path-timeout-repairs) — VERIFYING
-Plan: 7 of 8
-Status: Awaiting normal protected PR result
-Last activity: 2026-08-26 — local integration passed; PR #228 opened automatically
+Phase: 164 (repository-truth-reconciliation-and-closeout) — READY
+Plan: not yet planned
+Status: Phase 163 machine-verified; ready for Phase 164 planning
+Last activity: 2026-08-26 — protected run 32998989827 and both release-path jobs passed
 
-Progress: [██████████████████░░] 24/26 plans (92%)
+Progress: [████████████████████] 26/26 planned plans (100%)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 18
+- Total plans completed: 26
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -49,7 +49,7 @@ Progress: [██████████████████░░] 24/26 p
 |-------|-------|-------|----------|
 | 161. Canonical Workspace and Evidence Preservation | 5 | 72m | 14m |
 | 162. Protected Release and Scheduled-Control Recovery | 13 | — | — |
-| 163. Deterministic Release-Path Timeout Repairs | 6 | — | — |
+| 163. Deterministic Release-Path Timeout Repairs | 8 | — | — |
 | 164. Repository Truth Reconciliation and Closeout | 0 | — | — |
 **Per-Plan Metrics:**
 
@@ -79,6 +79,8 @@ Progress: [██████████████████░░] 24/26 p
 | Phase 163 P04 | continuation | 3 tasks | 8 files |
 | Phase 163 P05 | continuation | 3 tasks | 8 files |
 | Phase 163 P06 | 8m | 2 tasks | 5 files |
+| Phase 163 P07 | protected wait | 1 task | 1 file |
+| Phase 163 P08 | 8m | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -97,8 +99,9 @@ Progress: [██████████████████░░] 24/26 p
 - [Phase 162]: External GitHub bytes require decode and list-shape validation; unavailable evidence is `cannot-check`, and summaries consume the same persisted result as retained artifacts.
 - [Phase 162]: Scheduled-control UAT binds event, run, and workflow SHA to protected `main`; all three current-main evidence chains verified on 2026-08-26 without manual substitution.
 - [Phase 163]: Bounded non-reproduction of the historical database cancellation authorizes no speculative repair; the existing deterministic lane now captures the next structured recurrence automatically.
-- [Phase 163]: The current gallery timeout belongs to the complete 117-cell body; only that test receives a finite 60-second bound while global policy and coverage remain unchanged.
+- [Phase 163]: Protected recurrence evidence selected finite exact-owner bounds: 240 seconds for the complete gallery, 60 seconds for two structural matrices, and 20 minutes for browser-only sandbox ownership; global timeout, retry, worker, and job policy remain unchanged.
 - [Phase 163]: Human UAT is removed from timeout proof; local integration and normally triggered exact-SHA protected jobs are the release-path authority.
+- [Phase 163]: Normal PR run 32998989827 passed Core Deterministic and Operator Browser at the protected repair identity; all four DTRM requirements and Nyquist validation are complete.
 
 ### Pending Todos
 
@@ -106,7 +109,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- PR #228's normal protected run must finish successfully for the frozen Phase 163 repair branch before DTRM-02/DTRM-04 and final validation can close.
+None.
 
 ## Deferred Items
 
@@ -116,6 +119,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-26T15:54:57Z
-Stopped at: Phase 163 exact-SHA protected PR run pending
-Resume file: .planning/phases/163-deterministic-release-path-timeout-repairs/163-07-PLAN.md
+Last session: 2026-08-26T18:31:50Z
+Stopped at: Phase 163 complete; Phase 164 ready to plan
+Resume file: .planning/ROADMAP.md

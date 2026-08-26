@@ -1,77 +1,67 @@
 ---
 phase: 163
 slug: deterministic-release-path-timeout-repairs
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-08-26
+approved: 2026-08-26
+human_uat_required: false
 ---
 
-# Phase 163 — Validation Strategy
+# Phase 163 — Validation Record
 
-> Per-phase validation contract for feedback sampling during execution.
+All acceptance is automated. The phase uses ExUnit, StreamData, PostgreSQL/Ecto
+Sandbox, Playwright, actionlint, and the repository-local read-only CI monitor;
+no new test framework or human verification step was added.
 
----
+## Executed verification map
 
-## Test Infrastructure
+| Task ID | Requirement | Automated evidence | Threat refs | Status |
+| --- | --- | --- | --- | --- |
+| 163-04-01 | DTRM-01 | Immutable database run/job/SHA and structured SQLSTATE 57014 recovered | T-163-14, T-163-15 | green |
+| 163-04-02 | DTRM-01 | Three exact-SHA retry-disabled reconstructions; no recurrence, no speculative repair | T-163-16, T-163-17 | green |
+| 163-04-03 | DTRM-01/02 | Sanitized stable-operation recorder tests and unchanged 1,000-run property pair | T-163-18 | green |
+| 163-05-01 | DTRM-03 | Immutable gallery failure plus current monotonic reproduction and protected recurrence artifacts | T-163-19, T-163-20 | green |
+| 163-05-02 | DTRM-03/04 | Finite title-local bounds and 20-minute browser-owner bound; exact focused sets first-attempt green | T-163-21 | green |
+| 163-05-03 | DTRM-03/04 | Live discovery, 117 cells, four widths, three themes, stress/overflow/clipping inventory retained | T-163-22 | green |
+| 163-06-01 | DTRM-02/04 | `mix test --warnings-as-errors`: 23 properties, 1,964 tests, 0 failures | T-163-23 | green |
+| 163-06-02 | DTRM-04 | `CI=true npm run test:operator-browser`: 176 passed, 1 skip, no retry | T-163-23 | green |
+| 163-07-01 | DTRM-02/04 | Normal PR run `32998989827` reached terminal success at exact `repair_sha` | T-163-24, T-163-25 | green |
+| 163-08-01 | DTRM-02/04 | Read-only exact run/job reconciliation: Core `98275572748`, Browser `98275572988`, both success | T-163-26 | green |
+| 163-08-02 | DTRM-01/02/03/04 | Final requirement, edge, prohibition, source, local, and protected synthesis in `163-PROOF.md` | T-163-27, T-163-28, T-163-29 | green |
 
-| Property | Value |
-|----------|-------|
-| **Framework** | ExUnit + StreamData + PostgreSQL/Ecto Sandbox; Playwright |
-| **Config file** | `test/test_helper.exs`; `mailglass_admin/playwright.config.cjs` |
-| **Quick run command** | `MIX_ENV=test mix test test/mailglass/properties/<affected_property>.exs --warnings-as-errors` or `cd mailglass_admin && npx playwright test e2e/gallery-matrix.spec.js --config=playwright.config.cjs --workers=1` |
-| **Full suite command** | Unchanged deterministic core suite and `cd mailglass_admin && npm run test:operator-browser` |
-| **Estimated runtime** | Focused property: several minutes; focused browser: bounded by the existing server/test lifecycle; full protected gates: up to their existing CI deadlines |
+## Automated command evidence
 
----
+| Scope | Command/result |
+| --- | --- |
+| Database focused/contracts | 2 properties, 6 tests, 0 failures in 64.4s |
+| Database complete | `mix test --warnings-as-errors` → 23 properties, 1,964 tests, 0 failures, 7 intentional skips |
+| Gallery repetitions | 44,027ms / 47,553ms / 50,256ms, all first attempt |
+| Final browser exact trio | 47.7s / 17.8s / 12.2s, 3 passed first attempt |
+| Browser complete | `CI=true npm run test:operator-browser` → 176 passed, 1 intentional skip in 3.8m, no retry |
+| Contracts | ExUnit evidence/CI contracts, admin recorder tests, Node reporter/monitor tests all green |
+| Workflow/source | `actionlint`, phase-owned format checks, and `git diff --check` green |
+| Protected | Run `32998989827` exact head; both named protected jobs successful |
 
-## Sampling Rate
+## Policy and coverage sign-off
 
-- **After database diagnosis or repair commits:** Run the affected 1,000-run property unseeded with warnings as errors.
-- **After browser diagnosis or repair commits:** Run the full `gallery-matrix.spec.js` with one worker and no added retry.
-- **After every plan wave:** Repeat the affected focused proof at the plan's documented finite count and record command, toolchain, elapsed range, first-attempt result, and attributed boundary.
-- **Before `$gsd-verify-work`:** The unchanged deterministic core and operator-browser gates must be green.
-- **Max feedback latency:** The existing bounded focused-test and CI job limits; no new global deadline.
+- [x] Both database properties retain unseeded `max_runs: 1000` execution.
+- [x] The browser matrix retains live discovery, 117 cells, all widths/themes,
+  stress fixtures, overflow checks, and 320px clipping proof.
+- [x] Global Playwright timeout remains 30 seconds; CI retry remains one; local
+  retry remains zero; execution remains one worker; job remains 30 minutes.
+- [x] Selected title/owner bounds are finite and derived from exact measured
+  exhaustion; equality remains a failure.
+- [x] Failure artifacts are strict, failure-only, non-PII, uniquely identified,
+  and retained for 90 days.
+- [x] No product/UI/schema/API/package/dependency/action/schedule/job topology,
+  dispatch, merge, or release change occurred.
+- [x] Sampling continuity and every task have automated evidence.
+- [x] No watch-mode or human UAT gate remains.
 
----
+**Approval:** machine-verified 2026-08-26
 
-## Per-Task Verification Map
+**Nyquist:** compliant
 
-| Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
-|---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 163-01-01 | 01 | 1 | DTRM-01 | T-163-01 | Attribute SQLSTATE/query/session without weakening bounds or exposing PII | property diagnosis | `MIX_ENV=test mix test test/mailglass/properties/idempotency_convergence_test.exs test/mailglass/properties/webhook_idempotency_convergence_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
-| 163-01-02 | 01 | 1 | DTRM-01, DTRM-02 | T-163-01 | Keep the repair fixture/session/query-local and preserve 1,000 runs | property regression + repetition | `make toolchain CMD='mix test test/mailglass/properties/<affected_property>.exs --warnings-as-errors'` | ✅ | ⬜ pending |
-| 163-02-01 | 02 | 1 | DTRM-03 | T-163-02 | Distinguish readiness from matrix execution without reducing coverage | browser diagnosis | `cd mailglass_admin && npx playwright test e2e/gallery-matrix.spec.js --config=playwright.config.cjs --workers=1` | ✅ | ⬜ pending |
-| 163-02-02 | 02 | 1 | DTRM-03, DTRM-04 | T-163-02 | Keep any timing change finite and local; preserve live discovery and all axes | browser regression + repetition | `cd mailglass_admin && npx playwright test e2e/gallery-matrix.spec.js --config=playwright.config.cjs --workers=1` | ✅ | ⬜ pending |
-| 163-03-01 | 03 | 2 | DTRM-02, DTRM-04 | T-163-01, T-163-02 | Do not broaden protected CI topology, retries, or job deadlines | integration | Unchanged deterministic core suite and `cd mailglass_admin && npm run test:operator-browser` | ✅ | ⬜ pending |
-| 163-03-02 | 03 | 2 | DTRM-02, DTRM-04 | T-163-10 | Bind protected evidence to the immutable post-Task-1 repair SHA; exact-SHA success may sign off, while pending/blocked/cannot-check remains recorded with both validation flags false | protected exact-SHA reconciliation | Read-only `gh run view &lt;protected_run_id&gt; --json headSha,event,status,conclusion,url,jobs` plus the Task 2 verdict-branch command in `163-03-PLAN.md` | ✅ | ⬜ pending — pass only for the exact SHA with both named jobs successful; every other verdict is a truthful non-pass, not an implementation error |
-
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
-
----
-
-## Wave 0 Requirements
-
-- [ ] Record the focused-proof evidence format in the executable plans: command, toolchain, repetition count, elapsed range, first-attempt result, and attributed source boundary.
-- [ ] Add no framework or package; existing ExUnit, StreamData, PostgreSQL, Sandbox, Playwright, and readiness infrastructure cover all requirements.
-- [ ] Add durable diagnostic instrumentation only if reproduction proves an attribution field is missing; otherwise remove temporary diagnostics after capturing the regression.
-
----
-
-## Manual-Only Verifications
-
-All phase behaviors have automated verification.
-
----
-
-## Validation Sign-Off
-
-- [ ] All tasks have `<automated>` verification or an explicit Wave 0 dependency.
-- [ ] Sampling continuity: no three consecutive tasks without automated verification.
-- [ ] Wave 0 covers all missing references.
-- [ ] No watch-mode flags.
-- [ ] Full 1,000-run properties and the complete gallery matrix remain intact.
-- [ ] Protected integration commands and job-level deadlines remain unchanged.
-- [ ] `nyquist_compliant: true` set after execution evidence passes.
-
-**Approval:** pending
+**Final sign-off:** pass

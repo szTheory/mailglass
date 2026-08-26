@@ -36,7 +36,7 @@ The final browser run reached readiness in 240ms, passed the repaired 117-cell b
 
 Commits `9b1a7c0c`, `7b51ba44`, `5d125ad2`, `cf91502b`, and `d27de4b6` add `scripts/ci_monitor.cjs` and five Node contract tests, then roll those tests into the existing Node-enabled operator-browser job. The wrapper exposes workflow state, bounded `runs`, exact-run `inspect`, PR identity/check inspection, policy-safe title repair, `watch`/`fail-fast`, failed/job logs, artifact listing/download, and file-backed PR creation; it never dispatches, merges, or releases.
 
-Two normally triggered protected runs published safe evidence for the browser recurrences. Commits `e8c6260f` and `9d0bcacf` repair only the exact owners; `9d0bcacf` is the successor code identity. DTRM-02 and DTRM-04 remain pending only until its normally triggered exact-SHA jobs are terminal and successful.
+Two normally triggered protected runs published safe evidence for the browser recurrences. Commits `e8c6260f` and `9d0bcacf` repair only the exact owners. Their normally triggered successor `32998989827` passed both named release-path jobs; DTRM-02 and DTRM-04 are complete.
 
 ---
-*Plan status: local integration complete; protected evidence delegated to CI*
+*Plan status: local integration complete; protected evidence reconciled by Plans 07–08*

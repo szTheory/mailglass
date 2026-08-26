@@ -55,7 +55,7 @@
 
 - [x] **Phase 161: Canonical Workspace and Evidence Preservation** - Establish an auditable canonical `main` and recoverably disposition all workspace and Git residue. (completed 2026-08-22)
 - [x] **Phase 162: Protected Release and Scheduled-Control Recovery** - Reconcile release state and restore truthful proposal, hygiene, and post-publish outcomes through existing protected controls. (completed 2026-08-26)
-- [ ] **Phase 163: Deterministic Release-Path Timeout Repairs** - Repair uniquely reproduced timeout owners, retain complete proof contracts, and capture safe structured evidence automatically when bounded reconstruction does not recur.
+- [x] **Phase 163: Deterministic Release-Path Timeout Repairs** - Repair uniquely reproduced timeout owners, retain complete proof contracts, and capture safe structured evidence automatically when bounded reconstruction does not recur. (completed 2026-08-26)
 - [ ] **Phase 164: Repository Truth Reconciliation and Closeout** - Align maintenance evidence with settled facts and prove the final quiet repository state.
 
 ## Phase Details
@@ -158,7 +158,7 @@ Plans:
   3. A maintainer can reproduce the gallery-matrix timeout and verify a narrow readiness, test, or Playwright-boundary repair while discovered specimens, viewport, theme, stress, and overflow coverage remain intact.
   4. Repeated focused browser proof and the relevant operator-browser gate pass without matrix removal, broad retries, visual changes, or unlimited/global timeout expansion.
 
-**Plans**: 6/8 plans executed
+**Plans**: 8/8 plans executed
 **Wave 1**
 
 - [x] 163-01-PLAN.md
@@ -173,11 +173,11 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 163-07-PLAN.md
+- [x] 163-07-PLAN.md
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 163-08-PLAN.md
+- [x] 163-08-PLAN.md
 
 ### Phase 164: Repository Truth Reconciliation and Closeout
 
@@ -200,5 +200,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
-| 163. Deterministic Release-Path Timeout Repairs | 6/8 | In Progress |  |
+| 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
 | 164. Repository Truth Reconciliation and Closeout | 0/TBD | Not started | - |
