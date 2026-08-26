@@ -1,6 +1,6 @@
 ---
 phase: 163-deterministic-release-path-timeout-repairs
-verified: 2026-08-26T18:31:50Z
+verified: 2026-08-26T19:12:13Z
 status: passed
 score: 17/17
 re_verification: true
@@ -18,9 +18,9 @@ execution.
 | Truth | Status | Evidence |
 | --- | --- | --- |
 | Bound historical SQLSTATE 57014 reconstruction, repair only a unique owner, retain both 1,000-run invariants | passed | Historical run `32433156236`; three exact-SHA non-reproductions; no speculative repair; structured protected recurrence recorder; unchanged properties |
-| Focused and protected deterministic proof pass without prohibited weakening | passed | Focused pair/contracts green; full local 23 properties/1,964 tests green; protected Core job `98275572748` success |
-| Reproduce and narrowly repair browser timeout while retaining complete matrix coverage | passed | Current plus protected artifacts identify three exact matrix bodies and browser owner; finite local bounds; all 117 cells/axes/assertions retained |
-| Focused and protected browser proof pass without UI/matrix/retry/global weakening | passed | Three gallery repetitions, final exact trio, complete local 176-pass lane, and protected Browser job `98275572988` success |
+| Focused and protected deterministic proof pass without prohibited weakening | passed | Focused pair/contracts green; full local 23 properties/1,964 tests green; protected Core job `98288202697` success |
+| Reproduce and narrowly repair browser timeout while retaining complete matrix coverage | passed | Current plus protected artifacts identify five exact test bodies and browser owner; finite local bounds; all 117 cells/axes/assertions retained |
+| Focused and protected browser proof pass without UI/matrix/retry/global weakening | passed | Three gallery repetitions, exact-title focused sets, complete local 176-pass lane, and protected Browser job `98288203115` success |
 
 **Roadmap score:** 4/4 truths verified.
 
@@ -50,15 +50,15 @@ execution.
 
 ## Exact protected proof
 
-- Run: https://github.com/szTheory/mailglass/actions/runs/32998989827
+- Run: https://github.com/szTheory/mailglass/actions/runs/33002642359
 - Event/head: `pull_request` /
-  `03605625c2fca8a747a94ab19d0ee1a430ab301a`
-- Core Deterministic Suite job `98275572748`: success.
-- Operator Browser Gate job `98275572988`: success.
+  `f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6`
+- Core Deterministic Suite job `98288202697`: success.
+- Operator Browser Gate job `98288203115`: success.
 - Overall conclusion: success.
 
-The final executable implementation is `9d0bcacf`; the protected identity adds
-only append-only Phase 163 evidence and contains that exact executable tree.
+The final executable implementation and protected identity are exactly
+`f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6`.
 
 ## Policy verdict
 
@@ -72,6 +72,6 @@ No human verification or UAT is required.
 
 ---
 
-_Re-verified: 2026-08-26T18:31:50Z_
+_Re-verified: 2026-08-26T19:12:13Z_
 
 _Verifier: automated Phase 163 execution and protected CI_

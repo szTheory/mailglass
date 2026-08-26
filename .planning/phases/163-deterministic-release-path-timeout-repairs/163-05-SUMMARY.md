@@ -15,7 +15,7 @@ key-files:
     - mailglass_admin/playwright.config.cjs
     - mailglass_admin/test/support/operator_browser_server.ex
 key-decisions:
-  - Raise only the named complete-matrix body to 240 seconds, two named structural matrices to 60 seconds, and browser sandbox ownership to 20 minutes after protected recurrence; retain every global bound and coverage axis.
+  - Raise only the named complete-matrix body to 240 seconds, four named structural bodies to 60 seconds, and browser sandbox ownership to 20 minutes after protected recurrence; retain every global bound and coverage axis.
 requirements-completed: [DTRM-03]
 completed: 2026-08-26
 status: complete
@@ -23,7 +23,7 @@ status: complete
 
 # Phase 163 Plan 05: Gallery Timeout Repair Summary
 
-**A current CI-mode full gate and a protected PR recurrence identified two exact browser owners; finite title-local bounds repair both without changing global policy or coverage.**
+**Current and protected CI recurrences identified five exact browser test owners; finite title-local bounds repair them without changing global policy or coverage.**
 
 ## Accomplishments
 
@@ -33,6 +33,7 @@ status: complete
 - Added safe first-attempt reporter/server evidence and failure-only CI artifacts.
 - Used protected run `32994318111` to attribute a 60-second gallery recurrence and an independent 31.3-second contrast-matrix expiry, then raised only those bodies to 120 and 60 seconds respectively.
 - Used protected run `32996524975` to attribute the 120-second gallery recurrence, a 32.6-second primitive-matrix expiry, and downstream sandbox-owner loss after 10 minutes; selected finite 240-second, 60-second, and 20-minute local bounds.
+- Used final-head protected run `33000671393` to attribute 32.1–32.3-second expiries in the interactive-primitive and stat-card bodies, then assigned only those exact titles 60 seconds.
 
 ## Focused proof
 
@@ -50,7 +51,7 @@ The global test default remains 30 seconds, CI retry policy remains one, local r
 
 ## Protected recurrence proof
 
-The final exact repaired trio passed first attempt in CI mode (gallery `47.7s`, contrast `17.8s`, primitive matrix `12.2s`). The complete operator-browser lane then passed first attempt with 176 passed and one intentional skip in 3.8 minutes; gallery completed in `47.8s` and no retry ran.
+The final two-title focused command passed first attempt in CI mode (`11.9s` and `9.1s`). The complete operator-browser lane then passed first attempt with 176 passed and one intentional skip in 3.7 minutes; gallery completed in `45.6s` and no retry ran. Exact-code protected run `33002642359` subsequently passed the complete browser and core gates.
 
 ## Commits
 
@@ -60,6 +61,7 @@ The final exact repaired trio passed first attempt in CI mode (gallery `47.7s`, 
 - `e8c6260f` — protected recurrence repairs scoped to the two exact test titles.
 - `d27de4b6` — exact-run job log and failure-artifact inspection.
 - `9d0bcacf` — second protected matrix and browser-owner recurrence repair.
+- `f8bf029f` — final two structural-title recurrence repairs.
 
 ---
 *Plan status: complete without human UAT*

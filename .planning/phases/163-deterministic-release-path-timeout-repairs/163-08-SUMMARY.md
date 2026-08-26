@@ -22,12 +22,12 @@ CI success, and zero human UAT.**
   attempts, so no speculative repair was made. Both unseeded 1,000-run
   properties remain intact, and the existing protected lane now captures the
   next structured recurrence automatically.
-- Browser evidence iteratively identified three exact matrix bodies and the
+- Browser evidence iteratively identified five exact test bodies and the
   browser-only sandbox owner. Finite local bounds repaired them while retaining
   the global 30-second test default, one CI retry, one worker, 30-minute job,
   all 117 cells, and every matrix assertion.
 - Complete local deterministic and browser lanes passed first attempt.
-- Protected run `32998989827` and both named release-path jobs passed.
+- Exact-code protected run `33002642359` and both named release-path jobs passed.
 - `163-PROOF.md`, `163-VALIDATION.md`, and `163-VERIFICATION.md` now record final
   sign-off, Nyquist compliance, edge/prohibition resolution, and the explicit
   `human_uat_required: false` contract.

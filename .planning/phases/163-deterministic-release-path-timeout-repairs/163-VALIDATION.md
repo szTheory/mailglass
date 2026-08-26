@@ -27,8 +27,8 @@ no new test framework or human verification step was added.
 | 163-05-03 | DTRM-03/04 | Live discovery, 117 cells, four widths, three themes, stress/overflow/clipping inventory retained | T-163-22 | green |
 | 163-06-01 | DTRM-02/04 | `mix test --warnings-as-errors`: 23 properties, 1,964 tests, 0 failures | T-163-23 | green |
 | 163-06-02 | DTRM-04 | `CI=true npm run test:operator-browser`: 176 passed, 1 skip, no retry | T-163-23 | green |
-| 163-07-01 | DTRM-02/04 | Normal PR run `32998989827` reached terminal success at exact `repair_sha` | T-163-24, T-163-25 | green |
-| 163-08-01 | DTRM-02/04 | Read-only exact run/job reconciliation: Core `98275572748`, Browser `98275572988`, both success | T-163-26 | green |
+| 163-07-01 | DTRM-02/04 | Normal PR run `33002642359` reached terminal success at exact `repair_sha` | T-163-24, T-163-25 | green |
+| 163-08-01 | DTRM-02/04 | Read-only exact run/job reconciliation: Core `98288202697`, Browser `98288203115`, both success | T-163-26 | green |
 | 163-08-02 | DTRM-01/02/03/04 | Final requirement, edge, prohibition, source, local, and protected synthesis in `163-PROOF.md` | T-163-27, T-163-28, T-163-29 | green |
 
 ## Automated command evidence
@@ -38,11 +38,11 @@ no new test framework or human verification step was added.
 | Database focused/contracts | 2 properties, 6 tests, 0 failures in 64.4s |
 | Database complete | `mix test --warnings-as-errors` → 23 properties, 1,964 tests, 0 failures, 7 intentional skips |
 | Gallery repetitions | 44,027ms / 47,553ms / 50,256ms, all first attempt |
-| Final browser exact trio | 47.7s / 17.8s / 12.2s, 3 passed first attempt |
-| Browser complete | `CI=true npm run test:operator-browser` → 176 passed, 1 intentional skip in 3.8m, no retry |
+| Final browser exact pair | 11.9s / 9.1s, 2 passed first attempt in 23.6s |
+| Browser complete | `CI=true npm run test:operator-browser` → 176 passed, 1 intentional skip in 3.7m, no retry |
 | Contracts | ExUnit evidence/CI contracts, admin recorder tests, Node reporter/monitor tests all green |
 | Workflow/source | `actionlint`, phase-owned format checks, and `git diff --check` green |
-| Protected | Run `32998989827` exact head; both named protected jobs successful |
+| Protected | Run `33002642359` at exact head `f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6`; both named protected jobs successful |
 
 ## Policy and coverage sign-off
 

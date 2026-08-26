@@ -1,7 +1,7 @@
 # Phase 163 Browser Timeout Evidence
 
 **Recorded:** 2026-08-26  
-**Scope:** Two evidence-owned Playwright bodies only; one Playwright worker; no added retries, selectors, workers, global deadlines, UI changes, dependencies, or CI topology changes.
+**Scope:** Five evidence-owned Playwright bodies plus the browser-only sandbox owner; one Playwright worker; no added retries, selectors, workers, global deadlines, UI changes, dependencies, or CI topology changes.
 
 ## Instrumentation
 
@@ -235,3 +235,33 @@ in 1.3 minutes). The complete `CI=true npm run test:operator-browser` lane then
 passed first attempt with 176 passed and one intentional skip in 3.8 minutes;
 readiness was `240ms`, gallery `47.8s`, primitive matrix `14.4s`, and no retry
 ran. The server emitted the selected `ownership_timeout_ms=1200000` identity.
+
+## Final-head structural recurrence and exact-code proof (2026-08-26)
+
+Normally triggered PR run `33000671393` evaluated source head
+`e018b269f0d38d38500bceca11011c8eb77501cc` through merge checkout
+`b39b1bdd...`. Core Deterministic Suite job `98281452841` succeeded. Operator
+Browser Gate job `98281452787` published artifact
+`operator-browser-timeout-evidence-33000671393-node-22` (artifact ID
+`9618963265`). Its sanitized manifest recorded 174 passing results, one
+intentional skip, and four exhausted attempts belonging to two exact titles:
+
+| Exact owner | First attempt | Existing CI retry | Selected local bound |
+| --- | ---: | ---: | ---: |
+| `interactive primitive hover, focus, disabled, and target-size contracts hold` | 32,101ms | 32,279ms | 60,000ms |
+| `stat_card shape, icon meaning, and overflow contracts hold at primitive widths` | 32,222ms | 32,128ms | 60,000ms |
+
+Both bodies exhausted only the unchanged 30-second global default. Commit
+`f8bf029f` therefore assigns 60 seconds to those exact titles and changes no
+other browser policy or coverage. Their focused CI-mode command passed first
+attempt in 11.9s and 9.1s (2 passed in 23.6s). The complete local
+`CI=true npm run test:operator-browser` lane then passed first attempt with 176
+passed and one intentional skip in 3.7 minutes; readiness was 230ms, gallery
+45.6s, the two newly repaired bodies 11.4s and 8.9s, and no retry ran.
+
+Normally triggered protected PR run `33002642359` exactly matched final repair
+SHA `f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6` and completed successfully.
+Core Deterministic Suite job `98288202697` and Operator Browser Gate job
+`98288203115` both succeeded. This final exact-code run proves all five
+title-local finite bounds and the browser-only 20-minute owner without a human
+checkpoint, rerun, manual dispatch, policy bypass, or reduced coverage.

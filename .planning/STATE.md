@@ -6,7 +6,7 @@ current_phase: 164
 current_phase_name: repository-truth-reconciliation-and-closeout
 status: ready
 stopped_at: Phase 163 complete; Phase 164 ready to plan
-last_updated: "2026-08-26T18:31:50Z"
+last_updated: "2026-08-26T19:12:13Z"
 last_activity: 2026-08-26
 last_activity_desc: Phase 163 exact-head protected CI passed with zero human UAT
 progress:
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 Phase: 164 (repository-truth-reconciliation-and-closeout) — READY
 Plan: not yet planned
 Status: Phase 163 machine-verified; ready for Phase 164 planning
-Last activity: 2026-08-26 — protected run 32998989827 and both release-path jobs passed
+Last activity: 2026-08-26 — exact-code protected run 33002642359 and both release-path jobs passed
 
 Progress: [████████████████████] 26/26 planned plans (100%)
 
@@ -99,9 +99,9 @@ Progress: [████████████████████] 26/26 p
 - [Phase 162]: External GitHub bytes require decode and list-shape validation; unavailable evidence is `cannot-check`, and summaries consume the same persisted result as retained artifacts.
 - [Phase 162]: Scheduled-control UAT binds event, run, and workflow SHA to protected `main`; all three current-main evidence chains verified on 2026-08-26 without manual substitution.
 - [Phase 163]: Bounded non-reproduction of the historical database cancellation authorizes no speculative repair; the existing deterministic lane now captures the next structured recurrence automatically.
-- [Phase 163]: Protected recurrence evidence selected finite exact-owner bounds: 240 seconds for the complete gallery, 60 seconds for two structural matrices, and 20 minutes for browser-only sandbox ownership; global timeout, retry, worker, and job policy remain unchanged.
+- [Phase 163]: Protected recurrence evidence selected finite exact-owner bounds: 240 seconds for the complete gallery, 60 seconds for four structural test bodies, and 20 minutes for browser-only sandbox ownership; global timeout, retry, worker, and job policy remain unchanged.
 - [Phase 163]: Human UAT is removed from timeout proof; local integration and normally triggered exact-SHA protected jobs are the release-path authority.
-- [Phase 163]: Normal PR run 32998989827 passed Core Deterministic and Operator Browser at the protected repair identity; all four DTRM requirements and Nyquist validation are complete.
+- [Phase 163]: Normal PR run 33002642359 passed Core Deterministic and Operator Browser at exact final repair SHA f8bf029f; all four DTRM requirements and Nyquist validation are complete.
 
 ### Pending Todos
 
@@ -119,6 +119,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-08-26T18:31:50Z
+Last session: 2026-08-26T19:12:13Z
 Stopped at: Phase 163 complete; Phase 164 ready to plan
 Resume file: .planning/ROADMAP.md

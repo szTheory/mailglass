@@ -13,22 +13,20 @@ status: complete
 
 # Phase 163 Plan 07: Protected Run Summary
 
-**Normal PR run `32998989827` completed successfully at exact repair identity
-`03605625c2fca8a747a94ab19d0ee1a430ab301a`; no human checkpoint or manual
+**Normal PR run `33002642359` completed successfully at exact repair identity
+`f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6`; no human checkpoint or manual
 dispatch was required.**
 
 ## Protected identities
 
 | Item | Identity | Conclusion |
 | --- | --- | --- |
-| CI run | `32998989827` | success |
-| Core Deterministic Suite | job `98275572748` | success |
-| Operator Browser Gate | job `98275572988` | success |
+| CI run | `33002642359` | success |
+| Core Deterministic Suite | job `98288202697` | success |
+| Operator Browser Gate | job `98288203115` | success |
 
 The run event was `pull_request`, status `completed`, and its exact head matched
-the frozen repair identity. The final executable implementation within that
-identity is `9d0bcacf875ad0c88155bd16bad2996c1c57b926`; later files before the protected
-identity are append-only Phase 163 evidence only.
+the frozen repair identity and final executable implementation.
 
 The repository-local monitor performed only read-only run/job reconciliation.
 It did not rerun, dispatch, merge, release, or change workflow policy.

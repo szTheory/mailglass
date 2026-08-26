@@ -1,8 +1,8 @@
 ---
 phase: 163-deterministic-release-path-timeout-repairs
-repair_sha: 03605625c2fca8a747a94ab19d0ee1a430ab301a
-implementation_sha: 9d0bcacf875ad0c88155bd16bad2996c1c57b926
-protected_run_id: 32998989827
+repair_sha: f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6
+implementation_sha: f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6
+protected_run_id: 33002642359
 protected_verdict: success
 final_signoff: pass
 human_uat_required: false
@@ -18,9 +18,9 @@ workflow dispatch, rerun, merge, release, or policy mutation was used.
 | Requirement | Verdict | Evidence |
 | --- | --- | --- |
 | DTRM-01 | pass | Historical structured SQLSTATE 57014 was reconstructed at its immutable SHA three times without recurrence. No speculative database repair was made; both 1,000-run invariants remain unchanged and the existing protected lane now emits sanitized exact-operation recurrence evidence. |
-| DTRM-02 | pass | The focused database pair/contracts passed, the complete local deterministic suite passed, and protected Core Deterministic Suite job `98275572748` succeeded. No seed, skip, product/schema/API, database-global, or job-timeout relaxation occurred. |
-| DTRM-03 | pass | Current and protected evidence attributed browser expiries to three exact matrix titles plus the browser-only sandbox owner. Finite local bounds repair those owners while all 117 cells, widths, themes, stress fixtures, and overflow assertions remain. |
-| DTRM-04 | pass | Three focused gallery first attempts, the later exact-title focused sets, two complete local browser gates, and protected Operator Browser Gate job `98275572988` passed. Global timeout, retry, worker, UI, matrix, and job policy remain unchanged. |
+| DTRM-02 | pass | The focused database pair/contracts passed, the complete local deterministic suite passed, and protected Core Deterministic Suite job `98288202697` succeeded. No seed, skip, product/schema/API, database-global, or job-timeout relaxation occurred. |
+| DTRM-03 | pass | Current and protected evidence attributed browser expiries to five exact test titles plus the browser-only sandbox owner. Finite local bounds repair those owners while all 117 cells, widths, themes, stress fixtures, and overflow assertions remain. |
+| DTRM-04 | pass | Three focused gallery first attempts, the later exact-title focused sets, complete local browser gates, and protected Operator Browser Gate job `98288203115` passed. Global timeout, retry, worker, UI, matrix, and job policy remain unchanged. |
 
 ## Immutable identities and chronology
 
@@ -28,11 +28,8 @@ workflow dispatch, rerun, merge, release, or policy mutation was used.
   `81e738e74d59d1ab36c3e1dc3adc03ad6d0c0b84`, SQLSTATE 57014.
 - Browser historical failure: run `32865270291`, job `97858959632`, SHA
   `fda6368bf43c49aab88e3f90da1d6af67ee77d35`.
-- Final executable implementation: `9d0bcacf875ad0c88155bd16bad2996c1c57b926`.
-- Protected repair identity: `03605625c2fca8a747a94ab19d0ee1a430ab301a`.
-  The commits between the implementation and protected identity contain only
-  append-only Phase 163 evidence; the protected tree contains the exact final
-  executable implementation.
+- Final executable implementation and protected repair identity:
+  `f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6`.
 
 | Commit | Purpose |
 | --- | --- |
@@ -42,6 +39,7 @@ workflow dispatch, rerun, merge, release, or policy mutation was used.
 | `9b1a7c0c`–`d27de4b6` | Contract-tested read-only CI/PR/run/job/artifact inspection |
 | `e8c6260f` | First protected gallery and contrast-matrix recurrence repair |
 | `9d0bcacf` | Final gallery/primitive-matrix bounds and browser sandbox-owner repair |
+| `f8bf029f` | Final interactive-primitive and stat-card exact-title recurrence repair |
 
 ## Focused and local proof
 
@@ -64,13 +62,15 @@ workflow dispatch, rerun, merge, release, or policy mutation was used.
 | Protected run `32994318111` | Complete gallery / inbound contrast matrix | 60,002ms / 60,047ms; 31,348ms / 31,336ms | 120,000ms / 60,000ms |
 | Protected run `32996524975` | Complete gallery / primitive state-theme matrix | 120,004ms / 120,064ms; 32,530ms / 32,670ms | 240,000ms / 60,000ms |
 | Protected run `32996524975` | Browser sandbox owner | 11.6m suite outlived 10m owner | 20 minutes |
+| Protected run `33000671393` | Interactive-primitive / stat-card structural bodies | 32,101ms / 32,279ms; 32,222ms / 32,128ms | 60,000ms / 60,000ms |
 
 - The first three repaired gallery invocations passed first attempt in 44,027ms,
   47,553ms, and 50,256ms.
-- The final exact trio passed first attempt in 47.7s, 17.8s, and 12.2s.
+- The final two-title focused command passed first attempt in 11.9s and 9.1s
+  (2 passed in 23.6s).
 - Final complete local `CI=true npm run test:operator-browser`: 176 passed,
-  1 intentional skip in 3.8m, no retry; readiness 240ms, gallery 47.8s,
-  primitive matrix 14.4s.
+  1 intentional skip in 3.7m, no retry; readiness 230ms, gallery 45.6s,
+  interactive-primitive 11.4s, stat-card 8.9s.
 - Equality with every selected Playwright timeout remains exhaustion. All bounds
   are finite, title-local except the browser-only sandbox owner, and below the
   unchanged 30-minute job.
@@ -80,7 +80,7 @@ workflow dispatch, rerun, merge, release, or policy mutation was used.
 | Gate | Result |
 | --- | --- |
 | `mix test --warnings-as-errors` | 23 properties, 1,964 tests, 0 failures, 7 intentional skips in 174.7s |
-| `CI=true npm run test:operator-browser` | 176 passed, 1 intentional skip in 3.8m; no retry |
+| `CI=true npm run test:operator-browser` | 176 passed, 1 intentional skip in 3.7m; no retry |
 | Evidence/CI contracts | ExUnit recorder/workflow contracts, admin recorder tests, Node reporter/monitor tests all pass |
 | Workflow validity | `actionlint .github/workflows/ci.yml`, phase-owned format checks, and `git diff --check` pass |
 
@@ -90,10 +90,10 @@ workflow dispatch, rerun, merge, release, or policy mutation was used.
 | --- | --- |
 | D-01 database attribution | Historical 57014 retained; bounded exact-SHA non-reproduction authorizes no repair and automatically captures the next exact operation. |
 | D-02 database invariant | Both properties remain unseeded 1,000-run properties with unchanged ownership and settle semantics. |
-| D-03 browser attribution | Monotonic readiness/test evidence distinguishes healthy boot from three exact matrix bodies and sandbox-owner lifetime. |
+| D-03 browser attribution | Monotonic readiness/test evidence distinguishes healthy boot from five exact test bodies and sandbox-owner lifetime. |
 | D-04 browser coverage | Live discovery, `>50` guard, 117 cells, four widths, three themes, stress fixtures, overflow, and clipping remain intact. |
 | D-05 local integration | Both unchanged complete release-path commands pass first attempt. |
-| D-06 protected authority | Normal pull-request run `32998989827` exactly matches `repair_sha`; both named protected jobs succeeded. |
+| D-06 protected authority | Normal pull-request run `33002642359` exactly matches `repair_sha`; both named protected jobs succeeded. |
 
 ## Edge and prohibition resolution
 
@@ -102,7 +102,7 @@ workflow dispatch, rerun, merge, release, or policy mutation was used.
 | Database boundary | Inconclusive by three-run budget; fail-closed recorder requires a future structured 57014 before any repair. |
 | Database precision | SQLSTATE and stable operation labels only; raw SQL, params, payloads, and free-form errors are excluded. |
 | Database manual-review candidate | Source diff, focused contracts, complete local suite, and protected deterministic job agree; no human review remains. |
-| Browser boundary | Exact title-local monotonic durations and the owner lifetime establish the four repaired boundaries. |
+| Browser boundary | Exact title-local monotonic durations and the owner lifetime establish the six repaired boundaries. |
 | Browser precision | Equality exhausts; 240s/60s/20m are finite evidence-derived ceilings, not unlimited/global test policy. |
 | Browser manual-review candidate | Coverage inventory, focused timings, complete local lane, and protected browser job agree; no human review remains. |
 
@@ -121,15 +121,15 @@ Captured read-only on 2026-08-26 through `scripts/ci_monitor.cjs`:
 | Field | Value |
 | --- | --- |
 | PR | https://github.com/szTheory/mailglass/pull/228 |
-| Run | https://github.com/szTheory/mailglass/actions/runs/32998989827 |
+| Run | https://github.com/szTheory/mailglass/actions/runs/33002642359 |
 | Event / status / conclusion | `pull_request` / `completed` / `success` |
-| Head SHA | `03605625c2fca8a747a94ab19d0ee1a430ab301a` (exact `repair_sha`) |
-| Core job | `98275572748` — `Core Deterministic Suite (Elixir 1.18 / OTP 27)` — success |
-| Browser job | `98275572988` — `Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)` — success |
+| Head SHA | `f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6` (exact `repair_sha`) |
+| Core job | `98288202697` — `Core Deterministic Suite (Elixir 1.18 / OTP 27)` — success |
+| Browser job | `98288203115` — `Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22) (22)` — success |
 
-Core job: https://github.com/szTheory/mailglass/actions/runs/32998989827/job/98275572748
+Core job: https://github.com/szTheory/mailglass/actions/runs/33002642359/job/98288202697
 
-Browser job: https://github.com/szTheory/mailglass/actions/runs/32998989827/job/98275572988
+Browser job: https://github.com/szTheory/mailglass/actions/runs/33002642359/job/98288203115
 
 ## Source Coverage Audit
 
@@ -138,7 +138,7 @@ Browser job: https://github.com/szTheory/mailglass/actions/runs/32998989827/job/
 | `163-DATABASE-TIMEOUT-EVIDENCE.md` | Historical identity, three bounded reconstructions, no-repair verdict, current recurrence capture |
 | `163-BROWSER-TIMEOUT-EVIDENCE.md` | Historical/current/protected ownership, all selected finite bounds, focused/full proof |
 | Executable tests/support/workflow | Invariants, matrix axes, evidence reporters, failure-only artifacts, CI monitor contracts |
-| Protected run `32998989827` | Exact identity and successful named deterministic/browser jobs |
+| Protected run `33002642359` | Exact final-code identity and successful named deterministic/browser jobs |
 
 `protected_verdict: success`
 
