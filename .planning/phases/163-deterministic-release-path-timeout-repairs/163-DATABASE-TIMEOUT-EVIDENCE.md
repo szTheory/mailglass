@@ -86,3 +86,14 @@ or regression change is authorized.
   and equality/tie behavior were not measured because no SQLSTATE 57014 was
   captured.
 
+## Append-only local verification addendum
+
+After the diagnostic capture, the plan's exact local focused-pair verification
+completed unseeded on its first attempt:
+
+| Command | Exit | Monotonic elapsed | Result |
+| --- | ---: | ---: | --- |
+| `MIX_ENV=test mix test test/mailglass/properties/idempotency_convergence_test.exs test/mailglass/properties/webhook_idempotency_convergence_test.exs --warnings-as-errors` | 0 | 126865ms | 2 properties, 0 failures; no `query_canceled`/SQLSTATE 57014 captured. |
+
+This confirms the tracer verification but does not alter the `unattributed`
+verdict or authorize Task 2.
