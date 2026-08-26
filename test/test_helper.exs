@@ -47,6 +47,7 @@ schema = Mailglass.Config.schema()
 # *replaces* ExUnit's default formatter list — that would silently drop
 # `ExUnit.CLIFormatter`'s normal test/failure output.
 ExUnit.configure(formatters: [ExUnit.CLIFormatter, Mailglass.TestSupport.SuiteTruthFormatter])
+Mailglass.TestSupport.TimeoutEvidence.initialize!()
 
 # HARNESS-03 (D-13, D-15): register the anti-vacuity policy check. Placed
 # here (after `schema` above, alongside the formatter it reads via

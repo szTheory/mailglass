@@ -42,6 +42,7 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
 
   alias Mailglass.{Tenancy, TestRepo}
   alias Mailglass.Events.Event
+  alias Mailglass.TestSupport.TimeoutEvidence
   alias Mailglass.Webhook.{Ingest, WebhookEvent}
 
   @moduletag :property
@@ -74,12 +75,23 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
     Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
     :ok = Tenancy.put_current("prop-test-tenant")
 
-    TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
-    TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+    TimeoutEvidence.capture("webhook.setup.truncate_webhook_events", fn ->
+      TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
+    end)
+
+    TimeoutEvidence.capture("webhook.setup.truncate_events", fn ->
+      TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+    end)
 
     on_exit(fn ->
-      TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
-      TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+      TimeoutEvidence.capture("webhook.cleanup.truncate_webhook_events", fn ->
+        TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
+      end)
+
+      TimeoutEvidence.capture("webhook.cleanup.truncate_events", fn ->
+        TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+      end)
+
       Tenancy.clear()
     end)
 
@@ -123,8 +135,13 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
           ) do
       # Wipe between iterations (trigger forbids UPDATE/DELETE; TRUNCATE
       # CASCADE is the only bulk-reset path).
-      TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
-      TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+      TimeoutEvidence.capture("webhook.iteration.truncate_webhook_events", fn ->
+        TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
+      end)
+
+      TimeoutEvidence.capture("webhook.iteration.truncate_events", fn ->
+        TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+      end)
 
       # Each event carries a distinct provider_event_id (the generator
       # suffixes it with event_id which is itself random), so a Postmark
@@ -134,7 +151,10 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
         raw_body =
           ~s({"RecordType":"#{event.metadata["record_type"]}","MessageID":"#{event.metadata["message_id"]}"})
 
-        {:ok, _result} = Ingest.ingest_multi(:postmark, raw_body, [event])
+        {:ok, _result} =
+          TimeoutEvidence.capture("webhook.iteration.ingest", fn ->
+            Ingest.ingest_multi(:postmark, raw_body, [event])
+          end)
       end
 
       # Structural invariant: webhook_event_count == |unique provider_event_ids|
@@ -144,14 +164,16 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
         |> Enum.uniq()
 
       webhook_event_count =
-        TestRepo.aggregate(
-          from(w in WebhookEvent,
-            where:
-              w.tenant_id == "prop-test-tenant" and w.provider == "postmark" and
-                w.provider_event_id in ^unique_provider_event_ids
-          ),
-          :count
-        )
+        TimeoutEvidence.capture("webhook.iteration.aggregate_webhook_events", fn ->
+          TestRepo.aggregate(
+            from(w in WebhookEvent,
+              where:
+                w.tenant_id == "prop-test-tenant" and w.provider == "postmark" and
+                  w.provider_event_id in ^unique_provider_event_ids
+            ),
+            :count
+          )
+        end)
 
       unique_provider_event_count = length(unique_provider_event_ids)
 
@@ -169,19 +191,21 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
       # there's no matching Delivery). Replay is structurally idempotent
       # via the `idempotency_key` partial UNIQUE index on mailglass_events.
       event_count =
-        TestRepo.aggregate(
-          from(e in Event,
-            where:
-              e.tenant_id == "prop-test-tenant" and
-                fragment(
-                  "?->>? = ANY(?)",
-                  e.metadata,
-                  "provider_event_id",
-                  ^unique_provider_event_ids
-                )
-          ),
-          :count
-        )
+        TimeoutEvidence.capture("webhook.iteration.aggregate_events", fn ->
+          TestRepo.aggregate(
+            from(e in Event,
+              where:
+                e.tenant_id == "prop-test-tenant" and
+                  fragment(
+                    "?->>? = ANY(?)",
+                    e.metadata,
+                    "provider_event_id",
+                    ^unique_provider_event_ids
+                  )
+            ),
+            :count
+          )
+        end)
 
       assert event_count == unique_provider_event_count,
              """

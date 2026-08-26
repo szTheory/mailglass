@@ -126,7 +126,7 @@ defmodule Mailglass.Properties.IdempotencyConvergenceTest do
   alias Mailglass.Events
   alias Mailglass.Events.Event
   alias Mailglass.TestRepo
-  alias Mailglass.TestSupport.SandboxOwnership
+  alias Mailglass.TestSupport.{SandboxOwnership, TimeoutEvidence}
 
   @moduletag timeout: :infinity
 
@@ -149,7 +149,9 @@ defmodule Mailglass.Properties.IdempotencyConvergenceTest do
       )
 
     # Wipe committed residue from other modules so this property starts clean.
-    TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+    TimeoutEvidence.capture("idempotency.setup.truncate_events", fn ->
+      TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+    end)
 
     # Registered AFTER checkout!/1's release, so it runs BEFORE it (reverse
     # on_exit ordering) — the connection is still owned and still shared, which
@@ -157,7 +159,9 @@ defmodule Mailglass.Properties.IdempotencyConvergenceTest do
     # Writes here are committed (sandbox: false), so this cleanup is real work,
     # not a statement a rollback would discard.
     on_exit(fn ->
-      TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+      TimeoutEvidence.capture("idempotency.cleanup.truncate_events", fn ->
+        TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+      end)
     end)
 
     :ok
@@ -175,14 +179,18 @@ defmodule Mailglass.Properties.IdempotencyConvergenceTest do
       # Wipe events table between iterations to isolate state.
       # (The trigger prevents UPDATE/DELETE only; we need TRUNCATE with
       # CASCADE via raw SQL because DELETE fires the trigger.)
-      TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+      TimeoutEvidence.capture("idempotency.iteration.truncate_before_fresh", fn ->
+        TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+      end)
 
       # Pass 1: apply each event exactly once.
       fresh_keys = Enum.map(events, &apply_and_key/1)
       fresh_snapshot = snapshot()
 
       # Wipe + Pass 2: apply N replays of the sequence, shuffled.
-      TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+      TimeoutEvidence.capture("idempotency.iteration.truncate_before_replay", fn ->
+        TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+      end)
 
       replayed =
         events
@@ -228,7 +236,9 @@ defmodule Mailglass.Properties.IdempotencyConvergenceTest do
 
   # Returns the idempotency_key used for this event.
   defp apply_and_key(%{idempotency_key: key} = attrs) do
-    {:ok, _event} = Events.append(attrs)
+    {:ok, _event} =
+      TimeoutEvidence.capture("idempotency.iteration.append", fn -> Events.append(attrs) end)
+
     key
   end
 
@@ -236,12 +246,14 @@ defmodule Mailglass.Properties.IdempotencyConvergenceTest do
   # snapshots (not row structs) tolerates inserted_at drift while proving
   # convergence on the stable fields.
   defp snapshot do
-    TestRepo.all(
-      from(e in Event,
-        where: not is_nil(e.idempotency_key),
-        select: {e.idempotency_key, e.type}
+    TimeoutEvidence.capture("idempotency.iteration.snapshot", fn ->
+      TestRepo.all(
+        from(e in Event,
+          where: not is_nil(e.idempotency_key),
+          select: {e.idempotency_key, e.type}
+        )
       )
-    )
+    end)
     |> Map.new()
   end
 end
