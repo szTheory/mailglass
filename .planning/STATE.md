@@ -31,9 +31,9 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 Phase: 164 (repository-truth-reconciliation-and-closeout) — EXECUTING
 Plan: 2 of 7
 Status: Ready to execute
-Last activity: 2026-08-26 — Phase 164 execution started
+Last activity: 2026-08-26 — Completed 164-01 locked stale-sweep tracer
 
-Progress: [████████████████████] 26/26 planned plans ([████████░░] 82%)
+Progress: [████████░░] 27/33 planned plans (82%)
 
 ## Performance Metrics
 
