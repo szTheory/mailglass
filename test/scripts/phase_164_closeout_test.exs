@@ -137,7 +137,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     File.write!(
       Path.join(bin, "node"),
-      "#!/usr/bin/env bash\nprintf '{\\\"headSha\\\":\\\"%s\\\",\\\"status\\\":\\\"completed\\\",\\\"conclusion\\\":\\\"success\\\"}\\n' \"#{ci_sha}\"\n"
+      "#!/usr/bin/env bash\nprintf '%s\\n' 'ci_monitor: diagnostic' >&2\nprintf '{\\\"headSha\\\":\\\"%s\\\",\\\"status\\\":\\\"completed\\\",\\\"conclusion\\\":\\\"success\\\"}\\n' \"#{ci_sha}\"\n"
     )
 
     File.chmod!(Path.join(bin, "mix"), 0o755)
