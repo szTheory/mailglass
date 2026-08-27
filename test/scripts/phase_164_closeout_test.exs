@@ -17,6 +17,12 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert Map.has_key?(report, "captured_at")
     assert Map.has_key?(report, "components")
 
+    policy_blocked = fixture!(:hygiene_blocked)
+    assert {_, 0} = run(policy_blocked)
+    assert {:ok, blocked_report} = policy_blocked.output |> File.read!() |> Jason.decode()
+    assert blocked_report["status"] == "pass"
+    assert blocked_report["components"]["hygiene"]["status"] == "blocked"
+
     for mutation <- [:hygiene, :preservation, :ledger, :ci, :scheduled] do
       changed = fixture!(mutation)
       assert {_, status} = run(changed)
@@ -126,14 +132,22 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     hygiene =
       case mutation do
         :malformed_hygiene -> "{not-json"
-        :hygiene -> ~s({"status":"blocked","reason":"not_clean"})
+        :hygiene -> ~s({"status":"cannot-check","reason":"not_clean"})
+        :hygiene_blocked ->
+          ~s({"status":"blocked","reason":"expected_policy_gate","checks":[{"name":"release","status":"blocked","message":"retained proposal","details":{"pr":222}}]})
+
         _ -> ~s({"status":"pass","reason":"clean"})
       end
 
     ci_sha = if mutation == :ci, do: String.duplicate("b", 40), else: "$(git rev-parse HEAD)"
     scheduled = scheduled_script_json(mutation)
 
-    File.write!(Path.join(bin, "mix"), "#!/usr/bin/env bash\nprintf '%s\\n' '#{hygiene}'\n")
+    hygiene_exit = if mutation == :hygiene_blocked, do: 1, else: 0
+
+    File.write!(
+      Path.join(bin, "mix"),
+      "#!/usr/bin/env bash\nprintf '%s\\n' '#{hygiene}'\nexit #{hygiene_exit}\n"
+    )
 
     File.write!(
       Path.join(bin, "node"),
