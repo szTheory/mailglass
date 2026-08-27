@@ -7,6 +7,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
   @repo_root Path.expand("../..", __DIR__)
   @phase_dir ".planning/phases/164-repository-truth-reconciliation-and-closeout"
+  @ledger Path.join(@repo_root, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv"))
   @headers [
     "stable_id",
     "subject",
@@ -23,9 +24,12 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   ]
   @locked_digest "331810b4b1724452f0e2707c800230e52fabea01c3773d362b3a1240040ece7e"
 
-  test "parses a valid twelve-column ledger and derives its complete audit inventory" do
-    assert {:ok, %{headers: @headers, rows: [_]}} =
-             Ledger.parse(header_line() <> "\n" <> valid_row())
+  test "parses and validates the authoritative twelve-column ledger" do
+    contents = File.read!(@ledger)
+
+    assert {:ok, %{headers: @headers, rows: rows}} = Ledger.parse(contents)
+    assert rows != []
+    assert :ok = Ledger.validate(contents, @repo_root)
 
     assert {:ok, subjects} = Ledger.audit_subjects(@repo_root)
     assert MapSet.member?(subjects, "scripts/validate_repository_truth.exs")
@@ -33,7 +37,8 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   end
 
   test "D-08 retains its locked stale removal identity" do
-    assert {:ok, %{rows: [row]}} = Ledger.parse(header_line() <> "\n" <> valid_row())
+    assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+    assert [row] = Enum.filter(rows, &(&1["subject"] == "scheduled-control-sweep.json"))
     assert row["stable_id"] == "D-08"
     assert row["disposition"] == "remove"
     assert row["evidence"] =~ @locked_digest
@@ -78,6 +83,33 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
              Ledger.parse(
                header_line() <> "\n" <> valid <> "\n" <> String.replace(valid, "D-08", "D-09")
              )
+  end
+
+  test "validates independently of row ordering and fails missing audited subject classes" do
+    contents = File.read!(@ledger)
+    [header | rows] = String.split(String.trim_trailing(contents), "\n", trim: true)
+
+    assert :ok = Ledger.validate(Enum.join([header | Enum.reverse(rows)], "\n") <> "\n", @repo_root)
+
+    for subject <- [
+          "scripts/validate_repository_truth.exs",
+          Path.join(@phase_dir, "164-VERIFICATION.md"),
+          "ignore:.gitignore:/tmp/",
+          ".planning/release-target.json"
+        ] do
+      assert {:error, {:missing_audited_subjects, missing}} =
+               contents |> remove_subject(subject) |> Ledger.validate(@repo_root)
+
+      assert subject in missing
+    end
+  end
+
+  defp remove_subject(contents, subject) do
+    contents
+    |> String.split("\n", trim: true)
+    |> Enum.reject(fn line -> String.split(line, "\t", parts: 3) |> Enum.at(1) == subject end)
+    |> Enum.join("\n")
+    |> Kernel.<>("\n")
   end
 
   defp header_line, do: Enum.join(@headers, "\t")

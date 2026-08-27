@@ -170,7 +170,8 @@ defmodule Mailglass.RepositoryTruthLedger do
 end
 
 if Enum.any?(System.argv(), &(&1 in ["--repo", "--ledger"])) do
-  {opts, _, errors} = OptionParser.parse(System.argv(), strict: [repo: :string, ledger: :string])
+  argv = Enum.drop_while(System.argv(), &(&1 == "--"))
+  {opts, _, errors} = OptionParser.parse(argv, strict: [repo: :string, ledger: :string])
 
   result =
     with [] <- errors,
