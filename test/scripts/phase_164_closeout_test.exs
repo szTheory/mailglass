@@ -131,12 +131,17 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   defp write_fixture_scripts!(repo, bin, mutation) do
     hygiene =
       case mutation do
-        :malformed_hygiene -> "{not-json"
-        :hygiene -> ~s({"status":"cannot-check","reason":"not_clean"})
+        :malformed_hygiene ->
+          "{not-json"
+
+        :hygiene ->
+          ~s({"status":"cannot-check","reason":"not_clean"})
+
         :hygiene_blocked ->
           ~s({"status":"blocked","reason":"expected_policy_gate","checks":[{"name":"release","status":"blocked","message":"retained proposal","details":{"pr":222}}]})
 
-        _ -> ~s({"status":"pass","reason":"clean"})
+        _ ->
+          ~s({"status":"pass","reason":"clean"})
       end
 
     ci_sha = if mutation == :ci, do: String.duplicate("b", 40), else: "$(git rev-parse HEAD)"
