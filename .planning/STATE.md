@@ -5,16 +5,16 @@ milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 164
 current_phase_name: repository-truth-reconciliation-and-closeout
 status: executing
-stopped_at: Completed 164-05-PLAN.md
-last_updated: "2026-08-26T21:39:27.204Z"
-last_activity: 2026-08-26
-last_activity_desc: Completed 164-01 locked stale-sweep tracer
+stopped_at: Completed 164-06-PLAN.md
+last_updated: "2026-08-27T13:56:43.297Z"
+last_activity: 2026-08-27
+last_activity_desc: Phase 164 execution started
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 33
-  completed_plans: 31
-  percent: 75
+  completed_plans: 32
+  percent: 97
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (repository-truth-reconciliation-and-closeout) — EXECUTING
-Plan: 6 of 7
-Status: Ready to execute
-Last activity: 2026-08-26 — Completed 164-01 locked stale-sweep tracer
+Plan: 7 of 7
+Status: Ready to execute final read-only closeout
+Last activity: 2026-08-27 — Completed 164-06 protected-main evidence checkpoint
 
-Progress: [████████░░] 27/33 planned plans ([█████████░] 94%)
+Progress: [██████████] 32/33 planned plans ([██████████] 97%)
 
 ## Performance Metrics
 
@@ -50,7 +50,7 @@ Progress: [████████░░] 27/33 planned plans ([█████
 | 161. Canonical Workspace and Evidence Preservation | 5 | 72m | 14m |
 | 162. Protected Release and Scheduled-Control Recovery | 13 | — | — |
 | 163. Deterministic Release-Path Timeout Repairs | 8 | — | — |
-| 164. Repository Truth Reconciliation and Closeout | 0 | — | — |
+| 164. Repository Truth Reconciliation and Closeout | 6 | 28m | 5m |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -86,6 +86,7 @@ Progress: [████████░░] 27/33 planned plans ([█████
 | Phase 164-repository-truth-reconciliation-and-closeout P03 | 3m | 1 tasks | 4 files |
 | Phase 164 P04 | 8m | 1 tasks | 2 files |
 | Phase 164 P05 | 9m | 2 tasks | 3 files |
+| Phase 164 P06 | 1m | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,7 @@ Progress: [████████░░] 27/33 planned plans ([█████
 - [Phase ?]: Repository-truth audit scope derives from committed ignore rules, Git-tracked proof, and Phase 164 plan files.
 - [Phase ?]: Closeout remains read-only and writes volatile report evidence under the existing ignored tmp/ rule.
 - [Phase ?]: A quiet verdict requires exact main, exact successful CI, current provenance-valid controls, and a valid exact-one ledger.
+- [Phase ?]: Plan 164-07 must re-query protected main SHA 00bce87d77ce9d8a74ad0f42de5d8ce71ef054fb and CI run 33020041269; no manual substitute is accepted.
 
 ### Pending Todos
 
@@ -132,6 +134,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-08-26T21:39:27.193Z
-Stopped at: Completed 164-05-PLAN.md
+Last session: 2026-08-27T13:56:43.289Z
+Stopped at: Completed 164-06-PLAN.md
 Resume file: None
