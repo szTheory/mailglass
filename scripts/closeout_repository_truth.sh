@@ -44,8 +44,25 @@ printf '%s\n' "$branch $head_sha $origin_main_sha $porcelain" >"$git_source"
 if [[ "$head_sha" =~ ^[0-9a-f]{40}$ ]] && [[ "$origin_main_sha" =~ ^[0-9a-f]{40}$ ]] && [ "$branch" = main ] && [ "$head_sha" = "$origin_main_sha" ] && [ -z "$porcelain" ]; then component git pass exact_main_clean "$git_source"; else component git blocked exact_main_or_porcelain_mismatch "$git_source"; fi
 
 hygiene_raw="$components_dir/hygiene.source"
-if (cd "$repo" && mix mailglass.repo.hygiene --check --format json) >"$hygiene_raw" 2>&1 && jq -e 'type == "object" and (.status | type == "string") and (.reason | type == "string")' "$hygiene_raw" >/dev/null 2>&1; then
-  component hygiene "$(jq -r '.status' "$hygiene_raw")" "$(jq -r '.reason' "$hygiene_raw")" "$hygiene_raw"
+set +e
+(cd "$repo" && mix mailglass.repo.hygiene --check --format json) >"$hygiene_raw" 2>&1
+hygiene_exit=$?
+set -e
+if jq -e '
+  type == "object" and
+  (.status == "pass" or .status == "blocked" or .status == "pending" or .status == "cannot-check") and
+  (.reason | type == "string" and length > 0) and
+  (.status != "blocked" or (
+    (.checks | type == "array" and length > 0) and
+    any(.checks[]; .status == "blocked" and (.message | type == "string" and length > 0) and (.details | type == "object"))
+  ))
+' "$hygiene_raw" >/dev/null 2>&1; then
+  hygiene_status=$(jq -r '.status' "$hygiene_raw")
+  if [ "$hygiene_status" = pass ] && [ "$hygiene_exit" -ne 0 ]; then
+    component hygiene cannot-check command_status_mismatch "$hygiene_raw"
+  else
+    component hygiene "$hygiene_status" "$(jq -r '.reason' "$hygiene_raw")" "$hygiene_raw"
+  fi
 else component hygiene cannot-check malformed_or_unavailable_hygiene "$hygiene_raw"; fi
 
 workspace_raw="$components_dir/workspace.source"
@@ -69,7 +86,7 @@ captured_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 report_tmp=$(mktemp "$output.XXXXXX")
 jq -n --arg schema "mailglass.repository-closeout/v1" --arg captured_at "$captured_at" --arg repo "$repo" --arg branch "$branch" --arg head_sha "$head_sha" --arg origin_main_sha "$origin_main_sha" --arg ci_run_id "$ci_run_id" --slurpfile git "$components_dir/git.json" --slurpfile hygiene "$components_dir/hygiene.json" --slurpfile workspace "$components_dir/workspace.json" --slurpfile ledger "$components_dir/ledger.json" --slurpfile ci "$components_dir/ci.json" --slurpfile scheduled "$components_dir/scheduled.json" '
   [$git[0], $hygiene[0], $workspace[0], $ledger[0], $ci[0], $scheduled[0]] as $all |
-  (if any($all[]; .status == "cannot-check") then "cannot-check" elif any($all[]; .status == "pending") then "pending" elif any($all[]; .status == "blocked") then "blocked" elif all($all[]; .status == "pass") then "pass" else "cannot-check" end) as $status |
+  (if any($all[]; .status == "cannot-check") then "cannot-check" elif any($all[]; .status == "pending") then "pending" elif ($git[0].status == "pass" and ($hygiene[0].status == "pass" or $hygiene[0].status == "blocked") and $workspace[0].status == "pass" and $ledger[0].status == "pass" and $ci[0].status == "pass" and $scheduled[0].status == "pass") then "pass" elif any($all[]; .status == "blocked") then "blocked" else "cannot-check" end) as $status |
   {schema: $schema, captured_at: $captured_at, repo: $repo, branch: $branch, head_sha: $head_sha, origin_main_sha: $origin_main_sha, ci_run_id: $ci_run_id, components: {git: $git[0], hygiene: $hygiene[0], workspace: $workspace[0], ledger: $ledger[0], ci: $ci[0], scheduled: $scheduled[0]}, status: $status, reason: (if $status == "pass" then "all_authorities_exact_and_current" else "closeout_" + $status end)}' >"$report_tmp"
 mv "$report_tmp" "$output"
 [ "$(jq -r '.status' "$output")" = pass ]
