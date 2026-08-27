@@ -3,16 +3,21 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   @repo_root Path.expand("../..", __DIR__)
   @script Path.join(@repo_root, "scripts/closeout_repository_truth.sh")
-  @ledger Path.join(@repo_root, ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv")
+  @ledger Path.join(
+            @repo_root,
+            ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
+          )
 
   test "rejects a sibling checkout and a foreign symlink before component collection" do
     root = temporary_root!()
     sibling = @repo_root <> "-disposable"
     File.mkdir_p!(sibling)
+
     on_exit(fn ->
       File.rm_rf!(root)
       File.rm_rf!(sibling)
     end)
+
     link = Path.join(root, "mailglass")
     File.ln_s!(sibling, link)
 
@@ -33,7 +38,12 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     copied = Path.join(root, "complete-copy.tsv")
     arbitrary = Path.join(root, "one-row.tsv")
     File.cp!(@ledger, copied)
-    File.write!(arbitrary, header() <> "\nD-01\tproof\tproof\tproducer\ttracked\tauthority\treproducible\tcurrent\tconsumer\tevidence\tretain\trationale\n")
+
+    File.write!(
+      arbitrary,
+      header() <>
+        "\nD-01\tproof\tproof\tproducer\ttracked\tauthority\treproducible\tcurrent\tconsumer\tevidence\tretain\trationale\n"
+    )
 
     for ledger <- [copied, arbitrary] do
       marker = Path.join(root, "mix-called-#{System.unique_integer([:positive])}")
@@ -61,7 +71,15 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     for {contents, index} <- Enum.with_index(mutations) do
       ledger = Path.join(root, "invalid-#{index}.tsv")
       File.write!(ledger, contents)
-      {_, status} = System.cmd("elixir", ["scripts/validate_repository_truth.exs", "--repo", @repo_root, "--ledger", ledger], cd: @repo_root, stderr_to_stdout: true)
+
+      {_, status} =
+        System.cmd(
+          "elixir",
+          ["scripts/validate_repository_truth.exs", "--repo", @repo_root, "--ledger", ledger],
+          cd: @repo_root,
+          stderr_to_stdout: true
+        )
+
       assert status != 0
     end
   end
