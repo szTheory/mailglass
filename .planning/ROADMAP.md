@@ -190,7 +190,7 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 6/7 plans executed
+**Plans**: 9/11 plans executed
 
 Plans:
 
@@ -214,7 +214,23 @@ Plans:
 
 **Wave 5** *(blocked on protected evidence handoff)*
 
-- [ ] 164-07-PLAN.md — Run the read-only exact-main closeout and emit the volatile quiet verdict.
+- [x] 164-07-PLAN.md — Run the read-only exact-main closeout and emit the volatile quiet verdict.
+
+**Wave 6** *(gap closure; blocked on executed baseline)*
+
+- [x] 164-08-PLAN.md — Extract one authoritative complete ledger validator and reconcile durable evidence rows.
+
+**Wave 7** *(blocked on shared validator)*
+
+- [x] 164-09-PLAN.md — Bind closeout to canonical repository, ledger, ignored output, and post-write cleanliness.
+
+**Wave 8** *(blocked on durable gap repairs)*
+
+- [ ] 164-10-PLAN.md — Integrate repairs and await normal exact-SHA protected-main CI and scheduled evidence.
+
+**Wave 9** *(blocked on protected evidence handoff)*
+
+- [ ] 164-11-PLAN.md — Regenerate the hardened volatile report for the exact integrated protected main.
 
 ## Progress
 
@@ -225,4 +241,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 6/7 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 9/11 | In Progress|  |

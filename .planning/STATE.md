@@ -5,16 +5,16 @@ milestone_name: Repository Stewardship & Operational Hygiene
 current_phase: 164
 current_phase_name: repository-truth-reconciliation-and-closeout
 status: executing
-stopped_at: Completed 164-06-PLAN.md
-last_updated: "2026-08-27T13:56:43.297Z"
+stopped_at: Completed 164-09-PLAN.md
+last_updated: "2026-08-27T17:39:00.619Z"
 last_activity: 2026-08-27
 last_activity_desc: Phase 164 execution started
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 33
-  completed_plans: 32
-  percent: 97
+  total_plans: 37
+  completed_plans: 35
+  percent: 75
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (repository-truth-reconciliation-and-closeout) — EXECUTING
-Plan: 7 of 7
-Status: Ready to execute final read-only closeout
-Last activity: 2026-08-27 — Completed 164-06 protected-main evidence checkpoint
+Plan: 3 of 11
+Status: Ready to execute
+Last activity: 2026-08-27 — Phase 164 execution started
 
-Progress: [██████████] 32/33 planned plans ([██████████] 97%)
+Progress: [██████████] 32/33 planned plans ([██████████] 95%)
 
 ## Performance Metrics
 
@@ -87,6 +87,9 @@ Progress: [██████████] 32/33 planned plans ([█████
 | Phase 164 P04 | 8m | 1 tasks | 2 files |
 | Phase 164 P05 | 9m | 2 tasks | 3 files |
 | Phase 164 P06 | 1m | 1 tasks | 1 files |
+| Phase 164 P07 | 4m | 1 tasks | 1 files |
+| Phase 164 P08 | 4m | 2 tasks | 3 files |
+| Phase 164 P09 | 5m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -117,6 +120,12 @@ Progress: [██████████] 32/33 planned plans ([█████
 - [Phase ?]: Closeout remains read-only and writes volatile report evidence under the existing ignored tmp/ rule.
 - [Phase ?]: A quiet verdict requires exact main, exact successful CI, current provenance-valid controls, and a valid exact-one ledger.
 - [Phase ?]: Plan 164-07 must re-query protected main SHA 00bce87d77ce9d8a74ad0f42de5d8ce71ef054fb and CI run 33020041269; no manual substitute is accepted.
+- [Phase ?]: Closeout accepts only exact protected-main identity, normally triggered push CI, and current provenance-valid scheduled evidence.
+- [Phase ?]: The final report remains ignored runtime evidence rather than a self-invalidating tracked snapshot.
+- [Phase ?]: Exact currentness is an enum; stale context belongs in rationale rather than the enum field.
+- [Phase ?]: The repository-truth inventory derives from committed ignore rules, tracked proof, Phase 164 plans, and verification evidence.
+- [Phase ?]: Closeout accepts only the physical canonical repository, Phase 164 ledger, and ignored tmp output boundary.
+- [Phase ?]: The shared full-ledger validator, rather than a local partial parser, decides ledger validity.
 
 ### Pending Todos
 
@@ -134,6 +143,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-08-27T13:56:43.289Z
-Stopped at: Completed 164-06-PLAN.md
+Last session: 2026-08-27T17:39:00.609Z
+Stopped at: Completed 164-09-PLAN.md
 Resume file: None

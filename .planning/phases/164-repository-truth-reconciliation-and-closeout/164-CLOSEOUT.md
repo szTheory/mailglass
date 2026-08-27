@@ -13,15 +13,22 @@ manual dispatch, a different branch, or a merely latest run.
 ```bash
 scripts/closeout_repository_truth.sh \
   --repo /Users/jon/projects/mailglass \
-  --ledger .planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv \
+  --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv \
   --ci-run-id <exact-current-main-ci-run-id> \
-  --output tmp/phase-164-closeout/report.json
+  --output /Users/jon/projects/mailglass/tmp/phase-164-closeout/report.json
 ```
 
+These are enforced identities, not examples: the command resolves `--repo` to
+exactly `/Users/jon/projects/mailglass`, accepts only the Phase 164 ledger at
+the path above, and accepts output only beneath that repository's `tmp/`
+directory. Arbitrary checkouts, copied or equivalent ledgers, and destinations
+not covered by the root `/tmp/` ignore rule are rejected before evidence
+collection or output creation.
+
 `tmp/phase-164-closeout/report.json` and its sibling `components/` source files
-are volatile, untracked runtime evidence under the existing `/tmp/` ignore rule.
-Inspect or attach them to an appropriate later evidence capture; never commit
-them as the repository's final state.
+are volatile, untracked runtime evidence under that existing root `/tmp/` ignore
+rule. Inspect or attach them to an appropriate later evidence capture; never
+commit them as the repository's final state.
 
 ## Report contract
 
@@ -30,8 +37,11 @@ The JSON report contains `schema`, `captured_at`, `repo`, `branch`, `head_sha`,
 source paths preserve the raw output used for each normalized verdict.
 
 The command exits zero only for `status: "pass"`; it writes the report atomically
-for every other verdict as well. It is read-only: it does not dispatch, rerun,
-merge, publish, authorize, or mutate Git/GitHub/Hex state.
+for every other verdict as well. Stable porcelain is sampled before collection
+and again after every component and final-report write, so an observed
+post-write dirty workspace prevents a pass. It is read-only apart from the
+ignored volatile report: it does not dispatch, rerun, merge, publish, authorize,
+or mutate Git/GitHub/Hex state.
 
 ## Quiet pass conditions
 
@@ -42,8 +52,10 @@ merge, publish, authorize, or mutate Git/GitHub/Hex state.
   every scheduled/recovery control has current, complete, event/run/workflow/head
   identity and retained-artifact provenance. A policy-blocked control is eligible
   only when that complete evidence is valid.
-- **D-12:** the durable ledger has exactly one valid disposition for every audited
-  subject.
+- **D-12:** the authoritative durable ledger passes the shared full-ledger
+  validator: every audited subject is complete, each currentness value is exactly
+  `current`, `historical`, or `stale`, and a `stale` entry has an update, archive,
+  or removal outcome rather than `retain` or `ignore`.
 
 `pending`, `cannot-check`, stale, malformed, mismatched, missing, or unexplained
 evidence is non-pass. `cannot-check` takes precedence over `pending`, which takes
