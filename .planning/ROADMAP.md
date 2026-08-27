@@ -190,7 +190,7 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 7/7 plans executed
+**Plans**: 11 plans (7 executed, 4 gap-closure plans pending)
 
 Plans:
 
@@ -215,6 +215,22 @@ Plans:
 **Wave 5** *(blocked on protected evidence handoff)*
 
 - [x] 164-07-PLAN.md — Run the read-only exact-main closeout and emit the volatile quiet verdict.
+
+**Wave 6** *(gap closure; blocked on executed baseline)*
+
+- [ ] 164-08-PLAN.md — Extract one authoritative complete ledger validator and reconcile durable evidence rows.
+
+**Wave 7** *(blocked on shared validator)*
+
+- [ ] 164-09-PLAN.md — Bind closeout to canonical repository, ledger, ignored output, and post-write cleanliness.
+
+**Wave 8** *(blocked on durable gap repairs)*
+
+- [ ] 164-10-PLAN.md — Integrate repairs and await normal exact-SHA protected-main CI and scheduled evidence.
+
+**Wave 9** *(blocked on protected evidence handoff)*
+
+- [ ] 164-11-PLAN.md — Regenerate the hardened volatile report for the exact integrated protected main.
 
 ## Progress
 
