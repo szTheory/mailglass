@@ -31,7 +31,7 @@
 
 - [ ] **TRTH-01**: Maintainer, version, release, recovery, and package guidance agrees with the settled protected-release workflow, published package state, and actual supported commands.
 - [x] **TRTH-02**: Every changed tracked/generated artifact and ignore rule has an evidence-backed classification; only demonstrable junk or stale output is removed, and planning/release proof remains tracked and discoverable.
-- [ ] **TRTH-03**: A maintainer can reproduce final closeout evidence showing the canonical workspace clean, protected main CI green, scheduled/recovery outcomes explained, and every audited item dispositioned.
+- [x] **TRTH-03**: A maintainer can reproduce final closeout evidence showing the canonical workspace clean, protected main CI green, scheduled/recovery outcomes explained, and every audited item dispositioned.
 
 ## Future Requirements
 
