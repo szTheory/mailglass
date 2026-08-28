@@ -135,7 +135,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "--pre-verification"
     assert source =~ "git ls-files --error-unmatch"
     assert source =~ ~s(pi.exec("bash", [finalizer, repoRoot, ...modeArgs])
-    assert source =~ "exitCode"
+    assert source =~ "result.code"
+    assert source =~ "process.exitCode = 1"
+    assert source =~ ~s|process.argv.includes("--print")|
+    assert source =~ "process.exit(1)"
     assert source =~ "ctx.ui.notify"
     assert source =~ "slice(-MAX_OUTPUT_BYTES)"
 
