@@ -3,6 +3,11 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   @repo_root Path.expand("../..", __DIR__)
   @script Path.join(@repo_root, "scripts/closeout_repository_truth.sh")
+  @extension Path.join(@repo_root, ".gsd/extensions/finalize-phase/index.ts")
+  @manifest Path.join(
+              @repo_root,
+              ".gsd/extensions/finalize-phase/extension-manifest.json"
+            )
   @ledger Path.join(
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
@@ -109,6 +114,33 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "status --porcelain=v1 --untracked-files=all"
 
     assert source =~ "write_report\nfinal_porcelain=$(stable_porcelain)"
+  end
+
+  test "finalize-phase manifest exposes exactly one compatible community command" do
+    manifest = @manifest |> File.read!() |> Jason.decode!()
+
+    assert manifest["id"] == "finalize-phase"
+    assert manifest["tier"] == "community"
+    assert manifest["requires"] == %{"platform" => ">=2.29.0"}
+    assert manifest["provides"] == %{"commands" => ["finalize-phase"]}
+  end
+
+  test "finalize-phase command validates one phase and dispatches one tracked finalizer via pi.exec" do
+    source = File.read!(@extension)
+
+    assert source =~ ~s(import type { ExtensionAPI } from "@gsd/pi-coding-agent")
+    assert source =~ ~s(pi.registerCommand("finalize-phase")
+    assert source =~ ~r/\^\[1-9\]\\d\*\$/
+    assert source =~ "--pre-verification"
+    assert source =~ "git ls-files --error-unmatch"
+    assert source =~ ~s(pi.exec("bash", [finalizer, repoRoot, ...modeArgs])
+    assert source =~ "exitCode"
+    assert source =~ "ctx.ui.notify"
+    assert source =~ "slice(-MAX_OUTPUT_BYTES)"
+
+    refute source =~ "child_process"
+    refute source =~ "registerTool"
+    refute source =~ "pi.on("
   end
 
   test "accepts authoritative per-control freshness and rejects identity or provenance mutations" do

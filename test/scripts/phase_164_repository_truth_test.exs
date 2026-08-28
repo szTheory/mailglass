@@ -104,6 +104,14 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     end
   end
 
+  test "git ignores all GSD runtime state except the finalize-phase extension" do
+    assert ignored?(".gsd/gsd.db")
+    assert ignored?(".gsd/exec/probe")
+    assert ignored?(".gsd/extensions/other/index.ts")
+    refute ignored?(".gsd/extensions/finalize-phase/index.ts")
+    refute ignored?(".gsd/extensions/finalize-phase/extension-manifest.json")
+  end
+
   defp remove_subject(contents, subject) do
     contents
     |> String.split("\n", trim: true)
@@ -113,6 +121,13 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   end
 
   defp header_line, do: Enum.join(@headers, "\t")
+
+  defp ignored?(path) do
+    {_output, status} =
+      System.cmd("git", ["check-ignore", "-q", path], cd: @repo_root, stderr_to_stdout: true)
+
+    status == 0
+  end
 
   defp valid_row do
     Enum.join(
