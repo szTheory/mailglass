@@ -8,6 +8,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
               @repo_root,
               ".gsd/extensions/finalize-phase/extension-manifest.json"
             )
+  @finalizer Path.join(@repo_root, "scripts/finalize_phase_164.sh")
   @ledger Path.join(
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
@@ -162,6 +163,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         String.duplicate("b", 40)
       ),
       put_in(report, ["controls", Access.at(0), "source_run", "event"], "workflow_dispatch"),
+      put_in(report, ["controls", Access.at(0), "source_run", "attempt"], 2),
       put_in(report, ["controls", Access.at(0), "source_run", "head_branch"], "feature"),
       put_in(report, ["controls", Access.at(0), "source_run", "status"], "in_progress"),
       put_in(
@@ -182,6 +184,51 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       File.write!(mutation_path, Jason.encode!(mutation))
       refute scheduled_report_acceptable?(mutation_path, sha)
     end
+  end
+
+  test "finalizer selects only an exact attempt-one normal push CI run without caller identity" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+    sha = String.duplicate("a", 40)
+    runs = Path.join(root, "runs.json")
+
+    File.write!(
+      runs,
+      Jason.encode!([
+        ci_run(12, sha, 2, "2026-08-28T18:00:00Z"),
+        ci_run(11, sha, 1, "2026-08-28T17:00:00Z"),
+        %{ci_run(13, sha, 1, "2026-08-28T19:00:00Z") | "event" => "workflow_dispatch"},
+        ci_run(10, String.duplicate("b", 40), 1, "2026-08-28T16:00:00Z")
+      ])
+    )
+
+    assert {"11\n", 0} = source_finalizer("select_ci_run_id \"$2\" \"$3\"", [runs, sha])
+
+    assert {_, status} =
+             source_finalizer("select_ci_run_id \"$2\" \"$3\"", [runs, String.duplicate("c", 40)])
+
+    assert status != 0
+
+    source = File.read!(@finalizer)
+    refute source =~ "--ci-run-id"
+    refute source =~ ~r/gh\s+workflow\s+(run|rerun)/
+    refute source =~ ~r/gh\s+run\s+rerun/
+  end
+
+  test "finalizer separates pre-verification and terminal tracked-state gates" do
+    source = File.read!(@finalizer)
+
+    assert source =~ "--pre-verification"
+    assert source =~ "pre-verification-inputs.json"
+    assert source =~ "pre-verification-report.json"
+    assert source =~ "finalization-inputs.json"
+    assert source =~ "164-VERIFICATION.md"
+    assert source =~ "TRTH-01"
+    assert source =~ "status --porcelain=v1 --untracked-files=all"
+    assert source =~ "git fetch origin main"
+    assert source =~ "components.ci.source"
+    assert source =~ "components.scheduled.source"
+    assert source =~ "source_run.attempt == 1"
   end
 
   defp run(repo, ledger, output, marker) do
@@ -243,6 +290,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       "control" => control,
       "evidence_valid" => true,
       "source_run" => %{
+        "attempt" => 1,
         "event" => "schedule",
         "status" => "completed",
         "head_branch" => "main",
@@ -253,9 +301,33 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         "status" => status,
         "reason" => "fixture_result",
         "workflow_sha" => sha,
-        "payload_sha256" => String.duplicate("f", 64)
+        "payload_sha256" => String.duplicate("f", 64),
+        "artifact_archive_digest" => "sha256:#{String.duplicate("e", 64)}"
       }
     }
+  end
+
+  defp ci_run(id, sha, attempt, created_at) do
+    %{
+      "databaseId" => id,
+      "workflowName" => "CI",
+      "headBranch" => "main",
+      "headSha" => sha,
+      "event" => "push",
+      "attempt" => attempt,
+      "status" => "completed",
+      "conclusion" => "success",
+      "createdAt" => created_at
+    }
+  end
+
+  defp source_finalizer(command, args) do
+    System.cmd(
+      "bash",
+      ["-c", ~s(source "$1"; #{command}), "phase-164-finalizer-test", @finalizer | args],
+      cd: @repo_root,
+      stderr_to_stdout: true
+    )
   end
 
   defp header do

@@ -72,6 +72,7 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
       report = output |> File.read!() |> Jason.decode!()
       assert report["kind"] == "run"
       assert report["evidence_valid"]
+      assert report["source_run"]["attempt"] == 1
       assert report["source_run"]["conclusion"] == "failure"
       assert report["result"]["status"] == "blocked"
     end)
@@ -99,6 +100,13 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
       )
 
       assert verify_file_status("release-please", artifact, run_json, output) != 0
+
+      File.write!(
+        run_json,
+        Jason.encode!(%{run("release-please") | "run_attempt" => 2})
+      )
+
+      assert verify_file_status("release-please", artifact, run_json, output) != 0
     end)
   end
 
@@ -116,6 +124,7 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
       assert current_report["kind"] == "sweep"
       assert current_report["expected_main_sha"] == run_sha
       assert get_in(current_report, ["controls", Access.at(0), "source_run", "head_sha"]) == run_sha
+      assert get_in(current_report, ["controls", Access.at(0), "source_run", "attempt"]) == 1
 
       fixture = write_sweep_fixture!(Path.join(temp_dir, "stale"), run_sha, main_sha)
 
@@ -345,6 +354,7 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
       run_json,
       Jason.encode!(%{
         "id" => 16_214,
+        "run_attempt" => 1,
         "name" => "release-please",
         "event" => "schedule",
         "status" => "completed",
@@ -420,6 +430,7 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
   defp run(workflow_name) do
     %{
       "id" => 16_214,
+      "run_attempt" => 1,
       "name" => workflow_name,
       "event" => "schedule",
       "status" => "completed",
