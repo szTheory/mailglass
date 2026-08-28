@@ -190,7 +190,7 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 9/12 plans executed
+**Plans**: 9/11 plans executed
 
 Plans:
 
@@ -230,11 +230,11 @@ Plans:
 
 **Wave 9** *(blocked on tracked freshness repair)*
 
-- [ ] 164-11-PLAN.md — Integrate the repair through protected main, observe normal push CI, and await naturally scheduled exact-SHA evidence.
+- [ ] 164-11-PLAN.md — Install the tracked post-execution finalization contract and bind it into closeout documentation and the exact-one ledger.
 
-**Wave 10** *(blocked on protected natural-evidence handoff)*
+**Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
 
-- [ ] 164-12-PLAN.md — Regenerate and independently verify the hardened ignored report for the exact repaired protected main.
+- [ ] 164-FINALIZATION.md — Observe normal push CI and natural exact-SHA schedules, carry identities through ignored runtime state, regenerate the ignored report, and independently verify raw CI/scheduled sources with no later tracked commit.
 
 ## Progress
 
