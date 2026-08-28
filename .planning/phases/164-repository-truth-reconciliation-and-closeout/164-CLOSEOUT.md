@@ -4,11 +4,28 @@ This is the durable usage contract for a volatile closeout report. It is not a
 captured final-state snapshot: each report's timestamp, SHAs, run IDs, control
 observations, and verdict are time-bound evidence and must remain untracked.
 
-## Run after a protected merge
+## Lifecycle entry point
 
-From the canonical checkout at `/Users/jon/projects/mailglass`, obtain the exact
-normally triggered protected CI run ID for the current `main` SHA. Do not use a
-manual dispatch, a different branch, or a merely latest run.
+Use the tracked post-completion boundary documented in
+[164-FINALIZATION.md](164-FINALIZATION.md):
+
+```text
+/finalize-phase 164 --pre-verification
+/finalize-phase 164
+```
+
+The first command supplies implementation-SHA evidence to ordinary phase
+verification. The second runs only after all tracked completion metadata has
+reached protected `main` and supplies terminal operational proof without a
+self-invalidating tracked write. Both commands select attempt-1 normal push CI
+automatically and accept no caller-provided run identity.
+
+## Internal closeout composition
+
+The finalizer invokes the lower-level composer below with the CI identity it
+selected and validated. Maintainers should use `/finalize-phase`, not supply a
+run ID manually. Manual dispatch, rerun, a different branch, or a merely latest
+run is never a substitute.
 
 ```bash
 scripts/closeout_repository_truth.sh \

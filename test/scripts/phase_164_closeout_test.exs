@@ -210,7 +210,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert status != 0
 
     source = File.read!(@finalizer)
-    refute source =~ "--ci-run-id"
+    assert source =~ "usage: $0 REPO [--pre-verification]"
+    refute source =~ ~r/ci_run_id=.*\$\{[123]:-/
     refute source =~ ~r/gh\s+workflow\s+(run|rerun)/
     refute source =~ ~r/gh\s+run\s+rerun/
   end
@@ -229,6 +230,63 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "components.ci.source"
     assert source =~ "components.scheduled.source"
     assert source =~ "source_run.attempt == 1"
+  end
+
+  test "finalizer independently validates raw CI and registered scheduled provenance" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+    components = Path.join(root, "components")
+    File.mkdir_p!(components)
+    sha = String.duplicate("a", 40)
+    ci = Path.join(components, "ci.source")
+    scheduled = Path.join(components, "scheduled.source")
+    report = Path.join(root, "report.json")
+    registry = Path.join(root, "registry.json")
+
+    ci_payload = ci_run(77, sha, 1, "2026-08-28T17:00:00Z")
+    File.write!(ci, Jason.encode!(ci_payload))
+    File.write!(scheduled, Jason.encode!(authoritative_sweep(sha)))
+
+    File.write!(
+      report,
+      Jason.encode!(%{
+        "components" => %{
+          "ci" => %{"source" => ci},
+          "scheduled" => %{"source" => scheduled}
+        }
+      })
+    )
+
+    File.write!(
+      registry,
+      Jason.encode!(%{
+        "controls" =>
+          Enum.map(["release-please", "repo-hygiene", "post-publish-smoke"], fn id ->
+            %{"id" => id, "workflow_name" => id}
+          end)
+      })
+    )
+
+    command = "raw_sources_are_acceptable \"$2\" \"$3\" \"$4\" \"$5\" \"$6\""
+    assert {_, 0} = source_finalizer(command, [report, sha, root, registry, "77"])
+
+    File.write!(ci, Jason.encode!(%{ci_payload | "attempt" => 2}))
+    assert {_, status} = source_finalizer(command, [report, sha, root, registry, "77"])
+    assert status != 0
+
+    File.write!(ci, Jason.encode!(ci_payload))
+
+    scheduled_payload = authoritative_sweep(sha)
+
+    File.write!(
+      scheduled,
+      Jason.encode!(
+        put_in(scheduled_payload, ["controls", Access.at(1), "source_run", "attempt"], 2)
+      )
+    )
+
+    assert {_, status} = source_finalizer(command, [report, sha, root, registry, "77"])
+    assert status != 0
   end
 
   defp run(repo, ledger, output, marker) do
@@ -290,9 +348,12 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       "control" => control,
       "evidence_valid" => true,
       "source_run" => %{
+        "id" => "16214",
+        "name" => control,
         "attempt" => 1,
         "event" => "schedule",
         "status" => "completed",
+        "conclusion" => if(status == "pass", do: "success", else: "failure"),
         "head_branch" => "main",
         "head_sha" => sha,
         "updated_at" => updated_at

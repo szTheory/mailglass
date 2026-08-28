@@ -14,6 +14,7 @@ scheduled_report_is_acceptable() {
     (.controls | type == "array" and length > 0) and
     all(.controls[];
       .evidence_valid == true and
+      .source_run.attempt == 1 and
       .source_run.event == "schedule" and
       .source_run.status == "completed" and
       .source_run.head_branch == "main" and
@@ -73,7 +74,8 @@ components_dir="$output_dir/components"
 output_rel=${output#"$repo"/}
 components_rel=${components_dir#"$repo"/}
 [ "$output_rel" != "$output" ] && [ "$components_rel" != "$components_dir" ] || usage
-git -C "$repo" check-ignore -q -- "$output_rel" "$components_rel" || usage
+git -C "$repo" check-ignore -q -- "$output_rel" || usage
+git -C "$repo" check-ignore -q -- "$components_rel" || usage
 mkdir -p "$components_dir"
 
 stable_porcelain() {
@@ -122,7 +124,7 @@ if elixir "$repo/scripts/validate_repository_truth.exs" --repo "$repo" --ledger 
 
 ci_raw="$components_dir/ci.source"
 ci_diagnostics="$components_dir/ci.diagnostics"
-if (cd "$repo" && node scripts/ci_monitor.cjs inspect "$ci_run_id") >"$ci_raw" 2>"$ci_diagnostics" && jq -e --arg sha "$head_sha" 'type == "object" and .headSha == $sha and .status == "completed" and .conclusion == "success"' "$ci_raw" >/dev/null 2>&1; then component ci pass exact_successful_ci "$ci_raw"; else component ci cannot-check missing_malformed_or_wrong_identity_ci "$ci_raw"; fi
+if (cd "$repo" && node scripts/ci_monitor.cjs inspect "$ci_run_id") >"$ci_raw" 2>"$ci_diagnostics" && jq -e --arg sha "$head_sha" 'type == "object" and .workflowName == "CI" and .event == "push" and .attempt == 1 and .headBranch == "main" and .headSha == $sha and .status == "completed" and .conclusion == "success"' "$ci_raw" >/dev/null 2>&1; then component ci pass exact_successful_ci "$ci_raw"; else component ci cannot-check missing_malformed_or_wrong_identity_ci "$ci_raw"; fi
 
 scheduled_raw="$components_dir/scheduled.source"
 if (cd "$repo" && bash scripts/scheduled_control_evidence.sh sweep --output "$scheduled_raw") >/dev/null 2>&1 && scheduled_report_is_acceptable "$scheduled_raw" "$head_sha"; then component scheduled pass current_provenance_valid "$scheduled_raw"; elif jq -e 'type == "object" and (.status == "pending" or .status == "cannot-check")' "$scheduled_raw" >/dev/null 2>&1; then component scheduled "$(jq -r '.status' "$scheduled_raw")" "$(jq -r '.reason // "scheduled_evidence_incomplete"' "$scheduled_raw")" "$scheduled_raw"; else component scheduled cannot-check malformed_stale_or_mismatched_scheduled_evidence "$scheduled_raw"; fi
