@@ -112,6 +112,27 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     refute ignored?(".gsd/extensions/finalize-phase/extension-manifest.json")
   end
 
+  test "finalization artifacts have exactly one tracked current retain disposition" do
+    assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+
+    for subject <- [
+          ".gitignore",
+          ".gsd/extensions/finalize-phase/extension-manifest.json",
+          ".gsd/extensions/finalize-phase/index.ts",
+          "scripts/finalize_phase_164.sh",
+          Path.join(@phase_dir, "164-FINALIZE.sh"),
+          Path.join(@phase_dir, "164-FINALIZATION.md"),
+          "scripts/ci_monitor.cjs",
+          "scripts/scheduled_control_evidence.sh",
+          "test/scripts/scheduled_control_evidence_test.exs"
+        ] do
+      assert [row] = Enum.filter(rows, &(&1["subject"] == subject))
+      assert row["state"] == "tracked"
+      assert row["currentness"] == "current"
+      assert row["disposition"] == "retain"
+    end
+  end
+
   defp remove_subject(contents, subject) do
     contents
     |> String.split("\n", trim: true)
