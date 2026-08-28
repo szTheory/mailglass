@@ -112,6 +112,12 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     refute ignored?(".gsd/extensions/finalize-phase/extension-manifest.json")
   end
 
+  test "git ignores the canonical GSD lifecycle lock while planning proof stays visible" do
+    assert ignored?(".planning/milestone.lock")
+    refute ignored?(".planning/milestone-lock-proof.json")
+    refute ignored?(".planning/release-target.json")
+  end
+
   test "finalization artifacts have exactly one tracked current retain disposition" do
     assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
 

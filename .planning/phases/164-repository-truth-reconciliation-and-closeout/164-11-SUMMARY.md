@@ -39,9 +39,9 @@ key-decisions:
   - "The finalizer independently validates raw CI and scheduled-control provenance instead of trusting only lower-level aggregate status."
 requirements-completed: [TRTH-02, TRTH-03]
 actuals:
-  tokens: 14070
+  tokens: 15947
   tasks: 3
-  commits: 7
+  commits: 8
 metrics:
   duration: 12m
   completed: 2026-08-28
@@ -162,6 +162,14 @@ Each task was committed atomically using TDD where required:
 - **Files modified:** `scripts/closeout_repository_truth.sh`
 - **Commit:** `e0ad4fa8`
 
+**4. [Rule 2 - Missing Critical Functionality] Ignored the canonical volatile GSD lifecycle lock**
+
+- **Found during:** Post-plan integration via official GSD 2.80 `state begin-phase`
+- **Issue:** GSD creates `.planning/milestone.lock` with volatile session, PID, and timestamp metadata while a phase is active. Because the lock was unignored, the finalizer's stable-porcelain prerequisite could never pass during canonical GSD execution.
+- **Fix:** Added one exact root ignore rule, proved the lock is ignored while neighboring planning proof remains visible, and reconciled the rule as unique ledger row `I-072`.
+- **Files modified:** `.gitignore`, `test/scripts/phase_164_repository_truth_test.exs`, `.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv`
+- **Commit:** This atomic Plan 164-11 follow-up fix.
+
 ## Verification
 
 - `mix test test/scripts/phase_164_closeout_test.exs test/scripts/phase_164_repository_truth_test.exs test/scripts/scheduled_control_evidence_test.exs --warnings-as-errors --no-deps-check` — 27 tests, 0 failures.
@@ -169,6 +177,7 @@ Each task was committed atomically using TDD where required:
 - `mix format --check-formatted` for all modified Elixir tests — passed.
 - Repository-truth validator — valid.
 - Narrow `.gsd` ignore-boundary assertions — passed.
+- Canonical `.planning/milestone.lock` ignore and neighboring planning-proof visibility assertions — passed.
 - Pinned `gsd` version — 2.80.0.
 - Real `gsd --print --no-session "/finalize-phase 164 --pre-verification"` — command loaded and correctly failed nonzero at the stable-porcelain guard in the intentionally dirty integration checkout.
 - `git diff --check` — passed.
