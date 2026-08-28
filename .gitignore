@@ -48,5 +48,8 @@ erl_crash.dump
 /.claude/
 /.bg-shell/
 /.cursor/
-/.gsd/
+/.gsd/*
+!/.gsd/extensions/
+/.gsd/extensions/*
+!/.gsd/extensions/finalize-phase/
 /.mcp.json

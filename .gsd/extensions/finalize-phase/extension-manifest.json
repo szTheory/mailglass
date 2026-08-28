@@ -1,0 +1,11 @@
+{
+  "id": "finalize-phase",
+  "name": "Finalize Phase",
+  "version": "1.0.0",
+  "description": "Run a tracked post-completion phase finalizer without writing tracked state",
+  "tier": "community",
+  "requires": { "platform": ">=2.29.0" },
+  "provides": {
+    "commands": ["finalize-phase"]
+  }
+}
