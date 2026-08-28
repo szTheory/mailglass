@@ -111,6 +111,47 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "write_report\nfinal_porcelain=$(stable_porcelain)"
   end
 
+  test "accepts authoritative per-control freshness and rejects identity or provenance mutations" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    sha = String.duplicate("a", 40)
+    report = authoritative_sweep(sha)
+    report_path = Path.join(root, "scheduled-sweep.json")
+
+    File.write!(report_path, Jason.encode!(report))
+    assert scheduled_report_acceptable?(report_path, sha)
+
+    mutations = [
+      put_in(report, ["expected_main_sha"], String.duplicate("b", 40)),
+      put_in(
+        report,
+        ["controls", Access.at(0), "source_run", "head_sha"],
+        String.duplicate("b", 40)
+      ),
+      put_in(report, ["controls", Access.at(0), "source_run", "event"], "workflow_dispatch"),
+      put_in(report, ["controls", Access.at(0), "source_run", "head_branch"], "feature"),
+      put_in(report, ["controls", Access.at(0), "source_run", "status"], "in_progress"),
+      put_in(
+        report,
+        ["controls", Access.at(0), "result", "workflow_sha"],
+        String.duplicate("b", 40)
+      ),
+      put_in(report, ["controls", Access.at(0), "evidence_valid"], false),
+      put_in(report, ["controls", Access.at(0), "result", "status"], "pending"),
+      put_in(report, ["controls", Access.at(2), "result", "payload_sha256"], ""),
+      put_in(report, ["status"], "pending"),
+      put_in(report, ["status"], "cannot-check"),
+      put_in(report, ["evidence_valid"], false)
+    ]
+
+    for {mutation, index} <- Enum.with_index(mutations) do
+      mutation_path = Path.join(root, "scheduled-sweep-#{index}.json")
+      File.write!(mutation_path, Jason.encode!(mutation))
+      refute scheduled_report_acceptable?(mutation_path, sha)
+    end
+  end
+
   defp run(repo, ledger, output, marker) do
     root = Path.dirname(marker)
     bin = Path.join(root, "bin-#{System.unique_integer([:positive])}")
@@ -125,6 +166,64 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       env: [{"PATH", "#{bin}:#{System.fetch_env!("PATH")}"}],
       stderr_to_stdout: true
     )
+  end
+
+  defp scheduled_report_acceptable?(report_path, expected_sha) do
+    {_, status} =
+      System.cmd(
+        "bash",
+        [
+          "-c",
+          ~s(source "$1"; scheduled_report_is_acceptable "$2" "$3"),
+          "phase-164-closeout-test",
+          @script,
+          report_path,
+          expected_sha
+        ],
+        cd: @repo_root,
+        stderr_to_stdout: true
+      )
+
+    status == 0
+  end
+
+  defp authoritative_sweep(sha) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    hourly = now |> DateTime.add(-3_600, :second) |> DateTime.to_iso8601()
+    daily = now |> DateTime.add(-14_400, :second) |> DateTime.to_iso8601()
+
+    %{
+      "kind" => "sweep",
+      "status" => "pass",
+      "reason" => "all_controls_current",
+      "evidence_valid" => true,
+      "expected_main_sha" => sha,
+      "controls" => [
+        scheduled_control("release-please", sha, hourly, "pass"),
+        scheduled_control("repo-hygiene", sha, daily, "pass"),
+        scheduled_control("post-publish-smoke", sha, daily, "blocked")
+      ]
+    }
+  end
+
+  defp scheduled_control(control, sha, updated_at, status) do
+    %{
+      "control" => control,
+      "evidence_valid" => true,
+      "source_run" => %{
+        "event" => "schedule",
+        "status" => "completed",
+        "head_branch" => "main",
+        "head_sha" => sha,
+        "updated_at" => updated_at
+      },
+      "result" => %{
+        "status" => status,
+        "reason" => "fixture_result",
+        "workflow_sha" => sha,
+        "payload_sha256" => String.duplicate("f", 64)
+      }
+    }
   end
 
   defp header do
