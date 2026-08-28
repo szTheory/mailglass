@@ -1,19 +1,20 @@
 ---
 gsd_state_version: 1.0
 milestone: v2.7
-milestone_name: Repository Stewardship & Operational Hygiene
+milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: repository-truth-reconciliation-and-closeout
 status: executing
-stopped_at: Completed 164-09-PLAN.md
-last_updated: "2026-08-27T17:39:00.619Z"
-last_activity: 2026-08-27
-last_activity_desc: Phase 164 execution started
+stopped_at: Awaiting protected integration for 164-12-PLAN.md
+last_updated: "2026-08-28T20:46:21.443Z"
+last_activity: 2026-08-28
+last_activity_desc: Completed 164-11; awaiting protected-main checkpoint
+state_head: aeac3eb4d854222957c8ae554c3c05b99d302deb
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 37
-  completed_plans: 35
+  total_plans: 38
+  completed_plans: 34
   percent: 75
 ---
 
@@ -29,17 +30,17 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (repository-truth-reconciliation-and-closeout) — EXECUTING
-Plan: 3 of 11
-Status: Ready to execute
-Last activity: 2026-08-27 — Phase 164 execution started
+Plan: 12 of 12
+Status: Awaiting protected-main checkpoint
+Last activity: 2026-08-28 — Completed 164-11; awaiting protected-main checkpoint
 
-Progress: [██████████] 32/33 planned plans ([██████████] 95%)
+Progress: [████████░░] 34/38 planned plans ([████████░░] 75%)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 26
+- Total plans completed: 34
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -50,7 +51,7 @@ Progress: [██████████] 32/33 planned plans ([█████
 | 161. Canonical Workspace and Evidence Preservation | 5 | 72m | 14m |
 | 162. Protected Release and Scheduled-Control Recovery | 13 | — | — |
 | 163. Deterministic Release-Path Timeout Repairs | 8 | — | — |
-| 164. Repository Truth Reconciliation and Closeout | 6 | 28m | 5m |
+| 164. Repository Truth Reconciliation and Closeout | 11 | 28m | 3m |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |

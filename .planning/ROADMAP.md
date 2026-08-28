@@ -190,7 +190,7 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 9/12 plans executed
+**Plans**: 11/12 plans executed
 
 Plans:
 
@@ -226,11 +226,11 @@ Plans:
 
 **Wave 8** *(freshness gap repair; blocked on canonical closeout boundary)*
 
-- [ ] 164-10-PLAN.md — Repair the closeout freshness consumer through a focused TDD contract without weakening provenance or registry limits.
+- [x] 164-10-PLAN.md — Repair the closeout freshness consumer through a focused TDD contract without weakening provenance or registry limits.
 
 **Wave 9** *(blocked on tracked freshness repair)*
 
-- [ ] 164-11-PLAN.md — Version a project-local `/finalize-phase` command, implement the no-tracked-output Phase 164 finalizer, and bind its narrow `.gsd` boundary into the exact-one ledger.
+- [x] 164-11-PLAN.md — Version a project-local `/finalize-phase` command, implement the no-tracked-output Phase 164 finalizer, and bind its narrow `.gsd` boundary into the exact-one ledger.
 
 **Wave 10** *(pre-verification protected-main checkpoint; blocked on the finalizer implementation)*
 
@@ -249,4 +249,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 9/12 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 11/12 | In Progress|  |
