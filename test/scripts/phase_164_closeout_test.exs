@@ -205,10 +205,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       ])
     )
 
-    assert {"11\n", 0} = source_finalizer("select_ci_run_id \"$2\" \"$3\"", [runs, sha])
+    assert {"11\n", 0} = source_finalizer(~s(select_ci_run_id "$2" "$3"), [runs, sha])
 
     assert {_, status} =
-             source_finalizer("select_ci_run_id \"$2\" \"$3\"", [runs, String.duplicate("c", 40)])
+             source_finalizer(~s(select_ci_run_id "$2" "$3"), [runs, String.duplicate("c", 40)])
 
     assert status != 0
 
