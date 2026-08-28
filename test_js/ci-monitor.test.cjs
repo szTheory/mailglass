@@ -12,7 +12,7 @@ test("builds observable run-list and exact-run inspection commands", () => {
     "--branch",
     "phase-163",
     "--json",
-    "databaseId,workflowName,headBranch,headSha,event,status,conclusion,url,createdAt"
+    "databaseId,workflowName,headBranch,headSha,event,attempt,status,conclusion,url,createdAt"
   ]);
 
   assert.deepEqual(buildCommand(["inspect", "4242"]), [
@@ -20,7 +20,7 @@ test("builds observable run-list and exact-run inspection commands", () => {
     "view",
     "4242",
     "--json",
-    "databaseId,workflowName,headBranch,headSha,event,status,conclusion,url,jobs"
+    "databaseId,workflowName,headBranch,headSha,event,attempt,status,conclusion,url,jobs"
   ]);
 
   assert.deepEqual(buildCommand(["workflows"]), [

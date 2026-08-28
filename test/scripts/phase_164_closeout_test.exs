@@ -3,6 +3,12 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   @repo_root Path.expand("../..", __DIR__)
   @script Path.join(@repo_root, "scripts/closeout_repository_truth.sh")
+  @extension Path.join(@repo_root, ".gsd/extensions/finalize-phase/index.ts")
+  @manifest Path.join(
+              @repo_root,
+              ".gsd/extensions/finalize-phase/extension-manifest.json"
+            )
+  @finalizer Path.join(@repo_root, "scripts/finalize_phase_164.sh")
   @ledger Path.join(
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
@@ -111,6 +117,181 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "write_report\nfinal_porcelain=$(stable_porcelain)"
   end
 
+  test "finalize-phase manifest exposes exactly one compatible community command" do
+    manifest = @manifest |> File.read!() |> Jason.decode!()
+
+    assert manifest["id"] == "finalize-phase"
+    assert manifest["tier"] == "community"
+    assert manifest["requires"] == %{"platform" => ">=2.29.0"}
+    assert manifest["provides"] == %{"commands" => ["finalize-phase"]}
+  end
+
+  test "finalize-phase command validates one phase and dispatches one tracked finalizer via pi.exec" do
+    source = File.read!(@extension)
+
+    assert source =~ ~s(import type { ExtensionAPI } from "@gsd/pi-coding-agent")
+    assert source =~ ~s(pi.registerCommand("finalize-phase")
+    assert source =~ ~r/\^\[1-9\]\\d\*\$/
+    assert source =~ "--pre-verification"
+    assert source =~ "git ls-files --error-unmatch"
+    assert source =~ ~s(pi.exec("bash", [finalizer, repoRoot, ...modeArgs])
+    assert source =~ "result.code"
+    assert source =~ "process.exitCode = 1"
+    assert source =~ ~s|process.argv.includes("--print")|
+    assert source =~ "process.exit(1)"
+    assert source =~ "ctx.ui.notify"
+    assert source =~ "slice(-MAX_OUTPUT_BYTES)"
+
+    refute source =~ "child_process"
+    refute source =~ "registerTool"
+    refute source =~ "pi.on("
+  end
+
+  test "accepts authoritative per-control freshness and rejects identity or provenance mutations" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    sha = String.duplicate("a", 40)
+    report = authoritative_sweep(sha)
+    report_path = Path.join(root, "scheduled-sweep.json")
+
+    File.write!(report_path, Jason.encode!(report))
+    assert scheduled_report_acceptable?(report_path, sha)
+
+    mutations = [
+      put_in(report, ["expected_main_sha"], String.duplicate("b", 40)),
+      put_in(
+        report,
+        ["controls", Access.at(0), "source_run", "head_sha"],
+        String.duplicate("b", 40)
+      ),
+      put_in(report, ["controls", Access.at(0), "source_run", "event"], "workflow_dispatch"),
+      put_in(report, ["controls", Access.at(0), "source_run", "attempt"], 2),
+      put_in(report, ["controls", Access.at(0), "source_run", "head_branch"], "feature"),
+      put_in(report, ["controls", Access.at(0), "source_run", "status"], "in_progress"),
+      put_in(
+        report,
+        ["controls", Access.at(0), "result", "workflow_sha"],
+        String.duplicate("b", 40)
+      ),
+      put_in(report, ["controls", Access.at(0), "evidence_valid"], false),
+      put_in(report, ["controls", Access.at(0), "result", "status"], "pending"),
+      put_in(report, ["controls", Access.at(2), "result", "payload_sha256"], ""),
+      put_in(report, ["status"], "pending"),
+      put_in(report, ["status"], "cannot-check"),
+      put_in(report, ["evidence_valid"], false)
+    ]
+
+    for {mutation, index} <- Enum.with_index(mutations) do
+      mutation_path = Path.join(root, "scheduled-sweep-#{index}.json")
+      File.write!(mutation_path, Jason.encode!(mutation))
+      refute scheduled_report_acceptable?(mutation_path, sha)
+    end
+  end
+
+  test "finalizer selects only an exact attempt-one normal push CI run without caller identity" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+    sha = String.duplicate("a", 40)
+    runs = Path.join(root, "runs.json")
+
+    File.write!(
+      runs,
+      Jason.encode!([
+        ci_run(12, sha, 2, "2026-08-28T18:00:00Z"),
+        ci_run(11, sha, 1, "2026-08-28T17:00:00Z"),
+        %{ci_run(13, sha, 1, "2026-08-28T19:00:00Z") | "event" => "workflow_dispatch"},
+        ci_run(10, String.duplicate("b", 40), 1, "2026-08-28T16:00:00Z")
+      ])
+    )
+
+    assert {"11\n", 0} = source_finalizer(~s(select_ci_run_id "$2" "$3"), [runs, sha])
+
+    assert {_, status} =
+             source_finalizer(~s(select_ci_run_id "$2" "$3"), [runs, String.duplicate("c", 40)])
+
+    assert status != 0
+
+    source = File.read!(@finalizer)
+    assert source =~ "usage: $0 REPO [--pre-verification]"
+    refute source =~ ~r/ci_run_id=.*\$\{[123]:-/
+    refute source =~ ~r/gh\s+workflow\s+(run|rerun)/
+    refute source =~ ~r/gh\s+run\s+rerun/
+  end
+
+  test "finalizer separates pre-verification and terminal tracked-state gates" do
+    source = File.read!(@finalizer)
+
+    assert source =~ "--pre-verification"
+    assert source =~ "pre-verification-inputs.json"
+    assert source =~ "pre-verification-report.json"
+    assert source =~ "finalization-inputs.json"
+    assert source =~ "164-VERIFICATION.md"
+    assert source =~ "TRTH-01"
+    assert source =~ "status --porcelain=v1 --untracked-files=all"
+    assert source =~ "git fetch origin main"
+    assert source =~ "components.ci.source"
+    assert source =~ "components.scheduled.source"
+    assert source =~ "source_run.attempt == 1"
+  end
+
+  test "finalizer independently validates raw CI and registered scheduled provenance" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+    components = Path.join(root, "components")
+    File.mkdir_p!(components)
+    sha = String.duplicate("a", 40)
+    ci = Path.join(components, "ci.source")
+    scheduled = Path.join(components, "scheduled.source")
+    report = Path.join(root, "report.json")
+    registry = Path.join(root, "registry.json")
+
+    ci_payload = ci_run(77, sha, 1, "2026-08-28T17:00:00Z")
+    File.write!(ci, Jason.encode!(ci_payload))
+    File.write!(scheduled, Jason.encode!(authoritative_sweep(sha)))
+
+    File.write!(
+      report,
+      Jason.encode!(%{
+        "components" => %{
+          "ci" => %{"source" => ci},
+          "scheduled" => %{"source" => scheduled}
+        }
+      })
+    )
+
+    File.write!(
+      registry,
+      Jason.encode!(%{
+        "controls" =>
+          Enum.map(["release-please", "repo-hygiene", "post-publish-smoke"], fn id ->
+            %{"id" => id, "workflow_name" => id}
+          end)
+      })
+    )
+
+    command = "raw_sources_are_acceptable \"$2\" \"$3\" \"$4\" \"$5\" \"$6\""
+    assert {_, 0} = source_finalizer(command, [report, sha, root, registry, "77"])
+
+    File.write!(ci, Jason.encode!(%{ci_payload | "attempt" => 2}))
+    assert {_, status} = source_finalizer(command, [report, sha, root, registry, "77"])
+    assert status != 0
+
+    File.write!(ci, Jason.encode!(ci_payload))
+
+    scheduled_payload = authoritative_sweep(sha)
+
+    File.write!(
+      scheduled,
+      Jason.encode!(
+        put_in(scheduled_payload, ["controls", Access.at(1), "source_run", "attempt"], 2)
+      )
+    )
+
+    assert {_, status} = source_finalizer(command, [report, sha, root, registry, "77"])
+    assert status != 0
+  end
+
   defp run(repo, ledger, output, marker) do
     root = Path.dirname(marker)
     bin = Path.join(root, "bin-#{System.unique_integer([:positive])}")
@@ -123,6 +304,92 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       "bash",
       [@script, "--repo", repo, "--ledger", ledger, "--ci-run-id", "123", "--output", output],
       env: [{"PATH", "#{bin}:#{System.fetch_env!("PATH")}"}],
+      stderr_to_stdout: true
+    )
+  end
+
+  defp scheduled_report_acceptable?(report_path, expected_sha) do
+    {_, status} =
+      System.cmd(
+        "bash",
+        [
+          "-c",
+          ~s(source "$1"; scheduled_report_is_acceptable "$2" "$3"),
+          "phase-164-closeout-test",
+          @script,
+          report_path,
+          expected_sha
+        ],
+        cd: @repo_root,
+        stderr_to_stdout: true
+      )
+
+    status == 0
+  end
+
+  defp authoritative_sweep(sha) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    hourly = now |> DateTime.add(-3_600, :second) |> DateTime.to_iso8601()
+    daily = now |> DateTime.add(-14_400, :second) |> DateTime.to_iso8601()
+
+    %{
+      "kind" => "sweep",
+      "status" => "pass",
+      "reason" => "all_controls_current",
+      "evidence_valid" => true,
+      "expected_main_sha" => sha,
+      "controls" => [
+        scheduled_control("release-please", sha, hourly, "pass"),
+        scheduled_control("repo-hygiene", sha, daily, "pass"),
+        scheduled_control("post-publish-smoke", sha, daily, "blocked")
+      ]
+    }
+  end
+
+  defp scheduled_control(control, sha, updated_at, status) do
+    %{
+      "control" => control,
+      "evidence_valid" => true,
+      "source_run" => %{
+        "id" => "16214",
+        "name" => control,
+        "attempt" => 1,
+        "event" => "schedule",
+        "status" => "completed",
+        "conclusion" => if(status == "pass", do: "success", else: "failure"),
+        "head_branch" => "main",
+        "head_sha" => sha,
+        "updated_at" => updated_at
+      },
+      "result" => %{
+        "status" => status,
+        "reason" => "fixture_result",
+        "workflow_sha" => sha,
+        "payload_sha256" => String.duplicate("f", 64),
+        "artifact_archive_digest" => "sha256:#{String.duplicate("e", 64)}"
+      }
+    }
+  end
+
+  defp ci_run(id, sha, attempt, created_at) do
+    %{
+      "databaseId" => id,
+      "workflowName" => "CI",
+      "headBranch" => "main",
+      "headSha" => sha,
+      "event" => "push",
+      "attempt" => attempt,
+      "status" => "completed",
+      "conclusion" => "success",
+      "createdAt" => created_at
+    }
+  end
+
+  defp source_finalizer(command, args) do
+    System.cmd(
+      "bash",
+      ["-c", ~s(source "$1"; #{command}), "phase-164-finalizer-test", @finalizer | args],
+      cd: @repo_root,
       stderr_to_stdout: true
     )
   end

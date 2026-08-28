@@ -44,9 +44,17 @@ erl_crash.dump
 # stay tracked.
 /.planning/research/**/.cache/
 
+# GSD's phase lifecycle creates this advisory lock with volatile
+# session/PID/timestamp metadata. Ignore only the canonical lock file so
+# neighboring planning evidence remains visible to repository-truth checks.
+/.planning/milestone.lock
+
 # Local IDE/tooling — no project artifacts
 /.claude/
 /.bg-shell/
 /.cursor/
-/.gsd/
+/.gsd/*
+!/.gsd/extensions/
+/.gsd/extensions/*
+!/.gsd/extensions/finalize-phase/
 /.mcp.json

@@ -3,9 +3,9 @@
 const { spawnSync } = require("node:child_process");
 
 const RUN_LIST_FIELDS =
-  "databaseId,workflowName,headBranch,headSha,event,status,conclusion,url,createdAt";
+  "databaseId,workflowName,headBranch,headSha,event,attempt,status,conclusion,url,createdAt";
 const RUN_VIEW_FIELDS =
-  "databaseId,workflowName,headBranch,headSha,event,status,conclusion,url,jobs";
+  "databaseId,workflowName,headBranch,headSha,event,attempt,status,conclusion,url,jobs";
 
 const HELP = `Usage: node scripts/ci_monitor.cjs <command> [arguments]
 

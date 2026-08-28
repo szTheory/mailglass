@@ -140,12 +140,13 @@ bind_artifact() {
 
 verify_file() {
   local control="$1" artifact="$2" run_json="$3" output="$4"
-  local expected_schema run_id run_event run_status run_name run_sha run_branch
+  local expected_schema run_id run_attempt run_event run_status run_name run_sha run_branch
   local artifact_sha verified_at
 
   control_json "$control" >/dev/null
   expected_schema=$(jq -er '.evidence_schema' "$config_path")
   run_id=$(jq -er '.id | tostring' "$run_json")
+  run_attempt=$(jq -er '.run_attempt' "$run_json")
   run_event=$(jq -er '.event' "$run_json")
   run_status=$(jq -er '.status' "$run_json")
   run_name=$(jq -er '.name' "$run_json")
@@ -153,6 +154,7 @@ verify_file() {
   run_branch=$(jq -er '.head_branch' "$run_json")
 
   [ "$run_event" = "schedule" ] || { echo "Run $run_id is not schedule evidence." >&2; return 1; }
+  [ "$run_attempt" -eq 1 ] 2>/dev/null || { echo "Run $run_id is not attempt 1." >&2; return 1; }
   [ "$run_status" = "completed" ] || { echo "Run $run_id is not completed." >&2; return 1; }
   [ "$run_branch" = "main" ] || { echo "Run $run_id is not from main." >&2; return 1; }
   [[ "$run_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Run $run_id has an invalid head SHA." >&2; return 1; }
@@ -199,6 +201,7 @@ verify_file() {
         control: $control,
         source_run: {
           id: ($run[0].id | tostring),
+          attempt: $run[0].run_attempt,
           name: $run[0].name,
           event: $run[0].event,
           status: $run[0].status,
@@ -319,6 +322,7 @@ sweep_controls() {
             expected_main_sha: $expected_main_sha,
             source_run: {
               id: ($run[0].id | tostring),
+              attempt: $run[0].run_attempt,
               name: $run[0].name,
               event: $run[0].event,
               status: $run[0].status,
