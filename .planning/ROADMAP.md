@@ -190,7 +190,7 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 9/11 plans executed
+**Plans**: 9/12 plans executed
 
 Plans:
 
@@ -230,11 +230,15 @@ Plans:
 
 **Wave 9** *(blocked on tracked freshness repair)*
 
-- [ ] 164-11-PLAN.md — Install the tracked post-execution finalization contract and bind it into closeout documentation and the exact-one ledger.
+- [ ] 164-11-PLAN.md — Version a project-local `/finalize-phase` command, implement the no-tracked-output Phase 164 finalizer, and bind its narrow `.gsd` boundary into the exact-one ledger.
+
+**Wave 10** *(pre-verification protected-main checkpoint; blocked on the finalizer implementation)*
+
+- [ ] 164-12-PLAN.md — Integrate the complete implementation normally and capture attempt-1 protected evidence for the ordinary verifier without claiming terminal state.
 
 **Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
 
-- [ ] 164-FINALIZATION.md — Observe normal push CI and natural exact-SHA schedules, carry identities through ignored runtime state, regenerate the ignored report, and independently verify raw CI/scheduled sources with no later tracked commit.
+- [ ] `/finalize-phase 164` — After tracked phase completion reaches protected main, automatically select exact normal push CI, consume natural exact-SHA schedules, and independently verify ignored raw evidence with no later tracked commit.
 
 ## Progress
 
@@ -245,4 +249,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 9/11 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 9/12 | In Progress|  |

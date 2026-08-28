@@ -10,7 +10,7 @@ revised: 2026-08-28
 
 # Phase 164 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-11 plus the non-plan post-execution finalization gate required after all tracked GSD metadata reaches protected main.
+> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-12 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
 
 ---
 
@@ -30,8 +30,9 @@ revised: 2026-08-28
 
 - **After every task commit:** Run the focused automated command named by that task.
 - **After every plan wave:** Run `mix ci.fast` after all implementation tasks in the wave are integrated; run the focused closeout/scheduled contracts after Waves 8 and 9.
-- **After normal execute-phase metadata:** Do not capture final evidence until all Phase 164 SUMMARY files and the tracked VERIFICATION, ROADMAP, STATE, and REQUIREMENTS completion updates have reached protected main.
-- **Post-execution finalization:** Run `164-FINALIZATION.md` outside phase-plan-index, after the final tracked SHA receives normal push CI and naturally scheduled exact-SHA evidence. The gate writes ignored runtime artifacts only and permits no later tracked commit.
+- **Pre-verification checkpoint:** Plan 164-12 runs `/finalize-phase 164 --pre-verification` after implementation Plans 01-11 and their summaries reach protected main. The verifier independently checks this exact-SHA evidence and permits only the later Plan 12 summary/metadata handoff as a non-implementation delta.
+- **After normal execute-phase metadata:** Integrate all Phase 164 SUMMARY files and the tracked VERIFICATION, ROADMAP, STATE, and REQUIREMENTS completion updates before terminal capture.
+- **Post-execution finalization:** Run `/finalize-phase 164` outside phase-plan-index after the final tracked SHA receives attempt-1 normal push CI and naturally scheduled attempt-1 exact-SHA evidence. The gate writes ignored runtime artifacts only and permits no later tracked commit.
 - **Max feedback latency:** 15 minutes.
 
 ---
@@ -53,9 +54,11 @@ revised: 2026-08-28
 | 164-09-01 | 164-09 | 7 | TRTH-02, TRTH-03 | T-164-25, T-164-26, T-164-27, T-164-28 | Noncanonical repositories/ledgers/outputs and post-write dirt cannot pass | adversarial integration contract | `mix test test/scripts/phase_164_closeout_test.exs --warnings-as-errors --no-deps-check` | hardened closeout script and test | ✅ green |
 | 164-09-02 | 164-09 | 7 | TRTH-03 | T-164-27, T-164-28 | Durable closeout guidance matches canonical identities, ignored output, and post-write cleanliness | docs/CLI contract | `mix test test/scripts/phase_164_closeout_test.exs --warnings-as-errors --no-deps-check` | `164-CLOSEOUT.md` contract assertions | ✅ green |
 | 164-10-01 | 164-10 tracer | 8 | TRTH-03 | T-164-36, T-164-37, T-164-38, T-164-39 | Closeout trusts registry-specific authoritative freshness while retaining exact identity/provenance checks | TDD runtime regression | `mix test test/scripts/phase_164_closeout_test.exs test/scripts/scheduled_control_evidence_test.exs --warnings-as-errors --no-deps-check && bash -n scripts/closeout_repository_truth.sh` | production scheduled-report predicate plus dynamic fixtures | ⬜ pending |
-| 164-11-01 | 164-11 | 9 | TRTH-03 | T-164-40, T-164-41, T-164-42, T-164-43, T-164-44 | Finalization is outside normal plan execution, carries ignored identities, reads raw CI/scheduled sources, and forbids later tracked writes | lifecycle/docs contract | `mix test test/scripts/phase_164_closeout_test.exs test/scripts/scheduled_control_evidence_test.exs --warnings-as-errors --no-deps-check` | `164-FINALIZATION.md`, closeout test | ⬜ pending |
-| 164-11-02 | 164-11 | 9 | TRTH-03 | T-164-40 | The tracked finalization contract has exactly one complete durable disposition | production ledger validator | `mix run scripts/validate_repository_truth.exs -- --repo /Users/jon/projects/mailglass --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv` | canonical ledger and validator | ⬜ pending |
-| 164-FINAL | post-execution gate | after phase.complete integration | TRTH-03 | T-164-40, T-164-41, T-164-42, T-164-43, T-164-44 | Final protected SHA has normal push CI, natural schedules, ignored identity/report state, independently verified raw sources, and no later tracked commit | live lifecycle gate | Commands defined and contract-tested in `164-FINALIZATION.md` | ignored `finalization-inputs.json`, report, CI source, scheduled source | ⬜ pending |
+| 164-11-01 | 164-11 | 9 | TRTH-02, TRTH-03 | T-164-40, T-164-41 | The project-local command validates phase/mode, dispatches one tracked finalizer with `pi.exec`, loads under pinned GSD 2.80.0, and exposes no `.gsd` runtime state | extension/runtime/ignore contract | Plan 164-11 Task 1 exact command, including `ASDF_NODEJS_VERSION=22.14.0 gsd --print --no-session "/finalize-phase 164 --pre-verification"` | manifest, extension source, real blocked-precondition invocation, exact ignore behavior | ⬜ pending |
+| 164-11-02 | 164-11 | 9 | TRTH-03 | T-164-42, T-164-43, T-164-44 | Finalizer selects attempt-1 exact normal push CI automatically, consumes attempt-1 natural schedules, validates raw sources, and forbids later tracked writes | runtime/lifecycle contract | `mix test test/scripts/phase_164_closeout_test.exs test/scripts/scheduled_control_evidence_test.exs --warnings-as-errors --no-deps-check && bash -n scripts/finalize_phase_164.sh .planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZE.sh` | CI monitor attempt field, scheduled authority attempt provenance, production finalizer, phase shim, `164-FINALIZATION.md` | ⬜ pending |
+| 164-11-03 | 164-11 | 9 | TRTH-02, TRTH-03 | T-164-40, T-164-41 | The extension, finalizer, lifecycle contract, and changed ignore rules have exact-one complete durable dispositions | production ledger validator | `mix run scripts/validate_repository_truth.exs -- --repo /Users/jon/projects/mailglass --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv` | canonical ledger and validator | ⬜ pending |
+| 164-12-01 | 164-12 checkpoint | 10 | TRTH-03 | T-164-42, T-164-43, T-164-44 | Protected implementation SHA has attempt-1 push CI and natural schedules before verification; report is explicitly non-terminal | live pre-verification gate | `/finalize-phase 164 --pre-verification` after protected integration | ignored pre-verification inputs/report/raw sources | ⬜ pending |
+| 164-FINAL | post-execution gate | after phase.complete integration | TRTH-03 | T-164-40, T-164-41, T-164-42, T-164-43, T-164-44 | Final protected metadata SHA has attempt-1 normal push CI, attempt-1 natural schedules, ignored identity/report state, independently verified raw sources, and no later tracked commit | live lifecycle gate | `/finalize-phase 164` | ignored `finalization-inputs.json`, report, CI source, scheduled source | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -68,7 +71,8 @@ revised: 2026-08-28
 - [ ] **Plan 164-05 Task 1 owns creation before production code:** `test/scripts/phase_164_closeout_test.exs` — disposable-repository and PATH-stub fixtures for pass, wrong branch/SHA, dirt, incomplete ledger, pending/cannot-check, malformed data, and evidence-valid policy-blocked outcomes.
 - [ ] **Plan 164-05 Task 2 owns contract extension/use:** the closeout test verifies `164-CLOSEOUT.md` names the exact wrapper flags, existing `tmp/phase-164-closeout/report.json` treatment, D-10 through D-12 conditions, and volatile/untracked semantics.
 - [ ] **Plan 164-10 owns freshness regression expansion:** the closeout test executes the production scheduled-report predicate with daily evidence beyond three hours and adversarial exact-provenance mutations.
-- [ ] **Plan 164-11 owns lifecycle contract expansion:** the closeout test verifies `164-FINALIZATION.md` runs after all tracked GSD metadata, carries ignored identities, reads raw CI/scheduled sources, and creates no tracked post-capture artifact.
+- [ ] **Plan 164-11 owns the missing lifecycle primitive:** extension/ignore contracts prove only the named finalizer is versioned; closeout/scheduled tests prove attempt-1 automatic exact push-CI selection, both lifecycle modes, ignored identities, raw CI/scheduled verification, and no tracked post-capture artifact.
+- [ ] **Plan 164-12 owns the non-circular external checkpoint:** the ignored pre-verification report proves protected implementation behavior before the verifier writes completion metadata and is never represented as terminal evidence.
 
 `wave_0_complete` remains `false` until these test assets exist and their plan-specific commands have run successfully. Their creation is executor work, not evidence that the planning contract may predeclare complete.
 
@@ -80,7 +84,8 @@ revised: 2026-08-28
 |------|----------|-------------|-------------------------------|---------------------------|
 | 164-06-01 | Protected-main handoff | TRTH-01, TRTH-02, TRTH-03 | Durable changes must first reach protected `main`, and normal CI/scheduled controls must produce exact-SHA evidence | Fetch origin in `/Users/jon/projects/mailglass`; require local `main` and `HEAD == origin/main`; select only a terminal normally triggered CI run whose `headSha` equals that SHA; wait for applicable registered scheduled controls to carry fresh same-SHA provenance; provide `main_sha` and `ci_run_id`. |
 | 164-07-01 | Exact-main quiet verdict | TRTH-03 | Live GitHub, Git, CI, and scheduled-control evidence can only be sampled after the protected merge | Substitute the checkpoint SHA/run into the Plan 164-07 command, run the read-only wrapper, require report `status: pass`, exact identities, complete component evidence, and empty stable porcelain. Keep the report volatile beneath existing ignored `tmp/`. |
-| 164-FINAL | Post-execution exact-main finalization | TRTH-03 | Normal plan execution, verifier output, and phase.complete tracking all write tracked files after task execution; final evidence must follow their protected integration | Complete Plans 164-10 and 164-11; finish normal GSD tracking; integrate every SUMMARY plus VERIFICATION/ROADMAP/STATE/REQUIREMENTS update to protected main; wait for normal push CI and natural exact-SHA schedules; run `164-FINALIZATION.md`; independently validate raw CI/scheduled source files; make no later tracked commit. |
+| 164-12-01 | Pre-verification exact-main capture | TRTH-03 | Ordinary verification previously failed without fresh operational proof, but terminal proof cannot precede tracked completion metadata | Integrate implementation and summaries through Plan 164-11 normally; run `/finalize-phase 164 --pre-verification`; let the verifier independently inspect attempt-1 raw sources and recognize the later Plan 12 summary as non-implementation metadata. |
+| 164-FINAL | Post-execution exact-main finalization | TRTH-03 | Normal verifier output and phase.complete tracking write tracked files after the pre-verification capture; terminal evidence must follow their protected integration | Integrate every SUMMARY plus passed VERIFICATION/ROADMAP/STATE/REQUIREMENTS update to protected main; then run `/finalize-phase 164`. The command automatically selects attempt-1 exact normal push CI, consumes only attempt-1 natural schedules, independently validates raw sources, and permits no later tracked commit. |
 
 ---
 
@@ -88,7 +93,7 @@ revised: 2026-08-28
 
 ### Planning-contract completeness
 
-- [x] All fifteen executor tasks across all eleven plans have an automated verification row, plus one explicit post-execution lifecycle gate.
+- [x] All seventeen executor tasks across all twelve plans have an automated verification row, plus one explicit terminal post-execution lifecycle gate.
 - [x] The tracer-created repository-truth test, Plan 164-04 expansion, Plan 164-05 test/wrapper and usage contract, Plan 164-06 checkpoint, and Plan 164-07 exact-main report are explicitly mapped.
 - [x] TRTH-01 and TRTH-02 retain completed task-level coverage; TRTH-03 maps through the freshness repair, tracked lifecycle contract, and terminal post-execution raw-source gate.
 - [x] Sampling continuity has no three consecutive tasks without automated feedback.
@@ -104,8 +109,9 @@ revised: 2026-08-28
 - [ ] Plan 164-06 protected-main checkpoint has supplied exact identities.
 - [ ] Plan 164-07 exact-main report gate has passed on fresh live evidence.
 - [ ] Plan 164-10 registry-specific freshness repair and adversarial provenance contract have run green.
-- [ ] Plan 164-11 finalization contract, closeout guidance, ledger row, and lifecycle tests have run green.
-- [ ] All tracked Phase 164 summaries and phase.complete metadata have reached protected main before `164-FINALIZATION.md` runs.
+- [ ] Plan 164-11 extension, narrow `.gsd` ignore boundary, finalizer, lifecycle guidance, ledger rows, and focused tests have run green.
+- [ ] Plan 164-12 pre-verification protected capture has passed and ordinary verification has independently checked its raw evidence.
+- [ ] All tracked Phase 164 summaries and phase.complete metadata have reached protected main before terminal `/finalize-phase 164` runs.
 - [ ] The final ignored report and raw CI/scheduled sources pass independent verification with no later tracked commit.
 
-**Approval:** Planning contract complete and Nyquist-compliant; implementation and live exact-main sign-off pending.
+**Approval:** Planning contract complete and Nyquist-compliant; ordinary verification proves the installed capability before phase completion, and live exact-main sign-off follows through the no-tracked-output `/finalize-phase 164` gate.
