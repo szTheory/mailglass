@@ -64,7 +64,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
                header_line() <> "\n" <> String.replace(valid, "\tremove\t", "\tretain\t")
              )
 
-    assert {:ok, _} =
+    assert {:error, {:invalid_kind_relationship, "scheduled-control-sweep.json"}} =
              Ledger.parse(
                header_line() <> "\n" <> String.replace(valid, "\tremove\t", "\tarchive\t")
              )
@@ -81,7 +81,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
     assert {:error, {:duplicate_subject, "scheduled-control-sweep.json"}} =
              Ledger.parse(
-               header_line() <> "\n" <> valid <> "\n" <> String.replace(valid, "D-08", "D-09")
+               header_line() <> "\n" <> valid <> "\n" <> valid
              )
   end
 
@@ -102,6 +102,38 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
       assert subject in missing
     end
+  end
+
+  test "rejects fabricated semantic authority fields and extra subjects" do
+    contents = File.read!(@ledger)
+
+    mutations = [
+      mutate_first_row(contents, "stable_id", "FORGED"),
+      mutate_first_row(contents, "kind", "forged-kind"),
+      mutate_first_row(contents, "producer", "forged-producer"),
+      mutate_first_row(contents, "state", "forged-state"),
+      mutate_first_row(contents, "authority", "forged-authority"),
+      mutate_first_row(contents, "reproducibility", "forged-reproducibility"),
+      mutate_first_row(contents, "durable_consumer", "forged-consumer"),
+      mutate_first_row(contents, "evidence", "fabricated-evidence")
+    ]
+
+    for mutation <- mutations do
+      assert {:error, _reason} = Ledger.validate(mutation, @repo_root)
+    end
+
+    [header | rows] = String.split(contents, "\n", trim: true)
+    tracked = Enum.find(rows, &String.starts_with?(&1, "M-01\t"))
+
+    fabricated =
+      tracked
+      |> String.replace_prefix("M-01\t", "M-99\t")
+      |> String.replace("\t#{Enum.at(String.split(tracked, "\t"), 1)}\t", "\tfabricated-subject\t")
+
+    assert {:error, {:unexpected_audited_subjects, ["fabricated-subject"]}} =
+             Ledger.validate(contents <> fabricated <> "\n", @repo_root)
+
+    assert header == header_line()
   end
 
   test "git ignores all GSD runtime state except the finalize-phase extension" do
@@ -162,17 +194,25 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
         "D-08",
         "scheduled-control-sweep.json",
         "generated-output",
-        "no root-path producer",
+        "scripts/scheduled_control_evidence.sh sweep (content shape only; no root-path producer)",
         "untracked",
         "D-08",
-        "reproducible",
+        "regenerable from the scheduled-control evidence workflow",
         "stale",
         "none",
-        "sha256:#{@locked_digest}",
+        "D-08; sha256:#{@locked_digest}; Phase 162 scheduled-control proof",
         "remove",
         "stale generated root sweep"
       ],
       "\t"
     )
+  end
+
+  defp mutate_first_row(contents, column, value) do
+    [header, first | rest] = String.split(String.trim_trailing(contents), "\n", trim: true)
+    index = Enum.find_index(@headers, &(&1 == column))
+    fields = String.split(first, "\t", trim: false)
+    mutated = fields |> List.replace_at(index, value) |> Enum.join("\t")
+    Enum.join([header, mutated | rest], "\n") <> "\n"
   end
 end

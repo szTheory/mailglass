@@ -16,6 +16,63 @@ defmodule Mailglass.RepositoryTruthLedger do
   @header_line Enum.join(@headers, "\t")
   @dispositions ~w(retain update archive remove ignore)
   @currentness ~w(current historical stale)
+  @states ~w(tracked untracked ignored)
+  @kinds ~w(ci-evidence-client closeout-report closeout-script contract-test finalization-guidance finalization-script finalization-shim forensic-proof generated-output gsd-extension-command gsd-extension-manifest ignore-rule maintainer-guidance package-allowlist package-guidance planning-artifact protected-ci-proof publish-proof release-proof repository-ignore-contract repository-truth-validator scheduled-control-contract scheduled-control-proof scheduled-control-verifier verification-report)
+  @producers [
+    "GSD phase lifecycle", "GSD project extension loader", "GSD runtime state producer",
+    "GitHub scheduled-control registry", "Phase 161 preservation audit", "Phase 161 workspace audit",
+    "Phase 162 protected release recovery", "Phase 162 scheduled control audit", "Phase 162 verification",
+    "Phase 163 protected CI audit", "Phase 163 verifier", "Phase 164 closeout plan",
+    "Phase 164 disposition audit", "Phase 164 finalization boundary", "Phase 164 maintainer reconciliation",
+    "Phase 164 package compatibility reconciliation", "Phase 164 repository truth contract",
+    "Phase 164 shared ledger validation", "Phase 164 verifier", "mix mailglass.publish.check",
+    "scripts/release_policy.exs", "scripts/scheduled_control_evidence.sh sweep (content shape only; no root-path producer)",
+    "scripts/verify_published_release.sh", "shared project tooling producer"
+  ]
+  @authorities [
+    ".gitignore", "D-05 through D-12", "D-07 and D-09", "D-08", "D-09 and D-10",
+    "D-09 through D-11", "D-09 through D-12", "D-11", "Phase 161 evidence contract",
+    "Phase 162 release authority", "Phase 162 requirement verification", "Phase 162 scheduled-control contract",
+    "Phase 163 exact protected run", "Phase 163 requirement verification", "Phase 164 verification authority",
+    "admin package manifest compatibility", "current executable authority projection",
+    "executable scheduled-control contract", "inbound package manifest compatibility",
+    "mailglass_admin/.gitignore", "mailglass_inbound/.gitignore", "maintainer release contract",
+    "manifest-derived docs contract", "package content contract", "package manifest compatibility",
+    "protected release policy", "published package verification", "reference/demo_app/.gitignore",
+    "reference/host_app/.gitignore", "test/example/.gitignore"
+  ]
+  @reproducibility [
+    "captured from exact event run and workflow identities", "captured from exact protected run and SHA",
+    "captured from immutable Git facts", "captured from protected GitHub and Git facts",
+    "derived from Git graph and content", "derived from exact protected evidence", "derived from tracked evidence",
+    "regenerable advisory session claim", "regenerable extension-local state", "regenerable from audited Git state",
+    "regenerable from authorized evidence", "regenerable from exact main state", "regenerable from extension source",
+    "regenerable from immutable package facts", "regenerable from package source", "regenerable from plan source",
+    "regenerable from protected GitHub evidence", "regenerable from repository source",
+    "regenerable from settled lifecycle contract", "regenerable from source",
+    "regenerable from the scheduled-control evidence workflow", "regenerable from tracked verification process",
+    "regenerable machine-local output", "reproducible from manifests", "reproducible from release controls",
+    "reproducible from repository configuration", "reproducible from source", "reproducible loader boundary"
+  ]
+  @durable_consumers [
+    "GSD project extension loader", "GSD runtime and extension boundary", "Phase 164 closeout",
+    "Phase 164 closeout contract", "adopter documentation", "closeout CI identity validation",
+    "closeout provenance", "closeout repository truth gate", "closeout scheduled evidence validation",
+    "finalize-phase extension boundary", "finalize-phase extension dispatcher",
+    "finalize-phase stable-porcelain guard", "maintainer closeout reader", "maintainer finalization command",
+    "maintainer provenance", "maintainer release gate", "mix test closeout contract",
+    "mix test documentation gate", "mix test maintainer guidance gate", "mix test repository truth gate",
+    "mix test scheduled evidence gate", "none", "package release verification", "post-completion operational proof",
+    "protected release guidance", "publish contract tests", "rerunnable closeout report",
+    "scheduled evidence scripts and workflow", "test fixture allowlist", "workspace preservation verification"
+  ]
+  @tracked_evidence [
+    "164-02-PLAN.md", "164-03-PLAN.md", "164-04-PLAN.md", "164-05-PLAN.md", "164-08-PLAN.md",
+    "git ls-files .planning/publish", "git ls-files; 164-08-PLAN.md", "git ls-files; 164-11-PLAN.md",
+    "git ls-files; Phase 161 summary", "git ls-files; Phase 162 summary", "git ls-files; release-target ledger",
+    "git ls-files; run 33002642359", "git ls-files; scripts/scheduled_control_evidence.sh"
+  ]
+  @locked_removal_evidence "D-08; sha256:331810b4b1724452f0e2707c800230e52fabea01c3773d362b3a1240040ece7e; Phase 162 scheduled-control proof"
   @ignore_files [
     ".gitignore",
     "mailglass_admin/.gitignore",
@@ -47,7 +104,9 @@ defmodule Mailglass.RepositoryTruthLedger do
 
       [header | row_lines] when row_lines != [] ->
         if header == @header_line do
-          with {:ok, rows} <- parse_rows(row_lines), :ok <- ensure_unique_subjects(rows) do
+          with {:ok, rows} <- parse_rows(row_lines),
+               :ok <- ensure_unique_subjects(rows),
+               :ok <- ensure_unique_stable_ids(rows) do
             {:ok, %{headers: @headers, rows: rows}}
           end
         else
@@ -76,8 +135,13 @@ defmodule Mailglass.RepositoryTruthLedger do
          {:ok, required_subjects} <- audit_subjects(repo_root) do
       subjects = rows |> Enum.map(& &1["subject"]) |> MapSet.new()
       missing = required_subjects |> MapSet.difference(subjects) |> MapSet.to_list() |> Enum.sort()
+      unexpected = subjects |> MapSet.difference(required_subjects) |> MapSet.to_list() |> Enum.sort()
 
-      if missing == [], do: :ok, else: {:error, {:missing_audited_subjects, missing}}
+      cond do
+        missing != [] -> {:error, {:missing_audited_subjects, missing}}
+        unexpected != [] -> {:error, {:unexpected_audited_subjects, unexpected}}
+        true -> ensure_tracked_subjects_exist(rows, repo_root)
+      end
     end
   end
 
@@ -108,8 +172,32 @@ defmodule Mailglass.RepositoryTruthLedger do
       row["currentness"] not in @currentness ->
         {:error, {:invalid_currentness, row["currentness"]}}
 
+      row["kind"] not in @kinds ->
+        {:error, {:invalid_kind, row["kind"]}}
+
+      row["producer"] not in @producers ->
+        {:error, {:invalid_producer, row["producer"]}}
+
+      row["state"] not in @states ->
+        {:error, {:invalid_state, row["state"]}}
+
+      row["authority"] not in @authorities ->
+        {:error, {:invalid_authority, row["authority"]}}
+
+      row["reproducibility"] not in @reproducibility ->
+        {:error, {:invalid_reproducibility, row["reproducibility"]}}
+
+      row["durable_consumer"] not in @durable_consumers ->
+        {:error, {:invalid_durable_consumer, row["durable_consumer"]}}
+
       row["currentness"] == "stale" and row["disposition"] not in ~w(update archive remove) ->
         {:error, {:stale_without_outcome, row["subject"]}}
+
+      not valid_kind_relationship?(row) ->
+        {:error, {:invalid_kind_relationship, row["subject"]}}
+
+      not valid_evidence?(row) ->
+        {:error, {:invalid_evidence, row["subject"]}}
 
       true ->
         {:ok, row}
@@ -122,6 +210,47 @@ defmodule Mailglass.RepositoryTruthLedger do
     case Enum.find(rows, fn row -> Enum.count(rows, &(&1["subject"] == row["subject"])) > 1 end) do
       nil -> :ok
       row -> {:error, {:duplicate_subject, row["subject"]}}
+    end
+  end
+
+  defp ensure_unique_stable_ids(rows) do
+    case Enum.find(rows, fn row -> Enum.count(rows, &(&1["stable_id"] == row["stable_id"])) > 1 end) do
+      nil -> :ok
+      row -> {:error, {:duplicate_stable_id, row["stable_id"]}}
+    end
+  end
+
+  defp valid_kind_relationship?(%{"kind" => "ignore-rule"} = row) do
+    Regex.match?(~r/^I-\d{3}$/, row["stable_id"]) and row["state"] == "ignored" and
+      row["currentness"] == "current" and row["disposition"] == "ignore" and
+      String.starts_with?(row["subject"], "ignore:#{row["authority"]}:")
+  end
+
+  defp valid_kind_relationship?(%{"kind" => "generated-output"} = row) do
+    row["stable_id"] == "D-08" and row["subject"] == "scheduled-control-sweep.json" and
+      row["state"] == "untracked" and row["currentness"] == "stale" and
+      row["disposition"] == "remove" and row["authority"] == "D-08"
+  end
+
+  defp valid_kind_relationship?(row) do
+    Regex.match?(~r/^[MP]-\d{2}$/, row["stable_id"]) and row["state"] == "tracked" and
+      row["currentness"] in ~w(current historical) and row["disposition"] == "retain"
+  end
+
+  defp valid_evidence?(%{"kind" => "ignore-rule"} = row),
+    do: String.starts_with?(row["evidence"], row["authority"] <> " rule")
+
+  defp valid_evidence?(%{"kind" => "generated-output"} = row),
+    do: row["evidence"] == @locked_removal_evidence
+
+  defp valid_evidence?(row), do: row["evidence"] in @tracked_evidence
+
+  defp ensure_tracked_subjects_exist(rows, repo_root) do
+    case Enum.find(rows, fn row ->
+           row["state"] == "tracked" and not File.regular?(Path.join(repo_root, row["subject"]))
+         end) do
+      nil -> :ok
+      row -> {:error, {:tracked_subject_missing, row["subject"]}}
     end
   end
 
