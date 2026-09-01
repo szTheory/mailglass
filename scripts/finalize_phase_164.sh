@@ -31,6 +31,38 @@ repository_identity_is_authoritative() {
   esac
 }
 
+mark_report_non_pass() {
+  local report="$1" reason="$2" report_dir report_tmp
+  report_dir=$(cd "$(dirname "$report")" 2>/dev/null && pwd -P) || return 1
+  report_tmp=$(mktemp "$report_dir/.report.XXXXXX") || return 1
+  jq --arg reason "$reason" '.status = "blocked" | .reason = $reason' "$report" >"$report_tmp" || {
+    rm -f "$report_tmp"
+    return 1
+  }
+  mv "$report_tmp" "$report"
+}
+
+revalidate_final_main() {
+  local repo="$1" expected_sha="$2" report="$3" scheduled_source
+
+  if ! git -C "$repo" fetch origin main >/dev/null 2>&1 ||
+     [ "$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)" != "$expected_sha" ] ||
+     [ "$(git -C "$repo" rev-parse refs/remotes/origin/main 2>/dev/null || true)" != "$expected_sha" ]; then
+    mark_report_non_pass "$report" protected_main_advanced
+    return 1
+  fi
+
+  scheduled_source=$(jq -er '.components.scheduled.source | strings | select(length > 0)' "$report") || {
+    mark_report_non_pass "$report" scheduled_main_identity_missing
+    return 1
+  }
+
+  jq -e --arg sha "$expected_sha" '.expected_main_sha == $sha' "$scheduled_source" >/dev/null || {
+    mark_report_non_pass "$report" scheduled_main_identity_mismatch
+    return 1
+  }
+}
+
 select_ci_run_id() {
   local runs_json="$1" expected_sha="$2"
 
@@ -227,6 +259,9 @@ main() {
   [ -f "$capture_dir/$report" ] || fail "closeout did not preserve a report"
   raw_sources_are_acceptable "$capture_dir/$report" "$main_sha" "$repo/tmp" "$repo/$registry_rel" "$ci_run_id" ||
     fail "raw CI or scheduled evidence failed independent finalization validation"
+
+  revalidate_final_main "$repo" "$main_sha" "$capture_dir/$report" ||
+    fail "protected main changed during finalization"
 
   [ "$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)" = "$main_sha" ] || fail "HEAD changed during finalization"
   [ -z "$(stable_porcelain "$repo")" ] || fail "stable porcelain changed during finalization"

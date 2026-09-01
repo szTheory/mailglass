@@ -319,6 +319,51 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "source_run.attempt == 1"
   end
 
+  test "finalizer re-fetches protected main and preserves non-pass evidence when it advances" do
+    root = temporary_root!()
+    remote = Path.join(root, "remote.git")
+    seed = Path.join(root, "seed")
+    checkout = Path.join(root, "checkout")
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    git!(root, ["init", "-q", "--bare", remote])
+    git!(root, ["init", "-q", "-b", "main", seed])
+    File.write!(Path.join(seed, "tracked"), "a")
+    git!(seed, ["add", "tracked"])
+    git!(seed, ["commit", "-q", "-m", "a"])
+    git!(seed, ["remote", "add", "origin", remote])
+    git!(seed, ["push", "-q", "-u", "origin", "main"])
+    git!(root, ["clone", "-q", "-b", "main", remote, checkout])
+    sha = checkout |> git!(["rev-parse", "HEAD"]) |> String.trim()
+
+    components = Path.join(root, "components")
+    File.mkdir_p!(components)
+    scheduled = Path.join(components, "scheduled.source")
+    report = Path.join(root, "report.json")
+    File.write!(scheduled, Jason.encode!(%{"expected_main_sha" => sha}))
+
+    File.write!(
+      report,
+      Jason.encode!(%{
+        "status" => "pass",
+        "reason" => "all_authorities_exact_and_current",
+        "components" => %{"scheduled" => %{"source" => scheduled}}
+      })
+    )
+
+    command = ~s(revalidate_final_main "$2" "$3" "$4")
+    assert {_, 0} = source_finalizer(command, [checkout, sha, report])
+
+    File.write!(Path.join(seed, "tracked"), "b")
+    git!(seed, ["commit", "-qam", "b"])
+    git!(seed, ["push", "-q", "origin", "main"])
+
+    assert {_, status} = source_finalizer(command, [checkout, sha, report])
+    assert status != 0
+    assert %{"status" => "blocked", "reason" => "protected_main_advanced"} =
+             Jason.decode!(File.read!(report))
+  end
+
   test "finalizer independently validates raw CI and registered scheduled provenance" do
     root = temporary_root!()
     on_exit(fn -> File.rm_rf!(root) end)
@@ -477,6 +522,22 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       cd: @repo_root,
       stderr_to_stdout: true
     )
+  end
+
+  defp git!(directory, args) do
+    {output, 0} =
+      System.cmd("git", args,
+        cd: directory,
+        env: [
+          {"GIT_AUTHOR_NAME", "Phase 164 Test"},
+          {"GIT_AUTHOR_EMAIL", "phase164@example.test"},
+          {"GIT_COMMITTER_NAME", "Phase 164 Test"},
+          {"GIT_COMMITTER_EMAIL", "phase164@example.test"}
+        ],
+        stderr_to_stdout: true
+      )
+
+    output
   end
 
   defp header do
