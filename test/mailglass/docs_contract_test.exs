@@ -45,6 +45,38 @@ defmodule Mailglass.DocsContractTest do
                core_version
     end
 
+    test "production operator guidance includes a production-capable admin dependency" do
+      root = current_compatibility_section!(File.read!("README.md"), "README.md")
+      admin = File.read!("mailglass_admin/README.md")
+
+      assert root =~ ~s({:mailglass_admin, "~> 2.5"})
+      refute root =~ ~s({:mailglass_admin, "~> 2.5", only:)
+
+      assert admin =~ "Preview-only installation"
+      assert admin =~ ~s({:mailglass_admin, "~> 2.5", only: :dev})
+      assert admin =~ "Production operator installation"
+      assert admin =~ ~s({:mailglass_admin, "~> 2.5"})
+    end
+
+    test "current contract labels track package manifest majors" do
+      core_major = package_major_minor!("mix.exs") |> String.split(".") |> hd()
+      admin_major = package_major_minor!("mailglass_admin/mix.exs") |> String.split(".") |> hd()
+      inbound_major = package_major_minor!("mailglass_inbound/mix.exs") |> String.split(".") |> hd()
+      readme = File.read!("README.md")
+      admin = File.read!("mailglass_admin/README.md")
+      maintaining = File.read!("MAINTAINING.md")
+
+      assert readme =~ "canonical `v#{core_major}.x` contract"
+
+      assert readme =~
+               "current `v#{core_major}.x` compatibility, deprecation, and support-matrix policy with retained historical `1.x` promises"
+
+      assert readme =~ "`mailglass`         | `v#{core_major}.x` contract"
+      assert readme =~ "`mailglass_admin`   | Narrow `v#{admin_major}.x` admin contract"
+      assert admin =~ "canonical `v#{admin_major}.x` admin surface"
+      assert maintaining =~ "independent `#{inbound_major}.x` contract"
+    end
+
     test "installation snippet targets the current stable surface" do
       blocks = extract_code_blocks("README.md")
       install_block = Enum.find(blocks, &(&1 =~ "mix mailglass.install"))
@@ -401,7 +433,7 @@ defmodule Mailglass.DocsContractTest do
       assert maintaining =~ "Laravel Mail"
       assert maintaining =~ "Resend inbound docs"
       refute maintaining =~ "while it remains outside the `v1.x`"
-      assert maintaining =~ "independent `1.0` contract"
+      assert maintaining =~ "independent `2.x` contract"
     end
 
     test "preview docs stay within bounded preview-pipeline confidence language" do

@@ -57,18 +57,24 @@ the maintained trust-proof baseline.
 ## Current package compatibility
 
 For the current package line, add the linked core and admin packages together.
-Add the independently released inbound package when your app receives mail:
+The declaration below is production-capable, which is required when mounting the
+production operator surface. Add the independently released inbound package when
+your app receives mail:
 
 ```elixir
 # mix.exs
 def deps do
   [
     {:mailglass, "~> 2.5"},
-    {:mailglass_admin, "~> 2.5", only: [:dev]},
+    {:mailglass_admin, "~> 2.5"},
     {:mailglass_inbound, "~> 2.2"}
   ]
 end
 ```
+
+Preview-only adopters that do not mount the production operator may instead add
+`only: :dev` to the `mailglass_admin` dependency. A dev-scoped dependency is not
+compiled or available in production.
 
 Fetch deps, run the installer, and migrate:
 
@@ -165,11 +171,11 @@ placement certainty or a deliverability grade.
 
 ## API Stability
 
-The canonical `v1.x` contract inventory for the core package lives in
+The canonical `v2.x` contract for the core package lives in
 [`docs/api_stability.md`](docs/api_stability.md).
 
-The canonical `1.x` compatibility, deprecation, and support-matrix policy
-lives in
+The compatibility guide retains the historical `1.x` promises and defines the
+current v2 deprecation and support-matrix policy in
 [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md).
 
 Use that document, not root-module reachability, as the source of truth for:
@@ -183,7 +189,7 @@ Use that document, not root-module reachability, as the source of truth for:
 `mailglass_inbound` has its own stable `2.0` contract inventory in
 [`mailglass_inbound/docs/api_stability.md`](mailglass_inbound/docs/api_stability.md);
 it remains an independent package release line rather than part of the linked
-core/admin `v1.x` group.
+core/admin `v2.x` group.
 
 For release posture, support floors, retained legacy bridges, and upgrade
 expectations, use the compatibility guide rather than inferring policy from the
@@ -242,8 +248,8 @@ stability inventory alone.
 
 | Package             | Status                   | What it is |
 |---------------------|--------------------------|------------|
-| `mailglass`         | `v1.x` contract inventory documented in `docs/api_stability.md` | Core library: mailables, rendering, delivery pipeline, event ledger, webhook ingest, streams, unsubscribe, suppressions, tenancy. |
-| `mailglass_admin`   | Narrow `v1.x` admin contract documented separately | Mountable LiveView dashboard with stable router/auth/operator seams and internal UI implementation details. |
+| `mailglass`         | `v2.x` contract documented in `docs/api_stability.md` | Core library: mailables, rendering, delivery pipeline, event ledger, webhook ingest, streams, unsubscribe, suppressions, tenancy. |
+| `mailglass_admin`   | Narrow `v2.x` admin contract documented separately | Mountable LiveView dashboard with stable router/auth/operator seams and internal UI implementation details. |
 | `mailglass_inbound` | Stable `2.0` contract documented separately | Inbound routing (Action Mailbox equivalent): recipient/subject/header matchers, ingress plugs per provider, storage adapters, Oban routing. |
 
 ## Roadmap
@@ -270,7 +276,7 @@ Full trajectory in [`.planning/ROADMAP.md`](.planning/ROADMAP.md) and
 - [`guides/run-the-demo.md`](guides/run-the-demo.md) — see mailglass
   working locally in one command (`make demo`)
 - [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)
-  — canonical `1.x` compatibility, deprecation, and support-matrix policy
+  — current `v2.x` compatibility, deprecation, and support-matrix policy with retained historical `1.x` promises
 - [`guides/upgrading-to-v1_0.md`](guides/upgrading-to-v1_0.md) — canonical
   latest-`0.x` to `1.0` upgrade path
 - [`guides/upgrading-from-v0_1.md`](guides/upgrading-from-v0_1.md) —

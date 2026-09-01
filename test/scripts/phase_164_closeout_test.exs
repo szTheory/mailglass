@@ -9,6 +9,15 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
               ".gsd/extensions/finalize-phase/extension-manifest.json"
             )
   @finalizer Path.join(@repo_root, "scripts/finalize_phase_164.sh")
+  @scheduled_registry Path.join(@repo_root, ".github/scheduled-controls.json")
+  @closeout_contract Path.join(
+                       @repo_root,
+                       ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-CLOSEOUT.md"
+                     )
+  @finalization_contract Path.join(
+                           @repo_root,
+                           ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
+                         )
   @ledger Path.join(
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
@@ -106,6 +115,30 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  test "does not follow a pre-existing components symlink while collecting evidence" do
+    root = temporary_root!()
+    output_dir = Path.join(@repo_root, "tmp/phase-164-closeout-symlink-test")
+    external = Path.join(root, "external")
+    marker = Path.join(root, "mix-called")
+    sentinel = Path.join(external, "git.source")
+
+    on_exit(fn ->
+      File.rm_rf!(root)
+      File.rm_rf!(output_dir)
+    end)
+
+    File.mkdir_p!(external)
+    File.write!(sentinel, "do-not-overwrite")
+    File.mkdir_p!(output_dir)
+    File.ln_s!(external, Path.join(output_dir, "components"))
+
+    {_output, status} =
+      run(@repo_root, @ledger, Path.join(output_dir, "report.json"), marker)
+
+    assert status != 0
+    assert File.read!(sentinel) == "do-not-overwrite"
+  end
+
   test "uses the canonical ledger validator and samples porcelain after report writes" do
     source = File.read!(@script)
     assert source =~ "canonical_repo=/Users/jon/projects/mailglass"
@@ -115,6 +148,93 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "status --porcelain=v1 --untracked-files=all"
 
     assert source =~ "write_report\nfinal_porcelain=$(stable_porcelain)"
+  end
+
+  test "aggregate report preserves component evidence and applies fail-closed precedence" do
+    valid_block = %{
+      "status" => "blocked",
+      "reason" => "policy_blocked",
+      "checks" => [
+        %{
+          "status" => "blocked",
+          "message" => "expected policy block",
+          "details" => %{"policy" => "fixture"}
+        }
+      ]
+    }
+
+    cases = [
+      {"malformed", "{malformed", 1, "cannot-check", "closeout_cannot-check", "cannot-check"},
+      {"pending", Jason.encode!(%{"status" => "pending", "reason" => "waiting"}), 1, "pending",
+       "closeout_pending", "pending"},
+      {"policy-blocked", Jason.encode!(valid_block), 1, "pass", "all_authorities_exact_and_current",
+       "blocked"},
+      {"all-pass", Jason.encode!(%{"status" => "pass", "reason" => "clean"}), 0, "pass",
+       "all_authorities_exact_and_current", "pass"}
+    ]
+
+    for {name, hygiene_json, hygiene_exit, expected_status, expected_reason,
+         expected_hygiene_status} <- cases do
+      report = run_aggregate_fixture!(name, hygiene_json, hygiene_exit)
+
+      assert report["status"] == expected_status
+      assert report["reason"] == expected_reason
+      assert report["components"]["hygiene"]["status"] == expected_hygiene_status
+
+      for component <- ["git", "workspace", "ledger", "ci", "scheduled"] do
+        assert report["components"][component]["status"] == "pass"
+      end
+
+      for component <- ["git", "hygiene", "workspace", "ledger", "ci", "scheduled"] do
+        source = report["components"][component]["source"]
+        assert is_binary(source) and source != ""
+        assert File.regular?(source), "expected persisted source for #{name}/#{component}"
+      end
+
+      assert File.read!(report["components"]["hygiene"]["source"]) == hygiene_json
+      cleanup_aggregate_fixture!(report)
+    end
+  end
+
+  test "durable closeout guidance matches the enforced canonical volatile-report boundary" do
+    contract = File.read!(@closeout_contract)
+    normalized = Regex.replace(~r/\s+/, contract, " ")
+
+    assert contract =~ "--repo /Users/jon/projects/mailglass"
+
+    assert contract =~
+             "--ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
+
+    assert contract =~ "--ci-run-id <exact-current-main-ci-run-id>"
+    assert contract =~ "tmp/phase-164-closeout/report.json"
+    assert contract =~ "enforced identities, not examples"
+    assert contract =~ "Arbitrary checkouts, copied or equivalent ledgers"
+    assert contract =~ "root `/tmp/` ignore rule"
+    assert normalized =~ "shared full-ledger validator"
+    assert normalized =~ "Stable porcelain is sampled before collection"
+    assert normalized =~ "after every component and final-report write"
+    assert contract =~ "volatile, untracked runtime evidence"
+
+    for non_pass <- ["pending", "cannot-check", "stale", "malformed", "mismatched"] do
+      assert contract =~ non_pass
+    end
+  end
+
+  test "finalization guidance keeps pre-verification and terminal proof non-circular" do
+    contract = File.read!(@finalization_contract)
+    normalized = Regex.replace(~r/\s+/, contract, " ")
+
+    assert contract =~ "/finalize-phase 164 --pre-verification"
+    assert contract =~ "ordinary phase verifier"
+    assert normalized =~ "before `phase.complete` writes tracked completion metadata"
+    assert contract =~ "/finalize-phase 164"
+    assert contract =~ "After the normal verifier has passed"
+    assert contract =~ "status: passed"
+    assert contract =~ "writes only ignored"
+    assert contract =~ "No summary, planning update, commit, push, merge"
+    assert contract =~ "CI must be attempt 1"
+    assert normalized =~ "Every registered scheduled control must be attempt 1"
+    assert normalized =~ "A HEAD change or any stable-porcelain entry"
   end
 
   test "finalize-phase manifest exposes exactly one compatible community command" do
@@ -189,6 +309,35 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  test "rejects incomplete or fabricated scheduled-control sweep provenance" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    sha = String.duplicate("a", 40)
+    report = authoritative_sweep(sha)
+
+    mutations = [
+      put_in(report, ["controls"], Enum.take(report["controls"], 1)),
+      put_in(report, ["controls"], [hd(report["controls"]) | report["controls"]]),
+      put_in(report, ["controls", Access.at(0), "source_run", "name"], "foreign-workflow"),
+      put_in(report, ["controls", Access.at(0), "source_run", "id"], "0"),
+      put_in(report, ["controls", Access.at(0), "result", "reason"], ""),
+      put_in(report, ["controls", Access.at(0), "result", "payload_sha256"], "fabricated"),
+      put_in(
+        report,
+        ["controls", Access.at(0), "result", "artifact_archive_digest"],
+        "sha256:fabricated"
+      ),
+      put_in(report, ["status"], "blocked")
+    ]
+
+    for {mutation, index} <- Enum.with_index(mutations) do
+      path = Path.join(root, "scheduled-incomplete-#{index}.json")
+      File.write!(path, Jason.encode!(mutation))
+      refute scheduled_report_acceptable?(path, sha)
+    end
+  end
+
   test "finalizer selects only an exact attempt-one normal push CI run without caller identity" do
     root = temporary_root!()
     on_exit(fn -> File.rm_rf!(root) end)
@@ -219,6 +368,48 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     refute source =~ ~r/gh\s+run\s+rerun/
   end
 
+  test "finalizer accepts only the authoritative origin and GitHub repository identity" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+    {_, 0} = System.cmd("git", ["init", "-q", root])
+
+    {_, 0} =
+      System.cmd("git", [
+        "-C",
+        root,
+        "remote",
+        "add",
+        "origin",
+        "git@github.com:szTheory/mailglass.git"
+      ])
+
+    command = ~s(repository_identity_is_authoritative "$2" "$3")
+    assert {_, 0} = source_finalizer(command, [root, "szTheory/mailglass"])
+
+    assert {_, status} =
+             source_finalizer("GH_HOST=attacker.example " <> command, [root, "szTheory/mailglass"])
+
+    assert status != 0
+
+    {_, 0} =
+      System.cmd(
+        "git",
+        ["-C", root, "remote", "set-url", "origin", "https://github.com/attacker/mailglass.git"]
+      )
+
+    assert {_, status} = source_finalizer(command, [root, "szTheory/mailglass"])
+    assert status != 0
+
+    {_, 0} =
+      System.cmd(
+        "git",
+        ["-C", root, "remote", "set-url", "origin", "https://github.com/szTheory/mailglass.git"]
+      )
+
+    assert {_, status} = source_finalizer(command, [root, "attacker/mailglass"])
+    assert status != 0
+  end
+
   test "finalizer separates pre-verification and terminal tracked-state gates" do
     source = File.read!(@finalizer)
 
@@ -233,6 +424,52 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "components.ci.source"
     assert source =~ "components.scheduled.source"
     assert source =~ "source_run.attempt == 1"
+  end
+
+  test "finalizer re-fetches protected main and preserves non-pass evidence when it advances" do
+    root = temporary_root!()
+    remote = Path.join(root, "remote.git")
+    seed = Path.join(root, "seed")
+    checkout = Path.join(root, "checkout")
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    git!(root, ["init", "-q", "--bare", remote])
+    git!(root, ["init", "-q", "-b", "main", seed])
+    File.write!(Path.join(seed, "tracked"), "a")
+    git!(seed, ["add", "tracked"])
+    git!(seed, ["commit", "-q", "-m", "a"])
+    git!(seed, ["remote", "add", "origin", remote])
+    git!(seed, ["push", "-q", "-u", "origin", "main"])
+    git!(root, ["clone", "-q", "-b", "main", remote, checkout])
+    sha = checkout |> git!(["rev-parse", "HEAD"]) |> String.trim()
+
+    components = Path.join(root, "components")
+    File.mkdir_p!(components)
+    scheduled = Path.join(components, "scheduled.source")
+    report = Path.join(root, "report.json")
+    File.write!(scheduled, Jason.encode!(%{"expected_main_sha" => sha}))
+
+    File.write!(
+      report,
+      Jason.encode!(%{
+        "status" => "pass",
+        "reason" => "all_authorities_exact_and_current",
+        "components" => %{"scheduled" => %{"source" => scheduled}}
+      })
+    )
+
+    command = ~s(revalidate_final_main "$2" "$3" "$4")
+    assert {_, 0} = source_finalizer(command, [checkout, sha, report])
+
+    File.write!(Path.join(seed, "tracked"), "b")
+    git!(seed, ["commit", "-qam", "b"])
+    git!(seed, ["push", "-q", "origin", "main"])
+
+    assert {_, status} = source_finalizer(command, [checkout, sha, report])
+    assert status != 0
+
+    assert %{"status" => "blocked", "reason" => "protected_main_advanced"} =
+             Jason.decode!(File.read!(report))
   end
 
   test "finalizer independently validates raw CI and registered scheduled provenance" do
@@ -265,7 +502,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       Jason.encode!(%{
         "controls" =>
           Enum.map(["release-please", "repo-hygiene", "post-publish-smoke"], fn id ->
-            %{"id" => id, "workflow_name" => id}
+            %{"id" => id, "workflow_name" => id, "max_age_seconds" => 129_600}
           end)
       })
     )
@@ -292,6 +529,68 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert status != 0
   end
 
+  test "finalizer rejects stale scheduled evidence despite an inflated ambient registry" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+    components = Path.join(root, "components")
+    File.mkdir_p!(components)
+    sha = String.duplicate("a", 40)
+    ci = Path.join(components, "ci.source")
+    scheduled = Path.join(components, "scheduled.source")
+    report = Path.join(root, "report.json")
+    inflated_registry = Path.join(root, "inflated-registry.json")
+
+    File.write!(ci, Jason.encode!(ci_run(77, sha, 1, "2026-08-28T17:00:00Z")))
+
+    stale =
+      authoritative_sweep(sha)
+      |> put_in(
+        ["controls", Access.at(0), "source_run", "updated_at"],
+        DateTime.utc_now()
+        |> DateTime.add(-14_400, :second)
+        |> DateTime.truncate(:second)
+        |> DateTime.to_iso8601()
+      )
+
+    File.write!(scheduled, Jason.encode!(stale))
+
+    File.write!(
+      report,
+      Jason.encode!(%{
+        "components" => %{
+          "ci" => %{"source" => ci},
+          "scheduled" => %{"source" => scheduled}
+        }
+      })
+    )
+
+    inflated =
+      @scheduled_registry
+      |> File.read!()
+      |> Jason.decode!()
+      |> update_in(["controls", Access.all(), "max_age_seconds"], fn _ -> 31_536_000 end)
+
+    File.write!(inflated_registry, Jason.encode!(inflated))
+
+    command =
+      ~s(SCHEDULED_CONTROL_CONFIG="$7" raw_sources_are_acceptable "$2" "$3" "$4" "$5" "$6")
+
+    assert {_, status} =
+             source_finalizer(command, [
+               report,
+               sha,
+               root,
+               @scheduled_registry,
+               "77",
+               inflated_registry
+             ])
+
+    assert status != 0
+
+    source = File.read!(@finalizer)
+    assert source =~ ~s(SCHEDULED_CONTROL_CONFIG="$repo/$registry_rel")
+  end
+
   defp run(repo, ledger, output, marker) do
     root = Path.dirname(marker)
     bin = Path.join(root, "bin-#{System.unique_integer([:positive])}")
@@ -314,11 +613,12 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         "bash",
         [
           "-c",
-          ~s(source "$1"; scheduled_report_is_acceptable "$2" "$3"),
+          ~s(source "$1"; scheduled_report_is_acceptable "$2" "$3" "$4"),
           "phase-164-closeout-test",
           @script,
           report_path,
-          expected_sha
+          expected_sha,
+          @scheduled_registry
         ],
         cd: @repo_root,
         stderr_to_stdout: true
@@ -392,6 +692,156 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       cd: @repo_root,
       stderr_to_stdout: true
     )
+  end
+
+  defp run_aggregate_fixture!(name, hygiene_json, hygiene_exit) do
+    root = temporary_root!()
+    fixture_script = Path.join(root, "closeout_repository_truth.sh")
+
+    production_source = File.read!(@script)
+    canonical_assignment = "canonical_repo=/Users/jon/projects/mailglass"
+    assert length(:binary.matches(production_source, canonical_assignment)) == 1
+
+    File.write!(
+      fixture_script,
+      String.replace(
+        production_source,
+        canonical_assignment,
+        ~s(canonical_repo="#{@repo_root}"),
+        global: false
+      )
+    )
+
+    File.chmod!(fixture_script, 0o755)
+
+    output_dir =
+      Path.join(@repo_root, "tmp/phase-164-aggregate-#{name}-#{System.unique_integer([:positive])}")
+
+    output = Path.join(output_dir, "report.json")
+    bin = Path.join(root, "bin")
+    File.mkdir_p!(bin)
+    File.mkdir_p!(output_dir)
+
+    sha = String.duplicate("a", 40)
+    scheduled_json = Jason.encode!(authoritative_sweep(sha))
+
+    write_executable!(
+      Path.join(bin, "git"),
+      """
+      #!/bin/bash
+      case "$3" in
+        status) exit 0 ;;
+        rev-parse) printf '%s\\n' "$FIXTURE_SHA" ;;
+        branch) printf 'main\\n' ;;
+        check-ignore) exit 0 ;;
+        *) exit 99 ;;
+      esac
+      """
+    )
+
+    write_executable!(
+      Path.join(bin, "mix"),
+      """
+      #!/bin/bash
+      printf '%s' "$HYGIENE_JSON"
+      exit "$HYGIENE_EXIT"
+      """
+    )
+
+    write_executable!(Path.join(bin, "elixir"), "#!/bin/bash\nprintf 'ledger valid\\n'\n")
+
+    write_executable!(
+      Path.join(bin, "node"),
+      """
+      #!/bin/bash
+      printf '{"databaseId":123,"workflowName":"CI","event":"push","attempt":1,"headBranch":"main","headSha":"%s","status":"completed","conclusion":"success"}\\n' "$FIXTURE_SHA"
+      """
+    )
+
+    write_executable!(
+      Path.join(bin, "bash"),
+      """
+      #!/bin/bash
+      case "$1" in
+        *verify_workspace_evidence.sh)
+          printf 'workspace valid\\n'
+          exit 0
+          ;;
+        scripts/scheduled_control_evidence.sh|*/scripts/scheduled_control_evidence.sh)
+          while [ "$#" -gt 0 ]; do
+            if [ "$1" = "--output" ]; then
+              shift
+              printf '%s' "$SCHEDULED_JSON" > "$1"
+              exit 0
+            fi
+            shift
+          done
+          exit 2
+          ;;
+        *) exit 99 ;;
+      esac
+      """
+    )
+
+    {_output, status} =
+      System.cmd(
+        "/bin/bash",
+        [
+          fixture_script,
+          "--repo",
+          @repo_root,
+          "--ledger",
+          @ledger,
+          "--ci-run-id",
+          "123",
+          "--output",
+          output
+        ],
+        env: [
+          {"PATH", "#{bin}:#{System.fetch_env!("PATH")}"},
+          {"FIXTURE_SHA", sha},
+          {"HYGIENE_JSON", hygiene_json},
+          {"HYGIENE_EXIT", Integer.to_string(hygiene_exit)},
+          {"SCHEDULED_JSON", scheduled_json}
+        ],
+        stderr_to_stdout: true
+      )
+
+    if name in ["policy-blocked", "all-pass"], do: assert(status == 0), else: assert(status != 0)
+    assert File.regular?(output)
+
+    report = output |> File.read!() |> Jason.decode!()
+    Map.put(report, "fixture_cleanup", [root, output_dir])
+  end
+
+  defp cleanup_aggregate_fixture!(report) do
+    capture_root =
+      report["components"]["git"]["source"]
+      |> Path.dirname()
+      |> Path.dirname()
+
+    for path <- [capture_root | report["fixture_cleanup"]], do: File.rm_rf!(path)
+  end
+
+  defp write_executable!(path, contents) do
+    File.write!(path, contents)
+    File.chmod!(path, 0o755)
+  end
+
+  defp git!(directory, args) do
+    {output, 0} =
+      System.cmd("git", args,
+        cd: directory,
+        env: [
+          {"GIT_AUTHOR_NAME", "Phase 164 Test"},
+          {"GIT_AUTHOR_EMAIL", "phase164@example.test"},
+          {"GIT_COMMITTER_NAME", "Phase 164 Test"},
+          {"GIT_COMMITTER_EMAIL", "phase164@example.test"}
+        ],
+        stderr_to_stdout: true
+      )
+
+    output
   end
 
   defp header do

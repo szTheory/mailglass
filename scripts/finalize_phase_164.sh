@@ -5,6 +5,7 @@ canonical_repo=/Users/jon/projects/mailglass
 phase_rel=.planning/phases/164-repository-truth-reconciliation-and-closeout
 ledger_rel="$phase_rel/164-TRUTH-DISPOSITION.tsv"
 registry_rel=.github/scheduled-controls.json
+expected_repository=szTheory/mailglass
 
 fail() {
   printf 'finalize-phase 164: %s\n' "$1" >&2
@@ -13,6 +14,54 @@ fail() {
 
 stable_porcelain() {
   git -C "$1" status --porcelain=v1 --untracked-files=all 2>/dev/null || printf 'git_status_failed\n'
+}
+
+repository_identity_is_authoritative() {
+  local repo="$1" github_repository="$2" origin_url
+
+  [ -z "${GH_REPO:-}" ] || return 1
+  [ -z "${GH_HOST:-}" ] || [ "$GH_HOST" = github.com ] || return 1
+  [ "$github_repository" = "$expected_repository" ] || return 1
+  origin_url=$(git -C "$repo" remote get-url origin 2>/dev/null) || return 1
+
+  case "$origin_url" in
+    "git@github.com:$expected_repository"|"git@github.com:$expected_repository.git"|\
+    "https://github.com/$expected_repository"|"https://github.com/$expected_repository.git"|\
+    "ssh://git@github.com/$expected_repository"|"ssh://git@github.com/$expected_repository.git") return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+mark_report_non_pass() {
+  local report="$1" reason="$2" report_dir report_tmp
+  report_dir=$(cd "$(dirname "$report")" 2>/dev/null && pwd -P) || return 1
+  report_tmp=$(mktemp "$report_dir/.report.XXXXXX") || return 1
+  jq --arg reason "$reason" '.status = "blocked" | .reason = $reason' "$report" >"$report_tmp" || {
+    rm -f "$report_tmp"
+    return 1
+  }
+  mv "$report_tmp" "$report"
+}
+
+revalidate_final_main() {
+  local repo="$1" expected_sha="$2" report="$3" scheduled_source
+
+  if ! git -C "$repo" fetch origin main >/dev/null 2>&1 ||
+     [ "$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)" != "$expected_sha" ] ||
+     [ "$(git -C "$repo" rev-parse refs/remotes/origin/main 2>/dev/null || true)" != "$expected_sha" ]; then
+    mark_report_non_pass "$report" protected_main_advanced
+    return 1
+  fi
+
+  scheduled_source=$(jq -er '.components.scheduled.source | strings | select(length > 0)' "$report") || {
+    mark_report_non_pass "$report" scheduled_main_identity_missing
+    return 1
+  }
+
+  jq -e --arg sha "$expected_sha" '.expected_main_sha == $sha' "$scheduled_source" >/dev/null || {
+    mark_report_non_pass "$report" scheduled_main_identity_mismatch
+    return 1
+  }
 }
 
 select_ci_run_id() {
@@ -81,10 +130,13 @@ canonical_component_source() {
 }
 
 raw_sources_are_acceptable() {
-  local report="$1" expected_sha="$2" capture_dir="$3" registry="$4" expected_ci_run_id="$5"
+  local report="$1" expected_sha="$2" capture_root="$3" registry="$4" expected_ci_run_id="$5"
   local components_dir ci_source scheduled_source
 
-  components_dir=$(cd "$capture_dir/components" 2>/dev/null && pwd -P) || return 1
+  ci_source=$(jq -er '.components.ci.source | strings | select(length > 0)' "$report") || return 1
+  components_dir=$(cd "$(dirname "$ci_source")" 2>/dev/null && pwd -P) || return 1
+  capture_root=$(cd "$capture_root" 2>/dev/null && pwd -P) || return 1
+  case "$components_dir" in "$capture_root/components"|"$capture_root/"*/components) ;; *) return 1 ;; esac
   ci_source=$(canonical_component_source "$report" '.components.ci.source' "$components_dir") || return 1
   scheduled_source=$(canonical_component_source "$report" '.components.scheduled.source' "$components_dir") || return 1
 
@@ -101,7 +153,9 @@ raw_sources_are_acceptable() {
   ' "$ci_source" >/dev/null || return 1
 
   jq -e --arg sha "$expected_sha" --slurpfile registry "$registry" '
-    ($registry[0].controls | map({key: .id, value: .workflow_name}) | from_entries) as $workflow_names |
+    ($registry[0].controls |
+      map({key: .id, value: {workflow_name: .workflow_name, max_age_seconds: .max_age_seconds}}) |
+      from_entries) as $control_contracts |
     type == "object" and
     .kind == "sweep" and
     .status == "pass" and
@@ -113,14 +167,17 @@ raw_sources_are_acceptable() {
     all(.controls[];
       .evidence_valid == true and
       (.source_run.id | tostring | test("^[1-9][0-9]*$")) and
-      .source_run.name == $workflow_names[.control] and
+      .source_run.name == $control_contracts[.control].workflow_name and
       .source_run.attempt == 1 and
       .source_run.event == "schedule" and
       .source_run.head_branch == "main" and
       .source_run.head_sha == $sha and
       .source_run.status == "completed" and
       (.source_run.conclusion | type == "string" and length > 0) and
+      ($control_contracts[.control].max_age_seconds | type == "number" and . > 0) and
       (.source_run.updated_at | type == "string" and length > 0) and
+      (now - (.source_run.updated_at | fromdateiso8601)) <=
+        $control_contracts[.control].max_age_seconds and
       .result.workflow_sha == $sha and
       (.result.reason | type == "string" and length > 0) and
       (.result.status == "pass" or .result.status == "blocked") and
@@ -152,6 +209,13 @@ main() {
   porcelain=$(stable_porcelain "$repo")
   [ -z "$porcelain" ] || fail "stable porcelain is not empty"
 
+  repository_identity_is_authoritative "$repo" "$expected_repository" ||
+    fail "origin or GitHub repository override is not authoritative"
+  github_repository=$(GH_HOST=github.com gh repo view "github.com/$expected_repository" --json nameWithOwner --jq '.nameWithOwner') ||
+    fail "could not resolve the authoritative GitHub repository identity"
+  repository_identity_is_authoritative "$repo" "$github_repository" ||
+    fail "GitHub repository identity is not $expected_repository"
+
   git -C "$repo" fetch origin main >/dev/null || fail "git fetch origin main failed"
   main_sha=$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)
   [[ "$main_sha" =~ ^[0-9a-f]{40}$ ]] || fail "HEAD is not a full commit SHA"
@@ -169,11 +233,14 @@ main() {
     report=report.json
   fi
 
-  capture_dir="$repo/tmp/phase-164-closeout"
-  mkdir -p "$capture_dir"
-  runs_json="$capture_dir/ci-runs.json"
+  capture_dir=$(mktemp -d "$repo/tmp/phase-164-finalize.XXXXXX") || fail "could not allocate private capture directory"
+  capture_dir=$(cd "$capture_dir" 2>/dev/null && pwd -P) || fail "could not resolve private capture directory"
+  case "$capture_dir" in "$repo/tmp/"*) ;; *) fail "capture directory escaped canonical tmp" ;; esac
+  chmod 700 "$capture_dir"
+  runs_json=$(mktemp "$capture_dir/ci-runs.XXXXXX") || fail "could not allocate CI capture"
 
-  gh run list \
+  GH_HOST=github.com gh run list \
+    --repo "$expected_repository" \
     --workflow CI \
     --branch main \
     --event push \
@@ -182,17 +249,16 @@ main() {
     --json databaseId,workflowName,headBranch,headSha,event,attempt,status,conclusion,url,createdAt \
     >"$runs_json"
   ci_run_id=$(select_ci_run_id "$runs_json" "$main_sha") || fail "no exact attempt-1 normal push CI run passed for HEAD"
-  github_repository=$(gh repo view --json nameWithOwner --jq '.nameWithOwner') ||
-    fail "could not resolve the GitHub repository identity"
-  [[ "$github_repository" =~ ^[^/[:space:]]+/[^/[:space:]]+$ ]] ||
-    fail "GitHub repository identity is malformed"
-
+  inputs_tmp=$(mktemp "$capture_dir/$inputs.XXXXXX") || fail "could not allocate input capture"
   jq -n --arg main_sha "$main_sha" --arg ci_run_id "$ci_run_id" \
-    '{main_sha: $main_sha, ci_run_id: $ci_run_id}' >"$capture_dir/$inputs.tmp"
-  mv "$capture_dir/$inputs.tmp" "$capture_dir/$inputs"
+    '{main_sha: $main_sha, ci_run_id: $ci_run_id}' >"$inputs_tmp"
+  mv "$inputs_tmp" "$capture_dir/$inputs"
 
   set +e
-  GITHUB_REPOSITORY="$github_repository" "$repo/scripts/closeout_repository_truth.sh" \
+  GH_HOST=github.com \
+  GITHUB_REPOSITORY="$github_repository" \
+  SCHEDULED_CONTROL_CONFIG="$repo/$registry_rel" \
+    "$repo/scripts/closeout_repository_truth.sh" \
     --repo "$repo" \
     --ledger "$repo/$ledger_rel" \
     --ci-run-id "$ci_run_id" \
@@ -201,8 +267,11 @@ main() {
   set -e
 
   [ -f "$capture_dir/$report" ] || fail "closeout did not preserve a report"
-  raw_sources_are_acceptable "$capture_dir/$report" "$main_sha" "$capture_dir" "$repo/$registry_rel" "$ci_run_id" ||
+  raw_sources_are_acceptable "$capture_dir/$report" "$main_sha" "$repo/tmp" "$repo/$registry_rel" "$ci_run_id" ||
     fail "raw CI or scheduled evidence failed independent finalization validation"
+
+  revalidate_final_main "$repo" "$main_sha" "$capture_dir/$report" ||
+    fail "protected main changed during finalization"
 
   [ "$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)" = "$main_sha" ] || fail "HEAD changed during finalization"
   [ -z "$(stable_porcelain "$repo")" ] || fail "stable porcelain changed during finalization"
