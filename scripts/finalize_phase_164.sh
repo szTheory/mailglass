@@ -20,6 +20,7 @@ repository_identity_is_authoritative() {
   local repo="$1" github_repository="$2" origin_url
 
   [ -z "${GH_REPO:-}" ] || return 1
+  [ -z "${GH_HOST:-}" ] || [ "$GH_HOST" = github.com ] || return 1
   [ "$github_repository" = "$expected_repository" ] || return 1
   origin_url=$(git -C "$repo" remote get-url origin 2>/dev/null) || return 1
 
@@ -205,7 +206,7 @@ main() {
 
   repository_identity_is_authoritative "$repo" "$expected_repository" ||
     fail "origin or GitHub repository override is not authoritative"
-  github_repository=$(gh repo view "$expected_repository" --json nameWithOwner --jq '.nameWithOwner') ||
+  github_repository=$(GH_HOST=github.com gh repo view "github.com/$expected_repository" --json nameWithOwner --jq '.nameWithOwner') ||
     fail "could not resolve the authoritative GitHub repository identity"
   repository_identity_is_authoritative "$repo" "$github_repository" ||
     fail "GitHub repository identity is not $expected_repository"
@@ -233,7 +234,8 @@ main() {
   chmod 700 "$capture_dir"
   runs_json=$(mktemp "$capture_dir/ci-runs.XXXXXX") || fail "could not allocate CI capture"
 
-  gh run list \
+  GH_HOST=github.com gh run list \
+    --repo "$expected_repository" \
     --workflow CI \
     --branch main \
     --event push \

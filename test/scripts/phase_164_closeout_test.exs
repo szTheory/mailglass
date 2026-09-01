@@ -284,6 +284,11 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     command = ~s(repository_identity_is_authoritative "$2" "$3")
     assert {_, 0} = source_finalizer(command, [root, "szTheory/mailglass"])
 
+    assert {_, status} =
+             source_finalizer("GH_HOST=attacker.example " <> command, [root, "szTheory/mailglass"])
+
+    assert status != 0
+
     {_, 0} =
       System.cmd(
         "git",
