@@ -10,6 +10,14 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
             )
   @finalizer Path.join(@repo_root, "scripts/finalize_phase_164.sh")
   @scheduled_registry Path.join(@repo_root, ".github/scheduled-controls.json")
+  @closeout_contract Path.join(
+                       @repo_root,
+                       ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-CLOSEOUT.md"
+                     )
+  @finalization_contract Path.join(
+                           @repo_root,
+                           ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
+                         )
   @ledger Path.join(
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
@@ -140,6 +148,47 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "status --porcelain=v1 --untracked-files=all"
 
     assert source =~ "write_report\nfinal_porcelain=$(stable_porcelain)"
+  end
+
+  test "durable closeout guidance matches the enforced canonical volatile-report boundary" do
+    contract = File.read!(@closeout_contract)
+    normalized = Regex.replace(~r/\s+/, contract, " ")
+
+    assert contract =~ "--repo /Users/jon/projects/mailglass"
+
+    assert contract =~
+             "--ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
+
+    assert contract =~ "--ci-run-id <exact-current-main-ci-run-id>"
+    assert contract =~ "tmp/phase-164-closeout/report.json"
+    assert contract =~ "enforced identities, not examples"
+    assert contract =~ "Arbitrary checkouts, copied or equivalent ledgers"
+    assert contract =~ "root `/tmp/` ignore rule"
+    assert normalized =~ "shared full-ledger validator"
+    assert normalized =~ "Stable porcelain is sampled before collection"
+    assert normalized =~ "after every component and final-report write"
+    assert contract =~ "volatile, untracked runtime evidence"
+
+    for non_pass <- ["pending", "cannot-check", "stale", "malformed", "mismatched"] do
+      assert contract =~ non_pass
+    end
+  end
+
+  test "finalization guidance keeps pre-verification and terminal proof non-circular" do
+    contract = File.read!(@finalization_contract)
+    normalized = Regex.replace(~r/\s+/, contract, " ")
+
+    assert contract =~ "/finalize-phase 164 --pre-verification"
+    assert contract =~ "ordinary phase verifier"
+    assert normalized =~ "before `phase.complete` writes tracked completion metadata"
+    assert contract =~ "/finalize-phase 164"
+    assert contract =~ "After the normal verifier has passed"
+    assert contract =~ "status: passed"
+    assert contract =~ "writes only ignored"
+    assert contract =~ "No summary, planning update, commit, push, merge"
+    assert contract =~ "CI must be attempt 1"
+    assert normalized =~ "Every registered scheduled control must be attempt 1"
+    assert normalized =~ "A HEAD change or any stable-porcelain entry"
   end
 
   test "finalize-phase manifest exposes exactly one compatible community command" do
@@ -279,7 +328,14 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     {_, 0} = System.cmd("git", ["init", "-q", root])
 
     {_, 0} =
-      System.cmd("git", ["-C", root, "remote", "add", "origin", "git@github.com:szTheory/mailglass.git"])
+      System.cmd("git", [
+        "-C",
+        root,
+        "remote",
+        "add",
+        "origin",
+        "git@github.com:szTheory/mailglass.git"
+      ])
 
     command = ~s(repository_identity_is_authoritative "$2" "$3")
     assert {_, 0} = source_finalizer(command, [root, "szTheory/mailglass"])
@@ -365,6 +421,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     assert {_, status} = source_finalizer(command, [checkout, sha, report])
     assert status != 0
+
     assert %{"status" => "blocked", "reason" => "protected_main_advanced"} =
              Jason.decode!(File.read!(report))
   end
