@@ -696,6 +696,23 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   defp run_aggregate_fixture!(name, hygiene_json, hygiene_exit) do
     root = temporary_root!()
+    fixture_script = Path.join(root, "closeout_repository_truth.sh")
+
+    production_source = File.read!(@script)
+    canonical_assignment = "canonical_repo=/Users/jon/projects/mailglass"
+    assert length(:binary.matches(production_source, canonical_assignment)) == 1
+
+    File.write!(
+      fixture_script,
+      String.replace(
+        production_source,
+        canonical_assignment,
+        ~s(canonical_repo="#{@repo_root}"),
+        global: false
+      )
+    )
+
+    File.chmod!(fixture_script, 0o755)
 
     output_dir =
       Path.join(@repo_root, "tmp/phase-164-aggregate-#{name}-#{System.unique_integer([:positive])}")
@@ -770,7 +787,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       System.cmd(
         "/bin/bash",
         [
-          @script,
+          fixture_script,
           "--repo",
           @repo_root,
           "--ledger",
