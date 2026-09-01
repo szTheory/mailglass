@@ -399,7 +399,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       Jason.encode!(%{
         "controls" =>
           Enum.map(["release-please", "repo-hygiene", "post-publish-smoke"], fn id ->
-            %{"id" => id, "workflow_name" => id}
+            %{"id" => id, "workflow_name" => id, "max_age_seconds" => 129_600}
           end)
       })
     )
@@ -424,6 +424,68 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     assert {_, status} = source_finalizer(command, [report, sha, root, registry, "77"])
     assert status != 0
+  end
+
+  test "finalizer rejects stale scheduled evidence despite an inflated ambient registry" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+    components = Path.join(root, "components")
+    File.mkdir_p!(components)
+    sha = String.duplicate("a", 40)
+    ci = Path.join(components, "ci.source")
+    scheduled = Path.join(components, "scheduled.source")
+    report = Path.join(root, "report.json")
+    inflated_registry = Path.join(root, "inflated-registry.json")
+
+    File.write!(ci, Jason.encode!(ci_run(77, sha, 1, "2026-08-28T17:00:00Z")))
+
+    stale =
+      authoritative_sweep(sha)
+      |> put_in(
+        ["controls", Access.at(0), "source_run", "updated_at"],
+        DateTime.utc_now()
+        |> DateTime.add(-14_400, :second)
+        |> DateTime.truncate(:second)
+        |> DateTime.to_iso8601()
+      )
+
+    File.write!(scheduled, Jason.encode!(stale))
+
+    File.write!(
+      report,
+      Jason.encode!(%{
+        "components" => %{
+          "ci" => %{"source" => ci},
+          "scheduled" => %{"source" => scheduled}
+        }
+      })
+    )
+
+    inflated =
+      @scheduled_registry
+      |> File.read!()
+      |> Jason.decode!()
+      |> update_in(["controls", Access.all(), "max_age_seconds"], fn _ -> 31_536_000 end)
+
+    File.write!(inflated_registry, Jason.encode!(inflated))
+
+    command =
+      ~s(SCHEDULED_CONTROL_CONFIG="$7" raw_sources_are_acceptable "$2" "$3" "$4" "$5" "$6")
+
+    assert {_, status} =
+             source_finalizer(command, [
+               report,
+               sha,
+               root,
+               @scheduled_registry,
+               "77",
+               inflated_registry
+             ])
+
+    assert status != 0
+
+    source = File.read!(@finalizer)
+    assert source =~ ~s(SCHEDULED_CONTROL_CONFIG="$repo/$registry_rel")
   end
 
   defp run(repo, ledger, output, marker) do

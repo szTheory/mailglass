@@ -153,7 +153,9 @@ raw_sources_are_acceptable() {
   ' "$ci_source" >/dev/null || return 1
 
   jq -e --arg sha "$expected_sha" --slurpfile registry "$registry" '
-    ($registry[0].controls | map({key: .id, value: .workflow_name}) | from_entries) as $workflow_names |
+    ($registry[0].controls |
+      map({key: .id, value: {workflow_name: .workflow_name, max_age_seconds: .max_age_seconds}}) |
+      from_entries) as $control_contracts |
     type == "object" and
     .kind == "sweep" and
     .status == "pass" and
@@ -165,14 +167,17 @@ raw_sources_are_acceptable() {
     all(.controls[];
       .evidence_valid == true and
       (.source_run.id | tostring | test("^[1-9][0-9]*$")) and
-      .source_run.name == $workflow_names[.control] and
+      .source_run.name == $control_contracts[.control].workflow_name and
       .source_run.attempt == 1 and
       .source_run.event == "schedule" and
       .source_run.head_branch == "main" and
       .source_run.head_sha == $sha and
       .source_run.status == "completed" and
       (.source_run.conclusion | type == "string" and length > 0) and
+      ($control_contracts[.control].max_age_seconds | type == "number" and . > 0) and
       (.source_run.updated_at | type == "string" and length > 0) and
+      (now - (.source_run.updated_at | fromdateiso8601)) <=
+        $control_contracts[.control].max_age_seconds and
       .result.workflow_sha == $sha and
       (.result.reason | type == "string" and length > 0) and
       (.result.status == "pass" or .result.status == "blocked") and
@@ -250,7 +255,10 @@ main() {
   mv "$inputs_tmp" "$capture_dir/$inputs"
 
   set +e
-  GITHUB_REPOSITORY="$github_repository" "$repo/scripts/closeout_repository_truth.sh" \
+  GH_HOST=github.com \
+  GITHUB_REPOSITORY="$github_repository" \
+  SCHEDULED_CONTROL_CONFIG="$repo/$registry_rel" \
+    "$repo/scripts/closeout_repository_truth.sh" \
     --repo "$repo" \
     --ledger "$repo/$ledger_rel" \
     --ci-run-id "$ci_run_id" \
