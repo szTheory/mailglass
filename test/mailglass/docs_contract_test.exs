@@ -45,6 +45,19 @@ defmodule Mailglass.DocsContractTest do
                core_version
     end
 
+    test "production operator guidance includes a production-capable admin dependency" do
+      root = current_compatibility_section!(File.read!("README.md"), "README.md")
+      admin = File.read!("mailglass_admin/README.md")
+
+      assert root =~ ~s({:mailglass_admin, "~> 2.5"})
+      refute root =~ ~s({:mailglass_admin, "~> 2.5", only:)
+
+      assert admin =~ "Preview-only installation"
+      assert admin =~ ~s({:mailglass_admin, "~> 2.5", only: :dev})
+      assert admin =~ "Production operator installation"
+      assert admin =~ ~s({:mailglass_admin, "~> 2.5"})
+    end
+
     test "installation snippet targets the current stable surface" do
       blocks = extract_code_blocks("README.md")
       install_block = Enum.find(blocks, &(&1 =~ "mix mailglass.install"))

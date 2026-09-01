@@ -41,8 +41,11 @@ the admin stability page only for the package surface inventory.
 
 ## Current package compatibility
 
-For the current linked core/admin package line, add `mailglass_admin` to your
-adopter app's `mix.exs`:
+Choose the dependency shape that matches the surface your app mounts.
+
+### Preview-only installation
+
+If the app uses only the development preview, scope `mailglass_admin` to dev:
 
     def deps do
       [
@@ -51,7 +54,19 @@ adopter app's `mix.exs`:
       ]
     end
 
-Then `mix deps.get`.
+### Production operator installation
+
+If the app mounts the production operator, omit `only:` so the router helpers and
+operator modules are compiled and available in production:
+
+    def deps do
+      [
+        {:mailglass, "~> 2.5"},
+        {:mailglass_admin, "~> 2.5"}
+      ]
+    end
+
+Then run `mix deps.get`.
 
 ## Mount the dev preview
 

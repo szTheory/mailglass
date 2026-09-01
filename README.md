@@ -57,18 +57,24 @@ the maintained trust-proof baseline.
 ## Current package compatibility
 
 For the current package line, add the linked core and admin packages together.
-Add the independently released inbound package when your app receives mail:
+The declaration below is production-capable, which is required when mounting the
+production operator surface. Add the independently released inbound package when
+your app receives mail:
 
 ```elixir
 # mix.exs
 def deps do
   [
     {:mailglass, "~> 2.5"},
-    {:mailglass_admin, "~> 2.5", only: [:dev]},
+    {:mailglass_admin, "~> 2.5"},
     {:mailglass_inbound, "~> 2.2"}
   ]
 end
 ```
+
+Preview-only adopters that do not mount the production operator may instead add
+`only: :dev` to the `mailglass_admin` dependency. A dev-scoped dependency is not
+compiled or available in production.
 
 Fetch deps, run the installer, and migrate:
 
