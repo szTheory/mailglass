@@ -276,7 +276,7 @@ Full trajectory in [`.planning/ROADMAP.md`](.planning/ROADMAP.md) and
 - [`guides/run-the-demo.md`](guides/run-the-demo.md) — see mailglass
   working locally in one command (`make demo`)
 - [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)
-  — canonical `1.x` compatibility, deprecation, and support-matrix policy
+  — current `v2.x` compatibility, deprecation, and support-matrix policy with retained historical `1.x` promises
 - [`guides/upgrading-to-v1_0.md`](guides/upgrading-to-v1_0.md) — canonical
   latest-`0.x` to `1.0` upgrade path
 - [`guides/upgrading-from-v0_1.md`](guides/upgrading-from-v0_1.md) —

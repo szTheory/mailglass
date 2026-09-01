@@ -67,6 +67,10 @@ defmodule Mailglass.DocsContractTest do
       maintaining = File.read!("MAINTAINING.md")
 
       assert readme =~ "canonical `v#{core_major}.x` contract"
+
+      assert readme =~
+               "current `v#{core_major}.x` compatibility, deprecation, and support-matrix policy with retained historical `1.x` promises"
+
       assert readme =~ "`mailglass`         | `v#{core_major}.x` contract"
       assert readme =~ "`mailglass_admin`   | Narrow `v#{admin_major}.x` admin contract"
       assert admin =~ "canonical `v#{admin_major}.x` admin surface"
