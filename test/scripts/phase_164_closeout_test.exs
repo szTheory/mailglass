@@ -150,6 +150,52 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "write_report\nfinal_porcelain=$(stable_porcelain)"
   end
 
+  test "aggregate report preserves component evidence and applies fail-closed precedence" do
+    valid_block = %{
+      "status" => "blocked",
+      "reason" => "policy_blocked",
+      "checks" => [
+        %{
+          "status" => "blocked",
+          "message" => "expected policy block",
+          "details" => %{"policy" => "fixture"}
+        }
+      ]
+    }
+
+    cases = [
+      {"malformed", "{malformed", 1, "cannot-check", "closeout_cannot-check", "cannot-check"},
+      {"pending", Jason.encode!(%{"status" => "pending", "reason" => "waiting"}), 1, "pending",
+       "closeout_pending", "pending"},
+      {"policy-blocked", Jason.encode!(valid_block), 1, "pass", "all_authorities_exact_and_current",
+       "blocked"},
+      {"all-pass", Jason.encode!(%{"status" => "pass", "reason" => "clean"}), 0, "pass",
+       "all_authorities_exact_and_current", "pass"}
+    ]
+
+    for {name, hygiene_json, hygiene_exit, expected_status, expected_reason,
+         expected_hygiene_status} <- cases do
+      report = run_aggregate_fixture!(name, hygiene_json, hygiene_exit)
+
+      assert report["status"] == expected_status
+      assert report["reason"] == expected_reason
+      assert report["components"]["hygiene"]["status"] == expected_hygiene_status
+
+      for component <- ["git", "workspace", "ledger", "ci", "scheduled"] do
+        assert report["components"][component]["status"] == "pass"
+      end
+
+      for component <- ["git", "hygiene", "workspace", "ledger", "ci", "scheduled"] do
+        source = report["components"][component]["source"]
+        assert is_binary(source) and source != ""
+        assert File.regular?(source), "expected persisted source for #{name}/#{component}"
+      end
+
+      assert File.read!(report["components"]["hygiene"]["source"]) == hygiene_json
+      cleanup_aggregate_fixture!(report)
+    end
+  end
+
   test "durable closeout guidance matches the enforced canonical volatile-report boundary" do
     contract = File.read!(@closeout_contract)
     normalized = Regex.replace(~r/\s+/, contract, " ")
@@ -646,6 +692,123 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       cd: @repo_root,
       stderr_to_stdout: true
     )
+  end
+
+  defp run_aggregate_fixture!(name, hygiene_json, hygiene_exit) do
+    root = temporary_root!()
+
+    output_dir =
+      Path.join(@repo_root, "tmp/phase-164-aggregate-#{name}-#{System.unique_integer([:positive])}")
+
+    output = Path.join(output_dir, "report.json")
+    bin = Path.join(root, "bin")
+    File.mkdir_p!(bin)
+    File.mkdir_p!(output_dir)
+
+    sha = String.duplicate("a", 40)
+    scheduled_json = Jason.encode!(authoritative_sweep(sha))
+
+    write_executable!(
+      Path.join(bin, "git"),
+      """
+      #!/bin/bash
+      case "$3" in
+        status) exit 0 ;;
+        rev-parse) printf '%s\\n' "$FIXTURE_SHA" ;;
+        branch) printf 'main\\n' ;;
+        check-ignore) exit 0 ;;
+        *) exit 99 ;;
+      esac
+      """
+    )
+
+    write_executable!(
+      Path.join(bin, "mix"),
+      """
+      #!/bin/bash
+      printf '%s' "$HYGIENE_JSON"
+      exit "$HYGIENE_EXIT"
+      """
+    )
+
+    write_executable!(Path.join(bin, "elixir"), "#!/bin/bash\nprintf 'ledger valid\\n'\n")
+
+    write_executable!(
+      Path.join(bin, "node"),
+      """
+      #!/bin/bash
+      printf '{"databaseId":123,"workflowName":"CI","event":"push","attempt":1,"headBranch":"main","headSha":"%s","status":"completed","conclusion":"success"}\\n' "$FIXTURE_SHA"
+      """
+    )
+
+    write_executable!(
+      Path.join(bin, "bash"),
+      """
+      #!/bin/bash
+      case "$1" in
+        *verify_workspace_evidence.sh)
+          printf 'workspace valid\\n'
+          exit 0
+          ;;
+        scripts/scheduled_control_evidence.sh|*/scripts/scheduled_control_evidence.sh)
+          while [ "$#" -gt 0 ]; do
+            if [ "$1" = "--output" ]; then
+              shift
+              printf '%s' "$SCHEDULED_JSON" > "$1"
+              exit 0
+            fi
+            shift
+          done
+          exit 2
+          ;;
+        *) exit 99 ;;
+      esac
+      """
+    )
+
+    {_output, status} =
+      System.cmd(
+        "/bin/bash",
+        [
+          @script,
+          "--repo",
+          @repo_root,
+          "--ledger",
+          @ledger,
+          "--ci-run-id",
+          "123",
+          "--output",
+          output
+        ],
+        env: [
+          {"PATH", "#{bin}:#{System.fetch_env!("PATH")}"},
+          {"FIXTURE_SHA", sha},
+          {"HYGIENE_JSON", hygiene_json},
+          {"HYGIENE_EXIT", Integer.to_string(hygiene_exit)},
+          {"SCHEDULED_JSON", scheduled_json}
+        ],
+        stderr_to_stdout: true
+      )
+
+    if name in ["policy-blocked", "all-pass"], do: assert(status == 0), else: assert(status != 0)
+    assert File.regular?(output)
+
+    report = output |> File.read!() |> Jason.decode!()
+    Map.put(report, "fixture_cleanup", [root, output_dir])
+  end
+
+  defp cleanup_aggregate_fixture!(report) do
+    capture_root =
+      report["components"]["git"]["source"]
+      |> Path.dirname()
+      |> Path.dirname()
+
+    for path <- [capture_root | report["fixture_cleanup"]], do: File.rm_rf!(path)
+  end
+
+  defp write_executable!(path, contents) do
+    File.write!(path, contents)
+    File.chmod!(path, 0o755)
   end
 
   defp git!(directory, args) do
