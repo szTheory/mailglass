@@ -1,9 +1,9 @@
 ---
 phase: 164
 slug: repository-truth-reconciliation-and-closeout
-status: ready
-nyquist_compliant: true
-wave_0_complete: false
+status: validated
+nyquist_compliant: false
+wave_0_complete: true
 created: 2026-08-26
 revised: 2026-08-28
 ---
@@ -114,4 +114,28 @@ revised: 2026-08-28
 - [ ] All tracked Phase 164 summaries and phase.complete metadata have reached protected main before terminal `/finalize-phase 164` runs.
 - [ ] The final ignored report and raw CI/scheduled sources pass independent verification with no later tracked commit.
 
-**Approval:** Planning contract complete and Nyquist-compliant; ordinary verification proves the installed capability before phase completion, and live exact-main sign-off follows through the no-tracked-output `/finalize-phase 164` gate.
+## Validation Audit 2026-09-01
+
+The implemented test suite is green (67 tests, 0 failures, 1 skipped; Node CI-monitor tests 5/5; shell syntax passed), but it does not exercise seven adversarial boundaries identified by the Phase 164 code review.
+
+| Metric | Count |
+|--------|-------|
+| Review findings audited | 7 |
+| Covered | 0 |
+| Partial | 4 |
+| Missing | 3 |
+| Implementation blockers escalated | 6 |
+
+| Finding | Coverage | Required automated proof |
+|---------|----------|--------------------------|
+| CR-01 symlink overwrite | MISSING | Reject symlinked predictable component/output paths without modifying an external sentinel. |
+| CR-02 incomplete scheduled sweep | PARTIAL | Reject missing/duplicate controls and altered workflow, run, reason, payload, and archive bindings. |
+| CR-03 fork certification | MISSING | Reject non-authoritative origin/GitHub repository identity before evidence collection. |
+| CR-04 protected-main race | PARTIAL | Advance origin/main during collection and require a final re-fetch/non-pass verdict. |
+| CR-05 fabricated ledger semantics | PARTIAL | Mutate every semantic authority column and enforce closed relationships and formats. |
+| CR-06 dev-only production operator docs | MISSING | Require production-capable dependency guidance for the documented operator mount. |
+| WR-01 stale v1/1.0 contracts | PARTIAL | Derive current contract majors while preserving explicitly historical sections. |
+
+These gaps were not auto-filled because adding tracked tests after the protected pre-verification capture would violate Plan 164-12's metadata-only handoff boundary. They must be resolved as implementation/test gap work followed by fresh protected evidence.
+
+**Approval:** validated but not Nyquist-compliant — adversarial coverage gaps and implementation blockers remain open.
