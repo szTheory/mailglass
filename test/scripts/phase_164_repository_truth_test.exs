@@ -128,7 +128,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       |> String.replace_prefix("M-01\t", "M-99\t")
       |> String.replace("\t#{Enum.at(String.split(tracked, "\t"), 1)}\t", "\tfabricated-subject\t")
 
-    assert {:error, {:unexpected_audited_subjects, ["fabricated-subject"]}} =
+    assert {:error, {:invalid_canonical_relationship, "fabricated-subject"}} =
              Ledger.validate(contents <> fabricated <> "\n", @repo_root)
 
     assert header == header_line()
@@ -148,6 +148,42 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
             {:invalid_canonical_relationship,
              ".planning/phases/163-deterministic-release-path-timeout-repairs/163-PROOF.md"}} =
              Ledger.validate(transplanted, @repo_root)
+  end
+
+  test "rejects a whitelisted producer transplanted onto an ignore subject" do
+    contents = File.read!(@ledger)
+    subject = "ignore:.gitignore:/_build/"
+
+    transplanted = mutate_subject_row(contents, subject, "producer", "GSD phase lifecycle")
+
+    assert {:error, {:invalid_canonical_relationship, ^subject}} =
+             Ledger.validate(transplanted, @repo_root)
+  end
+
+  test "rejects stable IDs swapped between ignore subjects" do
+    contents = File.read!(@ledger)
+    first_subject = "ignore:.gitignore:/_build/"
+    second_subject = "ignore:.gitignore:/cover/"
+
+    swapped = swap_subject_column(contents, first_subject, second_subject, "stable_id")
+
+    assert {:error, {:invalid_canonical_relationship, subject}} =
+             Ledger.validate(swapped, @repo_root)
+
+    assert subject in [first_subject, second_subject]
+  end
+
+  test "fails closed for an otherwise valid non-ignore subject absent from the canonical map" do
+    contents = File.read!(@ledger)
+    canonical_subject = "README.md"
+    unmapped_subject = "future-audited-proof.md"
+
+    [header | rows] = String.split(String.trim_trailing(contents), "\n", trim: true)
+    row = Enum.find(rows, &String.contains?(&1, "\t#{canonical_subject}\t"))
+    unmapped = String.replace(row, "\t#{canonical_subject}\t", "\t#{unmapped_subject}\t")
+
+    assert {:error, {:invalid_canonical_relationship, ^unmapped_subject}} =
+             Ledger.parse(Enum.join([header, unmapped], "\n") <> "\n")
   end
 
   test "git ignores all GSD runtime state except the finalize-phase extension" do
@@ -253,6 +289,45 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     lines
     |> List.replace_at(first_index, swap.(first, second))
     |> List.replace_at(second_index, swap.(second, first))
+    |> Enum.join("\n")
+    |> Kernel.<>("\n")
+  end
+
+  defp mutate_subject_row(contents, subject, column, value) do
+    lines = String.split(String.trim_trailing(contents), "\n", trim: true)
+    row_index = Enum.find_index(lines, &String.contains?(&1, "\t#{subject}\t"))
+    column_index = Enum.find_index(@headers, &(&1 == column))
+
+    mutated =
+      lines
+      |> Enum.at(row_index)
+      |> String.split("\t", trim: false)
+      |> List.replace_at(column_index, value)
+      |> Enum.join("\t")
+
+    lines
+    |> List.replace_at(row_index, mutated)
+    |> Enum.join("\n")
+    |> Kernel.<>("\n")
+  end
+
+  defp swap_subject_column(contents, first_subject, second_subject, column) do
+    lines = String.split(String.trim_trailing(contents), "\n", trim: true)
+    first_index = Enum.find_index(lines, &String.contains?(&1, "\t#{first_subject}\t"))
+    second_index = Enum.find_index(lines, &String.contains?(&1, "\t#{second_subject}\t"))
+    column_index = Enum.find_index(@headers, &(&1 == column))
+    first = String.split(Enum.at(lines, first_index), "\t", trim: false)
+    second = String.split(Enum.at(lines, second_index), "\t", trim: false)
+
+    lines
+    |> List.replace_at(
+      first_index,
+      first |> List.replace_at(column_index, Enum.at(second, column_index)) |> Enum.join("\t")
+    )
+    |> List.replace_at(
+      second_index,
+      second |> List.replace_at(column_index, Enum.at(first, column_index)) |> Enum.join("\t")
+    )
     |> Enum.join("\n")
     |> Kernel.<>("\n")
   end

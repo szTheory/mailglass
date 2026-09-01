@@ -165,6 +165,111 @@ defmodule Mailglass.RepositoryTruthLedger do
     "evidence",
     "disposition"
   ]
+  @canonical_ignore_stable_ids %{
+    "ignore:.gitignore:/_build/" => "I-001",
+    "ignore:.gitignore:/cover/" => "I-002",
+    "ignore:.gitignore:/deps/" => "I-003",
+    "ignore:.gitignore:/doc/" => "I-004",
+    "ignore:.gitignore:/.fetch" => "I-005",
+    "ignore:.gitignore:erl_crash.dump" => "I-006",
+    "ignore:.gitignore:*.ez" => "I-007",
+    "ignore:.gitignore:*.beam" => "I-008",
+    "ignore:.gitignore:/config/*.secret.exs" => "I-009",
+    "ignore:.gitignore:.elixir_ls/" => "I-010",
+    "ignore:.gitignore:/tmp/" => "I-011",
+    "ignore:.gitignore:/test/tmp/" => "I-012",
+    "ignore:.gitignore:/mailglass_admin/node_modules/" => "I-013",
+    "ignore:.gitignore:/mailglass_admin/test-results/" => "I-014",
+    "ignore:.gitignore:/mailglass_admin/playwright-report/" => "I-015",
+    "ignore:.gitignore:/reference/demo_app/tmp/" => "I-016",
+    "ignore:.gitignore:/reference/demo_app/assets/test-results/" => "I-017",
+    "ignore:.gitignore:/reference/demo_app/assets/playwright-report/" => "I-018",
+    "ignore:.gitignore:/mailglass-*.tar" => "I-019",
+    "ignore:.gitignore:/mailglass_admin/*.tar" => "I-020",
+    "ignore:.gitignore:/.env" => "I-021",
+    "ignore:.gitignore:/mailglass_admin/tailwind-macos-*" => "I-022",
+    "ignore:.gitignore:/mailglass_admin/tailwind-darwin-*" => "I-023",
+    "ignore:.gitignore:/mailglass_admin/tailwind-linux-*" => "I-024",
+    "ignore:.gitignore:/mailglass_admin/tailwind-windows-*" => "I-025",
+    "ignore:.gitignore:.DS_Store" => "I-026",
+    "ignore:.gitignore:**/.DS_Store" => "I-027",
+    "ignore:.gitignore:/.planning/research/**/.cache/" => "I-028",
+    "ignore:.gitignore:/.planning/milestone.lock" => "I-072",
+    "ignore:.gitignore:/.claude/" => "I-029",
+    "ignore:.gitignore:/.bg-shell/" => "I-030",
+    "ignore:.gitignore:/.cursor/" => "I-031",
+    "ignore:.gitignore:/.gsd/*" => "I-032",
+    "ignore:.gitignore:!/.gsd/extensions/" => "I-069",
+    "ignore:.gitignore:/.gsd/extensions/*" => "I-070",
+    "ignore:.gitignore:!/.gsd/extensions/finalize-phase/" => "I-071",
+    "ignore:.gitignore:/.mcp.json" => "I-033",
+    "ignore:mailglass_admin/.gitignore:/_build/" => "I-034",
+    "ignore:mailglass_admin/.gitignore:/cover/" => "I-035",
+    "ignore:mailglass_admin/.gitignore:/deps/" => "I-036",
+    "ignore:mailglass_admin/.gitignore:/doc/" => "I-037",
+    "ignore:mailglass_admin/.gitignore:/.fetch" => "I-038",
+    "ignore:mailglass_admin/.gitignore:erl_crash.dump" => "I-039",
+    "ignore:mailglass_admin/.gitignore:*.ez" => "I-040",
+    "ignore:mailglass_admin/.gitignore:/tmp/" => "I-041",
+    "ignore:mailglass_admin/.gitignore:*.log" => "I-042",
+    "ignore:mailglass_admin/.gitignore:/.elixir_ls/" => "I-043",
+    "ignore:mailglass_inbound/.gitignore:/_build/" => "I-044",
+    "ignore:mailglass_inbound/.gitignore:/cover/" => "I-045",
+    "ignore:mailglass_inbound/.gitignore:/deps/" => "I-046",
+    "ignore:mailglass_inbound/.gitignore:/doc/" => "I-047",
+    "ignore:mailglass_inbound/.gitignore:/.fetch" => "I-048",
+    "ignore:mailglass_inbound/.gitignore:erl_crash.dump" => "I-049",
+    "ignore:mailglass_inbound/.gitignore:*.ez" => "I-050",
+    "ignore:mailglass_inbound/.gitignore:*.beam" => "I-051",
+    "ignore:mailglass_inbound/.gitignore:/config/*.secret.exs" => "I-052",
+    "ignore:mailglass_inbound/.gitignore:.elixir_ls/" => "I-053",
+    "ignore:reference/demo_app/.gitignore:/_build/" => "I-054",
+    "ignore:reference/demo_app/.gitignore:/deps/" => "I-055",
+    "ignore:reference/demo_app/.gitignore:/assets/node_modules/" => "I-056",
+    "ignore:reference/demo_app/.gitignore:/assets/test-results/" => "I-057",
+    "ignore:reference/demo_app/.gitignore:/assets/playwright-report/" => "I-058",
+    "ignore:reference/demo_app/.gitignore:/tmp/" => "I-059",
+    "ignore:reference/demo_app/.gitignore:.env" => "I-060",
+    "ignore:reference/host_app/.gitignore:/_build/" => "I-061",
+    "ignore:reference/host_app/.gitignore:/deps/" => "I-062",
+    "ignore:reference/host_app/.gitignore:/.elixir_ls/" => "I-063",
+    "ignore:reference/host_app/.gitignore:/erl_crash.dump" => "I-064",
+    "ignore:reference/host_app/.gitignore:/.env" => "I-065",
+    "ignore:test/example/.gitignore:*" => "I-066",
+    "ignore:test/example/.gitignore:!.gitignore" => "I-067",
+    "ignore:test/example/.gitignore:!README.md" => "I-068"
+  }
+  @canonical_ignore_overrides %{
+    "ignore:.gitignore:/.planning/milestone.lock" => %{
+      "producer" => "GSD phase lifecycle",
+      "reproducibility" => "regenerable advisory session claim",
+      "durable_consumer" => "finalize-phase stable-porcelain guard",
+      "evidence" => ".gitignore rule; GSD 2.80 state begin-phase"
+    },
+    "ignore:.gitignore:/.gsd/*" => %{
+      "producer" => "GSD runtime state producer",
+      "durable_consumer" => "finalize-phase extension boundary",
+      "evidence" => ".gitignore rule; 164-11-PLAN.md"
+    },
+    "ignore:.gitignore:!/.gsd/extensions/" => %{
+      "producer" => "GSD project extension loader",
+      "reproducibility" => "reproducible loader boundary",
+      "durable_consumer" => "finalize-phase extension boundary",
+      "evidence" => ".gitignore rule; 164-11-PLAN.md"
+    },
+    "ignore:.gitignore:/.gsd/extensions/*" => %{
+      "producer" => "GSD project extension loader",
+      "reproducibility" => "regenerable extension-local state",
+      "durable_consumer" => "finalize-phase extension boundary",
+      "evidence" => ".gitignore rule; 164-11-PLAN.md"
+    },
+    "ignore:.gitignore:!/.gsd/extensions/finalize-phase/" => %{
+      "producer" => "Phase 164 finalization boundary",
+      "reproducibility" => "reproducible loader boundary",
+      "durable_consumer" => "GSD project extension loader",
+      "evidence" => ".gitignore rule; 164-11-PLAN.md"
+    }
+  }
   @canonical_relationship_sha256 %{
     "scheduled-control-sweep.json" =>
       "95c0c3276cdc09e566b11946520967fe3b95c8c078b39b45782b26ddc636d5eb",
@@ -417,12 +522,37 @@ defmodule Mailglass.RepositoryTruthLedger do
 
   defp valid_evidence?(row), do: row["evidence"] in @tracked_evidence
 
-  defp valid_canonical_relationship?(%{"kind" => "ignore-rule"}), do: true
+  defp valid_canonical_relationship?(%{"kind" => "ignore-rule"} = row) do
+    with stable_id when is_binary(stable_id) <- @canonical_ignore_stable_ids[row["subject"]],
+         ["ignore", authority, _rule] <- String.split(row["subject"], ":", parts: 3) do
+      durable_consumer =
+        if authority == "test/example/.gitignore", do: "test fixture allowlist", else: "none"
+
+      expected =
+        %{
+          "stable_id" => stable_id,
+          "kind" => "ignore-rule",
+          "producer" => "shared project tooling producer",
+          "state" => "ignored",
+          "authority" => authority,
+          "reproducibility" => "regenerable machine-local output",
+          "currentness" => "current",
+          "durable_consumer" => durable_consumer,
+          "evidence" => authority <> " rule",
+          "disposition" => "ignore"
+        }
+        |> Map.merge(Map.get(@canonical_ignore_overrides, row["subject"], %{}))
+
+      Enum.all?(@canonical_relationship_fields, &(row[&1] == expected[&1]))
+    else
+      _ -> false
+    end
+  end
 
   defp valid_canonical_relationship?(row) do
     case @canonical_relationship_sha256[row["subject"]] do
       nil ->
-        true
+        false
 
       expected_sha256 ->
         actual_sha256 =
