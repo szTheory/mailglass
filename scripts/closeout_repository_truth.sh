@@ -4,26 +4,34 @@ set -euo pipefail
 usage() { echo "usage: $0 --repo PATH --ledger PATH --ci-run-id ID --output PATH" >&2; exit 2; }
 
 scheduled_report_is_acceptable() {
-  local report_path="$1" expected_sha="$2"
+  local report_path="$1" expected_sha="$2" registry="$3"
 
-  jq -e --arg sha "$expected_sha" '
+  jq -e --arg sha "$expected_sha" --slurpfile registry "$registry" '
+    ($registry[0].controls | map({key: .id, value: .workflow_name}) | from_entries) as $workflow_names |
     type == "object" and
+    .kind == "sweep" and
     .expected_main_sha == $sha and
-    (.status == "pass" or .status == "blocked") and
+    .status == "pass" and
+    .reason == "all_controls_current" and
     .evidence_valid == true and
-    (.controls | type == "array" and length > 0) and
+    (.controls | type == "array") and
+    ([.controls[].control] | sort) == ($registry[0].controls | map(.id) | sort) and
     all(.controls[];
       .evidence_valid == true and
+      (.source_run.id | tostring | test("^[1-9][0-9]*$")) and
+      .source_run.name == $workflow_names[.control] and
       .source_run.attempt == 1 and
       .source_run.event == "schedule" and
       .source_run.status == "completed" and
       .source_run.head_branch == "main" and
       .source_run.head_sha == $sha and
+      (.source_run.conclusion | type == "string" and length > 0) and
       (.source_run.updated_at | type == "string" and length > 0) and
       .result.workflow_sha == $sha and
-      (.result.status == "pass" or
-        (.result.status == "blocked" and
-          (.result.payload_sha256 | type == "string" and length > 0)))
+      (.result.reason | type == "string" and length > 0) and
+      (.result.status == "pass" or .result.status == "blocked") and
+      (.result.payload_sha256 | type == "string" and test("^[0-9a-f]{64}$")) and
+      (.result.artifact_archive_digest | type == "string" and test("^sha256:[0-9a-f]{64}$"))
     )
   ' "$report_path" >/dev/null 2>&1
 }
@@ -132,7 +140,7 @@ ci_diagnostics=$(mktemp "$components_dir/ci.diagnostics.XXXXXX")
 if (cd "$repo" && node scripts/ci_monitor.cjs inspect "$ci_run_id") >"$ci_raw" 2>"$ci_diagnostics" && jq -e --arg sha "$head_sha" 'type == "object" and .workflowName == "CI" and .event == "push" and .attempt == 1 and .headBranch == "main" and .headSha == $sha and .status == "completed" and .conclusion == "success"' "$ci_raw" >/dev/null 2>&1; then component ci pass exact_successful_ci "$ci_raw"; else component ci cannot-check missing_malformed_or_wrong_identity_ci "$ci_raw"; fi
 
 scheduled_raw=$(mktemp "$components_dir/scheduled.source.XXXXXX")
-if (cd "$repo" && bash scripts/scheduled_control_evidence.sh sweep --output "$scheduled_raw") >/dev/null 2>&1 && scheduled_report_is_acceptable "$scheduled_raw" "$head_sha"; then component scheduled pass current_provenance_valid "$scheduled_raw"; elif jq -e 'type == "object" and (.status == "pending" or .status == "cannot-check")' "$scheduled_raw" >/dev/null 2>&1; then component scheduled "$(jq -r '.status' "$scheduled_raw")" "$(jq -r '.reason // "scheduled_evidence_incomplete"' "$scheduled_raw")" "$scheduled_raw"; else component scheduled cannot-check malformed_stale_or_mismatched_scheduled_evidence "$scheduled_raw"; fi
+if (cd "$repo" && bash scripts/scheduled_control_evidence.sh sweep --output "$scheduled_raw") >/dev/null 2>&1 && scheduled_report_is_acceptable "$scheduled_raw" "$head_sha" "$repo/.github/scheduled-controls.json"; then component scheduled pass current_provenance_valid "$scheduled_raw"; elif jq -e 'type == "object" and (.status == "pending" or .status == "cannot-check")' "$scheduled_raw" >/dev/null 2>&1; then component scheduled "$(jq -r '.status' "$scheduled_raw")" "$(jq -r '.reason // "scheduled_evidence_incomplete"' "$scheduled_raw")" "$scheduled_raw"; else component scheduled cannot-check malformed_stale_or_mismatched_scheduled_evidence "$scheduled_raw"; fi
 
 write_report() {
   local captured_at report_tmp

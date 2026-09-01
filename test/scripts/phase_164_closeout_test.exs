@@ -9,6 +9,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
               ".gsd/extensions/finalize-phase/extension-manifest.json"
             )
   @finalizer Path.join(@repo_root, "scripts/finalize_phase_164.sh")
+  @scheduled_registry Path.join(@repo_root, ".github/scheduled-controls.json")
   @ledger Path.join(
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
@@ -213,6 +214,35 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  test "rejects incomplete or fabricated scheduled-control sweep provenance" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    sha = String.duplicate("a", 40)
+    report = authoritative_sweep(sha)
+
+    mutations = [
+      put_in(report, ["controls"], Enum.take(report["controls"], 1)),
+      put_in(report, ["controls"], [hd(report["controls"]) | report["controls"]]),
+      put_in(report, ["controls", Access.at(0), "source_run", "name"], "foreign-workflow"),
+      put_in(report, ["controls", Access.at(0), "source_run", "id"], "0"),
+      put_in(report, ["controls", Access.at(0), "result", "reason"], ""),
+      put_in(report, ["controls", Access.at(0), "result", "payload_sha256"], "fabricated"),
+      put_in(
+        report,
+        ["controls", Access.at(0), "result", "artifact_archive_digest"],
+        "sha256:fabricated"
+      ),
+      put_in(report, ["status"], "blocked")
+    ]
+
+    for {mutation, index} <- Enum.with_index(mutations) do
+      path = Path.join(root, "scheduled-incomplete-#{index}.json")
+      File.write!(path, Jason.encode!(mutation))
+      refute scheduled_report_acceptable?(path, sha)
+    end
+  end
+
   test "finalizer selects only an exact attempt-one normal push CI run without caller identity" do
     root = temporary_root!()
     on_exit(fn -> File.rm_rf!(root) end)
@@ -338,11 +368,12 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         "bash",
         [
           "-c",
-          ~s(source "$1"; scheduled_report_is_acceptable "$2" "$3"),
+          ~s(source "$1"; scheduled_report_is_acceptable "$2" "$3" "$4"),
           "phase-164-closeout-test",
           @script,
           report_path,
-          expected_sha
+          expected_sha,
+          @scheduled_registry
         ],
         cd: @repo_root,
         stderr_to_stdout: true
