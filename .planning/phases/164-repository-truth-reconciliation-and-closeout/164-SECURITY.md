@@ -39,7 +39,7 @@ created: "2026-09-01"
 | T-164-11 | Information Disclosure | ignore scope | medium | mitigate | Six ignore files derived and narrow visibility tested | closed |
 | T-164-12 | Spoofing | closeout Git/CI identity | high | mitigate | Branch, SHA, run, and CI head checks | closed |
 | T-164-13 | Tampering | scheduled evidence predicate | high | mitigate | Exact registered-control set plus complete workflow/run/reason/payload/archive bindings are enforced and mutation-tested | closed |
-| T-164-14 | Repudiation | aggregate verdict precedence | high | mitigate | Production-path fixtures execute cannot-check, pending, policy-blocked/pass, and all-pass outcomes while preserving component sources | closed |
+| T-164-14 | Repudiation | aggregate verdict precedence | high | mitigate | A production-script fixture substitutes only the canonical checkout constant, then executes cannot-check, pending, policy-blocked/pass, and all-pass outcomes while preserving component sources | closed |
 | T-164-15 | Elevation of Privilege | evidence command authority | high | mitigate | No dispatch, rerun, merge, or publish surface | closed |
 | T-164-16 | Spoofing | CI run selection | high | mitigate | Attempt-one exact-SHA CI selection and raw re-query | closed |
 | T-164-17 | Elevation of Privilege | finalizer authority | high | mitigate | Observation/fetch and ignored writes only | closed |
