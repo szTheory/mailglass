@@ -15,7 +15,7 @@ selected delivery. The canonical support runbook lives in
 The canonical operator trust contract lives in
 [`docs/operator-trust.md`](docs/operator-trust.md).
 
-The canonical `v1.x` admin surface inventory lives in
+The canonical `v2.x` admin surface lives in
 [`docs/api_stability.md`](docs/api_stability.md).
 
 The canonical matched-sibling compatibility and deprecation policy lives in the

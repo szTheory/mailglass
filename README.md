@@ -171,11 +171,11 @@ placement certainty or a deliverability grade.
 
 ## API Stability
 
-The canonical `v1.x` contract inventory for the core package lives in
+The canonical `v2.x` contract for the core package lives in
 [`docs/api_stability.md`](docs/api_stability.md).
 
-The canonical `1.x` compatibility, deprecation, and support-matrix policy
-lives in
+The compatibility guide retains the historical `1.x` promises and defines the
+current v2 deprecation and support-matrix policy in
 [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md).
 
 Use that document, not root-module reachability, as the source of truth for:
@@ -189,7 +189,7 @@ Use that document, not root-module reachability, as the source of truth for:
 `mailglass_inbound` has its own stable `2.0` contract inventory in
 [`mailglass_inbound/docs/api_stability.md`](mailglass_inbound/docs/api_stability.md);
 it remains an independent package release line rather than part of the linked
-core/admin `v1.x` group.
+core/admin `v2.x` group.
 
 For release posture, support floors, retained legacy bridges, and upgrade
 expectations, use the compatibility guide rather than inferring policy from the
@@ -248,8 +248,8 @@ stability inventory alone.
 
 | Package             | Status                   | What it is |
 |---------------------|--------------------------|------------|
-| `mailglass`         | `v1.x` contract inventory documented in `docs/api_stability.md` | Core library: mailables, rendering, delivery pipeline, event ledger, webhook ingest, streams, unsubscribe, suppressions, tenancy. |
-| `mailglass_admin`   | Narrow `v1.x` admin contract documented separately | Mountable LiveView dashboard with stable router/auth/operator seams and internal UI implementation details. |
+| `mailglass`         | `v2.x` contract documented in `docs/api_stability.md` | Core library: mailables, rendering, delivery pipeline, event ledger, webhook ingest, streams, unsubscribe, suppressions, tenancy. |
+| `mailglass_admin`   | Narrow `v2.x` admin contract documented separately | Mountable LiveView dashboard with stable router/auth/operator seams and internal UI implementation details. |
 | `mailglass_inbound` | Stable `2.0` contract documented separately | Inbound routing (Action Mailbox equivalent): recipient/subject/header matchers, ingress plugs per provider, storage adapters, Oban routing. |
 
 ## Roadmap
