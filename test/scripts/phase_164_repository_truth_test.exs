@@ -80,9 +80,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
              Ledger.parse(header_line() <> "\n" <> String.replace(valid, "generated-output", ""))
 
     assert {:error, {:duplicate_subject, "scheduled-control-sweep.json"}} =
-             Ledger.parse(
-               header_line() <> "\n" <> valid <> "\n" <> valid
-             )
+             Ledger.parse(header_line() <> "\n" <> valid <> "\n" <> valid)
   end
 
   test "validates independently of row ordering and fails missing audited subject classes" do
@@ -134,6 +132,22 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
              Ledger.validate(contents <> fabricated <> "\n", @repo_root)
 
     assert header == header_line()
+  end
+
+  test "rejects cross-row borrowing of canonical authority relationships" do
+    contents = File.read!(@ledger)
+
+    transplanted =
+      swap_row_semantics(
+        contents,
+        "README.md",
+        ".planning/phases/163-deterministic-release-path-timeout-repairs/163-PROOF.md"
+      )
+
+    assert {:error,
+            {:invalid_canonical_relationship,
+             ".planning/phases/163-deterministic-release-path-timeout-repairs/163-PROOF.md"}} =
+             Ledger.validate(transplanted, @repo_root)
   end
 
   test "git ignores all GSD runtime state except the finalize-phase extension" do
@@ -214,5 +228,32 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     fields = String.split(first, "\t", trim: false)
     mutated = fields |> List.replace_at(index, value) |> Enum.join("\t")
     Enum.join([header, mutated | rest], "\n") <> "\n"
+  end
+
+  defp swap_row_semantics(contents, first_subject, second_subject) do
+    semantic_indexes =
+      @headers
+      |> Enum.with_index()
+      |> Enum.reject(fn {column, _index} -> column in ["subject", "rationale"] end)
+      |> Enum.map(&elem(&1, 1))
+
+    lines = String.split(String.trim_trailing(contents), "\n", trim: true)
+    first_index = Enum.find_index(lines, &String.contains?(&1, "\t#{first_subject}\t"))
+    second_index = Enum.find_index(lines, &String.contains?(&1, "\t#{second_subject}\t"))
+    first = String.split(Enum.at(lines, first_index), "\t", trim: false)
+    second = String.split(Enum.at(lines, second_index), "\t", trim: false)
+
+    swap = fn target, donor ->
+      Enum.reduce(semantic_indexes, target, fn index, fields ->
+        List.replace_at(fields, index, Enum.at(donor, index))
+      end)
+      |> Enum.join("\t")
+    end
+
+    lines
+    |> List.replace_at(first_index, swap.(first, second))
+    |> List.replace_at(second_index, swap.(second, first))
+    |> Enum.join("\n")
+    |> Kernel.<>("\n")
   end
 end
