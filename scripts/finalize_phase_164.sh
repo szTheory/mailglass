@@ -5,6 +5,7 @@ canonical_repo=/Users/jon/projects/mailglass
 phase_rel=.planning/phases/164-repository-truth-reconciliation-and-closeout
 ledger_rel="$phase_rel/164-TRUTH-DISPOSITION.tsv"
 registry_rel=.github/scheduled-controls.json
+expected_repository=szTheory/mailglass
 
 fail() {
   printf 'finalize-phase 164: %s\n' "$1" >&2
@@ -13,6 +14,21 @@ fail() {
 
 stable_porcelain() {
   git -C "$1" status --porcelain=v1 --untracked-files=all 2>/dev/null || printf 'git_status_failed\n'
+}
+
+repository_identity_is_authoritative() {
+  local repo="$1" github_repository="$2" origin_url
+
+  [ -z "${GH_REPO:-}" ] || return 1
+  [ "$github_repository" = "$expected_repository" ] || return 1
+  origin_url=$(git -C "$repo" remote get-url origin 2>/dev/null) || return 1
+
+  case "$origin_url" in
+    "git@github.com:$expected_repository"|"git@github.com:$expected_repository.git"|\
+    "https://github.com/$expected_repository"|"https://github.com/$expected_repository.git"|\
+    "ssh://git@github.com/$expected_repository"|"ssh://git@github.com/$expected_repository.git") return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
 select_ci_run_id() {
@@ -155,6 +171,13 @@ main() {
   porcelain=$(stable_porcelain "$repo")
   [ -z "$porcelain" ] || fail "stable porcelain is not empty"
 
+  repository_identity_is_authoritative "$repo" "$expected_repository" ||
+    fail "origin or GitHub repository override is not authoritative"
+  github_repository=$(gh repo view "$expected_repository" --json nameWithOwner --jq '.nameWithOwner') ||
+    fail "could not resolve the authoritative GitHub repository identity"
+  repository_identity_is_authoritative "$repo" "$github_repository" ||
+    fail "GitHub repository identity is not $expected_repository"
+
   git -C "$repo" fetch origin main >/dev/null || fail "git fetch origin main failed"
   main_sha=$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)
   [[ "$main_sha" =~ ^[0-9a-f]{40}$ ]] || fail "HEAD is not a full commit SHA"
@@ -187,11 +210,6 @@ main() {
     --json databaseId,workflowName,headBranch,headSha,event,attempt,status,conclusion,url,createdAt \
     >"$runs_json"
   ci_run_id=$(select_ci_run_id "$runs_json" "$main_sha") || fail "no exact attempt-1 normal push CI run passed for HEAD"
-  github_repository=$(gh repo view --json nameWithOwner --jq '.nameWithOwner') ||
-    fail "could not resolve the GitHub repository identity"
-  [[ "$github_repository" =~ ^[^/[:space:]]+/[^/[:space:]]+$ ]] ||
-    fail "GitHub repository identity is malformed"
-
   inputs_tmp=$(mktemp "$capture_dir/$inputs.XXXXXX") || fail "could not allocate input capture"
   jq -n --arg main_sha "$main_sha" --arg ci_run_id "$ci_run_id" \
     '{main_sha: $main_sha, ci_run_id: $ci_run_id}' >"$inputs_tmp"

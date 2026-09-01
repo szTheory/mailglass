@@ -273,6 +273,36 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     refute source =~ ~r/gh\s+run\s+rerun/
   end
 
+  test "finalizer accepts only the authoritative origin and GitHub repository identity" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+    {_, 0} = System.cmd("git", ["init", "-q", root])
+
+    {_, 0} =
+      System.cmd("git", ["-C", root, "remote", "add", "origin", "git@github.com:szTheory/mailglass.git"])
+
+    command = ~s(repository_identity_is_authoritative "$2" "$3")
+    assert {_, 0} = source_finalizer(command, [root, "szTheory/mailglass"])
+
+    {_, 0} =
+      System.cmd(
+        "git",
+        ["-C", root, "remote", "set-url", "origin", "https://github.com/attacker/mailglass.git"]
+      )
+
+    assert {_, status} = source_finalizer(command, [root, "szTheory/mailglass"])
+    assert status != 0
+
+    {_, 0} =
+      System.cmd(
+        "git",
+        ["-C", root, "remote", "set-url", "origin", "https://github.com/szTheory/mailglass.git"]
+      )
+
+    assert {_, status} = source_finalizer(command, [root, "attacker/mailglass"])
+    assert status != 0
+  end
+
   test "finalizer separates pre-verification and terminal tracked-state gates" do
     source = File.read!(@finalizer)
 
