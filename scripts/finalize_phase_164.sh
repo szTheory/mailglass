@@ -81,10 +81,13 @@ canonical_component_source() {
 }
 
 raw_sources_are_acceptable() {
-  local report="$1" expected_sha="$2" capture_dir="$3" registry="$4" expected_ci_run_id="$5"
+  local report="$1" expected_sha="$2" capture_root="$3" registry="$4" expected_ci_run_id="$5"
   local components_dir ci_source scheduled_source
 
-  components_dir=$(cd "$capture_dir/components" 2>/dev/null && pwd -P) || return 1
+  ci_source=$(jq -er '.components.ci.source | strings | select(length > 0)' "$report") || return 1
+  components_dir=$(cd "$(dirname "$ci_source")" 2>/dev/null && pwd -P) || return 1
+  capture_root=$(cd "$capture_root" 2>/dev/null && pwd -P) || return 1
+  case "$components_dir" in "$capture_root/components"|"$capture_root/"*/components) ;; *) return 1 ;; esac
   ci_source=$(canonical_component_source "$report" '.components.ci.source' "$components_dir") || return 1
   scheduled_source=$(canonical_component_source "$report" '.components.scheduled.source' "$components_dir") || return 1
 
@@ -169,9 +172,11 @@ main() {
     report=report.json
   fi
 
-  capture_dir="$repo/tmp/phase-164-closeout"
-  mkdir -p "$capture_dir"
-  runs_json="$capture_dir/ci-runs.json"
+  capture_dir=$(mktemp -d "$repo/tmp/phase-164-finalize.XXXXXX") || fail "could not allocate private capture directory"
+  capture_dir=$(cd "$capture_dir" 2>/dev/null && pwd -P) || fail "could not resolve private capture directory"
+  case "$capture_dir" in "$repo/tmp/"*) ;; *) fail "capture directory escaped canonical tmp" ;; esac
+  chmod 700 "$capture_dir"
+  runs_json=$(mktemp "$capture_dir/ci-runs.XXXXXX") || fail "could not allocate CI capture"
 
   gh run list \
     --workflow CI \
@@ -187,9 +192,10 @@ main() {
   [[ "$github_repository" =~ ^[^/[:space:]]+/[^/[:space:]]+$ ]] ||
     fail "GitHub repository identity is malformed"
 
+  inputs_tmp=$(mktemp "$capture_dir/$inputs.XXXXXX") || fail "could not allocate input capture"
   jq -n --arg main_sha "$main_sha" --arg ci_run_id "$ci_run_id" \
-    '{main_sha: $main_sha, ci_run_id: $ci_run_id}' >"$capture_dir/$inputs.tmp"
-  mv "$capture_dir/$inputs.tmp" "$capture_dir/$inputs"
+    '{main_sha: $main_sha, ci_run_id: $ci_run_id}' >"$inputs_tmp"
+  mv "$inputs_tmp" "$capture_dir/$inputs"
 
   set +e
   GITHUB_REPOSITORY="$github_repository" "$repo/scripts/closeout_repository_truth.sh" \
@@ -201,7 +207,7 @@ main() {
   set -e
 
   [ -f "$capture_dir/$report" ] || fail "closeout did not preserve a report"
-  raw_sources_are_acceptable "$capture_dir/$report" "$main_sha" "$capture_dir" "$repo/$registry_rel" "$ci_run_id" ||
+  raw_sources_are_acceptable "$capture_dir/$report" "$main_sha" "$repo/tmp" "$repo/$registry_rel" "$ci_run_id" ||
     fail "raw CI or scheduled evidence failed independent finalization validation"
 
   [ "$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)" = "$main_sha" ] || fail "HEAD changed during finalization"

@@ -106,6 +106,30 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  test "does not follow a pre-existing components symlink while collecting evidence" do
+    root = temporary_root!()
+    output_dir = Path.join(@repo_root, "tmp/phase-164-closeout-symlink-test")
+    external = Path.join(root, "external")
+    marker = Path.join(root, "mix-called")
+    sentinel = Path.join(external, "git.source")
+
+    on_exit(fn ->
+      File.rm_rf!(root)
+      File.rm_rf!(output_dir)
+    end)
+
+    File.mkdir_p!(external)
+    File.write!(sentinel, "do-not-overwrite")
+    File.mkdir_p!(output_dir)
+    File.ln_s!(external, Path.join(output_dir, "components"))
+
+    {_output, status} =
+      run(@repo_root, @ledger, Path.join(output_dir, "report.json"), marker)
+
+    assert status != 0
+    assert File.read!(sentinel) == "do-not-overwrite"
+  end
+
   test "uses the canonical ledger validator and samples porcelain after report writes" do
     source = File.read!(@script)
     assert source =~ "canonical_repo=/Users/jon/projects/mailglass"
