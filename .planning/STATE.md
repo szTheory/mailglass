@@ -4,17 +4,17 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: repository-truth-reconciliation-and-closeout
-status: executing
-stopped_at: Awaiting protected integration for 164-12-PLAN.md
-last_updated: "2026-08-28T20:46:21.443Z"
-last_activity: 2026-08-28
-last_activity_desc: Completed 164-11; awaiting protected-main checkpoint
-state_head: aeac3eb4d854222957c8ae554c3c05b99d302deb
+status: ready_for_verification
+stopped_at: Completed 164-12-PLAN.md; ordinary verification pending
+last_updated: "2026-09-01T14:05:23.602Z"
+last_activity: 2026-09-01
+last_activity_desc: Completed 164-12; ordinary verification pending
+state_head: 382ebb0a33ad12d8bb11cc67fa4ef9a943b37a9d
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 38
-  completed_plans: 34
+  completed_plans: 35
   percent: 75
 ---
 
@@ -31,10 +31,10 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 Phase: 164 (repository-truth-reconciliation-and-closeout) — EXECUTING
 Plan: 12 of 12
-Status: Awaiting protected-main checkpoint
-Last activity: 2026-08-28 — Completed 164-11; awaiting protected-main checkpoint
+Status: Ready for verification
+Last activity: 2026-09-01 — Completed 164-12; ordinary verification pending
 
-Progress: [████████░░] 34/38 planned plans ([████████░░] 75%)
+Progress: [████████░░] 35/38 planned plans ([████████░░] 75%)
 
 ## Performance Metrics
 
@@ -91,6 +91,7 @@ Progress: [████████░░] 34/38 planned plans ([█████
 | Phase 164 P07 | 4m | 1 tasks | 1 files |
 | Phase 164 P08 | 4m | 2 tasks | 3 files |
 | Phase 164 P09 | 5m | 2 tasks | 3 files |
+| Phase 164 P12 | 15m | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -127,15 +128,15 @@ Progress: [████████░░] 34/38 planned plans ([█████
 - [Phase ?]: The repository-truth inventory derives from committed ignore rules, tracked proof, Phase 164 plans, and verification evidence.
 - [Phase ?]: Closeout accepts only the physical canonical repository, Phase 164 ledger, and ignored tmp output boundary.
 - [Phase ?]: The shared full-ledger validator, rather than a local partial parser, decides ledger validity.
+- [Phase 164]: Pre-verification proves implementation behavior at protected-main SHA 382ebb0a33ad12d8bb11cc67fa4ef9a943b37a9d; Plan 164-12 metadata intentionally makes it non-terminal without changing implementation behavior. — Ordinary verification needs non-circular implementation evidence before tracked completion metadata, while terminal proof must bind the later exact SHA.
+- [Phase 164]: Independent raw-source verification corrected only the CI jq grouping defect and retained every other attempt-one provenance criterion. — The plan intended to compare the stringified databaseId to the selected run; parentheses restore that meaning without weakening evidence authority.
 
 ### Pending Todos
 
 None yet.
-
 ### Blockers/Concerns
 
 None.
-
 ## Deferred Items
 
 | Category | Item | Status | Deferred At |
@@ -144,6 +145,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-08-27T17:39:00.609Z
-Stopped at: Completed 164-09-PLAN.md
+Last session: 2026-09-01T14:05:23.509Z
+Stopped at: Completed 164-12-PLAN.md; ordinary verification pending
 Resume file: None
