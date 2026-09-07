@@ -69,8 +69,8 @@ Inbound setup is manual in this phase. There is no generated setup path for
 ```elixir
 defp deps do
   [
-    {:mailglass_inbound, "~> 2.2"},
-    {:mailglass, "~> 2.5"},
+    {:mailglass_inbound, "~> 2.3"},
+    {:mailglass, "~> 2.6"},
     {:oban, "~> 2.21"}
   ]
 end
