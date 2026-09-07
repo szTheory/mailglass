@@ -14,6 +14,74 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.6.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.5.0...mailglass-v2.6.0) (2026-09-07)
+
+
+### Features
+
+* **162-01:** capture PR release reconciliation tracer ([fec73dd](https://github.com/szTheory/mailglass/commit/fec73ddad869ba82504692712f6ece58e735bbc2))
+* **162-02:** record proposal-only release outcomes ([424c9af](https://github.com/szTheory/mailglass/commit/424c9af71f93b27b31f71517cc6f0e03e5783ff2))
+* **162-03:** classify hygiene evidence as cannot-check ([52f2fe3](https://github.com/szTheory/mailglass/commit/52f2fe3522142626603ed57745623cadbf619e6f))
+* **162-03:** render hygiene result from audit artifact ([ac00bd2](https://github.com/szTheory/mailglass/commit/ac00bd2405d8b8cd11eef30739d613ed5c5be6a7))
+* **162-04:** report blocked scheduled post-publish targets ([751e89a](https://github.com/szTheory/mailglass/commit/751e89a105741056489b9cf78c60837f05a832e2))
+* **162-05:** finalize protected release reconciliation ([fb32b07](https://github.com/szTheory/mailglass/commit/fb32b076e65ad995b4d48520da8ae7c26481683e))
+* **162-08:** recover idle scheduled release control\n\n- Discover exact open release proposals before scheduled capture\n- Preserve pending no-open-proposal evidence through upload and gate\n ([cb5020c](https://github.com/szTheory/mailglass/commit/cb5020c7584a020199d2305c0aa7abff7cf881b1))
+* **162-12:** authorize protected release dispatcher ([7f74f02](https://github.com/szTheory/mailglass/commit/7f74f02b6756ecd3063109a346763438f895f758))
+* **164-01:** ledger the stale scheduled-control sweep ([507b7a1](https://github.com/szTheory/mailglass/commit/507b7a169a5598c010b8fbd60434528262a1ae08))
+* **164-03:** clarify current package compatibility\n\n- Mark each package README's current compatibility guidance\n- Document the linked core/admin and independent inbound constraints\n ([d272e82](https://github.com/szTheory/mailglass/commit/d272e824e92f11f09c4a060271cd1202837b3711))
+* **164-04:** complete repository truth inventory ([12a1694](https://github.com/szTheory/mailglass/commit/12a1694cb087d9ba376935e5525af05363334a42))
+* **164-05:** compose fail-closed closeout verdict ([a24f161](https://github.com/szTheory/mailglass/commit/a24f161395c6661085f3e2ca68109372d1b21f51))
+* **164-08:** extract repository truth ledger validator ([b96df55](https://github.com/szTheory/mailglass/commit/b96df559bcafeecd910f7567e5f4ca9817a1a95c))
+* **164-09:** bind closeout to canonical truth paths ([38e7076](https://github.com/szTheory/mailglass/commit/38e7076fe09f1793045742d3168fe76e1f1f4449))
+* **164-10:** trust authoritative scheduled freshness ([6e825d2](https://github.com/szTheory/mailglass/commit/6e825d2ea2bb576c4f2ed1e98db1be92a2368572))
+* **164-11:** add guarded finalize-phase command ([4f2ddf6](https://github.com/szTheory/mailglass/commit/4f2ddf6c1f1603eb98a4f2286eb390dedab6b39a))
+* **164-11:** implement attempt-one phase finalization ([e0ad4fa](https://github.com/szTheory/mailglass/commit/e0ad4fa82a2172d445baddbee4f4b8871e29e14b))
+
+
+### Bug Fixes
+
+* **162-06:** preserve proposal capture outputs on exit ([815ec16](https://github.com/szTheory/mailglass/commit/815ec166085d4c1353e1f282750fb09f962e4d91))
+* **162-07:** serialize every post-publish resolution ([e7f0e29](https://github.com/szTheory/mailglass/commit/e7f0e29259d4c65a4b22c9774b3a775514ce04ba))
+* **162-09:** select CI by checkout SHA\n\n- Query ci.yml runs with the exact detached HEAD commit\n- Preserve head SHA and terminal-success validation in hygiene output\n ([eff6892](https://github.com/szTheory/mailglass/commit/eff6892d19ed2ffcceff8d94634df7ec96b3562b))
+* **162-10:** isolate protected release from proposal tail ([aee58c0](https://github.com/szTheory/mailglass/commit/aee58c02cfebd31507c238821bece8949d0323f1))
+* **162-11:** bound malformed CI run responses ([833df30](https://github.com/szTheory/mailglass/commit/833df307ecde21dd1f3a3a6934131185309cdbe6))
+* **162-13:** bound malformed PR list evidence ([b33d619](https://github.com/szTheory/mailglass/commit/b33d619d8df33d59dec0d5df2b5643e952163c43))
+* **163:** bound recurrent primitive matrices ([f8bf029](https://github.com/szTheory/mailglass/commit/f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6))
+* **163:** preserve protected browser ownership ([9d0bcac](https://github.com/szTheory/mailglass/commit/9d0bcacf875ad0c88155bd16bad2996c1c57b926))
+* **163:** repair protected browser timeout recurrences ([e8c6260](https://github.com/szTheory/mailglass/commit/e8c6260ff0f01fc88ed0b3b5241e4caf8584ccf2))
+* **164-05:** accept evidenced hygiene policy blocks ([fbc2a09](https://github.com/szTheory/mailglass/commit/fbc2a0992f01b2a5b4094a40914808cbeff750ce))
+* **164-05:** preserve exact CI JSON in closeout ([8edae93](https://github.com/szTheory/mailglass/commit/8edae935d74a8200ed2eee4674ae9326189b452e))
+* **164-08:** reconcile authoritative truth ledger ([d5ce88f](https://github.com/szTheory/mailglass/commit/d5ce88f97f39924149c7c594ae211309a16503c7))
+* **164-11:** align finalizer command with GSD exec results ([8f212b0](https://github.com/szTheory/mailglass/commit/8f212b0917ff3c97186b35defb6b7743542cd4c3))
+* **164-11:** ignore volatile GSD milestone lock ([4bc18c2](https://github.com/szTheory/mailglass/commit/4bc18c2dc3fee120cabcd92d60cf6379ced68be8))
+* **164:** close repository-truth security and validation gaps ([e79cd50](https://github.com/szTheory/mailglass/commit/e79cd50c04cd34961a7e60613e2067701cd173d4))
+* **164:** CR-01 prevent symlinked evidence writes ([d6f83d2](https://github.com/szTheory/mailglass/commit/d6f83d2d6fc1116ef5f5c61891149e6a08fd27b7))
+* **164:** CR-02 require complete scheduled evidence ([e12b8c2](https://github.com/szTheory/mailglass/commit/e12b8c212c3d81fa48a1d4e72f11e893c38628b8))
+* **164:** CR-03 pin authoritative GitHub host ([40042c7](https://github.com/szTheory/mailglass/commit/40042c78dd3c2a109342ae7986c2304fd0168299))
+* **164:** CR-03 pin authoritative repository identity ([eaf41de](https://github.com/szTheory/mailglass/commit/eaf41de2a25be18df759d79a8fdc3542ad1d7a02))
+* **164:** CR-03 pin scheduled freshness authority ([fe20b57](https://github.com/szTheory/mailglass/commit/fe20b570deda921c316f84b305e351725ac0dcea))
+* **164:** CR-04 revalidate protected main at final decision ([897f48c](https://github.com/szTheory/mailglass/commit/897f48ca9603596ce9313b96f3fd13df587e2144))
+* **164:** CR-05 authenticate ledger semantics ([0deb20e](https://github.com/szTheory/mailglass/commit/0deb20eb7a7cfb4740230fac0ec4e6128252e1d9))
+* **164:** CR-05 bind every audited ledger relationship ([4b0edbf](https://github.com/szTheory/mailglass/commit/4b0edbf0f3a9b007a726505c2b77a0f4c1c51728))
+* **164:** CR-05 bind ledger semantics to canonical subjects ([7d5559a](https://github.com/szTheory/mailglass/commit/7d5559afbf891b79b4f9b47e2f7c9403540c2bac))
+* **164:** CR-06 document production admin dependency ([cbdd37c](https://github.com/szTheory/mailglass/commit/cbdd37c9f89ca626ae936a7978b4ba99346e64a0))
+* **164:** WR-01 align compatibility index with v2 ([e91b5cb](https://github.com/szTheory/mailglass/commit/e91b5cb8f9b9b1b85d3c71af83598b2339f491c8))
+* **164:** WR-01 align current contract major labels ([7897fb4](https://github.com/szTheory/mailglass/commit/7897fb4e5f67e5f157b2af9b1e89a7b910140790))
+* accept evidenced closeout policy blocks ([84454ae](https://github.com/szTheory/mailglass/commit/84454ae6b60ec9c52114d5bf44ed394dac611f99))
+* **ci:** fetch history for evidence contracts ([8ab9fc5](https://github.com/szTheory/mailglass/commit/8ab9fc5ba299d11bdd45b7684567c75cb042e352))
+* **ci:** repair phase 164 protected gates ([5859cc7](https://github.com/szTheory/mailglass/commit/5859cc7ccb47dc49d41b94cf682286fc846a057b))
+* **ci:** retain history in deterministic suite ([6466d4f](https://github.com/szTheory/mailglass/commit/6466d4f18f662ae4e8e5f986695134580520498d))
+* **ci:** retain history in full-suite lanes ([3d93f4e](https://github.com/szTheory/mailglass/commit/3d93f4ef4427789a682e366ca92736c4819fc61a))
+* preserve exact CI JSON in repository closeout ([233c24c](https://github.com/szTheory/mailglass/commit/233c24c10f01d7a74a2b955b81ed526397e0bf52))
+* reconcile repository truth closeout ([e5c4fc7](https://github.com/szTheory/mailglass/commit/e5c4fc793d7504280298156da4d4652f09802482))
+* **release:** configure disposable host Swoosh ([6c4b284](https://github.com/szTheory/mailglass/commit/6c4b2846d4d3af062ae27579394ccfe7e9c27f20))
+* **release:** configure disposable host Swoosh ([b56bb13](https://github.com/szTheory/mailglass/commit/b56bb1345bca38eab2cd50365febe58dbcb935fd))
+* **release:** provision smoke consumer database ([3a06e12](https://github.com/szTheory/mailglass/commit/3a06e122a990d63bea13244299af0e21d9972282))
+* **release:** provision smoke consumer database ([229421a](https://github.com/szTheory/mailglass/commit/229421a9dc5cc0e5a58c304128eafb29cc8cfbe0))
+* **release:** recover immutable tag CI gate ([#221](https://github.com/szTheory/mailglass/issues/221)) ([323f808](https://github.com/szTheory/mailglass/commit/323f808cb2d5fc203120ed2e528059ff1806d640))
+* resolve post-merge formatting from wave 2 ([6af2f41](https://github.com/szTheory/mailglass/commit/6af2f419831618c8d52ae93ede0108f802abb6f3))
+* restore Phase 164 repository-truth finalization ([382ebb0](https://github.com/szTheory/mailglass/commit/382ebb0a33ad12d8bb11cc67fa4ef9a943b37a9d))
+
 ## [2.5.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.4.1...mailglass-v2.5.0) (2026-08-20)
 
 

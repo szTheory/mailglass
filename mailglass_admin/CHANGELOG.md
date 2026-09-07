@@ -4,6 +4,26 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.6.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.5.0...mailglass_admin-v2.6.0) (2026-09-07)
+
+
+### Features
+
+* **163-02:** add gallery timeout attribution probes ([673b2d2](https://github.com/szTheory/mailglass/commit/673b2d20e4bf624cd9475c0b55c0c12e3d67914b))
+* **164-03:** clarify current package compatibility\n\n- Mark each package README's current compatibility guidance\n- Document the linked core/admin and independent inbound constraints\n ([d272e82](https://github.com/szTheory/mailglass/commit/d272e824e92f11f09c4a060271cd1202837b3711))
+
+
+### Bug Fixes
+
+* **163:** bound recurrent primitive matrices ([f8bf029](https://github.com/szTheory/mailglass/commit/f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6))
+* **163:** preserve protected browser ownership ([9d0bcac](https://github.com/szTheory/mailglass/commit/9d0bcacf875ad0c88155bd16bad2996c1c57b926))
+* **163:** repair and capture gallery timeout ([7b9da5b](https://github.com/szTheory/mailglass/commit/7b9da5b7fa736542662fe8ea7ad76c8f9ea29cb0))
+* **163:** repair protected browser timeout recurrences ([e8c6260](https://github.com/szTheory/mailglass/commit/e8c6260ff0f01fc88ed0b3b5241e4caf8584ccf2))
+* **164:** close repository-truth security and validation gaps ([e79cd50](https://github.com/szTheory/mailglass/commit/e79cd50c04cd34961a7e60613e2067701cd173d4))
+* **164:** CR-06 document production admin dependency ([cbdd37c](https://github.com/szTheory/mailglass/commit/cbdd37c9f89ca626ae936a7978b4ba99346e64a0))
+* **164:** WR-01 align current contract major labels ([7897fb4](https://github.com/szTheory/mailglass/commit/7897fb4e5f67e5f157b2af9b1e89a7b910140790))
+* **ci:** repair phase 164 protected gates ([5859cc7](https://github.com/szTheory/mailglass/commit/5859cc7ccb47dc49d41b94cf682286fc846a057b))
+
 ## [2.5.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.4.1...mailglass_admin-v2.5.0) (2026-08-20)
 
 
