@@ -4,18 +4,19 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
-status: ready_to_execute
-stopped_at: Planned 164-13 and 164-14; ready for gap execution
-last_updated: "2026-09-08T19:30:51.897Z"
+current_plan: 13
+status: executing
+stopped_at: Completed 164-13-PLAN.md
+last_updated: "2026-09-08T19:52:00.359Z"
 last_activity: 2026-09-08
-last_activity_desc: Planned Phase 164 gap closure in 164-13 and 164-14
-state_head: 74de3e67b500c6543f4f4bbd4bddec0cd15280bb
+last_activity_desc: Completed Plan 164-13 adversarial regression coverage
+state_head: a0b55e75b9977376151ffa1b85811625f07bf84d
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 40
-  completed_plans: 35
-  percent: 88
+  completed_plans: 36
+  percent: 90
 ---
 
 # Project State
@@ -25,16 +26,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-26)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 164 — repository-truth-reconciliation-and-closeout
+**Current focus:** Phase 164 — Repository Truth Reconciliation and Closeout
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — READY TO EXECUTE
-Plan: 12 of 14
-Status: Ready to execute gap plans 164-13 and 164-14
-Last activity: 2026-09-08 — Planned Phase 164 gap closure in 164-13 and 164-14
+Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
+Plan: 13 of 14
+Status: Ready to execute Plan 164-14
+Last activity: 2026-09-08 — Completed Plan 164-13 adversarial regression coverage
 
-Progress: [█████████░] 35/40 planned plans ([█████████░] 88%)
+Progress: [█████████░] 36/40 planned plans ([█████████░] 90%)
 
 ## Performance Metrics
 
@@ -92,6 +93,7 @@ Progress: [█████████░] 35/40 planned plans ([█████
 | Phase 164 P08 | 4m | 2 tasks | 3 files |
 | Phase 164 P09 | 5m | 2 tasks | 3 files |
 | Phase 164 P12 | 15m | 1 tasks | 3 files |
+| Phase 164 P13 | 6min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -130,14 +132,8 @@ Progress: [█████████░] 35/40 planned plans ([█████
 - [Phase ?]: The shared full-ledger validator, rather than a local partial parser, decides ledger validity.
 - [Phase 164]: Pre-verification proves implementation behavior at protected-main SHA 382ebb0a33ad12d8bb11cc67fa4ef9a943b37a9d; Plan 164-12 metadata intentionally makes it non-terminal without changing implementation behavior. — Ordinary verification needs non-circular implementation evidence before tracked completion metadata, while terminal proof must bind the later exact SHA.
 - [Phase 164]: Independent raw-source verification corrected only the CI jq grouping defect and retained every other attempt-one provenance criterion. — The plan intended to compare the stringified databaseId to the selected run; parentheses restore that meaning without weakening evidence authority.
-
-### Pending Todos
-
-None yet.
-
-### Blockers/Concerns
-
-None.
+- [Phase 164]: Production behavior remains unchanged; Plan 164-13 locks the existing validator and closeout seams through named hostile fixtures. — The gap was missing explicit rerunnable regression coverage, not a remaining production defect.
+- [Phase 164]: Late-dirt regressions inject untracked state at exact stable-porcelain boundaries. — This proves a clean preflight observation cannot override dirty state introduced by component or report writes.
 
 ## Deferred Items
 
@@ -147,6 +143,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-09-01T14:05:23.509Z
-Stopped at: Completed 164-12-PLAN.md; ordinary verification pending
+Last session: 2026-09-08T19:52:00.257Z
+Stopped at: Completed 164-13-PLAN.md
 Resume file: None
