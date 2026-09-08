@@ -221,6 +221,101 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     end
   end
 
+  describe "phase 164 gap closure" do
+    @describetag :phase_164_gap_closure
+
+    test "rejects every forged currentness spelling by exact enum membership" do
+      valid = valid_row()
+
+      for forged <- [
+            "current-forged",
+            "current_extra",
+            "historical-forged",
+            "stale-looking",
+            " current",
+            "current ",
+            "CURRENT"
+          ] do
+        contents =
+          header_line() <> "\n" <> String.replace(valid, "\tstale\t", "\t#{forged}\t")
+
+        assert {:error, {:invalid_currentness, ^forged}} = Ledger.parse(contents)
+      end
+    end
+
+    test "rejects stale retain while accepting the locked canonical stale removal" do
+      valid = valid_row()
+
+      assert {:ok, %{rows: [%{"currentness" => "stale", "disposition" => "remove"}]}} =
+               Ledger.parse(header_line() <> "\n" <> valid)
+
+      assert {:error, {:stale_without_outcome, "scheduled-control-sweep.json"}} =
+               Ledger.parse(
+                 header_line() <> "\n" <> String.replace(valid, "\tremove\t", "\tretain\t")
+               )
+    end
+
+    test "rejects vacuous and incomplete inventories across every audited subject class" do
+      contents = File.read!(@ledger)
+
+      assert {:error, :empty_ledger} = Ledger.parse("")
+      assert {:error, :empty_ledger} = Ledger.parse(header_line() <> "\n")
+
+      assert {:error, {:missing_audited_subjects, missing}} =
+               Ledger.validate(header_line() <> "\n" <> valid_row() <> "\n", @repo_root)
+
+      assert missing != []
+
+      for subject <- [
+            "ignore:.gitignore:/tmp/",
+            "ignore:mailglass_admin/.gitignore:/tmp/",
+            "ignore:mailglass_inbound/.gitignore:/deps/",
+            "ignore:reference/demo_app/.gitignore:/tmp/",
+            "ignore:reference/host_app/.gitignore:/deps/",
+            "ignore:test/example/.gitignore:!README.md",
+            ".planning/publish/mailglass-files.expected",
+            ".planning/release-target.json",
+            "scripts/validate_repository_truth.exs",
+            Path.join(@phase_dir, "164-VERIFICATION.md")
+          ] do
+        assert {:error, {:missing_audited_subjects, missing}} =
+                 contents |> remove_subject(subject) |> Ledger.validate(@repo_root)
+
+        assert subject in missing
+      end
+    end
+
+    test "duplicate identity errors and validation results are independent of row order" do
+      contents = File.read!(@ledger)
+      [header | rows] = String.split(String.trim_trailing(contents), "\n", trim: true)
+      subject = "README.md"
+      duplicate = Enum.find(rows, &String.contains?(&1, "\t#{subject}\t"))
+      insertion_index = Enum.find_index(rows, &(&1 == duplicate))
+
+      adjacent = List.insert_at(rows, insertion_index, duplicate)
+      separated = rows ++ [duplicate]
+
+      for duplicate_rows <- [adjacent, separated] do
+        assert {:error, {:duplicate_subject, ^subject}} =
+                 Ledger.parse(Enum.join([header | duplicate_rows], "\n") <> "\n")
+      end
+
+      rotated = Enum.drop(rows, 17) ++ Enum.take(rows, 17)
+
+      for reordered <- [Enum.reverse(rows), rotated] do
+        assert :ok = Ledger.validate(Enum.join([header | reordered], "\n") <> "\n", @repo_root)
+      end
+
+      forged = mutate_subject_row(contents, subject, "currentness", "current-forged")
+      [forged_header | forged_rows] = String.split(String.trim_trailing(forged), "\n", trim: true)
+
+      for reordered <- [forged_rows, Enum.reverse(forged_rows)] do
+        assert {:error, {:invalid_currentness, "current-forged"}} =
+                 Ledger.parse(Enum.join([forged_header | reordered], "\n") <> "\n")
+      end
+    end
+  end
+
   defp remove_subject(contents, subject) do
     contents
     |> String.split("\n", trim: true)

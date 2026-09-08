@@ -591,6 +591,129 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ ~s(SCHEDULED_CONTROL_CONFIG="$repo/$registry_rel")
   end
 
+  describe "phase 164 gap closure" do
+    @describetag :phase_164_gap_closure
+
+    test "rejects alternate repository identities before evidence collection" do
+      root = temporary_root!()
+      disposable = Path.join(root, "clean-main")
+      prefix_collision = @repo_root <> "-gap-#{System.unique_integer([:positive])}"
+      foreign_target = Path.join(root, "foreign")
+      foreign_link = Path.join(root, "foreign-link")
+
+      on_exit(fn ->
+        File.rm_rf!(root)
+        File.rm_rf!(prefix_collision)
+      end)
+
+      git!(root, ["init", "-q", "-b", "main", disposable])
+      File.write!(Path.join(disposable, "tracked"), "fixture")
+      git!(disposable, ["add", "tracked"])
+      git!(disposable, ["commit", "-q", "-m", "fixture"])
+      File.mkdir_p!(prefix_collision)
+      File.mkdir_p!(foreign_target)
+      File.ln_s!(foreign_target, foreign_link)
+
+      for repo <- [disposable, prefix_collision, foreign_link] do
+        marker = Path.join(root, "collector-#{System.unique_integer([:positive])}")
+        output = Path.join(@repo_root, "tmp/phase-164-gap-repo/report.json")
+
+        {_, status} = run(repo, @ledger, output, marker)
+        assert status != 0
+        refute File.exists?(marker)
+        refute File.exists?(output)
+      end
+    end
+
+    test "rejects alternate ledger identities and semantic ledger mutations" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      contents = File.read!(@ledger)
+
+      fixtures = %{
+        "copied-complete" => contents,
+        "one-row" => header() <> "\n" <> (contents |> String.split("\n") |> Enum.at(1)) <> "\n",
+        "missing-subject" => contents |> String.split("\n") |> List.delete_at(2) |> Enum.join("\n"),
+        "malformed-currentness" =>
+          String.replace(contents, "\tcurrent\t", "\tcurrent-forged\t", global: false),
+        "stale-retain" => String.replace(contents, "\tcurrent\t", "\tstale\t", global: false)
+      }
+
+      for {name, fixture} <- fixtures do
+        ledger = Path.join(root, "#{name}.tsv")
+        marker = Path.join(root, "collector-#{name}")
+        output = Path.join(@repo_root, "tmp/phase-164-gap-ledger/#{name}.json")
+        File.write!(ledger, fixture)
+
+        {_, closeout_status} = run(@repo_root, ledger, output, marker)
+        assert closeout_status != 0
+        refute File.exists?(marker)
+        refute File.exists?(output)
+
+        {_, validator_status} =
+          System.cmd(
+            "elixir",
+            ["scripts/validate_repository_truth.exs", "--repo", @repo_root, "--ledger", ledger],
+            cd: @repo_root,
+            stderr_to_stdout: true
+          )
+
+        if name == "copied-complete",
+          do: assert(validator_status == 0),
+          else: assert(validator_status != 0)
+      end
+    end
+
+    test "rejects hostile output destinations without changing an external sentinel" do
+      root = temporary_root!()
+      output_root = Path.join(@repo_root, "tmp/phase-164-gap-output")
+      external = Path.join(root, "external")
+      components_link = Path.join(output_root, "components")
+      sentinel = Path.join(external, "sentinel")
+      tracked_root = Path.join(@repo_root, "phase-164-gap-report.json")
+      prefix_escape = Path.join(@repo_root <> "-outside", "report.json")
+      non_ignored = Path.join(root, "report.json")
+
+      on_exit(fn ->
+        File.rm_rf!(root)
+        File.rm_rf!(output_root)
+      end)
+
+      File.mkdir_p!(external)
+      File.mkdir_p!(output_root)
+      File.write!(sentinel, "unchanged")
+      File.ln_s!(external, components_link)
+
+      for output <- [
+            tracked_root,
+            prefix_escape,
+            non_ignored,
+            Path.join(components_link, "report.json")
+          ] do
+        marker = Path.join(root, "collector-#{System.unique_integer([:positive])}")
+        {_, status} = run(@repo_root, @ledger, output, marker)
+        assert status != 0
+        refute File.exists?(marker)
+        refute File.exists?(output)
+        assert File.read!(sentinel) == "unchanged"
+      end
+    end
+
+    test "late dirt after a component or first report write always wins over clean preflight" do
+      for {name, dirty_after_status_call} <- [{"component", 2}, {"report", 8}] do
+        report = run_late_dirt_fixture!(name, dirty_after_status_call)
+
+        assert report["status"] == "blocked"
+        assert report["reason"] == "closeout_blocked"
+        assert report["components"]["git"]["status"] == "blocked"
+        assert report["components"]["git"]["reason"] == "post_write_porcelain_dirty"
+        assert File.regular?(report["dirt_sentinel"])
+
+        cleanup_late_dirt_fixture!(report)
+      end
+    end
+  end
+
   defp run(repo, ledger, output, marker) do
     root = Path.dirname(marker)
     bin = Path.join(root, "bin-#{System.unique_integer([:positive])}")
@@ -815,6 +938,150 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   end
 
   defp cleanup_aggregate_fixture!(report) do
+    capture_root =
+      report["components"]["git"]["source"]
+      |> Path.dirname()
+      |> Path.dirname()
+
+    for path <- [capture_root | report["fixture_cleanup"]], do: File.rm_rf!(path)
+  end
+
+  defp run_late_dirt_fixture!(name, dirty_after_status_call) do
+    root = temporary_root!()
+    fixture_script = Path.join(root, "closeout_repository_truth.sh")
+
+    output_dir =
+      Path.join(@repo_root, "tmp/phase-164-late-dirt-#{name}-#{System.unique_integer([:positive])}")
+
+    output = Path.join(output_dir, "report.json")
+
+    dirt_sentinel =
+      Path.join(@repo_root, "phase-164-late-dirt-#{System.unique_integer([:positive])}")
+
+    status_counter = Path.join(root, "status-counter")
+    bin = Path.join(root, "bin")
+    sha = String.duplicate("a", 40)
+
+    File.mkdir_p!(bin)
+    File.mkdir_p!(output_dir)
+    File.write!(status_counter, "0")
+
+    production_source = File.read!(@script)
+    canonical_assignment = "canonical_repo=/Users/jon/projects/mailglass"
+    assert length(:binary.matches(production_source, canonical_assignment)) == 1
+
+    File.write!(
+      fixture_script,
+      String.replace(
+        production_source,
+        canonical_assignment,
+        ~s(canonical_repo="#{@repo_root}"),
+        global: false
+      )
+    )
+
+    File.chmod!(fixture_script, 0o755)
+
+    write_executable!(
+      Path.join(bin, "git"),
+      """
+      #!/bin/bash
+      case "$3" in
+        status)
+          count=$(($(cat "$STATUS_COUNTER") + 1))
+          printf '%s' "$count" > "$STATUS_COUNTER"
+          if [ "$count" -ge "$DIRTY_AFTER_STATUS_CALL" ]; then
+            : > "$DIRT_SENTINEL"
+            printf '?? %s\n' "${DIRT_SENTINEL#"$FIXTURE_REPO"/}"
+          fi
+          ;;
+        rev-parse) printf '%s\n' "$FIXTURE_SHA" ;;
+        branch) printf 'main\n' ;;
+        check-ignore) exit 0 ;;
+        *) exit 99 ;;
+      esac
+      """
+    )
+
+    write_executable!(
+      Path.join(bin, "mix"),
+      "#!/bin/bash\nprintf '{\"status\":\"pass\",\"reason\":\"clean\"}'\n"
+    )
+
+    write_executable!(Path.join(bin, "elixir"), "#!/bin/bash\nprintf 'ledger valid\\n'\n")
+
+    write_executable!(
+      Path.join(bin, "node"),
+      """
+      #!/bin/bash
+      printf '{"databaseId":123,"workflowName":"CI","event":"push","attempt":1,"headBranch":"main","headSha":"%s","status":"completed","conclusion":"success"}\n' "$FIXTURE_SHA"
+      """
+    )
+
+    scheduled_json = Jason.encode!(authoritative_sweep(sha))
+
+    write_executable!(
+      Path.join(bin, "bash"),
+      """
+      #!/bin/bash
+      case "$1" in
+        *verify_workspace_evidence.sh)
+          printf 'workspace valid\n'
+          exit 0
+          ;;
+        scripts/scheduled_control_evidence.sh|*/scripts/scheduled_control_evidence.sh)
+          while [ "$#" -gt 0 ]; do
+            if [ "$1" = "--output" ]; then
+              shift
+              printf '%s' "$SCHEDULED_JSON" > "$1"
+              exit 0
+            fi
+            shift
+          done
+          exit 2
+          ;;
+        *) exit 99 ;;
+      esac
+      """
+    )
+
+    {_command_output, status} =
+      System.cmd(
+        "/bin/bash",
+        [
+          fixture_script,
+          "--repo",
+          @repo_root,
+          "--ledger",
+          @ledger,
+          "--ci-run-id",
+          "123",
+          "--output",
+          output
+        ],
+        env: [
+          {"PATH", "#{bin}:#{System.fetch_env!("PATH")}"},
+          {"FIXTURE_REPO", @repo_root},
+          {"FIXTURE_SHA", sha},
+          {"STATUS_COUNTER", status_counter},
+          {"DIRTY_AFTER_STATUS_CALL", Integer.to_string(dirty_after_status_call)},
+          {"DIRT_SENTINEL", dirt_sentinel},
+          {"SCHEDULED_JSON", scheduled_json}
+        ],
+        stderr_to_stdout: true
+      )
+
+    assert status != 0
+    assert File.regular?(output)
+
+    output
+    |> File.read!()
+    |> Jason.decode!()
+    |> Map.put("dirt_sentinel", dirt_sentinel)
+    |> Map.put("fixture_cleanup", [root, output_dir, dirt_sentinel])
+  end
+
+  defp cleanup_late_dirt_fixture!(report) do
     capture_root =
       report["components"]["git"]["source"]
       |> Path.dirname()
