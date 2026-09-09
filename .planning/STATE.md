@@ -5,18 +5,18 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-14-PLAN.md
-last_updated: "2026-09-09T20:33:17.998Z"
+stopped_at: Completed 164-15-PLAN.md
+last_updated: "2026-09-09T21:04:13.853Z"
 last_activity: 2026-09-09
-last_activity_desc: Completed Plan 164-13 adversarial regression coverage
-state_head: d41acf6bc1c17fa43b1ed55e05ed0675b0e1d29a
+last_activity_desc: Completed Plan 164-15 terminal integrity gap closure
+state_head: 861b21c34b0ff58b2ef4229b6a116aaf4fb97610
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 41
-  completed_plans: 37
+  completed_plans: 38
   percent: 75
-current_plan: 14
+current_plan: 15
 ---
 
 # Project State
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — READY TO EXECUTE
-Plan: 14 of 14
-Status: Plan 164-14 complete; ready for refreshed phase verification
-Last activity: 2026-09-09 — Completed Plan 164-14 protected pre-verification evidence
+Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
+Plan: 15 of 15
+Status: Awaiting phase verification and terminal finalization
+Last activity: 2026-09-09 — Completed Plan 164-15 terminal integrity gap closure
 
-Progress: [█████████░] 37/40 planned plans ([█████████░] 93%)
+Progress: [█████████░] 38/41 planned plans (93%)
 
 ## Performance Metrics
 
@@ -95,6 +95,7 @@ Progress: [█████████░] 37/40 planned plans ([█████
 | Phase 164 P12 | 15m | 1 tasks | 3 files |
 | Phase 164 P13 | 6min | 2 tasks | 2 files |
 | Phase 164 P14 | 7min | 1 tasks | 1 files |
+| Phase 164 P15 | 18min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -137,6 +138,9 @@ Progress: [█████████░] 37/40 planned plans ([█████
 - [Phase 164]: Late-dirt regressions inject untracked state at exact stable-porcelain boundaries. — This proves a clean preflight observation cannot override dirty state introduced by component or report writes.
 - [Phase 164]: Pre-verification passed at protected-main SHA d903b040c72fff62a69a57cacbcc7e7d7c2f6167; tracked completion metadata makes this capture non-terminal. — Terminal proof must be regenerated only after the refreshed verifier and all completion metadata reach protected main.
 - [Phase 164]: Natural attempt-one scheduled failures count only through evidence-valid policy-blocked artifacts. — No dispatch, rerun, authority change, or alternate identity may manufacture closeout evidence.
+- [Phase 164]: Terminal authority inspects every commit after verified_implementation_sha relative to its first parent, preserving forbidden change-then-revert history without traversing unrelated second-parent history.
+- [Phase 164]: Scheduled freshness is the closed interval from zero through each tracked registry maximum; malformed and negative ages have no clock-skew exception.
+- [Phase 164]: Out-of-root hostile fixtures are recursively removed only while exclusive allocation, lstat identity, resolved parent, exact basename, and invocation token all remain valid.
 
 ## Deferred Items
 
@@ -146,6 +150,6 @@ Progress: [█████████░] 37/40 planned plans ([█████
 
 ## Session Continuity
 
-Last session: 2026-09-09T18:51:25.809Z
-Stopped at: Completed 164-14-PLAN.md
+Last session: 2026-09-09T21:04:13.754Z
+Stopped at: Completed 164-15-PLAN.md
 Resume file: None
