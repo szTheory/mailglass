@@ -9,7 +9,7 @@ just proved.
 
 ## Pre-verification checkpoint
 
-After Plans 01–11 and their summaries have reached protected `main`, run:
+After Plans 01–13 and their summaries have reached protected `main`, run:
 
 ```text
 /finalize-phase 164 --pre-verification

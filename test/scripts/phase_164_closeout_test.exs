@@ -25,12 +25,12 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   test "rejects a sibling checkout and a foreign symlink before component collection" do
     root = temporary_root!()
-    sibling = @repo_root <> "-disposable"
-    File.mkdir_p!(sibling)
+    sibling_owner = allocate_owned_sibling!("disposable")
+    sibling = sibling_owner.path
 
     on_exit(fn ->
       File.rm_rf!(root)
-      File.rm_rf!(sibling)
+      cleanup_owned_sibling!(sibling_owner)
     end)
 
     link = Path.join(root, "mailglass")
@@ -504,6 +504,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   test "terminal lifecycle documents the verified SHA and first-parent per-commit allowlist" do
     finalization = File.read!(@finalization_contract)
+
     validation =
       File.read!(
         Path.join(
@@ -523,6 +524,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     assert validation =~ "164-15-01"
     assert validation =~ "T-164-53"
+
     assert validation =~
              "mix test test/scripts/phase_164_closeout_test.exs --warnings-as-errors --no-deps-check && bash -n scripts/finalize_phase_164.sh"
   end
@@ -698,20 +700,20 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     test "rejects alternate repository identities before evidence collection" do
       root = temporary_root!()
       disposable = Path.join(root, "clean-main")
-      prefix_collision = @repo_root <> "-gap-#{System.unique_integer([:positive])}"
+      prefix_owner = allocate_owned_sibling!("gap")
+      prefix_collision = prefix_owner.path
       foreign_target = Path.join(root, "foreign")
       foreign_link = Path.join(root, "foreign-link")
 
       on_exit(fn ->
         File.rm_rf!(root)
-        File.rm_rf!(prefix_collision)
+        cleanup_owned_sibling!(prefix_owner)
       end)
 
       git!(root, ["init", "-q", "-b", "main", disposable])
       File.write!(Path.join(disposable, "tracked"), "fixture")
       git!(disposable, ["add", "tracked"])
       git!(disposable, ["commit", "-q", "-m", "fixture"])
-      File.mkdir_p!(prefix_collision)
       File.mkdir_p!(foreign_target)
       File.ln_s!(foreign_target, foreign_link)
 
@@ -813,6 +815,35 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         cleanup_late_dirt_fixture!(report)
       end
     end
+  end
+
+  test "owned sibling cleanup refuses pre-existing and token-replaced paths" do
+    root = temporary_root!()
+    candidate = @repo_root <> "-gap-preexisting-#{System.unique_integer([:positive])}"
+    File.mkdir!(candidate)
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    try do
+      assert_raise RuntimeError, ~r/refusing to reuse existing sibling fixture/, fn ->
+        allocate_owned_sibling!("gap", candidate)
+      end
+
+      assert File.dir?(candidate)
+    after
+      File.rmdir!(candidate)
+    end
+
+    owner = allocate_owned_sibling!("gap")
+    File.write!(owner.ownership_file, "replacement")
+
+    assert_raise RuntimeError, ~r/ownership check failed/, fn ->
+      cleanup_owned_sibling!(owner)
+    end
+
+    assert File.dir?(owner.path)
+    File.write!(owner.ownership_file, owner.token)
+    cleanup_owned_sibling!(owner)
+    refute File.exists?(owner.path)
   end
 
   defp run(repo, ledger, output, marker) do
@@ -930,11 +961,17 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     git!(Path.dirname(repo), ["init", "-q", "-b", "main", repo])
 
     File.write!(Path.join(repo, "scripts/finalize_phase_164.sh"), "verified source")
-    File.write!(Path.join(repo, ".planning/ROADMAP.md"), "- [x] **Phase 164: Repository Truth Reconciliation and Closeout**\n")
+
+    File.write!(
+      Path.join(repo, ".planning/ROADMAP.md"),
+      "- [x] **Phase 164: Repository Truth Reconciliation and Closeout**\n"
+    )
+
     File.write!(
       Path.join(repo, ".planning/REQUIREMENTS.md"),
       Enum.map_join(["TRTH-01", "TRTH-02", "TRTH-03"], "\n", &"- [x] **#{&1}**") <> "\n"
     )
+
     File.write!(Path.join(repo, ".planning/STATE.md"), "state\n")
 
     for plan <- 1..15 do
@@ -958,7 +995,11 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   defp write_verification!(phase_dir, verified_sha) do
     sha_line = if verified_sha, do: "verified_implementation_sha: #{verified_sha}\n", else: ""
-    File.write!(Path.join(phase_dir, "164-VERIFICATION.md"), "---\nstatus: passed\n#{sha_line}---\n")
+
+    File.write!(
+      Path.join(phase_dir, "164-VERIFICATION.md"),
+      "---\nstatus: passed\n#{sha_line}---\n"
+    )
   end
 
   defp run_aggregate_fixture!(name, hygiene_json, hygiene_exit) do
@@ -1237,6 +1278,53 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   defp write_executable!(path, contents) do
     File.write!(path, contents)
     File.chmod!(path, 0o755)
+  end
+
+  defp allocate_owned_sibling!(tag, candidate \\ nil) do
+    token = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+    basename_prefix = "#{Path.basename(@repo_root)}-#{tag}-"
+    path = candidate || Path.join(Path.dirname(@repo_root), basename_prefix <> token)
+
+    case File.mkdir(path) do
+      :ok -> :ok
+      {:error, :eexist} -> raise "refusing to reuse existing sibling fixture: #{path}"
+      {:error, reason} -> raise "could not allocate sibling fixture #{path}: #{inspect(reason)}"
+    end
+
+    ownership_file = Path.join(path, ".phase-164-owner")
+    File.write!(ownership_file, token, [:exclusive])
+
+    %{
+      path: path,
+      token: token,
+      ownership_file: ownership_file,
+      resolved_parent: resolved_path!(Path.dirname(path)),
+      basename: Path.basename(path),
+      basename_prefix: basename_prefix
+    }
+  end
+
+  defp cleanup_owned_sibling!(owner) do
+    owned =
+      match?({:ok, %File.Stat{type: :directory}}, File.lstat(owner.path)) and
+        resolved_path!(Path.dirname(owner.path)) == owner.resolved_parent and
+        Path.basename(owner.path) == owner.basename and
+        String.starts_with?(owner.basename, owner.basename_prefix) and
+        match?({:ok, %File.Stat{type: :regular}}, File.lstat(owner.ownership_file)) and
+        File.read(owner.ownership_file) == {:ok, owner.token}
+
+    if owned do
+      File.rm_rf!(owner.path)
+    else
+      raise "sibling fixture ownership check failed; leaving path untouched: #{owner.path}"
+    end
+  end
+
+  defp resolved_path!(path) do
+    case System.cmd("realpath", [path], stderr_to_stdout: true) do
+      {resolved, 0} -> String.trim(resolved)
+      {message, status} -> raise "realpath failed (#{status}): #{message}"
+    end
   end
 
   defp git!(directory, args) do

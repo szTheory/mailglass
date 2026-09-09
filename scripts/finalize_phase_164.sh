@@ -90,7 +90,7 @@ select_ci_run_id() {
 require_pre_verification_state() {
   local repo="$1" phase_dir="$2" plan
 
-  for plan in $(seq -w 1 11); do
+  for plan in $(seq -w 1 13); do
     [ -f "$phase_dir/164-$plan-SUMMARY.md" ] || fail "missing implementation summary 164-$plan-SUMMARY.md"
   done
 }
