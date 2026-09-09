@@ -5,12 +5,12 @@ status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-08-26
-revised: 2026-09-01
+revised: 2026-09-09
 ---
 
 # Phase 164 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-12 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
+> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-14 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
 
 ---
 
@@ -30,7 +30,7 @@ revised: 2026-09-01
 
 - **After every task commit:** Run the focused automated command named by that task.
 - **After every plan wave:** Run `mix ci.fast` after all implementation tasks in the wave are integrated; run the focused closeout/scheduled contracts after Waves 8 and 9.
-- **Pre-verification checkpoint:** Plan 164-12 runs `/finalize-phase 164 --pre-verification` after implementation Plans 01-11 and their summaries reach protected main. The verifier independently checks this exact-SHA evidence and permits only the later Plan 12 summary/metadata handoff as a non-implementation delta.
+- **Pre-verification checkpoint:** Plan 164-14 runs `/finalize-phase 164 --pre-verification` after the Plan 164-13 adversarial regression locks and summary reach protected main. The verifier independently checks this exact-SHA evidence; the later Plan 14 summary/metadata handoff makes the capture explicitly non-terminal without changing implementation behavior.
 - **After normal execute-phase metadata:** Integrate all Phase 164 SUMMARY files and the tracked VERIFICATION, ROADMAP, STATE, and REQUIREMENTS completion updates before terminal capture.
 - **Post-execution finalization:** Run `/finalize-phase 164` outside phase-plan-index after the final tracked SHA receives attempt-1 normal push CI and naturally scheduled attempt-1 exact-SHA evidence. The gate writes ignored runtime artifacts only and permits no later tracked commit.
 - **Max feedback latency:** 15 minutes.
@@ -58,6 +58,9 @@ revised: 2026-09-01
 | 164-11-02 | 164-11 | 9 | TRTH-03 | T-164-42, T-164-43, T-164-44 | Finalizer selects attempt-1 exact normal push CI automatically, consumes attempt-1 natural schedules, validates raw sources, and forbids later tracked writes | runtime/lifecycle contract | `mix test test/scripts/phase_164_closeout_test.exs test/scripts/scheduled_control_evidence_test.exs --warnings-as-errors --no-deps-check && bash -n scripts/finalize_phase_164.sh .planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZE.sh` | CI monitor attempt field, scheduled authority attempt provenance, production finalizer, phase shim, `164-FINALIZATION.md` | ✅ green |
 | 164-11-03 | 164-11 | 9 | TRTH-02, TRTH-03 | T-164-40, T-164-41 | The extension, finalizer, lifecycle contract, and changed ignore rules have exact-one complete durable dispositions | production ledger validator | `mix run scripts/validate_repository_truth.exs -- --repo /Users/jon/projects/mailglass --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv` | canonical ledger and validator | ✅ green |
 | 164-12-01 | 164-12 checkpoint | 10 | TRTH-03 | T-164-42, T-164-43, T-164-44 | Protected implementation SHA has attempt-1 push CI and natural schedules before verification; report is explicitly non-terminal | live pre-verification gate | `/finalize-phase 164 --pre-verification` after protected integration | ignored pre-verification inputs/report/raw sources | ✅ capability green; fresh external capture required after remediation integration |
+| 164-13-01 | 164-13 tracer | 11 | TRTH-02 | T-164-45 | The production ledger validator rejects forged currentness, stale-retain, vacuous/incomplete inventories, and adjacent or separated duplicate subjects while remaining order-invariant | tagged adversarial integration contract | `mix test test/scripts/phase_164_repository_truth_test.exs --only phase_164_gap_closure --warnings-as-errors --no-deps-check` | production validator plus tagged ledger mutation matrix | ✅ green (4 tests) |
+| 164-13-02 | 164-13 | 11 | TRTH-03 | T-164-46, T-164-47, T-164-48 | The closeout process rejects alternate repository/ledger identities and hostile destinations before collection, and late dirt overrides a clean preflight | tagged adversarial process contract | `mix test test/scripts/phase_164_closeout_test.exs --only phase_164_gap_closure --warnings-as-errors --no-deps-check` | production closeout process plus hostile path/write fixtures | ✅ green (4 tests) |
+| 164-14-01 | 164-14 checkpoint | 12 | TRTH-01, TRTH-02, TRTH-03 | T-164-49, T-164-50, T-164-51, T-164-52 | The integrated repair passes the complete focused contracts and canonical ledger, then exact protected-main pre-verification accepts only attempt-one normal CI and the complete natural scheduled-control set | focused integration plus live pre-verification gate | `mix test test/scripts/phase_164_repository_truth_test.exs test/scripts/phase_164_closeout_test.exs test/mailglass/publish/maintaining_release_gate_contract_test.exs test/mailglass/docs_contract_test.exs --warnings-as-errors --no-deps-check && elixir scripts/validate_repository_truth.exs --repo /Users/jon/projects/mailglass --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv` | 81-test focused suite, production ledger validator, and ignored exact-SHA report/raw sources | ✅ green; pre-verification capture passed at `d903b040c72fff62a69a57cacbcc7e7d7c2f6167` |
 | 164-FINAL | post-execution gate | after phase.complete integration | TRTH-03 | T-164-40, T-164-41, T-164-42, T-164-43, T-164-44 | Final protected metadata SHA has attempt-1 normal push CI, attempt-1 natural schedules, ignored identity/report state, independently verified raw sources, and no later tracked commit | live lifecycle gate | `/finalize-phase 164` | ignored `finalization-inputs.json`, report, CI source, scheduled source | ⚠️ external terminal capture pending |
 
 *Status: ✅ automated capability green · ⚠️ external evidence still required*
@@ -73,6 +76,8 @@ revised: 2026-09-01
 - [x] **Plan 164-10 owns freshness regression expansion:** the closeout test executes the production scheduled-report predicate with daily evidence beyond three hours and adversarial exact-provenance mutations.
 - [x] **Plan 164-11 owns the missing lifecycle primitive:** extension/ignore contracts prove only the named finalizer is versioned; closeout/scheduled tests prove attempt-1 automatic exact push-CI selection, both lifecycle modes, ignored identities, raw CI/scheduled verification, and no tracked post-capture artifact.
 - [x] **Plan 164-12 owns the non-circular external checkpoint capability:** the ignored pre-verification report proves protected implementation behavior before the verifier writes completion metadata and is never represented as terminal evidence. Fresh evidence must be recaptured after remediation reaches protected main.
+- [x] **Plan 164-13 owns the named adversarial regression locks:** both `phase_164_gap_closure` groups run against production seams and cover exact ledger semantics, canonical identity/output boundaries, symlink safety, and post-write dirt precedence.
+- [x] **Plan 164-14 owns the refreshed protected-main checkpoint:** the complete focused suite and production validator pass before exact-SHA attempt-one CI and natural scheduled evidence are captured and independently checked.
 
 `wave_0_complete` is `true`: the test assets exist and their plan-specific commands have run successfully. This records completed executor evidence, not a plan-time predeclaration.
 
@@ -93,7 +98,7 @@ revised: 2026-09-01
 
 ### Planning-contract completeness
 
-- [x] All seventeen executor tasks across all twelve plans have an automated verification row, plus one explicit terminal post-execution lifecycle gate.
+- [x] All twenty executor tasks across all fourteen plans have an automated verification row, plus one explicit terminal post-execution lifecycle gate.
 - [x] The tracer-created repository-truth test, Plan 164-04 expansion, Plan 164-05 test/wrapper and usage contract, Plan 164-06 checkpoint, and Plan 164-07 exact-main report are explicitly mapped.
 - [x] TRTH-01 and TRTH-02 retain completed task-level coverage; TRTH-03 maps through the freshness repair, tracked lifecycle contract, and terminal post-execution raw-source gate.
 - [x] Sampling continuity has no three consecutive tasks without automated feedback.
@@ -106,11 +111,13 @@ revised: 2026-09-01
 - [x] Wave 0 test files have been created.
 - [x] Wave 0 focused commands have run green; `wave_0_complete: true` is set.
 - [x] Waves 1-3 focused and wave gates have run green.
-- [ ] Plan 164-06 protected-main checkpoint has supplied exact identities.
-- [ ] Plan 164-07 exact-main report gate has passed on fresh live evidence.
+- [x] Plan 164-06 protected-main checkpoint supplied exact identities.
+- [x] Plan 164-07 exact-main report gate passed on fresh live evidence.
 - [x] Plan 164-10 registry-specific freshness repair and adversarial provenance contract have run green.
 - [x] Plan 164-11 extension, narrow `.gsd` ignore boundary, finalizer, lifecycle guidance, ledger rows, and focused tests have run green.
-- [ ] Plan 164-12 pre-verification protected capture has passed and ordinary verification has independently checked its raw evidence.
+- [x] Plan 164-12 pre-verification protected capture passed and its raw evidence was independently checked; Plan 164-14 subsequently refreshed this evidence after the Plan 164-13 regression repair.
+- [x] Plan 164-13 tagged adversarial ledger and closeout groups run non-vacuously and green against production behavior.
+- [x] Plan 164-14 complete focused suite, production ledger validator, and protected pre-verification capture passed with independently checked raw sources.
 - [ ] All tracked Phase 164 summaries and phase.complete metadata have reached protected main before terminal `/finalize-phase 164` runs.
 - [ ] The final ignored report and raw CI/scheduled sources pass independent verification with no later tracked commit.
 
@@ -160,3 +167,26 @@ The code-review gaps and the additional task-map/documentation-contract gap are 
 - Real GSD invocation loaded the command and failed closed because the remediation branch is not canonical protected `main`.
 
 **Approval:** Nyquist-compliant for automated coverage. Fresh pre-verification and terminal protected-main evidence remain mandatory external gates before Phase 164 can complete.
+
+## Validation Audit 2026-09-09 — Plan 164-14 Refresh
+
+Plan 164-14 introduced no production implementation. The existing validation strategy was re-audited against the Plan 164-13 adversarial regression locks and the Plan 164-14 exact-main evidence summary; no automated coverage gaps remain for TRTH-01, TRTH-02, or TRTH-03.
+
+| Metric | Count |
+|--------|-------|
+| Requirements audited | 3 |
+| Automated gaps found | 0 |
+| Tagged adversarial groups | 2 |
+| Tagged adversarial tests passed | 8 |
+| Complete focused tests | 81 |
+| Failures | 0 |
+| Pre-existing skips | 1 |
+
+- Complete focused Phase 164 suite: 81 tests, 0 failures, 1 pre-existing skip.
+- Tagged production-ledger regression group: 4 tests, 0 failures.
+- Tagged production-closeout regression group: 4 tests, 0 failures.
+- Production authoritative-ledger CLI: `repository truth ledger: valid`.
+- Closeout/finalizer shell syntax, modified Elixir formatting, and `git diff --check`: passed.
+- Plan 164-14 independently recorded a passing pre-verification capture for exact protected-main SHA `d903b040c72fff62a69a57cacbcc7e7d7c2f6167` and CI run `34284583200`.
+
+**Approval:** Current and Nyquist-compliant for automated coverage through Plan 164-14. The separate terminal `/finalize-phase 164` external-state gate remains pending and is not an automated test gap.
