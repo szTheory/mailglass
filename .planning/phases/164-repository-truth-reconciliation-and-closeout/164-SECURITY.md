@@ -62,6 +62,9 @@ created: "2026-09-01"
 | T-164-50 | Tampering | scheduled evidence set/provenance | high | mitigate | Exact registry equality plus per-control attempt, event, workflow, SHA, status, reason, freshness, payload digest, and archive digest checks passed in Plan 164-14 | closed |
 | T-164-51 | Repudiation | pre-verification versus terminal boundary | high | mitigate | `164-FINALIZATION.md` and `164-14-SUMMARY.md` explicitly classify the accepted capture as pre-verification-only and require terminal recapture after tracked completion metadata | closed |
 | T-164-52 | Elevation of Privilege | remote workflow/release controls | high | mitigate | Plan 164-14 completed through read-only queries and transient credential injection with no dispatch, rerun, push, merge, authority change, or publication operation | closed |
+| T-164-58 | Elevation of Privilege | non-historical maintainer release guidance | high | mitigate | The whole pre-historical `MAINTAINING.md` region requires protected exact-candidate dispatch plus fresh repository-admin authorization and rejects automatic, reviewer-free, and approval-free variants | closed |
+| T-164-59 | Repudiation | historical v0.1/v0.5 authority provenance | medium | mitigate | The exact, singular `## Historical release procedures` boundary is enforced and the legacy rationale appears only beneath it with explicit historical applicability | closed |
+| T-164-60 | Tampering | executable protected-release controls | low | accept | Plan 164-16 changed only documentation and its contract; executable release-control paths remained unchanged | closed |
 | T-164-SC | Tampering | package supply chain | low | accept | Acceptance is not yet documented; below the configured blocking threshold | open — below high threshold |
 
 ## Accepted Risks Log
@@ -75,6 +78,7 @@ No accepted risks. T-164-SC remains open below the configured blocking threshold
 | 2026-09-01 | 33 | 22 | 11 total / 10 blocking | gsd-security-auditor |
 | 2026-09-01 | 33 | 32 | 1 total / 0 blocking | gsd-security-auditor (post-remediation) |
 | 2026-09-09 | 37 | 36 | 1 total / 0 blocking | execute-phase ASVS L1 short-circuit refresh through Plan 164-14 |
+| 2026-09-09 | 40 | 39 | 1 total / 0 blocking | execute-phase ASVS L1 short-circuit refresh through Plan 164-16 |
 
 ## Sign-Off
 
