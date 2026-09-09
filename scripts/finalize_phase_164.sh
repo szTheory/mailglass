@@ -209,8 +209,8 @@ raw_sources_are_acceptable() {
       (.source_run.conclusion | type == "string" and length > 0) and
       ($control_contracts[.control].max_age_seconds | type == "number" and . > 0) and
       (.source_run.updated_at | type == "string" and length > 0) and
-      (now - (.source_run.updated_at | fromdateiso8601)) <=
-        $control_contracts[.control].max_age_seconds and
+      ((now - (.source_run.updated_at | fromdateiso8601)) as $age |
+        $age >= 0 and $age <= $control_contracts[.control].max_age_seconds) and
       .result.workflow_sha == $sha and
       (.result.reason | type == "string" and length > 0) and
       (.result.status == "pass" or .result.status == "blocked") and

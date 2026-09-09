@@ -347,8 +347,9 @@ sweep_controls() {
     rm -f "$run_json"
     updated_at=$(jq -er '.source_run.updated_at' "$report")
     jq -ne --arg updated_at "$updated_at" --argjson max_age "$max_age" \
-      '(now - ($updated_at | fromdateiso8601)) <= $max_age' >/dev/null || {
-      echo "Latest scheduled run for $workflow_file is stale." >&2
+      '(now - ($updated_at | fromdateiso8601)) as $age |
+       $age >= 0 and $age <= $max_age' >/dev/null || {
+      echo "Latest scheduled run for $workflow_file has an invalid, future, or stale timestamp." >&2
       return 1
     }
   done < <(jq -c '.controls[]' "$config_path")
