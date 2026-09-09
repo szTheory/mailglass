@@ -1,7 +1,7 @@
 ---
 phase: 164-repository-truth-reconciliation-and-closeout
-verified: 2026-09-09T21:23:26Z
-verified_implementation_sha: 6b8e5948e8b6c5cd512deccc1c58643836d6a1e6
+verified: 2026-09-09T22:52:25Z
+verified_implementation_sha: 114415c8f3eaa943235f105d4d0fd533989e8494
 status: gaps_found
 score: 11/13 must-haves verified
 behavior_unverified: 0
@@ -10,39 +10,53 @@ re_verification:
   previous_status: gaps_found
   previous_score: 11/13
   gaps_closed:
-    - "Terminal finalization now requires one exact verified_implementation_sha and rejects forbidden source history in every later first-parent commit."
-    - "Pre-verification now requires summaries 164-01 through 164-13 before evidence collection."
-    - "The hostile sibling fixture now requires exclusive allocation and a matching non-symlink ownership token before recursive cleanup."
-    - "Scheduled evidence producer and finalizer now reject malformed, future, and over-age timestamps with a closed freshness interval."
-  gaps_remaining: []
+    - "TRTH-01 current maintainer guidance now presents one protected exact-candidate and fresh repository-admin authority model throughout the non-historical document."
+    - "Obsolete v0.1/v0.5 hands-free authority is now retained only beneath the exact Historical release procedures boundary."
+  gaps_remaining:
+    - "TRTH-02 tracked-state claims are not authenticated against the Git index."
+    - "TRTH-03 finalizer dispatch executes mutable working-tree bytes rather than the tracked HEAD blob."
   regressions:
-    - "A previously missed contradiction remains in current-facing MAINTAINING.md: the Bus Factor & Continuity section describes release as hands-free after gates pass."
+    - "The post-164-16 code review exposed two previously untested trust-boundary defects in the repository-truth validator and finalizer dispatcher."
 gaps:
-  - truth: "TRTH-01 / D-01 / D-02 / D-04: Maintainers have one unmistakable current release and recovery path whose authority agrees everywhere with the protected exact-candidate workflow."
+  - truth: "TRTH-02 / D-05 / D-06 / D-12: Every tracked artifact disposition is evidence-backed by actual exact-path Git membership."
     status: failed
-    reason: "MAINTAINING.md first documents protected exact-candidate dispatch plus repository-admin authorization, then its still-current Bus Factor & Continuity section says the release pipeline is hands-free after gates pass and has no reviewer control. The focused contract scopes its negative assertions too narrowly and passes despite the contradiction."
+    reason: "The production validator treats any regular file as satisfying a ledger row whose state is tracked. In a disposable clone, README.md was removed from the Git index but left on disk; RepositoryTruthLedger.validate/2 still returned :ok."
     artifacts:
-      - path: "MAINTAINING.md"
-        issue: "Lines 359-366 present obsolete v0.1/v0.5 hands-free authority before the Historical release procedures boundary."
-      - path: "test/mailglass/publish/maintaining_release_gate_contract_test.exs"
-        issue: "The test refutes obsolete authority only inside the opening extracted section, not across all non-historical guidance."
+      - path: "scripts/validate_repository_truth.exs"
+        issue: "ensure_tracked_subjects_exist/2 checks File.regular?/1 only and never verifies git ls-files --error-unmatch for each tracked row."
+      - path: "test/scripts/phase_164_repository_truth_test.exs"
+        issue: "The finalization-artifact test asserts the row's literal state field but has no untracked-regular-file regression against production validation."
     missing:
-      - "Move or explicitly bound the obsolete v0.1/v0.5 release-authority prose as historical, or rewrite it to match the protected exact-candidate/repository-admin workflow."
-      - "Extend the contract to reject hands-free/no-approval authority throughout all non-historical content."
+      - "Require exact-path Git index membership, as well as the expected regular-file type, for every ledger row whose state is tracked."
+      - "Add a disposable-repository regression where an untracked regular file with state=tracked fails and the same committed file passes."
+  - truth: "TRTH-03 / D-09 / D-10 / D-11: The finalizer command executes only immutable code authenticated to the tracked implementation at HEAD."
+    status: failed
+    reason: "The extension checks git ls-files index membership, then executes the resolved working-tree shim. A newly staged or unstaged-modified shim can run before the real finalizer's clean-tree and evidence checks, so the protected closeout authority can be bypassed."
+    artifacts:
+      - path: ".gsd/extensions/finalize-phase/index.ts"
+        issue: "Lines 88-101 do not prove HEAD contains the finalizer or that working-tree bytes equal the HEAD blob before pi.exec runs bash."
+      - path: "test/scripts/phase_164_closeout_test.exs"
+        issue: "The extension contract checks source strings for git ls-files and pi.exec but does not behaviorally reject staged-new or modified tracked finalizers."
+    missing:
+      - "Resolve and authenticate HEAD:<relative-finalizer>, reject index/worktree mismatches, and preferably execute a private immutable materialization of the verified HEAD blob."
+      - "Add behavioral dispatcher tests for a staged-new finalizer, an unstaged modification, and an unchanged committed finalizer."
 prohibition_flags:
+  - statement: "D-05/D-06/D-12: MUST NOT represent an untracked artifact as tracked repository proof."
+    verdict: "violated — disposable-clone reproduction proves the validator accepts this false state"
+  - statement: "D-09/D-10/D-11: MUST NOT execute unauthenticated working-tree finalizer code as protected closeout authority."
+    verdict: "violated — dispatcher authenticates index membership but executes mutable working-tree bytes"
   - statement: "D-01/D-04: MUST NOT broaden protected exact-candidate or repository-admin authorization."
-    verdict: "non-authoritative LLM judgment: violated by the current Bus Factor & Continuity guidance; remediation required"
-  - statement: "Phase 164 finalization and evidence MUST NOT use caller-selected, rerun, stale, malformed, future-dated, alternate-SHA, or post-verification source evidence."
-    verdict: "non-authoritative LLM judgment: automated production-seam tests support compliance; human review recommended"
+    verdict: "non-authoritative LLM judgment: Plan 164-16 documentation and its whole-document contract support compliance; human review recommended"
 ---
 
 # Phase 164: Repository Truth Reconciliation and Closeout Verification Report
 
 **Phase Goal:** Maintainers can rely on documentation, tracked artifacts, ignore rules, and final evidence to describe the repository's actual supported and operational state.
-**Verified:** 2026-09-09T21:23:26Z
-**Implementation SHA evaluated:** `6b8e5948e8b6c5cd512deccc1c58643836d6a1e6`
+**Verified:** 2026-09-09T22:52:25Z
+**Implementation SHA evaluated:** `114415c8f3eaa943235f105d4d0fd533989e8494`
 **Status:** gaps_found
-**Re-verification:** Yes — all four prior gaps closed; one previously missed documentation blocker remains.
+**Re-verification:** Yes — the Plan 164-16 documentation gap is closed; two fresh critical review defects contradict TRTH-02 and TRTH-03.
+**Next action:** Plan the two fixes, then re-run execute-phase (`$gsd-plan-phase 164 --gaps`).
 
 ## Goal Achievement
 
@@ -50,19 +64,19 @@ prohibition_flags:
 
 | # | Truth | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | TRTH-01 maintainer/release/recovery guidance agrees throughout with protected workflow facts. | ✗ FAILED | `MAINTAINING.md:5-48` states the protected exact-candidate/repository-admin boundary, but lines 359-366 call the current pipeline hands-free after gates pass. |
-| 2 | Historical release procedures are explicitly bounded, leaving one unmistakable current runbook. | ✗ FAILED | The named historical section is bounded, but obsolete v0.1/v0.5 authority remains in non-historical content before that boundary. |
-| 3 | Current package guidance matches the core/admin 2.5 and inbound 2.2 manifests. | ✓ VERIFIED | Manifest-derived README contract passed in the 96-test focused run. |
-| 4 | The locked stale root sweep has one evidence-backed remove disposition. | ✓ VERIFIED | The ledger retains the exact `331810b4...04ece7e` D-08 digest/remove row and the root file is absent. |
-| 5 | Durable scheduled/release/publish/planning proof remains tracked and discoverable. | ✓ VERIFIED | The production repository-derived ledger validator passed against the canonical checkout. |
-| 6 | Every scoped artifact and non-comment rule in all six ignore files has one complete disposition. | ✓ VERIFIED | The authoritative validator printed `repository truth ledger: valid`; exact-set and hostile ledger tests passed. |
-| 7 | Retained ignore rules are narrow and producer-owned. | ✓ VERIFIED | Six-file inventory and `.gsd` exception tests passed; only the named extension is re-included while runtime state remains ignored. |
-| 8 | One rerunnable command composes Git, hygiene, preservation, ledger, CI, and scheduled authorities. | ✓ VERIFIED | `closeout_repository_truth.sh` invokes the real authority seams and its process tests passed. |
-| 9 | Quiet requires canonical repo/ledger, ignored output, exact origin/main, and post-write cleanliness. | ✓ VERIFIED | Alternate repository/ledger/output, symlink, and late-dirt process regressions passed. |
-| 10 | Malformed, future, or stale scheduled timestamps cannot be accepted as current. | ✓ VERIFIED | Both production predicates enforce `0 <= age <= max_age_seconds`; producer and finalizer mutation tests passed. |
-| 11 | Quiet requires the complete exact-one ledger gate. | ✓ VERIFIED | Closeout invokes the canonical shared validator with the authoritative ledger path. |
-| 12 | Evidence selection permits only attempt-one normal push CI and natural same-SHA scheduled controls. | ✓ VERIFIED | Attempt/event/branch/SHA/status/digest mutation tests passed; existing d903b040 pre-verification raw evidence remains inspectable but non-terminal. |
-| 13 | Terminal finalization is bound to the exact implementation verified and permits only four completion-metadata paths afterward. | ✓ VERIFIED | Process tests cover absent/malformed/non-ancestor SHA, direct forbidden source, change-then-revert history, and allowed metadata-only commits against `require_terminal_state`. |
+| 1 | TRTH-01 maintainer/release/recovery guidance agrees throughout with protected workflow facts. | ✓ VERIFIED | `MAINTAINING.md:5-48` defines exact-candidate/repository-admin authority; lines 357-368 now explicitly defer to it. The whole-document contract passed. |
+| 2 | Historical release procedures are explicitly bounded, leaving one unmistakable current runbook. | ✓ VERIFIED | Exactly one `## Historical release procedures` heading exists; v0.1/v0.5 hands-free language appears only after it, and missing/duplicate-boundary tests pass. |
+| 3 | Current package guidance matches the core/admin 2.5 and inbound 2.2 manifests. | ✓ VERIFIED | Manifest-derived README assertions passed in the 98-test focused run. |
+| 4 | The locked stale root sweep has one evidence-backed remove disposition. | ✓ VERIFIED | Ledger retains the exact `331810b4...04ece7e` D-08 digest/remove row; the root file remains absent. |
+| 5 | Durable scheduled/release/publish/planning proof currently remains tracked and discoverable. | ✓ VERIFIED | Direct Git membership audit found 38 tracked ledger rows and zero currently missing index entries. |
+| 6 | Every scoped artifact and non-comment rule in all six ignore files has one truthful, complete disposition. | ✗ FAILED | Canonical data passes today, but the production validator accepts a regular untracked file as `state=tracked`; disposable-clone reproduction returned `:ok`. |
+| 7 | Retained ignore rules are narrow and producer-owned. | ✓ VERIFIED | Six-file exact inventory and `.gsd` exception tests pass; durable evidence is not broadly ignored. |
+| 8 | One rerunnable command composes Git, hygiene, preservation, ledger, CI, and scheduled authorities. | ✓ VERIFIED | `closeout_repository_truth.sh` is substantive, wired to the real authority seams, shell-valid, and exercised by process tests. |
+| 9 | Quiet requires canonical repo/ledger, ignored output, exact origin/main, and post-write cleanliness. | ✓ VERIFIED | Alternate repository/ledger/output, symlink, origin race, and late-dirt regressions pass. |
+| 10 | Malformed, future, or stale scheduled timestamps cannot be accepted as current. | ✓ VERIFIED | Both production boundaries enforce `0 <= age <= max_age_seconds`; producer/finalizer mutation tests pass. |
+| 11 | Quiet requires the complete exact-one ledger gate. | ✓ VERIFIED | Closeout invokes the canonical shared validator using the authoritative ledger path and rejects caller-selected substitutes. |
+| 12 | Evidence selection permits only attempt-one normal push CI and natural same-SHA scheduled controls. | ✓ VERIFIED | Attempt/event/branch/SHA/status/digest mutation tests and Node CI-monitor tests pass. Existing protected evidence is explicitly pre-verification-only. |
+| 13 | Terminal finalization is bound to the exact tracked implementation verified. | ✗ FAILED | The shell finalizer has SHA/history guards, but the extension can execute modified working-tree shim bytes before those guards run. |
 
 **Score:** 11/13 truths verified (0 present, behavior-unverified)
 
@@ -70,46 +84,50 @@ prohibition_flags:
 
 | Artifact | Expected | Status | Details |
 | --- | --- | --- | --- |
-| `MAINTAINING.md` | One current protected release/recovery path | ✗ FAILED | Substantive and tracked, but contains contradictory current authority. |
+| `MAINTAINING.md` | One current protected release/recovery authority | ✓ VERIFIED | Substantive, tracked, globally consistent before the historical boundary. |
 | Package READMEs | Manifest-derived current compatibility | ✓ VERIFIED | Root, admin, and inbound documentation contract passed. |
-| `164-TRUTH-DISPOSITION.tsv` | Complete exact-one disposition ledger | ✓ VERIFIED | Canonical validator passed; D-08 and all six ignore sets remain present. |
-| `scripts/validate_repository_truth.exs` | Shared production ledger validator | ⚠️ PARTIAL | Valid canonical invocation passes and closeout supplies exact flags, but standalone no-argument and misspelled-option invocations silently exit 0. |
-| `scripts/closeout_repository_truth.sh` | Canonical fail-closed evidence composition | ✓ VERIFIED | Substantive, shell-valid, wired to the shared validator and authority sources, and behaviorally tested. |
-| `scripts/finalize_phase_164.sh` | Hash-bound pre-verification/terminal lifecycle gate | ✓ VERIFIED | Summary prerequisites, per-commit SHA binding, raw-source checks, and stable-porcelain gates are behaviorally tested. |
-| `.gsd/extensions/finalize-phase/` | Project-local finalization command | ✓ VERIFIED | Manifest declares exactly one command; dispatcher validates one tracked phase finalizer and uses `pi.exec`. |
-| `164-FINALIZATION.md` | Accurate lifecycle contract | ✓ VERIFIED | Matches Plans 01-13 prerequisites and the per-first-parent verified-SHA boundary. |
-| `164-VALIDATION.md` | Complete task/threat verification map | ✓ VERIFIED | Contains 164-15-01/02/03 and T-164-53 through T-164-57 mappings. |
-| Phase-owned focused tests | Non-vacuous production-seam proof | ✓ VERIFIED | 96 tests, 0 failures, 1 unrelated historical skip. |
+| `164-TRUTH-DISPOSITION.tsv` | Complete exact-one disposition ledger | ✓ VERIFIED | Canonical bytes parse and current rows match the index, but enforcement of tracked state is defective below. |
+| `scripts/validate_repository_truth.exs` | Shared production truth validator | ✗ FAILED | Substantive and wired, but fails to authenticate tracked-state claims; invalid standalone invocations also silently exit 0. |
+| `scripts/closeout_repository_truth.sh` | Canonical fail-closed evidence composition | ✓ VERIFIED | Shell-valid and behaviorally tested across hostile identity, output, and evidence cases. |
+| `scripts/finalize_phase_164.sh` | Hash-bound pre-verification/terminal lifecycle gate | ✓ VERIFIED | Its internal SHA/history, raw-source, timestamp, and porcelain checks are substantive and tested. |
+| `.gsd/extensions/finalize-phase/index.ts` | Authenticated dispatcher for the tracked finalizer | ✗ FAILED | Executes working-tree finalizer bytes after only an index-membership check. |
+| `164-FINALIZATION.md` | Accurate lifecycle contract | ✓ VERIFIED | Documents verified implementation SHA and first-parent completion-metadata boundary. |
+| `164-VALIDATION.md` | Complete task/threat verification map | ✓ VERIFIED | Covers Plans 01-16 and preserves the pending post-completion terminal gate. |
+| Phase-owned focused tests | Non-vacuous production-seam proof | ⚠️ PARTIAL | 98 tests pass, but neither current critical review defect is exercised. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 | --- | --- | --- | --- | --- |
-| Current maintainer prose | protected release workflow | authority projection | ✗ PARTIAL | Opening section agrees; later non-historical bus-factor prose contradicts it. |
+| Current maintainer prose | protected release workflow | whole-non-historical authority projection | ✓ WIRED | Plan 164-16 repair and four active contract tests pass. |
 | Package READMEs | package manifests | dynamically derived major/minor assertions | ✓ WIRED | Docs contract passed. |
-| Six ignore files and durable proof | truth ledger | repository-derived exact-set validation | ✓ WIRED | Production validator and adversarial test passed. |
-| Closeout | authoritative ledger | exact canonical path and production CLI | ✓ WIRED | Caller-selected ledger paths are rejected before collection. |
-| Closeout/finalizer | CI and scheduled raw sources | exact attempt/event/SHA/provenance checks | ✓ WIRED | Behavior and mutation tests passed. |
-| Passing verifier | terminal HEAD | `verified_implementation_sha` plus per-commit first-parent allowlist | ✓ WIRED | Plan 164-15 gap-closure regressions passed. |
-| `164-13-SUMMARY.md` | pre-verification collection | required summary presence | ✓ WIRED | Missing-summary regression proves collection does not begin. |
+| Six ignore files and durable proof | truth ledger | repository-derived exact-set validation | ⚠️ PARTIAL | Subject inventory is wired, but `state=tracked` is not authenticated against Git per row. |
+| Closeout | authoritative ledger | exact canonical path and production CLI | ✓ WIRED | Caller-selected ledger paths are rejected before evidence collection. |
+| Extension | phase finalizer | `git ls-files` followed by `pi.exec("bash", working-tree-path)` | ✗ NOT_WIRED SAFELY | Membership is not HEAD-byte authentication; mutable code is executed. |
+| Finalizer | CI and scheduled raw sources | exact attempt/event/SHA/provenance checks | ✓ WIRED | Behavioral and mutation tests passed. |
+| Passing verifier | terminal HEAD | `verified_implementation_sha` plus per-commit first-parent allowlist | ✓ WIRED INTERNALLY | Shell gate is correct, but the unsafe extension entrypoint can bypass it. |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data | Source | Produces Real Data | Status |
 | --- | --- | --- | --- | --- |
-| Closeout report | Git/hygiene/workspace/ledger/CI/scheduled results | Real repository commands and persisted component sources | Yes | ✓ FLOWING |
-| Pre-verification report | protected-main identities and raw CI/scheduled evidence | Ignored report/source files for `d903b040...` | Yes, explicitly non-terminal | ✓ FLOWING |
-| Terminal verifier authority | implementation identity | `verified_implementation_sha` in this report | Yes, exact evaluated commit | ✓ FLOWING |
+| Truth ledger validation | tracked-state assertion | ledger row plus filesystem regular-file check | No Git membership proof | ✗ DISCONNECTED |
+| Finalizer dispatch | executable bytes | mutable working-tree phase shim | Not authenticated to HEAD | ✗ DISCONNECTED |
+| Closeout report | Git/hygiene/workspace/ledger/CI/scheduled results | real repository commands and persisted component sources | Yes | ✓ FLOWING |
+| Pre-verification evidence | exact protected-main CI/scheduled identities | ignored raw report sources | Yes, explicitly non-terminal | ✓ FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
-| Complete focused Phase 164 contracts | `mix test` over five Phase 164-linked test files | 96 tests, 0 failures, 1 unrelated historical skip | ✓ PASS |
-| Authoritative ledger | `elixir scripts/validate_repository_truth.exs --repo ... --ledger ...` | `repository truth ledger: valid`, exit 0 | ✓ PASS |
-| Shell entrypoints | `bash -n` over closeout, finalizer, scheduled evidence, and shim | exit 0 | ✓ PASS |
-| Standalone validator rejects invalid invocation | no arguments; `--ledgr bogus` | both exited 0 with no output | ⚠️ WARNING |
-| Current maintainer authority is globally consistent | inspect all content before `Historical release procedures` | contradictory `hands-free` release statement at lines 359-366 | ✗ FAIL |
+| Complete focused Phase 164 contracts | `mix test` over five Phase 164-linked files | 98 tests, 0 failures, 1 historical skip | ✓ PASS |
+| Canonical authoritative ledger | `elixir scripts/validate_repository_truth.exs --repo ... --ledger ...` | `repository truth ledger: valid` | ✓ PASS |
+| False tracked-state claim | disposable clone; `git rm --cached README.md`; call `RepositoryTruthLedger.validate/2` | returned `:ok` while `README.md` was untracked | ✗ FAIL |
+| Node CI-monitor contract | `node --test test_js/ci-monitor.test.cjs` | 5 tests passed | ✓ PASS |
+| Shell entrypoints | `bash -n` over closeout, finalizer, scheduled evidence, and phase shim | exit 0 | ✓ PASS |
+| Elixir formatting | `mix format --check-formatted` over Phase 164 source/tests | exit 0 | ✓ PASS |
+| Standalone validator invalid invocation | no arguments; `--ledgr bogus` | both exit 0 with zero output | ⚠️ WARNING |
+| Whitespace integrity | `git diff --check` | exit 0 | ✓ PASS |
 
 ### Probe Execution
 
@@ -119,48 +137,57 @@ SKIPPED — no `probe-*.sh` is declared for Phase 164. The focused production sc
 
 | Requirement | Source Plans | Description | Status | Evidence |
 | --- | --- | --- | --- | --- |
-| TRTH-01 | 164-02, 03, 06, 07, 14, 15 | Guidance agrees with protected workflow, published package state, and supported commands. | ✗ BLOCKED | Package truth passes, but current maintainer release authority contradicts itself. |
-| TRTH-02 | 164-01, 04, 06-09, 11, 13-15 | Every changed/generated artifact and ignore rule is classified; durable proof remains discoverable. | ✓ SATISFIED | Authoritative ledger and exact-set contracts pass. |
-| TRTH-03 | 164-05-07, 09-15 | Reproducible exact-main closeout with clean Git, protected CI, explained schedules, and complete dispositions. | ✓ SATISFIED | Capability is wired and behaviorally tested, including SHA-bound terminal history; the external terminal capture remains the documented post-completion gate. |
+| TRTH-01 | 164-02, 03, 06, 07, 14-16 | Guidance agrees with protected workflow, published package state, and supported commands. | ✓ SATISFIED | Whole-document maintaining contract and manifest-derived package contracts pass. |
+| TRTH-02 | 164-01, 04, 06-09, 11, 13-15 | Every changed/generated artifact and ignore rule is truthfully classified; proof remains discoverable. | ✗ BLOCKED | CR-02: tracked-state rows are accepted without Git membership, so the machine-enforced classification can be false. |
+| TRTH-03 | 164-05-07, 09-15 | Reproducible exact-main closeout with clean Git, protected CI, explained schedules, and complete dispositions. | ✗ BLOCKED | CR-01: the dispatcher can execute uncommitted shim bytes before the protected finalizer gates. |
 
-All requirement IDs declared by all fifteen PLAN frontmatters are exactly TRTH-01, TRTH-02, or TRTH-03 and are present in `.planning/REQUIREMENTS.md`. No orphaned Phase 164 requirement exists.
+All requirement IDs declared across all sixteen PLAN frontmatters are exactly TRTH-01, TRTH-02, or TRTH-03, and all three are present in `.planning/REQUIREMENTS.md`. No orphaned Phase 164 requirement exists. No later milestone phase exists to defer either blocker.
 
 ### Test Quality Audit
 
 | Test File | Linked Req | Active | Skipped | Circular | Assertion Level | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
-| `phase_164_repository_truth_test.exs` | TRTH-02 | yes | 0 | No | Behavioral/value | PASS |
-| `phase_164_closeout_test.exs` | TRTH-03 | yes | 0 | No | Process/behavioral | PASS |
+| `phase_164_repository_truth_test.exs` | TRTH-02 | yes | 0 | No | Behavioral/value | INSUFFICIENT — no Git-membership mutation for a tracked row |
+| `phase_164_closeout_test.exs` | TRTH-03 | yes | 0 | No | Process/behavioral | INSUFFICIENT — extension test checks source strings, not staged/modified dispatcher behavior |
 | `scheduled_control_evidence_test.exs` | TRTH-03 | yes | 0 | No | Process/behavioral | PASS |
-| `maintaining_release_gate_contract_test.exs` | TRTH-01 | yes | 0 | No | Value/contract | INSUFFICIENT: only the opening section is checked for obsolete authority |
-| `docs_contract_test.exs` | TRTH-01 | yes | 1 unrelated Phase 38 test | No | Value/contract | PASS with existing unrelated skip |
+| `maintaining_release_gate_contract_test.exs` | TRTH-01 | yes | 0 | No | Whole-document value/contract | PASS |
+| `docs_contract_test.exs` | TRTH-01 | yes | 1 historical | No | Value/contract | PASS with unrelated historical skip |
 
-No disabled test is the sole proof for a Phase 164 requirement, and no circular expected-value generator was found. The maintainer contract's assertion scope is insufficient for the phase-wide single-runbook claim.
+No disabled test is the sole proof for a Phase 164 requirement, and no circular expected-value generator was found. The 98-test green result does not prove the two untested trust boundaries.
 
-### Anti-Patterns and Advisory Review Findings
+### Anti-Patterns and Review Findings
 
-| Finding | Independent Verdict | Severity | Evidence |
+| Finding | Independent Verdict | Classification | Goal/Requirement Impact |
 | --- | --- | --- | --- |
-| CR-01 contradictory current release authority | CONFIRMED | 🛑 BLOCKER | `MAINTAINING.md:359-366` contradicts lines 5-48; the test only refutes obsolete language in its extracted opening section. |
-| WR-01 standalone validator invalid invocations succeed | CONFIRMED | ⚠️ WARNING | No-argument and `--ledgr bogus` subprocesses both exited 0 with no output because the CLI body is conditional on seeing literal `--repo` or `--ledger`. Closeout itself passes both exact flags, so its production link remains fail-closed. |
+| CR-01 mutable working-tree finalizer execution | CONFIRMED | 🛑 BLOCKER | Directly contradicts reliable protected closeout authority and TRTH-03. |
+| CR-02 untracked regular file accepted as tracked | CONFIRMED + REPRODUCED | 🛑 BLOCKER | Directly contradicts truthful evidence-backed classification and TRTH-02. |
+| WR-01 invalid standalone validator invocation exits 0 | CONFIRMED | ⚠️ WARNING | Weakens direct CLI robustness, but does not independently block the phase because the documented closeout path supplies both exact required flags and preserves nonzero validation failure. |
 
 No unreferenced `TBD`, `FIXME`, or `XXX` marker was found in the phase-owned implementation files.
 
 ### Decision Coverage
 
-All 12 trackable CONTEXT decisions are honored by shipped artifacts according to the non-blocking decision-coverage gate.
+All 12 trackable `164-CONTEXT.md` decisions are honored according to the non-blocking decision-coverage gate. This heuristic does not override the concrete CR-01/CR-02 failures.
 
 ### Human Verification Required
 
-N/A — infrastructure/documentation foundation phase with no user-facing UI. All goal checks are programmatically inspectable; the flagged prohibitions remain non-authoritative LLM judgments recorded in frontmatter.
+N/A — repository infrastructure/documentation phase with no user-facing UI. Both blockers are programmatically observable. Judgment-tier prohibition conclusions remain explicitly non-authoritative and human review is recommended, but no manual test can convert either failed truth to verified.
 
 ### Gaps Summary
 
-The four prior implementation gaps are closed with executable regression evidence. Phase 164 still cannot pass because the main maintainer document presents two incompatible current release-authority models, and its focused test is scoped so narrowly that the contradiction passes. This directly blocks roadmap criterion 1 and TRTH-01. The standalone validator's fail-open invalid-argument boundary is also confirmed as a warning, but the closeout path invokes it with exact required flags and remains wired fail-closed.
+Plan 164-16 successfully closed the prior TRTH-01 documentation contradiction. Phase 164 still cannot pass because its two trust anchors are not trustworthy under adversarial but valid repository states: the ledger can certify an untracked file as tracked, and the extension can execute finalizer bytes that were never authenticated to `HEAD`. These directly defeat the phase goal's promise that maintainers can rely on tracked artifacts and final evidence.
 
-No later milestone phase exists to defer the documentation gap. After correcting the prose and broadening the contract, rerun verification against the resulting implementation commit and update `verified_implementation_sha`. The separate terminal `/finalize-phase 164` capture remains intentionally downstream of a passing verifier plus protected completion metadata.
+The standalone validator's no-argument/unknown-option success remains a warning, not a separate blocker. The post-completion terminal `/finalize-phase 164` capture remains downstream of a future passing verifier and protected completion-metadata integration; it must not run to bless the current defective implementation.
+
+## Recommended Fix Plan
+
+### 164-17-PLAN.md: Authenticate tracked artifacts and finalizer bytes
+
+1. Make `RepositoryTruthLedger.validate/2` require exact Git index membership and expected file type for every `state=tracked` subject; add committed-versus-untracked disposable-repository tests.
+2. Make the extension authenticate the phase finalizer against `HEAD` and execute an immutable verified blob; add staged-new, unstaged-modified, and unchanged-committed behavioral tests.
+3. Fix direct validator argument handling as a bounded companion warning, then rerun the complete Phase 164 focused suite, production validator reproduction, Node tests, syntax, formatting, and diff checks.
 
 ---
 
-_Verified: 2026-09-09T21:23:26Z_
+_Verified: 2026-09-09T22:52:25Z_
 _Verifier: the agent (gsd-verifier)_
