@@ -1,49 +1,79 @@
 ---
 phase: 164-repository-truth-reconciliation-and-closeout
-verified: 2026-08-27T17:00:16Z
+verified: 2026-09-09T19:25:08Z
 status: gaps_found
-score: 8/13 must-haves verified
+score: 11/13 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
+re_verification:
+  previous_status: gaps_found
+  previous_score: 8/13
+  gaps_closed:
+    - "Closeout now binds --ledger to the authoritative Phase 164 ledger and invokes the shared complete validator."
+    - "Closeout now rejects noncanonical repositories and non-ignored outputs and rechecks stable porcelain after writes."
+    - "Fresh pre-verification evidence exists for integrated implementation SHA d903b040c72fff62a69a57cacbcc7e7d7c2f6167."
+  gaps_remaining: []
+  regressions:
+    - "Terminal finalization accepts a stale status: passed verifier without binding it to the implementation being finalized."
+    - "Pre-verification stops at summaries 01-11 and does not require the Plan 13 repair contract."
+    - "A hostile-path test can recursively delete a pre-existing sibling directory outside its temporary root."
+    - "Scheduled evidence freshness accepts timestamps in the future."
 gaps:
-  - truth: "D-05/D-12/TRTH-02: Every scoped artifact and every non-comment rule in all six ignore files has exactly one complete evidence-backed disposition."
+  - truth: "D-09 through D-11/TRTH-03: Terminal final evidence is bound to the implementation that received goal-level verification."
+    status: failed
+    reason: "Terminal mode checks only for status: passed in 164-VERIFICATION.md; it compares no verified implementation SHA and permits arbitrary source changes before terminal HEAD."
+    artifacts:
+      - path: "scripts/finalize_phase_164.sh"
+        issue: "require_terminal_state at lines 98-120 accepts a stale passing verifier solely by frontmatter status."
+      - path: ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
+        issue: "The promised terminal boundary is not backed by an executable verified-source binding."
+    missing:
+      - "Record a verified implementation SHA and bind terminal HEAD to it with an explicit metadata-only diff allowlist, or use an equivalent hash-bound final verification result."
+      - "Add a regression proving a source commit after a passing verifier is rejected."
+  - truth: "D-09/D-10/TRTH-03: Pre-verification mechanically requires the complete tracked repair through Plan 164-13 before evidence collection."
+    status: failed
+    reason: "The actual d903b040 capture contains Plan 13, but the reusable gate only checks summaries 01 through 11."
+    artifacts:
+      - path: "scripts/finalize_phase_164.sh"
+        issue: "require_pre_verification_state at lines 90-96 never requires 164-12-SUMMARY.md or 164-13-SUMMARY.md."
+      - path: ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
+        issue: "The pre-verification instructions still say Plans 01-11, conflicting with Plan 164-14."
+    missing:
+      - "Require the current expected summary set through Plan 13 before collection."
+      - "Add a process regression proving missing 164-13-SUMMARY.md prevents collection."
+  - truth: "Phase-owned verification is safe to run and cannot delete unrelated developer data."
+    status: failed
+    reason: "The hostile-repository test uses a VM-local integer for a sibling path, accepts an existing path, and unconditionally deletes it recursively on exit."
+    artifacts:
+      - path: "test/scripts/phase_164_closeout_test.exs"
+        issue: "Lines 600-606 construct a path beside the repository and call File.rm_rf!/1 without exclusive ownership proof."
+    missing:
+      - "Use an exclusively-created temporary directory or keep the fixture under the test temporary root."
+      - "Delete only a path this invocation proves it owns."
+  - truth: "D-11/TRTH-03: Malformed or temporally impossible scheduled evidence cannot be accepted as current."
     status: partial
-    reason: "The durable ledger exists and its focused test passes, but the closeout command accepts arbitrary incomplete/semantically invalid ledgers rather than the authoritative ledger and complete validator."
+    reason: "Both freshness checks enforce only age <= max_age. A future timestamp produces a negative age and passes; an independent jq probe returned true for now+86400 seconds."
     artifacts:
-      - path: "scripts/closeout_repository_truth.sh"
-        issue: "Lines 71-72 validate only header, field count, subject, disposition, and duplicate subject; they do not bind the ledger path or enforce mandatory fields, currentness, stale disposition, or audited-subject coverage."
-      - path: "test/scripts/phase_164_closeout_test.exs"
-        issue: "Its passing fixture supplies a one-row D-01 ledger, proving the closeout gate accepts incomplete coverage."
+      - path: "scripts/scheduled_control_evidence.sh"
+        issue: "Lines 348-352 omit a nonnegative-age check."
+      - path: "scripts/finalize_phase_164.sh"
+        issue: "Lines 177-180 repeat the one-sided predicate, so independent validation does not catch it."
     missing:
-      - "Bind --ledger to the authoritative Phase 164 ledger under the selected canonical repository."
-      - "Reuse or extract the full ledger parser and audited-subject inventory in the closeout gate, with negative fixtures for malformed currentness, stale-retain, and missing subjects."
-  - truth: "D-09/D-10/TRTH-03: One rerunnable final-evidence command proves a clean canonical /Users/jon/projects/mailglass on main with HEAD equal to origin/main."
-    status: failed
-    reason: "The CLI documents a canonical-checkout requirement but never compares the resolved --repo path with /Users/jon/projects/mailglass; it can report pass for any clean main checkout. It also checks porcelain before writing caller-controlled output/components, so a pass can leave a non-ignored output path dirty."
-    artifacts:
-      - path: "scripts/closeout_repository_truth.sh"
-        issue: "Lines 23 and 38-44 only canonicalize and inspect the supplied path; lines 25-29 and 85-92 create output after the sole porcelain check without restricting it to ignored tmp/."
-      - path: "test/scripts/phase_164_closeout_test.exs"
-        issue: "The positive fixture at lines 87-128 creates and passes a disposable temporary repository, and has no noncanonical-repo or output-in-worktree negative case."
-    missing:
-      - "Reject any --repo that is not the canonical checkout, and test that rejection."
-      - "Require ignored tmp/ output (or re-check porcelain after all writes) and test a non-ignored output path."
-  - truth: "D-09 through D-11/TRTH-03: A fresh untracked report for exact protected main proves clean canonical Git state, successful exact-SHA CI, and evidence-valid scheduled/recovery outcomes."
-    status: failed
-    reason: "The retained volatile report is for 84454ae6b60ec9c52114d5bf44ed394dac611f99, while this checkout's HEAD is dd542caa1e5cb0ffc76dde21fc87a07915536a7b and origin/main remains 84454ae6b60ec9c52114d5bf44ed394dac611f99. It is therefore not fresh evidence for the actual workspace state."
-    artifacts:
-      - path: "tmp/phase-164-closeout/report.json"
-        issue: "captured_at is 2026-08-27T16:51:33Z and head_sha/origin_main_sha are 84454a..., not the current local HEAD."
-    missing:
-      - "After fixing the closeout gate and integrating the verification/report commit, obtain a normal protected-main CI run and regenerate a report for the then-current exact SHA."
+      - "Require age >= 0 and age <= max_age, with an explicitly bounded clock-skew allowance only if needed."
+      - "Add future and invalid timestamp fixtures to both evidence layers."
+prohibition_flags:
+  - statement: "MUST NOT label the repository quiet when evidence is stale, malformed, mismatched, missing, or unexplained."
+    verdict: "non-authoritative LLM judgment: violated by stale-verifier binding and future-timestamp acceptance"
+  - statement: "MUST NOT represent pre-verification evidence as terminal evidence or edit tracked state after capture."
+    verdict: "non-authoritative LLM judgment: lifecycle is documented, but executable verifier-to-HEAD binding is incomplete; human review recommended"
 ---
 
 # Phase 164: Repository Truth Reconciliation and Closeout Verification Report
 
 **Phase Goal:** Maintainers can rely on documentation, tracked artifacts, ignore rules, and final evidence to describe the repository's actual supported and operational state.
-**Verified:** 2026-08-27T17:00:16Z
+**Verified:** 2026-09-09T19:25:08Z
 **Status:** gaps_found
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — prior gaps closed, current review exposed new blockers.
 
 ## Goal Achievement
 
@@ -51,96 +81,117 @@ gaps:
 
 | # | Truth | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | TRTH-01: Maintainer, release, recovery, and supported-command guidance agrees with protected workflow facts. | ✓ VERIFIED | `MAINTAINING.md:5-48` names hygiene, exact-candidate digest, repository-admin authorization, exact run/SHA, scheduled evidence, and non-success states; the focused contract passed. |
-| 2 | Historical v1 procedures remain discoverable but are unmistakably non-current. | ✓ VERIFIED | `MAINTAINING.md:474-479` explicitly labels Phase 38/73 procedures historical and non-current; contract test passed. |
-| 3 | Current package guidance matches core/admin 2.5.0 and inbound 2.2.0 manifests. | ✓ VERIFIED | `mix.exs:4`, `mailglass_admin/mix.exs:4`, and `mailglass_inbound/mix.exs:4` agree with README constraints; dynamic docs contract passed. |
-| 4 | The locked stale root sweep has one evidence-backed remove disposition rather than concealment. | ✓ VERIFIED | Ledger D-08 contains the locked SHA, stale generated identity, no consumer, and `remove`; `scheduled-control-sweep.json` is absent and no ignore rule names it. |
-| 5 | Durable scheduled/release/publish/planning proof remains tracked and discoverable. | ✓ VERIFIED | The repository-truth contract checks tracked proof paths and Phase 164 artifacts; focused suite passed. |
-| 6 | Every scoped artifact and every non-comment ignore rule has one **complete** evidence-backed disposition. | ✗ FAILED | The closeout gate accepts a one-row fixture ledger and only performs a partial AWK validation; it cannot prove complete authoritative coverage. |
-| 7 | Retained ignore rules are narrowly scoped and name a shared producer. | ✓ VERIFIED | Ledger inventories all six ignore files bijectively and the focused ledger contract passed. |
-| 8 | A rerunnable command composes hygiene, preservation, CI, scheduled-control, and ledger evidence into a volatile report. | ✓ VERIFIED | `scripts/closeout_repository_truth.sh:38-91` invokes all five authorities and normalizes component JSON; fixture contract passed. |
-| 9 | Quiet requires the canonical checkout on main, at exact origin/main, with no tracked or untracked entries. | ✗ FAILED | Script accepts any supplied clean `main` repository and writes output after its sole porcelain check. |
-| 10 | Quiet requires exact-main protected CI and current identity-matched scheduled/recovery evidence. | ✗ FAILED | Existing report proves only old SHA `84454a...`; current local `HEAD` is `dd542c...`, and no current exact-SHA report exists. |
-| 11 | Quiet requires the complete exact-one ledger gate. | ✗ FAILED | The script's line-72 AWK gate omits the actual ledger's completeness and semantic rules. |
-| 12 | Protected-main handoff uses a normally-triggered CI run for the supplied exact SHA. | ✓ VERIFIED | Stored report's CI source ties run `33085442330` to `84454a...`; this was valid for that historical snapshot, not current closeout. |
-| 13 | Final evidence describes the repository's **actual current** operational state. | ✗ FAILED | Current workspace is locally ahead of `origin/main`; stored volatile report is stale and its claimed quiet state is no longer current. |
+| 1 | TRTH-01 maintainer/release/recovery guidance agrees with protected workflow facts. | ✓ VERIFIED | `MAINTAINING.md:5-48` names exact authority, identity, scheduled evidence, immutable target, and fail-closed states; contract passed. |
+| 2 | Historical v1 procedures are discoverable but non-current. | ✓ VERIFIED | Current guidance disclaims historical procedures as alternate authority; contract passed. |
+| 3 | Package guidance matches core/admin 2.5 and inbound 2.2 manifests. | ✓ VERIFIED | README constraints and manifest-derived docs contract agree. |
+| 4 | Locked stale root sweep has one evidence-backed remove disposition. | ✓ VERIFIED | D-08 locked digest/remove row remains; root output is absent; production validator passed. |
+| 5 | Durable scheduled/release/publish/planning proof remains tracked. | ✓ VERIFIED | Principal artifacts are tracked and repository-derived validation passed. |
+| 6 | Every scoped artifact and ignore rule has one complete disposition. | ✓ VERIFIED | Production validator printed `repository truth ledger: valid`; adversarial completeness tests are active. |
+| 7 | Retained ignore rules are narrow and producer-owned. | ✓ VERIFIED | Six-file exact-set inventory passed; no broad proof-hiding rule found. |
+| 8 | One rerunnable command composes all evidence authorities. | ✓ VERIFIED | `closeout_repository_truth.sh:132-143` invokes workspace, ledger, CI, and scheduled sources; focused tests passed. |
+| 9 | Quiet requires canonical repo/ledger, ignored output, exact origin/main, and post-write cleanliness. | ✓ VERIFIED | Exact path gates and late-dirt regression tests passed. |
+| 10 | Quiet rejects malformed temporal scheduled evidence. | ✗ FAILED | Exact provenance is checked, but future timestamps pass both one-sided age predicates. |
+| 11 | Quiet requires the complete exact-one ledger gate. | ✓ VERIFIED | Closeout invokes the canonical shared validator; canonical ledger passed independently. |
+| 12 | Handoff uses attempt-one normal push CI and natural same-SHA schedules. | ✓ VERIFIED | Raw sources for `d903b040...` match CI run `34284583200` and the exact natural attempt-one control set. |
+| 13 | Final evidence reliably describes the verified implementation and terminal state. | ✗ FAILED | Terminal mode accepts any older `status: passed` verifier without a verified-source SHA binding; terminal capture is not yet run. |
 
-**Score:** 8/13 truths verified (0 present, behavior-unverified)
+**Score:** 11/13 truths verified (0 present, behavior-unverified)
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 | --- | --- | --- | --- |
-| `MAINTAINING.md` | Current release/recovery path and historical boundary | ✓ VERIFIED | Substantive, contract-tested documentation; links to workflow authority. |
-| Package READMEs | Manifest-derived compatibility guidance | ✓ VERIFIED | Substantive, dynamically tested against all three manifests. |
-| `164-TRUTH-DISPOSITION.tsv` | Complete artifact/ignore disposition ledger | ⚠️ HOLLOW IN CLOSEOUT | Ledger and its direct contract are substantive; the consuming closeout CLI does not validate its full meaning or scope. |
-| `test/scripts/phase_164_repository_truth_test.exs` | Ledger contract | ⚠️ WARNING | Focused test passes, but `String.starts_with?/2` at lines 244-249 accepts forged currentness prefixes such as `current-forged`. |
-| `scripts/closeout_repository_truth.sh` | Fail-closed canonical closeout CLI | ✗ FAILED | Substantive and wired, but omits canonical-path/output cleanliness/complete-ledger enforcement. |
-| `test/scripts/phase_164_closeout_test.exs` | Identity and failure-precedence contract | ⚠️ INSUFFICIENT | Passes, while its pass fixture demonstrates the noncanonical-repository bypass and incomplete ledger acceptance. |
-| `164-CLOSEOUT.md` | Stable rerun contract | ⚠️ CONTRADICTED | Claims canonical path and complete ledger conditions the executable CLI does not enforce. |
-| `tmp/phase-164-closeout/report.json` | Fresh exact-main volatile proof | ✗ STALE | Report SHA `84454a...` differs from current `HEAD` `dd542c...`. |
+| `MAINTAINING.md` | Current release/recovery truth | ✓ VERIFIED | Substantive, tracked, contract-tested. |
+| Package READMEs | Manifest-derived compatibility | ✓ VERIFIED | Root/admin/inbound constraints dynamically checked. |
+| `164-TRUTH-DISPOSITION.tsv` | Complete artifact/ignore ledger | ✓ VERIFIED | Canonical validator passed. |
+| `scripts/validate_repository_truth.exs` | Shared validator | ✓ VERIFIED | Tracked and invoked by tests and closeout. |
+| `scripts/closeout_repository_truth.sh` | Canonical fail-closed composition | ⚠️ PARTIAL | Original gaps closed; upstream freshness accepts future timestamps. |
+| `scripts/finalize_phase_164.sh` | Safe lifecycle gate | ✗ FAILED | Omits Plan 13 prerequisite and verified-source binding. |
+| `test/scripts/phase_164_closeout_test.exs` | Safe hostile-path contract | ✗ FAILED | Passing test contains unsafe out-of-root cleanup. |
+| `164-FINALIZATION.md` | Accurate lifecycle contract | ⚠️ PARTIAL | Still says Plans 01-11 and lacks a verifier-SHA contract. |
+| Ignored pre-verification evidence | Exact protected implementation proof | ✓ VERIFIED | Report/raw sources exist and independently validate for `d903b040...`. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 | --- | --- | --- | --- | --- |
-| `MAINTAINING.md` | `.github/workflows/release-please.yml` | exact command, digest, repository-admin authority | ✓ WIRED | Contract and prose align with guarded workflow language. |
-| Package READMEs | three manifests | dynamic major/minor assertions | ✓ WIRED | `docs_contract_test.exs` computes manifest versions. |
-| Ignore files/proof paths | disposition ledger | deterministic exact-one inventory | ⚠️ PARTIAL | Direct test inventories them, but final closeout uses a different partial validator. |
-| Closeout CLI | evidence tools | normalized component report | ✓ WIRED | Script invokes hygiene, workspace evidence, CI monitor, and scheduled sweep. |
-| CLI `--repo`/`--ledger` | authoritative canonical paths | exact identity binding | ✗ NOT_WIRED | Arbitrary existing paths are accepted. |
-| checkpoint SHA/CI | current volatile report | independent exact identity assertions | ✗ NOT_WIRED | Stored report is bound to a prior SHA, not current workspace identity. |
+| Maintainer/package docs | workflows/manifests | contract assertions | ✓ WIRED | Focused documentation tests passed. |
+| Closeout | authoritative ledger | exact CLI invocation | ✓ WIRED | Shared validator called at closeout line 136. |
+| Closeout | canonical repo/output | physical identity, ignore gate, post-write porcelain | ✓ WIRED | Prior gaps closed and hostile fixtures pass. |
+| Finalizer | Plan 13 prerequisite | summary presence | ✗ NOT_WIRED | Loop stops at summary 11. |
+| Passing verifier | terminal HEAD | verified SHA and metadata-only delta | ✗ NOT_WIRED | Only `status: passed` is checked. |
+| Scheduled sweep | final raw validation | freshness and provenance | ⚠️ PARTIAL | Identity is checked; negative age is accepted. |
 
 ### Data-Flow Trace (Level 4)
 
-| Artifact | Data Variable | Source | Produces Real Data | Status |
+| Artifact | Data | Source | Produces Real Data | Status |
 | --- | --- | --- | --- | --- |
-| Closeout CLI | Git identity/porcelain | `git -C "$repo"` | Yes, but any caller-supplied repo | ⚠️ UNSCOPED |
-| Closeout CLI | ledger verdict | caller-supplied TSV + partial AWK | No complete semantic coverage | ✗ HOLLOW |
-| Closeout report | CI/scheduled components | `ci_monitor.cjs` and `scheduled_control_evidence.sh` | Historical report contains real evidence for `84454a...` | ⚠️ STALE |
+| Closeout report | Git/hygiene/workspace/ledger/CI/scheduled | Real Git and existing tools | Yes | ✓ FLOWING |
+| Pre-verification report | protected-main identities | Ignored raw files | Yes, for `d903b040...` | ✓ FLOWING |
+| Terminal verifier authority | verifier applicability to terminal source | Verification frontmatter | No implementation identity flows | ✗ DISCONNECTED |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
-| Phase ledger/docs/closeout contracts | `mix test test/scripts/phase_164_repository_truth_test.exs test/scripts/phase_164_closeout_test.exs test/mailglass/publish/maintaining_release_gate_contract_test.exs test/mailglass/docs_contract_test.exs --warnings-as-errors --no-deps-check` | 49 tests, 0 failures, 1 skipped | ✓ PASS (but insufficient for the failed truth cases) |
-| Closeout script parses | `bash -n scripts/closeout_repository_truth.sh` | exit 0 | ✓ PASS |
-| Current report identity | `git rev-parse HEAD; git rev-parse refs/remotes/origin/main; jq .head_sha tmp/phase-164-closeout/report.json` | `dd542c...`; `84454a...`; `84454a...` | ✗ FAIL |
+| Focused Phase 164 contracts | four focused ExUnit files | 81 tests, 0 failures, 1 pre-existing historical skip | ✓ PASS |
+| Authoritative ledger | production validator CLI | `repository truth ledger: valid` | ✓ PASS |
+| Shell syntax | `bash -n` on closeout/finalizer/shim | exit 0 | ✓ PASS |
+| Pre-verification raw identity | exact CI/scheduled jq predicates | both true | ✓ PASS |
+| Future timestamp rejection | one-day-future jq age probe | `true` | ✗ FAIL |
 
 ### Probe Execution
 
-Step 7c: SKIPPED — no phase-declared or conventional `probe-*.sh` files found.
+SKIPPED — no Phase 164 `probe-*.sh` is declared; focused scripts and the finalizer are the execution seams.
 
 ### Requirements Coverage
 
-| Requirement | Source Plan | Description | Status | Evidence |
-| --- | --- | --- | --- | --- |
-| TRTH-01 | 164-02, 164-03, 164-06, 164-07 | Guidance agrees with actual supported protected workflow, package state, and commands. | ✓ SATISFIED | Current/historical maintenance and package contracts pass, with manifest/workflow evidence. |
-| TRTH-02 | 164-01, 164-04, 164-06, 164-07 | All tracked/generated artifacts and ignore rules have evidence-backed classifications; proof remains discoverable. | ✗ BLOCKED | Direct ledger evidence is strong, but the final closeout acceptance path can pass an incomplete/invalid arbitrary ledger. |
-| TRTH-03 | 164-05, 164-06, 164-07 | Reproducible final closeout proves clean canonical state, protected CI, outcomes, and dispositions. | ✗ BLOCKED | Canonical repository, complete ledger, output-cleanliness, and fresh-current evidence claims are not enforced/proven. |
+| Requirement | Source Plans | Status | Evidence |
+| --- | --- | --- | --- |
+| TRTH-01 | 164-02, 03, 06, 07, 14 | ✓ SATISFIED | Maintainer and package contracts pass. |
+| TRTH-02 | 164-01, 04, 06-09, 11, 13, 14 | ✓ SATISFIED | Canonical exact-one validator passes against proof and six ignore inventories. |
+| TRTH-03 | 164-05-07, 09-14 | ✗ BLOCKED | Terminal verification is not source-bound; pre-verification is under-scoped; future timestamps can pass. |
 
-No orphaned Phase 164 requirements: all three mapped IDs appear in plan frontmatter.
+Every requirement ID from all fourteen PLAN frontmatters is one of TRTH-01, TRTH-02, or TRTH-03 and is present in REQUIREMENTS.md. No orphaned Phase 164 requirement exists.
 
-### Anti-Patterns Found
+### Test Quality Audit
 
-| File | Line | Pattern | Severity | Impact |
-| --- | --- | --- | --- | --- |
-| `scripts/closeout_repository_truth.sh` | 23, 38-44 | Caller-controlled canonical identity | 🛑 Blocker | A clean noncanonical repository can receive `pass`. |
-| `scripts/closeout_repository_truth.sh` | 25-29, 85-92 | Writes after porcelain check | 🛑 Blocker | A pass may leave non-ignored untracked output in the checked repository. |
-| `scripts/closeout_repository_truth.sh` | 71-72 | Partial ledger parser | 🛑 Blocker | Complete disposition coverage is asserted without enforcement. |
-| `test/scripts/phase_164_repository_truth_test.exs` | 244-249 | Prefix currentness validation | ⚠️ Warning | `current-forged`/`stale-but-not-really` can be accepted. |
+| Test File | Linked Req | Active | Skipped | Circular | Assertion Level | Verdict |
+| --- | --- | ---: | ---: | --- | --- | --- |
+| `phase_164_repository_truth_test.exs` | TRTH-02 | yes | 0 | No | Behavioral/value | PASS |
+| `phase_164_closeout_test.exs` | TRTH-03 | yes | 0 | No | Process/behavioral | BLOCKER: unsafe cleanup and missing review regressions |
+| `maintaining_release_gate_contract_test.exs` | TRTH-01 | yes | 0 | No | Value/contract | PASS |
+| `docs_contract_test.exs` | TRTH-01 | yes | 1 unrelated Phase 38 test | No | Value/contract | PASS with existing skip |
+| `scheduled_control_evidence_test.exs` | TRTH-03 | yes | 0 | No | Behavioral | WARNING: no future-timestamp rejection |
 
-No unreferenced `TBD`, `FIXME`, or `XXX` debt markers were found in phase-owned implementation files.
+The skipped historical test is not the sole proof for any Phase 164 requirement. No circular expected-value generator was found.
 
-### Prohibition Review — Human Decision Required
+### Anti-Patterns and Advisory Review Findings
 
-All seven plan-declared prohibitions are judgment-tier and remain flagged `unverified` in the plans. Automated inspection found no broad new proof-hiding ignore rule and no code path that dispatches, merges, publishes, or changes authorization. A maintainer must still decide whether the closeout policy-block interpretation and the historical authority boundaries meet the intended operational policy; this review cannot silently turn those judgment prohibitions green.
+| Finding | Independent Verdict | Severity | Evidence |
+| --- | --- | --- | --- |
+| CR-01 stale verifier can authorize later source | CONFIRMED | 🛑 BLOCKER | `finalize_phase_164.sh:115-120` checks only status; no SHA/diff binding exists. |
+| CR-02 pre-verification omits Plans 12/13 | CONFIRMED | 🛑 BLOCKER | `finalize_phase_164.sh:93-95` loops only through 11. Actual capture contains Plan 13, but the gate does not enforce it. |
+| CR-03 cleanup may remove unrelated sibling | CONFIRMED | 🛑 BLOCKER | Test lines 600-606 use VM-local uniqueness and unconditional recursive deletion outside the temp root. |
+| WR-01 future timestamps accepted | CONFIRMED | ⚠️ WARNING / goal gap | Both predicates lack `age >= 0`; direct probe returned true one day ahead. |
+
+No unreferenced `TBD`, `FIXME`, or `XXX` marker was found in phase-owned implementation files.
+
+### Decision Coverage
+
+All 12 trackable CONTEXT decisions are honored by shipped artifacts according to the non-blocking decision-coverage gate.
+
+### Prohibition Review
+
+The 13 plan prohibitions remain descriptor-less and flagged `unverified`. Automated evidence supports the no-dispatch/no-rerun, narrow-ignore, canonical-path, and durable-proof portions. The false-quiet family cannot pass judgment while verifier binding and timestamp validation remain open. These are non-authoritative LLM judgments; human review remains recommended after remediation.
 
 ### Gaps Summary
 
-The documentation and direct ledger evidence are mostly real, but the phase goal is blocked by its central final-evidence mechanism. The closeout script can certify an arbitrary clean repository and a one-row ledger, contradicting its own durable contract. Additionally, the only volatile report belongs to an earlier SHA and the working checkout is no longer aligned with `origin/main`; it cannot describe the repository's current state. These are implementation gaps, not deferred work: no later milestone phase covers them.
+The prior three gaps were genuinely repaired, and the integrated implementation has internally consistent exact-SHA pre-verification evidence. Phase 164 still cannot pass: terminal finalization can reuse an old passing verifier after source changes; pre-verification does not enforce the current Plan 13 prerequisite; a phase-owned test has destructive cleanup risk; and future scheduled timestamps are accepted as fresh. No later milestone phase exists to defer these gaps.
+
+The checkout is `main` at `38928c92...`, five metadata/review commits ahead of `origin/main` at `d903b040...`. This pre-integration delta is not itself treated as an implementation gap. Terminal capture remains a post-completion operation, but its binding defect must be repaired first.
 
 ---
 
-_Verified: 2026-08-27T17:00:16Z_
+_Verified: 2026-09-09T19:25:08Z_
 _Verifier: the agent (gsd-verifier)_
