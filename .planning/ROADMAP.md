@@ -190,7 +190,7 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 15/15 plans executed
+**Plans**: 15/16 plans executed
 
 Plans:
 
@@ -247,6 +247,10 @@ Plans:
 **Wave 13** *(gap closure; blocked on the Wave 12 protected evidence handoff)*
 
 - [x] 164-15-PLAN.md — Bind terminal verification to per-commit source history, require the complete repair summary set, contain hostile fixture cleanup, and reject impossible scheduled timestamps.
+
+**Wave 14** *(gap closure; blocked on Wave 13 completion)*
+
+- [ ] 164-16-PLAN.md — Reconcile contradictory current maintainer release authority and enforce the historical boundary across all non-historical guidance.
 
 **Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
 
