@@ -426,6 +426,30 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "source_run.attempt == 1"
   end
 
+  test "pre-verification requires summaries through Plan 13 before collection" do
+    root = temporary_root!()
+    phase_dir = Path.join(root, "phase")
+    marker = Path.join(root, "evidence-collected")
+    on_exit(fn -> File.rm_rf!(root) end)
+    File.mkdir_p!(phase_dir)
+
+    for plan <- 1..13 do
+      number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
+      File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary\n")
+    end
+
+    command = ~s(require_pre_verification_state "$2" "$3" && touch "$4")
+    assert {_, 0} = source_finalizer(command, [root, phase_dir, marker])
+    assert File.regular?(marker)
+
+    File.rm!(marker)
+    File.rm!(Path.join(phase_dir, "164-13-SUMMARY.md"))
+    assert {output, status} = source_finalizer(command, [root, phase_dir, marker])
+    assert status != 0
+    assert output =~ "missing implementation summary 164-13-SUMMARY.md"
+    refute File.exists?(marker)
+  end
+
   test "terminal verifier authority is bound to an ancestor implementation SHA and exact metadata history" do
     root = temporary_root!()
     on_exit(fn -> File.rm_rf!(root) end)
