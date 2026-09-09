@@ -58,6 +58,10 @@ created: "2026-09-01"
 | T-164-37 | Spoofing | scheduled provenance | high | mitigate | SHA, attempt, event, branch, status, workflow-SHA mutation tests | closed |
 | T-164-38 | Repudiation | sweep completeness | high | mitigate | Successful top-level sweep and exact complete control envelope are required and adversarially tested | closed |
 | T-164-39 | Elevation of Privilege | scheduled controls | medium | mitigate | No workflow/rerun/authorization/release surface | closed |
+| T-164-49 | Spoofing | protected-main and CI identity | high | mitigate | Exact canonical checkout, branch, HEAD/origin SHA equality, and finalizer-selected attempt-one normal push CI were independently verified in Plan 164-14 | closed |
+| T-164-50 | Tampering | scheduled evidence set/provenance | high | mitigate | Exact registry equality plus per-control attempt, event, workflow, SHA, status, reason, freshness, payload digest, and archive digest checks passed in Plan 164-14 | closed |
+| T-164-51 | Repudiation | pre-verification versus terminal boundary | high | mitigate | `164-FINALIZATION.md` and `164-14-SUMMARY.md` explicitly classify the accepted capture as pre-verification-only and require terminal recapture after tracked completion metadata | closed |
+| T-164-52 | Elevation of Privilege | remote workflow/release controls | high | mitigate | Plan 164-14 completed through read-only queries and transient credential injection with no dispatch, rerun, push, merge, authority change, or publication operation | closed |
 | T-164-SC | Tampering | package supply chain | low | accept | Acceptance is not yet documented; below the configured blocking threshold | open — below high threshold |
 
 ## Accepted Risks Log
@@ -70,6 +74,7 @@ No accepted risks. T-164-SC remains open below the configured blocking threshold
 |------------|---------------|--------|------|--------|
 | 2026-09-01 | 33 | 22 | 11 total / 10 blocking | gsd-security-auditor |
 | 2026-09-01 | 33 | 32 | 1 total / 0 blocking | gsd-security-auditor (post-remediation) |
+| 2026-09-09 | 37 | 36 | 1 total / 0 blocking | execute-phase ASVS L1 short-circuit refresh through Plan 164-14 |
 
 ## Sign-Off
 
