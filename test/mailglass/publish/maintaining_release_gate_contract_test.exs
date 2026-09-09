@@ -42,7 +42,13 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
     ]
 
     Enum.each(variants, fn variant ->
-      injected = String.replace(maintaining, "## Bus Factor & Continuity", "#{variant}\n\n## Bus Factor & Continuity")
+      injected =
+        String.replace(
+          maintaining,
+          "## Bus Factor & Continuity",
+          "#{variant}\n\n## Bus Factor & Continuity"
+        )
+
       current = section_before!(injected, "Historical release procedures")
 
       refute authority_violations(current) == [], "expected to reject: #{variant}"

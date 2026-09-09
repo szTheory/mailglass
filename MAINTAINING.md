@@ -356,14 +356,10 @@ editing any one of the three without the others fails CI.
 
 ## Bus Factor & Continuity
 
-Mailglass is single-maintainer at v0.1. The release pipeline is intentionally
-hands-free after the repo-proved gates pass: `gate-ci-green` checks the release
-SHA and the `hex-publish` environment has no required reviewers. This is
-documented honestly here rather than presented as a stronger human approval
-control than it is. Multi-owner Hex transition is deferred to v0.5, when
-production adopters exist (D-26 rationale: at v0.1 the asymmetry of a co-owner
-being able to `mix hex.publish` from their own machine bypassing GitHub
-governance is a worse footgun than the bus-factor risk it solves).
+Mailglass remains single-maintainer. A green gate alone does not authorize
+release or publish progress. Every current release continues to require the
+protected exact-candidate dispatch and fresh exact repository-admin
+authorization described at the start of this document.
 
 If `szTheory` is unreachable for more than 30 days, the community can request a
 Hex.pm package transfer by opening a public issue titled
@@ -478,6 +474,17 @@ provenance and their original-version applicability only. They are non-current:
 do not use their auto-merge, fan-out, manual smoke, tag, or fallback language as
 authority for a current release or recovery. The current protected path is the
 one at the start of this document.
+
+### Historical v0.1/v0.5 bus-factor rationale
+
+Mailglass was single-maintainer at v0.1. The release pipeline was intentionally
+hands-free after the repo-proved gates passed: `gate-ci-green` checked the
+release SHA and the `hex-publish` environment had no required reviewers. This
+was documented rather than presented as a stronger human approval control than
+it was. Multi-owner Hex transition was deferred to v0.5, when production
+adopters existed (D-26 rationale: at v0.1 the asymmetry of a co-owner being able
+to `mix hex.publish` from their own machine bypassing GitHub governance was a
+worse footgun than the bus-factor risk it solved).
 
 Five historical steps. Step 4 had a literal 60-minute timer — that was the last
 revert window before the published artifact became permanent.
