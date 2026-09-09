@@ -1,42 +1,46 @@
 # Phase 164 — UI Review
 
-**Audited:** 2026-09-01
+**Audited:** 2026-09-09
 **Baseline:** Abstract 6-pillar standards; no UI-SPEC.md exists
-**Screenshots:** Not captured — no HTTP 200 response at ports 3000, 5173, or 8080, and Phase 164 has no frontend target
-**Audit status:** **NOT APPLICABLE / SKIPPED** — no frontend or visual UI artifact changed in this phase
+**Screenshots:** Not captured — the execute:wave:post safety gate reports `frontend=false`, `hasUiFiles=false`, and `hasUiSpec=false`
+**Audit status:** **NOT APPLICABLE / SKIPPED** — Phase 164 contains no frontend deliverable or phase-owned UI change
+**Scope:** Plans 164-01 through 164-14 and their execution summaries
 
 ---
 
 ## Scope Determination
 
-Phase 164 is a repository-truth and operational-hygiene phase. Its locked boundary explicitly excludes product and admin UI changes (`164-CONTEXT.md:9`). The plans and summaries cover Markdown documentation, shell/Elixir/TypeScript operational tooling, tests, Git ignore rules, evidence ledgers, and GSD finalization infrastructure.
+Phase 164 reconciles repository documentation, package/version truth, artifact and ignore-rule dispositions, protected-CI evidence, and closeout automation. Its locked phase boundary explicitly excludes product and admin UI work (`164-CONTEXT.md:9`).
 
-The phase commit-path scan found no changed `.tsx`, `.jsx`, `.css`, `.scss`, `.heex`, `.leex`, `.vue`, or `.svelte` file. The only user-notification code added is the operational `finalize-phase` GSD command (`.gsd/extensions/finalize-phase/index.ts:34-110`); it invokes a tracked shell finalizer and forwards bounded command output through `ctx.ui.notify`. It is not a rendered application frontend and provides no visual surface on which to assess color, typography, spacing, or hierarchy.
+The complete 14-plan audit surface does not introduce or modify a rendered application artifact. Plans 164-01 through 164-12 cover documentation, evidence ledgers, shell/Elixir/TypeScript operational tooling, tests, ignore rules, and GSD finalization infrastructure. The two newly completed gap-closure plans preserve that boundary:
 
-The README and maintainer-document edits are user-facing documentation, not application UI. Phase 164 records those paths directly (`164-02-SUMMARY.md:16-20`, `164-03-SUMMARY.md:18`). Their factual contracts belong to documentation and repository-truth verification, not this visual audit.
+- Plan 164-13 modifies only two ExUnit test files (`164-13-SUMMARY.md:20-24`) and explicitly creates or modifies no UI (`164-13-PLAN.md:149-153`).
+- Plan 164-14 declares no implementation files modified (`164-14-PLAN.md:1-8`); its only tracked execution artifact is the plan summary (`164-14-SUMMARY.md:21-24`, `:104-108`).
 
-No BLOCKER or WARNING is assigned merely because the phase has no UI deliverable. Doing so would penalize correct scope adherence.
+The execute:wave:post `ui.safety-gate` independently reports `frontend=false`, `hasUiFiles=false`, `hasUiSpec=false`, and `block=false`. Under the task constraint, no browser or unrelated service was probed because there is no frontend target. The screenshot safety directory gate was executed before making that determination; no screenshots were created.
+
+No BLOCKER or WARNING is assigned. A visual defect classification requires an applicable UI surface, and scoring this phase as either `0/24` or `24/24` would misrepresent what was built.
 
 ---
 
 ## Pillar Status
 
-| Pillar | Status | Key Finding |
-|--------|--------|-------------|
-| 1. Copywriting | N/A | No in-product CTA, empty-state, error-state, or interface copy changed. Documentation and operational command messages are outside the visual frontend scope. |
-| 2. Visuals | N/A | No rendered component, layout, icon, image, or visual hierarchy artifact changed. |
-| 3. Color | N/A | No phase-owned stylesheet, color token, CSS variable, or frontend color class changed. |
-| 4. Typography | N/A | No phase-owned font, type scale, weight, or rendered text-style artifact changed. |
-| 5. Spacing | N/A | No phase-owned layout, spacing token, margin, padding, gap, or responsive breakpoint changed. |
-| 6. Experience Design | N/A | No application flow, loading state, empty state, destructive UI action, form, or responsive interaction changed. |
+| Pillar | Status | Evidence-based finding |
+|--------|--------|------------------------|
+| 1. Copywriting | N/A | No in-product CTA, form label, empty state, error state, or interface copy changed. Markdown operational guidance is documentation, not application UI copy. |
+| 2. Visuals | N/A | No component, page, icon, image, layout, or rendered hierarchy changed. |
+| 3. Color | N/A | No stylesheet, color token, CSS variable, utility color class, or rendered color usage changed. |
+| 4. Typography | N/A | No font family, type scale, weight, line-height, or rendered typographic hierarchy changed. |
+| 5. Spacing | N/A | No layout primitive, spacing token, margin, padding, gap, or responsive breakpoint changed. |
+| 6. Experience Design | N/A | No application flow, control, form, loading state, empty state, destructive UI action, or responsive interaction changed. |
 
-**Overall:** Not scored. Zero of six UI pillars are applicable; reporting `0/24` or `24/24` would misrepresent the implementation.
+**Overall:** Not scored — zero of six UI pillars are applicable.
 
 ---
 
 ## Top 3 Priority Fixes
 
-No Phase 164 UI fixes are applicable. The audit does not invent three visual changes for a phase whose contract excludes UI work.
+Not applicable. The audit does not invent visual fixes for a phase whose contract explicitly excludes UI work.
 
 ---
 
@@ -44,52 +48,46 @@ No Phase 164 UI fixes are applicable. The audit does not invent three visual cha
 
 ### Pillar 1: Copywriting (N/A)
 
-**Scope finding — NOT APPLICABLE:** The changed human-facing prose is in `MAINTAINING.md` and three package README files, where Phase 164 reconciles operational authority and manifest-derived compatibility. No application string, CTA, form label, empty state, or rendered error message was introduced. The GSD extension uses specific operational errors and a bounded success notification (`.gsd/extensions/finalize-phase/index.ts:35`, `:40-43`, `:50-53`, `:67-69`, `:79-85`, `:96-108`), but that command surface is not frontend copy under this review contract.
+**Scope finding — NOT APPLICABLE:** The phase updates maintainer and package documentation and operational evidence messaging. Those artifacts are reviewed by repository-truth and documentation contracts, not as rendered product copy. Plans 164-13 and 164-14 add no product strings.
 
 ### Pillar 2: Visuals (N/A)
 
-**Scope finding — NOT APPLICABLE:** No frontend extension appeared in the Phase 164 commit-path scan. The phase creates no component, page, icon-only control, illustration, dashboard, or visual hierarchy. The phase boundary explicitly excludes admin UI (`164-CONTEXT.md:9`).
+**Scope finding — NOT APPLICABLE:** The full 14-plan surface contains no application component, page, visual asset, or hierarchy change. Plan 164-13 is test-only gap closure, and Plan 164-14 changes no implementation file.
 
 ### Pillar 3: Color (N/A)
 
-**Scope finding — NOT APPLICABLE:** No Phase 164 plan or summary declares a stylesheet, frontend token file, or rendered template as modified. There is therefore no evidence base for accent-distribution, contrast, semantic-color, or hardcoded-color scoring.
+**Scope finding — NOT APPLICABLE:** There is no phase-owned stylesheet or rendered template against which to assess palette distribution, accent restraint, semantic color, or contrast.
 
 ### Pillar 4: Typography (N/A)
 
-**Scope finding — NOT APPLICABLE:** No Phase 164 implementation path changes font families, sizes, weights, line heights, or rendered typographic hierarchy. Markdown heading structure is documentation content and is not an application type system.
+**Scope finding — NOT APPLICABLE:** There is no phase-owned frontend typography. Markdown headings and terminal/report formatting are operational documentation surfaces, not an application type system.
 
 ### Pillar 5: Spacing (N/A)
 
-**Scope finding — NOT APPLICABLE:** No Phase 164 implementation path changes layout primitives, responsive breakpoints, spacing tokens, or arbitrary visual dimensions. Operational script formatting and Markdown whitespace are not UI spacing evidence.
+**Scope finding — NOT APPLICABLE:** No frontend spacing classes, layout tokens, responsive dimensions, or breakpoint behavior changed.
 
 ### Pillar 6: Experience Design (N/A)
 
-**Scope finding — NOT APPLICABLE:** Phase 164 changes repository closeout, evidence validation, and finalization behavior rather than a user application flow. The command extension distinguishes success and error notifications and validates arguments before invoking the finalizer (`.gsd/extensions/finalize-phase/index.ts:34-108`), but it adds no visual loading, empty, confirmation, disabled, responsive, or destructive-action state. Its operational safety is covered by Phase 164 contracts rather than visual UX scoring.
+**Scope finding — NOT APPLICABLE:** Phase 164's interactions are repository validation, evidence capture, and terminal finalization rather than application UX. Their failure states and safety properties are covered by Phase 164's executable contracts; they do not create a visual interaction surface.
 
 ---
 
 ## Audit Conditions
 
 - UI-SPEC.md: absent.
-- Dev server probes: port 3000 unavailable; port 5173 unavailable; port 8080 returned HTTP 301, not the required HTTP 200.
+- Frontend safety gate: `frontend=false`, `hasUiFiles=false`, `hasUiSpec=false`, `block=false`.
+- Browser/dev-server probe: intentionally not run because no frontend target exists.
 - Screenshots: not captured.
+- Screenshot storage gate: executed; no binary assets created.
 - `components.json`: absent; registry safety audit not applicable.
-- Frontend change scan: no Phase 164 commit path matched `.tsx`, `.jsx`, `.css`, `.scss`, `.heex`, `.leex`, `.vue`, or `.svelte`.
+- Finding classification: no BLOCKER and no WARNING because all six pillars are out of scope.
 
 ---
 
 ## Files Audited
 
 - `.planning/phases/164-repository-truth-reconciliation-and-closeout/164-CONTEXT.md`
-- All twelve `164-*-PLAN.md` files
-- All twelve `164-*-SUMMARY.md` files
-- `.gsd/extensions/finalize-phase/index.ts`
-- `.gsd/extensions/finalize-phase/extension-manifest.json`
-- `MAINTAINING.md`
-- `README.md`
-- `mailglass_admin/README.md`
-- `mailglass_inbound/README.md`
-- `scripts/closeout_repository_truth.sh`
-- `scripts/finalize_phase_164.sh`
-- `scripts/validate_repository_truth.exs`
-- Phase 164 commit-path inventory and repository frontend-file inventory
+- `.planning/phases/164-repository-truth-reconciliation-and-closeout/164-01-PLAN.md` through `164-14-PLAN.md`
+- `.planning/phases/164-repository-truth-reconciliation-and-closeout/164-01-SUMMARY.md` through `164-14-SUMMARY.md`
+- Previous `.planning/phases/164-repository-truth-reconciliation-and-closeout/164-UI-REVIEW.md`, superseded by this 14-plan review
+- execute:wave:post `ui.safety-gate` result supplied for the current phase state
