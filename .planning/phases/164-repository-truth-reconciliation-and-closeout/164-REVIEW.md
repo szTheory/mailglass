@@ -1,6 +1,6 @@
 ---
 phase: 164-repository-truth-reconciliation-and-closeout
-reviewed: 2026-09-01T15:03:39Z
+reviewed: 2026-09-09T19:15:34Z
 depth: standard
 files_reviewed: 20
 files_reviewed_list:
@@ -25,70 +25,66 @@ files_reviewed_list:
   - test/scripts/scheduled_control_evidence_test.exs
   - test_js/ci-monitor.test.cjs
 findings:
-  critical: 0
-  warning: 0
+  critical: 3
+  warning: 1
   info: 0
-  total: 0
-status: clean
+  total: 4
+status: issues_found
 ---
 
 # Phase 164: Code Review Report
 
-**Reviewed:** 2026-09-01T15:03:39Z
+**Reviewed:** 2026-09-09T19:15:34Z
 **Depth:** standard
 **Files Reviewed:** 20
-**Status:** clean
+**Status:** issues_found
 
 ## Summary
 
-The post-iteration-3 implementation closes the remaining scheduled-freshness
-and subject-binding gaps without regressing the earlier Phase 164 remediations.
-All reviewed files meet quality standards. No issues found.
+The reviewed contracts pass (90 tests, 0 failures, 1 pre-existing skip), but the final evidence boundary is not fail-closed. Terminal mode accepts a stale verifier result after arbitrary source changes, pre-verification mode does not enforce the Plan 13 integration precondition, and a new hostile-identity test can recursively delete a pre-existing sibling directory. Scheduled evidence also treats timestamps in the future as fresh.
 
-The terminal finalizer now pins `GH_HOST`, `GITHUB_REPOSITORY`, and
-`SCHEDULED_CONTROL_CONFIG` for the delegated closeout, then independently loads
-the canonical registry and enforces its workflow identities, positive maximum
-ages, parsed run timestamps, exact control set, exact main SHA, attempt-one
-schedule provenance, and retained artifact digests. An ambient copied registry
-with inflated freshness limits therefore cannot weaken the terminal decision.
-
-The repository-truth validator binds all 72 currently audited ignore-rule
-subjects to stable IDs and canonical semantic profiles. It also binds every
-non-ignore subject to a subject-keyed relationship digest and returns false for
-any unmapped subject. Cross-row relationship borrowing, ignore producer
-transplants, ignore stable-ID swaps, and newly introduced unmapped subjects all
-fail closed.
-
-### Prior-finding disposition
-
-| Prior finding | Result | Evidence |
-|---|---|---|
-| CR-01 | Resolved | Closeout and finalization allocate private random capture directories under canonical `tmp`, use private component directories, and write via temporary files plus atomic renames. The foreign-symlink regression passes. |
-| CR-02 | Resolved | Scheduled acceptance requires a top-level passing sweep, the exact canonical control set, matching workflow names, attempt-one scheduled runs, exact-main identities, non-empty reasons, and valid payload/archive digests. Incomplete and fabricated sweep regressions pass. |
-| CR-03 | Resolved | Origin, GitHub repository, `GH_HOST`, and `GH_REPO` authority are checked; direct GitHub calls are pinned; delegated scheduled configuration is canonical; and the final raw-source predicate independently enforces canonical freshness. |
-| CR-04 | Resolved | The finalizer re-fetches protected main at the final decision point, requires both HEAD and `origin/main` to remain on the captured SHA, binds the scheduled source to that SHA, and preserves a blocked report if main advances. |
-| CR-05 | Resolved | Closed semantic enums and kind relationships remain enforced, non-ignore rows are subject-digest-bound, every ignore row is stable-ID/profile-bound, and unmapped audited subjects fail closed. |
-| CR-06 | Resolved | Root guidance is production-capable and the admin README clearly separates preview-only dev scoping from production operator installation. |
-| WR-01 | Resolved | Current core/admin labels use manifest-aligned `v2.x`, inbound maintenance guidance uses `2.x`, and retained `1.x` language is explicitly historical. |
-
-### Verification evidence
-
-- Focused ExUnit scope passed: 79 tests, 0 failures, 1 skipped (78 executed).
-- Exhaustive ignore-profile mutation probe covered 72 rows × 10 bound semantic
-  fields (720 mutations); zero mutated relationships were accepted.
-- Canonical repository-truth CLI returned `repository truth ledger: valid`.
-- Node CI-monitor contract passed 5 tests.
-- `bash -n` passed for all three scoped shell scripts.
-- `git diff --check` passed.
-- No push, merge, workflow dispatch, rerun, source edit, test edit, or commit was
-  performed by this review.
+The current checkout does not itself constitute terminal proof: `164-VERIFICATION.md` still has `status: gaps_found`, and local `HEAD` is ahead of `origin/main`. This is correctly rejected by today's preconditions, but does not mitigate the implementation defects below once those superficial state checks are satisfied.
 
 ## Narrative Findings (AI reviewer)
 
-No Critical, Warning, or Info findings remain in the reviewed scope.
+## Critical Issues
+
+### CR-01 [BLOCKER]: Terminal mode does not bind the passing verifier to the implementation it certifies
+
+**File:** `/Users/jon/projects/mailglass/scripts/finalize_phase_164.sh:115-120`
+
+**Issue:** `require_terminal_state` checks only that the verification frontmatter contains `status: passed`. It does not read an implementation SHA from the verifier, nor restrict the changes between verification and the terminal `HEAD` to known completion-metadata paths. Consequently, after any old passing `164-VERIFICATION.md` exists, arbitrary source changes can land, receive an ordinary green CI run, and still be declared terminally finalized without goal-level verification of those changes. The exact-current CI and ledger checks do not replace this missing binding: CI proves its configured tests passed, while the ledger validates row semantics rather than source contents.
+
+**Fix:** Record the verified implementation SHA in `164-VERIFICATION.md`, parse it in `require_terminal_state`, and fail unless `git diff --name-only <verified-sha>..HEAD` contains only an explicit allowlist of phase-completion metadata. Alternatively, run goal verification against the final source tree and store a detached signed/hashed verifier result that the finalizer can bind to the current tree without creating another tracked write.
+
+### CR-02 [BLOCKER]: Pre-verification can pass without the required Plan 13 repair being integrated
+
+**File:** `/Users/jon/projects/mailglass/scripts/finalize_phase_164.sh:90-96`
+
+**Issue:** Pre-verification hard-codes summaries `164-01` through `164-11`. Plan 164-14 explicitly requires Plan 13 tests and `164-13-SUMMARY.md` to be on protected main before capture, yet the executable gate never checks either Plan 12 or Plan 13. A clean protected-main commit containing only Plans 01-11 can therefore obtain `pre-verification evidence passed`, contrary to the current acceptance contract and the Plan 14 claim that the complete gap repair was integrated first.
+
+**Fix:** Make the current pre-verification gate require summaries 01 through 13 (and preferably the expected numbered plan set plus the specific Plan 13 test paths tracked at `HEAD`). Add a process-level regression that removes `164-13-SUMMARY.md` from a disposable canonical fixture and proves evidence collection never starts.
+
+### CR-03 [BLOCKER]: New test cleanup can recursively delete an unrelated sibling checkout
+
+**File:** `/Users/jon/projects/mailglass/test/scripts/phase_164_closeout_test.exs:600-606`
+
+**Issue:** The hostile-repository test constructs `prefix_collision` beside the real repository using `@repo_root <> "-gap-#{System.unique_integer(...)}`. `File.mkdir_p!/1` succeeds if that path already exists, and `on_exit` then unconditionally calls `File.rm_rf!/1`. `System.unique_integer/1` is only VM-local; after a restart or a prior interrupted run, the generated sibling path can already contain user data. Running the test can therefore destroy an unrelated directory outside the test's temporary root.
+
+**Fix:** Allocate the prefix-collision fixture with a collision-safe exclusive temporary-directory primitive, or keep it under `temporary_root!()` and test the canonical-prefix logic through an injected canonical path. At minimum, fail if the candidate already exists, record that this invocation created it, and delete it only when that ownership marker is present.
+
+## Warnings
+
+### WR-01 [WARNING]: Future scheduled-run timestamps are accepted as fresh
+
+**File:** `/Users/jon/projects/mailglass/scripts/scheduled_control_evidence.sh:348-352`
+
+**Issue:** Freshness is tested only as `now - updated_at <= max_age`. A timestamp in the future yields a negative age and passes. The independent finalizer repeats the same one-sided predicate at `scripts/finalize_phase_164.sh:177-180`, so the second validation does not catch it. A malformed or clock-skewed upstream record can remain "current" indefinitely until wall time catches up, contradicting the documented fail-closed treatment of malformed evidence.
+
+**Fix:** Parse the timestamp once and require `age >= 0 and age <= max_age` in both predicates, with a small explicitly documented clock-skew allowance if needed. Add fixtures for a far-future timestamp and an invalid timestamp to both the scheduled sweep and finalizer raw-source tests.
 
 ---
 
-_Reviewed: 2026-09-01T15:03:39Z_
+_Reviewed: 2026-09-09T19:15:34Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
