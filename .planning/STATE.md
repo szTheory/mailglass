@@ -5,18 +5,18 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-15-PLAN.md
-last_updated: "2026-09-09T22:00:02.868Z"
+stopped_at: Completed 164-16-PLAN.md
+last_updated: "2026-09-09T22:16:39.198Z"
 last_activity: 2026-09-09
-last_activity_desc: Completed Plan 164-15 terminal integrity gap closure
-state_head: 9c35fe5a8d061d798387cc5fa7f08ecbcf2cba49
+last_activity_desc: Completed Plan 164-16 maintainer authority reconciliation
+state_head: c5406ee03703f150a08c8d7be3b1ab8afd71acd3
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 42
-  completed_plans: 38
-  percent: 75
-current_plan: 15
+  completed_plans: 39
+  percent: 93
+current_plan: 16
 ---
 
 # Project State
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — READY TO EXECUTE
-Plan: 15 of 15
-Status: Awaiting phase verification and terminal finalization
-Last activity: 2026-09-09 — Completed Plan 164-15 terminal integrity gap closure
+Phase: 164 (Repository Truth Reconciliation and Closeout) — READY TO VERIFY
+Plan: 16 of 16
+Status: Awaiting refreshed phase verification and terminal finalization
+Last activity: 2026-09-09 — Completed Plan 164-16 maintainer authority reconciliation
 
-Progress: [█████████░] 38/41 planned plans (93%)
+Progress: [█████████░] 39/42 planned plans (93%)
 
 ## Performance Metrics
 
@@ -96,6 +96,7 @@ Progress: [█████████░] 38/41 planned plans (93%)
 | Phase 164 P13 | 6min | 2 tasks | 2 files |
 | Phase 164 P14 | 7min | 1 tasks | 1 files |
 | Phase 164 P15 | 18min | 3 tasks | 9 files |
+| Phase 164 P16 | 3min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -141,6 +142,8 @@ Progress: [█████████░] 38/41 planned plans (93%)
 - [Phase 164]: Terminal authority inspects every commit after verified_implementation_sha relative to its first parent, preserving forbidden change-then-revert history without traversing unrelated second-parent history.
 - [Phase 164]: Scheduled freshness is the closed interval from zero through each tracked registry maximum; malformed and negative ages have no clock-skew exception.
 - [Phase 164]: Out-of-root hostile fixtures are recursively removed only while exclusive allocation, lstat identity, resolved parent, exact basename, and invocation token all remain valid.
+- [Phase 164]: Current bus-factor guidance binds release progress to the protected exact-candidate dispatch and fresh exact repository-admin authorization; green gates alone grant no authority. — This keeps all current-facing maintainer prose aligned with the executable protected workflow.
+- [Phase 164]: The original v0.1/v0.5 hands-free rationale remains discoverable only after the exact Historical release procedures boundary. — Historical provenance stays available without reading as a second current runbook.
 
 ## Deferred Items
 
@@ -150,6 +153,6 @@ Progress: [█████████░] 38/41 planned plans (93%)
 
 ## Session Continuity
 
-Last session: 2026-09-09T21:04:13.754Z
-Stopped at: Completed 164-15-PLAN.md
+Last session: 2026-09-09T22:16:39.083Z
+Stopped at: Completed 164-16-PLAN.md
 Resume file: None
