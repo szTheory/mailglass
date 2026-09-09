@@ -630,6 +630,29 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     assert {_, status} = source_finalizer(command, [report, sha, root, registry, "77"])
     assert status != 0
+
+    for updated_at <- [
+          "not-an-iso8601-time",
+          DateTime.utc_now()
+          |> DateTime.add(86_400, :second)
+          |> DateTime.truncate(:second)
+          |> DateTime.to_iso8601(),
+          DateTime.utc_now()
+          |> DateTime.add(-129_601, :second)
+          |> DateTime.truncate(:second)
+          |> DateTime.to_iso8601()
+        ] do
+      mutated =
+        authoritative_sweep(sha)
+        |> put_in(["controls", Access.at(1), "source_run", "updated_at"], updated_at)
+
+      File.write!(scheduled, Jason.encode!(mutated))
+      assert {_, status} = source_finalizer(command, [report, sha, root, registry, "77"])
+      assert status != 0
+    end
+
+    File.write!(scheduled, Jason.encode!(authoritative_sweep(sha)))
+    assert {_, 0} = source_finalizer(command, [report, sha, root, registry, "77"])
   end
 
   test "finalizer rejects stale scheduled evidence despite an inflated ambient registry" do

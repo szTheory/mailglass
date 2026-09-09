@@ -148,6 +148,27 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
     end)
   end
 
+  test "sweep rejects malformed future and stale timestamps while accepting current evidence" do
+    in_tmp(fn temp_dir ->
+      sha = String.duplicate("a", 40)
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      fixtures = [
+        {"invalid", "not-an-iso8601-time", false},
+        {"future", now |> DateTime.add(86_400, :second) |> DateTime.to_iso8601(), false},
+        {"current", DateTime.to_iso8601(now), true},
+        {"in-range", now |> DateTime.add(-3_600, :second) |> DateTime.to_iso8601(), true},
+        {"stale", now |> DateTime.add(-10_801, :second) |> DateTime.to_iso8601(), false}
+      ]
+
+      for {name, updated_at, accepted?} <- fixtures do
+        fixture = write_sweep_fixture!(Path.join(temp_dir, name), sha, sha, updated_at)
+        {_output, status} = run_sweep(fixture)
+        assert status == 0 == accepted?, "unexpected freshness verdict for #{name}"
+      end
+    end)
+  end
+
   test "monitor is read-only, consumes trusted code, and covers every scheduled control" do
     workflow = File.read!(@monitor_workflow)
     verifier = File.read!(@evidence_script)
@@ -298,7 +319,7 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
     status
   end
 
-  defp write_sweep_fixture!(temp_dir, run_sha, main_sha) do
+  defp write_sweep_fixture!(temp_dir, run_sha, main_sha, updated_at \\ nil) do
     File.mkdir_p!(temp_dir)
     bin_dir = Path.join(temp_dir, "bin")
     File.mkdir_p!(bin_dir)
@@ -362,7 +383,9 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
         "head_branch" => "main",
         "head_sha" => run_sha,
         "html_url" => "https://github.com/example/mailglass/actions/runs/16214",
-        "updated_at" => DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+        "updated_at" =>
+          updated_at ||
+            DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
       })
     )
 
