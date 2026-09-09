@@ -327,6 +327,8 @@ defmodule Mailglass.RepositoryTruthLedger do
       "9d1e6e8f85891907277d87f427d52a54dcb501803d683f779a4dfa22591b37c2",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VERIFICATION.md" =>
       "37abe2db9ac0edbab5543e224cf410f528a6d86e6b541b34e70ba82aa9162312",
+    ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md" =>
+      "e9a328f7586633c017305370f306010745e8c558bdc4ef06f08e2db8ec6717af",
     ".gitignore" => "52c7aed7a0eaaf139bec59b33cca9e74a8ffda7ff0ec140512f1b5559d362f8a",
     ".gsd/extensions/finalize-phase/extension-manifest.json" =>
       "9a64278b3ac905ea43e5f12a3bd19c6f40f1fa6b22b04945e6aebae18f0649ce",
