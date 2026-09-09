@@ -36,7 +36,16 @@ protected `main`, run:
 
 Terminal mode additionally requires a summary for every numbered Phase 164
 plan, a completed Phase 164 ROADMAP entry, completed TRTH-01 through TRTH-03,
-and `status: passed` in `164-VERIFICATION.md`. It writes only ignored
+and both `status: passed` and a required `verified_implementation_sha` in
+`164-VERIFICATION.md`. The SHA is exactly 40 lowercase hexadecimal characters,
+names the implementation commit evaluated by the ordinary verifier, and must be
+an ancestor of terminal `HEAD`. Every later commit on that first-parent chain is
+inspected relative to its first parent; each may change only
+`.planning/phases/164-repository-truth-reconciliation-and-closeout/164-VERIFICATION.md`,
+`.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, or `.planning/STATE.md`.
+This per-commit check retains forbidden change-then-revert history and judges a
+merge by its result relative to its first parent without traversing unrelated
+second-parent history. It writes only ignored
 `tmp/phase-164-closeout/finalization-inputs.json`, `report.json`, and component
 sources. No summary, planning update, commit, push, merge, release, publication,
 dispatch, or rerun follows the capture.

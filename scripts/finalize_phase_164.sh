@@ -96,7 +96,7 @@ require_pre_verification_state() {
 }
 
 require_terminal_state() {
-  local repo="$1" phase_dir="$2" plan_file summary
+  local repo="$1" phase_dir="$2" plan_file summary verification verified_implementation_sha commit path
 
   for plan_file in "$phase_dir"/164-[0-9][0-9]-PLAN.md; do
     [ -f "$plan_file" ] || fail "no numbered phase plans found"
@@ -112,12 +112,45 @@ require_terminal_state() {
       fail "$requirement is not complete"
   done
 
+  verification="$phase_dir/164-VERIFICATION.md"
   awk '
     NR == 1 && $0 == "---" { frontmatter = 1; next }
     frontmatter && $0 == "---" { exit }
     frontmatter && $0 == "status: passed" { passed = 1 }
     END { exit(passed ? 0 : 1) }
-  ' "$phase_dir/164-VERIFICATION.md" || fail "164-VERIFICATION.md has not passed"
+  ' "$verification" || fail "164-VERIFICATION.md has not passed"
+
+  [ "$(awk '
+    NR == 1 && $0 == "---" { frontmatter = 1; next }
+    frontmatter && $0 == "---" { exit }
+    frontmatter && /^verified_implementation_sha: / { count += 1 }
+    END { print count + 0 }
+  ' "$verification")" -eq 1 ] || fail "164-VERIFICATION.md must name one verified_implementation_sha"
+
+  verified_implementation_sha=$(awk '
+    NR == 1 && $0 == "---" { frontmatter = 1; next }
+    frontmatter && $0 == "---" { exit }
+    frontmatter && /^verified_implementation_sha: / {
+      sub(/^verified_implementation_sha: /, "")
+      print
+    }
+  ' "$verification")
+  [[ "$verified_implementation_sha" =~ ^[0-9a-f]{40}$ ]] ||
+    fail "verified_implementation_sha is not exactly 40 lowercase hexadecimal characters"
+  git -C "$repo" cat-file -e "$verified_implementation_sha^{commit}" 2>/dev/null ||
+    fail "verified_implementation_sha does not name a commit"
+  git -C "$repo" merge-base --is-ancestor "$verified_implementation_sha" HEAD 2>/dev/null ||
+    fail "verified_implementation_sha is not an ancestor of terminal HEAD"
+
+  while IFS= read -r commit; do
+    [ -n "$commit" ] || continue
+    while IFS= read -r path; do
+      case "$path" in
+        "$phase_rel/164-VERIFICATION.md"|.planning/ROADMAP.md|.planning/REQUIREMENTS.md|.planning/STATE.md) ;;
+        *) fail "commit $commit changes $path outside completion metadata" ;;
+      esac
+    done < <(git -C "$repo" diff-tree --no-commit-id --name-only -r "$commit^1" "$commit")
+  done < <(git -C "$repo" rev-list --first-parent --reverse "$verified_implementation_sha..HEAD")
 }
 
 canonical_component_source() {
