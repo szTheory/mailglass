@@ -10,7 +10,7 @@ revised: 2026-09-09
 
 # Phase 164 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-15 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
+> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-16 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
 
 ---
 
@@ -30,7 +30,7 @@ revised: 2026-09-09
 
 - **After every task commit:** Run the focused automated command named by that task.
 - **After every plan wave:** Run `mix ci.fast` after all implementation tasks in the wave are integrated; run the focused closeout/scheduled contracts after Waves 8 and 9.
-- **Pre-verification checkpoint:** Plan 164-14 runs `/finalize-phase 164 --pre-verification` after the Plan 164-13 adversarial regression locks and summary reach protected main. The verifier independently checks this exact-SHA evidence; the later Plan 14 summary/metadata handoff makes the capture explicitly non-terminal without changing implementation behavior.
+- **Pre-verification checkpoint:** Plan 164-14 ran `/finalize-phase 164 --pre-verification` after the Plan 164-13 adversarial regression locks reached protected main. Plan 164-16 subsequently changed tracked maintainer documentation and its test, so that older capture remains explicitly non-terminal; refreshed ordinary verification must evaluate the Plan 164-16 implementation SHA before terminal finalization.
 - **Verified implementation lifecycle:** Plan 164-15 requires the ordinary verifier to record the exact implementation commit as `verified_implementation_sha`. Terminal finalization accepts only an ancestor SHA and inspects every subsequent first-parent commit relative to its first parent against the four exact completion-metadata paths, so change-then-revert source history remains visible.
 - **After normal execute-phase metadata:** Integrate all Phase 164 SUMMARY files and the tracked VERIFICATION, ROADMAP, STATE, and REQUIREMENTS completion updates before terminal capture.
 - **Post-execution finalization:** Run `/finalize-phase 164` outside phase-plan-index after the final tracked SHA receives attempt-1 normal push CI and naturally scheduled attempt-1 exact-SHA evidence. The gate writes ignored runtime artifacts only and permits no later tracked commit.
@@ -65,6 +65,7 @@ revised: 2026-09-09
 | 164-15-01 | 164-15 tracer | 13 | TRTH-03 | T-164-53 | Terminal authority requires one valid ancestor `verified_implementation_sha`; every later first-parent commit is inspected relative to its first parent against only `164-VERIFICATION.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, and `.planning/STATE.md` | isolated Git process regression and lifecycle contract | `mix test test/scripts/phase_164_closeout_test.exs --warnings-as-errors --no-deps-check && bash -n scripts/finalize_phase_164.sh` | production terminal gate, direct forbidden-source and change-then-revert fixtures, permitted metadata-only fixture, `164-FINALIZATION.md` | ✅ green |
 | 164-15-02 | 164-15 | 13 | TRTH-03 | T-164-54, T-164-55 | Pre-verification requires summaries 01 through 13 before collection; lexical-prefix sibling fixtures are exclusively allocated and recursively removed only while lstat, resolved parent, basename, and invocation token still prove ownership | process prerequisite and teardown safety regression | `mix test test/scripts/phase_164_closeout_test.exs --warnings-as-errors --no-deps-check && bash -n scripts/finalize_phase_164.sh` | missing-Plan-13 collection marker, pre-existing-candidate fixture, token-replacement survival fixture | ✅ green |
 | 164-15-03 | 164-15 | 13 | TRTH-03 | T-164-56, T-164-57 | Producer sweep and independent terminal raw-source validation both require `0 <= now - updated_at <= max_age_seconds` from the tracked per-control registry | two-seam temporal process regression | `mix test test/scripts/phase_164_closeout_test.exs test/scripts/scheduled_control_evidence_test.exs --warnings-as-errors --no-deps-check && bash -n scripts/finalize_phase_164.sh scripts/scheduled_control_evidence.sh` | invalid ISO-8601, one-day-future, age-zero/current, in-range, and over-age fixtures at both production predicates | ✅ green |
+| 164-16-01 | 164-16 tracer | 14 | TRTH-01 | T-164-58, T-164-59, T-164-60 | Every byte before the single historical boundary rejects automatic, reviewer-free, or approval-free authority while retaining the protected exact-candidate/repository-admin model and historical v0.1/v0.5 provenance | whole-document docs contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/mailglass/publish/maintaining_release_gate_contract_test.exs --warnings-as-errors --no-deps-check && git diff --check` | `MAINTAINING.md` plus four active position-independent contract tests | ✅ green (4 tests) |
 | 164-FINAL | post-execution gate | after phase.complete integration | TRTH-03 | T-164-40, T-164-41, T-164-42, T-164-43, T-164-44 | Final protected metadata SHA has attempt-1 normal push CI, attempt-1 natural schedules, ignored identity/report state, independently verified raw sources, and no later tracked commit | live lifecycle gate | `/finalize-phase 164` | ignored `finalization-inputs.json`, report, CI source, scheduled source | ⚠️ external terminal capture pending |
 
 *Status: ✅ automated capability green · ⚠️ external evidence still required*
@@ -83,6 +84,7 @@ revised: 2026-09-09
 - [x] **Plan 164-13 owns the named adversarial regression locks:** both `phase_164_gap_closure` groups run against production seams and cover exact ledger semantics, canonical identity/output boundaries, symlink safety, and post-write dirt precedence.
 - [x] **Plan 164-14 owns the refreshed protected-main checkpoint:** the complete focused suite and production validator pass before exact-SHA attempt-one CI and natural scheduled evidence are captured and independently checked.
 - [x] **Plan 164-15 owns terminal integrity gap closure:** closeout and scheduled-control tests cover verified-SHA first-parent history, Plans 01–13 prerequisites, token-owned hostile fixture cleanup, and malformed/future/current/in-range/stale timestamps at both evidence seams.
+- [x] **Plan 164-16 owns whole-document maintainer authority reconciliation:** the maintaining contract scans the complete non-historical region, rejects representative automatic/reviewer-free/approval-free variants wherever injected, requires exactly one historical boundary, and preserves explicitly historical v0.1/v0.5 provenance.
 
 `wave_0_complete` is `true`: the test assets exist and their plan-specific commands have run successfully. This records completed executor evidence, not a plan-time predeclaration.
 
@@ -103,7 +105,7 @@ revised: 2026-09-09
 
 ### Planning-contract completeness
 
-- [x] All twenty-three executor tasks across all fifteen plans have an automated verification row, plus one explicit terminal post-execution lifecycle gate.
+- [x] All twenty-four executor tasks across all sixteen plans have an automated verification row, plus one explicit terminal post-execution lifecycle gate.
 - [x] The tracer-created repository-truth test, Plan 164-04 expansion, Plan 164-05 test/wrapper and usage contract, Plan 164-06 checkpoint, and Plan 164-07 exact-main report are explicitly mapped.
 - [x] TRTH-01 and TRTH-02 retain completed task-level coverage; TRTH-03 maps through the freshness repair, tracked lifecycle contract, and terminal post-execution raw-source gate.
 - [x] Sampling continuity has no three consecutive tasks without automated feedback.
@@ -124,6 +126,7 @@ revised: 2026-09-09
 - [x] Plan 164-13 tagged adversarial ledger and closeout groups run non-vacuously and green against production behavior.
 - [x] Plan 164-14 complete focused suite, production ledger validator, and protected pre-verification capture passed with independently checked raw sources.
 - [x] Plan 164-15 verified-SHA history, complete-prerequisite, owned-cleanup, and two-sided freshness regressions pass at the production seams.
+- [x] Plan 164-16 whole-non-historical maintainer authority contract passes all four active tests and retains one exact historical boundary.
 - [ ] All tracked Phase 164 summaries and phase.complete metadata have reached protected main before terminal `/finalize-phase 164` runs.
 - [ ] The final ignored report and raw CI/scheduled sources pass independent verification with no later tracked commit.
 
@@ -196,3 +199,25 @@ Plan 164-14 introduced no production implementation. The existing validation str
 - Plan 164-14 independently recorded a passing pre-verification capture for exact protected-main SHA `d903b040c72fff62a69a57cacbcc7e7d7c2f6167` and CI run `34284583200`.
 
 **Approval:** Current and Nyquist-compliant for automated coverage through Plan 164-14. The separate terminal `/finalize-phase 164` external-state gate remains pending and is not an automated test gap.
+
+## Validation Audit 2026-09-09 — Plan 164-16 Closeout
+
+Plan 164-16 closes the remaining TRTH-01 documentation gap with a behavioral contract over the complete non-historical maintainer document. Every Phase 164 executor task now has meaningful automated verification; no new automated coverage gap was found.
+
+| Metric | Count |
+|--------|-------|
+| Plans audited | 16 |
+| Executor tasks mapped | 24 |
+| Requirements audited | 3 |
+| Automated gaps found | 0 |
+| Complete focused tests | 98 |
+| Failures | 0 |
+| Pre-existing skips | 1 |
+
+- Complete focused Phase 164 suite: 98 tests, 0 failures, 1 pre-existing historical skip (97 executed).
+- Plan 164-16 maintaining contract: 4 active tests covering the full pre-historical region, injected authority variants, retained historical provenance, and missing/duplicate boundary failure.
+- Production authoritative-ledger CLI: `repository truth ledger: valid`.
+- Modified ExUnit formatting, closeout/finalizer/scheduled shell syntax, executable-control diff, and `git diff --check`: passed.
+- The Plan 164-14 protected-main capture predates Plan 164-16 and remains non-terminal by design. Refreshed ordinary verification must record the Plan 164-16 implementation SHA; terminal `/finalize-phase 164` remains an external-state gate after all completion metadata reaches protected main.
+
+**Approval:** Current and Nyquist-compliant for automated coverage through Plan 164-16. Refreshed exact-SHA verification and the separate terminal protected-main capture remain mandatory lifecycle gates, not missing automated tests.
