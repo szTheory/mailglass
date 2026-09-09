@@ -426,6 +426,83 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "source_run.attempt == 1"
   end
 
+  test "terminal verifier authority is bound to an ancestor implementation SHA and exact metadata history" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    fixture = terminal_fixture!(Path.join(root, "accepted"))
+    assert {_, 0} = terminal_state(fixture.repo, fixture.phase_dir)
+
+    for value <- [nil, "ABC", String.duplicate("f", 40)] do
+      write_verification!(fixture.phase_dir, value)
+      git!(fixture.repo, ["add", "."])
+      git!(fixture.repo, ["commit", "-q", "-m", "verification mutation"])
+      assert {_, status} = terminal_state(fixture.repo, fixture.phase_dir)
+      assert status != 0
+    end
+
+    non_ancestor = terminal_fixture!(Path.join(root, "non-ancestor"))
+    git!(non_ancestor.repo, ["checkout", "-q", "--orphan", "unrelated"])
+    File.write!(Path.join(non_ancestor.repo, "unrelated"), "history")
+    git!(non_ancestor.repo, ["add", "unrelated"])
+    git!(non_ancestor.repo, ["commit", "-q", "-m", "unrelated"])
+    unrelated_sha = non_ancestor.repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
+    git!(non_ancestor.repo, ["checkout", "-q", "main"])
+    write_verification!(non_ancestor.phase_dir, unrelated_sha)
+    git!(non_ancestor.repo, ["commit", "-qam", "point at unrelated history"])
+    assert {_, status} = terminal_state(non_ancestor.repo, non_ancestor.phase_dir)
+    assert status != 0
+  end
+
+  test "terminal verifier rejects forbidden commits even when a later commit restores the tree" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    direct = terminal_fixture!(Path.join(root, "direct"))
+    File.write!(Path.join(direct.repo, "scripts/finalize_phase_164.sh"), "changed")
+    git!(direct.repo, ["add", "scripts/finalize_phase_164.sh"])
+    git!(direct.repo, ["commit", "-q", "-m", "forbidden source"])
+    assert {output, status} = terminal_state(direct.repo, direct.phase_dir)
+    assert status != 0
+    assert output =~ "outside completion metadata"
+
+    reverted = terminal_fixture!(Path.join(root, "reverted"))
+    source = Path.join(reverted.repo, "scripts/finalize_phase_164.sh")
+    original = File.read!(source)
+    File.write!(source, "changed")
+    git!(reverted.repo, ["commit", "-qam", "forbidden source"])
+    File.write!(source, original)
+    git!(reverted.repo, ["commit", "-qam", "restore source"])
+    assert {output, status} = terminal_state(reverted.repo, reverted.phase_dir)
+    assert status != 0
+    assert output =~ "outside completion metadata"
+  end
+
+  test "terminal lifecycle documents the verified SHA and first-parent per-commit allowlist" do
+    finalization = File.read!(@finalization_contract)
+    validation =
+      File.read!(
+        Path.join(
+          @repo_root,
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md"
+        )
+      )
+
+    for document <- [finalization, validation] do
+      assert document =~ "verified_implementation_sha"
+      assert document =~ "first-parent"
+      assert document =~ "164-VERIFICATION.md"
+      assert document =~ ".planning/ROADMAP.md"
+      assert document =~ ".planning/REQUIREMENTS.md"
+      assert document =~ ".planning/STATE.md"
+    end
+
+    assert validation =~ "164-15-01"
+    assert validation =~ "T-164-53"
+    assert validation =~
+             "mix test test/scripts/phase_164_closeout_test.exs --warnings-as-errors --no-deps-check && bash -n scripts/finalize_phase_164.sh"
+  end
+
   test "finalizer re-fetches protected main and preserves non-pass evidence when it advances" do
     root = temporary_root!()
     remote = Path.join(root, "remote.git")
@@ -815,6 +892,49 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       cd: @repo_root,
       stderr_to_stdout: true
     )
+  end
+
+  defp terminal_state(repo, phase_dir) do
+    source_finalizer(~s(require_terminal_state "$2" "$3"), [repo, phase_dir])
+  end
+
+  defp terminal_fixture!(repo) do
+    phase_rel = ".planning/phases/164-repository-truth-reconciliation-and-closeout"
+    phase_dir = Path.join(repo, phase_rel)
+    File.mkdir_p!(Path.join(repo, "scripts"))
+    File.mkdir_p!(phase_dir)
+    git!(Path.dirname(repo), ["init", "-q", "-b", "main", repo])
+
+    File.write!(Path.join(repo, "scripts/finalize_phase_164.sh"), "verified source")
+    File.write!(Path.join(repo, ".planning/ROADMAP.md"), "- [x] **Phase 164: Repository Truth Reconciliation and Closeout**\n")
+    File.write!(
+      Path.join(repo, ".planning/REQUIREMENTS.md"),
+      Enum.map_join(["TRTH-01", "TRTH-02", "TRTH-03"], "\n", &"- [x] **#{&1}**") <> "\n"
+    )
+    File.write!(Path.join(repo, ".planning/STATE.md"), "state\n")
+
+    for plan <- 1..15 do
+      number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
+      File.write!(Path.join(phase_dir, "164-#{number}-PLAN.md"), "plan\n")
+      File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary\n")
+    end
+
+    git!(repo, ["add", "."])
+    git!(repo, ["commit", "-q", "-m", "verified implementation"])
+    verified_sha = repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
+    write_verification!(phase_dir, verified_sha)
+    git!(repo, ["add", "."])
+    git!(repo, ["commit", "-q", "-m", "verification metadata"])
+
+    File.write!(Path.join(repo, ".planning/STATE.md"), "complete\n")
+    git!(repo, ["commit", "-qam", "completion metadata"])
+
+    %{repo: repo, phase_dir: phase_dir, verified_sha: verified_sha}
+  end
+
+  defp write_verification!(phase_dir, verified_sha) do
+    sha_line = if verified_sha, do: "verified_implementation_sha: #{verified_sha}\n", else: ""
+    File.write!(Path.join(phase_dir, "164-VERIFICATION.md"), "---\nstatus: passed\n#{sha_line}---\n")
   end
 
   defp run_aggregate_fixture!(name, hygiene_json, hygiene_exit) do
