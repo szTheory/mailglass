@@ -1,6 +1,6 @@
 ---
 phase: 164-repository-truth-reconciliation-and-closeout
-reviewed: 2026-09-09T21:14:29Z
+reviewed: 2026-09-09T22:42:37Z
 depth: standard
 files_reviewed: 22
 files_reviewed_list:
@@ -27,35 +27,43 @@ files_reviewed_list:
   - test/scripts/scheduled_control_evidence_test.exs
   - test_js/ci-monitor.test.cjs
 findings:
-  critical: 1
+  critical: 2
   warning: 1
   info: 0
-  total: 2
+  total: 3
 status: issues_found
 ---
 
 # Phase 164: Code Review Report
 
-**Reviewed:** 2026-09-09T21:14:29Z
+**Reviewed:** 2026-09-09T22:42:37Z
 **Depth:** standard
 **Files Reviewed:** 22
 **Status:** issues_found
 
 ## Summary
 
-The review found one release-authority contradiction in the current maintainer guide and one fail-open CLI boundary in the repository-truth validator. The JavaScript command builder tests passed, and all three reviewed shell scripts passed `bash -n`, but those checks do not cover the defects below.
+The refreshed review found two trust-boundary defects and one CLI robustness defect. The prior maintainer-guidance contradiction has been corrected, but the finalizer dispatcher can still execute code that is not the version tracked at `HEAD`, and the repository-truth validator accepts regular files whose ledger rows falsely claim they are tracked. The focused Elixir and Node suites passed, and all reviewed shell scripts passed syntax checking; the existing tests do not exercise these defects.
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01: Current maintainer guidance still describes the obsolete hands-free release authority
+### CR-01: The finalizer dispatcher executes mutable working-tree code instead of the tracked HEAD version
 
-**File:** `MAINTAINING.md:357-366`
+**File:** `.gsd/extensions/finalize-phase/index.ts:88-101`
 
-**Issue (BLOCKER):** The newly added current release section says the only release boundary is a protected exact-candidate dispatch with fresh repository-admin authorization, but the still-current `Bus Factor & Continuity` section later says the pipeline is hands-free once repository gates pass and has no approval control. This section is before `Historical release procedures`, so readers are explicitly presented with two incompatible current authority models. The contract test only refutes hands-free wording inside the first section (`test/mailglass/publish/maintaining_release_gate_contract_test.exs:35-36`), allowing this contradictory release guidance to pass. A maintainer following the later section can incorrectly conclude that green gates alone authorize a release.
+**Issue (BLOCKER):** The dispatcher describes and reports the finalizer as "tracked at HEAD", but `git ls-files --error-unmatch` only proves that the path is present in the index. It does not prove that the path exists at `HEAD` or that its current bytes match the committed blob. A newly staged finalizer or a locally modified tracked finalizer therefore passes this check and is executed directly from the working tree by `pi.exec("bash", [finalizer, ...])`. For Phase 164, changing the tracked shim to arbitrary shell code bypasses every clean-tree, GitHub-identity, and evidence check in `scripts/finalize_phase_164.sh`, because the untrusted shim runs before any of those checks. This breaks the protected-main authority boundary and permits arbitrary command execution under the extension process.
 
-**Fix:** Update the bus-factor section to describe the protected exact-candidate/repository-admin boundary and the actual current release line, or move the obsolete v0.1/v0.5 text under `Historical release procedures`. Extend the contract test to inspect all non-historical content, for example by refuting `hands-free` and `at v0.1` in everything before the historical heading.
+**Fix:** Resolve the blob from `HEAD` rather than trusting the index or working tree. At minimum, require `git cat-file -e HEAD:<relative-path>`, compare the file's bytes or blob ID with `HEAD:<relative-path>`, and reject any mismatch. Prefer materializing the verified `HEAD` blob into a private temporary file and executing that immutable copy, while separately rejecting a dirty repository when the command contract requires it. Add behavioral tests for a newly staged finalizer, an unstaged modification to a committed finalizer, and an unchanged committed finalizer.
+
+### CR-02: Ledger rows marked tracked are accepted even when Git does not track their files
+
+**File:** `scripts/validate_repository_truth.exs:570-576`
+
+**Issue (BLOCKER):** `ensure_tracked_subjects_exist/2` validates a row whose state is `tracked` only with `File.regular?/1`. Any untracked regular file at the canonical subject path satisfies the validator, so the authoritative command can print `repository truth ledger: valid` while the ledger's tracked-state assertion is false. This directly violates TRTH-02's machine-enforced repository-truth contract. The test at `test/scripts/phase_164_repository_truth_test.exs:203-221` checks only the literal `state` field and repeats the same unsupported claim; it never queries Git.
+
+**Fix:** For every `state == "tracked"` row, require both a regular file and successful exact-path Git membership, for example `System.cmd("git", ["ls-files", "--error-unmatch", "--", subject], cd: repo_root)`. Also reject paths whose tracked index entry is not a regular file when the contract requires files. Add a temporary-repository regression proving that an untracked regular file with a `tracked` ledger row fails while the same committed file passes.
 
 ## Warnings
 
@@ -63,12 +71,12 @@ The review found one release-authority contradiction in the current maintainer g
 
 **File:** `scripts/validate_repository_truth.exs:623-647`
 
-**Issue (WARNING):** The CLI body runs only when any argument is literally `--repo` or `--ledger`. Invoking the executable with no arguments, a misspelled option such as `--ledgr`, or unrelated arguments skips the entire block and exits successfully without producing a verdict. This is a fail-open command-line boundary: an operator or automation typo can be interpreted as a successful repository-truth check. Existing tests exercise malformed ledgers only with both expected flags and do not cover missing or unknown CLI arguments.
+**Issue (WARNING):** The CLI body runs only when any argument is literally `--repo` or `--ledger`. Invoking the executable with no arguments, only misspelled options, or unrelated arguments skips the entire block and exits successfully without a verdict. An operator or automation typo can therefore be interpreted as a successful repository-truth check. Existing subprocess tests always include the expected flags and do not cover this boundary.
 
-**Fix:** Separate the reusable `Mailglass.RepositoryTruthLedger` module from an always-executed CLI wrapper. The wrapper should parse every direct invocation, print usage, and halt nonzero for missing or unknown arguments; tests should require the module file rather than the executable wrapper. Add subprocess tests for no arguments, one missing required option, and an unknown option.
+**Fix:** Split the reusable module from an always-executed CLI wrapper, or use an explicit load-mode sentinel for tests. Every direct CLI invocation should parse its full argument list, print usage, and halt nonzero for missing or unknown arguments. Add subprocess tests for no arguments, each missing required option, and unknown options.
 
 ---
 
-_Reviewed: 2026-09-09T21:14:29Z_
+_Reviewed: 2026-09-09T22:42:37Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
