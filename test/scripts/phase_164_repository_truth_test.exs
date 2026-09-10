@@ -377,6 +377,100 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     end
   end
 
+  describe "phase 164 stage-0 index identity" do
+    @describetag :phase_164_stage0_index
+
+    test "rejects a genuine unmerged subject through the helper and full validator" do
+      repo = clone_repository!()
+      subject = "README.md"
+      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      install_unmerged_index_entry!(repo, subject)
+
+      {staged, 0} =
+        System.cmd(
+          "git",
+          ["--literal-pathspecs", "ls-files", "--stage", "--error-unmatch", "--", subject],
+          cd: repo
+        )
+
+      assert length(String.split(staged, "\n", trim: true)) == 3
+      refute staged =~ " 0\t"
+
+      assert {:error, {:tracked_subject_identity_mismatch, ^subject, _records}} =
+               Ledger.tracked_subject_in_index(repo, subject)
+
+      assert {:error, {:tracked_subject_identity_mismatch, ^subject, _records}} =
+               Ledger.validate(ledger, repo)
+    end
+
+    test "accepts one ordinary committed stage-0 record with byte-exact identity" do
+      repo = clone_repository!()
+      subject = "stage-zero\nproof.txt"
+      File.write!(Path.join(repo, subject), "proof\n")
+      assert {_output, 0} = System.cmd("git", ["add", "--", subject], cd: repo)
+
+      assert :ok = Ledger.tracked_subject_in_index(repo, subject)
+    end
+
+    test "literal metacharacters, adjacent names, newlines, and record order preserve identity" do
+      repo = clone_repository!()
+      literal = "stage[0]*?.txt"
+      adjacent = literal <> ".backup"
+      newline = "stage-zero\nrecord.txt"
+
+      for subject <- [literal, adjacent, newline] do
+        File.write!(Path.join(repo, subject), subject)
+      end
+
+      assert {_output, 0} = System.cmd("git", ["add", "--", literal, adjacent, newline], cd: repo)
+      assert :ok = Ledger.tracked_subject_in_index(repo, literal)
+      assert :ok = Ledger.tracked_subject_in_index(repo, adjacent)
+      assert :ok = Ledger.tracked_subject_in_index(repo, newline)
+
+      assert {:error, {:tracked_subject_identity_mismatch, ^literal, _records}} =
+               Ledger.validate_staged_index_output(
+                 stage_record(adjacent) <> stage_record(literal),
+                 literal
+               )
+
+      assert {:error, {:tracked_subject_identity_mismatch, ^literal, _records}} =
+               Ledger.validate_staged_index_output(
+                 stage_record(literal) <> stage_record(adjacent),
+                 literal
+               )
+    end
+
+    test "missing, duplicate, nonzero, malformed, and different records fail closed" do
+      subject = "proof.txt"
+
+      assert {:error, {:tracked_subject_malformed_output, ^subject}} =
+               Ledger.validate_staged_index_output("", subject)
+
+      for output <- [
+            stage_record(subject) <> stage_record(subject),
+            stage_record(subject, 1),
+            stage_record(subject, 2),
+            stage_record(subject, 3),
+            stage_record("other.txt")
+          ] do
+        assert {:error, {:tracked_subject_identity_mismatch, ^subject, _records}} =
+                 Ledger.validate_staged_index_output(output, subject)
+      end
+
+      for output <- [
+            "not-a-mode #{String.duplicate("a", 40)} 0\t#{subject}\0",
+            "100644 not-an-object 0\t#{subject}\0",
+            "100644 #{String.duplicate("a", 40)} x\t#{subject}\0",
+            "100644 #{String.duplicate("a", 40)} 0 #{subject}\0",
+            "100644 #{String.duplicate("a", 40)} 0\t#{subject}"
+          ] do
+        assert {:error, {:tracked_subject_malformed_output, ^subject}} =
+                 Ledger.validate_staged_index_output(output, subject)
+      end
+    end
+  end
+
   defp remove_subject(contents, subject) do
     contents
     |> String.split("\n", trim: true)
@@ -409,6 +503,36 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
              )
 
     root
+  end
+
+  defp install_unmerged_index_entry!(repo, subject) do
+    assert {_output, 0} =
+             System.cmd("git", ["config", "user.email", "phase164@example.test"], cd: repo)
+
+    assert {_output, 0} = System.cmd("git", ["config", "user.name", "Phase 164 Fixture"], cd: repo)
+    base = git_output!(repo, ["rev-parse", "HEAD"])
+
+    assert {_output, 0} = System.cmd("git", ["switch", "-c", "stage-ours"], cd: repo)
+    File.write!(Path.join(repo, subject), "ours\n")
+    assert {_output, 0} = System.cmd("git", ["add", "--", subject], cd: repo)
+    assert {_output, 0} = System.cmd("git", ["commit", "-m", "ours"], cd: repo)
+
+    assert {_output, 0} = System.cmd("git", ["switch", "-c", "stage-theirs", base], cd: repo)
+    File.write!(Path.join(repo, subject), "theirs\n")
+    assert {_output, 0} = System.cmd("git", ["add", "--", subject], cd: repo)
+    assert {_output, 0} = System.cmd("git", ["commit", "-m", "theirs"], cd: repo)
+
+    assert {_output, 0} = System.cmd("git", ["switch", "stage-ours"], cd: repo)
+    assert {_output, 1} = System.cmd("git", ["merge", "--no-edit", "stage-theirs"], cd: repo)
+  end
+
+  defp git_output!(repo, args) do
+    {output, 0} = System.cmd("git", args, cd: repo)
+    String.trim(output)
+  end
+
+  defp stage_record(subject, stage \\ 0) do
+    "100644 #{String.duplicate("a", 40)} #{stage}\t#{subject}\0"
   end
 
   defp valid_row do
