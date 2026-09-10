@@ -421,6 +421,67 @@ defmodule Mailglass.RepositoryTruthLedger do
     end
   end
 
+  def tracked_subject_in_index(repo_root, subject)
+      when is_binary(repo_root) and is_binary(subject) do
+    {output, status} =
+      System.cmd(
+        "git",
+        ["--literal-pathspecs", "ls-files", "--error-unmatch", "--", subject],
+        cd: repo_root,
+        stderr_to_stdout: true
+      )
+
+    case status do
+      0 ->
+        returned_paths =
+          output
+          |> String.trim_trailing("\n")
+          |> String.split("\n", trim: true)
+          |> Enum.map(&String.trim_trailing(&1, "\r"))
+
+        if returned_paths == [subject] do
+          :ok
+        else
+          {:error, {:tracked_subject_identity_mismatch, subject, returned_paths}}
+        end
+
+      1 ->
+        {:error, {:tracked_subject_untracked, subject}}
+
+      _ ->
+        {:error, {:tracked_subject_git_failure, subject, status}}
+    end
+  end
+
+  def main(argv) when is_list(argv) do
+    argv = Enum.drop_while(argv, &(&1 == "--"))
+    {opts, arguments, errors} = OptionParser.parse(argv, strict: [repo: :string, ledger: :string])
+
+    result =
+      with [] <- errors,
+           [] <- arguments,
+           repo when is_binary(repo) <- opts[:repo],
+           ledger when is_binary(ledger) <- opts[:ledger],
+           {:ok, contents} <- File.read(ledger) do
+        validate(contents, repo)
+      else
+        nil -> {:error, :missing_required_cli_option}
+        {:error, reason} -> {:error, reason}
+        invalid when is_list(invalid) -> {:error, {:invalid_options, invalid}}
+      end
+
+    case result do
+      :ok ->
+        IO.puts("repository truth ledger: valid")
+        0
+
+      {:error, reason} ->
+        IO.puts(:stderr, "repository truth ledger: #{inspect(reason)}")
+        IO.puts(:stderr, "usage: validate_repository_truth.exs --repo PATH --ledger PATH")
+        1
+    end
+  end
+
   defp parse_rows(lines) do
     lines
     |> Enum.reduce_while({:ok, []}, fn line, {:ok, rows} ->
@@ -568,12 +629,22 @@ defmodule Mailglass.RepositoryTruthLedger do
   end
 
   defp ensure_tracked_subjects_exist(rows, repo_root) do
-    case Enum.find(rows, fn row ->
-           row["state"] == "tracked" and not File.regular?(Path.join(repo_root, row["subject"]))
-         end) do
-      nil -> :ok
-      row -> {:error, {:tracked_subject_missing, row["subject"]}}
-    end
+    rows
+    |> Enum.filter(&(&1["state"] == "tracked"))
+    |> Enum.reduce_while(:ok, fn row, :ok ->
+      subject = row["subject"]
+
+      cond do
+        not File.regular?(Path.join(repo_root, subject)) ->
+          {:halt, {:error, {:tracked_subject_missing, subject}}}
+
+        true ->
+          case tracked_subject_in_index(repo_root, subject) do
+            :ok -> {:cont, :ok}
+            error -> {:halt, error}
+          end
+      end
+    end)
   end
 
   defp ensure_repository(repo_root) do
@@ -620,28 +691,13 @@ defmodule Mailglass.RepositoryTruthLedger do
   end
 end
 
-if Enum.any?(System.argv(), &(&1 in ["--repo", "--ledger"])) do
-  argv = Enum.drop_while(System.argv(), &(&1 == "--"))
-  {opts, _, errors} = OptionParser.parse(argv, strict: [repo: :string, ledger: :string])
+script_path = Path.expand(__ENV__.file)
 
-  result =
-    with [] <- errors,
-         repo when is_binary(repo) <- opts[:repo],
-         ledger when is_binary(ledger) <- opts[:ledger],
-         {:ok, contents} <- File.read(ledger) do
-      Mailglass.RepositoryTruthLedger.validate(contents, repo)
-    else
-      nil -> {:error, :missing_required_cli_option}
-      {:error, reason} -> {:error, reason}
-      errors when is_list(errors) -> {:error, {:invalid_options, errors}}
-    end
+direct_invocation? =
+  :init.get_plain_arguments()
+  |> Enum.map(&List.to_string/1)
+  |> Enum.any?(fn argument -> Path.expand(argument) == script_path end)
 
-  case result do
-    :ok ->
-      IO.puts("repository truth ledger: valid")
-
-    {:error, reason} ->
-      IO.puts(:stderr, "repository truth ledger: #{inspect(reason)}")
-      System.halt(1)
-  end
+if direct_invocation? do
+  System.halt(Mailglass.RepositoryTruthLedger.main(System.argv()))
 end

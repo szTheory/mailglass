@@ -371,9 +371,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
         "Code.require_file(#{inspect(script)}); IO.puts(\"repository truth module: loaded\")"
 
       {output, 0} =
-        System.cmd(elixir, ["-e", require_expression, "--", "--unknown"],
-          stderr_to_stdout: true
-        )
+        System.cmd(elixir, ["-e", require_expression, "--", "--unknown"], stderr_to_stdout: true)
 
       assert output == "repository truth module: loaded\n"
     end
@@ -397,7 +395,12 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   end
 
   defp clone_repository! do
-    root = Path.join(System.tmp_dir!(), "mailglass-phase-164-truth-#{System.unique_integer([:positive])}")
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-phase-164-truth-#{System.unique_integer([:positive])}"
+      )
+
     on_exit(fn -> File.rm_rf!(root) end)
 
     assert {_output, 0} =
