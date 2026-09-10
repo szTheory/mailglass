@@ -1,21 +1,23 @@
 ---
 phase: 164-repository-truth-reconciliation-and-closeout
-reviewed: 2026-09-10T15:07:40Z
+reviewed: 2026-09-10T21:50:56Z
 depth: standard
-files_reviewed: 20
+files_reviewed: 22
 files_reviewed_list:
   - .gitignore
-  - .gsd/extensions/finalize-phase/extension-manifest.json
-  - .gsd/extensions/finalize-phase/index.ts
+  - /Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env
   - MAINTAINING.md
   - README.md
+  - compose.toolchain.yml
   - config/test_exceptions.exs
+  - dev/toolchain/Dockerfile
   - mailglass_admin/README.md
   - mailglass_admin/e2e/structural.spec.js
   - mailglass_inbound/README.md
   - scripts/ci_monitor.cjs
   - scripts/closeout_repository_truth.sh
   - scripts/finalize_phase_164.sh
+  - scripts/mailglass_finalize_phase_loader.mjs
   - scripts/scheduled_control_evidence.sh
   - scripts/validate_repository_truth.exs
   - test/mailglass/docs_contract_test.exs
@@ -34,51 +36,51 @@ status: issues_found
 
 # Phase 164: Code Review Report
 
-**Reviewed:** 2026-09-10T15:07:40Z
+**Reviewed:** 2026-09-10T21:50:56Z
 **Depth:** standard
-**Files Reviewed:** 20
+**Files Reviewed:** 22
 **Status:** issues_found
 
 ## Summary
 
-The stage-aware Git-index parser now correctly requires one complete NUL-delimited stage-0 record with byte-exact path identity. The surrounding finalization boundary still has three ship-blocking trust defects: it resolves every dependency against a moving `HEAD`, it treats whatever numbered artifacts remain at `HEAD` as the complete phase history, and the worktree-loaded extension that establishes the private authority root is itself outside that authentication root. The new documentation contract also embeds release-version literals that will make the suite fail on the next package-line change.
+The immutable materialization work closes several earlier worktree-mutation gaps, but the installed boundary is not yet safe to ship. The generic CI suite now depends on one maintainer's machine-local installation, the installed loader will execute authority code from any repository selected by its current working directory, and all of its trust decisions remain replaceable through ambient `PATH`. The approval self-check also fails to prove that the recorded installation commit belongs to the current repository history.
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01: Dependency authentication is not bound to one immutable HEAD
+### CR-01: Required CI unconditionally depends on one maintainer's external installation
 
 **Classification:** BLOCKER
-**File:** `.gsd/extensions/finalize-phase/index.ts:119-159,169-207,296-325`
-**Issue:** Every `cat-file`, `ls-tree`, `diff`, and `show` invocation resolves the symbolic name `HEAD` independently. Authentication spans dozens of awaited subprocesses, so a concurrent checkout, reset, or ref update can move `HEAD` between enumeration, cleanliness checks, and blob reads. The resulting private tree can contain an authenticated-looking mixture of files from different commits; the downstream finalizer only observes the final checkout SHA and cannot detect that earlier dependencies came from another tree. This breaks the core guarantee that the executed dependency chain represents one exact repository state.
-**Fix:** Resolve and validate one full commit OID once (for example, `git rev-parse --verify HEAD^{commit}`), pass that OID into all authentication/enumeration helpers, use `${headOid}:${path}` and `ls-tree <headOid>`, and re-check that checkout `HEAD` still equals the captured OID immediately before dispatch. Prefer comparing each index/worktree path against the captured blob OID rather than rerunning diffs against symbolic `HEAD`. Add a harness case that changes `HEAD` between two mocked Git calls and requires rejection.
+**Files:** `test/scripts/phase_164_closeout_test.exs:8-9,1086-1095`; `mix.exs:291-299`
+**Issue:** `verify.ci_lane_contract` intentionally runs every file under `test/scripts/`, and the publish-gating CI job invokes that alias without exclusions. The five newly tagged installed-production-boundary tests immediately call `assert_installed_authority!/0`, which requires `/Users/jon/.local/bin/mailglass-finalize-phase` and `/Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env`. Those files exist only on the submitting maintainer's host; a GitHub runner or another contributor does not have them. `compose.toolchain.yml` mounts the files only into the optional local container and cannot supply them to GitHub Actions. Consequently an ordinary required CI run fails before testing repository code, so the phase cannot ship through its own gate.
+**Fix:** Keep repository tests hermetic. Move the host-install assertions to a separately invoked local/controlled-host test file or gate them behind an explicit opt-in environment contract that the generic `test/scripts/` alias does not select. Retain fixture-based loader tests in required CI, and add a CI contract proving that `mix verify.ci_lane_contract` does not require absolute host files.
 
-### CR-02: Removing a complete plan/summary pair shrinks the trusted manifest without failing
-
-**Classification:** BLOCKER
-**Files:** `.gsd/extensions/finalize-phase/index.ts:162-186`; `scripts/finalize_phase_164.sh:98-105`
-**Issue:** `numberedPhaseDependencies` accepts any nonempty set of matching files, and the terminal gate checks only that each plan still present has a summary. If a commit deletes both `164-NN-PLAN.md` and `164-NN-SUMMARY.md`, neither check notices: enumeration simply returns a smaller authenticated set and the shell loop never visits the missing number. The validator likewise derives phase subjects from the plans that remain. A phase can therefore finalize after losing an entire numbered unit of its implementation/provenance history.
-**Fix:** Validate an exact authoritative artifact manifest before materialization. At minimum require one PLAN and one SUMMARY for every contiguous number through a separately anchored terminal plan number, with no gaps or unmatched files. For Phase 164, persist the expected terminal set (currently through Plan 20) in an authenticated manifest or terminal verification field rather than deriving completeness from the directory being checked. Add regressions that remove both members of a middle pair and the terminal pair.
-
-### CR-03: The root extension executes from mutable worktree bytes before authentication begins
+### CR-02: The installed executable authenticates and executes code from any current repository
 
 **Classification:** BLOCKER
-**File:** `.gsd/extensions/finalize-phase/index.ts:222-358`
-**Issue:** The extension is the component that authenticates and materializes the remaining chain, but GSD imports this file directly from the worktree. It never proves its own bytes against `HEAD`, and self-checking after import would not establish trust because modified code can omit or forge that check. An `assume-unchanged` mutation of `index.ts` is invisible to the downstream stable-porcelain gates and can dispatch arbitrary code or substitute arbitrary materialized inputs. Tests cover hidden mutations of transitive helpers/data but omit the root that enforces those protections.
-**Fix:** Move the trust bootstrap outside this extension: the extension loader (or a separately installed trusted command) must resolve a commit OID, read this module from that commit, verify the worktree module byte-for-byte before importing it, or execute a committed/materialized entry point without evaluating mutable repository TypeScript first. If the loader cannot provide that guarantee, document this command as trusting local extension bytes and do not claim an authenticated end-to-end chain. Add a subprocess regression with an `assume-unchanged` mutation of the extension itself.
+**Files:** `scripts/mailglass_finalize_phase_loader.mjs:299-320`; `test/scripts/phase_164_closeout_test.exs:1089-1108,1667-1678`
+**Issue:** The installed loader discovers its authority repository solely with `git rev-parse` in `process.cwd()`. It does not check the canonical path or the `szTheory/mailglass` remote before reading `scripts/finalize_phase_164.sh` from that repository and executing the materialized result. The canonical-repository check lives inside that very script, so a foreign repository can replace the check. The production-boundary test positively demonstrates this behavior: it constructs an arbitrary temporary Git repository containing a fixture finalizer, invokes the real installed executable there, and expects the fixture code to run and create a marker. A repository can therefore provide the code supposedly being authorized by the external trusted command.
+**Fix:** Compile the canonical repository path and expected remote identity into the installed loader and reject any other real path before `dependencyManifest` or `authenticateCommitFile` runs. Authenticate the origin identity in loader-owned code as well; do not delegate the first identity check to repository-supplied Bash. Replace the current positive foreign-repository production test with a rejection test and exercise accepted execution only against a controlled clone whose canonical identity is explicitly configured by a test-only loader build.
+
+### CR-03: Ambient PATH can forge every immutable-loader trust decision
+
+**Classification:** BLOCKER
+**Files:** `scripts/mailglass_finalize_phase_loader.mjs:1,83-94,299-320`; `scripts/finalize_phase_164.sh:245-305`
+**Issue:** The installed entry point uses `#!/usr/bin/env node`, invokes `git` and `bash` by bare name, and the dispatched shell invokes `git`, `gh`, `jq`, `mix`, `node`, and `elixir` from the caller's inherited `PATH`. A checkout-local or otherwise earlier executable can fabricate `rev-parse`, `ls-tree`, `diff`, and `show` responses, causing attacker-chosen bytes to be materialized and executed while returning a stable fake OID. The tests themselves inject a `git` shim through `PATH`, confirming the boundary accepts executable substitution; they only use a cooperative wrapper and never test a forging implementation. This defeats the claimed authenticated-copy boundary even after the repository-identity defect is fixed.
+**Fix:** Establish an explicit trusted toolchain before any repository discovery: resolve absolute executable paths from a fixed allowlist, reject symlinks/unexpected owners or modes as appropriate, and pass a sanitized `env`/`PATH` to every child. Invoke the loader with an installation-time-pinned Node path (or ship a self-contained executable) and use absolute paths for Git and Bash. Add an adversarial fake-`git` test that returns internally consistent forged objects and assert that the loader refuses it before dispatch.
 
 ## Warnings
 
-### WR-01: Documentation contracts hardcode the current package version
+### WR-01: Self-check accepts an unrelated installation commit as provenance
 
 **Classification:** WARNING
-**File:** `test/mailglass/docs_contract_test.exs:48-58`
-**Issue:** The adjacent compatibility test derives package major/minor values from each manifest, but this test hardcodes `~> 2.5` four times. A legitimate minor-line release will update manifests and documentation while these assertions remain stale, causing a false CI failure and undermining the stated manifest-derived contract.
-**Fix:** Reuse `package_major_minor!/1` to construct the expected core/admin constraints, then assert preview-only versus production-capable option shape around those dynamic values. This keeps the environment distinction checked without coupling the test to one release number.
+**File:** `scripts/mailglass_finalize_phase_loader.mjs:274-283`
+**Issue:** `--self-check` proves only that `installation_source_oid` names some locally available commit whose loader blob equals the installed and current bytes. It never proves that this commit is an ancestor of current `HEAD`. An unrelated or injected object with the same blob therefore satisfies the check, even though the command reports that OID as installation provenance. Blob equality is useful for byte identity but is not commit-history provenance.
+**Fix:** After validating both full OIDs, require `git merge-base --is-ancestor <installation_oid> <current_oid>` and fail otherwise. Add a regression using two unrelated histories containing identical loader bytes.
 
 ---
 
-_Reviewed: 2026-09-10T15:07:40Z_
+_Reviewed: 2026-09-10T21:50:56Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
