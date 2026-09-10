@@ -897,6 +897,61 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  describe "phase 164 dispatcher boundary" do
+    @describetag :phase_164_dispatcher_boundary
+
+    test "rejects a symlinked lexical shim before Bash dispatch" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      fixture = extension_fixture!(Path.join(root, "symlinked-shim"))
+      File.rm!(fixture.shim)
+      File.ln_s!(fixture.downstream, fixture.shim)
+
+      assert_dispatch_rejected(fixture)
+    end
+
+    test "accepts the unchanged lexical Phase 164 shim" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      fixture = extension_fixture!(Path.join(root, "accepted-shim"))
+      result = invoke_extension!(fixture, "164 --pre-verification")
+
+      assert result["error"] == nil
+      assert Enum.any?(result["calls"], &(&1["command"] == "bash"))
+      assert File.regular?(fixture.marker)
+    end
+
+    test "rejects every non-164 phase before repository discovery" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      fixture = extension_fixture!(Path.join(root, "alternate-phase"))
+
+      for phase <- ["1", "163", "165", "999"] do
+        result = invoke_extension!(fixture, phase)
+        assert result["error"] =~ "only phase 164 is supported"
+        assert result["calls"] == []
+      end
+
+      refute File.exists?(fixture.marker)
+    end
+
+    test "print-mode failure removes the private directory before process exit" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      fixture = extension_fixture!(Path.join(root, "print-failure"))
+      {result, status} = invoke_extension_print!(fixture, "164", [{"FINALIZER_EXIT", "7"}])
+
+      assert status != 0
+      assert result["error"] =~ "exited with status 7"
+      private_script = fixture.marker |> File.read!() |> String.split("|") |> hd()
+      refute File.exists?(Path.dirname(private_script))
+    end
+  end
+
   test "owned sibling cleanup refuses pre-existing and token-replaced paths" do
     root = temporary_root!()
     candidate = @repo_root <> "-gap-preexisting-#{System.unique_integer([:positive])}"
@@ -1475,6 +1530,65 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     result = output |> String.trim() |> Jason.decode!()
     if result["error"], do: assert(status != 0), else: assert(status == 0)
     result
+  end
+
+  defp invoke_extension_print!(fixture, args, extra_env) do
+    harness = Path.join(fixture.repo, "extension-print-harness.mjs")
+
+    File.write!(
+      harness,
+      """
+      import { spawnSync } from "node:child_process";
+      import extension from #{inspect("file://" <> @extension)};
+
+      let handler;
+      const calls = [];
+      const notifications = [];
+      const pi = {
+        registerCommand(name, definition) {
+          if (name !== "finalize-phase") throw new Error(`unexpected command: ${name}`);
+          handler = definition.handler;
+        },
+        async exec(command, args, options) {
+          calls.push({command, args, cwd: options.cwd});
+          const result = spawnSync(command, args, {
+            cwd: options.cwd,
+            env: process.env,
+            encoding: "utf8",
+            maxBuffer: 64 * 1024,
+          });
+          return {code: result.status ?? 1, stdout: result.stdout ?? "", stderr: result.stderr ?? ""};
+        },
+      };
+
+      extension(pi);
+      let error = null;
+      try {
+        await handler(process.argv[2], {
+          cwd: process.argv[3],
+          ui: {notify(message, level) { notifications.push({message, level});}},
+        });
+      } catch (caught) {
+        error = caught instanceof Error ? caught.message : String(caught);
+      }
+      console.log(JSON.stringify({calls, notifications, error}));
+      """
+    )
+
+    node = System.find_executable("node")
+
+    {output, status} =
+      System.cmd(node, ["--experimental-strip-types", harness, args, fixture.repo, "--print"],
+        env:
+          extra_env ++
+            [
+              {"MARKER", fixture.marker},
+              {"BYTES_MARKER", fixture.bytes_marker}
+            ],
+        stderr_to_stdout: false
+      )
+
+    {output |> String.trim() |> Jason.decode!(), status}
   end
 
   defp allocate_owned_sibling!(tag, candidate \\ nil) do
