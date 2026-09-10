@@ -190,7 +190,7 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 20 plans (17 executed; 3 gap-closure plans ready)
+**Plans**: 18/20 plans executed (17 executed; 3 gap-closure plans ready)
 
 Plans:
 
@@ -258,7 +258,7 @@ Plans:
 
 **Wave 16** *(gap closure; blocked on the executed Plan 164-17 baseline)*
 
-- [ ] 164-18-PLAN.md — Require one exact NUL-delimited stage-0 Git-index identity for every tracked disposition and regress unmerged entries.
+- [x] 164-18-PLAN.md — Require one exact NUL-delimited stage-0 Git-index identity for every tracked disposition and regress unmerged entries.
 
 **Wave 17** *(blocked on the stage-aware trust anchor)*
 
@@ -281,4 +281,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 17/20 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 18/20 | In Progress|  |
