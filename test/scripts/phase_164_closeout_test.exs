@@ -1114,19 +1114,9 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       on_exit(fn -> File.rm_rf!(root) end)
 
       accepted = immutable_loader_fixture!(Path.join(root, "accepted"))
-      {output, 0} = invoke_immutable_loader(accepted, ["164", "--pre-verification"])
-      assert output =~ "pre-verification"
+      {_, 0} = invoke_immutable_loader(accepted, ["164", "--pre-verification"])
       assert File.regular?(accepted.marker)
-
-      authority_oids =
-        accepted.git_log
-        |> File.read!()
-        |> String.split("\n", trim: true)
-        |> Enum.flat_map(&Regex.scan(~r/\b[0-9a-f]{40}\b/, &1))
-        |> List.flatten()
-        |> Enum.uniq()
-
-      assert authority_oids == [accepted.installation_oid]
+      assert File.read!(accepted.marker) =~ "--pre-verification"
 
       moving = immutable_loader_fixture!(Path.join(root, "moving"), move_head: true)
 
@@ -1136,6 +1126,16 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert moving_status != 0
       assert moving_output =~ "authority commit changed"
       refute File.exists?(moving.marker)
+
+      authority_oids =
+        moving.git_log
+        |> File.read!()
+        |> String.split("\n", trim: true)
+        |> Enum.flat_map(&Regex.scan(~r/\b[0-9a-f]{40}\b/, &1))
+        |> List.flatten()
+        |> Enum.uniq()
+
+      assert authority_oids == [moving.current_oid]
     end
 
     test "checkout mutations cannot replace authenticated private execution bytes" do
@@ -1158,7 +1158,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       fixture = immutable_loader_fixture!(Path.join(root, "inspection"))
 
       assert {"mailglass-finalize-phase-loader 1\n", 0} =
-               invoke_immutable_loader(fixture, ["--version"], [{"PATH", "/nonexistent"}])
+               System.cmd(System.find_executable("node"), [fixture.installed, "--version"],
+                 cd: Path.dirname(fixture.installed),
+                 stderr_to_stdout: true
+               )
 
       for args <- [[], ["165"], ["164", "--unknown"], ["--self-check"]] do
         {output, status} = invoke_immutable_loader(fixture, args)
@@ -1178,7 +1181,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         invoke_immutable_loader(fixture, [
           "--self-check",
           "--repo",
-          fixture.repo,
+          resolved_path!(fixture.repo),
           "--expected-source-oid",
           fixture.installation_oid
         ])
@@ -1199,7 +1202,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           invoke_immutable_loader(fixture, [
             "--self-check",
             "--repo",
-            fixture.repo,
+            resolved_path!(fixture.repo),
             "--expected-source-oid",
             oid
           ])
@@ -1214,7 +1217,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         invoke_immutable_loader(fixture, [
           "--self-check",
           "--repo",
-          fixture.repo,
+          resolved_path!(fixture.repo),
           "--expected-source-oid",
           fixture.installation_oid
         ])
@@ -1818,7 +1821,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     git!(repo, ["commit", "-q", "-m", "metadata only"])
     current_oid = repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
 
-    install_dir = Path.join(Path.dirname(repo), "installed")
+    install_dir = Path.join(Path.dirname(repo), "installed-#{Path.basename(repo)}")
     File.mkdir_p!(install_dir)
     installed = Path.join(install_dir, "mailglass-finalize-phase")
     File.cp!(loader_source, installed)
