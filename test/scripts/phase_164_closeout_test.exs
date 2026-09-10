@@ -78,7 +78,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     installed_block =
       source
-      |> String.split(~s(describe "phase 164 installed production boundary" do), parts: 2)
+      |> String.split(~s(describe "phase 164 installed production boundary" do))
       |> List.last()
       |> String.split(~s(\n  test "owned sibling cleanup), parts: 2)
       |> List.first()

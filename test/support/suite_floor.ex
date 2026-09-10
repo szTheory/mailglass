@@ -237,12 +237,17 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   # Constants
   # ──────────────────────────────────────────────────────────────
 
-  # The complete set of tokens either `advisory-matrix.yml`'s
-  # `--exclude requires_workspace` or `test_helper.exs`'s conditional
-  # `ExUnit.configure(exclude: [:public_only])` can produce. Answers "is this
-  # tag one of the two legitimate sources," not "does THIS schema expect it"
+  # The complete set of tokens produced by `advisory-matrix.yml`'s
+  # `--exclude requires_workspace`, `test_helper.exs`'s conditional
+  # `ExUnit.configure(exclude: [:public_only])`, or the repository-only CI
+  # contract's controlled-host exclusion. Answers "is this tag one of the
+  # legitimate sources," not "does THIS schema expect it"
   # — see `expected_exclusion_tags/1` for the schema-aware half.
-  @known_exclusion_tags MapSet.new([:requires_workspace, :public_only])
+  @known_exclusion_tags MapSet.new([
+                          :requires_workspace,
+                          :public_only,
+                          :phase_164_installed_production_boundary
+                        ])
 
   # Answers: "did this complete suite run at least as many tests as the last
   # green gating run did?" It does NOT answer whether those tests assert
@@ -465,9 +470,10 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   end
 
   @doc """
-  The full set of exclusion tags either legitimate source
+  The full set of exclusion tags a legitimate source
   (`advisory-matrix.yml`'s `--exclude requires_workspace`,
-  `test_helper.exs`'s conditional `:public_only`) can produce. Used for the
+  `test_helper.exs`'s conditional `:public_only`, or the repository-only CI
+  contract's `:phase_164_installed_production_boundary`) can produce. Used for the
   "unknown tag" direction of the both-directions check — a schema chooses a
   SUBSET of this set, never a tag outside it (see `expected_exclusion_tags/1`
   for the schema-aware subset).
