@@ -1245,6 +1245,38 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       end
     end
 
+    test "rejects singleton, malformed, and unexpected numbered artifacts before Bash" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      mutations = [
+        {"singleton", fn fixture ->
+           git!(fixture.repo, ["rm", "-q", ".planning/phases/164-fixture/164-10-SUMMARY.md"])
+         end},
+        {"malformed", fn fixture ->
+           path = ".planning/phases/164-fixture/164-10-PLAN.md.backup"
+           File.write!(Path.join(fixture.repo, path), "malformed\n")
+           git!(fixture.repo, ["add", "--", path])
+         end},
+        {"unexpected", fn fixture ->
+           path = ".planning/phases/164-fixture/164-25-PLAN.md"
+           File.write!(Path.join(fixture.repo, path), "unexpected\n")
+           git!(fixture.repo, ["add", "--", path])
+         end}
+      ]
+
+      for {name, mutate} <- mutations do
+        fixture = immutable_loader_fixture!(Path.join(root, name))
+        mutate.(fixture)
+        git!(fixture.repo, ["commit", "-q", "-m", name])
+
+        {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
+        assert status != 0
+        assert output =~ "numbered history is not the exact 01-24"
+        refute File.exists?(fixture.marker)
+      end
+    end
+
     test "loader and shell share an explicit 01-24 terminal contract recorded in the ledger" do
       loader = File.read!(@immutable_loader)
       finalizer = File.read!(@finalizer)
