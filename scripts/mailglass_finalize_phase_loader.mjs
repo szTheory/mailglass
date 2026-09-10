@@ -188,10 +188,14 @@ function exactNumberedArtifacts(repo, authorityOid, phaseRelative) {
   const expected = expectedPhaseArtifacts(phaseRelative);
   const escaped = phaseRelative.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const numberedPattern = new RegExp(`^${escaped}/164-\\d{2}-(?:PLAN|SUMMARY)\\.md$`);
-  const actual = capturedTreePaths(repo, authorityOid, phaseRelative).filter((path) =>
-    numberedPattern.test(path),
+  const numberedLikePattern = new RegExp(
+    `^${escaped}/164-\\d.*-(?:PLAN|SUMMARY)(?:\\.|$)`,
   );
+  const phasePaths = capturedTreePaths(repo, authorityOid, phaseRelative);
+  const actual = phasePaths.filter((path) => numberedPattern.test(path));
+  const numberedLike = phasePaths.filter((path) => numberedLikePattern.test(path));
   if (
+    numberedLike.length !== actual.length ||
     actual.length !== expected.length ||
     new Set(actual).size !== actual.length ||
     expected.some((path) => !actual.includes(path))
