@@ -280,7 +280,7 @@ Plans:
 
 **Wave 21** *(blocking-human installation checkpoint; blocked on Wave 20)*
 
-- [ ] 164-23-PLAN.md — Preflight, approve, atomically install, and provenance-check the external authority with recoverable replacement bytes.
+- [x] 164-23-PLAN.md — Preflight, approve, atomically install, and provenance-check the external authority with recoverable replacement bytes.
 
 **Wave 22** *(blocked on the verified installed command)*
 
@@ -299,4 +299,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 22/24 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 23/24 | In Progress|  |
