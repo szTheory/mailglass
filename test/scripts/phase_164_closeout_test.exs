@@ -1295,6 +1295,40 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  describe "phase 164 installed boundary" do
+    @describetag :phase_164_installed_boundary
+
+    test "retired project extension bytes are absent from the checkout and authority path" do
+      refute File.exists?(@extension)
+      refute File.exists?(@manifest)
+
+      loader = File.read!(@immutable_loader)
+      refute loader =~ ".gsd/extensions/finalize-phase"
+      refute loader =~ "registerCommand"
+    end
+
+    test "a hostile recreation of the retired extension cannot influence direct loader execution" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "hostile-retired-extension"))
+      retired_dir = Path.join(fixture.repo, ".gsd/extensions/finalize-phase")
+      hostile_marker = Path.join(fixture.repo, "retired-extension.marker")
+
+      File.mkdir_p!(retired_dir)
+
+      File.write!(
+        Path.join(retired_dir, "index.ts"),
+        "import { writeFileSync } from 'node:fs'; writeFileSync(#{inspect(hostile_marker)}, 'executed');\n"
+      )
+
+      File.write!(Path.join(retired_dir, "extension-manifest.json"), ~s({"id":"hostile"}\n))
+
+      {_, 0} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
+      assert File.regular?(fixture.marker)
+      refute File.exists?(hostile_marker)
+    end
+  end
+
   test "owned sibling cleanup refuses pre-existing and token-replaced paths" do
     root = temporary_root!()
     candidate = @repo_root <> "-gap-preexisting-#{System.unique_integer([:positive])}"

@@ -186,7 +186,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
              Ledger.parse(Enum.join([header, unmapped], "\n") <> "\n")
   end
 
-  test "git ignores all GSD runtime state except the finalize-phase extension" do
+  test "git runtime rules do not conceal the retired finalize-phase extension paths" do
     assert ignored?(".gsd/gsd.db")
     assert ignored?(".gsd/exec/probe")
     assert ignored?(".gsd/extensions/other/index.ts")
@@ -200,13 +200,34 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     refute ignored?(".planning/release-target.json")
   end
 
-  test "finalization artifacts have exactly one tracked current retain disposition" do
+  test "retired extension rows preserve removal provenance and name the retained replacement" do
+    assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+
+    for subject <- [
+          ".gsd/extensions/finalize-phase/extension-manifest.json",
+          ".gsd/extensions/finalize-phase/index.ts"
+        ] do
+      assert [row] = Enum.filter(rows, &(&1["subject"] == subject))
+      assert row["state"] == "untracked"
+      assert row["currentness"] == "historical"
+      assert row["disposition"] == "remove"
+      assert row["evidence"] =~ "164-22-PLAN.md"
+      assert row["rationale"] =~ "scripts/mailglass_finalize_phase_loader.mjs"
+    end
+
+    assert [replacement] =
+             Enum.filter(rows, &(&1["subject"] == "scripts/mailglass_finalize_phase_loader.mjs"))
+
+    assert replacement["state"] == "tracked"
+    assert replacement["currentness"] == "current"
+    assert replacement["disposition"] == "retain"
+  end
+
+  test "retained finalization artifacts have exactly one tracked current disposition" do
     assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
 
     for subject <- [
           ".gitignore",
-          ".gsd/extensions/finalize-phase/extension-manifest.json",
-          ".gsd/extensions/finalize-phase/index.ts",
           "scripts/finalize_phase_164.sh",
           Path.join(@phase_dir, "164-FINALIZE.sh"),
           Path.join(@phase_dir, "164-FINALIZATION.md"),
