@@ -284,7 +284,7 @@ Plans:
 
 **Wave 22** *(blocked on the verified installed command)*
 
-- [ ] 164-24-PLAN.md — Exercise all verifier attacks through the installed executable and reconcile non-terminal validation records.
+- [x] 164-24-PLAN.md — Exercise all verifier attacks through the installed executable and reconcile non-terminal validation records.
 
 **Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
 
@@ -299,4 +299,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 23/24 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 24/24 | In Progress|  |

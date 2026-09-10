@@ -4,19 +4,19 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
-status: executing
-stopped_at: Completed 164-23-PLAN.md
-last_updated: "2026-09-10T21:14:58.951Z"
+status: verifying
+stopped_at: Completed 164-24-PLAN.md
+last_updated: "2026-09-10T21:40:36.012Z"
 last_activity: 2026-09-10
-last_activity_desc: Completed Plan 164-22 installed finalization authority
-state_head: efa1502602f4c845b564b3211dcb797c1fc70614
+last_activity_desc: Completed Plan 164-24 installed production boundary proof
+state_head: c0817fb72d82cf982da7ab1b3e37cd72209a2c19
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 50
-  completed_plans: 46
+  completed_plans: 47
   percent: 75
-current_plan: 22
+current_plan: 24
 ---
 
 # Project State
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
+Phase: 164 (Repository Truth Reconciliation and Closeout) — READY FOR VERIFICATION
 Plan: 24 of 24
-Status: Ready to execute
-Last activity: 2026-09-10 — Completed Plan 164-22 installed finalization authority
+Status: Phase complete — ready for verification
+Last activity: 2026-09-10 — Completed Plan 164-24 installed production boundary proof
 
-Progress: [█████████░] 45/50 plans complete ([████████░░] 75%)
+Progress: [█████████░] 47/50 plans complete ([████████░░] 75%)
 
 ## Performance Metrics
 
@@ -104,6 +104,7 @@ Progress: [█████████░] 45/50 plans complete ([████�
 | Phase 164 P21 | 22min | 2 tasks | 5 files |
 | Phase 164 P22 | 6min | 2 tasks | 10 files |
 | Phase 164 P23 | 6min | 3 tasks | 4 files |
+| Phase 164-repository-truth-reconciliation-and-closeout P24 | 21min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -165,6 +166,8 @@ Progress: [█████████░] 45/50 plans complete ([████�
 - [Phase 164]: Retired extension subjects remain exact ledger identities with historical remove dispositions and explicit replacement evidence naming scripts/mailglass_finalize_phase_loader.mjs. — Executable removal must preserve audit identity, origin, and current replacement authority.
 - [Phase 164]: Human approval authorized only the exact persisted absent-destination installation tuple. — Any change in source OID, digest, destination, mode, or prior-object disposition invalidates authorization before mutation.
 - [Phase 164]: The installed loader remains bound to the approved source OID while rollback is inapplicable for the absent destination. — The exact approved committed bytes were atomically installed at mode 0500 and both version and self-check probes passed.
+- [Phase 164]: Installed-boundary tests authenticate the immutable Plan 164-23 approval tuple before direct subprocess attacks and never import the retired checkout extension. — This makes the actually installed command, not a test-local import, the production authority under test.
+- [Phase 164]: Plan 164-24 records automated production-boundary proof only; terminal finalization remains pending. — Ordinary verification and protected completion-metadata integration remain separately ordered lifecycle events.
 
 ## Deferred Items
 
@@ -174,6 +177,6 @@ Progress: [█████████░] 45/50 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-10T21:14:58.689Z
-Stopped at: Completed 164-23-PLAN.md
+Last session: 2026-09-10T21:40:35.883Z
+Stopped at: Completed 164-24-PLAN.md
 Resume file: None

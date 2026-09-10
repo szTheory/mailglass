@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 10
 waived_count: 0
-fixed_count: 15
-total_count: 25
-last_updated: 2026-09-10T20:54:22.869Z
+fixed_count: 19
+total_count: 29
+last_updated: 2026-09-10T21:41:39.344Z
 ---
 
 # Broken Windows Ledger
@@ -40,6 +40,10 @@ last_updated: 2026-09-10T20:54:22.869Z
 | 23 | 164 | deviation | scripts/validate_repository_truth.exs |  | Split ledger audit reads from authenticated authority while preserving canonical Git index observations | fixed |  | 2026-09-10T04:21:02.342Z | 2026-09-10T04:21:28.803Z |
 | 24 | 164 | deviation | scripts/mailglass_finalize_phase_loader.mjs |  | Reject numbered-looking malformed Phase 164 PLAN/SUMMARY paths before Bash dispatch | fixed |  | 2026-09-10T20:52:58.085Z | 2026-09-10T20:54:22.768Z |
 | 25 | 164 | deviation | scripts/validate_repository_truth.exs |  | Limit plan-derived repository truth inventory to completed plans | fixed |  | 2026-09-10T20:52:58.175Z | 2026-09-10T20:54:22.869Z |
+| 26 | 164 | deviation | scripts/validate_repository_truth.exs |  | Added canonical dispositions for approved installation artifacts discovered by the complete validator | fixed |  | 2026-09-10T21:41:18.734Z | 2026-09-10T21:41:39.071Z |
+| 27 | 164 | deviation | dev/toolchain/Dockerfile |  | Completed pinned toolchain dependencies required by lifecycle verification | fixed |  | 2026-09-10T21:41:18.836Z | 2026-09-10T21:41:39.164Z |
+| 28 | 164 | deviation | test/scripts/phase_164_closeout_test.exs |  | Removed obsolete execution tests for the retired project extension authority | fixed |  | 2026-09-10T21:41:18.939Z | 2026-09-10T21:41:39.255Z |
+| 29 | 164 | deviation | test/scripts/phase_164_closeout_test.exs |  | Replaced BSD-only stat assertions with portable File.Stat mode checks | fixed |  | 2026-09-10T21:41:19.032Z | 2026-09-10T21:41:39.344Z |
 
 ````json
 [
@@ -342,6 +346,54 @@ last_updated: 2026-09-10T20:54:22.869Z
     "reason": "",
     "recorded_at": "2026-09-10T20:52:58.175Z",
     "resolved_at": "2026-09-10T20:54:22.869Z"
+  },
+  {
+    "id": 26,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "scripts/validate_repository_truth.exs",
+    "line": null,
+    "description": "Added canonical dispositions for approved installation artifacts discovered by the complete validator",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T21:41:18.734Z",
+    "resolved_at": "2026-09-10T21:41:39.071Z"
+  },
+  {
+    "id": 27,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "dev/toolchain/Dockerfile",
+    "line": null,
+    "description": "Completed pinned toolchain dependencies required by lifecycle verification",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T21:41:18.836Z",
+    "resolved_at": "2026-09-10T21:41:39.164Z"
+  },
+  {
+    "id": 28,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "test/scripts/phase_164_closeout_test.exs",
+    "line": null,
+    "description": "Removed obsolete execution tests for the retired project extension authority",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T21:41:18.939Z",
+    "resolved_at": "2026-09-10T21:41:39.255Z"
+  },
+  {
+    "id": 29,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "test/scripts/phase_164_closeout_test.exs",
+    "line": null,
+    "description": "Replaced BSD-only stat assertions with portable File.Stat mode checks",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T21:41:19.032Z",
+    "resolved_at": "2026-09-10T21:41:39.344Z"
   }
 ]
 ````
