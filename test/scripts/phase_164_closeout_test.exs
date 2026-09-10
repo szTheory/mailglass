@@ -4,6 +4,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   @repo_root Path.expand("../..", __DIR__)
   @script Path.join(@repo_root, "scripts/closeout_repository_truth.sh")
   @extension Path.join(@repo_root, ".gsd/extensions/finalize-phase/index.ts")
+  @immutable_loader Path.join(@repo_root, "scripts/mailglass_finalize_phase_loader.mjs")
   @manifest Path.join(
               @repo_root,
               ".gsd/extensions/finalize-phase/extension-manifest.json"
@@ -1105,6 +1106,125 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  describe "phase 164 immutable loader" do
+    @describetag :phase_164_immutable_loader
+
+    test "dispatches committed bytes from one authority OID and rejects a moving HEAD" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      accepted = immutable_loader_fixture!(Path.join(root, "accepted"))
+      {output, 0} = invoke_immutable_loader(accepted, ["164", "--pre-verification"])
+      assert output =~ "pre-verification"
+      assert File.regular?(accepted.marker)
+
+      authority_oids =
+        accepted.git_log
+        |> File.read!()
+        |> String.split("\n", trim: true)
+        |> Enum.flat_map(&Regex.scan(~r/\b[0-9a-f]{40}\b/, &1))
+        |> List.flatten()
+        |> Enum.uniq()
+
+      assert authority_oids == [accepted.installation_oid]
+
+      moving = immutable_loader_fixture!(Path.join(root, "moving"), move_head: true)
+
+      {moving_output, moving_status} =
+        invoke_immutable_loader(moving, ["164", "--pre-verification"], moving.env)
+
+      assert moving_status != 0
+      assert moving_output =~ "authority commit changed"
+      refute File.exists?(moving.marker)
+    end
+
+    test "checkout mutations cannot replace authenticated private execution bytes" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "hidden"))
+
+      git!(fixture.repo, ["update-index", "--assume-unchanged", "--", fixture.downstream_relative])
+      File.write!(fixture.downstream, hostile_script(fixture.hostile_marker))
+      File.chmod!(fixture.downstream, 0o755)
+
+      {_, 0} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
+      assert File.regular?(fixture.marker)
+      refute File.exists?(fixture.hostile_marker)
+    end
+
+    test "version and invalid invocations are bounded and never dispatch Bash" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "inspection"))
+
+      assert {"mailglass-finalize-phase-loader 1\n", 0} =
+               invoke_immutable_loader(fixture, ["--version"], [{"PATH", "/nonexistent"}])
+
+      for args <- [[], ["165"], ["164", "--unknown"], ["--self-check"]] do
+        {output, status} = invoke_immutable_loader(fixture, args)
+        assert status != 0
+        assert byte_size(output) <= 16_000
+      end
+
+      refute File.exists?(fixture.marker)
+    end
+
+    test "self-check binds external installed bytes to the installation OID and current source" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "self-check"))
+
+      {output, 0} =
+        invoke_immutable_loader(fixture, [
+          "--self-check",
+          "--repo",
+          fixture.repo,
+          "--expected-source-oid",
+          fixture.installation_oid
+        ])
+
+      assert output =~ "installation_oid=#{fixture.installation_oid}"
+      assert output =~ "current_oid=#{fixture.current_oid}"
+      assert output =~ "terminal_range=01-24"
+      assert output =~ "mode=0500"
+      refute File.exists?(fixture.marker)
+
+      invalid = [
+        String.slice(fixture.installation_oid, 0, 12),
+        String.duplicate("f", 40)
+      ]
+
+      for oid <- invalid do
+        {bad_output, status} =
+          invoke_immutable_loader(fixture, [
+            "--self-check",
+            "--repo",
+            fixture.repo,
+            "--expected-source-oid",
+            oid
+          ])
+
+        assert status != 0
+        assert byte_size(bad_output) <= 16_000
+      end
+
+      File.write!(Path.join(fixture.repo, "dirty"), "dirty\n")
+
+      {dirty_output, dirty_status} =
+        invoke_immutable_loader(fixture, [
+          "--self-check",
+          "--repo",
+          fixture.repo,
+          "--expected-source-oid",
+          fixture.installation_oid
+        ])
+
+      assert dirty_status != 0
+      assert dirty_output =~ "repository is not clean"
+      refute File.exists?(fixture.marker)
+    end
+  end
+
   test "owned sibling cleanup refuses pre-existing and token-replaced paths" do
     root = temporary_root!()
     candidate = @repo_root <> "-gap-preexisting-#{System.unique_integer([:positive])}"
@@ -1674,6 +1794,101 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       bytes_marker: bytes_marker,
       hostile_marker: hostile_marker
     }
+  end
+
+  defp immutable_loader_fixture!(repo, options \\ []) do
+    fixture = extension_fixture!(repo)
+    loader_source = Path.join(repo, "scripts/mailglass_finalize_phase_loader.mjs")
+    File.cp!(@immutable_loader, loader_source)
+
+    phase_dir = Path.join(repo, ".planning/phases/164-fixture")
+
+    for plan <- 2..24 do
+      number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
+      File.write!(Path.join(phase_dir, "164-#{number}-PLAN.md"), "plan #{number}\n")
+      File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary #{number}\n")
+    end
+
+    git!(repo, ["add", "."])
+    git!(repo, ["commit", "-q", "-m", "installable immutable loader authority"])
+    installation_oid = repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
+
+    File.write!(Path.join(repo, "metadata"), "later metadata\n")
+    git!(repo, ["add", "metadata"])
+    git!(repo, ["commit", "-q", "-m", "metadata only"])
+    current_oid = repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
+
+    install_dir = Path.join(Path.dirname(repo), "installed")
+    File.mkdir_p!(install_dir)
+    installed = Path.join(install_dir, "mailglass-finalize-phase")
+    File.cp!(loader_source, installed)
+    File.chmod!(installed, 0o500)
+
+    git_log = Path.join(Path.dirname(repo), "git.log")
+    real_git = System.find_executable("git")
+    env = [{"REAL_GIT", real_git}, {"GIT_LOG", git_log}]
+
+    env =
+      if Keyword.get(options, :move_head, false) do
+        shim_dir = Path.join(Path.dirname(repo), "git-shim")
+        counter = Path.join(Path.dirname(repo), "git-counter")
+        File.mkdir_p!(shim_dir)
+        File.write!(counter, "0")
+
+        write_executable!(
+          Path.join(shim_dir, "git"),
+          """
+          #!/usr/bin/env bash
+          set -euo pipefail
+          printf '%s\\n' "$*" >> "$GIT_LOG"
+          "$REAL_GIT" "$@"
+          status=$?
+          count=$(($(cat "$GIT_COUNTER") + 1))
+          printf '%s' "$count" > "$GIT_COUNTER"
+          if [ "$count" -eq 4 ]; then
+            printf 'advanced\\n' > "$FIXTURE_REPO/head-advance"
+            "$REAL_GIT" -C "$FIXTURE_REPO" add head-advance
+            GIT_AUTHOR_NAME='Phase 164 Test' GIT_AUTHOR_EMAIL=phase164@example.test \\
+            GIT_COMMITTER_NAME='Phase 164 Test' GIT_COMMITTER_EMAIL=phase164@example.test \\
+              "$REAL_GIT" -C "$FIXTURE_REPO" commit -q -m 'advance head during authentication'
+          fi
+          exit "$status"
+          """
+        )
+
+        [
+          {"PATH", "#{shim_dir}:#{System.fetch_env!("PATH")}"},
+          {"GIT_COUNTER", counter},
+          {"FIXTURE_REPO", repo}
+          | env
+        ]
+      else
+        env
+      end
+
+    Map.merge(fixture, %{
+      installed: installed,
+      installation_oid: installation_oid,
+      current_oid: current_oid,
+      git_log: git_log,
+      env: env
+    })
+  end
+
+  defp invoke_immutable_loader(fixture, args, extra_env \\ []) do
+    System.cmd(System.find_executable("node"), [fixture.installed | args],
+      cd: fixture.repo,
+      env:
+        extra_env ++
+          [
+            {"MARKER", fixture.marker},
+            {"BYTES_MARKER", fixture.bytes_marker},
+            {"HOSTILE_MARKER", fixture.hostile_marker},
+            {"GIT_LOG", fixture.git_log},
+            {"REAL_GIT", System.find_executable("git")}
+          ],
+      stderr_to_stdout: true
+    )
   end
 
   defp hostile_script(marker) do
