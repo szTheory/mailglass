@@ -96,7 +96,7 @@ require_pre_verification_state() {
 }
 
 require_terminal_state() {
-  local repo="$1" phase_dir="$2" plan_file summary verification verified_implementation_sha commit path
+  local repo="$1" phase_dir="$2" authority_root="$3" plan_file summary verification verified_implementation_sha commit path
 
   for plan_file in "$phase_dir"/164-[0-9][0-9]-PLAN.md; do
     [ -f "$plan_file" ] || fail "no numbered phase plans found"
@@ -104,11 +104,11 @@ require_terminal_state() {
     [ -f "$summary" ] || fail "missing terminal summary $(basename "$summary")"
   done
 
-  grep -F -- '- [x] **Phase 164: Repository Truth Reconciliation and Closeout**' "$repo/.planning/ROADMAP.md" >/dev/null ||
+  grep -F -- '- [x] **Phase 164: Repository Truth Reconciliation and Closeout**' "$authority_root/.planning/ROADMAP.md" >/dev/null ||
     fail "ROADMAP does not mark Phase 164 complete"
 
   for requirement in TRTH-01 TRTH-02 TRTH-03; do
-    grep -F -- "- [x] **$requirement**" "$repo/.planning/REQUIREMENTS.md" >/dev/null ||
+    grep -F -- "- [x] **$requirement**" "$authority_root/.planning/REQUIREMENTS.md" >/dev/null ||
       fail "$requirement is not complete"
   done
 
@@ -221,20 +221,23 @@ raw_sources_are_acceptable() {
 }
 
 main() {
-  local repo_arg="${1:-}" mode_arg="${2:-}" mode=terminal
-  local repo phase_dir capture_dir inputs report runs_json ci_run_id main_sha branch porcelain
+  local repo_arg="${1:-}" authority_arg="${2:-}" mode_arg="${3:-}" mode=terminal
+  local repo authority_root phase_dir capture_dir inputs report runs_json ci_run_id main_sha branch porcelain
   local github_repository
   local closeout_status=0
 
-  [ "$#" -ge 1 ] && [ "$#" -le 2 ] || fail "usage: $0 REPO [--pre-verification]"
-  if [ "$#" -eq 2 ]; then
+  [ "$#" -ge 2 ] && [ "$#" -le 3 ] || fail "usage: $0 REPO AUTHORITY_ROOT [--pre-verification]"
+  if [ "$#" -eq 3 ]; then
     [ "$mode_arg" = "--pre-verification" ] || fail "unknown mode: $mode_arg"
     mode=pre-verification
   fi
 
   repo=$(cd "$repo_arg" 2>/dev/null && pwd -P) || fail "repository does not exist"
   [ "$repo" = "$canonical_repo" ] || fail "repository is not the canonical checkout"
-  phase_dir="$repo/$phase_rel"
+  authority_root=$(cd "$authority_arg" 2>/dev/null && pwd -P) || fail "authenticated authority root does not exist"
+  [ "$authority_root" != "$repo" ] || fail "authenticated authority root must be private"
+  case "$(basename "$authority_root")" in mailglass-finalize-164-*) ;; *) fail "authenticated authority root is unexpected" ;; esac
+  phase_dir="$authority_root/$phase_rel"
 
   branch=$(git -C "$repo" branch --show-current 2>/dev/null || true)
   [ "$branch" = main ] || fail "canonical checkout is not on main"
@@ -261,7 +264,7 @@ main() {
     inputs=pre-verification-inputs.json
     report=pre-verification-report.json
   else
-    require_terminal_state "$repo" "$phase_dir"
+    require_terminal_state "$repo" "$phase_dir" "$authority_root"
     inputs=finalization-inputs.json
     report=report.json
   fi
@@ -290,9 +293,10 @@ main() {
   set +e
   GH_HOST=github.com \
   GITHUB_REPOSITORY="$github_repository" \
-  SCHEDULED_CONTROL_CONFIG="$repo/$registry_rel" \
-    "$repo/scripts/closeout_repository_truth.sh" \
+  SCHEDULED_CONTROL_CONFIG="$authority_root/$registry_rel" \
+    "$authority_root/scripts/closeout_repository_truth.sh" \
     --repo "$repo" \
+    --authority-root "$authority_root" \
     --ledger "$repo/$ledger_rel" \
     --ci-run-id "$ci_run_id" \
     --output "$capture_dir/$report"
@@ -300,7 +304,7 @@ main() {
   set -e
 
   [ -f "$capture_dir/$report" ] || fail "closeout did not preserve a report"
-  raw_sources_are_acceptable "$capture_dir/$report" "$main_sha" "$repo/tmp" "$repo/$registry_rel" "$ci_run_id" ||
+  raw_sources_are_acceptable "$capture_dir/$report" "$main_sha" "$repo/tmp" "$authority_root/$registry_rel" "$ci_run_id" ||
     fail "raw CI or scheduled evidence failed independent finalization validation"
 
   revalidate_final_main "$repo" "$main_sha" "$capture_dir/$report" ||

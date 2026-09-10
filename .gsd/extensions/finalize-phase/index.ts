@@ -1,4 +1,13 @@
-import { chmodSync, lstatSync, mkdtempSync, realpathSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { relative, resolve, sep } from "node:path";
 
@@ -8,6 +17,63 @@ const MAX_OUTPUT_BYTES = 16_000;
 const PHASE_PATTERN = /^[1-9]\d*$/;
 const SUPPORTED_PHASE = "164";
 const PRE_VERIFICATION = "--pre-verification";
+type Dependency = { path: string; executable: boolean };
+
+const STATIC_DEPENDENCIES: Dependency[] = [
+  { path: "scripts/finalize_phase_164.sh", executable: true },
+  { path: "scripts/closeout_repository_truth.sh", executable: true },
+  { path: "scripts/verify_workspace_evidence.sh", executable: true },
+  { path: "scripts/validate_repository_truth.exs", executable: true },
+  { path: "scripts/ci_monitor.cjs", executable: true },
+  { path: "scripts/scheduled_control_evidence.sh", executable: true },
+  { path: ".github/scheduled-controls.json", executable: false },
+  {
+    path: ".planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md",
+    executable: false,
+  },
+  {
+    path: ".planning/phases/161-canonical-workspace-and-evidence-preservation/161-PRESERVATION-RECONCILIATION.tsv",
+    executable: false,
+  },
+  { path: ".planning/ROADMAP.md", executable: false },
+  { path: ".planning/REQUIREMENTS.md", executable: false },
+  { path: ".gitignore", executable: false },
+  { path: "mailglass_admin/.gitignore", executable: false },
+  { path: "mailglass_inbound/.gitignore", executable: false },
+  { path: "reference/demo_app/.gitignore", executable: false },
+  { path: "reference/host_app/.gitignore", executable: false },
+  { path: "test/example/.gitignore", executable: false },
+  { path: ".planning/release-target.json", executable: false },
+  {
+    path: ".planning/phases/162-protected-release-and-scheduled-control-recovery/162-RELEASE-RECONCILIATION.md",
+    executable: false,
+  },
+  {
+    path: ".planning/phases/162-protected-release-and-scheduled-control-recovery/162-UAT.md",
+    executable: false,
+  },
+  {
+    path: ".planning/phases/162-protected-release-and-scheduled-control-recovery/162-VERIFICATION.md",
+    executable: false,
+  },
+  {
+    path: ".planning/phases/163-deterministic-release-path-timeout-repairs/163-PROOF.md",
+    executable: false,
+  },
+  {
+    path: ".planning/phases/163-deterministic-release-path-timeout-repairs/163-VERIFICATION.md",
+    executable: false,
+  },
+];
+
+function phaseDependencies(phaseRelative: string): Dependency[] {
+  return [
+    { path: `${phaseRelative}/164-TRUTH-DISPOSITION.tsv`, executable: false },
+    { path: `${phaseRelative}/164-VERIFICATION.md`, executable: false },
+    { path: `${phaseRelative}/164-VALIDATION.md`, executable: false },
+    { path: `${phaseRelative}/164-FINALIZATION.md`, executable: false },
+  ];
+}
 
 function inside(root: string, candidate: string): boolean {
   const pathFromRoot = relative(root, candidate);
@@ -38,6 +104,18 @@ async function authenticateHeadFile(
   label: string,
   ctx: { ui: { notify(message: string, level: "error"): void } },
 ): Promise<string> {
+  const lexicalPath = resolve(repoRoot, repositoryPath);
+  let lexicalStat;
+  try {
+    lexicalStat = lstatSync(lexicalPath);
+  } catch {
+    commandError(ctx, `finalize-phase: ${label} is missing from the worktree`);
+  }
+
+  if (!inside(repoRoot, lexicalPath) || !lexicalStat.isFile() || lexicalStat.isSymbolicLink()) {
+    commandError(ctx, `finalize-phase: ${label} is not a regular repository file`);
+  }
+
   const objectType = await pi.exec("git", ["cat-file", "-t", `HEAD:${repositoryPath}`], {
     cwd: repoRoot,
   });
@@ -79,6 +157,66 @@ async function authenticateHeadFile(
   }
 
   return blob.stdout;
+}
+
+async function numberedPhaseDependencies(
+  pi: ExtensionAPI,
+  repoRoot: string,
+  phaseDirectory: string,
+  ctx: { ui: { notify(message: string, level: "error"): void } },
+): Promise<Dependency[]> {
+  const phaseRelative = relative(repoRoot, phaseDirectory);
+  const result = await pi.exec(
+    "git",
+    ["ls-tree", "-r", "--name-only", "-z", "HEAD", "--", phaseRelative],
+    { cwd: repoRoot },
+  );
+
+  if (result.code !== 0 || !result.stdout.endsWith("\0")) {
+    commandError(ctx, "finalize-phase: could not enumerate authenticated Phase 164 artifacts");
+  }
+
+  const pattern = new RegExp(`^${phaseRelative.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/164-\\d{2}-(?:PLAN|SUMMARY)\\.md$`);
+  const paths = result.stdout.split("\0").filter((path) => pattern.test(path));
+
+  if (paths.length === 0 || new Set(paths).size !== paths.length) {
+    commandError(ctx, "finalize-phase: authenticated Phase 164 artifact set is empty or duplicated");
+  }
+
+  return paths.map((path) => ({ path, executable: false }));
+}
+
+async function trackedTreeDependencies(
+  pi: ExtensionAPI,
+  repoRoot: string,
+  treePath: string,
+  ctx: { ui: { notify(message: string, level: "error"): void } },
+): Promise<Dependency[]> {
+  const result = await pi.exec(
+    "git",
+    ["ls-tree", "-r", "--name-only", "-z", "HEAD", "--", treePath],
+    { cwd: repoRoot },
+  );
+  if (result.code !== 0 || !result.stdout.endsWith("\0")) {
+    commandError(ctx, `finalize-phase: could not enumerate authenticated ${treePath}`);
+  }
+  const paths = result.stdout.split("\0").filter(Boolean);
+  if (paths.length === 0 || new Set(paths).size !== paths.length) {
+    commandError(ctx, `finalize-phase: authenticated ${treePath} is empty or duplicated`);
+  }
+  return paths.map((path) => ({ path, executable: false }));
+}
+
+function materializeDependency(root: string, dependency: Dependency, contents: string): void {
+  const destination = resolve(root, dependency.path);
+  if (!inside(root, destination)) throw new Error("finalize-phase: dependency path escaped authority root");
+  mkdirSync(resolve(destination, ".."), { recursive: true, mode: 0o700 });
+  writeFileSync(destination, contents, {
+    encoding: "utf8",
+    flag: "wx",
+    mode: dependency.executable ? 0o500 : 0o400,
+  });
+  chmodSync(destination, dependency.executable ? 0o500 : 0o400);
 }
 
 export default function finalizePhaseExtension(pi: ExtensionAPI): void {
@@ -154,6 +292,7 @@ export default function finalizePhaseExtension(pi: ExtensionAPI): void {
 
       const finalizerRelative = relative(repoRoot, finalizerCandidate);
       const downstreamRelative = relative(repoRoot, downstreamCandidate);
+      const phaseRelative = relative(repoRoot, phaseDirectory);
       await authenticateHeadFile(
         pi,
         repoRoot,
@@ -161,13 +300,30 @@ export default function finalizePhaseExtension(pi: ExtensionAPI): void {
         `phase shim for ${phase}`,
         ctx,
       );
-      const downstreamBlob = await authenticateHeadFile(
+      const numberedDependencies = await numberedPhaseDependencies(pi, repoRoot, phaseDirectory, ctx);
+      const publishDependencies = await trackedTreeDependencies(
         pi,
         repoRoot,
-        downstreamRelative,
-        `downstream finalizer for ${phase}`,
+        ".planning/publish",
         ctx,
       );
+      const dependencies = [
+        ...STATIC_DEPENDENCIES,
+        ...phaseDependencies(phaseRelative),
+        ...numberedDependencies,
+        ...publishDependencies,
+      ];
+      if (new Set(dependencies.map((dependency) => dependency.path)).size !== dependencies.length) {
+        commandError(ctx, "finalize-phase: dependency manifest contains duplicate paths");
+      }
+
+      const authenticated = new Map<string, string>();
+      for (const dependency of dependencies) {
+        authenticated.set(
+          dependency.path,
+          await authenticateHeadFile(pi, repoRoot, dependency.path, dependency.path, ctx),
+        );
+      }
 
       const finalizer = realpathSync(finalizerCandidate);
       const downstream = realpathSync(downstreamCandidate);
@@ -176,14 +332,15 @@ export default function finalizePhaseExtension(pi: ExtensionAPI): void {
       }
 
       const privateDirectory = mkdtempSync(resolve(tmpdir(), `mailglass-finalize-${phase}-`));
-      const privateFinalizer = resolve(privateDirectory, "finalize.sh");
+      const privateFinalizer = resolve(privateDirectory, downstreamRelative);
 
       try {
         chmodSync(privateDirectory, 0o700);
-        writeFileSync(privateFinalizer, downstreamBlob, { encoding: "utf8", flag: "wx", mode: 0o500 });
-        chmodSync(privateFinalizer, 0o500);
+        for (const dependency of dependencies) {
+          materializeDependency(privateDirectory, dependency, authenticated.get(dependency.path)!);
+        }
 
-        const result = await pi.exec("bash", [privateFinalizer, repoRoot, ...modeArgs], {
+        const result = await pi.exec("bash", [privateFinalizer, repoRoot, privateDirectory, ...modeArgs], {
           cwd: repoRoot,
         });
         const output = boundedTail(result.stdout, result.stderr);

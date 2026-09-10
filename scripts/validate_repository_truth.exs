@@ -392,21 +392,26 @@ defmodule Mailglass.RepositoryTruthLedger do
     end
   end
 
-  def audit_subjects(repo_root) do
-    with :ok <- ensure_repository(repo_root) do
+  def audit_subjects(repo_root, authority_root \\ nil) do
+    authority_root = authority_root || repo_root
+
+    with :ok <- ensure_repository(repo_root),
+         :ok <- ensure_repository(authority_root) do
       subjects =
-        ignore_subjects(repo_root) ++
+        ignore_subjects(authority_root) ++
           tracked_subjects(repo_root, ".planning/publish") ++
           @proof_paths ++
-          phase_artifacts(repo_root) ++ [Path.join(@phase_dir, "164-VERIFICATION.md")]
+          phase_artifacts(authority_root) ++ [Path.join(@phase_dir, "164-VERIFICATION.md")]
 
       {:ok, MapSet.new(subjects)}
     end
   end
 
-  def validate(contents, repo_root) do
+  def validate(contents, repo_root, authority_root \\ nil) do
+    authority_root = authority_root || repo_root
+
     with {:ok, %{rows: rows}} <- parse(contents),
-         {:ok, required_subjects} <- audit_subjects(repo_root) do
+         {:ok, required_subjects} <- audit_subjects(repo_root, authority_root) do
       subjects = rows |> Enum.map(& &1["subject"]) |> MapSet.new()
       missing = required_subjects |> MapSet.difference(subjects) |> MapSet.to_list() |> Enum.sort()
 
@@ -473,7 +478,11 @@ defmodule Mailglass.RepositoryTruthLedger do
 
   def main(argv) when is_list(argv) do
     argv = Enum.drop_while(argv, &(&1 == "--"))
-    {opts, arguments, errors} = OptionParser.parse(argv, strict: [repo: :string, ledger: :string])
+
+    {opts, arguments, errors} =
+      OptionParser.parse(argv,
+        strict: [repo: :string, authority_root: :string, ledger: :string]
+      )
 
     result =
       with [] <- errors,
@@ -481,7 +490,7 @@ defmodule Mailglass.RepositoryTruthLedger do
            repo when is_binary(repo) <- opts[:repo],
            ledger when is_binary(ledger) <- opts[:ledger],
            {:ok, contents} <- File.read(ledger) do
-        validate(contents, repo)
+        validate(contents, repo, opts[:authority_root])
       else
         nil -> {:error, :missing_required_cli_option}
         {:error, reason} -> {:error, reason}
@@ -495,7 +504,12 @@ defmodule Mailglass.RepositoryTruthLedger do
 
       {:error, reason} ->
         IO.puts(:stderr, "repository truth ledger: #{inspect(reason)}")
-        IO.puts(:stderr, "usage: validate_repository_truth.exs --repo PATH --ledger PATH")
+
+        IO.puts(
+          :stderr,
+          "usage: validate_repository_truth.exs --repo PATH [--authority-root PATH] --ledger PATH"
+        )
+
         1
     end
   end

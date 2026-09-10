@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage() { echo "usage: $0 --repo PATH --ledger PATH --ci-run-id ID --output PATH" >&2; exit 2; }
+usage() { echo "usage: $0 --repo PATH --authority-root PATH --ledger PATH --ci-run-id ID --output PATH" >&2; exit 2; }
 
 scheduled_report_is_acceptable() {
   local report_path="$1" expected_sha="$2" registry="$3"
@@ -38,13 +38,14 @@ scheduled_report_is_acceptable() {
 
 main() {
 canonical_repo=/Users/jon/projects/mailglass
-repo=""; ledger=""; ci_run_id=""; output=""
+repo=""; authority_root=""; ledger=""; ci_run_id=""; output=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --repo|--ledger|--ci-run-id|--output)
+    --repo|--authority-root|--ledger|--ci-run-id|--output)
       [ "$#" -ge 2 ] || usage
       case "$1" in
         --repo) repo="$2" ;;
+        --authority-root) authority_root="$2" ;;
         --ledger) ledger="$2" ;;
         --ci-run-id) ci_run_id="$2" ;;
         --output) output="$2" ;;
@@ -53,15 +54,18 @@ while [ "$#" -gt 0 ]; do
     *) usage ;;
   esac
 done
-[ -n "$repo" ] && [ -n "$ledger" ] && [ -n "$ci_run_id" ] && [ -n "$output" ] || usage
+[ -n "$repo" ] && [ -n "$authority_root" ] && [ -n "$ledger" ] && [ -n "$ci_run_id" ] && [ -n "$output" ] || usage
 [[ "$ci_run_id" =~ ^[1-9][0-9]*$ ]] || usage
 
 repo=$(cd "$repo" 2>/dev/null && pwd -P) || usage
 [ "$repo" = "$canonical_repo" ] || usage
+authority_root=$(cd "$authority_root" 2>/dev/null && pwd -P) || usage
+case "$authority_root" in "$repo"|/private/*/mailglass-finalize-164-*|/tmp/mailglass-finalize-164-*) ;; *) usage ;; esac
 canonical_ledger="$repo/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
+authority_ledger="$authority_root/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
 ledger=$(cd "$(dirname "$ledger")" 2>/dev/null && printf '%s/%s' "$(pwd -P)" "$(basename "$ledger")") || usage
 [ "$ledger" = "$canonical_ledger" ] || usage
-[ -f "$canonical_ledger" ] || usage
+[ -f "$authority_ledger" ] || usage
 
 case "$output" in *".."*) usage ;; esac
 case "$output" in /*) output_candidate="$output" ;; *) output_candidate="$(pwd -P)/$output" ;; esac
@@ -130,17 +134,17 @@ if jq -e '
 else component hygiene cannot-check malformed_or_unavailable_hygiene "$hygiene_raw"; fi
 
 workspace_raw=$(mktemp "$components_dir/workspace.source.XXXXXX")
-if bash "$repo/scripts/verify_workspace_evidence.sh" static "$repo/.planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md" "$repo/.planning/phases/161-canonical-workspace-and-evidence-preservation/161-PRESERVATION-RECONCILIATION.tsv" >"$workspace_raw" 2>&1; then component workspace pass preservation_verified "$workspace_raw"; else component workspace cannot-check preservation_verification_failed "$workspace_raw"; fi
+if bash "$authority_root/scripts/verify_workspace_evidence.sh" static "$authority_root/.planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md" "$authority_root/.planning/phases/161-canonical-workspace-and-evidence-preservation/161-PRESERVATION-RECONCILIATION.tsv" >"$workspace_raw" 2>&1; then component workspace pass preservation_verified "$workspace_raw"; else component workspace cannot-check preservation_verification_failed "$workspace_raw"; fi
 
 ledger_raw=$(mktemp "$components_dir/ledger.source.XXXXXX")
-if elixir "$repo/scripts/validate_repository_truth.exs" --repo "$repo" --ledger "$canonical_ledger" >"$ledger_raw" 2>&1; then component ledger pass complete_authoritative_disposition_ledger "$ledger_raw"; else component ledger cannot-check invalid_or_incomplete_authoritative_ledger "$ledger_raw"; fi
+if elixir "$authority_root/scripts/validate_repository_truth.exs" --repo "$repo" --authority-root "$authority_root" --ledger "$authority_ledger" >"$ledger_raw" 2>&1; then component ledger pass complete_authoritative_disposition_ledger "$ledger_raw"; else component ledger cannot-check invalid_or_incomplete_authoritative_ledger "$ledger_raw"; fi
 
 ci_raw=$(mktemp "$components_dir/ci.source.XXXXXX")
 ci_diagnostics=$(mktemp "$components_dir/ci.diagnostics.XXXXXX")
-if (cd "$repo" && node scripts/ci_monitor.cjs inspect "$ci_run_id") >"$ci_raw" 2>"$ci_diagnostics" && jq -e --arg sha "$head_sha" 'type == "object" and .workflowName == "CI" and .event == "push" and .attempt == 1 and .headBranch == "main" and .headSha == $sha and .status == "completed" and .conclusion == "success"' "$ci_raw" >/dev/null 2>&1; then component ci pass exact_successful_ci "$ci_raw"; else component ci cannot-check missing_malformed_or_wrong_identity_ci "$ci_raw"; fi
+if (cd "$repo" && node "$authority_root/scripts/ci_monitor.cjs" inspect "$ci_run_id") >"$ci_raw" 2>"$ci_diagnostics" && jq -e --arg sha "$head_sha" 'type == "object" and .workflowName == "CI" and .event == "push" and .attempt == 1 and .headBranch == "main" and .headSha == $sha and .status == "completed" and .conclusion == "success"' "$ci_raw" >/dev/null 2>&1; then component ci pass exact_successful_ci "$ci_raw"; else component ci cannot-check missing_malformed_or_wrong_identity_ci "$ci_raw"; fi
 
 scheduled_raw=$(mktemp "$components_dir/scheduled.source.XXXXXX")
-if (cd "$repo" && bash scripts/scheduled_control_evidence.sh sweep --output "$scheduled_raw") >/dev/null 2>&1 && scheduled_report_is_acceptable "$scheduled_raw" "$head_sha" "$repo/.github/scheduled-controls.json"; then component scheduled pass current_provenance_valid "$scheduled_raw"; elif jq -e 'type == "object" and (.status == "pending" or .status == "cannot-check")' "$scheduled_raw" >/dev/null 2>&1; then component scheduled "$(jq -r '.status' "$scheduled_raw")" "$(jq -r '.reason // "scheduled_evidence_incomplete"' "$scheduled_raw")" "$scheduled_raw"; else component scheduled cannot-check malformed_stale_or_mismatched_scheduled_evidence "$scheduled_raw"; fi
+if (cd "$repo" && SCHEDULED_CONTROL_CONFIG="$authority_root/.github/scheduled-controls.json" bash "$authority_root/scripts/scheduled_control_evidence.sh" sweep --output "$scheduled_raw") >/dev/null 2>&1 && scheduled_report_is_acceptable "$scheduled_raw" "$head_sha" "$authority_root/.github/scheduled-controls.json"; then component scheduled pass current_provenance_valid "$scheduled_raw"; elif jq -e 'type == "object" and (.status == "pending" or .status == "cannot-check")' "$scheduled_raw" >/dev/null 2>&1; then component scheduled "$(jq -r '.status' "$scheduled_raw")" "$(jq -r '.reason // "scheduled_evidence_incomplete"' "$scheduled_raw")" "$scheduled_raw"; else component scheduled cannot-check malformed_stale_or_mismatched_scheduled_evidence "$scheduled_raw"; fi
 
 write_report() {
   local captured_at report_tmp
