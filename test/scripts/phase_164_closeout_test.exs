@@ -1250,15 +1250,18 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       on_exit(fn -> File.rm_rf!(root) end)
 
       mutations = [
-        {"singleton", fn fixture ->
+        {"singleton",
+         fn fixture ->
            git!(fixture.repo, ["rm", "-q", ".planning/phases/164-fixture/164-10-SUMMARY.md"])
          end},
-        {"malformed", fn fixture ->
+        {"malformed",
+         fn fixture ->
            path = ".planning/phases/164-fixture/164-10-PLAN.md.backup"
            File.write!(Path.join(fixture.repo, path), "malformed\n")
            git!(fixture.repo, ["add", "--", path])
          end},
-        {"unexpected", fn fixture ->
+        {"unexpected",
+         fn fixture ->
            path = ".planning/phases/164-fixture/164-25-PLAN.md"
            File.write!(Path.join(fixture.repo, path), "unexpected\n")
            git!(fixture.repo, ["add", "--", path])
