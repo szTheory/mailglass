@@ -5,12 +5,12 @@ status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-08-26
-revised: 2026-09-09
+revised: 2026-09-10
 ---
 
 # Phase 164 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-17 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
+> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-20 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
 
 ---
 
@@ -30,7 +30,7 @@ revised: 2026-09-09
 
 - **After every task commit:** Run the focused automated command named by that task.
 - **After every plan wave:** Run `mix ci.fast` after all implementation tasks in the wave are integrated; run the focused closeout/scheduled contracts after Waves 8 and 9.
-- **Pre-verification checkpoint:** Plan 164-14 ran `/finalize-phase 164 --pre-verification` after the Plan 164-13 adversarial regression locks reached protected main. Plans 164-16 and 164-17 subsequently changed tracked documentation, trust-anchor implementation, and tests, so that older capture remains explicitly non-terminal; refreshed ordinary verification must evaluate the Plan 164-17 implementation SHA before terminal finalization.
+- **Pre-verification checkpoint:** Plan 164-14 ran `/finalize-phase 164 --pre-verification` after the Plan 164-13 adversarial regression locks reached protected main. Plans 164-16 through 164-19 subsequently changed tracked documentation, trust-anchor implementation, and tests, so that older capture remains explicitly non-terminal; refreshed ordinary verification must evaluate the repaired implementation through Plan 164-19 before terminal finalization. Plan 164-20 only reconciles these validation and lifecycle records.
 - **Verified implementation lifecycle:** Plan 164-15 requires the ordinary verifier to record the exact implementation commit as `verified_implementation_sha`. Terminal finalization accepts only an ancestor SHA and inspects every subsequent first-parent commit relative to its first parent against the four exact completion-metadata paths, so change-then-revert source history remains visible.
 - **After normal execute-phase metadata:** Integrate all Phase 164 SUMMARY files and the tracked VERIFICATION, ROADMAP, STATE, and REQUIREMENTS completion updates before terminal capture.
 - **Post-execution finalization:** Run `/finalize-phase 164` outside phase-plan-index after the final tracked SHA receives attempt-1 normal push CI and naturally scheduled attempt-1 exact-SHA evidence. The gate writes ignored runtime artifacts only and permits no later tracked commit.
@@ -68,6 +68,10 @@ revised: 2026-09-09
 | 164-16-01 | 164-16 tracer | 14 | TRTH-01 | T-164-58, T-164-59, T-164-60 | Every byte before the single historical boundary rejects automatic, reviewer-free, or approval-free authority while retaining the protected exact-candidate/repository-admin model and historical v0.1/v0.5 provenance | whole-document docs contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/mailglass/publish/maintaining_release_gate_contract_test.exs --warnings-as-errors --no-deps-check && git diff --check` | `MAINTAINING.md` plus four active position-independent contract tests | ✅ green (4 tests) |
 | 164-17-01 | 164-17 tracer | 15 | TRTH-02 | T-164-61, T-164-64 | Every tracked ledger row requires an exact regular-file subject and the sole byte-exact literal-pathspec Git-index result; direct CLI misuse fails nonzero without triggering during module load | tagged adversarial integration contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_repository_truth_test.exs --only phase_164_trust_anchor --warnings-as-errors --no-deps-check` | production `RepositoryTruthLedger.validate/2` and CLI through disposable-repository and subprocess fixtures | ✅ green (3 tests) |
 | 164-17-02 | 164-17 | 15 | TRTH-03 | T-164-62, T-164-63 | The real registered handler authenticates both exact HEAD executables, rejects staged-new and staged/unstaged divergence, executes only a private downstream HEAD materialization, and removes it on success or failure | tagged adversarial process contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_trust_anchor --warnings-as-errors --no-deps-check` | real extension handler with disposable Git repositories and real Git/Bash subprocesses | ✅ green (1 test) |
+| 164-18-01 | 164-18 tracer | 16 | TRTH-02 | T-164-65, T-164-66, T-164-67 | A tracked disposition requires exactly one complete NUL-delimited stage-0 record for the byte-exact literal subject; genuine stage-1/2/3 conflicts, missing, duplicate, malformed, nonzero-stage, and mismatched records fail closed | tagged production Git-index contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_repository_truth_test.exs --only phase_164_stage0_index --warnings-as-errors --no-deps-check` | production staged-record parser plus genuine unmerged disposable repository | ✅ green (4 selected, 20 excluded, 0 failures) |
+| 164-19-01 | 164-19 tracer | 17 | TRTH-03 | T-164-68, T-164-71, T-164-72 | Only the lexical non-symlink regular-file Phase 164 shim is authenticated before resolution; unsupported phases never reach discovery, and print failures clean private state before reporting non-success | tagged real-dispatcher contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_dispatcher_boundary --warnings-as-errors --no-deps-check` | registered TypeScript handler exercised through real Git, Node, and Bash subprocesses | ✅ green (4 selected, 33 excluded, 0 failures) |
+| 164-19-02 | 164-19 | 17 | TRTH-03 | T-164-69, T-164-70 | Every transitive executable and data input is authenticated and materialized from HEAD under one private authority root before Bash; hidden assume-unchanged checkout mutations cannot affect execution | tagged authenticated-chain contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_transitive_chain --warnings-as-errors --no-deps-check` | closed dependency manifest, private authority-root materialization, and hostile helper/data mutations | ✅ green (4 selected, 33 excluded, 0 failures) |
+| 164-20-01 | 164-20 | 18 | TRTH-02, TRTH-03 | T-164-73, T-164-74, T-164-75 | Validation and finalization records describe the repaired stage-0 and authenticated-authority behavior without claiming that terminal evidence was captured during execution | complete focused suite, canonical validator, and syntax contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_repository_truth_test.exs test/scripts/phase_164_closeout_test.exs test/mailglass/publish/maintaining_release_gate_contract_test.exs test/mailglass/docs_contract_test.exs test/scripts/scheduled_control_evidence_test.exs --warnings-as-errors --no-deps-check && ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 elixir scripts/validate_repository_truth.exs --repo /Users/jon/projects/mailglass --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv && bash -n scripts/finalize_phase_164.sh scripts/closeout_repository_truth.sh && git diff --check` | current validation/finalization records compared with Plans 164-18 and 164-19 production seams | ✅ green (114 tests, 0 failures, 1 pre-existing skip; ledger and syntax valid) |
 | 164-FINAL | post-execution gate | after phase.complete integration | TRTH-03 | T-164-40, T-164-41, T-164-42, T-164-43, T-164-44 | Final protected metadata SHA has attempt-1 normal push CI, attempt-1 natural schedules, ignored identity/report state, independently verified raw sources, and no later tracked commit | live lifecycle gate | `/finalize-phase 164` | ignored `finalization-inputs.json`, report, CI source, scheduled source | ⚠️ external terminal capture pending |
 
 *Status: ✅ automated capability green · ⚠️ external evidence still required*
@@ -88,6 +92,9 @@ revised: 2026-09-09
 - [x] **Plan 164-15 owns terminal integrity gap closure:** closeout and scheduled-control tests cover verified-SHA first-parent history, Plans 01–13 prerequisites, token-owned hostile fixture cleanup, and malformed/future/current/in-range/stale timestamps at both evidence seams.
 - [x] **Plan 164-16 owns whole-document maintainer authority reconciliation:** the maintaining contract scans the complete non-historical region, rejects representative automatic/reviewer-free/approval-free variants wherever injected, requires exactly one historical boundary, and preserves explicitly historical v0.1/v0.5 provenance.
 - [x] **Plan 164-17 owns immutable trust-anchor coverage:** the repository-truth group exercises exact Git-index membership and fail-closed CLI behavior through production `RepositoryTruthLedger` seams; the closeout group invokes the real registered extension handler and proves full shim-to-downstream HEAD authentication, immutable private execution, and cleanup under adversarial Git states.
+- [x] **Plan 164-18 owns stage-aware tracked proof:** the `phase_164_stage0_index` group selected four tests and passed all four, proving exact NUL-delimited stage-0 identity and rejecting a genuine unmerged stage-1/2/3 subject through both helper and full validation paths.
+- [x] **Plan 164-19 owns complete finalization authority:** the `phase_164_dispatcher_boundary` and `phase_164_transitive_chain` groups each selected four tests and passed all four, proving Phase-164-only lexical dispatch, cleanup-before-error, full pre-Bash HEAD materialization, and immunity to hidden checkout mutations.
+- [x] **Plan 164-20 owns record reconciliation:** the complete focused suite, canonical validator, shell syntax, and diff checks bind these records to the executed Plan 164-18/19 behavior without running either finalization mode.
 
 `wave_0_complete` is `true`: the test assets exist and their plan-specific commands have run successfully. This records completed executor evidence, not a plan-time predeclaration.
 
@@ -108,7 +115,7 @@ revised: 2026-09-09
 
 ### Planning-contract completeness
 
-- [x] All twenty-six executor tasks across all seventeen plans have an automated verification row, plus one explicit terminal post-execution lifecycle gate.
+- [x] All thirty executor tasks across all twenty plans have an automated verification row, plus one explicit terminal post-execution lifecycle gate.
 - [x] The tracer-created repository-truth test, Plan 164-04 expansion, Plan 164-05 test/wrapper and usage contract, Plan 164-06 checkpoint, and Plan 164-07 exact-main report are explicitly mapped.
 - [x] TRTH-01 and TRTH-02 retain completed task-level coverage; TRTH-03 maps through the freshness repair, tracked lifecycle contract, and terminal post-execution raw-source gate.
 - [x] Sampling continuity has no three consecutive tasks without automated feedback.
@@ -131,6 +138,9 @@ revised: 2026-09-09
 - [x] Plan 164-15 verified-SHA history, complete-prerequisite, owned-cleanup, and two-sided freshness regressions pass at the production seams.
 - [x] Plan 164-16 whole-non-historical maintainer authority contract passes all four active tests and retains one exact historical boundary.
 - [x] Plan 164-17 trust-anchor contracts pass directly against the production validator and real extension handler, including untracked regular files, literal path identity, CLI misuse, staged-new/divergent executables, immutable downstream HEAD bytes, and private-materialization cleanup.
+- [x] Plan 164-18 stage-aware contracts pass four selected production-seam tests and reject genuine unmerged stage-1/2/3 index state without weakening literal stage-0 identity.
+- [x] Plan 164-19 dispatcher and transitive-chain contracts pass eight selected real-handler tests, authenticate the lexical Phase 164 selector plus the closed HEAD dependency manifest before Bash, and clean the private authority root before every outcome.
+- [x] Plan 164-20 documentation reconciliation maps the repaired seams and preserves terminal finalization as a separately governed post-execution action.
 - [ ] All tracked Phase 164 summaries and phase.complete metadata have reached protected main before terminal `/finalize-phase 164` runs.
 - [ ] The final ignored report and raw CI/scheduled sources pass independent verification with no later tracked commit.
 
@@ -249,3 +259,39 @@ Plan 164-17 closes the two verifier-identified trust-anchor gaps with direct beh
 - Terminal `/finalize-phase 164` remains pending after refreshed ordinary verification and protected completion-metadata integration; it is an external lifecycle gate, not an automated coverage gap.
 
 **Approval:** Current and Nyquist-compliant for automated coverage through Plan 164-17. Refreshed exact-SHA verification and the separate terminal protected-main capture remain mandatory lifecycle gates.
+
+## Validation Audit 2026-09-10 — Plans 164-18 through 164-20 Reconciliation
+
+Plans 164-18 and 164-19 closed the stage-0 index, lexical shim, unsupported
+phase, transitive authenticated-chain, and print-cleanup gaps through named
+production seams. Plan 164-20 reconciled this record and the lifecycle contract
+without invoking either finalization mode.
+
+| Metric | Count |
+|--------|-------|
+| Plans audited | 20 |
+| Executor tasks mapped | 30 |
+| New named regression groups | 3 |
+| Named regression tests selected | 12 |
+| Complete focused tests | 114 |
+| Failures | 0 |
+| Pre-existing skips | 1 |
+
+- `phase_164_stage0_index`: 4 selected, 20 excluded, 0 failures; genuine
+  stage-1/2/3 conflict state is rejected through helper and full-ledger paths.
+- `phase_164_dispatcher_boundary`: 4 selected, 33 excluded, 0 failures;
+  lexical Phase 164 selection, unsupported-phase rejection, and cleanup before
+  print-mode failure are exercised through the real handler.
+- `phase_164_transitive_chain`: 4 selected, 33 excluded, 0 failures; the closed
+  HEAD dependency manifest is materialized before Bash and hidden checkout
+  helper/data mutations cannot influence execution.
+- Complete focused Phase 164 suite: 114 tests, 0 failures, 1 pre-existing
+  historical skip (113 executed).
+- Production authoritative-ledger CLI: `repository truth ledger: valid`.
+- Finalizer/closeout shell syntax and `git diff --check`: passed.
+- Neither Plans 164-18, 164-19, nor 164-20 ran pre-verification or terminal
+  `/finalize-phase 164`.
+
+**Approval:** Current and Nyquist-compliant for automated coverage through Plan
+164-20. Ordinary verification and protected completion-metadata integration
+remain prerequisites for the separate terminal `/finalize-phase 164` capture.

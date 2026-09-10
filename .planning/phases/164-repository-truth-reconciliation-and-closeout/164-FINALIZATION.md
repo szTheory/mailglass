@@ -7,6 +7,28 @@ requirements, and phase-completion metadata. The project-local
 protected `main`, and writes no tracked result that would invalidate the SHA it
 just proved.
 
+The project-local dispatcher is deliberately Phase-164-only. It rejects every
+other positive phase before repository discovery because no other phase has an
+authenticated downstream mapping. For Phase 164, it preserves the canonical
+lexical `164-FINALIZE.sh` path, requires that checkout entry to be a non-symlink
+regular file, and authenticates its exact HEAD/index/worktree identity before
+using `realpath` only as an additional containment check.
+
+Before the first Bash process starts, the dispatcher enumerates a closed Phase
+164 dependency manifest from HEAD, authenticates every exact executable and
+data blob, and materializes the complete set beneath one mode-0700 private
+authority root. Executables are mode 0500 and data is read-only. Both shell
+layers use that authority root for helper execution and immutable ledger,
+registry, plan, summary, verification, and preservation inputs. The canonical
+checkout remains a separate observation target only for live Git and GitHub
+identity, protected-main, stable-porcelain, and ignored-output checks; mutable
+checkout helper or policy bytes never become execution authority.
+
+The handler reports errors by setting a nonzero exit code and throwing through
+its cleanup-protected scope. Its `finally` removes the complete private
+authority root before success, ordinary failure, or `--print` failure returns
+to the caller.
+
 ## Pre-verification checkpoint
 
 After Plans 01–13 and their summaries have reached protected `main`, run:
@@ -24,6 +46,12 @@ does not dispatch or rerun a workflow. It writes only ignored
 ordinary phase verifier use that evidence to prove the implementation SHA and
 the finalization capability before `phase.complete` writes tracked completion
 metadata.
+
+Plans 164-18 and 164-19 repaired the stage-aware ledger and authenticated
+finalization chain after the earlier pre-verification capture. Neither those
+plans nor Plan 164-20 ran pre-verification or terminal finalization; their
+ordinary test results are implementation evidence, not a replacement terminal
+report.
 
 ## Terminal operational proof
 
