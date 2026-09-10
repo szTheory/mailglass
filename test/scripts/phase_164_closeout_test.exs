@@ -5,6 +5,12 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   @script Path.join(@repo_root, "scripts/closeout_repository_truth.sh")
   @extension Path.join(@repo_root, ".gsd/extensions/finalize-phase/index.ts")
   @immutable_loader Path.join(@repo_root, "scripts/mailglass_finalize_phase_loader.mjs")
+  @installed_loader "/Users/jon/.local/bin/mailglass-finalize-phase"
+  @install_approval "/Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env"
+  @install_summary Path.join(
+                     @repo_root,
+                     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-23-SUMMARY.md"
+                   )
   @manifest Path.join(
               @repo_root,
               ".gsd/extensions/finalize-phase/extension-manifest.json"
@@ -1335,6 +1341,93 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       {_, 0} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
       assert File.regular?(fixture.marker)
       refute File.exists?(hostile_marker)
+    end
+  end
+
+  describe "phase 164 installed production boundary" do
+    @describetag :phase_164_installed_production_boundary
+
+    test "absolute installed executable dispatches only captured-commit private bytes" do
+      authority = assert_installed_authority!()
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = production_installed_fixture!(Path.join(root, "accepted"))
+
+      {output, 0} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+      assert output == ""
+      assert File.regular?(fixture.marker)
+
+      [private_script, authority_root, repo, "--pre-verification"] =
+        fixture.marker |> File.read!() |> String.split("|")
+
+      assert repo == resolved_path!(fixture.repo)
+      assert Path.dirname(Path.dirname(private_script)) == authority_root
+      refute File.exists?(authority_root)
+      assert authority.installation_oid != authority.current_oid
+      assert File.read!(fixture.bytes_marker) == git!(fixture.repo, ["show", "HEAD:#{fixture.downstream_relative}"])
+    end
+
+    test "absolute installed executable rejects a moving HEAD before Bash" do
+      assert_installed_authority!()
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = production_installed_fixture!(Path.join(root, "moving"), move_head: true)
+
+      {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"], fixture.env)
+      assert status != 0
+      assert output =~ "authority commit changed"
+      refute File.exists?(fixture.marker)
+      refute File.exists?(fixture.hostile_marker)
+    end
+
+    test "absolute installed executable rejects deleted middle and terminal pairs before Bash" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      for plan <- [10, 20, 24] do
+        assert_installed_authority!()
+        fixture = production_installed_fixture!(Path.join(root, "missing-#{plan}"))
+        number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
+        phase = ".planning/phases/164-fixture/164-#{number}"
+        git!(fixture.repo, ["rm", "-q", "#{phase}-PLAN.md", "#{phase}-SUMMARY.md"])
+        git!(fixture.repo, ["commit", "-q", "-m", "remove pair #{number}"])
+
+        {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+        assert status != 0
+        assert output =~ "numbered history is not the exact 01-24"
+        refute File.exists?(fixture.marker)
+        refute File.exists?(fixture.hostile_marker)
+      end
+    end
+
+    test "assume-unchanged hostile retired extension is never evaluated" do
+      assert_installed_authority!()
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = production_installed_fixture!(Path.join(root, "hostile-extension"))
+      hostile_extension = Path.join(fixture.repo, ".gsd/extensions/finalize-phase/index.ts")
+
+      git!(fixture.repo, ["update-index", "--assume-unchanged", "--", ".gsd/extensions/finalize-phase/index.ts"])
+
+      File.write!(
+        hostile_extension,
+        "import { writeFileSync } from 'node:fs'; writeFileSync(#{inspect(fixture.hostile_marker)}, 'executed');\n"
+      )
+
+      assert git!(fixture.repo, ["status", "--porcelain", "--", ".gsd/extensions/finalize-phase/index.ts"]) == ""
+      {_, 0} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+      assert File.regular?(fixture.marker)
+      refute File.exists?(fixture.hostile_marker)
+    end
+
+    test "approval tuple keeps installation and execution authority OIDs distinct" do
+      authority = assert_installed_authority!()
+
+      assert authority.installation_oid == "7f57e1cd0aafe6d236624da98f7292e86e6de697"
+      assert authority.current_oid == git!(@repo_root, ["rev-parse", "HEAD"]) |> String.trim()
+      assert authority.installation_oid != authority.current_oid
+      assert authority.installed_digest == authority.source_digest
+      assert authority.current_digest == authority.source_digest
     end
   end
 
