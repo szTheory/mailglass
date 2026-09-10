@@ -865,14 +865,17 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       accepted = extension_fixture!(Path.join(root, "accepted"))
       result = invoke_extension!(accepted, "164 --pre-verification")
       assert result["error"] == nil
+
       assert [%{"command" => "bash", "args" => [private_script, repo, "--pre-verification"]}] =
                Enum.filter(result["calls"], &(&1["command"] == "bash"))
 
-      assert repo == accepted.repo
+      accepted_repo = resolved_path!(accepted.repo)
+      assert repo == accepted_repo
       refute private_script in [accepted.shim, accepted.downstream]
       refute File.exists?(Path.dirname(private_script))
+
       assert File.read!(accepted.marker) ==
-               "#{private_script}|#{accepted.repo}|--pre-verification"
+               "#{private_script}|#{accepted_repo}|--pre-verification"
 
       committed_bytes = git!(accepted.repo, ["show", "HEAD:#{accepted.downstream_relative}"])
       assert File.read!(accepted.bytes_marker) == committed_bytes
@@ -880,6 +883,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       failed = extension_fixture!(Path.join(root, "failed-execution"))
       failure = invoke_extension!(failed, "164", [{"FINALIZER_EXIT", "7"}])
       assert failure["error"] =~ "exited with status 7"
+
       assert [%{"args" => [failed_private_script | _]}] =
                Enum.filter(failure["calls"], &(&1["command"] == "bash"))
 
@@ -1451,7 +1455,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     node = System.find_executable("node")
 
-    {output, 0} =
+    {output, status} =
       System.cmd(node, ["--experimental-strip-types", harness, args, fixture.repo],
         env:
           extra_env ++
@@ -1462,7 +1466,9 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         stderr_to_stdout: false
       )
 
-    output |> String.trim() |> Jason.decode!()
+    result = output |> String.trim() |> Jason.decode!()
+    if result["error"], do: assert(status != 0), else: assert(status == 0)
+    result
   end
 
   defp allocate_owned_sibling!(tag, candidate \\ nil) do
