@@ -63,6 +63,33 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     ".planning/phases/163-deterministic-release-path-timeout-repairs/163-VERIFICATION.md"
   ]
 
+  test "required and controlled-host aliases keep distinct non-vacuous authority" do
+    aliases = Mix.Project.config()[:aliases]
+
+    assert Keyword.fetch!(aliases, :"verify.ci_lane_contract") == [
+             "test test/scripts/ --exclude phase_164_installed_production_boundary --warnings-as-errors"
+           ]
+
+    assert Keyword.fetch!(aliases, :"verify.phase_164.installed_boundary") == [
+             "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
+           ]
+
+    source = File.read!(__ENV__.file)
+
+    installed_block =
+      source
+      |> String.split(~s(describe "phase 164 installed production boundary" do), parts: 2)
+      |> List.last()
+      |> String.split(~s(\n  test "owned sibling cleanup), parts: 2)
+      |> List.first()
+
+    assert installed_block =~ "@describetag :phase_164_installed_production_boundary"
+    assert Regex.scan(~r/^    test \"/m, installed_block) != []
+    refute installed_block =~ "@tag :skip"
+    refute installed_block =~ "if File.exists?(@installed_loader)"
+    refute installed_block =~ "if File.regular?(@installed_loader)"
+  end
+
   test "rejects a sibling checkout and a foreign symlink before component collection" do
     root = temporary_root!()
     sibling_owner = allocate_owned_sibling!("disposable")
