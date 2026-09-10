@@ -5,16 +5,16 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Planned 164-17-PLAN.md
-last_updated: "2026-09-10T00:39:31.787Z"
+stopped_at: Completed 164-17-PLAN.md
+last_updated: "2026-09-10T01:12:55.272Z"
 last_activity: 2026-09-09
-last_activity_desc: Planned Plan 164-17 trust-anchor gap closure
-state_head: bb7b41ba46fe48c1daa8c012f5a3e6eeaddbf9fb
+last_activity_desc: Completed Plan 164-17 trust-anchor gap closure
+state_head: 0166f072800654d09987709fea1810a4f6970cbb
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 43
-  completed_plans: 39
+  completed_plans: 40
   percent: 75
 current_plan: 17
 ---
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — READY TO EXECUTE
+Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
 Plan: 17 of 17
-Status: Ready to execute Plan 164-17 trust-anchor gap closure
-Last activity: 2026-09-09 — Planned Plan 164-17 trust-anchor gap closure
+Status: Completed Plan 164-17; ordinary verification remains next
+Last activity: 2026-09-09 — Completed Plan 164-17 trust-anchor gap closure
 
-Progress: [█████████░] 39/43 plans complete (91%)
+Progress: [█████████░] 40/43 plans complete (93%)
 
 ## Performance Metrics
 
@@ -97,6 +97,7 @@ Progress: [█████████░] 39/43 plans complete (91%)
 | Phase 164 P14 | 7min | 1 tasks | 1 files |
 | Phase 164 P15 | 18min | 3 tasks | 9 files |
 | Phase 164 P16 | 3min | 1 tasks | 2 files |
+| Phase 164 P17 | 13min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -144,6 +145,8 @@ Progress: [█████████░] 39/43 plans complete (91%)
 - [Phase 164]: Out-of-root hostile fixtures are recursively removed only while exclusive allocation, lstat identity, resolved parent, exact basename, and invocation token all remain valid.
 - [Phase 164]: Current bus-factor guidance binds release progress to the protected exact-candidate dispatch and fresh exact repository-admin authorization; green gates alone grant no authority. — This keeps all current-facing maintainer prose aligned with the executable protected workflow.
 - [Phase 164]: The original v0.1/v0.5 hands-free rationale remains discoverable only after the exact Historical release procedures boundary. — Historical provenance stays available without reading as a second current runbook.
+- [Phase 164]: Tracked ledger state now requires a regular file plus one exact literal-pathspec Git-index return equal to the subject.
+- [Phase 164]: Finalize-phase authenticates both executable links and runs only a mode-0500 private downstream HEAD materialization removed in finally.
 
 ## Deferred Items
 
@@ -153,6 +156,6 @@ Progress: [█████████░] 39/43 plans complete (91%)
 
 ## Session Continuity
 
-Last session: 2026-09-09T22:16:39.083Z
-Stopped at: Completed 164-16-PLAN.md
+Last session: 2026-09-10T01:12:55.120Z
+Stopped at: Completed 164-17-PLAN.md
 Resume file: None
