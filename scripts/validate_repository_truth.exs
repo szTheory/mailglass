@@ -426,30 +426,48 @@ defmodule Mailglass.RepositoryTruthLedger do
     {output, status} =
       System.cmd(
         "git",
-        ["--literal-pathspecs", "ls-files", "--error-unmatch", "--", subject],
+        [
+          "--literal-pathspecs",
+          "ls-files",
+          "--stage",
+          "-z",
+          "--error-unmatch",
+          "--",
+          subject
+        ],
         cd: repo_root,
         stderr_to_stdout: true
       )
 
     case status do
       0 ->
-        returned_paths =
-          output
-          |> String.trim_trailing("\n")
-          |> String.split("\n", trim: true)
-          |> Enum.map(&String.trim_trailing(&1, "\r"))
-
-        if returned_paths == [subject] do
-          :ok
-        else
-          {:error, {:tracked_subject_identity_mismatch, subject, returned_paths}}
-        end
+        validate_staged_index_output(output, subject)
 
       1 ->
         {:error, {:tracked_subject_untracked, subject}}
 
       _ ->
         {:error, {:tracked_subject_git_failure, subject, status}}
+    end
+  end
+
+  def validate_staged_index_output(output, subject)
+      when is_binary(output) and is_binary(subject) do
+    case split_complete_staged_records(output) do
+      {:ok, records} ->
+        case parse_staged_records(records) do
+          {:ok, [%{stage: 0, path: ^subject}]} ->
+            :ok
+
+          {:ok, parsed_records} ->
+            {:error, {:tracked_subject_identity_mismatch, subject, parsed_records}}
+
+          :error ->
+            {:error, {:tracked_subject_malformed_output, subject}}
+        end
+
+      :error ->
+        {:error, {:tracked_subject_malformed_output, subject}}
     end
   end
 
@@ -493,6 +511,65 @@ defmodule Mailglass.RepositoryTruthLedger do
     |> case do
       {:ok, rows} -> {:ok, Enum.reverse(rows)}
       error -> error
+    end
+  end
+
+  defp split_complete_staged_records(output) do
+    case :binary.split(output, <<0>>, [:global]) do
+      records when records != [] ->
+        case List.pop_at(records, -1) do
+          {"", complete_records} ->
+            if complete_records != [] and Enum.all?(complete_records, &(&1 != "")) do
+              {:ok, complete_records}
+            else
+              :error
+            end
+
+          _ ->
+            :error
+        end
+
+      _ ->
+        :error
+    end
+  end
+
+  defp parse_staged_records(records) do
+    records
+    |> Enum.reduce_while({:ok, []}, fn record, {:ok, parsed} ->
+      case parse_staged_record(record) do
+        {:ok, staged_record} -> {:cont, {:ok, [staged_record | parsed]}}
+        :error -> {:halt, :error}
+      end
+    end)
+    |> case do
+      {:ok, parsed} -> {:ok, Enum.reverse(parsed)}
+      :error -> :error
+    end
+  end
+
+  defp parse_staged_record(record) do
+    case :binary.split(record, "\t") do
+      [metadata, path] ->
+        case :binary.split(metadata, " ", [:global]) do
+          [mode, object_id, stage]
+          when byte_size(mode) == 6 and byte_size(object_id) in [40, 64] and
+                 byte_size(stage) == 1 ->
+            with true <- Regex.match?(~r/^[0-7]{6}$/, mode),
+                 true <- Regex.match?(~r/^[0-9a-f]+$/, object_id),
+                 {stage_number, ""} <- Integer.parse(stage),
+                 true <- stage_number in 0..3 do
+              {:ok, %{mode: mode, object_id: object_id, stage: stage_number, path: path}}
+            else
+              _ -> :error
+            end
+
+          _ ->
+            :error
+        end
+
+      _ ->
+        :error
     end
   end
 

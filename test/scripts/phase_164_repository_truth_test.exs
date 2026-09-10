@@ -390,7 +390,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       {staged, 0} =
         System.cmd(
           "git",
-          ["--literal-pathspecs", "ls-files", "--stage", "--error-unmatch", "--", subject],
+          ["--literal-pathspecs", "ls-files", "--stage", "--", subject],
           cd: repo
         )
 
