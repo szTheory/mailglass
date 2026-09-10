@@ -272,7 +272,7 @@ Plans:
 
 **Wave 19** *(gap closure; blocked on the executed Plan 164-20 baseline)*
 
-- [ ] 164-21-PLAN.md — Establish one immutable installed-loader source, non-dispatching inspection modes, and exact numbered-history authority.
+- [x] 164-21-PLAN.md — Establish one immutable installed-loader source, non-dispatching inspection modes, and exact numbered-history authority.
 
 **Wave 20** *(blocked on the immutable loader contract)*
 
@@ -299,4 +299,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 20/24 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 21/24 | In Progress|  |

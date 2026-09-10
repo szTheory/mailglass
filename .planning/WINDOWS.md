@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 10
 waived_count: 0
-fixed_count: 13
-total_count: 23
-last_updated: 2026-09-10T04:21:28.803Z
+fixed_count: 15
+total_count: 25
+last_updated: 2026-09-10T20:54:22.869Z
 ---
 
 # Broken Windows Ledger
@@ -38,6 +38,8 @@ last_updated: 2026-09-10T04:21:28.803Z
 | 21 | 164 | unrun-verify | test/mailglass/docs_contract_test.exs |  | mix ci.fast blocked by pre-existing formatting drift in Phase 164-03 contract test | fixed |  | 2026-08-26T21:23:27.723Z | 2026-08-26T21:30:58.688Z |
 | 22 | 164 | unrun-verify | test/mailglass/publish/maintaining_release_gate_contract_test.exs |  | mix ci.fast blocked by pre-existing formatting drift in Phase 164-02 contract test | fixed |  | 2026-08-26T21:23:27.812Z | 2026-08-26T21:30:58.767Z |
 | 23 | 164 | deviation | scripts/validate_repository_truth.exs |  | Split ledger audit reads from authenticated authority while preserving canonical Git index observations | fixed |  | 2026-09-10T04:21:02.342Z | 2026-09-10T04:21:28.803Z |
+| 24 | 164 | deviation | scripts/mailglass_finalize_phase_loader.mjs |  | Reject numbered-looking malformed Phase 164 PLAN/SUMMARY paths before Bash dispatch | fixed |  | 2026-09-10T20:52:58.085Z | 2026-09-10T20:54:22.768Z |
+| 25 | 164 | deviation | scripts/validate_repository_truth.exs |  | Limit plan-derived repository truth inventory to completed plans | fixed |  | 2026-09-10T20:52:58.175Z | 2026-09-10T20:54:22.869Z |
 
 ````json
 [
@@ -316,6 +318,30 @@ last_updated: 2026-09-10T04:21:28.803Z
     "reason": "",
     "recorded_at": "2026-09-10T04:21:02.342Z",
     "resolved_at": "2026-09-10T04:21:28.803Z"
+  },
+  {
+    "id": 24,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "scripts/mailglass_finalize_phase_loader.mjs",
+    "line": null,
+    "description": "Reject numbered-looking malformed Phase 164 PLAN/SUMMARY paths before Bash dispatch",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T20:52:58.085Z",
+    "resolved_at": "2026-09-10T20:54:22.768Z"
+  },
+  {
+    "id": 25,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "scripts/validate_repository_truth.exs",
+    "line": null,
+    "description": "Limit plan-derived repository truth inventory to completed plans",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T20:52:58.175Z",
+    "resolved_at": "2026-09-10T20:54:22.869Z"
   }
 ]
 ````

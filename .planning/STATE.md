@@ -5,18 +5,18 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-20-PLAN.md
-last_updated: "2026-09-10T19:57:54.678Z"
+stopped_at: Completed 164-21-PLAN.md
+last_updated: "2026-09-10T20:53:41.870Z"
 last_activity: 2026-09-10
-last_activity_desc: Completed Plan 164-20 validation and lifecycle reconciliation
-state_head: dbe310910adea80a455fd935e41a62ce576f3ab7
+last_activity_desc: Completed Plan 164-21 immutable finalization authority
+state_head: f04d3f2b7d5c8e1972aadfc4bcb21869d725a98a
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 50
-  completed_plans: 43
-  percent: 75
-current_plan: 20
+  completed_plans: 44
+  percent: 88
+current_plan: 21
 ---
 
 # Project State
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — READY TO EXECUTE
-Plan: 20 of 20
-Status: All plans executed; ordinary phase verification and terminal finalization remain pending
-Last activity: 2026-09-10 — Completed Plan 164-20 validation and lifecycle reconciliation
+Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
+Plan: 22 of 24
+Status: Ready to execute
+Last activity: 2026-09-10 — Completed Plan 164-21 immutable finalization authority
 
-Progress: [█████████░] 43/46 plans complete (93%)
+Progress: [█████████░] 44/50 plans complete (88%)
 
 ## Performance Metrics
 
@@ -101,6 +101,7 @@ Progress: [█████████░] 43/46 plans complete (93%)
 | Phase 164 P18 | 15min | 1 tasks | 2 files |
 | Phase 164 P19 | 24min | 2 tasks | 5 files |
 | Phase 164 P20 | 7min | 1 tasks | 2 files |
+| Phase 164 P21 | 22min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -155,6 +156,9 @@ Progress: [█████████░] 43/46 plans complete (93%)
 - [Phase 164]: All finalization code and data is authenticated and fully materialized before Bash; the live checkout remains authoritative only for Git, GitHub, ignored-output, and repository-identity observations.
 - [Phase 164]: Validation records name the repaired production seams and preserve observed non-vacuous results. — The final proof map must describe the behavior delivered by Plans 164-18 and 164-19 rather than retain Plan-17-era closure claims.
 - [Phase 164]: Terminal finalization remains pending after ordinary verification and protected completion-metadata integration. — Plan 164-20 reconciles tracked documentation only and does not substitute test evidence for the separately governed exact-main terminal capture.
+- [Phase 164]: The standalone loader captures one full HEAD commit OID, uses it for every tree/blob authority operation, rechecks HEAD immediately before dispatch, and executes only privately materialized authenticated bytes. — Mutable checkout bytes cannot establish or replace repository finalization authority.
+- [Phase 164]: Phase 164 terminal history is the explicit 48-path PLAN/SUMMARY set for 01 through 24; later plans must deliberately update both loader and shell constants. — Completeness must not shrink when either member of a numbered pair disappears.
+- [Phase 164]: Repository-truth inventory considers completed plan declarations. — Unexecuted future plans and their external installation paths are not current audited subjects.
 
 ## Deferred Items
 
@@ -164,6 +168,6 @@ Progress: [█████████░] 43/46 plans complete (93%)
 
 ## Session Continuity
 
-Last session: 2026-09-10T04:36:08.651Z
-Stopped at: Completed 164-20-PLAN.md
+Last session: 2026-09-10T20:53:41.749Z
+Stopped at: Completed 164-21-PLAN.md
 Resume file: None
