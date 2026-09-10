@@ -1364,7 +1364,9 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert Path.dirname(Path.dirname(private_script)) == authority_root
       refute File.exists?(authority_root)
       assert authority.installation_oid != authority.current_oid
-      assert File.read!(fixture.bytes_marker) == git!(fixture.repo, ["show", "HEAD:#{fixture.downstream_relative}"])
+
+      assert File.read!(fixture.bytes_marker) ==
+               git!(fixture.repo, ["show", "HEAD:#{fixture.downstream_relative}"])
     end
 
     test "absolute installed executable rejects a moving HEAD before Bash" do
@@ -1373,7 +1375,9 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       on_exit(fn -> File.rm_rf!(root) end)
       fixture = production_installed_fixture!(Path.join(root, "moving"), move_head: true)
 
-      {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"], fixture.env)
+      {output, status} =
+        invoke_production_loader(fixture, ["164", "--pre-verification"], fixture.env)
+
       assert status != 0
       assert output =~ "authority commit changed"
       refute File.exists?(fixture.marker)
@@ -1407,14 +1411,25 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       fixture = production_installed_fixture!(Path.join(root, "hostile-extension"))
       hostile_extension = Path.join(fixture.repo, ".gsd/extensions/finalize-phase/index.ts")
 
-      git!(fixture.repo, ["update-index", "--assume-unchanged", "--", ".gsd/extensions/finalize-phase/index.ts"])
+      git!(fixture.repo, [
+        "update-index",
+        "--assume-unchanged",
+        "--",
+        ".gsd/extensions/finalize-phase/index.ts"
+      ])
 
       File.write!(
         hostile_extension,
         "import { writeFileSync } from 'node:fs'; writeFileSync(#{inspect(fixture.hostile_marker)}, 'executed');\n"
       )
 
-      assert git!(fixture.repo, ["status", "--porcelain", "--", ".gsd/extensions/finalize-phase/index.ts"]) == ""
+      assert git!(fixture.repo, [
+               "status",
+               "--porcelain",
+               "--",
+               ".gsd/extensions/finalize-phase/index.ts"
+             ]) == ""
+
       {_, 0} = invoke_production_loader(fixture, ["164", "--pre-verification"])
       assert File.regular?(fixture.marker)
       refute File.exists?(fixture.hostile_marker)
@@ -2079,6 +2094,183 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       git_log: git_log,
       env: env
     })
+  end
+
+  defp production_installed_fixture!(repo, options \\ []) do
+    fixture = immutable_loader_fixture!(repo, options)
+    retired_extension = Path.join(repo, ".gsd/extensions/finalize-phase/index.ts")
+    File.mkdir_p!(Path.dirname(retired_extension))
+    File.write!(retired_extension, "export default function retired() { return 'retired'; }\n")
+    git!(repo, ["add", ".gsd/extensions/finalize-phase/index.ts"])
+    git!(repo, ["commit", "-q", "-m", "record retired extension fixture"])
+    fixture
+  end
+
+  defp invoke_production_loader(fixture, args, extra_env \\ []) do
+    System.cmd(System.find_executable("node"), [@installed_loader | args],
+      cd: fixture.repo,
+      env:
+        extra_env ++
+          [
+            {"MARKER", fixture.marker},
+            {"BYTES_MARKER", fixture.bytes_marker},
+            {"HOSTILE_MARKER", fixture.hostile_marker},
+            {"GIT_LOG", fixture.git_log},
+            {"REAL_GIT", System.find_executable("git")}
+          ],
+      stderr_to_stdout: true
+    )
+  end
+
+  defp assert_installed_authority! do
+    approval_keys = [
+      "record_version",
+      "phase_plan",
+      "installation_source_oid",
+      "source_sha256",
+      "destination",
+      "install_mode",
+      "destination_disposition",
+      "prior_sha256",
+      "prior_mode",
+      "prior_stat_identity",
+      "prior_physical_identity",
+      "prior_provenance",
+      "rollback_path",
+      "approval_status"
+    ]
+
+    assert File.regular?(@install_approval)
+    refute match?({:ok, %File.Stat{type: :symlink}}, File.lstat(@install_approval))
+    assert {"400\n", 0} = System.cmd("stat", ["-f", "%Lp", @install_approval])
+
+    approval = strict_key_values!(@install_approval, approval_keys)
+    assert approval["record_version"] == "1"
+    assert approval["phase_plan"] == "164-23"
+    assert approval["approval_status"] == "approved"
+    assert approval["destination"] == @installed_loader
+    assert approval["install_mode"] == "0500"
+
+    summary_keys =
+      (approval_keys -- ["record_version", "phase_plan"]) ++
+        [
+          "approval_record_sha256",
+          "rollback_mode",
+          "rollback_restore_test",
+          "rollback_cleanup_test"
+        ]
+
+    summary = strict_key_values!(@install_summary, summary_keys)
+
+    for key <- approval_keys -- ["record_version", "phase_plan"] do
+      assert summary[key] == approval[key]
+    end
+
+    approval_digest = sha256(File.read!(@install_approval))
+    assert summary["approval_record_sha256"] == approval_digest
+
+    case approval["destination_disposition"] do
+      "absent" ->
+        for key <- [
+              "prior_sha256",
+              "prior_mode",
+              "prior_stat_identity",
+              "prior_physical_identity",
+              "prior_provenance",
+              "rollback_path"
+            ] do
+          assert approval[key] == "none"
+        end
+
+        assert summary["rollback_mode"] == "none"
+        assert summary["rollback_restore_test"] == "not-applicable"
+        assert summary["rollback_cleanup_test"] == "passed"
+
+      "approval-required-prior-loader" ->
+        rollback_path = approval["rollback_path"]
+        assert File.regular?(rollback_path)
+        refute match?({:ok, %File.Stat{type: :symlink}}, File.lstat(rollback_path))
+        assert {"400\n", 0} = System.cmd("stat", ["-f", "%Lp", rollback_path])
+        assert sha256(File.read!(rollback_path)) == approval["prior_sha256"]
+
+        assert approval["prior_provenance"] ==
+                 "observed-user-owned-external-command-awaiting-explicit-approval"
+
+        assert summary["rollback_mode"] == "0400"
+        assert summary["rollback_restore_test"] == "passed"
+        assert summary["rollback_cleanup_test"] == "passed"
+
+      disposition ->
+        flunk("unexpected approved destination disposition: #{disposition}")
+    end
+
+    assert File.regular?(@installed_loader)
+    refute match?({:ok, %File.Stat{type: :symlink}}, File.lstat(@installed_loader))
+    assert {"500\n", 0} = System.cmd("stat", ["-f", "%Lp", @installed_loader])
+    installed_digest = sha256(File.read!(@installed_loader))
+    assert installed_digest == approval["source_sha256"]
+
+    current_oid = @repo_root |> git!(["rev-parse", "HEAD"]) |> String.trim()
+
+    current_bytes =
+      git!(@repo_root, ["show", "#{current_oid}:scripts/mailglass_finalize_phase_loader.mjs"])
+
+    current_digest = sha256(current_bytes)
+    assert current_digest == approval["source_sha256"]
+
+    self_check_root = temporary_root!()
+    self_check_repo = Path.join(self_check_root, "repo")
+
+    try do
+      git!(@repo_root, ["clone", "-q", "--shared", "--no-checkout", @repo_root, self_check_repo])
+      git!(self_check_repo, ["checkout", "-q", current_oid])
+
+      assert {output, 0} =
+               System.cmd(
+                 System.find_executable("node"),
+                 [
+                   @installed_loader,
+                   "--self-check",
+                   "--repo",
+                   resolved_path!(self_check_repo),
+                   "--expected-source-oid",
+                   approval["installation_source_oid"]
+                 ],
+                 stderr_to_stdout: true
+               )
+
+      assert output =~ "installation_oid=#{approval["installation_source_oid"]}"
+      assert output =~ "current_oid=#{current_oid}"
+      assert output =~ "loader_sha256=#{approval["source_sha256"]}"
+      assert output =~ "executable=#{@installed_loader}"
+      assert output =~ "mode=0500"
+      assert output =~ "terminal_range=01-24"
+    after
+      File.rm_rf!(self_check_root)
+    end
+
+    %{
+      installation_oid: approval["installation_source_oid"],
+      current_oid: current_oid,
+      source_digest: approval["source_sha256"],
+      installed_digest: installed_digest,
+      current_digest: current_digest
+    }
+  end
+
+  defp strict_key_values!(path, required_keys) do
+    lines = File.read!(path) |> String.split("\n", trim: true)
+
+    Map.new(required_keys, fn key ->
+      matches = Enum.filter(lines, &String.starts_with?(&1, "#{key}="))
+      assert length(matches) == 1, "expected exactly one #{key}= line in #{path}"
+      [line] = matches
+      {key, String.replace_prefix(line, "#{key}=", "")}
+    end)
+  end
+
+  defp sha256(contents) do
+    :crypto.hash(:sha256, contents) |> Base.encode16(case: :lower)
   end
 
   defp invoke_immutable_loader(fixture, args, extra_env \\ []) do
