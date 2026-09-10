@@ -288,7 +288,7 @@ Plans:
 
 **Wave 23** *(gap closure; blocked on the executed Plan 164-24 baseline)*
 
-- [ ] 164-25-PLAN.md — Restore hermetic required CI while preserving explicit controlled-host installed-boundary proof.
+- [x] 164-25-PLAN.md — Restore hermetic required CI while preserving explicit controlled-host installed-boundary proof.
 
 **Wave 24** *(blocked on the hermetic CI contract)*
 
@@ -315,4 +315,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 24/28 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 25/28 | In Progress|  |

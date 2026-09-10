@@ -5,18 +5,18 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-24-PLAN.md
-last_updated: "2026-09-10T22:28:58.352Z"
+stopped_at: Completed 164-25-PLAN.md
+last_updated: "2026-09-10T23:58:21.369Z"
 last_activity: 2026-09-10
-last_activity_desc: Completed Plan 164-24 installed production boundary proof
-state_head: c2a5bec6c9aaebb8ba7394d4f8e93f4a01526c3b
+last_activity_desc: Completed Plan 164-25 hermetic required CI boundary
+state_head: afa747bf59c62056bfcacc9e993e74dff0d7256b
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 54
-  completed_plans: 47
+  completed_plans: 48
   percent: 75
-current_plan: 24
+current_plan: 25
 ---
 
 # Project State
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — READY TO EXECUTE
-Plan: 24 of 24
+Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
+Plan: 25 of 28
 Status: Ready to execute
-Last activity: 2026-09-10 — Completed Plan 164-24 installed production boundary proof
+Last activity: 2026-09-10 — Completed Plan 164-25 hermetic required CI boundary
 
-Progress: [█████████░] 47/50 plans complete ([████████░░] 75%)
+Progress: [████████░░] 48/54 plans complete (75%)
 
 ## Performance Metrics
 
@@ -105,6 +105,7 @@ Progress: [█████████░] 47/50 plans complete ([████�
 | Phase 164 P22 | 6min | 2 tasks | 10 files |
 | Phase 164 P23 | 6min | 3 tasks | 4 files |
 | Phase 164-repository-truth-reconciliation-and-closeout P24 | 21min | 2 tasks | 10 files |
+| Phase 164 P25 | 13min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -168,6 +169,8 @@ Progress: [█████████░] 47/50 plans complete ([████�
 - [Phase 164]: The installed loader remains bound to the approved source OID while rollback is inapplicable for the absent destination. — The exact approved committed bytes were atomically installed at mode 0500 and both version and self-check probes passed.
 - [Phase 164]: Installed-boundary tests authenticate the immutable Plan 164-23 approval tuple before direct subprocess attacks and never import the retired checkout extension. — This makes the actually installed command, not a test-local import, the production authority under test.
 - [Phase 164]: Plan 164-24 records automated production-boundary proof only; terminal finalization remains pending. — Ordinary verification and protected completion-metadata integration remain separately ordered lifecycle events.
+- [Phase 164]: The generic required lane retains test/scripts directory discovery and excludes exactly phase_164_installed_production_boundary; no workflow or required-lane topology changes are needed. — Protected CI must use only tracked repository state while preserving all fixture-backed contracts.
+- [Phase 164]: Installed-host assertions remain fail-closed under one explicit preferred-test-environment alias and are never treated as repository-runner evidence. — Fixture-backed and installed-host groups are distinct execution authorities and neither substitutes for the other.
 
 ## Deferred Items
 
@@ -177,6 +180,6 @@ Progress: [█████████░] 47/50 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-10T21:40:35.883Z
-Stopped at: Completed 164-24-PLAN.md
+Last session: 2026-09-10T23:58:21.231Z
+Stopped at: Completed 164-25-PLAN.md
 Resume file: None

@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 10
 waived_count: 0
-fixed_count: 19
-total_count: 29
-last_updated: 2026-09-10T21:41:39.344Z
+fixed_count: 21
+total_count: 31
+last_updated: 2026-09-10T23:58:55.180Z
 ---
 
 # Broken Windows Ledger
@@ -44,6 +44,8 @@ last_updated: 2026-09-10T21:41:39.344Z
 | 27 | 164 | deviation | dev/toolchain/Dockerfile |  | Completed pinned toolchain dependencies required by lifecycle verification | fixed |  | 2026-09-10T21:41:18.836Z | 2026-09-10T21:41:39.164Z |
 | 28 | 164 | deviation | test/scripts/phase_164_closeout_test.exs |  | Removed obsolete execution tests for the retired project extension authority | fixed |  | 2026-09-10T21:41:18.939Z | 2026-09-10T21:41:39.255Z |
 | 29 | 164 | deviation | test/scripts/phase_164_closeout_test.exs |  | Replaced BSD-only stat assertions with portable File.Stat mode checks | fixed |  | 2026-09-10T21:41:19.032Z | 2026-09-10T21:41:39.344Z |
+| 30 | 164 | deviation | test/support/suite_floor.ex |  | Registered the controlled-host exclusion in the fail-closed SuiteFloor allowlist and its source contract | fixed |  | 2026-09-10T23:57:08.787Z | 2026-09-10T23:58:55.094Z |
+| 31 | 164 | deviation | config/test_exceptions.exs | 156 | Corrected the stale docs-contract skip line pointer required by the repository-only CI lane | fixed |  | 2026-09-10T23:57:08.869Z | 2026-09-10T23:58:55.180Z |
 
 ````json
 [
@@ -394,6 +396,30 @@ last_updated: 2026-09-10T21:41:39.344Z
     "reason": "",
     "recorded_at": "2026-09-10T21:41:19.032Z",
     "resolved_at": "2026-09-10T21:41:39.344Z"
+  },
+  {
+    "id": 30,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "test/support/suite_floor.ex",
+    "line": null,
+    "description": "Registered the controlled-host exclusion in the fail-closed SuiteFloor allowlist and its source contract",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T23:57:08.787Z",
+    "resolved_at": "2026-09-10T23:58:55.094Z"
+  },
+  {
+    "id": 31,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "config/test_exceptions.exs",
+    "line": 156,
+    "description": "Corrected the stale docs-contract skip line pointer required by the repository-only CI lane",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T23:57:08.869Z",
+    "resolved_at": "2026-09-10T23:58:55.180Z"
   }
 ]
 ````
