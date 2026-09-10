@@ -190,9 +190,9 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 24 total (20 executed; 4 gap-closure plans pending)
+**Plans**: 28 total (24 executed; 4 gap-closure plans pending)
 
-**Completion state**: Phase and TRTH-01/TRTH-02/TRTH-03 completion remain pending until Plans 21–24 execute, their summaries and tracking metadata reach protected `main`, and the installed terminal command completes.
+**Completion state**: Phase and TRTH-01/TRTH-02/TRTH-03 completion remain pending until Plans 25–28 execute, their summaries and tracking metadata reach protected `main`, and the installed terminal command completes.
 
 Plans:
 
@@ -286,9 +286,25 @@ Plans:
 
 - [x] 164-24-PLAN.md — Exercise all verifier attacks through the installed executable and reconcile non-terminal validation records.
 
+**Wave 23** *(gap closure; blocked on the executed Plan 164-24 baseline)*
+
+- [ ] 164-25-PLAN.md — Restore hermetic required CI while preserving explicit controlled-host installed-boundary proof.
+
+**Wave 24** *(blocked on the hermetic CI contract)*
+
+- [ ] 164-26-PLAN.md — Pin canonical repository and trusted-tool authority, enforce installation ancestry, and expand exact terminal history through Plan 28.
+
+**Wave 25** *(blocking-human installation checkpoint; blocked on the hardened loader contract)*
+
+- [ ] 164-27-PLAN.md — Approve, recoverably install, and production-check the hardened external authority without running finalization.
+
+**Wave 26** *(blocked on the verified installed command)*
+
+- [ ] 164-28-PLAN.md — Reconcile validation, security, and lifecycle records while preserving the post-protected-main terminal boundary.
+
 **Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
 
-- [ ] `/Users/jon/.local/bin/mailglass-finalize-phase 164` — After Plans 21–24, all summaries, requirement/phase completion tracking, and protected-main integration finish, automatically select exact normal push CI, consume natural exact-SHA schedules, and independently verify ignored raw evidence with no later tracked commit.
+- [ ] `/Users/jon/.local/bin/mailglass-finalize-phase 164` — After Plans 25–28, all summaries, requirement/phase completion tracking, and protected-main integration finish, automatically select exact normal push CI, consume natural exact-SHA schedules, and independently verify ignored raw evidence with no later tracked commit.
 
 ## Progress
 
@@ -299,4 +315,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 24/24 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 24/28 | In Progress|  |
