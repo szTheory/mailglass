@@ -246,15 +246,21 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert manifest["provides"] == %{"commands" => ["finalize-phase"]}
   end
 
-  test "finalize-phase command validates one phase and dispatches one tracked finalizer via pi.exec" do
+  test "finalize-phase command validates one phase and dispatches one authenticated private finalizer" do
     source = File.read!(@extension)
 
     assert source =~ ~s(import type { ExtensionAPI } from "@gsd/pi-coding-agent")
     assert source =~ ~s(pi.registerCommand("finalize-phase")
     assert source =~ ~r/\^\[1-9\]\\d\*\$/
     assert source =~ "--pre-verification"
-    assert source =~ "git ls-files --error-unmatch"
-    assert source =~ ~s(pi.exec("bash", [finalizer, repoRoot, ...modeArgs])
+
+    assert source =~
+             ~s("--literal-pathspecs", "ls-files", "--error-unmatch", "--", repositoryPath)
+
+    assert source =~ ~s(pi.exec("bash", [privateFinalizer, repoRoot, ...modeArgs])
+    assert source =~ ~s(["show", `HEAD:${repositoryPath}`])
+    assert source =~ "mkdtempSync"
+    assert source =~ "rmSync(privateDirectory, { recursive: true, force: true })"
     assert source =~ "result.code"
     assert source =~ "process.exitCode = 1"
     assert source =~ ~s|process.argv.includes("--print")|
