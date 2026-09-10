@@ -144,6 +144,7 @@ defmodule Mailglass.RepositoryTruthLedger do
     "164-04-PLAN.md",
     "164-05-PLAN.md",
     "164-08-PLAN.md",
+    "164-11-PLAN.md; 164-21-SUMMARY.md; 164-22-PLAN.md",
     "git ls-files .planning/publish",
     "git ls-files; 164-08-PLAN.md",
     "git ls-files; 164-11-PLAN.md",
@@ -332,9 +333,9 @@ defmodule Mailglass.RepositoryTruthLedger do
       "e9a328f7586633c017305370f306010745e8c558bdc4ef06f08e2db8ec6717af",
     ".gitignore" => "52c7aed7a0eaaf139bec59b33cca9e74a8ffda7ff0ec140512f1b5559d362f8a",
     ".gsd/extensions/finalize-phase/extension-manifest.json" =>
-      "9a64278b3ac905ea43e5f12a3bd19c6f40f1fa6b22b04945e6aebae18f0649ce",
+      "af89407b07f1bea91c588c083dac9ed05b127427e7ec0f90759510b3727a87de",
     ".gsd/extensions/finalize-phase/index.ts" =>
-      "ede122a47d9b6cd21802339810be80891a56873e54f3541612814b9c20eb2649",
+      "422b26464d57918d7311918577891d0dd4d550fb81a4b78e4eaa5f7d3a4214ad",
     "scripts/finalize_phase_164.sh" =>
       "304eaf03834cedf640215a9e8f7777f8d5779ac1adf7d74262978ac7613c631f",
     "scripts/mailglass_finalize_phase_loader.mjs" =>
@@ -665,6 +666,15 @@ defmodule Mailglass.RepositoryTruthLedger do
     row["stable_id"] == "D-08" and row["subject"] == "scheduled-control-sweep.json" and
       row["state"] == "untracked" and row["currentness"] == "stale" and
       row["disposition"] == "remove" and row["authority"] == "D-08"
+  end
+
+  defp valid_kind_relationship?(%{"subject" => subject} = row)
+       when subject in [
+              ".gsd/extensions/finalize-phase/extension-manifest.json",
+              ".gsd/extensions/finalize-phase/index.ts"
+            ] do
+    row["stable_id"] in ["M-15", "M-16"] and row["state"] == "untracked" and
+      row["currentness"] == "historical" and row["disposition"] == "remove"
   end
 
   defp valid_kind_relationship?(row) do
