@@ -840,6 +840,53 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  describe "phase 164 trust anchors" do
+    @describetag :phase_164_trust_anchor
+
+    test "real extension handler authenticates and privately executes the complete HEAD chain" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      staged_new = extension_fixture!(Path.join(root, "staged-new"), commit_shim: false)
+      git!(staged_new.repo, ["add", staged_new.shim_relative])
+      assert_dispatch_rejected(staged_new)
+
+      modified_shim = extension_fixture!(Path.join(root, "modified-shim"))
+      File.write!(modified_shim.shim, hostile_script(modified_shim.hostile_marker))
+      assert_dispatch_rejected(modified_shim)
+
+      for {name, stage?} <- [{"unstaged-downstream", false}, {"staged-downstream", true}] do
+        fixture = extension_fixture!(Path.join(root, name))
+        File.write!(fixture.downstream, hostile_script(fixture.hostile_marker))
+        if stage?, do: git!(fixture.repo, ["add", fixture.downstream_relative])
+        assert_dispatch_rejected(fixture)
+      end
+
+      accepted = extension_fixture!(Path.join(root, "accepted"))
+      result = invoke_extension!(accepted, "164 --pre-verification")
+      assert result["error"] == nil
+      assert [%{"command" => "bash", "args" => [private_script, repo, "--pre-verification"]}] =
+               Enum.filter(result["calls"], &(&1["command"] == "bash"))
+
+      assert repo == accepted.repo
+      refute private_script in [accepted.shim, accepted.downstream]
+      refute File.exists?(Path.dirname(private_script))
+      assert File.read!(accepted.marker) ==
+               "#{private_script}|#{accepted.repo}|--pre-verification"
+
+      committed_bytes = git!(accepted.repo, ["show", "HEAD:#{accepted.downstream_relative}"])
+      assert File.read!(accepted.bytes_marker) == committed_bytes
+
+      failed = extension_fixture!(Path.join(root, "failed-execution"))
+      failure = invoke_extension!(failed, "164", [{"FINALIZER_EXIT", "7"}])
+      assert failure["error"] =~ "exited with status 7"
+      assert [%{"args" => [failed_private_script | _]}] =
+               Enum.filter(failure["calls"], &(&1["command"] == "bash"))
+
+      refute File.exists?(Path.dirname(failed_private_script))
+    end
+  end
+
   test "owned sibling cleanup refuses pre-existing and token-replaced paths" do
     root = temporary_root!()
     candidate = @repo_root <> "-gap-preexisting-#{System.unique_integer([:positive])}"
@@ -1301,6 +1348,121 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   defp write_executable!(path, contents) do
     File.write!(path, contents)
     File.chmod!(path, 0o755)
+  end
+
+  defp extension_fixture!(repo, options \\ []) do
+    phase_dir = Path.join(repo, ".planning/phases/164-fixture")
+    scripts_dir = Path.join(repo, "scripts")
+    shim = Path.join(phase_dir, "164-FINALIZE.sh")
+    downstream = Path.join(scripts_dir, "finalize_phase_164.sh")
+    marker = Path.join(repo, "execution.marker")
+    bytes_marker = Path.join(repo, "bytes.marker")
+    hostile_marker = Path.join(repo, "hostile.marker")
+    File.mkdir_p!(phase_dir)
+    File.mkdir_p!(scripts_dir)
+    git!(Path.dirname(repo), ["init", "-q", "-b", "main", repo])
+
+    File.write!(
+      downstream,
+      "#!/usr/bin/env bash\nprintf '%s|%s|%s' \"$0\" \"$1\" \"${2:-}\" > \"$MARKER\"\ncat \"$0\" > \"$BYTES_MARKER\"\nexit \"${FINALIZER_EXIT:-0}\"\n"
+    )
+
+    File.chmod!(downstream, 0o755)
+    git!(repo, ["add", "scripts/finalize_phase_164.sh"])
+    git!(repo, ["commit", "-q", "-m", "committed downstream"])
+
+    File.write!(
+      shim,
+      "#!/usr/bin/env bash\nexec \"$1/scripts/finalize_phase_164.sh\" \"$@\"\n"
+    )
+
+    File.chmod!(shim, 0o755)
+
+    if Keyword.get(options, :commit_shim, true) do
+      git!(repo, ["add", ".planning/phases/164-fixture/164-FINALIZE.sh"])
+      git!(repo, ["commit", "-q", "-m", "committed shim"])
+    end
+
+    %{
+      repo: repo,
+      shim: shim,
+      shim_relative: ".planning/phases/164-fixture/164-FINALIZE.sh",
+      downstream: downstream,
+      downstream_relative: "scripts/finalize_phase_164.sh",
+      marker: marker,
+      bytes_marker: bytes_marker,
+      hostile_marker: hostile_marker
+    }
+  end
+
+  defp hostile_script(marker) do
+    "#!/usr/bin/env bash\nprintf hostile > #{inspect(marker)}\n"
+  end
+
+  defp assert_dispatch_rejected(fixture) do
+    result = invoke_extension!(fixture, "164 --pre-verification")
+    assert is_binary(result["error"])
+    refute Enum.any?(result["calls"], &(&1["command"] == "bash"))
+    refute File.exists?(fixture.hostile_marker)
+  end
+
+  defp invoke_extension!(fixture, args, extra_env \\ []) do
+    harness = Path.join(fixture.repo, "extension-harness.mjs")
+
+    File.write!(
+      harness,
+      """
+      import { spawnSync } from "node:child_process";
+      import extension from #{inspect("file://" <> @extension)};
+
+      let handler;
+      const calls = [];
+      const notifications = [];
+      const pi = {
+        registerCommand(name, definition) {
+          if (name !== "finalize-phase") throw new Error(`unexpected command: ${name}`);
+          handler = definition.handler;
+        },
+        async exec(command, args, options) {
+          calls.push({command, args, cwd: options.cwd});
+          const result = spawnSync(command, args, {
+            cwd: options.cwd,
+            env: process.env,
+            encoding: "utf8",
+            maxBuffer: 64 * 1024,
+          });
+          return {code: result.status ?? 1, stdout: result.stdout ?? "", stderr: result.stderr ?? ""};
+        },
+      };
+
+      extension(pi);
+      let error = null;
+      try {
+        await handler(process.argv[2], {
+          cwd: process.argv[3],
+          ui: {notify(message, level) { notifications.push({message, level});}},
+        });
+      } catch (caught) {
+        error = caught instanceof Error ? caught.message : String(caught);
+      }
+      console.log(JSON.stringify({calls, notifications, error}));
+      """
+    )
+
+    node = System.find_executable("node")
+
+    {output, 0} =
+      System.cmd(node, ["--experimental-strip-types", harness, args, fixture.repo],
+        env:
+          extra_env ++
+            [
+              {"MARKER", fixture.marker},
+              {"BYTES_MARKER", fixture.bytes_marker}
+            ],
+        stderr_to_stdout: false
+      )
+
+    output |> String.trim() |> Jason.decode!()
   end
 
   defp allocate_owned_sibling!(tag, candidate \\ nil) do
