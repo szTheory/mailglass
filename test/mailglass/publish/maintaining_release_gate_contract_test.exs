@@ -81,7 +81,7 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
     assert historical =~ "~> 1.3"
     assert historical =~ "~> 1.0"
     assert historical =~ "non-current"
-    assert historical =~ "superseded project-local `/finalize-phase 164`"
+    assert historical =~ ~r/superseded\s+project-local `\/finalize-phase 164`/
     assert historical =~ ".gsd/extensions/finalize-phase"
 
     refute section!(

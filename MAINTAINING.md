@@ -47,6 +47,30 @@ Historical procedures below remain provenance only. They are not an alternate
 current runbook and do not supersede the protected exact-candidate and
 repository-admin conditions above.
 
+## Phase 164 repository finalization
+
+The sole current Phase 164 verdict entry point is the installed executable:
+
+```text
+/Users/jon/.local/bin/mailglass-finalize-phase 164
+```
+
+For the ordinary verifier's non-terminal capture, use the same installed
+program with its only optional mode:
+
+```text
+/Users/jon/.local/bin/mailglass-finalize-phase 164 --pre-verification
+```
+
+The tracked installation source is
+`scripts/mailglass_finalize_phase_loader.mjs`. Plan 164-23 owns the explicit
+authenticated-copy checkpoint, including byte identity, provenance, mode, and
+recoverable replacement verification. Until that checkpoint completes, do not
+claim the external executable is installed or use checkout code as a substitute.
+After installation, the program authenticates one captured repository commit,
+privately materializes its complete authority set, rechecks `HEAD` immediately
+before Bash dispatch, and leaves only the governed ignored report evidence.
+
 ## Trust runner checkpoint handoff
 
 Use `mix verify.reference_host.journey` as the canonical trust-runner command.
@@ -474,6 +498,11 @@ provenance and their original-version applicability only. They are non-current:
 do not use their auto-merge, fan-out, manual smoke, tag, or fallback language as
 authority for a current release or recovery. The current protected path is the
 one at the start of this document.
+
+The removed `.gsd/extensions/finalize-phase` implementation and its superseded
+project-local `/finalize-phase 164` command are historical implementation
+provenance only. They are not a supported alternative to the installed
+executable named above.
 
 ### Historical v0.1/v0.5 bus-factor rationale
 

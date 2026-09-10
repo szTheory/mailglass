@@ -2,39 +2,38 @@
 
 Phase 164 closes across two deliberately separate proof boundaries. Ordinary
 GSD execution owns tracked implementation, summaries, verification, roadmap,
-requirements, and phase-completion metadata. The project-local
-`/finalize-phase 164` command runs only after those tracked outputs have reached
-protected `main`, and writes no tracked result that would invalidate the SHA it
-just proved.
+requirements, and phase-completion metadata. The trusted program is the
+mode-0500 executable installed at
+`/Users/jon/.local/bin/mailglass-finalize-phase` from the tracked source
+`scripts/mailglass_finalize_phase_loader.mjs` through the Plan 164-23
+authenticated-copy checkpoint. The installed loader is outside checkout
+evaluation: no project-local extension module is imported before it establishes
+repository authority.
 
-The project-local dispatcher is deliberately Phase-164-only. It rejects every
-other positive phase before repository discovery because no other phase has an
-authenticated downstream mapping. For Phase 164, it preserves the canonical
-lexical `164-FINALIZE.sh` path, requires that checkout entry to be a non-symlink
-regular file, and authenticates its exact HEAD/index/worktree identity before
-using `realpath` only as an additional containment check.
+At invocation the installed program captures one full repository commit OID.
+That captured repository OID, rather than symbolic `HEAD`, is the authority for
+every tree enumeration, blob authentication, and private materialization. The
+authorized terminal history is the exact PLAN/SUMMARY set for 01 through 24:
+Plans 01-20 are the executed baseline and Plans 21-24 are the explicitly
+authorized closure set. Missing pairs, extra numbers, malformed names, or a
+silently shortened set fail before execution.
 
-Before the first Bash process starts, the dispatcher enumerates a closed Phase
-164 dependency manifest from HEAD, authenticates every exact executable and
-data blob, and materializes the complete set beneath one mode-0700 private
-authority root. Executables are mode 0500 and data is read-only. Both shell
-layers use that authority root for helper execution and immutable ledger,
-registry, plan, summary, verification, and preservation inputs. The canonical
-checkout remains a separate observation target only for live Git and GitHub
-identity, protected-main, stable-porcelain, and ignored-output checks; mutable
-checkout helper or policy bytes never become execution authority.
-
-The handler reports errors by setting a nonzero exit code and throwing through
-its cleanup-protected scope. Its `finally` removes the complete private
-authority root before success, ordinary failure, or `--print` failure returns
-to the caller.
+Before the first Bash process starts, the loader authenticates every exact
+executable and data blob at that OID and materializes the complete set beneath
+one mode-0700 private authority root. Executables are mode 0500 and data is
+read-only. Both shell layers use the private authority root for helper execution
+and immutable ledger, registry, plan, summary, verification, and preservation
+inputs. The live canonical checkout remains a separate observation target only
+for Git and GitHub identity, protected-main, stable-porcelain, and ignored-output
+checks. The loader rechecks live `HEAD` against the captured OID immediately
+before Bash dispatch and removes the private root on every exit path.
 
 ## Pre-verification checkpoint
 
 After Plans 01–13 and their summaries have reached protected `main`, run:
 
 ```text
-/finalize-phase 164 --pre-verification
+/Users/jon/.local/bin/mailglass-finalize-phase 164 --pre-verification
 ```
 
 The command requires a clean canonical checkout whose `HEAD` equals
@@ -59,7 +58,7 @@ After the normal verifier has passed and the phase-completion commit has reached
 protected `main`, run:
 
 ```text
-/finalize-phase 164
+/Users/jon/.local/bin/mailglass-finalize-phase 164
 ```
 
 Terminal mode additionally requires a summary for every numbered Phase 164
