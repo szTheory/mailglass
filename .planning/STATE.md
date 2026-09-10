@@ -5,18 +5,18 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-21-PLAN.md
-last_updated: "2026-09-10T20:53:41.870Z"
+stopped_at: Completed 164-22-PLAN.md
+last_updated: "2026-09-10T21:03:40.177Z"
 last_activity: 2026-09-10
-last_activity_desc: Completed Plan 164-21 immutable finalization authority
-state_head: f04d3f2b7d5c8e1972aadfc4bcb21869d725a98a
+last_activity_desc: Completed Plan 164-22 installed finalization authority
+state_head: 26e58fe85c8f16d8201986e949e08ac997b8f2b1
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 50
-  completed_plans: 44
-  percent: 88
-current_plan: 21
+  completed_plans: 45
+  percent: 90
+current_plan: 22
 ---
 
 # Project State
@@ -31,11 +31,11 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
-Plan: 22 of 24
+Plan: 23 of 24
 Status: Ready to execute
-Last activity: 2026-09-10 — Completed Plan 164-21 immutable finalization authority
+Last activity: 2026-09-10 — Completed Plan 164-22 installed finalization authority
 
-Progress: [█████████░] 44/50 plans complete (88%)
+Progress: [█████████░] 45/50 plans complete (90%)
 
 ## Performance Metrics
 
@@ -102,6 +102,7 @@ Progress: [█████████░] 44/50 plans complete (88%)
 | Phase 164 P19 | 24min | 2 tasks | 5 files |
 | Phase 164 P20 | 7min | 1 tasks | 2 files |
 | Phase 164 P21 | 22min | 2 tasks | 5 files |
+| Phase 164 P22 | 6min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -159,6 +160,8 @@ Progress: [█████████░] 44/50 plans complete (88%)
 - [Phase 164]: The standalone loader captures one full HEAD commit OID, uses it for every tree/blob authority operation, rechecks HEAD immediately before dispatch, and executes only privately materialized authenticated bytes. — Mutable checkout bytes cannot establish or replace repository finalization authority.
 - [Phase 164]: Phase 164 terminal history is the explicit 48-path PLAN/SUMMARY set for 01 through 24; later plans must deliberately update both loader and shell constants. — Completeness must not shrink when either member of a numbered pair disappears.
 - [Phase 164]: Repository-truth inventory considers completed plan declarations. — Unexecuted future plans and their external installation paths are not current audited subjects.
+- [Phase 164]: The installed /Users/jon/.local/bin/mailglass-finalize-phase executable is the sole current Phase 164 verdict entry point; the removed project-local slash command is historical provenance only. — This removes checkout evaluation from the trust root while preserving explicit implementation history.
+- [Phase 164]: Retired extension subjects remain exact ledger identities with historical remove dispositions and explicit replacement evidence naming scripts/mailglass_finalize_phase_loader.mjs. — Executable removal must preserve audit identity, origin, and current replacement authority.
 
 ## Deferred Items
 
@@ -168,6 +171,6 @@ Progress: [█████████░] 44/50 plans complete (88%)
 
 ## Session Continuity
 
-Last session: 2026-09-10T20:53:41.749Z
-Stopped at: Completed 164-21-PLAN.md
+Last session: 2026-09-10T21:03:40.052Z
+Stopped at: Completed 164-22-PLAN.md
 Resume file: None
