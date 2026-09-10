@@ -316,6 +316,69 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     end
   end
 
+  describe "phase 164 trust anchors" do
+    @describetag :phase_164_trust_anchor
+
+    test "tracked ledger claims require exact Git index membership" do
+      repo = clone_repository!()
+      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      assert :ok = Ledger.validate(ledger, repo)
+      assert {_output, 0} = System.cmd("git", ["rm", "--cached", "--", "README.md"], cd: repo)
+      assert File.regular?(Path.join(repo, "README.md"))
+
+      assert {:error, {:tracked_subject_untracked, "README.md"}} = Ledger.validate(ledger, repo)
+    end
+
+    test "literal metacharacter and prefix-adjacent paths cannot satisfy another subject" do
+      repo = clone_repository!()
+      literal = "proof[1]*?.txt"
+      adjacent = literal <> ".backup"
+      File.write!(Path.join(repo, literal), "literal\n")
+      File.write!(Path.join(repo, adjacent), "adjacent\n")
+      assert {_output, 0} = System.cmd("git", ["add", "--", literal, adjacent], cd: repo)
+
+      assert :ok = Ledger.tracked_subject_in_index(repo, literal)
+      assert :ok = Ledger.tracked_subject_in_index(repo, adjacent)
+      assert {_output, 0} = System.cmd("git", ["rm", "--cached", "--", literal], cd: repo)
+      assert File.regular?(Path.join(repo, literal))
+
+      assert {:error, {:tracked_subject_untracked, ^literal}} =
+               Ledger.tracked_subject_in_index(repo, literal)
+
+      assert :ok = Ledger.tracked_subject_in_index(repo, adjacent)
+    end
+
+    test "standalone CLI fails closed while requiring the module stays side-effect free" do
+      script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
+      elixir = System.find_executable("elixir")
+
+      for args <- [[], ["--unknown"], ["--repo", @repo_root], ["--ledger", @ledger]] do
+        {output, status} = System.cmd(elixir, [script | args], stderr_to_stdout: true)
+        assert status != 0
+        assert output =~ "repository truth ledger:"
+        assert byte_size(output) < 1_024
+      end
+
+      {output, 0} =
+        System.cmd(elixir, [script, "--repo", @repo_root, "--ledger", @ledger],
+          stderr_to_stdout: true
+        )
+
+      assert output =~ "repository truth ledger: valid"
+
+      require_expression =
+        "Code.require_file(#{inspect(script)}); IO.puts(\"repository truth module: loaded\")"
+
+      {output, 0} =
+        System.cmd(elixir, ["-e", require_expression, "--", "--unknown"],
+          stderr_to_stdout: true
+        )
+
+      assert output == "repository truth module: loaded\n"
+    end
+  end
+
   defp remove_subject(contents, subject) do
     contents
     |> String.split("\n", trim: true)
@@ -331,6 +394,18 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       System.cmd("git", ["check-ignore", "-q", path], cd: @repo_root, stderr_to_stdout: true)
 
     status == 0
+  end
+
+  defp clone_repository! do
+    root = Path.join(System.tmp_dir!(), "mailglass-phase-164-truth-#{System.unique_integer([:positive])}")
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    assert {_output, 0} =
+             System.cmd("git", ["clone", "--quiet", "--shared", @repo_root, root],
+               stderr_to_stdout: true
+             )
+
+    root
   end
 
   defp valid_row do
