@@ -190,7 +190,7 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 17/17 plans executed
+**Plans**: 20 plans (17 executed; 3 gap-closure plans ready)
 
 Plans:
 
@@ -256,6 +256,18 @@ Plans:
 
 - [x] 164-17-PLAN.md — Authenticate exact tracked-artifact membership and execute only finalizer bytes authenticated through the gate-bearing HEAD blob.
 
+**Wave 16** *(gap closure; blocked on the executed Plan 164-17 baseline)*
+
+- [ ] 164-18-PLAN.md — Require one exact NUL-delimited stage-0 Git-index identity for every tracked disposition and regress unmerged entries.
+
+**Wave 17** *(blocked on the stage-aware trust anchor)*
+
+- [ ] 164-19-PLAN.md — Authenticate the lexical Phase 164 shim and complete HEAD dependency chain, reject alternate phases, and guarantee print-mode cleanup.
+
+**Wave 18** *(blocked on the repaired finalizer chain)*
+
+- [ ] 164-20-PLAN.md — Reconcile validation and finalization records with the repaired production behavior while preserving terminal closeout ordering.
+
 **Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
 
 - [ ] `/finalize-phase 164` — After tracked phase completion reaches protected main, automatically select exact normal push CI, consume natural exact-SHA schedules, and independently verify ignored raw evidence with no later tracked commit.
@@ -269,4 +281,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 17/17 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 17/20 | In Progress|  |
