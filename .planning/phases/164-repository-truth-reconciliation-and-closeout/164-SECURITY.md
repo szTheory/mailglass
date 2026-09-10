@@ -1,8 +1,8 @@
 ---
 phase: "164"
 slug: repository-truth-reconciliation-and-closeout
-status: blocked
-threats_open: 2
+status: secured
+threats_open: 0
 asvs_level: 1
 block_on: high
 created: "2026-09-01"
@@ -42,7 +42,7 @@ created: "2026-09-01"
 | T-164-14 | Repudiation | aggregate verdict precedence | high | mitigate | A production-script fixture substitutes only the canonical checkout constant, then executes cannot-check, pending, policy-blocked/pass, and all-pass outcomes while preserving component sources | closed |
 | T-164-15 | Elevation of Privilege | evidence command authority | high | mitigate | No dispatch, rerun, merge, or publish surface | closed |
 | T-164-16 | Spoofing | CI run selection | high | mitigate | Attempt-one exact-SHA CI selection and raw re-query | closed |
-| T-164-17 | Elevation of Privilege | finalizer authority | high | mitigate | Reopened by post-Plan 164-17 goal verification: lexical shim symlinks bypass the resolved-path identity check, authenticated entry bytes still invoke mutable checkout helpers, and every accepted phase maps to the Phase 164 downstream finalizer | open |
+| T-164-17 | Elevation of Privilege | finalizer authority | high | mitigate | Phase-164-only lexical regular-file authentication precedes realpath resolution; the complete transitive dependency manifest is authenticated from HEAD, materialized under one private authority root, and removed in `finally` on every exit path | closed |
 | T-164-18 | Spoofing | protected-main freshness | high | mitigate | Final decision re-fetches origin/main, reasserts identities, and preserves a blocked report if main advances | closed |
 | T-164-19 | Tampering | persisted component evidence | high | mitigate | Canonicalized CI/scheduled sources are independently revalidated and incomplete evidence is rejected | closed |
 | T-164-20 | Repudiation | report provenance | high | mitigate | Persist timestamp, repository/SHA/run, sources, statuses, reasons | closed |
@@ -51,7 +51,7 @@ created: "2026-09-01"
 | T-164-23 | Repudiation | required subjects | high | mitigate | Derive required subjects from Git, plans, proof, verification, ignores | closed |
 | T-164-24 | Tampering | duplicate subjects | medium | mitigate | Ordering-independent duplicate rejection | closed |
 | T-164-25 | Spoofing | repository authority | high | mitigate | Canonical checkout, normalized origin, GitHub owner/repository, `GH_HOST`, and `GH_REPO` are pinned | closed |
-| T-164-26 | Tampering | ledger semantic authority | high | mitigate | Reopened by post-Plan 164-17 goal verification: pathname-only `ls-files` output accepts an unmerged subject whose index contains stages 1/2/3 but no authoritative stage-0 entry | open |
+| T-164-26 | Tampering | ledger semantic authority | high | mitigate | Literal `ls-files --stage -z` parsing accepts exactly one byte-exact stage-0 record and rejects missing, duplicate, malformed, mismatched, or stage-1/2/3 records; genuine unmerged-index regressions pass | closed |
 | T-164-27 | Repudiation | local capture paths | high | mitigate | Private random capture directories, private component directories, temporary leaves, and atomic renames are symlink-safe | closed |
 | T-164-28 | Elevation of Privilege | remote behavior | high | mitigate | Read-only remote behavior | closed |
 | T-164-36 | Tampering | freshness authority | high | mitigate | Registry-specific age decision remains in scheduled sweep | closed |
@@ -84,13 +84,14 @@ No accepted risks. T-164-SC remains open below the configured blocking threshold
 | 2026-09-09 | 40 | 37 | 3 total / 2 blocking | execute-phase reconciliation after code review and goal verification |
 | 2026-09-09 | 42 | 41 | 1 total / 0 blocking | gsd-security-auditor (post-Plan 164-17 trust-anchor verification) |
 | 2026-09-09 | 42 | 39 | 3 total / 2 blocking | execute-phase reconciliation after code review and authoritative goal verification |
+| 2026-09-10 | 42 | 41 | 1 total / 0 blocking | gsd-security-auditor (post-Plans 164-18/19 gap verification) |
 
 ## Sign-Off
 
 - [x] All registered threats were inspected at ASVS L1.
-- [ ] All high-severity mitigations are present.
+- [x] All high-severity mitigations are present.
 - [x] No accepted risk is relied upon for the blocking gate; T-164-SC remains explicitly open below threshold.
-- [ ] `threats_open: 0` confirmed.
-- [x] `status: blocked` set in frontmatter.
+- [x] `threats_open: 0` confirmed.
+- [x] `status: secured` set in frontmatter.
 
-**Approval:** blocked at ASVS L1 — T-164-17 and T-164-26 remain open at the configured high-severity blocking threshold after the authoritative goal verifier reproduced deeper attacks. T-164-SC stays visible as one additional unaccepted low-severity item.
+**Approval:** secured at ASVS L1 — T-164-17 and T-164-26 are closed by the Plan 164-18/19 production seams and focused behavioral regressions. T-164-SC remains visible as one unaccepted low-severity item below the configured high-severity blocking threshold.
