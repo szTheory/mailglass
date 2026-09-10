@@ -287,44 +287,6 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert normalized =~ "A HEAD change or any stable-porcelain entry"
   end
 
-  test "finalize-phase manifest exposes exactly one compatible community command" do
-    manifest = @manifest |> File.read!() |> Jason.decode!()
-
-    assert manifest["id"] == "finalize-phase"
-    assert manifest["tier"] == "community"
-    assert manifest["requires"] == %{"platform" => ">=2.29.0"}
-    assert manifest["provides"] == %{"commands" => ["finalize-phase"]}
-  end
-
-  test "finalize-phase command validates one phase and dispatches one authenticated private finalizer" do
-    source = File.read!(@extension)
-
-    assert source =~ ~s(import type { ExtensionAPI } from "@gsd/pi-coding-agent")
-    assert source =~ ~s(pi.registerCommand("finalize-phase")
-    assert source =~ ~r/\^\[1-9\]\\d\*\$/
-    assert source =~ "--pre-verification"
-
-    assert source =~
-             ~s("--literal-pathspecs", "ls-files", "--error-unmatch", "--", repositoryPath)
-
-    assert source =~
-             ~s(pi.exec("bash", [privateFinalizer, repoRoot, privateDirectory, ...modeArgs])
-
-    assert source =~ ~s(["show", `HEAD:${repositoryPath}`])
-    assert source =~ "mkdtempSync"
-    assert source =~ "rmSync(privateDirectory, { recursive: true, force: true })"
-    assert source =~ "result.code"
-    assert source =~ "process.exitCode = 1"
-    assert source =~ ~s|process.argv.includes("--print")|
-    refute source =~ "process.exit(1)"
-    assert source =~ "ctx.ui.notify"
-    assert source =~ "slice(-MAX_OUTPUT_BYTES)"
-
-    refute source =~ "child_process"
-    refute source =~ "registerTool"
-    refute source =~ "pi.on("
-  end
-
   test "accepts authoritative per-control freshness and rejects identity or provenance mutations" do
     root = temporary_root!()
     on_exit(fn -> File.rm_rf!(root) end)
@@ -895,229 +857,6 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         cleanup_late_dirt_fixture!(report)
       end
-    end
-  end
-
-  describe "phase 164 trust anchors" do
-    @describetag :phase_164_trust_anchor
-
-    test "real extension handler authenticates and privately executes the complete HEAD chain" do
-      root = temporary_root!()
-      on_exit(fn -> File.rm_rf!(root) end)
-
-      staged_new = extension_fixture!(Path.join(root, "staged-new"), commit_shim: false)
-      git!(staged_new.repo, ["add", staged_new.shim_relative])
-      assert_dispatch_rejected(staged_new)
-
-      modified_shim = extension_fixture!(Path.join(root, "modified-shim"))
-      File.write!(modified_shim.shim, hostile_script(modified_shim.hostile_marker))
-      assert_dispatch_rejected(modified_shim)
-
-      for {name, stage?} <- [{"unstaged-downstream", false}, {"staged-downstream", true}] do
-        fixture = extension_fixture!(Path.join(root, name))
-        File.write!(fixture.downstream, hostile_script(fixture.hostile_marker))
-        if stage?, do: git!(fixture.repo, ["add", fixture.downstream_relative])
-        assert_dispatch_rejected(fixture)
-      end
-
-      accepted = extension_fixture!(Path.join(root, "accepted"))
-      result = invoke_extension!(accepted, "164 --pre-verification")
-      assert result["error"] == nil
-
-      assert [
-               %{
-                 "command" => "bash",
-                 "args" => [private_script, repo, authority_root, "--pre-verification"]
-               }
-             ] =
-               Enum.filter(result["calls"], &(&1["command"] == "bash"))
-
-      accepted_repo = resolved_path!(accepted.repo)
-      assert repo == accepted_repo
-      assert Path.dirname(Path.dirname(private_script)) == authority_root
-      refute private_script in [accepted.shim, accepted.downstream]
-      refute File.exists?(authority_root)
-
-      assert File.read!(accepted.marker) ==
-               "#{private_script}|#{authority_root}|#{accepted_repo}|--pre-verification"
-
-      committed_bytes = git!(accepted.repo, ["show", "HEAD:#{accepted.downstream_relative}"])
-      assert File.read!(accepted.bytes_marker) == committed_bytes
-
-      failed = extension_fixture!(Path.join(root, "failed-execution"))
-      failure = invoke_extension!(failed, "164", [{"FINALIZER_EXIT", "7"}])
-      assert failure["error"] =~ "exited with status 7"
-
-      assert [%{"args" => [failed_private_script | _]}] =
-               Enum.filter(failure["calls"], &(&1["command"] == "bash"))
-
-      refute File.exists?(Path.dirname(failed_private_script))
-    end
-  end
-
-  describe "phase 164 dispatcher boundary" do
-    @describetag :phase_164_dispatcher_boundary
-
-    test "rejects a symlinked lexical shim before Bash dispatch" do
-      source = File.read!(@extension)
-      assert source =~ "lstatSync(finalizerCandidate)"
-      assert source =~ "relative(repoRoot, finalizerCandidate)"
-      assert source =~ "realpathSync(finalizerCandidate)"
-
-      root = temporary_root!()
-      on_exit(fn -> File.rm_rf!(root) end)
-
-      fixture = extension_fixture!(Path.join(root, "symlinked-shim"))
-      File.rm!(fixture.shim)
-      File.ln_s!(fixture.downstream, fixture.shim)
-
-      assert_dispatch_rejected(fixture)
-    end
-
-    test "accepts the unchanged lexical Phase 164 shim" do
-      root = temporary_root!()
-      on_exit(fn -> File.rm_rf!(root) end)
-
-      fixture = extension_fixture!(Path.join(root, "accepted-shim"))
-      result = invoke_extension!(fixture, "164 --pre-verification")
-
-      assert result["error"] == nil
-      assert Enum.any?(result["calls"], &(&1["command"] == "bash"))
-      assert File.regular?(fixture.marker)
-    end
-
-    test "rejects every non-164 phase before repository discovery" do
-      root = temporary_root!()
-      on_exit(fn -> File.rm_rf!(root) end)
-
-      fixture = extension_fixture!(Path.join(root, "alternate-phase"))
-
-      for phase <- ["1", "163", "165", "999"] do
-        result = invoke_extension!(fixture, phase)
-        assert result["error"] =~ "only phase 164 is supported"
-        assert result["calls"] == []
-      end
-
-      refute File.exists?(fixture.marker)
-    end
-
-    test "print-mode failure removes the private directory before process exit" do
-      root = temporary_root!()
-      on_exit(fn -> File.rm_rf!(root) end)
-
-      fixture = extension_fixture!(Path.join(root, "print-failure"))
-      {result, status} = invoke_extension_print!(fixture, "164", [{"FINALIZER_EXIT", "7"}])
-
-      assert status != 0
-      assert result["error"] =~ "exited with status 7"
-      private_script = fixture.marker |> File.read!() |> String.split("|") |> hd()
-      refute File.exists?(Path.dirname(private_script))
-    end
-  end
-
-  describe "phase 164 transitive chain" do
-    @describetag :phase_164_transitive_chain
-
-    test "declares the complete executable and representative data authority manifest" do
-      source = File.read!(@extension)
-
-      for path <- ["scripts/finalize_phase_164.sh" | @transitive_executables] do
-        assert source =~ path
-      end
-
-      for path <- [
-            ".github/scheduled-controls.json",
-            "164-TRUTH-DISPOSITION.tsv",
-            "161-WORKSPACE-INVENTORY.md",
-            "161-PRESERVATION-RECONCILIATION.tsv",
-            "164-VERIFICATION.md",
-            "164-VALIDATION.md",
-            "164-FINALIZATION.md",
-            ".planning/ROADMAP.md",
-            ".planning/REQUIREMENTS.md"
-          ] do
-        assert source =~ path
-      end
-
-      assert source =~ "dependency manifest contains duplicate paths"
-    end
-
-    test "rejects staged, unstaged, symlink, and missing transitive members before Bash" do
-      root = temporary_root!()
-      on_exit(fn -> File.rm_rf!(root) end)
-
-      variants = [
-        {"staged-helper", "scripts/closeout_repository_truth.sh", :staged},
-        {"unstaged-data", ".github/scheduled-controls.json", :unstaged},
-        {"symlink-helper", "scripts/verify_workspace_evidence.sh", :symlink},
-        {"missing-data", ".planning/ROADMAP.md", :missing}
-      ]
-
-      for {name, path, variant} <- variants do
-        fixture = extension_fixture!(Path.join(root, name))
-        absolute = Path.join(fixture.repo, path)
-
-        case variant do
-          :staged ->
-            File.write!(absolute, "staged mutation\n")
-            git!(fixture.repo, ["add", "--", path])
-
-          :unstaged ->
-            File.write!(absolute, "unstaged mutation\n")
-
-          :symlink ->
-            File.rm!(absolute)
-            File.ln_s!(fixture.hostile_marker, absolute)
-
-          :missing ->
-            File.rm!(absolute)
-        end
-
-        assert_dispatch_rejected(fixture)
-      end
-    end
-
-    test "materializes the complete committed chain before Bash and removes its authority root" do
-      root = temporary_root!()
-      on_exit(fn -> File.rm_rf!(root) end)
-
-      fixture = extension_fixture!(Path.join(root, "complete-chain"))
-      result = invoke_extension!(fixture, "164 --pre-verification")
-
-      assert result["error"] == nil
-
-      assert [%{"args" => [private_script, repo, authority_root, "--pre-verification"]}] =
-               Enum.filter(result["calls"], &(&1["command"] == "bash"))
-
-      assert repo == resolved_path!(fixture.repo)
-      assert Path.dirname(Path.dirname(private_script)) == authority_root
-      refute File.exists?(authority_root)
-      assert File.read!(fixture.marker) =~ "#{authority_root}|#{repo}|--pre-verification"
-    end
-
-    test "assume-unchanged helper and data mutations cannot affect execution" do
-      root = temporary_root!()
-      on_exit(fn -> File.rm_rf!(root) end)
-
-      fixture = extension_fixture!(Path.join(root, "hidden-chain"))
-
-      for path <- @transitive_executables ++ @transitive_data do
-        absolute = Path.join(fixture.repo, path)
-        git!(fixture.repo, ["update-index", "--assume-unchanged", "--", path])
-
-        if path in @transitive_executables do
-          File.write!(absolute, hostile_script(fixture.hostile_marker))
-          File.chmod!(absolute, 0o755)
-        else
-          File.write!(absolute, "MUTATED:#{path}\n")
-        end
-
-        assert git!(fixture.repo, ["status", "--porcelain", "--", path]) == ""
-      end
-
-      result = invoke_extension!(fixture, "164 --pre-verification")
-      assert result["error"] == nil
-      refute File.exists?(fixture.hostile_marker)
     end
   end
 
@@ -2142,7 +1881,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     assert File.regular?(@install_approval)
     refute match?({:ok, %File.Stat{type: :symlink}}, File.lstat(@install_approval))
-    assert {"400\n", 0} = System.cmd("stat", ["-f", "%Lp", @install_approval])
+    assert_file_mode!(@install_approval, 0o400)
 
     approval = strict_key_values!(@install_approval, approval_keys)
     assert approval["record_version"] == "1"
@@ -2206,7 +1945,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     assert File.regular?(@installed_loader)
     refute match?({:ok, %File.Stat{type: :symlink}}, File.lstat(@installed_loader))
-    assert {"500\n", 0} = System.cmd("stat", ["-f", "%Lp", @installed_loader])
+    assert_file_mode!(@installed_loader, 0o500)
     installed_digest = sha256(File.read!(@installed_loader))
     assert installed_digest == approval["source_sha256"]
 
@@ -2258,6 +1997,11 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     }
   end
 
+  defp assert_file_mode!(path, expected_mode) do
+    assert {:ok, %File.Stat{mode: mode}} = File.stat(path)
+    assert Bitwise.band(mode, 0o777) == expected_mode
+  end
+
   defp strict_key_values!(path, required_keys) do
     lines = File.read!(path) |> String.split("\n", trim: true)
 
@@ -2291,134 +2035,6 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   defp hostile_script(marker) do
     "#!/usr/bin/env bash\nprintf hostile > #{inspect(marker)}\n"
-  end
-
-  defp assert_dispatch_rejected(fixture) do
-    result = invoke_extension!(fixture, "164 --pre-verification")
-    assert is_binary(result["error"])
-    refute Enum.any?(result["calls"], &(&1["command"] == "bash"))
-    refute File.exists?(fixture.hostile_marker)
-  end
-
-  defp invoke_extension!(fixture, args, extra_env \\ []) do
-    harness = Path.join(fixture.repo, "extension-harness.mjs")
-
-    File.write!(
-      harness,
-      """
-      import { spawnSync } from "node:child_process";
-      import extension from #{inspect("file://" <> @extension)};
-
-      let handler;
-      const calls = [];
-      const notifications = [];
-      const pi = {
-        registerCommand(name, definition) {
-          if (name !== "finalize-phase") throw new Error(`unexpected command: ${name}`);
-          handler = definition.handler;
-        },
-        async exec(command, args, options) {
-          calls.push({command, args, cwd: options.cwd});
-          const result = spawnSync(command, args, {
-            cwd: options.cwd,
-            env: process.env,
-            encoding: "utf8",
-            maxBuffer: 64 * 1024,
-          });
-          return {code: result.status ?? 1, stdout: result.stdout ?? "", stderr: result.stderr ?? ""};
-        },
-      };
-
-      extension(pi);
-      let error = null;
-      try {
-        await handler(process.argv[2], {
-          cwd: process.argv[3],
-          ui: {notify(message, level) { notifications.push({message, level});}},
-        });
-      } catch (caught) {
-        error = caught instanceof Error ? caught.message : String(caught);
-      }
-      console.log(JSON.stringify({calls, notifications, error}));
-      """
-    )
-
-    node = System.find_executable("node")
-
-    {output, status} =
-      System.cmd(node, ["--experimental-strip-types", harness, args, fixture.repo],
-        env:
-          extra_env ++
-            [
-              {"MARKER", fixture.marker},
-              {"BYTES_MARKER", fixture.bytes_marker},
-              {"HOSTILE_MARKER", fixture.hostile_marker}
-            ],
-        stderr_to_stdout: false
-      )
-
-    result = output |> String.trim() |> Jason.decode!()
-    if result["error"], do: assert(status != 0), else: assert(status == 0)
-    result
-  end
-
-  defp invoke_extension_print!(fixture, args, extra_env) do
-    harness = Path.join(fixture.repo, "extension-print-harness.mjs")
-
-    File.write!(
-      harness,
-      """
-      import { spawnSync } from "node:child_process";
-      import extension from #{inspect("file://" <> @extension)};
-
-      let handler;
-      const calls = [];
-      const notifications = [];
-      const pi = {
-        registerCommand(name, definition) {
-          if (name !== "finalize-phase") throw new Error(`unexpected command: ${name}`);
-          handler = definition.handler;
-        },
-        async exec(command, args, options) {
-          calls.push({command, args, cwd: options.cwd});
-          const result = spawnSync(command, args, {
-            cwd: options.cwd,
-            env: process.env,
-            encoding: "utf8",
-            maxBuffer: 64 * 1024,
-          });
-          return {code: result.status ?? 1, stdout: result.stdout ?? "", stderr: result.stderr ?? ""};
-        },
-      };
-
-      extension(pi);
-      let error = null;
-      try {
-        await handler(process.argv[2], {
-          cwd: process.argv[3],
-          ui: {notify(message, level) { notifications.push({message, level});}},
-        });
-      } catch (caught) {
-        error = caught instanceof Error ? caught.message : String(caught);
-      }
-      console.log(JSON.stringify({calls, notifications, error}));
-      """
-    )
-
-    node = System.find_executable("node")
-
-    {output, status} =
-      System.cmd(node, ["--experimental-strip-types", harness, args, fixture.repo, "--print"],
-        env:
-          extra_env ++
-            [
-              {"MARKER", fixture.marker},
-              {"BYTES_MARKER", fixture.bytes_marker}
-            ],
-        stderr_to_stdout: false
-      )
-
-    {output |> String.trim() |> Jason.decode!(), status}
   end
 
   defp allocate_owned_sibling!(tag, candidate \\ nil) do

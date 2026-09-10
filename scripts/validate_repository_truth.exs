@@ -145,10 +145,12 @@ defmodule Mailglass.RepositoryTruthLedger do
     "164-05-PLAN.md",
     "164-08-PLAN.md",
     "164-11-PLAN.md; 164-21-SUMMARY.md; 164-22-PLAN.md",
+    "164-23-PLAN.md; 164-23-SUMMARY.md",
     "git ls-files .planning/publish",
     "git ls-files; 164-08-PLAN.md",
     "git ls-files; 164-11-PLAN.md",
     "git ls-files; 164-21-PLAN.md",
+    "git ls-files; 164-23-PLAN.md",
     "git ls-files; Phase 161 summary",
     "git ls-files; Phase 162 summary",
     "git ls-files; release-target ledger",
@@ -348,7 +350,18 @@ defmodule Mailglass.RepositoryTruthLedger do
     "scripts/scheduled_control_evidence.sh" =>
       "83583ea9347f0f816dfa071ec5ae3677411cf1dc03fbcc410a2940c63954edcd",
     "test/scripts/scheduled_control_evidence_test.exs" =>
-      "345fd03d1a3a3120a44c71f21432b4f758c032c9ad7c9df28b46a0bd8c232003"
+      "345fd03d1a3a3120a44c71f21432b4f758c032c9ad7c9df28b46a0bd8c232003",
+    ".planning/ROADMAP.md" => "8ff4d332bfe0bb7893253c1ade51b8b0e9e6dc988c597ccf169c6db5770544a5",
+    ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-23-SUMMARY.md" =>
+      "84410c563fb394425ba45ce94f26a892c0495d0120983afe1accf4711c341d10",
+    "/Users/jon/.local/share/mailglass/checkpoints/164-23-install-proposal.env" =>
+      "0eb639d2bc3eadf0bb407f1d5e491c95de1bcb14c66068371c985100013ba684",
+    "/Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env" =>
+      "f1356194ac336f3dcfed82a014ec820c60a705b1d3da3acd84999d76f642a29f",
+    "/Users/jon/.local/bin/mailglass-finalize-phase" =>
+      "083d18d38157b29924fc287402377b21ff54392a98ef605c96de676b2f83e2fe",
+    "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.<prior-sha256>" =>
+      "756b45b7cd87b91fec05b207d7e6bc098be581e96bb94e73e7a17a614fef86e4"
   }
   @locked_removal_evidence "D-08; sha256:331810b4b1724452f0e2707c800230e52fabea01c3773d362b3a1240040ece7e; Phase 162 scheduled-control proof"
   @ignore_files [
@@ -675,6 +688,18 @@ defmodule Mailglass.RepositoryTruthLedger do
             ] do
     row["stable_id"] in ["M-15", "M-16"] and row["state"] == "untracked" and
       row["currentness"] == "historical" and row["disposition"] == "remove"
+  end
+
+  defp valid_kind_relationship?(%{"subject" => subject} = row)
+       when subject in [
+              "/Users/jon/.local/share/mailglass/checkpoints/164-23-install-proposal.env",
+              "/Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env",
+              "/Users/jon/.local/bin/mailglass-finalize-phase",
+              "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.<prior-sha256>"
+            ] do
+    row["stable_id"] in ["M-27", "M-28", "M-29", "M-30"] and
+      row["state"] == "untracked" and row["currentness"] == "current" and
+      row["disposition"] == "retain"
   end
 
   defp valid_kind_relationship?(row) do

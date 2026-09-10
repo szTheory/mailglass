@@ -14,9 +14,10 @@ FROM hexpm/elixir:1.18.4-erlang-27.3.4.13-debian-bookworm-20260623-slim@sha256:c
 
 # git: hex/rebar fetches and any git-sourced dep. build-essential: NIF-bearing
 # deps. postgresql-client: `pg_isready` for the same readiness wait the CI job
-# performs before `mix ecto.create`.
+# performs before `mix ecto.create`. nodejs, unzip, and zip: immutable-loader
+# execution and archive fixtures exercised by the repository lifecycle suite.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends build-essential git ca-certificates jq postgresql-client \
+  && apt-get install -y --no-install-recommends build-essential git ca-certificates jq nodejs postgresql-client unzip zip \
   && rm -rf /var/lib/apt/lists/*
 
 RUN mix local.hex --force && mix local.rebar --force

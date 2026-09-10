@@ -10,7 +10,7 @@ revised: 2026-09-10
 
 # Phase 164 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-20 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
+> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-24 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
 
 ---
 
@@ -30,10 +30,11 @@ revised: 2026-09-10
 
 - **After every task commit:** Run the focused automated command named by that task.
 - **After every plan wave:** Run `mix ci.fast` after all implementation tasks in the wave are integrated; run the focused closeout/scheduled contracts after Waves 8 and 9.
-- **Pre-verification checkpoint:** Plan 164-14 ran `/finalize-phase 164 --pre-verification` after the Plan 164-13 adversarial regression locks reached protected main. Plans 164-16 through 164-19 subsequently changed tracked documentation, trust-anchor implementation, and tests, so that older capture remains explicitly non-terminal; refreshed ordinary verification must evaluate the repaired implementation through Plan 164-19 before terminal finalization. Plan 164-20 only reconciles these validation and lifecycle records.
+- **Pre-verification checkpoint:** Plan 164-14 ran the then-current pre-verification command after the Plan 164-13 adversarial regression locks reached protected main. Plans 164-16 through 164-24 subsequently changed tracked documentation, trust-anchor implementation, installation state, and tests, so that older capture remains explicitly non-terminal; refreshed ordinary verification must evaluate the repaired implementation through Plan 164-24 before terminal finalization.
+- **Plans 164-21 through 164-24:** No task ran canonical pre-verification or terminal finalization. These plans proved immutable source, exact history, installed identity, and adversarial subprocess behavior only.
 - **Verified implementation lifecycle:** Plan 164-15 requires the ordinary verifier to record the exact implementation commit as `verified_implementation_sha`. Terminal finalization accepts only an ancestor SHA and inspects every subsequent first-parent commit relative to its first parent against the four exact completion-metadata paths, so change-then-revert source history remains visible.
 - **After normal execute-phase metadata:** Integrate all Phase 164 SUMMARY files and the tracked VERIFICATION, ROADMAP, STATE, and REQUIREMENTS completion updates before terminal capture.
-- **Post-execution finalization:** Run `/finalize-phase 164` outside phase-plan-index after the final tracked SHA receives attempt-1 normal push CI and naturally scheduled attempt-1 exact-SHA evidence. The gate writes ignored runtime artifacts only and permits no later tracked commit.
+- **Post-execution finalization:** Run `/Users/jon/.local/bin/mailglass-finalize-phase 164` outside phase-plan-index after the final tracked SHA receives attempt-1 normal push CI and naturally scheduled attempt-1 exact-SHA evidence. The gate writes ignored runtime artifacts only and permits no later tracked commit.
 - **Max feedback latency:** 15 minutes.
 
 ---
@@ -72,7 +73,16 @@ revised: 2026-09-10
 | 164-19-01 | 164-19 tracer | 17 | TRTH-03 | T-164-68, T-164-71, T-164-72 | Only the lexical non-symlink regular-file Phase 164 shim is authenticated before resolution; unsupported phases never reach discovery, and print failures clean private state before reporting non-success | tagged real-dispatcher contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_dispatcher_boundary --warnings-as-errors --no-deps-check` | registered TypeScript handler exercised through real Git, Node, and Bash subprocesses | ✅ green (4 selected, 33 excluded, 0 failures) |
 | 164-19-02 | 164-19 | 17 | TRTH-03 | T-164-69, T-164-70 | Every transitive executable and data input is authenticated and materialized from HEAD under one private authority root before Bash; hidden assume-unchanged checkout mutations cannot affect execution | tagged authenticated-chain contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_transitive_chain --warnings-as-errors --no-deps-check` | closed dependency manifest, private authority-root materialization, and hostile helper/data mutations | ✅ green (4 selected, 33 excluded, 0 failures) |
 | 164-20-01 | 164-20 | 18 | TRTH-02, TRTH-03 | T-164-73, T-164-74, T-164-75 | Validation and finalization records describe the repaired stage-0 and authenticated-authority behavior without claiming that terminal evidence was captured during execution | complete focused suite, canonical validator, and syntax contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_repository_truth_test.exs test/scripts/phase_164_closeout_test.exs test/mailglass/publish/maintaining_release_gate_contract_test.exs test/mailglass/docs_contract_test.exs test/scripts/scheduled_control_evidence_test.exs --warnings-as-errors --no-deps-check && ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 elixir scripts/validate_repository_truth.exs --repo /Users/jon/projects/mailglass --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv && bash -n scripts/finalize_phase_164.sh scripts/closeout_repository_truth.sh && git diff --check` | current validation/finalization records compared with Plans 164-18 and 164-19 production seams | ✅ green (114 tests, 0 failures, 1 pre-existing skip; ledger and syntax valid) |
-| 164-FINAL | post-execution gate | after phase.complete integration | TRTH-03 | T-164-40, T-164-41, T-164-42, T-164-43, T-164-44 | Final protected metadata SHA has attempt-1 normal push CI, attempt-1 natural schedules, ignored identity/report state, independently verified raw sources, and no later tracked commit | live lifecycle gate | `/finalize-phase 164` | ignored `finalization-inputs.json`, report, CI source, scheduled source | ⚠️ external terminal capture pending |
+| 164-21-01 | 164-21 | 19 | TRTH-03 | T-164-76, T-164-78, T-164-79 | One captured full OID governs every authenticated read; moving HEAD fails before Bash and private bytes are removed on every outcome | installed-loader precursor regression | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_immutable_loader --warnings-as-errors --no-deps-check && node --check scripts/mailglass_finalize_phase_loader.mjs && git diff --check` | standalone loader plus real Git/Node/Bash fixtures | ✅ green (7 selected, 37 excluded, 0 failures) |
+| 164-21-02 | 164-21 | 19 | TRTH-03 | T-164-77, T-164-79 | Exact PLAN/SUMMARY pairs 01-24 reject middle, baseline-terminal, current-terminal, singleton, malformed, and unexpected identities before Bash | fixed-history regression and canonical validator | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_immutable_loader --warnings-as-errors --no-deps-check && bash -n scripts/finalize_phase_164.sh && ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 elixir scripts/validate_repository_truth.exs --repo /Users/jon/projects/mailglass --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv && git diff --check` | loader/shell range constants and ledger | ✅ green |
+| 164-22-01 | 164-22 | 20 | TRTH-02, TRTH-03 | T-164-80, T-164-81, T-164-83 | Retired checkout extension identities remain ledgered while hostile recreation cannot influence direct loader execution | installed-boundary and ledger regression | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_boundary --warnings-as-errors --no-deps-check && ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_repository_truth_test.exs --warnings-as-errors --no-deps-check && ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 elixir scripts/validate_repository_truth.exs --repo /Users/jon/projects/mailglass --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv && git diff --check` | removed extension paths, retained ledger evidence, hostile fixture | ✅ green (3 installed-boundary tests, 0 failures) |
+| 164-22-02 | 164-22 | 20 | TRTH-01, TRTH-03 | T-164-82 | Current maintainer and lifecycle prose expose only the absolute installed command and bound the old slash command to history | whole-current-region docs contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/mailglass/publish/maintaining_release_gate_contract_test.exs --warnings-as-errors --no-deps-check` | `MAINTAINING.md`, `164-FINALIZATION.md`, maintaining contract | ✅ green (5 tests, 0 failures) |
+| 164-23-01 | 164-23 | 21 | TRTH-03 | T-164-84, T-164-85 | Clean committed source and destination lstat observations produce one private mode-0400 proposal; any source/destination drift fails before approval or mutation | immutable install preflight | `test -f /Users/jon/.local/share/mailglass/checkpoints/164-23-install-proposal.env && test ! -L /Users/jon/.local/share/mailglass/checkpoints/164-23-install-proposal.env && test "$(stat -f '%Lp' /Users/jon/.local/share/mailglass/checkpoints/164-23-install-proposal.env)" = 400` plus the Plan 164-23 fixed-key OID/digest/destination preflight | proposal record and captured Git blob digest | ✅ approved preflight observed |
+| 164-23-02 | 164-23 | 21 | TRTH-03 | T-164-86, T-164-86A | Approval is exact field-for-field, mode 0400, and explicit; changed or unapproved tuples fail before installation | immutable approval-record verification | `test -f /Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env && test ! -L /Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env && test "$(stat -f '%Lp' /Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env)" = 400 && test "$(grep -c '^approval_status=approved$' /Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env)" = 1` | approval record plus exact proposal parity | ✅ approved tuple observed |
+| 164-23-03 | 164-23 | 21 | TRTH-03 | T-164-84, T-164-85, T-164-86, T-164-86A | Atomic external mode-0500 install must match the approved blob; prior-object rollback evidence is conditional and any mismatch fails self-check | installed provenance/self-check | `/Users/jon/.local/bin/mailglass-finalize-phase --self-check --repo /Users/jon/projects/mailglass --expected-source-oid 7f57e1cd0aafe6d236624da98f7292e86e6de697` | installed loader, approval record, Plan 164-23 summary | ✅ green; absent-destination rollback branch recorded not-applicable |
+| 164-24-01 | 164-24 | 22 | TRTH-03 | T-164-87, T-164-88, T-164-SC | Absolute installed executable accepts captured private bytes, while moving HEAD, deleted pairs 10, 20, and 24, and a hostile retired extension all fail or remain unevaluated before unauthorized Bash | installed production-boundary subprocess regression | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors --no-deps-check` | immutable approval/summary parity plus real installed command | ✅ green (5 selected, 46 excluded, 0 failures) |
+| 164-24-02 | 164-24 | 22 | TRTH-01, TRTH-02, TRTH-03 | T-164-89, T-164-90 | Current proof records and manifest-derived docs contract report installed-boundary closure without representing it as pre-verification or terminal evidence | complete focused suite, validator, syntax, docs contract | `make toolchain CMD='mix test test/scripts/phase_164_repository_truth_test.exs test/scripts/phase_164_closeout_test.exs test/mailglass/publish/maintaining_release_gate_contract_test.exs test/mailglass/docs_contract_test.exs test/scripts/scheduled_control_evidence_test.exs --warnings-as-errors' && ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 elixir scripts/validate_repository_truth.exs --repo /Users/jon/projects/mailglass --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv && node --check scripts/mailglass_finalize_phase_loader.mjs && bash -n scripts/finalize_phase_164.sh scripts/closeout_repository_truth.sh && git diff --check` | `164-VALIDATION.md`, `164-FINALIZATION.md`, stable docs contract | ✅ green (120 tests, 0 failures, 1 historical skip; ledger and syntax valid) |
+| 164-FINAL | post-execution gate | after phase.complete integration | TRTH-03 | T-164-40, T-164-41, T-164-42, T-164-43, T-164-44 | Final protected metadata SHA has attempt-1 normal push CI, attempt-1 natural schedules, ignored identity/report state, independently verified raw sources, and no later tracked commit | live lifecycle gate | `/Users/jon/.local/bin/mailglass-finalize-phase 164` | ignored `finalization-inputs.json`, report, CI source, scheduled source | ⚠️ external terminal capture pending |
 
 *Status: ✅ automated capability green · ⚠️ external evidence still required*
 
@@ -95,6 +105,10 @@ revised: 2026-09-10
 - [x] **Plan 164-18 owns stage-aware tracked proof:** the `phase_164_stage0_index` group selected four tests and passed all four, proving exact NUL-delimited stage-0 identity and rejecting a genuine unmerged stage-1/2/3 subject through both helper and full validation paths.
 - [x] **Plan 164-19 owns complete finalization authority:** the `phase_164_dispatcher_boundary` and `phase_164_transitive_chain` groups each selected four tests and passed all four, proving Phase-164-only lexical dispatch, cleanup-before-error, full pre-Bash HEAD materialization, and immunity to hidden checkout mutations.
 - [x] **Plan 164-20 owns record reconciliation:** the complete focused suite, canonical validator, shell syntax, and diff checks bind these records to the executed Plan 164-18/19 behavior without running either finalization mode.
+- [x] **Plan 164-21 owns immutable commit and exact-history authority:** seven selected loader tests bind reads to one captured OID and reject moving HEAD, missing pairs 10/20/24, malformed, singleton, and unexpected numbered artifacts.
+- [x] **Plan 164-22 owns installed-command authority migration:** the project-local extension is retired with exact ledger provenance, and current guidance exposes only the external command.
+- [x] **Plan 164-23 owns explicit installation approval:** the mode-0400 approval record, mode-0500 installed executable, approved source digest, and conditional rollback evidence are immutable inputs to later tests.
+- [x] **Plan 164-24 owns production installed-boundary proof:** five selected subprocess tests invoke the absolute installed command and cover accepted private dispatch, moving HEAD, pairs 10/20/24, hostile extension self-mutation, and approval parity.
 
 `wave_0_complete` is `true`: the test assets exist and their plan-specific commands have run successfully. This records completed executor evidence, not a plan-time predeclaration.
 
@@ -115,7 +129,7 @@ revised: 2026-09-10
 
 ### Planning-contract completeness
 
-- [x] All thirty executor tasks across all twenty plans have an automated verification row, plus one explicit terminal post-execution lifecycle gate.
+- [x] All executor tasks across all twenty-four plans have an automated verification row, plus one explicit terminal post-execution lifecycle gate.
 - [x] The tracer-created repository-truth test, Plan 164-04 expansion, Plan 164-05 test/wrapper and usage contract, Plan 164-06 checkpoint, and Plan 164-07 exact-main report are explicitly mapped.
 - [x] TRTH-01 and TRTH-02 retain completed task-level coverage; TRTH-03 maps through the freshness repair, tracked lifecycle contract, and terminal post-execution raw-source gate.
 - [x] Sampling continuity has no three consecutive tasks without automated feedback.
@@ -141,6 +155,7 @@ revised: 2026-09-10
 - [x] Plan 164-18 stage-aware contracts pass four selected production-seam tests and reject genuine unmerged stage-1/2/3 index state without weakening literal stage-0 identity.
 - [x] Plan 164-19 dispatcher and transitive-chain contracts pass eight selected real-handler tests, authenticate the lexical Phase 164 selector plus the closed HEAD dependency manifest before Bash, and clean the private authority root before every outcome.
 - [x] Plan 164-20 documentation reconciliation maps the repaired seams and preserves terminal finalization as a separately governed post-execution action.
+- [x] Plans 164-21 through 164-24 close the immutable-OID, exact-history, pre-evaluation authority, installation provenance, and installed-boundary regression gaps without running canonical pre-verification or terminal finalization.
 - [ ] All tracked Phase 164 summaries and phase.complete metadata have reached protected main before terminal `/finalize-phase 164` runs.
 - [ ] The final ignored report and raw CI/scheduled sources pass independent verification with no later tracked commit.
 
@@ -295,3 +310,47 @@ without invoking either finalization mode.
 **Approval:** Current and Nyquist-compliant for automated coverage through Plan
 164-20. Ordinary verification and protected completion-metadata integration
 remain prerequisites for the separate terminal `/finalize-phase 164` capture.
+
+## Validation Audit 2026-09-10 — Plans 164-21 through 164-24 Installed Boundary
+
+Plans 164-21 through 164-24 close the three remaining verifier attacks at the
+installed production boundary. The immutable installation authority is Plan
+164-23 approval OID `7f57e1cd0aafe6d236624da98f7292e86e6de697` with loader SHA-256
+`ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9`.
+Plan 164-24 separately captured the current execution-authority OID and proved
+its loader blob remained byte-identical; it did not require current HEAD to
+equal the older installation OID.
+
+| Metric | Count |
+|--------|-------|
+| Plans audited | 24 |
+| Remaining verifier attacks closed | 3 |
+| Installed production-boundary tests | 5 selected, 46 excluded, 0 failures |
+| Complete focused tests | 120 |
+| Failures | 0 |
+| Pre-existing historical skips | 1 |
+
+- `phase_164_installed_production_boundary` invoked
+  `/Users/jon/.local/bin/mailglass-finalize-phase` directly; no tracked source
+  path or test-local import stood in for the installed process.
+- The accepted fixture executed only captured-commit bytes beneath a private
+  authority root and removed that root after dispatch.
+- A moving HEAD exited nonzero with a bounded reason before Bash.
+- Deletion of exact PLAN/SUMMARY pairs 10, 20, and 24 each exited nonzero before
+  Bash, closing both middle-pair and terminal-pair shrinkage.
+- An assume-unchanged hostile retired extension carried a real marker-writing
+  payload, but direct installed execution never evaluated it and the marker
+  remained absent.
+- Before every matrix, the mode-0400 approval record, exact Plan 164-23 summary
+  tuple/digest, absent-destination rollback result, installed mode/digest, and
+  immutable installation-OID self-check passed.
+- `T-164-87` is closed by absolute-path and checkpoint-digest identity;
+  `T-164-88` by the unevaluated executable marker; `T-164-89` by this observed
+  result map; and `T-164-90` by the complete manifest-derived docs contract.
+- No task in Plans 164-21 through 164-24 ran canonical pre-verification or
+  terminal finalization.
+
+**Approval:** Current and Nyquist-compliant for automated coverage through Plan
+164-24. Ordinary verification and protected completion-metadata integration
+still precede the final installed command run; terminal finalization remains
+pending and no terminal evidence is claimed here.

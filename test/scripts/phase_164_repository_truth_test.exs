@@ -523,6 +523,16 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
                stderr_to_stdout: true
              )
 
+    fixture_ledger = Path.join(root, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv"))
+    File.cp!(@ledger, fixture_ledger)
+
+    assert {_output, 0} =
+             System.cmd(
+               "git",
+               ["add", "--", Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")],
+               cd: root
+             )
+
     root
   end
 

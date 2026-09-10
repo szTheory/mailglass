@@ -47,10 +47,37 @@ the finalization capability before `phase.complete` writes tracked completion
 metadata.
 
 Plans 164-18 and 164-19 repaired the stage-aware ledger and authenticated
-finalization chain after the earlier pre-verification capture. Neither those
-plans nor Plan 164-20 ran pre-verification or terminal finalization; their
-ordinary test results are implementation evidence, not a replacement terminal
-report.
+finalization chain after the earlier pre-verification capture. Plans 164-21
+through 164-24 then bound every repository read to one captured OID, fixed the
+01-24 history set, retired checkout extension authority, installed the approved
+external loader, and exercised the installed production boundary. None of
+Plans 164-21 through 164-24 ran canonical pre-verification or terminal
+finalization; their ordinary test results are implementation evidence, not a
+replacement terminal report.
+
+## Installed production-boundary regression
+
+Plan 164-24 verified the absolute installed command against the immutable Plan
+164-23 approval record. The installation OID is
+`7f57e1cd0aafe6d236624da98f7292e86e6de697`, and both its loader blob and the
+installed executable have SHA-256
+`ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9`.
+The approval-record OID remains installation provenance; the test separately
+captured the newer repository execution-authority OID and required its loader
+blob to retain the same digest without equating the two commits.
+
+The `phase_164_installed_production_boundary` subprocess group ran 5 selected
+tests with 46 excluded and 0 failures. Direct invocation accepted one complete
+disposable repository and executed only captured-commit bytes from a private
+authority root that was removed afterward. It rejected a moving HEAD and
+deletion of complete PLAN/SUMMARY pairs 10, 20, and 24 before Bash. An
+assume-unchanged hostile retired extension contained a real marker-writing
+payload, but direct installed-command execution never evaluated it and the
+marker remained absent.
+
+These results close the automated installed-boundary attacks only. The ordinary
+verification and protected completion-metadata integration still precede the
+final installed command run, and terminal finalization remains pending.
 
 ## Terminal operational proof
 

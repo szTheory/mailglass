@@ -48,14 +48,15 @@ defmodule Mailglass.DocsContractTest do
     test "production operator guidance includes a production-capable admin dependency" do
       root = current_compatibility_section!(File.read!("README.md"), "README.md")
       admin = File.read!("mailglass_admin/README.md")
+      admin_major_minor = package_major_minor!("mailglass_admin/mix.exs")
 
-      assert root =~ ~s({:mailglass_admin, "~> 2.5"})
-      refute root =~ ~s({:mailglass_admin, "~> 2.5", only:)
+      assert root =~ ~s({:mailglass_admin, "~> #{admin_major_minor}"})
+      refute root =~ ~s({:mailglass_admin, "~> #{admin_major_minor}", only:)
 
       assert admin =~ "Preview-only installation"
-      assert admin =~ ~s({:mailglass_admin, "~> 2.5", only: :dev})
+      assert admin =~ ~s({:mailglass_admin, "~> #{admin_major_minor}", only: :dev})
       assert admin =~ "Production operator installation"
-      assert admin =~ ~s({:mailglass_admin, "~> 2.5"})
+      assert admin =~ ~s({:mailglass_admin, "~> #{admin_major_minor}"})
     end
 
     test "current contract labels track package manifest majors" do
@@ -187,6 +188,39 @@ defmodule Mailglass.DocsContractTest do
   end
 
   describe "Guide contracts" do
+    test "Phase 164 records installed-boundary proof without claiming terminal evidence" do
+      validation =
+        File.read!(
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md"
+        )
+
+      finalization =
+        File.read!(
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
+        )
+
+      for document <- [validation, finalization] do
+        normalized = Regex.replace(~r/\s+/, document, " ")
+        assert document =~ "/Users/jon/.local/bin/mailglass-finalize-phase"
+        assert document =~ "7f57e1cd0aafe6d236624da98f7292e86e6de697"
+        assert document =~ "ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
+        assert document =~ "moving HEAD"
+        assert document =~ "10, 20, and 24"
+        assert document =~ "hostile retired extension"
+        assert document =~ "Plans 164-21 through 164-24"
+        assert normalized =~ "ordinary verification"
+        assert normalized =~ "protected completion-metadata integration"
+        assert normalized =~ "terminal finalization remains pending"
+      end
+
+      assert validation =~ "5 selected, 46 excluded, 0 failures"
+      assert validation =~ "T-164-87"
+      assert validation =~ "T-164-88"
+      assert validation =~ "T-164-89"
+      assert validation =~ "T-164-90"
+      assert validation =~ "phase_164_installed_production_boundary"
+    end
+
     test "B2C first-adopter profile locks the safe consumer launch contract" do
       guide = File.read!("guides/b2c-first-adopter.md")
       blocks = extract_code_blocks("guides/b2c-first-adopter.md")
