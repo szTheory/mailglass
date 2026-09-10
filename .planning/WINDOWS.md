@@ -2,14 +2,14 @@
 schema_version: 1
 open_count: 10
 waived_count: 0
-fixed_count: 12
-total_count: 22
-last_updated: 2026-08-26T21:30:58.767Z
+fixed_count: 13
+total_count: 23
+last_updated: 2026-09-10T04:21:28.803Z
 ---
 
 # Broken Windows Ledger
 
-> Cross-phase defect register. `/gsd-ship` blocks while `open_count > 0`.
+> Cross-phase defect register. With `workflow.windows_enforce` enabled, `/gsd-ship` blocks while `open_count > 0`.
 > Waive with `gsd-tools windows waive <id> "<reason>"` (reason required).
 > Mark fixed with `gsd-tools windows fixed <id>`.
 
@@ -37,6 +37,7 @@ last_updated: 2026-08-26T21:30:58.767Z
 | 20 | 162 | unrun-verify | test/scripts/release_trigger_recovery_test.exs |  | Complete release-trigger recovery test file exceeded the interactive runner window before final completion. | open |  | 2026-08-24T20:37:02.538Z |  |
 | 21 | 164 | unrun-verify | test/mailglass/docs_contract_test.exs |  | mix ci.fast blocked by pre-existing formatting drift in Phase 164-03 contract test | fixed |  | 2026-08-26T21:23:27.723Z | 2026-08-26T21:30:58.688Z |
 | 22 | 164 | unrun-verify | test/mailglass/publish/maintaining_release_gate_contract_test.exs |  | mix ci.fast blocked by pre-existing formatting drift in Phase 164-02 contract test | fixed |  | 2026-08-26T21:23:27.812Z | 2026-08-26T21:30:58.767Z |
+| 23 | 164 | deviation | scripts/validate_repository_truth.exs |  | Split ledger audit reads from authenticated authority while preserving canonical Git index observations | fixed |  | 2026-09-10T04:21:02.342Z | 2026-09-10T04:21:28.803Z |
 
 ````json
 [
@@ -303,6 +304,18 @@ last_updated: 2026-08-26T21:30:58.767Z
     "reason": "",
     "recorded_at": "2026-08-26T21:23:27.812Z",
     "resolved_at": "2026-08-26T21:30:58.767Z"
+  },
+  {
+    "id": 23,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "scripts/validate_repository_truth.exs",
+    "line": null,
+    "description": "Split ledger audit reads from authenticated authority while preserving canonical Git index observations",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T04:21:02.342Z",
+    "resolved_at": "2026-09-10T04:21:28.803Z"
   }
 ]
 ````
