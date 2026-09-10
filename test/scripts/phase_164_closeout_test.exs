@@ -22,6 +22,24 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
           )
+  @transitive_executables [
+    "scripts/closeout_repository_truth.sh",
+    "scripts/verify_workspace_evidence.sh",
+    "scripts/validate_repository_truth.exs",
+    "scripts/ci_monitor.cjs",
+    "scripts/scheduled_control_evidence.sh"
+  ]
+  @transitive_data [
+    ".github/scheduled-controls.json",
+    ".planning/phases/164-fixture/164-TRUTH-DISPOSITION.tsv",
+    ".planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md",
+    ".planning/phases/161-canonical-workspace-and-evidence-preservation/161-PRESERVATION-RECONCILIATION.tsv",
+    ".planning/phases/164-fixture/164-VERIFICATION.md",
+    ".planning/phases/164-fixture/164-VALIDATION.md",
+    ".planning/phases/164-fixture/164-FINALIZATION.md",
+    ".planning/ROADMAP.md",
+    ".planning/REQUIREMENTS.md"
+  ]
 
   test "rejects a sibling checkout and a foreign symlink before component collection" do
     root = temporary_root!()
@@ -957,6 +975,73 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  describe "phase 164 transitive chain" do
+    @describetag :phase_164_transitive_chain
+
+    test "declares the complete executable and representative data authority manifest" do
+      source = File.read!(@extension)
+
+      for path <- ["scripts/finalize_phase_164.sh" | @transitive_executables] do
+        assert source =~ inspect(path)
+      end
+
+      for path <- [
+            ".github/scheduled-controls.json",
+            "164-TRUTH-DISPOSITION.tsv",
+            "161-WORKSPACE-INVENTORY.md",
+            "161-PRESERVATION-RECONCILIATION.tsv",
+            "164-VERIFICATION.md",
+            "164-VALIDATION.md",
+            "164-FINALIZATION.md",
+            ".planning/ROADMAP.md",
+            ".planning/REQUIREMENTS.md"
+          ] do
+        assert source =~ inspect(path)
+      end
+    end
+
+    test "materializes the complete committed chain before Bash and removes its authority root" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      fixture = extension_fixture!(Path.join(root, "complete-chain"))
+      result = invoke_extension!(fixture, "164 --pre-verification")
+
+      assert result["error"] == nil
+
+      assert [%{"args" => [private_script, repo, authority_root, "--pre-verification"]}] =
+               Enum.filter(result["calls"], &(&1["command"] == "bash"))
+
+      assert repo == resolved_path!(fixture.repo)
+      assert Path.dirname(private_script) == authority_root
+      refute File.exists?(authority_root)
+      assert File.read!(fixture.marker) =~ "#{authority_root}|#{repo}|--pre-verification"
+    end
+
+    test "assume-unchanged helper and data mutations cannot affect execution" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      for {path, index} <- Enum.with_index(@transitive_executables ++ @transitive_data) do
+        fixture = extension_fixture!(Path.join(root, "hidden-#{index}"))
+        absolute = Path.join(fixture.repo, path)
+        git!(fixture.repo, ["update-index", "--assume-unchanged", "--", path])
+
+        if path in @transitive_executables do
+          File.write!(absolute, hostile_script(fixture.hostile_marker))
+          File.chmod!(absolute, 0o755)
+        else
+          File.write!(absolute, "MUTATED:#{path}\n")
+        end
+
+        assert git!(fixture.repo, ["status", "--porcelain", "--", path]) == ""
+        result = invoke_extension!(fixture, "164 --pre-verification")
+        assert result["error"] == nil
+        refute File.exists?(fixture.hostile_marker)
+      end
+    end
+  end
+
   test "owned sibling cleanup refuses pre-existing and token-replaced paths" do
     root = temporary_root!()
     candidate = @repo_root <> "-gap-preexisting-#{System.unique_integer([:positive])}"
@@ -1434,7 +1519,22 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     File.write!(
       downstream,
-      "#!/usr/bin/env bash\nprintf '%s|%s|%s' \"$0\" \"$1\" \"${2:-}\" > \"$MARKER\"\ncat \"$0\" > \"$BYTES_MARKER\"\nexit \"${FINALIZER_EXIT:-0}\"\n"
+      """
+      #!/usr/bin/env bash
+      set -euo pipefail
+      target_repo="$1"
+      if [ "${2:-}" != "" ] && [ "${2#--}" = "$2" ]; then
+        authority_root="$2"
+        mode="${3:-}"
+      else
+        authority_root="$target_repo"
+        mode="${2:-}"
+      fi
+      printf '%s|%s|%s|%s' "$0" "$authority_root" "$target_repo" "$mode" > "$MARKER"
+      cat "$0" > "$BYTES_MARKER"
+      "$authority_root/scripts/closeout_repository_truth.sh" "$authority_root"
+      exit "${FINALIZER_EXIT:-0}"
+      """
     )
 
     File.chmod!(downstream, 0o755)
@@ -1452,6 +1552,32 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       git!(repo, ["add", ".planning/phases/164-fixture/164-FINALIZE.sh"])
       git!(repo, ["commit", "-q", "-m", "committed shim"])
     end
+
+    for path <- @transitive_executables do
+      absolute = Path.join(repo, path)
+      File.mkdir_p!(Path.dirname(absolute))
+
+      contents =
+        if path == "scripts/closeout_repository_truth.sh" do
+          reads = Enum.map_join(@transitive_data, "\n", &~s(grep -q '^MUTATED:' "$root/#{&1}" && touch "$HOSTILE_MARKER" || true))
+          helpers = Enum.map_join(@transitive_executables -- [path], "\n", &~s("$root/#{&1}"))
+          "#!/usr/bin/env bash\nset -euo pipefail\nroot=\"$1\"\n#{helpers}\n#{reads}\n"
+        else
+          "#!/usr/bin/env bash\nexit 0\n"
+        end
+
+      File.write!(absolute, contents)
+      File.chmod!(absolute, 0o755)
+    end
+
+    for path <- @transitive_data do
+      absolute = Path.join(repo, path)
+      File.mkdir_p!(Path.dirname(absolute))
+      File.write!(absolute, "trusted:#{path}\n")
+    end
+
+    git!(repo, ["add" | @transitive_executables ++ @transitive_data])
+    git!(repo, ["commit", "-q", "-m", "committed authority dependencies"])
 
     %{
       repo: repo,
@@ -1527,7 +1653,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           extra_env ++
             [
               {"MARKER", fixture.marker},
-              {"BYTES_MARKER", fixture.bytes_marker}
+              {"BYTES_MARKER", fixture.bytes_marker},
+              {"HOSTILE_MARKER", fixture.hostile_marker}
             ],
         stderr_to_stdout: false
       )
