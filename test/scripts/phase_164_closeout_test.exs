@@ -264,7 +264,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "result.code"
     assert source =~ "process.exitCode = 1"
     assert source =~ ~s|process.argv.includes("--print")|
-    assert source =~ "process.exit(1)"
+    refute source =~ "process.exit(1)"
     assert source =~ "ctx.ui.notify"
     assert source =~ "slice(-MAX_OUTPUT_BYTES)"
 
@@ -901,6 +901,11 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     @describetag :phase_164_dispatcher_boundary
 
     test "rejects a symlinked lexical shim before Bash dispatch" do
+      source = File.read!(@extension)
+      assert source =~ "lstatSync(finalizerCandidate)"
+      assert source =~ "relative(repoRoot, finalizerCandidate)"
+      assert source =~ "realpathSync(finalizerCandidate)"
+
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
 

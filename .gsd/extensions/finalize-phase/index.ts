@@ -1,4 +1,4 @@
-import { chmodSync, mkdtempSync, realpathSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, lstatSync, mkdtempSync, realpathSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { relative, resolve, sep } from "node:path";
 
@@ -6,6 +6,7 @@ import type { ExtensionAPI } from "@gsd/pi-coding-agent";
 
 const MAX_OUTPUT_BYTES = 16_000;
 const PHASE_PATTERN = /^[1-9]\d*$/;
+const SUPPORTED_PHASE = "164";
 const PRE_VERIFICATION = "--pre-verification";
 
 function inside(root: string, candidate: string): boolean {
@@ -26,7 +27,6 @@ function commandError(
   process.exitCode = 1;
   if (process.argv.includes("--print")) {
     console.error(message);
-    process.exit(1);
   }
   throw new Error(message);
 }
@@ -95,6 +95,11 @@ export default function finalizePhaseExtension(pi: ExtensionAPI): void {
       }
 
       const phase = tokens[0];
+
+      if (phase !== SUPPORTED_PHASE) {
+        commandError(ctx, `finalize-phase: only phase ${SUPPORTED_PHASE} is supported`);
+      }
+
       const modeArgs = tokens.length === 2 ? [PRE_VERIFICATION] : [];
       const rootResult = await pi.exec("git", ["rev-parse", "--show-toplevel"], { cwd: ctx.cwd });
 
@@ -124,11 +129,11 @@ export default function finalizePhaseExtension(pi: ExtensionAPI): void {
       const finalizerCandidate = resolve(phaseDirectory, `${phase}-FINALIZE.sh`);
       const downstreamCandidate = resolve(repoRoot, "scripts/finalize_phase_164.sh");
 
-      let finalizer: string;
-      let downstream: string;
+      let finalizerStat;
+      let downstreamStat;
       try {
-        finalizer = realpathSync(finalizerCandidate);
-        downstream = realpathSync(downstreamCandidate);
+        finalizerStat = lstatSync(finalizerCandidate);
+        downstreamStat = lstatSync(downstreamCandidate);
       } catch {
         const message = `finalize-phase: finalizer chain is missing for phase ${phase}`;
         commandError(ctx, message);
@@ -136,17 +141,19 @@ export default function finalizePhaseExtension(pi: ExtensionAPI): void {
 
       if (
         !inside(repoRoot, phaseDirectory) ||
-        !inside(repoRoot, finalizer) ||
-        !inside(repoRoot, downstream) ||
-        !statSync(finalizer).isFile() ||
-        !statSync(downstream).isFile()
+        !inside(repoRoot, finalizerCandidate) ||
+        !inside(repoRoot, downstreamCandidate) ||
+        !finalizerStat.isFile() ||
+        finalizerStat.isSymbolicLink() ||
+        !downstreamStat.isFile() ||
+        downstreamStat.isSymbolicLink()
       ) {
         const message = `finalize-phase: finalizer chain for phase ${phase} is not repository-contained`;
         commandError(ctx, message);
       }
 
-      const finalizerRelative = relative(repoRoot, finalizer);
-      const downstreamRelative = relative(repoRoot, downstream);
+      const finalizerRelative = relative(repoRoot, finalizerCandidate);
+      const downstreamRelative = relative(repoRoot, downstreamCandidate);
       await authenticateHeadFile(
         pi,
         repoRoot,
@@ -161,6 +168,12 @@ export default function finalizePhaseExtension(pi: ExtensionAPI): void {
         `downstream finalizer for ${phase}`,
         ctx,
       );
+
+      const finalizer = realpathSync(finalizerCandidate);
+      const downstream = realpathSync(downstreamCandidate);
+      if (!inside(repoRoot, finalizer) || !inside(repoRoot, downstream)) {
+        commandError(ctx, `finalize-phase: finalizer chain for phase ${phase} is not repository-contained`);
+      }
 
       const privateDirectory = mkdtempSync(resolve(tmpdir(), `mailglass-finalize-${phase}-`));
       const privateFinalizer = resolve(privateDirectory, "finalize.sh");
