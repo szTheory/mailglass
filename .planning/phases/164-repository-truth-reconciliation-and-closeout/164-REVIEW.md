@@ -1,6 +1,6 @@
 ---
 phase: 164-repository-truth-reconciliation-and-closeout
-reviewed: 2026-09-09T22:42:37Z
+reviewed: 2026-09-10T01:47:42Z
 depth: standard
 files_reviewed: 22
 files_reviewed_list:
@@ -27,56 +27,67 @@ files_reviewed_list:
   - test/scripts/scheduled_control_evidence_test.exs
   - test_js/ci-monitor.test.cjs
 findings:
-  critical: 2
+  critical: 4
   warning: 1
   info: 0
-  total: 3
+  total: 5
 status: issues_found
 ---
 
 # Phase 164: Code Review Report
 
-**Reviewed:** 2026-09-09T22:42:37Z
+**Reviewed:** 2026-09-10T01:47:42Z
 **Depth:** standard
 **Files Reviewed:** 22
 **Status:** issues_found
 
 ## Summary
 
-The refreshed review found two trust-boundary defects and one CLI robustness defect. The prior maintainer-guidance contradiction has been corrected, but the finalizer dispatcher can still execute code that is not the version tracked at `HEAD`, and the repository-truth validator accepts regular files whose ledger rows falsely claim they are tracked. The focused Elixir and Node suites passed, and all reviewed shell scripts passed syntax checking; the existing tests do not exercise these defects.
+The repository-truth and finalization changes still contain four ship-blocking trust defects. Most importantly, the ledger accepts an unmerged multi-stage index entry as a single authoritative tracked file, while the privately materialized finalizer later executes additional scripts from the mutable checkout. Git's `assume-unchanged` mechanism makes those mutations invisible to the exact `status`/`diff` checks used here, so unauthenticated code can execute after the authenticated entry script passes. The dispatcher also authenticates a symlink target instead of the required lexical shim identity and accepts arbitrary phase numbers while always running Phase 164. Print-mode failures additionally bypass private-directory cleanup.
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01: The finalizer dispatcher executes mutable working-tree code instead of the tracked HEAD version
+### CR-01: Multi-stage index conflicts are certified as one tracked artifact
 
-**File:** `.gsd/extensions/finalize-phase/index.ts:88-101`
+**Classification:** BLOCKER
+**File:** `scripts/validate_repository_truth.exs:424-445`
+**Issue:** `git ls-files` without `--stage` collapses an unmerged path's stage-1, stage-2, and stage-3 entries into one pathname. Consequently, an index with `UU README.md` produces exactly `README.md\n`, and `tracked_subject_in_index/2` returns `:ok` even though there is no stage-0 index identity and the working file contains an unresolved merge. This contradicts the exact/sole Git-index identity guarantee and lets the standalone repository-truth validator certify conflicted proof.
+**Fix:** Parse NUL-delimited staged output and require exactly one stage-0 regular-file entry for the exact subject. For example, invoke `git --literal-pathspecs ls-files --stage -z --error-unmatch -- <subject>`, parse the mode/object/stage prefix separately from the NUL-terminated path, reject every nonzero stage or multiple entry, and retain the existing `File.regular?/1` check. Add an unmerged-index regression, not only untracked/metacharacter cases.
 
-**Issue (BLOCKER):** The dispatcher describes and reports the finalizer as "tracked at HEAD", but `git ls-files --error-unmatch` only proves that the path is present in the index. It does not prove that the path exists at `HEAD` or that its current bytes match the committed blob. A newly staged finalizer or a locally modified tracked finalizer therefore passes this check and is executed directly from the working tree by `pi.exec("bash", [finalizer, ...])`. For Phase 164, changing the tracked shim to arbitrary shell code bypasses every clean-tree, GitHub-identity, and evidence check in `scripts/finalize_phase_164.sh`, because the untrusted shim runs before any of those checks. This breaks the protected-main authority boundary and permits arbitrary command execution under the extension process.
+### CR-02: The authenticated finalizer executes mutable transitive helpers
 
-**Fix:** Resolve the blob from `HEAD` rather than trusting the index or working tree. At minimum, require `git cat-file -e HEAD:<relative-path>`, compare the file's bytes or blob ID with `HEAD:<relative-path>`, and reject any mismatch. Prefer materializing the verified `HEAD` blob into a private temporary file and executing that immutable copy, while separately rejecting a dirty repository when the command contract requires it. Add behavioral tests for a newly staged finalizer, an unstaged modification to a committed finalizer, and an unchanged committed finalizer.
+**Classification:** BLOCKER
+**Files:** `.gsd/extensions/finalize-phase/index.ts:157-174`; `scripts/finalize_phase_164.sh:290-298`
+**Issue:** The extension privately materializes only `scripts/finalize_phase_164.sh`, but that script executes `scripts/closeout_repository_truth.sh` directly from the checkout. That helper in turn executes other checkout scripts (`validate_repository_truth.exs`, `ci_monitor.cjs`, `scheduled_control_evidence.sh`, and workspace verification). The clean-tree gates do not close this boundary: a tracked file marked `assume-unchanged` can be modified while both `git status --porcelain` and `git diff --quiet -- <path>` return clean. Thus an attacker who can alter this checkout can hide a hostile `closeout_repository_truth.sh` and have it execute after the authenticated private script passes its initial gates.
+**Fix:** Define the full executable/data dependency manifest for finalization, read every member from the authenticated `HEAD` tree, and materialize the executable chain into the same private directory (with fixed private paths passed to the entry script). At minimum this includes the closeout script and every script it launches; registry/ledger inputs should likewise be read from the authenticated tree or verified by exact blob OID immediately before use. Add a behavioral regression that marks the checkout helper `assume-unchanged`, mutates it, and proves its marker cannot execute.
 
-### CR-02: Ledger rows marked tracked are accepted even when Git does not track their files
+### CR-03: A symlinked shim authenticates the target path instead of the required shim path
 
-**File:** `scripts/validate_repository_truth.exs:570-576`
+**Classification:** BLOCKER
+**File:** `.gsd/extensions/finalize-phase/index.ts:123-156`
+**Issue:** The code calls `realpathSync(finalizerCandidate)` and then derives `finalizerRelative` from the resolved target. Replacing `.planning/phases/<phase>/<phase>-FINALIZE.sh` in the working tree with a symlink to any clean tracked file inside the repository therefore causes authentication to run against the target path, not against the canonical shim path named by the command. The modified/missing lexical shim is never checked, defeating the claimed exact phase-shim identity. `statSync` follows the symlink, so it does not reject this case.
+**Fix:** Keep the canonical lexical repository-relative shim path as the input to all Git authentication calls. Use `lstatSync` to require that both checkout candidates are regular files and not symbolic links, then use `realpathSync` only as an additional containment check. Add a real-handler fixture that replaces the committed shim with an in-repository symlink and asserts rejection before Bash dispatch.
 
-**Issue (BLOCKER):** `ensure_tracked_subjects_exist/2` validates a row whose state is `tracked` only with `File.regular?/1`. Any untracked regular file at the canonical subject path satisfies the validator, so the authoritative command can print `repository truth ledger: valid` while the ledger's tracked-state assertion is false. This directly violates TRTH-02's machine-enforced repository-truth contract. The test at `test/scripts/phase_164_repository_truth_test.exs:203-221` checks only the literal `state` field and repeats the same unsupported claim; it never queries Git.
+### CR-04: Every accepted phase number dispatches the Phase 164 finalizer
 
-**Fix:** For every `state == "tracked"` row, require both a regular file and successful exact-path Git membership, for example `System.cmd("git", ["ls-files", "--error-unmatch", "--", subject], cd: repo_root)`. Also reject paths whose tracked index entry is not a regular file when the contract requires files. Add a temporary-repository regression proving that an untracked regular file with a `tracked` ledger row fails while the same committed file passes.
+**Classification:** BLOCKER
+**File:** `.gsd/extensions/finalize-phase/index.ts:84-125`
+**Issue:** The public command accepts any positive integer and locates that phase's directory/shim, but `downstreamCandidate` is unconditionally `scripts/finalize_phase_164.sh`. If a different phase has a matching `*-FINALIZE.sh`, `/finalize-phase 165` authenticates the Phase 165 shim and then runs the Phase 164 terminal gate. This is incorrect cross-phase behavior at a destructive lifecycle boundary and can report work against the wrong phase.
+**Fix:** Either make this extension explicitly Phase-164-only by rejecting `phase !== "164"`, or derive a phase-specific downstream path such as `scripts/finalize_phase_${phase}.sh` and authenticate that exact mapping. The latter also needs a trusted shim-to-downstream mapping rather than merely proving both unrelated files exist.
 
 ## Warnings
 
-### WR-01: Invalid standalone validator invocations silently succeed without validating anything
+### WR-01: Print-mode failure bypasses private materialization cleanup
 
-**File:** `scripts/validate_repository_truth.exs:623-647`
-
-**Issue (WARNING):** The CLI body runs only when any argument is literally `--repo` or `--ledger`. Invoking the executable with no arguments, only misspelled options, or unrelated arguments skips the entire block and exits successfully without a verdict. An operator or automation typo can therefore be interpreted as a successful repository-truth check. Existing subprocess tests always include the expected flags and do not cover this boundary.
-
-**Fix:** Split the reusable module from an always-executed CLI wrapper, or use an explicit load-mode sentinel for tests. Every direct CLI invocation should parse its full argument list, print usage, and halt nonzero for missing or unknown arguments. Add subprocess tests for no arguments, each missing required option, and unknown options.
+**Classification:** WARNING
+**File:** `.gsd/extensions/finalize-phase/index.ts:24-31,168-184`
+**Issue:** When the materialized finalizer returns nonzero under `--print`, `commandError` calls `process.exit(1)` from inside the `try`. Immediate process termination does not run JavaScript `finally` blocks, so the mode-0700 temporary directory and mode-0500 finalizer remain on disk. The current harness only exercises caught exceptions and therefore cannot prove the stated cleanup guarantee in print mode.
+**Fix:** Never call `process.exit` inside `commandError`. Set `process.exitCode`, throw, and let the handler's `finally` remove the directory; if the host requires an immediate print-mode exit, perform that exit only after cleanup at the outermost command boundary. Add a subprocess `--print` failure test that records the private path and verifies its parent no longer exists.
 
 ---
 
-_Reviewed: 2026-09-09T22:42:37Z_
+_Reviewed: 2026-09-10T01:47:42Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
