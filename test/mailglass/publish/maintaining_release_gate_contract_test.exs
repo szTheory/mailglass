@@ -29,6 +29,20 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
     assert authority_violations(current) == []
   end
 
+  test "current finalization guidance names only the installed executable and its source" do
+    maintaining = File.read!(@maintaining_path)
+    current = section_before!(maintaining, "Historical release procedures")
+
+    assert current =~ "/Users/jon/.local/bin/mailglass-finalize-phase 164"
+    assert current =~
+             "/Users/jon/.local/bin/mailglass-finalize-phase 164 --pre-verification"
+
+    assert current =~ "scripts/mailglass_finalize_phase_loader.mjs"
+    assert current =~ "Plan 164-23"
+    refute current =~ "/finalize-phase 164"
+    refute current =~ ".gsd/extensions/finalize-phase"
+  end
+
   test "unsupported authority variants are rejected anywhere before the historical boundary" do
     maintaining = File.read!(@maintaining_path)
 
@@ -67,6 +81,8 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
     assert historical =~ "~> 1.3"
     assert historical =~ "~> 1.0"
     assert historical =~ "non-current"
+    assert historical =~ "superseded project-local `/finalize-phase 164`"
+    assert historical =~ ".gsd/extensions/finalize-phase"
 
     refute section!(
              maintaining,

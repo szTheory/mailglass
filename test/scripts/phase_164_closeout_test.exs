@@ -255,14 +255,23 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  @tag :phase_164_installed_boundary
   test "finalization guidance keeps pre-verification and terminal proof non-circular" do
     contract = File.read!(@finalization_contract)
     normalized = Regex.replace(~r/\s+/, contract, " ")
 
-    assert contract =~ "/finalize-phase 164 --pre-verification"
+    assert contract =~
+             "/Users/jon/.local/bin/mailglass-finalize-phase 164 --pre-verification"
+
+    assert contract =~ "scripts/mailglass_finalize_phase_loader.mjs"
+    assert contract =~ "Plan 164-23"
+    assert normalized =~ "installed loader is outside checkout evaluation"
+    assert normalized =~ "captured repository OID"
+    assert normalized =~ "immediately before Bash dispatch"
     assert contract =~ "ordinary phase verifier"
     assert normalized =~ "before `phase.complete` writes tracked completion metadata"
-    assert contract =~ "/finalize-phase 164"
+    assert contract =~ "/Users/jon/.local/bin/mailglass-finalize-phase 164"
+    refute contract =~ "`/finalize-phase 164"
     assert contract =~ "After the normal verifier has passed"
     assert contract =~ "status: passed"
     assert contract =~ "writes only ignored"
