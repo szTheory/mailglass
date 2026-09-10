@@ -270,12 +270,20 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
   test "required CI executes the append-only gate and the directory-scoped contract suite" do
     ci = File.read!(Path.join(@repo_root, ".github/workflows/ci.yml"))
     actionlint = File.read!(Path.join(@repo_root, ".github/workflows/actionlint.yml"))
-    mix = File.read!(Path.join(@repo_root, "mix.exs"))
+    aliases = Mix.Project.config()[:aliases]
 
     assert ci =~ "scripts/check_append_only_evidence.sh"
     assert ci =~ "mix verify.ci_lane_contract"
-    assert mix =~ ~s("verify.ci_lane_contract": [)
-    assert mix =~ "test test/scripts/ --warnings-as-errors"
+    refute ci =~ "mix verify.phase_164.installed_boundary"
+
+    assert Keyword.fetch!(aliases, :"verify.ci_lane_contract") == [
+             "test test/scripts/ --exclude phase_164_installed_production_boundary --warnings-as-errors"
+           ]
+
+    assert Keyword.fetch!(aliases, :"verify.phase_164.installed_boundary") == [
+             "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
+           ]
+
     assert actionlint =~ ".github/scheduled-controls.json"
     assert actionlint =~ "scripts/scheduled_control_evidence.sh"
     assert actionlint =~ "scripts/check_append_only_evidence.sh"

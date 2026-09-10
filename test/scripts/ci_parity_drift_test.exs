@@ -1,6 +1,10 @@
 defmodule Mailglass.Scripts.CIParityDriftTest do
   use ExUnit.Case, async: true
 
+  @repo_root Path.expand("../..", __DIR__)
+  @required_contract_step "test test/scripts/ --exclude phase_164_installed_production_boundary --warnings-as-errors"
+  @installed_boundary_step "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
+
   @moduledoc """
   MIXCI-03 parity-drift test (D-LD-10).
 
@@ -101,6 +105,21 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   defp ci_steps, do: flatten_alias(aliases(), :ci)
   defp ci_browser_steps, do: flatten_alias(aliases(), :"ci.browser")
   defp union_steps, do: ci_steps() ++ ci_browser_steps()
+
+  defp exact_phase_164_scope?(required, installed) do
+    required == [@required_contract_step] and installed == [@installed_boundary_step]
+  end
+
+  defp describe_test_count(source, name) do
+    escaped = Regex.escape(name)
+
+    case Regex.run(~r/^  describe "#{escaped}" do\n(?<body>.*?)(?=^  (?:describe|test) )/ms, source,
+           capture: :all_names
+         ) do
+      [body] -> length(Regex.scan(~r/^    test "/m, body))
+      nil -> 0
+    end
+  end
 
   # ---------------------------------------------------------------------------
   # Lane -> covering-step matcher table (identity + flag-set, not loose substring)
@@ -250,5 +269,42 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
     assert offending == [],
            "the flattened mix ci alias step-set reintroduced a fixed-seed flag — " <>
              "this regresses DET-02 (Phase 127). Offending step(s): #{inspect(offending)}"
+  end
+
+  test "required CI excludes only controlled-host proof while repository fixtures stay non-vacuous" do
+    aliases = aliases()
+    required = Keyword.fetch!(aliases, :"verify.ci_lane_contract")
+    installed = Keyword.fetch!(aliases, :"verify.phase_164.installed_boundary")
+
+    assert exact_phase_164_scope?(required, installed)
+
+    ci = File.read!(Path.join(@repo_root, ".github/workflows/ci.yml"))
+    assert length(Regex.scan(~r/\bmix verify\.ci_lane_contract\b/, ci)) == 1
+    refute ci =~ "mix verify.phase_164.installed_boundary"
+
+    closeout = File.read!(Path.join(@repo_root, "test/scripts/phase_164_closeout_test.exs"))
+    assert describe_test_count(closeout, "phase 164 immutable loader") > 0
+
+    immutable_body =
+      Regex.run(
+        ~r/^  describe "phase 164 immutable loader" do\n(?<body>.*?)(?=^  describe )/ms,
+        closeout,
+        capture: :all_names
+      )
+
+    assert [body] = immutable_body
+    refute body =~ "@describetag :phase_164_installed_production_boundary"
+
+    for {broken_required, broken_installed} <- [
+          {[], installed},
+          {required, []},
+          {["test test/scripts/ --exclude phase_164 --warnings-as-errors"], installed},
+          {required,
+           [
+             "test test/scripts/ --only phase_164_installed_production_boundary --warnings-as-errors"
+           ]}
+        ] do
+      refute exact_phase_164_scope?(broken_required, broken_installed)
+    end
   end
 end
