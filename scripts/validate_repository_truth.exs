@@ -147,6 +147,7 @@ defmodule Mailglass.RepositoryTruthLedger do
     "git ls-files .planning/publish",
     "git ls-files; 164-08-PLAN.md",
     "git ls-files; 164-11-PLAN.md",
+    "git ls-files; 164-21-PLAN.md",
     "git ls-files; Phase 161 summary",
     "git ls-files; Phase 162 summary",
     "git ls-files; release-target ledger",
@@ -336,6 +337,8 @@ defmodule Mailglass.RepositoryTruthLedger do
       "ede122a47d9b6cd21802339810be80891a56873e54f3541612814b9c20eb2649",
     "scripts/finalize_phase_164.sh" =>
       "304eaf03834cedf640215a9e8f7777f8d5779ac1adf7d74262978ac7613c631f",
+    "scripts/mailglass_finalize_phase_loader.mjs" =>
+      "f02f86b0b8ab5ee00c4af42fd8b1cbed3c56ca994b36e5a3441b6387c9054a90",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZE.sh" =>
       "7351a41c9f8e820203b2d70c4272134f2378859b6104100bc2e6c20524bb93bd",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md" =>
@@ -400,6 +403,7 @@ defmodule Mailglass.RepositoryTruthLedger do
       subjects =
         ignore_subjects(authority_root) ++
           tracked_subjects(repo_root, ".planning/publish") ++
+          tracked_subjects(repo_root, "scripts/mailglass_finalize_phase_loader.mjs") ++
           @proof_paths ++
           phase_artifacts(authority_root) ++ [Path.join(@phase_dir, "164-VERIFICATION.md")]
 
@@ -763,8 +767,15 @@ defmodule Mailglass.RepositoryTruthLedger do
     repo_root
     |> Path.join(Path.join(@phase_dir, "164-*-PLAN.md"))
     |> Path.wildcard()
+    |> Enum.filter(&completed_plan?/1)
     |> Enum.flat_map(&plan_files_modified/1)
     |> Enum.uniq()
+  end
+
+  defp completed_plan?(plan) do
+    plan
+    |> String.replace_suffix("-PLAN.md", "-SUMMARY.md")
+    |> File.regular?()
   end
 
   defp plan_files_modified(plan) do

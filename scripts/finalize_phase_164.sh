@@ -6,6 +6,8 @@ phase_rel=.planning/phases/164-repository-truth-reconciliation-and-closeout
 ledger_rel="$phase_rel/164-TRUTH-DISPOSITION.tsv"
 registry_rel=.github/scheduled-controls.json
 expected_repository=szTheory/mailglass
+terminal_first_plan=1
+terminal_last_plan=24
 
 fail() {
   printf 'finalize-phase 164: %s\n' "$1" >&2
@@ -96,12 +98,13 @@ require_pre_verification_state() {
 }
 
 require_terminal_state() {
-  local repo="$1" phase_dir="$2" authority_root="$3" plan_file summary verification verified_implementation_sha commit path
+  local repo="$1" phase_dir="$2" authority_root="$3" plan plan_file summary verification verified_implementation_sha commit path
 
-  for plan_file in "$phase_dir"/164-[0-9][0-9]-PLAN.md; do
-    [ -f "$plan_file" ] || fail "no numbered phase plans found"
-    summary=${plan_file%-PLAN.md}-SUMMARY.md
-    [ -f "$summary" ] || fail "missing terminal summary $(basename "$summary")"
+  for plan in $(seq -w "$terminal_first_plan" "$terminal_last_plan"); do
+    plan_file="$phase_dir/164-$plan-PLAN.md"
+    summary="$phase_dir/164-$plan-SUMMARY.md"
+    [ -f "$plan_file" ] || fail "missing terminal plan 164-$plan-PLAN.md"
+    [ -f "$summary" ] || fail "missing terminal summary 164-$plan-SUMMARY.md"
   done
 
   grep -F -- '- [x] **Phase 164: Repository Truth Reconciliation and Closeout**' "$authority_root/.planning/ROADMAP.md" >/dev/null ||
