@@ -1226,6 +1226,38 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert dirty_output =~ "repository is not clean"
       refute File.exists?(fixture.marker)
     end
+
+    test "requires every exact PLAN and SUMMARY pair through the authorized terminal range" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      for plan <- [10, 20, 24] do
+        fixture = immutable_loader_fixture!(Path.join(root, "missing-#{plan}"))
+        number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
+        phase = ".planning/phases/164-fixture/164-#{number}"
+        git!(fixture.repo, ["rm", "-q", "#{phase}-PLAN.md", "#{phase}-SUMMARY.md"])
+        git!(fixture.repo, ["commit", "-q", "-m", "remove pair #{number}"])
+
+        {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
+        assert status != 0
+        assert output =~ "numbered history is not the exact 01-24"
+        refute File.exists?(fixture.marker)
+      end
+    end
+
+    test "loader and shell share an explicit 01-24 terminal contract recorded in the ledger" do
+      loader = File.read!(@immutable_loader)
+      finalizer = File.read!(@finalizer)
+      ledger = File.read!(@ledger)
+
+      assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 24"
+      assert finalizer =~ "terminal_first_plan=1"
+      assert finalizer =~ "terminal_last_plan=24"
+      assert finalizer =~ ~S|for plan in $(seq -w "$terminal_first_plan" "$terminal_last_plan")|
+      assert ledger =~ "scripts/mailglass_finalize_phase_loader.mjs"
+      assert ledger =~ "scripts/finalize_phase_164.sh"
+    end
   end
 
   test "owned sibling cleanup refuses pre-existing and token-replaced paths" do
@@ -1397,7 +1429,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     File.write!(Path.join(repo, ".planning/STATE.md"), "state\n")
 
-    for plan <- 1..15 do
+    for plan <- 1..24 do
       number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
       File.write!(Path.join(phase_dir, "164-#{number}-PLAN.md"), "plan\n")
       File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary\n")
