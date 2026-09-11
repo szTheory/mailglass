@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 10
 waived_count: 0
-fixed_count: 22
-total_count: 32
-last_updated: 2026-09-11T01:33:48.251Z
+fixed_count: 23
+total_count: 33
+last_updated: 2026-09-11T03:17:22.972Z
 ---
 
 # Broken Windows Ledger
@@ -47,6 +47,7 @@ last_updated: 2026-09-11T01:33:48.251Z
 | 30 | 164 | deviation | test/support/suite_floor.ex |  | Registered the controlled-host exclusion in the fail-closed SuiteFloor allowlist and its source contract | fixed |  | 2026-09-10T23:57:08.787Z | 2026-09-10T23:58:55.094Z |
 | 31 | 164 | deviation | config/test_exceptions.exs | 156 | Corrected the stale docs-contract skip line pointer required by the repository-only CI lane | fixed |  | 2026-09-10T23:57:08.869Z | 2026-09-10T23:58:55.180Z |
 | 32 | 164 | deviation | .planning/phases/164-repository-truth-reconciliation-and-closeout/164-28-PLAN.md |  | Task 2's literal make-toolchain suite requires controlled-host Node and gh identities absent from the repository-only container; the pinned local suite, CI lane, and installed-boundary alias passed separately. | fixed |  | 2026-09-11T01:33:22.220Z | 2026-09-11T01:33:48.251Z |
+| 33 | 164 | deviation | .planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv |  | Plan 164-29 test/test_helper.exs became discoverable after summary activation and required exact-one ledger row M-34 | fixed |  | 2026-09-11T03:15:47.707Z | 2026-09-11T03:17:22.972Z |
 
 ````json
 [
@@ -433,6 +434,19 @@ last_updated: 2026-09-11T01:33:48.251Z
     "reason": "",
     "recorded_at": "2026-09-11T01:33:22.220Z",
     "resolved_at": "2026-09-11T01:33:48.251Z"
+  },
+  {
+    "id": 33,
+    "kind": "deviation",
+    "phase": "164",
+    "file": ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv",
+    "line": null,
+    "description": "Plan 164-29 test/test_helper.exs became discoverable after summary activation and required exact-one ledger row M-34",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-11T03:15:47.707Z",
+    "resolved_at": "2026-09-11T03:17:22.972Z",
+    "milestone": "v2.7"
   }
 ]
 ````

@@ -5,18 +5,18 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-29-PLAN.md; ready for 164-30
-last_updated: "2026-09-11T02:54:03.800Z"
+stopped_at: Completed 164-30-PLAN.md; ready for 164-31
+last_updated: "2026-09-11T03:15:50.297Z"
 last_activity: 2026-09-10
-last_activity_desc: Completed Plan 164-29 installed-authority and suite-isolation reconciliation
-state_head: 677679bef856ee9af02362d20bf803027cb74a96
+last_activity_desc: Completed Plan 164-30 bounded incomplete-authority diagnostics
+state_head: 602137de8f97f77ebde3e0abeb43eff576625628
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 60
-  completed_plans: 52
+  completed_plans: 53
   percent: 75
-current_plan: 29
+current_plan: 30
 ---
 
 # Project State
@@ -31,11 +31,11 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
-Plan: 29 of 34
-Status: Ready to execute Plan 164-30
-Last activity: 2026-09-10 — Completed Plan 164-29 installed-authority and suite-isolation reconciliation
+Plan: 30 of 34
+Status: Ready to execute Plan 164-31
+Last activity: 2026-09-10 — Completed Plan 164-30 bounded incomplete-authority diagnostics
 
-Progress: [████████░░] 52/60 plans complete ([████████░░] 75%)
+Progress: [████████░░] 53/60 plans complete ([████████░░] 75%)
 
 ## Performance Metrics
 
@@ -110,6 +110,7 @@ Progress: [████████░░] 52/60 plans complete ([████�
 | Phase 164 P27 | 4min | 3 tasks | 7 files |
 | Phase 164 P28 | 23min | 2 tasks | 9 files |
 | Phase 164 P29 | 15min | 2 tasks | 4 files |
+| Phase 164 P30 | 11min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -187,6 +188,8 @@ Progress: [████████░░] 52/60 plans complete ([████�
 - [Phase 164]: Plan 164-27 remains the single installed authority tuple; approval bytes are parsed as data and matched field-for-field before installed execution.
 - [Phase 164]: The controlled-host tag is excluded by test_helper on every schema axis and is re-enabled only by the exact named --only alias.
 - [Phase 164]: Disposable loader attacks remain repository-only tests and discover Node through the active test environment rather than a version-specific launcher.
+- [Phase 164]: Authority ignore subjects now use declared-order lstat and non-raising reads, returning missing_authority_subject for absent/non-regular inputs and unreadable_authority_subject only for regular-file read failures.
+- [Phase 164]: Plan 164-29 test/test_helper.exs is exact-one ledger subject M-34 so completed-plan discovery remains canonical after summary activation.
 
 ## Deferred Items
 
@@ -196,6 +199,6 @@ Progress: [████████░░] 52/60 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-11T02:54:03.638Z
-Stopped at: Completed 164-29-PLAN.md; ready for 164-30
+Last session: 2026-09-11T03:15:50.057Z
+Stopped at: Completed 164-30-PLAN.md; ready for 164-31
 Resume file: None
