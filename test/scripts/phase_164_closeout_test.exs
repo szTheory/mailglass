@@ -952,6 +952,36 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert output =~ "installation OID is not an ancestor"
     end
 
+    @tag :phase_164_trusted_toolchain
+    test "caller PATH cannot substitute any trusted finalization executable" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "forged-tools"))
+      forged = Path.join(root, "forged-bin")
+      File.mkdir_p!(forged)
+
+      markers =
+        for tool <- ~w(git bash gh jq mix node elixir), into: %{} do
+          marker = Path.join(root, "#{tool}.marker")
+
+          write_executable!(
+            Path.join(forged, tool),
+            "#!/bin/sh\ntouch #{inspect(marker)}\nexit 97\n"
+          )
+
+          {tool, marker}
+        end
+
+      {output, status} =
+        invoke_immutable_loader(fixture, ["164", "--pre-verification"], [
+          {"PATH", "#{forged}:#{System.fetch_env!("PATH")}"}
+        ])
+
+      assert status == 0, output
+      assert File.regular?(fixture.marker)
+      for {_tool, marker} <- markers, do: refute(File.exists?(marker))
+    end
+
     test "dispatches committed bytes from one authority OID and rejects a moving HEAD" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
@@ -1954,7 +1984,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   end
 
   defp invoke_production_loader(fixture, args, extra_env \\ []) do
-    System.cmd(System.find_executable("node"), [fixture.installed | args],
+    System.cmd("/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node", [fixture.installed | args],
       cd: fixture.repo,
       env:
         extra_env ++
@@ -1970,7 +2000,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   end
 
   defp invoke_immutable_loader(fixture, args, extra_env \\ []) do
-    System.cmd(System.find_executable("node"), [fixture.installed | args],
+    System.cmd("/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node", [fixture.installed | args],
       cd: fixture.repo,
       env:
         extra_env ++
