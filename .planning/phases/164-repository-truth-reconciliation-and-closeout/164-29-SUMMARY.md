@@ -128,7 +128,7 @@ None. The changed surface narrows test collection and authenticates an already-a
 
 ## Next Phase Readiness
 
-- The two TRTH-03 verifier gaps assigned to Plan 164-29 are closed and ready for ordinary Phase 164 verification.
+- The two TRTH-03 verifier gaps assigned to Plan 164-29 are closed and contribute to readiness for ordinary Phase 164 verification after the remaining gap plans execute.
 - Plan 164-30 and later gap plans remain unexecuted.
 - Terminal finalization remains pending under the established protected-main lifecycle.
 
