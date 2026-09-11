@@ -317,7 +317,7 @@ Plans:
 
 **Wave 30** *(blocked on the approved replacement tuple)*
 
-- [ ] 164-33-PLAN.md — Recoverably install the approved loader and prove the active external authority without entering terminal lifecycle.
+- [x] 164-33-PLAN.md — Recoverably install the approved loader and prove the active external authority without entering terminal lifecycle.
 
 **Wave 31** *(blocked on validator repair and verified installed authority)*
 
@@ -336,4 +336,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 32/34 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 33/34 | In Progress|  |
