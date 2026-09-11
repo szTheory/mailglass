@@ -67,7 +67,7 @@ created: "2026-09-01"
 | T-164-60 | Tampering | executable protected-release controls | low | accept | Plan 164-16 changed only documentation and its contract; executable release-control paths remained unchanged | closed |
 | T-164-63 | Tampering | downstream finalizer and temporary materialization | high | mitigate | The downstream HEAD blob is materialized in a mode-0700 private directory as a mode-0500 file, executed by private path, and removed in `finally` on success and failure | closed |
 | T-164-64 | Repudiation | standalone validator invocation | medium | mitigate | Missing and invalid CLI arguments emit bounded diagnostics and exit nonzero; canonical invocation and module loading are covered by subprocess regressions | closed |
-| T-164-105 | Repudiation | required-CI host coupling | high | mitigate | The current `mix verify.ci_lane_contract` rerun observed 396 selected, 7 controlled-host exclusions, and 0 failures | closed |
+| T-164-105 | Repudiation | required-CI host coupling | high | mitigate | The final `mix verify.ci_lane_contract` rerun observed 398 selected, 7 controlled-host exclusions, and 0 failures | closed |
 | T-164-106 | Spoofing | caller-selected repository authority | high | mitigate | `phase_164_canonical_loader` observed 1 selected, 48 excluded, and 0 failures; the installed matrix rejects foreign repositories before dispatch | closed |
 | T-164-107 | Elevation of Privilege | forged PATH/tools | high | mitigate | `phase_164_trusted_toolchain` observed 3 selected, 46 excluded, and 0 failures; forged Git/Bash/gh/jq/Mix/Node/Elixir markers never execute | closed |
 | T-164-108 | Spoofing | unrelated installation OID | high | mitigate | Installation ancestry and the real installed tuple proof reject byte-identical loaders from unrelated history; the active controlled-host group observed 7 selected, 54 excluded, and 0 failures | closed |
@@ -107,7 +107,7 @@ discovery, stale exact-history range, and superseded installed bytes. Closure
 is bound to the named production seams above, not the earlier audit prose.
 
 Repository-only CI and controlled-host installation readiness are deliberately
-separate authorities. The former reran 396 selected tests with 7 host tests
+separate authorities. The former reran 398 selected tests with 7 host tests
 excluded and 0 failures. The latter reran 7 selected tests with 54 excluded and
 0 failures against the active Plan 164-32 source OID
 `1cfee7802de808f690fe5413b22a57e7ab802488` and SHA-256

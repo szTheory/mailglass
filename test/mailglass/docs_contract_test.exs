@@ -248,7 +248,7 @@ defmodule Mailglass.DocsContractTest do
             "T-164-128",
             "exhaustive full-suite isolation",
             "mix verify.ci_lane_contract",
-            "396 selected, 7 excluded, 0 failures",
+            "398 selected, 7 excluded, 0 failures",
             "1cfee7802de808f690fe5413b22a57e7ab802488",
             "f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac",
             "Plan 164-27 prior provenance",
