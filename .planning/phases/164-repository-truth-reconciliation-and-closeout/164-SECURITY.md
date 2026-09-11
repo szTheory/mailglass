@@ -128,6 +128,11 @@ phase/requirement completion occurred here.
 
 ## Accepted Risks Log
 
+T-164-60 is explicitly accepted because Plan 164-16 changed only current-facing
+maintainer documentation and its behavioral contract; executable release-control
+paths were unchanged. This low-severity acceptance records the bounded scope and
+does not grant or alter release authority.
+
 T-164-SC is explicitly accepted because this phase performs no package-manager
 installation or dependency change. The installed artifact is a
 human-approved, project-authored Git blob with exact OID and digest evidence;
@@ -148,11 +153,13 @@ or terminal lifecycle checks.
 | 2026-09-10 | 42 | 41 | 1 total / 0 blocking | gsd-security-auditor (post-Plans 164-18/19 gap verification) |
 | 2026-09-10 | 47 | 46 resolved | 1 blocking terminal-lifecycle item | Plan 164-28 superseding reconciliation after Plans 164-25 through 164-27 |
 | 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | Plan 164-34 reconciliation of Plans 164-29 through 164-33 and canonical Task 2 validation |
+| 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | gsd-security-auditor post-gap-closure verification |
 
 ## Sign-Off
 
 - [x] All registered threats were inspected at ASVS L1.
 - [ ] T-164-109 remains open until terminal protected-main evidence is captured in the mandated lifecycle order.
+- [x] T-164-60 is explicitly accepted as a low-severity documentation-only scope observation with executable controls unchanged.
 - [x] T-164-SC is explicitly accepted without any package-manager install or dependency change.
 - [x] `threats_open: 1` reflects the pending high-severity terminal lifecycle item.
 - [x] `status: pending_terminal` prevents an early secured or completed claim.
