@@ -5,6 +5,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   @script Path.join(@repo_root, "scripts/closeout_repository_truth.sh")
   @extension Path.join(@repo_root, ".gsd/extensions/finalize-phase/index.ts")
   @immutable_loader Path.join(@repo_root, "scripts/mailglass_finalize_phase_loader.mjs")
+  @installed_loader "/Users/jon/.local/bin/mailglass-finalize-phase"
+  @install_approval "/Users/jon/.local/share/mailglass/checkpoints/164-27-install-approval.env"
+  @installation_source_oid "2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97"
+  @installed_loader_sha256 "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
   @manifest Path.join(
               @repo_root,
               ".gsd/extensions/finalize-phase/extension-manifest.json"
@@ -1266,8 +1270,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
-  describe "phase 164 installed production boundary" do
-    @describetag :phase_164_installed_production_boundary
+  describe "phase 164 repository-only installed-loader attacks" do
+    @describetag :phase_164_installed_boundary
 
     test "production loader rejects a foreign repository before private dispatch" do
       root = temporary_root!()
@@ -1361,6 +1365,81 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
                  output =~ "numbered history is not the exact 01-28"
 
         refute File.exists?(fixture.marker)
+      end
+    end
+  end
+
+  describe "phase 164 installed production boundary" do
+    @describetag :phase_164_installed_production_boundary
+
+    test "real installed command and approval are regular non-symlinks with exact modes" do
+      assert_regular_mode!(@installed_loader, 0o500)
+      assert_regular_mode!(@install_approval, 0o400)
+
+      approval = parse_install_approval!(@install_approval)
+      assert approval["destination"] == @installed_loader
+      assert approval["install_mode"] == "0500"
+      assert approval["approval_status"] == "approved"
+      assert approval["installation_source_oid"] == @installation_source_oid
+      assert approval["source_sha256"] == @installed_loader_sha256
+    end
+
+    test "approval binds all nineteen immutable Plan 164-27 fields exactly once" do
+      approval = parse_install_approval!(@install_approval)
+
+      assert map_size(approval) == 19
+      assert approval["record_version"] == "1"
+      assert approval["phase_plan"] == "164-27"
+      assert approval["node_executable"] == "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node"
+      assert approval["git_executable"] == "/opt/homebrew/Cellar/git/2.41.0/bin/git"
+      assert approval["bash_executable"] == "/opt/homebrew/Cellar/bash/5.2.37/bin/bash"
+      assert approval["gh_executable"] == "/opt/homebrew/Cellar/gh/2.95.0/bin/gh"
+      assert approval["jq_executable"] == "/usr/bin/jq"
+      assert approval["mix_executable"] == "/Users/jon/.asdf/shims/mix"
+      assert approval["elixir_executable"] == "/Users/jon/.asdf/shims/elixir"
+      assert approval["prior_approval_sha256"] == "c9750e8becddd7b08ce27b2c6267b5172c1f25954d0d1b5ef9e39f04a909c862"
+      assert approval["prior_sha256"] == "ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
+      assert approval["prior_mode"] == "0500"
+      assert approval["prior_stat_identity"] == "16777229:267228421:501:20"
+      assert approval["rollback_path"] == "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
+    end
+
+    test "installed digest equals the approved committed loader blob at an ancestor OID" do
+      approval = parse_install_approval!(@install_approval)
+      assert sha256_file!(@installed_loader) == approval["source_sha256"]
+
+      {blob, 0} = System.cmd("git", ["show", "#{approval["installation_source_oid"]}:scripts/mailglass_finalize_phase_loader.mjs"], cd: @repo_root)
+      assert :crypto.hash(:sha256, blob) |> Base.encode16(case: :lower) == approval["source_sha256"]
+
+      assert {_, 0} =
+               System.cmd("git", ["merge-base", "--is-ancestor", approval["installation_source_oid"], "HEAD"], cd: @repo_root, stderr_to_stdout: true)
+    end
+
+    test "installed executable self-check reports every approved authority field" do
+      approval = parse_install_approval!(@install_approval)
+      {output, 0} = invoke_installed_self_check(@installed_loader, approval)
+
+      assert output =~ "installation_oid=#{approval["installation_source_oid"]}"
+      assert output =~ "current_oid="
+      assert output =~ "loader_sha256=#{approval["source_sha256"]}"
+      assert output =~ "executable=#{approval["destination"]}"
+      assert output =~ "mode=#{approval["install_mode"]}"
+      assert output =~ "terminal_range=01-28"
+    end
+
+    test "approval validation rejects malformed and duplicate records fail-closed" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      for {name, contents, expected} <- [
+            {"blank", "record_version=1\nphase_plan=\n", "blank approval value"},
+            {"malformed", "not-an-assignment\n", "malformed approval line"},
+            {"duplicate", "record_version=1\nrecord_version=1\n", "duplicate approval key"},
+            {"unknown", "unknown=value\n", "unknown approval key"}
+          ] do
+        path = Path.join(root, name)
+        File.write!(path, contents)
+        assert_raise RuntimeError, ~r/#{expected}/, fn -> parse_install_approval!(path) end
       end
     end
   end
