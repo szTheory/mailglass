@@ -190,9 +190,9 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 28 total (24 executed; 4 gap-closure plans pending)
+**Plans**: 34 total (28 executed; 6 gap-closure plans pending)
 
-**Completion state**: Phase and TRTH-01/TRTH-02/TRTH-03 completion remain pending until Plans 25–28 execute, their summaries and tracking metadata reach protected `main`, and the installed terminal command completes.
+**Completion state**: Phase and TRTH-01/TRTH-02/TRTH-03 completion remain pending until Plans 29–34 execute, their summaries and completion tracking reach protected `main`, and the installed terminal command completes.
 
 Plans:
 
@@ -302,9 +302,30 @@ Plans:
 
 - [x] 164-28-PLAN.md — Reconcile validation, security, and lifecycle records while preserving the post-protected-main terminal boundary.
 
+**Wave 27** *(verification gap closure; blocked on the executed Plan 164-28 baseline)*
+
+- [ ] 164-29-PLAN.md — Prove the real installed authority and prevent controlled-host tests from entering repository or protected full suites.
+- [ ] 164-30-PLAN.md — Make incomplete authority roots fail through the standalone ledger validator's bounded diagnostic contract.
+
+**Wave 28** *(blocked on controlled-host and suite-boundary repair)*
+
+- [ ] 164-31-PLAN.md — Advance authenticated terminal history through the exact Plan 01–34 pair set and mark changed installed bytes pending reapproval.
+
+**Wave 29** *(blocking-human installation checkpoint; blocked on exact-history authority)*
+
+- [ ] 164-32-PLAN.md — Bind the changed loader to one explicit immutable replacement proposal and approval tuple.
+
+**Wave 30** *(blocked on the approved replacement tuple)*
+
+- [ ] 164-33-PLAN.md — Recoverably install the approved loader and prove the active external authority without entering terminal lifecycle.
+
+**Wave 31** *(blocked on validator repair and verified installed authority)*
+
+- [ ] 164-34-PLAN.md — Reconcile validation, security, lifecycle, and ledger records to the completed repairs while leaving terminal evidence pending.
+
 **Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
 
-- [ ] `/Users/jon/.local/bin/mailglass-finalize-phase 164` — After Plans 25–28, all summaries, requirement/phase completion tracking, and protected-main integration finish, automatically select exact normal push CI, consume natural exact-SHA schedules, and independently verify ignored raw evidence with no later tracked commit.
+- [ ] `/Users/jon/.local/bin/mailglass-finalize-phase 164` — After Plans 29–34, all summaries, requirement/phase completion tracking, and protected-main integration finish, automatically select exact normal push CI, consume natural exact-SHA schedules, and independently verify ignored raw evidence with no later tracked commit.
 
 ## Progress
 
