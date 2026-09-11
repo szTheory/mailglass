@@ -207,6 +207,14 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
     assert Enum.map(config["controls"], & &1["max_age_seconds"]) == [10_800, 129_600, 129_600]
   end
 
+  test "protected CI calls repository proof but never the controlled-host alias" do
+    workflow = File.read!(Path.join(@repo_root, ".github/workflows/ci.yml"))
+
+    assert length(Regex.scan(~r/\bmix verify\.ci_lane_contract\b/, workflow)) == 1
+    refute workflow =~ "mix verify.phase_164.installed_boundary"
+    assert workflow =~ "mix test --warnings-as-errors"
+  end
+
   test "each source workflow binds evidence before uploading its retained JSON" do
     for {workflow_file, control, upload_name} <- [
           {"release-please.yml", "release-please", "Upload proposal-only release control result"},

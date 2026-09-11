@@ -102,6 +102,40 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
 
   defp aliases, do: Mix.Project.config()[:aliases]
 
+  defp full_suite_alias_commands(aliases) do
+    aliases
+    |> Keyword.keys()
+    |> Enum.flat_map(&flatten_alias(aliases, &1))
+    |> Enum.uniq()
+    |> Enum.filter(&full_root_mix_test?/1)
+  end
+
+  defp workflow_full_suite_commands(workflow) do
+    workflow
+    |> String.split("\n")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(&full_root_mix_test?/1)
+  end
+
+  defp full_root_mix_test?(command) do
+    core_root? = not String.contains?(command, "--cd ")
+    mix_test? = Regex.match?(~r/(?:^|\s)(?:mix\s+)?test(?:\s|$)/, command)
+    file_scoped? = Regex.match?(~r/(?:^|\s)[^\s-][^\s]*[\/.][^\s]*/, command)
+    core_root? and mix_test? and not file_scoped?
+  end
+
+  defp host_only_collection_impossible?(commands, default_excluded?) do
+    default_excluded? and
+      Enum.all?(commands, fn command ->
+        not String.contains?(command, "--only phase_164_installed_production_boundary")
+      end)
+  end
+
+  defp default_host_exclusion?(source) do
+    source =~ "base_exclusions = [:phase_164_installed_production_boundary]" and
+      source =~ "ExUnit.configure(exclude: exclusions)"
+  end
+
   defp ci_steps, do: flatten_alias(aliases(), :ci)
   defp ci_browser_steps, do: flatten_alias(aliases(), :"ci.browser")
   defp union_steps, do: ci_steps() ++ ci_browser_steps()
@@ -306,5 +340,45 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
         ] do
       refute exact_phase_164_scope?(broken_required, broken_installed)
     end
+  end
+
+  test "every root alias and workflow suite inherits the controlled-host exclusion" do
+    helper = File.read!(Path.join(@repo_root, "test/test_helper.exs"))
+    workflow = File.read!(Path.join(@repo_root, ".github/workflows/ci.yml"))
+    alias_commands = full_suite_alias_commands(aliases())
+    workflow_commands = workflow_full_suite_commands(workflow)
+
+    assert alias_commands != []
+    assert workflow_commands != []
+    assert default_host_exclusion?(helper)
+    assert host_only_collection_impossible?(alias_commands ++ workflow_commands, true)
+
+    refute host_only_collection_impossible?(alias_commands ++ workflow_commands, false)
+
+    refute host_only_collection_impossible?(
+             alias_commands ++ ["mix test --only phase_164_installed_production_boundary"],
+             true
+           )
+  end
+
+  test "repository-only loader attacks remain active and portable" do
+    source = File.read!(Path.join(@repo_root, "test/scripts/phase_164_closeout_test.exs"))
+
+    [body] =
+      Regex.run(
+        ~r/^  describe "phase 164 repository-only installed-loader attacks" do\n(?<body>.*?)(?=^  describe )/ms,
+        source,
+        capture: :all_names
+      )
+
+    assert length(Regex.scan(~r/^    test "/m, body)) == 5
+    refute body =~ "@describetag :phase_164_installed_production_boundary"
+
+    refute Regex.match?(
+             ~r/defp invoke_(?:production|immutable)_loader.*?System\.cmd\("\/Users\/jon\/\.asdf\/installs\/nodejs\/24\.19\.0\/bin\/node"/ms,
+             source
+           )
+
+    assert source =~ "System.find_executable(\"node\")"
   end
 end
