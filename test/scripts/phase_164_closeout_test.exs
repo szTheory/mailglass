@@ -1349,6 +1349,59 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  describe "phase 164 gap reinstall readiness" do
+    @describetag :phase_164_gap_reinstall_readiness
+
+    test "changed 01-34 source remains superseded-pending behind a new approved reinstall" do
+      plan_27 =
+        File.read!(
+          Path.join(
+            @repo_root,
+            ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-27-SUMMARY.md"
+          )
+        )
+
+      assert plan_27 =~
+               "installation_source_oid=2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97"
+
+      assert plan_27 =~
+               "source_sha256=0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
+
+      assert plan_27 =~ "approval_sha256=e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9"
+
+      contract = File.read!(@finalization_contract)
+      heading = "## Plan 164-31 superseded-pending 01-34 source"
+      assert contract =~ heading
+
+      section =
+        contract
+        |> String.split(heading, parts: 2)
+        |> List.last()
+        |> String.split("\n## ", parts: 2)
+        |> List.first()
+        |> Regex.replace(~r/\s+/, " ")
+
+      assert section =~ "2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97"
+      assert section =~ "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
+      assert section =~ "prior proven installation authority"
+      assert section =~ "tracked 01-34 loader source"
+      assert section =~ "superseded-pending"
+      assert section =~ "Plan 164-32"
+      assert section =~ "immutable replacement proposal and exact human approval"
+      assert section =~ "Plan 164-33"
+      assert section =~ "rollback preservation, atomic reinstall, and controlled-host proof"
+      assert section =~ "ordinary verification remains pending"
+      assert section =~ "completion-only metadata remains pending"
+      assert section =~ "protected-main integration remains pending"
+      assert section =~ "terminal ignored capture remains pending"
+
+      refute section =~ "01-34 installation is ready"
+      refute section =~ "ordinary verification passed"
+      refute section =~ "protected main passed"
+      refute section =~ "terminal evidence captured"
+    end
+  end
+
   describe "phase 164 repository-only installed-loader attacks" do
     @describetag :phase_164_installed_boundary
 
