@@ -1367,7 +1367,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert plan_27 =~
                "source_sha256=0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
 
-      assert plan_27 =~ "approval_sha256=e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9"
+      assert plan_27 =~
+               "approval_sha256=e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9"
 
       contract = File.read!(@finalization_contract)
       heading = "## Plan 164-31 superseded-pending 01-34 source"
