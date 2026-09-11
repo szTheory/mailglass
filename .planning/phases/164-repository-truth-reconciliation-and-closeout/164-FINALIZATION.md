@@ -303,6 +303,54 @@ Plan 164-39 tracked reconciliation, ordinary verification, completion-only
 metadata, protected-main terminal evidence, and terminal finalization all
 remain pending. Any tuple change requires a new proposal and approval.
 
+## Plan 164-38 installed 01-39 readiness
+
+Plan 164-38 consumed only the exact Plan 164-37 approval record with SHA-256
+`e3687bf5a2afc69a79b2677c69daa3d533549d4b6f730a30a04e32cc6d13b7cd`.
+Immediately before mutation, the executor revalidated all 28 ordered approval
+fields, exact proposal-copy-plus-status bytes, protected source OID
+`52c07a5051d269b307831a2210f53dec0dd1ff65`, successful normal push CI run
+`34650810638`, authenticated loader SHA-256
+`394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746`,
+physical tool identities, exact-child runtime output, predecessor identity,
+destination, and absent rollback target.
+
+Before replacing the destination, the exact predecessor bytes were copied,
+set read-only, atomically published, and read back as the regular non-symlink
+mode-0400 rollback
+`/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`.
+Its SHA-256 is
+`f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`
+and its observed lstat identity is `16777229:288282021:501:20`. The immutable
+Plan 164-32 approval remains bounded prior provenance with SHA-256
+`f120bbda1a15478ea97179210215ee54e28ff59641644a35a643628265e9bf4b`;
+neither that approval nor the rollback is a second active authority.
+
+The installed destination
+`/Users/jon/.local/bin/mailglass-finalize-phase` is now the authenticated Git
+blob from the approved source OID, published by same-directory atomic rename
+and re-read as a regular non-symlink mode-0500 object. Its observed SHA-256 is
+`394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746`
+and its lstat identity is `16777229:288282024:501:20`. Direct `--version`
+returned `mailglass-finalize-phase-loader 1`. Direct ancestry-aware
+`--self-check` reported installation OID
+`52c07a5051d269b307831a2210f53dec0dd1ff65`, current repository OID
+`03cb5babd37014e963fbe4e41cd987d6c17fa6bb`, the same loader digest and
+external path, mode `0500`, and terminal range `01-39`.
+
+The exact sanitized child environment used these physical runtime members:
+
+- Mix: `/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix` →
+  `Mix 1.19.5 (compiled with Erlang/OTP 28)`
+- Elixir: `/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir` →
+  `Elixir 1.19.5 (compiled with Erlang/OTP 28)`
+- Erlang: `/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl` → OTP release `28`
+
+Their normalized probe SHA-256 is
+`ca3c43bd04c4e21e223f39561f294885ceca2633db65a72fa29b780bcef3975d`.
+No asdf selector entered the child environment. Automatic predecessor
+restoration was armed for every post-replacement direct assertion.
+
 ## Tracked completion and terminal order
 
 The only authorized closeout sequence is:
