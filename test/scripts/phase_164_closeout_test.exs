@@ -9,6 +9,28 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   @install_approval "/Users/jon/.local/share/mailglass/checkpoints/164-27-install-approval.env"
   @installation_source_oid "2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97"
   @installed_loader_sha256 "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
+  @install_approval_tuple %{
+    "record_version" => "1",
+    "phase_plan" => "164-27",
+    "installation_source_oid" => @installation_source_oid,
+    "source_sha256" => @installed_loader_sha256,
+    "destination" => @installed_loader,
+    "install_mode" => "0500",
+    "node_executable" => "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+    "git_executable" => "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+    "bash_executable" => "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+    "gh_executable" => "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+    "jq_executable" => "/usr/bin/jq",
+    "mix_executable" => "/Users/jon/.asdf/shims/mix",
+    "elixir_executable" => "/Users/jon/.asdf/shims/elixir",
+    "prior_approval_sha256" => "c9750e8becddd7b08ce27b2c6267b5172c1f25954d0d1b5ef9e39f04a909c862",
+    "prior_sha256" => "ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9",
+    "prior_mode" => "0500",
+    "prior_stat_identity" => "16777229:267228421:501:20",
+    "rollback_path" =>
+      "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9",
+    "approval_status" => "approved"
+  }
   @manifest Path.join(
               @repo_root,
               ".gsd/extensions/finalize-phase/extension-manifest.json"
@@ -1397,22 +1419,43 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert approval["jq_executable"] == "/usr/bin/jq"
       assert approval["mix_executable"] == "/Users/jon/.asdf/shims/mix"
       assert approval["elixir_executable"] == "/Users/jon/.asdf/shims/elixir"
-      assert approval["prior_approval_sha256"] == "c9750e8becddd7b08ce27b2c6267b5172c1f25954d0d1b5ef9e39f04a909c862"
-      assert approval["prior_sha256"] == "ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
+
+      assert approval["prior_approval_sha256"] ==
+               "c9750e8becddd7b08ce27b2c6267b5172c1f25954d0d1b5ef9e39f04a909c862"
+
+      assert approval["prior_sha256"] ==
+               "ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
+
       assert approval["prior_mode"] == "0500"
       assert approval["prior_stat_identity"] == "16777229:267228421:501:20"
-      assert approval["rollback_path"] == "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
+
+      assert approval["rollback_path"] ==
+               "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
     end
 
     test "installed digest equals the approved committed loader blob at an ancestor OID" do
       approval = parse_install_approval!(@install_approval)
       assert sha256_file!(@installed_loader) == approval["source_sha256"]
 
-      {blob, 0} = System.cmd("git", ["show", "#{approval["installation_source_oid"]}:scripts/mailglass_finalize_phase_loader.mjs"], cd: @repo_root)
+      {blob, 0} =
+        System.cmd(
+          "git",
+          [
+            "show",
+            "#{approval["installation_source_oid"]}:scripts/mailglass_finalize_phase_loader.mjs"
+          ],
+          cd: @repo_root
+        )
+
       assert :crypto.hash(:sha256, blob) |> Base.encode16(case: :lower) == approval["source_sha256"]
 
       assert {_, 0} =
-               System.cmd("git", ["merge-base", "--is-ancestor", approval["installation_source_oid"], "HEAD"], cd: @repo_root, stderr_to_stdout: true)
+               System.cmd(
+                 "git",
+                 ["merge-base", "--is-ancestor", approval["installation_source_oid"], "HEAD"],
+                 cd: @repo_root,
+                 stderr_to_stdout: true
+               )
     end
 
     test "installed executable self-check reports every approved authority field" do
@@ -1439,6 +1482,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           ] do
         path = Path.join(root, name)
         File.write!(path, contents)
+        File.chmod!(path, 0o400)
         assert_raise RuntimeError, ~r/#{expected}/, fn -> parse_install_approval!(path) end
       end
     end
@@ -2153,7 +2197,9 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   end
 
   defp invoke_immutable_loader(fixture, args, extra_env \\ []) do
-    System.cmd("/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node", [fixture.installed | args],
+    node = System.find_executable("node") || raise "node executable is required for loader fixtures"
+
+    System.cmd(node, [fixture.installed | args],
       cd: fixture.repo,
       env:
         extra_env ++
@@ -2164,6 +2210,85 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
             {"GIT_LOG", fixture.git_log},
             {"REAL_GIT", System.find_executable("git")}
           ],
+      stderr_to_stdout: true
+    )
+  end
+
+  defp parse_install_approval!(path) do
+    assert_regular_mode!(path, 0o400)
+
+    approval =
+      path
+      |> File.read!()
+      |> String.split("\n", trim: true)
+      |> Enum.reduce(%{}, fn line, fields ->
+        case String.split(line, "=", parts: 2) do
+          ["", _value] ->
+            raise "blank approval key"
+
+          [_key, ""] ->
+            raise "blank approval value"
+
+          [key, value] ->
+            unless Map.has_key?(@install_approval_tuple, key),
+              do: raise("unknown approval key: #{key}")
+
+            if Map.has_key?(fields, key), do: raise("duplicate approval key: #{key}")
+            Map.put(fields, key, value)
+
+          _ ->
+            raise "malformed approval line"
+        end
+      end)
+
+    missing = Map.keys(@install_approval_tuple) -- Map.keys(approval)
+    if missing != [], do: raise("missing approval keys: #{Enum.join(Enum.sort(missing), ",")}")
+
+    for {key, expected} <- @install_approval_tuple do
+      actual = Map.fetch!(approval, key)
+      if actual != expected, do: raise("approval tuple mismatch for #{key}")
+    end
+
+    approval
+  end
+
+  defp assert_regular_mode!(path, expected_mode) do
+    case File.lstat(path) do
+      {:ok, %File.Stat{type: :regular, mode: mode}} ->
+        actual_mode = Bitwise.band(mode, 0o777)
+
+        if actual_mode != expected_mode do
+          raise "wrong mode for #{path}: expected #{Integer.to_string(expected_mode, 8)}, got #{Integer.to_string(actual_mode, 8)}"
+        end
+
+        :ok
+
+      {:ok, %File.Stat{type: type}} ->
+        raise "not a regular non-symlink file: #{path} (#{type})"
+
+      {:error, reason} ->
+        raise "cannot lstat #{path}: #{:file.format_error(reason)}"
+    end
+  end
+
+  defp sha256_file!(path) do
+    assert_regular_mode!(path, 0o500)
+    path |> File.read!() |> :crypto.hash(:sha256) |> Base.encode16(case: :lower)
+  end
+
+  defp invoke_installed_self_check(path, approval) do
+    assert_regular_mode!(path, 0o500)
+
+    System.cmd(
+      path,
+      [
+        "--self-check",
+        "--repo",
+        @repo_root,
+        "--expected-source-oid",
+        approval["installation_source_oid"]
+      ],
+      cd: @repo_root,
       stderr_to_stdout: true
     )
   end
