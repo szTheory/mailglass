@@ -152,6 +152,7 @@ defmodule Mailglass.RepositoryTruthLedger do
     "git ls-files; 164-21-PLAN.md",
     "git ls-files; 164-23-PLAN.md",
     "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md",
+    "git ls-files; 164-28-PLAN.md; 164-28-SUMMARY.md",
     "git ls-files; Phase 161 summary",
     "git ls-files; Phase 162 summary",
     "git ls-files; release-target ledger",
@@ -323,6 +324,8 @@ defmodule Mailglass.RepositoryTruthLedger do
     "mix.exs" => "fb53f2fc7eb2b5918f2bac2ab6278dddc08bca2f19ca52418b9c24e7796f9c5d",
     "test/scripts/ci_parity_drift_test.exs" =>
       "6ac9d4bce0d62fcb4bf24cd7a34fd8ad9d66e7e6cdd6ba648292fbfda113e599",
+    ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-SECURITY.md" =>
+      "c8297e39db5c67f8bbdb084535af0d07fff76828f8f58ca9c74104ceee3dabd0",
     "test/mailglass/docs_contract_test.exs" =>
       "d96bd664afccfc94812c38335f345e040c1ab6a1df33c89328a4309ad86a8821",
     "scripts/closeout_repository_truth.sh" =>
