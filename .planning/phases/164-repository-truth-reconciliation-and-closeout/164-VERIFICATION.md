@@ -1,9 +1,9 @@
 ---
 phase: 164-repository-truth-reconciliation-and-closeout
-verified: 2026-09-10T21:57:10Z
-verified_implementation_sha: c6dc54fe783d88b25853a5f91f424f8ea523691e
+verified: 2026-09-11T01:52:47Z
+verified_implementation_sha: 44ebadd4a444e4e841b2c876f383f1557e2d5cd4
 status: gaps_found
-next_action: "Gaps found. Plan the fixes, then re-run execute-phase before shipping."
+next_action: "Fix the installed-boundary, full-suite isolation, and validator error-handling gaps; then re-run ordinary Phase 164 verification. Do not update completion metadata or run terminal finalization yet."
 next_command: "$gsd-plan-phase 164 --gaps"
 score: 12/13 must-haves verified
 behavior_unverified: 0
@@ -12,79 +12,66 @@ re_verification:
   previous_status: gaps_found
   previous_score: 12/13
   gaps_closed:
-    - "The installed loader now captures one full commit OID and uses it for tree/blob operations."
-    - "The Phase 164 numbered history is anchored to the exact 01-24 PLAN/SUMMARY set."
-    - "The retired project-local extension is no longer evaluated on the supported finalization path."
+    - "The generic verify.ci_lane_contract alias is hermetic and passed 380 repository tests with five controlled-host tests excluded."
+    - "The installed loader pins canonical repository/origin, validates absolute tools, sanitizes child execution, and enforces installation-OID ancestry."
+    - "The terminal history range is exactly 01 through 28 and approved installed bytes match tracked source."
   gaps_remaining:
-    - "Required CI unconditionally depends on maintainer-local installed files."
-    - "The installed loader accepts and executes authority bytes from any repository selected by the caller's working directory."
-    - "The installed trust boundary relies on ambient PATH for Node, Git, Bash, and downstream tools."
-    - "Current Phase 164 metadata is not integrated to origin/main and no terminal report exists for the current SHA."
+    - "The controlled-host alias does not verify the real installed executable or approval tuple and currently fails all five selected tests."
+    - "The controlled-host tag is still collected by unfiltered protected/full-suite commands."
+    - "The standalone ledger validator crashes on an existing but incomplete authority directory."
+    - "Terminal no-later-write evidence remains intentionally pending."
   regressions:
-    - "The Plan 164-24 installed-production test positively codifies execution from an arbitrary temporary repository."
+    - "mix verify.phase_164.installed_boundary fails 5/5 because fixture expectations conflict with live canonical-checkout behavior."
 gaps:
-  - truth: "TRTH-03: The supported finalization path is runnable by required protected CI without maintainer-local state."
+  - truth: "TRTH-03: The controlled-host boundary proves the actual installed finalizer and approved installation tuple."
     status: failed
-    reason: "mix verify.ci_lane_contract selects all test/scripts tests, including five production-boundary tests that immediately require two /Users/jon-local files unavailable on GitHub runners and other contributors."
+    reason: "The selected block copies tracked loader source into disposable fixtures and never reads the real installed executable or Plan 164-27 approval record; the fresh alias run failed all five tests."
     artifacts:
       - path: "test/scripts/phase_164_closeout_test.exs"
-        issue: "The required CI suite contains unconditional absolute-host assertions at the installed-production boundary."
+        issue: "production_installed_fixture!/2 and invoke_production_loader/3 exercise fixture.installed, not the real installed command or approval tuple."
       - path: "mix.exs"
-        issue: "verify.ci_lane_contract unconditionally selects the entire test/scripts directory."
+        issue: "verify.phase_164.installed_boundary selects only this ineffective/failing fixture-backed block."
     missing:
-      - "Keep required CI hermetic by moving host-install assertions to a separately invoked controlled-host suite or explicit opt-in contract."
-      - "Add a CI contract proving the generic required lane does not require absolute host files."
-  - truth: "D-09/D-10/D-11/TRTH-03: The installed executable accepts only the canonical Mailglass repository authority."
+      - "Add fail-closed real path/type/mode, exact approval schema, digest, OID ancestry, and installed --self-check assertions."
+      - "Keep disposable source-loader attacks in repository-only coverage and make the controlled-host alias pass non-vacuously."
+  - truth: "TRTH-03: Host-specific installed-boundary tests cannot enter protected or repository-only full-suite lanes."
     status: failed
-    reason: "finalize() discovers the repository only from process.cwd() and does not pin the canonical path or szTheory/mailglass origin before authenticating and executing repository-supplied finalizer bytes."
+    reason: "Only verify.ci_lane_contract excludes the tag. test/test_helper.exs has no default exclusion, while protected CI and ci.full invoke unfiltered mix test; selected tests hard-code a Jon-specific Node path."
     artifacts:
-      - path: "scripts/mailglass_finalize_phase_loader.mjs"
-        issue: "Repository discovery at lines 299-305 has no loader-owned canonical-path or origin-identity check."
+      - path: "test/test_helper.exs"
+        issue: "No default phase_164_installed_production_boundary exclusion."
+      - path: ".github/workflows/ci.yml"
+        issue: "The protected deterministic-core lane invokes an unfiltered full mix test command."
+      - path: "mix.exs"
+        issue: "ci.full invokes an unfiltered full suite."
       - path: "test/scripts/phase_164_closeout_test.exs"
-        issue: "The passing installed-production test expects an arbitrary temporary repository's finalizer marker to execute."
+        issue: "invoke_production_loader/3 hard-codes /Users/jon/.asdf/installs/nodejs/24.19.0/bin/node."
     missing:
-      - "Pin and verify the canonical real path and expected remote identity in loader-owned code before dependency enumeration."
-      - "Replace the foreign-repository acceptance test with a rejection test."
-  - truth: "D-09/D-10/D-11/TRTH-03: Finalization trust decisions cannot be replaced through caller-controlled executable lookup."
+      - "Default-exclude the tag with explicit controlled-host inclusion, or exclude it from every repository/protected full-suite entry point."
+      - "Add a contract that expands all full-suite aliases/jobs and proves host-only collection is impossible."
+  - truth: "TRTH-02: The public repository-truth validator rejects incomplete authority roots through its controlled diagnostic contract."
     status: failed
-    reason: "The installed script uses /usr/bin/env node and bare git/bash names, while the authenticated Bash chain inherits PATH for all remaining tools; a forged PATH can replace the trust oracle itself."
+    reason: "An existing empty --authority-root reaches File.stream!/1 and raises an uncaught File.Error rather than returning a tagged diagnostic."
     artifacts:
-      - path: "scripts/mailglass_finalize_phase_loader.mjs"
-        issue: "Shebang and spawnSync calls resolve Node, Git, and Bash through ambient PATH."
-      - path: "scripts/finalize_phase_164.sh"
-        issue: "Git, gh, jq, mix, node, and elixir inherit the caller's unsanitized PATH."
-      - path: "test/scripts/phase_164_closeout_test.exs"
-        issue: "Tests inject cooperative PATH shims but contain no adversarial forged-Git rejection proof."
+      - path: "scripts/validate_repository_truth.exs"
+        issue: "ignore_subjects/1 uses File.stream!/1 after checking only that authority_root is a directory."
     missing:
-      - "Establish a pinned trusted toolchain using validated absolute executable paths and a sanitized child environment."
-      - "Add a fake-Git attack that returns internally consistent forged objects and prove rejection before dispatch."
-  - truth: "Roadmap SC3 / TRTH-03: Final closeout evidence describes the actual completed protected-main repository state."
-    status: failed
-    reason: "HEAD c6dc54fe is not origin/main d903b040, ROADMAP and REQUIREMENTS still mark Phase 164 incomplete/gaps-found, 164-FINALIZATION.md says terminal finalization is pending, and no terminal report was found for the current SHA."
-    artifacts:
-      - path: ".planning/ROADMAP.md"
-        issue: "The post-execution installed terminal command remains unchecked and the completion text is stale."
-      - path: ".planning/REQUIREMENTS.md"
-        issue: "TRTH-01, TRTH-02, and TRTH-03 remain unchecked and Gaps Found."
-      - path: ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
-        issue: "Explicitly states ordinary verification, protected integration, and terminal finalization remain pending."
-    missing:
-      - "After code gaps close, integrate all tracked metadata through protected main."
-      - "Run the repaired installed terminal command on exact protected main and retain a no-later-write terminal report."
+      - "Use non-raising reads and thread a stable missing-authority-subject error through audit_subjects/2 and main/1."
+      - "Add an empty-authority-root CLI regression requiring exit 1 and a bounded diagnostic without a stack trace."
 prohibition_flags:
-  - statement: "D-09/D-10/D-11: MUST NOT let mutable or caller-selected executable/repository bytes establish finalization authority."
-    verdict: "violated — caller cwd selects the repository and ambient PATH selects every trust executable"
-  - statement: "All remaining judgment-tier prohibitions from Plans 164-01 through 164-24."
-    verdict: "non-authoritative autonomous judgment: no additional violation observed; human review recommended"
+  - statement: "D-09/D-10/D-11: MUST NOT treat controlled-host code tests as terminal protected-main evidence."
+    verdict: "violated at the controlled-host proof seam"
+  - statement: "T-164-109: terminal evidence must have no later tracked write."
+    verdict: "unverified-prohibition — human review recommended; lifecycle evidence is intentionally pending and finalization was not run"
 ---
 
 # Phase 164: Repository Truth Reconciliation and Closeout Verification Report
 
 **Phase Goal:** Maintainers can rely on documentation, tracked artifacts, ignore rules, and final evidence to describe the repository's actual supported and operational state.
-**Verified:** 2026-09-10T21:57:10Z
-**Implementation SHA evaluated:** `c6dc54fe783d88b25853a5f91f424f8ea523691e`
+**Verified:** 2026-09-11T01:52:47Z
+**Implementation SHA evaluated:** `44ebadd4a444e4e841b2c876f383f1557e2d5cd4`
 **Status:** gaps_found
-**Re-verification:** Yes — Plans 164-21 through 164-24 closed the prior immutable-OID, exact-history, and project-extension gaps, but the fresh review's three trust-boundary blockers are confirmed and terminal evidence is still absent.
+**Re-verification:** Yes — after Plans 164-25 through 164-28.
 
 ## Goal Achievement
 
@@ -92,145 +79,128 @@ prohibition_flags:
 
 | # | Truth | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | TRTH-01 maintainer/release/recovery guidance agrees with protected workflow facts. | ✓ VERIFIED | Current maintainer contract passed; protected exact-candidate, repository-admin, proposal-only, and fail-closed terms are present. |
-| 2 | Historical procedures are explicitly bounded, leaving one current runbook. | ✓ VERIFIED | The contract enforces one `Historical release procedures` boundary. |
-| 3 | Current package guidance agrees with current manifests. | ✓ VERIFIED | Documentation contract passed against core/admin 2.5 and inbound 2.2 guidance. |
-| 4 | The locked stale root sweep has one evidence-backed remove disposition. | ✓ VERIFIED | D-08 digest/remove row remains and the root output is absent. |
-| 5 | Durable release, publish, scheduled-control, planning, and installation proof remains classified and discoverable. | ✓ VERIFIED | The 118-line ledger passes the production validator. |
-| 6 | Tracked dispositions require one byte-exact stage-0 index identity. | ✓ VERIFIED | Production parser uses literal `ls-files --stage -z --error-unmatch`; focused ledger tests passed. |
-| 7 | All six ignore inventories have exact-one narrow classifications. | ✓ VERIFIED | 72 non-comment ignore rules are covered by the passing canonical validator. |
-| 8 | Closeout composes Git, hygiene, preservation, ledger, CI, and scheduled evidence fail-closed. | ✓ VERIFIED | Substantive scripts and existing process regressions remain wired. |
-| 9 | Quiet requires canonical path, exact main, ignored output, and post-write cleanliness. | ✓ VERIFIED | Closeout-level hostile path and late-dirt behavior remains tested. |
-| 10 | Scheduled freshness and provenance remain registry-specific and fail closed. | ✓ VERIFIED | Scheduled and finalizer checks preserve exact attempt/event/SHA/age constraints. |
-| 11 | The installed loader uses one captured OID and exact 01-24 history, and excludes the retired extension. | ✓ VERIFIED | Source inspection plus 5/5 installed-boundary tests prove these narrower repairs. |
-| 12 | Installed bytes and approval record match the committed loader source. | ✓ VERIFIED | External files are regular modes 0500/0400 and installed/source SHA-256 both equal `ca760f78...b7d9`. |
-| 13 | Finalization is a hermetic, canonical-repository, trusted-toolchain path that can produce terminal protected-main evidence. | ✗ FAILED | Required CI is host-coupled; caller cwd and PATH control authority; HEAD is not origin/main; terminal capture is pending. |
+| 1 | TRTH-01 maintainer/release/recovery guidance agrees with protected workflow facts. | ✓ VERIFIED | Focused current-guidance contracts passed. |
+| 2 | Historical procedures are explicitly bounded, leaving one current runbook. | ✓ VERIFIED | Docs contracts passed; the sole historical skip is registered and not sole proof. |
+| 3 | Current package guidance agrees with current manifests. | ✓ VERIFIED | README/package contract assertions passed. |
+| 4 | The locked stale root sweep has one evidence-backed remove disposition. | ✓ VERIFIED | Canonical ledger validator passed and the root sweep remains absent. |
+| 5 | Durable release, publish, scheduled-control, planning, and installation proof remains classified and discoverable. | ✓ VERIFIED | The 122-line ledger validates against tracked state. |
+| 6 | Tracked dispositions require one byte-exact stage-0 index identity. | ✓ VERIFIED | Repository-truth regressions passed. |
+| 7 | All six ignore inventories have exact-one narrow classifications. | ✓ VERIFIED | Production validator returned `repository truth ledger: valid`. |
+| 8 | Closeout composes Git, hygiene, preservation, ledger, CI, and scheduled evidence fail-closed. | ✓ VERIFIED | Repository-only closeout regressions are substantive and wired. |
+| 9 | Quiet requires canonical path, exact main, ignored output, and post-write cleanliness. | ✓ VERIFIED | Fixture-backed canonical/fail-closed tests pass in repository scope. |
+| 10 | Scheduled freshness and provenance remain registry-specific and fail closed. | ✓ VERIFIED | Scheduled evidence tests passed. |
+| 11 | Loader pins canonical repository/tool authority, installation ancestry, and exact 01-28 history. | ✓ VERIFIED | Source inspection confirms each gate and shared range. |
+| 12 | Installed bytes match approved tracked loader source. | ✓ VERIFIED | Files are regular modes 0500/0400; both digests equal `0dbcc034...d8676e`; installation OID is an ancestor of HEAD. |
+| 13 | Finalization has valid controlled-host proof and can proceed to truthful terminal evidence. | ✗ FAILED | Controlled-host alias fails 5/5, does not validate the actual installation tuple, leaks into full suites, and terminal evidence remains pending. |
 
 **Score:** 12/13 truths verified (0 present, behavior-unverified)
 
-### Plan Must-Have Coverage
-
-Every one of the 83 PLAN truth entries and 70 artifact declarations was checked. Repeated truths were merged into the observable contracts above; the table records each plan's resulting disposition.
-
-| Plans | Status | Notes |
-| --- | --- | --- |
-| 164-01 through 164-10 | ✓ VERIFIED | Documentation, package, ledger, ignore, closeout, and freshness contracts remain substantive and wired. |
-| 164-11 | ✓ SUPERSEDED/VERIFIED | Its project-local extension artifacts were intentionally retired by Plan 22; retained finalizer behavior remains present. |
-| 164-12 through 164-16 | ✓ VERIFIED | Pre-verification, adversarial ledger/closeout, history, timestamp, and documentation contracts are present; captures are correctly non-terminal. |
-| 164-17 through 164-20 | ✓ SUPERSEDED/VERIFIED | Stage-0 and transitive-authentication behavior remains; missing extension files are intentional Plan-22 retirement, not stubs. |
-| 164-21 | ✗ PARTIAL | Captured OID and exact 01-24 set exist, but the installed loader does not establish canonical repository or trusted executable authority. |
-| 164-22 | ✓ VERIFIED | Retired extension is absent, installed command is documented, and replacement ledger evidence exists. |
-| 164-23 | ⚠ PARTIAL | Installation tuple and byte identity exist; self-check does not enforce installation-OID ancestry, although the recorded OID is currently an ancestor. |
-| 164-24 | ✗ PARTIAL | Five named tests pass, but the accepted-path test positively demonstrates foreign-repository execution and makes required CI host-dependent. |
-
 ### Required Artifacts
 
-| Artifact group | Expected | Status | Details |
+| Artifact | Expected | Status | Details |
 | --- | --- | --- | --- |
-| `MAINTAINING.md`, three READMEs, documentation tests | Current operational/package truth | ✓ VERIFIED | Focused 70-test run passed with one historical skip. |
-| `164-TRUTH-DISPOSITION.tsv`, validator, repository-truth test | Complete exact-one classification | ✓ VERIFIED | Validator prints `repository truth ledger: valid`; export checker false positives were manually resolved at `parse/1`, `audit_subjects/2`, and `validate/3`. |
-| Closeout/finalizer/scheduled scripts and tests | Fail-closed evidence composition | ✓ VERIFIED | Substantive and wired; CI-monitor Node tests passed 5/5. |
-| `scripts/mailglass_finalize_phase_loader.mjs` | Installed pre-evaluation trust authority | ✗ FAILED | Byte-identical installation exists, but repository and executable lookup remain caller-controlled. |
-| Installed executable and approval record | External immutable installation state | ⚠ PARTIAL | Exist with correct modes/digest; external-state artifact false negatives from `verify.artifacts` were manually resolved. Provenance ancestry is not enforced by self-check. |
-| `164-VALIDATION.md` / `164-FINALIZATION.md` | Truthful proof map and lifecycle state | ⚠ PARTIAL | Correctly says terminal proof is pending, but claims automated installed authority is closed despite confirmed trust defects. |
-| Terminal ignored report for current protected-main SHA | Final operational evidence | ✗ MISSING | Existing reports are pre-verification or stale; current HEAD is not origin/main. |
+| `MAINTAINING.md` and package READMEs | Current operational/package truth | ✓ VERIFIED | Substantive and contract-checked. |
+| `164-TRUTH-DISPOSITION.tsv` and validator | Exact-one artifact/ignore classification | ⚠ PARTIAL | Canonical input passes; incomplete authority root crashes. |
+| `scripts/mailglass_finalize_phase_loader.mjs` | Canonical immutable loader authority | ✓ VERIFIED | Repository, tools, ancestry, and 01-28 history are wired. |
+| Installed command and Plan 27 approval | Installed authority tuple | ✓ PRESENT | Bytes/modes/provenance agree; named controlled-host tests do not read this tuple. |
+| `test/scripts/phase_164_closeout_test.exs` | Repository and installed-boundary proof | ✗ FAILED | Installed block is fixture-backed, hard-codes local Node, enters unfiltered suites, and fails 5/5. |
+| `164-VALIDATION.md`, `164-SECURITY.md`, `164-FINALIZATION.md` | Truthful proof/lifecycle records | ⚠ PARTIAL | Terminal is correctly pending, but installed-boundary closure is overstated. |
+| Current terminal ignored report | Final operational evidence | ⏳ PENDING | Existing report is for `84454ae6...`; evaluated HEAD is `44ebadd4...`. |
 
 ### Key Link Verification
 
 | From | To | Status | Details |
 | --- | --- | --- | --- |
-| Maintainer/package prose | workflows and manifests | ✓ WIRED | Focused contracts pass. |
-| Ledger validator | Git index, six ignores, durable proof, external installation subjects | ✓ WIRED | Canonical validator passes. |
-| Installed loader | one captured OID and exact Phase 164 history | ✓ WIRED | OID-addressed tree/blob reads and exact 01-24 set are present. |
-| Installed loader | canonical `/Users/jon/projects/mailglass` / `szTheory/mailglass` identity | ✗ NOT WIRED | `process.cwd()` alone selects the authority repository. |
-| Installed loader | trusted Node/Git/Bash toolchain | ✗ NOT WIRED | `/usr/bin/env` and bare executable names resolve from ambient PATH. |
-| Required CI lane | repository-only tests | ✗ NOT WIRED | Generic `test/scripts/` selection reaches host-only installed-production tests. |
-| Current tracked metadata | protected origin/main and terminal report | ✗ NOT WIRED | Local HEAD differs from origin/main and terminal gate remains unchecked. |
+| Maintainer/package prose | workflows/manifests | ✓ WIRED | Focused contracts passed. |
+| Ledger | Git index, ignores, proof | ⚠ PARTIAL | Canonical flow works; malformed authority handling fails. |
+| Required CI | repository-only tests | ✓ WIRED | 380 passed, 5 controlled-host tests excluded. |
+| Controlled-host alias | real installed tuple | ✗ NOT WIRED | Tests execute `fixture.installed`; alias failed 5/5. |
+| Protected/full-suite entries | host-tag exclusion | ✗ NOT WIRED | `test_helper`, protected `mix test`, and `ci.full` have no exclusion. |
+| Ordinary verification | terminal finalizer | ⏳ PENDING | Correctly not executed; blockers must close first. |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data | Source | Status |
 | --- | --- | --- | --- |
-| Ledger | audited subjects and dispositions | Git index, ignore files, plan-owned proof, approved installation tuple | ✓ FLOWING |
-| Closeout report | Git/CI/scheduled/component statuses | live observations and authenticated private dependencies | ✓ FLOWING at closeout layer |
-| Loader authority repository | repository root and authority objects | caller cwd plus ambient `git` | ✗ UNTRUSTED SOURCE |
-| Child executable identity | Git/Bash and downstream tools | caller PATH | ✗ UNTRUSTED SOURCE |
-| Terminal report | completed exact-main evidence | none for current SHA | ✗ DISCONNECTED |
+| Ledger | audited subjects/dispositions | live index, six ignores, tracked proof | ⚠ PARTIAL |
+| Installed loader | repository/tool authority | loader-owned constants/absolute identities | ✓ FLOWING |
+| Controlled-host proof | installed bytes/approval | disposable `fixture.installed` | ✗ DISCONNECTED |
+| Terminal report | completed exact-main evidence | stale prior captures only | ⏳ PENDING |
 
 ### Behavioral Spot-Checks
 
-| Behavior | Command / result | Status |
-| --- | --- | --- |
-| Canonical production ledger | pinned Elixir validator: `repository truth ledger: valid` | ✓ PASS |
-| Installed boundary group | pinned ExUnit tag: 5 tests, 0 failures | ✓ PASS, but insufficient/wrong oracle |
-| Current documentation and ledger contracts | pinned focused run: 70 tests, 0 failures, 1 historical skip | ✓ PASS |
-| CI monitor contract | `node --test test_js/ci-monitor.test.cjs`: 5 passed | ✓ PASS |
-| Canonical protected-main identity | `HEAD=c6dc54fe...`, `origin/main=d903b040...` | ✗ FAIL |
-| Foreign-repository rejection | Test at lines 1089-1108 expects arbitrary fixture finalizer execution | ✗ FAIL |
-| Trusted executable lookup | loader uses `/usr/bin/env node`, `spawnSync("git")`, and `spawnSync("bash")` | ✗ FAIL |
+| Behavior | Command | Result | Status |
+| --- | --- | --- | --- |
+| Repository-only lane | `mix verify.ci_lane_contract` pinned to project Elixir/Erlang | 380 tests, 0 failures, 5 excluded | ✓ PASS |
+| Controlled-host boundary | `mix verify.phase_164.installed_boundary` | 5 tests, 5 failures, 44 excluded | ✗ FAIL |
+| Docs/ledger/scheduled contracts | focused four-file `mix test` | 86 tests, 0 failures, 1 registered historical skip | ✓ PASS |
+| Canonical ledger | production validator | `repository truth ledger: valid` | ✓ PASS |
+| Incomplete authority root | validator with existing empty temporary root | exit 1 plus uncaught `File.Error` stack trace | ✗ FAIL |
+| Loader/shell syntax and diff | `node --check`; `bash -n`; `git diff --check` | exit 0 | ✓ PASS |
 
 ### Probe Execution
 
-SKIPPED — no `probe-*.sh` is declared. The terminal installed command was not run because its trust boundary is unsafe and protected-main prerequisites are unmet.
+SKIPPED — no `probe-*.sh` is declared. Terminal finalization was deliberately not run.
 
 ### Requirements Coverage
 
-| Requirement | Source Plans | Description | Status | Evidence |
-| --- | --- | --- | --- | --- |
-| TRTH-01 | 02, 03, 06, 07, 14-16, 22, 24 | Maintainer/package guidance matches supported state | ✓ SATISFIED | Documentation tests pass. |
-| TRTH-02 | 01, 04, 06-09, 11, 13-15, 17-20, 22, 24 | Exact evidence-backed artifact/ignore classification | ✓ SATISFIED | Canonical validator and focused tests pass. |
-| TRTH-03 | 05-07, 09-15, 17, 19-24 | Reproducible exact-main quiet closeout evidence | ✗ BLOCKED | Host-coupled CI, foreign-repository authority, PATH substitution, and absent terminal evidence. |
+| Requirement | Source Plans | Status | Evidence |
+| --- | --- | --- | --- |
+| TRTH-01 | 02, 03, 06, 07, 14-16, 22, 24, 28 | ✓ SATISFIED | Current/historical/package contracts pass. |
+| TRTH-02 | 01, 04, 06-09, 11, 13-15, 17, 18, 20, 22, 24, 28 | ⚠ PARTIAL | Canonical ledger passes; public malformed-authority boundary crashes. |
+| TRTH-03 | 05-07, 09-15, 17, 19-28 | ✗ BLOCKED | Controlled-host proof is disconnected/failing and leaks into protected full suites. |
 
-All requirement IDs declared across all 24 PLAN frontmatters are one or more of TRTH-01, TRTH-02, and TRTH-03, and each maps to the matching REQUIREMENTS.md entry. No Phase 164 requirement is orphaned. There is no later milestone phase to which a gap can be deferred.
+All 28 PLAN frontmatters declare only `TRTH-01`, `TRTH-02`, and `TRTH-03`; each maps to `REQUIREMENTS.md`. No Phase 164 requirement is orphaned and no later milestone phase can absorb these gaps. Current requirement checkboxes are completion metadata and remain untouched pending a passing verification.
 
 ### Test Quality Audit
 
-| Test File | Linked Req | Active | Skipped | Circular | Assertion Level | Verdict |
-| --- | --- | --- | --- | --- | --- | --- |
-| `phase_164_repository_truth_test.exs` | TRTH-02 | yes | 0 | No | Behavioral | PASS |
-| `phase_164_closeout_test.exs` | TRTH-03 | yes | 0 | No | Behavioral | BLOCKER — five host-only tests enter generic CI and accepted fixture asserts insecure foreign-repository execution. |
-| `scheduled_control_evidence_test.exs` | TRTH-03 | yes | 0 | No | Behavioral | PASS |
-| `maintaining_release_gate_contract_test.exs` | TRTH-01 | yes | 0 | No | Value/behavioral | PASS |
-| `docs_contract_test.exs` | TRTH-01 | yes | 1 historical | No | Value | PASS with historical skip |
-| `ci-monitor.test.cjs` | TRTH-03 | yes | 0 | No | Behavioral | PASS |
+| Test File | Linked Req | Active | Skipped | Circular | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| `phase_164_repository_truth_test.exs` | TRTH-02 | yes | 0 | No | PASS, missing incomplete-authority CLI case |
+| `phase_164_closeout_test.exs` | TRTH-03 | yes | 0 | No | BLOCKER — wrong source, full-suite leak, 5/5 failure |
+| `scheduled_control_evidence_test.exs` | TRTH-03 | yes | 0 | No | PASS |
+| `maintaining_release_gate_contract_test.exs` | TRTH-01 | yes | 0 | No | PASS |
+| `docs_contract_test.exs` | TRTH-01/02/03 | yes | 1 historical | No | PASS with registered historical skip |
+| `ci_parity_drift_test.exs` | TRTH-03 | yes | 0 | No | INSUFFICIENT — does not cover all unfiltered suites |
 
-No requirement relies solely on a disabled test and no circular expected-value generator was found. The decisive issue is a strong assertion aimed at the wrong security outcome.
+No requirement relies solely on a disabled test and no circular expected-value generator was found.
 
-### Review, Security, and Validation Reconciliation
+### Review Findings Reconciliation
 
-| Finding/claim | Verdict | Impact |
-| --- | --- | --- |
-| REVIEW CR-01: required CI depends on maintainer-local installation | CONFIRMED | 🛑 BLOCKER |
-| REVIEW CR-02: installed command executes from any current repository | CONFIRMED | 🛑 BLOCKER |
-| REVIEW CR-03: ambient PATH can forge trust decisions | CONFIRMED | 🛑 BLOCKER |
-| REVIEW WR-01: self-check does not prove installation OID ancestry | CONFIRMED | ⚠ WARNING; current recorded OID is an ancestor, but code does not enforce it |
-| SECURITY: all high threats closed / secured | CONTRADICTED | Canonical-repository and executable-integrity boundaries remain open. |
-| VALIDATION: installed boundary complete through Plan 24 | CONTRADICTED | 5/5 tests pass but omit PATH forgery and affirm foreign-repository execution. |
+| Finding | Verdict | Evidence | Impact |
+| --- | --- | --- | --- |
+| CR-01: gate never verifies installed executable/approval tuple | CONFIRMED | Selected block has no real path/approval read; helper uses `fixture.installed`; alias failed 5/5 | 🛑 BLOCKER |
+| CR-02: host-only tests execute in protected full suites | CONFIRMED | No default exclusion; protected CI/`ci.full` use unfiltered full suites; helper hard-codes Jon's Node | 🛑 BLOCKER |
+| WR-01: incomplete authority directory crashes validator | CONFIRMED | Empty root produced uncaught `File.Error` from `File.stream!/1` | ⚠ WARNING / TRTH-02 partial |
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 | --- | --- | --- | --- | --- |
-| `test/scripts/phase_164_closeout_test.exs` | 8-9, 1086-1095 | absolute maintainer-local prerequisites in generic CI directory | 🛑 Blocker | protected CI cannot run hermetically |
-| `test/scripts/phase_164_closeout_test.exs` | 1089-1108 | foreign repository execution asserted as success | 🛑 Blocker | insecure behavior is regression-locked |
-| `scripts/mailglass_finalize_phase_loader.mjs` | 1, 83-94, 299-320 | caller PATH/cwd establish trust | 🛑 Blocker | repository and executable authority are forgeable |
-| `scripts/mailglass_finalize_phase_loader.mjs` | 274-283 | installation OID not ancestry-checked | ⚠ Warning | provenance can name an unrelated local commit |
+| `test/scripts/phase_164_closeout_test.exs` | 1270-1366 | Fixture proof labeled installed; hard-coded local Node | 🛑 Blocker | False/non-portable controlled-host proof |
+| `test/test_helper.exs` | 1-69 | No default host-tag exclusion | 🛑 Blocker | Full suites collect host tests |
+| `scripts/validate_repository_truth.exs` | 419-429, 791-800 | Raising stream at malformed-input boundary | ⚠ Warning | Stack trace replaces diagnostic |
+| `164-VALIDATION.md` / `164-SECURITY.md` | current closure sections | Claims conflict with fresh evidence | ⚠ Warning | Records are not yet reliable |
 
-No unreferenced `TBD`, `FIXME`, or `XXX` marker was found in phase-owned implementation/test files.
+No unreferenced `TBD`, `FIXME`, or `XXX` marker was found in Plans 164-25 through 164-28 files.
 
 ### Decision Coverage
 
-All 12/12 trackable `164-CONTEXT.md` decisions are honored by shipped artifacts according to the non-blocking decision-coverage gate. This fuzzy coverage result does not override concrete trust-boundary failures.
+All 12/12 trackable context decisions are honored according to the non-blocking fuzzy gate. This does not override concrete failures.
 
 ### Human Verification Required
 
-N/A — infrastructure/operational tooling phase. The observed failures are concrete code and lifecycle defects; manual UAT cannot close them.
+N/A — infrastructure/operational tooling. Failures are deterministic. Judgment-tier prohibition review remains recommended but cannot substitute for fixes.
+
+### Terminal Lifecycle Gate
+
+T-164-109 remains intentionally open. `HEAD` is `44ebadd4...`, `origin/main` is `d903b040...`, and ignored reports describe older SHAs (`84454ae6...` and `382ebb0a...`). Terminal finalization was not run. Required order remains: passing verifier → authorized completion metadata only → protected-main integration → exact attempt-1 push CI/natural schedules → installed terminal capture → no later tracked write. This report does not mark the phase complete.
 
 ### Gaps Summary
 
-Plans 164-21 through 164-24 successfully repair the previous captured-OID, exact-history, and mutable-extension defects. They do not establish a safe operational trust root: required CI depends on one machine, arbitrary repositories can supply the authenticated payload, and ambient PATH can replace every trust decision. The positive installed-boundary test codifies rather than rejects the foreign-repository behavior. Final exact-main evidence is also absent and cannot be captured safely until these defects are repaired. Phase 164 therefore remains blocked with TRTH-03 unsatisfied.
+Plans 164-25 through 164-27 improved repository-only CI and loader authority, but all submitted review findings remain observable. The repository lane is green; the installed-boundary lane is disconnected and fails, its tag leaks into protected full suites, and the standalone validator raises on an incomplete authority root. Terminal capture remains pending behind a future passing verifier and protected lifecycle.
 
 ---
 
-_Verified: 2026-09-10T21:57:10Z_
+_Verified: 2026-09-11T01:52:47Z_
 _Verifier: the agent (gsd-verifier)_
