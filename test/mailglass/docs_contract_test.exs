@@ -230,28 +230,29 @@ defmodule Mailglass.DocsContractTest do
         )
 
       for token <- [
-            "## Gap Reconciliation — Plans 164-25 through 164-28",
-            "CR-01",
-            "164-25-01",
-            "phase_164_ci_hermeticity",
+            "## Gap Reconciliation — Plans 164-29 through 164-34",
+            "GR-29",
+            "T-164-110",
+            "T-164-113",
+            "real installed tuple proof",
+            "mix verify.phase_164.installed_boundary",
+            "7 selected, 54 excluded, 0 failures",
+            "GR-30",
+            "T-164-114",
+            "T-164-117",
+            "phase_164_incomplete_authority_root",
+            "3 selected, 25 excluded, 0 failures",
+            "repository_truth: missing_ignore_subject",
+            "GR-33",
+            "T-164-125",
+            "T-164-128",
+            "exhaustive full-suite isolation",
             "mix verify.ci_lane_contract",
-            "380 selected, 5 excluded, 0 failures",
-            "CR-02",
-            "164-26-01",
-            "phase_164_canonical_loader",
-            "1 selected, 48 excluded, 0 failures",
-            "CR-03",
-            "164-26-02",
-            "phase_164_trusted_toolchain",
-            "3 selected, 46 excluded, 0 failures",
-            "WR-01",
-            "phase_164_reinstall_contract",
-            "3 selected, 46 excluded, 0 failures",
-            "164-27-03",
-            "phase_164_installed_production_boundary",
-            "5 selected, 44 excluded, 0 failures",
+            "396 selected, 7 excluded, 0 failures",
+            "1cfee7802de808f690fe5413b22a57e7ab802488",
+            "f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac",
+            "Plan 164-27 prior provenance",
             "2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97",
-            "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e",
             "ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
           ] do
         assert validation =~ token,
@@ -268,6 +269,29 @@ defmodule Mailglass.DocsContractTest do
 
       for token <- [
             "## Superseding Gap-Reconciliation Assessment",
+            "T-164-110",
+            "T-164-111",
+            "T-164-112",
+            "T-164-113",
+            "T-164-114",
+            "T-164-115",
+            "T-164-116",
+            "T-164-117",
+            "T-164-118",
+            "T-164-119",
+            "T-164-120",
+            "T-164-121",
+            "T-164-122",
+            "T-164-123",
+            "T-164-124",
+            "T-164-125",
+            "T-164-126",
+            "T-164-127",
+            "T-164-128",
+            "T-164-129",
+            "T-164-130",
+            "T-164-131",
+            "T-164-132",
             "T-164-105",
             "required-CI host coupling",
             "T-164-106",
@@ -278,11 +302,11 @@ defmodule Mailglass.DocsContractTest do
             "unrelated installation OID",
             "T-164-109",
             "terminal no-later-write evidence",
-            "phase_164_ci_hermeticity",
-            "phase_164_canonical_loader",
-            "phase_164_trusted_toolchain",
-            "phase_164_reinstall_contract",
+            "phase_164_incomplete_authority_root",
             "phase_164_installed_production_boundary",
+            "mix verify.ci_lane_contract",
+            "repository-only CI",
+            "controlled-host installation readiness",
             "T-164-SC",
             "accepted"
           ] do
@@ -316,7 +340,7 @@ defmodule Mailglass.DocsContractTest do
     end
 
     @tag :phase_164_lifecycle_contract
-    test "Phase 164 loader, shell, validation, and finalization agree on exact 01 through 28 history" do
+    test "Phase 164 loader, shell, validation, and finalization agree on exact 01 through 34 history" do
       loader = File.read!("scripts/mailglass_finalize_phase_loader.mjs")
       shell = File.read!("scripts/finalize_phase_164.sh")
 
@@ -331,12 +355,12 @@ defmodule Mailglass.DocsContractTest do
         end
 
       assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
-      assert loader =~ "const TERMINAL_LAST_PLAN = 28"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 34"
       assert shell =~ "terminal_first_plan=1"
-      assert shell =~ "terminal_last_plan=28"
+      assert shell =~ "terminal_last_plan=34"
 
       for record <- records do
-        assert record =~ "exact PLAN/SUMMARY pair set 01 through 28"
+        assert record =~ "exact PLAN/SUMMARY pair set 01 through 34"
         refute record =~ "exact 01-24"
         refute record =~ "Plans 01-20 are the executed baseline"
       end
@@ -351,7 +375,7 @@ defmodule Mailglass.DocsContractTest do
         |> then(&Regex.replace(~r/\s+/, &1, " "))
 
       for token <- [
-            "164-28-SUMMARY.md exists before ordinary verification",
+            "164-34-SUMMARY.md exists before ordinary verification",
             "status: passed",
             "verified_implementation_sha",
             "only the four authorized completion metadata paths",
@@ -367,19 +391,20 @@ defmodule Mailglass.DocsContractTest do
     end
 
     @tag :phase_164_lifecycle_contract
-    test "Plan 164-28 verification proves readiness without invoking either finalization mode" do
+    test "Plan 164-34 verification proves readiness without invoking either finalization mode" do
       plan =
         File.read!(
-          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-28-PLAN.md"
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-34-PLAN.md"
         )
 
       automated =
         Regex.scan(~r/<automated>([\s\S]*?)<\/automated>/, plan)
         |> Enum.map_join("\n", fn [_, command] -> command end)
 
-      assert automated =~ "make toolchain"
       assert automated =~ "mix verify.ci_lane_contract"
       assert automated =~ "mix verify.phase_164.installed_boundary"
+      assert automated =~ "phase_164_gap_reconciliation"
+      assert automated =~ "phase_164_lifecycle_contract"
       assert automated =~ "validate_repository_truth.exs"
       refute automated =~ "mailglass-finalize-phase 164"
       refute automated =~ "--pre-verification"
