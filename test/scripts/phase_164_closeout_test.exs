@@ -1379,7 +1379,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         |> List.last()
         |> String.split("\n## ", parts: 2)
         |> List.first()
-        |> Regex.replace(~r/\s+/, " ")
+        |> then(&Regex.replace(~r/\s+/, &1, " "))
 
       assert section =~ "2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97"
       assert section =~ "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"

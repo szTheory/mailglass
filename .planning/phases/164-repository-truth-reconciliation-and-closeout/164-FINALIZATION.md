@@ -2,23 +2,27 @@
 
 Phase 164 closes across two deliberately separate proof boundaries. Ordinary
 GSD execution owns tracked implementation, summaries, verification, roadmap,
-requirements, and phase-completion metadata. The trusted program is the
-mode-0500 executable at
-`/Users/jon/.local/bin/mailglass-finalize-phase` from the tracked source
-`scripts/mailglass_finalize_phase_loader.mjs`. The Plan 164-23 approval and
-authenticated-copy checkpoint remain immutable provenance for the currently
-installed prior object; they do not authorize later tracked bytes. The installed
-loader is outside checkout evaluation: no project-local extension module is
-imported before it establishes repository authority.
+requirements, and phase-completion metadata. The previously proven installed
+program is the mode-0500 executable at
+`/Users/jon/.local/bin/mailglass-finalize-phase`; its active bytes remain bound
+to the exact Plan 164-27 approval described below. The now-changed tracked source
+`scripts/mailglass_finalize_phase_loader.mjs` is proposal authority only until a
+new approval and reinstall complete. The Plan 164-23 approval and
+authenticated-copy checkpoint remain immutable provenance for an older prior
+object; they do not authorize later tracked bytes. The installed loader is
+outside checkout evaluation: no project-local extension module is imported
+before it establishes repository authority.
 
 At invocation the installed program captures one full repository commit OID.
 That captured repository OID, rather than symbolic `HEAD`, is the authority for
 every tree enumeration, blob authentication, and private materialization. The
-authorized terminal history is the exact PLAN/SUMMARY pair set 01 through 28,
-with exactly one PLAN and one SUMMARY for every number. The installed loader
-and both shell layers enforce the same immutable range; no historical subset
-or shortened baseline is accepted. Missing pairs, extra numbers, malformed
-names, or a silently shortened set fail before execution.
+Plan 164-27 installed authority recognizes the exact PLAN/SUMMARY pair set 01
+through 28, with exactly one PLAN and one SUMMARY for every number. The tracked
+loader and shell source now recognize the deliberately advanced 01 through 34
+set. That temporary mismatch makes the installation superseded-pending rather
+than ready; no historical subset or shortened baseline is accepted. Missing
+pairs, extra numbers, malformed names, or a silently shortened set fail before
+execution.
 
 Before the first Bash process starts, the loader authenticates every exact
 executable and data blob at that OID and materializes the complete set beneath
@@ -111,6 +115,31 @@ repository authority, trusted toolchain, installation ancestry, and installed
 boundary. Plan 164-28 reconciles those results into the durable validation,
 security, and lifecycle records. None of their test commands runs either
 finalization mode.
+
+## Plan 164-31 superseded-pending 01-34 source
+
+Plan 164-27 remains the prior proven installation authority. Its exact source
+OID is `2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97`, its installed loader SHA-256
+is `0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e`,
+and its persisted approval remains the immutable record of what was actually
+installed and proven. That tuple is preserved as historical operational fact;
+it does not authorize the tracked 01-34 loader source committed by Plan 164-31.
+
+The tracked 01-34 loader source is now **superseded-pending** at the installed
+boundary. It is not installed authority and no ordinary or terminal invocation
+of the Plan 164-27 executable can establish readiness for these changed bytes.
+Plan 164-32 must bind the changed committed blob and all source, tool,
+destination, prior-object, and rollback fields into one immutable replacement
+proposal and exact human approval. Plan 164-33 must then complete rollback
+preservation, atomic reinstall, and controlled-host proof before installed
+readiness can resume. Any drift invalidates the approval before mutation.
+
+This source-authority advance claims no later lifecycle milestone: ordinary
+verification remains pending; completion-only metadata remains pending;
+protected-main integration remains pending; and terminal ignored capture
+remains pending. The required sequence is unchanged: ordinary verifier →
+completion-only metadata → protected main → exact attempt-one CI and natural
+schedules → terminal ignored capture → no later tracked write.
 
 ## Tracked completion and terminal order
 
