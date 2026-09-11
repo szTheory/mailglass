@@ -228,7 +228,7 @@ pending until the exact protected SHA receives attempt-1 push CI and natural
 schedules, the installed command captures ignored terminal evidence, and no
 later tracked write occurs.
 
-## Plan 164-37 pending physical-toolchain replacement tuple
+## Plan 164-37 approved physical-toolchain replacement tuple
 
 Plan 164-37 independently revalidated protected `main` source OID
 `52c07a5051d269b307831a2210f53dec0dd1ff65` and its normally triggered,
@@ -282,12 +282,26 @@ digest and lstat identity; the new digest-addressed rollback path remains
 absent. Destination and rollback semantics were derived only from that active
 approval.
 
-Approval is pending at the blocking-human checkpoint. No Plan 164-37 approval
-record exists yet. Plan 164-38 installation and rollback publication, Plan
-164-39 tracked reconciliation, ordinary verification, completion-only
+After the maintainer responded exactly `approved`, every ordered proposal field
+and live fact was revalidated before publication. The immutable approval is the
+regular non-symlink mode-0400 file
+`/Users/jon/.local/share/mailglass/checkpoints/164-37-install-approval.env`.
+Its SHA-256 is
+`e3687bf5a2afc69a79b2677c69daa3d533549d4b6f730a30a04e32cc6d13b7cd`,
+and its bytes are exactly the proposal bytes followed by the single final line
+`approval_status=approved`. Readback confirmed that exact-copy-plus-status
+form, all 28 keys occur once with nonempty values, and protected-main, normal
+CI, authenticated source, physical toolchain, runtime probe, installed
+predecessor, destination, and absent rollback facts remained unchanged.
+
+This approval authorizes only Plan 164-38's recoverable replacement of the
+displayed exact tuple. The installed destination remains the Plan
+164-32-approved object, the new rollback path remains absent, and no
+finalization mode, workflow dispatch or rerun, release, publication, or
+completion metadata ran. Plan 164-38 installation and rollback publication,
+Plan 164-39 tracked reconciliation, ordinary verification, completion-only
 metadata, protected-main terminal evidence, and terminal finalization all
-remain pending. This proposal is non-terminal authority data and authorizes no
-mutation by itself.
+remain pending. Any tuple change requires a new proposal and approval.
 
 ## Tracked completion and terminal order
 
