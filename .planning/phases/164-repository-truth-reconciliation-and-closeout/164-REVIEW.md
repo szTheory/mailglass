@@ -1,90 +1,114 @@
 ---
 phase: 164-repository-truth-reconciliation-and-closeout
-reviewed: 2026-09-11T01:43:23Z
+reviewed: 2026-09-11T18:47:03Z
 depth: standard
-files_reviewed: 30
+files_reviewed: 20
 files_reviewed_list:
-  - .gitignore
-  - /Users/jon/.local/bin/mailglass-finalize-phase
-  - /Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env
-  - /Users/jon/.local/share/mailglass/checkpoints/164-27-install-approval.env
-  - /Users/jon/.local/share/mailglass/checkpoints/164-27-install-proposal.env
-  - /Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9
-  - MAINTAINING.md
-  - README.md
-  - compose.toolchain.yml
+  - /Users/jon/.local/share/mailglass/checkpoints/164-32-install-approval.env
+  - /Users/jon/.local/share/mailglass/checkpoints/164-32-install-proposal.env
+  - /Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e
   - config/test_exceptions.exs
-  - dev/toolchain/Dockerfile
-  - mailglass_admin/README.md
-  - mailglass_admin/e2e/structural.spec.js
-  - mailglass_inbound/README.md
-  - mix.exs
-  - scripts/ci_monitor.cjs
-  - scripts/closeout_repository_truth.sh
   - scripts/finalize_phase_164.sh
   - scripts/mailglass_finalize_phase_loader.mjs
-  - scripts/scheduled_control_evidence.sh
   - scripts/validate_repository_truth.exs
+  - test/mailglass/compliance_test.exs
+  - test/mailglass/demo_data_test.exs
   - test/mailglass/docs_contract_test.exs
   - test/mailglass/publish/maintaining_release_gate_contract_test.exs
   - test/scripts/ci_parity_drift_test.exs
   - test/scripts/phase_164_closeout_test.exs
   - test/scripts/phase_164_repository_truth_test.exs
+  - test/scripts/release_policy_contract_test.exs
   - test/scripts/scheduled_control_evidence_test.exs
   - test/scripts/suite_floor_contract_test.exs
+  - test/scripts/verify_published_release_test.exs
   - test/support/suite_floor.ex
-  - test_js/ci-monitor.test.cjs
+  - test/test_helper.exs
 findings:
   critical: 2
-  warning: 1
+  warning: 2
   info: 0
-  total: 3
+  total: 4
 status: issues_found
 ---
 
 # Phase 164: Code Review Report
 
-**Reviewed:** 2026-09-11T01:43:23Z
+**Reviewed:** 2026-09-11T18:47:03Z
 **Depth:** standard
-**Files Reviewed:** 30
+**Files Reviewed:** 20
 **Status:** issues_found
 
 ## Summary
 
-The installed-loader and private-authority implementation is generally defensive, but the new controlled-host test boundary is not wired to the authority it claims to prove and is not isolated from the repository's other full-suite entry points. As submitted, protected full-suite CI can fail solely because a maintainer-specific Node path does not exist, while the dedicated installed-boundary alias can pass without reading either the installed executable or its approval record. The repository-truth validator also has an avoidable crash path for a syntactically valid but incomplete authority directory.
+The 01-34 reconciliation fixes the earlier installed-boundary and suite-isolation findings, but the approved installed command still cannot run the closeout toolchain it pins. The loader also loses its authenticated authority OID at the Bash boundary, leaving a race in which different commits can supply the authenticated code and the repository evidence. A purported moving-HEAD regression test does not exercise that race, and the standalone ledger validator still has an uncaught non-repository input path.
+
+The full Elixir suite could not be executed on this host because the repository requires Elixir 1.18.4 while that asdf installation is absent. The toolchain blocker below was independently reproduced in the loader's exact child `PATH`: the approved Mix shim exits 127 with `asdf: not found`.
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01: The installed-boundary gate never verifies the installed executable or approval tuple
+### CR-01 (BLOCKER): The approved Mix and Elixir executables are unusable in the sanitized child environment
 
-**File:** `/Users/jon/projects/mailglass/test/scripts/phase_164_closeout_test.exs:1269-1366`
+**Files:**
 
-**Issue:** The only tests selected by `verify.phase_164.installed_boundary` are the `phase 164 installed production boundary` describe block. Every test in that block calls `production_installed_fixture!/2`, which copies the tracked `scripts/mailglass_finalize_phase_loader.mjs` into a disposable fixture (`:2050-2057`), and `invoke_production_loader/3` executes that disposable copy (`:2060-2073`). The block never reads `/Users/jon/.local/bin/mailglass-finalize-phase`, `/Users/jon/.local/share/mailglass/checkpoints/164-27-install-approval.env`, or the approved digest/OID tuple. Consequently, the controlled-host alias can pass after the installed command has been deleted, replaced, downgraded, or detached from its approval record. This makes the named operational proof materially false and defeats the lifecycle separation introduced in `mix.exs:304-305`.
+- `scripts/mailglass_finalize_phase_loader.mjs:26-33`
+- `scripts/mailglass_finalize_phase_loader.mjs:132-160`
+- `/Users/jon/.local/share/mailglass/checkpoints/164-32-install-approval.env:12-13`
 
-**Fix:** Add a test under `@describetag :phase_164_installed_production_boundary` that fails closed unless the real installed path and current approval record are regular non-symlink files with the required modes, parses the approval record with an exact key schema, verifies the installed SHA-256 against `source_sha256`, verifies the approved installation OID and ancestry, and runs the installed command's `--self-check` with that recorded OID. Keep source-derived disposable-loader tests in the repository-only group; they do not constitute installed-boundary evidence.
+**Issue:** The approved tuple pins `MIX` and `ELIXIR` to asdf shim scripts. Those scripts execute `asdf exec`, but `buildChildEnvironment/1` constructs `PATH` only from the pinned executables' directories plus `/usr/bin` and `/bin`; the actual asdf executable is `/opt/homebrew/bin/asdf`, and `/opt/homebrew/bin` is absent. Running the approved Mix path under that exact child `PATH` fails with exit 127 (`exec: asdf: not found`). Even if asdf were made reachable, `.tool-versions` requires Elixir 1.18.4, which is not installed on this host. The downstream closeout invokes bare `mix` and `elixir` (`scripts/closeout_repository_truth.sh:123,140`), so both pre-verification and terminal finalization are unable to reach their repository hygiene and ledger checks. `validateTrustedToolchain/1` only validates the shim files themselves and therefore approved an interpreter chain that cannot execute. Preserving caller-controlled `ASDF_DATA_DIR`, `ASDF_DIR`, and version overrides at lines 144-147 would also let the caller redirect that chain if asdf were merely added to `PATH`.
 
-### CR-02: The host-only tests still execute in protected full-suite lanes
+**Fix:** Pin real, runnable Mix and Elixir executables for the required versions (including their interpreter/runtime dependencies), remove or set the asdf override variables instead of inheriting them, and have the downstream script call `"$MAILGLASS_MIX"` and `"$MAILGLASS_ELIXIR"` rather than bare names. Before approving an installation, execute version probes inside the exact sanitized child environment and reject any nonzero result. For example:
 
-**File:** `/Users/jon/projects/mailglass/test/scripts/phase_164_closeout_test.exs:1270`
+```bash
+"$MAILGLASS_MIX" --version >/dev/null
+"$MAILGLASS_ELIXIR" --version >/dev/null
+(cd "$repo" && "$MAILGLASS_MIX" mailglass.repo.hygiene --check --format json)
+"$MAILGLASS_ELIXIR" "$authority_root/scripts/validate_repository_truth.exs" ...
+```
 
-**Issue:** Phase 164 excludes `:phase_164_installed_production_boundary` only from `verify.ci_lane_contract` (`mix.exs:298-305`). The repository still has unfiltered full-suite commands, including `mix.exs:417` and the protected deterministic-core CI command `mix test --warnings-as-errors`. `test/test_helper.exs` does not exclude the new tag by default, so those full suites collect all five tests in this describe. Each test eventually calls `System.cmd("/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node", ...)` at lines 2060-2077. That executable is absent on GitHub-hosted Linux runners and in the supplied toolchain image, which installs Node as `/usr/bin/node`. Thus the new tests can crash the required full suite before making an assertion, blocking protected CI and local parity on every non-Jon environment.
+### CR-02 (BLOCKER): The authenticated authority OID is discarded before Bash, allowing mixed-commit finalization
 
-**Fix:** Default-exclude `:phase_164_installed_production_boundary` in `test/test_helper.exs` and explicitly include it only in the controlled-host alias (verify that `--only` overrides the default exclusion), or add the exact exclusion to every repository-only full-suite invocation. Remove the hard-coded interpreter from disposable fixture tests and use a validated executable supplied by the test environment. Add a contract test that expands every full-suite CI/local alias and proves the host-only tag cannot run there.
+**Files:**
+
+- `scripts/mailglass_finalize_phase_loader.mjs:408-427`
+- `scripts/finalize_phase_164.sh:235-270`
+
+**Issue:** The loader authenticates and materializes every dependency from `authorityOid`, then checks HEAD once at lines 419-420. It spawns the finalizer with only the repository and private authority-root paths; the authenticated OID is not passed. The shell subsequently fetches and independently captures whatever HEAD exists at lines 266-270 as `main_sha`. A fast-forward or other same-user checkout update after the loader's last check but before the shell captures HEAD is therefore accepted as long as it equals `origin/main`. The process can then validate new repository state and the live ledger (`scripts/finalize_phase_164.sh:311`) using scripts and policy material authenticated from the old commit. This violates the claimed single-authority-OID boundary and can produce a passing closeout assembled from two commits.
+
+**Fix:** Pass `authorityOid` as an explicit required argument (or otherwise immutable authenticated input) to the shell. On entry and again after fetch, require both HEAD and `origin/main` to equal that exact OID; never recapture a replacement authority. Use the authority-root ledger rather than the mutable checkout copy. For example:
+
+```javascript
+spawnSync(tools.BASH, [finalizer, repo, privateRoot, authorityOid, ...modeArgs], options);
+```
+
+```bash
+expected_oid=$3
+current_oid=$("$MAILGLASS_GIT" -C "$repo" rev-parse HEAD)
+[ "$current_oid" = "$expected_oid" ] || fail "authority commit changed before finalization"
+```
 
 ## Warnings
 
-### WR-01: An incomplete authority directory crashes the validator instead of returning a controlled error
+### WR-01 (WARNING): The moving-HEAD regression test explicitly accepts success and never moves HEAD
 
-**File:** `/Users/jon/projects/mailglass/scripts/validate_repository_truth.exs:419-429`
+**File:** `test/scripts/phase_164_closeout_test.exs:1096-1112`
 
-**Issue:** `audit_subjects/2` validates only that `authority_root` is a directory, then `ignore_subjects/1` calls `File.stream!/1` for six required ignore files (`:791-800`). A caller can provide an existing but incomplete authority directory and trigger an uncaught `File.Error`, bypassing the validator's documented `{:error, reason}` result and `main/1` diagnostic path. The installed loader currently materializes these files, so this is primarily a robustness defect in the standalone public script, but it makes malformed-boundary behavior inconsistent and harder to diagnose.
+**Issue:** The test named `rejects a moving HEAD` asserts `moving_status == 0` and that dispatch created its marker. Its fixture tries to advance HEAD through a `git` executable prepended to `PATH` (`:2419-2452`), but the loader invokes its absolute pinned Git path, so the shim is never called; the test even asserts that `git_log` does not exist. The test therefore proves that environment-path substitution is ignored, not that a checkout change between authentication and Bash dispatch is rejected. This materially masks CR-02.
 
-**Fix:** Read/stream required authority files with non-raising APIs and return a tagged error such as `{:error, {:authority_subject_missing, path}}`; thread that result through `audit_subjects/2`'s `with` chain. Add a CLI regression using an existing empty `--authority-root` and assert a stable diagnostic plus exit status 1.
+**Fix:** Separate the environment-substitution assertion into its own test. Add a deterministic dispatch hook or a fixture finalizer that advances the fixture checkout precisely after authentication, pass the captured expected OID across the boundary, and assert a nonzero result, an authority-drift diagnostic, and no closeout marker.
+
+### WR-02 (WARNING): An existing non-Git `--repo` crashes the ledger validator instead of returning a controlled error
+
+**File:** `scripts/validate_repository_truth.exs:797-799,848-850`
+
+**Issue:** `ensure_repository/1` accepts any directory. `audit_subjects/2` then calls `tracked_subjects/2`, which pattern-matches specifically on `{output, 0}` from `git ls-files`. For an existing directory that is not a Git worktree, Git returns a nonzero status and the public CLI raises a `MatchError` instead of reaching `main/1`'s stable `{:error, reason}` diagnostic and exit-status path. This makes malformed-boundary behavior inconsistent and exposes an avoidable stack trace.
+
+**Fix:** Validate `git rev-parse --is-inside-work-tree` as part of `ensure_repository/1`, or make `tracked_subjects/2` return `{:ok, subjects} | {:error, reason}` and thread it through `audit_subjects/2`. Add a CLI regression with an empty temporary directory as `--repo` and assert exit status 1 plus a bounded `invalid_repository` diagnostic.
 
 ---
 
-_Reviewed: 2026-09-11T01:43:23Z_
+_Reviewed: 2026-09-11T18:47:03Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
