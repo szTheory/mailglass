@@ -304,7 +304,7 @@ Plans:
 
 **Wave 27** *(verification gap closure; blocked on the executed Plan 164-28 baseline)*
 
-- [ ] 164-29-PLAN.md — Prove the real installed authority and prevent controlled-host tests from entering repository or protected full suites.
+- [x] 164-29-PLAN.md — Prove the real installed authority and prevent controlled-host tests from entering repository or protected full suites.
 - [ ] 164-30-PLAN.md — Make incomplete authority roots fail through the standalone ledger validator's bounded diagnostic contract.
 
 **Wave 28** *(blocked on controlled-host and suite-boundary repair)*
@@ -336,4 +336,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 28/28 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 29/34 | In Progress|  |

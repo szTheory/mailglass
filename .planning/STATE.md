@@ -1,22 +1,22 @@
 ---
-gsd_state_version: 1.0
+gsd_state_version: "1.0"
 milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-28-PLAN.md; ordinary verification pending
-last_updated: "2026-09-11T02:25:46.862Z"
+stopped_at: Completed 164-29-PLAN.md; ready for 164-30
+last_updated: "2026-09-11T02:54:03.800Z"
 last_activity: 2026-09-10
-last_activity_desc: Completed Plan 164-28 tracked reconciliation; ordinary verification pending
-state_head: 5f6c0cb14a7c1a49e0dcc475be4cb7da82fee3ec
+last_activity_desc: Completed Plan 164-29 installed-authority and suite-isolation reconciliation
+state_head: 677679bef856ee9af02362d20bf803027cb74a96
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 60
-  completed_plans: 51
+  completed_plans: 52
   percent: 75
-current_plan: 28
+current_plan: 29
 ---
 
 # Project State
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — READY TO EXECUTE
-Plan: 28 of 28
-Status: Ready for ordinary verification; terminal finalization pending
-Last activity: 2026-09-10 — Completed Plan 164-28 tracked reconciliation
+Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
+Plan: 29 of 34
+Status: Ready to execute Plan 164-30
+Last activity: 2026-09-10 — Completed Plan 164-29 installed-authority and suite-isolation reconciliation
 
-Progress: [████████░░] 51/54 plans complete ([████████░░] 75%)
+Progress: [████████░░] 52/60 plans complete ([████████░░] 75%)
 
 ## Performance Metrics
 
@@ -109,6 +109,7 @@ Progress: [████████░░] 51/54 plans complete ([████�
 | Phase 164 P26 | 10min | 2 tasks | 3 files |
 | Phase 164 P27 | 4min | 3 tasks | 7 files |
 | Phase 164 P28 | 23min | 2 tasks | 9 files |
+| Phase 164 P29 | 15min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -183,6 +184,9 @@ Progress: [████████░░] 51/54 plans complete ([████�
 - [Phase 164]: Plans 164-25 through 164-27 close the four implementation findings; T-164-109 and terminal protected-main evidence remain pending.
 - [Phase 164]: The authorized terminal history is exactly one PLAN and SUMMARY for every number 01 through 28.
 - [Phase 164]: Plan 164-28 stops after summary readiness; ordinary verification and terminal finalization remain later ordered boundaries.
+- [Phase 164]: Plan 164-27 remains the single installed authority tuple; approval bytes are parsed as data and matched field-for-field before installed execution.
+- [Phase 164]: The controlled-host tag is excluded by test_helper on every schema axis and is re-enabled only by the exact named --only alias.
+- [Phase 164]: Disposable loader attacks remain repository-only tests and discover Node through the active test environment rather than a version-specific launcher.
 
 ## Deferred Items
 
@@ -192,6 +196,6 @@ Progress: [████████░░] 51/54 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-11T01:35:09.675Z
-Stopped at: Completed 164-28-PLAN.md; ordinary verification pending
+Last session: 2026-09-11T02:54:03.638Z
+Stopped at: Completed 164-29-PLAN.md; ready for 164-30
 Resume file: None
