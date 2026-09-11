@@ -2584,7 +2584,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     phase_dir = Path.join(repo, ".planning/phases/164-fixture")
 
-    tools = fixture_toolchain!()
+    tools = fixture_toolchain!(repo)
     source = @immutable_loader |> File.read!() |> portable_loader_source!(tools)
     git_log = Path.join(Path.dirname(repo), "git.log")
     real_git = System.find_executable("git")
@@ -2714,10 +2714,21 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     )
   end
 
-  defp fixture_toolchain! do
+  defp fixture_toolchain!(repo) do
+    tool_dir = Path.join(Path.dirname(repo), "trusted-tools-#{Path.basename(repo)}")
+    File.mkdir_p!(tool_dir)
+
     Map.new(@production_tool_paths, fn {tool, _production_path} ->
-      path = tool |> Atom.to_string() |> String.downcase() |> fixture_executable!()
-      {tool, resolved_path!(path)}
+      command = tool |> Atom.to_string() |> String.downcase()
+      delegate = command |> fixture_executable!() |> resolved_path!()
+      wrapper = Path.join(tool_dir, command)
+
+      write_executable!(
+        wrapper,
+        "#!/bin/sh\nexec #{inspect(delegate)} \"$@\"\n"
+      )
+
+      {tool, resolved_path!(wrapper)}
     end)
   end
 
