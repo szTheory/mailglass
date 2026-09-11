@@ -292,7 +292,7 @@ Plans:
 
 **Wave 24** *(blocked on the hermetic CI contract)*
 
-- [ ] 164-26-PLAN.md — Pin canonical repository and trusted-tool authority, enforce installation ancestry, and expand exact terminal history through Plan 28.
+- [x] 164-26-PLAN.md — Pin canonical repository and trusted-tool authority, enforce installation ancestry, and expand exact terminal history through Plan 28.
 
 **Wave 25** *(blocking-human installation checkpoint; blocked on the hardened loader contract)*
 
@@ -315,4 +315,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 25/28 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 26/28 | In Progress|  |

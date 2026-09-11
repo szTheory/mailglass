@@ -5,16 +5,16 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-25-PLAN.md
-last_updated: "2026-09-10T23:58:21.369Z"
+stopped_at: Completed 164-26-PLAN.md
+last_updated: "2026-09-11T00:12:41.872Z"
 last_activity: 2026-09-10
 last_activity_desc: Completed Plan 164-25 hermetic required CI boundary
-state_head: afa747bf59c62056bfcacc9e993e74dff0d7256b
+state_head: 421cdc8e7b83caaa89e150208d3a0901104559b9
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 54
-  completed_plans: 48
+  completed_plans: 49
   percent: 75
 current_plan: 25
 ---
@@ -31,11 +31,11 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
-Plan: 25 of 28
+Plan: 26 of 28
 Status: Ready to execute
 Last activity: 2026-09-10 — Completed Plan 164-25 hermetic required CI boundary
 
-Progress: [████████░░] 48/54 plans complete (75%)
+Progress: [████████░░] 48/54 plans complete ([████████░░] 75%)
 
 ## Performance Metrics
 
@@ -106,6 +106,7 @@ Progress: [████████░░] 48/54 plans complete (75%)
 | Phase 164 P23 | 6min | 3 tasks | 4 files |
 | Phase 164-repository-truth-reconciliation-and-closeout P24 | 21min | 2 tasks | 10 files |
 | Phase 164 P25 | 13min | 2 tasks | 7 files |
+| Phase 164 P26 | 10min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -171,6 +172,9 @@ Progress: [████████░░] 48/54 plans complete (75%)
 - [Phase 164]: Plan 164-24 records automated production-boundary proof only; terminal finalization remains pending. — Ordinary verification and protected completion-metadata integration remain separately ordered lifecycle events.
 - [Phase 164]: The generic required lane retains test/scripts directory discovery and excludes exactly phase_164_installed_production_boundary; no workflow or required-lane topology changes are needed. — Protected CI must use only tracked repository state while preserving all fixture-backed contracts.
 - [Phase 164]: Installed-host assertions remain fail-closed under one explicit preferred-test-environment alias and are never treated as repository-runner evidence. — Fixture-backed and installed-host groups are distinct execution authorities and neither substitutes for the other.
+- [Phase 164]: Production finalization selects only /Users/jon/projects/mailglass with normalized origin szTheory/mailglass before dependency enumeration.
+- [Phase 164]: Finalization validates absolute Node, Git, Bash, gh, jq, Mix, and Elixir identities and passes an allowlisted child environment with reconstructed PATH.
+- [Phase 164]: Phase 164 terminal history is the exact PLAN/SUMMARY pair set 01 through 28.
 
 ## Deferred Items
 
@@ -180,6 +184,6 @@ Progress: [████████░░] 48/54 plans complete (75%)
 
 ## Session Continuity
 
-Last session: 2026-09-10T23:58:21.231Z
-Stopped at: Completed 164-25-PLAN.md
+Last session: 2026-09-11T00:12:41.742Z
+Stopped at: Completed 164-26-PLAN.md
 Resume file: None
