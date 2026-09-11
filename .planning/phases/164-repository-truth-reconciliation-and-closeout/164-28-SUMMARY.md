@@ -12,9 +12,9 @@ provides:
   - contract-checked post-summary verifier, protected-metadata, CI, schedule, and no-later-write order
 affects: [phase-164-verification, phase-164-terminal-proof, TRTH-01, TRTH-02, TRTH-03]
 actuals:
-  tokens: 9234
+  tokens: 13667
   tasks: 2
-  commits: 4
+  commits: 5
 tech-stack:
   added: []
   patterns: [named production-seam reconciliation, exact lifecycle ordering, distinct repository and controlled-host verification lanes]
@@ -98,6 +98,7 @@ status: complete
 2. **Task 1 GREEN: Reconcile repaired gap evidence** — `892b0729`
 3. **Task 2 RED: Add failing lifecycle ordering contracts** — `78005f65`
 4. **Task 2 GREEN: Lock exact terminal lifecycle** — `65749043`
+5. **Post-summary Rule 3 fix: Register activated Plan 28 security evidence** — `8bcf41b7`
 
 ## Decisions Made
 
@@ -133,6 +134,14 @@ status: complete
 - **Files modified:** `.planning/WINDOWS.md`
 - **Commit:** summary metadata commit
 
+**4. [Rule 3 - Blocking] Registered the completed Plan 28 security record**
+
+- **Found during:** Final committed-tree verification after the summary activated Plan 28 in completed-plan discovery
+- **Issue:** The canonical validator correctly required `164-SECURITY.md`, but no exact ledger relationship existed yet.
+- **Fix:** Added M-33 and bound its canonical completed-plan relationship digest in the production validator.
+- **Files modified:** `164-TRUTH-DISPOSITION.tsv`, `scripts/validate_repository_truth.exs`
+- **Commit:** `8bcf41b7`
+
 ## Verification
 
 - Gap reconciliation contract: 3 selected, 0 failures.
@@ -160,7 +169,7 @@ None. Changes reconcile existing trust boundaries and add fail-closed documentat
 
 ## Self-Check: PASSED
 
-- Task commits `02d379c5`, `892b0729`, `78005f65`, and `65749043` exist.
+- Task commits `02d379c5`, `892b0729`, `78005f65`, `65749043`, and `8bcf41b7` exist.
 - All created and modified plan files exist.
 - All non-terminal acceptance checks passed under their intended repository or controlled-host authority.
 - No terminal report was produced or claimed.
