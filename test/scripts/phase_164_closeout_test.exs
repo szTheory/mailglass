@@ -1447,7 +1447,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           cd: @repo_root
         )
 
-      assert :crypto.hash(:sha256, blob) |> Base.encode16(case: :lower) == approval["source_sha256"]
+      assert blob |> then(&:crypto.hash(:sha256, &1)) |> Base.encode16(case: :lower) ==
+               approval["source_sha256"]
 
       assert {_, 0} =
                System.cmd(
@@ -2273,7 +2274,11 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   defp sha256_file!(path) do
     assert_regular_mode!(path, 0o500)
-    path |> File.read!() |> :crypto.hash(:sha256) |> Base.encode16(case: :lower)
+
+    path
+    |> File.read!()
+    |> then(&:crypto.hash(:sha256, &1))
+    |> Base.encode16(case: :lower)
   end
 
   defp invoke_installed_self_check(path, approval) do
