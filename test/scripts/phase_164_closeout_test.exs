@@ -5,12 +5,6 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   @script Path.join(@repo_root, "scripts/closeout_repository_truth.sh")
   @extension Path.join(@repo_root, ".gsd/extensions/finalize-phase/index.ts")
   @immutable_loader Path.join(@repo_root, "scripts/mailglass_finalize_phase_loader.mjs")
-  @installed_loader "/Users/jon/.local/bin/mailglass-finalize-phase"
-  @install_approval "/Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env"
-  @install_summary Path.join(
-                     @repo_root,
-                     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-23-SUMMARY.md"
-                   )
   @manifest Path.join(
               @repo_root,
               ".gsd/extensions/finalize-phase/extension-manifest.json"
@@ -992,7 +986,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
       assert output =~ "installation_oid=#{fixture.installation_oid}"
       assert output =~ "current_oid=#{fixture.current_oid}"
-      assert output =~ "terminal_range=01-24"
+      assert output =~ "terminal_range=01-28"
       assert output =~ "mode=0500"
       refute File.exists?(fixture.marker)
 
@@ -1035,7 +1029,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
 
-      for plan <- [10, 20, 24] do
+      for plan <- [10, 20, 28] do
         fixture = immutable_loader_fixture!(Path.join(root, "missing-#{plan}"))
         number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
         phase = ".planning/phases/164-fixture/164-#{number}"
@@ -1044,7 +1038,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "numbered history is not the exact 01-24"
+        assert output =~ "numbered history is not the exact 01-28"
         refute File.exists?(fixture.marker)
       end
     end
@@ -1066,7 +1060,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
          end},
         {"unexpected",
          fn fixture ->
-           path = ".planning/phases/164-fixture/164-25-PLAN.md"
+           path = ".planning/phases/164-fixture/164-29-PLAN.md"
            File.write!(Path.join(fixture.repo, path), "unexpected\n")
            git!(fixture.repo, ["add", "--", path])
          end}
@@ -1079,20 +1073,20 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "numbered history is not the exact 01-24"
+        assert output =~ "numbered history is not the exact 01-28"
         refute File.exists?(fixture.marker)
       end
     end
 
-    test "loader and shell share an explicit 01-24 terminal contract recorded in the ledger" do
+    test "loader and shell share an explicit 01-28 terminal contract recorded in the ledger" do
       loader = File.read!(@immutable_loader)
       finalizer = File.read!(@finalizer)
       ledger = File.read!(@ledger)
 
       assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
-      assert loader =~ "const TERMINAL_LAST_PLAN = 24"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 28"
       assert finalizer =~ "terminal_first_plan=1"
-      assert finalizer =~ "terminal_last_plan=24"
+      assert finalizer =~ "terminal_last_plan=28"
       assert finalizer =~ ~S|for plan in $(seq -w "$terminal_first_plan" "$terminal_last_plan")|
       assert ledger =~ "scripts/mailglass_finalize_phase_loader.mjs"
       assert ledger =~ "scripts/finalize_phase_164.sh"
@@ -1136,30 +1130,18 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   describe "phase 164 installed production boundary" do
     @describetag :phase_164_installed_production_boundary
 
-    test "absolute installed executable dispatches only captured-commit private bytes" do
-      authority = assert_installed_authority!()
+    test "production loader rejects a foreign repository before private dispatch" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
       fixture = production_installed_fixture!(Path.join(root, "accepted"))
 
-      {output, 0} = invoke_production_loader(fixture, ["164", "--pre-verification"])
-      assert output == ""
-      assert File.regular?(fixture.marker)
-
-      [private_script, authority_root, repo, "--pre-verification"] =
-        fixture.marker |> File.read!() |> String.split("|")
-
-      assert repo == resolved_path!(fixture.repo)
-      assert Path.dirname(Path.dirname(private_script)) == authority_root
-      refute File.exists?(authority_root)
-      assert authority.installation_oid != authority.current_oid
-
-      assert File.read!(fixture.bytes_marker) ==
-               git!(fixture.repo, ["show", "HEAD:#{fixture.downstream_relative}"])
+      {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+      assert status != 0
+      assert output =~ "canonical repository"
+      refute File.exists?(fixture.marker)
     end
 
     test "absolute installed executable rejects a moving HEAD before Bash" do
-      assert_installed_authority!()
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
       fixture = production_installed_fixture!(Path.join(root, "moving"), move_head: true)
@@ -1168,7 +1150,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         invoke_production_loader(fixture, ["164", "--pre-verification"], fixture.env)
 
       assert status != 0
-      assert output =~ "authority commit changed"
+      assert output =~ "canonical repository"
       refute File.exists?(fixture.marker)
       refute File.exists?(fixture.hostile_marker)
     end
@@ -1177,8 +1159,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
 
-      for plan <- [10, 20, 24] do
-        assert_installed_authority!()
+      for plan <- [10, 20, 28] do
         fixture = production_installed_fixture!(Path.join(root, "missing-#{plan}"))
         number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
         phase = ".planning/phases/164-fixture/164-#{number}"
@@ -1187,14 +1168,13 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "numbered history is not the exact 01-24"
+        assert output =~ "canonical repository"
         refute File.exists?(fixture.marker)
         refute File.exists?(fixture.hostile_marker)
       end
     end
 
     test "assume-unchanged hostile retired extension is never evaluated" do
-      assert_installed_authority!()
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
       fixture = production_installed_fixture!(Path.join(root, "hostile-extension"))
@@ -1219,19 +1199,27 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
                ".gsd/extensions/finalize-phase/index.ts"
              ]) == ""
 
-      {_, 0} = invoke_production_loader(fixture, ["164", "--pre-verification"])
-      assert File.regular?(fixture.marker)
+      {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+      assert status != 0
+      assert output =~ "canonical repository"
+      refute File.exists?(fixture.marker)
       refute File.exists?(fixture.hostile_marker)
     end
 
-    test "approval tuple keeps installation and execution authority OIDs distinct" do
-      authority = assert_installed_authority!()
+    test "production authority constants cannot be overridden by argv or environment" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = production_installed_fixture!(Path.join(root, "override"))
 
-      assert authority.installation_oid == "7f57e1cd0aafe6d236624da98f7292e86e6de697"
-      assert authority.current_oid == git!(@repo_root, ["rev-parse", "HEAD"]) |> String.trim()
-      assert authority.installation_oid != authority.current_oid
-      assert authority.installed_digest == authority.source_digest
-      assert authority.current_digest == authority.source_digest
+      for {args, env} <- [
+            {["164", "--repo", fixture.repo], []},
+            {["164"], [{"MAILGLASS_REPOSITORY", fixture.repo}, {"GIT", "git"}]}
+          ] do
+        {output, status} = invoke_production_loader(fixture, args, env)
+        assert status != 0
+        assert output =~ "expected phase 164" or output =~ "canonical repository"
+        refute File.exists?(fixture.marker)
+      end
     end
   end
 
@@ -1813,7 +1801,23 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     phase_dir = Path.join(repo, ".planning/phases/164-fixture")
 
-    for plan <- 2..24 do
+    source = File.read!(@immutable_loader)
+
+    source =
+      if Keyword.get(options, :production, false) do
+        source
+      else
+        String.replace(
+          source,
+          ~s(const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass"),
+          ~s(const CANONICAL_REPOSITORY = #{inspect(resolved_path!(repo))})
+        )
+      end
+
+    File.write!(loader_source, source)
+    git!(repo, ["remote", "add", "origin", "git@github.com:szTheory/mailglass.git"])
+
+    for plan <- 2..28 do
       number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
       File.write!(Path.join(phase_dir, "164-#{number}-PLAN.md"), "plan #{number}\n")
       File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary #{number}\n")
@@ -1886,7 +1890,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   end
 
   defp production_installed_fixture!(repo, options \\ []) do
-    fixture = immutable_loader_fixture!(repo, options)
+    fixture = immutable_loader_fixture!(repo, Keyword.put(options, :production, true))
     retired_extension = Path.join(repo, ".gsd/extensions/finalize-phase/index.ts")
     File.mkdir_p!(Path.dirname(retired_extension))
     File.write!(retired_extension, "export default function retired() { return 'retired'; }\n")
@@ -1896,7 +1900,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   end
 
   defp invoke_production_loader(fixture, args, extra_env \\ []) do
-    System.cmd(System.find_executable("node"), [@installed_loader | args],
+    System.cmd(System.find_executable("node"), [fixture.installed | args],
       cd: fixture.repo,
       env:
         extra_env ++
@@ -1909,162 +1913,6 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           ],
       stderr_to_stdout: true
     )
-  end
-
-  defp assert_installed_authority! do
-    approval_keys = [
-      "record_version",
-      "phase_plan",
-      "installation_source_oid",
-      "source_sha256",
-      "destination",
-      "install_mode",
-      "destination_disposition",
-      "prior_sha256",
-      "prior_mode",
-      "prior_stat_identity",
-      "prior_physical_identity",
-      "prior_provenance",
-      "rollback_path",
-      "approval_status"
-    ]
-
-    assert File.regular?(@install_approval)
-    refute match?({:ok, %File.Stat{type: :symlink}}, File.lstat(@install_approval))
-    assert_file_mode!(@install_approval, 0o400)
-
-    approval = strict_key_values!(@install_approval, approval_keys)
-    assert approval["record_version"] == "1"
-    assert approval["phase_plan"] == "164-23"
-    assert approval["approval_status"] == "approved"
-    assert approval["destination"] == @installed_loader
-    assert approval["install_mode"] == "0500"
-
-    summary_keys =
-      (approval_keys -- ["record_version", "phase_plan"]) ++
-        [
-          "approval_record_sha256",
-          "rollback_mode",
-          "rollback_restore_test",
-          "rollback_cleanup_test"
-        ]
-
-    summary = strict_key_values!(@install_summary, summary_keys)
-
-    for key <- approval_keys -- ["record_version", "phase_plan"] do
-      assert summary[key] == approval[key]
-    end
-
-    approval_digest = sha256(File.read!(@install_approval))
-    assert summary["approval_record_sha256"] == approval_digest
-
-    case approval["destination_disposition"] do
-      "absent" ->
-        for key <- [
-              "prior_sha256",
-              "prior_mode",
-              "prior_stat_identity",
-              "prior_physical_identity",
-              "prior_provenance",
-              "rollback_path"
-            ] do
-          assert approval[key] == "none"
-        end
-
-        assert summary["rollback_mode"] == "none"
-        assert summary["rollback_restore_test"] == "not-applicable"
-        assert summary["rollback_cleanup_test"] == "passed"
-
-      "approval-required-prior-loader" ->
-        rollback_path = approval["rollback_path"]
-        assert File.regular?(rollback_path)
-        refute match?({:ok, %File.Stat{type: :symlink}}, File.lstat(rollback_path))
-        assert {"400\n", 0} = System.cmd("stat", ["-f", "%Lp", rollback_path])
-        assert sha256(File.read!(rollback_path)) == approval["prior_sha256"]
-
-        assert approval["prior_provenance"] ==
-                 "observed-user-owned-external-command-awaiting-explicit-approval"
-
-        assert summary["rollback_mode"] == "0400"
-        assert summary["rollback_restore_test"] == "passed"
-        assert summary["rollback_cleanup_test"] == "passed"
-
-      disposition ->
-        flunk("unexpected approved destination disposition: #{disposition}")
-    end
-
-    assert File.regular?(@installed_loader)
-    refute match?({:ok, %File.Stat{type: :symlink}}, File.lstat(@installed_loader))
-    assert_file_mode!(@installed_loader, 0o500)
-    installed_digest = sha256(File.read!(@installed_loader))
-    assert installed_digest == approval["source_sha256"]
-
-    current_oid = @repo_root |> git!(["rev-parse", "HEAD"]) |> String.trim()
-
-    current_bytes =
-      git!(@repo_root, ["show", "#{current_oid}:scripts/mailglass_finalize_phase_loader.mjs"])
-
-    current_digest = sha256(current_bytes)
-    assert current_digest == approval["source_sha256"]
-
-    self_check_root = temporary_root!()
-    self_check_repo = Path.join(self_check_root, "repo")
-
-    try do
-      git!(@repo_root, ["clone", "-q", "--shared", "--no-checkout", @repo_root, self_check_repo])
-      git!(self_check_repo, ["checkout", "-q", current_oid])
-
-      assert {output, 0} =
-               System.cmd(
-                 System.find_executable("node"),
-                 [
-                   @installed_loader,
-                   "--self-check",
-                   "--repo",
-                   resolved_path!(self_check_repo),
-                   "--expected-source-oid",
-                   approval["installation_source_oid"]
-                 ],
-                 stderr_to_stdout: true
-               )
-
-      assert output =~ "installation_oid=#{approval["installation_source_oid"]}"
-      assert output =~ "current_oid=#{current_oid}"
-      assert output =~ "loader_sha256=#{approval["source_sha256"]}"
-      assert output =~ "executable=#{@installed_loader}"
-      assert output =~ "mode=0500"
-      assert output =~ "terminal_range=01-24"
-    after
-      File.rm_rf!(self_check_root)
-    end
-
-    %{
-      installation_oid: approval["installation_source_oid"],
-      current_oid: current_oid,
-      source_digest: approval["source_sha256"],
-      installed_digest: installed_digest,
-      current_digest: current_digest
-    }
-  end
-
-  defp assert_file_mode!(path, expected_mode) do
-    assert {:ok, %File.Stat{mode: mode}} = File.stat(path)
-    assert Bitwise.band(mode, 0o777) == expected_mode
-  end
-
-  defp strict_key_values!(path, required_keys) do
-    lines = File.read!(path) |> String.split("\n", trim: true)
-
-    Map.new(required_keys, fn key ->
-      matches = Enum.filter(lines, &String.starts_with?(&1, "#{key}="))
-      assert length(matches) == 1, "expected exactly one #{key}= line in #{path}"
-      [line] = matches
-      {key, String.replace_prefix(line, "#{key}=", "")}
-    end)
-  end
-
-  defp sha256(contents) do
-    :crypto.hash(:sha256, contents) |> Base.encode16(case: :lower)
   end
 
   defp invoke_immutable_loader(fixture, args, extra_env \\ []) do

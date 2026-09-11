@@ -21,8 +21,11 @@ const LOADER_IDENTITY = "mailglass-finalize-phase-loader 1";
 const MAX_OUTPUT_BYTES = 16_000;
 const SOURCE_PATH = "scripts/mailglass_finalize_phase_loader.mjs";
 const SUPPORTED_PHASE = "164";
+const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass";
+const EXPECTED_REPOSITORY = "szTheory/mailglass";
+const TRUSTED_GIT = "/opt/homebrew/Cellar/git/2.41.0/bin/git";
 const TERMINAL_FIRST_PLAN = 1;
-const TERMINAL_LAST_PLAN = 24;
+const TERMINAL_LAST_PLAN = 28;
 const PRE_VERIFICATION = "--pre-verification";
 const FULL_OID = /^[0-9a-f]{40}$/;
 
@@ -81,7 +84,7 @@ function inside(root, candidate) {
 }
 
 function git(repo, args, options = {}) {
-  const result = spawnSync("git", args, {
+  const result = spawnSync(TRUSTED_GIT, args, {
     cwd: repo,
     encoding: options.encoding ?? null,
     maxBuffer: 16 * 1024 * 1024,
@@ -92,6 +95,35 @@ function git(repo, args, options = {}) {
     fail(`${options.label ?? "Git operation"} failed: ${detail}`);
   }
   return result;
+}
+
+function normalizedRepository(url) {
+  const match = String(url).trim().match(
+    /^(?:git@github\.com:|https:\/\/github\.com\/|ssh:\/\/git@github\.com\/)([^/]+\/[^/]+?)(?:\.git)?$/,
+  );
+  return match?.[1] ?? "";
+}
+
+export function validateCanonicalRepository() {
+  let lexical;
+  let repo;
+  try {
+    lexical = lstatSync(CANONICAL_REPOSITORY);
+    repo = realpathSync(CANONICAL_REPOSITORY);
+  } catch {
+    fail("canonical repository is missing");
+  }
+  if (!lexical.isDirectory() || lexical.isSymbolicLink() || repo !== CANONICAL_REPOSITORY) {
+    fail("canonical repository path is not the compiled physical checkout");
+  }
+  const origin = git(repo, ["remote", "get-url", "origin"], {
+    encoding: "utf8",
+    label: "canonical origin authentication",
+  }).stdout.trim();
+  if (normalizedRepository(origin) !== EXPECTED_REPOSITORY) {
+    fail("canonical repository origin is not szTheory/mailglass");
+  }
+  return repo;
 }
 
 export function captureAuthorityCommit(repo) {
@@ -200,7 +232,7 @@ function exactNumberedArtifacts(repo, authorityOid, phaseRelative) {
     new Set(actual).size !== actual.length ||
     expected.some((path) => !actual.includes(path))
   ) {
-    fail("authenticated Phase 164 numbered history is not the exact 01-24 PLAN/SUMMARY set");
+    fail("authenticated Phase 164 numbered history is not the exact 01-28 PLAN/SUMMARY set");
   }
   return expected;
 }
@@ -281,14 +313,14 @@ function selfCheck(args) {
   const currentOid = captureAuthorityCommit(repo);
   const currentBytes = authenticateCommitFile(repo, currentOid, SOURCE_PATH);
   if (!installedBytes.equals(currentBytes)) fail("current HEAD loader source differs from installed bytes");
-  if (TERMINAL_FIRST_PLAN !== 1 || TERMINAL_LAST_PLAN !== 24) fail("compiled terminal range is invalid");
+  if (TERMINAL_FIRST_PLAN !== 1 || TERMINAL_LAST_PLAN !== 28) fail("compiled terminal range is invalid");
   const digest = createHash("sha256").update(installedBytes).digest("hex");
   console.log(`installation_oid=${expectedSourceOid}`);
   console.log(`current_oid=${currentOid}`);
   console.log(`loader_sha256=${digest}`);
   console.log(`executable=${executable}`);
   console.log("mode=0500");
-  console.log("terminal_range=01-24");
+  console.log("terminal_range=01-28");
 }
 
 function finalize(args) {
@@ -296,12 +328,7 @@ function finalize(args) {
   if (!valid || args[0] !== SUPPORTED_PHASE) {
     fail("expected phase 164 and optional --pre-verification");
   }
-  const rootOutput = git(process.cwd(), ["rev-parse", "--show-toplevel"], {
-    encoding: "utf8",
-    label: "repository discovery",
-  }).stdout.trim();
-  if (!rootOutput) fail("current directory is not inside a Git repository");
-  const repo = realpathSync(rootOutput);
+  const repo = validateCanonicalRepository();
   const authorityOid = captureAuthorityCommit(repo);
   const phaseRelative = phaseDirectoryAtCommit(repo, authorityOid);
   const dependencies = dependencyManifest(repo, authorityOid, phaseRelative);
