@@ -5,16 +5,16 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-34-PLAN.md; ready for ordinary Phase 164 verification
-last_updated: "2026-09-11T05:12:09Z"
+stopped_at: Completed 164-35-PLAN.md
+last_updated: "2026-09-11T20:31:26.590Z"
 last_activity: 2026-09-11
-last_activity_desc: Completed Plan 164-34 repair evidence and ledger reconciliation; terminal lifecycle remains pending
-state_head: 60eecec87eb666d11c66d88bf99fa7d0c145c96b
+last_activity_desc: Phase 164 execution started
+state_head: 42b5f9c94d1dc19a1a35c6bfba33e9c2a2e00391
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 60
-  completed_plans: 57
+  total_plans: 65
+  completed_plans: 58
   percent: 75
 current_plan: 34
 ---
@@ -31,9 +31,9 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
-Plan: 34 of 34
-Status: Plan execution complete; ready for ordinary Phase 164 verification (phase and terminal completion pending)
-Last activity: 2026-09-11 — Completed Plan 164-34 repair evidence and ledger reconciliation
+Plan: 2 of 39
+Status: Ready to execute
+Last activity: 2026-09-11 — Phase 164 execution started
 
 Progress: [████████░░] 57/60 plans complete ([████████░░] 75%)
 
@@ -115,6 +115,7 @@ Progress: [████████░░] 57/60 plans complete ([████�
 | Phase 164 P32 | 34min | 2 tasks | 5 files |
 | Phase 164 P33 | 17min | 2 tasks | 5 files |
 | Phase 164 P34 | 25min | 2 tasks | 8 files |
+| Phase 164 P35 | 34m | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -205,6 +206,9 @@ Progress: [████████░░] 57/60 plans complete ([████�
 - [Phase 164]: Repository-only CI, controlled-host installation readiness, ordinary verification, protected completion metadata, exact-main remote evidence, and terminal capture remain separate ordered authorities.
 - [Phase 164]: The active installed authority is the exact Plan 164-32 tuple proven by Plan 164-33; Plan 164-27 remains immutable prior provenance only.
 - [Phase 164]: Plan 164-34 completes execute-plan reconciliation without completing TRTH-01/02/03 or Phase 164; T-164-109 and terminal no-later-write evidence remain pending.
+- [Phase 164]: Finalization runtime authority is the versioned physical Elixir 1.19.5 and Erlang 28 closure, not asdf shims or inherited ASDF selectors. — The exact sanitized child environment must execute every authenticated runtime member before Bash dispatch.
+- [Phase 164]: The Node-authenticated commit remains immutable data through finalizer and closeout. — Every later repository observation validates the captured OID rather than recapturing or substituting authority.
+- [Phase 164]: Proposal and installed-host test groups remain outside repository-only CI behind dedicated non-vacuous aliases. — Repository evidence, human approval, and controlled-host proof are distinct authorities.
 
 ## Deferred Items
 
@@ -214,6 +218,6 @@ Progress: [████████░░] 57/60 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-11T05:12:09Z
-Stopped at: Completed 164-34-PLAN.md; ready for ordinary Phase 164 verification
+Last session: 2026-09-11T20:31:26.439Z
+Stopped at: Completed 164-35-PLAN.md
 Resume file: None

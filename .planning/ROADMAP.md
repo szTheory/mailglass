@@ -190,7 +190,7 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 34/39 plans executed
+**Plans**: 35/39 plans executed
 
 **Completion state**: Gap-closure Plans 164-35 through 164-39 are planned and pending execution. Phase and TRTH-01/TRTH-02/TRTH-03 completion remain pending until those plans have summaries, ordinary verification passes, completion-only tracking reaches protected `main`, exact-main CI/natural schedules are observed, and the installed terminal command completes with no later tracked write.
 
@@ -325,7 +325,7 @@ Plans:
 
 **Wave 32** *(gap closure; blocked on the executed Plan 164-34 baseline)*
 
-- [ ] 164-35-PLAN.md — Close the physical BEAM runtime chain and carry one immutable authority OID through every finalization boundary.
+- [x] 164-35-PLAN.md — Close the physical BEAM runtime chain and carry one immutable authority OID through every finalization boundary.
 
 **Wave 33** *(blocked on the authority-chain repair)*
 
@@ -356,4 +356,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 34/39 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 35/39 | In Progress|  |
