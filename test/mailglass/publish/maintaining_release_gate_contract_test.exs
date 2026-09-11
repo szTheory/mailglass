@@ -34,6 +34,7 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
     current = section_before!(maintaining, "Historical release procedures")
 
     assert current =~ "/Users/jon/.local/bin/mailglass-finalize-phase 164"
+
     assert current =~
              "/Users/jon/.local/bin/mailglass-finalize-phase 164 --pre-verification"
 
