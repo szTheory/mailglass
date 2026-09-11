@@ -52,6 +52,9 @@ services:
       # Both D-06 schema axes the advisory matrix runs. Default `public` matches
       # the required lane; override with `make toolchain MAILGLASS_SCHEMA=mailglass`.
       MAILGLASS_SCHEMA: ${MAILGLASS_SCHEMA:-public}
+      # Debian bookworm's Node 18 otherwise interprets extensionless executables
+      # as CommonJS; the installed immutable loader is an ESM command.
+      NODE_OPTIONS: --experimental-default-type=module
       HEX_HOME: /cache/hex
       MIX_HOME: /cache/mix
     depends_on:
@@ -68,6 +71,10 @@ services:
       - mailglass_toolchain_build:/workspace/_build
       - mailglass_toolchain_mix:/cache/mix
       - mailglass_toolchain_hex:/cache/hex
+      # Phase 164's production-boundary tests intentionally execute the exact
+      # approved host installation and its separately protected approval tuple.
+      - /Users/jon/.local/bin/mailglass-finalize-phase:/Users/jon/.local/bin/mailglass-finalize-phase:ro
+      - /Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env:/Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env:ro
 
 volumes:
   mailglass_toolchain_pg:

@@ -190,7 +190,9 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 13/14 plans executed
+**Plans**: 35/39 plans executed
+
+**Completion state**: Gap-closure Plans 164-35 through 164-39 are planned and pending execution. Phase and TRTH-01/TRTH-02/TRTH-03 completion remain pending until those plans have summaries, ordinary verification passes, completion-only tracking reaches protected `main`, exact-main CI/natural schedules are observed, and the installed terminal command completes with no later tracked write.
 
 Plans:
 
@@ -242,11 +244,108 @@ Plans:
 
 **Wave 12** *(blocked on the Wave 11 regression lock)*
 
-- [ ] 164-14-PLAN.md — Integrate the repair normally, capture fresh exact-SHA protected evidence, and preserve the terminal-finalization boundary.
+- [x] 164-14-PLAN.md — Integrate the repair normally, capture fresh exact-SHA protected evidence, and preserve the terminal-finalization boundary.
+
+**Wave 13** *(gap closure; blocked on the Wave 12 protected evidence handoff)*
+
+- [x] 164-15-PLAN.md — Bind terminal verification to per-commit source history, require the complete repair summary set, contain hostile fixture cleanup, and reject impossible scheduled timestamps.
+
+**Wave 14** *(gap closure; blocked on Wave 13 completion)*
+
+- [x] 164-16-PLAN.md — Reconcile contradictory current maintainer release authority and enforce the historical boundary across all non-historical guidance.
+
+**Wave 15** *(gap closure; blocked on Wave 14 completion)*
+
+- [x] 164-17-PLAN.md — Authenticate exact tracked-artifact membership and execute only finalizer bytes authenticated through the gate-bearing HEAD blob.
+
+**Wave 16** *(gap closure; blocked on the executed Plan 164-17 baseline)*
+
+- [x] 164-18-PLAN.md — Require one exact NUL-delimited stage-0 Git-index identity for every tracked disposition and regress unmerged entries.
+
+**Wave 17** *(blocked on the stage-aware trust anchor)*
+
+- [x] 164-19-PLAN.md — Authenticate the lexical Phase 164 shim and complete HEAD dependency chain, reject alternate phases, and guarantee print-mode cleanup.
+
+**Wave 18** *(blocked on the repaired finalizer chain)*
+
+- [x] 164-20-PLAN.md — Reconcile validation and finalization records with the repaired production behavior while preserving terminal closeout ordering.
+
+**Wave 19** *(gap closure; blocked on the executed Plan 164-20 baseline)*
+
+- [x] 164-21-PLAN.md — Establish one immutable installed-loader source, non-dispatching inspection modes, and exact numbered-history authority.
+
+**Wave 20** *(blocked on the immutable loader contract)*
+
+- [x] 164-22-PLAN.md — Retire the mutable project-local extension and publish the installed command as the sole current authority.
+
+**Wave 21** *(blocking-human installation checkpoint; blocked on Wave 20)*
+
+- [x] 164-23-PLAN.md — Preflight, approve, atomically install, and provenance-check the external authority with recoverable replacement bytes.
+
+**Wave 22** *(blocked on the verified installed command)*
+
+- [x] 164-24-PLAN.md — Exercise all verifier attacks through the installed executable and reconcile non-terminal validation records.
+
+**Wave 23** *(gap closure; blocked on the executed Plan 164-24 baseline)*
+
+- [x] 164-25-PLAN.md — Restore hermetic required CI while preserving explicit controlled-host installed-boundary proof.
+
+**Wave 24** *(blocked on the hermetic CI contract)*
+
+- [x] 164-26-PLAN.md — Pin canonical repository and trusted-tool authority, enforce installation ancestry, and expand exact terminal history through Plan 28.
+
+**Wave 25** *(blocking-human installation checkpoint; blocked on the hardened loader contract)*
+
+- [x] 164-27-PLAN.md — Approve, recoverably install, and production-check the hardened external authority without running finalization.
+
+**Wave 26** *(blocked on the verified installed command)*
+
+- [x] 164-28-PLAN.md — Reconcile validation, security, and lifecycle records while preserving the post-protected-main terminal boundary.
+
+**Wave 27** *(verification gap closure; blocked on the executed Plan 164-28 baseline)*
+
+- [x] 164-29-PLAN.md — Prove the real installed authority and prevent controlled-host tests from entering repository or protected full suites.
+- [x] 164-30-PLAN.md — Make incomplete authority roots fail through the standalone ledger validator's bounded diagnostic contract.
+
+**Wave 28** *(blocked on controlled-host and suite-boundary repair)*
+
+- [x] 164-31-PLAN.md — Advance authenticated terminal history through the exact Plan 01–34 pair set and mark changed installed bytes pending reapproval.
+
+**Wave 29** *(blocking-human installation checkpoint; blocked on exact-history authority)*
+
+- [x] 164-32-PLAN.md — Bind the changed loader to one explicit immutable replacement proposal and approval tuple.
+
+**Wave 30** *(blocked on the approved replacement tuple)*
+
+- [x] 164-33-PLAN.md — Recoverably install the approved loader and prove the active external authority without entering terminal lifecycle.
+
+**Wave 31** *(blocked on validator repair and verified installed authority)*
+
+- [x] 164-34-PLAN.md — Reconcile validation, security, lifecycle, and ledger records to the completed repairs while leaving terminal evidence pending.
+
+**Wave 32** *(gap closure; blocked on the executed Plan 164-34 baseline)*
+
+- [x] 164-35-PLAN.md — Close the physical BEAM runtime chain and carry one immutable authority OID through every finalization boundary.
+
+**Wave 33** *(blocked on the authority-chain repair)*
+
+- [ ] 164-36-PLAN.md — Integrate the repair normally and capture exact attempt-one protected-main CI evidence.
+
+**Wave 34** *(blocking-human approval checkpoint; blocked on protected-main evidence)*
+
+- [ ] 164-37-PLAN.md — Publish one immutable replacement proposal and obtain exact human approval.
+
+**Wave 35** *(blocked on the approved replacement tuple)*
+
+- [ ] 164-38-PLAN.md — Install with rollback-first recovery and prove the real controlled-host boundary.
+
+**Wave 36** *(blocked on verified installed authority)*
+
+- [ ] 164-39-PLAN.md — Reconcile validation, security, lifecycle, and ledger evidence while preserving the terminal gate.
 
 **Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
 
-- [ ] `/finalize-phase 164` — After tracked phase completion reaches protected main, automatically select exact normal push CI, consume natural exact-SHA schedules, and independently verify ignored raw evidence with no later tracked commit.
+- [ ] `/Users/jon/.local/bin/mailglass-finalize-phase 164` — After Plans 35–39, all summaries, ordinary verification, requirement/phase completion tracking, and protected-main integration finish, automatically select exact normal push CI, consume natural exact-SHA schedules, and independently verify ignored raw evidence with no later tracked commit.
 
 ## Progress
 
@@ -257,4 +356,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 13/14 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 35/39 | In Progress|  |

@@ -22,7 +22,35 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     "disposition",
     "rationale"
   ]
+  @ignore_files [
+    ".gitignore",
+    "mailglass_admin/.gitignore",
+    "mailglass_inbound/.gitignore",
+    "reference/demo_app/.gitignore",
+    "reference/host_app/.gitignore",
+    "test/example/.gitignore"
+  ]
   @locked_digest "331810b4b1724452f0e2707c800230e52fabea01c3773d362b3a1240040ece7e"
+  @repair_plan_evidence %{
+    Path.join(@phase_dir, "164-FINALIZATION.md") =>
+      "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md",
+    Path.join(@phase_dir, "164-SECURITY.md") => "git ls-files; 164-34-PLAN.md",
+    Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv") =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
+    Path.join(@phase_dir, "164-VALIDATION.md") => "git ls-files; 164-34-PLAN.md",
+    "scripts/finalize_phase_164.sh" => "git ls-files; 164-31-PLAN.md",
+    "scripts/mailglass_finalize_phase_loader.mjs" => "git ls-files; 164-31-PLAN.md",
+    "scripts/validate_repository_truth.exs" => "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
+    "test/mailglass/docs_contract_test.exs" => "git ls-files; 164-34-PLAN.md",
+    "test/scripts/ci_parity_drift_test.exs" =>
+      "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-29-PLAN.md",
+    "test/scripts/phase_164_closeout_test.exs" =>
+      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md",
+    "test/scripts/phase_164_repository_truth_test.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
+    "test/scripts/scheduled_control_evidence_test.exs" => "git ls-files; 164-29-PLAN.md",
+    "test/test_helper.exs" => "git ls-files; 164-29-PLAN.md; 164-29-SUMMARY.md"
+  }
 
   test "parses and validates the authoritative twelve-column ledger" do
     contents = File.read!(@ledger)
@@ -186,7 +214,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
              Ledger.parse(Enum.join([header, unmapped], "\n") <> "\n")
   end
 
-  test "git ignores all GSD runtime state except the finalize-phase extension" do
+  test "git runtime rules do not conceal the retired finalize-phase extension paths" do
     assert ignored?(".gsd/gsd.db")
     assert ignored?(".gsd/exec/probe")
     assert ignored?(".gsd/extensions/other/index.ts")
@@ -200,13 +228,34 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     refute ignored?(".planning/release-target.json")
   end
 
-  test "finalization artifacts have exactly one tracked current retain disposition" do
+  test "retired extension rows preserve removal provenance and name the retained replacement" do
+    assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+
+    for subject <- [
+          ".gsd/extensions/finalize-phase/extension-manifest.json",
+          ".gsd/extensions/finalize-phase/index.ts"
+        ] do
+      assert [row] = Enum.filter(rows, &(&1["subject"] == subject))
+      assert row["state"] == "untracked"
+      assert row["currentness"] == "historical"
+      assert row["disposition"] == "remove"
+      assert row["evidence"] =~ "164-22-PLAN.md"
+      assert row["rationale"] =~ "scripts/mailglass_finalize_phase_loader.mjs"
+    end
+
+    assert [replacement] =
+             Enum.filter(rows, &(&1["subject"] == "scripts/mailglass_finalize_phase_loader.mjs"))
+
+    assert replacement["state"] == "tracked"
+    assert replacement["currentness"] == "current"
+    assert replacement["disposition"] == "retain"
+  end
+
+  test "retained finalization artifacts have exactly one tracked current disposition" do
     assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
 
     for subject <- [
           ".gitignore",
-          ".gsd/extensions/finalize-phase/extension-manifest.json",
-          ".gsd/extensions/finalize-phase/index.ts",
           "scripts/finalize_phase_164.sh",
           Path.join(@phase_dir, "164-FINALIZE.sh"),
           Path.join(@phase_dir, "164-FINALIZATION.md"),
@@ -218,6 +267,49 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       assert row["state"] == "tracked"
       assert row["currentness"] == "current"
       assert row["disposition"] == "retain"
+    end
+  end
+
+  describe "phase 164 repair-plan ledger reconciliation" do
+    @describetag :phase_164_repair_plan_ledger
+
+    test "Plans 164-29 through 164-34 activate exactly one current row per tracked subject" do
+      assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+
+      declared_subjects =
+        29..34
+        |> Enum.flat_map(&plan_modified_files/1)
+        |> MapSet.new()
+
+      assert declared_subjects == MapSet.new(Map.keys(@repair_plan_evidence))
+
+      for {subject, evidence} <- @repair_plan_evidence do
+        assert [row] = Enum.filter(rows, &(&1["subject"] == subject))
+        assert row["state"] == "tracked"
+        assert row["currentness"] == "current"
+        assert row["disposition"] == "retain"
+        assert row["evidence"] == evidence
+      end
+    end
+
+    test "missing, duplicate, and stale canonical repair relationships fail closed" do
+      contents = File.read!(@ledger)
+      subject = Path.join(@phase_dir, "164-FINALIZATION.md")
+
+      assert {:error, {:missing_audited_subjects, missing}} =
+               contents |> remove_subject(subject) |> Ledger.validate(@repo_root)
+
+      assert subject in missing
+
+      [header | rows] = String.split(String.trim_trailing(contents), "\n", trim: true)
+      row = Enum.find(rows, &String.contains?(&1, "\t#{subject}\t"))
+
+      assert {:error, {:duplicate_subject, ^subject}} =
+               Ledger.parse(Enum.join([header | rows ++ [row]], "\n") <> "\n")
+
+      stale = mutate_subject_row(contents, subject, "evidence", "git ls-files; 164-23-PLAN.md")
+
+      assert {:error, {:invalid_canonical_relationship, ^subject}} = Ledger.parse(stale)
     end
   end
 
@@ -316,6 +408,289 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     end
   end
 
+  describe "phase 164 trust anchors" do
+    @describetag :phase_164_trust_anchor
+
+    test "tracked ledger claims require exact Git index membership" do
+      repo = clone_repository!()
+      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      assert :ok = Ledger.validate(ledger, repo)
+      assert {_output, 0} = System.cmd("git", ["rm", "--cached", "--", "README.md"], cd: repo)
+      assert File.regular?(Path.join(repo, "README.md"))
+
+      assert {:error, {:tracked_subject_untracked, "README.md"}} = Ledger.validate(ledger, repo)
+    end
+
+    test "literal metacharacter and prefix-adjacent paths cannot satisfy another subject" do
+      repo = clone_repository!()
+      literal = "proof[1]*?.txt"
+      adjacent = literal <> ".backup"
+      File.write!(Path.join(repo, literal), "literal\n")
+      File.write!(Path.join(repo, adjacent), "adjacent\n")
+      assert {_output, 0} = System.cmd("git", ["add", "--", literal, adjacent], cd: repo)
+
+      assert :ok = Ledger.tracked_subject_in_index(repo, literal)
+      assert :ok = Ledger.tracked_subject_in_index(repo, adjacent)
+      assert {_output, 0} = System.cmd("git", ["rm", "--cached", "--", literal], cd: repo)
+      assert File.regular?(Path.join(repo, literal))
+
+      assert {:error, {:tracked_subject_untracked, ^literal}} =
+               Ledger.tracked_subject_in_index(repo, literal)
+
+      assert :ok = Ledger.tracked_subject_in_index(repo, adjacent)
+    end
+
+    test "standalone CLI fails closed while requiring the module stays side-effect free" do
+      script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
+      elixir = System.find_executable("elixir")
+
+      for args <- [[], ["--unknown"], ["--repo", @repo_root], ["--ledger", @ledger]] do
+        {output, status} = System.cmd(elixir, [script | args], stderr_to_stdout: true)
+        assert status != 0
+        assert output =~ "repository truth ledger:"
+        assert byte_size(output) < 1_024
+      end
+
+      {output, 0} =
+        System.cmd(elixir, [script, "--repo", @repo_root, "--ledger", @ledger],
+          stderr_to_stdout: true
+        )
+
+      assert output =~ "repository truth ledger: valid"
+
+      require_expression =
+        "Code.require_file(#{inspect(script)}); IO.puts(\"repository truth module: loaded\")"
+
+      {output, 0} =
+        System.cmd(elixir, ["-e", require_expression, "--", "--unknown"], stderr_to_stdout: true)
+
+      assert output == "repository truth module: loaded\n"
+    end
+  end
+
+  describe "phase 164 incomplete authority root" do
+    @describetag :phase_164_incomplete_authority_root
+
+    test "existing empty authority root returns one bounded deterministic CLI diagnostic" do
+      authority_root =
+        Path.join(
+          System.tmp_dir!(),
+          "mailglass-phase-164-empty-authority-#{System.unique_integer([:positive])}"
+        )
+
+      File.mkdir!(authority_root)
+      on_exit(fn -> File.rm_rf!(authority_root) end)
+
+      script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
+      elixir = System.find_executable("elixir")
+
+      expected =
+        "repository truth ledger: {:missing_authority_subject, \".gitignore\"}\n" <>
+          "usage: validate_repository_truth.exs --repo PATH [--authority-root PATH] --ledger PATH\n"
+
+      results =
+        for _run <- 1..2 do
+          result =
+            System.cmd(
+              elixir,
+              [
+                script,
+                "--repo",
+                @repo_root,
+                "--authority-root",
+                authority_root,
+                "--ledger",
+                @ledger
+              ],
+              stderr_to_stdout: true
+            )
+
+          assert File.ls!(authority_root) == []
+          result
+        end
+
+      assert Enum.map(results, &elem(&1, 1)) == [1, 1]
+      assert Enum.map(results, &elem(&1, 0)) == [expected, expected]
+
+      refute expected =~ "File.Error"
+      refute expected =~ "** ("
+      refute expected =~ "scripts/validate_repository_truth.exs:"
+      refute expected =~ "    ("
+    end
+
+    test "authority subjects stop at the first missing file in declared order" do
+      authority_root = authority_root!()
+
+      for {ignore_file, index} <- Enum.with_index(@ignore_files) do
+        assert ignore_subjects_result(authority_root) ==
+                 {:error, {:missing_authority_subject, ignore_file}}
+
+        write_authority_subject!(authority_root, ignore_file, "/fixture-#{index}/\n")
+      end
+
+      assert Ledger.ignore_subjects(authority_root) ==
+               {:ok,
+                Enum.with_index(@ignore_files, fn ignore_file, index ->
+                  "ignore:#{ignore_file}:/fixture-#{index}/"
+                end)}
+    end
+
+    test "wrong-type and unreadable authority subjects return bounded tagged reasons" do
+      next_subject = Enum.at(@ignore_files, 1)
+
+      directory_root = authority_root!()
+      write_authority_subject!(directory_root, ".gitignore", "/root/\n")
+      File.mkdir_p!(Path.join(directory_root, next_subject))
+
+      symlink_root = authority_root!()
+      write_authority_subject!(symlink_root, ".gitignore", "/root/\n")
+      symlink_path = Path.join(symlink_root, next_subject)
+      File.mkdir_p!(Path.dirname(symlink_path))
+      File.ln_s!(Path.join(@repo_root, next_subject), symlink_path)
+
+      unreadable_root = authority_root!()
+      write_authority_subject!(unreadable_root, ".gitignore", "/root/\n")
+      unreadable_path = Path.join(unreadable_root, next_subject)
+      write_authority_subject!(unreadable_root, next_subject, "/private/\n")
+      File.chmod!(unreadable_path, 0o000)
+
+      malformed_root = authority_root!()
+      write_authority_subject!(malformed_root, ".gitignore", "/root/\n")
+      File.write!(Path.join(malformed_root, "mailglass_admin"), "not a directory\n")
+
+      api_results =
+        for root <- [directory_root, symlink_root, unreadable_root, malformed_root] do
+          ignore_subjects_result(root)
+        end
+
+      script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
+      elixir = System.find_executable("elixir")
+
+      cli_result =
+        System.cmd(
+          elixir,
+          [
+            script,
+            "--repo",
+            @repo_root,
+            "--authority-root",
+            directory_root,
+            "--ledger",
+            @ledger
+          ],
+          stderr_to_stdout: true
+        )
+
+      expected_cli =
+        "repository truth ledger: {:missing_authority_subject, #{inspect(next_subject)}}\n" <>
+          "usage: validate_repository_truth.exs --repo PATH [--authority-root PATH] --ledger PATH\n"
+
+      assert cli_result == {expected_cli, 1}
+
+      assert api_results == [
+               {:error, {:missing_authority_subject, next_subject}},
+               {:error, {:missing_authority_subject, next_subject}},
+               {:error, {:unreadable_authority_subject, next_subject, :eacces}},
+               {:error, {:missing_authority_subject, next_subject}}
+             ]
+    end
+  end
+
+  describe "phase 164 stage-0 index identity" do
+    @describetag :phase_164_stage0_index
+
+    test "rejects a genuine unmerged subject through the helper and full validator" do
+      repo = clone_repository!()
+      subject = "README.md"
+      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      install_unmerged_index_entry!(repo, subject)
+
+      {staged, 0} =
+        System.cmd(
+          "git",
+          ["--literal-pathspecs", "ls-files", "--stage", "--", subject],
+          cd: repo
+        )
+
+      assert length(String.split(staged, "\n", trim: true)) == 3
+      refute staged =~ " 0\t"
+
+      assert {:error, {:tracked_subject_identity_mismatch, ^subject, _records}} =
+               Ledger.tracked_subject_in_index(repo, subject)
+
+      assert {:error, {:tracked_subject_identity_mismatch, ^subject, _records}} =
+               Ledger.validate(ledger, repo)
+    end
+
+    test "accepts one ordinary committed stage-0 record with byte-exact identity" do
+      repo = clone_repository!()
+      subject = "stage-zero\nproof.txt"
+      File.write!(Path.join(repo, subject), "proof\n")
+      assert {_output, 0} = System.cmd("git", ["add", "--", subject], cd: repo)
+
+      assert :ok = Ledger.tracked_subject_in_index(repo, subject)
+    end
+
+    test "literal metacharacters, adjacent names, newlines, and record order preserve identity" do
+      repo = clone_repository!()
+      literal = "stage[0]*?.txt"
+      adjacent = literal <> ".backup"
+      newline = "stage-zero\nrecord.txt"
+
+      for subject <- [literal, adjacent, newline] do
+        File.write!(Path.join(repo, subject), subject)
+      end
+
+      assert {_output, 0} = System.cmd("git", ["add", "--", literal, adjacent, newline], cd: repo)
+      assert :ok = Ledger.tracked_subject_in_index(repo, literal)
+      assert :ok = Ledger.tracked_subject_in_index(repo, adjacent)
+      assert :ok = Ledger.tracked_subject_in_index(repo, newline)
+
+      assert {:error, {:tracked_subject_identity_mismatch, ^literal, _records}} =
+               Ledger.validate_staged_index_output(
+                 stage_record(adjacent) <> stage_record(literal),
+                 literal
+               )
+
+      assert {:error, {:tracked_subject_identity_mismatch, ^literal, _records}} =
+               Ledger.validate_staged_index_output(
+                 stage_record(literal) <> stage_record(adjacent),
+                 literal
+               )
+    end
+
+    test "missing, duplicate, nonzero, malformed, and different records fail closed" do
+      subject = "proof.txt"
+
+      assert {:error, {:tracked_subject_malformed_output, ^subject}} =
+               Ledger.validate_staged_index_output("", subject)
+
+      for output <- [
+            stage_record(subject) <> stage_record(subject),
+            stage_record(subject, 1),
+            stage_record(subject, 2),
+            stage_record(subject, 3),
+            stage_record("other.txt")
+          ] do
+        assert {:error, {:tracked_subject_identity_mismatch, ^subject, _records}} =
+                 Ledger.validate_staged_index_output(output, subject)
+      end
+
+      for output <- [
+            "not-a-mode #{String.duplicate("a", 40)} 0\t#{subject}\0",
+            "100644 not-an-object 0\t#{subject}\0",
+            "100644 #{String.duplicate("a", 40)} x\t#{subject}\0",
+            "100644 #{String.duplicate("a", 40)} 0 #{subject}\0",
+            "100644 #{String.duplicate("a", 40)} 0\t#{subject}"
+          ] do
+        assert {:error, {:tracked_subject_malformed_output, ^subject}} =
+                 Ledger.validate_staged_index_output(output, subject)
+      end
+    end
+  end
+
   defp remove_subject(contents, subject) do
     contents
     |> String.split("\n", trim: true)
@@ -326,11 +701,105 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
   defp header_line, do: Enum.join(@headers, "\t")
 
+  defp plan_modified_files(plan_number) do
+    plan = Path.join(@repo_root, Path.join(@phase_dir, "164-#{plan_number}-PLAN.md"))
+
+    [paths] =
+      Regex.run(~r/^files_modified:\n(?<paths>(?:\s+- .+\n)*)^autonomous:/m, File.read!(plan),
+        capture: :all_names
+      )
+
+    paths
+    |> String.split("\n", trim: true)
+    |> Enum.map(&(&1 |> String.trim() |> String.trim_leading("- ")))
+  end
+
   defp ignored?(path) do
     {_output, status} =
       System.cmd("git", ["check-ignore", "-q", path], cd: @repo_root, stderr_to_stdout: true)
 
     status == 0
+  end
+
+  defp authority_root! do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-phase-164-authority-#{System.unique_integer([:positive])}"
+      )
+
+    File.mkdir!(root)
+    on_exit(fn -> File.rm_rf!(root) end)
+    root
+  end
+
+  defp write_authority_subject!(authority_root, relative_path, contents) do
+    path = Path.join(authority_root, relative_path)
+    File.mkdir_p!(Path.dirname(path))
+    File.write!(path, contents)
+  end
+
+  defp ignore_subjects_result(authority_root) do
+    Ledger.ignore_subjects(authority_root)
+  rescue
+    error in File.Error -> {:raised, error.reason}
+  end
+
+  defp clone_repository! do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-phase-164-truth-#{System.unique_integer([:positive])}"
+      )
+
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    assert {_output, 0} =
+             System.cmd("git", ["clone", "--quiet", "--shared", @repo_root, root],
+               stderr_to_stdout: true
+             )
+
+    fixture_ledger = Path.join(root, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv"))
+    File.cp!(@ledger, fixture_ledger)
+
+    assert {_output, 0} =
+             System.cmd(
+               "git",
+               ["add", "--", Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")],
+               cd: root
+             )
+
+    root
+  end
+
+  defp install_unmerged_index_entry!(repo, subject) do
+    assert {_output, 0} =
+             System.cmd("git", ["config", "user.email", "phase164@example.test"], cd: repo)
+
+    assert {_output, 0} = System.cmd("git", ["config", "user.name", "Phase 164 Fixture"], cd: repo)
+    base = git_output!(repo, ["rev-parse", "HEAD"])
+
+    assert {_output, 0} = System.cmd("git", ["switch", "-c", "stage-ours"], cd: repo)
+    File.write!(Path.join(repo, subject), "ours\n")
+    assert {_output, 0} = System.cmd("git", ["add", "--", subject], cd: repo)
+    assert {_output, 0} = System.cmd("git", ["commit", "-m", "ours"], cd: repo)
+
+    assert {_output, 0} = System.cmd("git", ["switch", "-c", "stage-theirs", base], cd: repo)
+    File.write!(Path.join(repo, subject), "theirs\n")
+    assert {_output, 0} = System.cmd("git", ["add", "--", subject], cd: repo)
+    assert {_output, 0} = System.cmd("git", ["commit", "-m", "theirs"], cd: repo)
+
+    assert {_output, 0} = System.cmd("git", ["switch", "stage-ours"], cd: repo)
+    assert {_output, 1} = System.cmd("git", ["merge", "--no-edit", "stage-theirs"], cd: repo)
+  end
+
+  defp git_output!(repo, args) do
+    {output, 0} = System.cmd("git", args, cd: repo)
+    String.trim(output)
+  end
+
+  defp stage_record(subject, stage \\ 0) do
+    "100644 #{String.duplicate("a", 40)} #{stage}\t#{subject}\0"
   end
 
   defp valid_row do

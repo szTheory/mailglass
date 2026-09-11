@@ -107,13 +107,22 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
     end
   end
 
-  test "SuiteFloor's known exclusion-tag allowlist is pinned to exactly the two current " <>
+  test "SuiteFloor's known exclusion-tag allowlist is pinned to exactly the six current " <>
          "sources (D-14)" do
     assert MapSet.new(SuiteFloor.known_exclusion_tags()) ==
-             MapSet.new([:requires_workspace, :public_only]),
-           "SuiteFloor.known_exclusion_tags/0 drifted from the two documented sources " <>
+             MapSet.new([
+               :requires_workspace,
+               :public_only,
+               :phase_164_proposal_boundary,
+               :phase_164_installed_production_boundary,
+               :flaky,
+               :migration_roundtrip
+             ]),
+           "SuiteFloor.known_exclusion_tags/0 drifted from the six documented sources " <>
              "(advisory-matrix.yml's --exclude requires_workspace; test_helper.exs's " <>
-             "conditional :public_only) — a legitimate new source must update this guard " <>
+             "conditional :public_only; verify.ci_lane_contract's proposal and controlled-host exclusions; " <>
+             "verify.cold_start's :flaky/:migration_roundtrip exclusions) " <>
+             "— a legitimate new source must update this guard " <>
              "deliberately, not silently."
   end
 
@@ -259,7 +268,7 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
       violations =
         SuiteFloor.violations(
           report(total: floor),
-          MapSet.new([:requires_workspace, :flaky]),
+          MapSet.new([:requires_workspace, :unregistered_scope]),
           "public"
         )
 
@@ -267,7 +276,7 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
                Enum.filter(violations, &(&1.name == :exclusion_allowlist_unknown_tag))
 
       assert violation.kind == :violation
-      assert violation.message =~ "flaky"
+      assert violation.message =~ "unregistered_scope"
     end
 
     test "an effective exclusion set missing an allowlisted token produces exactly one " <>
@@ -347,7 +356,7 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
       violations =
         SuiteFloor.violations(
           report(total: floor),
-          MapSet.new([:test, :flaky]),
+          MapSet.new([:test, :unregistered_scope]),
           "public",
           %{full_suite?: false, inclusion: MapSet.new([:schema_prefix])}
         )
@@ -355,7 +364,7 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
       assert [violation] =
                Enum.filter(violations, &(&1.name == :exclusion_allowlist_unknown_tag))
 
-      assert violation.message =~ "flaky",
+      assert violation.message =~ "unregistered_scope",
              "the --only discount must not launder an unrelated unpinned exclusion tag " <>
                "that happens to travel with it — got #{inspect(violations)}"
     end
@@ -402,7 +411,7 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
       violations =
         SuiteFloor.violations(
           report(total: 4, already_shared: 2),
-          MapSet.new([:flaky]),
+          MapSet.new([:unregistered_scope]),
           "public",
           %{full_suite?: false, inclusion: MapSet.new()}
         )
@@ -637,7 +646,8 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
     repo_root = Path.expand("../..", __DIR__)
     mix_exs = File.read!(Path.join(repo_root, "mix.exs"))
 
-    assert mix_exs =~ "test test/scripts/ --warnings-as-errors",
+    assert mix_exs =~
+             "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors",
            "verify.ci_lane_contract's directory glob (test test/scripts/) must still exist " <>
              "for this file to be auto-collected into the required mix_task_tests lane"
   end

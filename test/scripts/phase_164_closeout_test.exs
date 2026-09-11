@@ -4,6 +4,68 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   @repo_root Path.expand("../..", __DIR__)
   @script Path.join(@repo_root, "scripts/closeout_repository_truth.sh")
   @extension Path.join(@repo_root, ".gsd/extensions/finalize-phase/index.ts")
+  @immutable_loader Path.join(@repo_root, "scripts/mailglass_finalize_phase_loader.mjs")
+  @production_tool_paths [
+    NODE: "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+    GIT: "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+    BASH: "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+    GH: "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+    JQ: "/usr/bin/jq",
+    MIX: "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix",
+    ELIXIR: "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir",
+    ERL: "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl"
+  ]
+  @installed_loader "/Users/jon/.local/bin/mailglass-finalize-phase"
+  @install_approval "/Users/jon/.local/share/mailglass/checkpoints/164-32-install-approval.env"
+  @installation_source_oid "1cfee7802de808f690fe5413b22a57e7ab802488"
+  @installed_loader_sha256 "f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac"
+  @install_approval_tuple %{
+    "record_version" => "1",
+    "phase_plan" => "164-32",
+    "installation_source_oid" => @installation_source_oid,
+    "source_sha256" => @installed_loader_sha256,
+    "destination" => @installed_loader,
+    "install_mode" => "0500",
+    "node_executable" => "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+    "git_executable" => "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+    "bash_executable" => "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+    "gh_executable" => "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+    "jq_executable" => "/usr/bin/jq",
+    "mix_executable" => "/Users/jon/.asdf/shims/mix",
+    "elixir_executable" => "/Users/jon/.asdf/shims/elixir",
+    "prior_approval_sha256" => "e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9",
+    "prior_sha256" => "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e",
+    "prior_mode" => "0500",
+    "prior_stat_identity" => "16777229:269505365:501:20",
+    "rollback_path" =>
+      "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e",
+    "approval_status" => "approved"
+  }
+  @prior_install_approval "/Users/jon/.local/share/mailglass/checkpoints/164-27-install-approval.env"
+  @prior_install_approval_tuple %{
+    "record_version" => "1",
+    "phase_plan" => "164-27",
+    "installation_source_oid" => "2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97",
+    "source_sha256" => "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e",
+    "destination" => @installed_loader,
+    "install_mode" => "0500",
+    "node_executable" => "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+    "git_executable" => "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+    "bash_executable" => "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+    "gh_executable" => "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+    "jq_executable" => "/usr/bin/jq",
+    "mix_executable" => "/Users/jon/.asdf/shims/mix",
+    "elixir_executable" => "/Users/jon/.asdf/shims/elixir",
+    "prior_approval_sha256" => "c9750e8becddd7b08ce27b2c6267b5172c1f25954d0d1b5ef9e39f04a909c862",
+    "prior_sha256" => "ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9",
+    "prior_mode" => "0500",
+    "prior_stat_identity" => "16777229:267228421:501:20",
+    "rollback_path" =>
+      "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9",
+    "approval_status" => "approved"
+  }
+  @prior_approval_sha256 "e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9"
+  @prior_rollback "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
   @manifest Path.join(
               @repo_root,
               ".gsd/extensions/finalize-phase/extension-manifest.json"
@@ -22,15 +84,86 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
           )
+  @transitive_executables [
+    "scripts/closeout_repository_truth.sh",
+    "scripts/verify_workspace_evidence.sh",
+    "scripts/validate_repository_truth.exs",
+    "scripts/ci_monitor.cjs",
+    "scripts/scheduled_control_evidence.sh"
+  ]
+  @transitive_data [
+    ".github/scheduled-controls.json",
+    ".planning/phases/164-fixture/164-TRUTH-DISPOSITION.tsv",
+    ".planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md",
+    ".planning/phases/161-canonical-workspace-and-evidence-preservation/161-PRESERVATION-RECONCILIATION.tsv",
+    ".planning/phases/164-fixture/164-VERIFICATION.md",
+    ".planning/phases/164-fixture/164-VALIDATION.md",
+    ".planning/phases/164-fixture/164-FINALIZATION.md",
+    ".planning/phases/164-fixture/164-01-PLAN.md",
+    ".planning/phases/164-fixture/164-01-SUMMARY.md",
+    ".planning/ROADMAP.md",
+    ".planning/REQUIREMENTS.md",
+    ".gitignore",
+    "mailglass_admin/.gitignore",
+    "mailglass_inbound/.gitignore",
+    "reference/demo_app/.gitignore",
+    "reference/host_app/.gitignore",
+    "test/example/.gitignore",
+    ".planning/release-target.json",
+    ".planning/publish/core.json",
+    ".planning/phases/162-protected-release-and-scheduled-control-recovery/162-RELEASE-RECONCILIATION.md",
+    ".planning/phases/162-protected-release-and-scheduled-control-recovery/162-UAT.md",
+    ".planning/phases/162-protected-release-and-scheduled-control-recovery/162-VERIFICATION.md",
+    ".planning/phases/163-deterministic-release-path-timeout-repairs/163-PROOF.md",
+    ".planning/phases/163-deterministic-release-path-timeout-repairs/163-VERIFICATION.md"
+  ]
+
+  test "required and controlled-host aliases keep distinct non-vacuous authority" do
+    aliases = Mix.Project.config()[:aliases]
+
+    assert Keyword.fetch!(aliases, :"verify.ci_lane_contract") == [
+             "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
+           ]
+
+    assert Keyword.fetch!(aliases, :"verify.phase_164.authority_closure") == [
+             "test test/scripts/phase_164_closeout_test.exs --only phase_164_authority_closure --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
+           ]
+
+    assert Keyword.fetch!(aliases, :"verify.phase_164.proposal_boundary") == [
+             "test test/scripts/phase_164_closeout_test.exs --only phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
+           ]
+
+    assert Keyword.fetch!(aliases, :"verify.phase_164.installed_boundary") == [
+             "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
+           ]
+
+    source = File.read!(__ENV__.file)
+
+    installed_block =
+      source
+      |> String.split(~s(describe "phase 164 installed production boundary" do))
+      |> List.last()
+      |> String.split(~s(\n  test "owned sibling cleanup), parts: 2)
+      |> List.first()
+
+    assert installed_block =~ "@describetag :phase_164_installed_production_boundary"
+    assert Regex.scan(~r/^    test \"/m, installed_block) != []
+    refute installed_block =~ "@tag :skip"
+    refute installed_block =~ "if File.exists?(@installed_loader)"
+    refute installed_block =~ "if File.regular?(@installed_loader)"
+    refute installed_block =~ "immutable_loader_fixture!"
+    refute installed_block =~ "production_installed_fixture!"
+    refute installed_block =~ "invoke_production_loader"
+  end
 
   test "rejects a sibling checkout and a foreign symlink before component collection" do
     root = temporary_root!()
-    sibling = @repo_root <> "-disposable"
-    File.mkdir_p!(sibling)
+    sibling_owner = allocate_owned_sibling!("disposable")
+    sibling = sibling_owner.path
 
     on_exit(fn ->
       File.rm_rf!(root)
-      File.rm_rf!(sibling)
+      cleanup_owned_sibling!(sibling_owner)
     end)
 
     link = Path.join(root, "mailglass")
@@ -143,8 +276,9 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     source = File.read!(@script)
     assert source =~ "canonical_repo=/Users/jon/projects/mailglass"
     assert source =~ "validate_repository_truth.exs"
-    assert source =~ "--ledger \"$canonical_ledger\""
-    assert source =~ "git -C \"$repo\" check-ignore"
+    assert source =~ "--authority-root \"$authority_root\""
+    assert source =~ "--ledger \"$authority_ledger\""
+    assert source =~ "\"$MAILGLASS_GIT\" -C \"$repo\" check-ignore"
     assert source =~ "status --porcelain=v1 --untracked-files=all"
 
     assert source =~ "write_report\nfinal_porcelain=$(stable_porcelain)"
@@ -177,6 +311,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
          expected_hygiene_status} <- cases do
       report = run_aggregate_fixture!(name, hygiene_json, hygiene_exit)
 
+      assert report["expected_main_sha"] == String.duplicate("a", 40)
+      assert report["head_sha"] == report["expected_main_sha"]
       assert report["status"] == expected_status
       assert report["reason"] == expected_reason
       assert report["components"]["hygiene"]["status"] == expected_hygiene_status
@@ -220,14 +356,23 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  @tag :phase_164_installed_boundary
   test "finalization guidance keeps pre-verification and terminal proof non-circular" do
     contract = File.read!(@finalization_contract)
     normalized = Regex.replace(~r/\s+/, contract, " ")
 
-    assert contract =~ "/finalize-phase 164 --pre-verification"
+    assert contract =~
+             "/Users/jon/.local/bin/mailglass-finalize-phase 164 --pre-verification"
+
+    assert contract =~ "scripts/mailglass_finalize_phase_loader.mjs"
+    assert contract =~ "Plan 164-23"
+    assert normalized =~ "installed loader is outside checkout evaluation"
+    assert normalized =~ "captured repository OID"
+    assert normalized =~ "immediately before Bash dispatch"
     assert contract =~ "ordinary phase verifier"
     assert normalized =~ "before `phase.complete` writes tracked completion metadata"
-    assert contract =~ "/finalize-phase 164"
+    assert contract =~ "/Users/jon/.local/bin/mailglass-finalize-phase 164"
+    refute contract =~ "`/finalize-phase 164"
     assert contract =~ "After the normal verifier has passed"
     assert contract =~ "status: passed"
     assert contract =~ "writes only ignored"
@@ -235,36 +380,6 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert contract =~ "CI must be attempt 1"
     assert normalized =~ "Every registered scheduled control must be attempt 1"
     assert normalized =~ "A HEAD change or any stable-porcelain entry"
-  end
-
-  test "finalize-phase manifest exposes exactly one compatible community command" do
-    manifest = @manifest |> File.read!() |> Jason.decode!()
-
-    assert manifest["id"] == "finalize-phase"
-    assert manifest["tier"] == "community"
-    assert manifest["requires"] == %{"platform" => ">=2.29.0"}
-    assert manifest["provides"] == %{"commands" => ["finalize-phase"]}
-  end
-
-  test "finalize-phase command validates one phase and dispatches one tracked finalizer via pi.exec" do
-    source = File.read!(@extension)
-
-    assert source =~ ~s(import type { ExtensionAPI } from "@gsd/pi-coding-agent")
-    assert source =~ ~s(pi.registerCommand("finalize-phase")
-    assert source =~ ~r/\^\[1-9\]\\d\*\$/
-    assert source =~ "--pre-verification"
-    assert source =~ "git ls-files --error-unmatch"
-    assert source =~ ~s(pi.exec("bash", [finalizer, repoRoot, ...modeArgs])
-    assert source =~ "result.code"
-    assert source =~ "process.exitCode = 1"
-    assert source =~ ~s|process.argv.includes("--print")|
-    assert source =~ "process.exit(1)"
-    assert source =~ "ctx.ui.notify"
-    assert source =~ "slice(-MAX_OUTPUT_BYTES)"
-
-    refute source =~ "child_process"
-    refute source =~ "registerTool"
-    refute source =~ "pi.on("
   end
 
   test "accepts authoritative per-control freshness and rejects identity or provenance mutations" do
@@ -362,7 +477,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert status != 0
 
     source = File.read!(@finalizer)
-    assert source =~ "usage: $0 REPO [--pre-verification]"
+    assert source =~ "usage: $0 REPO AUTHORITY_ROOT EXPECTED_AUTHORITY_OID [--pre-verification]"
     refute source =~ ~r/ci_run_id=.*\$\{[123]:-/
     refute source =~ ~r/gh\s+workflow\s+(run|rerun)/
     refute source =~ ~r/gh\s+run\s+rerun/
@@ -424,6 +539,109 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "components.ci.source"
     assert source =~ "components.scheduled.source"
     assert source =~ "source_run.attempt == 1"
+  end
+
+  test "pre-verification requires summaries through Plan 13 before collection" do
+    root = temporary_root!()
+    phase_dir = Path.join(root, "phase")
+    marker = Path.join(root, "evidence-collected")
+    on_exit(fn -> File.rm_rf!(root) end)
+    File.mkdir_p!(phase_dir)
+
+    for plan <- 1..13 do
+      number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
+      File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary\n")
+    end
+
+    command = ~s(require_pre_verification_state "$2" "$3" && touch "$4")
+    assert {_, 0} = source_finalizer(command, [root, phase_dir, marker])
+    assert File.regular?(marker)
+
+    File.rm!(marker)
+    File.rm!(Path.join(phase_dir, "164-13-SUMMARY.md"))
+    assert {output, status} = source_finalizer(command, [root, phase_dir, marker])
+    assert status != 0
+    assert output =~ "missing implementation summary 164-13-SUMMARY.md"
+    refute File.exists?(marker)
+  end
+
+  test "terminal verifier authority is bound to an ancestor implementation SHA and exact metadata history" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    fixture = terminal_fixture!(Path.join(root, "accepted"))
+    assert {_, 0} = terminal_state(fixture.repo, fixture.phase_dir)
+
+    for value <- [nil, "ABC", String.duplicate("f", 40)] do
+      write_verification!(fixture.phase_dir, value)
+      git!(fixture.repo, ["add", "."])
+      git!(fixture.repo, ["commit", "-q", "-m", "verification mutation"])
+      assert {_, status} = terminal_state(fixture.repo, fixture.phase_dir)
+      assert status != 0
+    end
+
+    non_ancestor = terminal_fixture!(Path.join(root, "non-ancestor"))
+    git!(non_ancestor.repo, ["checkout", "-q", "--orphan", "unrelated"])
+    File.write!(Path.join(non_ancestor.repo, "unrelated"), "history")
+    git!(non_ancestor.repo, ["add", "unrelated"])
+    git!(non_ancestor.repo, ["commit", "-q", "-m", "unrelated"])
+    unrelated_sha = non_ancestor.repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
+    git!(non_ancestor.repo, ["checkout", "-q", "main"])
+    write_verification!(non_ancestor.phase_dir, unrelated_sha)
+    git!(non_ancestor.repo, ["commit", "-qam", "point at unrelated history"])
+    assert {_, status} = terminal_state(non_ancestor.repo, non_ancestor.phase_dir)
+    assert status != 0
+  end
+
+  test "terminal verifier rejects forbidden commits even when a later commit restores the tree" do
+    root = temporary_root!()
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    direct = terminal_fixture!(Path.join(root, "direct"))
+    File.write!(Path.join(direct.repo, "scripts/finalize_phase_164.sh"), "changed")
+    git!(direct.repo, ["add", "scripts/finalize_phase_164.sh"])
+    git!(direct.repo, ["commit", "-q", "-m", "forbidden source"])
+    assert {output, status} = terminal_state(direct.repo, direct.phase_dir)
+    assert status != 0
+    assert output =~ "outside completion metadata"
+
+    reverted = terminal_fixture!(Path.join(root, "reverted"))
+    source = Path.join(reverted.repo, "scripts/finalize_phase_164.sh")
+    original = File.read!(source)
+    File.write!(source, "changed")
+    git!(reverted.repo, ["commit", "-qam", "forbidden source"])
+    File.write!(source, original)
+    git!(reverted.repo, ["commit", "-qam", "restore source"])
+    assert {output, status} = terminal_state(reverted.repo, reverted.phase_dir)
+    assert status != 0
+    assert output =~ "outside completion metadata"
+  end
+
+  test "terminal lifecycle documents the verified SHA and first-parent per-commit allowlist" do
+    finalization = File.read!(@finalization_contract)
+
+    validation =
+      File.read!(
+        Path.join(
+          @repo_root,
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md"
+        )
+      )
+
+    for document <- [finalization, validation] do
+      assert document =~ "verified_implementation_sha"
+      assert document =~ "first-parent"
+      assert document =~ "164-VERIFICATION.md"
+      assert document =~ ".planning/ROADMAP.md"
+      assert document =~ ".planning/REQUIREMENTS.md"
+      assert document =~ ".planning/STATE.md"
+    end
+
+    assert validation =~ "164-15-01"
+    assert validation =~ "T-164-53"
+
+    assert validation =~
+             "mix test test/scripts/phase_164_closeout_test.exs --warnings-as-errors --no-deps-check && bash -n scripts/finalize_phase_164.sh"
   end
 
   test "finalizer re-fetches protected main and preserves non-pass evidence when it advances" do
@@ -527,6 +745,29 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     assert {_, status} = source_finalizer(command, [report, sha, root, registry, "77"])
     assert status != 0
+
+    for updated_at <- [
+          "not-an-iso8601-time",
+          DateTime.utc_now()
+          |> DateTime.add(86_400, :second)
+          |> DateTime.truncate(:second)
+          |> DateTime.to_iso8601(),
+          DateTime.utc_now()
+          |> DateTime.add(-129_601, :second)
+          |> DateTime.truncate(:second)
+          |> DateTime.to_iso8601()
+        ] do
+      mutated =
+        authoritative_sweep(sha)
+        |> put_in(["controls", Access.at(1), "source_run", "updated_at"], updated_at)
+
+      File.write!(scheduled, Jason.encode!(mutated))
+      assert {_, status} = source_finalizer(command, [report, sha, root, registry, "77"])
+      assert status != 0
+    end
+
+    File.write!(scheduled, Jason.encode!(authoritative_sweep(sha)))
+    assert {_, 0} = source_finalizer(command, [report, sha, root, registry, "77"])
   end
 
   test "finalizer rejects stale scheduled evidence despite an inflated ambient registry" do
@@ -588,7 +829,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert status != 0
 
     source = File.read!(@finalizer)
-    assert source =~ ~s(SCHEDULED_CONTROL_CONFIG="$repo/$registry_rel")
+    assert source =~ ~s(SCHEDULED_CONTROL_CONFIG="$authority_root/$registry_rel")
   end
 
   describe "phase 164 gap closure" do
@@ -597,20 +838,20 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     test "rejects alternate repository identities before evidence collection" do
       root = temporary_root!()
       disposable = Path.join(root, "clean-main")
-      prefix_collision = @repo_root <> "-gap-#{System.unique_integer([:positive])}"
+      prefix_owner = allocate_owned_sibling!("gap")
+      prefix_collision = prefix_owner.path
       foreign_target = Path.join(root, "foreign")
       foreign_link = Path.join(root, "foreign-link")
 
       on_exit(fn ->
         File.rm_rf!(root)
-        File.rm_rf!(prefix_collision)
+        cleanup_owned_sibling!(prefix_owner)
       end)
 
       git!(root, ["init", "-q", "-b", "main", disposable])
       File.write!(Path.join(disposable, "tracked"), "fixture")
       git!(disposable, ["add", "tracked"])
       git!(disposable, ["commit", "-q", "-m", "fixture"])
-      File.mkdir_p!(prefix_collision)
       File.mkdir_p!(foreign_target)
       File.ln_s!(foreign_target, foreign_link)
 
@@ -714,6 +955,1021 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  describe "phase 164 immutable loader" do
+    @describetag :phase_164_immutable_loader
+
+    @tag :phase_164_canonical_loader
+    test "production loader owns the canonical repository and normalized origin identity" do
+      source = File.read!(@immutable_loader)
+
+      assert source =~ ~s(const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass")
+      assert source =~ ~s(const EXPECTED_REPOSITORY = "szTheory/mailglass")
+      assert source =~ "validateCanonicalRepository"
+      refute source =~ ~S|git(process.cwd(), ["rev-parse", "--show-toplevel"])|
+    end
+
+    @tag :phase_164_canonical_loader
+    @tag :phase_164_loader_shell_terminal_contract
+    test "loader and shell authenticate exact terminal pairs 01 through 39" do
+      loader = File.read!(@immutable_loader)
+      finalizer = File.read!(@finalizer)
+
+      assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 39"
+      assert loader =~ "exact 01-39 PLAN/SUMMARY set"
+      assert loader =~ "new Set(actual).size !== actual.length"
+      assert finalizer =~ "terminal_first_plan=1"
+      assert finalizer =~ "terminal_last_plan=39"
+      assert finalizer =~ ~S|for plan in $(seq -w "$terminal_first_plan" "$terminal_last_plan")|
+      assert finalizer =~ ~s(missing terminal plan 164-$plan-PLAN.md)
+      assert finalizer =~ ~s(missing terminal summary 164-$plan-SUMMARY.md)
+
+      node = fixture_node!()
+
+      expression = """
+      const loader = await import(#{inspect("file://" <> @immutable_loader)});
+      console.log(JSON.stringify(loader.expectedPhaseArtifacts('.planning/phases/164-fixture')));
+      """
+
+      {paths_json, 0} =
+        System.cmd(node, ["--input-type=module", "--eval", expression],
+          cd: @repo_root,
+          stderr_to_stdout: true
+        )
+
+      paths = Jason.decode!(paths_json)
+      assert length(paths) == 78
+      assert hd(paths) == ".planning/phases/164-fixture/164-01-PLAN.md"
+      assert List.last(paths) == ".planning/phases/164-fixture/164-39-SUMMARY.md"
+      assert paths == Enum.sort_by(paths, &terminal_artifact_sort_key/1)
+
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      for plan <- 29..39,
+          member <- ["PLAN", "SUMMARY"] do
+        fixture = immutable_loader_fixture!(Path.join(root, "missing-#{plan}-#{member}"))
+        number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
+        path = ".planning/phases/164-fixture/164-#{number}-#{member}.md"
+        git!(fixture.repo, ["rm", "-q", path])
+        git!(fixture.repo, ["commit", "-q", "-m", "remove #{number} #{member}"])
+
+        {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
+        assert status != 0
+        assert output =~ "numbered history is not the exact 01-39"
+        assert byte_size(output) <= 16_000
+        refute File.exists?(fixture.marker)
+      end
+
+      for {name, path} <- [
+            {"additional-40", ".planning/phases/164-fixture/164-40-PLAN.md"},
+            {"malformed-suffix", ".planning/phases/164-fixture/164-034-SUMMARY.md"}
+          ] do
+        fixture = immutable_loader_fixture!(Path.join(root, name))
+        File.write!(Path.join(fixture.repo, path), "unexpected\n")
+        git!(fixture.repo, ["add", "--", path])
+        git!(fixture.repo, ["commit", "-q", "-m", name])
+
+        {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
+        assert status != 0
+        assert output =~ "numbered history is not the exact 01-39"
+        assert byte_size(output) <= 16_000
+        refute File.exists?(fixture.marker)
+      end
+    end
+
+    @tag :phase_164_trusted_toolchain
+    test "loader pins validated tools and passes an allowlisted child environment" do
+      loader = File.read!(@immutable_loader)
+      finalizer = File.read!(@finalizer)
+      closeout = File.read!(@script)
+
+      assert String.starts_with?(loader, "#!/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node\n")
+      assert loader =~ "validateTrustedToolchain"
+      assert loader =~ "buildChildEnvironment"
+      refute loader =~ "...process.env"
+      assert loader =~ "MAILGLASS_GIT"
+      assert loader =~ "MAILGLASS_BASH"
+      assert loader =~ ~s(const EXPECTED_ELIXIR_VERSION = "1.19.5")
+      assert loader =~ ~s(const EXPECTED_OTP_RELEASE = "28")
+
+      for {tool, path} <- @production_tool_paths do
+        assert loader =~ ~s(#{tool}: #{inspect(path)})
+      end
+
+      for tool <- ~w(GIT BASH GH JQ MIX NODE ELIXIR ERL) do
+        assert finalizer =~ ~s(\"${MAILGLASS_#{tool})
+      end
+
+      for tool <- ~w(GIT BASH JQ MIX NODE ELIXIR) do
+        assert closeout =~ ~s(\"$MAILGLASS_#{tool}\")
+      end
+
+      assert closeout =~ "MAILGLASS_ERL"
+    end
+
+    @tag :phase_164_authority_closure
+    test "physical BEAM runtime closure runs inside the exact sanitized child environment" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "runtime-closure"))
+      node = fixture_node!()
+
+      expression = """
+      const loader = await import(#{inspect("file://" <> fixture.installed)});
+      const tools = loader.validateTrustedToolchain();
+      const env = loader.buildChildEnvironment(tools);
+      const probe = loader.probeTrustedRuntime(tools, env);
+      console.log(JSON.stringify({tools, env, probe}));
+      """
+
+      {output, status} =
+        System.cmd(node, ["--input-type=module", "--eval", expression],
+          cd: @repo_root,
+          stderr_to_stdout: true
+        )
+
+      assert status == 0, output
+      result = Jason.decode!(output)
+
+      for {tool, path} <- fixture.tools do
+        assert result["tools"][Atom.to_string(tool)] == path
+      end
+
+      assert result["env"]["MAILGLASS_ERL"] == result["tools"]["ERL"]
+      refute Map.has_key?(result["env"], "ASDF_ELIXIR_VERSION")
+      refute Map.has_key?(result["env"], "ASDF_ERLANG_VERSION")
+      assert result["probe"]["mix_version"] =~ "Mix #{System.version()}"
+      assert result["probe"]["elixir_version"] =~ "Elixir #{System.version()}"
+      assert result["probe"]["otp_release"] == fixture_otp_release()
+      assert result["probe"]["digest"] =~ ~r/^[0-9a-f]{64}$/
+    end
+
+    @tag :phase_164_authority_closure
+    test "missing or shim-selected BEAM runtime members fail before Bash dispatch" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "runtime-rejections"))
+      node = fixture_node!()
+
+      for {name, mutation} <- [
+            {"missing-erl", "delete tools.ERL;"},
+            {"mix-shim", ~s(tools.MIX = "/Users/jon/.asdf/shims/mix";)}
+          ] do
+        expression = """
+        const loader = await import(#{inspect("file://" <> fixture.installed)});
+        const tools = {...loader.validateTrustedToolchain()};
+        #{mutation}
+        const validated = loader.validateTrustedToolchain(tools);
+        const env = loader.buildChildEnvironment(validated);
+        loader.probeTrustedRuntime(validated, env);
+        """
+
+        {output, status} =
+          System.cmd(node, ["--input-type=module", "--eval", expression],
+            cd: @repo_root,
+            stderr_to_stdout: true
+          )
+
+        assert status != 0, "#{name} unexpectedly passed"
+        assert output =~ "finalize-phase:"
+      end
+    end
+
+    @tag :phase_164_trusted_toolchain
+    test "self-check rejects byte-identical loader bytes from unrelated history" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "unrelated-installation"))
+      unrelated = Path.join(root, "unrelated")
+      git!(root, ["init", "-q", "-b", "main", unrelated])
+      unrelated_source = Path.join(unrelated, "scripts/mailglass_finalize_phase_loader.mjs")
+      File.mkdir_p!(Path.dirname(unrelated_source))
+      File.write!(unrelated_source, File.read!(fixture.installed))
+      git!(unrelated, ["add", "."])
+      git!(unrelated, ["commit", "-q", "-m", "unrelated identical loader"])
+      unrelated_oid = unrelated |> git!(["rev-parse", "HEAD"]) |> String.trim()
+      git!(fixture.repo, ["fetch", "-q", unrelated, unrelated_oid])
+
+      {output, status} =
+        invoke_immutable_loader(fixture, [
+          "--self-check",
+          "--repo",
+          resolved_path!(fixture.repo),
+          "--expected-source-oid",
+          unrelated_oid
+        ])
+
+      assert status != 0
+      assert output =~ "installation OID is not an ancestor"
+    end
+
+    @tag :phase_164_trusted_toolchain
+    test "caller PATH cannot substitute any trusted finalization executable" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "forged-tools"))
+      forged = Path.join(root, "forged-bin")
+      File.mkdir_p!(forged)
+
+      markers =
+        for tool <- ~w(git bash gh jq mix node elixir erl), into: %{} do
+          marker = Path.join(root, "#{tool}.marker")
+
+          write_executable!(
+            Path.join(forged, tool),
+            "#!/bin/sh\ntouch #{inspect(marker)}\nexit 97\n"
+          )
+
+          {tool, marker}
+        end
+
+      {output, status} =
+        invoke_immutable_loader(fixture, ["164", "--pre-verification"], [
+          {"PATH", "#{forged}:#{System.fetch_env!("PATH")}"}
+        ])
+
+      assert status == 0, output
+      assert File.regular?(fixture.marker)
+      for {_tool, marker} <- markers, do: refute(File.exists?(marker))
+    end
+
+    @tag :phase_164_authority_closure
+    test "dispatches one authenticated authority OID and rejects a clean inter-process HEAD advance" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      accepted = immutable_loader_fixture!(Path.join(root, "accepted"))
+      {_, 0} = invoke_immutable_loader(accepted, ["164", "--pre-verification"])
+      assert File.regular?(accepted.marker)
+      assert File.read!(accepted.marker) =~ "--pre-verification"
+
+      moving = immutable_loader_fixture!(Path.join(root, "moving"), move_head: true)
+
+      {moving_output, moving_status} =
+        invoke_immutable_loader(moving, ["164", "--pre-verification"], moving.env)
+
+      assert moving_status != 0,
+             "#{moving_output}\n#{if File.regular?(moving.git_log), do: File.read!(moving.git_log), else: "missing git log"}"
+
+      refute File.exists?(moving.marker)
+      assert File.regular?(moving.git_log), moving_output
+      assert moving_output =~ "authority commit changed"
+    end
+
+    @tag :phase_164_authority_closure
+    test "both shell boundaries require one existing full OID equal to HEAD" do
+      root = temporary_root!()
+      repo = Path.join(root, "repo")
+      on_exit(fn -> File.rm_rf!(root) end)
+      git!(root, ["init", "-q", "-b", "main", repo])
+      File.write!(Path.join(repo, "tracked"), "one\n")
+      git!(repo, ["add", "tracked"])
+      git!(repo, ["commit", "-q", "-m", "one"])
+      accepted = repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
+      File.write!(Path.join(repo, "tracked"), "two\n")
+      git!(repo, ["commit", "-qam", "two"])
+      current = repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
+
+      for script <- [@finalizer, @script] do
+        for invalid <- ["", "abc", String.duplicate("f", 40), accepted] do
+          command = ~s(require_expected_authority "$2" "$3")
+          assert {_, status} = source_authority_script(script, command, [repo, invalid])
+          assert status != 0
+        end
+
+        assert {_, 0} =
+                 source_authority_script(
+                   script,
+                   ~s(require_expected_authority "$2" "$3"),
+                   [repo, current]
+                 )
+      end
+
+      finalizer = File.read!(@finalizer)
+      closeout = File.read!(@script)
+      assert finalizer =~ ~s(--expected-main-sha "$expected_authority_oid")
+
+      assert finalizer =~
+               ~s("$MAILGLASS_BASH" "$authority_root/scripts/closeout_repository_truth.sh")
+
+      assert closeout =~ "--expected-main-sha"
+      assert closeout =~ "expected_main_sha"
+    end
+
+    test "checkout mutations cannot replace authenticated private execution bytes" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "hidden"))
+
+      git!(fixture.repo, ["update-index", "--assume-unchanged", "--", fixture.downstream_relative])
+      File.write!(fixture.downstream, hostile_script(fixture.hostile_marker))
+      File.chmod!(fixture.downstream, 0o755)
+
+      {_, 0} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
+      assert File.regular?(fixture.marker)
+      refute File.exists?(fixture.hostile_marker)
+    end
+
+    test "version and invalid invocations are bounded and never dispatch Bash" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "inspection"))
+
+      assert {"mailglass-finalize-phase-loader 1\n", 0} =
+               System.cmd(System.find_executable("node"), [fixture.installed, "--version"],
+                 cd: Path.dirname(fixture.installed),
+                 stderr_to_stdout: true
+               )
+
+      for args <- [[], ["165"], ["164", "--unknown"], ["--self-check"]] do
+        {output, status} = invoke_immutable_loader(fixture, args)
+        assert status != 0
+        assert byte_size(output) <= 16_000
+      end
+
+      refute File.exists?(fixture.marker)
+    end
+
+    test "self-check binds external installed bytes to the installation OID and current source" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "self-check"))
+
+      {output, 0} =
+        invoke_immutable_loader(fixture, [
+          "--self-check",
+          "--repo",
+          resolved_path!(fixture.repo),
+          "--expected-source-oid",
+          fixture.installation_oid
+        ])
+
+      assert output =~ "installation_oid=#{fixture.installation_oid}"
+      assert output =~ "current_oid=#{fixture.current_oid}"
+      assert output =~ "terminal_range=01-39"
+      assert output =~ "mode=0500"
+      refute File.exists?(fixture.marker)
+
+      invalid = [
+        String.slice(fixture.installation_oid, 0, 12),
+        String.duplicate("f", 40)
+      ]
+
+      for oid <- invalid do
+        {bad_output, status} =
+          invoke_immutable_loader(fixture, [
+            "--self-check",
+            "--repo",
+            resolved_path!(fixture.repo),
+            "--expected-source-oid",
+            oid
+          ])
+
+        assert status != 0
+        assert byte_size(bad_output) <= 16_000
+      end
+
+      File.write!(Path.join(fixture.repo, "dirty"), "dirty\n")
+
+      {dirty_output, dirty_status} =
+        invoke_immutable_loader(fixture, [
+          "--self-check",
+          "--repo",
+          resolved_path!(fixture.repo),
+          "--expected-source-oid",
+          fixture.installation_oid
+        ])
+
+      assert dirty_status != 0
+      assert dirty_output =~ "repository is not clean"
+      refute File.exists?(fixture.marker)
+    end
+
+    test "requires every exact PLAN and SUMMARY pair through the authorized terminal range" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      for plan <- [10, 20, 39] do
+        fixture = immutable_loader_fixture!(Path.join(root, "missing-#{plan}"))
+        number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
+        phase = ".planning/phases/164-fixture/164-#{number}"
+        git!(fixture.repo, ["rm", "-q", "#{phase}-PLAN.md", "#{phase}-SUMMARY.md"])
+        git!(fixture.repo, ["commit", "-q", "-m", "remove pair #{number}"])
+
+        {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
+        assert status != 0
+        assert output =~ "numbered history is not the exact 01-39"
+        refute File.exists?(fixture.marker)
+      end
+    end
+
+    test "rejects singleton, malformed, and unexpected numbered artifacts before Bash" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      mutations = [
+        {"singleton",
+         fn fixture ->
+           git!(fixture.repo, ["rm", "-q", ".planning/phases/164-fixture/164-10-SUMMARY.md"])
+         end},
+        {"malformed",
+         fn fixture ->
+           path = ".planning/phases/164-fixture/164-10-PLAN.md.backup"
+           File.write!(Path.join(fixture.repo, path), "malformed\n")
+           git!(fixture.repo, ["add", "--", path])
+         end},
+        {"unexpected",
+         fn fixture ->
+           path = ".planning/phases/164-fixture/164-40-PLAN.md"
+           File.write!(Path.join(fixture.repo, path), "unexpected\n")
+           git!(fixture.repo, ["add", "--", path])
+         end}
+      ]
+
+      for {name, mutate} <- mutations do
+        fixture = immutable_loader_fixture!(Path.join(root, name))
+        mutate.(fixture)
+        git!(fixture.repo, ["commit", "-q", "-m", name])
+
+        {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
+        assert status != 0
+        assert output =~ "numbered history is not the exact 01-39"
+        refute File.exists?(fixture.marker)
+      end
+    end
+
+    test "loader and shell share an explicit 01-39 terminal contract recorded in the ledger" do
+      loader = File.read!(@immutable_loader)
+      finalizer = File.read!(@finalizer)
+      ledger = File.read!(@ledger)
+
+      assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 39"
+      assert finalizer =~ "terminal_first_plan=1"
+      assert finalizer =~ "terminal_last_plan=39"
+      assert finalizer =~ ~S|for plan in $(seq -w "$terminal_first_plan" "$terminal_last_plan")|
+      assert ledger =~ "scripts/mailglass_finalize_phase_loader.mjs"
+      assert ledger =~ "scripts/finalize_phase_164.sh"
+    end
+  end
+
+  describe "phase 164 installed boundary" do
+    @describetag :phase_164_installed_boundary
+
+    test "retired project extension bytes are absent from the checkout and authority path" do
+      refute File.exists?(@extension)
+      refute File.exists?(@manifest)
+
+      loader = File.read!(@immutable_loader)
+      refute loader =~ ".gsd/extensions/finalize-phase"
+      refute loader =~ "registerCommand"
+    end
+
+    test "a hostile recreation of the retired extension cannot influence direct loader execution" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "hostile-retired-extension"))
+      retired_dir = Path.join(fixture.repo, ".gsd/extensions/finalize-phase")
+      hostile_marker = Path.join(fixture.repo, "retired-extension.marker")
+
+      File.mkdir_p!(retired_dir)
+
+      File.write!(
+        Path.join(retired_dir, "index.ts"),
+        "import { writeFileSync } from 'node:fs'; writeFileSync(#{inspect(hostile_marker)}, 'executed');\n"
+      )
+
+      File.write!(Path.join(retired_dir, "extension-manifest.json"), ~s({"id":"hostile"}\n))
+
+      {_, 0} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
+      assert File.regular?(fixture.marker)
+      refute File.exists?(hostile_marker)
+    end
+  end
+
+  describe "phase 164 hardened loader reinstall contract" do
+    @describetag :phase_164_reinstall_contract
+
+    test "committed source contains every hardened authority required before proposal" do
+      loader = File.read!(@immutable_loader)
+
+      assert String.starts_with?(loader, "#!/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node\n")
+      assert loader =~ ~s(const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass")
+      assert loader =~ ~s(const EXPECTED_REPOSITORY = "szTheory/mailglass")
+      assert loader =~ "validateCanonicalRepository"
+      assert loader =~ "validateTrustedToolchain"
+      assert loader =~ "buildChildEnvironment"
+      assert loader =~ "installationOidIsAncestor"
+      assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 39"
+      assert loader =~ "exact 01-39 PLAN/SUMMARY set"
+
+      for path <- [
+            "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+            "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+            "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+            "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+            "/usr/bin/jq",
+            "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix",
+            "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir",
+            "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl"
+          ] do
+        assert loader =~ inspect(path)
+      end
+    end
+
+    test "Plan 164-23 approval remains immutable prior-object provenance" do
+      summary =
+        File.read!(
+          Path.join(
+            @repo_root,
+            ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-23-SUMMARY.md"
+          )
+        )
+
+      assert summary =~ "installation_source_oid=7f57e1cd0aafe6d236624da98f7292e86e6de697"
+
+      assert summary =~
+               "source_sha256=ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
+
+      assert summary =~ "destination=/Users/jon/.local/bin/mailglass-finalize-phase"
+      assert summary =~ "install_mode=0500"
+      assert summary =~ "approval_status=approved"
+      assert summary =~ "with immutable provenance"
+
+      contract = File.read!(@finalization_contract)
+      assert contract =~ "Plan 164-23 approval record remains immutable prior provenance"
+      assert contract =~ "7f57e1cd0aafe6d236624da98f7292e86e6de697"
+      assert contract =~ "ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
+    end
+
+    test "lifecycle requires approved recoverable reinstall before readiness" do
+      contract = File.read!(@finalization_contract)
+      normalized = Regex.replace(~r/\s+/, contract, " ")
+
+      assert normalized =~ "Plan 164-27"
+      assert normalized =~ "exact approval"
+      assert normalized =~ "atomic replacement"
+      assert normalized =~ "rollback"
+      assert normalized =~ "controlled-host"
+      assert normalized =~ "superseded operationally only after"
+
+      assert normalized =~
+               "post-summary → ordinary verifier → protected completion metadata → exact-main terminal"
+
+      assert normalized =~ "does not run canonical pre-verification or terminal finalization"
+      assert normalized =~ "terminal finalization remains pending"
+    end
+  end
+
+  describe "phase 164 gap reinstall readiness" do
+    @describetag :phase_164_gap_reinstall_readiness
+
+    test "changed 01-34 source remains superseded-pending behind a new approved reinstall" do
+      plan_27 =
+        File.read!(
+          Path.join(
+            @repo_root,
+            ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-27-SUMMARY.md"
+          )
+        )
+
+      assert plan_27 =~
+               "installation_source_oid=2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97"
+
+      assert plan_27 =~
+               "source_sha256=0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
+
+      assert plan_27 =~
+               "approval_sha256=e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9"
+
+      contract = File.read!(@finalization_contract)
+      heading = "## Plan 164-31 superseded-pending 01-34 source"
+      assert contract =~ heading
+
+      section =
+        contract
+        |> String.split(heading, parts: 2)
+        |> List.last()
+        |> String.split("\n## ", parts: 2)
+        |> List.first()
+        |> then(&Regex.replace(~r/\s+/, &1, " "))
+
+      assert section =~ "2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97"
+      assert section =~ "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
+      assert section =~ "prior proven installation authority"
+      assert section =~ "tracked 01-34 loader source"
+      assert section =~ "superseded-pending"
+      assert section =~ "Plan 164-32"
+      assert section =~ "immutable replacement proposal and exact human approval"
+      assert section =~ "Plan 164-33"
+      assert section =~ "rollback preservation, atomic reinstall, and controlled-host proof"
+      assert section =~ "ordinary verification remains pending"
+      assert section =~ "completion-only metadata remains pending"
+      assert section =~ "protected-main integration remains pending"
+      assert section =~ "terminal ignored capture remains pending"
+
+      refute section =~ "01-34 installation is ready"
+      refute section =~ "ordinary verification passed"
+      refute section =~ "protected main passed"
+      refute section =~ "terminal evidence captured"
+    end
+  end
+
+  describe "phase 164 gap install proposal" do
+    @describetag :phase_164_gap_install_proposal
+    @describetag :phase_164_proposal_boundary
+
+    test "01-39 source exposes every authority required before proposal publication" do
+      loader = File.read!(@immutable_loader)
+
+      assert String.starts_with?(loader, "#!/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node\n")
+      assert loader =~ ~s(const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass")
+      assert loader =~ ~s(const EXPECTED_REPOSITORY = "szTheory/mailglass")
+      assert loader =~ "validateCanonicalRepository"
+      assert loader =~ "validateTrustedToolchain"
+      assert loader =~ "buildChildEnvironment"
+      assert loader =~ "installationOidIsAncestor"
+      assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 39"
+      assert loader =~ "exact 01-39 PLAN/SUMMARY set"
+
+      for path <- [
+            "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+            "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+            "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+            "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+            "/usr/bin/jq",
+            "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix",
+            "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir",
+            "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl"
+          ] do
+        assert loader =~ inspect(path)
+      end
+    end
+
+    test "Plan 164-27 tuple is the exact prior-object authority" do
+      summary =
+        File.read!(
+          Path.join(
+            @repo_root,
+            ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-27-SUMMARY.md"
+          )
+        )
+
+      assert summary =~
+               "installation_source_oid=2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97"
+
+      assert summary =~
+               "source_sha256=0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
+
+      assert summary =~
+               "approval_sha256=e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9"
+
+      assert summary =~ "destination=/Users/jon/.local/bin/mailglass-finalize-phase"
+      assert summary =~ "install_mode=0500"
+      assert summary =~ "approval_status=approved"
+    end
+
+    test "replacement proposal schema is the prior approval schema without approval status" do
+      proposal_keys =
+        @install_approval_tuple
+        |> Map.keys()
+        |> List.delete("approval_status")
+        |> Kernel.++([
+          "erl_executable",
+          "mix_version",
+          "elixir_version",
+          "otp_release",
+          "runtime_probe_sha256"
+        ])
+        |> Enum.sort()
+
+      assert length(proposal_keys) == 23
+
+      assert proposal_keys ==
+               Enum.sort([
+                 "record_version",
+                 "phase_plan",
+                 "installation_source_oid",
+                 "source_sha256",
+                 "destination",
+                 "install_mode",
+                 "node_executable",
+                 "git_executable",
+                 "bash_executable",
+                 "gh_executable",
+                 "jq_executable",
+                 "mix_executable",
+                 "elixir_executable",
+                 "erl_executable",
+                 "mix_version",
+                 "elixir_version",
+                 "otp_release",
+                 "runtime_probe_sha256",
+                 "prior_approval_sha256",
+                 "prior_sha256",
+                 "prior_mode",
+                 "prior_stat_identity",
+                 "rollback_path"
+               ])
+
+      refute "approval_status" in proposal_keys
+    end
+
+    test "lifecycle keeps the persisted Plan 164-32 tuple pending and non-mutating" do
+      contract = File.read!(@finalization_contract)
+      heading = "## Plan 164-32 pending 01-34 replacement tuple"
+      assert contract =~ heading
+
+      section =
+        contract
+        |> String.split(heading, parts: 2)
+        |> List.last()
+        |> String.split("\n## ", parts: 2)
+        |> List.first()
+        |> then(&Regex.replace(~r/\s+/, &1, " "))
+
+      assert section =~ "/Users/jon/.local/share/mailglass/checkpoints/164-32-install-proposal.env"
+      assert section =~ "mode 0400"
+      assert section =~ "18 proposal fields"
+      assert section =~ "approval_status"
+      assert section =~ "Plan 164-27"
+      assert section =~ "e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9"
+      assert section =~ "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
+      assert section =~ "Plan 164-33"
+      assert section =~ "destination and rollback path remain unchanged"
+      assert section =~ "terminal finalization remains pending"
+
+      refute section =~ "01-34 installation is ready"
+      refute section =~ "ordinary verification passed"
+      refute section =~ "terminal evidence captured"
+    end
+  end
+
+  describe "phase 164 repository-only installed-loader attacks" do
+    @describetag :phase_164_installed_boundary
+
+    test "production loader rejects a foreign repository before private dispatch" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = production_installed_fixture!(Path.join(root, "accepted"))
+
+      {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+      assert status != 0
+      assert_production_boundary_rejection!(output, fixture)
+    end
+
+    test "absolute installed executable rejects a moving HEAD before Bash" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = production_installed_fixture!(Path.join(root, "moving"), move_head: true)
+
+      {output, status} =
+        invoke_production_loader(fixture, ["164", "--pre-verification"], fixture.env)
+
+      assert status != 0
+      assert_production_boundary_rejection!(output, fixture)
+    end
+
+    test "absolute installed executable rejects deleted middle and terminal pairs before Bash" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      for plan <- [10, 20, 34] do
+        fixture = production_installed_fixture!(Path.join(root, "missing-#{plan}"))
+        number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
+        phase = ".planning/phases/164-fixture/164-#{number}"
+        git!(fixture.repo, ["rm", "-q", "#{phase}-PLAN.md", "#{phase}-SUMMARY.md"])
+        git!(fixture.repo, ["commit", "-q", "-m", "remove pair #{number}"])
+
+        {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+        assert status != 0
+        assert_production_boundary_rejection!(output, fixture)
+      end
+    end
+
+    test "assume-unchanged hostile retired extension is never evaluated" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = production_installed_fixture!(Path.join(root, "hostile-extension"))
+      hostile_extension = Path.join(fixture.repo, ".gsd/extensions/finalize-phase/index.ts")
+
+      git!(fixture.repo, [
+        "update-index",
+        "--assume-unchanged",
+        "--",
+        ".gsd/extensions/finalize-phase/index.ts"
+      ])
+
+      File.write!(
+        hostile_extension,
+        "import { writeFileSync } from 'node:fs'; writeFileSync(#{inspect(fixture.hostile_marker)}, 'executed');\n"
+      )
+
+      assert git!(fixture.repo, [
+               "status",
+               "--porcelain",
+               "--",
+               ".gsd/extensions/finalize-phase/index.ts"
+             ]) == ""
+
+      {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+      assert status != 0
+      assert_production_boundary_rejection!(output, fixture)
+    end
+
+    test "production authority constants cannot be overridden by argv or environment" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = production_installed_fixture!(Path.join(root, "override"))
+
+      for {args, env} <- [
+            {["164", "--repo", fixture.repo], []},
+            {["164"], [{"MAILGLASS_REPOSITORY", fixture.repo}, {"GIT", "git"}]}
+          ] do
+        {output, status} = invoke_production_loader(fixture, args, env)
+        assert status != 0
+        assert_production_boundary_rejection!(output, fixture)
+      end
+    end
+  end
+
+  describe "phase 164 installed production boundary" do
+    @describetag :phase_164_installed_production_boundary
+
+    test "real installed command and approval are regular non-symlinks with exact modes" do
+      assert_regular_mode!(@installed_loader, 0o500)
+      assert_regular_mode!(@install_approval, 0o400)
+
+      approval = parse_install_approval!(@install_approval)
+      assert approval["destination"] == @installed_loader
+      assert approval["install_mode"] == "0500"
+      assert approval["approval_status"] == "approved"
+      assert approval["installation_source_oid"] == @installation_source_oid
+      assert approval["source_sha256"] == @installed_loader_sha256
+    end
+
+    test "Plan 164-27 approval remains exact immutable provenance for the verified rollback" do
+      assert sha256_file!(@prior_install_approval, 0o400) == @prior_approval_sha256
+      approval = parse_install_approval!(@prior_install_approval, @prior_install_approval_tuple)
+
+      assert approval["phase_plan"] == "164-27"
+      assert approval["installation_source_oid"] == "2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97"
+      assert approval["source_sha256"] == @install_approval_tuple["prior_sha256"]
+      assert_regular_mode!(@prior_rollback, 0o400)
+      assert sha256_file!(@prior_rollback, 0o400) == approval["source_sha256"]
+    end
+
+    test "approval binds all nineteen immutable Plan 164-32 fields exactly once" do
+      approval = parse_install_approval!(@install_approval)
+
+      assert map_size(approval) == 19
+      assert approval["record_version"] == "1"
+      assert approval["phase_plan"] == "164-32"
+      assert approval["node_executable"] == "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node"
+      assert approval["git_executable"] == "/opt/homebrew/Cellar/git/2.41.0/bin/git"
+      assert approval["bash_executable"] == "/opt/homebrew/Cellar/bash/5.2.37/bin/bash"
+      assert approval["gh_executable"] == "/opt/homebrew/Cellar/gh/2.95.0/bin/gh"
+      assert approval["jq_executable"] == "/usr/bin/jq"
+      assert approval["mix_executable"] == "/Users/jon/.asdf/shims/mix"
+      assert approval["elixir_executable"] == "/Users/jon/.asdf/shims/elixir"
+
+      assert approval["prior_approval_sha256"] ==
+               @prior_approval_sha256
+
+      assert approval["prior_sha256"] ==
+               "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
+
+      assert approval["prior_mode"] == "0500"
+      assert approval["prior_stat_identity"] == "16777229:269505365:501:20"
+
+      assert approval["rollback_path"] == @prior_rollback
+    end
+
+    test "installed digest equals the approved 01-34 committed loader blob at an ancestor OID" do
+      approval = parse_install_approval!(@install_approval)
+      assert sha256_file!(@installed_loader) == approval["source_sha256"]
+
+      {blob, 0} =
+        System.cmd(
+          "git",
+          [
+            "show",
+            "#{approval["installation_source_oid"]}:scripts/mailglass_finalize_phase_loader.mjs"
+          ],
+          cd: @repo_root
+        )
+
+      assert blob =~ "const TERMINAL_LAST_PLAN = 34;"
+
+      assert blob |> then(&:crypto.hash(:sha256, &1)) |> Base.encode16(case: :lower) ==
+               approval["source_sha256"]
+
+      assert {_, 0} =
+               System.cmd(
+                 "git",
+                 ["merge-base", "--is-ancestor", approval["installation_source_oid"], "HEAD"],
+                 cd: @repo_root,
+                 stderr_to_stdout: true
+               )
+    end
+
+    test "installed executable version and self-check report every approved authority field" do
+      approval = parse_install_approval!(@install_approval)
+
+      assert {"mailglass-finalize-phase-loader 1\n", 0} =
+               System.cmd(@installed_loader, ["--version"],
+                 cd: @repo_root,
+                 stderr_to_stdout: true
+               )
+
+      {output, 0} = invoke_installed_self_check(@installed_loader, approval)
+
+      assert output =~ "installation_oid=#{approval["installation_source_oid"]}"
+      assert output =~ "current_oid="
+      assert output =~ "loader_sha256=#{approval["source_sha256"]}"
+      assert output =~ "executable=#{approval["destination"]}"
+      assert output =~ "mode=#{approval["install_mode"]}"
+      assert output =~ "terminal_range=01-34"
+    end
+
+    test "lifecycle records installation readiness without advancing terminal order" do
+      contract = File.read!(@finalization_contract)
+      heading = "## Plan 164-33 installed 01-34 readiness"
+      assert contract =~ heading
+
+      section =
+        contract
+        |> String.split(heading, parts: 2)
+        |> List.last()
+        |> String.split("\n## ", parts: 2)
+        |> List.first()
+        |> then(&Regex.replace(~r/\s+/, &1, " "))
+
+      assert section =~ "Plan 164-32 approval"
+      assert section =~ @installation_source_oid
+      assert section =~ @installed_loader_sha256
+      assert section =~ @prior_approval_sha256
+      assert section =~ @prior_rollback
+      assert section =~ "installation readiness only"
+      assert section =~ "ordinary verification remains pending"
+      assert section =~ "protected-main integration remains pending"
+      assert section =~ "terminal finalization remains pending"
+      assert section =~ "ordinary verifier → completion-only metadata → protected main"
+      refute section =~ "terminal evidence captured"
+      refute section =~ "TRTH-03 complete"
+      refute section =~ "Phase 164 complete"
+    end
+
+    test "approval validation rejects malformed and duplicate records fail-closed" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      for {name, contents, expected} <- [
+            {"blank", "record_version=1\nphase_plan=\n", "blank approval value"},
+            {"malformed", "not-an-assignment\n", "malformed approval line"},
+            {"duplicate", "record_version=1\nrecord_version=1\n", "duplicate approval key"},
+            {"unknown", "unknown=value\n", "unknown approval key"}
+          ] do
+        path = Path.join(root, name)
+        File.write!(path, contents)
+        File.chmod!(path, 0o400)
+        assert_raise RuntimeError, ~r/#{expected}/, fn -> parse_install_approval!(path) end
+      end
+    end
+  end
+
+  test "owned sibling cleanup refuses pre-existing and token-replaced paths" do
+    root = temporary_root!()
+    candidate = @repo_root <> "-gap-preexisting-#{System.unique_integer([:positive])}"
+    File.mkdir!(candidate)
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    try do
+      assert_raise RuntimeError, ~r/refusing to reuse existing sibling fixture/, fn ->
+        allocate_owned_sibling!("gap", candidate)
+      end
+
+      assert File.dir?(candidate)
+    after
+      File.rmdir!(candidate)
+    end
+
+    owner = allocate_owned_sibling!("gap")
+    File.write!(owner.ownership_file, "replacement")
+
+    assert_raise RuntimeError, ~r/ownership check failed/, fn ->
+      cleanup_owned_sibling!(owner)
+    end
+
+    assert File.dir?(owner.path)
+    File.write!(owner.ownership_file, owner.token)
+    cleanup_owned_sibling!(owner)
+    refute File.exists?(owner.path)
+  end
+
   defp run(repo, ledger, output, marker) do
     root = Path.dirname(marker)
     bin = Path.join(root, "bin-#{System.unique_integer([:positive])}")
@@ -724,8 +1980,32 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     System.cmd(
       "bash",
-      [@script, "--repo", repo, "--ledger", ledger, "--ci-run-id", "123", "--output", output],
-      env: [{"PATH", "#{bin}:#{System.fetch_env!("PATH")}"}],
+      [
+        @script,
+        "--repo",
+        repo,
+        "--authority-root",
+        repo,
+        "--expected-main-sha",
+        String.duplicate("a", 40),
+        "--ledger",
+        ledger,
+        "--ci-run-id",
+        "123",
+        "--output",
+        output
+      ],
+      env: [
+        {"PATH", "#{bin}:#{System.fetch_env!("PATH")}"},
+        {"MAILGLASS_GIT", System.find_executable("git")},
+        {"MAILGLASS_BASH", System.find_executable("bash")},
+        {"MAILGLASS_GH", System.find_executable("gh")},
+        {"MAILGLASS_JQ", System.find_executable("jq")},
+        {"MAILGLASS_MIX", mix},
+        {"MAILGLASS_NODE", System.find_executable("node")},
+        {"MAILGLASS_ELIXIR", System.find_executable("elixir")},
+        {"MAILGLASS_ERL", System.find_executable("erl")}
+      ],
       stderr_to_stdout: true
     )
   end
@@ -744,6 +2024,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           @scheduled_registry
         ],
         cd: @repo_root,
+        env: [{"MAILGLASS_JQ", System.find_executable("jq")}],
         stderr_to_stdout: true
       )
 
@@ -813,7 +2094,89 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       "bash",
       ["-c", ~s(source "$1"; #{command}), "phase-164-finalizer-test", @finalizer | args],
       cd: @repo_root,
+      env: [
+        {"MAILGLASS_GIT", System.find_executable("git")},
+        {"MAILGLASS_BASH", System.find_executable("bash")},
+        {"MAILGLASS_GH", System.find_executable("gh")},
+        {"MAILGLASS_JQ", System.find_executable("jq")},
+        {"MAILGLASS_MIX", System.find_executable("mix")},
+        {"MAILGLASS_NODE", System.find_executable("node")},
+        {"MAILGLASS_ELIXIR", System.find_executable("elixir")},
+        {"MAILGLASS_ERL", System.find_executable("erl")}
+      ],
       stderr_to_stdout: true
+    )
+  end
+
+  defp source_authority_script(script, command, args) do
+    System.cmd(
+      "bash",
+      ["-c", ~s(source "$1"; #{command}), "phase-164-authority-test", script | args],
+      cd: @repo_root,
+      env: [
+        {"MAILGLASS_GIT", System.find_executable("git")},
+        {"MAILGLASS_BASH", System.find_executable("bash")},
+        {"MAILGLASS_GH", System.find_executable("gh")},
+        {"MAILGLASS_JQ", System.find_executable("jq")},
+        {"MAILGLASS_MIX", System.find_executable("mix")},
+        {"MAILGLASS_NODE", System.find_executable("node")},
+        {"MAILGLASS_ELIXIR", System.find_executable("elixir")},
+        {"MAILGLASS_ERL", System.find_executable("erl")}
+      ],
+      stderr_to_stdout: true
+    )
+  end
+
+  defp terminal_state(repo, phase_dir) do
+    source_finalizer(~s(require_terminal_state "$2" "$3" "$2"), [repo, phase_dir])
+  end
+
+  defp terminal_fixture!(repo) do
+    phase_rel = ".planning/phases/164-repository-truth-reconciliation-and-closeout"
+    phase_dir = Path.join(repo, phase_rel)
+    File.mkdir_p!(Path.join(repo, "scripts"))
+    File.mkdir_p!(phase_dir)
+    git!(Path.dirname(repo), ["init", "-q", "-b", "main", repo])
+
+    File.write!(Path.join(repo, "scripts/finalize_phase_164.sh"), "verified source")
+
+    File.write!(
+      Path.join(repo, ".planning/ROADMAP.md"),
+      "- [x] **Phase 164: Repository Truth Reconciliation and Closeout**\n"
+    )
+
+    File.write!(
+      Path.join(repo, ".planning/REQUIREMENTS.md"),
+      Enum.map_join(["TRTH-01", "TRTH-02", "TRTH-03"], "\n", &"- [x] **#{&1}**") <> "\n"
+    )
+
+    File.write!(Path.join(repo, ".planning/STATE.md"), "state\n")
+
+    for plan <- 1..39 do
+      number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
+      File.write!(Path.join(phase_dir, "164-#{number}-PLAN.md"), "plan\n")
+      File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary\n")
+    end
+
+    git!(repo, ["add", "."])
+    git!(repo, ["commit", "-q", "-m", "verified implementation"])
+    verified_sha = repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
+    write_verification!(phase_dir, verified_sha)
+    git!(repo, ["add", "."])
+    git!(repo, ["commit", "-q", "-m", "verification metadata"])
+
+    File.write!(Path.join(repo, ".planning/STATE.md"), "complete\n")
+    git!(repo, ["commit", "-qam", "completion metadata"])
+
+    %{repo: repo, phase_dir: phase_dir, verified_sha: verified_sha}
+  end
+
+  defp write_verification!(phase_dir, verified_sha) do
+    sha_line = if verified_sha, do: "verified_implementation_sha: #{verified_sha}\n", else: ""
+
+    File.write!(
+      Path.join(phase_dir, "164-VERIFICATION.md"),
+      "---\nstatus: passed\n#{sha_line}---\n"
     )
   end
 
@@ -854,6 +2217,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       #!/bin/bash
       case "$3" in
         status) exit 0 ;;
+        cat-file) exit 0 ;;
         rev-parse) printf '%s\\n' "$FIXTURE_SHA" ;;
         branch) printf 'main\\n' ;;
         check-ignore) exit 0 ;;
@@ -913,6 +2277,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           fixture_script,
           "--repo",
           @repo_root,
+          "--authority-root",
+          @repo_root,
+          "--expected-main-sha",
+          sha,
           "--ledger",
           @ledger,
           "--ci-run-id",
@@ -922,6 +2290,14 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         ],
         env: [
           {"PATH", "#{bin}:#{System.fetch_env!("PATH")}"},
+          {"MAILGLASS_GIT", Path.join(bin, "git")},
+          {"MAILGLASS_BASH", Path.join(bin, "bash")},
+          {"MAILGLASS_GH", System.find_executable("gh")},
+          {"MAILGLASS_JQ", System.find_executable("jq")},
+          {"MAILGLASS_MIX", Path.join(bin, "mix")},
+          {"MAILGLASS_NODE", Path.join(bin, "node")},
+          {"MAILGLASS_ELIXIR", Path.join(bin, "elixir")},
+          {"MAILGLASS_ERL", System.find_executable("erl")},
           {"FIXTURE_SHA", sha},
           {"HYGIENE_JSON", hygiene_json},
           {"HYGIENE_EXIT", Integer.to_string(hygiene_exit)},
@@ -995,6 +2371,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
             printf '?? %s\n' "${DIRT_SENTINEL#"$FIXTURE_REPO"/}"
           fi
           ;;
+        cat-file) exit 0 ;;
         rev-parse) printf '%s\n' "$FIXTURE_SHA" ;;
         branch) printf 'main\n' ;;
         check-ignore) exit 0 ;;
@@ -1052,6 +2429,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           fixture_script,
           "--repo",
           @repo_root,
+          "--authority-root",
+          @repo_root,
+          "--expected-main-sha",
+          sha,
           "--ledger",
           @ledger,
           "--ci-run-id",
@@ -1061,6 +2442,14 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         ],
         env: [
           {"PATH", "#{bin}:#{System.fetch_env!("PATH")}"},
+          {"MAILGLASS_GIT", Path.join(bin, "git")},
+          {"MAILGLASS_BASH", Path.join(bin, "bash")},
+          {"MAILGLASS_GH", System.find_executable("gh")},
+          {"MAILGLASS_JQ", System.find_executable("jq")},
+          {"MAILGLASS_MIX", Path.join(bin, "mix")},
+          {"MAILGLASS_NODE", Path.join(bin, "node")},
+          {"MAILGLASS_ELIXIR", Path.join(bin, "elixir")},
+          {"MAILGLASS_ERL", System.find_executable("erl")},
           {"FIXTURE_REPO", @repo_root},
           {"FIXTURE_SHA", sha},
           {"STATUS_COUNTER", status_counter},
@@ -1093,6 +2482,501 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   defp write_executable!(path, contents) do
     File.write!(path, contents)
     File.chmod!(path, 0o755)
+  end
+
+  defp extension_fixture!(repo, options \\ []) do
+    phase_dir = Path.join(repo, ".planning/phases/164-fixture")
+    scripts_dir = Path.join(repo, "scripts")
+    shim = Path.join(phase_dir, "164-FINALIZE.sh")
+    downstream = Path.join(scripts_dir, "finalize_phase_164.sh")
+    marker = Path.join(repo, "execution.marker")
+    bytes_marker = Path.join(repo, "bytes.marker")
+    hostile_marker = Path.join(repo, "hostile.marker")
+    File.mkdir_p!(phase_dir)
+    File.mkdir_p!(scripts_dir)
+    git!(Path.dirname(repo), ["init", "-q", "-b", "main", repo])
+
+    File.write!(
+      downstream,
+      """
+      #!/usr/bin/env bash
+      set -euo pipefail
+      target_repo="$1"
+      authority_root="$2"
+      expected_authority_oid="$3"
+      mode="${4:-}"
+      observed=$("$MAILGLASS_GIT" -C "$target_repo" rev-parse --verify 'HEAD^{commit}')
+      if [ "$observed" != "$expected_authority_oid" ]; then
+        printf 'authority commit changed\n' >&2
+        exit 1
+      fi
+      printf '%s|%s|%s|%s|%s' "$0" "$authority_root" "$target_repo" "$expected_authority_oid" "$mode" > "$MARKER"
+      cat "$0" > "$BYTES_MARKER"
+      "$authority_root/scripts/closeout_repository_truth.sh" "$authority_root"
+      exit "${FINALIZER_EXIT:-0}"
+      """
+    )
+
+    File.chmod!(downstream, 0o755)
+    git!(repo, ["add", "scripts/finalize_phase_164.sh"])
+    git!(repo, ["commit", "-q", "-m", "committed downstream"])
+
+    File.write!(
+      shim,
+      "#!/usr/bin/env bash\nexec \"$1/scripts/finalize_phase_164.sh\" \"$@\"\n"
+    )
+
+    File.chmod!(shim, 0o755)
+
+    if Keyword.get(options, :commit_shim, true) do
+      git!(repo, ["add", ".planning/phases/164-fixture/164-FINALIZE.sh"])
+      git!(repo, ["commit", "-q", "-m", "committed shim"])
+    end
+
+    for path <- @transitive_executables do
+      absolute = Path.join(repo, path)
+      File.mkdir_p!(Path.dirname(absolute))
+
+      contents =
+        if path == "scripts/closeout_repository_truth.sh" do
+          reads =
+            Enum.map_join(
+              @transitive_data,
+              "\n",
+              &~s(grep -q '^MUTATED:' "$root/#{&1}" && touch "$HOSTILE_MARKER" || true)
+            )
+
+          helpers = Enum.map_join(@transitive_executables -- [path], "\n", &~s("$root/#{&1}"))
+          "#!/usr/bin/env bash\nset -euo pipefail\nroot=\"$1\"\n#{helpers}\n#{reads}\n"
+        else
+          "#!/usr/bin/env bash\nexit 0\n"
+        end
+
+      File.write!(absolute, contents)
+      File.chmod!(absolute, 0o755)
+    end
+
+    for path <- @transitive_data do
+      absolute = Path.join(repo, path)
+      File.mkdir_p!(Path.dirname(absolute))
+      File.write!(absolute, "trusted:#{path}\n")
+    end
+
+    git!(repo, ["add" | @transitive_executables ++ @transitive_data])
+    git!(repo, ["commit", "-q", "-m", "committed authority dependencies"])
+
+    %{
+      repo: repo,
+      shim: shim,
+      shim_relative: ".planning/phases/164-fixture/164-FINALIZE.sh",
+      downstream: downstream,
+      downstream_relative: "scripts/finalize_phase_164.sh",
+      marker: marker,
+      bytes_marker: bytes_marker,
+      hostile_marker: hostile_marker
+    }
+  end
+
+  defp immutable_loader_fixture!(repo, options \\ []) do
+    fixture = extension_fixture!(repo)
+    loader_source = Path.join(repo, "scripts/mailglass_finalize_phase_loader.mjs")
+    File.cp!(@immutable_loader, loader_source)
+
+    phase_dir = Path.join(repo, ".planning/phases/164-fixture")
+
+    tools = fixture_toolchain!(repo)
+    source = @immutable_loader |> File.read!() |> portable_loader_source!(tools)
+    git_log = Path.join(Path.dirname(repo), "git.log")
+    real_git = System.find_executable("git")
+    env = [{"REAL_GIT", real_git}, {"GIT_LOG", git_log}]
+
+    {source, tools, env} =
+      if Keyword.get(options, :move_head, false) do
+        delegate_dir = Path.join(Path.dirname(repo), "trusted-git")
+        delegate = Path.join(delegate_dir, "git")
+        counter = Path.join(Path.dirname(repo), "git-counter")
+        File.mkdir_p!(delegate_dir)
+        File.write!(counter, "0")
+
+        write_executable!(
+          delegate,
+          """
+          #!/usr/bin/env bash
+          set -euo pipefail
+          printf '%s\\n' "$*" >> "$GIT_LOG"
+          if [ "$#" -eq 3 ] && [ "$1" = rev-parse ] && [ "$2" = --verify ] && [ "$3" = 'HEAD^{commit}' ]; then
+            count=$(($(cat "$GIT_COUNTER") + 1))
+            printf '%s' "$count" > "$GIT_COUNTER"
+            if [ "$count" -eq 2 ]; then
+              observed=$("$REAL_GIT" "$@")
+              printf 'advanced\\n' > "$FIXTURE_REPO/head-advance"
+              "$REAL_GIT" -C "$FIXTURE_REPO" add head-advance
+              GIT_AUTHOR_NAME='Phase 164 Test' GIT_AUTHOR_EMAIL=phase164@example.test \\
+              GIT_COMMITTER_NAME='Phase 164 Test' GIT_COMMITTER_EMAIL=phase164@example.test \\
+                "$REAL_GIT" -C "$FIXTURE_REPO" commit -q -m 'advance head between Node and Bash'
+              printf '%s\\n' "$observed"
+              exit 0
+            fi
+          fi
+          exec "$REAL_GIT" "$@"
+          """
+        )
+
+        physical_delegate = resolved_path!(delegate)
+
+        replaced =
+          replace_exact_once!(
+            source,
+            ~s(GIT: #{inspect(Map.fetch!(tools, :GIT))}),
+            ~s(GIT: #{inspect(physical_delegate)})
+          )
+
+        {replaced, Map.put(tools, :GIT, physical_delegate),
+         [
+           {"GIT_COUNTER", counter},
+           {"FIXTURE_REPO", repo}
+           | env
+         ]}
+      else
+        {source, tools, env}
+      end
+
+    source =
+      if Keyword.get(options, :production, false) do
+        source
+      else
+        String.replace(
+          source,
+          ~s(const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass"),
+          ~s(const CANONICAL_REPOSITORY = #{inspect(resolved_path!(repo))})
+        )
+      end
+
+    source =
+      String.replace(
+        source,
+        "const TEST_ENV_KEYS = [];",
+        ~s(const TEST_ENV_KEYS = ["MARKER", "BYTES_MARKER", "HOSTILE_MARKER", "FINALIZER_EXIT", "REAL_GIT", "GIT_LOG", "GIT_COUNTER", "FIXTURE_REPO"];)
+      )
+
+    File.write!(loader_source, source)
+    git!(repo, ["remote", "add", "origin", "git@github.com:szTheory/mailglass.git"])
+
+    for plan <- 2..39 do
+      number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
+      File.write!(Path.join(phase_dir, "164-#{number}-PLAN.md"), "plan #{number}\n")
+      File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary #{number}\n")
+    end
+
+    git!(repo, ["add", "."])
+    git!(repo, ["commit", "-q", "-m", "installable immutable loader authority"])
+    installation_oid = repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
+
+    File.write!(Path.join(repo, "metadata"), "later metadata\n")
+    git!(repo, ["add", "metadata"])
+    git!(repo, ["commit", "-q", "-m", "metadata only"])
+    current_oid = repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
+
+    install_dir = Path.join(Path.dirname(repo), "installed-#{Path.basename(repo)}")
+    File.mkdir_p!(install_dir)
+    installed = Path.join(install_dir, "mailglass-finalize-phase")
+    File.cp!(loader_source, installed)
+    File.chmod!(installed, 0o500)
+
+    Map.merge(fixture, %{
+      installed: installed,
+      installation_oid: installation_oid,
+      current_oid: current_oid,
+      git_log: git_log,
+      tools: tools,
+      env: env
+    })
+  end
+
+  defp portable_loader_source!(source, tools) do
+    source =
+      Enum.reduce(@production_tool_paths, source, fn {tool, production_path}, rewritten ->
+        replace_exact_once!(
+          rewritten,
+          ~s(#{tool}: #{inspect(production_path)}),
+          ~s(#{tool}: #{inspect(Map.fetch!(tools, tool))})
+        )
+      end)
+
+    source
+    |> replace_exact_once!(
+      ~s(const EXPECTED_ELIXIR_VERSION = "1.19.5"),
+      ~s(const EXPECTED_ELIXIR_VERSION = #{inspect(System.version())})
+    )
+    |> replace_exact_once!(
+      ~s(const EXPECTED_OTP_RELEASE = "28"),
+      ~s(const EXPECTED_OTP_RELEASE = #{inspect(fixture_otp_release())})
+    )
+  end
+
+  defp fixture_toolchain!(repo) do
+    tool_dir = Path.join(Path.dirname(repo), "trusted-tools-#{Path.basename(repo)}")
+    File.mkdir_p!(tool_dir)
+
+    Map.new(@production_tool_paths, fn {tool, _production_path} ->
+      command = tool |> Atom.to_string() |> String.downcase()
+      delegate = command |> fixture_executable!() |> resolved_path!()
+      wrapper = Path.join(tool_dir, command)
+
+      write_executable!(
+        wrapper,
+        "#!/bin/sh\nexec #{inspect(delegate)} \"$@\"\n"
+      )
+
+      {tool, resolved_path!(wrapper)}
+    end)
+  end
+
+  defp fixture_executable!(name) do
+    discovered =
+      System.find_executable(name) || raise "#{name} executable is required for loader fixtures"
+
+    if String.contains?(discovered, "/.asdf/shims/") do
+      asdf = System.find_executable("asdf") || raise "asdf is required to resolve #{name}"
+      {path, 0} = System.cmd(asdf, ["which", name], stderr_to_stdout: true)
+      String.trim(path)
+    else
+      discovered
+    end
+  end
+
+  defp fixture_otp_release do
+    :otp_release |> :erlang.system_info() |> List.to_string()
+  end
+
+  defp replace_exact_once!(source, expected, replacement) do
+    case :binary.matches(source, expected) do
+      [_match] -> String.replace(source, expected, replacement, global: false)
+      matches -> raise "expected one loader fixture replacement, found #{length(matches)}"
+    end
+  end
+
+  defp production_installed_fixture!(repo, options \\ []) do
+    fixture = immutable_loader_fixture!(repo, Keyword.put(options, :production, true))
+    retired_extension = Path.join(repo, ".gsd/extensions/finalize-phase/index.ts")
+    File.mkdir_p!(Path.dirname(retired_extension))
+    File.write!(retired_extension, "export default function retired() { return 'retired'; }\n")
+    git!(repo, ["add", ".gsd/extensions/finalize-phase/index.ts"])
+    git!(repo, ["commit", "-q", "-m", "record retired extension fixture"])
+    fixture
+  end
+
+  defp invoke_production_loader(fixture, args, extra_env \\ []) do
+    node = fixture_node!()
+
+    System.cmd(node, [fixture.installed | args],
+      cd: fixture.repo,
+      env:
+        extra_env ++
+          [
+            {"MARKER", fixture.marker},
+            {"BYTES_MARKER", fixture.bytes_marker},
+            {"HOSTILE_MARKER", fixture.hostile_marker},
+            {"GIT_LOG", fixture.git_log},
+            {"REAL_GIT", System.find_executable("git")}
+          ],
+      stderr_to_stdout: true
+    )
+  end
+
+  defp assert_production_boundary_rejection!(output, fixture) do
+    accepted_failures = [
+      "expected phase 164",
+      "canonical repository is missing",
+      "canonical repository path is not the compiled physical checkout",
+      "canonical repository origin is not szTheory/mailglass",
+      "authenticated Phase 164 numbered history is not the exact 01-39",
+      "canonical checkout is not on main"
+    ]
+
+    assert Enum.any?(accepted_failures, &String.contains?(output, &1)),
+           "expected an authenticated production-boundary rejection, got: #{inspect(output)}"
+
+    refute File.exists?(fixture.marker)
+    refute File.exists?(fixture.hostile_marker)
+  end
+
+  defp invoke_immutable_loader(fixture, args, extra_env \\ []) do
+    node = fixture_node!()
+
+    System.cmd(node, [fixture.installed | args],
+      cd: fixture.repo,
+      env:
+        extra_env ++
+          [
+            {"MARKER", fixture.marker},
+            {"BYTES_MARKER", fixture.bytes_marker},
+            {"HOSTILE_MARKER", fixture.hostile_marker},
+            {"GIT_LOG", fixture.git_log},
+            {"REAL_GIT", System.find_executable("git")}
+          ],
+      stderr_to_stdout: true
+    )
+  end
+
+  defp fixture_node! do
+    discovered =
+      System.find_executable("node") || raise "node executable is required for loader fixtures"
+
+    case System.cmd(discovered, ["-p", "process.execPath"], stderr_to_stdout: true) do
+      {path, 0} ->
+        resolved = String.trim(path)
+
+        if File.regular?(resolved),
+          do: resolved,
+          else: raise("node resolved to non-file: #{resolved}")
+
+      {output, status} ->
+        raise "node executable discovery failed with #{status}: #{String.trim(output)}"
+    end
+  end
+
+  defp parse_install_approval!(path, expected_tuple \\ @install_approval_tuple) do
+    assert_regular_mode!(path, 0o400)
+
+    approval =
+      path
+      |> File.read!()
+      |> String.split("\n", trim: true)
+      |> Enum.reduce(%{}, &parse_install_approval_line!(&1, &2, expected_tuple))
+
+    missing = Map.keys(expected_tuple) -- Map.keys(approval)
+    if missing != [], do: raise("missing approval keys: #{Enum.join(Enum.sort(missing), ",")}")
+
+    for {key, expected} <- expected_tuple do
+      actual = Map.fetch!(approval, key)
+      if actual != expected, do: raise("approval tuple mismatch for #{key}")
+    end
+
+    approval
+  end
+
+  defp parse_install_approval_line!(line, fields, expected_tuple) do
+    case String.split(line, "=", parts: 2) do
+      ["", _value] ->
+        raise "blank approval key"
+
+      [_key, ""] ->
+        raise "blank approval value"
+
+      [key, value] ->
+        validate_install_approval_key!(key, fields, expected_tuple)
+        Map.put(fields, key, value)
+
+      _ ->
+        raise "malformed approval line"
+    end
+  end
+
+  defp validate_install_approval_key!(key, fields, expected_tuple) do
+    unless Map.has_key?(expected_tuple, key), do: raise("unknown approval key: #{key}")
+    if Map.has_key?(fields, key), do: raise("duplicate approval key: #{key}")
+  end
+
+  defp assert_regular_mode!(path, expected_mode) do
+    case File.lstat(path) do
+      {:ok, %File.Stat{type: :regular, mode: mode}} ->
+        actual_mode = Bitwise.band(mode, 0o777)
+
+        if actual_mode != expected_mode do
+          raise "wrong mode for #{path}: expected #{Integer.to_string(expected_mode, 8)}, got #{Integer.to_string(actual_mode, 8)}"
+        end
+
+        :ok
+
+      {:ok, %File.Stat{type: type}} ->
+        raise "not a regular non-symlink file: #{path} (#{type})"
+
+      {:error, reason} ->
+        raise "cannot lstat #{path}: #{:file.format_error(reason)}"
+    end
+  end
+
+  defp sha256_file!(path, expected_mode \\ 0o500) do
+    assert_regular_mode!(path, expected_mode)
+
+    path
+    |> File.read!()
+    |> then(&:crypto.hash(:sha256, &1))
+    |> Base.encode16(case: :lower)
+  end
+
+  defp invoke_installed_self_check(path, approval) do
+    assert_regular_mode!(path, 0o500)
+
+    System.cmd(
+      path,
+      [
+        "--self-check",
+        "--repo",
+        @repo_root,
+        "--expected-source-oid",
+        approval["installation_source_oid"]
+      ],
+      cd: @repo_root,
+      stderr_to_stdout: true
+    )
+  end
+
+  defp hostile_script(marker) do
+    "#!/usr/bin/env bash\nprintf hostile > #{inspect(marker)}\n"
+  end
+
+  defp terminal_artifact_sort_key(path) do
+    [_, number, member] = Regex.run(~r/164-(\d{2})-(PLAN|SUMMARY)\.md$/, path)
+    {String.to_integer(number), if(member == "PLAN", do: 0, else: 1)}
+  end
+
+  defp allocate_owned_sibling!(tag, candidate \\ nil) do
+    token = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+    basename_prefix = "#{Path.basename(@repo_root)}-#{tag}-"
+    path = candidate || Path.join(Path.dirname(@repo_root), basename_prefix <> token)
+
+    case File.mkdir(path) do
+      :ok -> :ok
+      {:error, :eexist} -> raise "refusing to reuse existing sibling fixture: #{path}"
+      {:error, reason} -> raise "could not allocate sibling fixture #{path}: #{inspect(reason)}"
+    end
+
+    ownership_file = Path.join(path, ".phase-164-owner")
+    File.write!(ownership_file, token, [:exclusive])
+
+    %{
+      path: path,
+      token: token,
+      ownership_file: ownership_file,
+      resolved_parent: resolved_path!(Path.dirname(path)),
+      basename: Path.basename(path),
+      basename_prefix: basename_prefix
+    }
+  end
+
+  defp cleanup_owned_sibling!(owner) do
+    owned =
+      match?({:ok, %File.Stat{type: :directory}}, File.lstat(owner.path)) and
+        resolved_path!(Path.dirname(owner.path)) == owner.resolved_parent and
+        Path.basename(owner.path) == owner.basename and
+        String.starts_with?(owner.basename, owner.basename_prefix) and
+        match?({:ok, %File.Stat{type: :regular}}, File.lstat(owner.ownership_file)) and
+        File.read(owner.ownership_file) == {:ok, owner.token}
+
+    if owned do
+      File.rm_rf!(owner.path)
+    else
+      raise "sibling fixture ownership check failed; leaving path untouched: #{owner.path}"
+    end
+  end
+
+  defp resolved_path!(path) do
+    case System.cmd("realpath", [path], stderr_to_stdout: true) do
+      {resolved, 0} -> String.trim(resolved)
+      {message, status} -> raise "realpath failed (#{status}): #{message}"
+    end
   end
 
   defp git!(directory, args) do

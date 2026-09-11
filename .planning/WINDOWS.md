@@ -2,14 +2,14 @@
 schema_version: 1
 open_count: 10
 waived_count: 0
-fixed_count: 12
-total_count: 22
-last_updated: 2026-08-26T21:30:58.767Z
+fixed_count: 23
+total_count: 33
+last_updated: 2026-09-11T03:17:22.972Z
 ---
 
 # Broken Windows Ledger
 
-> Cross-phase defect register. `/gsd-ship` blocks while `open_count > 0`.
+> Cross-phase defect register. With `workflow.windows_enforce` enabled, `/gsd-ship` blocks while `open_count > 0`.
 > Waive with `gsd-tools windows waive <id> "<reason>"` (reason required).
 > Mark fixed with `gsd-tools windows fixed <id>`.
 
@@ -37,6 +37,17 @@ last_updated: 2026-08-26T21:30:58.767Z
 | 20 | 162 | unrun-verify | test/scripts/release_trigger_recovery_test.exs |  | Complete release-trigger recovery test file exceeded the interactive runner window before final completion. | open |  | 2026-08-24T20:37:02.538Z |  |
 | 21 | 164 | unrun-verify | test/mailglass/docs_contract_test.exs |  | mix ci.fast blocked by pre-existing formatting drift in Phase 164-03 contract test | fixed |  | 2026-08-26T21:23:27.723Z | 2026-08-26T21:30:58.688Z |
 | 22 | 164 | unrun-verify | test/mailglass/publish/maintaining_release_gate_contract_test.exs |  | mix ci.fast blocked by pre-existing formatting drift in Phase 164-02 contract test | fixed |  | 2026-08-26T21:23:27.812Z | 2026-08-26T21:30:58.767Z |
+| 23 | 164 | deviation | scripts/validate_repository_truth.exs |  | Split ledger audit reads from authenticated authority while preserving canonical Git index observations | fixed |  | 2026-09-10T04:21:02.342Z | 2026-09-10T04:21:28.803Z |
+| 24 | 164 | deviation | scripts/mailglass_finalize_phase_loader.mjs |  | Reject numbered-looking malformed Phase 164 PLAN/SUMMARY paths before Bash dispatch | fixed |  | 2026-09-10T20:52:58.085Z | 2026-09-10T20:54:22.768Z |
+| 25 | 164 | deviation | scripts/validate_repository_truth.exs |  | Limit plan-derived repository truth inventory to completed plans | fixed |  | 2026-09-10T20:52:58.175Z | 2026-09-10T20:54:22.869Z |
+| 26 | 164 | deviation | scripts/validate_repository_truth.exs |  | Added canonical dispositions for approved installation artifacts discovered by the complete validator | fixed |  | 2026-09-10T21:41:18.734Z | 2026-09-10T21:41:39.071Z |
+| 27 | 164 | deviation | dev/toolchain/Dockerfile |  | Completed pinned toolchain dependencies required by lifecycle verification | fixed |  | 2026-09-10T21:41:18.836Z | 2026-09-10T21:41:39.164Z |
+| 28 | 164 | deviation | test/scripts/phase_164_closeout_test.exs |  | Removed obsolete execution tests for the retired project extension authority | fixed |  | 2026-09-10T21:41:18.939Z | 2026-09-10T21:41:39.255Z |
+| 29 | 164 | deviation | test/scripts/phase_164_closeout_test.exs |  | Replaced BSD-only stat assertions with portable File.Stat mode checks | fixed |  | 2026-09-10T21:41:19.032Z | 2026-09-10T21:41:39.344Z |
+| 30 | 164 | deviation | test/support/suite_floor.ex |  | Registered the controlled-host exclusion in the fail-closed SuiteFloor allowlist and its source contract | fixed |  | 2026-09-10T23:57:08.787Z | 2026-09-10T23:58:55.094Z |
+| 31 | 164 | deviation | config/test_exceptions.exs | 156 | Corrected the stale docs-contract skip line pointer required by the repository-only CI lane | fixed |  | 2026-09-10T23:57:08.869Z | 2026-09-10T23:58:55.180Z |
+| 32 | 164 | deviation | .planning/phases/164-repository-truth-reconciliation-and-closeout/164-28-PLAN.md |  | Task 2's literal make-toolchain suite requires controlled-host Node and gh identities absent from the repository-only container; the pinned local suite, CI lane, and installed-boundary alias passed separately. | fixed |  | 2026-09-11T01:33:22.220Z | 2026-09-11T01:33:48.251Z |
+| 33 | 164 | deviation | .planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv |  | Plan 164-29 test/test_helper.exs became discoverable after summary activation and required exact-one ledger row M-34 | fixed |  | 2026-09-11T03:15:47.707Z | 2026-09-11T03:17:22.972Z |
 
 ````json
 [
@@ -303,6 +314,139 @@ last_updated: 2026-08-26T21:30:58.767Z
     "reason": "",
     "recorded_at": "2026-08-26T21:23:27.812Z",
     "resolved_at": "2026-08-26T21:30:58.767Z"
+  },
+  {
+    "id": 23,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "scripts/validate_repository_truth.exs",
+    "line": null,
+    "description": "Split ledger audit reads from authenticated authority while preserving canonical Git index observations",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T04:21:02.342Z",
+    "resolved_at": "2026-09-10T04:21:28.803Z"
+  },
+  {
+    "id": 24,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "scripts/mailglass_finalize_phase_loader.mjs",
+    "line": null,
+    "description": "Reject numbered-looking malformed Phase 164 PLAN/SUMMARY paths before Bash dispatch",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T20:52:58.085Z",
+    "resolved_at": "2026-09-10T20:54:22.768Z"
+  },
+  {
+    "id": 25,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "scripts/validate_repository_truth.exs",
+    "line": null,
+    "description": "Limit plan-derived repository truth inventory to completed plans",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T20:52:58.175Z",
+    "resolved_at": "2026-09-10T20:54:22.869Z"
+  },
+  {
+    "id": 26,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "scripts/validate_repository_truth.exs",
+    "line": null,
+    "description": "Added canonical dispositions for approved installation artifacts discovered by the complete validator",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T21:41:18.734Z",
+    "resolved_at": "2026-09-10T21:41:39.071Z"
+  },
+  {
+    "id": 27,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "dev/toolchain/Dockerfile",
+    "line": null,
+    "description": "Completed pinned toolchain dependencies required by lifecycle verification",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T21:41:18.836Z",
+    "resolved_at": "2026-09-10T21:41:39.164Z"
+  },
+  {
+    "id": 28,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "test/scripts/phase_164_closeout_test.exs",
+    "line": null,
+    "description": "Removed obsolete execution tests for the retired project extension authority",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T21:41:18.939Z",
+    "resolved_at": "2026-09-10T21:41:39.255Z"
+  },
+  {
+    "id": 29,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "test/scripts/phase_164_closeout_test.exs",
+    "line": null,
+    "description": "Replaced BSD-only stat assertions with portable File.Stat mode checks",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T21:41:19.032Z",
+    "resolved_at": "2026-09-10T21:41:39.344Z"
+  },
+  {
+    "id": 30,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "test/support/suite_floor.ex",
+    "line": null,
+    "description": "Registered the controlled-host exclusion in the fail-closed SuiteFloor allowlist and its source contract",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T23:57:08.787Z",
+    "resolved_at": "2026-09-10T23:58:55.094Z"
+  },
+  {
+    "id": 31,
+    "kind": "deviation",
+    "phase": "164",
+    "file": "config/test_exceptions.exs",
+    "line": 156,
+    "description": "Corrected the stale docs-contract skip line pointer required by the repository-only CI lane",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-10T23:57:08.869Z",
+    "resolved_at": "2026-09-10T23:58:55.180Z"
+  },
+  {
+    "id": 32,
+    "kind": "deviation",
+    "phase": "164",
+    "file": ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-28-PLAN.md",
+    "line": null,
+    "description": "Task 2's literal make-toolchain suite requires controlled-host Node and gh identities absent from the repository-only container; the pinned local suite, CI lane, and installed-boundary alias passed separately.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-11T01:33:22.220Z",
+    "resolved_at": "2026-09-11T01:33:48.251Z"
+  },
+  {
+    "id": 33,
+    "kind": "deviation",
+    "phase": "164",
+    "file": ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv",
+    "line": null,
+    "description": "Plan 164-29 test/test_helper.exs became discoverable after summary activation and required exact-one ledger row M-34",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-11T03:15:47.707Z",
+    "resolved_at": "2026-09-11T03:17:22.972Z",
+    "milestone": "v2.7"
   }
 ]
 ````

@@ -42,6 +42,16 @@ test_repo_config = Application.get_env(:mailglass, Mailglass.TestRepo)
 # 3F000 under the isolated search_path).
 schema = Mailglass.Config.schema()
 
+# Machine-specific installed-authority proof is opt-in only. Keep this base
+# exclusion in every root ExUnit process; `--only` on the one controlled-host
+# alias explicitly includes it when the canonical host is being verified.
+base_exclusions = [:phase_164_installed_production_boundary]
+
+exclusions =
+  if schema == "public", do: base_exclusions, else: [:public_only | base_exclusions]
+
+ExUnit.configure(exclude: exclusions)
+
 # HARNESS-01 (D-09): register the pool-hygiene ledger formatter alongside the
 # default CLI formatter. Deliberately NOT the `--formatter` CLI flag, which
 # *replaces* ExUnit's default formatter list — that would silently drop
@@ -65,10 +75,6 @@ Mailglass.TestSupport.SuiteFloor.install()
 # :down, all: true)` deadlock on `lock_for_migrations` — and they add no
 # isolation coverage — so they run only on the public axis where they validate
 # the adopter `mix ecto.rollback` path.
-if schema != "public" do
-  ExUnit.configure(exclude: [:public_only])
-end
-
 # search_path is "<schema>, public": unqualified DDL/queries resolve to the
 # isolated schema first, but the `citext` extension type (installed in public)
 # stays resolvable. Mirrors the admin operator harness's `SET LOCAL search_path

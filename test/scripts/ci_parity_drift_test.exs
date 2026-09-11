@@ -1,6 +1,10 @@
 defmodule Mailglass.Scripts.CIParityDriftTest do
   use ExUnit.Case, async: true
 
+  @repo_root Path.expand("../..", __DIR__)
+  @required_contract_step "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
+  @installed_boundary_step "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
+
   @moduledoc """
   MIXCI-03 parity-drift test (D-LD-10).
 
@@ -98,9 +102,58 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
 
   defp aliases, do: Mix.Project.config()[:aliases]
 
+  defp full_suite_alias_commands(aliases) do
+    aliases
+    |> Keyword.keys()
+    |> Enum.flat_map(&flatten_alias(aliases, &1))
+    |> Enum.uniq()
+    |> Enum.filter(&full_root_mix_test?/1)
+  end
+
+  defp workflow_full_suite_commands(workflow) do
+    workflow
+    |> String.split("\n")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(&full_root_mix_test?/1)
+  end
+
+  defp full_root_mix_test?(command) do
+    core_root? = not String.contains?(command, "--cd ")
+    mix_test? = Regex.match?(~r/(?:^|\s)(?:mix\s+)?test(?:\s|$)/, command)
+    file_scoped? = Regex.match?(~r/(?:^|\s)[^\s-][^\s]*[\/.][^\s]*/, command)
+    core_root? and mix_test? and not file_scoped?
+  end
+
+  defp host_only_collection_impossible?(commands, default_excluded?) do
+    default_excluded? and
+      Enum.all?(commands, fn command ->
+        not String.contains?(command, "--only phase_164_installed_production_boundary")
+      end)
+  end
+
+  defp default_host_exclusion?(source) do
+    source =~ "base_exclusions = [:phase_164_installed_production_boundary]" and
+      source =~ "ExUnit.configure(exclude: exclusions)"
+  end
+
   defp ci_steps, do: flatten_alias(aliases(), :ci)
   defp ci_browser_steps, do: flatten_alias(aliases(), :"ci.browser")
   defp union_steps, do: ci_steps() ++ ci_browser_steps()
+
+  defp exact_phase_164_scope?(required, installed) do
+    required == [@required_contract_step] and installed == [@installed_boundary_step]
+  end
+
+  defp describe_test_count(source, name) do
+    escaped = Regex.escape(name)
+
+    case Regex.run(~r/^  describe "#{escaped}" do\n(?<body>.*?)(?=^  (?:describe|test) )/ms, source,
+           capture: :all_names
+         ) do
+      [body] -> length(Regex.scan(~r/^    test "/m, body))
+      nil -> 0
+    end
+  end
 
   # ---------------------------------------------------------------------------
   # Lane -> covering-step matcher table (identity + flag-set, not loose substring)
@@ -250,5 +303,82 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
     assert offending == [],
            "the flattened mix ci alias step-set reintroduced a fixed-seed flag — " <>
              "this regresses DET-02 (Phase 127). Offending step(s): #{inspect(offending)}"
+  end
+
+  test "required CI excludes proposal and controlled-host proof while repository fixtures stay non-vacuous" do
+    aliases = aliases()
+    required = Keyword.fetch!(aliases, :"verify.ci_lane_contract")
+    installed = Keyword.fetch!(aliases, :"verify.phase_164.installed_boundary")
+
+    assert exact_phase_164_scope?(required, installed)
+
+    ci = File.read!(Path.join(@repo_root, ".github/workflows/ci.yml"))
+    assert length(Regex.scan(~r/\bmix verify\.ci_lane_contract\b/, ci)) == 1
+    refute ci =~ "mix verify.phase_164.installed_boundary"
+
+    closeout = File.read!(Path.join(@repo_root, "test/scripts/phase_164_closeout_test.exs"))
+    assert describe_test_count(closeout, "phase 164 immutable loader") > 0
+
+    immutable_body =
+      Regex.run(
+        ~r/^  describe "phase 164 immutable loader" do\n(?<body>.*?)(?=^  describe )/ms,
+        closeout,
+        capture: :all_names
+      )
+
+    assert [body] = immutable_body
+    refute body =~ "@describetag :phase_164_installed_production_boundary"
+
+    for {broken_required, broken_installed} <- [
+          {[], installed},
+          {required, []},
+          {["test test/scripts/ --exclude phase_164 --warnings-as-errors"], installed},
+          {required,
+           [
+             "test test/scripts/ --only phase_164_installed_production_boundary --warnings-as-errors"
+           ]}
+        ] do
+      refute exact_phase_164_scope?(broken_required, broken_installed)
+    end
+  end
+
+  test "every root alias and workflow suite inherits the controlled-host exclusion" do
+    helper = File.read!(Path.join(@repo_root, "test/test_helper.exs"))
+    workflow = File.read!(Path.join(@repo_root, ".github/workflows/ci.yml"))
+    alias_commands = full_suite_alias_commands(aliases())
+    workflow_commands = workflow_full_suite_commands(workflow)
+
+    assert alias_commands != []
+    assert workflow_commands != []
+    assert default_host_exclusion?(helper)
+    assert host_only_collection_impossible?(alias_commands ++ workflow_commands, true)
+
+    refute host_only_collection_impossible?(alias_commands ++ workflow_commands, false)
+
+    refute host_only_collection_impossible?(
+             alias_commands ++ ["mix test --only phase_164_installed_production_boundary"],
+             true
+           )
+  end
+
+  test "repository-only loader attacks remain active and portable" do
+    source = File.read!(Path.join(@repo_root, "test/scripts/phase_164_closeout_test.exs"))
+
+    [body] =
+      Regex.run(
+        ~r/^  describe "phase 164 repository-only installed-loader attacks" do\n(?<body>.*?)(?=^  describe )/ms,
+        source,
+        capture: :all_names
+      )
+
+    assert length(Regex.scan(~r/^    test "/m, body)) == 5
+    refute body =~ "@describetag :phase_164_installed_production_boundary"
+
+    refute Regex.match?(
+             ~r/defp invoke_(?:production|immutable)_loader.*?System\.cmd\("\/Users\/jon\/\.asdf\/installs\/nodejs\/24\.19\.0\/bin\/node"/ms,
+             source
+           )
+
+    assert source =~ "System.find_executable(\"node\")"
   end
 end

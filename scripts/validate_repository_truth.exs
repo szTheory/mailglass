@@ -144,9 +144,23 @@ defmodule Mailglass.RepositoryTruthLedger do
     "164-04-PLAN.md",
     "164-05-PLAN.md",
     "164-08-PLAN.md",
+    "164-11-PLAN.md; 164-21-SUMMARY.md; 164-22-PLAN.md",
+    "164-23-PLAN.md; 164-23-SUMMARY.md",
     "git ls-files .planning/publish",
     "git ls-files; 164-08-PLAN.md",
     "git ls-files; 164-11-PLAN.md",
+    "git ls-files; 164-21-PLAN.md",
+    "git ls-files; 164-23-PLAN.md",
+    "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md",
+    "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-29-PLAN.md",
+    "git ls-files; 164-28-PLAN.md; 164-28-SUMMARY.md",
+    "git ls-files; 164-29-PLAN.md; 164-29-SUMMARY.md",
+    "git ls-files; 164-29-PLAN.md",
+    "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md",
+    "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
+    "git ls-files; 164-31-PLAN.md",
+    "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md",
+    "git ls-files; 164-34-PLAN.md",
     "git ls-files; Phase 161 summary",
     "git ls-files; Phase 162 summary",
     "git ls-files; release-target ledger",
@@ -304,9 +318,9 @@ defmodule Mailglass.RepositoryTruthLedger do
     ".github/scheduled-controls.json" =>
       "9f1688cfc0524ae39fc8fdb66475f95a424a247fa45bc6f0c5dc2d7b2d5fd727",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv" =>
-      "2ffcb7e7dcef97d8fe0b3a0b35a238e206f601d92d5ae64f436c3667d9df3ddc",
+      "d8bcd6b5705f6cd05d02134163a7056cf648db0c5dfeb6dd4a99d72acb1d732f",
     "test/scripts/phase_164_repository_truth_test.exs" =>
-      "eb2511792697f86796724d89872fcd20064645ab6595dabced6879a2f609e1fa",
+      "f5623549c65f64011f30f0e983ab3873b71d2b1ae1bc0c84e3432413e26b7b22",
     "MAINTAINING.md" => "16fdbf3f0265a67bcfcd5e5482bf89ad972ea2d9bb957535f84a59126a16cf3a",
     "test/mailglass/publish/maintaining_release_gate_contract_test.exs" =>
       "472d04f71e60a2e4c7bc5c036d9b86f7a0e6538101834b268cb1ddbe9eb463a7",
@@ -315,34 +329,55 @@ defmodule Mailglass.RepositoryTruthLedger do
       "5b850e2cdf8249d1e4066ab30d2184a26ace72a0fef9f0f12cc2fbce7f9462db",
     "mailglass_inbound/README.md" =>
       "458b030831a014296505fc1cc9ea5b4e32729694bb02546e5c3c78f1c12ca804",
+    "mix.exs" => "fb53f2fc7eb2b5918f2bac2ab6278dddc08bca2f19ca52418b9c24e7796f9c5d",
+    "test/scripts/ci_parity_drift_test.exs" =>
+      "71655ec6e5b2ce5e95c8f82600cde614111cf0818f7df623e6edb915ee171777",
+    ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-SECURITY.md" =>
+      "8151e268bc8ff020e0bbf51f9f3468ab1cb6121c2f24e19227831a02f8012d89",
+    "test/test_helper.exs" => "8260178e135e10358c9ae0e6fa2f082c4df2d95a7700bbac028ade7da61738ed",
     "test/mailglass/docs_contract_test.exs" =>
-      "d96bd664afccfc94812c38335f345e040c1ab6a1df33c89328a4309ad86a8821",
+      "78ef187ec8e232a44c2fc8677eaef85cb429f5e4a58a0f87078b8612275c4686",
     "scripts/closeout_repository_truth.sh" =>
       "77facce62c361cc1fcf11c81b5d032383cd289fe6b339e45b08d5c6586e27f06",
     "test/scripts/phase_164_closeout_test.exs" =>
-      "36449c59a7431d98d62706f93081ca1b3992f49fbf3ef3e3cc59512d56748dba",
+      "3e00ad4c02171d72aa846665828793e8b7999299869f83d2acc7e270403905da",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-CLOSEOUT.md" =>
       "e378c14a37c9610cf87b594ff8be6360e126a62cdbef9674eb4ae5575164d878",
     "scripts/validate_repository_truth.exs" =>
-      "9d1e6e8f85891907277d87f427d52a54dcb501803d683f779a4dfa22591b37c2",
+      "fcd9ffc95c0453292e18a1b104a45f57e9bb2133c536d5ab7119c083aeeab025",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VERIFICATION.md" =>
       "37abe2db9ac0edbab5543e224cf410f528a6d86e6b541b34e70ba82aa9162312",
+    ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md" =>
+      "8f46042c69788a3fc232f6ce1e1c86d976918bbdc043050e10804594f8f8bd4f",
     ".gitignore" => "52c7aed7a0eaaf139bec59b33cca9e74a8ffda7ff0ec140512f1b5559d362f8a",
     ".gsd/extensions/finalize-phase/extension-manifest.json" =>
-      "9a64278b3ac905ea43e5f12a3bd19c6f40f1fa6b22b04945e6aebae18f0649ce",
+      "af89407b07f1bea91c588c083dac9ed05b127427e7ec0f90759510b3727a87de",
     ".gsd/extensions/finalize-phase/index.ts" =>
-      "ede122a47d9b6cd21802339810be80891a56873e54f3541612814b9c20eb2649",
+      "422b26464d57918d7311918577891d0dd4d550fb81a4b78e4eaa5f7d3a4214ad",
     "scripts/finalize_phase_164.sh" =>
-      "304eaf03834cedf640215a9e8f7777f8d5779ac1adf7d74262978ac7613c631f",
+      "10b5973cedbb71e7f22318b5cc4ec6ef8e32f5940f530d244a21dc7fb3246c38",
+    "scripts/mailglass_finalize_phase_loader.mjs" =>
+      "2f39dea4bfaa9367690f2b09e9270ff18f6c9a3e539429d7581e834e534fb206",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZE.sh" =>
       "7351a41c9f8e820203b2d70c4272134f2378859b6104100bc2e6c20524bb93bd",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md" =>
-      "7acb43cf5623bc0ae23be9c43aae52e49b61b6b08b7b70cedbe91784a8bab2cb",
+      "8a1eacef0916d29707a5f1719d1f1a6d8065d1c55af255f5006af007d4e040d2",
     "scripts/ci_monitor.cjs" => "2a886eaba7c246c5461e915f5199ae1cff89fc735a7c82cd5fec171a12951c6f",
     "scripts/scheduled_control_evidence.sh" =>
       "83583ea9347f0f816dfa071ec5ae3677411cf1dc03fbcc410a2940c63954edcd",
     "test/scripts/scheduled_control_evidence_test.exs" =>
-      "345fd03d1a3a3120a44c71f21432b4f758c032c9ad7c9df28b46a0bd8c232003"
+      "b5d1a8de5de6ca6ffe24f82663e1cea227baeb95d1f9d54908c141197150e265",
+    ".planning/ROADMAP.md" => "8ff4d332bfe0bb7893253c1ade51b8b0e9e6dc988c597ccf169c6db5770544a5",
+    ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-23-SUMMARY.md" =>
+      "84410c563fb394425ba45ce94f26a892c0495d0120983afe1accf4711c341d10",
+    "/Users/jon/.local/share/mailglass/checkpoints/164-23-install-proposal.env" =>
+      "0eb639d2bc3eadf0bb407f1d5e491c95de1bcb14c66068371c985100013ba684",
+    "/Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env" =>
+      "f1356194ac336f3dcfed82a014ec820c60a705b1d3da3acd84999d76f642a29f",
+    "/Users/jon/.local/bin/mailglass-finalize-phase" =>
+      "083d18d38157b29924fc287402377b21ff54392a98ef605c96de676b2f83e2fe",
+    "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.<prior-sha256>" =>
+      "756b45b7cd87b91fec05b207d7e6bc098be581e96bb94e73e7a17a614fef86e4"
   }
   @locked_removal_evidence "D-08; sha256:331810b4b1724452f0e2707c800230e52fabea01c3773d362b3a1240040ece7e; Phase 162 scheduled-control proof"
   @ignore_files [
@@ -390,21 +425,28 @@ defmodule Mailglass.RepositoryTruthLedger do
     end
   end
 
-  def audit_subjects(repo_root) do
-    with :ok <- ensure_repository(repo_root) do
+  def audit_subjects(repo_root, authority_root \\ nil) do
+    authority_root = authority_root || repo_root
+
+    with :ok <- ensure_repository(repo_root),
+         :ok <- ensure_repository(authority_root),
+         {:ok, ignore_subjects} <- ignore_subjects(authority_root) do
       subjects =
-        ignore_subjects(repo_root) ++
+        ignore_subjects ++
           tracked_subjects(repo_root, ".planning/publish") ++
+          tracked_subjects(repo_root, "scripts/mailglass_finalize_phase_loader.mjs") ++
           @proof_paths ++
-          phase_artifacts(repo_root) ++ [Path.join(@phase_dir, "164-VERIFICATION.md")]
+          phase_artifacts(authority_root) ++ [Path.join(@phase_dir, "164-VERIFICATION.md")]
 
       {:ok, MapSet.new(subjects)}
     end
   end
 
-  def validate(contents, repo_root) do
+  def validate(contents, repo_root, authority_root \\ nil) do
+    authority_root = authority_root || repo_root
+
     with {:ok, %{rows: rows}} <- parse(contents),
-         {:ok, required_subjects} <- audit_subjects(repo_root) do
+         {:ok, required_subjects} <- audit_subjects(repo_root, authority_root) do
       subjects = rows |> Enum.map(& &1["subject"]) |> MapSet.new()
       missing = required_subjects |> MapSet.difference(subjects) |> MapSet.to_list() |> Enum.sort()
 
@@ -419,6 +461,94 @@ defmodule Mailglass.RepositoryTruthLedger do
     end
   end
 
+  def tracked_subject_in_index(repo_root, subject)
+      when is_binary(repo_root) and is_binary(subject) do
+    {output, status} =
+      System.cmd(
+        "git",
+        [
+          "--literal-pathspecs",
+          "ls-files",
+          "--stage",
+          "-z",
+          "--error-unmatch",
+          "--",
+          subject
+        ],
+        cd: repo_root,
+        stderr_to_stdout: true
+      )
+
+    case status do
+      0 ->
+        validate_staged_index_output(output, subject)
+
+      1 ->
+        {:error, {:tracked_subject_untracked, subject}}
+
+      _ ->
+        {:error, {:tracked_subject_git_failure, subject, status}}
+    end
+  end
+
+  def validate_staged_index_output(output, subject)
+      when is_binary(output) and is_binary(subject) do
+    case split_complete_staged_records(output) do
+      {:ok, records} ->
+        case parse_staged_records(records) do
+          {:ok, [%{stage: 0, path: ^subject}]} ->
+            :ok
+
+          {:ok, parsed_records} ->
+            {:error, {:tracked_subject_identity_mismatch, subject, parsed_records}}
+
+          :error ->
+            {:error, {:tracked_subject_malformed_output, subject}}
+        end
+
+      :error ->
+        {:error, {:tracked_subject_malformed_output, subject}}
+    end
+  end
+
+  def main(argv) when is_list(argv) do
+    argv = Enum.drop_while(argv, &(&1 == "--"))
+
+    {opts, arguments, errors} =
+      OptionParser.parse(argv,
+        strict: [repo: :string, authority_root: :string, ledger: :string]
+      )
+
+    result =
+      with [] <- errors,
+           [] <- arguments,
+           repo when is_binary(repo) <- opts[:repo],
+           ledger when is_binary(ledger) <- opts[:ledger],
+           {:ok, contents} <- File.read(ledger) do
+        validate(contents, repo, opts[:authority_root])
+      else
+        nil -> {:error, :missing_required_cli_option}
+        {:error, reason} -> {:error, reason}
+        invalid when is_list(invalid) -> {:error, {:invalid_options, invalid}}
+      end
+
+    case result do
+      :ok ->
+        IO.puts("repository truth ledger: valid")
+        0
+
+      {:error, reason} ->
+        IO.puts(:stderr, "repository truth ledger: #{inspect(reason)}")
+
+        IO.puts(
+          :stderr,
+          "usage: validate_repository_truth.exs --repo PATH [--authority-root PATH] --ledger PATH"
+        )
+
+        1
+    end
+  end
+
   defp parse_rows(lines) do
     lines
     |> Enum.reduce_while({:ok, []}, fn line, {:ok, rows} ->
@@ -430,6 +560,65 @@ defmodule Mailglass.RepositoryTruthLedger do
     |> case do
       {:ok, rows} -> {:ok, Enum.reverse(rows)}
       error -> error
+    end
+  end
+
+  defp split_complete_staged_records(output) do
+    case :binary.split(output, <<0>>, [:global]) do
+      records when records != [] ->
+        case List.pop_at(records, -1) do
+          {"", complete_records} ->
+            if complete_records != [] and Enum.all?(complete_records, &(&1 != "")) do
+              {:ok, complete_records}
+            else
+              :error
+            end
+
+          _ ->
+            :error
+        end
+
+      _ ->
+        :error
+    end
+  end
+
+  defp parse_staged_records(records) do
+    records
+    |> Enum.reduce_while({:ok, []}, fn record, {:ok, parsed} ->
+      case parse_staged_record(record) do
+        {:ok, staged_record} -> {:cont, {:ok, [staged_record | parsed]}}
+        :error -> {:halt, :error}
+      end
+    end)
+    |> case do
+      {:ok, parsed} -> {:ok, Enum.reverse(parsed)}
+      :error -> :error
+    end
+  end
+
+  defp parse_staged_record(record) do
+    case :binary.split(record, "\t") do
+      [metadata, path] ->
+        case :binary.split(metadata, " ", [:global]) do
+          [mode, object_id, stage]
+          when byte_size(mode) == 6 and byte_size(object_id) in [40, 64] and
+                 byte_size(stage) == 1 ->
+            with true <- Regex.match?(~r/^[0-7]{6}$/, mode),
+                 true <- Regex.match?(~r/^[0-9a-f]+$/, object_id),
+                 {stage_number, ""} <- Integer.parse(stage),
+                 true <- stage_number in 0..3 do
+              {:ok, %{mode: mode, object_id: object_id, stage: stage_number, path: path}}
+            else
+              _ -> :error
+            end
+
+          _ ->
+            :error
+        end
+
+      _ ->
+        :error
     end
   end
 
@@ -509,6 +698,27 @@ defmodule Mailglass.RepositoryTruthLedger do
       row["disposition"] == "remove" and row["authority"] == "D-08"
   end
 
+  defp valid_kind_relationship?(%{"subject" => subject} = row)
+       when subject in [
+              ".gsd/extensions/finalize-phase/extension-manifest.json",
+              ".gsd/extensions/finalize-phase/index.ts"
+            ] do
+    row["stable_id"] in ["M-15", "M-16"] and row["state"] == "untracked" and
+      row["currentness"] == "historical" and row["disposition"] == "remove"
+  end
+
+  defp valid_kind_relationship?(%{"subject" => subject} = row)
+       when subject in [
+              "/Users/jon/.local/share/mailglass/checkpoints/164-23-install-proposal.env",
+              "/Users/jon/.local/share/mailglass/checkpoints/164-23-install-approval.env",
+              "/Users/jon/.local/bin/mailglass-finalize-phase",
+              "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.<prior-sha256>"
+            ] do
+    row["stable_id"] in ["M-27", "M-28", "M-29", "M-30"] and
+      row["state"] == "untracked" and row["currentness"] == "current" and
+      row["disposition"] == "retain"
+  end
+
   defp valid_kind_relationship?(row) do
     Regex.match?(~r/^[MP]-\d{2}$/, row["stable_id"]) and row["state"] == "tracked" and
       row["currentness"] in ~w(current historical) and row["disposition"] == "retain"
@@ -566,28 +776,73 @@ defmodule Mailglass.RepositoryTruthLedger do
   end
 
   defp ensure_tracked_subjects_exist(rows, repo_root) do
-    case Enum.find(rows, fn row ->
-           row["state"] == "tracked" and not File.regular?(Path.join(repo_root, row["subject"]))
-         end) do
-      nil -> :ok
-      row -> {:error, {:tracked_subject_missing, row["subject"]}}
-    end
+    rows
+    |> Enum.filter(&(&1["state"] == "tracked"))
+    |> Enum.reduce_while(:ok, fn row, :ok ->
+      subject = row["subject"]
+
+      cond do
+        not File.regular?(Path.join(repo_root, subject)) ->
+          {:halt, {:error, {:tracked_subject_missing, subject}}}
+
+        true ->
+          case tracked_subject_in_index(repo_root, subject) do
+            :ok -> {:cont, :ok}
+            error -> {:halt, error}
+          end
+      end
+    end)
   end
 
   defp ensure_repository(repo_root) do
     if File.dir?(repo_root), do: :ok, else: {:error, {:invalid_repository, repo_root}}
   end
 
-  defp ignore_subjects(repo_root) do
-    @ignore_files
-    |> Enum.flat_map(fn ignore_file ->
-      repo_root
-      |> Path.join(ignore_file)
-      |> File.stream!()
-      |> Stream.map(&String.trim/1)
-      |> Stream.reject(&(&1 == "" or String.starts_with?(&1, "#")))
-      |> Enum.map(&"ignore:#{ignore_file}:#{&1}")
+  def ignore_subjects(repo_root) do
+    Enum.reduce_while(@ignore_files, {:ok, []}, fn ignore_file, {:ok, subjects} ->
+      case read_ignore_subject(repo_root, ignore_file) do
+        {:ok, file_subjects} -> {:cont, {:ok, subjects ++ file_subjects}}
+        {:error, _reason} = error -> {:halt, error}
+      end
     end)
+  end
+
+  defp read_ignore_subject(repo_root, ignore_file) do
+    path = Path.join(repo_root, ignore_file)
+
+    case File.lstat(path) do
+      {:ok, %File.Stat{type: :regular}} ->
+        read_ignore_file(path, ignore_file)
+
+      {:ok, %File.Stat{}} ->
+        {:error, {:missing_authority_subject, ignore_file}}
+
+      {:error, reason} when reason in [:enoent, :enotdir] ->
+        {:error, {:missing_authority_subject, ignore_file}}
+
+      {:error, reason} ->
+        {:error, {:unreadable_authority_subject, ignore_file, reason}}
+    end
+  end
+
+  defp read_ignore_file(path, ignore_file) do
+    case File.read(path) do
+      {:ok, contents} ->
+        subjects =
+          contents
+          |> String.split("\n")
+          |> Enum.map(&String.trim/1)
+          |> Enum.reject(&(&1 == "" or String.starts_with?(&1, "#")))
+          |> Enum.map(&"ignore:#{ignore_file}:#{&1}")
+
+        {:ok, subjects}
+
+      {:error, :enoent} ->
+        {:error, {:missing_authority_subject, ignore_file}}
+
+      {:error, reason} ->
+        {:error, {:unreadable_authority_subject, ignore_file, reason}}
+    end
   end
 
   defp tracked_subjects(repo_root, path) do
@@ -599,8 +854,15 @@ defmodule Mailglass.RepositoryTruthLedger do
     repo_root
     |> Path.join(Path.join(@phase_dir, "164-*-PLAN.md"))
     |> Path.wildcard()
+    |> Enum.filter(&completed_plan?/1)
     |> Enum.flat_map(&plan_files_modified/1)
     |> Enum.uniq()
+  end
+
+  defp completed_plan?(plan) do
+    plan
+    |> String.replace_suffix("-PLAN.md", "-SUMMARY.md")
+    |> File.regular?()
   end
 
   defp plan_files_modified(plan) do
@@ -618,28 +880,13 @@ defmodule Mailglass.RepositoryTruthLedger do
   end
 end
 
-if Enum.any?(System.argv(), &(&1 in ["--repo", "--ledger"])) do
-  argv = Enum.drop_while(System.argv(), &(&1 == "--"))
-  {opts, _, errors} = OptionParser.parse(argv, strict: [repo: :string, ledger: :string])
+script_path = Path.expand(__ENV__.file)
 
-  result =
-    with [] <- errors,
-         repo when is_binary(repo) <- opts[:repo],
-         ledger when is_binary(ledger) <- opts[:ledger],
-         {:ok, contents} <- File.read(ledger) do
-      Mailglass.RepositoryTruthLedger.validate(contents, repo)
-    else
-      nil -> {:error, :missing_required_cli_option}
-      {:error, reason} -> {:error, reason}
-      errors when is_list(errors) -> {:error, {:invalid_options, errors}}
-    end
+direct_invocation? =
+  :init.get_plain_arguments()
+  |> Enum.map(&List.to_string/1)
+  |> Enum.any?(fn argument -> Path.expand(argument) == script_path end)
 
-  case result do
-    :ok ->
-      IO.puts("repository truth ledger: valid")
-
-    {:error, reason} ->
-      IO.puts(:stderr, "repository truth ledger: #{inspect(reason)}")
-      System.halt(1)
-  end
+if direct_invocation? do
+  System.halt(Mailglass.RepositoryTruthLedger.main(System.argv()))
 end

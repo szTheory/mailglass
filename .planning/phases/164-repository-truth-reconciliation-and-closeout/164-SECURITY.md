@@ -1,8 +1,8 @@
 ---
 phase: "164"
 slug: repository-truth-reconciliation-and-closeout
-status: verified
-threats_open: 0
+status: pending_terminal
+threats_open: 1
 asvs_level: 1
 block_on: high
 created: "2026-09-01"
@@ -42,7 +42,7 @@ created: "2026-09-01"
 | T-164-14 | Repudiation | aggregate verdict precedence | high | mitigate | A production-script fixture substitutes only the canonical checkout constant, then executes cannot-check, pending, policy-blocked/pass, and all-pass outcomes while preserving component sources | closed |
 | T-164-15 | Elevation of Privilege | evidence command authority | high | mitigate | No dispatch, rerun, merge, or publish surface | closed |
 | T-164-16 | Spoofing | CI run selection | high | mitigate | Attempt-one exact-SHA CI selection and raw re-query | closed |
-| T-164-17 | Elevation of Privilege | finalizer authority | high | mitigate | Observation/fetch and ignored writes only | closed |
+| T-164-17 | Elevation of Privilege | finalizer authority | high | mitigate | Phase-164-only lexical regular-file authentication precedes realpath resolution; the complete transitive dependency manifest is authenticated from HEAD, materialized under one private authority root, and removed in `finally` on every exit path | closed |
 | T-164-18 | Spoofing | protected-main freshness | high | mitigate | Final decision re-fetches origin/main, reasserts identities, and preserves a blocked report if main advances | closed |
 | T-164-19 | Tampering | persisted component evidence | high | mitigate | Canonicalized CI/scheduled sources are independently revalidated and incomplete evidence is rejected | closed |
 | T-164-20 | Repudiation | report provenance | high | mitigate | Persist timestamp, repository/SHA/run, sources, statuses, reasons | closed |
@@ -51,18 +51,93 @@ created: "2026-09-01"
 | T-164-23 | Repudiation | required subjects | high | mitigate | Derive required subjects from Git, plans, proof, verification, ignores | closed |
 | T-164-24 | Tampering | duplicate subjects | medium | mitigate | Ordering-independent duplicate rejection | closed |
 | T-164-25 | Spoofing | repository authority | high | mitigate | Canonical checkout, normalized origin, GitHub owner/repository, `GH_HOST`, and `GH_REPO` are pinned | closed |
-| T-164-26 | Tampering | ledger semantic authority | high | mitigate | Non-ignore subjects are digest-bound; ignore subjects are stable-ID/profile-bound; unmapped subjects fail closed | closed |
+| T-164-26 | Tampering | ledger semantic authority | high | mitigate | Literal `ls-files --stage -z` parsing accepts exactly one byte-exact stage-0 record and rejects missing, duplicate, malformed, mismatched, or stage-1/2/3 records; genuine unmerged-index regressions pass | closed |
 | T-164-27 | Repudiation | local capture paths | high | mitigate | Private random capture directories, private component directories, temporary leaves, and atomic renames are symlink-safe | closed |
 | T-164-28 | Elevation of Privilege | remote behavior | high | mitigate | Read-only remote behavior | closed |
 | T-164-36 | Tampering | freshness authority | high | mitigate | Registry-specific age decision remains in scheduled sweep | closed |
 | T-164-37 | Spoofing | scheduled provenance | high | mitigate | SHA, attempt, event, branch, status, workflow-SHA mutation tests | closed |
 | T-164-38 | Repudiation | sweep completeness | high | mitigate | Successful top-level sweep and exact complete control envelope are required and adversarially tested | closed |
 | T-164-39 | Elevation of Privilege | scheduled controls | medium | mitigate | No workflow/rerun/authorization/release surface | closed |
-| T-164-SC | Tampering | package supply chain | low | accept | Acceptance is not yet documented; below the configured blocking threshold | open — below high threshold |
+| T-164-49 | Spoofing | protected-main and CI identity | high | mitigate | Exact canonical checkout, branch, HEAD/origin SHA equality, and finalizer-selected attempt-one normal push CI were independently verified in Plan 164-14 | closed |
+| T-164-50 | Tampering | scheduled evidence set/provenance | high | mitigate | Exact registry equality plus per-control attempt, event, workflow, SHA, status, reason, freshness, payload digest, and archive digest checks passed in Plan 164-14 | closed |
+| T-164-51 | Repudiation | pre-verification versus terminal boundary | high | mitigate | `164-FINALIZATION.md` and `164-14-SUMMARY.md` explicitly classify the accepted capture as pre-verification-only and require terminal recapture after tracked completion metadata | closed |
+| T-164-52 | Elevation of Privilege | remote workflow/release controls | high | mitigate | Plan 164-14 completed through read-only queries and transient credential injection with no dispatch, rerun, push, merge, authority change, or publication operation | closed |
+| T-164-58 | Elevation of Privilege | non-historical maintainer release guidance | high | mitigate | The whole pre-historical `MAINTAINING.md` region requires protected exact-candidate dispatch plus fresh repository-admin authorization and rejects automatic, reviewer-free, and approval-free variants | closed |
+| T-164-59 | Repudiation | historical v0.1/v0.5 authority provenance | medium | mitigate | The exact, singular `## Historical release procedures` boundary is enforced and the legacy rationale appears only beneath it with explicit historical applicability | closed |
+| T-164-60 | Tampering | executable protected-release controls | low | accept | Plan 164-16 changed only documentation and its contract; executable release-control paths remained unchanged | closed |
+| T-164-63 | Tampering | downstream finalizer and temporary materialization | high | mitigate | The downstream HEAD blob is materialized in a mode-0700 private directory as a mode-0500 file, executed by private path, and removed in `finally` on success and failure | closed |
+| T-164-64 | Repudiation | standalone validator invocation | medium | mitigate | Missing and invalid CLI arguments emit bounded diagnostics and exit nonzero; canonical invocation and module loading are covered by subprocess regressions | closed |
+| T-164-105 | Repudiation | required-CI host coupling | high | mitigate | The final `mix verify.ci_lane_contract` rerun observed 398 selected, 7 controlled-host exclusions, and 0 failures | closed |
+| T-164-106 | Spoofing | caller-selected repository authority | high | mitigate | `phase_164_canonical_loader` observed 1 selected, 48 excluded, and 0 failures; the installed matrix rejects foreign repositories before dispatch | closed |
+| T-164-107 | Elevation of Privilege | forged PATH/tools | high | mitigate | `phase_164_trusted_toolchain` observed 3 selected, 46 excluded, and 0 failures; forged Git/Bash/gh/jq/Mix/Node/Elixir markers never execute | closed |
+| T-164-108 | Spoofing | unrelated installation OID | high | mitigate | Installation ancestry and the real installed tuple proof reject byte-identical loaders from unrelated history; the active controlled-host group observed 7 selected, 54 excluded, and 0 failures | closed |
+| T-164-109 | Repudiation | terminal no-later-write evidence | high | mitigate | Requires the Plan 164-34 summary, passed ordinary verification, protected completion metadata, protected main, exact-main attempt-1 push CI, natural schedules, and then the ignored terminal report with no later tracked write | open — lifecycle evidence pending |
+| T-164-110 | Spoofing | installed authority proof | high | mitigate | Direct `phase_164_installed_production_boundary` proof authenticates exact approval schema, path/type/mode, digest, committed blob, ancestry, and self-check | closed |
+| T-164-111 | Repudiation | controlled-host alias | high | mitigate | `mix verify.phase_164.installed_boundary` selected 7 tests, excluded 54, and returned 0 failures; absent or mismatched host authority fails nonzero | closed |
+| T-164-112 | Denial of Service | protected/full suites | high | mitigate | Root ExUnit exclusion plus recursive alias/workflow checks keep controlled-host installation readiness out of repository-only CI; `mix verify.ci_lane_contract` selected 396 and excluded exactly 7 | closed |
+| T-164-113 | Tampering | disposable attack coverage | medium | mitigate | Five foreign-repository/source-loader attacks remain active in repository-only CI and retain marker/failure assertions | closed |
+| T-164-114 | Denial of Service | authority subject discovery | medium | mitigate | Ordered result-returning lstat/read operations replace raising streams; `phase_164_incomplete_authority_root` selected 3 tests with 25 excluded and 0 failures | closed |
+| T-164-115 | Information Disclosure | CLI diagnostic | medium | mitigate | Empty/incomplete roots emit bounded stable relative `repository_truth: missing_ignore_subject` diagnostics without exception stacks | closed |
+| T-164-116 | Tampering | authority fallback | high | mitigate | Missing authority-root subjects return tagged failure and never substitute canonical repository files | closed |
+| T-164-117 | Repudiation | subject ordering | medium | mitigate | Declared `@ignore_files` order determines the stable first-missing subject under every partial-prefix fixture | closed |
+| T-164-118 | Tampering | terminal history range | high | mitigate | Loader/shell constants and hostile histories pin exactly one PLAN/SUMMARY pair for 01-34 | closed |
+| T-164-119 | Repudiation | installed readiness record | high | mitigate | Plan 164-27 remains prior provenance; changed bytes required the distinct Plans 164-32/33 approval and reinstall | closed |
+| T-164-120 | Spoofing | glob-derived completeness | high | mitigate | Explicit numeric expected-set comparison rejects missing, extra, or malformed history members | closed |
+| T-164-121 | Tampering | proposal source | high | mitigate | Plan 164-32 extracted one committed blob by full OID and bound its SHA-256 and trusted tool identities | closed |
+| T-164-122 | Elevation of Privilege | approval scope | high | mitigate | Blocking human approval covered the complete persisted replacement tuple and granted no terminal authority | closed |
+| T-164-123 | Spoofing | prior object | high | mitigate | Proposal and install revalidated exact Plan 164-27 approval, installed digest/mode/lstat, and rollback absence | closed |
+| T-164-124 | Repudiation | approval parity | high | mitigate | Approval is byte-for-byte proposal parity plus exactly one approval-status line | closed |
+| T-164-125 | Tampering | installed replacement | high | mitigate | Plan 164-33 installed only the approved authenticated commit bytes by private materialization and atomic rename | closed |
+| T-164-126 | Repudiation | rollback provenance | high | mitigate | Exact prior bytes were published and verified as the digest-addressed regular non-symlink mode-0400 rollback before replacement | closed |
+| T-164-127 | Spoofing | active installed proof | high | mitigate | Real approval/install proof binds source OID `1cfee7802de808f690fe5413b22a57e7ab802488`, SHA-256 `f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`, ancestry, version, mode, and 01-34 self-check | closed |
+| T-164-128 | Elevation of Privilege | terminal execution | high | mitigate | Installation readiness permitted only direct `--version` and `--self-check`; no phase argument or finalization mode ran | closed |
+| T-164-129 | Repudiation | validation/security records | high | mitigate | Plan 164-34 binds claims to named active tags, exact commands, observed selected/excluded counts, exit status, and failure direction | closed |
+| T-164-130 | Tampering | canonical ledger map | high | mitigate | Exact-one completed-plan subjects and final canonical relationship digests are enforced with missing, duplicate, and stale-hash negatives; the full repository-truth suite passed 30 tests | closed |
+| T-164-131 | Spoofing | terminal readiness | high | mitigate | Records preserve ordinary verifier → completion-only metadata → protected main → exact attempt-one CI/natural schedules → ignored capture → no later tracked write | closed |
+| T-164-132 | Information Disclosure | validator errors | medium | mitigate | The active incomplete-authority CLI regression retains stable relative tagged diagnostics without stack traces | closed |
+| T-164-SC | Tampering | package supply chain | low | accept | No package-manager install or dependency change occurred; active bytes are the human-approved project-authored Plan 164-32 Git blob and Plan 164-27/23 bytes remain exact prior provenance | accepted |
+
+## Superseding Gap-Reconciliation Assessment
+
+The 2026-09-10 verifier and review correctly contradicted the earlier blanket
+`secured` claim. Plans 164-25 through 164-33 repaired the required-CI host
+coupling, caller-selected repository authority, forged tools, unrelated
+installation ancestry, fixture-only installed proof, raising authority-root
+discovery, stale exact-history range, and superseded installed bytes. Closure
+is bound to the named production seams above, not the earlier audit prose.
+
+Repository-only CI and controlled-host installation readiness are deliberately
+separate authorities. The former reran 398 selected tests with 7 host tests
+excluded and 0 failures. The latter reran 7 selected tests with 54 excluded and
+0 failures against the active Plan 164-32 source OID
+`1cfee7802de808f690fe5413b22a57e7ab802488` and SHA-256
+`f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`.
+Plan 164-27 prior provenance remains immutable at OID
+`2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97` and digest
+`0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e`.
+
+T-164-109 remains open and high. Ordinary verification must evaluate the
+complete tracked implementation only after `164-34-SUMMARY.md` exists. Only
+protected completion metadata may follow before all tracked state reaches
+protected `main`; exact attempt-1 normal push CI and naturally scheduled
+attempt-1 evidence must then authorize the installed read-only capture. Until
+that sequence completes, terminal protected-main evidence remains absent and
+pending. No repository test, controlled-host installation result, manual
+dispatch, or this reconciliation substitutes for it, and no terminal run or
+phase/requirement completion occurred here.
 
 ## Accepted Risks Log
 
-No accepted risks. T-164-SC remains open below the configured blocking threshold; it has not been silently accepted.
+T-164-60 is explicitly accepted because Plan 164-16 changed only current-facing
+maintainer documentation and its behavioral contract; executable release-control
+paths were unchanged. This low-severity acceptance records the bounded scope and
+does not grant or alter release authority.
+
+T-164-SC is explicitly accepted because this phase performs no package-manager
+installation or dependency change. The installed artifact is a
+human-approved, project-authored Git blob with exact OID and digest evidence;
+this acceptance does not weaken repository, executable, installation-ancestry,
+or terminal lifecycle checks.
 
 ## Security Audit Trail
 
@@ -70,13 +145,24 @@ No accepted risks. T-164-SC remains open below the configured blocking threshold
 |------------|---------------|--------|------|--------|
 | 2026-09-01 | 33 | 22 | 11 total / 10 blocking | gsd-security-auditor |
 | 2026-09-01 | 33 | 32 | 1 total / 0 blocking | gsd-security-auditor (post-remediation) |
+| 2026-09-09 | 37 | 36 | 1 total / 0 blocking | execute-phase ASVS L1 short-circuit refresh through Plan 164-14 |
+| 2026-09-09 | 40 | 39 | 1 total / 0 blocking | execute-phase ASVS L1 short-circuit refresh through Plan 164-16 |
+| 2026-09-09 | 40 | 37 | 3 total / 2 blocking | execute-phase reconciliation after code review and goal verification |
+| 2026-09-09 | 42 | 41 | 1 total / 0 blocking | gsd-security-auditor (post-Plan 164-17 trust-anchor verification) |
+| 2026-09-09 | 42 | 39 | 3 total / 2 blocking | execute-phase reconciliation after code review and authoritative goal verification |
+| 2026-09-10 | 42 | 41 | 1 total / 0 blocking | gsd-security-auditor (post-Plans 164-18/19 gap verification) |
+| 2026-09-10 | 47 | 46 resolved | 1 blocking terminal-lifecycle item | Plan 164-28 superseding reconciliation after Plans 164-25 through 164-27 |
+| 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | Plan 164-34 reconciliation of Plans 164-29 through 164-33 and canonical Task 2 validation |
+| 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | gsd-security-auditor post-gap-closure verification |
+| 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | verify-work refresh; T-164-109 evidence chain remains incomplete |
 
 ## Sign-Off
 
 - [x] All registered threats were inspected at ASVS L1.
-- [x] All high-severity mitigations are present.
-- [x] No accepted risk is relied upon for the blocking gate; T-164-SC remains explicitly open below threshold.
-- [x] `threats_open: 0` confirmed.
-- [x] `status: verified` set in frontmatter.
+- [ ] T-164-109 remains open until terminal protected-main evidence is captured in the mandated lifecycle order.
+- [x] T-164-60 is explicitly accepted as a low-severity documentation-only scope observation with executable controls unchanged.
+- [x] T-164-SC is explicitly accepted without any package-manager install or dependency change.
+- [x] `threats_open: 1` reflects the pending high-severity terminal lifecycle item.
+- [x] `status: pending_terminal` prevents an early secured or completed claim.
 
-**Approval:** verified at ASVS L1 — zero threats at or above the configured high-severity blocking threshold remain. T-164-SC stays visible as one unaccepted low-severity item.
+**Approval:** implementation mitigations are reconciled at ASVS L1 through Plan 164-34 Task 1, but Phase 164 is not yet security-final. T-164-109 remains open until the ordinary verifier, protected completion metadata, exact-main CI/natural schedules, and ignored no-later-write terminal capture complete in order.

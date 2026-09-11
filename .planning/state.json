@@ -1,0 +1,33 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": "v2.7 — Repository Stewardship & Operational Hygiene (Planned)",
+  "phases": [
+    {
+      "number": "161",
+      "name": "Canonical Workspace and Evidence Preservation",
+      "status": "complete"
+    },
+    {
+      "number": "162",
+      "name": "Protected Release and Scheduled-Control Recovery",
+      "status": "complete"
+    },
+    {
+      "number": "163",
+      "name": "Deterministic Release-Path Timeout Repairs",
+      "status": "complete"
+    },
+    {
+      "number": "164",
+      "name": "Repository Truth Reconciliation and Closeout",
+      "status": "in_progress"
+    }
+  ],
+  "next": {
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 164 of 4 · 75% · executing"
+  },
+  "updated_at": "2026-09-11T04:39:30.671Z"
+}

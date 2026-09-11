@@ -148,6 +148,27 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
     end)
   end
 
+  test "sweep rejects malformed future and stale timestamps while accepting current evidence" do
+    in_tmp(fn temp_dir ->
+      sha = String.duplicate("a", 40)
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      fixtures = [
+        {"invalid", "not-an-iso8601-time", false},
+        {"future", now |> DateTime.add(86_400, :second) |> DateTime.to_iso8601(), false},
+        {"current", DateTime.to_iso8601(now), true},
+        {"in-range", now |> DateTime.add(-3_600, :second) |> DateTime.to_iso8601(), true},
+        {"stale", now |> DateTime.add(-10_801, :second) |> DateTime.to_iso8601(), false}
+      ]
+
+      for {name, updated_at, accepted?} <- fixtures do
+        fixture = write_sweep_fixture!(Path.join(temp_dir, name), sha, sha, updated_at)
+        {_output, status} = run_sweep(fixture)
+        assert status == 0 == accepted?, "unexpected freshness verdict for #{name}"
+      end
+    end)
+  end
+
   test "monitor is read-only, consumes trusted code, and covers every scheduled control" do
     workflow = File.read!(@monitor_workflow)
     verifier = File.read!(@evidence_script)
@@ -184,6 +205,14 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
            ]
 
     assert Enum.map(config["controls"], & &1["max_age_seconds"]) == [10_800, 129_600, 129_600]
+  end
+
+  test "protected CI calls repository proof but never the controlled-host alias" do
+    workflow = File.read!(Path.join(@repo_root, ".github/workflows/ci.yml"))
+
+    assert length(Regex.scan(~r/\bmix verify\.ci_lane_contract\b/, workflow)) == 1
+    refute workflow =~ "mix verify.phase_164.installed_boundary"
+    assert workflow =~ "mix test --warnings-as-errors"
   end
 
   test "each source workflow binds evidence before uploading its retained JSON" do
@@ -249,12 +278,20 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
   test "required CI executes the append-only gate and the directory-scoped contract suite" do
     ci = File.read!(Path.join(@repo_root, ".github/workflows/ci.yml"))
     actionlint = File.read!(Path.join(@repo_root, ".github/workflows/actionlint.yml"))
-    mix = File.read!(Path.join(@repo_root, "mix.exs"))
+    aliases = Mix.Project.config()[:aliases]
 
     assert ci =~ "scripts/check_append_only_evidence.sh"
     assert ci =~ "mix verify.ci_lane_contract"
-    assert mix =~ ~s("verify.ci_lane_contract": [)
-    assert mix =~ "test test/scripts/ --warnings-as-errors"
+    refute ci =~ "mix verify.phase_164.installed_boundary"
+
+    assert Keyword.fetch!(aliases, :"verify.ci_lane_contract") == [
+             "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
+           ]
+
+    assert Keyword.fetch!(aliases, :"verify.phase_164.installed_boundary") == [
+             "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
+           ]
+
     assert actionlint =~ ".github/scheduled-controls.json"
     assert actionlint =~ "scripts/scheduled_control_evidence.sh"
     assert actionlint =~ "scripts/check_append_only_evidence.sh"
@@ -298,7 +335,7 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
     status
   end
 
-  defp write_sweep_fixture!(temp_dir, run_sha, main_sha) do
+  defp write_sweep_fixture!(temp_dir, run_sha, main_sha, updated_at \\ nil) do
     File.mkdir_p!(temp_dir)
     bin_dir = Path.join(temp_dir, "bin")
     File.mkdir_p!(bin_dir)
@@ -362,7 +399,9 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
         "head_branch" => "main",
         "head_sha" => run_sha,
         "html_url" => "https://github.com/example/mailglass/actions/runs/16214",
-        "updated_at" => DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+        "updated_at" =>
+          updated_at ||
+            DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
       })
     )
 
