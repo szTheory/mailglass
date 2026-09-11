@@ -4,10 +4,11 @@ Phase 164 closes across two deliberately separate proof boundaries. Ordinary
 GSD execution owns tracked implementation, summaries, verification, roadmap,
 requirements, and phase-completion metadata. The previously proven installed
 program is the mode-0500 executable at
-`/Users/jon/.local/bin/mailglass-finalize-phase`; its active bytes remain bound
-to the exact Plan 164-27 approval described below. The now-changed tracked source
-`scripts/mailglass_finalize_phase_loader.mjs` is proposal authority only until a
-new approval and reinstall complete. The Plan 164-23 approval and
+`/Users/jon/.local/bin/mailglass-finalize-phase`; its active bytes are bound to
+the exact Plan 164-32 approval and installed-readiness proof described below.
+The tracked source `scripts/mailglass_finalize_phase_loader.mjs` and installed
+command now share the approved 01-34 bytes. The Plan 164-27 and Plan 164-23
+approvals remain immutable prior provenance only. The Plan 164-23
 authenticated-copy checkpoint remain immutable provenance for an older prior
 object; they do not authorize later tracked bytes. The installed loader is
 outside checkout evaluation: no project-local extension module is imported
@@ -16,12 +17,11 @@ before it establishes repository authority.
 At invocation the installed program captures one full repository commit OID.
 That captured repository OID, rather than symbolic `HEAD`, is the authority for
 every tree enumeration, blob authentication, and private materialization. The
-Plan 164-27 installed authority recognizes the exact PLAN/SUMMARY pair set 01
-through 28, with exactly one PLAN and one SUMMARY for every number. The tracked
-loader and shell source now recognize the deliberately advanced 01 through 34
-set. That temporary mismatch makes the installation superseded-pending rather
-than ready; no historical subset or shortened baseline is accepted. Missing
-pairs, extra numbers, malformed names, or a silently shortened set fail before
+Plan 164-32 installed authority recognizes the exact PLAN/SUMMARY pair set 01
+through 34, with exactly one PLAN and one SUMMARY for every number. The tracked
+loader, installed loader, and shell source share that deliberately advanced
+range. No historical subset or shortened baseline is accepted. Missing pairs,
+extra numbers, malformed names, or a silently shortened set fail before
 execution.
 
 Before the first Bash process starts, the loader authenticates every exact
@@ -170,6 +170,38 @@ atomic replacement, and controlled-host proof. Ordinary verification,
 completion-only metadata, and protected-main integration remain pending in
 their existing order, and terminal finalization remains pending; no readiness, CI dispatch, rerun,
 release, publication, pre-verification, or terminal evidence is claimed here.
+
+## Plan 164-33 installed 01-34 readiness
+
+Plan 164-33 consumed only the exact Plan 164-32 approval. The active
+installation source OID is
+`1cfee7802de808f690fe5413b22a57e7ab802488`, its authenticated loader SHA-256
+is `f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`,
+and that OID is an ancestor of the repository HEAD observed by the direct
+self-check. The active destination is the regular non-symlink mode-0500 file
+`/Users/jon/.local/bin/mailglass-finalize-phase`, observed after atomic rename
+with lstat identity `16777229:273869583:501:20`. Direct `--version` returned
+`mailglass-finalize-phase-loader 1`; direct ancestry-aware `--self-check`
+reported the approved source digest, active external path, mode `0500`, and
+terminal range `01-34`.
+
+The immutable Plan 164-27 approval remains prior provenance with approval
+SHA-256 `e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9`.
+Before the destination changed, its exact installed bytes with SHA-256
+`0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e`
+were published and verified as the regular non-symlink mode-0400 rollback
+`/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e`.
+Its observed lstat identity is `16777229:273869587:501:20`. This preserves the
+Plan 164-27 object for exact recovery without treating it as a second active
+authority.
+
+This is installation readiness only. No phase argument, canonical
+pre-verification, terminal finalization, CI dispatch or rerun, release, or
+publication ran; ordinary verification remains pending, completion-only
+metadata remains pending, protected-main integration remains pending, and
+terminal finalization remains pending. The authorized order remains ordinary
+verifier → completion-only metadata → protected main → exact attempt-one CI
+and natural schedules → terminal ignored capture → no later tracked write.
 
 ## Tracked completion and terminal order
 
