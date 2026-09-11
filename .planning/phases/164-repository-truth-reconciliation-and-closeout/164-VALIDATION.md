@@ -10,7 +10,7 @@ revised: 2026-09-10
 
 # Phase 164 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-24 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
+> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-28 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
 
 ---
 
@@ -82,9 +82,52 @@ revised: 2026-09-10
 | 164-23-03 | 164-23 | 21 | TRTH-03 | T-164-84, T-164-85, T-164-86, T-164-86A | Atomic external mode-0500 install must match the approved blob; prior-object rollback evidence is conditional and any mismatch fails self-check | installed provenance/self-check | `/Users/jon/.local/bin/mailglass-finalize-phase --self-check --repo /Users/jon/projects/mailglass --expected-source-oid 7f57e1cd0aafe6d236624da98f7292e86e6de697` | installed loader, approval record, Plan 164-23 summary | ✅ green; absent-destination rollback branch recorded not-applicable |
 | 164-24-01 | 164-24 | 22 | TRTH-03 | T-164-87, T-164-88, T-164-SC | Absolute installed executable accepts captured private bytes, while moving HEAD, deleted pairs 10, 20, and 24, and a hostile retired extension all fail or remain unevaluated before unauthorized Bash | installed production-boundary subprocess regression | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors --no-deps-check` | immutable approval/summary parity plus real installed command | ✅ green (5 selected, 46 excluded, 0 failures) |
 | 164-24-02 | 164-24 | 22 | TRTH-01, TRTH-02, TRTH-03 | T-164-89, T-164-90 | Current proof records and manifest-derived docs contract report installed-boundary closure without representing it as pre-verification or terminal evidence | complete focused suite, validator, syntax, docs contract | `make toolchain CMD='mix test test/scripts/phase_164_repository_truth_test.exs test/scripts/phase_164_closeout_test.exs test/mailglass/publish/maintaining_release_gate_contract_test.exs test/mailglass/docs_contract_test.exs test/scripts/scheduled_control_evidence_test.exs --warnings-as-errors' && ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 elixir scripts/validate_repository_truth.exs --repo /Users/jon/projects/mailglass --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv && node --check scripts/mailglass_finalize_phase_loader.mjs && bash -n scripts/finalize_phase_164.sh scripts/closeout_repository_truth.sh && git diff --check` | `164-VALIDATION.md`, `164-FINALIZATION.md`, stable docs contract | ✅ green (120 tests, 0 failures, 1 historical skip; ledger and syntax valid) |
+| 164-25-01 | 164-25 tracer | 23 | TRTH-03 | T-164-105 | Required CI selects repository-owned tests while the host-only installed boundary remains explicit and non-vacuous | `phase_164_ci_hermeticity` source/alias contract plus required lane | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix verify.ci_lane_contract` | `mix.exs`, closeout/CI parity/SuiteFloor contracts | ✅ green (380 selected, 5 excluded, 0 failures) |
+| 164-25-02 | 164-25 | 23 | TRTH-03 | T-164-105 | CI workflow and aliases cannot silently reintroduce maintainer-local host authority | focused parity and scheduled-control contracts | Plan 164-25 Task 2 command | exact alias/workflow/source negative controls | ✅ green |
+| 164-26-01 | 164-26 tracer | 24 | TRTH-03 | T-164-106 | Loader-owned physical path and normalized origin reject caller-selected repository authority before enumeration | `phase_164_canonical_loader` | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_canonical_loader --warnings-as-errors --no-deps-check` | production loader and foreign-repository rejection | ✅ green (1 selected, 48 excluded, 0 failures) |
+| 164-26-02 | 164-26 | 24 | TRTH-03 | T-164-107, T-164-108 | Absolute validated tools, sanitized child environment, and installation ancestry reject forged PATH and unrelated OIDs | `phase_164_trusted_toolchain` | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_trusted_toolchain --warnings-as-errors --no-deps-check` | loader/finalizer trust chain plus unrelated-history fixture | ✅ green (3 selected, 46 excluded, 0 failures) |
+| 164-27-01 | 164-27 tracer | 25 | TRTH-03 | T-164-108, T-164-SC | The hardened committed source is the sole eligible reinstall input and adds no package dependency | `phase_164_reinstall_contract` | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_reinstall_contract --warnings-as-errors --no-deps-check` | source-bound reinstall readiness contract | ✅ green (3 selected, 46 excluded, 0 failures) |
+| 164-27-02 | 164-27 checkpoint | 25 | TRTH-03 | T-164-108, T-164-SC | Exact immutable approval binds source, tools, destination, prior object, and rollback identity before replacement | external approval checks | Plan 164-27 Task 2 exact proposal/approval parity checks | mode-0400 proposal and approval records | ✅ approved tuple observed |
+| 164-27-03 | 164-27 | 25 | TRTH-03 | T-164-106, T-164-107, T-164-108 | Installed bytes match the approved source and reject foreign repository, forged PATH, moving HEAD, and incomplete history attacks | `phase_164_installed_production_boundary` | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix verify.phase_164.installed_boundary` | absolute installed executable and controlled-host attack matrix | ✅ green (5 selected, 44 excluded, 0 failures) |
+| 164-28-01 | 164-28 tracer | 26 | TRTH-01, TRTH-02, TRTH-03 | T-164-105 through T-164-109 | Durable validation/security records bind each repaired finding to its production seam and observed regression without claiming terminal completion | `phase_164_gap_reconciliation` | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/mailglass/docs_contract_test.exs test/scripts/phase_164_closeout_test.exs --only phase_164_gap_reconciliation --warnings-as-errors --no-deps-check` | this record, `164-SECURITY.md`, docs contract | ✅ green after record reconciliation |
+| 164-28-02 | 164-28 | 26 | TRTH-01, TRTH-02, TRTH-03 | T-164-106, T-164-107, T-164-109 | Exact 01-28 lifecycle contract keeps terminal execution after summary, verifier, protected completion metadata, exact CI, and natural schedules | lifecycle/docs contract plus complete phase suite | Plan 164-28 Task 2 command | `164-FINALIZATION.md`, this record, docs contract | ⏳ current plan; terminal evidence remains pending |
 | 164-FINAL | post-execution gate | after phase.complete integration | TRTH-03 | T-164-40, T-164-41, T-164-42, T-164-43, T-164-44 | Final protected metadata SHA has attempt-1 normal push CI, attempt-1 natural schedules, ignored identity/report state, independently verified raw sources, and no later tracked commit | live lifecycle gate | `/Users/jon/.local/bin/mailglass-finalize-phase 164` | ignored `finalization-inputs.json`, report, CI source, scheduled source | ⚠️ external terminal capture pending |
 
 *Status: ✅ automated capability green · ⚠️ external evidence still required*
+
+---
+
+## Gap Reconciliation — Plans 164-25 through 164-28
+
+This assessment supersedes the contradicted installed-boundary closure claims
+recorded before the Plan 164-25 through 164-27 repairs. The finding IDs remain
+unchanged audit history; closure below means the named production seam and
+active regression were observed after the repair. It does not mean terminal
+protected-main finalization has run.
+
+| Finding | Plan / task | Production seam | Named active regression and exact command | Observed result | Failure direction | Security disposition |
+|---------|-------------|-----------------|-------------------------------------------|-----------------|-------------------|----------------------|
+| CR-01 | 164-25-01 / 164-25-02 | `verify.ci_lane_contract` excludes only the controlled-host tag; `verify.phase_164.installed_boundary` owns host proof | `phase_164_ci_hermeticity`; `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix verify.ci_lane_contract` | 380 selected, 5 excluded, 0 failures | Removing/narrowing the required repository lane or reintroducing installed files makes alias, CI-parity, SuiteFloor, or required-lane tests fail. | T-164-105 closed by observed repository-only CI evidence. |
+| CR-02 | 164-26-01 / 164-27-03 | loader-owned `/Users/jon/projects/mailglass` real path plus normalized `szTheory/mailglass` origin is checked before enumeration | `phase_164_canonical_loader`; `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_canonical_loader --warnings-as-errors --no-deps-check` | 1 selected, 48 excluded, 0 failures; installed attack matrix also passed | Caller cwd, argv, or environment cannot select a foreign authority; foreign repositories fail before private Bash dispatch. | T-164-106 closed by canonical-loader and installed-boundary rejection evidence. |
+| CR-03 | 164-26-02 / 164-27-03 | validated absolute Node/Git/Bash/gh/jq/Mix/Elixir identities and allowlisted child environment | `phase_164_trusted_toolchain`; `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_trusted_toolchain --warnings-as-errors --no-deps-check` | 3 selected, 46 excluded, 0 failures | A seven-tool forged caller PATH never executes its marker programs; unexpected tool identity fails before repository authentication or dispatch. | T-164-107 closed by observed forged-tool rejection. |
+| WR-01 | 164-26-02 / 164-27-01 / 164-27-03 | self-check requires installation OID ancestry plus source/installed byte equality | `phase_164_reinstall_contract`; `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_reinstall_contract --warnings-as-errors --no-deps-check`; then controlled-host alias | 3 selected, 46 excluded, 0 failures; 5 selected, 44 excluded, 0 failures | A byte-identical loader from unrelated history fails ancestry; any approved tuple, installed digest, or rollback identity drift fails closed. | T-164-108 closed by ancestry, reinstall, and installed-boundary evidence. |
+
+Observed installation identity: approved source OID
+`2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97`; source and installed
+SHA-256
+`0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e`.
+The superseded installed object remains recoverable at SHA-256
+`ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9`.
+These are controlled-host installation facts, not terminal protected-main
+evidence.
+
+Plans 164-25 through 164-27 close the four implementation findings. Plan
+164-28 reconciles the durable records and exact lifecycle contract. Ordinary
+verification must next evaluate the complete tracked implementation, after
+which only protected completion metadata may change before integration to
+protected `main`. Until exact attempt-1 normal push CI and natural exact-SHA
+scheduled evidence authorize the installed terminal command, terminal
+protected-main evidence remains absent and pending.
 
 ---
 

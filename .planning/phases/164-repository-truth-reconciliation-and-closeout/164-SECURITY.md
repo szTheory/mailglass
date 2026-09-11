@@ -1,8 +1,8 @@
 ---
 phase: "164"
 slug: repository-truth-reconciliation-and-closeout
-status: secured
-threats_open: 0
+status: pending_terminal
+threats_open: 1
 asvs_level: 1
 block_on: high
 created: "2026-09-01"
@@ -67,11 +67,40 @@ created: "2026-09-01"
 | T-164-60 | Tampering | executable protected-release controls | low | accept | Plan 164-16 changed only documentation and its contract; executable release-control paths remained unchanged | closed |
 | T-164-63 | Tampering | downstream finalizer and temporary materialization | high | mitigate | The downstream HEAD blob is materialized in a mode-0700 private directory as a mode-0500 file, executed by private path, and removed in `finally` on success and failure | closed |
 | T-164-64 | Repudiation | standalone validator invocation | medium | mitigate | Missing and invalid CLI arguments emit bounded diagnostics and exit nonzero; canonical invocation and module loading are covered by subprocess regressions | closed |
-| T-164-SC | Tampering | package supply chain | low | accept | Acceptance is not yet documented; below the configured blocking threshold | open — below high threshold |
+| T-164-105 | Repudiation | required-CI host coupling | high | mitigate | `phase_164_ci_hermeticity` plus `mix verify.ci_lane_contract` observed 380 selected, 5 controlled-host exclusions, and 0 failures after Plan 164-25 | closed |
+| T-164-106 | Spoofing | caller-selected repository authority | high | mitigate | `phase_164_canonical_loader` observed 1 selected, 48 excluded, and 0 failures; the installed matrix rejects foreign repositories before dispatch | closed |
+| T-164-107 | Elevation of Privilege | forged PATH/tools | high | mitigate | `phase_164_trusted_toolchain` observed 3 selected, 46 excluded, and 0 failures; forged Git/Bash/gh/jq/Mix/Node/Elixir markers never execute | closed |
+| T-164-108 | Spoofing | unrelated installation OID | high | mitigate | `phase_164_reinstall_contract` observed 3 selected, 46 excluded, and 0 failures, while `phase_164_installed_production_boundary` observed 5 selected, 44 excluded, and 0 failures against the approved source OID and digest | closed |
+| T-164-109 | Repudiation | terminal no-later-write evidence | high | mitigate | Requires the Plan 164-28 summary, passed ordinary verification, protected completion metadata, exact-main attempt-1 push CI, natural schedules, and then the ignored terminal report with no later tracked write | open — lifecycle evidence pending |
+| T-164-SC | Tampering | package supply chain | low | accept | No package-manager install or dependency change occurred; Plan 164-27 installed only human-approved project-authored Git blob `2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97` with SHA-256 `0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e` and retained the superseded `ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9` bytes | accepted |
+
+## Superseding Gap-Reconciliation Assessment
+
+The 2026-09-10 verifier and review correctly contradicted the earlier blanket
+`secured` claim: required-CI host coupling, caller-selected repository
+authority, forged PATH/tools, and an unrelated installation OID were not yet
+closed at that audit point. Plans 164-25 through 164-27 subsequently repaired
+those seams. T-164-105 through T-164-108 are closed only by the named observed
+regressions above, not by the earlier audit prose. The current installed source
+OID is `2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97`; source and installed bytes
+share SHA-256
+`0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e`.
+
+T-164-109 remains open. Ordinary verification must evaluate the complete
+tracked implementation after the Plan 164-28 summary exists. Only protected
+completion metadata may follow before all tracked state reaches protected
+`main`; exact attempt-1 normal push CI and natural schedules must then authorize
+the installed read-only capture. Until that sequence completes, terminal
+protected-main evidence remains absent and pending. No code test,
+controlled-host installation result, or manual dispatch substitutes for it.
 
 ## Accepted Risks Log
 
-No accepted risks. T-164-SC remains open below the configured blocking threshold; it has not been silently accepted.
+T-164-SC is explicitly accepted because this phase performs no package-manager
+installation or dependency change. The installed artifact is a
+human-approved, project-authored Git blob with exact OID and digest evidence;
+this acceptance does not weaken repository, executable, installation-ancestry,
+or terminal lifecycle checks.
 
 ## Security Audit Trail
 
@@ -85,13 +114,14 @@ No accepted risks. T-164-SC remains open below the configured blocking threshold
 | 2026-09-09 | 42 | 41 | 1 total / 0 blocking | gsd-security-auditor (post-Plan 164-17 trust-anchor verification) |
 | 2026-09-09 | 42 | 39 | 3 total / 2 blocking | execute-phase reconciliation after code review and authoritative goal verification |
 | 2026-09-10 | 42 | 41 | 1 total / 0 blocking | gsd-security-auditor (post-Plans 164-18/19 gap verification) |
+| 2026-09-10 | 47 | 46 resolved | 1 blocking terminal-lifecycle item | Plan 164-28 superseding reconciliation after Plans 164-25 through 164-27 |
 
 ## Sign-Off
 
 - [x] All registered threats were inspected at ASVS L1.
-- [x] All high-severity mitigations are present.
-- [x] No accepted risk is relied upon for the blocking gate; T-164-SC remains explicitly open below threshold.
-- [x] `threats_open: 0` confirmed.
-- [x] `status: secured` set in frontmatter.
+- [ ] T-164-109 remains open until terminal protected-main evidence is captured in the mandated lifecycle order.
+- [x] T-164-SC is explicitly accepted without any package-manager install or dependency change.
+- [x] `threats_open: 1` reflects the pending high-severity terminal lifecycle item.
+- [x] `status: pending_terminal` prevents an early secured or completed claim.
 
-**Approval:** secured at ASVS L1 — T-164-17 and T-164-26 are closed by the Plan 164-18/19 production seams and focused behavioral regressions. T-164-SC remains visible as one unaccepted low-severity item below the configured high-severity blocking threshold.
+**Approval:** implementation mitigations are reconciled at ASVS L1 through Plan 164-28 Task 1, but Phase 164 is not yet security-final. T-164-109 remains open until the ordinary verifier, protected completion metadata, exact-main CI/natural schedules, and ignored no-later-write terminal capture complete in order.
