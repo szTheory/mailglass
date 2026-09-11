@@ -890,6 +890,29 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   describe "phase 164 immutable loader" do
     @describetag :phase_164_immutable_loader
 
+    @tag :phase_164_canonical_loader
+    test "production loader owns the canonical repository and normalized origin identity" do
+      source = File.read!(@immutable_loader)
+
+      assert source =~ ~s(const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass")
+      assert source =~ ~s(const EXPECTED_REPOSITORY = "szTheory/mailglass")
+      assert source =~ "validateCanonicalRepository"
+      refute source =~ ~S|git(process.cwd(), ["rev-parse", "--show-toplevel"])|
+    end
+
+    @tag :phase_164_loader_shell_terminal_contract
+    test "loader and shell authorize exactly terminal pairs 01 through 28" do
+      loader = File.read!(@immutable_loader)
+      finalizer = File.read!(@finalizer)
+
+      assert loader =~ "const TERMINAL_LAST_PLAN = 28"
+      assert loader =~ "exact 01-28 PLAN/SUMMARY set"
+      assert finalizer =~ "terminal_last_plan=28"
+      assert finalizer =~ ~S|for plan in $(seq -w "$terminal_first_plan" "$terminal_last_plan")|
+      assert finalizer =~ ~s(missing terminal plan 164-$plan-PLAN.md)
+      assert finalizer =~ ~s(missing terminal summary 164-$plan-SUMMARY.md)
+    end
+
     test "dispatches committed bytes from one authority OID and rejects a moving HEAD" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
