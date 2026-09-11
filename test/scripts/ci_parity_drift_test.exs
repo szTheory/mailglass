@@ -2,7 +2,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   use ExUnit.Case, async: true
 
   @repo_root Path.expand("../..", __DIR__)
-  @required_contract_step "test test/scripts/ --exclude phase_164_installed_production_boundary --warnings-as-errors"
+  @required_contract_step "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
   @installed_boundary_step "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
 
   @moduledoc """
@@ -305,7 +305,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
              "this regresses DET-02 (Phase 127). Offending step(s): #{inspect(offending)}"
   end
 
-  test "required CI excludes only controlled-host proof while repository fixtures stay non-vacuous" do
+  test "required CI excludes proposal and controlled-host proof while repository fixtures stay non-vacuous" do
     aliases = aliases()
     required = Keyword.fetch!(aliases, :"verify.ci_lane_contract")
     installed = Keyword.fetch!(aliases, :"verify.phase_164.installed_boundary")

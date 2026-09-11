@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage() { echo "usage: $0 --repo PATH --authority-root PATH --ledger PATH --ci-run-id ID --output PATH" >&2; exit 2; }
+usage() { echo "usage: $0 --repo PATH --authority-root PATH --expected-main-sha OID --ledger PATH --ci-run-id ID --output PATH" >&2; exit 2; }
+
+require_expected_authority() {
+  local repo="$1" expected_main_sha="$2" observed
+
+  [[ "$expected_main_sha" =~ ^[0-9a-f]{40}$ ]] || return 1
+  "$MAILGLASS_GIT" -C "$repo" cat-file -e "$expected_main_sha^{commit}" 2>/dev/null || return 1
+  observed=$("$MAILGLASS_GIT" -C "$repo" rev-parse --verify 'HEAD^{commit}' 2>/dev/null || true)
+  [ "$observed" = "$expected_main_sha" ]
+}
 
 scheduled_report_is_acceptable() {
   local report_path="$1" expected_sha="$2" registry="$3"
@@ -39,18 +48,19 @@ scheduled_report_is_acceptable() {
 
 main() {
 canonical_repo=/Users/jon/projects/mailglass
-repo=""; authority_root=""; ledger=""; ci_run_id=""; output=""
+repo=""; authority_root=""; expected_main_sha=""; ledger=""; ci_run_id=""; output=""
 for tool_env in MAILGLASS_GIT MAILGLASS_BASH MAILGLASS_GH MAILGLASS_JQ MAILGLASS_MIX MAILGLASS_NODE MAILGLASS_ELIXIR MAILGLASS_ERL; do
   tool_path="${!tool_env:-}"
   [ -n "$tool_path" ] && [ "${tool_path#/}" != "$tool_path" ] && [ -x "$tool_path" ] || usage
 done
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --repo|--authority-root|--ledger|--ci-run-id|--output)
+    --repo|--authority-root|--expected-main-sha|--ledger|--ci-run-id|--output)
       [ "$#" -ge 2 ] || usage
       case "$1" in
         --repo) repo="$2" ;;
         --authority-root) authority_root="$2" ;;
+        --expected-main-sha) expected_main_sha="$2" ;;
         --ledger) ledger="$2" ;;
         --ci-run-id) ci_run_id="$2" ;;
         --output) output="$2" ;;
@@ -59,11 +69,12 @@ while [ "$#" -gt 0 ]; do
     *) usage ;;
   esac
 done
-[ -n "$repo" ] && [ -n "$authority_root" ] && [ -n "$ledger" ] && [ -n "$ci_run_id" ] && [ -n "$output" ] || usage
+[ -n "$repo" ] && [ -n "$authority_root" ] && [ -n "$expected_main_sha" ] && [ -n "$ledger" ] && [ -n "$ci_run_id" ] && [ -n "$output" ] || usage
 [[ "$ci_run_id" =~ ^[1-9][0-9]*$ ]] || usage
 
 repo=$(cd "$repo" 2>/dev/null && pwd -P) || usage
 [ "$repo" = "$canonical_repo" ] || usage
+require_expected_authority "$repo" "$expected_main_sha" || usage
 authority_root=$(cd "$authority_root" 2>/dev/null && pwd -P) || usage
 case "$authority_root" in "$repo"|/private/*/mailglass-finalize-164-*|/tmp/mailglass-finalize-164-*) ;; *) usage ;; esac
 canonical_ledger="$repo/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
@@ -115,13 +126,13 @@ component() {
   fi
 }
 
-head_sha=$("$MAILGLASS_GIT" -C "$repo" rev-parse HEAD 2>/dev/null || true)
+head_sha=$("$MAILGLASS_GIT" -C "$repo" rev-parse --verify 'HEAD^{commit}' 2>/dev/null || true)
 origin_main_sha=$("$MAILGLASS_GIT" -C "$repo" rev-parse refs/remotes/origin/main 2>/dev/null || true)
 branch=$("$MAILGLASS_GIT" -C "$repo" branch --show-current 2>/dev/null || true)
 porcelain=$(stable_porcelain)
 git_source=$(mktemp "$components_dir/git.source.XXXXXX")
 printf '%s\n' "$branch $head_sha $origin_main_sha $porcelain" >"$git_source"
-if [[ "$head_sha" =~ ^[0-9a-f]{40}$ ]] && [[ "$origin_main_sha" =~ ^[0-9a-f]{40}$ ]] && [ "$branch" = main ] && [ "$head_sha" = "$origin_main_sha" ] && [ -z "$porcelain" ]; then component git pass exact_main_clean "$git_source"; else component git blocked exact_main_or_porcelain_mismatch "$git_source"; fi
+if [ "$head_sha" = "$expected_main_sha" ] && [[ "$origin_main_sha" =~ ^[0-9a-f]{40}$ ]] && [ "$branch" = main ] && [ "$head_sha" = "$origin_main_sha" ] && [ -z "$porcelain" ]; then component git pass exact_main_clean "$git_source"; else component git blocked exact_main_or_porcelain_mismatch "$git_source"; fi
 
 hygiene_raw=$(mktemp "$components_dir/hygiene.source.XXXXXX")
 set +e
@@ -155,16 +166,22 @@ write_report() {
   local captured_at report_tmp
   captured_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   report_tmp=$(mktemp "$output_dir/.$output_name.XXXXXX")
-  "$MAILGLASS_JQ" -n --arg schema "mailglass.repository-closeout/v1" --arg captured_at "$captured_at" --arg repo "$repo" --arg branch "$branch" --arg head_sha "$head_sha" --arg origin_main_sha "$origin_main_sha" --arg ci_run_id "$ci_run_id" --slurpfile git "$components_dir/git.json" --slurpfile hygiene "$components_dir/hygiene.json" --slurpfile workspace "$components_dir/workspace.json" --slurpfile ledger "$components_dir/ledger.json" --slurpfile ci "$components_dir/ci.json" --slurpfile scheduled "$components_dir/scheduled.json" '
+  "$MAILGLASS_JQ" -n --arg schema "mailglass.repository-closeout/v1" --arg captured_at "$captured_at" --arg repo "$repo" --arg branch "$branch" --arg expected_main_sha "$expected_main_sha" --arg head_sha "$head_sha" --arg origin_main_sha "$origin_main_sha" --arg ci_run_id "$ci_run_id" --slurpfile git "$components_dir/git.json" --slurpfile hygiene "$components_dir/hygiene.json" --slurpfile workspace "$components_dir/workspace.json" --slurpfile ledger "$components_dir/ledger.json" --slurpfile ci "$components_dir/ci.json" --slurpfile scheduled "$components_dir/scheduled.json" '
     [$git[0], $hygiene[0], $workspace[0], $ledger[0], $ci[0], $scheduled[0]] as $all |
     (if any($all[]; .status == "cannot-check") then "cannot-check" elif any($all[]; .status == "pending") then "pending" elif ($git[0].status == "pass" and ($hygiene[0].status == "pass" or $hygiene[0].status == "blocked") and $workspace[0].status == "pass" and $ledger[0].status == "pass" and $ci[0].status == "pass" and $scheduled[0].status == "pass") then "pass" elif any($all[]; .status == "blocked") then "blocked" else "cannot-check" end) as $status |
-    {schema: $schema, captured_at: $captured_at, repo: $repo, branch: $branch, head_sha: $head_sha, origin_main_sha: $origin_main_sha, ci_run_id: $ci_run_id, components: {git: $git[0], hygiene: $hygiene[0], workspace: $workspace[0], ledger: $ledger[0], ci: $ci[0], scheduled: $scheduled[0]}, status: $status, reason: (if $status == "pass" then "all_authorities_exact_and_current" else "closeout_" + $status end)}' >"$report_tmp"
+    {schema: $schema, captured_at: $captured_at, repo: $repo, branch: $branch, expected_main_sha: $expected_main_sha, head_sha: $head_sha, origin_main_sha: $origin_main_sha, ci_run_id: $ci_run_id, components: {git: $git[0], hygiene: $hygiene[0], workspace: $workspace[0], ledger: $ledger[0], ci: $ci[0], scheduled: $scheduled[0]}, status: $status, reason: (if $status == "pass" then "all_authorities_exact_and_current" else "closeout_" + $status end)}' >"$report_tmp"
   mv "$report_tmp" "$output"
 }
 
 write_report
 final_porcelain=$(stable_porcelain)
-if [ -n "$final_porcelain" ]; then
+final_head_sha=$("$MAILGLASS_GIT" -C "$repo" rev-parse --verify 'HEAD^{commit}' 2>/dev/null || true)
+final_origin_main_sha=$("$MAILGLASS_GIT" -C "$repo" rev-parse refs/remotes/origin/main 2>/dev/null || true)
+if [ "$final_head_sha" != "$expected_main_sha" ] || [ "$final_origin_main_sha" != "$expected_main_sha" ]; then
+  component git blocked expected_authority_changed "$git_source"
+  write_report
+  final_porcelain=$(stable_porcelain)
+elif [ -n "$final_porcelain" ]; then
   component git blocked post_write_porcelain_dirty "$git_source"
   write_report
   final_porcelain=$(stable_porcelain)

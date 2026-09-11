@@ -301,6 +301,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
          expected_hygiene_status} <- cases do
       report = run_aggregate_fixture!(name, hygiene_json, hygiene_exit)
 
+      assert report["expected_main_sha"] == String.duplicate("a", 40)
+      assert report["head_sha"] == report["expected_main_sha"]
       assert report["status"] == expected_status
       assert report["reason"] == expected_reason
       assert report["components"]["hygiene"]["status"] == expected_hygiene_status
@@ -1039,7 +1041,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert loader =~ "MAILGLASS_GIT"
       assert loader =~ "MAILGLASS_BASH"
 
-      for tool <- ~w(GIT BASH GH JQ MIX NODE ELIXIR) do
+      for tool <- ~w(GIT BASH GH JQ MIX NODE ELIXIR ERL) do
         assert finalizer =~ ~s(\"${MAILGLASS_#{tool})
       end
 
@@ -1188,9 +1190,11 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       {moving_output, moving_status} =
         invoke_immutable_loader(moving, ["164", "--pre-verification"], moving.env)
 
-      assert moving_status != 0, moving_output
+      assert moving_status != 0,
+             "#{moving_output}\n#{if File.regular?(moving.git_log), do: File.read!(moving.git_log), else: "missing git log"}"
+
       refute File.exists?(moving.marker)
-      assert File.regular?(moving.git_log)
+      assert File.regular?(moving.git_log), moving_output
       assert moving_output =~ "authority commit changed"
     end
 
@@ -1226,7 +1230,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       finalizer = File.read!(@finalizer)
       closeout = File.read!(@script)
       assert finalizer =~ ~s(--expected-main-sha "$expected_authority_oid")
-      assert finalizer =~ ~s("$MAILGLASS_BASH" "$authority_root/scripts/closeout_repository_truth.sh")
+
+      assert finalizer =~
+               ~s("$MAILGLASS_BASH" "$authority_root/scripts/closeout_repository_truth.sh")
+
       assert closeout =~ "--expected-main-sha"
       assert closeout =~ "expected_main_sha"
     end
@@ -1960,6 +1967,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         repo,
         "--authority-root",
         repo,
+        "--expected-main-sha",
+        String.duplicate("a", 40),
         "--ledger",
         ledger,
         "--ci-run-id",
@@ -2189,6 +2198,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       #!/bin/bash
       case "$3" in
         status) exit 0 ;;
+        cat-file) exit 0 ;;
         rev-parse) printf '%s\\n' "$FIXTURE_SHA" ;;
         branch) printf 'main\\n' ;;
         check-ignore) exit 0 ;;
@@ -2250,6 +2260,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           @repo_root,
           "--authority-root",
           @repo_root,
+          "--expected-main-sha",
+          sha,
           "--ledger",
           @ledger,
           "--ci-run-id",
@@ -2340,6 +2352,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
             printf '?? %s\n' "${DIRT_SENTINEL#"$FIXTURE_REPO"/}"
           fi
           ;;
+        cat-file) exit 0 ;;
         rev-parse) printf '%s\n' "$FIXTURE_SHA" ;;
         branch) printf 'main\n' ;;
         check-ignore) exit 0 ;;
@@ -2399,6 +2412,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           @repo_root,
           "--authority-root",
           @repo_root,
+          "--expected-main-sha",
+          sha,
           "--ledger",
           @ledger,
           "--ci-run-id",
@@ -2468,14 +2483,15 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       #!/usr/bin/env bash
       set -euo pipefail
       target_repo="$1"
-      if [ "${2:-}" != "" ] && [ "${2#--}" = "$2" ]; then
-        authority_root="$2"
-        mode="${3:-}"
-      else
-        authority_root="$target_repo"
-        mode="${2:-}"
+      authority_root="$2"
+      expected_authority_oid="$3"
+      mode="${4:-}"
+      observed=$("$MAILGLASS_GIT" -C "$target_repo" rev-parse --verify 'HEAD^{commit}')
+      if [ "$observed" != "$expected_authority_oid" ]; then
+        printf 'authority commit changed\n' >&2
+        exit 1
       fi
-      printf '%s|%s|%s|%s' "$0" "$authority_root" "$target_repo" "$mode" > "$MARKER"
+      printf '%s|%s|%s|%s|%s' "$0" "$authority_root" "$target_repo" "$expected_authority_oid" "$mode" > "$MARKER"
       cat "$0" > "$BYTES_MARKER"
       "$authority_root/scripts/closeout_repository_truth.sh" "$authority_root"
       exit "${FINALIZER_EXIT:-0}"
@@ -2550,6 +2566,61 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     phase_dir = Path.join(repo, ".planning/phases/164-fixture")
 
     source = File.read!(@immutable_loader)
+    git_log = Path.join(Path.dirname(repo), "git.log")
+    real_git = System.find_executable("git")
+    env = [{"REAL_GIT", real_git}, {"GIT_LOG", git_log}]
+
+    {source, env} =
+      if Keyword.get(options, :move_head, false) do
+        delegate_dir = Path.join(Path.dirname(repo), "trusted-git")
+        delegate = Path.join(delegate_dir, "git")
+        counter = Path.join(Path.dirname(repo), "git-counter")
+        File.mkdir_p!(delegate_dir)
+        File.write!(counter, "0")
+
+        write_executable!(
+          delegate,
+          """
+          #!/usr/bin/env bash
+          set -euo pipefail
+          printf '%s\\n' "$*" >> "$GIT_LOG"
+          if [ "$#" -eq 3 ] && [ "$1" = rev-parse ] && [ "$2" = --verify ] && [ "$3" = 'HEAD^{commit}' ]; then
+            count=$(($(cat "$GIT_COUNTER") + 1))
+            printf '%s' "$count" > "$GIT_COUNTER"
+            if [ "$count" -eq 2 ]; then
+              observed=$("$REAL_GIT" "$@")
+              printf 'advanced\\n' > "$FIXTURE_REPO/head-advance"
+              "$REAL_GIT" -C "$FIXTURE_REPO" add head-advance
+              GIT_AUTHOR_NAME='Phase 164 Test' GIT_AUTHOR_EMAIL=phase164@example.test \\
+              GIT_COMMITTER_NAME='Phase 164 Test' GIT_COMMITTER_EMAIL=phase164@example.test \\
+                "$REAL_GIT" -C "$FIXTURE_REPO" commit -q -m 'advance head between Node and Bash'
+              printf '%s\\n' "$observed"
+              exit 0
+            fi
+          fi
+          exec "$REAL_GIT" "$@"
+          """
+        )
+
+        physical_delegate = resolved_path!(delegate)
+
+        replaced =
+          String.replace(
+            source,
+            ~s(GIT: "/opt/homebrew/Cellar/git/2.41.0/bin/git"),
+            ~s(GIT: #{inspect(physical_delegate)}),
+            global: false
+          )
+
+        {replaced,
+         [
+           {"GIT_COUNTER", counter},
+           {"FIXTURE_REPO", repo}
+           | env
+         ]}
+      else
+        {source, env}
+      end
 
     source =
       if Keyword.get(options, :production, false) do
@@ -2566,7 +2637,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       String.replace(
         source,
         "const TEST_ENV_KEYS = [];",
-        ~s(const TEST_ENV_KEYS = ["MARKER", "BYTES_MARKER", "HOSTILE_MARKER", "FINALIZER_EXIT"];)
+        ~s(const TEST_ENV_KEYS = ["MARKER", "BYTES_MARKER", "HOSTILE_MARKER", "FINALIZER_EXIT", "REAL_GIT", "GIT_LOG", "GIT_COUNTER", "FIXTURE_REPO"];)
       )
 
     File.write!(loader_source, source)
@@ -2592,48 +2663,6 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     installed = Path.join(install_dir, "mailglass-finalize-phase")
     File.cp!(loader_source, installed)
     File.chmod!(installed, 0o500)
-
-    git_log = Path.join(Path.dirname(repo), "git.log")
-    real_git = System.find_executable("git")
-    env = [{"REAL_GIT", real_git}, {"GIT_LOG", git_log}]
-
-    env =
-      if Keyword.get(options, :move_head, false) do
-        shim_dir = Path.join(Path.dirname(repo), "git-shim")
-        counter = Path.join(Path.dirname(repo), "git-counter")
-        File.mkdir_p!(shim_dir)
-        File.write!(counter, "0")
-
-        write_executable!(
-          Path.join(shim_dir, "git"),
-          """
-          #!/usr/bin/env bash
-          set -euo pipefail
-          printf '%s\\n' "$*" >> "$GIT_LOG"
-          "$REAL_GIT" "$@"
-          status=$?
-          count=$(($(cat "$GIT_COUNTER") + 1))
-          printf '%s' "$count" > "$GIT_COUNTER"
-          if [ "$count" -eq 4 ]; then
-            printf 'advanced\\n' > "$FIXTURE_REPO/head-advance"
-            "$REAL_GIT" -C "$FIXTURE_REPO" add head-advance
-            GIT_AUTHOR_NAME='Phase 164 Test' GIT_AUTHOR_EMAIL=phase164@example.test \\
-            GIT_COMMITTER_NAME='Phase 164 Test' GIT_COMMITTER_EMAIL=phase164@example.test \\
-              "$REAL_GIT" -C "$FIXTURE_REPO" commit -q -m 'advance head during authentication'
-          fi
-          exit "$status"
-          """
-        )
-
-        [
-          {"PATH", "#{shim_dir}:#{System.fetch_env!("PATH")}"},
-          {"GIT_COUNTER", counter},
-          {"FIXTURE_REPO", repo}
-          | env
-        ]
-      else
-        env
-      end
 
     Map.merge(fixture, %{
       installed: installed,
@@ -2678,7 +2707,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       "canonical repository is missing",
       "canonical repository path is not the compiled physical checkout",
       "canonical repository origin is not szTheory/mailglass",
-      "authenticated Phase 164 numbered history is not the exact 01-34",
+      "authenticated Phase 164 numbered history is not the exact 01-39",
       "canonical checkout is not on main"
     ]
 

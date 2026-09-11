@@ -196,7 +196,7 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   `:test` is consequently **discounted from the unknown-tag set when, and
   only when, the run carries a non-empty include set** — the exact signature
   of the `--only` pairing. It is deliberately NOT added to
-  `@known_exclusion_tags`: that attribute names the two sources that
+  `@known_exclusion_tags`: that attribute names the legitimate sources that
   legitimately withhold coverage, and `:test` is not one of them. A bare
   `--exclude test` with no include set still violates, which is right — it
   excludes the entire suite, nobody means it, and the executed floor catches
@@ -245,6 +245,7 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   @known_exclusion_tags MapSet.new([
                           :requires_workspace,
                           :public_only,
+                          :phase_164_proposal_boundary,
                           :phase_164_installed_production_boundary,
                           :flaky,
                           :migration_roundtrip
@@ -474,7 +475,8 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   The full set of exclusion tags a legitimate source
   (`advisory-matrix.yml`'s `--exclude requires_workspace`,
   `test_helper.exs`'s conditional `:public_only`, the repository-only CI
-  contract's `:phase_164_installed_production_boundary`, or the cold-start
+  contract's `:phase_164_proposal_boundary` and
+  `:phase_164_installed_production_boundary`, or the cold-start
   alias's `:flaky`/`:migration_roundtrip`) can produce. Used for the
   "unknown tag" direction of the both-directions check — a schema chooses a
   SUBSET of this set, never a tag outside it (see `expected_exclusion_tags/1`

@@ -8,6 +8,7 @@ set -euo pipefail
 : "${MAILGLASS_MIX:?missing validated MAILGLASS_MIX}"
 : "${MAILGLASS_NODE:?missing validated MAILGLASS_NODE}"
 : "${MAILGLASS_ELIXIR:?missing validated MAILGLASS_ELIXIR}"
+: "${MAILGLASS_ERL:?missing validated MAILGLASS_ERL}"
 
 canonical_repo=/Users/jon/projects/mailglass
 phase_rel=.planning/phases/164-repository-truth-reconciliation-and-closeout
@@ -15,7 +16,7 @@ ledger_rel="$phase_rel/164-TRUTH-DISPOSITION.tsv"
 registry_rel=.github/scheduled-controls.json
 expected_repository=szTheory/mailglass
 terminal_first_plan=1
-terminal_last_plan=34
+terminal_last_plan=39
 
 fail() {
   printf 'finalize-phase 164: %s\n' "$1" >&2
@@ -24,6 +25,16 @@ fail() {
 
 stable_porcelain() {
   "$MAILGLASS_GIT" -C "$1" status --porcelain=v1 --untracked-files=all 2>/dev/null || printf 'git_status_failed\n'
+}
+
+require_expected_authority() {
+  local repo="$1" expected_authority_oid="$2" observed
+
+  [[ "$expected_authority_oid" =~ ^[0-9a-f]{40}$ ]] || fail "expected authority OID is not a full lowercase commit OID"
+  "$MAILGLASS_GIT" -C "$repo" cat-file -e "$expected_authority_oid^{commit}" 2>/dev/null ||
+    fail "expected authority OID does not name a commit"
+  observed=$("$MAILGLASS_GIT" -C "$repo" rev-parse --verify 'HEAD^{commit}' 2>/dev/null || true)
+  [ "$observed" = "$expected_authority_oid" ] || fail "authority commit changed"
 }
 
 repository_identity_is_authoritative() {
@@ -232,19 +243,21 @@ raw_sources_are_acceptable() {
 }
 
 main() {
-  local repo_arg="${1:-}" authority_arg="${2:-}" mode_arg="${3:-}" mode=terminal
+  local repo_arg="${1:-}" authority_arg="${2:-}" expected_authority_oid="${3:-}" mode_arg="${4:-}" mode=terminal
   local repo authority_root phase_dir capture_dir inputs report runs_json ci_run_id main_sha branch porcelain
   local github_repository
   local closeout_status=0
 
-  [ "$#" -ge 2 ] && [ "$#" -le 3 ] || fail "usage: $0 REPO AUTHORITY_ROOT [--pre-verification]"
-  if [ "$#" -eq 3 ]; then
+  [ "$#" -ge 3 ] && [ "$#" -le 4 ] || fail "usage: $0 REPO AUTHORITY_ROOT EXPECTED_AUTHORITY_OID [--pre-verification]"
+  [[ "$expected_authority_oid" =~ ^[0-9a-f]{40}$ ]] || fail "expected authority OID is not a full lowercase commit OID"
+  if [ "$#" -eq 4 ]; then
     [ "$mode_arg" = "--pre-verification" ] || fail "unknown mode: $mode_arg"
     mode=pre-verification
   fi
 
   repo=$(cd "$repo_arg" 2>/dev/null && pwd -P) || fail "repository does not exist"
   [ "$repo" = "$canonical_repo" ] || fail "repository is not the canonical checkout"
+  require_expected_authority "$repo" "$expected_authority_oid"
   authority_root=$(cd "$authority_arg" 2>/dev/null && pwd -P) || fail "authenticated authority root does not exist"
   [ "$authority_root" != "$repo" ] || fail "authenticated authority root must be private"
   case "$(basename "$authority_root")" in mailglass-finalize-164-*) ;; *) fail "authenticated authority root is unexpected" ;; esac
@@ -264,9 +277,9 @@ main() {
     fail "GitHub repository identity is not $expected_repository"
 
   "$MAILGLASS_GIT" -C "$repo" fetch origin main >/dev/null || fail "git fetch origin main failed"
-  main_sha=$("$MAILGLASS_GIT" -C "$repo" rev-parse HEAD 2>/dev/null || true)
-  [[ "$main_sha" =~ ^[0-9a-f]{40}$ ]] || fail "HEAD is not a full commit SHA"
-  [ "$main_sha" = "$("$MAILGLASS_GIT" -C "$repo" rev-parse refs/remotes/origin/main 2>/dev/null || true)" ] ||
+  require_expected_authority "$repo" "$expected_authority_oid"
+  main_sha="$expected_authority_oid"
+  [ "$expected_authority_oid" = "$("$MAILGLASS_GIT" -C "$repo" rev-parse refs/remotes/origin/main 2>/dev/null || true)" ] ||
     fail "HEAD does not equal origin/main"
   [ -z "$(stable_porcelain "$repo")" ] || fail "stable porcelain changed after fetch"
 
@@ -301,13 +314,15 @@ main() {
     '{main_sha: $main_sha, ci_run_id: $ci_run_id}' >"$inputs_tmp"
   mv "$inputs_tmp" "$capture_dir/$inputs"
 
+  require_expected_authority "$repo" "$expected_authority_oid" || return 1
   set +e
   GH_HOST=github.com \
   GITHUB_REPOSITORY="$github_repository" \
   SCHEDULED_CONTROL_CONFIG="$authority_root/$registry_rel" \
-    "$authority_root/scripts/closeout_repository_truth.sh" \
+    "$MAILGLASS_BASH" "$authority_root/scripts/closeout_repository_truth.sh" \
     --repo "$repo" \
     --authority-root "$authority_root" \
+    --expected-main-sha "$expected_authority_oid" \
     --ledger "$repo/$ledger_rel" \
     --ci-run-id "$ci_run_id" \
     --output "$capture_dir/$report"
@@ -318,10 +333,10 @@ main() {
   raw_sources_are_acceptable "$capture_dir/$report" "$main_sha" "$repo/tmp" "$authority_root/$registry_rel" "$ci_run_id" ||
     fail "raw CI or scheduled evidence failed independent finalization validation"
 
-  revalidate_final_main "$repo" "$main_sha" "$capture_dir/$report" ||
+  revalidate_final_main "$repo" "$expected_authority_oid" "$capture_dir/$report" ||
     fail "protected main changed during finalization"
 
-  [ "$("$MAILGLASS_GIT" -C "$repo" rev-parse HEAD 2>/dev/null || true)" = "$main_sha" ] || fail "HEAD changed during finalization"
+  require_expected_authority "$repo" "$expected_authority_oid"
   [ -z "$(stable_porcelain "$repo")" ] || fail "stable porcelain changed during finalization"
   [ "$closeout_status" -eq 0 ] || fail "closeout preserved a non-pass report"
   [ "$("$MAILGLASS_JQ" -r '.status' "$capture_dir/$report")" = pass ] || fail "closeout report is not pass"

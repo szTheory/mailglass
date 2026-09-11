@@ -107,19 +107,20 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
     end
   end
 
-  test "SuiteFloor's known exclusion-tag allowlist is pinned to exactly the five current " <>
+  test "SuiteFloor's known exclusion-tag allowlist is pinned to exactly the six current " <>
          "sources (D-14)" do
     assert MapSet.new(SuiteFloor.known_exclusion_tags()) ==
              MapSet.new([
                :requires_workspace,
                :public_only,
+               :phase_164_proposal_boundary,
                :phase_164_installed_production_boundary,
                :flaky,
                :migration_roundtrip
              ]),
-           "SuiteFloor.known_exclusion_tags/0 drifted from the five documented sources " <>
+           "SuiteFloor.known_exclusion_tags/0 drifted from the six documented sources " <>
              "(advisory-matrix.yml's --exclude requires_workspace; test_helper.exs's " <>
-             "conditional :public_only; verify.ci_lane_contract's controlled-host exclusion; " <>
+             "conditional :public_only; verify.ci_lane_contract's proposal and controlled-host exclusions; " <>
              "verify.cold_start's :flaky/:migration_roundtrip exclusions) " <>
              "— a legitimate new source must update this guard " <>
              "deliberately, not silently."
@@ -646,7 +647,7 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
     mix_exs = File.read!(Path.join(repo_root, "mix.exs"))
 
     assert mix_exs =~
-             "test test/scripts/ --exclude phase_164_installed_production_boundary --warnings-as-errors",
+             "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors",
            "verify.ci_lane_contract's directory glob (test test/scripts/) must still exist " <>
              "for this file to be auto-collected into the required mix_task_tests lane"
   end

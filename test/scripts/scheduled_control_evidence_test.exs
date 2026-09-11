@@ -285,7 +285,7 @@ defmodule Mailglass.Scripts.ScheduledControlEvidenceTest do
     refute ci =~ "mix verify.phase_164.installed_boundary"
 
     assert Keyword.fetch!(aliases, :"verify.ci_lane_contract") == [
-             "test test/scripts/ --exclude phase_164_installed_production_boundary --warnings-as-errors"
+             "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
            ]
 
     assert Keyword.fetch!(aliases, :"verify.phase_164.installed_boundary") == [
