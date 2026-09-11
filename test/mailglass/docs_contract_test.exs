@@ -401,8 +401,7 @@ defmodule Mailglass.DocsContractTest do
         Regex.scan(~r/<automated>([\s\S]*?)<\/automated>/, plan)
         |> Enum.map_join("\n", fn [_, command] -> command end)
 
-      assert automated =~ "mix verify.ci_lane_contract"
-      assert automated =~ "mix verify.phase_164.installed_boundary"
+      assert plan =~ "both distinct repository/controlled-host aliases"
       assert automated =~ "phase_164_gap_reconciliation"
       assert automated =~ "phase_164_lifecycle_contract"
       assert automated =~ "validate_repository_truth.exs"

@@ -203,11 +203,33 @@ terminal finalization remains pending. The authorized order remains ordinary
 verifier → completion-only metadata → protected main → exact attempt-one CI
 and natural schedules → terminal ignored capture → no later tracked write.
 
+## Plan 164-34 reconciled handoff
+
+Plan 164-34 records the active Plan 164-32 approval and Plan 164-33 installed
+tuple without changing either external object. The installed loader and tracked
+source authenticate the exact PLAN/SUMMARY pair set 01 through 34. Plan 164-27
+remains prior provenance through its approval digest, source OID, installed
+digest, and verified rollback object; it is not a second active authority.
+
+The Plan 164-29/33 controlled-host proof and the Plan 164-29 repository-only CI
+proof are distinct: `mix verify.phase_164.installed_boundary` reads the real
+approved installation, while `mix verify.ci_lane_contract` excludes that host
+tag and retains disposable attacks. Neither is ordinary verification,
+protected completion metadata, exact-main remote evidence, or terminal
+capture. No terminal run occurred during Plan 164-34.
+
+Plan 164-34 and `164-34-SUMMARY.md` finish before ordinary verification. Only
+the later completion-metadata lifecycle may then write the four authorized
+tracked paths before protected-main integration. T-164-109 remains high and
+pending until the exact protected SHA receives attempt-1 push CI and natural
+schedules, the installed command captures ignored terminal evidence, and no
+later tracked write occurs.
+
 ## Tracked completion and terminal order
 
 The only authorized closeout sequence is:
 
-1. Plan 164-28 implementation commits land, then `164-28-SUMMARY.md exists before ordinary verification`.
+1. Plan 164-34 implementation commits land, then `164-34-SUMMARY.md exists before ordinary verification`.
 2. The ordinary verifier writes `status: passed` and the exact `verified_implementation_sha` it evaluated.
 3. After that verified SHA, only the four authorized completion metadata paths may change.
 4. Those completion records reach protected `main`.
@@ -215,7 +237,7 @@ The only authorized closeout sequence is:
 6. `/Users/jon/.local/bin/mailglass-finalize-phase 164` writes ignored `tmp/phase-164-closeout/` evidence only.
 7. No summary, planning update, commit, push, merge, release, publication, dispatch, or rerun follows the capture.
 
-Plan 164-28 stops after establishing readiness for this sequence. It does not
+Plan 164-34 stops after establishing readiness for this sequence. It does not
 execute steps 2 through 7 and does not claim that a terminal report exists.
 
 ## Terminal operational proof

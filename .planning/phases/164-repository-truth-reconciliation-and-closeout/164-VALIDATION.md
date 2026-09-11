@@ -5,12 +5,12 @@ status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-08-26
-revised: 2026-09-10
+revised: 2026-09-11
 ---
 
 # Phase 164 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution. The contract covers the exact PLAN/SUMMARY pair set 01 through 28 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
+> Per-phase validation contract for feedback sampling during execution. The contract covers the exact PLAN/SUMMARY pair set 01 through 34 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
 
 ---
 
@@ -32,7 +32,7 @@ revised: 2026-09-10
 - **After every plan wave:** Run `mix ci.fast` after all implementation tasks in the wave are integrated; run the focused closeout/scheduled contracts after Waves 8 and 9.
 - **Pre-verification checkpoint:** Plan 164-14 ran the then-current pre-verification command after the Plan 164-13 adversarial regression locks reached protected main. Plans 164-16 through 164-24 subsequently changed tracked documentation, trust-anchor implementation, installation state, and tests, so that older capture remains explicitly non-terminal; refreshed ordinary verification must evaluate the repaired implementation through Plan 164-24 before terminal finalization.
 - **Plans 164-21 through 164-24:** No task ran canonical pre-verification or terminal finalization. These plans proved immutable source, exact history, installed identity, and adversarial subprocess behavior only.
-- **Plans 164-25 through 164-28:** These plans establish repaired implementation and record readiness only. Their test commands do not invoke canonical pre-verification or terminal finalization.
+- **Plans 164-25 through 164-34:** These plans establish repaired implementation, approved installed-loader readiness, bounded repository-truth diagnostics, and reconciled records only. Their test commands do not invoke canonical pre-verification or terminal finalization.
 - **Verified implementation lifecycle:** Plan 164-15 requires the ordinary verifier to record the exact implementation commit as `verified_implementation_sha`. Terminal finalization accepts only an ancestor SHA and inspects every subsequent first-parent commit relative to its first parent against the four exact completion-metadata paths, so change-then-revert source history remains visible.
 - **After normal execute-phase metadata:** Integrate all Phase 164 SUMMARY files and the tracked VERIFICATION, ROADMAP, STATE, and REQUIREMENTS completion updates before terminal capture.
 - **Post-execution finalization:** Run `/Users/jon/.local/bin/mailglass-finalize-phase 164` outside phase-plan-index after the final tracked SHA receives attempt-1 normal push CI and naturally scheduled attempt-1 exact-SHA evidence. The gate writes ignored runtime artifacts only and permits no later tracked commit.
@@ -92,57 +92,63 @@ revised: 2026-09-10
 | 164-27-03 | 164-27 | 25 | TRTH-03 | T-164-106, T-164-107, T-164-108 | Installed bytes match the approved source and reject foreign repository, forged PATH, moving HEAD, and incomplete history attacks | `phase_164_installed_production_boundary` | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix verify.phase_164.installed_boundary` | absolute installed executable and controlled-host attack matrix | ✅ green (5 selected, 44 excluded, 0 failures) |
 | 164-28-01 | 164-28 tracer | 26 | TRTH-01, TRTH-02, TRTH-03 | T-164-105 through T-164-109 | Durable validation/security records bind each repaired finding to its production seam and observed regression without claiming terminal completion | `phase_164_gap_reconciliation` | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/mailglass/docs_contract_test.exs test/scripts/phase_164_closeout_test.exs --only phase_164_gap_reconciliation --warnings-as-errors --no-deps-check` | this record, `164-SECURITY.md`, docs contract | ✅ green after record reconciliation |
 | 164-28-02 | 164-28 | 26 | TRTH-01, TRTH-02, TRTH-03 | T-164-106, T-164-107, T-164-109 | Exact 01-28 lifecycle contract keeps terminal execution after summary, verifier, protected completion metadata, exact CI, and natural schedules | `phase_164_lifecycle_contract` plus complete phase suite | Plan 164-28 Task 2 command | `164-FINALIZATION.md`, this record, docs contract | ✅ green tracked readiness; terminal evidence remains pending |
+| 164-29-01 | 164-29 tracer | 27 | TRTH-03 | T-164-110, T-164-111 | The real installed tuple is authenticated from its approval, Git blob, ancestry, regular-file mode, digest, and direct self-check | `phase_164_installed_production_boundary` | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix verify.phase_164.installed_boundary` | controlled-host approval/install proof | ✅ green (current rerun: 7 selected, 54 excluded, 0 failures) |
+| 164-29-02 | 164-29 | 27 | TRTH-03 | T-164-112, T-164-113 | Every root repository/protected suite excludes the controlled-host tag while retaining all disposable source-loader attacks | exhaustive repository-only lane | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix verify.ci_lane_contract` | root ExUnit exclusion plus recursive alias/workflow contract | ✅ green (current rerun: 396 selected, 7 excluded, 0 failures) |
+| 164-30-01 | 164-30 tracer | 28 | TRTH-02 | T-164-114, T-164-115, T-164-116 | An empty authority root returns one bounded tagged relative diagnostic and exit 1 without fallback or stack trace | `phase_164_incomplete_authority_root` | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_repository_truth_test.exs --only phase_164_incomplete_authority_root --warnings-as-errors --no-deps-check` | standalone CLI and disposable authority roots | ✅ green (current rerun: 3 selected, 25 excluded, 0 failures) |
+| 164-30-02 | 164-30 | 28 | TRTH-02 | T-164-114 through T-164-117 | Declared-order lstat/read results preserve deterministic first-missing behavior for partial, wrong-type, symlink, unreadable, and malformed roots | same non-vacuous focused group plus complete repository-truth suite | Plan 164-30 Task 2 command | shared validator and ordered negative controls | ✅ green |
+| 164-31-01 | 164-31 tracer | 29 | TRTH-03 | T-164-118, T-164-120 | Loader and shell authenticate exactly one PLAN/SUMMARY pair for every number 01-34 and reject missing, extra, or malformed members | loader/shell terminal-range contracts | Plan 164-31 Task 1 command | tracked loader, shell, and hostile histories | ✅ green |
+| 164-31-02 | 164-31 | 29 | TRTH-03 | T-164-119 | Changed 01-34 bytes remain superseded-pending until a new immutable tuple is approved and installed | lifecycle docs contract | Plan 164-31 Task 2 command | `164-FINALIZATION.md` | ✅ green; no installation or finalization |
+| 164-32-01 | 164-32 tracer | 30 | TRTH-03 | T-164-121, T-164-123, T-164-124 | One non-mutating proposal binds committed source, trusted tools, exact prior installed identity, and absent rollback target | approval preflight | Plan 164-32 Task 1 command | private mode-0400 proposal | ✅ proposal observed |
+| 164-32-02 | 164-32 checkpoint | 30 | TRTH-03 | T-164-122, T-164-124 | Human approval is byte-for-byte proposal parity plus one exact approval line | blocking approval verification | Plan 164-32 Task 2 verification | private mode-0400 approval | ✅ exact approval observed; no install |
+| 164-33-01 | 164-33 | 30 | TRTH-03 | T-164-125, T-164-126, T-164-128 | Approved bytes are installed atomically only after exact rollback preservation; inspection modes run without terminal execution | installation/rollback checks | Plan 164-33 Task 1 command | active mode-0500 install and mode-0400 rollback | ✅ readiness observed |
+| 164-33-02 | 164-33 tracer | 30 | TRTH-03 | T-164-127, T-164-128 | Active installed authority matches the Plan 164-32 tuple and exact 01-34 range while repository CI stays host-independent | both distinct aliases | `mix verify.phase_164.installed_boundary` and `mix verify.ci_lane_contract` | controlled-host proof plus repository-only isolation | ✅ green (7/54 controlled-host; 396/7 repository-only) |
+| 164-34-01 | 164-34 tracer | 31 | TRTH-01, TRTH-02, TRTH-03 | T-164-129, T-164-131, T-164-109 | Durable validation/security/lifecycle records bind current production seams and preserve pending terminal ordering | `phase_164_gap_reconciliation` and `phase_164_lifecycle_contract` | Plan 164-34 Task 1 command | this record, security/finalization records, docs contract | in progress; terminal evidence remains pending |
+| 164-34-02 | 164-34 | 31 | TRTH-02 | T-164-130, T-164-132 | Completed-plan subjects remain exact-one with current provenance and canonical relationships; incomplete roots retain bounded diagnostics | complete repository-truth contract and canonical validator | Plan 164-34 Task 2 command | ledger, validator, repository-truth test | pending Task 2 |
 | 164-FINAL | post-execution gate | after phase.complete integration | TRTH-03 | T-164-40, T-164-41, T-164-42, T-164-43, T-164-44 | Final protected metadata SHA has attempt-1 normal push CI, attempt-1 natural schedules, ignored identity/report state, independently verified raw sources, and no later tracked commit | live lifecycle gate | `/Users/jon/.local/bin/mailglass-finalize-phase 164` | ignored `finalization-inputs.json`, report, CI source, scheduled source | ⚠️ external terminal capture pending |
 
 *Status: ✅ automated capability green · ⚠️ external evidence still required*
 
 ---
 
-## Gap Reconciliation — Plans 164-25 through 164-28
+## Gap Reconciliation — Plans 164-29 through 164-34
 
-This assessment supersedes the contradicted installed-boundary closure claims
-recorded before the Plan 164-25 through 164-27 repairs. The finding IDs remain
-unchanged audit history; closure below means the named production seam and
-active regression were observed after the repair. It does not mean terminal
-protected-main finalization has run.
+This assessment supersedes the stale fixture-backed and raising-path evidence
+that remained after Plan 164-28. It reports fresh production-seam behavior from
+the completed Plans 164-29, 164-30, and 164-33 repairs. Every command exited 0
+with a nonzero selected count. These results are implementation and installation
+readiness evidence only; terminal protected-main finalization has not run.
 
-| Finding | Plan / task | Production seam | Named active regression and exact command | Observed result | Failure direction | Security disposition |
-|---------|-------------|-----------------|-------------------------------------------|-----------------|-------------------|----------------------|
-| CR-01 | 164-25-01 / 164-25-02 | `verify.ci_lane_contract` excludes only the controlled-host tag; `verify.phase_164.installed_boundary` owns host proof | `phase_164_ci_hermeticity`; `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix verify.ci_lane_contract` | 380 selected, 5 excluded, 0 failures | Removing/narrowing the required repository lane or reintroducing installed files makes alias, CI-parity, SuiteFloor, or required-lane tests fail. | T-164-105 closed by observed repository-only CI evidence. |
-| CR-02 | 164-26-01 / 164-27-03 | loader-owned `/Users/jon/projects/mailglass` real path plus normalized `szTheory/mailglass` origin is checked before enumeration | `phase_164_canonical_loader`; `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_canonical_loader --warnings-as-errors --no-deps-check` | 1 selected, 48 excluded, 0 failures; installed attack matrix also passed | Caller cwd, argv, or environment cannot select a foreign authority; foreign repositories fail before private Bash dispatch. | T-164-106 closed by canonical-loader and installed-boundary rejection evidence. |
-| CR-03 | 164-26-02 / 164-27-03 | validated absolute Node/Git/Bash/gh/jq/Mix/Elixir identities and allowlisted child environment | `phase_164_trusted_toolchain`; `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_trusted_toolchain --warnings-as-errors --no-deps-check` | 3 selected, 46 excluded, 0 failures | A seven-tool forged caller PATH never executes its marker programs; unexpected tool identity fails before repository authentication or dispatch. | T-164-107 closed by observed forged-tool rejection. |
-| WR-01 | 164-26-02 / 164-27-01 / 164-27-03 | self-check requires installation OID ancestry plus source/installed byte equality | `phase_164_reinstall_contract`; `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_closeout_test.exs --only phase_164_reinstall_contract --warnings-as-errors --no-deps-check`; then controlled-host alias | 3 selected, 46 excluded, 0 failures; 5 selected, 44 excluded, 0 failures | A byte-identical loader from unrelated history fails ancestry; any approved tuple, installed digest, or rollback identity drift fails closed. | T-164-108 closed by ancestry, reinstall, and installed-boundary evidence. |
+| Finding | Repair / production seam | Named active regression and exact command | Observed result | Failure direction | Security disposition |
+|---------|--------------------------|-------------------------------------------|-----------------|-------------------|----------------------|
+| GR-29 | Plans 164-29/33 real installed tuple proof; direct `/Users/jon/.local/bin/mailglass-finalize-phase` inspection against the exact Plan 164-32 approval | `phase_164_installed_production_boundary`; `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix verify.phase_164.installed_boundary` | 7 selected, 54 excluded, 0 failures, exit 0 | Missing/malformed approval, non-regular or wrong-mode objects, digest/OID/ancestry drift, incomplete 01-34 history, or self-check disagreement fails nonzero. | T-164-110 through T-164-113 and T-164-125 through T-164-128 closed by controlled-host evidence. |
+| GR-30 | Plan 164-30 ordered non-raising authority-root discovery | `phase_164_incomplete_authority_root`; `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/scripts/phase_164_repository_truth_test.exs --only phase_164_incomplete_authority_root --warnings-as-errors --no-deps-check` | 3 selected, 25 excluded, 0 failures, exit 0; empty CLI fixture emits bounded `repository_truth: missing_ignore_subject` data with no stack trace | Empty, incomplete, wrong-type, symlinked, unreadable, or malformed roots return deterministic tagged errors and never fall back to canonical files. | T-164-114 through T-164-117 closed; T-164-132 remains enforced by the same bounded diagnostic seam. |
+| GR-33 | Plans 164-29/33 exhaustive full-suite isolation; root ExUnit default exclusion plus recursive alias/workflow checks | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix verify.ci_lane_contract` | 396 selected, 7 excluded, 0 failures, exit 0 | Any unfiltered repository/protected entry point that can collect the host tag, or removal of a disposable attack, fails the alias/workflow/SuiteFloor contracts. | T-164-112 and T-164-113 closed by repository-only CI evidence. |
 
-Observed installation identity: approved source OID
-`2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97`; source and installed
-SHA-256
-`0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e`.
-The superseded installed object remains recoverable at SHA-256
+The active controlled-host installed tuple is Plan 164-32 source OID
+`1cfee7802de808f690fe5413b22a57e7ab802488` with source/installed SHA-256
+`f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`
+and mode 0500. Plan 164-27 prior provenance remains immutable at source OID
+`2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97`; its installed bytes remain
+recoverable with SHA-256
+`0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e`,
+and the older Plan 164-23 object retains SHA-256
 `ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9`.
-These are controlled-host installation facts, not terminal protected-main
-evidence.
+None of these controlled-host facts is ordinary verification or terminal
+protected-main evidence.
 
-Plans 164-25 through 164-27 close the four implementation findings. Plan
-164-28 reconciles the durable records and exact lifecycle contract. Ordinary
-verification must next evaluate the complete tracked implementation, after
-which only protected completion metadata may change before integration to
-protected `main`. Until exact attempt-1 normal push CI and natural exact-SHA
-scheduled evidence authorize the installed terminal command, terminal
-protected-main evidence remains absent and pending.
+### Terminal handoff after Plan 164-34
 
-### Terminal handoff after Plan 164-28
-
-The tracked closeout now covers the exact PLAN/SUMMARY pair set 01 through 28
-and the installed loader approved from source OID
-`2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97`. Plan verification commands do
-not invoke either finalization mode. After `164-28-SUMMARY.md` is committed,
-the ordinary verifier must record `status: passed` and its exact
-`verified_implementation_sha`; only the four authorized completion metadata
-paths may then change before those records reach protected `main`. That exact
-SHA must receive attempt-1 normal push CI and naturally produced attempt-1
-scheduled evidence before the installed terminal command writes its ignored
-report. No later tracked write is authorized. This is a pending handoff, not a
-claim that terminal finalization has run or that a terminal report exists.
+The tracked closeout covers the exact PLAN/SUMMARY pair set 01 through 34.
+Plan 164-34 and `164-34-SUMMARY.md` finish before ordinary verification. The
+ordinary verifier must then record `status: passed` and its exact
+`verified_implementation_sha`; only protected completion metadata may follow,
+limited to the four authorized completion paths, before those records reach
+protected `main`. That exact protected SHA must receive attempt-1 normal push
+CI and naturally produced attempt-1 scheduled evidence before the installed
+command may write its ignored terminal capture. No later tracked write is
+authorized. T-164-109 therefore remains high and pending: terminal
+protected-main evidence remains absent and pending, no terminal run occurred,
+and this record makes no phase or requirement completion claim.
 
 ---
 
@@ -187,7 +193,7 @@ claim that terminal finalization has run or that a terminal report exists.
 
 ### Planning-contract completeness
 
-- [x] All executor tasks across all twenty-four plans have an automated verification row, plus one explicit terminal post-execution lifecycle gate.
+- [x] All executor tasks across all thirty-four plans have an automated verification row, plus one explicit terminal post-execution lifecycle gate.
 - [x] The tracer-created repository-truth test, Plan 164-04 expansion, Plan 164-05 test/wrapper and usage contract, Plan 164-06 checkpoint, and Plan 164-07 exact-main report are explicitly mapped.
 - [x] TRTH-01 and TRTH-02 retain completed task-level coverage; TRTH-03 maps through the freshness repair, tracked lifecycle contract, and terminal post-execution raw-source gate.
 - [x] Sampling continuity has no three consecutive tasks without automated feedback.
@@ -214,6 +220,9 @@ claim that terminal finalization has run or that a terminal report exists.
 - [x] Plan 164-19 dispatcher and transitive-chain contracts pass eight selected real-handler tests, authenticate the lexical Phase 164 selector plus the closed HEAD dependency manifest before Bash, and clean the private authority root before every outcome.
 - [x] Plan 164-20 documentation reconciliation maps the repaired seams and preserves terminal finalization as a separately governed post-execution action.
 - [x] Plans 164-21 through 164-24 close the immutable-OID, exact-history, pre-evaluation authority, installation provenance, and installed-boundary regression gaps without running canonical pre-verification or terminal finalization.
+- [x] Plans 164-25 through 164-28 repaired CI hermeticity, repository/tool authority, installation ancestry, and their first durable reconciliation without terminal execution.
+- [x] Plans 164-29 through 164-33 replaced fixture proof with the real installed tuple, made every repository/protected suite host-independent, bounded incomplete-authority diagnostics, advanced exact history to 01-34, and approved/installed the current loader while preserving rollback provenance.
+- [ ] Plan 164-34 summary and its complete repository-truth verification must finish before ordinary Phase 164 verification.
 - [ ] All tracked Phase 164 summaries and phase.complete metadata have reached protected main before terminal `/finalize-phase 164` runs.
 - [ ] The final ignored report and raw CI/scheduled sources pass independent verification with no later tracked commit.
 
