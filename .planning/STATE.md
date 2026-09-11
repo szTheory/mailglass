@@ -5,18 +5,18 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-33-PLAN.md; ready for 164-34
-last_updated: "2026-09-11T04:39:33.409Z"
+stopped_at: Completed 164-34-PLAN.md; ready for ordinary Phase 164 verification
+last_updated: "2026-09-11T05:12:09Z"
 last_activity: 2026-09-11
-last_activity_desc: Completed Plan 164-33 approved loader installation and active boundary proof
-state_head: 0920cc9eae4ece226df20458f217225c56fd6995
+last_activity_desc: Completed Plan 164-34 repair evidence and ledger reconciliation; terminal lifecycle remains pending
+state_head: 60eecec87eb666d11c66d88bf99fa7d0c145c96b
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 60
-  completed_plans: 56
+  completed_plans: 57
   percent: 75
-current_plan: 33
+current_plan: 34
 ---
 
 # Project State
@@ -31,17 +31,17 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
-Plan: 33 of 34
-Status: Ready to execute Plan 164-34
-Last activity: 2026-09-11 — Completed Plan 164-33 approved loader installation and active boundary proof
+Plan: 34 of 34
+Status: Plan execution complete; ready for ordinary Phase 164 verification (phase and terminal completion pending)
+Last activity: 2026-09-11 — Completed Plan 164-34 repair evidence and ledger reconciliation
 
-Progress: [████████░░] 56/60 plans complete ([████████░░] 75%)
+Progress: [████████░░] 57/60 plans complete ([████████░░] 75%)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 34
+- Total plans completed: 35
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -52,7 +52,7 @@ Progress: [████████░░] 56/60 plans complete ([████�
 | 161. Canonical Workspace and Evidence Preservation | 5 | 72m | 14m |
 | 162. Protected Release and Scheduled-Control Recovery | 13 | — | — |
 | 163. Deterministic Release-Path Timeout Repairs | 8 | — | — |
-| 164. Repository Truth Reconciliation and Closeout | 11 | 28m | 3m |
+| 164. Repository Truth Reconciliation and Closeout | 12 | 53m | 4m |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -114,6 +114,7 @@ Progress: [████████░░] 56/60 plans complete ([████�
 | Phase 164-repository-truth-reconciliation-and-closeout P31 | 16min | 2 tasks | 4 files |
 | Phase 164 P32 | 34min | 2 tasks | 5 files |
 | Phase 164 P33 | 17min | 2 tasks | 5 files |
+| Phase 164 P34 | 25min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -201,6 +202,9 @@ Progress: [████████░░] 56/60 plans complete ([████�
 - [Phase 164]: Plan 164-27 bytes remain recoverable only through the exact private mode-0400 digest-addressed rollback; they are not a second active authority.
 - [Phase 164]: Controlled-host assertions remain isolated in the installed-boundary alias while disposable repository attacks remain repository-only.
 - [Phase 164]: TRTH-03, Phase 164 completion, protected-main integration, and terminal finalization remain pending after Plan 164-33.
+- [Phase 164]: Repository-only CI, controlled-host installation readiness, ordinary verification, protected completion metadata, exact-main remote evidence, and terminal capture remain separate ordered authorities.
+- [Phase 164]: The active installed authority is the exact Plan 164-32 tuple proven by Plan 164-33; Plan 164-27 remains immutable prior provenance only.
+- [Phase 164]: Plan 164-34 completes execute-plan reconciliation without completing TRTH-01/02/03 or Phase 164; T-164-109 and terminal no-later-write evidence remain pending.
 
 ## Deferred Items
 
@@ -210,6 +214,6 @@ Progress: [████████░░] 56/60 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-11T04:39:33.178Z
-Stopped at: Completed 164-33-PLAN.md; ready for 164-34
+Last session: 2026-09-11T05:12:09Z
+Stopped at: Completed 164-34-PLAN.md; ready for ordinary Phase 164 verification
 Resume file: None

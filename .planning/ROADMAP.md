@@ -190,9 +190,9 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 34 total (28 executed; 6 gap-closure plans pending)
+**Plans**: 34/34 plans executed
 
-**Completion state**: Phase and TRTH-01/TRTH-02/TRTH-03 completion remain pending until Plans 29–34 execute, their summaries and completion tracking reach protected `main`, and the installed terminal command completes.
+**Completion state**: All plans now have execution summaries. Phase and TRTH-01/TRTH-02/TRTH-03 completion remain pending until ordinary verification passes, completion-only tracking reaches protected `main`, exact-main CI/natural schedules are observed, and the installed terminal command completes with no later tracked write.
 
 Plans:
 
@@ -321,7 +321,7 @@ Plans:
 
 **Wave 31** *(blocked on validator repair and verified installed authority)*
 
-- [ ] 164-34-PLAN.md — Reconcile validation, security, lifecycle, and ledger records to the completed repairs while leaving terminal evidence pending.
+- [x] 164-34-PLAN.md — Reconcile validation, security, lifecycle, and ledger records to the completed repairs while leaving terminal evidence pending.
 
 **Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
 
@@ -336,4 +336,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 33/34 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 34/34 | In Progress |  |
