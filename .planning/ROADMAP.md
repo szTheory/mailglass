@@ -309,7 +309,7 @@ Plans:
 
 **Wave 28** *(blocked on controlled-host and suite-boundary repair)*
 
-- [ ] 164-31-PLAN.md — Advance authenticated terminal history through the exact Plan 01–34 pair set and mark changed installed bytes pending reapproval.
+- [x] 164-31-PLAN.md — Advance authenticated terminal history through the exact Plan 01–34 pair set and mark changed installed bytes pending reapproval.
 
 **Wave 29** *(blocking-human installation checkpoint; blocked on exact-history authority)*
 
@@ -336,4 +336,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 30/34 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 31/34 | In Progress|  |

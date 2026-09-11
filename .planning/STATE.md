@@ -5,18 +5,18 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-30-PLAN.md; ready for 164-31
-last_updated: "2026-09-11T03:15:50.297Z"
+stopped_at: Completed 164-31-PLAN.md; ready for 164-32
+last_updated: "2026-09-11T03:32:46.436Z"
 last_activity: 2026-09-10
 last_activity_desc: Completed Plan 164-30 bounded incomplete-authority diagnostics
-state_head: 602137de8f97f77ebde3e0abeb43eff576625628
+state_head: 415ee9375dfa02bcdfc9cf2e2ffcc044958be5a3
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 60
-  completed_plans: 53
+  completed_plans: 54
   percent: 75
-current_plan: 30
+current_plan: 31
 ---
 
 # Project State
@@ -31,11 +31,11 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
-Plan: 30 of 34
-Status: Ready to execute Plan 164-31
-Last activity: 2026-09-10 — Completed Plan 164-30 bounded incomplete-authority diagnostics
+Plan: 31 of 34
+Status: Ready to execute Plan 164-32
+Last activity: 2026-09-10 — Completed Plan 164-31 exact 01-34 history and superseded installation contract
 
-Progress: [████████░░] 53/60 plans complete ([████████░░] 75%)
+Progress: [████████░░] 54/60 plans complete ([████████░░] 75%)
 
 ## Performance Metrics
 
@@ -111,6 +111,7 @@ Progress: [████████░░] 53/60 plans complete ([████�
 | Phase 164 P28 | 23min | 2 tasks | 9 files |
 | Phase 164 P29 | 15min | 2 tasks | 4 files |
 | Phase 164 P30 | 11min | 2 tasks | 3 files |
+| Phase 164-repository-truth-reconciliation-and-closeout P31 | 16min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -190,6 +191,8 @@ Progress: [████████░░] 53/60 plans complete ([████�
 - [Phase 164]: Disposable loader attacks remain repository-only tests and discover Node through the active test environment rather than a version-specific launcher.
 - [Phase 164]: Authority ignore subjects now use declared-order lstat and non-raising reads, returning missing_authority_subject for absent/non-regular inputs and unreadable_authority_subject only for regular-file read failures.
 - [Phase 164]: Plan 164-29 test/test_helper.exs is exact-one ledger subject M-34 so completed-plan discovery remains canonical after summary activation.
+- [Phase 164]: Phase 164 terminal history remains one singular exact PLAN/SUMMARY pair set; its explicit authenticated bound advances from 28 to 34. — Exact numeric source constants, not globs or planning prose, define terminal membership.
+- [Phase 164]: The Plan 164-27 installation is preserved prior proof but is superseded-pending until Plans 164-32 and 164-33 approve and install the changed loader bytes. — Tracked byte drift invalidates current installed readiness without rewriting prior provenance.
 
 ## Deferred Items
 
@@ -199,6 +202,6 @@ Progress: [████████░░] 53/60 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-11T03:15:50.057Z
-Stopped at: Completed 164-30-PLAN.md; ready for 164-31
+Last session: 2026-09-11T03:32:46.166Z
+Stopped at: Completed 164-31-PLAN.md; ready for 164-32
 Resume file: None
