@@ -315,6 +315,76 @@ defmodule Mailglass.DocsContractTest do
       end
     end
 
+    @tag :phase_164_lifecycle_contract
+    test "Phase 164 loader, shell, validation, and finalization agree on exact 01 through 28 history" do
+      loader = File.read!("scripts/mailglass_finalize_phase_loader.mjs")
+      shell = File.read!("scripts/finalize_phase_164.sh")
+
+      records =
+        for name <- ["164-VALIDATION.md", "164-FINALIZATION.md"] do
+          File.read!(
+            Path.join(
+              ".planning/phases/164-repository-truth-reconciliation-and-closeout",
+              name
+            )
+          )
+        end
+
+      assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 28"
+      assert shell =~ "terminal_first_plan=1"
+      assert shell =~ "terminal_last_plan=28"
+
+      for record <- records do
+        assert record =~ "exact PLAN/SUMMARY pair set 01 through 28"
+        refute record =~ "exact 01-24"
+        refute record =~ "Plans 01-20 are the executed baseline"
+      end
+    end
+
+    @tag :phase_164_lifecycle_contract
+    test "Phase 164 records lock the terminal no-later-write lifecycle" do
+      finalization =
+        File.read!(
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
+        )
+        |> then(&Regex.replace(~r/\s+/, &1, " "))
+
+      for token <- [
+            "164-28-SUMMARY.md exists before ordinary verification",
+            "status: passed",
+            "verified_implementation_sha",
+            "only the four authorized completion metadata paths",
+            "protected `main`",
+            "attempt-1 normal push CI",
+            "naturally produced attempt-1 scheduled evidence",
+            "/Users/jon/.local/bin/mailglass-finalize-phase 164",
+            "No summary, planning update, commit, push, merge, release, publication, dispatch, or rerun follows the capture"
+          ] do
+        assert finalization =~ token,
+               "164-FINALIZATION.md is missing lifecycle contract #{inspect(token)}"
+      end
+    end
+
+    @tag :phase_164_lifecycle_contract
+    test "Plan 164-28 verification proves readiness without invoking either finalization mode" do
+      plan =
+        File.read!(
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-28-PLAN.md"
+        )
+
+      automated =
+        Regex.scan(~r/<automated>([\s\S]*?)<\/automated>/, plan)
+        |> Enum.map_join("\n", fn [_, command] -> command end)
+
+      assert automated =~ "make toolchain"
+      assert automated =~ "mix verify.ci_lane_contract"
+      assert automated =~ "mix verify.phase_164.installed_boundary"
+      assert automated =~ "validate_repository_truth.exs"
+      refute automated =~ "mailglass-finalize-phase 164"
+      refute automated =~ "--pre-verification"
+    end
+
     test "B2C first-adopter profile locks the safe consumer launch contract" do
       guide = File.read!("guides/b2c-first-adopter.md")
       blocks = extract_code_blocks("guides/b2c-first-adopter.md")
