@@ -31,6 +31,26 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     "test/example/.gitignore"
   ]
   @locked_digest "331810b4b1724452f0e2707c800230e52fabea01c3773d362b3a1240040ece7e"
+  @repair_plan_evidence %{
+    Path.join(@phase_dir, "164-FINALIZATION.md") =>
+      "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md",
+    Path.join(@phase_dir, "164-SECURITY.md") => "git ls-files; 164-34-PLAN.md",
+    Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv") =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
+    Path.join(@phase_dir, "164-VALIDATION.md") => "git ls-files; 164-34-PLAN.md",
+    "scripts/finalize_phase_164.sh" => "git ls-files; 164-31-PLAN.md",
+    "scripts/mailglass_finalize_phase_loader.mjs" => "git ls-files; 164-31-PLAN.md",
+    "scripts/validate_repository_truth.exs" => "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
+    "test/mailglass/docs_contract_test.exs" => "git ls-files; 164-34-PLAN.md",
+    "test/scripts/ci_parity_drift_test.exs" =>
+      "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-29-PLAN.md",
+    "test/scripts/phase_164_closeout_test.exs" =>
+      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md",
+    "test/scripts/phase_164_repository_truth_test.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
+    "test/scripts/scheduled_control_evidence_test.exs" => "git ls-files; 164-29-PLAN.md",
+    "test/test_helper.exs" => "git ls-files; 164-29-PLAN.md; 164-29-SUMMARY.md"
+  }
 
   test "parses and validates the authoritative twelve-column ledger" do
     contents = File.read!(@ledger)
@@ -247,6 +267,49 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       assert row["state"] == "tracked"
       assert row["currentness"] == "current"
       assert row["disposition"] == "retain"
+    end
+  end
+
+  describe "phase 164 repair-plan ledger reconciliation" do
+    @describetag :phase_164_repair_plan_ledger
+
+    test "Plans 164-29 through 164-34 activate exactly one current row per tracked subject" do
+      assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+
+      declared_subjects =
+        29..34
+        |> Enum.flat_map(&plan_modified_files/1)
+        |> MapSet.new()
+
+      assert declared_subjects == MapSet.new(Map.keys(@repair_plan_evidence))
+
+      for {subject, evidence} <- @repair_plan_evidence do
+        assert [row] = Enum.filter(rows, &(&1["subject"] == subject))
+        assert row["state"] == "tracked"
+        assert row["currentness"] == "current"
+        assert row["disposition"] == "retain"
+        assert row["evidence"] == evidence
+      end
+    end
+
+    test "missing, duplicate, and stale canonical repair relationships fail closed" do
+      contents = File.read!(@ledger)
+      subject = Path.join(@phase_dir, "164-FINALIZATION.md")
+
+      assert {:error, {:missing_audited_subjects, missing}} =
+               contents |> remove_subject(subject) |> Ledger.validate(@repo_root)
+
+      assert subject in missing
+
+      [header | rows] = String.split(String.trim_trailing(contents), "\n", trim: true)
+      row = Enum.find(rows, &String.contains?(&1, "\t#{subject}\t"))
+
+      assert {:error, {:duplicate_subject, ^subject}} =
+               Ledger.parse(Enum.join([header | rows ++ [row]], "\n") <> "\n")
+
+      stale = mutate_subject_row(contents, subject, "evidence", "git ls-files; 164-23-PLAN.md")
+
+      assert {:error, {:invalid_canonical_relationship, ^subject}} = Ledger.parse(stale)
     end
   end
 
@@ -637,6 +700,19 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   end
 
   defp header_line, do: Enum.join(@headers, "\t")
+
+  defp plan_modified_files(plan_number) do
+    plan = Path.join(@repo_root, Path.join(@phase_dir, "164-#{plan_number}-PLAN.md"))
+
+    [paths] =
+      Regex.run(~r/^files_modified:\n(?<paths>(?:\s+- .+\n)*)^autonomous:/m, File.read!(plan),
+        capture: :all_names
+      )
+
+    paths
+    |> String.split("\n", trim: true)
+    |> Enum.map(&(&1 |> String.trim() |> String.trim_leading("- ")))
+  end
 
   defp ignored?(path) do
     {_output, status} =
