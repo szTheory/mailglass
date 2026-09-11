@@ -35,7 +35,7 @@ const TRUSTED_TOOLS = Object.freeze({
 const TRUSTED_GIT = TRUSTED_TOOLS.GIT;
 const TEST_ENV_KEYS = [];
 const TERMINAL_FIRST_PLAN = 1;
-const TERMINAL_LAST_PLAN = 28;
+const TERMINAL_LAST_PLAN = 34;
 const PRE_VERIFICATION = "--pre-verification";
 const FULL_OID = /^[0-9a-f]{40}$/;
 
@@ -296,7 +296,7 @@ function exactNumberedArtifacts(repo, authorityOid, phaseRelative) {
     new Set(actual).size !== actual.length ||
     expected.some((path) => !actual.includes(path))
   ) {
-    fail("authenticated Phase 164 numbered history is not the exact 01-28 PLAN/SUMMARY set");
+    fail("authenticated Phase 164 numbered history is not the exact 01-34 PLAN/SUMMARY set");
   }
   return expected;
 }
@@ -381,14 +381,14 @@ function selfCheck(args) {
   if (!installationOidIsAncestor(repo, expectedSourceOid, currentOid)) {
     fail("installation OID is not an ancestor of current authority OID");
   }
-  if (TERMINAL_FIRST_PLAN !== 1 || TERMINAL_LAST_PLAN !== 28) fail("compiled terminal range is invalid");
+  if (TERMINAL_FIRST_PLAN !== 1 || TERMINAL_LAST_PLAN !== 34) fail("compiled terminal range is invalid");
   const digest = createHash("sha256").update(installedBytes).digest("hex");
   console.log(`installation_oid=${expectedSourceOid}`);
   console.log(`current_oid=${currentOid}`);
   console.log(`loader_sha256=${digest}`);
   console.log(`executable=${executable}`);
   console.log("mode=0500");
-  console.log("terminal_range=01-28");
+  console.log("terminal_range=01-34");
 }
 
 export function installationOidIsAncestor(repo, installationOid, currentOid) {

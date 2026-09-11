@@ -15,7 +15,7 @@ ledger_rel="$phase_rel/164-TRUTH-DISPOSITION.tsv"
 registry_rel=.github/scheduled-controls.json
 expected_repository=szTheory/mailglass
 terminal_first_plan=1
-terminal_last_plan=28
+terminal_last_plan=34
 
 fail() {
   printf 'finalize-phase 164: %s\n' "$1" >&2
