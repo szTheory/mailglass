@@ -5,6 +5,16 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   @script Path.join(@repo_root, "scripts/closeout_repository_truth.sh")
   @extension Path.join(@repo_root, ".gsd/extensions/finalize-phase/index.ts")
   @immutable_loader Path.join(@repo_root, "scripts/mailglass_finalize_phase_loader.mjs")
+  @production_tool_paths [
+    NODE: "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+    GIT: "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+    BASH: "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+    GH: "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+    JQ: "/usr/bin/jq",
+    MIX: "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix",
+    ELIXIR: "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir",
+    ERL: "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl"
+  ]
   @installed_loader "/Users/jon/.local/bin/mailglass-finalize-phase"
   @install_approval "/Users/jon/.local/share/mailglass/checkpoints/164-32-install-approval.env"
   @installation_source_oid "1cfee7802de808f690fe5413b22a57e7ab802488"
@@ -1040,6 +1050,12 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       refute loader =~ "...process.env"
       assert loader =~ "MAILGLASS_GIT"
       assert loader =~ "MAILGLASS_BASH"
+      assert loader =~ ~s(const EXPECTED_ELIXIR_VERSION = "1.19.5")
+      assert loader =~ ~s(const EXPECTED_OTP_RELEASE = "28")
+
+      for {tool, path} <- @production_tool_paths do
+        assert loader =~ ~s(#{tool}: #{inspect(path)})
+      end
 
       for tool <- ~w(GIT BASH GH JQ MIX NODE ELIXIR ERL) do
         assert finalizer =~ ~s(\"${MAILGLASS_#{tool})
@@ -1054,10 +1070,13 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     @tag :phase_164_authority_closure
     test "physical BEAM runtime closure runs inside the exact sanitized child environment" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "runtime-closure"))
       node = fixture_node!()
 
       expression = """
-      const loader = await import(#{inspect("file://" <> @immutable_loader)});
+      const loader = await import(#{inspect("file://" <> fixture.installed)});
       const tools = loader.validateTrustedToolchain();
       const env = loader.buildChildEnvironment(tools);
       const probe = loader.probeTrustedRuntime(tools, env);
@@ -1073,24 +1092,24 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert status == 0, output
       result = Jason.decode!(output)
 
-      assert result["tools"]["MIX"] ==
-               "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix"
+      for {tool, path} <- fixture.tools do
+        assert result["tools"][Atom.to_string(tool)] == path
+      end
 
-      assert result["tools"]["ELIXIR"] ==
-               "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir"
-
-      assert result["tools"]["ERL"] == "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl"
       assert result["env"]["MAILGLASS_ERL"] == result["tools"]["ERL"]
       refute Map.has_key?(result["env"], "ASDF_ELIXIR_VERSION")
       refute Map.has_key?(result["env"], "ASDF_ERLANG_VERSION")
-      assert result["probe"]["mix_version"] =~ "Mix 1.19.5"
-      assert result["probe"]["elixir_version"] =~ "Elixir 1.19.5"
-      assert result["probe"]["otp_release"] == "28"
+      assert result["probe"]["mix_version"] =~ "Mix #{System.version()}"
+      assert result["probe"]["elixir_version"] =~ "Elixir #{System.version()}"
+      assert result["probe"]["otp_release"] == fixture_otp_release()
       assert result["probe"]["digest"] =~ ~r/^[0-9a-f]{64}$/
     end
 
     @tag :phase_164_authority_closure
     test "missing or shim-selected BEAM runtime members fail before Bash dispatch" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "runtime-rejections"))
       node = fixture_node!()
 
       for {name, mutation} <- [
@@ -1098,7 +1117,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
             {"mix-shim", ~s(tools.MIX = "/Users/jon/.asdf/shims/mix";)}
           ] do
         expression = """
-        const loader = await import(#{inspect("file://" <> @immutable_loader)});
+        const loader = await import(#{inspect("file://" <> fixture.installed)});
         const tools = {...loader.validateTrustedToolchain()};
         #{mutation}
         const validated = loader.validateTrustedToolchain(tools);
@@ -2565,12 +2584,13 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     phase_dir = Path.join(repo, ".planning/phases/164-fixture")
 
-    source = File.read!(@immutable_loader)
+    tools = fixture_toolchain!()
+    source = @immutable_loader |> File.read!() |> portable_loader_source!(tools)
     git_log = Path.join(Path.dirname(repo), "git.log")
     real_git = System.find_executable("git")
     env = [{"REAL_GIT", real_git}, {"GIT_LOG", git_log}]
 
-    {source, env} =
+    {source, tools, env} =
       if Keyword.get(options, :move_head, false) do
         delegate_dir = Path.join(Path.dirname(repo), "trusted-git")
         delegate = Path.join(delegate_dir, "git")
@@ -2605,21 +2625,20 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         physical_delegate = resolved_path!(delegate)
 
         replaced =
-          String.replace(
+          replace_exact_once!(
             source,
-            ~s(GIT: "/opt/homebrew/Cellar/git/2.41.0/bin/git"),
-            ~s(GIT: #{inspect(physical_delegate)}),
-            global: false
+            ~s(GIT: #{inspect(Map.fetch!(tools, :GIT))}),
+            ~s(GIT: #{inspect(physical_delegate)})
           )
 
-        {replaced,
+        {replaced, Map.put(tools, :GIT, physical_delegate),
          [
            {"GIT_COUNTER", counter},
            {"FIXTURE_REPO", repo}
            | env
          ]}
       else
-        {source, env}
+        {source, tools, env}
       end
 
     source =
@@ -2669,8 +2688,61 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       installation_oid: installation_oid,
       current_oid: current_oid,
       git_log: git_log,
+      tools: tools,
       env: env
     })
+  end
+
+  defp portable_loader_source!(source, tools) do
+    source =
+      Enum.reduce(@production_tool_paths, source, fn {tool, production_path}, rewritten ->
+        replace_exact_once!(
+          rewritten,
+          ~s(#{tool}: #{inspect(production_path)}),
+          ~s(#{tool}: #{inspect(Map.fetch!(tools, tool))})
+        )
+      end)
+
+    source
+    |> replace_exact_once!(
+      ~s(const EXPECTED_ELIXIR_VERSION = "1.19.5"),
+      ~s(const EXPECTED_ELIXIR_VERSION = #{inspect(System.version())})
+    )
+    |> replace_exact_once!(
+      ~s(const EXPECTED_OTP_RELEASE = "28"),
+      ~s(const EXPECTED_OTP_RELEASE = #{inspect(fixture_otp_release())})
+    )
+  end
+
+  defp fixture_toolchain! do
+    Map.new(@production_tool_paths, fn {tool, _production_path} ->
+      path = tool |> Atom.to_string() |> String.downcase() |> fixture_executable!()
+      {tool, resolved_path!(path)}
+    end)
+  end
+
+  defp fixture_executable!(name) do
+    discovered =
+      System.find_executable(name) || raise "#{name} executable is required for loader fixtures"
+
+    if String.contains?(discovered, "/.asdf/shims/") do
+      asdf = System.find_executable("asdf") || raise "asdf is required to resolve #{name}"
+      {path, 0} = System.cmd(asdf, ["which", name], stderr_to_stdout: true)
+      String.trim(path)
+    else
+      discovered
+    end
+  end
+
+  defp fixture_otp_release do
+    :otp_release |> :erlang.system_info() |> List.to_string()
+  end
+
+  defp replace_exact_once!(source, expected, replacement) do
+    case :binary.matches(source, expected) do
+      [_match] -> String.replace(source, expected, replacement, global: false)
+      matches -> raise "expected one loader fixture replacement, found #{length(matches)}"
+    end
   end
 
   defp production_installed_fixture!(repo, options \\ []) do
