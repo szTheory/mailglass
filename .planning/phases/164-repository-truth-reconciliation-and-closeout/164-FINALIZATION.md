@@ -14,10 +14,11 @@ imported before it establishes repository authority.
 At invocation the installed program captures one full repository commit OID.
 That captured repository OID, rather than symbolic `HEAD`, is the authority for
 every tree enumeration, blob authentication, and private materialization. The
-authorized terminal history is the exact PLAN/SUMMARY set for 01 through 28:
-Plans 01-20 are the executed baseline and Plans 21-28 are the explicitly
-authorized closure set. Missing pairs, extra numbers, malformed names, or a
-silently shortened set fail before execution.
+authorized terminal history is the exact PLAN/SUMMARY pair set 01 through 28,
+with exactly one PLAN and one SUMMARY for every number. The installed loader
+and both shell layers enforce the same immutable range; no historical subset
+or shortened baseline is accepted. Missing pairs, extra numbers, malformed
+names, or a silently shortened set fail before execution.
 
 Before the first Bash process starts, the loader authenticates every exact
 executable and data blob at that OID and materializes the complete set beneath
@@ -104,6 +105,27 @@ It may establish installation readiness only; terminal finalization remains
 pending. The protected lifecycle order stays: post-summary → ordinary verifier
 → protected completion metadata → exact-main terminal. No installation test or
 approval record substitutes for any later boundary.
+
+Plans 164-25 through 164-27 repaired the repository-only CI lane, canonical
+repository authority, trusted toolchain, installation ancestry, and installed
+boundary. Plan 164-28 reconciles those results into the durable validation,
+security, and lifecycle records. None of their test commands runs either
+finalization mode.
+
+## Tracked completion and terminal order
+
+The only authorized closeout sequence is:
+
+1. Plan 164-28 implementation commits land, then `164-28-SUMMARY.md exists before ordinary verification`.
+2. The ordinary verifier writes `status: passed` and the exact `verified_implementation_sha` it evaluated.
+3. After that verified SHA, only the four authorized completion metadata paths may change.
+4. Those completion records reach protected `main`.
+5. That exact protected SHA receives attempt-1 normal push CI and naturally produced attempt-1 scheduled evidence.
+6. `/Users/jon/.local/bin/mailglass-finalize-phase 164` writes ignored `tmp/phase-164-closeout/` evidence only.
+7. No summary, planning update, commit, push, merge, release, publication, dispatch, or rerun follows the capture.
+
+Plan 164-28 stops after establishing readiness for this sequence. It does not
+execute steps 2 through 7 and does not claim that a terminal report exists.
 
 ## Terminal operational proof
 

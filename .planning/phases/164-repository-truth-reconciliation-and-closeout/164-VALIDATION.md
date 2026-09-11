@@ -10,7 +10,7 @@ revised: 2026-09-10
 
 # Phase 164 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution. The contract covers every executor task in Plans 164-01 through 164-28 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
+> Per-phase validation contract for feedback sampling during execution. The contract covers the exact PLAN/SUMMARY pair set 01 through 28 plus the terminal non-plan finalization gate required after all tracked GSD metadata reaches protected main.
 
 ---
 
@@ -32,6 +32,7 @@ revised: 2026-09-10
 - **After every plan wave:** Run `mix ci.fast` after all implementation tasks in the wave are integrated; run the focused closeout/scheduled contracts after Waves 8 and 9.
 - **Pre-verification checkpoint:** Plan 164-14 ran the then-current pre-verification command after the Plan 164-13 adversarial regression locks reached protected main. Plans 164-16 through 164-24 subsequently changed tracked documentation, trust-anchor implementation, installation state, and tests, so that older capture remains explicitly non-terminal; refreshed ordinary verification must evaluate the repaired implementation through Plan 164-24 before terminal finalization.
 - **Plans 164-21 through 164-24:** No task ran canonical pre-verification or terminal finalization. These plans proved immutable source, exact history, installed identity, and adversarial subprocess behavior only.
+- **Plans 164-25 through 164-28:** These plans establish repaired implementation and record readiness only. Their test commands do not invoke canonical pre-verification or terminal finalization.
 - **Verified implementation lifecycle:** Plan 164-15 requires the ordinary verifier to record the exact implementation commit as `verified_implementation_sha`. Terminal finalization accepts only an ancestor SHA and inspects every subsequent first-parent commit relative to its first parent against the four exact completion-metadata paths, so change-then-revert source history remains visible.
 - **After normal execute-phase metadata:** Integrate all Phase 164 SUMMARY files and the tracked VERIFICATION, ROADMAP, STATE, and REQUIREMENTS completion updates before terminal capture.
 - **Post-execution finalization:** Run `/Users/jon/.local/bin/mailglass-finalize-phase 164` outside phase-plan-index after the final tracked SHA receives attempt-1 normal push CI and naturally scheduled attempt-1 exact-SHA evidence. The gate writes ignored runtime artifacts only and permits no later tracked commit.
@@ -90,7 +91,7 @@ revised: 2026-09-10
 | 164-27-02 | 164-27 checkpoint | 25 | TRTH-03 | T-164-108, T-164-SC | Exact immutable approval binds source, tools, destination, prior object, and rollback identity before replacement | external approval checks | Plan 164-27 Task 2 exact proposal/approval parity checks | mode-0400 proposal and approval records | ✅ approved tuple observed |
 | 164-27-03 | 164-27 | 25 | TRTH-03 | T-164-106, T-164-107, T-164-108 | Installed bytes match the approved source and reject foreign repository, forged PATH, moving HEAD, and incomplete history attacks | `phase_164_installed_production_boundary` | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix verify.phase_164.installed_boundary` | absolute installed executable and controlled-host attack matrix | ✅ green (5 selected, 44 excluded, 0 failures) |
 | 164-28-01 | 164-28 tracer | 26 | TRTH-01, TRTH-02, TRTH-03 | T-164-105 through T-164-109 | Durable validation/security records bind each repaired finding to its production seam and observed regression without claiming terminal completion | `phase_164_gap_reconciliation` | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 mix test test/mailglass/docs_contract_test.exs test/scripts/phase_164_closeout_test.exs --only phase_164_gap_reconciliation --warnings-as-errors --no-deps-check` | this record, `164-SECURITY.md`, docs contract | ✅ green after record reconciliation |
-| 164-28-02 | 164-28 | 26 | TRTH-01, TRTH-02, TRTH-03 | T-164-106, T-164-107, T-164-109 | Exact 01-28 lifecycle contract keeps terminal execution after summary, verifier, protected completion metadata, exact CI, and natural schedules | lifecycle/docs contract plus complete phase suite | Plan 164-28 Task 2 command | `164-FINALIZATION.md`, this record, docs contract | ⏳ current plan; terminal evidence remains pending |
+| 164-28-02 | 164-28 | 26 | TRTH-01, TRTH-02, TRTH-03 | T-164-106, T-164-107, T-164-109 | Exact 01-28 lifecycle contract keeps terminal execution after summary, verifier, protected completion metadata, exact CI, and natural schedules | `phase_164_lifecycle_contract` plus complete phase suite | Plan 164-28 Task 2 command | `164-FINALIZATION.md`, this record, docs contract | ✅ green tracked readiness; terminal evidence remains pending |
 | 164-FINAL | post-execution gate | after phase.complete integration | TRTH-03 | T-164-40, T-164-41, T-164-42, T-164-43, T-164-44 | Final protected metadata SHA has attempt-1 normal push CI, attempt-1 natural schedules, ignored identity/report state, independently verified raw sources, and no later tracked commit | live lifecycle gate | `/Users/jon/.local/bin/mailglass-finalize-phase 164` | ignored `finalization-inputs.json`, report, CI source, scheduled source | ⚠️ external terminal capture pending |
 
 *Status: ✅ automated capability green · ⚠️ external evidence still required*
@@ -128,6 +129,20 @@ which only protected completion metadata may change before integration to
 protected `main`. Until exact attempt-1 normal push CI and natural exact-SHA
 scheduled evidence authorize the installed terminal command, terminal
 protected-main evidence remains absent and pending.
+
+### Terminal handoff after Plan 164-28
+
+The tracked closeout now covers the exact PLAN/SUMMARY pair set 01 through 28
+and the installed loader approved from source OID
+`2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97`. Plan verification commands do
+not invoke either finalization mode. After `164-28-SUMMARY.md` is committed,
+the ordinary verifier must record `status: passed` and its exact
+`verified_implementation_sha`; only the four authorized completion metadata
+paths may then change before those records reach protected `main`. That exact
+SHA must receive attempt-1 normal push CI and naturally produced attempt-1
+scheduled evidence before the installed terminal command writes its ignored
+report. No later tracked write is authorized. This is a pending handoff, not a
+claim that terminal finalization has run or that a terminal report exists.
 
 ---
 
