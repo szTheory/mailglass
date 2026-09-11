@@ -141,6 +141,36 @@ remains pending. The required sequence is unchanged: ordinary verifier →
 completion-only metadata → protected main → exact attempt-one CI and natural
 schedules → terminal ignored capture → no later tracked write.
 
+## Plan 164-32 pending 01-34 replacement tuple
+
+Plan 164-32 owns one non-mutating proposal for the changed tracked 01-34
+loader. Its canonical record is
+`/Users/jon/.local/share/mailglass/checkpoints/164-32-install-proposal.env`, a
+regular non-symlink mode 0400 file. The record has exactly 18 proposal fields:
+record version and phase-plan identity; one full committed source OID and its
+loader SHA-256; the destination and requested mode; absolute Node, Git, Bash,
+gh, jq, Mix, and Elixir executable paths; the prior approval SHA-256; the prior
+installed digest, mode, and lstat identity; and one absent digest-addressed
+rollback path. `approval_status` is deliberately absent from the proposal.
+
+The prior inputs remain the exact Plan 164-27 operational authority. Its
+approval record SHA-256 is
+`e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9`, and
+the installed destination is the regular mode-0500 object with SHA-256
+`0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e`.
+Proposal publication must revalidate those identities without following a
+symlink. It must also prove the new rollback target is absent before and after
+publication.
+
+The proposal is approval input only. Until an exact human response authorizes
+all persisted fields, no approval record exists and the destination and
+rollback path remain unchanged. Even after approval, Plan 164-32 performs no
+installation or invocation. Plan 164-33 alone owns rollback preservation,
+atomic replacement, and controlled-host proof. Ordinary verification,
+completion-only metadata, and protected-main integration remain pending in
+their existing order, and terminal finalization remains pending; no readiness, CI dispatch, rerun,
+release, publication, pre-verification, or terminal evidence is claimed here.
+
 ## Tracked completion and terminal order
 
 The only authorized closeout sequence is:
