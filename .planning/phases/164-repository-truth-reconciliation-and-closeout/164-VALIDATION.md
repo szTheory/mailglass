@@ -222,7 +222,7 @@ and this record makes no phase or requirement completion claim.
 - [x] Plans 164-21 through 164-24 close the immutable-OID, exact-history, pre-evaluation authority, installation provenance, and installed-boundary regression gaps without running canonical pre-verification or terminal finalization.
 - [x] Plans 164-25 through 164-28 repaired CI hermeticity, repository/tool authority, installation ancestry, and their first durable reconciliation without terminal execution.
 - [x] Plans 164-29 through 164-33 replaced fixture proof with the real installed tuple, made every repository/protected suite host-independent, bounded incomplete-authority diagnostics, advanced exact history to 01-34, and approved/installed the current loader while preserving rollback provenance.
-- [ ] Plan 164-34 summary must finish before ordinary Phase 164 verification; its 30-test repository-truth verification and canonical validator are green.
+- [x] Plan 164-34 summary finished before ordinary Phase 164 verification; its 30-test repository-truth verification and canonical validator are green.
 - [ ] All tracked Phase 164 summaries and phase.complete metadata have reached protected main before terminal `/finalize-phase 164` runs.
 - [ ] The final ignored report and raw CI/scheduled sources pass independent verification with no later tracked commit.
 
@@ -421,3 +421,31 @@ equal the older installation OID.
 164-24. Ordinary verification and protected completion-metadata integration
 still precede the final installed command run; terminal finalization remains
 pending and no terminal evidence is claimed here.
+
+## Validation Audit 2026-09-11 — Plans 164-29 through 164-34 Gap Closure
+
+The gap-closure plans retain automated coverage for every declared executor
+task. The active controlled-host installation, repository-only suite boundary,
+bounded authority-root diagnostics, exact 01-34 history, immutable approval and
+replacement, and durable evidence reconciliation all ran green at their named
+production seams. No missing or partial automated coverage was found.
+
+| Metric | Count |
+|--------|-------|
+| Gap-closure plans audited | 6 |
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+- Plan 164-29/33 controlled-host proof: 7 selected, 54 excluded, 0 failures.
+- Repository-only required lane after Plan 164-34: 398 selected, 7 excluded,
+  0 failures.
+- Plan 164-30 incomplete-authority group: 3 selected, 25 excluded, 0 failures.
+- Plan 164-34 repository-truth suite: 30 tests, 0 failures; canonical validator
+  valid.
+- Terminal exact-main capture remains an explicit external lifecycle gate, not
+  an automated coverage gap.
+
+**Approval:** Current and Nyquist-compliant for automated coverage through Plan
+164-34. Ordinary verification, protected completion-metadata integration, and
+the separate terminal `/finalize-phase 164` capture remain pending in order.
