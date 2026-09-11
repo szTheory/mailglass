@@ -154,6 +154,7 @@ or terminal lifecycle checks.
 | 2026-09-10 | 47 | 46 resolved | 1 blocking terminal-lifecycle item | Plan 164-28 superseding reconciliation after Plans 164-25 through 164-27 |
 | 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | Plan 164-34 reconciliation of Plans 164-29 through 164-33 and canonical Task 2 validation |
 | 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | gsd-security-auditor post-gap-closure verification |
+| 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | verify-work refresh; T-164-109 evidence chain remains incomplete |
 
 ## Sign-Off
 
