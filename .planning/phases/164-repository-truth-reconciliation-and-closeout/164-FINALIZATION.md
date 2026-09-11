@@ -4,11 +4,14 @@ Phase 164 closes across two deliberately separate proof boundaries. Ordinary
 GSD execution owns tracked implementation, summaries, verification, roadmap,
 requirements, and phase-completion metadata. The previously proven installed
 program is the mode-0500 executable at
-`/Users/jon/.local/bin/mailglass-finalize-phase`; its active bytes are bound to
-the exact Plan 164-32 approval and installed-readiness proof described below.
-The tracked source `scripts/mailglass_finalize_phase_loader.mjs` and installed
-command now share the approved 01-34 bytes. The Plan 164-27 and Plan 164-23
-approvals remain immutable prior provenance only. The Plan 164-23
+`/Users/jon/.local/bin/mailglass-finalize-phase`; its active predecessor bytes
+remain bound to the exact Plan 164-32 approval and installed-readiness proof
+described below. The tracked source
+`scripts/mailglass_finalize_phase_loader.mjs` has advanced to the protected
+01-39 authority-chain repair and is not installed authority until Plans 164-37
+and 164-38 complete their separately ordered approval and recoverable install.
+The Plan 164-27 and Plan 164-23 approvals remain immutable prior provenance
+only. The Plan 164-23
 authenticated-copy checkpoint remain immutable provenance for an older prior
 object; they do not authorize later tracked bytes. The installed loader is
 outside checkout evaluation: no project-local extension module is imported
@@ -224,6 +227,67 @@ tracked paths before protected-main integration. T-164-109 remains high and
 pending until the exact protected SHA receives attempt-1 push CI and natural
 schedules, the installed command captures ignored terminal evidence, and no
 later tracked write occurs.
+
+## Plan 164-37 pending physical-toolchain replacement tuple
+
+Plan 164-37 independently revalidated protected `main` source OID
+`52c07a5051d269b307831a2210f53dec0dd1ff65` and its normally triggered,
+successful attempt-one `CI` push run `34650810638`. The authenticated loader
+blob at that OID has SHA-256
+`394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746`, an
+absolute physical Node shebang, and the exact terminal range 01 through 39.
+
+The immutable proposal is the regular non-symlink mode-0400 file
+`/Users/jon/.local/share/mailglass/checkpoints/164-37-install-proposal.env`.
+Its SHA-256 is
+`4d580f9f4a72ed6d25afa390f53369e1e08af3dc84c92b9e008d80895c13ddcf`,
+and its 27 fields are ordered exactly as follows:
+
+```text
+record_version=2
+proposal_schema=mailglass-finalize-phase-install-proposal-v2
+phase_plan=164-37
+installation_source_oid=52c07a5051d269b307831a2210f53dec0dd1ff65
+source_sha256=394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746
+protected_ci_run_id=34650810638
+destination=/Users/jon/.local/bin/mailglass-finalize-phase
+install_mode=0500
+node_executable=/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node
+git_executable=/opt/homebrew/Cellar/git/2.41.0/bin/git
+bash_executable=/opt/homebrew/Cellar/bash/5.2.37/bin/bash
+gh_executable=/opt/homebrew/Cellar/gh/2.95.0/bin/gh
+jq_executable=/usr/bin/jq
+mix_executable=/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix
+elixir_executable=/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir
+erl_executable=/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl
+mix_version=Mix 1.19.5 (compiled with Erlang/OTP 28)
+elixir_version=Elixir 1.19.5 (compiled with Erlang/OTP 28)
+otp_release=28
+runtime_probe_sha256=ca3c43bd04c4e21e223f39561f294885ceca2633db65a72fa29b780bcef3975d
+prior_approval_sha256=f120bbda1a15478ea97179210215ee54e28ff59641644a35a643628265e9bf4b
+prior_sha256=f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac
+prior_mode=0500
+prior_stat_identity=16777229:273869583:501:20
+rollback_path=/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac
+rollback_status=absent
+terminal_last_plan=39
+```
+
+The Mix, Elixir, and Erlang identities above were lstat-checked as physical,
+non-symlink, safely owned regular files and executed successfully inside the
+loader's exact sanitized child environment. The ordered runtime probe digest
+binds the three normalized output fields shown above. The installed predecessor
+remains the Plan 164-32-approved regular mode-0500 object with the recorded
+digest and lstat identity; the new digest-addressed rollback path remains
+absent. Destination and rollback semantics were derived only from that active
+approval.
+
+Approval is pending at the blocking-human checkpoint. No Plan 164-37 approval
+record exists yet. Plan 164-38 installation and rollback publication, Plan
+164-39 tracked reconciliation, ordinary verification, completion-only
+metadata, protected-main terminal evidence, and terminal finalization all
+remain pending. This proposal is non-terminal authority data and authorizes no
+mutation by itself.
 
 ## Tracked completion and terminal order
 
