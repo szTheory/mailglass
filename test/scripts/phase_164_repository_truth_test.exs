@@ -398,6 +398,57 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     end
   end
 
+  describe "phase 164 incomplete authority root" do
+    @describetag :phase_164_incomplete_authority_root
+
+    test "existing empty authority root returns one bounded deterministic CLI diagnostic" do
+      authority_root =
+        Path.join(
+          System.tmp_dir!(),
+          "mailglass-phase-164-empty-authority-#{System.unique_integer([:positive])}"
+        )
+
+      File.mkdir!(authority_root)
+      on_exit(fn -> File.rm_rf!(authority_root) end)
+
+      script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
+      elixir = System.find_executable("elixir")
+
+      expected =
+        "repository truth ledger: {:missing_authority_subject, \".gitignore\"}\n" <>
+          "usage: validate_repository_truth.exs --repo PATH [--authority-root PATH] --ledger PATH\n"
+
+      results =
+        for _run <- 1..2 do
+          result =
+            System.cmd(
+              elixir,
+              [
+                script,
+                "--repo",
+                @repo_root,
+                "--authority-root",
+                authority_root,
+                "--ledger",
+                @ledger
+              ],
+              stderr_to_stdout: true
+            )
+
+          assert File.ls!(authority_root) == []
+          result
+        end
+
+      assert Enum.map(results, &elem(&1, 1)) == [1, 1]
+      assert Enum.map(results, &elem(&1, 0)) == [expected, expected]
+
+      refute expected =~ "File.Error"
+      refute expected =~ "** ("
+      refute expected =~ "scripts/validate_repository_truth.exs:"
+      refute expected =~ "    ("
+    end
+  end
+
   describe "phase 164 stage-0 index identity" do
     @describetag :phase_164_stage0_index
 
