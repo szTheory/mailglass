@@ -296,7 +296,7 @@ Plans:
 
 **Wave 25** *(blocking-human installation checkpoint; blocked on the hardened loader contract)*
 
-- [ ] 164-27-PLAN.md — Approve, recoverably install, and production-check the hardened external authority without running finalization.
+- [x] 164-27-PLAN.md — Approve, recoverably install, and production-check the hardened external authority without running finalization.
 
 **Wave 26** *(blocked on the verified installed command)*
 
@@ -315,4 +315,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 26/28 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 27/28 | In Progress|  |

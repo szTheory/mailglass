@@ -5,18 +5,18 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-26-PLAN.md
-last_updated: "2026-09-11T00:12:41.872Z"
+stopped_at: Completed 164-27-PLAN.md
+last_updated: "2026-09-11T01:09:23.034Z"
 last_activity: 2026-09-10
-last_activity_desc: Completed Plan 164-25 hermetic required CI boundary
-state_head: 421cdc8e7b83caaa89e150208d3a0901104559b9
+last_activity_desc: Completed Plan 164-27 hardened installed-loader replacement
+state_head: 6ab2a91350b7757c9289cceb1df87f78b61962c7
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 54
-  completed_plans: 49
+  completed_plans: 50
   percent: 75
-current_plan: 25
+current_plan: 27
 ---
 
 # Project State
@@ -31,11 +31,11 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
-Plan: 26 of 28
+Plan: 27 of 28
 Status: Ready to execute
-Last activity: 2026-09-10 — Completed Plan 164-25 hermetic required CI boundary
+Last activity: 2026-09-10 — Completed Plan 164-27 hardened installed-loader replacement
 
-Progress: [████████░░] 48/54 plans complete ([████████░░] 75%)
+Progress: [████████░░] 50/54 plans complete ([████████░░] 75%)
 
 ## Performance Metrics
 
@@ -107,6 +107,7 @@ Progress: [████████░░] 48/54 plans complete ([████�
 | Phase 164-repository-truth-reconciliation-and-closeout P24 | 21min | 2 tasks | 10 files |
 | Phase 164 P25 | 13min | 2 tasks | 7 files |
 | Phase 164 P26 | 10min | 2 tasks | 3 files |
+| Phase 164 P27 | 4min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -175,6 +176,9 @@ Progress: [████████░░] 48/54 plans complete ([████�
 - [Phase 164]: Production finalization selects only /Users/jon/projects/mailglass with normalized origin szTheory/mailglass before dependency enumeration.
 - [Phase 164]: Finalization validates absolute Node, Git, Bash, gh, jq, Mix, and Elixir identities and passes an allowlisted child environment with reconstructed PATH.
 - [Phase 164]: Phase 164 terminal history is the exact PLAN/SUMMARY pair set 01 through 28.
+- [Phase 164]: Human approval authorized only source OID 2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97 and its complete source-bound replacement tuple; every repository, tool, prior-object, and rollback field was revalidated before mutation.
+- [Phase 164]: The superseded ca760f78 loader remains recoverable as a private digest-addressed mode-0400 object, while the operational command is now the approved 0dbcc034 hardened loader.
+- [Phase 164]: Installation readiness was proven without invoking canonical pre-verification or terminal finalization; protected lifecycle ordering remains unchanged.
 
 ## Deferred Items
 
@@ -184,6 +188,6 @@ Progress: [████████░░] 48/54 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-11T00:12:41.742Z
-Stopped at: Completed 164-26-PLAN.md
+Last session: 2026-09-11T01:09:22.894Z
+Stopped at: Completed 164-27-PLAN.md
 Resume file: None
