@@ -420,9 +420,10 @@ defmodule Mailglass.RepositoryTruthLedger do
     authority_root = authority_root || repo_root
 
     with :ok <- ensure_repository(repo_root),
-         :ok <- ensure_repository(authority_root) do
+         :ok <- ensure_repository(authority_root),
+         {:ok, ignore_subjects} <- ignore_subjects(authority_root) do
       subjects =
-        ignore_subjects(authority_root) ++
+        ignore_subjects ++
           tracked_subjects(repo_root, ".planning/publish") ++
           tracked_subjects(repo_root, "scripts/mailglass_finalize_phase_loader.mjs") ++
           @proof_paths ++
@@ -788,16 +789,47 @@ defmodule Mailglass.RepositoryTruthLedger do
     if File.dir?(repo_root), do: :ok, else: {:error, {:invalid_repository, repo_root}}
   end
 
-  defp ignore_subjects(repo_root) do
-    @ignore_files
-    |> Enum.flat_map(fn ignore_file ->
-      repo_root
-      |> Path.join(ignore_file)
-      |> File.stream!()
-      |> Stream.map(&String.trim/1)
-      |> Stream.reject(&(&1 == "" or String.starts_with?(&1, "#")))
-      |> Enum.map(&"ignore:#{ignore_file}:#{&1}")
-    end)
+  def ignore_subjects(repo_root) do
+    [first_ignore_file | remaining_ignore_files] = @ignore_files
+
+    with {:ok, first_subjects} <- read_ignore_subject(repo_root, first_ignore_file) do
+      remaining_subjects =
+        Enum.flat_map(remaining_ignore_files, fn ignore_file ->
+          repo_root
+          |> Path.join(ignore_file)
+          |> File.stream!()
+          |> Stream.map(&String.trim/1)
+          |> Stream.reject(&(&1 == "" or String.starts_with?(&1, "#")))
+          |> Enum.map(&"ignore:#{ignore_file}:#{&1}")
+        end)
+
+      {:ok, first_subjects ++ remaining_subjects}
+    end
+  end
+
+  defp read_ignore_subject(repo_root, ignore_file) do
+    path = Path.join(repo_root, ignore_file)
+
+    with {:ok, %File.Stat{type: :regular}} <- File.lstat(path),
+         {:ok, contents} <- File.read(path) do
+      subjects =
+        contents
+        |> String.split("\n")
+        |> Enum.map(&String.trim/1)
+        |> Enum.reject(&(&1 == "" or String.starts_with?(&1, "#")))
+        |> Enum.map(&"ignore:#{ignore_file}:#{&1}")
+
+      {:ok, subjects}
+    else
+      {:error, :enoent} ->
+        {:error, {:missing_authority_subject, ignore_file}}
+
+      {:ok, %File.Stat{}} ->
+        {:error, {:missing_authority_subject, ignore_file}}
+
+      {:error, reason} ->
+        {:error, {:unreadable_authority_subject, ignore_file, reason}}
+    end
   end
 
   defp tracked_subjects(repo_root, path) do
