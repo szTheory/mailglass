@@ -22,6 +22,14 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     "disposition",
     "rationale"
   ]
+  @ignore_files [
+    ".gitignore",
+    "mailglass_admin/.gitignore",
+    "mailglass_inbound/.gitignore",
+    "reference/demo_app/.gitignore",
+    "reference/host_app/.gitignore",
+    "test/example/.gitignore"
+  ]
   @locked_digest "331810b4b1724452f0e2707c800230e52fabea01c3773d362b3a1240040ece7e"
 
   test "parses and validates the authoritative twelve-column ledger" do
@@ -447,6 +455,23 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       refute expected =~ "scripts/validate_repository_truth.exs:"
       refute expected =~ "    ("
     end
+
+    test "authority subjects stop at the first missing file in declared order" do
+      authority_root = authority_root!()
+
+      for {ignore_file, index} <- Enum.with_index(@ignore_files) do
+        assert ignore_subjects_result(authority_root) ==
+                 {:error, {:missing_authority_subject, ignore_file}}
+
+        write_authority_subject!(authority_root, ignore_file, "/fixture-#{index}/\n")
+      end
+
+      assert Ledger.ignore_subjects(authority_root) ==
+               {:ok,
+                Enum.with_index(@ignore_files, fn ignore_file, index ->
+                  "ignore:#{ignore_file}:/fixture-#{index}/"
+                end)}
+    end
   end
 
   describe "phase 164 stage-0 index identity" do
@@ -558,6 +583,30 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       System.cmd("git", ["check-ignore", "-q", path], cd: @repo_root, stderr_to_stdout: true)
 
     status == 0
+  end
+
+  defp authority_root! do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-phase-164-authority-#{System.unique_integer([:positive])}"
+      )
+
+    File.mkdir!(root)
+    on_exit(fn -> File.rm_rf!(root) end)
+    root
+  end
+
+  defp write_authority_subject!(authority_root, relative_path, contents) do
+    path = Path.join(authority_root, relative_path)
+    File.mkdir_p!(Path.dirname(path))
+    File.write!(path, contents)
+  end
+
+  defp ignore_subjects_result(authority_root) do
+    Ledger.ignore_subjects(authority_root)
+  rescue
+    error in File.Error -> {:raised, error.reason}
   end
 
   defp clone_repository! do
