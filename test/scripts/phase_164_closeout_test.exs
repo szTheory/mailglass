@@ -2760,25 +2760,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       path
       |> File.read!()
       |> String.split("\n", trim: true)
-      |> Enum.reduce(%{}, fn line, fields ->
-        case String.split(line, "=", parts: 2) do
-          ["", _value] ->
-            raise "blank approval key"
-
-          [_key, ""] ->
-            raise "blank approval value"
-
-          [key, value] ->
-            unless Map.has_key?(expected_tuple, key),
-              do: raise("unknown approval key: #{key}")
-
-            if Map.has_key?(fields, key), do: raise("duplicate approval key: #{key}")
-            Map.put(fields, key, value)
-
-          _ ->
-            raise "malformed approval line"
-        end
-      end)
+      |> Enum.reduce(%{}, &parse_install_approval_line!(&1, &2, expected_tuple))
 
     missing = Map.keys(expected_tuple) -- Map.keys(approval)
     if missing != [], do: raise("missing approval keys: #{Enum.join(Enum.sort(missing), ",")}")
@@ -2789,6 +2771,28 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
 
     approval
+  end
+
+  defp parse_install_approval_line!(line, fields, expected_tuple) do
+    case String.split(line, "=", parts: 2) do
+      ["", _value] ->
+        raise "blank approval key"
+
+      [_key, ""] ->
+        raise "blank approval value"
+
+      [key, value] ->
+        validate_install_approval_key!(key, fields, expected_tuple)
+        Map.put(fields, key, value)
+
+      _ ->
+        raise "malformed approval line"
+    end
+  end
+
+  defp validate_install_approval_key!(key, fields, expected_tuple) do
+    unless Map.has_key?(expected_tuple, key), do: raise("unknown approval key: #{key}")
+    if Map.has_key?(fields, key), do: raise("duplicate approval key: #{key}")
   end
 
   defp assert_regular_mode!(path, expected_mode) do
