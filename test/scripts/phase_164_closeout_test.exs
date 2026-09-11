@@ -907,6 +907,51 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert finalizer =~ ~s(missing terminal summary 164-$plan-SUMMARY.md)
     end
 
+    @tag :phase_164_trusted_toolchain
+    test "loader pins validated tools and passes an allowlisted child environment" do
+      loader = File.read!(@immutable_loader)
+      finalizer = File.read!(@finalizer)
+
+      assert String.starts_with?(loader, "#!/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node\n")
+      assert loader =~ "validateTrustedToolchain"
+      assert loader =~ "buildChildEnvironment"
+      refute loader =~ "...process.env"
+      assert loader =~ "MAILGLASS_GIT"
+      assert loader =~ "MAILGLASS_BASH"
+
+      for tool <- ~w(GIT GH JQ MIX NODE ELIXIR) do
+        assert finalizer =~ ~s(\"${MAILGLASS_#{tool})
+      end
+    end
+
+    @tag :phase_164_trusted_toolchain
+    test "self-check rejects byte-identical loader bytes from unrelated history" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = immutable_loader_fixture!(Path.join(root, "unrelated-installation"))
+      unrelated = Path.join(root, "unrelated")
+      git!(root, ["init", "-q", "-b", "main", unrelated])
+      unrelated_source = Path.join(unrelated, "scripts/mailglass_finalize_phase_loader.mjs")
+      File.mkdir_p!(Path.dirname(unrelated_source))
+      File.write!(unrelated_source, File.read!(fixture.installed))
+      git!(unrelated, ["add", "."])
+      git!(unrelated, ["commit", "-q", "-m", "unrelated identical loader"])
+      unrelated_oid = unrelated |> git!(["rev-parse", "HEAD"]) |> String.trim()
+      git!(fixture.repo, ["fetch", "-q", unrelated, unrelated_oid])
+
+      {output, status} =
+        invoke_immutable_loader(fixture, [
+          "--self-check",
+          "--repo",
+          resolved_path!(fixture.repo),
+          "--expected-source-oid",
+          unrelated_oid
+        ])
+
+      assert status != 0
+      assert output =~ "installation OID is not an ancestor"
+    end
+
     test "dispatches committed bytes from one authority OID and rejects a moving HEAD" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
