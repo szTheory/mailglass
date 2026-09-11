@@ -1172,7 +1172,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
       {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
       assert status != 0
-      assert output =~ "canonical repository"
+      assert output =~ "numbered history is not the exact 01-28"
       refute File.exists?(fixture.marker)
     end
 
@@ -1185,7 +1185,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         invoke_production_loader(fixture, ["164", "--pre-verification"], fixture.env)
 
       assert status != 0
-      assert output =~ "canonical repository"
+      assert output =~ "numbered history is not the exact 01-28"
       refute File.exists?(fixture.marker)
       refute File.exists?(fixture.hostile_marker)
     end
@@ -1203,7 +1203,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "canonical repository"
+        assert output =~ "numbered history is not the exact 01-28"
         refute File.exists?(fixture.marker)
         refute File.exists?(fixture.hostile_marker)
       end
@@ -1236,7 +1236,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
       {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
       assert status != 0
-      assert output =~ "canonical repository"
+      assert output =~ "numbered history is not the exact 01-28"
       refute File.exists?(fixture.marker)
       refute File.exists?(fixture.hostile_marker)
     end
@@ -1252,7 +1252,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           ] do
         {output, status} = invoke_production_loader(fixture, args, env)
         assert status != 0
-        assert output =~ "expected phase 164" or output =~ "canonical repository"
+
+        assert output =~ "expected phase 164" or
+                 output =~ "numbered history is not the exact 01-28"
+
         refute File.exists?(fixture.marker)
       end
     end
