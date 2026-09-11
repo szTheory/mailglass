@@ -153,6 +153,7 @@ defmodule Mailglass.RepositoryTruthLedger do
     "git ls-files; 164-23-PLAN.md",
     "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md",
     "git ls-files; 164-28-PLAN.md; 164-28-SUMMARY.md",
+    "git ls-files; 164-29-PLAN.md; 164-29-SUMMARY.md",
     "git ls-files; Phase 161 summary",
     "git ls-files; Phase 162 summary",
     "git ls-files; release-target ledger",
@@ -326,6 +327,8 @@ defmodule Mailglass.RepositoryTruthLedger do
       "6ac9d4bce0d62fcb4bf24cd7a34fd8ad9d66e7e6cdd6ba648292fbfda113e599",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-SECURITY.md" =>
       "c8297e39db5c67f8bbdb084535af0d07fff76828f8f58ca9c74104ceee3dabd0",
+    "test/test_helper.exs" =>
+      "8260178e135e10358c9ae0e6fa2f082c4df2d95a7700bbac028ade7da61738ed",
     "test/mailglass/docs_contract_test.exs" =>
       "d96bd664afccfc94812c38335f345e040c1ab6a1df33c89328a4309ad86a8821",
     "scripts/closeout_repository_truth.sh" =>
@@ -790,41 +793,45 @@ defmodule Mailglass.RepositoryTruthLedger do
   end
 
   def ignore_subjects(repo_root) do
-    [first_ignore_file | remaining_ignore_files] = @ignore_files
-
-    with {:ok, first_subjects} <- read_ignore_subject(repo_root, first_ignore_file) do
-      remaining_subjects =
-        Enum.flat_map(remaining_ignore_files, fn ignore_file ->
-          repo_root
-          |> Path.join(ignore_file)
-          |> File.stream!()
-          |> Stream.map(&String.trim/1)
-          |> Stream.reject(&(&1 == "" or String.starts_with?(&1, "#")))
-          |> Enum.map(&"ignore:#{ignore_file}:#{&1}")
-        end)
-
-      {:ok, first_subjects ++ remaining_subjects}
-    end
+    Enum.reduce_while(@ignore_files, {:ok, []}, fn ignore_file, {:ok, subjects} ->
+      case read_ignore_subject(repo_root, ignore_file) do
+        {:ok, file_subjects} -> {:cont, {:ok, subjects ++ file_subjects}}
+        {:error, _reason} = error -> {:halt, error}
+      end
+    end)
   end
 
   defp read_ignore_subject(repo_root, ignore_file) do
     path = Path.join(repo_root, ignore_file)
 
-    with {:ok, %File.Stat{type: :regular}} <- File.lstat(path),
-         {:ok, contents} <- File.read(path) do
-      subjects =
-        contents
-        |> String.split("\n")
-        |> Enum.map(&String.trim/1)
-        |> Enum.reject(&(&1 == "" or String.starts_with?(&1, "#")))
-        |> Enum.map(&"ignore:#{ignore_file}:#{&1}")
-
-      {:ok, subjects}
-    else
-      {:error, :enoent} ->
-        {:error, {:missing_authority_subject, ignore_file}}
+    case File.lstat(path) do
+      {:ok, %File.Stat{type: :regular}} ->
+        read_ignore_file(path, ignore_file)
 
       {:ok, %File.Stat{}} ->
+        {:error, {:missing_authority_subject, ignore_file}}
+
+      {:error, reason} when reason in [:enoent, :enotdir] ->
+        {:error, {:missing_authority_subject, ignore_file}}
+
+      {:error, reason} ->
+        {:error, {:unreadable_authority_subject, ignore_file, reason}}
+    end
+  end
+
+  defp read_ignore_file(path, ignore_file) do
+    case File.read(path) do
+      {:ok, contents} ->
+        subjects =
+          contents
+          |> String.split("\n")
+          |> Enum.map(&String.trim/1)
+          |> Enum.reject(&(&1 == "" or String.starts_with?(&1, "#")))
+          |> Enum.map(&"ignore:#{ignore_file}:#{&1}")
+
+        {:ok, subjects}
+
+      {:error, :enoent} ->
         {:error, {:missing_authority_subject, ignore_file}}
 
       {:error, reason} ->
