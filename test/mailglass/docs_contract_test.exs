@@ -340,7 +340,7 @@ defmodule Mailglass.DocsContractTest do
     end
 
     @tag :phase_164_lifecycle_contract
-    test "Phase 164 loader, shell, validation, and finalization agree on exact 01 through 34 history" do
+    test "Phase 164 tracked authority advances to 01 through 39 while installed records remain 01 through 34" do
       loader = File.read!("scripts/mailglass_finalize_phase_loader.mjs")
       shell = File.read!("scripts/finalize_phase_164.sh")
 
@@ -355,9 +355,9 @@ defmodule Mailglass.DocsContractTest do
         end
 
       assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
-      assert loader =~ "const TERMINAL_LAST_PLAN = 34"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 39"
       assert shell =~ "terminal_first_plan=1"
-      assert shell =~ "terminal_last_plan=34"
+      assert shell =~ "terminal_last_plan=39"
 
       for record <- records do
         assert record =~ "exact PLAN/SUMMARY pair set 01 through 34"
