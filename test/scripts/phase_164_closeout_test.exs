@@ -1035,6 +1035,71 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       end
     end
 
+    @tag :phase_164_authority_closure
+    test "physical BEAM runtime closure runs inside the exact sanitized child environment" do
+      node = fixture_node!()
+
+      expression = """
+      const loader = await import(#{inspect("file://" <> @immutable_loader)});
+      const tools = loader.validateTrustedToolchain();
+      const env = loader.buildChildEnvironment(tools);
+      const probe = loader.probeTrustedRuntime(tools, env);
+      console.log(JSON.stringify({tools, env, probe}));
+      """
+
+      {output, status} =
+        System.cmd(node, ["--input-type=module", "--eval", expression],
+          cd: @repo_root,
+          stderr_to_stdout: true
+        )
+
+      assert status == 0, output
+      result = Jason.decode!(output)
+
+      assert result["tools"]["MIX"] ==
+               "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix"
+
+      assert result["tools"]["ELIXIR"] ==
+               "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir"
+
+      assert result["tools"]["ERL"] == "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl"
+      assert result["env"]["MAILGLASS_ERL"] == result["tools"]["ERL"]
+      refute Map.has_key?(result["env"], "ASDF_ELIXIR_VERSION")
+      refute Map.has_key?(result["env"], "ASDF_ERLANG_VERSION")
+      assert result["probe"]["mix_version"] =~ "Mix 1.19.5"
+      assert result["probe"]["elixir_version"] =~ "Elixir 1.19.5"
+      assert result["probe"]["otp_release"] == "28"
+      assert result["probe"]["digest"] =~ ~r/^[0-9a-f]{64}$/
+    end
+
+    @tag :phase_164_authority_closure
+    test "missing or shim-selected BEAM runtime members fail before Bash dispatch" do
+      node = fixture_node!()
+
+      for {name, mutation} <- [
+            {"missing-erl", "delete tools.ERL;"},
+            {"mix-shim", ~s(tools.MIX = "/Users/jon/.asdf/shims/mix";)}
+          ] do
+        expression = """
+        const loader = await import(#{inspect("file://" <> @immutable_loader)});
+        const tools = {...loader.validateTrustedToolchain()};
+        #{mutation}
+        const validated = loader.validateTrustedToolchain(tools);
+        const env = loader.buildChildEnvironment(validated);
+        loader.probeTrustedRuntime(validated, env);
+        """
+
+        {output, status} =
+          System.cmd(node, ["--input-type=module", "--eval", expression],
+            cd: @repo_root,
+            stderr_to_stdout: true
+          )
+
+        assert status != 0, "#{name} unexpectedly passed"
+        assert output =~ "finalize-phase:"
+      end
+    end
+
     @tag :phase_164_trusted_toolchain
     test "self-check rejects byte-identical loader bytes from unrelated history" do
       root = temporary_root!()
