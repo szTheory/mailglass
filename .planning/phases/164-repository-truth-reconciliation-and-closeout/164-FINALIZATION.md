@@ -2,16 +2,13 @@
 
 Phase 164 closes across two deliberately separate proof boundaries. Ordinary
 GSD execution owns tracked implementation, summaries, verification, roadmap,
-requirements, and phase-completion metadata. The previously proven installed
-program is the mode-0500 executable at
-`/Users/jon/.local/bin/mailglass-finalize-phase`; its active predecessor bytes
-remain bound to the exact Plan 164-32 approval and installed-readiness proof
-described below. The tracked source
-`scripts/mailglass_finalize_phase_loader.mjs` has advanced to the protected
-01-39 authority-chain repair and is not installed authority until Plans 164-37
-and 164-38 complete their separately ordered approval and recoverable install.
-The Plan 164-27 and Plan 164-23 approvals remain immutable prior provenance
-only. The Plan 164-23
+requirements, and phase-completion metadata. The active installed program is
+the mode-0500 executable at
+`/Users/jon/.local/bin/mailglass-finalize-phase`, bound to the exact Plan 164-37
+approval and Plan 164-38 installed-readiness proof described below. The tracked
+source `scripts/mailglass_finalize_phase_loader.mjs` and the installed object
+are the same protected 01-39 authority-chain repair. The Plan 164-32, Plan
+164-27, and Plan 164-23 approvals remain immutable prior provenance only. The Plan 164-23
 authenticated-copy checkpoint remain immutable provenance for an older prior
 object; they do not authorize later tracked bytes. The installed loader is
 outside checkout evaluation: no project-local extension module is imported
@@ -20,12 +17,11 @@ before it establishes repository authority.
 At invocation the installed program captures one full repository commit OID.
 That captured repository OID, rather than symbolic `HEAD`, is the authority for
 every tree enumeration, blob authentication, and private materialization. The
-Plan 164-32 installed authority recognizes the exact PLAN/SUMMARY pair set 01
-through 34, with exactly one PLAN and one SUMMARY for every number. The tracked
-loader, installed loader, and shell source share that deliberately advanced
-range. No historical subset or shortened baseline is accepted. Missing pairs,
-extra numbers, malformed names, or a silently shortened set fail before
-execution.
+Plan 164-37/38 installed authority recognizes the exact PLAN/SUMMARY pair set
+01 through 39, with exactly one PLAN and one SUMMARY for every number. The
+tracked loader, installed loader, and shell source share that range. No
+historical subset or shortened baseline is accepted. Missing pairs, extra
+numbers, malformed names, or a silently shortened set fail before execution.
 
 Before the first Bash process starts, the loader authenticates every exact
 executable and data blob at that OID and materializes the complete set beneath
@@ -350,6 +346,27 @@ Their normalized probe SHA-256 is
 `ca3c43bd04c4e21e223f39561f294885ceca2633db65a72fa29b780bcef3975d`.
 No asdf selector entered the child environment. Automatic predecessor
 restoration was armed for every post-replacement direct assertion.
+
+The real `mix verify.phase_164.installed_boundary` controlled-host alias reads
+the Plan 164-37 approval and the actual installed object; its seven selected
+tests are non-vacuous and include direct version, ancestry-aware self-check,
+physical Mix/Elixir/Erlang output, probe-digest agreement, and rollback
+provenance. The separate `mix verify.ci_lane_contract` repository lane excludes
+both `phase_164_proposal_boundary` and
+`phase_164_installed_production_boundary` while retaining the disposable
+repository movement and runtime-closure negative tests. Neither lane is
+terminal evidence.
+
+This result is installation readiness only. Plan 164-39 tracked reconciliation
+remains pending, ordinary verification remains pending, completion-only
+metadata remains pending, protected-main integration remains pending, exact
+remote attempt-one CI and natural schedules remain pending, and terminal
+finalization remains pending. T-164-109 stays open. The authorized order is
+Plan 164-39 tracked reconciliation → ordinary verifier → completion-only metadata → protected main
+→ exact attempt-one CI and natural schedules → terminal ignored capture → no
+later tracked write. No phase argument, pre-verification mode, terminal mode,
+workflow dispatch or rerun, protected-control mutation, release, or publication
+ran in Plan 164-38.
 
 ## Tracked completion and terminal order
 
