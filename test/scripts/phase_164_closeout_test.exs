@@ -1192,6 +1192,74 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  describe "phase 164 hardened loader reinstall contract" do
+    @describetag :phase_164_reinstall_contract
+
+    test "committed source contains every hardened authority required before proposal" do
+      loader = File.read!(@immutable_loader)
+
+      assert String.starts_with?(loader, "#!/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node\n")
+      assert loader =~ ~s(const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass")
+      assert loader =~ ~s(const EXPECTED_REPOSITORY = "szTheory/mailglass")
+      assert loader =~ "validateCanonicalRepository"
+      assert loader =~ "validateTrustedToolchain"
+      assert loader =~ "buildChildEnvironment"
+      assert loader =~ "installationOidIsAncestor"
+      assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 28"
+      assert loader =~ "exact 01-28 PLAN/SUMMARY set"
+
+      for path <- [
+            "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+            "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+            "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+            "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+            "/usr/bin/jq",
+            "/Users/jon/.asdf/shims/mix",
+            "/Users/jon/.asdf/shims/elixir"
+          ] do
+        assert loader =~ inspect(path)
+      end
+    end
+
+    test "Plan 164-23 approval remains immutable prior-object provenance" do
+      summary =
+        File.read!(
+          Path.join(
+            @repo_root,
+            ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-23-SUMMARY.md"
+          )
+        )
+
+      assert summary =~ "installation_source_oid=7f57e1cd0aafe6d236624da98f7292e86e6de697"
+      assert summary =~
+               "source_sha256=ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
+
+      assert summary =~ "destination=/Users/jon/.local/bin/mailglass-finalize-phase"
+      assert summary =~ "install_mode=0500"
+      assert summary =~ "approval_status=approved"
+      assert summary =~ "Plan 164-27"
+      assert summary =~ "prior"
+    end
+
+    test "lifecycle requires approved recoverable reinstall before readiness" do
+      contract = File.read!(@finalization_contract)
+      normalized = Regex.replace(~r/\s+/, contract, " ")
+
+      assert normalized =~ "Plan 164-27"
+      assert normalized =~ "exact approval"
+      assert normalized =~ "atomic replacement"
+      assert normalized =~ "rollback"
+      assert normalized =~ "controlled-host"
+      assert normalized =~ "superseded operationally only after"
+      assert normalized =~
+               "post-summary → ordinary verifier → protected completion metadata → exact-main terminal"
+
+      assert normalized =~ "does not run canonical pre-verification or terminal finalization"
+      assert normalized =~ "terminal finalization remains pending"
+    end
+  end
+
   describe "phase 164 installed production boundary" do
     @describetag :phase_164_installed_production_boundary
 
