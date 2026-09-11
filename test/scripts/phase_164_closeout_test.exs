@@ -1403,6 +1403,123 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     end
   end
 
+  describe "phase 164 gap install proposal" do
+    @describetag :phase_164_gap_install_proposal
+
+    test "01-34 source exposes every authority required before proposal publication" do
+      loader = File.read!(@immutable_loader)
+
+      assert String.starts_with?(loader, "#!/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node\n")
+      assert loader =~ ~s(const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass")
+      assert loader =~ ~s(const EXPECTED_REPOSITORY = "szTheory/mailglass")
+      assert loader =~ "validateCanonicalRepository"
+      assert loader =~ "validateTrustedToolchain"
+      assert loader =~ "buildChildEnvironment"
+      assert loader =~ "installationOidIsAncestor"
+      assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 34"
+      assert loader =~ "exact 01-34 PLAN/SUMMARY set"
+
+      for path <- [
+            "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+            "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+            "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+            "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+            "/usr/bin/jq",
+            "/Users/jon/.asdf/shims/mix",
+            "/Users/jon/.asdf/shims/elixir"
+          ] do
+        assert loader =~ inspect(path)
+      end
+    end
+
+    test "Plan 164-27 tuple is the exact prior-object authority" do
+      summary =
+        File.read!(
+          Path.join(
+            @repo_root,
+            ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-27-SUMMARY.md"
+          )
+        )
+
+      assert summary =~
+               "installation_source_oid=2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97"
+
+      assert summary =~
+               "source_sha256=0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
+
+      assert summary =~
+               "approval_sha256=e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9"
+
+      assert summary =~ "destination=/Users/jon/.local/bin/mailglass-finalize-phase"
+      assert summary =~ "install_mode=0500"
+      assert summary =~ "approval_status=approved"
+    end
+
+    test "replacement proposal schema is the prior approval schema without approval status" do
+      proposal_keys =
+        @install_approval_tuple
+        |> Map.keys()
+        |> List.delete("approval_status")
+        |> Enum.sort()
+
+      assert length(proposal_keys) == 18
+
+      assert proposal_keys ==
+               Enum.sort([
+                 "record_version",
+                 "phase_plan",
+                 "installation_source_oid",
+                 "source_sha256",
+                 "destination",
+                 "install_mode",
+                 "node_executable",
+                 "git_executable",
+                 "bash_executable",
+                 "gh_executable",
+                 "jq_executable",
+                 "mix_executable",
+                 "elixir_executable",
+                 "prior_approval_sha256",
+                 "prior_sha256",
+                 "prior_mode",
+                 "prior_stat_identity",
+                 "rollback_path"
+               ])
+
+      refute "approval_status" in proposal_keys
+    end
+
+    test "lifecycle keeps the persisted Plan 164-32 tuple pending and non-mutating" do
+      contract = File.read!(@finalization_contract)
+      heading = "## Plan 164-32 pending 01-34 replacement tuple"
+      assert contract =~ heading
+
+      section =
+        contract
+        |> String.split(heading, parts: 2)
+        |> List.last()
+        |> String.split("\n## ", parts: 2)
+        |> List.first()
+        |> then(&Regex.replace(~r/\s+/, &1, " "))
+
+      assert section =~ "/Users/jon/.local/share/mailglass/checkpoints/164-32-install-proposal.env"
+      assert section =~ "mode 0400"
+      assert section =~ "18 proposal fields"
+      assert section =~ "approval_status"
+      assert section =~ "Plan 164-27"
+      assert section =~ "e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9"
+      assert section =~ "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e"
+      assert section =~ "Plan 164-33"
+      assert section =~ "destination and rollback path remain unchanged"
+      assert section =~ "terminal finalization remains pending"
+
+      refute section =~ "01-34 installation is ready"
+      refute section =~ "ordinary verification passed"
+      refute section =~ "terminal evidence captured"
+    end
+  end
+
   describe "phase 164 repository-only installed-loader attacks" do
     @describetag :phase_164_installed_boundary
 
