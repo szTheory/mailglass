@@ -472,6 +472,66 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
                   "ignore:#{ignore_file}:/fixture-#{index}/"
                 end)}
     end
+
+    test "wrong-type and unreadable authority subjects return bounded tagged reasons" do
+      next_subject = Enum.at(@ignore_files, 1)
+
+      directory_root = authority_root!()
+      write_authority_subject!(directory_root, ".gitignore", "/root/\n")
+      File.mkdir_p!(Path.join(directory_root, next_subject))
+
+      symlink_root = authority_root!()
+      write_authority_subject!(symlink_root, ".gitignore", "/root/\n")
+      symlink_path = Path.join(symlink_root, next_subject)
+      File.mkdir_p!(Path.dirname(symlink_path))
+      File.ln_s!(Path.join(@repo_root, next_subject), symlink_path)
+
+      unreadable_root = authority_root!()
+      write_authority_subject!(unreadable_root, ".gitignore", "/root/\n")
+      unreadable_path = Path.join(unreadable_root, next_subject)
+      write_authority_subject!(unreadable_root, next_subject, "/private/\n")
+      File.chmod!(unreadable_path, 0o000)
+
+      malformed_root = authority_root!()
+      write_authority_subject!(malformed_root, ".gitignore", "/root/\n")
+      File.write!(Path.join(malformed_root, "mailglass_admin"), "not a directory\n")
+
+      api_results =
+        for root <- [directory_root, symlink_root, unreadable_root, malformed_root] do
+          ignore_subjects_result(root)
+        end
+
+      script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
+      elixir = System.find_executable("elixir")
+
+      cli_result =
+        System.cmd(
+          elixir,
+          [
+            script,
+            "--repo",
+            @repo_root,
+            "--authority-root",
+            directory_root,
+            "--ledger",
+            @ledger
+          ],
+          stderr_to_stdout: true
+        )
+
+      expected_cli =
+        "repository truth ledger: {:missing_authority_subject, #{inspect(next_subject)}}\n" <>
+          "usage: validate_repository_truth.exs --repo PATH [--authority-root PATH] --ledger PATH\n"
+
+      assert cli_result == {expected_cli, 1}
+
+      assert api_results == [
+               {:error, {:missing_authority_subject, next_subject}},
+               {:error, {:missing_authority_subject, next_subject}},
+               {:error, {:unreadable_authority_subject, next_subject, :eacces}},
+               {:error, {:missing_authority_subject, next_subject}}
+             ]
+    end
   end
 
   describe "phase 164 stage-0 index identity" do
