@@ -92,7 +92,7 @@ created: "2026-09-01"
 | T-164-127 | Spoofing | active installed proof | high | mitigate | Real approval/install proof binds source OID `1cfee7802de808f690fe5413b22a57e7ab802488`, SHA-256 `f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`, ancestry, version, mode, and 01-34 self-check | closed |
 | T-164-128 | Elevation of Privilege | terminal execution | high | mitigate | Installation readiness permitted only direct `--version` and `--self-check`; no phase argument or finalization mode ran | closed |
 | T-164-129 | Repudiation | validation/security records | high | mitigate | Plan 164-34 binds claims to named active tags, exact commands, observed selected/excluded counts, exit status, and failure direction | closed |
-| T-164-130 | Tampering | canonical ledger map | high | mitigate | Exact-one completed-plan subjects and final canonical relationship digests are enforced with missing, duplicate, and stale-hash negatives | pending Task 2 |
+| T-164-130 | Tampering | canonical ledger map | high | mitigate | Exact-one completed-plan subjects and final canonical relationship digests are enforced with missing, duplicate, and stale-hash negatives; the full repository-truth suite passed 30 tests | closed |
 | T-164-131 | Spoofing | terminal readiness | high | mitigate | Records preserve ordinary verifier → completion-only metadata → protected main → exact attempt-one CI/natural schedules → ignored capture → no later tracked write | closed |
 | T-164-132 | Information Disclosure | validator errors | medium | mitigate | The active incomplete-authority CLI regression retains stable relative tagged diagnostics without stack traces | closed |
 | T-164-SC | Tampering | package supply chain | low | accept | No package-manager install or dependency change occurred; active bytes are the human-approved project-authored Plan 164-32 Git blob and Plan 164-27/23 bytes remain exact prior provenance | accepted |
@@ -147,7 +147,7 @@ or terminal lifecycle checks.
 | 2026-09-09 | 42 | 39 | 3 total / 2 blocking | execute-phase reconciliation after code review and authoritative goal verification |
 | 2026-09-10 | 42 | 41 | 1 total / 0 blocking | gsd-security-auditor (post-Plans 164-18/19 gap verification) |
 | 2026-09-10 | 47 | 46 resolved | 1 blocking terminal-lifecycle item | Plan 164-28 superseding reconciliation after Plans 164-25 through 164-27 |
-| 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | Plan 164-34 reconciliation of Plans 164-29 through 164-33; T-164-130 completes with Task 2 |
+| 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | Plan 164-34 reconciliation of Plans 164-29 through 164-33 and canonical Task 2 validation |
 
 ## Sign-Off
 
