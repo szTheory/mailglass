@@ -313,7 +313,7 @@ Plans:
 
 **Wave 29** *(blocking-human installation checkpoint; blocked on exact-history authority)*
 
-- [ ] 164-32-PLAN.md — Bind the changed loader to one explicit immutable replacement proposal and approval tuple.
+- [x] 164-32-PLAN.md — Bind the changed loader to one explicit immutable replacement proposal and approval tuple.
 
 **Wave 30** *(blocked on the approved replacement tuple)*
 
@@ -336,4 +336,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 31/34 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 32/34 | In Progress|  |
