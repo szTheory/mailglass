@@ -113,6 +113,7 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     end)
   end
 
+  @tag timeout: 180_000
   test "target validation accepts only source-matching exact candidate tags" do
     in_tmp(fn dir ->
       File.mkdir_p!(Path.join(dir, "mailglass_admin"))

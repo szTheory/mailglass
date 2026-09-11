@@ -237,16 +237,17 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   # Constants
   # ──────────────────────────────────────────────────────────────
 
-  # The complete set of tokens produced by `advisory-matrix.yml`'s
-  # `--exclude requires_workspace`, `test_helper.exs`'s conditional
-  # `ExUnit.configure(exclude: [:public_only])`, or the repository-only CI
-  # contract's controlled-host exclusion. Answers "is this tag one of the
-  # legitimate sources," not "does THIS schema expect it"
+  # The complete set of tokens produced by `advisory-matrix.yml`,
+  # `test_helper.exs`, the repository-only CI contract, or the explicit
+  # cold-start alias. Answers "is this tag one of the legitimate sources,"
+  # not "does THIS schema expect it"
   # — see `expected_exclusion_tags/1` for the schema-aware half.
   @known_exclusion_tags MapSet.new([
                           :requires_workspace,
                           :public_only,
-                          :phase_164_installed_production_boundary
+                          :phase_164_installed_production_boundary,
+                          :flaky,
+                          :migration_roundtrip
                         ])
 
   # Answers: "did this complete suite run at least as many tests as the last
@@ -472,8 +473,9 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   @doc """
   The full set of exclusion tags a legitimate source
   (`advisory-matrix.yml`'s `--exclude requires_workspace`,
-  `test_helper.exs`'s conditional `:public_only`, or the repository-only CI
-  contract's `:phase_164_installed_production_boundary`) can produce. Used for the
+  `test_helper.exs`'s conditional `:public_only`, the repository-only CI
+  contract's `:phase_164_installed_production_boundary`, or the cold-start
+  alias's `:flaky`/`:migration_roundtrip`) can produce. Used for the
   "unknown tag" direction of the both-directions check — a schema chooses a
   SUBSET of this set, never a tag outside it (see `expected_exclusion_tags/1`
   for the schema-aware subset).

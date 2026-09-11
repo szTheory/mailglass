@@ -1,5 +1,8 @@
 defmodule Mailglass.ComplianceTest do
-  use ExUnit.Case, async: true
+  # This module owns global :mailglass Application configuration for each test.
+  # Keep it serialized so a fresh, highly concurrent suite cannot observe the
+  # restore window between cases as missing compliance configuration.
+  use ExUnit.Case, async: false
 
   alias Mailglass.Message
 
@@ -28,16 +31,9 @@ defmodule Mailglass.ComplianceTest do
     # resolving to `nil` instead of its default. Same shape as the `:schema`
     # restore bug that produced a 104-failure cascade in 143-07.
     #
-    # This module deliberately does NOT use
-    # `SandboxOwnership.with_app_env!/2`, unlike the other ten sites migrated
-    # in this pass, and the reason is `async: true` on line 2. That seam
-    # restores the WHOLE app env, which is only safe when no other module can
-    # be writing it concurrently. `clock_test.exs` is also `async: true` and
-    # also writes `:mailglass` env (`:clock`), so a whole-env restore fired
-    # from here could delete a key `clock_test.exs` had live at that instant.
-    # Phase 143 changes no file's `async:` value (D-11/D-31), so the correct
-    # fix here is the presence-aware per-key restore below: same semantics for
-    # the two keys this module owns, no claim over any key it does not.
+    # Keep the restore presence-aware and per-key: serialization prevents
+    # cross-module races, while the narrow restore avoids claiming ownership
+    # of unrelated configuration established by the test harness.
     prior_tracking = Application.fetch_env(:mailglass, :tracking)
     prior_compliance = Application.fetch_env(:mailglass, :compliance)
 

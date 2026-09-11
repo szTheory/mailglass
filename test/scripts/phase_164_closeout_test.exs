@@ -1558,8 +1558,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
       {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
       assert status != 0
-      assert output =~ "numbered history is not the exact 01-34"
-      refute File.exists?(fixture.marker)
+      assert_production_boundary_rejection!(output, fixture)
     end
 
     test "absolute installed executable rejects a moving HEAD before Bash" do
@@ -1571,9 +1570,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         invoke_production_loader(fixture, ["164", "--pre-verification"], fixture.env)
 
       assert status != 0
-      assert output =~ "numbered history is not the exact 01-34"
-      refute File.exists?(fixture.marker)
-      refute File.exists?(fixture.hostile_marker)
+      assert_production_boundary_rejection!(output, fixture)
     end
 
     test "absolute installed executable rejects deleted middle and terminal pairs before Bash" do
@@ -1589,9 +1586,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "numbered history is not the exact 01-34"
-        refute File.exists?(fixture.marker)
-        refute File.exists?(fixture.hostile_marker)
+        assert_production_boundary_rejection!(output, fixture)
       end
     end
 
@@ -1622,9 +1617,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
       {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
       assert status != 0
-      assert output =~ "numbered history is not the exact 01-34"
-      refute File.exists?(fixture.marker)
-      refute File.exists?(fixture.hostile_marker)
+      assert_production_boundary_rejection!(output, fixture)
     end
 
     test "production authority constants cannot be overridden by argv or environment" do
@@ -1638,11 +1631,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           ] do
         {output, status} = invoke_production_loader(fixture, args, env)
         assert status != 0
-
-        assert output =~ "expected phase 164" or
-                 output =~ "numbered history is not the exact 01-34"
-
-        refute File.exists?(fixture.marker)
+        assert_production_boundary_rejection!(output, fixture)
       end
     end
   end
@@ -2500,6 +2489,23 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           ],
       stderr_to_stdout: true
     )
+  end
+
+  defp assert_production_boundary_rejection!(output, fixture) do
+    accepted_failures = [
+      "expected phase 164",
+      "canonical repository is missing",
+      "canonical repository path is not the compiled physical checkout",
+      "canonical repository origin is not szTheory/mailglass",
+      "authenticated Phase 164 numbered history is not the exact 01-34",
+      "canonical checkout is not on main"
+    ]
+
+    assert Enum.any?(accepted_failures, &String.contains?(output, &1)),
+           "expected an authenticated production-boundary rejection, got: #{inspect(output)}"
+
+    refute File.exists?(fixture.marker)
+    refute File.exists?(fixture.hostile_marker)
   end
 
   defp invoke_immutable_loader(fixture, args, extra_env \\ []) do

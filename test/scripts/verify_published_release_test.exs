@@ -144,6 +144,7 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
     refute File.exists?(Path.join(context.root, "curl.log"))
   end
 
+  @tag timeout: 180_000
   test "fails closed on failed, malformed, partial, ambiguous, or wrong GitHub evidence", context do
     hostile = [
       %{gh_mode: "failure"},

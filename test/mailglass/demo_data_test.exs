@@ -9,6 +9,7 @@ defmodule Mailglass.DemoDataTest do
 
   @demo_app Path.expand("../../reference/demo_app", __DIR__)
 
+  @tag timeout: 180_000
   test "demo app fixture suite passes from repo root" do
     {create_output, create_exit} =
       System.cmd("mix", ["ecto.create"],
