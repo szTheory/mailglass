@@ -300,7 +300,7 @@ Plans:
 
 **Wave 26** *(blocked on the verified installed command)*
 
-- [ ] 164-28-PLAN.md — Reconcile validation, security, and lifecycle records while preserving the post-protected-main terminal boundary.
+- [x] 164-28-PLAN.md — Reconcile validation, security, and lifecycle records while preserving the post-protected-main terminal boundary.
 
 **Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
 
@@ -315,4 +315,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 27/28 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 28/28 | In Progress|  |
