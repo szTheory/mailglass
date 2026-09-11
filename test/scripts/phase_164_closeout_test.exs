@@ -1232,14 +1232,19 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         )
 
       assert summary =~ "installation_source_oid=7f57e1cd0aafe6d236624da98f7292e86e6de697"
+
       assert summary =~
                "source_sha256=ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
 
       assert summary =~ "destination=/Users/jon/.local/bin/mailglass-finalize-phase"
       assert summary =~ "install_mode=0500"
       assert summary =~ "approval_status=approved"
-      assert summary =~ "Plan 164-27"
-      assert summary =~ "prior"
+      assert summary =~ "with immutable provenance"
+
+      contract = File.read!(@finalization_contract)
+      assert contract =~ "Plan 164-23 approval record remains immutable prior provenance"
+      assert contract =~ "7f57e1cd0aafe6d236624da98f7292e86e6de697"
+      assert contract =~ "ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
     end
 
     test "lifecycle requires approved recoverable reinstall before readiness" do
@@ -1252,6 +1257,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert normalized =~ "rollback"
       assert normalized =~ "controlled-host"
       assert normalized =~ "superseded operationally only after"
+
       assert normalized =~
                "post-summary → ordinary verifier → protected completion metadata → exact-main terminal"
 

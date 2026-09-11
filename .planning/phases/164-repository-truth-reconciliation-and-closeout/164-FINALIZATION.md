@@ -3,18 +3,19 @@
 Phase 164 closes across two deliberately separate proof boundaries. Ordinary
 GSD execution owns tracked implementation, summaries, verification, roadmap,
 requirements, and phase-completion metadata. The trusted program is the
-mode-0500 executable installed at
+mode-0500 executable at
 `/Users/jon/.local/bin/mailglass-finalize-phase` from the tracked source
-`scripts/mailglass_finalize_phase_loader.mjs` through the Plan 164-23
-authenticated-copy checkpoint. The installed loader is outside checkout
-evaluation: no project-local extension module is imported before it establishes
-repository authority.
+`scripts/mailglass_finalize_phase_loader.mjs`. The Plan 164-23 approval and
+authenticated-copy checkpoint remain immutable provenance for the currently
+installed prior object; they do not authorize later tracked bytes. The installed
+loader is outside checkout evaluation: no project-local extension module is
+imported before it establishes repository authority.
 
 At invocation the installed program captures one full repository commit OID.
 That captured repository OID, rather than symbolic `HEAD`, is the authority for
 every tree enumeration, blob authentication, and private materialization. The
-authorized terminal history is the exact PLAN/SUMMARY set for 01 through 24:
-Plans 01-20 are the executed baseline and Plans 21-24 are the explicitly
+authorized terminal history is the exact PLAN/SUMMARY set for 01 through 28:
+Plans 01-20 are the executed baseline and Plans 21-28 are the explicitly
 authorized closure set. Missing pairs, extra numbers, malformed names, or a
 silently shortened set fail before execution.
 
@@ -78,6 +79,31 @@ marker remained absent.
 These results close the automated installed-boundary attacks only. The ordinary
 verification and protected completion-metadata integration still precede the
 final installed command run, and terminal finalization remains pending.
+
+## Plan 164-27 hardened-loader reinstallation
+
+The Plan 164-23 approval record remains immutable prior provenance. Its source
+OID `7f57e1cd0aafe6d236624da98f7292e86e6de697` and loader SHA-256
+`ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9`
+identify the exact older mode-0500 object; they must not be mistaken for or
+silently overwritten by the hardened Plan 164-26 source.
+
+Plan 164-27 is the only reinstall authority. Before it can propose an upgrade,
+one committed loader blob must expose the canonical physical repository and
+normalized origin, the approved absolute Node shebang and trusted Git, Bash,
+gh, jq, Mix, and Elixir identities, the sanitized child environment, the
+installation-OID ancestry gate, and the exact 01-28 PLAN/SUMMARY range. The
+Plan 164-23 object is superseded operationally only after Plan 164-27's exact
+approval, rollback preservation, atomic replacement, installed digest and
+ancestry self-checks, and controlled-host boundary checks all succeed. Any
+source, tool, destination, prior-object, or rollback drift invalidates the
+approval before replacement.
+
+Plan 164-27 does not run canonical pre-verification or terminal finalization.
+It may establish installation readiness only; terminal finalization remains
+pending. The protected lifecycle order stays: post-summary → ordinary verifier
+→ protected completion metadata → exact-main terminal. No installation test or
+approval record substitutes for any later boundary.
 
 ## Terminal operational proof
 
