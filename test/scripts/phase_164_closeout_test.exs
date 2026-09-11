@@ -1162,7 +1162,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
       assert output =~ "installation_oid=#{fixture.installation_oid}"
       assert output =~ "current_oid=#{fixture.current_oid}"
-      assert output =~ "terminal_range=01-28"
+      assert output =~ "terminal_range=01-34"
       assert output =~ "mode=0500"
       refute File.exists?(fixture.marker)
 
@@ -1205,7 +1205,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
 
-      for plan <- [10, 20, 28] do
+      for plan <- [10, 20, 34] do
         fixture = immutable_loader_fixture!(Path.join(root, "missing-#{plan}"))
         number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
         phase = ".planning/phases/164-fixture/164-#{number}"
@@ -1214,7 +1214,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "numbered history is not the exact 01-28"
+        assert output =~ "numbered history is not the exact 01-34"
         refute File.exists?(fixture.marker)
       end
     end
@@ -1236,7 +1236,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
          end},
         {"unexpected",
          fn fixture ->
-           path = ".planning/phases/164-fixture/164-29-PLAN.md"
+           path = ".planning/phases/164-fixture/164-35-PLAN.md"
            File.write!(Path.join(fixture.repo, path), "unexpected\n")
            git!(fixture.repo, ["add", "--", path])
          end}
@@ -1249,20 +1249,20 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "numbered history is not the exact 01-28"
+        assert output =~ "numbered history is not the exact 01-34"
         refute File.exists?(fixture.marker)
       end
     end
 
-    test "loader and shell share an explicit 01-28 terminal contract recorded in the ledger" do
+    test "loader and shell share an explicit 01-34 terminal contract recorded in the ledger" do
       loader = File.read!(@immutable_loader)
       finalizer = File.read!(@finalizer)
       ledger = File.read!(@ledger)
 
       assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
-      assert loader =~ "const TERMINAL_LAST_PLAN = 28"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 34"
       assert finalizer =~ "terminal_first_plan=1"
-      assert finalizer =~ "terminal_last_plan=28"
+      assert finalizer =~ "terminal_last_plan=34"
       assert finalizer =~ ~S|for plan in $(seq -w "$terminal_first_plan" "$terminal_last_plan")|
       assert ledger =~ "scripts/mailglass_finalize_phase_loader.mjs"
       assert ledger =~ "scripts/finalize_phase_164.sh"
@@ -1317,8 +1317,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert loader =~ "buildChildEnvironment"
       assert loader =~ "installationOidIsAncestor"
       assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
-      assert loader =~ "const TERMINAL_LAST_PLAN = 28"
-      assert loader =~ "exact 01-28 PLAN/SUMMARY set"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 34"
+      assert loader =~ "exact 01-34 PLAN/SUMMARY set"
 
       for path <- [
             "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
@@ -1558,7 +1558,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
       {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
       assert status != 0
-      assert output =~ "numbered history is not the exact 01-28"
+      assert output =~ "numbered history is not the exact 01-34"
       refute File.exists?(fixture.marker)
     end
 
@@ -1571,7 +1571,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         invoke_production_loader(fixture, ["164", "--pre-verification"], fixture.env)
 
       assert status != 0
-      assert output =~ "numbered history is not the exact 01-28"
+      assert output =~ "numbered history is not the exact 01-34"
       refute File.exists?(fixture.marker)
       refute File.exists?(fixture.hostile_marker)
     end
@@ -1580,7 +1580,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
 
-      for plan <- [10, 20, 28] do
+      for plan <- [10, 20, 34] do
         fixture = production_installed_fixture!(Path.join(root, "missing-#{plan}"))
         number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
         phase = ".planning/phases/164-fixture/164-#{number}"
@@ -1589,7 +1589,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "numbered history is not the exact 01-28"
+        assert output =~ "numbered history is not the exact 01-34"
         refute File.exists?(fixture.marker)
         refute File.exists?(fixture.hostile_marker)
       end
@@ -1622,7 +1622,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
       {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
       assert status != 0
-      assert output =~ "numbered history is not the exact 01-28"
+      assert output =~ "numbered history is not the exact 01-34"
       refute File.exists?(fixture.marker)
       refute File.exists?(fixture.hostile_marker)
     end
@@ -1640,7 +1640,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         assert status != 0
 
         assert output =~ "expected phase 164" or
-                 output =~ "numbered history is not the exact 01-28"
+                 output =~ "numbered history is not the exact 01-34"
 
         refute File.exists?(fixture.marker)
       end
@@ -1970,7 +1970,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     File.write!(Path.join(repo, ".planning/STATE.md"), "state\n")
 
-    for plan <- 1..28 do
+    for plan <- 1..34 do
       number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
       File.write!(Path.join(phase_dir, "164-#{number}-PLAN.md"), "plan\n")
       File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary\n")
