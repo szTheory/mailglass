@@ -2182,7 +2182,9 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   end
 
   defp invoke_production_loader(fixture, args, extra_env \\ []) do
-    System.cmd("/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node", [fixture.installed | args],
+    node = fixture_node!()
+
+    System.cmd(node, [fixture.installed | args],
       cd: fixture.repo,
       env:
         extra_env ++
@@ -2198,7 +2200,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   end
 
   defp invoke_immutable_loader(fixture, args, extra_env \\ []) do
-    node = System.find_executable("node") || raise "node executable is required for loader fixtures"
+    node = fixture_node!()
 
     System.cmd(node, [fixture.installed | args],
       cd: fixture.repo,
@@ -2213,6 +2215,23 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           ],
       stderr_to_stdout: true
     )
+  end
+
+  defp fixture_node! do
+    discovered =
+      System.find_executable("node") || raise "node executable is required for loader fixtures"
+
+    case System.cmd(discovered, ["-p", "process.execPath"], stderr_to_stdout: true) do
+      {path, 0} ->
+        resolved = String.trim(path)
+
+        if File.regular?(resolved),
+          do: resolved,
+          else: raise("node resolved to non-file: #{resolved}")
+
+      {output, status} ->
+        raise "node executable discovery failed with #{status}: #{String.trim(output)}"
+    end
   end
 
   defp parse_install_approval!(path) do
