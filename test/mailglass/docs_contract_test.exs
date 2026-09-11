@@ -221,6 +221,100 @@ defmodule Mailglass.DocsContractTest do
       assert validation =~ "phase_164_installed_production_boundary"
     end
 
+    @tag :phase_164_gap_reconciliation
+    @tag :phase_164_ci_hermeticity
+    test "Phase 164 validation maps every current finding to observed repair evidence" do
+      validation =
+        File.read!(
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md"
+        )
+
+      for token <- [
+            "## Gap Reconciliation — Plans 164-25 through 164-28",
+            "CR-01",
+            "164-25-01",
+            "phase_164_ci_hermeticity",
+            "mix verify.ci_lane_contract",
+            "372 selected, 5 excluded, 0 failures",
+            "CR-02",
+            "164-26-01",
+            "phase_164_canonical_loader",
+            "1 selected, 0 failures",
+            "CR-03",
+            "164-26-02",
+            "phase_164_trusted_toolchain",
+            "3 selected, 0 failures",
+            "WR-01",
+            "phase_164_reinstall_contract",
+            "3 selected, 0 failures",
+            "164-27-03",
+            "phase_164_installed_production_boundary",
+            "5 selected, 44 excluded, 0 failures",
+            "2c7cf25c4ac004df3f960a5e8cb37cf8aef68c97",
+            "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e",
+            "ca760f78ab0901dbc537e20ec6c231314afffa7932dd8f1850f4935cabc8b7d9"
+          ] do
+        assert validation =~ token,
+               "164-VALIDATION.md is missing gap-reconciliation evidence #{inspect(token)}"
+      end
+    end
+
+    @tag :phase_164_gap_reconciliation
+    test "Phase 164 security supersedes the contradicted audit with observed mitigations" do
+      security =
+        File.read!(
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-SECURITY.md"
+        )
+
+      for token <- [
+            "## Superseding Gap-Reconciliation Assessment",
+            "T-164-105",
+            "required-CI host coupling",
+            "T-164-106",
+            "caller-selected repository authority",
+            "T-164-107",
+            "forged PATH/tools",
+            "T-164-108",
+            "unrelated installation OID",
+            "T-164-109",
+            "terminal no-later-write evidence",
+            "phase_164_ci_hermeticity",
+            "phase_164_canonical_loader",
+            "phase_164_trusted_toolchain",
+            "phase_164_reinstall_contract",
+            "phase_164_installed_production_boundary",
+            "T-164-SC",
+            "accepted"
+          ] do
+        assert security =~ token,
+               "164-SECURITY.md is missing superseding security evidence #{inspect(token)}"
+      end
+    end
+
+    @tag :phase_164_gap_reconciliation
+    test "Phase 164 validation and security keep terminal protected-main evidence pending" do
+      documents =
+        for name <- ["164-VALIDATION.md", "164-SECURITY.md"] do
+          name
+          |> then(
+            &Path.join(
+              ".planning/phases/164-repository-truth-reconciliation-and-closeout",
+              &1
+            )
+          )
+          |> File.read!()
+          |> then(&Regex.replace(~r/\s+/, &1, " "))
+        end
+
+      for document <- documents do
+        assert document =~ "terminal protected-main evidence remains absent and pending"
+        assert document =~ "ordinary verification"
+        assert document =~ "protected completion metadata"
+        refute document =~ "terminal finalization passed"
+        refute document =~ "Phase 164 completed"
+      end
+    end
+
     test "B2C first-adopter profile locks the safe consumer launch contract" do
       guide = File.read!("guides/b2c-first-adopter.md")
       blocks = extract_code_blocks("guides/b2c-first-adopter.md")
