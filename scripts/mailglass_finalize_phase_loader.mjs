@@ -29,9 +29,22 @@ const TRUSTED_TOOLS = Object.freeze({
   BASH: "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
   GH: "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
   JQ: "/usr/bin/jq",
-  MIX: "/Users/jon/.asdf/shims/mix",
-  ELIXIR: "/Users/jon/.asdf/shims/elixir",
+  MIX: "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix",
+  ELIXIR: "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir",
+  ERL: "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl",
 });
+const REQUIRED_TOOL_NAMES = Object.freeze([
+  "NODE",
+  "GIT",
+  "BASH",
+  "GH",
+  "JQ",
+  "MIX",
+  "ELIXIR",
+  "ERL",
+]);
+const EXPECTED_ELIXIR_VERSION = "1.19.5";
+const EXPECTED_OTP_RELEASE = "28";
 const TRUSTED_GIT = TRUSTED_TOOLS.GIT;
 const TEST_ENV_KEYS = [];
 const TERMINAL_FIRST_PLAN = 1;
@@ -109,8 +122,11 @@ function git(repo, args, options = {}) {
 
 export function validateTrustedToolchain(tools = TRUSTED_TOOLS) {
   const allowedOwners = new Set([0, process.getuid?.()].filter(Number.isInteger));
-  for (const [name, path] of Object.entries(tools)) {
+  for (const name of REQUIRED_TOOL_NAMES) {
+    const path = tools[name];
+    if (typeof path !== "string" || path.length === 0) fail(`trusted ${name} executable is missing`);
     if (!isAbsolute(path)) fail(`trusted ${name} path is not absolute`);
+    if (path.includes("/.asdf/shims/")) fail(`trusted ${name} executable must not be an asdf shim`);
     let entry;
     let physical;
     try {
@@ -141,10 +157,6 @@ export function buildChildEnvironment(tools = TRUSTED_TOOLS) {
     "SSH_AUTH_SOCK",
     "GH_TOKEN",
     "GITHUB_TOKEN",
-    "ASDF_DATA_DIR",
-    "ASDF_DIR",
-    "ASDF_ELIXIR_VERSION",
-    "ASDF_ERLANG_VERSION",
     ...TEST_ENV_KEYS,
   ]) {
     if (process.env[name]) env[name] = process.env[name];
@@ -156,9 +168,66 @@ export function buildChildEnvironment(tools = TRUSTED_TOOLS) {
   env.MAILGLASS_JQ = tools.JQ;
   env.MAILGLASS_MIX = tools.MIX;
   env.MAILGLASS_ELIXIR = tools.ELIXIR;
+  env.MAILGLASS_ERL = tools.ERL;
   env.GH_HOST = "github.com";
   env.PATH = [...new Set(Object.values(tools).map(dirname).concat(["/usr/bin", "/bin"]))].join(":");
   return env;
+}
+
+function probeCommand(path, args, childEnv, label) {
+  const result = spawnSync(path, args, {
+    encoding: "utf8",
+    env: childEnv,
+    timeout: 10_000,
+    maxBuffer: 1024 * 1024,
+  });
+  if (result.error || result.status !== 0) {
+    const detail = bounded(result.stderr || result.stdout || result.error?.message || "probe failed");
+    fail(`${label} probe failed: ${detail}`);
+  }
+  const output = String(result.stdout || "").trim();
+  if (output.length === 0) fail(`${label} probe returned empty output`);
+  return output;
+}
+
+export function probeTrustedRuntime(tools = TRUSTED_TOOLS, childEnv = buildChildEnvironment(tools)) {
+  validateTrustedToolchain(tools);
+  const expectedPath = [
+    ...new Set(Object.values(tools).map(dirname).concat(["/usr/bin", "/bin"])),
+  ].join(":");
+  if (childEnv.PATH !== expectedPath) fail("trusted runtime PATH differs from authenticated tool closure");
+  if (Object.keys(childEnv).some((name) => name.startsWith("ASDF_"))) {
+    fail("trusted runtime environment contains ASDF selectors");
+  }
+
+  const mixOutput = probeCommand(tools.MIX, ["--version"], childEnv, "Mix");
+  const elixirOutput = probeCommand(tools.ELIXIR, ["--version"], childEnv, "Elixir");
+  const otpRelease = probeCommand(
+    tools.ERL,
+    ["-noshell", "-eval", 'io:format("~s", [erlang:system_info(otp_release)]), halt().'],
+    childEnv,
+    "Erlang",
+  );
+  const mixVersion = mixOutput.split("\n").find((line) => line.startsWith("Mix ")) || "";
+  const elixirVersion = elixirOutput.split("\n").find((line) => line.startsWith("Elixir ")) || "";
+  if (
+    !mixVersion.startsWith(`Mix ${EXPECTED_ELIXIR_VERSION} `) ||
+    !mixVersion.includes(`Erlang/OTP ${EXPECTED_OTP_RELEASE}`) ||
+    !elixirVersion.startsWith(`Elixir ${EXPECTED_ELIXIR_VERSION} `) ||
+    !elixirVersion.includes(`Erlang/OTP ${EXPECTED_OTP_RELEASE}`) ||
+    otpRelease !== EXPECTED_OTP_RELEASE
+  ) {
+    fail("trusted runtime versions are incompatible with the approved BEAM closure");
+  }
+  const probe = {
+    mix_version: mixVersion,
+    elixir_version: elixirVersion,
+    otp_release: otpRelease,
+  };
+  return {
+    ...probe,
+    digest: createHash("sha256").update(JSON.stringify(probe)).digest("hex"),
+  };
 }
 
 function normalizedRepository(url) {
@@ -353,7 +422,9 @@ function assertCleanRepository(repo) {
 }
 
 function selfCheck(args) {
-  validateTrustedToolchain();
+  const tools = validateTrustedToolchain();
+  const childEnv = buildChildEnvironment(tools);
+  const runtimeProbe = probeTrustedRuntime(tools, childEnv);
   const { repoArgument, expectedSourceOid } = parseSelfCheck(args);
   if (!isAbsolute(repoArgument) || !FULL_OID.test(expectedSourceOid)) {
     fail("self-check requires an absolute repository and full lowercase source OID");
@@ -389,6 +460,10 @@ function selfCheck(args) {
   console.log(`executable=${executable}`);
   console.log("mode=0500");
   console.log("terminal_range=01-34");
+  console.log(`mix_version=${runtimeProbe.mix_version}`);
+  console.log(`elixir_version=${runtimeProbe.elixir_version}`);
+  console.log(`otp_release=${runtimeProbe.otp_release}`);
+  console.log(`runtime_probe_sha256=${runtimeProbe.digest}`);
 }
 
 export function installationOidIsAncestor(repo, installationOid, currentOid) {
@@ -404,6 +479,8 @@ function finalize(args) {
     fail("expected phase 164 and optional --pre-verification");
   }
   const tools = validateTrustedToolchain();
+  const childEnv = buildChildEnvironment(tools);
+  probeTrustedRuntime(tools, childEnv);
   const repo = validateCanonicalRepository();
   const authorityOid = captureAuthorityCommit(repo);
   const phaseRelative = phaseDirectoryAtCommit(repo, authorityOid);
@@ -424,7 +501,7 @@ function finalize(args) {
       cwd: repo,
       encoding: "utf8",
       maxBuffer: 16 * 1024 * 1024,
-      env: buildChildEnvironment(tools),
+      env: childEnv,
     });
     const output = bounded([result.stdout?.trim(), result.stderr?.trim()].filter(Boolean).join("\n"));
     if (result.error || result.status !== 0) {

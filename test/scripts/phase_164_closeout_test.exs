@@ -260,7 +260,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     assert source =~ "validate_repository_truth.exs"
     assert source =~ "--authority-root \"$authority_root\""
     assert source =~ "--ledger \"$authority_ledger\""
-    assert source =~ "git -C \"$repo\" check-ignore"
+    assert source =~ "\"$MAILGLASS_GIT\" -C \"$repo\" check-ignore"
     assert source =~ "status --porcelain=v1 --untracked-files=all"
 
     assert source =~ "write_report\nfinal_porcelain=$(stable_porcelain)"
@@ -1022,6 +1022,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     test "loader pins validated tools and passes an allowlisted child environment" do
       loader = File.read!(@immutable_loader)
       finalizer = File.read!(@finalizer)
+      closeout = File.read!(@script)
 
       assert String.starts_with?(loader, "#!/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node\n")
       assert loader =~ "validateTrustedToolchain"
@@ -1030,9 +1031,15 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert loader =~ "MAILGLASS_GIT"
       assert loader =~ "MAILGLASS_BASH"
 
-      for tool <- ~w(GIT GH JQ MIX NODE ELIXIR) do
+      for tool <- ~w(GIT BASH GH JQ MIX NODE ELIXIR) do
         assert finalizer =~ ~s(\"${MAILGLASS_#{tool})
       end
+
+      for tool <- ~w(GIT BASH JQ MIX NODE ELIXIR) do
+        assert closeout =~ ~s(\"$MAILGLASS_#{tool}\")
+      end
+
+      assert closeout =~ "MAILGLASS_ERL"
     end
 
     @tag :phase_164_authority_closure
@@ -1137,7 +1144,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       File.mkdir_p!(forged)
 
       markers =
-        for tool <- ~w(git bash gh jq mix node elixir), into: %{} do
+        for tool <- ~w(git bash gh jq mix node elixir erl), into: %{} do
           marker = Path.join(root, "#{tool}.marker")
 
           write_executable!(
@@ -1391,8 +1398,9 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
             "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
             "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
             "/usr/bin/jq",
-            "/Users/jon/.asdf/shims/mix",
-            "/Users/jon/.asdf/shims/elixir"
+            "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix",
+            "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir",
+            "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl"
           ] do
         assert loader =~ inspect(path)
       end
@@ -1498,6 +1506,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
   describe "phase 164 gap install proposal" do
     @describetag :phase_164_gap_install_proposal
+    @describetag :phase_164_proposal_boundary
 
     test "01-34 source exposes every authority required before proposal publication" do
       loader = File.read!(@immutable_loader)
@@ -1519,8 +1528,9 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
             "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
             "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
             "/usr/bin/jq",
-            "/Users/jon/.asdf/shims/mix",
-            "/Users/jon/.asdf/shims/elixir"
+            "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix",
+            "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir",
+            "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl"
           ] do
         assert loader =~ inspect(path)
       end
@@ -1898,7 +1908,17 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         "--output",
         output
       ],
-      env: [{"PATH", "#{bin}:#{System.fetch_env!("PATH")}"}],
+      env: [
+        {"PATH", "#{bin}:#{System.fetch_env!("PATH")}"},
+        {"MAILGLASS_GIT", System.find_executable("git")},
+        {"MAILGLASS_BASH", System.find_executable("bash")},
+        {"MAILGLASS_GH", System.find_executable("gh")},
+        {"MAILGLASS_JQ", System.find_executable("jq")},
+        {"MAILGLASS_MIX", mix},
+        {"MAILGLASS_NODE", System.find_executable("node")},
+        {"MAILGLASS_ELIXIR", System.find_executable("elixir")},
+        {"MAILGLASS_ERL", System.find_executable("erl")}
+      ],
       stderr_to_stdout: true
     )
   end
@@ -1917,6 +1937,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           @scheduled_registry
         ],
         cd: @repo_root,
+        env: [{"MAILGLASS_JQ", System.find_executable("jq")}],
         stderr_to_stdout: true
       )
 
@@ -1993,7 +2014,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         {"MAILGLASS_JQ", System.find_executable("jq")},
         {"MAILGLASS_MIX", System.find_executable("mix")},
         {"MAILGLASS_NODE", System.find_executable("node")},
-        {"MAILGLASS_ELIXIR", System.find_executable("elixir")}
+        {"MAILGLASS_ELIXIR", System.find_executable("elixir")},
+        {"MAILGLASS_ERL", System.find_executable("erl")}
       ],
       stderr_to_stdout: true
     )
@@ -2159,6 +2181,14 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         ],
         env: [
           {"PATH", "#{bin}:#{System.fetch_env!("PATH")}"},
+          {"MAILGLASS_GIT", Path.join(bin, "git")},
+          {"MAILGLASS_BASH", Path.join(bin, "bash")},
+          {"MAILGLASS_GH", System.find_executable("gh")},
+          {"MAILGLASS_JQ", System.find_executable("jq")},
+          {"MAILGLASS_MIX", Path.join(bin, "mix")},
+          {"MAILGLASS_NODE", Path.join(bin, "node")},
+          {"MAILGLASS_ELIXIR", Path.join(bin, "elixir")},
+          {"MAILGLASS_ERL", System.find_executable("erl")},
           {"FIXTURE_SHA", sha},
           {"HYGIENE_JSON", hygiene_json},
           {"HYGIENE_EXIT", Integer.to_string(hygiene_exit)},
@@ -2300,6 +2330,14 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         ],
         env: [
           {"PATH", "#{bin}:#{System.fetch_env!("PATH")}"},
+          {"MAILGLASS_GIT", Path.join(bin, "git")},
+          {"MAILGLASS_BASH", Path.join(bin, "bash")},
+          {"MAILGLASS_GH", System.find_executable("gh")},
+          {"MAILGLASS_JQ", System.find_executable("jq")},
+          {"MAILGLASS_MIX", Path.join(bin, "mix")},
+          {"MAILGLASS_NODE", Path.join(bin, "node")},
+          {"MAILGLASS_ELIXIR", Path.join(bin, "elixir")},
+          {"MAILGLASS_ERL", System.find_executable("erl")},
           {"FIXTURE_REPO", @repo_root},
           {"FIXTURE_SHA", sha},
           {"STATUS_COUNTER", status_counter},
