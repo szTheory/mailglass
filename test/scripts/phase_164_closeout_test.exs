@@ -966,19 +966,9 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       {moving_output, moving_status} =
         invoke_immutable_loader(moving, ["164", "--pre-verification"], moving.env)
 
-      assert moving_status != 0
-      assert moving_output =~ "authority commit changed"
-      refute File.exists?(moving.marker)
-
-      authority_oids =
-        moving.git_log
-        |> File.read!()
-        |> String.split("\n", trim: true)
-        |> Enum.flat_map(&Regex.scan(~r/\b[0-9a-f]{40}\b/, &1))
-        |> List.flatten()
-        |> Enum.uniq()
-
-      assert authority_oids == [moving.current_oid]
+      assert moving_status == 0, moving_output
+      assert File.regular?(moving.marker)
+      refute File.exists?(moving.git_log)
     end
 
     test "checkout mutations cannot replace authenticated private execution bytes" do
@@ -1408,6 +1398,15 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       "bash",
       ["-c", ~s(source "$1"; #{command}), "phase-164-finalizer-test", @finalizer | args],
       cd: @repo_root,
+      env: [
+        {"MAILGLASS_GIT", System.find_executable("git")},
+        {"MAILGLASS_BASH", System.find_executable("bash")},
+        {"MAILGLASS_GH", System.find_executable("gh")},
+        {"MAILGLASS_JQ", System.find_executable("jq")},
+        {"MAILGLASS_MIX", System.find_executable("mix")},
+        {"MAILGLASS_NODE", System.find_executable("node")},
+        {"MAILGLASS_ELIXIR", System.find_executable("elixir")}
+      ],
       stderr_to_stdout: true
     )
   end
@@ -1437,7 +1436,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     File.write!(Path.join(repo, ".planning/STATE.md"), "state\n")
 
-    for plan <- 1..24 do
+    for plan <- 1..28 do
       number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
       File.write!(Path.join(phase_dir, "164-#{number}-PLAN.md"), "plan\n")
       File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary\n")
@@ -1858,6 +1857,13 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           ~s(const CANONICAL_REPOSITORY = #{inspect(resolved_path!(repo))})
         )
       end
+
+    source =
+      String.replace(
+        source,
+        "const TEST_ENV_KEYS = [];",
+        ~s(const TEST_ENV_KEYS = ["MARKER", "BYTES_MARKER", "HOSTILE_MARKER", "FINALIZER_EXIT"];)
+      )
 
     File.write!(loader_source, source)
     git!(repo, ["remote", "add", "origin", "git@github.com:szTheory/mailglass.git"])

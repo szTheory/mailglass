@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node
 
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
@@ -23,7 +23,17 @@ const SOURCE_PATH = "scripts/mailglass_finalize_phase_loader.mjs";
 const SUPPORTED_PHASE = "164";
 const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass";
 const EXPECTED_REPOSITORY = "szTheory/mailglass";
-const TRUSTED_GIT = "/opt/homebrew/Cellar/git/2.41.0/bin/git";
+const TRUSTED_TOOLS = Object.freeze({
+  NODE: "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+  GIT: "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+  BASH: "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+  GH: "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+  JQ: "/usr/bin/jq",
+  MIX: "/Users/jon/.asdf/shims/mix",
+  ELIXIR: "/Users/jon/.asdf/shims/elixir",
+});
+const TRUSTED_GIT = TRUSTED_TOOLS.GIT;
+const TEST_ENV_KEYS = [];
 const TERMINAL_FIRST_PLAN = 1;
 const TERMINAL_LAST_PLAN = 28;
 const PRE_VERIFICATION = "--pre-verification";
@@ -95,6 +105,60 @@ function git(repo, args, options = {}) {
     fail(`${options.label ?? "Git operation"} failed: ${detail}`);
   }
   return result;
+}
+
+export function validateTrustedToolchain(tools = TRUSTED_TOOLS) {
+  const allowedOwners = new Set([0, process.getuid?.()].filter(Number.isInteger));
+  for (const [name, path] of Object.entries(tools)) {
+    if (!isAbsolute(path)) fail(`trusted ${name} path is not absolute`);
+    let entry;
+    let physical;
+    try {
+      entry = lstatSync(path);
+      physical = realpathSync(path);
+    } catch {
+      fail(`trusted ${name} executable is missing`);
+    }
+    if (!entry.isFile() || entry.isSymbolicLink() || physical !== path) {
+      fail(`trusted ${name} executable is not one physical regular file`);
+    }
+    if (!allowedOwners.has(entry.uid) || (entry.mode & 0o022) !== 0) {
+      fail(`trusted ${name} executable has unsafe ownership or mode`);
+    }
+  }
+  return tools;
+}
+
+export function buildChildEnvironment(tools = TRUSTED_TOOLS) {
+  const env = {};
+  for (const name of [
+    "HOME",
+    "TMPDIR",
+    "LANG",
+    "LC_ALL",
+    "USER",
+    "LOGNAME",
+    "SSH_AUTH_SOCK",
+    "GH_TOKEN",
+    "GITHUB_TOKEN",
+    "ASDF_DATA_DIR",
+    "ASDF_DIR",
+    "ASDF_ELIXIR_VERSION",
+    "ASDF_ERLANG_VERSION",
+    ...TEST_ENV_KEYS,
+  ]) {
+    if (process.env[name]) env[name] = process.env[name];
+  }
+  env.MAILGLASS_NODE = tools.NODE;
+  env.MAILGLASS_GIT = tools.GIT;
+  env.MAILGLASS_BASH = tools.BASH;
+  env.MAILGLASS_GH = tools.GH;
+  env.MAILGLASS_JQ = tools.JQ;
+  env.MAILGLASS_MIX = tools.MIX;
+  env.MAILGLASS_ELIXIR = tools.ELIXIR;
+  env.GH_HOST = "github.com";
+  env.PATH = [...new Set(Object.values(tools).map(dirname).concat(["/usr/bin", "/bin"]))].join(":");
+  return env;
 }
 
 function normalizedRepository(url) {
@@ -289,6 +353,7 @@ function assertCleanRepository(repo) {
 }
 
 function selfCheck(args) {
+  validateTrustedToolchain();
   const { repoArgument, expectedSourceOid } = parseSelfCheck(args);
   if (!isAbsolute(repoArgument) || !FULL_OID.test(expectedSourceOid)) {
     fail("self-check requires an absolute repository and full lowercase source OID");
@@ -313,6 +378,9 @@ function selfCheck(args) {
   const currentOid = captureAuthorityCommit(repo);
   const currentBytes = authenticateCommitFile(repo, currentOid, SOURCE_PATH);
   if (!installedBytes.equals(currentBytes)) fail("current HEAD loader source differs from installed bytes");
+  if (!installationOidIsAncestor(repo, expectedSourceOid, currentOid)) {
+    fail("installation OID is not an ancestor of current authority OID");
+  }
   if (TERMINAL_FIRST_PLAN !== 1 || TERMINAL_LAST_PLAN !== 28) fail("compiled terminal range is invalid");
   const digest = createHash("sha256").update(installedBytes).digest("hex");
   console.log(`installation_oid=${expectedSourceOid}`);
@@ -323,11 +391,19 @@ function selfCheck(args) {
   console.log("terminal_range=01-28");
 }
 
+export function installationOidIsAncestor(repo, installationOid, currentOid) {
+  const result = git(repo, ["merge-base", "--is-ancestor", installationOid, currentOid], {
+    allowFailure: true,
+  });
+  return result.status === 0;
+}
+
 function finalize(args) {
   const valid = args.length === 1 || (args.length === 2 && args[1] === PRE_VERIFICATION);
   if (!valid || args[0] !== SUPPORTED_PHASE) {
     fail("expected phase 164 and optional --pre-verification");
   }
+  const tools = validateTrustedToolchain();
   const repo = validateCanonicalRepository();
   const authorityOid = captureAuthorityCommit(repo);
   const phaseRelative = phaseDirectoryAtCommit(repo, authorityOid);
@@ -344,10 +420,11 @@ function finalize(args) {
     if (currentOid !== authorityOid) fail("authority commit changed before Bash dispatch");
     const finalizer = resolve(privateRoot, "scripts/finalize_phase_164.sh");
     const modeArgs = args.length === 2 ? [PRE_VERIFICATION] : [];
-    const result = spawnSync("bash", [finalizer, repo, privateRoot, ...modeArgs], {
+    const result = spawnSync(tools.BASH, [finalizer, repo, privateRoot, ...modeArgs], {
       cwd: repo,
       encoding: "utf8",
       maxBuffer: 16 * 1024 * 1024,
+      env: buildChildEnvironment(tools),
     });
     const output = bounded([result.stdout?.trim(), result.stderr?.trim()].filter(Boolean).join("\n"));
     if (result.error || result.status !== 0) {
