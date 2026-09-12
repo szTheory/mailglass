@@ -33,23 +33,60 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   @locked_digest "331810b4b1724452f0e2707c800230e52fabea01c3773d362b3a1240040ece7e"
   @repair_plan_evidence %{
     Path.join(@phase_dir, "164-FINALIZATION.md") =>
-      "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md",
-    Path.join(@phase_dir, "164-SECURITY.md") => "git ls-files; 164-34-PLAN.md",
+      "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md; 164-37-PLAN.md; 164-38-PLAN.md; 164-39-PLAN.md",
+    Path.join(@phase_dir, "164-SECURITY.md") =>
+      "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
     Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv") =>
-      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
-    Path.join(@phase_dir, "164-VALIDATION.md") => "git ls-files; 164-34-PLAN.md",
-    "scripts/finalize_phase_164.sh" => "git ls-files; 164-31-PLAN.md",
-    "scripts/mailglass_finalize_phase_loader.mjs" => "git ls-files; 164-31-PLAN.md",
-    "scripts/validate_repository_truth.exs" => "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
-    "test/mailglass/docs_contract_test.exs" => "git ls-files; 164-34-PLAN.md",
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
+    Path.join(@phase_dir, "164-VALIDATION.md") =>
+      "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
+    "scripts/finalize_phase_164.sh" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
+    "scripts/mailglass_finalize_phase_loader.mjs" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
+    "scripts/validate_repository_truth.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md",
+    "test/mailglass/docs_contract_test.exs" =>
+      "git ls-files; 164-34-PLAN.md; 164-36-PLAN.md; 164-39-PLAN.md",
     "test/scripts/ci_parity_drift_test.exs" =>
       "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-29-PLAN.md",
     "test/scripts/phase_164_closeout_test.exs" =>
-      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md",
+      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md; 164-42-PLAN.md",
     "test/scripts/phase_164_repository_truth_test.exs" =>
-      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md",
     "test/scripts/scheduled_control_evidence_test.exs" => "git ls-files; 164-29-PLAN.md",
     "test/test_helper.exs" => "git ls-files; 164-29-PLAN.md; 164-29-SUMMARY.md"
+  }
+  @final_plan_evidence %{
+    Path.join(@phase_dir, "164-FINALIZATION.md") =>
+      "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md; 164-37-PLAN.md; 164-38-PLAN.md; 164-39-PLAN.md",
+    Path.join(@phase_dir, "164-SECURITY.md") =>
+      "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
+    Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv") =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
+    Path.join(@phase_dir, "164-VALIDATION.md") =>
+      "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
+    "mix.exs" => "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-35-PLAN.md",
+    "scripts/closeout_repository_truth.sh" => "git ls-files; 164-05-PLAN.md; 164-35-PLAN.md",
+    "scripts/finalize_phase_164.sh" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
+    "scripts/mailglass_finalize_phase_loader.mjs" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
+    "scripts/validate_repository_truth.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md",
+    "test/mailglass/docs_contract_test.exs" =>
+      "git ls-files; 164-34-PLAN.md; 164-36-PLAN.md; 164-39-PLAN.md",
+    "test/scripts/phase_164_closeout_test.exs" =>
+      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md; 164-42-PLAN.md",
+    "test/scripts/phase_164_repository_truth_test.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md"
+  }
+  @gap_closure_evidence %{
+    "MAINTAINING.md" => "164-02-PLAN.md; 164-43-PLAN.md",
+    "scripts/validate_repository_truth.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md",
+    "test/mailglass/publish/maintaining_release_gate_contract_test.exs" =>
+      "164-02-PLAN.md; 164-43-PLAN.md",
+    "test/scripts/phase_164_closeout_test.exs" =>
+      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md; 164-42-PLAN.md",
+    "test/scripts/phase_164_repository_truth_test.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md"
   }
 
   test "parses and validates the authoritative twelve-column ledger" do
@@ -313,6 +350,161 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     end
   end
 
+  describe "phase 164 final ledger reconciliation" do
+    test "Plans 164-35 through 164-39 retain exactly one complete tracked row" do
+      assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+
+      declared_subjects =
+        35..39
+        |> Enum.flat_map(&plan_modified_files/1)
+        |> MapSet.new()
+
+      assert declared_subjects == MapSet.new(Map.keys(@final_plan_evidence))
+
+      for {subject, evidence} <- @final_plan_evidence do
+        assert [row] = Enum.filter(rows, &(&1["subject"] == subject))
+        assert Map.keys(row) |> Enum.sort() == Enum.sort(@headers)
+        assert Enum.all?(@headers, &(row[&1] != ""))
+        assert row["state"] == "tracked"
+        assert row["currentness"] == "current"
+        assert row["disposition"] == "retain"
+        assert row["evidence"] == evidence
+      end
+    end
+
+    test "empty outcomes, extra outcomes, adjacent subjects, and exact duplicates fail" do
+      valid = valid_row()
+
+      assert {:error, {:blank_required_field, "disposition"}} =
+               Ledger.parse(header_line() <> "\n" <> String.replace(valid, "\tremove\t", "\t\t"))
+
+      assert {:error, {:invalid_column_count, 13}} =
+               Ledger.parse(header_line() <> "\n" <> valid <> "\tretain")
+
+      contents = File.read!(@ledger)
+      [header | rows] = String.split(String.trim_trailing(contents), "\n", trim: true)
+      subject = "scripts/finalize_phase_164.sh"
+      exact = Enum.find(rows, &String.contains?(&1, "\t#{subject}\t"))
+      adjacent = String.replace(exact, "\t#{subject}\t", "\t#{subject}.backup\t")
+
+      for candidate_rows <- [rows ++ [adjacent], [adjacent | rows]] do
+        assert {:error, {:invalid_canonical_relationship, "scripts/finalize_phase_164.sh.backup"}} =
+                 Ledger.parse(Enum.join([header | candidate_rows], "\n") <> "\n")
+      end
+
+      for candidate_rows <- [rows ++ [exact], [exact | rows]] do
+        assert {:error, {:duplicate_subject, ^subject}} =
+                 Ledger.parse(Enum.join([header | candidate_rows], "\n") <> "\n")
+      end
+    end
+
+    test "missing candidates and stale semantic digests fail independently of row order" do
+      contents = File.read!(@ledger)
+      subject = Path.join(@phase_dir, "164-VALIDATION.md")
+
+      assert {:error, {:missing_audited_subjects, missing}} =
+               contents |> remove_subject(subject) |> Ledger.validate(@repo_root)
+
+      assert subject in missing
+
+      stale = mutate_subject_row(contents, subject, "evidence", "git ls-files; 164-31-PLAN.md")
+      [header | rows] = String.split(String.trim_trailing(stale), "\n", trim: true)
+
+      for candidate_rows <- [rows, Enum.reverse(rows)] do
+        assert {:error, {:invalid_canonical_relationship, ^subject}} =
+                 Ledger.parse(Enum.join([header | candidate_rows], "\n") <> "\n")
+      end
+    end
+
+    test "new external approval rollback and report objects stay outside the tracked ledger" do
+      assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+      subjects = MapSet.new(rows, & &1["subject"])
+
+      for external <- [
+            "/Users/jon/.local/share/mailglass/checkpoints/164-37-install-proposal.env",
+            "/Users/jon/.local/share/mailglass/checkpoints/164-37-install-approval.env",
+            "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac",
+            "tmp/phase-164-closeout/report.json"
+          ] do
+        refute MapSet.member?(subjects, external)
+      end
+    end
+  end
+
+  describe "phase 164 final gap ledger reconciliation" do
+    @describetag :phase_164_final_gap_ledger
+
+    test "Plans 164-40 through 164-43 retain exactly one complete canonical row" do
+      assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+
+      declared_subjects =
+        40..43
+        |> Enum.flat_map(fn plan_number ->
+          plan = Path.join(@repo_root, Path.join(@phase_dir, "164-#{plan_number}-PLAN.md"))
+          assert {:ok, paths} = Ledger.plan_files_modified(plan)
+          paths
+        end)
+        |> MapSet.new()
+
+      assert declared_subjects == MapSet.new(Map.keys(@gap_closure_evidence))
+
+      for {subject, evidence} <- @gap_closure_evidence do
+        assert [row] = Enum.filter(rows, &(&1["subject"] == subject))
+        assert Map.keys(row) |> Enum.sort() == Enum.sort(@headers)
+        assert Enum.all?(@headers, &(row[&1] != ""))
+        assert row["state"] == "tracked"
+        assert row["currentness"] == "current"
+        assert row["disposition"] == "retain"
+        assert row["evidence"] == evidence
+      end
+    end
+
+    test "missing duplicate adjacent ordering and stale relationships fail closed" do
+      contents = File.read!(@ledger)
+      subject = "scripts/validate_repository_truth.exs"
+
+      assert {:error, {:missing_audited_subjects, missing}} =
+               contents |> remove_subject(subject) |> Ledger.validate(@repo_root)
+
+      assert subject in missing
+
+      [header | rows] = String.split(String.trim_trailing(contents), "\n", trim: true)
+      row = Enum.find(rows, &String.contains?(&1, "\t#{subject}\t"))
+
+      assert {:error, {:duplicate_subject, ^subject}} =
+               Ledger.parse(Enum.join([header | rows ++ [row]], "\n") <> "\n")
+
+      adjacent = String.replace(row, "\t#{subject}\t", "\t#{subject}.backup\t")
+
+      assert {:error,
+              {:invalid_canonical_relationship, "scripts/validate_repository_truth.exs.backup"}} =
+               Ledger.parse(Enum.join([header | rows ++ [adjacent]], "\n") <> "\n")
+
+      reordered_ids =
+        swap_subject_column(
+          contents,
+          subject,
+          "test/scripts/phase_164_repository_truth_test.exs",
+          "stable_id"
+        )
+
+      assert {:error, {:invalid_canonical_relationship, invalid_subject}} =
+               Ledger.parse(reordered_ids)
+
+      assert invalid_subject in [subject, "test/scripts/phase_164_repository_truth_test.exs"]
+
+      stale =
+        mutate_subject_row(
+          contents,
+          subject,
+          "evidence",
+          "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md"
+        )
+
+      assert {:error, {:invalid_evidence, ^subject}} = Ledger.parse(stale)
+    end
+  end
+
   describe "phase 164 gap closure" do
     @describetag :phase_164_gap_closure
 
@@ -405,6 +597,278 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
         assert {:error, {:invalid_currentness, "current-forged"}} =
                  Ledger.parse(Enum.join([forged_header | reordered], "\n") <> "\n")
       end
+    end
+  end
+
+  describe "phase 164 completed-plan metadata" do
+    @describetag :phase_164_plan_metadata
+
+    test "reordered non-adjacent files_modified entries cross the public audit seam" do
+      {authority_root, plan, _relative_plan} =
+        completed_plan_fixture!("""
+        ---
+        phase: 164-repository-truth-reconciliation-and-closeout
+        plan: 99
+        autonomous: true
+        files_modified:
+          - docs/nested/reordered-proof.md
+          - scripts/reordered-proof.exs
+        wave: 41
+        depends_on: [164-40]
+        ---
+
+        <objective>fixture</objective>
+        """)
+
+      assert {:ok, subjects} = Ledger.audit_subjects(@repo_root, authority_root)
+      assert MapSet.member?(subjects, "docs/nested/reordered-proof.md")
+      assert MapSet.member?(subjects, "scripts/reordered-proof.exs")
+
+      assert function_exported?(Ledger, :plan_files_modified, 1)
+
+      assert {:ok, ["docs/nested/reordered-proof.md", "scripts/reordered-proof.exs"]} =
+               apply(Ledger, :plan_files_modified, [plan])
+    end
+
+    test "explicit empty metadata is distinct from a missing files_modified key" do
+      {_root, empty_plan, _empty_relative} =
+        completed_plan_fixture!("""
+        ---
+        phase: 164-repository-truth-reconciliation-and-closeout
+        plan: 99
+        files_modified: []
+        autonomous: true
+        ---
+        """)
+
+      {missing_root, missing_plan, missing_relative} =
+        completed_plan_fixture!("""
+        ---
+        phase: 164-repository-truth-reconciliation-and-closeout
+        plan: 99
+        autonomous: true
+        ---
+        """)
+
+      empty_result =
+        if function_exported?(Ledger, :plan_files_modified, 1) do
+          apply(Ledger, :plan_files_modified, [empty_plan])
+        else
+          {:error, :public_plan_metadata_seam_missing}
+        end
+
+      assert {:ok, []} = empty_result
+
+      expected = {:error, {:plan_metadata_missing, missing_relative, "files_modified"}}
+      assert expected == Ledger.audit_subjects(@repo_root, missing_root)
+      assert expected == apply(Ledger, :plan_files_modified, [missing_plan])
+      assert_metadata_cli_failure(missing_root, missing_relative, "plan_metadata_missing")
+    end
+
+    test "malformed files_modified metadata returns one stable API and CLI tag" do
+      {authority_root, plan, relative_plan} =
+        completed_plan_fixture!("""
+        ---
+        phase: 164-repository-truth-reconciliation-and-closeout
+        plan: 99
+        files_modified: scripts/not-a-list.exs
+        autonomous: true
+        ---
+        """)
+
+      assert {:error, {:plan_metadata_malformed, ^relative_plan, reason}} =
+               Ledger.audit_subjects(@repo_root, authority_root)
+
+      assert is_binary(reason)
+
+      assert {:error, {:plan_metadata_malformed, ^relative_plan, ^reason}} =
+               apply(Ledger, :plan_files_modified, [plan])
+
+      assert_metadata_cli_failure(authority_root, relative_plan, "plan_metadata_malformed")
+    end
+
+    test "metadata shape matrix parses valid lists and rejects every malformed value" do
+      valid_cases = [
+        {"adjacent",
+         """
+         ---
+         files_modified:
+           - docs/adjacent.md
+         autonomous: true
+         ---
+         """, ["docs/adjacent.md"]},
+        {"nested-reordered",
+         """
+         ---
+         wave: 41
+         autonomous: true
+         files_modified:
+           - .planning/proof/nested/evidence.md
+           - test/scripts/nested_contract_test.exs
+         depends_on: [164-40]
+         ---
+         """, [".planning/proof/nested/evidence.md", "test/scripts/nested_contract_test.exs"]},
+        {"explicit-empty",
+         """
+         ---
+         autonomous: true
+         files_modified: []
+         wave: 41
+         ---
+         """, []}
+      ]
+
+      valid_results =
+        Enum.map(valid_cases, fn {identity, contents, expected_paths} ->
+          {_root, plan, relative_plan} = completed_plan_fixture!(contents)
+          {identity, relative_plan, expected_paths, Ledger.plan_files_modified(plan)}
+        end)
+
+      assert valid_results != []
+      assert Enum.uniq_by(valid_results, &elem(&1, 0)) == valid_results
+
+      for {_identity, _relative_plan, expected_paths, result} <- valid_results do
+        assert {:ok, ^expected_paths} = result
+      end
+
+      invalid_cases = [
+        {"blank",
+         """
+         ---
+         files_modified:
+         autonomous: true
+         ---
+         """},
+        {"scalar",
+         """
+         ---
+         files_modified: scripts/scalar.exs
+         autonomous: true
+         ---
+         """},
+        {"malformed-indentation",
+         """
+         ---
+         files_modified:
+         - scripts/unindented.exs
+         autonomous: true
+         ---
+         """},
+        {"duplicate-key",
+         """
+         ---
+         files_modified: []
+         autonomous: true
+         files_modified:
+           - scripts/duplicate.exs
+         ---
+         """},
+        {"explicit-empty-with-list",
+         """
+         ---
+         files_modified: []
+           - scripts/hidden-after-empty.exs
+         autonomous: true
+         ---
+         """},
+        {"missing-delimiter",
+         """
+         ---
+         files_modified:
+           - scripts/no-closing-delimiter.exs
+         autonomous: true
+         """},
+        {"unterminated-list",
+         """
+         ---
+         files_modified:
+           - scripts/first.exs
+           continuation: invalid
+         autonomous: true
+         ---
+         """}
+      ]
+
+      invalid_results =
+        Enum.map(invalid_cases, fn {identity, contents} ->
+          {_root, plan, relative_plan} = completed_plan_fixture!(contents)
+          {identity, relative_plan, Ledger.plan_files_modified(plan)}
+        end)
+
+      assert invalid_results != []
+      assert Enum.uniq_by(invalid_results, &elem(&1, 0)) == invalid_results
+
+      for {_identity, relative_plan, result} <- invalid_results do
+        assert {:error, {:plan_metadata_malformed, ^relative_plan, reason}} = result
+        assert is_binary(reason) and reason != ""
+      end
+    end
+  end
+
+  describe "phase 164 Git repository identity" do
+    @describetag :phase_164_git_identity
+
+    test "an existing non-Git repository root fails through tagged API and bounded CLI results" do
+      non_git_repo = authority_root!()
+
+      {authority_root, _plan, _relative_plan} =
+        completed_plan_fixture!("""
+        ---
+        files_modified: []
+        autonomous: true
+        ---
+        """)
+
+      api_result =
+        try do
+          Ledger.audit_subjects(non_git_repo, authority_root)
+        rescue
+          error -> {:raised, error.__struct__}
+        end
+
+      assert api_result == {:error, {:invalid_git_repository, non_git_repo}}
+
+      script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
+
+      {output, status} =
+        System.cmd(
+          System.find_executable("elixir"),
+          [
+            script,
+            "--repo",
+            non_git_repo,
+            "--authority-root",
+            authority_root,
+            "--ledger",
+            @ledger
+          ],
+          stderr_to_stdout: true
+        )
+
+      assert status == 1
+
+      assert output =~
+               "repository truth ledger: {:invalid_git_repository, #{inspect(non_git_repo)}}"
+
+      assert length(Regex.scan(~r/^usage: /m, output)) == 1
+      assert byte_size(output) < 1_024
+      refute output =~ "MatchError"
+      refute output =~ "** ("
+      refute output =~ "scripts/validate_repository_truth.exs:"
+      refute output =~ "    ("
+    end
+
+    test "a plain authority directory remains valid when the repository root is Git-backed" do
+      {authority_root, _plan, _relative_plan} =
+        completed_plan_fixture!("""
+        ---
+        files_modified: []
+        autonomous: true
+        ---
+        """)
+
+      assert {:ok, subjects} = Ledger.audit_subjects(@repo_root, authority_root)
+      assert MapSet.member?(subjects, "ignore:.gitignore:/tmp/")
     end
   end
 
@@ -633,6 +1097,66 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       assert :ok = Ledger.tracked_subject_in_index(repo, subject)
     end
 
+    test "accepts exact-one regular blob modes through parsed and real index records" do
+      subject = "regular-mode.txt"
+
+      regular_records =
+        for mode <- ["100644", "100755"] do
+          {mode, stage_record(subject, 0, mode)}
+        end
+
+      assert regular_records != []
+      assert Enum.uniq_by(regular_records, &elem(&1, 0)) == regular_records
+
+      for {_mode, record} <- regular_records do
+        assert :ok = Ledger.validate_staged_index_output(record, subject)
+      end
+
+      repo = clone_repository!()
+      executable = "mode-100755.sh"
+      executable_path = Path.join(repo, executable)
+      File.write!(executable_path, "#!/bin/sh\nexit 0\n")
+      File.chmod!(executable_path, 0o755)
+      assert {_output, 0} = System.cmd("git", ["add", "--", executable], cd: repo)
+      assert git_output!(repo, ["ls-files", "--stage", "--", executable]) =~ ~r/^100755 /
+      assert :ok = Ledger.tracked_subject_in_index(repo, executable)
+    end
+
+    test "rejects structurally valid non-regular modes through parsed and real index records" do
+      subject = "non-regular-mode"
+
+      invalid_modes = ["100600", "120000", "160000"]
+      assert [_ | _] = invalid_modes
+      assert Enum.uniq(invalid_modes) == invalid_modes
+
+      for mode <- invalid_modes do
+        assert {:error, {:tracked_subject_invalid_index_mode, ^subject, ^mode}} =
+                 Ledger.validate_staged_index_output(stage_record(subject, 0, mode), subject)
+      end
+
+      symlink_repo = clone_repository!()
+      symlink_target = external_regular_file!()
+      File.write!(Path.join(symlink_repo, subject), "replace me\n")
+      replace_with_tracked_symlink!(symlink_repo, subject, symlink_target)
+
+      assert {:error, {:tracked_subject_invalid_index_mode, ^subject, "120000"}} =
+               Ledger.tracked_subject_in_index(symlink_repo, subject)
+
+      gitlink_repo = clone_repository!()
+      gitlink_oid = git_output!(gitlink_repo, ["rev-parse", "HEAD"])
+
+      assert {_output, 0} =
+               System.cmd(
+                 "git",
+                 ["update-index", "--add", "--cacheinfo", "160000,#{gitlink_oid},#{subject}"],
+                 cd: gitlink_repo,
+                 stderr_to_stdout: true
+               )
+
+      assert {:error, {:tracked_subject_invalid_index_mode, ^subject, "160000"}} =
+               Ledger.tracked_subject_in_index(gitlink_repo, subject)
+    end
+
     test "literal metacharacters, adjacent names, newlines, and record order preserve identity" do
       repo = clone_repository!()
       literal = "stage[0]*?.txt"
@@ -691,6 +1215,59 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     end
   end
 
+  describe "phase 164 validator file identity" do
+    @describetag :phase_164_validator_file_identity
+
+    test "public validation rejects a tracked symlink to an external regular file" do
+      repo = clone_repository!()
+      subject = "README.md"
+      external_target = external_regular_file!()
+      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      replace_with_tracked_symlink!(repo, subject, external_target)
+
+      assert git_output!(repo, ["ls-files", "--stage", "--", subject]) =~
+               ~r/^120000 [0-9a-f]{40} 0\tREADME\.md$/
+
+      assert {:error, {:tracked_subject_not_regular, ^subject}} =
+               Ledger.validate(ledger, repo)
+    end
+
+    test "standalone validation rejects an external tracked symlink without disclosure" do
+      repo = clone_repository!()
+      subject = "README.md"
+      external_target = external_regular_file!()
+      ledger = Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv"))
+      script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
+
+      replace_with_tracked_symlink!(repo, subject, external_target)
+
+      {output, status} =
+        System.cmd(System.find_executable("elixir"), [script, "--repo", repo, "--ledger", ledger],
+          stderr_to_stdout: true
+        )
+
+      assert status == 1
+      assert output =~ "repository truth ledger: {:tracked_subject_not_regular, \"README.md\"}"
+      assert length(Regex.scan(~r/^usage: /m, output)) == 1
+      assert byte_size(output) < 1_024
+      refute output =~ external_target
+      refute output =~ "** ("
+      refute output =~ "scripts/validate_repository_truth.exs:"
+      refute output =~ "    ("
+    end
+
+    test "one ordinary mode-100644 stage-0 record remains valid" do
+      repo = clone_repository!()
+      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      assert git_output!(repo, ["ls-files", "--stage", "--", "README.md"]) =~
+               ~r/^100644 [0-9a-f]{40} 0\tREADME\.md$/
+
+      assert :ok = Ledger.validate(ledger, repo)
+    end
+  end
+
   defp remove_subject(contents, subject) do
     contents
     |> String.split("\n", trim: true)
@@ -703,15 +1280,25 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
   defp plan_modified_files(plan_number) do
     plan = Path.join(@repo_root, Path.join(@phase_dir, "164-#{plan_number}-PLAN.md"))
+    contents = File.read!(plan)
 
-    [paths] =
-      Regex.run(~r/^files_modified:\n(?<paths>(?:\s+- .+\n)*)^autonomous:/m, File.read!(plan),
-        capture: :all_names
-      )
+    paths =
+      if String.contains?(contents, "files_modified: []"), do: "", else: plan_paths!(plan, contents)
 
     paths
     |> String.split("\n", trim: true)
     |> Enum.map(&(&1 |> String.trim() |> String.trim_leading("- ")))
+  end
+
+  defp plan_paths!(plan, contents) do
+    case Regex.run(
+           ~r/^files_modified:(?<paths>(?:\n\s+- .+)*)\n^autonomous:/m,
+           contents,
+           capture: :all_names
+         ) do
+      [paths] -> paths
+      nil -> flunk("#{plan} is missing a parseable files_modified list")
+    end
   end
 
   defp ignored?(path) do
@@ -719,6 +1306,54 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       System.cmd("git", ["check-ignore", "-q", path], cd: @repo_root, stderr_to_stdout: true)
 
     status == 0
+  end
+
+  defp completed_plan_fixture!(contents) do
+    authority_root = authority_root!()
+
+    for ignore_file <- @ignore_files do
+      source = Path.join(@repo_root, ignore_file)
+      destination = Path.join(authority_root, ignore_file)
+      File.mkdir_p!(Path.dirname(destination))
+      File.cp!(source, destination)
+    end
+
+    relative_plan = Path.join(@phase_dir, "164-99-PLAN.md")
+    plan = Path.join(authority_root, relative_plan)
+    summary = String.replace_suffix(plan, "-PLAN.md", "-SUMMARY.md")
+    File.mkdir_p!(Path.dirname(plan))
+    File.write!(plan, contents)
+    File.write!(summary, "summary\n")
+
+    {authority_root, plan, relative_plan}
+  end
+
+  defp assert_metadata_cli_failure(authority_root, relative_plan, tag) do
+    script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
+
+    {output, status} =
+      System.cmd(
+        System.find_executable("elixir"),
+        [
+          script,
+          "--repo",
+          @repo_root,
+          "--authority-root",
+          authority_root,
+          "--ledger",
+          @ledger
+        ],
+        stderr_to_stdout: true
+      )
+
+    assert status == 1
+    assert output =~ tag
+    assert output =~ relative_plan
+    assert byte_size(output) < 1_024
+    refute output =~ "MatchError"
+    refute output =~ "** ("
+    refute output =~ "scripts/validate_repository_truth.exs:"
+    refute output =~ "    ("
   end
 
   defp authority_root! do
@@ -772,6 +1407,25 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     root
   end
 
+  defp external_regular_file! do
+    path =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-phase-164-external-#{System.unique_integer([:positive])}.txt"
+      )
+
+    File.write!(path, "external bytes\n")
+    on_exit(fn -> File.rm(path) end)
+    path
+  end
+
+  defp replace_with_tracked_symlink!(repo, subject, external_target) do
+    subject_path = Path.join(repo, subject)
+    File.rm!(subject_path)
+    File.ln_s!(external_target, subject_path)
+    assert {_output, 0} = System.cmd("git", ["add", "--", subject], cd: repo)
+  end
+
   defp install_unmerged_index_entry!(repo, subject) do
     assert {_output, 0} =
              System.cmd("git", ["config", "user.email", "phase164@example.test"], cd: repo)
@@ -798,8 +1452,8 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     String.trim(output)
   end
 
-  defp stage_record(subject, stage \\ 0) do
-    "100644 #{String.duplicate("a", 40)} #{stage}\t#{subject}\0"
+  defp stage_record(subject, stage \\ 0, mode \\ "100644") do
+    "#{mode} #{String.duplicate("a", 40)} #{stage}\t#{subject}\0"
   end
 
   defp valid_row do

@@ -29,9 +29,15 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
     assert authority_violations(current) == []
   end
 
-  test "current finalization guidance names only the installed executable and its source" do
+  test "current finalization guidance binds the active approval and installation authorities" do
     maintaining = File.read!(@maintaining_path)
-    current = section_before!(maintaining, "Historical release procedures")
+
+    current =
+      section!(
+        maintaining,
+        "Phase 164 repository finalization",
+        "Trust runner checkpoint handoff"
+      )
 
     assert current =~ "/Users/jon/.local/bin/mailglass-finalize-phase 164"
 
@@ -39,7 +45,11 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
              "/Users/jon/.local/bin/mailglass-finalize-phase 164 --pre-verification"
 
     assert current =~ "scripts/mailglass_finalize_phase_loader.mjs"
-    assert current =~ "Plan 164-23"
+    assert current =~ "Plan 164-37"
+    assert current =~ "approval"
+    assert current =~ "Plan 164-38"
+    assert current =~ "installed"
+    refute current =~ "Plan 164-23"
     refute current =~ "/finalize-phase 164"
     refute current =~ ".gsd/extensions/finalize-phase"
   end
@@ -72,8 +82,21 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
 
   test "historical release procedures retain provenance without becoming current guidance" do
     maintaining = File.read!(@maintaining_path)
+
+    current =
+      section!(
+        maintaining,
+        "Phase 164 repository finalization",
+        "Trust runner checkpoint handoff"
+      )
+
     historical = section_from!(maintaining, "Historical release procedures")
 
+    refute current =~ "Plan 164-23"
+    assert historical =~ "Plan 164-23"
+    assert historical =~ ~r/Plan 164-23.*superseded.*provenance/is
+    assert historical =~ "Plan 164-37"
+    assert historical =~ "Plan 164-38"
     assert historical =~ "Phase 38"
     assert historical =~ "Phase 73"
     assert historical =~ "Historical v0.1/v0.5 bus-factor rationale"

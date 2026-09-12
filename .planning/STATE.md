@@ -4,19 +4,19 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
-status: executing
-stopped_at: Completed 164-35-PLAN.md
-last_updated: "2026-09-11T20:31:26.590Z"
-last_activity: 2026-09-11
-last_activity_desc: Phase 164 execution started
-state_head: 42b5f9c94d1dc19a1a35c6bfba33e9c2a2e00391
+status: verifying
+stopped_at: Completed 164-44-PLAN.md
+last_updated: "2026-09-12T04:09:59.753Z"
+last_activity: 2026-09-12
+last_activity_desc: Plan 164-44 ordinary repository-truth reconciliation completed; terminal lifecycle pending
+state_head: 1a95f1957e757f2e117abc1298e0f9383f19b7f2
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 65
-  completed_plans: 58
+  total_plans: 70
+  completed_plans: 67
   percent: 75
-current_plan: 34
+current_plan: 44
 ---
 
 # Project State
@@ -30,18 +30,18 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
-Plan: 2 of 39
-Status: Ready to execute
-Last activity: 2026-09-11 — Phase 164 execution started
+Phase: 164 (Repository Truth Reconciliation and Closeout) — VERIFYING
+Plan: 44 of 44
+Status: Phase complete — ready for verification
+Last activity: 2026-09-12 — Plan 164-44 ordinary repository-truth reconciliation completed; terminal lifecycle pending
 
-Progress: [████████░░] 57/60 plans complete ([████████░░] 75%)
+Progress: [██████████] 67/70 plans complete ([████████░░] 75%)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 35
+- Total plans completed: 36
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -116,6 +116,12 @@ Progress: [████████░░] 57/60 plans complete ([████�
 | Phase 164 P33 | 17min | 2 tasks | 5 files |
 | Phase 164 P34 | 25min | 2 tasks | 8 files |
 | Phase 164 P35 | 34m | 2 tasks | 9 files |
+| Phase 164 P36 | 95m | 1 tasks | 2 files |
+| Phase 164 P40 | 7m | 2 tasks | 2 files |
+| Phase 164 P42 | 36m | 2 tasks | 1 files |
+| Phase 164 P43 | 4m | 2 tasks | 2 files |
+| Phase 164 P41 | 9m | 2 tasks | 2 files |
+| Phase 164 P44 | 25m | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -209,6 +215,16 @@ Progress: [████████░░] 57/60 plans complete ([████�
 - [Phase 164]: Finalization runtime authority is the versioned physical Elixir 1.19.5 and Erlang 28 closure, not asdf shims or inherited ASDF selectors. — The exact sanitized child environment must execute every authenticated runtime member before Bash dispatch.
 - [Phase 164]: The Node-authenticated commit remains immutable data through finalizer and closeout. — Every later repository observation validates the captured OID rather than recapturing or substituting authority.
 - [Phase 164]: Proposal and installed-host test groups remain outside repository-only CI behind dedicated non-vacuous aliases. — Repository evidence, human approval, and controlled-host proof are distinct authorities.
+- [Phase 164]: Tracked ledger subjects require lstat regular worktree entries before Git-index identity is evaluated. — This prevents symlink targets and every other non-regular entry type from becoming repository truth.
+- [Phase 164]: Exact-one stage-0 Git records are accepted only in modes 100644 and 100755. — Structurally valid non-regular objects receive a stable invalid-index-mode failure after exact identity is established.
+- [Phase 164]: Repository-only attacks authenticate and dispatch exclusively inside disposable canonical repositories; controlled-host proof remains separate.
+- [Phase 164]: Disposable fixtures bind origin/main to current HEAD or its predecessor to prove ahead counts zero and one explicitly.
+- [Phase 164]: Plan 164-37 is the current approval authority and Plan 164-38 is the current installed-loader authority.
+- [Phase 164]: Plan 164-23 remains only as superseded earlier-generation installation provenance inside the historical boundary.
+- [Phase 164]: Completed-plan artifact discovery accepts an empty list only for a standalone explicit files_modified: [] declaration; every missing or malformed shape fails with a stable tag.
+- [Phase 164]: repo_root must prove Git work-tree identity before ls-files, while authority_root remains a directory-only policy fixture boundary.
+- [Phase 164]: Completed Plans 164-40 through 164-43 contribute provenance only through structurally declared modified subjects, each resolving to exactly one current complete ledger row.
+- [Phase 164]: Fresh repository-only and controlled-host results remain separate ordinary authorities; T-164-109 stays open until the terminal lifecycle completes.
 
 ## Deferred Items
 
@@ -218,6 +234,6 @@ Progress: [████████░░] 57/60 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-11T20:31:26.439Z
-Stopped at: Completed 164-35-PLAN.md
+Last session: 2026-09-12T04:09:59.640Z
+Stopped at: Completed 164-44-PLAN.md
 Resume file: None

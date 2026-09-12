@@ -340,7 +340,7 @@ defmodule Mailglass.DocsContractTest do
     end
 
     @tag :phase_164_lifecycle_contract
-    test "Phase 164 tracked authority advances to 01 through 39 while installed records remain 01 through 34" do
+    test "Phase 164 tracked authority authenticates exact history 01 through 44" do
       loader = File.read!("scripts/mailglass_finalize_phase_loader.mjs")
       shell = File.read!("scripts/finalize_phase_164.sh")
 
@@ -355,12 +355,12 @@ defmodule Mailglass.DocsContractTest do
         end
 
       assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
-      assert loader =~ "const TERMINAL_LAST_PLAN = 39"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 44"
       assert shell =~ "terminal_first_plan=1"
-      assert shell =~ "terminal_last_plan=39"
+      assert shell =~ "terminal_last_plan=44"
 
       for record <- records do
-        assert record =~ "exact PLAN/SUMMARY pair set 01 through 34"
+        assert record =~ "exact PLAN/SUMMARY pair set 01 through 44"
         refute record =~ "exact 01-24"
         refute record =~ "Plans 01-20 are the executed baseline"
       end
@@ -375,7 +375,7 @@ defmodule Mailglass.DocsContractTest do
         |> then(&Regex.replace(~r/\s+/, &1, " "))
 
       for token <- [
-            "164-34-SUMMARY.md exists before ordinary verification",
+            "164-44-SUMMARY.md exists before ordinary verification",
             "status: passed",
             "verified_implementation_sha",
             "only the four authorized completion metadata paths",
@@ -713,6 +713,78 @@ defmodule Mailglass.DocsContractTest do
       # rewrite is out of scope for this CI-triage commit. Phase 51 closeout
       # should re-pin these assertions to the v1.0/1.1 release-record format.
       :ok
+    end
+
+    @tag :phase_164_lifecycle_contract
+    test "tracked reconciliation cannot manufacture terminal evidence" do
+      finalization =
+        File.read!(
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
+        )
+        |> then(&Regex.replace(~r/\s+/, &1, " "))
+
+      assert finalization =~
+               "164-44-SUMMARY.md → ordinary verifier → completion-only metadata → protected main → exact attempt-one normal CI → natural scheduled evidence → installed approval recheck → terminal capture → no later tracked write"
+
+      assert finalization =~ "T-164-109 remains pending throughout the tracked reconciliation"
+      assert finalization =~ "Repository tests and installed readiness are not terminal proof"
+      refute finalization =~ "tracked reconciliation produced terminal evidence"
+    end
+
+    @tag :phase_164_gap_reconciliation
+    test "Phase 164 final reconciliation binds the repaired executable and installed authority" do
+      validation =
+        File.read!(
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md"
+        )
+
+      for token <- [
+            "## Gap Reconciliation — Plans 164-35 through 164-39",
+            "physical Mix/Elixir/Erlang exact-child probe",
+            "OID-handoff movement regression",
+            "phase_164_runtime_closure",
+            "phase_164_oid_handoff",
+            "mix verify.phase_164.authority_closure",
+            "mix verify.phase_164.installed_boundary",
+            "mix verify.ci_lane_contract",
+            "52c07a5051d269b307831a2210f53dec0dd1ff65",
+            "34650810638",
+            "e3687bf5a2afc69a79b2677c69daa3d533549d4b6f730a30a04e32cc6d13b7cd",
+            "394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746",
+            "ca3c43bd04c4e21e223f39561f294885ceca2633db65a72fa29b780bcef3975d",
+            "repository-only CI",
+            "controlled-host installation readiness",
+            "stable failure direction"
+          ] do
+        assert validation =~ token,
+               "164-VALIDATION.md is missing final reconciliation evidence #{inspect(token)}"
+      end
+    end
+
+    @tag :phase_164_gap_reconciliation
+    test "Phase 164 security records the final authority-chain threats without closing terminal proof" do
+      security =
+        File.read!(
+          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-SECURITY.md"
+        )
+
+      for threat_number <- 133..149 do
+        assert security =~ "T-164-#{threat_number}",
+               "164-SECURITY.md is missing final authority threat T-164-#{threat_number}"
+      end
+
+      for token <- [
+            "physical Mix/Elixir/Erlang exact-child probe",
+            "immutable OID handoff",
+            "Plan 164-37 approval",
+            "Plan 164-38 installed authority",
+            "T-164-109 remains open and high"
+          ] do
+        assert security =~ token,
+               "164-SECURITY.md is missing final authority mitigation #{inspect(token)}"
+      end
+
+      refute Regex.match?(~r/\| T-164-109 \|.*\| closed \|/, security)
     end
 
     test "production-go-live-checklist is registered in both mix.exs docs lists" do

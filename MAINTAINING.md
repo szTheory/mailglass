@@ -62,14 +62,19 @@ program with its only optional mode:
 /Users/jon/.local/bin/mailglass-finalize-phase 164 --pre-verification
 ```
 
-The tracked installation source is
-`scripts/mailglass_finalize_phase_loader.mjs`. Plan 164-23 owns the explicit
-authenticated-copy checkpoint, including byte identity, provenance, mode, and
-recoverable replacement verification. Until that checkpoint completes, do not
-claim the external executable is installed or use checkout code as a substitute.
-After installation, the program authenticates one captured repository commit,
-privately materializes its complete authority set, rechecks `HEAD` immediately
-before Bash dispatch, and leaves only the governed ignored report evidence.
+Plan 164-37 is the active approval authority: its immutable proposal and
+approval checkpoint bind the exact protected source, CI, physical toolchain,
+destination, predecessor, and rollback tuple. Plan 164-38 is the active
+installed-loader authority: it consumed only that approval and recoverably
+installed the authoritative repository source
+`scripts/mailglass_finalize_phase_loader.mjs` at the external executable path
+`/Users/jon/.local/bin/mailglass-finalize-phase` with mode `0500`.
+
+The installed program authenticates one captured repository commit, privately
+materializes its complete authority set, rechecks `HEAD` immediately before
+Bash dispatch, and leaves only the governed ignored report evidence. Approval
+and installation readiness do not establish terminal finalization; follow the
+separately governed ordinary-verification and terminal-capture ordering.
 
 ## Trust runner checkpoint handoff
 
@@ -498,6 +503,13 @@ provenance and their original-version applicability only. They are non-current:
 do not use their auto-merge, fan-out, manual smoke, tag, or fallback language as
 authority for a current release or recovery. The current protected path is the
 one at the start of this document.
+
+Plan 164-23 is retained here as superseded earlier-generation installation
+provenance. Its authenticated-copy checkpoint and initially installed loader
+were authoritative for that earlier generation; Plan 164-37's immutable
+approval and Plan 164-38's recoverable installation superseded them as the
+exclusive current approval/install pair. Do not use Plan 164-23 to authorize a
+current finalization action.
 
 The removed `.gsd/extensions/finalize-phase` implementation and its superseded
 project-local `/finalize-phase 164` command are historical implementation

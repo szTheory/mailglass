@@ -17,6 +17,7 @@ defmodule Mailglass.RepositoryTruthLedger do
   @dispositions ~w(retain update archive remove ignore)
   @currentness ~w(current historical stale)
   @states ~w(tracked untracked ignored)
+  @regular_index_modes MapSet.new(["100644", "100755"])
   @kinds ~w(ci-evidence-client closeout-report closeout-script contract-test finalization-guidance finalization-script finalization-shim forensic-proof generated-output gsd-extension-command gsd-extension-manifest ignore-rule maintainer-guidance package-allowlist package-guidance planning-artifact protected-ci-proof publish-proof release-proof repository-ignore-contract repository-truth-validator scheduled-control-contract scheduled-control-proof scheduled-control-verifier verification-report)
   @producers [
     "GSD phase lifecycle",
@@ -139,7 +140,7 @@ defmodule Mailglass.RepositoryTruthLedger do
     "workspace preservation verification"
   ]
   @tracked_evidence [
-    "164-02-PLAN.md",
+    "164-02-PLAN.md; 164-43-PLAN.md",
     "164-03-PLAN.md",
     "164-04-PLAN.md",
     "164-05-PLAN.md",
@@ -161,6 +162,15 @@ defmodule Mailglass.RepositoryTruthLedger do
     "git ls-files; 164-31-PLAN.md",
     "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md",
     "git ls-files; 164-34-PLAN.md",
+    "git ls-files; 164-05-PLAN.md; 164-35-PLAN.md",
+    "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-35-PLAN.md",
+    "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md; 164-42-PLAN.md",
+    "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md",
+    "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
+    "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md; 164-37-PLAN.md; 164-38-PLAN.md; 164-39-PLAN.md",
+    "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
+    "git ls-files; 164-34-PLAN.md; 164-36-PLAN.md; 164-39-PLAN.md",
+    "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
     "git ls-files; Phase 161 summary",
     "git ls-files; Phase 162 summary",
     "git ls-files; release-target ledger",
@@ -318,50 +328,50 @@ defmodule Mailglass.RepositoryTruthLedger do
     ".github/scheduled-controls.json" =>
       "9f1688cfc0524ae39fc8fdb66475f95a424a247fa45bc6f0c5dc2d7b2d5fd727",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv" =>
-      "d8bcd6b5705f6cd05d02134163a7056cf648db0c5dfeb6dd4a99d72acb1d732f",
+      "59887823ec2ac5372d7d65c1c69771c79e9c2317118061eccf1b9850cb7f46c8",
     "test/scripts/phase_164_repository_truth_test.exs" =>
-      "f5623549c65f64011f30f0e983ab3873b71d2b1ae1bc0c84e3432413e26b7b22",
-    "MAINTAINING.md" => "16fdbf3f0265a67bcfcd5e5482bf89ad972ea2d9bb957535f84a59126a16cf3a",
+      "a6e9cd3dd466da7e02686b90f84a3119425cf58c1faeb72d12a331e3a0b12003",
+    "MAINTAINING.md" => "224d2b03f3f462a9630fa8b00336c68bbaa2b6b3018fb1b86f8639eadd69444f",
     "test/mailglass/publish/maintaining_release_gate_contract_test.exs" =>
-      "472d04f71e60a2e4c7bc5c036d9b86f7a0e6538101834b268cb1ddbe9eb463a7",
+      "65aa7cb7d6089664a7218d827e2b263a49d4f1da40ad3e8eae9f2217f97e0e95",
     "README.md" => "0942020b0f64a8103d4100a91461295d1f1b22430da5763562d0ffc265e4057a",
     "mailglass_admin/README.md" =>
       "5b850e2cdf8249d1e4066ab30d2184a26ace72a0fef9f0f12cc2fbce7f9462db",
     "mailglass_inbound/README.md" =>
       "458b030831a014296505fc1cc9ea5b4e32729694bb02546e5c3c78f1c12ca804",
-    "mix.exs" => "fb53f2fc7eb2b5918f2bac2ab6278dddc08bca2f19ca52418b9c24e7796f9c5d",
+    "mix.exs" => "09262c48b67da5ae000e696e8fcce73da3af0ff94f11304d0527c40a9c819158",
     "test/scripts/ci_parity_drift_test.exs" =>
       "71655ec6e5b2ce5e95c8f82600cde614111cf0818f7df623e6edb915ee171777",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-SECURITY.md" =>
-      "8151e268bc8ff020e0bbf51f9f3468ab1cb6121c2f24e19227831a02f8012d89",
+      "dfaf011fdf8018e6a753b830b1b4a5881c6e8ad3b5c93cd4c0e150e63e7e8af6",
     "test/test_helper.exs" => "8260178e135e10358c9ae0e6fa2f082c4df2d95a7700bbac028ade7da61738ed",
     "test/mailglass/docs_contract_test.exs" =>
-      "78ef187ec8e232a44c2fc8677eaef85cb429f5e4a58a0f87078b8612275c4686",
+      "f118afc05752e791c9de16a77cdd1d5228fd0c5ff73ae386b813b5ba982069f8",
     "scripts/closeout_repository_truth.sh" =>
-      "77facce62c361cc1fcf11c81b5d032383cd289fe6b339e45b08d5c6586e27f06",
+      "21580aee36fa0b56528fc2fb115fa4053e9ef2c776ca17d1a405150445fcb244",
     "test/scripts/phase_164_closeout_test.exs" =>
-      "3e00ad4c02171d72aa846665828793e8b7999299869f83d2acc7e270403905da",
+      "3b1f136d09464f174434831d42c0e0de2dff169b825a674d1baaaaeee2c70e05",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-CLOSEOUT.md" =>
       "e378c14a37c9610cf87b594ff8be6360e126a62cdbef9674eb4ae5575164d878",
     "scripts/validate_repository_truth.exs" =>
-      "fcd9ffc95c0453292e18a1b104a45f57e9bb2133c536d5ab7119c083aeeab025",
+      "e81391fa8d6055aef4f9792f79c7f1e9a6a19ec56fba23c614a8c5c2d09bdeb1",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VERIFICATION.md" =>
       "37abe2db9ac0edbab5543e224cf410f528a6d86e6b541b34e70ba82aa9162312",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md" =>
-      "8f46042c69788a3fc232f6ce1e1c86d976918bbdc043050e10804594f8f8bd4f",
+      "64ff6aaf70e65190bb2a4b4d2cae21d1bf2a13df5b34b92bcc5e60600c8378c3",
     ".gitignore" => "52c7aed7a0eaaf139bec59b33cca9e74a8ffda7ff0ec140512f1b5559d362f8a",
     ".gsd/extensions/finalize-phase/extension-manifest.json" =>
       "af89407b07f1bea91c588c083dac9ed05b127427e7ec0f90759510b3727a87de",
     ".gsd/extensions/finalize-phase/index.ts" =>
       "422b26464d57918d7311918577891d0dd4d550fb81a4b78e4eaa5f7d3a4214ad",
     "scripts/finalize_phase_164.sh" =>
-      "10b5973cedbb71e7f22318b5cc4ec6ef8e32f5940f530d244a21dc7fb3246c38",
+      "a38356fddaa3da05f6f836460f07a99c8413481842f7cd459dcc9ac2863d4a51",
     "scripts/mailglass_finalize_phase_loader.mjs" =>
-      "2f39dea4bfaa9367690f2b09e9270ff18f6c9a3e539429d7581e834e534fb206",
+      "23314dfe5124c0d418eab8a6d5259bad296cccb4682f309a3f8899ecadb01219",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZE.sh" =>
       "7351a41c9f8e820203b2d70c4272134f2378859b6104100bc2e6c20524bb93bd",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md" =>
-      "8a1eacef0916d29707a5f1719d1f1a6d8065d1c55af255f5006af007d4e040d2",
+      "1b78e0595373bc1187753d0234471d479802425495901b9cd048b8d0f989ebe1",
     "scripts/ci_monitor.cjs" => "2a886eaba7c246c5461e915f5199ae1cff89fc735a7c82cd5fec171a12951c6f",
     "scripts/scheduled_control_evidence.sh" =>
       "83583ea9347f0f816dfa071ec5ae3677411cf1dc03fbcc410a2940c63954edcd",
@@ -429,14 +439,19 @@ defmodule Mailglass.RepositoryTruthLedger do
     authority_root = authority_root || repo_root
 
     with :ok <- ensure_repository(repo_root),
+         :ok <- ensure_git_repository(repo_root),
          :ok <- ensure_repository(authority_root),
-         {:ok, ignore_subjects} <- ignore_subjects(authority_root) do
+         {:ok, ignore_subjects} <- ignore_subjects(authority_root),
+         {:ok, publish_subjects} <- tracked_subjects(repo_root, ".planning/publish"),
+         {:ok, loader_subjects} <-
+           tracked_subjects(repo_root, "scripts/mailglass_finalize_phase_loader.mjs"),
+         {:ok, phase_artifacts} <- phase_artifacts(authority_root) do
       subjects =
         ignore_subjects ++
-          tracked_subjects(repo_root, ".planning/publish") ++
-          tracked_subjects(repo_root, "scripts/mailglass_finalize_phase_loader.mjs") ++
+          publish_subjects ++
+          loader_subjects ++
           @proof_paths ++
-          phase_artifacts(authority_root) ++ [Path.join(@phase_dir, "164-VERIFICATION.md")]
+          phase_artifacts ++ [Path.join(@phase_dir, "164-VERIFICATION.md")]
 
       {:ok, MapSet.new(subjects)}
     end
@@ -496,8 +511,12 @@ defmodule Mailglass.RepositoryTruthLedger do
     case split_complete_staged_records(output) do
       {:ok, records} ->
         case parse_staged_records(records) do
-          {:ok, [%{stage: 0, path: ^subject}]} ->
-            :ok
+          {:ok, [%{stage: 0, path: ^subject, mode: mode}]} ->
+            if MapSet.member?(@regular_index_modes, mode) do
+              :ok
+            else
+              {:error, {:tracked_subject_invalid_index_mode, subject, mode}}
+            end
 
           {:ok, parsed_records} ->
             {:error, {:tracked_subject_identity_mismatch, subject, parsed_records}}
@@ -781,21 +800,38 @@ defmodule Mailglass.RepositoryTruthLedger do
     |> Enum.reduce_while(:ok, fn row, :ok ->
       subject = row["subject"]
 
-      cond do
-        not File.regular?(Path.join(repo_root, subject)) ->
-          {:halt, {:error, {:tracked_subject_missing, subject}}}
-
-        true ->
+      case File.lstat(Path.join(repo_root, subject)) do
+        {:ok, %File.Stat{type: :regular}} ->
           case tracked_subject_in_index(repo_root, subject) do
             :ok -> {:cont, :ok}
             error -> {:halt, error}
           end
+
+        _ ->
+          {:halt, {:error, {:tracked_subject_not_regular, subject}}}
       end
     end)
   end
 
   defp ensure_repository(repo_root) do
     if File.dir?(repo_root), do: :ok, else: {:error, {:invalid_repository, repo_root}}
+  end
+
+  defp ensure_git_repository(repo_root) do
+    case System.cmd("git", ["rev-parse", "--is-inside-work-tree"],
+           cd: repo_root,
+           stderr_to_stdout: true
+         ) do
+      {output, 0} ->
+        if String.trim(output) == "true" do
+          :ok
+        else
+          {:error, {:invalid_git_repository, repo_root}}
+        end
+
+      {_output, _status} ->
+        {:error, {:invalid_git_repository, repo_root}}
+    end
   end
 
   def ignore_subjects(repo_root) do
@@ -846,8 +882,13 @@ defmodule Mailglass.RepositoryTruthLedger do
   end
 
   defp tracked_subjects(repo_root, path) do
-    {output, 0} = System.cmd("git", ["ls-files", "--", path], cd: repo_root)
-    String.split(output, "\n", trim: true)
+    case System.cmd("git", ["ls-files", "--", path], cd: repo_root, stderr_to_stdout: true) do
+      {output, 0} ->
+        {:ok, String.split(output, "\n", trim: true)}
+
+      {_output, status} ->
+        {:error, {:git_command_failure, "ls-files", path, status}}
+    end
   end
 
   defp phase_artifacts(repo_root) do
@@ -855,8 +896,16 @@ defmodule Mailglass.RepositoryTruthLedger do
     |> Path.join(Path.join(@phase_dir, "164-*-PLAN.md"))
     |> Path.wildcard()
     |> Enum.filter(&completed_plan?/1)
-    |> Enum.flat_map(&plan_files_modified/1)
-    |> Enum.uniq()
+    |> Enum.reduce_while({:ok, []}, fn plan, {:ok, paths} ->
+      case plan_files_modified(plan) do
+        {:ok, plan_paths} -> {:cont, {:ok, paths ++ plan_paths}}
+        {:error, _reason} = error -> {:halt, error}
+      end
+    end)
+    |> case do
+      {:ok, paths} -> {:ok, Enum.uniq(paths)}
+      error -> error
+    end
   end
 
   defp completed_plan?(plan) do
@@ -865,17 +914,126 @@ defmodule Mailglass.RepositoryTruthLedger do
     |> File.regular?()
   end
 
-  defp plan_files_modified(plan) do
-    case Regex.run(~r/^files_modified:\n(?<paths>(?:\s+- .+\n)*)^autonomous:/m, File.read!(plan),
-           capture: :all_names
-         ) do
-      [paths] ->
-        paths
-        |> String.split("\n", trim: true)
-        |> Enum.map(&(&1 |> String.trim() |> String.trim_leading("- ")))
+  def plan_files_modified(plan) when is_binary(plan) do
+    relative_plan = relative_plan_path(plan)
 
-      nil ->
-        []
+    with {:ok, contents} <- File.read(plan),
+         {:ok, frontmatter} <- opening_frontmatter(contents, relative_plan),
+         {:ok, paths} <- parse_files_modified(frontmatter, relative_plan) do
+      {:ok, paths}
+    else
+      {:error, {:plan_metadata_missing, _plan, _key}} = error ->
+        error
+
+      {:error, {:plan_metadata_malformed, _plan, _reason}} = error ->
+        error
+
+      {:error, _reason} ->
+        {:error, {:plan_metadata_malformed, relative_plan, "unable to read plan metadata"}}
+    end
+  end
+
+  defp opening_frontmatter(contents, relative_plan) do
+    lines = contents |> String.split("\n", trim: false) |> Enum.map(&String.trim_trailing(&1, "\r"))
+
+    case lines do
+      ["---" | rest] ->
+        case Enum.split_while(rest, &(&1 != "---")) do
+          {frontmatter, ["---" | _body]} ->
+            {:ok, frontmatter}
+
+          {_frontmatter, []} ->
+            metadata_malformed(relative_plan, "missing closing frontmatter delimiter")
+        end
+
+      _ ->
+        metadata_malformed(relative_plan, "missing opening frontmatter delimiter")
+    end
+  end
+
+  defp parse_files_modified(frontmatter, relative_plan) do
+    declarations =
+      frontmatter
+      |> Enum.with_index()
+      |> Enum.filter(fn {line, _index} -> Regex.match?(~r/^files_modified:/, line) end)
+
+    case declarations do
+      [] ->
+        {:error, {:plan_metadata_missing, relative_plan, "files_modified"}}
+
+      [{declaration, index}] ->
+        parse_files_modified_declaration(declaration, index, frontmatter, relative_plan)
+
+      _ ->
+        metadata_malformed(relative_plan, "duplicate files_modified key")
+    end
+  end
+
+  defp parse_files_modified_declaration(declaration, index, frontmatter, relative_plan) do
+    [value] = Regex.run(~r/^files_modified:[ ]*(.*)$/, declaration, capture: :all_but_first)
+
+    cond do
+      value == "[]" ->
+        trailing_values =
+          frontmatter
+          |> Enum.drop(index + 1)
+          |> Enum.take_while(&(not Regex.match?(~r/^[A-Za-z0-9_-]+:/, &1)))
+          |> Enum.reject(fn line ->
+            trimmed = String.trim(line)
+            trimmed == "" or String.starts_with?(trimmed, "#")
+          end)
+
+        if trailing_values == [] do
+          {:ok, []}
+        else
+          metadata_malformed(relative_plan, "files_modified [] must not contain list entries")
+        end
+
+      value != "" ->
+        metadata_malformed(relative_plan, "files_modified must be a dash list or []")
+
+      true ->
+        frontmatter
+        |> Enum.drop(index + 1)
+        |> Enum.take_while(&(not Regex.match?(~r/^[A-Za-z0-9_-]+:/, &1)))
+        |> parse_files_modified_entries(relative_plan)
+    end
+  end
+
+  defp parse_files_modified_entries([], relative_plan) do
+    metadata_malformed(relative_plan, "files_modified list is blank")
+  end
+
+  defp parse_files_modified_entries(lines, relative_plan) do
+    parsed =
+      Enum.map(lines, fn line ->
+        case Regex.run(~r/^( +)- +(\S(?:.*\S)?) *$/, line, capture: :all_but_first) do
+          [indent, path] -> {:ok, byte_size(indent), path}
+          _ -> :error
+        end
+      end)
+
+    case parsed do
+      [{:ok, indent, _path} | _] ->
+        if Enum.all?(parsed, &match?({:ok, ^indent, _path}, &1)) do
+          {:ok, Enum.map(parsed, fn {:ok, _indent, path} -> path end)}
+        else
+          metadata_malformed(relative_plan, "files_modified list indentation is malformed")
+        end
+
+      _ ->
+        metadata_malformed(relative_plan, "files_modified must contain indented dash entries")
+    end
+  end
+
+  defp metadata_malformed(relative_plan, reason) do
+    {:error, {:plan_metadata_malformed, relative_plan, reason}}
+  end
+
+  defp relative_plan_path(plan) do
+    case String.split(Path.expand(plan), "/.planning/", parts: 2) do
+      [_prefix, suffix] -> ".planning/" <> suffix
+      _ -> Path.basename(plan)
     end
   end
 end

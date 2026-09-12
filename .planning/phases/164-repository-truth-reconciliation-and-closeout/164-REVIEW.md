@@ -1,32 +1,16 @@
 ---
 phase: 164-repository-truth-reconciliation-and-closeout
-reviewed: 2026-09-11T18:47:03Z
+reviewed: 2026-09-12T00:49:51Z
 depth: standard
-files_reviewed: 20
+files_reviewed: 4
 files_reviewed_list:
-  - /Users/jon/.local/share/mailglass/checkpoints/164-32-install-approval.env
-  - /Users/jon/.local/share/mailglass/checkpoints/164-32-install-proposal.env
-  - /Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e
-  - config/test_exceptions.exs
-  - scripts/finalize_phase_164.sh
-  - scripts/mailglass_finalize_phase_loader.mjs
   - scripts/validate_repository_truth.exs
-  - test/mailglass/compliance_test.exs
-  - test/mailglass/demo_data_test.exs
   - test/mailglass/docs_contract_test.exs
-  - test/mailglass/publish/maintaining_release_gate_contract_test.exs
-  - test/scripts/ci_parity_drift_test.exs
   - test/scripts/phase_164_closeout_test.exs
   - test/scripts/phase_164_repository_truth_test.exs
-  - test/scripts/release_policy_contract_test.exs
-  - test/scripts/scheduled_control_evidence_test.exs
-  - test/scripts/suite_floor_contract_test.exs
-  - test/scripts/verify_published_release_test.exs
-  - test/support/suite_floor.ex
-  - test/test_helper.exs
 findings:
-  critical: 2
-  warning: 2
+  critical: 3
+  warning: 1
   info: 0
   total: 4
 status: issues_found
@@ -34,81 +18,68 @@ status: issues_found
 
 # Phase 164: Code Review Report
 
-**Reviewed:** 2026-09-11T18:47:03Z
+**Reviewed:** 2026-09-12T00:49:51Z
 **Depth:** standard
-**Files Reviewed:** 20
+**Files Reviewed:** 4
 **Status:** issues_found
 
 ## Summary
 
-The 01-34 reconciliation fixes the earlier installed-boundary and suite-isolation findings, but the approved installed command still cannot run the closeout toolchain it pins. The loader also loses its authenticated authority OID at the Bash boundary, leaving a race in which different commits can supply the authenticated code and the repository evidence. A purported moving-HEAD regression test does not exercise that race, and the standalone ledger validator still has an uncaught non-repository input path.
+The new installed-authority reconciliation is not ready to ship. The explicit controlled-host alias passes all seven selected tests, but the repository-only scoped suite fails five tests because its so-called disposable production fixtures retain the real canonical checkout and therefore depend on live `HEAD == origin/main` state. On an exact-main checkout those same tests can proceed into the real pre-verification finalizer instead of exercising their fixture mutations.
 
-The full Elixir suite could not be executed on this host because the repository requires Elixir 1.18.4 while that asdf installation is absent. The toolchain blocker below was independently reproduced in the loader's exact child `PATH`: the approved Mix shim exits 127 with `asdf: not found`.
+The repository-truth validator also accepts tracked symlinks whose bytes live outside the repository and silently drops completed-plan file inventories when their YAML layout does not exactly match one regex. A separate malformed `--repo` path still escapes the CLI's controlled diagnostic contract with a stack trace. T-164-109 remains intentionally pending and is not classified as a defect here.
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01 (BLOCKER): The approved Mix and Elixir executables are unusable in the sanitized child environment
+### CR-01 (BLOCKER): Tracked symlinks to mutable external files satisfy repository truth
 
-**Files:**
+**File:** `/Users/jon/projects/mailglass/scripts/validate_repository_truth.exs:786-800`
 
-- `scripts/mailglass_finalize_phase_loader.mjs:26-33`
-- `scripts/mailglass_finalize_phase_loader.mjs:132-160`
-- `/Users/jon/.local/share/mailglass/checkpoints/164-32-install-approval.env:12-13`
+**Issue:** `ensure_tracked_subjects_exist/2` uses `File.regular?/1`, which follows symlinks, while `validate_staged_index_output/2` accepts any six-digit Git mode. A stage-0 symlink entry (`120000`) whose target is a regular file therefore passes as a tracked durable subject. This lets repository truth depend on mutable bytes outside Git. Replacing tracked `README.md` in a shared clone with a symlink to an external temporary file and staging it caused the public CLI to exit 0 with `repository truth ledger: valid`.
 
-**Issue:** The approved tuple pins `MIX` and `ELIXIR` to asdf shim scripts. Those scripts execute `asdf exec`, but `buildChildEnvironment/1` constructs `PATH` only from the pinned executables' directories plus `/usr/bin` and `/bin`; the actual asdf executable is `/opt/homebrew/bin/asdf`, and `/opt/homebrew/bin` is absent. Running the approved Mix path under that exact child `PATH` fails with exit 127 (`exec: asdf: not found`). Even if asdf were made reachable, `.tool-versions` requires Elixir 1.18.4, which is not installed on this host. The downstream closeout invokes bare `mix` and `elixir` (`scripts/closeout_repository_truth.sh:123,140`), so both pre-verification and terminal finalization are unable to reach their repository hygiene and ledger checks. `validateTrustedToolchain/1` only validates the shim files themselves and therefore approved an interpreter chain that cannot execute. Preserving caller-controlled `ASDF_DATA_DIR`, `ASDF_DIR`, and version overrides at lines 144-147 would also let the caller redirect that chain if asdf were merely added to `PATH`.
+**Fix:** Use `File.lstat/1` and require `type: :regular`, and reject non-regular Git index modes before accepting the stage-0 record. For example:
 
-**Fix:** Pin real, runnable Mix and Elixir executables for the required versions (including their interpreter/runtime dependencies), remove or set the asdf override variables instead of inheriting them, and have the downstream script call `"$MAILGLASS_MIX"` and `"$MAILGLASS_ELIXIR"` rather than bare names. Before approving an installation, execute version probes inside the exact sanitized child environment and reject any nonzero result. For example:
-
-```bash
-"$MAILGLASS_MIX" --version >/dev/null
-"$MAILGLASS_ELIXIR" --version >/dev/null
-(cd "$repo" && "$MAILGLASS_MIX" mailglass.repo.hygiene --check --format json)
-"$MAILGLASS_ELIXIR" "$authority_root/scripts/validate_repository_truth.exs" ...
+```elixir
+with {:ok, %File.Stat{type: :regular}} <- File.lstat(Path.join(repo_root, subject)),
+     :ok <- tracked_subject_in_index(repo_root, subject) do
+  :ok
+else
+  _ -> {:error, {:tracked_subject_not_regular, subject}}
+end
 ```
 
-### CR-02 (BLOCKER): The authenticated authority OID is discarded before Bash, allowing mixed-commit finalization
+In `validate_staged_index_output/2`, accept only the repository's allowed regular-file modes (for example `100644` and `100755`) and add an external-target symlink regression.
 
-**Files:**
+### CR-02 (BLOCKER): Repository-only loader attacks target the live canonical checkout and can dispatch the real finalizer
 
-- `scripts/mailglass_finalize_phase_loader.mjs:408-427`
-- `scripts/finalize_phase_164.sh:235-270`
+**File:** `/Users/jon/projects/mailglass/test/scripts/phase_164_closeout_test.exs:1717-1802`
 
-**Issue:** The loader authenticates and materializes every dependency from `authorityOid`, then checks HEAD once at lines 419-420. It spawns the finalizer with only the repository and private authority-root paths; the authenticated OID is not passed. The shell subsequently fetches and independently captures whatever HEAD exists at lines 266-270 as `main_sha`. A fast-forward or other same-user checkout update after the loader's last check but before the shell captures HEAD is therefore accepted as long as it equals `origin/main`. The process can then validate new repository state and the live ledger (`scripts/finalize_phase_164.sh:311`) using scripts and policy material authenticated from the old commit. This violates the claimed single-authority-OID boundary and can produce a passing closeout assembled from two commits.
+**Issue:** The repository-only group calls `production_installed_fixture!/2`, which deliberately leaves `CANONICAL_REPOSITORY` set to `/Users/jon/projects/mailglass` (`:2670-2678`), and then invokes that copied loader with `164 --pre-verification` (`:2795-2810`). The fixture checkout and its deleted plans, moving HEAD, or hostile extension are consequently not the repository the loader authenticates. On the current clean `main` at `f845d785...` while `origin/main` is `52c07a50...`, all five tests failed on the unrelated real-checkout error `HEAD does not equal origin/main`; the scoped run finished with 136 tests, 5 failures, 1 skipped, and 11 excluded. On a clean exact-main checkout, the copied loader can instead authenticate and dispatch the actual canonical pre-verification scripts, causing network access and ignored evidence writes during a repository-only test. The accepted-error allowlist also lets feature-branch CI pass before any named fixture attack is reached.
 
-**Fix:** Pass `authorityOid` as an explicit required argument (or otherwise immutable authenticated input) to the shell. On entry and again after fetch, require both HEAD and `origin/main` to equal that exact OID; never recapture a replacement authority. Use the authority-root ledger rather than the mutable checkout copy. For example:
+**Fix:** Make each negative test authenticate a fully disposable repository and assert the specific mutation-induced rejection. Do not invoke the production `164 --pre-verification` path from the repository-only lane. Keep production-constant/installed-object assertions in the explicit controlled-host selection, or expose a side-effect-free validation seam for testing. Then require `mix verify.ci_lane_contract` to pass from both a feature checkout and a local `main` that is ahead of `origin/main`.
 
-```javascript
-spawnSync(tools.BASH, [finalizer, repo, privateRoot, authorityOid, ...modeArgs], options);
-```
+### CR-03 (BLOCKER): Malformed completed-plan metadata silently removes files from the required audit set
 
-```bash
-expected_oid=$3
-current_oid=$("$MAILGLASS_GIT" -C "$repo" rev-parse HEAD)
-[ "$current_oid" = "$expected_oid" ] || fail "authority commit changed before finalization"
-```
+**File:** `/Users/jon/projects/mailglass/scripts/validate_repository_truth.exs:861-887`
+
+**Issue:** `plan_files_modified/1` returns `[]` whenever its layout-sensitive regex does not match. It therefore treats malformed or merely reordered YAML exactly like an intentionally empty inventory. A completed plan containing `files_modified:`, a real path, an intervening frontmatter field, and then `autonomous:` was accepted by `audit_subjects/2`, but its declared path was absent from the returned subject set. An updated ledger can consequently omit that tracked file while the completeness comparison has no missing subject to report, violating the fail-closed exact-disposition contract. The new test helper correctly fails on an unparsable list, but production retains the silent fallback.
+
+**Fix:** Parse frontmatter as YAML and return a tagged error when `files_modified` is missing, malformed, or not a list. Thread `{:error, {:invalid_plan_metadata, plan}}` through `phase_artifacts/1`, `audit_subjects/2`, and `main/1`; reserve an empty list only for an explicit `files_modified: []`. Add regressions for reordered keys, intervening keys, invalid scalar values, and missing metadata.
 
 ## Warnings
 
-### WR-01 (WARNING): The moving-HEAD regression test explicitly accepts success and never moves HEAD
+### WR-01 (WARNING): Existing non-Git `--repo` directories still crash the public validator
 
-**File:** `test/scripts/phase_164_closeout_test.exs:1096-1112`
+**File:** `/Users/jon/projects/mailglass/scripts/validate_repository_truth.exs:805-806,856-858`
 
-**Issue:** The test named `rejects a moving HEAD` asserts `moving_status == 0` and that dispatch created its marker. Its fixture tries to advance HEAD through a `git` executable prepended to `PATH` (`:2419-2452`), but the loader invokes its absolute pinned Git path, so the shim is never called; the test even asserts that `git_log` does not exist. The test therefore proves that environment-path substitution is ignored, not that a checkout change between authentication and Bash dispatch is rejected. This materially masks CR-02.
+**Issue:** `ensure_repository/1` accepts any directory, then `tracked_subjects/2` pattern-matches on a successful `git ls-files`. With a directory containing all six ignore authorities but no `.git`, the CLI exits 1 through an uncaught `MatchError` and prints a stack trace from line 857 instead of its bounded `repository truth ledger: ...` diagnostic and usage line. The recent incomplete-authority fix does not cover this neighboring public input boundary.
 
-**Fix:** Separate the environment-substitution assertion into its own test. Add a deterministic dispatch hook or a fixture finalizer that advances the fixture checkout precisely after authentication, pass the captured expected OID across the boundary, and assert a nonzero result, an authority-drift diagnostic, and no closeout marker.
-
-### WR-02 (WARNING): An existing non-Git `--repo` crashes the ledger validator instead of returning a controlled error
-
-**File:** `scripts/validate_repository_truth.exs:797-799,848-850`
-
-**Issue:** `ensure_repository/1` accepts any directory. `audit_subjects/2` then calls `tracked_subjects/2`, which pattern-matches specifically on `{output, 0}` from `git ls-files`. For an existing directory that is not a Git worktree, Git returns a nonzero status and the public CLI raises a `MatchError` instead of reaching `main/1`'s stable `{:error, reason}` diagnostic and exit-status path. This makes malformed-boundary behavior inconsistent and exposes an avoidable stack trace.
-
-**Fix:** Validate `git rev-parse --is-inside-work-tree` as part of `ensure_repository/1`, or make `tracked_subjects/2` return `{:ok, subjects} | {:error, reason}` and thread it through `audit_subjects/2`. Add a CLI regression with an empty temporary directory as `--repo` and assert exit status 1 plus a bounded `invalid_repository` diagnostic.
+**Fix:** Verify repository identity with a non-raising Git command before enumeration, or return `{:ok, subjects} | {:error, reason}` from `tracked_subjects/2` and thread the error through `audit_subjects/2`. Add a CLI regression requiring one deterministic `invalid_repository` diagnostic and no exception trace.
 
 ---
 
-_Reviewed: 2026-09-11T18:47:03Z_
+_Reviewed: 2026-09-12T00:49:51Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_

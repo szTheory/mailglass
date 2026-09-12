@@ -2,13 +2,14 @@
 
 Phase 164 closes across two deliberately separate proof boundaries. Ordinary
 GSD execution owns tracked implementation, summaries, verification, roadmap,
-requirements, and phase-completion metadata. The previously proven installed
-program is the mode-0500 executable at
-`/Users/jon/.local/bin/mailglass-finalize-phase`; its active bytes are bound to
-the exact Plan 164-32 approval and installed-readiness proof described below.
-The tracked source `scripts/mailglass_finalize_phase_loader.mjs` and installed
-command now share the approved 01-34 bytes. The Plan 164-27 and Plan 164-23
-approvals remain immutable prior provenance only. The Plan 164-23
+requirements, and phase-completion metadata. The active installed program is
+the mode-0500 executable at
+`/Users/jon/.local/bin/mailglass-finalize-phase`, bound to the exact Plan 164-37
+approval and Plan 164-38 installed-readiness proof described below. The tracked
+source `scripts/mailglass_finalize_phase_loader.mjs` now authenticates the exact
+01-44 authority chain. The installed object remains the protected 01-39 repair
+until a new exact-tuple approval and recoverable installation completes. The Plan 164-32, Plan
+164-27, and Plan 164-23 approvals remain immutable prior provenance only. The Plan 164-23
 authenticated-copy checkpoint remain immutable provenance for an older prior
 object; they do not authorize later tracked bytes. The installed loader is
 outside checkout evaluation: no project-local extension module is imported
@@ -17,12 +18,12 @@ before it establishes repository authority.
 At invocation the installed program captures one full repository commit OID.
 That captured repository OID, rather than symbolic `HEAD`, is the authority for
 every tree enumeration, blob authentication, and private materialization. The
-Plan 164-32 installed authority recognizes the exact PLAN/SUMMARY pair set 01
-through 34, with exactly one PLAN and one SUMMARY for every number. The tracked
-loader, installed loader, and shell source share that deliberately advanced
-range. No historical subset or shortened baseline is accepted. Missing pairs,
-extra numbers, malformed names, or a silently shortened set fail before
-execution.
+tracked loader and shell recognize the exact PLAN/SUMMARY pair set 01 through 44,
+with exactly one PLAN and one SUMMARY for every number. The installed Plan
+164-37/38 authority remains bounded to 01 through 39 and cannot run terminal
+mode until replaced under a new approval. No
+historical subset or shortened baseline is accepted. Missing pairs, extra
+numbers, malformed names, or a silently shortened set fail before execution.
 
 Before the first Bash process starts, the loader authenticates every exact
 executable and data blob at that OID and materializes the complete set beneath
@@ -225,11 +226,155 @@ pending until the exact protected SHA receives attempt-1 push CI and natural
 schedules, the installed command captures ignored terminal evidence, and no
 later tracked write occurs.
 
+## Plan 164-37 approved physical-toolchain replacement tuple
+
+Plan 164-37 independently revalidated protected `main` source OID
+`52c07a5051d269b307831a2210f53dec0dd1ff65` and its normally triggered,
+successful attempt-one `CI` push run `34650810638`. The authenticated loader
+blob at that OID has SHA-256
+`394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746`, an
+absolute physical Node shebang, and the exact terminal range 01 through 39.
+
+The immutable proposal is the regular non-symlink mode-0400 file
+`/Users/jon/.local/share/mailglass/checkpoints/164-37-install-proposal.env`.
+Its SHA-256 is
+`4d580f9f4a72ed6d25afa390f53369e1e08af3dc84c92b9e008d80895c13ddcf`,
+and its 27 fields are ordered exactly as follows:
+
+```text
+record_version=2
+proposal_schema=mailglass-finalize-phase-install-proposal-v2
+phase_plan=164-37
+installation_source_oid=52c07a5051d269b307831a2210f53dec0dd1ff65
+source_sha256=394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746
+protected_ci_run_id=34650810638
+destination=/Users/jon/.local/bin/mailglass-finalize-phase
+install_mode=0500
+node_executable=/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node
+git_executable=/opt/homebrew/Cellar/git/2.41.0/bin/git
+bash_executable=/opt/homebrew/Cellar/bash/5.2.37/bin/bash
+gh_executable=/opt/homebrew/Cellar/gh/2.95.0/bin/gh
+jq_executable=/usr/bin/jq
+mix_executable=/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix
+elixir_executable=/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir
+erl_executable=/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl
+mix_version=Mix 1.19.5 (compiled with Erlang/OTP 28)
+elixir_version=Elixir 1.19.5 (compiled with Erlang/OTP 28)
+otp_release=28
+runtime_probe_sha256=ca3c43bd04c4e21e223f39561f294885ceca2633db65a72fa29b780bcef3975d
+prior_approval_sha256=f120bbda1a15478ea97179210215ee54e28ff59641644a35a643628265e9bf4b
+prior_sha256=f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac
+prior_mode=0500
+prior_stat_identity=16777229:273869583:501:20
+rollback_path=/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac
+rollback_status=absent
+terminal_last_plan=39
+```
+
+The Mix, Elixir, and Erlang identities above were lstat-checked as physical,
+non-symlink, safely owned regular files and executed successfully inside the
+loader's exact sanitized child environment. The ordered runtime probe digest
+binds the three normalized output fields shown above. The installed predecessor
+remains the Plan 164-32-approved regular mode-0500 object with the recorded
+digest and lstat identity; the new digest-addressed rollback path remains
+absent. Destination and rollback semantics were derived only from that active
+approval.
+
+After the maintainer responded exactly `approved`, every ordered proposal field
+and live fact was revalidated before publication. The immutable approval is the
+regular non-symlink mode-0400 file
+`/Users/jon/.local/share/mailglass/checkpoints/164-37-install-approval.env`.
+Its SHA-256 is
+`e3687bf5a2afc69a79b2677c69daa3d533549d4b6f730a30a04e32cc6d13b7cd`,
+and its bytes are exactly the proposal bytes followed by the single final line
+`approval_status=approved`. Readback confirmed that exact-copy-plus-status
+form, all 28 keys occur once with nonempty values, and protected-main, normal
+CI, authenticated source, physical toolchain, runtime probe, installed
+predecessor, destination, and absent rollback facts remained unchanged.
+
+This approval authorizes only Plan 164-38's recoverable replacement of the
+displayed exact tuple. The installed destination remains the Plan
+164-32-approved object, the new rollback path remains absent, and no
+finalization mode, workflow dispatch or rerun, release, publication, or
+completion metadata ran. Plan 164-38 installation and rollback publication,
+Plan 164-39 tracked reconciliation, ordinary verification, completion-only
+metadata, protected-main terminal evidence, and terminal finalization all
+remain pending. Any tuple change requires a new proposal and approval.
+
+## Plan 164-38 installed 01-39 readiness
+
+Plan 164-38 consumed only the exact Plan 164-37 approval record with SHA-256
+`e3687bf5a2afc69a79b2677c69daa3d533549d4b6f730a30a04e32cc6d13b7cd`.
+Immediately before mutation, the executor revalidated all 28 ordered approval
+fields, exact proposal-copy-plus-status bytes, protected source OID
+`52c07a5051d269b307831a2210f53dec0dd1ff65`, successful normal push CI run
+`34650810638`, authenticated loader SHA-256
+`394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746`,
+physical tool identities, exact-child runtime output, predecessor identity,
+destination, and absent rollback target.
+
+Before replacing the destination, the exact predecessor bytes were copied,
+set read-only, atomically published, and read back as the regular non-symlink
+mode-0400 rollback
+`/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`.
+Its SHA-256 is
+`f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`
+and its observed lstat identity is `16777229:288282021:501:20`. The immutable
+Plan 164-32 approval remains bounded prior provenance with SHA-256
+`f120bbda1a15478ea97179210215ee54e28ff59641644a35a643628265e9bf4b`;
+neither that approval nor the rollback is a second active authority.
+
+The installed destination
+`/Users/jon/.local/bin/mailglass-finalize-phase` is now the authenticated Git
+blob from the approved source OID, published by same-directory atomic rename
+and re-read as a regular non-symlink mode-0500 object. Its observed SHA-256 is
+`394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746`
+and its lstat identity is `16777229:288282024:501:20`. Direct `--version`
+returned `mailglass-finalize-phase-loader 1`. Direct ancestry-aware
+`--self-check` reported installation OID
+`52c07a5051d269b307831a2210f53dec0dd1ff65`, current repository OID
+`03cb5babd37014e963fbe4e41cd987d6c17fa6bb`, the same loader digest and
+external path, mode `0500`, and terminal range `01-39`.
+
+The exact sanitized child environment used these physical runtime members:
+
+- Mix: `/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix` →
+  `Mix 1.19.5 (compiled with Erlang/OTP 28)`
+- Elixir: `/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir` →
+  `Elixir 1.19.5 (compiled with Erlang/OTP 28)`
+- Erlang: `/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl` → OTP release `28`
+
+Their normalized probe SHA-256 is
+`ca3c43bd04c4e21e223f39561f294885ceca2633db65a72fa29b780bcef3975d`.
+No asdf selector entered the child environment. Automatic predecessor
+restoration was armed for every post-replacement direct assertion.
+
+The real `mix verify.phase_164.installed_boundary` controlled-host alias reads
+the Plan 164-37 approval and the actual installed object; its seven selected
+tests are non-vacuous and include direct version, ancestry-aware self-check,
+physical Mix/Elixir/Erlang output, probe-digest agreement, and rollback
+provenance. The separate `mix verify.ci_lane_contract` repository lane excludes
+both `phase_164_proposal_boundary` and
+`phase_164_installed_production_boundary` while retaining the disposable
+repository movement and runtime-closure negative tests. Neither lane is
+terminal evidence.
+
+This result is installation readiness only. Plan 164-39 tracked reconciliation
+remains pending, ordinary verification remains pending, completion-only
+metadata remains pending, protected-main integration remains pending, exact
+remote attempt-one CI and natural schedules remain pending, and terminal
+finalization remains pending. T-164-109 stays open. The authorized order is
+Plan 164-39 tracked reconciliation → ordinary verifier → completion-only metadata → protected main
+→ exact attempt-one CI and natural schedules → terminal ignored capture → no
+later tracked write. No phase argument, pre-verification mode, terminal mode,
+workflow dispatch or rerun, protected-control mutation, release, or publication
+ran in Plan 164-38.
+
 ## Tracked completion and terminal order
 
 The only authorized closeout sequence is:
 
-1. Plan 164-34 implementation commits land, then `164-34-SUMMARY.md exists before ordinary verification`.
+1. All tracked reconciliation through Plan 164-44 lands, then `164-44-SUMMARY.md exists before ordinary verification`.
 2. The ordinary verifier writes `status: passed` and the exact `verified_implementation_sha` it evaluated.
 3. After that verified SHA, only the four authorized completion metadata paths may change.
 4. Those completion records reach protected `main`.
@@ -237,8 +382,17 @@ The only authorized closeout sequence is:
 6. `/Users/jon/.local/bin/mailglass-finalize-phase 164` writes ignored `tmp/phase-164-closeout/` evidence only.
 7. No summary, planning update, commit, push, merge, release, publication, dispatch, or rerun follows the capture.
 
-Plan 164-34 stops after establishing readiness for this sequence. It does not
-execute steps 2 through 7 and does not claim that a terminal report exists.
+Plans 164-39 through 164-44 stop after reconciling readiness for this sequence.
+They do not execute steps 2 through 7 and do not claim that a terminal report exists.
+
+In compact authority order, the mandatory sequence is:
+
+`164-44-SUMMARY.md → ordinary verifier → completion-only metadata → protected main → exact attempt-one normal CI → natural scheduled evidence → installed approval recheck → terminal capture → no later tracked write`
+
+T-164-109 remains pending throughout the tracked reconciliation. Repository tests and
+installed readiness are not terminal proof. No reconciliation task invokes either
+finalization mode, changes protected controls or completion metadata, dispatches
+or reruns CI, releases or publishes an artifact, or captures terminal evidence.
 
 ## Terminal operational proof
 
