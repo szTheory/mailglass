@@ -674,6 +674,14 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
            - scripts/duplicate.exs
          ---
          """},
+        {"explicit-empty-with-list",
+         """
+         ---
+         files_modified: []
+           - scripts/hidden-after-empty.exs
+         autonomous: true
+         ---
+         """},
         {"missing-delimiter",
          """
          ---
