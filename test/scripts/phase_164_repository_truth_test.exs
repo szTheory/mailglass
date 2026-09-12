@@ -736,6 +736,66 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       assert :ok = Ledger.tracked_subject_in_index(repo, subject)
     end
 
+    test "accepts exact-one regular blob modes through parsed and real index records" do
+      subject = "regular-mode.txt"
+
+      regular_records =
+        for mode <- ["100644", "100755"] do
+          {mode, stage_record(subject, 0, mode)}
+        end
+
+      assert regular_records != []
+      assert Enum.uniq_by(regular_records, &elem(&1, 0)) == regular_records
+
+      for {_mode, record} <- regular_records do
+        assert :ok = Ledger.validate_staged_index_output(record, subject)
+      end
+
+      repo = clone_repository!()
+      executable = "mode-100755.sh"
+      executable_path = Path.join(repo, executable)
+      File.write!(executable_path, "#!/bin/sh\nexit 0\n")
+      File.chmod!(executable_path, 0o755)
+      assert {_output, 0} = System.cmd("git", ["add", "--", executable], cd: repo)
+      assert git_output!(repo, ["ls-files", "--stage", "--", executable]) =~ ~r/^100755 /
+      assert :ok = Ledger.tracked_subject_in_index(repo, executable)
+    end
+
+    test "rejects structurally valid non-regular modes through parsed and real index records" do
+      subject = "non-regular-mode"
+
+      invalid_modes = ["100600", "120000", "160000"]
+      assert [_ | _] = invalid_modes
+      assert Enum.uniq(invalid_modes) == invalid_modes
+
+      for mode <- invalid_modes do
+        assert {:error, {:tracked_subject_invalid_index_mode, ^subject, ^mode}} =
+                 Ledger.validate_staged_index_output(stage_record(subject, 0, mode), subject)
+      end
+
+      symlink_repo = clone_repository!()
+      symlink_target = external_regular_file!()
+      File.write!(Path.join(symlink_repo, subject), "replace me\n")
+      replace_with_tracked_symlink!(symlink_repo, subject, symlink_target)
+
+      assert {:error, {:tracked_subject_invalid_index_mode, ^subject, "120000"}} =
+               Ledger.tracked_subject_in_index(symlink_repo, subject)
+
+      gitlink_repo = clone_repository!()
+      gitlink_oid = git_output!(gitlink_repo, ["rev-parse", "HEAD"])
+
+      assert {_output, 0} =
+               System.cmd(
+                 "git",
+                 ["update-index", "--add", "--cacheinfo", "160000,#{gitlink_oid},#{subject}"],
+                 cd: gitlink_repo,
+                 stderr_to_stdout: true
+               )
+
+      assert {:error, {:tracked_subject_invalid_index_mode, ^subject, "160000"}} =
+               Ledger.tracked_subject_in_index(gitlink_repo, subject)
+    end
+
     test "literal metacharacters, adjacent names, newlines, and record order preserve identity" do
       repo = clone_repository!()
       literal = "stage[0]*?.txt"
@@ -983,8 +1043,8 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     String.trim(output)
   end
 
-  defp stage_record(subject, stage \\ 0) do
-    "100644 #{String.duplicate("a", 40)} #{stage}\t#{subject}\0"
+  defp stage_record(subject, stage \\ 0, mode \\ "100644") do
+    "#{mode} #{String.duplicate("a", 40)} #{stage}\t#{subject}\0"
   end
 
   defp valid_row do
