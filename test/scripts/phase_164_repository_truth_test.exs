@@ -511,6 +511,93 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     end
   end
 
+  describe "phase 164 completed-plan metadata" do
+    @describetag :phase_164_plan_metadata
+
+    test "reordered non-adjacent files_modified entries cross the public audit seam" do
+      {authority_root, plan, _relative_plan} =
+        completed_plan_fixture!("""
+        ---
+        phase: 164-repository-truth-reconciliation-and-closeout
+        plan: 99
+        autonomous: true
+        files_modified:
+          - docs/nested/reordered-proof.md
+          - scripts/reordered-proof.exs
+        wave: 41
+        depends_on: [164-40]
+        ---
+
+        <objective>fixture</objective>
+        """)
+
+      assert {:ok, subjects} = Ledger.audit_subjects(@repo_root, authority_root)
+      assert MapSet.member?(subjects, "docs/nested/reordered-proof.md")
+      assert MapSet.member?(subjects, "scripts/reordered-proof.exs")
+
+      assert function_exported?(Ledger, :plan_files_modified, 1)
+      assert {:ok, ["docs/nested/reordered-proof.md", "scripts/reordered-proof.exs"]} =
+               apply(Ledger, :plan_files_modified, [plan])
+    end
+
+    test "explicit empty metadata is distinct from a missing files_modified key" do
+      {_root, empty_plan, _empty_relative} =
+        completed_plan_fixture!("""
+        ---
+        phase: 164-repository-truth-reconciliation-and-closeout
+        plan: 99
+        files_modified: []
+        autonomous: true
+        ---
+        """)
+
+      {missing_root, missing_plan, missing_relative} =
+        completed_plan_fixture!("""
+        ---
+        phase: 164-repository-truth-reconciliation-and-closeout
+        plan: 99
+        autonomous: true
+        ---
+        """)
+
+      empty_result =
+        if function_exported?(Ledger, :plan_files_modified, 1) do
+          apply(Ledger, :plan_files_modified, [empty_plan])
+        else
+          {:error, :public_plan_metadata_seam_missing}
+        end
+
+      assert {:ok, []} = empty_result
+
+      expected = {:error, {:plan_metadata_missing, missing_relative, "files_modified"}}
+      assert expected == Ledger.audit_subjects(@repo_root, missing_root)
+      assert expected == apply(Ledger, :plan_files_modified, [missing_plan])
+      assert_metadata_cli_failure(missing_root, missing_relative, "plan_metadata_missing")
+    end
+
+    test "malformed files_modified metadata returns one stable API and CLI tag" do
+      {authority_root, plan, relative_plan} =
+        completed_plan_fixture!("""
+        ---
+        phase: 164-repository-truth-reconciliation-and-closeout
+        plan: 99
+        files_modified: scripts/not-a-list.exs
+        autonomous: true
+        ---
+        """)
+
+      assert {:error, {:plan_metadata_malformed, ^relative_plan, reason}} =
+               Ledger.audit_subjects(@repo_root, authority_root)
+
+      assert is_binary(reason)
+
+      assert {:error, {:plan_metadata_malformed, ^relative_plan, ^reason}} =
+               apply(Ledger, :plan_files_modified, [plan])
+
+      assert_metadata_cli_failure(authority_root, relative_plan, "plan_metadata_malformed")
+    end
+  end
+
   describe "phase 164 trust anchors" do
     @describetag :phase_164_trust_anchor
 
@@ -945,6 +1032,54 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       System.cmd("git", ["check-ignore", "-q", path], cd: @repo_root, stderr_to_stdout: true)
 
     status == 0
+  end
+
+  defp completed_plan_fixture!(contents) do
+    authority_root = authority_root!()
+
+    for ignore_file <- @ignore_files do
+      source = Path.join(@repo_root, ignore_file)
+      destination = Path.join(authority_root, ignore_file)
+      File.mkdir_p!(Path.dirname(destination))
+      File.cp!(source, destination)
+    end
+
+    relative_plan = Path.join(@phase_dir, "164-99-PLAN.md")
+    plan = Path.join(authority_root, relative_plan)
+    summary = String.replace_suffix(plan, "-PLAN.md", "-SUMMARY.md")
+    File.mkdir_p!(Path.dirname(plan))
+    File.write!(plan, contents)
+    File.write!(summary, "summary\n")
+
+    {authority_root, plan, relative_plan}
+  end
+
+  defp assert_metadata_cli_failure(authority_root, relative_plan, tag) do
+    script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
+
+    {output, status} =
+      System.cmd(
+        System.find_executable("elixir"),
+        [
+          script,
+          "--repo",
+          @repo_root,
+          "--authority-root",
+          authority_root,
+          "--ledger",
+          @ledger
+        ],
+        stderr_to_stdout: true
+      )
+
+    assert status == 1
+    assert output =~ tag
+    assert output =~ relative_plan
+    assert byte_size(output) < 1_024
+    refute output =~ "MatchError"
+    refute output =~ "** ("
+    refute output =~ "scripts/validate_repository_truth.exs:"
+    refute output =~ "    ("
   end
 
   defp authority_root! do
