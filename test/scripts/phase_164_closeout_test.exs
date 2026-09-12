@@ -1721,7 +1721,13 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
       fixture = immutable_loader_fixture!(Path.join(root, "foreign-origin"))
-      git!(fixture.repo, ["remote", "set-url", "origin", "https://github.com/attacker/mailglass.git"])
+
+      git!(fixture.repo, [
+        "remote",
+        "set-url",
+        "origin",
+        "https://github.com/attacker/mailglass.git"
+      ])
 
       {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
       assert status != 0
@@ -1751,14 +1757,15 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       on_exit(fn -> File.rm_rf!(root) end)
 
       for plan <- [10, 20, 34] do
-        fixture = production_installed_fixture!(Path.join(root, "missing-#{plan}"))
+        fixture = immutable_loader_fixture!(Path.join(root, "missing-#{plan}"))
         number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
         phase = ".planning/phases/164-fixture/164-#{number}"
         git!(fixture.repo, ["rm", "-q", "#{phase}-PLAN.md", "#{phase}-SUMMARY.md"])
         git!(fixture.repo, ["commit", "-q", "-m", "remove pair #{number}"])
 
-        {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+        {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
+
         assert output =~
                  "authenticated Phase 164 numbered history is not the exact 01-39 PLAN/SUMMARY set"
 
@@ -1771,8 +1778,13 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     test "assume-unchanged hostile retired extension is never evaluated" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
-      fixture = production_installed_fixture!(Path.join(root, "hostile-extension"))
+      fixture = immutable_loader_fixture!(Path.join(root, "hostile-extension"))
       hostile_extension = Path.join(fixture.repo, ".gsd/extensions/finalize-phase/index.ts")
+
+      File.mkdir_p!(Path.dirname(hostile_extension))
+      File.write!(hostile_extension, "export default function retired() { return 'retired'; }\n")
+      git!(fixture.repo, ["add", ".gsd/extensions/finalize-phase/index.ts"])
+      git!(fixture.repo, ["commit", "-q", "-m", "record retired extension fixture"])
 
       git!(fixture.repo, [
         "update-index",
@@ -1793,55 +1805,47 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
                ".gsd/extensions/finalize-phase/index.ts"
              ]) == ""
 
-      {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+      {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
       assert status == 0, output
       assert File.regular?(fixture.marker)
       refute output =~ @repo_root
       refute File.exists?(fixture.hostile_marker)
     end
 
-    test "invalid argv fails with the exact loader usage diagnostic" do
+    test "argv, environment, and origin/main state cannot replace disposable authority" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
-      fixture = production_installed_fixture!(Path.join(root, "invalid-argv"))
+      invalid_fixture = immutable_loader_fixture!(Path.join(root, "invalid-argv"))
 
       {output, status} =
-        invoke_production_loader(fixture, ["164", "--repo", fixture.repo])
+        invoke_immutable_loader(invalid_fixture, ["164", "--repo", invalid_fixture.repo])
 
       assert status != 0
       assert output =~ "expected phase 164 and optional --pre-verification"
       refute output =~ @repo_root
-      refute File.exists?(fixture.marker)
-      refute File.exists?(fixture.hostile_marker)
-    end
+      refute File.exists?(invalid_fixture.marker)
+      refute File.exists?(invalid_fixture.hostile_marker)
 
-    test "environment overrides cannot replace the disposable canonical repository" do
-      root = temporary_root!()
-      on_exit(fn -> File.rm_rf!(root) end)
-      fixture = production_installed_fixture!(Path.join(root, "environment-override"))
+      environment_fixture =
+        immutable_loader_fixture!(Path.join(root, "environment-override"))
 
       {output, status} =
-        invoke_production_loader(fixture, ["164", "--pre-verification"], [
+        invoke_immutable_loader(environment_fixture, ["164", "--pre-verification"], [
           {"MAILGLASS_REPOSITORY", @repo_root},
           {"GIT", "/bin/false"}
         ])
 
       assert status == 0, output
-      assert File.regular?(fixture.marker)
+      assert File.regular?(environment_fixture.marker)
       refute output =~ @repo_root
-      refute File.exists?(fixture.hostile_marker)
-    end
-
-    test "repository fixtures prove exact-main and one-commit-ahead-main states" do
-      root = temporary_root!()
-      on_exit(fn -> File.rm_rf!(root) end)
+      refute File.exists?(environment_fixture.hostile_marker)
 
       for {name, origin_main, expected_ahead} <- [
             {"exact-main", :head, 0},
             {"ahead-main", :previous, 1}
           ] do
         fixture =
-          production_installed_fixture!(Path.join(root, name), origin_main: origin_main)
+          immutable_loader_fixture!(Path.join(root, name), origin_main: origin_main)
 
         ahead =
           fixture.repo
@@ -1850,7 +1854,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         assert ahead == Integer.to_string(expected_ahead)
 
-        {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+        {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
         assert status == 0, output
         assert File.regular?(fixture.marker)
         refute output =~ @repo_root
@@ -2722,15 +2726,11 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       end
 
     source =
-      if Keyword.get(options, :production, false) do
-        source
-      else
-        String.replace(
-          source,
-          ~s(const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass"),
-          ~s(const CANONICAL_REPOSITORY = #{inspect(resolved_path!(repo))})
-        )
-      end
+      String.replace(
+        source,
+        ~s(const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass"),
+        ~s(const CANONICAL_REPOSITORY = #{inspect(resolved_path!(repo))})
+      )
 
     source =
       String.replace(
@@ -2756,6 +2756,15 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     git!(repo, ["add", "metadata"])
     git!(repo, ["commit", "-q", "-m", "metadata only"])
     current_oid = repo |> git!(["rev-parse", "HEAD"]) |> String.trim()
+
+    origin_main_oid =
+      case Keyword.get(options, :origin_main, :head) do
+        :head -> current_oid
+        :previous -> installation_oid
+        other -> raise "unsupported origin/main fixture state: #{inspect(other)}"
+      end
+
+    git!(repo, ["update-ref", "refs/remotes/origin/main", origin_main_oid])
 
     install_dir = Path.join(Path.dirname(repo), "installed-#{Path.basename(repo)}")
     File.mkdir_p!(install_dir)
@@ -2834,51 +2843,6 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       [_match] -> String.replace(source, expected, replacement, global: false)
       matches -> raise "expected one loader fixture replacement, found #{length(matches)}"
     end
-  end
-
-  defp production_installed_fixture!(repo, options \\ []) do
-    fixture = immutable_loader_fixture!(repo, Keyword.put(options, :production, true))
-    retired_extension = Path.join(repo, ".gsd/extensions/finalize-phase/index.ts")
-    File.mkdir_p!(Path.dirname(retired_extension))
-    File.write!(retired_extension, "export default function retired() { return 'retired'; }\n")
-    git!(repo, ["add", ".gsd/extensions/finalize-phase/index.ts"])
-    git!(repo, ["commit", "-q", "-m", "record retired extension fixture"])
-    fixture
-  end
-
-  defp invoke_production_loader(fixture, args, extra_env \\ []) do
-    node = fixture_node!()
-
-    System.cmd(node, [fixture.installed | args],
-      cd: fixture.repo,
-      env:
-        extra_env ++
-          [
-            {"MARKER", fixture.marker},
-            {"BYTES_MARKER", fixture.bytes_marker},
-            {"HOSTILE_MARKER", fixture.hostile_marker},
-            {"GIT_LOG", fixture.git_log},
-            {"REAL_GIT", System.find_executable("git")}
-          ],
-      stderr_to_stdout: true
-    )
-  end
-
-  defp assert_production_boundary_rejection!(output, fixture) do
-    accepted_failures = [
-      "expected phase 164",
-      "canonical repository is missing",
-      "canonical repository path is not the compiled physical checkout",
-      "canonical repository origin is not szTheory/mailglass",
-      "authenticated Phase 164 numbered history is not the exact 01-39",
-      "canonical checkout is not on main"
-    ]
-
-    assert Enum.any?(accepted_failures, &String.contains?(output, &1)),
-           "expected an authenticated production-boundary rejection, got: #{inspect(output)}"
-
-    refute File.exists?(fixture.marker)
-    refute File.exists?(fixture.hostile_marker)
   end
 
   defp invoke_immutable_loader(fixture, args, extra_env \\ []) do
