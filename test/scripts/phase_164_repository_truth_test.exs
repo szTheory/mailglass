@@ -597,6 +597,182 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
       assert_metadata_cli_failure(authority_root, relative_plan, "plan_metadata_malformed")
     end
+
+    test "metadata shape matrix parses valid lists and rejects every malformed value" do
+      valid_cases = [
+        {"adjacent",
+         """
+         ---
+         files_modified:
+           - docs/adjacent.md
+         autonomous: true
+         ---
+         """, ["docs/adjacent.md"]},
+        {"nested-reordered",
+         """
+         ---
+         wave: 41
+         autonomous: true
+         files_modified:
+           - .planning/proof/nested/evidence.md
+           - test/scripts/nested_contract_test.exs
+         depends_on: [164-40]
+         ---
+         """, [".planning/proof/nested/evidence.md", "test/scripts/nested_contract_test.exs"]},
+        {"explicit-empty",
+         """
+         ---
+         autonomous: true
+         files_modified: []
+         wave: 41
+         ---
+         """, []}
+      ]
+
+      valid_results =
+        Enum.map(valid_cases, fn {identity, contents, expected_paths} ->
+          {_root, plan, relative_plan} = completed_plan_fixture!(contents)
+          {identity, relative_plan, expected_paths, Ledger.plan_files_modified(plan)}
+        end)
+
+      assert valid_results != []
+      assert Enum.uniq_by(valid_results, &elem(&1, 0)) == valid_results
+
+      for {_identity, _relative_plan, expected_paths, result} <- valid_results do
+        assert {:ok, ^expected_paths} = result
+      end
+
+      invalid_cases = [
+        {"blank",
+         """
+         ---
+         files_modified:
+         autonomous: true
+         ---
+         """},
+        {"scalar",
+         """
+         ---
+         files_modified: scripts/scalar.exs
+         autonomous: true
+         ---
+         """},
+        {"malformed-indentation",
+         """
+         ---
+         files_modified:
+         - scripts/unindented.exs
+         autonomous: true
+         ---
+         """},
+        {"duplicate-key",
+         """
+         ---
+         files_modified: []
+         autonomous: true
+         files_modified:
+           - scripts/duplicate.exs
+         ---
+         """},
+        {"missing-delimiter",
+         """
+         ---
+         files_modified:
+           - scripts/no-closing-delimiter.exs
+         autonomous: true
+         """},
+        {"unterminated-list",
+         """
+         ---
+         files_modified:
+           - scripts/first.exs
+           continuation: invalid
+         autonomous: true
+         ---
+         """}
+      ]
+
+      invalid_results =
+        Enum.map(invalid_cases, fn {identity, contents} ->
+          {_root, plan, relative_plan} = completed_plan_fixture!(contents)
+          {identity, relative_plan, Ledger.plan_files_modified(plan)}
+        end)
+
+      assert invalid_results != []
+      assert Enum.uniq_by(invalid_results, &elem(&1, 0)) == invalid_results
+
+      for {_identity, relative_plan, result} <- invalid_results do
+        assert {:error, {:plan_metadata_malformed, ^relative_plan, reason}} = result
+        assert is_binary(reason) and reason != ""
+      end
+    end
+  end
+
+  describe "phase 164 Git repository identity" do
+    @describetag :phase_164_git_identity
+
+    test "an existing non-Git repository root fails through tagged API and bounded CLI results" do
+      non_git_repo = authority_root!()
+
+      {authority_root, _plan, _relative_plan} =
+        completed_plan_fixture!("""
+        ---
+        files_modified: []
+        autonomous: true
+        ---
+        """)
+
+      api_result =
+        try do
+          Ledger.audit_subjects(non_git_repo, authority_root)
+        rescue
+          error -> {:raised, error.__struct__}
+        end
+
+      assert api_result == {:error, {:invalid_git_repository, non_git_repo}}
+
+      script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
+
+      {output, status} =
+        System.cmd(
+          System.find_executable("elixir"),
+          [
+            script,
+            "--repo",
+            non_git_repo,
+            "--authority-root",
+            authority_root,
+            "--ledger",
+            @ledger
+          ],
+          stderr_to_stdout: true
+        )
+
+      assert status == 1
+
+      assert output =~
+               "repository truth ledger: {:invalid_git_repository, #{inspect(non_git_repo)}}"
+
+      assert length(Regex.scan(~r/^usage: /m, output)) == 1
+      assert byte_size(output) < 1_024
+      refute output =~ "MatchError"
+      refute output =~ "** ("
+      refute output =~ "scripts/validate_repository_truth.exs:"
+      refute output =~ "    ("
+    end
+
+    test "a plain authority directory remains valid when the repository root is Git-backed" do
+      {authority_root, _plan, _relative_plan} =
+        completed_plan_fixture!("""
+        ---
+        files_modified: []
+        autonomous: true
+        ---
+        """)
+
+      assert {:ok, subjects} = Ledger.audit_subjects(@repo_root, authority_root)
+      assert MapSet.member?(subjects, "ignore:.gitignore:/tmp/")
+    end
   end
 
   describe "phase 164 trust anchors" do
