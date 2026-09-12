@@ -502,11 +502,11 @@ row below records a stable failure direction as well as its observed success.
 | GR-36-PROTECTED | Normal protected integration and exact push-CI selection bind the repair to protected source OID `52c07a5051d269b307831a2210f53dec0dd1ff65`. | Protected PR #249 and independently checked CI run `34650810638` | Workflow `CI`, event `push`, attempt `1`, branch `main`, exact head SHA, completed, success. | Direct push, bypass, dispatch, rerun, alternate SHA/run, or incomplete identity fields do not establish authority. |
 | GR-37-APPROVAL | The exact Plan 164-37 approval is proposal bytes plus one approved-status line, mode 0400, and binds the protected source, CI, runtime, predecessor, destination, and rollback tuple. | `mix verify.phase_164.proposal_boundary`; approval SHA-256 `e3687bf5a2afc69a79b2677c69daa3d533549d4b6f730a30a04e32cc6d13b7cd` | 4 selected, 60 excluded, 0 failures; all 28 ordered fields revalidated before publication. | Any missing, empty, duplicated, reordered, or changed field invalidates approval and grants no installation, finalization, workflow, or release authority. |
 | GR-38-INSTALLED | The active mode-0500 object is the approved Git blob, while the exact predecessor is a separate verified mode-0400 rollback. | `phase_164_installed_production_boundary`; `mix verify.phase_164.installed_boundary` | 7 selected, 57 excluded, 0 failures, exit 0; installed SHA-256 `394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746`; rollback SHA-256 `f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`. | Approval, source, digest, mode, ancestry, physical-runtime, probe, rollback, or exact 01-39 history drift fails nonzero; rollback is not a second active authority. |
+| GR-44R-INSTALLED | The security-remediation installation binds the active external command to the complete tracked 01-44 authority without adding a numbered plan. | Plan 164-44 remediation proposal/approval; direct installed version and self-check; `phase_164_installed_production_boundary` | Protected source OID `af2c3a09e4021d2d2beb4ba361239df10bb632d0`, attempt-one push CI `34719836367`, approval SHA-256 `a25d2dfcd945b084edcc00a06f408aa599be56dd76b07f83b8cccef8cedf4a35`, installed SHA-256 `5cc800c1db20b65e8ad7ea90fde01a0180dc66c057166d8486ac9c321f564972`, exact 01-44 self-check passed. | Any tuple, source, CI, prior-object, rollback, mode, ancestry, physical-runtime, or exact 01-44 history drift fails nonzero; this remains non-terminal evidence. |
 | GR-39-REPOSITORY | Repository-only CI stays disjoint from proposal and controlled-host groups while retaining the disposable runtime/OID attacks. | `mix verify.ci_lane_contract` | 397 selected, 11 excluded; the initial RED-tree run exposed only the expected test-exception line shift, which was removed by keeping the registered historical skip at its canonical line. The clean GREEN rerun is required before Task 1 commit. | Any zero selection, host-group collection, removed disposable attack, SuiteFloor drift, or repository failure returns nonzero and cannot be relabeled as installed or terminal proof. |
 
-The current tracked source recognizes the exact PLAN/SUMMARY pair set 01 through 44.
-The installed authority remains bounded to 01 through 39 until a new
-exact-tuple approval and recoverable replacement completes. Current maintainer and package guidance
+The current tracked source and approved installed authority both recognize the
+exact PLAN/SUMMARY pair set 01 through 44. Current maintainer and package guidance
 remains unchanged: one protected release path is current, historical procedures
 stay explicitly bounded, package compatibility derives from live manifests,
 and protected recovery/finalization retains one fail-closed route.
@@ -518,8 +518,8 @@ The only valid later sequence is: ordinary verifier records `status: passed`
 and its exact `verified_implementation_sha`; only the four authorized completion
 metadata paths change; those descendants integrate normally through protected
 `main`; the exact terminal main SHA receives successful attempt-one normal CI
-and complete naturally scheduled attempt-one evidence; the Plan 164-37 approval
-and the superseding installed/provenance tuple is rechecked; the installed
+and complete naturally scheduled attempt-one evidence; the Plan 164-44
+remediation approval and installed/provenance tuple is rechecked; the installed
 command performs terminal capture; then no tracked write occurs.
 
 T-164-109 remains high and pending. Terminal protected-main evidence remains

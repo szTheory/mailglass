@@ -4,12 +4,12 @@ Phase 164 closes across two deliberately separate proof boundaries. Ordinary
 GSD execution owns tracked implementation, summaries, verification, roadmap,
 requirements, and phase-completion metadata. The active installed program is
 the mode-0500 executable at
-`/Users/jon/.local/bin/mailglass-finalize-phase`, bound to the exact Plan 164-37
-approval and Plan 164-38 installed-readiness proof described below. The tracked
-source `scripts/mailglass_finalize_phase_loader.mjs` now authenticates the exact
-01-44 authority chain. The installed object remains the protected 01-39 repair
-until a new exact-tuple approval and recoverable installation completes. The Plan 164-32, Plan
-164-27, and Plan 164-23 approvals remain immutable prior provenance only. The Plan 164-23
+`/Users/jon/.local/bin/mailglass-finalize-phase`, bound to the exact Plan 164-44
+security-remediation approval and installed-readiness proof described below.
+The tracked source `scripts/mailglass_finalize_phase_loader.mjs` and installed
+object both authenticate the exact 01-44 authority chain. The Plan 164-37,
+Plan 164-32, Plan 164-27, and Plan 164-23
+approvals remain immutable prior provenance only. The Plan 164-23
 authenticated-copy checkpoint remain immutable provenance for an older prior
 object; they do not authorize later tracked bytes. The installed loader is
 outside checkout evaluation: no project-local extension module is imported
@@ -20,8 +20,7 @@ That captured repository OID, rather than symbolic `HEAD`, is the authority for
 every tree enumeration, blob authentication, and private materialization. The
 tracked loader and shell recognize the exact PLAN/SUMMARY pair set 01 through 44,
 with exactly one PLAN and one SUMMARY for every number. The installed Plan
-164-37/38 authority remains bounded to 01 through 39 and cannot run terminal
-mode until replaced under a new approval. No
+164-44 remediation authority is bounded to the same exact range. No
 historical subset or shortened baseline is accepted. Missing pairs, extra
 numbers, malformed names, or a silently shortened set fail before execution.
 
@@ -369,6 +368,58 @@ Plan 164-39 tracked reconciliation → ordinary verifier → completion-only met
 later tracked write. No phase argument, pre-verification mode, terminal mode,
 workflow dispatch or rerun, protected-control mutation, release, or publication
 ran in Plan 164-38.
+
+## Security remediation installed 01-44 readiness
+
+The Phase 164 security remediation replaced the superseded installed 01-39
+authority only after exact human approval of the Plan 164-44 remediation
+proposal. The proposal is the regular non-symlink mode-0400 record
+`/Users/jon/.local/share/mailglass/checkpoints/164-44-install-proposal.env`
+with SHA-256
+`7fa73ed9f8dccf2f0a38989c8e1ec6c9b465fda0377965924d30f0e308d7b8b3`.
+The approval is the proposal byte-for-byte plus one final
+`approval_status=approved` line at
+`/Users/jon/.local/share/mailglass/checkpoints/164-44-install-approval.env`,
+also a regular non-symlink mode-0400 record, with SHA-256
+`a25d2dfcd945b084edcc00a06f408aa599be56dd76b07f83b8cccef8cedf4a35`.
+
+The approved installation source is protected-main OID
+`af2c3a09e4021d2d2beb4ba361239df10bb632d0`, backed by the successful
+attempt-one normal push CI run `34719836367`. Its authenticated loader blob has
+SHA-256
+`5cc800c1db20b65e8ad7ea90fde01a0180dc66c057166d8486ac9c321f564972`.
+The active installed destination is a regular non-symlink mode-0500 object with
+that exact digest and observed lstat identity
+`16777229:294201920:501:20`.
+
+Before replacement, the exact Plan 164-37 installed bytes were atomically
+preserved as the regular non-symlink mode-0400 rollback
+`/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746`.
+Its digest is
+`394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746`
+and its observed lstat identity is `16777229:294201921:501:20`. The prior
+Plan 164-37 approval has SHA-256
+`e3687bf5a2afc69a79b2677c69daa3d533549d4b6f730a30a04e32cc6d13b7cd`
+and remains bounded historical provenance, not a second active authority.
+
+Direct `--version` returned `mailglass-finalize-phase-loader 1`. Direct
+ancestry-aware `--self-check` reported installation and current OID
+`af2c3a09e4021d2d2beb4ba361239df10bb632d0`, the approved digest and external
+path, mode `0500`, terminal range `01-44`, Mix 1.19.5, Elixir 1.19.5, OTP 28,
+and normalized runtime probe SHA-256
+`ca3c43bd04c4e21e223f39561f294885ceca2633db65a72fa29b780bcef3975d`.
+The installed-boundary suite is bound to the exact Plan 164-44 remediation
+approval, active object, prior approval, and rollback identities.
+
+This is installation readiness only; ordinary verification remains pending,
+completion-only metadata remains pending, protected-main integration remains
+pending, exact remote evidence and natural schedules remain pending, and
+terminal finalization remains pending. T-164-109 remains open until terminal
+ignored evidence proves the no-later-write boundary. The remaining authorized
+order is ordinary verifier → completion-only metadata → protected main → exact
+attempt-one CI and natural schedules → terminal ignored capture → no later
+tracked write. No phase argument, finalization mode, workflow dispatch or
+rerun, release, or publication ran during this remediation installation.
 
 ## Tracked completion and terminal order
 

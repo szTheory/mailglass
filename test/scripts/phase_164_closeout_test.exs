@@ -16,15 +16,47 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     ERL: "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl"
   ]
   @installed_loader "/Users/jon/.local/bin/mailglass-finalize-phase"
-  @install_approval "/Users/jon/.local/share/mailglass/checkpoints/164-37-install-approval.env"
-  @installation_source_oid "52c07a5051d269b307831a2210f53dec0dd1ff65"
-  @installed_loader_sha256 "394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746"
+  @install_approval "/Users/jon/.local/share/mailglass/checkpoints/164-44-install-approval.env"
+  @installation_source_oid "af2c3a09e4021d2d2beb4ba361239df10bb632d0"
+  @installed_loader_sha256 "5cc800c1db20b65e8ad7ea90fde01a0180dc66c057166d8486ac9c321f564972"
   @install_approval_tuple %{
     "record_version" => "2",
     "proposal_schema" => "mailglass-finalize-phase-install-proposal-v2",
-    "phase_plan" => "164-37",
+    "phase_plan" => "164-44",
     "installation_source_oid" => @installation_source_oid,
     "source_sha256" => @installed_loader_sha256,
+    "protected_ci_run_id" => "34719836367",
+    "destination" => @installed_loader,
+    "install_mode" => "0500",
+    "node_executable" => "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+    "git_executable" => "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+    "bash_executable" => "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+    "gh_executable" => "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+    "jq_executable" => "/usr/bin/jq",
+    "mix_executable" => "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix",
+    "elixir_executable" => "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir",
+    "erl_executable" => "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl",
+    "mix_version" => "Mix 1.19.5 (compiled with Erlang/OTP 28)",
+    "elixir_version" => "Elixir 1.19.5 (compiled with Erlang/OTP 28)",
+    "otp_release" => "28",
+    "runtime_probe_sha256" => "ca3c43bd04c4e21e223f39561f294885ceca2633db65a72fa29b780bcef3975d",
+    "prior_approval_sha256" => "e3687bf5a2afc69a79b2677c69daa3d533549d4b6f730a30a04e32cc6d13b7cd",
+    "prior_sha256" => "394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746",
+    "prior_mode" => "0500",
+    "prior_stat_identity" => "16777229:288282024:501:20",
+    "rollback_path" =>
+      "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746",
+    "rollback_status" => "absent",
+    "terminal_last_plan" => "44",
+    "approval_status" => "approved"
+  }
+  @prior_install_approval "/Users/jon/.local/share/mailglass/checkpoints/164-37-install-approval.env"
+  @prior_install_approval_tuple %{
+    "record_version" => "2",
+    "proposal_schema" => "mailglass-finalize-phase-install-proposal-v2",
+    "phase_plan" => "164-37",
+    "installation_source_oid" => "52c07a5051d269b307831a2210f53dec0dd1ff65",
+    "source_sha256" => "394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746",
     "protected_ci_run_id" => "34650810638",
     "destination" => @installed_loader,
     "install_mode" => "0500",
@@ -50,31 +82,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     "terminal_last_plan" => "39",
     "approval_status" => "approved"
   }
-  @prior_install_approval "/Users/jon/.local/share/mailglass/checkpoints/164-32-install-approval.env"
-  @prior_install_approval_tuple %{
-    "record_version" => "1",
-    "phase_plan" => "164-32",
-    "installation_source_oid" => "1cfee7802de808f690fe5413b22a57e7ab802488",
-    "source_sha256" => "f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac",
-    "destination" => @installed_loader,
-    "install_mode" => "0500",
-    "node_executable" => "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
-    "git_executable" => "/opt/homebrew/Cellar/git/2.41.0/bin/git",
-    "bash_executable" => "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
-    "gh_executable" => "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
-    "jq_executable" => "/usr/bin/jq",
-    "mix_executable" => "/Users/jon/.asdf/shims/mix",
-    "elixir_executable" => "/Users/jon/.asdf/shims/elixir",
-    "prior_approval_sha256" => "e3acaa0081593713daaedf891c5129561bb3c645d2067ea4e835fee92a54eac9",
-    "prior_sha256" => "0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e",
-    "prior_mode" => "0500",
-    "prior_stat_identity" => "16777229:269505365:501:20",
-    "rollback_path" =>
-      "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e",
-    "approval_status" => "approved"
-  }
-  @prior_approval_sha256 "f120bbda1a15478ea97179210215ee54e28ff59641644a35a643628265e9bf4b"
-  @prior_rollback "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac"
+  @prior_approval_sha256 "e3687bf5a2afc69a79b2677c69daa3d533549d4b6f730a30a04e32cc6d13b7cd"
+  @prior_rollback "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746"
   @manifest Path.join(
               @repo_root,
               ".gsd/extensions/finalize-phase/extension-manifest.json"
@@ -1878,25 +1887,25 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert approval["source_sha256"] == @installed_loader_sha256
     end
 
-    test "Plan 164-32 approval remains exact immutable provenance for the verified rollback" do
+    test "Plan 164-37 approval remains exact immutable provenance for the verified rollback" do
       assert sha256_file!(@prior_install_approval, 0o400) == @prior_approval_sha256
       approval = parse_install_approval!(@prior_install_approval, @prior_install_approval_tuple)
 
-      assert approval["phase_plan"] == "164-32"
-      assert approval["installation_source_oid"] == "1cfee7802de808f690fe5413b22a57e7ab802488"
+      assert approval["phase_plan"] == "164-37"
+      assert approval["installation_source_oid"] == "52c07a5051d269b307831a2210f53dec0dd1ff65"
       assert approval["source_sha256"] == @install_approval_tuple["prior_sha256"]
       assert_regular_mode!(@prior_rollback, 0o400)
       assert sha256_file!(@prior_rollback, 0o400) == approval["source_sha256"]
     end
 
-    test "approval binds all twenty-eight immutable Plan 164-37 fields exactly once" do
+    test "approval binds all twenty-eight immutable Plan 164-44 remediation fields exactly once" do
       approval = parse_install_approval!(@install_approval)
 
       assert map_size(approval) == 28
       assert approval["record_version"] == "2"
       assert approval["proposal_schema"] == "mailglass-finalize-phase-install-proposal-v2"
-      assert approval["phase_plan"] == "164-37"
-      assert approval["protected_ci_run_id"] == "34650810638"
+      assert approval["phase_plan"] == "164-44"
+      assert approval["protected_ci_run_id"] == "34719836367"
       assert approval["node_executable"] == "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node"
       assert approval["git_executable"] == "/opt/homebrew/Cellar/git/2.41.0/bin/git"
       assert approval["bash_executable"] == "/opt/homebrew/Cellar/bash/5.2.37/bin/bash"
@@ -1919,15 +1928,16 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
                @prior_approval_sha256
 
       assert approval["prior_sha256"] ==
-               "f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac"
+               "394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746"
 
       assert approval["prior_mode"] == "0500"
-      assert approval["prior_stat_identity"] == "16777229:273869583:501:20"
+      assert approval["prior_stat_identity"] == "16777229:288282024:501:20"
 
       assert approval["rollback_path"] == @prior_rollback
+      assert approval["terminal_last_plan"] == "44"
     end
 
-    test "installed digest equals the approved 01-39 committed loader blob at an ancestor OID" do
+    test "installed digest equals the approved 01-44 committed loader blob at an ancestor OID" do
       approval = parse_install_approval!(@install_approval)
       assert sha256_file!(@installed_loader) == approval["source_sha256"]
 
@@ -1941,7 +1951,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
           cd: @repo_root
         )
 
-      assert blob =~ "const TERMINAL_LAST_PLAN = 39;"
+      assert blob =~ "const TERMINAL_LAST_PLAN = 44;"
 
       assert blob |> then(&:crypto.hash(:sha256, &1)) |> Base.encode16(case: :lower) ==
                approval["source_sha256"]
@@ -1971,7 +1981,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert output =~ "loader_sha256=#{approval["source_sha256"]}"
       assert output =~ "executable=#{approval["destination"]}"
       assert output =~ "mode=#{approval["install_mode"]}"
-      assert output =~ "terminal_range=01-39"
+      assert output =~ "terminal_range=01-44"
       assert output =~ "mix_version=#{approval["mix_version"]}"
       assert output =~ "elixir_version=#{approval["elixir_version"]}"
       assert output =~ "otp_release=#{approval["otp_release"]}"
@@ -1980,7 +1990,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     test "lifecycle records installation readiness without advancing terminal order" do
       contract = File.read!(@finalization_contract)
-      heading = "## Plan 164-38 installed 01-39 readiness"
+      heading = "## Security remediation installed 01-44 readiness"
       assert contract =~ heading
 
       section =
@@ -1991,7 +2001,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         |> List.first()
         |> then(&Regex.replace(~r/\s+/, &1, " "))
 
-      assert section =~ "Plan 164-37 approval"
+      assert section =~ "Plan 164-44 remediation approval"
       assert section =~ @installation_source_oid
       assert section =~ @installed_loader_sha256
       assert section =~ @prior_approval_sha256
@@ -2000,10 +2010,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert section =~ "ordinary verification remains pending"
       assert section =~ "protected-main integration remains pending"
       assert section =~ "terminal finalization remains pending"
-      assert section =~ "Plan 164-39 tracked reconciliation remains pending"
+      assert section =~ "exact remote evidence and natural schedules remain pending"
 
       assert section =~
-               "Plan 164-39 tracked reconciliation → ordinary verifier → completion-only metadata → protected main"
+               "ordinary verifier → completion-only metadata → protected main"
 
       refute section =~ "terminal evidence captured"
       refute section =~ "TRTH-03 complete"
