@@ -112,6 +112,25 @@ created: "2026-09-01"
 | T-164-147 | Repudiation | rollback provenance | high | mitigate | Exact predecessor bytes were atomically published and verified first as the digest-addressed regular mode-0400 rollback | closed — rollback digest `f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac` |
 | T-164-148 | Spoofing | active installed proof | high | mitigate | Plan 164-38 installed authority is checked directly against Plan 164-37 approval, source digest/mode/OID ancestry, exact 01-39 history, physical runtime output, and probe digest | closed — installed alias passed 7 selected, 57 excluded |
 | T-164-149 | Elevation of Privilege | terminal execution | high | mitigate | Plan 164-38 invoked only version/self-check inspection; repository tests and installed readiness are not terminal proof | closed — T-164-109 retains terminal ownership |
+| T-164-150 | Repudiation | validation/security records | high | mitigate | Named lanes, observed counts, exact identities, stable diagnostics, and failure directions preserve layered evidence | closed — Plan 164-39 reconciliation retained as historical evidence |
+| T-164-151 | Tampering | disposition ledger | high | mitigate | Exact-one 12-field rows, exact disposition, complete candidate sets, and canonical relationships are enforced | closed — canonical validator and 47-test repository-truth suite passed |
+| T-164-152 | Spoofing | equal/adjacent subjects | high | mitigate | Exact normalized identities reject duplicate, prefix-collision, adjacent-backup, and ordering substitutions | closed — adversarial repository-truth regressions passed |
+| T-164-153 | Information Disclosure | validator errors | medium | mitigate | Public failures remain bounded relative tagged diagnostics without exception stacks | closed — standalone CLI regressions passed |
+| T-164-154 | Elevation of Privilege | terminal lifecycle | high | mitigate | Terminal execution remains outside plan execution and after the non-circular post-execution gate | closed — T-164-109 retains the open terminal obligation |
+| T-164-155 | Tampering | tracked-subject worktree entry | high | mitigate | `lstat` proves an exact regular file before any index or content claim | closed — Plan 164-40 regular-file attacks passed |
+| T-164-156 | Spoofing | stage-0 Git index record | high | mitigate | Only one byte-identical stage-0 mode-100644/100755 record is accepted | closed — Plan 164-40 index attacks passed |
+| T-164-157 | Information Disclosure | public CLI diagnostic | medium | mitigate | Subject-relative tagged errors are bounded and omit external targets and stacks | closed — Plan 164-40 CLI attacks passed |
+| T-164-158 | Denial of Service / Tampering | malformed staged output and plan metadata | high | mitigate | Finite NUL parsing and structural opening-frontmatter parsing reject malformed Git or PLAN input deterministically | closed — Plans 164-40/41 regressions passed |
+| T-164-159 | Denial of Service | Git subprocess handling | medium | mitigate | Git identity is validated before enumeration and subprocess failures return bounded tags | closed — Plan 164-41 non-Git-root regressions passed |
+| T-164-160 | Information Disclosure | standalone CLI | low | mitigate | Git-root and plan-metadata failures emit relative bounded diagnostics without exception output | closed — Plan 164-41 CLI regressions passed |
+| T-164-161 | Tampering | repository-only attack fixtures | high | mitigate | Installed-loader attacks use disposable repositories and mutation-specific assertions | closed — Plan 164-42 repository-only CI regressions passed |
+| T-164-162 | Elevation of Privilege | live pre-verification dispatch | high | mitigate | Fixture-owned paths replace canonical dispatch targets and production markers remain absent | closed — Plan 164-42 loader regressions passed |
+| T-164-163 | Spoofing | origin/main fixture state | medium | mitigate | Disposable remotes assert exact origin/main state before every loader invocation | closed — Plan 164-42 loader regressions passed |
+| T-164-164 | Spoofing | current finalization authority | high | mitigate | Current maintainer prose and tests bind authority to Plans 164-37/164-38 | closed — maintaining contract passed 5 tests |
+| T-164-165 | Repudiation | Plan 164-23 history | medium | mitigate | Superseded Plan 164-23 authority remains only in a separately bounded historical region | closed — maintaining contract passed 5 tests |
+| T-164-166 | Repudiation | SECURITY/VALIDATION provenance | high | mitigate | Exact commands, actual counts, and implementation commit `91b867ab2299afb8b2392176f699e16af4fc8f4a` were recorded only after all five prerequisite lanes exited zero | closed — fresh Plan 164-44 ordinary evidence |
+| T-164-167 | Tampering | truth-disposition ledger | high | mitigate | Completed Plans 164-40 through 164-43 resolve to exact-one complete current rows, with canonical relationship hashes and stale-evidence negatives | closed — canonical validator valid and 47 tests passed |
+| T-164-168 | Spoofing | ordinary versus terminal proof | high | mitigate | Fresh repository and controlled-host results are explicitly non-terminal and T-164-109 remains open | closed — authority layers remain distinct |
 | T-164-SC | Tampering | package supply chain | low | accept | No package-manager install or dependency change occurred; active bytes are the human-approved project-authored Plan 164-37 Git blob and Plan 164-32/27/23 objects remain exact prior provenance | accepted |
 
 ## Superseding Gap-Reconciliation Assessment
@@ -150,6 +169,31 @@ handoff are repository behavior; the Plan 164-37 approval and Plan 164-38
 installed authority are separate external facts. Their passing lanes do not
 collapse into ordinary verification or the later terminal capture.
 
+## Final Ordinary-Verification Reconciliation — Plan 164-44
+
+This assessment supersedes the earlier current-count claims without deleting
+them: the 397/11, 398/7, and other earlier results above remain dated layered
+history under D-01, while this fresh run is the current dual-proof record under
+D-09. All five prerequisite commands ran after the Plan 164-44 ledger repair at
+implementation commit `91b867ab2299afb8b2392176f699e16af4fc8f4a`, and every
+command exited zero before this document was edited.
+
+| Authority layer | Exact command | Fresh result |
+|-----------------|---------------|--------------|
+| Canonical ledger | `elixir scripts/validate_repository_truth.exs --repo /Users/jon/projects/mailglass --ledger /Users/jon/projects/mailglass/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv` | `repository truth ledger: valid`; exit 0 |
+| Repository-truth contract | `mix test test/scripts/phase_164_repository_truth_test.exs --warnings-as-errors --no-deps-check` | 47 selected, 0 excluded, 0 failures; exit 0 |
+| Repository-only CI | `mix verify.ci_lane_contract` | 414 selected, 11 excluded, 0 failures; exit 0 |
+| Controlled-host installed readiness | `mix verify.phase_164.installed_boundary` | 7 selected, 57 excluded, 0 failures; exit 0 |
+| Maintainer authority | `mix test test/mailglass/publish/maintaining_release_gate_contract_test.exs --warnings-as-errors --no-deps-check` | 5 selected, 0 excluded, 0 failures; exit 0 |
+| Evidence-document contract | `mix test test/mailglass/docs_contract_test.exs --only phase_164_gap_reconciliation --warnings-as-errors --no-deps-check` | 5 selected, 44 excluded, 0 failures; exit 0 after evidence edits |
+
+These results close T-164-150 through T-164-168 as implementation and ordinary
+readiness mitigations. They do not close T-164-109. D-10 clean exact main and
+D-11 protected checks plus naturally scheduled evidence were not produced;
+the installed command was not invoked in terminal mode; no ignored terminal
+capture or no-later-tracked-write proof is claimed. Terminal protected-main
+evidence remains absent and pending until the mandated lifecycle completes.
+
 ## Accepted Risks Log
 
 T-164-60 is explicitly accepted because Plan 164-16 changed only current-facing
@@ -179,6 +223,7 @@ or terminal lifecycle checks.
 | 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | Plan 164-34 reconciliation of Plans 164-29 through 164-33 and canonical Task 2 validation |
 | 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | gsd-security-auditor post-gap-closure verification |
 | 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | verify-work refresh; T-164-109 evidence chain remains incomplete |
+| 2026-09-12 | 106 | 105 resolved/accepted | 1 blocking terminal-lifecycle item | Plan 164-44 fresh ordinary reconciliation at implementation commit `91b867ab2299afb8b2392176f699e16af4fc8f4a` |
 
 ## Sign-Off
 
@@ -189,4 +234,4 @@ or terminal lifecycle checks.
 - [x] `threats_open: 1` reflects the pending high-severity terminal lifecycle item.
 - [x] `status: pending_terminal` prevents an early secured or completed claim.
 
-**Approval:** implementation mitigations are reconciled at ASVS L1 through Plan 164-34 Task 1, but Phase 164 is not yet security-final. T-164-109 remains open until the ordinary verifier, protected completion metadata, exact-main CI/natural schedules, and ignored no-later-write terminal capture complete in order.
+**Approval:** implementation mitigations are reconciled at ASVS L1 through the Plan 164-44 ordinary-verification evidence, but Phase 164 is not yet security-final. T-164-109 remains open until protected completion metadata, exact-main CI/natural schedules, and ignored no-later-write terminal capture complete in order.
