@@ -190,9 +190,9 @@ Plans:
   2. Every changed tracked/generated artifact and ignore rule has an evidence-backed classification, with only demonstrable junk or stale output removed and planning/release proof still discoverable.
   3. A maintainer can reproduce final closeout evidence showing a clean canonical workspace, protected `main` CI green, explained scheduled/recovery outcomes, and an explicit disposition for every audited item.
 
-**Plans**: 39/39 plans executed
+**Plans**: 39/44 plans executed
 
-**Completion state**: Gap-closure Plans 164-35 through 164-39 are planned and pending execution. Phase and TRTH-01/TRTH-02/TRTH-03 completion remain pending until those plans have summaries, ordinary verification passes, completion-only tracking reaches protected `main`, exact-main CI/natural schedules are observed, and the installed terminal command completes with no later tracked write.
+**Completion state**: Gap-closure Plans 164-40 through 164-44 are planned and pending execution. Phase and TRTH-01/TRTH-02/TRTH-03 completion remain pending until those plans have summaries, ordinary verification passes, completion-only tracking reaches protected `main`, exact-main CI/natural schedules are observed, and the installed terminal command completes with no later tracked write.
 
 Plans:
 
@@ -343,9 +343,23 @@ Plans:
 
 - [x] 164-39-PLAN.md — Reconcile validation, security, lifecycle, and ledger evidence while preserving the terminal gate.
 
+**Wave 37** *(blocker-specific repairs; blocked on Wave 36 completion)*
+
+- [ ] 164-40-PLAN.md — Reject symlink-backed and non-regular Git index subjects through public repository-truth surfaces.
+- [ ] 164-42-PLAN.md — Authenticate disposable repository-only loader attacks and prove exact/ahead-main alias behavior.
+- [ ] 164-43-PLAN.md — Bind current maintainer authority to Plans 164-37/164-38 while preserving Plan 164-23 as history.
+
+**Wave 38** *(blocked on validator file-identity repair)*
+
+- [ ] 164-41-PLAN.md — Structurally parse completed-plan metadata and return bounded tagged non-Git diagnostics.
+
+**Wave 39** *(blocked on all blocker-specific repairs)*
+
+- [ ] 164-44-PLAN.md — Reconcile fresh ordinary-verification evidence and exact-one ledger provenance without crossing the terminal gate.
+
 **Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
 
-- [ ] `/Users/jon/.local/bin/mailglass-finalize-phase 164` — After Plans 35–39, all summaries, ordinary verification, requirement/phase completion tracking, and protected-main integration finish, automatically select exact normal push CI, consume natural exact-SHA schedules, and independently verify ignored raw evidence with no later tracked commit.
+- [ ] `/Users/jon/.local/bin/mailglass-finalize-phase 164` — After Plans 40–44, all summaries, ordinary verification, requirement/phase completion tracking, and protected-main integration finish, automatically select exact normal push CI, consume natural exact-SHA schedules, and independently verify ignored raw evidence with no later tracked commit.
 
 ## Progress
 
@@ -356,4 +370,4 @@ Plans:
 | 161. Canonical Workspace and Evidence Preservation | 5/5 | Complete    | 2026-08-22 |
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
-| 164. Repository Truth Reconciliation and Closeout | 39/39 | In Progress|  |
+| 164. Repository Truth Reconciliation and Closeout | 39/44 | In Progress|  |
