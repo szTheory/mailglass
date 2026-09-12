@@ -979,16 +979,16 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     @tag :phase_164_canonical_loader
     @tag :phase_164_loader_shell_terminal_contract
-    test "loader and shell authenticate exact terminal pairs 01 through 39" do
+    test "loader and shell authenticate exact terminal pairs 01 through 44" do
       loader = File.read!(@immutable_loader)
       finalizer = File.read!(@finalizer)
 
       assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
-      assert loader =~ "const TERMINAL_LAST_PLAN = 39"
-      assert loader =~ "exact 01-39 PLAN/SUMMARY set"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 44"
+      assert loader =~ "exact 01-44 PLAN/SUMMARY set"
       assert loader =~ "new Set(actual).size !== actual.length"
       assert finalizer =~ "terminal_first_plan=1"
-      assert finalizer =~ "terminal_last_plan=39"
+      assert finalizer =~ "terminal_last_plan=44"
       assert finalizer =~ ~S|for plan in $(seq -w "$terminal_first_plan" "$terminal_last_plan")|
       assert finalizer =~ ~s(missing terminal plan 164-$plan-PLAN.md)
       assert finalizer =~ ~s(missing terminal summary 164-$plan-SUMMARY.md)
@@ -1007,15 +1007,15 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         )
 
       paths = Jason.decode!(paths_json)
-      assert length(paths) == 78
+      assert length(paths) == 88
       assert hd(paths) == ".planning/phases/164-fixture/164-01-PLAN.md"
-      assert List.last(paths) == ".planning/phases/164-fixture/164-39-SUMMARY.md"
+      assert List.last(paths) == ".planning/phases/164-fixture/164-44-SUMMARY.md"
       assert paths == Enum.sort_by(paths, &terminal_artifact_sort_key/1)
 
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
 
-      for plan <- 29..39,
+      for plan <- 29..44,
           member <- ["PLAN", "SUMMARY"] do
         fixture = immutable_loader_fixture!(Path.join(root, "missing-#{plan}-#{member}"))
         number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
@@ -1025,13 +1025,13 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "numbered history is not the exact 01-39"
+        assert output =~ "numbered history is not the exact 01-44"
         assert byte_size(output) <= 16_000
         refute File.exists?(fixture.marker)
       end
 
       for {name, path} <- [
-            {"additional-40", ".planning/phases/164-fixture/164-40-PLAN.md"},
+            {"additional-45", ".planning/phases/164-fixture/164-45-PLAN.md"},
             {"malformed-suffix", ".planning/phases/164-fixture/164-034-SUMMARY.md"}
           ] do
         fixture = immutable_loader_fixture!(Path.join(root, name))
@@ -1041,7 +1041,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "numbered history is not the exact 01-39"
+        assert output =~ "numbered history is not the exact 01-44"
         assert byte_size(output) <= 16_000
         refute File.exists?(fixture.marker)
       end
@@ -1316,7 +1316,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
       assert output =~ "installation_oid=#{fixture.installation_oid}"
       assert output =~ "current_oid=#{fixture.current_oid}"
-      assert output =~ "terminal_range=01-39"
+      assert output =~ "terminal_range=01-44"
       assert output =~ "mode=0500"
       refute File.exists?(fixture.marker)
 
@@ -1359,7 +1359,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
 
-      for plan <- [10, 20, 39] do
+      for plan <- [10, 20, 44] do
         fixture = immutable_loader_fixture!(Path.join(root, "missing-#{plan}"))
         number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
         phase = ".planning/phases/164-fixture/164-#{number}"
@@ -1368,7 +1368,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "numbered history is not the exact 01-39"
+        assert output =~ "numbered history is not the exact 01-44"
         refute File.exists?(fixture.marker)
       end
     end
@@ -1390,7 +1390,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
          end},
         {"unexpected",
          fn fixture ->
-           path = ".planning/phases/164-fixture/164-40-PLAN.md"
+           path = ".planning/phases/164-fixture/164-45-PLAN.md"
            File.write!(Path.join(fixture.repo, path), "unexpected\n")
            git!(fixture.repo, ["add", "--", path])
          end}
@@ -1403,20 +1403,20 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert output =~ "numbered history is not the exact 01-39"
+        assert output =~ "numbered history is not the exact 01-44"
         refute File.exists?(fixture.marker)
       end
     end
 
-    test "loader and shell share an explicit 01-39 terminal contract recorded in the ledger" do
+    test "loader and shell share an explicit 01-44 terminal contract recorded in the ledger" do
       loader = File.read!(@immutable_loader)
       finalizer = File.read!(@finalizer)
       ledger = File.read!(@ledger)
 
       assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
-      assert loader =~ "const TERMINAL_LAST_PLAN = 39"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 44"
       assert finalizer =~ "terminal_first_plan=1"
-      assert finalizer =~ "terminal_last_plan=39"
+      assert finalizer =~ "terminal_last_plan=44"
       assert finalizer =~ ~S|for plan in $(seq -w "$terminal_first_plan" "$terminal_last_plan")|
       assert ledger =~ "scripts/mailglass_finalize_phase_loader.mjs"
       assert ledger =~ "scripts/finalize_phase_164.sh"
@@ -1471,8 +1471,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert loader =~ "buildChildEnvironment"
       assert loader =~ "installationOidIsAncestor"
       assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
-      assert loader =~ "const TERMINAL_LAST_PLAN = 39"
-      assert loader =~ "exact 01-39 PLAN/SUMMARY set"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 44"
+      assert loader =~ "exact 01-44 PLAN/SUMMARY set"
 
       for path <- [
             "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
@@ -1590,7 +1590,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     @describetag :phase_164_gap_install_proposal
     @describetag :phase_164_proposal_boundary
 
-    test "01-39 source exposes every authority required before proposal publication" do
+    test "01-44 source exposes every authority required before proposal publication" do
       loader = File.read!(@immutable_loader)
 
       assert String.starts_with?(loader, "#!/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node\n")
@@ -1601,8 +1601,8 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       assert loader =~ "buildChildEnvironment"
       assert loader =~ "installationOidIsAncestor"
       assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
-      assert loader =~ "const TERMINAL_LAST_PLAN = 39"
-      assert loader =~ "exact 01-39 PLAN/SUMMARY set"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 44"
+      assert loader =~ "exact 01-44 PLAN/SUMMARY set"
 
       for path <- [
             "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
@@ -1767,7 +1767,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         assert status != 0
 
         assert output =~
-                 "authenticated Phase 164 numbered history is not the exact 01-39 PLAN/SUMMARY set"
+                 "authenticated Phase 164 numbered history is not the exact 01-44 PLAN/SUMMARY set"
 
         refute output =~ @repo_root
         refute File.exists?(fixture.marker)
@@ -2239,7 +2239,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     File.write!(Path.join(repo, ".planning/STATE.md"), "state\n")
 
-    for plan <- 1..39 do
+    for plan <- 1..44 do
       number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
       File.write!(Path.join(phase_dir, "164-#{number}-PLAN.md"), "plan\n")
       File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary\n")
@@ -2742,7 +2742,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     File.write!(loader_source, source)
     git!(repo, ["remote", "add", "origin", "git@github.com:szTheory/mailglass.git"])
 
-    for plan <- 2..39 do
+    for plan <- 2..44 do
       number = plan |> Integer.to_string() |> String.pad_leading(2, "0")
       File.write!(Path.join(phase_dir, "164-#{number}-PLAN.md"), "plan #{number}\n")
       File.write!(Path.join(phase_dir, "164-#{number}-SUMMARY.md"), "summary #{number}\n")

@@ -6,8 +6,9 @@ requirements, and phase-completion metadata. The active installed program is
 the mode-0500 executable at
 `/Users/jon/.local/bin/mailglass-finalize-phase`, bound to the exact Plan 164-37
 approval and Plan 164-38 installed-readiness proof described below. The tracked
-source `scripts/mailglass_finalize_phase_loader.mjs` and the installed object
-are the same protected 01-39 authority-chain repair. The Plan 164-32, Plan
+source `scripts/mailglass_finalize_phase_loader.mjs` now authenticates the exact
+01-44 authority chain. The installed object remains the protected 01-39 repair
+until a new exact-tuple approval and recoverable installation completes. The Plan 164-32, Plan
 164-27, and Plan 164-23 approvals remain immutable prior provenance only. The Plan 164-23
 authenticated-copy checkpoint remain immutable provenance for an older prior
 object; they do not authorize later tracked bytes. The installed loader is
@@ -17,9 +18,10 @@ before it establishes repository authority.
 At invocation the installed program captures one full repository commit OID.
 That captured repository OID, rather than symbolic `HEAD`, is the authority for
 every tree enumeration, blob authentication, and private materialization. The
-Plan 164-37/38 installed authority recognizes the exact PLAN/SUMMARY pair set 01 through 39,
-with exactly one PLAN and one SUMMARY for every number. The
-tracked loader, installed loader, and shell source share that range. No
+tracked loader and shell recognize the exact PLAN/SUMMARY pair set 01 through 44,
+with exactly one PLAN and one SUMMARY for every number. The installed Plan
+164-37/38 authority remains bounded to 01 through 39 and cannot run terminal
+mode until replaced under a new approval. No
 historical subset or shortened baseline is accepted. Missing pairs, extra
 numbers, malformed names, or a silently shortened set fail before execution.
 
@@ -372,7 +374,7 @@ ran in Plan 164-38.
 
 The only authorized closeout sequence is:
 
-1. Plan 164-39 tracked reconciliation commits land, then `164-39-SUMMARY.md exists before ordinary verification`.
+1. All tracked reconciliation through Plan 164-44 lands, then `164-44-SUMMARY.md exists before ordinary verification`.
 2. The ordinary verifier writes `status: passed` and the exact `verified_implementation_sha` it evaluated.
 3. After that verified SHA, only the four authorized completion metadata paths may change.
 4. Those completion records reach protected `main`.
@@ -380,15 +382,15 @@ The only authorized closeout sequence is:
 6. `/Users/jon/.local/bin/mailglass-finalize-phase 164` writes ignored `tmp/phase-164-closeout/` evidence only.
 7. No summary, planning update, commit, push, merge, release, publication, dispatch, or rerun follows the capture.
 
-Plan 164-39 stops after reconciling readiness for this sequence. It does not
-execute steps 2 through 7 and does not claim that a terminal report exists.
+Plans 164-39 through 164-44 stop after reconciling readiness for this sequence.
+They do not execute steps 2 through 7 and do not claim that a terminal report exists.
 
 In compact authority order, the mandatory sequence is:
 
-`164-39-SUMMARY.md → ordinary verifier → completion-only metadata → protected main → exact attempt-one normal CI → natural scheduled evidence → installed approval recheck → terminal capture → no later tracked write`
+`164-44-SUMMARY.md → ordinary verifier → completion-only metadata → protected main → exact attempt-one normal CI → natural scheduled evidence → installed approval recheck → terminal capture → no later tracked write`
 
-T-164-109 remains pending throughout Plan 164-39. Repository tests and
-installed readiness are not terminal proof. No Plan 164-39 task invokes either
+T-164-109 remains pending throughout the tracked reconciliation. Repository tests and
+installed readiness are not terminal proof. No reconciliation task invokes either
 finalization mode, changes protected controls or completion metadata, dispatches
 or reruns CI, releases or publishes an artifact, or captures terminal evidence.
 

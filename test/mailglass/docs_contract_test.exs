@@ -340,7 +340,7 @@ defmodule Mailglass.DocsContractTest do
     end
 
     @tag :phase_164_lifecycle_contract
-    test "Phase 164 tracked and installed authority agree on exact history 01 through 39" do
+    test "Phase 164 tracked authority authenticates exact history 01 through 44" do
       loader = File.read!("scripts/mailglass_finalize_phase_loader.mjs")
       shell = File.read!("scripts/finalize_phase_164.sh")
 
@@ -355,12 +355,12 @@ defmodule Mailglass.DocsContractTest do
         end
 
       assert loader =~ "const TERMINAL_FIRST_PLAN = 1"
-      assert loader =~ "const TERMINAL_LAST_PLAN = 39"
+      assert loader =~ "const TERMINAL_LAST_PLAN = 44"
       assert shell =~ "terminal_first_plan=1"
-      assert shell =~ "terminal_last_plan=39"
+      assert shell =~ "terminal_last_plan=44"
 
       for record <- records do
-        assert record =~ "exact PLAN/SUMMARY pair set 01 through 39"
+        assert record =~ "exact PLAN/SUMMARY pair set 01 through 44"
         refute record =~ "exact 01-24"
         refute record =~ "Plans 01-20 are the executed baseline"
       end
@@ -375,7 +375,7 @@ defmodule Mailglass.DocsContractTest do
         |> then(&Regex.replace(~r/\s+/, &1, " "))
 
       for token <- [
-            "164-39-SUMMARY.md exists before ordinary verification",
+            "164-44-SUMMARY.md exists before ordinary verification",
             "status: passed",
             "verified_implementation_sha",
             "only the four authorized completion metadata paths",
@@ -716,7 +716,7 @@ defmodule Mailglass.DocsContractTest do
     end
 
     @tag :phase_164_lifecycle_contract
-    test "Plan 164-39 is tracked reconciliation and cannot manufacture terminal evidence" do
+    test "tracked reconciliation cannot manufacture terminal evidence" do
       finalization =
         File.read!(
           ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
@@ -724,11 +724,11 @@ defmodule Mailglass.DocsContractTest do
         |> then(&Regex.replace(~r/\s+/, &1, " "))
 
       assert finalization =~
-               "164-39-SUMMARY.md → ordinary verifier → completion-only metadata → protected main → exact attempt-one normal CI → natural scheduled evidence → installed approval recheck → terminal capture → no later tracked write"
+               "164-44-SUMMARY.md → ordinary verifier → completion-only metadata → protected main → exact attempt-one normal CI → natural scheduled evidence → installed approval recheck → terminal capture → no later tracked write"
 
-      assert finalization =~ "T-164-109 remains pending throughout Plan 164-39"
+      assert finalization =~ "T-164-109 remains pending throughout the tracked reconciliation"
       assert finalization =~ "Repository tests and installed readiness are not terminal proof"
-      refute finalization =~ "Plan 164-39 produced terminal evidence"
+      refute finalization =~ "tracked reconciliation produced terminal evidence"
     end
 
     @tag :phase_164_gap_reconciliation

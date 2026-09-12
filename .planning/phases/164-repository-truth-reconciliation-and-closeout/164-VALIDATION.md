@@ -504,22 +504,23 @@ row below records a stable failure direction as well as its observed success.
 | GR-38-INSTALLED | The active mode-0500 object is the approved Git blob, while the exact predecessor is a separate verified mode-0400 rollback. | `phase_164_installed_production_boundary`; `mix verify.phase_164.installed_boundary` | 7 selected, 57 excluded, 0 failures, exit 0; installed SHA-256 `394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746`; rollback SHA-256 `f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`. | Approval, source, digest, mode, ancestry, physical-runtime, probe, rollback, or exact 01-39 history drift fails nonzero; rollback is not a second active authority. |
 | GR-39-REPOSITORY | Repository-only CI stays disjoint from proposal and controlled-host groups while retaining the disposable runtime/OID attacks. | `mix verify.ci_lane_contract` | 397 selected, 11 excluded; the initial RED-tree run exposed only the expected test-exception line shift, which was removed by keeping the registered historical skip at its canonical line. The clean GREEN rerun is required before Task 1 commit. | Any zero selection, host-group collection, removed disposable attack, SuiteFloor drift, or repository failure returns nonzero and cannot be relabeled as installed or terminal proof. |
 
-The current tracked and installed authority both recognize the exact
-PLAN/SUMMARY pair set 01 through 39. Current maintainer and package guidance
+The current tracked source recognizes the exact PLAN/SUMMARY pair set 01 through 44.
+The installed authority remains bounded to 01 through 39 until a new
+exact-tuple approval and recoverable replacement completes. Current maintainer and package guidance
 remains unchanged: one protected release path is current, historical procedures
 stay explicitly bounded, package compatibility derives from live manifests,
 and protected recovery/finalization retains one fail-closed route.
 
-### Mandatory post-Plan-164-39 handoff
+### Mandatory post-Plan-164-44 handoff
 
-`164-39-SUMMARY.md` must exist and be committed before ordinary verification.
+`164-44-SUMMARY.md` must exist and be committed before ordinary verification.
 The only valid later sequence is: ordinary verifier records `status: passed`
 and its exact `verified_implementation_sha`; only the four authorized completion
 metadata paths change; those descendants integrate normally through protected
 `main`; the exact terminal main SHA receives successful attempt-one normal CI
 and complete naturally scheduled attempt-one evidence; the Plan 164-37 approval
-and Plan 164-38 installed/provenance tuple are rechecked; the installed command
-performs terminal capture; then no tracked write occurs.
+and the superseding installed/provenance tuple is rechecked; the installed
+command performs terminal capture; then no tracked write occurs.
 
 T-164-109 remains high and pending. Terminal protected-main evidence remains
 absent and pending throughout this plan. No implementation test, repository-only
