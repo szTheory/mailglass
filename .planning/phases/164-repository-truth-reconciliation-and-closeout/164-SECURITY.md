@@ -249,11 +249,12 @@ resolved or accepted and one high-severity row remains open.
 
 | Threat ID | Severity | Blocking | Evidence | Required action |
 |-----------|----------|----------|----------|-----------------|
-| T-164-109 | high | yes | `164-VERIFICATION.md` remains `gaps_found`; local main is ahead of protected main; `.planning/state.json` is dirty; terminal inputs are absent; retained reports target older SHAs; tracked source authenticates Plans 01-44, but the installed finalizer remains approved only for Plans 01-39. | Approve and install the reconciled loader, rerun ordinary verification, reach clean protected exact main, obtain exact attempt-one CI and natural schedules, recheck installed approval, capture the ignored terminal report, and make no later tracked write. |
+| T-164-109 | high | yes | `164-VERIFICATION.md` remains `gaps_found`; terminal inputs are absent; retained reports target older SHAs. The tracked and installed finalizer now both authenticate Plans 01-44 under the exact Plan 164-44 remediation approval, but ordinary verification, completion metadata, final protected integration, exact remote evidence, and terminal no-later-write capture remain pending. | Rerun ordinary verification, reach clean protected exact main, obtain exact attempt-one CI and natural schedules, recheck installed approval, capture the ignored terminal report, and make no later tracked write. |
 
-The current controlled-host installed-boundary run selected seven tests: six
-passed and one correctly failed closed with `repository is not clean`. This
-confirms the mitigation behavior but is not current terminal-readiness evidence.
+The approved 01-44 loader passed direct version, digest, ancestry, mode, terminal
+range, and physical BEAM runtime self-checks. The controlled-host
+installed-boundary rerun selected seven tests and passed all seven. These are
+current installation-readiness controls, not terminal evidence.
 
 No unregistered SUMMARY threat flags were found. Summary flags map to authored
 threats, including the explicit retention of T-164-109 in
@@ -315,6 +316,28 @@ evidence. The physical Mix/Elixir/Erlang exact-child probe and immutable OID han
 are repository behavior; the Plan 164-37 approval and Plan 164-38
 installed authority are separate external facts. Their passing lanes do not
 collapse into ordinary verification or the later terminal capture.
+
+## Post-audit installed-authority remediation
+
+The exact Plan 164-44 remediation proposal was approved by the human operator
+after all 27 fields and proposal SHA-256
+`7fa73ed9f8dccf2f0a38989c8e1ec6c9b465fda0377965924d30f0e308d7b8b3`
+were displayed. The mode-0400 approval has SHA-256
+`a25d2dfcd945b084edcc00a06f408aa599be56dd76b07f83b8cccef8cedf4a35`
+and binds protected source OID
+`af2c3a09e4021d2d2beb4ba361239df10bb632d0`, successful attempt-one normal
+push CI run `34719836367`, loader SHA-256
+`5cc800c1db20b65e8ad7ea90fde01a0180dc66c057166d8486ac9c321f564972`,
+the physical runtime closure, destination, exact predecessor, and rollback.
+
+The predecessor was preserved first as a regular non-symlink mode-0400 object
+with its approved digest. The active external command was then atomically
+replaced from the authenticated Git blob and re-read as a regular non-symlink
+mode-0500 object. Direct self-check proved installation/current ancestry,
+terminal range `01-44`, and the approved Mix/Elixir/OTP probe. This closes the
+installed-range subgap but does not close T-164-109: the ordinary verifier,
+completion-only metadata, final protected SHA evidence, natural schedules,
+terminal ignored capture, and no-later-write observation remain mandatory.
 
 ## Final Ordinary-Verification Reconciliation — Plan 164-44
 
