@@ -51,6 +51,26 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     "test/scripts/scheduled_control_evidence_test.exs" => "git ls-files; 164-29-PLAN.md",
     "test/test_helper.exs" => "git ls-files; 164-29-PLAN.md; 164-29-SUMMARY.md"
   }
+  @final_plan_evidence %{
+    Path.join(@phase_dir, "164-FINALIZATION.md") =>
+      "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md; 164-37-PLAN.md; 164-38-PLAN.md; 164-39-PLAN.md",
+    Path.join(@phase_dir, "164-SECURITY.md") => "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
+    Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv") =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
+    Path.join(@phase_dir, "164-VALIDATION.md") => "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
+    "mix.exs" => "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-35-PLAN.md",
+    "scripts/closeout_repository_truth.sh" => "git ls-files; 164-05-PLAN.md; 164-35-PLAN.md",
+    "scripts/finalize_phase_164.sh" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
+    "scripts/mailglass_finalize_phase_loader.mjs" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
+    "scripts/validate_repository_truth.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
+    "test/mailglass/docs_contract_test.exs" =>
+      "git ls-files; 164-34-PLAN.md; 164-36-PLAN.md; 164-39-PLAN.md",
+    "test/scripts/phase_164_closeout_test.exs" =>
+      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md",
+    "test/scripts/phase_164_repository_truth_test.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md"
+  }
 
   test "parses and validates the authoritative twelve-column ledger" do
     contents = File.read!(@ledger)
@@ -310,6 +330,87 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       stale = mutate_subject_row(contents, subject, "evidence", "git ls-files; 164-23-PLAN.md")
 
       assert {:error, {:invalid_canonical_relationship, ^subject}} = Ledger.parse(stale)
+    end
+  end
+
+  describe "phase 164 final ledger reconciliation" do
+    test "Plans 164-35 through 164-39 retain exactly one complete tracked row" do
+      assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+
+      declared_subjects =
+        35..39
+        |> Enum.flat_map(&plan_modified_files/1)
+        |> MapSet.new()
+
+      assert declared_subjects == MapSet.new(Map.keys(@final_plan_evidence))
+
+      for {subject, evidence} <- @final_plan_evidence do
+        assert [row] = Enum.filter(rows, &(&1["subject"] == subject))
+        assert Map.keys(row) |> Enum.sort() == Enum.sort(@headers)
+        assert Enum.all?(@headers, &(row[&1] != ""))
+        assert row["state"] == "tracked"
+        assert row["currentness"] == "current"
+        assert row["disposition"] == "retain"
+        assert row["evidence"] == evidence
+      end
+    end
+
+    test "empty outcomes, extra outcomes, adjacent subjects, and exact duplicates fail" do
+      valid = valid_row()
+
+      assert {:error, {:blank_required_field, "disposition"}} =
+               Ledger.parse(header_line() <> "\n" <> String.replace(valid, "\tremove\t", "\t\t"))
+
+      assert {:error, {:invalid_column_count, 13}} =
+               Ledger.parse(header_line() <> "\n" <> valid <> "\tretain")
+
+      contents = File.read!(@ledger)
+      [header | rows] = String.split(String.trim_trailing(contents), "\n", trim: true)
+      subject = "scripts/finalize_phase_164.sh"
+      exact = Enum.find(rows, &String.contains?(&1, "\t#{subject}\t"))
+      adjacent = String.replace(exact, "\t#{subject}\t", "\t#{subject}.backup\t")
+
+      for candidate_rows <- [rows ++ [adjacent], [adjacent | rows]] do
+        assert {:error, {:invalid_canonical_relationship, "scripts/finalize_phase_164.sh.backup"}} =
+                 Ledger.parse(Enum.join([header | candidate_rows], "\n") <> "\n")
+      end
+
+      for candidate_rows <- [rows ++ [exact], [exact | rows]] do
+        assert {:error, {:duplicate_subject, ^subject}} =
+                 Ledger.parse(Enum.join([header | candidate_rows], "\n") <> "\n")
+      end
+    end
+
+    test "missing candidates and stale semantic digests fail independently of row order" do
+      contents = File.read!(@ledger)
+      subject = Path.join(@phase_dir, "164-VALIDATION.md")
+
+      assert {:error, {:missing_audited_subjects, missing}} =
+               contents |> remove_subject(subject) |> Ledger.validate(@repo_root)
+
+      assert subject in missing
+
+      stale = mutate_subject_row(contents, subject, "evidence", "git ls-files; 164-31-PLAN.md")
+      [header | rows] = String.split(String.trim_trailing(stale), "\n", trim: true)
+
+      for candidate_rows <- [rows, Enum.reverse(rows)] do
+        assert {:error, {:invalid_canonical_relationship, ^subject}} =
+                 Ledger.parse(Enum.join([header | candidate_rows], "\n") <> "\n")
+      end
+    end
+
+    test "new external approval rollback and report objects stay outside the tracked ledger" do
+      assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+      subjects = MapSet.new(rows, & &1["subject"])
+
+      for external <- [
+            "/Users/jon/.local/share/mailglass/checkpoints/164-37-install-proposal.env",
+            "/Users/jon/.local/share/mailglass/checkpoints/164-37-install-approval.env",
+            "/Users/jon/.local/share/mailglass/rollback/mailglass-finalize-phase.f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac",
+            "tmp/phase-164-closeout/report.json"
+          ] do
+        refute MapSet.member?(subjects, external)
+      end
     end
   end
 
@@ -703,15 +804,25 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
   defp plan_modified_files(plan_number) do
     plan = Path.join(@repo_root, Path.join(@phase_dir, "164-#{plan_number}-PLAN.md"))
+    contents = File.read!(plan)
 
-    [paths] =
-      Regex.run(~r/^files_modified:\n(?<paths>(?:\s+- .+\n)*)^autonomous:/m, File.read!(plan),
-        capture: :all_names
-      )
+    paths =
+      if String.contains?(contents, "files_modified: []"), do: "", else: plan_paths!(plan, contents)
 
     paths
     |> String.split("\n", trim: true)
     |> Enum.map(&(&1 |> String.trim() |> String.trim_leading("- ")))
+  end
+
+  defp plan_paths!(plan, contents) do
+    case Regex.run(
+           ~r/^files_modified:(?<paths>(?:\n\s+- .+)*)\n^autonomous:/m,
+           contents,
+           capture: :all_names
+         ) do
+      [paths] -> paths
+      nil -> flunk("#{plan} is missing a parseable files_modified list")
+    end
   end
 
   defp ignored?(path) do
