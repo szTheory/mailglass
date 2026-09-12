@@ -5,16 +5,16 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-40-PLAN.md
-last_updated: "2026-09-12T02:25:44.886Z"
+stopped_at: Completed 164-42-PLAN.md
+last_updated: "2026-09-12T03:10:03.330Z"
 last_activity: 2026-09-11
 last_activity_desc: Phase 164 execution started
-state_head: cd5e3c113439fa7bf0ae8a61a92d70cc915f2466
+state_head: aca6faf9806f91374de46ab86ea118cda8a16e26
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 70
-  completed_plans: 63
+  completed_plans: 64
   percent: 75
 current_plan: 40
 ---
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
-Plan: 41 of 44
+Plan: 42 of 44
 Status: Ready to execute
 Last activity: 2026-09-11 — Phase 164 execution started
 
@@ -118,6 +118,7 @@ Progress: [█████████░] 63/70 plans complete ([████�
 | Phase 164 P35 | 34m | 2 tasks | 9 files |
 | Phase 164 P36 | 95m | 1 tasks | 2 files |
 | Phase 164 P40 | 7m | 2 tasks | 2 files |
+| Phase 164 P42 | 36m | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -213,6 +214,8 @@ Progress: [█████████░] 63/70 plans complete ([████�
 - [Phase 164]: Proposal and installed-host test groups remain outside repository-only CI behind dedicated non-vacuous aliases. — Repository evidence, human approval, and controlled-host proof are distinct authorities.
 - [Phase 164]: Tracked ledger subjects require lstat regular worktree entries before Git-index identity is evaluated. — This prevents symlink targets and every other non-regular entry type from becoming repository truth.
 - [Phase 164]: Exact-one stage-0 Git records are accepted only in modes 100644 and 100755. — Structurally valid non-regular objects receive a stable invalid-index-mode failure after exact identity is established.
+- [Phase 164]: Repository-only attacks authenticate and dispatch exclusively inside disposable canonical repositories; controlled-host proof remains separate.
+- [Phase 164]: Disposable fixtures bind origin/main to current HEAD or its predecessor to prove ahead counts zero and one explicitly.
 
 ## Deferred Items
 
@@ -222,6 +225,6 @@ Progress: [█████████░] 63/70 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-12T02:25:44.767Z
-Stopped at: Completed 164-40-PLAN.md
+Last session: 2026-09-12T03:10:03.215Z
+Stopped at: Completed 164-42-PLAN.md
 Resume file: None
