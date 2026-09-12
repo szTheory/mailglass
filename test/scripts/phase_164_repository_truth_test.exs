@@ -794,6 +794,59 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     end
   end
 
+  describe "phase 164 validator file identity" do
+    @describetag :phase_164_validator_file_identity
+
+    test "public validation rejects a tracked symlink to an external regular file" do
+      repo = clone_repository!()
+      subject = "README.md"
+      external_target = external_regular_file!()
+      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      replace_with_tracked_symlink!(repo, subject, external_target)
+
+      assert git_output!(repo, ["ls-files", "--stage", "--", subject]) =~
+               ~r/^120000 [0-9a-f]{40} 0\tREADME\.md$/
+
+      assert {:error, {:tracked_subject_not_regular, ^subject}} =
+               Ledger.validate(ledger, repo)
+    end
+
+    test "standalone validation rejects an external tracked symlink without disclosure" do
+      repo = clone_repository!()
+      subject = "README.md"
+      external_target = external_regular_file!()
+      ledger = Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv"))
+      script = Path.join(repo, "scripts/validate_repository_truth.exs")
+
+      replace_with_tracked_symlink!(repo, subject, external_target)
+
+      {output, status} =
+        System.cmd(System.find_executable("elixir"), [script, "--repo", repo, "--ledger", ledger],
+          stderr_to_stdout: true
+        )
+
+      assert status == 1
+      assert output =~ "repository truth ledger: {:tracked_subject_not_regular, \"README.md\"}"
+      assert length(Regex.scan(~r/^usage: /m, output)) == 1
+      assert byte_size(output) < 1_024
+      refute output =~ external_target
+      refute output =~ "** ("
+      refute output =~ "scripts/validate_repository_truth.exs:"
+      refute output =~ "    ("
+    end
+
+    test "one ordinary mode-100644 stage-0 record remains valid" do
+      repo = clone_repository!()
+      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      assert git_output!(repo, ["ls-files", "--stage", "--", "README.md"]) =~
+               ~r/^100644 [0-9a-f]{40} 0\tREADME\.md$/
+
+      assert :ok = Ledger.validate(ledger, repo)
+    end
+  end
+
   defp remove_subject(contents, subject) do
     contents
     |> String.split("\n", trim: true)
@@ -883,6 +936,25 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
              )
 
     root
+  end
+
+  defp external_regular_file! do
+    path =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-phase-164-external-#{System.unique_integer([:positive])}.txt"
+      )
+
+    File.write!(path, "external bytes\n")
+    on_exit(fn -> File.rm(path) end)
+    path
+  end
+
+  defp replace_with_tracked_symlink!(repo, subject, external_target) do
+    subject_path = Path.join(repo, subject)
+    File.rm!(subject_path)
+    File.ln_s!(external_target, subject_path)
+    assert {_output, 0} = System.cmd("git", ["add", "--", subject], cd: repo)
   end
 
   defp install_unmerged_index_entry!(repo, subject) do
