@@ -504,6 +504,13 @@ do not use their auto-merge, fan-out, manual smoke, tag, or fallback language as
 authority for a current release or recovery. The current protected path is the
 one at the start of this document.
 
+Plan 164-23 is retained here as superseded earlier-generation installation
+provenance. Its authenticated-copy checkpoint and initially installed loader
+were authoritative for that earlier generation; Plan 164-37's immutable
+approval and Plan 164-38's recoverable installation superseded them as the
+exclusive current approval/install pair. Do not use Plan 164-23 to authorize a
+current finalization action.
+
 The removed `.gsd/extensions/finalize-phase` implementation and its superseded
 project-local `/finalize-phase 164` command are historical implementation
 provenance only. They are not a supported alternative to the installed
