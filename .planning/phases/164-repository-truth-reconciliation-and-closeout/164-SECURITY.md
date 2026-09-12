@@ -133,6 +133,35 @@ created: "2026-09-01"
 | T-164-168 | Spoofing | ordinary versus terminal proof | high | mitigate | Fresh repository and controlled-host results are explicitly non-terminal and T-164-109 remains open | closed — authority layers remain distinct |
 | T-164-SC | Tampering | package supply chain | low | accept | No package-manager install or dependency change occurred; active bytes are the human-approved project-authored Plan 164-37 Git blob and Plan 164-32/27/23 objects remain exact prior provenance | accepted |
 
+## Security Audit Escalation — 2026-09-12
+
+The current ASVS L1 audit cannot certify the consolidated table above as a
+faithful representation of the authored Phase 164 threat register. Across 42
+plans with parseable `<threat_model>` blocks, the plans contain 198 authored
+rows and 158 unique threat IDs. The consolidated table contains 106 unique
+rows. The auditor provisionally verified 156 unique IDs as closed, with two
+open items: one high-severity blocker and one low-severity accepted disposition
+that has not been entered in the accepted-risks log.
+
+| Register integrity finding | Evidence | Required reconciliation |
+|----------------------------|----------|-------------------------|
+| 52 authored IDs are absent from the consolidated table | T-164-45 through T-164-48, T-164-53 through T-164-57, T-164-61 through T-164-62, T-164-65 through T-164-86A, and T-164-87 through T-164-104 | Restore the authored rows or add explicit one-to-one supersession mappings. |
+| T-164-105 through T-164-108 have different meanings in the consolidated table than in Plan 164-28 | The plan defines validation/security records, exact numbered history, terminal protected-main identity, and terminal remote operations; the table assigns later gap-reconciliation findings to those IDs | Restore the authored meanings and assign distinct IDs to later findings. |
+| T-164-158 is reused for two definitions | Plan 164-40 defines a medium denial-of-service threat; Plan 164-41 defines a high tampering threat | Assign distinct IDs while retaining both verified mitigations. |
+| T-164-SC is reused 40 times with 23 distinct definitions | The authored rows include 32 low and 8 high severities, with 36 `accept` and 4 `mitigate` dispositions | Qualify the ID per plan/definition or create explicit aliases; the single low accepted row above is not a complete reconciliation. |
+| T-164-40 through T-164-44 are referenced but not authored in a plan threat model | Plans 164-11 and 164-12 have no `<threat_model>` block, while VALIDATION attributes these IDs to them | Add an authored register or remove the orphan references through the planning process. |
+
+### Open Threats
+
+| Threat ID | Severity | Blocking | Evidence | Required action |
+|-----------|----------|----------|----------|-----------------|
+| T-164-109 | high | yes | `164-VERIFICATION.md` remains `gaps_found`; local HEAD `7ba4bf7f13b1c9b17fed662c059c787623d96788` differs from protected main `52c07a5051d269b307831a2210f53dec0dd1ff65`; the worktree is not clean; terminal inputs are absent; the retained report is for an older SHA; and the installed loader still authenticates Plans 01-39 while the authoritative phase contains Plans 01-44 | Reconcile the terminal range and approved installation, rerun ordinary verification, reach clean protected exact main, obtain exact attempt-one CI and natural schedules, recheck installed approval, capture the ignored terminal report, and make no later tracked write. |
+| T-164-94 | low | no | Plan 164-25 assigns an `accept` disposition, but the accepted-risks log below does not document it | Add the explicit accepted-risk entry or change its disposition through the planning process. |
+
+No unregistered SUMMARY threat flags were found. Summary flags map to authored
+threats, including the explicit retention of T-164-109 in
+`164-35-SUMMARY.md`.
+
 ## Superseding Gap-Reconciliation Assessment
 
 The 2026-09-10 verifier and review correctly contradicted the earlier blanket
@@ -225,14 +254,21 @@ or terminal lifecycle checks.
 | 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | verify-work refresh; T-164-109 evidence chain remains incomplete |
 | 2026-09-12 | 106 | 105 resolved/accepted | 1 blocking terminal-lifecycle item | Plan 164-44 fresh ordinary reconciliation at implementation commit `91b867ab2299afb8b2392176f699e16af4fc8f4a` |
 | 2026-09-12 | 106 | 105 resolved/accepted | 1 blocking terminal-lifecycle item | gsd-security-auditor re-audit — T-164-109 remains open: ordinary verification is `gaps_found`; Phase 164 is incomplete and 47 commits ahead of protected main; exact completion-SHA CI/natural schedules, terminal installed-authority recheck, terminal inputs/report, and no-later-tracked-write proof are absent |
+| 2026-09-12 | 158 unique authored IDs | 156 provisionally closed | 2 total / 1 blocking | gsd-security-auditor escalation — consolidated register is incomplete and contains identity collisions; T-164-109 remains blocking and T-164-94 remains undocumented below threshold |
 
 ## Sign-Off
 
-- [x] All registered threats were inspected at ASVS L1.
+- [x] All 158 unique authored threat IDs were inspected at ASVS L1.
+- [ ] The persisted register still requires reconciliation for 52 omitted IDs, T-164-105 through T-164-108 identity corruption, T-164-158 reuse, and T-164-SC collisions.
 - [ ] T-164-109 remains open until terminal protected-main evidence is captured in the mandated lifecycle order.
+- [ ] T-164-94 remains open below the blocking threshold until its planned acceptance is explicitly documented.
 - [x] T-164-60 is explicitly accepted as a low-severity documentation-only scope observation with executable controls unchanged.
 - [x] T-164-SC is explicitly accepted without any package-manager install or dependency change.
-- [x] `threats_open: 1` reflects the pending high-severity terminal lifecycle item.
+- [x] `threats_open: 1` reflects the pending high-severity terminal lifecycle item; one additional low-severity item is open below the configured `high` blocking threshold.
 - [x] `status: pending_terminal` prevents an early secured or completed claim.
 
-**Approval:** implementation mitigations are reconciled at ASVS L1 through the Plan 164-44 ordinary-verification evidence, but Phase 164 is not yet security-final. T-164-109 remains open until protected completion metadata, exact-main CI/natural schedules, and ignored no-later-write terminal capture complete in order.
+**Approval:** withheld. Most implementation mitigations are provisionally closed
+at ASVS L1, but the authored and persisted registers do not reconcile. Phase 164
+is not security-final. T-164-109 remains open until protected completion
+metadata, exact-main CI/natural schedules, and ignored no-later-write terminal
+capture complete in order.
