@@ -33,21 +33,23 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   @locked_digest "331810b4b1724452f0e2707c800230e52fabea01c3773d362b3a1240040ece7e"
   @repair_plan_evidence %{
     Path.join(@phase_dir, "164-FINALIZATION.md") =>
-      "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md",
-    Path.join(@phase_dir, "164-SECURITY.md") => "git ls-files; 164-34-PLAN.md",
+      "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md; 164-37-PLAN.md; 164-38-PLAN.md; 164-39-PLAN.md",
+    Path.join(@phase_dir, "164-SECURITY.md") => "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
     Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv") =>
-      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
-    Path.join(@phase_dir, "164-VALIDATION.md") => "git ls-files; 164-34-PLAN.md",
-    "scripts/finalize_phase_164.sh" => "git ls-files; 164-31-PLAN.md",
-    "scripts/mailglass_finalize_phase_loader.mjs" => "git ls-files; 164-31-PLAN.md",
-    "scripts/validate_repository_truth.exs" => "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
-    "test/mailglass/docs_contract_test.exs" => "git ls-files; 164-34-PLAN.md",
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
+    Path.join(@phase_dir, "164-VALIDATION.md") => "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
+    "scripts/finalize_phase_164.sh" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
+    "scripts/mailglass_finalize_phase_loader.mjs" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
+    "scripts/validate_repository_truth.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
+    "test/mailglass/docs_contract_test.exs" =>
+      "git ls-files; 164-34-PLAN.md; 164-36-PLAN.md; 164-39-PLAN.md",
     "test/scripts/ci_parity_drift_test.exs" =>
       "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-29-PLAN.md",
     "test/scripts/phase_164_closeout_test.exs" =>
-      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md",
+      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md",
     "test/scripts/phase_164_repository_truth_test.exs" =>
-      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md",
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
     "test/scripts/scheduled_control_evidence_test.exs" => "git ls-files; 164-29-PLAN.md",
     "test/test_helper.exs" => "git ls-files; 164-29-PLAN.md; 164-29-SUMMARY.md"
   }

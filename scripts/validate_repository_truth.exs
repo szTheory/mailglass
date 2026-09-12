@@ -161,6 +161,14 @@ defmodule Mailglass.RepositoryTruthLedger do
     "git ls-files; 164-31-PLAN.md",
     "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md",
     "git ls-files; 164-34-PLAN.md",
+    "git ls-files; 164-05-PLAN.md; 164-35-PLAN.md",
+    "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-35-PLAN.md",
+    "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md",
+    "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
+    "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md; 164-37-PLAN.md; 164-38-PLAN.md; 164-39-PLAN.md",
+    "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
+    "git ls-files; 164-34-PLAN.md; 164-36-PLAN.md; 164-39-PLAN.md",
+    "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
     "git ls-files; Phase 161 summary",
     "git ls-files; Phase 162 summary",
     "git ls-files; release-target ledger",
@@ -318,9 +326,9 @@ defmodule Mailglass.RepositoryTruthLedger do
     ".github/scheduled-controls.json" =>
       "9f1688cfc0524ae39fc8fdb66475f95a424a247fa45bc6f0c5dc2d7b2d5fd727",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv" =>
-      "d8bcd6b5705f6cd05d02134163a7056cf648db0c5dfeb6dd4a99d72acb1d732f",
+      "c8aa487ff1768dd5a862e6661a8e7b3839c6845ca783e506db8b9afe313109c8",
     "test/scripts/phase_164_repository_truth_test.exs" =>
-      "f5623549c65f64011f30f0e983ab3873b71d2b1ae1bc0c84e3432413e26b7b22",
+      "1696ffd9eb054a0463b7b3bcce4f903852573764e55fcacb4019f9ab3cd9e9ff",
     "MAINTAINING.md" => "16fdbf3f0265a67bcfcd5e5482bf89ad972ea2d9bb957535f84a59126a16cf3a",
     "test/mailglass/publish/maintaining_release_gate_contract_test.exs" =>
       "472d04f71e60a2e4c7bc5c036d9b86f7a0e6538101834b268cb1ddbe9eb463a7",
@@ -329,39 +337,39 @@ defmodule Mailglass.RepositoryTruthLedger do
       "5b850e2cdf8249d1e4066ab30d2184a26ace72a0fef9f0f12cc2fbce7f9462db",
     "mailglass_inbound/README.md" =>
       "458b030831a014296505fc1cc9ea5b4e32729694bb02546e5c3c78f1c12ca804",
-    "mix.exs" => "fb53f2fc7eb2b5918f2bac2ab6278dddc08bca2f19ca52418b9c24e7796f9c5d",
+    "mix.exs" => "09262c48b67da5ae000e696e8fcce73da3af0ff94f11304d0527c40a9c819158",
     "test/scripts/ci_parity_drift_test.exs" =>
       "71655ec6e5b2ce5e95c8f82600cde614111cf0818f7df623e6edb915ee171777",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-SECURITY.md" =>
-      "8151e268bc8ff020e0bbf51f9f3468ab1cb6121c2f24e19227831a02f8012d89",
+      "89df7f199004e642bf4156806f1b770ad6ffdfac161c6ec8feebff266beefbc3",
     "test/test_helper.exs" => "8260178e135e10358c9ae0e6fa2f082c4df2d95a7700bbac028ade7da61738ed",
     "test/mailglass/docs_contract_test.exs" =>
-      "78ef187ec8e232a44c2fc8677eaef85cb429f5e4a58a0f87078b8612275c4686",
+      "f118afc05752e791c9de16a77cdd1d5228fd0c5ff73ae386b813b5ba982069f8",
     "scripts/closeout_repository_truth.sh" =>
-      "77facce62c361cc1fcf11c81b5d032383cd289fe6b339e45b08d5c6586e27f06",
+      "21580aee36fa0b56528fc2fb115fa4053e9ef2c776ca17d1a405150445fcb244",
     "test/scripts/phase_164_closeout_test.exs" =>
-      "3e00ad4c02171d72aa846665828793e8b7999299869f83d2acc7e270403905da",
+      "ab64257a7caa93b0d5b3af32bb75ac817d816562af70323c24e31e5511b16b33",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-CLOSEOUT.md" =>
       "e378c14a37c9610cf87b594ff8be6360e126a62cdbef9674eb4ae5575164d878",
     "scripts/validate_repository_truth.exs" =>
-      "fcd9ffc95c0453292e18a1b104a45f57e9bb2133c536d5ab7119c083aeeab025",
+      "93166897ce8190edc0e339fef0788ccc6a07dc6e634ca23307c897c07f620267",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VERIFICATION.md" =>
       "37abe2db9ac0edbab5543e224cf410f528a6d86e6b541b34e70ba82aa9162312",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md" =>
-      "8f46042c69788a3fc232f6ce1e1c86d976918bbdc043050e10804594f8f8bd4f",
+      "f7220f68603a36ced406bff3bbd3bfae45e061dcc6b1b98f00e322061d4e8765",
     ".gitignore" => "52c7aed7a0eaaf139bec59b33cca9e74a8ffda7ff0ec140512f1b5559d362f8a",
     ".gsd/extensions/finalize-phase/extension-manifest.json" =>
       "af89407b07f1bea91c588c083dac9ed05b127427e7ec0f90759510b3727a87de",
     ".gsd/extensions/finalize-phase/index.ts" =>
       "422b26464d57918d7311918577891d0dd4d550fb81a4b78e4eaa5f7d3a4214ad",
     "scripts/finalize_phase_164.sh" =>
-      "10b5973cedbb71e7f22318b5cc4ec6ef8e32f5940f530d244a21dc7fb3246c38",
+      "a38356fddaa3da05f6f836460f07a99c8413481842f7cd459dcc9ac2863d4a51",
     "scripts/mailglass_finalize_phase_loader.mjs" =>
-      "2f39dea4bfaa9367690f2b09e9270ff18f6c9a3e539429d7581e834e534fb206",
+      "23314dfe5124c0d418eab8a6d5259bad296cccb4682f309a3f8899ecadb01219",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZE.sh" =>
       "7351a41c9f8e820203b2d70c4272134f2378859b6104100bc2e6c20524bb93bd",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md" =>
-      "8a1eacef0916d29707a5f1719d1f1a6d8065d1c55af255f5006af007d4e040d2",
+      "1b78e0595373bc1187753d0234471d479802425495901b9cd048b8d0f989ebe1",
     "scripts/ci_monitor.cjs" => "2a886eaba7c246c5461e915f5199ae1cff89fc735a7c82cd5fec171a12951c6f",
     "scripts/scheduled_control_evidence.sh" =>
       "83583ea9347f0f816dfa071ec5ae3677411cf1dc03fbcc410a2940c63954edcd",
