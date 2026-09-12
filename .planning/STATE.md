@@ -5,18 +5,18 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-36-PLAN.md
-last_updated: "2026-09-12T01:56:37.294Z"
+stopped_at: Completed 164-40-PLAN.md
+last_updated: "2026-09-12T02:25:44.886Z"
 last_activity: 2026-09-11
 last_activity_desc: Phase 164 execution started
-state_head: 8524e198a177e239cd39034013e3b2c264bfd985
+state_head: cd5e3c113439fa7bf0ae8a61a92d70cc915f2466
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 70
-  completed_plans: 59
+  completed_plans: 63
   percent: 75
-current_plan: 36
+current_plan: 40
 ---
 
 # Project State
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — READY TO EXECUTE
-Plan: 1 of 39
+Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
+Plan: 41 of 44
 Status: Ready to execute
 Last activity: 2026-09-11 — Phase 164 execution started
 
-Progress: [█████████░] 59/65 plans complete ([████████░░] 75%)
+Progress: [█████████░] 63/70 plans complete ([████████░░] 75%)
 
 ## Performance Metrics
 
@@ -117,6 +117,7 @@ Progress: [█████████░] 59/65 plans complete ([████�
 | Phase 164 P34 | 25min | 2 tasks | 8 files |
 | Phase 164 P35 | 34m | 2 tasks | 9 files |
 | Phase 164 P36 | 95m | 1 tasks | 2 files |
+| Phase 164 P40 | 7m | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -210,6 +211,8 @@ Progress: [█████████░] 59/65 plans complete ([████�
 - [Phase 164]: Finalization runtime authority is the versioned physical Elixir 1.19.5 and Erlang 28 closure, not asdf shims or inherited ASDF selectors. — The exact sanitized child environment must execute every authenticated runtime member before Bash dispatch.
 - [Phase 164]: The Node-authenticated commit remains immutable data through finalizer and closeout. — Every later repository observation validates the captured OID rather than recapturing or substituting authority.
 - [Phase 164]: Proposal and installed-host test groups remain outside repository-only CI behind dedicated non-vacuous aliases. — Repository evidence, human approval, and controlled-host proof are distinct authorities.
+- [Phase 164]: Tracked ledger subjects require lstat regular worktree entries before Git-index identity is evaluated. — This prevents symlink targets and every other non-regular entry type from becoming repository truth.
+- [Phase 164]: Exact-one stage-0 Git records are accepted only in modes 100644 and 100755. — Structurally valid non-regular objects receive a stable invalid-index-mode failure after exact identity is established.
 
 ## Deferred Items
 
@@ -219,6 +222,6 @@ Progress: [█████████░] 59/65 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-11T22:07:31.905Z
-Stopped at: Completed 164-36-PLAN.md
+Last session: 2026-09-12T02:25:44.767Z
+Stopped at: Completed 164-40-PLAN.md
 Resume file: None
