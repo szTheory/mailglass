@@ -5,16 +5,16 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
 status: executing
-stopped_at: Completed 164-42-PLAN.md
-last_updated: "2026-09-12T03:10:03.330Z"
+stopped_at: Completed 164-43-PLAN.md
+last_updated: "2026-09-12T03:29:16.214Z"
 last_activity: 2026-09-11
 last_activity_desc: Phase 164 execution started
-state_head: aca6faf9806f91374de46ab86ea118cda8a16e26
+state_head: c39531468bfc8adf4583f524926299d7638f867a
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 70
-  completed_plans: 64
+  completed_plans: 65
   percent: 75
 current_plan: 40
 ---
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
-Plan: 42 of 44
+Plan: 43 of 44
 Status: Ready to execute
 Last activity: 2026-09-11 — Phase 164 execution started
 
@@ -119,6 +119,7 @@ Progress: [█████████░] 63/70 plans complete ([████�
 | Phase 164 P36 | 95m | 1 tasks | 2 files |
 | Phase 164 P40 | 7m | 2 tasks | 2 files |
 | Phase 164 P42 | 36m | 2 tasks | 1 files |
+| Phase 164 P43 | 4m | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -216,6 +217,8 @@ Progress: [█████████░] 63/70 plans complete ([████�
 - [Phase 164]: Exact-one stage-0 Git records are accepted only in modes 100644 and 100755. — Structurally valid non-regular objects receive a stable invalid-index-mode failure after exact identity is established.
 - [Phase 164]: Repository-only attacks authenticate and dispatch exclusively inside disposable canonical repositories; controlled-host proof remains separate.
 - [Phase 164]: Disposable fixtures bind origin/main to current HEAD or its predecessor to prove ahead counts zero and one explicitly.
+- [Phase 164]: Plan 164-37 is the current approval authority and Plan 164-38 is the current installed-loader authority.
+- [Phase 164]: Plan 164-23 remains only as superseded earlier-generation installation provenance inside the historical boundary.
 
 ## Deferred Items
 
@@ -225,6 +228,6 @@ Progress: [█████████░] 63/70 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-12T03:10:03.215Z
-Stopped at: Completed 164-42-PLAN.md
+Last session: 2026-09-12T03:29:16.090Z
+Stopped at: Completed 164-43-PLAN.md
 Resume file: None
