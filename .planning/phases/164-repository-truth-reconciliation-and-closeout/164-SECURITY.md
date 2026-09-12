@@ -224,6 +224,7 @@ or terminal lifecycle checks.
 | 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | gsd-security-auditor post-gap-closure verification |
 | 2026-09-11 | 70 | 69 resolved/accepted | 1 blocking terminal-lifecycle item | verify-work refresh; T-164-109 evidence chain remains incomplete |
 | 2026-09-12 | 106 | 105 resolved/accepted | 1 blocking terminal-lifecycle item | Plan 164-44 fresh ordinary reconciliation at implementation commit `91b867ab2299afb8b2392176f699e16af4fc8f4a` |
+| 2026-09-12 | 106 | 105 resolved/accepted | 1 blocking terminal-lifecycle item | gsd-security-auditor re-audit — T-164-109 remains open: ordinary verification is `gaps_found`; Phase 164 is incomplete and 47 commits ahead of protected main; exact completion-SHA CI/natural schedules, terminal installed-authority recheck, terminal inputs/report, and no-later-tracked-write proof are absent |
 
 ## Sign-Off
 
