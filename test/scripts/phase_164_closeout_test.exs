@@ -1746,7 +1746,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
       refute File.exists?(fixture.hostile_marker)
     end
 
-    test "absolute installed executable rejects deleted middle and terminal pairs before Bash" do
+    test "disposable loader rejects deleted middle and terminal pairs with exact history diagnostics" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
 
@@ -1759,7 +1759,12 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
         {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
         assert status != 0
-        assert_production_boundary_rejection!(output, fixture)
+        assert output =~
+                 "authenticated Phase 164 numbered history is not the exact 01-39 PLAN/SUMMARY set"
+
+        refute output =~ @repo_root
+        refute File.exists?(fixture.marker)
+        refute File.exists?(fixture.hostile_marker)
       end
     end
 
@@ -1789,22 +1794,67 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
              ]) == ""
 
       {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
-      assert status != 0
-      assert_production_boundary_rejection!(output, fixture)
+      assert status == 0, output
+      assert File.regular?(fixture.marker)
+      refute output =~ @repo_root
+      refute File.exists?(fixture.hostile_marker)
     end
 
-    test "production authority constants cannot be overridden by argv or environment" do
+    test "invalid argv fails with the exact loader usage diagnostic" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
-      fixture = production_installed_fixture!(Path.join(root, "override"))
+      fixture = production_installed_fixture!(Path.join(root, "invalid-argv"))
 
-      for {args, env} <- [
-            {["164", "--repo", fixture.repo], []},
-            {["164"], [{"MAILGLASS_REPOSITORY", fixture.repo}, {"GIT", "git"}]}
+      {output, status} =
+        invoke_production_loader(fixture, ["164", "--repo", fixture.repo])
+
+      assert status != 0
+      assert output =~ "expected phase 164 and optional --pre-verification"
+      refute output =~ @repo_root
+      refute File.exists?(fixture.marker)
+      refute File.exists?(fixture.hostile_marker)
+    end
+
+    test "environment overrides cannot replace the disposable canonical repository" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+      fixture = production_installed_fixture!(Path.join(root, "environment-override"))
+
+      {output, status} =
+        invoke_production_loader(fixture, ["164", "--pre-verification"], [
+          {"MAILGLASS_REPOSITORY", @repo_root},
+          {"GIT", "/bin/false"}
+        ])
+
+      assert status == 0, output
+      assert File.regular?(fixture.marker)
+      refute output =~ @repo_root
+      refute File.exists?(fixture.hostile_marker)
+    end
+
+    test "repository fixtures prove exact-main and one-commit-ahead-main states" do
+      root = temporary_root!()
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      for {name, origin_main, expected_ahead} <- [
+            {"exact-main", :head, 0},
+            {"ahead-main", :previous, 1}
           ] do
-        {output, status} = invoke_production_loader(fixture, args, env)
-        assert status != 0
-        assert_production_boundary_rejection!(output, fixture)
+        fixture =
+          production_installed_fixture!(Path.join(root, name), origin_main: origin_main)
+
+        ahead =
+          fixture.repo
+          |> git!(["rev-list", "--count", "refs/remotes/origin/main..HEAD"])
+          |> String.trim()
+
+        assert ahead == Integer.to_string(expected_ahead)
+
+        {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+        assert status == 0, output
+        assert File.regular?(fixture.marker)
+        refute output =~ @repo_root
+        refute File.exists?(fixture.hostile_marker)
       end
     end
   end
