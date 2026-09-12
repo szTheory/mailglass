@@ -71,7 +71,7 @@ created: "2026-09-01"
 | T-164-106 | Spoofing | caller-selected repository authority | high | mitigate | `phase_164_canonical_loader` observed 1 selected, 48 excluded, and 0 failures; the installed matrix rejects foreign repositories before dispatch | closed |
 | T-164-107 | Elevation of Privilege | forged PATH/tools | high | mitigate | `phase_164_trusted_toolchain` observed 3 selected, 46 excluded, and 0 failures; forged Git/Bash/gh/jq/Mix/Node/Elixir markers never execute | closed |
 | T-164-108 | Spoofing | unrelated installation OID | high | mitigate | Installation ancestry and the real installed tuple proof reject byte-identical loaders from unrelated history; the active controlled-host group observed 7 selected, 54 excluded, and 0 failures | closed |
-| T-164-109 | Repudiation | terminal no-later-write evidence | high | mitigate | Requires the Plan 164-34 summary, passed ordinary verification, protected completion metadata, protected main, exact-main attempt-1 push CI, natural schedules, and then the ignored terminal report with no later tracked write | open — lifecycle evidence pending |
+| T-164-109 | Repudiation | terminal no-later-write evidence | high | mitigate | Requires the Plan 164-39 summary, passed ordinary verification, protected completion metadata, protected main, exact-main attempt-1 push CI, natural schedules, installed approval recheck, and then the ignored terminal report with no later tracked write | open — lifecycle evidence pending |
 | T-164-110 | Spoofing | installed authority proof | high | mitigate | Direct `phase_164_installed_production_boundary` proof authenticates exact approval schema, path/type/mode, digest, committed blob, ancestry, and self-check | closed |
 | T-164-111 | Repudiation | controlled-host alias | high | mitigate | `mix verify.phase_164.installed_boundary` selected 7 tests, excluded 54, and returned 0 failures; absent or mismatched host authority fails nonzero | closed |
 | T-164-112 | Denial of Service | protected/full suites | high | mitigate | Root ExUnit exclusion plus recursive alias/workflow checks keep controlled-host installation readiness out of repository-only CI; `mix verify.ci_lane_contract` selected 396 and excluded exactly 7 | closed |
@@ -80,7 +80,7 @@ created: "2026-09-01"
 | T-164-115 | Information Disclosure | CLI diagnostic | medium | mitigate | Empty/incomplete roots emit bounded stable relative `repository_truth: missing_ignore_subject` diagnostics without exception stacks | closed |
 | T-164-116 | Tampering | authority fallback | high | mitigate | Missing authority-root subjects return tagged failure and never substitute canonical repository files | closed |
 | T-164-117 | Repudiation | subject ordering | medium | mitigate | Declared `@ignore_files` order determines the stable first-missing subject under every partial-prefix fixture | closed |
-| T-164-118 | Tampering | terminal history range | high | mitigate | Loader/shell constants and hostile histories pin exactly one PLAN/SUMMARY pair for 01-34 | closed |
+| T-164-118 | Tampering | terminal history range | high | mitigate | Loader/shell constants and hostile histories pin exactly one PLAN/SUMMARY pair for 01-39 | closed |
 | T-164-119 | Repudiation | installed readiness record | high | mitigate | Plan 164-27 remains prior provenance; changed bytes required the distinct Plans 164-32/33 approval and reinstall | closed |
 | T-164-120 | Spoofing | glob-derived completeness | high | mitigate | Explicit numeric expected-set comparison rejects missing, extra, or malformed history members | closed |
 | T-164-121 | Tampering | proposal source | high | mitigate | Plan 164-32 extracted one committed blob by full OID and bound its SHA-256 and trusted tool identities | closed |
@@ -89,13 +89,30 @@ created: "2026-09-01"
 | T-164-124 | Repudiation | approval parity | high | mitigate | Approval is byte-for-byte proposal parity plus exactly one approval-status line | closed |
 | T-164-125 | Tampering | installed replacement | high | mitigate | Plan 164-33 installed only the approved authenticated commit bytes by private materialization and atomic rename | closed |
 | T-164-126 | Repudiation | rollback provenance | high | mitigate | Exact prior bytes were published and verified as the digest-addressed regular non-symlink mode-0400 rollback before replacement | closed |
-| T-164-127 | Spoofing | active installed proof | high | mitigate | Real approval/install proof binds source OID `1cfee7802de808f690fe5413b22a57e7ab802488`, SHA-256 `f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac`, ancestry, version, mode, and 01-34 self-check | closed |
+| T-164-127 | Spoofing | superseded installed proof | high | mitigate | The then-active Plan 164-32 tuple was proven exactly and is now bounded prior provenance; current active authority is governed by T-164-141 through T-164-149 | closed — superseded provenance retained |
 | T-164-128 | Elevation of Privilege | terminal execution | high | mitigate | Installation readiness permitted only direct `--version` and `--self-check`; no phase argument or finalization mode ran | closed |
 | T-164-129 | Repudiation | validation/security records | high | mitigate | Plan 164-34 binds claims to named active tags, exact commands, observed selected/excluded counts, exit status, and failure direction | closed |
 | T-164-130 | Tampering | canonical ledger map | high | mitigate | Exact-one completed-plan subjects and final canonical relationship digests are enforced with missing, duplicate, and stale-hash negatives; the full repository-truth suite passed 30 tests | closed |
 | T-164-131 | Spoofing | terminal readiness | high | mitigate | Records preserve ordinary verifier → completion-only metadata → protected main → exact attempt-one CI/natural schedules → ignored capture → no later tracked write | closed |
 | T-164-132 | Information Disclosure | validator errors | medium | mitigate | The active incomplete-authority CLI regression retains stable relative tagged diagnostics without stack traces | closed |
-| T-164-SC | Tampering | package supply chain | low | accept | No package-manager install or dependency change occurred; active bytes are the human-approved project-authored Plan 164-32 Git blob and Plan 164-27/23 bytes remain exact prior provenance | accepted |
+| T-164-133 | Spoofing | BEAM runtime closure | high | mitigate | The physical Mix/Elixir/Erlang exact-child probe authenticates each regular executable and binds normalized Mix, Elixir, OTP, and probe-digest output in the sanitized child environment | closed — Plan 164-35 authority lane passed 4 selected, 60 excluded |
+| T-164-134 | Tampering | child environment | high | mitigate | Child PATH contains only authenticated tool directories and inherited ASDF selectors are absent | closed — hostile selector and shim fixtures fail before dispatch |
+| T-164-135 | Tampering | Node-to-Bash authority handoff | high | mitigate | The immutable OID handoff is required positionally and by named flag across both Bash boundaries | closed — missing, malformed, nonexistent, and substituted OIDs fail |
+| T-164-136 | Elevation of Privilege | closeout command resolution | high | mitigate | Trust-sensitive subprocesses resolve only through authenticated `MAILGLASS_*` identities in the allowlisted environment | closed — forged path/tool markers remain absent |
+| T-164-137 | Repudiation | race regression evidence | high | mitigate | The OID-handoff movement regression advances fixture HEAD after loader authentication and requires bounded failure before evidence markers | closed — `phase_164_oid_handoff` is active in the non-vacuous authority lane |
+| T-164-138 | Spoofing | protected-main identity | high | mitigate | Protected PR #249 integrated the exact repair; canonical branch, local HEAD, fetched origin/main, and two stable porcelain reads agreed on `52c07a5051d269b307831a2210f53dec0dd1ff65` | closed — Plan 164-36 protected observation |
+| T-164-139 | Repudiation | CI provenance | high | mitigate | CI run `34650810638` independently matched workflow, push event, attempt one, main branch, exact SHA, completed status, success conclusion, and numeric ID | closed — no run-order substitution |
+| T-164-140 | Elevation of Privilege | integration controls | high | mitigate | Normal protected squash merge ran only after required checks; no direct main push, protection bypass, workflow dispatch, or rerun occurred | closed — Plan 164-36 protected workflow |
+| T-164-141 | Spoofing | proposal source/CI tuple | high | mitigate | Plan 164-37 approval binds the exact protected OID, loader digest, and CI run to one ordered proposal | closed — proposal boundary passed 4 selected, 60 excluded |
+| T-164-142 | Tampering | runtime tool tuple | high | mitigate | Approval binds all physical tool identities, normalized version outputs, OTP release, and exact-child probe SHA-256 | closed — all 28 approval fields revalidated |
+| T-164-143 | Repudiation | human approval | high | mitigate | Maintainer approval covers only proposal SHA-256 `4d580f9f4a72ed6d25afa390f53369e1e08af3dc84c92b9e008d80895c13ddcf`; approval bytes are exact-copy-plus-status | closed — approval digest `e3687bf5a2afc69a79b2677c69daa3d533549d4b6f730a30a04e32cc6d13b7cd` |
+| T-164-144 | Elevation of Privilege | approval scope | high | mitigate | Approval authorizes only the displayed recoverable Plan 164-38 replacement and grants no finalization, workflow, release, or completion authority | closed — later gates remain separate |
+| T-164-145 | Tampering | proposal/approval files | high | mitigate | Proposal and approval are atomic regular non-symlink mode-0400 records with exact ordered nonempty fields and readback digests | closed — byte parity verified |
+| T-164-146 | Tampering | installed replacement | high | mitigate | Plan 164-38 revalidated the exact approval and installed only private materialization of the authenticated commit blob by same-directory atomic rename | closed — active digest `394a47effebe04d7aaa4e098775bedd194b6f00ce6efa63eea078aa79bb9f746` |
+| T-164-147 | Repudiation | rollback provenance | high | mitigate | Exact predecessor bytes were atomically published and verified first as the digest-addressed regular mode-0400 rollback | closed — rollback digest `f01859c551e6611d3bdd4dbae427cba3bc3d63e18fad7d74bbeeacf9953fffac` |
+| T-164-148 | Spoofing | active installed proof | high | mitigate | Plan 164-38 installed authority is checked directly against Plan 164-37 approval, source digest/mode/OID ancestry, exact 01-39 history, physical runtime output, and probe digest | closed — installed alias passed 7 selected, 57 excluded |
+| T-164-149 | Elevation of Privilege | terminal execution | high | mitigate | Plan 164-38 invoked only version/self-check inspection; repository tests and installed readiness are not terminal proof | closed — T-164-109 retains terminal ownership |
+| T-164-SC | Tampering | package supply chain | low | accept | No package-manager install or dependency change occurred; active bytes are the human-approved project-authored Plan 164-37 Git blob and Plan 164-32/27/23 objects remain exact prior provenance | accepted |
 
 ## Superseding Gap-Reconciliation Assessment
 
@@ -117,7 +134,7 @@ Plan 164-27 prior provenance remains immutable at OID
 `0dbcc03466f4da863c63d46ac2f314b4a260e45388e8f770c608d0eb02d8676e`.
 
 T-164-109 remains open and high. Ordinary verification must evaluate the
-complete tracked implementation only after `164-34-SUMMARY.md` exists. Only
+complete tracked implementation only after `164-39-SUMMARY.md` exists. Only
 protected completion metadata may follow before all tracked state reaches
 protected `main`; exact attempt-1 normal push CI and naturally scheduled
 attempt-1 evidence must then authorize the installed read-only capture. Until
@@ -125,6 +142,13 @@ that sequence completes, terminal protected-main evidence remains absent and
 pending. No repository test, controlled-host installation result, manual
 dispatch, or this reconciliation substitutes for it, and no terminal run or
 phase/requirement completion occurred here.
+
+Plans 164-35 through 164-38 close T-164-133 through T-164-149 at ASVS L1
+through observed executable, protected, approval, installation, and rollback
+evidence. The physical Mix/Elixir/Erlang exact-child probe and immutable OID
+handoff are repository behavior; the Plan 164-37 approval and Plan 164-38
+installed authority are separate external facts. Their passing lanes do not
+collapse into ordinary verification or the later terminal capture.
 
 ## Accepted Risks Log
 

@@ -17,8 +17,8 @@ before it establishes repository authority.
 At invocation the installed program captures one full repository commit OID.
 That captured repository OID, rather than symbolic `HEAD`, is the authority for
 every tree enumeration, blob authentication, and private materialization. The
-Plan 164-37/38 installed authority recognizes the exact PLAN/SUMMARY pair set
-01 through 39, with exactly one PLAN and one SUMMARY for every number. The
+Plan 164-37/38 installed authority recognizes the exact PLAN/SUMMARY pair set 01 through 39,
+with exactly one PLAN and one SUMMARY for every number. The
 tracked loader, installed loader, and shell source share that range. No
 historical subset or shortened baseline is accepted. Missing pairs, extra
 numbers, malformed names, or a silently shortened set fail before execution.
@@ -372,7 +372,7 @@ ran in Plan 164-38.
 
 The only authorized closeout sequence is:
 
-1. Plan 164-34 implementation commits land, then `164-34-SUMMARY.md exists before ordinary verification`.
+1. Plan 164-39 tracked reconciliation commits land, then `164-39-SUMMARY.md exists before ordinary verification`.
 2. The ordinary verifier writes `status: passed` and the exact `verified_implementation_sha` it evaluated.
 3. After that verified SHA, only the four authorized completion metadata paths may change.
 4. Those completion records reach protected `main`.
@@ -380,8 +380,17 @@ The only authorized closeout sequence is:
 6. `/Users/jon/.local/bin/mailglass-finalize-phase 164` writes ignored `tmp/phase-164-closeout/` evidence only.
 7. No summary, planning update, commit, push, merge, release, publication, dispatch, or rerun follows the capture.
 
-Plan 164-34 stops after establishing readiness for this sequence. It does not
+Plan 164-39 stops after reconciling readiness for this sequence. It does not
 execute steps 2 through 7 and does not claim that a terminal report exists.
+
+In compact authority order, the mandatory sequence is:
+
+`164-39-SUMMARY.md → ordinary verifier → completion-only metadata → protected main → exact attempt-one normal CI → natural scheduled evidence → installed approval recheck → terminal capture → no later tracked write`
+
+T-164-109 remains pending throughout Plan 164-39. Repository tests and
+installed readiness are not terminal proof. No Plan 164-39 task invokes either
+finalization mode, changes protected controls or completion metadata, dispatches
+or reruns CI, releases or publishes an artifact, or captures terminal evidence.
 
 ## Terminal operational proof
 
