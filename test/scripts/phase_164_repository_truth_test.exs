@@ -536,6 +536,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       assert MapSet.member?(subjects, "scripts/reordered-proof.exs")
 
       assert function_exported?(Ledger, :plan_files_modified, 1)
+
       assert {:ok, ["docs/nested/reordered-proof.md", "scripts/reordered-proof.exs"]} =
                apply(Ledger, :plan_files_modified, [plan])
     end

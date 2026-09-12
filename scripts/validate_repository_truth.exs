@@ -439,13 +439,14 @@ defmodule Mailglass.RepositoryTruthLedger do
 
     with :ok <- ensure_repository(repo_root),
          :ok <- ensure_repository(authority_root),
-         {:ok, ignore_subjects} <- ignore_subjects(authority_root) do
+         {:ok, ignore_subjects} <- ignore_subjects(authority_root),
+         {:ok, phase_artifacts} <- phase_artifacts(authority_root) do
       subjects =
         ignore_subjects ++
           tracked_subjects(repo_root, ".planning/publish") ++
           tracked_subjects(repo_root, "scripts/mailglass_finalize_phase_loader.mjs") ++
           @proof_paths ++
-          phase_artifacts(authority_root) ++ [Path.join(@phase_dir, "164-VERIFICATION.md")]
+          phase_artifacts ++ [Path.join(@phase_dir, "164-VERIFICATION.md")]
 
       {:ok, MapSet.new(subjects)}
     end
@@ -868,8 +869,16 @@ defmodule Mailglass.RepositoryTruthLedger do
     |> Path.join(Path.join(@phase_dir, "164-*-PLAN.md"))
     |> Path.wildcard()
     |> Enum.filter(&completed_plan?/1)
-    |> Enum.flat_map(&plan_files_modified/1)
-    |> Enum.uniq()
+    |> Enum.reduce_while({:ok, []}, fn plan, {:ok, paths} ->
+      case plan_files_modified(plan) do
+        {:ok, plan_paths} -> {:cont, {:ok, paths ++ plan_paths}}
+        {:error, _reason} = error -> {:halt, error}
+      end
+    end)
+    |> case do
+      {:ok, paths} -> {:ok, Enum.uniq(paths)}
+      error -> error
+    end
   end
 
   defp completed_plan?(plan) do
@@ -878,17 +887,113 @@ defmodule Mailglass.RepositoryTruthLedger do
     |> File.regular?()
   end
 
-  defp plan_files_modified(plan) do
-    case Regex.run(~r/^files_modified:\n(?<paths>(?:\s+- .+\n)*)^autonomous:/m, File.read!(plan),
-           capture: :all_names
-         ) do
-      [paths] ->
-        paths
-        |> String.split("\n", trim: true)
-        |> Enum.map(&(&1 |> String.trim() |> String.trim_leading("- ")))
+  def plan_files_modified(plan) when is_binary(plan) do
+    relative_plan = relative_plan_path(plan)
 
-      nil ->
-        []
+    with {:ok, contents} <- File.read(plan),
+         {:ok, frontmatter} <- opening_frontmatter(contents, relative_plan),
+         {:ok, paths} <- parse_files_modified(frontmatter, relative_plan) do
+      {:ok, paths}
+    else
+      {:error, {:plan_metadata_missing, _plan, _key}} = error ->
+        error
+
+      {:error, {:plan_metadata_malformed, _plan, _reason}} = error ->
+        error
+
+      {:error, _reason} ->
+        {:error, {:plan_metadata_malformed, relative_plan, "unable to read plan metadata"}}
+    end
+  end
+
+  defp opening_frontmatter(contents, relative_plan) do
+    lines = contents |> String.split("\n", trim: false) |> Enum.map(&String.trim_trailing(&1, "\r"))
+
+    case lines do
+      ["---" | rest] ->
+        case Enum.split_while(rest, &(&1 != "---")) do
+          {frontmatter, ["---" | _body]} ->
+            {:ok, frontmatter}
+
+          {_frontmatter, []} ->
+            metadata_malformed(relative_plan, "missing closing frontmatter delimiter")
+        end
+
+      _ ->
+        metadata_malformed(relative_plan, "missing opening frontmatter delimiter")
+    end
+  end
+
+  defp parse_files_modified(frontmatter, relative_plan) do
+    declarations =
+      frontmatter
+      |> Enum.with_index()
+      |> Enum.filter(fn {line, _index} -> Regex.match?(~r/^files_modified:/, line) end)
+
+    case declarations do
+      [] ->
+        {:error, {:plan_metadata_missing, relative_plan, "files_modified"}}
+
+      [{declaration, index}] ->
+        parse_files_modified_declaration(declaration, index, frontmatter, relative_plan)
+
+      _ ->
+        metadata_malformed(relative_plan, "duplicate files_modified key")
+    end
+  end
+
+  defp parse_files_modified_declaration(declaration, index, frontmatter, relative_plan) do
+    [value] = Regex.run(~r/^files_modified:[ ]*(.*)$/, declaration, capture: :all_but_first)
+
+    cond do
+      value == "[]" ->
+        {:ok, []}
+
+      value != "" ->
+        metadata_malformed(relative_plan, "files_modified must be a dash list or []")
+
+      true ->
+        frontmatter
+        |> Enum.drop(index + 1)
+        |> Enum.take_while(&(not Regex.match?(~r/^[A-Za-z0-9_-]+:/, &1)))
+        |> parse_files_modified_entries(relative_plan)
+    end
+  end
+
+  defp parse_files_modified_entries([], relative_plan) do
+    metadata_malformed(relative_plan, "files_modified list is blank")
+  end
+
+  defp parse_files_modified_entries(lines, relative_plan) do
+    parsed =
+      Enum.map(lines, fn line ->
+        case Regex.run(~r/^( +)- +(\S(?:.*\S)?) *$/, line, capture: :all_but_first) do
+          [indent, path] -> {:ok, byte_size(indent), path}
+          _ -> :error
+        end
+      end)
+
+    case parsed do
+      [{:ok, indent, _path} | _] ->
+        if Enum.all?(parsed, &match?({:ok, ^indent, _path}, &1)) do
+          {:ok, Enum.map(parsed, fn {:ok, _indent, path} -> path end)}
+        else
+          metadata_malformed(relative_plan, "files_modified list indentation is malformed")
+        end
+
+      _ ->
+        metadata_malformed(relative_plan, "files_modified must contain indented dash entries")
+    end
+  end
+
+  defp metadata_malformed(relative_plan, reason) do
+    {:error, {:plan_metadata_malformed, relative_plan, reason}}
+  end
+
+  defp relative_plan_path(plan) do
+    case String.split(Path.expand(plan), "/.planning/", parts: 2) do
+      [_prefix, suffix] -> ".planning/" <> suffix
+      _ -> Path.basename(plan)
     end
   end
 end
