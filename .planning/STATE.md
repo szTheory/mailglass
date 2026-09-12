@@ -4,17 +4,17 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
-status: executing
-stopped_at: Completed 164-41-PLAN.md
-last_updated: "2026-09-12T03:44:27.388Z"
-last_activity: 2026-09-11
-last_activity_desc: Phase 164 execution started
-state_head: 413584c518a71046344513851dbcb3542b1c5464
+status: verifying
+stopped_at: Completed 164-44-PLAN.md
+last_updated: "2026-09-12T04:09:59.753Z"
+last_activity: 2026-09-12
+last_activity_desc: Plan 164-44 ordinary repository-truth reconciliation completed; terminal lifecycle pending
+state_head: 1a95f1957e757f2e117abc1298e0f9383f19b7f2
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 70
-  completed_plans: 66
+  completed_plans: 67
   percent: 75
 current_plan: 44
 ---
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — EXECUTING
+Phase: 164 (Repository Truth Reconciliation and Closeout) — VERIFYING
 Plan: 44 of 44
-Status: Ready to execute
-Last activity: 2026-09-11 — Phase 164 execution started
+Status: Phase complete — ready for verification
+Last activity: 2026-09-12 — Plan 164-44 ordinary repository-truth reconciliation completed; terminal lifecycle pending
 
-Progress: [█████████░] 66/70 plans complete ([████████░░] 75%)
+Progress: [██████████] 67/70 plans complete ([████████░░] 75%)
 
 ## Performance Metrics
 
@@ -121,6 +121,7 @@ Progress: [█████████░] 66/70 plans complete ([████�
 | Phase 164 P42 | 36m | 2 tasks | 1 files |
 | Phase 164 P43 | 4m | 2 tasks | 2 files |
 | Phase 164 P41 | 9m | 2 tasks | 2 files |
+| Phase 164 P44 | 25m | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -222,6 +223,8 @@ Progress: [█████████░] 66/70 plans complete ([████�
 - [Phase 164]: Plan 164-23 remains only as superseded earlier-generation installation provenance inside the historical boundary.
 - [Phase 164]: Completed-plan artifact discovery accepts an empty list only for a standalone explicit files_modified: [] declaration; every missing or malformed shape fails with a stable tag.
 - [Phase 164]: repo_root must prove Git work-tree identity before ls-files, while authority_root remains a directory-only policy fixture boundary.
+- [Phase 164]: Completed Plans 164-40 through 164-43 contribute provenance only through structurally declared modified subjects, each resolving to exactly one current complete ledger row.
+- [Phase 164]: Fresh repository-only and controlled-host results remain separate ordinary authorities; T-164-109 stays open until the terminal lifecycle completes.
 
 ## Deferred Items
 
@@ -231,6 +234,6 @@ Progress: [█████████░] 66/70 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-12T03:44:27.273Z
-Stopped at: Completed 164-41-PLAN.md
+Last session: 2026-09-12T04:09:59.640Z
+Stopped at: Completed 164-44-PLAN.md
 Resume file: None
