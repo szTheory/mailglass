@@ -438,13 +438,17 @@ defmodule Mailglass.RepositoryTruthLedger do
     authority_root = authority_root || repo_root
 
     with :ok <- ensure_repository(repo_root),
+         :ok <- ensure_git_repository(repo_root),
          :ok <- ensure_repository(authority_root),
          {:ok, ignore_subjects} <- ignore_subjects(authority_root),
+         {:ok, publish_subjects} <- tracked_subjects(repo_root, ".planning/publish"),
+         {:ok, loader_subjects} <-
+           tracked_subjects(repo_root, "scripts/mailglass_finalize_phase_loader.mjs"),
          {:ok, phase_artifacts} <- phase_artifacts(authority_root) do
       subjects =
         ignore_subjects ++
-          tracked_subjects(repo_root, ".planning/publish") ++
-          tracked_subjects(repo_root, "scripts/mailglass_finalize_phase_loader.mjs") ++
+          publish_subjects ++
+          loader_subjects ++
           @proof_paths ++
           phase_artifacts ++ [Path.join(@phase_dir, "164-VERIFICATION.md")]
 
@@ -812,6 +816,23 @@ defmodule Mailglass.RepositoryTruthLedger do
     if File.dir?(repo_root), do: :ok, else: {:error, {:invalid_repository, repo_root}}
   end
 
+  defp ensure_git_repository(repo_root) do
+    case System.cmd("git", ["rev-parse", "--is-inside-work-tree"],
+           cd: repo_root,
+           stderr_to_stdout: true
+         ) do
+      {output, 0} ->
+        if String.trim(output) == "true" do
+          :ok
+        else
+          {:error, {:invalid_git_repository, repo_root}}
+        end
+
+      {_output, _status} ->
+        {:error, {:invalid_git_repository, repo_root}}
+    end
+  end
+
   def ignore_subjects(repo_root) do
     Enum.reduce_while(@ignore_files, {:ok, []}, fn ignore_file, {:ok, subjects} ->
       case read_ignore_subject(repo_root, ignore_file) do
@@ -860,8 +881,13 @@ defmodule Mailglass.RepositoryTruthLedger do
   end
 
   defp tracked_subjects(repo_root, path) do
-    {output, 0} = System.cmd("git", ["ls-files", "--", path], cd: repo_root)
-    String.split(output, "\n", trim: true)
+    case System.cmd("git", ["ls-files", "--", path], cd: repo_root, stderr_to_stdout: true) do
+      {output, 0} ->
+        {:ok, String.split(output, "\n", trim: true)}
+
+      {_output, status} ->
+        {:error, {:git_command_failure, "ls-files", path, status}}
+    end
   end
 
   defp phase_artifacts(repo_root) do
