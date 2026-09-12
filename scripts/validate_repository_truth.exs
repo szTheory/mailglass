@@ -973,7 +973,20 @@ defmodule Mailglass.RepositoryTruthLedger do
 
     cond do
       value == "[]" ->
-        {:ok, []}
+        trailing_values =
+          frontmatter
+          |> Enum.drop(index + 1)
+          |> Enum.take_while(&(not Regex.match?(~r/^[A-Za-z0-9_-]+:/, &1)))
+          |> Enum.reject(fn line ->
+            trimmed = String.trim(line)
+            trimmed == "" or String.starts_with?(trimmed, "#")
+          end)
+
+        if trailing_values == [] do
+          {:ok, []}
+        else
+          metadata_malformed(relative_plan, "files_modified [] must not contain list entries")
+        end
 
       value != "" ->
         metadata_malformed(relative_plan, "files_modified must be a dash list or []")
