@@ -140,7 +140,7 @@ defmodule Mailglass.RepositoryTruthLedger do
     "workspace preservation verification"
   ]
   @tracked_evidence [
-    "164-02-PLAN.md",
+    "164-02-PLAN.md; 164-43-PLAN.md",
     "164-03-PLAN.md",
     "164-04-PLAN.md",
     "164-05-PLAN.md",
@@ -164,12 +164,13 @@ defmodule Mailglass.RepositoryTruthLedger do
     "git ls-files; 164-34-PLAN.md",
     "git ls-files; 164-05-PLAN.md; 164-35-PLAN.md",
     "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-35-PLAN.md",
-    "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md",
-    "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
+    "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md; 164-42-PLAN.md",
+    "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md",
+    "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
     "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md; 164-37-PLAN.md; 164-38-PLAN.md; 164-39-PLAN.md",
     "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
     "git ls-files; 164-34-PLAN.md; 164-36-PLAN.md; 164-39-PLAN.md",
-    "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
+    "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
     "git ls-files; Phase 161 summary",
     "git ls-files; Phase 162 summary",
     "git ls-files; release-target ledger",
@@ -327,12 +328,12 @@ defmodule Mailglass.RepositoryTruthLedger do
     ".github/scheduled-controls.json" =>
       "9f1688cfc0524ae39fc8fdb66475f95a424a247fa45bc6f0c5dc2d7b2d5fd727",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv" =>
-      "c8aa487ff1768dd5a862e6661a8e7b3839c6845ca783e506db8b9afe313109c8",
+      "59887823ec2ac5372d7d65c1c69771c79e9c2317118061eccf1b9850cb7f46c8",
     "test/scripts/phase_164_repository_truth_test.exs" =>
-      "1696ffd9eb054a0463b7b3bcce4f903852573764e55fcacb4019f9ab3cd9e9ff",
-    "MAINTAINING.md" => "16fdbf3f0265a67bcfcd5e5482bf89ad972ea2d9bb957535f84a59126a16cf3a",
+      "a6e9cd3dd466da7e02686b90f84a3119425cf58c1faeb72d12a331e3a0b12003",
+    "MAINTAINING.md" => "224d2b03f3f462a9630fa8b00336c68bbaa2b6b3018fb1b86f8639eadd69444f",
     "test/mailglass/publish/maintaining_release_gate_contract_test.exs" =>
-      "472d04f71e60a2e4c7bc5c036d9b86f7a0e6538101834b268cb1ddbe9eb463a7",
+      "65aa7cb7d6089664a7218d827e2b263a49d4f1da40ad3e8eae9f2217f97e0e95",
     "README.md" => "0942020b0f64a8103d4100a91461295d1f1b22430da5763562d0ffc265e4057a",
     "mailglass_admin/README.md" =>
       "5b850e2cdf8249d1e4066ab30d2184a26ace72a0fef9f0f12cc2fbce7f9462db",
@@ -342,22 +343,22 @@ defmodule Mailglass.RepositoryTruthLedger do
     "test/scripts/ci_parity_drift_test.exs" =>
       "71655ec6e5b2ce5e95c8f82600cde614111cf0818f7df623e6edb915ee171777",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-SECURITY.md" =>
-      "89df7f199004e642bf4156806f1b770ad6ffdfac161c6ec8feebff266beefbc3",
+      "dfaf011fdf8018e6a753b830b1b4a5881c6e8ad3b5c93cd4c0e150e63e7e8af6",
     "test/test_helper.exs" => "8260178e135e10358c9ae0e6fa2f082c4df2d95a7700bbac028ade7da61738ed",
     "test/mailglass/docs_contract_test.exs" =>
       "f118afc05752e791c9de16a77cdd1d5228fd0c5ff73ae386b813b5ba982069f8",
     "scripts/closeout_repository_truth.sh" =>
       "21580aee36fa0b56528fc2fb115fa4053e9ef2c776ca17d1a405150445fcb244",
     "test/scripts/phase_164_closeout_test.exs" =>
-      "ab64257a7caa93b0d5b3af32bb75ac817d816562af70323c24e31e5511b16b33",
+      "3b1f136d09464f174434831d42c0e0de2dff169b825a674d1baaaaeee2c70e05",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-CLOSEOUT.md" =>
       "e378c14a37c9610cf87b594ff8be6360e126a62cdbef9674eb4ae5575164d878",
     "scripts/validate_repository_truth.exs" =>
-      "93166897ce8190edc0e339fef0788ccc6a07dc6e634ca23307c897c07f620267",
+      "e81391fa8d6055aef4f9792f79c7f1e9a6a19ec56fba23c614a8c5c2d09bdeb1",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VERIFICATION.md" =>
       "37abe2db9ac0edbab5543e224cf410f528a6d86e6b541b34e70ba82aa9162312",
     ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md" =>
-      "f7220f68603a36ced406bff3bbd3bfae45e061dcc6b1b98f00e322061d4e8765",
+      "64ff6aaf70e65190bb2a4b4d2cae21d1bf2a13df5b34b92bcc5e60600c8378c3",
     ".gitignore" => "52c7aed7a0eaaf139bec59b33cca9e74a8ffda7ff0ec140512f1b5559d362f8a",
     ".gsd/extensions/finalize-phase/extension-manifest.json" =>
       "af89407b07f1bea91c588c083dac9ed05b127427e7ec0f90759510b3727a87de",

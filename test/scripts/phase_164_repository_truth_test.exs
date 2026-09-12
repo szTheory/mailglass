@@ -34,7 +34,8 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   @repair_plan_evidence %{
     Path.join(@phase_dir, "164-FINALIZATION.md") =>
       "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md; 164-37-PLAN.md; 164-38-PLAN.md; 164-39-PLAN.md",
-    Path.join(@phase_dir, "164-SECURITY.md") => "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
+    Path.join(@phase_dir, "164-SECURITY.md") =>
+      "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
     Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv") =>
       "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
     Path.join(@phase_dir, "164-VALIDATION.md") =>
@@ -60,8 +61,9 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     Path.join(@phase_dir, "164-SECURITY.md") =>
       "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
     Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv") =>
-      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
-    Path.join(@phase_dir, "164-VALIDATION.md") => "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
+    Path.join(@phase_dir, "164-VALIDATION.md") =>
+      "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
     "mix.exs" => "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-35-PLAN.md",
     "scripts/closeout_repository_truth.sh" => "git ls-files; 164-05-PLAN.md; 164-35-PLAN.md",
     "scripts/finalize_phase_164.sh" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
@@ -474,7 +476,8 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
       adjacent = String.replace(row, "\t#{subject}\t", "\t#{subject}.backup\t")
 
-      assert {:error, {:invalid_canonical_relationship, "scripts/validate_repository_truth.exs.backup"}} =
+      assert {:error,
+              {:invalid_canonical_relationship, "scripts/validate_repository_truth.exs.backup"}} =
                Ledger.parse(Enum.join([header | rows ++ [adjacent]], "\n") <> "\n")
 
       reordered_ids =
@@ -498,7 +501,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
           "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md"
         )
 
-      assert {:error, {:invalid_canonical_relationship, ^subject}} = Ledger.parse(stale)
+      assert {:error, {:invalid_evidence, ^subject}} = Ledger.parse(stale)
     end
   end
 
