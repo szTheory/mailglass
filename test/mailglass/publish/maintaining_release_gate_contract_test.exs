@@ -31,6 +31,7 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
 
   test "current finalization guidance binds the active approval and installation authorities" do
     maintaining = File.read!(@maintaining_path)
+
     current =
       section!(
         maintaining,
@@ -81,6 +82,7 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
 
   test "historical release procedures retain provenance without becoming current guidance" do
     maintaining = File.read!(@maintaining_path)
+
     current =
       section!(
         maintaining,
