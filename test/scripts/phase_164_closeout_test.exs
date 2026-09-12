@@ -1720,10 +1720,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     test "disposable loader rejects a foreign repository origin before private dispatch" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
-      fixture = production_installed_fixture!(Path.join(root, "accepted"))
+      fixture = immutable_loader_fixture!(Path.join(root, "foreign-origin"))
       git!(fixture.repo, ["remote", "set-url", "origin", "https://github.com/attacker/mailglass.git"])
 
-      {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
+      {output, status} = invoke_immutable_loader(fixture, ["164", "--pre-verification"])
       assert status != 0
       assert output =~ "canonical repository origin is not szTheory/mailglass"
       refute output =~ @repo_root
@@ -1734,10 +1734,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     test "disposable loader rejects a moving HEAD before Bash dispatch" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
-      fixture = production_installed_fixture!(Path.join(root, "moving"), move_head: true)
+      fixture = immutable_loader_fixture!(Path.join(root, "moving"), move_head: true)
 
       {output, status} =
-        invoke_production_loader(fixture, ["164", "--pre-verification"], fixture.env)
+        invoke_immutable_loader(fixture, ["164", "--pre-verification"], fixture.env)
 
       assert status != 0
       assert output =~ "authority commit changed before Bash dispatch"
@@ -2641,14 +2641,11 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
             count=$(($(cat "$GIT_COUNTER") + 1))
             printf '%s' "$count" > "$GIT_COUNTER"
             if [ "$count" -eq 2 ]; then
-              observed=$("$REAL_GIT" "$@")
               printf 'advanced\\n' > "$FIXTURE_REPO/head-advance"
               "$REAL_GIT" -C "$FIXTURE_REPO" add head-advance
               GIT_AUTHOR_NAME='Phase 164 Test' GIT_AUTHOR_EMAIL=phase164@example.test \\
               GIT_COMMITTER_NAME='Phase 164 Test' GIT_COMMITTER_EMAIL=phase164@example.test \\
                 "$REAL_GIT" -C "$FIXTURE_REPO" commit -q -m 'advance head between Node and Bash'
-              printf '%s\\n' "$observed"
-              exit 0
             fi
           fi
           exec "$REAL_GIT" "$@"
