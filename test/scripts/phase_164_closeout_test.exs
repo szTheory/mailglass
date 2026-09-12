@@ -1717,17 +1717,21 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
   describe "phase 164 repository-only installed-loader attacks" do
     @describetag :phase_164_installed_boundary
 
-    test "production loader rejects a foreign repository before private dispatch" do
+    test "disposable loader rejects a foreign repository origin before private dispatch" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
       fixture = production_installed_fixture!(Path.join(root, "accepted"))
+      git!(fixture.repo, ["remote", "set-url", "origin", "https://github.com/attacker/mailglass.git"])
 
       {output, status} = invoke_production_loader(fixture, ["164", "--pre-verification"])
       assert status != 0
-      assert_production_boundary_rejection!(output, fixture)
+      assert output =~ "canonical repository origin is not szTheory/mailglass"
+      refute output =~ @repo_root
+      refute File.exists?(fixture.marker)
+      refute File.exists?(fixture.hostile_marker)
     end
 
-    test "absolute installed executable rejects a moving HEAD before Bash" do
+    test "disposable loader rejects a moving HEAD before Bash dispatch" do
       root = temporary_root!()
       on_exit(fn -> File.rm_rf!(root) end)
       fixture = production_installed_fixture!(Path.join(root, "moving"), move_head: true)
@@ -1736,7 +1740,10 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
         invoke_production_loader(fixture, ["164", "--pre-verification"], fixture.env)
 
       assert status != 0
-      assert_production_boundary_rejection!(output, fixture)
+      assert output =~ "authority commit changed before Bash dispatch"
+      refute output =~ @repo_root
+      refute File.exists?(fixture.marker)
+      refute File.exists?(fixture.hostile_marker)
     end
 
     test "absolute installed executable rejects deleted middle and terminal pairs before Bash" do
