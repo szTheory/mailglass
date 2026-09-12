@@ -36,27 +36,29 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md; 164-37-PLAN.md; 164-38-PLAN.md; 164-39-PLAN.md",
     Path.join(@phase_dir, "164-SECURITY.md") => "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
     Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv") =>
-      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
-    Path.join(@phase_dir, "164-VALIDATION.md") => "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
+    Path.join(@phase_dir, "164-VALIDATION.md") =>
+      "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
     "scripts/finalize_phase_164.sh" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
     "scripts/mailglass_finalize_phase_loader.mjs" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
     "scripts/validate_repository_truth.exs" =>
-      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md",
     "test/mailglass/docs_contract_test.exs" =>
       "git ls-files; 164-34-PLAN.md; 164-36-PLAN.md; 164-39-PLAN.md",
     "test/scripts/ci_parity_drift_test.exs" =>
       "git ls-files; 164-25-PLAN.md; 164-25-SUMMARY.md; 164-29-PLAN.md",
     "test/scripts/phase_164_closeout_test.exs" =>
-      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md",
+      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md; 164-42-PLAN.md",
     "test/scripts/phase_164_repository_truth_test.exs" =>
-      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md",
     "test/scripts/scheduled_control_evidence_test.exs" => "git ls-files; 164-29-PLAN.md",
     "test/test_helper.exs" => "git ls-files; 164-29-PLAN.md; 164-29-SUMMARY.md"
   }
   @final_plan_evidence %{
     Path.join(@phase_dir, "164-FINALIZATION.md") =>
       "git ls-files; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-34-PLAN.md; 164-37-PLAN.md; 164-38-PLAN.md; 164-39-PLAN.md",
-    Path.join(@phase_dir, "164-SECURITY.md") => "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
+    Path.join(@phase_dir, "164-SECURITY.md") =>
+      "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md; 164-44-PLAN.md",
     Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv") =>
       "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
     Path.join(@phase_dir, "164-VALIDATION.md") => "git ls-files; 164-34-PLAN.md; 164-39-PLAN.md",
@@ -65,13 +67,24 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     "scripts/finalize_phase_164.sh" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
     "scripts/mailglass_finalize_phase_loader.mjs" => "git ls-files; 164-31-PLAN.md; 164-35-PLAN.md",
     "scripts/validate_repository_truth.exs" =>
-      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md",
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md",
     "test/mailglass/docs_contract_test.exs" =>
       "git ls-files; 164-34-PLAN.md; 164-36-PLAN.md; 164-39-PLAN.md",
     "test/scripts/phase_164_closeout_test.exs" =>
-      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md",
+      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md; 164-42-PLAN.md",
     "test/scripts/phase_164_repository_truth_test.exs" =>
-      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md"
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md"
+  }
+  @gap_closure_evidence %{
+    "MAINTAINING.md" => "164-02-PLAN.md; 164-43-PLAN.md",
+    "scripts/validate_repository_truth.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md",
+    "test/mailglass/publish/maintaining_release_gate_contract_test.exs" =>
+      "164-02-PLAN.md; 164-43-PLAN.md",
+    "test/scripts/phase_164_closeout_test.exs" =>
+      "git ls-files; 164-29-PLAN.md; 164-31-PLAN.md; 164-32-PLAN.md; 164-33-PLAN.md; 164-35-PLAN.md; 164-36-PLAN.md; 164-38-PLAN.md; 164-42-PLAN.md",
+    "test/scripts/phase_164_repository_truth_test.exs" =>
+      "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md; 164-40-PLAN.md; 164-41-PLAN.md; 164-44-PLAN.md"
   }
 
   test "parses and validates the authoritative twelve-column ledger" do
@@ -413,6 +426,79 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
           ] do
         refute MapSet.member?(subjects, external)
       end
+    end
+  end
+
+  describe "phase 164 final gap ledger reconciliation" do
+    @describetag :phase_164_final_gap_ledger
+
+    test "Plans 164-40 through 164-43 retain exactly one complete canonical row" do
+      assert {:ok, %{rows: rows}} = Ledger.parse(File.read!(@ledger))
+
+      declared_subjects =
+        40..43
+        |> Enum.flat_map(fn plan_number ->
+          plan = Path.join(@repo_root, Path.join(@phase_dir, "164-#{plan_number}-PLAN.md"))
+          assert {:ok, paths} = Ledger.plan_files_modified(plan)
+          paths
+        end)
+        |> MapSet.new()
+
+      assert declared_subjects == MapSet.new(Map.keys(@gap_closure_evidence))
+
+      for {subject, evidence} <- @gap_closure_evidence do
+        assert [row] = Enum.filter(rows, &(&1["subject"] == subject))
+        assert Map.keys(row) |> Enum.sort() == Enum.sort(@headers)
+        assert Enum.all?(@headers, &(row[&1] != ""))
+        assert row["state"] == "tracked"
+        assert row["currentness"] == "current"
+        assert row["disposition"] == "retain"
+        assert row["evidence"] == evidence
+      end
+    end
+
+    test "missing duplicate adjacent ordering and stale relationships fail closed" do
+      contents = File.read!(@ledger)
+      subject = "scripts/validate_repository_truth.exs"
+
+      assert {:error, {:missing_audited_subjects, missing}} =
+               contents |> remove_subject(subject) |> Ledger.validate(@repo_root)
+
+      assert subject in missing
+
+      [header | rows] = String.split(String.trim_trailing(contents), "\n", trim: true)
+      row = Enum.find(rows, &String.contains?(&1, "\t#{subject}\t"))
+
+      assert {:error, {:duplicate_subject, ^subject}} =
+               Ledger.parse(Enum.join([header | rows ++ [row]], "\n") <> "\n")
+
+      adjacent = String.replace(row, "\t#{subject}\t", "\t#{subject}.backup\t")
+
+      assert {:error, {:invalid_canonical_relationship, "scripts/validate_repository_truth.exs.backup"}} =
+               Ledger.parse(Enum.join([header | rows ++ [adjacent]], "\n") <> "\n")
+
+      reordered_ids =
+        swap_subject_column(
+          contents,
+          subject,
+          "test/scripts/phase_164_repository_truth_test.exs",
+          "stable_id"
+        )
+
+      assert {:error, {:invalid_canonical_relationship, invalid_subject}} =
+               Ledger.parse(reordered_ids)
+
+      assert invalid_subject in [subject, "test/scripts/phase_164_repository_truth_test.exs"]
+
+      stale =
+        mutate_subject_row(
+          contents,
+          subject,
+          "evidence",
+          "git ls-files; 164-30-PLAN.md; 164-34-PLAN.md; 164-39-PLAN.md"
+        )
+
+      assert {:error, {:invalid_canonical_relationship, ^subject}} = Ledger.parse(stale)
     end
   end
 
