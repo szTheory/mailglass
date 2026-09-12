@@ -17,6 +17,7 @@ defmodule Mailglass.RepositoryTruthLedger do
   @dispositions ~w(retain update archive remove ignore)
   @currentness ~w(current historical stale)
   @states ~w(tracked untracked ignored)
+  @regular_index_modes MapSet.new(["100644", "100755"])
   @kinds ~w(ci-evidence-client closeout-report closeout-script contract-test finalization-guidance finalization-script finalization-shim forensic-proof generated-output gsd-extension-command gsd-extension-manifest ignore-rule maintainer-guidance package-allowlist package-guidance planning-artifact protected-ci-proof publish-proof release-proof repository-ignore-contract repository-truth-validator scheduled-control-contract scheduled-control-proof scheduled-control-verifier verification-report)
   @producers [
     "GSD phase lifecycle",
@@ -504,8 +505,12 @@ defmodule Mailglass.RepositoryTruthLedger do
     case split_complete_staged_records(output) do
       {:ok, records} ->
         case parse_staged_records(records) do
-          {:ok, [%{stage: 0, path: ^subject}]} ->
-            :ok
+          {:ok, [%{stage: 0, path: ^subject, mode: mode}]} ->
+            if MapSet.member?(@regular_index_modes, mode) do
+              :ok
+            else
+              {:error, {:tracked_subject_invalid_index_mode, subject, mode}}
+            end
 
           {:ok, parsed_records} ->
             {:error, {:tracked_subject_identity_mismatch, subject, parsed_records}}
@@ -789,15 +794,15 @@ defmodule Mailglass.RepositoryTruthLedger do
     |> Enum.reduce_while(:ok, fn row, :ok ->
       subject = row["subject"]
 
-      cond do
-        not File.regular?(Path.join(repo_root, subject)) ->
-          {:halt, {:error, {:tracked_subject_missing, subject}}}
-
-        true ->
+      case File.lstat(Path.join(repo_root, subject)) do
+        {:ok, %File.Stat{type: :regular}} ->
           case tracked_subject_in_index(repo_root, subject) do
             :ok -> {:cont, :ok}
             error -> {:halt, error}
           end
+
+        _ ->
+          {:halt, {:error, {:tracked_subject_not_regular, subject}}}
       end
     end)
   end

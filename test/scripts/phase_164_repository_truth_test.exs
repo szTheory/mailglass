@@ -817,7 +817,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       subject = "README.md"
       external_target = external_regular_file!()
       ledger = Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv"))
-      script = Path.join(repo, "scripts/validate_repository_truth.exs")
+      script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
 
       replace_with_tracked_symlink!(repo, subject, external_target)
 
