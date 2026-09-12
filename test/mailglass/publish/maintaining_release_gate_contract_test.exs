@@ -81,8 +81,20 @@ defmodule Mailglass.Publish.MaintainingReleaseGateContractTest do
 
   test "historical release procedures retain provenance without becoming current guidance" do
     maintaining = File.read!(@maintaining_path)
+    current =
+      section!(
+        maintaining,
+        "Phase 164 repository finalization",
+        "Trust runner checkpoint handoff"
+      )
+
     historical = section_from!(maintaining, "Historical release procedures")
 
+    refute current =~ "Plan 164-23"
+    assert historical =~ "Plan 164-23"
+    assert historical =~ ~r/Plan 164-23.*superseded.*provenance/is
+    assert historical =~ "Plan 164-37"
+    assert historical =~ "Plan 164-38"
     assert historical =~ "Phase 38"
     assert historical =~ "Phase 73"
     assert historical =~ "Historical v0.1/v0.5 bus-factor rationale"
