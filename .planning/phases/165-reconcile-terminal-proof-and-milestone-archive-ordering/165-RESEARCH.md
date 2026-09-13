@@ -369,23 +369,23 @@ This ordering follows the locked lifecycle and the observed GSD mutation sequenc
 | # | Claim | Section | Risk if Wrong |
 |---|---|---|---|
 | A1 | Recommended repository-local names are `mailglass_finalize_milestone_loader.mjs`, `finalize_milestone_v2_7.sh`, and `phase_165_milestone_finalizer_test.exs`. | Recommended Project Structure | Low: planner may choose other narrow names. |
-| A2 | The distinct installed command should use the same mode-0500, exact-tuple, rollback-aware installation pattern as Phase 164. | Runtime State Inventory | Medium: exact destination and prior-object state must be computed immediately before approval. |
-| A3 | Skip the stock local tag step because it occurs before the final archive commit and would not identify the final archived SHA. | Common Pitfalls | Medium: planner must ensure workflow orchestration can omit the section without changing global tag policy. |
+| A2 | The distinct installed command uses destination `/Users/jon/.local/bin/mailglass-finalize-milestone`; predecessor identity remains an execution-time tuple captured immediately before approval. | Runtime State Inventory | Low: destination policy is resolved; the checkpoint deliberately binds the then-current predecessor facts. |
+| A3 | Omit the stock local/remote tag section with a trap-protected, exact-byte temporary `git.create_tag=false` project-config override around complete-milestone initialization and execution. | Common Pitfalls | Low: the mechanism is resolved and must be proven in a disposable fixture before confirmation. |
 | A4 | Invoke the installed GSD `publishStateContract` export directly after final metadata edits unless the planner chooses a tested narrow wrapper. | Architecture / Code Examples | Medium: compiled internal path is environment-specific, although present and inspected in this session. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Exact installed milestone-command destination and predecessor state**
-   - What we know: It must be separate from `/Users/jon/.local/bin/mailglass-finalize-phase`, accept only `v2.7`, and require a fresh exact-tuple approval.
-   - What's unclear: The destination does not exist as a locked discrete value yet; its lstat identity and any predecessor can only be known at approval time.
-   - Recommendation: Use `/Users/jon/.local/bin/mailglass-finalize-milestone` as the proposal default, but treat the entire tuple as unapproved until the checkpoint. [ASSUMED]
+1. **Installed milestone-command destination and predecessor policy — RESOLVED**
+   - Use `/Users/jon/.local/bin/mailglass-finalize-milestone` as the exact destination, separate from the immutable Phase 164 command per D-02.
+   - Treat predecessor identity as an execution-time field, not a planning assumption. The proposal must `lstat` the destination immediately before the D-16 checkpoint and accept only two states: absent, with disposition `create`; or one safe regular non-symlink file, with exact digest, mode, owner, atomic backup/replace behavior, and rollback in the approval tuple. Any other file type, link, unsafe ownership/mode, or tuple drift fails closed before installation.
+   - No installation, replacement, chmod, backup mutation, or deletion may occur before the user approves the exact tuple.
 
-2. **How to omit the stock tag section for this one completion**
-   - What we know: Configuration defaults quote `"create_tag": true`; the tag step precedes the final deletion commit and offers a remote push. [VERIFIED: /Users/jon/.codex/gsd-core/bin/shared/config-defaults.manifest.json:17-23; /Users/jon/.codex/gsd-core/workflows/complete-milestone.md:856-868]
-   - What's unclear: Whether the orchestrator will supply a section manifest excluding `git-tag` or execute the required archive sequence explicitly.
-   - Recommendation: Exclude `git-tag` for this run without changing the repository-wide default; record the omission as the locked no-release/no-tag-push posture. [ASSUMED]
+2. **One-run stock tag omission — RESOLVED**
+   - Do not execute the stock local or remote tag step. Immediately around the complete-milestone initialization and approved run, save the exact bytes of `.planning/config.json` to a private temporary path outside the repository, install a trap that restores those exact bytes, set only `git.create_tag=false`, and verify the `init.complete-milestone` section manifest excludes `git-tag` before any `--confirm` call.
+   - Restore the exact original config bytes before final tracked-state convergence or commit, and verify byte identity after restoration. If initialization, archive execution, trap restoration, or byte verification cannot prove this contract, fail closed before `--confirm`; do not hand-run a partial archive and do not change the repository-wide final policy.
+   - Exercise success, initialization failure, archive failure, and restoration failure behavior in a disposable repository fixture before the archive checkpoint.
 
-No open question blocks repository-local planning. Both unresolved details belong to the already-required narrow checkpoints.
+No research question remains open before execution. These policies implement D-02, D-10, D-16, and D-17 without adding checkpoints or changing repository-wide policy.
 
 ## Environment Availability
 
@@ -500,7 +500,7 @@ Security enforcement is active by default at ASVS level `1`, blocking on `"high"
 - Standard stack: HIGH — every tool/path comes from the existing authenticated loader and was probed locally.
 - Architecture: HIGH — derived from locked decisions, current executable trust boundaries, and inspected GSD archive/audit sources.
 - Pitfalls: HIGH — each major failure mode is either present in the baseline audit, demanded by CONTEXT, or implied directly by inspected mutation order.
-- Exact new filenames/destination and stock-tag omission mechanism: LOW — deliberately left as planner decisions and logged assumptions.
+- Exact new filenames: MEDIUM — planner-selected narrow names follow direct project analogs. Installed destination and stock-tag omission mechanism: HIGH — resolved above with checkpoint-bound predecessor capture and disposable-fixture proof.
 
 **Research date:** 2026-09-13
 **Valid until:** 2026-10-13 for repository-local patterns; re-run archive dry-run and environment/remote probes immediately before mutation.
