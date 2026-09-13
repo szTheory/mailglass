@@ -231,6 +231,53 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  test "stale live ledgers and absent retrospective evidence fail closed" do
+    roadmap = milestone_fixture!("stale-live-roadmap")
+
+    roadmap =
+      mutate_fixture!(roadmap, ".planning/ROADMAP.md", fn body ->
+        body <> "\n## Phase 165: stale live milestone detail\n"
+      end)
+
+    assert_failure(roadmap, %{}, "live ROADMAP retains stale v2.7 phase detail")
+
+    requirements = milestone_fixture!("live-requirements")
+    requirements = add_fixture_file!(requirements, ".planning/REQUIREMENTS.md", "# stale v2.7 requirements\n")
+    assert_failure(requirements, %{}, "live REQUIREMENTS.md remains after milestone archive")
+
+    retrospective = milestone_fixture!("missing-retrospective")
+    git!(retrospective.repo, ["rm", "-q", "--", ".planning/RETROSPECTIVE.md"])
+    git!(retrospective.repo, ["commit", "-q", "-m", "remove milestone retrospective"])
+    retrospective = refresh_oid(retrospective)
+    assert_failure(retrospective, %{}, ".planning/RETROSPECTIVE.md is missing from the worktree")
+  end
+
+  @tag :phase_165_hostile
+  test "false or missing Nyquist validation fields fail closed" do
+    for {name, transform, diagnostic} <- [
+          {"nyquist-false", &String.replace(&1, "nyquist_compliant: true", "nyquist_compliant: false"),
+           "archived phase 163 Nyquist compliance is not true"},
+          {"nyquist-missing", &String.replace(&1, "nyquist_compliant: true\n", ""),
+           "archived phase 163 Nyquist compliance is missing or duplicated"},
+          {"wave-zero-false", &String.replace(&1, "wave_0_complete: true", "wave_0_complete: false"),
+           "archived phase 163 Wave 0 completion is not true"},
+          {"wave-zero-missing", &String.replace(&1, "wave_0_complete: true\n", ""),
+           "archived phase 163 Wave 0 completion is missing or duplicated"}
+        ] do
+      fixture = milestone_fixture!(name)
+
+      fixture =
+        mutate_fixture!(
+          fixture,
+          ".planning/milestones/v2.7-phases/163-fixture/163-VALIDATION.md",
+          transform
+        )
+
+      assert_failure(fixture, %{}, diagnostic)
+    end
+  end
+
+  @tag :phase_165_hostile
   test "dirty and moving repository authority fails before or after report publication" do
     dirty = milestone_fixture!("dirty-entry")
     File.write!(Path.join(dirty.repo, "untracked-dirt"), "dirty\n")
@@ -613,6 +660,18 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
 
     write!(
       repo,
+      ".planning/ROADMAP.md",
+      "- ✅ **v2.7 Repository Stewardship & Operational Hygiene** — Phases 161-165 (shipped 2026-09-13) — [archive](milestones/v2.7-ROADMAP.md)\n"
+    )
+
+    write!(
+      repo,
+      ".planning/RETROSPECTIVE.md",
+      "# Retrospective: mailglass\n\n## Milestone: v2.7 — Repository Stewardship & Operational Hygiene\n"
+    )
+
+    write!(
+      repo,
       ".planning/PROJECT.md",
       "## Completed Milestone: v2.7 Repository Stewardship & Operational Hygiene\n\nThe 14 open PRs remain disclosed accepted repository-hygiene policy debt.\n"
     )
@@ -626,7 +685,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
       write!(
         repo,
         ".planning/milestones/v2.7-phases/#{slug}/#{phase}-VALIDATION.md",
-        "---\nstatus: validated\n---\n"
+        "---\nstatus: validated\nnyquist_compliant: true\nwave_0_complete: true\n---\n"
       )
 
       write!(

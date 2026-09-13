@@ -95,6 +95,8 @@ require_archive_contract() {
     validation="${dir[0]}/$phase-VALIDATION.md"
     [ -f "$validation" ] || fail "archived phase $phase validation is missing"
     require_frontmatter_value "$validation" status validated "archived phase $phase status"
+    require_frontmatter_value "$validation" nyquist_compliant true "archived phase $phase Nyquist compliance"
+    require_frontmatter_value "$validation" wave_0_complete true "archived phase $phase Wave 0 completion"
   done
   shopt -u nullglob
 
@@ -104,6 +106,12 @@ require_archive_contract() {
   require_heading "$authority_root/.planning/STATE.md" '14 open PRs.*accepted operational debt' "state omits the accepted 14-PR policy debt"
   require_heading "$authority_root/.planning/PROJECT.md" '^## Completed Milestone: v2\.7 Repository Stewardship & Operational Hygiene$' "project omits the completed v2.7 record"
   require_heading "$authority_root/.planning/PROJECT.md" '14 open PRs.*accepted repository-hygiene policy debt' "project omits the accepted 14-PR policy debt"
+  require_heading "$authority_root/.planning/ROADMAP.md" '^- ✅ \*\*v2\.7 Repository Stewardship & Operational Hygiene\*\* — Phases 161-165 \(shipped [0-9]{4}-[0-9]{2}-[0-9]{2}\) — \[archive\]\(milestones/v2\.7-ROADMAP\.md\)$' "live ROADMAP omits the exact archived v2.7 record"
+  ! grep -E '^#{2,3} Phase 16[1-5](:| —| -)|^- \[[ xX]\] \*\*Phase 16[1-5]:' "$authority_root/.planning/ROADMAP.md" >/dev/null ||
+    fail "live ROADMAP retains stale v2.7 phase detail"
+  [ ! -e "$authority_root/.planning/REQUIREMENTS.md" ] && [ ! -L "$authority_root/.planning/REQUIREMENTS.md" ] ||
+    fail "live REQUIREMENTS.md remains after milestone archive"
+  require_heading "$authority_root/.planning/RETROSPECTIVE.md" '^## Milestone: v2\.7 — Repository Stewardship & Operational Hygiene$' "retrospective omits the v2.7 milestone record"
   "$MAILGLASS_JQ" -e '.milestone == "v2.7" and (.status == "archived" or .milestone_status == "archived")' \
     "$authority_root/.planning/state.json" >/dev/null || fail "machine state does not agree that v2.7 is archived"
   [ -f "$authority_root/$archive_root/v2.7-ROADMAP.md" ] || fail "archived ROADMAP is missing"
@@ -204,8 +212,15 @@ main() {
       executable: $evidence[0].executable,
       runtime_closure: $evidence[0].runtime_closure,
       components: {
-        archive: {status: "pass", phases: [161, 162, 163, 164, 165]},
+        archive: {
+          status: "pass",
+          phases: [161, 162, 163, 164, 165],
+          live_roadmap: "archived-only",
+          live_requirements: "absent",
+          retrospective: "present"
+        },
         audit: {status: "pass", requirements: "16/16", phases: "5/5", integration: "16/16", flows: "5/5"},
+        nyquist: {status: "pass", compliant_phases: [161, 162, 163, 164, 165], wave_0_complete: true},
         ci: $evidence[0].ci,
         schedules: $evidence[0].schedules
       }

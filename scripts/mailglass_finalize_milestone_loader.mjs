@@ -269,6 +269,9 @@ export function expectedArchivedManifest(repo, authorityOid, gitPath = TRUSTED_T
     EXPECTED_PHASES.some((phase) => path.startsWith(`.planning/phases/${phase}-`)),
   );
   if (livePhasePaths.length > 0) fail("live/archive lifecycle disagreement");
+  if (treePaths(repo, authorityOid, ".planning/REQUIREMENTS.md", gitPath).length > 0) {
+    fail("live REQUIREMENTS.md remains after milestone archive");
+  }
 
   const archivePaths = treePaths(repo, authorityOid, ARCHIVED_PHASE_ROOT, gitPath);
   const phaseDirs = [...new Set(archivePaths.map((path) => path.split("/").slice(0, 4).join("/")))];
@@ -287,6 +290,8 @@ export function expectedArchivedManifest(repo, authorityOid, gitPath = TRUSTED_T
     `${ARCHIVE_ROOT}/v2.7-MILESTONE-AUDIT.md`,
     ".planning/MILESTONES.md",
     ".planning/PROJECT.md",
+    ".planning/ROADMAP.md",
+    ".planning/RETROSPECTIVE.md",
     ".planning/STATE.md",
     ".planning/state.json",
     ".gitignore",
