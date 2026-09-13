@@ -2,7 +2,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   use ExUnit.Case, async: true
 
   @repo_root Path.expand("../..", __DIR__)
-  @required_contract_step "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
+  @required_contract_step "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --exclude phase_165_installed_production_boundary --warnings-as-errors"
   @installed_boundary_step "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
 
   @moduledoc """
@@ -127,12 +127,14 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   defp host_only_collection_impossible?(commands, default_excluded?) do
     default_excluded? and
       Enum.all?(commands, fn command ->
-        not String.contains?(command, "--only phase_164_installed_production_boundary")
+        not String.contains?(command, "--only phase_164_installed_production_boundary") and
+          not String.contains?(command, "--only phase_165_installed_production_boundary")
       end)
   end
 
   defp default_host_exclusion?(source) do
-    source =~ "base_exclusions = [:phase_164_installed_production_boundary]" and
+    source =~ ":phase_164_installed_production_boundary" and
+      source =~ ":phase_165_installed_production_boundary" and
       source =~ "ExUnit.configure(exclude: exclusions)"
   end
 

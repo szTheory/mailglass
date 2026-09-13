@@ -71,6 +71,8 @@ defmodule Mailglass.MixProject do
         "verify.phase_164.authority_closure": :test,
         "verify.phase_164.proposal_boundary": :test,
         "verify.phase_164.installed_boundary": :test,
+        "verify.phase_165.repository": :test,
+        "verify.phase_165.installed_boundary": :test,
         "verify.reference_host.journey": :test,
         "verify.demo_browser_evidence": :test,
         "verify.phase69": :test,

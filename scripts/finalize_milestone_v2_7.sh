@@ -39,9 +39,15 @@ frontmatter_value() {
 }
 
 require_archive_contract() {
-  local authority_root="$1" expected_oid="$2" audit phase dir validation phases=()
+  local authority_root="$1" expected_oid="$2" repo="$3" audit audit_oid phase dir validation phases=()
   audit="$authority_root/$archive_root/v2.7-MILESTONE-AUDIT.md"
   [ "$(frontmatter_value "$audit" status)" = passed ] || fail "canonical audit status is not passed"
+  audit_oid=$(frontmatter_value "$audit" audited_head)
+  [[ "$audit_oid" =~ ^[0-9a-f]{40}$ ]] || fail "stale audit: audited_head is not one full OID"
+  "$MAILGLASS_GIT" -C "$repo" cat-file -e "$audit_oid^{commit}" 2>/dev/null ||
+    fail "stale audit: audited_head does not name a commit"
+  "$MAILGLASS_GIT" -C "$repo" merge-base --is-ancestor "$audit_oid" "$expected_oid" 2>/dev/null ||
+    fail "stale audit: audited_head is not an ancestor of terminal authority"
   grep -F -- 'requirements: 16/16' "$audit" >/dev/null || fail "canonical audit requirements score is not 16/16"
   grep -F -- 'phases: 5/5' "$audit" >/dev/null || fail "canonical audit phase score is not 5/5"
   grep -F -- 'integration: 16/16' "$audit" >/dev/null || fail "canonical audit integration score is not 16/16"
@@ -71,6 +77,13 @@ require_archive_contract() {
   [ -f "$authority_root/$archive_root/v2.7-ROADMAP.md" ] || fail "archived ROADMAP is missing"
   [ -f "$authority_root/$archive_root/v2.7-REQUIREMENTS.md" ] || fail "archived REQUIREMENTS is missing"
   ! compgen -G "$authority_root/.planning/phases/16[1-5]-*" >/dev/null || fail "live/archive lifecycle disagreement"
+}
+
+mark_report_blocked() {
+  local report="$1" reason="$2" tmp
+  tmp="${report}.blocked"
+  "$MAILGLASS_JQ" --arg reason "$reason" '.status = "blocked" | .reason = $reason' "$report" >"$tmp" || return 1
+  mv "$tmp" "$report"
 }
 
 require_selected_evidence() {
@@ -112,7 +125,7 @@ main() {
 
   require_authority "$repo" "$expected_oid"
   [ -z "$(stable_porcelain "$repo")" ] || fail "stable porcelain is not empty"
-  require_archive_contract "$authority_root" "$expected_oid"
+  require_archive_contract "$authority_root" "$expected_oid" "$repo"
   require_selected_evidence "$inputs" "$expected_oid"
   require_report_boundary "$repo" "$report"
 
@@ -151,9 +164,30 @@ main() {
   chmod 600 "$report_tmp"
   mv "$report_tmp" "$report"
 
+  case "${MAILGLASS_MILESTONE_MUTATE_AFTER_REPORT:-}" in
+    "") ;;
+    move-head)
+      [ "${MAILGLASS_MILESTONE_FIXTURE:-}" = 1 ] || fail "post-report mutation hook is fixture-only"
+      printf 'move\n' >"$repo/.phase-165-after-report"
+      "$MAILGLASS_GIT" -C "$repo" add -- .phase-165-after-report
+      "$MAILGLASS_GIT" -C "$repo" commit -q -m "fixture head move after report"
+      ;;
+    dirty-worktree)
+      [ "${MAILGLASS_MILESTONE_FIXTURE:-}" = 1 ] || fail "post-report mutation hook is fixture-only"
+      printf 'dirty\n' >"$repo/.phase-165-after-report"
+      ;;
+    *) fail "unknown post-report mutation hook" ;;
+  esac
+
   # The report move above is the final filesystem effect. Everything below is read-only.
-  require_authority "$repo" "$expected_oid"
-  [ -z "$(stable_porcelain "$repo")" ] || fail "stable porcelain changed after report write"
+  if ! require_authority "$repo" "$expected_oid"; then
+    mark_report_blocked "$report" "authority commit changed after report write"
+    fail "authority commit changed after report write"
+  fi
+  if [ -n "$(stable_porcelain "$repo")" ]; then
+    mark_report_blocked "$report" "stable porcelain changed after report write"
+    fail "stable porcelain changed after report write"
+  fi
   "$MAILGLASS_JQ" -e --arg sha "$expected_oid" '.status == "pass" and .expected_main_sha == $sha' "$report" >/dev/null ||
     fail "terminal report is not pass"
   printf 'finalize-milestone v2.7: terminal evidence passed at %s\n' "$expected_oid"

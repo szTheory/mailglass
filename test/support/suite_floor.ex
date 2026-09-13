@@ -247,6 +247,7 @@ defmodule Mailglass.TestSupport.SuiteFloor do
                           :public_only,
                           :phase_164_proposal_boundary,
                           :phase_164_installed_production_boundary,
+                          :phase_165_installed_production_boundary,
                           :flaky,
                           :migration_roundtrip
                         ])

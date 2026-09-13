@@ -195,11 +195,30 @@ function treePaths(repo, authorityOid, root, gitPath) {
     gitPath,
     label: `tree enumeration for ${root}`,
   }).stdout.toString("utf8");
+  if (output === "") return [];
   if (!output.endsWith("\0")) fail(`${root} tree output is not NUL terminated`);
   return output.split("\0").slice(0, -1);
 }
 
 export function expectedArchivedManifest(repo, authorityOid, gitPath = TRUSTED_TOOLS.GIT) {
+  const milestonePaths = treePaths(repo, authorityOid, ARCHIVE_ROOT, gitPath);
+  const unexpectedV27 = milestonePaths.filter(
+    (path) =>
+      path.startsWith(`${ARCHIVE_ROOT}/v2.7`) &&
+      !path.startsWith(`${ARCHIVED_PHASE_ROOT}/`) &&
+      ![
+        `${ARCHIVE_ROOT}/v2.7-ROADMAP.md`,
+        `${ARCHIVE_ROOT}/v2.7-REQUIREMENTS.md`,
+        `${ARCHIVE_ROOT}/v2.7-MILESTONE-AUDIT.md`,
+      ].includes(path),
+  );
+  if (unexpectedV27.length > 0) fail("legacy quick-task or unknown v2.7 archive content is present");
+
+  const livePhasePaths = treePaths(repo, authorityOid, ".planning/phases", gitPath).filter((path) =>
+    EXPECTED_PHASES.some((phase) => path.startsWith(`.planning/phases/${phase}-`)),
+  );
+  if (livePhasePaths.length > 0) fail("live/archive lifecycle disagreement");
+
   const archivePaths = treePaths(repo, authorityOid, ARCHIVED_PHASE_ROOT, gitPath);
   const phaseDirs = [...new Set(archivePaths.map((path) => path.split("/").slice(0, 4).join("/")))];
   const phaseNumbers = phaseDirs.map((path) => path.split("/").at(-1)?.match(/^(\d+)-/)?.[1] ?? "");
@@ -298,9 +317,9 @@ function safePredecessor(destination) {
     fail("could not inspect installation predecessor");
   }
   const allowedOwners = new Set([0, process.getuid?.()].filter(Number.isInteger));
-  if (!entry.isFile() || entry.isSymbolicLink() || !allowedOwners.has(entry.uid) || (entry.mode & 0o022) !== 0) {
-    fail("installation predecessor is not a safe regular non-symlink file");
-  }
+  if (!entry.isFile() || entry.isSymbolicLink()) fail("installation predecessor has unsafe predecessor kind");
+  if (!allowedOwners.has(entry.uid)) fail("installation predecessor has unsafe ownership");
+  if ((entry.mode & 0o022) !== 0) fail("installation predecessor has unsafe mode");
   const digest = sha256(readFileSync(destination));
   return {
     disposition: "backup_replace",
@@ -359,7 +378,17 @@ export function writeTerminalReport(repo, reportPath, report, gitPath = TRUSTED_
   return absolute;
 }
 
-function stageAndDispatch({ repo, authorityOid, authenticated, ciRun, schedules, reportPath, tools, fixture }) {
+function stageAndDispatch({
+  repo,
+  authorityOid,
+  authenticated,
+  ciRun,
+  schedules,
+  reportPath,
+  tools,
+  fixture,
+  fixtureMutation,
+}) {
   const privateRoot = mkdtempSync(resolve(tmpdir(), "mailglass-finalize-v2-7-"));
   try {
     chmodSync(privateRoot, 0o700);
@@ -370,11 +399,23 @@ function stageAndDispatch({ repo, authorityOid, authenticated, ciRun, schedules,
       mode: 0o400,
     });
     chmodSync(inputsPath, 0o400);
+    if (fixtureMutation === "move-before-dispatch") {
+      writeFileSync(resolve(repo, ".phase-165-head-move"), "move\n", { flag: "wx" });
+      git(repo, ["add", "--", ".phase-165-head-move"], { gitPath: tools.GIT });
+      git(repo, ["commit", "-q", "-m", "fixture head move before dispatch"], { gitPath: tools.GIT });
+    }
     if (captureAuthorityCommit(repo, tools.GIT) !== authorityOid) {
       fail("authority commit changed before Bash dispatch");
     }
     const childEnv = buildChildEnvironment(tools);
-    if (fixture) childEnv.MAILGLASS_MILESTONE_FIXTURE = "1";
+    if (fixture) {
+      childEnv.MAILGLASS_MILESTONE_FIXTURE = "1";
+      if (fixtureMutation === "move-after-report") {
+        childEnv.MAILGLASS_MILESTONE_MUTATE_AFTER_REPORT = "move-head";
+      } else if (fixtureMutation === "dirty-after-report") {
+        childEnv.MAILGLASS_MILESTONE_MUTATE_AFTER_REPORT = "dirty-worktree";
+      }
+    }
     const finalizer = resolve(privateRoot, FINALIZER_PATH);
     const result = run(tools.BASH, [finalizer, repo, privateRoot, authorityOid, reportPath, inputsPath], {
       cwd: repo,
@@ -389,6 +430,18 @@ function stageAndDispatch({ repo, authorityOid, authenticated, ciRun, schedules,
 }
 
 export function runFixtureFinalization(options) {
+  const allowedKeys = new Set([
+    "repo",
+    "authorityOid",
+    "reportRelative",
+    "ciRuns",
+    "scheduleRuns",
+    "expectedScheduleNames",
+    "tools",
+    "fixtureMutation",
+  ]);
+  const unexpected = Object.keys(options).filter((key) => !allowedKeys.has(key));
+  if (unexpected.length > 0) fail(`caller-selected or unsupported fixture input: ${unexpected.join(",")}`);
   const tools = options.tools ?? TRUSTED_TOOLS;
   const repo = realpathSync(options.repo);
   const authorityOid = options.authorityOid ?? captureAuthorityCommit(repo, tools.GIT);
@@ -398,7 +451,58 @@ export function runFixtureFinalization(options) {
   const schedules = selectNaturalSchedules(options.scheduleRuns, authorityOid, options.expectedScheduleNames);
   const reportPath = resolve(repo, options.reportRelative ?? "tmp/phase-165-finalize.fixture/report.json");
   mkdirSync(dirname(reportPath), { recursive: true, mode: 0o700 });
-  return stageAndDispatch({ repo, authorityOid, authenticated, ciRun, schedules, reportPath, tools, fixture: true });
+  return stageAndDispatch({
+    repo,
+    authorityOid,
+    authenticated,
+    ciRun,
+    schedules,
+    reportPath,
+    tools,
+    fixture: true,
+    fixtureMutation: options.fixtureMutation,
+  });
+}
+
+function parseSelfCheck(args) {
+  if (
+    args.length !== 5 ||
+    args[0] !== "--self-check" ||
+    args[1] !== "--repo" ||
+    args[3] !== "--expected-source-oid"
+  ) {
+    fail("expected --self-check --repo ABSOLUTE --expected-source-oid FULL_OID");
+  }
+  return { repoArgument: args[2], expectedSourceOid: args[4] };
+}
+
+function selfCheck(args) {
+  const tools = validateTrustedToolchain();
+  const { repoArgument, expectedSourceOid } = parseSelfCheck(args);
+  if (!isAbsolute(repoArgument) || !FULL_OID.test(expectedSourceOid)) fail("self-check input is invalid");
+  const repo = realpathSync(repoArgument);
+  assertCleanRepository(repo, tools.GIT);
+  const executableLexical = fileURLToPath(import.meta.url);
+  const executableEntry = lstatSync(executableLexical);
+  const executable = realpathSync(executableLexical);
+  if (!executableEntry.isFile() || executableEntry.isSymbolicLink() || inside(repo, executable)) {
+    fail("self-check executable must be one external regular file");
+  }
+  if ((executableEntry.mode & 0o777) !== 0o500) fail("self-check executable mode is not 0500");
+  const installedBytes = readFileSync(executable);
+  const approvedBytes = authenticateCommitFile(repo, expectedSourceOid, SOURCE_PATH, tools.GIT);
+  if (!installedBytes.equals(approvedBytes)) fail("installed-byte mismatch");
+  const currentOid = captureAuthorityCommit(repo, tools.GIT);
+  const ancestry = git(repo, ["merge-base", "--is-ancestor", expectedSourceOid, currentOid], {
+    gitPath: tools.GIT,
+    allowFailure: true,
+  });
+  if (ancestry.status !== 0) fail("installation OID is not an ancestor of current authority");
+  console.log(`installation_oid=${expectedSourceOid}`);
+  console.log(`current_oid=${currentOid}`);
+  console.log(`loader_sha256=${sha256(installedBytes)}`);
+  console.log(`executable=${executable}`);
+  console.log("mode=0500");
 }
 
 function validateCanonicalRepository(gitPath) {
@@ -468,6 +572,7 @@ export function main(args = process.argv.slice(2)) {
     console.log(JSON.stringify(buildInstallationProposal({ destination: args[2] })));
     return;
   }
+  if (args[0] === "--self-check") return selfCheck(args);
   if (args.length !== 1 || args[0] !== SUPPORTED_MILESTONE) fail("expected exact milestone token v2.7");
   finalizeMilestone();
 }
