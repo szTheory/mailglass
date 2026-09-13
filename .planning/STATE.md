@@ -2,18 +2,18 @@
 gsd_state_version: "1.0"
 milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Planned)
-current_phase: 164
-current_phase_name: Repository Truth Reconciliation and Closeout
+current_phase: 165
+current_phase_name: Reconcile terminal proof and milestone archive ordering
 status: complete
 stopped_at: Phase 165 context gathered (assumptions mode)
-last_updated: "2026-09-13T14:20:37.703Z"
+last_updated: "2026-09-13T15:20:25.361Z"
 last_activity: 2026-09-12
 last_activity_desc: Phase 164 passed ordinary verification at implementation SHA 28e364b423d291585329fccb08f097fc765d46bd
-state_head: 019c15254de2520881aef90e944232fd177c9ede
+state_head: f0191a39ae920bfef544d80b0b17b127505bdf0d
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 70
+  total_plans: 75
   completed_plans: 67
   percent: 80
 current_plan: 44
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — COMPLETE
+Phase: 165 (Reconcile terminal proof and milestone archive ordering) — READY TO EXECUTE
 Plan: 44 of 44
 Status: Ordinary verification passed; tracked completion metadata is complete; terminal evidence remains pending
 Last activity: 2026-09-12 — ordinary verification passed at implementation SHA `28e364b423d291585329fccb08f097fc765d46bd`

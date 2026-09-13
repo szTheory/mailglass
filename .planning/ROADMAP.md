@@ -382,9 +382,16 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
+**Wave 1**
 
 - [ ] 165-01-PLAN.md — Build the repository-local v2.7 terminal tracer, hostile fixtures, and isolated verification lanes.
 - [ ] 165-02-PLAN.md — Repair strict Phase 161 requirement ownership and canonical Phase 161/163 validation inputs.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 165-03-PLAN.md — Reconcile the live five-phase milestone ledgers and republish state.json.
 - [ ] 165-04-PLAN.md — Obtain exact installation approval, install atomically, and prove the installed-only boundary.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 165-05-PLAN.md — Validate ordinary Phase 165 readiness and codify the post-completion audit/archive/terminal lifecycle.
