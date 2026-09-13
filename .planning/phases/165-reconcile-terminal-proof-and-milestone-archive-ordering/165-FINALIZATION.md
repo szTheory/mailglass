@@ -3,7 +3,7 @@ phase: "165"
 slug: reconcile-terminal-proof-and-milestone-archive-ordering
 status: ready_after_execute_phase
 terminal_authority: post_archive_only
-human_checkpoints: 1
+human_checkpoints: 2
 created: "2026-09-13"
 ---
 
@@ -262,7 +262,8 @@ directory list 161-165, empty quick list, scope-not-skipped result, milestone na
 Approval authorizes only `phase_165_complete_milestone_without_tag confirm <approved_preview_sha256>`.
 The confirm mode performs a fresh dry run and a second same-process preview after proving restoration.
 Any changed preview, manifest, config restoration behavior, or digest requires a new preview and new
-approval. This is the runbook's only human checkpoint.
+approval. This is the archive checkpoint; installation has its own separately authenticated checkpoint
+after the final source commit.
 
 ## 4. Canonical Archive and Final Tracked Convergence
 
@@ -294,16 +295,47 @@ is the clean local `HEAD == origin/main`. For that exact full SHA require one no
 successful, natural `schedule` event at attempt-1 and exact SHA for every registered scheduled control.
 Absence is a wait/block, never authority to dispatch or rerun.
 
-## 6. One Terminal Invocation and Hard Stop
+## 6. Fresh Authenticated Installation Checkpoint
 
-The Phase 165 review fixes deliberately invalidate the earlier installation approval. As of the
-review-fix boundary, the tracked source candidate has SHA-256
-`bee0e504a9fb88e34452f6bf1f9cd01dc8ec75eabf2b844eaa9e49ef12db27cb`, while the untouched installed
-file has SHA-256 `505707b19ab09366479243365ef2ce1b4c2a4030614eca69c40ea5f51174a6ce` (regular file,
-mode `0500`, uid `501`, gid `20`). This mismatch is an expected fail-closed result, not installation
-authority. Do not invoke terminal finalization. A fresh proposal, exact tuple approval, atomic install,
-and successful exact-path self-check are required after these source changes land; any further source
-change invalidates the candidate digest again.
+The Phase 165 review fixes invalidate every earlier installation approval. Do not install during review
+fixing and do not reuse or fabricate approval. After all source changes land on a clean canonical `main`,
+fetch `origin/main`, require exact equality, and generate the immutable proposal with the repository copy:
+
+```text
+node scripts/mailglass_finalize_milestone_loader.mjs --installation-proposal
+```
+
+The command itself refreshes `origin/main`, derives the repository and commit from its physical source
+path (there is no caller-selected repository or OID), and writes a mode-`0400` proposal under the ignored
+OID-specific installation control directory. Display the complete proposal, including repository, full
+source OID, source SHA-256, destination, mode, predecessor, rollback action, runtime closure, and
+`proposal_digest`. Then stop for a fresh blocking-human decision. Approval must be the exact text:
+
+> `approve exact mailglass-finalize-milestone installation <proposal_digest>`
+
+Record that exact statement and perform the approved transition only with the same digest:
+
+```text
+node scripts/mailglass_finalize_milestone_loader.mjs --approve-installation <proposal_digest> "approve exact mailglass-finalize-milestone installation <proposal_digest>"
+node scripts/mailglass_finalize_milestone_loader.mjs --install-approved <proposal_digest>
+```
+
+The approval receipt binds the OS-authenticated approver uid/gid, repository, source OID and digest,
+destination, and proposal digest. Installation reauthenticates all receipts and current authority, writes
+mode `0500` bytes to a sibling temporary file, preserves an authenticated predecessor when present, and
+atomically renames into place. Any failed transition restores the predecessor. A completed install writes
+an immutable installation receipt; the explicit authenticated rollback path is:
+
+```text
+node scripts/mailglass_finalize_milestone_loader.mjs --rollback-approved-install <proposal_digest>
+```
+
+Do not run rollback after a successful self-check unless abandoning this installation. Any proposal,
+receipt, source, predecessor, authority, runtime, or destination drift requires a fresh proposal and
+human approval. The terminal command consumes the proposal, approval, and installation receipts; matching
+bytes alone are never installation authority.
+
+## 7. One Terminal Invocation and Hard Stop
 
 After every prior gate passes, invoke the approved installed command by command name exactly once:
 

@@ -4,12 +4,17 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   chmodSync,
+  copyFileSync,
+  constants as fsConstants,
+  existsSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   realpathSync,
+  renameSync,
   rmSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -23,6 +28,7 @@ const SUPPORTED_MILESTONE = "v2.7";
 const CANONICAL_REPOSITORY = "/Users/jon/projects/mailglass";
 const EXPECTED_REPOSITORY = "szTheory/mailglass";
 const INSTALLATION_DESTINATION = "/Users/jon/.local/bin/mailglass-finalize-milestone";
+const INSTALL_APPROVAL_STATEMENT = "approve exact mailglass-finalize-milestone installation";
 const ARCHIVE_ROOT = ".planning/milestones";
 const ARCHIVED_PHASE_ROOT = `${ARCHIVE_ROOT}/v2.7-phases`;
 const MAX_OUTPUT_BYTES = 16_000;
@@ -416,18 +422,49 @@ function safePredecessor(destination) {
   };
 }
 
+function sourceRepository() {
+  const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  const physical = realpathSync(repo);
+  if (physical !== repo) fail("proposal source repository is not one physical checkout");
+  return repo;
+}
+
+function assertProposalAuthority(repo, authorityOid, gitPath) {
+  if (captureAuthorityCommit(repo, gitPath) !== authorityOid) fail("proposal authority commit changed");
+  assertCleanRepository(repo, gitPath);
+  const branch = git(repo, ["branch", "--show-current"], { gitPath, encoding: "utf8" }).stdout.trim();
+  if (branch !== "main") fail("proposal repository is not on canonical main");
+  const origin = git(repo, ["remote", "get-url", "origin"], { gitPath, encoding: "utf8" }).stdout.trim();
+  if (normalizedRepository(origin) !== EXPECTED_REPOSITORY) fail("proposal repository origin is not szTheory/mailglass");
+  const remoteOid = git(repo, ["rev-parse", "--verify", "refs/remotes/origin/main^{commit}"], {
+    gitPath,
+    encoding: "utf8",
+    label: "proposal origin/main authentication",
+  }).stdout.trim();
+  if (remoteOid !== authorityOid) fail("proposal main does not equal origin/main");
+}
+
+function digestRecord(record, omittedKey) {
+  const body = Object.fromEntries(Object.entries(record).filter(([key]) => key !== omittedKey));
+  return sha256(Buffer.from(JSON.stringify(body), "utf8"));
+}
+
 export function buildInstallationProposal(options = {}) {
-  const repo = options.repo ?? CANONICAL_REPOSITORY;
+  const unexpected = Object.keys(options).filter((key) => key !== "destination");
+  if (unexpected.length > 0) fail(`caller-selected installation proposal authority: ${unexpected.join(",")}`);
+  const repo = sourceRepository();
   const destination = options.destination ?? INSTALLATION_DESTINATION;
-  const tools = validateTrustedToolchain(options.tools ?? TRUSTED_TOOLS);
+  const tools = validateTrustedToolchain();
   const runtimeClosure = trustedToolClosure(tools);
   const gitPath = tools.GIT;
-  const authorityOid = options.authorityOid ?? captureAuthorityCommit(repo, gitPath);
+  const authorityOid = captureAuthorityCommit(repo, gitPath);
+  assertProposalAuthority(repo, authorityOid, gitPath);
   const source = authenticateCommitFile(repo, authorityOid, SOURCE_PATH, gitPath);
   const predecessor = safePredecessor(destination);
-  const proposal = {
+  const proposalBody = {
     proposal_schema: "mailglass-finalize-milestone-install-proposal-v1",
     milestone: SUPPORTED_MILESTONE,
+    repository: repo,
     source_oid: authorityOid,
     source_sha256: sha256(source),
     destination,
@@ -439,6 +476,7 @@ export function buildInstallationProposal(options = {}) {
         ? { action: "remove_created", destination }
         : { action: "restore_backup", destination, backup: predecessor.backup, sha256: predecessor.sha256 },
   };
+  const proposal = { ...proposalBody, proposal_digest: digestRecord(proposalBody, "proposal_digest") };
   // Re-lstat at the emission boundary. Any replacement invalidates the proposal.
   const rechecked = safePredecessor(destination);
   if (JSON.stringify(rechecked) !== JSON.stringify(predecessor)) fail("installation predecessor changed before proposal emission");
@@ -446,6 +484,254 @@ export function buildInstallationProposal(options = {}) {
     fail("trusted runtime closure changed before proposal emission");
   }
   return proposal;
+}
+
+export function installationControlPaths(repo, authorityOid) {
+  if (!FULL_OID.test(authorityOid)) fail("installation control authority OID is invalid");
+  const root = resolve(repo, `tmp/mailglass-finalize-v2.7-install-${authorityOid}`);
+  if (!inside(repo, root)) fail("installation control path escaped repository");
+  return {
+    root,
+    proposal: resolve(root, "proposal.json"),
+    approval: resolve(root, "approval.json"),
+    installation: resolve(root, "installation.json"),
+    rollback: resolve(root, "rollback.json"),
+  };
+}
+
+function writeSecureJson(path, value) {
+  requirePhysicalParentChain(path, "installation control receipt");
+  writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, { flag: "wx", mode: 0o400 });
+  chmodSync(path, 0o400);
+}
+
+function readSecureJson(path, label) {
+  requirePhysicalParentChain(path, label);
+  let entry;
+  try {
+    entry = lstatSync(path);
+  } catch {
+    fail(`${label} is missing`);
+  }
+  const allowedOwners = new Set([0, process.getuid?.()].filter(Number.isInteger));
+  if (!entry.isFile() || entry.isSymbolicLink() || realpathSync(path) !== path) fail(`${label} is not one physical file`);
+  if (!allowedOwners.has(entry.uid) || (entry.mode & 0o777) !== 0o400) fail(`${label} has unsafe ownership or mode`);
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    fail(`${label} is not valid JSON`);
+  }
+}
+
+function authenticateProposal(
+  proposal,
+  expectedDigest,
+  requirePredecessor = true,
+  expectedRepository = sourceRepository(),
+) {
+  if (
+    proposal?.proposal_schema !== "mailglass-finalize-milestone-install-proposal-v1" ||
+    proposal.milestone !== SUPPORTED_MILESTONE ||
+    proposal.repository !== expectedRepository ||
+    proposal.destination !== INSTALLATION_DESTINATION && !isAbsolute(proposal.destination) ||
+    proposal.mode !== "0500" ||
+    !FULL_OID.test(proposal.source_oid) ||
+    !/^[0-9a-f]{64}$/.test(proposal.source_sha256) ||
+    !/^[0-9a-f]{64}$/.test(proposal.proposal_digest) ||
+    proposal.proposal_digest !== expectedDigest ||
+    digestRecord(proposal, "proposal_digest") !== proposal.proposal_digest
+  ) {
+    fail("installation proposal authentication failed");
+  }
+  assertProposalAuthority(proposal.repository, proposal.source_oid, TRUSTED_TOOLS.GIT);
+  const source = authenticateCommitFile(proposal.repository, proposal.source_oid, SOURCE_PATH, TRUSTED_TOOLS.GIT);
+  if (sha256(source) !== proposal.source_sha256) fail("installation proposal source digest changed");
+  if (JSON.stringify(trustedToolClosure()) !== JSON.stringify(proposal.runtime_closure)) {
+    fail("installation proposal runtime closure changed");
+  }
+  if (requirePredecessor && JSON.stringify(safePredecessor(proposal.destination)) !== JSON.stringify(proposal.predecessor)) {
+    fail("installation predecessor changed after proposal approval");
+  }
+  return proposal;
+}
+
+export function writeInstallationProposal(options = {}) {
+  const unexpected = Object.keys(options).filter((key) => !["destination", "outputPath"].includes(key));
+  if (unexpected.length > 0 || !options.outputPath) fail("installation proposal output is invalid");
+  const proposal = buildInstallationProposal({ destination: options.destination });
+  const paths = installationControlPaths(proposal.repository, proposal.source_oid);
+  const outputPath = resolve(options.outputPath);
+  if (outputPath !== paths.proposal && options.destination === undefined) fail("canonical proposal path changed");
+  try {
+    mkdirSync(dirname(outputPath), { recursive: false, mode: 0o700 });
+  } catch (error) {
+    if (error?.code !== "EEXIST") fail("could not create installation control directory");
+  }
+  writeSecureJson(outputPath, proposal);
+  return proposal;
+}
+
+export function recordInstallationApproval(options = {}) {
+  const proposal = readSecureJson(resolve(options.proposalPath), "installation proposal");
+  authenticateProposal(proposal, options.proposalDigest, true, options.expectedRepository);
+  if (options.expectedDestination && proposal.destination !== options.expectedDestination) {
+    fail("installation proposal destination is not approved");
+  }
+  const expectedStatement = `${INSTALL_APPROVAL_STATEMENT} ${proposal.proposal_digest}`;
+  if (options.approvalStatement !== expectedStatement) fail("fresh exact installation approval statement is missing");
+  const body = {
+    approval_schema: "mailglass-finalize-milestone-install-approval-v1",
+    proposal_digest: proposal.proposal_digest,
+    repository: proposal.repository,
+    source_oid: proposal.source_oid,
+    source_sha256: proposal.source_sha256,
+    destination: proposal.destination,
+    approved_by_uid: process.getuid?.() ?? 0,
+    approved_by_gid: process.getgid?.() ?? 0,
+    approved_at: new Date().toISOString(),
+    statement: expectedStatement,
+  };
+  const approval = { ...body, approval_digest: digestRecord(body, "approval_digest") };
+  writeSecureJson(resolve(options.approvalPath), approval);
+  return approval;
+}
+
+function authenticateApproval(approval, proposal) {
+  const expectedStatement = `${INSTALL_APPROVAL_STATEMENT} ${proposal.proposal_digest}`;
+  if (
+    approval?.approval_schema !== "mailglass-finalize-milestone-install-approval-v1" ||
+    approval.proposal_digest !== proposal.proposal_digest ||
+    approval.repository !== proposal.repository ||
+    approval.source_oid !== proposal.source_oid ||
+    approval.source_sha256 !== proposal.source_sha256 ||
+    approval.destination !== proposal.destination ||
+    approval.approved_by_uid !== (process.getuid?.() ?? 0) ||
+    approval.approved_by_gid !== (process.getgid?.() ?? 0) ||
+    typeof approval.approved_at !== "string" ||
+    approval.statement !== expectedStatement ||
+    !/^[0-9a-f]{64}$/.test(approval.approval_digest) ||
+    digestRecord(approval, "approval_digest") !== approval.approval_digest
+  ) {
+    fail("installation approval receipt authentication failed");
+  }
+  return approval;
+}
+
+function readApprovedPair(options, requirePredecessor = true) {
+  const proposal = readSecureJson(resolve(options.proposalPath), "installation proposal");
+  authenticateProposal(proposal, options.proposalDigest, requirePredecessor, options.expectedRepository);
+  const approval = readSecureJson(resolve(options.approvalPath), "installation approval receipt");
+  authenticateApproval(approval, proposal);
+  if (options.expectedDestination && proposal.destination !== options.expectedDestination) {
+    fail("installation proposal destination is not approved");
+  }
+  return { proposal, approval };
+}
+
+function rollbackInstalledBytes(proposal) {
+  if (proposal.rollback?.action === "remove_created") {
+    if (existsSync(proposal.destination)) unlinkSync(proposal.destination);
+    return;
+  }
+  if (proposal.rollback?.action !== "restore_backup" || proposal.rollback.backup !== proposal.predecessor.backup) {
+    fail("installation rollback contract is invalid");
+  }
+  const backup = safePredecessor(proposal.rollback.backup);
+  if (backup.disposition !== "backup_replace" || backup.sha256 !== proposal.predecessor.sha256) {
+    fail("installation rollback backup authentication failed");
+  }
+  renameSync(proposal.rollback.backup, proposal.destination);
+}
+
+export function installApprovedExecutable(options = {}) {
+  const { proposal, approval } = readApprovedPair(options);
+  const source = authenticateCommitFile(proposal.repository, proposal.source_oid, SOURCE_PATH, TRUSTED_TOOLS.GIT);
+  const temp = `${proposal.destination}.install-${process.pid}-${Date.now()}`;
+  let replaced = false;
+  let backupCreated = false;
+  try {
+    writeFileSync(temp, source, { flag: "wx", mode: 0o500 });
+    chmodSync(temp, 0o500);
+    if (proposal.predecessor.disposition === "backup_replace") {
+      copyFileSync(proposal.destination, proposal.predecessor.backup, fsConstants.COPYFILE_EXCL);
+      backupCreated = true;
+      chmodSync(proposal.predecessor.backup, Number.parseInt(proposal.predecessor.mode, 8));
+    }
+    renameSync(temp, proposal.destination);
+    replaced = true;
+    const installed = verifyInstalledExecutable({
+      repo: proposal.repository,
+      expectedSourceOid: proposal.source_oid,
+      executable: proposal.destination,
+    });
+    const body = {
+      installation_schema: "mailglass-finalize-milestone-installation-v1",
+      status: "installed",
+      proposal_digest: proposal.proposal_digest,
+      approval_digest: approval.approval_digest,
+      source_oid: proposal.source_oid,
+      destination: proposal.destination,
+      installed_sha256: installed.sha256,
+      installed_at: new Date().toISOString(),
+    };
+    const receipt = { ...body, installation_digest: digestRecord(body, "installation_digest") };
+    writeSecureJson(resolve(options.installationReceiptPath), receipt);
+    return receipt;
+  } catch (error) {
+    if (existsSync(temp)) unlinkSync(temp);
+    if (replaced) rollbackInstalledBytes(proposal);
+    else if (backupCreated && existsSync(proposal.predecessor.backup)) unlinkSync(proposal.predecessor.backup);
+    throw error;
+  }
+}
+
+function authenticateInstallationReceipt(receipt, proposal, approval) {
+  if (
+    receipt?.installation_schema !== "mailglass-finalize-milestone-installation-v1" ||
+    receipt.status !== "installed" ||
+    receipt.proposal_digest !== proposal.proposal_digest ||
+    receipt.approval_digest !== approval.approval_digest ||
+    receipt.source_oid !== proposal.source_oid ||
+    receipt.destination !== proposal.destination ||
+    receipt.installed_sha256 !== proposal.source_sha256 ||
+    !/^[0-9a-f]{64}$/.test(receipt.installation_digest) ||
+    digestRecord(receipt, "installation_digest") !== receipt.installation_digest
+  ) {
+    fail("installation receipt authentication failed");
+  }
+  return receipt;
+}
+
+export function rollbackApprovedInstallation(options = {}) {
+  const { proposal, approval } = readApprovedPair(options, false);
+  const receipt = readSecureJson(resolve(options.installationReceiptPath), "installation receipt");
+  authenticateInstallationReceipt(receipt, proposal, approval);
+  verifyInstalledExecutable({ repo: proposal.repository, expectedSourceOid: proposal.source_oid, executable: proposal.destination });
+  rollbackInstalledBytes(proposal);
+  const body = {
+    rollback_schema: "mailglass-finalize-milestone-install-rollback-v1",
+    status: "rolled_back",
+    proposal_digest: proposal.proposal_digest,
+    installation_digest: receipt.installation_digest,
+    destination: proposal.destination,
+    rolled_back_at: new Date().toISOString(),
+  };
+  const rollback = { ...body, rollback_digest: digestRecord(body, "rollback_digest") };
+  writeSecureJson(resolve(options.rollbackReceiptPath), rollback);
+  return rollback;
+}
+
+export function authenticateApprovedInstallation(options = {}) {
+  const { proposal, approval } = readApprovedPair(options, false);
+  const receipt = readSecureJson(resolve(options.installationReceiptPath), "installation receipt");
+  authenticateInstallationReceipt(receipt, proposal, approval);
+  const executable = verifyInstalledExecutable({
+    repo: proposal.repository,
+    expectedSourceOid: proposal.source_oid,
+    executable: proposal.destination,
+  });
+  if (executable.sha256 !== receipt.installed_sha256) fail("approved installation bytes changed after receipt");
+  return { proposal, approval, receipt, executable };
 }
 
 export function terminalReceiptPath(repo, authorityOid) {
@@ -501,6 +787,7 @@ function stageAndDispatch({
   tools,
   executable,
   runtimeClosure,
+  preflight = false,
 }) {
   const privateRoot = mkdtempSync(resolve(tmpdir(), "mailglass-finalize-v2-7-"));
   try {
@@ -520,17 +807,21 @@ function stageAndDispatch({
       fail("authority commit changed before Bash dispatch");
     }
     const childEnv = buildChildEnvironment(tools);
+    if (preflight) childEnv.MAILGLASS_MILESTONE_PREFLIGHT = "1";
     if (JSON.stringify(trustedToolClosure(tools)) !== JSON.stringify(runtimeClosure)) {
       fail("trusted runtime closure changed before finalizer invocation");
     }
     const finalizer = resolve(privateRoot, FINALIZER_PATH);
-    const result = run(tools.BASH, [finalizer, repo, privateRoot, authorityOid, reportPath, inputsPath], {
+    const effectiveReportPath = preflight ? resolve(privateRoot, "preflight-report.json") : reportPath;
+    const result = run(tools.BASH, [finalizer, repo, privateRoot, authorityOid, effectiveReportPath, inputsPath], {
       cwd: repo,
       env: childEnv,
       encoding: "utf8",
       label: "staged milestone finalizer",
     });
-    return { output: bounded(result.stdout), report: JSON.parse(readFileSync(reportPath, "utf8")) };
+    return preflight
+      ? { output: bounded(result.stdout), report: null }
+      : { output: bounded(result.stdout), report: JSON.parse(readFileSync(reportPath, "utf8")) };
   } finally {
     rmSync(privateRoot, { recursive: true, force: true });
   }
@@ -622,6 +913,24 @@ function authenticateRunningInstallation(repo, authorityOid, tools, runtimeClosu
   if (JSON.stringify(trustedToolClosure(tools)) !== JSON.stringify(runtimeClosure)) {
     fail("trusted runtime closure changed at installed boundary");
   }
+  const control = installationControlPaths(repo, authorityOid);
+  const approved = authenticateApprovedInstallation({
+    proposalPath: control.proposal,
+    approvalPath: control.approval,
+    installationReceiptPath: control.installation,
+    proposalDigest: readSecureJson(control.proposal, "installation proposal").proposal_digest,
+    expectedRepository: repo,
+    expectedDestination: INSTALLATION_DESTINATION,
+  });
+  if (
+    approved.proposal.repository !== repo ||
+    approved.proposal.source_oid !== authorityOid ||
+    approved.proposal.destination !== INSTALLATION_DESTINATION ||
+    approved.executable.path !== evidence.path ||
+    approved.executable.sha256 !== evidence.sha256
+  ) {
+    fail("terminal executable is not bound to the approved installation receipt");
+  }
   return evidence;
 }
 
@@ -664,24 +973,37 @@ function finalizeMilestone() {
   const authorityOid = captureAuthorityCommit(repo, tools.GIT);
   const authenticated = authenticateClosedManifest(repo, authorityOid, tools.GIT);
   const executable = authenticateRunningInstallation(repo, authorityOid, tools, runtimeClosure);
-  const reportPath = prepareTerminalReceipt(repo, authorityOid, tools.GIT);
   const childEnv = buildChildEnvironment(tools);
   const fields = "databaseId,workflowName,headBranch,headSha,event,attempt,status,conclusion,createdAt";
   const ciRuns = ghJson(tools, runtimeClosure, ["run", "list", "--repo", EXPECTED_REPOSITORY, "--workflow", "CI", "--branch", "main", "--event", "push", "--status", "completed", "--limit", "100", "--json", fields], childEnv);
   const scheduleRuns = ghJson(tools, runtimeClosure, ["run", "list", "--repo", EXPECTED_REPOSITORY, "--branch", "main", "--event", "schedule", "--status", "completed", "--limit", "100", "--json", fields], childEnv);
   const ciRun = selectExactAttemptOneCi(ciRuns, authorityOid);
   const schedules = selectNaturalSchedules(scheduleRuns, authorityOid);
-  const result = stageAndDispatch({
+  const dispatch = {
     repo,
     authorityOid,
     authenticated,
     ciRun,
     schedules,
-    reportPath,
     tools,
     executable,
     runtimeClosure,
-  });
+  };
+  stageAndDispatch({ ...dispatch, preflight: true });
+  const reportPath = prepareTerminalReceipt(repo, authorityOid, tools.GIT);
+  let result;
+  try {
+    result = stageAndDispatch({ ...dispatch, reportPath });
+  } catch (error) {
+    if (!existsSync(reportPath)) {
+      try {
+        rmSync(dirname(reportPath));
+      } catch {
+        fail(`terminal invocation failed before publication and owned reservation could not be released: ${bounded(error.message)}`);
+      }
+    }
+    throw error;
+  }
   if (captureAuthorityCommit(repo, tools.GIT) !== authorityOid) fail("authority commit changed after report write");
   assertCleanRepository(repo, tools.GIT);
   console.log(result.output.trim());
@@ -692,9 +1014,68 @@ export function main(args = process.argv.slice(2)) {
     console.log(LOADER_IDENTITY);
     return;
   }
-  if (args.length === 3 && args[0] === "--installation-proposal" && args[1] === "--destination") {
-    if (args[2] !== INSTALLATION_DESTINATION) fail("installation proposal destination is not canonical");
-    console.log(JSON.stringify(buildInstallationProposal({ destination: args[2] })));
+  if (args.length === 1 && args[0] === "--installation-proposal") {
+    const repo = sourceRepository();
+    if (repo !== CANONICAL_REPOSITORY) fail("installation proposal source is not the canonical repository");
+    const tools = validateTrustedToolchain();
+    git(repo, ["fetch", "origin", "main"], { gitPath: tools.GIT, label: "proposal origin/main refresh" });
+    const authorityOid = captureAuthorityCommit(repo, tools.GIT);
+    const control = installationControlPaths(repo, authorityOid);
+    const proposal = writeInstallationProposal({ outputPath: control.proposal });
+    console.log(`proposal_path=${control.proposal}`);
+    console.log(`proposal_digest=${proposal.proposal_digest}`);
+    return;
+  }
+  if (args.length === 3 && args[0] === "--approve-installation") {
+    const repo = sourceRepository();
+    if (repo !== CANONICAL_REPOSITORY) fail("installation approval source is not the canonical repository");
+    const authorityOid = captureAuthorityCommit(repo, TRUSTED_TOOLS.GIT);
+    const control = installationControlPaths(repo, authorityOid);
+    const approval = recordInstallationApproval({
+      proposalPath: control.proposal,
+      approvalPath: control.approval,
+      proposalDigest: args[1],
+      approvalStatement: args[2],
+      expectedRepository: CANONICAL_REPOSITORY,
+      expectedDestination: INSTALLATION_DESTINATION,
+    });
+    console.log(`approval_path=${control.approval}`);
+    console.log(`approval_digest=${approval.approval_digest}`);
+    return;
+  }
+  if (args.length === 2 && args[0] === "--install-approved") {
+    const repo = sourceRepository();
+    if (repo !== CANONICAL_REPOSITORY) fail("approved installation source is not the canonical repository");
+    const authorityOid = captureAuthorityCommit(repo, TRUSTED_TOOLS.GIT);
+    const control = installationControlPaths(repo, authorityOid);
+    const receipt = installApprovedExecutable({
+      proposalPath: control.proposal,
+      approvalPath: control.approval,
+      installationReceiptPath: control.installation,
+      proposalDigest: args[1],
+      expectedRepository: CANONICAL_REPOSITORY,
+      expectedDestination: INSTALLATION_DESTINATION,
+    });
+    console.log(`installation_path=${control.installation}`);
+    console.log(`installation_digest=${receipt.installation_digest}`);
+    return;
+  }
+  if (args.length === 2 && args[0] === "--rollback-approved-install") {
+    const repo = sourceRepository();
+    if (repo !== CANONICAL_REPOSITORY) fail("installation rollback source is not the canonical repository");
+    const authorityOid = captureAuthorityCommit(repo, TRUSTED_TOOLS.GIT);
+    const control = installationControlPaths(repo, authorityOid);
+    const receipt = rollbackApprovedInstallation({
+      proposalPath: control.proposal,
+      approvalPath: control.approval,
+      installationReceiptPath: control.installation,
+      rollbackReceiptPath: control.rollback,
+      proposalDigest: args[1],
+      expectedRepository: CANONICAL_REPOSITORY,
+      expectedDestination: INSTALLATION_DESTINATION,
+    });
+    console.log(`rollback_path=${control.rollback}`);
+    console.log(`rollback_digest=${receipt.rollback_digest}`);
     return;
   }
   if (args[0] === "--self-check") return selfCheck(args);

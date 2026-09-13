@@ -131,6 +131,7 @@ export function runFixtureFinalization(options) {
     "scheduleRuns",
     "expectedScheduleNames",
     "fixtureMutation",
+    "transientQueryMarker",
   ]);
   const unexpected = Object.keys(options).filter((key) => !allowedKeys.has(key));
   if (unexpected.length > 0) fail(`caller-selected or unsupported fixture input: ${unexpected.join(",")}`);
@@ -147,6 +148,19 @@ export function runFixtureFinalization(options) {
   if (porcelain !== "") fail("repository is not clean");
 
   const authenticated = authenticateClosedManifest(repo, authorityOid, tools.GIT);
+  if (options.transientQueryMarker) {
+    const marker = resolve(options.transientQueryMarker);
+    if (!inside(dirname(repo), marker)) fail("transient query marker escaped fixture root");
+    try {
+      writeFileSync(marker, "failed once\n", { flag: "wx", mode: 0o600 });
+      fail("transient read-only evidence query failed");
+    } catch (error) {
+      if (!String(error?.message).includes("transient read-only evidence query failed") && error?.code !== "EEXIST") {
+        throw error;
+      }
+      if (String(error?.message).includes("transient read-only evidence query failed")) throw error;
+    }
+  }
   const ciRun = selectExactAttemptOneCi(options.ciRuns, authorityOid);
   const schedules = selectNaturalSchedules(options.scheduleRuns, authorityOid, options.expectedScheduleNames);
   const reportPath = prepareReportPath(

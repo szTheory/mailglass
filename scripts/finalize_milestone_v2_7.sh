@@ -178,7 +178,9 @@ main() {
   [ -z "$(stable_porcelain "$repo")" ] || fail "stable porcelain is not empty"
   require_archive_contract "$authority_root" "$expected_oid" "$repo"
   require_selected_evidence "$inputs" "$expected_oid"
-  require_report_boundary "$repo" "$report"
+  if [ "${MAILGLASS_MILESTONE_PREFLIGHT:-}" != 1 ]; then
+    require_report_boundary "$repo" "$report"
+  fi
 
   branch=$("$MAILGLASS_GIT" -C "$repo" branch --show-current 2>/dev/null || true)
   [ "$branch" = main ] || fail "canonical checkout is not on main"
@@ -195,6 +197,10 @@ main() {
 
   require_authority "$repo" "$expected_oid"
   [ -z "$(stable_porcelain "$repo")" ] || fail "stable porcelain changed before report write"
+  if [ "${MAILGLASS_MILESTONE_PREFLIGHT:-}" = 1 ]; then
+    printf 'finalize-milestone v2.7: semantic preflight passed at %s\n' "$expected_oid"
+    return 0
+  fi
   report_tmp=$(mktemp "$(dirname "$report")/.report.XXXXXX") || fail "could not allocate terminal report"
   if [ "${MAILGLASS_MILESTONE_FIXTURE:-}" = 1 ]; then
     report_schema=mailglass-finalize-milestone-fixture-v1

@@ -84,6 +84,10 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
 
     for name <- [
           "buildInstallationProposal",
+          "recordInstallationApproval",
+          "installApprovedExecutable",
+          "rollbackApprovedInstallation",
+          "authenticateApprovedInstallation",
           "authenticateClosedManifest",
           "selectExactAttemptOneCi",
           "selectNaturalSchedules",
@@ -242,7 +246,10 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     assert_failure(roadmap, %{}, "live ROADMAP retains stale v2.7 phase detail")
 
     requirements = milestone_fixture!("live-requirements")
-    requirements = add_fixture_file!(requirements, ".planning/REQUIREMENTS.md", "# stale v2.7 requirements\n")
+
+    requirements =
+      add_fixture_file!(requirements, ".planning/REQUIREMENTS.md", "# stale v2.7 requirements\n")
+
     assert_failure(requirements, %{}, "live REQUIREMENTS.md remains after milestone archive")
 
     retrospective = milestone_fixture!("missing-retrospective")
@@ -255,11 +262,13 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   @tag :phase_165_hostile
   test "false or missing Nyquist validation fields fail closed" do
     for {name, transform, diagnostic} <- [
-          {"nyquist-false", &String.replace(&1, "nyquist_compliant: true", "nyquist_compliant: false"),
+          {"nyquist-false",
+           &String.replace(&1, "nyquist_compliant: true", "nyquist_compliant: false"),
            "archived phase 163 Nyquist compliance is not true"},
           {"nyquist-missing", &String.replace(&1, "nyquist_compliant: true\n", ""),
            "archived phase 163 Nyquist compliance is missing or duplicated"},
-          {"wave-zero-false", &String.replace(&1, "wave_0_complete: true", "wave_0_complete: false"),
+          {"wave-zero-false",
+           &String.replace(&1, "wave_0_complete: true", "wave_0_complete: false"),
            "archived phase 163 Wave 0 completion is not true"},
           {"wave-zero-missing", &String.replace(&1, "wave_0_complete: true\n", ""),
            "archived phase 163 Wave 0 completion is missing or duplicated"}
@@ -408,6 +417,23 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  test "a transient evidence query failure releases no receipt and identical retry succeeds" do
+    fixture = milestone_fixture!("transient-query-retry")
+    marker = Path.join(physical_dir!(Path.dirname(fixture.repo)), "transient-query.marker")
+    options = %{"transientQueryMarker" => marker}
+
+    {output, status} = run_fixture(fixture, options)
+    assert status != 0
+    assert output =~ "transient read-only evidence query failed"
+    refute File.exists?(fixture.report)
+    refute File.exists?(Path.dirname(fixture.report))
+
+    assert {output, 0} = run_fixture(fixture, options)
+    assert output =~ "fixture evidence validated"
+    assert File.exists?(fixture.report)
+  end
+
+  @tag :phase_165_hostile
   test "caller PATH cannot shadow shell utilities" do
     fixture = milestone_fixture!("path-shadow")
     shadow = Path.join(Path.dirname(fixture.repo), "shadow-bin")
@@ -434,6 +460,9 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     absent = Path.join(root, "absent")
 
     absent_proposal = installation_proposal(fixture, absent)
+    assert absent_proposal["repository"] == physical_dir!(fixture.repo)
+    assert absent_proposal["source_oid"] == fixture.oid
+    assert absent_proposal["proposal_digest"] =~ ~r/^[0-9a-f]{64}$/
     assert absent_proposal["predecessor"]["disposition"] == "create"
     assert absent_proposal["mode"] == "0500"
     assert length(absent_proposal["runtime_closure"]) == 5
@@ -474,6 +503,53 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
              installation_proposal_result(fixture, Path.join(linked_parent, "destination"))
 
     assert diagnostic =~ "installation destination parent is not one physical directory"
+
+    assert {:error, diagnostic} = installation_proposal_override_result(fixture, absent)
+    assert diagnostic =~ "caller-selected installation proposal authority"
+
+    dirty = milestone_fixture!("dirty-proposal-authority")
+    dirty_destination = Path.join(physical_dir!(Path.dirname(dirty.repo)), "dirty-proposal")
+    File.write!(Path.join(dirty.repo, "untracked-proposal-dirt"), "dirty\n")
+    assert {:error, diagnostic} = installation_proposal_result(dirty, dirty_destination)
+    assert diagnostic =~ "repository is not clean"
+  end
+
+  @tag :phase_165_hostile
+  test "fresh exact approval atomically installs and authenticated rollback restores predecessor" do
+    fixture = milestone_fixture!("approved-install")
+    root = physical_dir!(Path.dirname(fixture.repo))
+    destination = Path.join(root, "approved-install-destination")
+    File.write!(destination, "prior approved executable\n")
+    File.chmod!(destination, 0o500)
+
+    assert {:ok, result} = installation_lifecycle_result(fixture, destination, "approve")
+    assert result["approval"]["proposal_digest"] == result["proposal"]["proposal_digest"]
+    assert result["installation"]["approval_digest"] == result["approval"]["approval_digest"]
+    assert result["authenticated"]["receipt"]["status"] == "installed"
+    assert result["rollback"]["status"] == "rolled_back"
+    assert File.read!(destination) == "prior approved executable\n"
+
+    rejected = milestone_fixture!("rejected-install-approval")
+
+    rejected_destination =
+      Path.join(physical_dir!(Path.dirname(rejected.repo)), "rejected-destination")
+
+    assert {:error, diagnostic} =
+             installation_lifecycle_result(rejected, rejected_destination, "wrong")
+
+    assert diagnostic =~ "fresh exact installation approval statement is missing"
+    refute File.exists?(rejected_destination)
+
+    tampered = milestone_fixture!("tampered-install-proposal")
+
+    tampered_destination =
+      Path.join(physical_dir!(Path.dirname(tampered.repo)), "tampered-destination")
+
+    assert {:error, diagnostic} =
+             installation_lifecycle_result(tampered, tampered_destination, "tamper")
+
+    assert diagnostic =~ "installation proposal authentication failed"
+    refute File.exists?(tampered_destination)
   end
 
   @tag :phase_165_hostile
@@ -676,7 +752,12 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
       "## Completed Milestone: v2.7 Repository Stewardship & Operational Hygiene\n\nThe 14 open PRs remain disclosed accepted repository-hygiene policy debt.\n"
     )
 
-    write!(repo, ".planning/STATE.md", "---\nmilestone: v2.7\nstatus: archived\n---\n\nRepository hygiene remains policy-blocked by 14 open PRs as accepted operational debt.\n")
+    write!(
+      repo,
+      ".planning/STATE.md",
+      "---\nmilestone: v2.7\nstatus: archived\n---\n\nRepository hygiene remains policy-blocked by 14 open PRs as accepted operational debt.\n"
+    )
+
     write!(repo, ".planning/state.json", ~s({"milestone":"v2.7","status":"archived"}\n))
 
     for phase <- 161..165 do
@@ -765,13 +846,15 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
 
   defp installation_proposal_result(fixture, destination) do
     node = System.find_executable("node") || flunk("node executable is required")
-    loader_url = "file://#{@loader}"
+
+    loader_url =
+      "file://#{Path.join(fixture.repo, "scripts/mailglass_finalize_milestone_loader.mjs")}"
+
+    git!(fixture.repo, ["update-ref", "refs/remotes/origin/main", fixture.oid])
 
     script = """
     import { buildInstallationProposal } from #{Jason.encode!(loader_url)};
     const proposal = buildInstallationProposal({
-      repo: #{Jason.encode!(fixture.repo)},
-      authorityOid: #{Jason.encode!(fixture.oid)},
       destination: #{Jason.encode!(destination)}
     });
     console.log(JSON.stringify(proposal));
@@ -782,6 +865,103 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
            stderr_to_stdout: true
          ) do
       {output, 0} -> {:ok, output |> String.trim() |> Jason.decode!()}
+      {output, _status} -> {:error, output}
+    end
+  end
+
+  defp installation_lifecycle_result(fixture, destination, mode) do
+    node = System.find_executable("node") || flunk("node executable is required")
+
+    loader_url =
+      "file://#{Path.join(fixture.repo, "scripts/mailglass_finalize_milestone_loader.mjs")}"
+
+    control = Path.join(physical_dir!(Path.dirname(fixture.repo)), "install-control-#{mode}")
+    proposal_path = Path.join(control, "proposal.json")
+    approval_path = Path.join(control, "approval.json")
+    installation_path = Path.join(control, "installation.json")
+    rollback_path = Path.join(control, "rollback.json")
+    git!(fixture.repo, ["update-ref", "refs/remotes/origin/main", fixture.oid])
+
+    script = """
+    import {
+      authenticateApprovedInstallation,
+      installApprovedExecutable,
+      recordInstallationApproval,
+      rollbackApprovedInstallation,
+      writeInstallationProposal
+    } from #{Jason.encode!(loader_url)};
+    import { chmodSync, readFileSync, writeFileSync } from "node:fs";
+    const proposal = writeInstallationProposal({
+      destination: #{Jason.encode!(destination)},
+      outputPath: #{Jason.encode!(proposal_path)}
+    });
+    const statement = #{Jason.encode!(mode)} === "wrong"
+      ? "not approved"
+      : `approve exact mailglass-finalize-milestone installation ${proposal.proposal_digest}`;
+    const approval = recordInstallationApproval({
+      proposalPath: #{Jason.encode!(proposal_path)},
+      approvalPath: #{Jason.encode!(approval_path)},
+      proposalDigest: proposal.proposal_digest,
+      approvalStatement: statement
+    });
+    if (#{Jason.encode!(mode)} === "tamper") {
+      const changed = JSON.parse(readFileSync(#{Jason.encode!(proposal_path)}, "utf8"));
+      changed.source_sha256 = "f".repeat(64);
+      chmodSync(#{Jason.encode!(proposal_path)}, 0o600);
+      writeFileSync(#{Jason.encode!(proposal_path)}, JSON.stringify(changed));
+      chmodSync(#{Jason.encode!(proposal_path)}, 0o400);
+    }
+    const installation = installApprovedExecutable({
+      proposalPath: #{Jason.encode!(proposal_path)},
+      approvalPath: #{Jason.encode!(approval_path)},
+      installationReceiptPath: #{Jason.encode!(installation_path)},
+      proposalDigest: proposal.proposal_digest
+    });
+    const authenticated = authenticateApprovedInstallation({
+      proposalPath: #{Jason.encode!(proposal_path)},
+      approvalPath: #{Jason.encode!(approval_path)},
+      installationReceiptPath: #{Jason.encode!(installation_path)},
+      proposalDigest: proposal.proposal_digest
+    });
+    const rollback = rollbackApprovedInstallation({
+      proposalPath: #{Jason.encode!(proposal_path)},
+      approvalPath: #{Jason.encode!(approval_path)},
+      installationReceiptPath: #{Jason.encode!(installation_path)},
+      rollbackReceiptPath: #{Jason.encode!(rollback_path)},
+      proposalDigest: proposal.proposal_digest
+    });
+    console.log(JSON.stringify({proposal, approval, installation, authenticated, rollback}));
+    """
+
+    case System.cmd(node, ["--input-type=module", "--eval", script],
+           cd: @repo_root,
+           stderr_to_stdout: true
+         ) do
+      {output, 0} -> {:ok, output |> String.trim() |> Jason.decode!()}
+      {output, _status} -> {:error, output}
+    end
+  end
+
+  defp installation_proposal_override_result(fixture, destination) do
+    node = System.find_executable("node") || flunk("node executable is required")
+
+    loader_url =
+      "file://#{Path.join(fixture.repo, "scripts/mailglass_finalize_milestone_loader.mjs")}"
+
+    script = """
+    import { buildInstallationProposal } from #{Jason.encode!(loader_url)};
+    buildInstallationProposal({
+      repo: #{Jason.encode!(fixture.repo)},
+      authorityOid: #{Jason.encode!(fixture.oid)},
+      destination: #{Jason.encode!(destination)}
+    });
+    """
+
+    case System.cmd(node, ["--input-type=module", "--eval", script],
+           cd: @repo_root,
+           stderr_to_stdout: true
+         ) do
+      {output, 0} -> {:ok, output}
       {output, _status} -> {:error, output}
     end
   end
