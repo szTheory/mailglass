@@ -1,10 +1,10 @@
 ---
 phase: "165"
 slug: "reconcile-terminal-proof-and-milestone-archive-ordering"
-status: draft
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
-human_uat_required: true
+human_uat_required: false
 created: "2026-09-13"
 updated: "2026-09-13"
 ---
@@ -43,16 +43,16 @@ Same-wave file ownership is disjoint: Plan 01 owns finalizer/test/alias files wh
 
 | Task ID | Plan | Wave | Decisions | Threat Ref | Observable / Secure Behavior | Test Type | Command ID | Artifact Availability | Status |
 |---------|------|------|-----------|------------|------------------------------|-----------|------------|-----------------------|--------|
-| 165-01-01 | 01 | 1 | D-01–D-05, D-10, D-12, D-16, D-17 | T-165-01-T01/S01/R01/E01 | One exact archived v2.7 path authenticates a closed manifest; proposal predecessor states are closed; repository lane cannot dispatch installed authority | tracer integration | V01 | Task creates loader, shell, test, aliases, and exclusion before verify | pending |
-| 165-01-02 | 01 | 1 | D-04, D-05, D-10–D-12, D-15, D-17 | T-165-01-T01/S01/R01/E01 | Every stale, incomplete, selected, rerun, non-natural, moving, leaking, or unsafe-predecessor fixture fails closed with non-dispatch | negative integration | V02 | Expands artifacts created by 165-01-01 | pending |
-| 165-02-01 | 02 | 1 | D-01, D-06, D-09 | T-165-02-T01 | Owning summary claims exactly WSPC-01, WSPC-03, WSPC-04 without changing the 16-ID ledger | semantic metadata | V03 | Existing summary modified in place | pending |
-| 165-02-02 | 02 | 1 | D-01, D-07, D-09, D-13 | T-165-02-R01/I01 | Canonical Phase 161/163 validation reruns preserve evidence and yield exact `status: validated` | workflow integration | V04 | Existing validation records refreshed by canonical owner | pending |
-| 165-03-01 | 03 | 2 | D-01, D-08–D-11, D-17 | T-165-03-T01/S01 | ROADMAP and PROJECT agree on phases 161-165, 16 requirements, debt disclosure, and Phase 164 historical status | semantic metadata | V05 | Existing ledgers modified after Plan 02 | pending |
-| 165-03-02 | 03 | 2 | D-04, D-05, D-08, D-15 | T-165-03-R01 | STATE reflects pre-archive Phase 165 truth and canonical publisher regenerates valid state.json | generated-state integration | V06 | Existing STATE modified; existing state.json regenerated | pending |
-| 165-04-01 | 04 | 2 | D-02, D-16 | T-165-04-T01/E01/R01 | Read-only proposal lstat-captures exact absent-or-safe-regular predecessor tuple before first checkpoint | controlled-host proposal | V07 | Plan 01 proposal command exists; external destination is only inspected | pending |
-| 165-04-02 | 04 | 2 | D-02, D-10, D-12, D-16, D-17 | T-165-04-T01/E01/D01/R01 | Approved bytes install atomically, drift fails, rollback restores predecessor, readiness emits no terminal report | controlled-host integration | V08 | Runs only after unchanged tuple approval | pending |
-| 165-05-01 | 05 | 3 | D-01–D-05, D-10, D-12–D-17 | T-165-05-T01/E01/R01/S01/I01/D01 | Security gates and canonical audit/archive runbook enforce exact-byte config restoration, no git-tag section, final convergence, and one terminal stop | documentation contract + disposable integration | V09 | Creates SECURITY/FINALIZATION; modifies Phase 165 test file | pending |
-| 165-05-02 | 05 | 3 | D-04, D-09, D-12 | T-165-05-T01/R01 | Canonical validation records every finalized task, all repository/host lanes, capability decisions, and excludes terminal proof | workflow + capability contract | V10a, V10b | Modifies this record after all prior plan summaries exist | pending |
+| 165-01-01 | 01 | 1 | D-01–D-05, D-10, D-12, D-16, D-17 | T-165-01-T01/S01/R01/E01 | One exact archived v2.7 path authenticates a closed manifest; proposal predecessor states are closed; repository lane cannot dispatch installed authority | tracer integration | V01 | Task creates loader, shell, test, aliases, and exclusion before verify | pass |
+| 165-01-02 | 01 | 1 | D-04, D-05, D-10–D-12, D-15, D-17 | T-165-01-T01/S01/R01/E01 | Every stale, incomplete, selected, rerun, non-natural, moving, leaking, or unsafe-predecessor fixture fails closed with non-dispatch | negative integration | V02 | Expands artifacts created by 165-01-01 | pass |
+| 165-02-01 | 02 | 1 | D-01, D-06, D-09 | T-165-02-T01 | Owning summary claims exactly WSPC-01, WSPC-03, WSPC-04 without changing the 16-ID ledger | semantic metadata | V03 | Existing summary modified in place | pass |
+| 165-02-02 | 02 | 1 | D-01, D-07, D-09, D-13 | T-165-02-R01/I01 | Canonical Phase 161/163 validation reruns preserve evidence and yield exact `status: validated` | workflow integration | V04 | Existing validation records refreshed by canonical owner | pass |
+| 165-03-01 | 03 | 2 | D-01, D-08–D-11, D-17 | T-165-03-T01/S01 | ROADMAP and PROJECT agree on phases 161-165, 16 requirements, debt disclosure, and Phase 164 historical status | semantic metadata | V05 | Existing ledgers modified after Plan 02 | pass |
+| 165-03-02 | 03 | 2 | D-04, D-05, D-08, D-15 | T-165-03-R01 | STATE reflects pre-archive Phase 165 truth and canonical publisher regenerates valid state.json | generated-state integration | V06 | Existing STATE modified; existing state.json regenerated | pass |
+| 165-04-01 | 04 | 2 | D-02, D-16 | T-165-04-T01/E01/R01 | Read-only proposal lstat-captures exact absent-or-safe-regular predecessor tuple before first checkpoint | controlled-host proposal | V07 | Plan 01 proposal command exists; external destination is only inspected | pass |
+| 165-04-02 | 04 | 2 | D-02, D-10, D-12, D-16, D-17 | T-165-04-T01/E01/D01/R01 | Approved bytes install atomically, drift fails, rollback restores predecessor, readiness emits no terminal report | controlled-host integration | V08 | Runs only after unchanged tuple approval | pass |
+| 165-05-01 | 05 | 3 | D-01–D-05, D-10, D-12–D-17 | T-165-05-T01/E01/R01/S01/I01/D01 | Security gates and canonical audit/archive runbook enforce exact-byte config restoration, no git-tag section, final convergence, and one terminal stop | documentation contract + disposable integration | V09 | Creates SECURITY/FINALIZATION; modifies Phase 165 test file | pass |
+| 165-05-02 | 05 | 3 | D-04, D-09, D-12 | T-165-05-T01/R01 | Canonical validation records every finalized task, all repository/host lanes, capability decisions, and excludes terminal proof | workflow + capability contract | V10a, V10b | Modifies this record after all prior plan summaries exist | pass |
 
 ## Automated Command Registry
 
@@ -90,7 +90,7 @@ Commands below are the exact `<automated>` contracts from the finalized plan tas
 
 ## Capability Decisions
 
-- **external-API detector — detected: false.** Planning scope reuses the established read-only GitHub CLI evidence boundary and introduces no general GitHub API integration; V10b re-runs the deterministic detector over the final artifacts.
+- **external-API detector — detected: false.** Planning scope reuses the established read-only GitHub CLI evidence boundary and introduces no general-purpose service client; V10b re-runs the deterministic detector over the final artifacts.
 - **Spec-less probe fallback — skipped because Phase 165 has no requirement IDs** per D-09; decisions D-01–D-17 provide the phase's traceability contract.
 - **assumption-delta — detected: false.** No identity checkpoint is added; the two locked mutation checkpoints remain the exact installation tuple and exact archive preview.
 - Schema, database, browser, UI, dependency, and CI-topology gates are outside the locked phase boundary.
@@ -114,6 +114,42 @@ Exactly two explicit human checkpoints exist across the finalized plan set: 165-
 - [x] No watch-mode flags are present.
 - [x] Repository, controlled-host, canonical workflow, and terminal authorities are explicitly separated.
 - [x] Exactly two blocking human checkpoints are identified.
-- [ ] Replace pending row status with observed results during canonical validate-phase execution, then set frontmatter `status: validated`.
+- [x] Every task row has observed evidence, frontmatter is exact `status: validated`, and ordinary validation remains strictly pre-archive.
 
-**Approval:** strategy reconciled before execution; observed execution evidence pending.
+**Approval:** canonical Phase 165 validation audit passed; no manual ordinary-completion item remains.
+
+## Validation Audit 2026-09-13
+
+| Metric | Count |
+|--------|-------|
+| Finalized tasks audited | 10 |
+| Covered | 10 |
+| Partial | 0 |
+| Missing | 0 |
+| Manual-only | 0 |
+
+### Observed Evidence
+
+| Command IDs | Observed result |
+|-------------|-----------------|
+| V01-V02 | Plan 165-01 recorded the 3-test tracer and 12-test hostile matrix green; the final focused repository refresh passed 13 executed tests, 1 installed-only exclusion, and 0 failures after adding the tag-omission fixture. |
+| V03-V04 | Plan 165-02 recorded exact WSPC ownership/cardinality plus refreshed Phase 161/163 validated evidence; the final required lane passed 427 executed tests, 12 expected exclusions, 0 failures, and zero SuiteFloor violations. |
+| V05-V06 | Plan 165-03 recorded exact five-phase/16-requirement ledgers and `{published: true, reason: "published"}` from the canonical pre-archive state publisher. |
+| V07-V08 | Plan 165-04 recorded the exact approved installation proposal, guarded rollback, final SHA-256/mode proof, and a fresh installed-boundary run of 1 executed test, 13 exclusions, and 0 failures. |
+| V09 | The stable-marked tag-omission section passed success plus initialization, archive, and restoration failure cases; all required runbook/security tokens and whitespace checks passed. |
+| V10a | Final repository, shell syntax, installed-boundary, and CI-lane commands passed with no terminal invocation. |
+| V10b | Deterministic scope scan returned exact `detected: false`; spec-less fallback remained skipped because there are no Phase 165 requirement IDs. |
+
+### Capability and Assumption Decisions
+
+- The deterministic external-API detector returned `detected: false` over CONTEXT, RESEARCH,
+  PATTERNS, and this finalized validation record. Read-only GitHub CLI observation is an established
+  evidence boundary, not a newly introduced general API client.
+- Spec-less probe fallback was skipped because Phase 165 has no requirement IDs per D-09; no
+  placeholder requirement or capability matrix was invented.
+- The canonical assumption-delta scan returned `detected: false` with no signals, so no identity
+  checkpoint was added.
+- Schema and frontend gates are inapplicable: Phase 165 changes neither trust-boundary schema nor UI.
+- The installed `mailglass-finalize-milestone v2.7` terminal invocation remains excluded from this
+  pre-archive validation and ordinary verification. It is governed only by `165-FINALIZATION.md` after
+  execute-phase completion, archive convergence, and protected exact-SHA evidence.
