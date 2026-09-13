@@ -87,6 +87,27 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     assert output =~ "expected exact milestone token v2.7"
   end
 
+  @tag :phase_165_hostile
+  test "stale audit authority fails closed before terminal report publication" do
+    fixture = milestone_fixture!("stale-audit")
+    audit = Path.join(fixture.repo, ".planning/milestones/v2.7-MILESTONE-AUDIT.md")
+
+    File.write!(
+      audit,
+      File.read!(audit) <> "audited_head: 0000000000000000000000000000000000000000\n"
+    )
+
+    git!(fixture.repo, ["add", "--", ".planning/milestones/v2.7-MILESTONE-AUDIT.md"])
+    git!(fixture.repo, ["commit", "-q", "-m", "forge stale audit"])
+    fixture = %{fixture | oid: git!(fixture.repo, ["rev-parse", "HEAD"]) |> String.trim()}
+
+    {output, status} = run_fixture(fixture)
+
+    assert status != 0
+    assert output =~ "stale audit"
+    refute File.exists?(fixture.report)
+  end
+
   describe "installed milestone production boundary" do
     @describetag :phase_165_installed_production_boundary
 
