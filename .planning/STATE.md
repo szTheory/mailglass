@@ -4,18 +4,18 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 164
 current_phase_name: Repository Truth Reconciliation and Closeout
-status: verifying
-stopped_at: Completed 164-44-PLAN.md
-last_updated: "2026-09-12T04:09:59.753Z"
+status: complete
+stopped_at: Phase 164 ordinary verification passed; protected terminal lifecycle pending
+last_updated: "2026-09-12T20:08:00-04:00"
 last_activity: 2026-09-12
-last_activity_desc: Plan 164-44 ordinary repository-truth reconciliation completed; terminal lifecycle pending
-state_head: 1a95f1957e757f2e117abc1298e0f9383f19b7f2
+last_activity_desc: Phase 164 passed ordinary verification at implementation SHA 28e364b423d291585329fccb08f097fc765d46bd
+state_head: 7ba5be1450f6cdc46a503f8f9a276f3fcbaf8af0
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 70
-  completed_plans: 67
-  percent: 75
+  completed_plans: 70
+  percent: 100
 current_plan: 44
 ---
 
@@ -26,22 +26,22 @@ current_plan: 44
 See: .planning/PROJECT.md (updated 2026-08-26)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 164 — Repository Truth Reconciliation and Closeout
+**Current focus:** Phase 164 terminal evidence — protected completion metadata, natural schedules, then one final ignored capture
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — VERIFYING
+Phase: 164 (Repository Truth Reconciliation and Closeout) — COMPLETE
 Plan: 44 of 44
-Status: Phase complete — ready for verification
-Last activity: 2026-09-12 — Plan 164-44 ordinary repository-truth reconciliation completed; terminal lifecycle pending
+Status: Ordinary verification passed; tracked completion metadata is complete; terminal evidence remains pending
+Last activity: 2026-09-12 — ordinary verification passed at implementation SHA `28e364b423d291585329fccb08f097fc765d46bd`
 
-Progress: [██████████] 67/70 plans complete ([████████░░] 75%)
+Progress: [████████████████████] 70/70 plans complete (100%)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 36
+- Total plans completed: 70
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -52,7 +52,7 @@ Progress: [██████████] 67/70 plans complete ([████�
 | 161. Canonical Workspace and Evidence Preservation | 5 | 72m | 14m |
 | 162. Protected Release and Scheduled-Control Recovery | 13 | — | — |
 | 163. Deterministic Release-Path Timeout Repairs | 8 | — | — |
-| 164. Repository Truth Reconciliation and Closeout | 12 | 53m | 4m |
+| 164. Repository Truth Reconciliation and Closeout | 44 | — | — |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -234,6 +234,6 @@ Progress: [██████████] 67/70 plans complete ([████�
 
 ## Session Continuity
 
-Last session: 2026-09-12T04:09:59.640Z
-Stopped at: Completed 164-44-PLAN.md
+Last session: 2026-09-12T20:08:00-04:00
+Stopped at: Phase 164 ordinary verification passed; protected terminal lifecycle pending
 Resume file: None
