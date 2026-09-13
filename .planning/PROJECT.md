@@ -28,6 +28,23 @@ results without gaining release authority. The read-only scheduled-control sweep
 current-protected-`main` runs, including matching log, summary, and retained artifact digests. Verification
 passed 5/5 and UAT passed 2/2 with no human judgment or open security threats remaining.
 
+**Phase 163 completed and verified 2026-08-26.** The database property and browser gallery release-path
+gates retain their full invariants and matrices under narrow, finite owner bounds. Protected proof passed
+without seed pinning, skips, broad retries, global timeout relaxation, or product changes.
+
+**Phase 164 completed and verified 2026-09-12.** Repository truth, maintenance guidance, tracked
+artifacts, ignore rules, and closeout evidence now agree with the supported operational state. The
+installed Phase 164 finalizer successfully captured terminal evidence at protected-main SHA
+`851e3640f7f0eb6e784611d157e3a7329f87e2dc`; that report is immutable historical evidence and is not
+current authority for Phase 165 or the archived v2.7 milestone.
+
+**Phase 165 is the active pre-archive lifecycle repair.** Its exact goal is to restore a truthful v2.7
+lifecycle by reconciling strict metadata, completing and auditing Phase 165, archiving the milestone
+before terminal capture, and establishing ignored-only exact-SHA terminal authority for archived v2.7.
+The new terminal authority has not run and cannot run until ordinary verification, canonical audit,
+archive completion, final tracked convergence, protected-main integration, exact attempt-one CI, and
+natural scheduled evidence are complete.
+
 **v2.6 Engineering Quality Ratchet shipped and passed its milestone audit 2026-08-21.** The milestone restored
 generated-host migration truth, bounded execution and data/security correctness, tightened architecture,
 and made merge and release signals fail closed. The canonical `mix ci` path passed 1,914 tests, 23
@@ -80,6 +97,10 @@ paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package
 **Goal:** Leave Mailglass in a clean, quiet, trustworthy maintenance posture after v2.6 without product
 expansion or speculative refactoring.
 
+**Phase inventory:** Phases 161–165 — Canonical Workspace and Evidence Preservation; Protected Release
+and Scheduled-Control Recovery; Deterministic Release-Path Timeout Repairs; Repository Truth
+Reconciliation and Closeout; and Reconcile terminal proof and milestone archive ordering.
+
 **Target features:**
 - Establish one canonical `main` workspace and safely disposition temporary worktrees, stashes, divergent
   branches, and release leftovers after auditing each for unique work.
@@ -100,6 +121,12 @@ release truth, deterministic release-path gates, and repository truth/closeout. 
 to recoverability-first, low-controversy maintenance. Product/API/schema/UI expansion, dependency churn,
 speculative architecture, cosmetic busywork, a CI-efficiency overhaul, and a release performed only for
 ceremony are out of scope.
+
+Phase 165 adds no requirement IDs and does not remap the 16 existing definitions or their Phase 161–164
+assignments. The 14 open PRs remain disclosed accepted repository-hygiene policy debt; this milestone does
+not close them or turn the block into release authority. Legacy quick tasks remain outside v2.7 because
+the completion workflow cannot attribute them accurately. Remote tag pushes, branch deletion, workflow
+dispatch or rerun, merge bypass, releases, and publication remain prohibited.
 
 ## Validated Requirements: v2.7 (in progress)
 

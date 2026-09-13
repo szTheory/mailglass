@@ -53,6 +53,13 @@
 
 **Milestone Goal:** Leave Mailglass in a clean, quiet, trustworthy maintenance posture after v2.6 without product expansion, speculative refactoring, or a ceremonial release.
 
+**Scope and accepted debt:** This five-phase milestone spans Phases 161–165 and retains the same 16
+requirements assigned to Phases 161–164; Phase 165 adds lifecycle decision coverage but no new
+requirement IDs. The repository-hygiene result remains an accepted 14-open-PR policy block, not a
+release authorization. Legacy quick tasks are excluded from v2.7 because they cannot be attributed
+truthfully to this milestone. Closing those PRs, pushing tags, deleting branches, dispatching or rerunning
+workflows, bypassing protected controls, releasing, and publishing remain outside this milestone.
+
 - [x] **Phase 161: Canonical Workspace and Evidence Preservation** - Establish an auditable canonical `main` and recoverably disposition all workspace and Git residue. (completed 2026-08-22)
 - [x] **Phase 162: Protected Release and Scheduled-Control Recovery** - Reconcile release state and restore truthful proposal, hygiene, and post-publish outcomes through existing protected controls. (completed 2026-08-26)
 - [x] **Phase 163: Deterministic Release-Path Timeout Repairs** - Repair uniquely reproduced timeout owners, retain complete proof contracts, and capture safe structured evidence automatically when bounded reconstruction does not recur. (completed 2026-08-26)
@@ -193,7 +200,11 @@ Plans:
 
 **Plans**: 44/44 plans executed
 
-**Completion state**: All 44 plans have summaries, the final ordinary-verification matrix is green, and TRTH-01/TRTH-02/TRTH-03 tracking is complete. Phase completion remains pending until this completion-only tracking reaches protected `main`, exact-main CI and natural schedules are observed, and the installed terminal command completes with no later tracked write.
+**Completion state**: All 44 plans have summaries, the final ordinary-verification matrix is green,
+TRTH-01/TRTH-02/TRTH-03 tracking is complete, and the installed Phase 164 command successfully captured
+terminal evidence at protected-main SHA `851e3640f7f0eb6e784611d157e3a7329f87e2dc`. That report is immutable
+historical Phase 164 evidence only. Phase 165 now owns the separate pre-archive reconciliation and the
+eventual post-archive v2.7 terminal authority.
 
 Plans:
 
@@ -358,9 +369,11 @@ Plans:
 
 - [x] 164-44-PLAN.md — Reconcile fresh ordinary-verification evidence and exact-one ledger provenance without crossing the terminal gate.
 
-**Post-execution finalization gate** *(not a PLAN; runs only after all summaries and phase tracking updates reach protected main)*
+**Historical post-execution finalization gate** *(completed for Phase 164; not current v2.7 authority)*
 
-- [ ] `/Users/jon/.local/bin/mailglass-finalize-phase 164` — After Plans 40–44, all summaries, ordinary verification, requirement/phase completion tracking, and protected-main integration finish, automatically select exact normal push CI, consume natural exact-SHA schedules, and independently verify ignored raw evidence with no later tracked commit.
+- [x] `/Users/jon/.local/bin/mailglass-finalize-phase 164` — Successfully captured immutable ignored
+  Phase 164 evidence at `851e3640f7f0eb6e784611d157e3a7329f87e2dc`; it does not establish authority
+  for Phase 165 or the archived v2.7 milestone.
 
 ## Progress
 
