@@ -650,6 +650,35 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     assert output =~ "configured restoration command failed"
     assert File.read!(after_confirm.config) == after_confirm.original
     assert File.read!(after_confirm.log) =~ "--confirm"
+
+    false_success = tag_omission_fixture!("restoration-false-success")
+
+    assert {output, status} =
+             run_tag_omission(false_success, section, ["preview"], %{
+               "PHASE_165_RESTORE_COMMAND" => false_success.restore,
+               "STUB_RESTORE_FALSE_SUCCESS" => "1"
+             })
+
+    assert status != 0
+    assert output =~ "returned success with wrong bytes"
+    assert File.read!(false_success.config) == false_success.original
+    refute File.read!(false_success.log) =~ "--confirm"
+
+    false_success_after = tag_omission_fixture!("restoration-false-success-after-confirm")
+    {preview_output, 0} = run_tag_omission(false_success_after, section, ["preview"])
+    [_, approved_sha] = Regex.run(~r/approved_preview_sha256=([0-9a-f]{64})/, preview_output)
+
+    assert {output, status} =
+             run_tag_omission(false_success_after, section, ["confirm", approved_sha], %{
+               "PHASE_165_RESTORE_COMMAND" => false_success_after.restore,
+               "STUB_RESTORE_FALSE_SUCCESS_AFTER" => "2",
+               "STUB_RESTORE_COUNTER" => false_success_after.restore_counter
+             })
+
+    assert status != 0
+    assert output =~ "returned success with wrong bytes"
+    assert File.read!(false_success_after.config) == false_success_after.original
+    assert File.read!(false_success_after.log) =~ "--confirm"
   end
 
   describe "installed milestone production boundary" do
@@ -1061,6 +1090,15 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
         [ -z "${STUB_RESTORE_FAIL_AFTER:-}" ] || [ "$count" -lt "$STUB_RESTORE_FAIL_AFTER" ] || exit 75
       fi
       [ "${STUB_RESTORE_FAIL:-0}" != 1 ] || exit 74
+      if [ "${STUB_RESTORE_FALSE_SUCCESS:-0}" = 1 ]; then
+        printf '%s\n' '{"wrong":true}' > "$2"
+        exit 0
+      fi
+      if [ -n "${STUB_RESTORE_FALSE_SUCCESS_AFTER:-}" ] &&
+         [ "$count" -ge "$STUB_RESTORE_FALSE_SUCCESS_AFTER" ]; then
+        printf '%s\n' '{"wrong":true}' > "$2"
+        exit 0
+      fi
       cp -- "$1" "$2"
       """
     )

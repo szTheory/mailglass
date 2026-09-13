@@ -112,6 +112,15 @@ phase_165_complete_milestone_without_tag() (
   chmod 0600 "$phase_165_original"
   phase_165_restored=1
 
+  phase_165_restore_from_backup() {
+    phase_165_restore_tmp=$(mktemp "$phase_165_repo/.planning/.config.restore.XXXXXX") || return 1
+    if ! cp -- "$phase_165_original" "$phase_165_restore_tmp" ||
+       ! mv -f -- "$phase_165_restore_tmp" "$phase_165_config"; then
+      rm -f -- "$phase_165_restore_tmp"
+      return 1
+    fi
+  }
+
   phase_165_restore_config() {
     if [ "$phase_165_restored" -eq 0 ]; then
       if [ -n "${PHASE_165_RESTORE_COMMAND:-}" ]; then
@@ -119,14 +128,21 @@ phase_165_complete_milestone_without_tag() (
           # A testable/custom restore is never the last copy authority. Recover
           # with the private byte-for-byte backup, but keep the invocation red so
           # an operator cannot mistake a degraded restoration path for success.
-          cp -- "$phase_165_original" "$phase_165_config" || return 1
+          phase_165_restore_from_backup || return 1
           phase_165_restored=1
           cmp -s -- "$phase_165_original" "$phase_165_config" || return 1
           echo "phase165-archive: configured restoration command failed; exact original config bytes recovered" >&2
           return 1
         fi
+        if ! cmp -s -- "$phase_165_original" "$phase_165_config"; then
+          phase_165_restore_from_backup || return 1
+          phase_165_restored=1
+          cmp -s -- "$phase_165_original" "$phase_165_config" || return 1
+          echo "phase165-archive: configured restoration command returned success with wrong bytes; exact original config bytes recovered" >&2
+          return 1
+        fi
       else
-        cp -- "$phase_165_original" "$phase_165_config"
+        phase_165_restore_from_backup
       fi
       phase_165_restored=1
     fi
