@@ -5,16 +5,16 @@ milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 165
 current_phase_name: Reconcile terminal proof and milestone archive ordering
 status: executing
-stopped_at: Completed 165-01-PLAN.md
-last_updated: "2026-09-13T16:27:52.341Z"
+stopped_at: Completed 165-02-PLAN.md
+last_updated: "2026-09-13T18:29:09.398Z"
 last_activity: 2026-09-13
 last_activity_desc: Phase 165 execution started
-state_head: cc2b25c9960defa31c649aec2cdc8da285e82906
+state_head: 5b83e7f390ed43f9d2ba15e3af23bb076edd1eef
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 75
-  completed_plans: 68
+  completed_plans: 69
   percent: 80
 current_plan: 44
 ---
@@ -31,11 +31,11 @@ See: .planning/PROJECT.md (updated 2026-08-26)
 ## Current Position
 
 Phase: 165 (Reconcile terminal proof and milestone archive ordering) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-09-13 — Phase 165 execution started
 
-Progress: [████████████████████] 70/70 plans complete ([████████░░] 80%)
+Progress: [████████████████████] 69/75 plans complete ([████████░░] 80%)
 
 ## Performance Metrics
 
@@ -123,6 +123,7 @@ Progress: [████████████████████] 70/70 p
 | Phase 164 P41 | 9m | 2 tasks | 2 files |
 | Phase 164 P44 | 25m | 2 tasks | 5 files |
 | Phase 165 P01 | 61m | 2 tasks | 10 files |
+| Phase 165 P02 | 117m | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -232,6 +233,8 @@ Progress: [████████████████████] 70/70 p
 - [Phase 164]: Fresh repository-only and controlled-host results remain separate ordinary authorities; T-164-109 stays open until the terminal lifecycle completes.
 - [Phase 165]: Phase 165 terminal authority uses a separately staged v2.7 loader/finalizer and leaves the Phase 164 pair byte-identical.
 - [Phase 165]: Installed-host proof remains opt-in and excluded from repository CI; repository fixtures authenticate and execute staged bytes only.
+- [Phase 165]: Phase 161 Plan 04 owns WSPC-01, WSPC-03, and WSPC-04 completion claims; WSPC-02 remains owned by Plan 05.
+- [Phase 165]: Canonical validation refreshes retain historical green evidence while adding current workflow audit trails; they do not reinterpret Phase 164 terminal authority.
 
 ## Deferred Items
 
@@ -241,6 +244,6 @@ Progress: [████████████████████] 70/70 p
 
 ## Session Continuity
 
-Last session: 2026-09-13T16:27:52.166Z
-Stopped at: Completed 165-01-PLAN.md
+Last session: 2026-09-13T18:29:09.167Z
+Stopped at: Completed 165-02-PLAN.md
 Resume file: None

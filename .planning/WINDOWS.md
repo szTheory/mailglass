@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 10
 waived_count: 0
-fixed_count: 25
-total_count: 35
-last_updated: 2026-09-13T16:27:42.458Z
+fixed_count: 26
+total_count: 36
+last_updated: 2026-09-13T18:30:03.302Z
 ---
 
 # Broken Windows Ledger
@@ -50,6 +50,7 @@ last_updated: 2026-09-13T16:27:42.458Z
 | 33 | 164 | deviation | .planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv |  | Plan 164-29 test/test_helper.exs became discoverable after summary activation and required exact-one ledger row M-34 | fixed |  | 2026-09-11T03:15:47.707Z | 2026-09-11T03:17:22.972Z |
 | 34 | 164 | deviation | test/scripts/phase_164_closeout_test.exs |  | Consolidated argv, environment, and remote-relation assertions to preserve the five-test repository-attack contract | fixed |  | 2026-09-12T03:12:39.474Z | 2026-09-12T03:14:01.534Z |
 | 35 | 165 | deviation | test/support/suite_floor.ex | 249 | Extended installed-boundary exclusion compatibility contracts for Phase 165 | fixed |  | 2026-09-13T16:27:17.139Z | 2026-09-13T16:27:42.458Z |
+| 36 | 165 | deviation | .planning/STATE.md |  | state.update-progress undercounted completed predecessor phases and duplicated decision prefixes required normalization | fixed |  | 2026-09-13T18:29:48.613Z | 2026-09-13T18:30:03.302Z |
 
 ````json
 [
@@ -472,6 +473,18 @@ last_updated: 2026-09-13T16:27:42.458Z
     "reason": "",
     "recorded_at": "2026-09-13T16:27:17.139Z",
     "resolved_at": "2026-09-13T16:27:42.458Z"
+  },
+  {
+    "id": 36,
+    "kind": "deviation",
+    "phase": "165",
+    "file": ".planning/STATE.md",
+    "line": null,
+    "description": "state.update-progress undercounted completed predecessor phases and duplicated decision prefixes required normalization",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-13T18:29:48.613Z",
+    "resolved_at": "2026-09-13T18:30:03.302Z"
   }
 ]
 ````
