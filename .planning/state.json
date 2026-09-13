@@ -21,13 +21,18 @@
     {
       "number": "164",
       "name": "Repository Truth Reconciliation and Closeout",
+      "status": "complete"
+    },
+    {
+      "number": "165",
+      "name": "Reconcile terminal proof and milestone archive ordering",
       "status": "in_progress"
     }
   ],
   "next": {
     "command": "/gsd:progress --next",
     "label": "Advance to the next step",
-    "reason": "Phase 164 of 4 · 75% · executing"
+    "reason": "Phase 165 of 5 · 80% · executing"
   },
-  "updated_at": "2026-09-12T01:56:37.305Z"
+  "updated_at": "2026-09-13T18:46:02.468Z"
 }

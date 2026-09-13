@@ -23,7 +23,7 @@ current_plan: 44
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-26)
+See: .planning/PROJECT.md (updated 2026-09-13)
 
 **Core value:** Email you can see, audit, and trust before it ships.
 **Current focus:** Phase 165 — Reconcile terminal proof and milestone archive ordering
@@ -36,6 +36,24 @@ Status: Ready to execute
 Last activity: 2026-09-13 — Phase 165 execution started
 
 Progress: [████████████████████] 69/75 plans complete ([████████░░] 80%)
+
+## Lifecycle Authority
+
+- Phase 165 is the active pre-archive lifecycle repair across the five-phase v2.7 scope, with no new
+  requirement IDs beyond the 16 definitions assigned to Phases 161–164.
+- Phase 164 completed successfully at protected-main SHA
+  `851e3640f7f0eb6e784611d157e3a7329f87e2dc`. Its ignored terminal report is immutable historical
+  evidence only; Phase 164 pending/current-authority statements retained in the accumulated execution
+  history below are not live milestone blockers or v2.7 terminal authority.
+- The separate v2.7 terminal authority has not run. It remains ordered after Phase 165 ordinary
+  verification, canonical audit, archive completion, final tracked convergence, protected-main
+  integration, exact attempt-one CI, and natural scheduled evidence.
+- This publication is pre-archive only. The post-archive runbook must call the canonical
+  `publishStateContract` again after every archive-related Markdown edit and include the resulting
+  `state.json` in the final tracked archive commit.
+- Repository hygiene remains policy-blocked by 14 open PRs as accepted operational debt. Legacy quick
+  tasks stay outside v2.7, and no PR closure, tag push, branch deletion, workflow dispatch or rerun,
+  merge bypass, release, or publication is authorized.
 
 ## Performance Metrics
 
