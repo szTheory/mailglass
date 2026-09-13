@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 10
 waived_count: 0
-fixed_count: 24
-total_count: 34
-last_updated: 2026-09-12T03:14:01.534Z
+fixed_count: 25
+total_count: 35
+last_updated: 2026-09-13T16:27:42.458Z
 ---
 
 # Broken Windows Ledger
@@ -49,6 +49,7 @@ last_updated: 2026-09-12T03:14:01.534Z
 | 32 | 164 | deviation | .planning/phases/164-repository-truth-reconciliation-and-closeout/164-28-PLAN.md |  | Task 2's literal make-toolchain suite requires controlled-host Node and gh identities absent from the repository-only container; the pinned local suite, CI lane, and installed-boundary alias passed separately. | fixed |  | 2026-09-11T01:33:22.220Z | 2026-09-11T01:33:48.251Z |
 | 33 | 164 | deviation | .planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv |  | Plan 164-29 test/test_helper.exs became discoverable after summary activation and required exact-one ledger row M-34 | fixed |  | 2026-09-11T03:15:47.707Z | 2026-09-11T03:17:22.972Z |
 | 34 | 164 | deviation | test/scripts/phase_164_closeout_test.exs |  | Consolidated argv, environment, and remote-relation assertions to preserve the five-test repository-attack contract | fixed |  | 2026-09-12T03:12:39.474Z | 2026-09-12T03:14:01.534Z |
+| 35 | 165 | deviation | test/support/suite_floor.ex | 249 | Extended installed-boundary exclusion compatibility contracts for Phase 165 | fixed |  | 2026-09-13T16:27:17.139Z | 2026-09-13T16:27:42.458Z |
 
 ````json
 [
@@ -446,8 +447,7 @@ last_updated: 2026-09-12T03:14:01.534Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-11T03:15:47.707Z",
-    "resolved_at": "2026-09-11T03:17:22.972Z",
-    "milestone": "v2.7"
+    "resolved_at": "2026-09-11T03:17:22.972Z"
   },
   {
     "id": 34,
@@ -459,8 +459,19 @@ last_updated: 2026-09-12T03:14:01.534Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-12T03:12:39.474Z",
-    "resolved_at": "2026-09-12T03:14:01.534Z",
-    "milestone": "v2.7"
+    "resolved_at": "2026-09-12T03:14:01.534Z"
+  },
+  {
+    "id": 35,
+    "kind": "deviation",
+    "phase": "165",
+    "file": "test/support/suite_floor.ex",
+    "line": 249,
+    "description": "Extended installed-boundary exclusion compatibility contracts for Phase 165",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-13T16:27:17.139Z",
+    "resolved_at": "2026-09-13T16:27:42.458Z"
   }
 ]
 ````

@@ -4,17 +4,17 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 165
 current_phase_name: Reconcile terminal proof and milestone archive ordering
-status: complete
-stopped_at: Phase 165 context gathered (assumptions mode)
-last_updated: "2026-09-13T15:20:25.361Z"
-last_activity: 2026-09-12
-last_activity_desc: Phase 164 passed ordinary verification at implementation SHA 28e364b423d291585329fccb08f097fc765d46bd
-state_head: f0191a39ae920bfef544d80b0b17b127505bdf0d
+status: executing
+stopped_at: Completed 165-01-PLAN.md
+last_updated: "2026-09-13T16:27:52.341Z"
+last_activity: 2026-09-13
+last_activity_desc: Phase 165 execution started
+state_head: cc2b25c9960defa31c649aec2cdc8da285e82906
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 75
-  completed_plans: 67
+  completed_plans: 68
   percent: 80
 current_plan: 44
 ---
@@ -26,14 +26,14 @@ current_plan: 44
 See: .planning/PROJECT.md (updated 2026-08-26)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 164 terminal evidence — protected completion metadata, natural schedules, then one final ignored capture
+**Current focus:** Phase 165 — Reconcile terminal proof and milestone archive ordering
 
 ## Current Position
 
-Phase: 165 (Reconcile terminal proof and milestone archive ordering) — READY TO EXECUTE
-Plan: 44 of 44
-Status: Ordinary verification passed; tracked completion metadata is complete; terminal evidence remains pending
-Last activity: 2026-09-12 — ordinary verification passed at implementation SHA `28e364b423d291585329fccb08f097fc765d46bd`
+Phase: 165 (Reconcile terminal proof and milestone archive ordering) — EXECUTING
+Plan: 2 of 5
+Status: Ready to execute
+Last activity: 2026-09-13 — Phase 165 execution started
 
 Progress: [████████████████████] 70/70 plans complete ([████████░░] 80%)
 
@@ -122,6 +122,7 @@ Progress: [████████████████████] 70/70 p
 | Phase 164 P43 | 4m | 2 tasks | 2 files |
 | Phase 164 P41 | 9m | 2 tasks | 2 files |
 | Phase 164 P44 | 25m | 2 tasks | 5 files |
+| Phase 165 P01 | 61m | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -229,6 +230,8 @@ Progress: [████████████████████] 70/70 p
 - [Phase 164]: repo_root must prove Git work-tree identity before ls-files, while authority_root remains a directory-only policy fixture boundary.
 - [Phase 164]: Completed Plans 164-40 through 164-43 contribute provenance only through structurally declared modified subjects, each resolving to exactly one current complete ledger row.
 - [Phase 164]: Fresh repository-only and controlled-host results remain separate ordinary authorities; T-164-109 stays open until the terminal lifecycle completes.
+- [Phase 165]: Phase 165 terminal authority uses a separately staged v2.7 loader/finalizer and leaves the Phase 164 pair byte-identical.
+- [Phase 165]: Installed-host proof remains opt-in and excluded from repository CI; repository fixtures authenticate and execute staged bytes only.
 
 ## Deferred Items
 
@@ -238,6 +241,6 @@ Progress: [████████████████████] 70/70 p
 
 ## Session Continuity
 
-Last session: 2026-09-13T14:20:37.524Z
-Stopped at: Phase 165 context gathered (assumptions mode)
-Resume file: .planning/phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-CONTEXT.md
+Last session: 2026-09-13T16:27:52.166Z
+Stopped at: Completed 165-01-PLAN.md
+Resume file: None
