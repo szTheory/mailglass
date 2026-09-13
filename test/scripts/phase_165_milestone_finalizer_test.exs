@@ -4,6 +4,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   @repo_root Path.expand("../..", __DIR__)
   @loader Path.join(@repo_root, "scripts/mailglass_finalize_milestone_loader.mjs")
   @finalizer Path.join(@repo_root, "scripts/finalize_milestone_v2_7.sh")
+  @fixture_loader Path.join(@repo_root, "test/support/mailglass_milestone_finalizer_fixture.mjs")
   @finalization_runbook Path.join(
                           @repo_root,
                           ".planning/phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md"
@@ -28,16 +29,21 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_tracer
-  test "exact v2.7 fixture authenticates a closed stage and writes one ignored pass report" do
+  test "exact v2.7 fixture authenticates a closed stage without emitting terminal pass evidence" do
     fixture = milestone_fixture!("tracer")
     {output, 0} = run_fixture(fixture)
 
-    assert output =~ "terminal evidence passed at #{fixture.oid}"
+    assert output =~ "fixture evidence validated at #{fixture.oid}"
 
     report = fixture.report |> File.read!() |> Jason.decode!()
-    assert report["status"] == "pass"
+    assert report["schema"] == "mailglass-finalize-milestone-fixture-v1"
+    assert report["status"] == "fixture-only"
+    refute report["schema"] == "mailglass-finalize-milestone-report-v1"
     assert report["milestone"] == "v2.7"
     assert report["expected_main_sha"] == fixture.oid
+    assert report["executable"]["sha256"] =~ ~r/^[0-9a-f]{64}$/
+    assert report["executable"]["source_oid"] == fixture.oid
+    assert length(report["runtime_closure"]) == 5
     assert report["components"]["ci"]["attempt"] == 1
     assert Enum.all?(report["components"]["schedules"], &(&1["event"] == "schedule"))
 
@@ -81,10 +87,17 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
           "authenticateClosedManifest",
           "selectExactAttemptOneCi",
           "selectNaturalSchedules",
-          "writeTerminalReport"
+          "verifyInstalledExecutable"
         ] do
       assert source =~ "export function #{name}"
     end
+
+    refute source =~ "runFixtureFinalization"
+    refute source =~ "writeTerminalReport"
+
+    finalizer = File.read!(@finalizer)
+    refute finalizer =~ ~s|if [ "${MAILGLASS_MILESTONE_FIXTURE:-}" != 1 ]|
+    assert finalizer =~ ~s|"$MAILGLASS_GIT" -C "$repo" fetch origin main|
 
     node = System.find_executable("node") || flunk("node executable is required")
     assert {output, 1} = System.cmd(node, [@loader, "2.7"], stderr_to_stdout: true)
@@ -313,16 +326,73 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  test "report boundary rejects symlinked parents and existing ignored targets without overwrite" do
+    symlinked = milestone_fixture!("symlinked-report-parent")
+    outside = Path.join(Path.dirname(symlinked.repo), "outside-report-root")
+    File.mkdir_p!(Path.join(symlinked.repo, "tmp"))
+    File.mkdir_p!(outside)
+    File.ln_s!(outside, Path.join(symlinked.repo, "tmp/symlinked"))
+
+    {output, status} = run_fixture(symlinked, %{"reportRelative" => "tmp/symlinked/report.json"})
+    assert status != 0
+    assert output =~ "fixture report parent is not one physical directory"
+    refute File.exists?(Path.join(outside, "report.json"))
+
+    existing = milestone_fixture!("existing-report")
+    existing_path = Path.join(existing.repo, "tmp/existing/report.json")
+    File.mkdir_p!(Path.dirname(existing_path))
+    File.write!(existing_path, "do-not-overwrite\n")
+
+    {output, status} = run_fixture(existing, %{"reportRelative" => "tmp/existing/report.json"})
+    assert status != 0
+    assert output =~ "terminal report target already exists"
+    assert File.read!(existing_path) == "do-not-overwrite\n"
+  end
+
+  @tag :phase_165_hostile
+  test "a second fixture invocation is rejected and cannot rewrite its first receipt" do
+    fixture = milestone_fixture!("one-shot")
+    assert {_, 0} = run_fixture(fixture)
+    first = File.read!(fixture.report)
+
+    {output, status} = run_fixture(fixture)
+    assert status != 0
+    assert output =~ "terminal report target already exists"
+    assert File.read!(fixture.report) == first
+  end
+
+  @tag :phase_165_hostile
+  test "caller PATH cannot shadow shell utilities" do
+    fixture = milestone_fixture!("path-shadow")
+    shadow = Path.join(Path.dirname(fixture.repo), "shadow-bin")
+    marker = Path.join(Path.dirname(fixture.repo), "shadow-executed")
+    File.mkdir_p!(shadow)
+
+    for name <- ["grep", "mktemp"] do
+      path = Path.join(shadow, name)
+      File.write!(path, "#!/bin/bash\nprintf shadow > #{marker}\nexit 91\n")
+      File.chmod!(path, 0o700)
+    end
+
+    hostile_path = shadow <> ":" <> System.fetch_env!("PATH")
+    assert {_, 0} = run_fixture(fixture, %{}, [{"PATH", hostile_path}])
+    refute File.exists?(marker)
+  end
+
+  @tag :phase_165_hostile
   test "installation proposal admits only absence or one safe regular predecessor" do
     fixture = milestone_fixture!("proposal")
     root = Path.join(Path.dirname(fixture.repo), "installation")
     File.mkdir_p!(root)
+    root = physical_dir!(root)
     absent = Path.join(root, "absent")
 
     absent_proposal = installation_proposal(fixture, absent)
     assert absent_proposal["predecessor"]["disposition"] == "create"
     assert absent_proposal["mode"] == "0500"
-    assert length(absent_proposal["runtime_closure"]) == 8
+    assert length(absent_proposal["runtime_closure"]) == 5
+    assert Enum.all?(absent_proposal["runtime_closure"], &(&1["sha256"] =~ ~r/^[0-9a-f]{64}$/))
+    assert Enum.all?(absent_proposal["runtime_closure"], &is_binary(&1["version"]))
     assert absent_proposal["rollback"]["action"] == "remove_created"
 
     safe = Path.join(root, "safe")
@@ -348,6 +418,16 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     File.ln_s!(safe, symlink)
     assert {:error, diagnostic} = installation_proposal_result(fixture, symlink)
     assert diagnostic =~ "unsafe predecessor kind"
+
+    physical_parent = Path.join(root, "physical-parent")
+    linked_parent = Path.join(root, "linked-parent")
+    File.mkdir_p!(physical_parent)
+    File.ln_s!(physical_parent, linked_parent)
+
+    assert {:error, diagnostic} =
+             installation_proposal_result(fixture, Path.join(linked_parent, "destination"))
+
+    assert diagnostic =~ "installation destination parent is not one physical directory"
   end
 
   @tag :phase_165_hostile
@@ -365,6 +445,20 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
              )
 
     assert output =~ "installed-byte mismatch"
+  end
+
+  @tag :phase_165_hostile
+  test "installed verifier rejects a symlink even when its target bytes are approved" do
+    fixture = milestone_fixture!("installed-symlink")
+    root = physical_dir!(Path.dirname(fixture.repo))
+    installed = Path.join(root, "approved-loader")
+    symlink = Path.join(root, "linked-loader")
+    File.write!(installed, File.read!(@loader))
+    File.chmod!(installed, 0o500)
+    File.ln_s!(installed, symlink)
+
+    assert {:error, diagnostic} = installed_verification_result(fixture, symlink)
+    assert diagnostic =~ "installed executable is not one physical regular file"
   end
 
   @tag :phase_165_tag_omission_fixture
@@ -439,11 +533,22 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   describe "installed milestone production boundary" do
     @describetag :phase_165_installed_production_boundary
 
-    test "installed command has the approved executable identity" do
-      assert File.regular?(@installed_loader)
+    test "installed command proves exact path, kind, mode, owner, bytes, and runtime closure" do
+      assert {:ok, stat} = File.lstat(@installed_loader)
+      assert stat.type == :regular
+      assert Bitwise.band(stat.mode, 0o777) == 0o500
 
-      assert {"mailglass-finalize-milestone-loader 1\n", 0} =
-               System.cmd(@installed_loader, ["--version"], stderr_to_stdout: true)
+      authority_oid = git!(@repo_root, ["rev-parse", "HEAD"]) |> String.trim()
+
+      assert {output, 0} =
+               System.cmd(
+                 @installed_loader,
+                 ["--self-check", "--repo", @repo_root, "--expected-source-oid", authority_oid],
+                 stderr_to_stdout: true
+               )
+
+      assert output =~ "executable=#{@installed_loader}"
+      assert output =~ "loader_sha256="
     end
   end
 
@@ -616,6 +721,36 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     end
   end
 
+  defp installed_verification_result(fixture, executable) do
+    node = System.find_executable("node") || flunk("node executable is required")
+    loader_url = "file://#{@loader}"
+
+    script = """
+    import { verifyInstalledExecutable } from #{Jason.encode!(loader_url)};
+    const evidence = verifyInstalledExecutable({
+      repo: #{Jason.encode!(fixture.repo)},
+      expectedSourceOid: #{Jason.encode!(fixture.oid)},
+      executable: #{Jason.encode!(executable)}
+    });
+    console.log(JSON.stringify(evidence));
+    """
+
+    case System.cmd(node, ["--input-type=module", "--eval", script],
+           cd: @repo_root,
+           stderr_to_stdout: true
+         ) do
+      {output, 0} -> {:ok, output |> String.trim() |> Jason.decode!()}
+      {output, _status} -> {:error, output}
+    end
+  end
+
+  defp physical_dir!(path) do
+    case System.cmd("/bin/pwd", ["-P"], cd: path, stderr_to_stdout: true) do
+      {output, 0} -> String.trim(output)
+      {output, status} -> flunk("could not resolve physical fixture path (#{status}): #{output}")
+    end
+  end
+
   defp runbook_tag_omission_section! do
     source = File.read!(@finalization_runbook)
 
@@ -721,9 +856,9 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     )
   end
 
-  defp run_fixture(fixture, overrides \\ %{}) do
+  defp run_fixture(fixture, overrides \\ %{}, process_env \\ []) do
     node = System.find_executable("node") || flunk("node executable is required")
-    loader_url = "file://#{@loader}"
+    fixture_loader_url = "file://#{@fixture_loader}"
 
     base = %{
       "headBranch" => "main",
@@ -755,13 +890,14 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     options = Map.merge(defaults, overrides)
 
     script = """
-    import { runFixtureFinalization } from #{Jason.encode!(loader_url)};
+    import { runFixtureFinalization } from #{Jason.encode!(fixture_loader_url)};
     const result = runFixtureFinalization(#{Jason.encode!(options)});
     console.log(result.output);
     """
 
     System.cmd(node, ["--input-type=module", "--eval", script],
       cd: @repo_root,
+      env: process_env,
       stderr_to_stdout: true
     )
   end

@@ -1,6 +1,6 @@
 #!/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node
 
-import { createHash, randomBytes } from "node:crypto";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   chmodSync,
@@ -9,7 +9,6 @@ import {
   mkdtempSync,
   readFileSync,
   realpathSync,
-  renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -30,16 +29,41 @@ const MAX_OUTPUT_BYTES = 16_000;
 const FULL_OID = /^[0-9a-f]{40}$/;
 const EXPECTED_PHASES = Object.freeze(["161", "162", "163", "164", "165"]);
 const EXPECTED_SCHEDULES = Object.freeze(["Post Publish", "Release Please", "Repository Hygiene"]);
-const TRUSTED_TOOLS = Object.freeze({
-  NODE: "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
-  GIT: "/opt/homebrew/Cellar/git/2.41.0/bin/git",
-  BASH: "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
-  GH: "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
-  JQ: "/usr/bin/jq",
-  MIX: "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/mix",
-  ELIXIR: "/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin/elixir",
-  ERL: "/Users/jon/.asdf/installs/erlang/28.4.1/bin/erl",
+const TRUSTED_TOOL_SPECS = Object.freeze({
+  NODE: Object.freeze({
+    path: "/Users/jon/.asdf/installs/nodejs/24.19.0/bin/node",
+    sha256: "27db838bb204ef7c21df2931f5656e4c8fb32e6e947f363a402b49714d32b5b1",
+    version: "v24.19.0",
+    versionArgs: Object.freeze(["--version"]),
+  }),
+  GIT: Object.freeze({
+    path: "/opt/homebrew/Cellar/git/2.41.0/bin/git",
+    sha256: "8a685463cdb7b0bd80507a3978bd1720a97475c9326c186916b228d55242b450",
+    version: "git version 2.41.0",
+    versionArgs: Object.freeze(["--version"]),
+  }),
+  BASH: Object.freeze({
+    path: "/opt/homebrew/Cellar/bash/5.2.37/bin/bash",
+    sha256: "956cc46a1c898cdcbf1f41ba129bfc4e992df6ea112ea7082d227c5a3cc05bab",
+    version: "GNU bash, version 5.2.37(1)-release (aarch64-apple-darwin24.2.0)",
+    versionArgs: Object.freeze(["--version"]),
+  }),
+  GH: Object.freeze({
+    path: "/opt/homebrew/Cellar/gh/2.95.0/bin/gh",
+    sha256: "798882434e7f6ae5846194191263ecc59d56bc201f13f016270f44cb4f34499e",
+    version: "gh version 2.95.0 (2026-06-17)",
+    versionArgs: Object.freeze(["--version"]),
+  }),
+  JQ: Object.freeze({
+    path: "/usr/bin/jq",
+    sha256: "b16bc93b2f3c69ce3134f20b796bb72aa3410b10166566ac2ca1bee5e4153ed5",
+    version: "jq-1.7.1-apple",
+    versionArgs: Object.freeze(["--version"]),
+  }),
 });
+const TRUSTED_TOOLS = Object.freeze(
+  Object.fromEntries(Object.entries(TRUSTED_TOOL_SPECS).map(([name, spec]) => [name, spec.path])),
+);
 const REQUIRED_TOOL_NAMES = Object.freeze(Object.keys(TRUSTED_TOOLS));
 
 function fail(message) {
@@ -94,7 +118,13 @@ export function validateTrustedToolchain(tools = TRUSTED_TOOLS) {
   const allowedOwners = new Set([0, process.getuid?.()].filter(Number.isInteger));
   for (const name of REQUIRED_TOOL_NAMES) {
     const path = tools[name];
-    if (typeof path !== "string" || !isAbsolute(path) || path.includes("/.asdf/shims/")) {
+    const expected = TRUSTED_TOOL_SPECS[name];
+    if (
+      typeof path !== "string" ||
+      path !== expected.path ||
+      !isAbsolute(path) ||
+      path.includes("/.asdf/shims/")
+    ) {
       fail(`trusted ${name} executable is not one physical absolute path`);
     }
     let entry;
@@ -111,8 +141,26 @@ export function validateTrustedToolchain(tools = TRUSTED_TOOLS) {
     if (!allowedOwners.has(entry.uid) || (entry.mode & 0o022) !== 0) {
       fail(`trusted ${name} executable has unsafe ownership or mode`);
     }
+    if (sha256(readFileSync(path)) !== expected.sha256) {
+      fail(`trusted ${name} executable digest drifted`);
+    }
+    const version = run(path, expected.versionArgs, {
+      encoding: "utf8",
+      label: `trusted ${name} version probe`,
+    }).stdout.split("\n")[0].trim();
+    if (version !== expected.version) fail(`trusted ${name} executable version drifted`);
   }
   return tools;
+}
+
+export function trustedToolClosure(tools = TRUSTED_TOOLS) {
+  validateTrustedToolchain(tools);
+  return REQUIRED_TOOL_NAMES.map((name) => ({
+    name,
+    path: tools[name],
+    sha256: TRUSTED_TOOL_SPECS[name].sha256,
+    version: TRUSTED_TOOL_SPECS[name].version,
+  }));
 }
 
 export function buildChildEnvironment(tools = TRUSTED_TOOLS) {
@@ -122,7 +170,10 @@ export function buildChildEnvironment(tools = TRUSTED_TOOLS) {
   }
   for (const [name, path] of Object.entries(tools)) env[`MAILGLASS_${name}`] = path;
   env.GH_HOST = "github.com";
-  env.PATH = [...new Set(Object.values(tools).map(dirname).concat(["/usr/bin", "/bin"]))].join(":");
+  // The staged Bash script uses only system utilities by bare name. Keeping
+  // user-owned tool directories out of PATH prevents grep/mktemp/etc. shadowing;
+  // non-system tools are invoked through their MAILGLASS_* absolute paths.
+  env.PATH = "/usr/bin:/bin";
   return env;
 }
 
@@ -308,7 +359,36 @@ export function selectNaturalSchedules(runs, authorityOid, expectedNames = EXPEC
   return selected;
 }
 
+function requirePhysicalParentChain(destination, label) {
+  if (!isAbsolute(destination) || resolve(destination) !== destination) {
+    fail(`${label} is not one normalized absolute path`);
+  }
+  const parents = [];
+  let current = dirname(destination);
+  while (true) {
+    parents.push(current);
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  for (const parent of parents.reverse()) {
+    let entry;
+    let physical;
+    try {
+      entry = lstatSync(parent);
+      physical = realpathSync(parent);
+    } catch {
+      fail(`${label} parent is missing`);
+    }
+    if (!entry.isDirectory() || entry.isSymbolicLink() || physical !== parent) {
+      fail(`${label} parent is not one physical directory`);
+    }
+  }
+  return dirname(destination);
+}
+
 function safePredecessor(destination) {
+  requirePhysicalParentChain(destination, "installation destination");
   let entry;
   try {
     entry = lstatSync(destination);
@@ -335,6 +415,7 @@ export function buildInstallationProposal(options = {}) {
   const repo = options.repo ?? CANONICAL_REPOSITORY;
   const destination = options.destination ?? INSTALLATION_DESTINATION;
   const tools = validateTrustedToolchain(options.tools ?? TRUSTED_TOOLS);
+  const runtimeClosure = trustedToolClosure(tools);
   const gitPath = tools.GIT;
   const authorityOid = options.authorityOid ?? captureAuthorityCommit(repo, gitPath);
   const source = authenticateCommitFile(repo, authorityOid, SOURCE_PATH, gitPath);
@@ -346,7 +427,7 @@ export function buildInstallationProposal(options = {}) {
     source_sha256: sha256(source),
     destination,
     mode: "0500",
-    runtime_closure: Object.entries(tools).map(([name, path]) => ({ name, path })),
+    runtime_closure: runtimeClosure,
     predecessor,
     rollback:
       predecessor.disposition === "create"
@@ -356,13 +437,33 @@ export function buildInstallationProposal(options = {}) {
   // Re-lstat at the emission boundary. Any replacement invalidates the proposal.
   const rechecked = safePredecessor(destination);
   if (JSON.stringify(rechecked) !== JSON.stringify(predecessor)) fail("installation predecessor changed before proposal emission");
+  if (JSON.stringify(trustedToolClosure(tools)) !== JSON.stringify(runtimeClosure)) {
+    fail("trusted runtime closure changed before proposal emission");
+  }
   return proposal;
 }
 
-export function writeTerminalReport(repo, reportPath, report, gitPath = TRUSTED_TOOLS.GIT) {
-  const absolute = resolve(reportPath);
-  if (!inside(repo, absolute)) fail("terminal report escapes repository");
-  const relativePath = relative(repo, absolute);
+export function terminalReceiptPath(repo, authorityOid) {
+  if (!FULL_OID.test(authorityOid)) fail("terminal receipt authority OID is invalid");
+  return resolve(repo, `tmp/mailglass-finalize-v2.7-${authorityOid}/report.json`);
+}
+
+function prepareTerminalReceipt(repo, authorityOid, gitPath) {
+  const tmpRoot = resolve(repo, "tmp");
+  if (!inside(repo, tmpRoot)) fail("terminal report root escapes repository");
+  requirePhysicalParentChain(resolve(tmpRoot, "receipt"), "terminal report root");
+  let tmpEntry;
+  try {
+    tmpEntry = lstatSync(tmpRoot);
+  } catch {
+    fail("terminal report root is missing");
+  }
+  if (!tmpEntry.isDirectory() || tmpEntry.isSymbolicLink() || realpathSync(tmpRoot) !== tmpRoot) {
+    fail("terminal report root is not a physical repository directory");
+  }
+  const reportPath = terminalReceiptPath(repo, authorityOid);
+  const reportDir = dirname(reportPath);
+  const relativePath = relative(repo, reportPath);
   const tracked = git(repo, ["--literal-pathspecs", "ls-files", "--error-unmatch", "--", relativePath], {
     gitPath,
     allowFailure: true,
@@ -372,10 +473,17 @@ export function writeTerminalReport(repo, reportPath, report, gitPath = TRUSTED_
     gitPath,
     label: "terminal report ignore check",
   });
-  const temporary = `${absolute}.tmp-${randomBytes(8).toString("hex")}`;
-  writeFileSync(temporary, `${JSON.stringify(report, null, 2)}\n`, { flag: "wx", mode: 0o600 });
-  renameSync(temporary, absolute);
-  return absolute;
+  try {
+    mkdirSync(reportDir, { recursive: false, mode: 0o700 });
+  } catch (error) {
+    if (error?.code === "EEXIST") fail("terminal invocation receipt already exists for milestone and authority OID");
+    fail("could not create terminal invocation receipt");
+  }
+  const reportDirEntry = lstatSync(reportDir);
+  if (!reportDirEntry.isDirectory() || reportDirEntry.isSymbolicLink() || realpathSync(reportDir) !== reportDir) {
+    fail("terminal invocation receipt is not one physical directory");
+  }
+  return reportPath;
 }
 
 function stageAndDispatch({
@@ -386,35 +494,29 @@ function stageAndDispatch({
   schedules,
   reportPath,
   tools,
-  fixture,
-  fixtureMutation,
+  executable,
+  runtimeClosure,
 }) {
   const privateRoot = mkdtempSync(resolve(tmpdir(), "mailglass-finalize-v2-7-"));
   try {
     chmodSync(privateRoot, 0o700);
     for (const entry of authenticated) materialize(privateRoot, entry);
     const inputsPath = resolve(privateRoot, "terminal-inputs.json");
-    writeFileSync(inputsPath, `${JSON.stringify({ ci: ciRun, schedules }, null, 2)}\n`, {
+    const revalidatedClosure = trustedToolClosure(tools);
+    if (JSON.stringify(revalidatedClosure) !== JSON.stringify(runtimeClosure)) {
+      fail("trusted runtime closure changed before staged dispatch");
+    }
+    writeFileSync(inputsPath, `${JSON.stringify({ ci: ciRun, schedules, executable, runtime_closure: runtimeClosure }, null, 2)}\n`, {
       flag: "wx",
       mode: 0o400,
     });
     chmodSync(inputsPath, 0o400);
-    if (fixtureMutation === "move-before-dispatch") {
-      writeFileSync(resolve(repo, ".phase-165-head-move"), "move\n", { flag: "wx" });
-      git(repo, ["add", "--", ".phase-165-head-move"], { gitPath: tools.GIT });
-      git(repo, ["commit", "-q", "-m", "fixture head move before dispatch"], { gitPath: tools.GIT });
-    }
     if (captureAuthorityCommit(repo, tools.GIT) !== authorityOid) {
       fail("authority commit changed before Bash dispatch");
     }
     const childEnv = buildChildEnvironment(tools);
-    if (fixture) {
-      childEnv.MAILGLASS_MILESTONE_FIXTURE = "1";
-      if (fixtureMutation === "move-after-report") {
-        childEnv.MAILGLASS_MILESTONE_MUTATE_AFTER_REPORT = "move-head";
-      } else if (fixtureMutation === "dirty-after-report") {
-        childEnv.MAILGLASS_MILESTONE_MUTATE_AFTER_REPORT = "dirty-worktree";
-      }
+    if (JSON.stringify(trustedToolClosure(tools)) !== JSON.stringify(runtimeClosure)) {
+      fail("trusted runtime closure changed before finalizer invocation");
     }
     const finalizer = resolve(privateRoot, FINALIZER_PATH);
     const result = run(tools.BASH, [finalizer, repo, privateRoot, authorityOid, reportPath, inputsPath], {
@@ -429,41 +531,6 @@ function stageAndDispatch({
   }
 }
 
-export function runFixtureFinalization(options) {
-  const allowedKeys = new Set([
-    "repo",
-    "authorityOid",
-    "reportRelative",
-    "ciRuns",
-    "scheduleRuns",
-    "expectedScheduleNames",
-    "tools",
-    "fixtureMutation",
-  ]);
-  const unexpected = Object.keys(options).filter((key) => !allowedKeys.has(key));
-  if (unexpected.length > 0) fail(`caller-selected or unsupported fixture input: ${unexpected.join(",")}`);
-  const tools = options.tools ?? TRUSTED_TOOLS;
-  const repo = realpathSync(options.repo);
-  const authorityOid = options.authorityOid ?? captureAuthorityCommit(repo, tools.GIT);
-  assertCleanRepository(repo, tools.GIT);
-  const authenticated = authenticateClosedManifest(repo, authorityOid, tools.GIT);
-  const ciRun = selectExactAttemptOneCi(options.ciRuns, authorityOid);
-  const schedules = selectNaturalSchedules(options.scheduleRuns, authorityOid, options.expectedScheduleNames);
-  const reportPath = resolve(repo, options.reportRelative ?? "tmp/phase-165-finalize.fixture/report.json");
-  mkdirSync(dirname(reportPath), { recursive: true, mode: 0o700 });
-  return stageAndDispatch({
-    repo,
-    authorityOid,
-    authenticated,
-    ciRun,
-    schedules,
-    reportPath,
-    tools,
-    fixture: true,
-    fixtureMutation: options.fixtureMutation,
-  });
-}
-
 function parseSelfCheck(args) {
   if (
     args.length !== 5 ||
@@ -476,33 +543,81 @@ function parseSelfCheck(args) {
   return { repoArgument: args[2], expectedSourceOid: args[4] };
 }
 
+export function verifyInstalledExecutable(options) {
+  const tools = validateTrustedToolchain(options.tools ?? TRUSTED_TOOLS);
+  const repo = realpathSync(options.repo);
+  const expectedSourceOid = options.expectedSourceOid;
+  const executableLexical = resolve(options.executable);
+  if (!FULL_OID.test(expectedSourceOid)) fail("installed executable authority OID is invalid");
+  if (inside(repo, executableLexical)) fail("installed executable must be external to the repository");
+  requirePhysicalParentChain(executableLexical, "installed executable");
+  let executableEntry;
+  let executable;
+  try {
+    executableEntry = lstatSync(executableLexical);
+    executable = realpathSync(executableLexical);
+  } catch {
+    fail("installed executable is missing");
+  }
+  const allowedOwners = new Set([0, process.getuid?.()].filter(Number.isInteger));
+  if (!executableEntry.isFile() || executableEntry.isSymbolicLink() || executable !== executableLexical) {
+    fail("installed executable is not one physical regular file");
+  }
+  if (!allowedOwners.has(executableEntry.uid)) fail("installed executable has unsafe ownership");
+  if ((executableEntry.mode & 0o777) !== 0o500) fail("installed executable mode is not 0500");
+  const installedBytes = readFileSync(executable);
+  const approvedBytes = authenticateCommitFile(repo, expectedSourceOid, SOURCE_PATH, tools.GIT);
+  if (!installedBytes.equals(approvedBytes)) fail("installed-byte mismatch");
+  return {
+    path: executable,
+    sha256: sha256(installedBytes),
+    source_oid: expectedSourceOid,
+    mode: "0500",
+    uid: executableEntry.uid,
+    gid: executableEntry.gid,
+  };
+}
+
 function selfCheck(args) {
   const tools = validateTrustedToolchain();
   const { repoArgument, expectedSourceOid } = parseSelfCheck(args);
   if (!isAbsolute(repoArgument) || !FULL_OID.test(expectedSourceOid)) fail("self-check input is invalid");
   const repo = realpathSync(repoArgument);
-  assertCleanRepository(repo, tools.GIT);
   const executableLexical = fileURLToPath(import.meta.url);
-  const executableEntry = lstatSync(executableLexical);
-  const executable = realpathSync(executableLexical);
-  if (!executableEntry.isFile() || executableEntry.isSymbolicLink() || inside(repo, executable)) {
-    fail("self-check executable must be one external regular file");
-  }
-  if ((executableEntry.mode & 0o777) !== 0o500) fail("self-check executable mode is not 0500");
-  const installedBytes = readFileSync(executable);
-  const approvedBytes = authenticateCommitFile(repo, expectedSourceOid, SOURCE_PATH, tools.GIT);
-  if (!installedBytes.equals(approvedBytes)) fail("installed-byte mismatch");
+  const evidence = verifyInstalledExecutable({ repo, expectedSourceOid, executable: executableLexical, tools });
   const currentOid = captureAuthorityCommit(repo, tools.GIT);
   const ancestry = git(repo, ["merge-base", "--is-ancestor", expectedSourceOid, currentOid], {
     gitPath: tools.GIT,
     allowFailure: true,
   });
   if (ancestry.status !== 0) fail("installation OID is not an ancestor of current authority");
+  trustedToolClosure(tools);
   console.log(`installation_oid=${expectedSourceOid}`);
   console.log(`current_oid=${currentOid}`);
-  console.log(`loader_sha256=${sha256(installedBytes)}`);
-  console.log(`executable=${executable}`);
+  console.log(`loader_sha256=${evidence.sha256}`);
+  console.log(`executable=${evidence.path}`);
   console.log("mode=0500");
+}
+
+function authenticateRunningInstallation(repo, authorityOid, tools, runtimeClosure) {
+  const invoked = process.argv[1] ? resolve(process.argv[1]) : "";
+  const modulePath = fileURLToPath(import.meta.url);
+  if (invoked !== INSTALLATION_DESTINATION || modulePath !== INSTALLATION_DESTINATION) {
+    fail("terminal executable is not the approved installation destination");
+  }
+  if (realpathSync(process.execPath) !== tools.NODE) {
+    fail("terminal executable is not running under the approved Node runtime");
+  }
+  const evidence = verifyInstalledExecutable({
+    repo,
+    expectedSourceOid: authorityOid,
+    executable: modulePath,
+    tools,
+  });
+  if (JSON.stringify(trustedToolClosure(tools)) !== JSON.stringify(runtimeClosure)) {
+    fail("trusted runtime closure changed at installed boundary");
+  }
+  return evidence;
 }
 
 function validateCanonicalRepository(gitPath) {
@@ -522,7 +637,10 @@ function validateCanonicalRepository(gitPath) {
   return repo;
 }
 
-function ghJson(tools, args, childEnv) {
+function ghJson(tools, runtimeClosure, args, childEnv) {
+  if (JSON.stringify(trustedToolClosure(tools)) !== JSON.stringify(runtimeClosure)) {
+    fail("trusted runtime closure changed before GitHub evidence query");
+  }
   const result = run(tools.GH, args, { encoding: "utf8", env: childEnv, label: "read-only GitHub evidence query" });
   try {
     const parsed = JSON.parse(result.stdout);
@@ -535,27 +653,29 @@ function ghJson(tools, args, childEnv) {
 
 function finalizeMilestone() {
   const tools = validateTrustedToolchain();
+  const runtimeClosure = trustedToolClosure(tools);
   const repo = validateCanonicalRepository(tools.GIT);
   assertCleanRepository(repo, tools.GIT);
   const authorityOid = captureAuthorityCommit(repo, tools.GIT);
   const authenticated = authenticateClosedManifest(repo, authorityOid, tools.GIT);
+  const executable = authenticateRunningInstallation(repo, authorityOid, tools, runtimeClosure);
+  const reportPath = prepareTerminalReceipt(repo, authorityOid, tools.GIT);
   const childEnv = buildChildEnvironment(tools);
   const fields = "databaseId,workflowName,headBranch,headSha,event,attempt,status,conclusion,createdAt";
-  const ciRuns = ghJson(tools, ["run", "list", "--repo", EXPECTED_REPOSITORY, "--workflow", "CI", "--branch", "main", "--event", "push", "--status", "completed", "--limit", "100", "--json", fields], childEnv);
-  const scheduleRuns = ghJson(tools, ["run", "list", "--repo", EXPECTED_REPOSITORY, "--branch", "main", "--event", "schedule", "--status", "completed", "--limit", "100", "--json", fields], childEnv);
+  const ciRuns = ghJson(tools, runtimeClosure, ["run", "list", "--repo", EXPECTED_REPOSITORY, "--workflow", "CI", "--branch", "main", "--event", "push", "--status", "completed", "--limit", "100", "--json", fields], childEnv);
+  const scheduleRuns = ghJson(tools, runtimeClosure, ["run", "list", "--repo", EXPECTED_REPOSITORY, "--branch", "main", "--event", "schedule", "--status", "completed", "--limit", "100", "--json", fields], childEnv);
   const ciRun = selectExactAttemptOneCi(ciRuns, authorityOid);
   const schedules = selectNaturalSchedules(scheduleRuns, authorityOid);
-  const reportDir = resolve(repo, `tmp/phase-165-finalize.${randomBytes(4).toString("hex")}`);
-  mkdirSync(reportDir, { recursive: false, mode: 0o700 });
   const result = stageAndDispatch({
     repo,
     authorityOid,
     authenticated,
     ciRun,
     schedules,
-    reportPath: resolve(reportDir, "report.json"),
+    reportPath,
     tools,
-    fixture: false,
+    executable,
+    runtimeClosure,
   });
   if (captureAuthorityCommit(repo, tools.GIT) !== authorityOid) fail("authority commit changed after report write");
   assertCleanRepository(repo, tools.GIT);

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
+PATH=/usr/bin:/bin
+export PATH
 
 : "${MAILGLASS_GIT:?missing validated MAILGLASS_GIT}"
 : "${MAILGLASS_JQ:?missing validated MAILGLASS_JQ}"
@@ -128,6 +130,16 @@ require_selected_evidence() {
     .ci.workflowName == "CI" and .ci.event == "push" and .ci.attempt == 1 and
     .ci.headBranch == "main" and .ci.headSha == $sha and .ci.status == "completed" and
     .ci.conclusion == "success" and
+    (.executable | type == "object") and
+    (.executable.path | type == "string" and length > 0) and
+    (.executable.sha256 | test("^[0-9a-f]{64}$")) and
+    .executable.source_oid == $sha and .executable.mode == "0500" and
+    (.runtime_closure | type == "array" and length == 5) and
+    all(.runtime_closure[];
+      (.name | type == "string" and length > 0) and
+      (.path | type == "string" and startswith("/")) and
+      (.sha256 | test("^[0-9a-f]{64}$")) and
+      (.version | type == "string" and length > 0)) and
     (.schedules | type == "array" and length == 3) and
     ([.schedules[].workflowName] | sort) == (["Post Publish", "Release Please", "Repository Hygiene"] | sort) and
     all(.schedules[];
@@ -143,11 +155,12 @@ require_report_boundary() {
   ! "$MAILGLASS_GIT" -C "$repo" --literal-pathspecs ls-files --error-unmatch -- "$rel" >/dev/null 2>&1 ||
     fail "terminal report target is tracked"
   "$MAILGLASS_GIT" -C "$repo" check-ignore -q -- "$rel" || fail "terminal report target is not ignored"
+  [ ! -e "$report" ] && [ ! -L "$report" ] || fail "terminal report target already exists"
 }
 
 main() {
   local repo_arg="${1:-}" authority_arg="${2:-}" expected_oid="${3:-}" report_arg="${4:-}" inputs_arg="${5:-}"
-  local repo authority_root report inputs origin branch report_tmp
+  local repo authority_root report inputs origin branch report_tmp report_schema report_status
   [ "$#" -eq 5 ] || fail "usage: $0 REPO AUTHORITY_ROOT EXPECTED_OID REPORT INPUTS"
   repo=$(cd "$repo_arg" 2>/dev/null && pwd -P) || fail "repository does not exist"
   authority_root=$(cd "$authority_arg" 2>/dev/null && pwd -P) || fail "authority root does not exist"
@@ -163,30 +176,37 @@ main() {
   require_selected_evidence "$inputs" "$expected_oid"
   require_report_boundary "$repo" "$report"
 
-  if [ "${MAILGLASS_MILESTONE_FIXTURE:-}" != 1 ]; then
-    branch=$("$MAILGLASS_GIT" -C "$repo" branch --show-current 2>/dev/null || true)
-    [ "$branch" = main ] || fail "canonical checkout is not on main"
-    origin=$("$MAILGLASS_GIT" -C "$repo" remote get-url origin 2>/dev/null || true)
-    case "$origin" in
-      "git@github.com:$expected_repository"|"git@github.com:$expected_repository.git"|\
-      "https://github.com/$expected_repository"|"https://github.com/$expected_repository.git"|\
-      "ssh://git@github.com/$expected_repository"|"ssh://git@github.com/$expected_repository.git") ;;
-      *) fail "origin is not $expected_repository" ;;
-    esac
-    "$MAILGLASS_GIT" -C "$repo" fetch origin main >/dev/null || fail "git fetch origin main failed"
-    [ "$("$MAILGLASS_GIT" -C "$repo" rev-parse refs/remotes/origin/main 2>/dev/null || true)" = "$expected_oid" ] ||
-      fail "HEAD does not equal origin/main"
-  fi
+  branch=$("$MAILGLASS_GIT" -C "$repo" branch --show-current 2>/dev/null || true)
+  [ "$branch" = main ] || fail "canonical checkout is not on main"
+  origin=$("$MAILGLASS_GIT" -C "$repo" remote get-url origin 2>/dev/null || true)
+  case "$origin" in
+    "git@github.com:$expected_repository"|"git@github.com:$expected_repository.git"|\
+    "https://github.com/$expected_repository"|"https://github.com/$expected_repository.git"|\
+    "ssh://git@github.com/$expected_repository"|"ssh://git@github.com/$expected_repository.git") ;;
+    *) fail "origin is not $expected_repository" ;;
+  esac
+  "$MAILGLASS_GIT" -C "$repo" fetch origin main >/dev/null || fail "git fetch origin main failed"
+  [ "$("$MAILGLASS_GIT" -C "$repo" rev-parse refs/remotes/origin/main 2>/dev/null || true)" = "$expected_oid" ] ||
+    fail "HEAD does not equal origin/main"
 
   require_authority "$repo" "$expected_oid"
   [ -z "$(stable_porcelain "$repo")" ] || fail "stable porcelain changed before report write"
   report_tmp=$(mktemp "$(dirname "$report")/.report.XXXXXX") || fail "could not allocate terminal report"
-  "$MAILGLASS_JQ" -n --arg sha "$expected_oid" --slurpfile evidence "$inputs" '
+  if [ "${MAILGLASS_MILESTONE_FIXTURE:-}" = 1 ]; then
+    report_schema=mailglass-finalize-milestone-fixture-v1
+    report_status=fixture-only
+  else
+    report_schema=mailglass-finalize-milestone-report-v1
+    report_status=pass
+  fi
+  "$MAILGLASS_JQ" -n --arg sha "$expected_oid" --arg schema "$report_schema" --arg status "$report_status" --slurpfile evidence "$inputs" '
     {
-      schema: "mailglass-finalize-milestone-report-v1",
+      schema: $schema,
       milestone: "v2.7",
-      status: "pass",
+      status: $status,
       expected_main_sha: $sha,
+      executable: $evidence[0].executable,
+      runtime_closure: $evidence[0].runtime_closure,
       components: {
         archive: {status: "pass", phases: [161, 162, 163, 164, 165]},
         audit: {status: "pass", requirements: "16/16", phases: "5/5", integration: "16/16", flows: "5/5"},
@@ -196,7 +216,8 @@ main() {
     }
   ' >"$report_tmp" || { rm -f "$report_tmp"; fail "could not serialize terminal report"; }
   chmod 600 "$report_tmp"
-  mv "$report_tmp" "$report"
+  mv -n "$report_tmp" "$report" || { rm -f "$report_tmp"; fail "could not publish terminal report"; }
+  [ ! -e "$report_tmp" ] || { rm -f "$report_tmp"; fail "terminal report target appeared before publication"; }
 
   case "${MAILGLASS_MILESTONE_MUTATE_AFTER_REPORT:-}" in
     "") ;;
@@ -222,9 +243,17 @@ main() {
     mark_report_blocked "$report" "stable porcelain changed after report write"
     fail "stable porcelain changed after report write"
   fi
-  "$MAILGLASS_JQ" -e --arg sha "$expected_oid" '.status == "pass" and .expected_main_sha == $sha' "$report" >/dev/null ||
-    fail "terminal report is not pass"
-  printf 'finalize-milestone v2.7: terminal evidence passed at %s\n' "$expected_oid"
+  if [ "${MAILGLASS_MILESTONE_FIXTURE:-}" = 1 ]; then
+    "$MAILGLASS_JQ" -e --arg sha "$expected_oid" \
+      '.schema == "mailglass-finalize-milestone-fixture-v1" and .status == "fixture-only" and .expected_main_sha == $sha' \
+      "$report" >/dev/null || fail "fixture report crossed the production report boundary"
+    printf 'finalize-milestone v2.7: fixture evidence validated at %s\n' "$expected_oid"
+  else
+    "$MAILGLASS_JQ" -e --arg sha "$expected_oid" \
+      '.schema == "mailglass-finalize-milestone-report-v1" and .status == "pass" and .expected_main_sha == $sha' \
+      "$report" >/dev/null || fail "terminal report is not pass"
+    printf 'finalize-milestone v2.7: terminal evidence passed at %s\n' "$expected_oid"
+  fi
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

@@ -293,6 +293,15 @@ Absence is a wait/block, never authority to dispatch or rerun.
 
 ## 6. One Terminal Invocation and Hard Stop
 
+The Phase 165 review fixes deliberately invalidate the earlier installation approval. As of the
+review-fix boundary, the tracked source candidate has SHA-256
+`bee0e504a9fb88e34452f6bf1f9cd01dc8ec75eabf2b844eaa9e49ef12db27cb`, while the untouched installed
+file has SHA-256 `505707b19ab09366479243365ef2ce1b4c2a4030614eca69c40ea5f51174a6ce` (regular file,
+mode `0500`, uid `501`, gid `20`). This mismatch is an expected fail-closed result, not installation
+authority. Do not invoke terminal finalization. A fresh proposal, exact tuple approval, atomic install,
+and successful exact-path self-check are required after these source changes land; any further source
+change invalidates the candidate digest again.
+
 After every prior gate passes, invoke the approved installed command by command name exactly once:
 
 ```text
