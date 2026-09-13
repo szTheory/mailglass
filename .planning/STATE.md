@@ -1,20 +1,20 @@
 ---
-gsd_state_version: "1.0"
+gsd_state_version: 1.0
 milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 165
 current_phase_name: Reconcile terminal proof and milestone archive ordering
-status: executing
-stopped_at: Completed 165-04-PLAN.md
-last_updated: "2026-09-13T19:14:03.984Z"
+status: verifying
+stopped_at: Completed 165-05-PLAN.md
+last_updated: "2026-09-13T19:56:06.300Z"
 last_activity: 2026-09-13
-last_activity_desc: Plan 165-04 completed
-state_head: cbe9c45797c444b21dc7e6f51559f7b2f573fbf1
+last_activity_desc: Plan 165-05 completed
+state_head: e13ef41e8013bc173cd2ab9f8defad7561f51c30
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 75
-  completed_plans: 71
+  completed_plans: 72
   percent: 80
 current_plan: 5
 ---
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-09-13)
 
 ## Current Position
 
-Phase: 165 (Reconcile terminal proof and milestone archive ordering) — EXECUTING
+Phase: 165 (Reconcile terminal proof and milestone archive ordering) — VERIFYING
 Plan: 5 of 5
-Status: Ready to execute
-Last activity: 2026-09-13 — Plan 165-04 completed
+Status: Phase complete — ready for verification
+Last activity: 2026-09-13 — Plan 165-05 completed
 
-Progress: [████████████████████] 71/75 plans complete ([████████░░] 80%)
+Progress: [████████████████████] 72/75 plans complete ([████████░░] 80%)
 
 ## Lifecycle Authority
 
@@ -59,7 +59,7 @@ Progress: [████████████████████] 71/75 p
 
 **Velocity:**
 
-- Total plans completed: 71
+- Total plans completed: 72
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -144,6 +144,7 @@ Progress: [████████████████████] 71/75 p
 | Phase 165 P02 | 117m | 2 tasks | 4 files |
 | Phase 165 P03 | 4m | 2 tasks | 4 files |
 | Phase 165 P04 | 8m | 2 tasks | 1 files |
+| Phase 165 P05 | 25m | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -261,6 +262,9 @@ Progress: [████████████████████] 71/75 p
 - [Phase 165]: Plan 165-04 approved an absent/create predecessor with no backup and a guarded remove_created rollback bound to regular-file type, mode 0500, and the approved digest.
 - [Phase 165]: Plan 165-04 used same-filesystem atomic no-overwrite publication so a raced destination cannot be replaced beyond the approved tuple.
 - [Phase 165]: Plan 165-04 proved installed readiness only; the v2.7 terminal invocation remains ordered after archive and protected evidence gates.
+- [Phase 165]: Canonical milestone audit and archive begin only after execute-phase returns with passed ordinary verification and completion metadata.
+- [Phase 165]: The archive checkpoint binds a fresh exact preview while scoped git.create_tag=false is restored byte-for-byte before convergence.
+- [Phase 165]: Final state publication and commit precede protected exact-SHA evidence and the one permitted installed terminal invocation.
 
 ## Deferred Items
 
@@ -270,6 +274,6 @@ Progress: [████████████████████] 71/75 p
 
 ## Session Continuity
 
-Last session: 2026-09-13T19:14:03.796Z
-Stopped at: Completed 165-04-PLAN.md
+Last session: 2026-09-13T19:56:06.120Z
+Stopped at: Completed 165-05-PLAN.md
 Resume file: None
