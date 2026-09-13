@@ -1,22 +1,22 @@
 ---
-gsd_state_version: "1.0"
+gsd_state_version: 1.0
 milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Planned)
 current_phase: 165
 current_phase_name: Reconcile terminal proof and milestone archive ordering
 status: executing
-stopped_at: Completed 165-02-PLAN.md
-last_updated: "2026-09-13T18:29:09.398Z"
+stopped_at: Completed 165-03-PLAN.md
+last_updated: "2026-09-13T18:48:08.741Z"
 last_activity: 2026-09-13
-last_activity_desc: Phase 165 execution started
-state_head: 5b83e7f390ed43f9d2ba15e3af23bb076edd1eef
+last_activity_desc: Plan 165-03 completed
+state_head: 45de00f2abd930d648bbc04421d0b084270b6c89
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 75
-  completed_plans: 69
+  completed_plans: 70
   percent: 80
-current_plan: 44
+current_plan: 4
 ---
 
 # Project State
@@ -31,11 +31,11 @@ See: .planning/PROJECT.md (updated 2026-09-13)
 ## Current Position
 
 Phase: 165 (Reconcile terminal proof and milestone archive ordering) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
-Last activity: 2026-09-13 — Phase 165 execution started
+Last activity: 2026-09-13 — Plan 165-03 completed
 
-Progress: [████████████████████] 69/75 plans complete ([████████░░] 80%)
+Progress: [████████████████████] 70/75 plans complete ([████████░░] 80%)
 
 ## Lifecycle Authority
 
@@ -142,6 +142,7 @@ Progress: [████████████████████] 69/75 p
 | Phase 164 P44 | 25m | 2 tasks | 5 files |
 | Phase 165 P01 | 61m | 2 tasks | 10 files |
 | Phase 165 P02 | 117m | 2 tasks | 4 files |
+| Phase 165 P03 | 4m | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -253,6 +254,9 @@ Progress: [████████████████████] 69/75 p
 - [Phase 165]: Installed-host proof remains opt-in and excluded from repository CI; repository fixtures authenticate and execute staged bytes only.
 - [Phase 165]: Phase 161 Plan 04 owns WSPC-01, WSPC-03, and WSPC-04 completion claims; WSPC-02 remains owned by Plan 05.
 - [Phase 165]: Canonical validation refreshes retain historical green evidence while adding current workflow audit trails; they do not reinterpret Phase 164 terminal authority.
+- [Phase 165]: Phase 164 terminal evidence remains immutable successful history; Phase 165 owns the separate pre-archive reconciliation and eventual archived-v2.7 terminal authority. — Live lifecycle ledgers must not treat the completed Phase 164 proof as current milestone authority.
+- [Phase 165]: The v2.7 lifecycle remains exactly Phases 161-165 with the same 16 requirements, accepted 14-PR debt, and no legacy quick-task attribution. — D-09 through D-11 preserve scope and evidence-backed debt without inventing new ownership.
+- [Phase 165]: state.json is generated only by publishStateContract, with a second publication required after final archive-related Markdown edits. — Machine state must derive from the final human-authored lifecycle sources at both pre-archive and post-archive boundaries.
 
 ## Deferred Items
 
@@ -262,6 +266,6 @@ Progress: [████████████████████] 69/75 p
 
 ## Session Continuity
 
-Last session: 2026-09-13T18:29:09.167Z
-Stopped at: Completed 165-02-PLAN.md
+Last session: 2026-09-13T18:48:08.517Z
+Stopped at: Completed 165-03-PLAN.md
 Resume file: None

@@ -385,14 +385,14 @@ Plans:
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
 | 164. Repository Truth Reconciliation and Closeout | 44/44 | Complete | 2026-09-12 |
-| 165. Reconcile terminal proof and milestone archive ordering | 2/5 | In Progress|  |
+| 165. Reconcile terminal proof and milestone archive ordering | 3/5 | In Progress|  |
 
 ### Phase 165: Reconcile terminal proof and milestone archive ordering
 
 **Goal:** Restore a truthful v2.7 lifecycle by reconciling strict metadata, completing and auditing Phase 165, archiving the milestone before terminal capture, and establishing ignored-only exact-SHA terminal authority for archived v2.7.
 **Requirements**: None — lifecycle decision coverage only per D-09; the milestone's existing 16 requirements remain assigned to Phases 161–164.
 **Depends on:** Phase 164
-**Plans:** 2/5 plans executed
+**Plans:** 3/5 plans executed
 
 Plans:
 **Wave 1**
@@ -402,7 +402,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 165-03-PLAN.md — Reconcile the live five-phase milestone ledgers and republish state.json.
+- [x] 165-03-PLAN.md — Reconcile the live five-phase milestone ledgers and republish state.json.
 - [ ] 165-04-PLAN.md — Obtain exact installation approval, install atomically, and prove the installed-only boundary.
 
 **Wave 3** *(blocked on Wave 2 completion)*
