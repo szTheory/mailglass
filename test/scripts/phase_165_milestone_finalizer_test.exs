@@ -105,28 +105,18 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
-  test "stale audit authority fails closed before terminal report publication" do
-    fixture = milestone_fixture!("stale-audit")
-    audit = Path.join(fixture.repo, ".planning/milestones/v2.7-MILESTONE-AUDIT.md")
+  test "actual canonical audit schema is accepted and a wrong milestone fails closed" do
+    fixture = milestone_fixture!("canonical-audit")
+    assert {_, 0} = run_fixture(fixture)
 
-    File.write!(
-      audit,
-      Regex.replace(
-        ~r/^audited_head: [0-9a-f]{40}$/m,
-        File.read!(audit),
-        "audited_head: 0000000000000000000000000000000000000000"
-      )
-    )
+    wrong = milestone_fixture!("wrong-audit-milestone")
 
-    git!(fixture.repo, ["add", "--", ".planning/milestones/v2.7-MILESTONE-AUDIT.md"])
-    git!(fixture.repo, ["commit", "-q", "-m", "forge stale audit"])
-    fixture = %{fixture | oid: git!(fixture.repo, ["rev-parse", "HEAD"]) |> String.trim()}
+    wrong =
+      mutate_fixture!(wrong, ".planning/milestones/v2.7-MILESTONE-AUDIT.md", fn body ->
+        String.replace(body, "milestone: v2.7", "milestone: v2.6")
+      end)
 
-    {output, status} = run_fixture(fixture)
-
-    assert status != 0
-    assert output =~ "stale audit"
-    refute File.exists?(fixture.report)
+    assert_failure(wrong, %{}, "canonical audit milestone is not v2.7")
   end
 
   @tag :phase_165_hostile
@@ -136,11 +126,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
        "requirements score is not 16/16"},
       {"phases", "phases: 5/5", "phases: 4/5", "phase score is not 5/5"},
       {"integration", "integration: 16/16", "integration: 15/16", "integration score is not 16/16"},
-      {"flows", "flows: 5/5", "flows: 4/5", "flow score is not 5/5"},
-      {"policy-debt-count", "open_pull_requests: 14", "open_pull_requests: 13",
-       "accepted policy-debt PR count is not 14"},
-      {"policy-debt-disposition", "disposition: accepted", "disposition: rejected",
-       "policy-debt disposition is not accepted"}
+      {"flows", "flows: 5/5", "flows: 4/5", "flow score is not 5/5"}
     ]
 
     for {name, old, replacement, diagnostic} <- cases do
@@ -203,6 +189,19 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     for {name, relative, mutation, diagnostic} <- cases do
       fixture = milestone_fixture!("lifecycle-#{name}")
       fixture = mutate_fixture!(fixture, relative, mutation)
+      assert_failure(fixture, %{}, diagnostic)
+    end
+
+    for {name, relative, phrase, diagnostic} <- [
+          {"state-debt", ".planning/STATE.md",
+           "Repository hygiene remains policy-blocked by 14 open PRs as accepted operational debt.\n",
+           "state omits the accepted 14-PR policy debt"},
+          {"project-debt", ".planning/PROJECT.md",
+           "The 14 open PRs remain disclosed accepted repository-hygiene policy debt.\n",
+           "project omits the accepted 14-PR policy debt"}
+        ] do
+      fixture = milestone_fixture!(name)
+      fixture = mutate_fixture!(fixture, relative, &String.replace(&1, phrase, ""))
       assert_failure(fixture, %{}, diagnostic)
     end
   end
@@ -579,18 +578,30 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
       ".planning/milestones/v2.7-MILESTONE-AUDIT.md",
       """
       ---
+      milestone: v2.7
+      audited: 2026-09-13T00:00:00Z
       status: passed
-      audited_head: AUDIT_HEAD
       scores:
         requirements: 16/16
         phases: 5/5
         integration: 16/16
         flows: 5/5
-      accepted_policy_debt:
-        open_pull_requests: 14
-        disposition: accepted
+      gaps:
+        requirements: []
+        integration: []
+        flows: []
+      nyquist:
+        compliant_phases: [161, 162, 163, 164, 165]
+        partial_phases: []
+        not_validated_phases: []
+        missing_phases: []
+        overall: compliant
+      tech_debt:
+        - phase: milestone
+          items:
+            - Repository hygiene remains policy-blocked by 14 open PRs.
       ---
-      Exact v2.7 milestone audit fixture.
+      Canonical audit workflow output fixture.
       """
     )
 
@@ -603,10 +614,10 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     write!(
       repo,
       ".planning/PROJECT.md",
-      "## Completed Milestone: v2.7 Repository Stewardship & Operational Hygiene\n"
+      "## Completed Milestone: v2.7 Repository Stewardship & Operational Hygiene\n\nThe 14 open PRs remain disclosed accepted repository-hygiene policy debt.\n"
     )
 
-    write!(repo, ".planning/STATE.md", "---\nmilestone: v2.7\nstatus: archived\n---\n")
+    write!(repo, ".planning/STATE.md", "---\nmilestone: v2.7\nstatus: archived\n---\n\nRepository hygiene remains policy-blocked by 14 open PRs as accepted operational debt.\n")
     write!(repo, ".planning/state.json", ~s({"milestone":"v2.7","status":"archived"}\n))
 
     for phase <- 161..165 do
@@ -627,11 +638,6 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
 
     git!(repo, ["add", "."])
     git!(repo, ["commit", "-q", "-m", "canonical v2.7 audit fixture"])
-    audit_oid = git!(repo, ["rev-parse", "HEAD"]) |> String.trim()
-    audit_path = Path.join(repo, ".planning/milestones/v2.7-MILESTONE-AUDIT.md")
-    File.write!(audit_path, String.replace(File.read!(audit_path), "AUDIT_HEAD", audit_oid))
-    git!(repo, ["add", "--", ".planning/milestones/v2.7-MILESTONE-AUDIT.md"])
-    git!(repo, ["commit", "-q", "-m", "final archived v2.7 fixture"])
     oid = git!(repo, ["rev-parse", "HEAD"]) |> String.trim()
 
     %{

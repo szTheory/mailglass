@@ -73,21 +73,15 @@ require_heading() {
 }
 
 require_archive_contract() {
-  local authority_root="$1" expected_oid="$2" repo="$3" audit audit_oid phase dir validation phases=()
+  local authority_root="$1" expected_oid="$2" repo="$3" audit phase dir validation phases=()
   audit="$authority_root/$archive_root/v2.7-MILESTONE-AUDIT.md"
+  require_frontmatter_value "$audit" milestone v2.7 "canonical audit milestone"
   require_frontmatter_value "$audit" status passed "canonical audit status"
-  audit_oid=$(frontmatter_value "$audit" audited_head)
-  [[ "$audit_oid" =~ ^[0-9a-f]{40}$ ]] || fail "stale audit: audited_head is not one full OID"
-  "$MAILGLASS_GIT" -C "$repo" cat-file -e "$audit_oid^{commit}" 2>/dev/null ||
-    fail "stale audit: audited_head does not name a commit"
-  "$MAILGLASS_GIT" -C "$repo" merge-base --is-ancestor "$audit_oid" "$expected_oid" 2>/dev/null ||
-    fail "stale audit: audited_head is not an ancestor of terminal authority"
   require_frontmatter_value "$audit" scores.requirements 16/16 "canonical audit requirements score"
   require_frontmatter_value "$audit" scores.phases 5/5 "canonical audit phase score"
   require_frontmatter_value "$audit" scores.integration 16/16 "canonical audit integration score"
   require_frontmatter_value "$audit" scores.flows 5/5 "canonical audit flow score"
-  require_frontmatter_value "$audit" accepted_policy_debt.open_pull_requests 14 "canonical audit accepted policy-debt PR count"
-  require_frontmatter_value "$audit" accepted_policy_debt.disposition accepted "canonical audit policy-debt disposition"
+  require_frontmatter_value "$audit" nyquist.overall compliant "canonical audit Nyquist result"
 
   shopt -s nullglob
   for dir in "$authority_root/$phase_root"/*; do
@@ -107,7 +101,9 @@ require_archive_contract() {
   require_heading "$authority_root/.planning/MILESTONES.md" '^## v2\.7 Repository Stewardship & Operational Hygiene \((Completed|Shipped):' "milestone ledger omits the completed v2.7 record"
   require_frontmatter_value "$authority_root/.planning/STATE.md" milestone v2.7 "state milestone"
   require_frontmatter_value "$authority_root/.planning/STATE.md" status archived "state status"
+  require_heading "$authority_root/.planning/STATE.md" '14 open PRs.*accepted operational debt' "state omits the accepted 14-PR policy debt"
   require_heading "$authority_root/.planning/PROJECT.md" '^## Completed Milestone: v2\.7 Repository Stewardship & Operational Hygiene$' "project omits the completed v2.7 record"
+  require_heading "$authority_root/.planning/PROJECT.md" '14 open PRs.*accepted repository-hygiene policy debt' "project omits the accepted 14-PR policy debt"
   "$MAILGLASS_JQ" -e '.milestone == "v2.7" and (.status == "archived" or .milestone_status == "archived")' \
     "$authority_root/.planning/state.json" >/dev/null || fail "machine state does not agree that v2.7 is archived"
   [ -f "$authority_root/$archive_root/v2.7-ROADMAP.md" ] || fail "archived ROADMAP is missing"

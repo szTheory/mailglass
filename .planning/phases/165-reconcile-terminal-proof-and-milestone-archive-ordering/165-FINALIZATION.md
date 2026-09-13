@@ -46,10 +46,13 @@ The newly generated live `.planning/v2.7-MILESTONE-AUDIT.md` must be non-null an
 - integration `16/16`;
 - flows `5/5`;
 - all five Phase 161-165 validation records compliant; and
-- the repository-hygiene `14-PR` policy block explicitly disclosed as accepted operational debt.
+- the canonical `nyquist.overall` result covering all five phases.
 
 Any other audit result stops the lifecycle before archive preview. Do not reinterpret or hand-edit
-the canonical audit to make it pass.
+the canonical audit to make it pass. The canonical producer does not emit a commit OID or a bespoke
+accepted-policy-debt object. The terminal finalizer therefore authenticates the archived audit as a
+blob of the final authority commit and derives the retained `14-PR` accepted-debt decision from the
+authenticated final PROJECT and STATE ledgers, where that project policy is canonically owned.
 
 ## 2. Preview the Exact Archive Without Mutating It
 
