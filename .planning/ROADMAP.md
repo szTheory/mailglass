@@ -33,7 +33,7 @@
 - ✅ **v2.4 Outbound First-Adopter Correctness** — Phases 149-153 (shipped 2026-08-04) — [archive](milestones/v2.4-ROADMAP.md)
 - ✅ **v2.5 B2C Alpha Adoption Certification** — Phase 154 (shipped 2026-08-04) — [archive](milestones/v2.5-ROADMAP.md)
 - ✅ **v2.6 Engineering Quality Ratchet** — Phases 155–160 (shipped 2026-08-21) — [archive](milestones/v2.6-ROADMAP.md)
-- 📋 **v2.7 Repository Stewardship & Operational Hygiene** — Phases 161–164 (planned)
+- 📋 **v2.7 Repository Stewardship & Operational Hygiene** — Phases 161–165 (planned)
 
 ## Phases
 
@@ -57,6 +57,7 @@
 - [x] **Phase 162: Protected Release and Scheduled-Control Recovery** - Reconcile release state and restore truthful proposal, hygiene, and post-publish outcomes through existing protected controls. (completed 2026-08-26)
 - [x] **Phase 163: Deterministic Release-Path Timeout Repairs** - Repair uniquely reproduced timeout owners, retain complete proof contracts, and capture safe structured evidence automatically when bounded reconstruction does not recur. (completed 2026-08-26)
 - [x] **Phase 164: Repository Truth Reconciliation and Closeout** - Align maintenance evidence with settled facts and prove the final quiet repository state. (completed 2026-09-12)
+- [ ] **Phase 165: Reconcile terminal proof and milestone archive ordering** - Restore a truthful v2.7 lifecycle by reconciling strict metadata, completing and auditing Phase 165, archiving the milestone before terminal capture, and establishing ignored-only exact-SHA terminal authority for archived v2.7.
 
 ## Phase Details
 
@@ -363,7 +364,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 161 → 162 → 163 → 164
+**Execution Order:** 161 → 162 → 163 → 164 → 165
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -371,3 +372,19 @@ Plans:
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
 | 164. Repository Truth Reconciliation and Closeout | 44/44 | Complete | 2026-09-12 |
+| 165. Reconcile terminal proof and milestone archive ordering | 0/5 | Planned | - |
+
+### Phase 165: Reconcile terminal proof and milestone archive ordering
+
+**Goal:** Restore a truthful v2.7 lifecycle by reconciling strict metadata, completing and auditing Phase 165, archiving the milestone before terminal capture, and establishing ignored-only exact-SHA terminal authority for archived v2.7.
+**Requirements**: None — lifecycle decision coverage only per D-09; the milestone's existing 16 requirements remain assigned to Phases 161–164.
+**Depends on:** Phase 164
+**Plans:** 5 plans
+
+Plans:
+
+- [ ] 165-01-PLAN.md — Build the repository-local v2.7 terminal tracer, hostile fixtures, and isolated verification lanes.
+- [ ] 165-02-PLAN.md — Repair strict Phase 161 requirement ownership and canonical Phase 161/163 validation inputs.
+- [ ] 165-03-PLAN.md — Reconcile the live five-phase milestone ledgers and republish state.json.
+- [ ] 165-04-PLAN.md — Obtain exact installation approval, install atomically, and prove the installed-only boundary.
+- [ ] 165-05-PLAN.md — Validate ordinary Phase 165 readiness and codify the post-completion audit/archive/terminal lifecycle.
