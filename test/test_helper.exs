@@ -45,7 +45,10 @@ schema = Mailglass.Config.schema()
 # Machine-specific installed-authority proof is opt-in only. Keep this base
 # exclusion in every root ExUnit process; `--only` on the one controlled-host
 # alias explicitly includes it when the canonical host is being verified.
-base_exclusions = [:phase_164_installed_production_boundary]
+base_exclusions = [
+  :phase_164_installed_production_boundary,
+  :phase_165_installed_production_boundary
+]
 
 exclusions =
   if schema == "public", do: base_exclusions, else: [:public_only | base_exclusions]

@@ -298,7 +298,7 @@ defmodule Mailglass.MixProject do
       # (and the ci.yml step that runs it) would satisfy the letter of a drift-proof
       # test while enforcing nothing.
       "verify.ci_lane_contract": [
-        "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
+        "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --exclude phase_165_installed_production_boundary --warnings-as-errors"
       ],
       "verify.phase_164.authority_closure": [
         "test test/scripts/phase_164_closeout_test.exs --only phase_164_authority_closure --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
@@ -311,6 +311,12 @@ defmodule Mailglass.MixProject do
       # through this explicit controlled-host command.
       "verify.phase_164.installed_boundary": [
         "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
+      ],
+      "verify.phase_165.repository": [
+        "test test/scripts/phase_165_milestone_finalizer_test.exs --exclude phase_165_installed_production_boundary --warnings-as-errors --no-deps-check"
+      ],
+      "verify.phase_165.installed_boundary": [
+        "test test/scripts/phase_165_milestone_finalizer_test.exs --only phase_165_installed_production_boundary --warnings-as-errors --no-deps-check"
       ],
       "verify.support_contract.core": [
         "test test/mailglass/docs_contract_test.exs test/mailglass/docs/testing_guide_test.exs test/mailglass/stability_contract_test.exs test/mailglass/compatibility_contract_test.exs test/mailglass/docs_migration_smoke_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs test/mailglass/operator/support_summary_test.exs test/mailglass/webhook/telemetry_test.exs test/mailglass/telemetry_test.exs test/mailglass/webhook/replay_test.exs test/mailglass/webhook/reconciler_test.exs --warnings-as-errors"
