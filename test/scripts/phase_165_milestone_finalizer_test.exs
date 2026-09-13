@@ -4,6 +4,10 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   @repo_root Path.expand("../..", __DIR__)
   @loader Path.join(@repo_root, "scripts/mailglass_finalize_milestone_loader.mjs")
   @finalizer Path.join(@repo_root, "scripts/finalize_milestone_v2_7.sh")
+  @finalization_runbook Path.join(
+                          @repo_root,
+                          ".planning/phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md"
+                        )
   @installed_loader "/Users/jon/.local/bin/mailglass-finalize-milestone"
 
   @tag :phase_165_tracer
@@ -320,6 +324,58 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     assert output =~ "installed-byte mismatch"
   end
 
+  @tag :phase_165_tag_omission_fixture
+  test "runbook tag omission restores exact config bytes and fails closed at each seam" do
+    section = runbook_tag_omission_section!()
+
+    success = tag_omission_fixture!("success")
+    {preview_output, 0} = run_tag_omission(success, section, ["preview"])
+    [_, approved_sha] = Regex.run(~r/approved_preview_sha256=([0-9a-f]{64})/, preview_output)
+    assert File.read!(success.config) == success.original
+
+    assert {output, 0} = run_tag_omission(success, section, ["confirm", approved_sha])
+    assert output =~ "canonical archive confirmed"
+    assert File.read!(success.config) == success.original
+    assert File.read!(success.log) =~ "--confirm"
+
+    initialization = tag_omission_fixture!("initialization-failure")
+
+    assert {output, status} =
+             run_tag_omission(initialization, section, ["preview"], %{"STUB_INIT_FAIL" => "1"})
+
+    assert status != 0
+    assert output =~ "init.complete-milestone failed"
+    assert File.read!(initialization.config) == initialization.original
+    refute File.read!(initialization.log) =~ "--confirm"
+
+    archive = tag_omission_fixture!("archive-failure")
+    {preview_output, 0} = run_tag_omission(archive, section, ["preview"])
+    [_, approved_sha] = Regex.run(~r/approved_preview_sha256=([0-9a-f]{64})/, preview_output)
+
+    assert {output, status} =
+             run_tag_omission(archive, section, ["confirm", approved_sha], %{
+               "STUB_ARCHIVE_FAIL" => "1"
+             })
+
+    assert status != 0
+    assert output =~ "canonical archive confirmation failed"
+    assert File.read!(archive.config) == archive.original
+
+    restoration = tag_omission_fixture!("restoration-failure")
+    {preview_output, 0} = run_tag_omission(restoration, section, ["preview"])
+    [_, approved_sha] = Regex.run(~r/approved_preview_sha256=([0-9a-f]{64})/, preview_output)
+
+    assert {output, status} =
+             run_tag_omission(restoration, section, ["confirm", approved_sha], %{
+               "PHASE_165_RESTORE_COMMAND" => restoration.restore,
+               "STUB_RESTORE_FAIL" => "1"
+             })
+
+    assert status != 0
+    assert output =~ "exact original config bytes were not restored"
+    refute File.read!(restoration.log) =~ "--confirm"
+  end
+
   describe "installed milestone production boundary" do
     @describetag :phase_165_installed_production_boundary
 
@@ -484,6 +540,94 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
       {output, 0} -> {:ok, output |> String.trim() |> Jason.decode!()}
       {output, _status} -> {:error, output}
     end
+  end
+
+  defp runbook_tag_omission_section! do
+    source = File.read!(@finalization_runbook)
+
+    case Regex.run(
+           ~r/^# phase165:tag-omission:start\n(?<section>.*?)^# phase165:tag-omission:end$/ms,
+           source,
+           capture: ["section"]
+         ) do
+      [section] -> section
+      _ -> flunk("stable tag-omission runbook markers are missing or ambiguous")
+    end
+  end
+
+  defp tag_omission_fixture!(name) do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "mailglass-phase-165-tag-omission-#{name}-#{System.unique_integer([:positive])}"
+      )
+
+    repo = Path.join(root, "repo")
+    config = Path.join(repo, ".planning/config.json")
+    log = Path.join(root, "gsd.log")
+    stub = Path.join(root, "gsd-stub")
+    restore = Path.join(root, "restore-stub")
+    File.mkdir_p!(Path.dirname(config))
+    original = ~s({"mode":"yolo","git":{"branching_strategy":"none"}}\n)
+    File.write!(config, original)
+    on_exit(fn -> File.rm_rf!(root) end)
+
+    File.write!(
+      stub,
+      """
+      #!/bin/bash
+      set -eu
+      printf '%s\\n' "$*" >> "$STUB_LOG"
+      /usr/bin/jq -e '.git.create_tag == false' "$PHASE_165_REPO/.planning/config.json" >/dev/null
+      if [ "$*" = "query init.complete-milestone" ]; then
+        [ "${STUB_INIT_FAIL:-0}" != 1 ] || exit 71
+        printf '%s\\n' '{"section_manifest":{"included":["archive"],"excluded":["git-tag"]}}'
+      elif [[ "$*" == *"--dry-run"* ]]; then
+        printf '%s\\n' '{"dry_run":true,"version":"v2.7","would_archive":{"audit":{"source":".planning/v2.7-MILESTONE-AUDIT.md","target":".planning/milestones/v2.7-MILESTONE-AUDIT.md"},"phases":["161-a","162-b","163-c","164-d","165-e"],"phases_archive_skipped":false,"quick":[]}}'
+      elif [[ "$*" == *"--confirm"* ]]; then
+        [ "${STUB_ARCHIVE_FAIL:-0}" != 1 ] || exit 72
+        printf '%s\\n' '{"version":"v2.7","archived":{"roadmap":true,"requirements":true,"audit":true,"phases":true,"phases_archive_skipped":false,"quick":false}}'
+      else
+        exit 73
+      fi
+      """
+    )
+
+    File.write!(
+      restore,
+      """
+      #!/bin/bash
+      set -eu
+      [ "${STUB_RESTORE_FAIL:-0}" != 1 ] || exit 74
+      cp -- "$1" "$2"
+      """
+    )
+
+    File.chmod!(stub, 0o700)
+    File.chmod!(restore, 0o700)
+    File.write!(log, "")
+    %{repo: repo, config: config, original: original, log: log, stub: stub, restore: restore}
+  end
+
+  defp run_tag_omission(fixture, section, args, overrides \\ %{}) do
+    script = section <> "\nphase_165_complete_milestone_without_tag \"$@\"\n"
+    script_path = Path.join(Path.dirname(fixture.repo), "run-section.sh")
+    File.write!(script_path, script)
+
+    env =
+      %{
+        "PHASE_165_GSD_RUN" => fixture.stub,
+        "PHASE_165_REPO" => fixture.repo,
+        "STUB_LOG" => fixture.log
+      }
+      |> Map.merge(overrides)
+      |> Map.to_list()
+
+    System.cmd("/bin/bash", [script_path | args],
+      cd: fixture.repo,
+      env: env,
+      stderr_to_stdout: true
+    )
   end
 
   defp run_fixture(fixture, overrides \\ %{}) do
