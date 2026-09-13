@@ -372,8 +372,25 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
              })
 
     assert status != 0
-    assert output =~ "exact original config bytes were not restored"
+    assert output =~ "configured restoration command failed"
+    assert File.read!(restoration.config) == restoration.original
     refute File.read!(restoration.log) =~ "--confirm"
+
+    after_confirm = tag_omission_fixture!("restoration-failure-after-confirm")
+    {preview_output, 0} = run_tag_omission(after_confirm, section, ["preview"])
+    [_, approved_sha] = Regex.run(~r/approved_preview_sha256=([0-9a-f]{64})/, preview_output)
+
+    assert {output, status} =
+             run_tag_omission(after_confirm, section, ["confirm", approved_sha], %{
+               "PHASE_165_RESTORE_COMMAND" => after_confirm.restore,
+               "STUB_RESTORE_FAIL_AFTER" => "2",
+               "STUB_RESTORE_COUNTER" => after_confirm.restore_counter
+             })
+
+    assert status != 0
+    assert output =~ "configured restoration command failed"
+    assert File.read!(after_confirm.config) == after_confirm.original
+    assert File.read!(after_confirm.log) =~ "--confirm"
   end
 
   describe "installed milestone production boundary" do
@@ -567,6 +584,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     log = Path.join(root, "gsd.log")
     stub = Path.join(root, "gsd-stub")
     restore = Path.join(root, "restore-stub")
+    restore_counter = Path.join(root, "restore-counter")
     File.mkdir_p!(Path.dirname(config))
     original = ~s({"mode":"yolo","git":{"branching_strategy":"none"}}\n)
     File.write!(config, original)
@@ -598,6 +616,13 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
       """
       #!/bin/bash
       set -eu
+      if [ -n "${STUB_RESTORE_COUNTER:-}" ]; then
+        count=0
+        [ ! -f "$STUB_RESTORE_COUNTER" ] || count=$(cat "$STUB_RESTORE_COUNTER")
+        count=$((count + 1))
+        printf '%s\n' "$count" > "$STUB_RESTORE_COUNTER"
+        [ -z "${STUB_RESTORE_FAIL_AFTER:-}" ] || [ "$count" -lt "$STUB_RESTORE_FAIL_AFTER" ] || exit 75
+      fi
       [ "${STUB_RESTORE_FAIL:-0}" != 1 ] || exit 74
       cp -- "$1" "$2"
       """
@@ -606,7 +631,16 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     File.chmod!(stub, 0o700)
     File.chmod!(restore, 0o700)
     File.write!(log, "")
-    %{repo: repo, config: config, original: original, log: log, stub: stub, restore: restore}
+
+    %{
+      repo: repo,
+      config: config,
+      original: original,
+      log: log,
+      stub: stub,
+      restore: restore,
+      restore_counter: restore_counter
+    }
   end
 
   defp run_tag_omission(fixture, section, args, overrides \\ %{}) do

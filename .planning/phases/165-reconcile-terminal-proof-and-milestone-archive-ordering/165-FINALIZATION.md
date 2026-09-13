@@ -112,7 +112,16 @@ phase_165_complete_milestone_without_tag() (
   phase_165_restore_config() {
     if [ "$phase_165_restored" -eq 0 ]; then
       if [ -n "${PHASE_165_RESTORE_COMMAND:-}" ]; then
-        "$PHASE_165_RESTORE_COMMAND" "$phase_165_original" "$phase_165_config"
+        if ! "$PHASE_165_RESTORE_COMMAND" "$phase_165_original" "$phase_165_config"; then
+          # A testable/custom restore is never the last copy authority. Recover
+          # with the private byte-for-byte backup, but keep the invocation red so
+          # an operator cannot mistake a degraded restoration path for success.
+          cp -- "$phase_165_original" "$phase_165_config" || return 1
+          phase_165_restored=1
+          cmp -s -- "$phase_165_original" "$phase_165_config" || return 1
+          echo "phase165-archive: configured restoration command failed; exact original config bytes recovered" >&2
+          return 1
+        fi
       else
         cp -- "$phase_165_original" "$phase_165_config"
       fi
@@ -127,8 +136,12 @@ phase_165_complete_milestone_without_tag() (
   phase_165_cleanup() {
     phase_165_status=$?
     trap - EXIT
-    if ! phase_165_restore_config; then phase_165_status=1; fi
-    rm -rf -- "$phase_165_tmp"
+    if phase_165_restore_config; then
+      rm -rf -- "$phase_165_tmp"
+    else
+      phase_165_status=1
+      printf 'phase165-archive: recovery copy retained at %s\n' "$phase_165_original" >&2
+    fi
     exit "$phase_165_status"
   }
   trap phase_165_cleanup EXIT
