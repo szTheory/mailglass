@@ -26,33 +26,66 @@ require_authority() {
 
 frontmatter_value() {
   local file="$1" key="$2"
-  awk -v key="$key" '
+  awk -v path="$key" '
+    BEGIN {
+      parts = split(path, key_parts, ".")
+      if (parts < 1 || parts > 2) exit 64
+    }
     NR == 1 && $0 == "---" { in_frontmatter = 1; next }
-    in_frontmatter && $0 == "---" { exit }
-    in_frontmatter && index($0, key ":") == 1 {
-      sub("^" key ":[[:space:]]*", "")
-      gsub(/^\"|\"$/, "")
-      print
-      exit
+    in_frontmatter && $0 == "---" { closed = 1; in_frontmatter = 0; next }
+    !in_frontmatter { next }
+    parts == 1 && $0 ~ ("^" key_parts[1] ":[[:space:]]*") {
+      count++
+      value = $0
+      sub("^" key_parts[1] ":[[:space:]]*", "", value)
+      next
+    }
+    parts == 2 && $0 ~ ("^" key_parts[1] ":[[:space:]]*$") {
+      parent_count++
+      in_parent = 1
+      next
+    }
+    parts == 2 && in_parent && $0 ~ /^[^[:space:]]/ { in_parent = 0 }
+    parts == 2 && in_parent && $0 ~ ("^  " key_parts[2] ":[[:space:]]*") {
+      count++
+      value = $0
+      sub("^  " key_parts[2] ":[[:space:]]*", "", value)
+    }
+    END {
+      if (!closed || count != 1 || (parts == 2 && parent_count != 1)) exit 65
+      gsub(/^\"|\"$/, "", value)
+      print value
     }
   ' "$file"
+}
+
+require_frontmatter_value() {
+  local file="$1" key="$2" expected="$3" diagnostic="$4" observed
+  observed=$(frontmatter_value "$file" "$key") || fail "$diagnostic is missing or duplicated"
+  [ "$observed" = "$expected" ] || fail "$diagnostic is not $expected"
+}
+
+require_heading() {
+  local file="$1" pattern="$2" diagnostic="$3"
+  grep -E -- "$pattern" "$file" >/dev/null || fail "$diagnostic"
 }
 
 require_archive_contract() {
   local authority_root="$1" expected_oid="$2" repo="$3" audit audit_oid phase dir validation phases=()
   audit="$authority_root/$archive_root/v2.7-MILESTONE-AUDIT.md"
-  [ "$(frontmatter_value "$audit" status)" = passed ] || fail "canonical audit status is not passed"
+  require_frontmatter_value "$audit" status passed "canonical audit status"
   audit_oid=$(frontmatter_value "$audit" audited_head)
   [[ "$audit_oid" =~ ^[0-9a-f]{40}$ ]] || fail "stale audit: audited_head is not one full OID"
   "$MAILGLASS_GIT" -C "$repo" cat-file -e "$audit_oid^{commit}" 2>/dev/null ||
     fail "stale audit: audited_head does not name a commit"
   "$MAILGLASS_GIT" -C "$repo" merge-base --is-ancestor "$audit_oid" "$expected_oid" 2>/dev/null ||
     fail "stale audit: audited_head is not an ancestor of terminal authority"
-  grep -F -- 'requirements: 16/16' "$audit" >/dev/null || fail "canonical audit requirements score is not 16/16"
-  grep -F -- 'phases: 5/5' "$audit" >/dev/null || fail "canonical audit phase score is not 5/5"
-  grep -F -- 'integration: 16/16' "$audit" >/dev/null || fail "canonical audit integration score is not 16/16"
-  grep -F -- 'flows: 5/5' "$audit" >/dev/null || fail "canonical audit flow score is not 5/5"
-  grep -F -- '14-PR accepted policy debt' "$audit" >/dev/null || fail "canonical audit omits accepted 14-PR policy debt"
+  require_frontmatter_value "$audit" scores.requirements 16/16 "canonical audit requirements score"
+  require_frontmatter_value "$audit" scores.phases 5/5 "canonical audit phase score"
+  require_frontmatter_value "$audit" scores.integration 16/16 "canonical audit integration score"
+  require_frontmatter_value "$audit" scores.flows 5/5 "canonical audit flow score"
+  require_frontmatter_value "$audit" accepted_policy_debt.open_pull_requests 14 "canonical audit accepted policy-debt PR count"
+  require_frontmatter_value "$audit" accepted_policy_debt.disposition accepted "canonical audit policy-debt disposition"
 
   shopt -s nullglob
   for dir in "$authority_root/$phase_root"/*; do
@@ -65,13 +98,14 @@ require_archive_contract() {
     [ "${#dir[@]}" -eq 1 ] || fail "archived phase $phase is missing or ambiguous"
     validation="${dir[0]}/$phase-VALIDATION.md"
     [ -f "$validation" ] || fail "archived phase $phase validation is missing"
-    [ "$(frontmatter_value "$validation" status)" = validated ] || fail "archived phase $phase is not validated"
+    require_frontmatter_value "$validation" status validated "archived phase $phase status"
   done
   shopt -u nullglob
 
-  grep -F -- 'v2.7' "$authority_root/.planning/MILESTONES.md" >/dev/null || fail "milestone ledger omits v2.7"
-  grep -F -- 'archived' "$authority_root/.planning/STATE.md" >/dev/null || fail "state does not record archived milestone"
-  grep -F -- 'v2.7' "$authority_root/.planning/PROJECT.md" >/dev/null || fail "project does not record v2.7"
+  require_heading "$authority_root/.planning/MILESTONES.md" '^## v2\.7 Repository Stewardship & Operational Hygiene \((Completed|Shipped):' "milestone ledger omits the completed v2.7 record"
+  require_frontmatter_value "$authority_root/.planning/STATE.md" milestone v2.7 "state milestone"
+  require_frontmatter_value "$authority_root/.planning/STATE.md" status archived "state status"
+  require_heading "$authority_root/.planning/PROJECT.md" '^## Completed Milestone: v2\.7 Repository Stewardship & Operational Hygiene$' "project omits the completed v2.7 record"
   "$MAILGLASS_JQ" -e '.milestone == "v2.7" and (.status == "archived" or .milestone_status == "archived")' \
     "$authority_root/.planning/state.json" >/dev/null || fail "machine state does not agree that v2.7 is archived"
   [ -f "$authority_root/$archive_root/v2.7-ROADMAP.md" ] || fail "archived ROADMAP is missing"

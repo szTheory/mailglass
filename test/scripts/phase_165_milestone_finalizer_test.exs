@@ -124,8 +124,10 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
       {"phases", "phases: 5/5", "phases: 4/5", "phase score is not 5/5"},
       {"integration", "integration: 16/16", "integration: 15/16", "integration score is not 16/16"},
       {"flows", "flows: 5/5", "flows: 4/5", "flow score is not 5/5"},
-      {"policy-debt", "14-PR accepted policy debt", "policy debt omitted",
-       "omits accepted 14-PR policy debt"}
+      {"policy-debt-count", "open_pull_requests: 14", "open_pull_requests: 13",
+       "accepted policy-debt PR count is not 14"},
+      {"policy-debt-disposition", "disposition: accepted", "disposition: rejected",
+       "policy-debt disposition is not accepted"}
     ]
 
     for {name, old, replacement, diagnostic} <- cases do
@@ -133,7 +135,8 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
 
       fixture =
         mutate_fixture!(fixture, ".planning/milestones/v2.7-MILESTONE-AUDIT.md", fn body ->
-          String.replace(body, old, replacement)
+          String.replace(body, old, replacement) <>
+            "\nExplanatory prose retains the non-authoritative expected token: #{old}\n"
         end)
 
       assert_failure(fixture, %{}, diagnostic)
@@ -148,7 +151,47 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
         &String.replace(&1, "status: validated", "status: draft")
       )
 
-    assert_failure(fixture, %{}, "archived phase 163 is not validated")
+    assert_failure(fixture, %{}, "archived phase 163 status is not validated")
+
+    duplicate = milestone_fixture!("audit-duplicate-score")
+
+    duplicate =
+      mutate_fixture!(duplicate, ".planning/milestones/v2.7-MILESTONE-AUDIT.md", fn body ->
+        String.replace(
+          body,
+          "  requirements: 16/16",
+          "  requirements: 16/16\n  requirements: 16/16"
+        )
+      end)
+
+    assert_failure(duplicate, %{}, "requirements score is missing or duplicated")
+  end
+
+  @tag :phase_165_hostile
+  test "lifecycle prose cannot impersonate authoritative archived state" do
+    cases = [
+      {"state", ".planning/STATE.md",
+       fn body ->
+         String.replace(body, "status: archived", "status: active") <>
+           "\nv2.7 is not archived; the word archived is explanatory only.\n"
+       end, "state status is not archived"},
+      {"project", ".planning/PROJECT.md",
+       fn body ->
+         String.replace(body, "## Completed Milestone:", "## Proposed Milestone:") <>
+           "\nThe phrase Completed Milestone: v2.7 Repository Stewardship & Operational Hygiene is not authoritative.\n"
+       end, "project omits the completed v2.7 record"},
+      {"milestones", ".planning/MILESTONES.md",
+       fn body ->
+         String.replace(body, "(Completed:", "(Not completed:") <>
+           "\nv2.7 archived appears only in prose.\n"
+       end, "milestone ledger omits the completed v2.7 record"}
+    ]
+
+    for {name, relative, mutation, diagnostic} <- cases do
+      fixture = milestone_fixture!("lifecycle-#{name}")
+      fixture = mutate_fixture!(fixture, relative, mutation)
+      assert_failure(fixture, %{}, diagnostic)
+    end
   end
 
   @tag :phase_165_hostile
@@ -433,18 +476,32 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
       ---
       status: passed
       audited_head: AUDIT_HEAD
+      scores:
+        requirements: 16/16
+        phases: 5/5
+        integration: 16/16
+        flows: 5/5
+      accepted_policy_debt:
+        open_pull_requests: 14
+        disposition: accepted
       ---
-      requirements: 16/16
-      phases: 5/5
-      integration: 16/16
-      flows: 5/5
-      14-PR accepted policy debt
+      Exact v2.7 milestone audit fixture.
       """
     )
 
-    write!(repo, ".planning/MILESTONES.md", "v2.7 archived\n")
-    write!(repo, ".planning/PROJECT.md", "v2.7 completed and archived\n")
-    write!(repo, ".planning/STATE.md", "v2.7 archived\n")
+    write!(
+      repo,
+      ".planning/MILESTONES.md",
+      "## v2.7 Repository Stewardship & Operational Hygiene (Completed: 2026-09-13)\n"
+    )
+
+    write!(
+      repo,
+      ".planning/PROJECT.md",
+      "## Completed Milestone: v2.7 Repository Stewardship & Operational Hygiene\n"
+    )
+
+    write!(repo, ".planning/STATE.md", "---\nmilestone: v2.7\nstatus: archived\n---\n")
     write!(repo, ".planning/state.json", ~s({"milestone":"v2.7","status":"archived"}\n))
 
     for phase <- 161..165 do
