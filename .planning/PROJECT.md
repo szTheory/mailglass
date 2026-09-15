@@ -38,12 +38,14 @@ installed Phase 164 finalizer successfully captured terminal evidence at protect
 `851e3640f7f0eb6e784611d157e3a7329f87e2dc`; that report is immutable historical evidence and is not
 current authority for Phase 165 or the archived v2.7 milestone.
 
-**Phase 165 is the active pre-archive lifecycle repair.** Its exact goal is to restore a truthful v2.7
-lifecycle by reconciling strict metadata, completing and auditing Phase 165, archiving the milestone
-before terminal capture, and establishing ignored-only exact-SHA terminal authority for archived v2.7.
-The new terminal authority has not run and cannot run until ordinary verification, canonical audit,
-archive completion, final tracked convergence, protected-main integration, exact attempt-one CI, and
-natural scheduled evidence are complete.
+**Phase 165 is the pre-archive lifecycle repair, and it passed ordinary verification 2026-09-15**
+(5/5 must-haves, `165-VERIFICATION.md`). Its exact goal is to restore a truthful v2.7 lifecycle by
+reconciling strict metadata, completing and auditing Phase 165, archiving the milestone before
+terminal capture, and establishing ignored-only exact-SHA terminal authority for archived v2.7.
+Ordinary verification is now the only one of those gates that has run. The new terminal authority
+has not run and cannot run until canonical audit, archive completion, final tracked convergence,
+protected-main integration, exact attempt-one CI, and natural scheduled evidence are complete; the
+runbook sequencing them is `165-FINALIZATION.md`.
 
 **v2.6 Engineering Quality Ratchet shipped and passed its milestone audit 2026-08-21.** The milestone restored
 generated-host migration truth, bounded execution and data/security correctness, tightened architecture,
@@ -136,6 +138,19 @@ dispatch or rerun, merge bypass, releases, and publication remain prohibited.
 - ✓ AUTO-01..05 — reconciled release identities and explicit dispositions; proposal-only protected
   authority; three-state repository-hygiene evidence; and exact-target post-publish recovery — validated
   in Phase 162. All three current-main scheduled controls passed provenance and artifact-agreement UAT.
+- ✓ DTRM-01..04 — bounded reconstruction of the observed SQLSTATE 57014 property failure with the
+  invariant and its 1,000 executions retained, and the gallery-matrix timeout repaired at its narrow
+  readiness/Playwright boundary — validated in Phase 163. Normal PR run 33002642359 passed Core
+  Deterministic and Operator Browser at exact repair SHA `f8bf029f`; human UAT was removed from
+  timeout proof in favour of that exact-SHA protected evidence.
+- ✓ TRTH-01..03 — maintainer/version/release guidance reconciled to the settled protected workflow,
+  every changed tracked artifact and ignore rule classified with evidence, and reproducible closeout
+  proof of a clean canonical workspace with green protected-main CI — validated in Phase 164 at
+  protected-main SHA `851e3640f7f0eb6e784611d157e3a7329f87e2dc`. That terminal report is immutable
+  historical evidence, not current authority for the archived milestone.
+
+All 16 v2.7 requirements are now Complete in `.planning/REQUIREMENTS.md`. Phase 165 contributed
+lifecycle decision coverage only and validated no requirement IDs, per D-09.
 
 ## Completed Milestone: v2.6 Engineering Quality Ratchet
 
@@ -1005,7 +1020,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-08-26 after Phase 162.*
+*Last updated: 2026-09-15 after Phase 165.*
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->

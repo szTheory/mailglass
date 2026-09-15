@@ -8,12 +8,12 @@ stopped_at: Phase 165 complete — all phases complete
 last_updated: "2026-09-15T22:09:18.579Z"
 last_activity: 2026-09-15
 last_activity_desc: Phase 165 complete
-state_head: a2fb0eab5193a96f8c4ad24eff0c46a6fc821ef1
+state_head: ef18c73eb84bf894a55c1b869163defc2fc94a0b
 progress:
   total_phases: 5
   completed_phases: 5
   total_plans: 75
-  completed_plans: 72
+  completed_plans: 75
   percent: 100
 current_plan: 5
 ---
@@ -22,31 +22,34 @@ current_plan: 5
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-09-13)
+See: .planning/PROJECT.md (updated 2026-09-15)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 165 — Reconcile terminal proof and milestone archive ordering
+**Current focus:** v2.7 post-completion runbook — canonical milestone audit, then archive, then terminal capture (165-FINALIZATION.md)
 
 ## Current Position
 
 Phase: 165
 Plan: Not started
-Status: All phases complete
+Status: All phases complete — Phase 165 ordinary verification passed 5/5
 Last activity: 2026-09-15 — Phase 165 complete
 
-Progress: [████████████████████] 72/75 plans complete ([██████████] 100%)
+Progress: [████████████████████] 75/75 plans complete ([██████████] 100%)
 
 ## Lifecycle Authority
 
-- Phase 165 is the active pre-archive lifecycle repair across the five-phase v2.7 scope, with no new
-  requirement IDs beyond the 16 definitions assigned to Phases 161–164.
+- Phase 165 was the pre-archive lifecycle repair across the five-phase v2.7 scope, with no new
+  requirement IDs beyond the 16 definitions assigned to Phases 161–164. It passed ordinary
+  verification 5/5 on 2026-09-15 (`165-VERIFICATION.md`) and is marked complete; all 75 plans across
+  Phases 161–165 now have summaries and ROADMAP checkboxes.
 - Phase 164 completed successfully at protected-main SHA
   `851e3640f7f0eb6e784611d157e3a7329f87e2dc`. Its ignored terminal report is immutable historical
   evidence only; Phase 164 pending/current-authority statements retained in the accumulated execution
   history below are not live milestone blockers or v2.7 terminal authority.
-- The separate v2.7 terminal authority has not run. It remains ordered after Phase 165 ordinary
-  verification, canonical audit, archive completion, final tracked convergence, protected-main
-  integration, exact attempt-one CI, and natural scheduled evidence.
+- The separate v2.7 terminal authority has not run. Phase 165 ordinary verification is now the only
+  one of its ordered predecessors that has completed; canonical audit, archive completion, final
+  tracked convergence, protected-main integration, exact attempt-one CI, and natural scheduled
+  evidence all remain outstanding. The runbook sequencing them is `165-FINALIZATION.md`.
 - This publication is pre-archive only. The post-archive runbook must call the canonical
   `publishStateContract` again after every archive-related Markdown edit and include the resulting
   `state.json` in the final tracked archive commit.
@@ -274,6 +277,6 @@ Progress: [████████████████████] 72/75 p
 
 ## Session Continuity
 
-Last session: 2026-09-13T19:56:06.120Z
-Stopped at: Phase 165 complete — all phases complete
+Last session: 2026-09-15
+Stopped at: Phase 165 complete and verified (5/5) — all v2.7 phases complete; next is the canonical milestone audit, then archive, then terminal capture per 165-FINALIZATION.md. 36 local commits remain unpushed; STATE withholds push authority.
 Resume file: None
