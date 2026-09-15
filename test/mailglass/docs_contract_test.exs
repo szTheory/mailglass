@@ -550,12 +550,15 @@ defmodule Mailglass.DocsContractTest do
       assert opener_offset < subordinate_offset,
              "value-prop opener must appear before 'subordinate' framing"
 
-      # Stale pins are fixed and the current 1.x pin is present (positive assertion so
+      # Stale pins are fixed and the current 2.x pin is present (positive assertion so
       # deleting the dep block or pinning to some other wrong version cannot pass).
       refute migration =~ "~> 0.3", "migration-from-swoosh.md still contains stale ~> 0.3 pin"
 
-      assert migration =~ ~r/~>\s*1\.6/,
-             "migration-from-swoosh.md must pin the current ~> 1.6 series"
+      refute migration =~ ~r/~>\s*1\.6/,
+             "migration-from-swoosh.md still contains stale ~> 1.6 pin"
+
+      assert migration =~ ~r/~>\s*2\.5/,
+             "migration-from-swoosh.md must pin the current ~> 2.5 series"
     end
 
     test "Multi-tenancy routing example parses and documents the shipped adapter_ref surface" do

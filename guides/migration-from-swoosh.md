@@ -28,11 +28,16 @@ Add mailglass to your dependencies:
 ```elixir
 def deps do
   [
-    {:mailglass, "~> 1.6"},
-    {:mailglass_admin, "~> 1.6", only: [:dev]}
+    {:mailglass, "~> 2.5"},
+    {:mailglass_admin, "~> 2.5"}
   ]
 end
 ```
+
+The `mailglass_admin` declaration above is production-capable, which is required
+when mounting the production operator surface. Preview-only adopters that do not
+mount the production operator may instead add `only: :dev` to that dependency; a
+dev-scoped dependency is not compiled or available in production.
 
 Then fetch deps, run the installer, and migrate:
 
