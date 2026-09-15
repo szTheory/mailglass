@@ -64,7 +64,7 @@ workflows, bypassing protected controls, releasing, and publishing remain outsid
 - [x] **Phase 162: Protected Release and Scheduled-Control Recovery** - Reconcile release state and restore truthful proposal, hygiene, and post-publish outcomes through existing protected controls. (completed 2026-08-26)
 - [x] **Phase 163: Deterministic Release-Path Timeout Repairs** - Repair uniquely reproduced timeout owners, retain complete proof contracts, and capture safe structured evidence automatically when bounded reconstruction does not recur. (completed 2026-08-26)
 - [x] **Phase 164: Repository Truth Reconciliation and Closeout** - Align maintenance evidence with settled facts and prove the final quiet repository state. (completed 2026-09-12)
-- [ ] **Phase 165: Reconcile terminal proof and milestone archive ordering** - Restore a truthful v2.7 lifecycle by reconciling strict metadata, completing and auditing Phase 165, archiving the milestone before terminal capture, and establishing ignored-only exact-SHA terminal authority for archived v2.7.
+- [x] **Phase 165: Reconcile terminal proof and milestone archive ordering** - Restore a truthful v2.7 lifecycle by reconciling strict metadata, completing and auditing Phase 165, archiving the milestone before terminal capture, and establishing ignored-only exact-SHA terminal authority for archived v2.7. (completed 2026-09-15)
 
 ## Phase Details
 
@@ -385,14 +385,14 @@ Plans:
 | 162. Protected Release and Scheduled-Control Recovery | 13/13 | Complete    | 2026-08-26 |
 | 163. Deterministic Release-Path Timeout Repairs | 8/8 | Complete | 2026-08-26 |
 | 164. Repository Truth Reconciliation and Closeout | 44/44 | Complete | 2026-09-12 |
-| 165. Reconcile terminal proof and milestone archive ordering | 5/5 | In Progress|  |
+| 165. Reconcile terminal proof and milestone archive ordering | 5/5 | Complete    | 2026-09-15 |
 
 ### Phase 165: Reconcile terminal proof and milestone archive ordering
 
 **Goal:** Restore a truthful v2.7 lifecycle by reconciling strict metadata, completing and auditing Phase 165, archiving the milestone before terminal capture, and establishing ignored-only exact-SHA terminal authority for archived v2.7.
 **Requirements**: None — lifecycle decision coverage only per D-09; the milestone's existing 16 requirements remain assigned to Phases 161–164.
 **Depends on:** Phase 164
-**Plans:** 5/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 **Wave 1**

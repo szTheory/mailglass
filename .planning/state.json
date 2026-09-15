@@ -26,13 +26,13 @@
     {
       "number": "165",
       "name": "Reconcile terminal proof and milestone archive ordering",
-      "status": "in_progress"
+      "status": "complete"
     }
   ],
   "next": {
-    "command": "/gsd:progress --next",
-    "label": "Advance to the next step (verify)",
-    "reason": "Phase 165 of 5 · 80% · ready to verify"
+    "command": "/gsd:new-milestone",
+    "label": "Start a new milestone",
+    "reason": "All phases complete — start a new milestone"
   },
-  "updated_at": "2026-09-13T19:56:04.171Z"
+  "updated_at": "2026-09-15T22:09:31.082Z"
 }
