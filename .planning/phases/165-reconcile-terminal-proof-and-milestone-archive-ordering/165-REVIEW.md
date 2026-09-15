@@ -1,8 +1,8 @@
 ---
 phase: 165-reconcile-terminal-proof-and-milestone-archive-ordering
-reviewed: 2026-09-13T20:05:16Z
+reviewed: 2026-09-13T21:25:11Z
 depth: standard
-files_reviewed: 10
+files_reviewed: 11
 files_reviewed_list:
   - mix.exs
   - scripts/finalize_milestone_v2_7.sh
@@ -14,173 +14,153 @@ files_reviewed_list:
   - test/scripts/suite_floor_contract_test.exs
   - test/support/suite_floor.ex
   - test/test_helper.exs
+  - test/support/mailglass_milestone_finalizer_fixture.mjs
 findings:
   critical: 5
-  warning: 4
+  warning: 1
   info: 0
-  total: 9
+  total: 6
 status: issues_found
+disposition: accepted_risk
+disposition_date: 2026-09-15
+disposition_authority: maintainer
+disposition_scope: CR-01, CR-02, CR-03, CR-04, CR-05, WR-01
 ---
 
 # Phase 165: Code Review Report
 
-**Reviewed:** 2026-09-13T20:05:16Z
+**Reviewed:** 2026-09-13T21:25:11Z
 **Depth:** standard
-**Files Reviewed:** 10
+**Files Reviewed:** 11
 **Status:** issues_found
 
 ## Summary
 
-The milestone finalizer has five release-blocking authority defects. Most importantly, the shipped loader exports a fixture path that accepts caller-fabricated CI/schedule records and emits the same pass-report schema as production while disabling canonical origin and `origin/main` checks. The installed executable and its runtime tools are also not authenticated at the terminal boundary, and several path and archive-semantic checks are weaker than the Phase 165 threat model claims. Four additional test and maintainability defects leave these gaps under-tested or permit the one-shot contract to drift.
+The iteration-2 changes do close the five findings they targeted at a surface level: the finalizer now accepts the canonical audit field layout, authenticates live ROADMAP/RETROSPECTIVE and absent REQUIREMENTS state, checks all three validation booleans, separates fixture reports from production reports, validates installed bytes and pinned runtime tools, restores config bytes after false-success hooks, and releases unpublished receipt reservations. The terminal lifecycle is nevertheless still not shippable. Its supposedly exact document parser accepts contradictory authenticated content, approval/install can trust a stale remote-tracking ref, a late loader-side authority failure leaves a published pass receipt, one-shot state is scoped to an OID instead of the milestone, and rollback does not preserve or durably receipt the predecessor transition it claims to authenticate.
+
+Executable evidence confirmed that a duplicate contradictory `scores` parent is accepted as `16/16`, and that an authoritative-looking heading inside a fenced Markdown example is accepted. The deterministic receipt helper also produces distinct receipt locations for two OIDs of the same v2.7 milestone. Bash and Node syntax checks passed, as did `git diff --check`; the Elixir lane could not be rerun in this checkout because the available 1.19/OTP-27 runtime encountered dependency BEAMs compiled under an incompatible runtime (`corrupt atom table`). The prior fix report records a green 436-test CI-lane run. `.planning/config.json` remained byte-identical at SHA-256 `1bd93e09ff13a2f3536d7b5308f9fb19dcedc378424a7fa00c163a2868bf05fc`.
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01 — BLOCKER: Shipped fixture API can forge a production-shaped terminal pass report
+### CR-01 — BLOCKER: Contradictory YAML and fenced examples can still impersonate terminal archive semantics
 
-**File:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:432-464`
+**File:** `/Users/jon/projects/mailglass/scripts/finalize_milestone_v2_7.sh:29-61,70-72,103-115`
 
-**Also affected:** `/Users/jon/projects/mailglass/scripts/finalize_milestone_v2_7.sh:132-145`, `/Users/jon/projects/mailglass/test/scripts/phase_165_milestone_finalizer_test.exs:650-669`
+**Issue:** `frontmatter_value` counts a nested parent only when it has the exact empty form `scores:` or `nyquist:`. It therefore accepts a document containing both `scores: {requirements: 0/16}` and a later block-form `scores:` with `requirements: 16/16`; the review probe returned `16/16` instead of rejecting the duplicate parent. The lifecycle checks are looser still: `require_heading` is a raw `grep`, so an exact PROJECT, ROADMAP, MILESTONES, or RETROSPECTIVE heading inside a fenced code example passes. The two accepted-debt checks are unanchored prose searches and can occur in a sentence that repudiates the policy. The audit's `gaps` collections and exact Nyquist phase sets are not checked at all. Thus an authenticated final commit can contain contradictory canonical state while the finalizer emits a production `pass` report.
 
-**Issue:** `runFixtureFinalization/1` is exported by the same module that is installed as the production command. It accepts caller-supplied `ciRuns`, `scheduleRuns`, `expectedScheduleNames`, `tools`, and output path, then sets `MAILGLASS_MILESTONE_FIXTURE=1`. The shell uses that unauthenticated flag to skip branch, canonical-origin, fetch, and `HEAD == origin/main` enforcement. The resulting report still has schema `mailglass-finalize-milestone-report-v1` and `status: "pass"`, with no fixture marker. Any local caller can therefore import the repository or installed loader, supply fabricated attempt-1 records for the current OID, and create terminal evidence indistinguishable from the protected GitHub path. The happy-path test demonstrates this exact caller-selected evidence route.
+**Fix:** Parse the complete frontmatter as one strict document with duplicate-key rejection, require empty critical-gap collections and exact Nyquist phase sets, and reject unsupported YAML shapes rather than selecting one occurrence. Parse Markdown headings outside fenced/code regions and require exactly one canonical lifecycle record. Move the accepted-debt disposition to an exact structured owner field, or at minimum require one exact non-negated line outside fences. Add hostile cases for duplicate inline/block parents, non-empty audit gaps under `status: passed`, fenced canonical headings, duplicate ledger records, and negated debt prose.
 
-**Fix:** Remove the fixture bypass from the shipped loader/finalizer. Put fixture orchestration in a test-only module that cannot emit the production schema. Production shell checks should be unconditional:
+### CR-02 — BLOCKER: Approval and installation authenticate a stale cached `origin/main`
 
-```bash
-branch=$($MAILGLASS_GIT -C "$repo" branch --show-current)
-[ "$branch" = main ] || fail "canonical checkout is not on main"
-$MAILGLASS_GIT -C "$repo" fetch origin main
-[ "$($MAILGLASS_GIT -C "$repo" rev-parse refs/remotes/origin/main)" = "$expected_oid" ] ||
-  fail "HEAD does not equal origin/main"
-```
+**File:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:432-445,1017-1061`
 
-If fixture execution must share code, return a distinct `mailglass-finalize-milestone-fixture-v1` document that can never carry `status: "pass"`, and make the production report writer reject fixture mode.
+**Issue:** Proposal creation refreshes `origin/main` once, but `--approve-installation` and `--install-approved` do not fetch. Their call chain reaches `assertProposalAuthority`, which compares HEAD only with the local `refs/remotes/origin/main`. If protected main advances after proposal creation without another local fetch, that cached ref still equals the old HEAD, so both fresh approval and the host installation proceed for authority that is no longer current. Terminal execution will eventually discover the advance, but only after the external executable has already been replaced, contradicting the runbook rule that authority drift invalidates the proposal and approval.
 
-### CR-02 — BLOCKER: Terminal mode never authenticates the executable that is actually running
+**Fix:** Before recording approval and again immediately before mutating the destination, fetch `origin main` with the pinned Git binary, then require clean physical canonical `main == origin/main == proposal.source_oid`. Reauthenticate the proposal, source bytes, runtime closure, and predecessor after that refresh. Add a disposable remote fixture where main advances between proposal/approval and between approval/install; neither transition may write a receipt or destination byte.
 
-**File:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:479-505`
+### CR-03 — BLOCKER: A loader-side late authority failure leaves a valid-looking pass receipt published
 
-**Also affected:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:536-559`, `/Users/jon/projects/mailglass/test/scripts/phase_165_milestone_finalizer_test.exs:379-387`
+**File:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:992-1009`
 
-**Issue:** A byte-comparison self-check exists, but `finalizeMilestone()` never calls it or otherwise binds `import.meta.url` to the approved loader blob/destination. The controlled-host test only uses `File.regular?/1` (which follows symlinks) and checks attacker-controlled `--version` text. A symlink or replacement executable that prints that string passes the installed boundary, and terminal mode then runs without any independent approved-digest check. This contradicts T-165-04-T01 and the Plan 04 claim that installed bytes are proved at the boundary.
+**Issue:** The staged Bash finalizer marks the report blocked when its own post-write checks detect movement, but after it returns the loader performs another HEAD and cleanliness check. If HEAD or the worktree changes in the interval between Bash's last check and lines 1007-1008, those loader checks throw without changing the already-published report. The invocation exits non-zero while `report.json` remains `schema: mailglass-finalize-milestone-report-v1, status: pass`; the occupied receipt directory then prevents a corrective retry. This is exactly the late-race case the terminal receipt is supposed to fail closed on.
 
-**Fix:** Make the controlled-host gate lstat the exact canonical destination, reject symlinks, verify mode/owner, hash the installed bytes, compare them with the approved commit blob, and only then invoke terminal mode. Also bind the running path and digest into the report. For example:
+**Fix:** Wrap every post-publication loader check in a common finalization path that atomically rewrites the owned report to `blocked` before propagating the error, and reauthenticate that blocked write. Prefer returning the final observation to the report-owning process so there is one post-publication authority boundary. Add a mutation hook after staged Bash returns but before the loader's final checks and assert that the durable receipt is blocked, never pass.
 
-```javascript
-const executableLexical = fileURLToPath(import.meta.url);
-const executable = realpathSync(executableLexical);
-if (executableLexical !== INSTALLATION_DESTINATION || executable !== INSTALLATION_DESTINATION) {
-  fail("terminal executable is not the approved installation destination");
-}
-const approved = authenticated.find((entry) => entry.path === SOURCE_PATH)?.contents;
-if (!approved || !readFileSync(executable).equals(approved)) fail("installed-byte mismatch");
-```
+### CR-04 — BLOCKER: “Exactly once” is enforced per commit, not per v2.7 milestone
 
-The external test must exercise this exact path, not merely `--version`, and include real-path symlink and byte-tamper negative controls.
+**File:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:737-739,742-777,993-1005`
 
-### CR-03 — BLOCKER: “Trusted runtime closure” binds paths, not executable identity, and leaves PATH shadowing open
+**Also affected:** `/Users/jon/projects/mailglass/.planning/phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md:354-367`
 
-**File:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:93-126`
+**Issue:** The exclusive receipt directory includes `authorityOid`. Two different commits therefore map to two different receipt directories (`tmp/mailglass-finalize-v2.7-<oid>/report.json`) and can each execute the v2.7 terminal workflow once. The runbook requires one terminal invocation followed by a hard stop against later v2.7 lifecycle/report writes; the implementation only rejects a repeat at the same commit and has no milestone-global consumed marker. A later tracked commit—whether accidental or hostile—reopens the supposedly terminal command.
 
-**Also affected:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:334-350`, `/Users/jon/projects/mailglass/scripts/finalize_milestone_v2_7.sh:27-86`
+**Fix:** Add a milestone-global exclusive one-shot record whose identity is independent of OID and whose payload binds the single authorized OID/report. Acquire it only after read-only evidence and semantic preflight so unpublished failures remain retryable; remove only an owned unpublished reservation, and retain every published pass/blocked consumption permanently. Keep the OID-specific report as evidence, but gate it on the global record. Add a test that publishes at OID A, advances the fixture repository to OID B, supplies otherwise valid evidence, and proves the second v2.7 invocation is rejected before queries or report creation.
 
-**Issue:** `validateTrustedToolchain()` checks only absolute path, regular-file type, owner, and group/world write bits. It permits user-owned, owner-writable executables and never records or verifies tool SHA-256/version. The installation proposal's `runtime_closure` contains only `{name, path}`, despite the Plan 04 and security records claiming versions and digests. Worse, `buildChildEnvironment()` places user-owned tool directories before `/usr/bin` and `/bin`, while the shell invokes bare `awk`, `grep`, `sed`, `basename`, `mktemp`, `chmod`, `mv`, and `rm`. A shadow executable in an earlier directory can bypass audit validation, alter the report, or execute arbitrary code even though Git/JQ paths are pinned.
+### CR-05 — BLOCKER: Rollback neither preserves the authenticated predecessor nor guarantees a consumable receipt
 
-**Fix:** Pin and revalidate content digest plus expected version for every executable at proposal, self-check, and terminal invocation. Do not put user-writable directories on the shell lookup path; invoke every shell utility by a validated absolute path or use a minimal system-only path:
+**File:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:401-422,631-644,646-720,1063-1076`
 
-```javascript
-env.PATH = "/usr/bin:/bin";
-runtime_closure: Object.entries(tools).map(([name, path]) => ({
-  name,
-  path,
-  sha256: sha256(readFileSync(path)),
-  version: probeVersion(name, path),
-}))
-```
+**Issue:** The proposal records predecessor uid/gid/mode, but installation backs it up with `copyFileSync` and restores it with `renameSync`; only the mode is reapplied. A root-owned or differently grouped allowed predecessor can therefore be restored with the installer's uid/gid, despite the receipt claiming the original authenticated predecessor. The explicit rollback mutates the destination before creating `rollback.json`; if that exclusive receipt write fails, rollback has already happened, the command returns failure without a durable receipt, and a retry cannot pass the installed-byte precondition. Moreover the CLI derives the rollback control directory from current HEAD rather than the supplied proposal digest/source OID, so an authority advance makes the approved prior installation receipt undiscoverable precisely when rollback may be needed.
 
-Reject digest/version drift before any GitHub query or report write, and add a negative test that shadows `grep`/`mktemp` in an earlier directory.
-
-### CR-04 — BLOCKER: Audit and lifecycle semantics are accepted by substring presence
-
-**File:** `/Users/jon/projects/mailglass/scripts/finalize_milestone_v2_7.sh:41-79`
-
-**Issue:** Only `status` and `audited_head` are parsed from frontmatter. The four audit scores and policy-debt disposition use unrestricted `grep -F`, and STATE/PROJECT/MILESTONES are similarly accepted if words occur anywhere. An audit with authoritative `requirements: 15/16` can still pass by containing prose such as “expected requirements: 16/16”; `STATE.md` saying “v2.7 is not archived” also satisfies the current `archived` check. The report then hardcodes all audit components to pass. This is not the exact semantic validation promised by T-165-05-T01.
-
-**Fix:** Parse the canonical structured fields, reject duplicate keys, and compare exact values. At minimum, use the existing frontmatter parser for all scores:
-
-```bash
-[ "$(frontmatter_value "$audit" requirements)" = "16/16" ] || fail "..."
-[ "$(frontmatter_value "$audit" phases)" = "5/5" ] || fail "..."
-[ "$(frontmatter_value "$audit" integration)" = "16/16" ] || fail "..."
-[ "$(frontmatter_value "$audit" flows)" = "5/5" ] || fail "..."
-```
-
-Prefer one strict YAML/JSON parser for the complete audit/lifecycle contract, and add hostile fixtures that retain the expected token in explanatory prose while changing the authoritative field.
-
-### CR-05 — BLOCKER: Lexical path checks allow symlinked parent traversal before rejection
-
-**File:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:311-359`
-
-**Also affected:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:548-549`
-
-**Issue:** `safePredecessor()` lstat-checks only the final destination component. If `/Users/jon/.local/bin` is a symlink, an absent destination is approved as `create` without authenticating where it resolves. Similarly, `finalizeMilestone()` lexically resolves `repo/tmp/...` and calls `mkdirSync` before the shell canonicalizes the report parent. An ignored `tmp` symlink can therefore make the command create its report directory outside the repository before the later boundary check fails. This violates the exact installation destination and ignored-only output boundaries.
-
-**Fix:** Authenticate every existing parent component with `lstat`, reject symlinks, and compare the physical parent against the approved physical root before any mkdir/write. Create the report directory through a verified parent and re-check it after creation:
-
-```javascript
-const tmpRoot = resolve(repo, "tmp");
-const tmpEntry = lstatSync(tmpRoot);
-if (!tmpEntry.isDirectory() || tmpEntry.isSymbolicLink() || !inside(repo, realpathSync(tmpRoot))) {
-  fail("report root is not a physical repository directory");
-}
-```
-
-Apply the same rule to `dirname(INSTALLATION_DESTINATION)` and add intermediate-parent symlink fixtures for both boundaries.
+**Fix:** Preserve the predecessor inode/metadata with an authenticated rename-to-backup design (or explicitly restore and verify uid, gid, mode, and digest), and verify all restored fields. Reserve a rollback journal/receipt path before mutation and make failure recovery deterministic so the operation ends in either authenticated installed state or authenticated rolled-back state with a consumable record. Resolve the approved installation by proposal digest and authenticated receipt source OID rather than current HEAD, without weakening destination or receipt authentication. Add root/different-group metadata coverage where supported, a pre-existing/unwritable rollback-receipt failure case, and rollback after repository HEAD advances.
 
 ## Warnings
 
-### WR-01 — WARNING: Restoration-failure test permits the config to remain modified and the recovery copy to disappear
+### WR-01 — WARNING: The “actual canonical audit” and one-shot tests do not exercise the remaining trust boundaries
 
-**File:** `/Users/jon/projects/mailglass/test/scripts/phase_165_milestone_finalizer_test.exs:364-376`
+**File:** `/Users/jon/projects/mailglass/test/scripts/phase_165_milestone_finalizer_test.exs:111-171,407-434,517-553,706-817`
 
-**Issue:** The restoration-failure case checks only a diagnostic and absence of `--confirm`; unlike the other cases, it never asserts that `restoration.config` equals `restoration.original`. The extracted runbook cleanup deletes its temporary directory even when restoration fails, so this test currently accepts the dangerous state where `.planning/config.json` remains overridden and the only original-byte backup is removed. That makes the claimed exact-restoration negative control unreliable.
+**Issue:** The test named “actual canonical audit schema” uses a hand-authored fixture rather than output from the canonical producer, and its duplicate test duplicates only a nested child under one block parent. The one-shot test repeats the same OID only, the installation lifecycle asserts restored bytes but not uid/gid/mode, and no test covers remote advancement between installation stages or mutation after Bash returns. These omissions let all five blocker paths above remain green while the suite claims the relevant controls.
 
-**Fix:** Assert exact bytes after every failure, including restoration failure, and make cleanup retain/report the recovery file until restoration succeeds:
-
-```elixir
-assert File.read!(restoration.config) == restoration.original
-refute File.read!(restoration.log) =~ "--confirm"
-```
-
-Add a failure-after-confirm fixture as well, because that is the point where leaving `git.create_tag=false` behind is most consequential.
-
-### WR-02 — WARNING: The named Node report boundary is dead code while production uses a second implementation
-
-**File:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:362-378`
-
-**Issue:** `writeTerminalReport()` is exported and asserted by name, but no production or test call uses it. The actual report is written independently in Bash. The two boundaries already differ in path handling, temporary-file naming, and parent assumptions, so future hardening of the named function will not protect production. The current test only checks that its source name exists.
-
-**Fix:** Route production through one report writer and behavior-test tracked, ignored, symlink-parent, existing-target, and late-mutation cases. If Bash must own the atomic write, remove the unused Node export and test the Bash boundary directly.
-
-### WR-03 — WARNING: CI parity “bijection” assertion is tautological
-
-**File:** `/Users/jon/projects/mailglass/test/scripts/ci_parity_drift_test.exs:239-244`
-
-**Issue:** Both `known` and `matcher_lanes` are constructed from the same `lanes` list, so `MapSet.difference(matcher_lanes, known)` is always empty. The asserted stale-matcher direction can never fail and does not prove the advertised bijection.
-
-**Fix:** Maintain an independently enumerable matcher-key set (or return `{lane, matcher}` entries from one explicit table) and compare that set with the policy lane set. Add a negative control containing a stale matcher key and assert it is reported.
-
-### WR-04 — WARNING: The one-terminal-invocation hard stop is procedural only
-
-**File:** `/Users/jon/projects/mailglass/scripts/mailglass_finalize_milestone_loader.mjs:536-562`
-
-**Issue:** Every invocation creates a new random report directory, and neither the loader nor finalizer checks for an existing terminal receipt for the same milestone/SHA. The command can therefore be rerun indefinitely, producing multiple pass reports despite the Plan 01/05 one-shot and “no report rewrite” contract. There is no test for a second invocation.
-
-**Fix:** Use an authenticated deterministic receipt/lock keyed by milestone and authority OID with exclusive creation, or maintain a separately approved host-side one-shot record. Reject a second invocation before GitHub queries and add a two-call negative test.
+**Fix:** Check in or generate a producer-authentic canonical audit sample and exercise it unchanged. Add the hostile cases described in CR-01 through CR-05, including a different-OID second invocation and metadata/receipt-order assertions. Keep fixture-only schema assertions, but do not label a manually reconstructed document as actual producer output.
 
 ---
 
-_Reviewed: 2026-09-13T20:05:16Z_
+_Reviewed: 2026-09-13T21:25:11Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
+
+---
+
+## Disposition — Accepted Risk (2026-09-15)
+
+All six findings above (CR-01..CR-05, WR-01) are **accepted as known risk**. They are not
+fixed and are not scheduled. Phase 165 closes with them open.
+
+### Rationale
+
+The asset under review is `scripts/finalize_milestone_v2_7.sh` and its loader: repository-local
+tooling that archives Markdown under `.planning/` and writes a receipt. It is not adopter-facing,
+not published to Hex, and not reachable by any third party. No file in `lib/` was touched by any
+Phase 165 commit.
+
+Every open finding models an adversary who already holds commit rights to protected `main` and is
+attempting to smuggle contradictory YAML, race a HEAD advance, or subvert a local file install.
+Such an actor can edit the archive directly and does not need this script. The realistic
+worst case for each finding is a milestone-archive commit recorded against a stale SHA, in a
+single-maintainer repository, by the maintainer — recoverable by `git revert`.
+
+The review loop was also not converging: three passes produced 9 → 5 → 6 findings, each pass
+introducing a new adversary class rather than exhausting the prior one. The hardening already
+committed (3,750 lines of script, loader, fixture and test) is disproportionate to the asset and
+was itself becoming the larger risk surface.
+
+### Verification status at disposition
+
+`mix verify.phase_165.repository` — 22 executed, 1 expected exclusion, 0 failures. Confirmed by
+direct execution on 2026-09-15, not inherited from a prior report.
+
+### Correction to the iteration-2 verification claim
+
+`165-REVIEW-FIX.md` records `verify.ci_lane_contract` as "436 executed, 12 expected exclusions,
+0 failures". That result was **not reproducible as stated**. Re-running the lane produced 5, 0, 0
+and 1 failures across four runs.
+
+The cause is a test-isolation defect, since fixed: `release_policy_test.exs` `run_cli/1` invoked
+`mix run --no-compile --no-deps-check` in a subprocess without pinning `MIX_ENV`. Mix applies an
+alias's `preferred_envs` internally rather than exporting `MIX_ENV`, so the child resolved to
+`:dev` and depended on `_build/dev` being populated by some unrelated earlier command. With
+`_build/dev` present the test passed; with it absent it failed deterministically. The subprocess
+now inherits `to_string(Mix.env())`.
+
+Two process lessons are recorded because they are the reason this survived three review passes:
+
+1. The iteration-3 reviewer could not execute the Elixir lane at all — it reported a `corrupt atom
+   table`, which was an uninstalled local toolchain (`.tool-versions` pins `elixir 1.18.4` /
+   `erlang 27.3.4.13`; neither was present). It then carried the iteration-2 green claim forward
+   rather than marking the lane unverified.
+2. A green result asserted in a fix report is not evidence. It must be re-executed by whoever
+   relies on it.
+
+### Not accepted / still open elsewhere
+
+- `architecture_boundary_test.exs:131` invokes `mix xref graph` with the same missing `MIX_ENV`
+  pin. It omits `--no-compile`, so it self-heals by compiling and is not a correctness risk. Left
+  unchanged deliberately; pinning it would force dev compilation on cold runs.
+
+### Revisit condition
+
+Reopen these findings if `scripts/finalize_milestone_v2_7.sh` is ever generalized beyond v2.7,
+packaged for distribution, or executed by anyone other than the maintainer on a trusted checkout.
