@@ -107,7 +107,7 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
     end
   end
 
-  test "SuiteFloor's known exclusion-tag allowlist is pinned to exactly the seven current " <>
+  test "SuiteFloor's known exclusion-tag allowlist is pinned to exactly the eight current " <>
          "sources (D-14)" do
     assert MapSet.new(SuiteFloor.known_exclusion_tags()) ==
              MapSet.new([
@@ -116,12 +116,14 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
                :phase_164_proposal_boundary,
                :phase_164_installed_production_boundary,
                :phase_165_installed_production_boundary,
+               :phase_165_controlled_host,
                :flaky,
                :migration_roundtrip
              ]),
-           "SuiteFloor.known_exclusion_tags/0 drifted from the seven documented sources " <>
+           "SuiteFloor.known_exclusion_tags/0 drifted from the eight documented sources " <>
              "(advisory-matrix.yml's --exclude requires_workspace; test_helper.exs's " <>
-             "conditional :public_only; verify.ci_lane_contract's proposal and controlled-host exclusions; " <>
+             "conditional :public_only and its :phase_165_controlled_host base exclusion; " <>
+             "verify.ci_lane_contract's proposal and installed-boundary exclusions; " <>
              "verify.cold_start's :flaky/:migration_roundtrip exclusions) " <>
              "— a legitimate new source must update this guard " <>
              "deliberately, not silently."
