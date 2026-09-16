@@ -315,7 +315,7 @@ defmodule Mailglass.MixProject do
         "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
       ],
       "verify.phase_165.repository": [
-        "test test/scripts/phase_165_milestone_finalizer_test.exs --exclude phase_165_installed_production_boundary --warnings-as-errors --no-deps-check"
+        "test test/scripts/phase_165_milestone_finalizer_test.exs --exclude phase_165_installed_production_boundary --include phase_165_controlled_host --warnings-as-errors --no-deps-check"
       ],
       "verify.phase_165.installed_boundary": [
         "test test/scripts/phase_165_milestone_finalizer_test.exs --only phase_165_installed_production_boundary --warnings-as-errors --no-deps-check"

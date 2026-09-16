@@ -47,7 +47,13 @@ schema = Mailglass.Config.schema()
 # alias explicitly includes it when the canonical host is being verified.
 base_exclusions = [
   :phase_164_installed_production_boundary,
-  :phase_165_installed_production_boundary
+  :phase_165_installed_production_boundary,
+  # Every Phase 165 test that EXECUTES the finalizer loader validates a pinned closed
+  # runtime by absolute path and digest, so it can only pass on the canonical maintainer
+  # host. Excluded from every root ExUnit process -- including bare `mix test`, which the
+  # alias-level `--exclude` flags never reach -- and explicitly re-included by the one
+  # `verify.phase_165.repository` controlled-host alias.
+  :phase_165_controlled_host
 ]
 
 exclusions =

@@ -21,7 +21,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     aliases = Mix.Project.config()[:aliases]
 
     assert Keyword.fetch!(aliases, :"verify.phase_165.repository") == [
-             "test test/scripts/phase_165_milestone_finalizer_test.exs --exclude phase_165_installed_production_boundary --warnings-as-errors --no-deps-check"
+             "test test/scripts/phase_165_milestone_finalizer_test.exs --exclude phase_165_installed_production_boundary --include phase_165_controlled_host --warnings-as-errors --no-deps-check"
            ]
 
     assert Keyword.fetch!(aliases, :"verify.phase_165.installed_boundary") == [
@@ -37,8 +37,14 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     # here so the isolation cannot silently widen or disappear.
     assert required =~ "--exclude phase_165_controlled_host"
 
+    # The base ExUnit exclusion in test_helper.exs keeps controlled-host proof out of
+    # every root process, including bare `mix test`. Only this one alias opts back in.
     repository = Keyword.fetch!(aliases, :"verify.phase_165.repository") |> List.to_string()
+    assert repository =~ "--include phase_165_controlled_host"
     refute repository =~ "--exclude phase_165_controlled_host"
+
+    helper = File.read!(Path.join(@repo_root, "test/test_helper.exs"))
+    assert helper =~ ":phase_165_controlled_host"
 
     refute required =~ @installed_loader
   end
