@@ -15,6 +15,10 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
 
   alias MailglassInbound.InboundRecords
 
+  # Key `MailglassInbound.Execution` stores the durable route binding under.
+  @route_binding_key "mailglass_execution_route"
+  @fixture_mailbox MyApp.Mailboxes.SupportMailbox
+
   @doc """
   Inserts a canonical inbound record. Returns the inserted `%InboundRecord{}`.
   """
@@ -33,8 +37,22 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
     record
   end
 
-  @doc "Inserts an evidence row for a record. Returns the inserted `%InboundEvidence{}`."
+  @doc """
+  Inserts an evidence row for a record. Returns the inserted `%InboundEvidence{}`.
+
+  `route_binding:` seeds the DURABLE execution route binding the ingress path
+  persists on every real evidence row (see `MailglassInbound.Execution`). Pass
+  `{:matched, mailbox_module}` or `:no_match`; omit it to model a pre-binding
+  (legacy) row. Replay resolves its mailbox from this binding ONLY — the legacy
+  "resolve the persisted mailbox string" path was deliberately closed, so a
+  matched fixture WITHOUT a binding can never replay.
+  """
   def insert_evidence!(tenant_id, record_id, opts \\ []) do
+    verification_facts =
+      opts
+      |> Keyword.get(:verification_facts, %{})
+      |> put_route_binding(Keyword.get(opts, :route_binding))
+
     {:ok, evidence} =
       InboundRecords.insert_inbound_evidence(%{
         tenant_id: tenant_id,
@@ -42,11 +60,30 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
         provider: Keyword.get(opts, :provider, "mailgun"),
         raw_payload: Keyword.get(opts, :raw_payload, %{"ok" => true}),
         raw_headers: Keyword.get(opts, :raw_headers, %{}),
-        verification_facts: Keyword.get(opts, :verification_facts, %{}),
+        verification_facts: verification_facts,
         parse_warnings: Keyword.get(opts, :parse_warnings, %{})
       })
 
     evidence
+  end
+
+  # Mirrors the shape `MailglassInbound.Execution` reads back out of
+  # `verification_facts["mailglass_execution_route"]`. The router key is omitted:
+  # the fixture mailbox is not declared on the synthetic test router, and the
+  # mailbox-only form resolves against loaded modules carrying the Mailbox
+  # behaviour — which `MyApp.Mailboxes.SupportMailbox` does.
+  defp put_route_binding(facts, nil), do: facts
+
+  defp put_route_binding(facts, :no_match),
+    do: Map.put(facts, @route_binding_key, %{"status" => "no_match"})
+
+  defp put_route_binding(facts, {:matched, mailbox}) when is_atom(mailbox) do
+    Code.ensure_loaded!(mailbox)
+
+    Map.put(facts, @route_binding_key, %{
+      "status" => "matched",
+      "mailbox" => Atom.to_string(mailbox)
+    })
   end
 
   @doc """
@@ -83,12 +120,20 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
   """
   def seed_matched!(tenant_id, opts \\ []) do
     record = insert_record!(tenant_id, opts)
-    evidence = insert_evidence!(tenant_id, record.id, Keyword.get(opts, :evidence, []))
+
+    evidence =
+      insert_evidence!(
+        tenant_id,
+        record.id,
+        opts
+        |> Keyword.get(:evidence, [])
+        |> Keyword.put_new(:route_binding, {:matched, @fixture_mailbox})
+      )
 
     fresh =
       insert_run!(tenant_id, record.id, evidence.id,
         source: :fresh,
-        mailbox: "MyApp.Mailboxes.SupportMailbox",
+        mailbox: mailbox_name(),
         outcome: :accept,
         executed_at: hours_ago(2)
       )
@@ -96,7 +141,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
     replay =
       insert_run!(tenant_id, record.id, evidence.id,
         source: :replay,
-        mailbox: "MyApp.Mailboxes.SupportMailbox",
+        mailbox: mailbox_name(),
         outcome: :accept,
         executed_at: hours_ago(1)
       )
@@ -110,7 +155,15 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
   """
   def seed_no_match!(tenant_id, opts \\ []) do
     record = insert_record!(tenant_id, opts)
-    evidence = insert_evidence!(tenant_id, record.id, Keyword.get(opts, :evidence, []))
+
+    evidence =
+      insert_evidence!(
+        tenant_id,
+        record.id,
+        opts
+        |> Keyword.get(:evidence, [])
+        |> Keyword.put_new(:route_binding, :no_match)
+      )
 
     run =
       insert_run!(tenant_id, record.id, evidence.id,
@@ -123,7 +176,9 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
   end
 
   defp default_mailbox(:no_match), do: nil
-  defp default_mailbox(_outcome), do: "MyApp.Mailboxes.SupportMailbox"
+  defp default_mailbox(_outcome), do: mailbox_name()
+
+  defp mailbox_name, do: Atom.to_string(@fixture_mailbox)
 
   defp default_reason(outcome) when outcome in [:reject, :bounce], do: "fixture reason"
   defp default_reason(_outcome), do: nil
