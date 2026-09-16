@@ -176,6 +176,7 @@ Last activity: 2026-09-16 — Completed quick task 260916-i5g: scoped release-pl
 ### Pending Todos
 
 - [2026-09-16] [inbound] Document and remediate pre-v2.6 unreplayable evidence rows — [todo file](.planning/todos/pending/2026-09-16-document-and-remediate-pre-v2-6-unreplayable-evidence-rows.md)
+- [2026-09-16] [release-engineering] Enforce commit-type discipline for release-triggering paths — [todo file](.planning/todos/pending/2026-09-16-enforce-commit-type-discipline-for-release-triggering-paths.md)
 
 ### Roadmap Evolution
 
