@@ -6,19 +6,21 @@
       "release-type": "elixir",
       "component": "mailglass",
       "changelog-path": "CHANGELOG.md",
-      "exclude-paths": [".github", ".planning", "brandbook", "ci", "dev", "mailglass_admin", "mailglass_inbound", "prompts", "reference", "scripts", "test", "test_js"]
+      "exclude-paths": [".github", ".gitignore", ".gsd", ".planning", "brandbook", "ci", "dev", "mailglass_admin", "mailglass_inbound", "prompts", "reference", "scripts", "test", "test_js"]
     },
     "mailglass_admin": {
       "package-name": "mailglass_admin",
       "release-type": "elixir",
       "component": "mailglass_admin",
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "exclude-paths": ["mailglass_admin/dev", "mailglass_admin/e2e", "mailglass_admin/package-lock.json", "mailglass_admin/package.json", "mailglass_admin/playwright.config.cjs", "mailglass_admin/scripts", "mailglass_admin/test"]
     },
     "mailglass_inbound": {
       "package-name": "mailglass_inbound",
       "release-type": "elixir",
       "component": "mailglass_inbound",
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "exclude-paths": ["mailglass_inbound/test"]
     }
   },
   "plugins": [
