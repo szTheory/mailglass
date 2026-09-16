@@ -6,7 +6,7 @@ status: archived
 stopped_at: Phase 165 complete — all phases complete
 last_updated: "2026-09-16T16:05:00.000Z"
 last_activity: 2026-09-16
-last_activity_desc: Quick task 260916-g7k disposed the 13 open dependabot PRs
+last_activity_desc: Closed out the stale 2.5.0 release-target ledger (PR #266)
 state_head: 532301a309debe8d9736d4ea4cd66c14904a9f22
 progress:
   total_phases: 5
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 Phase: Milestone v2.7 complete
 Plan: —
 Status: v2.7 milestone complete — awaiting next milestone
-Last activity: 2026-09-16 — Completed quick task 260916-i5g: scoped release-please core exclude-paths, closed empty proposal #222
+Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger; PR #266 opened (unblocks release-please, which had failed closed on every run since 2026-08-20)
 
 ## Lifecycle Authority
 
@@ -177,7 +177,6 @@ Last activity: 2026-09-16 — Completed quick task 260916-i5g: scoped release-pl
 
 - [2026-09-16] [inbound] Document and remediate pre-v2.6 unreplayable evidence rows — [todo file](.planning/todos/pending/2026-09-16-document-and-remediate-pre-v2-6-unreplayable-evidence-rows.md)
 - [2026-09-16] [release-engineering] Enforce commit-type discipline for release-triggering paths — [todo file](.planning/todos/pending/2026-09-16-enforce-commit-type-discipline-for-release-triggering-paths.md)
-- [2026-09-16] [release-engineering] **Close out the stale 2.5.0 release-target ledger** (critical — blocks all releases) — [todo file](.planning/todos/pending/2026-09-16-close-out-the-stale-2-5-0-release-target-ledger.md)
 
 ### Roadmap Evolution
 
