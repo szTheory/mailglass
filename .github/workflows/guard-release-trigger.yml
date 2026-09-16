@@ -48,12 +48,15 @@ jobs:
             exit 1
           fi
 
-          files="$(gh pr view "$PR_NUMBER" --json files --jq '.files[].path')"
+          # Named changed_files, not files: shellcheck follows the source above
+          # and sees `local -a files` inside guard_decision, so reusing the name
+          # here trips SC2178/SC2128.
+          changed_files="$(gh pr view "$PR_NUMBER" --json files --jq '.files[].path')"
           # Squash-merge copies the PR body into the commit body, so a
           # Release-As: footer written there is what release-please will read.
           body="$(gh pr view "$PR_NUMBER" --json body --jq '.body')"
 
-          if guard_decision "$PR_TITLE" "$files" "$body"; then
+          if guard_decision "$PR_TITLE" "$changed_files" "$body"; then
             echo "PASS: '$PR_TITLE' is non-bumping, or touches shippable code."
             exit 0
           fi
@@ -67,7 +70,7 @@ jobs:
           echo "::error::If this docs-only release IS intended, declare it explicitly with a"
           echo "::error::'Release-As: x.y.z' footer in the PR body."
           echo "::error::Changed files:"
-          printf '::error::  %s\n' $files
+          printf '%s\n' "$changed_files" | sed 's/^/::error::  /'
           exit 1
 
       - name: Check pushed commit subjects vs their diffs
@@ -114,10 +117,10 @@ jobs:
               failures=$(( failures + 1 ))
             fi
 
-            files="$(git show --pretty=format: --name-only "$sha" | sed '/^$/d')"
+            changed_files="$(git show --pretty=format: --name-only "$sha" | sed '/^$/d')"
             body="$(git log -1 --format=%b "$sha")"
 
-            if ! guard_decision "$subject" "$files" "$body"; then
+            if ! guard_decision "$subject" "$changed_files" "$body"; then
               echo "::error::Commit $sha triggers a release-please bump:"
               echo "::error::  $subject"
               echo "::error::...but every file it changed is non-shippable (brand/planning/"
@@ -125,7 +128,7 @@ jobs:
               echo "::error::typed feat:/fix: proposes a version nobody intended. If the release"
               echo "::error::IS intended, declare it with a 'Release-As: x.y.z' commit footer."
               echo "::error::Changed files:"
-              printf '::error::  %s\n' $files
+              printf '%s\n' "$changed_files" | sed 's/^/::error::  /' 
               failures=$(( failures + 1 ))
             fi
 
