@@ -117,6 +117,53 @@ Use Conventional Commits:
 - `docs: ...` for documentation changes
 - `chore: ...` for maintenance
 
+### The type decides the release, not the diff
+
+release-please derives the version bump from the commit **type alone**. It never
+looks at which files changed. `feat:` means a minor bump and `fix:` means a patch
+bump whatever the commit touched — including a two-line README edit.
+
+So `feat:` and `fix:` are reserved for changes to **shippable code**. A change
+confined to documentation uses `docs:`, even when that documentation ships to Hex
+inside the package. READMEs, CHANGELOGs, `guides/`, and each package's `docs/`
+directory are all published alongside the code, but editing one is still a docs
+change.
+
+This is not hypothetical. Release proposal #222 offered `mailglass_inbound 2.3.0`
+on the strength of a single commit that changed two lines of
+`mailglass_inbound/README.md` and was typed `feat:`. It was caught by a human
+reading a forty-entry changelog, which is not a review that scales.
+
+The `Guard Release Trigger` check enforces this on pull requests **and** on direct
+pushes to `main`. It fails a `feat:`/`fix:`/`!` change whose every touched file is
+documentation, brand, or planning material.
+
+**If a documentation-only release is what you actually want**, say so explicitly
+with release-please's own footer in the commit or PR body:
+
+```
+Release-As: 2.2.1
+```
+
+The guard honours that footer and steps aside. Deliberate docs-only releases are
+legitimate — `3edc95f0` cut 2.2.1 from a `MAINTAINING.md` change on purpose. The
+footer just makes the intent explicit and auditable instead of implied.
+
+### Write multi-line messages with real newlines
+
+`git commit -m "subject\n\nbody"` does **not** produce a newline. The shell passes
+`\n` through as two literal characters, and the subject ships into the generated
+CHANGELOG as one unbroken line. Several phase-164 commits carry this defect.
+
+Use `$'...'` quoting, repeated `-m` flags, or a heredoc:
+
+```bash
+git commit -m 'fix(inbound): select CI by checkout SHA' \
+           -m 'Query ci.yml runs with the exact detached HEAD SHA.'
+```
+
+`Guard Release Trigger` rejects any subject containing a literal `\n`.
+
 ## PR Expectations
 
 - All CI checks must pass.
