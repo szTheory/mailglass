@@ -300,7 +300,7 @@ defmodule Mailglass.MixProject do
       # (and the ci.yml step that runs it) would satisfy the letter of a drift-proof
       # test while enforcing nothing.
       "verify.ci_lane_contract": [
-        "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --exclude phase_165_installed_production_boundary --warnings-as-errors"
+        "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --exclude phase_165_installed_production_boundary --exclude phase_165_controlled_host --warnings-as-errors"
       ],
       "verify.phase_164.authority_closure": [
         "test test/scripts/phase_164_closeout_test.exs --only phase_164_authority_closure --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"

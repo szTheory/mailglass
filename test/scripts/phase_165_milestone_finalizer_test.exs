@@ -30,10 +30,21 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
 
     required = Keyword.fetch!(aliases, :"verify.ci_lane_contract") |> List.to_string()
     assert required =~ "--exclude phase_165_installed_production_boundary"
+
+    # Every test that EXECUTES the loader validates a pinned closed runtime by absolute
+    # path and digest, so it can only pass on the controlled maintainer host. The shared
+    # lane excludes them; `verify.phase_165.repository` still runs them in full. Pinned
+    # here so the isolation cannot silently widen or disappear.
+    assert required =~ "--exclude phase_165_controlled_host"
+
+    repository = Keyword.fetch!(aliases, :"verify.phase_165.repository") |> List.to_string()
+    refute repository =~ "--exclude phase_165_controlled_host"
+
     refute required =~ @installed_loader
   end
 
   @tag :phase_165_tracer
+  @tag :phase_165_controlled_host
   test "exact v2.7 fixture authenticates a closed stage without emitting terminal pass evidence" do
     fixture = milestone_fixture!("tracer")
     {output, 0} = run_fixture(fixture)
@@ -114,6 +125,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "actual canonical audit schema is accepted and a wrong milestone fails closed" do
     fixture = milestone_fixture!("canonical-audit")
     assert {_, 0} = run_fixture(fixture)
@@ -129,6 +141,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "audit scores, validation status, and policy-debt disclosure fail independently" do
     cases = [
       {"requirements", "requirements: 16/16", "requirements: 15/16",
@@ -176,6 +189,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "lifecycle prose cannot impersonate authoritative archived state" do
     cases = [
       {"state", ".planning/STATE.md",
@@ -230,6 +244,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "incomplete, legacy-quick, and mixed live/archive layouts fail closed" do
     incomplete = milestone_fixture!("missing-phase")
 
@@ -254,6 +269,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "stale live ledgers and absent retrospective evidence fail closed" do
     roadmap = milestone_fixture!("stale-live-roadmap")
 
@@ -279,6 +295,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "false or missing Nyquist validation fields fail closed" do
     for {name, transform, diagnostic} <- [
           {"nyquist-false",
@@ -306,6 +323,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "dirty and moving repository authority fails before or after report publication" do
     dirty = milestone_fixture!("dirty-entry")
     File.write!(Path.join(dirty.repo, "untracked-dirt"), "dirty\n")
@@ -339,6 +357,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "caller-selected, rerun, and wrong-identity CI evidence fails closed" do
     fixture = milestone_fixture!("ci-selection")
     assert_failure(fixture, %{"ciRunId" => 101}, "caller-selected or unsupported fixture input")
@@ -363,6 +382,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "manual, rerun, wrong-branch, and wrong-SHA schedules fail closed" do
     fixture = milestone_fixture!("schedule-selection")
     schedules = schedule_runs(fixture)
@@ -385,6 +405,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "tracked terminal output fails before staged finalizer dispatch" do
     fixture = milestone_fixture!("tracked-output")
     tracked = "tmp/tracked-output/report.json"
@@ -400,6 +421,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "report boundary rejects symlinked parents and existing ignored targets without overwrite" do
     symlinked = milestone_fixture!("symlinked-report-parent")
     outside = Path.join(Path.dirname(symlinked.repo), "outside-report-root")
@@ -424,6 +446,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "a second fixture invocation is rejected and cannot rewrite its first receipt" do
     fixture = milestone_fixture!("one-shot")
     assert {_, 0} = run_fixture(fixture)
@@ -436,6 +459,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "a transient evidence query failure releases no receipt and identical retry succeeds" do
     fixture = milestone_fixture!("transient-query-retry")
     marker = Path.join(physical_dir!(Path.dirname(fixture.repo)), "transient-query.marker")
@@ -453,6 +477,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "caller PATH cannot shadow shell utilities" do
     fixture = milestone_fixture!("path-shadow")
     shadow = Path.join(Path.dirname(fixture.repo), "shadow-bin")
@@ -471,6 +496,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "installation proposal admits only absence or one safe regular predecessor" do
     fixture = milestone_fixture!("proposal")
     root = Path.join(Path.dirname(fixture.repo), "installation")
@@ -534,6 +560,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "fresh exact approval atomically installs and authenticated rollback restores predecessor" do
     fixture = milestone_fixture!("approved-install")
     root = physical_dir!(Path.dirname(fixture.repo))
@@ -572,6 +599,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "installed-byte mismatch fails the external self-check" do
     fixture = milestone_fixture!("installed-byte-mismatch")
     installed = Path.join(Path.dirname(fixture.repo), "mailglass-finalize-milestone")
@@ -589,6 +617,7 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   end
 
   @tag :phase_165_hostile
+  @tag :phase_165_controlled_host
   test "installed verifier rejects a symlink even when its target bytes are approved" do
     fixture = milestone_fixture!("installed-symlink")
     root = physical_dir!(Path.dirname(fixture.repo))

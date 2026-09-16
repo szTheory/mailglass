@@ -648,7 +648,7 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
     mix_exs = File.read!(Path.join(repo_root, "mix.exs"))
 
     assert mix_exs =~
-             "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --exclude phase_165_installed_production_boundary --warnings-as-errors",
+             "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --exclude phase_165_installed_production_boundary --exclude phase_165_controlled_host --warnings-as-errors",
            "verify.ci_lane_contract's directory glob (test test/scripts/) must still exist " <>
              "for this file to be auto-collected into the required mix_task_tests lane"
   end

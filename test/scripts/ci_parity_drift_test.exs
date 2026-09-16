@@ -2,7 +2,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   use ExUnit.Case, async: true
 
   @repo_root Path.expand("../..", __DIR__)
-  @required_contract_step "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --exclude phase_165_installed_production_boundary --warnings-as-errors"
+  @required_contract_step "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --exclude phase_165_installed_production_boundary --exclude phase_165_controlled_host --warnings-as-errors"
   @installed_boundary_step "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
 
   @moduledoc """
