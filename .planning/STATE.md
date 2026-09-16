@@ -4,9 +4,9 @@ milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Shipped 2026-09-15, archived)
 status: archived
 stopped_at: Phase 165 complete — all phases complete
-last_updated: "2026-09-16T01:14:49.264Z"
-last_activity: 2026-09-15
-last_activity_desc: Milestone v2.7 completed and archived
+last_updated: "2026-09-16T16:05:00.000Z"
+last_activity: 2026-09-16
+last_activity_desc: Quick task 260916-g7k disposed the 13 open dependabot PRs
 state_head: 532301a309debe8d9736d4ea4cd66c14904a9f22
 progress:
   total_phases: 5
@@ -291,6 +291,12 @@ Last activity: 2026-09-15 — Milestone v2.7 completed and archived
 - [Phase 165]: The archive checkpoint binds a fresh exact preview while scoped git.create_tag=false is restored byte-for-byte before convergence.
 - [Phase 165]: Final state publication and commit precede protected exact-SHA evidence and the one permitted installed terminal invocation.
 
+## Quick Tasks Completed
+
+| Date | Task | Outcome |
+|------|------|---------|
+| 2026-09-16 | [dispose the 14 open dependabot PRs](quick/260916-g7k-dispose-the-14-open-dependabot-prs/SUMMARY.md) | Open PRs 15 → 1. All 13 dependabot PRs were single-lockfile bumps colliding on 3 lockfiles; consolidated into one refresh (#260 → `753a840c`) and closed as superseded. #222 (Hex release proposal) deliberately left open. |
+
 ## Deferred Items
 
 | Category | Item | Status | Deferred At |
@@ -299,15 +305,24 @@ Last activity: 2026-09-15 — Milestone v2.7 completed and archived
 
 ## Session Continuity
 
-Last session: 2026-09-15
-Stopped at: Milestone v2.7 archived AND integrated to protected `main` (`79247daf`) with attempt-1
-push CI green. §6–7 terminal proof is closed out as not achievable under current policy — the three
-scheduled controls fail closed on the 14 accepted-debt PRs. No further v2.7 lifecycle work is pending.
+Last session: 2026-09-16
+Stopped at: Quick task 260916-g7k complete. The 13 open dependabot PRs were disposed via one
+consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
+archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
+current policy. No v2.7 lifecycle work is pending.
 Resume file: None
 
 ## Operator Next Steps
 
 - Start the next milestone with `/gsd-new-milestone`.
-- v2.7 needs nothing further. Only revisit `165-FINALIZATION.md` §6–7 if the 14 accepted-debt PRs are
-  disposed or the terminal contract is deliberately relaxed — a separate authority from any new
-  milestone, and not a prerequisite for one.
+- v2.7 needs nothing further. The accepted-debt PR count is now 1, not 14, but `165-FINALIZATION.md`
+  §6–7 stays closed out: the remaining PR (#222) still fails `repo-hygiene`, and both
+  `post-publish-smoke` and `release-please` block specifically on it. Revisiting §6–7 is a separate
+  authority from any new milestone, and not a prerequisite for one.
+- Decide #222 `chore: release main` — it would cut `mailglass 2.6.0` / `mailglass_inbound 2.3.0` to
+  Hex. Currently red (Core Full Suite + CI Green) and `BEHIND`. Either rebase-and-release, or close it
+  and let release-please regenerate. This is the only thing standing between the repo and a green
+  scheduled-control signal.
+- Two pre-existing reds on `main` in `MailglassAdmin.InboundLiveTest` (replay flash copy,
+  `inbound_live_test.exs:913` and `:1411`) are undiagnosed. Likely coupled to the unmerged PR #129
+  replay-copy redesign. Worth resolving before any release.
