@@ -1,6 +1,6 @@
 ---
 slug: inbound-replay-flash-copy
-status: awaiting_human_verify
+status: resolved
 trigger: "MailglassAdmin.InboundLiveTest replay flash copy fails on main at inbound_live_test.exs:913 and :1411"
 created: 2026-09-16
 updated: 2026-09-16
@@ -128,25 +128,45 @@ next_action: fix applied and verified (68 tests, 0 failures at seeds 0 and 12345
 
 ## Resolution
 
-root_cause: "Cross-package fixture drift (AND-gated, two contributing causes): (1) commit 61e8c8e8 (#203, v2.6 engineering ratchet) made `verification_facts[\"mailglass_execution_route\"]` the SOLE source of a replay mailbox and made the legacy path deliberately refuse to resolve a persisted mailbox string; (2) `MailglassAdmin.TestSupport.InboundFixtures` was never migrated and still seeds `verification_facts: %{}`. Together, `Internal.Replay.replay/2` returns `{:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}}`, so `confirm_replay` takes its error branch and flashes \"Replay blocked: mailbox module not found.\" instead of the asserted success copy."
-fix: "Seeded the durable route binding in `MailglassAdmin.TestSupport.InboundFixtures`. `insert_evidence!/3` gained a `:route_binding` option (`{:matched, module}` | `:no_match` | omitted = legacy pre-binding row) that merges `verification_facts[\"mailglass_execution_route\"]` in the exact shape `MailglassInbound.Execution.route_binding/1` reads back, and `Code.ensure_loaded!/1`s the mailbox so `discover_bound_mailbox/1`'s `:code.all_loaded()` scan can find it. `seed_matched!/2` now seeds `{:matched, MyApp.Mailboxes.SupportMailbox}`; `seed_no_match!/2` seeds `:no_match` (so V11 blocks for the RIGHT reason — `:no_prior_match` — rather than incidentally via the legacy fallback). The hardcoded mailbox strings collapsed onto a single `@fixture_mailbox` constant so the binding and the ExecutionRun.mailbox column can never drift apart again. NO production code and NO assertion or copy was changed."
-oracle_type: specified (verbatim UI-SPEC copy contract, V10/IADM-03)
-verification:
-  - signal: original reproduction
-    result: pass — 68 tests / 0 failures at `--seed 0` (was 68/2, deterministic)
-  - signal: seed independence
-    result: pass — 68/0 at `--seed 12345`
-  - signal: mutation at the fix site
-    result: pass — flipping `seed_matched!`'s binding to `:no_match` resurrects EXACTLY the two original failures (:913 and :1411). The regression assertions bite.
-  - signal: revert test
-    result: pass — the pre-fix tree reproduces both failures deterministically (baseline).
-  - signal: regression scope
-    result: pass — `InboundFixtures` has exactly one consumer (`inbound_live_test.exs`, plus `inbound_test_router.ex` referencing it in a comment); the whole file is green. `mix format --check-formatted` clean; `mix credo --strict` surfaces only the pre-existing `token_parity_test.exs:111` refactor note.
-  - signal: diff shape
-    result: pass — single test-support file, additive; no deletion-only "fix", no assertion weakened.
-guardrail_verdict: accepted
-why_not_caught: "No CI gate ran this file. `verify.support_contract.admin` (mailglass_admin/mix.exs) is an explicit ALLOW-LIST of admin test files and `inbound_live_test.exs` was not on it; no other ci.yml lane runs `mix test` inside mailglass_admin/. #203 could therefore land a cross-package contract change that broke an admin test with a fully green PR, and main stayed red undetected for ~4 weeks."
-recurrence_guard: "Added `test/mailglass_admin/inbound_live_test.exs` to the `verify.support_contract.admin` allow-list (mailglass_admin/mix.exs) — the lane that gates every PR touching code. Verified green: 184 tests / 0 failures with `--warnings-as-errors`. The 68 tests in that file (incl. the two replay-copy assertions) are now merge-blocking, so the next durable-contract change cannot silently orphan the admin fixtures. Secondary guard: the fixture mailbox identity collapsed onto a single `@fixture_mailbox` constant so the route binding and the ExecutionRun.mailbox column cannot drift apart."
+root_cause: |
+  AND-gated cross-package fixture drift. (1) Commit 61e8c8e8 (#203, v2.6 ratchet)
+  made verification_facts["mailglass_execution_route"] the sole source of a replay
+  mailbox and deliberately closed legacy mailbox-string resolution. (2) mailglass_admin's
+  InboundFixtures still seeded verification_facts: %{}, because #203 migrated
+  mailglass_inbound's own fixtures and missed the admin sibling. confirm_replay
+  therefore took the error branch. NOT copy drift and NOT PR #129 -- the asserted
+  success string is verbatim at inbound_live.ex:409, and no production code is at fault.
+
+fix: |
+  Test-support only. insert_evidence!/3 gained a :route_binding option merging the
+  binding in the exact shape Execution.route_binding/1 reads back -- mirroring what
+  Ingress.Persist writes on every real evidence row. seed_matched!/2 seeds {:matched, _};
+  seed_no_match!/2 seeds :no_match so the V11 block fires for the right reason
+  (:no_prior_match). Mailbox collapsed onto one constant. No copy changed, no assertion
+  weakened, refute_banned/1 sweep intact.
+
+verification: |
+  inbound_live_test.exs 68/0 at seeds 0 and 12345 (was 68/2 deterministic).
+  verify.support_contract.admin 184/0. mix format clean; credo --strict shows only the
+  pre-existing token_parity_test.exs:111 note. Mutation check: flipping seed_matched!
+  to :no_match resurrects exactly the two original failures at :913 and :1411.
+  Independently re-run by the orchestrator, not just self-reported.
+
+prevention: |
+  No CI lane ran this file -- verify.support_contract.admin is an explicit allow-list
+  that omitted inbound_live_test.exs, and nothing else runs mix test inside
+  mailglass_admin/. That is how #203 landed green over a red file and main stayed red
+  ~4 weeks. The file is now on the allow-list, making its 68 tests merge-blocking.
+
+follow_up: |
+  Post-#203, real pre-binding (legacy) evidence rows can never replay -- they fail
+  {:replay_mailbox_missing, :invalid_mailbox} and surface as "Replay blocked: mailbox
+  module not found." Intentional per the code comment, but a silent behavioural break
+  for anyone who ingested mail before v2.6, with no upgrade note found. NOT addressed
+  here; candidate for /gsd-capture.
+
 files_changed:
   - mailglass_admin/test/support/inbound_fixtures.ex
   - mailglass_admin/mix.exs
+
+landed: branch fix/admin-inbound-fixture-route-binding, commit df7faadc, PR #262
