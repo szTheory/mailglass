@@ -248,6 +248,12 @@ defmodule Mailglass.TestSupport.SuiteFloor do
                           :phase_164_proposal_boundary,
                           :phase_164_installed_production_boundary,
                           :phase_165_installed_production_boundary,
+                          # Phase 165 tests that EXECUTE the finalizer loader. The loader
+                          # validates a pinned closed runtime by absolute path and digest,
+                          # so they can only pass on the canonical maintainer host and are
+                          # excluded from every root ExUnit process (test_helper.exs
+                          # base_exclusions); `verify.phase_165.repository` opts back in.
+                          :phase_165_controlled_host,
                           :flaky,
                           :migration_roundtrip
                         ])
