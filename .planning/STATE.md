@@ -72,6 +72,15 @@ Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger; 
   fail-closed under exactly the condition v2.7 chose to accept. Recorded as a known contract
   contradiction, not a gap in the milestone: the archive is complete and green on protected `main`, and
   the terminal report was always ignored-only evidence, never the deliverable.
+- **CORRECTION (2026-09-16), appended rather than rewritten so the archived reasoning stays readable
+  as written:** the bullet above attributes the `release-please` → `proposal_identity_mismatch` red to
+  open proposal PR #222. That attribution is **wrong**. #222 was closed on 2026-09-16 and the control
+  stayed red. The real cause was `.planning/release-target.json`, frozen at `status: authorized` /
+  `publication: not_started` since the 2.5.0 release on 2026-08-20 — 0 successes in 100 runs. Fixed in
+  PR #266 (ledger closed out to `inactive`); PR #267 adds the missing close-out path, since nothing in
+  the pipeline ever wrote the ledger and every release would otherwise strand it the same way. This
+  does **not** reopen §6–7: `repo-hygiene` and `post-publish-smoke` remain blocked on the accepted
+  open-PR debt exactly as recorded, so the terminal-proof conclusion is unchanged.
 - Re-opening §6–7 is a **deliberate future decision**, valid only if the accepted debt is disposed or
   the terminal contract is relaxed. Until then, absence of schedule evidence is the expected steady
   state — never authority to dispatch, rerun, close a PR, or publish.
