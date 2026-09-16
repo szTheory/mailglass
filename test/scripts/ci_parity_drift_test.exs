@@ -2,7 +2,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   use ExUnit.Case, async: true
 
   @repo_root Path.expand("../..", __DIR__)
-  @required_contract_step "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
+  @required_contract_step "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --exclude phase_165_installed_production_boundary --exclude phase_165_controlled_host --warnings-as-errors"
   @installed_boundary_step "test test/scripts/phase_164_closeout_test.exs --only phase_164_installed_production_boundary --warnings-as-errors"
 
   @moduledoc """
@@ -127,12 +127,14 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   defp host_only_collection_impossible?(commands, default_excluded?) do
     default_excluded? and
       Enum.all?(commands, fn command ->
-        not String.contains?(command, "--only phase_164_installed_production_boundary")
+        not String.contains?(command, "--only phase_164_installed_production_boundary") and
+          not String.contains?(command, "--only phase_165_installed_production_boundary")
       end)
   end
 
   defp default_host_exclusion?(source) do
-    source =~ "base_exclusions = [:phase_164_installed_production_boundary]" and
+    source =~ ":phase_164_installed_production_boundary" and
+      source =~ ":phase_165_installed_production_boundary" and
       source =~ "ExUnit.configure(exclude: exclusions)"
   end
 
@@ -159,28 +161,67 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   # Lane -> covering-step matcher table (identity + flag-set, not loose substring)
   #
   # Each matcher is a predicate over the flattened alias step-set. A lane is
-  # "covered" iff its matcher returns true. Names are read from Mailglass.CILanes
-  # verbatim — never duplicated as literals in this table's keys.
+  # "covered" iff its matcher returns true. The policy registry and matcher-key
+  # registry are deliberately separate so set-equality can detect drift both ways.
   # ---------------------------------------------------------------------------
 
   defp any_step?(steps, substr), do: Enum.any?(steps, &String.contains?(&1, substr))
 
+  # This table is intentionally independent from Mailglass.CILanes. The duplicated
+  # keys are the assertion boundary: deleting or renaming a policy lane without
+  # updating its local matcher (or leaving a retired matcher behind) must fail the
+  # set-equality check below instead of disappearing from both sides at once.
+  @matcher_specs %{
+    "Format Check (Elixir 1.18 / OTP 27)" => ["format --check-formatted"],
+    "Compile Warnings as Errors (Elixir 1.18 / OTP 27)" => ["compile --warnings-as-errors"],
+    "Compile No Optional Deps (Elixir 1.18 / OTP 27)" => [
+      "compile --no-optional-deps --warnings-as-errors"
+    ],
+    "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)" => [
+      "mailglass_inbound mix compile --no-optional-deps --warnings-as-errors"
+    ],
+    "Support Contract Core (Elixir 1.18 / OTP 27)" => ["verify.support_contract.core"],
+    "Support Contract Admin (Elixir 1.18 / OTP 27)" => ["verify.support_contract.admin"],
+    "Inbound Test (Elixir 1.18 / OTP 27)" => [
+      "mailglass_inbound mix test --exclude property",
+      "mailglass_inbound mix test --only property"
+    ],
+    "Core Deterministic Suite (Elixir 1.18 / OTP 27)" => ["mix test --warnings-as-errors"],
+    "Mix Task Tests (Elixir 1.18 / OTP 27)" => ["mix test --warnings-as-errors"],
+    "Credo Strict (Elixir 1.18 / OTP 27)" => ["credo --strict"],
+    "Docs Warnings as Errors (Elixir 1.18 / OTP 27)" => ["docs --warnings-as-errors"],
+    "Dialyzer (Elixir 1.18 / OTP 27)" => ["mix dialyzer"],
+    "Inbound Dialyzer (Elixir 1.18 / OTP 27)" => ["mailglass_inbound mix dialyzer"],
+    "Hex Audit (Elixir 1.18 / OTP 27)" => ["mailglass.audit --kind hex"],
+    "Deps Audit (Elixir 1.18 / OTP 27)" => ["mailglass.audit --kind deps"],
+    "Trust Lane Repo Head (Elixir 1.18 / OTP 27)" => ["verify.reference_host.journey"],
+    "Installer Host Smoke" => ["consumer_install_smoke.sh", "generated_ecto_host_proof.sh"],
+    "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)" => [
+      "npm run test:operator-browser"
+    ]
+  }
+
   # Maps a lane display name to a matcher/1 over the union step-set.
-  # Built programmatically off Mailglass.CILanes so the keys are never a second
-  # copy of the lane list.
   defp matcher_for(lane) do
-    local_lane = Enum.find(local_required_lanes(), &(&1.name == lane))
+    case Map.fetch(@matcher_specs, lane) do
+      {:ok, required_fragments} ->
+        fn steps -> Enum.all?(required_fragments, &any_step?(steps, &1)) end
 
-    cond do
-      local_lane ->
-        fn steps -> Enum.all?(List.wrap(local_lane.local_alias), &any_step?(steps, &1)) end
-
-      lane == "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)" ->
-        &any_step?(&1, "npm run test:operator-browser")
-
-      true ->
+      :error ->
         nil
     end
+  end
+
+  defp matcher_lanes, do: Map.keys(@matcher_specs)
+
+  defp matcher_drift(policy_lanes, matcher_lane_names) do
+    policy = MapSet.new(policy_lanes)
+    matchers = MapSet.new(matcher_lane_names)
+
+    %{
+      missing: MapSet.difference(policy, matchers),
+      stale: MapSet.difference(matchers, policy)
+    }
   end
 
   defp local_required_lanes do
@@ -226,24 +267,21 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
     assert length(Mailglass.CILanes.required_lanes()) == 19,
            "expected exactly 19 required lanes from the promoted CI policy"
 
-    # Every ci_lanes lane must have a matcher (no lane silently ignored)...
-    lanes_without_matcher =
-      Enum.reject(lanes, fn lane -> is_function(matcher_for(lane), 1) end)
+    drift = matcher_drift(lanes, matcher_lanes())
 
-    assert lanes_without_matcher == [],
+    assert MapSet.size(drift.missing) == 0,
            "these ci_lanes lanes have no covering matcher (a new lane was added " <>
-             "without a matcher, so coverage would silently pass): #{inspect(lanes_without_matcher)}"
+             "without a matcher, so coverage would silently pass): #{inspect(MapSet.to_list(drift.missing))}"
 
     # ...and no matcher may reference a lane absent from ci_lanes (no stale matcher).
-    known = MapSet.new(lanes)
-
-    matcher_lanes = MapSet.new(lanes)
-
-    stale = MapSet.difference(matcher_lanes, known)
-
-    assert MapSet.size(stale) == 0,
+    assert MapSet.size(drift.stale) == 0,
            "matcher table references lanes not in Mailglass.CILanes (stale matcher — " <>
-             "a lane was renamed/removed in ci_lanes but not here): #{inspect(MapSet.to_list(stale))}"
+             "a lane was renamed/removed in ci_lanes but not here): #{inspect(MapSet.to_list(drift.stale))}"
+
+    hostile = matcher_drift(lanes, ["Retired Stale Lane" | matcher_lanes()])
+
+    assert hostile.stale == MapSet.new(["Retired Stale Lane"]),
+           "the stale-matcher negative control did not report the injected retired key"
   end
 
   test "negative control: removing the installer-smoke step makes its lane report uncovered (fail-loud property is tested)" do

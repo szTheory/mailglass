@@ -90,15 +90,15 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
             )
   @finalizer Path.join(@repo_root, "scripts/finalize_phase_164.sh")
   @scheduled_registry Path.join(@repo_root, ".github/scheduled-controls.json")
-  @closeout_contract Path.join(
+  @closeout_contract Mailglass.TestSupport.PhaseArtifacts.resolve!(
                        @repo_root,
                        ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-CLOSEOUT.md"
                      )
-  @finalization_contract Path.join(
+  @finalization_contract Mailglass.TestSupport.PhaseArtifacts.resolve!(
                            @repo_root,
                            ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
                          )
-  @ledger Path.join(
+  @ledger Mailglass.TestSupport.PhaseArtifacts.resolve!(
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
           )
@@ -140,7 +140,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     aliases = Mix.Project.config()[:aliases]
 
     assert Keyword.fetch!(aliases, :"verify.ci_lane_contract") == [
-             "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --warnings-as-errors"
+             "test test/scripts/ --exclude phase_164_proposal_boundary --exclude phase_164_installed_production_boundary --exclude phase_165_installed_production_boundary --exclude phase_165_controlled_host --warnings-as-errors"
            ]
 
     assert Keyword.fetch!(aliases, :"verify.phase_164.authority_closure") == [
@@ -640,7 +640,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
 
     validation =
       File.read!(
-        Path.join(
+        Mailglass.TestSupport.PhaseArtifacts.resolve!(
           @repo_root,
           ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md"
         )
@@ -1500,7 +1500,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     test "Plan 164-23 approval remains immutable prior-object provenance" do
       summary =
         File.read!(
-          Path.join(
+          Mailglass.TestSupport.PhaseArtifacts.resolve!(
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-23-SUMMARY.md"
           )
@@ -1547,7 +1547,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     test "changed 01-34 source remains superseded-pending behind a new approved reinstall" do
       plan_27 =
         File.read!(
-          Path.join(
+          Mailglass.TestSupport.PhaseArtifacts.resolve!(
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-27-SUMMARY.md"
           )
@@ -1630,7 +1630,7 @@ defmodule Mailglass.Scripts.Phase164CloseoutTest do
     test "Plan 164-27 tuple is the exact prior-object authority" do
       summary =
         File.read!(
-          Path.join(
+          Mailglass.TestSupport.PhaseArtifacts.resolve!(
             @repo_root,
             ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-27-SUMMARY.md"
           )

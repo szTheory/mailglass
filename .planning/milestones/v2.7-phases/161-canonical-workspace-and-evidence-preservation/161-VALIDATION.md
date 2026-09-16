@@ -1,10 +1,11 @@
 ---
 phase: 161
 slug: canonical-workspace-and-evidence-preservation
-status: complete
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-08-21
+updated: 2026-09-13
 ---
 
 # Phase 161 — Validation Strategy
@@ -46,6 +47,7 @@ created: 2026-08-21
 | 161-03-02 | 03 | 3 | WSPC-04 | T-161-01 | Dirty evidence is committed to the exact ref/OID or represented by a concrete handoff with location, blocker, and permitted next action. | TSV reconciliation + artifact schema | `161-verify-preservation-reconciliation.sh complete`; `pending: 0` | ✅ preservation refs/handoffs | ✅ green |
 | 161-04-01 | 04 | 4 | WSPC-04 | T-161-01 | Cleanup eligibility consumes the unchanged Plan 03 row-level reconciliation before any action. | shell integration + safety gate | Complete reconciliation before the empty cleanup queue. | ✅ complete reconciliation | ✅ green |
 | 161-04-02 | 04 | 4 | WSPC-01, WSPC-02, WSPC-03, WSPC-04 | T-161-02 | Final recapture preserves the stable seven-commit semantic range, current live ahead count, all outcomes, and surviving recovery anchors. | shell integration + artifact reconciliation | Final enumerators plus `161-verify-preservation-reconciliation.sh complete`. | ✅ final reconciliation | ✅ green |
+| 161-05-01 | 05 | 5 | WSPC-02 | T-161-02 | Append-only canonical-main recapture keeps historical values immutable while binding the newer observation to its capture-time HEAD and divergence. | shell integration + hostile fixture | `scripts/verify_workspace_evidence.sh static`; `test/scripts/workspace_evidence_contract_test.exs` | ✅ recapture + CI contract | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -99,3 +101,26 @@ included by the directory-scoped `mix verify.ci_lane_contract` alias and its req
 - [x] `nyquist_compliant: true` is set only after task IDs and commands match finalized plans.
 
 **Approval:** Complete — 2026-08-22T15:56:05Z. All read-only Git captures, exact range checks, preservation reconciliation, row/outcome comparison, canonical cleanliness, and sampling continuity passed. The pre-existing `req`/`swoosh` lock mismatch remains outside this phase and does not replace or invalidate the completed read-only phase gates.
+
+## Validation Audit 2026-09-13 — Canonical Refresh
+
+The canonical validation workflow re-audited all five current plans, their summaries,
+the four WSPC requirement mappings, and the existing implementation/test surfaces.
+The only map gap was the later Plan 161-05 recapture task; its existing static auditor
+and hostile disposable-repository contract provide non-vacuous automated coverage.
+Every pre-existing green task row remains green.
+
+| Metric | Count |
+|--------|-------|
+| Plans audited | 5 |
+| Executor tasks mapped | 9 |
+| Requirements audited | 4 |
+| Gaps found | 1 |
+| Resolved | 1 |
+| Escalated | 0 |
+
+- `scripts/verify_workspace_evidence.sh static` passed for 1,850 inventory identities and 12 preservation rows.
+- Both `161-verify-preservation-reconciliation.sh partial` and `complete` passed with 12 eligible identities, 12 required identities, and 12 exact refs.
+- `test/scripts/workspace_evidence_contract_test.exs` passed 8 tests with 0 failures and zero SuiteFloor violations under the authenticated Elixir 1.19.5 / OTP 28 host toolchain.
+
+**Approval:** Validated and Nyquist-compliant. The historical capture-time facts remain immutable; this refresh establishes current automated coverage and does not reinterpret Phase 161 release state.

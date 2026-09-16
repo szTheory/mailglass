@@ -23,6 +23,10 @@ key-decisions:
   - "The verified cleanup queue is empty because no ledger row has disposition remove; no Git deletion is authorized."
   - "Canonical main is clean at final capture but remains non-release-clean while it is 29 commits ahead of origin/main."
   - "Phase 162 receives local recovery evidence and questions only; no remote release conclusion was made."
+requirements-completed:
+  - WSPC-01
+  - WSPC-03
+  - WSPC-04
 metrics:
   tasks_completed: 2
   files_modified: 2

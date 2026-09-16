@@ -1,47 +1,75 @@
 ---
 gsd_state_version: "1.0"
 milestone: v2.7
-milestone_name: Repository Stewardship & Operational Hygiene (Planned)
-current_phase: 164
-current_phase_name: Repository Truth Reconciliation and Closeout
-status: complete
-stopped_at: Phase 164 ordinary verification passed; protected terminal lifecycle pending
-last_updated: "2026-09-12T20:08:00-04:00"
-last_activity: 2026-09-12
-last_activity_desc: Phase 164 passed ordinary verification at implementation SHA 28e364b423d291585329fccb08f097fc765d46bd
-state_head: 7ba5be1450f6cdc46a503f8f9a276f3fcbaf8af0
+milestone_name: Repository Stewardship & Operational Hygiene (Shipped 2026-09-15, archived)
+status: archived
+stopped_at: Phase 165 complete — all phases complete
+last_updated: "2026-09-16T01:14:49.264Z"
+last_activity: 2026-09-15
+last_activity_desc: Milestone v2.7 completed and archived
+state_head: 532301a309debe8d9736d4ea4cd66c14904a9f22
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 70
-  completed_plans: 70
+  total_phases: 5
+  completed_phases: 5
+  total_plans: 75
+  completed_plans: 75
   percent: 100
-current_plan: 44
+current_phase: 165
+current_plan: 5
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-26)
+See: .planning/PROJECT.md (updated 2026-09-15)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 164 terminal evidence — protected completion metadata, natural schedules, then one final ignored capture
+**Current focus:** No milestone open — v2.7 archived 2026-09-15. Outstanding: the post-archive half of
+`165-FINALIZATION.md` (§5–7), which is gated on push authority that STATE still withholds.
 
 ## Current Position
 
-Phase: 164 (Repository Truth Reconciliation and Closeout) — COMPLETE
-Plan: 44 of 44
-Status: Ordinary verification passed; tracked completion metadata is complete; terminal evidence remains pending
-Last activity: 2026-09-12 — ordinary verification passed at implementation SHA `28e364b423d291585329fccb08f097fc765d46bd`
+Phase: Milestone v2.7 complete
+Plan: —
+Status: v2.7 milestone complete — awaiting next milestone
+Last activity: 2026-09-15 — Milestone v2.7 completed and archived
 
-Progress: [████████████████████] 70/70 plans complete (100%)
+## Lifecycle Authority
+
+- **v2.7 is archived.** The canonical audit passed (16/16 requirements, 5/5 phases, 16/16 integration,
+  5/5 flows, Nyquist compliant) and `milestone.complete v2.7 --confirm` ran on 2026-09-15 under the
+  scoped `git.create_tag=false` override defined in `165-FINALIZATION.md` §2, restored byte-for-byte
+  afterward. Archived to `.planning/milestones/v2.7-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and
+  `v2.7-phases/`. **No `v2.7` tag exists and none may be created.**
+- Closeout type: `override_closeout`. `init.manager` projected Phases 161 and 165 `stale` — a timestamp
+  heuristic firing on the runbook-mandated completion-metadata commits, not an unverified phase; both
+  VERIFICATION.md records are `status: passed` (161: 21/21, 165: 5/5).
+- **Known verification overrides: 0 newly acknowledged, 0 carried forward.** The pre-close artifact
+  audit's 27 open items (23 deferred, 3 UAT gaps, 1 verification gap) all belong to already-archived
+  milestones (v0.2, v1.1, v1.13, v1.14, v2.0, v2.2) and were deliberately not acknowledged into v2.7;
+  acknowledging them would attribute foreign debt to this milestone. They remain open against their own.
+- Phase 164 completed successfully at protected-main SHA
+  `851e3640f7f0eb6e784611d157e3a7329f87e2dc`. Its ignored terminal report is immutable historical
+  evidence only; Phase 164 pending/current-authority statements retained in the accumulated execution
+  history below are not live milestone blockers or v2.7 terminal authority.
+- **The v2.7 terminal authority still has not run.** Sections 1–4 of `165-FINALIZATION.md` are now
+  complete (canonical audit, archive preview, approved archive, final tracked convergence). Sections
+  5–7 remain outstanding: protected-main integration, exact attempt-one push CI, natural attempt-one
+  scheduled evidence for every registered control, the fresh authenticated installation checkpoint, and
+  one `mailglass-finalize-milestone v2.7` invocation followed by a hard stop. The runbook now lives at
+  `milestones/v2.7-phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md`.
+- Local commits remain unpushed and **STATE withholds push authority.** Absence of CI or schedule
+  evidence is a wait/block, never authority to dispatch or rerun.
+- Repository hygiene remains policy-blocked by 14 open PRs as accepted operational debt. Legacy quick
+  tasks stay outside v2.7, and no PR closure, tag push, branch deletion, workflow dispatch or rerun,
+  merge bypass, release, or publication is authorized.
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 70
+- Total plans completed: 75
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -53,6 +81,7 @@ Progress: [████████████████████] 70/70 p
 | 162. Protected Release and Scheduled-Control Recovery | 13 | — | — |
 | 163. Deterministic Release-Path Timeout Repairs | 8 | — | — |
 | 164. Repository Truth Reconciliation and Closeout | 44 | — | — |
+| 165 | 5 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -122,8 +151,17 @@ Progress: [████████████████████] 70/70 p
 | Phase 164 P43 | 4m | 2 tasks | 2 files |
 | Phase 164 P41 | 9m | 2 tasks | 2 files |
 | Phase 164 P44 | 25m | 2 tasks | 5 files |
+| Phase 165 P01 | 61m | 2 tasks | 10 files |
+| Phase 165 P02 | 117m | 2 tasks | 4 files |
+| Phase 165 P03 | 4m | 2 tasks | 4 files |
+| Phase 165 P04 | 8m | 2 tasks | 1 files |
+| Phase 165 P05 | 25m | 2 tasks | 4 files |
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 165 added: Reconcile terminal proof and milestone archive ordering
 
 ### Decisions
 
@@ -225,6 +263,19 @@ Progress: [████████████████████] 70/70 p
 - [Phase 164]: repo_root must prove Git work-tree identity before ls-files, while authority_root remains a directory-only policy fixture boundary.
 - [Phase 164]: Completed Plans 164-40 through 164-43 contribute provenance only through structurally declared modified subjects, each resolving to exactly one current complete ledger row.
 - [Phase 164]: Fresh repository-only and controlled-host results remain separate ordinary authorities; T-164-109 stays open until the terminal lifecycle completes.
+- [Phase 165]: Phase 165 terminal authority uses a separately staged v2.7 loader/finalizer and leaves the Phase 164 pair byte-identical.
+- [Phase 165]: Installed-host proof remains opt-in and excluded from repository CI; repository fixtures authenticate and execute staged bytes only.
+- [Phase 165]: Phase 161 Plan 04 owns WSPC-01, WSPC-03, and WSPC-04 completion claims; WSPC-02 remains owned by Plan 05.
+- [Phase 165]: Canonical validation refreshes retain historical green evidence while adding current workflow audit trails; they do not reinterpret Phase 164 terminal authority.
+- [Phase 165]: Phase 164 terminal evidence remains immutable successful history; Phase 165 owns the separate pre-archive reconciliation and eventual archived-v2.7 terminal authority. — Live lifecycle ledgers must not treat the completed Phase 164 proof as current milestone authority.
+- [Phase 165]: The v2.7 lifecycle remains exactly Phases 161-165 with the same 16 requirements, accepted 14-PR debt, and no legacy quick-task attribution. — D-09 through D-11 preserve scope and evidence-backed debt without inventing new ownership.
+- [Phase 165]: state.json is generated only by publishStateContract, with a second publication required after final archive-related Markdown edits. — Machine state must derive from the final human-authored lifecycle sources at both pre-archive and post-archive boundaries.
+- [Phase 165]: Plan 165-04 approved an absent/create predecessor with no backup and a guarded remove_created rollback bound to regular-file type, mode 0500, and the approved digest.
+- [Phase 165]: Plan 165-04 used same-filesystem atomic no-overwrite publication so a raced destination cannot be replaced beyond the approved tuple.
+- [Phase 165]: Plan 165-04 proved installed readiness only; the v2.7 terminal invocation remains ordered after archive and protected evidence gates.
+- [Phase 165]: Canonical milestone audit and archive begin only after execute-phase returns with passed ordinary verification and completion metadata.
+- [Phase 165]: The archive checkpoint binds a fresh exact preview while scoped git.create_tag=false is restored byte-for-byte before convergence.
+- [Phase 165]: Final state publication and commit precede protected exact-SHA evidence and the one permitted installed terminal invocation.
 
 ## Deferred Items
 
@@ -234,6 +285,15 @@ Progress: [████████████████████] 70/70 p
 
 ## Session Continuity
 
-Last session: 2026-09-12T20:08:00-04:00
-Stopped at: Phase 164 ordinary verification passed; protected terminal lifecycle pending
+Last session: 2026-09-15
+Stopped at: Milestone v2.7 archived (`165-FINALIZATION.md` §1–4 complete). Next is §5 — protected-main
+integration of the unpushed local commits, then exact attempt-1 push CI and natural attempt-1 scheduled
+evidence, then the §6 installation checkpoint and the single §7 terminal invocation. STATE withholds push
+authority; that is a wait, not a blocker to route around.
 Resume file: None
+
+## Operator Next Steps
+
+- Start the next milestone with `/gsd-new-milestone`.
+- Separately, when push authority is granted: resume `165-FINALIZATION.md` §5–7 for the v2.7 terminal
+  proof. That sequence is a distinct authority from any new milestone and must not be folded into one.

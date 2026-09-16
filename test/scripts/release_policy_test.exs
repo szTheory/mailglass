@@ -444,7 +444,13 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
         | arguments
       ],
       cd: Path.expand("../..", __DIR__),
-      stderr_to_stdout: true
+      stderr_to_stdout: true,
+      # `--no-compile --no-deps-check` makes this subprocess use whatever is
+      # already built for the env it resolves to. Mix sets an alias's
+      # preferred_env internally rather than exporting MIX_ENV, so without this
+      # the child defaults to :dev and silently depends on _build/dev being
+      # populated by some unrelated earlier command — a green-or-red coin flip.
+      env: [{"MIX_ENV", to_string(Mix.env())}]
     )
   end
 

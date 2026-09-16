@@ -1,11 +1,12 @@
 ---
 phase: 163
 slug: deterministic-release-path-timeout-repairs
-status: complete
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-08-26
 approved: 2026-08-26
+updated: 2026-09-13
 human_uat_required: false
 ---
 
@@ -65,3 +66,26 @@ no new test framework or human verification step was added.
 **Nyquist:** compliant
 
 **Final sign-off:** pass
+
+## Validation Audit 2026-09-13 — Canonical Refresh
+
+The canonical validation workflow re-audited the completed Plans 163-04 through
+163-08, their summaries, all four DTRM mappings, and the current database and browser
+test surfaces. Plans 163-01 through 163-03 remain immutable blocked attempts superseded
+by those completed plans; they do not replace or duplicate the executed task map.
+Every existing green task row remains green and no coverage gap was found.
+
+| Metric | Count |
+|--------|-------|
+| Completed plans audited | 5 |
+| Executed tasks mapped | 11 |
+| Requirements audited | 4 |
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+- The two unchanged database convergence property files completed their unseeded `max_runs: 1000` contracts with 2 properties, 0 failures under the authenticated Elixir 1.19.5 / OTP 28 host toolchain.
+- `CI=true npm run test:operator-browser` preserved the complete one-worker gallery/operator matrix and passed 176 tests with 1 intentional conditional skip in 4.0 minutes.
+- Existing exact-SHA protected evidence remains the immutable run `33002642359` at repair SHA `f8bf029faf87d8dda0ef1a36fe6ebbe6e2ab60d6`; this refresh neither dispatches nor substitutes remote evidence.
+
+**Approval:** Validated and Nyquist-compliant. Fresh local database and browser evidence agrees with every retained green task row and the existing protected proof.

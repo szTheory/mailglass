@@ -3,6 +3,24 @@ set -euo pipefail
 
 usage() { echo "usage: $0 --repo PATH --authority-root PATH --expected-main-sha OID --ledger PATH --ci-run-id ID --output PATH" >&2; exit 2; }
 
+# Completing milestone v2.7 MOVES every `.planning/phases/16N-*` directory into
+# `.planning/milestones/v2.7-phases/`. The artifacts are byte-identical either side of
+# that move, so closeout evidence must follow it rather than fail the moment the
+# milestone it reports on is archived. Resolution never guesses: the live path wins when
+# it exists, the archived path is used only when the live one is absent, and an artifact
+# missing from both returns the live path so the caller's own check reports the failure.
+resolve_phase_artifact() {
+  local root="$1" rel="$2" archived
+  archived=".planning/milestones/v2.7-phases/${rel#.planning/phases/}"
+  if [ -e "$root/$rel" ]; then
+    printf '%s/%s\n' "$root" "$rel"
+  elif [ -e "$root/$archived" ]; then
+    printf '%s/%s\n' "$root" "$archived"
+  else
+    printf '%s/%s\n' "$root" "$rel"
+  fi
+}
+
 require_expected_authority() {
   local repo="$1" expected_main_sha="$2" observed
 
@@ -77,8 +95,8 @@ repo=$(cd "$repo" 2>/dev/null && pwd -P) || usage
 require_expected_authority "$repo" "$expected_main_sha" || usage
 authority_root=$(cd "$authority_root" 2>/dev/null && pwd -P) || usage
 case "$authority_root" in "$repo"|/private/*/mailglass-finalize-164-*|/tmp/mailglass-finalize-164-*) ;; *) usage ;; esac
-canonical_ledger="$repo/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
-authority_ledger="$authority_root/.planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv"
+canonical_ledger=$(resolve_phase_artifact "$repo" ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv")
+authority_ledger=$(resolve_phase_artifact "$authority_root" ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-TRUTH-DISPOSITION.tsv")
 ledger=$(cd "$(dirname "$ledger")" 2>/dev/null && printf '%s/%s' "$(pwd -P)" "$(basename "$ledger")") || usage
 [ "$ledger" = "$canonical_ledger" ] || usage
 [ -f "$authority_ledger" ] || usage
@@ -150,7 +168,9 @@ if "$MAILGLASS_JQ" -e '
 else component hygiene cannot-check malformed_or_unavailable_hygiene "$hygiene_raw"; fi
 
 workspace_raw=$(mktemp "$components_dir/workspace.source.XXXXXX")
-if "$MAILGLASS_BASH" "$authority_root/scripts/verify_workspace_evidence.sh" static "$authority_root/.planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md" "$authority_root/.planning/phases/161-canonical-workspace-and-evidence-preservation/161-PRESERVATION-RECONCILIATION.tsv" >"$workspace_raw" 2>&1; then component workspace pass preservation_verified "$workspace_raw"; else component workspace cannot-check preservation_verification_failed "$workspace_raw"; fi
+workspace_inventory=$(resolve_phase_artifact "$authority_root" ".planning/phases/161-canonical-workspace-and-evidence-preservation/161-WORKSPACE-INVENTORY.md")
+workspace_tsv=$(resolve_phase_artifact "$authority_root" ".planning/phases/161-canonical-workspace-and-evidence-preservation/161-PRESERVATION-RECONCILIATION.tsv")
+if "$MAILGLASS_BASH" "$authority_root/scripts/verify_workspace_evidence.sh" static "$workspace_inventory" "$workspace_tsv" >"$workspace_raw" 2>&1; then component workspace pass preservation_verified "$workspace_raw"; else component workspace cannot-check preservation_verification_failed "$workspace_raw"; fi
 
 ledger_raw=$(mktemp "$components_dir/ledger.source.XXXXXX")
 if "$MAILGLASS_ELIXIR" "$authority_root/scripts/validate_repository_truth.exs" --repo "$repo" --authority-root "$authority_root" --ledger "$authority_ledger" >"$ledger_raw" 2>&1; then component ledger pass complete_authoritative_disposition_ledger "$ledger_raw"; else component ledger cannot-check invalid_or_incomplete_authoritative_ledger "$ledger_raw"; fi
