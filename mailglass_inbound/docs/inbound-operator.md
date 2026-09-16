@@ -165,6 +165,29 @@ When no records match the selectors, the task exits `0` with:
 Inbound replay: nothing to replay (0 records matched the selectors).
 ```
 
+### Messages received before 2.2.0 cannot be replayed
+
+Since `mailglass_inbound` 2.2.0, replay resolves a record's mailbox from the
+durable route binding written on the evidence row at receive time, and from
+nothing else. Resolving a mailbox from a module name persisted on an old
+execution run was deliberately closed: turning stored text back into a module is
+an unsafe code-loading operation, and evidence rows are adopter-controlled data.
+
+The consequence is historical and bounded: **an inbound message received before
+you upgraded to 2.2.0 has no route binding and can never be replayed.** Replay
+reports it and moves on; the record, its evidence, and its execution history are
+all intact and remain readable and auditable. Every message received since the
+upgrade replays normally, because the ingress path writes the binding on every
+evidence row it creates.
+
+There is no backfill task. Reconstructing a binding would mean either trusting
+the persisted module name — the exact operation that was closed — or re-running
+your current routing config against old evidence, which can silently bind a
+historical message to a mailbox that did not receive it. If you have a concrete
+need to replay pre-2.2.0 messages, open an issue describing it; the safe form of
+that remediation depends on facts about your routing history that the library
+cannot infer.
+
 ## mix mailglass.inbound.prune
 
 `mix mailglass.inbound.prune` enforces the configured inbound retention policy.
