@@ -6,7 +6,7 @@ status: archived
 stopped_at: Phase 165 complete — all phases complete
 last_updated: "2026-09-16T16:05:00.000Z"
 last_activity: 2026-09-16
-last_activity_desc: Closed out the stale 2.5.0 release-target ledger (PR #266)
+last_activity_desc: Quick task 260916-ldh added the missing release-target ledger close-out path
 state_head: 532301a309debe8d9736d4ea4cd66c14904a9f22
 progress:
   total_phases: 5
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 Phase: Milestone v2.7 complete
 Plan: —
 Status: v2.7 milestone complete — awaiting next milestone
-Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger; PR #266 opened (unblocks release-please, which had failed closed on every run since 2026-08-20)
+Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (PR #266, merged); completed quick task 260916-ldh, which added the missing close-out path so the ledger can return to inactive without a hand edit
 
 ## Lifecycle Authority
 
@@ -311,6 +311,7 @@ Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger; 
 |------|------|---------|
 | 2026-09-16 | [dispose the 14 open dependabot PRs](quick/260916-g7k-dispose-the-14-open-dependabot-prs/SUMMARY.md) | Open PRs 15 → 1. All 13 dependabot PRs were single-lockfile bumps colliding on 3 lockfiles; consolidated into one refresh (#260 → `753a840c`) and closed as superseded. #222 (Hex release proposal) deliberately left open. |
 | 2026-09-16 | [scope release-please core exclude-paths](quick/260916-i5g-scope-release-please-core-exclude-paths-/260916-i5g-SUMMARY.md) | Core package was rooted at `.` and claimed `scripts/`, `.github/`, `dev/`, `test/`, `reference/`, `ci/`, `test_js/`, so tooling commits registered as core library features. `exclude-paths` widened 5 → 12 tracked entries (#263 → `ff52bb66`). Empty proposal #222 (2.6.0/2.6.0/2.3.0, zero adopter payload) closed. Same defect class as RELH-01. |
+| 2026-09-16 | [add a release-target ledger close-out path](quick/260916-ldh-add-a-close-out-path-so-a-published-rele/260916-ldh-SUMMARY.md) | Nothing in the pipeline ever *wrote* the ledger, so every real release stranded it and failed `release-please` closed (`proposal_identity_mismatch`; the 2.5.0 strand ran ~4 weeks, 0/100 runs green). Added a non-authorizing `close-out` verb to `release_policy.exs` (can only ever emit `status: inactive`, re-validates its own output), an evidence-gated `release_policy_close_out.sh` (live Hex proof, checksums read from the API and re-verified, tag must resolve), and an in-memory self-heal in the capture control reporting `release_target_closed_out`. Publishing stayed `contents: read` — no new permissions. Stacked on #266. |
 
 ## Deferred Items
 
