@@ -173,6 +173,10 @@ Last activity: 2026-09-15 — Milestone v2.7 completed and archived
 
 ## Accumulated Context
 
+### Pending Todos
+
+- [2026-09-16] [inbound] Document and remediate pre-v2.6 unreplayable evidence rows — [todo file](.planning/todos/pending/2026-09-16-document-and-remediate-pre-v2-6-unreplayable-evidence-rows.md)
+
 ### Roadmap Evolution
 
 - Phase 165 added: Reconcile terminal proof and milestone archive ordering
