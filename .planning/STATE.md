@@ -2,7 +2,7 @@
 gsd_state_version: "1.0"
 milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Shipped 2026-09-15, archived)
-status: Awaiting next milestone
+status: v2.7 milestone complete
 stopped_at: Phase 165 complete — all phases complete
 last_updated: "2026-09-16T01:14:49.264Z"
 last_activity: 2026-09-15
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 
 Phase: Milestone v2.7 complete
 Plan: —
-Status: Awaiting next milestone
+Status: v2.7 milestone complete — awaiting next milestone
 Last activity: 2026-09-15 — Milestone v2.7 completed and archived
 
 ## Lifecycle Authority
