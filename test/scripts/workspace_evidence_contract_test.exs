@@ -3,12 +3,17 @@ defmodule Mailglass.Scripts.WorkspaceEvidenceContractTest do
 
   @repo_root Path.expand("../..", __DIR__)
   @script Path.join(@repo_root, "scripts/verify_workspace_evidence.sh")
-  @phase_dir Path.join(
+  # Resolved live-or-archived so Phase 161 evidence stays under contract after v2.7 is
+  # archived; the inventory and reconciliation bytes are unchanged by the move.
+  @phase_dir ".planning/phases/161-canonical-workspace-and-evidence-preservation"
+  @phase_inventory Mailglass.TestSupport.PhaseArtifacts.resolve!(
+                     @repo_root,
+                     Path.join(@phase_dir, "161-WORKSPACE-INVENTORY.md")
+                   )
+  @phase_tsv Mailglass.TestSupport.PhaseArtifacts.resolve!(
                @repo_root,
-               ".planning/phases/161-canonical-workspace-and-evidence-preservation"
+               Path.join(@phase_dir, "161-PRESERVATION-RECONCILIATION.tsv")
              )
-  @phase_inventory Path.join(@phase_dir, "161-WORKSPACE-INVENTORY.md")
-  @phase_tsv Path.join(@phase_dir, "161-PRESERVATION-RECONCILIATION.tsv")
 
   test "Phase 161 evidence satisfies the reusable static contract" do
     assert {output, 0} = run(["static", @phase_inventory, @phase_tsv])

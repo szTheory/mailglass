@@ -116,7 +116,9 @@ Package boundaries are locked. Chimeway owns notification policy and preferences
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
 paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
 
-## Completed Milestone: v2.7 Repository Stewardship & Operational Hygiene (SHIPPED 2026-09-15)
+## Completed Milestone: v2.7 Repository Stewardship & Operational Hygiene
+
+**Shipped and archived 2026-09-15.**
 
 **Goal:** Leave Mailglass in a clean, quiet, trustworthy maintenance posture after v2.6 without product
 expansion or speculative refactoring.

@@ -112,8 +112,19 @@ require_archive_contract() {
   [ ! -e "$authority_root/.planning/REQUIREMENTS.md" ] && [ ! -L "$authority_root/.planning/REQUIREMENTS.md" ] ||
     fail "live REQUIREMENTS.md remains after milestone archive"
   require_heading "$authority_root/.planning/RETROSPECTIVE.md" '^## Milestone: v2\.7 — Repository Stewardship & Operational Hygiene$' "retrospective omits the v2.7 milestone record"
-  "$MAILGLASS_JQ" -e '.milestone == "v2.7" and (.status == "archived" or .milestone_status == "archived")' \
-    "$authority_root/.planning/state.json" >/dev/null || fail "machine state does not agree that v2.7 is archived"
+  # The canonical GSD state contract (gsd-core state-contract.cjs) emits a frozen key
+  # set -- contract/flavor/milestone/phases/next/updated_at -- and rebuilds the object
+  # on every publish. It has never emitted `status` or `milestone_status`, so asserting
+  # those made this check satisfiable only by a hand-written stub: a false green that
+  # would have failed closed against real published machine state. The archived signal
+  # the publisher actually carries is the milestone identity plus an empty live-phase
+  # list, and requiring the contract envelope is what stops prose or a stub from
+  # impersonating it.
+  "$MAILGLASS_JQ" -e '
+    (.contract | type == "string" and length > 0) and
+    .milestone == "v2.7" and
+    (.phases | type == "array") and (.phases | length) == 0
+  ' "$authority_root/.planning/state.json" >/dev/null || fail "machine state does not agree that v2.7 is archived"
   [ -f "$authority_root/$archive_root/v2.7-ROADMAP.md" ] || fail "archived ROADMAP is missing"
   [ -f "$authority_root/$archive_root/v2.7-REQUIREMENTS.md" ] || fail "archived REQUIREMENTS is missing"
   ! compgen -G "$authority_root/.planning/phases/16[1-5]-*" >/dev/null || fail "live/archive lifecycle disagreement"

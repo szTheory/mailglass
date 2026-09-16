@@ -410,6 +410,36 @@ defmodule Mailglass.RepositoryTruthLedger do
     ".github/scheduled-controls.json"
   ]
   @phase_dir ".planning/phases/164-repository-truth-reconciliation-and-closeout"
+  # Archiving v2.7 MOVES every `.planning/phases/16N-*` directory under this root. The
+  # ledger, @proof_paths and every plan-declared subject keep recording the live path --
+  # that string is the stable LOGICAL identity of the artifact and is what the append-only
+  # ledger committed to. Only the PHYSICAL lookup follows the move, so repository truth
+  # survives its own milestone archive without rewriting recorded evidence.
+  @v2_7_phase_archive ".planning/milestones/v2.7-phases"
+
+  @doc """
+  Resolve a logical `.planning/phases/...` subject to where it physically lives now.
+
+  Returns the subject unchanged unless it is absent live AND present in the v2.7 phase
+  archive. Never guesses: if both or neither exist, the logical path is returned so the
+  caller's own existence/tracked check reports the real failure.
+  """
+  def physical_subject(repo_root, subject) when is_binary(repo_root) and is_binary(subject) do
+    case subject do
+      ".planning/phases/" <> rest ->
+        archived = Path.join(@v2_7_phase_archive, rest)
+
+        if not File.exists?(Path.join(repo_root, subject)) and
+             File.exists?(Path.join(repo_root, archived)) do
+          archived
+        else
+          subject
+        end
+
+      _ ->
+        subject
+    end
+  end
 
   def parse(contents) when is_binary(contents) do
     case String.split(String.trim_trailing(contents), "\n", trim: true) do
@@ -800,9 +830,11 @@ defmodule Mailglass.RepositoryTruthLedger do
     |> Enum.reduce_while(:ok, fn row, :ok ->
       subject = row["subject"]
 
-      case File.lstat(Path.join(repo_root, subject)) do
+      physical = physical_subject(repo_root, subject)
+
+      case File.lstat(Path.join(repo_root, physical)) do
         {:ok, %File.Stat{type: :regular}} ->
-          case tracked_subject_in_index(repo_root, subject) do
+          case tracked_subject_in_index(repo_root, physical) do
             :ok -> {:cont, :ok}
             error -> {:halt, error}
           end
@@ -893,7 +925,7 @@ defmodule Mailglass.RepositoryTruthLedger do
 
   defp phase_artifacts(repo_root) do
     repo_root
-    |> Path.join(Path.join(@phase_dir, "164-*-PLAN.md"))
+    |> Path.join(Path.join(physical_subject(repo_root, @phase_dir), "164-*-PLAN.md"))
     |> Path.wildcard()
     |> Enum.filter(&completed_plan?/1)
     |> Enum.reduce_while({:ok, []}, fn plan, {:ok, paths} ->

@@ -2,7 +2,7 @@
 gsd_state_version: "1.0"
 milestone: v2.7
 milestone_name: Repository Stewardship & Operational Hygiene (Shipped 2026-09-15, archived)
-status: v2.7 milestone complete
+status: archived
 stopped_at: Phase 165 complete — all phases complete
 last_updated: "2026-09-16T01:14:49.264Z"
 last_activity: 2026-09-15

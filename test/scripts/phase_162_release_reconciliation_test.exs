@@ -1,9 +1,12 @@
 defmodule Mailglass.Scripts.Phase162ReleaseReconciliationTest do
   use ExUnit.Case, async: true
 
-  @ledger Path.expand(
-            "../../.planning/phases/162-protected-release-and-scheduled-control-recovery/162-RELEASE-RECONCILIATION.md",
-            __DIR__
+  @repo_root Path.expand("../..", __DIR__)
+  # Resolved live-or-archived: completing v2.7 moves this ledger into the milestone
+  # archive, and the evidence it carries is identical either side of that move.
+  @ledger Mailglass.TestSupport.PhaseArtifacts.resolve!(
+            @repo_root,
+            ".planning/phases/162-protected-release-and-scheduled-control-recovery/162-RELEASE-RECONCILIATION.md"
           )
 
   test "the PR #222 tracer has complete source, identity, observation, and disposition evidence" do

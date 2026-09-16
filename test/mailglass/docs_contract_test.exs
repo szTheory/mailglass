@@ -1,5 +1,14 @@
 defmodule Mailglass.DocsContractTest do
   use ExUnit.Case, async: true
+
+  # Completing milestone v2.7 moves the Phase 164 directory into
+  # `.planning/milestones/v2.7-phases/`. These documents are byte-identical either
+  # side of that move, so the guide contract follows it instead of going red when the
+  # milestone it documents is archived.
+  @phase_164_dir Mailglass.TestSupport.PhaseArtifacts.relative!(
+                   File.cwd!(),
+                   ".planning/phases/164-repository-truth-reconciliation-and-closeout"
+                 )
   import Mailglass.DocsHelpers
 
   describe "README.md contract" do
@@ -190,14 +199,10 @@ defmodule Mailglass.DocsContractTest do
   describe "Guide contracts" do
     test "Phase 164 records installed-boundary proof without claiming terminal evidence" do
       validation =
-        File.read!(
-          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md"
-        )
+        File.read!(Path.join(@phase_164_dir, "164-VALIDATION.md"))
 
       finalization =
-        File.read!(
-          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
-        )
+        File.read!(Path.join(@phase_164_dir, "164-FINALIZATION.md"))
 
       for document <- [validation, finalization] do
         normalized = Regex.replace(~r/\s+/, document, " ")
@@ -225,9 +230,7 @@ defmodule Mailglass.DocsContractTest do
     @tag :phase_164_ci_hermeticity
     test "Phase 164 validation maps every current finding to observed repair evidence" do
       validation =
-        File.read!(
-          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md"
-        )
+        File.read!(Path.join(@phase_164_dir, "164-VALIDATION.md"))
 
       for token <- [
             "## Gap Reconciliation — Plans 164-29 through 164-34",
@@ -263,9 +266,7 @@ defmodule Mailglass.DocsContractTest do
     @tag :phase_164_gap_reconciliation
     test "Phase 164 security supersedes the contradicted audit with observed mitigations" do
       security =
-        File.read!(
-          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-SECURITY.md"
-        )
+        File.read!(Path.join(@phase_164_dir, "164-SECURITY.md"))
 
       for token <- [
             "## Superseding Gap-Reconciliation Assessment",
@@ -322,7 +323,7 @@ defmodule Mailglass.DocsContractTest do
           name
           |> then(
             &Path.join(
-              ".planning/phases/164-repository-truth-reconciliation-and-closeout",
+              @phase_164_dir,
               &1
             )
           )
@@ -348,7 +349,7 @@ defmodule Mailglass.DocsContractTest do
         for name <- ["164-VALIDATION.md", "164-FINALIZATION.md"] do
           File.read!(
             Path.join(
-              ".planning/phases/164-repository-truth-reconciliation-and-closeout",
+              @phase_164_dir,
               name
             )
           )
@@ -369,9 +370,7 @@ defmodule Mailglass.DocsContractTest do
     @tag :phase_164_lifecycle_contract
     test "Phase 164 records lock the terminal no-later-write lifecycle" do
       finalization =
-        File.read!(
-          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
-        )
+        File.read!(Path.join(@phase_164_dir, "164-FINALIZATION.md"))
         |> then(&Regex.replace(~r/\s+/, &1, " "))
 
       for token <- [
@@ -393,9 +392,7 @@ defmodule Mailglass.DocsContractTest do
     @tag :phase_164_lifecycle_contract
     test "Plan 164-34 verification proves readiness without invoking either finalization mode" do
       plan =
-        File.read!(
-          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-34-PLAN.md"
-        )
+        File.read!(Path.join(@phase_164_dir, "164-34-PLAN.md"))
 
       automated =
         Regex.scan(~r/<automated>([\s\S]*?)<\/automated>/, plan)
@@ -721,9 +718,7 @@ defmodule Mailglass.DocsContractTest do
     @tag :phase_164_lifecycle_contract
     test "tracked reconciliation cannot manufacture terminal evidence" do
       finalization =
-        File.read!(
-          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-FINALIZATION.md"
-        )
+        File.read!(Path.join(@phase_164_dir, "164-FINALIZATION.md"))
         |> then(&Regex.replace(~r/\s+/, &1, " "))
 
       assert finalization =~
@@ -737,9 +732,7 @@ defmodule Mailglass.DocsContractTest do
     @tag :phase_164_gap_reconciliation
     test "Phase 164 final reconciliation binds the repaired executable and installed authority" do
       validation =
-        File.read!(
-          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-VALIDATION.md"
-        )
+        File.read!(Path.join(@phase_164_dir, "164-VALIDATION.md"))
 
       for token <- [
             "## Gap Reconciliation — Plans 164-35 through 164-39",
@@ -767,9 +760,7 @@ defmodule Mailglass.DocsContractTest do
     @tag :phase_164_gap_reconciliation
     test "Phase 164 security records the final authority-chain threats without closing terminal proof" do
       security =
-        File.read!(
-          ".planning/phases/164-repository-truth-reconciliation-and-closeout/164-SECURITY.md"
-        )
+        File.read!(Path.join(@phase_164_dir, "164-SECURITY.md"))
 
       for threat_number <- 133..149 do
         assert security =~ "T-164-#{threat_number}",

@@ -33,7 +33,7 @@
 - ✅ **v2.4 Outbound First-Adopter Correctness** — Phases 149-153 (shipped 2026-08-04) — [archive](milestones/v2.4-ROADMAP.md)
 - ✅ **v2.5 B2C Alpha Adoption Certification** — Phase 154 (shipped 2026-08-04) — [archive](milestones/v2.5-ROADMAP.md)
 - ✅ **v2.6 Engineering Quality Ratchet** — Phases 155–160 (shipped 2026-08-21) — [archive](milestones/v2.6-ROADMAP.md)
-- ✅ **v2.7 Repository Stewardship & Operational Hygiene** — Phases 161–165 (shipped 2026-09-15) — [archive](milestones/v2.7-ROADMAP.md)
+- ✅ **v2.7 Repository Stewardship & Operational Hygiene** — Phases 161-165 (shipped 2026-09-15) — [archive](milestones/v2.7-ROADMAP.md)
 
 ## Phases
 

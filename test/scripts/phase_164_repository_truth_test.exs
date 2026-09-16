@@ -7,7 +7,14 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
   @repo_root Path.expand("../..", __DIR__)
   @phase_dir ".planning/phases/164-repository-truth-reconciliation-and-closeout"
-  @ledger Path.join(@repo_root, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv"))
+  # Resolved through PhaseArtifacts so this evidence stays readable after the v2.7
+  # archive moves the phase directory. @phase_dir remains the LOGICAL path -- it is what
+  # the append-only ledger records and what subject comparisons are made against.
+  @phase_dir_physical Mailglass.TestSupport.PhaseArtifacts.relative!(@repo_root, @phase_dir)
+  @ledger Mailglass.TestSupport.PhaseArtifacts.resolve!(
+            @repo_root,
+            Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")
+          )
   @headers [
     "stable_id",
     "subject",
@@ -440,7 +447,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       declared_subjects =
         40..43
         |> Enum.flat_map(fn plan_number ->
-          plan = Path.join(@repo_root, Path.join(@phase_dir, "164-#{plan_number}-PLAN.md"))
+          plan = Path.join(@repo_root, Path.join(@phase_dir_physical, "164-#{plan_number}-PLAN.md"))
           assert {:ok, paths} = Ledger.plan_files_modified(plan)
           paths
         end)
@@ -877,7 +884,9 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
     test "tracked ledger claims require exact Git index membership" do
       repo = clone_repository!()
-      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      ledger =
+        File.read!(Path.join(repo, Path.join(@phase_dir_physical, "164-TRUTH-DISPOSITION.tsv")))
 
       assert :ok = Ledger.validate(ledger, repo)
       assert {_output, 0} = System.cmd("git", ["rm", "--cached", "--", "README.md"], cd: repo)
@@ -1067,7 +1076,9 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
     test "rejects a genuine unmerged subject through the helper and full validator" do
       repo = clone_repository!()
       subject = "README.md"
-      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      ledger =
+        File.read!(Path.join(repo, Path.join(@phase_dir_physical, "164-TRUTH-DISPOSITION.tsv")))
 
       install_unmerged_index_entry!(repo, subject)
 
@@ -1222,7 +1233,9 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       repo = clone_repository!()
       subject = "README.md"
       external_target = external_regular_file!()
-      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      ledger =
+        File.read!(Path.join(repo, Path.join(@phase_dir_physical, "164-TRUTH-DISPOSITION.tsv")))
 
       replace_with_tracked_symlink!(repo, subject, external_target)
 
@@ -1237,7 +1250,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
       repo = clone_repository!()
       subject = "README.md"
       external_target = external_regular_file!()
-      ledger = Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv"))
+      ledger = Path.join(repo, Path.join(@phase_dir_physical, "164-TRUTH-DISPOSITION.tsv"))
       script = Path.join(@repo_root, "scripts/validate_repository_truth.exs")
 
       replace_with_tracked_symlink!(repo, subject, external_target)
@@ -1259,7 +1272,9 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
 
     test "one ordinary mode-100644 stage-0 record remains valid" do
       repo = clone_repository!()
-      ledger = File.read!(Path.join(repo, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")))
+
+      ledger =
+        File.read!(Path.join(repo, Path.join(@phase_dir_physical, "164-TRUTH-DISPOSITION.tsv")))
 
       assert git_output!(repo, ["ls-files", "--stage", "--", "README.md"]) =~
                ~r/^100644 [0-9a-f]{40} 0\tREADME\.md$/
@@ -1279,7 +1294,7 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
   defp header_line, do: Enum.join(@headers, "\t")
 
   defp plan_modified_files(plan_number) do
-    plan = Path.join(@repo_root, Path.join(@phase_dir, "164-#{plan_number}-PLAN.md"))
+    plan = Path.join(@repo_root, Path.join(@phase_dir_physical, "164-#{plan_number}-PLAN.md"))
     contents = File.read!(plan)
 
     paths =
@@ -1394,15 +1409,16 @@ defmodule Mailglass.Scripts.Phase164RepositoryTruthTest do
                stderr_to_stdout: true
              )
 
-    fixture_ledger = Path.join(root, Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv"))
+    # The clone mirrors HEAD, so the ledger sits wherever the v2.7 archive left it.
+    # Stage it back at that same physical path rather than at the pre-archive live
+    # path, which no longer exists in the clone.
+    fixture_relative = Path.join(@phase_dir_physical, "164-TRUTH-DISPOSITION.tsv")
+    fixture_ledger = Path.join(root, fixture_relative)
+    File.mkdir_p!(Path.dirname(fixture_ledger))
     File.cp!(@ledger, fixture_ledger)
 
     assert {_output, 0} =
-             System.cmd(
-               "git",
-               ["add", "--", Path.join(@phase_dir, "164-TRUTH-DISPOSITION.tsv")],
-               cd: root
-             )
+             System.cmd("git", ["add", "--", fixture_relative], cd: root)
 
     root
   end

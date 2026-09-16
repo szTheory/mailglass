@@ -5,10 +5,15 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
   @loader Path.join(@repo_root, "scripts/mailglass_finalize_milestone_loader.mjs")
   @finalizer Path.join(@repo_root, "scripts/finalize_milestone_v2_7.sh")
   @fixture_loader Path.join(@repo_root, "test/support/mailglass_milestone_finalizer_fixture.mjs")
-  @finalization_runbook Path.join(
-                          @repo_root,
-                          ".planning/phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md"
-                        )
+  # The runbook lives under the live phase directory until v2.7 is archived, after which
+  # `milestone complete` MOVES it into the milestone archive. Both locations are the same
+  # authored bytes; resolving either keeps this lane honest across the archive boundary
+  # instead of going red the moment the milestone it describes is closed.
+  @finalization_runbook_candidates [
+                                     ".planning/phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md",
+                                     ".planning/milestones/v2.7-phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md"
+                                   ]
+                                   |> Enum.map(&Path.join(@repo_root, &1))
   @installed_loader "/Users/jon/.local/bin/mailglass-finalize-milestone"
 
   @tag :phase_165_tracer
@@ -187,7 +192,21 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
        fn body ->
          String.replace(body, "(Completed:", "(Not completed:") <>
            "\nv2.7 archived appears only in prose.\n"
-       end, "milestone ledger omits the completed v2.7 record"}
+       end, "milestone ledger omits the completed v2.7 record"},
+      # A hand-written stub carrying the word "archived" is not machine state. This is
+      # the exact shape the pre-repair assertion accepted, and no publisher emits it.
+      {"state-json-stub", ".planning/state.json",
+       fn _body -> ~s({"milestone":"v2.7","status":"archived"}\n) end,
+       "machine state does not agree that v2.7 is archived"},
+      # A canonical contract that still lists live phases has not been archived.
+      {"state-json-live-phase", ".planning/state.json",
+       fn body ->
+         String.replace(
+           body,
+           ~s("phases":[]),
+           ~s("phases":[{"number":"165","name":"Fixture","status":"complete"}])
+         )
+       end, "machine state does not agree that v2.7 is archived"}
     ]
 
     for {name, relative, mutation, diagnostic} <- cases do
@@ -787,7 +806,14 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
       "---\nmilestone: v2.7\nstatus: archived\n---\n\nRepository hygiene remains policy-blocked by 14 open PRs as accepted operational debt.\n"
     )
 
-    write!(repo, ".planning/state.json", ~s({"milestone":"v2.7","status":"archived"}\n))
+    # Canonical GSD state-contract shape (frozen key set, empty live-phase list after
+    # archival) -- deliberately NOT a hand-written {"status":"archived"} stub, which no
+    # publisher emits and which previously made this lane green against fiction.
+    write!(
+      repo,
+      ".planning/state.json",
+      ~s({"contract":"1.0.0","flavor":"core","milestone":"v2.7","phases":[],"next":{"command":"/gsd:new-milestone"},"updated_at":"2026-09-15T00:00:00.000Z"}\n)
+    )
 
     for phase <- 161..165 do
       slug = "#{phase}-fixture"
@@ -1025,8 +1051,23 @@ defmodule Mailglass.Phase165MilestoneFinalizerTest do
     end
   end
 
+  defp finalization_runbook! do
+    case Enum.filter(@finalization_runbook_candidates, &File.regular?/1) do
+      [path] ->
+        path
+
+      [] ->
+        flunk(
+          "165-FINALIZATION.md is missing from both the live phase directory and the v2.7 archive"
+        )
+
+      many ->
+        flunk("165-FINALIZATION.md is ambiguous — present at #{Enum.join(many, " and ")}")
+    end
+  end
+
   defp runbook_tag_omission_section! do
-    source = File.read!(@finalization_runbook)
+    source = File.read!(finalization_runbook!())
 
     case Regex.run(
            ~r/^# phase165:tag-omission:start\n(?<section>.*?)^# phase165:tag-omission:end$/ms,
