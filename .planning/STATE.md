@@ -53,14 +53,28 @@ Last activity: 2026-09-15 — Milestone v2.7 completed and archived
   `851e3640f7f0eb6e784611d157e3a7329f87e2dc`. Its ignored terminal report is immutable historical
   evidence only; Phase 164 pending/current-authority statements retained in the accumulated execution
   history below are not live milestone blockers or v2.7 terminal authority.
-- **The v2.7 terminal authority still has not run.** Sections 1–4 of `165-FINALIZATION.md` are now
-  complete (canonical audit, archive preview, approved archive, final tracked convergence). Sections
-  5–7 remain outstanding: protected-main integration, exact attempt-one push CI, natural attempt-one
-  scheduled evidence for every registered control, the fresh authenticated installation checkpoint, and
-  one `mailglass-finalize-milestone v2.7` invocation followed by a hard stop. The runbook now lives at
+- **Sections 1–5(CI) of `165-FINALIZATION.md` are complete.** Canonical audit, archive preview,
+  approved archive, final tracked convergence, and protected-main integration all ran. The archive is
+  on protected `main` at **`79247dafbb3b2d3a56114127e1e96e62cbcf33db`** (PR #257, squash), and the
+  push-CI requirement is satisfied exactly: workflow `CI`, event `push`, branch `main`, that exact SHA,
+  attempt 1, completed/success (run 35108991834). The runbook now lives at
   `milestones/v2.7-phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md`.
-- Local commits remain unpushed and **STATE withholds push authority.** Absence of CI or schedule
-  evidence is a wait/block, never authority to dispatch or rerun.
+- **v2.7 closes ARCHIVED WITHOUT TERMINAL PROOF. Sections 6–7 are not achievable under current
+  policy and are not pending work.** The runbook also requires all three registered scheduled controls
+  to report `completed/success` at that exact SHA. All three fail closed *by design*, on one shared
+  root cause — the 14 open PRs this milestone accepted as permanent operational debt:
+  `repo-hygiene` → `blocked` / "14 open PR(s) require disposition before release";
+  `post-publish-smoke` → `blocked` / `scheduled_target_not_published` (PR #222 is an
+  authorized-but-unpublished target); `release-please` → `blocked` / `proposal_identity_mismatch`
+  (the same open #222 proposal). Clearing them would require closing those PRs, publishing a release,
+  or relaxing the controls' fail-closed semantics — each explicitly on the runbook's own Forbidden
+  Operations list. Phase 165 therefore demands green evidence from controls Phase 162 deliberately made
+  fail-closed under exactly the condition v2.7 chose to accept. Recorded as a known contract
+  contradiction, not a gap in the milestone: the archive is complete and green on protected `main`, and
+  the terminal report was always ignored-only evidence, never the deliverable.
+- Re-opening §6–7 is a **deliberate future decision**, valid only if the accepted debt is disposed or
+  the terminal contract is relaxed. Until then, absence of schedule evidence is the expected steady
+  state — never authority to dispatch, rerun, close a PR, or publish.
 - Repository hygiene remains policy-blocked by 14 open PRs as accepted operational debt. Legacy quick
   tasks stay outside v2.7, and no PR closure, tag push, branch deletion, workflow dispatch or rerun,
   merge bypass, release, or publication is authorized.
@@ -286,14 +300,14 @@ Last activity: 2026-09-15 — Milestone v2.7 completed and archived
 ## Session Continuity
 
 Last session: 2026-09-15
-Stopped at: Milestone v2.7 archived (`165-FINALIZATION.md` §1–4 complete). Next is §5 — protected-main
-integration of the unpushed local commits, then exact attempt-1 push CI and natural attempt-1 scheduled
-evidence, then the §6 installation checkpoint and the single §7 terminal invocation. STATE withholds push
-authority; that is a wait, not a blocker to route around.
+Stopped at: Milestone v2.7 archived AND integrated to protected `main` (`79247daf`) with attempt-1
+push CI green. §6–7 terminal proof is closed out as not achievable under current policy — the three
+scheduled controls fail closed on the 14 accepted-debt PRs. No further v2.7 lifecycle work is pending.
 Resume file: None
 
 ## Operator Next Steps
 
 - Start the next milestone with `/gsd-new-milestone`.
-- Separately, when push authority is granted: resume `165-FINALIZATION.md` §5–7 for the v2.7 terminal
-  proof. That sequence is a distinct authority from any new milestone and must not be folded into one.
+- v2.7 needs nothing further. Only revisit `165-FINALIZATION.md` §6–7 if the 14 accepted-debt PRs are
+  disposed or the terminal contract is deliberately relaxed — a separate authority from any new
+  milestone, and not a prerequisite for one.

@@ -36,7 +36,17 @@
 - SEED-006 (CI efficiency overhaul) deferred outside v2.7 on 2026-08-21 as a pull-gated backlog seed. Legacy quick tasks excluded from v2.7 because they cannot be truthfully attributed to it.
 - `verify.artifacts` reported two literal-pattern false negatives in Phase 162 (Plan 09 `checkout --detach` spelling, Plan 10 "post-merge" prose); confirmed pattern artifacts, not stubs.
 
-**Post-archive sequence (not performed by this close):** runbook sections 5–7 of `milestones/v2.7-phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md` remain outstanding — protected-main integration of the tracked commits, exact attempt-1 push CI, natural attempt-1 scheduled evidence, the fresh authenticated installation checkpoint, and the single terminal `mailglass-finalize-milestone v2.7` invocation. STATE withholds push authority; absence of evidence is a wait, never authority to dispatch or rerun.
+**Post-archive outcome:** the archive was integrated to protected `main` as
+`79247dafbb3b2d3a56114127e1e96e62cbcf33db` (PR #257) with the required attempt-1 push CI green
+(`CI` / `push` / `main` / exact SHA / attempt 1 / success). **v2.7 closes archived without terminal
+proof.** `165-FINALIZATION.md` §6-7 additionally require all three registered scheduled controls to
+report `completed/success` at that SHA; all three fail closed by design on the 14 open PRs this
+milestone accepted as permanent debt (`repo-hygiene`: "14 open PR(s) require disposition";
+`post-publish-smoke`: `scheduled_target_not_published` for the authorized-but-unpublished PR #222;
+`release-please`: `proposal_identity_mismatch` on that same proposal). Every remedy — closing those
+PRs, publishing a release, or relaxing the controls' fail-closed semantics — is on the runbook's own
+Forbidden Operations list, so §6-7 are not achievable under current policy and are not pending work.
+The terminal report was always ignored-only evidence, never the milestone deliverable.
 
 ---
 
