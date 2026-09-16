@@ -34,12 +34,29 @@ while IFS= read -r path; do
     continue
   fi
 
+  head_path="$path"
+
   if ! git cat-file -e "$head_sha:$path" 2>/dev/null; then
-    echo "Append-only evidence check failed: retained file removed: $path" >&2
-    exit 1
+    # Completing a milestone MOVES `.planning/phases/16N-*` into
+    # `.planning/milestones/v<ver>-phases/`. That is a relocation, not a removal, and the
+    # append-only promise must still be proved ACROSS it -- so follow the move and diff
+    # the base blob against the archived blob. A genuine deletion still fails here,
+    # because the archived twin will not exist either.
+    archive_milestone="${EVIDENCE_ARCHIVE_MILESTONE:-v2.7}"
+    archived_path=".planning/milestones/${archive_milestone}-phases/${path#.planning/phases/}"
+
+    case "$path" in .planning/phases/*) ;; *) archived_path="$path" ;; esac
+
+    if [ "$archived_path" != "$path" ] && git cat-file -e "$head_sha:$archived_path" 2>/dev/null; then
+      echo "Append-only evidence check: retained file archived $path -> $archived_path"
+      head_path="$archived_path"
+    else
+      echo "Append-only evidence check failed: retained file removed: $path" >&2
+      exit 1
+    fi
   fi
 
-  removed_lines=$(git diff --unified=0 "$base_sha" "$head_sha" -- "$path" |
+  removed_lines=$(git diff --unified=0 "$base_sha:$path" "$head_sha:$head_path" |
     awk '/^--- / {next} /^-/ {print}')
 
   if [ -n "$removed_lines" ]; then
@@ -48,5 +65,5 @@ while IFS= read -r path; do
     exit 1
   fi
 
-  echo "Append-only evidence check passed: $path"
+  echo "Append-only evidence check passed: $head_path"
 done < <(jq -er '.append_only_evidence_paths[]' "$config_path")
