@@ -184,7 +184,7 @@ Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (
 
 ### Pending Todos
 
-- [2026-09-16] [release-engineering] Enforce commit-type discipline for release-triggering paths — [todo file](.planning/todos/pending/2026-09-16-enforce-commit-type-discipline-for-release-triggering-paths.md)
+(none)
 
 ### Roadmap Evolution
 
