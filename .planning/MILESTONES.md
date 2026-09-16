@@ -1,5 +1,45 @@
 # Milestones
 
+## v2.7 Repository Stewardship & Operational Hygiene (Shipped: 2026-09-15)
+
+**Delivered:** A clean, quiet, trustworthy maintenance posture — every workspace and Git object accounted for, every release and hygiene control emitting truthful pass/blocked/cannot-check/pending evidence, and repository truth derived from exact immutable Git authority. No product expansion, no speculative refactoring, no ceremonial release.
+
+**Phases completed:** 5 phases, 75 plans, 92 tasks
+
+**Stats:** 288 files changed; 52,699 insertions / 1,739 deletions; 321 commits over a 26-day window (2026-08-21 → 2026-09-15).
+
+**Git range:** `06ac996c` → `532301a3`
+
+**Archives:** `milestones/v2.7-ROADMAP.md`, `milestones/v2.7-REQUIREMENTS.md`, `milestones/v2.7-MILESTONE-AUDIT.md`, `milestones/v2.7-phases/`
+
+**Release:** none — repo-artifact milestone. Package versions unchanged at `mailglass` 2.5.0 / `mailglass_admin` 2.5.0 / `mailglass_inbound` 2.2.0. No tag was created: the milestone-close section manifest excludes `git-tag` by design (165-FINALIZATION.md §2).
+
+**Key accomplishments:**
+
+- Every one of 1,849 non-sentinel workspace and Git-object identities now carries content/reachability evidence, exactly one safe disposition, and a verified recovery anchor — closing on an explained canonical `main`, a zero-action cleanup queue, and no consumed original evidence.
+- Release-please, post-publish recovery, and repository hygiene each serialize a single truthful `pass` / `blocked` / `cannot-check` / `pending` artifact before their failure boundary, so malformed or absent upstream output becomes inspectable evidence instead of an escaped exception — with no expansion of release authority anywhere.
+- Protected exact-digest releases now require a freshly queried GitHub repository-admin dispatcher before any privileged PAT-backed validation, merge, release, or sync checkout, and find scheduled CI by the detached checkout's immutable SHA.
+- The historical SQLSTATE 57014 was recovered but did not recur across three exact-SHA attempts or the complete current suite, so Phase 163 preserved the 1,000-run invariants and installed sanitized failure-only recurrence evidence rather than speculating a repair; five exact browser test owners were bounded title-locally without weakening global policy or coverage.
+- Repository truth now accepts tracked claims only through one exact NUL-delimited stage-0 Git-index identity, rejecting unresolved merge stages, symlinks, and non-regular objects at the production seam with bounded public diagnostics.
+- Finalization authority is an externally installed, human-approved mode-0500 command with authenticated provenance, exercised rollback, a physically authenticated BEAM runtime, and separate hermetic repository and controlled-host CI lanes — and Phase 165 reordered the lifecycle so the milestone archive precedes terminal capture, binding terminal proof to protected exact-SHA evidence through a fail-closed runbook.
+
+**Closeout type:** `override_closeout`.
+
+**Known verification overrides:** 0 newly acknowledged, 0 carried forward. The pre-close artifact audit reported 27 open items (23 deferred items, 3 UAT gaps, 1 verification gap); every one belongs to an already-archived milestone (v0.2, v1.1, v1.13, v1.14, v2.0, v2.2) and none to Phases 161–165. They were deliberately **not** acknowledged into v2.7 — suppressing them here would attribute archived-milestone debt to this milestone, the same truthful-attribution reason v2.7 excluded legacy quick tasks. They remain open against their own milestones.
+
+**Known gaps:**
+
+- Requirements: none. All 16 v2.7 requirements (WSPC-01..04, AUTO-01..05, DTRM-01..04, TRTH-01..03) are satisfied 16/16 under three-source cross-reference; the canonical audit reports phases 5/5, integration 16/16, flows 5/5, Nyquist compliant across all five phases.
+- `init.manager` projected Phases 161 and 165 as `verification_status: stale`, so a strict `verified_closeout` was unavailable. Both VERIFICATION.md records are `status: passed` (161: 21/21, 165: 5/5). The staleness is a timestamp heuristic firing on the completion-metadata commits the runbook itself mandates — the only files post-dating 165's verification are `.planning/ROADMAP.md`, `.planning/STATE.md`, `.planning/PROJECT.md`, and `.planning/state.json`; both source commits predate it. Accepted as an override, not an unverified phase.
+- Phase 165 accepted five code-review findings (CR-01, CR-02, CR-03, WR-01, WR-02) as known risk after three escalating review passes; each was fixed in iteration 2 and flagged "requires human verification" for lifecycle-acceptance, terminal-pass, installation-transition, cleanup-state, and one-shot-receipt semantics.
+- Repository hygiene remains policy-blocked by 14 open PRs — accepted operational debt recorded in ROADMAP scope, STATE Lifecycle Authority, and PROJECT policy. Not a release authorization.
+- SEED-006 (CI efficiency overhaul) deferred outside v2.7 on 2026-08-21 as a pull-gated backlog seed. Legacy quick tasks excluded from v2.7 because they cannot be truthfully attributed to it.
+- `verify.artifacts` reported two literal-pattern false negatives in Phase 162 (Plan 09 `checkout --detach` spelling, Plan 10 "post-merge" prose); confirmed pattern artifacts, not stubs.
+
+**Post-archive sequence (not performed by this close):** runbook sections 5–7 of `milestones/v2.7-phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md` remain outstanding — protected-main integration of the tracked commits, exact attempt-1 push CI, natural attempt-1 scheduled evidence, the fresh authenticated installation checkpoint, and the single terminal `mailglass-finalize-milestone v2.7` invocation. STATE withholds push authority; absence of evidence is a wait, never authority to dispatch or rerun.
+
+---
+
 ## v2.6 Engineering Quality Ratchet (Shipped: 2026-08-21)
 
 **Delivered:** A truthful, bounded, cycle-free package family whose migration, merge, release, and exact-Hex adopter paths are all executable and fail closed.

@@ -1,20 +1,20 @@
 ---
 gsd_state_version: "1.0"
 milestone: v2.7
-milestone_name: Repository Stewardship & Operational Hygiene (Planned)
-current_phase: 165
-status: completed
+milestone_name: Repository Stewardship & Operational Hygiene (Shipped 2026-09-15, archived)
+status: Awaiting next milestone
 stopped_at: Phase 165 complete — all phases complete
-last_updated: "2026-09-15T22:09:18.579Z"
+last_updated: "2026-09-16T01:14:49.264Z"
 last_activity: 2026-09-15
-last_activity_desc: Phase 165 complete
-state_head: ef18c73eb84bf894a55c1b869163defc2fc94a0b
+last_activity_desc: Milestone v2.7 completed and archived
+state_head: 532301a309debe8d9736d4ea4cd66c14904a9f22
 progress:
   total_phases: 5
   completed_phases: 5
   total_plans: 75
   completed_plans: 75
   percent: 100
+current_phase: 165
 current_plan: 5
 ---
 
@@ -25,34 +25,42 @@ current_plan: 5
 See: .planning/PROJECT.md (updated 2026-09-15)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v2.7 post-completion runbook — canonical milestone audit, then archive, then terminal capture (165-FINALIZATION.md)
+**Current focus:** No milestone open — v2.7 archived 2026-09-15. Outstanding: the post-archive half of
+`165-FINALIZATION.md` (§5–7), which is gated on push authority that STATE still withholds.
 
 ## Current Position
 
-Phase: 165
-Plan: Not started
-Status: All phases complete — Phase 165 ordinary verification passed 5/5
-Last activity: 2026-09-15 — Phase 165 complete
-
-Progress: [████████████████████] 75/75 plans complete ([██████████] 100%)
+Phase: Milestone v2.7 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-09-15 — Milestone v2.7 completed and archived
 
 ## Lifecycle Authority
 
-- Phase 165 was the pre-archive lifecycle repair across the five-phase v2.7 scope, with no new
-  requirement IDs beyond the 16 definitions assigned to Phases 161–164. It passed ordinary
-  verification 5/5 on 2026-09-15 (`165-VERIFICATION.md`) and is marked complete; all 75 plans across
-  Phases 161–165 now have summaries and ROADMAP checkboxes.
+- **v2.7 is archived.** The canonical audit passed (16/16 requirements, 5/5 phases, 16/16 integration,
+  5/5 flows, Nyquist compliant) and `milestone.complete v2.7 --confirm` ran on 2026-09-15 under the
+  scoped `git.create_tag=false` override defined in `165-FINALIZATION.md` §2, restored byte-for-byte
+  afterward. Archived to `.planning/milestones/v2.7-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and
+  `v2.7-phases/`. **No `v2.7` tag exists and none may be created.**
+- Closeout type: `override_closeout`. `init.manager` projected Phases 161 and 165 `stale` — a timestamp
+  heuristic firing on the runbook-mandated completion-metadata commits, not an unverified phase; both
+  VERIFICATION.md records are `status: passed` (161: 21/21, 165: 5/5).
+- **Known verification overrides: 0 newly acknowledged, 0 carried forward.** The pre-close artifact
+  audit's 27 open items (23 deferred, 3 UAT gaps, 1 verification gap) all belong to already-archived
+  milestones (v0.2, v1.1, v1.13, v1.14, v2.0, v2.2) and were deliberately not acknowledged into v2.7;
+  acknowledging them would attribute foreign debt to this milestone. They remain open against their own.
 - Phase 164 completed successfully at protected-main SHA
   `851e3640f7f0eb6e784611d157e3a7329f87e2dc`. Its ignored terminal report is immutable historical
   evidence only; Phase 164 pending/current-authority statements retained in the accumulated execution
   history below are not live milestone blockers or v2.7 terminal authority.
-- The separate v2.7 terminal authority has not run. Phase 165 ordinary verification is now the only
-  one of its ordered predecessors that has completed; canonical audit, archive completion, final
-  tracked convergence, protected-main integration, exact attempt-one CI, and natural scheduled
-  evidence all remain outstanding. The runbook sequencing them is `165-FINALIZATION.md`.
-- This publication is pre-archive only. The post-archive runbook must call the canonical
-  `publishStateContract` again after every archive-related Markdown edit and include the resulting
-  `state.json` in the final tracked archive commit.
+- **The v2.7 terminal authority still has not run.** Sections 1–4 of `165-FINALIZATION.md` are now
+  complete (canonical audit, archive preview, approved archive, final tracked convergence). Sections
+  5–7 remain outstanding: protected-main integration, exact attempt-one push CI, natural attempt-one
+  scheduled evidence for every registered control, the fresh authenticated installation checkpoint, and
+  one `mailglass-finalize-milestone v2.7` invocation followed by a hard stop. The runbook now lives at
+  `milestones/v2.7-phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md`.
+- Local commits remain unpushed and **STATE withholds push authority.** Absence of CI or schedule
+  evidence is a wait/block, never authority to dispatch or rerun.
 - Repository hygiene remains policy-blocked by 14 open PRs as accepted operational debt. Legacy quick
   tasks stay outside v2.7, and no PR closure, tag push, branch deletion, workflow dispatch or rerun,
   merge bypass, release, or publication is authorized.
@@ -278,5 +286,14 @@ Progress: [████████████████████] 75/75 p
 ## Session Continuity
 
 Last session: 2026-09-15
-Stopped at: Phase 165 complete and verified (5/5) — all v2.7 phases complete; next is the canonical milestone audit, then archive, then terminal capture per 165-FINALIZATION.md. 36 local commits remain unpushed; STATE withholds push authority.
+Stopped at: Milestone v2.7 archived (`165-FINALIZATION.md` §1–4 complete). Next is §5 — protected-main
+integration of the unpushed local commits, then exact attempt-1 push CI and natural attempt-1 scheduled
+evidence, then the §6 installation checkpoint and the single §7 terminal invocation. STATE withholds push
+authority; that is a wait, not a blocker to route around.
 Resume file: None
+
+## Operator Next Steps
+
+- Start the next milestone with `/gsd-new-milestone`.
+- Separately, when push authority is granted: resume `165-FINALIZATION.md` §5–7 for the v2.7 terminal
+  proof. That sequence is a distinct authority from any new milestone and must not be folded into one.

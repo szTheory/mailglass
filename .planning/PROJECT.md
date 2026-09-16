@@ -10,10 +10,32 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**v2.7 Repository Stewardship & Operational Hygiene opened 2026-08-21.** This is a bounded maintenance
-milestone: restore quiet, trustworthy repository operations; disposition release and workspace residue;
-and make documentation and tracked artifacts tell the truth. It does not expand the product, redesign
-architecture, overhaul CI for speed, or force a Hex release without an adopter-facing correction.
+**v2.7 Repository Stewardship & Operational Hygiene SHIPPED and ARCHIVED 2026-09-15.** The bounded
+maintenance milestone closed with its canonical audit `status: passed` — 16/16 requirements, 5/5 phases,
+16/16 integration seams, 5/5 flows, Nyquist compliant across Phases 161–165. Artifacts are archived to
+`.planning/milestones/v2.7-ROADMAP.md`, `v2.7-REQUIREMENTS.md`, `v2.7-MILESTONE-AUDIT.md`, and
+`v2.7-phases/`. No milestone is open; run `/gsd-new-milestone` to start the next one.
+
+It expanded no product surface, redesigned no architecture, overhauled no CI for speed, and forced no Hex
+release. Package versions are unchanged at `mailglass` 2.5.0 / `mailglass_admin` 2.5.0 /
+`mailglass_inbound` 2.2.0, and **no `v2.7` git tag was created** — the close deliberately excludes the
+`git-tag` section per `165-FINALIZATION.md` §2, which is why the standing release-cadence rule below does
+not apply to this repo-artifact milestone.
+
+**Closeout was an `override_closeout`.** `init.manager` projected Phases 161 and 165 as
+`verification_status: stale`, though both VERIFICATION.md records are `status: passed` (161: 21/21,
+165: 5/5) and the only files post-dating 165's verification are the completion-metadata writes the runbook
+itself mandates. The pre-close artifact audit's 27 open items all belong to already-archived milestones
+(v0.2, v1.1, v1.13, v1.14, v2.0, v2.2) and were deliberately **not** acknowledged into v2.7 — suppressing
+them here would attribute foreign debt to this milestone. See `.planning/MILESTONES.md` for the full
+override and known-gap record.
+
+**The post-archive sequence has not run.** Sections 5–7 of
+`milestones/v2.7-phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md`
+remain outstanding: protected-main integration of the tracked v2.7 commits, exact attempt-1 push CI,
+natural attempt-1 scheduled-control evidence, the fresh authenticated installation checkpoint, and one
+terminal `mailglass-finalize-milestone v2.7` invocation. STATE withholds push authority; absence of
+evidence is a wait, never authority to dispatch or rerun.
 
 **Phase 161 completed and verified 2026-08-22.** The canonical workspace, linked worktrees, stashes,
 refs, divergent ranges, release leftovers, and selected unreachable objects now have an append-only,
@@ -94,7 +116,7 @@ Package boundaries are locked. Chimeway owns notification policy and preferences
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
 paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
 
-## Current Milestone: v2.7 Repository Stewardship & Operational Hygiene
+## Completed Milestone: v2.7 Repository Stewardship & Operational Hygiene (SHIPPED 2026-09-15)
 
 **Goal:** Leave Mailglass in a clean, quiet, trustworthy maintenance posture after v2.6 without product
 expansion or speculative refactoring.
@@ -116,7 +138,12 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 - Close with a clean working state, accurate docs, no unexplained red automation, and an explicit disposition
   for every audited item.
 
-## Active Requirements: v2.7
+## Active Requirements
+
+**None — no milestone is open.** The 16 v2.7 requirements are archived and validated in
+`.planning/milestones/v2.7-REQUIREMENTS.md`. The next set is defined by `/gsd-new-milestone`.
+
+### v2.7 scope record (archived)
 
 The 16 committed v2.7 requirements in `.planning/REQUIREMENTS.md` cover workspace integrity, automation and
 release truth, deterministic release-path gates, and repository truth/closeout. The milestone is constrained
@@ -130,7 +157,7 @@ not close them or turn the block into release authority. Legacy quick tasks rema
 the completion workflow cannot attribute them accurately. Remote tag pushes, branch deletion, workflow
 dispatch or rerun, merge bypass, releases, and publication remain prohibited.
 
-## Validated Requirements: v2.7 (in progress)
+## Validated Requirements: v2.7 (SHIPPED 2026-09-15)
 
 - ✓ WSPC-01..04 — complete pre-mutation workspace evidence, an explained canonical `main`, one
   evidence-backed disposition per identity, and verified preservation before any cleanup — validated in
@@ -152,7 +179,7 @@ dispatch or rerun, merge bypass, releases, and publication remain prohibited.
 All 16 v2.7 requirements are now Complete in `.planning/REQUIREMENTS.md`. Phase 165 contributed
 lifecycle decision coverage only and validated no requirement IDs, per D-09.
 
-## Completed Milestone: v2.6 Engineering Quality Ratchet
+## Archived: v2.6 Engineering Quality Ratchet (SHIPPED 2026-08-21)
 
 **Goal:** Raise the internal engineering bar substantially while proving the generated first-adopter path,
 runtime correctness, data safety, architecture boundaries, and merge/release signals are honest.
@@ -978,7 +1005,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-26 | v1.10 adopts the A/B-winning fable brand as the project's one canonical identity and hardens the release pipeline against accidental brand/planning-only releases | The v1.9 A/B winner needed to actually become the repo's identity (folder, README, social, HexDocs), and the 1.6.x accidental-release incident proved release-please could cut a release from non-code commits | ✓ Validated v1.10 — canonical `brandbook/` adopted (codex removed), README/og-card/admin/HexDocs surfaces propagated, `exclude-paths` + required `guard-release-trigger` lint added, 1.6.x aftermath reconciled to 1.6.2/1.6.2/1.3.1; audit passed 10/10; no Hex release cut |
 | D-27 | v1.11 re-baselines `mailglass_admin` onto the canonical fable brand tokens and runs a fractal (component → group → page), idempotent, research-grounded design-system uplift of all three admin surfaces — an adopter-visible-quality investment under D-23, not feature growth | The admin UI was last polished (v1.7) against the *old codex-era* brand; v1.9→v1.10 brand work never touched the admin's `app.css`, leaving it drifted (borders drawn in the accent color, cards one brand-role off, dark muted text below AA, no consumption of `brandbook/tokens.css`). The "Storybook lens" is realized as a thin dev-only gallery (zero-Node forbids real Storybook); "only-forward" is enforced by a committed score baseline + carried-forward GAP register. Scope fenced to admin UI; release prepare-only | ✓ Validated v1.11 — all 3 admin surfaces re-baselined onto `brandbook/tokens.css`; idempotent ratchet armed (36/36 cells meet-or-beat, zero regressions); dev-only gallery shipped; audit passed 34/34 reqs across 10 phases; release prepare-only held (no Hex cut); fenced scope held (no functional core/inbound changes) |
 | D-28 | Each adopter-quality milestone **actually cuts** the linked-version Hex release at close (not prepare-only), draining the staged-but-unshipped backlog to adopters | v1.7/v1.11 staged release ceremonies prepare-only, accumulating polish on `main` that adopters never saw; the convergence posture is only adopter-valuable once it ships | ✓ Validated v1.12 — first real linked-version release since 1.6.2 cut (1.7.0/1.7.0/1.4.0); carried into v1.13 (PR #86 fixes + the design-system uplift ship together) |
-| D-29 | v1.13 is a third adopter-visible-quality admin pass under D-23, distinguished from v1.7/v1.11 by being **lived-experience / real-demo-driven** rather than in-the-lab: a fractal, research-per-decision (adversarially judged), WCAG-2.2-AA, light/dark/**system**, idempotent design-system stress-test that also fixes the multi-tenant demo so the picker earns its place — then ships (D-28) | v1.11's ratchet passed in the lab (LLM-scored PNGs, structural assertions) yet clicking the real demo still surfaced usability traps and "kind of ugly" rough edges; the remaining gap is lived-experience polish + a tangible multi-tenant story, not more capability. Restraint (admin+demo only, brand book is source of truth, no new deps without a decision brief, idempotent meet-or-beat ratchet extended from v1.11) keeps it convergence-aligned | — Pending (v1.13 in flight) |
+| D-29 | v1.13 is a third adopter-visible-quality admin pass under D-23, distinguished from v1.7/v1.11 by being **lived-experience / real-demo-driven** rather than in-the-lab: a fractal, research-per-decision (adversarially judged), WCAG-2.2-AA, light/dark/**system**, idempotent design-system stress-test that also fixes the multi-tenant demo so the picker earns its place — then ships (D-28) | v1.11's ratchet passed in the lab (LLM-scored PNGs, structural assertions) yet clicking the real demo still surfaced usability traps and "kind of ugly" rough edges; the remaining gap is lived-experience polish + a tangible multi-tenant story, not more capability. Restraint (admin+demo only, brand book is source of truth, no new deps without a decision brief, idempotent meet-or-beat ratchet extended from v1.11) keeps it convergence-aligned | ✓ Validated v1.13 — shipped 2026-06-21 at 1.8.0/1.8.0/1.5.0, audit passed 41/41 across 9 phases |
 | D-30 | Mailglass publishes the B2C email safety profile but host/Chimeway retain notification preferences and RFC 8058 category policy | Preference, consent, auth, and product policy belong with the host; Mailglass owns stream and suppression mechanics | ✓ Validated v2.3 — guide/package contracts passed without adding a preference-center API |
 | D-31 | Provider feedback emits once from the existing post-commit projector chokepoint with a closed, PII-free metadata contract | Observability consumers need durable facts, not webhook-attempt noise or recipient/message data | ✓ Validated v2.3 — replay-safe event and metadata contract passed focused tests |
 | D-32 | The admin reuses existing tenant PubSub topics and refreshes read models; it does not add a second event bus or mutate URL navigation state | Existing projection topics are the canonical live signal and keep the one-maintainer architecture supportable | ✓ Validated v2.3 — current-tenant refresh and foreign-tenant rejection passed 79 LiveView tests |
@@ -997,7 +1024,10 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-45 | One canonical local `mix ci` path and the protected `CI Green` aggregate must cover the same required deterministic evidence, with explicit ownership for every exception | Maintainers need a single reproducible merge signal whose green state cannot be manufactured by skipped, stale, or cross-test evidence | ✓ Validated Phase 159 and milestone re-audit — scoped telemetry regression, policy checks, and uninterrupted full CI passed |
 | D-46 | Publication authority is bound to one authorized candidate digest and immutable tag, and success requires exact-Hex generated-host and trust-runner evidence | Repository green is not sufficient proof that the public three-package family is installable and behaviorally identical | ✓ Validated Phase 160 — 2.5.0 / 2.5.0 / 2.2.0 published and exact-Hex adoption passed from immutable tag SHA `0f0b0686` |
 | D-47 | Workspace and release-evidence verification is machine-enforced through live identity reconciliation plus disposable-repository CI contracts; evidence corrections append instead of rewriting history | Git identity, reachability, preservation, and release-verdict invariants are deterministic and recurring, so manual UAT adds delay without adding judgment value | ✓ Validated Phase 161 — 21/21 verification truths and 15/15 automated UAT checks passed; the auditor caught and append-only corrected one historical evidence hash typo |
-| D-48 | Verification is automated by default: every machine-observable acceptance criterion must resolve through required deterministic CI, browser/integration evidence, or a read-only recurring monitor; `human_needed` is reserved for explicitly documented irreducible product, legal, or subjective judgment | Waiting for a person to repeat a query or inspect deterministic evidence delays maintenance and lets stale state masquerade as proof; automated evidence can stay bounded, current, and rerunnable | ✓ Validated Phase 162 — the read-only sweep verified all three current-main schedule runs and their retained evidence chains without manual substitution |
+| D-48 | Verification is automated by default: every machine-observable acceptance criterion must resolve through required deterministic CI, browser/integration evidence, or a read-only recurring monitor; `human_needed` is reserved for explicitly documented irreducible product, legal, or subjective judgment | Waiting for a person to repeat a query or inspect deterministic evidence delays maintenance and lets stale state masquerade as proof; automated evidence can stay bounded, current, and rerunnable | ✓ Validated Phase 162 — the read-only sweep verified all three current-main schedule runs and their retained evidence chains without manual substitution || D-49 | When a previously observed failure does not recur under bounded exact-SHA reconstruction, the phase closes with an evidence-backed repair halt and sanitized failure-only recurrence evidence — never a speculative seam change | A timeout "fix" aimed at a failure you cannot reproduce is an untestable guess that risks weakening the invariant it claims to protect; honest non-recurrence plus durable future capture is more valuable than a plausible patch | ✓ Validated Phase 163 — SQLSTATE 57014 did not recur across three exact-SHA attempts or the full current suite; the 1,000-run invariants were retained and five browser owners were bounded title-locally instead |
+| D-50 | Repository truth derives exclusively from exact immutable Git authority — NUL-delimited stage-0 index identity with regular-file proof — and finalization authority lives outside the checkout as a human-approved mode-0500 installed command with authenticated provenance and exercised rollback | A validator that trusts the worktree, the caller's cwd/PATH, or a mutable in-checkout script can be steered by the very repository state it is supposed to judge; hostile index, symlink, merge-stage, and non-regular-object cases must fail closed at the production seam | ✓ Validated Phase 164 — hostile index/worktree clusters reject at their mutation-specific boundary; the installed loader runs a physically authenticated BEAM toolchain with Git-ancestry-bound provenance |
+| D-51 | The milestone archive precedes terminal capture, and terminal proof is ignored-only evidence bound to the final protected exact SHA — invoked exactly once, never staged or committed, followed by a hard stop on further lifecycle writes | v2.7 initially tried to capture terminal proof before archiving, which made the report describe a milestone state that the archive then changed; binding the report to the post-archive exact SHA is the only ordering where the evidence can be true, and a hard stop prevents a second report silently superseding it | ✓ Validated Phase 165 — a fail-closed runbook (`165-FINALIZATION.md`) codifies audit → archive → protected integration → installation → one terminal invocation; the archive half executed 2026-09-15, sections 5–7 remain outstanding pending push authority |
+
 
 ## Evolution
 
@@ -1020,7 +1050,8 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-09-15 after Phase 165.*
+*Last updated: 2026-09-15 after the v2.7 milestone archive.*
+<!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->

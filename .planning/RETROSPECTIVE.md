@@ -4,6 +4,56 @@
 
 ---
 
+## Milestone: v2.7 — Repository Stewardship & Operational Hygiene
+
+**Shipped 2026-09-15** — 5 phases (161–165), 75 plans, 16 requirements; audit `status: passed` (16/16 requirements, 5/5 phases, 16/16 integration, 5/5 flows). No Hex release, no git tag — a repo-artifact milestone.
+
+### What Was Built
+
+- A recoverability-first evidence ledger covering 1,849 workspace and Git-object identities, each with content/reachability proof, exactly one disposition, and a verified recovery anchor.
+- Release-please, repository-hygiene, and post-publish controls that serialize a single truthful `pass` / `blocked` / `cannot-check` / `pending` artifact before their failure boundary, without gaining release authority.
+- A fresh repository-admin check gating every privileged PAT-backed protected step, and scheduled-CI lookup bound to the detached checkout's immutable SHA.
+- Repository truth derived from exact NUL-delimited stage-0 Git-index identity, rejecting unresolved merge stages, symlinks, and non-regular objects at the production seam.
+- An externally installed, human-approved mode-0500 finalization command with authenticated provenance, exercised rollback, a physically authenticated BEAM runtime, and separate hermetic repository / controlled-host CI lanes.
+- A fail-closed post-completion runbook (`165-FINALIZATION.md`) that orders audit → archive → protected integration → installation → one terminal invocation → hard stop.
+
+### What Worked
+
+- Recoverability-first dispositioning: nothing was deleted before a recovery anchor existed, so a 1,849-identity cleanup carried no "did we lose something?" tail risk.
+- Refusing to fabricate a fix. Phase 163 recovered SQLSTATE 57014 historically but could not reproduce it across three exact-SHA attempts or the full suite, and closed with an evidence-backed halt plus sanitized recurrence capture instead of a speculative timeout change.
+- Treating evidence as append-only. Corrections were appended, never rewritten, so the ledger stayed auditable through several rounds of revision.
+- Hostile-fixture testing of the authority chain itself — moving HEAD, mutated retired extensions, missing history pairs, malformed successful GitHub output — caught fail-open behavior that happy-path tests could not.
+
+### What Was Inefficient
+
+- Phase 164 ran 44 plans, several of them successive re-installations and re-approvals of the finalization loader (27 → 32 → 34 → 39). Each transition was individually justified, but the loader's authority model was being designed while it was being installed; settling the model first would have collapsed four install ceremonies into one.
+- The lifecycle ordering defect that Phase 165 existed to repair — terminal capture before archive — was only discovered after Phase 164 had produced a terminal report, making that report immutable historical evidence with no authority. An ordering review before the first terminal invocation would have avoided a whole phase.
+- Phase 165's review loop escalated across three passes (9 → 5 → 6 findings) on a Markdown-archive script and was stopped by accepting CR-01..05 and WR-01 as known risk. The loop's real yield was one genuine defect it nearly missed: a flaky `verify.ci_lane_contract` caused by an unpinned `MIX_ENV` in a release-policy CLI subprocess.
+- `init.manager` marked Phases 161 and 165 `stale` purely because the runbook-mandated completion-metadata commits post-date their verification timestamps, forcing an `override_closeout` on a milestone whose canonical audit was clean 5/5.
+
+### Patterns Established
+
+- Automation controls emit one truthful bounded result — `pass` / `blocked` / `cannot-check` / `pending` — before any failure gate. Malformed upstream output becomes inspectable evidence, never an escaped exception.
+- Non-reproduction is a legitimate, documentable phase outcome. Record the halt and install failure-only recurrence capture rather than shipping a guess.
+- Executable authority lives outside the checkout, is human-approved against an immutable digest, and reauthenticates every receipt at use; matching bytes alone are never authority.
+- Terminal/closeout evidence is ignored-only and bound to a post-archive exact SHA — it is never staged or committed, and it is invoked exactly once.
+- Accepted operational debt is disclosed in the milestone's own ledgers (ROADMAP scope, STATE Lifecycle Authority, PROJECT policy) and is explicitly *not* release authorization.
+
+### Key Lessons
+
+- Design the authority model before installing the authority. Phase 164's cost was dominated by re-approving and re-installing a command whose trust boundaries were still moving.
+- Lifecycle ordering is a correctness property, not ceremony: proof captured before the archive describes a state the archive then invalidates.
+- Escalating review passes on a low-risk artifact hit diminishing returns after three rounds; the stopping rule (accept as known risk, name the findings) was correct, and the one real defect surfaced early rather than in the escalation.
+- Truthful attribution beats a clean audit surface. The pre-close audit's 27 open items were deliberately left unacknowledged because every one belongs to an already-archived milestone — the same reason legacy quick tasks stayed outside v2.7.
+
+### Cost Observations
+
+- 288 files changed, 52,699 insertions, 1,739 deletions across 321 commits and 26 calendar days (2026-08-21 → 2026-09-15).
+- 5 phases / 75 plans, but distribution was extreme: Phase 164 alone was 44 plans (59%), and Phases 161+163 together were 13.
+- Zero adopter-facing change and zero release. The entire spend bought trustworthy repository operations and an honest evidence chain — worth it once, and an argument for settling authority models early so it is not repeated.
+
+---
+
 ## Milestone: v2.6 — Engineering Quality Ratchet
 
 **Shipped 2026-08-21** — 6 phases (155–160), 41 plans, 50 requirements; audit `status: passed`.
@@ -795,3 +845,4 @@ baseline: "I LOVE THE NEW BRANDBOOK."
 | v2.1 | 3 | 9 | Hostile-path and first-load proof expose false confidence hidden by friendly fixtures. |
 | v2.2 | 4 | 30 | CI truth requires fail-closed aggregation, negative controls, and runtime/source cross-checks. |
 | v2.6 | 6 | 41 | Milestone-wide executable integration catches order dependence and local/CI environment drift after phase-local gates pass. |
+| v2.7 | 5 | 75 | Settle an authority model before installing it, and order lifecycle proof after the archive — evidence captured before the state it describes is finalized cannot be true. |
