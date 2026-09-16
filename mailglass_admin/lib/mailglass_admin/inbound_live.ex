@@ -275,7 +275,13 @@ defmodule MailglassAdmin.InboundLive do
   def handle_event("close_detail", _params, socket) do
     {:noreply,
      push_patch(socket,
-       to: build_path(socket.assigns.base_path, socket.assigns.filter_params, nil, socket.assigns.dark_chrome)
+       to:
+         build_path(
+           socket.assigns.base_path,
+           socket.assigns.filter_params,
+           nil,
+           socket.assigns.dark_chrome
+         )
      )}
   end
 
@@ -842,8 +848,25 @@ defmodule MailglassAdmin.InboundLive do
 
   # Map the structured replay errors to UI-SPEC copy by matching the tuple/struct,
   # never the message string (CLAUDE.md rule 7).
+  #
+  # `:replay_mailbox_missing` carries a `:reason` that distinguishes three
+  # genuinely different situations. Collapsing them into one "mailbox module not
+  # found" line misattributed all three — most damagingly for `:invalid_mailbox`,
+  # where it read as a misconfiguration the operator could fix when in fact
+  # nothing they can do will make the row replayable.
+  defp replay_error_copy({:replay_mailbox_missing, %{reason: :invalid_mailbox}}),
+    do:
+      "Replay unavailable: this message was received before mailglass_inbound 2.6 recorded a durable route binding, so its mailbox cannot be resolved safely. Messages received since then replay normally."
+
+  defp replay_error_copy({:replay_mailbox_missing, %{reason: :no_prior_match}}),
+    do:
+      "Replay unavailable: no mailbox matched this message when it was received, so there is no route to replay it through."
+
+  defp replay_error_copy({:replay_mailbox_missing, %{reason: :execution_history_missing}}),
+    do: "Replay unavailable: this message has no recorded execution history to replay from."
+
   defp replay_error_copy({:replay_mailbox_missing, _details}),
-    do: "Replay blocked: mailbox module not found."
+    do: "Replay unavailable: this message has no resolvable mailbox route."
 
   defp replay_error_copy(:not_found),
     do:
