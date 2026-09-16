@@ -54,16 +54,6 @@ defmodule Mailglass.TestSupport.PhaseArtifacts do
     |> Path.relative_to(repo_root)
   end
 
-  @doc "True when v2.7 phase artifacts have been archived out of the live phase tree."
-  @spec archived?(binary()) :: boolean()
-  def archived?(repo_root) when is_binary(repo_root) do
-    repo_root |> Path.join(@archive_root) |> File.dir?()
-  end
-
-  @doc "The repo-relative root the v2.7 archive moves phase directories into."
-  @spec archive_root() :: binary()
-  def archive_root, do: @archive_root
-
   defp candidates(repo_root, ".planning/phases/" <> rest = relative) do
     [
       Path.join(repo_root, relative),
