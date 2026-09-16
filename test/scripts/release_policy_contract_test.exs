@@ -492,7 +492,8 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
 
     assert capture =~ "source_target=$(mktemp)"
     assert capture =~ "git show \"$source_sha\":.planning/release-target.json > \"$source_target\""
-    assert capture =~ "capture-candidate \"$source_target\" \"$candidate_root\""
+    assert capture =~ "capture-candidate \"$inactive_target\" \"$candidate_root\""
+    assert capture =~ "capture_from_inactive_target \"$source_target\""
     assert capture =~ "captured|authorized)"
 
     assert capture =~
@@ -518,6 +519,41 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     refute capture =~ "capture-candidate .planning/release-target.json"
     refute release =~ "release_packages=$(jq"
     refute release =~ "Phase 148 must publish exactly"
+  end
+
+  test "capture control self-heals a stranded ledger through the non-authorizing close-out wrapper" do
+    release = File.read!(@release_please)
+
+    capture =
+      extract_step_script!(release, "Capture Release Please proposal identity without activation")
+
+    assert capture =~
+             "scripts/release_policy_close_out.sh --target \"$source_target\" --repo \"$GITHUB_WORKSPACE\""
+
+    refute capture =~
+             "release_policy_close_out.sh --target \"$source_target\" --repo \"$GITHUB_WORKSPACE\" --write"
+
+    refute Regex.match?(~r/release_policy_close_out\.sh[^\n]*--write/, capture)
+
+    assert capture =~ "release_target_closed_out"
+    assert capture =~ "closed_out=false"
+    assert capture =~ "closed_out=true"
+
+    # The `completed)` branch is no longer an unconditional block: it must
+    # attempt the self-heal before falling back to the existing dead end.
+    [_before, completed_branch] = String.split(capture, "completed)\n", parts: 2)
+    [completed_body | _] = String.split(completed_branch, "\n            *)", parts: 2)
+    assert completed_body =~ "attempt_close_out"
+    assert completed_body =~ "release_target_completed"
+
+    # The two capture-candidate call sites (the natural inactive branch and
+    # the self-heal) must share one function, not duplicate the invocation.
+    assert capture =~ "capture_from_inactive_target() {"
+    assert capture =~ "capture_from_inactive_target \"$source_target\""
+    assert capture =~ "capture_from_inactive_target \"$healed_target\""
+
+    refute capture =~ "git push"
+    refute capture =~ "git commit"
   end
 
   test "publish workflow requires a protected exact-digest dispatch and keeps live jobs inert" do
