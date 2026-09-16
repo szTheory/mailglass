@@ -30,12 +30,13 @@ itself mandates. The pre-close artifact audit's 27 open items all belong to alre
 them here would attribute foreign debt to this milestone. See `.planning/MILESTONES.md` for the full
 override and known-gap record.
 
-**The post-archive sequence has not run.** Sections 5–7 of
-`milestones/v2.7-phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md`
-remain outstanding: protected-main integration of the tracked v2.7 commits, exact attempt-1 push CI,
-natural attempt-1 scheduled-control evidence, the fresh authenticated installation checkpoint, and one
-terminal `mailglass-finalize-milestone v2.7` invocation. STATE withholds push authority; absence of
-evidence is a wait, never authority to dispatch or rerun.
+**The archive is integrated; the terminal proof is closed out as unachievable.** v2.7 landed on
+protected `main` as `79247dafbb3b2d3a56114127e1e96e62cbcf33db` (PR #257) with attempt-1 push CI green.
+`165-FINALIZATION.md` §6-7 further require all three registered scheduled controls to succeed at that
+exact SHA; all three fail closed by design on the 14 open PRs accepted as permanent debt, and every
+remedy is on the runbook's own Forbidden Operations list. **v2.7 therefore closes archived without
+terminal proof** — a known contract contradiction between Phase 165's demand for green schedule
+evidence and Phase 162's deliberate fail-closed controls, not a gap in the milestone.
 
 **Phase 161 completed and verified 2026-08-22.** The canonical workspace, linked worktrees, stashes,
 refs, divergent ranges, release leftovers, and selected unreachable objects now have an append-only,
