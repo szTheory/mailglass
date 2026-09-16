@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 Phase: Milestone v2.7 complete
 Plan: —
 Status: v2.7 milestone complete — awaiting next milestone
-Last activity: 2026-09-15 — Milestone v2.7 completed and archived
+Last activity: 2026-09-16 — Completed quick task 260916-i5g: scoped release-please core exclude-paths, closed empty proposal #222
 
 ## Lifecycle Authority
 
@@ -300,6 +300,7 @@ Last activity: 2026-09-15 — Milestone v2.7 completed and archived
 | Date | Task | Outcome |
 |------|------|---------|
 | 2026-09-16 | [dispose the 14 open dependabot PRs](quick/260916-g7k-dispose-the-14-open-dependabot-prs/SUMMARY.md) | Open PRs 15 → 1. All 13 dependabot PRs were single-lockfile bumps colliding on 3 lockfiles; consolidated into one refresh (#260 → `753a840c`) and closed as superseded. #222 (Hex release proposal) deliberately left open. |
+| 2026-09-16 | [scope release-please core exclude-paths](quick/260916-i5g-scope-release-please-core-exclude-paths-/260916-i5g-SUMMARY.md) | Core package was rooted at `.` and claimed `scripts/`, `.github/`, `dev/`, `test/`, `reference/`, `ci/`, `test_js/`, so tooling commits registered as core library features. `exclude-paths` widened 5 → 12 tracked entries (#263 → `ff52bb66`). Empty proposal #222 (2.6.0/2.6.0/2.3.0, zero adopter payload) closed. Same defect class as RELH-01. |
 
 ## Deferred Items
 
