@@ -46,7 +46,25 @@ correct CI contract.
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| *(filled by planner)* | | | | | | | | | ⬜ pending |
+| 166-01 T1 (tracer) | 166-01 | 1 | GREEN-01 | — | widened lane cannot silently run 185 tests | integration | `cd mailglass_admin && MIX_ENV=test mix verify.support_contract.admin` | ✅ | ⬜ pending |
+| 166-01 T1 (parity) | 166-01 | 1 | GREEN-01 | — | alias-name parity unchanged | unit | `mix test test/scripts/ci_parity_drift_test.exs` | ✅ | ⬜ pending |
+| 166-01 T2 | 166-01 | 1 | GREEN-02 | T-166-01, T-166-02, T-166-SC | measured triple + exact toolchain, minimal CI scope | script + unit | `mix coveralls.json … && bash scripts/check_coverage_floor.sh config/coverage_baselines/admin.json …` ; `mix test test/scripts/coverage_floor_contract_test.exs` ; `actionlint .github/workflows/ci.yml` | ⬜ baseline is Wave 0 | ⬜ pending |
+| 166-01 T3 | 166-01 | 1 | GREEN-02 | T-166-02 | floor demonstrably fires on each ratchet member | regression drill | perturb-and-check loop over covered_lines / relevant_lines / percentage | ✅ | ⬜ pending |
+| 166-02 T1 | 166-02 | 2 | GREEN-03 | T-166-05 | no floor re-pinning to force green | integration | `MAILGLASS_SUITE_FLOOR=1 mix test --warnings-as-errors` | ✅ | ⬜ pending |
+| 166-02 T2 | 166-02 | 2 | GREEN-03 | T-166-04, T-166-06 | env line guarded against silent deletion | unit + lint | `mix test test/scripts/lane_classification_drift_test.exs` ; `actionlint .github/workflows/ci.yml` | ⬜ guard trio is Wave 0 | ⬜ pending |
+| 166-03 T1 | 166-03 | 3 | CTRL-04 | T-166-07 | clock fake scoped to one command, never release machinery | probe | `faketime '2026-12-01 00:00:00' elixir -e 'Date.utc_today()'` | ✅ | ⬜ pending |
+| 166-03 T2 | 166-03 | 3 | CTRL-04 | T-166-08, T-166-09 | expiry machinery intact; data-only lib/ edit | unit | `mix test test/mailglass/supply_chain/accepted_advisories_test.exs` | ✅ | ⬜ pending |
+| 166-03 T3 | 166-03 | 3 | CTRL-04 | T-166-07 | real unmodified audit binary under a faked or real clock | integration | `mix mailglass.audit --kind hex` (faketime-wrapped on the primary branch) | ✅ | ⬜ pending |
+| 166-03 T4 | 166-03 | 3 | CTRL-04 | T-166-08 | exemption named, substituted evidence accepted | human | *(checkpoint — blocking human)* | n/a | ⬜ pending |
+| 166-04 T1 | 166-04 | 4 | CTRL-02 | T-166-14 | no new hard-fail reachable on an ordinary push | lint + unit | `actionlint .github/workflows/release-please.yml` ; `mix test test/scripts/release_policy_contract_test.exs test/scripts/release_trigger_recovery_test.exs test/scripts/guard_release_trigger_test.exs test/scripts/linked_release_concurrency_test.exs` | ✅ | ⬜ pending |
+| 166-04 T2 | 166-04 | 4 | CTRL-03 | T-166-11, T-166-12, T-166-13 | bounded retry, no scope creep, cannot-check never passes | lint + structural + unit | `actionlint …` ; YAML assertion that the action step is `continue-on-error` ; `mix test test/scripts/ test/mix/tasks/` | ✅ | ⬜ pending |
+| 166-04 T3 | 166-04 | 4 | CTRL-02, CTRL-03 | T-166-13 | three real pushes, push and schedule agreeing | human (post-merge) | *(checkpoint — blocking human)* | n/a | ⬜ pending |
+| 166-05 T1 | 166-05 | 5 | GREEN-04 | T-166-16, T-166-SC | hex build isolated; path-dep build untouched; `--check-locked` kept | integration + lint | isolated `MAILGLASS_DEMO_DEPS=hex mix deps.get --check-locked && mix compile` with before/after deps listing ; `actionlint .github/workflows/ci.yml` | ✅ | ⬜ pending |
+| 166-05 T2 | 166-05 | 5 | GREEN-05 | T-166-17, T-166-19 | cache keys provably distinct; note demonstrates | structural + lint | YAML assertion that the two trust-lane cache keys differ ; note-content greps ; `mix test test/scripts/` | ⬜ note is Wave 0 (no analog) | ⬜ pending |
+| 166-05 T3 | 166-05 | 5 | GREEN-05 | T-166-19 | observed restore evidence, not inference | human (post-merge) | *(checkpoint — blocking human)* | n/a | ⬜ pending |
+| 166-06 T1 | 166-06 | 6 | CTRL-01 | T-166-20, T-166-21 | live-dispatch guards retained; distinct baseline signal | lint + unit + CLI | `actionlint .github/workflows/post-publish-smoke.yml` ; `shellcheck scripts/check_post_publish_target.sh` ; `mix test test/scripts/release_policy_contract_test.exs test/scripts/release_policy_test.exs test/scripts/release_policy_close_out_test.exs test/scripts/scheduled_control_evidence_test.exs test/scripts/workflow_hardening_contract_test.exs` ; `elixir scripts/release_policy.exs baseline-versions .planning/release-target.json` | ⬜ verb is Wave 0 | ⬜ pending |
+| 166-06 T2 | 166-06 | 6 | CTRL-05 | T-166-22, T-166-23, T-166-24 | cannot-check stays non-zero; malformed rollup does not crash | unit (TDD) | `mix test test/mix/tasks/mailglass.repo.hygiene_test.exs` | ⬜ new cases are Wave 0 | ⬜ pending |
+| 166-06 T3 | 166-06 | 6 | CTRL-01, CTRL-05 | T-166-20 | dispatch exits 0; two real cron firings pass | human (post-merge) | *(checkpoint — blocking human)* | n/a | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -74,12 +92,12 @@ distinct from the PR's own merge gates.
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| `workflow_dispatch` of the schedule path exits 0 against an `inactive` ledger and uploads `post-publish-resolution.json` | CTRL-01 | Needs the workflow present on `main`; cannot be dispatched pre-merge | After merge: `gh workflow run post-publish-smoke.yml` with the new mode input; assert exit 0 and the uploaded artifact |
-| No redundant `release-please` re-run against an already-tagged SHA | CTRL-02 | Requires a real `chore: release main` merge | Observe the next release PR merge's `release-please` run |
-| Three consecutive pushes to `main` green, `push` and `schedule` agreeing at the same SHA | CTRL-03 | Inherently a 3-push observation | PR-5 and Phase 167's PRs supply the three observations; record each run URL |
-| Two consecutive scheduled `repo-hygiene` runs conclude `success` with `status: pass`, with a freshly opened healthy PR open | CTRL-05 | Requires two real cron firings | Record both run URLs plus the open PR number |
-| Cache-restore behavior across trust lanes (part 2 of the GREEN-05 proof) | GREEN-05 | Needs a real CI run to observe `actions/cache` restore | CI step listing `reference/host_app/deps` before `deps.get` |
-| `faketime '2026-12-01 00:00:00' mix mailglass.audit --kind hex` | CTRL-04 | `faketime`'s interception of BEAM clock reads is unverified (RESEARCH Open Question 1) | Try `faketime`; if BEAM ignores `LD_PRELOAD`, fall back to the documented date-boundary unit test plus a real-date audit run |
+| `workflow_dispatch` of the schedule path exits 0 against an `inactive` ledger and uploads `post-publish-resolution.json` [plan 166-06 Task 3] | CTRL-01 | Needs the workflow present on `main`; cannot be dispatched pre-merge | After merge: `gh workflow run post-publish-smoke.yml` with the new mode input; assert exit 0 and the uploaded artifact |
+| No redundant `release-please` re-run against an already-tagged SHA [plan 166-04 Task 3] | CTRL-02 | Requires a real `chore: release main` merge | Observe the next release PR merge's `release-please` run |
+| Three consecutive pushes to `main` green, `push` and `schedule` agreeing at the same SHA [plan 166-04 Task 3] | CTRL-03 | Inherently a 3-push observation | PR-5 and Phase 167's PRs supply the three observations; record each run URL |
+| Two consecutive scheduled `repo-hygiene` runs conclude `success` with `status: pass`, with a freshly opened healthy PR open [plan 166-06 Task 3] | CTRL-05 | Requires two real cron firings | Record both run URLs plus the open PR number |
+| Cache-restore behavior across trust lanes (part 2 of the GREEN-05 proof) [plan 166-05 Task 3] | GREEN-05 | Needs a real CI run to observe `actions/cache` restore | CI step listing `reference/host_app/deps` before `deps.get` |
+| `faketime '2026-12-01 00:00:00' mix mailglass.audit --kind hex` [plan 166-03 Tasks 1/3 + post-merge item in 166-03] | CTRL-04 | `faketime`'s interception of BEAM clock reads is unverified (RESEARCH Open Question 1) | Try `faketime`; if BEAM ignores `LD_PRELOAD`, fall back to the documented date-boundary unit test plus a real-date audit run |
 
 ---
 
