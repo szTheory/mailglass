@@ -404,8 +404,13 @@ jobs:
 
           if [ "$INBOUND_CHANGED" = true ]; then
             # Only an actual inbound release changes inbound's own install pin.
+            # The root README carries the same `{:mailglass_inbound, "~> X.Y"}`
+            # line as the inbound package README, and docs_contract_test asserts
+            # it against mailglass_inbound/mix.exs. Leaving it out made every
+            # proposal that bumps inbound's minor structurally red.
             echo "Target inbound README pin: {:mailglass_inbound, \"~> $INBOUND_MM\"}"
-            sed -i -E "s/\{:mailglass_inbound, \"~> [0-9]+\.[0-9]+\"\}/{:mailglass_inbound, \"~> ${INBOUND_MM}\"}/" mailglass_inbound/README.md
+            sed -i -E "s/\{:mailglass_inbound, \"~> [0-9]+\.[0-9]+\"\}/{:mailglass_inbound, \"~> ${INBOUND_MM}\"}/" \
+              README.md mailglass_inbound/README.md
             if [ -f "$INSTALL" ]; then
               sed -i -E "s/(\{:mailglass_inbound,[[:space:]]+\"~> )[0-9]+\.[0-9]+(\")/\1${INBOUND_MM}\2/" "$INSTALL"
             fi

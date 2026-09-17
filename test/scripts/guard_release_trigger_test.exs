@@ -4,6 +4,11 @@ defmodule Mailglass.Scripts.GuardReleaseTriggerTest do
   # Path to the workflow file this test guards.
   @workflow_path Path.expand("../../.github/workflows/guard-release-trigger.yml", __DIR__)
 
+  # The single home of the decision logic, sourced by both the workflow and the
+  # offline fixture suite.
+  @library_path Path.expand("../../scripts/guard_release_trigger.sh", __DIR__)
+  @cases_path Path.expand("guard-release-trigger-cases.sh", __DIR__)
+
   # Always-reporting trigger types: a fresh status must be posted on every PR
   # update to main so that making Guard Release Trigger a required context does
   # not re-introduce green-but-BLOCKED (a required check that never reports
@@ -116,8 +121,113 @@ defmodule Mailglass.Scripts.GuardReleaseTriggerTest do
   end
 
   # ---------------------------------------------------------------------------
+  # Test: push-to-main trigger
+  # ---------------------------------------------------------------------------
+
+  test "guard-release-trigger.yml also triggers on push to main" do
+    source = File.read!(@workflow_path)
+
+    # Every commit this guard exists to catch — #222's `feat:` on a package
+    # README, the literal \\n subjects from phase 164 — landed by direct push
+    # during phase execution, never through a PR. A pull_request-only trigger
+    # structurally cannot see them, so the push trigger is the arm that makes
+    # this guard catch its own motivating defects.
+    assert source =~ ~r/^\s{2}push:$/m,
+           "guard-release-trigger.yml has no push: trigger. Direct pushes to main " <>
+             "bypass the PR path entirely, which is exactly how every commit this " <>
+             "guard was written for reached main."
+
+    push_block = trigger_block(source, "push")
+
+    assert push_block =~ "main",
+           "push: trigger does not target branches: [main].\nBlock:\n#{push_block}"
+  end
+
+  # ---------------------------------------------------------------------------
+  # Test: the workflow sources the shared library, not a second copy
+  # ---------------------------------------------------------------------------
+
+  test "guard-release-trigger.yml sources the shared decision library" do
+    source = File.read!(@workflow_path)
+
+    assert source =~ "source scripts/guard_release_trigger.sh",
+           "guard-release-trigger.yml must source scripts/guard_release_trigger.sh rather " <>
+             "than inlining the decision logic. The offline fixture test exercises that " <>
+             "same file; an inline copy would drift away from what the tests prove."
+
+    # Anti-drift: the decision logic must live in exactly one place. If the
+    # workflow starts defining the functions itself, the fixture test is no
+    # longer testing what CI runs.
+    refute source =~ "guard_decision() {",
+           "guard-release-trigger.yml defines guard_decision() inline. It must source " <>
+             "the shared library instead — two copies is the drift hazard this refactor removed."
+  end
+
+  # ---------------------------------------------------------------------------
+  # Test: the shared library exists and keeps its escape hatch
+  # ---------------------------------------------------------------------------
+
+  test "the shared guard library exposes both checks and the Release-As escape hatch" do
+    library = File.read!(@library_path)
+
+    for fun <- ~w[guard_decision guard_subject_hygiene guard_body_declares_release] do
+      assert library =~ "#{fun}() {",
+             "scripts/guard_release_trigger.sh does not define #{fun}()."
+    end
+
+    # The escape hatch is load-bearing, not decorative. A fail-closed release
+    # control with no declared way through is how a release gets stranded —
+    # this repo lost four weeks of releases to exactly that shape. Removing
+    # the override would make a deliberate docs-only release impossible.
+    assert library =~ "Release-As:",
+           "scripts/guard_release_trigger.sh has lost its Release-As: escape hatch. " <>
+             "Without it a deliberate docs-only release cannot be cut at all."
+  end
+
+  # ---------------------------------------------------------------------------
+  # Test: the offline fixture suite actually passes
+  # ---------------------------------------------------------------------------
+
+  test "the offline fixture suite passes" do
+    {output, status} =
+      System.cmd("bash", [@cases_path], stderr_to_stdout: true, cd: Path.expand("../..", __DIR__))
+
+    assert status == 0, "guard-release-trigger-cases.sh failed:\n#{output}"
+
+    # Anti-vacuity: a harness that asserted nothing would also exit 0.
+    assert output =~ "All cases passed."
+
+    case_count =
+      output |> String.split("\n") |> Enum.count(&String.contains?(&1, "OK  ["))
+
+    assert case_count >= 20,
+           "Expected the fixture suite to exercise at least 20 cases, saw #{case_count}. " <>
+             "A shrinking case list is how coverage silently disappears."
+  end
+
+  # ---------------------------------------------------------------------------
   # Parser helpers
   # ---------------------------------------------------------------------------
+
+  # Returns the indented block under `on:` -> `<name>:`, or "" if absent.
+  defp trigger_block(source, name) do
+    lines = String.split(source, "\n")
+
+    case Enum.find_index(lines, &(&1 =~ ~r/^\s{2}#{name}:$/)) do
+      nil ->
+        ""
+
+      start_idx ->
+        [header | rest] = Enum.drop(lines, start_idx)
+
+        children =
+          Enum.take_while(rest, fn line ->
+            Regex.match?(~r/^\s{4,}/, line) or line == ""
+          end)
+
+        Enum.join([header | children], "\n")
+    end
+  end
 
   # Returns {full_source, pull_request_trigger_block_or_nil}.
   # The pull_request block is the indented section under `on:` → `pull_request:`.

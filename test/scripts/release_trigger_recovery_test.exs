@@ -344,6 +344,24 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       assert sync_paths =~ path
     end)
 
+    # The root README carries the same `{:mailglass_inbound, "~> X.Y"}` line as
+    # the inbound package README, and docs_contract_test asserts it against
+    # mailglass_inbound/mix.exs. When the inbound-pin sed covered only the
+    # package README, every proposal that bumped inbound's minor left the root
+    # README stale and went red on that contract. Pin both files here.
+    inbound_pin_sed =
+      sync
+      |> String.split("\n")
+      |> Enum.drop_while(&(not (&1 =~ "Target inbound README pin")))
+      |> Enum.take(4)
+      |> Enum.join("\n")
+
+    assert inbound_pin_sed =~ "mailglass_inbound/README.md",
+           "inbound pin sed must still rewrite the inbound package README:\n#{inbound_pin_sed}"
+
+    assert inbound_pin_sed =~ ~r/(^|[^\/])\bREADME\.md\b/m,
+           "inbound pin sed must also rewrite the ROOT README.md:\n#{inbound_pin_sed}"
+
     assert sync =~ "sync inbound README \\`~>\\` pin + publish-summary to core $CORE_VERSION"
     assert sync =~ "--argjson inbound_changed \"$INBOUND_CHANGED\""
     assert sync =~ "if $inbound_changed then .version=$v"

@@ -125,6 +125,62 @@ Do not gitignore these files: `test/mailglass/stability_contract_test.exs`
 reads the inbound summary directly as part of the sibling-package release
 contract.
 
+## Commit Type Discipline for Release-Triggering Paths
+
+release-please reads the conventional-commit **type** and nothing else. It does
+not inspect the diff. `feat:` is a minor bump and `fix:` is a patch bump even when
+the commit changed only a README.
+
+Two consequences worth holding onto as a maintainer:
+
+**`exclude-paths` cannot fix this.** The core package is rooted at `.` and claims
+every non-excluded path, and the twelve `exclude-paths` entries (`#263`) narrow
+that claim by *path*. But #222's driving commit, `d272e824`, changed
+`mailglass_inbound/README.md` — a file genuinely inside the package. Excluding it
+would wrongly exclude the package's own README. The defect is the type, not the
+path, so there is no config-level remedy. `changelog-sections` with
+`hidden: true` does not help either: it suppresses the rendered entry while still
+bumping the version.
+
+**The PR-title lint cannot see the commits that caused this.** `Conventional PR
+Title` lints the PR title, which under squash-merge becomes the commit subject.
+All three malformed phase-164 subjects bypassed it because they landed via direct
+push during phase execution, not through a PR.
+
+`Guard Release Trigger` therefore runs on `pull_request` **and** on `push` to
+`main`, and checks two things:
+
+| Check | Fails when |
+|---|---|
+| Bump-vs-diff | A `feat:`/`fix:`/`!` change whose every touched file is documentation, brand, or planning material |
+| Subject hygiene | A subject contains a literal `\n` escape |
+
+The decision logic lives in `scripts/guard_release_trigger.sh` — one copy, sourced
+by both the workflow and the offline fixture suite in
+`test/scripts/guard-release-trigger-cases.sh`. Do not inline it back into the
+workflow; the Elixir contract test in `test/scripts/guard_release_trigger_test.exs`
+fails if you do, because a second copy is free to drift away from what the tests
+prove.
+
+### The escape hatch, and why it must stay
+
+A docs-only release is sometimes exactly right. `3edc95f0` changed only
+`MAINTAINING.md` and deliberately cut 2.2.1. Declare that intent with
+release-please's native footer in the commit or PR body:
+
+```
+Release-As: 2.2.1
+```
+
+The guard honours the footer and steps aside, whatever the diff looks like.
+
+**Keep this override.** A fail-closed release control with no declared way through
+is how a release gets stranded — this repo lost four weeks of release proposals to
+exactly that shape when `.planning/release-target.json` froze mid-ceremony. A
+guard that can only ever say no eventually blocks something legitimate at the
+worst possible moment. The footer keeps the decision in a maintainer's hands and
+on the record.
+
 ## Tarball Allowlist Protocol
 
 Adding a file under a published package's `lib/` changes what ships to Hex, and
