@@ -67,7 +67,7 @@ def deps do
   [
     {:mailglass, "~> 2.6"},
     {:mailglass_admin, "~> 2.6"},
-    {:mailglass_inbound, "~> 2.2"}
+    {:mailglass_inbound, "~> 2.3"}
   ]
 end
 ```
