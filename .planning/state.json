@@ -1,12 +1,23 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.8",
-  "phases": [],
+  "milestone": "v2.8 — Truthful Repo",
+  "phases": [
+    {
+      "number": "166",
+      "name": "Earned Greens and Controls That Can Pass",
+      "status": "pending"
+    },
+    {
+      "number": "167",
+      "name": "Truthful Documentation and the Standing Control",
+      "status": "pending"
+    }
+  ],
   "next": {
-    "command": "/gsd:discuss-phase",
-    "label": "Discuss the first phase",
-    "reason": "Project initialized — plan your first phase"
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 166 of 2 · 0% · executing"
   },
-  "updated_at": "2026-09-17T20:15:24.264Z"
+  "updated_at": "2026-09-17T21:03:16.082Z"
 }

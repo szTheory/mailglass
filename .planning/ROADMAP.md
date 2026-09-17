@@ -146,11 +146,28 @@ the `Hex Audit` advisories expire `2026-10-26` and red a required lane on 2026-1
 166-06 land in the same PR). Waves are strictly sequential, honoring the WIP limit of 1 open PR.
 
 Plans:
+**Wave 1**
+
 - [ ] 166-01-PLAN.md — PR-1: widen the admin lane to a directory-scoped run and add its measured coverage floor (GREEN-01, GREEN-02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 166-02-PLAN.md — PR-2: enable the deterministic lane's suite floor and extend the occurrence drift guard to ci.yml (GREEN-03)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 166-03-PLAN.md — PR-3: defuse the Hex Audit calendar time bomb truthfully, entry data and test dates in lockstep (CTRL-04)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 166-04-PLAN.md — PR-4: remove the redundant release-please re-run and add bounded retry/classification (CTRL-02, CTRL-03)
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
 - [ ] 166-05-PLAN.md — PR-5a: prove the demo app's Hex pins in CI and close the trust-lane cache question in writing (GREEN-04, GREEN-05)
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
 - [ ] 166-06-PLAN.md — PR-5b: give post-publish-smoke a baseline path and repo-hygiene a distinguishable non-verdict (CTRL-01, CTRL-05)
 
 ### Phase 167: Truthful Documentation and the Standing Control
