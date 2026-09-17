@@ -1,39 +1,41 @@
 ---
 gsd_state_version: "1.0"
-milestone: v2.7
-milestone_name: Repository Stewardship & Operational Hygiene (Shipped 2026-09-15, archived)
-status: archived
-stopped_at: Phase 165 complete — all phases complete
-last_updated: "2026-09-16T16:05:00.000Z"
-last_activity: 2026-09-16
-last_activity_desc: Quick task 260916-ldh added the missing release-target ledger close-out path
-state_head: 532301a309debe8d9736d4ea4cd66c14904a9f22
+milestone: v2.8
+milestone_name: Truthful Repo
+status: planning
+last_updated: "2026-09-17T20:15:24.258Z"
+last_activity: 2026-09-17
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 75
-  completed_plans: 75
-  percent: 100
-current_phase: 165
-current_plan: 5
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-09-15)
+See: .planning/PROJECT.md (updated 2026-09-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** No milestone open — v2.7 archived 2026-09-15. Outstanding: the post-archive half of
-`165-FINALIZATION.md` (§5–7), which is gated on push authority that STATE still withholds.
+**Current focus:** v2.8 Truthful Repo — make every claim the repo makes about itself either true or
+tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
+`.planning/research/v2.8/FINDINGS.md`.
+
+> **Note on the sections below.** Much of the accumulated context that follows is v2.7-era and has
+> since gone stale — notably `## Operator Next Steps`, which still describes two `InboundLiveTest`
+> reds as undiagnosed (fixed in `f733fc22`/`d65a1aa8`), PR #222 as open (closed), and 14 open PRs
+> (now zero). **That staleness is not an oversight — it is v2.8 evidence.** Truthing it up is a
+> committed requirement of this milestone, so it is left intact here until the phase that fixes it.
 
 ## Current Position
 
-Phase: Milestone v2.7 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: v2.7 milestone complete — awaiting next milestone
-Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (PR #266, merged); completed quick task 260916-ldh, which added the missing close-out path so the ledger can return to inactive without a hand edit
+Status: Defining requirements
+Last activity: 2026-09-17 — Milestone v2.8 started
 
 ## Lifecycle Authority
 
