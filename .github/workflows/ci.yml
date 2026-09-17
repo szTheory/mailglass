@@ -449,6 +449,7 @@ jobs:
         env:
           MAILGLASS_TIMEOUT_EVIDENCE_PATH: tmp/timeout-evidence/database.ndjson
           MAILGLASS_TIMEOUT_EVIDENCE_COMMAND: mix test --warnings-as-errors
+          MAILGLASS_SUITE_FLOOR: "1"
         run: mix test --warnings-as-errors
       - name: Upload deterministic timeout evidence
         if: ${{ failure() && steps.deterministic-core.outcome == 'failure' }}
