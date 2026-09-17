@@ -461,6 +461,24 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
     end)
   end
 
+  test "the captured-output filter removes Mix's build-lock notice and nothing else" do
+    payload = "{\n  \"status\": \"inactive\"\n}\n"
+
+    # Verbatim shape observed in CI, ANSI reset included.
+    contaminated =
+      "\e[0mWaiting for lock on the build directory (held by process 8040)\n" <> payload
+
+    assert strip_mix_build_lock_notice(contaminated) == payload
+
+    # Anti-vacuity: an uncontaminated payload must pass through byte-for-byte,
+    # and a line that merely mentions locking must NOT be swallowed — the filter
+    # is allowed to remove Mix's notice, never the CLI's own diagnostics.
+    assert strip_mix_build_lock_notice(payload) == payload
+
+    cli_diagnostic = "release policy refused: waiting for lock on the build directory\n"
+    assert strip_mix_build_lock_notice(cli_diagnostic) == cli_diagnostic
+  end
+
   test "legacy direct script-style verification flags fail closed" do
     for flag <- ["--validate-candidate", "--verify-published", "--verify-complete"] do
       {output, status} = System.cmd("elixir", [@script, flag], stderr_to_stdout: true)
@@ -616,7 +634,27 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
     assert status != 0
   end
 
+  # `mix run` takes the `_build` lock. Under the full suite another async test
+  # can be holding it, and Mix then writes "Waiting for lock on the build
+  # directory (held by process N)" to stdout. With `stderr_to_stdout: true` that
+  # notice lands inside the captured CLI output and breaks the byte-exact
+  # determinism assertions — a contention-dependent flake that passes on a
+  # scoped run and fails in CI. Strip exactly that one Mix-emitted line (with any
+  # ANSI reset Mix prefixes it with) so the assertions describe the CLI's own
+  # output rather than Mix's chatter. Nothing else is filtered: the CLI's stdout
+  # and stderr both still reach every assertion verbatim.
+  @mix_build_lock_notice ~r/^(?:\e\[[0-9;]*m)*Waiting for lock on the build directory[^\n]*\n/m
+
   defp run_cli(arguments) do
+    {output, status} = raw_run_cli(arguments)
+    {strip_mix_build_lock_notice(output), status}
+  end
+
+  defp strip_mix_build_lock_notice(output) do
+    String.replace(output, @mix_build_lock_notice, "")
+  end
+
+  defp raw_run_cli(arguments) do
     System.cmd(
       "mix",
       [
