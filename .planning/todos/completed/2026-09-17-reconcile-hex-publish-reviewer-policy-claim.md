@@ -41,3 +41,18 @@ An agent or maintainer reading CLAUDE.md plans a release that needs no
 human present, then the fan-out blocks on an approval nobody is waiting
 for. That is how a publish gets stranded half-done, with some packages
 live and others not.
+
+## Resolution (2026-09-17)
+
+Kept the control, fixed the doc — the option the todo named as correct.
+
+Verified against the live environment before editing:
+
+```
+$ gh api repos/szTheory/mailglass/environments/hex-publish
+{"name":"hex-publish","rules":[{"type":"required_reviewers","reviewers":["szTheory"]}]}
+```
+
+CLAUDE.md's "Commit & Branch Conventions" now states that the fan-out
+stops for one approval per package (three on a linked release) and that
+a release should be planned with a human present.
