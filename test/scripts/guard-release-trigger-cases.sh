@@ -158,8 +158,10 @@ assert_hygiene "19: subject mentioning an escape" "FAIL" \
 
 # --- Test-tree cases -------------------------------------------------------
 
-# Case 25: a sibling package's test tree is inside that package's claimed path
-# (no exclude-paths on admin/inbound), so a test-only fix: would bump it -> FAIL.
+# Case 25: a test-only commit typed fix: is mistyped and must FAIL. Since #265
+# mailglass_admin/test is also in that package's exclude-paths, so config alone
+# would stop the bump today — the guard still fails it, because the rule is
+# about the commit type matching its content, not about the current config.
 assert_case "25: fix: admin test tree only" "FAIL" \
   "fix(admin): correct the replay assertion" \
   "$(printf 'mailglass_admin/test/mailglass_admin/inbound_live_test.exs')"

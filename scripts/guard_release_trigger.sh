@@ -55,12 +55,14 @@ guard_path_is_non_shippable() {
   [[ "$f" == docs/* || "$f" == */docs/* ]] && return 0
   [[ "$f" == guides/* || "$f" == */guides/* ]] && return 0
 
-  # Test trees. The root test/ tree is already in the core package's
-  # exclude-paths and so cannot bump it — but mailglass_admin and
-  # mailglass_inbound have NO exclude-paths and are rooted at their own
-  # directories, so `mailglass_admin/test/foo_test.exs` IS inside that
-  # package's claimed path. A `fix:` touching only tests there would bump
-  # admin. That commit is a `test:`.
+  # Test trees. Every package's test tree now sits in its own exclude-paths
+  # (root test/ for core since #263; mailglass_admin/test and
+  # mailglass_inbound/test since #265), so config alone would stop a bump
+  # today. This rule is kept deliberately, for two reasons. The exclusion is
+  # per-package config that a future package can be added without, and a
+  # `fix:` whose only content is tests is mistyped regardless of whether it
+  # happens to bump anything — that commit is a `test:`. The guard classifies
+  # by kind so it stays correct independently of how exclude-paths drift.
   [[ "$f" == test/* || "$f" == */test/* ]] && return 0
 
   return 1
