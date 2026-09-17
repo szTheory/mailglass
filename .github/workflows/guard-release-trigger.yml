@@ -4,6 +4,12 @@ on:
   pull_request:
     branches: [main]
     types: [opened, edited, synchronize, reopened]
+  # Direct pushes to main bypass the PR path entirely. Every malformed commit
+  # this guard exists to catch (#222's `feat:` README edit, the three literal
+  # `\n` subjects in phase 164) landed that way during phase execution, so the
+  # PR-only trigger could never have seen them.
+  push:
+    branches: [main]
 
 permissions:
   pull-requests: read
@@ -15,74 +21,123 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Check out the guard logic
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Need the pushed range to inspect each commit's subject and diff.
+          # 0 = full history; the push branch below walks before..after.
+          fetch-depth: 0
+
       - name: Check PR title type vs changed-file set
+        if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          #!/usr/bin/env bash
           set -euo pipefail
+          source scripts/guard_release_trigger.sh
 
-          GUARDED=( "brandbook/" ".planning/" "prompts/" )
-
-          # 1. Extract the conventional-commit type from the PR title.
-          #    Matches: "feat:", "fix:", "feat(scope):", "feat!:", "fix(scope)!:", etc.
-          #    Capture: $type (feat|fix|docs|...) and whether a "!" bang is present.
-          if [[ "$PR_TITLE" =~ ^([a-z]+)(\([^\)]*\))?(!)?: ]]; then
-            type="${BASH_REMATCH[1]}"
-            bang="${BASH_REMATCH[3]}"   # "!" if breaking-change marker present
-          else
-            echo "PR title is not a conventional commit — pr-title.yml owns that failure; pass here."
-            exit 0
-          fi
-
-          # 2. Is this a BUMP-TRIGGERING title?
-          #    release-please defaults: feat -> minor, fix -> patch, any "!" -> major.
-          #    A title-level breaking change is the "!" marker (Conventional Commits).
-          #    "BREAKING CHANGE:" is a commit-BODY footer that release-please reads from
-          #    the squash-commit body, NOT the PR title, so it is not matched here: a title
-          #    substring match would false-positive any title merely mentioning the phrase
-          #    (e.g. "docs: document our BREAKING CHANGE policy"). The "!" bang is the
-          #    correct, unambiguous title-level signal.
-          is_bump="false"
-          case "$type" in
-            feat|fix) is_bump="true" ;;
-          esac
-          [[ -n "$bang" ]] && is_bump="true"
-
-          if [[ "$is_bump" != "true" ]]; then
-            echo "Non-bumping type '$type' — release-please will not cut a release. PASS."
-            exit 0
-          fi
-
-          # 3. Get the PR's changed files (PR-level aggregate = the squash commit content).
-          mapfile -t files < <(gh pr view "$PR_NUMBER" --json files --jq '.files[].path')
-
-          if [[ "${#files[@]}" -eq 0 ]]; then
-            echo "No changed files reported — nothing to guard. PASS."
-            exit 0
-          fi
-
-          # 4. Are ALL changed files inside the guarded path set? (subset test)
-          all_guarded="true"
-          for f in "${files[@]}"; do
-            in_guard="false"
-            for g in "${GUARDED[@]}"; do
-              if [[ "$f" == "$g"* ]]; then in_guard="true"; break; fi
-            done
-            if [[ "$in_guard" != "true" ]]; then all_guarded="false"; break; fi
-          done
-
-          # 5. Decision: bump-triggering type AND every file is brand/planning-only -> FAIL.
-          if [[ "$all_guarded" == "true" ]]; then
-            echo "::error::PR title type '${type}${bang}' triggers a release-please bump, but every"
-            echo "::error::changed file is under brand/planning paths (${GUARDED[*]})."
-            echo "::error::This is the 1.6.x accidental-release pattern. Use a non-bumping type"
-            echo "::error::(docs:/chore:/test:) for brand/planning-only changes, or include real"
-            echo "::error::package code if a release is genuinely intended."
+          if ! guard_subject_hygiene "$PR_TITLE"; then
+            echo "::error::PR title contains a literal backslash-n escape:"
+            echo "::error::  $PR_TITLE"
+            echo "::error::Under squash-merge the title becomes the commit subject and is"
+            echo "::error::copied verbatim into the generated CHANGELOG that ships to Hex,"
+            echo "::error::where it renders as one unbroken line. Use a real newline in the"
+            echo "::error::PR body instead of an escape in the title."
             exit 1
           fi
 
-          echo "Bump-triggering type touches real package code (not exclusively brand/planning). PASS."
-          exit 0
+          # Named changed_files, not files: shellcheck follows the source above
+          # and sees `local -a files` inside guard_decision, so reusing the name
+          # here trips SC2178/SC2128.
+          changed_files="$(gh pr view "$PR_NUMBER" --json files --jq '.files[].path')"
+          # Squash-merge copies the PR body into the commit body, so a
+          # Release-As: footer written there is what release-please will read.
+          body="$(gh pr view "$PR_NUMBER" --json body --jq '.body')"
+
+          if guard_decision "$PR_TITLE" "$changed_files" "$body"; then
+            echo "PASS: '$PR_TITLE' is non-bumping, or touches shippable code."
+            exit 0
+          fi
+
+          echo "::error::PR title '$PR_TITLE' triggers a release-please bump, but every"
+          echo "::error::changed file is non-shippable (brand/planning/prompts, or docs)."
+          echo "::error::release-please derives the bump from the commit type alone and never"
+          echo "::error::inspects paths, so this would cut a release for a docs-only change —"
+          echo "::error::the #222 pattern. Use docs:/chore:/test: for documentation-only"
+          echo "::error::changes, or include real package code if a release is intended."
+          echo "::error::If this docs-only release IS intended, declare it explicitly with a"
+          echo "::error::'Release-As: x.y.z' footer in the PR body."
+          echo "::error::Changed files:"
+          printf '%s\n' "$changed_files" | sed 's/^/::error::  /'
+          exit 1
+
+      - name: Check pushed commit subjects vs their diffs
+        if: github.event_name == 'push'
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.event.after }}
+        run: |
+          set -euo pipefail
+          source scripts/guard_release_trigger.sh
+
+          # A branch-creation push reports an all-zero `before`; there is no
+          # meaningful range to walk, so inspect only the tip commit.
+          if [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
+            range_commits="$AFTER_SHA"
+          else
+            range_commits="$(git rev-list "$BEFORE_SHA..$AFTER_SHA")"
+          fi
+
+          if [[ -z "$range_commits" ]]; then
+            echo "No commits in the pushed range — nothing to guard. PASS."
+            exit 0
+          fi
+
+          failures=0
+
+          while read -r sha; do
+            [[ -z "$sha" ]] && continue
+
+            subject="$(git log -1 --format=%s "$sha")"
+
+            # Merge commits carry a generated subject and the union of both
+            # parents' diffs; neither is a signal about authored intent.
+            if [[ "$(git rev-list --parents -n1 "$sha" | wc -w)" -gt 2 ]]; then
+              echo "  skip $sha (merge commit)"
+              continue
+            fi
+
+            if ! guard_subject_hygiene "$subject"; then
+              echo "::error::Commit $sha has a literal backslash-n in its subject:"
+              echo "::error::  $subject"
+              echo "::error::It will render as one unbroken line in the generated CHANGELOG."
+              echo "::error::Use \$'...' or a heredoc for a multi-line commit message."
+              failures=$(( failures + 1 ))
+            fi
+
+            changed_files="$(git show --pretty=format: --name-only "$sha" | sed '/^$/d')"
+            body="$(git log -1 --format=%b "$sha")"
+
+            if ! guard_decision "$subject" "$changed_files" "$body"; then
+              echo "::error::Commit $sha triggers a release-please bump:"
+              echo "::error::  $subject"
+              echo "::error::...but every file it changed is non-shippable (brand/planning/"
+              echo "::error::prompts, or docs). This is the #222 pattern: a docs-only change"
+              echo "::error::typed feat:/fix: proposes a version nobody intended. If the release"
+              echo "::error::IS intended, declare it with a 'Release-As: x.y.z' commit footer."
+              echo "::error::Changed files:"
+              printf '%s\n' "$changed_files" | sed 's/^/::error::  /' 
+              failures=$(( failures + 1 ))
+            fi
+
+            [[ "$failures" -eq 0 ]] && echo "  ok   $sha  $subject"
+          done <<< "$range_commits"
+
+          if [[ "$failures" -gt 0 ]]; then
+            echo "$failures commit-level violation(s) in the pushed range."
+            exit 1
+          fi
+
+          echo "All pushed commits pass. PASS."
