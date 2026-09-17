@@ -2,9 +2,14 @@
 gsd_state_version: "1.0"
 milestone: v2.8
 milestone_name: Truthful Repo
+current_phase: 166
+current_phase_name: Earned Greens and Controls That Can Pass
 status: in_progress
-last_updated: "2026-09-17T21:05:00.000Z"
+stopped_at: Phase 166 context gathered (assumptions mode)
+last_updated: "2026-09-17T20:30:58.721Z"
 last_activity: 2026-09-17
+last_activity_desc: v2.8 roadmap created (2 phases, 17/17 requirements mapped)
+state_head: c2baa4f45999fc104ed15dd0cee6d0dc9c8e850d
 progress:
   total_phases: 2
   completed_phases: 0
@@ -344,12 +349,12 @@ Last activity: 2026-09-17 — v2.8 roadmap created (2 phases, 17/17 requirements
 
 ## Session Continuity
 
-Last session: 2026-09-16
-Stopped at: Quick task 260916-g7k complete. The 13 open dependabot PRs were disposed via one
+Last session: 2026-09-17T20:30:58.711Z
+Stopped at: Phase 166 context gathered (assumptions mode)
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.
-Resume file: None
+Resume file: .planning/phases/166-earned-greens-and-controls-that-can-pass/166-CONTEXT.md
 
 ## Operator Next Steps
 
