@@ -498,6 +498,7 @@ jobs:
           source_sha=""
           candidate_digest="${CANDIDATE_DIGEST:-}"
           candidate_root=""
+          closed_out=false
 
           emit_capture_outputs() {
             {
@@ -555,37 +556,75 @@ jobs:
           mkdir -p .planning/release-candidates
           target_status=$(jq -er '.status' "$source_target")
 
+          # Both the inactive branch and a successful self-heal (below) feed
+          # an inactive-shaped target into the same inactive-only capture
+          # CLI. Factor that call so the two call sites cannot drift.
+          capture_from_inactive_target() {
+            local inactive_target=$1
+            local digest
+            digest=$(scripts/release_policy_content_digest.sh --repo "$candidate_root")
+            mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- capture-candidate "$inactive_target" "$candidate_root" "$proposal_head" "$source_sha" "$digest" > .planning/release-candidates/proposal-candidate.json
+          }
+
+          # A stranded post-publication ledger (authorized/published never
+          # advanced, or completed) otherwise fails this control closed on
+          # every run. Attempt a non-authorizing close-out on the *source*
+          # (protected-base) copy only: on success this can only ever yield
+          # an inactive ledger (see close_out/3), never write the repo file,
+          # and never push, so it cannot manufacture publish authorization.
+          attempt_close_out() {
+            local healed
+            healed=$(mktemp)
+            if scripts/release_policy_close_out.sh --target "$source_target" --repo "$GITHUB_WORKSPACE" >"$healed" 2>/dev/null; then
+              printf '%s\n' "$healed"
+            else
+              rm -f "$healed"
+              return 1
+            fi
+          }
+
           case "$target_status" in
             inactive)
-              digest=$(scripts/release_policy_content_digest.sh --repo "$candidate_root")
-              mix run --no-start --no-compile --no-deps-check --require scripts/release_policy.exs -e 'Mailglass.ReleasePolicy.cli(System.argv())' -- capture-candidate "$source_target" "$candidate_root" "$proposal_head" "$source_sha" "$digest" > .planning/release-candidates/proposal-candidate.json
+              capture_from_inactive_target "$source_target"
               ;;
             captured|authorized)
-              # Plan 05 advances main only to record the already-reviewed
-              # candidate. Preserve that exact proposal instead of trying to
-              # recapture it through the inactive-only CLI.
-              recorded_head=$(jq -er '.proposal_identity.head_sha' "$source_target")
-              recorded_source_sha=$(jq -er '.proposal_identity.source_sha' "$source_target")
-              recorded_digest=$(jq -er '.publishable_content.digest' "$source_target")
-              core=$(jq -er '.candidate_versions.mailglass' "$source_target")
-              [[ "$recorded_head" =~ ^[0-9a-f]{40}$ ]]
-              [[ "$recorded_source_sha" =~ ^[0-9a-f]{40}$ ]]
-              [[ "$recorded_digest" =~ ^[0-9a-f]{64}$ ]]
-              if ! [ "$proposal_head" = "$recorded_head" ] || \
-                 ! git merge-base --is-ancestor "$recorded_source_sha" "$source_sha" || \
-                 ! [ "$(scripts/release_policy_content_digest.sh --ref "$recorded_source_sha")" = "$(scripts/release_policy_content_digest.sh --ref "$source_sha")" ] || \
-                 ! [ "$(scripts/release_policy_content_digest.sh --repo "$candidate_root")" = "$recorded_digest" ] || \
-                 ! scripts/release_policy_validate_target.sh "$source_target" "mailglass-v${core}" "$candidate_root" >/dev/null; then
-                result_status=blocked
-                result_reason=proposal_identity_mismatch
-                exit 1
+              if healed_target=$(attempt_close_out); then
+                closed_out=true
+                capture_from_inactive_target "$healed_target"
+                rm -f "$healed_target"
+              else
+                # Plan 05 advances main only to record the already-reviewed
+                # candidate. Preserve that exact proposal instead of trying to
+                # recapture it through the inactive-only CLI.
+                recorded_head=$(jq -er '.proposal_identity.head_sha' "$source_target")
+                recorded_source_sha=$(jq -er '.proposal_identity.source_sha' "$source_target")
+                recorded_digest=$(jq -er '.publishable_content.digest' "$source_target")
+                core=$(jq -er '.candidate_versions.mailglass' "$source_target")
+                [[ "$recorded_head" =~ ^[0-9a-f]{40}$ ]]
+                [[ "$recorded_source_sha" =~ ^[0-9a-f]{40}$ ]]
+                [[ "$recorded_digest" =~ ^[0-9a-f]{64}$ ]]
+                if ! [ "$proposal_head" = "$recorded_head" ] || \
+                   ! git merge-base --is-ancestor "$recorded_source_sha" "$source_sha" || \
+                   ! [ "$(scripts/release_policy_content_digest.sh --ref "$recorded_source_sha")" = "$(scripts/release_policy_content_digest.sh --ref "$source_sha")" ] || \
+                   ! [ "$(scripts/release_policy_content_digest.sh --repo "$candidate_root")" = "$recorded_digest" ] || \
+                   ! scripts/release_policy_validate_target.sh "$source_target" "mailglass-v${core}" "$candidate_root" >/dev/null; then
+                  result_status=blocked
+                  result_reason=proposal_identity_mismatch
+                  exit 1
+                fi
+                jq -e '{candidate_versions, proposal_identity, publishable_content}' "$source_target" > .planning/release-candidates/proposal-candidate.json
               fi
-              jq -e '{candidate_versions, proposal_identity, publishable_content}' "$source_target" > .planning/release-candidates/proposal-candidate.json
               ;;
             completed)
-              result_status=blocked
-              result_reason=release_target_completed
-              exit 1
+              if healed_target=$(attempt_close_out); then
+                closed_out=true
+                capture_from_inactive_target "$healed_target"
+                rm -f "$healed_target"
+              else
+                result_status=blocked
+                result_reason=release_target_completed
+                exit 1
+              fi
               ;;
             *)
               echo "ERROR: unsupported release target status for proposal capture: $target_status" >&2
@@ -596,7 +635,11 @@ jobs:
           jq -e '.candidate_versions.mailglass == .candidate_versions.mailglass_admin' .planning/release-candidates/proposal-candidate.json >/dev/null
           candidate_digest=$(jq -er '.publishable_content.digest' .planning/release-candidates/proposal-candidate.json)
           result_status=pass
-          result_reason=proposal_captured
+          if [ "$closed_out" = true ]; then
+            result_reason=release_target_closed_out
+          else
+            result_reason=proposal_captured
+          fi
           echo "captured=true" >> "$GITHUB_OUTPUT"
           printf '%s\n' "proposal candidate captured after sibling synchronization"
 
