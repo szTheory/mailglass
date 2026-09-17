@@ -14,7 +14,17 @@ Three sibling Hex packages, MIT, no Node toolchain anywhere:
 
 **Marketing email and multi-channel notifications are permanently out of scope.** See `.planning/PROJECT.md` Out of Scope for the full list with reasoning.
 
-**Current state (as of 2026-06-13):** v0.1 → v1.7 shipped to Hex; current versions `mailglass` 1.6.2 / `mailglass_admin` 1.6.2 / `mailglass_inbound` 1.3.1 (core+admin linked; inbound on its own version line). The 1.6.2/1.6.2/1.3.1 release train landed 2026-06-12 as an accidental train triggered by brandbook feat commits (root `.` claimed all paths — the bug RELH-01 hardens against; see Phase 93). v1.8 (brand system) closed superseded 2026-06-11; **v1.9 "Brand Book Fable" shipped 2026-06-12** and Phase 91 of v1.10 adopted the maintainer-approved sealed-flap brand as canonical `brandbook/` (light+dark token system, self-contained HTML book; binding brand constraints in `.planning/milestones/v1.9-phases/87-logo-tournament/87-decision-record.md`). Repo-artifact milestones only — no Hex release since 1.6.2. **Current milestone: v1.10 Brand Adoption** (canonical folder adoption first, then README/HexDocs/social propagation). v1.7 (Admin UI — IA & Design-System Polish v2) shipped + archived 2026-06-05; v1.5.0 added one-command Docker DX. The 1.5.1 linked release was finished by hand after a release-pipeline snag: a release-please **bot-merged** release SHA gets no `ci.yml` run (GitHub anti-recursion), so `publish-hex`'s `gate-ci-green` blocks with "no ci.yml runs found for SHA" — recover by dispatching `ci.yml` on the release tag (or pushing the release commit under a human identity) so a green run exists, then publish. Inbound's exact `{:mailglass, "== <core>"}` pin forces a **paired inbound release on every core bump** (that pin-drag is why core 1.6.2 dragged inbound to 1.3.1). Posture is quiet maintenance / adopter-pull for product scope; brand adoption is the active repo-artifact milestone. `.planning/STATE.md` is the live source of truth for milestone/phase status — read it rather than trusting any milestone number hardcoded in this file.
+**Current state (as of 2026-09-17):** v0.1 → v2.7 shipped. Current published versions `mailglass` 2.6.0 / `mailglass_admin` 2.6.0 / `mailglass_inbound` 2.3.0, published 2026-09-17 (core+admin linked; inbound on its own version line). No active milestone — v2.7 "Repository Stewardship & Operational Hygiene" shipped and archived 2026-09-15. `.planning/STATE.md` is the live source of truth for milestone/phase status — read it rather than trusting any milestone number hardcoded in this file.
+
+Release mechanics worth knowing before you touch them:
+
+- Releases are authorized through a **fail-closed ledger**, `.planning/release-target.json` (`inactive` → `captured` → `authorized` → `published` → `completed` → `inactive`). Do not hand-edit it as part of other work; ledger edits are their own reviewed PR.
+- A release is not finished when Hex accepts it. **Close-out** returns the ledger to `inactive` and advances the published baseline of record. Skipping it strands the ledger and fails `release-please` closed — the 2.5.0 strand ran about four weeks.
+- The core package is rooted at `.` and claims every path not in `exclude-paths`, which is how tooling commits once became a phantom release (RELH-01; see Phase 93 and `.planning/todos/`). `Guard Release Trigger` now classifies shippability by commit KIND as well.
+- Sibling pins are **no longer exact**. Since v1.15 Phase 125 the packages carry `~>` and the Release Please linked-versions plugin locks the minor at release time, so a core bump no longer drags a paired inbound release. Any doc describing a `{:mailglass, "== <core>"}` re-pin dance is stale.
+- The old 1.5.1 recovery playbook (bot-merged release SHA gets no `ci.yml` run, so `gate-ci-green` blocks) is **obsolete** — `publish-hex.yml`'s `ensure-live-ci-runs` job handles it upstream.
+
+Brand: Phase 91 of v1.10 adopted the maintainer-approved sealed-flap brand as canonical `brandbook/` (light+dark token system, self-contained HTML book); binding brand constraints live in `.planning/milestones/v1.9-phases/87-logo-tournament/87-decision-record.md`.
 
 ## Where to Look
 
@@ -106,7 +116,7 @@ Encoded for GSD in `~/.claude/get-shit-done/USER-PROFILE.md` (advisor mode, `ven
 
 - **Conventional Commits enforced** (PR title check). Squash-merge workflow.
 - `docs(state):` commit type for `.planning/STATE.md` updates — CI path filters skip them.
-- **Hex publish only from a protected ref**, via the `hex-publish` GitHub Environment so `HEX_API_KEY` is never visible to PR jobs. Releases are **fully hands-free**: a Release Please PR auto-merges on green (see `release-please.yml` "Arm auto-merge") and the publish fan-out runs with no human approval gate (the `hex-publish` environment intentionally has no required reviewers). Tightening this back to a required-reviewer gate is a deliberate policy change, not the current default.
+- **Hex publish only from a protected ref**, via the `hex-publish` GitHub Environment so `HEX_API_KEY` is never visible to PR jobs. A Release Please PR auto-merges on green (see `release-please.yml` "Arm auto-merge"), but **the publish itself is not hands-free**: the `hex-publish` environment has a `required_reviewers` rule (szTheory), so the fan-out stops for one manual approval **per package** — three approvals on a linked core+admin+inbound release. Plan a release with a human present. Removing that gate is a deliberate policy change; do not remove it to make a doc or a script true.
 - **All third-party GitHub Actions pinned to commit SHA.** Dependabot watches both `mix.lock` and `.github/workflows/`.
 
 ## Things Not To Do (the short list — full list in PITFALLS.md)
@@ -127,4 +137,4 @@ Encoded for GSD in `~/.claude/get-shit-done/USER-PROFILE.md` (advisor mode, `ven
 MIT across all sibling packages. Forever. (See PROJECT.md D-02.)
 
 ---
-*Generated: 2026-04-21 from `.planning/` artifacts. "What This Is" + "Where to Look" refreshed 2026-05-22; current-state reconciled 2026-06-05 to live `mailglass` 1.5.1 / `mailglass_admin` 1.5.1 / `mailglass_inbound` 1.3.0 (v1.7 shipped, quiet-maintenance posture).*
+*Generated: 2026-04-21 from `.planning/` artifacts. "What This Is" + "Where to Look" refreshed 2026-05-22; current-state and release mechanics reconciled 2026-09-17 to live `mailglass` 2.6.0 / `mailglass_admin` 2.6.0 / `mailglass_inbound` 2.3.0 (v2.7 shipped + archived, no active milestone).*

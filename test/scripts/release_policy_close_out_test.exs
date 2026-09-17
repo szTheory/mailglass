@@ -75,9 +75,70 @@ defmodule Mailglass.Scripts.ReleasePolicyCloseOutTest do
     {tag_sha, 0} = System.cmd("git", ["-C", repo, "rev-parse", "mailglass-v3.0.0^{commit}"])
     tag_sha = String.trim(tag_sha)
 
+    write_baseline_of_record!(repo, @candidates, tag_sha)
+
     on_exit(fn -> File.rm_rf!(root) end)
 
     {:ok, root: root, bin: bin, repo: repo, tag_sha: tag_sha}
+  end
+
+  # The four records the repo keeps of what is published. --write is gated on
+  # these agreeing with the release being closed out, so the fixture has to
+  # carry them or the gate is never exercised on the happy path.
+  defp write_baseline_of_record!(repo, versions, tag_sha) do
+    core = versions["mailglass"]
+    inbound = versions["mailglass_inbound"]
+    [major, minor | _] = String.split(core, ".")
+
+    File.mkdir_p!(Path.join(repo, "test/scripts"))
+    File.mkdir_p!(Path.join(repo, ".planning/publish"))
+
+    File.write!(Path.join(repo, "test/scripts/reconcile_release_versions_test.exs"), """
+    defmodule Fixture do
+      defp baseline_versions do
+        %{
+          "mailglass" => "#{versions["mailglass"]}",
+          "mailglass_admin" => "#{versions["mailglass_admin"]}",
+          "mailglass_inbound" => "#{inbound}"
+        }
+      end
+
+      defp evidence_identifiers do
+        %{
+          "hex_release_endpoints" => %{
+            "mailglass" => "https://hex.pm/api/packages/mailglass/releases/#{versions["mailglass"]}",
+            "mailglass_admin" =>
+              "https://hex.pm/api/packages/mailglass_admin/releases/#{versions["mailglass_admin"]}",
+            "mailglass_inbound" =>
+              "https://hex.pm/api/packages/mailglass_inbound/releases/#{inbound}"
+          },
+          "hex_release_checksums" => %{
+            "mailglass" => "#{@checksum}",
+            "mailglass_admin" => "#{@checksum}",
+            "mailglass_inbound" => "#{@checksum}"
+          },
+          "historical_tag" => "mailglass-v#{core}",
+          "historical_tag_sha" => "#{tag_sha}"
+        }
+      end
+
+      defp inbound_summary_expectation(_repository_versions) do
+        %{
+          "version" => "#{inbound}",
+          "manifest_version" => "#{inbound}",
+          "source_ref" => "v#{inbound}",
+          "mailglass_inbound_publish_pin" => "~> #{major}.#{minor} and >= #{core}"
+        }
+      end
+    end
+    """)
+
+    for {package, version} <- versions do
+      File.write!(
+        Path.join(repo, ".planning/publish/#{package}-publish-summary.json"),
+        Jason.encode!(%{"version" => version, "linked_versions" => versions})
+      )
+    end
   end
 
   test "happy path prints the inactive successor and leaves the ledger untouched", context do
@@ -115,6 +176,56 @@ defmodule Mailglass.Scripts.ReleasePolicyCloseOutTest do
     assert write_status == 0, write_output
     assert write_output == ""
     assert File.read!(write_target_path) == printed
+  end
+
+  test "--write refuses while the published baseline of record still describes the previous release",
+       context do
+    # Exactly the 2.6.0 close-out: the ledger advanced, the other three records
+    # did not, and Core Full Suite went red on both schemas one commit later
+    # (29464056). Writing `inactive` is what flips
+    # ReconcileReleaseVersionsTest to its published-baseline branch, so the
+    # disagreement has to stop the write rather than be discovered in CI.
+    write_baseline_of_record!(context.repo, @baselines, context.tag_sha)
+
+    target = authorized_target()
+    target_path = write_json(context.root, "target.json", target)
+    original = File.read!(target_path)
+
+    {output, status} = run(context, ["--target", target_path, "--repo", context.repo, "--write"])
+
+    assert status != 0
+    assert File.read!(target_path) == original, "a refused close-out must not touch the ledger"
+
+    assert output =~ "published baseline of record does not yet describe this release"
+    assert output =~ ~s("mailglass" => "3.0.0")
+    assert output =~ ~s("mailglass_inbound" => "2.2.0")
+    assert output =~ "publish summary (mailglass): version is 2.5.0, expected 3.0.0"
+    assert output =~ "mix mailglass.publish.check --package mailglass"
+
+    # The operator needs the evidence in hand to fix it, and the checksums must
+    # be copied from the Hex API rather than recomputed locally.
+    assert output =~ @checksum
+    assert output =~ "mailglass-v3.0.0"
+    assert output =~ context.tag_sha
+  end
+
+  test "the read-only path still succeeds when the baseline of record disagrees", context do
+    # release-please.yml runs this script WITHOUT --write as an in-memory
+    # self-heal for a stranded ledger, and never writes the repo file. That
+    # reasoning is about the ledger alone; gating it on the repo's baseline
+    # records would fail the release control closed on every run.
+    write_baseline_of_record!(context.repo, @baselines, context.tag_sha)
+
+    target = authorized_target()
+    target_path = write_json(context.root, "target.json", target)
+    original = File.read!(target_path)
+
+    {output, status} = run(context, ["--target", target_path, "--repo", context.repo])
+
+    assert status == 0, output
+    assert {:ok, successor} = Jason.decode(output)
+    assert successor["status"] == "inactive"
+    assert File.read!(target_path) == original
   end
 
   test "requests exactly the three candidate release endpoints in package order", context do

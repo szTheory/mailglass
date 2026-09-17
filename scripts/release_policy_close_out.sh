@@ -88,6 +88,38 @@ tag_sha=$(git -C "$repo_path" rev-parse --verify "refs/tags/${tag}^{commit}" 2>/
 
 [[ "$tag_sha" =~ ^[0-9a-f]{40}$ ]] || fail "release tag ${tag} resolved to a malformed commit SHA"
 
+# Only the --write path is gated on the rest of the published baseline of
+# record. Writing `inactive` is what flips ReconcileReleaseVersionsTest to its
+# published-baseline branch, so a --write that leaves the other three records
+# behind lands a commit that is guaranteed to red Core Full Suite (2.6.0,
+# commit 29464056). Reporting it here costs one re-run; reporting it as a red
+# required check costs a CI cycle at the most fragile moment of the ceremony.
+#
+# The read-only path is deliberately NOT gated. release-please.yml runs this
+# script without --write as an in-memory self-heal for a stranded ledger
+# (release_policy_contract_test.exs pins that it never passes --write there);
+# that reasoning is about the ledger alone and must keep working regardless of
+# what the repo's baseline records currently say.
+if [ "$write" = true ]; then
+  versions_tmp=$(mktemp)
+  jq -e '.candidate_versions' "$target_path" >"$versions_tmp" ||
+    fail "candidate versions are missing from the release target"
+
+  # Checked against --repo: the baseline of record and the ledger being written
+  # belong to the same tree. In production that is this repo (the default).
+  "$repo_root/scripts/check_published_baseline_of_record.sh" \
+    --repo "$repo_path" \
+    --versions "$versions_tmp" \
+    --checksums "$checksums_tmp" \
+    --tag "$tag" \
+    --tag-sha "$tag_sha" >/dev/null || {
+    rm -f "$versions_tmp"
+    exit 1
+  }
+
+  rm -f "$versions_tmp"
+fi
+
 cd "$repo_root"
 mix deps.get >/dev/null 2>&1
 mix compile >/dev/null 2>&1
