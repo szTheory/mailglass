@@ -697,7 +697,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       extract_step_block!(source, "Discover an open Release Please proposal before capture")
 
     result = extract_step_block!(source, "Write proposal-only release control result")
-    gate = extract_step_block!(source, "Fail non-pass proposal control result after evidence upload")
+
+    gate =
+      extract_step_block!(source, "Fail non-pass proposal control result after evidence upload")
 
     # The regression this pins: discovery used to be scoped to
     # `github.event_name == 'schedule'`, so a push observing an identical
