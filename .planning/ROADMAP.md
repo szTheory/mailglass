@@ -142,13 +142,13 @@ the `Hex Audit` advisories expire `2026-10-26` and red a required lane on 2026-1
 - Ordering inside the phase: GREEN-01 first (largest blast radius, earliest discovery), CTRL-04 no
   later than mid-phase (calendar deadline 2026-10-27).
 
-**Plans:** 6 plans (one per D-37 PR, with PR-5 split into two plans for context budget — 166-05 and
+**Plans:** 1/6 plans executed (one per D-37 PR, with PR-5 split into two plans for context budget — 166-05 and
 166-06 land in the same PR). Waves are strictly sequential, honoring the WIP limit of 1 open PR.
 
 Plans:
 **Wave 1**
 
-- [ ] 166-01-PLAN.md — PR-1: widen the admin lane to a directory-scoped run and add its measured coverage floor (GREEN-01, GREEN-02)
+- [x] 166-01-PLAN.md — PR-1: widen the admin lane to a directory-scoped run and add its measured coverage floor (GREEN-01, GREEN-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -229,7 +229,7 @@ the control behavior Phase 166 establishes)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 166. Earned Greens and Controls That Can Pass | 0/6 | Planned | - |
+| 166. Earned Greens and Controls That Can Pass | 1/6 | In Progress|  |
 | 167. Truthful Documentation and the Standing Control | 0/? | Not started | - |
 
 ## Milestone Exit Criteria (v2.8)

@@ -4,17 +4,17 @@ milestone: v2.8
 milestone_name: Truthful Repo
 current_phase: 166
 current_phase_name: Earned Greens and Controls That Can Pass
-status: in_progress
-stopped_at: Phase 166 context gathered (assumptions mode)
-last_updated: "2026-09-17T21:03:16.071Z"
+status: executing
+stopped_at: Completed 166-01-PLAN.md (GREEN-01/GREEN-02)
+last_updated: "2026-09-17T21:54:43.486Z"
 last_activity: 2026-09-17
-last_activity_desc: v2.8 roadmap created (2 phases, 17/17 requirements mapped)
-state_head: 9406b06643fed3816cad4c4bf02f8601fcdfc031
+last_activity_desc: Phase 166 execution started
+state_head: 71609b4fd78414402351ba894a628be0dfd261c9
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 6
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v2.8 Truthful Repo — make every claim the repo makes about itself either true or
+**Current focus:** Phase 166 — Earned Greens and Controls That Can Pass
 tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
 `.planning/research/v2.8/FINDINGS.md`.
 
@@ -37,10 +37,10 @@ tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
 
 ## Current Position
 
-Phase: 166 (Earned Greens and Controls That Can Pass) — READY TO EXECUTE
-Plan: —
-Status: Roadmap created; awaiting `/gsd-plan-phase 166`
-Last activity: 2026-09-17 — v2.8 roadmap created (2 phases, 17/17 requirements mapped)
+Phase: 166 (Earned Greens and Controls That Can Pass) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
+Last activity: 2026-09-17 — Phase 166 execution started
 
 ## v2.8 Roadmap Shape
 
@@ -208,6 +208,7 @@ Last activity: 2026-09-17 — v2.8 roadmap created (2 phases, 17/17 requirements
 | Phase 165 P03 | 4m | 2 tasks | 4 files |
 | Phase 165 P04 | 8m | 2 tasks | 1 files |
 | Phase 165 P05 | 25m | 2 tasks | 4 files |
+| Phase 166 P01 | 24min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -332,6 +333,7 @@ Last activity: 2026-09-17 — v2.8 roadmap created (2 phases, 17/17 requirements
 - [Phase 165]: Canonical milestone audit and archive begin only after execute-phase returns with passed ordinary verification and completion metadata.
 - [Phase 165]: The archive checkpoint binds a fresh exact preview while scoped git.create_tag=false is restored byte-for-byte before convergence.
 - [Phase 165]: Final state publication and commit precede protected exact-SHA evidence and the one permitted installed terminal invocation.
+- [Phase 166]: GREEN-01/GREEN-02: widened verify.support_contract.admin to directory-scoped run (325 newly-executed tests) and wired a measured ExCoveralls coverage floor for mailglass_admin, demonstrated (not asserted) to fire on regression.
 
 ## Quick Tasks Completed
 
@@ -349,12 +351,12 @@ Last activity: 2026-09-17 — v2.8 roadmap created (2 phases, 17/17 requirements
 
 ## Session Continuity
 
-Last session: 2026-09-17T20:30:58.711Z
-Stopped at: Phase 166 context gathered (assumptions mode)
+Last session: 2026-09-17T21:54:43.469Z
+Stopped at: Completed 166-01-PLAN.md (GREEN-01/GREEN-02)
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.
-Resume file: .planning/phases/166-earned-greens-and-controls-that-can-pass/166-CONTEXT.md
+Resume file: None
 
 ## Operator Next Steps
 

@@ -38,11 +38,11 @@ sentence. Three specific temptations were identified in research and are pre-ref
 Signals that currently report success without earning it. **These outrank visible reds:** a red costs
 a glance; a false green is why the admin blind spot hid two failures for four weeks.
 
-- [ ] **GREEN-01**: The full `mailglass_admin` test suite executes in CI. The hand-enumerated 9-file
+- [x] **GREEN-01**: The full `mailglass_admin` test suite executes in CI. The hand-enumerated 9-file
       allow-list in `verify.support_contract.admin` is replaced by a directory-scoped run (the
       existing, uninvoked `verify.preview` alias is the intended mechanism), in both CI and `mix ci`.
       *Accept:* the `Support Contract Admin` lane log reports ≥510 tests, not 185, with 0 failures.
-- [ ] **GREEN-02**: `mailglass_admin` enforces a coverage floor in CI, as core and inbound already do.
+- [x] **GREEN-02**: `mailglass_admin` enforces a coverage floor in CI, as core and inbound already do.
       *Accept:* the admin lane fails when coverage drops below the committed threshold.
 - [ ] **GREEN-03**: The required `core_deterministic_suite` lane enforces its own anti-vacuity floor.
       `MAILGLASS_SUITE_FLOOR: "1"` is set, and `@suite_floor_env_occurrences` in
@@ -203,8 +203,8 @@ Populated 2026-09-17 during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GREEN-01 | Phase 166 | Pending |
-| GREEN-02 | Phase 166 | Pending |
+| GREEN-01 | Phase 166 | Complete |
+| GREEN-02 | Phase 166 | Complete |
 | GREEN-03 | Phase 166 | Pending |
 | GREEN-04 | Phase 166 | Pending |
 | GREEN-05 | Phase 166 | Pending |
@@ -222,6 +222,7 @@ Populated 2026-09-17 during roadmap creation.
 | STAND-01 | Phase 167 | Pending |
 
 **Coverage:**
+
 - v2.8 requirements: 17 total
 - Mapped to phases: 17 ✓ (Phase 166: 10 — GREEN-01..05, CTRL-01..05; Phase 167: 7 — DOCS-01..06, STAND-01)
 - Unmapped: 0
