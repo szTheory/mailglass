@@ -531,7 +531,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     preflight = extract_step_block!(source, "Detect already-tagged release PR")
 
     discovery =
-      extract_step_block!(source, "Discover scheduled Release Please proposal before capture")
+      extract_step_block!(source, "Discover an open Release Please proposal before capture")
 
     result = extract_step_block!(source, "Write proposal-only release control result")
     summary = extract_step_block!(source, "Summarize proposal-only release control result")
@@ -546,12 +546,12 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert step_precedes?(
              source,
              "Sync sibling package -> mailglass dep pin on release-please branch",
-             "Discover scheduled Release Please proposal before capture"
+             "Discover an open Release Please proposal before capture"
            )
 
     assert step_precedes?(
              source,
-             "Discover scheduled Release Please proposal before capture",
+             "Discover an open Release Please proposal before capture",
              "Capture Release Please proposal identity without activation"
            )
 
@@ -664,7 +664,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   test "scheduled discovery preserves capture for active or ambiguous proposals and fails unavailable evidence" do
     discovery =
       workflow_source()
-      |> extract_step_block!("Discover scheduled Release Please proposal before capture")
+      |> extract_step_block!("Discover an open Release Please proposal before capture")
 
     for {mode, expected_capture, expected_status, expected_reason, expected_exit} <- [
           {:one, "true", "", "", 0},
@@ -688,6 +688,88 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
         assert outputs["result_reason"] == expected_reason
       end)
     end
+  end
+
+  test "a push run with no open proposal reaches the same pending verdict a scheduled run does" do
+    source = workflow_source()
+
+    discovery =
+      extract_step_block!(source, "Discover an open Release Please proposal before capture")
+
+    result = extract_step_block!(source, "Write proposal-only release control result")
+    gate = extract_step_block!(source, "Fail non-pass proposal control result after evidence upload")
+
+    # The regression this pins: discovery used to be scoped to
+    # `github.event_name == 'schedule'`, so a push observing an identical
+    # repository fell through to capture and failed `proposal_missing`. Both
+    # verdicts were observed at 6a0447a9 an hour apart.
+    refute discovery =~ "github.event_name == 'schedule'",
+           "proposal discovery is scoped to scheduled runs again; a push with no open " <>
+             "proposal will fail proposal_missing while the hourly run passes."
+
+    with_idle_schedule_fixture(:none, "push", fn temp_dir, env ->
+      File.write!(Path.join(temp_dir, "discovery.sh"), proposal_result_script(discovery))
+      File.write!(Path.join(temp_dir, "result.sh"), proposal_result_script(result))
+      File.write!(Path.join(temp_dir, "gate.sh"), proposal_result_script(gate))
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "discovery.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(env),
+                 stderr_to_stdout: true
+               )
+
+      discovery_outputs = read_output!(env["GITHUB_OUTPUT"])
+      assert discovery_outputs["should_capture"] == "false"
+      assert discovery_outputs["result_status"] == "pending"
+      assert discovery_outputs["result_reason"] == "no_open_proposal"
+
+      writer_env =
+        Map.merge(env, %{
+          "CAPTURE_OUTCOME" => "skipped",
+          "CAPTURE_STATUS" => "",
+          "CAPTURE_REASON" => "",
+          "DISCOVERY_STATUS" => discovery_outputs["result_status"],
+          "DISCOVERY_REASON" => discovery_outputs["result_reason"],
+          "PROPOSAL_HEAD" => "",
+          "SOURCE_SHA" => ""
+        })
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "result.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(writer_env),
+                 stderr_to_stdout: true
+               )
+
+      json =
+        temp_dir
+        |> Path.join("release-proposal-control-result.json")
+        |> File.read!()
+        |> Jason.decode!()
+
+      assert Map.take(json, ["status", "reason", "event_name"]) == %{
+               "status" => "pending",
+               "reason" => "no_open_proposal",
+               "event_name" => "push"
+             }
+
+      # The gate is the step that actually reddened main.
+      assert {_, 0} =
+               System.cmd(
+                 "bash",
+                 [Path.join(temp_dir, "gate.sh")],
+                 env: [
+                   {"RESULT_STATUS", json["status"]},
+                   {"RESULT_REASON", json["reason"]}
+                 ],
+                 stderr_to_stdout: true
+               )
+
+      # Nothing may merge, tag, or push on this path.
+      refute File.read!(env["COMMAND_LOG"]) =~
+               ~r/(gh pr merge|git tag|gh release|git push|protected-dispatch)/
+    end)
   end
 
   test "proposal capture emits its real post-worktree outcome before cleanup and the writer preserves it" do
@@ -1039,7 +1121,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end
   end
 
-  defp with_idle_schedule_fixture(mode, fun) do
+  defp with_idle_schedule_fixture(mode, fun), do: with_idle_schedule_fixture(mode, "schedule", fun)
+
+  defp with_idle_schedule_fixture(mode, event_name, fun) do
     temp_dir =
       Path.join(System.tmp_dir!(), "release-idle-schedule-#{System.unique_integer([:positive])}")
 
@@ -1082,7 +1166,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       "GITHUB_OUTPUT" => Path.join(temp_dir, "github-output"),
       "GITHUB_STEP_SUMMARY" => Path.join(temp_dir, "summary"),
       "RUNNER_TEMP" => temp_dir,
-      "EVENT_NAME" => "schedule",
+      "EVENT_NAME" => event_name,
       "RUN_ID" => "16208",
       "CANDIDATE_DIGEST" => "",
       "COMMIT_MESSAGE" => "",
