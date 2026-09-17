@@ -14,6 +14,28 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.6.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.5.0...mailglass-v2.6.0) (2026-09-17)
+
+
+### Features
+
+* **164-03:** clarify current package compatibility\n\n- Mark each package README's current compatibility guidance\n- Document the linked core/admin and independent inbound constraints\n ([d272e82](https://github.com/szTheory/mailglass/commit/d272e824e92f11f09c4a060271cd1202837b3711))
+* **164-11:** add guarded finalize-phase command ([4f2ddf6](https://github.com/szTheory/mailglass/commit/4f2ddf6c1f1603eb98a4f2286eb390dedab6b39a))
+
+
+### Bug Fixes
+
+* **164-11:** ignore volatile GSD milestone lock ([4bc18c2](https://github.com/szTheory/mailglass/commit/4bc18c2dc3fee120cabcd92d60cf6379ced68be8))
+* **164:** close repository-truth security and validation gaps ([e79cd50](https://github.com/szTheory/mailglass/commit/e79cd50c04cd34961a7e60613e2067701cd173d4))
+* **164:** CR-06 document production admin dependency ([cbdd37c](https://github.com/szTheory/mailglass/commit/cbdd37c9f89ca626ae936a7978b4ba99346e64a0))
+* **164:** WR-01 align compatibility index with v2 ([e91b5cb](https://github.com/szTheory/mailglass/commit/e91b5cb8f9b9b1b85d3c71af83598b2339f491c8))
+* **164:** WR-01 align current contract major labels ([7897fb4](https://github.com/szTheory/mailglass/commit/7897fb4e5f67e5f157b2af9b1e89a7b910140790))
+* **ci:** repair phase 164 protected gates ([5859cc7](https://github.com/szTheory/mailglass/commit/5859cc7ccb47dc49d41b94cf682286fc846a057b))
+* **phase-164:** close executable authority gaps ([#249](https://github.com/szTheory/mailglass/issues/249)) ([52c07a5](https://github.com/szTheory/mailglass/commit/52c07a5051d269b307831a2210f53dec0dd1ff65))
+* reconcile phase 164 terminal authority through plan 44 ([#250](https://github.com/szTheory/mailglass/issues/250)) ([af2c3a0](https://github.com/szTheory/mailglass/commit/af2c3a09e4021d2d2beb4ba361239df10bb632d0))
+* restore Phase 164 repository-truth finalization ([382ebb0](https://github.com/szTheory/mailglass/commit/382ebb0a33ad12d8bb11cc67fa4ef9a943b37a9d))
+* **supply-chain:** drop the resolved cowlib EEF-CVE-2026-43971 allowlist entry ([#271](https://github.com/szTheory/mailglass/issues/271)) ([603de53](https://github.com/szTheory/mailglass/commit/603de53763d4ce3688c7253c89fa07fd552504ed))
+
 ## [2.5.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.4.1...mailglass-v2.5.0) (2026-08-20)
 
 

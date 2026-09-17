@@ -1,7 +1,7 @@
 defmodule Mailglass.MixProject do
   use Mix.Project
 
-  @version "2.5.0"
+  @version "2.6.0"
   @source_url "https://github.com/szTheory/mailglass"
   # Release-As path anchor (137-02, D-01): this root mix.exs touch attributes the
   # companion commit's `Release-As: 2.0.0` footer to the linked mailglass +

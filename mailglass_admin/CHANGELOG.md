@@ -4,6 +4,22 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.6.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.5.0...mailglass_admin-v2.6.0) (2026-09-17)
+
+
+### Features
+
+* **164-03:** clarify current package compatibility\n\n- Mark each package README's current compatibility guidance\n- Document the linked core/admin and independent inbound constraints\n ([d272e82](https://github.com/szTheory/mailglass/commit/d272e824e92f11f09c4a060271cd1202837b3711))
+
+
+### Bug Fixes
+
+* **163:** repair and capture gallery timeout ([7b9da5b](https://github.com/szTheory/mailglass/commit/7b9da5b7fa736542662fe8ea7ad76c8f9ea29cb0))
+* **164:** close repository-truth security and validation gaps ([e79cd50](https://github.com/szTheory/mailglass/commit/e79cd50c04cd34961a7e60613e2067701cd173d4))
+* **164:** CR-06 document production admin dependency ([cbdd37c](https://github.com/szTheory/mailglass/commit/cbdd37c9f89ca626ae936a7978b4ba99346e64a0))
+* **164:** WR-01 align current contract major labels ([7897fb4](https://github.com/szTheory/mailglass/commit/7897fb4e5f67e5f157b2af9b1e89a7b910140790))
+* **admin:** name the real cause when a pre-2.2.0 inbound message cannot be replayed ([#268](https://github.com/szTheory/mailglass/issues/268)) ([d65a1aa](https://github.com/szTheory/mailglass/commit/d65a1aa87498bd35c0f0e68e08264d2299b855d3))
+
 ## [2.5.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.4.1...mailglass_admin-v2.5.0) (2026-08-20)
 
 
