@@ -2,11 +2,11 @@
 gsd_state_version: "1.0"
 milestone: v2.8
 milestone_name: Truthful Repo
-status: planning
-last_updated: "2026-09-17T20:15:24.258Z"
+status: in_progress
+last_updated: "2026-09-17T21:05:00.000Z"
 last_activity: 2026-09-17
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -32,10 +32,32 @@ tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 166 — Earned Greens and Controls That Can Pass (roadmapped, not yet planned)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-09-17 — Milestone v2.8 started
+Status: Roadmap created; awaiting `/gsd-plan-phase 166`
+Last activity: 2026-09-17 — v2.8 roadmap created (2 phases, 17/17 requirements mapped)
+
+## v2.8 Roadmap Shape
+
+- **Phase 166** — GREEN-01..05 + CTRL-01..05 (10 requirements). First because fixing a false green can
+  surface previously-unrun failures (GREEN-01 exposes 325 never-executed admin tests; all 510 pass
+  locally today, so blast radius is bounded but nonzero), and because CTRL-04 has a calendar deadline
+  of **2026-10-27**.
+- **Phase 167** — DOCS-01..06 + STAND-01 (7 requirements). Genuinely independent; safely last.
+- **Exactly two phases. There is no Phase 168.** Hard timebox 5 working days, WIP limit 1 open PR.
+  On day 5, ship what is done and close regardless.
+- **Stop line:** every claim the repo makes about itself is either true or tested. Anything discovered
+  that is not one of the 17 requirements is **filed, not fixed**.
+- **Standing prohibition:** no phase may satisfy a requirement by weakening a gate, relaxing a
+  fail-closed control, deleting an expiry, lowering a test's rigor, or narrowing a generator.
+  Pre-refused by name: `cron-guard` `continue-on-error` / dropping a cron; deleting the
+  `recheck_by` / `unused_entries` machinery; lowering `max_runs` or narrowing the inbound property
+  generator.
+- **No product code changes.** DOCS-05's `css_inliner` disposition is the single permitted `lib/` change.
+- Known cross-file locksteps: GREEN-03 ⇒ `@suite_floor_env_occurrences` 2 → 3 in
+  `lane_classification_drift_test.exs:56` *in the same change*; DOCS-04 ⇒
+  `guides/migration-from-swoosh.md:31-32` and `test/mailglass/docs_contract_test.exs:558` move together
+  (Phase 125 pin-drift shape); CTRL-02 + CTRL-03 are cause and symptom of one red and land together.
 
 ## Lifecycle Authority
 

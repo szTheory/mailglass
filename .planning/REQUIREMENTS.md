@@ -199,32 +199,35 @@ Explicitly excluded, with reasoning, so it is not re-argued mid-milestone.
 
 ## Traceability
 
-Populated during roadmap creation.
+Populated 2026-09-17 during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GREEN-01 | — | Pending |
-| GREEN-02 | — | Pending |
-| GREEN-03 | — | Pending |
-| GREEN-04 | — | Pending |
-| GREEN-05 | — | Pending |
-| CTRL-01 | — | Pending |
-| CTRL-02 | — | Pending |
-| CTRL-03 | — | Pending |
-| CTRL-04 | — | Pending |
-| CTRL-05 | — | Pending |
-| DOCS-01 | — | Pending |
-| DOCS-02 | — | Pending |
-| DOCS-03 | — | Pending |
-| DOCS-04 | — | Pending |
-| DOCS-05 | — | Pending |
-| DOCS-06 | — | Pending |
-| STAND-01 | — | Pending |
+| GREEN-01 | Phase 166 | Pending |
+| GREEN-02 | Phase 166 | Pending |
+| GREEN-03 | Phase 166 | Pending |
+| GREEN-04 | Phase 166 | Pending |
+| GREEN-05 | Phase 166 | Pending |
+| CTRL-01 | Phase 166 | Pending |
+| CTRL-02 | Phase 166 | Pending |
+| CTRL-03 | Phase 166 | Pending |
+| CTRL-04 | Phase 166 | Pending |
+| CTRL-05 | Phase 166 | Pending |
+| DOCS-01 | Phase 167 | Pending |
+| DOCS-02 | Phase 167 | Pending |
+| DOCS-03 | Phase 167 | Pending |
+| DOCS-04 | Phase 167 | Pending |
+| DOCS-05 | Phase 167 | Pending |
+| DOCS-06 | Phase 167 | Pending |
+| STAND-01 | Phase 167 | Pending |
 
 **Coverage:**
 - v2.8 requirements: 17 total
-- Mapped to phases: 0
-- Unmapped: 17 ⚠ (roadmap pending)
+- Mapped to phases: 17 ✓ (Phase 166: 10 — GREEN-01..05, CTRL-01..05; Phase 167: 7 — DOCS-01..06, STAND-01)
+- Unmapped: 0
+- Duplicated across phases: 0
+
+Roadmap: `.planning/ROADMAP.md` (created 2026-09-17).
 
 ---
 *Requirements defined: 2026-09-17*
