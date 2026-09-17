@@ -70,3 +70,37 @@ the ledger is still open.
   `assert repository_versions == baseline_versions()`.
 - The lagging summaries: `mailglass`/`mailglass_admin` summaries read
   2.5.0 on a tree that had published 2.6.0.
+
+## Partial resolution (2026-09-17)
+
+**Close-out completeness — done, as fail-loudly rather than auto-advance.**
+`scripts/check_published_baseline_of_record.sh` verifies all four records
+against the release evidence, and `release_policy_close_out.sh --write`
+refuses while any disagree, naming each one and printing the released
+set, tag, tag SHA and the Hex checksums to copy.
+
+Chosen over having close-out *write* the other three records: two of them
+are Elixir source, and generating a control's literals from a script is
+the kind of thing that fails quietly and corrupts the baseline of record.
+Fail-loudly gets the same result — a close-out commit that is green by
+construction — at a fraction of the blast radius.
+
+Bound to `--write` only. `release-please.yml` runs this script without
+`--write` as an in-memory self-heal for a stranded ledger, and
+`release_policy_contract_test.exs` pins that it never passes `--write`
+there; gating that path would fail the release control closed on every
+run. Both behaviours are now pinned by tests, and the refusal test was
+verified to fail with the gate removed.
+
+**Still open: fan-out symmetry.** `publish-hex.yml` still regenerates
+only `mailglass_inbound`'s publish summary. The check above now catches
+the lag at close-out instead of letting it reach main, but the operator
+still has to run `mix mailglass.publish.check` for core and admin by
+hand. The workflow fix is unstarted.
+
+**Worth considering separately:** collapsing the four records to one —
+a close-out-written JSON artifact that the test reads instead of holding
+literals. It would delete this whole class of drift, and it is grounded
+in the Hex API rather than in the tree, so it is not self-certifying.
+But it changes the shape of a control and deserves its own decision.
+
