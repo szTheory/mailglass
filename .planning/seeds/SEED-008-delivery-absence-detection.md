@@ -6,7 +6,11 @@ planted_during: v2.8 (Truthful Repo) scoping
 trigger_when: when planning outbound operator evidence, deliverability, adopter onboarding, or delivery-audit work
 scope: medium
 source: real adopter incident (GetFluent, reported via cross-session field report 2026-09-15)
+demand: CONFIRMED ADOPTER PULL — stated adoption trigger, escalated 2026-09-17
 ---
+
+> **⚠ This is not a speculative feature idea. It is a blocked adoption with a named trigger.**
+> See `## Adopter Pull (escalated 2026-09-17)` below before deprioritizing.
 
 # SEED-008: Delivery-Absence Detection
 
@@ -108,6 +112,57 @@ retention) — both answer "what actually happened to our mail?", from opposite 
   so confirmation lives in `last_event_type`/`delivered_at`; and the Operator row
   projection exposes `status`, `last_event_type`, `last_event_at` but **not**
   `delivered_at`/`dispatched_at` (`lib/mailglass/operator/deliveries.ex:83-95`).
+
+## Adopter Pull (escalated 2026-09-17)
+
+The adopter was asked whether either capability would change their adopt/don't-adopt decision, and
+authorized escalating the answer. Their words, recorded because the specificity is the point:
+
+> "Your answer changed our decision. We had this as *2.x may be cheaper than building our own*. It
+> isn't, for the incident — dispatch-only, mailglass records the failure honestly but never detects
+> it… **Either of the two above flips it back**, because either one turns honest bookkeeping into an
+> actual signal."
+
+**This is a stated adoption trigger, not a wish.** Shipping *either* capability converts one blocked
+adopter. That is the strongest demand signal in the planning tree, and the only one sourced from a
+production outage rather than from internal reasoning.
+
+Two refinements they added that sharpen the design:
+
+- **The preflight has a precedent in adopter code already.** Their `config/runtime.exs` uses
+  `fetch_env!` for `RESEND_API_KEY` and `EMAIL_FROM_ADDRESS` precisely so a missing value crash-loops
+  rather than failing silently. The ask is not novel behavior — it extends an instinct adopters
+  already have from *"is it set"* to *"is it usable."* `bootstrap!/0` is the natural site.
+- **The absence-signal needs no new state.** `mailglass_deliveries` already carries `dispatched_at`
+  and `delivered_at` as distinct columns, so *"rows dispatched more than N ago with `delivered_at`
+  still NULL"* is a query over existing data. That materially lowers the implementation estimate —
+  this is a read-model and a surface, not a schema change.
+
+### Context: what this cost them to discover
+
+The adopter also reported they came close to shipping *without* building their own stall detector,
+because `lib/mailglass/outbound.ex`'s moduledoc claims orphan `:queued` rows are reconcilable via
+`Events.Reconciler` at age ≥ 5min — a claim not backed by code. In their words: *"Had we read the
+moduledoc and skipped building our own stall detector, we'd have shipped believing one existed."*
+
+**That defect is already a committed v2.8 requirement (DOCS-05)** — independently found by internal
+research before the adopter raised it. Their report is external confirmation that the v2.8
+truthfulness thesis is not academic: a false claim printed beside a mechanism that does not establish
+it nearly caused a second production outage at a second company. It is the same shape as the incident
+that started this seed.
+
+### Also recorded from the same exchange
+
+- **The 1.x → 2.x upgrade fear was unfounded**, and this is worth surfacing to *all* capped adopters:
+  `mailable.ex`, `message.ex` and `renderer.ex` have **zero commits since v2.0.0 across 484 commits**.
+  The upgrade cost is the Postgres schema move, not API churn. The adopter called this "the single
+  most useful fact in your report." If other hosts are capped at `~> 1.0` out of the same fear, saying
+  this loudly in the upgrade guide is cheap and high-leverage.
+- **MG-REQ-B (mail-client override defenses) is closed as already-shipped**, with a caveat: the
+  defenses exist in `components.ex`/`layout.ex` but **no test asserts `text-decoration`,
+  `max-width`/`width="600"`, or `mso-line-height-rule`**, and there is no container/section/layout
+  test at all. The adopter recorded them as working-but-unguaranteed. Adding those assertions is small
+  and fits the "claims are true or tested" rule — a natural candidate for a future milestone.
 
 ## Related
 
