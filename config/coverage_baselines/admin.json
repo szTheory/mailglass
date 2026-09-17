@@ -1,0 +1,12 @@
+{
+  "package": "mailglass_admin",
+  "cohort": "test",
+  "covered_lines": 3334,
+  "relevant_lines": 3992,
+  "percentage": 83.517034,
+  "toolchain": "1.18.4/27",
+  "image": "hexpm/elixir:1.18.4-erlang-27.3.4-debian-bookworm-20250520-slim",
+  "command": "make toolchain CMD='cd mailglass_admin && mix deps.get && mix ecto.create -r Mailglass.TestRepo --quiet && mix coveralls.json --output-dir /workspace/coverage/admin test --warnings-as-errors'",
+  "report_sha256": "61c85df76266c31c6631a704830ff1bf05c498890c4db14a2623135347e72824",
+  "measured_at": "2026-09-17"
+}

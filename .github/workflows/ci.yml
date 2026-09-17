@@ -915,6 +915,12 @@ jobs:
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run admin support contract
         run: cd mailglass_admin && mix verify.support_contract.admin
+      - name: Collect and enforce admin coverage floor
+        run: |
+          cd mailglass_admin
+          mix coveralls.json --output-dir ../coverage/admin test --warnings-as-errors
+          cd ..
+          bash scripts/check_coverage_floor.sh config/coverage_baselines/admin.json coverage/admin/excoveralls.json 1.18.4/27
 
   operator_browser_gate:
     name: Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)
