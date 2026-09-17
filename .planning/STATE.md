@@ -6,7 +6,7 @@ status: archived
 stopped_at: Phase 165 complete — all phases complete
 last_updated: "2026-09-16T16:05:00.000Z"
 last_activity: 2026-09-16
-last_activity_desc: Quick task 260916-g7k disposed the 13 open dependabot PRs
+last_activity_desc: Quick task 260916-ldh added the missing release-target ledger close-out path
 state_head: 532301a309debe8d9736d4ea4cd66c14904a9f22
 progress:
   total_phases: 5
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 Phase: Milestone v2.7 complete
 Plan: —
 Status: v2.7 milestone complete — awaiting next milestone
-Last activity: 2026-09-16 — Completed quick task 260916-i5g: scoped release-please core exclude-paths, closed empty proposal #222
+Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (PR #266, merged); completed quick task 260916-ldh, which added the missing close-out path so the ledger can return to inactive without a hand edit
 
 ## Lifecycle Authority
 
@@ -72,6 +72,15 @@ Last activity: 2026-09-16 — Completed quick task 260916-i5g: scoped release-pl
   fail-closed under exactly the condition v2.7 chose to accept. Recorded as a known contract
   contradiction, not a gap in the milestone: the archive is complete and green on protected `main`, and
   the terminal report was always ignored-only evidence, never the deliverable.
+- **CORRECTION (2026-09-16), appended rather than rewritten so the archived reasoning stays readable
+  as written:** the bullet above attributes the `release-please` → `proposal_identity_mismatch` red to
+  open proposal PR #222. That attribution is **wrong**. #222 was closed on 2026-09-16 and the control
+  stayed red. The real cause was `.planning/release-target.json`, frozen at `status: authorized` /
+  `publication: not_started` since the 2.5.0 release on 2026-08-20 — 0 successes in 100 runs. Fixed in
+  PR #266 (ledger closed out to `inactive`); PR #267 adds the missing close-out path, since nothing in
+  the pipeline ever wrote the ledger and every release would otherwise strand it the same way. This
+  does **not** reopen §6–7: `repo-hygiene` and `post-publish-smoke` remain blocked on the accepted
+  open-PR debt exactly as recorded, so the terminal-proof conclusion is unchanged.
 - Re-opening §6–7 is a **deliberate future decision**, valid only if the accepted debt is disposed or
   the terminal contract is relaxed. Until then, absence of schedule evidence is the expected steady
   state — never authority to dispatch, rerun, close a PR, or publish.
@@ -175,9 +184,7 @@ Last activity: 2026-09-16 — Completed quick task 260916-i5g: scoped release-pl
 
 ### Pending Todos
 
-- [2026-09-16] [inbound] Document and remediate pre-v2.6 unreplayable evidence rows — [todo file](.planning/todos/pending/2026-09-16-document-and-remediate-pre-v2-6-unreplayable-evidence-rows.md)
 - [2026-09-16] [release-engineering] Enforce commit-type discipline for release-triggering paths — [todo file](.planning/todos/pending/2026-09-16-enforce-commit-type-discipline-for-release-triggering-paths.md)
-- [2026-09-16] [release-engineering] **Close out the stale 2.5.0 release-target ledger** (critical — blocks all releases) — [todo file](.planning/todos/pending/2026-09-16-close-out-the-stale-2-5-0-release-target-ledger.md)
 
 ### Roadmap Evolution
 
@@ -303,6 +310,7 @@ Last activity: 2026-09-16 — Completed quick task 260916-i5g: scoped release-pl
 |------|------|---------|
 | 2026-09-16 | [dispose the 14 open dependabot PRs](quick/260916-g7k-dispose-the-14-open-dependabot-prs/SUMMARY.md) | Open PRs 15 → 1. All 13 dependabot PRs were single-lockfile bumps colliding on 3 lockfiles; consolidated into one refresh (#260 → `753a840c`) and closed as superseded. #222 (Hex release proposal) deliberately left open. |
 | 2026-09-16 | [scope release-please core exclude-paths](quick/260916-i5g-scope-release-please-core-exclude-paths-/260916-i5g-SUMMARY.md) | Core package was rooted at `.` and claimed `scripts/`, `.github/`, `dev/`, `test/`, `reference/`, `ci/`, `test_js/`, so tooling commits registered as core library features. `exclude-paths` widened 5 → 12 tracked entries (#263 → `ff52bb66`). Empty proposal #222 (2.6.0/2.6.0/2.3.0, zero adopter payload) closed. Same defect class as RELH-01. |
+| 2026-09-16 | [add a release-target ledger close-out path](quick/260916-ldh-add-a-close-out-path-so-a-published-rele/260916-ldh-SUMMARY.md) | Nothing in the pipeline ever *wrote* the ledger, so every real release stranded it and failed `release-please` closed (`proposal_identity_mismatch`; the 2.5.0 strand ran ~4 weeks, 0/100 runs green). Added a non-authorizing `close-out` verb to `release_policy.exs` (can only ever emit `status: inactive`, re-validates its own output), an evidence-gated `release_policy_close_out.sh` (live Hex proof, checksums read from the API and re-verified, tag must resolve), and an in-memory self-heal in the capture control reporting `release_target_closed_out`. Publishing stayed `contents: read` — no new permissions. Stacked on #266. |
 
 ## Deferred Items
 

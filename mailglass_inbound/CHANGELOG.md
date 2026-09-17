@@ -12,6 +12,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * complete v2.6 engineering quality ratchet ([#203](https://github.com/szTheory/mailglass/issues/203)) ([61e8c8e](https://github.com/szTheory/mailglass/commit/61e8c8e841306755ec637f84052f8dca4baadb76))
 
+### Upgrade notes
+
+Replay now resolves a record's mailbox from the durable route binding persisted
+on its evidence row, and from no other source. The prior path that resolved a
+mailbox from the module name stored on an execution run was deliberately closed,
+because turning adopter-controlled stored text back into a module is an unsafe
+code-loading operation.
+
+**Inbound messages received before 2.2.0 carry no route binding and can no
+longer be replayed.** Those records, their evidence, and their execution history
+are unaffected and remain readable and auditable; only replay is refused, and it
+is refused deterministically. Messages received on 2.2.0 or later replay
+normally. There is no backfill task — see
+[Messages received before 2.2.0 cannot be replayed](docs/inbound-operator.md#messages-received-before-220-cannot-be-replayed)
+for why, and `docs/api_stability.md` for the recorded contract change.
+
 ## [2.1.2](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v2.1.1...mailglass_inbound-v2.1.2) (2026-08-03)
 
 ### Fixed

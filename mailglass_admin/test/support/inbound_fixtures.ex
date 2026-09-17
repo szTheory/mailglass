@@ -150,6 +150,41 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
   end
 
   @doc """
+  Seeds a PRE-BINDING (pre-v2.6) matched record: evidence carries no durable
+  route binding, but a matched fresh run does persist a mailbox string — exactly
+  the shape of a row ingested before `61e8c8e8` made the binding the sole source
+  of a replay mailbox.
+
+  Such a row can never be replayed: resolving the persisted module name is the
+  unsafe operation that change deliberately closed. Replay therefore reports
+  `{:replay_mailbox_missing, %{reason: :invalid_mailbox}}`, which is the one
+  reason distinct from a routing failure — the message is correct and the row is
+  intact; only the binding is absent.
+
+  Returns `%{record: record, evidence: evidence, run: run}`.
+  """
+  def seed_pre_binding_matched!(tenant_id, opts \\ []) do
+    record = insert_record!(tenant_id, opts)
+
+    evidence =
+      insert_evidence!(
+        tenant_id,
+        record.id,
+        Keyword.delete(Keyword.get(opts, :evidence, []), :route_binding)
+      )
+
+    run =
+      insert_run!(tenant_id, record.id, evidence.id,
+        source: :fresh,
+        mailbox: mailbox_name(),
+        outcome: :accept,
+        executed_at: hours_ago(1)
+      )
+
+    %{record: record, evidence: evidence, run: run}
+  end
+
+  @doc """
   Seeds a record whose only fresh run is `:no_match` (routing-trace eligible).
   Returns `%{record: record, evidence: evidence, run: run}`.
   """

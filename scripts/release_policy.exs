@@ -130,6 +130,21 @@ defmodule Mailglass.ReleasePolicy do
     end
   end
 
+  def close_out(target, tag_sha, checksums) do
+    with {:ok, target} <- validate_target(target),
+         :ok <- close_out_applicable(target),
+         :ok <- checksum_map(checksums),
+         true <- sha1?(tag_sha) or error(:invalid_close_out_tag_sha),
+         :ok <- close_out_evidence_match(target, tag_sha, checksums) do
+      target
+      |> close_out_successor(tag_sha, checksums)
+      |> validate_target()
+    else
+      false -> error(:invalid_close_out_tag_sha)
+      {:error, _} = failure -> failure
+    end
+  end
+
   def candidate_digest(target) do
     with {:ok, target} <- validate_target(target),
          :ok <- candidate_identity_lifecycle(target) do
@@ -392,6 +407,16 @@ defmodule Mailglass.ReleasePolicy do
     end
   end
 
+  def cli(["close-out", target_path, tag_sha, checksums_path]) do
+    with {:ok, target} <- read_json(target_path),
+         {:ok, checksums} <- read_json(checksums_path),
+         {:ok, successor} <- close_out(target, tag_sha, checksums) do
+      IO.puts(Jason.encode!(successor, pretty: true))
+    else
+      _ -> System.halt(1)
+    end
+  end
+
   def cli(_), do: System.halt(1)
 
   defp lifecycle(target) do
@@ -547,6 +572,69 @@ defmodule Mailglass.ReleasePolicy do
   end
 
   defp reviewed_content(_), do: error(:invalid_content)
+
+  defp close_out_applicable(target) do
+    if target["status"] in ["authorized", "published", "completed"] and
+         target["states"]["capture"] == "captured" do
+      :ok
+    else
+      error(:close_out_not_applicable)
+    end
+  end
+
+  defp close_out_evidence_match(target, tag_sha, checksums) do
+    final_identity = target["final_identity"]
+
+    case final_identity["publication_evidence"] do
+      nil ->
+        :ok
+
+      evidence ->
+        with :ok <- exact_value(final_identity, "tag_sha", tag_sha),
+             :ok <- exact_value(evidence, "hex_release_checksums", checksums) do
+          :ok
+        else
+          {:error, _} -> error(:close_out_evidence_mismatch)
+        end
+    end
+  end
+
+  defp close_out_successor(target, tag_sha, checksums) do
+    baselines = target["candidate_versions"]
+
+    %{
+      "schema_version" => target["schema_version"],
+      "status" => "inactive",
+      "package_set" => target["package_set"],
+      "baselines" => baselines,
+      "candidate_versions" => nil,
+      "required_evidence_identifiers" => %{
+        "hex_package_endpoints" => target["required_evidence_identifiers"]["hex_package_endpoints"],
+        "hex_release_endpoints" => close_out_hex_release_endpoints(baselines),
+        "hex_release_checksums" => checksums,
+        "historical_tag" => "mailglass-v#{baselines["mailglass"]}",
+        "historical_tag_sha" => tag_sha
+      },
+      "proposal_identity" => %{"head_sha" => nil, "source_sha" => nil},
+      "publishable_content" => %{
+        "algorithm" => "sha256",
+        "digest" => nil,
+        "excludes" => [".planning/release-target.json"]
+      },
+      "final_identity" => %{"tag_sha" => nil},
+      "states" => %{
+        "capture" => "inactive",
+        "authorization" => "unauthorized",
+        "publication" => "not_started"
+      }
+    }
+  end
+
+  defp close_out_hex_release_endpoints(baselines) do
+    Map.new(@packages, fn package ->
+      {package, "https://hex.pm/api/packages/#{package}/releases/#{baselines[package]}"}
+    end)
+  end
 
   defp candidate_final_identity(value) do
     exact_value(%{"final_identity" => value}, "final_identity", %{"tag_sha" => nil})

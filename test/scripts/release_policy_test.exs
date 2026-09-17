@@ -295,6 +295,190 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
     end)
   end
 
+  test "close_out returns a hard-coded non-authorizing inactive successor for a published target" do
+    target = published_target()
+    tag_sha = target["final_identity"]["tag_sha"]
+    checksums = target["final_identity"]["publication_evidence"]["hex_release_checksums"]
+
+    assert {:ok, successor} = policy(:close_out, [target, tag_sha, checksums])
+
+    assert successor["status"] == "inactive"
+
+    assert successor["states"] == %{
+             "capture" => "inactive",
+             "authorization" => "unauthorized",
+             "publication" => "not_started"
+           }
+
+    assert successor["candidate_versions"] == nil
+    assert successor["proposal_identity"] == %{"head_sha" => nil, "source_sha" => nil}
+    assert successor["publishable_content"]["digest"] == nil
+    assert successor["final_identity"] == %{"tag_sha" => nil}
+
+    assert successor["baselines"] == target["candidate_versions"]
+
+    assert successor["required_evidence_identifiers"]["hex_release_endpoints"] ==
+             Map.new(@packages, fn package ->
+               {package,
+                "https://hex.pm/api/packages/#{package}/releases/#{target["candidate_versions"][package]}"}
+             end)
+
+    assert successor["required_evidence_identifiers"]["hex_release_checksums"] == checksums
+
+    assert successor["required_evidence_identifiers"]["historical_tag"] ==
+             "mailglass-v#{target["candidate_versions"]["mailglass"]}"
+
+    assert successor["required_evidence_identifiers"]["historical_tag_sha"] == tag_sha
+
+    assert successor["required_evidence_identifiers"]["hex_package_endpoints"] ==
+             target["required_evidence_identifiers"]["hex_package_endpoints"]
+
+    assert successor["package_set"] == target["package_set"]
+    assert successor["schema_version"] == target["schema_version"]
+
+    assert {:ok, ^successor} = policy(:validate_target, [successor])
+  end
+
+  test "close-out successor is non-authorizing for every accepted input status" do
+    for target <- [authorized_target(), published_target(), completed_target()] do
+      tag_sha = close_out_tag_sha(target)
+      checksums = close_out_checksums(target)
+
+      assert {:ok, successor} = policy(:close_out, [target, tag_sha, checksums])
+      assert successor["status"] == "inactive"
+
+      assert policy(:candidate_digest, [successor]) ==
+               {:error, %{reason: :inactive_candidate}}
+
+      assert policy(:expected_tags, [successor]) ==
+               {:error, %{reason: :inactive_candidate}}
+    end
+  end
+
+  test "close-out refuses inactive input, malformed evidence, and evidence tampering" do
+    published = published_target()
+    tag_sha = published["final_identity"]["tag_sha"]
+    checksums = published["final_identity"]["publication_evidence"]["hex_release_checksums"]
+
+    {:ok, already_inactive} = policy(:close_out, [published, tag_sha, checksums])
+
+    refutations = [
+      {already_inactive, tag_sha, checksums},
+      {published, "not-a-sha", checksums},
+      {published, tag_sha, Map.delete(checksums, "mailglass")},
+      {published, tag_sha, Map.put(checksums, "unknown", String.duplicate("a", 64))},
+      {published, tag_sha, Map.put(checksums, "mailglass", "short")},
+      {published, String.duplicate("9", 40), checksums},
+      {published, tag_sha, Map.put(checksums, "mailglass", String.duplicate("9", 64))}
+    ]
+
+    for {target, tag, cksum} <- refutations do
+      assert {:error, _} = policy(:close_out, [target, tag, cksum])
+    end
+  end
+
+  test "close-out advances baselines so the just-released versions are no longer new candidates" do
+    published = published_target()
+    tag_sha = published["final_identity"]["tag_sha"]
+    checksums = published["final_identity"]["publication_evidence"]["hex_release_checksums"]
+
+    assert {:ok, successor} = policy(:close_out, [published, tag_sha, checksums])
+
+    in_tmp(fn root ->
+      successor_path = write_json(root, "successor.json", successor)
+      released = successor["baselines"]
+
+      write_versions(
+        root,
+        released["mailglass"],
+        released["mailglass_admin"],
+        released["mailglass_inbound"]
+      )
+
+      write_json(root, ".release-please-manifest.json", %{
+        "." => released["mailglass"],
+        "mailglass_admin" => released["mailglass_admin"],
+        "mailglass_inbound" => released["mailglass_inbound"]
+      })
+
+      capture_args = [
+        "capture-candidate",
+        successor_path,
+        root,
+        String.duplicate("1", 40),
+        String.duplicate("2", 40),
+        String.duplicate("3", 64)
+      ]
+
+      refute_cli(capture_args)
+
+      higher = bumped_patch_versions(released)
+
+      write_versions(
+        root,
+        higher["mailglass"],
+        higher["mailglass_admin"],
+        higher["mailglass_inbound"]
+      )
+
+      write_json(root, ".release-please-manifest.json", %{
+        "." => higher["mailglass"],
+        "mailglass_admin" => higher["mailglass_admin"],
+        "mailglass_inbound" => higher["mailglass_inbound"]
+      })
+
+      assert_cli(capture_args, "candidate_versions")
+    end)
+  end
+
+  test "close-out CLI prints a deterministic pretty successor and fails closed on refusal" do
+    in_tmp(fn root ->
+      published = published_target()
+      tag_sha = published["final_identity"]["tag_sha"]
+      checksums = published["final_identity"]["publication_evidence"]["hex_release_checksums"]
+
+      target_path = write_json(root, "published.json", published)
+      checksums_path = write_json(root, "checksums.json", checksums)
+
+      {output_1, status_1} = run_cli(["close-out", target_path, tag_sha, checksums_path])
+      {output_2, status_2} = run_cli(["close-out", target_path, tag_sha, checksums_path])
+
+      assert status_1 == 0
+      assert status_2 == 0
+      assert output_1 == output_2
+      assert String.ends_with?(output_1, "\n")
+      assert {:ok, decoded} = Jason.decode(output_1)
+      assert decoded["status"] == "inactive"
+
+      bad_checksums_path =
+        write_json(root, "bad-checksums.json", Map.delete(checksums, "mailglass"))
+
+      {bad_output, bad_status} =
+        run_cli(["close-out", target_path, tag_sha, bad_checksums_path])
+
+      assert bad_status != 0
+      refute bad_output =~ "\"status\""
+    end)
+  end
+
+  test "the captured-output filter removes Mix's build-lock notice and nothing else" do
+    payload = "{\n  \"status\": \"inactive\"\n}\n"
+
+    # Verbatim shape observed in CI, ANSI reset included.
+    contaminated =
+      "\e[0mWaiting for lock on the build directory (held by process 8040)\n" <> payload
+
+    assert strip_mix_build_lock_notice(contaminated) == payload
+
+    # Anti-vacuity: an uncontaminated payload must pass through byte-for-byte,
+    # and a line that merely mentions locking must NOT be swallowed — the filter
+    # is allowed to remove Mix's notice, never the CLI's own diagnostics.
+    assert strip_mix_build_lock_notice(payload) == payload
+
+    cli_diagnostic = "release policy refused: waiting for lock on the build directory\n"
+    assert strip_mix_build_lock_notice(cli_diagnostic) == cli_diagnostic
+  end
+
   test "legacy direct script-style verification flags fail closed" do
     for flag <- ["--validate-candidate", "--verify-published", "--verify-complete"] do
       {output, status} = System.cmd("elixir", [@script, flag], stderr_to_stdout: true)
@@ -336,6 +520,28 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
         "publication" => "not_started"
       }
     }
+  end
+
+  defp authorized_target do
+    captured_target()
+    |> Map.put("status", "authorized")
+    |> put_in(["states", "authorization"], "authorized")
+  end
+
+  defp close_out_tag_sha(%{"status" => "authorized"}), do: String.duplicate("9", 40)
+  defp close_out_tag_sha(target), do: target["final_identity"]["tag_sha"]
+
+  defp close_out_checksums(%{"status" => "authorized"}),
+    do: Map.new(@packages, &{&1, String.duplicate("1", 64)})
+
+  defp close_out_checksums(target),
+    do: target["final_identity"]["publication_evidence"]["hex_release_checksums"]
+
+  defp bumped_patch_versions(versions) do
+    Map.new(versions, fn {package, version} ->
+      {:ok, parsed} = Version.parse(version)
+      {package, "#{parsed.major}.#{parsed.minor}.#{parsed.patch + 1}"}
+    end)
   end
 
   defp review_from(target) do
@@ -428,7 +634,27 @@ defmodule Mailglass.Scripts.ReleasePolicyTest do
     assert status != 0
   end
 
+  # `mix run` takes the `_build` lock. Under the full suite another async test
+  # can be holding it, and Mix then writes "Waiting for lock on the build
+  # directory (held by process N)" to stdout. With `stderr_to_stdout: true` that
+  # notice lands inside the captured CLI output and breaks the byte-exact
+  # determinism assertions — a contention-dependent flake that passes on a
+  # scoped run and fails in CI. Strip exactly that one Mix-emitted line (with any
+  # ANSI reset Mix prefixes it with) so the assertions describe the CLI's own
+  # output rather than Mix's chatter. Nothing else is filtered: the CLI's stdout
+  # and stderr both still reach every assertion verbatim.
+  @mix_build_lock_notice ~r/^(?:\e\[[0-9;]*m)*Waiting for lock on the build directory[^\n]*\n/m
+
   defp run_cli(arguments) do
+    {output, status} = raw_run_cli(arguments)
+    {strip_mix_build_lock_notice(output), status}
+  end
+
+  defp strip_mix_build_lock_notice(output) do
+    String.replace(output, @mix_build_lock_notice, "")
+  end
+
+  defp raw_run_cli(arguments) do
     System.cmd(
       "mix",
       [

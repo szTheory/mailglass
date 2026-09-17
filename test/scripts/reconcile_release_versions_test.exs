@@ -42,7 +42,14 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
 
     assert report.status == "reconciled"
     assert report.package_set == @packages
-    assert report.baselines == baseline_versions()
+
+    # Mirrors this test's own synthetic records, not the published baselines —
+    # the two were equal until 2.5.0 shipped, which is why they are now separate.
+    assert report.baselines == %{
+             "mailglass" => "2.4.1",
+             "mailglass_admin" => "2.4.1",
+             "mailglass_inbound" => "2.1.2"
+           }
 
     assert report.constraints == %{
              "mailglass_admin->mailglass" => "~> 2.0",
@@ -307,18 +314,40 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     assert File.read!(Path.join(@repo_root, "mailglass_inbound/CHANGELOG.md")) =~
              "## [2.1.2](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v2.1.1...mailglass_inbound-v2.1.2) (2026-08-03)"
 
+    # The published baselines this test now asserts against.
+    assert File.read!(Path.join(@repo_root, "CHANGELOG.md")) =~
+             "## [2.5.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.4.1...mailglass-v2.5.0) (2026-08-20)"
+
+    assert File.read!(Path.join(@repo_root, "mailglass_admin/CHANGELOG.md")) =~
+             "## [2.5.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.4.1...mailglass_admin-v2.5.0) (2026-08-20)"
+
+    assert File.read!(Path.join(@repo_root, "mailglass_inbound/CHANGELOG.md")) =~
+             "## [2.2.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v2.1.2...mailglass_inbound-v2.2.0) (2026-08-20)"
+
+    # Deliberately pinned to 2.4.1 rather than to baseline_versions/0. The 2.5.0
+    # publish fan-out advanced only mailglass_inbound's summary; the core and
+    # admin summaries were never rewritten, so 2.4.1 is what those files
+    # actually say. Asserting the real content keeps this test honest about the
+    # gap instead of hiding it. Tracked separately — do not "fix" by editing the
+    # summary files, which are publication evidence, not editable config.
+    stale_2_4_1_summary_linked_versions = %{
+      "mailglass" => "2.4.1",
+      "mailglass_admin" => "2.4.1",
+      "mailglass_inbound" => "2.1.2"
+    }
+
     expected_summaries = %{
       "mailglass" => %{
         "version" => "2.4.1",
         "manifest_version" => "2.4.1",
         "source_ref" => "v2.4.1",
-        "linked_versions" => baseline_versions()
+        "linked_versions" => stale_2_4_1_summary_linked_versions
       },
       "mailglass_admin" => %{
         "version" => "2.4.1",
         "manifest_version" => "2.4.1",
         "source_ref" => "v2.4.1",
-        "linked_versions" => baseline_versions()
+        "linked_versions" => stale_2_4_1_summary_linked_versions
       },
       "mailglass_inbound" => inbound_summary_expectation(repository_versions)
     }
@@ -580,8 +609,12 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     end)
   end
 
+  # The published baselines, read from Hex: 2.5.0/2.5.0/2.2.0 went live
+  # 2026-08-20. These trailed at 2.4.1/2.4.1/2.1.2 until the 2.5.0 release-target
+  # close-out, because the ledger stayed `authorized` and routed this test down
+  # its release-candidate branch instead of the published-baseline branch.
   defp baseline_versions do
-    %{"mailglass" => "2.4.1", "mailglass_admin" => "2.4.1", "mailglass_inbound" => "2.1.2"}
+    %{"mailglass" => "2.5.0", "mailglass_admin" => "2.5.0", "mailglass_inbound" => "2.2.0"}
   end
 
   defp release_candidate_tree?(repository_versions) do
@@ -608,11 +641,11 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
       }
     else
       %{
-        "version" => "2.1.2",
-        "manifest_version" => "2.1.2",
-        "source_ref" => "v2.1.2",
+        "version" => "2.2.0",
+        "manifest_version" => "2.2.0",
+        "source_ref" => "v2.2.0",
         "linked_versions" => baseline_versions(),
-        "mailglass_inbound_publish_pin" => "~> 2.0"
+        "mailglass_inbound_publish_pin" => "~> 2.5 and >= 2.5.0"
       }
     end
   end
@@ -625,17 +658,18 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     %{
       "hex_package_endpoints" => Map.new(@packages, &{&1, "https://hex.pm/api/packages/#{&1}"}),
       "hex_release_endpoints" => %{
-        "mailglass" => "https://hex.pm/api/packages/mailglass/releases/2.4.1",
-        "mailglass_admin" => "https://hex.pm/api/packages/mailglass_admin/releases/2.4.1",
-        "mailglass_inbound" => "https://hex.pm/api/packages/mailglass_inbound/releases/2.1.2"
+        "mailglass" => "https://hex.pm/api/packages/mailglass/releases/2.5.0",
+        "mailglass_admin" => "https://hex.pm/api/packages/mailglass_admin/releases/2.5.0",
+        "mailglass_inbound" => "https://hex.pm/api/packages/mailglass_inbound/releases/2.2.0"
       },
+      # Read from the Hex release API, never computed locally.
       "hex_release_checksums" => %{
-        "mailglass" => "364bd0b97955dd021a71b685c44d9748e51bc01d6350fb6a475beaac95767268",
-        "mailglass_admin" => "50944118e771bceefc31a6ebcd097339fa2212f092eab49fa0903603d27f2589",
-        "mailglass_inbound" => "1c98e323d7cb65bf20a624893604b2f2e8314e462913027c80ac47a3e734d730"
+        "mailglass" => "8ffab2c0708b5eb3b18693ec6df1b4ad105abc38d7041f1f7b7650cb046f05de",
+        "mailglass_admin" => "19a4400bb76631605424f6edba30905de50c1d31e8db6667ec31007222ba832c",
+        "mailglass_inbound" => "b3261d51b58fa8d69ffee7045507f9a0e2c57ea4b09be7f796378f267ad84cc2"
       },
-      "historical_tag" => "mailglass-v2.4.1",
-      "historical_tag_sha" => "587c9d1a09944de02220b3fa121ce937677a8c3a"
+      "historical_tag" => "mailglass-v2.5.0",
+      "historical_tag_sha" => "0f0b06861b1cbb2e89f44ea4f40db754effc4017"
     }
   end
 

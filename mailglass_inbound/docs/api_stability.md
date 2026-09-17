@@ -296,8 +296,30 @@ Stable operator behavior:
 - replays stored canonical and raw evidence truth
 - uses `[y/N]` confirmation unless `--yes` is supplied
 - never treats replay as a new provider receipt
+- resolves a record's mailbox from the durable route binding persisted on its
+  evidence row, and from no other source
 - does not promise public replay API, public rerouting controls, worker args,
   queue names, or job struct contracts
+
+Recorded behavioral change (2.2.0, `61e8c8e8`): the durable route binding became
+the sole source of a replay mailbox, and the prior path that resolved a mailbox
+from the module name persisted on an execution run was closed. Resolving a
+module from adopter-controlled stored text is an unsafe code-loading operation,
+so the narrowing is intentional and permanent.
+
+This is recorded here because it changed observable behavior on a `stable` seam
+under the 1.0 contract, and it is named rather than left implicit: inbound
+messages received before 2.2.0 carry no binding and are therefore permanently
+unreplayable. The records, their evidence, and their execution history remain
+intact, readable, and auditable — only replay is refused, and it is refused
+deterministically rather than failing partway. Messages received on 2.2.0 or
+later are unaffected; the ingress path writes the binding on every evidence row.
+
+No backfill seam is offered or planned. Reconstructing a binding would require
+either the closed unsafe resolution or re-running current routing config against
+historical evidence, which can bind a message to a mailbox that never received
+it. Adopters needing pre-2.2.0 replay should raise the specific case rather than
+infer a remediation from source reachability.
 
 #### `mix mailglass.inbound.prune`
 

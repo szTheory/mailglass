@@ -565,7 +565,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       InboundFixtures.seed_matched!(@tenant_id, recipient: "local@example.com")
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id, "full" => "1"})
+        )
 
       assert html =~ ~s(data-testid="inbound-detail-error")
 
@@ -824,7 +827,10 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       assert html =~ ~s(data-testid="inbound-routing-trace")
       assert html =~ "Routing trace"
@@ -862,7 +868,10 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       # Exact recipient matcher verbatim (route 1: recipient "support@example.com").
       assert html =~ "support@example.com"
@@ -894,7 +903,10 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       assert html =~ ~s(data-testid="inbound-evidence-card")
       assert html =~ "Raw provider source"
@@ -921,7 +933,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       before_count = run_count(record.id)
 
       {:ok, view, _html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       view |> element("button[phx-click='open_replay']") |> render_click()
 
@@ -941,7 +956,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert latest.source == :replay
     end
 
-    test "replaying a :no_match record is blocked with the mailbox-missing copy and appends no run (V11)",
+    test "replaying a :no_match record is blocked with the no-prior-match copy and appends no run (V11)",
          %{conn: conn} do
       conn = operator_conn(conn)
 
@@ -951,13 +966,49 @@ defmodule MailglassAdmin.InboundLiveTest do
       before_count = run_count(record.id)
 
       {:ok, view, _html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       # The confirm path is defensively mapped even though the button is disabled
       # in the header (render→click race) — drive the event directly.
       html = render_click(view, "confirm_replay", %{})
 
-      assert html =~ "Replay blocked: mailbox module not found."
+      assert html =~
+               "Replay unavailable: no mailbox matched this message when it was received, so there is no route to replay it through."
+
+      assert run_count(record.id) == before_count
+    end
+
+    test "replaying a pre-v2.6 (pre-binding) record names the real cause and appends no run",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+
+      # A row ingested before 61e8c8e8 made the durable route binding the sole
+      # source of a replay mailbox. It matched at receive time and persisted a
+      # mailbox string, but resolving that string is the unsafe operation the
+      # ratchet deliberately closed -- so the row can never replay, and the copy
+      # must say so rather than implying a fixable misconfiguration.
+      %{record: record} =
+        InboundFixtures.seed_pre_binding_matched!(@tenant_id, recipient: "legacy@example.com")
+
+      before_count = run_count(record.id)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      html = render_click(view, "confirm_replay", %{})
+
+      assert html =~
+               "Replay unavailable: this message was received before mailglass_inbound 2.6 recorded a durable route binding"
+
+      # The operator must not be pointed at a missing module they could "fix".
+      refute html =~ "mailbox module not found"
+      refute_banned(html)
       assert run_count(record.id) == before_count
     end
 
@@ -991,7 +1042,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       before_count = run_count(record.id)
 
       {:ok, view, _html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       html = render_click(view, "confirm_replay", %{})
 
@@ -1402,7 +1456,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       _evidence = InboundFixtures.insert_evidence!(@tenant_id, record.id)
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       assert html =~ "No execution runs have been recorded for this message yet."
       refute_banned(html)
@@ -1415,7 +1472,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       %{record: matched} = InboundFixtures.seed_matched!(@tenant_id, recipient: "ok@example.com")
 
       {:ok, view1, _html} =
-        live(conn1, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => matched.id, "full" => "1"}))
+        live(
+          conn1,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => matched.id, "full" => "1"})
+        )
 
       success_html = render_click(view1, "confirm_replay", %{})
 
@@ -1429,10 +1489,16 @@ defmodule MailglassAdmin.InboundLiveTest do
       %{record: nomatch} = InboundFixtures.seed_no_match!(@tenant_id, recipient: "nm@example.com")
 
       {:ok, view2, _html} =
-        live(conn2, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => nomatch.id, "full" => "1"}))
+        live(
+          conn2,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => nomatch.id, "full" => "1"})
+        )
 
       block_html = render_click(view2, "confirm_replay", %{})
-      assert block_html =~ "Replay blocked: mailbox module not found."
+
+      assert block_html =~
+               "Replay unavailable: no mailbox matched this message when it was received, so there is no route to replay it through."
+
       refute_banned(block_html)
 
       # Not authorized (denied capability).
@@ -1440,7 +1506,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       %{record: denied} = InboundFixtures.seed_matched!(@tenant_id, recipient: "no@example.com")
 
       {:ok, view3, _html} =
-        live(conn3, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => denied.id, "full" => "1"}))
+        live(
+          conn3,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => denied.id, "full" => "1"})
+        )
 
       denied_html = render_click(view3, "confirm_replay", %{})
 
@@ -1460,7 +1529,10 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       {:ok, view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       assert html =~
                "Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability."
@@ -1481,7 +1553,10 @@ defmodule MailglassAdmin.InboundLiveTest do
         InboundFixtures.seed_no_match!(@tenant_id, recipient: "trace@example.com")
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       assert html =~ "Routing trace"
       assert html =~ "Why this message did not match"
@@ -1509,7 +1584,10 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       # Detail + routing-trace surfaces (selected).
       {:ok, _view2, detail_html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       # Masked in the detail header AND the routing-trace recipient "actual".
       assert detail_html =~ masked
@@ -1530,7 +1608,10 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       {:ok, _view, redacted_html} =
-        live(conn1, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn1,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       refute redacted_html =~ secret
 
@@ -1538,7 +1619,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       conn2 = operator_conn(conn)
 
       {:ok, view2, _html} =
-        live(conn2, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn2,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       revealed_html = render_click(view2, "reveal_raw", %{})
       assert revealed_html =~ secret
@@ -1782,7 +1866,10 @@ defmodule MailglassAdmin.InboundLiveTest do
         InboundFixtures.seed_matched!(@tenant_id, recipient: "motion@example.com")
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       assert html =~ ~s(id="inbound-detail-#{record.id}")
     end
