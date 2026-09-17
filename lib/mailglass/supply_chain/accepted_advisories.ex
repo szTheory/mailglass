@@ -56,8 +56,10 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
         }
 
   # cowlib (transitive via cowboy/plug_cowboy/phoenix; unavoidable for any web
-  # server) — these entries have no upstream fix as of cowlib 2.19.0 per Hex's
-  # own hex.audit/EEF-CVE database.
+  # server) — upstream has PERMANENTLY declined to fix these, on principle
+  # (ninenines/cowlib#167, 2026-08-06). This is not a "not yet fixed" holding
+  # pattern; see each entry's :reason for the source-verified evidence and the
+  # named falsifiable re-check for the next recheck_by cycle.
   @entries [
     %{
       id: "EEF-CVE-2026-43966",
@@ -65,12 +67,26 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
       package: "cowlib",
       severity: "MEDIUM",
       reason:
-        "HTTP Response Splitting via non-VCHAR bytes; no upstream fix as of cowlib 2.19.0 " <>
-          "(Hex hex.audit/EEF-CVE database); absent from mirego's mix_audit DB under cowlib " <>
-          "entirely (an upstream data gap, not a suppression); transitive via " <>
-          "cowboy/plug_cowboy/phoenix, unavoidable for any web server.",
+        "HTTP Response Splitting via non-VCHAR bytes. Permanently declined by upstream, not " <>
+          "pending: all six fix PRs on ninenines/cowlib (#154, #163, #164, #165, #166, #169) " <>
+          "were closed unmerged by the maintainer on principle — \"Both CVEs are invalid " <>
+          "because this type of validation is done at a different level... Neither Gun nor " <>
+          "Cowboy are vulnerable\" (ninenines/cowlib#167, 2026-08-06; " <>
+          "https://ninenines.eu/articles/security-strategy/). Directly verified against " <>
+          "cowlib 2.20.0 source on 2026-09-17: cow_cookie:cookie/1 emits values verbatim and " <>
+          "cow_http_struct_hd:escape_string/2 escapes only backslash and double-quote, " <>
+          "passing CR/LF through. OSV re-confirmed this advisory on 2026-09-09 — one day " <>
+          "after cowlib 2.20.0 shipped to Hex on 2026-09-08 — with a SEMVER range carrying an " <>
+          "introduced: 2.9.0 event and no fixed event. No upgrade escape exists: cowlib " <>
+          "2.20.0 is the latest release and cowboy 2.19.0 requires cowlib >= 2.20.0 and < " <>
+          "3.0.0, so the repo is already on the newest of both. mailglass inherits the " <>
+          "framework-layer mitigation via plug_cowboy: Cowboy 2.16.0+ " <>
+          "invalid_response_headers and Gun 2.4.0+ invalid_request_headers. Absent from " <>
+          "mirego's mix_audit DB under cowlib entirely (GHSA-w4f7-4cxr-rv3c 404s — an " <>
+          "upstream data gap, not a suppression). Next recheck: does a cowlib release above " <>
+          "2.20.0 validate input, or does OSV add a fixed event.",
       accepted_on: ~D[2026-07-28],
-      recheck_by: ~D[2026-10-26]
+      recheck_by: ~D[2027-03-17]
     },
     %{
       id: "EEF-CVE-2026-43969",
@@ -78,14 +94,29 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
       package: "cowlib",
       severity: "LOW",
       reason:
-        "Cookie Request Header Injection; no upstream fix as of cowlib 2.19.0 (Hex " <>
-          "hex.audit/EEF-CVE database); mirego's mix_audit DB range for this advisory closes " <>
-          "at <= 2.16.1, so mix deps.audit no longer flags cowlib 2.19.0 for it — the entry " <>
+        "Cookie Request Header Injection. Permanently declined by upstream, not pending: all " <>
+          "six fix PRs on ninenines/cowlib (#154, #163, #164, #165, #166, #169) were closed " <>
+          "unmerged by the maintainer on principle — \"Both CVEs are invalid because this " <>
+          "type of validation is done at a different level... Neither Gun nor Cowboy are " <>
+          "vulnerable\" (ninenines/cowlib#167, 2026-08-06; " <>
+          "https://ninenines.eu/articles/security-strategy/). Directly verified against " <>
+          "cowlib 2.20.0 source on 2026-09-17: cow_cookie:cookie/1 emits values verbatim and " <>
+          "cow_http_struct_hd:escape_string/2 escapes only backslash and double-quote, " <>
+          "passing CR/LF through. OSV re-confirmed this advisory on 2026-09-09 — one day " <>
+          "after cowlib 2.20.0 shipped to Hex on 2026-09-08 — with a SEMVER range carrying an " <>
+          "introduced: 2.9.0 event and no fixed event. No upgrade escape exists: cowlib " <>
+          "2.20.0 is the latest release and cowboy 2.19.0 requires cowlib >= 2.20.0 and < " <>
+          "3.0.0, so the repo is already on the newest of both. mailglass inherits the " <>
+          "framework-layer mitigation via plug_cowboy: Cowboy 2.16.0+ " <>
+          "invalid_response_headers and Gun 2.4.0+ invalid_request_headers. mirego's " <>
+          "mix_audit DB range for this advisory has empty first_patched_versions and closes " <>
+          "at <= 2.16.1, so mix deps.audit no longer flags cowlib 2.20.0 for it — the entry " <>
           "stays because the Hex-native hex.audit side still reports it live; this is WHY " <>
           "expired_entries/1 and unused_entries/1 are scoped to --kind hex only, not a " <>
-          "contradiction.",
+          "contradiction. Next recheck: does a cowlib release above 2.20.0 validate input, " <>
+          "or does OSV add a fixed event.",
       accepted_on: ~D[2026-07-28],
-      recheck_by: ~D[2026-10-26]
+      recheck_by: ~D[2027-03-17]
     }
   ]
 

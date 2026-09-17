@@ -146,18 +146,18 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisoriesTest do
   end
 
   describe "expired_entries/1" do
-    # Both remaining entries carry recheck_by 2026-10-26, so the boundary pair
-    # below exercises the same two ids. That is a property of the current
-    # allowlist, not a weakened test: the strictly-after semantics are still
-    # pinned on both sides of the boundary. The dates moved here when the
-    # cowlib EEF-CVE-2026-43971 entry was dropped, which had the earlier
-    # 2026-09-18 recheck date.
+    # Both remaining entries carry recheck_by 2027-03-17 (CTRL-04, D-30: a
+    # 6-month extension on the permanent-refusal framing — see each entry's
+    # :reason), so the boundary pair below exercises the same two ids. That
+    # is a property of the current allowlist, not a weakened test: the
+    # strictly-after semantics are still pinned on both sides of the
+    # boundary.
     test "an entry whose recheck_by is exactly today is NOT flagged (strictly-after semantics)" do
-      assert AcceptedAdvisories.expired_entries(~D[2026-10-26]) == []
+      assert AcceptedAdvisories.expired_entries(~D[2027-03-17]) == []
     end
 
     test "an entry whose recheck_by was yesterday IS flagged" do
-      result = AcceptedAdvisories.expired_entries(~D[2026-10-27])
+      result = AcceptedAdvisories.expired_entries(~D[2027-03-18])
 
       assert Enum.map(result, & &1.id) == [
                "EEF-CVE-2026-43966",
@@ -165,13 +165,8 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisoriesTest do
              ]
     end
 
-    test "reports every entry after the latest recheck date" do
-      result = AcceptedAdvisories.expired_entries(~D[2026-12-01])
-
-      assert Enum.map(result, & &1.id) == [
-               "EEF-CVE-2026-43966",
-               "EEF-CVE-2026-43969"
-             ]
+    test "no entries are flagged at the old (superseded) 2026-12-01 boundary" do
+      assert AcceptedAdvisories.expired_entries(~D[2026-12-01]) == []
     end
 
     test "no entries are flagged before recheck_by has arrived" do
