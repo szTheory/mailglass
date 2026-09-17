@@ -44,7 +44,7 @@ a glance; a false green is why the admin blind spot hid two failures for four we
       *Accept:* the `Support Contract Admin` lane log reports ≥510 tests, not 185, with 0 failures.
 - [x] **GREEN-02**: `mailglass_admin` enforces a coverage floor in CI, as core and inbound already do.
       *Accept:* the admin lane fails when coverage drops below the committed threshold.
-- [ ] **GREEN-03**: The required `core_deterministic_suite` lane enforces its own anti-vacuity floor.
+- [x] **GREEN-03**: The required `core_deterministic_suite` lane enforces its own anti-vacuity floor.
       `MAILGLASS_SUITE_FLOOR: "1"` is set, and `@suite_floor_env_occurrences` in
       `lane_classification_drift_test.exs:56` moves 2 → 3 in the same change.
       *Accept:* the lane's log prints `scope: FULL SUITE (MAILGLASS_SUITE_FLOOR=1)` instead of
@@ -205,7 +205,7 @@ Populated 2026-09-17 during roadmap creation.
 |-------------|-------|--------|
 | GREEN-01 | Phase 166 | Complete |
 | GREEN-02 | Phase 166 | Complete |
-| GREEN-03 | Phase 166 | Pending |
+| GREEN-03 | Phase 166 | Complete |
 | GREEN-04 | Phase 166 | Pending |
 | GREEN-05 | Phase 166 | Pending |
 | CTRL-01 | Phase 166 | Pending |

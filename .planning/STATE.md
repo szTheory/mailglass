@@ -5,16 +5,16 @@ milestone_name: Truthful Repo
 current_phase: 166
 current_phase_name: Earned Greens and Controls That Can Pass
 status: executing
-stopped_at: Completed 166-01-PLAN.md (GREEN-01/GREEN-02)
-last_updated: "2026-09-17T21:54:43.486Z"
+stopped_at: Completed 166-02-PLAN.md (GREEN-03)
+last_updated: "2026-09-17T22:07:33.623Z"
 last_activity: 2026-09-17
 last_activity_desc: Phase 166 execution started
-state_head: 71609b4fd78414402351ba894a628be0dfd261c9
+state_head: 4511c205da5e0cd280a900d2ec7756e824097d73
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 6
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -38,7 +38,7 @@ tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
 ## Current Position
 
 Phase: 166 (Earned Greens and Controls That Can Pass) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-09-17 — Phase 166 execution started
 
@@ -209,6 +209,7 @@ Last activity: 2026-09-17 — Phase 166 execution started
 | Phase 165 P04 | 8m | 2 tasks | 1 files |
 | Phase 165 P05 | 25m | 2 tasks | 4 files |
 | Phase 166 P01 | 24min | 3 tasks | 5 files |
+| Phase 166 P02 | 15min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -334,6 +335,7 @@ Last activity: 2026-09-17 — Phase 166 execution started
 - [Phase 165]: The archive checkpoint binds a fresh exact preview while scoped git.create_tag=false is restored byte-for-byte before convergence.
 - [Phase 165]: Final state publication and commit precede protected exact-SHA evidence and the one permitted installed terminal invocation.
 - [Phase 166]: GREEN-01/GREEN-02: widened verify.support_contract.admin to directory-scoped run (325 newly-executed tests) and wired a measured ExCoveralls coverage floor for mailglass_admin, demonstrated (not asserted) to fire on regression.
+- [Phase 166]: GREEN-03: enforced the anti-vacuity suite floor on the required core_deterministic_suite lane by setting MAILGLASS_SUITE_FLOOR: "1" in ci.yml, guarded by a new occurrence-count drift test mirroring the advisory-matrix.yml trio; no floor constants were re-pinned (measured 2134 executed vs 1576 floor, 7 skipped == 7 ceiling).
 
 ## Quick Tasks Completed
 
@@ -351,8 +353,8 @@ Last activity: 2026-09-17 — Phase 166 execution started
 
 ## Session Continuity
 
-Last session: 2026-09-17T21:54:43.469Z
-Stopped at: Completed 166-01-PLAN.md (GREEN-01/GREEN-02)
+Last session: 2026-09-17T22:07:33.605Z
+Stopped at: Completed 166-02-PLAN.md (GREEN-03)
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.
