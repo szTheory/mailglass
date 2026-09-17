@@ -1,21 +1,17 @@
 {
   "schema_version": 1,
-  "status": "authorized",
+  "status": "inactive",
   "package_set": [
     "mailglass",
     "mailglass_admin",
     "mailglass_inbound"
   ],
   "baselines": {
-    "mailglass": "2.4.1",
-    "mailglass_admin": "2.4.1",
-    "mailglass_inbound": "2.1.2"
-  },
-  "candidate_versions": {
     "mailglass": "2.5.0",
     "mailglass_admin": "2.5.0",
     "mailglass_inbound": "2.2.0"
   },
+  "candidate_versions": null,
   "required_evidence_identifiers": {
     "hex_package_endpoints": {
       "mailglass": "https://hex.pm/api/packages/mailglass",
@@ -23,25 +19,25 @@
       "mailglass_inbound": "https://hex.pm/api/packages/mailglass_inbound"
     },
     "hex_release_endpoints": {
-      "mailglass": "https://hex.pm/api/packages/mailglass/releases/2.4.1",
-      "mailglass_admin": "https://hex.pm/api/packages/mailglass_admin/releases/2.4.1",
-      "mailglass_inbound": "https://hex.pm/api/packages/mailglass_inbound/releases/2.1.2"
+      "mailglass": "https://hex.pm/api/packages/mailglass/releases/2.5.0",
+      "mailglass_admin": "https://hex.pm/api/packages/mailglass_admin/releases/2.5.0",
+      "mailglass_inbound": "https://hex.pm/api/packages/mailglass_inbound/releases/2.2.0"
     },
     "hex_release_checksums": {
-      "mailglass": "364bd0b97955dd021a71b685c44d9748e51bc01d6350fb6a475beaac95767268",
-      "mailglass_admin": "50944118e771bceefc31a6ebcd097339fa2212f092eab49fa0903603d27f2589",
-      "mailglass_inbound": "1c98e323d7cb65bf20a624893604b2f2e8314e462913027c80ac47a3e734d730"
+      "mailglass": "8ffab2c0708b5eb3b18693ec6df1b4ad105abc38d7041f1f7b7650cb046f05de",
+      "mailglass_admin": "19a4400bb76631605424f6edba30905de50c1d31e8db6667ec31007222ba832c",
+      "mailglass_inbound": "b3261d51b58fa8d69ffee7045507f9a0e2c57ea4b09be7f796378f267ad84cc2"
     },
-    "historical_tag": "mailglass-v2.4.1",
-    "historical_tag_sha": "587c9d1a09944de02220b3fa121ce937677a8c3a"
+    "historical_tag": "mailglass-v2.5.0",
+    "historical_tag_sha": "0f0b06861b1cbb2e89f44ea4f40db754effc4017"
   },
   "proposal_identity": {
-    "head_sha": "d0369ba76c1f5d033d4d10b804050fa76c784756",
-    "source_sha": "77774f1085e6f07ecaa9e595116cd33827b750a2"
+    "head_sha": null,
+    "source_sha": null
   },
   "publishable_content": {
     "algorithm": "sha256",
-    "digest": "1f2202e829cbb26b876fee41c6730f9c5dab7a5dcb04a9aeb9cb5368088e6831",
+    "digest": null,
     "excludes": [
       ".planning/release-target.json"
     ]
@@ -50,8 +46,8 @@
     "tag_sha": null
   },
   "states": {
-    "capture": "captured",
-    "authorization": "authorized",
+    "capture": "inactive",
+    "authorization": "unauthorized",
     "publication": "not_started"
   }
 }
