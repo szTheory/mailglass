@@ -109,18 +109,22 @@ the `Hex Audit` advisories expire `2026-10-26` and red a required lane on 2026-1
 1. The `Support Contract Admin` lane log reports **≥510 tests, 0 failures** (not 185), driven by a
    directory-scoped run in both CI and `mix ci`; and the admin lane fails when coverage drops below its
    committed threshold. *(GREEN-01, GREEN-02 — exit criterion 1)*
+
 2. The required `core_deterministic_suite` lane log prints
    `scope: FULL SUITE (MAILGLASS_SUITE_FLOOR=1)` instead of "scoped run … floor not evaluated", and
    `lane_classification_drift_test.exs` is green in the same change. *(GREEN-03 — exit criterion 2)*
+
 3. A CI lane resolves the demo app's **Hex** deps rather than path deps to the working tree
    (`MAILGLASS_DEMO_DEPS` set where the demo is built); and the trust-lane deps-cache question is
    closed in writing — either the cache keys are disambiguated, or a committed note demonstrates the
    lanes cannot contaminate each other. *(GREEN-04, GREEN-05)*
+
 4. A `workflow_dispatch` of `post-publish-smoke`'s **schedule path** against the current `inactive`
    ledger exits 0 and uploads `post-publish-resolution.json` (dispatch semantics for a live release
    unchanged); and `mix mailglass.audit --kind hex` passes with the system clock faked to
    `2026-12-01`, each advisory disposition citing the evidence it was re-verified against.
    *(CTRL-01, CTRL-04 — exit criteria 3, 5)*
+
 5. Three consecutive pushes to `main` yield a green `release-please` run with `push` and `schedule`
    agreeing at the same SHA (`cannot-check` still never reports as `pass`); and two consecutive
    scheduled `repo-hygiene` runs conclude `success` with `status: pass` while a freshly opened healthy
@@ -131,18 +135,22 @@ the `Hex Audit` advisories expire `2026-10-26` and red a required lane on 2026-1
 - **GREEN-03 is a two-file atomic change.** Setting `MAILGLASS_SUITE_FLOOR: "1"` requires bumping
   `@suite_floor_env_occurrences` 2 → 3 in `lane_classification_drift_test.exs:56` **in the same
   change**, or the lane-classification drift test reds.
+
 - **CTRL-02 and CTRL-03 are two composing halves of one red** — cause (redundant action re-run against
   an already-tagged SHA on `push`) and symptom (a transient GitHub API failure reported as a control
   failure). They land together or in immediate sequence; neither alone produces criterion 5.
+
 - **CTRL-03's rate limit is a *secondary* limit** (all 15 buckets read full during a 403). Reducing
   cron frequency is not a fix and is explicitly out of scope.
+
 - **GREEN-01 makes CI slower. That is accepted** (SEED-006 CI efficiency overhaul stays deferred).
 - **GREEN-05 will not accept a "probably fine" verdict** — a refutation must be demonstrated, not
   asserted.
+
 - Ordering inside the phase: GREEN-01 first (largest blast radius, earliest discovery), CTRL-04 no
   later than mid-phase (calendar deadline 2026-10-27).
 
-**Plans:** 3/6 plans executed (one per D-37 PR, with PR-5 split into two plans for context budget — 166-05 and
+**Plans:** 4/6 plans executed (one per D-37 PR, with PR-5 split into two plans for context budget — 166-05 and
 166-06 land in the same PR). Waves are strictly sequential, honoring the WIP limit of 1 open PR.
 
 Plans:
@@ -160,7 +168,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 166-04-PLAN.md — PR-4: remove the redundant release-please re-run and add bounded retry/classification (CTRL-02, CTRL-03)
+- [x] 166-04-PLAN.md — PR-4: remove the redundant release-please re-run and add bounded retry/classification (CTRL-02, CTRL-03)
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
@@ -188,14 +196,17 @@ the control behavior Phase 166 establishes)
    `docs_contract_test.exs:558` having moved **in the same commit** (or the guide brought under the
    release-please README-sync), and `guides/compatibility-and-deprecations.md:207-212`'s
    exact-sibling-pin claim corrected. *(DOCS-04 — exit criterion 6)*
+
 2. No accepted config key is inert and no moduledoc describes behavior absent from code:
    `config :mailglass, renderer: [css_inliner: :none]` is either honored or rejected at validation
    (pinned by a test), `lib/mailglass/outbound.ex`'s orphan-`:queued` reconciliation claim is
    corrected, and `docs/api_stability.md:1119`'s non-existent injected
    `import Swoosh.Email, except: [new: 0]` is corrected — core suite green. *(DOCS-05)*
+
 3. No statement in `STATE.md` is falsified by `gh pr list`, `gh issue list`, or a live suite run — the
    two fixed `InboundLiveTest` reds, closed PRs #222/#129, and the "14 open PRs" count are truthed up.
    *(DOCS-01 — exit criterion 7)*
+
 4. A `grep` for each named stale claim returns nothing: `CLAUDE.md`'s auto-merge, `== <version>`
    sibling-pin (:56) and inbound "stable 1.0 contract" (:15) claims; `CONTRIBUTING.md:187-191`'s
    mandatory `fix(inbound):` floor bump; `MAINTAINING.md`'s "twelve exclude-paths" (:137, actually 14)
@@ -205,6 +216,7 @@ the control behavior Phase 166 establishes)
    close-out from it alone. `README.md:280-284` links `guides/upgrading-to-v2_0.md`, and
    `CHANGELOG.md:171-173`'s 2.0.0 BREAKING block names the Postgres schema move.
    *(DOCS-02, DOCS-03, DOCS-06 — exit criterion 6)*
+
 5. Each `mix` entry in `.github/dependabot.yml` carries minor/patch grouping, a weekly schedule, and
    `open-pull-requests-limit: 3`, with majors left ungrouped so a breaking bump stays individually
    reviewable — a week's bumps arriving as ≤1 PR per lock directory, CI green with no hand edits.
@@ -214,12 +226,16 @@ the control behavior Phase 166 establishes)
 
 - **DOCS-04 is the Phase 125 pin-drift shape.** The guide text and `docs_contract_test.exs:558` are a
   two-file lockstep; splitting them produces a deterministic red. It is not a free one-liner.
+
 - **DOCS-02 is internally contradictory today** — `CLAUDE.md:56`'s `== <version>` pin claim contradicts
   line 24 of the same file. Both statements must end up agreeing with the `~>` reality.
+
 - **DOCS-05 is the milestone's only permitted `lib/` change**, and may legitimately be resolved by
   *rejecting* the `css_inliner` key at validation rather than implementing it.
+
 - **Each correction must be pinned by a test or generated, not merely proofread.** That is what makes
   this milestone terminate rather than recur as v2.9.
+
 - **STAND-01 is exactly one new control.** The alert budget says adding another requires retiring one.
   If a grouped PR reds, drop the culprit with `ignore` and re-run — do not ungroup.
 
@@ -229,7 +245,7 @@ the control behavior Phase 166 establishes)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 166. Earned Greens and Controls That Can Pass | 3/6 | In Progress|  |
+| 166. Earned Greens and Controls That Can Pass | 4/6 | In Progress|  |
 | 167. Truthful Documentation and the Standing Control | 0/? | Not started | - |
 
 ## Milestone Exit Criteria (v2.8)

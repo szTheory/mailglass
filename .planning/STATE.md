@@ -1,21 +1,21 @@
 ---
-gsd_state_version: "1.0"
+gsd_state_version: 1.0
 milestone: v2.8
 milestone_name: Truthful Repo
 current_phase: 166
 current_phase_name: Earned Greens and Controls That Can Pass
 status: executing
-stopped_at: Completed 166-03-PLAN.md (CTRL-04)
-last_updated: "2026-09-18T00:29:09.389Z"
+stopped_at: Completed 166-04-PLAN.md (CTRL-02/CTRL-03 code merged; Task 3 post-merge evidence pending)
+last_updated: "2026-09-18T02:00:15.199Z"
 last_activity: 2026-09-17
 last_activity_desc: Phase 166 execution started
-state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
+state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 ---
 
 # Project State
@@ -38,7 +38,7 @@ tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
 ## Current Position
 
 Phase: 166 (Earned Greens and Controls That Can Pass) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-09-17 — Phase 166 execution started
 
@@ -48,16 +48,20 @@ Last activity: 2026-09-17 — Phase 166 execution started
   surface previously-unrun failures (GREEN-01 exposes 325 never-executed admin tests; all 510 pass
   locally today, so blast radius is bounded but nonzero), and because CTRL-04 has a calendar deadline
   of **2026-10-27**.
+
 - **Phase 167** — DOCS-01..06 + STAND-01 (7 requirements). Genuinely independent; safely last.
 - **Exactly two phases. There is no Phase 168.** Hard timebox 5 working days, WIP limit 1 open PR.
   On day 5, ship what is done and close regardless.
+
 - **Stop line:** every claim the repo makes about itself is either true or tested. Anything discovered
   that is not one of the 17 requirements is **filed, not fixed**.
+
 - **Standing prohibition:** no phase may satisfy a requirement by weakening a gate, relaxing a
   fail-closed control, deleting an expiry, lowering a test's rigor, or narrowing a generator.
   Pre-refused by name: `cron-guard` `continue-on-error` / dropping a cron; deleting the
   `recheck_by` / `unused_entries` machinery; lowering `max_runs` or narrowing the inbound property
   generator.
+
 - **No product code changes.** DOCS-05's `css_inliner` disposition is the single permitted `lib/` change.
 - Known cross-file locksteps: GREEN-03 ⇒ `@suite_floor_env_occurrences` 2 → 3 in
   `lane_classification_drift_test.exs:56` *in the same change*; DOCS-04 ⇒
@@ -71,23 +75,28 @@ Last activity: 2026-09-17 — Phase 166 execution started
   scoped `git.create_tag=false` override defined in `165-FINALIZATION.md` §2, restored byte-for-byte
   afterward. Archived to `.planning/milestones/v2.7-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and
   `v2.7-phases/`. **No `v2.7` tag exists and none may be created.**
+
 - Closeout type: `override_closeout`. `init.manager` projected Phases 161 and 165 `stale` — a timestamp
   heuristic firing on the runbook-mandated completion-metadata commits, not an unverified phase; both
   VERIFICATION.md records are `status: passed` (161: 21/21, 165: 5/5).
+
 - **Known verification overrides: 0 newly acknowledged, 0 carried forward.** The pre-close artifact
   audit's 27 open items (23 deferred, 3 UAT gaps, 1 verification gap) all belong to already-archived
   milestones (v0.2, v1.1, v1.13, v1.14, v2.0, v2.2) and were deliberately not acknowledged into v2.7;
   acknowledging them would attribute foreign debt to this milestone. They remain open against their own.
+
 - Phase 164 completed successfully at protected-main SHA
   `851e3640f7f0eb6e784611d157e3a7329f87e2dc`. Its ignored terminal report is immutable historical
   evidence only; Phase 164 pending/current-authority statements retained in the accumulated execution
   history below are not live milestone blockers or v2.7 terminal authority.
+
 - **Sections 1–5(CI) of `165-FINALIZATION.md` are complete.** Canonical audit, archive preview,
   approved archive, final tracked convergence, and protected-main integration all ran. The archive is
   on protected `main` at **`79247dafbb3b2d3a56114127e1e96e62cbcf33db`** (PR #257, squash), and the
   push-CI requirement is satisfied exactly: workflow `CI`, event `push`, branch `main`, that exact SHA,
   attempt 1, completed/success (run 35108991834). The runbook now lives at
   `milestones/v2.7-phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md`.
+
 - **v2.7 closes ARCHIVED WITHOUT TERMINAL PROOF. Sections 6–7 are not achievable under current
   policy and are not pending work.** The runbook also requires all three registered scheduled controls
   to report `completed/success` at that exact SHA. All three fail closed *by design*, on one shared
@@ -101,6 +110,7 @@ Last activity: 2026-09-17 — Phase 166 execution started
   fail-closed under exactly the condition v2.7 chose to accept. Recorded as a known contract
   contradiction, not a gap in the milestone: the archive is complete and green on protected `main`, and
   the terminal report was always ignored-only evidence, never the deliverable.
+
 - **CORRECTION (2026-09-16), appended rather than rewritten so the archived reasoning stays readable
   as written:** the bullet above attributes the `release-please` → `proposal_identity_mismatch` red to
   open proposal PR #222. That attribution is **wrong**. #222 was closed on 2026-09-16 and the control
@@ -110,9 +120,11 @@ Last activity: 2026-09-17 — Phase 166 execution started
   the pipeline ever wrote the ledger and every release would otherwise strand it the same way. This
   does **not** reopen §6–7: `repo-hygiene` and `post-publish-smoke` remain blocked on the accepted
   open-PR debt exactly as recorded, so the terminal-proof conclusion is unchanged.
+
 - Re-opening §6–7 is a **deliberate future decision**, valid only if the accepted debt is disposed or
   the terminal contract is relaxed. Until then, absence of schedule evidence is the expected steady
   state — never authority to dispatch, rerun, close a PR, or publish.
+
 - Repository hygiene remains policy-blocked by 14 open PRs as accepted operational debt. Legacy quick
   tasks stay outside v2.7, and no PR closure, tag push, branch deletion, workflow dispatch or rerun,
   merge bypass, release, or publication is authorized.
@@ -211,6 +223,7 @@ Last activity: 2026-09-17 — Phase 166 execution started
 | Phase 166 P01 | 24min | 3 tasks | 5 files |
 | Phase 166 P02 | 15min | 2 tasks | 2 files |
 | Phase 166 P03 | 4min | 4 tasks | 2 files |
+| Phase 166 P04 | 6m | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -340,6 +353,8 @@ Last activity: 2026-09-17 — Phase 166 execution started
 - [Phase 166]: Clock-proof: faketime does not intercept the BEAM clock on this toolchain (macOS SIP strips DYLD_INSERT_LIBRARIES); maintainer accepted the fallback evidence (real un-faked audit run + committed date-boundary test) as satisfying CTRL-04's clock-fake clause.
 - [Phase 166]: lib/ exemption confirmed by maintainer: accepted_advisories.ex data-only edit (recheck_by + reason text) is CTRL-04's named exemption to the milestone's no-product-code-changes constraint (D-31).
 - [Phase 166]: recheck_by: ~D[2027-03-17] confirmed as the standing decision for both cowlib advisory entries (D-30), with named falsifiable re-check for next cycle.
+- [Phase 166]: CTRL-02/CTRL-03 code changes (release-please early-return deletion + bounded classify-and-retry) are implemented and merged, but their acceptance criteria are post-merge observations (a green push run at an already-tagged SHA; three consecutive agreeing push/schedule runs). Carried as explicitly pending evidence per D-37 — not marked complete — until 166-05/166-06 or Phase 167 merges naturally supply the observations.
+- [Phase 166]: D-20's release-please.yml line citations (:119/:179) are stale; the semantic clause (the gh api calls that already classify to cannot-check) governs. Verified the two gh pr list calls at lines 572/684 are the correct and only wrap targets; maintainer confirmed this reading.
 
 ## Quick Tasks Completed
 
@@ -357,8 +372,8 @@ Last activity: 2026-09-17 — Phase 166 execution started
 
 ## Session Continuity
 
-Last session: 2026-09-18T00:29:09.376Z
-Stopped at: Completed 166-03-PLAN.md (CTRL-04)
+Last session: 2026-09-18T02:00:15.188Z
+Stopped at: Completed 166-04-PLAN.md (CTRL-02/CTRL-03 code merged; Task 3 post-merge evidence pending)
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.
@@ -371,10 +386,12 @@ Resume file: None
   §6–7 stays closed out: the remaining PR (#222) still fails `repo-hygiene`, and both
   `post-publish-smoke` and `release-please` block specifically on it. Revisiting §6–7 is a separate
   authority from any new milestone, and not a prerequisite for one.
+
 - Decide #222 `chore: release main` — it would cut `mailglass 2.6.0` / `mailglass_inbound 2.3.0` to
   Hex. Currently red (Core Full Suite + CI Green) and `BEHIND`. Either rebase-and-release, or close it
   and let release-please regenerate. This is the only thing standing between the repo and a green
   scheduled-control signal.
+
 - Two pre-existing reds on `main` in `MailglassAdmin.InboundLiveTest` (replay flash copy,
   `inbound_live_test.exs:913` and `:1411`) are undiagnosed. Likely coupled to the unmerged PR #129
   replay-copy redesign. Worth resolving before any release.

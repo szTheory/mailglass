@@ -15,3 +15,19 @@ re-run builds hoping they resolve themselves).
   plan's diff touches). Not fixed here — pre-existing, unrelated file, out of scope for CTRL-02/
   CTRL-03. Confirmed 166-04's full test suite is green when this one file is excluded (492 tests,
   0 failures, 20 excluded).
+
+- **Task 3 (checkpoint:human-verify, `gate="blocking-human"`) -- post-merge evidence for
+  CTRL-02/CTRL-03 acceptance criteria is explicitly PENDING, not observed.** Cannot be satisfied
+  pre-merge and must never be manufactured by dispatch or re-run (plan prohibition, confirmed by
+  maintainer). Checklist for whoever picks this up next (166-05/166-06 or Phase 167 merges are
+  expected to supply the observations naturally per D-37):
+  1. Open the `release-please` workflow runs for the three most recent merges to `main`; confirm
+     each concluded `success`.
+  2. For each of those SHAs, open both the `push` run and the `schedule` run and confirm they
+     agree.
+  3. When the next `chore: release main` PR merges, open its `release-please` push run and confirm
+     the tagged-SHA skip fired (CTRL-02's own acceptance) rather than the action re-running.
+  4. Confirm no run reported a `cannot-check` outcome as `pass`.
+
+  Until all four are observed, `.planning/REQUIREMENTS.md`'s CTRL-02/CTRL-03 rows stay
+  `Implemented, evidence pending` -- not `Complete`. See `166-04-SUMMARY.md` for full detail.
