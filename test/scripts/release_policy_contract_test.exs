@@ -401,7 +401,6 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     assert release =~ "candidate_digest:"
     assert release =~ "ref: refs/heads/main"
     assert release =~ "fetch-depth: 0"
-    assert release =~ "Proposal mode bypasses historical baseline tag recovery"
     assert release =~ "Validate protected exact candidate dispatch"
     assert protected =~ "git fetch --no-tags origin main:refs/remotes/origin/main"
     assert protected =~ "current_main_sha=$(git rev-parse origin/main)"

@@ -89,12 +89,6 @@ jobs:
             exit 1
           fi
 
-          if [ -z "${CANDIDATE_DIGEST:-}" ]; then
-            echo "Proposal mode bypasses historical baseline tag recovery."
-            echo "should_run=true" >>"$GITHUB_OUTPUT"
-            exit 0
-          fi
-
           if [ -n "${CANDIDATE_DIGEST:-}" ]; then
             if ! expected_tags_text=$(scripts/release_policy_expected_tags.sh "$manifest" "$target"); then
               echo "ERROR: protected release target is invalid: $target" >&2
