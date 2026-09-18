@@ -32,11 +32,12 @@ tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
 > as undiagnosed (fixed in `f733fc22`/`d65a1aa8`, both merged to `main`) and PR #222 as open (it is
-> closed). Truthing that up was DOCS-01/STAND-01 (Phase 167 Plan 04). This file does not snapshot an
-> open-PR or open-issue count or identity anywhere below — that is permanently non-permanent
-> information. For current open PRs and issues, run `gh pr list --state open` and
-> `gh issue list --state open` against `szTheory/mailglass`; `scripts/check_state_md_pr_refs.sh`
-> machine-checks every `#NNN` reference in this file against live GitHub state.
+> closed). PR #129, the replay-copy redesign once suspected of causing those reds, is also closed.
+> Truthing that up was DOCS-01/STAND-01 (Phase 167 Plan 04). This file does not snapshot an open-PR or
+> open-issue count or identity anywhere below — that is permanently non-permanent information. For
+> current open PRs and issues, run `gh pr list --state open` and `gh issue list --state open` against
+> `szTheory/mailglass`; `scripts/check_state_md_pr_refs.sh` machine-checks every `#NNN` reference in
+> this file against live GitHub state.
 
 ## Current Position
 
