@@ -570,8 +570,21 @@ defmodule Mailglass.DocsContractTest do
       refute migration =~ ~r/~>\s*1\.6/,
              "migration-from-swoosh.md still contains stale ~> 1.6 pin"
 
-      assert migration =~ ~r/~>\s*2\.5/,
-             "migration-from-swoosh.md must pin the current ~> 2.5 series"
+      # Derived comparison — no hardcoded version literal. The guide's pin is
+      # generated at release time by release-please.yml's pin-resync step, so the
+      # test must assert against the manifest, not a literal, or the two would
+      # drift apart again on the next core release (the Phase 125 pin-drift shape).
+      core_version = package_major_minor!("mix.exs")
+      admin_version = package_major_minor!("mailglass_admin/mix.exs")
+
+      assert dependency_constraint!(migration, "mailglass", "guides/migration-from-swoosh.md") ==
+               core_version
+
+      assert dependency_constraint!(
+               migration,
+               "mailglass_admin",
+               "guides/migration-from-swoosh.md"
+             ) == admin_version
     end
 
     test "Multi-tenancy routing example parses and documents the shipped adapter_ref surface" do
@@ -715,6 +728,19 @@ defmodule Mailglass.DocsContractTest do
       assert trust_doc =~ "new work"
       assert docs_check =~ "\"guides/testing.md\""
       assert docs_check =~ "\"mailglass_admin/docs/operator-trust.md\""
+    end
+
+    test "compatibility guide no longer claims an exact sibling-version pin" do
+      compatibility = File.read!("guides/compatibility-and-deprecations.md")
+
+      refute compatibility =~ "exact sibling version",
+             "guides/compatibility-and-deprecations.md still claims an exact sibling pin — " <>
+               "both mailglass_admin/mix.exs and mailglass_inbound/mix.exs declare a bare " <>
+               "{:mailglass, \"~> 2.0\"} constraint, not an exact version"
+
+      assert compatibility =~ ~r/published builds pin.*~>/,
+             "guides/compatibility-and-deprecations.md must describe the real ~> pessimistic " <>
+               "sibling constraint"
     end
 
     @tag :skip

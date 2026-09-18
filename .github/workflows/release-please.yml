@@ -438,7 +438,7 @@ jobs:
           CORE_MM=$(echo "$CORE_VERSION" | cut -d. -f1,2)
           INBOUND_MM=$(echo "$INBOUND_VERSION" | cut -d. -f1,2)
           echo "Target core/admin README pins: ~> $CORE_MM"
-          for readme in README.md mailglass_admin/README.md; do
+          for readme in README.md mailglass_admin/README.md guides/migration-from-swoosh.md; do
             sed -i -E "s/\{:mailglass, \"~> [0-9]+\.[0-9]+\"/{:mailglass, \"~> ${CORE_MM}\"/" "$readme"
             sed -i -E "s/\{:mailglass_admin, \"~> [0-9]+\.[0-9]+\"/{:mailglass_admin, \"~> ${CORE_MM}\"/" "$readme"
           done
@@ -480,6 +480,7 @@ jobs:
             mailglass_admin/README.md
             mailglass_inbound/README.md
             mailglass_inbound/docs/inbound-install.md
+            guides/migration-from-swoosh.md
             .planning/publish/mailglass_inbound-publish-summary.json
           )
           COMMIT_MESSAGE="chore(release-please): sync linked package pins to core $CORE_VERSION"
