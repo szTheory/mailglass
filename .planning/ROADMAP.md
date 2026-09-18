@@ -300,8 +300,12 @@ CTRL-03 become achievable rather than structurally blocked.
    expiry — reviewable as "made a control able to reach its own pass state" (milestone criterion 8).
 5. The new behavior is pinned by a test or generated check, not only by a run log.
 
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
 
-- [ ] TBD (run /gsd-plan-phase 167.1 to break down)
+- [ ] 167.1-01-PLAN.md — Decouple proposal discovery from `should_run`, add truthful verdicts for the
+      standalone-discovery world states, widen both twin pass predicates by exactly one observed pair,
+      and pin all five states plus the two guards that must not move (wave 1)
+- [ ] 167.1-02-PLAN.md — Correct the refuted rate-limit mechanism in CTRL-02/CTRL-03 prose (Accept
+      clauses verbatim) and write the post-merge harvest procedure with empty observation slots (wave 2)
