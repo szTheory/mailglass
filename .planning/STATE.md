@@ -373,7 +373,7 @@ Last activity: 2026-09-18 — Phase 167 execution started
 - [Phase ?]: [Phase 167]: MAINTAINING.md's exclude-paths count is derived from release-please-config.json at test time (count_word!/1 1..30 map), never a second hardcoded literal — proven via a live mutation.
 - [Phase ?]: [Phase 167]: MAINTAINING.md/CONTRIBUTING.md publish-fan-out and sibling-pin claims corrected (required_reviewers gate named explicitly, bare ~> 2.0 sibling constraint replaces the stale fix(inbound) floor-bump instruction).
 - [Phase ?]: [Phase 167]: New MAINTAINING.md ## Release Close-Out runbook added and pinned with File.exists?/1 over every scripts/*.sh|.exs path it names, proven via a rename-and-revert mutation.
-- [Phase ?]: [Phase 167]: DOCS-01/STAND-01 — STATE.md's ongoing PR/issue state is delegated to a live gh audit script (scripts/check_state_md_pr_refs.sh) and pinned offline by refusing the shape of a hardcoded open-count claim, not by asserting today's count; the three mix Dependabot entries are grouped (minor+patch) and capped at 3 open PRs, with majors and security-updates left individually reviewable.
+- [Phase ?]: [Phase 167]: DOCS-01/STAND-01 — STATE.md's ongoing PR/issue state is delegated to a live gh audit script (scripts/check_state_md_pr_refs.sh) and pinned offline by refusing the shape of a hardcoded open-count claim, not by asserting today's count; the three mix Dependabot entries are grouped (minor+patch) and carry an `open-pull-requests-limit` of 3, with majors and security-updates left individually reviewable.
 
 ## Quick Tasks Completed
 
