@@ -790,6 +790,110 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end)
   end
 
+  test "the two proposal-control pass predicates are identical modulo variable names (D-05)" do
+    source = workflow_source()
+
+    predicates =
+      source
+      |> String.split("\n")
+      |> Enum.filter(&(&1 =~ "= pass ]"))
+      |> Enum.reject(&String.starts_with?(String.trim_leading(&1), "#"))
+
+    assert length(predicates) == 2,
+           "expected exactly two non-comment pass predicates, found #{length(predicates)}"
+
+    normalized =
+      Enum.map(predicates, fn line ->
+        line
+        |> String.replace("$RESULT_STATUS", "$status")
+        |> String.replace("$RESULT_REASON", "$reason")
+        |> String.trim()
+      end)
+
+    assert Enum.uniq(normalized) |> length() == 1,
+           "the twin pass predicates diverged: #{inspect(normalized)}"
+  end
+
+  test "a push run with one open proposal and should_run=false reaches the same pending verdict a scheduled run does" do
+    source = workflow_source()
+
+    discovery =
+      extract_step_block!(source, "Discover an open Release Please proposal before capture")
+
+    result = extract_step_block!(source, "Write proposal-only release control result")
+
+    gate =
+      extract_step_block!(source, "Fail non-pass proposal control result after evidence upload")
+
+    # This is the permanent post-close-out steady state: main's manifest tags
+    # all already exist, so should_run is false on every push and every
+    # hourly schedule, and exactly one release proposal is open against main.
+    with_idle_schedule_fixture(:one, "push", "false", fn temp_dir, env ->
+      File.write!(Path.join(temp_dir, "discovery.sh"), proposal_result_script(discovery))
+      File.write!(Path.join(temp_dir, "result.sh"), proposal_result_script(result))
+      File.write!(Path.join(temp_dir, "gate.sh"), proposal_result_script(gate))
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "discovery.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(env),
+                 stderr_to_stdout: true
+               )
+
+      discovery_outputs = read_output!(env["GITHUB_OUTPUT"])
+      assert discovery_outputs["should_capture"] == "false"
+      assert discovery_outputs["result_status"] == "pending"
+      assert discovery_outputs["result_reason"] == "proposal_awaiting_release_action"
+
+      writer_env =
+        Map.merge(env, %{
+          "CAPTURE_OUTCOME" => "skipped",
+          "CAPTURE_STATUS" => "",
+          "CAPTURE_REASON" => "",
+          "DISCOVERY_STATUS" => discovery_outputs["result_status"],
+          "DISCOVERY_REASON" => discovery_outputs["result_reason"],
+          "PROPOSAL_HEAD" => "",
+          "SOURCE_SHA" => ""
+        })
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "result.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(writer_env),
+                 stderr_to_stdout: true
+               )
+
+      json =
+        temp_dir
+        |> Path.join("release-proposal-control-result.json")
+        |> File.read!()
+        |> Jason.decode!()
+
+      assert Map.take(json, ["status", "reason", "event_name"]) == %{
+               "status" => "pending",
+               "reason" => "proposal_awaiting_release_action",
+               "event_name" => "push"
+             }
+
+      # Feed the gate from the artifact's own values, not hardcoded strings --
+      # this is what makes the test catch a D-05 predicate divergence.
+      assert {_, 0} =
+               System.cmd(
+                 "bash",
+                 [Path.join(temp_dir, "gate.sh")],
+                 env: [
+                   {"RESULT_STATUS", json["status"]},
+                   {"RESULT_REASON", json["reason"]}
+                 ],
+                 stderr_to_stdout: true
+               )
+
+      # Nothing may merge, tag, or push on this path.
+      refute File.read!(env["COMMAND_LOG"]) =~
+               ~r/(gh pr merge|git tag|gh release|git push|protected-dispatch)/
+    end)
+  end
+
   test "proposal capture emits its real post-worktree outcome before cleanup and the writer preserves it" do
     source = workflow_source()
 
