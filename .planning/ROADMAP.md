@@ -290,22 +290,27 @@ CTRL-03 become achievable rather than structurally blocked.
 **Depends on:** Phase 167
 
 **Success Criteria:**
+
 1. A `release-please` run on `main` at a SHA whose manifest tags all exist concludes `success` with
    a status/reason that truthfully describes the observed proposal state, and uploads
    `release-proposal-control-result.json` as evidence.
+
 2. `push` and `schedule` at the same SHA produce the same status and reason.
 3. `cannot-check` still never reports as `pass`. The fail-closed predicate at `:885`
    (`pass`, or `pending` + `no_open_proposal`) is not loosened to admit a new non-verdict.
+
 4. The fix adds no `continue-on-error` to the failing gate, deletes no gate, and removes no
    expiry — reviewable as "made a control able to reach its own pass state" (milestone criterion 8).
+
 5. The new behavior is pinned by a test or generated check, not only by a run log.
 
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 
-- [ ] 167.1-01-PLAN.md — Decouple proposal discovery from `should_run`, add truthful verdicts for the
+- [x] 167.1-01-PLAN.md — Decouple proposal discovery from `should_run`, add truthful verdicts for the
       standalone-discovery world states, widen both twin pass predicates by exactly one observed pair,
       and pin all five states plus the two guards that must not move (wave 1)
+
 - [ ] 167.1-02-PLAN.md — Correct the refuted rate-limit mechanism in CTRL-02/CTRL-03 prose (Accept
       clauses verbatim) and write the post-merge harvest procedure with empty observation slots (wave 2)
