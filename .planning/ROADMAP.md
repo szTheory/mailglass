@@ -150,7 +150,7 @@ the `Hex Audit` advisories expire `2026-10-26` and red a required lane on 2026-1
 - Ordering inside the phase: GREEN-01 first (largest blast radius, earliest discovery), CTRL-04 no
   later than mid-phase (calendar deadline 2026-10-27).
 
-**Plans:** 4/6 plans executed (one per D-37 PR, with PR-5 split into two plans for context budget — 166-05 and
+**Plans:** 5/6 plans executed (one per D-37 PR, with PR-5 split into two plans for context budget — 166-05 and
 166-06 land in the same PR). Waves are strictly sequential, honoring the WIP limit of 1 open PR.
 
 Plans:
@@ -172,7 +172,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 166-05-PLAN.md — PR-5a: prove the demo app's Hex pins in CI and close the trust-lane cache question in writing (GREEN-04, GREEN-05)
+- [x] 166-05-PLAN.md — PR-5a: prove the demo app's Hex pins in CI and close the trust-lane cache question in writing (GREEN-04, GREEN-05)
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
@@ -245,7 +245,7 @@ the control behavior Phase 166 establishes)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 166. Earned Greens and Controls That Can Pass | 4/6 | In Progress|  |
+| 166. Earned Greens and Controls That Can Pass | 5/6 | In Progress|  |
 | 167. Truthful Documentation and the Standing Control | 0/? | Not started | - |
 
 ## Milestone Exit Criteria (v2.8)

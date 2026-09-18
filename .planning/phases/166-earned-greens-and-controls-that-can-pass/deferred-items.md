@@ -31,3 +31,51 @@ re-run builds hoping they resolve themselves).
 
   Until all four are observed, `.planning/REQUIREMENTS.md`'s CTRL-02/CTRL-03 rows stay
   `Implemented, evidence pending` -- not `Complete`. See `166-04-SUMMARY.md` for full detail.
+
+## 166-05
+
+- **Task 1 (GREEN-04) deviated from the plan's literal isolation mechanism — documented, not a
+  silent substitution.** The plan's acceptance text named a `MIX_DEPS_PATH`/`MIX_BUILD_PATH`
+  environment-variable override as the isolation mechanism. That override was reproduced locally
+  (5 runs, isolated variable, prior executor attempt) to break cowlib's `erlang.mk` build. Per
+  orchestrator resolution, the isolated Hex build instead uses a scratch copy of
+  `reference/demo_app` + `reference/persona_spec` (via `rsync`) built with default `deps`/`_build`
+  paths inside `/tmp/mailglass_demo_hex_proof`. Verified locally: `HEX_BUILD_ISOLATED` (path-dep
+  `deps/` directory listing byte-identical before/after), `--check-locked` succeeds, compile
+  succeeds. A dedicated new CI job (the orchestrator's first-preference option) was rejected
+  because any new `ci.yml` job — required or advisory — must be registered in
+  `Mailglass.CILanes.all_classified_lanes/0` (enforced by a job-count-parity test in
+  `lane_classification_drift_test.exs`), which is strictly more blast radius for the same signal
+  than a step inside the existing required `support_contract_core` job.
+
+- **`reference/demo_app/mix.lock`'s three mailglass sibling entries were refreshed to
+  2.6.0/2.6.0/2.3.0** (the current published line) as a precondition for GREEN-04 — the frozen
+  2.0.0 lock cannot satisfy `mailglass_admin`'s `:navigation` router dependency (introduced at
+  2.1.0), so `MAILGLASS_DEMO_DEPS=hex mix compile` failed against the committed lock before this
+  refresh. Verified: `git diff --stat` shows exactly 3 lines changed (one per sibling package);
+  `mix.exs` and every other lock entry are untouched. This lifts the plan's "do not edit
+  `reference/demo_app/mix.lock`" prohibition for this narrow refresh only, per orchestrator
+  resolution (the prohibition and D-12 were both written on the now-disproven assumption that
+  `mix compile` succeeds unmodified at 2.0.0).
+
+- **Task 3 (checkpoint:human-verify, `gate="blocking-human"`) — post-merge/post-push evidence for
+  GREEN-05's Part 2 (CI-observed cache-restore behavior) and GREEN-04's post-merge confirmation is
+  explicitly PENDING, not observed.** `docs/ci-cache-isolation.md` Parts 1 and 3 are fully written
+  and demonstrated locally; Part 2 has a placeholder describing what is expected (a first-run cache
+  miss on both disambiguated trust-lane keys) but no real CI run has occurred yet from this
+  sequential-executor context (no branch was pushed; this executor has no push/PR-creation
+  mandate). Checklist for whoever picks this up next:
+  1. Push this branch (or merge to `main`) so CI actually runs with the disambiguated
+     `mix-trust-repo-head-…` / `mix-trust-clean-baseline-…` cache keys for the first time.
+  2. From that run, open both `trust_lane_repo_head` and `trust_lane_clean_baseline`; copy each
+     job's cache-restore log line (hit or miss, resolved key) and the new
+     "List reference/host_app/deps before install" step's output.
+  3. Paste both, plus the run URL, into `docs/ci-cache-isolation.md` Part 2, annotating the
+     expected first-run cache miss as a cold start (D-16), not a regression.
+  4. On the same or a subsequent `main` run, confirm the `support_contract_core` job's
+     "Prove demo app Hex pins" step resolved all three sibling packages from Hex and compiled
+     (GREEN-04's own post-merge confirmation row), and record that run URL too.
+  5. Present the completed note to the maintainer for a yes/no per Task 3's resume-signal.
+
+  Until this is observed, `.planning/REQUIREMENTS.md`'s GREEN-04/GREEN-05 rows stay
+  `Implemented, evidence pending` — not `Complete`. See `166-05-SUMMARY.md` for full detail.

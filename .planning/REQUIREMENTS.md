@@ -206,8 +206,8 @@ Populated 2026-09-17 during roadmap creation.
 | GREEN-01 | Phase 166 | Complete |
 | GREEN-02 | Phase 166 | Complete |
 | GREEN-03 | Phase 166 | Complete |
-| GREEN-04 | Phase 166 | Pending |
-| GREEN-05 | Phase 166 | Pending |
+| GREEN-04 | Phase 166 | Implemented, evidence pending |
+| GREEN-05 | Phase 166 | Implemented, evidence pending |
 | CTRL-01 | Phase 166 | Pending |
 | CTRL-02 | Phase 166 | Implemented, evidence pending |
 | CTRL-03 | Phase 166 | Implemented, evidence pending |

@@ -5,15 +5,15 @@ milestone_name: Truthful Repo
 current_phase: 166
 current_phase_name: Earned Greens and Controls That Can Pass
 status: executing
-stopped_at: Completed 166-04-PLAN.md (CTRL-02/CTRL-03 code merged; Task 3 post-merge evidence pending)
-last_updated: "2026-09-18T02:00:15.199Z"
+stopped_at: Completed 166-05-PLAN.md (GREEN-04/GREEN-05 implemented; Task 3 post-push evidence pending)
+last_updated: "2026-09-18T02:30:22.936Z"
 last_activity: 2026-09-17
 last_activity_desc: Phase 166 execution started
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 ---
@@ -38,7 +38,7 @@ tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
 ## Current Position
 
 Phase: 166 (Earned Greens and Controls That Can Pass) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-09-17 — Phase 166 execution started
 
@@ -224,6 +224,7 @@ Last activity: 2026-09-17 — Phase 166 execution started
 | Phase 166 P02 | 15min | 2 tasks | 2 files |
 | Phase 166 P03 | 4min | 4 tasks | 2 files |
 | Phase 166 P04 | 6m | 2 tasks | 4 files |
+| Phase 166 P05 | 55min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -355,6 +356,8 @@ Last activity: 2026-09-17 — Phase 166 execution started
 - [Phase 166]: recheck_by: ~D[2027-03-17] confirmed as the standing decision for both cowlib advisory entries (D-30), with named falsifiable re-check for next cycle.
 - [Phase 166]: CTRL-02/CTRL-03 code changes (release-please early-return deletion + bounded classify-and-retry) are implemented and merged, but their acceptance criteria are post-merge observations (a green push run at an already-tagged SHA; three consecutive agreeing push/schedule runs). Carried as explicitly pending evidence per D-37 — not marked complete — until 166-05/166-06 or Phase 167 merges naturally supply the observations.
 - [Phase 166]: D-20's release-please.yml line citations (:119/:179) are stale; the semantic clause (the gh api calls that already classify to cannot-check) governs. Verified the two gh pr list calls at lines 572/684 are the correct and only wrap targets; maintainer confirmed this reading.
+- [Phase 166]: 166-05: GREEN-04 isolation uses an rsync scratch copy with default paths, not MIX_DEPS_PATH/MIX_BUILD_PATH (broke cowlib's erlang.mk build) or a new CI job (requires lane-registry registration). — Both prior-executor blockers resolved by orchestrator and re-verified locally before implementation.
+- [Phase 166]: 166-05: reference/demo_app/mix.lock's three mailglass sibling entries refreshed to the published 2.6.0/2.6.0/2.3.0 line so GREEN-04's hex build can compile (frozen 2.0.0 lock predates mailglass_admin's :navigation dependency). — mix.exs ~> 2.0 constraints already permit this; only the lock was stale.
 
 ## Quick Tasks Completed
 
@@ -372,8 +375,8 @@ Last activity: 2026-09-17 — Phase 166 execution started
 
 ## Session Continuity
 
-Last session: 2026-09-18T02:00:15.188Z
-Stopped at: Completed 166-04-PLAN.md (CTRL-02/CTRL-03 code merged; Task 3 post-merge evidence pending)
+Last session: 2026-09-18T02:30:16.352Z
+Stopped at: Completed 166-05-PLAN.md (GREEN-04/GREEN-05 implemented; Task 3 post-push evidence pending)
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.
