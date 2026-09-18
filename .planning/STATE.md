@@ -6,7 +6,7 @@ current_phase: 166
 current_phase_name: Earned Greens and Controls That Can Pass
 status: planning
 stopped_at: Completed 167-03-PLAN.md
-last_updated: "2026-09-18T13:19:56.156Z"
+last_updated: "2026-09-18T16:30:22.639Z"
 last_activity: 2026-09-18
 last_activity_desc: Phase 167 execution started
 progress:
@@ -25,7 +25,8 @@ state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 See: .planning/PROJECT.md (updated 2026-09-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 167 — truthful-documentation-and-the-standing-control
+**Current focus:** Phase 166 — closing the four post-merge observations that remain open after both
+phases' code has merged. Phase 167 is complete.
 tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open at a time. Evidence:
 `.planning/research/v2.8/FINDINGS.md`.
 
@@ -42,9 +43,14 @@ tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open 
 ## Current Position
 
 Phase: 166 — Earned Greens and Controls That Can Pass
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-09-18 — Phase 167 complete, transitioned to Phase 166
+Plan: 6/6 executed and merged (`dcbda58f`, PR #281)
+Status: UAT partial — 15 of 19 checkpoints passed, 0 issues, 4 blocked on evidence that can only be
+observed later. Not "ready to plan": nothing remains to build. The four open items are CTRL-02 and
+CTRL-03 (need a release proposal merged that is not already-tagged), GREEN-05 Part 2 (needs a second
+`main` CI run with `mix.lock` unchanged, for a trust-lane cache restore-hit), and CTRL-05 (needs two
+naturally-triggered scheduled repo-hygiene runs after the merge). None may be dispatched or
+manufactured.
+Last activity: 2026-09-18 — Phase 167 UAT complete (17/17 passed, 0 issues), phase marked complete
 
 ## v2.8 Roadmap Shape
 
@@ -398,8 +404,9 @@ Last activity: 2026-09-18 — Phase 167 complete, transitioned to Phase 166
 
 ## Session Continuity
 
-Last session: 2026-09-18T13:12:43.130Z
-Stopped at: Completed 167-03-PLAN.md
+Last session: 2026-09-18T16:30:00Z
+Stopped at: Phase 167 complete — UAT 17/17 passed, 0 issues, `167-UAT.md` committed. Phase 166 stays
+partial, waiting only on post-merge observations that cannot be forced. Earlier context: the
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.
