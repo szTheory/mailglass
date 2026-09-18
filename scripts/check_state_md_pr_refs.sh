@@ -188,10 +188,15 @@ for num in "${ordered_refs[@]}"; do
   status="pass"
   message="$name ($live_state) is consistent with STATE.md's prose."
 
-  if [ "$says_open" = true ] && { [ "$live_state" = "CLOSED" ] || [ "$live_state" = "MERGED" ]; }; then
+  # A line naming both "open" and "closed"/"merged" is treated as a
+  # self-correcting statement (e.g. "PR #N as open (it is closed)") rather
+  # than a contradiction -- only a line asserting ONE state, when GitHub
+  # reports the other, is a genuine drift.
+  if [ "$says_open" = true ] && [ "$says_closed" = false ] && \
+     { [ "$live_state" = "CLOSED" ] || [ "$live_state" = "MERGED" ]; }; then
     status="blocked"
     message="$name is described as open in STATE.md but GitHub reports $live_state."
-  elif [ "$says_closed" = true ] && [ "$live_state" = "OPEN" ]; then
+  elif [ "$says_closed" = true ] && [ "$says_open" = false ] && [ "$live_state" = "OPEN" ]; then
     status="blocked"
     message="$name is described as closed/merged in STATE.md but GitHub reports OPEN."
   fi
