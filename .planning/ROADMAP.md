@@ -242,10 +242,18 @@ the control behavior Phase 166 establishes)
 **Plans**: 4 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 167-01-PLAN.md — DOCS-03: correct MAINTAINING.md/CONTRIBUTING.md release-mechanics claims and add the close-out runbook, led by the phase tracer (a derived exclude-paths count pin) [wave 1]
-- [ ] 167-02-PLAN.md — DOCS-02, DOCS-06: correct CLAUDE.md's sibling-pin and auto-merge claims; link the v2.0 upgrade guide from README and name the real v2.0 breaking change in CHANGELOG [wave 2]
-- [ ] 167-03-PLAN.md — DOCS-04, DOCS-05: dissolve the migration-guide version lockstep via release-time sed sync plus a dynamic assertion; reject `css_inliner: :none`; correct the outbound.ex and api_stability.md claims [wave 3]
 - [ ] 167-04-PLAN.md — DOCS-01, STAND-01: truth up STATE.md with a live-state audit script and an offline shape-guard test; group and cap the three `mix` Dependabot entries [wave 1]
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 167-02-PLAN.md — DOCS-02, DOCS-06: correct CLAUDE.md's sibling-pin and auto-merge claims; link the v2.0 upgrade guide from README and name the real v2.0 breaking change in CHANGELOG [wave 2]
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 167-03-PLAN.md — DOCS-04, DOCS-05: dissolve the migration-guide version lockstep via release-time sed sync plus a dynamic assertion; reject `css_inliner: :none`; correct the outbound.ex and api_stability.md claims [wave 3]
 
 ## Progress
 

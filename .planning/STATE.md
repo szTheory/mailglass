@@ -4,15 +4,15 @@ milestone: v2.8
 milestone_name: Truthful Repo
 current_phase: 166
 current_phase_name: Earned Greens and Controls That Can Pass
-status: verifying
+status: executing
 stopped_at: Completed 166-06-PLAN.md (Task 3 checkpoint pending post-merge evidence)
-last_updated: "2026-09-18T02:57:41.564Z"
+last_updated: "2026-09-18T03:44:34.969Z"
 last_activity: 2026-09-17
 last_activity_desc: Phase 166 execution started
 progress:
   total_phases: 2
   completed_phases: 1
-  total_plans: 6
+  total_plans: 10
   completed_plans: 6
   percent: 50
 state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
@@ -39,7 +39,7 @@ tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
 
 Phase: 166 (Earned Greens and Controls That Can Pass) — EXECUTING
 Plan: 6 of 6
-Status: Phase complete — ready for verification
+Status: Ready to execute
 Last activity: 2026-09-17 — Phase 166 execution started
 
 ## v2.8 Roadmap Shape
