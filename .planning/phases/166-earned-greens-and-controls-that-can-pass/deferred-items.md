@@ -123,3 +123,49 @@ re-run builds hoping they resolve themselves).
 
   Until all of the above are observed, `.planning/REQUIREMENTS.md`'s CTRL-01/CTRL-05 rows stay
   `Implemented, evidence pending` — not `Complete`. See `166-06-SUMMARY.md` for full detail.
+
+## Code review (166-REVIEW.md) — findings NOT fixed in this phase
+
+WR-01 was fixed in-phase (`test/scripts/check_post_publish_target_test.exs`, commit `905cb3f9`):
+the `--baseline-mode` digest bypass now has tests that execute the script rather than grep the
+YAML that calls it, verified by mutation. The remaining findings are recorded here rather than
+fixed, each with the reason.
+
+- **WR-03 — `status/1` ranks `:cannot_check` above `:blocked` (NOT a defect to flip unilaterally).**
+  In `dev/mix/tasks/mailglass.repo.hygiene.ex:482-488` the aggregate resolves to `:cannot_check`
+  whenever any check is unobservable, even if another check is a confirmed `:blocked`. The review
+  reads this as a confirmed alarm being masked. Investigated and deliberately left alone:
+  1. It is pre-existing Phase 162 behavior, not introduced by 166-06.
+  2. It is explicitly test-pinned — `test/mix/tasks/mailglass.repo.hygiene_test.exs:148`,
+     `"cannot-check takes precedence over a confirmed policy block"` — and D-35 instructed 166-06's
+     executor to pin current behavior, which it did.
+  3. It is not lossy. The text renderer (`Enum.each(result.checks, ...)`, line 520) and the JSON
+     encoder both emit every individual check, so the `:blocked` finding is still fully visible in
+     the output; only the one-line `reason/1` headline and the aggregate exit code prefer
+     cannot-check.
+  4. The control does not fail open either way — `:cannot_check` exits 2 and `:blocked` exits 1,
+     both non-zero, so the workflow step fails identically.
+
+  The precedence is a defensible reading ("do not issue a verdict on a repository you could not
+  fully observe"), and the opposite reading ("a confirmed alarm outranks an unknown") is also
+  defensible. Flipping a fail-closed control's semantics on review-agent initiative, against a
+  deliberate pin, is not a call to make at phase close. Carry to Phase 167 as an explicit design
+  question for the maintainer.
+
+- **WR-02 — `report_sha256` in the coverage baselines is decorative.** The field is recorded in
+  `config/coverage_baselines/*.json` and cited as provenance in SUMMARY prose, but neither
+  `scripts/check_coverage_floor.sh` nor any test reads or verifies it. This is genuinely on-theme
+  for v2.8 (data presented as proof that proves nothing), but it touches the Phase 166-01 coverage
+  baseline contract rather than any control this phase was chartered to fix. Phase 167 candidate:
+  either verify the digest at floor-check time or stop citing it as evidence.
+
+- **WR-04 — `support_contract_admin` runs the 510-test admin suite twice.** Once via
+  `verify.support_contract.admin` and again under the coverage step. Wasteful and it doubles the
+  flake surface of a required job, but not a correctness defect. Phase 167 candidate.
+
+- **IN-01 — `scripts/release_policy.exs`'s bare-invocation guard only catches three known-stale
+  flag spellings.** Other bare `elixir scripts/release_policy.exs <verb>` forms still exit 0
+  without invoking `cli/1`. This is the same vacuity shape 166-06's executor hit in the plan's own
+  verify command and worked around by using `mix run -e cli(System.argv())`. No shipped code path
+  depends on the bare form, so it is latent rather than live. Phase 167 candidate: make the guard
+  reject any invocation that does not reach `cli/1`, rather than enumerating stale spellings.
