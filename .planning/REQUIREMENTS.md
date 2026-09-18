@@ -77,7 +77,10 @@ adds a path to *earn* green; none relaxes a gate.
 
 - [ ] **CTRL-02**: `release-please` no longer re-runs the action against an already-tagged SHA on the
       push event. The tagged-PR preflight skip is restored for `push` in proposal mode
-      (`release-please.yml` ~L92), removing the redundant API work that trips the rate limit.
+      (`release-please.yml` ~L92): `release-preflight` correctly reports that the release-please action
+      should not re-run once `main`'s manifest tags all exist, but the proposal-evidence steps were
+      gated on that same flag, so the control could not observe the repository it reports on; Phase
+      167.1 decouples discovery from that flag.
       *Accept:* the merge of a `chore: release main` PR produces a green `release-please` push run.
 
 - [ ] **CTRL-03**: A transient GitHub API failure is retried, not reported as a control failure. An
@@ -85,8 +88,9 @@ adds a path to *earn* green; none relaxes a gate.
       `cannot-check` + `github_evidence_unavailable` is treated as retryable with backoff.
       *Accept:* three consecutive pushes to `main` produce `success`, and `push` and `schedule` at the
       same SHA agree. **`cannot-check` must still never report as `pass`.**
-      *Note:* research verified this is a **secondary** rate limit (all 15 buckets read full during a
-      403), so reducing cron frequency is not a fix and is not in scope.
+      *Note:* the 2026-09-18 audit measured the GitHub API quota at 5000/5000 during the reds — it was
+      not exhausted. The root cause was the same conflated `should_run` flag CTRL-02 corrects (Phase
+      167.1), not a rate limit; reducing cron frequency remains not a fix and remains out of scope.
 
 - [x] **CTRL-04**: The `Hex Audit` calendar time bomb is defused truthfully before it fires. Both
       cowlib advisories (`EEF-CVE-2026-43966`, `EEF-CVE-2026-43969`, `recheck_by: ~D[2026-10-26]`) are
