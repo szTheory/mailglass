@@ -1141,7 +1141,10 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
   defp with_idle_schedule_fixture(mode, fun), do: with_idle_schedule_fixture(mode, "schedule", fun)
 
-  defp with_idle_schedule_fixture(mode, event_name, fun) do
+  defp with_idle_schedule_fixture(mode, event_name, fun),
+    do: with_idle_schedule_fixture(mode, event_name, "true", fun)
+
+  defp with_idle_schedule_fixture(mode, event_name, should_run, fun) do
     temp_dir =
       Path.join(System.tmp_dir!(), "release-idle-schedule-#{System.unique_integer([:positive])}")
 
@@ -1199,7 +1202,8 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       "RUN_ID" => "16208",
       "CANDIDATE_DIGEST" => "",
       "COMMIT_MESSAGE" => "",
-      "FAKE_DISCOVERY" => Atom.to_string(mode)
+      "FAKE_DISCOVERY" => Atom.to_string(mode),
+      "SHOULD_RUN" => should_run
     }
 
     try do
