@@ -143,3 +143,9 @@ _No plan-metadata commit yet — that follows this SUMMARY per the executor's `<
 ---
 *Phase: 167-truthful-documentation-and-the-standing-control*
 *Completed: 2026-09-18*
+
+## Self-Check: PASSED
+
+All modified files (MAINTAINING.md, CONTRIBUTING.md, test/mailglass/docs_contract_test.exs) confirmed
+present on disk. All four task/summary commit hashes (6f8277ae, f499bc74, adbb91cf, 306cba46) confirmed
+present in `git log --oneline --all`.

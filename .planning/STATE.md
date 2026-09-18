@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v2.8
 milestone_name: Truthful Repo
-current_phase: 166
-current_phase_name: Earned Greens and Controls That Can Pass
+current_phase: 167
+current_phase_name: truthful-documentation-and-the-standing-control
 status: executing
-stopped_at: Completed 166-06-PLAN.md (Task 3 checkpoint pending post-merge evidence)
-last_updated: "2026-09-18T03:44:34.969Z"
-last_activity: 2026-09-17
-last_activity_desc: Phase 166 execution started
+stopped_at: Completed 167-01-PLAN.md
+last_updated: "2026-09-18T12:43:38.903Z"
+last_activity: 2026-09-18
+last_activity_desc: Phase 167 execution started
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 10
-  completed_plans: 6
+  completed_plans: 7
   percent: 50
 state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 ---
@@ -25,7 +25,7 @@ state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 See: .planning/PROJECT.md (updated 2026-09-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 166 — Earned Greens and Controls That Can Pass
+**Current focus:** Phase 167 — truthful-documentation-and-the-standing-control
 tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
 `.planning/research/v2.8/FINDINGS.md`.
 
@@ -37,10 +37,10 @@ tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
 
 ## Current Position
 
-Phase: 166 (Earned Greens and Controls That Can Pass) — EXECUTING
-Plan: 6 of 6
+Phase: 167 (truthful-documentation-and-the-standing-control) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-09-17 — Phase 166 execution started
+Last activity: 2026-09-18 — Phase 167 execution started
 
 ## v2.8 Roadmap Shape
 
@@ -226,6 +226,7 @@ Last activity: 2026-09-17 — Phase 166 execution started
 | Phase 166 P04 | 6m | 2 tasks | 4 files |
 | Phase 166 P05 | 55min | 2 tasks | 5 files |
 | Phase 166 P06 | 55min | 2 tasks | 6 files |
+| Phase 167 P01 | 25min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -361,6 +362,9 @@ Last activity: 2026-09-17 — Phase 166 execution started
 - [Phase 166]: 166-05: reference/demo_app/mix.lock's three mailglass sibling entries refreshed to the published 2.6.0/2.6.0/2.3.0 line so GREEN-04's hex build can compile (frozen 2.0.0 lock predates mailglass_admin's :navigation dependency). — mix.exs ~> 2.0 constraints already permit this; only the lock was stale.
 - [Phase ?]: CTRL-01: post-publish-smoke resolves an inactive ledger's published baseline via a new baseline-versions verb + ledger-status peek; distinct cron-guard baseline output never reuses completed=true
 - [Phase ?]: CTRL-05: repo-hygiene cannot_check exits a distinct nonzero code from blocked; PR predicate widened to open >14d (day-granularity) OR failing required check
+- [Phase ?]: [Phase 167]: MAINTAINING.md's exclude-paths count is derived from release-please-config.json at test time (count_word!/1 1..30 map), never a second hardcoded literal — proven via a live mutation.
+- [Phase ?]: [Phase 167]: MAINTAINING.md/CONTRIBUTING.md publish-fan-out and sibling-pin claims corrected (required_reviewers gate named explicitly, bare ~> 2.0 sibling constraint replaces the stale fix(inbound) floor-bump instruction).
+- [Phase ?]: [Phase 167]: New MAINTAINING.md ## Release Close-Out runbook added and pinned with File.exists?/1 over every scripts/*.sh|.exs path it names, proven via a rename-and-revert mutation.
 
 ## Quick Tasks Completed
 
@@ -378,8 +382,8 @@ Last activity: 2026-09-17 — Phase 166 execution started
 
 ## Session Continuity
 
-Last session: 2026-09-18T02:57:41.553Z
-Stopped at: Completed 166-06-PLAN.md (Task 3 checkpoint pending post-merge evidence)
+Last session: 2026-09-18T12:43:38.893Z
+Stopped at: Completed 167-01-PLAN.md
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.

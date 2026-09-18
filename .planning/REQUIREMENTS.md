@@ -42,16 +42,20 @@ a glance; a false green is why the admin blind spot hid two failures for four we
       allow-list in `verify.support_contract.admin` is replaced by a directory-scoped run (the
       existing, uninvoked `verify.preview` alias is the intended mechanism), in both CI and `mix ci`.
       *Accept:* the `Support Contract Admin` lane log reports ≥510 tests, not 185, with 0 failures.
+
 - [x] **GREEN-02**: `mailglass_admin` enforces a coverage floor in CI, as core and inbound already do.
       *Accept:* the admin lane fails when coverage drops below the committed threshold.
+
 - [x] **GREEN-03**: The required `core_deterministic_suite` lane enforces its own anti-vacuity floor.
       `MAILGLASS_SUITE_FLOOR: "1"` is set, and `@suite_floor_env_occurrences` in
       `lane_classification_drift_test.exs:56` moves 2 → 3 in the same change.
       *Accept:* the lane's log prints `scope: FULL SUITE (MAILGLASS_SUITE_FLOOR=1)` instead of
       "scoped run … floor not evaluated".
+
 - [ ] **GREEN-04**: The demo app exercises its Hex pins in at least one lane. `MAILGLASS_DEMO_DEPS`
       is set where the demo is built, so the published-consumer path is actually proven.
       *Accept:* a CI lane resolves the demo app's Hex deps rather than path deps to the working tree.
+
 - [ ] **GREEN-05**: The trust-lane deps-cache pollution vector is resolved or refuted in writing. Both
       trust lanes run `mix deps.get` unlocked against `reference/host_app` (`ci.yml` L1226, L1307),
       resolving live 2.6.0, while required lanes test locked 2.0.0 — sharing a cache keyed on
@@ -70,10 +74,12 @@ adds a path to *earn* green; none relaxes a gate.
       checksum/endpoint proof against the published baseline.
       *Accept:* a `workflow_dispatch` of the schedule path against the current `inactive` ledger exits
       0 and uploads `post-publish-resolution.json`. Dispatch semantics for a live release are unchanged.
+
 - [ ] **CTRL-02**: `release-please` no longer re-runs the action against an already-tagged SHA on the
       push event. The tagged-PR preflight skip is restored for `push` in proposal mode
       (`release-please.yml` ~L92), removing the redundant API work that trips the rate limit.
       *Accept:* the merge of a `chore: release main` PR produces a green `release-please` push run.
+
 - [ ] **CTRL-03**: A transient GitHub API failure is retried, not reported as a control failure. An
       action-step failure is classified into the evidence artifact rather than crashing, and
       `cannot-check` + `github_evidence_unavailable` is treated as retryable with backoff.
@@ -81,6 +87,7 @@ adds a path to *earn* green; none relaxes a gate.
       same SHA agree. **`cannot-check` must still never report as `pass`.**
       *Note:* research verified this is a **secondary** rate limit (all 15 buckets read full during a
       403), so reducing cron frequency is not a fix and is not in scope.
+
 - [x] **CTRL-04**: The `Hex Audit` calendar time bomb is defused truthfully before it fires. Both
       cowlib advisories (`EEF-CVE-2026-43966`, `EEF-CVE-2026-43969`, `recheck_by: ~D[2026-10-26]`) are
       genuinely re-verified upstream, then either extended with written justification or removed if
@@ -88,6 +95,7 @@ adds a path to *earn* green; none relaxes a gate.
       *Accept:* `mix mailglass.audit --kind hex` passes with the system clock faked to 2026-12-01, and
       each entry's disposition cites the evidence it was re-verified against.
       **Deleting `expired_entries/1` or `unused_entries/1` does not satisfy this.**
+
 - [ ] **CTRL-05**: `repo-hygiene` distinguishes a non-verdict from an alarm, and its PR predicate
       stops firing on healthy activity. `cannot_check` is separated from `blocked` in the exit code,
       and the predicate changes from `open_count > 0` to "open >14d **or** failing a required check".
@@ -105,6 +113,7 @@ milestone terminate rather than recur.
       `d65a1aa8`), PR #222 and #129 (both closed), and the "14 open PRs" accepted-debt count (now zero).
       *Accept:* no statement in `STATE.md` is falsified by `gh pr list`, `gh issue list`, or a live
       suite run.
+
 - [ ] **DOCS-02**: `CLAUDE.md` describes the release pipeline as it actually behaves. Specifically the
       auto-merge claim (the step now echoes *"Disarmed ordinary auto-merge; a later protected exact
       candidate-digest dispatch is required"*), the `{:mailglass, "== <version>"}` sibling-pin claim at
@@ -112,7 +121,8 @@ milestone terminate rather than recur.
       at :15.
       *Accept:* a maintainer following `CLAUDE.md` through a release is never told to wait for
       something that will not happen.
-- [ ] **DOCS-03**: The release-mechanics docs are correct and complete. `CONTRIBUTING.md:187-191`'s
+
+- [x] **DOCS-03**: The release-mechanics docs are correct and complete. `CONTRIBUTING.md:187-191`'s
       mandatory `fix(inbound):` floor bump (mechanically false under `~> 2.0`) is retired;
       `MAINTAINING.md`'s "twelve `exclude-paths`" (:137, actually 14) and "hands-free publish fan-out"
       (:631, :662 — there are three `required_reviewers` stops) are corrected; and **`MAINTAINING.md`
@@ -120,6 +130,7 @@ milestone terminate rather than recur.
       `release_policy_close_out.sh`, whose omission caused the 4-week 2.5.0 strand.
       *Accept:* a reader who has never seen the ledger can complete close-out from `MAINTAINING.md`
       alone.
+
 - [ ] **DOCS-04**: Version claims in guides are correct, and the two-file lockstep is respected.
       `guides/migration-from-swoosh.md:31-32` (`~> 2.5`) is asserted **verbatim** by
       `test/mailglass/docs_contract_test.exs:558` — both move together, or the guide is brought under
@@ -127,6 +138,7 @@ milestone terminate rather than recur.
       `guides/compatibility-and-deprecations.md:207-212`'s exact-sibling-pin claim is corrected.
       *Accept:* the docs contract is green and no guide asserts a version the tree disproves.
       ⚠ *This is the Phase 125 pin-drift shape. It is not a free one-liner.*
+
 - [ ] **DOCS-05**: Code-level documentation does not overpromise, and no config key is accepted
       without effect. `config :mailglass, renderer: [css_inliner: :none]` is validated
       (`config.ex:84-88`) but never read — Premailex always runs (`renderer.ex:73`); it is either
@@ -135,6 +147,7 @@ milestone terminate rather than recur.
       queries *events*, `events/reconciler.ex:58`). `docs/api_stability.md:1119`'s injected
       `import Swoosh.Email, except: [new: 0]`, which does not exist in `mailable.ex`, is corrected.
       *Accept:* no accepted config key is inert, and no moduledoc describes behavior absent from code.
+
 - [ ] **DOCS-06**: The v2.0 upgrade path is discoverable and honestly labeled. `README.md:280-284`
       links `guides/upgrading-to-v2_0.md` alongside the v1.0/v0.1/Swoosh guides, and
       `CHANGELOG.md:171-173`'s 2.0.0 "⚠ BREAKING CHANGES" block names the actual Postgres schema move
@@ -167,6 +180,7 @@ The milestone is complete when all of the following hold. Each is verifiable in 
 3. A `workflow_dispatch` of `post-publish-smoke`'s schedule path exits 0 against an `inactive` ledger.
 4. Three consecutive pushes to `main` yield a green `release-please` run, with `push` and `schedule`
    agreeing at the same SHA.
+
 5. `mix mailglass.audit --kind hex` passes with the clock faked to 2026-12-01.
 6. `grep` for the corrected doc claims returns nothing, and the docs contract test is green.
 7. No statement in `STATE.md` is falsified by `gh pr list`, `gh issue list`, or a live suite run.
@@ -215,7 +229,7 @@ Populated 2026-09-17 during roadmap creation.
 | CTRL-05 | Phase 166 | Implemented, evidence pending |
 | DOCS-01 | Phase 167 | Pending |
 | DOCS-02 | Phase 167 | Pending |
-| DOCS-03 | Phase 167 | Pending |
+| DOCS-03 | Phase 167 | Complete |
 | DOCS-04 | Phase 167 | Pending |
 | DOCS-05 | Phase 167 | Pending |
 | DOCS-06 | Phase 167 | Pending |
