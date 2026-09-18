@@ -32,6 +32,16 @@ re-run builds hoping they resolve themselves).
   Until all four are observed, `.planning/REQUIREMENTS.md`'s CTRL-02/CTRL-03 rows stay
   `Implemented, evidence pending` -- not `Complete`. See `166-04-SUMMARY.md` for full detail.
 
+  status: partial
+  update (2026-09-18): the blocking mechanism was diagnosed as the `should_run` gating defect
+  (NOT the rate limit originally suspected) and fixed in Phase 167.1, merged as `f6131908`.
+  Of the four checklist items: (2) push/schedule agreement and (4) `cannot-check` never reported
+  as `pass` are both SATISFIED at `f6131908` (push 35387947658, schedule 35391497513 — identical
+  `{status, reason}` and identical `probes`). (1) three consecutive green pushes stands at 1 of 3.
+  (3) CTRL-02's own acceptance is UNTOUCHED — it needs a real `chore: release main` merge, which
+  is a human-approved release ceremony and must not be initiated to fill an evidence slot.
+  See `167.1-POSTMERGE-EVIDENCE.md`.
+
 ## 166-05
 
 - **Task 1 (GREEN-04) deviated from the plan's literal isolation mechanism — documented, not a
@@ -48,6 +58,10 @@ re-run builds hoping they resolve themselves).
   `lane_classification_drift_test.exs`), which is strictly more blast radius for the same signal
   than a step inside the existing required `support_contract_core` job.
 
+  status: resolved
+  disposition: a documented, orchestrator-approved deviation with its verification recorded
+  above. No open work — logged for provenance only.
+
 - **`reference/demo_app/mix.lock`'s three mailglass sibling entries were refreshed to
   2.6.0/2.6.0/2.3.0** (the current published line) as a precondition for GREEN-04 — the frozen
   2.0.0 lock cannot satisfy `mailglass_admin`'s `:navigation` router dependency (introduced at
@@ -57,6 +71,10 @@ re-run builds hoping they resolve themselves).
   `reference/demo_app/mix.lock`" prohibition for this narrow refresh only, per orchestrator
   resolution (the prohibition and D-12 were both written on the now-disproven assumption that
   `mix compile` succeeds unmodified at 2.0.0).
+
+  status: resolved
+  disposition: a documented, orchestrator-approved deviation with its verification recorded
+  above. No open work — logged for provenance only.
 
 - **Task 3 (checkpoint:human-verify, `gate="blocking-human"`) — post-merge/post-push evidence for
   GREEN-05's Part 2 (CI-observed cache-restore behavior) and GREEN-04's post-merge confirmation is
@@ -79,6 +97,12 @@ re-run builds hoping they resolve themselves).
 
   Until this is observed, `.planning/REQUIREMENTS.md`'s GREEN-04/GREEN-05 rows stay
   `Implemented, evidence pending` — not `Complete`. See `166-05-SUMMARY.md` for full detail.
+
+  status: open
+  update (2026-09-18): still unobserved. Run 35361151376 shows both trust lanes as cold
+  miss-then-save (`grep -cE 'Cache restored from key: mix-trust'` -> 0) while 21 other lanes did
+  restore in the same run — that corroborates isolation but is not the restore-HIT Part 2 asks
+  for. Needs one more `main` run with `mix.lock` unchanged. Tracked as 166-UAT test 7.
 
 ## 166-06
 
@@ -124,6 +148,13 @@ re-run builds hoping they resolve themselves).
   Until all of the above are observed, `.planning/REQUIREMENTS.md`'s CTRL-01/CTRL-05 rows stay
   `Implemented, evidence pending` — not `Complete`. See `166-06-SUMMARY.md` for full detail.
 
+  status: partial
+  update (2026-09-18): CTRL-01 is SATISFIED — `post-publish-smoke` dispatch run 35364627465 in
+  `mode=baseline` passed against the inactive ledger (`status: pass`, `reason:
+  exact_target_verified`, artifact verified). Milestone exit criterion 3 is cleared.
+  CTRL-05 remains OPEN: it needs two naturally-triggered scheduled `repo-hygiene` firings after
+  the merge (expected ~2026-09-19 and ~2026-09-20, cron `30 12 * * *`). Not dispatchable.
+
 ## Code review (166-REVIEW.md) — findings NOT fixed in this phase
 
 WR-01 was fixed in-phase (`test/scripts/check_post_publish_target_test.exs`, commit `905cb3f9`):
@@ -152,6 +183,11 @@ fixed, each with the reason.
   deliberate pin, is not a call to make at phase close. Carry to Phase 167 as an explicit design
   question for the maintainer.
 
+  status: resolved
+  disposition: promoted 2026-09-18 to `.planning/todos/2026-09-18-hygiene-cannot-check-outranks-blocked.md`
+  as an open maintainer decision. Tracked, not decided — current precedence stands and its
+  pinned test is untouched.
+
 - **WR-02 — `report_sha256` in the coverage baselines is decorative.** The field is recorded in
   `config/coverage_baselines/*.json` and cited as provenance in SUMMARY prose, but neither
   `scripts/check_coverage_floor.sh` nor any test reads or verifies it. This is genuinely on-theme
@@ -159,9 +195,17 @@ fixed, each with the reason.
   baseline contract rather than any control this phase was chartered to fix. Phase 167 candidate:
   either verify the digest at floor-check time or stop citing it as evidence.
 
+  status: resolved
+  disposition: promoted 2026-09-18 to `.planning/todos/2026-09-18-report-sha256-is-decorative.md`.
+  Tracked, not fixed — the field is still cited and still unverified.
+
 - **WR-04 — `support_contract_admin` runs the 510-test admin suite twice.** Once via
   `verify.support_contract.admin` and again under the coverage step. Wasteful and it doubles the
   flake surface of a required job, but not a correctness defect. Phase 167 candidate.
+
+  status: resolved
+  disposition: promoted 2026-09-18 to `.planning/todos/2026-09-18-support-contract-admin-runs-suite-twice.md`.
+  Tracked, not fixed — the suite still runs twice.
 
 - **IN-01 — `scripts/release_policy.exs`'s bare-invocation guard only catches three known-stale
   flag spellings.** Other bare `elixir scripts/release_policy.exs <verb>` forms still exit 0
@@ -169,3 +213,7 @@ fixed, each with the reason.
   verify command and worked around by using `mix run -e cli(System.argv())`. No shipped code path
   depends on the bare form, so it is latent rather than live. Phase 167 candidate: make the guard
   reject any invocation that does not reach `cli/1`, rather than enumerating stale spellings.
+
+  status: resolved
+  disposition: promoted 2026-09-18 to `.planning/todos/2026-09-18-release-policy-bare-invocation-guard-enumerates-stale-spellings.md`.
+  Tracked, not fixed — the guard still enumerates spellings.
