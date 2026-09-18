@@ -43,8 +43,14 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
 
     emit(result, format)
 
-    if result.status != :pass do
-      exit({:shutdown, 1})
+    case result.status do
+      :pass -> :ok
+      # A non-verdict must be observably different from a confirmed alarm in
+      # the workflow log and to any consumer -- and it must never be 0 (that
+      # would convert an unobservable control into a permanent green, the
+      # same failure class the release-please gate refuses). D-34.
+      :cannot_check -> exit({:shutdown, 2})
+      _blocked -> exit({:shutdown, 1})
     end
   end
 
@@ -284,23 +290,19 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
         "--limit",
         "100",
         "--json",
-        "number,title,isDraft,headRefName,updatedAt,mergeStateStatus"
+        "number,title,isDraft,headRefName,updatedAt,mergeStateStatus,createdAt,statusCheckRollup"
       ]
 
       case cmd(repo, "gh", args) do
         {json, 0} ->
           case Jason.decode(json) do
             {:ok, prs} when is_list(prs) ->
-              status =
-                if Enum.empty?(prs) do
-                  :pass
-                else
-                  :blocked
-                end
+              {status, reason} = pr_predicate(prs)
 
-              check(:pull_requests, status, pr_message(prs), %{
+              check(:pull_requests, status, pr_message(status, reason, prs), %{
                 open_count: length(prs),
-                prs: prs
+                prs: prs,
+                reason: reason
               })
 
             {:ok, _response} ->
@@ -408,8 +410,61 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
     end
   end
 
-  defp pr_message([]), do: "No open PRs."
-  defp pr_message(prs), do: "#{length(prs)} open PR(s) require disposition before release."
+  # D-35 (166-06 CTRL-05): open >14d or failing a required check, not any
+  # open PR at all -- a freshly opened healthy PR must not turn this red.
+  defp pr_predicate(prs) do
+    stale = Enum.filter(prs, &pr_stale?/1)
+    failing = Enum.filter(prs, &pr_failing_check?/1)
+
+    cond do
+      stale != [] and failing != [] ->
+        {:blocked, "open PR(s) exceed the 14-day age threshold and have a failing required check"}
+
+      stale != [] ->
+        {:blocked, "open PR(s) exceed the 14-day age threshold"}
+
+      failing != [] ->
+        {:blocked, "open PR(s) have a failing required check"}
+
+      true ->
+        {:pass, nil}
+    end
+  end
+
+  defp pr_stale?(pr) do
+    with created when is_binary(created) <- Map.get(pr, "createdAt"),
+         {:ok, created_at, _offset} <- DateTime.from_iso8601(created) do
+      # Whole-day granularity, not raw elapsed seconds: a PR opened exactly
+      # 14 days ago must not flip to blocked purely from the few seconds of
+      # audit-run latency between "createdAt" and this comparison.
+      age_days = div(DateTime.diff(DateTime.utc_now(), created_at, :second), 86_400)
+      age_days > 14
+    else
+      _ -> false
+    end
+  end
+
+  # A malformed or missing rollup classifies to not-failing here -- a decode
+  # failure on the whole PR-list response still routes to cannot-check
+  # upstream, never silently to pass (T-166-23).
+  defp pr_failing_check?(pr) do
+    case Map.get(pr, "statusCheckRollup") do
+      rollup when is_list(rollup) -> Enum.any?(rollup, &check_conclusion_failing?/1)
+      _not_a_list -> false
+    end
+  end
+
+  defp check_conclusion_failing?(%{"conclusion" => conclusion}) when is_binary(conclusion) do
+    String.upcase(conclusion) in ~w(FAILURE TIMED_OUT CANCELLED ACTION_REQUIRED STARTUP_FAILURE)
+  end
+
+  defp check_conclusion_failing?(_), do: false
+
+  defp pr_message(:pass, _reason, []), do: "No open PRs."
+  defp pr_message(:pass, _reason, prs), do: "#{length(prs)} open PR(s), none blocking."
+
+  defp pr_message(:blocked, reason, prs),
+    do: "#{length(prs)} open PR(s) require disposition before release: #{reason}."
 
   defp parse_branch(line) do
     [name, upstream, committed_at] = String.split(line, "|", parts: 3)
