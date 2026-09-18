@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v2.8
 milestone_name: Truthful Repo
-current_phase: 167
-current_phase_name: truthful-documentation-and-the-standing-control
-status: verifying
+current_phase: 166
+current_phase_name: Earned Greens and Controls That Can Pass
+status: planning
 stopped_at: Completed 167-03-PLAN.md
-last_updated: "2026-09-18T13:12:43.141Z"
+last_updated: "2026-09-18T13:19:56.156Z"
 last_activity: 2026-09-18
 last_activity_desc: Phase 167 execution started
 progress:
@@ -41,10 +41,10 @@ tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open 
 
 ## Current Position
 
-Phase: 167 (truthful-documentation-and-the-standing-control) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-09-18 — Phase 167 execution started
+Phase: 166 — Earned Greens and Controls That Can Pass
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-09-18 — Phase 167 complete, transitioned to Phase 166
 
 ## v2.8 Roadmap Shape
 
@@ -140,7 +140,7 @@ Last activity: 2026-09-18 — Phase 167 execution started
 
 **Velocity:**
 
-- Total plans completed: 75
+- Total plans completed: 79
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -153,6 +153,7 @@ Last activity: 2026-09-18 — Phase 167 execution started
 | 163. Deterministic Release-Path Timeout Repairs | 8 | — | — |
 | 164. Repository Truth Reconciliation and Closeout | 44 | — | — |
 | 165 | 5 | - | - |
+| 167 | 4 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |

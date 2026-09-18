@@ -85,7 +85,7 @@ state."* Three temptations are pre-refused by name:
 **No product code changes.** DOCS-05's `css_inliner` disposition is the single permitted `lib/` change.
 
 - [ ] **Phase 166: Earned Greens and Controls That Can Pass** - Replace the signals that report success without earning it, and give each fail-closed control a path to its own pass state
-- [ ] **Phase 167: Truthful Documentation and the Standing Control** - Retire the claims that mislead at the moment they are read, pin each correction with a test, and install exactly one new standing control
+- [x] **Phase 167: Truthful Documentation and the Standing Control** - Retire the claims that mislead at the moment they are read, pin each correction with a test, and install exactly one new standing control (completed 2026-09-18)
 
 ## Phase Details
 
@@ -260,7 +260,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 166. Earned Greens and Controls That Can Pass | 6/6 | In Progress|  |
-| 167. Truthful Documentation and the Standing Control | 4/4 | In Progress|  |
+| 167. Truthful Documentation and the Standing Control | 4/4 | Complete    | 2026-09-18 |
 
 ## Milestone Exit Criteria (v2.8)
 
