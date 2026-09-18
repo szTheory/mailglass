@@ -4,9 +4,9 @@ milestone: v2.8
 milestone_name: Truthful Repo
 current_phase: 167.1
 current_phase_name: close-gap-ctrl-02-ctrl-03-proposal-control-cannot-produce-ev
-status: executing
-stopped_at: Completed 167.1-01-PLAN.md
-last_updated: "2026-09-18T18:02:09.550Z"
+status: verifying
+stopped_at: Completed 167.1-02-PLAN.md
+last_updated: "2026-09-18T18:05:35.886Z"
 last_activity: 2026-09-18
 last_activity_desc: Phase 167 execution started
 progress:
@@ -44,7 +44,7 @@ tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open 
 
 Phase: 167.1 (close-gap-ctrl-02-ctrl-03-proposal-control-cannot-produce-ev) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 awaiting planning; something does remain to build.
 
 CTRL-02 and CTRL-03 are **not** waiting on a release ceremony. The audit disproved that diagnosis by
@@ -258,6 +258,7 @@ Last activity: 2026-09-18 — Phase 167.1 execution started
 | Phase 167 P02 | 20min | 2 tasks | 4 files |
 | Phase 167 P03 | 15min | 3 tasks | 8 files |
 | Phase 167.1 P01 | 24m | 3 tasks | 2 files |
+| Phase 167.1 P02 | 12min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -404,6 +405,7 @@ Last activity: 2026-09-18 — Phase 167.1 execution started
 - [Phase ?]: [Phase 167]: DOCS-05's outbound.ex moduledoc and api_stability.md injected-forms list corrected against source (Reconciler resolves orphan webhook Events, not orphan :queued Deliveries; the actual Mailglass.Message import/new(assigns \\ [])/defoverridable new: 1 replace three wrong claims), both pinned by source-coupled ExUnit assertions rather than proofread.
 - [Phase ?]: [Phase 167.1]: D-05 widening added exactly one new admissible pass pair (pending / proposal_awaiting_release_action) to release-please.yml's twin predicates -- a positive observation reachable only after gh pr list succeeded and exactly one open proposal was counted; capture-proposal's should_run gate left byte-identical so an un-gated discovery can never validate a pre-sibling-sync digest.
 - [Phase ?]: [Phase 167.1]: CTRL-02/CTRL-03's structural block is closed (167.1-01 merged the code fix), but both requirements' Accept clauses are post-merge observations this plan cannot produce -- they remain evidence-pending, not complete. Plan 02 owns the harvest.
+- [Phase ?]: CTRL-02/CTRL-03 requirement prose corrected to name the measured conflated-should_run-flag mechanism (D-06); both Accept clauses left byte-identical
 
 ## Quick Tasks Completed
 
@@ -421,8 +423,8 @@ Last activity: 2026-09-18 — Phase 167.1 execution started
 
 ## Session Continuity
 
-Last session: 2026-09-18T18:01:53.026Z
-Stopped at: Completed 167.1-01-PLAN.md
+Last session: 2026-09-18T18:05:35.875Z
+Stopped at: Completed 167.1-02-PLAN.md
 partial, waiting only on post-merge observations that cannot be forced. Earlier context: the
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under

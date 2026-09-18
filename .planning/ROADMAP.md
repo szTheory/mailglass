@@ -304,7 +304,7 @@ CTRL-03 become achievable rather than structurally blocked.
 
 5. The new behavior is pinned by a test or generated check, not only by a run log.
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans executed
 
 Plans:
 
@@ -312,5 +312,5 @@ Plans:
       standalone-discovery world states, widen both twin pass predicates by exactly one observed pair,
       and pin all five states plus the two guards that must not move (wave 1)
 
-- [ ] 167.1-02-PLAN.md — Correct the refuted rate-limit mechanism in CTRL-02/CTRL-03 prose (Accept
+- [x] 167.1-02-PLAN.md — Correct the refuted rate-limit mechanism in CTRL-02/CTRL-03 prose (Accept
       clauses verbatim) and write the post-merge harvest procedure with empty observation slots (wave 2)
