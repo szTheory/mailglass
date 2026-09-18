@@ -277,6 +277,8 @@ Full trajectory in [`.planning/ROADMAP.md`](.planning/ROADMAP.md) and
   working locally in one command (`make demo`)
 - [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)
   — current `v2.x` compatibility, deprecation, and support-matrix policy with retained historical `1.x` promises
+- [`guides/upgrading-to-v2_0.md`](guides/upgrading-to-v2_0.md) — canonical
+  `1.x` to `2.0` upgrade path (PostgreSQL schema isolation)
 - [`guides/upgrading-to-v1_0.md`](guides/upgrading-to-v1_0.md) — canonical
   latest-`0.x` to `1.0` upgrade path
 - [`guides/upgrading-from-v0_1.md`](guides/upgrading-from-v0_1.md) —

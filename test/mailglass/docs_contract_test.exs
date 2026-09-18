@@ -185,6 +185,22 @@ defmodule Mailglass.DocsContractTest do
       refute admin =~ "{:mailglass_admin, \"~> 0.1\"}"
       refute admin =~ "guaranteed client parity"
     end
+
+    # Positive-only: the defect is an absence (an existing guide unlinked from
+    # README.md), so there is no stale string to refute. Generalizing across
+    # the wildcard means the next upgrade guide is covered automatically.
+    test "every upgrade guide on disk is linked from README.md" do
+      readme = File.read!("README.md")
+      guides = Path.wildcard("guides/upgrading-*.md")
+
+      refute guides == [],
+             "Path.wildcard(\"guides/upgrading-*.md\") returned no upgrade guides — " <>
+               "expected at least guides/upgrading-to-v1_0.md and guides/upgrading-to-v2_0.md"
+
+      Enum.each(guides, fn path ->
+        assert readme =~ path, "README.md does not link #{path}"
+      end)
+    end
   end
 
   describe "Task existence" do
@@ -1153,6 +1169,31 @@ defmodule Mailglass.DocsContractTest do
 
       assert claude =~ "three approvals",
              "CLAUDE.md must still state the three required approvals"
+    end
+  end
+
+  describe "CHANGELOG.md contract" do
+    test "2.0.0 changelog entry names the schema-isolation breaking change" do
+      changelog = File.read!("CHANGELOG.md")
+
+      section =
+        case Regex.run(~r/^## \[2\.0\.0\]([\s\S]*?)(?=^## \[|\z)/m, changelog) do
+          [_, body] -> body
+          _ -> flunk("CHANGELOG.md is missing its ## [2.0.0] section")
+        end
+
+      assert section =~ "schema",
+             "CHANGELOG.md's 2.0.0 section must name the schema-isolation breaking change"
+
+      assert section =~ "132",
+             "CHANGELOG.md's 2.0.0 section must cite the Phases 132-137 schema-isolation work"
+
+      # Additive-only proof: the original release-please-generated bullet must
+      # survive verbatim, so this diff can never be the one that rewrote
+      # release history.
+      assert section =~
+               "marker is banked in 132-136, so release-please would otherwise cut 1.12.0/1.12.0",
+             "CHANGELOG.md's original release-please-generated 2.0.0 bullet must survive unedited"
     end
   end
 
