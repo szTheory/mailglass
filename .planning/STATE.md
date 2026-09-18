@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v2.8
 milestone_name: Truthful Repo
 current_phase: 167.1
-current_phase_name: "Close gap: CTRL-02/CTRL-03 — proposal control cannot produce evidence when should_run=false"
+current_phase_name: "Close gap: CTRL-02/CTRL-03"
 status: planning
 stopped_at: Completed 167-03-PLAN.md
-last_updated: "2026-09-18T17:23:28.266Z"
+last_updated: "2026-09-18T17:44:17.359Z"
 last_activity: 2026-09-18
 last_activity_desc: Phase 167 execution started
 progress:
@@ -42,7 +42,7 @@ tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open 
 
 ## Current Position
 
-Phase: 167.1 — Close gap: CTRL-02/CTRL-03 — proposal control cannot produce evidence when should_run=false
+Phase: 167.1 — Close gap: CTRL-02/CTRL-03 (planned, ready to execute)
 Plan: 6/6 executed and merged (`dcbda58f`, PR #281)
 Status: v2.8 audited 2026-09-18 — `gaps_found`, 15/17 requirements satisfied. Phase 167.1 inserted and
 awaiting planning; something does remain to build.
