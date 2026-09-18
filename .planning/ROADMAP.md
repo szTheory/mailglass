@@ -239,13 +239,13 @@ the control behavior Phase 166 establishes)
 - **STAND-01 is exactly one new control.** The alert budget says adding another requires retiring one.
   If a grouped PR reds, drop the culprit with `ignore` and re-run — do not ungroup.
 
-**Plans**: 1/4 plans executed
+**Plans**: 2/4 plans executed
 
 Plans:
 **Wave 1**
 
 - [x] 167-01-PLAN.md — DOCS-03: correct MAINTAINING.md/CONTRIBUTING.md release-mechanics claims and add the close-out runbook, led by the phase tracer (a derived exclude-paths count pin) [wave 1]
-- [ ] 167-04-PLAN.md — DOCS-01, STAND-01: truth up STATE.md with a live-state audit script and an offline shape-guard test; group and cap the three `mix` Dependabot entries [wave 1]
+- [x] 167-04-PLAN.md — DOCS-01, STAND-01: truth up STATE.md with a live-state audit script and an offline shape-guard test; group and cap the three `mix` Dependabot entries [wave 1]
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -260,7 +260,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 166. Earned Greens and Controls That Can Pass | 6/6 | In Progress|  |
-| 167. Truthful Documentation and the Standing Control | 1/4 | In Progress|  |
+| 167. Truthful Documentation and the Standing Control | 2/4 | In Progress|  |
 
 ## Milestone Exit Criteria (v2.8)
 

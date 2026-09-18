@@ -5,15 +5,15 @@ milestone_name: Truthful Repo
 current_phase: 167
 current_phase_name: truthful-documentation-and-the-standing-control
 status: executing
-stopped_at: Completed 167-01-PLAN.md
-last_updated: "2026-09-18T12:43:38.903Z"
+stopped_at: Completed 167-04-PLAN.md
+last_updated: "2026-09-18T12:54:17.791Z"
 last_activity: 2026-09-18
 last_activity_desc: Phase 167 execution started
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 8
   percent: 50
 state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 ---
@@ -42,7 +42,7 @@ tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open 
 ## Current Position
 
 Phase: 167 (truthful-documentation-and-the-standing-control) — EXECUTING
-Plan: 2 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-09-18 — Phase 167 execution started
 
@@ -234,6 +234,7 @@ Last activity: 2026-09-18 — Phase 167 execution started
 | Phase 166 P05 | 55min | 2 tasks | 5 files |
 | Phase 166 P06 | 55min | 2 tasks | 6 files |
 | Phase 167 P01 | 25min | 3 tasks | 3 files |
+| Phase 167 P04 | 12m | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -372,6 +373,7 @@ Last activity: 2026-09-18 — Phase 167 execution started
 - [Phase ?]: [Phase 167]: MAINTAINING.md's exclude-paths count is derived from release-please-config.json at test time (count_word!/1 1..30 map), never a second hardcoded literal — proven via a live mutation.
 - [Phase ?]: [Phase 167]: MAINTAINING.md/CONTRIBUTING.md publish-fan-out and sibling-pin claims corrected (required_reviewers gate named explicitly, bare ~> 2.0 sibling constraint replaces the stale fix(inbound) floor-bump instruction).
 - [Phase ?]: [Phase 167]: New MAINTAINING.md ## Release Close-Out runbook added and pinned with File.exists?/1 over every scripts/*.sh|.exs path it names, proven via a rename-and-revert mutation.
+- [Phase ?]: [Phase 167]: DOCS-01/STAND-01 — STATE.md's ongoing PR/issue state is delegated to a live gh audit script (scripts/check_state_md_pr_refs.sh) and pinned offline by refusing the shape of a hardcoded open-count claim, not by asserting today's count; the three mix Dependabot entries are grouped (minor+patch) and capped at 3 open PRs, with majors and security-updates left individually reviewable.
 
 ## Quick Tasks Completed
 
@@ -389,8 +391,8 @@ Last activity: 2026-09-18 — Phase 167 execution started
 
 ## Session Continuity
 
-Last session: 2026-09-18T12:43:38.893Z
-Stopped at: Completed 167-01-PLAN.md
+Last session: 2026-09-18T12:54:17.780Z
+Stopped at: Completed 167-04-PLAN.md
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.

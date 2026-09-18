@@ -108,7 +108,7 @@ Documentation that actively misleads at the moment it is read. Ordered by damage
 correction must be pinned by a test or generated, not merely proofread** — that is what makes this
 milestone terminate rather than recur.
 
-- [ ] **DOCS-01**: `STATE.md` contains no claim contradicted by HEAD. The `## Operator Next Steps` and
+- [x] **DOCS-01**: `STATE.md` contains no claim contradicted by HEAD. The `## Operator Next Steps` and
       Session Continuity blocks are truthed up: the two `InboundLiveTest` reds (fixed in `f733fc22` /
       `d65a1aa8`), PR #222 and #129 (both closed), and the "14 open PRs" accepted-debt count (now zero).
       *Accept:* no statement in `STATE.md` is falsified by `gh pr list`, `gh issue list`, or a live
@@ -159,7 +159,7 @@ milestone terminate rather than recur.
 The mechanism that makes quiet self-sustaining. **Exactly one new control** — the alert budget says
 adding more requires retiring some.
 
-- [ ] **STAND-01**: Dependabot produces batched, scheduled, reviewable PRs instead of a serial pileup.
+- [x] **STAND-01**: Dependabot produces batched, scheduled, reviewable PRs instead of a serial pileup.
       Each `mix` entry in `.github/dependabot.yml` gains grouping for minor/patch, a weekly schedule,
       and `open-pull-requests-limit: 3`. Majors stay ungrouped so a breaking bump is individually
       reviewable.
@@ -227,13 +227,13 @@ Populated 2026-09-17 during roadmap creation.
 | CTRL-03 | Phase 166 | Implemented, evidence pending |
 | CTRL-04 | Phase 166 | Complete |
 | CTRL-05 | Phase 166 | Implemented, evidence pending |
-| DOCS-01 | Phase 167 | Pending |
+| DOCS-01 | Phase 167 | Complete |
 | DOCS-02 | Phase 167 | Pending |
 | DOCS-03 | Phase 167 | Complete |
 | DOCS-04 | Phase 167 | Pending |
 | DOCS-05 | Phase 167 | Pending |
 | DOCS-06 | Phase 167 | Pending |
-| STAND-01 | Phase 167 | Pending |
+| STAND-01 | Phase 167 | Complete |
 
 **Coverage:**
 
