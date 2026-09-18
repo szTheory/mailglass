@@ -1226,9 +1226,14 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: deps
-          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
+          # GREEN-05 (D-15): lane-specific key segment disambiguates this
+          # trust lane's cache entry from trust_lane_clean_baseline's, even
+          # though both currently declare the same bare `deps` path list —
+          # belt-and-braces on top of the by-construction refutation in
+          # docs/ci-cache-isolation.md.
+          key: mix-trust-repo-head-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
+            mix-trust-repo-head-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
       - name: Install deps
         run: mix deps.get
       - name: Wait for postgres + create test DB
@@ -1237,6 +1242,12 @@ jobs:
         run: |
           until pg_isready -h localhost -U postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: List reference/host_app/deps before install (GREEN-05 evidence)
+        # Part 2 of the D-15 proof: records what cache restore actually
+        # materialized before deps.get runs, rather than inferring it. This
+        # trust lane's cache step above never declares reference/host_app/deps
+        # as a path — this listing observes that fact directly.
+        run: ls -la reference/host_app/deps 2>/dev/null || echo "reference/host_app/deps absent before install"
       - name: Build published Admin compatibility gate
         # Repo-head trust is explicitly prepublication: core + inbound come
         # from coherent workspace builds, while Admin remains the established
@@ -1311,9 +1322,14 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: deps
-          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
+          # GREEN-05 (D-15): lane-specific key segment disambiguates this
+          # trust lane's cache entry from trust_lane_repo_head's, even
+          # though both currently declare the same bare `deps` path list —
+          # belt-and-braces on top of the by-construction refutation in
+          # docs/ci-cache-isolation.md.
+          key: mix-trust-clean-baseline-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
+            mix-trust-clean-baseline-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
       - name: Install deps
         run: mix deps.get
       - name: Wait for postgres + create test DB
@@ -1322,6 +1338,12 @@ jobs:
         run: |
           until pg_isready -h localhost -U postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: List reference/host_app/deps before install (GREEN-05 evidence)
+        # Part 2 of the D-15 proof: records what cache restore actually
+        # materialized before deps.get runs, rather than inferring it. This
+        # trust lane's cache step above never declares reference/host_app/deps
+        # as a path — this listing observes that fact directly.
+        run: ls -la reference/host_app/deps 2>/dev/null || echo "reference/host_app/deps absent before install"
       - name: Build reference host (dev) so the journey can load sibling beams
         working-directory: reference/host_app
         env:
