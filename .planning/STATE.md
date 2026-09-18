@@ -4,17 +4,17 @@ milestone: v2.8
 milestone_name: Truthful Repo
 current_phase: 166
 current_phase_name: Earned Greens and Controls That Can Pass
-status: executing
-stopped_at: Completed 166-05-PLAN.md (GREEN-04/GREEN-05 implemented; Task 3 post-push evidence pending)
-last_updated: "2026-09-18T02:30:22.936Z"
+status: verifying
+stopped_at: Completed 166-06-PLAN.md (Task 3 checkpoint pending post-merge evidence)
+last_updated: "2026-09-18T02:57:41.564Z"
 last_activity: 2026-09-17
 last_activity_desc: Phase 166 execution started
 progress:
   total_phases: 2
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 6
-  completed_plans: 5
-  percent: 0
+  completed_plans: 6
+  percent: 50
 state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 ---
 
@@ -39,7 +39,7 @@ tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
 
 Phase: 166 (Earned Greens and Controls That Can Pass) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-09-17 — Phase 166 execution started
 
 ## v2.8 Roadmap Shape
@@ -225,6 +225,7 @@ Last activity: 2026-09-17 — Phase 166 execution started
 | Phase 166 P03 | 4min | 4 tasks | 2 files |
 | Phase 166 P04 | 6m | 2 tasks | 4 files |
 | Phase 166 P05 | 55min | 2 tasks | 5 files |
+| Phase 166 P06 | 55min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -358,6 +359,8 @@ Last activity: 2026-09-17 — Phase 166 execution started
 - [Phase 166]: D-20's release-please.yml line citations (:119/:179) are stale; the semantic clause (the gh api calls that already classify to cannot-check) governs. Verified the two gh pr list calls at lines 572/684 are the correct and only wrap targets; maintainer confirmed this reading.
 - [Phase 166]: 166-05: GREEN-04 isolation uses an rsync scratch copy with default paths, not MIX_DEPS_PATH/MIX_BUILD_PATH (broke cowlib's erlang.mk build) or a new CI job (requires lane-registry registration). — Both prior-executor blockers resolved by orchestrator and re-verified locally before implementation.
 - [Phase 166]: 166-05: reference/demo_app/mix.lock's three mailglass sibling entries refreshed to the published 2.6.0/2.6.0/2.3.0 line so GREEN-04's hex build can compile (frozen 2.0.0 lock predates mailglass_admin's :navigation dependency). — mix.exs ~> 2.0 constraints already permit this; only the lock was stale.
+- [Phase ?]: CTRL-01: post-publish-smoke resolves an inactive ledger's published baseline via a new baseline-versions verb + ledger-status peek; distinct cron-guard baseline output never reuses completed=true
+- [Phase ?]: CTRL-05: repo-hygiene cannot_check exits a distinct nonzero code from blocked; PR predicate widened to open >14d (day-granularity) OR failing required check
 
 ## Quick Tasks Completed
 
@@ -375,8 +378,8 @@ Last activity: 2026-09-17 — Phase 166 execution started
 
 ## Session Continuity
 
-Last session: 2026-09-18T02:30:16.352Z
-Stopped at: Completed 166-05-PLAN.md (GREEN-04/GREEN-05 implemented; Task 3 post-push evidence pending)
+Last session: 2026-09-18T02:57:41.553Z
+Stopped at: Completed 166-06-PLAN.md (Task 3 checkpoint pending post-merge evidence)
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.

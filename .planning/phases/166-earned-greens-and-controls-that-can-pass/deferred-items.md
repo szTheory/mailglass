@@ -79,3 +79,47 @@ re-run builds hoping they resolve themselves).
 
   Until this is observed, `.planning/REQUIREMENTS.md`'s GREEN-04/GREEN-05 rows stay
   `Implemented, evidence pending` — not `Complete`. See `166-05-SUMMARY.md` for full detail.
+
+## 166-06
+
+- **Task 3 (checkpoint:human-verify, `gate="blocking-human"`) — post-merge evidence for
+  CTRL-01/CTRL-05 acceptance criteria is explicitly PENDING, not observed.** Nothing from this
+  plan has merged to `main` yet, and CTRL-05's evidence needs two NATURALLY-TRIGGERED
+  `repo-hygiene` cron firings — never a `workflow_dispatch` or re-run manufactured to produce
+  them (the plan's own prohibition, confirmed by maintainer). Checklist for whoever picks this
+  up next:
+
+  **CTRL-01 (milestone exit criterion 3 — do not drop if the timebox tightens):**
+  1. After this PR merges to `main`, dispatch `post-publish-smoke.yml` via
+     `gh workflow run post-publish-smoke.yml --ref main -f mode=baseline -f core_version=<any
+     non-empty value> -f admin_version=<any non-empty value> -f inbound_version=<any non-empty
+     value> -f target_ref=<any 40-hex value, e.g. the ledger's
+     required_evidence_identifiers.historical_tag_sha>`. The four non-mode inputs stay
+     `required: true` per D-17 but are NOT consulted in baseline mode — any well-formed
+     placeholder satisfies GitHub's non-empty requirement.
+  2. Confirm the `resolve-completed-target` job's "Resolve protected target versions" step
+     exits 0 and the "Upload post-publish resolution" step uploads
+     `post-publish-resolution-<run_id>` containing `post-publish-resolution.json`.
+  3. Download the artifact; confirm `status: "pass"`, `reason: "exact_target_verified"`, and
+     that `core`/`admin`/`inbound`/`target_ref` match `.planning/release-target.json`'s
+     `baselines` and `required_evidence_identifiers.historical_tag_sha` (currently
+     2.6.0/2.6.0/2.3.0 and `6a0447a900e26b2b07332ac50682767801ddcda7`).
+  4. Record the run URL and the artifact's resolved values.
+  5. Confirm the live-dispatch path is unaffected: the guards this plan did not touch
+     (40-hex ref regex, exact-SemVer assertions, all 4 pre-existing required inputs, the
+     64-hex digest requirement) still apply unconditionally when `mode` is left empty.
+
+  **CTRL-05:**
+  1. Wait for two consecutive naturally-triggered scheduled `repo-hygiene` runs (daily cron
+     `30 12 * * *`). Do not dispatch or re-run to manufacture these.
+  2. Confirm both runs conclude `success` with an overall `status: pass` in the uploaded
+     `repo-hygiene` artifact.
+  3. Keep at least one healthy PR (age ≤14 days, no failing required check) open across both
+     firings; record its number, so "a freshly opened healthy PR does not turn it red" is
+     exercised rather than vacuously true on an empty PR list.
+  4. Confirm no `repo-hygiene` run exited 0 on a non-pass verdict (the workflow's `pipefail`
+     step should fail whenever `mix mailglass.repo.hygiene --check --format json` exits
+     `{:shutdown, 1}` blocked or `{:shutdown, 2}` cannot-check).
+
+  Until all of the above are observed, `.planning/REQUIREMENTS.md`'s CTRL-01/CTRL-05 rows stay
+  `Implemented, evidence pending` — not `Complete`. See `166-06-SUMMARY.md` for full detail.
