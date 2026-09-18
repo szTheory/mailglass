@@ -47,6 +47,37 @@ Historical procedures below remain provenance only. They are not an alternate
 current runbook and do not supersede the protected exact-candidate and
 repository-admin conditions above.
 
+## Release Close-Out
+
+A release is not finished when Hex accepts it. The fail-closed ledger at
+`.planning/release-target.json` moves through five states:
+`inactive → captured → authorized → published → completed → inactive`. Skipping
+close-out strands the ledger and fails `release-please` closed — the 2.5.0
+release strand ran about four weeks before it was diagnosed.
+
+Run this runbook every time a publish (Steps 1-6 above) completes:
+
+1. Confirm `.planning/release-target.json`'s `status` is one of `authorized`,
+   `published`, or `completed`. The wrapper below rejects any other value —
+   there is nothing to close out from `inactive` or `captured`.
+2. Run `scripts/release_policy_close_out.sh --write`. Full usage:
+   `release_policy_close_out.sh [--target PATH] [--repo PATH] [--write]`.
+   Omitting `--write` is the dry run — it re-verifies live Hex checksums and
+   reports what it would write without touching the ledger.
+3. The wrapper re-verifies live Hex checksums and invokes
+   `scripts/check_published_baseline_of_record.sh`, which fails the ledger
+   write loudly if the four published-baseline records disagree. A loud
+   failure here is the control working, not a bug to route around — do not
+   bypass it.
+4. Confirm the ledger `status` returned to `inactive` and the published
+   baseline of record advanced, then commit the ledger change as its own
+   reviewed PR. A ledger edit is never folded into another PR.
+
+The underlying implementation is `scripts/release_policy.exs`'s `close-out` CLI
+verb (`cli(["close-out", target_path, tag_sha, checksums_path])`) — the wrapper
+script above is what a maintainer should invoke directly; read the CLI verb
+when debugging the wrapper itself.
+
 ## Phase 164 repository finalization
 
 The sole current Phase 164 verdict entry point is the installed executable:

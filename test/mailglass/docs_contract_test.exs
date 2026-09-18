@@ -1059,6 +1059,35 @@ defmodule Mailglass.DocsContractTest do
       assert maintaining =~ "three",
              "MAINTAINING.md must state the three required_reviewers approval stops"
     end
+
+    # Positive-only: the defect here is an *absent* section, so there is no
+    # stale string to refute — only presence and referential integrity of the
+    # runbook can be asserted.
+    test "close-out runbook names the ledger states and every script it tells the reader to run" do
+      maintaining = File.read!("MAINTAINING.md")
+
+      section =
+        case Regex.run(~r/^## Release Close-Out\n([\s\S]*?)(?=^## |\z)/m, maintaining) do
+          [_, body] -> body
+          _ -> flunk("MAINTAINING.md is missing its ## Release Close-Out section")
+        end
+
+      assert section =~ "scripts/release_policy_close_out.sh",
+             "Release Close-Out section must name scripts/release_policy_close_out.sh"
+
+      assert section =~ "check_published_baseline_of_record.sh",
+             "Release Close-Out section must name check_published_baseline_of_record.sh"
+
+      for state <- ~w(inactive captured authorized published completed) do
+        assert section =~ state,
+               "Release Close-Out section must name the #{state} ledger state"
+      end
+
+      for path <- Regex.scan(~r{scripts/[a-z0-9_]+\.(?:sh|exs)}, section) |> Enum.map(&hd/1) |> Enum.uniq() do
+        assert File.exists?(path),
+               "Release Close-Out section names #{path}, which does not exist on disk"
+      end
+    end
   end
 
   describe "CONTRIBUTING.md contract" do
