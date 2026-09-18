@@ -81,7 +81,7 @@ adds a path to *earn* green; none relaxes a gate.
       same SHA agree. **`cannot-check` must still never report as `pass`.**
       *Note:* research verified this is a **secondary** rate limit (all 15 buckets read full during a
       403), so reducing cron frequency is not a fix and is not in scope.
-- [ ] **CTRL-04**: The `Hex Audit` calendar time bomb is defused truthfully before it fires. Both
+- [x] **CTRL-04**: The `Hex Audit` calendar time bomb is defused truthfully before it fires. Both
       cowlib advisories (`EEF-CVE-2026-43966`, `EEF-CVE-2026-43969`, `recheck_by: ~D[2026-10-26]`) are
       genuinely re-verified upstream, then either extended with written justification or removed if
       upstream now has a fix.
@@ -211,7 +211,7 @@ Populated 2026-09-17 during roadmap creation.
 | CTRL-01 | Phase 166 | Pending |
 | CTRL-02 | Phase 166 | Pending |
 | CTRL-03 | Phase 166 | Pending |
-| CTRL-04 | Phase 166 | Pending |
+| CTRL-04 | Phase 166 | Complete |
 | CTRL-05 | Phase 166 | Pending |
 | DOCS-01 | Phase 167 | Pending |
 | DOCS-02 | Phase 167 | Pending |

@@ -5,16 +5,16 @@ milestone_name: Truthful Repo
 current_phase: 166
 current_phase_name: Earned Greens and Controls That Can Pass
 status: executing
-stopped_at: Completed 166-02-PLAN.md (GREEN-03)
-last_updated: "2026-09-17T22:07:33.623Z"
+stopped_at: Completed 166-03-PLAN.md (CTRL-04)
+last_updated: "2026-09-18T00:29:09.389Z"
 last_activity: 2026-09-17
 last_activity_desc: Phase 166 execution started
-state_head: 4511c205da5e0cd280a900d2ec7756e824097d73
+state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 6
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -38,7 +38,7 @@ tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
 ## Current Position
 
 Phase: 166 (Earned Greens and Controls That Can Pass) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-09-17 — Phase 166 execution started
 
@@ -210,6 +210,7 @@ Last activity: 2026-09-17 — Phase 166 execution started
 | Phase 165 P05 | 25m | 2 tasks | 4 files |
 | Phase 166 P01 | 24min | 3 tasks | 5 files |
 | Phase 166 P02 | 15min | 2 tasks | 2 files |
+| Phase 166 P03 | 4min | 4 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -336,6 +337,9 @@ Last activity: 2026-09-17 — Phase 166 execution started
 - [Phase 165]: Final state publication and commit precede protected exact-SHA evidence and the one permitted installed terminal invocation.
 - [Phase 166]: GREEN-01/GREEN-02: widened verify.support_contract.admin to directory-scoped run (325 newly-executed tests) and wired a measured ExCoveralls coverage floor for mailglass_admin, demonstrated (not asserted) to fire on regression.
 - [Phase 166]: GREEN-03: enforced the anti-vacuity suite floor on the required core_deterministic_suite lane by setting MAILGLASS_SUITE_FLOOR: "1" in ci.yml, guarded by a new occurrence-count drift test mirroring the advisory-matrix.yml trio; no floor constants were re-pinned (measured 2134 executed vs 1576 floor, 7 skipped == 7 ceiling).
+- [Phase 166]: Clock-proof: faketime does not intercept the BEAM clock on this toolchain (macOS SIP strips DYLD_INSERT_LIBRARIES); maintainer accepted the fallback evidence (real un-faked audit run + committed date-boundary test) as satisfying CTRL-04's clock-fake clause.
+- [Phase 166]: lib/ exemption confirmed by maintainer: accepted_advisories.ex data-only edit (recheck_by + reason text) is CTRL-04's named exemption to the milestone's no-product-code-changes constraint (D-31).
+- [Phase 166]: recheck_by: ~D[2027-03-17] confirmed as the standing decision for both cowlib advisory entries (D-30), with named falsifiable re-check for next cycle.
 
 ## Quick Tasks Completed
 
@@ -353,8 +357,8 @@ Last activity: 2026-09-17 — Phase 166 execution started
 
 ## Session Continuity
 
-Last session: 2026-09-17T22:07:33.605Z
-Stopped at: Completed 166-02-PLAN.md (GREEN-03)
+Last session: 2026-09-18T00:29:09.376Z
+Stopped at: Completed 166-03-PLAN.md (CTRL-04)
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.
