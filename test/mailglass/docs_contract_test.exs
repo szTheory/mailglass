@@ -1110,6 +1110,52 @@ defmodule Mailglass.DocsContractTest do
     end
   end
 
+  # Negative-first for both tests: each defect is a specific wrong string, and
+  # the corrected prose can legitimately be phrased many ways, so a
+  # positive-only assertion would over-constrain a human-edited file. Each
+  # refute is paired with a positive backstop so deleting the sentence
+  # entirely cannot turn the test green.
+  describe "CLAUDE.md contract" do
+    test "sibling pin guidance matches the ~> convention the sibling mix files carry" do
+      claude = File.read!("CLAUDE.md")
+
+      sibling_bullet =
+        String.split(claude, "\n")
+        |> Enum.find(&String.starts_with?(&1, "- **Sibling packages"))
+
+      refute is_nil(sibling_bullet),
+             "CLAUDE.md is missing its '- **Sibling packages with linked-version releases.**' bullet"
+
+      refute sibling_bullet =~ ~s({:mailglass, "== <version>"}),
+             "CLAUDE.md's sibling-pin bullet still instructs an == exact pin"
+
+      assert sibling_bullet =~ "~> ",
+             "CLAUDE.md's sibling-pin bullet must describe the ~> convention"
+
+      assert sibling_bullet =~ "linked-versions",
+             "CLAUDE.md's sibling-pin bullet must name the linked-versions plugin"
+    end
+
+    test "release PR merge path is described as disarmed plus protected dispatch" do
+      claude = File.read!("CLAUDE.md")
+
+      refute claude =~ "auto-merges on green",
+             "CLAUDE.md still claims the release PR auto-merges on green"
+
+      assert claude =~ "disarmed" or claude =~ "Disarmed",
+             "CLAUDE.md must describe ordinary auto-merge as disarmed"
+
+      assert claude =~ "candidate-digest",
+             "CLAUDE.md must name the protected exact candidate-digest dispatch"
+
+      assert claude =~ "required_reviewers",
+             "CLAUDE.md must still name the required_reviewers approval mechanism"
+
+      assert claude =~ "three approvals",
+             "CLAUDE.md must still state the three required approvals"
+    end
+  end
+
   defp v26_contract_errors(core, compatibility, adopter) do
     combined = core <> "\n" <> compatibility
 
