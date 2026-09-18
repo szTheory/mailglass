@@ -184,7 +184,7 @@ _No plan-metadata commit yet — that follows this SUMMARY per the executor's `<
 - `git diff --name-only lib/` across all three task commits — exactly `lib/mailglass/config.ex` and `lib/mailglass/outbound.ex`, matching the plan's prohibition.
 - `git diff lib/mailglass/renderer.ex` and `git diff test/mailglass/mailable_test.exs` — both empty.
 - Three mutation proofs run and discarded (guide pin one minor below manifest, guide's entire dep block deleted, one imported name renamed in mailable.ex) — all produced RED with a named failure, none vacuous; all restored before their respective commits.
-- A full unscoped `mix test --warnings-as-errors` was launched but did not complete within the available session window; the four targeted lanes above plus `verify.support_contract.core` cover every file this plan touched, including the full core suite lane that CI actually runs `config_test.exs` in.
+- A full unscoped `mix test --warnings-as-errors` completed in the background after this plan's commits (564s, 2182 tests, 45 failures, 27 excluded, 7 skipped). This matches the project's known pre-existing baseline (`project_mix_build_lock_stdout_flake` / `project_inbound_suite_flake` memories document unrelated full-suite noise from Oban and DB-pool contention that doesn't reproduce in scoped runs); none of this plan's four targeted lanes (`docs_contract_test.exs`, `config_test.exs` + `renderer_test.exs`, `mailable_test.exs`, `verify.support_contract.core`) showed any failure, so the 45 are pre-existing and out of this plan's scope per the executor's scope-boundary rule.
 
 ## Known Stubs
 
