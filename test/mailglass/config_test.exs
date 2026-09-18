@@ -15,9 +15,9 @@ defmodule Mailglass.ConfigTest do
     end
 
     test "accepts valid opts unchanged and fills defaults" do
-      config = Mailglass.Config.new!(renderer: [css_inliner: :none, plaintext: false])
+      config = Mailglass.Config.new!(renderer: [css_inliner: :premailex, plaintext: false])
       renderer = Keyword.fetch!(config, :renderer)
-      assert Keyword.fetch!(renderer, :css_inliner) == :none
+      assert Keyword.fetch!(renderer, :css_inliner) == :premailex
       assert Keyword.fetch!(renderer, :plaintext) == false
     end
 
@@ -31,6 +31,15 @@ defmodule Mailglass.ConfigTest do
       assert_raise NimbleOptions.ValidationError, fn ->
         Mailglass.Config.new!(renderer: [css_inliner: :invalid_backend])
       end
+    end
+
+    test "rejects css_inliner: :none — the key was accepted but never read" do
+      exception =
+        assert_raise NimbleOptions.ValidationError, fn ->
+          Mailglass.Config.new!(renderer: [css_inliner: :none])
+        end
+
+      assert exception.message =~ ":premailex"
     end
 
     test "accepts a valid mailgun subtree" do

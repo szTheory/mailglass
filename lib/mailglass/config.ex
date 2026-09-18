@@ -82,9 +82,9 @@ defmodule Mailglass.Runtime.Schema do
       doc: "Renderer options.",
       keys: [
         css_inliner: [
-          type: {:in, [:premailex, :none]},
+          type: {:in, [:premailex]},
           default: :premailex,
-          doc: "CSS inlining backend. Default: `:premailex`."
+          doc: "CSS inlining backend. Premailex is the only supported backend. Default: `:premailex`."
         ],
         plaintext: [
           type: :boolean,
