@@ -515,10 +515,11 @@ jobs:
       # is not reporting on the repository.
       - name: Discover an open Release Please proposal before capture
         id: proposal-discovery
-        if: ${{ steps.release-preflight.outputs.should_run == 'true' && github.event.inputs.candidate_digest == '' }}
+        if: ${{ github.event.inputs.candidate_digest == '' }}
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHOULD_RUN: ${{ steps.release-preflight.outputs.should_run }}
         run: |
           set -euo pipefail
           should_capture=true
@@ -586,13 +587,44 @@ jobs:
               result_reason=no_open_proposal
               ;;
             1)
-              # Capture retains the existing exact identity and candidate
-              # validation semantics for an active proposal.
+              # CTRL-02/CTRL-03 (#166-04, closed by 167.1): in the permanent
+              # post-close-out steady state, should_run is false on every push
+              # and every hourly schedule because main's manifest tags all
+              # already exist -- 23 consecutive reds beginning at 7e9617b2,
+              # both triggers agreeing at dcbda58f. Capture never runs standalone
+              # discovery, so without this split the writer's cannot-check /
+              # github_evidence_unavailable defaults stood in for a real
+              # observation. When should_run is true, capture retains the
+              # existing exact identity and candidate validation semantics for
+              # an active proposal (byte-for-byte unchanged). When should_run is
+              # false, discovery itself has already established two facts: the
+              # API answered (gh pr list succeeded) and exactly one open
+              # proposal exists (jq -er 'length' == 1). Report that as a
+              # positive observation -- an open proposal exists and the release
+              # action is correctly not re-running against an already-tagged
+              # main -- not as an absence of evidence.
+              if [ "${SHOULD_RUN:-}" != true ]; then
+                should_capture=false
+                result_status=pending
+                result_reason=proposal_awaiting_release_action
+              fi
               ;;
             *)
               # Keep capture authoritative for the existing multiple-proposal
               # blocked classification rather than converting ambiguity into
-              # a successful pending observation.
+              # a successful pending observation. Under should_run=false the
+              # same standalone-discovery gap exists here as in the `1)` arm
+              # above: reproduce capture's own blocked / multiple_open_proposals
+              # verdict verbatim so the two paths cannot disagree about the
+              # same repository. This adds no admissible pass pair -- `blocked`
+              # is not in either pass predicate, so this path still fails the
+              # gate. It converts a blind cannot-check into a named,
+              # fail-closed alarm.
+              if [ "${SHOULD_RUN:-}" != true ]; then
+                should_capture=false
+                result_status=blocked
+                result_reason=multiple_open_proposals
+              fi
               ;;
           esac
 
@@ -854,7 +886,7 @@ jobs:
             printf 'status=%s\n' "$status"
             printf 'reason=%s\n' "$reason"
           } >> "$GITHUB_OUTPUT"
-          [ "$status" = pass ] || { [ "$status" = pending ] && [ "$reason" = no_open_proposal ]; }
+          [ "$status" = pass ] || { [ "$status" = pending ] && { [ "$reason" = no_open_proposal ] || [ "$reason" = proposal_awaiting_release_action ]; }; }
 
       - name: Summarize proposal-only release control result
         if: ${{ always() && github.event.inputs.candidate_digest == '' }}
@@ -882,7 +914,7 @@ jobs:
           RESULT_STATUS: ${{ steps.proposal-control-result.outputs.status }}
           RESULT_REASON: ${{ steps.proposal-control-result.outputs.reason }}
         run: |
-          [ "$RESULT_STATUS" = pass ] || { [ "$RESULT_STATUS" = pending ] && [ "$RESULT_REASON" = no_open_proposal ]; }
+          [ "$RESULT_STATUS" = pass ] || { [ "$RESULT_STATUS" = pending ] && { [ "$RESULT_REASON" = no_open_proposal ] || [ "$RESULT_REASON" = proposal_awaiting_release_action ]; }; }
 
       - name: Upload sanitized release proposal candidate
         if: ${{ github.event.inputs.candidate_digest == '' && steps.capture-proposal.outputs.captured == 'true' }}

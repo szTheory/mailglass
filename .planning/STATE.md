@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v2.8
 milestone_name: Truthful Repo
-current_phase: 166
-current_phase_name: Earned Greens and Controls That Can Pass
-status: planning
-stopped_at: Completed 167-03-PLAN.md
-last_updated: "2026-09-18T13:19:56.156Z"
+current_phase: 167.1
+current_phase_name: close-gap-ctrl-02-ctrl-03-proposal-control-cannot-produce-ev
+status: verifying
+stopped_at: Completed 167.1-02-PLAN.md
+last_updated: "2026-09-18T18:05:35.886Z"
 last_activity: 2026-09-18
 last_activity_desc: Phase 167 execution started
 progress:
@@ -25,7 +25,8 @@ state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 See: .planning/PROJECT.md (updated 2026-09-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 167 — truthful-documentation-and-the-standing-control
+**Current focus:** Phase 167.1 — close-gap-ctrl-02-ctrl-03-proposal-control-cannot-produce-ev
+phases' code has merged. Phase 167 is complete.
 tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open at a time. Evidence:
 `.planning/research/v2.8/FINDINGS.md`.
 
@@ -41,10 +42,23 @@ tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open 
 
 ## Current Position
 
-Phase: 166 — Earned Greens and Controls That Can Pass
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-09-18 — Phase 167 complete, transitioned to Phase 166
+Phase: 167.1 (close-gap-ctrl-02-ctrl-03-proposal-control-cannot-produce-ev) — EXECUTING
+Plan: 2 of 2
+Status: Phase complete — ready for verification
+awaiting planning; something does remain to build.
+
+CTRL-02 and CTRL-03 are **not** waiting on a release ceremony. The audit disproved that diagnosis by
+reading the run logs: `release-please.yml` gates both proposal-evidence steps (`:518` discovery,
+`:603` capture) on `should_run`, which the preflight sets false whenever `main`'s manifest tags all
+exist — the permanent steady state after any close-out. The result writer then falls to its
+`cannot-check` / `github_evidence_unavailable` defaults and `:885` fails the job. 23 consecutive reds
+on push and schedule alike. PR #280 is a legitimate, untagged 2.6.1 proposal and is **not** the
+cause; closing it would not help. This needs the Phase 167.1 code fix.
+
+GREEN-05 Part 2 (a second `main` CI run with `mix.lock` unchanged, for a trust-lane cache restore-hit)
+and CTRL-05 (two naturally-triggered scheduled repo-hygiene runs after the merge) remain genuine timed
+observations. Neither may be dispatched or manufactured.
+Last activity: 2026-09-18 — Phase 167.1 execution started
 
 ## v2.8 Roadmap Shape
 
@@ -55,6 +69,11 @@ Last activity: 2026-09-18 — Phase 167 complete, transitioned to Phase 166
 
 - **Phase 167** — DOCS-01..06 + STAND-01 (7 requirements). Genuinely independent; safely last.
 - **Exactly two phases. There is no Phase 168.** Hard timebox 5 working days, WIP limit: at most one PR open at a time.
+- **CORRECTION (2026-09-18), appended rather than rewritten.** The `/gsd-audit-milestone v2.8` audit
+  found that CTRL-02/CTRL-03 are blocked by a defect in the control Phase 166 shipped, not by scope
+  that "did not fit." Phase **167.1** was inserted to close it. The literal constraint holds — there
+  is still no Phase 168 — and the boundedness rule is honored in substance: 167.1 fixes a committed
+  v2.8 requirement rather than admitting new scope. Nothing outside the 17 requirements was accepted.
   On day 5, ship what is done and close regardless.
 
 - **Stop line:** every claim the repo makes about itself is either true or tested. Anything discovered
@@ -238,6 +257,8 @@ Last activity: 2026-09-18 — Phase 167 complete, transitioned to Phase 166
 | Phase 167 P04 | 12m | 3 tasks | 5 files |
 | Phase 167 P02 | 20min | 2 tasks | 4 files |
 | Phase 167 P03 | 15min | 3 tasks | 8 files |
+| Phase 167.1 P01 | 24m | 3 tasks | 2 files |
+| Phase 167.1 P02 | 12min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -248,6 +269,7 @@ Last activity: 2026-09-18 — Phase 167 complete, transitioned to Phase 166
 ### Roadmap Evolution
 
 - Phase 165 added: Reconcile terminal proof and milestone archive ordering
+- Phase 167.1 inserted after Phase 167: Close gap: CTRL-02/CTRL-03 — proposal control cannot produce evidence when should_run=false (URGENT)
 
 ### Decisions
 
@@ -381,6 +403,9 @@ Last activity: 2026-09-18 — Phase 167 complete, transitioned to Phase 166
 - [Phase ?]: [Phase 167]: DOCS-04's migration-guide version lockstep dissolved permanently (not re-tightened) — the guide's ~> X.Y pin joins release-please.yml's existing pin-resync sed loop + SYNC_PATHS, and docs_contract_test.exs asserts it dynamically via package_major_minor!/dependency_constraint!, mirroring the README contract test.
 - [Phase ?]: [Phase 167]: DOCS-05's css_inliner: :none rejected at validation (not honored) per the milestone's single-permitted-lib-change pre-authorization — the key validated but had zero effect and zero adopter-facing documentation; NimbleOptions now raises naming :premailex.
 - [Phase ?]: [Phase 167]: DOCS-05's outbound.ex moduledoc and api_stability.md injected-forms list corrected against source (Reconciler resolves orphan webhook Events, not orphan :queued Deliveries; the actual Mailglass.Message import/new(assigns \\ [])/defoverridable new: 1 replace three wrong claims), both pinned by source-coupled ExUnit assertions rather than proofread.
+- [Phase ?]: [Phase 167.1]: D-05 widening added exactly one new admissible pass pair (pending / proposal_awaiting_release_action) to release-please.yml's twin predicates -- a positive observation reachable only after gh pr list succeeded and exactly one open proposal was counted; capture-proposal's should_run gate left byte-identical so an un-gated discovery can never validate a pre-sibling-sync digest.
+- [Phase ?]: [Phase 167.1]: CTRL-02/CTRL-03's structural block is closed (167.1-01 merged the code fix), but both requirements' Accept clauses are post-merge observations this plan cannot produce -- they remain evidence-pending, not complete. Plan 02 owns the harvest.
+- [Phase ?]: CTRL-02/CTRL-03 requirement prose corrected to name the measured conflated-should_run-flag mechanism (D-06); both Accept clauses left byte-identical
 
 ## Quick Tasks Completed
 
@@ -398,8 +423,9 @@ Last activity: 2026-09-18 — Phase 167 complete, transitioned to Phase 166
 
 ## Session Continuity
 
-Last session: 2026-09-18T13:12:43.130Z
-Stopped at: Completed 167-03-PLAN.md
+Last session: 2026-09-18T18:05:35.875Z
+Stopped at: Completed 167.1-02-PLAN.md
+partial, waiting only on post-merge observations that cannot be forced. Earlier context: the
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.

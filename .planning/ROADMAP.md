@@ -274,3 +274,43 @@ Each is verifiable in under a minute.
 6. `grep` for the corrected doc claims returns nothing, and the docs contract test is green. *(Phase 167)*
 7. No statement in `STATE.md` is falsified by `gh pr list`, `gh issue list`, or a live suite run. *(Phase 167)*
 8. **No diff in this milestone removes or weakens a gate.** Each PR is reviewable as "made a control able to reach its own pass state." *(Both phases)*
+
+### Phase 167.1: Close gap: CTRL-02/CTRL-03 — proposal control cannot produce evidence when should_run=false (INSERTED)
+
+**Goal:** Give the proposal-only release control a path to a truthful verdict in the post-close-out
+steady state. When `main`'s manifest tags all exist, `release-preflight` correctly sets
+`should_run=false` so the release-please action does not re-run — but `release-please.yml:518`
+(discovery) and `:603` (capture) are gated on that same flag, so the result writer at `:823-827`
+falls to its `cannot-check` / `github_evidence_unavailable` defaults and `:885` fails the job on
+every push and every hourly schedule. The control cannot observe the repository it reports on.
+Separate "should the release action run" from "can the control gather evidence," so CTRL-02 and
+CTRL-03 become achievable rather than structurally blocked.
+
+**Requirements**: CTRL-02, CTRL-03
+**Depends on:** Phase 167
+
+**Success Criteria:**
+
+1. A `release-please` run on `main` at a SHA whose manifest tags all exist concludes `success` with
+   a status/reason that truthfully describes the observed proposal state, and uploads
+   `release-proposal-control-result.json` as evidence.
+
+2. `push` and `schedule` at the same SHA produce the same status and reason.
+3. `cannot-check` still never reports as `pass`. The fail-closed predicate at `:885`
+   (`pass`, or `pending` + `no_open_proposal`) is not loosened to admit a new non-verdict.
+
+4. The fix adds no `continue-on-error` to the failing gate, deletes no gate, and removes no
+   expiry — reviewable as "made a control able to reach its own pass state" (milestone criterion 8).
+
+5. The new behavior is pinned by a test or generated check, not only by a run log.
+
+**Plans:** 2/2 plans executed
+
+Plans:
+
+- [x] 167.1-01-PLAN.md — Decouple proposal discovery from `should_run`, add truthful verdicts for the
+      standalone-discovery world states, widen both twin pass predicates by exactly one observed pair,
+      and pin all five states plus the two guards that must not move (wave 1)
+
+- [x] 167.1-02-PLAN.md — Correct the refuted rate-limit mechanism in CTRL-02/CTRL-03 prose (Accept
+      clauses verbatim) and write the post-merge harvest procedure with empty observation slots (wave 2)
