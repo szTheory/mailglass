@@ -5,16 +5,16 @@ milestone_name: Truthful Repo
 current_phase: 167
 current_phase_name: truthful-documentation-and-the-standing-control
 status: verifying
-stopped_at: Completed 167-02-PLAN.md
-last_updated: "2026-09-18T12:59:09.049Z"
+stopped_at: Completed 167-03-PLAN.md
+last_updated: "2026-09-18T13:12:43.141Z"
 last_activity: 2026-09-18
 last_activity_desc: Phase 167 execution started
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 10
-  completed_plans: 9
-  percent: 50
+  completed_plans: 10
+  percent: 100
 state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 ---
 
@@ -236,6 +236,7 @@ Last activity: 2026-09-18 — Phase 167 execution started
 | Phase 167 P01 | 25min | 3 tasks | 3 files |
 | Phase 167 P04 | 12m | 3 tasks | 5 files |
 | Phase 167 P02 | 20min | 2 tasks | 4 files |
+| Phase 167 P03 | 15min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -376,6 +377,9 @@ Last activity: 2026-09-18 — Phase 167 execution started
 - [Phase ?]: [Phase 167]: New MAINTAINING.md ## Release Close-Out runbook added and pinned with File.exists?/1 over every scripts/*.sh|.exs path it names, proven via a rename-and-revert mutation.
 - [Phase ?]: [Phase 167]: DOCS-01/STAND-01 — STATE.md's ongoing PR/issue state is delegated to a live gh audit script (scripts/check_state_md_pr_refs.sh) and pinned offline by refusing the shape of a hardcoded open-count claim, not by asserting today's count; the three mix Dependabot entries are grouped (minor+patch) and carry an `open-pull-requests-limit` of 3, with majors and security-updates left individually reviewable.
 - [Phase ?]: [Phase 167]: CLAUDE.md's sibling-pin/auto-merge release-mechanics claims corrected (bare ~> + linked-versions replaces the stale == pin; disarmed-auto-merge + protected candidate-digest dispatch replaces the false auto-merges-on-green claim); README.md links guides/upgrading-to-v2_0.md (wildcard-generalized); CHANGELOG.md's 2.0.0 section additively names the Phases 132-137 schema-isolation move.
+- [Phase ?]: [Phase 167]: DOCS-04's migration-guide version lockstep dissolved permanently (not re-tightened) — the guide's ~> X.Y pin joins release-please.yml's existing pin-resync sed loop + SYNC_PATHS, and docs_contract_test.exs asserts it dynamically via package_major_minor!/dependency_constraint!, mirroring the README contract test.
+- [Phase ?]: [Phase 167]: DOCS-05's css_inliner: :none rejected at validation (not honored) per the milestone's single-permitted-lib-change pre-authorization — the key validated but had zero effect and zero adopter-facing documentation; NimbleOptions now raises naming :premailex.
+- [Phase ?]: [Phase 167]: DOCS-05's outbound.ex moduledoc and api_stability.md injected-forms list corrected against source (Reconciler resolves orphan webhook Events, not orphan :queued Deliveries; the actual Mailglass.Message import/new(assigns \\ [])/defoverridable new: 1 replace three wrong claims), both pinned by source-coupled ExUnit assertions rather than proofread.
 
 ## Quick Tasks Completed
 
@@ -393,8 +397,8 @@ Last activity: 2026-09-18 — Phase 167 execution started
 
 ## Session Continuity
 
-Last session: 2026-09-18T12:59:09.037Z
-Stopped at: Completed 167-02-PLAN.md
+Last session: 2026-09-18T13:12:43.130Z
+Stopped at: Completed 167-03-PLAN.md
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.

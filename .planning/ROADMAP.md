@@ -239,7 +239,7 @@ the control behavior Phase 166 establishes)
 - **STAND-01 is exactly one new control.** The alert budget says adding another requires retiring one.
   If a grouped PR reds, drop the culprit with `ignore` and re-run — do not ungroup.
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans executed
 
 Plans:
 **Wave 1**
@@ -253,14 +253,14 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 167-03-PLAN.md — DOCS-04, DOCS-05: dissolve the migration-guide version lockstep via release-time sed sync plus a dynamic assertion; reject `css_inliner: :none`; correct the outbound.ex and api_stability.md claims [wave 3]
+- [x] 167-03-PLAN.md — DOCS-04, DOCS-05: dissolve the migration-guide version lockstep via release-time sed sync plus a dynamic assertion; reject `css_inliner: :none`; correct the outbound.ex and api_stability.md claims [wave 3]
 
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 166. Earned Greens and Controls That Can Pass | 6/6 | In Progress|  |
-| 167. Truthful Documentation and the Standing Control | 3/4 | In Progress|  |
+| 167. Truthful Documentation and the Standing Control | 4/4 | In Progress|  |
 
 ## Milestone Exit Criteria (v2.8)
 

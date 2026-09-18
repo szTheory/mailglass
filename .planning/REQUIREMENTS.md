@@ -131,7 +131,7 @@ milestone terminate rather than recur.
       *Accept:* a reader who has never seen the ledger can complete close-out from `MAINTAINING.md`
       alone.
 
-- [ ] **DOCS-04**: Version claims in guides are correct, and the two-file lockstep is respected.
+- [x] **DOCS-04**: Version claims in guides are correct, and the two-file lockstep is respected.
       `guides/migration-from-swoosh.md:31-32` (`~> 2.5`) is asserted **verbatim** by
       `test/mailglass/docs_contract_test.exs:558` — both move together, or the guide is brought under
       the release-please README-sync so it stops drifting every minor.
@@ -139,7 +139,7 @@ milestone terminate rather than recur.
       *Accept:* the docs contract is green and no guide asserts a version the tree disproves.
       ⚠ *This is the Phase 125 pin-drift shape. It is not a free one-liner.*
 
-- [ ] **DOCS-05**: Code-level documentation does not overpromise, and no config key is accepted
+- [x] **DOCS-05**: Code-level documentation does not overpromise, and no config key is accepted
       without effect. `config :mailglass, renderer: [css_inliner: :none]` is validated
       (`config.ex:84-88`) but never read — Premailex always runs (`renderer.ex:73`); it is either
       honored or rejected at validation. `lib/mailglass/outbound.ex`'s moduledoc claim that orphan
@@ -230,8 +230,8 @@ Populated 2026-09-17 during roadmap creation.
 | DOCS-01 | Phase 167 | Complete |
 | DOCS-02 | Phase 167 | Complete |
 | DOCS-03 | Phase 167 | Complete |
-| DOCS-04 | Phase 167 | Pending |
-| DOCS-05 | Phase 167 | Pending |
+| DOCS-04 | Phase 167 | Complete |
+| DOCS-05 | Phase 167 | Complete |
 | DOCS-06 | Phase 167 | Complete |
 | STAND-01 | Phase 167 | Complete |
 
