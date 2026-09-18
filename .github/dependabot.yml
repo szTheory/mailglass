@@ -4,14 +4,38 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      mix-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "mix"
     directory: "/mailglass_admin"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      mix-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "mix"
     directory: "/mailglass_inbound"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      mix-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
