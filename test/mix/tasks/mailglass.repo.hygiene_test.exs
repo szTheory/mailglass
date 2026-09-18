@@ -4,6 +4,12 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
 
   alias Mix.Tasks.Mailglass.Repo.Hygiene
 
+  # D-34 (166-06 CTRL-05): cannot-check gets its own distinct, still-nonzero
+  # exit code, separate from blocked. Exit 0 for a non-pass aggregate is
+  # prohibited by construction (see the exit-code-split test below).
+  @cannot_check_exit 2
+  @blocked_exit 1
+
   test "reports a clean repo with release workflow readiness as pass" do
     repo = git_repo!()
     write_release_workflows!(repo)
@@ -156,8 +162,8 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     {text, text_exit} = run_hygiene(repo, ["--check"])
     {json, json_exit} = run_hygiene(repo, ["--check", "--format", "json"])
 
-    assert text_exit == {:shutdown, 1}
-    assert json_exit == {:shutdown, 1}
+    assert text_exit == {:shutdown, @cannot_check_exit}
+    assert json_exit == {:shutdown, @cannot_check_exit}
     assert text =~ "Repo hygiene: cannot-check"
     assert text =~ "cannot-check branch_protection:"
     assert Jason.decode!(json)["status"] == "cannot-check"
@@ -301,7 +307,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
       {json, exit} = run_hygiene(repo, ["--check", "--format", "json"], response: response)
       decoded = Jason.decode!(json)
 
-      assert exit == {:shutdown, 1}
+      assert exit == {:shutdown, @cannot_check_exit}
       assert decoded["status"] == "cannot-check"
 
       assert Enum.find(decoded["checks"], &(&1["name"] == "ci_state"))["status"] ==
@@ -333,31 +339,232 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
 
       decoded = Jason.decode!(json)
 
-      assert exit == {:shutdown, 1}
+      assert exit == {:shutdown, @cannot_check_exit}
       assert decoded["status"] == "cannot-check"
       assert decoded["reason"] =~ diagnostic
 
       assert Enum.find(decoded["checks"], &(&1["name"] == "pull_requests"))["status"] ==
                "cannot-check"
     end
+  end
 
-    empty =
-      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_response: "[]")
+  # D-35 (166-06 CTRL-05): the PR predicate widens from any-open-PR to
+  # "open more than 14 days OR failing a required check". Cases below pin the
+  # new predicate's behavior; they must move in the same commit as the task
+  # (D-35's own lockstep requirement).
 
-    assert check(empty, :pull_requests).status == :pass
-    assert check(empty, :pull_requests).details == %{open_count: 0, prs: []}
+  test "an empty open-PR list still concludes pass" do
+    repo = ready_repo!()
 
-    prs =
-      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end,
-        pr_response: "[{\"number\":222,\"title\":\"Candidate\"}]"
-      )
+    result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_response: "[]")
 
-    assert check(prs, :pull_requests).status == :blocked
-    assert check(prs, :pull_requests).details.open_count == 1
-    assert check(prs, :pull_requests).details.prs == [%{"number" => 222, "title" => "Candidate"}]
+    assert check(result, :pull_requests).status == :pass
+    assert check(result, :pull_requests).details.open_count == 0
+    assert check(result, :pull_requests).details.prs == []
+  end
+
+  test "a freshly opened healthy PR does not turn it red" do
+    repo = ready_repo!()
+
+    write_branch_protection_verifier!(
+      repo,
+      "echo 'OK: branch protection matches expected rules.'\n"
+    )
+
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
+
+    pr_response =
+      Jason.encode!([
+        %{
+          "number" => 222,
+          "title" => "Candidate",
+          "createdAt" => iso_days_ago(3),
+          "statusCheckRollup" => success_rollup()
+        }
+      ])
+
+    result =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_response: pr_response)
+
+    pull_requests = check(result, :pull_requests)
+    assert pull_requests.status == :pass
+    assert pull_requests.details.open_count == 1
+    assert result.status == :pass
+  end
+
+  test "a PR open for exactly 14 days is not blocked" do
+    repo = ready_repo!()
+
+    pr_response =
+      Jason.encode!([
+        %{
+          "number" => 222,
+          "title" => "Candidate",
+          "createdAt" => iso_days_ago(14),
+          "statusCheckRollup" => success_rollup()
+        }
+      ])
+
+    result =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_response: pr_response)
+
+    assert check(result, :pull_requests).status == :pass
+  end
+
+  test "a PR open for 15 days is blocked with the age reason named" do
+    repo = ready_repo!()
+
+    write_branch_protection_verifier!(
+      repo,
+      "echo 'OK: branch protection matches expected rules.'\n"
+    )
+
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
+
+    pr_response =
+      Jason.encode!([
+        %{
+          "number" => 222,
+          "title" => "Candidate",
+          "createdAt" => iso_days_ago(15),
+          "statusCheckRollup" => success_rollup()
+        }
+      ])
+
+    result =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_response: pr_response)
+
+    pull_requests = check(result, :pull_requests)
+    assert pull_requests.status == :blocked
+    assert pull_requests.details.reason =~ "14-day"
+    assert result.status == :blocked
+  end
+
+  test "a PR with a failing required check is blocked with the failing-check reason named" do
+    repo = ready_repo!()
+
+    write_branch_protection_verifier!(
+      repo,
+      "echo 'OK: branch protection matches expected rules.'\n"
+    )
+
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
+
+    pr_response =
+      Jason.encode!([
+        %{
+          "number" => 222,
+          "title" => "Candidate",
+          "createdAt" => iso_days_ago(1),
+          "statusCheckRollup" => failure_rollup()
+        }
+      ])
+
+    result =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_response: pr_response)
+
+    pull_requests = check(result, :pull_requests)
+    assert pull_requests.status == :blocked
+    assert pull_requests.details.reason =~ "failing"
+    assert result.status == :blocked
+  end
+
+  test "a null or absent statusCheckRollup is treated as not-failing, not a crash" do
+    repo = ready_repo!()
+
+    null_rollup_response =
+      Jason.encode!([
+        %{
+          "number" => 222,
+          "title" => "Candidate",
+          "createdAt" => iso_days_ago(1),
+          "statusCheckRollup" => nil
+        }
+      ])
+
+    absent_rollup_response =
+      Jason.encode!([
+        %{"number" => 222, "title" => "Candidate", "createdAt" => iso_days_ago(1)}
+      ])
+
+    for pr_response <- [null_rollup_response, absent_rollup_response] do
+      result =
+        with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_response: pr_response)
+
+      assert check(result, :pull_requests).status == :pass
+    end
+  end
+
+  test "a gh pr list query failure is cannot-check with the existing unavailable reason" do
+    repo = ready_repo!()
+
+    result =
+      with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end, pr_query_exit: 1)
+
+    pull_requests = check(result, :pull_requests)
+    assert pull_requests.status == :cannot_check
+    assert pull_requests.message == "Open PR state was not checked."
+    assert result.status == :cannot_check
+  end
+
+  test "the cannot-check aggregate and the blocked aggregate exit with distinct nonzero codes, neither zero" do
+    repo = ready_repo!()
+
+    write_branch_protection_verifier!(
+      repo,
+      "echo 'OK: branch protection matches expected rules.'\n"
+    )
+
+    commit_all!(repo, "add verifier")
+    push_upstream!(repo)
+
+    stale_pr_response =
+      Jason.encode!([
+        %{
+          "number" => 222,
+          "title" => "Candidate",
+          "createdAt" => iso_days_ago(15),
+          "statusCheckRollup" => success_rollup()
+        }
+      ])
+
+    {_blocked_output, blocked_exit} =
+      run_hygiene(repo, ["--check", "--format", "json"], pr_response: stale_pr_response)
+
+    {_cannot_check_output, cannot_check_exit} =
+      run_hygiene(repo, ["--check", "--format", "json"], pr_query_exit: 1)
+
+    assert {:shutdown, blocked_code} = blocked_exit
+    assert {:shutdown, cannot_check_code} = cannot_check_exit
+    assert blocked_code != 0
+    assert cannot_check_code != 0
+    assert blocked_code != cannot_check_code
+    assert cannot_check_code == @cannot_check_exit
+    assert blocked_code == @blocked_exit
   end
 
   defp check(result, name), do: Enum.find(result.checks, &(&1.name == name))
+
+  defp iso_days_ago(days) do
+    DateTime.utc_now()
+    |> DateTime.add(-days * 24 * 60 * 60, :second)
+    |> DateTime.truncate(:second)
+    |> DateTime.to_iso8601()
+  end
+
+  defp success_rollup do
+    [%{"__typename" => "CheckRun", "conclusion" => "SUCCESS"}]
+  end
+
+  defp failure_rollup do
+    [
+      %{"__typename" => "CheckRun", "conclusion" => "SUCCESS"},
+      %{"__typename" => "CheckRun", "conclusion" => "FAILURE"}
+    ]
+  end
 
   defp git_repo! do
     repo =

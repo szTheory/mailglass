@@ -14,11 +14,16 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 maintenance milestone closed with its canonical audit `status: passed` — 16/16 requirements, 5/5 phases,
 16/16 integration seams, 5/5 flows, Nyquist compliant across Phases 161–165. Artifacts are archived to
 `.planning/milestones/v2.7-ROADMAP.md`, `v2.7-REQUIREMENTS.md`, `v2.7-MILESTONE-AUDIT.md`, and
-`v2.7-phases/`. No milestone is open; run `/gsd-new-milestone` to start the next one.
+`v2.7-phases/`.
+
+**v2.8 Truthful Repo is now OPEN (2026-09-17).** Since the v2.7 archive, the 2.6.0 release shipped:
+live on Hex at `mailglass` 2.6.0 / `mailglass_admin` 2.6.0 / `mailglass_inbound` 2.3.0 (published
+2026-09-17), with the fail-closed release ledger closed out to `inactive`. Open PRs and open issues
+are both zero. See `## Current Milestone: v2.8 Truthful Repo` below.
 
 It expanded no product surface, redesigned no architecture, overhauled no CI for speed, and forced no Hex
-release. Package versions are unchanged at `mailglass` 2.5.0 / `mailglass_admin` 2.5.0 /
-`mailglass_inbound` 2.2.0, and **no `v2.7` git tag was created** — the close deliberately excludes the
+release. Package versions were unchanged *at its close* at `mailglass` 2.5.0 / `mailglass_admin` 2.5.0 /
+`mailglass_inbound` 2.2.0 (superseded by the 2.6.0 line above), and **no `v2.7` git tag was created** — the close deliberately excludes the
 `git-tag` section per `165-FINALIZATION.md` §2, which is why the standing release-cadence rule below does
 not apply to this repo-artifact milestone.
 
@@ -117,6 +122,43 @@ Package boundaries are locked. Chimeway owns notification policy and preferences
 semantics; Accrue owns billing and dunning; Cairnloop owns support state; Parapet owns dashboards and
 paging; Crosswake owns mobile route activation. No `crosswake_mailglass` package is planned.
 
+## Current Milestone: v2.8 Truthful Repo
+
+**Opened 2026-09-17.** Hard timebox: 5 working days / WIP limit 1 open PR. Two phases, no third.
+
+**Goal:** Make every claim the repository makes about itself either true or tested — closing the
+greens that do not mean what they say, the controls that cannot reach their own pass state, and the
+docs that actively mislead.
+
+**Why now, and why it is small.** Scoping research (`.planning/research/v2.8/FINDINGS.md`) established
+that the repo is *already* quiet in the ways that are easy to see: all three suites pass (core 2145,
+admin 510, inbound 460 — zero failures), all 26 `ci.yml` jobs are green on `main`, and there are zero
+open PRs and issues. Five of seven carried "known reds" were refuted as stale. **This is not a repair
+milestone. It is a truth milestone** — the residual risk is concentrated in signals that report success
+without earning it, and in documentation that misdirects a maintainer mid-release.
+
+**Target features:**
+- Close the false greens: run the 64% of the admin suite that currently executes in no lane, make the
+  required deterministic lane enforce its own anti-vacuity floor, and make the demo app actually
+  exercise the published-consumer path it appears to prove.
+- Make the fail-closed controls able to reach their own pass state without relaxing a single gate —
+  `post-publish-smoke` after a correct close-out, `release-please` on the push event, and the
+  `Hex Audit` advisory expiry that reds a required lane on a known calendar date.
+- Retire the documentation that is actively wrong at the moment it is read, and pin the corrected
+  claims with tests so they cannot silently drift back.
+- Install exactly one new standing control (grouped, scheduled Dependabot) so quiet is self-sustaining
+  rather than a campaign that recurs as v2.9.
+
+**Stop line (the boundedness mechanism):** every claim the repo makes about itself is either true or
+tested. Anything discovered that is not one of the milestone's exit invariants is filed, not fixed.
+If the work does not fit in two phases, that is evidence the scope was wrong — not that it needs a
+third phase.
+
+**Explicitly out of scope** (see `FINDINGS.md` §7): the inbound `--seed 0` property flake (fixing it
+cheaply would mean weakening a test), the ~30 controlled-host tests, the ~30 source-text-grep drift
+guards, SEED-006 CI efficiency, `.planning/` archive prose, `.tool-versions`, and any reference-baseline
+advance. No product code changes.
+
 ## Completed Milestone: v2.7 Repository Stewardship & Operational Hygiene
 
 **Shipped and archived 2026-09-15.**
@@ -143,8 +185,10 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 
 ## Active Requirements
 
-**None — no milestone is open.** The 16 v2.7 requirements are archived and validated in
-`.planning/milestones/v2.7-REQUIREMENTS.md`. The next set is defined by `/gsd-new-milestone`.
+**v2.8 Truthful Repo is open.** Its committed requirements are defined in
+`.planning/REQUIREMENTS.md` and mapped to phases in `.planning/ROADMAP.md`; the supporting evidence
+for every one of them is `.planning/research/v2.8/FINDINGS.md`. The 16 v2.7 requirements are archived
+and validated in `.planning/milestones/v2.7-REQUIREMENTS.md`.
 
 ### v2.7 scope record (archived)
 
@@ -1053,7 +1097,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-09-15 after the v2.7 milestone archive.*
+*Last updated: 2026-09-18 after completing Phase 167 (truthful documentation + the standing control) in milestone v2.8 Truthful Repo. DOCS-01..06 and STAND-01 are verified; v2.8 is not shipped — Phase 166 remains open, so no v2.8 Validated Requirements section exists yet.*
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->

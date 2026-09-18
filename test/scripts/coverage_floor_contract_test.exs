@@ -33,10 +33,12 @@ defmodule Mailglass.Scripts.CoverageFloorContractTest do
   test "canonical baselines name the scoped package cohorts and critical paths stay separate" do
     core = File.read!(Path.expand("../../config/coverage_baselines/core.json", __DIR__))
     inbound = File.read!(Path.expand("../../config/coverage_baselines/inbound.json", __DIR__))
+    admin = File.read!(Path.expand("../../config/coverage_baselines/admin.json", __DIR__))
     critical = File.read!(Path.expand("../../config/critical_path_manifest.json", __DIR__))
 
     assert core =~ "test/mailglass"
     assert inbound =~ "test/mailglass_inbound"
+    assert admin =~ "mailglass_admin"
     assert critical =~ "required_commands"
     assert critical =~ "not coverage-percentage inputs"
   end

@@ -1,39 +1,76 @@
 ---
-gsd_state_version: "1.0"
-milestone: v2.7
-milestone_name: Repository Stewardship & Operational Hygiene (Shipped 2026-09-15, archived)
-status: archived
-stopped_at: Phase 165 complete — all phases complete
-last_updated: "2026-09-16T16:05:00.000Z"
-last_activity: 2026-09-16
-last_activity_desc: Quick task 260916-ldh added the missing release-target ledger close-out path
-state_head: 532301a309debe8d9736d4ea4cd66c14904a9f22
+gsd_state_version: 1.0
+milestone: v2.8
+milestone_name: Truthful Repo
+current_phase: 166
+current_phase_name: Earned Greens and Controls That Can Pass
+status: planning
+stopped_at: Completed 167-03-PLAN.md
+last_updated: "2026-09-18T13:19:56.156Z"
+last_activity: 2026-09-18
+last_activity_desc: Phase 167 execution started
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 75
-  completed_plans: 75
+  total_phases: 2
+  completed_phases: 2
+  total_plans: 10
+  completed_plans: 10
   percent: 100
-current_phase: 165
-current_plan: 5
+state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-09-15)
+See: .planning/PROJECT.md (updated 2026-09-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** No milestone open — v2.7 archived 2026-09-15. Outstanding: the post-archive half of
-`165-FINALIZATION.md` (§5–7), which is gated on push authority that STATE still withholds.
+**Current focus:** Phase 167 — truthful-documentation-and-the-standing-control
+tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open at a time. Evidence:
+`.planning/research/v2.8/FINDINGS.md`.
+
+> **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
+> has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
+> as undiagnosed (fixed in `f733fc22`/`d65a1aa8`, both merged to `main`) and PR #222 as open (it is
+> closed). PR #129, the replay-copy redesign once suspected of causing those reds, is also closed.
+> Truthing that up was DOCS-01/STAND-01 (Phase 167 Plan 04). This file does not snapshot an open-PR or
+> open-issue count or identity anywhere below — that is permanently non-permanent information. For
+> current open PRs and issues, run `gh pr list --state open` and `gh issue list --state open` against
+> `szTheory/mailglass`; `scripts/check_state_md_pr_refs.sh` machine-checks every `#NNN` reference in
+> this file against live GitHub state.
 
 ## Current Position
 
-Phase: Milestone v2.7 complete
-Plan: —
-Status: v2.7 milestone complete — awaiting next milestone
-Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (PR #266, merged); completed quick task 260916-ldh, which added the missing close-out path so the ledger can return to inactive without a hand edit
+Phase: 166 — Earned Greens and Controls That Can Pass
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-09-18 — Phase 167 complete, transitioned to Phase 166
+
+## v2.8 Roadmap Shape
+
+- **Phase 166** — GREEN-01..05 + CTRL-01..05 (10 requirements). First because fixing a false green can
+  surface previously-unrun failures (GREEN-01 exposes 325 never-executed admin tests; all 510 pass
+  locally today, so blast radius is bounded but nonzero), and because CTRL-04 has a calendar deadline
+  of **2026-10-27**.
+
+- **Phase 167** — DOCS-01..06 + STAND-01 (7 requirements). Genuinely independent; safely last.
+- **Exactly two phases. There is no Phase 168.** Hard timebox 5 working days, WIP limit: at most one PR open at a time.
+  On day 5, ship what is done and close regardless.
+
+- **Stop line:** every claim the repo makes about itself is either true or tested. Anything discovered
+  that is not one of the 17 requirements is **filed, not fixed**.
+
+- **Standing prohibition:** no phase may satisfy a requirement by weakening a gate, relaxing a
+  fail-closed control, deleting an expiry, lowering a test's rigor, or narrowing a generator.
+  Pre-refused by name: `cron-guard` `continue-on-error` / dropping a cron; deleting the
+  `recheck_by` / `unused_entries` machinery; lowering `max_runs` or narrowing the inbound property
+  generator.
+
+- **No product code changes.** DOCS-05's `css_inliner` disposition is the single permitted `lib/` change.
+- Known cross-file locksteps: GREEN-03 ⇒ `@suite_floor_env_occurrences` 2 → 3 in
+  `lane_classification_drift_test.exs:56` *in the same change*; DOCS-04 ⇒
+  `guides/migration-from-swoosh.md:31-32` and `test/mailglass/docs_contract_test.exs:558` move together
+  (Phase 125 pin-drift shape); CTRL-02 + CTRL-03 are cause and symptom of one red and land together.
 
 ## Lifecycle Authority
 
@@ -42,28 +79,34 @@ Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (
   scoped `git.create_tag=false` override defined in `165-FINALIZATION.md` §2, restored byte-for-byte
   afterward. Archived to `.planning/milestones/v2.7-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and
   `v2.7-phases/`. **No `v2.7` tag exists and none may be created.**
+
 - Closeout type: `override_closeout`. `init.manager` projected Phases 161 and 165 `stale` — a timestamp
   heuristic firing on the runbook-mandated completion-metadata commits, not an unverified phase; both
   VERIFICATION.md records are `status: passed` (161: 21/21, 165: 5/5).
+
 - **Known verification overrides: 0 newly acknowledged, 0 carried forward.** The pre-close artifact
   audit's 27 open items (23 deferred, 3 UAT gaps, 1 verification gap) all belong to already-archived
   milestones (v0.2, v1.1, v1.13, v1.14, v2.0, v2.2) and were deliberately not acknowledged into v2.7;
   acknowledging them would attribute foreign debt to this milestone. They remain open against their own.
+
 - Phase 164 completed successfully at protected-main SHA
   `851e3640f7f0eb6e784611d157e3a7329f87e2dc`. Its ignored terminal report is immutable historical
   evidence only; Phase 164 pending/current-authority statements retained in the accumulated execution
   history below are not live milestone blockers or v2.7 terminal authority.
+
 - **Sections 1–5(CI) of `165-FINALIZATION.md` are complete.** Canonical audit, archive preview,
   approved archive, final tracked convergence, and protected-main integration all ran. The archive is
   on protected `main` at **`79247dafbb3b2d3a56114127e1e96e62cbcf33db`** (PR #257, squash), and the
   push-CI requirement is satisfied exactly: workflow `CI`, event `push`, branch `main`, that exact SHA,
   attempt 1, completed/success (run 35108991834). The runbook now lives at
   `milestones/v2.7-phases/165-reconcile-terminal-proof-and-milestone-archive-ordering/165-FINALIZATION.md`.
+
 - **v2.7 closes ARCHIVED WITHOUT TERMINAL PROOF. Sections 6–7 are not achievable under current
   policy and are not pending work.** The runbook also requires all three registered scheduled controls
   to report `completed/success` at that exact SHA. All three fail closed *by design*, on one shared
-  root cause — the 14 open PRs this milestone accepted as permanent operational debt:
-  `repo-hygiene` → `blocked` / "14 open PR(s) require disposition before release";
+  root cause — the batch of PRs (fourteen, at the time) this milestone accepted as permanent
+  operational debt while left open:
+  `repo-hygiene` → `blocked` / "open PR(s) require disposition before release";
   `post-publish-smoke` → `blocked` / `scheduled_target_not_published` (PR #222 is an
   authorized-but-unpublished target); `release-please` → `blocked` / `proposal_identity_mismatch`
   (the same open #222 proposal). Clearing them would require closing those PRs, publishing a release,
@@ -72,6 +115,7 @@ Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (
   fail-closed under exactly the condition v2.7 chose to accept. Recorded as a known contract
   contradiction, not a gap in the milestone: the archive is complete and green on protected `main`, and
   the terminal report was always ignored-only evidence, never the deliverable.
+
 - **CORRECTION (2026-09-16), appended rather than rewritten so the archived reasoning stays readable
   as written:** the bullet above attributes the `release-please` → `proposal_identity_mismatch` red to
   open proposal PR #222. That attribution is **wrong**. #222 was closed on 2026-09-16 and the control
@@ -81,18 +125,22 @@ Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (
   the pipeline ever wrote the ledger and every release would otherwise strand it the same way. This
   does **not** reopen §6–7: `repo-hygiene` and `post-publish-smoke` remain blocked on the accepted
   open-PR debt exactly as recorded, so the terminal-proof conclusion is unchanged.
+
 - Re-opening §6–7 is a **deliberate future decision**, valid only if the accepted debt is disposed or
   the terminal contract is relaxed. Until then, absence of schedule evidence is the expected steady
   state — never authority to dispatch, rerun, close a PR, or publish.
-- Repository hygiene remains policy-blocked by 14 open PRs as accepted operational debt. Legacy quick
-  tasks stay outside v2.7, and no PR closure, tag push, branch deletion, workflow dispatch or rerun,
-  merge bypass, release, or publication is authorized.
+
+- At v2.7's close, repository hygiene was policy-blocked by open PRs accepted as operational debt; that
+  count is not snapshotted here because it changes independently of this file — run
+  `mix mailglass.repo.hygiene --check` or `gh pr list --state open` for the current figure. Legacy
+  quick tasks stay outside v2.7, and no PR closure, tag push, branch deletion, workflow dispatch or
+  rerun, merge bypass, release, or publication is authorized by this record.
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 75
+- Total plans completed: 79
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -105,6 +153,7 @@ Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (
 | 163. Deterministic Release-Path Timeout Repairs | 8 | — | — |
 | 164. Repository Truth Reconciliation and Closeout | 44 | — | — |
 | 165 | 5 | - | - |
+| 167 | 4 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -179,6 +228,16 @@ Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (
 | Phase 165 P03 | 4m | 2 tasks | 4 files |
 | Phase 165 P04 | 8m | 2 tasks | 1 files |
 | Phase 165 P05 | 25m | 2 tasks | 4 files |
+| Phase 166 P01 | 24min | 3 tasks | 5 files |
+| Phase 166 P02 | 15min | 2 tasks | 2 files |
+| Phase 166 P03 | 4min | 4 tasks | 2 files |
+| Phase 166 P04 | 6m | 2 tasks | 4 files |
+| Phase 166 P05 | 55min | 2 tasks | 5 files |
+| Phase 166 P06 | 55min | 2 tasks | 6 files |
+| Phase 167 P01 | 25min | 3 tasks | 3 files |
+| Phase 167 P04 | 12m | 3 tasks | 5 files |
+| Phase 167 P02 | 20min | 2 tasks | 4 files |
+| Phase 167 P03 | 15min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -303,6 +362,25 @@ Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (
 - [Phase 165]: Canonical milestone audit and archive begin only after execute-phase returns with passed ordinary verification and completion metadata.
 - [Phase 165]: The archive checkpoint binds a fresh exact preview while scoped git.create_tag=false is restored byte-for-byte before convergence.
 - [Phase 165]: Final state publication and commit precede protected exact-SHA evidence and the one permitted installed terminal invocation.
+- [Phase 166]: GREEN-01/GREEN-02: widened verify.support_contract.admin to directory-scoped run (325 newly-executed tests) and wired a measured ExCoveralls coverage floor for mailglass_admin, demonstrated (not asserted) to fire on regression.
+- [Phase 166]: GREEN-03: enforced the anti-vacuity suite floor on the required core_deterministic_suite lane by setting MAILGLASS_SUITE_FLOOR: "1" in ci.yml, guarded by a new occurrence-count drift test mirroring the advisory-matrix.yml trio; no floor constants were re-pinned (measured 2134 executed vs 1576 floor, 7 skipped == 7 ceiling).
+- [Phase 166]: Clock-proof: faketime does not intercept the BEAM clock on this toolchain (macOS SIP strips DYLD_INSERT_LIBRARIES); maintainer accepted the fallback evidence (real un-faked audit run + committed date-boundary test) as satisfying CTRL-04's clock-fake clause.
+- [Phase 166]: lib/ exemption confirmed by maintainer: accepted_advisories.ex data-only edit (recheck_by + reason text) is CTRL-04's named exemption to the milestone's no-product-code-changes constraint (D-31).
+- [Phase 166]: recheck_by: ~D[2027-03-17] confirmed as the standing decision for both cowlib advisory entries (D-30), with named falsifiable re-check for next cycle.
+- [Phase 166]: CTRL-02/CTRL-03 code changes (release-please early-return deletion + bounded classify-and-retry) are implemented and merged, but their acceptance criteria are post-merge observations (a green push run at an already-tagged SHA; three consecutive agreeing push/schedule runs). Carried as explicitly pending evidence per D-37 — not marked complete — until 166-05/166-06 or Phase 167 merges naturally supply the observations.
+- [Phase 166]: D-20's release-please.yml line citations (:119/:179) are stale; the semantic clause (the gh api calls that already classify to cannot-check) governs. Verified the two gh pr list calls at lines 572/684 are the correct and only wrap targets; maintainer confirmed this reading.
+- [Phase 166]: 166-05: GREEN-04 isolation uses an rsync scratch copy with default paths, not MIX_DEPS_PATH/MIX_BUILD_PATH (broke cowlib's erlang.mk build) or a new CI job (requires lane-registry registration). — Both prior-executor blockers resolved by orchestrator and re-verified locally before implementation.
+- [Phase 166]: 166-05: reference/demo_app/mix.lock's three mailglass sibling entries refreshed to the published 2.6.0/2.6.0/2.3.0 line so GREEN-04's hex build can compile (frozen 2.0.0 lock predates mailglass_admin's :navigation dependency). — mix.exs ~> 2.0 constraints already permit this; only the lock was stale.
+- [Phase ?]: CTRL-01: post-publish-smoke resolves an inactive ledger's published baseline via a new baseline-versions verb + ledger-status peek; distinct cron-guard baseline output never reuses completed=true
+- [Phase ?]: CTRL-05: repo-hygiene cannot_check exits a distinct nonzero code from blocked; PR predicate widened to open >14d (day-granularity) OR failing required check
+- [Phase ?]: [Phase 167]: MAINTAINING.md's exclude-paths count is derived from release-please-config.json at test time (count_word!/1 1..30 map), never a second hardcoded literal — proven via a live mutation.
+- [Phase ?]: [Phase 167]: MAINTAINING.md/CONTRIBUTING.md publish-fan-out and sibling-pin claims corrected (required_reviewers gate named explicitly, bare ~> 2.0 sibling constraint replaces the stale fix(inbound) floor-bump instruction).
+- [Phase ?]: [Phase 167]: New MAINTAINING.md ## Release Close-Out runbook added and pinned with File.exists?/1 over every scripts/*.sh|.exs path it names, proven via a rename-and-revert mutation.
+- [Phase ?]: [Phase 167]: DOCS-01/STAND-01 — STATE.md's ongoing PR/issue state is delegated to a live gh audit script (scripts/check_state_md_pr_refs.sh) and pinned offline by refusing the shape of a hardcoded open-count claim, not by asserting today's count; the three mix Dependabot entries are grouped (minor+patch) and carry an `open-pull-requests-limit` of 3, with majors and security-updates left individually reviewable.
+- [Phase ?]: [Phase 167]: CLAUDE.md's sibling-pin/auto-merge release-mechanics claims corrected (bare ~> + linked-versions replaces the stale == pin; disarmed-auto-merge + protected candidate-digest dispatch replaces the false auto-merges-on-green claim); README.md links guides/upgrading-to-v2_0.md (wildcard-generalized); CHANGELOG.md's 2.0.0 section additively names the Phases 132-137 schema-isolation move.
+- [Phase ?]: [Phase 167]: DOCS-04's migration-guide version lockstep dissolved permanently (not re-tightened) — the guide's ~> X.Y pin joins release-please.yml's existing pin-resync sed loop + SYNC_PATHS, and docs_contract_test.exs asserts it dynamically via package_major_minor!/dependency_constraint!, mirroring the README contract test.
+- [Phase ?]: [Phase 167]: DOCS-05's css_inliner: :none rejected at validation (not honored) per the milestone's single-permitted-lib-change pre-authorization — the key validated but had zero effect and zero adopter-facing documentation; NimbleOptions now raises naming :premailex.
+- [Phase ?]: [Phase 167]: DOCS-05's outbound.ex moduledoc and api_stability.md injected-forms list corrected against source (Reconciler resolves orphan webhook Events, not orphan :queued Deliveries; the actual Mailglass.Message import/new(assigns \\ [])/defoverridable new: 1 replace three wrong claims), both pinned by source-coupled ExUnit assertions rather than proofread.
 
 ## Quick Tasks Completed
 
@@ -320,8 +398,8 @@ Last activity: 2026-09-16 — Closed out the stale 2.5.0 release-target ledger (
 
 ## Session Continuity
 
-Last session: 2026-09-16
-Stopped at: Quick task 260916-g7k complete. The 13 open dependabot PRs were disposed via one
+Last session: 2026-09-18T13:12:43.130Z
+Stopped at: Completed 167-03-PLAN.md
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
 current policy. No v2.7 lifecycle work is pending.
@@ -329,15 +407,14 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with `/gsd-new-milestone`.
-- v2.7 needs nothing further. The accepted-debt PR count is now 1, not 14, but `165-FINALIZATION.md`
-  §6–7 stays closed out: the remaining PR (#222) still fails `repo-hygiene`, and both
-  `post-publish-smoke` and `release-please` block specifically on it. Revisiting §6–7 is a separate
-  authority from any new milestone, and not a prerequisite for one.
-- Decide #222 `chore: release main` — it would cut `mailglass 2.6.0` / `mailglass_inbound 2.3.0` to
-  Hex. Currently red (Core Full Suite + CI Green) and `BEHIND`. Either rebase-and-release, or close it
-  and let release-please regenerate. This is the only thing standing between the repo and a green
-  scheduled-control signal.
-- Two pre-existing reds on `main` in `MailglassAdmin.InboundLiveTest` (replay flash copy,
-  `inbound_live_test.exs:913` and `:1411`) are undiagnosed. Likely coupled to the unmerged PR #129
-  replay-copy redesign. Worth resolving before any release.
+- v2.7 needs nothing further. `165-FINALIZATION.md` §6–7 stays closed out (not achievable under
+  current policy). PR #222 (the proposal that blocked §6–7 at v2.7's close) is closed. Revisiting
+  §6–7 is a separate authority from any milestone, and not a prerequisite for one.
+
+- A release-please release proposal may currently be open against `main` — check
+  `gh pr list --state open` for its number and CI status before deciding whether to rebase-and-merge
+  it or close it and let release-please regenerate. This file deliberately does not name or snapshot
+  that PR, since its identity and status change every time release-please or a maintainer acts on it.
+
+- The two `MailglassAdmin.InboundLiveTest` replay-flash-copy reds (`inbound_live_test.exs:913` and
+  `:1411`) are fixed, by `f733fc22` and `d65a1aa8`, both merged to `main`. They are not a blocker.

@@ -54,6 +54,12 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   # (`core_full_suite_next_toolchain_advisory`).
   @suite_floor_env_occurrences 2
 
+  # One per ci.yml full-suite step: the single `core_deterministic_suite` job's
+  # "Run deterministic core suite" step (GREEN-03). Counts ci.yml only — never
+  # bump @suite_floor_env_occurrences above for this; that constant counts
+  # advisory-matrix.yml exclusively (D-07).
+  @ci_yml_suite_floor_occurrences 1
+
   # Every RUNTIME lane name advisory-matrix.yml produces: 2 Core Full Suite legs +
   # 2 next-toolchain legs + 1 Provider Compatibility leg + 2 Inbound Full Suite legs.
   # Deliberately NOT derived from the parser under test — a count computed from the
@@ -636,6 +642,54 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
              "removing one occurrence must be observable by the same counting function the " <>
                "assertion above uses — otherwise that assertion could pass on a workflow " <>
                "with the opt-in stripped out"
+    end
+  end
+
+  describe "ci.yml's required-lane suite-floor enforcement (GREEN-03)" do
+    test "the deterministic core suite step carries the suite-floor env entry exactly once, " <>
+           "with the literal value SuiteFloor compares against" do
+      occurrences = count_ci_yml_suite_floor_env_entries()
+
+      assert occurrences == @ci_yml_suite_floor_occurrences,
+             "expected exactly #{@ci_yml_suite_floor_occurrences} `#{@suite_floor_env_entry}` " <>
+               "entries in ci.yml — one on the core_deterministic_suite job's " <>
+               "\"Run deterministic core suite\" step — got #{occurrences}.\n\n" <>
+               "Removing it silently returns the required lane to an unevaluated floor: " <>
+               "SuiteFloor keeps PRINTING its counts in scoped mode, so the log still looks " <>
+               "instrumented while nothing can fail. A future legitimate change (a second " <>
+               "full-suite step in ci.yml) must update this count deliberately, not delete " <>
+               "the guard."
+    end
+
+    test "anti-vacuity: the parser finds ci.yml and the env entry it counts" do
+      source = File.read!(@ci_yml_path)
+
+      assert byte_size(source) > 0,
+             "ci.yml parsed to an empty string — the count assertion above would then " <>
+               "compare 0 against 0 for a moved or deleted file rather than failing on it"
+
+      assert String.contains?(source, @suite_floor_env_entry),
+             "ci.yml contains no `#{@suite_floor_env_entry}` at all. If the variable was " <>
+               "renamed, this file's @suite_floor_env_entry and " <>
+               "Mailglass.TestSupport.SuiteFloor's `System.get_env/1` read must move " <>
+               "together — a rename in one place alone turns the gate off silently."
+    end
+
+    test "negative control: deleting the occurrence from the parsed source makes the count " <>
+           "assertion report it" do
+      source = File.read!(@ci_yml_path)
+
+      assert count_ci_yml_suite_floor_env_entries(source) == @ci_yml_suite_floor_occurrences,
+             "sanity check failed: the unmodified workflow should already carry the entry"
+
+      broken =
+        String.replace(source, @suite_floor_env_entry, "", global: false)
+
+      assert count_ci_yml_suite_floor_env_entries(broken) ==
+               @ci_yml_suite_floor_occurrences - 1,
+             "removing the occurrence must be observable by the same counting function the " <>
+               "assertion above uses — otherwise that assertion could pass on a workflow " <>
+               "with the enforcement stripped out"
     end
   end
 
@@ -1279,6 +1333,17 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
 
   defp count_suite_floor_env_entries(source \\ nil) do
     (source || File.read!(@advisory_matrix_path))
+    |> String.split(@suite_floor_env_entry)
+    |> length()
+    |> Kernel.-(1)
+  end
+
+  # Sibling of count_suite_floor_env_entries/1, targeted at ci.yml instead of
+  # advisory-matrix.yml (GREEN-03). Kept as a separate function — rather than
+  # parameterizing the one above — so the advisory-matrix.yml trio's behavior
+  # stays byte-identical.
+  defp count_ci_yml_suite_floor_env_entries(source \\ nil) do
+    (source || File.read!(@ci_yml_path))
     |> String.split(@suite_floor_env_entry)
     |> length()
     |> Kernel.-(1)

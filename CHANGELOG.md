@@ -171,6 +171,7 @@ version line per [`guides/compatibility-and-deprecations.md`](guides/compatibili
 ### ⚠ BREAKING CHANGES
 
 * **release:** marker is banked in 132-136, so release-please would otherwise cut 1.12.0/1.12.0. This root mix.exs touch attributes the footer below to the linked group (core exclude-paths keep admin/inbound out of `.`).
+* **Note (added Phase 167):** the adopter-facing breaking change in this release is the PostgreSQL schema-isolation move (Phases 132-137): mailglass's four domain tables (`mailglass_events`, `mailglass_deliveries`, `mailglass_suppressions`, `mailglass_webhook_events`) now default to a dedicated `mailglass` Postgres schema instead of `public`. See `guides/upgrading-to-v2_0.md` for the two supported upgrade routes.
 
 ### Features
 

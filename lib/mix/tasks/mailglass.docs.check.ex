@@ -299,7 +299,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
       required: [
         "subordinate raw-Swoosh migration reference",
         "upgrading-to-v1_0.md",
-        "{:mailglass, \"~> 2.5\"}",
+        "{:mailglass, \"~> <CORE_MAJOR_MINOR>\"}",
         "Mailglass still accepts a plain `%Swoosh.Email{}`",
         "assert {:ok, _delivery} = Mailglass.deliver(email)"
       ],
@@ -546,6 +546,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
 
       required_issues =
         Enum.flat_map(rules.required, fn token ->
+          token = expand_core_version(token)
           if String.contains?(content, token), do: [], else: [{:missing, path, token}]
         end)
 
@@ -556,6 +557,30 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
 
       required_issues ++ forbidden_issues
     end)
+  end
+
+  # A guide's sibling pin must track the core version, not a literal frozen at the
+  # time the rule was written. Hardcoding it here made this task a silent third
+  # participant in the two-file version lockstep DOCS-04 dissolved: bumping the
+  # guide alone turned this check red with no other signal. Resolve the version
+  # from mailglass's OWN app spec rather than `Mix.Project.config/0`, which would
+  # report the HOST application's version wherever this task runs as a dependency
+  # (mailglass_admin, reference/host_app, reference/demo_app all vendor it).
+  defp expand_core_version(token) do
+    String.replace(token, "<CORE_MAJOR_MINOR>", core_major_minor())
+  end
+
+  defp core_major_minor do
+    version =
+      case Application.spec(:mailglass, :vsn) do
+        nil -> Mix.Project.config()[:version]
+        vsn -> List.to_string(vsn)
+      end
+
+    case String.split(version, ".") do
+      [major, minor | _] -> "#{major}.#{minor}"
+      _ -> version
+    end
   end
 
   defp preview_boundary_issues(paths) do

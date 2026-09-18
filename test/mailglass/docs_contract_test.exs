@@ -185,6 +185,22 @@ defmodule Mailglass.DocsContractTest do
       refute admin =~ "{:mailglass_admin, \"~> 0.1\"}"
       refute admin =~ "guaranteed client parity"
     end
+
+    # Positive-only: the defect is an absence (an existing guide unlinked from
+    # README.md), so there is no stale string to refute. Generalizing across
+    # the wildcard means the next upgrade guide is covered automatically.
+    test "every upgrade guide on disk is linked from README.md" do
+      readme = File.read!("README.md")
+      guides = Path.wildcard("guides/upgrading-*.md")
+
+      refute guides == [],
+             "Path.wildcard(\"guides/upgrading-*.md\") returned no upgrade guides — " <>
+               "expected at least guides/upgrading-to-v1_0.md and guides/upgrading-to-v2_0.md"
+
+      Enum.each(guides, fn path ->
+        assert readme =~ path, "README.md does not link #{path}"
+      end)
+    end
   end
 
   describe "Task existence" do
@@ -554,8 +570,21 @@ defmodule Mailglass.DocsContractTest do
       refute migration =~ ~r/~>\s*1\.6/,
              "migration-from-swoosh.md still contains stale ~> 1.6 pin"
 
-      assert migration =~ ~r/~>\s*2\.5/,
-             "migration-from-swoosh.md must pin the current ~> 2.5 series"
+      # Derived comparison — no hardcoded version literal. The guide's pin is
+      # generated at release time by release-please.yml's pin-resync step, so the
+      # test must assert against the manifest, not a literal, or the two would
+      # drift apart again on the next core release (the Phase 125 pin-drift shape).
+      core_version = package_major_minor!("mix.exs")
+      admin_version = package_major_minor!("mailglass_admin/mix.exs")
+
+      assert dependency_constraint!(migration, "mailglass", "guides/migration-from-swoosh.md") ==
+               core_version
+
+      assert dependency_constraint!(
+               migration,
+               "mailglass_admin",
+               "guides/migration-from-swoosh.md"
+             ) == admin_version
     end
 
     test "Multi-tenancy routing example parses and documents the shipped adapter_ref surface" do
@@ -699,6 +728,19 @@ defmodule Mailglass.DocsContractTest do
       assert trust_doc =~ "new work"
       assert docs_check =~ "\"guides/testing.md\""
       assert docs_check =~ "\"mailglass_admin/docs/operator-trust.md\""
+    end
+
+    test "compatibility guide no longer claims an exact sibling-version pin" do
+      compatibility = File.read!("guides/compatibility-and-deprecations.md")
+
+      refute compatibility =~ "exact sibling version",
+             "guides/compatibility-and-deprecations.md still claims an exact sibling pin — " <>
+               "both mailglass_admin/mix.exs and mailglass_inbound/mix.exs declare a bare " <>
+               "{:mailglass, \"~> 2.0\"} constraint, not an exact version"
+
+      assert compatibility =~ ~r/published builds pin.*~>/,
+             "guides/compatibility-and-deprecations.md must describe the real ~> pessimistic " <>
+               "sibling constraint"
     end
 
     @tag :skip
@@ -962,6 +1004,54 @@ defmodule Mailglass.DocsContractTest do
     end
   end
 
+  describe "docs/api_stability.md contract" do
+    test "injected __using__ forms list matches mailable.ex" do
+      doc = File.read!("docs/api_stability.md")
+      mailable = File.read!("lib/mailglass/mailable.ex")
+
+      refute doc =~ "Swoosh.Email, except",
+             "docs/api_stability.md still names the non-existent Swoosh.Email import form"
+
+      message_import =
+        "import Mailglass.Message, only: [to: 2, from: 2, subject: 2, html_body: 2, text_body: 2, header: 3, attach: 2, put_tag: 2]"
+
+      assert doc =~ message_import,
+             "docs/api_stability.md is missing the actual injected Mailglass.Message import"
+
+      # mailable.ex wraps the same import across multiple lines, so assert each
+      # imported name individually against the source rather than the doc's
+      # single-line rendering.
+      for name <- ~w(to: from: subject: html_body: text_body: header: attach: put_tag:) do
+        assert mailable =~ name,
+               "lib/mailglass/mailable.ex no longer imports #{name} — " <>
+                 "docs/api_stability.md's injected-forms list would drift from the source"
+      end
+
+      assert mailable =~ "import Mailglass.Message,",
+             "lib/mailglass/mailable.ex no longer imports Mailglass.Message"
+
+      defoverridable_form = "defoverridable new: 0, new: 1, render: 3, deliver: 2, deliver_later: 2"
+
+      assert doc =~ defoverridable_form,
+             "docs/api_stability.md's defoverridable item must name both new: 0 and new: 1"
+
+      assert mailable =~ defoverridable_form,
+             "lib/mailglass/mailable.ex's defoverridable list no longer matches docs/api_stability.md"
+    end
+
+    test "outbound moduledoc does not claim queued-delivery reconciliation" do
+      outbound = File.read!("lib/mailglass/outbound.ex")
+
+      refute outbound =~ ~r/reconcilable via.*Mailglass\.Events\.Reconciler/s,
+             "lib/mailglass/outbound.ex still claims orphan :queued Delivery rows are " <>
+               "reconcilable via Mailglass.Events.Reconciler — Reconciler.find_orphans/1 " <>
+               "queries orphan webhook Event rows, a distinct failure class"
+
+      assert outbound =~ "not currently auto-reconciled",
+             "lib/mailglass/outbound.ex must state the orphan :queued Delivery gap explicitly"
+    end
+  end
+
   describe "jobs.md contract" do
     # guides/jobs.md is the public JTBD ramp-up guide. Its snippets are a
     # projection of the canonical surface, so they must keep parsing and keep
@@ -1022,6 +1112,168 @@ defmodule Mailglass.DocsContractTest do
     end
   end
 
+  describe "MAINTAINING.md contract" do
+    test "exclude-paths count in prose is derived from release-please-config.json" do
+      maintaining = File.read!("MAINTAINING.md")
+
+      config = Jason.decode!(File.read!("release-please-config.json"))
+      count = length(get_in(config, ["packages", ".", "exclude-paths"]))
+      word = count_word!(count)
+
+      pattern = Regex.compile!("#{word}\\s+`exclude-paths`\\s+entries")
+
+      assert maintaining =~ pattern,
+             "MAINTAINING.md must state the derived exclude-paths count (#{count}/#{word}) " <>
+               "immediately before the `exclude-paths` token"
+
+      refute maintaining =~ "twelve `exclude-paths`",
+             "MAINTAINING.md still contains the stale hardcoded exclude-paths count"
+    end
+
+    # Negative-first: the defect is a specific misleading phrase, and there are
+    # many valid ways to phrase the correction, so a positive-only assertion
+    # would over-constrain the prose. A positive backstop (required_reviewers +
+    # three) is added so that deleting the sentence outright cannot pass either.
+    test "publish fan-out is described as gated, not hands-free" do
+      maintaining = File.read!("MAINTAINING.md")
+
+      refute maintaining =~ "hands-free publish fan-out",
+             "MAINTAINING.md still describes the publish fan-out as hands-free"
+
+      refute maintaining =~ "hands-free path can never self-skip",
+             "MAINTAINING.md still attributes the override guarantee to a hands-free path"
+
+      assert maintaining =~ "required_reviewers",
+             "MAINTAINING.md must name the required_reviewers approval mechanism"
+
+      assert maintaining =~ "three",
+             "MAINTAINING.md must state the three required_reviewers approval stops"
+    end
+
+    # Positive-only: the defect here is an *absent* section, so there is no
+    # stale string to refute — only presence and referential integrity of the
+    # runbook can be asserted.
+    test "close-out runbook names the ledger states and every script it tells the reader to run" do
+      maintaining = File.read!("MAINTAINING.md")
+
+      section =
+        case Regex.run(~r/^## Release Close-Out\n([\s\S]*?)(?=^## |\z)/m, maintaining) do
+          [_, body] -> body
+          _ -> flunk("MAINTAINING.md is missing its ## Release Close-Out section")
+        end
+
+      assert section =~ "scripts/release_policy_close_out.sh",
+             "Release Close-Out section must name scripts/release_policy_close_out.sh"
+
+      assert section =~ "check_published_baseline_of_record.sh",
+             "Release Close-Out section must name check_published_baseline_of_record.sh"
+
+      for state <- ~w(inactive captured authorized published completed) do
+        assert section =~ state,
+               "Release Close-Out section must name the #{state} ledger state"
+      end
+
+      for path <-
+            Regex.scan(~r{scripts/[a-z0-9_]+\.(?:sh|exs)}, section)
+            |> Enum.map(&hd/1)
+            |> Enum.uniq() do
+        assert File.exists?(path),
+               "Release Close-Out section names #{path}, which does not exist on disk"
+      end
+    end
+  end
+
+  describe "CONTRIBUTING.md contract" do
+    # Narrowly scoped negative: a blanket refute on "fix(inbound):" would
+    # false-positive on the legitimate, unrelated example commit message at
+    # CONTRIBUTING.md:161 ("select CI by checkout SHA"). Scope the refute to
+    # the specific stale sentence, and pair it with a positive assertion so the
+    # paragraph cannot simply be deleted.
+    test "sibling pin guidance describes the bare ~> constraint, not a floor bump" do
+      contributing = File.read!("CONTRIBUTING.md")
+
+      refute contributing =~ "requires a deliberate",
+             "CONTRIBUTING.md still instructs a deliberate fix(inbound): floor-bump commit"
+
+      assert contributing =~ "~> 2.0",
+             "CONTRIBUTING.md must describe the current bare ~> 2.0 sibling constraint"
+
+      assert contributing =~ "fix(inbound):",
+             "CONTRIBUTING.md's legitimate unrelated fix(inbound): example must survive"
+    end
+  end
+
+  # Negative-first for both tests: each defect is a specific wrong string, and
+  # the corrected prose can legitimately be phrased many ways, so a
+  # positive-only assertion would over-constrain a human-edited file. Each
+  # refute is paired with a positive backstop so deleting the sentence
+  # entirely cannot turn the test green.
+  describe "CLAUDE.md contract" do
+    test "sibling pin guidance matches the ~> convention the sibling mix files carry" do
+      claude = File.read!("CLAUDE.md")
+
+      sibling_bullet =
+        String.split(claude, "\n")
+        |> Enum.find(&String.starts_with?(&1, "- **Sibling packages"))
+
+      refute is_nil(sibling_bullet),
+             "CLAUDE.md is missing its '- **Sibling packages with linked-version releases.**' bullet"
+
+      refute sibling_bullet =~ ~s({:mailglass, "== <version>"}),
+             "CLAUDE.md's sibling-pin bullet still instructs an == exact pin"
+
+      assert sibling_bullet =~ "~> ",
+             "CLAUDE.md's sibling-pin bullet must describe the ~> convention"
+
+      assert sibling_bullet =~ "linked-versions",
+             "CLAUDE.md's sibling-pin bullet must name the linked-versions plugin"
+    end
+
+    test "release PR merge path is described as disarmed plus protected dispatch" do
+      claude = File.read!("CLAUDE.md")
+
+      refute claude =~ "auto-merges on green",
+             "CLAUDE.md still claims the release PR auto-merges on green"
+
+      assert claude =~ "disarmed" or claude =~ "Disarmed",
+             "CLAUDE.md must describe ordinary auto-merge as disarmed"
+
+      assert claude =~ "candidate-digest",
+             "CLAUDE.md must name the protected exact candidate-digest dispatch"
+
+      assert claude =~ "required_reviewers",
+             "CLAUDE.md must still name the required_reviewers approval mechanism"
+
+      assert claude =~ "three approvals",
+             "CLAUDE.md must still state the three required approvals"
+    end
+  end
+
+  describe "CHANGELOG.md contract" do
+    test "2.0.0 changelog entry names the schema-isolation breaking change" do
+      changelog = File.read!("CHANGELOG.md")
+
+      section =
+        case Regex.run(~r/^## \[2\.0\.0\]([\s\S]*?)(?=^## \[|\z)/m, changelog) do
+          [_, body] -> body
+          _ -> flunk("CHANGELOG.md is missing its ## [2.0.0] section")
+        end
+
+      assert section =~ "schema",
+             "CHANGELOG.md's 2.0.0 section must name the schema-isolation breaking change"
+
+      assert section =~ "132",
+             "CHANGELOG.md's 2.0.0 section must cite the Phases 132-137 schema-isolation work"
+
+      # Additive-only proof: the original release-please-generated bullet must
+      # survive verbatim, so this diff can never be the one that rewrote
+      # release history.
+      assert section =~
+               "marker is banked in 132-136, so release-please would otherwise cut 1.12.0/1.12.0",
+             "CHANGELOG.md's original release-please-generated 2.0.0 bullet must survive unedited"
+    end
+  end
+
   defp v26_contract_errors(core, compatibility, adopter) do
     combined = core <> "\n" <> compatibility
 
@@ -1044,6 +1296,47 @@ defmodule Mailglass.DocsContractTest do
          else: []
 
     Enum.uniq(missing ++ stale ++ ui_claim)
+  end
+
+  @count_words %{
+    1 => "one",
+    2 => "two",
+    3 => "three",
+    4 => "four",
+    5 => "five",
+    6 => "six",
+    7 => "seven",
+    8 => "eight",
+    9 => "nine",
+    10 => "ten",
+    11 => "eleven",
+    12 => "twelve",
+    13 => "thirteen",
+    14 => "fourteen",
+    15 => "fifteen",
+    16 => "sixteen",
+    17 => "seventeen",
+    18 => "eighteen",
+    19 => "nineteen",
+    20 => "twenty",
+    21 => "twenty-one",
+    22 => "twenty-two",
+    23 => "twenty-three",
+    24 => "twenty-four",
+    25 => "twenty-five",
+    26 => "twenty-six",
+    27 => "twenty-seven",
+    28 => "twenty-eight",
+    29 => "twenty-nine",
+    30 => "thirty"
+  }
+
+  defp count_word!(n) do
+    Map.get(@count_words, n) ||
+      flunk(
+        "count_word!/1 has no English-word mapping for #{n} — extend @count_words " <>
+          "in test/mailglass/docs_contract_test.exs"
+      )
   end
 
   defp package_major_minor!(mixfile_path) do

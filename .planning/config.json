@@ -1,5 +1,5 @@
 {
-  "model_profile": "balanced",
+  "model_profile": "adaptive",
   "commit_docs": true,
   "parallelization": true,
   "search_gitignored": false,
@@ -8,6 +8,7 @@
   "exa_search": false,
   "git": {
     "branching_strategy": "none",
+    "allow_default_branch_commits": true,
     "phase_branch_template": "gsd/phase-{phase}-{slug}",
     "milestone_branch_template": "gsd/{milestone}-{slug}",
     "quick_branch_template": null
@@ -56,7 +57,12 @@
       ]
     }
   },
-  "resolve_model_ids": "omit",
+  "resolve_model_ids": false,
   "mode": "yolo",
-  "granularity": "standard"
+  "granularity": "standard",
+  "runtime": "claude",
+  "model_policy": {
+    "provider": "anthropic",
+    "budget": "medium"
+  }
 }

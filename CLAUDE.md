@@ -10,7 +10,7 @@
 Three sibling Hex packages, MIT, no Node toolchain anywhere:
 - **`mailglass`** — core lib (Phoenix + Ecto + Postgres required, Oban optional)
 - **`mailglass_admin`** — mountable LiveView dashboard (dev preview shipped v0.1, prod admin shipped v0.5)
-- **`mailglass_inbound`** — Action Mailbox equivalent (opened v1.1; now on its own stable `1.0` contract — see `mailglass_inbound/docs/api_stability.md`)
+- **`mailglass_inbound`** — Action Mailbox equivalent (opened v1.1; now on its own stable contract (semver-honored since 1.0) — see `mailglass_inbound/docs/api_stability.md`)
 
 **Marketing email and multi-channel notifications are permanently out of scope.** See `.planning/PROJECT.md` Out of Scope for the full list with reasoning.
 
@@ -53,7 +53,7 @@ These are inherited from 4 prior shipped libraries (accrue, lattice_stripe, sigr
 - **Telemetry on `[:mailglass, :domain, :resource, :action, :start | :stop | :exception]`.** Metadata whitelisted to counts/statuses/IDs/latencies. **Never PII** (no `:to`, `:from`, `:body`, `:html_body`, `:subject`, `:headers`, `:recipient`, `:email`). Handlers that raise must not break business logic.
 - **Append-only `mailglass_events` Postgres table.** UPDATE/DELETE raises SQLSTATE 45A01 via trigger. Idempotency keys via `UNIQUE` partial index — webhook replays are safe no-ops.
 - **Multi-tenancy first-class from v0.1.** `tenant_id` on every record. `Mailglass.Tenancy.scope/2` behaviour. Cannot be retrofitted (D-09).
-- **Sibling packages with linked-version releases.** Release Please with `separate-pull-requests: false` + linked-versions plugin. `mailglass_admin/mix.exs` declares `{:mailglass, "== <version>"}`.
+- **Sibling packages with linked-version releases.** Release Please with `separate-pull-requests: false` + linked-versions plugin. `mailglass_admin/mix.exs` declares `{:mailglass, "~> <core-major.minor>"}`, and the linked-versions plugin locks the minor at release time.
 - **Fake adapter is the merge-blocking release gate.** `Mailglass.Adapters.Fake` is built FIRST per D-13. Real-provider sandbox tests are advisory only (daily cron + `workflow_dispatch`, never block PRs).
 - **Custom Credo checks at lint time.** Twelve checks enforce domain rules. See `LINT-01..LINT-12` in REQUIREMENTS.md.
 - **Optional deps gated through `Mailglass.OptionalDeps.*` modules.** `@compile {:no_warn_undefined, ...}` declared once + `available?/0` predicate + degraded fallback. CI lane `mix compile --no-optional-deps --warnings-as-errors` is mandatory.
@@ -116,7 +116,7 @@ Encoded for GSD in `~/.claude/get-shit-done/USER-PROFILE.md` (advisor mode, `ven
 
 - **Conventional Commits enforced** (PR title check). Squash-merge workflow.
 - `docs(state):` commit type for `.planning/STATE.md` updates — CI path filters skip them.
-- **Hex publish only from a protected ref**, via the `hex-publish` GitHub Environment so `HEX_API_KEY` is never visible to PR jobs. A Release Please PR auto-merges on green (see `release-please.yml` "Arm auto-merge"), but **the publish itself is not hands-free**: the `hex-publish` environment has a `required_reviewers` rule (szTheory), so the fan-out stops for one manual approval **per package** — three approvals on a linked core+admin+inbound release. Plan a release with a human present. Removing that gate is a deliberate policy change; do not remove it to make a doc or a script true.
+- **Hex publish only from a protected ref**, via the `hex-publish` GitHub Environment so `HEX_API_KEY` is never visible to PR jobs. Ordinary auto-merge on the release PR is disarmed (see `release-please.yml` "Arm auto-merge"); the merge proceeds only via a later protected exact candidate-digest dispatch. **The publish itself is not hands-free**: the `hex-publish` environment has a `required_reviewers` rule (szTheory), so the fan-out stops for one manual approval **per package** — three approvals on a linked core+admin+inbound release. Plan a release with a human present. Removing that gate is a deliberate policy change; do not remove it to make a doc or a script true.
 - **All third-party GitHub Actions pinned to commit SHA.** Dependabot watches both `mix.lock` and `.github/workflows/`.
 
 ## Things Not To Do (the short list — full list in PITFALLS.md)

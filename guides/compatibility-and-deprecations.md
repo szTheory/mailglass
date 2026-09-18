@@ -207,7 +207,7 @@ different compatibility window.
 `mailglass_admin/mix.exs` proves the current expectation:
 
 - local development uses the repo path dependency
-- published builds pin the exact sibling version
+- published builds pin the sibling's current major.minor with a pessimistic `~>` constraint
 
 That is the current truth the repo can defend. Do not infer a broader
 cross-version compatibility story from shared source control alone.

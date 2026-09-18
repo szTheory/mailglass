@@ -17,6 +17,7 @@ defmodule MailglassAdmin.MixProject do
       deps: deps(),
       aliases: aliases(),
       dialyzer: dialyzer(),
+      test_coverage: [tool: ExCoveralls],
       name: "MailglassAdmin",
       description: @description,
       source_url: @source_url,
@@ -130,7 +131,10 @@ defmodule MailglassAdmin.MixProject do
       {:ex_doc, "~> 0.40", only: :dev, runtime: false},
       # Phoenix.LiveViewTest 1.1+ requires lazy_html for DOM traversal
       # (replaces the previous floki-based implementation).
-      {:lazy_html, ">= 0.1.0", only: :test}
+      {:lazy_html, ">= 0.1.0", only: :test},
+      # GREEN-02: measured coverage-floor ratchet, mirroring core and inbound
+      # (mailglass_inbound/mix.exs, same ~> 0.18 pin already locked repo-wide).
+      {:excoveralls, "~> 0.18", only: [:test]}
     ]
   end
 
@@ -206,7 +210,7 @@ defmodule MailglassAdmin.MixProject do
         "cmd git diff --exit-code priv/static/"
       ],
       "verify.support_contract.admin": [
-        "test test/mailglass_admin/post_installer_smoke_test.exs test/mailglass_admin/operator_live_test.exs test/mailglass_admin/inbound_live_test.exs test/mailglass_admin/operator_trust_doc_test.exs test/mailglass_admin/stability_contract_test.exs test/mailglass_admin/router_test.exs test/mailglass_admin/auth_test.exs test/mailglass_admin/token_parity_test.exs test/mailglass_admin/ratchet_baseline_test.exs --warnings-as-errors"
+        "test --warnings-as-errors"
       ],
       # Deprecated pass-through (REL-03, one cycle) — use verify.preview instead
       "verify.phase_05": ["verify.preview"]

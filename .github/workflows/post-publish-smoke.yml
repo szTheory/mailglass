@@ -28,6 +28,18 @@ on:
         description: "Immutable 40-character tag SHA validated by the protected publisher"
         required: true
         type: string
+      mode:
+        description: >-
+          Optional. Set to "baseline" to exercise the scheduled proof against the
+          current inactive ledger's already-published baseline instead of the
+          exact authorized/published protected target. The four inputs above
+          still must be filled (GitHub requires non-empty values for required
+          inputs) but their values are not consulted in baseline mode -- the
+          resolved versions and tag SHA come from the ledger's baselines and
+          historical_tag_sha instead. Evidence-only; never authorizes a publish.
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -44,6 +56,7 @@ jobs:
     outputs:
       completed: ${{ steps.target.outputs.completed }}
       authorized: ${{ steps.target.outputs.authorized }}
+      baseline: ${{ steps.target.outputs.baseline }}
       core: ${{ steps.target.outputs.core }}
       admin: ${{ steps.target.outputs.admin }}
       inbound: ${{ steps.target.outputs.inbound }}
@@ -54,6 +67,7 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_TARGET_REF: ${{ github.event.inputs.target_ref }}
+          INPUT_MODE: ${{ github.event.inputs.mode }}
           RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
@@ -70,7 +84,7 @@ jobs:
             mv "$temporary_path" "$resolution_path"
           }
 
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "${INPUT_MODE:-}" != "baseline" ]; then
             if ! [[ "$INPUT_TARGET_REF" =~ ^[0-9a-f]{40}$ ]]; then
               write_resolution "cannot-check" "invalid_protected_target_ref" "invalid" "" "" "" "" "" ""
               exit 1
@@ -123,14 +137,35 @@ jobs:
           INPUT_ADMIN: ${{ github.event.inputs.admin_version }}
           INPUT_INBOUND: ${{ github.event.inputs.inbound_version }}
           INPUT_TARGET_REF: ${{ github.event.inputs.target_ref }}
+          INPUT_MODE: ${{ github.event.inputs.mode }}
           RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
-          command="authorized-versions"
-          if [ "$EVENT_NAME" = "schedule" ]; then command="completed-versions"; fi
           control_target=.planning/release-target.json
           target="$control_target"
           target_repo=.
+
+          # Peek the ledger status before choosing a resolution verb (never a
+          # second parser -- this only decides which already-validated verb
+          # below to invoke). A schedule fire against an inactive ledger (the
+          # normal state between releases) and a baseline-mode dispatch both
+          # resolve the published baseline instead of a completed/authorized
+          # candidate that does not exist yet.
+          ledger_status_peek=$(jq -er '.status' "$control_target" 2>/dev/null || echo "")
+
+          command="authorized-versions"
+          baseline_mode=false
+          if [ "$EVENT_NAME" = "schedule" ]; then
+            command="completed-versions"
+            if [ "$ledger_status_peek" = "inactive" ]; then
+              command="baseline-versions"
+              baseline_mode=true
+            fi
+          fi
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "${INPUT_MODE:-}" = "baseline" ]; then
+            command="baseline-versions"
+            baseline_mode=true
+          fi
           resolved=$(mktemp)
           resolution_path="$RUNNER_TEMP/post-publish-resolution.json"
           resolution_finalized=false
@@ -148,7 +183,7 @@ jobs:
 
           trap 'exit_status=$?; trap - EXIT; if [ "$resolution_finalized" != true ]; then write_resolution "cannot-check" "resolver_failed" "error" "" "" "" "" "" ""; fi; exit "$exit_status"' EXIT
 
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$baseline_mode" != true ]; then
             target=immutable-target/.planning/release-target.json
             target_repo=immutable-target
             control_resolved=$(mktemp)
@@ -183,7 +218,7 @@ jobs:
             exit "$resolution_status"
           fi
 
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$baseline_mode" != true ]; then
             for identity_key in core admin inbound candidate_digest content_digest proposal_head source_sha; do
               control_value=$(awk -F= -v key="$identity_key" '$1 == key {print $2}' "$control_resolved")
               target_value=$(awk -F= -v key="$identity_key" '$1 == key {print $2}' "$resolved")
@@ -201,6 +236,8 @@ jobs:
           fi
           completed=$(awk -F= '$1 == "completed" {print $2}' "$resolved")
           authorized=$(awk -F= '$1 == "authorized" {print $2}' "$resolved")
+          baseline=$(awk -F= '$1 == "baseline" {print $2}' "$resolved")
+          baseline=${baseline:-false}
           core=$(awk -F= '$1 == "core" {print $2}' "$resolved")
           admin=$(awk -F= '$1 == "admin" {print $2}' "$resolved")
           inbound=$(awk -F= '$1 == "inbound" {print $2}' "$resolved")
@@ -208,7 +245,15 @@ jobs:
           [[ "$core" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           [[ "$admin" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           [[ "$inbound" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          if [ "$EVENT_NAME" = "schedule" ]; then
+          if [ "$baseline_mode" = true ]; then
+            # Baseline mode does not consult the dispatch ref at all -- the
+            # resolved target_ref comes from the ledger's
+            # required_evidence_identifiers.historical_tag_sha via the
+            # baseline-versions verb, exactly like the schedule/completed path
+            # resolves target_ref from a completed target's final_identity.
+            [ "$baseline" = true ]
+            target_ref=$(awk -F= '$1 == "target_ref" {print $2}' "$resolved")
+          elif [ "$EVENT_NAME" = "schedule" ]; then
             [ "$completed" = true ]
             target_ref=$(awk -F= '$1 == "target_ref" {print $2}' "$resolved")
           else
@@ -223,18 +268,30 @@ jobs:
             target_ref="$INPUT_TARGET_REF"
           fi
           [[ "$target_ref" =~ ^[0-9a-f]{40}$ ]]
-          bash scripts/check_post_publish_target.sh \
-            --repo "$target_repo" \
-            --target "$target" \
-            --target-ref "$target_ref" \
-            --core "$core" \
-            --admin "$admin" \
-            --inbound "$inbound"
+          if [ "$baseline_mode" = true ]; then
+            bash scripts/check_post_publish_target.sh \
+              --repo "$target_repo" \
+              --target "$target" \
+              --target-ref "$target_ref" \
+              --core "$core" \
+              --admin "$admin" \
+              --inbound "$inbound" \
+              --baseline-mode
+          else
+            bash scripts/check_post_publish_target.sh \
+              --repo "$target_repo" \
+              --target "$target" \
+              --target-ref "$target_ref" \
+              --core "$core" \
+              --admin "$admin" \
+              --inbound "$inbound"
+          fi
           lifecycle="completed"
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then lifecycle="$control_status"; fi
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$baseline_mode" != true ]; then lifecycle="$control_status"; fi
+          if [ "$baseline_mode" = true ]; then lifecycle="inactive"; fi
           write_resolution "pass" "exact_target_verified" "$lifecycle" "$lifecycle" "published" "$target_ref" "$core" "$admin" "$inbound"
           resolution_finalized=true
-          printf 'completed=%s\nauthorized=%s\ncore=%s\nadmin=%s\ninbound=%s\ntarget_ref=%s\n' "$completed" "$authorized" "$core" "$admin" "$inbound" "$target_ref" >> "$GITHUB_OUTPUT"
+          printf 'completed=%s\nauthorized=%s\nbaseline=%s\ncore=%s\nadmin=%s\ninbound=%s\ntarget_ref=%s\n' "$completed" "$authorized" "$baseline" "$core" "$admin" "$inbound" "$target_ref" >> "$GITHUB_OUTPUT"
       - name: Bind and summarize scheduled-control evidence
         if: ${{ always() && github.event_name != 'release' }}
         env:
@@ -277,6 +334,7 @@ jobs:
         env:
           COMPLETED: ${{ needs.resolve-completed-target.outputs.completed }}
           AUTHORIZED: ${{ needs.resolve-completed-target.outputs.authorized }}
+          BASELINE: ${{ needs.resolve-completed-target.outputs.baseline }}
           COMPLETED_CORE: ${{ needs.resolve-completed-target.outputs.core }}
           COMPLETED_ADMIN: ${{ needs.resolve-completed-target.outputs.admin }}
           COMPLETED_INBOUND: ${{ needs.resolve-completed-target.outputs.inbound }}
@@ -293,12 +351,19 @@ jobs:
               return;
             }
 
-            if (eventName === 'schedule' && process.env.COMPLETED !== 'true') {
+            // A distinct `baseline` signal, never a reuse of `completed`: the
+            // ledger is inactive between releases (no completed target
+            // exists), so the scheduled fire -- and an on-demand
+            // workflow_dispatch exercising the same path via mode=baseline --
+            // resolves the published baseline instead. Reusing
+            // `completed=true` for an inactive ledger would make this
+            // fail-closed control lie about what it verified.
+            if (eventName === 'schedule' && process.env.COMPLETED !== 'true' && process.env.BASELINE !== 'true') {
               core.setFailed('Scheduled smoke requires an immutable completed target.');
               return;
             }
 
-            if (eventName === 'workflow_dispatch' && process.env.AUTHORIZED !== 'true') {
+            if (eventName === 'workflow_dispatch' && process.env.AUTHORIZED !== 'true' && process.env.BASELINE !== 'true') {
               core.setFailed('Protected post-publication dispatch requires its exact authorized or published target.');
               return;
             }

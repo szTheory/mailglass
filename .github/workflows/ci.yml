@@ -279,6 +279,21 @@ jobs:
       - name: Compile demo app for coverage
         working-directory: reference/demo_app
         run: mix compile --warnings-as-errors
+      - name: Prepare isolated Hex-resolution copy of demo app
+        # GREEN-04 (D-11): prove the demo app's Hex pins resolve and compile,
+        # without ever flipping the path-dep steps above, which deliberately
+        # compile the working tree under test. Isolation is a scratch copy
+        # with default deps/_build paths, not a MIX_DEPS_PATH/MIX_BUILD_PATH
+        # override on the working tree — that override reproducibly breaks
+        # cowlib's erlang.mk build locally (see 166-05-SUMMARY.md deviation).
+        run: |
+          rm -rf /tmp/mailglass_demo_hex_proof
+          rsync -a --exclude 'demo_app/deps' --exclude 'demo_app/_build' --exclude 'host_app' reference/ /tmp/mailglass_demo_hex_proof/
+      - name: Prove demo app Hex pins
+        working-directory: /tmp/mailglass_demo_hex_proof/demo_app
+        env:
+          MAILGLASS_DEMO_DEPS: hex
+        run: mix deps.get --check-locked && mix compile
       - name: Wait for postgres + create test DB
         env:
           PGPASSWORD: postgres
@@ -449,6 +464,7 @@ jobs:
         env:
           MAILGLASS_TIMEOUT_EVIDENCE_PATH: tmp/timeout-evidence/database.ndjson
           MAILGLASS_TIMEOUT_EVIDENCE_COMMAND: mix test --warnings-as-errors
+          MAILGLASS_SUITE_FLOOR: "1"
         run: mix test --warnings-as-errors
       - name: Upload deterministic timeout evidence
         if: ${{ failure() && steps.deterministic-core.outcome == 'failure' }}
@@ -915,6 +931,12 @@ jobs:
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run admin support contract
         run: cd mailglass_admin && mix verify.support_contract.admin
+      - name: Collect and enforce admin coverage floor
+        run: |
+          cd mailglass_admin
+          mix coveralls.json --output-dir ../coverage/admin test --warnings-as-errors
+          cd ..
+          bash scripts/check_coverage_floor.sh config/coverage_baselines/admin.json coverage/admin/excoveralls.json 1.18.4/27
 
   operator_browser_gate:
     name: Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)
@@ -1204,9 +1226,14 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: deps
-          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
+          # GREEN-05 (D-15): lane-specific key segment disambiguates this
+          # trust lane's cache entry from trust_lane_clean_baseline's, even
+          # though both currently declare the same bare `deps` path list —
+          # belt-and-braces on top of the by-construction refutation in
+          # docs/ci-cache-isolation.md.
+          key: mix-trust-repo-head-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
+            mix-trust-repo-head-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
       - name: Install deps
         run: mix deps.get
       - name: Wait for postgres + create test DB
@@ -1215,6 +1242,12 @@ jobs:
         run: |
           until pg_isready -h localhost -U postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: List reference/host_app/deps before install (GREEN-05 evidence)
+        # Part 2 of the D-15 proof: records what cache restore actually
+        # materialized before deps.get runs, rather than inferring it. This
+        # trust lane's cache step above never declares reference/host_app/deps
+        # as a path — this listing observes that fact directly.
+        run: ls -la reference/host_app/deps 2>/dev/null || echo "reference/host_app/deps absent before install"
       - name: Build published Admin compatibility gate
         # Repo-head trust is explicitly prepublication: core + inbound come
         # from coherent workspace builds, while Admin remains the established
@@ -1289,9 +1322,14 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: deps
-          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
+          # GREEN-05 (D-15): lane-specific key segment disambiguates this
+          # trust lane's cache entry from trust_lane_repo_head's, even
+          # though both currently declare the same bare `deps` path list —
+          # belt-and-braces on top of the by-construction refutation in
+          # docs/ci-cache-isolation.md.
+          key: mix-trust-clean-baseline-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
+            mix-trust-clean-baseline-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
       - name: Install deps
         run: mix deps.get
       - name: Wait for postgres + create test DB
@@ -1300,6 +1338,12 @@ jobs:
         run: |
           until pg_isready -h localhost -U postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: List reference/host_app/deps before install (GREEN-05 evidence)
+        # Part 2 of the D-15 proof: records what cache restore actually
+        # materialized before deps.get runs, rather than inferring it. This
+        # trust lane's cache step above never declares reference/host_app/deps
+        # as a path — this listing observes that fact directly.
+        run: ls -la reference/host_app/deps 2>/dev/null || echo "reference/host_app/deps absent before install"
       - name: Build reference host (dev) so the journey can load sibling beams
         working-directory: reference/host_app
         env:

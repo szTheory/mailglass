@@ -1116,14 +1116,14 @@ test in `test/mailglass/mailable_test.exs` asserts the budget on every CI run.
 2. `@before_compile Mailglass.Mailable`
 3. `@mailglass_opts opts`
 4. `@compile {:no_warn_undefined, Mailglass.Outbound}` (forward-ref guard until Plan 05)
-5. `import Swoosh.Email, except: [new: 0]`
+5. `import Mailglass.Message, only: [to: 2, from: 2, subject: 2, html_body: 2, text_body: 2, header: 3, attach: 2, put_tag: 2]`
 6. `import Mailglass.Components`
 7. `def __mailglass_opts__/0`
-8. `def new/0`
+8. `def new(assigns \\ [])` (defines both `new/0` and `new/1`)
 9. `def render/3`
 10. `def deliver/2`
 11. `def deliver_later/2`
-12. `defoverridable new: 0, render: 3, deliver: 2, deliver_later: 2`
+12. `defoverridable new: 0, new: 1, render: 3, deliver: 2, deliver_later: 2`
 
 **What is NOT injected:** `import Phoenix.Component` (adopters opt in per-mailable to avoid HEEx
 collision), `preview_props/0` default, module attributes `@subject` / `@from` (D-11 rationale).

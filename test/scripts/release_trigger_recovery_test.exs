@@ -651,10 +651,26 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
                  stderr_to_stdout: true
                )
 
-      calls = File.read!(env["GH_LOG"])
+      # CTRL-02 (#166-04): the preflight's tag lookups are now reachable on an
+      # empty-digest run, so they precede the discovery step's `pr list` call.
+      # The exact tag names are version-dependent (read from the live
+      # manifest), so assert shape/order rather than hardcoding them.
+      call_lines = env["GH_LOG"] |> File.read!() |> String.split("\n", trim: true)
+      {tag_lookup_calls, other_calls} = Enum.split(call_lines, -1)
 
-      assert calls ==
-               "pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid\n"
+      assert other_calls == [
+               "pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid"
+             ]
+
+      assert length(tag_lookup_calls) == 3
+
+      assert Enum.all?(
+               tag_lookup_calls,
+               &String.starts_with?(
+                 &1,
+                 "api --include repos/test-owner/test-repo/releases/tags/"
+               )
+             )
 
       refute File.read!(env["COMMAND_LOG"]) =~
                ~r/(gh pr merge|git tag|gh release|git push|protected-dispatch)/
@@ -1145,6 +1161,17 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       esac
       exit 0
     fi
+    # CTRL-02 (#166-04): the preflight's already-tagged-SHA tag lookup is now
+    # reachable on an empty-digest run too. This fixture always reports every
+    # queried tag absent (a confirmed 404), so the idle-schedule scenario
+    # falls through to "no PR number found" / "should_run=true" exactly as it
+    # did before the early return was deleted.
+    case "$*" in
+      "api --include repos/test-owner/test-repo/releases/tags/"*)
+        printf 'HTTP/2 404 Not Found\\n' >&2
+        exit 1
+        ;;
+    esac
     printf 'unexpected gh invocation: %s\\n' "$*" >&2
     exit 64
     """)

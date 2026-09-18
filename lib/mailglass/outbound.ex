@@ -45,9 +45,13 @@ defmodule Mailglass.Outbound do
   After Multi#2 commits → `Projector.broadcast_delivery_updated/3`.
 
   **Adapter-call-in-transaction is a hard no** — Postgres
-  connection-pool starvation under provider latency. Orphan `:queued`
-  Delivery rows between Multi#1 and adapter call are reconcilable via
-  `Mailglass.Events.Reconciler` with age >= 5min.
+  connection-pool starvation under provider latency.
+
+  An orphan `:queued` Delivery row between Multi#1 and the adapter call is
+  not currently auto-reconciled. `Mailglass.Events.Reconciler` resolves a
+  distinct failure class — orphan webhook `Event` rows with no matching
+  Delivery — not a Delivery stuck at `:queued` with no matching event. A
+  stuck `:queued` row today requires manual operator intervention.
 
   ## Return shapes
 
