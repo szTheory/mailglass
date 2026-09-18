@@ -26,14 +26,17 @@ See: .planning/PROJECT.md (updated 2026-09-17)
 
 **Core value:** Email you can see, audit, and trust before it ships.
 **Current focus:** Phase 167 — truthful-documentation-and-the-standing-control
-tested. Two phases, hard timebox 5 working days, WIP limit 1 open PR. Evidence:
+tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open at a time. Evidence:
 `.planning/research/v2.8/FINDINGS.md`.
 
-> **Note on the sections below.** Much of the accumulated context that follows is v2.7-era and has
-> since gone stale — notably `## Operator Next Steps`, which still describes two `InboundLiveTest`
-> reds as undiagnosed (fixed in `f733fc22`/`d65a1aa8`), PR #222 as open (closed), and 14 open PRs
-> (now zero). **That staleness is not an oversight — it is v2.8 evidence.** Truthing it up is a
-> committed requirement of this milestone, so it is left intact here until the phase that fixes it.
+> **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
+> has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
+> as undiagnosed (fixed in `f733fc22`/`d65a1aa8`, both merged to `main`) and PR #222 as open (it is
+> closed). Truthing that up was DOCS-01/STAND-01 (Phase 167 Plan 04). This file does not snapshot an
+> open-PR or open-issue count or identity anywhere below — that is permanently non-permanent
+> information. For current open PRs and issues, run `gh pr list --state open` and
+> `gh issue list --state open` against `szTheory/mailglass`; `scripts/check_state_md_pr_refs.sh`
+> machine-checks every `#NNN` reference in this file against live GitHub state.
 
 ## Current Position
 
@@ -50,7 +53,7 @@ Last activity: 2026-09-18 — Phase 167 execution started
   of **2026-10-27**.
 
 - **Phase 167** — DOCS-01..06 + STAND-01 (7 requirements). Genuinely independent; safely last.
-- **Exactly two phases. There is no Phase 168.** Hard timebox 5 working days, WIP limit 1 open PR.
+- **Exactly two phases. There is no Phase 168.** Hard timebox 5 working days, WIP limit: at most one PR open at a time.
   On day 5, ship what is done and close regardless.
 
 - **Stop line:** every claim the repo makes about itself is either true or tested. Anything discovered
@@ -100,8 +103,9 @@ Last activity: 2026-09-18 — Phase 167 execution started
 - **v2.7 closes ARCHIVED WITHOUT TERMINAL PROOF. Sections 6–7 are not achievable under current
   policy and are not pending work.** The runbook also requires all three registered scheduled controls
   to report `completed/success` at that exact SHA. All three fail closed *by design*, on one shared
-  root cause — the 14 open PRs this milestone accepted as permanent operational debt:
-  `repo-hygiene` → `blocked` / "14 open PR(s) require disposition before release";
+  root cause — the batch of PRs (fourteen, at the time) this milestone accepted as permanent
+  operational debt while left open:
+  `repo-hygiene` → `blocked` / "open PR(s) require disposition before release";
   `post-publish-smoke` → `blocked` / `scheduled_target_not_published` (PR #222 is an
   authorized-but-unpublished target); `release-please` → `blocked` / `proposal_identity_mismatch`
   (the same open #222 proposal). Clearing them would require closing those PRs, publishing a release,
@@ -125,9 +129,11 @@ Last activity: 2026-09-18 — Phase 167 execution started
   the terminal contract is relaxed. Until then, absence of schedule evidence is the expected steady
   state — never authority to dispatch, rerun, close a PR, or publish.
 
-- Repository hygiene remains policy-blocked by 14 open PRs as accepted operational debt. Legacy quick
-  tasks stay outside v2.7, and no PR closure, tag push, branch deletion, workflow dispatch or rerun,
-  merge bypass, release, or publication is authorized.
+- At v2.7's close, repository hygiene was policy-blocked by open PRs accepted as operational debt; that
+  count is not snapshotted here because it changes independently of this file — run
+  `mix mailglass.repo.hygiene --check` or `gh pr list --state open` for the current figure. Legacy
+  quick tasks stay outside v2.7, and no PR closure, tag push, branch deletion, workflow dispatch or
+  rerun, merge bypass, release, or publication is authorized by this record.
 
 ## Performance Metrics
 
@@ -391,17 +397,14 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with `/gsd-new-milestone`.
-- v2.7 needs nothing further. The accepted-debt PR count is now 1, not 14, but `165-FINALIZATION.md`
-  §6–7 stays closed out: the remaining PR (#222) still fails `repo-hygiene`, and both
-  `post-publish-smoke` and `release-please` block specifically on it. Revisiting §6–7 is a separate
-  authority from any new milestone, and not a prerequisite for one.
+- v2.7 needs nothing further. `165-FINALIZATION.md` §6–7 stays closed out (not achievable under
+  current policy). PR #222 (the proposal that blocked §6–7 at v2.7's close) is closed. Revisiting
+  §6–7 is a separate authority from any milestone, and not a prerequisite for one.
 
-- Decide #222 `chore: release main` — it would cut `mailglass 2.6.0` / `mailglass_inbound 2.3.0` to
-  Hex. Currently red (Core Full Suite + CI Green) and `BEHIND`. Either rebase-and-release, or close it
-  and let release-please regenerate. This is the only thing standing between the repo and a green
-  scheduled-control signal.
+- A release-please release proposal may currently be open against `main` — check
+  `gh pr list --state open` for its number and CI status before deciding whether to rebase-and-merge
+  it or close it and let release-please regenerate. This file deliberately does not name or snapshot
+  that PR, since its identity and status change every time release-please or a maintainer acts on it.
 
-- Two pre-existing reds on `main` in `MailglassAdmin.InboundLiveTest` (replay flash copy,
-  `inbound_live_test.exs:913` and `:1411`) are undiagnosed. Likely coupled to the unmerged PR #129
-  replay-copy redesign. Worth resolving before any release.
+- The two `MailglassAdmin.InboundLiveTest` replay-flash-copy reds (`inbound_live_test.exs:913` and
+  `:1411`) are fixed, by `f733fc22` and `d65a1aa8`, both merged to `main`. They are not a blocker.
