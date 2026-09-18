@@ -628,7 +628,11 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    and release-please skips the cut, recover with a tiny follow-up commit that
    carries a `Release-As: <intended-version>` footer. Do not hand-edit
    `.release-please-manifest.json` to force the version.
-3. **Monitor the hands-free publish fan-out.**
+3. **Monitor the publish fan-out — gated by one `required_reviewers` approval per package.**
+   The fan-out stops for one manual `required_reviewers` approval per package —
+   three stops on a linked core+admin+inbound release. "Hands-free" describes
+   everything up to that gate, not past it: nothing publishes to Hex without a
+   human clicking approve for each package.
    Review the pre-publish summary in the workflow run page (rendered by the
    `prepublish-summary` job per D-15) after `gate-ci-green` passes and the
    publish jobs fan out. Verify the file count, total size, CHANGELOG excerpt,
@@ -659,8 +663,9 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
              -f skip_core_full_suite_gate=true \
              -f core_full_suite_gate_skip_reason="<why>"
 
-       It is **dispatch-only and inert on the `release` event** — the hands-free
-       path can never self-skip its own gate. The reason is required, is echoed to
+       It is **dispatch-only and inert on the `release` event** — the override
+       input is only read on a `workflow_dispatch`, so a release triggered
+       without an explicit dispatch can never self-skip the gate. The reason is required, is echoed to
        the run summary, and the run logs a warning naming the override as an
        exception. Prefer re-running the lane
        (`gh workflow run advisory-matrix.yml --ref <tag>`) and re-dispatching the

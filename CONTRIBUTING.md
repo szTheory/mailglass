@@ -183,11 +183,12 @@ git commit -m 'fix(inbound): select CI by checkout SHA' \
   `.planning/publish/mailglass_inbound-publish-summary.json` to the new `~>` constraint.
 
 **What the sed step does NOT touch:** the sibling `mix.exs` core-dep declarations.
-As of v1.15 Phase 125 the sibling packages use hand-maintained pessimistic `~>` constraints
-(`mailglass_inbound` uses `~> 1.10 and >= 1.10.2`, `mailglass_admin` uses `~> 1.10`).
-A core **patch** release requires no sibling change at all. A core **minor** (e.g. 1.11.0)
-requires a deliberate `fix(inbound):` commit in `mailglass_inbound/mix.exs` updating the
-floor — asserting "verified against core 1.11" — before or alongside the release PR.
+Both sibling packages now declare a bare `{:mailglass, "~> 2.0"}` constraint with no
+explicit `>=` floor (`mailglass_admin/mix.exs` and `mailglass_inbound/mix.exs`).
+A core **patch** release and a core **minor** release (e.g. 2.1.0, 2.7.0) are both
+satisfied by the existing `~> 2.0` constraint — no sibling `mix.exs` edit is needed
+for either. Only a core **major** release needs a sibling constraint bump in
+`mailglass_inbound/mix.exs` and `mailglass_admin/mix.exs`.
 
 **CI-trigger guarantee:** the sync checkout and push use `RELEASE_PLEASE_PAT`.
 That non-`GITHUB_TOKEN` identity deliberately triggers

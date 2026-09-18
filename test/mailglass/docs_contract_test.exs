@@ -1039,6 +1039,46 @@ defmodule Mailglass.DocsContractTest do
       refute maintaining =~ "twelve `exclude-paths`",
              "MAINTAINING.md still contains the stale hardcoded exclude-paths count"
     end
+
+    # Negative-first: the defect is a specific misleading phrase, and there are
+    # many valid ways to phrase the correction, so a positive-only assertion
+    # would over-constrain the prose. A positive backstop (required_reviewers +
+    # three) is added so that deleting the sentence outright cannot pass either.
+    test "publish fan-out is described as gated, not hands-free" do
+      maintaining = File.read!("MAINTAINING.md")
+
+      refute maintaining =~ "hands-free publish fan-out",
+             "MAINTAINING.md still describes the publish fan-out as hands-free"
+
+      refute maintaining =~ "hands-free path can never self-skip",
+             "MAINTAINING.md still attributes the override guarantee to a hands-free path"
+
+      assert maintaining =~ "required_reviewers",
+             "MAINTAINING.md must name the required_reviewers approval mechanism"
+
+      assert maintaining =~ "three",
+             "MAINTAINING.md must state the three required_reviewers approval stops"
+    end
+  end
+
+  describe "CONTRIBUTING.md contract" do
+    # Narrowly scoped negative: a blanket refute on "fix(inbound):" would
+    # false-positive on the legitimate, unrelated example commit message at
+    # CONTRIBUTING.md:161 ("select CI by checkout SHA"). Scope the refute to
+    # the specific stale sentence, and pair it with a positive assertion so the
+    # paragraph cannot simply be deleted.
+    test "sibling pin guidance describes the bare ~> constraint, not a floor bump" do
+      contributing = File.read!("CONTRIBUTING.md")
+
+      refute contributing =~ "requires a deliberate",
+             "CONTRIBUTING.md still instructs a deliberate fix(inbound): floor-bump commit"
+
+      assert contributing =~ "~> 2.0",
+             "CONTRIBUTING.md must describe the current bare ~> 2.0 sibling constraint"
+
+      assert contributing =~ "fix(inbound):",
+             "CONTRIBUTING.md's legitimate unrelated fix(inbound): example must survive"
+    end
   end
 
   defp v26_contract_errors(core, compatibility, adopter) do
