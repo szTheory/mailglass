@@ -612,7 +612,19 @@ jobs:
             *)
               # Keep capture authoritative for the existing multiple-proposal
               # blocked classification rather than converting ambiguity into
-              # a successful pending observation.
+              # a successful pending observation. Under should_run=false the
+              # same standalone-discovery gap exists here as in the `1)` arm
+              # above: reproduce capture's own blocked / multiple_open_proposals
+              # verdict verbatim so the two paths cannot disagree about the
+              # same repository. This adds no admissible pass pair -- `blocked`
+              # is not in either pass predicate, so this path still fails the
+              # gate. It converts a blind cannot-check into a named,
+              # fail-closed alarm.
+              if [ "${SHOULD_RUN:-}" != true ]; then
+                should_capture=false
+                result_status=blocked
+                result_reason=multiple_open_proposals
+              fi
               ;;
           esac
 
