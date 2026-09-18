@@ -173,7 +173,10 @@ for num in "${ordered_refs[@]}"; do
   fi
 
   # Find the line(s) mentioning this reference, to inspect STATE.md's prose.
-  line_with_ref=$(grep -n "$name" "$target" | head -1 | cut -d: -f2- || true)
+  # Anchor on a non-digit (or end of line) so "#26" cannot match "#260" -- an
+  # unanchored substring match can read a DIFFERENT reference's prose and report
+  # a false pass for a genuine contradiction.
+  line_with_ref=$(grep -nE "${name}([^0-9]|$)" "$target" | head -1 | cut -d: -f2- || true)
   lower_line=$(printf '%s' "$line_with_ref" | tr '[:upper:]' '[:lower:]')
 
   says_open=false
@@ -209,17 +212,21 @@ for num in "${ordered_refs[@]}"; do
 done
 
 # --- Step 5: aggregate. ---
+# A CONFIRMED contradiction outranks an unresolvable reference: if any check is
+# blocked, the run is blocked even when a different reference could not be
+# resolved. Ordering this the other way lets an unrelated cannot_check mask a
+# real drift from any consumer reading only the exit code.
 overall="pass"
 for s in "${check_statuses[@]}"; do
-  if [ "$s" = "cannot_check" ]; then
-    overall="cannot_check"
+  if [ "$s" = "blocked" ]; then
+    overall="blocked"
     break
   fi
 done
-if [ "$overall" != "cannot_check" ]; then
+if [ "$overall" != "blocked" ]; then
   for s in "${check_statuses[@]}"; do
-    if [ "$s" = "blocked" ]; then
-      overall="blocked"
+    if [ "$s" = "cannot_check" ]; then
+      overall="cannot_check"
       break
     fi
   done
