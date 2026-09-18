@@ -289,7 +289,15 @@ jobs:
         # release/published fan-out can trigger publish/smoke workflows.
         # Maintainers must still treat tag-pinned workflow_dispatch from the
         # release tag as the canonical fallback if downstream fan-out fails.
+        #
+        # CTRL-03 (#166-04): this is the only non-continue-on-error
+        # GitHub-API step in the proposal path -- every other one already
+        # classifies a failure into evidence rather than crashing the job.
+        # `continue-on-error: true` exists SOLELY to route a failure here
+        # into the guarded retry below; it never lets the job proceed as if
+        # this action had succeeded (see the hard-fail step after the retry).
         if: ${{ steps.release-preflight.outputs.should_run == 'true' && (github.event.inputs.candidate_digest == '' || (steps.protected-dispatcher.outputs.authorized == 'true' && steps.protected-dispatch.outputs.authorized == 'true' && steps.protected-dispatch.outputs.content_verified == 'true' && steps.protected-merge.outputs.merge_tree_verified == 'true' && steps.protected-merge.outcome == 'success')) }}
+        continue-on-error: true
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
         with:
           token: ${{ secrets.RELEASE_PLEASE_PAT }}
@@ -298,6 +306,63 @@ jobs:
           # Proposal mode only. This workflow may update a release PR but cannot
           # create a GitHub release or tag from an unreviewed candidate.
           skip-github-release: ${{ github.event.inputs.candidate_digest == '' }}
+
+      # CTRL-03 (#166-04): exactly ONE guarded backoff re-run of the action
+      # above -- never a blind repeated request while limited (GitHub
+      # documents banning risk for that). No response headers are available
+      # from a `uses:` step's failure, so this uses D-22's own 60s-floor
+      # fallback branch (the policy-defined default when retry-after /
+      # x-ratelimit-reset are not obtainable), project policy per D-22.
+      - name: Wait before guarded release-please retry
+        if: ${{ steps.release.outcome == 'failure' }}
+        run: |
+          echo "release-please action failed on the first attempt; waiting 60s (D-22 floor) before the single guarded retry." >&2
+          sleep 60
+
+      - id: release-retry
+        name: Guarded retry of release-please action after a transient failure
+        if: ${{ steps.release.outcome == 'failure' }}
+        # continue-on-error here too, for the same reason as the first
+        # attempt: this is the ONE guarded re-run, not a second silent
+        # crash point. The explicit "Fail the job if the guarded
+        # release-please retry also failed" step below is what actually
+        # denies the job a false pass if this also fails.
+        continue-on-error: true
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_PAT }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          skip-github-release: ${{ github.event.inputs.candidate_digest == '' }}
+
+      # If the guarded retry also failed, the run must not report success --
+      # `continue-on-error` on the first attempt never allows the job to
+      # proceed as if the action had succeeded.
+      - name: Fail the job if the guarded release-please retry also failed
+        if: ${{ always() && steps.release.outcome == 'failure' && steps.release-retry.outcome != 'success' }}
+        run: |
+          echo "ERROR: googleapis/release-please-action failed on both the initial attempt and the guarded retry." >&2
+          exit 1
+
+      # Downstream steps must see the outputs of whichever attempt actually
+      # succeeded -- `steps.release.outputs.*` alone would silently reflect
+      # a failed first attempt's (empty) outputs even when the retry above
+      # succeeded.
+      - name: Resolve effective release action outputs after any guarded retry
+        id: release-effective
+        if: ${{ always() && steps.release-preflight.outputs.should_run == 'true' }}
+        env:
+          RELEASE_OUTCOME: ${{ steps.release.outcome }}
+          RELEASE_PRS_CREATED: ${{ steps.release.outputs.prs_created }}
+          RETRY_OUTCOME: ${{ steps.release-retry.outcome }}
+          RETRY_PRS_CREATED: ${{ steps.release-retry.outputs.prs_created }}
+        run: |
+          set -euo pipefail
+          prs_created="$RELEASE_PRS_CREATED"
+          if [ "$RELEASE_OUTCOME" = "failure" ] && [ "$RETRY_OUTCOME" = "success" ]; then
+            prs_created="$RETRY_PRS_CREATED"
+          fi
+          echo "prs_created=${prs_created:-}" >> "$GITHUB_OUTPUT"
 
       # Path 2 fix: release-please's `extra-files` generic updater silently
       # no-ops on a mix.exs already managed by the elixir release-type, so
@@ -324,7 +389,7 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_PAT }}
 
       - name: Sync sibling package -> mailglass dep pin on release-please branch
-        if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release.outputs.prs_created == 'true' }}
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release-effective.outputs.prs_created == 'true' }}
         run: |
           set -euo pipefail
           BRANCH=release-please--branches--main
@@ -459,7 +524,52 @@ jobs:
           result_status=""
           result_reason=""
 
-          if ! prs=$(gh pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid); then
+          # CTRL-03 (#166-04): bounded retry on a classified GitHub secondary
+          # rate limit before falling through to the SAME cannot-check /
+          # github_evidence_unavailable classification this call already
+          # produces on failure. `gh` embeds "(HTTP <status>)" plus the API's
+          # own error message (e.g. "You have exceeded a secondary rate
+          # limit") in its stderr on failure -- classify on both together,
+          # never on status alone. No pre-flight rate-limit probe is built
+          # (D-24): the primary x-ratelimit-* buckets read full during a
+          # secondary 403, so unconditional timed waiting after a classified
+          # failure is the only correct mechanism.
+          retry_gh() {
+            local attempt=0
+            local max_retries=3
+            local err_file
+            err_file=$(mktemp)
+            local call_status
+            while :; do
+              # `if "$@" ...; then ... fi` with no `else` reports exit 0 for
+              # the WHOLE if-statement when the condition is false (POSIX);
+              # `$?` immediately after such an `fi` is NOT the failed
+              # command's status. Capture it directly via `||` instead,
+              # which both stays `set -e`-safe and preserves the real code.
+              call_status=0
+              "$@" 2>"$err_file" || call_status=$?
+              if [ "$call_status" -eq 0 ]; then
+                cat "$err_file" >&2
+                rm -f "$err_file"
+                return 0
+              fi
+              if grep -qE '\(HTTP (403|429)\)' "$err_file" \
+                 && grep -qi 'secondary rate limit' "$err_file" \
+                 && [ "$attempt" -lt "$max_retries" ]; then
+                local sleep_for=$(( 60 * (2 ** attempt) ))
+                echo "Secondary rate limit detected (retry $((attempt + 1))/$max_retries); sleeping ${sleep_for}s before retry." >&2
+                cat "$err_file" >&2
+                sleep "$sleep_for"
+                attempt=$((attempt + 1))
+                continue
+              fi
+              cat "$err_file" >&2
+              rm -f "$err_file"
+              return "$call_status"
+            done
+          }
+
+          if ! prs=$(retry_gh gh pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid); then
             should_capture=false
             result_status=cannot-check
             result_reason=github_evidence_unavailable
@@ -527,10 +637,51 @@ jobs:
           }
 
           trap cleanup_and_emit_capture_outputs EXIT
+
+          # CTRL-03 (#166-04): same bounded classify-and-retry shape as the
+          # discovery step above -- on final failure this falls through to
+          # `set -euo pipefail` triggering the EXIT trap, which emits this
+          # script's own already-initialized cannot-check /
+          # github_evidence_unavailable defaults unchanged.
+          retry_gh() {
+            local attempt=0
+            local max_retries=3
+            local err_file
+            err_file=$(mktemp)
+            local call_status
+            while :; do
+              # `if "$@" ...; then ... fi` with no `else` reports exit 0 for
+              # the WHOLE if-statement when the condition is false (POSIX);
+              # `$?` immediately after such an `fi` is NOT the failed
+              # command's status. Capture it directly via `||` instead,
+              # which both stays `set -e`-safe and preserves the real code.
+              call_status=0
+              "$@" 2>"$err_file" || call_status=$?
+              if [ "$call_status" -eq 0 ]; then
+                cat "$err_file" >&2
+                rm -f "$err_file"
+                return 0
+              fi
+              if grep -qE '\(HTTP (403|429)\)' "$err_file" \
+                 && grep -qi 'secondary rate limit' "$err_file" \
+                 && [ "$attempt" -lt "$max_retries" ]; then
+                local sleep_for=$(( 60 * (2 ** attempt) ))
+                echo "Secondary rate limit detected (retry $((attempt + 1))/$max_retries); sleeping ${sleep_for}s before retry." >&2
+                cat "$err_file" >&2
+                sleep "$sleep_for"
+                attempt=$((attempt + 1))
+                continue
+              fi
+              cat "$err_file" >&2
+              rm -f "$err_file"
+              return "$call_status"
+            done
+          }
+
           # Capture proposal/source identity only after the sibling-pin sync
           # has settled the release branch; its publishable-content digest is
           # Plan 05 input.
-          prs=$(gh pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid)
+          prs=$(retry_gh gh pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid)
           if [ "$(jq -er 'length' <<<"$prs")" -gt 1 ]; then
             result_status=blocked
             result_reason=multiple_open_proposals
@@ -745,7 +896,7 @@ jobs:
       # explicitly disarming ordinary auto-merge. The protected exact-digest
       # dispatch above is the sole merge/tag boundary.
       - name: Arm auto-merge on the release PR
-        if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release.outputs.prs_created == 'true' }}
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release-effective.outputs.prs_created == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
