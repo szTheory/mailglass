@@ -1173,7 +1173,10 @@ defmodule Mailglass.DocsContractTest do
                "Release Close-Out section must name the #{state} ledger state"
       end
 
-      for path <- Regex.scan(~r{scripts/[a-z0-9_]+\.(?:sh|exs)}, section) |> Enum.map(&hd/1) |> Enum.uniq() do
+      for path <-
+            Regex.scan(~r{scripts/[a-z0-9_]+\.(?:sh|exs)}, section)
+            |> Enum.map(&hd/1)
+            |> Enum.uniq() do
         assert File.exists?(path),
                "Release Close-Out section names #{path}, which does not exist on disk"
       end
