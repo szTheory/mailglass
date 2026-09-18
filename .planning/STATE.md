@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v2.8
 milestone_name: Truthful Repo
-current_phase: 166
-current_phase_name: Earned Greens and Controls That Can Pass
+current_phase: 167.1
+current_phase_name: "Close gap: CTRL-02/CTRL-03 — proposal control cannot produce evidence when should_run=false"
 status: planning
 stopped_at: Completed 167-03-PLAN.md
-last_updated: "2026-09-18T16:30:22.639Z"
+last_updated: "2026-09-18T17:23:28.266Z"
 last_activity: 2026-09-18
 last_activity_desc: Phase 167 execution started
 progress:
@@ -42,15 +42,23 @@ tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open 
 
 ## Current Position
 
-Phase: 166 — Earned Greens and Controls That Can Pass
+Phase: 167.1 — Close gap: CTRL-02/CTRL-03 — proposal control cannot produce evidence when should_run=false
 Plan: 6/6 executed and merged (`dcbda58f`, PR #281)
-Status: UAT partial — 15 of 19 checkpoints passed, 0 issues, 4 blocked on evidence that can only be
-observed later. Not "ready to plan": nothing remains to build. The four open items are CTRL-02 and
-CTRL-03 (need a release proposal merged that is not already-tagged), GREEN-05 Part 2 (needs a second
-`main` CI run with `mix.lock` unchanged, for a trust-lane cache restore-hit), and CTRL-05 (needs two
-naturally-triggered scheduled repo-hygiene runs after the merge). None may be dispatched or
-manufactured.
-Last activity: 2026-09-18 — Phase 167 UAT complete (17/17 passed, 0 issues), phase marked complete
+Status: v2.8 audited 2026-09-18 — `gaps_found`, 15/17 requirements satisfied. Phase 167.1 inserted and
+awaiting planning; something does remain to build.
+
+CTRL-02 and CTRL-03 are **not** waiting on a release ceremony. The audit disproved that diagnosis by
+reading the run logs: `release-please.yml` gates both proposal-evidence steps (`:518` discovery,
+`:603` capture) on `should_run`, which the preflight sets false whenever `main`'s manifest tags all
+exist — the permanent steady state after any close-out. The result writer then falls to its
+`cannot-check` / `github_evidence_unavailable` defaults and `:885` fails the job. 23 consecutive reds
+on push and schedule alike. PR #280 is a legitimate, untagged 2.6.1 proposal and is **not** the
+cause; closing it would not help. This needs the Phase 167.1 code fix.
+
+GREEN-05 Part 2 (a second `main` CI run with `mix.lock` unchanged, for a trust-lane cache restore-hit)
+and CTRL-05 (two naturally-triggered scheduled repo-hygiene runs after the merge) remain genuine timed
+observations. Neither may be dispatched or manufactured.
+Last activity: 2026-09-18 — v2.8 milestone audit found CTRL-02/CTRL-03 blocked by a control defect, not by elapsed time; Phase 167.1 inserted
 
 ## v2.8 Roadmap Shape
 
@@ -61,6 +69,11 @@ Last activity: 2026-09-18 — Phase 167 UAT complete (17/17 passed, 0 issues), p
 
 - **Phase 167** — DOCS-01..06 + STAND-01 (7 requirements). Genuinely independent; safely last.
 - **Exactly two phases. There is no Phase 168.** Hard timebox 5 working days, WIP limit: at most one PR open at a time.
+- **CORRECTION (2026-09-18), appended rather than rewritten.** The `/gsd-audit-milestone v2.8` audit
+  found that CTRL-02/CTRL-03 are blocked by a defect in the control Phase 166 shipped, not by scope
+  that "did not fit." Phase **167.1** was inserted to close it. The literal constraint holds — there
+  is still no Phase 168 — and the boundedness rule is honored in substance: 167.1 fixes a committed
+  v2.8 requirement rather than admitting new scope. Nothing outside the 17 requirements was accepted.
   On day 5, ship what is done and close regardless.
 
 - **Stop line:** every claim the repo makes about itself is either true or tested. Anything discovered
@@ -254,6 +267,7 @@ Last activity: 2026-09-18 — Phase 167 UAT complete (17/17 passed, 0 issues), p
 ### Roadmap Evolution
 
 - Phase 165 added: Reconcile terminal proof and milestone archive ordering
+- Phase 167.1 inserted after Phase 167: Close gap: CTRL-02/CTRL-03 — proposal control cannot produce evidence when should_run=false (URGENT)
 
 ### Decisions
 
