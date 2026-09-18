@@ -7,7 +7,7 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'EOF'
-usage: check_post_publish_target.sh --repo PATH --target PATH --target-ref SHA --core VERSION --admin VERSION --inbound VERSION
+usage: check_post_publish_target.sh --repo PATH --target PATH --target-ref SHA --core VERSION --admin VERSION --inbound VERSION [--baseline-mode]
 EOF
 }
 
@@ -17,6 +17,7 @@ target_ref=""
 core=""
 admin=""
 inbound=""
+baseline_mode=false
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -26,6 +27,7 @@ while [ "$#" -gt 0 ]; do
     --core) core=${2:-}; shift 2 ;;
     --admin) admin=${2:-}; shift 2 ;;
     --inbound) inbound=${2:-}; shift 2 ;;
+    --baseline-mode) baseline_mode=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) usage; exit 64 ;;
   esac
@@ -84,18 +86,27 @@ for tag in "${expected_tags[@]}"; do
   fi
 done
 
-if ! expected_digest=$(jq -er \
-  '.publishable_content.digest | select(type == "string" and test("^[0-9a-f]{64}$"))' \
-  "$target"); then
-  echo "ERROR: authorized content digest is missing or malformed" >&2
-  exit 1
-fi
+if [ "$baseline_mode" = true ]; then
+  # Baseline mode proves a published, already-closed-out ledger between
+  # releases. Ledger close-out sets publishable_content.digest to null by
+  # construction (release_policy.exs close_out_successor/3), so the 64-hex
+  # digest requirement is unsatisfiable here -- the bypass is scoped to
+  # baseline mode only; the live-dispatch path below is unchanged.
+  actual_digest="(baseline mode: publishable_content.digest check skipped -- ledger close-out sets it to null)"
+else
+  if ! expected_digest=$(jq -er \
+    '.publishable_content.digest | select(type == "string" and test("^[0-9a-f]{64}$"))' \
+    "$target"); then
+    echo "ERROR: authorized content digest is missing or malformed" >&2
+    exit 1
+  fi
 
-actual_digest=$("$script_dir/release_policy_content_digest.sh" --repo "$repo" --ref "$target_ref")
+  actual_digest=$("$script_dir/release_policy_content_digest.sh" --repo "$repo" --ref "$target_ref")
 
-if [ "$actual_digest" != "$expected_digest" ]; then
-  echo "ERROR: canonical package content digest mismatch for target_ref $target_ref" >&2
-  exit 1
+  if [ "$actual_digest" != "$expected_digest" ]; then
+    echo "ERROR: canonical package content digest mismatch for target_ref $target_ref" >&2
+    exit 1
+  fi
 fi
 
 echo "post-publish target verified: ref=$target_ref tags=3 content_digest=$actual_digest"

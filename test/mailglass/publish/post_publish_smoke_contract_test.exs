@@ -49,8 +49,16 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
 
     assert resolver =~ "command=\"authorized-versions\""
 
-    assert resolver =~
-             "if [ \"$EVENT_NAME\" = \"schedule\" ]; then command=\"completed-versions\"; fi"
+    # CTRL-01 (166-06, D-17): the scheduled path peeks the ledger status before
+    # choosing a verb, so a schedule fire against an inactive ledger (the
+    # normal state between releases) resolves the published baseline instead
+    # of failing closed forever waiting on a completed target that does not
+    # exist yet.
+    assert resolver =~ "if [ \"$EVENT_NAME\" = \"schedule\" ]; then"
+    assert resolver =~ "command=\"completed-versions\""
+    assert resolver =~ "if [ \"$ledger_status_peek\" = \"inactive\" ]; then"
+    assert resolver =~ "command=\"baseline-versions\""
+    assert resolver =~ "baseline_mode=true"
 
     assert resolver =~ ~s("$command" "$target")
     assert resolver =~ ~s($1 == "target_ref")

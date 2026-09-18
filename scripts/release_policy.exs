@@ -366,6 +366,40 @@ defmodule Mailglass.ReleasePolicy do
     end
   end
 
+  def cli(["baseline-versions", target_path]) do
+    # Resolves the published baseline of an inactive ledger so the scheduled
+    # (or an on-demand workflow_dispatch exercising the same path) post-publish
+    # proof can run between releases, when no candidate/authorized/completed
+    # target exists to resolve. Re-validated through the SAME shared
+    # full-ledger validator every other verb uses -- never a local partial
+    # parser -- and never emits anything that authorizes a publish (no
+    # candidate_versions, no publishable_content digest).
+    with {:ok, json} <- File.read(target_path),
+         {:ok, target} <- Jason.decode(json),
+         {:ok, target} <- validate_target(target),
+         true <- target["status"] == "inactive" or error(:invalid_lifecycle) do
+      evidence = target["required_evidence_identifiers"]
+      baselines = target["baselines"]
+
+      IO.write("completed=false\n")
+      IO.write("authorized=false\n")
+      IO.write("baseline=true\n")
+      IO.write("core=#{baselines["mailglass"]}\n")
+      IO.write("admin=#{baselines["mailglass_admin"]}\n")
+      IO.write("inbound=#{baselines["mailglass_inbound"]}\n")
+      IO.write("tag_sha=#{evidence["historical_tag_sha"]}\n")
+      IO.write("target_ref=#{evidence["historical_tag_sha"]}\n")
+      IO.write("hex_checksum_core=#{evidence["hex_release_checksums"]["mailglass"]}\n")
+      IO.write("hex_checksum_admin=#{evidence["hex_release_checksums"]["mailglass_admin"]}\n")
+      IO.write("hex_checksum_inbound=#{evidence["hex_release_checksums"]["mailglass_inbound"]}\n")
+      IO.write("hex_endpoint_core=#{evidence["hex_release_endpoints"]["mailglass"]}\n")
+      IO.write("hex_endpoint_admin=#{evidence["hex_release_endpoints"]["mailglass_admin"]}\n")
+      IO.write("hex_endpoint_inbound=#{evidence["hex_release_endpoints"]["mailglass_inbound"]}\n")
+    else
+      _ -> System.halt(1)
+    end
+  end
+
   def cli(["validate-protected-dispatch", target_path, digest]) do
     with {:ok, json} <- File.read(target_path),
          {:ok, target} <- Jason.decode(json),
