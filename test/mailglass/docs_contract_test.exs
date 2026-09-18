@@ -1004,6 +1004,54 @@ defmodule Mailglass.DocsContractTest do
     end
   end
 
+  describe "docs/api_stability.md contract" do
+    test "injected __using__ forms list matches mailable.ex" do
+      doc = File.read!("docs/api_stability.md")
+      mailable = File.read!("lib/mailglass/mailable.ex")
+
+      refute doc =~ "Swoosh.Email, except",
+             "docs/api_stability.md still names the non-existent Swoosh.Email import form"
+
+      message_import =
+        "import Mailglass.Message, only: [to: 2, from: 2, subject: 2, html_body: 2, text_body: 2, header: 3, attach: 2, put_tag: 2]"
+
+      assert doc =~ message_import,
+             "docs/api_stability.md is missing the actual injected Mailglass.Message import"
+
+      # mailable.ex wraps the same import across multiple lines, so assert each
+      # imported name individually against the source rather than the doc's
+      # single-line rendering.
+      for name <- ~w(to: from: subject: html_body: text_body: header: attach: put_tag:) do
+        assert mailable =~ name,
+               "lib/mailglass/mailable.ex no longer imports #{name} — " <>
+                 "docs/api_stability.md's injected-forms list would drift from the source"
+      end
+
+      assert mailable =~ "import Mailglass.Message,",
+             "lib/mailglass/mailable.ex no longer imports Mailglass.Message"
+
+      defoverridable_form = "defoverridable new: 0, new: 1, render: 3, deliver: 2, deliver_later: 2"
+
+      assert doc =~ defoverridable_form,
+             "docs/api_stability.md's defoverridable item must name both new: 0 and new: 1"
+
+      assert mailable =~ defoverridable_form,
+             "lib/mailglass/mailable.ex's defoverridable list no longer matches docs/api_stability.md"
+    end
+
+    test "outbound moduledoc does not claim queued-delivery reconciliation" do
+      outbound = File.read!("lib/mailglass/outbound.ex")
+
+      refute outbound =~ ~r/reconcilable via.*Mailglass\.Events\.Reconciler/s,
+             "lib/mailglass/outbound.ex still claims orphan :queued Delivery rows are " <>
+               "reconcilable via Mailglass.Events.Reconciler — Reconciler.find_orphans/1 " <>
+               "queries orphan webhook Event rows, a distinct failure class"
+
+      assert outbound =~ "not currently auto-reconciled",
+             "lib/mailglass/outbound.ex must state the orphan :queued Delivery gap explicitly"
+    end
+  end
+
   describe "jobs.md contract" do
     # guides/jobs.md is the public JTBD ramp-up guide. Its snippets are a
     # projection of the canonical surface, so they must keep parsing and keep
