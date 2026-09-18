@@ -52,7 +52,7 @@ a glance; a false green is why the admin blind spot hid two failures for four we
       *Accept:* the lane's log prints `scope: FULL SUITE (MAILGLASS_SUITE_FLOOR=1)` instead of
       "scoped run … floor not evaluated".
 
-- [ ] **GREEN-04**: The demo app exercises its Hex pins in at least one lane. `MAILGLASS_DEMO_DEPS`
+- [x] **GREEN-04**: The demo app exercises its Hex pins in at least one lane. `MAILGLASS_DEMO_DEPS`
       is set where the demo is built, so the published-consumer path is actually proven.
       *Accept:* a CI lane resolves the demo app's Hex deps rather than path deps to the working tree.
 
@@ -68,7 +68,7 @@ a glance; a false green is why the admin blind spot hid two failures for four we
 Fail-closed controls that are structurally unable to reach their own success state. Every fix here
 adds a path to *earn* green; none relaxes a gate.
 
-- [ ] **CTRL-01**: `post-publish-smoke` can pass on its schedule between releases. A
+- [x] **CTRL-01**: `post-publish-smoke` can pass on its schedule between releases. A
       `baseline-versions` resolution path handles `status == "inactive"` using `baselines` +
       `required_evidence_identifiers.historical_tag_sha`, running the **same** exact Hex
       checksum/endpoint proof against the published baseline.
@@ -220,9 +220,9 @@ Populated 2026-09-17 during roadmap creation.
 | GREEN-01 | Phase 166 | Complete |
 | GREEN-02 | Phase 166 | Complete |
 | GREEN-03 | Phase 166 | Complete |
-| GREEN-04 | Phase 166 | Implemented, evidence pending |
+| GREEN-04 | Phase 166 | Complete |
 | GREEN-05 | Phase 166 | Implemented, evidence pending |
-| CTRL-01 | Phase 166 | Implemented, evidence pending |
+| CTRL-01 | Phase 166 | Complete |
 | CTRL-02 | Phase 166 | Implemented, evidence pending |
 | CTRL-03 | Phase 166 | Implemented, evidence pending |
 | CTRL-04 | Phase 166 | Complete |
