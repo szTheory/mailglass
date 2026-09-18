@@ -279,6 +279,21 @@ jobs:
       - name: Compile demo app for coverage
         working-directory: reference/demo_app
         run: mix compile --warnings-as-errors
+      - name: Prepare isolated Hex-resolution copy of demo app
+        # GREEN-04 (D-11): prove the demo app's Hex pins resolve and compile,
+        # without ever flipping the path-dep steps above, which deliberately
+        # compile the working tree under test. Isolation is a scratch copy
+        # with default deps/_build paths, not a MIX_DEPS_PATH/MIX_BUILD_PATH
+        # override on the working tree — that override reproducibly breaks
+        # cowlib's erlang.mk build locally (see 166-05-SUMMARY.md deviation).
+        run: |
+          rm -rf /tmp/mailglass_demo_hex_proof
+          rsync -a --exclude 'demo_app/deps' --exclude 'demo_app/_build' --exclude 'host_app' reference/ /tmp/mailglass_demo_hex_proof/
+      - name: Prove demo app Hex pins
+        working-directory: /tmp/mailglass_demo_hex_proof/demo_app
+        env:
+          MAILGLASS_DEMO_DEPS: hex
+        run: mix deps.get --check-locked && mix compile
       - name: Wait for postgres + create test DB
         env:
           PGPASSWORD: postgres
