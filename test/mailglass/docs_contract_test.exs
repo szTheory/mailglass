@@ -1022,6 +1022,25 @@ defmodule Mailglass.DocsContractTest do
     end
   end
 
+  describe "MAINTAINING.md contract" do
+    test "exclude-paths count in prose is derived from release-please-config.json" do
+      maintaining = File.read!("MAINTAINING.md")
+
+      config = Jason.decode!(File.read!("release-please-config.json"))
+      count = length(get_in(config, ["packages", ".", "exclude-paths"]))
+      word = count_word!(count)
+
+      pattern = Regex.compile!("#{word}\\s+`exclude-paths`\\s+entries")
+
+      assert maintaining =~ pattern,
+             "MAINTAINING.md must state the derived exclude-paths count (#{count}/#{word}) " <>
+               "immediately before the `exclude-paths` token"
+
+      refute maintaining =~ "twelve `exclude-paths`",
+             "MAINTAINING.md still contains the stale hardcoded exclude-paths count"
+    end
+  end
+
   defp v26_contract_errors(core, compatibility, adopter) do
     combined = core <> "\n" <> compatibility
 
@@ -1044,6 +1063,47 @@ defmodule Mailglass.DocsContractTest do
          else: []
 
     Enum.uniq(missing ++ stale ++ ui_claim)
+  end
+
+  @count_words %{
+    1 => "one",
+    2 => "two",
+    3 => "three",
+    4 => "four",
+    5 => "five",
+    6 => "six",
+    7 => "seven",
+    8 => "eight",
+    9 => "nine",
+    10 => "ten",
+    11 => "eleven",
+    12 => "twelve",
+    13 => "thirteen",
+    14 => "fourteen",
+    15 => "fifteen",
+    16 => "sixteen",
+    17 => "seventeen",
+    18 => "eighteen",
+    19 => "nineteen",
+    20 => "twenty",
+    21 => "twenty-one",
+    22 => "twenty-two",
+    23 => "twenty-three",
+    24 => "twenty-four",
+    25 => "twenty-five",
+    26 => "twenty-six",
+    27 => "twenty-seven",
+    28 => "twenty-eight",
+    29 => "twenty-nine",
+    30 => "thirty"
+  }
+
+  defp count_word!(n) do
+    Map.get(@count_words, n) ||
+      flunk(
+        "count_word!/1 has no English-word mapping for #{n} — extend @count_words " <>
+          "in test/mailglass/docs_contract_test.exs"
+      )
   end
 
   defp package_major_minor!(mixfile_path) do

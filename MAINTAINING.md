@@ -134,7 +134,7 @@ the commit changed only a README.
 Two consequences worth holding onto as a maintainer:
 
 **`exclude-paths` cannot fix this.** The core package is rooted at `.` and claims
-every non-excluded path, and the twelve `exclude-paths` entries (`#263`) narrow
+every non-excluded path, and the fourteen `exclude-paths` entries (`#263`) narrow
 that claim by *path*. But #222's driving commit, `d272e824`, changed
 `mailglass_inbound/README.md` — a file genuinely inside the package. Excluding it
 would wrongly exclude the package's own README. The defect is the type, not the
