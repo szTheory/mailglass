@@ -239,7 +239,7 @@ the control behavior Phase 166 establishes)
 - **STAND-01 is exactly one new control.** The alert budget says adding another requires retiring one.
   If a grouped PR reds, drop the culprit with `ignore` and re-run — do not ungroup.
 
-**Plans**: 2/4 plans executed
+**Plans**: 3/4 plans executed
 
 Plans:
 **Wave 1**
@@ -249,7 +249,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 167-02-PLAN.md — DOCS-02, DOCS-06: correct CLAUDE.md's sibling-pin and auto-merge claims; link the v2.0 upgrade guide from README and name the real v2.0 breaking change in CHANGELOG [wave 2]
+- [x] 167-02-PLAN.md — DOCS-02, DOCS-06: correct CLAUDE.md's sibling-pin and auto-merge claims; link the v2.0 upgrade guide from README and name the real v2.0 breaking change in CHANGELOG [wave 2]
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -260,7 +260,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 166. Earned Greens and Controls That Can Pass | 6/6 | In Progress|  |
-| 167. Truthful Documentation and the Standing Control | 2/4 | In Progress|  |
+| 167. Truthful Documentation and the Standing Control | 3/4 | In Progress|  |
 
 ## Milestone Exit Criteria (v2.8)
 

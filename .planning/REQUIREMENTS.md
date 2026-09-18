@@ -114,7 +114,7 @@ milestone terminate rather than recur.
       *Accept:* no statement in `STATE.md` is falsified by `gh pr list`, `gh issue list`, or a live
       suite run.
 
-- [ ] **DOCS-02**: `CLAUDE.md` describes the release pipeline as it actually behaves. Specifically the
+- [x] **DOCS-02**: `CLAUDE.md` describes the release pipeline as it actually behaves. Specifically the
       auto-merge claim (the step now echoes *"Disarmed ordinary auto-merge; a later protected exact
       candidate-digest dispatch is required"*), the `{:mailglass, "== <version>"}` sibling-pin claim at
       :56 which contradicts line 24 of the same file, and the inbound "stable `1.0` contract" claim
@@ -148,7 +148,7 @@ milestone terminate rather than recur.
       `import Swoosh.Email, except: [new: 0]`, which does not exist in `mailable.ex`, is corrected.
       *Accept:* no accepted config key is inert, and no moduledoc describes behavior absent from code.
 
-- [ ] **DOCS-06**: The v2.0 upgrade path is discoverable and honestly labeled. `README.md:280-284`
+- [x] **DOCS-06**: The v2.0 upgrade path is discoverable and honestly labeled. `README.md:280-284`
       links `guides/upgrading-to-v2_0.md` alongside the v1.0/v0.1/Swoosh guides, and
       `CHANGELOG.md:171-173`'s 2.0.0 "⚠ BREAKING CHANGES" block names the actual Postgres schema move
       rather than only a release-tooling note.
@@ -228,11 +228,11 @@ Populated 2026-09-17 during roadmap creation.
 | CTRL-04 | Phase 166 | Complete |
 | CTRL-05 | Phase 166 | Implemented, evidence pending |
 | DOCS-01 | Phase 167 | Complete |
-| DOCS-02 | Phase 167 | Pending |
+| DOCS-02 | Phase 167 | Complete |
 | DOCS-03 | Phase 167 | Complete |
 | DOCS-04 | Phase 167 | Pending |
 | DOCS-05 | Phase 167 | Pending |
-| DOCS-06 | Phase 167 | Pending |
+| DOCS-06 | Phase 167 | Complete |
 | STAND-01 | Phase 167 | Complete |
 
 **Coverage:**
