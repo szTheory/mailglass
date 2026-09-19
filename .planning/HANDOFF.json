@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-09-19T20:54:58.386Z",
+  "phase": null,
+  "phase_name": "between milestones",
+  "phase_dir": null,
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
+  "completed_tasks": [
+    {"id": 1, "name": "Publish v2.8 milestone archive work to main", "status": "done", "commit": "61994c22"},
+    {"id": 2, "name": "Repair CI formatter regression", "status": "done", "commit": "e3ec2f00"},
+    {"id": 3, "name": "Patch Mint security advisory", "status": "done", "commit": "6c8dca46"}
+  ],
+  "remaining_tasks": [
+    {"id": 4, "name": "Observe CI and Advisory Matrix for 6c8dca46", "status": "in_progress"},
+    {"id": 5, "name": "Start a new milestone only when a concrete objective exists", "status": "not_started"}
+  ],
+  "blockers": [
+    {"description": "GitHub CI and Advisory Matrix are still running for 6c8dca46.", "type": "external", "workaround": "Check the linked runs before making a release or starting follow-up work."}
+  ],
+  "async_jobs": [],
+  "human_actions_pending": [],
+  "decisions": [
+    {"decision": "Do not publish local v2.8 as a product tag.", "rationale": "It is a milestone-archive tag; the package manifest remains 2.6.0 and protected release policy owns publication.", "phase": null},
+    {"decision": "Update only Mint to 1.10.1.", "rationale": "The live Hex audit reported a medium advisory in Mint 1.10.0 and 1.10.1 is the minimal compatible patch.", "phase": null}
+  ],
+  "uncommitted_files": [" M .planning/config.json"],
+  "next_action": "Check GitHub CI and Advisory Matrix for 6c8dca46; release-please completed successfully and created no proposal.",
+  "context_notes": "v2.8 is archived. This session pushed the archive work, found and fixed a formatter failure, then found and patched a Mint advisory. Local verification after the patch passed lock integrity, Hex audit, formatter, focused trust-lane tests, and diff checks. No PII-pattern matches were found in v2.8 archive content."
+}
