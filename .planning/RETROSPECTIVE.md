@@ -4,6 +4,42 @@
 
 ---
 
+## Milestone: v2.8 — Truthful Repo
+
+**Shipped 2026-09-19** — 2 phases (166-167), 10 plans, 26 tasks, 17 requirements; audit `status: tech_debt` with all requirements, integration seams, and five operational flows complete.
+
+### What Was Built
+
+- CI now runs the full admin suite with a coverage floor, and the required deterministic lane enforces its anti-vacuity floor.
+- The demo Hex-consumer path, cache-isolation argument, post-publish baseline path, repo-hygiene distinction, advisory expiry policy, and release-proposal control all have executable seams.
+- Release and upgrade documentation was corrected and source/contract-pinned; Dependabot now batches scheduled minor and patch updates.
+
+### What Worked
+
+- Treating false greens and stale documentation as behavior to prove produced small, auditable changes without weakening controls.
+- The final cross-phase audit checked three-source requirement coverage, integration wiring, end-to-end flows, and Nyquist evidence rather than relying on plan completion alone.
+
+### What Was Inefficient
+
+- Completion was delayed by legacy artifact-audit records from older milestones; 28 were acknowledged as historical deferred items during closeout.
+
+### Patterns Established
+
+- A control is not complete merely because it can fail correctly: its pass path and its cannot-check semantics need an executable contract.
+- Documentation claims that steer release work should be coupled to source or contract tests, not maintained by proofreading.
+
+### Key Lessons
+
+- Keep naturally observed CI evidence separate from checked-in structural proof; neither should be represented as the other.
+- Archive-time artifacts need explicit historical attribution so old debt does not masquerade as a new milestone failure.
+
+### Cost Observations
+
+- 2 phases / 10 plans / 26 tasks over 2026-09-17 to 2026-09-19.
+- No product/API/UI surface was added; the milestone tightened repository and maintainer trust.
+
+---
+
 ## Milestone: v2.7 — Repository Stewardship & Operational Hygiene
 
 **Shipped 2026-09-15** — 5 phases (161–165), 75 plans, 16 requirements; audit `status: passed` (16/16 requirements, 5/5 phases, 16/16 integration, 5/5 flows). No Hex release, no git tag — a repo-artifact milestone.

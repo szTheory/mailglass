@@ -2,33 +2,30 @@
 gsd_state_version: "1.0"
 milestone: v2.8
 milestone_name: Truthful Repo
-current_phase: "167.1"
-current_phase_name: close-gap-ctrl-02-ctrl-03-proposal-control-cannot-produce-ev
-status: verifying
+status: Awaiting next milestone
 stopped_at: Repository disposition complete; CTRL-03 transcribed; WINDOWS ledger triaged; awaiting natural CTRL-05 cron and independently wanted release for CTRL-02
-last_updated: "2026-09-19T14:10:57.913Z"
+last_updated: "2026-09-19T19:15:02.205Z"
 last_activity: 2026-09-19
-last_activity_desc: "Closed stale PRs #280/#284, merged green Dependabot PR #282, deferred #283 to next bot cycle, transcribed CTRL-03, and triaged WINDOWS to 0 open"
-state_head: 31997d6892d5590a48a8b14361b3378a5a50dd41
+last_activity_desc: Milestone v2.8 completed and archived
+state_head: 7e43abe8acb1f309d20a50a55677507f046b1d71
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 10
   completed_plans: 10
-  percent: 50
+  percent: 100
+current_phase: null
+current_phase_name: Planning next milestone
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-09-17)
+See: .planning/PROJECT.md (updated 2026-09-19)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 167.1 — close-gap-ctrl-02-ctrl-03-proposal-control-cannot-produce-ev
-phases' code has merged. Phase 167 is complete.
-tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open at a time. Evidence:
-`.planning/research/v2.8/FINDINGS.md`.
+**Current focus:** Planning the next milestone.
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -42,23 +39,10 @@ tested. Two phases, hard timebox 5 working days, WIP limit: at most one PR open 
 
 ## Current Position
 
-Phase: 167.1 (close-gap-ctrl-02-ctrl-03-proposal-control-cannot-produce-ev) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
-awaiting planning; something does remain to build.
-
-CTRL-02 and CTRL-03 are **not** waiting on a release ceremony. The audit disproved that diagnosis by
-reading the run logs: `release-please.yml` gates both proposal-evidence steps (`:518` discovery,
-`:603` capture) on `should_run`, which the preflight sets false whenever `main`'s manifest tags all
-exist — the permanent steady state after any close-out. The result writer then falls to its
-`cannot-check` / `github_evidence_unavailable` defaults and `:885` fails the job. 23 consecutive reds
-on push and schedule alike. PR #280 is a legitimate, untagged 2.6.1 proposal and is **not** the
-cause; closing it would not help. This needs the Phase 167.1 code fix.
-
-GREEN-05 Part 2 (a second `main` CI run with `mix.lock` unchanged, for a trust-lane cache restore-hit)
-and CTRL-05 (two naturally-triggered scheduled repo-hygiene runs after the merge) remain genuine timed
-observations. Neither may be dispatched or manufactured.
-Last activity: 2026-09-19 — Closed stale PRs #280/#284, merged green Dependabot PR #282, deferred #283 to next bot cycle, transcribed CTRL-03, and triaged WINDOWS to 0 open
+Phase: Milestone v2.8 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-09-19 — Milestone v2.8 completed and archived
 
 ## v2.8 Roadmap Shape
 
@@ -417,9 +401,37 @@ Last activity: 2026-09-19 — Closed stale PRs #280/#284, merged green Dependabo
 
 ## Deferred Items
 
-| Category | Item | Status | Deferred At |
-|----------|------|--------|-------------|
-| Scope lock | CI efficiency overhaul (SEED-006) | Deferred outside v2.7 | 2026-08-21 |
+| Category | Item | Status | Deferred At | Milestone |
+|----------|------|--------|-------------|-----------|
+| seeds | SEED-008-delivery-absence-detection | active | 2026-09-19 | v2.8 |
+| uat_gaps | Phase 76/76-HUMAN-UAT.md (v1.7) | partial | 2026-09-19 | v2.8 |
+| uat_gaps | Phase 22/22-HUMAN-UAT.md (v0.4) | superseded | 2026-09-19 | v2.8 |
+| uat_gaps | Phase 16/16-HUMAN-UAT.md (v0.3) | partial | 2026-09-19 | v2.8 |
+| verification_gaps | Phase 76/76-VERIFICATION.md (v1.7) | human_needed | 2026-09-19 | v2.8 |
+| deferred_items | Phase 143/deferred-items.md (v2.2): emitted-body warning | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 143/deferred-items.md (v2.2): migration-module redefinition warnings | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 143/deferred-items.md (v2.2): upgrade migration down-test | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 143/deferred-items.md (v2.2): schema-isolation down-test | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 143/deferred-items.md (v2.2): isolated five-file mailglass-axis artifact | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 143/deferred-items.md (v2.2): RepoTest config-schema-drift record | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 143/deferred-items.md (v2.2): SchemaPrefixHardeningTest record | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 143/deferred-items.md (v2.2): PersistenceIntegrationTest record | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 143/deferred-items.md (v2.2): Igniter Rewrite.Error record | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 143/deferred-items.md (v2.2): tenancy app-env leak record | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 134/deferred-items.md (v2.0): pre-existing format drift | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 134/deferred-items.md (v2.0): pre-existing Credo warning | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 137/deferred-items.md (v2.0): trust-lane contract record | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 137/deferred-items.md (v2.0): reference-baseline lock regeneration | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 118/deferred-items.md (v1.14): preview asset rebuild drift | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 121/deferred-items.md (v1.14): selected_delivery warning | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 122/deferred-items.md (v1.14): Plan 122-01 compile warning | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 122/deferred-items.md (v1.14): Plan 122-03 preview reshoot | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 123/deferred-items.md (v1.14): pre-existing compile warning | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 116/deferred-items.md (v1.13): operator-browser matrix failures | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 44/deferred-items.md (v1.1): package build directories ignored incompletely | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 09/deferred-items.md (v0.2): test-suite failure record | acknowledged | 2026-09-19 | v2.8 |
+| deferred_items | Phase 11/deferred-items.md (v0.2): pre-existing Credo findings | acknowledged | 2026-09-19 | v2.8 |
+| Scope lock | CI efficiency overhaul (SEED-006) | Deferred outside v2.7 | 2026-08-21 | v2.7 |
 
 ## Session Continuity
 
@@ -433,14 +445,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- v2.7 needs nothing further. `165-FINALIZATION.md` §6–7 stays closed out (not achievable under
-  current policy). PR #222 (the proposal that blocked §6–7 at v2.7's close) is closed. Revisiting
-  §6–7 is a separate authority from any milestone, and not a prerequisite for one.
-
-- A release-please release proposal may currently be open against `main` — check
-  `gh pr list --state open` for its number and CI status before deciding whether to rebase-and-merge
-  it or close it and let release-please regenerate. This file deliberately does not name or snapshot
-  that PR, since its identity and status change every time release-please or a maintainer acts on it.
-
-- The two `MailglassAdmin.InboundLiveTest` replay-flash-copy reds (`inbound_live_test.exs:913` and
-  `:1411`) are fixed, by `f733fc22` and `d65a1aa8`, both merged to `main`. They are not a blocker.
+- Start the next milestone with $gsd-new-milestone

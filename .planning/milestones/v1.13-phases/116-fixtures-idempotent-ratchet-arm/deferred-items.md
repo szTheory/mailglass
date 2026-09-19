@@ -28,6 +28,7 @@ green (22 tests, 0 failures), as is the new `cohort.spec.js` (4 passed) and the 
 producer (9 passed).
 
 **Failing tests (16):**
+
 - `operator.spec.js` — 13 tests routed through `openOperator` /
   `openOperatorInbound` helpers that assert the now-`md:hidden` mobile list at
   desktop width.
@@ -44,3 +45,4 @@ before asserting `operator-deliveries-list`. Mirror the visibility-aware scoping
 the 116-06 demo `cohort.spec.js` adopted (scope row/list assertions to the
 viewport-appropriate container). This is an admin e2e-harness fix, not a fixtures
 or ratchet concern.
+  status: acknowledged

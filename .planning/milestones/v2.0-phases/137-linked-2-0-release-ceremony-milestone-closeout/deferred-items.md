@@ -16,7 +16,7 @@
   It is **not** schema-qualified contract drift (D-07) — no table-location expectation
   is involved. Per the executor SCOPE BOUNDARY rule, only issues directly caused by
   this task's changes are auto-fixed.
-- **Status:** Logged for a future CI-hygiene pass; does not block the 2.0 release
+- **Status:** acknowledged
   pre-conditions this plan lands.
 
 ### Reference-baseline lock regeneration (deferred to Plan 02 by design)
@@ -26,3 +26,4 @@
   correctly fails version-solving (`mailglass ~> 2.0 doesn't match any versions`).
   Locks left untouched — no fabricated entries, no transitive drift. Re-resolve is
   the Plan 02 post-publish consumer/baseline verification step.
+  status: acknowledged

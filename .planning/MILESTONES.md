@@ -1,5 +1,30 @@
 # Milestones
 
+## v2.8 Truthful Repo (Shipped: 2026-09-19)
+
+**Phases completed:** 2 phases, 10 plans, 26 tasks
+
+**Closeout type:** `override_closeout`.
+
+**Known verification overrides:** 28 newly acknowledged, 0 carried forward. These are legacy records
+from archived milestones, retained as deferred-item disclosures in `STATE.md`; v2.8 itself has no
+requirement, integration, or flow gap. The v2.8 audit's remaining items are monitoring/tech debt:
+natural CI cache restoration, external three-push observation, and one out-of-scope stale comment.
+
+**Key accomplishments:**
+
+- Widened `verify.support_contract.admin` from a 9-file allow-list to a directory-scoped run (325 newly-executed tests, 0 failures) and gave `mailglass_admin` a measured ExCoveralls coverage floor demonstrated to fire on regression.
+- Turned the required `core_deterministic_suite` lane's anti-vacuity suite floor from advisory to enforced by setting `MAILGLASS_SUITE_FLOOR: "1"` in `ci.yml`, and added a mirrored occurrence-count drift guard so the env line can't be silently deleted.
+- Rewrote both cowlib advisory entries from a stale "not yet fixed" framing to a permanent-refusal framing with a 6-month `recheck_by` extension, defusing the 2026-10-26 Hex Audit calendar time bomb truthfully — no upgrade exists and no date-override escape hatch was added.
+- Deleted the release-please early return so the already-tagged-SHA push skip is reachable again, and wrapped both proposal-path `gh api` calls plus the action step in a bounded 60/120/240s classify-and-retry loop — but the acceptance criteria for both requirements are inherently post-merge and remain explicitly pending, not verified, at the close of this plan.
+- An isolated CI build now proves the demo app's Hex pins resolve and compile (after refreshing the frozen 2.0.0 lock to the current 2.6.0/2.6.0/2.3.0 line, which the tracked lock could not previously compile against), and `docs/ci-cache-isolation.md` demonstrates by construction that trust-lane cache cross-contamination is structurally impossible — with real CI-observed evidence still pending a post-push run.
+- post-publish-smoke gains a ledger-status-peeked baseline resolution path so its daily cron can pass between releases, and repo-hygiene's cannot-check now exits a distinct nonzero code from blocked with a PR predicate that only fires on stale age or a failing required check.
+- Corrected three false release-mechanics claims in MAINTAINING.md/CONTRIBUTING.md (stale exclude-paths count, "hands-free" publish fan-out, mandatory fix(inbound): floor bump) and added the never-before-written Release Close-Out runbook — every correction pinned by a new ExUnit assertion in `test/mailglass/docs_contract_test.exs`, with two of the three pins proven to fail against a live mutation (config-array widening, script rename) rather than assumed to work.
+- Corrected CLAUDE.md's two false release-mechanics claims (a stale `==` sibling-pin instruction contradicting the file's own line 24, and an auto-merge claim the workflow no longer honors) and made the already-shipped `guides/upgrading-to-v2_0.md` discoverable from README.md plus honestly labeled in CHANGELOG.md — all four corrections pinned by new ExUnit assertions, two proven against live mutations.
+- Brought `guides/migration-from-swoosh.md`'s sibling-version pin under the release-time sed resync so it can never drift from a hand-maintained test literal again (the Phase 125 pin-drift shape), corrected a false "exact pin" claim in the compatibility guide, rejected the dead `css_inliner: :none` validation surface at the schema level, and corrected two code-adjacent docs (`outbound.ex`'s moduledoc, `api_stability.md`'s injected-forms list) to match what the code actually does — every correction pinned against source, not proofread.
+
+---
+
 ## v2.7 Repository Stewardship & Operational Hygiene (Shipped: 2026-09-15)
 
 **Delivered:** A clean, quiet, trustworthy maintenance posture — every workspace and Git object accounted for, every release and hygiene control emitting truthful pass/blocked/cannot-check/pending evidence, and repository truth derived from exact immutable Git authority. No product expansion, no speculative refactoring, no ceremonial release.

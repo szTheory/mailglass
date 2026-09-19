@@ -33,6 +33,7 @@ else here instead of fixing it).
 - **Suggested fix (not applied here):** delete the dead `@emitted_body` module
   attribute at line 24 (or reuse `@emitted` from the nested module instead of
   duplicating the `migration_body/2` call).
+  status: acknowledged
 
 ## From Plan 143-06
 
@@ -59,6 +60,7 @@ else here instead of fixing it).
   and combined, see 143-06-SUMMARY.md), which is the substantive claim the
   criterion protects. The abort is a pre-existing compiler-warning artifact,
   not a Sandbox-ownership regression.
+  status: acknowledged
 
 ### `upgrade_v2_schema_migration_test.exs`'s "down reverses the move" test — pre-existing failure on the mailglass axis
 
@@ -79,6 +81,7 @@ else here instead of fixing it).
   this plan's migration — same failure, same test, same count (6 tests, 1
   failure) both times, which is the "same test counts as parent commit" bar
   this plan's acceptance criteria hold to.
+  status: acknowledged
 
 ## From Plan 143-07
 
@@ -241,6 +244,7 @@ number never collides with the flat baseline migrations' own bookkeeping).
   ×3 including this file; mailglass 1513/0 ×2), `mix format --check-formatted`
   clean, `mix credo --strict` clean, `mix compile --warnings-as-errors`
   clean. `.planning/WINDOWS.md` ids 3 and 7 both marked `fixed`.
+  status: acknowledged
 
 ### Isolated 5-file mailglass-axis run artifact — NOT independently investigated further
 
@@ -269,6 +273,7 @@ number never collides with the flat baseline migrations' own bookkeeping).
 - **Impact on this plan's acceptance criteria:** none directly — Task 1's own
   `<verify>` block only requires the PUBLIC axis for this exact file
   combination (confirmed 24/24 tests passing there, unchanged from parent).
+  status: acknowledged
 
 ## From Plan 143-07 Task 3 (post-fix full-suite verification)
 
@@ -303,6 +308,7 @@ number never collides with the flat baseline migrations' own bookkeeping).
   and restores via `Application.put_env/3` — never `delete_env/2`.
 - **Verified:** post-fix full-suite public-axis run: 104 failures -> 6 (the
   6 remaining are unrelated pre-existing `Rewrite.Error`s, logged below).
+  status: acknowledged
 
 ### `SchemaPrefixHardeningTest`'s `assert_public_delivery_absent!/1` and `unsubscribe_event_count/2` — Rule 1 fix (not deferred)
 
@@ -323,6 +329,7 @@ number never collides with the flat baseline migrations' own bookkeeping).
 - **Verified:** both axes pass in isolation on a genuinely fresh DB
   (previously only reproducible on the exact "nothing has created
   `public.mailglass_*` yet" mailglass-axis ordering the full suite exercises).
+  status: acknowledged
 
 ### `Mailglass.PersistenceIntegrationTest`'s `migrated_version/0 == 0` on the mailglass axis — RESOLVED (orchestrator-directed gap closure)
 
@@ -357,6 +364,7 @@ number never collides with the flat baseline migrations' own bookkeeping).
   `migration_test.exs` 12/12 unchanged; full mailglass-axis suite
   1477 tests / 1 failure (down from 5-6, run-to-run); full public-axis suite
   unchanged, 1478/0.
+  status: acknowledged
 
 ### Pre-existing `Rewrite.Error: no source found` failures (Igniter generator tests) — RESOLVED (already fixed on this branch, commit `d459ea7e`)
 
@@ -378,6 +386,7 @@ number never collides with the flat baseline migrations' own bookkeeping).
   `mix test test/mailglass/upgrade/v0_2_test.exs
   test/mix/tasks/mailglass.gen.mailable_test.exs --warnings-as-errors --seed 0`
   → 6 tests, 0 failures.
+  status: acknowledged
 
 ### `:tenancy` application-env leak from `unsubscribe_test.exs` — OPEN (found by plan 143-12, deliberately not fixed here)
 
@@ -452,3 +461,4 @@ number never collides with the flat baseline migrations' own bookkeeping).
   `143-gap-closure-app-env-restore-SUMMARY.md` for the audit (75 sites, 11 affected),
   the mutation evidence, and five newly-recorded residual findings — including that
   `SuiteTruthFormatter`'s four module-boundary probes have never executed.
+  status: acknowledged

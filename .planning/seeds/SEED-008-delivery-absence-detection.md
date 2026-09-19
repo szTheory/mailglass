@@ -7,6 +7,10 @@ trigger_when: when planning outbound operator evidence, deliverability, adopter 
 scope: medium
 source: real adopter incident (GetFluent, reported via cross-session field report 2026-09-15)
 demand: CONFIRMED ADOPTER PULL — stated adoption trigger, escalated 2026-09-17
+audit_acknowledged:
+  milestone: v2.8
+  at: 2026-09-19
+  status: active
 ---
 
 > **⚠ This is not a speculative feature idea. It is a blocked adoption with a named trigger.**

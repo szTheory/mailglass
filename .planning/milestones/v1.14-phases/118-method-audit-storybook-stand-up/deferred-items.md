@@ -22,3 +22,4 @@ Out-of-scope discoveries logged during execution (NOT fixed in their discovering
 - **Action:** None taken in 118-01 (out of scope, milestone-wide tooling condition). A milestone
   owner should decide whether to refresh the committed bundle deliberately (coordinated, not a
   blind rebuild) in a later phase that actually touches admin CSS.
+  status: acknowledged

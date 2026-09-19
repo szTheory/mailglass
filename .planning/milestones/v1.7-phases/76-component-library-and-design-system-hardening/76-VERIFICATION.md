@@ -5,6 +5,7 @@ status: human_needed
 score: 4/4
 overrides_applied: 0
 human_verification:
+
   - test: "Start the app locally and visit the Deliveries surface (/ops/mail/). Inspect badge rendering for at least dispatched, delivered, bounced, and unknown status rows."
     expected: "Each status badge shows the correct badge color (badge-primary for dispatched, badge-success for delivered, badge-error for bounced, badge-outline for unknown), a matching Heroicon, and the correct text label — all in a single span."
     why_human: "Component renders correctly in ExUnit substring tests; actual CSS mask rendering of hero-* icons and color token resolution in a browser cannot be verified by grep or render_component."
@@ -17,6 +18,10 @@ human_verification:
   - test: "390px mobile viewport check: render the Deliveries surface at 390px width and confirm badge rows do not overflow or clip."
     expected: "Status badges remain contained within their table/list rows at 390px width. No horizontal scroll artifact introduced by the icon+label badge width."
     why_human: "GAP-10 (icon widens every badge) was explicitly noted as a DS-01/390px concern in 76-VALIDATION.md Manual-Only Verifications. Not assertable via render_component substring match. Deferred final pass is Phase 79 but a quick visual check during Phase 76 verification is prudent."
+audit_acknowledged:
+  milestone: v2.8
+  at: 2026-09-19
+  status: human_needed
 ---
 
 # Phase 76: Component Library and Design-System Hardening — Verification Report

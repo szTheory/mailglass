@@ -10,3 +10,4 @@ Out-of-scope discoveries logged during execution (not fixed — SCOPE BOUNDARY).
   for the storybook verification; this plan touched no admin lib code. Pre-existing and unrelated to
   COH-01. Not fixed. `mix compile --warnings-as-errors` still returned exit 0 (warning came from the
   admin-lib dependency compile, did not abort). Candidate cleanup for a future admin-lib pass.
+  status: acknowledged

@@ -6,18 +6,18 @@
     {
       "number": "166",
       "name": "Earned Greens and Controls That Can Pass",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "167",
       "name": "Truthful Documentation and the Standing Control",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "next": {
-    "command": "/gsd:progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 166 of 2 · 0% · executing"
+    "command": "/gsd:progress",
+    "label": "Show progress",
+    "reason": "Unsure of state — showing progress"
   },
-  "updated_at": "2026-09-18T00:28:58.644Z"
+  "updated_at": "2026-09-19T19:15:02.216Z"
 }

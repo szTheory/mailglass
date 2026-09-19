@@ -9,3 +9,4 @@
   - `test/mailglass/stream_test.exs:60`
   - `test/credo_checks/stream_policy_consistent_test.exs:65`
 - `mix credo --strict` also reports an existing tenant-scoping warning in `lib/mailglass/compliance/unsubscribe_controller.ex:21`, which belongs to a later Phase 11 slice and was not modified by plan `11-02`.
+  status: acknowledged
