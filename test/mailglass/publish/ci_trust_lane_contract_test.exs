@@ -43,17 +43,25 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
     workflow = File.read!(@workflow_path)
 
     repo_head = extract_job!(workflow, "trust_lane_repo_head", "trust_lane_clean_baseline")
-    clean_baseline = extract_job!(workflow, "trust_lane_clean_baseline", "branch_protection_advisory")
+
+    clean_baseline =
+      extract_job!(workflow, "trust_lane_clean_baseline", "branch_protection_advisory")
 
     assert_cache_contract!(repo_head, "mix-trust-repo-head-")
     assert_cache_contract!(clean_baseline, "mix-trust-clean-baseline-")
 
     refute cache_key!(repo_head) == cache_key!(clean_baseline)
 
-    assert step_index(repo_head, "- name: List reference/host_app/deps before install (GREEN-05 evidence)") <
+    assert step_index(
+             repo_head,
+             "- name: List reference/host_app/deps before install (GREEN-05 evidence)"
+           ) <
              step_index(repo_head, "- name: Install deps")
 
-    assert step_index(clean_baseline, "- name: List reference/host_app/deps before install (GREEN-05 evidence)") <
+    assert step_index(
+             clean_baseline,
+             "- name: List reference/host_app/deps before install (GREEN-05 evidence)"
+           ) <
              step_index(clean_baseline, "- name: Install deps")
 
     assert_raise ExUnit.AssertionError, fn ->
@@ -197,7 +205,11 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
   end
 
   defp cache_key!(job) do
-    [key] = Regex.run(~r/^          key: (.+)$/m, extract_step!(job, "Cache deps"), capture: :all_but_first)
+    [key] =
+      Regex.run(~r/^          key: (.+)$/m, extract_step!(job, "Cache deps"),
+        capture: :all_but_first
+      )
+
     key
   end
 
