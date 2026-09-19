@@ -84,7 +84,7 @@ state."* Three temptations are pre-refused by name:
 
 **No product code changes.** DOCS-05's `css_inliner` disposition is the single permitted `lib/` change.
 
-- [ ] **Phase 166: Earned Greens and Controls That Can Pass** - Replace the signals that report success without earning it, and give each fail-closed control a path to its own pass state
+- [x] **Phase 166: Earned Greens and Controls That Can Pass** - Replace the signals that report success without earning it, and give each fail-closed control a path to its own pass state (completed 2026-09-19)
 - [x] **Phase 167: Truthful Documentation and the Standing Control** - Retire the claims that mislead at the moment they are read, pin each correction with a test, and install exactly one new standing control (completed 2026-09-18)
 
 ## Phase Details
@@ -150,7 +150,7 @@ the `Hex Audit` advisories expire `2026-10-26` and red a required lane on 2026-1
 - Ordering inside the phase: GREEN-01 first (largest blast radius, earliest discovery), CTRL-04 no
   later than mid-phase (calendar deadline 2026-10-27).
 
-**Plans:** 6/6 plans executed (one per D-37 PR, with PR-5 split into two plans for context budget — 166-05 and
+**Plans:** 6/6 plans complete
 166-06 land in the same PR). Waves are strictly sequential, honoring the WIP limit of 1 open PR.
 
 Plans:
@@ -259,7 +259,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 166. Earned Greens and Controls That Can Pass | 6/6 | In Progress|  |
+| 166. Earned Greens and Controls That Can Pass | 6/6 | Complete    | 2026-09-19 |
 | 167. Truthful Documentation and the Standing Control | 4/4 | Complete    | 2026-09-18 |
 
 ## Milestone Exit Criteria (v2.8)

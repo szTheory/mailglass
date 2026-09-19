@@ -39,6 +39,31 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
     refute ci_green_needs(workflow) =~ "trust_lane_clean_baseline"
   end
 
+  test "trust-lane cache isolation is a tested workflow seam, not a log-review obligation" do
+    workflow = File.read!(@workflow_path)
+
+    repo_head = extract_job!(workflow, "trust_lane_repo_head", "trust_lane_clean_baseline")
+    clean_baseline = extract_job!(workflow, "trust_lane_clean_baseline", "branch_protection_advisory")
+
+    assert_cache_contract!(repo_head, "mix-trust-repo-head-")
+    assert_cache_contract!(clean_baseline, "mix-trust-clean-baseline-")
+
+    refute cache_key!(repo_head) == cache_key!(clean_baseline)
+
+    assert step_index(repo_head, "- name: List reference/host_app/deps before install (GREEN-05 evidence)") <
+             step_index(repo_head, "- name: Install deps")
+
+    assert step_index(clean_baseline, "- name: List reference/host_app/deps before install (GREEN-05 evidence)") <
+             step_index(clean_baseline, "- name: Install deps")
+
+    assert_raise ExUnit.AssertionError, fn ->
+      assert_cache_contract!(
+        String.replace(repo_head, "mix-trust-repo-head-", "mix-trust-clean-baseline-"),
+        "mix-trust-repo-head-"
+      )
+    end
+  end
+
   test "clean-baseline guard rejects a sibling resolved via a non-Hex source" do
     tmp_dir =
       Path.join(System.tmp_dir!(), "mailglass-clean-baseline-#{System.unique_integer([:positive])}")
@@ -160,6 +185,33 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
     [_before, rest] = String.split(workflow, "\n  #{start_key}:\n", parts: 2)
     [job | _after] = String.split(rest, "\n  #{next_key}:\n", parts: 2)
     job
+  end
+
+  defp assert_cache_contract!(job, expected_prefix) do
+    cache = extract_step!(job, "Cache deps")
+
+    assert cache =~ "path: deps"
+    assert cache =~ "key: #{expected_prefix}"
+    assert cache =~ "restore-keys: |\n            #{expected_prefix}"
+    refute cache =~ "reference/host_app/deps"
+  end
+
+  defp cache_key!(job) do
+    [key] = Regex.run(~r/^          key: (.+)$/m, extract_step!(job, "Cache deps"), capture: :all_but_first)
+    key
+  end
+
+  defp extract_step!(job, name) do
+    [_before, rest] = String.split(job, "      - name: #{name}\n", parts: 2)
+    [step | _after] = String.split(rest, "\n      - name: ", parts: 2)
+    step
+  end
+
+  defp step_index(job, marker) do
+    case :binary.match(job, marker) do
+      {index, _length} -> index
+      :nomatch -> flunk("missing workflow step: #{marker}")
+    end
   end
 
   # The ci_green aggregate job block — the load-bearing "publish-gate-only"
