@@ -52,7 +52,7 @@ a glance; a false green is why the admin blind spot hid two failures for four we
       *Accept:* the lane's log prints `scope: FULL SUITE (MAILGLASS_SUITE_FLOOR=1)` instead of
       "scoped run … floor not evaluated".
 
-- [ ] **GREEN-04**: The demo app exercises its Hex pins in at least one lane. `MAILGLASS_DEMO_DEPS`
+- [x] **GREEN-04**: The demo app exercises its Hex pins in at least one lane. `MAILGLASS_DEMO_DEPS`
       is set where the demo is built, so the published-consumer path is actually proven.
       *Accept:* a CI lane resolves the demo app's Hex deps rather than path deps to the working tree.
 
@@ -68,7 +68,7 @@ a glance; a false green is why the admin blind spot hid two failures for four we
 Fail-closed controls that are structurally unable to reach their own success state. Every fix here
 adds a path to *earn* green; none relaxes a gate.
 
-- [ ] **CTRL-01**: `post-publish-smoke` can pass on its schedule between releases. A
+- [x] **CTRL-01**: `post-publish-smoke` can pass on its schedule between releases. A
       `baseline-versions` resolution path handles `status == "inactive"` using `baselines` +
       `required_evidence_identifiers.historical_tag_sha`, running the **same** exact Hex
       checksum/endpoint proof against the published baseline.
@@ -77,7 +77,10 @@ adds a path to *earn* green; none relaxes a gate.
 
 - [ ] **CTRL-02**: `release-please` no longer re-runs the action against an already-tagged SHA on the
       push event. The tagged-PR preflight skip is restored for `push` in proposal mode
-      (`release-please.yml` ~L92), removing the redundant API work that trips the rate limit.
+      (`release-please.yml` ~L92): `release-preflight` correctly reports that the release-please action
+      should not re-run once `main`'s manifest tags all exist, but the proposal-evidence steps were
+      gated on that same flag, so the control could not observe the repository it reports on; Phase
+      167.1 decouples discovery from that flag.
       *Accept:* the merge of a `chore: release main` PR produces a green `release-please` push run.
 
 - [ ] **CTRL-03**: A transient GitHub API failure is retried, not reported as a control failure. An
@@ -85,8 +88,9 @@ adds a path to *earn* green; none relaxes a gate.
       `cannot-check` + `github_evidence_unavailable` is treated as retryable with backoff.
       *Accept:* three consecutive pushes to `main` produce `success`, and `push` and `schedule` at the
       same SHA agree. **`cannot-check` must still never report as `pass`.**
-      *Note:* research verified this is a **secondary** rate limit (all 15 buckets read full during a
-      403), so reducing cron frequency is not a fix and is not in scope.
+      *Note:* the 2026-09-18 audit measured the GitHub API quota at 5000/5000 during the reds — it was
+      not exhausted. The root cause was the same conflated `should_run` flag CTRL-02 corrects (Phase
+      167.1), not a rate limit; reducing cron frequency remains not a fix and remains out of scope.
 
 - [x] **CTRL-04**: The `Hex Audit` calendar time bomb is defused truthfully before it fires. Both
       cowlib advisories (`EEF-CVE-2026-43966`, `EEF-CVE-2026-43969`, `recheck_by: ~D[2026-10-26]`) are
@@ -220,9 +224,9 @@ Populated 2026-09-17 during roadmap creation.
 | GREEN-01 | Phase 166 | Complete |
 | GREEN-02 | Phase 166 | Complete |
 | GREEN-03 | Phase 166 | Complete |
-| GREEN-04 | Phase 166 | Implemented, evidence pending |
+| GREEN-04 | Phase 166 | Complete |
 | GREEN-05 | Phase 166 | Implemented, evidence pending |
-| CTRL-01 | Phase 166 | Implemented, evidence pending |
+| CTRL-01 | Phase 166 | Complete |
 | CTRL-02 | Phase 166 | Implemented, evidence pending |
 | CTRL-03 | Phase 166 | Implemented, evidence pending |
 | CTRL-04 | Phase 166 | Complete |

@@ -790,6 +790,295 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end)
   end
 
+  test "the two proposal-control pass predicates are identical modulo variable names (D-05)" do
+    source = workflow_source()
+
+    predicates =
+      source
+      |> String.split("\n")
+      |> Enum.filter(&(&1 =~ "= pass ]"))
+      |> Enum.reject(&String.starts_with?(String.trim_leading(&1), "#"))
+
+    assert length(predicates) == 2,
+           "expected exactly two non-comment pass predicates, found #{length(predicates)}"
+
+    normalized =
+      Enum.map(predicates, fn line ->
+        line
+        |> String.replace("$RESULT_STATUS", "$status")
+        |> String.replace("$RESULT_REASON", "$reason")
+        |> String.trim()
+      end)
+
+    assert Enum.uniq(normalized) |> length() == 1,
+           "the twin pass predicates diverged: #{inspect(normalized)}"
+  end
+
+  test "a push run with one open proposal and should_run=false reaches the same pending verdict a scheduled run does" do
+    source = workflow_source()
+
+    discovery =
+      extract_step_block!(source, "Discover an open Release Please proposal before capture")
+
+    result = extract_step_block!(source, "Write proposal-only release control result")
+
+    gate =
+      extract_step_block!(source, "Fail non-pass proposal control result after evidence upload")
+
+    # This is the permanent post-close-out steady state: main's manifest tags
+    # all already exist, so should_run is false on every push and every
+    # hourly schedule, and exactly one release proposal is open against main.
+    with_idle_schedule_fixture(:one, "push", "false", fn temp_dir, env ->
+      File.write!(Path.join(temp_dir, "discovery.sh"), proposal_result_script(discovery))
+      File.write!(Path.join(temp_dir, "result.sh"), proposal_result_script(result))
+      File.write!(Path.join(temp_dir, "gate.sh"), proposal_result_script(gate))
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "discovery.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(env),
+                 stderr_to_stdout: true
+               )
+
+      discovery_outputs = read_output!(env["GITHUB_OUTPUT"])
+      assert discovery_outputs["should_capture"] == "false"
+      assert discovery_outputs["result_status"] == "pending"
+      assert discovery_outputs["result_reason"] == "proposal_awaiting_release_action"
+
+      writer_env =
+        Map.merge(env, %{
+          "CAPTURE_OUTCOME" => "skipped",
+          "CAPTURE_STATUS" => "",
+          "CAPTURE_REASON" => "",
+          "DISCOVERY_STATUS" => discovery_outputs["result_status"],
+          "DISCOVERY_REASON" => discovery_outputs["result_reason"],
+          "PROPOSAL_HEAD" => "",
+          "SOURCE_SHA" => ""
+        })
+
+      assert {_, 0} =
+               System.cmd("bash", [Path.join(temp_dir, "result.sh")],
+                 cd: @repo_root,
+                 env: Map.to_list(writer_env),
+                 stderr_to_stdout: true
+               )
+
+      json =
+        temp_dir
+        |> Path.join("release-proposal-control-result.json")
+        |> File.read!()
+        |> Jason.decode!()
+
+      assert Map.take(json, ["status", "reason", "event_name"]) == %{
+               "status" => "pending",
+               "reason" => "proposal_awaiting_release_action",
+               "event_name" => "push"
+             }
+
+      # Feed the gate from the artifact's own values, not hardcoded strings --
+      # this is what makes the test catch a D-05 predicate divergence.
+      assert {_, 0} =
+               System.cmd(
+                 "bash",
+                 [Path.join(temp_dir, "gate.sh")],
+                 env: [
+                   {"RESULT_STATUS", json["status"]},
+                   {"RESULT_REASON", json["reason"]}
+                 ],
+                 stderr_to_stdout: true
+               )
+
+      # Nothing may merge, tag, or push on this path.
+      refute File.read!(env["COMMAND_LOG"]) =~
+               ~r/(gh pr merge|git tag|gh release|git push|protected-dispatch)/
+    end)
+  end
+
+  test "standalone discovery under should_run=false reaches a named verdict for every reachable world state" do
+    discovery =
+      workflow_source()
+      |> extract_step_block!("Discover an open Release Please proposal before capture")
+
+    for {mode, expected_capture, expected_status, expected_reason, expected_exit} <- [
+          {:none, "false", "pending", "no_open_proposal", 0},
+          {:one, "false", "pending", "proposal_awaiting_release_action", 0},
+          {:many, "false", "blocked", "multiple_open_proposals", 0},
+          {:unavailable, "false", "cannot-check", "github_evidence_unavailable", 1}
+        ] do
+      with_idle_schedule_fixture(mode, "schedule", "false", fn temp_dir, env ->
+        script = Path.join(temp_dir, "discovery.sh")
+        File.write!(script, proposal_result_script(discovery))
+
+        assert {_, ^expected_exit} =
+                 System.cmd("bash", [script],
+                   cd: @repo_root,
+                   env: Map.to_list(env),
+                   stderr_to_stdout: true
+                 )
+
+        outputs = read_output!(env["GITHUB_OUTPUT"])
+        assert outputs["should_capture"] == expected_capture
+        assert outputs["result_status"] == expected_status
+        assert outputs["result_reason"] == expected_reason
+      end)
+    end
+  end
+
+  test "the should_run=true hand-off to capture is unchanged for one and many open proposals" do
+    discovery =
+      workflow_source()
+      |> extract_step_block!("Discover an open Release Please proposal before capture")
+
+    for mode <- [:one, :many] do
+      with_idle_schedule_fixture(mode, "schedule", "true", fn temp_dir, env ->
+        script = Path.join(temp_dir, "discovery.sh")
+        File.write!(script, proposal_result_script(discovery))
+
+        assert {_, 0} =
+                 System.cmd("bash", [script],
+                   cd: @repo_root,
+                   env: Map.to_list(env),
+                   stderr_to_stdout: true
+                 )
+
+        outputs = read_output!(env["GITHUB_OUTPUT"])
+        assert outputs["should_capture"] == "true"
+        assert outputs["result_status"] == ""
+        assert outputs["result_reason"] == ""
+      end)
+    end
+  end
+
+  test "cannot-check and blocked never pass the gate under should_run=false (negative controls for D-05)" do
+    source = workflow_source()
+
+    discovery =
+      extract_step_block!(source, "Discover an open Release Please proposal before capture")
+
+    result = extract_step_block!(source, "Write proposal-only release control result")
+
+    gate =
+      extract_step_block!(source, "Fail non-pass proposal control result after evidence upload")
+
+    for {mode, expected_status, expected_reason} <- [
+          {:unavailable, "cannot-check", "github_evidence_unavailable"},
+          {:many, "blocked", "multiple_open_proposals"}
+        ] do
+      with_idle_schedule_fixture(mode, "schedule", "false", fn temp_dir, env ->
+        File.write!(Path.join(temp_dir, "discovery.sh"), proposal_result_script(discovery))
+        File.write!(Path.join(temp_dir, "result.sh"), proposal_result_script(result))
+        File.write!(Path.join(temp_dir, "gate.sh"), proposal_result_script(gate))
+
+        discovery_exit =
+          case mode do
+            :unavailable -> 1
+            _ -> 0
+          end
+
+        assert {_, ^discovery_exit} =
+                 System.cmd("bash", [Path.join(temp_dir, "discovery.sh")],
+                   cd: @repo_root,
+                   env: Map.to_list(env),
+                   stderr_to_stdout: true
+                 )
+
+        discovery_outputs = read_output!(env["GITHUB_OUTPUT"])
+        assert discovery_outputs["result_status"] == expected_status
+        assert discovery_outputs["result_reason"] == expected_reason
+
+        writer_env =
+          Map.merge(env, %{
+            "CAPTURE_OUTCOME" => "skipped",
+            "CAPTURE_STATUS" => "",
+            "CAPTURE_REASON" => "",
+            "DISCOVERY_STATUS" => discovery_outputs["result_status"],
+            "DISCOVERY_REASON" => discovery_outputs["result_reason"],
+            "PROPOSAL_HEAD" => "",
+            "SOURCE_SHA" => ""
+          })
+
+        # The writer step carries its own trailing pass-predicate assertion
+        # (mirrored by the dedicated gate below) and is itself
+        # `continue-on-error: true` in the real workflow for exactly this
+        # reason: for a non-pass verdict the writer script exits non-zero
+        # too. The artifact is written before that final assertion runs, so
+        # it is still readable after a non-zero exit.
+        {_, _writer_exit} =
+          System.cmd("bash", [Path.join(temp_dir, "result.sh")],
+            cd: @repo_root,
+            env: Map.to_list(writer_env),
+            stderr_to_stdout: true
+          )
+
+        json =
+          temp_dir
+          |> Path.join("release-proposal-control-result.json")
+          |> File.read!()
+          |> Jason.decode!()
+
+        assert json["status"] == expected_status
+        assert json["reason"] == expected_reason
+
+        # The gate must fail closed -- this is the negative control for the
+        # D-05 widening: neither cannot-check nor blocked may ever pass.
+        assert {_, exit_code} =
+                 System.cmd(
+                   "bash",
+                   [Path.join(temp_dir, "gate.sh")],
+                   env: [
+                     {"RESULT_STATUS", json["status"]},
+                     {"RESULT_REASON", json["reason"]}
+                   ],
+                   stderr_to_stdout: true
+                 )
+
+        assert exit_code != 0
+      end)
+    end
+  end
+
+  test "capture-proposal stays gated on should_run, candidate_digest, and discovery's should_capture (D-03)" do
+    source = workflow_source()
+
+    assert capture_gated_on_should_run?(source)
+
+    refute capture_gated_on_should_run?(
+             String.replace(
+               source,
+               "steps.release-preflight.outputs.should_run == 'true' && github.event.inputs.candidate_digest == '' && steps.proposal-discovery.outputs.should_capture != 'false'",
+               "github.event.inputs.candidate_digest == '' && steps.proposal-discovery.outputs.should_capture != 'false'",
+               global: false
+             )
+           )
+
+    assert step_precedes?(
+             source,
+             "Sync sibling package -> mailglass dep pin on release-please branch",
+             "Discover an open Release Please proposal before capture"
+           )
+
+    assert step_precedes?(
+             source,
+             "Discover an open Release Please proposal before capture",
+             "Capture Release Please proposal identity without activation"
+           )
+  end
+
+  test "discovery still refuses the protected candidate-digest dispatch path (T-167.1-01)" do
+    source = workflow_source()
+
+    assert discovery_bars_candidate_digest?(source)
+
+    refute discovery_bars_candidate_digest?(
+             String.replace(
+               source,
+               "if: ${{ github.event.inputs.candidate_digest == '' }}",
+               "if: ${{ true }}",
+               global: false
+             )
+           )
+  end
+
   test "proposal capture emits its real post-worktree outcome before cleanup and the writer preserves it" do
     source = workflow_source()
 
@@ -1141,7 +1430,10 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
   defp with_idle_schedule_fixture(mode, fun), do: with_idle_schedule_fixture(mode, "schedule", fun)
 
-  defp with_idle_schedule_fixture(mode, event_name, fun) do
+  defp with_idle_schedule_fixture(mode, event_name, fun),
+    do: with_idle_schedule_fixture(mode, event_name, "true", fun)
+
+  defp with_idle_schedule_fixture(mode, event_name, should_run, fun) do
     temp_dir =
       Path.join(System.tmp_dir!(), "release-idle-schedule-#{System.unique_integer([:positive])}")
 
@@ -1199,7 +1491,8 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       "RUN_ID" => "16208",
       "CANDIDATE_DIGEST" => "",
       "COMMIT_MESSAGE" => "",
-      "FAKE_DISCOVERY" => Atom.to_string(mode)
+      "FAKE_DISCOVERY" => Atom.to_string(mode),
+      "SHOULD_RUN" => should_run
     }
 
     try do
@@ -1470,6 +1763,25 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       action =~ "steps.release-preflight.outputs.should_run == 'true'" and
       action =~ "steps.protected-dispatch.outputs.content_verified == 'true'" and
       action =~ "steps.protected-merge.outcome == 'success'"
+  end
+
+  defp capture_gated_on_should_run?(source) do
+    capture =
+      extract_step_block!(
+        source,
+        "Capture Release Please proposal identity without activation"
+      )
+
+    capture =~ "steps.release-preflight.outputs.should_run == 'true'" and
+      capture =~ "github.event.inputs.candidate_digest == ''" and
+      capture =~ "steps.proposal-discovery.outputs.should_capture != 'false'"
+  end
+
+  defp discovery_bars_candidate_digest?(source) do
+    discovery =
+      extract_step_block!(source, "Discover an open Release Please proposal before capture")
+
+    discovery =~ "github.event.inputs.candidate_digest == ''"
   end
 
   defp extract_trigger_block!(source, trigger) do
