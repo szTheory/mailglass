@@ -321,7 +321,7 @@ defmodule Mailglass.MixProject do
         "test test/scripts/phase_165_milestone_finalizer_test.exs --only phase_165_installed_production_boundary --warnings-as-errors --no-deps-check"
       ],
       "verify.support_contract.core": [
-        "test test/mailglass/docs_contract_test.exs test/mailglass/state_md_contract_test.exs test/mailglass/docs/testing_guide_test.exs test/mailglass/stability_contract_test.exs test/mailglass/compatibility_contract_test.exs test/mailglass/docs_migration_smoke_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs test/mailglass/operator/support_summary_test.exs test/mailglass/webhook/telemetry_test.exs test/mailglass/telemetry_test.exs test/mailglass/webhook/replay_test.exs test/mailglass/webhook/reconciler_test.exs --warnings-as-errors"
+        "test test/mailglass/docs_contract_test.exs test/mailglass/state_md_contract_test.exs test/scripts/check_state_md_pr_refs_test.exs test/mailglass/docs/testing_guide_test.exs test/mailglass/stability_contract_test.exs test/mailglass/compatibility_contract_test.exs test/mailglass/docs_migration_smoke_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs test/mailglass/operator/support_summary_test.exs test/mailglass/webhook/telemetry_test.exs test/mailglass/telemetry_test.exs test/mailglass/webhook/replay_test.exs test/mailglass/webhook/reconciler_test.exs --warnings-as-errors"
       ],
       "verify.stability_contract": [
         "verify.support_contract.core",
