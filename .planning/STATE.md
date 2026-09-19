@@ -1,21 +1,21 @@
 ---
-gsd_state_version: 1.0
+gsd_state_version: "1.0"
 milestone: v2.8
 milestone_name: Truthful Repo
-current_phase: 167.1
+current_phase: "167.1"
 current_phase_name: close-gap-ctrl-02-ctrl-03-proposal-control-cannot-produce-ev
 status: verifying
-stopped_at: Completed 167.1-02-PLAN.md
-last_updated: "2026-09-18T18:05:35.886Z"
-last_activity: 2026-09-18
-last_activity_desc: Phase 167 execution started
+stopped_at: Repository disposition complete; CTRL-03 transcribed; WINDOWS ledger triaged; awaiting natural CTRL-05 cron and independently wanted release for CTRL-02
+last_updated: "2026-09-19T14:10:57.913Z"
+last_activity: 2026-09-19
+last_activity_desc: "Closed stale PRs #280/#284, merged green Dependabot PR #282, deferred #283 to next bot cycle, transcribed CTRL-03, and triaged WINDOWS to 0 open"
+state_head: 31997d6892d5590a48a8b14361b3378a5a50dd41
 progress:
   total_phases: 2
-  completed_phases: 2
+  completed_phases: 1
   total_plans: 10
   completed_plans: 10
-  percent: 100
-state_head: abd07aa43f2977469b8c38c702d9b9b6ec9ac51a
+  percent: 50
 ---
 
 # Project State
@@ -58,7 +58,7 @@ cause; closing it would not help. This needs the Phase 167.1 code fix.
 GREEN-05 Part 2 (a second `main` CI run with `mix.lock` unchanged, for a trust-lane cache restore-hit)
 and CTRL-05 (two naturally-triggered scheduled repo-hygiene runs after the merge) remain genuine timed
 observations. Neither may be dispatched or manufactured.
-Last activity: 2026-09-18 — Phase 167.1 execution started
+Last activity: 2026-09-19 — Closed stale PRs #280/#284, merged green Dependabot PR #282, deferred #283 to next bot cycle, transcribed CTRL-03, and triaged WINDOWS to 0 open
 
 ## v2.8 Roadmap Shape
 
@@ -423,8 +423,8 @@ Last activity: 2026-09-18 — Phase 167.1 execution started
 
 ## Session Continuity
 
-Last session: 2026-09-18T18:05:35.875Z
-Stopped at: Completed 167.1-02-PLAN.md
+Last session: 2026-09-19T14:10:26.482Z
+Stopped at: Repository disposition complete; CTRL-03 transcribed; WINDOWS ledger triaged; awaiting natural CTRL-05 cron and independently wanted release for CTRL-02
 partial, waiting only on post-merge observations that cannot be forced. Earlier context: the
 consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
 archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
