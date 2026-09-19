@@ -3,9 +3,9 @@ phase: 167
 slug: truthful-documentation-and-the-standing-control
 # status lifecycle: draft (seeded by plan-phase) → validated (set by validate-phase §6)
 # audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: false) (#2117)
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-09-17
 ---
 
@@ -55,29 +55,25 @@ The tracked `.tool-versions` is the correct CI contract — do not "fix" it.
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | 1 | DOCS-01 | — | N/A | generated script (advisory) | new `scripts/` check — see Wave 0 | ❌ W0 | ⬜ pending |
-| TBD | TBD | 1 | DOCS-02 | — | N/A | unit (source-text) | `mix test test/mailglass/docs_contract_test.exs` | ❌ W0 (new describe block) | ⬜ pending |
-| TBD | TBD | 1 | DOCS-03 | — | N/A | unit (source-text) | `mix test test/mailglass/docs_contract_test.exs` | ❌ W0 (new describe blocks) | ⬜ pending |
-| TBD | TBD | 2 | DOCS-04 | — | N/A | unit (dynamic assertion) | `mix test test/mailglass/docs_contract_test.exs` | ✅ existing test extended | ⬜ pending |
-| TBD | TBD | 2 | DOCS-05 | — | Invalid config key rejected at validation, not silently inert | unit | `mix test test/mailglass/config_test.exs test/mailglass/docs_contract_test.exs` | ✅ existing tests extended | ⬜ pending |
-| TBD | TBD | 1 | DOCS-06 | — | N/A | unit (source-text) | `mix test test/mailglass/docs_contract_test.exs` | ✅ existing test extended | ⬜ pending |
-| TBD | TBD | 1 | STAND-01 | — | Majors stay ungrouped so a breaking bump is individually reviewable | manual + observation | YAML review; a week's bumps arriving as ≤1 PR per lock directory | N/A — GitHub-native | ⬜ pending |
+| 167-01-T1–T3 | 01 | 1 | DOCS-03 | — | Correct release mechanics and close-out runbook remain pinned | unit (derived/source-text) | `mix test test/mailglass/docs_contract_test.exs --warnings-as-errors` | ✅ `docs_contract_test.exs` | ✅ green |
+| 167-02-T1 | 02 | 2 | DOCS-02 | — | CLAUDE.md describes the live release path | unit (source-text) | `mix test test/mailglass/docs_contract_test.exs --warnings-as-errors` | ✅ `docs_contract_test.exs` | ✅ green |
+| 167-02-T2 | 02 | 2 | DOCS-06 | — | Upgrade guide stays discoverable and changelog remains additive | unit (source-text) | `mix test test/mailglass/docs_contract_test.exs --warnings-as-errors` | ✅ `docs_contract_test.exs` | ✅ green |
+| 167-03-T1 | 03 | 3 | DOCS-04 | — | Migration pins derive from manifests and release-time sync | unit + YAML structure | `mix test test/mailglass/docs_contract_test.exs --warnings-as-errors` | ✅ `docs_contract_test.exs` | ✅ green |
+| 167-03-T2–T3 | 03 | 3 | DOCS-05 | — | `:none` config is rejected; code-adjacent docs track source | unit | `mix test test/mailglass/config_test.exs test/mailglass/docs_contract_test.exs test/mailglass/mailable_test.exs --warnings-as-errors` | ✅ focused tests | ✅ green |
+| 167-04-T1–T2 | 04 | 1 | DOCS-01 | — | STATE facts are structurally pinned and live audit cannot misattribute colliding IDs | unit + fixture-backed shell integration | `mix test test/mailglass/state_md_contract_test.exs test/scripts/check_state_md_pr_refs_test.exs --warnings-as-errors` | ✅ both test files | ✅ green |
+| 167-04-T3 | 04 | 1 | STAND-01 | — | Minor/patch Dependabot updates are grouped and capped; majors remain individual | static YAML structure + post-merge observation | PyYAML structural assertion; weekly observation | ✅ `.github/dependabot.yml` | ✅ static check green |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: ✅ green · ❌ red · ⚠️ flaky*
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] New `describe "CLAUDE.md contract"` / `describe "CONTRIBUTING.md contract"` /
-      `describe "MAINTAINING.md contract"` blocks in `test/mailglass/docs_contract_test.exs` — none
-      exist yet for these three files (only `README.md` and the guides have contract tests today)
-- [ ] New script for DOCS-01's live-GitHub-state pin (e.g. `scripts/check_state_md_pr_refs.sh`) —
-      **the one item in this phase with no direct existing pattern to extend.** Mirror the
-      `repo-hygiene` script pattern; advisory, not gating
-- [ ] Inverted `config_test.exs` case for `css_inliner: :none` (raise, not accept) — a flip of the
-      existing acceptance case at `config_test.exs:17-21`, mirroring the adjacent `:invalid_backend`
-      `assert_raise` already in that file. Not a net-new file
+- [x] CLAUDE.md, CONTRIBUTING.md, and MAINTAINING.md contract blocks added to
+      `test/mailglass/docs_contract_test.exs`.
+- [x] `scripts/check_state_md_pr_refs.sh` added with fixture-backed integration coverage, including
+      the `#26`/`#260` prefix-collision regression; the test is in `verify.support_contract.core`.
+- [x] `config_test.exs` inverts the `css_inliner: :none` case to an `assert_raise`.
 
 *Everything else reuses existing test files and idioms — this is a low-Wave-0-gap phase.*
 
@@ -115,11 +111,24 @@ The tracked `.tool-versions` is the correct CI contract — do not "fix" it.
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 300s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have automated verification or an explicitly bounded GitHub-native observation
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all formerly missing references
+- [x] No watch-mode flags
+- [x] Feedback latency < 300s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** automation-first validation; STAND-01's real weekly Dependabot behavior remains a
+post-merge observation, with its in-repository configuration asserted structurally.
+
+## Validation Audit 2026-09-19
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 1 |
+| Resolved | 1 |
+| Escalated | 0 |
+
+The gap was a missing durable regression for the state-reference audit's prefix-collision behavior.
+`test/scripts/check_state_md_pr_refs_test.exs` now proves that `#26` is evaluated against its own
+line rather than an earlier `#260` line, and `mix verify.support_contract.core` executes it.
