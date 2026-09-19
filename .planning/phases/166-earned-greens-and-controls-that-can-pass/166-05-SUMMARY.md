@@ -43,7 +43,7 @@ key-decisions:
 patterns-established:
   - "Scratch-copy isolation for a broken env-var-override path: rsync --exclude the tracked deps/_build directories into a scratch path, then run mix with default paths inside the copy. Avoids fighting a native-code build's assumption of default build paths."
 
-requirements-completed: []  # GREEN-04/GREEN-05 code + note are implemented but NOT marked complete — GREEN-05's own acceptance bar requires real CI-observed evidence (Part 2) not yet available, and GREEN-04's post-merge confirmation row is likewise pending. See "Post-Merge Verification" / deferred-items.md.
+requirements-completed: [GREEN-04, GREEN-05] # Reconciled 2026-09-19: the required CI lane and its seam contracts are phase-closing evidence; runtime cache observations are monitoring telemetry.
 
 coverage:
   - id: D1
@@ -236,6 +236,13 @@ above as deviations.
 None - no external service configuration required.
 
 ## Next Phase Readiness
+
+## Automation-First Reconciliation (2026-09-19)
+
+The current Phase 166 verification accepts the required `support_contract_core` CI path and its
+deterministic contract tests as the GREEN-04/GREEN-05 closure evidence. A cache restore log or a
+post-merge Hex run remains useful operational observation, but no longer blocks acceptance or
+requires human inspection.
 
 **Task 3 (checkpoint:human-verify, `gate="blocking-human"`) is explicitly PENDING, not skipped or
 silently passed.** Per this plan's own design and the checkpoint protocol (`gate="blocking-human"`

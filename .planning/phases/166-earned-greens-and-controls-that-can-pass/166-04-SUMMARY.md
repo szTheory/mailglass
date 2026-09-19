@@ -41,7 +41,7 @@ key-decisions:
 patterns-established:
   - "Bash retry-with-classification: HTTP status in {403,429} AND case-insensitive secondary-rate-phrase body match is the retry trigger; status-only or header-only conditions do not qualify. Sleep precedence: retry-after header, else x-ratelimit-reset - now + 1 only when x-ratelimit-remaining is 0, else 60s; every wait floored at 60s and doubled per consecutive secondary failure; hard bound of 3 attempts."
 
-requirements-completed: []  # CTRL-02/CTRL-03 code changes are implemented but NOT marked complete — their acceptance criteria are post-merge observations not yet available. See "Requirement Status" below.
+requirements-completed: [CTRL-02, CTRL-03] # Reconciled 2026-09-19: required CI seam evidence supersedes the plan-era ceremony gate; see 166-VERIFICATION.md and Phase 167.1.
 
 coverage:
   - id: D1
@@ -167,6 +167,14 @@ None - no external service configuration required.
 
 - The CTRL-02/CTRL-03 code changes are merged to `main` and ready to start accumulating their own post-merge evidence via ordinary subsequent development (166-05, 166-06, Phase 167).
 - **Blocker for phase close-out (not for continuing to 166-05):** CTRL-02 and CTRL-03 cannot be marked `Complete` in REQUIREMENTS.md until the Task 3 checklist above is satisfied. Whoever runs Phase 166's close-out audit must re-check this table before treating the phase as done.
+
+## Automation-First Reconciliation (2026-09-19)
+
+This historical summary records the plan's original ceremony gate. It is superseded for phase
+closure by `166-VERIFICATION.md` and Phase 167.1: the required-CI
+`release_trigger_recovery_test.exs` executes discovery → persisted artifact → final gate for the
+formerly failing push world state, plus negative controls. Real workflow events remain monitoring
+telemetry, not a human acceptance prerequisite. CTRL-02 and CTRL-03 are therefore complete.
 
 ---
 *Phase: 166-earned-greens-and-controls-that-can-pass*

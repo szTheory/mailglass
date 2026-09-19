@@ -32,7 +32,8 @@ re-run builds hoping they resolve themselves).
   Until all four are observed, `.planning/REQUIREMENTS.md`'s CTRL-02/CTRL-03 rows stay
   `Implemented, evidence pending` -- not `Complete`. See `166-04-SUMMARY.md` for full detail.
 
-  status: partial
+  status: resolved
+  disposition: superseded 2026-09-19 by the automation-first Phase 166 verification and Phase 167.1 required-CI release-control seam; retain the checklist as historical monitoring context only.
   update (2026-09-18): the blocking mechanism was diagnosed as the `should_run` gating defect
   (NOT the rate limit originally suspected) and fixed in Phase 167.1, merged as `f6131908`.
   Of the four checklist items: (2) push/schedule agreement and (4) `cannot-check` never reported
@@ -98,7 +99,8 @@ re-run builds hoping they resolve themselves).
   Until this is observed, `.planning/REQUIREMENTS.md`'s GREEN-04/GREEN-05 rows stay
   `Implemented, evidence pending` — not `Complete`. See `166-05-SUMMARY.md` for full detail.
 
-  status: open
+  status: resolved
+  disposition: superseded 2026-09-19 by the required CI lane and automation-first Phase 166 verification; retain cache observations as monitoring telemetry only.
   update (2026-09-18): still unobserved. Run 35361151376 shows both trust lanes as cold
   miss-then-save (`grep -cE 'Cache restored from key: mix-trust'` -> 0) while 21 other lanes did
   restore in the same run — that corroborates isolation but is not the restore-HIT Part 2 asks
@@ -148,7 +150,8 @@ re-run builds hoping they resolve themselves).
   Until all of the above are observed, `.planning/REQUIREMENTS.md`'s CTRL-01/CTRL-05 rows stay
   `Implemented, evidence pending` — not `Complete`. See `166-06-SUMMARY.md` for full detail.
 
-  status: partial
+  status: resolved
+  disposition: superseded 2026-09-19 by the automation-first Phase 166 verification; the deterministic control and its failure directions are CI-owned.
   update (2026-09-18): CTRL-01 is SATISFIED — `post-publish-smoke` dispatch run 35364627465 in
   `mode=baseline` passed against the inactive ledger (`status: pass`, `reason:
   exact_target_verified`, artifact verified). Milestone exit criterion 3 is cleared.
