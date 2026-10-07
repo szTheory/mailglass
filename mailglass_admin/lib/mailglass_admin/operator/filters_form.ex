@@ -8,7 +8,6 @@ defmodule MailglassAdmin.Operator.FiltersForm do
   alias MailglassAdmin.Components
 
   attr(:form, Phoenix.HTML.Form, required: true)
-  attr(:account_options, :list, default: [])
   attr(:provider_options, :list, default: [])
   attr(:event_values, :list, required: true)
   attr(:window_options, :list, required: true)
@@ -20,16 +19,6 @@ defmodule MailglassAdmin.Operator.FiltersForm do
       title="Filters"
       description="Show email activity for one account, then narrow by provider, status, or time."
     >
-      <Components.filter_field
-        field={@form[:tenant_id]}
-        type={:select}
-        label="Account"
-        help="Account maps to tenant_id in code and URLs."
-        error={field_error(@errors, "tenant_id")}
-        prompt="Choose account"
-        options={@account_options}
-      />
-
       <Components.filter_field
         field={@form[:provider]}
         type={:select}

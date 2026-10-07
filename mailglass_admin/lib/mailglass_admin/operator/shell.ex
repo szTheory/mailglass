@@ -338,15 +338,15 @@ defmodule MailglassAdmin.Operator.Shell do
         <Components.icon name="hero-building-office-2" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <div class="min-w-0 flex-1">
           <%= if @state == :none do %>
-            <h2 class="text-heading font-bold text-base-content">No accounts with mail activity</h2>
+            <h2 class="text-heading font-bold text-base-content">No Accounts with mail activity</h2>
             <p class="mt-sm text-body text-secondary">
-              This operator does not have an account with mail activity yet. Send a Message from your app, or check how your app sets <code class="mono">tenant_id</code>.
+              Send a Message from your app, or check how your app sets <code class="mono">tenant_id</code>.
             </p>
           <% else %>
             <p class="text-label font-bold uppercase text-secondary">Account</p>
-            <h2 class="mt-xs text-heading font-bold text-base-content">Choose an account</h2>
+            <h2 class="mt-xs text-heading font-bold text-base-content">Choose an Account</h2>
             <p class="mt-sm text-body text-secondary">
-              Pick the customer account whose Deliveries and inbound routing you want to inspect.
+              Select an Account to see scoped operator data.
             </p>
             <p class="mt-sm flex items-start gap-xs text-label text-secondary">
               <Components.icon
@@ -370,7 +370,7 @@ defmodule MailglassAdmin.Operator.Shell do
                 >
                   {tenant.label}
                 </span>
-                <span class="shrink-0 text-label font-bold text-primary">Open account</span>
+                <span class="shrink-0 text-label font-bold text-primary">Choose Account</span>
               </.link>
             </div>
           <% end %>

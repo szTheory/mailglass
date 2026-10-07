@@ -1097,12 +1097,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       {:ok, _view, html} = live(conn, @base_path)
 
-      assert html =~ "Choose an account"
-
-      assert html =~
-               "Pick the customer account whose Deliveries and inbound routing you want to inspect."
-
-      assert html =~ "Open account"
+      assert html =~ "Choose an Account"
+      assert html =~ "Select an Account to see scoped operator data."
+      assert html =~ "Choose Account"
       assert html =~ "alpha-tenant"
       assert html =~ "beta-tenant"
       refute html =~ "add <code"
@@ -1666,7 +1663,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Email health"
       assert html =~ ~s(data-testid="tenant-selector")
-      assert html =~ "No accounts with mail activity"
+      assert html =~ "No Accounts with mail activity"
       refute html =~ ~s(data-testid="operator-master-detail")
       refute html =~ ~s(data-testid="operator-deliveries-list")
     end
@@ -1675,7 +1672,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, @base_path)
 
-      assert html =~ "No accounts with mail activity"
+      assert html =~ "No Accounts with mail activity"
       assert html =~ ~s(data-testid="tenant-selector")
       refute html =~ ~s(data-testid="operator-overview-health")
     end

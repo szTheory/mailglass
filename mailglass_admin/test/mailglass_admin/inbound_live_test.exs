@@ -43,12 +43,9 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, @base_path)
 
-      assert html =~ "Choose an account"
-
-      assert html =~
-               "Pick the customer account whose Deliveries and inbound routing you want to inspect."
-
-      assert html =~ "Open account"
+      assert html =~ "Choose an Account"
+      assert html =~ "Select an Account to see scoped operator data."
+      assert html =~ "Choose Account"
       assert html =~ "alpha-inbound"
       assert html =~ "beta-inbound"
       refute html =~ "add a tenant_id to the URL"
@@ -90,10 +87,8 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => ""}))
 
-      assert html =~ "Choose an account"
-
-      assert html =~
-               "Pick the customer account whose Deliveries and inbound routing you want to inspect."
+      assert html =~ "Choose an Account"
+      assert html =~ "Select an Account to see scoped operator data."
 
       assert html =~ "other-tenant"
       assert clear_filters_count(html) == 0

@@ -732,15 +732,14 @@ defmodule MailglassAdmin.OperatorLive do
                       phx-submit="apply_filters"
                       class="mt-4 grid gap-md md:mt-0"
                     >
+                      <input
+                        id="filters_tenant_id"
+                        type="hidden"
+                        name={@filter_form[:tenant_id].name}
+                        value={@filter_form[:tenant_id].value}
+                      />
                       <FiltersForm.fields
                         form={@filter_form}
-                        account_options={
-                          Accounts.field_options(
-                            @tenant_options,
-                            @filter_params["tenant_id"],
-                            @account_labels
-                          )
-                        }
                         provider_options={@provider_options}
                         event_values={@event_values}
                         window_options={@window_options}
