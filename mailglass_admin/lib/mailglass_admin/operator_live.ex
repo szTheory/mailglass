@@ -778,7 +778,11 @@ defmodule MailglassAdmin.OperatorLive do
                       />
 
                       <div class="flex flex-wrap gap-2">
-                        <button type="submit" class="btn btn-primary min-h-11 px-5">
+                        <button
+                          type="submit"
+                          phx-disable-with="Applying filters…"
+                          class="btn btn-primary min-h-11 w-40 px-5"
+                        >
                           Apply filters
                         </button>
                         <button

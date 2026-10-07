@@ -181,6 +181,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(<option value="sendgrid")
       assert html =~ "SendGrid"
       assert html =~ "Apply filters"
+      assert html =~ ~s(phx-disable-with="Applying filters…")
+      assert html =~ "w-40"
       refute html =~ "Open delivery"
 
       view

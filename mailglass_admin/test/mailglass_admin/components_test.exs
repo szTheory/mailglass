@@ -1055,7 +1055,6 @@ defmodule MailglassAdmin.ComponentsTest do
     test "operator wrapper renders stable primitive-backed controls in delivery filter order" do
       form =
         filters_form(%{
-          "tenant_id" => "tenant-123",
           "provider" => "postmark",
           "event" => "delivered",
           "window_hours" => "168"
@@ -1065,7 +1064,6 @@ defmodule MailglassAdmin.ComponentsTest do
         render_component(&OperatorFiltersForm.fields/1,
           form: form,
           event_values: [:dispatched, :delivered],
-          account_options: [{"Acme Support", "tenant-123"}],
           provider_options: [{"Postmark", "postmark"}, {"SendGrid", "sendgrid"}],
           window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
           errors: %{"event" => "Status was not applied. Choose a listed status."}
@@ -1075,15 +1073,7 @@ defmodule MailglassAdmin.ComponentsTest do
         "<fieldset",
         "<legend",
         "Filters",
-        ~s(<label for="filters_tenant_id"),
         ~s(<select),
-        ~s(id="filters_tenant_id"),
-        ~s(name="filters[tenant_id]"),
-        "Account",
-        "Account maps to tenant_id in code and URLs.",
-        ~s(<option value="">Choose account</option>),
-        ~s(<option value="tenant-123" selected>),
-        "Acme Support",
         ~s(<label for="filters_provider"),
         ~s(<select),
         ~s(id="filters_provider"),
@@ -1107,14 +1097,14 @@ defmodule MailglassAdmin.ComponentsTest do
         ~s(value="168" selected>)
       ])
 
-      assert field_order(html, ["Account", "Provider", "Status", "Time window"])
+      assert field_order(html, ["Provider", "Status", "Time window"])
+      refute html =~ ~s(name="filters[tenant_id]")
       refute html =~ ~s(name="filters[status]")
     end
 
     test "inbound wrapper renders stable primitive-backed controls in inbound filter order" do
       form =
         filters_form(%{
-          "tenant_id" => "tenant-123",
           "provider" => "mailgun",
           "outcome" => "accept",
           "window_hours" => "168",
@@ -1125,7 +1115,6 @@ defmodule MailglassAdmin.ComponentsTest do
         render_component(&InboundFiltersForm.fields/1,
           form: form,
           outcome_values: [:no_match, :accept],
-          account_options: [{"Acme Support", "tenant-123"}],
           window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
           errors: %{"outcome" => "Mailbox outcome was not applied. Choose a listed outcome."}
         )
@@ -1134,15 +1123,7 @@ defmodule MailglassAdmin.ComponentsTest do
         "<fieldset",
         "<legend",
         "Filters",
-        ~s(<label for="filters_tenant_id"),
         ~s(<select),
-        ~s(id="filters_tenant_id"),
-        ~s(name="filters[tenant_id]"),
-        "Account",
-        "Account maps to tenant_id in code and URLs.",
-        ~s(<option value="">Choose account</option>),
-        ~s(<option value="tenant-123" selected>),
-        "Acme Support",
         ~s(<label for="filters_provider"),
         ~s(id="filters_provider"),
         ~s(name="filters[provider]"),
@@ -1165,7 +1146,8 @@ defmodule MailglassAdmin.ComponentsTest do
         "Search"
       ])
 
-      assert field_order(html, ["Account", "Provider", "Mailbox outcome", "Time window", "Search"])
+      assert field_order(html, ["Provider", "Mailbox outcome", "Time window", "Search"])
+      refute html =~ ~s(name="filters[tenant_id]")
     end
   end
 

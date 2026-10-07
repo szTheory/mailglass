@@ -623,7 +623,13 @@ defmodule MailglassAdmin.InboundLive do
                     />
 
                     <div class="flex flex-wrap gap-2">
-                      <button type="submit" class="btn btn-primary min-h-11 px-5">Apply filters</button>
+                      <button
+                        type="submit"
+                        phx-disable-with="Applying filters…"
+                        class="btn btn-primary min-h-11 w-40 px-5"
+                      >
+                        Apply filters
+                      </button>
                       <button
                         type="button"
                         phx-click="clear_filters"

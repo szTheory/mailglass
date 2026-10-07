@@ -262,6 +262,8 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ ~s(data-testid="inbound-filters")
       assert html =~ ~s(data-testid="inbound-filters-toggle")
+      assert html =~ ~s(phx-disable-with="Applying filters…")
+      assert html =~ "w-40"
       assert html =~ "toggle"
       assert html =~ ~s(to&quot;:&quot;#inbound-filter-panel&quot;)
       assert html =~ ~s(id="inbound-filter-panel")
@@ -518,8 +520,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ matching.id
       refute html =~ foreign.id
       assert html =~ ~s(value="168" selected)
-      refute html =~ "not-real"
-      refute html =~ "bogus"
+
+      document = Floki.parse_document!(html)
+      assert Floki.find(document, "#filters_outcome option[value='not-real']") == []
+      assert Floki.find(document, "#filters_window_hours option[value='bogus']") == []
     end
 
     test "invalid submitted filters render recovery copy and do not push a patch", %{
@@ -542,6 +546,9 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ "Mailbox outcome was not applied. Choose a listed outcome."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
+
+      document = Floki.parse_document!(html)
+      assert Floki.find(document, "#filters_outcome option[value='not-real']") == []
 
       assert_raise ArgumentError, fn ->
         assert_patch(view, 0)
