@@ -136,10 +136,15 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
             <tbody>
               <tr
                 :for={delivery <- @deliveries}
+                id={row_id(:desktop, delivery.id)}
                 data-testid="operator-delivery-row"
                 data-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
                 phx-click="select_delivery"
+                phx-keydown="select_delivery"
+                phx-key="Enter"
                 phx-value-id={delivery.id}
+                phx-value-focus-return-id={row_id(:desktop, delivery.id)}
+                tabindex="0"
                 aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
                 aria-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
                 class={[
@@ -190,11 +195,13 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
           >
             <li :for={delivery <- @deliveries}>
               <button
+                id={row_id(:mobile, delivery.id)}
                 data-testid="operator-delivery-row"
                 data-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
                 type="button"
                 phx-click="select_delivery"
                 phx-value-id={delivery.id}
+                phx-value-focus-return-id={row_id(:mobile, delivery.id)}
                 aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
                 aria-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
                 class={[
@@ -343,6 +350,9 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   defp selected?(%{id: id}, %{id: id}), do: true
   defp selected?(_selected_delivery, _delivery), do: false
+
+  defp row_id(:desktop, id), do: "operator-delivery-desktop-#{id}"
+  defp row_id(:mobile, id), do: "operator-delivery-mobile-#{id}"
 
   defp row_classes(%{id: id}, %{id: id}),
     do: "border-l-4 border-primary bg-base-100 text-base-content"

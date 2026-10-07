@@ -4,8 +4,8 @@ defmodule MailglassAdmin.Operator.QuickView do
   inspection flow ("what happened, at a glance").
 
   A URL-driven overlay (`?delivery_id=` with no `full`): a right slide-over pane on
-  desktop, a bottom sheet on mobile (positioning in the root layout's inline
-  `<style>` via `.mg-detail-panel`). Renders entirely from the list-row projection
+  desktop, a bottom sheet on mobile (positioning in the shared app stylesheet
+  via `.mg-detail-panel`). Renders entirely from the list-row projection
   already loaded in `@deliveries`, so flipping records with the `‹ ›` controls (and,
   in Stage C, the keyboard) fires no new queries. The heavy evidence — full event
   timeline, suppression state, replay history — lives one step deeper in Full detail
@@ -31,6 +31,7 @@ defmodule MailglassAdmin.Operator.QuickView do
   attr(:next_path, :string, default: nil)
   attr(:position, :map, default: nil)
   attr(:keyboard?, :boolean, default: true)
+  attr(:focus_return_id, :string, default: nil)
 
   def quick_view(assigns) do
     ~H"""
@@ -62,7 +63,7 @@ defmodule MailglassAdmin.Operator.QuickView do
 
         <div class="flex items-center justify-between gap-sm border-b border-base-300 pb-sm">
           <h2 id="operator-quick-view-title" class="text-label font-bold uppercase text-secondary">
-            Quick view
+            Delivery quick view
           </h2>
           <div class="flex items-center gap-xs">
             <.nav_button dir="prev" path={@previous_path} label="Previous delivery">‹</.nav_button>
@@ -100,7 +101,7 @@ defmodule MailglassAdmin.Operator.QuickView do
               </div>
 
               <p class="text-body text-secondary">
-                Latest:
+                Observed outcome:
                 <span class="text-base-content">{event_label(@delivery.last_event_type)}</span>
                 · <Components.timestamp at={@delivery.last_event_at} />
               </p>
@@ -118,12 +119,12 @@ defmodule MailglassAdmin.Operator.QuickView do
                 <div>
                   <dt class="text-label font-bold uppercase">Provider</dt>
                   <dd class="mt-xs text-base-content">
-                    {String.upcase(@delivery.provider || "unknown")}
+                    {provider_label(@delivery.provider)}
                   </dd>
                 </div>
                 <div class="sm:col-span-2">
                   <dt class="text-label font-bold uppercase">Delivery ID</dt>
-                  <dd class="mono mt-xs truncate text-base-content" title={@delivery.id}>
+                  <dd class="mono mt-xs break-all text-base-content" title={@delivery.id}>
                     {@delivery.id}
                   </dd>
                 </div>
@@ -178,12 +179,14 @@ defmodule MailglassAdmin.Operator.QuickView do
     """
   end
 
-  defp event_label(nil), do: "Unknown"
-
+  defp event_label(nil), do: "Unavailable"
   defp event_label(value) do
     value
     |> Atom.to_string()
     |> String.replace("_", " ")
     |> String.capitalize()
   end
+
+  defp provider_label(nil), do: "Unavailable"
+  defp provider_label(value), do: String.upcase(value)
 end

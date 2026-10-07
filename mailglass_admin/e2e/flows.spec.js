@@ -320,7 +320,10 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     // A bare delivery_id deep-link opens the Quick view; an off-page id surfaces
     // the error inside it (operator-quick-view-error), the list still behind it.
     await openOperator(page, `tenant_id=${tenantId}&view=deliveries&delivery_id=does-not-exist`);
+    const quickView = page.getByTestId("operator-quick-view");
     await expect(page.getByTestId("operator-quick-view-error")).toBeVisible();
+    await expect(quickView.getByTestId("operator-quick-view-full")).toHaveCount(0);
+    await expect(quickView.locator("dl")).toHaveCount(0);
     await assertSingleH1(page, "operator error");
     await assertNoRootOverflow(page, "operator error");
     await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator error master-detail");
@@ -871,6 +874,49 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(scopedRow).toContainText("f************.example");
     await scopedRow.click();
     await expect(page.getByTestId("operator-quick-view")).toContainText("fjordline-aps");
+  });
+
+  test("Phase 168 Quick view focus", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await openOperator(page);
+
+    const mobileRow = page.locator('[id^="operator-delivery-mobile-"]').first();
+    const deliveryId = await mobileRow.getAttribute("id");
+    await mobileRow.focus();
+    await page.keyboard.press("Enter");
+
+    const quickView = page.getByTestId("operator-quick-view");
+    await expect(quickView).toBeVisible();
+    await expect(quickView).toHaveAttribute("aria-modal", "true");
+    await expect(page.getByRole("heading", { name: "Delivery quick view", exact: true })).toBeVisible();
+    await expect(quickView).toContainText("Observed outcome:");
+    await expect(quickView).toContainText("Delivery ID");
+    await expect(quickView).toContainText(deliveryId.replace("operator-delivery-mobile-", ""));
+    await expect(page.getByTestId("operator-quick-view-focus-return")).toHaveAttribute("data-focus-return-id", deliveryId);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-quick-view-close");
+
+    const idField = quickView.locator("dd.mono");
+    const overflow = await idField.evaluate(element => element.scrollWidth - element.clientWidth);
+    expect(overflow, "full delivery ID wraps within the narrow dialog").toBeLessThanOrEqual(1);
+
+    await page.getByTestId("operator-quick-view-full").focus();
+    await page.keyboard.press("Tab");
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-quick-view-close");
+
+    await page.keyboard.press("Escape");
+    await expect(quickView).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(deliveryId);
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const desktopRow = page.locator('[id^="operator-delivery-desktop-"]').first();
+    const desktopId = await desktopRow.getAttribute("id");
+    await desktopRow.focus();
+    await page.keyboard.press("Enter");
+    await expect(quickView).toBeVisible();
+
+    await page.getByTestId("operator-detail-back").click();
+    await expect(quickView).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(desktopId);
   });
 
 });

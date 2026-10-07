@@ -57,6 +57,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:deliveries, [])
       |> assign(:deliveries_page_meta, empty_page_meta())
       |> assign(:selected_delivery, nil)
+      |> assign(:quick_view_focus_return_id, nil)
       |> assign(:timeline_events, [])
       |> assign(:suppression_state, nil)
       |> assign(:suppression_count, nil)
@@ -263,9 +264,23 @@ defmodule MailglassAdmin.OperatorLive do
      |> assign(:provider_options, load_provider_options(normalized))}
   end
 
-  def handle_event("select_delivery", %{"id" => delivery_id}, socket) do
+  def handle_event("select_delivery", %{"id" => delivery_id} = params, socket) do
+    allowed_focus_ids = [
+      "operator-delivery-desktop-#{delivery_id}",
+      "operator-delivery-mobile-#{delivery_id}"
+    ]
+
+    requested_focus_id = params["focus_return_id"] || params["focus-return-id"]
+
+    focus_return_id =
+      if requested_focus_id in allowed_focus_ids,
+        do: requested_focus_id,
+        else: nil
+
     {:noreply,
-     push_patch(socket,
+     socket
+     |> assign(:quick_view_focus_return_id, focus_return_id)
+     |> push_patch(
        to:
          build_path(
            socket.assigns.base_path,
@@ -818,6 +833,17 @@ defmodule MailglassAdmin.OperatorLive do
               <% end %>
 
               <%!-- Quick view (peek) overlay: a record is focused and we are NOT in Full detail. --%>
+              <span
+                :if={not @full_detail? and (@selected_delivery != nil or @detail_error != nil)}
+                data-testid="operator-quick-view-focus-return"
+                data-focus-return-id={@quick_view_focus_return_id}
+                phx-mounted={JS.focus(to: "#operator-quick-view-close")}
+                phx-remove={
+                  if @quick_view_focus_return_id,
+                    do: JS.focus(to: "##{@quick_view_focus_return_id}"),
+                    else: %JS{}
+                }
+              />
               <QuickView.quick_view
                 :if={not @full_detail? and (@selected_delivery != nil or @detail_error != nil)}
                 delivery={@selected_delivery}
@@ -857,6 +883,7 @@ defmodule MailglassAdmin.OperatorLive do
                 }
                 position={record_position(@deliveries, @selected_delivery, @deliveries_page_meta)}
                 keyboard?={not @replay_modal_open?}
+                focus_return_id={@quick_view_focus_return_id}
               />
 
               <%!-- Focus trap: phx-mounted moves focus into the modal on open; phx-remove returns focus to trigger on close --%>
