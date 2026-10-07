@@ -1,31 +1,31 @@
 ---
 gsd_state_version: "1.0"
-milestone: v2.8
-milestone_name: Truthful Repo
-status: Awaiting next milestone
-stopped_at: Repository disposition complete; CTRL-03 transcribed; WINDOWS ledger triaged; awaiting natural CTRL-05 cron and independently wanted release for CTRL-02
-last_updated: "2026-09-19T19:15:02.205Z"
-last_activity: 2026-09-19
-last_activity_desc: Milestone v2.8 completed and archived
-state_head: 7e43abe8acb1f309d20a50a55677507f046b1d71
+milestone: v2.9
+milestone_name: Operator, Preview & Email UI Refinement
+current_phase: 168
+current_phase_name: Shared Workspace and Usable Baseline
+status: planning
+stopped_at: "Approved v2.9 initialized with 28 requirements across Phases 168–173. Impeccable init complete; code-first and equal engineer/operator priority confirmed. Next: discuss Phase 168, then UI contract and implementation plan. No UI implementation or current runtime verification performed. Reconcile the preserved local workspace with merged cleanup before execution."
+last_updated: "2026-10-07T14:22:38.817Z"
+last_activity: 2026-10-07
+state_head: e91db5e2ed86dfae6bc6cbebf625a292fa3df05c
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 10
-  completed_plans: 10
-  percent: 100
-current_phase: null
-current_phase_name: Planning next milestone
+  total_phases: 6
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
+last_activity_desc: Owner approved v2.9 scope, 28 requirements, and six-phase roadmap; milestone initialized
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-09-19)
+See: .planning/PROJECT.md (updated 2026-10-07)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Planning the next milestone.
+**Current focus:** v2.9 Operator, Preview & Email UI Refinement — Phase 168 discussion and design contract.
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,12 +39,21 @@ See: .planning/PROJECT.md (updated 2026-09-19)
 
 ## Current Position
 
-Phase: Milestone v2.8 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-09-19 — Milestone v2.8 completed and archived
+Phase: 168 (Shared Workspace and Usable Baseline)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-07
+
+## v2.9 Roadmap Shape
+
+- Phases 168–173 own all 28 approved requirements; implementation has not started.
+- Phase 168 establishes the shared workspace and usable baseline. Outbound, inbound, preview, recipient output, and consistency/evidence follow as recorded in ROADMAP.md.
+- Code-first; equal engineer and support/on-call operator priority; bounded direct visual inspection and existing automated checks.
+- The approved unsubscribe boundary covers truthful GET/invalid/expired pages; interactive browser submission remains deferred.
 
 ## v2.8 Roadmap Shape
+
+Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 restriction does not apply to the approved v2.9 roadmap.
 
 - **Phase 166** — GREEN-01..05 + CTRL-01..05 (10 requirements). First because fixing a false green can
   surface previously-unrun failures (GREEN-01 exposes 325 never-executed admin tests; all 510 pass
@@ -435,14 +444,12 @@ Last activity: 2026-09-19 — Milestone v2.8 completed and archived
 
 ## Session Continuity
 
-Last session: 2026-09-19T14:10:26.482Z
-Stopped at: Repository disposition complete; CTRL-03 transcribed; WINDOWS ledger triaged; awaiting natural CTRL-05 cron and independently wanted release for CTRL-02
-partial, waiting only on post-merge observations that cannot be forced. Earlier context: the
-consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
-archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
-current policy. No v2.7 lifecycle work is pending.
-Resume file: None
+Last session: 2026-10-07T14:21:33.803Z
+Stopped at: Approved v2.9 initialized with 28 requirements across Phases 168–173. Impeccable init complete; code-first and equal engineer/operator priority confirmed. Next: discuss Phase 168, then UI contract and implementation plan. No UI implementation or current runtime verification performed. Reconcile the preserved local workspace with merged cleanup before execution.
+Resume file: .planning/research/v2.9/SCOPE.md
 
 ## Operator Next Steps
 
-- Start the next milestone with $gsd-new-milestone
+- Run `$gsd-discuss-phase 168`, then establish its UI design contract and implementation plan. Reuse the approved scope and Impeccable product context.
+- Before executing, safely reconcile this preserved local workspace with the cleanup source already merged and verified in the prior session; retain unrelated local changes and identify the preview checkout.
+- Capture a current rendered baseline before UI changes. Milestone initialization contains no new browser, email-client, product-test, or CI verification claim.

@@ -8,6 +8,20 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
+## Current Milestone: v2.9 Operator, Preview & Email UI Refinement
+
+**Goal:** Make Mailglass's existing operator, author, and recipient journeys coherent, readable, responsive, and reviewable with clear actions and truthful outcomes.
+
+**Target features:**
+- A shared workspace with consistent navigation, account context, typography, controls, themes, accessibility, domain language, and purposeful motion.
+- Complete outbound and inbound investigation/recovery flows with exact evidence and supported actions.
+- Usable developer preview plus public email components, sender-branded examples, plaintext, and truthful built-in unsubscribe GET pages.
+- Current shared-pattern guidance, bounded automated and rendered acceptance, and a working feedback preview with passing required CI on the delivery candidate.
+
+**Planning contract:** Approved 2026-10-07: 28 requirements across Phases 168–173. Start with Phase 168 discussion, UI design contract, and implementation planning. Engineers and support/on-call operators are equal primary Admin audiences. The owner selected code-first; use Impeccable and relevant Kowalski guidance with the existing LiveView/HEEx stack and brand. [Scope](research/v2.9/SCOPE.md), [requirements](REQUIREMENTS.md), and [roadmap](ROADMAP.md) are canonical for this milestone; root [PRODUCT.md](../PRODUCT.md) owns durable product context.
+
+**Boundaries:** Refine existing capabilities, preserve authorization/account/replay/rendering/protocol contracts, and defer an interactive browser unsubscribe submission journey. Reuse source-backed research and existing checks with targeted investigation as needed. The milestone label does not request a package version or authorize publication or merge. Before execution, reconcile the preserved local workspace with the previously merged cleanup source and record the checkout served by the preview.
+
 ## Current State
 
 **v2.7 Repository Stewardship & Operational Hygiene SHIPPED and ARCHIVED 2026-09-15.** The bounded
@@ -24,7 +38,7 @@ requirement gaps. Artifacts are archived to `.planning/milestones/v2.8-ROADMAP.m
 
 The close is an `override_closeout`: 28 legacy audit records were acknowledged as historical deferred
 items at close, and remain disclosed in `.planning/STATE.md`. No personal data is recorded in this
-closeout. The next milestone has not yet been defined.
+closeout. The approved next milestone is v2.9, described above.
 
 It expanded no product surface, redesigned no architecture, overhauled no CI for speed, and forced no Hex
 release. Package versions were unchanged *at its close* at `mailglass` 2.5.0 / `mailglass_admin` 2.5.0 /
@@ -190,10 +204,16 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 
 ## Active Requirements
 
-**v2.8 Truthful Repo is open.** Its committed requirements are defined in
-`.planning/REQUIREMENTS.md` and mapped to phases in `.planning/ROADMAP.md`; the supporting evidence
-for every one of them is `.planning/research/v2.8/FINDINGS.md`. The 16 v2.7 requirements are archived
-and validated in `.planning/milestones/v2.7-REQUIREMENTS.md`.
+**v2.9 Operator, Preview & Email UI Refinement is active for planning.** The 28 approved requirements are defined in [REQUIREMENTS.md](REQUIREMENTS.md) and each maps to one phase in [ROADMAP.md](ROADMAP.md):
+
+- UXF-01–08: shared workspace and interaction (Phase 168).
+- OUTUX-01–05: outbound investigation and recovery (Phase 169).
+- INUX-01–04: inbound investigation and recovery (Phase 170).
+- PRVUX-01–04: developer preview (Phase 171).
+- MAILUX-01–04: recipient output and built-in pages (Phase 172).
+- UIQ-01–03: consistency, evidence, and delivery (Phase 173).
+
+No v2.9 requirement has been implemented or verified yet. The v2.8 and v2.7 requirements remain in their milestone archives.
 
 ### v2.7 scope record (archived)
 
@@ -1102,7 +1122,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-09-19 after archiving v2.8 Truthful Repo. All 17 requirements are verified; the next milestone has not yet been defined.*
+*Last updated: 2026-10-07 after activating the approved v2.9 Operator, Preview & Email UI Refinement milestone: 28 requirements, Phases 168–173; implementation not started.*
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
