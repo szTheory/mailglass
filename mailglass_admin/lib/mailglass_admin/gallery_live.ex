@@ -196,6 +196,12 @@ defmodule MailglassAdmin.GalleryLive do
     """
   end
 
+  defp render_specimen(%{component: :timestamp} = assigns) do
+    ~H"""
+    <Components.timestamp at={@assigns_map[:at]} />
+    """
+  end
+
   defp render_specimen(%{component: :badge} = assigns) do
     ~H"""
     <Components.badge variant={@assigns_map[:variant]} />
@@ -624,6 +630,18 @@ defmodule MailglassAdmin.GalleryLive do
      %{kind: :success, message: "Webhook replayed: event recorded in the ledger"}},
     {:flash, "warning-kind",
      %{kind: :warning, message: "Draft only — Mailable has no preview_props/0 defined"}},
+    {:flash, "long-error-copy",
+     %{
+       kind: :error,
+       message:
+         "Delivery status could not be refreshed because the provider response exceeded the available inspection window. Refresh the page to try again, then contact your Mailglass host administrator if the same recorded failure remains unavailable. " <>
+           String.duplicate("unbroken-recovery-evidence-", 8)
+     }},
+
+    # Plan 168-03: missing time must render a truthful fallback and remain testable
+    # in the browser gallery without overriding live page content.
+    {:timestamp, "unavailable", %{at: nil}},
+    {:timestamp, "recorded", %{at: ~U[2026-10-07 20:06:18Z]}},
 
     # STATE-LD-04: badge — warning and stub
     {:badge, "warning", %{variant: :warning}},
@@ -1203,7 +1221,7 @@ defmodule MailglassAdmin.GalleryLive do
      %{
        kind: :stale,
        title: "Data may be out of date",
-       body: "Showing Deliveries as of 14:32. Refresh to load the latest."
+       body: "This view may be out of date. Refresh to check for updates."
      }},
 
     # Phase 113: deliveries_list — table/cards populated state (DATA-01)
@@ -1381,6 +1399,7 @@ defmodule MailglassAdmin.GalleryLive do
   defp component_label(:icon), do: "icon"
   defp component_label(:logo), do: "logo"
   defp component_label(:flash), do: "flash"
+  defp component_label(:timestamp), do: "timestamp"
   defp component_label(:badge), do: "badge"
   defp component_label(:status_badge), do: "status_badge"
   defp component_label(:nav_link), do: "nav_link"
