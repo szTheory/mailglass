@@ -37,9 +37,21 @@
 - ✅ **v2.8 Truthful Repo** — Phases 166-167 (shipped 2026-09-19) — [archive](milestones/v2.8-ROADMAP.md)
 - 🚧 **v2.9 Operator, Preview & Email UI Refinement** — Phases 168–173 (approved 2026-10-07)
 
+## Archived phases
+
+<details>
+<summary>✅ v2.8 Truthful Repo (Phases 166-167) — SHIPPED 2026-09-19</summary>
+
+- [x] Phase 166: Earned Greens and Controls That Can Pass (6/6 plans) — completed 2026-09-19
+- [x] Phase 167: Truthful Documentation and the Standing Control (4/4 plans) — completed 2026-09-19
+
+Full phase detail: [milestones/v2.8-ROADMAP.md](milestones/v2.8-ROADMAP.md) · phase artifacts: `milestones/v2.8-phases/`
+
+</details>
+
 ## v2.9 — Operator, Preview & Email UI Refinement
 
-**Status:** Approved 2026-10-07. Active for phase discussion and planning; implementation and runtime verification have not started.
+**Status:** Approved 2026-10-07. Phase 168 execution is underway; plan summaries record completed work and verification evidence.
 **Granularity:** Standard, from [config.json](config.json). Phase IDs continue after the archived v2.8 milestone at 168.
 
 ## Overview
@@ -76,10 +88,10 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
   4. A user can operate shared controls and overlays by keyboard or touch, understand their applicable default/focus/hover/pressed/selected/disabled/busy/validation states, and perceive status beyond color with correct focus containment and return.
   5. A user can choose one clear Light, Dark, or System preference across navigation and reload, see OS changes while System is selected, and receive prompt feedback without blocking or repeated motion, including under reduced motion and LiveView updates.
 
-**Plans**: 4 plans
+**Plans**: 1/4 plans executed
 Plans:
 **Wave 1**
-- [ ] 168-01-PLAN.md — Reconcile the preserved workspace, capture the served baseline, and make Account switching work in shared navigation.
+- [x] 168-01-PLAN.md — Reconcile the preserved workspace, capture the served baseline, and make Account switching work in shared navigation.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 168-02-PLAN.md — Make Health and Deliveries readable with coherent type, filters, copy, and exact evidence.
@@ -182,21 +194,9 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 168. Shared Workspace and Usable Baseline | 0/TBD | Not started | — |
+| 168. Shared Workspace and Usable Baseline | 1/4 | In Progress | — |
 | 169. Outbound Investigation and Recovery | 0/TBD | Not started | — |
 | 170. Inbound Investigation and Recovery | 0/TBD | Not started | — |
 | 171. Developer Preview | 0/TBD | Not started | — |
 | 172. Recipient Output and Built-in Pages | 0/TBD | Not started | — |
 | 173. Consistency and Delivery Evidence | 0/TBD | Not started | — |
-
-## Archived phases
-
-<details>
-<summary>✅ v2.8 Truthful Repo (Phases 166-167) — SHIPPED 2026-09-19</summary>
-
-- [x] Phase 166: Earned Greens and Controls That Can Pass (6/6 plans) — completed 2026-09-19
-- [x] Phase 167: Truthful Documentation and the Standing Control (4/4 plans) — completed 2026-09-19
-
-Full phase detail: [milestones/v2.8-ROADMAP.md](milestones/v2.8-ROADMAP.md) · phase artifacts: `milestones/v2.8-phases/`
-
-</details>

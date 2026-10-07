@@ -163,3 +163,7 @@ No new endpoint, authorization path, schema change, or security boundary was int
 ---
 *Phase: 168-shared-workspace-and-usable-baseline*
 *Completed: 2026-10-07*
+
+## Orchestrator follow-up
+
+The roadmap tracking issue was resolved after this plan returned: moved the unchanged archived milestone block before the active milestone, then `roadmap.update-plan-progress 168 01 complete` succeeded (1/4, In Progress). Strict state validation passed. Wave-post schema/UI gates passed; codebase drift was skipped because no STRUCTURE.md exists. Health tooltip overflow is carried into Plan 168-02 readability work.
