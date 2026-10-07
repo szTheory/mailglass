@@ -362,16 +362,16 @@ defmodule MailglassAdmin.Components do
   def theme_picker(assigns) do
     ~H"""
     <fieldset
-      class="inline-flex min-h-11 items-center gap-xs rounded-box border border-base-300 bg-base-200 p-xs text-label"
+      class="flex min-h-11 flex-wrap items-center gap-xs rounded-box border border-base-300 bg-base-200 p-xs text-label"
       disabled={@disabled}
       {@rest}
     >
-      <legend class="sr-only">Theme</legend>
+      <legend class="px-xs text-label font-bold text-base-content">Appearance</legend>
       <label
         :for={option <- theme_options()}
         title={option.label}
         class={[
-          "mg-focus-ring-within mg-state-layer relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-field px-sm",
+          "mg-focus-ring-within mg-state-layer relative flex min-h-11 min-w-11 items-center justify-center gap-xs rounded-field px-sm",
           theme_option_class(@selected == option.theme, @disabled)
         ]}
       >
@@ -391,8 +391,8 @@ defmodule MailglassAdmin.Components do
           phx-value-theme={if @event, do: option.value}
           class="absolute inset-0 m-0 cursor-pointer appearance-none rounded-field opacity-0 disabled:cursor-default"
         />
-        <.icon name={option.icon} class="pointer-events-none h-5 w-5" />
-        <span class="sr-only">{option.label}</span>
+        <.icon name={option.icon} class="pointer-events-none h-5 w-5 shrink-0" />
+        <span class="pointer-events-none">{option.label}</span>
       </label>
     </fieldset>
     """

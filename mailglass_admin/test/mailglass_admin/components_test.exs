@@ -477,7 +477,11 @@ defmodule MailglassAdmin.ComponentsTest do
     test "theme_picker system selected renders fieldset legend and exactly three radio inputs" do
       html = render_component(&Components.theme_picker/1, selected: :system)
 
-      assert_all(html, ["<fieldset", "<legend", "Theme", "System", "Light", "Dark"])
+      assert_all(html, ["<fieldset", "<legend", "Appearance", "System", "Light", "Dark"])
+      assert html =~ ~r/<legend[^>]*>Appearance<\/legend>/
+      assert html =~ ~r/<span class="pointer-events-none">System<\/span>/
+      assert html =~ ~r/<span class="pointer-events-none">Light<\/span>/
+      assert html =~ ~r/<span class="pointer-events-none">Dark<\/span>/
       assert_all(html, ["hero-window", "hero-sun", "hero-moon"])
 
       assert_all(html, [
@@ -488,6 +492,7 @@ defmodule MailglassAdmin.ComponentsTest do
 
       assert radio_count(html) == 3
       assert html =~ ~r/value="system"[^>]*checked/
+      assert Regex.scan(~r/\bchecked\b/, html) |> length() == 1
     end
 
     test "theme_picker light selected checks the light radio" do
