@@ -6,7 +6,7 @@
     {
       "number": "168",
       "name": "Shared Workspace and Usable Baseline",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "169",
@@ -39,5 +39,5 @@
     "label": "Advance to the next step",
     "reason": "Phase 168 of 6 · 0% · executing"
   },
-  "updated_at": "2026-10-07T19:09:27.686Z"
+  "updated_at": "2026-10-07T20:03:46.826Z"
 }
