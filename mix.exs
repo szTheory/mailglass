@@ -139,7 +139,6 @@ defmodule Mailglass.MixProject do
         :otel_span,
         Mjml,
         :gen_smtp_client,
-        Sigra,
         # Premailex transitively references Meeseeks.Error in an optional
         # HTML-parser integration. Meeseeks isn't a mailglass dep; suppress
         # the bare-reference warning to keep test --warnings-as-errors clean.
@@ -176,7 +175,6 @@ defmodule Mailglass.MixProject do
       {:opentelemetry, "~> 1.7", optional: true},
       {:mjml, "~> 6.0", optional: true},
       {:gen_smtp, "~> 1.3", optional: true},
-      {:sigra, "~> 1.0", optional: true},
       # Test only
       {:stream_data, "~> 1.3", only: [:test]},
       {:mox, "~> 1.2", only: [:test]},

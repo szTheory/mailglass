@@ -28,9 +28,6 @@ defmodule Mailglass.OptionalDeps do
     by `Mailglass.TemplateEngine.MJML` when adopters opt into MJML.
   - `Mailglass.OptionalDeps.GenSmtp` — gates `{:gen_smtp, "~> 1.3"}`. Used by
     `mailglass_inbound` for SMTP relay ingress (v0.5+).
-  - `Mailglass.OptionalDeps.Sigra` — gates `{:sigra, "~> 0.2"}`. The module is
-    **conditionally compiled**: it only exists when `:sigra` is loaded.
-    Callers must guard via `Code.ensure_loaded?(Mailglass.OptionalDeps.Sigra)`.
 
   ## Lint Enforcement
 

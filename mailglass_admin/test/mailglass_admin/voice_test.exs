@@ -25,7 +25,7 @@ defmodule MailglassAdmin.VoiceTest do
 
   # Data-driven banned-word list (D-09, COPY-LD-09). Each entry is checked
   # case-insensitively against script-stripped HTML on every surface.
-  @banned_words ~w[oops whoops "uh oh" "something went wrong"]
+  @banned_words ["oops", "whoops", "uh oh", "something went wrong"]
 
   describe "banned exclamations (05-UI-SPEC §Copywriting Contract)" do
     test "are absent from rendered UI", %{conn: conn} do
