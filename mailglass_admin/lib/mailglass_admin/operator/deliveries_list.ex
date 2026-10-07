@@ -104,7 +104,13 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         <% end %>
       <% true -> %>
         <%!-- Desktop table (>=768px) --%>
-        <div class="hidden md:block overflow-x-auto" data-testid="operator-deliveries-table">
+        <div
+          class="hidden md:block overflow-x-auto"
+          data-testid="operator-deliveries-table"
+          role="region"
+          aria-label="Delivery records"
+          tabindex="0"
+        >
           <table class="table w-full table-fixed">
             <thead>
               <tr>
@@ -204,22 +210,22 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                   />
                 </div>
 
-                <%!-- Recipient (masked) --%>
+                <%!-- The list masks recipient addresses; selecting the Delivery opens its exact detail. --%>
                 <div class="min-w-0">
                   <span class="text-label font-bold uppercase text-secondary">Recipient</span>
                   <p
-                    class="min-w-0 truncate text-body text-base-content"
+                    class="min-w-0 break-words text-body text-base-content"
                     title={Components.mask_recipient(delivery.recipient)}
                   >
                     {Components.mask_recipient(delivery.recipient)}
                   </p>
                 </div>
 
-                <%!-- Delivery ID with truncate+title --%>
+                <%!-- Keep the exact stable ID visible and copyable without hover. --%>
                 <div class="min-w-0">
                   <span class="text-label font-bold uppercase text-secondary">ID</span>
                   <p
-                    class="mono min-w-0 truncate text-label text-secondary"
+                    class="mono min-w-0 break-all text-label text-secondary"
                     title={delivery.id}
                   >
                     {delivery.id}
@@ -231,7 +237,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                   <div :if={@show_account?} class="min-w-0">
                     <span class="font-bold uppercase">Account</span>
                     <p
-                      class="min-w-0 truncate"
+                      class="min-w-0 break-words"
                       title={Accounts.title(delivery.tenant_id, @account_labels)}
                     >
                       {Accounts.label(delivery.tenant_id, @account_labels)}
@@ -241,7 +247,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                   <%!-- Provider --%>
                   <div>
                     <span class="font-bold uppercase">Provider</span>
-                    <p class="mono min-w-0 truncate" title={delivery.provider}>
+                    <p class="mono min-w-0 break-all" title={delivery.provider}>
                       {String.upcase(delivery.provider || "unknown")}
                     </p>
                   </div>
@@ -249,7 +255,9 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                   <%!-- Timestamp --%>
                   <div>
                     <span class="font-bold uppercase">Updated</span>
-                    <p><Components.timestamp at={delivery.last_event_at} class="whitespace-nowrap" /></p>
+                    <p>
+                      <Components.timestamp at={delivery.last_event_at} class="whitespace-nowrap" />
+                    </p>
                   </div>
                 </div>
               </button>

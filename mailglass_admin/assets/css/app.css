@@ -116,13 +116,13 @@
   --spacing-3xl: 64px;
 
   /* Type sizes — paired with line-heights. Weight is set per-element (400/700). */
-  --text-label: 12px;
-  --text-label--line-height: 1.5;
-  --text-body: 14px;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.4;
+  --text-body: 1rem;
   --text-body--line-height: 1.5;
-  --text-heading: 20px;
+  --text-heading: 1.25rem;
   --text-heading--line-height: 1.2;
-  --text-display: 28px;
+  --text-display: 1.75rem;
   --text-display--line-height: 1.2;
 
   /* Elevation — borders-first. Ink (#0D1B2A) tinted so shadow reads as
@@ -282,9 +282,9 @@
 .mg-stat-card-tooltip {
   position: absolute;
   inset-block-start: calc(100% - var(--spacing-xs));
-  inset-inline-start: var(--spacing-md);
+  inset-inline-start: 0;
   z-index: var(--z-dropdown);
-  max-width: min(20rem, calc(100vw - 2rem));
+  max-width: min(20rem, 100%);
   width: max-content;
   border: 1px solid var(--color-base-300);
   border-radius: var(--radius-field);

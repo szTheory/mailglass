@@ -296,7 +296,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "m****@e******.com"
       assert html =~ ~s(value="168" selected)
       refute html =~ "not-listed"
-      refute html =~ "not-real"
+      # Inspect the filter's option selection directly: the full LiveView document
+      # includes the Phoenix client bundle, which contains this test value as code.
+      document = Floki.parse_document!(html)
+      assert Floki.find(document, "#filters_event option[value='not-real']") == []
     end
 
     test "invalid submitted filters render recovery copy and do not push a patch", %{
@@ -479,7 +482,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, view, _html} =
         live(
           conn,
-          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id, "full" => "1"})
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "delivery_id" => selected_delivery.id,
+            "full" => "1"
+          })
         )
 
       detail_html = view |> element("#delivery-detail-#{selected_delivery.id}") |> render()
@@ -510,7 +517,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, view, _html} =
         live(
           conn,
-          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id, "full" => "1"})
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "delivery_id" => selected_delivery.id,
+            "full" => "1"
+          })
         )
 
       view
@@ -576,7 +587,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       })
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
 
       html = render(view)
 
@@ -628,7 +642,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {delivery, webhook_event} = insert_exact_replay_fixture!("msg-exact-ui", 401)
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -664,7 +681,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       insert_linked_event!(delivery, second, "seed-many-2")
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -706,7 +726,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       })
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -731,7 +754,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {delivery, webhook_event} = insert_exact_replay_fixture!("msg-stale-ui", 601)
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -752,7 +778,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {delivery, _webhook_event} = insert_exact_replay_fixture!("msg-success-ui", 701)
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -791,7 +820,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       })
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -1242,7 +1274,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert_patch(
         view,
-        operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries", "window_hours" => "168"})
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "view" => "deliveries",
+          "window_hours" => "168"
+        })
       )
     end
 

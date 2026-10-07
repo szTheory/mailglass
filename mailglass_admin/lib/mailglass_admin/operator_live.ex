@@ -163,7 +163,12 @@ defmodule MailglassAdmin.OperatorLive do
         view == "deliveries" or not is_nil(delivery_id) ->
           {:noreply,
            socket
-           |> assign_delivery_state(filter_params, delivery_id, full?, support_focus?(support_state))
+           |> assign_delivery_state(
+             filter_params,
+             delivery_id,
+             full?,
+             support_focus?(support_state)
+           )
            |> close_replay_modal()}
 
         true ->
@@ -439,7 +444,8 @@ defmodule MailglassAdmin.OperatorLive do
         {:noreply, put_flash(socket, :error, "Replay is unavailable for this delivery.")}
 
       {:error, :target_required} ->
-        {:noreply, put_flash(socket, :error, "Choose one webhook target before confirming replay.")}
+        {:noreply,
+         put_flash(socket, :error, "Choose one webhook target before confirming replay.")}
 
       {:error, {:auth, message}} ->
         {:noreply, put_flash(socket, :error, message)}
@@ -505,7 +511,7 @@ defmodule MailglassAdmin.OperatorLive do
           <div data-testid="operator-overview" class="grid gap-lg">
             <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
               <div data-testid="operator-overview-health" class="grid gap-md">
-                <div class="grid gap-md sm:grid-cols-3">
+                <div class="grid gap-md lg:grid-cols-3">
                   <.link
                     patch={
                       build_path(
@@ -709,8 +715,33 @@ defmodule MailglassAdmin.OperatorLive do
                   <% end %>
                 </div>
               <% else %>
-                <%!-- LIST PAGE: filters + optional support-focus evidence + full-width list.
+                <%!-- LIST PAGE: delivery collection first, with filters/supporting evidence secondary.
                     The Quick view overlay (below) sits on top when a record is focused. --%>
+                <section data-testid="operator-master-detail" class="mt-6">
+                  <aside
+                    data-testid="operator-deliveries-list-card"
+                    class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+                  >
+                    <div class="border-b border-base-300 px-4 py-3">
+                      <h2 class="text-heading font-bold text-base-content">Recent deliveries</h2>
+                    </div>
+                    <DeliveriesList.deliveries_list
+                      deliveries={@deliveries}
+                      page_meta={@deliveries_page_meta}
+                      account_labels={@account_labels}
+                      show_account?={false}
+                      previous_page_path={
+                        pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
+                      }
+                      next_page_path={
+                        pagination_path(@base_path, @filter_params, @dark_chrome, :next)
+                      }
+                      selected_delivery={@selected_delivery}
+                      filters_active?={filters_active?(@filter_params)}
+                    />
+                  </aside>
+                </section>
+
                 <section
                   data-testid="operator-filters"
                   class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
@@ -779,29 +810,6 @@ defmodule MailglassAdmin.OperatorLive do
                     suppression_count={@suppression_count}
                   />
                 </div>
-
-                <section data-testid="operator-master-detail" class="mt-6">
-                  <aside
-                    data-testid="operator-deliveries-list-card"
-                    class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
-                  >
-                    <div class="border-b border-base-300 px-4 py-3">
-                      <h2 class="text-label uppercase font-bold text-secondary">Recent deliveries</h2>
-                    </div>
-                    <DeliveriesList.deliveries_list
-                      deliveries={@deliveries}
-                      page_meta={@deliveries_page_meta}
-                      account_labels={@account_labels}
-                      show_account?={false}
-                      previous_page_path={
-                        pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
-                      }
-                      next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
-                      selected_delivery={@selected_delivery}
-                      filters_active?={filters_active?(@filter_params)}
-                    />
-                  </aside>
-                </section>
               <% end %>
 
               <%!-- Quick view (peek) overlay: a record is focused and we are NOT in Full detail. --%>
@@ -821,10 +829,26 @@ defmodule MailglassAdmin.OperatorLive do
                 }
                 close_path={build_path_with_view(@base_path, @filter_params, @dark_chrome)}
                 previous_path={
-                  neighbor_path("prev", @deliveries, @selected_delivery, @base_path, @filter_params, @dark_chrome, false)
+                  neighbor_path(
+                    "prev",
+                    @deliveries,
+                    @selected_delivery,
+                    @base_path,
+                    @filter_params,
+                    @dark_chrome,
+                    false
+                  )
                 }
                 next_path={
-                  neighbor_path("next", @deliveries, @selected_delivery, @base_path, @filter_params, @dark_chrome, false)
+                  neighbor_path(
+                    "next",
+                    @deliveries,
+                    @selected_delivery,
+                    @base_path,
+                    @filter_params,
+                    @dark_chrome,
+                    false
+                  )
                 }
                 position={record_position(@deliveries, @selected_delivery, @deliveries_page_meta)}
                 keyboard?={not @replay_modal_open?}
@@ -1081,7 +1105,9 @@ defmodule MailglassAdmin.OperatorLive do
     deliveries = deliveries_page.entries
     selected_delivery = find_selected_delivery(deliveries, selected_delivery_id)
 
-    replay_targets = if full?, do: load_replay_targets(filter_params, selected_delivery), else: nil
+    replay_targets =
+      if full?, do: load_replay_targets(filter_params, selected_delivery), else: nil
+
     replay_history = if full?, do: load_replay_history(filter_params, selected_delivery), else: []
     timeline = if full?, do: load_timeline(filter_params, selected_delivery), else: []
     suppression = if full?, do: load_suppression(filter_params, selected_delivery), else: nil
@@ -1278,7 +1304,15 @@ defmodule MailglassAdmin.OperatorLive do
   defp record_id(%{id: id}), do: id
   defp record_id(_record), do: nil
 
-  defp neighbor_path(dir, deliveries, selected_delivery, base_path, filter_params, dark_chrome, full?) do
+  defp neighbor_path(
+         dir,
+         deliveries,
+         selected_delivery,
+         base_path,
+         filter_params,
+         dark_chrome,
+         full?
+       ) do
     case neighbor_id(deliveries, selected_delivery, dir) do
       nil -> nil
       id -> detail_path(base_path, filter_params, id, dark_chrome, full?)

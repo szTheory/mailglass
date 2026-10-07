@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 1
+open_count: 0
 waived_count: 8
-fixed_count: 28
+fixed_count: 29
 total_count: 37
-last_updated: 2026-10-07T19:07:23.109Z
+last_updated: 2026-10-07T19:27:18.127Z
 ---
 
 # Broken Windows Ledger
@@ -51,7 +51,7 @@ last_updated: 2026-10-07T19:07:23.109Z
 | 34 | 164 | deviation | test/scripts/phase_164_closeout_test.exs |  | Consolidated argv, environment, and remote-relation assertions to preserve the five-test repository-attack contract | fixed |  | 2026-09-12T03:12:39.474Z | 2026-09-12T03:14:01.534Z |
 | 35 | 165 | deviation | test/support/suite_floor.ex | 249 | Extended installed-boundary exclusion compatibility contracts for Phase 165 | fixed |  | 2026-09-13T16:27:17.139Z | 2026-09-13T16:27:42.458Z |
 | 36 | 165 | deviation | .planning/STATE.md |  | state.update-progress undercounted completed predecessor phases and duplicated decision prefixes required normalization | fixed |  | 2026-09-13T18:29:48.613Z | 2026-09-13T18:30:03.302Z |
-| 37 | 168 | unmet-truth | mailglass_admin/lib/mailglass_admin/components.ex |  | Responsive Health page has 1px/164px document overflow at 320px/768px from the existing invisible stat-card tooltip; correct in overview/stat-card styling work. | open |  | 2026-10-07T19:07:23.109Z |  |
+| 37 | 168 | unmet-truth | mailglass_admin/lib/mailglass_admin/components.ex |  | Responsive Health page has 1px/164px document overflow at 320px/768px from the existing invisible stat-card tooltip; correct in overview/stat-card styling work. | fixed |  | 2026-10-07T19:07:23.109Z | 2026-10-07T19:27:18.127Z |
 
 ````json
 [
@@ -494,10 +494,10 @@ last_updated: 2026-10-07T19:07:23.109Z
     "file": "mailglass_admin/lib/mailglass_admin/components.ex",
     "line": null,
     "description": "Responsive Health page has 1px/164px document overflow at 320px/768px from the existing invisible stat-card tooltip; correct in overview/stat-card styling work.",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-10-07T19:07:23.109Z",
-    "resolved_at": null,
+    "resolved_at": "2026-10-07T19:27:18.127Z",
     "milestone": "v2.9"
   }
 ]
