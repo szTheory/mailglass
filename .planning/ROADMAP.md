@@ -65,6 +65,7 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
 ## Phase Details
 
 ### Phase 168: Shared Workspace and Usable Baseline
+
 **Goal**: Operators can use a coherent, readable shared workspace for real tasks, and maintainers can reproduce its baseline and improvements.
 **Depends on**: Nothing (first v2.9 phase)
 **Requirements**: UXF-01, UXF-02, UXF-03, UXF-04, UXF-05, UXF-06, UXF-07, UXF-08
@@ -74,11 +75,26 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
   3. A user can read essential information on working screens at narrow and desktop widths and browser zoom, with coherent type/spacing, consistent domain language, and exact technical details available for investigation.
   4. A user can operate shared controls and overlays by keyboard or touch, understand their applicable default/focus/hover/pressed/selected/disabled/busy/validation states, and perceive status beyond color with correct focus containment and return.
   5. A user can choose one clear Light, Dark, or System preference across navigation and reload, see OS changes while System is selected, and receive prompt feedback without blocking or repeated motion, including under reduced motion and LiveView updates.
-**Plans**: TBD
+
+**Plans**: 4 plans
+Plans:
+**Wave 1**
+- [ ] 168-01-PLAN.md — Reconcile the preserved workspace, capture the served baseline, and make Account switching work in shared navigation.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 168-02-PLAN.md — Make Health and Deliveries readable with coherent type, filters, copy, and exact evidence.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 168-03-PLAN.md — Expose persistent appearance choice and clear shared status/control feedback.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 168-04-PLAN.md — Complete accessible Quick view and confirmation behavior with restrained motion and before/after evidence.
+
 **UI hint**: yes
 **Acceptance focus**: Inspect rendered shell, navigation, account selector, typography, and shared controls in representative operator jobs; cover desktop/mobile, light/dark/System, keyboard/touch, zoom, and reduced motion. The inventory accompanies a working visual baseline.
 
 ### Phase 169: Outbound Investigation and Recovery
+
 **Goal**: Operators can investigate outbound mail and take supported exact-target recovery actions with truthful evidence and preserved context.
 **Depends on**: Phase 168
 **Requirements**: OUTUX-01, OUTUX-02, OUTUX-03, OUTUX-04, OUTUX-05
@@ -88,11 +104,13 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
   3. An operator can read recorded provider and event history with exact identifiers and times, and distinguish dispatch from downstream delivery without relying on color or ambiguous status words.
   4. An operator can relate suppression and failed or unmatched webhook evidence to a delivery and find the supported next investigation step without seeing an unavailable repair action promised.
   5. An authorized operator can review one eligible stored replay target and its consequence, confirm it, and distinguish requested work, new work, no change, and failure; denied or stale actions preserve Account scope and action-time authorization.
+
 **Plans**: TBD
 **UI hint**: yes
 **Acceptance focus**: Follow actual Email health → delivery → evidence/recovery handoffs and back navigation. Exercise zero/one/many, long and non-ASCII data, unavailable evidence, permission, busy, and failure states using real controls and rendered forms.
 
 ### Phase 170: Inbound Investigation and Recovery
+
 **Goal**: Operators can explain a received message's routing and perform permitted recovery with truthful outcomes.
 **Depends on**: Phase 168
 **Requirements**: INUX-01, INUX-02, INUX-03, INUX-04
@@ -101,11 +119,13 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
   2. An operator can follow routing and execution evidence and distinguish matched mailbox, no match, failed execution, and missing history without an invented outcome.
   3. An authorized operator can progressively inspect available inbound evidence in a readable view while redaction and reveal permissions still govern what is shown.
   4. An operator can see replay eligibility, confirm a permitted inbound replay, and understand disabled, denied, busy, requested, no-change, and failure results without losing the selected record or Account.
+
 **Plans**: TBD
 **UI hint**: yes
 **Acceptance focus**: Exercise inbound list/detail/evidence/replay as one task, including missing optional inbound support, permission boundaries, keyboard disclosure, mobile layout, and actual outcome feedback.
 
 ### Phase 171: Developer Preview
+
 **Goal**: Email authors can render supported scenarios and inspect their output without confusing preview controls with email-client proof.
 **Depends on**: Phase 168
 **Requirements**: PRVUX-01, PRVUX-02, PRVUX-03, PRVUX-04
@@ -114,11 +134,13 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
   2. An author can edit scenario inputs, render through the supported delivery rendering path, and recover from validation or render failures with useful input intact and stale output clearly identified.
   3. An author can inspect HTML, plaintext, raw output, and headers with usable tab/selection behavior and readable long content without changing supported rendering semantics.
   4. An author can change device framing and preview appearance independently of admin appearance and understand that a browser frame does not establish email-client or dark-mode compatibility.
+
 **Plans**: TBD
 **UI hint**: yes
 **Acceptance focus**: Use rendered inputs and output tabs for valid, invalid, long, and non-ASCII scenarios; inspect narrow/desktop and light/dark/System combinations where applicable, including failure recovery.
 
 ### Phase 172: Recipient Output and Built-in Pages
+
 **Goal**: Authors can produce readable supported transactional output, and recipients can understand its content and the existing unsubscribe page's actual state.
 **Depends on**: Phase 171
 **Requirements**: MAILUX-01, MAILUX-02, MAILUX-03, MAILUX-04
@@ -127,11 +149,13 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
   2. An evaluator can inspect representative existing scenarios with the sender's branding and can tell which examples use public components and which use AtlasDesk's separate HTML renderer; examples demonstrate supported authoring paths.
   3. A recipient can understand the message and essential action in plaintext as well as HTML, with meaningful links and content retained through the supported renderer.
   4. A recipient opening the built-in unsubscribe GET page or an invalid/expired link sees readable, accessible, truthful state and a supported next step, with no claim that GET already unsubscribed them; configured host redirects and the existing protocol POST behavior still work.
+
 **Plans**: TBD
 **UI hint**: yes
 **Acceptance focus**: Inspect public-component and AtlasDesk output separately; use affected HTML/plaintext and browser renders plus existing rendering checks. State which email clients and dark-mode behaviors have not been verified.
 
 ### Phase 173: Consistency and Delivery Evidence
+
 **Goal**: The delivered UI is coherent across slices and can be reviewed and reproduced from a working candidate.
 **Depends on**: Phases 169, 170, 171, 172
 **Requirements**: UIQ-01, UIQ-02, UIQ-03
@@ -139,6 +163,7 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
   1. A maintainer can find delivered shared patterns and applicable states in the existing gallery/Storybook and current design-system guidance, with clear token ownership and no obsolete rule competing with the shipped pattern.
   2. A maintainer can repeat focused existing checks and inspect source-identified before/after renders of changed primary flows and adverse states, with browser, email-client, and historical-score evidence clearly distinguished.
   3. The owner can open a documented working preview of the completed milestone and review a concise task-based walkthrough; the delivery candidate has passing required CI, current generated assets, committed task-owned changes, and disposed or explicitly retained temporary artifacts/services.
+
 **Plans**: TBD
 **UI hint**: yes
 **Acceptance focus**: Confirm cross-slice handoffs, mounted assets and custom paths, gallery/Storybook parity, a bounded render set, and the existing PR/required-check process. This phase does not authorize an automatic merge or package publication.
