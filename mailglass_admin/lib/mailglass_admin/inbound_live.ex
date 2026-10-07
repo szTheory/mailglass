@@ -495,6 +495,10 @@ defmodule MailglassAdmin.InboundLive do
       inbound_available?={@inbound_available?}
       dark_chrome={@dark_chrome}
       theme_choice={@theme_choice}
+      selected_tenant_id={@selected_tenant_id}
+      tenant_options={@tenant_options}
+      account_labels={@account_labels}
+      page_uri={@page_uri}
       title="Inbound records"
       subtitle="See why an InboundMessage routed the way it did — execution timeline, routing trace, and raw evidence."
       flash={@flash}

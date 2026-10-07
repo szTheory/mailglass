@@ -486,6 +486,10 @@ defmodule MailglassAdmin.OperatorLive do
       inbound_available?={@inbound_available?}
       dark_chrome={@dark_chrome}
       theme_choice={@theme_choice}
+      selected_tenant_id={@selected_tenant_id}
+      tenant_options={@tenant_options}
+      account_labels={@account_labels}
+      page_uri={@page_uri}
       title={if @view == :overview, do: "Email health", else: "Deliveries"}
       subtitle={page_subtitle(@view)}
       flash={@flash}

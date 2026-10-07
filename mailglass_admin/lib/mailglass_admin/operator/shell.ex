@@ -29,6 +29,7 @@ defmodule MailglassAdmin.Operator.Shell do
 
   alias MailglassAdmin.AdminShell
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.Accounts
   alias MailglassAdmin.SurfaceNav
   alias MailglassAdmin.Theme
 
@@ -165,6 +166,10 @@ defmodule MailglassAdmin.Operator.Shell do
   attr(:inbound_available?, :boolean, default: false)
   attr(:dark_chrome, :boolean, default: false)
   attr(:theme_choice, :atom, values: [:system, :light, :dark], default: :system)
+  attr(:selected_tenant_id, :string, default: nil)
+  attr(:tenant_options, :list, default: [])
+  attr(:account_labels, :map, default: %{})
+  attr(:page_uri, :string, default: "/ops/mail")
   attr(:title, :string, required: true)
   attr(:subtitle, :string, default: nil)
   attr(:flash, :map, default: %{})
@@ -182,6 +187,12 @@ defmodule MailglassAdmin.Operator.Shell do
       main_max_width_class="max-w-7xl"
     >
       <:actions>
+        <.account_context
+          selected_tenant_id={@selected_tenant_id}
+          tenant_options={@tenant_options}
+          account_labels={@account_labels}
+          page_uri={@page_uri}
+        />
         <Components.theme_picker selected={@theme_choice} event="set_theme" />
       </:actions>
       <:sidebar>
@@ -214,6 +225,74 @@ defmodule MailglassAdmin.Operator.Shell do
 
       {render_slot(@inner_block)}
     </AdminShell.shell>
+    """
+  end
+
+  attr(:selected_tenant_id, :string, default: nil)
+  attr(:tenant_options, :list, default: [])
+  attr(:account_labels, :map, default: %{})
+  attr(:page_uri, :string, required: true)
+
+  def account_context(assigns) do
+    assigns =
+      assign(assigns,
+        selected_label: Accounts.label(assigns.selected_tenant_id, assigns.account_labels)
+      )
+
+    ~H"""
+    <div
+      data-testid="operator-account-context"
+      aria-label="Account context"
+      class="flex min-w-0 flex-wrap items-center gap-sm"
+    >
+      <div class="min-w-0">
+        <span class="block text-label font-bold text-secondary">Account</span>
+        <span
+          :if={@selected_tenant_id}
+          data-testid="operator-account-label"
+          class="block max-w-[18rem] break-words text-body font-bold text-base-content"
+        >
+          {@selected_label}
+        </span>
+        <span
+          :if={@selected_tenant_id}
+          data-testid="operator-account-id"
+          class="mono block max-w-[18rem] break-all text-label text-secondary"
+        >
+          {@selected_tenant_id}
+        </span>
+        <span :if={!@selected_tenant_id} class="block text-body text-base-content">
+          Choose Account
+        </span>
+      </div>
+      <details :if={@tenant_options != []} class="relative min-w-0">
+        <summary
+          class="mg-focus-ring flex min-h-11 cursor-pointer list-none items-center rounded-field border border-base-300 bg-base-100 px-md py-sm text-label font-bold text-base-content hover:border-primary"
+          aria-label="Change Account"
+          data-testid="operator-account-switcher"
+        >
+          Change Account
+        </summary>
+        <div
+          role="list"
+          aria-label="Available Accounts"
+          class="mg-layer-dropdown absolute right-0 top-full z-20 mt-xs max-h-64 w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
+        >
+          <.link
+            :for={tenant <- @tenant_options}
+            patch={tenant_switch_path(@page_uri, tenant.id)}
+            aria-current={if tenant.id == @selected_tenant_id, do: "true", else: nil}
+            data-testid="operator-account-option"
+            data-account-id={tenant.id}
+            role="listitem"
+            class="mg-focus-ring flex min-h-11 flex-col justify-center rounded-field px-sm py-xs text-body text-base-content hover:bg-base-200"
+          >
+            <span class="break-words">{tenant.label}</span>
+            <span class="mono break-all text-label text-secondary">{tenant.id}</span>
+          </.link>
+        </div>
+      </details>
+    </div>
     """
   end
 

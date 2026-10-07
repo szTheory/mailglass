@@ -25,9 +25,17 @@ const FLOW_VIEWPORT = { width: 320, height: 900 };
 // Login + open helpers (mirror structural.spec.js exactly — no shared module)
 // ---------------------------------------------------------------------------
 
-async function loginOperator(page, returnTo, subjectId = "operator-1", sessionTenantId = tenantId) {
+async function loginOperator(
+  page,
+  returnTo,
+  subjectId = "operator-1",
+  sessionTenantId = tenantId,
+  resetScenario = null
+) {
   await page.context().clearCookies();
-  const resetResponse = await page.request.get("/ops/browser-reset");
+  const resetResponse = await page.request.get(
+    `/ops/browser-reset${resetScenario ? `?scenario=${encodeURIComponent(resetScenario)}` : ""}`
+  );
   expect(resetResponse.ok()).toBeTruthy();
 
   const loginParams = new URLSearchParams({
@@ -826,6 +834,43 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     expect(focusInside, "focus remains within the operator replay dialog after Tab past Confirm").toBeTruthy();
 
     await expect(page.locator("#operator-replay-confirm")).toHaveAttribute("phx-disable-with", "Replaying…");
+  });
+
+  test("Phase 168 Account scope", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await loginOperator(
+      page,
+      "/ops/mail?tenant_id=northstar",
+      "operator-1",
+      "northstar",
+      "accounts"
+    );
+    await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await expect(page.getByTestId("operator-account-id")).toHaveText("northstar");
+
+    // Give the prior Account a selected record; switching must drop this ID.
+    await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
+    await expect(page).toHaveURL(/delivery_id=/);
+    const targetAccount = page.locator(
+      '[data-testid="operator-account-option"][data-account-id="fjordline-aps"]'
+    );
+    await expect(targetAccount).toHaveAttribute("href", /tenant_id=fjordline-aps/);
+    await expect(targetAccount).not.toHaveAttribute("href", /delivery_id=/);
+    // Quick view is modal, so finish its focused task before opening the selector.
+    await page.getByTestId("operator-detail-back").click();
+    await expect(page).not.toHaveURL(/delivery_id=/);
+    await page.getByTestId("operator-account-switcher").click();
+    await targetAccount.click();
+
+    await expect(page).toHaveURL(/tenant_id=fjordline-aps/);
+    await expect(page).not.toHaveURL(/delivery_id=/);
+    await expect(page.getByTestId("operator-account-id")).toHaveText("fjordline-aps");
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    const scopedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+    await expect(scopedRow).toContainText("f************.example");
+    await scopedRow.click();
+    await expect(page.getByTestId("operator-quick-view")).toContainText("fjordline-aps");
   });
 
 });
