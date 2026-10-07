@@ -192,7 +192,11 @@ defmodule MailglassAdmin.GalleryLive do
 
   defp render_specimen(%{component: :flash} = assigns) do
     ~H"""
-    <Components.flash kind={@assigns_map[:kind]} message={@assigns_map[:message]} />
+    <Components.flash
+      kind={@assigns_map[:kind]}
+      message={@assigns_map[:message]}
+      placement={:inline}
+    />
     """
   end
 

@@ -151,6 +151,13 @@ Rendered acceptance command used the existing Playwright harness on port 4102 wi
 - **Observed:** the dialog is named “Confirm webhook replay for …” and describes the existing replay operation. The exact webhook event ID remains visible. Holding the real LiveView response after Confirm kept that target visible while the button read “Replaying…” and was disabled. Releasing the response showed “Replay completed with new work” plus the separate recorded requested/completed audit events. No downstream Delivery success was inferred. A stale-auth denial retained the modal and exact target with “Recent authentication is required.”; Escape returned focus to Replay webhook. A delivery with no eligible target displayed Replay unavailable and rendered no target ID or Confirm action.
 - **Evidence:** `npm run test:operator-browser -- --grep "Phase 168 confirmation focus"` — 1 passed. The case ran in an isolated touch-enabled Chromium context, intercepted only its LiveView response for the pending probe, and left denial/success replies intact.
 
+## Plan 168 Final Confirmation
+
+- **Rendered browser suite:** `npm run test:operator-browser` on isolated harness port 4102 — 183 passed, 0 failed, 1 existing guarded skip. The initial full run exposed mobile overflow in Inbound metadata and Preview error identifiers, a 768px gallery sidebar overflow, a theme-picker pointer affordance, an Account chooser locator ambiguity, and fixed Flash specimens covering focusable gallery controls. These were corrected in this phase; the final full suite passed.
+- **ExUnit:** focused shell, components, operator, inbound, voice, token parity and bundle checks — 302 tests, 0 failures, 1 excluded.
+- **Gallery obstruction diagnosis:** at 320px, `elementFromPoint` found the fixed Flash toast at viewport `(16,16)` covering the nav-link focus target. Gallery-only Flash specimens now render inline; the same hover/focus/disabled/touch-target matrix passes, and the test asserts the gallery has no fixed Flash toast.
+- **Demo asset identity:** restarted only `mailglass-demo-demo-1`. The demo stylesheet route `/dev/mail/css-a5aa8f353f9543034287ed8382ce0e70` and rebuilt `mailglass_admin/priv/static/app.css` both hash to `b19d6219708e6f73b65dcf144db5483b2a848678ab95957deffea45bbc26e783`; source `assets/css/app.css` hash is `2810f438d6452966d00f02e4a41cc203f414af6a9cc3a36a17099ae4af87a9f9`.
+
 ## Final UI-SPEC Coverage Inventory (52 Criteria)
 
 Status records the execution evidence in this baseline. `Partial` and `Pending` remain unproven states and are not treated as passes.

@@ -1849,6 +1849,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       page
     }) => {
       await openGallery(page);
+      await expect(page.locator('[data-testid^="gallery-flash-"] .toast')).toHaveCount(0);
 
       for (const viewport of PRIMITIVE_VIEWPORTS) {
         await page.setViewportSize(viewport);

@@ -141,6 +141,7 @@ defmodule MailglassAdmin.Components do
 
   attr(:kind, :atom, values: [:info, :success, :warning, :error], default: :info)
   attr(:message, :string, required: true)
+  attr(:placement, :atom, values: [:toast, :inline], default: :toast)
 
   @doc """
   Renders a brand-voice flash message in a daisyUI toast wrapper.
@@ -157,7 +158,10 @@ defmodule MailglassAdmin.Components do
     ~H"""
     <div
       id={"flash-#{@kind}"}
-      class="toast toast-top toast-end mg-layer-toast max-w-[min(100vw-2rem,32rem)]"
+      class={
+        if @placement == :toast,
+          do: "toast toast-top toast-end mg-layer-toast max-w-[min(100vw-2rem,32rem)]"
+      }
       role={@live_role}
       aria-live={if @kind == :error, do: "assertive", else: "polite"}
       aria-atomic="true"
