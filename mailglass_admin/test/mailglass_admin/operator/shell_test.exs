@@ -352,6 +352,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
         rendered_to_string(~H"""
         <Shell.shell
           active={:deliveries}
+          preview_path="/dev/mail"
           overview_path="/operator"
           deliveries_path="/operator?view=deliveries"
           inbound_path="/operator/inbound"
@@ -372,6 +373,17 @@ defmodule MailglassAdmin.Operator.ShellTest do
 
       assert length(health_links) >= 2,
              "expected at least 2 Health nav items (sidebar + mobile), got: #{length(health_links)}"
+
+      nav_links = Floki.find(doc, ~s([data-testid^="surface-nav-"] a))
+      labels = Enum.map(nav_links, &(Floki.text(&1) |> String.trim()))
+      hrefs = Enum.map(nav_links, &(Floki.attribute(&1, "href") |> List.first()))
+
+      assert "Preview" in labels
+      refute "Inbound" in labels,
+             "Inbound must be omitted when the optional inbound surface is unavailable"
+
+      assert "/dev/mail" in hrefs
+      refute "/operator/inbound" in hrefs
 
       Enum.each(health_links, fn link ->
         href = link |> Floki.attribute("href") |> List.first()
