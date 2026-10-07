@@ -110,4 +110,4 @@ The approved [roadmap](ROADMAP.md) assigns each of the 28 v2.9 requirements to e
 **Coverage:** 28/28 mapped; no duplicate or orphaned requirement IDs.
 
 ---
-*Last updated: 2026-10-07 after owner approval and milestone activation.*
+*Last updated: 2026-10-07 after Phase 168 verification; UXF-01–08 complete.*

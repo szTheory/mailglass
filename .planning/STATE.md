@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
-current_phase: 168
-current_phase_name: Shared Workspace and Usable Baseline
-status: verifying
-stopped_at: Completed 168-04-PLAN.md
-last_updated: "2026-10-07T21:14:26.874Z"
+current_phase: 169
+current_phase_name: Outbound Investigation and Recovery
+status: planning
+stopped_at: Phase 168 complete and verified; ready to discuss Phase 169
+last_updated: "2026-10-07T21:52:04.830Z"
 last_activity: 2026-10-07
-last_activity_desc: Phase 168 execution started
-state_head: ae66da0b37b28f018807d05453bcea3bf25983d9
+last_activity_desc: Phase 168 complete, transitioned to Phase 169
+state_head: 4429691341dd1a1f6688b29f73bb533fcbfc660e
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
   completed_plans: 4
-  percent: 0
+  percent: 17
 ---
 
 # Project State
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-07)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 168 — Shared Workspace and Usable Baseline
+**Current focus:** Phase 169 — Outbound Investigation and Recovery
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,15 +39,15 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 
 ## Current Position
 
-Phase: 168 (Shared Workspace and Usable Baseline) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-10-07 — Phase 168 execution started
+Phase: 169 — Outbound Investigation and Recovery
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-07 — Phase 168 complete, transitioned to Phase 169
 
 ## v2.9 Roadmap Shape
 
-- Phases 168–173 own all 28 approved requirements; implementation has not started.
-- Phase 168 establishes the shared workspace and usable baseline. Outbound, inbound, preview, recipient output, and consistency/evidence follow as recorded in ROADMAP.md.
+- Phases 168–173 own all 28 approved requirements; Phase 168 is complete and verified (UXF-01–08).
+- Phase 168 established the shared workspace and usable baseline. Phase 169 discussion and planning are next; inbound, preview, recipient output, and consistency/evidence follow as recorded in ROADMAP.md.
 - Code-first; equal engineer and support/on-call operator priority; bounded direct visual inspection and existing automated checks.
 - The approved unsubscribe boundary covers truthful GET/invalid/expired pages; interactive browser submission remains deferred.
 
@@ -152,7 +152,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 **Velocity:**
 
-- Total plans completed: 79
+- Total plans completed: 83
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -166,6 +166,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | 164. Repository Truth Reconciliation and Closeout | 44 | — | — |
 | 165 | 5 | - | - |
 | 167 | 4 | - | - |
+| 168 | 4 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -460,12 +461,12 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-07T21:14:26.854Z
-Stopped at: Completed 168-04-PLAN.md
+Last session: 2026-10-07T21:52:04.792Z
+Stopped at: Phase 168 complete and verified; ready to discuss Phase 169
 Resume file: None
 
 ## Operator Next Steps
 
-- Phase 168 planning is complete. Run `$gsd-execute-phase 168` for four serialized plans and eleven tasks. The independent plan checker passed after one targeted revision; all 8 requirements, 11 locked decisions, and 52 UI state criteria are covered. Use the approved context/UI-SPEC, research, patterns, and task validation map. Runtime acceptance remains pending.
-- Before executing, safely reconcile this preserved local workspace with the cleanup source already merged and verified in the prior session; retain unrelated local changes and identify the preview checkout.
-- Capture a current rendered baseline before UI changes. Milestone initialization contains no new browser, email-client, product-test, or CI verification claim.
+- Phase 168 is complete and independently verified. All four plans and both code-review corrections are committed.
+- Next: `$gsd-discuss-phase 169` — Outbound Investigation and Recovery. No next-phase execution has started.
+- Current demo: `http://localhost:4015`; source/asset identity and rendered evidence are in `168-BASELINE.md`. Local admin checks: 513 ExUnit tests, zero failures, one exclusion; Playwright 184 passed, one guarded skip. Remote delivery/CI proof remains Phase 173 scope.

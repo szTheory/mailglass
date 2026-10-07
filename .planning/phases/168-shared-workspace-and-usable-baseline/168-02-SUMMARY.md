@@ -127,8 +127,8 @@ status: complete
 
 ## Files Created/Modified
 
-- `mailglass_admin/assets/css/app.css` and `priv/static/app.css` - Shared type tokens and generated asset bundle.
-- `mailglass_admin/lib/mailglass_admin/operator_live.ex` and `operator/deliveries_list.ex` - Working-screen hierarchy, busy feedback, and cause-specific copy.
+- `mailglass_admin/assets/css/app.css` and `mailglass_admin/priv/static/app.css` - Shared type tokens and generated asset bundle.
+- `mailglass_admin/lib/mailglass_admin/operator_live.ex` and `mailglass_admin/lib/mailglass_admin/operator/deliveries_list.ex` - Working-screen hierarchy, busy feedback, and cause-specific copy.
 - `mailglass_admin/lib/mailglass_admin/inbound_live.ex` - Stable busy feedback for the inbound filter action.
 - `mailglass_admin/test/mailglass_admin/components_test.exs`, `inbound_live_test.exs`, `operator_live_test.exs`, and `voice_test.exs` - Focused filter, copy, empty-state, and exact-value assertions.
 - `.planning/phases/168-shared-workspace-and-usable-baseline/168-BASELINE.md` - Rendered evidence and correction record.

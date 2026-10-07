@@ -126,7 +126,7 @@ status: complete
 
 ## Accomplishments
 
-- Moved `.mg-detail-panel` positioning from inline root markup to `assets/css/app.css`, rebuilt `priv/static/app.css`, and verified the demo-served stylesheet hash matches the bundle.
+- Moved `.mg-detail-panel` positioning from inline root markup to `mailglass_admin/assets/css/app.css`, rebuilt `mailglass_admin/priv/static/app.css`, and verified the demo-served stylesheet hash matches the bundle.
 - Added keyboard activation and stable exact-row focus return for Quick view; clarified selected identity, outcome and unavailable evidence.
 - Completed accessible replay confirmation with exact target, held-response busy state, stale-auth denial, success audit events, and zero-target behavior.
 - Filled the 52-row source and evidence inventory in `168-BASELINE.md`.
@@ -144,11 +144,11 @@ The original four commits are measured from `plan_head_before` through `plan_hea
 
 ## Files Created/Modified
 
-- `mailglass_admin/assets/css/app.css` and `priv/static/app.css` — consolidated responsive panel rules and generated bundle.
-- `operator/quick_view.ex`, `operator/replay_modal.ex`, `operator_live.ex` — record identity, exact-trigger focus return, meaningful confirmation and truthful action state.
+- `mailglass_admin/assets/css/app.css` and `mailglass_admin/priv/static/app.css` — consolidated responsive panel rules and generated bundle.
+- `mailglass_admin/lib/mailglass_admin/operator/quick_view.ex`, `mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex`, `operator_live.ex` — record identity, exact-trigger focus return, meaningful confirmation and truthful action state.
 - `mailglass_admin/e2e/flows.spec.js` — Quick view keyboard and replay pending/denial/success browser cases.
 - `components.ex` and `gallery_live.ex` — opt-in inline Flash placement for static gallery samples.
-- `inbound/detail_header.ex`, `preview_live.ex`, `preview/sidebar.ex` — narrow layout wrapping and gallery sizing fixes.
+- `mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex`, `preview_live.ex`, `mailglass_admin/lib/mailglass_admin/preview/sidebar.ex` — narrow layout wrapping and gallery sizing fixes.
 - `mailglass_admin/e2e/structural.spec.js` — stable Account option assertions and gallery feedback-overlay regression check.
 - `mailglass_admin/test/support/endpoint_case.ex` — isolated browser fixture can represent stale recent authentication.
 - `168-BASELINE.md` — per-task review records, 52-criterion evidence inventory and final runtime confirmation.
@@ -167,7 +167,7 @@ The original four commits are measured from `plan_head_before` through `plan_hea
 - **Found during:** Task 3 (full browser verification)
 - **Issue:** Inbound metadata grid children, long Preview error identifiers, and the gallery sidebar overflowed at the tested viewport widths.
 - **Fix:** Constrained metadata grid items and enabled wrapping for long technical identifiers; constrained the gallery directory's min-width behavior.
-- **Files modified:** `inbound/detail_header.ex`, `preview_live.ex`, `preview/sidebar.ex`
+- **Files modified:** `mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex`, `preview_live.ex`, `mailglass_admin/lib/mailglass_admin/preview/sidebar.ex`
 - **Verification:** The affected focused flows passed; final browser suite passed 183 tests with no failures.
 - **Committed in:** `70d67e57` and `ae66da0b`.
 
@@ -194,7 +194,7 @@ The original four commits are measured from `plan_head_before` through `plan_hea
 - Full `npm run test:operator-browser`: **183 passed, 0 failed, 1 guarded skip**. The skipped case requires a header-anchored overlay only if one exists.
 - Focused ExUnit shell/components/operator/inbound/voice/token/bundle set: **302 tests, 0 failures, 1 excluded**.
 - Focused Plan04 acceptance cases: Quick view keyboard flow, exact-target confirmation flow, gallery hover/focus/touch-target matrix, Inbound and Preview error overflow, Account switching, and 120-cell gallery width/theme matrix passed.
-- Demo route `/dev/mail/css-a5aa8f353f9543034287ed8382ce0e70` and `priv/static/app.css` both SHA-256 `b19d6219708e6f73b65dcf144db5483b2a848678ab95957deffea45bbc26e783`.
+- Demo route `/dev/mail/css-a5aa8f353f9543034287ed8382ce0e70` and `mailglass_admin/priv/static/app.css` both SHA-256 `b19d6219708e6f73b65dcf144db5483b2a848678ab95957deffea45bbc26e783`.
 - Impeccable detection retained only existing findings: the legacy `border-l-4` tab treatment and existing Inter font declaration.
 
 ## Issues Encountered

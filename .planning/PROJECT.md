@@ -18,11 +18,13 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 - Usable developer preview plus public email components, sender-branded examples, plaintext, and truthful built-in unsubscribe GET pages.
 - Current shared-pattern guidance, bounded automated and rendered acceptance, and a working feedback preview with passing required CI on the delivery candidate.
 
-**Planning contract:** Approved 2026-10-07: 28 requirements across Phases 168–173. Start with Phase 168 discussion, UI design contract, and implementation planning. Engineers and support/on-call operators are equal primary Admin audiences. The owner selected code-first; use Impeccable and relevant Kowalski guidance with the existing LiveView/HEEx stack and brand. [Scope](research/v2.9/SCOPE.md), [requirements](REQUIREMENTS.md), and [roadmap](ROADMAP.md) are canonical for this milestone; root [PRODUCT.md](../PRODUCT.md) owns durable product context.
+**Planning contract:** Approved 2026-10-07: 28 requirements across Phases 168–173. Phase 168 is implemented and verified; Phase 169 is next for discussion and planning. Engineers and support/on-call operators are equal primary Admin audiences. The owner selected code-first; use Impeccable and relevant Kowalski guidance with the existing LiveView/HEEx stack and brand. [Scope](research/v2.9/SCOPE.md), [requirements](REQUIREMENTS.md), and [roadmap](ROADMAP.md) are canonical for this milestone; root [PRODUCT.md](../PRODUCT.md) owns durable product context.
 
-**Boundaries:** Refine existing capabilities, preserve authorization/account/replay/rendering/protocol contracts, and defer an interactive browser unsubscribe submission journey. Reuse source-backed research and existing checks with targeted investigation as needed. The milestone label does not request a package version or authorize publication or merge. Before execution, reconcile the preserved local workspace with the previously merged cleanup source and record the checkout served by the preview.
+**Boundaries:** Refine existing capabilities, preserve authorization/account/replay/rendering/protocol contracts, and defer an interactive browser unsubscribe submission journey. Reuse source-backed research and existing checks with targeted investigation as needed. The milestone label does not request a package version or authorize publication or merge. Phase 168 reconciled the preserved local workspace with merged cleanup and recorded the checkout and assets served by the preview.
 
 ## Current State
+
+**Phase 168 completed and verified 2026-10-07.** The shared workspace now has visible Account scope, readable type and exact values, System/Light/Dark selection, accessible feedback, and working keyboard focus containment/return in Quick view and replay dialogs. The current source and served demo assets are recorded in the phase baseline. Local admin verification reports 513 ExUnit tests with zero failures and one exclusion; Playwright reports 184 passed and one guarded skip. This is local implementation evidence; milestone delivery and required remote CI remain Phase 173 work.
 
 **v2.7 Repository Stewardship & Operational Hygiene SHIPPED and ARCHIVED 2026-09-15.** The bounded
 maintenance milestone closed with its canonical audit `status: passed` — 16/16 requirements, 5/5 phases,
@@ -204,16 +206,16 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 
 ## Active Requirements
 
-**v2.9 Operator, Preview & Email UI Refinement is active for planning.** The 28 approved requirements are defined in [REQUIREMENTS.md](REQUIREMENTS.md) and each maps to one phase in [ROADMAP.md](ROADMAP.md):
+**v2.9 Operator, Preview & Email UI Refinement is active.** The 28 approved requirements are defined in [REQUIREMENTS.md](REQUIREMENTS.md) and each maps to one phase in [ROADMAP.md](ROADMAP.md):
 
-- UXF-01–08: shared workspace and interaction (Phase 168).
+- ✓ UXF-01–08: shared workspace and interaction — implemented and verified in Phase 168.
 - OUTUX-01–05: outbound investigation and recovery (Phase 169).
 - INUX-01–04: inbound investigation and recovery (Phase 170).
 - PRVUX-01–04: developer preview (Phase 171).
 - MAILUX-01–04: recipient output and built-in pages (Phase 172).
 - UIQ-01–03: consistency, evidence, and delivery (Phase 173).
 
-No v2.9 requirement has been implemented or verified yet. The v2.8 and v2.7 requirements remain in their milestone archives.
+Phase 168 validated all eight UXF requirements; the remaining 20 requirements belong to Phases 169–173. The v2.8 and v2.7 requirements remain in their milestone archives.
 
 ### v2.7 scope record (archived)
 
@@ -1047,6 +1049,15 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 
 ## Key Decisions
 
+### Phase 168 implementation decisions
+
+- Account options assist navigation; they do not authorize scope. Preserve host-owned access checks and selected permitted IDs absent from activity-derived options.
+- Keep body/label type at 16/14px and exact identifiers readable through wrapping or accessible detail.
+- Use one persisted appearance preference; System remains selected while following the OS.
+- Derive dialog focus destinations from visible, enabled controls using the shared LiveView hook. Preserve action-time replay authorization and exact-target confirmation.
+- Record representative rendered evidence and distinguish inapplicable host/browser states from passing application states.
+
+
 | ID | Decision | Rationale | Outcome |
 |----|----------|-----------|---------|
 | D-01 | Sibling packages from v0.1 (`mailglass`, `mailglass_admin`, `mailglass_inbound` v0.5+) | Per accrue/sigra DNA — admin is mounted in adopters' apps, not run standalone; linked-version releases via Release Please | ✓ Validated v0.1 — Release Please linked-versions works; `mailglass_admin/mix.exs` pins `{:mailglass, "== <ver>"}` |
@@ -1122,7 +1133,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-10-07 after activating the approved v2.9 Operator, Preview & Email UI Refinement milestone: 28 requirements, Phases 168–173; implementation not started.*
+*Last updated: 2026-10-07 after completing and verifying Phase 168; Phase 169 discussion and planning are next.*
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->

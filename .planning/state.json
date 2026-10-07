@@ -6,7 +6,7 @@
     {
       "number": "168",
       "name": "Shared Workspace and Usable Baseline",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "169",
@@ -36,8 +36,8 @@
   ],
   "next": {
     "command": "/gsd:progress --next",
-    "label": "Advance to the next step (verify)",
-    "reason": "Phase 168 of 6 · 0% · ready to verify"
+    "label": "Advance to the next step (plan phase 169)",
+    "reason": "Phase 169 of 6 — needs a plan"
   },
-  "updated_at": "2026-10-07T21:14:26.209Z"
+  "updated_at": "2026-10-07T21:50:49.133Z"
 }
