@@ -143,3 +143,69 @@ Rendered acceptance command used the existing Playwright harness on port 4102 wi
 - **Observed:** the named `Delivery quick view` dialog opens by Enter from a mobile button and desktop table row. Focus enters Close, stays contained when tabbing after Open full detail, and Escape/Close return to the exact originating row. The complete UUID wraps without horizontal overflow at 320px. A nonexistent URL ID shows the detail error only; it renders no fallback record fields or Full detail action.
 - **Evidence:** `npm run test:operator-browser -- --grep "Phase 168 Quick view focus|Operator error: delivery_id"` — 2 passed. `mix test test/mailglass_admin/operator_live_test.exs --seed 1` — 80 passed. The browser command rebuilds `priv/static/app.css` before starting the isolated Playwright server.
 - **Unavailable evidence:** nil event type, timestamp, and provider use the explicit `Unavailable` treatment. Available Account, Provider, latest event, timestamp, and Delivery ID remain visible without title-only access.
+
+## Plan 168-04 Task 3 Review and Confirmation
+
+- **Source/route/fixture:** `mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex` and `operator_live.ex`; isolated browser tenant at `http://127.0.0.1:4102/ops/mail?tenant_id=browser-tenant&view=deliveries`, 320 × 900 CSS px with Chromium touch emulation. The live fixture contains an exact replay target (`browser-exact-delivery` provider event); a fixed old `recent_auth_at` drives the existing server denial.
+- **Light/dark and motion:** with System selected, the confirmation panel's computed surface color followed emulated Light → Dark → Light. Under `prefers-reduced-motion: reduce`, computed animation and transition durations were each ≤0.001s.
+- **Observed:** the dialog is named “Confirm webhook replay for …” and describes the existing replay operation. The exact webhook event ID remains visible. Holding the real LiveView response after Confirm kept that target visible while the button read “Replaying…” and was disabled. Releasing the response showed “Replay completed with new work” plus the separate recorded requested/completed audit events. No downstream Delivery success was inferred. A stale-auth denial retained the modal and exact target with “Recent authentication is required.”; Escape returned focus to Replay webhook. A delivery with no eligible target displayed Replay unavailable and rendered no target ID or Confirm action.
+- **Evidence:** `npm run test:operator-browser -- --grep "Phase 168 confirmation focus"` — 1 passed. The case ran in an isolated touch-enabled Chromium context, intercepted only its LiveView response for the pending probe, and left denial/success replies intact.
+
+## Final UI-SPEC Coverage Inventory (52 Criteria)
+
+Status records the execution evidence in this baseline. `Partial` and `Pending` remain unproven states and are not treated as passes.
+
+| Criterion | Status | Evidence / limit |
+|---|---|---|
+| E1 / loading | Partial | Plan 168-01 nav/route checks; no delayed navigation fixture. [168-01 summary](168-01-SUMMARY.md) |
+| E1 / error | Pending | Failed navigation recovery was not triggered in this execution. |
+| E1 / overflow | Pass | Plan 168-02 320/390/768/1440 and 200% shell review. [168-02 summary](168-02-SUMMARY.md) |
+| E1 / long-text | Partial | Configured nav labels and accessible names inspected; no long localized destination fixture. |
+| E2 / empty | Pass | No-activity chooser specimen and empty/filtered distinction. [168-02 summary](168-02-SUMMARY.md) |
+| E2 / loading | Pending | Account switch pending state was not delayed in a browser fixture. |
+| E2 / error | Pending | A rejected Account switch was not induced. |
+| E2 / populated | Pass | Northstar scope, stable ID, selector and row scoping. [Account scope case](../../../mailglass_admin/e2e/flows.spec.js) |
+| E2 / partial | Pass | Missing host label fallback and permitted selected ID checks. [168-01 summary](168-01-SUMMARY.md) |
+| E2 / overflow | Pass | Narrow Account header/filter and 200% review. [168-02 summary](168-02-SUMMARY.md) |
+| E2 / zero-one-many | Pass | No-activity, one-Account auto-select and multi-Account switch evidence. [168-01 summary](168-01-SUMMARY.md) |
+| E2 / long-text | Pass | Duplicate/non-ASCII Account labels and full IDs inspected. [168-01 summary](168-01-SUMMARY.md) |
+| E3 / empty | Pass | System is selected by default; explicit System/Light/Dark radios remain available. [Plan 03 acceptance](../../../mailglass_admin/e2e/phase168-plan03-acceptance.spec.js) |
+| E3 / loading | Partial | Palette updates promptly; persistence failure/latency was not induced. [Plan 03 acceptance](../../../mailglass_admin/e2e/phase168-plan03-acceptance.spec.js) |
+| E3 / error | Pending | Preference persistence failure was not induced. |
+| E3 / partial | Pass | System selection followed emulated OS light/dark and survived navigation/reload. [Plan 03 acceptance](../../../mailglass_admin/e2e/phase168-plan03-acceptance.spec.js) |
+| E3 / overflow | Pass | Theme controls reflowed at the narrow and desktop viewports. [168-02 summary](168-02-SUMMARY.md) |
+| E3 / long-text | Partial | 200% labels were reachable; enlarged-text browser setting was not separately emulated. [168-02 summary](168-02-SUMMARY.md) |
+| E4 / empty | Pass | Unset filters preserved visible default meanings. [168-02 summary](168-02-SUMMARY.md) |
+| E4 / loading | Pass | Stable busy/filter patch retained values and prevented duplicate submit. [Plan 03 acceptance](../../../mailglass_admin/e2e/phase168-plan03-acceptance.spec.js) |
+| E4 / error | Pass | Invalid filter values retained and showed field-specific correction. [168-02 summary](168-02-SUMMARY.md) |
+| E4 / partial | Pass | Provider/status/window filters preserved unrelated valid values. [168-02 summary](168-02-SUMMARY.md) |
+| E4 / overflow | Pass | 320/390/768/1440 and 200% control fit review. [168-02 summary](168-02-SUMMARY.md) |
+| E4 / long-text | Partial | Visible labels fit; no artificially long option/correction fixture. |
+| E5 / empty | Pass | No activity, filtered-empty and no-selection states stayed distinct. [168-02 summary](168-02-SUMMARY.md) |
+| E5 / loading | Partial | Existing busy/stale states reviewed; cold-load latency was not injected. [Plan 03 acceptance](../../../mailglass_admin/e2e/phase168-plan03-acceptance.spec.js) |
+| E5 / error | Pass | Stale and unavailable data copy/recovery remained distinct. [168-02 summary](168-02-SUMMARY.md) |
+| E5 / populated | Pass | Health summary and selected Delivery full evidence were inspected. [168-02 summary](168-02-SUMMARY.md) |
+| E5 / partial | Pass | Missing timestamps/metrics use Unavailable; no synthetic stale time. [168-02 summary](168-02-SUMMARY.md) |
+| E5 / overflow | Pass | Health/Delivery surfaces bounded at 320/390/768/1440 and 200%. [168-02 summary](168-02-SUMMARY.md) |
+| E5 / zero-one-many | Pass | Page counts and one/many Delivery results retain existing semantics. [168-02 summary](168-02-SUMMARY.md) |
+| E5 / long-text | Pass | Full recipient/provider IDs visible in detail without hover at 200%. [168-02 summary](168-02-SUMMARY.md) |
+| E6 / empty | Pass | No selection keeps Quick view closed; zero-target Replay has no Confirm. [Quick view](../../../mailglass_admin/e2e/flows.spec.js), [confirmation](../../../mailglass_admin/e2e/flows.spec.js) |
+| E6 / loading | Pass | Delayed LiveView reply showed disabled “Replaying…” with exact target retained. [confirmation case](../../../mailglass_admin/e2e/flows.spec.js) |
+| E6 / error | Pass | Nonexistent ID never substitutes a record; stale auth retains exact target and cause. [Quick view](../../../mailglass_admin/e2e/flows.spec.js), [confirmation](../../../mailglass_admin/e2e/flows.spec.js) |
+| E6 / populated | Pass | Quick view identity/outcome and requested/completed Replay audit were visible. [Quick view](../../../mailglass_admin/e2e/flows.spec.js), [confirmation](../../../mailglass_admin/e2e/flows.spec.js) |
+| E6 / partial | Partial | Nil event/provider/time render Unavailable; nil-value browser fixture was not seeded. [operator_live_test.exs](../../../mailglass_admin/test/mailglass_admin/operator_live_test.exs) |
+| E6 / overflow | Pass | 320px Quick view wraps the full UUID, scrolls within the panel, and traps focus; screenshots: `artifacts/plan04/`. |
+| E6 / zero-one-many | Pass | Zero unavailable state, one exact target browser path, and ambiguous explicit-choice LiveView tests. [operator tests](../../../mailglass_admin/test/mailglass_admin/operator_live_test.exs) |
+| E6 / long-text | Partial | UUID wrapping and full target IDs verified; no non-ASCII ID fixture (Delivery IDs are UUIDs). |
+| E7 / empty | Pass | No event renders no feedback; missing time uses Unavailable. [168-03 summary](168-03-SUMMARY.md) |
+| E7 / loading | Pass | Text busy feedback, stable live region and reduced-motion response verified. [Plan 03 acceptance](../../../mailglass_admin/e2e/phase168-plan03-acceptance.spec.js) |
+| E7 / error | Pass | Cause-specific auth, stale and unavailable messages remained visible. [confirmation](../../../mailglass_admin/e2e/flows.spec.js), [168-02 summary](168-02-SUMMARY.md) |
+| E7 / populated | Pass | Explicit status badge and exact UTC timestamp labels inspected. [168-02 summary](168-02-SUMMARY.md) |
+| E7 / overflow | Partial | Feedback fit the sampled 320px dialog; long error-copy scaling was not separately seeded. |
+| E7 / long-text | Partial | Technical IDs and feedback remained readable; no maximum-length failure message fixture. |
+| E8 / empty | Pass | Hiding decorative SVGs preserved labels and the Mailglass accessible brand name. [Plan 03 acceptance](../../../mailglass_admin/e2e/phase168-plan03-acceptance.spec.js) |
+| E8 / loading | Pass | Blocking font requests preserved fallback text and controls. [Plan 03 acceptance](../../../mailglass_admin/e2e/phase168-plan03-acceptance.spec.js) |
+| E8 / error | Partial | Blocked-font/decorative-icon simulation passed; actual missing local font file was not removed. |
+| E8 / populated | Pass | Theme-aware Mailglass mark and existing icon set rendered. [168-03 summary](168-03-SUMMARY.md) |
+| E8 / overflow | Pass | Logo/icons remained in reserved bounds at 320/768/1440 and touch viewports. [168-03 summary](168-03-SUMMARY.md) |
+| E8 / long-text | Partial | Enlarged navigation labels were reviewed at 200%; custom fallback text was not injected. |

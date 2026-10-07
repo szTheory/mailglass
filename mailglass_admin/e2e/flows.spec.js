@@ -30,7 +30,8 @@ async function loginOperator(
   returnTo,
   subjectId = "operator-1",
   sessionTenantId = tenantId,
-  resetScenario = null
+  resetScenario = null,
+  recentAuthAt = null
 ) {
   await page.context().clearCookies();
   const resetResponse = await page.request.get(
@@ -43,6 +44,7 @@ async function loginOperator(
     return_to: returnTo,
     subject_id: subjectId
   });
+  if (recentAuthAt) loginParams.set("recent_auth_at", recentAuthAt);
 
   const loginURL = new URL(`/ops/browser-login?${loginParams.toString()}`, baseURL).toString();
   await page.goto(loginURL);
@@ -917,6 +919,139 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await page.getByTestId("operator-detail-back").click();
     await expect(quickView).toHaveCount(0);
     await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(desktopId);
+  });
+
+  test("Phase 168 confirmation focus", async ({ browser }) => {
+    const context = await browser.newContext({
+      baseURL,
+      viewport: { width: 320, height: 900 },
+      isMobile: true,
+      hasTouch: true
+    });
+    const page = await context.newPage();
+
+    let holdNextReply = false;
+    let holdReplayResponse = true;
+    let heldReply = null;
+    let resolveHeldReply = null;
+    let liveSocket = null;
+
+    await page.routeWebSocket(/\/live\/websocket/, socket => {
+      liveSocket = socket;
+      const server = socket.connectToServer();
+
+      socket.onMessage(message => {
+        if (holdReplayResponse && String(message).includes("confirm_replay")) holdNextReply = true;
+        server.send(message);
+      });
+
+      server.onMessage(message => {
+        if (holdNextReply) {
+          holdNextReply = false;
+          heldReply = message;
+          resolveHeldReply?.();
+        } else {
+          socket.send(message);
+        }
+      });
+    });
+
+    try {
+      await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+      await openOperator(page);
+      await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3));
+      await page.getByTestId("operator-replay-open").tap();
+      const modal = page.getByTestId("operator-replay-modal");
+      await expect(modal).toBeVisible();
+      await expect(modal.getByRole("heading", { name: /Confirm webhook replay for/ })).toBeVisible();
+      await expect(modal).toHaveAttribute("aria-describedby", "replay-modal-description");
+      await expect(modal).toContainText("browser-exact-delivery");
+      const operatorShell = page.getByTestId("operator-shell");
+      await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
+      const lightModalBackground = await modal.evaluate(element => getComputedStyle(element).backgroundColor);
+      await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+      await expect.poll(() => modal.evaluate(element => getComputedStyle(element).backgroundColor)).not.toBe(lightModalBackground);
+      const darkModalBackground = await modal.evaluate(element => getComputedStyle(element).backgroundColor);
+      expect(darkModalBackground).not.toBe(lightModalBackground);
+      await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+      await expect.poll(() => modal.evaluate(element => getComputedStyle(element).backgroundColor)).toBe(lightModalBackground);
+      await expect(operatorShell).not.toHaveAttribute("data-theme", /mailglass-/);
+      const motion = await modal.evaluate(element => ({
+        animation: getComputedStyle(element).animationDuration,
+        transition: getComputedStyle(element).transitionDuration
+      }));
+      expect(Number.parseFloat(motion.animation), `reduced-motion animation ${motion.animation}`).toBeLessThanOrEqual(0.001);
+      expect(Number.parseFloat(motion.transition), `reduced-motion transition ${motion.transition}`).toBeLessThanOrEqual(0.001);
+      const exactTargetId = await modal.getByTestId("operator-replay-target-id").innerText();
+      expect(exactTargetId).toMatch(/^[0-9a-f-]{36}$/i);
+      const initialFocus = await page.evaluate(() => ({
+        tag: document.activeElement?.tagName,
+        id: document.activeElement?.id,
+        text: document.activeElement?.textContent?.trim().slice(0, 60)
+      }));
+      expect(
+        await modal.evaluate(el => el.contains(document.activeElement)),
+        `focus should enter the confirmation dialog; active=${JSON.stringify(initialFocus)}`
+      ).toBeTruthy();
+
+      const pendingReply = new Promise(resolve => { resolveHeldReply = resolve; });
+      const confirm = modal.getByTestId("operator-replay-confirm");
+      await confirm.tap();
+      await pendingReply;
+      await expect(confirm).toHaveText("Replaying…");
+      await expect(confirm).toBeDisabled();
+      await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(exactTargetId);
+      await expect(modal).toContainText("Selected target");
+
+      liveSocket.send(heldReply);
+      heldReply = null;
+      holdReplayResponse = false;
+      await expect(modal).toHaveCount(0);
+      await expect(page.getByText("Replay completed with new work.", { exact: true })).toBeVisible();
+      const detail = page.getByTestId("operator-detail-column");
+      await expect(detail).toContainText("Webhook replay requested");
+      await expect(detail).toContainText("Webhook replay completed");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("replay-open-btn");
+
+      const staleAuthAt = "2000-01-01T00:00:00.000Z";
+      await loginOperator(
+        page,
+        `/ops/mail?tenant_id=${tenantId}`,
+        "operator-1",
+        tenantId,
+        null,
+        staleAuthAt
+      );
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+      await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+      await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3));
+      const replayTrigger = page.getByTestId("operator-replay-open");
+      await replayTrigger.tap();
+      const deniedModal = page.getByTestId("operator-replay-modal").filter({ visible: true }).first();
+      const deniedTarget = await deniedModal.getByTestId("operator-replay-target-id").innerText();
+      await deniedModal.getByTestId("operator-replay-confirm").focus();
+      await page.keyboard.press("Enter");
+      await expect.poll(() => page.locator("body").innerText()).toContain("Recent authentication is required.");
+      await expect(deniedModal).toBeVisible();
+      await expect(deniedModal.getByTestId("operator-replay-target-id")).toHaveText(deniedTarget);
+      await deniedModal.locator("#operator-replay-close").focus();
+      await page.keyboard.press("Shift+Tab");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-confirm");
+      await expect.poll(() => deniedModal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
+      await page.keyboard.press("Escape");
+      await expect(page.getByTestId("operator-replay-modal").filter({ visible: true })).toHaveCount(0);
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("replay-open-btn");
+
+      await openOperator(page);
+      await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").filter({ visible: true }).first());
+      await page.getByTestId("operator-replay-open").tap();
+      const unavailableModal = page.getByTestId("operator-replay-modal");
+      await expect(unavailableModal).toContainText("Replay unavailable");
+      await expect(unavailableModal.getByTestId("operator-replay-confirm")).toHaveCount(0);
+      await expect(unavailableModal.getByTestId("operator-replay-target-id")).toHaveCount(0);
+    } finally {
+      await context.close();
+    }
   });
 
 });

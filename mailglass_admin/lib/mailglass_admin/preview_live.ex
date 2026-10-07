@@ -357,14 +357,14 @@ defmodule MailglassAdmin.PreviewLive do
                   </h2>
                 </div>
                 <p class="text-body text-secondary">
-                  <code class="font-mono text-label">{inspect(@current_mailable)}</code>
+                  <code class="break-all font-mono text-label">{inspect(@current_mailable)}</code>
                   raised while rendering the
-                  <code class="font-mono text-label">{@current_scenario}</code>
+                  <code class="break-all font-mono text-label">{@current_scenario}</code>
                   scenario. Fix it in
-                  <code class="font-mono text-label">{inspect(@current_mailable)}</code>
+                  <code class="break-all font-mono text-label">{inspect(@current_mailable)}</code>
                   and save to reload — the full error is below.
                 </p>
-                <pre class="mt-md font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-100 p-md rounded-box border border-base-300"><code>{@render_error}</code></pre>
+                <pre class="mt-md min-w-0 break-all font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-100 p-md rounded-box border border-base-300"><code>{@render_error}</code></pre>
               </div>
             </div>
           <% @current_scenario -> %>

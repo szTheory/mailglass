@@ -2124,8 +2124,13 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       );
 
       await expect(page.getByTestId("tenant-selector")).toBeVisible();
-      await expect(page.getByText("browser-tenant", { exact: true })).toBeVisible();
-      await expect(page.getByText("deny-reveal", { exact: true })).toBeVisible();
+      await page.getByTestId("operator-account-switcher").click();
+      await expect(
+        page.locator('[data-testid="operator-account-option"][data-account-id="browser-tenant"]')
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-testid="operator-account-option"][data-account-id="deny-reveal"]')
+      ).toBeVisible();
 
       await page.getByRole("link", { name: /browser-tenant/ }).click();
       await expect(page).toHaveURL(/\/ops\/mail\/inbound\?/);

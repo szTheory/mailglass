@@ -459,8 +459,7 @@ defmodule MailglassAdmin.OperatorLive do
         {:noreply, put_flash(socket, :error, "Replay is unavailable for this delivery.")}
 
       {:error, :target_required} ->
-        {:noreply,
-         put_flash(socket, :error, "Choose one webhook target before confirming replay.")}
+        {:noreply, put_flash(socket, :error, "Choose one webhook target before confirming replay.")}
 
       {:error, {:auth, message}} ->
         {:noreply, put_flash(socket, :error, message)}
@@ -889,7 +888,7 @@ defmodule MailglassAdmin.OperatorLive do
               <%!-- Focus trap: phx-mounted moves focus into the modal on open; phx-remove returns focus to trigger on close --%>
               <span
                 :if={@replay_modal_open?}
-                phx-mounted={JS.focus_first(to: "#operator-replay-modal")}
+                phx-mounted={JS.focus(to: "#operator-replay-close")}
                 phx-remove={JS.focus(to: "#replay-open-btn")}
               />
               <ReplayModal.replay_modal

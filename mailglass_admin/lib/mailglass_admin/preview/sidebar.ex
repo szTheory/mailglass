@@ -45,7 +45,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     <section
       data-testid={@testid}
       data-picker-variant="directory"
-      class="motion-reveal rounded-box border border-base-300 bg-base-200 p-md md:p-lg"
+      class="motion-reveal min-w-0 rounded-box border border-base-300 bg-base-200 p-md md:p-lg"
     >
       <div class="mb-md flex flex-wrap items-start justify-between gap-sm">
         <div class="min-w-0">
@@ -57,9 +57,9 @@ defmodule MailglassAdmin.Preview.Sidebar do
         </span>
       </div>
 
-      <ul class="grid gap-sm">
+      <ul class="grid min-w-0 gap-sm">
         <%= for {mod, reflection} <- @mailables do %>
-          <li>
+          <li class="min-w-0">
             <.mailable_entry
               mod={mod}
               reflection={reflection}

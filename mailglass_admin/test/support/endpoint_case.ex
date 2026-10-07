@@ -152,13 +152,14 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
     return_to = Map.get(params, "return_to", "/ops/mail?tenant_id=#{tenant_id}")
     subject_id = Map.get(params, "subject_id", "operator-1")
     now = DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+    recent_auth_at = Map.get(params, "recent_auth_at", now)
 
     conn
     |> Plug.Conn.put_session("current_user_id", subject_id)
     |> Plug.Conn.put_session("subject_id", subject_id)
     |> Plug.Conn.put_session("tenant_id", tenant_id)
     |> Plug.Conn.put_session("auth_method", "password")
-    |> Plug.Conn.put_session("recent_auth_at", now)
+    |> Plug.Conn.put_session("recent_auth_at", recent_auth_at)
     |> Plug.Conn.put_resp_header("cache-control", "no-store")
     |> Phoenix.Controller.redirect(to: return_to)
   end

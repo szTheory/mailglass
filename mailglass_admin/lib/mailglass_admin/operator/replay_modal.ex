@@ -28,6 +28,8 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           role="dialog"
           aria-modal="true"
           aria-labelledby="replay-modal-title"
+          aria-describedby="replay-modal-description"
+          phx-mounted={JS.focus(to: "#operator-replay-close")}
           phx-key="Escape"
           phx-window-keydown="close_replay"
           class="motion-overlay mg-layer-overlay-panel mx-auto my-4 w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
@@ -44,9 +46,9 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
               <h2 id="replay-modal-title" class="text-heading font-bold text-base-content">
-                Replay webhook for {@delivery.recipient}
+                Confirm webhook replay for {@delivery.recipient}
               </h2>
-              <p class="text-body text-secondary">
+              <p id="replay-modal-description" class="text-body text-secondary">
                 Re-dispatches the stored webhook request through Mailbox routing and records a new Event in the append-only ledger. Confirm to replay.
               </p>
             </div>
@@ -111,8 +113,9 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               :if={confirm_enabled?(@replay_targets, @selected_target_id)}
               id="operator-replay-confirm"
               type="button"
-              phx-click="confirm_replay"
+              phx-click={JS.push("confirm_replay") |> JS.focus(to: "#operator-replay-close")}
               phx-disable-with="Replaying…"
+              aria-live="polite"
               data-testid="operator-replay-confirm"
               class="btn btn-error min-h-11 px-5"
             >
@@ -197,7 +200,9 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           <p class="text-body font-bold text-base-content">
             {String.upcase(@candidate.provider || "unknown")}
           </p>
-          <p class="mono text-label text-secondary">{@candidate.webhook_event_id}</p>
+          <p data-testid="operator-replay-target-id" class="mono text-label text-secondary">
+            {@candidate.webhook_event_id}
+          </p>
         </div>
         <p class="text-label text-secondary"><Components.timestamp at={@candidate.webhook_timestamp} /></p>
       </div>

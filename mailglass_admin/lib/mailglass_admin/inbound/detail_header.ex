@@ -51,8 +51,8 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
           </p>
         </div>
 
-        <dl class="grid gap-sm text-body text-secondary sm:grid-cols-2">
-          <div>
+        <dl class="grid min-w-0 gap-sm text-body text-secondary sm:grid-cols-2 [&>div]:min-w-0 [&_dd]:break-words">
+          <div class="min-w-0">
             <dt class="text-label font-bold uppercase">Account</dt>
             <dd
               class="mt-xs text-base-content"
@@ -61,23 +61,23 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
               {Accounts.label(@record.tenant_id, @account_labels)}
             </dd>
           </div>
-          <div>
+          <div class="min-w-0">
             <dt class="text-label font-bold uppercase">Provider</dt>
             <dd class="mt-xs text-base-content">{String.upcase(@record.provider || "unknown")}</dd>
           </div>
-          <div>
+          <div class="min-w-0">
             <dt class="text-label font-bold uppercase">From</dt>
             <dd class="mt-xs text-base-content">{sender_display(@record)}</dd>
           </div>
-          <div>
+          <div class="min-w-0">
             <dt class="text-label font-bold uppercase">Subject</dt>
             <dd class="mt-xs text-base-content">{present(@record.subject)}</dd>
           </div>
-          <div>
+          <div class="min-w-0">
             <dt class="text-label font-bold uppercase">Received</dt>
             <dd class="mt-xs text-base-content"><Components.timestamp at={@record.received_at} /></dd>
           </div>
-          <div>
+          <div class="min-w-0">
             <dt class="text-label font-bold uppercase">Matched mailbox</dt>
             <dd class="mt-xs text-base-content">{matched_mailbox(@mailbox)}</dd>
           </div>
