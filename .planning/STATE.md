@@ -5,16 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 168
 current_phase_name: Shared Workspace and Usable Baseline
 status: executing
-stopped_at: Completed 168-02-PLAN.md
-last_updated: "2026-10-07T20:03:47.929Z"
+stopped_at: Completed 168-03-PLAN.md
+last_updated: "2026-10-07T20:14:02.250Z"
 last_activity: 2026-10-07
 last_activity_desc: Phase 168 execution started
-state_head: d2b64cda89fed70e299046bacfb0a3d49bb1a03a
+state_head: e5f77bf3a2c065201180899480f478b77ec2af72
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 ## Current Position
 
 Phase: 168 (Shared Workspace and Usable Baseline) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-10-07 — Phase 168 execution started
 
@@ -254,6 +254,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 167.1 P02 | 12min | 2 tasks | 2 files |
 | Phase 168 P1 | 48 | 3 tasks | 26 files |
 | Phase 168 P02 | 53m | 3 tasks | 34 files |
+| Phase 168 P03 | 5 min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -407,6 +408,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 168]: Health metrics use three columns only at the desktop breakpoint after 768px review showed compressed labels.
 - [Phase 168]: Filter submit busy labels use fixed-width buttons to preserve action position.
 - [Phase 168]: Stale/unavailable Delivery states use approved recovery copy and never invent an observation time.
+- [Phase 168]: Keep System, Light and Dark visible beside native radio controls and preserve the existing persisted preference.
+- [Phase 168]: Use explicit alert/status live regions, exact UTC timestamp names and keyboard-accessible feedback dismissal.
+- [Phase 168]: Render missing timestamps as Unavailable and never invent stale observation times.
 
 ## Quick Tasks Completed
 
@@ -452,8 +456,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-07T20:03:47.903Z
-Stopped at: Completed 168-02-PLAN.md
+Last session: 2026-10-07T20:14:02.226Z
+Stopped at: Completed 168-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
