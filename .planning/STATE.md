@@ -5,17 +5,17 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 168
 current_phase_name: Shared Workspace and Usable Baseline
 status: executing
-stopped_at: "Phase 168 planned: four plans, eleven tasks, four waves; independent checker passed and all 8 requirements, 11 decisions, and 52 UI criteria covered. Next: execute Phase 168, beginning with safe source reconciliation and current rendered baseline before UI edits. No UI implementation or runtime verification performed."
-last_updated: "2026-10-07T17:59:44.371Z"
+stopped_at: Completed 168-01-PLAN.md
+last_updated: "2026-10-07T19:09:28.478Z"
 last_activity: 2026-10-07
-state_head: 38e6ee531352f144f281cd7ea6099798cf692ace
+last_activity_desc: Phase 168 execution started
+state_head: 1ef528b6b61b13e41631c74926a207af6fc60271
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
-last_activity_desc: Phase 168 planning complete
 ---
 
 # Project State
@@ -25,7 +25,7 @@ last_activity_desc: Phase 168 planning complete
 See: .planning/PROJECT.md (updated 2026-10-07)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v2.9 Operator, Preview & Email UI Refinement — Phase 168 planned and checked; four plans ready to execute.
+**Current focus:** Phase 168 — Shared Workspace and Usable Baseline
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,10 +39,10 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 
 ## Current Position
 
-Phase: 168 (Shared Workspace and Usable Baseline) — READY TO EXECUTE
-Plan: Not started
+Phase: 168 (Shared Workspace and Usable Baseline) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-10-07
+Last activity: 2026-10-07 — Phase 168 execution started
 
 ## v2.9 Roadmap Shape
 
@@ -252,6 +252,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 167 P03 | 15min | 3 tasks | 8 files |
 | Phase 167.1 P01 | 24m | 3 tasks | 2 files |
 | Phase 167.1 P02 | 12min | 2 tasks | 2 files |
+| Phase 168 P1 | 48 | 3 tasks | 26 files |
 
 ## Accumulated Context
 
@@ -399,6 +400,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase ?]: [Phase 167.1]: D-05 widening added exactly one new admissible pass pair (pending / proposal_awaiting_release_action) to release-please.yml's twin predicates -- a positive observation reachable only after gh pr list succeeded and exactly one open proposal was counted; capture-proposal's should_run gate left byte-identical so an un-gated discovery can never validate a pre-sibling-sync digest.
 - [Phase ?]: [Phase 167.1]: CTRL-02/CTRL-03's structural block is closed (167.1-01 merged the code fix), but both requirements' Accept clauses are post-merge observations this plan cannot produce -- they remain evidence-pending, not complete. Plan 02 owns the harvest.
 - [Phase ?]: CTRL-02/CTRL-03 requirement prose corrected to name the measured conflated-should_run-flag mechanism (D-06); both Accept clauses left byte-identical
+- [Phase 168]: Keep tenant_id as the URL and filter-submission scope; remove duplicate Account filter selection.
+- [Phase 168]: Keep selected Account identity and scope switching in shared operator chrome; keep Preview outside production Account scope.
+- [Phase 168]: Preserve host-owned tenant resolution and authorization; Account option links are navigation aids only.
 
 ## Quick Tasks Completed
 
@@ -444,9 +448,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-07T17:59:01.819Z
-Stopped at: Phase 168 planned: four plans, eleven tasks, four waves; independent checker passed and all 8 requirements, 11 decisions, and 52 UI criteria covered. Next: execute Phase 168, beginning with safe source reconciliation and current rendered baseline before UI edits. No UI implementation or runtime verification performed.
-Resume file: .planning/phases/168-shared-workspace-and-usable-baseline/168-01-PLAN.md
+Last session: 2026-10-07T19:09:28.452Z
+Stopped at: Completed 168-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
