@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 2
+open_count: 0
 waived_count: 8
-fixed_count: 29
+fixed_count: 31
 total_count: 39
-last_updated: 2026-10-07T20:14:05.766Z
+last_updated: 2026-10-07T20:24:36.719Z
 ---
 
 # Broken Windows Ledger
@@ -52,8 +52,8 @@ last_updated: 2026-10-07T20:14:05.766Z
 | 35 | 165 | deviation | test/support/suite_floor.ex | 249 | Extended installed-boundary exclusion compatibility contracts for Phase 165 | fixed |  | 2026-09-13T16:27:17.139Z | 2026-09-13T16:27:42.458Z |
 | 36 | 165 | deviation | .planning/STATE.md |  | state.update-progress undercounted completed predecessor phases and duplicated decision prefixes required normalization | fixed |  | 2026-09-13T18:29:48.613Z | 2026-09-13T18:30:03.302Z |
 | 37 | 168 | unmet-truth | mailglass_admin/lib/mailglass_admin/components.ex |  | Responsive Health page has 1px/164px document overflow at 320px/768px from the existing invisible stat-card tooltip; correct in overview/stat-card styling work. | fixed |  | 2026-10-07T19:07:23.109Z | 2026-10-07T19:27:18.127Z |
-| 38 | 168 | deviation | mailglass_admin/lib/mailglass_admin/inbound/records_list.ex | 83 | Removed synthetic stale observation time and used truthful stale copy with refresh guidance. | open |  | 2026-10-07T20:14:05.678Z |  |
-| 39 | 168 | unrun-verify | .planning/phases/168-shared-workspace-and-usable-baseline/168-BASELINE.md |  | Live OS appearance transition, reduced-motion behavior, transient error/pending feedback, and missing icon/font fallback were not directly emulated; focused tests cover semantics and long-copy behavior. | open |  | 2026-10-07T20:14:05.766Z |  |
+| 38 | 168 | deviation | mailglass_admin/lib/mailglass_admin/inbound/records_list.ex | 83 | Removed synthetic stale observation time and used truthful stale copy with refresh guidance. | fixed |  | 2026-10-07T20:14:05.678Z | 2026-10-07T20:24:36.618Z |
+| 39 | 168 | unrun-verify | .planning/phases/168-shared-workspace-and-usable-baseline/168-BASELINE.md |  | Live OS appearance transition, reduced-motion behavior, transient error/pending feedback, and missing icon/font fallback were not directly emulated; focused tests cover semantics and long-copy behavior. | fixed |  | 2026-10-07T20:14:05.766Z | 2026-10-07T20:24:36.719Z |
 
 ````json
 [
@@ -509,10 +509,10 @@ last_updated: 2026-10-07T20:14:05.766Z
     "file": "mailglass_admin/lib/mailglass_admin/inbound/records_list.ex",
     "line": 83,
     "description": "Removed synthetic stale observation time and used truthful stale copy with refresh guidance.",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-10-07T20:14:05.678Z",
-    "resolved_at": null,
+    "resolved_at": "2026-10-07T20:24:36.618Z",
     "milestone": "v2.9"
   },
   {
@@ -522,10 +522,10 @@ last_updated: 2026-10-07T20:14:05.766Z
     "file": ".planning/phases/168-shared-workspace-and-usable-baseline/168-BASELINE.md",
     "line": null,
     "description": "Live OS appearance transition, reduced-motion behavior, transient error/pending feedback, and missing icon/font fallback were not directly emulated; focused tests cover semantics and long-copy behavior.",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-10-07T20:14:05.766Z",
-    "resolved_at": null,
+    "resolved_at": "2026-10-07T20:24:36.719Z",
     "milestone": "v2.9"
   }
 ]

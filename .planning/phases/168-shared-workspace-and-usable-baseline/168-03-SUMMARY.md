@@ -62,7 +62,7 @@ coverage:
         ref: "168-BASELINE.md — Plan 168-03 Task 1 Review and Confirmation"
         status: pass
     human_judgment: true
-    rationale: "OS color-scheme changes were not directly emulated during browser review."
+    rationale: "Playwright emulated both OS schemes and confirmed System follows the computed palette while remaining selected; explicit Light/Dark and persistence across Preview navigation/reload were also checked. Host OS settings were not changed."
   - id: D2
     description: "Feedback and status expose readable semantics, exact timestamps, keyboard-accessible dismissal, and wrapping long copy."
     requirement: UXF-07
@@ -76,8 +76,11 @@ coverage:
       - kind: manual_procedural
         ref: "168-BASELINE.md — Plan 168-03 Task 2 Review and Confirmation"
         status: pass
+      - kind: e2e
+        ref: "mailglass_admin/e2e/phase168-plan03-acceptance.spec.js (4 passed); 168-BASELINE.md — Plan 168-03 Bounded Acceptance Follow-up"
+        status: pass
     human_judgment: true
-    rationale: "The demo did not provide a transient error, missing asset, or pending state to trigger live; reduced-motion was not emulated."
+    rationale: "A disposable component-gallery fixture verified error/loading/timestamp fallback, blocked-font and hidden-decorative-icon rendering, reduced motion, and stable repeated LiveView patches. DOM/live-region behavior was observed; screenreader speech output and physical asset failure were not tested."
 
 duration: 5min
 completed: 2026-10-07
@@ -106,11 +109,14 @@ plan_head_after: e5f77bf3a2c065201180899480f478b77ec2af72
 - Exposed the exact recorded UTC time through the timestamp's accessible name and kept existing status labels tied to observed domain facts.
 - Rebuilt the checked-in stylesheet and confirmed its served response hash matches the generated artifact.
 - Recorded live theme, zoom, feedback, status, timestamp, and served-bundle evidence in `168-BASELINE.md`, including states that could not be emulated.
+- Added and passed four rendered Playwright acceptance cases covering System media changes, explicit theme persistence, transient feedback/fallback states, reduced motion, and repeated patch stability.
 
 ## Task Commits
 
 1. **Task 1: Show the persisted System, Light and Dark choice in the shared picker** - `031aee42` (`feat`)
 2. **Task 2: Keep feedback and icon states readable without repeated motion** - `e5f77bf3` (`feat`)
+
+Supplemental acceptance commit: `a1d1c66b` (`fix(168-03): make stale gallery evidence truthful`) adds the focused browser acceptance suite and corrects the Gallery stale specimen's fabricated time.
 
 ## Files Created/Modified
 
@@ -120,6 +126,7 @@ plan_head_after: e5f77bf3a2c065201180899480f478b77ec2af72
 - `mailglass_admin/lib/mailglass_admin/inbound/records_list.ex` - Removed fabricated stale observation time.
 - `mailglass_admin/priv/static/app.css` - Generated bundle for the changed HEEx utilities.
 - `mailglass_admin/test/mailglass_admin/components_test.exs` and `inbound_live_test.exs` - Appearance, feedback, timestamp, and stale-copy assertions.
+- `mailglass_admin/lib/mailglass_admin/gallery_live.ex` and `mailglass_admin/e2e/phase168-plan03-acceptance.spec.js` - Disposable acceptance specimens and rendered regression checks.
 - `.planning/phases/168-shared-workspace-and-usable-baseline/168-BASELINE.md` - Rendered review evidence and limits.
 
 ## Decisions Made
@@ -141,12 +148,19 @@ plan_head_after: e5f77bf3a2c065201180899480f478b77ec2af72
 - **Verification:** Focused inbound LiveView and component suites passed; the test rejects the fabricated time.
 - **Committed in:** `e5f77bf3`
 
-**Total deviations:** 1 auto-fixed (Rule 1). **Impact:** Removed misleading status copy directly related to the planned feedback/status surface.
+**2. [Rule 1 - Bug] Removed the synthetic stale time from the Gallery specimen**
+- **Found during:** Bounded acceptance follow-up
+- **Issue:** The Gallery's stale specimen still implied a recorded observation time (`14:32`) despite the production component having moved to truthful stale guidance.
+- **Fix:** Changed the specimen to the approved stale copy and added rendered coverage that rejects the fabricated time.
+- **Files modified:** `mailglass_admin/lib/mailglass_admin/gallery_live.ex`, `mailglass_admin/e2e/phase168-plan03-acceptance.spec.js`
+- **Verification:** Focused Playwright suite passed 4/4; supplemental commit `a1d1c66b`.
 
-## Issues Encountered
+**Total deviations:** 2 auto-fixed (Rule 1). **Impact:** Removed misleading status copy from the component gallery and directly exercised the planned transient UI states.
 
-- The demo had no live transient error, missing icon/font asset, or pending event available for direct interaction. Focused tests cover the relevant semantics, dismissal, and long-copy behavior.
-- Browser review used the host's Light OS appearance and did not emulate an OS appearance transition or reduced-motion preference. Those limits are recorded in the baseline.
+## Acceptance Limits
+
+- Browser OS preferences were emulated; the machine's OS appearance was not changed. Font requests were blocked and decorative icons hidden only in the disposable test browser, rather than inducing a physical asset failure.
+- Playwright verified live-region DOM semantics and mutation stability, not spoken screenreader output.
 - Test runs emitted existing warnings that Oban was unavailable; the focused tests still passed.
 
 ## User Setup Required
@@ -164,5 +178,5 @@ Plan 03 is complete and the shared appearance and feedback controls have focused
 ## Self-Check: PASSED
 
 - Summary file exists at the expected plan path.
-- Task commits `031aee42` and `e5f77bf3` are ancestors of HEAD.
+- Task commits `031aee42` and `e5f77bf3`, plus supplemental acceptance commit `a1d1c66b`, are ancestors of HEAD.
 - The persisted plan ledger measures 2 commits from `840d8bd72ddd1d0061a994208aa426be8300434c` through `e5f77bf3a2c065201180899480f478b77ec2af72`.
