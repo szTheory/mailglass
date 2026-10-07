@@ -73,8 +73,8 @@ defmodule MailglassAdmin.Inbound.RecordsList do
       <% @data_state == :stale -> %>
         <Components.data_state
           kind={:stale}
-          title="Data may be out of date"
-          body="Showing InboundMessages as of 14:32. Refresh to load the latest."
+          title="This view may be out of date."
+          body="Refresh the view to check for updates."
         />
       <% @data_state == :empty or (@data_state == nil and @records == []) -> %>
         <%!-- :no_tenant retains its original selector copy; :truly_empty and :filtered use UI-SPEC "No records" copy --%>
@@ -284,7 +284,12 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                   <%!-- Received timestamp --%>
                   <div>
                     <span class="font-bold uppercase">Received</span>
-                    <p><Components.timestamp at={Map.get(record, :received_at)} class="whitespace-nowrap" /></p>
+                    <p>
+                      <Components.timestamp
+                        at={Map.get(record, :received_at)}
+                        class="whitespace-nowrap"
+                      />
+                    </p>
                   </div>
                 </div>
               </button>

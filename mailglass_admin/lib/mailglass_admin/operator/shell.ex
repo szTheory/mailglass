@@ -306,19 +306,49 @@ defmodule MailglassAdmin.Operator.Shell do
     >
       <div
         :if={Phoenix.Flash.get(@flash, :info)}
+        id="operator-flash-info"
         role="status"
-        class="motion-reveal flex items-start gap-sm rounded-box border border-success bg-success/10 px-md py-sm text-body text-base-content"
+        aria-live="polite"
+        aria-atomic="true"
+        class="motion-reveal flex min-w-0 items-start gap-sm rounded-box border border-success bg-success/10 px-md py-sm text-body text-base-content"
       >
         <Components.icon name="hero-check-circle" class="mt-0.5 h-5 w-5 shrink-0 text-success" />
-        <span>{Phoenix.Flash.get(@flash, :info)}</span>
+        <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{Phoenix.Flash.get(
+          @flash,
+          :info
+        )}</span>
+        <button
+          type="button"
+          phx-click="lv:clear-flash"
+          phx-value-key="info"
+          aria-label="Dismiss success message"
+          class="mg-focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-field"
+        >
+          <Components.icon name="hero-x-mark" class="h-4 w-4" />
+        </button>
       </div>
       <div
         :if={Phoenix.Flash.get(@flash, :error)}
+        id="operator-flash-error"
         role="alert"
-        class="motion-reveal flex items-start gap-sm rounded-box border border-error bg-error/10 px-md py-sm text-body text-base-content"
+        aria-live="assertive"
+        aria-atomic="true"
+        class="motion-reveal flex min-w-0 items-start gap-sm rounded-box border border-error bg-error/10 px-md py-sm text-body text-base-content"
       >
         <Components.icon name="hero-exclamation-circle" class="mt-0.5 h-5 w-5 shrink-0 text-error" />
-        <span>{Phoenix.Flash.get(@flash, :error)}</span>
+        <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{Phoenix.Flash.get(
+          @flash,
+          :error
+        )}</span>
+        <button
+          type="button"
+          phx-click="lv:clear-flash"
+          phx-value-key="error"
+          aria-label="Dismiss error message"
+          class="mg-focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-field"
+        >
+          <Components.icon name="hero-x-mark" class="h-4 w-4" />
+        </button>
       </div>
     </div>
     """

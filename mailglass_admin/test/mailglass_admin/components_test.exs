@@ -231,27 +231,52 @@ defmodule MailglassAdmin.ComponentsTest do
 
   describe "delivery_display_status/1" do
     test "a downstream outcome event supersedes the :sent snapshot" do
-      for event <- [:delivered, :opened, :clicked, :bounced, :complained, :rejected, :deferred, :unsubscribed] do
-        assert Components.delivery_display_status(%{status: :sent, last_event_type: event}) == event
+      for event <- [
+            :delivered,
+            :opened,
+            :clicked,
+            :bounced,
+            :complained,
+            :rejected,
+            :deferred,
+            :unsubscribed
+          ] do
+        assert Components.delivery_display_status(%{status: :sent, last_event_type: event}) ==
+                 event
       end
     end
 
     test "in-flight (handed off, no downstream outcome) reads as :dispatched" do
-      assert Components.delivery_display_status(%{status: :sent, last_event_type: :dispatched}) == :dispatched
-      assert Components.delivery_display_status(%{status: :sent, last_event_type: :sent}) == :dispatched
-      assert Components.delivery_display_status(%{status: :sent, last_event_type: nil}) == :dispatched
+      assert Components.delivery_display_status(%{status: :sent, last_event_type: :dispatched}) ==
+               :dispatched
+
+      assert Components.delivery_display_status(%{status: :sent, last_event_type: :sent}) ==
+               :dispatched
+
+      assert Components.delivery_display_status(%{status: :sent, last_event_type: nil}) ==
+               :dispatched
+
       # A non-outcome event (autoresponded/subscribed/unknown) is not a delivery state → still in-flight.
-      assert Components.delivery_display_status(%{status: :sent, last_event_type: :unknown}) == :dispatched
+      assert Components.delivery_display_status(%{status: :sent, last_event_type: :unknown}) ==
+               :dispatched
     end
 
     test "queued before dispatch reads as :queued" do
-      assert Components.delivery_display_status(%{status: :queued, last_event_type: :queued}) == :queued
-      assert Components.delivery_display_status(%{status: :queued, last_event_type: nil}) == :queued
+      assert Components.delivery_display_status(%{status: :queued, last_event_type: :queued}) ==
+               :queued
+
+      assert Components.delivery_display_status(%{status: :queued, last_event_type: nil}) ==
+               :queued
     end
 
     test "failed and suppressed statuses are preserved" do
-      assert Components.delivery_display_status(%{status: :failed, last_event_type: :failed}) == :failed
-      assert Components.delivery_display_status(%{status: :suppressed, last_event_type: :suppressed}) == :suppressed
+      assert Components.delivery_display_status(%{status: :failed, last_event_type: :failed}) ==
+               :failed
+
+      assert Components.delivery_display_status(%{
+               status: :suppressed,
+               last_event_type: :suppressed
+             }) == :suppressed
     end
   end
 
@@ -267,16 +292,37 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "data-local-time"
       assert html =~ ~s(data-utc="2026-06-14 14:32:05 UTC")
       assert html =~ ~s(title="2026-06-14 14:32:05 UTC")
+      assert html =~ ~s(aria-label="Recorded at 2026-06-14 14:32:05 UTC")
+      assert html =~ ~s(tabindex="0")
       assert html =~ "<time"
       assert html =~ "whitespace-nowrap"
       assert html =~ "cursor-pointer"
     end
 
-    test "nil renders the Pending sentinel and no <time>" do
+    test "nil renders the unavailable sentinel and no <time>" do
       html = render_component(&Components.timestamp/1, at: nil)
 
-      assert html =~ "Pending"
+      assert html =~ "Unavailable"
       refute html =~ "<time"
+    end
+  end
+
+  describe "flash/1" do
+    test "errors are assertive, readable and have a keyboard-sized dismissal control" do
+      html =
+        render_component(&Components.flash/1,
+          kind: :error,
+          message: "Delivery failed. Retry the request."
+        )
+
+      assert html =~ ~s(role="alert")
+      assert html =~ ~s(aria-live="assertive")
+      assert html =~ "Delivery failed. Retry the request."
+      assert html =~ ~s(phx-click="lv:clear-flash")
+      assert html =~ ~s(phx-value-key="error")
+      assert html =~ ~s(aria-label="Dismiss error message")
+      assert html =~ "min-h-11 min-w-11"
+      assert html =~ "[overflow-wrap:anywhere]"
     end
   end
 

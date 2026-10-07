@@ -799,6 +799,7 @@ defmodule MailglassAdmin.OperatorLive do
 
                 <div
                   :if={support_focus?(@support_state) and is_nil(@selected_delivery)}
+                  id="operator-support-focus-detail"
                   data-testid="operator-support-focus-detail"
                   class="mt-6 motion-reveal space-y-4"
                 >

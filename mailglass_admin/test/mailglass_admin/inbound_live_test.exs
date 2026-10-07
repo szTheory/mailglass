@@ -1075,7 +1075,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         Topics.inbound_record_inserted(@tenant_id),
-        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
+        {:inbound_record_inserted, fresh.id,
+         %{provider: "mailgun", record_type: "inbound_record"}}
       )
 
       html = render(view)
@@ -1329,7 +1330,9 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       assert html =~ ~s(data-testid="data-state-stale")
-      assert html =~ "Data may be out of date"
+      assert html =~ "This view may be out of date."
+      assert html =~ "Refresh the view to check for updates."
+      refute html =~ "14:32"
     end
 
     test "inbound_live source contains no assign_async, inbound-loading, or Loading InboundMessages string" do

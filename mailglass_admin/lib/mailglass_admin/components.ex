@@ -151,15 +151,38 @@ defmodule MailglassAdmin.Components do
   """
   @doc since: "0.1.0"
   def flash(assigns) do
+    assigns =
+      assign(assigns, :live_role, if(assigns.kind == :error, do: "alert", else: "status"))
+
     ~H"""
-    <div class="toast toast-top toast-end mg-layer-toast" role="status" aria-live="polite">
-      <div class={["motion-reveal alert text-body gap-2 py-2 px-3", alert_class(@kind)]}>
+    <div
+      id={"flash-#{@kind}"}
+      class="toast toast-top toast-end mg-layer-toast max-w-[min(100vw-2rem,32rem)]"
+      role={@live_role}
+      aria-live={if @kind == :error, do: "assertive", else: "polite"}
+      aria-atomic="true"
+    >
+      <div class={["motion-reveal alert flex items-start gap-sm text-body", alert_class(@kind)]}>
         <.icon name="hero-arrow-path" class="w-4 h-4" />
-        <span>{@message}</span>
+        <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{@message}</span>
+        <button
+          type="button"
+          phx-click="lv:clear-flash"
+          phx-value-key={Atom.to_string(@kind)}
+          aria-label={"Dismiss #{flash_kind_label(@kind)} message"}
+          class="mg-focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-field"
+        >
+          <.icon name="hero-x-mark" class="h-4 w-4" />
+        </button>
       </div>
     </div>
     """
   end
+
+  defp flash_kind_label(:info), do: "information"
+  defp flash_kind_label(:success), do: "success"
+  defp flash_kind_label(:warning), do: "warning"
+  defp flash_kind_label(:error), do: "error"
 
   defp alert_class(:info), do: "alert-info"
   defp alert_class(:success), do: "alert-success"
@@ -505,7 +528,7 @@ defmodule MailglassAdmin.Components do
         class={["h-8 w-8", data_state_icon_class(@kind)]}
       />
       <h3 class="text-body font-bold text-base-content">{@title}</h3>
-      <p class="text-body text-secondary">{@body}</p>
+      <p class="max-w-prose break-words text-body text-secondary [overflow-wrap:anywhere]">{@body}</p>
     </section>
     """
   end
@@ -1059,7 +1082,7 @@ defmodule MailglassAdmin.Components do
   @doc since: "1.7.0"
   def timestamp(%{at: nil} = assigns) do
     ~H"""
-    Pending
+    Unavailable
     """
   end
 
@@ -1070,7 +1093,9 @@ defmodule MailglassAdmin.Components do
       data-local-time="true"
       data-utc={utc_string(@at)}
       title={utc_string(@at)}
-      class={["mono cursor-pointer", @class]}
+      aria-label={"Recorded at #{utc_string(@at)}"}
+      tabindex="0"
+      class={["mg-focus-ring mono cursor-pointer rounded-field", @class]}
     >{utc_string(@at)}</time>
     """
   end
