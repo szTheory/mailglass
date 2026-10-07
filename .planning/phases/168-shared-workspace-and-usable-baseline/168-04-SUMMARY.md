@@ -137,9 +137,10 @@ status: complete
 1. **Task 1: Consolidate rendered Quick view positioning and reduced-motion styling** — `61abe36d` (`fix`)
 2. **Task 2: Complete Quick view identity, evidence and keyboard focus path** — `68ef9c25` (`feat`)
 3. **Task 3: Confirm exact-target actions with truthful busy and completion feedback** — `70d67e57` (`feat`)
-4. **Follow-up: Keep gallery feedback samples inline** — `ae66da0b` (`fix`)
+4. **Task 3 follow-up: Keep gallery feedback samples inline** — `ae66da0b` (`fix`)
+5. **Task 3 audit correction: Preserve chooser semantics and modal focus** — `ed53da64` (`fix`)
 
-The four commits are measured from `plan_head_before` through `plan_head_after` in the frontmatter.
+The original four commits are measured from `plan_head_before` through `plan_head_after` in the frontmatter. The later audit correction is recorded separately above and in `168-REVIEW-FIX.md`.
 
 ## Files Created/Modified
 
@@ -217,3 +218,7 @@ Plan 168-04 is complete. Parent execution should run the whole-phase review and 
 ## Self-Check: PASSED
 
 The summary and all four rendered artifacts exist, and task commits `61abe36d`, `68ef9c25`, `70d67e57`, and `ae66da0b` are ancestors of HEAD.
+
+## Post-Audit Confirmation
+
+Code review WR-01/02 were fixed in `ed53da64`, including the shared modal focus hook and semantic Account links. Current full browser result: 184 passed, 0 failures, 1 guarded skip (185 discovered). Current full ExUnit result: 513 tests, 0 failures, 1 excluded; focused post-format browser confirmation: 8 passed. The source/served CSS hash is `c04faaedbf0bb15352be22f0afa040b7f87119a6a89f59e3d96c2012b6aa42b7`. See `168-BASELINE.md` and `168-REVIEW-FIX.md` for current evidence and remaining Partial/N/A criteria.

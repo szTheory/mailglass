@@ -116,7 +116,7 @@ plan_head_after: e5f77bf3a2c065201180899480f478b77ec2af72
 1. **Task 1: Show the persisted System, Light and Dark choice in the shared picker** - `031aee42` (`feat`)
 2. **Task 2: Keep feedback and icon states readable without repeated motion** - `e5f77bf3` (`feat`)
 
-Supplemental acceptance commit: `a1d1c66b` (`fix(168-03): make stale gallery evidence truthful`) adds the focused browser acceptance suite and corrects the Gallery stale specimen's fabricated time.
+3. **Task 2 supplemental acceptance** — `a1d1c66b` (`fix(168-03): make stale gallery evidence truthful`) adds the focused browser acceptance suite and corrects the Gallery stale specimen's fabricated time.
 
 ## Files Created/Modified
 

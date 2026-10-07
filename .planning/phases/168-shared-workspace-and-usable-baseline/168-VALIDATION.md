@@ -117,3 +117,7 @@ Fallback edge probe: six empty/encoding rows for UXF-03/06/07 have explicit trut
 | Gaps found | 0 |
 | Resolved | 0 |
 | Escalated | 0 |
+
+## Post-Audit Confirmation
+
+Corrective commit `ed53da64`: full ExUnit 513 tests, 0 failures, 1 excluded; full Playwright 184 passed, 0 failures, 1 guarded skip (2m36s); focused post-format Playwright 8 passed. Automated task coverage remains complete. Current generated/served CSS SHA-256: `c04faaedbf0bb15352be22f0afa040b7f87119a6a89f59e3d96c2012b6aa42b7`. Independent goal verification remains the final gate; visual Partial/N/A rows are not silently converted to passes.
