@@ -55,8 +55,8 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
       <% @data_state == :error -> %>
         <Components.data_state
           kind={:error}
-          title="Delivery data unavailable"
-          body="Delivery data could not be loaded. Refresh the page or adjust the filters, then try again."
+          title="This view could not be updated."
+          body="Refresh to try again. If it continues, contact your Mailglass host administrator."
         />
       <% @data_state == :permission_denied -> %>
         <Components.data_state
@@ -67,8 +67,8 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
       <% @data_state == :stale -> %>
         <Components.data_state
           kind={:stale}
-          title="Data may be out of date"
-          body="Showing Deliveries as of 14:32. Refresh to load the latest."
+          title="This view may be out of date."
+          body="Refresh the view to check for updates."
         />
       <% @data_state == :empty or (@data_state == nil and @deliveries == []) -> %>
         <%= if @filters_active? do %>

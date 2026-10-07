@@ -267,7 +267,7 @@ defmodule MailglassAdmin.VoiceTest do
         )
 
       refute_banned_words(html, "account state :none")
-      assert html =~ "No accounts with mail activity"
+      assert html =~ "No Accounts with mail activity"
       assert html =~ "Send a Message from your app"
       assert html =~ "tenant_id"
     end
@@ -284,15 +284,15 @@ defmodule MailglassAdmin.VoiceTest do
         )
 
       refute_banned_words(html, "account state :select_required")
-      assert html =~ "Choose an account"
+      assert html =~ "Choose an Account"
 
       assert html =~
-               "Pick the customer account whose Deliveries and inbound routing you want to inspect."
+               "Select an Account to see scoped operator data."
 
       assert html =~ "Account maps to"
       assert html =~ "tenant_id"
       # Domain nouns enforced as POSITIVE assertions only (D-12) — never a ban grep.
-      assert html =~ "Open account", "per-account link label must be present"
+      assert html =~ "Choose Account", "per-account link label must be present"
       assert html =~ "Acme Support"
       assert html =~ "Beacon Retail"
     end

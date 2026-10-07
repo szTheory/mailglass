@@ -11,6 +11,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
   alias Mailglass.Outbound.Delivery
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.DeliveriesList
+  alias MailglassAdmin.Operator.DetailHeader
   alias MailglassAdmin.Operator.SuppressionCard
   alias MailglassAdmin.TestSupport.OperatorFixtures
   alias MailglassAdmin.TestRepo
@@ -426,6 +427,50 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ "Remove suppression"
       refute html =~ "recent-auth"
       refute html =~ "recent auth"
+    end
+
+    test "full detail keeps exact Unicode labels, provider IDs, and timestamps readable", %{
+      conn: conn
+    } do
+      occurred_at = ~U[2026-10-07 12:34:56Z]
+      recipient = "māil+東京@example.com"
+      provider_message_id = "msg-Ångström-東京"
+
+      delivery =
+        insert_delivery!(
+          recipient: recipient,
+          provider_message_id: provider_message_id,
+          last_event_at: occurred_at,
+          status: :sent,
+          last_event_type: :delivered
+        )
+
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "delivery_id" => delivery.id,
+            "full" => "1"
+          })
+        )
+
+      assert html =~ recipient
+      assert html =~ provider_message_id
+      assert html =~ delivery.id
+      assert html =~ ~s(data-utc="2026-10-07 12:34:56 UTC")
+
+      detail_html =
+        render_component(&DetailHeader.detail_header/1,
+          delivery: delivery,
+          account_labels: %{@tenant_id => "Ångström 東京"}
+        )
+
+      assert detail_html =~ "Ångström 東京"
+      assert detail_html =~ ~s|title="Ångström 東京 (tenant_id: test-tenant)"|
     end
 
     test "renders support cards, masks overview recipients, and distinguishes replay audit from reconcile facts",
@@ -1702,6 +1747,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Email health"
       assert html =~ ~s(data-testid="tenant-selector")
       assert html =~ "No Accounts with mail activity"
+      assert html =~ "Send a Message from your app"
+      assert html =~ "tenant_id"
       refute html =~ ~s(data-testid="operator-master-detail")
       refute html =~ ~s(data-testid="operator-deliveries-list")
     end
@@ -2255,7 +2302,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "No deliveries"
     end
 
-    test "error signal emits data-state-error with 'Delivery data unavailable' — distinct from empty" do
+    test "error signal emits actionable update recovery distinct from empty" do
       html =
         render_component(&DeliveriesList.deliveries_list/1,
           deliveries: [],
@@ -2272,7 +2319,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert html =~ ~s(data-testid="data-state-error")
-      assert html =~ "Delivery data unavailable"
+      assert html =~ "This view could not be updated."
+
+      assert html =~
+               "Refresh to try again. If it continues, contact your Mailglass host administrator."
+
       refute html =~ ~s(data-testid="data-state-empty")
     end
 
@@ -2297,7 +2348,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ ~s(data-testid="data-state-empty")
     end
 
-    test "stale signal emits data-state-stale with 'Data may be out of date'" do
+    test "stale signal asks the operator to refresh without inventing an observation time" do
       html =
         render_component(&DeliveriesList.deliveries_list/1,
           deliveries: [],
@@ -2314,7 +2365,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert html =~ ~s(data-testid="data-state-stale")
-      assert html =~ "Data may be out of date"
+      assert html =~ "This view may be out of date."
+      assert html =~ "Refresh the view to check for updates."
+      refute html =~ "14:32"
     end
 
     test "no two states share a testid — the legacy filtered/truly-empty distinction is preserved within :empty" do

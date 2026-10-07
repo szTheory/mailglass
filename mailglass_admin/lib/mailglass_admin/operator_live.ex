@@ -614,11 +614,11 @@ defmodule MailglassAdmin.OperatorLive do
                 data-testid="operator-overview-no-tenant"
                 class="card bg-base-200 border border-base-300 rounded-box p-md flex flex-col gap-sm"
               >
-                <div class="text-body font-bold text-base-content">Choose an account to begin</div>
+                <div class="text-body font-bold text-base-content">Choose an Account</div>
                 <div class="text-body text-secondary">
-                  Pick the customer account whose email activity you want to inspect. Mailglass keeps
-                  that account boundary in the URL as <code class="mono">tenant_id</code> so refreshes
-                  and shared links stay scoped.
+                  Select an Account to see scoped operator data. Mailglass keeps that account boundary
+                  in the URL as <code class="mono">tenant_id</code> so refreshes and shared links stay
+                  scoped.
                 </div>
                 <div>
                   <.link navigate={@deliveries_path} class="btn btn-primary btn-sm min-h-11">
@@ -682,7 +682,7 @@ defmodule MailglassAdmin.OperatorLive do
                         <div class="flex items-center gap-2">
                           <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
                           <h2 class="text-body font-bold text-base-content">
-                            Delivery data could not be loaded. Refresh the page or adjust the filters, then try again.
+                            This view could not be updated. Refresh to try again. If it continues, contact your Mailglass host administrator.
                           </h2>
                         </div>
                       </div>
