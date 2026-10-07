@@ -1,4 +1,6 @@
 const { test, expect } = require("@playwright/test");
+const fs = require("fs");
+const path = require("path");
 
 // Mirrors operator.spec.js tenantId exactly
 const tenantId = "browser-tenant";
@@ -592,9 +594,8 @@ async function assertStatCardShape(wrapper, label) {
   const valueEl = card.locator("p").nth(1);
   const severityEl = card.locator("p").nth(2);
 
-  // The label's truncating inner span carries the title tooltip (the hint icon now
-  // shares the label <p>, so the title moved onto the text span).
-  await expect(labelEl.locator("span").first(), `${label} label`).toHaveAttribute("title", /.+/);
+  await expect(labelEl.locator("span").first(), `${label} label`).toContainText(/.+/);
+  await expect(labelEl.locator("span").first(), `${label} label is available without hover`).not.toHaveAttribute("title");
   await expect(valueEl, `${label} value`).toHaveText(/.+/);
   await expect(severityEl.locator('[class*="hero-"]'), `${label} severity icon`).toBeVisible();
   await expect(severityEl.locator("span").last(), `${label} severity text`).toHaveText(/.+/);
@@ -607,8 +608,9 @@ async function assertStatCardShape(wrapper, label) {
       overflowWrap: style.overflowWrap
     };
   });
-  expect(valueStyle.whiteSpace, `${label} value nowrap`).toBe("nowrap");
+  expect(valueStyle.whiteSpace, `${label} value wraps`).toBe("normal");
   expect(valueStyle.fontVariantNumeric, `${label} tabular numeric treatment`).toContain("tabular-nums");
+  expect(valueStyle.overflowWrap, `${label} long value wraps`).toBe("anywhere");
 }
 
 async function assertPanelAboveScrim(modal, label) {
@@ -1354,6 +1356,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       expect(await modal.getAttribute("aria-modal")).toBe("true");
       expect(await modal.getAttribute("phx-window-keydown")).toBe("close_replay");
       expect(await modal.getAttribute("phx-key")).toBe("Escape");
+
+      await page.locator("#inbound-replay-close").focus();
+      await page.keyboard.press("Shift+Tab");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-confirm");
+      await page.keyboard.press("Tab");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-close");
 
       // Assert Escape-to-close closes the modal (routes to existing close_replay handler)
       await page.keyboard.press("Escape");
@@ -2115,7 +2123,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("multi-tenant selector preserves surface state and inbound pagination uses real boundaries", async ({
       page
     }) => {
-      await page.setViewportSize({ width: 390, height: 844 });
+      await page.setViewportSize({ width: 320, height: 844 });
       await page.context().clearCookies();
       const resetResponse = await page.request.get("/ops/browser-reset");
       expect(resetResponse.ok()).toBeTruthy();
@@ -2125,7 +2133,22 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       );
 
       await expect(page.getByTestId("tenant-selector")).toBeVisible();
+      const reviewArtifacts = path.resolve(
+        __dirname,
+        "../../.planning/phases/168-shared-workspace-and-usable-baseline/artifacts/review-fix"
+      );
+      fs.mkdirSync(reviewArtifacts, { recursive: true });
+      await page.screenshot({ path: path.join(reviewArtifacts, "account-chooser-320.png"), fullPage: true });
+      const firstChoice = page.locator(
+        '[data-testid="tenant-selector-account-option"][data-account-id="browser-tenant"]'
+      );
+      await expect(firstChoice).toContainText("browser-tenant");
+      await expect(firstChoice).toBeVisible();
       await page.getByTestId("operator-account-switcher").click();
+      const accountList = page.getByRole("list", { name: "Available Accounts" });
+      await expect(accountList.getByRole("listitem")).toHaveCount(2);
+      await expect(accountList.getByRole("link", { name: /browser-tenant/ })).toBeVisible();
+      await page.screenshot({ path: path.join(reviewArtifacts, "account-options-320.png"), fullPage: true });
       await expect(
         page.locator('[data-testid="operator-account-option"][data-account-id="browser-tenant"]')
       ).toBeVisible();
@@ -2133,14 +2156,23 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         page.locator('[data-testid="operator-account-option"][data-account-id="deny-reveal"]')
       ).toBeVisible();
 
-      await page.getByRole("link", { name: /browser-tenant/ }).click();
+      await firstChoice.click();
       await expect(page).toHaveURL(/\/ops\/mail\/inbound\?/);
       await expect(page).toHaveURL(/tenant_id=browser-tenant/);
+      await page.screenshot({ path: path.join(reviewArtifacts, "selected-account-320.png"), fullPage: true });
+      await page.setViewportSize({ width: 390, height: 844 });
 
-      const activeMobile = page.locator('a[aria-current="page"][href*="/ops/mail/inbound"]').last();
+      const activeMobile = page
+        .locator('a[aria-current="page"][href*="/ops/mail/inbound"]')
+        .filter({ visible: true })
+        .last();
       await expect(activeMobile).toBeVisible();
       await expect(activeMobile).toHaveClass(/border-b-2/);
       await expect(activeMobile).toHaveClass(/border-primary/);
+
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.getByTestId("operator-account-switcher").click();
+      await page.screenshot({ path: path.join(reviewArtifacts, "account-options-1440.png"), fullPage: true });
 
       await expect(page.getByTestId("inbound-result-count")).toContainText("9 messages");
       // With per_page 20 (parity with Deliveries) the 9-record demo dataset fits on one
@@ -2335,13 +2367,15 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await expect(loadingCard, `${theme} ${viewport.width} loading aria-busy`).toHaveAttribute("aria-busy", "true");
           await expect(loadingCard.getByText("Loading", { exact: true })).toBeVisible();
 
-          // The label's title tooltip lives on the truncating inner span (the hint icon
-          // shares the label <p>), not the <p> itself.
+          // Long labels and values stay in the document flow; title hover is not
+          // the only way to recover complete content.
           const longLabel = primitiveWrapper(page, "stat_card", "long-label", theme).locator("article p").first().locator("span").first();
-          await expect(longLabel).toHaveAttribute("title", /Deliveries requiring operator review/);
+          await expect(longLabel).toContainText("Deliveries requiring operator review");
+          await expect(longLabel).not.toHaveAttribute("title");
 
           const longValue = primitiveWrapper(page, "stat_card", "long-value", theme).locator("article p").nth(1);
-          await expect(longValue).toHaveAttribute("title", /trace_01JXWIDEVALUE/);
+          await expect(longValue).toContainText(/trace_01JXWIDEVALUE/);
+          await expect(longValue).not.toHaveAttribute("title");
         }
 
         await assertNoElementHorizontalOverflow(

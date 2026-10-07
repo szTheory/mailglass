@@ -55,7 +55,10 @@ defmodule MailglassAdmin.Controllers.Assets do
   # Read from the host's already-installed priv dirs so they are NOT
   # charged to mailglass_admin's Hex tarball.
   @phoenix_js Application.app_dir(:phoenix, "priv/static/phoenix.js")
-  @phoenix_live_view_js Application.app_dir(:phoenix_live_view, "priv/static/phoenix_live_view.js")
+  @phoenix_live_view_js Application.app_dir(
+                          :phoenix_live_view,
+                          "priv/static/phoenix_live_view.js"
+                        )
   @external_resource @phoenix_js
   @external_resource @phoenix_live_view_js
   @live_socket_bootstrap """
@@ -69,8 +72,37 @@ defmodule MailglassAdmin.Controllers.Assets do
       .querySelector("meta[name='csrf-token']")
       ?.getAttribute("content")
 
+    const Hooks = {
+      ModalFocusTrap: {
+        mounted() {
+          this.handleFocusIn = (event) => {
+            const sentinel = event.target.closest?.("[data-focus-trap]")
+            if (!sentinel || !this.el.contains(sentinel)) return
+
+            const controls = [...this.el.querySelectorAll(
+              "a[href], area[href], input:not([disabled]):not([type='hidden']), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [contenteditable='true'], [tabindex]:not([tabindex='-1'])"
+            )].filter((element) =>
+              !element.hasAttribute("data-focus-trap") &&
+              element.getClientRects().length > 0 &&
+              getComputedStyle(element).visibility !== "hidden"
+            )
+
+            const target = sentinel.dataset.focusTrap === "start"
+              ? controls[controls.length - 1]
+              : controls[0]
+            target?.focus()
+          }
+          this.el.addEventListener("focusin", this.handleFocusIn)
+        },
+        destroyed() {
+          this.el.removeEventListener("focusin", this.handleFocusIn)
+        }
+      }
+    }
+
     const liveSocket = new LiveView.LiveSocket("/live", Phoenix.Socket, {
-      params: csrfToken ? { _csrf_token: csrfToken } : {}
+      params: csrfToken ? { _csrf_token: csrfToken } : {},
+      hooks: Hooks
     })
 
     window.liveSocket = liveSocket

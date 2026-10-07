@@ -32,6 +32,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
           role="dialog"
           aria-modal="true"
           aria-labelledby="inbound-replay-modal-title"
+          phx-hook="ModalFocusTrap"
           phx-key="Escape"
           phx-window-keydown="close_replay"
           class="motion-overlay mg-layer-overlay-panel mg-overscroll-contain mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
@@ -42,9 +43,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
             )
           }
         >
-          <%!-- Focus-trap start sentinel: Shift+Tab off the first control lands here and wraps to the last control (Confirm). Pure LiveView.JS, no client hook, no new npm dep. --%>
-          <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#inbound-replay-confirm")}>
-          </span>
+          <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
               <h2 id="inbound-replay-modal-title" class="text-heading font-bold text-base-content">
@@ -66,7 +65,12 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
           </div>
 
           <div class="mt-6 flex flex-wrap justify-end gap-sm">
-            <button type="button" phx-click="close_replay" class="btn btn-ghost min-h-11 px-5">
+            <button
+              id="inbound-replay-cancel"
+              type="button"
+              phx-click="close_replay"
+              class="btn btn-ghost min-h-11 px-5"
+            >
               Cancel
             </button>
             <button
@@ -80,9 +84,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
               Confirm replay
             </button>
           </div>
-          <%!-- Focus-trap end sentinel: Tab off the last control lands here and wraps to the first control (Close). --%>
-          <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#inbound-replay-close")}>
-          </span>
+          <span tabindex="0" aria-hidden="true" data-focus-trap="end"></span>
         </div>
       </div>
     <% end %>

@@ -273,24 +273,23 @@ defmodule MailglassAdmin.Operator.Shell do
         >
           Change Account
         </summary>
-        <div
-          role="list"
+        <ul
           aria-label="Available Accounts"
-          class="mg-layer-dropdown absolute right-0 top-full z-20 mt-xs max-h-64 w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
+          class="mg-layer-dropdown absolute right-0 top-full z-20 mt-xs max-h-64 w-[min(22rem,calc(100vw-2rem))] list-none overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
         >
-          <.link
-            :for={tenant <- @tenant_options}
-            patch={tenant_switch_path(@page_uri, tenant.id)}
-            aria-current={if tenant.id == @selected_tenant_id, do: "true", else: nil}
-            data-testid="operator-account-option"
-            data-account-id={tenant.id}
-            role="listitem"
-            class="mg-focus-ring flex min-h-11 flex-col justify-center rounded-field px-sm py-xs text-body text-base-content hover:bg-base-200"
-          >
-            <span class="break-words">{tenant.label}</span>
-            <span class="mono break-all text-label text-secondary">{tenant.id}</span>
-          </.link>
-        </div>
+          <li :for={tenant <- @tenant_options}>
+            <.link
+              patch={tenant_switch_path(@page_uri, tenant.id)}
+              aria-current={if tenant.id == @selected_tenant_id, do: "true", else: nil}
+              data-testid="operator-account-option"
+              data-account-id={tenant.id}
+              class="mg-focus-ring flex min-h-11 flex-col justify-center rounded-field px-sm py-xs text-body text-base-content hover:bg-base-200"
+            >
+              <span class="break-words">{tenant.label}</span>
+              <span class="mono break-all text-label text-secondary">{tenant.id}</span>
+            </.link>
+          </li>
+        </ul>
       </details>
     </div>
     """
@@ -392,15 +391,19 @@ defmodule MailglassAdmin.Operator.Shell do
               <.link
                 :for={tenant <- @tenant_options}
                 patch={tenant_switch_path(@current_uri, tenant.id)}
-                class="mg-focus-ring flex min-h-11 items-center justify-between gap-md rounded-field border border-base-300 bg-base-100 px-md py-sm text-body hover:border-primary"
+                data-testid="tenant-selector-account-option"
+                data-account-id={tenant.id}
+                class="mg-focus-ring grid min-h-11 min-w-0 grid-cols-1 items-center gap-xs rounded-field border border-base-300 bg-base-100 px-md py-sm text-body hover:border-primary sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-md"
               >
-                <span
-                  class="mono min-w-0 truncate font-bold text-base-content"
-                  title={account_title(tenant)}
-                >
-                  {tenant.label}
+                <span class="min-w-0">
+                  <span class="block break-words [overflow-wrap:anywhere] font-bold text-base-content">
+                    {tenant.label}
+                  </span>
+                  <span class="mono block break-all text-label text-secondary">{tenant.id}</span>
                 </span>
-                <span class="shrink-0 text-label font-bold text-primary">Choose Account</span>
+                <span class="justify-self-end text-label font-bold text-primary sm:shrink-0">
+                  Choose Account
+                </span>
               </.link>
             </div>
           <% end %>
@@ -409,12 +412,6 @@ defmodule MailglassAdmin.Operator.Shell do
     </section>
     """
   end
-
-  defp account_title(%{id: id, label: label}) when is_binary(id) and is_binary(label) do
-    if id == label, do: label, else: "#{label} (tenant_id: #{id})"
-  end
-
-  defp account_title(%{label: label}), do: to_string(label)
 
   @doc """
   Renders the orientation strip for an operator surface — a persistent, symptom-first

@@ -681,14 +681,17 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "Problem"
     end
 
-    test "stat_card long-label state truncates with title" do
+    test "stat_card long-label state remains visible without hover" do
       label = "Delivery health metric with an intentionally long descriptive label"
 
       html =
         render_component(&Components.stat_card/1, label: label, value: 42, severity: :success)
 
-      assert html =~ ~s(title="#{label}")
-      assert html =~ "truncate"
+      assert html =~ label
+      assert html =~ "break-words"
+      assert html =~ "overflow-wrap:anywhere"
+      refute html =~ "title=\"#{label}\""
+      refute html =~ "truncate"
     end
 
     test "stat_card hint renders card-hover affordance and screen-reader copy" do
@@ -727,7 +730,7 @@ defmodule MailglassAdmin.ComponentsTest do
       refute html =~ ~s(role="button")
     end
 
-    test "stat_card long-value state is tabular and whitespace-nowrap with title" do
+    test "stat_card long-value state is tabular and wraps without hover" do
       value = "123456789012345678901234567890"
 
       html =
@@ -737,7 +740,15 @@ defmodule MailglassAdmin.ComponentsTest do
           severity: :neutral
         )
 
-      assert_all(html, ["tabular-nums", "whitespace-nowrap", ~s(title="#{value}")])
+      assert_all(html, [
+        "tabular-nums",
+        "break-all",
+        "whitespace-normal",
+        "overflow-wrap:anywhere",
+        value
+      ])
+
+      refute html =~ "title=\"#{value}\""
     end
 
     test "stat_card is non-interactive unless a future attr makes it actionable" do
@@ -1250,7 +1261,7 @@ defmodule MailglassAdmin.ComponentsTest do
   end
 
   defp assert_stat_markers(html, icon, label, color_class) do
-    assert_all(html, [icon, label, color_class, "tabular-nums", "whitespace-nowrap"])
+    assert_all(html, [icon, label, color_class, "tabular-nums", "text-display"])
   end
 
   defp radio_count(html), do: length(Regex.scan(~r/type="radio"/, html))

@@ -24,11 +24,13 @@ defmodule MailglassAdmin.Operator.ReplayModal do
         }
       >
         <div
+          id="operator-replay-modal"
           data-testid="operator-replay-modal"
           role="dialog"
           aria-modal="true"
           aria-labelledby="replay-modal-title"
           aria-describedby="replay-modal-description"
+          phx-hook="ModalFocusTrap"
           phx-mounted={JS.focus(to: "#operator-replay-close")}
           phx-key="Escape"
           phx-window-keydown="close_replay"
@@ -40,9 +42,8 @@ defmodule MailglassAdmin.Operator.ReplayModal do
             )
           }
         >
-          <%!-- Focus-trap start sentinel: Shift+Tab off the first control lands here and wraps to the last control (Confirm). Pure LiveView.JS, no client hook, no new npm dep. --%>
-          <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#operator-replay-confirm")}>
-          </span>
+          <%!-- Wrap to the last currently focusable action: Confirm when enabled, otherwise Cancel. --%>
+          <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
               <h2 id="replay-modal-title" class="text-heading font-bold text-base-content">
@@ -106,7 +107,12 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           <% end %>
 
           <div class="mt-6 flex flex-wrap justify-end gap-sm">
-            <button type="button" phx-click="close_replay" class="btn btn-ghost min-h-11 px-5">
+            <button
+              id="operator-replay-cancel"
+              type="button"
+              phx-click="close_replay"
+              class="btn btn-ghost min-h-11 px-5"
+            >
               Cancel
             </button>
             <button
@@ -123,8 +129,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
             </button>
           </div>
           <%!-- Focus-trap end sentinel: Tab off the last control lands here and wraps to the first control (Close). --%>
-          <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#operator-replay-close")}>
-          </span>
+          <span tabindex="0" aria-hidden="true" data-focus-trap="end"></span>
         </div>
       </div>
     <% end %>
@@ -204,7 +209,9 @@ defmodule MailglassAdmin.Operator.ReplayModal do
             {@candidate.webhook_event_id}
           </p>
         </div>
-        <p class="text-label text-secondary"><Components.timestamp at={@candidate.webhook_timestamp} /></p>
+        <p class="text-label text-secondary">
+          <Components.timestamp at={@candidate.webhook_timestamp} />
+        </p>
       </div>
 
       <dl class="mt-4 grid gap-sm text-body text-secondary sm:grid-cols-2">

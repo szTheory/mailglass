@@ -36,13 +36,14 @@ defmodule MailglassAdmin.Inbound.QuickView do
         tabindex="-1"
         data-testid="inbound-quick-view-scrim"
         class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 block"
-      >
-      </.link>
+      ></.link>
       <div
+        id="inbound-quick-view"
         data-testid="inbound-quick-view"
         role="dialog"
         aria-modal="true"
         aria-labelledby="inbound-quick-view-title"
+        phx-hook="ModalFocusTrap"
         phx-window-keydown={if @keyboard?, do: "detail_key", else: nil}
         class="mg-detail-panel motion-overlay mg-layer-overlay-panel border-l border-base-300 bg-base-100 p-lg shadow-overlay"
         phx-remove={
@@ -52,8 +53,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
           )
         }
       >
-        <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#inbound-quick-view-close")}>
-        </span>
+        <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
 
         <div class="flex items-center justify-between gap-sm border-b border-base-300 pb-sm">
           <h2 id="inbound-quick-view-title" class="text-label font-bold uppercase text-secondary">
@@ -80,7 +80,10 @@ defmodule MailglassAdmin.Inbound.QuickView do
         <%= cond do %>
           <% @detail_error -> %>
             <div data-testid="inbound-quick-view-error" class="mt-md flex items-start gap-sm">
-              <Components.icon name="hero-exclamation-circle" class="mt-0.5 h-5 w-5 shrink-0 text-error" />
+              <Components.icon
+                name="hero-exclamation-circle"
+                class="mt-0.5 h-5 w-5 shrink-0 text-error"
+              />
               <p class="text-body text-base-content">
                 InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again.
               </p>
@@ -89,7 +92,9 @@ defmodule MailglassAdmin.Inbound.QuickView do
             <div class="mt-md space-y-md">
               <div class="flex flex-wrap items-center gap-sm">
                 <h3 class="text-heading font-bold text-base-content">{subject(@record)}</h3>
-                <Components.status_badge status={Components.normalize_inbound_outcome(Map.get(@record, :outcome))} />
+                <Components.status_badge status={
+                  Components.normalize_inbound_outcome(Map.get(@record, :outcome))
+                } />
               </div>
 
               <p class="text-body text-secondary">
@@ -142,8 +147,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
           </.link>
         </div>
 
-        <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#inbound-quick-view-close")}>
-        </span>
+        <span tabindex="0" aria-hidden="true" data-focus-trap="end"></span>
       </div>
     </div>
     """

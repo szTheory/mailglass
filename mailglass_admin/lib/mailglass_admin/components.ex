@@ -206,7 +206,7 @@ defmodule MailglassAdmin.Components do
   @doc since: "0.1.0"
   def badge(%{variant: :warning} = assigns) do
     ~H"""
-    <span class="badge badge-warning badge-sm gap-1">
+    <span class="badge badge-warning badge-sm gap-1 text-label">
       <.icon name="hero-exclamation-triangle" class="w-3 h-3" /> Error
     </span>
     """
@@ -438,7 +438,7 @@ defmodule MailglassAdmin.Components do
   attr(:rest, :global, default: %{})
 
   @doc """
-  Renders a canonical stat card with label, no-wrap value, and severity.
+  Renders a canonical stat card with wrapping label/value and severity.
 
   Severity is a closed set and always renders as icon plus visible label plus
   semantic color.
@@ -464,8 +464,8 @@ defmodule MailglassAdmin.Components do
       {@rest}
     >
       <div class="flex min-w-0 items-start justify-between gap-sm">
-        <p class="flex min-w-0 items-center gap-xs text-label font-bold uppercase text-secondary">
-          <span class="truncate" title={@label}>{@label}</span>
+        <p class="flex min-w-0 flex-wrap items-center gap-xs text-label font-bold uppercase text-secondary">
+          <span class="min-w-0 break-words [overflow-wrap:anywhere]">{@label}</span>
           <span
             :if={present?(@hint)}
             class="inline-flex shrink-0 text-secondary"
@@ -479,10 +479,7 @@ defmodule MailglassAdmin.Components do
       <p :if={present?(@hint)} class="mg-stat-card-tooltip" aria-hidden="true">
         {@hint}
       </p>
-      <p
-        class="mono mt-xs truncate text-display font-bold tabular-nums whitespace-nowrap text-base-content"
-        title={@display_value}
-      >
+      <p class="mono mt-xs break-all text-display font-bold tabular-nums whitespace-normal text-base-content [overflow-wrap:anywhere]">
         {@display_value}
       </p>
       <p class={[
@@ -1027,7 +1024,7 @@ defmodule MailglassAdmin.Components do
   @doc since: "1.5.0"
   def status_badge(assigns) do
     ~H"""
-    <span class={["badge", size_class(@size), status_class(@status)]}>
+    <span class={["badge text-label whitespace-nowrap", size_class(@size), status_class(@status)]}>
       <span class={[status_icon(@status), "w-3 h-3"]} aria-hidden="true"></span>{status_label(@status)}
     </span>
     """

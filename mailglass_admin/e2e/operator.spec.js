@@ -220,6 +220,11 @@ test.describe("operator browser gate", () => {
     await expect(modal).toContainText("browser-ambiguous-delivery-2");
     await expect(page.getByTestId("operator-replay-confirm")).toHaveCount(0);
 
+    await modal.locator("#operator-replay-close").focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
+    await expect.poll(() => modal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
+
     const secondTarget = page.getByRole("radio", { name: "POSTMARK webhook target", exact: true }).nth(1);
     await secondTarget.focus();
     await page.keyboard.press("Space");

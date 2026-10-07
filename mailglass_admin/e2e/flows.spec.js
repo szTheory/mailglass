@@ -825,6 +825,11 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     // Double-submit lock: Confirm carries phx-disable-with so a render->click double-fire
     // cannot append a duplicate replay run to the append-only ledger.
     await expect(page.locator("#inbound-replay-confirm")).toHaveAttribute("phx-disable-with", "Replaying…");
+    await page.locator("#inbound-replay-close").focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-confirm");
+    await page.keyboard.press("Tab");
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-close");
   });
 
   test("Operator replay modal: Tab off the last control keeps focus inside the dialog; Confirm locks after first click", async ({
@@ -837,12 +842,33 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await page.keyboard.press("Tab");
     const focusInside = await modal.evaluate(el => el.contains(document.activeElement));
     expect(focusInside, "focus remains within the operator replay dialog after Tab past Confirm").toBeTruthy();
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-close");
 
     await expect(page.locator("#operator-replay-confirm")).toHaveAttribute("phx-disable-with", "Replaying…");
   });
 
   test("Phase 168 Account scope", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
+
+    let holdAccountReply = false;
+    let heldAccountReply = null;
+    let resolveAccountReply;
+    let liveSocket = null;
+    await page.routeWebSocket(/\/live\/websocket/, socket => {
+      liveSocket = socket;
+      const server = socket.connectToServer();
+      socket.onMessage(message => server.send(message));
+      server.onMessage(message => {
+        if (holdAccountReply && String(message).includes("fjordline-aps")) {
+          holdAccountReply = false;
+          heldAccountReply = message;
+          resolveAccountReply?.();
+        } else {
+          socket.send(message);
+        }
+      });
+    });
+
     await loginOperator(
       page,
       "/ops/mail?tenant_id=northstar",
@@ -865,8 +891,19 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     // Quick view is modal, so finish its focused task before opening the selector.
     await page.getByTestId("operator-detail-back").click();
     await expect(page).not.toHaveURL(/delivery_id=/);
+    const committedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+    const committedRowText = await committedRow.innerText();
     await page.getByTestId("operator-account-switcher").click();
+    holdAccountReply = true;
+    const pendingAccountReply = new Promise(resolve => { resolveAccountReply = resolve; });
     await targetAccount.click();
+
+    await pendingAccountReply;
+    await expect(page.getByTestId("operator-account-id")).toHaveText("northstar");
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await expect(page.getByTestId("operator-delivery-row").filter({ visible: true }).first()).toHaveText(committedRowText);
+    liveSocket.send(heldAccountReply);
+    heldAccountReply = null;
 
     await expect(page).toHaveURL(/tenant_id=fjordline-aps/);
     await expect(page).not.toHaveURL(/delivery_id=/);
@@ -876,6 +913,29 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(scopedRow).toContainText("f************.example");
     await scopedRow.click();
     await expect(page.getByTestId("operator-quick-view")).toContainText("fjordline-aps");
+  });
+
+  test("Phase 168 essential shell and status type roles meet the UI contract", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await openOperator(page);
+
+    const sizes = await page.evaluate(() => {
+      const pixels = element => Number.parseFloat(getComputedStyle(element).fontSize);
+      const body = document.querySelector(".text-body");
+      const badges = [...document.querySelectorAll(".badge")];
+      const navigation = [...document.querySelectorAll('[data-testid="operator-shell"] nav a')];
+      return {
+        body: body ? pixels(body) : null,
+        badge: badges.map(pixels),
+        navigation: navigation.map(pixels)
+      };
+    });
+
+    expect(sizes.body, "body text uses the 16px role").toBe(16);
+    expect(sizes.badge.length, "status badges render on the selected operator page").toBeGreaterThan(0);
+    expect(Math.min(...sizes.badge), `essential badge sizes ${sizes.badge}`).toBeGreaterThanOrEqual(14);
+    expect(sizes.navigation.length, "operator navigation links render").toBeGreaterThan(0);
+    expect(Math.min(...sizes.navigation), `navigation sizes ${sizes.navigation}`).toBeGreaterThanOrEqual(14);
   });
 
   test("Phase 168 Quick view focus", async ({ page }) => {
@@ -897,13 +957,23 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(page.getByTestId("operator-quick-view-focus-return")).toHaveAttribute("data-focus-return-id", deliveryId);
     await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-quick-view-close");
 
+    await quickView.getByTestId("operator-quick-view-next").focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("data-testid"))).toBe("operator-quick-view-full");
+
     const idField = quickView.locator("dd.mono");
     const overflow = await idField.evaluate(element => element.scrollWidth - element.clientWidth);
     expect(overflow, "full delivery ID wraps within the narrow dialog").toBeLessThanOrEqual(1);
 
+    const firstQuickViewControl = await quickView.evaluate(el => {
+      const controls = [...el.querySelectorAll(
+        "a[href], area[href], input:not([disabled]):not([type='hidden']), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [contenteditable='true'], [tabindex]:not([tabindex='-1'])"
+      )].filter(element => !element.hasAttribute("data-focus-trap") && element.getClientRects().length > 0);
+      return controls[0]?.id || controls[0]?.getAttribute("data-testid");
+    });
     await page.getByTestId("operator-quick-view-full").focus();
     await page.keyboard.press("Tab");
-    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-quick-view-close");
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id || document.activeElement?.getAttribute("data-testid"))).toBe(firstQuickViewControl);
 
     await page.keyboard.press("Escape");
     await expect(quickView).toHaveCount(0);
@@ -1002,6 +1072,10 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       await expect(confirm).toBeDisabled();
       await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(exactTargetId);
       await expect(modal).toContainText("Selected target");
+      await modal.locator("#operator-replay-close").focus();
+      await page.keyboard.press("Shift+Tab");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
+      await expect.poll(() => modal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
 
       liveSocket.send(heldReply);
       heldReply = null;
@@ -1049,6 +1123,10 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       await expect(unavailableModal).toContainText("Replay unavailable");
       await expect(unavailableModal.getByTestId("operator-replay-confirm")).toHaveCount(0);
       await expect(unavailableModal.getByTestId("operator-replay-target-id")).toHaveCount(0);
+      await unavailableModal.locator("#operator-replay-close").focus();
+      await page.keyboard.press("Shift+Tab");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
+      await expect.poll(() => unavailableModal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
     } finally {
       await context.close();
     }

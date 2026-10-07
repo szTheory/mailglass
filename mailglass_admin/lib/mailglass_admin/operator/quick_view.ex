@@ -42,13 +42,14 @@ defmodule MailglassAdmin.Operator.QuickView do
         tabindex="-1"
         data-testid="operator-quick-view-scrim"
         class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 block"
-      >
-      </.link>
+      ></.link>
       <div
+        id="operator-quick-view"
         data-testid="operator-quick-view"
         role="dialog"
         aria-modal="true"
         aria-labelledby="operator-quick-view-title"
+        phx-hook="ModalFocusTrap"
         phx-window-keydown={if @keyboard?, do: "detail_key", else: nil}
         class="mg-detail-panel motion-overlay mg-layer-overlay-panel border-l border-base-300 bg-base-100 p-lg shadow-overlay"
         phx-remove={
@@ -58,8 +59,7 @@ defmodule MailglassAdmin.Operator.QuickView do
           )
         }
       >
-        <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#operator-quick-view-close")}>
-        </span>
+        <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
 
         <div class="flex items-center justify-between gap-sm border-b border-base-300 pb-sm">
           <h2 id="operator-quick-view-title" class="text-label font-bold uppercase text-secondary">
@@ -86,7 +86,10 @@ defmodule MailglassAdmin.Operator.QuickView do
         <%= cond do %>
           <% @detail_error -> %>
             <div data-testid="operator-quick-view-error" class="mt-md flex items-start gap-sm">
-              <Components.icon name="hero-exclamation-circle" class="mt-0.5 h-5 w-5 shrink-0 text-error" />
+              <Components.icon
+                name="hero-exclamation-circle"
+                class="mt-0.5 h-5 w-5 shrink-0 text-error"
+              />
               <p class="text-body text-base-content">
                 Delivery data could not be loaded. Refresh the page or adjust the filters, then try again.
               </p>
@@ -142,8 +145,7 @@ defmodule MailglassAdmin.Operator.QuickView do
           </.link>
         </div>
 
-        <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#operator-quick-view-close")}>
-        </span>
+        <span tabindex="0" aria-hidden="true" data-focus-trap="end"></span>
       </div>
     </div>
     """
@@ -180,6 +182,7 @@ defmodule MailglassAdmin.Operator.QuickView do
   end
 
   defp event_label(nil), do: "Unavailable"
+
   defp event_label(value) do
     value
     |> Atom.to_string()

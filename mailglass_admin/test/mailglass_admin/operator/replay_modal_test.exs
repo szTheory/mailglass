@@ -33,7 +33,8 @@ defmodule MailglassAdmin.Operator.ReplayModalTest do
       assert html =~ "Selected target"
       assert html =~ "hero-check-circle"
       assert html =~ ~s(phx-click="close_replay")
-      assert html =~ ~s(phx-click="confirm_replay")
+      assert html =~ ~s(data-testid="operator-replay-confirm")
+      assert html =~ "confirm_replay"
     end
 
     test "exact target branch stays non-radio and keeps confirm replay available" do
