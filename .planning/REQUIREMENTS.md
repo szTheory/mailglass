@@ -11,8 +11,8 @@
 
 - [x] **UXF-01**: The maintainer can reproduce the current and refined primary workflows from a documented source, route, fixture, theme, and viewport, with a compact inventory of components/states and observed issues.
 - [x] **UXF-02**: An operator can identify the current surface and selected account and navigate the existing workspace without losing the intended account scope or encountering misleading active navigation.
-- [ ] **UXF-03**: A user can read essential labels, values, headings, and supporting text with a coherent shared type/spacing hierarchy at supported narrow and desktop widths and at browser zoom.
-- [ ] **UXF-04**: A user can recognize and operate shared controls with consistent default, focus, hover, pressed, selected, disabled, busy, and validation states where applicable.
+- [x] **UXF-03**: A user can read essential labels, values, headings, and supporting text with a coherent shared type/spacing hierarchy at supported narrow and desktop widths and at browser zoom.
+- [x] **UXF-04**: A user can recognize and operate shared controls with consistent default, focus, hover, pressed, selected, disabled, busy, and validation states where applicable.
 - [ ] **UXF-05**: A user can choose Light, Dark, or System with one unambiguous selected preference and consistent appearance across navigation, reload, and OS changes while System is selected.
 - [x] **UXF-06**: A user encounters consistent domain names, action labels, explanations, and recovery copy across the workspace, with exact technical detail available where it supports investigation.
 - [x] **UXF-07**: A user can complete shared navigation and overlay interactions by keyboard or touch, with meaningful names, visible focus, correct focus containment/return, usable targets, and status cues beyond color.
@@ -80,8 +80,8 @@ The approved [roadmap](ROADMAP.md) assigns each of the 28 v2.9 requirements to e
 |-------------|-------|--------|
 | UXF-01 | Phase 168 | Complete |
 | UXF-02 | Phase 168 | Complete |
-| UXF-03 | Phase 168 | Pending |
-| UXF-04 | Phase 168 | Pending |
+| UXF-03 | Phase 168 | Complete |
+| UXF-04 | Phase 168 | Complete |
 | UXF-05 | Phase 168 | Pending |
 | UXF-06 | Phase 168 | Complete |
 | UXF-07 | Phase 168 | Complete |

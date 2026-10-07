@@ -5,16 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 168
 current_phase_name: Shared Workspace and Usable Baseline
 status: executing
-stopped_at: Completed 168-01-PLAN.md
-last_updated: "2026-10-07T19:09:28.478Z"
+stopped_at: Completed 168-02-PLAN.md
+last_updated: "2026-10-07T20:03:47.929Z"
 last_activity: 2026-10-07
 last_activity_desc: Phase 168 execution started
-state_head: 1ef528b6b61b13e41631c74926a207af6fc60271
+state_head: d2b64cda89fed70e299046bacfb0a3d49bb1a03a
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 ## Current Position
 
 Phase: 168 (Shared Workspace and Usable Baseline) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-10-07 — Phase 168 execution started
 
@@ -253,6 +253,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 167.1 P01 | 24m | 3 tasks | 2 files |
 | Phase 167.1 P02 | 12min | 2 tasks | 2 files |
 | Phase 168 P1 | 48 | 3 tasks | 26 files |
+| Phase 168 P02 | 53m | 3 tasks | 34 files |
 
 ## Accumulated Context
 
@@ -403,6 +404,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 168]: Keep tenant_id as the URL and filter-submission scope; remove duplicate Account filter selection.
 - [Phase 168]: Keep selected Account identity and scope switching in shared operator chrome; keep Preview outside production Account scope.
 - [Phase 168]: Preserve host-owned tenant resolution and authorization; Account option links are navigation aids only.
+- [Phase 168]: Health metrics use three columns only at the desktop breakpoint after 768px review showed compressed labels.
+- [Phase 168]: Filter submit busy labels use fixed-width buttons to preserve action position.
+- [Phase 168]: Stale/unavailable Delivery states use approved recovery copy and never invent an observation time.
 
 ## Quick Tasks Completed
 
@@ -448,8 +452,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-07T19:09:28.452Z
-Stopped at: Completed 168-01-PLAN.md
+Last session: 2026-10-07T20:03:47.903Z
+Stopped at: Completed 168-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
