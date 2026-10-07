@@ -5,11 +5,11 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 169
 current_phase_name: Outbound Investigation and Recovery
 status: planning
-stopped_at: Phase 169 context gathered; researched recommendations adopted; ready for UI design contract
-last_updated: "2026-10-07T22:20:51.656Z"
+stopped_at: Phase 169 UI-SPEC approved; ready for implementation planning
+last_updated: "2026-10-07T22:46:07.422Z"
 last_activity: 2026-10-07
-last_activity_desc: Phase 169 context gathered; researched recommendations adopted
-state_head: b1585f2194d7cd65b53dbb01dfb96234606d405e
+last_activity_desc: Phase 169 UI design contract approved; ready for implementation planning
+state_head: fdc2db16ecdb3df041827440f3b4785c44dc40ec
 progress:
   total_phases: 6
   completed_phases: 1
@@ -42,12 +42,12 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 Phase: 169 — Outbound Investigation and Recovery
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-10-07 — Phase 169 context gathered; researched recommendations adopted
+Last activity: 2026-10-07 — Phase 169 UI design contract approved; ready for implementation planning
 
 ## v2.9 Roadmap Shape
 
 - Phases 168–173 own all 28 approved requirements; Phase 168 is complete and verified (UXF-01–08).
-- Phase 168 established the shared workspace and usable baseline. Phase 169 discussion is complete: 36 specialist comparisons consolidated into 26 adopted decisions. UI design contract and planning are next; later slices follow ROADMAP.md.
+- Phase 168 established the shared workspace and usable baseline. Phase 169 discussion and UI design contract are complete: 26 adopted decisions, seven design dimensions passed, and 82 explicit state criteria across 11 surfaces. Implementation planning is next; later slices follow ROADMAP.md.
 - Code-first; equal engineer and support/on-call operator priority; bounded direct visual inspection and existing automated checks.
 - The approved unsubscribe boundary covers truthful GET/invalid/expired pages; interactive browser submission remains deferred.
 
@@ -461,13 +461,13 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-07T22:20:51.625Z
-Stopped at: Phase 169 context gathered; researched recommendations adopted; ready for UI design contract
-Resume file: .planning/phases/169-outbound-investigation-and-recovery/169-CONTEXT.md
+Last session: 2026-10-07T22:46:07.395Z
+Stopped at: Phase 169 UI-SPEC approved; ready for implementation planning
+Resume file: .planning/phases/169-outbound-investigation-and-recovery/169-UI-SPEC.md
 
 ## Operator Next Steps
 
 - Phase 168 is complete and independently verified. All four plans and both code-review corrections are committed.
-- Phase 169 discussion is complete; the owner delegated adoption of the researched recommendations. See `.planning/phases/169-outbound-investigation-and-recovery/169-CONTEXT.md` and its decision brief.
-- Next: `$gsd-ui-phase 169`, then `$gsd-plan-phase 169`. No Phase 169 implementation or product verification has started.
+- Phase 169 discussion and UI design contract are complete under the owner's delegated recommendations. See `.planning/phases/169-outbound-investigation-and-recovery/169-CONTEXT.md`, its decision brief, and the approved `169-UI-SPEC.md`.
+- Next: `$gsd-plan-phase 169`. The approved UI contract passed seven dimensions and the state-coverage probe resolved 82 criteria. No Phase 169 implementation or product verification has started.
 - Current demo: `http://localhost:4015`; source/asset identity and rendered evidence are in `168-BASELINE.md`. Local admin checks: 513 ExUnit tests, zero failures, one exclusion; Playwright 184 passed, one guarded skip. Remote delivery/CI proof remains Phase 173 scope.
