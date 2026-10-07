@@ -27,7 +27,7 @@ tech-stack:
     - Exact stable desktop/mobile trigger IDs for modal focus return
     - Inline presentation for gallery-only transient feedback specimens
 
-  key-files:
+key-files:
   created:
     - .planning/phases/168-shared-workspace-and-usable-baseline/168-04-SUMMARY.md
     - .planning/phases/168-shared-workspace-and-usable-baseline/artifacts/plan04/quick-view-320-light.png
