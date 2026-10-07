@@ -4,18 +4,18 @@ milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 168
 current_phase_name: Shared Workspace and Usable Baseline
-status: planning
-stopped_at: "Phase 168 UI-SPEC approved: seven dimensions passed and 52 state criteria specified. Next: implementation planning. Reconcile preserved workspace and capture the current rendered baseline before UI edits. No UI implementation or runtime verification performed."
-last_updated: "2026-10-07T17:10:32.169Z"
+status: executing
+stopped_at: "Phase 168 planned: four plans, eleven tasks, four waves; independent checker passed and all 8 requirements, 11 decisions, and 52 UI criteria covered. Next: execute Phase 168, beginning with safe source reconciliation and current rendered baseline before UI edits. No UI implementation or runtime verification performed."
+last_updated: "2026-10-07T17:59:44.371Z"
 last_activity: 2026-10-07
-state_head: 06aafd502f80f8f9b25036a1443c26d4b00ea0fa
+state_head: 38e6ee531352f144f281cd7ea6099798cf692ace
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
+  total_plans: 4
   completed_plans: 0
   percent: 0
-last_activity_desc: Phase 168 UI design contract approved and committed; implementation planning next
+last_activity_desc: Phase 168 planning complete
 ---
 
 # Project State
@@ -25,7 +25,7 @@ last_activity_desc: Phase 168 UI design contract approved and committed; impleme
 See: .planning/PROJECT.md (updated 2026-10-07)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v2.9 Operator, Preview & Email UI Refinement — Phase 168 UI design contract approved; implementation planning next.
+**Current focus:** v2.9 Operator, Preview & Email UI Refinement — Phase 168 planned and checked; four plans ready to execute.
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,9 +39,9 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 
 ## Current Position
 
-Phase: 168 (Shared Workspace and Usable Baseline)
+Phase: 168 (Shared Workspace and Usable Baseline) — READY TO EXECUTE
 Plan: Not started
-Status: Ready to plan
+Status: Ready to execute
 Last activity: 2026-10-07
 
 ## v2.9 Roadmap Shape
@@ -444,12 +444,12 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-07T17:10:31.749Z
-Stopped at: Phase 168 UI-SPEC approved: seven dimensions passed and 52 state criteria specified. Next: implementation planning. Reconcile preserved workspace and capture the current rendered baseline before UI edits. No UI implementation or runtime verification performed.
-Resume file: .planning/phases/168-shared-workspace-and-usable-baseline/168-UI-SPEC.md
+Last session: 2026-10-07T17:59:01.819Z
+Stopped at: Phase 168 planned: four plans, eleven tasks, four waves; independent checker passed and all 8 requirements, 11 decisions, and 52 UI criteria covered. Next: execute Phase 168, beginning with safe source reconciliation and current rendered baseline before UI edits. No UI implementation or runtime verification performed.
+Resume file: .planning/phases/168-shared-workspace-and-usable-baseline/168-01-PLAN.md
 
 ## Operator Next Steps
 
-- Phase 168 discussion and UI design contract are complete. Run `$gsd-plan-phase 168`. Use `168-CONTEXT.md`, `168-UI-SPEC.md`, the approved scope, and Impeccable product context. The contract passed all seven checker dimensions and specifies 52 state acceptance criteria; the owner confirmed the surface coverage and recommended behavior.
+- Phase 168 planning is complete. Run `$gsd-execute-phase 168` for four serialized plans and eleven tasks. The independent plan checker passed after one targeted revision; all 8 requirements, 11 locked decisions, and 52 UI state criteria are covered. Use the approved context/UI-SPEC, research, patterns, and task validation map. Runtime acceptance remains pending.
 - Before executing, safely reconcile this preserved local workspace with the cleanup source already merged and verified in the prior session; retain unrelated local changes and identify the preview checkout.
 - Capture a current rendered baseline before UI changes. Milestone initialization contains no new browser, email-client, product-test, or CI verification claim.

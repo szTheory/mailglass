@@ -35,9 +35,9 @@
     }
   ],
   "next": {
-    "command": "/gsd:discuss-phase",
-    "label": "Discuss the first phase",
-    "reason": "Project initialized — plan your first phase"
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 168 of 6 · 0% · executing"
   },
-  "updated_at": "2026-10-07T14:19:59.072Z"
+  "updated_at": "2026-10-07T17:59:01.315Z"
 }
