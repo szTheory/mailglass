@@ -241,8 +241,10 @@ stability inventory alone.
   [`oban`](https://hex.pm/packages/oban),
   [`opentelemetry`](https://hex.pm/packages/opentelemetry),
   [`mjml`](https://hex.pm/packages/mjml),
-  [`gen_smtp`](https://hex.pm/packages/gen_smtp),
-  [`sigra`](https://hex.pm/packages/sigra).
+  [`gen_smtp`](https://hex.pm/packages/gen_smtp).
+
+Authentication libraries such as [Sigra](https://hex.pm/packages/sigra) are
+host-owned dependencies; Mailglass does not install them as optional deps.
 
 ## Packages
 

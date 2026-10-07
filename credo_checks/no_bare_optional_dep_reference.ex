@@ -7,8 +7,7 @@ defmodule Mailglass.Credo.NoBareOptionalDepReference do
         Oban => Mailglass.OptionalDeps.Oban,
         OpenTelemetry => Mailglass.OptionalDeps.OpenTelemetry,
         Mjml => Mailglass.OptionalDeps.Mjml,
-        GenSmtp => Mailglass.OptionalDeps.GenSmtp,
-        Sigra => Mailglass.OptionalDeps.Sigra
+        GenSmtp => Mailglass.OptionalDeps.GenSmtp
       },
       included_path_prefixes: ["lib/mailglass/"]
     ],

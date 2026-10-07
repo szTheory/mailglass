@@ -191,12 +191,12 @@ the minimum runtime floor.
 - `opentelemetry`
 - `mjml`
 - `gen_smtp`
-- `sigra`
 
 Those integrations are documented and compiled as optional dependencies in
 `mix.exs`. They are supported when present in a compatible adopter app, but the
 repo does not claim that every project must install them to remain inside the
-core `2.x` contract.
+core `2.x` contract. Authentication libraries such as Sigra are owned by the
+host app and are not Mailglass dependencies.
 
 ## Sibling-package policy
 
