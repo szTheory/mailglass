@@ -279,6 +279,30 @@
   position: relative;
 }
 
+/* Delivery Quick view: a bottom sheet on compact screens and a right panel
+   from the existing 768px breakpoint. The panel owns its scroll region and
+   stays above the shared overlay scrim. */
+.mg-detail-panel {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 768px) {
+  .mg-detail-panel {
+    inset-inline-start: auto;
+    inset-block: 0;
+    height: 100%;
+    max-height: none;
+    width: 100%;
+    max-width: 42rem;
+  }
+}
+
 .mg-stat-card-tooltip {
   position: absolute;
   inset-block-start: calc(100% - var(--spacing-xs));

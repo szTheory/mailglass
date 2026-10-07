@@ -21,31 +21,6 @@
         background-color: var(--color-base-300);
       }
 
-      /* Record inspection overlay (Quick view). One URL-driven overlay whose shape
-         adapts by breakpoint: a bottom sheet on mobile, a right slide-over on desktop.
-         Positioning only — dim/z-layer/motion come from the reused mg-layer-overlay-*
-         and motion-* classes. Kept here (not app.css) so token_parity_test, which reads
-         only priv/static/app.css, is untouched. */
-      .mg-detail-panel {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        max-height: 90vh;
-        overflow-y: auto;
-      }
-      @media (min-width: 768px) {
-        .mg-detail-panel {
-          left: auto;
-          top: 0;
-          bottom: 0;
-          height: 100%;
-          max-height: none;
-          width: 100%;
-          max-width: 42rem;
-        }
-      }
     </style>
     <script><%= Phoenix.HTML.raw(js_inline()) %></script>
   </head>

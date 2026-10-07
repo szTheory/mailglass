@@ -25,6 +25,9 @@ defmodule MailglassAdmin.TokenParityTest do
               "app.css"
             ])
 
+  @css_source_path Path.expand("../../assets/css/app.css", __DIR__)
+  @root_layout_path Path.expand("../../lib/mailglass_admin/layouts/root.html.heex", __DIR__)
+
   # Three levels up from test/mailglass_admin/ → test/ → mailglass_admin/ → monorepo root → brandbook/
   @tokens_path Path.expand(Path.join([__DIR__, "..", "..", "..", "brandbook", "tokens.json"]))
 
@@ -88,6 +91,26 @@ defmodule MailglassAdmin.TokenParityTest do
   setup do
     css = File.read!(@css_path)
     {:ok, css: css}
+  end
+
+  test "Quick view positioning is consolidated into source and served CSS" do
+    source = File.read!(@css_source_path)
+    layout = File.read!(@root_layout_path)
+    bundle = File.read!(@css_path)
+
+    for {label, stylesheet} <- [{"source", source}, {"bundle", bundle}] do
+      assert stylesheet =~ ~r/\.mg-detail-panel\s*\{[^}]*position:\s*fixed/s,
+             "Quick view panel positioning is missing from #{label} CSS"
+
+      assert stylesheet =~ ~r/\.mg-detail-panel\s*\{[^}]*max-height:\s*90vh[^}]*overflow-y:\s*auto/s,
+             "Quick view mobile panel must keep a bounded scroll region in #{label} CSS"
+
+      assert stylesheet =~ ~r/@media\s*\(min-width:\s*768px\)[^{]*\{[^}]*\.mg-detail-panel\s*\{[^}]*max-width:\s*42rem/s,
+             "Quick view desktop panel width is missing from #{label} CSS"
+    end
+
+    refute layout =~ ".mg-detail-panel",
+           "Quick view positioning must not be duplicated in root.html.heex"
   end
 
   @tag :token_parity
