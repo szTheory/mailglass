@@ -22,7 +22,7 @@
 
 - [x] **OUTUX-01**: An operator can understand scoped Email health observations and reach the relevant affected work while distinguishing absent, stale, or unavailable evidence from a confirmed healthy outcome.
 - [x] **OUTUX-02**: An operator can find/filter/select a delivery, inspect it, and return to the list with relevant account and filter context preserved, including empty, filtered-empty, and invalid-selection states.
-- [ ] **OUTUX-03**: An operator can read a delivery's recorded provider/events timeline, identifiers, and exact times and distinguish dispatch from downstream delivery without relying on color or ambiguous status labels.
+- [x] **OUTUX-03**: An operator can read a delivery's recorded provider/events timeline, identifiers, and exact times and distinguish dispatch from downstream delivery without relying on color or ambiguous status labels.
 - [x] **OUTUX-04**: An operator can understand existing suppression and webhook-failure/unmatched evidence, its relationship to the selected delivery, and the supported next investigation step without implying an unavailable repair action.
 - [x] **OUTUX-05**: An authorized operator can review one exact eligible stored replay target, confirm its consequence, and understand requested/new-work/no-change/failure outcomes while preserving action-time authorization and account scope.
 
@@ -88,7 +88,7 @@ The approved [roadmap](ROADMAP.md) assigns each of the 28 v2.9 requirements to e
 | UXF-08 | Phase 168 | Complete |
 | OUTUX-01 | Phase 169 | Complete |
 | OUTUX-02 | Phase 169 | Complete |
-| OUTUX-03 | Phase 169 | Pending |
+| OUTUX-03 | Phase 169 | Complete |
 | OUTUX-04 | Phase 169 | Complete |
 | OUTUX-05 | Phase 169 | Complete |
 | INUX-01 | Phase 170 | Pending |

@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 3
+open_count: 5
 waived_count: 8
 fixed_count: 31
-total_count: 42
-last_updated: 2026-10-08T00:33:40.722Z
+total_count: 44
+last_updated: 2026-10-08T01:23:39.597Z
 ---
 
 # Broken Windows Ledger
@@ -57,6 +57,8 @@ last_updated: 2026-10-08T00:33:40.722Z
 | 40 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Full-detail Back action retained the selected Delivery and reopened Quick view; explicit return now clears the selection while preserving list context. | open |  | 2026-10-08T00:33:40.535Z |  |
 | 41 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Exact Delivery LiveView read initially used the wrong arity; it now passes Account and Delivery ID. | open |  | 2026-10-08T00:33:40.627Z |  |
 | 42 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Invalid selection and read failures could resemble an empty Account; distinct non-disclosing and retry states now preserve query truth. | open |  | 2026-10-08T00:33:40.722Z |  |
+| 43 | 169 | deviation | mailglass_admin/test/support/operator_fixtures.ex |  | Timeline browser fixtures use a valid Event UUID and database-required timestamp values. | open |  | 2026-10-08T01:23:39.478Z |  |
+| 44 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Health active-suppression count and historical suppressed-Event destination are labeled as separate populations. | open |  | 2026-10-08T01:23:39.597Z |  |
 
 ````json
 [
@@ -567,6 +569,32 @@ last_updated: 2026-10-08T00:33:40.722Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-10-08T00:33:40.722Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 43,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/test/support/operator_fixtures.ex",
+    "line": null,
+    "description": "Timeline browser fixtures use a valid Event UUID and database-required timestamp values.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T01:23:39.478Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 44,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+    "line": null,
+    "description": "Health active-suppression count and historical suppressed-Event destination are labeled as separate populations.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T01:23:39.597Z",
     "resolved_at": null,
     "milestone": "v2.9"
   }

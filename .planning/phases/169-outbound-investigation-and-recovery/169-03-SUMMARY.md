@@ -124,6 +124,8 @@ Each task was committed atomically:
 2. **Task 2: Copy exact event identity and UTC time without replacing their visible values** — `5feeb480` (feat).
 3. **Task 3: Explain one current matching suppression separately from ledger history and Account totals** — `18901af3` (fix).
 
+**Summary commit:** `e29d07ce` (docs; the final execution metadata commit also captures the state updates and this self-check).
+
 ## Files Created/Modified
 
 - No source files created.
@@ -186,3 +188,8 @@ The bounded timeline, exact selected-event read, copy behavior, and current supp
 ---
 *Phase: 169-outbound-investigation-and-recovery*
 *Completed: 2026-10-07*
+
+## Self-Check: PASSED
+
+- SUMMARY.md exists at the expected phase path.
+- Task commits `9473873f`, `b13a8ca3`, `5feeb480`, and `18901af3`, plus summary commit `e29d07ce`, are present in the current history.
