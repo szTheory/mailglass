@@ -328,7 +328,7 @@ defmodule MailglassAdmin.Operator.Shell do
         aria-atomic="true"
         class="motion-reveal flex min-w-0 items-start gap-sm rounded-box border border-success bg-success/10 px-md py-sm text-body text-base-content"
       >
-        <Components.icon name="hero-check-circle" class="mt-0.5 h-5 w-5 shrink-0 text-success" />
+        <Components.icon name="hero-check-circle" class="mt-xs h-5 w-5 shrink-0 text-success" />
         <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{Phoenix.Flash.get(
           @flash,
           :info
@@ -351,7 +351,7 @@ defmodule MailglassAdmin.Operator.Shell do
         aria-atomic="true"
         class="motion-reveal flex min-w-0 items-start gap-sm rounded-box border border-error bg-error/10 px-md py-sm text-body text-base-content"
       >
-        <Components.icon name="hero-exclamation-circle" class="mt-0.5 h-5 w-5 shrink-0 text-error" />
+        <Components.icon name="hero-exclamation-circle" class="mt-xs h-5 w-5 shrink-0 text-error" />
         <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{Phoenix.Flash.get(
           @flash,
           :error
@@ -381,7 +381,7 @@ defmodule MailglassAdmin.Operator.Shell do
       class="rounded-box border border-base-300 bg-base-200 p-lg"
     >
       <div class="flex items-start gap-sm">
-        <Components.icon name="hero-building-office-2" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <Components.icon name="hero-building-office-2" class="mt-xs h-5 w-5 shrink-0 text-primary" />
         <div class="min-w-0 flex-1">
           <%= if @state == :none do %>
             <h2 class="text-heading font-bold text-base-content">No Accounts with mail activity</h2>
@@ -397,7 +397,7 @@ defmodule MailglassAdmin.Operator.Shell do
             <p class="mt-sm flex items-start gap-xs text-label text-secondary">
               <Components.icon
                 name="hero-information-circle"
-                class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                class="mt-xs h-4 w-4 shrink-0 text-primary"
               />
               <span>
                 Account maps to <code class="mono">tenant_id</code>
@@ -449,7 +449,7 @@ defmodule MailglassAdmin.Operator.Shell do
       data-testid={"#{@surface}-orientation"}
     >
       <div class="flex items-start gap-sm">
-        <Components.icon name="hero-lifebuoy" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <Components.icon name="hero-lifebuoy" class="mt-xs h-5 w-5 shrink-0 text-primary" />
         <div class="min-w-0">
           <h2 class="text-body font-bold text-base-content">{@copy.heading}</h2>
           <ul class="mt-2 grid gap-1 text-label text-secondary">

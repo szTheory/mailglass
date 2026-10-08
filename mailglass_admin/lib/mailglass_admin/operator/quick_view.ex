@@ -88,7 +88,7 @@ defmodule MailglassAdmin.Operator.QuickView do
             <div data-testid="operator-quick-view-error" class="mt-md flex items-start gap-sm">
               <Components.icon
                 name="hero-exclamation-circle"
-                class="mt-0.5 h-5 w-5 shrink-0 text-error"
+                class="mt-xs h-5 w-5 shrink-0 text-error"
               />
               <p class="text-body text-base-content">
                 {detail_error_copy(@detail_error)}

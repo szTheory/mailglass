@@ -770,7 +770,7 @@ defmodule MailglassAdmin.Components do
         role="alert"
         class="flex items-start gap-xs text-label text-error"
       >
-        <.icon name="hero-exclamation-circle" class="mt-0.5 h-4 w-4 shrink-0" />
+        <.icon name="hero-exclamation-circle" class="mt-xs h-4 w-4 shrink-0" />
         <span>
           <span class="font-bold">Action needed:</span> {@error_text}
         </span>
