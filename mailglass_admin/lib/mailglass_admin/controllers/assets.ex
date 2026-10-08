@@ -114,13 +114,9 @@ defmodule MailglassAdmin.Controllers.Assets do
     }
   })();
 
-  // Local-time progressive enhancement: the server renders every timestamp as a
-  // <time data-local-time datetime="…Z" data-utc="… UTC">… UTC</time>. Here we rewrite
-  // the visible text to the viewer's local timezone (with a short tz label), keep the
-  // UTC in the title tooltip, and copy the UTC string to the clipboard on click. With
-  // JS off the server-rendered UTC stands on its own. No phx-hook: a MutationObserver
-  // re-localizes nodes LiveView patches back to UTC (morphdom drops our data-localized
-  // marker on re-render), and click handling is delegated so it survives patches.
+  // Local-time progressive enhancement: keep the server-rendered UTC visible and add a
+  // clearly labeled local-time supplement. No phx-hook: a MutationObserver enhances
+  // timestamps inserted by LiveView patches.
   ;(() => {
     const FMT = {
       year: "numeric", month: "short", day: "numeric",
@@ -133,8 +129,10 @@ defmodule MailglassAdmin.Controllers.Assets do
       if (!iso) return
       const d = new Date(iso)
       if (isNaN(d.getTime())) return
+      const supplement = el.nextElementSibling
+      if (!supplement?.hasAttribute("data-local-time-supplement")) return
       try {
-        el.textContent = d.toLocaleString(undefined, FMT)
+        supplement.textContent = `Local: ${d.toLocaleString(undefined, FMT)}`
       } catch (_e) {
         return
       }
@@ -154,20 +152,27 @@ defmodule MailglassAdmin.Controllers.Assets do
       requestAnimationFrame(() => { scheduled = false; localizeAll() })
     }
 
-    // Capture phase: this runs during the top-down capture pass, before the event
-    // reaches LiveView's window-bubble click handler — so stopPropagation() prevents
-    // the surrounding row's phx-click (e.g. select_delivery) from also firing.
+    // Native copy buttons remain functional after LiveView patches. Feedback is kept
+    // in the associated live region; the exact server-rendered value never changes.
     document.addEventListener("click", (e) => {
-      const el = e.target.closest && e.target.closest("time[data-local-time]")
-      if (!el) return
+      const button = e.target.closest && e.target.closest("button[data-copy-value]")
+      if (!button) return
       e.stopPropagation()
       e.preventDefault()
-      const utc = el.getAttribute("data-utc") || el.getAttribute("datetime")
-      if (!utc || !navigator.clipboard) return
-      navigator.clipboard.writeText(utc).then(() => {
-        el.textContent = "Copied ✓"
-        setTimeout(() => { delete el.dataset.localized; localize(el) }, 1200)
-      }).catch(() => {})
+      const status = button.parentElement.querySelector("[data-copy-status]")
+      const value = button.getAttribute("data-copy-value")
+      if (!status || value === null) return
+
+      status.textContent = ""
+      Promise.resolve()
+        .then(() => {
+          if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable")
+          return navigator.clipboard.writeText(value)
+        })
+        .then(() => { status.textContent = "Copied." })
+        .catch(() => {
+          status.textContent = "Clipboard unavailable. Select and copy the visible value manually."
+        })
     }, true)
 
     // While the Quick view overlay is open, its arrow keys drive prev/next record

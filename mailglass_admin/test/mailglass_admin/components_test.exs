@@ -281,22 +281,41 @@ defmodule MailglassAdmin.ComponentsTest do
   end
 
   describe "timestamp/1" do
-    test "a UTC datetime renders a <time> the local-time script can enhance" do
+    test "a UTC datetime remains visible and may show a labeled local-time supplement" do
       at = ~U[2026-06-14 14:32:05.000000Z]
       html = render_component(&Components.timestamp/1, at: at, class: "whitespace-nowrap")
 
       # Server-rendered fallback is the canonical UTC string, in body + title + data-utc.
-      assert html =~ "2026-06-14 14:32:05 UTC"
+      assert html =~ "2026-06-14 14:32:05.000000 UTC"
       # Machine-readable ISO8601 (Z) for the client script to parse.
       assert html =~ ~s(datetime="2026-06-14T14:32:05.000000Z")
       assert html =~ "data-local-time"
-      assert html =~ ~s(data-utc="2026-06-14 14:32:05 UTC")
-      assert html =~ ~s(title="2026-06-14 14:32:05 UTC")
-      assert html =~ ~s(aria-label="Recorded at 2026-06-14 14:32:05 UTC")
-      assert html =~ ~s(tabindex="0")
+      assert html =~ ~s(data-utc="2026-06-14 14:32:05.000000 UTC")
+      assert html =~ ~s(title="2026-06-14 14:32:05.000000 UTC")
+      assert html =~ ~s(aria-label="Recorded at 2026-06-14 14:32:05.000000 UTC")
       assert html =~ "<time"
       assert html =~ "whitespace-nowrap"
-      assert html =~ "cursor-pointer"
+      assert html =~ "data-local-time-supplement"
+      refute html =~ "tabindex=\"0\""
+      refute html =~ "cursor-pointer"
+    end
+
+    test "a precise UTC datetime preserves fractional seconds for visible and copied values" do
+      at = ~U[2026-06-14 14:32:05.123400Z]
+      html = render_component(&Components.timestamp/1, at: at)
+
+      assert html =~ "2026-06-14 14:32:05.123400 UTC"
+      assert Components.timestamp_value(at) == "2026-06-14 14:32:05.123400 UTC"
+    end
+
+    test "copy buttons expose exact values and an accessible status region" do
+      html = render_component(&Components.copy_button/1, value: "evt-東京-Å", label: "Copy event ID")
+
+      assert html =~ ~s(data-copy-value="evt-東京-Å")
+      assert html =~ ~s(aria-label="Copy event ID")
+      assert html =~ ~s(role="status")
+      assert html =~ ~s(aria-live="polite")
+      assert html =~ ~s(type="button")
     end
 
     test "nil renders the unavailable sentinel and no <time>" do

@@ -209,7 +209,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
         last_event_type: :failed
       })
 
-    base = ~U[2026-10-07 12:00:00Z]
+    base = ~U[2026-10-07 12:00:00.000000Z]
 
     events =
       for index <- 1..101 do
@@ -217,7 +217,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
         occurred_at =
           cond do
-            index == 101 -> nil
+            index == 101 -> DateTime.add(base, 101, :second)
             tied? -> DateTime.add(base, 99, :second)
             true -> DateTime.add(base, index, :second)
           end
@@ -233,7 +233,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
               %{
                 "provider" => "postmark",
                 "source" => "provider webhook",
-                "webhook_event_id" => "ordinary-linked-webhook"
+                "webhook_event_id" => "00000000-0000-0000-0000-000000000001"
               }
 
             index == 4 ->

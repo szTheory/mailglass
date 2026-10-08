@@ -573,54 +573,23 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("preview-orientation")).toBeVisible();
   });
 
-  // Timestamps render server-side as UTC, then the local-time script rewrites the
-  // visible text to the viewer's timezone (keeping UTC in the title) and copies UTC
-  // on click. Node/Chromium here runs in UTC, so the localized text still reads UTC-
-  // equivalent — assert the mechanism (machine-readable <time>, title, clipboard),
-  // not a specific offset.
-  test("Deliveries timestamps are <time> elements localized client-side and copy UTC on click", async ({
-    page,
-    context
-  }) => {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  // UTC stays visible while a separately labeled local time is progressively added.
+  test("Deliveries timestamps retain visible UTC with a local-time supplement", async ({ page }) => {
     await openOperator(page);
 
     const ts = page.locator("time[data-local-time]").first();
     await expect(ts).toBeVisible();
 
-    // Machine-readable ISO8601 (Z) drives the client conversion; UTC stays in the tooltip.
+    // Machine-readable ISO8601 (Z) drives the optional local-time supplement.
     await expect(ts).toHaveAttribute("datetime", /Z$/);
     await expect(ts).toHaveAttribute("title", /UTC$/);
     await expect(ts).toHaveAttribute("data-utc", /UTC$/);
-
-    // The script marks nodes it has localized.
-    await expect(ts).toHaveAttribute("data-localized", "1");
-
-    // js-enabled marker is set (scopes the skeleton), and the skeleton CSS is delivered:
-    // an unlocalized <time data-local-time> paints a muted bar with transparent text.
-    const skeleton = await page.evaluate(() => {
-      const hasJs = document.documentElement.classList.contains("mg-js");
-      const t = document.createElement("time");
-      t.setAttribute("data-local-time", "true");
-      document.body.appendChild(t);
-      const cs = getComputedStyle(t);
-      const out = { hasJs, color: cs.color, background: cs.backgroundColor };
-      t.remove();
-      return out;
-    });
-    expect(skeleton.hasJs).toBe(true);
-    expect(skeleton.color).toBe("rgba(0, 0, 0, 0)"); // transparent text
-    expect(skeleton.background).not.toBe("rgba(0, 0, 0, 0)"); // muted bar present
-
-    // Clicking copies the canonical UTC string to the clipboard...
     const utc = await ts.getAttribute("data-utc");
-    await ts.click();
-    const clip = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clip).toBe(utc);
-    expect(clip).toContain("UTC");
+    await expect(ts).toHaveText(utc);
+    await expect(ts.locator("xpath=following-sibling::*[@data-local-time-supplement]")).toContainText("Local:");
 
-    // ...and does NOT navigate: the click must not bubble to the row's select_delivery
-    // phx-click (the bug this guards).
+    // The script marks nodes it has enhanced without replacing the UTC value.
+    await expect(ts).toHaveAttribute("data-localized", "1");
     await expect(page).not.toHaveURL(/delivery_id=/);
   });
 });

@@ -110,7 +110,7 @@ test.describe("Phase 169 connected journey", () => {
     await expect(page.getByTestId("operator-timeline-selected-event")).toContainText(
       "This exact Event is outside the displayed timeline.",
     );
-    await expect(page.getByTestId("operator-timeline-selected-event")).toContainText("Unavailable");
+    await expect(page.getByTestId("operator-timeline-selected-event")).toContainText("Recorded time");
 
     const ordinaryWebhook = page.locator(`[data-event-id="${fixture.ordinary_linked_event_id}"]`);
     await expect(ordinaryWebhook).toContainText("Delivered");
@@ -119,6 +119,70 @@ test.describe("Phase 169 connected journey", () => {
     await expect(page.getByTestId("operator-timeline-selected-event")).toContainText("evt-東京-Ångström-");
     await expect(page.locator("body")).not.toContainText("never render");
     await page.screenshot({ path: "test-results/phase169-timeline-101.png", fullPage: true });
+  });
+
+  test("Phase 169 exact copy keeps values visible and reports clipboard success and failure", async ({ page, context, browser }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    const reset = await page.request.get("/ops/browser-reset?scenario=phase169-timeline-101");
+    expect(reset.ok()).toBeTruthy();
+    const fixture = await reset.json();
+    const detailPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=${fixture.delivery_id}&support_focus=orphan_backlog&support_event_id=${fixture.selected_event_id}&full=1`;
+    await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(detailPath)}`);
+
+    const selected = page.getByTestId("operator-timeline-selected-event");
+    const eventId = selected.getByRole("button", { name: "Copy event ID" });
+    await expect(selected).toContainText("evt-東京-Ångström-");
+    await eventId.focus();
+    await page.keyboard.press("Enter");
+    await expect(eventId.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText("Copied.");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(fixture.selected_event_id);
+    await expect(selected).toContainText(fixture.selected_event_id);
+
+    const visibleEvent = page.getByTestId("operator-timeline-event").first();
+    const time = visibleEvent.locator("time[data-local-time]");
+    const originalUtc = await time.innerText();
+    const copyTime = visibleEvent.getByRole("button", { name: "Copy recorded time" });
+    await copyTime.click();
+    await expect(copyTime.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText("Copied.");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(originalUtc);
+    await expect(time).toHaveText(originalUtc);
+
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { writeText: () => Promise.reject(new Error("denied")) }
+      });
+    });
+    await eventId.click();
+    await expect(eventId.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText(
+      "Clipboard unavailable. Select and copy the visible value manually."
+    );
+    await expect(selected).toContainText(fixture.selected_event_id);
+
+    await page.evaluate(() => {
+      window.liveSocket.disconnect();
+      window.liveSocket.connect();
+    });
+    await expect(eventId).toBeVisible();
+    await eventId.click();
+    await expect(eventId.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText(
+      "Clipboard unavailable. Select and copy the visible value manually."
+    );
+    await expect(selected).toContainText(fixture.selected_event_id);
+
+    const touchContext = await browser.newContext({ hasTouch: true, permissions: ["clipboard-read", "clipboard-write"] });
+    try {
+      const touchPage = await touchContext.newPage();
+      await touchPage.setViewportSize({ width: 390, height: 844 });
+      await touchPage.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(detailPath)}`);
+      const touchCopy = touchPage.getByTestId("operator-timeline-event").first()
+        .getByRole("button", { name: "Copy recorded time" });
+      await touchCopy.tap();
+      await expect(touchCopy.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText("Copied.");
+    } finally {
+      await touchContext.close();
+    }
+    await page.screenshot({ path: "test-results/phase169-copy-status.png", fullPage: true });
   });
 
   for (const width of [390, 1440]) {

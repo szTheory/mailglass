@@ -1073,12 +1073,9 @@ defmodule MailglassAdmin.Components do
   attr(:class, :string, default: "", doc: "extra classes for the <time> element")
 
   @doc """
-  Renders a UTC `%DateTime{}` as a `<time>` element the admin's local-time script
-  progressively enhances: the server-rendered text is the canonical UTC string
-  (`"YYYY-MM-DD HH:MM:SS UTC"`), and on the client the script rewrites the text to the
-  viewer's local timezone, keeps the UTC in the `title` tooltip, and copies the UTC to
-  the clipboard on click. With JS off (or before hydration) the UTC string stands on its
-  own. `nil` renders the plain `"Pending"` sentinel (no `<time>`).
+  Renders a UTC `%DateTime{}` as a `<time>` element whose visible value remains the
+  canonical UTC string (`"YYYY-MM-DD HH:MM:SS UTC"`). The client may add a separately
+  labeled local-time supplement. `nil` renders an unavailable sentinel (no `<time>`).
   """
   @doc since: "1.7.0"
   def timestamp(%{at: nil} = assigns) do
@@ -1095,13 +1092,46 @@ defmodule MailglassAdmin.Components do
       data-utc={utc_string(@at)}
       title={utc_string(@at)}
       aria-label={"Recorded at #{utc_string(@at)}"}
-      tabindex="0"
-      class={["mg-focus-ring mono cursor-pointer rounded-field", @class]}
+      class={["mono", @class]}
     >{utc_string(@at)}</time>
+    <span data-local-time-supplement class="ml-xs text-label text-secondary"></span>
     """
   end
 
-  defp utc_string(%DateTime{} = at), do: Calendar.strftime(at, "%Y-%m-%d %H:%M:%S UTC")
+  attr(:value, :string, required: true)
+  attr(:label, :string, required: true)
+
+  def copy_button(assigns) do
+    ~H"""
+    <span class="inline-flex flex-wrap items-center gap-xs">
+      <button
+        type="button"
+        class="btn btn-ghost min-h-11 mg-focus-ring"
+        data-copy-value={@value}
+        aria-label={@label}
+      >{@label}</button>
+      <span role="status" aria-live="polite" aria-atomic="true" data-copy-status></span>
+    </span>
+    """
+  end
+
+  @doc false
+  def timestamp_value(%DateTime{} = at), do: utc_string(at)
+
+  defp utc_string(%DateTime{} = at) do
+    base = Calendar.strftime(at, "%Y-%m-%d %H:%M:%S")
+    {microseconds, precision} = at.microsecond
+
+    fraction =
+      if precision > 0 do
+        digits = microseconds |> Integer.to_string() |> String.pad_leading(6, "0")
+        "." <> binary_part(digits, 0, precision)
+      else
+        ""
+      end
+
+    base <> fraction <> " UTC"
+  end
 
   defp size_class(:sm), do: "badge-sm"
   defp size_class(:md), do: "badge-md"

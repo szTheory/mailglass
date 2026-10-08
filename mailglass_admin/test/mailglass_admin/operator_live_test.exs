@@ -521,7 +521,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ recipient
       assert html =~ provider_message_id
       assert html =~ delivery.id
-      assert html =~ ~s(data-utc="2026-10-07 12:34:56 UTC")
+      assert html =~ ~s(data-utc="2026-10-07 12:34:56.000000 UTC")
 
       detail_html =
         render_component(&DetailHeader.detail_header/1,
