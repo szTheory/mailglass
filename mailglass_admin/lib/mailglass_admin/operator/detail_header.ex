@@ -25,7 +25,10 @@ defmodule MailglassAdmin.Operator.DetailHeader do
             <Components.status_badge status={@delivery.status} />
           </div>
           <p class="mono text-label text-secondary">{@delivery.id}</p>
-          <p :if={present?(@delivery.mailable)} class="text-body text-secondary">
+          <p
+            :if={present?(@delivery.mailable)}
+            class="break-words text-body text-secondary [overflow-wrap:anywhere]"
+          >
             {@delivery.mailable}
           </p>
         </div>

@@ -557,6 +557,55 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
 });
 
+test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
+  const mailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await loginOperator(page, "/ops/mail?tenant_id=northstar", "operator-1", "northstar", "accounts");
+  await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
+  await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+  await page.getByTestId("operator-account-switcher").click();
+  const fjordline = page.locator(
+    '[data-testid="operator-account-option"][data-account-id="fjordline-aps"]'
+  );
+  await fjordline.click();
+  await expect(page).toHaveURL(/tenant_id=fjordline-aps/);
+
+  const row = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+  await selectDeliveryFull(page, row);
+  const mailableElement = page
+    .getByTestId("operator-detail-header")
+    .locator("p")
+    .filter({ hasText: mailable });
+  await expect(mailableElement).toHaveText(mailable);
+
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const geometry = await mailableElement.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return {
+        overflowWrap: getComputedStyle(element).overflowWrap,
+        left: rect.left,
+        right: rect.right,
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+        documentScrollWidth: document.documentElement.scrollWidth,
+        viewportWidth: window.innerWidth
+      };
+    });
+    expect(geometry.overflowWrap, `Mailable wrapping at ${width}px`).toBe("anywhere");
+    expect(geometry.left, `Mailable left edge at ${width}px`).toBeGreaterThanOrEqual(0);
+    expect(geometry.right, `Mailable right edge at ${width}px`).toBeLessThanOrEqual(width);
+    expect(
+      geometry.scrollWidth - geometry.clientWidth,
+      `Mailable element overflow at ${width}px`
+    ).toBeLessThanOrEqual(1);
+    expect(
+      geometry.documentScrollWidth,
+      `document width at ${width}px`
+    ).toBeLessThanOrEqual(geometry.viewportWidth);
+  }
+});
+
 // =============================================================================
 // OVERLAY SUBSET — operator + inbound replay modal at 320:
 // panel-above-scrim + Escape closes + background scrollY unchanged
