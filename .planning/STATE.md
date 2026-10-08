@@ -4,17 +4,17 @@ milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 169
 current_phase_name: Outbound Investigation and Recovery
-status: executing
-stopped_at: Completed 169-04-PLAN.md
-last_updated: "2026-10-08T02:02:32.539Z"
+status: Plan 5 complete; awaiting independent phase review and verifier
+stopped_at: Completed 169-05-PLAN.md; awaiting independent phase review and verifier
+last_updated: "2026-10-08T02:44:42.627Z"
 last_activity: 2026-10-08
-last_activity_desc: Phase 169 Plan 04 completed
-state_head: 5bdc10980d8f1b2265f5c967fd9b8884e10aa596
+last_activity_desc: Phase 169 Plan 05 completed; awaiting independent review
+state_head: c86bd17d366d0f136a1a6c10db9b11d61effd3c5
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
   percent: 17
 ---
 
@@ -41,8 +41,8 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 
 Phase: 169 (Outbound Investigation and Recovery) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
-Last activity: 2026-10-08 — Phase 169 Plan 04 completed
+Status: Plan 5 complete; awaiting independent phase review and verifier
+Last activity: 2026-10-07 — Phase 169 Plan 05 completed; awaiting independent review
 
 ## v2.9 Roadmap Shape
 
@@ -261,6 +261,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 169 P02 | 24m | 2 tasks | 9 files |
 | Phase 169 P03 | 21m | 3 tasks | 16 files |
 | Phase 169 P04 | 22m | 2 tasks | 17 files |
+| Phase 169 P05 | ~2h 25m | 2 tasks | 35 files |
 
 ## Accumulated Context
 
@@ -433,6 +434,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 169]: Re-read and compare the same target before host authorization; reject stale or replaced review without selecting a substitute.
 - [Phase 169]: Use command-returned row counts for local outcomes and persisted audit reads only for terminal evidence.
 - [Phase 169]: Do not expose raw audit metadata, actor identifiers, failure reasons, or exception bodies in operator feedback.
+- [Phase 169]: Final Back to deliveries clears selected Delivery, full-detail mode, and exact support focus while preserving Account and committed list state, per the approved UI spec.
+- [Phase 169]: Keep dev-gallery theme specimens stacked through tablet widths; use actual available content width for production collection layout.
+- [Phase 169]: Terminal audit database write failure remains an explicit proof limit; browser evidence covers successful command feedback and a post-command audit read failure.
 
 ## Quick Tasks Completed
 
@@ -478,8 +482,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-08T02:02:32.508Z
-Stopped at: Completed 169-04-PLAN.md
+Last session: 2026-10-08T02:44:32.639Z
+Stopped at: Completed 169-05-PLAN.md; awaiting independent phase review and verifier
 Resume file: None
 
 ## Operator Next Steps
