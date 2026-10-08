@@ -80,9 +80,9 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           type="button"
           phx-click="open_replay"
           data-testid="operator-replay-open"
-          class="btn btn-error min-h-11 px-md"
+          class="btn btn-primary min-h-11 px-md"
         >
-          Replay webhook
+          Review webhook replay
         </button>
       </div>
     </Components.card>

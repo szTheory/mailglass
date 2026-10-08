@@ -83,6 +83,9 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:replay_history, [])
       |> assign(:replay_modal_open?, false)
       |> assign(:replay_selected_target_id, nil)
+      |> assign(:replay_review_snapshot, nil)
+      |> assign(:replay_review_consumed?, false)
+      |> assign(:replay_pending?, false)
       |> assign(:recent_auth_at, get_in(socket.assigns, [:operator_actor, :recent_auth_at]))
       |> assign(:base_path, "/operator")
       |> assign(:page_uri, "/operator")
@@ -395,13 +398,16 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("open_replay", _params, socket) do
+    replay_targets = socket.assigns.replay_targets
+    selected_target_id = default_replay_target_id(replay_targets)
+
     {:noreply,
      socket
      |> assign(:replay_modal_open?, true)
-     |> assign(
-       :replay_selected_target_id,
-       default_replay_target_id(socket.assigns.replay_targets)
-     )}
+     |> assign(:replay_selected_target_id, selected_target_id)
+     |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
+     |> assign(:replay_review_consumed?, false)
+     |> assign(:replay_pending?, false)}
   end
 
   def handle_event("close_replay", _params, socket) do
@@ -465,7 +471,7 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("choose_replay_target", %{"webhook_event_id" => webhook_event_id}, socket) do
-    {:noreply, assign(socket, :replay_selected_target_id, blank_to_nil(webhook_event_id))}
+    {:noreply, select_frozen_replay_target(socket, webhook_event_id)}
   end
 
   def handle_event(
@@ -473,10 +479,19 @@ defmodule MailglassAdmin.OperatorLive do
         %{"replay" => %{"webhook_event_id" => webhook_event_id}},
         socket
       ) do
-    {:noreply, assign(socket, :replay_selected_target_id, blank_to_nil(webhook_event_id))}
+    {:noreply, select_frozen_replay_target(socket, webhook_event_id)}
   end
 
-  def handle_event("confirm_replay", _params, socket) do
+  def handle_event(
+        "confirm_replay",
+        _params,
+        %{assigns: %{replay_modal_open?: true, replay_review_consumed?: false}} = socket
+      ) do
+    socket =
+      socket
+      |> assign(:replay_review_consumed?, true)
+      |> assign(:replay_pending?, true)
+
     with %{id: delivery_id, tenant_id: tenant_id} <-
            socket.assigns.selected_delivery || {:error, :no_selected_delivery},
          %{} = delivery <-
@@ -493,7 +508,10 @@ defmodule MailglassAdmin.OperatorLive do
              delivery_id: delivery_id
            }),
          {:ok, target} <-
-           selected_replay_target(
+           resolve_reviewed_replay_target(
+             socket.assigns.replay_review_snapshot,
+             tenant_id,
+             delivery_id,
              fresh_targets,
              socket.assigns.replay_selected_target_id
            ),
@@ -521,13 +539,34 @@ defmodule MailglassAdmin.OperatorLive do
         {:noreply, put_flash(socket, :error, "Select a delivery before replaying a webhook.")}
 
       {:error, :unavailable} ->
-        {:noreply, put_flash(socket, :error, "Replay is unavailable for this delivery.")}
+        {:noreply,
+         socket
+         |> assign(:replay_pending?, false)
+         |> put_flash(
+           :error,
+           "Replay is unavailable for this delivery. Review it again before retrying."
+         )}
+
+      {:error, :review_changed} ->
+        {:noreply,
+         socket
+         |> assign(:replay_pending?, false)
+         |> put_flash(
+           :error,
+           "This webhook request changed or is no longer eligible. Review the current request before replaying."
+         )}
 
       {:error, :target_required} ->
-        {:noreply, put_flash(socket, :error, "Choose one webhook target before confirming replay.")}
+        {:noreply,
+         socket
+         |> assign(:replay_pending?, false)
+         |> put_flash(:error, "Choose one webhook target before confirming replay.")}
 
       {:error, {:auth, message}} ->
-        {:noreply, put_flash(socket, :error, message)}
+        {:noreply,
+         socket
+         |> assign(:replay_pending?, false)
+         |> put_flash(:error, message)}
 
       {:error, reason} ->
         {:noreply,
@@ -538,9 +577,16 @@ defmodule MailglassAdmin.OperatorLive do
            true,
            false
          )
+         |> assign(:replay_pending?, false)
          |> put_flash(:error, RepairState.flash_failure(reason))}
     end
   end
+
+  def handle_event("confirm_replay", _params, %{assigns: %{selected_delivery: nil}} = socket) do
+    {:noreply, put_flash(socket, :error, "Select a delivery before replaying a webhook.")}
+  end
+
+  def handle_event("confirm_replay", _params, socket), do: {:noreply, socket}
 
   defp select_delivery(socket, delivery_id, params) do
     allowed_focus_ids = [
@@ -1073,6 +1119,9 @@ defmodule MailglassAdmin.OperatorLive do
                 delivery={@selected_delivery}
                 replay_targets={@replay_targets}
                 selected_target_id={@replay_selected_target_id}
+                account_label={Accounts.label(@selected_tenant_id, @account_labels)}
+                pending?={@replay_pending?}
+                consumed?={@replay_review_consumed?}
               />
           <% end %>
         <% end %>
@@ -1802,7 +1851,51 @@ defmodule MailglassAdmin.OperatorLive do
     socket
     |> assign(:replay_modal_open?, false)
     |> assign(:replay_selected_target_id, default_replay_target_id(socket.assigns.replay_targets))
+    |> assign(:replay_review_snapshot, nil)
+    |> assign(:replay_review_consumed?, false)
+    |> assign(:replay_pending?, false)
   end
+
+  defp replay_review_snapshot(socket, %{status: status, candidates: candidates})
+       when status in [:exact, :ambiguous] do
+    case socket.assigns.selected_delivery do
+      %{id: delivery_id, tenant_id: tenant_id} ->
+        %{tenant_id: tenant_id, delivery_id: delivery_id, status: status, candidates: candidates}
+
+      _ ->
+        nil
+    end
+  end
+
+  defp replay_review_snapshot(_socket, _targets), do: nil
+
+  defp select_frozen_replay_target(socket, value) do
+    target_id = blank_to_nil(value)
+    snapshot = socket.assigns[:replay_review_snapshot]
+
+    if snapshot && Enum.any?(snapshot.candidates, &(&1.webhook_event_id == target_id)) do
+      assign(socket, :replay_selected_target_id, target_id)
+    else
+      assign(socket, :replay_selected_target_id, nil)
+    end
+  end
+
+  defp resolve_reviewed_replay_target(
+         %{tenant_id: tenant_id, delivery_id: delivery_id, candidates: candidates},
+         tenant_id,
+         delivery_id,
+         %{candidates: fresh_candidates},
+         selected_target_id
+       ) do
+    selected = Enum.find(candidates, &(&1.webhook_event_id == selected_target_id))
+
+    if candidates == fresh_candidates && selected,
+      do: {:ok, selected},
+      else: {:error, :review_changed}
+  end
+
+  defp resolve_reviewed_replay_target(_snapshot, _tenant_id, _delivery_id, _targets, _selected),
+    do: {:error, :review_changed}
 
   defp preserve_replay_selection(
          %{status: :ambiguous, candidates: candidates},
@@ -1823,27 +1916,6 @@ defmodule MailglassAdmin.OperatorLive do
     do: candidate.webhook_event_id
 
   defp default_replay_target_id(_replay_targets), do: nil
-
-  defp selected_replay_target(nil, _selected_target_id), do: {:error, :unavailable}
-
-  defp selected_replay_target(%{status: :unavailable}, _selected_target_id),
-    do: {:error, :unavailable}
-
-  defp selected_replay_target(%{status: :exact, candidate: candidate}, selected_target_id) do
-    if candidate.webhook_event_id == selected_target_id,
-      do: {:ok, candidate},
-      else: {:error, :target_required}
-  end
-
-  defp selected_replay_target(%{status: :ambiguous, candidates: _candidates}, nil),
-    do: {:error, :target_required}
-
-  defp selected_replay_target(%{status: :ambiguous, candidates: candidates}, selected_target_id) do
-    case Enum.find(candidates, &(&1.webhook_event_id == selected_target_id)) do
-      nil -> {:error, :target_required}
-      candidate -> {:ok, candidate}
-    end
-  end
 
   defp latest_replay([]), do: nil
   defp latest_replay(replay_history), do: List.last(replay_history)

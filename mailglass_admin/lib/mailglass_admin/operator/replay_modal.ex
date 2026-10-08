@@ -13,6 +13,9 @@ defmodule MailglassAdmin.Operator.ReplayModal do
   attr(:delivery, :map, default: nil)
   attr(:replay_targets, :map, default: nil)
   attr(:selected_target_id, :string, default: nil)
+  attr(:account_label, :string, default: nil)
+  attr(:pending?, :boolean, default: false)
+  attr(:consumed?, :boolean, default: false)
 
   def replay_modal(assigns) do
     ~H"""
@@ -34,7 +37,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           phx-mounted={JS.focus(to: "#operator-replay-close")}
           phx-key="Escape"
           phx-window-keydown="close_replay"
-          class="motion-overlay mg-layer-overlay-panel mx-auto my-4 w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
+          class="motion-overlay mg-layer-overlay-panel relative mx-auto my-4 w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
           phx-remove={
             JS.hide(
               time: 150,
@@ -47,10 +50,10 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
               <h2 id="replay-modal-title" class="text-heading font-bold text-base-content">
-                Confirm webhook replay for {@delivery.recipient}
+                Review webhook replay
               </h2>
               <p id="replay-modal-description" class="text-body text-secondary">
-                Re-dispatches the stored webhook request through Mailbox routing and records a new Event in the append-only ledger. Confirm to replay.
+                Replay reprocesses the full stored request through current normalization. It may add Events or update Delivery and suppression records for multiple Deliveries in this Account. It does not resend outbound mail or prove provider receipt.
               </p>
             </div>
 
@@ -58,9 +61,9 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               id="operator-replay-close"
               type="button"
               phx-click="close_replay"
-              class="btn btn-ghost btn-sm"
+              class="btn btn-ghost min-h-11 px-4"
             >
-              Close
+              Close replay review
             </button>
           </div>
 
@@ -68,8 +71,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
             <% %{status: :exact, candidate: candidate} -> %>
               <div class="mt-6 space-y-4">
                 <p class="text-body text-base-content">
-                  Replay is <span class="font-bold">{RepairState.availability_label(:exact)}</span>.
-                  Confirm to replay that stored request.
+                  Review the exact stored request before confirming.
                 </p>
                 <.target_card candidate={candidate} selected={true} />
               </div>
@@ -77,7 +79,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               <div class="mt-6 space-y-4">
                 <p class="text-body text-base-content">
                   Replay is <span class="font-bold">{RepairState.availability_label(:ambiguous)}</span>.
-                  Choose one webhook target. The operator UI will not guess across multiple replayable webhook rows.
+                  Choose the exact stored request to review. No request is selected for you.
                 </p>
 
                 <form id="operator-replay-targets" phx-change="choose_replay_target" class="space-y-3">
@@ -106,6 +108,36 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               </div>
           <% end %>
 
+          <div
+            :if={reviewed_target(@replay_targets, @selected_target_id)}
+            class="mt-6 rounded-box border border-base-300 bg-base-200 p-4"
+            data-testid="operator-replay-reviewed-target"
+          >
+            <p class="mb-3 text-label font-bold text-base-content">Reviewed request</p>
+            <dl class="grid gap-sm text-body sm:grid-cols-2">
+              <div class="min-w-0">
+                <dt class="text-label text-secondary">Account</dt>
+                <dd class="mt-1 break-words text-base-content">{present(@account_label)}</dd>
+              </div>
+              <div class="min-w-0">
+                <dt class="text-label text-secondary">Stored webhook/request ID</dt>
+                <dd class="mono mt-1 break-all text-base-content">{reviewed_target(@replay_targets, @selected_target_id).webhook_event_id}</dd>
+              </div>
+              <div class="min-w-0">
+                <dt class="text-label text-secondary">Provider</dt>
+                <dd class="mt-1 break-words text-base-content">{String.upcase(reviewed_target(@replay_targets, @selected_target_id).provider || "unknown")}</dd>
+              </div>
+              <div class="min-w-0">
+                <dt class="text-label text-secondary">Received</dt>
+                <dd class="mt-1 break-words text-base-content"><Components.timestamp at={reviewed_target(@replay_targets, @selected_target_id).webhook_timestamp} /></dd>
+              </div>
+            </dl>
+          </div>
+
+          <p :if={@pending?} role="status" aria-live="polite" class="mt-4 text-body text-secondary">
+            Replaying the reviewed request…
+          </p>
+
           <div class="mt-6 flex flex-wrap justify-end gap-sm">
             <button
               id="operator-replay-cancel"
@@ -121,11 +153,12 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               type="button"
               phx-click={JS.push("confirm_replay") |> JS.focus(to: "#operator-replay-close")}
               phx-disable-with="Replaying…"
+              disabled={@pending? or @consumed?}
               aria-live="polite"
               data-testid="operator-replay-confirm"
               class="btn btn-error min-h-11 px-5"
             >
-              Confirm replay
+              {if(@pending?, do: "Replaying…", else: "Confirm replay")}
             </button>
           </div>
           <%!-- Focus-trap end sentinel: Tab off the last control lands here and wraps to the first control (Close). --%>
@@ -228,12 +261,23 @@ defmodule MailglassAdmin.Operator.ReplayModal do
     """
   end
 
-  defp confirm_enabled?(%{status: :exact}, _selected_target_id), do: true
+  defp confirm_enabled?(%{status: :exact, candidate: candidate}, selected_target_id),
+    do: candidate.webhook_event_id == selected_target_id
 
   defp confirm_enabled?(%{status: :ambiguous}, selected_target_id),
     do: is_binary(selected_target_id) and selected_target_id != ""
 
   defp confirm_enabled?(_replay_targets, _selected_target_id), do: false
+
+  defp reviewed_target(%{status: :exact, candidate: candidate}, selected_target_id) do
+    if candidate.webhook_event_id == selected_target_id, do: candidate, else: nil
+  end
+
+  defp reviewed_target(%{status: :ambiguous, candidates: candidates}, selected_target_id) do
+    Enum.find(candidates, &(&1.webhook_event_id == selected_target_id))
+  end
+
+  defp reviewed_target(_replay_targets, _selected_target_id), do: nil
 
   defp present(nil), do: "Unavailable"
   defp present(""), do: "Unavailable"

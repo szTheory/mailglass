@@ -1,6 +1,8 @@
 defmodule MailglassAdmin.TestSupport.OperatorFixtures do
   @moduledoc false
 
+  import Ecto.Query
+
   alias Mailglass.Events.Event
   alias Mailglass.IdempotencyKey
   alias Mailglass.Outbound.Delivery
@@ -196,6 +198,107 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
       webhook_event_id: webhook.id,
       listed_delivery_ids: Enum.map(recent, & &1.id)
     }
+  end
+
+  def seed_phase169_replay!(variant) when variant in ["zero", "one", "many"] do
+    reset!()
+
+    delivery =
+      insert_delivery!(%{
+        recipient: "phase169-replay-#{variant}@example.com",
+        provider: "postmark",
+        provider_message_id: "pm_phase169_replay_#{variant}",
+        status: :sent,
+        last_event_type: :delivered
+      })
+
+    primary =
+      insert_webhook_event!(%{
+        provider_event_id: "phase169-replay-one",
+        raw_payload: raw_postmark_payload(delivery.provider_message_id, 16911)
+      })
+
+    if variant != "zero" do
+      insert_linked_event!(delivery, primary, "phase169-replay-child-one")
+    end
+
+    additional =
+      if variant == "many" do
+        second =
+          insert_webhook_event!(%{
+            provider_event_id: "phase169-replay-many-second",
+            raw_payload: raw_postmark_payload(delivery.provider_message_id, 16912)
+          })
+
+        insert_linked_event!(delivery, second, "phase169-replay-child-many")
+        [second.id]
+      else
+        []
+      end
+
+    %{
+      tenant_id: @tenant_id,
+      delivery_id: delivery.id,
+      webhook_event_id: primary.id,
+      candidate_ids: [primary.id | additional]
+    }
+  end
+
+  def mutate_phase169_scenario!("replace-reviewed") do
+    delivery = seeded_replay_delivery!()
+    reviewed = seeded_replay_webhook!("phase169-replay-one")
+
+    replacement =
+      insert_webhook_event!(%{
+        provider_event_id: "phase169-replay-replacement",
+        raw_payload: raw_postmark_payload(delivery.provider_message_id, 16913)
+      })
+
+    TestRepo.delete!(reviewed)
+    %{replacement_id: replacement.id}
+  end
+
+  def mutate_phase169_scenario!("remove-reviewed") do
+    TestRepo.delete!(seeded_replay_webhook!("phase169-replay-one"))
+    :ok
+  end
+
+  def mutate_phase169_scenario!("change-reviewed") do
+    reviewed = seeded_replay_webhook!("phase169-replay-one")
+
+    TestRepo.query!(
+      "UPDATE mailglass_webhook_events SET provider_event_id = $1, received_at = $2 WHERE id = $3::uuid AND tenant_id = $4",
+      [
+        "phase169-replay-one-changed",
+        DateTime.add(reviewed.received_at, 1, :second),
+        Ecto.UUID.dump!(reviewed.id),
+        @tenant_id
+      ]
+    )
+
+    :ok
+  end
+
+  def mutate_phase169_scenario!(_operation), do: raise(ArgumentError, "unsupported replay mutation")
+
+  defp seeded_replay_delivery! do
+    TestRepo.one!(
+      from(delivery in Delivery,
+        where:
+          delivery.tenant_id == ^@tenant_id and
+            delivery.provider_message_id == "pm_phase169_replay_one",
+        limit: 1
+      )
+    )
+  end
+
+  defp seeded_replay_webhook!(provider_event_id) do
+    TestRepo.one!(
+      from(webhook in WebhookEvent,
+        where: webhook.tenant_id == ^@tenant_id and webhook.provider_event_id == ^provider_event_id,
+        limit: 1
+      )
+    )
   end
 
   def seed_phase169_timeline_101! do

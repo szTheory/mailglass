@@ -817,21 +817,21 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      refute html =~ "Replay webhook"
+      refute html =~ "Review webhook replay"
 
       # A row click opens the Quick view (peek) — the Replay CTA lives one tier deeper.
       view
       |> element("button[phx-value-id='#{delivery.id}']")
       |> render_click()
 
-      refute render(view) =~ "Replay webhook"
+      refute render(view) =~ "Review webhook replay"
 
       # Open full detail → the Replay CTA appears.
       view
       |> element(~s([data-testid="operator-quick-view-full"]))
       |> render_click()
 
-      assert render(view) =~ "Replay webhook"
+      assert render(view) =~ "Review webhook replay"
     end
 
     test "auto-populates the replay modal when exactly one target is available", %{conn: conn} do
@@ -968,6 +968,83 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Recent authentication is required."
       assert replay_audit_rows_for(webhook_event.id) == []
+    end
+
+    test "rejects the same webhook ID when reviewed receipt facts change", %{conn: conn} do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      conn = operator_conn(conn)
+      {delivery, webhook_event} = insert_exact_replay_fixture!("msg-changed-review", 651)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+
+      changed_received_at = DateTime.add(webhook_event.received_at, 1, :second)
+
+      TestRepo.query!(
+        "UPDATE mailglass_webhook_events SET received_at = $1 WHERE id = $2::uuid AND tenant_id = $3",
+        [changed_received_at, Ecto.UUID.dump!(webhook_event.id), @tenant_id]
+      )
+
+      html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+      assert html =~ "This webhook request changed or is no longer eligible."
+      assert html =~ "Review the current request before replaying."
+      assert replay_audit_rows_for(webhook_event.id) == []
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+    end
+
+    test "rejects a replaced exact target instead of falling back to the replacement", %{conn: conn} do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      conn = operator_conn(conn)
+      {delivery, reviewed} = insert_exact_replay_fixture!("msg-replaced-review", 652)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+
+      TestRepo.delete!(reviewed)
+
+      _replacement =
+        insert_webhook_event!(
+          provider_event_id: "replacement-652",
+          raw_payload: raw_postmark_payload(delivery.provider_message_id, 653)
+        )
+
+      html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+      assert html =~ "This webhook request changed or is no longer eligible."
+      assert replay_audit_rows_for(reviewed.id) == []
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+    end
+
+    test "one consumed review rejects a duplicate queued confirmation", %{conn: conn} do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      conn = operator_conn(conn)
+      {delivery, webhook_event} = insert_exact_replay_fixture!("msg-duplicate-review", 654)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+      render_hook(view, "confirm_replay", %{})
+      render_hook(view, "confirm_replay", %{})
+
+      audits = replay_audit_rows_for(webhook_event.id)
+      assert Enum.count(audits, &(&1.type == :webhook_replay_requested)) == 1
+      assert Enum.count(audits, &(&1.type == :webhook_replay_succeeded)) == 1
+      assert length(MailglassAdmin.TestOperatorAuth.destructive_calls()) == 1
     end
 
     test "executes replay in place and surfaces durable replay results inline", %{conn: conn} do

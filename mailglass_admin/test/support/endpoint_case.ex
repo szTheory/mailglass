@@ -154,6 +154,11 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
         "phase169-exact" ->
           {:ok, OperatorFixtures.seed_phase169_scenario!()}
 
+        scenario
+        when scenario in ["phase169-replay-zero", "phase169-replay-one", "phase169-replay-many"] ->
+          variant = scenario |> String.replace_prefix("phase169-replay-", "")
+          {:ok, OperatorFixtures.seed_phase169_replay!(variant)}
+
         "phase169-timeline-101" ->
           {:ok, OperatorFixtures.seed_phase169_timeline_101!()}
 
@@ -205,15 +210,24 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
         _ -> nil
       end
 
-    if is_binary(session_key) and is_binary(operation) and kind do
+    if is_binary(session_key) and action == "phase169-replay-mutate" do
       try do
-        OperatorFixtures.arm_reader_fault!(session_key, operation, kind)
-        json(conn, %{armed: true, operation: operation, action: action})
+        result = OperatorFixtures.mutate_phase169_scenario!(Map.get(params, "mutation"))
+        json(conn, %{mutated: true, result: result})
       rescue
         ArgumentError -> conn |> put_status(:bad_request) |> text("unsupported test mutation")
       end
     else
-      conn |> put_status(:bad_request) |> text("unsupported test mutation")
+      if is_binary(session_key) and is_binary(operation) and kind do
+        try do
+          OperatorFixtures.arm_reader_fault!(session_key, operation, kind)
+          json(conn, %{armed: true, operation: operation, action: action})
+        rescue
+          ArgumentError -> conn |> put_status(:bad_request) |> text("unsupported test mutation")
+        end
+      else
+        conn |> put_status(:bad_request) |> text("unsupported test mutation")
+      end
     end
   end
 

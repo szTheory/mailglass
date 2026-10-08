@@ -191,8 +191,10 @@ test.describe("operator browser gate", () => {
 
     const modal = page.getByTestId("operator-replay-modal");
     await expect(modal).toBeVisible();
-    await expect(modal).toContainText("Replay is ready.");
-    await expect(modal).toContainText("Confirm to replay that stored request.");
+    await expect(modal).toContainText("Review the exact stored request before confirming.");
+    await expect(modal).toContainText("does not resend outbound mail or prove provider receipt");
+    await expect(modal).toContainText("Reviewed request");
+    await expect(modal).toContainText("Account");
     await expect(modal).toContainText("browser-exact-delivery");
 
     await page.getByTestId("operator-replay-confirm").click();
@@ -205,6 +207,72 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-timeline")).toContainText("Replay succeeded");
     await expect(page.getByTestId("operator-timeline")).toContainText("completed");
     await expect(page.getByTestId("operator-timeline")).toContainText("new work");
+  });
+
+  test("Phase 169 replay review keeps the frozen request through persisted mutations", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    for (const mutation of ["replace-reviewed", "remove-reviewed", "change-reviewed"]) {
+      const reset = await page.request.get("/ops/browser-reset?scenario=phase169-replay-one");
+      expect(reset.ok()).toBeTruthy();
+      const scenario = await reset.json();
+      const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${scenario.tenant_id}`);
+      await page.goto(`/ops/browser-login?tenant_id=${scenario.tenant_id}&return_to=${returnTo}`);
+      await page.goto(
+        `/ops/mail?tenant_id=${scenario.tenant_id}&delivery_id=${scenario.delivery_id}&full=1`
+      );
+      await page.getByTestId("operator-replay-open").click();
+
+      const modal = page.getByTestId("operator-replay-modal");
+      const reviewedId = await modal.getByTestId("operator-replay-target-id").innerText();
+      const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
+      const mutationResult = await page.evaluate(async ({ csrfToken, mutation }) => {
+        const response = await fetch(
+          `/ops/browser-mutate?action=phase169-replay-mutate&mutation=${mutation}`,
+          { method: "POST", headers: { "x-csrf-token": csrfToken }, redirect: "manual" }
+        );
+        return { status: response.status, body: await response.text() };
+      }, { csrfToken, mutation });
+      expect(mutationResult.status, mutationResult.body).toBe(200);
+
+      await modal.getByTestId("operator-replay-confirm").click();
+      await expect(page.locator("body")).toContainText(
+        "This webhook request changed or is no longer eligible."
+      );
+      await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(reviewedId);
+
+      const authLog = await page.request.get("/ops/browser-auth-log");
+      expect((await authLog.json()).destructive_actions).toHaveLength(0);
+    }
+  });
+
+  test("Phase 169 replay review handles zero and many candidates without implicit selection", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    for (const variant of ["zero", "many"]) {
+      const reset = await page.request.get(`/ops/browser-reset?scenario=phase169-replay-${variant}`);
+      expect(reset.ok()).toBeTruthy();
+      const scenario = await reset.json();
+      const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${scenario.tenant_id}`);
+      await page.goto(`/ops/browser-login?tenant_id=${scenario.tenant_id}&return_to=${returnTo}`);
+      await page.goto(
+        `/ops/mail?tenant_id=${scenario.tenant_id}&delivery_id=${scenario.delivery_id}&full=1`
+      );
+      await page.getByTestId("operator-replay-open").click();
+      const modal = page.getByTestId("operator-replay-modal");
+
+      if (variant === "zero") {
+        await expect(modal).toContainText("Replay unavailable");
+        await expect(modal).toContainText(
+          "This delivery does not yet have any linked webhook events to replay."
+        );
+        await expect(modal.getByTestId("operator-replay-confirm")).toHaveCount(0);
+      } else {
+        await expect(modal).toContainText("Choose the exact stored request to review.");
+        await expect(modal.getByTestId("operator-replay-confirm")).toHaveCount(0);
+        await expect(modal.getByRole("radio")).toHaveCount(2);
+      }
+    }
   });
 
   test("ambiguous replay flow requires an explicit choice before confirm is available", async ({

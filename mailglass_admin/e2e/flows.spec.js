@@ -307,7 +307,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
     // The single obvious top action for Operator: the replay CTA (the one
     // destructive/dominant action in the detail header). It must be visible and
-    // be the dominant action button at 320px. Live copy is "Replay webhook"
+    // be the dominant action button at 320px. Live copy is "Review webhook replay"
     // (btn-error); the planner's prose label "Replay delivery" approximates it.
     const replayCta = page.getByTestId("operator-replay-open");
     await expect(replayCta).toBeVisible();
@@ -1033,7 +1033,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       await page.getByTestId("operator-replay-open").tap();
       const modal = page.getByTestId("operator-replay-modal");
       await expect(modal).toBeVisible();
-      await expect(modal.getByRole("heading", { name: /Confirm webhook replay for/ })).toBeVisible();
+      await expect(modal.getByRole("heading", { name: "Review webhook replay" })).toBeVisible();
       await expect(modal).toHaveAttribute("aria-describedby", "replay-modal-description");
       await expect(modal).toContainText("browser-exact-delivery");
       const operatorShell = page.getByTestId("operator-shell");
