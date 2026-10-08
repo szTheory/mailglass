@@ -122,7 +122,7 @@ defmodule Mailglass.Webhook.ReplayTest do
         FOR EACH ROW EXECUTE FUNCTION #{schema}.#{trigger_name}_fn();
         """)
 
-        assert {:error, %Postgrex.Error{}} =
+        assert {:error, :result_persistence_failed} =
                  Replay.execute(%{
                    tenant_id: "test-tenant",
                    webhook_event_id: webhook_event.id,
@@ -133,7 +133,12 @@ defmodule Mailglass.Webhook.ReplayTest do
         assert [_requested] = replay_events_for(webhook_event.id, :webhook_replay_requested)
         assert [_failed] = replay_events_for(webhook_event.id, :webhook_replay_failed)
         assert replay_events_for(webhook_event.id, :webhook_replay_succeeded) == []
-        assert [_delivered] = delivery_events_for(webhook_event.id, :delivered)
+        # Event and projection writes share the replay transaction with terminal
+        # audit persistence, so a rejected terminal fact rolls all of them back.
+        assert delivery_events_for(webhook_event.id, :delivered) == []
+        assert TestRepo.get!(Delivery, delivery.id).status == :sent
+        [failed] = replay_events_for(webhook_event.id, :webhook_replay_failed)
+        assert failed.metadata["failure_reason"] == "result_persistence_failed"
       after
         TestRepo.query!("DROP TRIGGER IF EXISTS #{trigger_name} ON #{schema}.mailglass_events")
         TestRepo.query!("DROP FUNCTION IF EXISTS #{schema}.#{trigger_name}_fn()")

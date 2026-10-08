@@ -99,6 +99,10 @@ defmodule MailglassAdmin.Operator.RepairState do
   def flash_failure(:invalid_raw_payload),
     do: "The stored request is unavailable for replay processing."
 
+  def flash_failure(:result_persistence_failed),
+    do:
+      "Replay processing could not be recorded because persistence failed. Normalized Events and projection changes were rolled back."
+
   def flash_failure(:replay_failed),
     do: "Replay processing failed. Follow your host's investigation guidance."
 

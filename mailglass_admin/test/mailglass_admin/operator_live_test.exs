@@ -1116,6 +1116,71 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Last retrieved replay evidence: completed · 0 newly normalized Events"
     end
 
+    test "reports terminal audit write failure safely and retains requested and failed evidence", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      {delivery, webhook_event} = insert_exact_replay_fixture!("msg-terminal-audit-ui", 803)
+      trigger_name = "reject_terminal_replay_ui_#{System.unique_integer([:positive])}"
+      schema = Mailglass.Config.schema()
+
+      try do
+        TestRepo.query!("""
+        CREATE FUNCTION #{schema}.#{trigger_name}_fn() RETURNS trigger AS $$
+        BEGIN
+          IF NEW.type = 'webhook_replay_succeeded'
+             AND NEW.metadata->>'webhook_event_id' = '#{webhook_event.id}' THEN
+            RAISE EXCEPTION 'private simulated terminal audit failure detail';
+          END IF;
+          RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+        """)
+
+        TestRepo.query!("""
+        CREATE TRIGGER #{trigger_name}
+        BEFORE INSERT ON #{schema}.mailglass_events
+        FOR EACH ROW EXECUTE FUNCTION #{schema}.#{trigger_name}_fn();
+        """)
+
+        {:ok, view, _html} =
+          live(
+            conn,
+            operator_path(%{
+              "tenant_id" => @tenant_id,
+              "delivery_id" => delivery.id,
+              "full" => "1"
+            })
+          )
+
+        view |> element("[data-testid='operator-replay-open']") |> render_click()
+        html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+        assert html =~
+                 "Replay processing could not be recorded because persistence failed. Normalized Events and projection changes were rolled back."
+
+        refute html =~ "private simulated terminal audit failure detail"
+        assert html =~ "Webhook replay requested"
+        assert html =~ "Webhook replay failed"
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_requested)
+               ) == 1
+
+        assert Enum.count(
+                 replay_audit_rows_for(webhook_event.id),
+                 &(&1.type == :webhook_replay_failed)
+               ) == 1
+
+        assert replay_audit_rows_for(webhook_event.id)
+               |> Enum.any?(&(&1.type == :webhook_replay_succeeded)) == false
+      after
+        TestRepo.query!("DROP TRIGGER IF EXISTS #{trigger_name} ON #{schema}.mailglass_events")
+        TestRepo.query!("DROP FUNCTION IF EXISTS #{schema}.#{trigger_name}_fn()")
+      end
+    end
+
     test "requested-only replay evidence says completion has not been recorded and hides untrusted metadata",
          %{conn: conn} do
       conn = operator_conn(conn)
