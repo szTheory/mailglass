@@ -71,18 +71,16 @@ mail or prove that a provider received or accepted a message.
   fact means the command was recorded as requested; it does not mean completion
   was recorded or that the command is still running.
 - Local command feedback reports only the normalized Event row count returned
-  by that command. Zero newly normalized rows is a no-change result, not a
+  by that command: new work means newly normalized Event rows, and no change
+  means zero newly normalized rows. A no-change result is not a
   failure and not proof that the Delivery or audit history was unchanged.
 - A terminal persisted result is shown only when the scoped audit read supplies
   that fact. If that read is unavailable, command feedback remains separate and
   the persisted evidence is labeled unavailable.
 
-The stored provider request and later local replay are distinct. Replay
-reprocesses the existing request; it is not a fresh provider receipt. Execution
-may happen later through Oban-backed durable jobs or, when Oban is unavailable,
-through a bounded Task.Supervisor fallback with no automatic retry. Replay is
-the recovery tool when operators need to rerun stored truth after best-effort
-fallback loss or a previous failure.
+The stored provider request and later local replay are distinct. Outbound replay
+reprocesses the existing request synchronously through the local command; it is
+not a fresh provider receipt.
 
 Replay and reconcile are intentionally distinct. Replay reruns one exact stored
 outbound webhook request through local normalization and does not silently
@@ -93,17 +91,20 @@ Replay command semantics are stable at the operator level, but this does not
 create a public replay runtime API. Internal replay orchestration modules,
 worker/queue internals, and admin execution wiring remain implementation detail.
 
-Known replay failure cases are also part of the honest operator story:
+### Inbound mailbox recovery
+
+Inbound mailbox execution may happen later through Oban-backed durable jobs or,
+when Oban is unavailable, through a bounded Task.Supervisor fallback with no
+automatic retry. Inbound replay supports recovery after fallback loss or an
+earlier mailbox execution failure. Its execution-history requirements include:
 
 - `no_prior_match` means fresh execution history only proves `:no_match`, so
   replay cannot safely infer a mailbox target.
 - `execution_history_missing` means the record predates execution-lineage
   capture or lacks the stored facts replay needs to rerun mailbox execution.
 
-When execution history is incomplete, replay fails explicitly rather than
-guessing. The current failure vocabulary includes `:no_prior_match` for records
-whose fresh history never matched a mailbox and `:execution_history_missing`
-for records that predate execution-lineage capture.
+These mailbox-history errors belong to inbound recovery. Outbound webhook replay
+uses the selected stored provider request and its Account-scoped audit evidence.
 
 ## Intentionally internal
 

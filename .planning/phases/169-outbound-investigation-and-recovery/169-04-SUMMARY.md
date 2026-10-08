@@ -165,3 +165,9 @@ Plan 169-05 can run connected rendered acceptance against the frozen replay revi
 - SUMMARY file exists at the required phase path.
 - Task commits `99340a87`, `1ec8b7d3`, and `5bdc1098` are ancestors of HEAD.
 - `gsd_run check evaluation-scope --plan 169-04 --commits-only --raw` resolved all three reachable plan commits with no missing files.
+
+## Orchestrator Post-Wave Integration Gate
+
+Admin compilation passed. The complete Admin suite caught the trust-doc outcome assertion. Review also found residual inbound mailbox execution paragraphs beneath outbound replay semantics. The document now names normalized-row new-work/no-change semantics, states synchronous outbound replay, and labels inbound scheduling/mailbox-history guidance separately. The strengthened contract test checks that separation and unavailable persisted-evidence copy.
+
+Full rerun from `mailglass_admin`: `ASDF_ELIXIR_VERSION=1.20.4-otp-29 ASDF_ERLANG_VERSION=29.1.1 HEX_HOME=/private/tmp/mailglass-169-hex MIX_ENV=test mix test --seed 1` — 536 passed, 0 failed, 1 excluded. Schema and UI gates report `block:false`; codebase-drift abstains with `no-structure-md`.
