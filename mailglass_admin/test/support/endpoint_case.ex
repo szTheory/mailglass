@@ -144,6 +144,7 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
         "sole" -> {:ok, OperatorFixtures.seed_browser_scenario!(deny_reveal?: false)}
         "accounts" -> {:ok, OperatorFixtures.seed_persona_cohort!()}
         "phase169-exact" -> {:ok, OperatorFixtures.seed_phase169_scenario!()}
+        "phase169-timeline-101" -> {:ok, OperatorFixtures.seed_phase169_timeline_101!()}
         "phase169-health-partial" -> {:ok, OperatorFixtures.seed_phase169_health_partial!()}
         "phase169-support-empty" -> {:ok, OperatorFixtures.seed_phase169_support_empty!()}
         _ -> :unknown

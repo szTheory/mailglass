@@ -558,7 +558,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           operator_path(%{
             "tenant_id" => @tenant_id,
             "delivery_id" => delivery.id,
-            "event_id" => selected.id,
+            "support_event_id" => selected.id,
             "full" => "1"
           })
         )
@@ -746,7 +746,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render(view)
 
-      assert html =~ "No delivery events have been recorded for this item yet."
+      assert html =~ "No events are recorded for this Delivery."
       assert html =~ "Immutable by policy"
 
       assert html =~

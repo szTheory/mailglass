@@ -198,6 +198,97 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     }
   end
 
+  def seed_phase169_timeline_101! do
+    reset!()
+
+    delivery =
+      insert_delivery!(%{
+        recipient: "phase169-timeline-101@example.com",
+        provider_message_id: "pm_phase169_timeline_101",
+        status: :sent,
+        last_event_type: :failed
+      })
+
+    base = ~U[2026-10-07 12:00:00Z]
+
+    events =
+      for index <- 1..101 do
+        tied? = index in [99, 100]
+
+        occurred_at =
+          cond do
+            index == 101 -> nil
+            tied? -> DateTime.add(base, 99, :second)
+            true -> DateTime.add(base, index, :second)
+          end
+
+        inserted_at =
+          if tied?,
+            do: DateTime.add(base, 200, :second),
+            else: DateTime.add(base, index + 200, :second)
+
+        metadata =
+          cond do
+            index == 3 ->
+              %{
+                "provider" => "postmark",
+                "source" => "provider webhook",
+                "webhook_event_id" => "ordinary-linked-webhook"
+              }
+
+            index == 4 ->
+              %{"provider" => "postmark"}
+
+            index == 101 ->
+              %{
+                "provider" => "postmark",
+                "source" => "provider webhook",
+                "provider_event_id" => String.duplicate("evt-東京-Ångström-", 8),
+                "provider_occurred_at" => "2026-10-07T12:34:56.123456Z"
+              }
+
+            true ->
+              %{"provider" => "postmark", "source" => "api"}
+          end
+
+        type =
+          case index do
+            2 -> :unknown
+            3 -> :delivered
+            101 -> :failed
+            _ -> :sent
+          end
+
+        id =
+          case index do
+            99 -> "00000000-0000-0000-0000-000000000099"
+            100 -> "00000000-0000-0000-0000-000000000100"
+            _ -> Ecto.UUID.generate()
+          end
+
+        TestRepo.insert!(
+          Ecto.Changeset.change(%Event{}, %{
+            id: id,
+            tenant_id: @tenant_id,
+            delivery_id: delivery.id,
+            type: type,
+            occurred_at: occurred_at,
+            inserted_at: inserted_at,
+            metadata: metadata,
+            normalized_payload: %{"private_payload" => "never render"}
+          })
+        )
+      end
+
+    %{
+      tenant_id: @tenant_id,
+      delivery_id: delivery.id,
+      selected_event_id: List.last(events).id,
+      ordinary_linked_event_id: Enum.at(events, 2).id,
+      unknown_event_id: Enum.at(events, 1).id
+    }
+  end
+
   def seed_phase169_health_partial! do
     reset!()
 
@@ -312,7 +403,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   def arm_reader_fault!(session_key, operation, kind)
       when is_binary(session_key) and is_binary(operation) and kind in [:known, :unexpected] do
-    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event) do
+    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event delivery_timeline selected_delivery_event) do
       raise ArgumentError, "unsupported test reader operation"
     end
 

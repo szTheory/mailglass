@@ -66,6 +66,8 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:requested_delivery_id, nil)
       |> assign(:quick_view_focus_return_id, nil)
       |> assign(:timeline_events, [])
+      |> assign(:timeline_state, :ready)
+      |> assign(:selected_timeline_event, nil)
       |> assign(:suppression_state, nil)
       |> assign(:suppression_count, nil)
       |> assign(:support_summary, nil)
@@ -417,6 +419,18 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("retry_details", _params, socket) do
+    {:noreply,
+     assign_delivery_state(
+       socket,
+       socket.assigns.filter_params,
+       get_in(socket.assigns, [Access.key(:selected_delivery), Access.key(:id)]) ||
+         socket.assigns[:requested_delivery_id],
+       socket.assigns.full_detail?,
+       support_focus?(socket.assigns.support_state)
+     )}
+  end
+
+  def handle_event("retry_timeline", _params, socket) do
     {:noreply,
      assign_delivery_state(
        socket,
@@ -837,6 +851,8 @@ defmodule MailglassAdmin.OperatorLive do
                         <OperatorTimeline.timeline
                           timeline_events={@timeline_events}
                           highlight_event_id={@support_state.event_id}
+                          read_state={@timeline_state}
+                          selected_event={@selected_timeline_event}
                         />
                         <SuppressionCard.suppression_card suppression_state={@suppression_state} />
                         <SupportCards.support_cards
@@ -1115,6 +1131,8 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:selected_delivery, nil)
     |> assign(:requested_delivery_id, nil)
     |> assign(:timeline_events, [])
+    |> assign(:timeline_state, :ready)
+    |> assign(:selected_timeline_event, nil)
     |> assign(:suppression_state, nil)
     |> assign(:support_summary, nil)
     |> assign(:health_panel_states, default_health_panel_states())
@@ -1228,16 +1246,84 @@ defmodule MailglassAdmin.OperatorLive do
     |> Enum.map_join(" ", &String.capitalize/1)
   end
 
-  defp load_timeline(_filter_params, nil), do: []
+  defp load_timeline(_filter_params, nil, _read_fault), do: {[], :ready}
 
-  defp load_timeline(filter_params, delivery) do
-    OperatorTimelineData.list_delivery_events(
-      %{
-        tenant_id: filter_params["tenant_id"],
-        delivery_id: delivery.id
-      },
-      []
+  defp load_timeline(filter_params, delivery, read_fault) do
+    run_read_fault(read_fault, :delivery_timeline)
+
+    events =
+      OperatorTimelineData.list_delivery_events(
+        %{
+          tenant_id: filter_params["tenant_id"],
+          delivery_id: delivery.id
+        },
+        limit: 101
+      )
+
+    {Enum.map(events, &safe_timeline_event/1), :ready}
+  rescue
+    error ->
+      if transient_read_error?(error), do: {[], :unavailable}, else: reraise(error, __STACKTRACE__)
+  end
+
+  defp safe_timeline_event(event) do
+    safe_metadata =
+      Map.take(event.metadata || %{}, [
+        "provider",
+        :provider,
+        "source",
+        :source,
+        "provider_event_id",
+        :provider_event_id,
+        "provider_occurred_at",
+        :provider_occurred_at,
+        "outcome",
+        :outcome,
+        "reconciled_provider",
+        :reconciled_provider,
+        "reconciled_provider_event_id",
+        :reconciled_provider_event_id,
+        "reconciled_from_event_id",
+        :reconciled_from_event_id
+      ])
+
+    event
+    |> Map.put(:metadata, safe_metadata)
+    |> Map.put(
+      :provider_occurred_at,
+      Map.get(safe_metadata, "provider_occurred_at") ||
+        Map.get(safe_metadata, :provider_occurred_at)
     )
+  end
+
+  defp load_selected_timeline_event(_filter_params, nil, _support_state, _read_fault), do: nil
+
+  defp load_selected_timeline_event(filter_params, delivery, support_state, read_fault) do
+    event_id = support_state.event_id
+
+    if is_binary(event_id) do
+      try do
+        run_read_fault(read_fault, :selected_delivery_event)
+
+        event =
+          OperatorTimelineData.get_delivery_event(
+            filter_params["tenant_id"],
+            delivery.id,
+            event_id
+          )
+
+        %{id: event_id, event: event, status: if(event, do: :ready, else: :not_found)}
+      rescue
+        error ->
+          if transient_read_error?(error) do
+            %{id: event_id, event: nil, status: :unavailable}
+          else
+            reraise(error, __STACKTRACE__)
+          end
+      end
+    else
+      nil
+    end
   end
 
   defp load_suppression(_filter_params, nil), do: nil
@@ -1339,7 +1425,23 @@ defmodule MailglassAdmin.OperatorLive do
       if full?, do: load_replay_targets(filter_params, selected_delivery), else: nil
 
     replay_history = if full?, do: load_replay_history(filter_params, selected_delivery), else: []
-    timeline = if full?, do: load_timeline(filter_params, selected_delivery), else: []
+
+    {timeline, timeline_state} =
+      if full?,
+        do: load_timeline(filter_params, selected_delivery, socket.assigns[:operator_read_fault]),
+        else: {[], :ready}
+
+    selected_timeline_event =
+      if full?,
+        do:
+          load_selected_timeline_event(
+            filter_params,
+            selected_delivery,
+            socket.assigns.support_state,
+            socket.assigns[:operator_read_fault]
+          ),
+        else: nil
+
     suppression = if full?, do: load_suppression(filter_params, selected_delivery), else: nil
 
     {support_summary, health_panel_states, suppression_count, health_observed_at, health_window} =
@@ -1365,6 +1467,8 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:selected_delivery, selected_delivery)
     |> assign(:requested_delivery_id, selected_delivery_id)
     |> assign(:timeline_events, timeline)
+    |> assign(:timeline_state, timeline_state)
+    |> assign(:selected_timeline_event, selected_timeline_event)
     |> assign(:suppression_state, suppression)
     |> assign(:support_summary, support_summary)
     |> assign(:suppression_count, suppression_count)
@@ -2126,9 +2230,6 @@ defmodule MailglassAdmin.OperatorLive do
       end
     end
   end
-
-  defp count_state(count) when is_integer(count), do: :ready
-  defp count_state(_count), do: :unavailable
 
   defp suppression_severity(count) when is_integer(count), do: :info
   defp suppression_severity(_count), do: :neutral

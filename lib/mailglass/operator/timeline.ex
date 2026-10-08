@@ -39,6 +39,39 @@ defmodule Mailglass.Operator.Timeline do
     |> Repo.all()
   end
 
+  @doc false
+  @spec get_delivery_event(String.t(), String.t(), String.t()) :: map() | nil
+  def get_delivery_event(tenant_id, delivery_id, event_id)
+      when is_binary(tenant_id) and tenant_id != "" and is_binary(delivery_id) and
+             delivery_id != "" and is_binary(event_id) and event_id != "" do
+    Event
+    |> where(
+      [event],
+      event.tenant_id == ^tenant_id and event.delivery_id == ^delivery_id and
+        event.id == ^event_id
+    )
+    |> select([event], %{
+      id: event.id,
+      tenant_id: event.tenant_id,
+      delivery_id: event.delivery_id,
+      type: event.type,
+      occurred_at: event.occurred_at,
+      reject_reason: event.reject_reason,
+      inserted_at: event.inserted_at,
+      metadata: %{
+        provider: fragment("?->>'provider'", event.metadata),
+        source: fragment("?->>'source'", event.metadata),
+        provider_event_id: fragment("?->>'provider_event_id'", event.metadata),
+        provider_occurred_at: fragment("?->>'provider_occurred_at'", event.metadata),
+        outcome: fragment("?->>'outcome'", event.metadata)
+      }
+    })
+    |> Tenancy.scope(tenant_id)
+    |> Repo.one()
+  end
+
+  def get_delivery_event(_tenant_id, _delivery_id, _event_id), do: nil
+
   defp normalize_filters(filters) when is_list(filters), do: Map.new(filters)
   defp normalize_filters(filters) when is_map(filters), do: Map.new(filters)
 

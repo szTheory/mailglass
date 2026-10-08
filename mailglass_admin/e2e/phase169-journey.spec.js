@@ -90,6 +90,37 @@ test.describe("Phase 169 connected journey", () => {
     await page.screenshot({ path: "test-results/phase169-support-exact.png", fullPage: true });
   });
 
+  test("Phase 169 timeline keeps the oldest 100 and the exact selected 101st Event", async ({ page }) => {
+    const reset = await page.request.get("/ops/browser-reset?scenario=phase169-timeline-101");
+    expect(reset.ok()).toBeTruthy();
+    const fixture = await reset.json();
+    expect(fixture.delivery_id).toBeTruthy();
+    expect(fixture.selected_event_id).toBeTruthy();
+
+    const detailPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=${fixture.delivery_id}&support_focus=orphan_backlog&support_event_id=${fixture.selected_event_id}&full=1`;
+    await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(detailPath)}`);
+    await expect(page.getByTestId("operator-detail-header")).toBeVisible();
+
+    const visibleEvents = page.getByTestId("operator-timeline-event");
+    await expect(visibleEvents).toHaveCount(100);
+    await expect(page.getByTestId("operator-timeline-overflow")).toContainText(
+      "At least one additional Event is not shown in this timeline. The full history is not available in this view.",
+    );
+    await expect(page.getByTestId("operator-timeline-selected-event")).toContainText(fixture.selected_event_id);
+    await expect(page.getByTestId("operator-timeline-selected-event")).toContainText(
+      "This exact Event is outside the displayed timeline.",
+    );
+    await expect(page.getByTestId("operator-timeline-selected-event")).toContainText("Unavailable");
+
+    const ordinaryWebhook = page.locator(`[data-event-id="${fixture.ordinary_linked_event_id}"]`);
+    await expect(ordinaryWebhook).toContainText("Delivered");
+    await expect(ordinaryWebhook).not.toContainText("Webhook replay");
+    await expect(page.locator(`[data-event-id="${fixture.unknown_event_id}"]`)).toContainText("Unknown event");
+    await expect(page.getByTestId("operator-timeline-selected-event")).toContainText("evt-東京-Ångström-");
+    await expect(page.locator("body")).not.toContainText("never render");
+    await page.screenshot({ path: "test-results/phase169-timeline-101.png", fullPage: true });
+  });
+
   for (const width of [390, 1440]) {
     test(`Phase 169 pre-edit baseline at ${width}px`, async ({ page }) => {
     fs.mkdirSync(beforeDir, { recursive: true });
