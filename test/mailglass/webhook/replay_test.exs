@@ -87,6 +87,59 @@ defmodule Mailglass.Webhook.ReplayTest do
       refute succeeded.metadata["outcome"] == "noop"
     end
 
+    test "reports an error when the terminal replay audit database write is rejected" do
+      delivery = insert_delivery!(provider_message_id: "msg-terminal-audit-write-fails")
+
+      webhook_event =
+        insert_webhook_event!(
+          provider_event_id: "postmark-terminal-audit-write-fails",
+          raw_payload: %{
+            "RecordType" => "Delivery",
+            "MessageID" => "msg-terminal-audit-write-fails",
+            "ID" => 919
+          }
+        )
+
+      trigger_name = "reject_terminal_replay_audit_#{System.unique_integer([:positive])}"
+      schema = Mailglass.Config.schema()
+
+      try do
+        TestRepo.query!("""
+        CREATE FUNCTION #{schema}.#{trigger_name}_fn() RETURNS trigger AS $$
+        BEGIN
+          IF NEW.type = 'webhook_replay_succeeded'
+             AND NEW.metadata->>'webhook_event_id' = '#{webhook_event.id}' THEN
+            RAISE EXCEPTION 'simulated terminal audit database write failure';
+          END IF;
+          RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+        """)
+
+        TestRepo.query!("""
+        CREATE TRIGGER #{trigger_name}
+        BEFORE INSERT ON #{schema}.mailglass_events
+        FOR EACH ROW EXECUTE FUNCTION #{schema}.#{trigger_name}_fn();
+        """)
+
+        assert {:error, %Postgrex.Error{}} =
+                 Replay.execute(%{
+                   tenant_id: "test-tenant",
+                   webhook_event_id: webhook_event.id,
+                   delivery_id: delivery.id,
+                   actor: %{subject_id: "operator-terminal-audit-write"}
+                 })
+
+        assert [_requested] = replay_events_for(webhook_event.id, :webhook_replay_requested)
+        assert [_failed] = replay_events_for(webhook_event.id, :webhook_replay_failed)
+        assert replay_events_for(webhook_event.id, :webhook_replay_succeeded) == []
+        assert [_delivered] = delivery_events_for(webhook_event.id, :delivered)
+      after
+        TestRepo.query!("DROP TRIGGER IF EXISTS #{trigger_name} ON #{schema}.mailglass_events")
+        TestRepo.query!("DROP FUNCTION IF EXISTS #{schema}.#{trigger_name}_fn()")
+      end
+    end
+
     test "normalizes known actor string keys without failing on unknown keys" do
       unknown_key = "unknown_actor_key_#{System.unique_integer([:positive])}"
       delivery = insert_delivery!(provider_message_id: "msg-replay-string-actor")
