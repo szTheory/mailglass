@@ -9,7 +9,7 @@ created: "2026-10-07"
 
 # Phase 168 — Security
 
-Authored threat registers from all four plans were checked against implementation at ASVS L1 depth. All nine mitigation dispositions have controls present; the existing asset supply-chain risk remains accepted as documented at plan time. This is a mitigation-presence audit, not a penetration test. The workflow permits the L1 short circuit with an authored register and no open threats.
+Authored threat registers across Phase 168 were checked against the current implementation at ASVS L1 depth. All 17 threats are closed; the existing asset supply-chain risk remains accepted as documented at plan time. This is a mitigation-presence audit, not a penetration test. The workflow permits the L1 short circuit with an authored register and no open threats.
 
 ## Trust Boundaries
 
@@ -40,6 +40,7 @@ Authored threat registers from all four plans were checked against implementatio
 | T-168-13 | Denial of service | Replay confirmation read boundary | medium | mitigate | Only classified transient fresh-read errors are recoverable; `g_168_9` covers both reads, retained exact target, no premature side effect, and normal retry authorization. Unexpected errors still fail loudly. | closed |
 | T-168-14 | Tampering | Health observation cache | medium | mitigate | Cache identity includes tenant and parsed interval; `g_168_10` proves prior-window stale data is unavailable under the changed window while same-window stale behavior remains. | closed |
 | T-168-15 | Tampering | Shared flash component | low | mitigate | Preview separates success styling from its backing `:info` key; `g_168_8` clicks the rendered clear control and verifies the message remains absent. Existing callers default to their visual kind. | closed |
+| T-168-16 | Information disclosure | Pending Account switch status | high | mitigate | Pending feedback is shown separately from committed Account identity and data. `JS.show` targets a numeric option index independent of tenant ID syntax; the delayed-switch Playwright case verifies the old scope/data while the patch is held and the new scope after release. | closed |
 | T-168-SC | Tampering | Asset dependencies | low | accept | Existing Mix build, vendored assets and opt-in browser tooling reused. Locked dependencies were synchronized for execution; no new dependency/toolchain introduced by Phase 168. | closed |
 
 ## Accepted Risks Log
@@ -54,6 +55,7 @@ Authored threat registers from all four plans were checked against implementatio
 | --- | --- | --- | --- | --- |
 | 2026-10-07 | 10 | 10 | 0 | Execute-phase orchestrator, L1 mitigation-presence check |
 | 2026-10-08 | 16 | 16 | 0 | Execute-phase orchestrator, L1 plan-mitigation check |
+| 2026-10-08 | 17 | 17 | 0 | GSD security auditor, ASVS L1 |
 
 ## Sign-Off
 
@@ -62,7 +64,7 @@ Authored threat registers from all four plans were checked against implementatio
 - [x] `threats_open: 0` confirmed (high blocking threshold).
 - [x] `status: verified` set.
 
-**Approval:** Verified 2026-10-07 at configured L1 depth.
+**Approval:** Verified 2026-10-08 at configured L1 depth.
 
 ## Security Audit 2026-10-08
 
@@ -83,4 +85,14 @@ The stable operator trust document now records this boundary.
 |---|---|
 | Threats found | 16 |
 | Closed | 16 |
+| Open | 0 |
+
+## Security Audit 2026-10-08 — Plan 09
+
+The current Account-switch mitigation uses numeric option indices for `JS.show` targets, so arbitrary tenant IDs cannot alter CSS selector parsing. The held-response Playwright regression confirms the previous committed Account/data remain paired until the new scope commits.
+
+| Metric | Count |
+|---|---|
+| Threats found | 17 |
+| Closed | 17 |
 | Open | 0 |

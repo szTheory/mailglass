@@ -9,7 +9,7 @@ created: "2026-10-07"
 
 # Phase 168 — Validation Strategy
 
-Execution audit completed on 2026-10-08. All 18 tasks across Plans 01–08 have automated coverage and passing final results. Direct visual evidence and its limits are recorded separately in `168-BASELINE.md`; the baseline inventory retains its evidence labels and does not imply every specimen passed.
+Execution audit completed on 2026-10-08. All 21 tasks across Plans 01–09 have automated coverage and passing final results. Direct visual evidence and its limits are recorded separately in `168-BASELINE.md`; the baseline inventory retains its evidence labels and does not imply every specimen passed.
 
 ## Test Infrastructure
 
@@ -62,6 +62,9 @@ The same `168-BASELINE.md` specimen ledger is updated through the serialized wav
 | 168-07 T2 | 6 | UXF-06, G-168-10 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass_admin/operator_live_test.exs --only g_168_10 --seed 1`; nonzero, zero/tagless test, prior-window value shown, or same-window stale fallback lost | — | — | pass |
 | 168-07 T3 | 6 | UXF-07, G-168-9 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass_admin/operator_live_test.exs --only g_168_9 --seed 1`; nonzero, zero/tagless test, LiveView exit, pending state retained, target changed/lost, or retry bypasses authorization | — | T-168-13 | pass |
 | 168-08 T1 | 6 | UXF-04/07/08, G-168-8 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass_admin/preview_live_test.exs --only g_168_8 --seed 1`; nonzero, zero/tagless test, wrong clear-flash key, or rendered feedback remains after dismissal | — | T-168-15 | pass |
+| 168-09 T1 | 7 | UXF-04 | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep 'Phase 168 (Delivery Mailable wrapping|Account scope)'`; nonzero, fewer than two tests, `getZoom()` not exactly `2`, the combined zoom/viewport not exactly 320 CSS px, a shared control/radio label outside the viewport or clipping its box, or document horizontal overflow | At actual Chromium zoom 2, topbar controls and every radio label are checked for visibility, viewport bounds, element scroll geometry, and document overflow at both 720px and 320px CSS layout widths | T-168-16 | pass |
+| 168-09 T2 | 7 | UXF-03 | Same focused browser command; nonzero, fewer than two tests, rendered text differing from its complete expected fixture value, clipped/unreachable final character, 320px combined viewport/zoom failure, or document overflow | At actual Chromium zoom 2 and again at 320px CSS layout width, Delivery ID is compared with the selected row ID; Mailable/provider/provider-message ID with fixed fixture values; and event ID/recorded UTC timestamp with fixture attributes. The Delivery explanation is also checked at 320px. Element text-range/final-character and container geometry plus document overflow are checked. The selected first event has no provider event ID or provider-occurrence timestamp, and the test asserts both are absent rather than treating them as covered value examples. | T-168-16 | pass |
+| 168-09 T3 | 7 | UXF-08 | Same focused browser command; nonzero, fewer than two tests, no visible polite atomic pending status, a pending-status ID not matching the numeric token shape, changed committed Account/data while held, or stale pending status after completion | Real Account option click with held LiveView patch; checks `role=status`, `aria-live=polite`, `aria-atomic=true`, numeric ID independent of the tenant ID, old scope/data during pending, and new scope/status clear after release | T-168-16 | pass |
 
 ## UI-SPEC Criterion Allocation
 
@@ -123,6 +126,21 @@ None remain as owner UAT. The previously listed machine-observable visual, inter
 | Escalated | 0 |
 
 The audit checked all eight PLAN/SUMMARY pairs, the corresponding current ExUnit and Playwright regressions, UAT and phase verification ledgers, and D-52 in `METHODOLOGY.md`/`PROJECT.md`. Plans 05–08 add deterministic browser and LiveView coverage; no further test artifact was needed. Current supplied phase-wide evidence: ExUnit 550 tests, 0 failures, 1 excluded; operator Playwright 198 passed, 0 failed, 1 existing guarded skip. No owner UAT remains.
+
+## Plan 09 Gap-Closure Validation 2026-10-08
+
+| Metric | Count |
+|---|---|
+| Plans / summaries audited | 9 / 9 |
+| Tasks with automated coverage | 21 / 21 |
+| Plan 09 behavioral regressions run | 2 / 2 |
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+Reviewed `168-09-PLAN.md`, `168-09-SUMMARY.md`, the current Playwright assertions, prior validation/UAT evidence, and D-52. The existing `Phase 168 Delivery Mailable wrapping` test exercises actual Chromium tab zoom via `setZoom`/`getZoom`, asserts the factor is exactly 2, then checks shared controls, radios, and each radio label at 720px CSS width. It next sets the browser viewport to 640 device pixels while preserving 2x tab zoom and asserts both `window.innerWidth` and the document client width are exactly 320 CSS px; it rechecks all controls and labels, every complete fixture-backed Delivery/timeline value, the Delivery explanation, and document overflow at that combined condition. Element text-range/final-character, container, and viewport geometry remain part of the checks. The event fixture selected by this test has no provider-event ID or provider-occurrence timestamp; the test asserts that those optional fields are absent. The delayed `Phase 168 Account scope` test uses the real switcher and holds the LiveView response while checking visible `role=status` with polite/atomic semantics, a numeric status ID (rather than tenant-ID-derived selector content), the old committed Account/data pair, then the new Account and cleared pending node. The shell implementation uses the enumerated option index for `JS.show` and status IDs, so punctuation in a tenant ID cannot change the selector target; the browser regression also fails if the ID is changed back to an interpolated tenant ID.
+
+Latest post-strengthening verification: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep 'Phase 168 (Delivery Mailable wrapping|Account scope)'` — **2 passed, 0 failed**, including the combined 200% zoom/320px CSS layout assertions. No new test artifact, dependency, CI requirement, or owner UAT is needed. The later full regression gate in `168-REGRESSION.md` passed 542 Admin tests and 198 browser tests, with 1 excluded Admin test and 1 existing guarded browser skip; it supersedes the earlier transient-failure note in the initial execution summary.
 
 ## Post-Audit Confirmation
 
