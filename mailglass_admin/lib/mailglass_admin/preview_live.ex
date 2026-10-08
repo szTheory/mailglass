@@ -501,7 +501,11 @@ defmodule MailglassAdmin.PreviewLive do
       </div>
 
       <%= if Phoenix.Flash.get(@flash, :info) do %>
-        <Components.flash kind={:success} message={Phoenix.Flash.get(@flash, :info)} />
+        <Components.flash
+          kind={:success}
+          flash_key={:info}
+          message={Phoenix.Flash.get(@flash, :info)}
+        />
       <% end %>
     </AdminShell.shell>
     """

@@ -140,6 +140,7 @@ defmodule MailglassAdmin.Components do
   end
 
   attr(:kind, :atom, values: [:info, :success, :warning, :error], default: :info)
+  attr(:flash_key, :atom, default: nil)
   attr(:message, :string, required: true)
   attr(:placement, :atom, values: [:toast, :inline], default: :toast)
 
@@ -172,7 +173,7 @@ defmodule MailglassAdmin.Components do
         <button
           type="button"
           phx-click="lv:clear-flash"
-          phx-value-key={Atom.to_string(@kind)}
+          phx-value-key={Atom.to_string(@flash_key || @kind)}
           aria-label={"Dismiss #{flash_kind_label(@kind)} message"}
           class="mg-focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-field"
         >

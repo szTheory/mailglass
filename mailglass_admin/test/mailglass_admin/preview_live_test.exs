@@ -659,6 +659,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
       before_dismiss = render(view)
       assert before_dismiss =~ ~s(id="flash-success")
       assert before_dismiss =~ ~s(role="status")
+      assert before_dismiss =~ ~s(phx-value-key="info")
+      assert before_dismiss =~ "alert-success"
       assert before_dismiss =~ "Reloaded: user_mailer.ex"
 
       dismissed =
