@@ -21,6 +21,9 @@ defmodule MailglassAdmin.ComponentsTest do
 
   alias MailglassAdmin.Components
   alias MailglassAdmin.Inbound.FiltersForm, as: InboundFiltersForm
+  alias MailglassAdmin.Operator.DeliveriesList
+  alias MailglassAdmin.Operator.DetailHeader
+  alias MailglassAdmin.Operator.QuickView
   alias MailglassAdmin.Operator.FiltersForm, as: OperatorFiltersForm
 
   describe "status_badge/1 — outbound delivery statuses (14 atoms)" do
@@ -280,6 +283,71 @@ defmodule MailglassAdmin.ComponentsTest do
     end
   end
 
+  describe "G-168-6 rendered downstream Delivery status" do
+    @tag :g_168_6
+    test "a :delivered event is shown in both list layouts, detail, and Quick view" do
+      assert_rendered_delivery_status(:delivered, "Delivered")
+    end
+
+    @tag :g_168_6
+    test "a :bounced event is shown in both list layouts, detail, and Quick view" do
+      assert_rendered_delivery_status(:bounced, "Bounced")
+    end
+
+    @tag :g_168_6
+    test "an :opened event is shown in both list layouts, detail, and Quick view" do
+      assert_rendered_delivery_status(:opened, "Opened")
+    end
+  end
+
+  defp assert_rendered_delivery_status(event, expected_label) do
+    delivery = %Mailglass.Outbound.Delivery{
+      id: "g1686-#{event}",
+      tenant_id: "g1686-account",
+      status: :sent,
+      last_event_type: event,
+      last_event_at: ~U[2026-10-08 12:00:00Z],
+      recipient: "operator@example.test",
+      provider: "postmark",
+      stream: :transactional,
+      mailable: "G1686.Mailer"
+    }
+
+    list_html =
+      render_component(&DeliveriesList.deliveries_list/1,
+        deliveries: [delivery],
+        show_account?: false
+      )
+
+    detail_html = render_component(&DetailHeader.detail_header/1, delivery: delivery)
+
+    quick_view_html =
+      render_component(&QuickView.quick_view/1,
+        delivery: delivery,
+        full_path: "/ops/mail?delivery_id=#{delivery.id}&full=1",
+        close_path: "/ops/mail"
+      )
+
+    assert badge_text(list_html, "[data-testid='operator-deliveries-table'] .badge") ==
+             [expected_label]
+
+    assert badge_text(list_html, "[data-testid='operator-deliveries-cards'] .badge") ==
+             [expected_label]
+
+    assert badge_text(detail_html, "[data-testid='operator-detail-header'] .badge") ==
+             [expected_label]
+
+    assert badge_text(quick_view_html, "[data-testid='operator-quick-view'] .badge") ==
+             [expected_label]
+  end
+
+  defp badge_text(html, selector) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find(selector)
+    |> Enum.map(&Floki.text/1)
+  end
+
   describe "timestamp/1" do
     test "a UTC datetime remains visible and may show a labeled local-time supplement" do
       at = ~U[2026-06-14 14:32:05.000000Z]
@@ -309,7 +377,8 @@ defmodule MailglassAdmin.ComponentsTest do
     end
 
     test "copy buttons expose exact values and an accessible status region" do
-      html = render_component(&Components.copy_button/1, value: "evt-東京-Å", label: "Copy event ID")
+      html =
+        render_component(&Components.copy_button/1, value: "evt-東京-Å", label: "Copy event ID")
 
       assert html =~ ~s(data-copy-value="evt-東京-Å")
       assert html =~ ~s(aria-label="Copy event ID")
