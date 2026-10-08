@@ -126,6 +126,74 @@ async function selectInboundFull(page, row) {
   await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
 }
 
+async function assertZoomReadableValue(locator, label, viewportWidth) {
+  await expect(locator, `${label} is rendered and visible`).toBeVisible();
+  await locator.scrollIntoViewIfNeeded();
+  const geometry = await locator.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const lines = [...range.getClientRects()].map(line => ({
+      left: line.left,
+      right: line.right,
+      top: line.top,
+      bottom: line.bottom
+    }));
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let lastText = null;
+    while (walker.nextNode()) {
+      if (walker.currentNode.textContent.trim()) lastText = walker.currentNode;
+    }
+    let lastCharacter = null;
+    if (lastText) {
+      let offset = lastText.textContent.length - 1;
+      while (offset >= 0 && /\s/.test(lastText.textContent[offset])) offset -= 1;
+      const character = document.createRange();
+      character.setStart(lastText, Math.max(offset, 0));
+      character.setEnd(lastText, Math.max(offset, 0) + 1);
+      const characterRect = character.getBoundingClientRect();
+      lastCharacter = { left: characterRect.left, right: characterRect.right };
+    }
+    return {
+      text: element.textContent.trim(),
+      left: rect.left,
+      right: rect.right,
+      top: rect.top,
+      bottom: rect.bottom,
+      viewportHeight: document.documentElement.clientHeight,
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+      documentScrollWidth: document.documentElement.scrollWidth,
+      lines,
+      lastCharacter
+    };
+  });
+
+  expect(geometry.text.length, `${label} has complete rendered text`).toBeGreaterThan(0);
+  expect(geometry.text, `${label} is not replaced by truncation`).not.toMatch(/(?:\.\.\.|…)/);
+  expect(geometry.lines.length, `${label} has rendered text geometry`).toBeGreaterThan(0);
+  expect(geometry.left, `${label} left edge`).toBeGreaterThanOrEqual(0);
+  expect(geometry.right, `${label} right edge`).toBeLessThanOrEqual(viewportWidth);
+  expect(geometry.top, `${label} top edge`).toBeGreaterThanOrEqual(0);
+  expect(geometry.bottom, `${label} bottom edge`).toBeLessThanOrEqual(geometry.viewportHeight);
+  expect(geometry.lines.every(line =>
+    line.left >= geometry.left && line.right <= geometry.right + 1 &&
+    line.left >= 0 && line.right <= viewportWidth + 1
+  ), `${label} text lines fit the value and layout viewport`).toBeTruthy();
+  expect(geometry.lastCharacter?.left, `${label} final character starts within the value`)
+    .toBeGreaterThanOrEqual(geometry.left);
+  expect(geometry.lastCharacter?.right, `${label} final character ends within the value`)
+    .toBeLessThanOrEqual(geometry.right + 1);
+  expect(geometry.scrollWidth - geometry.clientWidth, `${label} horizontal clipping`)
+    .toBeLessThanOrEqual(1);
+  expect(geometry.scrollHeight - geometry.clientHeight, `${label} vertical clipping`)
+    .toBeLessThanOrEqual(1);
+  expect(geometry.documentScrollWidth, `${label} document horizontal overflow`)
+    .toBeLessThanOrEqual(viewportWidth);
+}
+
 async function openOperatorReplayModal(page) {
   await openOperator(page);
   // The Confirm control only renders when replay is :exact (or :ambiguous with a
@@ -686,6 +754,70 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     await expect
       .poll(() => zoomPage.evaluate(() => window.devicePixelRatio))
       .toBe(initialDevicePixelRatio * 2);
+
+    const accountContext = zoomPage.getByTestId("operator-account-context");
+    await expect(accountContext).toBeVisible();
+    await expect(accountContext).toContainText("fjordline-aps");
+    const topbarControls = [
+      ["committed Account context", accountContext],
+      ["Account switcher", zoomPage.getByTestId("operator-account-switcher")],
+      ["Appearance group", zoomPage.getByRole("group", { name: "Appearance", exact: true })],
+      ["System radio", zoomPage.getByRole("radio", { name: "System", exact: true })],
+      ["Light radio", zoomPage.getByRole("radio", { name: "Light", exact: true })],
+      ["Dark radio", zoomPage.getByRole("radio", { name: "Dark", exact: true })]
+    ];
+    for (const [label, control] of topbarControls) {
+      await expect(control, `${label} is visible at 200% zoom`).toBeVisible();
+      await control.scrollIntoViewIfNeeded();
+      const geometry = await control.evaluate(element => {
+        const rect = element.getBoundingClientRect();
+        return {
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom,
+          viewportWidth: document.documentElement.clientWidth,
+          viewportHeight: document.documentElement.clientHeight,
+          scrollWidth: element.scrollWidth,
+          clientWidth: element.clientWidth,
+          scrollHeight: element.scrollHeight,
+          clientHeight: element.clientHeight,
+          documentScrollWidth: document.documentElement.scrollWidth
+        };
+      });
+      expect(geometry.left, `${label} left edge`).toBeGreaterThanOrEqual(0);
+      expect(geometry.right, `${label} right edge`).toBeLessThanOrEqual(geometry.viewportWidth);
+      expect(geometry.top, `${label} top edge`).toBeGreaterThanOrEqual(0);
+      expect(geometry.bottom, `${label} bottom edge`).toBeLessThanOrEqual(geometry.viewportHeight);
+      expect(geometry.scrollWidth - geometry.clientWidth, `${label} horizontal clipping`).toBeLessThanOrEqual(1);
+      expect(geometry.scrollHeight - geometry.clientHeight, `${label} vertical clipping`).toBeLessThanOrEqual(1);
+      expect(geometry.documentScrollWidth, `${label} document horizontal overflow`)
+        .toBeLessThanOrEqual(geometry.viewportWidth);
+    }
+
+    const detail = zoomPage.getByTestId("operator-detail-header");
+    await assertZoomReadableValue(detail.locator("p.mono").first(), "Delivery ID", 720);
+    await assertZoomReadableValue(zoomedMailable, "Mailable", 720);
+    await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider", 720);
+    await assertZoomReadableValue(
+      detail.getByText("del_01JXW9ZQKB3V1N4P2RMT7FHCG", { exact: true }),
+      "Provider message ID",
+      720
+    );
+
+    const timelineEvent = zoomPage.getByTestId("operator-timeline-event").first();
+    await expect(timelineEvent).toBeVisible();
+    await assertZoomReadableValue(timelineEvent.locator("p.mono").first(), "Timeline Event ID", 720);
+    await assertZoomReadableValue(timelineEvent.locator("time").first(), "Recorded timestamp", 720);
+    const providerEventId = timelineEvent.locator("p.mono").filter({ hasText: /^Provider Event ID:/ });
+    if (await providerEventId.count()) {
+      await assertZoomReadableValue(providerEventId, "Provider Event ID", 720);
+    }
+    const providerTimestamp = timelineEvent.locator("p").filter({ hasText: /^Provider occurrence time:/ });
+    if (await providerTimestamp.count()) {
+      await assertZoomReadableValue(providerTimestamp, "Provider timestamp", 720);
+    }
+
     const zoomGeometry = await zoomedMailable.evaluate(element => {
       const rect = element.getBoundingClientRect();
       return {
@@ -1111,12 +1243,23 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(page).not.toHaveURL(/delivery_id=/);
     const committedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
     const committedRowText = await committedRow.innerText();
+    const pendingSwitch = page
+      .getByTestId("operator-account-switch-status")
+      .filter({ hasText: "Switching to fjordline-aps…" });
+    await expect(pendingSwitch, "the target Account's pending status is available to the switch control")
+      .toHaveCount(1);
+    await expect(pendingSwitch).toBeHidden();
     await page.getByTestId("operator-account-switcher").click();
     holdAccountReply = true;
     const pendingAccountReply = new Promise(resolve => { resolveAccountReply = resolve; });
     await targetAccount.click();
 
     await pendingAccountReply;
+    await expect(pendingSwitch, "a delayed Account switch has visible pending feedback").toBeVisible();
+    await expect(pendingSwitch).toHaveAttribute("role", "status");
+    await expect(pendingSwitch).toHaveAttribute("aria-live", "polite");
+    await expect(pendingSwitch).toHaveAttribute("aria-atomic", "true");
+    await expect(pendingSwitch).toHaveText("Switching to fjordline-aps…");
     await expect(page.getByTestId("operator-account-id")).toHaveText("northstar");
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
     await expect(page.getByTestId("operator-delivery-row").filter({ visible: true }).first()).toHaveText(committedRowText);
@@ -1126,6 +1269,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(page).toHaveURL(/tenant_id=fjordline-aps/);
     await expect(page).not.toHaveURL(/delivery_id=/);
     await expect(page.getByTestId("operator-account-id")).toHaveText("fjordline-aps");
+    await expect(pendingSwitch).toHaveCount(0);
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
     const scopedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
     await expect(scopedRow).toContainText("f************.example");
