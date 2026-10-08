@@ -42,6 +42,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   # :empty | :error | :permission_denied | :stale | nil
   # nil means "normal flow": render deliveries or the legacy empty branches
   attr(:data_state, :atom, default: nil)
+  attr(:retry_event, :string, default: "retry_deliveries")
 
   def deliveries_list(assigns) do
     ~H"""
@@ -51,6 +52,12 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     >
       {result_count_label(@page_meta)}
     </div>
+    <Components.data_state
+      :if={@data_state == :stale}
+      kind={:stale}
+      title="This view may be out of date."
+      body="The latest read was unavailable. Showing the last results loaded for this Account."
+    />
     <%= cond do %>
       <% @data_state == :error -> %>
         <Components.data_state
@@ -58,19 +65,23 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
           title="This view could not be updated."
           body="Refresh to try again. If it continues, contact your Mailglass host administrator."
         />
+        <button type="button" phx-click={@retry_event} class="btn btn-ghost min-h-11 mx-auto block">
+          Retry deliveries
+        </button>
       <% @data_state == :permission_denied -> %>
         <Components.data_state
           kind={:permission_denied}
           title="Access restricted"
           body="You do not have access to this account's mail operations. Ask an administrator to grant access."
         />
-      <% @data_state == :stale -> %>
+      <% @deliveries == [] and @page_meta.total_count > 0 -> %>
         <Components.data_state
-          kind={:stale}
-          title="This view may be out of date."
-          body="Refresh the view to check for updates."
+          kind={:empty}
+          title="No deliveries on this page"
+          body="Move to an available page to inspect the current results."
         />
-      <% @data_state == :empty or (@data_state == nil and @deliveries == []) -> %>
+      <% @data_state == :empty or
+        (@data_state in [nil, :ready] and @deliveries == []) -> %>
         <%= if @filters_active? do %>
           <Components.data_state
             kind={:empty}
@@ -93,8 +104,8 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         <% else %>
           <Components.data_state
             kind={:empty}
-            title="No deliveries"
-            body="No deliveries have been recorded yet."
+            title="No deliveries in this time window"
+            body="No deliveries have been recorded for this Account during the selected time window."
             data-testid-override="operator-empty-truly"
           />
           <div
@@ -103,9 +114,10 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
           />
         <% end %>
       <% true -> %>
-        <%!-- Desktop table (>=768px) --%>
+        <div class="operator-deliveries-layout">
+        <%!-- The list switches based on available content width, including the shared sidebar. --%>
         <div
-          class="hidden md:block overflow-x-auto"
+          class="operator-deliveries-table overflow-x-auto"
           data-testid="operator-deliveries-table"
           role="region"
           aria-label="Delivery records"
@@ -114,7 +126,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
           <table class="table w-full table-fixed">
             <thead>
               <tr>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Status</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Outcome</th>
                 <th scope="col" class="text-label font-bold uppercase text-secondary w-64">
                   Recipient
                 </th>
@@ -128,9 +140,13 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                 <th scope="col" class="text-label font-bold uppercase text-secondary w-32">
                   Provider
                 </th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-36">
+                  Latest event
+                </th>
                 <th scope="col" class="text-label font-bold uppercase text-secondary">
                   Updated
                 </th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -154,7 +170,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
               >
                 <td class="text-body text-base-content">
                   <Components.status_badge
-                    status={Components.delivery_display_status(delivery)}
+                    status={delivery.status}
                     size={:sm}
                   />
                 </td>
@@ -179,16 +195,28 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     {String.upcase(delivery.provider || "unknown")}
                   </span>
                 </td>
+                <td class="text-body text-base-content">{event_label(delivery.last_event_type)}</td>
                 <td class="text-label text-secondary">
                   <Components.timestamp at={delivery.last_event_at} class="whitespace-nowrap" />
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    phx-click="select_delivery"
+                    phx-click-stop
+                    phx-value-delivery-id={delivery.id}
+                    class="mg-focus-ring btn btn-ghost btn-sm min-h-11 px-sm"
+                  >
+                    Open delivery
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <%!-- Mobile cards (<768px) — operator-deliveries-list kept for legacy consumers; Plan 04 migrates --%>
-        <div data-testid="operator-deliveries-cards" class="md:hidden">
+        <%!-- Cards remain readable until the list's own content area reaches 768px. --%>
+        <div data-testid="operator-deliveries-cards" class="operator-deliveries-cards">
           <ul
             data-testid="operator-deliveries-list"
             class="divide-y divide-base-300"
@@ -212,7 +240,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                 <%!-- Status badge first/prominent --%>
                 <div>
                   <Components.status_badge
-                    status={Components.delivery_display_status(delivery)}
+                    status={delivery.status}
                     size={:sm}
                   />
                 </div>
@@ -240,6 +268,10 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                 </div>
 
                 <div class="flex flex-wrap items-start gap-md text-label text-secondary">
+                  <div>
+                    <span class="font-bold uppercase">Latest event</span>
+                    <p class="text-body text-base-content">{event_label(delivery.last_event_type)}</p>
+                  </div>
                   <%!-- Account --%>
                   <div :if={@show_account?} class="min-w-0">
                     <span class="font-bold uppercase">Account</span>
@@ -267,9 +299,11 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     </p>
                   </div>
                 </div>
+                <span class="text-label font-bold text-primary">Open delivery →</span>
               </button>
             </li>
           </ul>
+        </div>
         </div>
     <% end %>
     <.pagination_controls
@@ -350,6 +384,12 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   defp selected?(%{id: id}, %{id: id}), do: true
   defp selected?(_selected_delivery, _delivery), do: false
+
+  defp event_label(nil), do: "Unavailable"
+  defp event_label(:unknown), do: "Unknown"
+
+  defp event_label(event) when is_atom(event),
+    do: event |> Atom.to_string() |> String.replace("_", " ") |> String.capitalize()
 
   defp row_id(:desktop, id), do: "operator-delivery-desktop-#{id}"
   defp row_id(:mobile, id), do: "operator-delivery-mobile-#{id}"

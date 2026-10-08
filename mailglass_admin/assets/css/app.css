@@ -515,3 +515,27 @@ code, pre, .mono {
     scroll-behavior: auto !important;
   }
 }
+
+/* Choose the deliveries presentation from the content column, not viewport
+   width; the shared Account sidebar can leave less than 768px at tablet sizes. */
+.operator-deliveries-layout {
+  container-type: inline-size;
+}
+
+.operator-deliveries-table {
+  display: none;
+}
+
+.operator-deliveries-cards {
+  display: block;
+}
+
+@container (min-width: 768px) {
+  .operator-deliveries-table {
+    display: block;
+  }
+
+  .operator-deliveries-cards {
+    display: none;
+  }
+}

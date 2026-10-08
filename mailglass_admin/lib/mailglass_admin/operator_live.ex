@@ -55,11 +55,15 @@ defmodule MailglassAdmin.OperatorLive do
       socket
       |> assign_new(:operator_actor, fn -> nil end)
       |> assign_new(:operator_auth, fn -> %{status: :unknown, recent_auth?: false} end)
+      |> assign_new(:operator_read_fault, fn -> nil end)
       |> assign(:view, :overview)
       |> assign(:full_detail?, false)
       |> assign(:deliveries, [])
       |> assign(:deliveries_page_meta, empty_page_meta())
+      |> assign(:deliveries_read_state, :ready)
+      |> assign(:deliveries_loaded_for, nil)
       |> assign(:selected_delivery, nil)
+      |> assign(:requested_delivery_id, nil)
       |> assign(:quick_view_focus_return_id, nil)
       |> assign(:timeline_events, [])
       |> assign(:suppression_state, nil)
@@ -268,30 +272,11 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("select_delivery", %{"id" => delivery_id} = params, socket) do
-    allowed_focus_ids = [
-      "operator-delivery-desktop-#{delivery_id}",
-      "operator-delivery-mobile-#{delivery_id}"
-    ]
+    select_delivery(socket, delivery_id, params)
+  end
 
-    requested_focus_id = params["focus_return_id"] || params["focus-return-id"]
-
-    focus_return_id =
-      if requested_focus_id in allowed_focus_ids,
-        do: requested_focus_id,
-        else: nil
-
-    {:noreply,
-     socket
-     |> assign(:quick_view_focus_return_id, focus_return_id)
-     |> push_patch(
-       to:
-         build_path(
-           socket.assigns.base_path,
-           socket.assigns.filter_params,
-           delivery_id,
-           socket.assigns.dark_chrome
-         )
-     )}
+  def handle_event("select_delivery", %{"delivery-id" => delivery_id} = params, socket) do
+    select_delivery(socket, delivery_id, params)
   end
 
   # Close the Quick view / Full detail — drop delivery_id (+ full + support-focus),
@@ -415,6 +400,29 @@ defmodule MailglassAdmin.OperatorLive do
     {:noreply, close_replay_modal(socket)}
   end
 
+  def handle_event("retry_deliveries", _params, socket) do
+    {:noreply,
+     assign_delivery_state(
+       socket,
+       socket.assigns.filter_params,
+       selected_delivery_id(socket),
+       socket.assigns.full_detail?,
+       support_focus?(socket.assigns.support_state)
+     )}
+  end
+
+  def handle_event("retry_details", _params, socket) do
+    {:noreply,
+     assign_delivery_state(
+       socket,
+       socket.assigns.filter_params,
+       get_in(socket.assigns, [Access.key(:selected_delivery), Access.key(:id)]) ||
+         socket.assigns[:requested_delivery_id],
+       socket.assigns.full_detail?,
+       support_focus?(socket.assigns.support_state)
+     )}
+  end
+
   def handle_event("choose_replay_target", %{"webhook_event_id" => webhook_event_id}, socket) do
     {:noreply, assign(socket, :replay_selected_target_id, blank_to_nil(webhook_event_id))}
   end
@@ -491,6 +499,33 @@ defmodule MailglassAdmin.OperatorLive do
          )
          |> put_flash(:error, RepairState.flash_failure(reason))}
     end
+  end
+
+  defp select_delivery(socket, delivery_id, params) do
+    allowed_focus_ids = [
+      "operator-delivery-desktop-#{delivery_id}",
+      "operator-delivery-mobile-#{delivery_id}"
+    ]
+
+    requested_focus_id = params["focus_return_id"] || params["focus-return-id"]
+
+    focus_return_id =
+      if requested_focus_id in allowed_focus_ids,
+        do: requested_focus_id,
+        else: nil
+
+    socket = assign(socket, :quick_view_focus_return_id, focus_return_id)
+
+    {:noreply,
+     push_patch(socket,
+       to:
+         build_path(
+           socket.assigns.base_path,
+           socket.assigns.filter_params,
+           delivery_id,
+           socket.assigns.dark_chrome
+         )
+     )}
   end
 
   @impl true
@@ -660,7 +695,9 @@ defmodule MailglassAdmin.OperatorLive do
           </div>
         <% else %>
           <%= cond do %>
-            <% @deliveries == [] and not filters_active?(@filter_params) and @filter_errors == %{} -> %>
+            <% @deliveries == [] and @deliveries_read_state == :ready and
+                is_nil(@requested_delivery_id) and @deliveries_page_meta.total_count == 0 and
+                not filters_active?(@filter_params) and @filter_errors == %{} -> %>
               <%!-- Genuine no-data: a single calm pane only — operator-empty-truly + orientation strip.
                   The filters toolbar, the Open-delivery CTA, and the entire master-detail grid (and
                   therefore the "Select a delivery…" helper nested inside it) are all withheld.
@@ -705,9 +742,17 @@ defmodule MailglassAdmin.OperatorLive do
                         <div class="flex items-center gap-2">
                           <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
                           <h2 class="text-body font-bold text-base-content">
-                            This view could not be updated. Refresh to try again. If it continues, contact your Mailglass host administrator.
+                            {detail_error_copy(@detail_error)}
                           </h2>
                         </div>
+                        <button
+                          :if={@detail_error == :unavailable}
+                          type="button"
+                          phx-click="retry_details"
+                          class="btn btn-ghost min-h-11 mt-md"
+                        >
+                          Retry details
+                        </button>
                       </div>
                     <% true -> %>
                       <div
@@ -760,6 +805,7 @@ defmodule MailglassAdmin.OperatorLive do
                         pagination_path(@base_path, @filter_params, @dark_chrome, :next)
                       }
                       selected_delivery={@selected_delivery}
+                      data_state={@deliveries_read_state}
                       filters_active?={filters_active?(@filter_params)}
                     />
                   </aside>
@@ -971,6 +1017,7 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   defp selected_delivery_id(%{assigns: %{selected_delivery: %{id: id}}}), do: id
+  defp selected_delivery_id(%{assigns: %{requested_delivery_id: id}}) when is_binary(id), do: id
   defp selected_delivery_id(_socket), do: nil
 
   defp clear_surface_state(socket) do
@@ -979,7 +1026,9 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:full_detail?, false)
     |> assign(:deliveries, [])
     |> assign(:deliveries_page_meta, empty_page_meta())
+    |> assign(:deliveries_read_state, :ready)
     |> assign(:selected_delivery, nil)
+    |> assign(:requested_delivery_id, nil)
     |> assign(:timeline_events, [])
     |> assign(:suppression_state, nil)
     |> assign(:support_summary, nil)
@@ -1052,11 +1101,16 @@ defmodule MailglassAdmin.OperatorLive do
 
       tenant_id ->
         providers =
-          Deliveries.list_providers(%{
-            tenant_id: tenant_id,
-            window_hours:
-              parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
-          })
+          try do
+            Deliveries.list_providers(%{
+              tenant_id: tenant_id,
+              window_hours:
+                parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
+            })
+          rescue
+            error ->
+              if transient_read_error?(error), do: [], else: reraise(error, __STACKTRACE__)
+          end
 
         providers =
           if selected_provider && selected_provider not in providers do
@@ -1116,8 +1170,28 @@ defmodule MailglassAdmin.OperatorLive do
     do: Enum.find(deliveries, &(&1.id == delivery_id))
 
   defp detail_error_for(nil, _selected_delivery), do: nil
-  defp detail_error_for(_delivery_id, nil), do: :not_found
+
+  defp detail_error_for(delivery_id, nil) do
+    case Ecto.UUID.cast(delivery_id) do
+      {:ok, _} -> :not_found
+      :error -> :invalid_id
+    end
+  end
+
   defp detail_error_for(_delivery_id, _selected_delivery), do: nil
+
+  defp detail_error_copy(:invalid_id),
+    do: "This delivery link is invalid. Return to deliveries and open a listed record."
+
+  defp detail_error_copy(:not_found),
+    do: "This delivery is not available in the selected Account. Return to deliveries to continue."
+
+  defp detail_error_copy(:unavailable),
+    do:
+      "Delivery details are temporarily unavailable. Retry the scoped read or return to deliveries."
+
+  defp detail_error_copy(_),
+    do: "Delivery details are unavailable. Return to deliveries to continue."
 
   defp load_replay_targets(_filter_params, nil), do: nil
 
@@ -1149,12 +1223,28 @@ defmodule MailglassAdmin.OperatorLive do
   # in Full detail (`full?`). `support_summary` is loaded for Full detail and for a
   # support-focus drill-down (both render SupportCards); the Quick view skips it.
   defp assign_delivery_state(socket, filter_params, selected_delivery_id, full?, support_focus?) do
-    deliveries_page = load_deliveries_page(filter_params)
-    deliveries = deliveries_page.entries
+    query_key = delivery_query_key(filter_params)
 
-    selected_delivery =
-      find_selected_delivery(deliveries, selected_delivery_id) ||
-        load_exact_delivery(filter_params, selected_delivery_id)
+    {deliveries, page_meta, deliveries_read_state} =
+      case read_deliveries_page(filter_params, socket.assigns[:operator_read_fault]) do
+        {:ok, deliveries_page} ->
+          {deliveries_page.entries, page_meta_without_entries(deliveries_page), :ready}
+
+        {:error, :unavailable}
+        when socket.assigns.deliveries != [] and socket.assigns.deliveries_loaded_for == query_key ->
+          {socket.assigns.deliveries, socket.assigns.deliveries_page_meta, :stale}
+
+        {:error, :unavailable} ->
+          {[], page_meta_without_entries(empty_page_meta()), :error}
+      end
+
+    {selected_delivery, detail_error} =
+      resolve_selected_delivery(
+        deliveries,
+        filter_params,
+        selected_delivery_id,
+        socket.assigns[:operator_read_fault]
+      )
 
     replay_targets =
       if full?, do: load_replay_targets(filter_params, selected_delivery), else: nil
@@ -1172,12 +1262,21 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:view, :deliveries)
     |> assign(:full_detail?, full?)
     |> assign(:deliveries, deliveries)
-    |> assign(:deliveries_page_meta, page_meta_without_entries(deliveries_page))
+    |> assign(:deliveries_page_meta, page_meta)
+    |> assign(:deliveries_read_state, deliveries_read_state)
+    |> assign(
+      :deliveries_loaded_for,
+      if(deliveries_read_state == :ready,
+        do: query_key,
+        else: socket.assigns[:deliveries_loaded_for]
+      )
+    )
     |> assign(:selected_delivery, selected_delivery)
+    |> assign(:requested_delivery_id, selected_delivery_id)
     |> assign(:timeline_events, timeline)
     |> assign(:suppression_state, suppression)
     |> assign(:support_summary, support_summary)
-    |> assign(:detail_error, detail_error_for(selected_delivery_id, selected_delivery))
+    |> assign(:detail_error, detail_error)
     |> assign(:replay_targets, replay_targets)
     |> assign(:replay_history, replay_history)
     |> assign(
@@ -1186,15 +1285,77 @@ defmodule MailglassAdmin.OperatorLive do
     )
   end
 
-  defp load_exact_delivery(_filter_params, nil), do: nil
+  defp read_deliveries_page(filter_params, read_fault) do
+    run_read_fault(read_fault, :deliveries)
+    {:ok, load_deliveries_page(filter_params)}
+  rescue
+    error ->
+      if transient_read_error?(error),
+        do: {:error, :unavailable},
+        else: reraise(error, __STACKTRACE__)
+  end
 
-  defp load_exact_delivery(filter_params, delivery_id) do
+  defp resolve_selected_delivery(_deliveries, _filter_params, nil, _read_fault),
+    do: {nil, nil}
+
+  defp resolve_selected_delivery(deliveries, filter_params, delivery_id, read_fault) do
+    case find_selected_delivery(deliveries, delivery_id) do
+      %{} = delivery ->
+        {delivery, nil}
+
+      nil ->
+        case load_exact_delivery(filter_params, delivery_id, read_fault) do
+          {:ok, %{} = delivery} -> {delivery, nil}
+          {:ok, nil} -> {nil, detail_error_for(delivery_id, nil)}
+          {:error, :unavailable} -> {nil, :unavailable}
+        end
+    end
+  end
+
+  defp load_exact_delivery(_filter_params, nil, _read_fault), do: {:ok, nil}
+
+  defp load_exact_delivery(filter_params, delivery_id, read_fault) do
     tenant_id = blank_to_nil(filter_params["tenant_id"])
 
     if tenant_id do
-      Deliveries.get_delivery(%{tenant_id: tenant_id, delivery_id: delivery_id}, [])
+      try do
+        run_read_fault(read_fault, :exact_delivery)
+        {:ok, Deliveries.get_delivery(%{tenant_id: tenant_id, delivery_id: delivery_id}, [])}
+      rescue
+        error ->
+          if transient_read_error?(error),
+            do: {:error, :unavailable},
+            else: reraise(error, __STACKTRACE__)
+      end
+    else
+      {:ok, nil}
     end
   end
+
+  defp run_read_fault(callback, operation) when is_function(callback, 1),
+    do: callback.(operation)
+
+  defp run_read_fault(_callback, _operation), do: :ok
+
+  defp transient_read_error?(%DBConnection.ConnectionError{}), do: true
+
+  defp transient_read_error?(%Postgrex.Error{postgres: %{code: code}})
+       when code in [
+              :query_canceled,
+              :admin_shutdown,
+              :connection_exception,
+              "57014",
+              "57P01"
+            ],
+       do: true
+
+  defp transient_read_error?(%Postgrex.Error{postgres: %{code: code}}) when is_binary(code),
+    do: String.starts_with?(code, "08")
+
+  defp transient_read_error?(_error), do: false
+
+  defp delivery_query_key(filter_params),
+    do: Map.take(filter_params, ["tenant_id", "provider", "event", "window_hours", "page"])
 
   defp assign_overview_state(socket, filter_params) do
     tenant_id = blank_to_nil(filter_params["tenant_id"])

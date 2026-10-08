@@ -31,9 +31,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "Dispatched"
-      assert has_element?(view, "[data-testid='operator-delivery-row']", "Dispatched")
-      refute has_element?(view, "[data-testid='operator-delivery-row']", "Delivered")
+      assert html =~ "Sent"
+      assert has_element?(view, "[data-testid='operator-delivery-row']", "Sent")
+      assert has_element?(view, "[data-testid='operator-delivery-row']", "Latest event")
 
       updated =
         delivery
@@ -50,7 +50,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       )
 
       _html = render(view)
-      assert has_element?(view, "[data-testid='operator-delivery-row']", "Dispatched")
+      assert has_element?(view, "[data-testid='operator-delivery-row']", "Sent")
 
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
@@ -59,8 +59,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       )
 
       _html = render(view)
+      assert has_element?(view, "[data-testid='operator-delivery-row']", "Sent")
       assert has_element?(view, "[data-testid='operator-delivery-row']", "Delivered")
-      refute has_element?(view, "[data-testid='operator-delivery-row']", "Dispatched")
     end
 
     test "refreshes selected full-detail evidence while preserving URL-backed filters", %{
@@ -137,10 +137,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "No deliveries"
+      assert html =~ "No deliveries in this time window"
 
       assert html =~
-               "No deliveries have been recorded yet."
+               "No deliveries have been recorded for this Account during the selected time window."
 
       # Single calm pane: the empty-truly state + the orientation strip (its only location).
       assert html =~ ~s(data-testid="operator-empty-truly")
@@ -184,7 +184,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Apply filters"
       assert html =~ ~s(phx-disable-with="Applying filters…")
       assert html =~ "w-40"
-      refute html =~ "Open delivery"
+      assert html =~ "Open delivery"
 
       view
       |> form("#operator-filters",
@@ -1066,10 +1066,35 @@ defmodule MailglassAdmin.OperatorLiveTest do
           filters_active?: false
         )
 
-      assert html =~ "No deliveries"
-      assert html =~ "No deliveries have been recorded yet."
+      assert html =~ "No deliveries in this time window"
+
+      assert html =~
+               "No deliveries have been recorded for this Account during the selected time window."
+
       assert html =~ ~s(data-testid="operator-empty-truly")
       refute html =~ ~s(phx-click="clear_filters")
+    end
+
+    test "out-of-range pages are distinct from an empty Account" do
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          page_meta: %{
+            total_count: 21,
+            page: 3,
+            per_page: 20,
+            total_pages: 2,
+            has_previous?: true,
+            has_next?: false
+          },
+          previous_page_path: "/ops/mail?tenant_id=test-tenant&view=deliveries&page=2"
+        )
+
+      assert html =~ "No deliveries on this page"
+      assert html =~ "Move to an available page"
+      assert html =~ ~s(data-testid="operator-pagination-prev")
     end
   end
 
@@ -1090,10 +1115,84 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ ~s(data-testid="operator-result-count")
       assert html =~ "21 deliveries"
+      assert html =~ "Open delivery"
       assert html =~ ~s(data-testid="operator-pagination")
       assert html =~ ~s(data-testid="operator-pagination-prev-disabled")
       assert html =~ "tenant_id=#{@tenant_id}"
       assert html =~ "page=2"
+    end
+  end
+
+  describe "exact delivery selection errors" do
+    test "distinguishes malformed links from non-disclosing missing or foreign IDs", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      {:ok, _view, invalid_html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "delivery_id" => "not-a-uuid",
+            "full" => "1"
+          })
+        )
+
+      assert invalid_html =~ "This delivery link is invalid."
+      refute invalid_html =~ "operator-empty-truly"
+
+      foreign =
+        insert_delivery!(
+          tenant_id: "foreign-tenant",
+          recipient: "private-foreign@example.com"
+        )
+
+      {:ok, _view, foreign_html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "delivery_id" => foreign.id,
+            "full" => "1"
+          })
+        )
+
+      assert foreign_html =~ "This delivery is not available in the selected Account."
+      refute foreign_html =~ "private-foreign@example.com"
+      refute foreign_html =~ foreign.id
+    end
+  end
+
+  describe "transient delivery read failures" do
+    test "a failed list read is not rendered as an empty Account and exposes retry", %{conn: conn} do
+      conn = operator_conn(conn, %{"auth_method" => "fault:deliveries"})
+
+      {:ok, _view, html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
+
+      assert html =~ "This view could not be updated."
+      assert html =~ "Retry deliveries"
+      refute html =~ "No deliveries in this time window"
+      refute html =~ "synthetic transient operator read failure"
+    end
+
+    test "an unavailable exact read retains the requested ID and offers scoped retry", %{conn: conn} do
+      conn = operator_conn(conn, %{"auth_method" => "fault:exact_delivery"})
+      requested_id = Ecto.UUID.generate()
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "delivery_id" => requested_id,
+            "full" => "1"
+          })
+        )
+
+      assert html =~ "Delivery details are temporarily unavailable."
+      assert html =~ "Retry details"
+      assert html =~ "Back to deliveries"
+      refute html =~ "No deliveries in this time window"
     end
   end
 
@@ -2193,7 +2292,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-deliveries-cards")
     end
 
-    test "desktop table uses semantic <table> with <th scope=col> headers in Status-first order" do
+    test "desktop table separates stored Outcome from Latest event" do
       delivery = %{
         id: "test-delivery-id-002",
         tenant_id: "t1",
@@ -2221,8 +2320,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "<table"
       assert html =~ ~s(scope="col")
-      # Status must be first column header
-      assert html =~ "Status"
+      assert html =~ "Outcome"
+      assert html =~ "Latest event"
+      assert html =~ "Sent"
+      assert html =~ "Delivered"
     end
 
     test "both presentations carry phx-click=select_delivery and phx-value-id; selected delivery carries aria-selected=true in both" do
@@ -2434,7 +2535,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ ~s(data-testid="data-state-stale")
       assert html =~ "This view may be out of date."
-      assert html =~ "Refresh the view to check for updates."
+
+      assert html =~
+               "The latest read was unavailable. Showing the last results loaded for this Account."
+
       refute html =~ "14:32"
     end
 

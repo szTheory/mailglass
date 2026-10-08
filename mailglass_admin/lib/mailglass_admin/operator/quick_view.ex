@@ -91,8 +91,16 @@ defmodule MailglassAdmin.Operator.QuickView do
                 class="mt-0.5 h-5 w-5 shrink-0 text-error"
               />
               <p class="text-body text-base-content">
-                Delivery data could not be loaded. Refresh the page or adjust the filters, then try again.
+                {detail_error_copy(@detail_error)}
               </p>
+              <button
+                :if={@detail_error == :unavailable}
+                type="button"
+                phx-click="retry_details"
+                class="btn btn-ghost min-h-11"
+              >
+                Retry details
+              </button>
             </div>
           <% @delivery -> %>
             <div class="mt-md space-y-md">
@@ -100,11 +108,11 @@ defmodule MailglassAdmin.Operator.QuickView do
                 <h3 class="text-heading font-bold text-base-content">
                   {Components.mask_recipient(@delivery.recipient)}
                 </h3>
-                <Components.status_badge status={Components.delivery_display_status(@delivery)} />
+                <Components.status_badge status={@delivery.status} />
               </div>
 
               <p class="text-body text-secondary">
-                Observed outcome:
+                Latest recorded event:
                 <span class="text-base-content">{event_label(@delivery.last_event_type)}</span>
                 · <Components.timestamp at={@delivery.last_event_at} />
               </p>
@@ -192,4 +200,17 @@ defmodule MailglassAdmin.Operator.QuickView do
 
   defp provider_label(nil), do: "Unavailable"
   defp provider_label(value), do: String.upcase(value)
+
+  defp detail_error_copy(:invalid_id),
+    do: "This delivery link is invalid. Return to deliveries and open a listed record."
+
+  defp detail_error_copy(:not_found),
+    do: "This delivery is not available in the selected Account. Return to deliveries to continue."
+
+  defp detail_error_copy(:unavailable),
+    do:
+      "Delivery details are temporarily unavailable. Retry the scoped read or return to deliveries."
+
+  defp detail_error_copy(_),
+    do: "Delivery details are unavailable. Return to deliveries to continue."
 end

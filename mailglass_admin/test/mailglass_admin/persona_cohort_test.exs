@@ -51,9 +51,7 @@ defmodule MailglassAdmin.PersonaCohortTest do
       literals = MailglassDemo.Personas.specimen_literals()
 
       fjordline_deliveries =
-        TestRepo.all(
-          from(d in Delivery, where: d.tenant_id == "fjordline-aps", select: d)
-        )
+        TestRepo.all(from(d in Delivery, where: d.tenant_id == "fjordline-aps", select: d))
 
       assert [delivery] = fjordline_deliveries
       assert delivery.provider_message_id == literals.long_delivery_id
@@ -131,7 +129,8 @@ defmodule MailglassAdmin.PersonaCohortTest do
         )
 
       # 116-UI-SPEC: helios-void direct-URL empty state copy.
-      assert html =~ "No deliveries have been recorded yet."
+      assert html =~
+               "No deliveries have been recorded for this Account during the selected time window."
     end
   end
 

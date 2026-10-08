@@ -60,7 +60,18 @@ async function openOperator(page) {
 }
 
 test.describe("operator browser gate", () => {
-  test("desktop: a row opens the Quick view over the list; Open full detail shows the full record", async ({
+  test("collection switches to cards until the content column is at least 768px", async ({ page }) => {
+    await page.setViewportSize({ width: 1000, height: 900 });
+    await openOperator(page);
+    await expect(page.getByTestId("operator-deliveries-cards")).toBeVisible();
+    await expect(page.getByTestId("operator-deliveries-table")).toBeHidden();
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(page.getByTestId("operator-deliveries-table")).toBeVisible();
+    await expect(page.getByTestId("operator-deliveries-cards")).toBeHidden();
+  });
+
+  test("desktop: Open delivery opens Quick view over the list; Open full detail shows the full record", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -74,7 +85,8 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-detail-header")).toHaveCount(0);
 
     const selectedRow = deliveryRow(page, 0);
-    await selectedRow.click();
+    await expect(page.getByRole("button", { name: "Open delivery" }).first()).toBeVisible();
+    await page.getByRole("button", { name: "Open delivery" }).first().click();
 
     // Quick view (peek) slides in; the list stays in the DOM behind it, row highlighted.
     const quickView = page.getByTestId("operator-quick-view");
@@ -120,6 +132,7 @@ test.describe("operator browser gate", () => {
     const deliveriesCard = page.getByTestId("operator-deliveries-list-card");
     await expect(deliveriesCard).toBeVisible();
     await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
+    await expect(deliveryRow(page, 0)).toContainText("Open delivery");
 
     await deliveryRow(page, 0).click();
 
@@ -269,11 +282,12 @@ test.describe("operator browser gate", () => {
     expect(deliveryId).toBeTruthy();
     await expect(page.locator(`#delivery-detail-${deliveryId}`)).toBeVisible();
 
-    // Flip to the next record via the Quick view (all push_patch, no full reload) and
-    // re-enter Full detail — the id must change (element replaced, not patched in place).
+    // Full detail's explicit return drops the selected id and returns to the list.
     await page.getByTestId("operator-detail-back").click();
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await expect(page.getByTestId("operator-quick-view")).toHaveCount(0);
+    await deliveryRow(page, 1).click();
     await expect(page.getByTestId("operator-quick-view")).toBeVisible();
-    await page.getByTestId("operator-quick-view-next").click();
     await page.waitForURL((url) => {
       const id = new URL(url).searchParams.get("delivery_id");
       return Boolean(id) && id !== deliveryId;
@@ -456,9 +470,8 @@ test.describe("operator browser gate", () => {
     // Strip absent on populated; toolbar present.
     await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
     await expect(page.getByTestId("operator-filters")).toBeVisible();
-    // The Status column reflects the message's real lifecycle state: a delivered
-    // message (status :sent + last_event :delivered in the seed) now badges "Delivered",
-    // not a perpetual "Sent".
+    // The stored outcome remains "Sent" while the separate Latest event field records
+    // the provider's "Delivered" observation.
     await expect(page.getByTestId("operator-deliveries-list-card")).toContainText("Delivered");
 
     // --- GENUINE NO-DATA Deliveries view ---

@@ -951,7 +951,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(quickView).toBeVisible();
     await expect(quickView).toHaveAttribute("aria-modal", "true");
     await expect(page.getByRole("heading", { name: "Delivery quick view", exact: true })).toBeVisible();
-    await expect(quickView).toContainText("Observed outcome:");
+    await expect(quickView).toContainText("Latest recorded event:");
     await expect(quickView).toContainText("Delivery ID");
     await expect(quickView).toContainText(deliveryId.replace("operator-delivery-mobile-", ""));
     await expect(page.getByTestId("operator-quick-view-focus-return")).toHaveAttribute("data-focus-return-id", deliveryId);

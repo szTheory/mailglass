@@ -195,8 +195,27 @@ defmodule MailglassAdmin.TestOperatorHook do
 
   import Phoenix.Component, only: [assign: 3]
 
-  def on_mount(:audit, _params, _session, socket) do
-    {:cont, assign(socket, :operator_hook, :audit)}
+  def on_mount(:audit, _params, session, socket) do
+    requested_fault =
+      case Map.get(session, "auth_method") do
+        "fault:" <> fault -> fault
+        _ -> nil
+      end
+
+    fault = if requested_fault in ["deliveries", "exact_delivery"], do: requested_fault, else: nil
+
+    callback = fn operation ->
+      if fault == Atom.to_string(operation) do
+        raise DBConnection.ConnectionError, message: "synthetic transient operator read failure"
+      end
+
+      :ok
+    end
+
+    {:cont,
+     socket
+     |> assign(:operator_hook, :audit)
+     |> assign(:operator_read_fault, callback)}
   end
 end
 

@@ -97,6 +97,9 @@ test.describe("Phase 169 connected journey", () => {
   }
 
   test("Phase 169 baseline and exact replay tracer", async ({ page }) => {
+    const unknownScenario = await page.request.get("/ops/browser-reset?scenario=unlisted");
+    expect(unknownScenario.status()).toBe(400);
+
     const reset = await page.request.get("/ops/browser-reset?scenario=phase169-exact");
     expect(reset.ok()).toBeTruthy();
     const fixture = await reset.json();
@@ -137,5 +140,27 @@ test.describe("Phase 169 connected journey", () => {
     expect(returned.searchParams.get("page")).toBe("2");
     expect(returned.searchParams.has("delivery_id")).toBe(false);
     await expect(page.getByTestId("operator-quick-view")).toHaveCount(0);
+  });
+
+  test("Phase 169 filter history restores committed URL state", async ({ page }) => {
+    await openBrowserTenant(page);
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+
+    await page.locator("#filters_event").selectOption("failed");
+    await expect(page).not.toHaveURL(/event=failed/);
+    await page.getByRole("button", { name: "Apply filters" }).click();
+    await page.waitForURL(url => new URL(url).searchParams.get("event") === "failed");
+
+    await page.goBack();
+    await page.waitForURL(url => new URL(url).searchParams.get("event") !== "failed");
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await expect(page.getByTestId("operator-quick-view")).toHaveCount(0);
+
+    await page.goForward();
+    await page.waitForURL(url => new URL(url).searchParams.get("event") === "failed");
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await expect(page.getByTestId("operator-quick-view")).toHaveCount(0);
+    await expect(page.locator("#filters_event")).toHaveValue("failed");
   });
 });
