@@ -11,7 +11,7 @@
     {
       "number": "169",
       "name": "Outbound Investigation and Recovery",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "170",
@@ -39,5 +39,5 @@
     "label": "Advance to the next step",
     "reason": "Phase 169 of 6 · 17% · executing"
   },
-  "updated_at": "2026-10-08T00:05:15.921Z"
+  "updated_at": "2026-10-08T00:59:22.814Z"
 }

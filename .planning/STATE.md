@@ -5,16 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 169
 current_phase_name: Outbound Investigation and Recovery
 status: executing
-stopped_at: Completed 169-01-PLAN.md
-last_updated: "2026-10-08T00:34:00.371Z"
+stopped_at: Completed 169-02-PLAN.md
+last_updated: "2026-10-08T00:59:23.748Z"
 last_activity: 2026-10-08
 last_activity_desc: Phase 169 execution started
-state_head: 2e870aa7c8262ffa8295a32765dd064502844e3d
+state_head: 77452a76a192ee250d04ae910bd2a79eb0d38bb8
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 9
-  completed_plans: 5
+  completed_plans: 6
   percent: 17
 ---
 
@@ -40,9 +40,9 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 ## Current Position
 
 Phase: 169 (Outbound Investigation and Recovery) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
-Last activity: 2026-10-07 — Phase 169 execution started
+Last activity: 2026-10-08 — Phase 169 Plan 02 completed
 
 ## v2.9 Roadmap Shape
 
@@ -258,6 +258,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 168 P03 | 5 min | 2 tasks | 8 files |
 | Phase 168 P04 | 60min | 3 tasks | 22 files |
 | Phase 169 P01 | 24m | 3 tasks | 31 files |
+| Phase 169 P02 | 24m | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -420,6 +421,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 169]: Keep exact Delivery selection independent of the current page and time window.
 - [Phase 169]: Retain compatible filters across Account switches while clearing page and object evidence IDs.
 - [Phase 169]: Use content-column width for the table-to-card breakpoint.
+- [Phase 169]: Keep the five Health populations independently readable with windowed evidence bound to one as-of instant; active suppressions remain current-at-read.
+- [Phase 169]: Resolve exact Account webhook and Event IDs independently from Delivery list membership, and name a Delivery only when a unique persisted linkage exists.
+- [Phase 169]: Keep exact support read functions documentation-hidden while exporting their module through the core boundary for Admin use.
 
 ## Quick Tasks Completed
 
@@ -465,13 +469,13 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-08T00:34:00.335Z
-Stopped at: Completed 169-01-PLAN.md
+Last session: 2026-10-08T00:59:23.711Z
+Stopped at: Completed 169-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
 
 - Phase 168 is complete and independently verified. All four plans and both code-review corrections are committed.
 - Phase 169 research, pattern map, validation strategy and five implementation plans are complete under the owner's delegated recommendations. See `.planning/phases/169-outbound-investigation-and-recovery/169-PLAN-CHECK.md` and `169-PLAN-COVERAGE.md`.
-- Next: `$gsd-execute-phase 169`. Five serial waves cover exact Delivery navigation, Health/support evidence, timeline/suppression, frozen replay review/outcomes, and connected rendered acceptance. Full core/Admin/assets/unfiltered browser regression is required by the final task. No Phase 169 implementation or product verification has started. Three unclassified edge-probe assumptions and five descriptor-less prohibitions remain explicitly flagged for later verification; no enforcement proof is claimed.
+- Next: `$gsd-execute-phase 169` resumes at Plan 03. Plans 01 and 02 are implemented and verified; three serial plans remain for timeline/suppression, frozen replay review/outcomes, and connected rendered acceptance. Full core/Admin/assets/unfiltered browser regression is required by the final task. Three unclassified edge-probe assumptions and five descriptor-less prohibitions remain flagged for later verification; no enforcement proof is claimed.
 - Current demo: `http://localhost:4015`; source/asset identity and rendered evidence are in `168-BASELINE.md`. Local admin checks: 513 ExUnit tests, zero failures, one exclusion; Playwright 184 passed, one guarded skip. Remote delivery/CI proof remains Phase 173 scope.
