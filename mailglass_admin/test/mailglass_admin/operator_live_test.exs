@@ -1067,14 +1067,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render(view)
 
-      assert html =~ "Replay completed with new work."
+      assert html =~ "Replay command added 1 newly normalized Event."
+      assert html =~ "newly normalized"
       assert html =~ "Webhook replay requested"
       assert html =~ "Webhook replay completed"
       assert html =~ "POSTMARK"
       assert html =~ "requested"
       assert html =~ "completed"
-      assert html =~ "new work"
-      assert html =~ "Last replay: completed · new work"
+      assert html =~ "Last replay: completed · 1 newly normalized Event"
     end
 
     test "shows explicit no-op replay copy when the replay converges", %{conn: conn} do
@@ -1109,10 +1109,53 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render(view)
 
-      assert html =~ "Replay completed with no change."
+      assert html =~ "Replay command completed with no newly normalized Events."
       assert html =~ "Webhook replay completed"
-      assert html =~ "no change"
-      assert html =~ "Last replay: completed · no change"
+      assert html =~ "Last replay: completed · 0 newly normalized Events"
+    end
+
+    test "requested-only replay evidence says completion has not been recorded and hides untrusted metadata",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+      delivery = insert_delivery!(recipient: "requested-only@example.com")
+
+      insert_event!(delivery, %{
+        type: :webhook_replay_requested,
+        metadata: %{
+          "provider" => "postmark",
+          "actor_id" => "private-operator-identifier",
+          "failure_reason" => "raw provider response secret"
+        }
+      })
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      assert html =~ "Last replay: requested · completion not recorded"
+      assert html =~ "POSTMARK"
+      refute html =~ "private-operator-identifier"
+      refute html =~ "raw provider response secret"
+    end
+
+    test "keeps known command feedback when replay audit refresh is unavailable", %{conn: conn} do
+      conn = operator_conn(conn, %{"auth_method" => "fault:replay_history"})
+      {delivery, _webhook_event} = insert_exact_replay_fixture!("msg-audit-read-fails", 802)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+      html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+      assert html =~ "Replay command added 1 newly normalized Event."
+      assert html =~ "The latest persisted replay evidence could not be refreshed."
+      refute html =~ "Last replay: completed"
     end
   end
 
