@@ -1,5 +1,13 @@
 # Project Methodology
 
+## Shift-Left Verification by Default
+
+**Owner decision (D-52, 2026-10-08):** Treat human UAT as a last resort. Before presenting a GSD verification checkpoint, convert every machine-observable acceptance criterion into a deterministic test and run it. A testable criterion must not be handed back to the owner for confirmation. Record passing automation as verification evidence and do not reopen it unless the implementation or acceptance contract changes.
+
+**Recommends:** Put each assertion at the cheapest boundary that proves the user-visible contract: unit/property tests for pure rules, ExUnit or integration tests for LiveView/server seams, Playwright for browser behavior and layout, and smoke or contract tests for host and provider boundaries. Use real controls and user-observable outcomes; include adversarial values, scope isolation, failure/empty/loading states, keyboard behavior, and relevant viewport/theme/motion variants. Prefer DOM, accessibility, layout, and geometry assertions over brittle pixel snapshots unless pixel rendering itself is the contract. Reuse the existing test stack and CI job first; add or promote a required CI lane only when recurring regression risk justifies its runtime and maintenance cost. Do not add a dependency or duplicate a test harness when the existing stack can cover the behavior.
+
+**Apply when:** Planning, executing, reviewing, or verifying any phase. For recurring acceptance, ensure the test runs in CI and report whether that job is a blocking required check or an advisory check. Keep `human_needed` only for a criterion that remains irreducibly subjective or requires physical-device, legal, policy, or otherwise unavailable human judgment after reasonable automation. If a GSD workflow proposes a generic confirmation summary for criteria already covered by passing tests, record the evidence and continue without an owner checkpoint.
+
 ## Decisive-By-Default Research Posture
 
 **Diagnoses:** Workflows that repeatedly surface routine implementation tradeoffs to the user even when the codebase, ecosystem norms, and project goals already point to a coherent default.
