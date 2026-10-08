@@ -9,7 +9,7 @@ created: "2026-10-07"
 
 # Phase 169 — Validation Strategy
 
-This file records the five-wave Phase 169 validation map (12 tasks). The phase execution evidence is in `169-BASELINE.md`; Phase 169 verification remains partial because the terminal audit database write-failure path is not safely handled by the implementation. Three edge assumptions and five descriptor-less prohibition judgments remain explicitly flagged in `169-PLAN-COVERAGE.md`.
+This file records the five-wave Phase 169 validation map (12 tasks). The phase execution evidence is in `169-BASELINE.md`; the terminal audit database write-failure escalation has now been repaired and covered at the core command and Admin LiveView boundaries. Phase 169 verification remains partial: three edge assumptions and five descriptor-less prohibition judgments remain explicitly flagged in `169-PLAN-COVERAGE.md`.
 
 ## Test Infrastructure
 
@@ -47,13 +47,23 @@ Each command runs from repository root. The Playwright script builds assets and 
 | 3 / 169-03 T2 | OUTUX-03 | `mailglass_admin/e2e/phase169-journey.spec.js`, existing Admin `components_test.exs`; rendered/connected browser suites | T-169-08 | zero case, replaced original value, silent clipboard rejection or UTC precision loss | green: rendered selection 2 passed; connected selection 9 passed |
 | 3 / 169-03 T3 | OUTUX-04 | existing core `suppressions_test.exs`, Admin `operator_live_test.exs`; full core operator and Admin suites | T-169-09 | wrong policy removability, foreign/expired match or failed read called no match | green: current-revision core operator selection 39 passed; Admin suite 537 passed, 1 excluded |
 | 4 / 169-04 T1 | OUTUX-05 | existing core `replay_targets_test.exs`, Admin `operator_live_test.exs`; closed replay mutations in `operator_fixtures.ex` and `endpoint_case.ex`; full current core/Admin suites | T-169-10, T-169-11, T-169-12 | changed/replaced target accepted, auth skipped or duplicate submitted | green: core operator 39 passed; Admin suite 537 passed, 1 excluded; browser 197 passed, 1 skipped |
-| 4 / 169-04 T2 | OUTUX-05 | existing Admin `operator_live_test.exs`, `operator/replay_modal_test.exs`; full Admin suite | T-169-13 | request called completion, known command result erased or raw error shown | partial: requested-only and audit-history READ failure are covered; terminal audit WRITE failure escalated (see below) |
+| 4 / 169-04 T2 | OUTUX-05 | existing Admin `operator_live_test.exs`, `operator/replay_modal_test.exs`; full Admin suite | T-169-13 | request called completion, known command result erased or raw error shown | green: command persistence failure returns a controlled error, preserves requested/failed audit facts, rolls back normalized writes, and renders safe cause-specific feedback; focused Admin tests 104 passed |
 | 5 / 169-05 T1 | OUTUX-01–05 | `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 169 rendered"` | T-169-14, T-169-15 | zero case, responsive/focus/copy/theme assertion fails or asset hash differs | green: 2 passed, 0 failed (Plan 169-05 current-revision evidence) |
 | 5 / 169-05 T2 | OUTUX-01–05 | Named connected selection; core operator selection; complete Admin; asset build; parity/bundle; unfiltered operator browser suite (commands and runtimes in `169-BASELINE.md`) | T-169-10, T-169-14, T-169-16 | named selection zero cases or journey failure; core/Admin/parity/bundle nonzero or zero tests; asset build failure or source/built/served mismatch; unfiltered browser nonzero, zero tests or missing incumbent/phase cases; any command missing current-revision count/duration record | green baseline gates per `169-BASELINE.md`: connected 9 passed; core 39 passed; Admin 537 passed / 1 excluded; parity/bundle 9 passed; browser 197 passed / 1 skipped; source/built/served hashes match |
 
 ### Adversarial Gap — terminal replay audit database write failure
 
-Added `test/mailglass/webhook/replay_test.exs` behavioral integration coverage that installs a transaction-scoped PostgreSQL trigger rejecting only the `webhook_replay_succeeded` audit row for a real stored webhook. Command: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass/webhook/replay_test.exs --seed 1`. Result: **9 passed, 1 failed**. The focused test reached the database write and observed `Replay.execute/1` raise the raw `%Postgrex.Error{}` at `lib/mailglass/webhook/replay.ex:81` rather than return a controlled error; therefore an honest LiveView assertion for preserved command feedback cannot yet be made. Iterations: 1) compile failed because `after` scope did not capture local bindings; fixed test with `try/after`; 2) behavioral assertion failed on raw Postgrex exception. Implementation is read-only for this audit, so this is an **ESCALATED BLOCKER** for OUTUX-05 / T-169-13. This test is intentionally retained as failing evidence and must not be counted green.
+Added `test/mailglass/webhook/replay_test.exs` behavioral integration coverage that installs a PostgreSQL trigger rejecting only the terminal success audit row for a real stored webhook. The baseline command on the pinned runtime reproduced the defect: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass/webhook/replay_test.exs --seed 1` — **9 passed, 1 failed**, with raw `%Postgrex.Error{}` escaping from `Replay.execute/1`.
+
+**Escalation repair evidence (2026-10-08):** `Replay.execute/1` now catches only `Postgrex.Error` at the replay transaction boundary and returns `{:error, :result_persistence_failed}`; non-Postgrex programming/configuration errors still raise. Its terminal audit, normalized Event inserts, and projections remain one transaction. The request audit is persisted before that transaction, and the safe failed audit is attempted after rollback. The trigger regression asserts the controlled error, retained requested/failed audit, absent terminal-success and normalized Event rows, unchanged Delivery state, and classified failure reason. It does not substitute a read fault for a database write fault.
+
+Commands on this repair revision with `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15`:
+
+- `mix test test/mailglass/webhook/replay_test.exs --seed 1` — **10 passed, 0 failed**.
+- `cd mailglass_admin && mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/operator/replay_modal_test.exs --seed 1` — **104 passed, 0 failed**. Added a second trigger-backed LiveView regression asserting safe feedback, retained requested/failed audit display, no success audit, and no raw database exception detail.
+- `git diff --check` — passed.
+
+The write-failure escalation is resolved for OUTUX-05 / T-169-13. This does not establish that all negative prohibitions in the phase are covered by assertions; the separate edge assumptions and descriptor-less prohibition judgments remain open. Phase-level Nyquist compliance remains false pending their resolution and parent verification.
 
 ## Wave 0 Requirements
 
@@ -77,7 +87,7 @@ Agent-operated rendered inspection is required for typography, composition, clip
 - [ ] Feedback timing measured during execution
 - [ ] Execution validation complete before setting nyquist_compliant true
 
-**Approval:** Phase plans executed; Nyquist audit complete with one escalated OUTUX-05 blocker. Parent phase verification remains pending.
+**Approval:** Phase plans executed; the OUTUX-05 terminal audit write-failure escalation is resolved with current-revision core and LiveView proof. Parent phase verification remains pending, and Nyquist compliance stays false while the explicitly recorded coverage gaps remain open.
 
 **Plan 169-05 execution evidence:** Complete at checkout `e45aa8e1b82f97dd45e08c67c9cfe6fdd7f31d68`; complete counts, runtimes, native Chrome zoom record, CSS provenance, and explicit proof limits are in `169-BASELINE.md` → “After Evidence — Plan 169-05”. This does not mark Phase 169 complete or set `nyquist_compliant: true`; parent review and phase verification remain separate.
 
