@@ -649,6 +649,28 @@ defmodule MailglassAdmin.PreviewLiveTest do
   end
 
   describe "live reload" do
+    @tag :g_168_8
+    test "Preview success feedback dismisses its backing info flash", %{conn: conn} do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+
+      send(view.pid, {:mailglass_live_reload, "lib/my_app/user_mailer.ex"})
+
+      before_dismiss = render(view)
+      assert before_dismiss =~ ~s(id="flash-success")
+      assert before_dismiss =~ ~s(role="status")
+      assert before_dismiss =~ "Reloaded: user_mailer.ex"
+
+      dismissed =
+        view
+        |> element("#flash-success button[phx-click='lv:clear-flash']")
+        |> render_click()
+
+      refute dismissed =~ "Reloaded: user_mailer.ex"
+      refute dismissed =~ ~s(id="flash-success")
+      refute render(view) =~ "Reloaded: user_mailer.ex"
+    end
+
     @tag :live_reload
     test "PreviewLive subscribes to mailglass:admin:reload and refreshes on broadcast",
          %{conn: conn} do
