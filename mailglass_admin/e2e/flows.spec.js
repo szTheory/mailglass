@@ -195,6 +195,36 @@ async function assertZoomReadableValue(locator, label, expectedText, viewportWid
     .toBeLessThanOrEqual(viewportWidth);
 }
 
+async function assertZoomReachableControl(control, label, viewportWidth) {
+  await expect(control, `${label} is visible at actual 200% zoom`).toBeVisible();
+  await control.scrollIntoViewIfNeeded();
+  const geometry = await control.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    return {
+      left: rect.left,
+      right: rect.right,
+      top: rect.top,
+      bottom: rect.bottom,
+      viewportWidth: document.documentElement.clientWidth,
+      viewportHeight: document.documentElement.clientHeight,
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+      documentScrollWidth: document.documentElement.scrollWidth
+    };
+  });
+
+  expect(geometry.viewportWidth, `${label} layout viewport width`).toBe(viewportWidth);
+  expect(geometry.left, `${label} left edge`).toBeGreaterThanOrEqual(0);
+  expect(geometry.right, `${label} right edge`).toBeLessThanOrEqual(viewportWidth);
+  expect(geometry.top, `${label} top edge`).toBeGreaterThanOrEqual(0);
+  expect(geometry.bottom, `${label} bottom edge`).toBeLessThanOrEqual(geometry.viewportHeight);
+  expect(geometry.scrollWidth - geometry.clientWidth, `${label} horizontal clipping`).toBeLessThanOrEqual(1);
+  expect(geometry.scrollHeight - geometry.clientHeight, `${label} vertical clipping`).toBeLessThanOrEqual(1);
+  expect(geometry.documentScrollWidth, `${label} document horizontal overflow`).toBeLessThanOrEqual(viewportWidth);
+}
+
 async function openOperatorReplayModal(page) {
   await openOperator(page);
   // The Confirm control only renders when replay is :exact (or :ambiguous with a
@@ -767,36 +797,14 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       ["Account switcher", zoomPage.getByTestId("operator-account-switcher")],
       ["Appearance group", zoomPage.getByRole("group", { name: "Appearance", exact: true })],
       ["System radio", zoomPage.getByRole("radio", { name: "System", exact: true })],
+      ["System radio label", zoomPage.getByRole("radio", { name: "System", exact: true }).locator("xpath=..")],
       ["Light radio", zoomPage.getByRole("radio", { name: "Light", exact: true })],
-      ["Dark radio", zoomPage.getByRole("radio", { name: "Dark", exact: true })]
+      ["Light radio label", zoomPage.getByRole("radio", { name: "Light", exact: true }).locator("xpath=..")],
+      ["Dark radio", zoomPage.getByRole("radio", { name: "Dark", exact: true })],
+      ["Dark radio label", zoomPage.getByRole("radio", { name: "Dark", exact: true }).locator("xpath=..")]
     ];
     for (const [label, control] of topbarControls) {
-      await expect(control, `${label} is visible at 200% zoom`).toBeVisible();
-      await control.scrollIntoViewIfNeeded();
-      const geometry = await control.evaluate(element => {
-        const rect = element.getBoundingClientRect();
-        return {
-          left: rect.left,
-          right: rect.right,
-          top: rect.top,
-          bottom: rect.bottom,
-          viewportWidth: document.documentElement.clientWidth,
-          viewportHeight: document.documentElement.clientHeight,
-          scrollWidth: element.scrollWidth,
-          clientWidth: element.clientWidth,
-          scrollHeight: element.scrollHeight,
-          clientHeight: element.clientHeight,
-          documentScrollWidth: document.documentElement.scrollWidth
-        };
-      });
-      expect(geometry.left, `${label} left edge`).toBeGreaterThanOrEqual(0);
-      expect(geometry.right, `${label} right edge`).toBeLessThanOrEqual(geometry.viewportWidth);
-      expect(geometry.top, `${label} top edge`).toBeGreaterThanOrEqual(0);
-      expect(geometry.bottom, `${label} bottom edge`).toBeLessThanOrEqual(geometry.viewportHeight);
-      expect(geometry.scrollWidth - geometry.clientWidth, `${label} horizontal clipping`).toBeLessThanOrEqual(1);
-      expect(geometry.scrollHeight - geometry.clientHeight, `${label} vertical clipping`).toBeLessThanOrEqual(1);
-      expect(geometry.documentScrollWidth, `${label} document horizontal overflow`)
-        .toBeLessThanOrEqual(geometry.viewportWidth);
+      await assertZoomReachableControl(control, label, 720);
     }
 
     const detail = zoomPage.getByTestId("operator-detail-header");
@@ -863,6 +871,51 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       "Prove what happened to a message — inspect its event timeline, suppression state, and replay history.",
       { exact: true }
     );
+
+    // UI-SPEC requires the supported 320 CSS px layout width and 200% browser
+    // zoom together. With the 2x device scale, a 640px Playwright viewport
+    // yields an actual 320 CSS px layout viewport while the tab remains at 2x.
+    await zoomPage.setViewportSize({ width: 640, height: 900 });
+    await expect.poll(() => zoomPage.evaluate(() => window.innerWidth)).toBe(320);
+    await expect.poll(() => zoomPage.evaluate(() => document.documentElement.clientWidth)).toBe(320);
+    const narrowTabZoom = await serviceWorker.evaluate(async () => {
+      const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      if (!tab?.id) throw new Error("The active browser tab is unavailable");
+      return chrome.tabs.getZoom(tab.id);
+    });
+    expect(narrowTabZoom, "narrow layout retains actual 200% browser zoom").toBe(2);
+    for (const [label, control] of topbarControls) {
+      await assertZoomReachableControl(control, `${label} at 320 CSS px`, 320);
+    }
+    await assertZoomReadableValue(detail.locator("p.mono").first(), "Delivery ID at 320 CSS px", expectedDeliveryId, 320);
+    await assertZoomReadableValue(zoomedMailable, "Mailable at 320 CSS px", expectedMailable, 320);
+    await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider at 320 CSS px", "POSTMARK", 320);
+    await assertZoomReadableValue(
+      detail.getByText("del_01JXW9ZQKB3V1N4P2RMT7FHCG", { exact: true }),
+      "Provider message ID at 320 CSS px",
+      "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
+      320
+    );
+    await assertZoomReadableValue(
+      timelineEvent.locator("p.mono").first(),
+      "Timeline Event ID at 320 CSS px",
+      expectedEventId,
+      320
+    );
+    await assertZoomReadableValue(
+      recordedTimestamp,
+      "Recorded timestamp at 320 CSS px",
+      expectedRecordedTimestamp,
+      320
+    );
+    await assertZoomReadableValue(
+      description,
+      "Delivery explanation at 320 CSS px",
+      "Prove what happened to a message — inspect its event timeline, suppression state, and replay history.",
+      320
+    );
+    const narrowDocumentWidth = await zoomPage.evaluate(() => document.documentElement.scrollWidth);
+    expect(narrowDocumentWidth, "320 CSS px at 200% has no page-level horizontal overflow").toBeLessThanOrEqual(320);
     await expect(description).toBeVisible();
     const clippedCopy = await Promise.all([description, zoomedMailable].map(locator =>
       locator.evaluate(element => {
