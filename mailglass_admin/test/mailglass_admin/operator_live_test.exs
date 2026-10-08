@@ -3299,6 +3299,69 @@ defmodule MailglassAdmin.OperatorLiveTest do
   end
 
   describe "Health copy stays limited to persisted observations" do
+    @tag :g_168_10
+    test "stale Health values are scoped to the selected observation window", %{conn: conn} do
+      conn = operator_conn(conn)
+      provider_event_id = "g-168-10-outside-short-window"
+
+      insert_webhook_event!(%{
+        provider_event_id: provider_event_id,
+        status: :failed,
+        received_at: hours_ago(100),
+        processed_at: hours_ago(100)
+      })
+
+      {:ok, view, html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "window_hours" => "168"}))
+
+      assert has_element?(view, "[data-testid='operator-health-window']", "(168 hours)")
+      [initial_card] = Floki.find(Floki.parse_document!(html), "[data-testid='operator-overview-health-failures']")
+      assert Floki.text(hd(Floki.find(initial_card, "p.mono"))) |> String.trim() == "1"
+
+      # The last value remains valid as stale when a read for the same interval fails.
+      OperatorFixtures.arm_reader_fault!("operator-1", "failed_ingest", :known)
+      render_patch(view, operator_path(%{
+        "tenant_id" => @tenant_id,
+        "event" => "opened",
+        "window_hours" => "168"
+      }))
+
+      same_window_html = render(view)
+      assert has_element?(view, "[data-testid='operator-health-window']", "(168 hours)")
+      [same_window_card] =
+        Floki.find(
+          Floki.parse_document!(same_window_html),
+          "[data-testid='operator-overview-health-failures']"
+        )
+
+      assert Floki.text(hd(Floki.find(same_window_card, "p.mono"))) |> String.trim() == "1"
+      assert Floki.text(same_window_card) =~ "Last retrieved"
+
+      # The same observation is outside 24 hours. A transient read in this new
+      # interval must not relabel the 168-hour value as current or stale.
+      OperatorFixtures.arm_reader_fault!("operator-1", "failed_ingest", :known)
+      render_patch(view, operator_path(%{
+        "tenant_id" => @tenant_id,
+        "event" => "opened",
+        "window_hours" => "24"
+      }))
+
+      changed_window_html = render(view)
+      assert has_element?(view, "[data-testid='operator-health-window']", "(24 hours)")
+      [changed_window_card] =
+        Floki.find(
+          Floki.parse_document!(changed_window_html),
+          "[data-testid='operator-overview-health-failures']"
+        )
+
+      assert Floki.text(hd(Floki.find(changed_window_card, "p.mono"))) |> String.trim() ==
+               "Unavailable"
+
+      refute Floki.text(changed_window_card) =~ "Last retrieved"
+      refute changed_window_html =~ provider_event_id
+      refute changed_window_html =~ "synthetic transient operator read failure"
+    end
+
     test "keeps a failed observation isolated while retaining its last known value", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, view, initial_html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
