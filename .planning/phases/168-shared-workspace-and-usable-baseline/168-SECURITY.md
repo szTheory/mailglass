@@ -16,7 +16,7 @@ Authored threat registers from all four plans were checked against implementatio
 | Boundary | Description | Data crossing |
 | --- | --- | --- |
 | Browser to server selection | Account, filter and record parameters are untrusted | Tenant and Delivery IDs, filter strings |
-| Host actor to Account options | Selection options do not grant authority | Host-scoped Account list and actor |
+| Host operator grant to Account selection | `:operator_access` is global across the host's Mailglass persistence scope; options do not grant authority | Operator grant, selected tenant ID, activity-derived options |
 | Stored facts to rendered UI | HEEx escapes values; summaries retain observed semantics | Names, IDs, diagnostics, events and timestamps |
 | Confirmation to replay | Exact scoped target and action-time authorization precede execution | Tenant, Delivery, webhook event and actor |
 | Theme request to persistence | Closed values and namespaced cookie | System/Light/Dark preference |
@@ -25,7 +25,7 @@ Authored threat registers from all four plans were checked against implementatio
 
 | Threat ID | Category | Component | Severity | Disposition | Mitigation / evidence | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-168-01 | Information disclosure | Account switch and reads | high | mitigate | `OperatorLive.handle_params/3` derives host-actor options; `Operator.Shell.tenant_switch_path/2` removes prior record IDs. `Operator.Deliveries.scoped_query` retains tenant filtering and `Tenancy.scope`. Account-scope browser case and LiveView tests cover the switch. | closed |
+| T-168-01 | Information disclosure | Account switch and reads | high | mitigate | Owner-confirmed policy: `:operator_access` is a global operator grant, not per-account membership. Activity-derived options are navigation aids. `Operator.Shell.tenant_switch_path/2` removes prior record IDs; reads retain the selected tenant predicate and `Tenancy.scope`, and live subscriptions use the selected tenant topic. Account-scope browser case and LiveView tests cover the switch. | closed |
 | T-168-02 | Spoofing | Active navigation and scope label | medium | mitigate | Shell Account label and active destinations derive from committed server route/selection. URL helpers whitelist preserved filters. No client-side optimistic label substitution. Delayed/rejected visual presentation remains a UI evidence concern, not a missing scope control. | closed |
 | T-168-03 | Injection | Labels, filters and diagnostics | medium | mitigate | Existing HEEx escaped interpolation and URI helpers remain in shell, filters, Quick view and replay; no raw HTML path added for host values. | closed |
 | T-168-04 | Repudiation | Delivery summary | medium | mitigate | Quick view/detail retain event values and timestamps; missing values render Unavailable. Delivery status is not fabricated from absent observations. Focused operator/component tests retain exact facts. | closed |
@@ -58,6 +58,11 @@ Authored threat registers from all four plans were checked against implementatio
 **Approval:** Verified 2026-10-07 at configured L1 depth.
 
 ## Security Audit 2026-10-08
+
+The owner confirmed that `:operator_access` intentionally grants global operator
+access across Account IDs in the host's Mailglass persistence scope. No per-user
+Account membership contract is implied by the activity-derived selector list.
+The stable operator trust document now records this boundary.
 
 | Metric | Count |
 |---|---|

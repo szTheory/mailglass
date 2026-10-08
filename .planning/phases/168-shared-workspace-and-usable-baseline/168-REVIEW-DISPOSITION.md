@@ -5,8 +5,9 @@ titles: json
 findings:
   - id: CR-01
     severity: critical
-    disposition: open
+    disposition: skipped
     title: "URL Account selection bypasses the server-side permitted-account set"
+    source: "Owner confirmed global operator access on 2026-10-08; stable trust contract and Phase 168 threat register now state the policy."
   - id: WR-01
     severity: warning
     disposition: open
@@ -15,7 +16,7 @@ findings:
     severity: warning
     disposition: open
     title: "Resend replay evidence omits its provider label"
-open: 3
+open: 2
 total: 3
 recorded: "2026-10-08"
 ---
@@ -24,7 +25,7 @@ recorded: "2026-10-08"
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| CR-01 | critical | open | Tenant authorization policy needs a decision against the host contract; see 168-REVIEW.md |
+| CR-01 | critical | skipped | Owner confirmed global operator access on 2026-10-08; see operator-trust.md and 168-SECURITY.md |
 | WR-01 | warning | open | Untriaged; see 168-REVIEW.md |
 | WR-02 | warning | open | Untriaged; see 168-REVIEW.md |
 

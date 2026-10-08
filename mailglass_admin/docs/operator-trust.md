@@ -55,6 +55,16 @@ This means mount-time access is not treated as blanket approval for later
 destructive actions. Adopters keep ownership of the policy through
 the `MailglassAdmin.Auth` `authorize/2` callback.
 
+`:operator_access` is a global grant to the Mailglass operator data available
+through the host's configured persistence scope. An authorized operator may
+select any `tenant_id` in that scope; the actor's optional `tenant_id` and the
+activity-derived Account options do not form a per-account membership list.
+Account options help operators navigate, while each read and live-update
+subscription remains scoped to the selected `tenant_id`. Hosts that need
+per-account operator membership must enforce it at their own boundary; the
+current stable auth contract does not provide a separate Account-selection
+authorization action.
+
 ## Replay semantics
 
 Replay is an operator recovery action against one exact stored outbound webhook
