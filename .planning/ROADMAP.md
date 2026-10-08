@@ -88,8 +88,9 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
   4. A user can operate shared controls and overlays by keyboard or touch, understand their applicable default/focus/hover/pressed/selected/disabled/busy/validation states, and perceive status beyond color with correct focus containment and return.
   5. A user can choose one clear Light, Dark, or System preference across navigation and reload, see OS changes while System is selected, and receive prompt feedback without blocking or repeated motion, including under reduced motion and LiveView updates.
 
-**Plans**: 8/9 plans executed; one focused gap-closure plan remains
+**Plans**: 10/10 plans executed; one focused gap-closure plan remains
 Plans:
+- [x] 168-10-PLAN.md
 - [x] 168-01-PLAN.md — Shared Account scope and reproducible baseline
 - [x] 168-02-PLAN.md — Readable Health and Deliveries, filters, and exact evidence
 - [x] 168-03-PLAN.md — Appearance preference and shared feedback
@@ -98,7 +99,7 @@ Plans:
 - [x] 168-06-PLAN.md — Render downstream Delivery outcomes and capture current readability evidence
 - [x] 168-07-PLAN.md — Keep operator caches scoped and replay confirmation recoverable
 - [x] 168-08-PLAN.md — Clear Preview success feedback by its backing flash key
-- [ ] 168-09-PLAN.md — Close actual 200% browser-zoom clipping and pending Account-switch feedback.
+- [x] 168-09-PLAN.md — Close actual 200% browser-zoom clipping and pending Account-switch feedback.
 
 **Wave 1**
 - [x] 168-01-PLAN.md — Reconcile the preserved workspace, capture the served baseline, and make Account switching work in shared navigation.
@@ -121,7 +122,7 @@ Plans:
 - [x] 168-08-PLAN.md — Close G-168-8 through shared flash-key handling and a real LiveView dismissal.
 
 **Wave 7** *(gap closure after completed Wave 6)*
-- [ ] 168-09-PLAN.md — Close actual 200% browser-zoom clipping and pending Account-switch feedback.
+- [x] 168-09-PLAN.md — Close actual 200% browser-zoom clipping and pending Account-switch feedback.
 
 **UI hint**: yes
 **Acceptance focus**: Inspect rendered shell, navigation, account selector, typography, and shared controls in representative operator jobs; cover desktop/mobile, light/dark/System, keyboard/touch, zoom, and reduced motion. The inventory accompanies a working visual baseline.
@@ -252,7 +253,7 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 168. Shared Workspace and Usable Baseline | 8/9 | In Progress |  |
+| 168. Shared Workspace and Usable Baseline | 10/10 | In Progress |  |
 | 169. Outbound Investigation and Recovery | 5/5 | Complete    | 2026-10-07 |
 | 170. Inbound Investigation and Recovery | 0/8 | Planned     | — |
 | 171. Developer Preview | 0/TBD | Not started | — |
