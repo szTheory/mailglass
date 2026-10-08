@@ -1,11 +1,17 @@
 ---
 phase: 168-shared-workspace-and-usable-baseline
-reviewed: 2026-10-08T23:09:56Z
+reviewed: 2026-10-08T23:41:28Z
 depth: standard
-files_reviewed: 3
+files_reviewed: 9
 files_reviewed_list:
-  - mailglass_admin/e2e/flows.spec.js
+  - mailglass_admin/lib/mailglass_admin/components.ex
+  - mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex
+  - mailglass_admin/lib/mailglass_admin/operator/quick_view.ex
   - mailglass_admin/lib/mailglass_admin/operator/shell.ex
+  - mailglass_admin/lib/mailglass_admin/preview_live.ex
+  - mailglass_admin/lib/mailglass_admin/preview/sidebar.ex
+  - mailglass_admin/test/mailglass_admin/token_parity_test.exs
+  - mailglass_admin/e2e/flows.spec.js
   - mailglass_admin/priv/static/app.css
 findings:
   critical: 0
@@ -17,21 +23,21 @@ status: clean
 
 # Phase 168: Code Review Report
 
-**Reviewed:** 2026-10-08T23:09:56Z  
-**Depth:** standard  
-**Files Reviewed:** 3  
+**Reviewed:** 2026-10-08T23:41:28Z
+**Depth:** standard
+**Files Reviewed:** 9
 **Status:** clean
 
 ## Summary
 
-Reviewed the three requested files against the Phase 168 plans, summaries, requirements, operator trust contract, and UI specification. The 200% zoom case checks actual Chromium tab zoom, the 720 CSS-pixel layout and combined 320 CSS-pixel layout, shared controls and visible radio-label geometry, and full fixture-backed values. The Account-switch status target uses a numeric option index and the delayed-switch case verifies the old committed scope remains paired with its data until the new scope commits. No verifiable issues were found in this file scope. The malformed exact-support UUID issue remains deferred to Phase 169 and is outside this review scope.
+Re-reviewed all nine Plan 10 source and test files after follow-up commit `46f8d2fb`. The browser assertion now opens the operator deliveries Quick view error fixture and checks its `mt-xs` icon margin, then opens the seeded Preview scenario menu and checks the visible scenario list row gap. The six-template guard covers half-step margin, padding, gap, and space utilities; the source token, generated bundle token, and `.mt-xs` / `.gap-xs` rules are consistent with the 4px spacing contract. No issues found.
 
 ## Narrative Findings (AI reviewer)
 
-All reviewed files meet quality standards. No issues found.
+No findings.
 
 ---
 
-_Reviewed: 2026-10-08T23:09:56Z_  
-_Reviewer: the agent (gsd-code-reviewer)_  
+_Reviewed: 2026-10-08T23:41:28Z_
+_Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_

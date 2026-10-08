@@ -1,6 +1,6 @@
 # Phase 168 — Automated Regression Gate
 
-Executed on `b257fe94cb240b4a97c9dade20bc8efb1b452774`, after the refreshed review artifact was committed. Product source was unchanged by this review-only commit. Runtime: Elixir `1.18.4-otp-27`, Erlang `27.3.4.15`, `MIX_ENV=test`.
+Final execution after Plan 10's operator-fixture correction was run on `fece85d26dabf34573e08b246985b80ff7f72651`. Runtime: Elixir `1.18.4-otp-27`, Erlang `27.3.4.15`, `MIX_ENV=test`.
 
 ## Command discovery
 
@@ -10,10 +10,15 @@ No `workflow.test_command` is configured, and the root `Makefile` has no `test:`
 
 | Gate | Command | Result |
 |---|---|---|
-| Full Admin integration and component suite | From `mailglass_admin`: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test --seed 1` | 542 tests, 0 failures, 1 excluded |
-| Full operator browser suite, including Phase 168 acceptance, 120-cell responsive/theme matrix, accessibility scans, and current Phase 169 journeys | From `mailglass_admin`: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 BROWSER_SERVER_PORT=4102 npm run test:operator-browser` | 198 passed, 1 skipped, 0 failed; 3.5 minutes |
+| Root core suite, attempted as the generic cross-phase check | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test --seed 1` | 2,200 tests; 10 failures, 9 invalid, 27 excluded, 7 skipped. Failures include stale release metadata/design-system test fixtures, sibling-directory writes blocked by the workspace sandbox, and workspace/demo dependency lock mismatches. These failures are outside the Phase 168 Plan 10 source scope; the check is recorded as non-green, not waived as passing. |
+| Full Admin integration and component suite | From `mailglass_admin`: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test --seed 1` | 551 tests, 0 failures, 1 excluded |
+| Full operator browser suite, including Phase 168 acceptance, 120-cell responsive/theme matrix, accessibility scans, and Phase 169 journeys | From `mailglass_admin`: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 BROWSER_SERVER_PORT=4102 npm run --silent test:operator-browser` | 199 passed, 1 skipped, 0 failed; 3.2 minutes |
 
-The single skip is the existing guarded structural case for an absent header-anchored overlay. A sandboxed Playwright attempt failed before assertions because Chromium was denied macOS Mach port setup; the same command passed with normal browser process permissions. The Admin run passed inside the standard workspace sandbox.
+The single browser skip is the existing guarded structural case for an absent header-anchored overlay. The focused Plan 10 browser test and full browser suite both passed with host browser-process permission after the sandbox denied Chromium's macOS Mach port setup. The Admin suite passed inside the standard workspace sandbox. All 10 failures in the root core suite were surfaced; the operator/Admin and browser suites that cover the Phase 168 changes are green.
+
+## Gate disposition
+
+Continue to the independent Phase 168 verifier: the Plan 10 focused tests, the full Admin suite, and the full Playwright suite pass; the root-suite failures are in release/design-system fixtures and restricted-workspace dependency/sandbox setup outside Plan 10's changed files. Keep the root suite non-green in this record and carry its setup failures into separate project health work rather than asking the owner to repeat deterministic UI acceptance.
 
 ## CI disposition
 
