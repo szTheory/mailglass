@@ -2808,6 +2808,75 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ "synthetic transient operator read failure"
     end
 
+    @tag :g_168_7
+    test "exact support evidence fallback is scoped to the selected Account", %{conn: conn} do
+      conn = operator_conn(conn)
+      other_tenant_id = "g-168-7-account-b"
+      _account_a_delivery =
+        insert_delivery!(tenant_id: @tenant_id, provider_message_id: "g-168-7-account-a")
+
+      _other_tenant_delivery =
+        insert_delivery!(tenant_id: other_tenant_id, provider_message_id: "g-168-7-account-b")
+
+      webhook =
+        insert_webhook_event!(%{
+          provider_event_id: "g-168-7-private-provider-event",
+          status: :failed
+        })
+
+      account_a_path =
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "view" => "deliveries",
+          "support_focus" => "failed_ingest",
+          "support_webhook_event_id" => webhook.id
+        })
+
+      {:ok, view, html} = live(conn, account_a_path)
+      assert html =~ webhook.id
+      assert html =~ webhook.provider_event_id
+
+      # Same-Account transient reads may still show the last exact record as stale.
+      OperatorFixtures.arm_reader_fault!("operator-1", "exact_failed_ingest", :known)
+
+      render_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "view" => "deliveries",
+          "event" => "opened",
+          "support_focus" => "failed_ingest",
+          "support_webhook_event_id" => webhook.id
+        })
+      )
+
+      html = render(view)
+      assert html =~ ~s(data-testid="operator-support-exact-stale")
+      assert html =~ webhook.id
+
+      # The request identity is otherwise unchanged. A fresh transient failure for
+      # Account B must not reuse any exact value loaded under Account A.
+      OperatorFixtures.arm_reader_fault!("operator-1", "exact_failed_ingest", :known)
+
+      render_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => other_tenant_id,
+          "view" => "deliveries",
+          "event" => "opened",
+          "support_focus" => "failed_ingest",
+          "support_webhook_event_id" => webhook.id
+        })
+      )
+
+      html = render(view)
+      assert html =~ other_tenant_id
+      assert html =~ ~s(data-testid="operator-support-exact-unavailable")
+      refute html =~ webhook.id
+      refute html =~ webhook.provider_event_id
+      refute html =~ "synthetic transient operator read failure"
+    end
+
     test "zero Health observations use limited evidence copy without global clearance", %{
       conn: conn
     } do
