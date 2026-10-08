@@ -121,6 +121,7 @@ commits: 3
 - Task 1 focused component/shell command: 131 tests, 0 failures.
 - Task 2 asset build and focused TokenParityTest: 4 tests, 0 failures.
 - Plan final focused command: `mix mailglass_admin.assets.build`, then the three focused ExUnit files, then `npm run --silent test:operator-browser -- --grep "Phase 168 shared spacing"` — 135 ExUnit tests and 1 Playwright test passed.
+- Code review identified that the initial browser test used the Inbound quick-view icon instead of operator markup. Follow-up commit `46f8d2fb` changed the fixture to the operator Quick view error state; the same focused Playwright command passed again (1 test, 0 failures).
 - The browser job remains advisory outside CI Green. No owner UAT was required under D-52 because these criteria are deterministic.
 
 ## Decisions Made
@@ -130,8 +131,7 @@ commits: 3
 
 ## Deviations from Plan
 
-- The rendered operator-side margin sample uses the Inbound quick-view error icon from a named in-scope template. The deliveries orientation strip was not a stable icon target in the focused flow fixture; the Inbound fixture provided a deterministic rendered icon using the same approved `mt-xs` utility.
-- Recorded in `.planning/WINDOWS.md` as deviation 47 and waived with the scope-equivalence rationale; it is not an open defect.
+- The initial browser assertion used the Inbound quick-view error icon because the deliveries orientation strip was not a stable target in the focused fixture. Standard code review correctly identified that this left operator-specific rendered markup unproven. Follow-up commit `46f8d2fb` switched the assertion to the deterministic operator Quick view error state and passed the focused browser test. The earlier Windows ledger entry records the initial deviation; the current test covers the planned operator target.
 
 ## Issues Encountered
 

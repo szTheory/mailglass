@@ -9,7 +9,7 @@ created: "2026-10-07"
 
 # Phase 168 — Security
 
-Authored threat registers across Phase 168 were checked against the current implementation at ASVS L1 depth. All 17 threats are closed; the existing asset supply-chain risk remains accepted as documented at plan time. This is a mitigation-presence audit, not a penetration test. The workflow permits the L1 short circuit with an authored register and no open threats.
+Authored threat registers across Phase 168 were checked against the current implementation at ASVS L1 depth. All 18 threats are closed; the existing asset supply-chain risk remains accepted as documented at plan time. This is a mitigation-presence audit, not a penetration test. The workflow permits the L1 short circuit with an authored register and no open threats.
 
 ## Trust Boundaries
 
@@ -41,6 +41,7 @@ Authored threat registers across Phase 168 were checked against the current impl
 | T-168-14 | Tampering | Health observation cache | medium | mitigate | Cache identity includes tenant and parsed interval; `g_168_10` proves prior-window stale data is unavailable under the changed window while same-window stale behavior remains. | closed |
 | T-168-15 | Tampering | Shared flash component | low | mitigate | Preview separates success styling from its backing `:info` key; `g_168_8` clicks the rendered clear control and verifies the message remains absent. Existing callers default to their visual kind. | closed |
 | T-168-16 | Information disclosure | Pending Account switch status | high | mitigate | Pending feedback is shown separately from committed Account identity and data. `JS.show` targets a numeric option index independent of tenant ID syntax; the delayed-switch Playwright case verifies the old scope/data while the patch is held and the new scope after release. | closed |
+| T-168-17 | Tampering | HEEx-to-served CSS spacing contract | low | mitigate | The six-template ExUnit guard rejects half-step spacing classes and verifies the source/bundle 4px token rules; the existing Playwright lane verifies computed 4px operator and Preview styles. | closed |
 | T-168-SC | Tampering | Asset dependencies | low | accept | Existing Mix build, vendored assets and opt-in browser tooling reused. Locked dependencies were synchronized for execution; no new dependency/toolchain introduced by Phase 168. | closed |
 
 ## Accepted Risks Log
@@ -95,4 +96,12 @@ The current Account-switch mitigation uses numeric option indices for `JS.show` 
 |---|---|
 | Threats found | 17 |
 | Closed | 17 |
+| Open | 0 |
+
+## Security Audit 2026-10-08
+
+| Metric | Count |
+|---|---|
+| Threats found | 18 |
+| Closed | 18 |
 | Open | 0 |
