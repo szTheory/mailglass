@@ -533,6 +533,50 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert detail_html =~ ~s|title="Ångström 東京 (tenant_id: test-tenant)"|
     end
 
+    test "full detail keeps a selected Event outside the first 100 in a separate section", %{
+      conn: conn
+    } do
+      delivery = insert_delivery!(recipient: "timeline-101@example.com")
+      base = ~U[2026-10-01 00:00:00Z]
+
+      events =
+        for index <- 1..101 do
+          insert_event!(delivery, %{
+            type: if(index == 101, do: :failed, else: :sent),
+            occurred_at: DateTime.add(base, index, :second),
+            inserted_at: DateTime.add(base, index, :second),
+            metadata: %{provider: "postmark", source: "webhook"}
+          })
+        end
+
+      selected = List.last(events)
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "delivery_id" => delivery.id,
+            "event_id" => selected.id,
+            "full" => "1"
+          })
+        )
+
+      visible_ids =
+        html
+        |> Floki.parse_fragment!()
+        |> Floki.find("[data-testid='operator-timeline-event']")
+        |> Enum.map(&(Floki.attribute(&1, "data-event-id") |> List.first()))
+
+      assert length(visible_ids) == 100
+      refute selected.id in visible_ids
+      assert html =~ "At least one additional Event is not shown in this timeline."
+      assert html =~ "Selected event"
+      assert html =~ "This exact Event is outside the displayed timeline."
+      assert html =~ selected.id
+    end
+
     test "renders support cards, masks overview recipients, and distinguishes replay audit from reconcile facts",
          %{conn: conn} do
       conn = operator_conn(conn)
