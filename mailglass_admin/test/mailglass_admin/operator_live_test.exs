@@ -1118,6 +1118,88 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert render(view) =~ ~s(data-testid="operator-replay-confirm")
     end
 
+    @tag :g_168_9
+    test "transient fresh Delivery read keeps the exact replay review retryable", %{conn: conn} do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      on_exit(&OperatorFixtures.clear_reader_faults!/0)
+      conn = operator_conn(conn)
+      {delivery, webhook_event} = insert_exact_replay_fixture!("g-168-9-delivery-read", 656)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+      review_id = replay_review_id(view)
+      assert render(view) =~ webhook_event.id
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "selected_delivery", :known)
+      html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+      assert Process.alive?(view.pid)
+      assert html =~ ~s(data-testid="operator-replay-modal")
+      assert html =~ webhook_event.id
+      assert html =~ webhook_event.provider_event_id
+      assert html =~ "Current records could not be refreshed. The exact reviewed request is retained."
+      assert replay_review_id(view) == review_id
+      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
+      refute html =~ "Replaying the reviewed request…"
+      refute html =~ "Webhook replay requested"
+      assert replay_audit_rows_for(webhook_event.id) == []
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      retry_html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+      assert retry_html =~ "Webhook replay requested"
+      assert Enum.count(replay_audit_rows_for(webhook_event.id), &(&1.type == :webhook_replay_succeeded)) == 1
+      assert [%{webhook_event_id: retried_target_id}] =
+               MailglassAdmin.TestOperatorAuth.destructive_calls()
+
+      assert retried_target_id == webhook_event.id
+    end
+
+    @tag :g_168_9
+    test "transient replay-target read keeps the exact replay review retryable", %{conn: conn} do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      on_exit(&OperatorFixtures.clear_reader_faults!/0)
+      conn = operator_conn(conn)
+      {delivery, webhook_event} = insert_exact_replay_fixture!("g-168-9-target-read", 657)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+      review_id = replay_review_id(view)
+      assert render(view) =~ webhook_event.id
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "replay_targets", :known)
+      html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+      assert Process.alive?(view.pid)
+      assert html =~ ~s(data-testid="operator-replay-modal")
+      assert html =~ webhook_event.id
+      assert html =~ webhook_event.provider_event_id
+      assert html =~ "Current records could not be refreshed. The exact reviewed request is retained."
+      assert replay_review_id(view) == review_id
+      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
+      refute html =~ "Replaying the reviewed request…"
+      refute html =~ "Webhook replay requested"
+      assert replay_audit_rows_for(webhook_event.id) == []
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      retry_html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+      assert retry_html =~ "Webhook replay requested"
+      assert Enum.count(replay_audit_rows_for(webhook_event.id), &(&1.type == :webhook_replay_succeeded)) == 1
+      assert [%{webhook_event_id: retried_target_id}] =
+               MailglassAdmin.TestOperatorAuth.destructive_calls()
+
+      assert retried_target_id == webhook_event.id
+    end
+
     test "one consumed review rejects a duplicate queued confirmation", %{conn: conn} do
       MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
       conn = operator_conn(conn)
