@@ -79,6 +79,27 @@ defmodule MailglassAdmin.Operator.ReplayModalTest do
 
       refute html =~ ~s(data-testid="operator-replay-confirm")
     end
+
+    test "pending and consumed reviews disable duplicate confirmation without claiming cancellation" do
+      html =
+        render_component(&ReplayModal.replay_modal/1,
+          open?: true,
+          delivery: %{recipient: "operator@example.com"},
+          replay_targets: %{
+            status: :exact,
+            candidate: candidate("webhook-exact", "provider-exact")
+          },
+          selected_target_id: "webhook-exact",
+          pending?: true,
+          consumed?: true
+        )
+
+      assert html =~ "Replaying the reviewed request…"
+      assert html =~ "Replaying…"
+      assert html =~ " disabled"
+      assert html =~ "Close replay review"
+      refute html =~ "cancelled"
+    end
   end
 
   defp candidate(webhook_event_id, provider_event_id) do

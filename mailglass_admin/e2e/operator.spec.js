@@ -196,12 +196,13 @@ test.describe("operator browser gate", () => {
     await expect(modal).toContainText("Reviewed request");
     await expect(modal).toContainText("Account");
     await expect(modal).toContainText("browser-exact-delivery");
-
     await page.getByTestId("operator-replay-confirm").click();
 
-    await expect(page.getByText("Replay completed with new work.")).toBeVisible();
+    await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+      "Replay command added 1 newly normalized Event."
+    );
     await expect(page.getByTestId("operator-detail-header")).toContainText(
-      "Last replay: completed · new work"
+      "Last retrieved replay evidence: completed · 1 newly normalized Event"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("Webhook replay completed", { timeout: 10000 });
     await expect(page.getByTestId("operator-timeline")).toContainText("Replay succeeded");
@@ -275,6 +276,46 @@ test.describe("operator browser gate", () => {
     }
   });
 
+  test("Phase 169 replay keeps command feedback when persisted audit refresh fails", async ({ page }) => {
+    const reset = await page.request.get("/ops/browser-reset?scenario=phase169-replay-one");
+    expect(reset.ok()).toBeTruthy();
+    const fixture = await reset.json();
+    const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${fixture.tenant_id}&delivery_id=${fixture.delivery_id}&full=1`);
+    await page.goto(`/ops/browser-login?tenant_id=${fixture.tenant_id}&return_to=${returnTo}`);
+    await page.goto(`/ops/mail?tenant_id=${fixture.tenant_id}&delivery_id=${fixture.delivery_id}&full=1`);
+    await page.getByTestId("operator-replay-open").click();
+
+    const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
+    const armed = await page.evaluate(async ({ csrfToken }) => {
+      const response = await fetch(
+        "/ops/browser-mutate?action=arm-known-read-failure&operation=replay_history",
+        { method: "POST", headers: { "x-csrf-token": csrfToken }, redirect: "manual" }
+      );
+      return { status: response.status, body: await response.text() };
+    }, { csrfToken });
+    expect(armed.status, armed.body).toBe(200);
+
+    await page.getByTestId("operator-replay-confirm").click();
+    await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+      "Replay command added 1 newly normalized Event."
+    );
+    await expect(page.getByTestId("operator-replay-evidence-unavailable")).toContainText(
+      "The latest persisted replay evidence could not be refreshed."
+    );
+    await expect(page.locator("[data-testid='operator-detail-header']")).not.toContainText(
+      "Last retrieved replay evidence: completed"
+    );
+
+    await page.getByRole("button", { name: "Refresh replay evidence" }).click();
+    await expect(page.getByTestId("operator-replay-evidence-unavailable")).toHaveCount(0);
+    await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+      "Replay command added 1 newly normalized Event."
+    );
+    await expect(page.getByTestId("operator-detail-header")).toContainText(
+      "Last retrieved replay evidence: completed · 1 newly normalized Event"
+    );
+  });
+
   test("ambiguous replay flow requires an explicit choice before confirm is available", async ({
     page
   }) => {
@@ -295,7 +336,7 @@ test.describe("operator browser gate", () => {
     await expect(modal).toBeVisible();
     await expect(modal).toContainText("Replay is choice required.");
     await expect(modal).toContainText(
-      "The operator UI will not guess across multiple replayable webhook rows."
+      "Choose the exact stored request to review. No request is selected for you."
     );
     await expect(modal).toContainText("browser-ambiguous-delivery-1");
     await expect(modal).toContainText("browser-ambiguous-delivery-2");
@@ -326,9 +367,11 @@ test.describe("operator browser gate", () => {
     await page.getByTestId("operator-replay-open").click();
     await page.getByTestId("operator-replay-confirm").click();
 
-    await expect(page.getByText("Replay completed with no change.")).toBeVisible();
+    await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+      "Replay command completed with no newly normalized Events."
+    );
     await expect(page.getByTestId("operator-detail-header")).toContainText(
-      "Last replay: completed · no change"
+      "Last retrieved replay evidence: completed · 0 newly normalized Events"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("completed");
     await expect(page.getByTestId("operator-timeline")).toContainText("no change");

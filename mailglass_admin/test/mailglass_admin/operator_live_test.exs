@@ -998,7 +998,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
     end
 
-    test "rejects a replaced exact target instead of falling back to the replacement", %{conn: conn} do
+    test "rejects a replaced exact target instead of falling back to the replacement", %{
+      conn: conn
+    } do
       MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
       conn = operator_conn(conn)
       {delivery, reviewed} = insert_exact_replay_fixture!("msg-replaced-review", 652)
@@ -1074,7 +1076,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "POSTMARK"
       assert html =~ "requested"
       assert html =~ "completed"
-      assert html =~ "Last replay: completed · 1 newly normalized Event"
+      assert html =~ "Last retrieved replay evidence: completed · 1 newly normalized Event"
     end
 
     test "shows explicit no-op replay copy when the replay converges", %{conn: conn} do
@@ -1111,7 +1113,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Replay command completed with no newly normalized Events."
       assert html =~ "Webhook replay completed"
-      assert html =~ "Last replay: completed · 0 newly normalized Events"
+      assert html =~ "Last retrieved replay evidence: completed · 0 newly normalized Events"
     end
 
     test "requested-only replay evidence says completion has not been recorded and hides untrusted metadata",
@@ -1119,13 +1121,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       conn = operator_conn(conn)
       delivery = insert_delivery!(recipient: "requested-only@example.com")
 
-      insert_event!(delivery, %{
-        type: :webhook_replay_requested,
-        metadata: %{
-          "provider" => "postmark",
-          "actor_id" => "private-operator-identifier",
-          "failure_reason" => "raw provider response secret"
-        }
+      OperatorFixtures.insert_replay_audit!(delivery, :webhook_replay_requested, %{
+        "provider" => "postmark",
+        "actor_id" => "private-operator-identifier",
+        "failure_reason" => "raw provider response secret"
       })
 
       {:ok, _view, html} =
@@ -1134,7 +1133,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
         )
 
-      assert html =~ "Last replay: requested · completion not recorded"
+      assert html =~ "Last retrieved replay evidence: requested · completion not recorded"
       assert html =~ "POSTMARK"
       refute html =~ "private-operator-identifier"
       refute html =~ "raw provider response secret"
@@ -1389,7 +1388,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ "synthetic transient operator read failure"
     end
 
-    test "an unavailable exact read retains the requested ID and offers scoped retry", %{conn: conn} do
+    test "an unavailable exact read retains the requested ID and offers scoped retry", %{
+      conn: conn
+    } do
       conn = operator_conn(conn, %{"auth_method" => "fault:exact_delivery"})
       requested_id = Ecto.UUID.generate()
 

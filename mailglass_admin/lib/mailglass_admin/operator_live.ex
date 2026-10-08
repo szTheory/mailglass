@@ -11,7 +11,14 @@ defmodule MailglassAdmin.OperatorLive do
 
   use Phoenix.LiveView
 
-  alias Mailglass.Operator.{Deliveries, ReplayHistory, ReplayTargets, SupportSummary, Suppressions}
+  alias Mailglass.Operator.{
+    Deliveries,
+    ReplayHistory,
+    ReplayTargets,
+    SupportSummary,
+    Suppressions
+  }
+
   alias Mailglass.Webhook.Replay
   alias Mailglass.Operator.Timeline, as: OperatorTimelineData
   alias MailglassAdmin.Components
@@ -81,6 +88,8 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:detail_error, nil)
       |> assign(:replay_targets, nil)
       |> assign(:replay_history, [])
+      |> assign(:replay_history_read_state, :ready)
+      |> assign(:replay_command_feedback, nil)
       |> assign(:replay_modal_open?, false)
       |> assign(:replay_selected_target_id, nil)
       |> assign(:replay_review_snapshot, nil)
@@ -404,6 +413,7 @@ defmodule MailglassAdmin.OperatorLive do
     {:noreply,
      socket
      |> assign(:replay_modal_open?, true)
+     |> assign(:replay_command_feedback, nil)
      |> assign(:replay_selected_target_id, selected_target_id)
      |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
      |> assign(:replay_review_consumed?, false)
@@ -449,6 +459,27 @@ defmodule MailglassAdmin.OperatorLive do
      )}
   end
 
+  def handle_event("retry_replay_evidence", _params, socket) do
+    case load_replay_history(
+           socket.assigns.filter_params,
+           socket.assigns.selected_delivery,
+           socket.assigns[:operator_read_fault],
+           socket.assigns.replay_history
+         ) do
+      {history, :ready} ->
+        {:noreply,
+         socket
+         |> assign(:replay_history, history)
+         |> assign(:replay_history_read_state, :ready)}
+
+      {history, state} ->
+        {:noreply,
+         socket
+         |> assign(:replay_history, history)
+         |> assign(:replay_history_read_state, state)}
+    end
+  end
+
   def handle_event("retry_suppression", _params, socket) do
     case read_suppression(
            socket.assigns.filter_params,
@@ -491,6 +522,7 @@ defmodule MailglassAdmin.OperatorLive do
       socket
       |> assign(:replay_review_consumed?, true)
       |> assign(:replay_pending?, true)
+      |> assign(:replay_command_feedback, nil)
 
     with %{id: delivery_id, tenant_id: tenant_id} <-
            socket.assigns.selected_delivery || {:error, :no_selected_delivery},
@@ -531,9 +563,10 @@ defmodule MailglassAdmin.OperatorLive do
            }) do
       {:noreply,
        socket
+       |> clear_flash()
+       |> assign(:replay_command_feedback, RepairState.command_feedback(result))
        |> assign_delivery_state(socket.assigns.filter_params, delivery_id, true, false)
-       |> close_replay_modal()
-       |> put_flash(:info, RepairState.flash_success(result.status))}
+       |> close_replay_modal()}
     else
       {:error, :no_selected_delivery} ->
         {:noreply, put_flash(socket, :error, "Select a delivery before replaying a webhook.")}
@@ -543,7 +576,7 @@ defmodule MailglassAdmin.OperatorLive do
          socket
          |> assign(:replay_pending?, false)
          |> put_flash(
-           :error,
+           :info,
            "Replay is unavailable for this delivery. Review it again before retrying."
          )}
 
@@ -552,7 +585,7 @@ defmodule MailglassAdmin.OperatorLive do
          socket
          |> assign(:replay_pending?, false)
          |> put_flash(
-           :error,
+           :info,
            "This webhook request changed or is no longer eligible. Review the current request before replaying."
          )}
 
@@ -560,13 +593,13 @@ defmodule MailglassAdmin.OperatorLive do
         {:noreply,
          socket
          |> assign(:replay_pending?, false)
-         |> put_flash(:error, "Choose one webhook target before confirming replay.")}
+         |> put_flash(:info, "Choose one webhook target before confirming replay.")}
 
       {:error, {:auth, message}} ->
         {:noreply,
          socket
          |> assign(:replay_pending?, false)
-         |> put_flash(:error, message)}
+         |> put_flash(:info, RepairState.authorization_feedback(message))}
 
       {:error, reason} ->
         {:noreply,
@@ -665,7 +698,15 @@ defmodule MailglassAdmin.OperatorLive do
               <div data-testid="operator-overview-health" class="grid gap-md">
                 <div class="grid gap-md lg:grid-cols-3">
                   <.link
-                    patch={support_evidence_path(@base_path, @filter_params, @dark_chrome, :failed_ingest, @support_summary)}
+                    patch={
+                      support_evidence_path(
+                        @base_path,
+                        @filter_params,
+                        @dark_chrome,
+                        :failed_ingest,
+                        @support_summary
+                      )
+                    }
                     class={health_metric_link_class()}
                     aria-label="View recent failures in Deliveries"
                     data-testid="operator-overview-health-failures-link"
@@ -673,7 +714,9 @@ defmodule MailglassAdmin.OperatorLive do
                     <Components.stat_card
                       label="Failed webhook attempts"
                       value={health_metric_count(@support_summary, :failed_ingest)}
-                      state={health_metric_state(@support_summary, :failed_ingest, @health_panel_states)}
+                      state={
+                        health_metric_state(@support_summary, :failed_ingest, @health_panel_states)
+                      }
                       severity={health_metric_severity(@support_summary, :failed_ingest, :warning)}
                       severity_label={
                         health_metric_severity_label(
@@ -687,7 +730,15 @@ defmodule MailglassAdmin.OperatorLive do
                     />
                   </.link>
                   <.link
-                    patch={support_evidence_path(@base_path, @filter_params, @dark_chrome, :orphan_backlog, @support_summary)}
+                    patch={
+                      support_evidence_path(
+                        @base_path,
+                        @filter_params,
+                        @dark_chrome,
+                        :orphan_backlog,
+                        @support_summary
+                      )
+                    }
                     class={health_metric_link_class()}
                     aria-label="View unmatched webhook evidence in Deliveries"
                     data-testid="operator-overview-health-orphans-link"
@@ -695,7 +746,9 @@ defmodule MailglassAdmin.OperatorLive do
                     <Components.stat_card
                       label="Unmatched Events"
                       value={health_metric_count(@support_summary, :orphan_backlog)}
-                      state={health_metric_state(@support_summary, :orphan_backlog, @health_panel_states)}
+                      state={
+                        health_metric_state(@support_summary, :orphan_backlog, @health_panel_states)
+                      }
                       severity={health_metric_severity(@support_summary, :orphan_backlog, :warning)}
                       severity_label={
                         health_metric_severity_label(
@@ -726,7 +779,13 @@ defmodule MailglassAdmin.OperatorLive do
                     <Components.stat_card
                       label="Active suppression records"
                       value={@suppression_count}
-                      state={panel_value_state(@health_panel_states, :active_suppressions, @suppression_count)}
+                      state={
+                        panel_value_state(
+                          @health_panel_states,
+                          :active_suppressions,
+                          @suppression_count
+                        )
+                      }
                       severity={suppression_severity(@suppression_count)}
                       severity_label={
                         suppression_severity_label(
@@ -739,7 +798,15 @@ defmodule MailglassAdmin.OperatorLive do
                     />
                   </.link>
                   <.link
-                    patch={support_evidence_path(@base_path, @filter_params, @dark_chrome, :replay_outcomes, @support_summary)}
+                    patch={
+                      support_evidence_path(
+                        @base_path,
+                        @filter_params,
+                        @dark_chrome,
+                        :replay_outcomes,
+                        @support_summary
+                      )
+                    }
                     class={health_metric_link_class()}
                     aria-label="View replay audit evidence"
                     data-testid="operator-overview-health-replay-link"
@@ -747,7 +814,9 @@ defmodule MailglassAdmin.OperatorLive do
                     <Components.stat_card
                       label="Replay audit facts"
                       value={health_metric_count(@support_summary, :replay_outcomes)}
-                      state={health_metric_state(@support_summary, :replay_outcomes, @health_panel_states)}
+                      state={
+                        health_metric_state(@support_summary, :replay_outcomes, @health_panel_states)
+                      }
                       severity={health_metric_severity(@support_summary, :replay_outcomes, :info)}
                       severity_label={
                         health_metric_severity_label(
@@ -761,7 +830,15 @@ defmodule MailglassAdmin.OperatorLive do
                     />
                   </.link>
                   <.link
-                    patch={support_evidence_path(@base_path, @filter_params, @dark_chrome, :reconcile_facts, @support_summary)}
+                    patch={
+                      support_evidence_path(
+                        @base_path,
+                        @filter_params,
+                        @dark_chrome,
+                        :reconcile_facts,
+                        @support_summary
+                      )
+                    }
                     class={health_metric_link_class()}
                     aria-label="View reconciliation audit evidence"
                     data-testid="operator-overview-health-reconcile-link"
@@ -769,7 +846,9 @@ defmodule MailglassAdmin.OperatorLive do
                     <Components.stat_card
                       label="Reconciliation audit facts"
                       value={health_metric_count(@support_summary, :reconcile_facts)}
-                      state={health_metric_state(@support_summary, :reconcile_facts, @health_panel_states)}
+                      state={
+                        health_metric_state(@support_summary, :reconcile_facts, @health_panel_states)
+                      }
                       severity={health_metric_severity(@support_summary, :reconcile_facts, :info)}
                       severity_label={
                         health_metric_severity_label(
@@ -786,7 +865,9 @@ defmodule MailglassAdmin.OperatorLive do
               </div>
               <div class="flex flex-wrap items-center justify-between gap-sm text-label text-secondary">
                 <p data-testid="operator-health-window">{health_window_copy(@health_window)}</p>
-                <p data-testid="operator-health-last-checked">{health_checked_copy(@health_observed_at)}</p>
+                <p data-testid="operator-health-last-checked">
+                  {health_checked_copy(@health_observed_at)}
+                </p>
                 <button type="button" phx-click="retry_health" class="btn btn-ghost min-h-11">
                   Retry observations
                 </button>
@@ -806,7 +887,9 @@ defmodule MailglassAdmin.OperatorLive do
                 data-testid={"operator-health-stale-#{panel}"}
                 class="text-label text-secondary"
               >
-                Showing the last retrieved {health_panel_name(panel)} from {health_checked_copy(state.checked_at)}.
+                Showing the last retrieved {health_panel_name(panel)} from {health_checked_copy(
+                  state.checked_at
+                )}.
               </p>
               <p
                 :for={{panel, state} <- @health_panel_states}
@@ -907,6 +990,8 @@ defmodule MailglassAdmin.OperatorLive do
                           delivery={@selected_delivery}
                           replay_targets={@replay_targets}
                           latest_replay={latest_replay(@replay_history)}
+                          replay_history_read_state={@replay_history_read_state}
+                          replay_command_feedback={@replay_command_feedback}
                           account_labels={@account_labels}
                         />
                         <%!-- Event timeline leads: it is the record-specific "what happened"
@@ -1334,7 +1419,9 @@ defmodule MailglassAdmin.OperatorLive do
     {Enum.map(events, &safe_timeline_event/1), :ready}
   rescue
     error ->
-      if transient_read_error?(error), do: {[], :unavailable}, else: reraise(error, __STACKTRACE__)
+      if transient_read_error?(error),
+        do: {[], :unavailable},
+        else: reraise(error, __STACKTRACE__)
   end
 
   defp safe_timeline_event(event) do
@@ -1438,7 +1525,8 @@ defmodule MailglassAdmin.OperatorLive do
     do: "This delivery link is invalid. Return to deliveries and open a listed record."
 
   defp detail_error_copy(:not_found),
-    do: "This delivery is not available in the selected Account. Return to deliveries to continue."
+    do:
+      "This delivery is not available in the selected Account. Return to deliveries to continue."
 
   defp detail_error_copy(:unavailable),
     do:
@@ -1462,13 +1550,26 @@ defmodule MailglassAdmin.OperatorLive do
     end
   end
 
-  defp load_replay_history(_filter_params, nil), do: []
+  defp load_replay_history(_filter_params, nil, _read_fault, _prior_history),
+    do: {[], :ready}
 
-  defp load_replay_history(filter_params, delivery) do
-    ReplayHistory.list_delivery_replay_history(%{
-      tenant_id: filter_params["tenant_id"],
-      delivery_id: delivery.id
-    })
+  defp load_replay_history(filter_params, delivery, read_fault, prior_history) do
+    run_read_fault(read_fault, :replay_history)
+
+    history =
+      ReplayHistory.list_delivery_replay_history(%{
+        tenant_id: filter_params["tenant_id"],
+        delivery_id: delivery.id
+      })
+
+    {history, :ready}
+  rescue
+    error ->
+      if transient_read_error?(error) do
+        {prior_history, if(prior_history == [], do: :unavailable, else: :stale)}
+      else
+        reraise(error, __STACKTRACE__)
+      end
   end
 
   # Two-tier load: the Quick view (peek) renders purely from the list-row projection
@@ -1478,6 +1579,19 @@ defmodule MailglassAdmin.OperatorLive do
   # support-focus drill-down (both render SupportCards); the Quick view skips it.
   defp assign_delivery_state(socket, filter_params, selected_delivery_id, full?, support_focus?) do
     query_key = delivery_query_key(filter_params)
+    prior_delivery = socket.assigns[:selected_delivery]
+
+    replay_command_feedback =
+      if prior_delivery && prior_delivery.id == selected_delivery_id &&
+           prior_delivery.tenant_id == filter_params["tenant_id"],
+        do: socket.assigns[:replay_command_feedback],
+        else: nil
+
+    prior_replay_history =
+      if prior_delivery && prior_delivery.id == selected_delivery_id &&
+           prior_delivery.tenant_id == filter_params["tenant_id"],
+        do: socket.assigns.replay_history,
+        else: []
 
     {deliveries, page_meta, deliveries_read_state} =
       case read_deliveries_page(filter_params, socket.assigns[:operator_read_fault]) do
@@ -1503,7 +1617,16 @@ defmodule MailglassAdmin.OperatorLive do
     replay_targets =
       if full?, do: load_replay_targets(filter_params, selected_delivery), else: nil
 
-    replay_history = if full?, do: load_replay_history(filter_params, selected_delivery), else: []
+    {replay_history, replay_history_read_state} =
+      if full?,
+        do:
+          load_replay_history(
+            filter_params,
+            selected_delivery,
+            socket.assigns[:operator_read_fault],
+            prior_replay_history
+          ),
+        else: {[], :ready}
 
     {timeline, timeline_state} =
       if full?,
@@ -1577,6 +1700,8 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:detail_error, detail_error)
     |> assign(:replay_targets, replay_targets)
     |> assign(:replay_history, replay_history)
+    |> assign(:replay_history_read_state, replay_history_read_state)
+    |> assign(:replay_command_feedback, replay_command_feedback)
     |> assign(
       :replay_selected_target_id,
       preserve_replay_selection(replay_targets, socket.assigns[:replay_selected_target_id])
@@ -1781,7 +1906,8 @@ defmodule MailglassAdmin.OperatorLive do
       summary = %{
         failed_ingest: failed || %{count: nil, latest: nil},
         orphan_backlog: orphan || %{count: nil, oldest: nil, oldest_age_seconds: nil},
-        replay_outcomes: replay || %{counts: %{failed: nil, noop: nil, replayed: nil}, latest: nil},
+        replay_outcomes:
+          replay || %{counts: %{failed: nil, noop: nil, replayed: nil}, latest: nil},
         reconcile_facts:
           reconcile ||
             %{
@@ -1801,7 +1927,9 @@ defmodule MailglassAdmin.OperatorLive do
       }
 
       any_current_read? = Enum.any?(Map.values(states), &(&1.status == :ready))
-      observed_at = if any_current_read?, do: as_of, else: prior_observed_at(socket, same_account?)
+
+      observed_at =
+        if any_current_read?, do: as_of, else: prior_observed_at(socket, same_account?)
 
       displayed_window =
         if any_current_read?,
@@ -2367,7 +2495,10 @@ defmodule MailglassAdmin.OperatorLive do
   defp normalize_stat_count(count) when is_integer(count), do: count
   defp normalize_stat_count(_count), do: nil
 
-  defp health_window_copy(%{started_at: %DateTime{} = started_at, ended_at: %DateTime{} = ended_at}) do
+  defp health_window_copy(%{
+         started_at: %DateTime{} = started_at,
+         ended_at: %DateTime{} = ended_at
+       }) do
     "Observation window: #{DateTime.to_iso8601(started_at)} to #{DateTime.to_iso8601(ended_at)} UTC"
   end
 

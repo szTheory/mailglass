@@ -344,8 +344,10 @@ test.describe("Phase 169 connected journey", () => {
     await expect(review).toBeVisible();
     await expect(review.getByTestId("operator-replay-target-id")).toHaveText(fixture.webhook_event_id);
     await page.getByTestId("operator-replay-confirm").click();
-    await expect(page.getByText(/Replay completed with/)).toBeVisible();
-    await expect(page.getByTestId("operator-detail-header")).toContainText("Last replay:");
+    await expect(page.getByTestId("operator-replay-command-feedback")).toBeVisible();
+    await expect(page.getByTestId("operator-detail-header")).toContainText(
+      "Last retrieved replay evidence:"
+    );
 
     const authResponse = await page.request.get("/ops/browser-auth-log");
     expect(authResponse.ok()).toBeTruthy();

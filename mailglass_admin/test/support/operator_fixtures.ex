@@ -279,7 +279,14 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     :ok
   end
 
-  def mutate_phase169_scenario!(_operation), do: raise(ArgumentError, "unsupported replay mutation")
+  def mutate_phase169_scenario!(_operation),
+    do: raise(ArgumentError, "unsupported replay mutation")
+
+  def insert_replay_audit!(delivery, type, metadata)
+      when type in [:webhook_replay_requested, :webhook_replay_succeeded, :webhook_replay_failed] and
+             is_map(metadata) do
+    insert_event!(delivery, %{type: type, metadata: metadata})
+  end
 
   defp seeded_replay_delivery! do
     TestRepo.one!(
@@ -295,7 +302,8 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
   defp seeded_replay_webhook!(provider_event_id) do
     TestRepo.one!(
       from(webhook in WebhookEvent,
-        where: webhook.tenant_id == ^@tenant_id and webhook.provider_event_id == ^provider_event_id,
+        where:
+          webhook.tenant_id == ^@tenant_id and webhook.provider_event_id == ^provider_event_id,
         limit: 1
       )
     )
@@ -588,7 +596,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   def arm_reader_fault!(session_key, operation, kind)
       when is_binary(session_key) and is_binary(operation) and kind in [:known, :unexpected] do
-    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event delivery_timeline selected_delivery_event delivery_suppression) do
+    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event delivery_timeline selected_delivery_event delivery_suppression replay_history) do
       raise ArgumentError, "unsupported test reader operation"
     end
 
@@ -824,7 +832,11 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     insert_event!(delivery, %{
       type: :sent,
       metadata:
-        linked_replay_metadata(webhook_event, child_provider_event_id, delivery.provider_message_id)
+        linked_replay_metadata(
+          webhook_event,
+          child_provider_event_id,
+          delivery.provider_message_id
+        )
     })
   end
 

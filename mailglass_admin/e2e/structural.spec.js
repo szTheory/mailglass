@@ -701,7 +701,7 @@ async function openAmbiguousOperatorReplayModal(page) {
       return modal;
     }
 
-    await modal.getByRole("button", { name: "Close", exact: true }).click();
+    await modal.getByRole("button", { name: "Close replay review", exact: true }).click();
   }
 
   throw new Error("Ambiguous operator replay modal was not found");
@@ -3005,7 +3005,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
         // Close via the modal's Close button (routes to close_replay; the
         // :if span's phx-remove fires JS.focus(to:"#replay-open-btn")).
-        await modal.getByRole("button", { name: "Close", exact: true }).click();
+        await modal.getByRole("button", { name: "Close replay review", exact: true }).click();
         await expect(page.getByTestId("operator-replay-modal")).toHaveCount(0);
 
         const activeId = await page.evaluate(

@@ -1081,7 +1081,9 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       heldReply = null;
       holdReplayResponse = false;
       await expect(modal).toHaveCount(0);
-      await expect(page.getByText("Replay completed with new work.", { exact: true })).toBeVisible();
+      await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+        "Replay command added 1 newly normalized Event."
+      );
       const detail = page.getByTestId("operator-detail-column");
       await expect(detail).toContainText("Webhook replay requested");
       await expect(detail).toContainText("Webhook replay completed");
@@ -1110,7 +1112,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       await expect(deniedModal.getByTestId("operator-replay-target-id")).toHaveText(deniedTarget);
       await deniedModal.locator("#operator-replay-close").focus();
       await page.keyboard.press("Shift+Tab");
-      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-confirm");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
       await expect.poll(() => deniedModal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
       await page.keyboard.press("Escape");
       await expect(page.getByTestId("operator-replay-modal").filter({ visible: true })).toHaveCount(0);

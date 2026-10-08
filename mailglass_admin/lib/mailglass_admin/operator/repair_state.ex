@@ -3,6 +3,8 @@ defmodule MailglassAdmin.Operator.RepairState do
   Shared presenter for operator-facing replay availability and outcome wording.
   """
 
+  @providers ~w(mailgun postmark sendgrid ses)
+
   @spec availability_label(map() | atom() | nil) :: String.t() | nil
   def availability_label(nil), do: nil
   def availability_label(%{status: status}), do: availability_label(status)
@@ -24,7 +26,23 @@ defmodule MailglassAdmin.Operator.RepairState do
 
   @spec effect_label(map() | atom() | String.t() | nil) :: String.t() | nil
   def effect_label(nil), do: nil
+
+  def effect_label(%{outcome: outcome, metadata: metadata}) when is_map(metadata) do
+    case Map.get(metadata, "new_event_count") || Map.get(metadata, :new_event_count) do
+      count when is_integer(count) and count >= 0 ->
+        "#{count} newly normalized #{if(count == 1, do: "Event", else: "Events")}"
+
+      _ ->
+        effect_label(outcome)
+    end
+  end
+
+  def effect_label(%{metadata: metadata}) when is_map(metadata), do: effect_label(metadata)
   def effect_label(%{outcome: outcome}), do: effect_label(outcome)
+
+  def effect_label(%{"outcome" => outcome} = metadata),
+    do: effect_label(%{outcome: outcome, metadata: metadata})
+
   def effect_label(:replayed), do: "new work"
   def effect_label("replayed"), do: "new work"
   def effect_label(:noop), do: "no change"
@@ -56,17 +74,47 @@ defmodule MailglassAdmin.Operator.RepairState do
     |> Enum.join(" · ")
   end
 
-  @spec flash_success(atom()) :: String.t()
-  def flash_success(:replayed), do: "Replay completed with new work."
-  def flash_success(:noop), do: "Replay completed with no change."
+  @spec command_feedback(map()) :: String.t()
+  def command_feedback(%{status: :replayed, new_event_count: count})
+      when is_integer(count) and count > 0 do
+    "Replay command added #{count} newly normalized #{if(count == 1, do: "Event", else: "Events")}."
+  end
+
+  def command_feedback(%{status: :noop, new_event_count: 0}),
+    do: "Replay command completed with no newly normalized Events."
+
+  def command_feedback(_result),
+    do:
+      "Replay command completed. Its result does not establish provider receipt or mail delivery."
 
   @spec flash_failure(term()) :: String.t()
-  def flash_failure(:webhook_event_not_found), do: "Replay target is no longer available."
+  def flash_failure(:webhook_event_not_found),
+    do: "The reviewed stored request is no longer available."
 
   def flash_failure(:unknown_provider),
-    do: "Replay failed before provider normalization could begin."
+    do: "Replay processing failed before normalization could begin."
 
-  def flash_failure(_reason), do: "Replay failed. Check the timeline for the durable audit result."
+  def flash_failure(:normalize_failed), do: "Replay processing failed during normalization."
+
+  def flash_failure(:invalid_raw_payload),
+    do: "The stored request is unavailable for replay processing."
+
+  def flash_failure(:replay_failed),
+    do: "Replay processing failed. Follow your host's investigation guidance."
+
+  def flash_failure(_reason),
+    do: "Replay could not be completed. Follow your host's investigation guidance."
+
+  @spec authorization_feedback(String.t()) :: String.t()
+  def authorization_feedback("Recent authentication is required."),
+    do: "Recent authentication is required."
+
+  def authorization_feedback("Replay is not authorized."), do: "Replay is not authorized."
+  def authorization_feedback(_message), do: "This action is not authorized."
+
+  @spec replay_evidence_unavailable_copy() :: String.t()
+  def replay_evidence_unavailable_copy,
+    do: "The latest persisted replay evidence could not be refreshed."
 
   @spec replay_event_label(atom()) :: String.t() | nil
   def replay_event_label(type) do
@@ -81,21 +129,23 @@ defmodule MailglassAdmin.Operator.RepairState do
   def reconcile_event_label(_type), do: nil
 
   @spec event_badge(atom()) :: String.t() | nil
-  def event_badge(type) when type in [:webhook_replay_requested, :webhook_replay_succeeded, :webhook_replay_failed],
-    do: "Replay audit"
+  def event_badge(type)
+      when type in [:webhook_replay_requested, :webhook_replay_succeeded, :webhook_replay_failed],
+      do: "Replay audit"
 
   def event_badge(:reconciled), do: "Reconcile fact"
   def event_badge(_type), do: nil
 
   @spec replay_metadata_summary(map()) :: String.t()
   def replay_metadata_summary(metadata) when is_map(metadata) do
-    provider = Map.get(metadata, "provider") || Map.get(metadata, :provider)
-    actor_id = Map.get(metadata, "actor_id") || Map.get(metadata, :actor_id)
-    outcome = outcome_label(Map.get(metadata, "outcome_label") || Map.get(metadata, :outcome_label))
-    effect = effect_label(Map.get(metadata, "outcome") || Map.get(metadata, :outcome))
-    failure_reason = Map.get(metadata, "failure_reason") || Map.get(metadata, :failure_reason)
+    provider = safe_provider(Map.get(metadata, "provider") || Map.get(metadata, :provider))
 
-    [provider && String.upcase(provider), actor_id, outcome, effect, failure_reason]
+    outcome =
+      outcome_label(Map.get(metadata, "outcome_label") || Map.get(metadata, :outcome_label))
+
+    effect = effect_label(metadata)
+
+    [provider && String.upcase(provider), outcome, effect]
     |> Enum.reject(&(&1 in [nil, ""]))
     |> case do
       [] -> "Replay audit"
@@ -112,7 +162,8 @@ defmodule MailglassAdmin.Operator.RepairState do
         Map.get(metadata, :reconciled_provider_event_id)
 
     source_event_id =
-      Map.get(metadata, "reconciled_from_event_id") || Map.get(metadata, :reconciled_from_event_id)
+      Map.get(metadata, "reconciled_from_event_id") ||
+        Map.get(metadata, :reconciled_from_event_id)
 
     [provider && String.upcase(provider), provider_event_id, source_event_id]
     |> Enum.reject(&(&1 in [nil, ""]))
@@ -136,7 +187,40 @@ defmodule MailglassAdmin.Operator.RepairState do
     do: "Replay target resolution is unavailable for this delivery."
 
   defp replay_summary_parts(replay) do
-    [outcome_label(replay), effect_label(replay)]
+    outcome = outcome_label(replay)
+
+    details =
+      case outcome do
+        "requested" -> "completion not recorded"
+        "completed" -> effect_label(replay)
+        "failed" -> safe_failure_reason(Map.get(replay, :failure_reason))
+        _ -> nil
+      end
+
+    provider = safe_provider(Map.get(replay, :provider))
+
+    [outcome, details, provider && String.upcase(provider)]
     |> Enum.reject(&is_nil/1)
   end
+
+  defp safe_provider(provider) when provider in @providers, do: provider
+  defp safe_provider(_provider), do: nil
+
+  defp safe_failure_reason(reason) when reason in [:unknown_provider, "unknown_provider"],
+    do: "processing failed before normalization"
+
+  defp safe_failure_reason(reason)
+       when reason in [:webhook_event_not_found, "webhook_event_not_found"],
+       do: "stored request unavailable"
+
+  defp safe_failure_reason(reason)
+       when reason in [
+              :normalize_failed,
+              "normalize_failed",
+              :invalid_raw_payload,
+              "invalid_raw_payload"
+            ],
+       do: "request could not be normalized"
+
+  defp safe_failure_reason(_reason), do: "processing failed"
 end

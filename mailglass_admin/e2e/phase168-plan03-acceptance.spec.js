@@ -188,7 +188,7 @@ test.describe("Plan 168-03 rendered acceptance", () => {
     await page.getByTestId("operator-replay-confirm").click();
 
     const status = page.locator("#operator-flash-info");
-    await expect(status).toContainText("Replay completed with no change.");
+    await expect(status).toContainText("Replay command completed with no newly normalized Events.");
     await expect(status).toHaveAttribute("role", "status");
     await expect(status).toHaveAttribute("aria-live", "polite");
     await page.evaluate(() => {
@@ -209,7 +209,7 @@ test.describe("Plan 168-03 rendered acceptance", () => {
 
     await page.getByTestId("operator-replay-open").click();
     await page.getByTestId("operator-replay-confirm").click();
-    await expect(status).toContainText("Replay completed with no change.");
+    await expect(status).toContainText("Replay command completed with no newly normalized Events.");
     const unchangedStatus = await page.evaluate(() => ({
       sameNode: document.querySelector("#operator-flash-info") === window.__plan168StatusNode,
       sameText: document.querySelector("#operator-flash-info").innerText === window.__plan168StatusText,

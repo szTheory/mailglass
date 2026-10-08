@@ -57,27 +57,37 @@ the `MailglassAdmin.Auth` `authorize/2` callback.
 
 ## Replay semantics
 
-Replay is an operator recovery action against one exact stored inbound receive
-truth for one selected delivery.
+Replay is an operator recovery action against one exact stored outbound webhook
+request for one selected Delivery. It reprocesses that request through current
+normalization, which can add Events and update Delivery or suppression records
+for multiple Deliveries in the selected Account. It does not resend outbound
+mail or prove that a provider received or accepted a message.
 
 - Replay is exact-target, not delivery-wide guessing.
 - Replay stays tenant-scoped.
-- Replay is ledger-audited as requested, succeeded, or failed facts.
-- Replay runs after canonical and raw evidence truth already exists; it is not
-  a fresh provider receipt.
-- Replay can honestly end in `new work` or `no change`.
+- Host authorization and recent-auth policy are evaluated immediately before
+  the local replay command.
+- Replay is ledger-audited as requested, succeeded, or failed facts. A requested
+  fact means the command was recorded as requested; it does not mean completion
+  was recorded or that the command is still running.
+- Local command feedback reports only the normalized Event row count returned
+  by that command. Zero newly normalized rows is a no-change result, not a
+  failure and not proof that the Delivery or audit history was unchanged.
+- A terminal persisted result is shown only when the scoped audit read supplies
+  that fact. If that read is unavailable, command feedback remains separate and
+  the persisted evidence is labeled unavailable.
 
-Fresh provider receipt and later execution are intentionally distinct. The
-durable promise is the stored inbound receive truth. Execution may happen later
-through Oban-backed durable jobs or, when Oban is unavailable, through a
-bounded Task.Supervisor fallback with no automatic retry. Replay is the
-recovery tool when operators need to rerun stored truth after best-effort
+The stored provider request and later local replay are distinct. Replay
+reprocesses the existing request; it is not a fresh provider receipt. Execution
+may happen later through Oban-backed durable jobs or, when Oban is unavailable,
+through a bounded Task.Supervisor fallback with no automatic retry. Replay is
+the recovery tool when operators need to rerun stored truth after best-effort
 fallback loss or a previous failure.
 
 Replay and reconcile are intentionally distinct. Replay reruns one exact stored
-inbound target through local semantics and does not silently reroute to a
-different mailbox. Reconcile is background-first backlog maintenance for
-unmatched webhook rows and is not a delivery-detail replay tool.
+outbound webhook request through local normalization and does not silently
+substitute another request. Reconcile is background-first backlog maintenance
+for unmatched webhook rows and is not a delivery-detail replay tool.
 
 Replay command semantics are stable at the operator level, but this does not
 create a public replay runtime API. Internal replay orchestration modules,
