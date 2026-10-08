@@ -108,9 +108,9 @@ Each task was committed atomically:
 
 - `mailglass_admin/e2e/phase169-journey.spec.js` — responsive rendered matrix, immutable before-evidence guard, and connected persisted-fixture journey.
 - `mailglass_admin/test/support/operator_fixtures.ex` — current Health failure exemplar linked to an aged-out Delivery.
-- `mailglass_admin/e2e/{gallery-matrix,operator,phase168-plan03-acceptance,structural}.spec.js` — narrow corrections to stale assertions and gallery diagnostics/responsive coverage.
+- `mailglass_admin/e2e/gallery-matrix.spec.js`, `mailglass_admin/e2e/operator.spec.js`, `mailglass_admin/e2e/phase168-plan03-acceptance.spec.js`, and `mailglass_admin/e2e/structural.spec.js` — narrow corrections to stale assertions and gallery diagnostics/responsive coverage.
 - `mailglass_admin/lib/mailglass_admin/gallery_live.ex` — keeps dev-only light/dark/System specimens full width through tablet viewports.
-- `mailglass_admin/lib/mailglass_admin/operator/{detail_header,timeline}.ex` and `mailglass_admin/priv/static/app.css` — narrow wrapping utility and rebuilt tracked CSS.
+- `mailglass_admin/lib/mailglass_admin/operator/detail_header.ex`, `mailglass_admin/lib/mailglass_admin/operator/timeline.ex` and `mailglass_admin/priv/static/app.css` — narrow wrapping utility and rebuilt tracked CSS.
 - `docs/api_stability.md`, `mailglass_admin/docs/api_stability.md` — sibling-only exact-read classification.
 - `.planning/phases/169-outbound-investigation-and-recovery/169-BASELINE.md`, `169-VALIDATION.md`, and `artifacts/after/` — current rendered evidence, regression results, proof boundaries, and validation status.
 
@@ -145,7 +145,7 @@ Each task was committed atomically:
 - **Found during:** Task 2 full unfiltered browser regression.
 - **Issue:** The dev gallery squeezed three theme wrappers into one 768 px row, overflowing detail-header and long timeline specimens.
 - **Fix:** Kept the three wrappers stacked until `xl` and made overflow failures report offending descendants.
-- **Files modified:** `gallery_live.ex`, `gallery-matrix.spec.js`, rebuilt `priv/static/app.css`.
+- **Files modified:** `gallery_live.ex`, `gallery-matrix.spec.js`, rebuilt `mailglass_admin/priv/static/app.css`.
 - **Verification:** All-specimen and long-value stress matrices passed across 320/390/768/1440 × light/dark/System.
 - **Committed in:** `c86bd17d`.
 

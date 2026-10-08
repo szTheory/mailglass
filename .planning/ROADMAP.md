@@ -51,7 +51,7 @@ Full phase detail: [milestones/v2.8-ROADMAP.md](milestones/v2.8-ROADMAP.md) · p
 
 ## v2.9 — Operator, Preview & Email UI Refinement
 
-**Status:** Approved 2026-10-07. Phase 168 is complete and verified; Phase 169 is ready for discussion and planning.
+**Status:** Approved 2026-10-07. Phases 168 and 169 are complete and verified; Phase 170 is ready for discussion and planning.
 **Granularity:** Standard, from [config.json](config.json). Phase IDs continue after the archived v2.8 milestone at 168.
 
 ## Overview
@@ -68,7 +68,7 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
 ## Phases
 
 - [x] **Phase 168: Shared Workspace and Usable Baseline** - Make the real operator workspace legible, navigable, and operable through representative shared patterns. (completed 2026-10-07)
-- [ ] **Phase 169: Outbound Investigation and Recovery** - Make Email health, delivery evidence, suppression, and exact-target replay understandable and usable.
+- [x] **Phase 169: Outbound Investigation and Recovery** - Make Email health, delivery evidence, suppression, and exact-target replay understandable and usable. (completed 2026-10-07)
 - [ ] **Phase 170: Inbound Investigation and Recovery** - Make received-message routing evidence and permitted replay clear without losing scope or history.
 - [ ] **Phase 171: Developer Preview** - Make supported scenario rendering and output inspection usable across devices and states.
 - [ ] **Phase 172: Recipient Output and Built-in Pages** - Improve public transactional output, truthful examples, plaintext, and bounded unsubscribe GET pages.
@@ -117,7 +117,7 @@ Plans:
   4. An operator can relate suppression and failed or unmatched webhook evidence to a delivery and find the supported next investigation step without seeing an unavailable repair action promised.
   5. An authorized operator can review one eligible stored replay target and its consequence, confirm it, and distinguish requested work, new work, no change, and failure; denied or stale actions preserve Account scope and action-time authorization.
 
-**Plans**: 5/5 plans executed
+**Plans**: 5/5 plans complete
 Plans:
 **Wave 1**
 - [x] 169-01-PLAN.md — Source-identified tracer, exact Delivery selection, filters, list and return
@@ -211,7 +211,7 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 168. Shared Workspace and Usable Baseline | 4/4 | Complete    | 2026-10-07 |
-| 169. Outbound Investigation and Recovery | 5/5 | In Progress | — |
+| 169. Outbound Investigation and Recovery | 5/5 | Complete    | 2026-10-07 |
 | 170. Inbound Investigation and Recovery | 0/TBD | Not started | — |
 | 171. Developer Preview | 0/TBD | Not started | — |
 | 172. Recipient Output and Built-in Pages | 0/TBD | Not started | — |

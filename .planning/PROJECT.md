@@ -18,11 +18,13 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 - Usable developer preview plus public email components, sender-branded examples, plaintext, and truthful built-in unsubscribe GET pages.
 - Current shared-pattern guidance, bounded automated and rendered acceptance, and a working feedback preview with passing required CI on the delivery candidate.
 
-**Planning contract:** Approved 2026-10-07: 28 requirements across Phases 168–173. Phase 168 is implemented and verified; Phase 169 discussion, UI contract, research and implementation plans are complete. Five plans across five serial waves contain 12 tasks and cover all five outbound requirements, 26 decisions and 82 explicit UI state criteria across 11 surfaces. The independent plan checker passed; execution is next. Engineers and support/on-call operators are equal primary Admin audiences. The owner selected code-first; use Impeccable and relevant Kowalski guidance with the existing LiveView/HEEx stack and brand. [Scope](research/v2.9/SCOPE.md), [requirements](REQUIREMENTS.md), and [roadmap](ROADMAP.md) are canonical for this milestone; root [PRODUCT.md](../PRODUCT.md) owns durable product context.
+**Planning contract:** Approved 2026-10-07: 28 requirements across Phases 168–173. Phases 168 and 169 are implemented and verified. Phase 169 completed five serial plans and 12 tasks covering five outbound requirements, 26 decisions, and 82 UI state criteria across 11 surfaces. Independent verification passed all 100 positive must-haves and individually adjudicated the five negative constraints under the owner’s standing delegation. Phase 170 discussion is next. Engineers and support/on-call operators are equal primary Admin audiences. The owner selected code-first; use Impeccable and relevant Kowalski guidance with the existing LiveView/HEEx stack and brand. [Scope](research/v2.9/SCOPE.md), [requirements](REQUIREMENTS.md), and [roadmap](ROADMAP.md) are canonical for this milestone; root [PRODUCT.md](../PRODUCT.md) owns durable product context.
 
 **Boundaries:** Refine existing capabilities, preserve authorization/account/replay/rendering/protocol contracts, and defer an interactive browser unsubscribe submission journey. Reuse source-backed research and existing checks with targeted investigation as needed. The milestone label does not request a package version or authorize publication or merge. Phase 168 reconciled the preserved local workspace with merged cleanup and recorded the checkout and assets served by the preview.
 
 ## Current State
+
+**Phase 169 completed and verified 2026-10-08 UTC.** Outbound investigation now preserves exact Account/Delivery/support identity, presents bounded truthful Health and timeline evidence, and supports refreshed exact webhook replay review with action-time host authorization. Terminal audit write failures return safe feedback and roll back replay writes. Independent code review is clean, security closed all 17 declared threats, and validation is compliant. Final local checks: 49 core tests; 542 Admin tests with zero failures and one exclusion; full browser suite 197 passed and one guarded skip; cross-phase browser gate 163 passed and one guarded skip. Representative rendered review is complete; physical-device and exhaustive native zoom matrices are not claimed. Milestone delivery and remote CI remain Phase 173 work.
 
 **Phase 168 completed and verified 2026-10-07.** The shared workspace now has visible Account scope, readable type and exact values, System/Light/Dark selection, accessible feedback, and working keyboard focus containment/return in Quick view and replay dialogs. The current source and served demo assets are recorded in the phase baseline. Local admin verification reports 513 ExUnit tests with zero failures and one exclusion; Playwright reports 184 passed and one guarded skip. This is local implementation evidence; milestone delivery and required remote CI remain Phase 173 work.
 
@@ -209,13 +211,13 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 **v2.9 Operator, Preview & Email UI Refinement is active.** The 28 approved requirements are defined in [REQUIREMENTS.md](REQUIREMENTS.md) and each maps to one phase in [ROADMAP.md](ROADMAP.md):
 
 - ✓ UXF-01–08: shared workspace and interaction — implemented and verified in Phase 168.
-- OUTUX-01–05: outbound investigation and recovery (Phase 169).
+- ✓ OUTUX-01–05: outbound investigation and recovery — implemented and verified in Phase 169.
 - INUX-01–04: inbound investigation and recovery (Phase 170).
 - PRVUX-01–04: developer preview (Phase 171).
 - MAILUX-01–04: recipient output and built-in pages (Phase 172).
 - UIQ-01–03: consistency, evidence, and delivery (Phase 173).
 
-Phase 168 validated all eight UXF requirements; the remaining 20 requirements belong to Phases 169–173. The v2.8 and v2.7 requirements remain in their milestone archives.
+Phases 168 and 169 validated 13 requirements; the remaining 15 belong to Phases 170–173. The v2.8 and v2.7 requirements remain in their milestone archives.
 
 ### v2.7 scope record (archived)
 
@@ -1049,6 +1051,14 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 
 ## Key Decisions
 
+### Phase 169 implementation decisions
+
+- Resolve requested Account/Delivery/Event/webhook identities independently of list membership; distinguish Account support facts from selected-Delivery evidence and retain proven reconciliation linkage.
+- Keep Health populations independent and time-bounded, distinguish current suppression from complete policy, and show the oldest 100 timeline Events with explicit overflow and separately reachable selected evidence.
+- Freeze each exact replay review, revalidate at action time, preserve host authorization, and refresh candidates only on explicit new review; private dialog correlation rejects queued stale confirmations.
+- Keep command feedback separate from persisted audit evidence. A terminal audit database write failure rolls back replay mutations and returns a controlled result.
+- Put evidence before recovery actions, preserve exact UTC and readable responsive layouts, and record source-backed representative visual proof without claiming exhaustive physical-device coverage.
+
 ### Phase 168 implementation decisions
 
 - Account options assist navigation; they do not authorize scope. Preserve host-owned access checks and selected permitted IDs absent from activity-derived options.
@@ -1133,7 +1143,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-10-08 after approving Phase 169's implementation plans; execution is next.*
+*Last updated: 2026-10-08 UTC after completing and independently verifying Phase 169; Phase 170 discussion is next.*
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->

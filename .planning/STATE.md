@@ -2,30 +2,30 @@
 gsd_state_version: "1.0"
 milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
-current_phase: 169
-current_phase_name: Outbound Investigation and Recovery
-status: Plan 5 complete; awaiting independent phase review and verifier
-stopped_at: Completed 169-05-PLAN.md; awaiting independent phase review and verifier
-last_updated: "2026-10-08T02:44:42.627Z"
+current_phase: 170
+current_phase_name: Inbound Investigation and Recovery
+status: planning
+stopped_at: Phase 169 complete, ready to plan Phase 170
+last_updated: "2026-10-08T03:52:45.665Z"
 last_activity: 2026-10-08
-last_activity_desc: Phase 169 Plan 05 completed; awaiting independent review
-state_head: c86bd17d366d0f136a1a6c10db9b11d61effd3c5
+last_activity_desc: Phase 169 complete, transitioned to Phase 170
+state_head: e2d8270dd00d11e59430b1947912744d50de6170
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 9
   completed_plans: 9
-  percent: 17
+  percent: 33
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-07)
+See: .planning/PROJECT.md (updated 2026-10-08 UTC)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 169 — Outbound Investigation and Recovery
+**Current focus:** Phase 170 — Inbound Investigation and Recovery
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,15 +39,17 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 
 ## Current Position
 
-Phase: 169 (Outbound Investigation and Recovery) — EXECUTING
-Plan: 5 of 5
-Status: Plan 5 complete; awaiting independent phase review and verifier
-Last activity: 2026-10-07 — Phase 169 Plan 05 completed; awaiting independent review
+Phase: 170 — Inbound Investigation and Recovery
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-08 UTC — Phase 169 complete, transitioned to Phase 170
+
+Progress: 2/6 phases complete (33%); all 9 currently planned plans are complete. Later phases are not yet planned.
 
 ## v2.9 Roadmap Shape
 
-- Phases 168–173 own all 28 approved requirements; Phase 168 is complete and verified (UXF-01–08).
-- Phase 168 established the shared workspace and usable baseline. Phase 169 planning is complete: five plans, five serial waves and 12 tasks cover five requirements, 26 decisions and 82 explicit UI state criteria. The independent plan checker passed after the final regression gate was made executable. Implementation is next; later slices follow ROADMAP.md.
+- Phases 168–173 own all 28 approved requirements; Phases 168 and 169 are complete and verified (UXF-01–08, OUTUX-01–05).
+- Phase 169 completed all five plans and 12 tasks. Independent verification passed 100 positive must-haves, including 82 UI states; five negative constraints have individual delegated judgments with explicit evidence limits. Phase 170 discussion is next; later slices follow ROADMAP.md.
 - Code-first; equal engineer and support/on-call operator priority; bounded direct visual inspection and existing automated checks.
 - The approved unsubscribe boundary covers truthful GET/invalid/expired pages; interactive browser submission remains deferred.
 
@@ -412,7 +414,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 168]: Keep tenant_id as the URL and filter-submission scope; remove duplicate Account filter selection.
 - [Phase 168]: Keep selected Account identity and scope switching in shared operator chrome; keep Preview outside production Account scope.
 - [Phase 168]: Preserve host-owned tenant resolution and authorization; Account option links are navigation aids only.
-- [Phase 168]: Health metrics use three columns only at the desktop breakpoint after 768px review showed compressed labels.
+- [Phase 168, superseded by Phase 169]: Health now uses the approved two-column arrangement and one column below 768px; the earlier three-column decision is historical.
 - [Phase 168]: Filter submit busy labels use fixed-width buttons to preserve action position.
 - [Phase 168]: Stale/unavailable Delivery states use approved recovery copy and never invent an observation time.
 - [Phase 168]: Keep System, Light and Dark visible beside native radio controls and preserve the existing persisted preference.
@@ -436,7 +438,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 169]: Do not expose raw audit metadata, actor identifiers, failure reasons, or exception bodies in operator feedback.
 - [Phase 169]: Final Back to deliveries clears selected Delivery, full-detail mode, and exact support focus while preserving Account and committed list state, per the approved UI spec.
 - [Phase 169]: Keep dev-gallery theme specimens stacked through tablet widths; use actual available content width for production collection layout.
-- [Phase 169]: Terminal audit database write failure remains an explicit proof limit; browser evidence covers successful command feedback and a post-command audit read failure.
+- [Phase 169]: Terminal audit database write failure is trigger-tested at core and LiveView boundaries; safe failure feedback retains context while normalized writes roll back.
+- [Phase 169]: Exact support records use neutral labels with current status and proven reconciliation linkage. Explicit new replay review refreshes candidates; private dialog correlation rejects old queued confirms.
 
 ## Quick Tasks Completed
 
@@ -482,13 +485,13 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-08T02:44:32.639Z
-Stopped at: Completed 169-05-PLAN.md; awaiting independent phase review and verifier
+Last session: 2026-10-08T03:52:45.665Z
+Stopped at: Phase 169 complete, ready to plan Phase 170
 Resume file: None
 
 ## Operator Next Steps
 
-- Phase 168 is complete and independently verified. All four plans and both code-review corrections are committed.
-- Phase 169 research, pattern map, validation strategy and five implementation plans are complete under the owner's delegated recommendations. See `.planning/phases/169-outbound-investigation-and-recovery/169-PLAN-CHECK.md` and `169-PLAN-COVERAGE.md`.
-- Next: `$gsd-execute-phase 169` resumes at Plan 05. Plans 01–04 are implemented and verified; one serial plan remains for connected rendered acceptance. Full core/Admin/assets/unfiltered browser regression is required by the final task. Three unclassified edge-probe assumptions and five descriptor-less prohibitions remain flagged for later verification; no enforcement proof is claimed.
-- Current demo: `http://localhost:4015`; source/asset identity and rendered evidence are in `168-BASELINE.md`. Local admin checks: 513 ExUnit tests, zero failures, one exclusion; Playwright 184 passed, one guarded skip. Remote delivery/CI proof remains Phase 173 scope.
+- Phase 169 is complete: five plans, all five OUTUX requirements, independent verification passed, code review clean, security 17/17 closed, and Nyquist compliant.
+- Final local evidence: 49 core tests; 542 Admin tests with zero failures and one exclusion; full operator browser 197 passed and one guarded skip; prior-phase browser gate 163 passed and one guarded skip. See `169-VERIFICATION.md`, `169-REGRESSION.md`, and `169-REVIEW-FIX.md` in the phase directory.
+- Next: `$gsd-discuss-phase 170` — Inbound Investigation and Recovery. No Phase 170 execution has begun.
+- Original unrelated planning-file deletions and config modification were preserved. Browser verification used isolated port 4102. The previously recorded feedback preview was not redeployed by this phase; its current served revision was not re-certified. Remote delivery/CI proof remains Phase 173 scope.

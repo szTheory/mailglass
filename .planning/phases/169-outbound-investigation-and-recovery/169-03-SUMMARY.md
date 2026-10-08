@@ -172,7 +172,11 @@ Each task was committed atomically:
 - `mix test test/mailglass/operator/timeline_test.exs --seed 1` — 6 passed.
 - `mix test test/mailglass/operator/suppressions_test.exs --seed 1` — 10 passed.
 - `mix test test/mailglass_admin/components_test.exs --seed 1` (from `mailglass_admin`) — 101 passed.
-- `mix test test/mailglass_admin/operator_live_test.exs` — 94 passed.
+- Admin LiveView command, run from `mailglass_admin` — 94 passed:
+
+  ```sh
+  mix test test/mailglass_admin/operator_live_test.exs
+  ```
 - Playwright named timeline overflow/exact-selection scenario — 1 passed on port 4102.
 - Playwright exact-copy and timestamp scenarios — 2 passed on port 4102.
 - Playwright current-suppression/history/totals/unavailable-refresh scenario — 1 passed on port 4102.

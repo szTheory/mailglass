@@ -11,7 +11,7 @@
     {
       "number": "169",
       "name": "Outbound Investigation and Recovery",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "170",
@@ -36,8 +36,8 @@
   ],
   "next": {
     "command": "/gsd:progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 169 of 6 · 17% · executing"
+    "label": "Advance to the next step (plan phase 170)",
+    "reason": "Phase 170 of 6 — needs a plan"
   },
-  "updated_at": "2026-10-08T02:02:31.566Z"
+  "updated_at": "2026-10-08T03:50:17.165Z"
 }
