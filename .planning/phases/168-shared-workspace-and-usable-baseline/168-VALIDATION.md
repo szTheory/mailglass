@@ -9,7 +9,7 @@ created: "2026-10-07"
 
 # Phase 168 — Validation Strategy
 
-Execution audit completed on 2026-10-08. All 21 tasks across Plans 01–09 have automated coverage and passing final results. Direct visual evidence and its limits are recorded separately in `168-BASELINE.md`; the baseline inventory retains its evidence labels and does not imply every specimen passed.
+Execution audit refreshed on 2026-10-08. All 23 tasks across Plans 01–10 have automated coverage and passing final results. Direct visual evidence and its limits are recorded separately in `168-BASELINE.md`; the baseline inventory retains its evidence labels and does not imply every specimen passed.
 
 ## Test Infrastructure
 
@@ -65,6 +65,8 @@ The same `168-BASELINE.md` specimen ledger is updated through the serialized wav
 | 168-09 T1 | 7 | UXF-04 | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep 'Phase 168 (Delivery Mailable wrapping|Account scope)'`; nonzero, fewer than two tests, `getZoom()` not exactly `2`, the combined zoom/viewport not exactly 320 CSS px, a shared control/radio label outside the viewport or clipping its box, or document horizontal overflow | At actual Chromium zoom 2, topbar controls and every radio label are checked for visibility, viewport bounds, element scroll geometry, and document overflow at both 720px and 320px CSS layout widths | T-168-16 | pass |
 | 168-09 T2 | 7 | UXF-03 | Same focused browser command; nonzero, fewer than two tests, rendered text differing from its complete expected fixture value, clipped/unreachable final character, 320px combined viewport/zoom failure, or document overflow | At actual Chromium zoom 2 and again at 320px CSS layout width, Delivery ID is compared with the selected row ID; Mailable/provider/provider-message ID with fixed fixture values; and event ID/recorded UTC timestamp with fixture attributes. The Delivery explanation is also checked at 320px. Element text-range/final-character and container geometry plus document overflow are checked. The selected first event has no provider event ID or provider-occurrence timestamp, and the test asserts both are absent rather than treating them as covered value examples. | T-168-16 | pass |
 | 168-09 T3 | 7 | UXF-08 | Same focused browser command; nonzero, fewer than two tests, no visible polite atomic pending status, a pending-status ID not matching the numeric token shape, changed committed Account/data while held, or stale pending status after completion | Real Account option click with held LiveView patch; checks `role=status`, `aria-live=polite`, `aria-atomic=true`, numeric ID independent of the tenant ID, old scope/data during pending, and new scope/status clear after release | T-168-16 | pass |
+| 168-10 T1 | 8 | UXF-03, D-03 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass_admin/components_test.exs test/mailglass_admin/operator/shell_test.exs --seed 1`; nonzero or zero tests | — | T-168-17 | pass |
+| 168-10 T2 | 8 | UXF-03, D-03 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass_admin/token_parity_test.exs --seed 1` and `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 168 shared spacing"`; nonzero, zero tests, an offending half-step class/missing source or bundle utility, or computed margin/row gap not equal to 4px | Existing browser case reads computed style from a rendered Inbound error icon and Preview scenario list using served CSS | T-168-17 | pass |
 
 ## UI-SPEC Criterion Allocation
 
@@ -145,3 +147,23 @@ Latest post-strengthening verification: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_
 ## Post-Audit Confirmation
 
 Corrective commit `ed53da64`: full ExUnit 513 tests, 0 failures, 1 excluded; full Playwright 184 passed, 0 failures, 1 guarded skip (2m36s); focused post-format Playwright 8 passed. Automated task coverage remains complete. Current generated/served CSS SHA-256: `c04faaedbf0bb15352be22f0afa040b7f87119a6a89f59e3d96c2012b6aa42b7`. Independent goal verification remains the final gate; visual Partial/N/A rows are not silently converted to passes.
+
+
+## Plan 10 Gap-Closure Validation 2026-10-08
+
+| Metric | Count |
+|---|---|
+| Plans / summaries audited | 10 / 10 |
+| Tasks with automated coverage | 23 / 23 |
+| Plan 09 behavioral regressions rechecked | 2 / 2 (existing recorded run) |
+| Plan 10 source/CSS ExUnit checks run | 135 passed, 0 failed |
+| Plan 10 rendered Playwright checks run | 1 passed, 0 failed |
+| Gaps found | 0 |
+| Resolved | 0 (existing assertions already cover both tasks) |
+| Escalated | 0 |
+
+Reviewed all ten PLAN/SUMMARY pairs, this validation map, Plan 10's source and browser assertions, and D-52 in `.planning/METHODOLOGY.md`. The TokenParity regression enumerates six templates, rejects half-step Tailwind spacing utilities with file/class diagnostics, and checks source and generated CSS for the 4px `--spacing-xs` token and `mt-xs`/`gap-xs` rules. The `Phase 168 shared spacing` Playwright case opens the existing Inbound and Preview fixtures and reads computed `marginTop` and `rowGap`; both must equal `4px`. No duplicate test was needed.
+
+Reran `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass_admin/token_parity_test.exs test/mailglass_admin/components_test.exs test/mailglass_admin/operator/shell_test.exs --seed 1` — **135 tests, 0 failures**. Reran `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 168 shared spacing"` — **1 passed, 0 failed**. Chromium initially failed to launch under the restricted sandbox (Mach-port permission); the same focused command passed with the approved elevated browser setup. Plan 10 summary records the asset build passing; it was not rerun because it writes the generated implementation bundle. No owner UAT is required under D-52.
+
+Current audit disposition: **23 / 23 tasks have automated coverage; Plans 09 and 10's focused checks pass; no gaps are open or escalated.**
