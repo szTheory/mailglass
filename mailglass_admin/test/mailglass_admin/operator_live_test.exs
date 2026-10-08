@@ -59,7 +59,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       )
 
       _html = render(view)
-      assert has_element?(view, "[data-testid='operator-delivery-row']", "Sent")
+      refute has_element?(view, "[data-testid='operator-delivery-row']", "Sent")
       assert has_element?(view, "[data-testid='operator-delivery-row']", "Delivered")
     end
 
@@ -1142,7 +1142,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-replay-modal")
       assert html =~ webhook_event.id
       assert html =~ webhook_event.provider_event_id
-      assert html =~ "Current records could not be refreshed. The exact reviewed request is retained."
+
+      assert html =~
+               "Current records could not be refreshed. The exact reviewed request is retained."
+
       assert replay_review_id(view) == review_id
       assert has_element?(view, "#operator-replay-confirm:not([disabled])")
       refute html =~ "Replaying the reviewed request…"
@@ -1152,7 +1155,12 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       retry_html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
       assert retry_html =~ "Webhook replay requested"
-      assert Enum.count(replay_audit_rows_for(webhook_event.id), &(&1.type == :webhook_replay_succeeded)) == 1
+
+      assert Enum.count(
+               replay_audit_rows_for(webhook_event.id),
+               &(&1.type == :webhook_replay_succeeded)
+             ) == 1
+
       assert [%{webhook_event_id: retried_target_id}] =
                MailglassAdmin.TestOperatorAuth.destructive_calls()
 
@@ -1183,7 +1191,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-replay-modal")
       assert html =~ webhook_event.id
       assert html =~ webhook_event.provider_event_id
-      assert html =~ "Current records could not be refreshed. The exact reviewed request is retained."
+
+      assert html =~
+               "Current records could not be refreshed. The exact reviewed request is retained."
+
       assert replay_review_id(view) == review_id
       assert has_element?(view, "#operator-replay-confirm:not([disabled])")
       refute html =~ "Replaying the reviewed request…"
@@ -1193,7 +1204,12 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       retry_html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
       assert retry_html =~ "Webhook replay requested"
-      assert Enum.count(replay_audit_rows_for(webhook_event.id), &(&1.type == :webhook_replay_succeeded)) == 1
+
+      assert Enum.count(
+               replay_audit_rows_for(webhook_event.id),
+               &(&1.type == :webhook_replay_succeeded)
+             ) == 1
+
       assert [%{webhook_event_id: retried_target_id}] =
                MailglassAdmin.TestOperatorAuth.destructive_calls()
 
@@ -2894,6 +2910,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
     test "exact support evidence fallback is scoped to the selected Account", %{conn: conn} do
       conn = operator_conn(conn)
       other_tenant_id = "g-168-7-account-b"
+
       _account_a_delivery =
         insert_delivery!(tenant_id: @tenant_id, provider_message_id: "g-168-7-account-a")
 
@@ -3055,7 +3072,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-deliveries-cards")
     end
 
-    test "desktop table separates stored Outcome from Latest event" do
+    test "desktop table shows the latest downstream outcome and event" do
       delivery = %{
         id: "test-delivery-id-002",
         tenant_id: "t1",
@@ -3085,7 +3102,6 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(scope="col")
       assert html =~ "Outcome"
       assert html =~ "Latest event"
-      assert html =~ "Sent"
       assert html =~ "Delivered"
     end
 
@@ -3397,19 +3413,30 @@ defmodule MailglassAdmin.OperatorLiveTest do
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "window_hours" => "168"}))
 
       assert has_element?(view, "[data-testid='operator-health-window']", "(168 hours)")
-      [initial_card] = Floki.find(Floki.parse_document!(html), "[data-testid='operator-overview-health-failures']")
+
+      [initial_card] =
+        Floki.find(
+          Floki.parse_document!(html),
+          "[data-testid='operator-overview-health-failures']"
+        )
+
       assert Floki.text(hd(Floki.find(initial_card, "p.mono"))) |> String.trim() == "1"
 
       # The last value remains valid as stale when a read for the same interval fails.
       OperatorFixtures.arm_reader_fault!("operator-1", "failed_ingest", :known)
-      render_patch(view, operator_path(%{
-        "tenant_id" => @tenant_id,
-        "event" => "opened",
-        "window_hours" => "168"
-      }))
+
+      render_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "event" => "opened",
+          "window_hours" => "168"
+        })
+      )
 
       same_window_html = render(view)
       assert has_element?(view, "[data-testid='operator-health-window']", "(168 hours)")
+
       [same_window_card] =
         Floki.find(
           Floki.parse_document!(same_window_html),
@@ -3422,14 +3449,19 @@ defmodule MailglassAdmin.OperatorLiveTest do
       # The same observation is outside 24 hours. A transient read in this new
       # interval must not relabel the 168-hour value as current or stale.
       OperatorFixtures.arm_reader_fault!("operator-1", "failed_ingest", :known)
-      render_patch(view, operator_path(%{
-        "tenant_id" => @tenant_id,
-        "event" => "opened",
-        "window_hours" => "24"
-      }))
+
+      render_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "event" => "opened",
+          "window_hours" => "24"
+        })
+      )
 
       changed_window_html = render(view)
       assert has_element?(view, "[data-testid='operator-health-window']", "(24 hours)")
+
       [changed_window_card] =
         Floki.find(
           Floki.parse_document!(changed_window_html),
