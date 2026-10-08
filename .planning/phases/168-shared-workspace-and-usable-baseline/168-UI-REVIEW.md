@@ -1,82 +1,75 @@
 # Phase 168 — UI Review
 
-**Audited:** 2026-10-08  
-**Baseline:** Approved `168-UI-SPEC.md` and the current source; authored Phase 168 screenshots were reviewed as historical evidence only.  
-**Screenshots:** not captured (server answered on `localhost:8080`, but Playwright CLI capture failed at desktop 1440×900, mobile 375×812, and tablet 768×1024).  
-**Interaction captures:** off (`workflow.ui_interaction_capture=false`)
+**Audited:** 2026-10-08
+**Baseline:** Approved `168-UI-SPEC.md`, the current implementation, all eight PLAN/SUMMARY pairs, UAT and verification records.
+**Screenshots:** captured and inspected from the current Playwright run: 320, 720 and 1440 CSS-pixel Deliveries views, 720 CSS-pixel Health, and a true 200% Chromium tab-zoom capture.
+**Interaction captures:** off (`workflow.ui_interaction_capture=false`); interaction findings below are derived from current source and Playwright assertions.
 
 ## Pillar Scores
 
 | Pillar | Score | Key Finding |
 |--------|-------|-------------|
-| 1. Copywriting | 3/4 | Shared Account chooser copy matches the contract, but the reusable stat card and overview fallback still offer generic or divergent empty-state copy. |
-| 2. Visuals | 2/4 | The account chooser and stat values now wrap, but navigation, preview names, list fields, and one Inbound quick-view identifier still hide full values behind hover-only titles or truncation. |
-| 3. Color | 2/4 | Semantic light/dark surfaces and active-row accents are established, yet primary accent colors informational icons, headings, and code beyond the contract's reserved roles. |
-| 4. Typography | 3/4 | The four declared type tokens and 400/700 weights are present, but 12px status badges and controls persist below the essential-label floor. |
-| 5. Spacing | 2/4 | The shared shell uses named 4px-grid tokens, while 114 hard-coded spacing utility occurrences remain across implementation files despite the no-off-grid rule. |
-| 6. Experience Design | 2/4 | Strong theme, feedback, overlay, and action states exist, but the Account switcher lacks explicit busy/rejection behavior and browser proof for the contract's retained-scope guarantee. |
+| 1. Copywriting | 3/4 | The unselected-Account overview offers “Go to Deliveries” instead of making Account selection its primary action. |
+| 2. Visuals | 1/4 | The actual-zoom screenshot shows the right side of the topbar and Delivery detail cut off, despite a passing check limited to two text elements. |
+| 3. Color | 3/4 | The semantic palette and restrained overall accent balance are sound, but informational content still uses the reserved primary accent. |
+| 4. Typography | 4/4 | Current source and browser assertions support the specified 14/16/20/28px roles, 400/700 weights, and status/navigation minimums. |
+| 5. Spacing | 3/4 | The old numeric-class count was a false positive, but 13 two-pixel spacing uses and an undefined `gap-2xs` utility remain. |
+| 6. Experience Design | 2/4 | Scope is retained during delayed Account patches, but the user receives no visible pending announcement; the Preview flash-key defect is fixed and covered. |
 
-**Overall: 14/24**
+**Overall: 16/24**
 
 ## Top 3 Priority Fixes
 
-1. **WARNING — Remove hover-only access to truncated labels and identifiers** — Keyboard and touch users can lose exact account, record, recipient, provider, and navigation values; wrap content where practical and offer a keyboard/touch-accessible full-value detail where not.
-2. **WARNING — Replace remaining off-grid spacing utilities** — 114 numeric spacing utility occurrences violate the explicit 4px token contract; migrate spacing to named tokens or equivalent values on the 4px scale, and retain arbitrary values only for non-spacing constraints.
-3. **WARNING — Complete Account-switch failure states** — The shared switcher currently patches directly to a new scope without visible pending or rejected-switch feedback; preserve the last committed Account and URL until success, announce failure, and capture delayed/rejected browser cases.
+1. **BLOCKER — Reconcile and correct the 200% layout clipping** — At true Chromium zoom, the retained capture shows Change Account cut off, Appearance outside the frame, and long detail text clipped; expand browser assertions to all required shell controls and rendered detail fields, then correct any actual clipping.
+2. **WARNING — Announce an Account switch while it is pending** — The delayed-switch regression proves Northstar remains committed while the response is held, but does not show the “pending work” cue required by E2; add a visible, live-region status and assert it in that same regression.
+3. **WARNING — Make Account selection the unselected-state action** — Replace or rework the overview’s “Go to Deliveries” CTA so a user with no selected Account can choose one directly, as the contract specifies.
 
 ## Detailed Findings
 
 ### Pillar 1: Copywriting (3/4)
 
-- **WARNING:** The canonical stat card still defaults to generic `No data yet` at [components.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/components.ex:434), and the Gallery supplies the same fallback at [gallery_live.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/gallery_live.ex:267). This component is reused on working screens; require a cause-specific `empty_text` or select copy by state and source.
-- **WARNING:** The overview's no-account fallback uses “Choose an Account” with a distinct body and a “Go to Deliveries” CTA ([operator_live.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator_live.ex:925)). The contract's shared empty state says “Select an Account to see scoped operator data.” and offers selection when available. Align this branch with that shared state and avoid a navigation CTA where no data-selection action is represented.
-- Shared chooser copy in [shell.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/shell.ex:370) and Delivery empty/error copy in [deliveries_list.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/deliveries_list.ex:58) match their specific purposes. Replay confirmation distinguishes pending and completion states.
+- **WARNING:** The no-Account overview uses the correct “Choose an Account” heading and “Select an Account to see scoped operator data.” body, but then presents “Go to Deliveries” as its CTA ([operator_live.ex:921](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator_live.ex:921)). The contract’s primary CTA is `Choose Account`; the current link changes surface without selecting scope. Make the available Account choices actionable in this state or change the CTA to the actual selection action.
+- The shared chooser preserves the required distinction between `Choose Account`, `Choose an Account`, and `No Accounts with mail activity` ([shell.ex:264](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/shell.ex:264), [shell.ex:370](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/shell.ex:370)). Error and retry copy names the failure and recovery action.
+- `No data yet` remains a generic default in the reusable stat component and Gallery ([components.ex:435](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/components.ex:435), [gallery_live.ex:267](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/gallery_live.ex:267)); current operator consumers supply cause-specific copy, so this is not counted as an active working-screen defect.
 
-### Pillar 2: Visuals (2/4)
+### Pillar 2: Visuals (1/4)
 
-- **WARNING:** The Account chooser itself has improved: the current row wraps the host label and renders `tenant_id` directly ([shell.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/shell.ex:396)). The previous report's chooser-truncation finding is stale and was not carried forward.
-- **WARNING:** Navigation primitives still use `truncate` with `title` as their only full-label affordance ([components.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/components.ex:249), `:267`, `:285`, `:313`, `:329`, `:345`). `tenant_chip` also truncates the Account value and puts its detail only in `title` ([components.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/components.ex:362)). These fail the long-text and no-hover-only requirements.
-- **WARNING:** Delivery rows truncate recipient, Account, and provider values with titles at [deliveries_list.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/deliveries_list.ex:178); the table variant additionally truncates the record ID. Inbound collection uses similar patterns. Inbound Quick view truncates its Record ID with a title ([quick_view.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex:132)); the full ID should wrap as in the Delivery Quick view.
-- The main composition uses a bounded content frame, visible Account scope, responsive sidebar/mobile navigation, and consistent headings. Current source was audited without a fresh screenshot; authored captures from the plans cannot establish current rendering after later source edits.
+- **BLOCKER:** The current [200% Chromium screenshot](artifacts/gap-closure/delivery-200-browser-zoom.png) visibly clips the topbar at its right edge: `Change Account` is cut off and the Appearance control is absent. Long Delivery detail text, the provider name, and the event ID/time also continue beyond the captured right edge. The 320/720 CSS-pixel captures show those controls and fields in-frame, so the actual-zoom artifact conflicts with the resized-viewport evidence.
+- The Playwright case sets and reads back zoom factor `2`, but checks geometry and final-character bounds only for the page description and one Mailable string ([flows.spec.js:676](/Users/jon/projects/mailglass/mailglass_admin/e2e/flows.spec.js:676), [flows.spec.js:717](/Users/jon/projects/mailglass/mailglass_admin/e2e/flows.spec.js:717)). It does not assert that Account switching, Appearance, the full record identity, provider details, or timeline content remain visible. Expand the automated bounds/accessibility checks to the contract’s essential controls and values; the retained screenshot cannot be reconciled with a blanket “200% content fits” claim yet.
+- Desktop composition, active-section cue, account identity, surface hierarchy, and card grouping are otherwise clear in the 1440px capture. The current screenshot is also a useful example of what the test needs to cover, not a reason to soften this score.
 
-### Pillar 3: Color (2/4)
+### Pillar 3: Color (3/4)
 
-- Light/dark semantic palettes map Paper/Ink grounds and raised surfaces as specified in [app.css](/Users/jon/projects/mailglass/mailglass_admin/assets/css/app.css:32). Active navigation, selected rows, focus rings, and primary controls use accent tokens in contract-aligned roles.
-- **WARNING:** Accent is also used for informational/support icons and informational headings, including chooser/help icons ([shell.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/shell.ex:367)), the “Email previews” label and selected check ([sidebar.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/preview/sidebar.ex:52)), and instructional checks/code in preview ([preview_live.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/preview_live.ex:453)). The contract reserves accent for selection, primary CTA, active navigation/timeline cue, and keyboard focus. Use semantic info or neutral tones for informational content.
-- There are 24 source lines containing `text-primary`, `bg-primary`, `border-primary`, or `ring-primary` across the implementation; several lines contain multiple elements. No hard-coded hex/RGB values were found in HEEx/Elixir implementation files. This is a source-use check, not a rendered 60/30/10 area measurement.
+- Semantic light/dark tokens remain centralized in [app.css:25](/Users/jon/projects/mailglass/mailglass_admin/assets/css/app.css:25); the inspected light views keep Paper as the dominant ground, white task cards secondary, and the active Deliveries cue restrained. Status still has explicit text/icon semantics.
+- **WARNING:** Informational icons and the information severity use `text-primary`, mapping them to the accent reserved by the contract for selection, primary actions, active navigation/timeline cues, and focus. Examples include the no-Account/help icons ([shell.ex:367](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/shell.ex:367), [shell.ex:383](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/shell.ex:383)) and `stat_severity_class(:info)` ([components.ex:804](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/components.ex:804)); `preview/sidebar.ex:52` also uses primary for the informational “Email previews” label. Use semantic info or neutral tokens for these supporting cues.
+- The source scan found no hard-coded hex/RGB color in HEEx/Elixir files. Utility counts alone do not establish a 60/30/10 pixel-area split; current screenshots support the overall restrained distribution.
 
-### Pillar 4: Typography (3/4)
+### Pillar 4: Typography (4/4)
 
-- The stylesheet defines the contract's 14/16/20/28px rem tokens and loads only 400/700 for the UI font roles ([app.css](/Users/jon/projects/mailglass/mailglass_admin/assets/css/app.css:117)). Source class tokens use `text-label`, `text-body`, `text-heading`, and `text-display`; weights are predominantly `font-bold`/`font-normal` (400/700 mapping per the project font setup).
-- **WARNING:** Status badge variants still use daisyUI's `badge-sm`, e.g. [components.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/components.ex:209); the size utility can reduce visible status text below the 14px label floor. The contract requires essential labels and status to stop using 12px text. Explicitly size essential compact badges and verify computed styles.
-- Copy areas and supporting metadata mostly use declared 14px labels or 16px body. The source class scan found no explicit `text-xs`, `text-sm`, or `text-lg` utility tokens in HEEx/Elixir, though third-party utility variants may still set smaller computed type.
+- The stylesheet defines the approved label/body/heading/display roles as 14/16/20/28px rem values ([app.css:117](/Users/jon/projects/mailglass/mailglass_admin/assets/css/app.css:117)); implementation class scans found only those named sizes and normal/bold weights. IBM Plex Mono is used for exact identifiers.
+- The current browser regression measures body, badge, and navigation sizes and requires the badge/navigation minimum of 14px ([flows.spec.js:1136](/Users/jon/projects/mailglass/mailglass_admin/e2e/flows.spec.js:1136)). The earlier concern about `badge-sm` is stale: the class is present, but the live computed-size check confirms status text clears the label floor.
 
-### Pillar 5: Spacing (2/4)
+### Pillar 5: Spacing (3/4)
 
-- Named tokens exist at 4/8/16/24/32/48/64px in [app.css](/Users/jon/projects/mailglass/mailglass_admin/assets/css/app.css:109), and the shared shell mostly uses them.
-- **WARNING:** A source scan found 114 occurrences of hard-coded numeric spacing utilities in `mailglass_admin/lib/mailglass_admin` files. Examples: `mt-2`, `gap-1`, `space-y-4`, `mt-6`, `px-4`, `py-3`, and `p-6` in [shell.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/shell.ex:438), [operator_live.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator_live.ex:970), and [replay_modal.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex:41). Some happen to equal 4px-grid values, but they bypass the declared named scale and include off-grid values such as `mt-6` (24px in Tailwind's scale is on-grid, while `mt-0.5` and `gap-0.5` are 2px and violate it). Convert 2px values and use consistent token intent for all spacing.
-- **WARNING:** Arbitrary dimension classes such as `max-w-[18rem]` and viewport-bounded menu widths are constraints rather than spacing and can remain; arbitrary margins/paddings/gaps should not.
+- **WARNING:** The previous review’s “114 numeric spacing utilities” finding was incorrect: `mt-1`, `p-4`, and similar values can map exactly to the approved 4px grid. That count is withdrawn.
+- **WARNING:** Thirteen remaining `mt-0.5`/`gap-0.5` usages apply 2px spacing, outside the declared grid; examples are icon alignment in [shell.ex:314](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/shell.ex:314) and Preview sidebar rows ([sidebar.ex:173](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/preview/sidebar.ex:173)). Replace with an approved value or document a narrowly justified optical alignment exception.
+- **WARNING:** `gap-2xs` is used for the Inbound evidence controls ([evidence_card.ex:49](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex:49)) but is absent from the generated `priv/static/app.css`; no spacing is applied between those children. Use an existing `gap-xs` token or define/build the intended token. The named 4px-grid scale itself remains correct ([app.css:109](/Users/jon/projects/mailglass/mailglass_admin/assets/css/app.css:109)).
 
 ### Pillar 6: Experience Design (2/4)
 
-- Theme preference uses visible native radios; system preference and OS changes, persistent explicit selection, reduced motion, feedback, and repeated patches have focused browser evidence in Plan 03/04 summaries. Quick view and replay confirmation cover named overlays, pending/disabled action, exact-target review, keyboard dismissal, focus return, and authorization-sensitive outcomes.
-- **WARNING — behavior contract gap:** The shared Account option is a direct LiveView `patch` link ([shell.ex](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/shell.ex:280)); the component has no local busy state or switch-specific status. Existing flash regions exist, but source does not provide the contract's “Account was not changed. Try choosing it again.” failure path for a rejected scope load. Add explicit loading/rejection state that preserves the committed Account and data until the new selection succeeds.
-- **WARNING — rendered evidence gap:** The plan 04 summary reports Account switching coverage, but the fresh audit could not capture browser states because Playwright produced no images from the responding server. The UI-SPEC specifically calls for delayed and rejected switching plus retained prior scope. Existing test artifacts are evidence of prior behavior only; ensure those cases remain exercised in current browser acceptance.
-- Loading, empty, unavailable, stale, and validation state patterns exist across shared data components and operator screens. A fresh 320/390/768/1440, zoom, keyboard/touch, and theme matrix was not recaptured in this audit.
+- **WARNING:** Account switching is a real URL-backed LiveView patch ([shell.ex:280](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/operator/shell.ex:280)). The current delayed-response case holds the server reply and asserts the previously committed Account and Delivery row remain visible until the response commits ([flows.spec.js:1114](/Users/jon/projects/mailglass/mailglass_admin/e2e/flows.spec.js:1114)). It does not present or assert a pending status, although the UI-SPEC requires pending work to be identified and announced. Add a visible shared live-region status and assert the busy and settled states in this regression.
+- A distinct rejected-switch message remains `N/A` for this host integration: Account options are activity-derived and do not authorize access, and the read routes expose no distinct denied-switch result. Do not infer denial from the option list or invent a product error state.
+- **Resolved in current code and evidence:** the shared flash component now accepts a backing `flash_key` separate from presentation `kind`, and Preview passes `flash_key={:info}` while retaining success styling ([components.ex:142](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/components.ex:142), [components.ex:176](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/components.ex:176), [preview_live.ex:505](/Users/jon/projects/mailglass/mailglass_admin/lib/mailglass_admin/preview_live.ex:505)). Tagged LiveView test `g_168_8` triggers the actual Preview message, clicks its dismiss control, and verifies it disappears ([preview_live_test.exs:652](/Users/jon/projects/mailglass/mailglass_admin/test/mailglass_admin/preview_live_test.exs:652)); no flash-key finding remains.
+- Quick view/replay focus, disabled pending action, scope isolation, theme selection, reduced motion, and cause-specific empty/error handling have focused coverage. The full Playwright result is **198 passed, 0 failed, 1 existing guarded skip**; ExUnit is **550 tests, 0 failures, 1 excluded**. These are current suite results recorded in `168-08-SUMMARY.md` and `168-VERIFICATION.md`.
+
+## Irreducible Visual Judgment
+
+The screenshot-based 200% clipping above is an observable acceptance defect, not a request for owner taste. Beyond that, no unresolved subjective design choice blocks this review: the D-52 contract leaves machine-observable criteria to automated evidence and does not leave owner UAT when current evidence covers them. The active findings are concrete, fixable contract gaps.
 
 ## Files Audited
 
-- `.planning/phases/168-shared-workspace-and-usable-baseline/168-01-SUMMARY.md` through `168-04-SUMMARY.md`
-- `.planning/phases/168-shared-workspace-and-usable-baseline/168-01-PLAN.md` through `168-04-PLAN.md`
-- `.planning/phases/168-shared-workspace-and-usable-baseline/168-UI-SPEC.md`
-- `.planning/phases/168-shared-workspace-and-usable-baseline/168-CONTEXT.md`
-- `mailglass_admin/lib/mailglass_admin/admin_shell.ex`
-- `mailglass_admin/lib/mailglass_admin/components.ex`
-- `mailglass_admin/lib/mailglass_admin/operator/shell.ex`
-- `mailglass_admin/lib/mailglass_admin/operator_live.ex`
-- `mailglass_admin/lib/mailglass_admin/operator/{deliveries_list,quick_view,replay_modal,detail_header}.ex`
-- `mailglass_admin/lib/mailglass_admin/inbound/{quick_view,detail_header,records_list}.ex`
-- `mailglass_admin/lib/mailglass_admin/preview/{sidebar,device_frame,tabs}.ex`, `preview_live.ex`
-- `mailglass_admin/lib/mailglass_admin/operator/support_cards.ex`
-- `mailglass_admin/assets/css/app.css`
-
+- `.planning/phases/168-shared-workspace-and-usable-baseline/168-01-PLAN.md` through `168-08-PLAN.md` and all eight matching `*-SUMMARY.md` files
+- `.planning/phases/168-shared-workspace-and-usable-baseline/168-UI-SPEC.md`, `168-CONTEXT.md`, `168-UAT.md`, `168-VERIFICATION.md`, `168-VALIDATION.md`, `168-BASELINE.md`, and the previous `168-UI-REVIEW.md`
+- Current screenshots: `artifacts/gap-closure/{delivery-200-browser-zoom,delivery-320-css,delivery-720-css,delivery-1440-css,health-720-css}.png`
+- `mailglass_admin/lib/mailglass_admin/admin_shell.ex`, `components.ex`, `operator/shell.ex`, `operator_live.ex`, `operator/deliveries_list.ex`, `operator/timeline.ex`, `operator/support_cards.ex`, `inbound/evidence_card.ex`, `preview/sidebar.ex`, and `preview_live.ex`
+- `mailglass_admin/assets/css/app.css`, `mailglass_admin/priv/static/app.css`, `mailglass_admin/e2e/flows.spec.js`, and `mailglass_admin/test/mailglass_admin/preview_live_test.exs`
