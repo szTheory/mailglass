@@ -195,12 +195,23 @@ defmodule Mailglass.Operator.SupportSummaryTest do
                delivery_id: nil
              }
 
+      processed = insert_webhook_event!(%{tenant_id: "tenant-a", status: :succeeded})
+
+      assert SupportSummary.get_webhook_event("tenant-a", processed.id) == %{
+               webhook_event_id: processed.id,
+               provider: "postmark",
+               provider_event_id: processed.provider_event_id,
+               received_at: processed.received_at,
+               status: :succeeded,
+               delivery_id: nil
+             }
+
       assert SupportSummary.get_webhook_event("tenant-a", Ecto.UUID.generate()) == nil
       assert SupportSummary.get_webhook_event("tenant-a", foreign.id) == nil
     end
 
     test "returns exact unlinked and linked Account events without requiring a Delivery" do
-      %{orphan: orphan, replay: replay} = seed_support_facts()
+      %{orphan: orphan, replay: replay, reconciled: reconciliation_facts} = seed_support_facts()
 
       assert SupportSummary.get_unmatched_event("tenant-a", orphan.unresolved.id) == %{
                event_id: orphan.unresolved.id,
@@ -209,13 +220,20 @@ defmodule Mailglass.Operator.SupportSummaryTest do
                provider_event_id: "orphan-open",
                webhook_event_id: nil,
                delivery_id: nil,
-               event_type: :delivered
+               event_type: :delivered,
+               reconciled_event_id: nil
              }
 
       linked = SupportSummary.get_unmatched_event("tenant-a", replay.replayed.id)
 
       assert linked.delivery_id == replay.delivery.id
       assert linked.event_id == replay.replayed.id
+      assert linked.reconciled_event_id == nil
+
+      resolved = SupportSummary.get_unmatched_event("tenant-a", reconciliation_facts.orphan.id)
+      assert resolved.delivery_id == reconciliation_facts.delivery.id
+      assert resolved.reconciled_event_id == reconciliation_facts.event.id
+      assert resolved.event_type == :delivered
       assert SupportSummary.get_unmatched_event("tenant-a", Ecto.UUID.generate()) == nil
     end
 

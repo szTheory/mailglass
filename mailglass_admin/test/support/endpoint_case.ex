@@ -274,7 +274,7 @@ defmodule MailglassAdmin.TestOperatorHook do
       end
 
     fault =
-      if requested_fault in ["deliveries", "exact_delivery", "replay_history"],
+      if requested_fault in ["deliveries", "exact_delivery", "replay_history", "replay_targets"],
         do: requested_fault,
         else: nil
 
@@ -315,8 +315,7 @@ defmodule MailglassAdmin.TestOperatorAuth do
   def destructive_calls, do: :persistent_term.get({__MODULE__, :destructive_calls}, [])
 
   def authorize(:operator_access, %{actor: %{subject_id: nil}}) do
-    {:error, :unauthorized,
-     %{message: "Operator access requires a signed-in actor.", to: "/login"}}
+    {:error, :unauthorized, %{message: "Operator access requires a signed-in actor.", to: "/login"}}
   end
 
   def authorize(:operator_access, %{actor: %{subject_id: "blocked"}}) do

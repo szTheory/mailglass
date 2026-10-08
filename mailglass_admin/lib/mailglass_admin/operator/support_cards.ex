@@ -102,9 +102,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
           <div :if={@exact_support_evidence.focus == :orphan_backlog}>
             <dt class="text-label uppercase font-bold">Delivery relationship</dt>
             <dd class="mt-xs text-base-content">
-              {if @exact_support_evidence.record.delivery_id,
-                do: "Linked Delivery: #{@exact_support_evidence.record.delivery_id}",
-                else: "No Delivery linkage is recorded for this Event."}
+              {exact_event_relationship(@exact_support_evidence.record)}
             </dd>
             <.link
               :if={@exact_delivery_path}
@@ -340,8 +338,8 @@ defmodule MailglassAdmin.Operator.SupportCards do
     """
   end
 
-  defp exact_evidence_title(:failed_ingest), do: "Exact failed webhook"
-  defp exact_evidence_title(:orphan_backlog), do: "Exact unmatched Event"
+  defp exact_evidence_title(:failed_ingest), do: "Exact Account webhook"
+  defp exact_evidence_title(:orphan_backlog), do: "Exact Account Event"
   defp exact_evidence_title(_evidence), do: "Exact support record"
 
   defp summary_count(summary, key) do
@@ -378,6 +376,16 @@ defmodule MailglassAdmin.Operator.SupportCards do
 
   defp exact_recorded_at(_evidence), do: "Unavailable"
 
+  defp exact_event_relationship(%{reconciled_event_id: reconciliation_id, delivery_id: delivery_id})
+       when is_binary(reconciliation_id) and is_binary(delivery_id),
+       do: "Resolved by reconciliation Event #{reconciliation_id}; linked Delivery: #{delivery_id}."
+
+  defp exact_event_relationship(%{delivery_id: delivery_id}) when is_binary(delivery_id),
+    do: "Linked Delivery: #{delivery_id}."
+
+  defp exact_event_relationship(_record),
+    do: "No Delivery linkage is recorded for this Event."
+
   defp exact_status(%{record: %{status: status}}) when is_atom(status),
     do: status |> Atom.to_string() |> String.capitalize()
 
@@ -393,6 +401,12 @@ defmodule MailglassAdmin.Operator.SupportCards do
   defp replay_count_summary(counts) do
     "failed #{counts.failed} · no change #{counts.noop} · new work #{counts.replayed}"
   end
+
+  defp drilldown_banner(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),
+    do: "Showing exact Account webhook row"
+
+  defp drilldown_banner(%{focus: :orphan_backlog, event_id: id}) when is_binary(id),
+    do: "Showing exact Account Event"
 
   defp drilldown_banner(%{focus: :failed_ingest}), do: "Showing failed ingest webhook row"
   defp drilldown_banner(%{focus: :orphan_backlog}), do: "Showing unmatched webhook evidence"

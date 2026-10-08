@@ -303,8 +303,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
   defp seeded_replay_webhook!(provider_event_id) do
     TestRepo.one!(
       from(webhook in WebhookEvent,
-        where:
-          webhook.tenant_id == ^@tenant_id and webhook.provider_event_id == ^provider_event_id,
+        where: webhook.tenant_id == ^@tenant_id and webhook.provider_event_id == ^provider_event_id,
         limit: 1
       )
     )
@@ -597,7 +596,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   def arm_reader_fault!(session_key, operation, kind)
       when is_binary(session_key) and is_binary(operation) and kind in [:known, :unexpected] do
-    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event delivery_timeline selected_delivery_event delivery_suppression replay_history) do
+    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event delivery_timeline selected_delivery_event delivery_suppression replay_history replay_targets) do
       raise ArgumentError, "unsupported test reader operation"
     end
 

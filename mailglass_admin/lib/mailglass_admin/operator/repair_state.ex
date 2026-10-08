@@ -84,8 +84,7 @@ defmodule MailglassAdmin.Operator.RepairState do
     do: "Replay command completed with no newly normalized Events."
 
   def command_feedback(_result),
-    do:
-      "Replay command completed. Its result does not establish provider receipt or mail delivery."
+    do: "Replay command completed. Its result does not establish provider receipt or mail delivery."
 
   @spec flash_failure(term()) :: String.t()
   def flash_failure(:webhook_event_not_found),
@@ -183,6 +182,10 @@ defmodule MailglassAdmin.Operator.RepairState do
 
   def unavailable_reason_copy(:missing_replay_linkage),
     do: "Historical rows without exact webhook linkage cannot be replayed safely."
+
+  def unavailable_reason_copy(:read_unavailable),
+    do:
+      "Current replay targets could not be refreshed. Close this review and open it again to retry."
 
   def unavailable_reason_copy(:no_delivery_events),
     do: "This delivery does not yet have any linked webhook events to replay."

@@ -117,21 +117,53 @@ defmodule Mailglass.Operator.SupportSummary do
   @spec get_unmatched_event(String.t(), String.t()) :: map() | nil
   def get_unmatched_event(tenant_id, event_id)
       when is_binary(tenant_id) and tenant_id != "" and is_binary(event_id) do
-    from(event in Event,
-      where: event.tenant_id == ^tenant_id,
-      where: event.id == ^event_id,
-      select: %{
-        event_id: event.id,
-        occurred_at: event.occurred_at,
-        provider: fragment("?->>'provider'", event.metadata),
-        provider_event_id: fragment("?->>'provider_event_id'", event.metadata),
-        webhook_event_id: fragment("?->>'webhook_event_id'", event.metadata),
-        delivery_id: event.delivery_id,
-        event_type: event.type
-      }
-    )
-    |> Tenancy.scope(tenant_id)
-    |> Repo.one()
+    event =
+      from(event in Event,
+        where: event.tenant_id == ^tenant_id,
+        where: event.id == ^event_id,
+        select: %{
+          event_id: event.id,
+          occurred_at: event.occurred_at,
+          provider: fragment("?->>'provider'", event.metadata),
+          provider_event_id: fragment("?->>'provider_event_id'", event.metadata),
+          webhook_event_id: fragment("?->>'webhook_event_id'", event.metadata),
+          delivery_id: event.delivery_id,
+          event_type: event.type
+        }
+      )
+      |> Tenancy.scope(tenant_id)
+      |> Repo.one()
+
+    case event do
+      nil ->
+        nil
+
+      %{delivery_id: nil} = event ->
+        reconciliation =
+          from(reconciled in Event,
+            where: reconciled.tenant_id == ^tenant_id,
+            where: reconciled.type == :reconciled,
+            where:
+              fragment(
+                "?->>'reconciled_from_event_id' = ?",
+                reconciled.metadata,
+                ^event.event_id
+              ),
+            order_by: [desc: reconciled.occurred_at, desc: reconciled.inserted_at],
+            limit: 1,
+            select: %{delivery_id: reconciled.delivery_id, event_id: reconciled.id}
+          )
+          |> Tenancy.scope(tenant_id)
+          |> Repo.one()
+
+        Map.merge(event, %{
+          delivery_id: reconciliation && reconciliation.delivery_id,
+          reconciled_event_id: reconciliation && reconciliation.event_id
+        })
+
+      event ->
+        Map.put(event, :reconciled_event_id, nil)
+    end
   end
 
   defp failed_ingest_summary(tenant_id, window_started_at) do

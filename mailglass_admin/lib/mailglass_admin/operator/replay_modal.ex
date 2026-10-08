@@ -13,6 +13,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
   attr(:delivery, :map, default: nil)
   attr(:replay_targets, :map, default: nil)
   attr(:selected_target_id, :string, default: nil)
+  attr(:review_id, :string, default: nil)
   attr(:account_label, :string, default: nil)
   attr(:pending?, :boolean, default: false)
   attr(:consumed?, :boolean, default: false)
@@ -152,6 +153,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               id="operator-replay-confirm"
               type="button"
               phx-click={JS.push("confirm_replay") |> JS.focus(to: "#operator-replay-close")}
+              phx-value-review={@review_id}
               phx-disable-with="Replaying…"
               disabled={@pending? or @consumed?}
               aria-live="polite"

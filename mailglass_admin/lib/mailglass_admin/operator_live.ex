@@ -94,6 +94,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:replay_modal_open?, false)
       |> assign(:replay_selected_target_id, nil)
       |> assign(:replay_review_snapshot, nil)
+      |> assign(:replay_review_id, nil)
       |> assign(:replay_review_consumed?, false)
       |> assign(:replay_pending?, false)
       |> assign(:recent_auth_at, get_in(socket.assigns, [:operator_actor, :recent_auth_at]))
@@ -408,15 +409,24 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("open_replay", _params, socket) do
-    replay_targets = socket.assigns.replay_targets
+    replay_targets =
+      load_replay_targets(
+        socket.assigns.filter_params,
+        socket.assigns.selected_delivery,
+        socket.assigns[:operator_read_fault]
+      )
+
     selected_target_id = default_replay_target_id(replay_targets)
+    review_id = Ecto.UUID.generate()
 
     {:noreply,
      socket
+     |> assign(:replay_targets, replay_targets)
      |> assign(:replay_modal_open?, true)
      |> assign(:replay_command_feedback, nil)
      |> assign(:replay_selected_target_id, selected_target_id)
      |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
+     |> assign(:replay_review_id, review_id)
      |> assign(:replay_review_consumed?, false)
      |> assign(:replay_pending?, false)}
   end
@@ -516,8 +526,14 @@ defmodule MailglassAdmin.OperatorLive do
 
   def handle_event(
         "confirm_replay",
-        _params,
-        %{assigns: %{replay_modal_open?: true, replay_review_consumed?: false}} = socket
+        %{"review" => review_id},
+        %{
+          assigns: %{
+            replay_modal_open?: true,
+            replay_review_consumed?: false,
+            replay_review_id: review_id
+          }
+        } = socket
       ) do
     socket =
       socket
@@ -1207,6 +1223,7 @@ defmodule MailglassAdmin.OperatorLive do
                 delivery={@selected_delivery}
                 replay_targets={@replay_targets}
                 selected_target_id={@replay_selected_target_id}
+                review_id={@replay_review_id}
                 account_label={Accounts.label(@selected_tenant_id, @account_labels)}
                 pending?={@replay_pending?}
                 consumed?={@replay_review_consumed?}
@@ -1528,8 +1545,7 @@ defmodule MailglassAdmin.OperatorLive do
     do: "This delivery link is invalid. Return to deliveries and open a listed record."
 
   defp detail_error_copy(:not_found),
-    do:
-      "This delivery is not available in the selected Account. Return to deliveries to continue."
+    do: "This delivery is not available in the selected Account. Return to deliveries to continue."
 
   defp detail_error_copy(:unavailable),
     do:
@@ -1538,9 +1554,11 @@ defmodule MailglassAdmin.OperatorLive do
   defp detail_error_copy(_),
     do: "Delivery details are unavailable. Return to deliveries to continue."
 
-  defp load_replay_targets(_filter_params, nil), do: nil
+  defp load_replay_targets(_filter_params, nil, _read_fault), do: nil
 
-  defp load_replay_targets(filter_params, delivery) do
+  defp load_replay_targets(filter_params, delivery, read_fault) do
+    run_read_fault(read_fault, :replay_targets)
+
     case ReplayTargets.list_delivery_targets(%{
            tenant_id: filter_params["tenant_id"],
            delivery_id: delivery.id
@@ -1551,6 +1569,13 @@ defmodule MailglassAdmin.OperatorLive do
       {:error, _reason} ->
         %{status: :unavailable, reason: :missing_replay_linkage, candidates: []}
     end
+  rescue
+    error ->
+      if transient_read_error?(error) do
+        %{status: :unavailable, reason: :read_unavailable, candidates: []}
+      else
+        reraise(error, __STACKTRACE__)
+      end
   end
 
   defp load_replay_history(_filter_params, nil, _read_fault, _prior_history),
@@ -1587,14 +1612,14 @@ defmodule MailglassAdmin.OperatorLive do
     replay_command_feedback =
       if prior_delivery && prior_delivery.id == selected_delivery_id &&
            prior_delivery.tenant_id == filter_params["tenant_id"],
-        do: socket.assigns[:replay_command_feedback],
-        else: nil
+         do: socket.assigns[:replay_command_feedback],
+         else: nil
 
     prior_replay_history =
       if prior_delivery && prior_delivery.id == selected_delivery_id &&
            prior_delivery.tenant_id == filter_params["tenant_id"],
-        do: socket.assigns.replay_history,
-        else: []
+         do: socket.assigns.replay_history,
+         else: []
 
     {deliveries, page_meta, deliveries_read_state} =
       case read_deliveries_page(filter_params, socket.assigns[:operator_read_fault]) do
@@ -1618,7 +1643,14 @@ defmodule MailglassAdmin.OperatorLive do
       )
 
     replay_targets =
-      if full?, do: load_replay_targets(filter_params, selected_delivery), else: nil
+      if full?,
+        do:
+          load_replay_targets(
+            filter_params,
+            selected_delivery,
+            socket.assigns[:operator_read_fault]
+          ),
+        else: nil
 
     {replay_history, replay_history_read_state} =
       if full?,
@@ -1909,8 +1941,7 @@ defmodule MailglassAdmin.OperatorLive do
       summary = %{
         failed_ingest: failed || %{count: nil, latest: nil},
         orphan_backlog: orphan || %{count: nil, oldest: nil, oldest_age_seconds: nil},
-        replay_outcomes:
-          replay || %{counts: %{failed: nil, noop: nil, replayed: nil}, latest: nil},
+        replay_outcomes: replay || %{counts: %{failed: nil, noop: nil, replayed: nil}, latest: nil},
         reconcile_facts:
           reconcile ||
             %{
@@ -1983,6 +2014,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:replay_modal_open?, false)
     |> assign(:replay_selected_target_id, default_replay_target_id(socket.assigns.replay_targets))
     |> assign(:replay_review_snapshot, nil)
+    |> assign(:replay_review_id, nil)
     |> assign(:replay_review_consumed?, false)
     |> assign(:replay_pending?, false)
   end
@@ -2563,11 +2595,25 @@ defmodule MailglassAdmin.OperatorLive do
   defp support_focus?(%{focus: focus}), do: not is_nil(focus)
   defp support_focus?(_support_state), do: false
 
+  defp support_focus_title(%{focus: :orphan_backlog, event_id: id}) when is_binary(id),
+    do: "Exact Account Event"
+
+  defp support_focus_title(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),
+    do: "Exact Account webhook"
+
   defp support_focus_title(%{focus: :orphan_backlog}), do: "Unmatched webhook evidence"
   defp support_focus_title(%{focus: :failed_ingest}), do: "Failure evidence"
   defp support_focus_title(%{focus: :replay_outcomes}), do: "Replay evidence"
   defp support_focus_title(%{focus: :reconcile_facts}), do: "Reconcile evidence"
   defp support_focus_title(_support_state), do: "Support evidence"
+
+  defp support_focus_body(%{focus: :orphan_backlog, event_id: id}) when is_binary(id),
+    do:
+      "The requested Account Event is retained below. Its current Delivery relationship may mean it is no longer part of the unmatched population."
+
+  defp support_focus_body(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),
+    do:
+      "The requested Account webhook row is retained below with its current stored status, which may differ from the failed-attempt population that linked here."
 
   defp support_focus_body(%{focus: :orphan_backlog}),
     do:

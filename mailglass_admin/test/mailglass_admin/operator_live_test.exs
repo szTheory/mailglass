@@ -1014,20 +1014,108 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       view |> element("[data-testid='operator-replay-open']") |> render_click()
+      old_review_id = replay_review_id(view)
 
       TestRepo.delete!(reviewed)
 
-      _replacement =
+      replacement =
         insert_webhook_event!(
           provider_event_id: "replacement-652",
           raw_payload: raw_postmark_payload(delivery.provider_message_id, 653)
         )
+
+      insert_linked_event!(delivery, replacement, "seed-replacement-652")
 
       html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
 
       assert html =~ "This webhook request changed or is no longer eligible."
       assert replay_audit_rows_for(reviewed.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      view |> element("#operator-replay-close") |> render_click()
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+
+      fresh_review_id = replay_review_id(view)
+      refute fresh_review_id == old_review_id
+      assert render(view) =~ "replacement-652"
+
+      # A queued Confirm from the rejected review cannot consume the new review.
+      render_hook(view, "confirm_replay", %{"review" => old_review_id})
+      assert replay_audit_rows_for(reviewed.id) == []
+      assert replay_audit_rows_for(replacement.id) == []
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      render_hook(view, "confirm_replay", %{"review" => fresh_review_id})
+
+      assert Enum.count(
+               replay_audit_rows_for(replacement.id),
+               &(&1.type == :webhook_replay_succeeded)
+             ) == 1
+
+      assert replay_audit_rows_for(reviewed.id) == []
+
+      assert [%{webhook_event_id: replacement_id}] =
+               MailglassAdmin.TestOperatorAuth.destructive_calls()
+
+      assert replacement_id == replacement.id
+    end
+
+    test "removed replay target refreshes to unavailable after an explicit new review", %{
+      conn: conn
+    } do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      conn = operator_conn(conn)
+      {delivery, reviewed} = insert_exact_replay_fixture!("msg-removed-review", 653)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+      old_review_id = replay_review_id(view)
+      TestRepo.delete!(reviewed)
+
+      html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+      assert html =~ "This webhook request changed or is no longer eligible."
+      assert replay_audit_rows_for(reviewed.id) == []
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      view |> element("#operator-replay-close") |> render_click()
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+
+      html = render(view)
+      assert html =~ "Replay unavailable"
+      assert html =~ "Historical rows without exact webhook linkage"
+      refute html =~ ~s(data-testid="operator-replay-confirm")
+
+      render_hook(view, "confirm_replay", %{"review" => old_review_id})
+      assert replay_audit_rows_for(reviewed.id) == []
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+    end
+
+    test "explicit replay review can refresh after an unavailable target read", %{conn: conn} do
+      conn = operator_conn(conn)
+      {delivery, webhook_event} = insert_exact_replay_fixture!("msg-review-read-retry", 655)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "replay_targets", :known)
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+
+      assert render(view) =~ "Current replay targets could not be refreshed."
+      refute render(view) =~ ~s(data-testid="operator-replay-confirm")
+
+      view |> element("#operator-replay-close") |> render_click()
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+
+      assert render(view) =~ webhook_event.provider_event_id
+      assert render(view) =~ ~s(data-testid="operator-replay-confirm")
     end
 
     test "one consumed review rejects a duplicate queued confirmation", %{conn: conn} do
@@ -1042,8 +1130,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       view |> element("[data-testid='operator-replay-open']") |> render_click()
-      render_hook(view, "confirm_replay", %{})
-      render_hook(view, "confirm_replay", %{})
+      review_id = replay_review_id(view)
+      render_hook(view, "confirm_replay", %{"review" => review_id})
+      render_hook(view, "confirm_replay", %{"review" => review_id})
 
       audits = replay_audit_rows_for(webhook_event.id)
       assert Enum.count(audits, &(&1.type == :webhook_replay_requested)) == 1
@@ -1118,9 +1207,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Last retrieved replay evidence: completed · 0 newly normalized Events"
     end
 
-    test "reports terminal audit write failure safely and retains requested and failed evidence", %{
-      conn: conn
-    } do
+    test "reports terminal audit write failure safely and retains requested and failed evidence",
+         %{
+           conn: conn
+         } do
       conn = operator_conn(conn)
       {delivery, webhook_event} = insert_exact_replay_fixture!("msg-terminal-audit-ui", 803)
       trigger_name = "reject_terminal_replay_ui_#{System.unique_integer([:positive])}"
@@ -2059,6 +2149,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
     )
   end
 
+  defp replay_review_id(view) do
+    {:ok, document} = render(view) |> Floki.parse_document()
+    [button] = Floki.find(document, "#operator-replay-confirm")
+    [review_id] = Floki.attribute(button, "phx-value-review")
+    review_id
+  end
+
   defp insert_support_summary_fixture! do
     selected_delivery =
       insert_delivery!(
@@ -2478,10 +2575,46 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert html =~ ~s(data-testid="operator-support-focus-detail")
-      assert html =~ "Unmatched webhook evidence"
+      assert html =~ "Exact Account Event"
       assert html =~ "Oldest unmatched Event example: orphan-open"
-      assert html =~ "Showing unmatched webhook evidence"
+      assert html =~ "Showing exact Account Event"
       refute html =~ "Select a delivery to inspect its event timeline and suppression state."
+    end
+
+    test "exact processed webhook URL retains its ID and current status without a failure claim",
+         %{
+           conn: conn
+         } do
+      fixture = OperatorFixtures.seed_phase169_support_empty!(@tenant_id)
+
+      TestRepo.query!(
+        "UPDATE mailglass_webhook_events SET status = 'succeeded' WHERE id = $1::uuid AND tenant_id = $2",
+        [Ecto.UUID.dump!(fixture.older_webhook_event_id), @tenant_id]
+      )
+
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "support_focus" => "failed_ingest",
+            "support_webhook_event_id" => fixture.older_webhook_event_id
+          })
+        )
+
+      {:ok, document} = Floki.parse_document(html)
+      [exact] = Floki.find(document, "[data-testid='operator-support-exact-evidence']")
+      exact_text = Floki.text(exact)
+
+      assert exact_text =~ "Exact Account webhook"
+      assert exact_text =~ fixture.older_webhook_event_id
+      assert exact_text =~ "Succeeded"
+      assert html =~ "Showing exact Account webhook row"
+      refute exact_text =~ "Exact failed webhook"
+      assert html =~ "The requested Account webhook row is retained below"
     end
 
     test "exact webhook ID survives a newer failure example and an empty Delivery result", %{
@@ -2539,6 +2672,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       exact_text = Floki.text(exact)
 
       assert exact_text =~ fixture.newer_unlinked_event_id
+      assert exact_text =~ "Exact Account Event"
       assert exact_text =~ "No Delivery linkage is recorded for this Event."
       assert exact_text =~ "phase169-long-safe-reference-"
       refute Floki.find(exact, "[data-testid='operator-support-linked-delivery']") |> Enum.any?()
@@ -2568,11 +2702,57 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ fixture.selected_delivery_id
       assert html =~ fixture.other_delivery_id
       {:ok, document} = Floki.parse_document(html)
+      [exact] = Floki.find(document, "[data-testid='operator-support-exact-evidence']")
+      exact_text = Floki.text(exact)
+      assert exact_text =~ "Exact Account Event"
+      assert exact_text =~ fixture.linked_event_id
+      assert exact_text =~ "Linked Delivery: #{fixture.other_delivery_id}"
+      refute exact_text =~ "No Delivery linkage is recorded"
       [link] = Floki.find(document, "[data-testid='operator-support-linked-delivery']")
       href = link |> Floki.attribute("href") |> List.first()
       assert href =~ "delivery_id=#{fixture.other_delivery_id}"
       refute href =~ "delivery_id=#{fixture.selected_delivery_id}"
       assert Floki.text(link) =~ fixture.other_delivery_id
+    end
+
+    test "exact orphan URL shows its later reconciliation linkage and keeps the source Event ID",
+         %{
+           conn: conn
+         } do
+      fixture = OperatorFixtures.seed_phase169_support_empty!(@tenant_id)
+
+      {:ok, reconciliation} =
+        Mailglass.Events.append(%{
+          tenant_id: @tenant_id,
+          delivery_id: fixture.other_delivery_id,
+          type: :reconciled,
+          occurred_at: DateTime.utc_now(),
+          metadata: %{"reconciled_from_event_id" => fixture.newer_unlinked_event_id}
+        })
+
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "support_focus" => "orphan_backlog",
+            "support_event_id" => fixture.newer_unlinked_event_id
+          })
+        )
+
+      {:ok, document} = Floki.parse_document(html)
+      [exact] = Floki.find(document, "[data-testid='operator-support-exact-evidence']")
+      exact_text = Floki.text(exact)
+
+      assert exact_text =~ fixture.newer_unlinked_event_id
+      assert exact_text =~ reconciliation.id
+      assert exact_text =~ fixture.other_delivery_id
+      assert exact_text =~ "Resolved by reconciliation Event"
+      refute exact_text =~ "No Delivery linkage is recorded for this Event."
+      refute exact_text =~ "Exact unmatched Event"
     end
 
     test "foreign exact support IDs share the non-disclosing Account state", %{conn: conn} do
