@@ -148,15 +148,16 @@ Plans:
   3. An authorized operator can progressively inspect available inbound evidence in a readable view while redaction and reveal permissions still govern what is shown.
   4. An operator can see replay eligibility, confirm a permitted inbound replay, and understand disabled, denied, busy, requested, no-change, and failure results without losing the selected record or Account.
 
-**Plans**: 7 plans
+**Plans**: 8 plans
 Plans:
 - [ ] 170-01-PLAN.md — Exact Account-scoped selection, return context, and read states
 - [ ] 170-02-PLAN.md — Explicit Mailbox no-change outcome through execution history
 - [ ] 170-03-PLAN.md — Privacy-safe evidence and current-router simulation
-- [ ] 170-04-PLAN.md — Latest-fresh disposition and chronological history
-- [ ] 170-05-PLAN.md — Durable replay eligibility and exact-target confirmation
-- [ ] 170-06-PLAN.md — Single-action feedback and honest history refresh
-- [ ] 170-07-PLAN.md — Connected and rendered inbound acceptance
+- [ ] 170-04-PLAN.md — Tenant-scoped latest-fresh disposition and chronological read model
+- [ ] 170-05-PLAN.md — Admin list, detail, filter, and historical presentation
+- [ ] 170-06-PLAN.md — Durable replay eligibility and exact-target confirmation
+- [ ] 170-07-PLAN.md — Single-action feedback and timestamped history refresh
+- [ ] 170-08-PLAN.md — Connected and rendered inbound acceptance
 **UI hint**: yes
 **Acceptance focus**: Exercise inbound list/detail/evidence/replay as one task, including missing optional inbound support, permission boundaries, keyboard disclosure, mobile layout, and actual outcome feedback.
 
