@@ -148,7 +148,7 @@ defmodule MailglassAdmin.Operator.Shell do
   defp blank_to_nil(value) when value in [nil, ""], do: nil
   defp blank_to_nil(value), do: value
 
-  @switch_query_keys ~w(provider status event outcome window_hours search support_focus support_event_id support_webhook_event_id view)
+  @switch_query_keys ~w(provider status event outcome window_hours search view)
 
   defp preserved_switch_query(query) do
     query

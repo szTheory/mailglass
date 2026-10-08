@@ -35,6 +35,9 @@ defmodule MailglassAdmin.OperatorLive do
 
   @event_values Mailglass.Outbound.Delivery.__event_types__()
   @default_window_hours 168
+  # A million hours is roughly 114 years, leaving DateTime and PostgreSQL
+  # timestamp arithmetic comfortably inside their supported ranges.
+  @max_window_hours 1_000_000
   @deliveries_per_page 20
   @event_filter_error "Status was not applied. Choose a listed status."
   @window_filter_error "Time window was not applied. Choose a positive listed time window."
@@ -141,7 +144,7 @@ defmodule MailglassAdmin.OperatorLive do
         |> assign(:dark_chrome, theme_choice == :dark)
         |> assign(:theme_choice, theme_choice)
         |> assign(:filter_params, filter_params)
-        |> assign(:filter_form, to_form(filter_params, as: :filters))
+        |> assign(:filter_form, to_form(filter_draft_params(params, filter_params), as: :filters))
         |> assign(:filter_errors, filter_errors)
         |> assign(:support_state, support_state)
         |> assign(:tenant_options, tenant_options)
@@ -231,7 +234,7 @@ defmodule MailglassAdmin.OperatorLive do
     else
       {:noreply,
        socket
-       |> assign(:filter_form, to_form(normalized, as: :filters))
+       |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
        |> assign(:filter_errors, filter_errors)}
     end
   end
@@ -259,7 +262,7 @@ defmodule MailglassAdmin.OperatorLive do
 
     {:noreply,
      socket
-     |> assign(:filter_form, to_form(normalized, as: :filters))
+     |> assign(:filter_form, to_form(filter_draft_params(filters, normalized), as: :filters))
      |> assign(:filter_errors, filter_errors)
      |> assign(:provider_options, load_provider_options(normalized))}
   end
@@ -1015,6 +1018,14 @@ defmodule MailglassAdmin.OperatorLive do
      ])}
   end
 
+  defp filter_draft_params(params, normalized) do
+    Enum.reduce(["event", "window_hours"], normalized, fn key, draft ->
+      if Map.has_key?(params, key),
+        do: Map.put(draft, key, normalize_string(Map.get(params, key))),
+        else: draft
+    end)
+  end
+
   defp load_deliveries_page(%{"tenant_id" => ""}), do: empty_page_meta()
 
   defp load_deliveries_page(filter_params) do
@@ -1524,13 +1535,13 @@ defmodule MailglassAdmin.OperatorLive do
     raw_string = normalize_string(raw_value)
 
     case parse_positive_integer(raw_value) do
-      integer when is_integer(integer) ->
+      integer when is_integer(integer) and integer <= @max_window_hours ->
         {Integer.to_string(integer), nil}
 
-      nil when raw_string == "" ->
+      _ when raw_string == "" and not is_map_key(params, "window_hours") ->
         {Integer.to_string(@default_window_hours), nil}
 
-      nil ->
+      _ ->
         {Integer.to_string(@default_window_hours), @window_filter_error}
     end
   end

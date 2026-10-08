@@ -297,7 +297,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Status was not applied. Choose a listed status."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
       assert html =~ "m****@e******.com"
-      assert html =~ ~s(value="168" selected)
+      assert input_value(html, "#filters_window_hours") == "0"
+      assert html =~ "Latest recorded event"
       refute html =~ "not-listed"
       # Inspect the filter's option selection directly: the full LiveView document
       # includes the Phoenix client bundle, which contains this test value as code.
@@ -325,10 +326,69 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Status was not applied. Choose a listed status."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
+      assert input_value(html, "#filters_window_hours") == "-5"
 
       assert_raise ArgumentError, fn ->
         assert_patch(view, 0)
       end
+    end
+
+    test "retains custom positive window links and rejects unsafe or empty window drafts", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      insert_delivery!(
+        recipient: "custom-window@example.com",
+        provider: "postmark",
+        status: :sent,
+        last_event_type: :delivered,
+        last_event_at: hours_ago(1)
+      )
+
+      {:ok, view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "window_hours" => "9000"
+          })
+        )
+
+      assert input_value(html, "#filters_window_hours") == "9000"
+      assert html =~ ~s|<datalist id="operator-window-options">|
+
+      unsafe_html =
+        render_hook(view, "validate_filters", %{
+          "filters" => %{
+            "tenant_id" => @tenant_id,
+            "provider" => "",
+            "event" => "",
+            "window_hours" => "999999999999999999999999999999999999999"
+          }
+        })
+
+      assert unsafe_html =~ "Time window was not applied. Choose a positive listed time window."
+
+      assert input_value(unsafe_html, "#filters_window_hours") ==
+               "999999999999999999999999999999999999999"
+
+      assert unsafe_html =~ ~s(data-testid="operator-deliveries-list-card")
+
+      empty_html =
+        render_hook(view, "validate_filters", %{
+          "filters" => %{
+            "tenant_id" => @tenant_id,
+            "provider" => "",
+            "event" => "",
+            "window_hours" => ""
+          }
+        })
+
+      assert empty_html =~ "Time window was not applied. Choose a positive listed time window."
+      assert input_value(empty_html, "#filters_window_hours") == ""
+      assert empty_html =~ ~s(data-testid="operator-deliveries-list-card")
     end
 
     test "selects a delivery and renders summary, timeline, reversible suppression copy, and read-only boundaries",
@@ -1383,6 +1443,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
         option |> Floki.attribute("value") |> List.first()
       end
     end)
+  end
+
+  defp input_value(html, selector) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find(selector)
+    |> List.first()
+    |> then(fn input -> input |> Floki.attribute("value") |> List.first() end)
   end
 
   defp operator_conn(conn, session \\ %{}) do

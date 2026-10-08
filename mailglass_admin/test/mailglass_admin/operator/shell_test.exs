@@ -86,6 +86,25 @@ defmodule MailglassAdmin.Operator.ShellTest do
              ) == "/ops/mail?tenant_id=beta&provider=postmark"
     end
 
+    test "retains compatible filters but clears page and support evidence on Account switch" do
+      path =
+        Shell.tenant_switch_path(
+          "/ops/mail?tenant_id=alpha&view=deliveries&page=8&provider=postmark&window_hours=9000&support_focus=failed_ingest&support_event_id=event-1&support_webhook_event_id=webhook-1&delivery_id=old-id",
+          "beta"
+        )
+
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert query["tenant_id"] == "beta"
+      assert query["view"] == "deliveries"
+      assert query["provider"] == "postmark"
+      assert query["window_hours"] == "9000"
+      refute Map.has_key?(query, "page")
+      refute Map.has_key?(query, "delivery_id")
+      refute Map.has_key?(query, "support_focus")
+      refute Map.has_key?(query, "support_event_id")
+      refute Map.has_key?(query, "support_webhook_event_id")
+    end
+
     test "keeps the inbound surface and drops selected inbound ids when switching tenants" do
       assert Shell.tenant_switch_path(
                "/ops/mail/inbound?tenant_id=alpha&inbound_id=old-id&provider=mailgun",
@@ -379,6 +398,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
       hrefs = Enum.map(nav_links, &(Floki.attribute(&1, "href") |> List.first()))
 
       assert "Preview" in labels
+
       refute "Inbound" in labels,
              "Inbound must be omitted when the optional inbound surface is unavailable"
 

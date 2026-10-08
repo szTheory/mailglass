@@ -648,7 +648,7 @@ defmodule MailglassAdmin.Components do
 
   attr(:rest, :global,
     default: %{},
-    include: ~w(autocomplete inputmode max min pattern placeholder step)
+    include: ~w(autocomplete inputmode list max min pattern placeholder step)
   )
 
   @doc """

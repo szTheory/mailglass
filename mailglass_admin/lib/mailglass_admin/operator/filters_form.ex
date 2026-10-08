@@ -32,8 +32,8 @@ defmodule MailglassAdmin.Operator.FiltersForm do
       <Components.filter_field
         field={@form[:event]}
         type={:select}
-        label="Status"
-        help="Filter by the message's latest delivery status."
+        label="Latest recorded event"
+        help="Filter by the latest event recorded for each delivery."
         error={field_error(@errors, "event")}
         prompt="Any status"
         options={enum_options(@event_values)}
@@ -41,12 +41,20 @@ defmodule MailglassAdmin.Operator.FiltersForm do
 
       <Components.filter_field
         field={@form[:window_hours]}
-        type={:select}
+        type={:number}
         label="Time window"
         help="Limit results to recent delivery activity."
         error={field_error(@errors, "window_hours")}
-        options={@window_options}
+        min="1"
+        max="1000000"
+        step="1"
+        inputmode="numeric"
+        list="operator-window-options"
+        placeholder="168"
       />
+      <datalist id="operator-window-options">
+        <option :for={{label, value} <- @window_options} value={value}>{label}</option>
+      </datalist>
     </Components.filter_section>
     """
   end
