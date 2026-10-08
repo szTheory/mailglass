@@ -117,7 +117,7 @@ Plans:
   4. An operator can relate suppression and failed or unmatched webhook evidence to a delivery and find the supported next investigation step without seeing an unavailable repair action promised.
   5. An authorized operator can review one eligible stored replay target and its consequence, confirm it, and distinguish requested work, new work, no change, and failure; denied or stale actions preserve Account scope and action-time authorization.
 
-**Plans**: 3/5 plans executed
+**Plans**: 4/5 plans executed
 Plans:
 **Wave 1**
 - [x] 169-01-PLAN.md — Source-identified tracer, exact Delivery selection, filters, list and return
@@ -129,7 +129,7 @@ Plans:
 - [x] 169-03-PLAN.md — Bounded event history and current suppression truth
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 169-04-PLAN.md — Frozen exact webhook replay and truthful outcomes
+- [x] 169-04-PLAN.md — Frozen exact webhook replay and truthful outcomes
 
 **Wave 5** *(blocked on Wave 4 completion)*
 - [ ] 169-05-PLAN.md — Connected rendered acceptance and sibling API inventory
@@ -211,7 +211,7 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 168. Shared Workspace and Usable Baseline | 4/4 | Complete    | 2026-10-07 |
-| 169. Outbound Investigation and Recovery | 3/5 | In Progress | — |
+| 169. Outbound Investigation and Recovery | 4/5 | In Progress | — |
 | 170. Inbound Investigation and Recovery | 0/TBD | Not started | — |
 | 171. Developer Preview | 0/TBD | Not started | — |
 | 172. Recipient Output and Built-in Pages | 0/TBD | Not started | — |

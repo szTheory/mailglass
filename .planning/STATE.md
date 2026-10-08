@@ -5,16 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 169
 current_phase_name: Outbound Investigation and Recovery
 status: executing
-stopped_at: Completed 169-03-PLAN.md
-last_updated: "2026-10-08T01:23:45.061Z"
+stopped_at: Completed 169-04-PLAN.md
+last_updated: "2026-10-08T02:02:32.539Z"
 last_activity: 2026-10-08
 last_activity_desc: Phase 169 Plan 03 completed
-state_head: e29d07cea267a26fff987cb7aaa9810b11c5c801
+state_head: 5bdc10980d8f1b2265f5c967fd9b8884e10aa596
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 8
   percent: 17
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 ## Current Position
 
 Phase: 169 (Outbound Investigation and Recovery) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-10-08 — Phase 169 Plan 03 completed
 
@@ -260,6 +260,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 169 P01 | 24m | 3 tasks | 31 files |
 | Phase 169 P02 | 24m | 2 tasks | 9 files |
 | Phase 169 P03 | 21m | 3 tasks | 16 files |
+| Phase 169 P04 | 22m | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -428,6 +429,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 169]: Show at most 100 chronological Events, detect overflow with row 101, and resolve selected Events independently by Account, Delivery, and Event.
 - [Phase 169]: Keep exact recorded UTC values visible and make local time a separately labeled supplement.
 - [Phase 169]: Present one current Mailglass suppression match separately from historical Events and Account-wide active-record totals.
+- [Phase 169]: Freeze the selected webhook ID and material Account, Delivery, provider, receipt-time, and eligibility facts at review open.
+- [Phase 169]: Re-read and compare the same target before host authorization; reject stale or replaced review without selecting a substitute.
+- [Phase 169]: Use command-returned row counts for local outcomes and persisted audit reads only for terminal evidence.
+- [Phase 169]: Do not expose raw audit metadata, actor identifiers, failure reasons, or exception bodies in operator feedback.
 
 ## Quick Tasks Completed
 
@@ -473,8 +478,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-08T01:23:45.026Z
-Stopped at: Completed 169-03-PLAN.md
+Last session: 2026-10-08T02:02:32.508Z
+Stopped at: Completed 169-04-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

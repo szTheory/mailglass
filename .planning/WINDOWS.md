@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 5
+open_count: 7
 waived_count: 8
 fixed_count: 31
-total_count: 44
-last_updated: 2026-10-08T01:23:39.597Z
+total_count: 46
+last_updated: 2026-10-08T02:02:40.936Z
 ---
 
 # Broken Windows Ledger
@@ -59,6 +59,8 @@ last_updated: 2026-10-08T01:23:39.597Z
 | 42 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Invalid selection and read failures could resemble an empty Account; distinct non-disclosing and retry states now preserve query truth. | open |  | 2026-10-08T00:33:40.722Z |  |
 | 43 | 169 | deviation | mailglass_admin/test/support/operator_fixtures.ex |  | Timeline browser fixtures use a valid Event UUID and database-required timestamp values. | open |  | 2026-10-08T01:23:39.478Z |  |
 | 44 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Health active-suppression count and historical suppressed-Event destination are labeled as separate populations. | open |  | 2026-10-08T01:23:39.597Z |  |
+| 45 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex | 141 | Changed the replay panel to an explicit 42rem max width with bounded internal scrolling after the 320px browser check found max-w-2xl rendered at 48px. | open |  | 2026-10-08T02:02:40.851Z |  |
+| 46 | 169 | deviation | mailglass_admin/e2e/flows.spec.js | 1115 | Updated replay browser expectations for the contracted close label and the next enabled focus target after a consumed review. | open |  | 2026-10-08T02:02:40.936Z |  |
 
 ````json
 [
@@ -595,6 +597,32 @@ last_updated: 2026-10-08T01:23:39.597Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-10-08T01:23:39.597Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 45,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
+    "line": 141,
+    "description": "Changed the replay panel to an explicit 42rem max width with bounded internal scrolling after the 320px browser check found max-w-2xl rendered at 48px.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T02:02:40.851Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 46,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/e2e/flows.spec.js",
+    "line": 1115,
+    "description": "Updated replay browser expectations for the contracted close label and the next enabled focus target after a consumed review.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T02:02:40.936Z",
     "resolved_at": null,
     "milestone": "v2.9"
   }
