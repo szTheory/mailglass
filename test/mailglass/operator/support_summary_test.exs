@@ -153,6 +153,72 @@ defmodule Mailglass.Operator.SupportSummaryTest do
     end
   end
 
+  describe "independent observation reads" do
+    test "accept a shared window and as-of instant for every population" do
+      %{failed: failed, orphan: orphan, replay: replay, reconciled: reconciled} =
+        seed_support_facts()
+
+      as_of = DateTime.utc_now()
+      window = %{tenant_id: "tenant-a", window_hours: 24, as_of: as_of}
+
+      assert SupportSummary.read_failed_ingest(window).count == 2
+      assert SupportSummary.read_orphan_backlog(window).count == 1
+      assert SupportSummary.read_orphan_backlog(window).oldest.event_id == orphan.unresolved.id
+
+      assert SupportSummary.read_replay_outcomes(window).counts == %{
+               failed: 1,
+               noop: 1,
+               replayed: 1
+             }
+
+      reconcile = SupportSummary.read_reconcile_facts(window)
+      assert reconcile.reconciled_count == 1
+      assert reconcile.still_unmatched_count == 1
+
+      assert SupportSummary.read_failed_ingest(window).latest.webhook_event_id == failed.dead.id
+      assert SupportSummary.read_replay_outcomes(window).latest.event_id == replay.replayed.id
+      assert reconcile.latest_reconciled.event_id == reconciled.event.id
+    end
+  end
+
+  describe "exact Account support reads" do
+    test "returns only allowlisted webhook fields for the selected tenant" do
+      webhook = insert_webhook_event!(%{tenant_id: "tenant-a", status: :dead})
+      foreign = insert_webhook_event!(%{tenant_id: "tenant-b", status: :dead})
+
+      assert SupportSummary.get_webhook_event("tenant-a", webhook.id) == %{
+               webhook_event_id: webhook.id,
+               provider: "postmark",
+               provider_event_id: webhook.provider_event_id,
+               received_at: webhook.received_at,
+               status: :dead
+             }
+
+      assert SupportSummary.get_webhook_event("tenant-a", Ecto.UUID.generate()) == nil
+      assert SupportSummary.get_webhook_event("tenant-a", foreign.id) == nil
+    end
+
+    test "returns exact unlinked and linked Account events without requiring a Delivery" do
+      %{orphan: orphan, replay: replay} = seed_support_facts()
+
+      assert SupportSummary.get_unmatched_event("tenant-a", orphan.unresolved.id) == %{
+               event_id: orphan.unresolved.id,
+               occurred_at: orphan.unresolved.occurred_at,
+               provider: "postmark",
+               provider_event_id: "orphan-open",
+               webhook_event_id: nil,
+               delivery_id: nil,
+               event_type: :delivered
+             }
+
+      linked = SupportSummary.get_unmatched_event("tenant-a", replay.replayed.id)
+
+      assert linked.delivery_id == replay.delivery.id
+      assert linked.event_id == replay.replayed.id
+      assert SupportSummary.get_unmatched_event("tenant-a", Ecto.UUID.generate()) == nil
+    end
+  end
+
   defp seed_support_facts do
     now = DateTime.utc_now()
     old = DateTime.add(now, -48, :hour)

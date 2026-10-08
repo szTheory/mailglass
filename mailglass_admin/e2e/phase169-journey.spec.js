@@ -20,6 +20,41 @@ async function openBrowserTenant(page) {
 }
 
 test.describe("Phase 169 connected journey", () => {
+  test("Health keeps unaffected Account facts visible after one read becomes unavailable", async ({ page }) => {
+    const reset = await page.request.get("/ops/browser-reset?scenario=phase169-health-partial");
+    expect(reset.ok()).toBeTruthy();
+    const fixture = await reset.json();
+    expect(fixture.failed_webhook_event_id).toBeTruthy();
+    expect(fixture.unmatched_event_id).toBeTruthy();
+
+    await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`)}`);
+    const failures = page.getByTestId("operator-overview-health-failures");
+    const unmatched = page.getByTestId("operator-overview-health-orphans");
+    await expect(failures).toContainText("1");
+    await expect(unmatched).toContainText("1");
+
+    const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
+    const fault = await page.evaluate(async ({ csrfToken }) => {
+      const response = await fetch("/ops/browser-mutate?action=arm-known-read-failure&operation=orphan_backlog", {
+        method: "POST",
+        headers: { "x-csrf-token": csrfToken },
+        body: undefined,
+        redirect: "manual"
+      });
+      return { status: response.status, body: await response.text() };
+    }, { csrfToken });
+    expect(fault.status, fault.body).toBe(200);
+
+    await page.getByRole("button", { name: "Retry observations" }).click();
+    await expect(page.getByTestId("operator-health-stale-orphan_backlog")).toBeVisible();
+    await expect(unmatched).toContainText("1");
+    await expect(failures).toContainText("1");
+    await expect(page.getByTestId("operator-health-partial")).toBeVisible();
+    await expect(page.getByTestId("operator-overview-health-replay")).toBeVisible();
+    await expect(page.locator("body")).not.toContainText("synthetic transient operator read failure");
+    await page.screenshot({ path: "test-results/phase169-health-partial.png", fullPage: true });
+  });
+
   for (const width of [390, 1440]) {
     test(`Phase 169 pre-edit baseline at ${width}px`, async ({ page }) => {
     fs.mkdirSync(beforeDir, { recursive: true });

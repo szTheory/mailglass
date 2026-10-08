@@ -8,6 +8,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
   alias Mailglass.Webhook.WebhookEvent
 
   @tenant_id "browser-tenant"
+  @reader_faults_key {__MODULE__, :reader_faults}
 
   def seed_browser_scenario!(opts \\ []) do
     reset!()
@@ -197,7 +198,140 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     }
   end
 
+  def seed_phase169_health_partial! do
+    reset!()
+
+    failed =
+      insert_webhook_event!(%{
+        provider_event_id: "phase169-health-failed",
+        status: :dead,
+        received_at: hours_ago(2)
+      })
+
+    {:ok, unmatched} =
+      Mailglass.Events.append(%{
+        tenant_id: @tenant_id,
+        type: :delivered,
+        delivery_id: nil,
+        occurred_at: hours_ago(3),
+        needs_reconciliation: true,
+        metadata: %{"provider" => "postmark", "provider_event_id" => "phase169-unmatched"}
+      })
+
+    %{tenant_id: @tenant_id, failed_webhook_event_id: failed.id, unmatched_event_id: unmatched.id}
+  end
+
+  def seed_phase169_support_empty! do
+    reset!()
+
+    older_webhook =
+      insert_webhook_event!(%{
+        provider_event_id: "phase169-support-older",
+        status: :dead,
+        received_at: hours_ago(8)
+      })
+
+    newer_webhook =
+      insert_webhook_event!(%{
+        provider_event_id: "phase169-support-newer",
+        status: :failed,
+        received_at: hours_ago(1)
+      })
+
+    {:ok, unlinked_event} =
+      Mailglass.Events.append(%{
+        tenant_id: @tenant_id,
+        type: :delivered,
+        delivery_id: nil,
+        occurred_at: hours_ago(9),
+        needs_reconciliation: true,
+        metadata: %{
+          "provider" => "postmark",
+          "provider_event_id" => "phase169-unlinked-event",
+          "webhook_event_id" => older_webhook.id
+        }
+      })
+
+    other_delivery =
+      insert_delivery!(%{
+        recipient: "phase169-other-delivery@example.com",
+        provider: "postmark",
+        provider_message_id: "pm_phase169_other_delivery"
+      })
+
+    {:ok, linked_event} =
+      Mailglass.Events.append(%{
+        tenant_id: @tenant_id,
+        type: :delivered,
+        delivery_id: other_delivery.id,
+        occurred_at: hours_ago(7),
+        needs_reconciliation: true,
+        metadata: %{
+          "provider" => "postmark",
+          "provider_event_id" => "phase169-other-delivery-event",
+          "webhook_event_id" => newer_webhook.id
+        }
+      })
+
+    %{
+      tenant_id: @tenant_id,
+      older_webhook_event_id: older_webhook.id,
+      newer_webhook_event_id: newer_webhook.id,
+      unlinked_event_id: unlinked_event.id,
+      linked_event_id: linked_event.id,
+      other_delivery_id: other_delivery.id
+    }
+  end
+
+  def arm_reader_fault!(session_key, operation, kind)
+      when is_binary(session_key) and is_binary(operation) and kind in [:known, :unexpected] do
+    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions) do
+      raise ArgumentError, "unsupported test reader operation"
+    end
+
+    with_reader_faults(fn faults ->
+      Map.put(faults, {session_key, operation}, kind)
+    end)
+  end
+
+  def take_reader_fault(session_key, operation)
+      when is_binary(session_key) and is_atom(operation) do
+    key = {session_key, Atom.to_string(operation)}
+
+    {kind, _faults} =
+      with_reader_faults(fn faults -> {Map.get(faults, key), Map.delete(faults, key)} end)
+
+    kind
+  end
+
+  def clear_reader_faults! do
+    with_reader_faults(fn _faults -> %{} end)
+  end
+
+  # The browser mutation endpoint runs in short-lived request processes. A
+  # request-owned ETS table disappears before the LiveView can consume it, so
+  # keep this tiny test-only registry in VM state and serialize its one-shot
+  # writes/reads with a global lock.
+  defp with_reader_faults(update) do
+    :global.trans({{__MODULE__, :reader_faults}, self()}, fn ->
+      faults = :persistent_term.get(@reader_faults_key, %{})
+      result = update.(faults)
+
+      case result do
+        {value, next_faults} ->
+          :persistent_term.put(@reader_faults_key, next_faults)
+          {value, next_faults}
+
+        next_faults when is_map(next_faults) ->
+          :persistent_term.put(@reader_faults_key, next_faults)
+          :ok
+      end
+    end)
+  end
+
   def reset! do
+    clear_reader_faults!()
+
     TestRepo.query!(
       "TRUNCATE TABLE mailglass_inbound_replay_runs, mailglass_inbound_evidence, mailglass_inbound_records, mailglass_webhook_events, mailglass_events, mailglass_suppressions, mailglass_deliveries RESTART IDENTITY CASCADE"
     )

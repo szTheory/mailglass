@@ -76,6 +76,7 @@ defmodule MailglassAdmin.TestAdopter.Router do
     get("/browser-ready", MailglassAdmin.TestAdopter.BrowserSessionController, :ready)
     get("/browser-reset", MailglassAdmin.TestAdopter.BrowserSessionController, :reset)
     get("/browser-auth-log", MailglassAdmin.TestAdopter.BrowserSessionController, :auth_log)
+    post("/browser-mutate", MailglassAdmin.TestAdopter.BrowserSessionController, :mutate)
     get("/browser-login", MailglassAdmin.TestAdopter.BrowserSessionController, :create)
 
     get(
@@ -143,6 +144,8 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
         "sole" -> {:ok, OperatorFixtures.seed_browser_scenario!(deny_reveal?: false)}
         "accounts" -> {:ok, OperatorFixtures.seed_persona_cohort!()}
         "phase169-exact" -> {:ok, OperatorFixtures.seed_phase169_scenario!()}
+        "phase169-health-partial" -> {:ok, OperatorFixtures.seed_phase169_health_partial!()}
+        "phase169-support-empty" -> {:ok, OperatorFixtures.seed_phase169_support_empty!()}
         _ -> :unknown
       end
 
@@ -158,6 +161,33 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
 
   def auth_log(conn, _params) do
     json(conn, %{destructive_actions: MailglassAdmin.TestOperatorAuth.destructive_calls()})
+  end
+
+  def mutate(conn, params) do
+    conn = Plug.Conn.fetch_query_params(conn)
+    params = Map.merge(conn.query_params, params)
+    session_key = get_session(conn, "current_user_id")
+
+    operation = Map.get(params, "operation")
+    action = Map.get(params, "action")
+
+    kind =
+      case action do
+        "arm-known-read-failure" -> :known
+        "arm-unexpected-read-failure" -> :unexpected
+        _ -> nil
+      end
+
+    if is_binary(session_key) and is_binary(operation) and kind do
+      try do
+        OperatorFixtures.arm_reader_fault!(session_key, operation, kind)
+        json(conn, %{armed: true, operation: operation, action: action})
+      rescue
+        ArgumentError -> conn |> put_status(:bad_request) |> text("unsupported test mutation")
+      end
+    else
+      conn |> put_status(:bad_request) |> text("unsupported test mutation")
+    end
   end
 
   def create(conn, params) do
@@ -203,13 +233,23 @@ defmodule MailglassAdmin.TestOperatorHook do
       end
 
     fault = if requested_fault in ["deliveries", "exact_delivery"], do: requested_fault, else: nil
+    session_key = Map.get(session, "current_user_id")
 
     callback = fn operation ->
       if fault == Atom.to_string(operation) do
         raise DBConnection.ConnectionError, message: "synthetic transient operator read failure"
       end
 
-      :ok
+      case MailglassAdmin.TestSupport.OperatorFixtures.take_reader_fault(session_key, operation) do
+        :known ->
+          raise DBConnection.ConnectionError, message: "synthetic transient operator read failure"
+
+        :unexpected ->
+          raise ArgumentError, "synthetic unexpected operator read failure"
+
+        nil ->
+          :ok
+      end
     end
 
     {:cont,

@@ -19,19 +19,93 @@ defmodule Mailglass.Operator.SupportSummary do
 
   @spec summarize_tenant(filters()) :: map()
   def summarize_tenant(filters) do
-    normalized = normalize_filters(filters)
-    tenant_id = fetch_tenant_id!(normalized)
-    window_hours = window_hours_from(normalized)
-    window_started_at = DateTime.add(Clock.utc_now(), -window_hours, :hour)
-
-    unresolved_orphans = unresolved_orphans_query(tenant_id, window_started_at)
+    context = observation_context(filters)
 
     %{
-      failed_ingest: failed_ingest_summary(tenant_id, window_started_at),
-      orphan_backlog: orphan_backlog_summary(tenant_id, unresolved_orphans),
-      replay_outcomes: replay_outcomes_summary(tenant_id, window_started_at),
-      reconcile_facts: reconcile_facts_summary(tenant_id, window_started_at, unresolved_orphans)
+      failed_ingest: read_failed_ingest(context),
+      orphan_backlog: read_orphan_backlog(context),
+      replay_outcomes: read_replay_outcomes(context),
+      reconcile_facts: read_reconcile_facts(context)
     }
+  end
+
+  @doc false
+  @spec read_failed_ingest(filters()) :: map()
+  def read_failed_ingest(filters) do
+    %{tenant_id: tenant_id, window_started_at: window_started_at} =
+      observation_context(filters)
+
+    failed_ingest_summary(tenant_id, window_started_at)
+  end
+
+  @doc false
+  @spec read_orphan_backlog(filters()) :: map()
+  def read_orphan_backlog(filters) do
+    %{tenant_id: tenant_id, window_started_at: window_started_at, as_of: as_of} =
+      observation_context(filters)
+
+    tenant_id
+    |> unresolved_orphans_query(window_started_at)
+    |> orphan_backlog_summary(tenant_id, as_of)
+  end
+
+  @doc false
+  @spec read_replay_outcomes(filters()) :: map()
+  def read_replay_outcomes(filters) do
+    %{tenant_id: tenant_id, window_started_at: window_started_at} =
+      observation_context(filters)
+
+    replay_outcomes_summary(tenant_id, window_started_at)
+  end
+
+  @doc false
+  @spec read_reconcile_facts(filters()) :: map()
+  def read_reconcile_facts(filters) do
+    %{tenant_id: tenant_id, window_started_at: window_started_at} =
+      observation_context(filters)
+
+    unresolved_orphans = unresolved_orphans_query(tenant_id, window_started_at)
+    reconcile_facts_summary(tenant_id, window_started_at, unresolved_orphans)
+  end
+
+  @doc false
+  @spec get_webhook_event(String.t(), String.t()) :: map() | nil
+  def get_webhook_event(tenant_id, webhook_event_id)
+      when is_binary(tenant_id) and tenant_id != "" and is_binary(webhook_event_id) do
+    from(webhook_event in WebhookEvent,
+      where: webhook_event.tenant_id == ^tenant_id,
+      where: webhook_event.id == ^webhook_event_id,
+      select: %{
+        webhook_event_id: webhook_event.id,
+        provider: webhook_event.provider,
+        provider_event_id: webhook_event.provider_event_id,
+        received_at: webhook_event.received_at,
+        status: webhook_event.status
+      }
+    )
+    |> Tenancy.scope(tenant_id)
+    |> Repo.one()
+  end
+
+  @doc false
+  @spec get_unmatched_event(String.t(), String.t()) :: map() | nil
+  def get_unmatched_event(tenant_id, event_id)
+      when is_binary(tenant_id) and tenant_id != "" and is_binary(event_id) do
+    from(event in Event,
+      where: event.tenant_id == ^tenant_id,
+      where: event.id == ^event_id,
+      select: %{
+        event_id: event.id,
+        occurred_at: event.occurred_at,
+        provider: fragment("?->>'provider'", event.metadata),
+        provider_event_id: fragment("?->>'provider_event_id'", event.metadata),
+        webhook_event_id: fragment("?->>'webhook_event_id'", event.metadata),
+        delivery_id: event.delivery_id,
+        event_type: event.type
+      }
+    )
+    |> Tenancy.scope(tenant_id)
+    |> Repo.one()
   end
 
   defp failed_ingest_summary(tenant_id, window_started_at) do
@@ -64,7 +138,7 @@ defmodule Mailglass.Operator.SupportSummary do
     }
   end
 
-  defp orphan_backlog_summary(tenant_id, unresolved_orphans) do
+  defp orphan_backlog_summary(unresolved_orphans, tenant_id, as_of) do
     oldest =
       unresolved_orphans
       |> order_by([event], asc: event.occurred_at, asc: event.inserted_at, asc: event.id)
@@ -82,7 +156,7 @@ defmodule Mailglass.Operator.SupportSummary do
     %{
       count: count_rows(unresolved_orphans, tenant_id),
       oldest: oldest,
-      oldest_age_seconds: age_seconds(oldest)
+      oldest_age_seconds: age_seconds(oldest, as_of)
     }
   end
 
@@ -233,6 +307,22 @@ defmodule Mailglass.Operator.SupportSummary do
   defp normalize_filters(filters) when is_list(filters), do: Map.new(filters)
   defp normalize_filters(filters) when is_map(filters), do: Map.new(filters)
 
+  defp observation_context(filters) do
+    normalized = normalize_filters(filters)
+    tenant_id = fetch_tenant_id!(normalized)
+    window_hours = window_hours_from(normalized)
+    as_of = Map.get(normalized, :as_of, Clock.utc_now())
+    as_of = if match?(%DateTime{}, as_of), do: as_of, else: Clock.utc_now()
+
+    %{
+      tenant_id: tenant_id,
+      window_hours: window_hours,
+      window_started_at:
+        Map.get(normalized, :window_started_at) || DateTime.add(as_of, -window_hours, :hour),
+      as_of: as_of
+    }
+  end
+
   defp count_rows(query, tenant_id) do
     query
     |> exclude(:order_by)
@@ -255,9 +345,9 @@ defmodule Mailglass.Operator.SupportSummary do
     end
   end
 
-  defp age_seconds(nil), do: nil
+  defp age_seconds(nil, _as_of), do: nil
 
-  defp age_seconds(%{occurred_at: %DateTime{} = occurred_at}) do
-    DateTime.diff(Clock.utc_now(), occurred_at, :second)
+  defp age_seconds(%{occurred_at: %DateTime{} = occurred_at}, as_of) do
+    DateTime.diff(as_of, occurred_at, :second)
   end
 end
