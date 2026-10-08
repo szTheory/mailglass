@@ -278,11 +278,11 @@ defmodule MailglassAdmin.Operator.Shell do
           aria-label="Available Accounts"
           class="mg-layer-dropdown absolute right-0 top-full z-20 mt-xs max-h-64 w-[min(22rem,calc(100vw-2rem))] list-none overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
         >
-          <li :for={tenant <- @tenant_options}>
+          <li :for={{tenant, index} <- Enum.with_index(@tenant_options)}>
             <.link
               patch={tenant_switch_path(@page_uri, tenant.id)}
               phx-click={JS.show(
-                to: "#operator-account-switch-status-#{tenant.id}",
+                to: "#operator-account-switch-status-#{index}",
                 display: "block"
               )}
               aria-current={if tenant.id == @selected_tenant_id, do: "true", else: nil}
@@ -297,9 +297,9 @@ defmodule MailglassAdmin.Operator.Shell do
         </ul>
       </details>
       <span
-        :for={tenant <- @tenant_options}
+        :for={{tenant, index} <- Enum.with_index(@tenant_options)}
         :if={tenant.id != @selected_tenant_id}
-        id={"operator-account-switch-status-#{tenant.id}"}
+        id={"operator-account-switch-status-#{index}"}
         data-testid="operator-account-switch-status"
         role="status"
         aria-live="polite"

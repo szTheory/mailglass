@@ -126,8 +126,9 @@ async function selectInboundFull(page, row) {
   await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
 }
 
-async function assertZoomReadableValue(locator, label, viewportWidth) {
+async function assertZoomReadableValue(locator, label, expectedText, viewportWidth) {
   await expect(locator, `${label} is rendered and visible`).toBeVisible();
+  await expect(locator, `${label} matches its complete fixture value`).toHaveText(expectedText);
   await locator.scrollIntoViewIfNeeded();
   const geometry = await locator.evaluate(element => {
     const rect = element.getBoundingClientRect();
@@ -733,12 +734,15 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     await expect(zoomPage).toHaveURL(/tenant_id=fjordline-aps/);
 
     const zoomRow = zoomPage.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+    const expectedDeliveryId = await zoomRow.getAttribute("phx-value-id");
+    expect(expectedDeliveryId, "the selected fixture row exposes its complete Delivery ID").toBeTruthy();
     await selectDeliveryFull(zoomPage, zoomRow);
+    const expectedMailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
     const zoomedMailable = zoomPage
       .getByTestId("operator-detail-header")
       .locator("p")
-      .filter({ hasText: mailable });
-    await expect(zoomedMailable).toHaveText(mailable);
+      .filter({ hasText: expectedMailable });
+    await expect(zoomedMailable).toHaveText(expectedMailable);
     const initialDevicePixelRatio = await zoomPage.evaluate(() => window.devicePixelRatio);
 
     const serviceWorker =
@@ -796,27 +800,36 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     }
 
     const detail = zoomPage.getByTestId("operator-detail-header");
-    await assertZoomReadableValue(detail.locator("p.mono").first(), "Delivery ID", 720);
-    await assertZoomReadableValue(zoomedMailable, "Mailable", 720);
-    await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider", 720);
+    await assertZoomReadableValue(detail.locator("p.mono").first(), "Delivery ID", expectedDeliveryId, 720);
+    await assertZoomReadableValue(zoomedMailable, "Mailable", expectedMailable, 720);
+    await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider", "POSTMARK", 720);
     await assertZoomReadableValue(
       detail.getByText("del_01JXW9ZQKB3V1N4P2RMT7FHCG", { exact: true }),
       "Provider message ID",
+      "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
       720
     );
 
     const timelineEvent = zoomPage.getByTestId("operator-timeline-event").first();
     await expect(timelineEvent).toBeVisible();
-    await assertZoomReadableValue(timelineEvent.locator("p.mono").first(), "Timeline Event ID", 720);
-    await assertZoomReadableValue(timelineEvent.locator("time").first(), "Recorded timestamp", 720);
+    const expectedEventId = await timelineEvent.getAttribute("data-event-id");
+    expect(expectedEventId, "the selected fixture event exposes its complete Event ID").toBeTruthy();
+    const recordedTimestamp = timelineEvent.locator("time").first();
+    await expect(recordedTimestamp, "the fixture event has a recorded timestamp").toHaveCount(1);
+    const expectedRecordedTimestamp = await recordedTimestamp.getAttribute("data-utc");
+    expect(expectedRecordedTimestamp, "the fixture timestamp exposes its canonical UTC value").toBeTruthy();
+    await assertZoomReadableValue(
+      timelineEvent.locator("p.mono").first(),
+      "Timeline Event ID",
+      expectedEventId,
+      720
+    );
+    await assertZoomReadableValue(recordedTimestamp, "Recorded timestamp", expectedRecordedTimestamp, 720);
     const providerEventId = timelineEvent.locator("p.mono").filter({ hasText: /^Provider Event ID:/ });
-    if (await providerEventId.count()) {
-      await assertZoomReadableValue(providerEventId, "Provider Event ID", 720);
-    }
+    await expect(providerEventId, "the selected fixture event has no provider event ID").toHaveCount(0);
     const providerTimestamp = timelineEvent.locator("p").filter({ hasText: /^Provider occurrence time:/ });
-    if (await providerTimestamp.count()) {
-      await assertZoomReadableValue(providerTimestamp, "Provider timestamp", 720);
-    }
+    await expect(providerTimestamp, "the selected fixture event has no provider occurrence timestamp")
+      .toHaveCount(0);
 
     const zoomGeometry = await zoomedMailable.evaluate(element => {
       const rect = element.getBoundingClientRect();
@@ -1248,6 +1261,8 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       .filter({ hasText: "Switching to fjordline-aps…" });
     await expect(pendingSwitch, "the target Account's pending status is available to the switch control")
       .toHaveCount(1);
+    await expect(pendingSwitch, "status target uses a safe numeric token independent of the Account ID")
+      .toHaveAttribute("id", /^operator-account-switch-status-\d+$/);
     await expect(pendingSwitch).toBeHidden();
     await page.getByTestId("operator-account-switcher").click();
     holdAccountReply = true;
