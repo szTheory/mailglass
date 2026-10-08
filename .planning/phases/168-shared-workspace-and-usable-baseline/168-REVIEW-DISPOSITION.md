@@ -5,43 +5,43 @@ titles: json
 findings:
   - id: CR-01
     severity: critical
-    disposition: open
+    disposition: fixed
     title: "Delivery badges show the stored snapshot instead of the latest outcome"
   - id: CR-02
     severity: critical
-    disposition: open
+    disposition: fixed
     title: "Transient reads can display cached support evidence from another Account"
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: deferred
     title: "Malformed exact-support IDs crash the LiveView"
   - id: WR-02
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Preview success flash cannot be dismissed"
   - id: WR-03
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Replay confirmation does not handle transient failures in its fresh reads"
   - id: WR-04
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Cached health counts can be shown for a different selected interval"
-open: 6
+open: 0
 total: 6
-recorded: 2026-10-08T17:15:36.098Z
+recorded: 2026-10-08T18:44:00Z
 ---
 
 # Phase 168: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| CR-01 | critical | open | - |
-| CR-02 | critical | open | - |
-| WR-01 | warning | open | - |
-| WR-02 | warning | open | - |
-| WR-03 | warning | open | - |
-| WR-04 | warning | open | - |
+| CR-01 | critical | fixed | 168-06 rendered outcome regressions and passing ExUnit coverage |
+| CR-02 | critical | fixed | 168-07 account-scope fallback regression and passing ExUnit coverage |
+| WR-01 | warning | deferred | Introduced by Phase 169 Plan 02; retain as follow-up for exact-support UUID validation, outside Phase 168 scope |
+| WR-02 | warning | fixed | 168-08 actual LiveView dismissal regression and passing ExUnit coverage |
+| WR-03 | warning | fixed | 168-07 transient replay-read regressions and passing ExUnit coverage |
+| WR-04 | warning | fixed | 168-07 interval-scope regression and passing ExUnit coverage |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
