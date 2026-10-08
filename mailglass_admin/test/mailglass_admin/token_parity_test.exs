@@ -28,6 +28,18 @@ defmodule MailglassAdmin.TokenParityTest do
   @css_source_path Path.expand("../../assets/css/app.css", __DIR__)
   @root_layout_path Path.expand("../../lib/mailglass_admin/layouts/root.html.heex", __DIR__)
 
+  @shared_spacing_template_paths Enum.map(
+                                    [
+                                      "../../lib/mailglass_admin/operator/shell.ex",
+                                      "../../lib/mailglass_admin/components.ex",
+                                      "../../lib/mailglass_admin/operator/quick_view.ex",
+                                      "../../lib/mailglass_admin/inbound/quick_view.ex",
+                                      "../../lib/mailglass_admin/preview_live.ex",
+                                      "../../lib/mailglass_admin/preview/sidebar.ex"
+                                    ],
+                                    &Path.expand(&1, __DIR__)
+                                  )
+
   # Three levels up from test/mailglass_admin/ → test/ → mailglass_admin/ → monorepo root → brandbook/
   @tokens_path Path.expand(Path.join([__DIR__, "..", "..", "..", "brandbook", "tokens.json"]))
 
@@ -91,6 +103,37 @@ defmodule MailglassAdmin.TokenParityTest do
   setup do
     css = File.read!(@css_path)
     {:ok, css: css}
+  end
+
+  test "shared operator and Preview templates stay on the 4px spacing grid" do
+    half_step_spacing =
+      ~r/(?:^|[\s"'`])(-?(?:[a-z0-9-]+:)*(?:m(?:t|r|b|l|x|y|s|e)?|p(?:t|r|b|l|x|y|s|e)?|gap(?:-[xy])?|space-[xy])-0\.5)(?=$|[\s"'`])/
+
+    violations =
+      Enum.flat_map(@shared_spacing_template_paths, fn path ->
+        source = File.read!(path)
+        Regex.scan(half_step_spacing, source, capture: :all_but_first)
+        |> Enum.map(fn [class] -> "#{path}: #{class}" end)
+      end)
+
+    assert violations == [],
+           "Half-step Tailwind spacing classes are outside the approved 4px grid:\n" <>
+             Enum.join(violations, "\n")
+
+    source_css = File.read!(@css_source_path)
+    bundle = File.read!(@css_path)
+
+    assert source_css =~ ~r/--spacing-xs:\s*4px;/,
+           "Source CSS must define xs spacing as 4px"
+
+    assert bundle =~ ~r/--spacing-xs:\s*4px/,
+           "Generated CSS must define xs spacing as 4px"
+
+    assert bundle =~ ~r/\.mt-xs\s*\{\s*margin-top:\s*var\(--spacing-xs\)\s*\}/,
+           "Generated CSS must resolve .mt-xs through --spacing-xs"
+
+    assert bundle =~ ~r/\.gap-xs\s*\{\s*gap:\s*var\(--spacing-xs\)\s*\}/,
+           "Generated CSS must resolve .gap-xs through --spacing-xs"
   end
 
   test "Quick view positioning is consolidated into source and served CSS" do

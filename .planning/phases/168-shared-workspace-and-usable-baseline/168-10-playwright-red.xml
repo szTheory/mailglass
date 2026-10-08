@@ -1,0 +1,33 @@
+<testsuites id="" name="" tests="1" failures="1" skipped="0" errors="0" time="4.596952999999999">
+<testsuite name="flows.spec.js" timestamp="2026-10-08T23:28:03.450Z" hostname="" tests="1" failures="1" skipped="0" time="1.128" errors="0">
+<testcase name="flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/02) › Phase 168 shared spacing: operator icon and Preview scenario gap use 4px" classname="flows.spec.js" time="1.128">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../mailglass_admin/test-results/flows-flows-full-walk-—-5--ccb18-review-scenario-gap-use-4px/error-context.md]]
+]]>
+</system-out>
+<failure message="Preview scenario list row gap" type="expect.toBe">
+<![CDATA[  flows.spec.js:614:3 › flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/02) › Phase 168 shared spacing: operator icon and Preview scenario gap use 4px 
+
+    Error: Preview scenario list row gap
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "4px"
+    Received: "2px"
+
+      626 |     await expect(scenarioList).toBeVisible();
+      627 |     const scenarioRowGap = await scenarioList.evaluate(element => getComputedStyle(element).rowGap);
+    > 628 |     expect(scenarioRowGap, "Preview scenario list row gap").toBe("4px");
+          |                                                             ^
+      629 |   });
+      630 |
+      631 |   test("Preview advanced: frame theme differs from admin theme without overflow at 320", async ({ page }) => {
+        at /Users/jon/projects/mailglass/mailglass_admin/e2e/flows.spec.js:628:61
+
+    Error Context: ../test-results/flows-flows-full-walk-—-5--ccb18-review-scenario-gap-use-4px/error-context.md
+]]>
+</failure>
+</testcase>
+</testsuite>
+</testsuites>

@@ -611,6 +611,23 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await expect(mailablesPicker.getByRole("link", { name: "welcome_default", exact: true })).toBeVisible();
   });
 
+  test("Phase 168 shared spacing: operator icon and Preview scenario gap use 4px", async ({ page }) => {
+    await openInbound(page, `tenant_id=${tenantId}&inbound_id=does-not-exist`);
+    const operatorError = page.getByTestId("inbound-quick-view-error");
+    await expect(operatorError).toBeVisible();
+    const operatorErrorIcon = operatorError.locator(".mt-xs");
+    await expect(operatorErrorIcon).toBeVisible();
+    const iconMarginTop = await operatorErrorIcon.evaluate(element => getComputedStyle(element).marginTop);
+    expect(iconMarginTop, "operator error icon margin-top").toBe("4px");
+
+    await openPreviewIndex(page);
+    await page.getByTestId("preview-email-menu-trigger").click();
+    const scenarioList = page.getByTestId("preview-email-menu-scenario-list").first();
+    await expect(scenarioList).toBeVisible();
+    const scenarioRowGap = await scenarioList.evaluate(element => getComputedStyle(element).rowGap);
+    expect(scenarioRowGap, "Preview scenario list row gap").toBe("4px");
+  });
+
   test("Preview advanced: frame theme differs from admin theme without overflow at 320", async ({ page }) => {
     await openPreviewScenario(page, "theme=light");
     await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
