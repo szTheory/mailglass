@@ -22,7 +22,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
         <div class="min-w-0 space-y-sm">
           <div class="flex flex-wrap items-center gap-sm">
             <h2 class="text-heading font-bold text-base-content">{@delivery.recipient}</h2>
-            <Components.status_badge status={@delivery.status} />
+            <Components.status_badge status={Components.delivery_display_status(@delivery)} />
           </div>
           <p class="mono text-label text-secondary">{@delivery.id}</p>
           <p

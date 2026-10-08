@@ -345,7 +345,7 @@ defmodule MailglassAdmin.ComponentsTest do
     html
     |> Floki.parse_document!()
     |> Floki.find(selector)
-    |> Enum.map(&Floki.text/1)
+    |> Enum.map(&(Floki.text(&1) |> String.trim()))
   end
 
   describe "timestamp/1" do

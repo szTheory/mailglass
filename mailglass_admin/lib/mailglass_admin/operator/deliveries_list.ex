@@ -115,195 +115,207 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         <% end %>
       <% true -> %>
         <div class="operator-deliveries-layout">
-        <%!-- The list switches based on available content width, including the shared sidebar. --%>
-        <div
-          class="operator-deliveries-table overflow-x-auto"
-          data-testid="operator-deliveries-table"
-          role="region"
-          aria-label="Delivery records"
-          tabindex="0"
-        >
-          <table class="table w-full table-fixed">
-            <thead>
-              <tr>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Outcome</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-64">
-                  Recipient
-                </th>
-                <th
-                  :if={@show_account?}
-                  scope="col"
-                  class="text-label font-bold uppercase text-secondary w-40"
-                >
-                  Account
-                </th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">
-                  Provider
-                </th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-36">
-                  Latest event
-                </th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary">
-                  Updated
-                </th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                :for={delivery <- @deliveries}
-                id={row_id(:desktop, delivery.id)}
-                data-testid="operator-delivery-row"
-                data-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
-                phx-click="select_delivery"
-                phx-keydown="select_delivery"
-                phx-key="Enter"
-                phx-value-id={delivery.id}
-                phx-value-focus-return-id={row_id(:desktop, delivery.id)}
-                tabindex="0"
-                aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
-                aria-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
-                class={[
-                  "mg-focus-ring-inset min-h-11 cursor-pointer transition-colors",
-                  row_classes(@selected_delivery, delivery)
-                ]}
-              >
-                <td class="text-body text-base-content">
-                  <Components.status_badge
-                    status={delivery.status}
-                    size={:sm}
-                  />
-                </td>
-                <td class="min-w-0 text-body text-base-content">
-                  <span
-                    class="min-w-0 truncate block"
-                    title={Components.mask_recipient(delivery.recipient)}
-                  >
-                    {Components.mask_recipient(delivery.recipient)}
-                  </span>
-                </td>
-                <td :if={@show_account?} class="min-w-0 text-body text-base-content">
-                  <span
-                    class="min-w-0 truncate block"
-                    title={Accounts.title(delivery.tenant_id, @account_labels)}
-                  >
-                    {Accounts.label(delivery.tenant_id, @account_labels)}
-                  </span>
-                </td>
-                <td class="text-body text-base-content">
-                  <span class="mono min-w-0 truncate block" title={delivery.provider}>
-                    {String.upcase(delivery.provider || "unknown")}
-                  </span>
-                </td>
-                <td class="text-body text-base-content">{event_label(delivery.last_event_type)}</td>
-                <td class="text-label text-secondary">
-                  <Components.timestamp at={delivery.last_event_at} class="whitespace-nowrap" />
-                </td>
-                <td>
-                  <button
-                    type="button"
-                    phx-click="select_delivery"
-                    phx-click-stop
-                    phx-value-delivery-id={delivery.id}
-                    class="mg-focus-ring btn btn-ghost btn-sm min-h-11 px-sm"
-                  >
-                    Open delivery
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <%!-- Cards remain readable until the list's own content area reaches 768px. --%>
-        <div data-testid="operator-deliveries-cards" class="operator-deliveries-cards">
-          <ul
-            data-testid="operator-deliveries-list"
-            class="divide-y divide-base-300"
+          <%!-- The list switches based on available content width, including the shared sidebar. --%>
+          <div
+            class="operator-deliveries-table overflow-x-auto"
+            data-testid="operator-deliveries-table"
+            role="region"
+            aria-label="Delivery records"
+            tabindex="0"
           >
-            <li :for={delivery <- @deliveries}>
-              <button
-                id={row_id(:mobile, delivery.id)}
-                data-testid="operator-delivery-row"
-                data-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
-                type="button"
-                phx-click="select_delivery"
-                phx-value-id={delivery.id}
-                phx-value-focus-return-id={row_id(:mobile, delivery.id)}
-                aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
-                aria-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
-                class={[
-                  "mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors",
-                  row_classes(@selected_delivery, delivery)
-                ]}
-              >
-                <%!-- Status badge first/prominent --%>
-                <div>
-                  <Components.status_badge
-                    status={delivery.status}
-                    size={:sm}
-                  />
-                </div>
-
-                <%!-- The list masks recipient addresses; selecting the Delivery opens its exact detail. --%>
-                <div class="min-w-0">
-                  <span class="text-label font-bold uppercase text-secondary">Recipient</span>
-                  <p
-                    class="min-w-0 break-words text-body text-base-content"
-                    title={Components.mask_recipient(delivery.recipient)}
+            <table class="table w-full table-fixed">
+              <thead>
+                <tr>
+                  <th scope="col" class="text-label font-bold uppercase text-secondary w-32">
+                    Outcome
+                  </th>
+                  <th scope="col" class="text-label font-bold uppercase text-secondary w-64">
+                    Recipient
+                  </th>
+                  <th
+                    :if={@show_account?}
+                    scope="col"
+                    class="text-label font-bold uppercase text-secondary w-40"
                   >
-                    {Components.mask_recipient(delivery.recipient)}
-                  </p>
-                </div>
-
-                <%!-- Keep the exact stable ID visible and copyable without hover. --%>
-                <div class="min-w-0">
-                  <span class="text-label font-bold uppercase text-secondary">ID</span>
-                  <p
-                    class="mono min-w-0 break-all text-label text-secondary"
-                    title={delivery.id}
-                  >
-                    {delivery.id}
-                  </p>
-                </div>
-
-                <div class="flex flex-wrap items-start gap-md text-label text-secondary">
-                  <div>
-                    <span class="font-bold uppercase">Latest event</span>
-                    <p class="text-body text-base-content">{event_label(delivery.last_event_type)}</p>
-                  </div>
-                  <%!-- Account --%>
-                  <div :if={@show_account?} class="min-w-0">
-                    <span class="font-bold uppercase">Account</span>
-                    <p
-                      class="min-w-0 break-words"
+                    Account
+                  </th>
+                  <th scope="col" class="text-label font-bold uppercase text-secondary w-32">
+                    Provider
+                  </th>
+                  <th scope="col" class="text-label font-bold uppercase text-secondary w-36">
+                    Latest event
+                  </th>
+                  <th scope="col" class="text-label font-bold uppercase text-secondary">
+                    Updated
+                  </th>
+                  <th scope="col" class="text-label font-bold uppercase text-secondary">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  :for={delivery <- @deliveries}
+                  id={row_id(:desktop, delivery.id)}
+                  data-testid="operator-delivery-row"
+                  data-selected={
+                    if selected?(@selected_delivery, delivery), do: "true", else: "false"
+                  }
+                  phx-click="select_delivery"
+                  phx-keydown="select_delivery"
+                  phx-key="Enter"
+                  phx-value-id={delivery.id}
+                  phx-value-focus-return-id={row_id(:desktop, delivery.id)}
+                  tabindex="0"
+                  aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
+                  aria-selected={
+                    if selected?(@selected_delivery, delivery), do: "true", else: "false"
+                  }
+                  class={[
+                    "mg-focus-ring-inset min-h-11 cursor-pointer transition-colors",
+                    row_classes(@selected_delivery, delivery)
+                  ]}
+                >
+                  <td class="text-body text-base-content">
+                    <Components.status_badge
+                      status={Components.delivery_display_status(delivery)}
+                      size={:sm}
+                    />
+                  </td>
+                  <td class="min-w-0 text-body text-base-content">
+                    <span
+                      class="min-w-0 truncate block"
+                      title={Components.mask_recipient(delivery.recipient)}
+                    >
+                      {Components.mask_recipient(delivery.recipient)}
+                    </span>
+                  </td>
+                  <td :if={@show_account?} class="min-w-0 text-body text-base-content">
+                    <span
+                      class="min-w-0 truncate block"
                       title={Accounts.title(delivery.tenant_id, @account_labels)}
                     >
                       {Accounts.label(delivery.tenant_id, @account_labels)}
-                    </p>
-                  </div>
-
-                  <%!-- Provider --%>
-                  <div>
-                    <span class="font-bold uppercase">Provider</span>
-                    <p class="mono min-w-0 break-all" title={delivery.provider}>
+                    </span>
+                  </td>
+                  <td class="text-body text-base-content">
+                    <span class="mono min-w-0 truncate block" title={delivery.provider}>
                       {String.upcase(delivery.provider || "unknown")}
+                    </span>
+                  </td>
+                  <td class="text-body text-base-content">{event_label(delivery.last_event_type)}</td>
+                  <td class="text-label text-secondary">
+                    <Components.timestamp at={delivery.last_event_at} class="whitespace-nowrap" />
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      phx-click="select_delivery"
+                      phx-click-stop
+                      phx-value-delivery-id={delivery.id}
+                      class="mg-focus-ring btn btn-ghost btn-sm min-h-11 px-sm"
+                    >
+                      Open delivery
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <%!-- Cards remain readable until the list's own content area reaches 768px. --%>
+          <div data-testid="operator-deliveries-cards" class="operator-deliveries-cards">
+            <ul
+              data-testid="operator-deliveries-list"
+              class="divide-y divide-base-300"
+            >
+              <li :for={delivery <- @deliveries}>
+                <button
+                  id={row_id(:mobile, delivery.id)}
+                  data-testid="operator-delivery-row"
+                  data-selected={
+                    if selected?(@selected_delivery, delivery), do: "true", else: "false"
+                  }
+                  type="button"
+                  phx-click="select_delivery"
+                  phx-value-id={delivery.id}
+                  phx-value-focus-return-id={row_id(:mobile, delivery.id)}
+                  aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
+                  aria-selected={
+                    if selected?(@selected_delivery, delivery), do: "true", else: "false"
+                  }
+                  class={[
+                    "mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors",
+                    row_classes(@selected_delivery, delivery)
+                  ]}
+                >
+                  <%!-- Status badge first/prominent --%>
+                  <div>
+                    <Components.status_badge
+                      status={Components.delivery_display_status(delivery)}
+                      size={:sm}
+                    />
+                  </div>
+
+                  <%!-- The list masks recipient addresses; selecting the Delivery opens its exact detail. --%>
+                  <div class="min-w-0">
+                    <span class="text-label font-bold uppercase text-secondary">Recipient</span>
+                    <p
+                      class="min-w-0 break-words text-body text-base-content"
+                      title={Components.mask_recipient(delivery.recipient)}
+                    >
+                      {Components.mask_recipient(delivery.recipient)}
                     </p>
                   </div>
 
-                  <%!-- Timestamp --%>
-                  <div>
-                    <span class="font-bold uppercase">Updated</span>
-                    <p>
-                      <Components.timestamp at={delivery.last_event_at} class="whitespace-nowrap" />
+                  <%!-- Keep the exact stable ID visible and copyable without hover. --%>
+                  <div class="min-w-0">
+                    <span class="text-label font-bold uppercase text-secondary">ID</span>
+                    <p
+                      class="mono min-w-0 break-all text-label text-secondary"
+                      title={delivery.id}
+                    >
+                      {delivery.id}
                     </p>
                   </div>
-                </div>
-                <span class="text-label font-bold text-[color:var(--mg-color-link)]">Open delivery →</span>
-              </button>
-            </li>
-          </ul>
-        </div>
+
+                  <div class="flex flex-wrap items-start gap-md text-label text-secondary">
+                    <div>
+                      <span class="font-bold uppercase">Latest event</span>
+                      <p class="text-body text-base-content">
+                        {event_label(delivery.last_event_type)}
+                      </p>
+                    </div>
+                    <%!-- Account --%>
+                    <div :if={@show_account?} class="min-w-0">
+                      <span class="font-bold uppercase">Account</span>
+                      <p
+                        class="min-w-0 break-words"
+                        title={Accounts.title(delivery.tenant_id, @account_labels)}
+                      >
+                        {Accounts.label(delivery.tenant_id, @account_labels)}
+                      </p>
+                    </div>
+
+                    <%!-- Provider --%>
+                    <div>
+                      <span class="font-bold uppercase">Provider</span>
+                      <p class="mono min-w-0 break-all" title={delivery.provider}>
+                        {String.upcase(delivery.provider || "unknown")}
+                      </p>
+                    </div>
+
+                    <%!-- Timestamp --%>
+                    <div>
+                      <span class="font-bold uppercase">Updated</span>
+                      <p>
+                        <Components.timestamp at={delivery.last_event_at} class="whitespace-nowrap" />
+                      </p>
+                    </div>
+                  </div>
+                  <span class="text-label font-bold text-[color:var(--mg-color-link)]">Open delivery →</span>
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
     <% end %>
     <.pagination_controls
