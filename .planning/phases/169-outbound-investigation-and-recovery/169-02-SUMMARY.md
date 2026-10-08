@@ -124,7 +124,7 @@ Each task was committed atomically:
 - Core: `mix test test/mailglass/operator/support_summary_test.exs test/mailglass/operator/suppressions_test.exs --seed 1` — 19 passed.
 - Admin: `cd mailglass_admin && mix test test/mailglass_admin/operator_live_test.exs --seed 1` — 92 passed.
 - Browser: Phase 169 Health partial-refresh and exact Account support journeys on port 4102 — 2 passed. Screenshots were written under `mailglass_admin/test-results/`.
-- The installed Elixir 1.20 / Erlang 29 toolchain was used with an isolated `HEX_HOME` because the repository-pinned Erlang 27.3.4.13 version is unavailable on this host. No toolchain or dependency files were changed.
+- The installed Elixir 1.20.4 / Erlang 29.1.1 toolchain was used with `HEX_HOME=/private/tmp/mailglass-169-hex` after the existing Hex archive failed to load under the installed Elixir 1.18.4 / Erlang 27.3.4.15 pair. The exact pinned Erlang 27.3.4.13 is absent, but the compatible OTP 27 pair remains installed and passed Wave 1. No toolchain or dependency files were changed.
 
 ## Deviations from Plan
 
@@ -170,3 +170,9 @@ The implementation adds read-only scoped query projections. The mutation route a
 - Summary file exists at the planned phase path.
 - Task commits `63f532d3` and `77452a76` are ancestors of HEAD.
 - Persisted plan ledger measured 2 commits from `fec3a2a4265fa5941afa9dd08316b7fd44061649` through `77452a76a192ee250d04ae910bd2a79eb0d38bb8`.
+
+## Orchestrator Post-Wave Integration Gate
+
+Admin compilation passed. The complete Admin suite exposed two stale expectations: global `All clear` copy for an empty Account and an inset count preceding the separate reconciliation evidence panel. Updated those assertions to the population-specific labels, absence of global clearance, all four named evidence insets, and the unchanged maximum elevation depth of two.
+
+Full rerun: `ASDF_ELIXIR_VERSION=1.20.4-otp-29 ASDF_ERLANG_VERSION=29.1.1 HEX_HOME=/private/tmp/mailglass-169-hex MIX_ENV=test mix test --seed 1` from `mailglass_admin`: 525 passed, 0 failed, 1 excluded. Schema and UI gates reported `block:false`; codebase-drift abstained with `no-structure-md`. Compiler warnings remain under the newer runtime; the now-unused OperatorLive count_state helper is assigned to Wave 3 while that file is being edited.

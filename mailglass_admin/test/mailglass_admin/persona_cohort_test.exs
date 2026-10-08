@@ -107,13 +107,18 @@ defmodule MailglassAdmin.PersonaCohortTest do
       conn = operator_conn(conn)
 
       # Direct navigation to the zero-delivery tenant must render the scoped
-      # no-data state (the overview's all-clear health), not crash or leak
+      # no-data observations without asserting global health, crashing, or leaking
       # another tenant's data.
       {:ok, _view, html} =
         live(conn, @base_path <> "?" <> URI.encode_query(%{"tenant_id" => "helios-void"}))
 
       assert html =~ "helios-void"
-      assert html =~ "All clear"
+      assert html =~ "Failed webhook attempts"
+      assert html =~ "Unmatched Events"
+      assert html =~ "Active suppression records"
+      assert html =~ "Recorded replay audit outcomes"
+      assert html =~ "Recorded reconciliation audit Events"
+      refute html =~ "All clear"
     end
 
     test "deliveries view renders the empty-state copy", %{conn: conn} do
