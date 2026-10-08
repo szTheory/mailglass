@@ -542,20 +542,10 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:replay_command_feedback, nil)
 
     with %{id: delivery_id, tenant_id: tenant_id} <-
-           socket.assigns.selected_delivery || {:error, :no_selected_delivery},
+         socket.assigns.selected_delivery || {:error, :no_selected_delivery},
          %{} = delivery <-
-           Deliveries.get_delivery(
-             %{
-               tenant_id: tenant_id,
-               delivery_id: delivery_id
-             },
-             []
-           ) || {:error, :unavailable},
-         {:ok, fresh_targets} <-
-           ReplayTargets.list_delivery_targets(%{
-             tenant_id: tenant_id,
-             delivery_id: delivery_id
-           }),
+           read_confirmation_delivery(socket, tenant_id, delivery_id),
+         {:ok, fresh_targets} <- read_confirmation_targets(socket, tenant_id, delivery_id),
          {:ok, target} <-
            resolve_reviewed_replay_target(
              socket.assigns.replay_review_snapshot,
@@ -595,6 +585,16 @@ defmodule MailglassAdmin.OperatorLive do
          |> put_flash(
            :info,
            "Replay is unavailable for this delivery. Review it again before retrying."
+         )}
+
+      {:error, :read_unavailable} ->
+        {:noreply,
+         socket
+         |> assign(:replay_pending?, false)
+         |> assign(:replay_review_consumed?, false)
+         |> put_flash(
+           :info,
+           "Current records could not be refreshed. The exact reviewed request is retained."
          )}
 
       {:error, :review_changed} ->
@@ -1792,6 +1792,29 @@ defmodule MailglassAdmin.OperatorLive do
     else
       {:ok, nil}
     end
+  end
+
+  defp read_confirmation_delivery(socket, tenant_id, delivery_id) do
+    run_read_fault(socket.assigns[:operator_read_fault], :selected_delivery)
+
+    Deliveries.get_delivery(%{tenant_id: tenant_id, delivery_id: delivery_id}, []) ||
+      {:error, :unavailable}
+  rescue
+    error ->
+      if transient_read_error?(error),
+        do: {:error, :read_unavailable},
+        else: reraise(error, __STACKTRACE__)
+  end
+
+  defp read_confirmation_targets(socket, tenant_id, delivery_id) do
+    run_read_fault(socket.assigns[:operator_read_fault], :replay_targets)
+
+    ReplayTargets.list_delivery_targets(%{tenant_id: tenant_id, delivery_id: delivery_id})
+  rescue
+    error ->
+      if transient_read_error?(error),
+        do: {:error, :read_unavailable},
+        else: reraise(error, __STACKTRACE__)
   end
 
   defp run_read_fault(callback, operation) when is_function(callback, 1),
