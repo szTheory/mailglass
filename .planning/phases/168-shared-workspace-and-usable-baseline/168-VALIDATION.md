@@ -9,7 +9,7 @@ created: "2026-10-07"
 
 # Phase 168 — Validation Strategy
 
-Execution audit completed on 2026-10-07. All 11 tasks have automated coverage and passing final results. Direct visual evidence and its remaining limitations are recorded separately in `168-BASELINE.md`; automated coverage does not imply that all 52 visual criteria have passed.
+Execution audit completed on 2026-10-08. All 18 tasks across Plans 01–08 have automated coverage and passing final results. Direct visual evidence and its limits are recorded separately in `168-BASELINE.md`; the baseline inventory retains its evidence labels and does not imply every specimen passed.
 
 ## Test Infrastructure
 
@@ -53,6 +53,16 @@ Every command is rooted at the repository checkout. Existing test targets and th
 
 The same `168-BASELINE.md` specimen ledger is updated through the serialized waves. Each task's browser pass is one batched inspection, one corrective batch, and one confirmation. An additional pass requires a recorded concrete blocker.
 
+| Task | Wave | Requirements / gap | Automated command and failing signal | Direct browser acceptance | Threat refs | Status |
+| --- | ---: | --- | --- | --- | --- | --- |
+| 168-05 T1 | 5 | UXF-03, G-168-5 | `npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 168 Delivery Mailable wrapping"`; nonzero, no matching test, zero executed/passed, or failed exact-text/wrapping/geometry assertion | Exact long Mailable remains readable at 320/390/768/1440 CSS px and actual 200% browser zoom; zoom factor is read back from Chromium | T-168-10 | pass |
+| 168-06 T1 | 6 | UXF-06, G-168-6 | `cd mailglass_admin && mix test test/mailglass_admin/components_test.exs --only g_168_6 --seed 1`; nonzero, zero tests, missing badge, or dispatch snapshot shown instead of latest downstream outcome | Outcome semantics across responsive views are additionally covered by the complete browser suite | — | pass |
+| 168-06 T2 | 6 | UXF-03, G-168-5 / 200% readability | `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 168 Delivery Mailable wrapping"`; nonzero, no matching test, zero executed, missing/empty artifact, zoom readback other than 2, or failed text/line/geometry assertions | Playwright sets and reads real Chromium tab zoom 2; separate CSS viewport screenshots remain accurately labeled | T-168-SC | pass |
+| 168-07 T1 | 6 | UXF-02, G-168-7 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass_admin/operator_live_test.exs --only g_168_7 --seed 1`; nonzero, zero/tagless test, LiveView exit, or prior Account exact evidence displayed | — | T-168-12 | pass |
+| 168-07 T2 | 6 | UXF-06, G-168-10 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass_admin/operator_live_test.exs --only g_168_10 --seed 1`; nonzero, zero/tagless test, prior-window value shown, or same-window stale fallback lost | — | — | pass |
+| 168-07 T3 | 6 | UXF-07, G-168-9 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass_admin/operator_live_test.exs --only g_168_9 --seed 1`; nonzero, zero/tagless test, LiveView exit, pending state retained, target changed/lost, or retry bypasses authorization | — | T-168-13 | pass |
+| 168-08 T1 | 6 | UXF-04/07/08, G-168-8 | `cd mailglass_admin && ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 mix test test/mailglass_admin/preview_live_test.exs --only g_168_8 --seed 1`; nonzero, zero/tagless test, wrong clear-flash key, or rendered feedback remains after dismissal | — | T-168-15 | pass |
+
 ## UI-SPEC Criterion Allocation
 
 | Explicit state criteria | Plan/tasks | Count | Evidence route |
@@ -78,15 +88,7 @@ Fallback edge probe: six empty/encoding rows for UXF-03/06/07 have explicit trut
 
 ## Manual-Only Verifications
 
-“Manual” means direct browser/visual inspection, which the executing agent may perform with browser tools.
-
-| Behavior | Requirement | Why direct inspection | Instructions |
-| --- | --- | --- | --- |
-| Identified before/after specimens | UXF-01 | Historical artifacts and source checks do not prove current output | Record source/asset identity, route, fixture/persona, theme/OS scheme, viewport, zoom, state, issue and capture. |
-| Reflow, readable exact values and targets | UXF-02, UXF-03, UXF-04, UXF-06, UXF-07 | Markup does not prove clipping/readability | Inspect representative 320/390/768/1440 CSS px and 200% zoom, long/non-ASCII names/IDs, touch and keyboard. |
-| Theme preference versus effective scheme | UXF-05 | Cookie/radio assertions do not prove OS response | Choose System; change OS scheme; navigate and reload; verify System remains selected and email appearance remains independent. |
-| Overlay focus and motion | UXF-07, UXF-08 | Structural focus hooks do not prove actual focus/animation | Open/close Quick view and confirmation; cycle focus, Escape/dismiss, return focus; inspect reduced motion and repeated LiveView patches. |
-| Applicable adverse states | UXF-01..08 | Fixtures need truthful, visible state | Cover UI-SPEC's 52 criteria through a representative matrix; distinguish unavailable/denied/empty/partial/stale, never fabricate a success. |
+None remain as owner UAT. The previously listed machine-observable visual, interaction, theme, zoom, and adverse-state checks now have current automated evidence in the existing ExUnit/Playwright stack. Historical screenshot and specimen notes remain in `168-BASELINE.md` as evidence context and limitations, not an owner checkpoint.
 
 ## Validation Sign-Off
 
@@ -110,13 +112,17 @@ Fallback edge probe: six empty/encoding rows for UXF-03/06/07 have explicit trut
 
 2026-10-07: Independent plan checker passed after one targeted revision to enforce the backup, reconciliation, and served-baseline prerequisites before UI edits. Final review reported no blockers or warnings. Deterministic planning probes resolve all 11 task verification commands and their failure statements. Coverage gates found all 8 requirements, 11 decisions, and 52 explicit UI state criteria represented. These are planning checks; product tests, baseline capture, and rendered acceptance remain pending.
 
-## Validation Audit 2026-10-07
+## Validation Audit 2026-10-08
 
 | Metric | Count |
 |---|---|
+| Plans / summaries audited | 8 / 8 |
+| Tasks with automated coverage | 18 / 18 |
 | Gaps found | 0 |
 | Resolved | 0 |
 | Escalated | 0 |
+
+The audit checked all eight PLAN/SUMMARY pairs, the corresponding current ExUnit and Playwright regressions, UAT and phase verification ledgers, and D-52 in `METHODOLOGY.md`/`PROJECT.md`. Plans 05–08 add deterministic browser and LiveView coverage; no further test artifact was needed. Current supplied phase-wide evidence: ExUnit 550 tests, 0 failures, 1 excluded; operator Playwright 198 passed, 0 failed, 1 existing guarded skip. No owner UAT remains.
 
 ## Post-Audit Confirmation
 
