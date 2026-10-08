@@ -51,7 +51,9 @@ Three parallel read-only reviews examined code/contracts, operator/support/desig
 
 ## Corrections Made
 
-No corrections — the owner selected option 1 and confirmed the recommendation set, including that inbound “no change” is shown only for an explicit inbound result or persisted fact.
+The owner first approved adding a narrow inbound-internal no-change result while preserving stable public APIs. Code inspection then confirmed that no internal source exists: the stable `MailglassInbound.Mailbox.process/1` callback currently accepts only `:accept`, `:ignore`, `{:reject, reason}`, and `{:bounce, reason}`. The owner approved the smallest source-backed resolution: add an explicit, additive `:no_change` callback outcome and persist it through the existing ExecutionRun outcome path. Existing outcomes keep their meanings; no-change must never be inferred from `:ignore`, an unchanged projection, or a reread. This approved exception is recorded as D-16 in CONTEXT.md under D-15's concrete-requirement allowance.
+
+The independent plan check found two remaining research questions. Planning resolved the read-failure boundary as D-17: only explicit gateway errors and `DBConnection.ConnectionError` (including queue timeout) render an unavailable state, while other exceptions propagate. Source inspection found no selected-record completion PubSub signal; existing insertion PubSub and execution telemetry do not provide one, so D-18 uses a timestamped history snapshot plus explicit refresh and adds no polling or signal. These decisions are recorded in CONTEXT.md and the revised plan tasks.
 
 ## External Research
 
