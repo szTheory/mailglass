@@ -2356,7 +2356,7 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   defp default_support_exact_evidence do
-    %{focus: nil, id: nil, status: :none, record: nil, checked_at: nil}
+    %{tenant_id: nil, focus: nil, id: nil, status: :none, record: nil, checked_at: nil}
   end
 
   defp load_support_exact_evidence(socket, filter_params, support_state) do
@@ -2384,13 +2384,15 @@ defmodule MailglassAdmin.OperatorLive do
       default_support_exact_evidence()
     else
       prior = socket.assigns[:support_exact_evidence]
-      same_request? = prior && prior.focus == focus && prior.id == id
+      same_request? =
+        prior && prior.tenant_id == tenant_id && prior.focus == focus && prior.id == id
 
       try do
         run_read_fault(socket.assigns[:operator_read_fault], operation)
         record = read.()
 
         %{
+          tenant_id: tenant_id,
           focus: focus,
           id: id,
           status: if(is_map(record), do: :ready, else: :not_found),
@@ -2403,7 +2405,14 @@ defmodule MailglassAdmin.OperatorLive do
             if same_request? && prior.status in [:ready, :stale] && is_map(prior.record) do
               %{prior | status: :stale}
             else
-              %{focus: focus, id: id, status: :unavailable, record: nil, checked_at: nil}
+              %{
+                tenant_id: tenant_id,
+                focus: focus,
+                id: id,
+                status: :unavailable,
+                record: nil,
+                checked_at: nil
+              }
             end
           else
             reraise(error, __STACKTRACE__)
