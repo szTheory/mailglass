@@ -170,7 +170,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     ~H"""
     <div class="grid gap-xs">
       <.mailable_menu_label mod={@mod} />
-      <ul data-testid="preview-email-menu-scenario-list" class="grid gap-0.5 pl-sm">
+      <ul data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <%= for {scenario_name, _defaults} <- @reflection do %>
           <li>
             <.link
@@ -209,7 +209,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     ~H"""
     <div class="grid gap-xs">
       <.mailable_menu_label mod={@mod} />
-      <div data-testid="preview-email-menu-scenario-list" class="grid gap-0.5 pl-sm">
+      <div data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <div class="flex min-h-11 items-center gap-sm rounded-field px-sm py-xs text-body text-secondary">
           <span class="min-w-0 flex-1 truncate">No previews defined</span>
           <Components.badge variant={:stub} />
@@ -223,7 +223,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     ~H"""
     <div class="grid gap-xs">
       <.mailable_menu_label mod={@mod} />
-      <div data-testid="preview-email-menu-scenario-list" class="grid gap-0.5 pl-sm">
+      <div data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <.link
           patch={broken_path(@mount_path, @mod)}
           title="This Mailable raised while rendering"

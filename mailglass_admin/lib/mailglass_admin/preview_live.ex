@@ -461,7 +461,7 @@ defmodule MailglassAdmin.PreviewLive do
                 <li class="flex items-start gap-sm">
                   <Components.icon
                     name="hero-check-circle"
-                    class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                    class="mt-xs h-4 w-4 shrink-0 text-primary"
                   />
                   <span>
                     Confirm the module calls
@@ -472,7 +472,7 @@ defmodule MailglassAdmin.PreviewLive do
                 <li class="flex items-start gap-sm">
                   <Components.icon
                     name="hero-check-circle"
-                    class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                    class="mt-xs h-4 w-4 shrink-0 text-primary"
                   />
                   <span>
                     Or pass an explicit list to the router: <code class="font-mono text-label overflow-auto whitespace-pre-wrap">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
