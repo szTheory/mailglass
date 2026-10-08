@@ -1,27 +1,32 @@
 ---
-phase: 168
+phase: "168"
 review: 168-REVIEW.md
 titles: json
 findings:
+  - id: CR-01
+    severity: critical
+    disposition: open
+    title: "URL Account selection bypasses the server-side permitted-account set"
   - id: WR-01
     severity: warning
-    disposition: fixed
-    title: "Account options lose link semantics in the accessibility tree"
+    disposition: open
+    title: "Malformed support evidence IDs crash the operator page"
   - id: WR-02
     severity: warning
-    disposition: fixed
-    title: "Replay focus trap escapes when the action is unavailable"
-open: 0
-total: 2
-recorded: 2026-10-07T21:44:50.499Z
+    disposition: open
+    title: "Resend replay evidence omits its provider label"
+open: 3
+total: 3
+recorded: "2026-10-08"
 ---
 
 # Phase 168: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 168-REVIEW-FIX.md |
-| WR-02 | warning | fixed | 168-REVIEW-FIX.md |
+| CR-01 | critical | open | Tenant authorization policy needs a decision against the host contract; see 168-REVIEW.md |
+| WR-01 | warning | open | Untriaged; see 168-REVIEW.md |
+| WR-02 | warning | open | Untriaged; see 168-REVIEW.md |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
