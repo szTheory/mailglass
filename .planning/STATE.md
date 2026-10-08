@@ -42,7 +42,7 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 Phase: 169 (Outbound Investigation and Recovery) — EXECUTING
 Plan: 5 of 5
 Status: Ready to execute
-Last activity: 2026-10-08 — Phase 169 Plan 03 completed
+Last activity: 2026-10-08 — Phase 169 Plan 04 completed
 
 ## v2.9 Roadmap Shape
 
@@ -486,5 +486,5 @@ Resume file: None
 
 - Phase 168 is complete and independently verified. All four plans and both code-review corrections are committed.
 - Phase 169 research, pattern map, validation strategy and five implementation plans are complete under the owner's delegated recommendations. See `.planning/phases/169-outbound-investigation-and-recovery/169-PLAN-CHECK.md` and `169-PLAN-COVERAGE.md`.
-- Next: `$gsd-execute-phase 169` resumes at Plan 04. Plans 01–03 are implemented and verified; two serial plans remain for frozen replay review/outcomes and connected rendered acceptance. Full core/Admin/assets/unfiltered browser regression is required by the final task. Three unclassified edge-probe assumptions and five descriptor-less prohibitions remain flagged for later verification; no enforcement proof is claimed.
+- Next: `$gsd-execute-phase 169` resumes at Plan 05. Plans 01–04 are implemented and verified; one serial plan remains for connected rendered acceptance. Full core/Admin/assets/unfiltered browser regression is required by the final task. Three unclassified edge-probe assumptions and five descriptor-less prohibitions remain flagged for later verification; no enforcement proof is claimed.
 - Current demo: `http://localhost:4015`; source/asset identity and rendered evidence are in `168-BASELINE.md`. Local admin checks: 513 ExUnit tests, zero failures, one exclusion; Playwright 184 passed, one guarded skip. Remote delivery/CI proof remains Phase 173 scope.
