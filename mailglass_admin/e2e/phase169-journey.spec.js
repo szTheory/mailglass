@@ -6,6 +6,7 @@ const path = require("node:path");
 const tenantId = "browser-tenant";
 const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
 const beforeDir = path.resolve(process.cwd(), "../.planning/phases/169-outbound-investigation-and-recovery/artifacts/before");
+const afterDir = path.resolve(process.cwd(), "../.planning/phases/169-outbound-investigation-and-recovery/artifacts/after");
 
 function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -245,81 +246,155 @@ test.describe("Phase 169 connected journey", () => {
     await page.screenshot({ path: "test-results/phase169-current-suppression.png", fullPage: true });
   });
 
-  for (const width of [390, 1440]) {
-    test(`Phase 169 pre-edit baseline at ${width}px`, async ({ page }) => {
-    fs.mkdirSync(beforeDir, { recursive: true });
+  test("Phase 169 rendered before evidence remains immutable", async () => {
+    const expected = {
+      "deliveries-1440.png": "3f496a8c88fd8b3dd9a3f538debf6b07f6d4b516e23d7424240cfccca9c2091b",
+      "deliveries-390.png": "8dcf2f4d2e1bc88143458964bbd4cf421385149fc4e4d35e28f89d5cadfe1f64",
+      "detail-1440.png": "21157c8b37fb9b4ff1d16850124f00127f7cd3313a567effc2bc3ecc3866ed58",
+      "detail-390.png": "1d939c4010fe61668a9a294864347eefaeffe32b90dff05fb8ecf08da33ff846",
+      "health-1440.png": "8d20abe41ebea2354ba44d46750c0e19efa29ebe2f3722898458bd408f92b33e",
+      "health-390.png": "d0e76d2baf7baa28499781b7a91636149fdf657e5375d70fdd2f6a49567560ba",
+      "quick-view-1440.png": "fb2ae4bf11e6192281b9d3e2ae8a15658d4d9f887c18da20f98de77149918250",
+      "quick-view-390.png": "3e5e35b70b5eace02bb2f8c586290c4bb9ef6d0f80698d05052e29be8f403dc6",
+      "replay-review-1440.png": "581e4e9dcaf36d93c2e2d85e6ed049ea7d5d5a539f8798ccea90373aa7f433a8",
+      "replay-review-390.png": "fee62c72368b1f239d0dadb8d9af376d0150b714a27932cbf78c2d963ff6e2a9"
+    };
+
+    for (const [file, digest] of Object.entries(expected)) {
+      expect(fs.existsSync(path.join(beforeDir, file)), `before capture ${file} exists`).toBeTruthy();
+      expect(sha256(fs.readFileSync(path.join(beforeDir, file))), `before capture ${file} is unchanged`).toBe(digest);
+    }
+  });
+
+  test("Phase 169 rendered route matrix stays readable across widths and missing media", async ({ page }) => {
+    fs.mkdirSync(afterDir, { recursive: true });
     const cssResponses = [];
+    const externalRequests = [];
+    page.on("request", request => {
+      if (new URL(request.url()).origin !== baseURL) externalRequests.push(request.url());
+    });
     page.on("response", async response => {
       if (/\/css-[0-9a-f]+(?:\.css)?(?:\?|$)/i.test(response.url())) {
         cssResponses.push({ url: response.url(), body: await response.body() });
       }
     });
 
-    await page.setViewportSize({ width, height: 1000 });
-    await openBrowserTenant(page);
-    await expect(page.getByTestId("operator-overview")).toBeVisible();
-    await page.screenshot({ path: path.join(beforeDir, `health-${width}.png`) });
-    const routes = [new URL(page.url()).pathname + new URL(page.url()).search];
+    // The wordmark is inline; a missing optional logo route must not remove it.
+    await page.route("**/logo.svg?phase169-missing", route => route.abort());
+    const routes = [];
+    const geometryByWidth = [];
+    const widths = [320, 390, 768, 1440];
 
-    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
-    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
-    await page.screenshot({ path: path.join(beforeDir, `deliveries-${width}.png`) });
-    routes.push(new URL(page.url()).pathname + new URL(page.url()).search);
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: 1000 });
+      const reset = await page.request.get("/ops/browser-reset");
+      expect(reset.ok()).toBeTruthy();
+      await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`)}`);
+      await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
+      await expect(page.getByRole("img", { name: "mailglass" })).toBeVisible();
+      await expect(page.getByTestId("operator-overview-health")).toBeVisible();
+      await page.evaluate(() => {
+        const probe = document.createElement("img");
+        probe.alt = "";
+        probe.src = "/ops/mail/logo.svg?phase169-missing";
+        document.body.append(probe);
+      });
+      await expect.poll(() => page.locator('img[src*="phase169-missing"]').evaluate(image => image.complete && image.naturalWidth === 0)).toBeTruthy();
+      await expect(page.getByRole("img", { name: "mailglass" })).toBeVisible();
+      await expect(page.getByTestId("operator-overview-health")).toBeVisible();
+      const healthGeometry = await page.evaluate(() => ({
+        viewport: window.innerWidth,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        bodyFont: Number.parseFloat(getComputedStyle(document.querySelector(".text-body")).fontSize),
+        labels: [...document.querySelectorAll(".text-label")].map(el => Number.parseFloat(getComputedStyle(el).fontSize)),
+        decorativeIcons: document.querySelectorAll('span[aria-hidden="true"][class*="hero-"]').length
+      }));
+      expect(healthGeometry.viewport).toBe(width);
+      expect(healthGeometry.overflow, `Health page overflow at ${width}px`).toBeLessThanOrEqual(1);
+      expect(healthGeometry.bodyFont).toBe(16);
+      expect(healthGeometry.labels.length).toBeGreaterThan(0);
+      expect(Math.min(...healthGeometry.labels)).toBe(14);
+      expect(healthGeometry.decorativeIcons).toBeGreaterThan(0);
+      geometryByWidth.push({ width, ...healthGeometry });
+      await page.locator('img[src*="phase169-missing"]').evaluate(image => image.remove());
+      await page.screenshot({ path: path.join(afterDir, `health-${width}.png`), fullPage: true });
+      routes.push({ width, state: "Health", url: new URL(page.url()).pathname + new URL(page.url()).search });
 
-    const exactRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3);
-    if (width >= 768) {
-      await exactRow.locator("td").first().click();
-    } else {
-      await exactRow.click();
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+      await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+      const contentWidth = await page.locator("main").first().evaluate(el => el.getBoundingClientRect().width);
+      if (contentWidth >= 768) {
+        await expect(page.getByTestId("operator-deliveries-table")).toBeVisible();
+        await expect(page.getByTestId("operator-deliveries-cards")).toBeHidden();
+      } else {
+        await expect(page.getByTestId("operator-deliveries-cards")).toBeVisible();
+        await expect(page.getByTestId("operator-deliveries-table")).toBeHidden();
+      }
+      const listGeometry = await page.evaluate(() => ({
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        mainWidth: document.querySelector("main")?.getBoundingClientRect().width,
+        focusTargets: [...document.querySelectorAll('[data-testid="operator-deliveries-list-card"] button')]
+          .filter(el => el.getClientRects().length > 0)
+          .map(el => el.getBoundingClientRect().height)
+      }));
+      expect(listGeometry.overflow, `Deliveries page overflow at ${width}px`).toBeLessThanOrEqual(1);
+      expect(listGeometry.mainWidth).toBe(contentWidth);
+      expect(listGeometry.focusTargets.length).toBeGreaterThan(0);
+      expect(Math.min(...listGeometry.focusTargets), `Open action target at ${width}px`).toBeGreaterThanOrEqual(44);
+      await page.screenshot({ path: path.join(afterDir, `deliveries-${width}.png`), fullPage: true });
+      routes.push({ width, contentWidth, state: "Deliveries", url: new URL(page.url()).pathname + new URL(page.url()).search });
+
+      await page.getByRole("button", { name: "Open delivery" }).nth(3).click();
+      const quickView = page.getByTestId("operator-quick-view");
+      await expect(quickView).toBeVisible();
+      await expect(quickView).toHaveAttribute("aria-modal", "true");
+      await expect(quickView).toContainText("Latest recorded event:");
+      await expect(quickView).toContainText("Delivery ID");
+      await expect(page.locator("body")).not.toContainText("browser-exact@example.com");
+      // Overlays are fixed to the viewport; fullPage screenshots resize the capture
+      // surface and place the sheet at the artificial bottom of a very tall image.
+      await page.screenshot({ path: path.join(afterDir, `quick-view-${width}.png`), animations: "disabled" });
+      routes.push({ width, state: "Quick view", url: new URL(page.url()).pathname + new URL(page.url()).search });
+
+      await page.getByTestId("operator-quick-view-full").click();
+      await expect(page.getByTestId("operator-detail-header")).toBeVisible();
+      await expect(page.getByTestId("operator-detail-header")).toContainText("browser-exact@example.com");
+      await expect(page.getByTestId("operator-timeline")).toBeVisible();
+      await page.screenshot({ path: path.join(afterDir, `detail-${width}.png`), fullPage: true });
+      routes.push({ width, state: "Full detail", url: new URL(page.url()).pathname + new URL(page.url()).search });
+
+      await page.getByTestId("operator-replay-open").click();
+      const review = page.getByTestId("operator-replay-modal");
+      await expect(review).toBeVisible();
+      await expect(review).toHaveAttribute("aria-modal", "true");
+      await expect(review).toContainText("does not resend outbound mail or prove provider receipt");
+      expect(await review.evaluate(el => el.contains(document.activeElement)), `Replay focus remains inside at ${width}px`).toBeTruthy();
+      await page.screenshot({ path: path.join(afterDir, `replay-review-${width}.png`), animations: "disabled" });
+      routes.push({ width, state: "Replay review", url: new URL(page.url()).pathname + new URL(page.url()).search });
+      await page.keyboard.press("Escape");
+      await expect(review).toHaveCount(0);
     }
-    await expect(page.getByTestId("operator-quick-view")).toBeVisible();
-    await page.screenshot({ path: path.join(beforeDir, `quick-view-${width}.png`) });
-    const selectedDeliveryId = new URL(page.url()).searchParams.get("delivery_id");
-    routes.push(new URL(page.url()).pathname + new URL(page.url()).search);
 
-    await page.getByTestId("operator-quick-view-full").click();
-    await expect(page.getByTestId("operator-detail-header")).toBeVisible();
-    await page.screenshot({ path: path.join(beforeDir, `detail-${width}.png`) });
-    routes.push(new URL(page.url()).pathname + new URL(page.url()).search);
-
-    await page.getByTestId("operator-replay-open").click();
-    const review = page.getByTestId("operator-replay-modal");
-    await expect(review).toBeVisible();
-    await page.screenshot({ path: path.join(beforeDir, `replay-review-${width}.png`) });
-    await review.locator("#operator-replay-close").click();
-
+    expect(externalRequests, "all browser requests remain local").toEqual([]);
     expect(cssResponses.length, "served versioned stylesheet response").toBeGreaterThan(0);
     const served = cssResponses[0];
     const builtAsset = fs.readFileSync(path.resolve(process.cwd(), "priv/static/app.css"));
     const sourceAsset = fs.readFileSync(path.resolve(process.cwd(), "assets/css/app.css"));
-    expect(served.body, "served CSS bytes match the checked-in built asset").toEqual(builtAsset);
-    const evidence = {
-      servedCssUrl: served.url,
-      servedCssSha256: sha256(served.body),
-      builtCssSha256: sha256(builtAsset),
-      sourceCssSha256: sha256(sourceAsset),
-      userAgent: await page.evaluate(() => navigator.userAgent),
-      platform: await page.evaluate(() => navigator.platform),
-      browserPlatform: process.platform,
-      viewportCssPixels: width,
-      zoom: 1,
-      deviceScaleFactor: await page.evaluate(() => window.devicePixelRatio),
-      theme: "System",
+    expect(served.body, "served CSS bytes match the built asset").toEqual(builtAsset);
+    console.log(`PHASE169_RENDERED ${JSON.stringify({
+      revision: require("node:child_process").execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
       fixture: "seed_browser_scenario!/0 (browser-tenant)",
+      theme: "System",
+      zoom: "100% Playwright viewport; actual 200% Chrome separately inspected",
+      sourceCssSha256: sha256(sourceAsset),
+      builtCssSha256: sha256(builtAsset),
+      servedCssSha256: sha256(served.body),
+      servedCssUrl: served.url,
       routes,
-      selectedDeliveryId,
-      interactionStates: ["Health", "Deliveries", "Quick view", "full detail", "replay review"],
-      screenshotPaths: [
-        `artifacts/before/health-${width}.png`,
-        `artifacts/before/deliveries-${width}.png`,
-        `artifacts/before/quick-view-${width}.png`,
-        `artifacts/before/detail-${width}.png`,
-        `artifacts/before/replay-review-${width}.png`
-      ]
-    };
-    console.log(`PHASE169_BASELINE ${JSON.stringify(evidence)}`);
-    });
-  }
+      screenshots: widths.flatMap(width => ["health", "deliveries", "quick-view", "detail", "replay-review"].map(state => `artifacts/after/${state}-${width}.png`)),
+      geometryByWidth
+    })}`);
+  });
 
   test("Phase 169 baseline and exact replay tracer", async ({ page }) => {
     const unknownScenario = await page.request.get("/ops/browser-reset?scenario=unlisted");
