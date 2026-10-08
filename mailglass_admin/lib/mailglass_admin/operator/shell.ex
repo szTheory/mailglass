@@ -32,6 +32,7 @@ defmodule MailglassAdmin.Operator.Shell do
   alias MailglassAdmin.Operator.Accounts
   alias MailglassAdmin.SurfaceNav
   alias MailglassAdmin.Theme
+  alias Phoenix.LiveView.JS
 
   @doc """
   Whether the inbound surface is present — the SAME gate the router uses to
@@ -280,6 +281,10 @@ defmodule MailglassAdmin.Operator.Shell do
           <li :for={tenant <- @tenant_options}>
             <.link
               patch={tenant_switch_path(@page_uri, tenant.id)}
+              phx-click={JS.show(
+                to: "#operator-account-switch-status-#{tenant.id}",
+                display: "block"
+              )}
               aria-current={if tenant.id == @selected_tenant_id, do: "true", else: nil}
               data-testid="operator-account-option"
               data-account-id={tenant.id}
@@ -291,6 +296,18 @@ defmodule MailglassAdmin.Operator.Shell do
           </li>
         </ul>
       </details>
+      <span
+        :for={tenant <- @tenant_options}
+        :if={tenant.id != @selected_tenant_id}
+        id={"operator-account-switch-status-#{tenant.id}"}
+        data-testid="operator-account-switch-status"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        class="hidden basis-full min-w-0 break-words text-label text-secondary"
+      >
+        Switching to {tenant.label}…
+      </span>
     </div>
     """
   end
