@@ -589,7 +589,15 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
         scrollWidth: element.scrollWidth,
         clientWidth: element.clientWidth,
         documentScrollWidth: document.documentElement.scrollWidth,
-        viewportWidth: window.innerWidth
+        viewportWidth: window.innerWidth,
+        overflowing: [...document.querySelectorAll("body *")]
+          .map(node => ({ node, overflow: node.scrollWidth - node.clientWidth }))
+          .filter(({ overflow }) => overflow > 1)
+          .sort((a, b) => b.overflow - a.overflow)
+          .slice(0, 3)
+          .map(({ node, overflow }) =>
+            `${node.dataset.testid || node.tagName.toLowerCase()}: ${node.textContent.trim().slice(0, 48)} (+${overflow}px)`
+          )
       };
     });
     expect(geometry.overflowWrap, `Mailable wrapping at ${width}px`).toBe("anywhere");
@@ -601,7 +609,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     ).toBeLessThanOrEqual(1);
     expect(
       geometry.documentScrollWidth,
-      `document width at ${width}px`
+      `document width at ${width}px; overflowing elements: ${geometry.overflowing.join("; ")}`
     ).toBeLessThanOrEqual(geometry.viewportWidth);
   }
 });

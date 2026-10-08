@@ -27,7 +27,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           <p class="mono text-label text-secondary">{@delivery.id}</p>
           <p
             :if={present?(@delivery.mailable)}
-            class="break-words text-body text-secondary [overflow-wrap:anywhere]"
+            class="text-body text-secondary [overflow-wrap:anywhere]"
           >
             {@delivery.mailable}
           </p>
@@ -63,7 +63,9 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           </div>
           <div :if={present?(@delivery.provider_message_id)}>
             <dt class="text-label font-bold uppercase">Provider message</dt>
-            <dd class="mono mt-xs text-base-content">{@delivery.provider_message_id}</dd>
+            <dd class="mono mt-xs text-base-content [overflow-wrap:anywhere]">
+              {@delivery.provider_message_id}
+            </dd>
           </div>
         </dl>
       </div>
