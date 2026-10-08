@@ -1,33 +1,47 @@
 ---
-phase: "168"
+phase: 168
 review: 168-REVIEW.md
 titles: json
 findings:
   - id: CR-01
     severity: critical
-    disposition: skipped
-    title: "URL Account selection bypasses the server-side permitted-account set"
-    source: "Owner confirmed global operator access on 2026-10-08; stable trust contract and Phase 168 threat register now state the policy."
+    disposition: open
+    title: "Delivery badges show the stored snapshot instead of the latest outcome"
+  - id: CR-02
+    severity: critical
+    disposition: open
+    title: "Transient reads can display cached support evidence from another Account"
   - id: WR-01
     severity: warning
     disposition: open
-    title: "Malformed support evidence IDs crash the operator page"
+    title: "Malformed exact-support IDs crash the LiveView"
   - id: WR-02
     severity: warning
     disposition: open
-    title: "Resend replay evidence omits its provider label"
-open: 2
-total: 3
-recorded: "2026-10-08"
+    title: "Preview success flash cannot be dismissed"
+  - id: WR-03
+    severity: warning
+    disposition: open
+    title: "Replay confirmation does not handle transient failures in its fresh reads"
+  - id: WR-04
+    severity: warning
+    disposition: open
+    title: "Cached health counts can be shown for a different selected interval"
+open: 6
+total: 6
+recorded: 2026-10-08T17:15:36.098Z
 ---
 
 # Phase 168: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| CR-01 | critical | skipped | Owner confirmed global operator access on 2026-10-08; see operator-trust.md and 168-SECURITY.md |
-| WR-01 | warning | open | Untriaged; see 168-REVIEW.md |
-| WR-02 | warning | open | Untriaged; see 168-REVIEW.md |
+| CR-01 | critical | open | - |
+| CR-02 | critical | open | - |
+| WR-01 | warning | open | - |
+| WR-02 | warning | open | - |
+| WR-03 | warning | open | - |
+| WR-04 | warning | open | - |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.

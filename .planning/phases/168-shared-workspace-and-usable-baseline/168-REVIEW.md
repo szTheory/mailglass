@@ -1,113 +1,104 @@
 ---
 phase: 168-shared-workspace-and-usable-baseline
-reviewed: 2026-10-08T15:25:33Z
+reviewed: 2026-10-08T17:12:27Z
 depth: standard
-files_reviewed: 60
+files_reviewed: 26
 files_reviewed_list:
-  - docs/api_stability.md
-  - lib/mailglass.ex
-  - lib/mailglass/operator/deliveries.ex
-  - lib/mailglass/operator/replay_targets.ex
-  - lib/mailglass/operator/support_summary.ex
-  - lib/mailglass/operator/suppressions.ex
-  - lib/mailglass/operator/timeline.ex
-  - lib/mailglass/webhook/replay.ex
   - mailglass_admin/assets/css/app.css
-  - mailglass_admin/docs/api_stability.md
-  - mailglass_admin/docs/operator-trust.md
   - mailglass_admin/e2e/flows.spec.js
-  - mailglass_admin/e2e/gallery-matrix.spec.js
-  - mailglass_admin/e2e/operator.spec.js
-  - mailglass_admin/e2e/phase168-plan03-acceptance.spec.js
-  - mailglass_admin/e2e/phase169-journey.spec.js
   - mailglass_admin/e2e/structural.spec.js
   - mailglass_admin/lib/mailglass_admin/components.ex
-  - mailglass_admin/lib/mailglass_admin/controllers/assets.ex
-  - mailglass_admin/lib/mailglass_admin/gallery_live.ex
   - mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex
-  - mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex
+  - mailglass_admin/lib/mailglass_admin/inbound/filters_form.ex
   - mailglass_admin/lib/mailglass_admin/inbound/records_list.ex
-  - mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex
   - mailglass_admin/lib/mailglass_admin/inbound_live.ex
+  - mailglass_admin/lib/mailglass_admin/layouts/root.html.heex
   - mailglass_admin/lib/mailglass_admin/operator/deliveries_list.ex
   - mailglass_admin/lib/mailglass_admin/operator/detail_header.ex
   - mailglass_admin/lib/mailglass_admin/operator/filters_form.ex
   - mailglass_admin/lib/mailglass_admin/operator/quick_view.ex
-  - mailglass_admin/lib/mailglass_admin/operator/repair_state.ex
-  - mailglass_admin/lib/mailglass_admin/operator/replay_action.ex
   - mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex
   - mailglass_admin/lib/mailglass_admin/operator/shell.ex
-  - mailglass_admin/lib/mailglass_admin/operator/support_cards.ex
-  - mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex
-  - mailglass_admin/lib/mailglass_admin/operator/timeline.ex
   - mailglass_admin/lib/mailglass_admin/operator_live.ex
   - mailglass_admin/lib/mailglass_admin/preview/sidebar.ex
   - mailglass_admin/lib/mailglass_admin/preview_live.ex
   - mailglass_admin/priv/static/app.css
-  - mailglass_admin/test/mailglass_admin/bucket_a_coverage_test.exs
   - mailglass_admin/test/mailglass_admin/components_test.exs
-  - mailglass_admin/test/mailglass_admin/group_nesting_test.exs
   - mailglass_admin/test/mailglass_admin/inbound_live_test.exs
-  - mailglass_admin/test/mailglass_admin/operator/replay_modal_test.exs
   - mailglass_admin/test/mailglass_admin/operator/shell_test.exs
   - mailglass_admin/test/mailglass_admin/operator_live_test.exs
-  - mailglass_admin/test/mailglass_admin/operator_trust_doc_test.exs
-  - mailglass_admin/test/mailglass_admin/persona_cohort_test.exs
   - mailglass_admin/test/mailglass_admin/token_parity_test.exs
   - mailglass_admin/test/mailglass_admin/voice_test.exs
   - mailglass_admin/test/support/endpoint_case.ex
-  - mailglass_admin/test/support/operator_browser_server.ex
-  - mailglass_admin/test/support/operator_fixtures.ex
-  - test/mailglass/operator/deliveries_test.exs
-  - test/mailglass/operator/replay_targets_test.exs
-  - test/mailglass/operator/support_summary_test.exs
-  - test/mailglass/operator/suppressions_test.exs
-  - test/mailglass/operator/timeline_test.exs
-  - test/mailglass/webhook/replay_test.exs
 findings:
-  critical: 1
-  warning: 2
+  critical: 2
+  warning: 4
   info: 0
-  total: 3
+  total: 6
 status: issues_found
 ---
 
 # Phase 168: Code Review Report
 
-**Reviewed:** 2026-10-08T15:25:33Z  
+**Reviewed:** 2026-10-08T17:12:27Z  
 **Depth:** standard  
-**Files Reviewed:** 60  
+**Files Reviewed:** 26  
 **Status:** issues_found
 
 ## Summary
 
-Reviewed the 60 unique source paths in the supplied scope. The evaluation-scope resolver was degraded (`no-task-commits-since`), so the review includes the related Phase 169 files as requested. The principal risk is that URL-selected Account IDs are treated as authorized on both operator surfaces without a server-side membership check; malformed support-evidence IDs can also turn a crafted URL into a failing LiveView request. No test files were reported as findings.
+Reviewed all 26 supplied files and traced the changed operator paths into their read models and shared LiveView components. Found two blockers: status badges no longer reflect downstream Delivery outcomes, and stale exact-support cache data can cross Account scopes after a transient read failure. Four warnings cover malformed support IDs, a nonfunctional Preview toast dismiss control, unhandled transient reads during replay confirmation, and stale health counts presented under a newly selected time interval. Tests were not run, per instruction.
 
 ## Narrative Findings (AI reviewer)
 
-### CR-01: URL Account selection bypasses the server-side permitted-account set
+### Critical Issues
+
+### CR-01: Delivery badges show the stored snapshot instead of the latest outcome
 
 **Classification:** BLOCKER  
-**File:** `mailglass_admin/lib/mailglass_admin/operator_live.ex:153-162`; `mailglass_admin/lib/mailglass_admin/inbound_live.ex:161-170`  
-**Issue:** Both LiveViews compute `tenant_options` from the authenticated operator context, then classify every non-empty `tenant_id` query value as `:selected` without checking whether the operator may access it. The selected ID is then passed to tenant-scoped reads and used to subscribe to that tenant's event topic. An authenticated operator can therefore change the query string to another tenant ID and read its delivery/inbound records if that tenant exists in the host database. The mount-time `:operator_access` check authorizes entry to the operator surface; it does not bind subsequent reads to the returned actor's permitted tenant set.
-**Fix:** Resolve the selected tenant against an authoritative, server-side authorization check before any reads or PubSub subscription. Preserve support for permitted IDs absent from activity-derived selector options by asking the host authorization seam for permission independently of that list; render a denied/empty state for an unpermitted ID.
+**File:** `mailglass_admin/lib/mailglass_admin/operator/deliveries_list.ex:173,243`; `mailglass_admin/lib/mailglass_admin/operator/detail_header.ex:25`; `mailglass_admin/lib/mailglass_admin/operator/quick_view.ex:111`; contract in `mailglass_admin/lib/mailglass_admin/components.ex:1046-1070`  
+**Issue:** The changed list, full-detail header, and Quick view pass `delivery.status` directly to the status badge. The component's existing `delivery_display_status/1` contract explains that `Delivery.status` is a dispatch snapshot that stops at `:sent`; downstream events such as `:delivered`, `:bounced`, and `:opened` must supersede it. A Delivery with a `:sent` snapshot and a `:delivered` latest event is therefore labeled Sent throughout the operator UI, even where the latest event is shown as Delivered.
+**Fix:** Pass `Components.delivery_display_status(delivery)` to each badge and add rendered tests for a `:sent` snapshot with downstream outcomes.
 
-### WR-01: Malformed support evidence IDs crash the operator page
+### CR-02: Transient reads can display cached support evidence from another Account
+
+**Classification:** BLOCKER  
+**File:** `mailglass_admin/lib/mailglass_admin/operator_live.ex:178,2386-2406`; rendered by `mailglass_admin/lib/mailglass_admin/operator_live.ex:1143-1147`  
+**Issue:** `load_support_exact_evidence/3` decides whether cached evidence is the same request using only `focus` and record `id`; it does not include the `tenant_id`. When a URL changes the selected Account but retains the same support focus and ID, a transient read failure for the new Account returns `prior.record` as `:stale`. The selected Account has already been updated in `handle_params/3`, so `SupportCards` can render the previous Account's exact record under the new Account context.
+**Fix:** Include the tenant ID in the cached evidence state and require it to match before reusing a stale record. Clear exact evidence when the selected tenant changes.
+
+### Warnings
+
+### WR-01: Malformed exact-support IDs crash the LiveView
 
 **Classification:** WARNING  
-**File:** `mailglass_admin/lib/mailglass_admin/operator_live.ex:2415-2419`; `lib/mailglass/operator/support_summary.ex:117-135`  
-**Issue:** `support_event_id` and `support_webhook_event_id` are copied from URL params without UUID validation. The exact-evidence loader passes these strings to `get_unmatched_event/2` and `get_webhook_event/2`, whose queries compare them with UUID primary keys. A malformed value raises an Ecto query cast error; the LiveView rescue only converts transient database errors and re-raises this input error, so a malformed or stale copied link fails the page instead of showing unavailable/not-found evidence.
-**Fix:** Validate UUIDs when normalizing support state and discard invalid IDs, or make the read-model functions cast IDs and return `nil` for invalid values before building the query.
+**File:** `mailglass_admin/lib/mailglass_admin/operator_live.ex:2367-2377,2415-2420`; `lib/mailglass/operator/support_summary.ex:117-135`  
+**Issue:** URL-provided `support_event_id` and `support_webhook_event_id` are copied into exact-evidence queries without UUID validation. The read models compare these values with UUID primary keys, which raises a query cast error for malformed IDs. `load_support_exact_evidence/3` re-raises that non-transient error, so a malformed or stale copied link fails the LiveView instead of rendering unavailable or not-found evidence.
+**Fix:** Validate each ID as a UUID before building the query, or make the read-model functions return `nil` for invalid IDs.
 
-### WR-02: Resend replay evidence omits its provider label
+### WR-02: Preview success flash cannot be dismissed
 
 **Classification:** WARNING  
-**File:** `mailglass_admin/lib/mailglass_admin/operator/repair_state.ex:6,207-214`; `lib/mailglass/webhook/replay.ex:15-21`  
-**Issue:** The replay command supports the `:resend` provider, but `RepairState.safe_provider/1` only accepts `mailgun`, `postmark`, `sendgrid`, and `ses`. Consequently, latest replay summaries and replay metadata summaries silently omit `RESEND`, making persisted evidence less identifiable for supported Resend requests.
-**Fix:** Add `resend` to the presenter allowlist (or derive the provider allowlist from the same canonical provider registry used by replay).
+**File:** `mailglass_admin/lib/mailglass_admin/components.ex:172-176`; `mailglass_admin/lib/mailglass_admin/preview_live.ex:503-504`  
+**Issue:** `Components.flash/1` uses its display `kind` as the `lv:clear-flash` key. Preview renders a success-styled component from `Phoenix.Flash.get(@flash, :info)`, so its dismiss button sends `key=success` while the stored flash key is `info`. LiveView clears only the requested key, leaving the visible Preview message in place.
+**Fix:** Pass the backing flash key separately from the visual kind and use `info` for the Preview call.
+
+### WR-03: Replay confirmation does not handle transient failures in its fresh reads
+
+**Classification:** WARNING  
+**File:** `mailglass_admin/lib/mailglass_admin/operator_live.ex:547-558`  
+**Issue:** Before authorizing replay, the handler synchronously calls `Deliveries.get_delivery/2` and `ReplayTargets.list_delivery_targets/1` without rescuing transient database/connection errors. The same module explicitly recognizes these errors and renders unavailable or stale read states elsewhere, but an outage during either new confirmation read escapes the event handler and terminates the LiveView instead of returning actionable feedback.
+**Fix:** Wrap both reads with the existing transient-read handling, return an unavailable result, and clear `replay_pending?` while keeping the user on the review modal.
+
+### WR-04: Cached health counts can be shown for a different selected interval
+
+**Classification:** WARNING  
+**File:** `mailglass_admin/lib/mailglass_admin/operator_live.ex:1864-1874,1963-1971,1986-1993`  
+**Issue:** The health cache is considered reusable whenever the Account matches, even if `window_hours` changed. If a read then fails, `read_health_panel/7` returns the prior value as stale. When any other panel read succeeds, `load_health_observations/2` publishes the new interval as the global `health_window`; the stale panel only shows its old check timestamp, not the interval its value covers. Operators can therefore read a count from the previous time range while the page labels the results with the newly selected range.
+**Fix:** Include the time window in the health cache identity, or clear interval-scoped cached values on window changes. Preserve and display the actual interval alongside stale panel values.
 
 ---
 
-_Reviewed: 2026-10-08T15:25:33Z_  
+_Reviewed: 2026-10-08T17:12:27Z_  
 _Reviewer: the agent (gsd-code-reviewer)_  
 _Depth: standard_
