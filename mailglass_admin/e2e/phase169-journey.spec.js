@@ -293,6 +293,15 @@ test.describe("Phase 169 connected journey", () => {
       await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
       await expect(page.getByRole("img", { name: "mailglass" })).toBeVisible();
       await expect(page.getByTestId("operator-overview-health")).toBeVisible();
+      await expect(page.getByTestId("operator-health-window")).toHaveText(
+        /^Observed from .+ to .+ UTC \(168 hours\)$/
+      );
+      const windowPrecedesMetrics = await page.evaluate(() => {
+        const window = document.querySelector('[data-testid="operator-health-window"]');
+        const metrics = document.querySelector('[data-testid="operator-overview-health-failures"]');
+        return Boolean(window.compareDocumentPosition(metrics) & Node.DOCUMENT_POSITION_FOLLOWING);
+      });
+      expect(windowPrecedesMetrics, "observation basis precedes summary metrics").toBeTruthy();
       await page.evaluate(() => {
         const probe = document.createElement("img");
         probe.alt = "";
@@ -307,7 +316,8 @@ test.describe("Phase 169 connected journey", () => {
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         bodyFont: Number.parseFloat(getComputedStyle(document.querySelector(".text-body")).fontSize),
         labels: [...document.querySelectorAll(".text-label")].map(el => Number.parseFloat(getComputedStyle(el).fontSize)),
-        decorativeIcons: document.querySelectorAll('span[aria-hidden="true"][class*="hero-"]').length
+        decorativeIcons: document.querySelectorAll('span[aria-hidden="true"][class*="hero-"]').length,
+        metricColumns: getComputedStyle(document.querySelector('[data-testid="operator-overview-health"] > div:nth-child(2)')).gridTemplateColumns.split(" ").length
       }));
       expect(healthGeometry.viewport).toBe(width);
       expect(healthGeometry.overflow, `Health page overflow at ${width}px`).toBeLessThanOrEqual(1);
@@ -315,13 +325,29 @@ test.describe("Phase 169 connected journey", () => {
       expect(healthGeometry.labels.length).toBeGreaterThan(0);
       expect(Math.min(...healthGeometry.labels)).toBe(14);
       expect(healthGeometry.decorativeIcons).toBeGreaterThan(0);
+      expect(healthGeometry.metricColumns).toBe(width < 768 ? 1 : 2);
       geometryByWidth.push({ width, ...healthGeometry });
       await page.locator('img[src*="phase169-missing"]').evaluate(image => image.remove());
       await page.screenshot({ path: path.join(afterDir, `health-${width}.png`), fullPage: true });
       routes.push({ width, state: "Health", url: new URL(page.url()).pathname + new URL(page.url()).search });
 
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&window_hours=24`);
+      await expect(page.getByTestId("operator-health-window")).toHaveText(
+        /^Observed from .+ to .+ UTC \(24 hours\)$/
+      );
+
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
       await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+      const rowOpener = page.getByText("Open delivery →", { exact: true }).first();
+      const colors = await rowOpener.evaluate(el => {
+        const probe = document.createElement("span");
+        probe.style.color = "var(--mg-color-link)";
+        document.body.append(probe);
+        const colors = { actual: getComputedStyle(el).color, expected: getComputedStyle(probe).color };
+        probe.remove();
+        return colors;
+      });
+      expect(colors.actual).toBe(colors.expected);
       const contentWidth = await page.locator("main").first().evaluate(el => el.getBoundingClientRect().width);
       if (contentWidth >= 768) {
         await expect(page.getByTestId("operator-deliveries-table")).toBeVisible();
@@ -360,6 +386,14 @@ test.describe("Phase 169 connected journey", () => {
       await expect(page.getByTestId("operator-detail-header")).toBeVisible();
       await expect(page.getByTestId("operator-detail-header")).toContainText("browser-exact@example.com");
       await expect(page.getByTestId("operator-timeline")).toBeVisible();
+      const detailOrder = await page.evaluate(() => [
+        "operator-detail-header",
+        "operator-timeline",
+        "operator-suppression-card",
+        "operator-support-cards",
+        "operator-replay-action"
+      ].map(testid => document.querySelector(`[data-testid="${testid}"]`)?.getBoundingClientRect().top));
+      expect(detailOrder.every((top, index) => Number.isFinite(top) && (index === 0 || detailOrder[index - 1] < top))).toBeTruthy();
       await page.screenshot({ path: path.join(afterDir, `detail-${width}.png`), fullPage: true });
       routes.push({ width, state: "Full detail", url: new URL(page.url()).pathname + new URL(page.url()).search });
 
@@ -448,9 +482,9 @@ test.describe("Phase 169 connected journey", () => {
     await expect(review.getByTestId("operator-replay-target-id")).toHaveText(fixture.webhook_event_id);
     await page.getByTestId("operator-replay-confirm").click();
     await expect(page.getByTestId("operator-replay-command-feedback")).toBeVisible();
-    await expect(page.getByTestId("operator-detail-header")).toContainText(
-      "Last retrieved replay evidence:"
-    );
+      await expect(page.getByTestId("operator-replay-action")).toContainText(
+        "Last retrieved replay evidence:"
+      );
 
     const authResponse = await page.request.get("/ops/browser-auth-log");
     expect(authResponse.ok()).toBeTruthy();

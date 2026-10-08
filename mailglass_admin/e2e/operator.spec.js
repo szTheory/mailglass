@@ -108,19 +108,21 @@ test.describe("operator browser gate", () => {
 
     await expect(page.getByTestId("operator-detail-header")).toBeVisible();
     await expect(page.getByTestId("operator-detail-header")).toContainText(selectedRecipient);
-    await expect(page.getByTestId("operator-detail-header")).toContainText(
-      "Replay is unavailable."
-    );
     await expect(page.getByTestId("operator-timeline")).toBeVisible();
     await expect(page.getByTestId("operator-suppression-card")).toBeVisible();
     await expect(page.getByTestId("operator-suppression-card")).toContainText("ops:review");
     await expect(page.getByTestId("operator-replay-open")).toBeVisible();
+    await expect(page.getByTestId("operator-replay-action")).toContainText("Replay is unavailable.");
     await expect(page.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
 
     // Full detail leads with the event timeline (above suppression).
     const timelineBox = await page.getByTestId("operator-timeline").boundingBox();
     const suppressionBox = await page.getByTestId("operator-suppression-card").boundingBox();
+    const supportBox = await page.getByTestId("operator-support-cards").boundingBox();
+    const replayBox = await page.getByTestId("operator-replay-action").boundingBox();
     expect(timelineBox.y).toBeLessThan(suppressionBox.y);
+    expect(suppressionBox.y).toBeLessThan(supportBox.y);
+    expect(supportBox.y).toBeLessThan(replayBox.y);
   });
 
   test("mobile: row opens the Quick view bottom sheet; full detail preserves section order", async ({ page }) => {
@@ -144,16 +146,20 @@ test.describe("operator browser gate", () => {
     await expect(page).toHaveURL(/full=1/);
     await expect(page.getByTestId("operator-detail-back")).toBeVisible();
 
-    // Detail-section order (header → timeline → suppression) is a stable contract.
+    // Full detail keeps evidence ahead of the final eligible replay action.
     const headerBox = await page.getByTestId("operator-detail-header").boundingBox();
     const timelineBox = await page.getByTestId("operator-timeline").boundingBox();
     const suppressionBox = await page.getByTestId("operator-suppression-card").boundingBox();
+    const supportBox = await page.getByTestId("operator-support-cards").boundingBox();
+    const replayBox = await page.getByTestId("operator-replay-action").boundingBox();
 
     expect(headerBox).not.toBeNull();
     expect(timelineBox).not.toBeNull();
     expect(suppressionBox).not.toBeNull();
     expect(headerBox.y).toBeLessThan(timelineBox.y);
     expect(timelineBox.y).toBeLessThan(suppressionBox.y);
+    expect(suppressionBox.y).toBeLessThan(supportBox.y);
+    expect(supportBox.y).toBeLessThan(replayBox.y);
 
     // Re-confirm strip absence on the populated &view=deliveries route at 390px.
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
@@ -185,7 +191,7 @@ test.describe("operator browser gate", () => {
 
     await openDeliveryFull(page, exactRow);
     await expect(page.getByTestId("operator-detail-header")).toContainText(exactRecipient);
-    await expect(page.getByTestId("operator-detail-header")).toContainText("Replay is ready.");
+    await expect(page.getByTestId("operator-replay-action")).toContainText("Replay is ready.");
 
     await page.getByTestId("operator-replay-open").click();
 
@@ -201,7 +207,7 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
       "Replay command added 1 newly normalized Event."
     );
-    await expect(page.getByTestId("operator-detail-header")).toContainText(
+    await expect(page.getByTestId("operator-replay-action")).toContainText(
       "Last retrieved replay evidence: completed · 1 newly normalized Event"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("Webhook replay completed", { timeout: 10000 });
@@ -302,7 +308,7 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-replay-evidence-unavailable")).toContainText(
       "The latest persisted replay evidence could not be refreshed."
     );
-    await expect(page.locator("[data-testid='operator-detail-header']")).not.toContainText(
+    await expect(page.locator("[data-testid='operator-replay-action']")).not.toContainText(
       "Last retrieved replay evidence: completed"
     );
 
@@ -311,7 +317,7 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
       "Replay command added 1 newly normalized Event."
     );
-    await expect(page.getByTestId("operator-detail-header")).toContainText(
+    await expect(page.getByTestId("operator-replay-action")).toContainText(
       "Last retrieved replay evidence: completed · 1 newly normalized Event"
     );
   });
@@ -326,9 +332,7 @@ test.describe("operator browser gate", () => {
 
     await openDeliveryFull(page, ambiguousRow);
     await expect(page.getByTestId("operator-detail-header")).toContainText(ambiguousRecipient);
-    await expect(page.getByTestId("operator-detail-header")).toContainText(
-      "Replay is choice required."
-    );
+    await expect(page.getByTestId("operator-replay-action")).toContainText("Replay is choice required.");
 
     await page.getByTestId("operator-replay-open").click();
 
@@ -362,7 +366,7 @@ test.describe("operator browser gate", () => {
 
     await openDeliveryFull(page, noopRow);
     await expect(page.getByTestId("operator-detail-header")).toContainText(noopRecipient);
-    await expect(page.getByTestId("operator-detail-header")).toContainText("Replay is ready.");
+    await expect(page.getByTestId("operator-replay-action")).toContainText("Replay is ready.");
 
     await page.getByTestId("operator-replay-open").click();
     await page.getByTestId("operator-replay-confirm").click();
@@ -370,7 +374,7 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
       "Replay command completed with no newly normalized Events."
     );
-    await expect(page.getByTestId("operator-detail-header")).toContainText(
+    await expect(page.getByTestId("operator-replay-action")).toContainText(
       "Last retrieved replay evidence: completed · 0 newly normalized Events"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("completed");

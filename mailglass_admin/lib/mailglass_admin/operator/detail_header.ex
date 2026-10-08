@@ -7,13 +7,8 @@ defmodule MailglassAdmin.Operator.DetailHeader do
 
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.Accounts
-  alias MailglassAdmin.Operator.RepairState
 
   attr(:delivery, :map, required: true)
-  attr(:replay_targets, :map, default: nil)
-  attr(:latest_replay, :map, default: nil)
-  attr(:replay_history_read_state, :atom, default: :ready)
-  attr(:replay_command_feedback, :string, default: nil)
   attr(:account_labels, :map, default: %{})
 
   def detail_header(assigns) do
@@ -68,52 +63,6 @@ defmodule MailglassAdmin.Operator.DetailHeader do
             <dd class="mono mt-xs text-base-content">{@delivery.provider_message_id}</dd>
           </div>
         </dl>
-      </div>
-
-      <div class="mt-lg flex flex-wrap items-start justify-between gap-md border-t border-base-300 pt-md">
-        <div class="space-y-xs">
-          <h3 class="text-body font-bold uppercase text-secondary">Webhook replay</h3>
-          <p class="text-body text-base-content">{RepairState.availability_hint(@replay_targets)}</p>
-          <p
-            :if={@replay_command_feedback}
-            role="status"
-            aria-live="polite"
-            data-testid="operator-replay-command-feedback"
-            class="text-label text-secondary"
-          >
-            {@replay_command_feedback}
-          </p>
-          <div
-            :if={@replay_history_read_state in [:unavailable, :stale]}
-            role="status"
-            aria-live="polite"
-            data-testid="operator-replay-evidence-unavailable"
-            class="flex flex-wrap items-center gap-sm text-label text-secondary"
-          >
-            <span>{RepairState.replay_evidence_unavailable_copy()}</span>
-            <button
-              type="button"
-              phx-click="retry_replay_evidence"
-              class="btn btn-ghost min-h-11"
-            >
-              Refresh replay evidence
-            </button>
-          </div>
-          <p :if={@latest_replay} class="text-label text-secondary">
-            Last retrieved replay evidence: {RepairState.latest_replay_summary(@latest_replay)} at
-            <Components.timestamp at={@latest_replay.occurred_at} />
-          </p>
-        </div>
-
-        <button
-          id="replay-open-btn"
-          type="button"
-          phx-click="open_replay"
-          data-testid="operator-replay-open"
-          class="btn btn-primary min-h-11 px-md"
-        >
-          Review webhook replay
-        </button>
       </div>
     </Components.card>
     """

@@ -299,7 +299,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     </p>
                   </div>
                 </div>
-                <span class="text-label font-bold text-primary">Open delivery →</span>
+                <span class="text-label font-bold text-[color:var(--mg-color-link)]">Open delivery →</span>
               </button>
             </li>
           </ul>

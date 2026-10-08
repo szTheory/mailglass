@@ -31,6 +31,7 @@ defmodule MailglassAdmin.OperatorLive do
     FiltersForm,
     QuickView,
     RepairState,
+    ReplayAction,
     ReplayModal,
     SupportCards,
     SuppressionCard
@@ -696,7 +697,16 @@ defmodule MailglassAdmin.OperatorLive do
           <div data-testid="operator-overview" class="grid gap-lg">
             <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
               <div data-testid="operator-overview-health" class="grid gap-md">
-                <div class="grid gap-md lg:grid-cols-3">
+                <div class="flex flex-wrap items-center justify-between gap-sm text-label text-secondary">
+                  <p data-testid="operator-health-window">{health_window_copy(@health_window)}</p>
+                  <p data-testid="operator-health-last-checked">
+                    {health_checked_copy(@health_observed_at)}
+                  </p>
+                  <button type="button" phx-click="retry_health" class="btn btn-ghost min-h-11">
+                    Retry observations
+                  </button>
+                </div>
+                <div class="grid gap-md md:grid-cols-2">
                   <.link
                     patch={
                       support_evidence_path(
@@ -863,15 +873,6 @@ defmodule MailglassAdmin.OperatorLive do
                   </.link>
                 </div>
               </div>
-              <div class="flex flex-wrap items-center justify-between gap-sm text-label text-secondary">
-                <p data-testid="operator-health-window">{health_window_copy(@health_window)}</p>
-                <p data-testid="operator-health-last-checked">
-                  {health_checked_copy(@health_observed_at)}
-                </p>
-                <button type="button" phx-click="retry_health" class="btn btn-ghost min-h-11">
-                  Retry observations
-                </button>
-              </div>
               <p
                 :if={health_partial?(@health_panel_states)}
                 role="status"
@@ -988,10 +989,6 @@ defmodule MailglassAdmin.OperatorLive do
                       >
                         <DetailHeader.detail_header
                           delivery={@selected_delivery}
-                          replay_targets={@replay_targets}
-                          latest_replay={latest_replay(@replay_history)}
-                          replay_history_read_state={@replay_history_read_state}
-                          replay_command_feedback={@replay_command_feedback}
                           account_labels={@account_labels}
                         />
                         <%!-- Event timeline leads: it is the record-specific "what happened"
@@ -1021,6 +1018,12 @@ defmodule MailglassAdmin.OperatorLive do
                               @support_state
                             )
                           }
+                        />
+                        <ReplayAction.replay_action
+                          replay_targets={@replay_targets}
+                          latest_replay={latest_replay(@replay_history)}
+                          replay_history_read_state={@replay_history_read_state}
+                          replay_command_feedback={@replay_command_feedback}
                         />
                       </div>
                   <% end %>
@@ -2499,7 +2502,11 @@ defmodule MailglassAdmin.OperatorLive do
          started_at: %DateTime{} = started_at,
          ended_at: %DateTime{} = ended_at
        }) do
-    "Observation window: #{DateTime.to_iso8601(started_at)} to #{DateTime.to_iso8601(ended_at)} UTC"
+    hours = div(DateTime.diff(ended_at, started_at, :second), 3_600)
+    start_copy = started_at |> DateTime.to_naive() |> NaiveDateTime.to_iso8601()
+    end_copy = ended_at |> DateTime.to_naive() |> NaiveDateTime.to_iso8601()
+
+    "Observed from #{start_copy} to #{end_copy} UTC (#{hours} hours)"
   end
 
   defp health_window_copy(_window), do: "Observation interval unavailable"

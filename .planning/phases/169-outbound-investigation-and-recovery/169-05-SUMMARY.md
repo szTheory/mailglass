@@ -173,6 +173,14 @@ See [169-BASELINE.md](169-BASELINE.md) for complete run provenance and explicit 
 
 **Unverified boundaries:** Browser coverage does not inject a terminal audit database write failure; native Chrome 200% zoom was visually inspected on one route family only; physical-device touch and manual OS appearance switching were not performed. OUTUX-01 through OUTUX-05 prohibition judgments remain flagged/unverified for independent phase review.
 
+## UI Audit Remediation — 2026-10-07
+
+Addressed the four bounded findings in `169-UI-REVIEW.md`: Health now presents its validated interval and last-check time before metrics using the exact approved UTC wording; the metric grid is one column below 768px and two columns from 768px; full detail orders identity/outcome, timeline, current suppression, Account support, then the replay eligibility/action section; repeated card openers use the brandbook link-role token. Replay target cardinality, Quick view, exact support, command feedback, and modal focus behavior remain covered by the existing cases.
+
+Focused behavioral and DOM assertions now fail on the old order, copy, column count, and primary-accent row opener. The after-capture matrix was refreshed at 320, 390, 768, and 1440px; the ten pre-edit baseline captures passed their byte-immutability check. Verification completed with 100 focused LiveView tests; 538 full Admin tests (1 excluded); 9 token-parity/bundle tests; passing asset build and served-CSS parity; 2 Phase 169 rendered and 9 connected browser cases; and the full browser suite at 197 passed, 1 skipped, 0 failed. Full provenance and exact hashes are in `169-BASELINE.md` under “After Evidence — Bounded UI Audit Remediation.”
+
+The independent UI Review scores and findings were left unchanged for auditor reassessment. Phase 169 remains in execution/review; this remediation does not mark the phase complete or advance planning state.
+
 ## User Setup Required
 
 None.

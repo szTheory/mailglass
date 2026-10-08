@@ -668,8 +668,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
     # Phase 114 D-10: binds the gallery composed-group specimen
     # (GalleryLive.composed_support_triage/1) to production reality. The specimen
-    # wraps `<div data-region>` around DetailHeader + SupportCards + Timeline +
-    # SuppressionCard; this asserts the REAL operator detail column carries the
+    # wraps `<div data-region>` around identity, timeline, suppression, support,
+    # and replay action; this asserts the REAL operator detail column carries the
     # same data-region scope + group testids, so a specimen that drifts from
     # production composition fails the suite.
     test "production operator detail column carries data-region + the composed-group testids",
@@ -693,12 +693,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
       # The data-region scope the plan-04 Floki ancestor-depth proof binds against.
       assert detail_html =~ "data-region"
 
-      # The four group testids the composed_support_triage specimen assembles, in
-      # the same order operator_live.ex composes them.
-      assert detail_html =~ ~s(data-testid="operator-detail-header")
-      assert detail_html =~ ~s(data-testid="operator-support-cards")
-      assert detail_html =~ ~s(data-testid="operator-timeline")
-      assert detail_html =~ ~s(data-testid="operator-suppression-card")
+      # The record identity, evidence groups, then replay action follow the approved order.
+      assert_in_order(detail_html, [
+        ~s(data-testid="operator-detail-header"),
+        ~s(data-testid="operator-timeline"),
+        ~s(data-testid="operator-suppression-card"),
+        ~s(data-testid="operator-support-cards"),
+        ~s(data-testid="operator-replay-action")
+      ])
     end
 
     test "support card drilldowns reveal concrete webhook, replay audit, orphan, and reconcile exemplars",
@@ -2228,13 +2230,16 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Active suppression records"
       assert html =~ "Replay audit facts"
       assert html =~ "Reconciliation audit facts"
-      assert html =~ "Observation window:"
+      assert html =~ "Observed from "
+      assert html =~ " UTC (168 hours)"
       assert html =~ "Last checked:"
       refute html =~ "Overall status"
       refute html =~ "Orphan backlog"
       refute html =~ ~s(data-testid="operator-overview-health-allclear")
 
       assert_in_order(html, [
+        "Observed from ",
+        "Last checked:",
         "Failed webhook attempts",
         "Unmatched Events",
         "Active suppression records",

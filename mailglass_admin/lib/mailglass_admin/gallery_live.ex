@@ -78,6 +78,7 @@ defmodule MailglassAdmin.GalleryLive do
   alias MailglassAdmin.Operator.SuppressionCard
   alias MailglassAdmin.Operator.Timeline
   alias MailglassAdmin.Operator.ReplayModal
+  alias MailglassAdmin.Operator.ReplayAction
   alias MailglassAdmin.Inbound.RecordsList
   alias MailglassAdmin.Inbound.RoutingTrace
   alias MailglassAdmin.Inbound.EvidenceCard
@@ -309,11 +310,7 @@ defmodule MailglassAdmin.GalleryLive do
 
   defp render_specimen(%{component: :detail_header} = assigns) do
     ~H"""
-    <DetailHeader.detail_header
-      delivery={@assigns_map[:delivery]}
-      replay_targets={@assigns_map[:replay_targets]}
-      latest_replay={@assigns_map[:latest_replay]}
-    />
+    <DetailHeader.detail_header delivery={@assigns_map[:delivery]} />
     """
   end
 
@@ -543,11 +540,9 @@ defmodule MailglassAdmin.GalleryLive do
 
     ~H"""
     <div data-region class="space-y-4">
-      <DetailHeader.detail_header
-        delivery={@delivery}
-        replay_targets={%{status: :unavailable, reason: :no_webhook}}
-        latest_replay={@latest_replay}
-      />
+      <DetailHeader.detail_header delivery={@delivery} />
+      <Timeline.timeline timeline_events={[]} highlight_event_id={@highlight_event_id} />
+      <SuppressionCard.suppression_card suppression_state={@suppression_state} />
       <SupportCards.support_cards
         support_summary={
           %{
@@ -564,8 +559,10 @@ defmodule MailglassAdmin.GalleryLive do
         support_state={%{focused_card: nil, drilldown_banner: nil}}
         suppression_count={0}
       />
-      <Timeline.timeline timeline_events={[]} highlight_event_id={@highlight_event_id} />
-      <SuppressionCard.suppression_card suppression_state={@suppression_state} />
+      <ReplayAction.replay_action
+        replay_targets={%{status: :unavailable, reason: :no_webhook}}
+        latest_replay={@latest_replay}
+      />
     </div>
     """
   end
