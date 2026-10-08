@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 0
+open_count: 3
 waived_count: 8
 fixed_count: 31
-total_count: 39
-last_updated: 2026-10-07T20:24:36.719Z
+total_count: 42
+last_updated: 2026-10-08T00:33:40.722Z
 ---
 
 # Broken Windows Ledger
@@ -54,6 +54,9 @@ last_updated: 2026-10-07T20:24:36.719Z
 | 37 | 168 | unmet-truth | mailglass_admin/lib/mailglass_admin/components.ex |  | Responsive Health page has 1px/164px document overflow at 320px/768px from the existing invisible stat-card tooltip; correct in overview/stat-card styling work. | fixed |  | 2026-10-07T19:07:23.109Z | 2026-10-07T19:27:18.127Z |
 | 38 | 168 | deviation | mailglass_admin/lib/mailglass_admin/inbound/records_list.ex | 83 | Removed synthetic stale observation time and used truthful stale copy with refresh guidance. | fixed |  | 2026-10-07T20:14:05.678Z | 2026-10-07T20:24:36.618Z |
 | 39 | 168 | unrun-verify | .planning/phases/168-shared-workspace-and-usable-baseline/168-BASELINE.md |  | Live OS appearance transition, reduced-motion behavior, transient error/pending feedback, and missing icon/font fallback were not directly emulated; focused tests cover semantics and long-copy behavior. | fixed |  | 2026-10-07T20:14:05.766Z | 2026-10-07T20:24:36.719Z |
+| 40 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Full-detail Back action retained the selected Delivery and reopened Quick view; explicit return now clears the selection while preserving list context. | open |  | 2026-10-08T00:33:40.535Z |  |
+| 41 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Exact Delivery LiveView read initially used the wrong arity; it now passes Account and Delivery ID. | open |  | 2026-10-08T00:33:40.627Z |  |
+| 42 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Invalid selection and read failures could resemble an empty Account; distinct non-disclosing and retry states now preserve query truth. | open |  | 2026-10-08T00:33:40.722Z |  |
 
 ````json
 [
@@ -526,6 +529,45 @@ last_updated: 2026-10-07T20:24:36.719Z
     "reason": "",
     "recorded_at": "2026-10-07T20:14:05.766Z",
     "resolved_at": "2026-10-07T20:24:36.719Z",
+    "milestone": "v2.9"
+  },
+  {
+    "id": 40,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+    "line": null,
+    "description": "Full-detail Back action retained the selected Delivery and reopened Quick view; explicit return now clears the selection while preserving list context.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T00:33:40.535Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 41,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+    "line": null,
+    "description": "Exact Delivery LiveView read initially used the wrong arity; it now passes Account and Delivery ID.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T00:33:40.627Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 42,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+    "line": null,
+    "description": "Invalid selection and read failures could resemble an empty Account; distinct non-disclosing and retry states now preserve query truth.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T00:33:40.722Z",
+    "resolved_at": null,
     "milestone": "v2.9"
   }
 ]

@@ -5,16 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 169
 current_phase_name: Outbound Investigation and Recovery
 status: executing
-stopped_at: Phase 169 plans verified; ready to execute five serial waves
-last_updated: "2026-10-08T00:05:15.854Z"
+stopped_at: Completed 169-01-PLAN.md
+last_updated: "2026-10-08T00:34:00.371Z"
 last_activity: 2026-10-08
-last_activity_desc: Phase 169 implementation plans approved; ready to execute five plans across five waves
-state_head: 88ae9bbec7fc3f1ef2bfcc36175402d079f54af0
+last_activity_desc: Phase 169 execution started
+state_head: 2e870aa7c8262ffa8295a32765dd064502844e3d
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 9
-  completed_plans: 4
+  completed_plans: 5
   percent: 17
 ---
 
@@ -39,10 +39,10 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 
 ## Current Position
 
-Phase: 169 (Outbound Investigation and Recovery) — READY TO EXECUTE
-Plan: Not started
+Phase: 169 (Outbound Investigation and Recovery) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-10-08 — Phase 169 implementation plans approved; ready to execute five plans across five waves
+Last activity: 2026-10-07 — Phase 169 execution started
 
 ## v2.9 Roadmap Shape
 
@@ -257,6 +257,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 168 P02 | 53m | 3 tasks | 34 files |
 | Phase 168 P03 | 5 min | 2 tasks | 8 files |
 | Phase 168 P04 | 60min | 3 tasks | 22 files |
+| Phase 169 P01 | 24m | 3 tasks | 31 files |
 
 ## Accumulated Context
 
@@ -416,6 +417,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 168]: Quick view returns focus only to the stable row ID matching its URL-selected delivery.
 - [Phase 168]: Gallery Flash specimens render inline so they cannot obscure other gallery controls.
 - [Phase 168]: Replay request and replay completion remain distinct; missing evidence is labeled unavailable.
+- [Phase 169]: Keep exact Delivery selection independent of the current page and time window.
+- [Phase 169]: Retain compatible filters across Account switches while clearing page and object evidence IDs.
+- [Phase 169]: Use content-column width for the table-to-card breakpoint.
 
 ## Quick Tasks Completed
 
@@ -461,9 +465,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-08T00:05:15.827Z
-Stopped at: Phase 169 plans verified; ready to execute five serial waves
-Resume file: .planning/phases/169-outbound-investigation-and-recovery/169-01-PLAN.md
+Last session: 2026-10-08T00:34:00.335Z
+Stopped at: Completed 169-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
