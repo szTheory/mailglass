@@ -1731,7 +1731,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:health_panel_states, health_panel_states)
     |> assign(:health_observed_at, health_observed_at)
     |> assign(:health_window, health_window)
-    |> assign(:health_loaded_for, blank_to_nil(filter_params["tenant_id"]))
+    |> assign(:health_loaded_for, health_observation_cache_key(filter_params))
     |> assign(:detail_error, detail_error)
     |> assign(:replay_targets, replay_targets)
     |> assign(:replay_history, replay_history)
@@ -1839,7 +1839,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:health_panel_states, health_panel_states)
     |> assign(:health_observed_at, observed_at)
     |> assign(:health_window, health_window)
-    |> assign(:health_loaded_for, blank_to_nil(filter_params["tenant_id"]))
+    |> assign(:health_loaded_for, health_observation_cache_key(filter_params))
     |> assign(:overview_path, paths.overview)
     |> assign(:inbound_path, paths.inbound)
     |> assign(:deliveries, [])
@@ -1857,19 +1857,20 @@ defmodule MailglassAdmin.OperatorLive do
   defp load_health_observations(socket, filter_params) do
     tenant_id = blank_to_nil(filter_params["tenant_id"])
     window_hours = parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
+    cache_key = health_observation_cache_key(filter_params)
 
     if is_nil(tenant_id) do
       {nil, default_health_panel_states(), nil, nil, nil}
     else
-      same_account? = socket.assigns[:health_loaded_for] == tenant_id
-      prior_summary = if same_account?, do: socket.assigns[:support_summary], else: nil
+      same_scope? = socket.assigns[:health_loaded_for] == cache_key
+      prior_summary = if same_scope?, do: socket.assigns[:support_summary], else: nil
 
       prior_states =
-        if same_account?,
+        if same_scope?,
           do: socket.assigns[:health_panel_states],
           else: default_health_panel_states()
 
-      prior_count = if same_account?, do: socket.assigns[:suppression_count], else: nil
+      prior_count = if same_scope?, do: socket.assigns[:suppression_count], else: nil
       as_of = DateTime.utc_now()
       window = %{tenant_id: tenant_id, window_hours: window_hours, as_of: as_of}
 
@@ -1963,7 +1964,7 @@ defmodule MailglassAdmin.OperatorLive do
       any_current_read? = Enum.any?(Map.values(states), &(&1.status == :ready))
 
       observed_at =
-        if any_current_read?, do: as_of, else: prior_observed_at(socket, same_account?)
+        if any_current_read?, do: as_of, else: prior_observed_at(socket, same_scope?)
 
       displayed_window =
         if any_current_read?,
@@ -1998,7 +1999,18 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   defp prior_observed_at(socket, true), do: socket.assigns[:health_observed_at]
-  defp prior_observed_at(_socket, _same_account?), do: nil
+  defp prior_observed_at(_socket, _same_scope?), do: nil
+
+  defp health_observation_cache_key(filter_params) do
+    case blank_to_nil(filter_params["tenant_id"]) do
+      nil -> nil
+      tenant_id ->
+        window_hours =
+          parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
+
+        {tenant_id, window_hours}
+    end
+  end
 
   defp default_health_panel_states do
     Map.new(
