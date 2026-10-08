@@ -34,6 +34,12 @@ Authored threat registers from all four plans were checked against implementatio
 | T-168-07 | Information disclosure | Quick view target | high | mitigate | `find_selected_delivery/2` matches the exact ID in the tenant-scoped collection; absent ID cannot fall back to another record. Browser Quick view case covers unavailable target. | closed |
 | T-168-08 | Elevation of privilege | Replay confirmation | high | mitigate | `confirm_replay` selects from server candidate set, invokes `DestructiveAction.authorize` with actor/Delivery/target, then `Replay.execute`; core replay fetch retains tenant and Delivery predicates. LiveView/browser tests exercise recent-auth denial and exact target. | closed |
 | T-168-09 | Repudiation | Replay outcome | medium | mitigate | Replay result status feeds existing `RepairState` outcome copy; pending, no-change, completion and denial retain target/facts. No downstream-delivery claim is inferred. | closed |
+| T-168-10 | Tampering | HEEx-to-served CSS bundle | low | mitigate | Existing Mix asset build runs before Playwright, and the Delivery wrapping case asserts computed wrapping and geometry against the served stylesheet at documented widths. | closed |
+| T-168-11 | Tampering | Delivery status badge projection | medium | mitigate | The list, detail, and Quick view use the downstream-aware status helper; `g_168_6` asserts rendered downstream outcomes without mutating the persisted `:sent` snapshot. | closed |
+| T-168-12 | Information disclosure | Exact support evidence cache | high | mitigate | Fallback identity includes tenant, focus, and record; `g_168_7` switches Accounts during a transient read and asserts no prior-tenant exact value renders. | closed |
+| T-168-13 | Denial of service | Replay confirmation read boundary | medium | mitigate | Only classified transient fresh-read errors are recoverable; `g_168_9` covers both reads, retained exact target, no premature side effect, and normal retry authorization. Unexpected errors still fail loudly. | closed |
+| T-168-14 | Tampering | Health observation cache | medium | mitigate | Cache identity includes tenant and parsed interval; `g_168_10` proves prior-window stale data is unavailable under the changed window while same-window stale behavior remains. | closed |
+| T-168-15 | Tampering | Shared flash component | low | mitigate | Preview separates success styling from its backing `:info` key; `g_168_8` clicks the rendered clear control and verifies the message remains absent. Existing callers default to their visual kind. | closed |
 | T-168-SC | Tampering | Asset dependencies | low | accept | Existing Mix build, vendored assets and opt-in browser tooling reused. Locked dependencies were synchronized for execution; no new dependency/toolchain introduced by Phase 168. | closed |
 
 ## Accepted Risks Log
@@ -47,6 +53,7 @@ Authored threat registers from all four plans were checked against implementatio
 | Audit date | Threats total | Closed | Open | Run by |
 | --- | --- | --- | --- | --- |
 | 2026-10-07 | 10 | 10 | 0 | Execute-phase orchestrator, L1 mitigation-presence check |
+| 2026-10-08 | 16 | 16 | 0 | Execute-phase orchestrator, L1 plan-mitigation check |
 
 ## Sign-Off
 
@@ -68,4 +75,12 @@ The stable operator trust document now records this boundary.
 |---|---|
 | Threats found | 10 |
 | Closed | 10 |
+| Open | 0 |
+
+## Security Audit 2026-10-08
+
+| Metric | Count |
+|---|---|
+| Threats found | 16 |
+| Closed | 16 |
 | Open | 0 |
