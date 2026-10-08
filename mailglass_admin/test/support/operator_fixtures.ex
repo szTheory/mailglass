@@ -186,8 +186,9 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     webhook =
       insert_webhook_event!(%{
         provider_event_id: "phase169-exact-delivery",
+        status: :dead,
         raw_payload: raw_postmark_payload("pm_phase169_exact", 16901),
-        received_at: hours_ago(200)
+        received_at: hours_ago(1)
       })
 
     insert_linked_event!(target, webhook, "phase169-exact-child")

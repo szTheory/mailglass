@@ -24,7 +24,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
       data-group-card="operator-detail-header"
     >
       <div class="flex flex-wrap items-start justify-between gap-md">
-        <div class="space-y-sm">
+        <div class="min-w-0 space-y-sm">
           <div class="flex flex-wrap items-center gap-sm">
             <h2 class="text-heading font-bold text-base-content">{@delivery.recipient}</h2>
             <Components.status_badge status={@delivery.status} />
@@ -35,7 +35,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           </p>
         </div>
 
-        <dl class="grid gap-sm text-body text-secondary sm:grid-cols-2">
+        <dl class="grid min-w-0 gap-sm text-body text-secondary sm:grid-cols-2">
           <div>
             <dt class="text-label font-bold uppercase">Account</dt>
             <dd

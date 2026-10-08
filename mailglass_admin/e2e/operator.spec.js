@@ -526,7 +526,7 @@ test.describe("operator browser gate", () => {
     // SHELL-02: failures stat card is wrapped in a drill-through link to failed Deliveries
     const failuresLink = page.getByTestId("operator-overview-health-failures-link");
     await expect(failuresLink).toBeVisible();
-    await expect(failuresLink).toHaveAttribute("href", /event=failed/);
+    await expect(failuresLink).toHaveAttribute("href", /support_focus=failed_ingest/);
 
     // SHELL-02: suppressions stat card is wrapped in a drill-through link to suppressed Deliveries
     const suppressionsLink = page.getByTestId("operator-overview-health-suppressions-link");

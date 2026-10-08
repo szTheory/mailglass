@@ -31,3 +31,64 @@ Result: **2 passed**, one named case for each viewport. The case reset the scena
 | Replay review | [replay-review-390.png](artifacts/before/replay-review-390.png) | [replay-review-1440.png](artifacts/before/replay-review-1440.png) |
 
 The browser harness and source/built asset hashes are retained with this record so the before/after comparison can distinguish served styling from checked-out source. These screenshots document the existing implementation only; they do not claim the Phase 169 criteria are already satisfied.
+
+## After Evidence — Plan 169-05
+
+Captured and verified 2026-10-07 from checkout `e45aa8e1b82f97dd45e08c67c9cfe6fdd7f31d68` (Plan 169-05 changes were uncommitted during these runs). The browser fixture was the isolated `seed_browser_scenario!/0` for Account `browser-tenant`, served from `http://127.0.0.1:4102`. The after matrix selected the in-app System theme; Playwright's broader structural suite separately exercises light, dark, System, and reduced-motion emulation. The after run used a 100% Playwright viewport, with the separate native Chrome 200% inspection recorded below.
+
+The browser recorded the exact route sequence Health → Deliveries → Quick view → full detail → replay review at 320, 390, 768, and 1440 CSS px. It saved [health](artifacts/after/health-320.png), [Deliveries](artifacts/after/deliveries-320.png), [Quick view](artifacts/after/quick-view-320.png), [full detail](artifacts/after/detail-320.png), and [replay review](artifacts/after/replay-review-320.png) at each width by substituting `320` with `390`, `768`, and `1440`. Each after capture came from the exact connected app state, not a mock. The before directory and its provenance were not modified; the named immutability assertion checked all ten original before-image checksums during the full browser run.
+
+| CSS viewport | Main content width | Collection view | Page overflow | Body / label | Decorative icons |
+|---:|---:|---|---:|---|---:|
+| 320 | 320 | Cards | 0 px | 16 / 14 px | 17 hidden from assistive tech |
+| 390 | 390 | Cards | 0 px | 16 / 14 px | 17 hidden from assistive tech |
+| 768 | 528 | Cards | 0 px | 16 / 14 px | 17 hidden from assistive tech |
+| 1440 | 1200 | Table | 0 px | 16 / 14 px | 17 hidden from assistive tech |
+
+The 44 px open-delivery target floor, modal background containment, focused replay review, missing optional logo media, copy/failure behavior, and exact connected route assertions passed. At native Chrome browser zoom **200%**, I inspected Health → Deliveries → Quick view → full detail → replay review in Chrome with DevTools docked. Chrome showed its native 200% zoom setting; the effective CSS viewport was 630×368 at DPR 4 (`visualViewport.scale` 1). Keyboard focus moved visibly from Close replay review into the modal to Cancel. This is actual browser zoom, not a viewport resize or CSS transform. It demonstrates one current route family at that native setting; it does not establish the entire route/theme/touch matrix at 200% or a physical-device result. One transient Chrome `InvalidStateError: Transition was aborted because of invalid state. Viewport size changed` occurred during the dock/zoom route transition and did not reproduce; its cause remains unconfirmed.
+
+### Current asset and revision provenance
+
+- **Checkout revision at test time:** `e45aa8e1b82f97dd45e08c67c9cfe6fdd7f31d68`.
+- **Dirty source manifest:** `docs/api_stability.md`; `mailglass_admin/docs/api_stability.md`; `mailglass_admin/e2e/{gallery-matrix,operator,phase168-plan03-acceptance,phase169-journey,structural}.spec.js`; `mailglass_admin/lib/mailglass_admin/{gallery_live,operator/detail_header,operator/timeline}.ex`; `mailglass_admin/test/mailglass_admin/bucket_a_coverage_test.exs`; `mailglass_admin/test/support/operator_fixtures.ex`; and generated `mailglass_admin/priv/static/app.css`. The 20 new/updated `artifacts/after/*.png` files are intentional captures. The browser harness also regenerated two Phase 168 review-fix captures; the parent confirmed they were clean before this run, and I restored those generated outputs from `HEAD` before handoff. The original three local planning changes (`D .planning/.continue-here.md`, `D .planning/HANDOFF.json`, `M .planning/config.json`) remain untouched and unstaged.
+- **CSS source SHA-256:** `8f3b778ecc1a29bda84e78a5c5b7e5b1f060e2be1c9bca5eaa2c1ca0a6791298`.
+- **Built and served CSS SHA-256:** `b3eb383048f32a875a8641623db4edb1afd3d2e7c6775097f9429ecf7c2447bd` for both, byte-equal in the browser assertion.
+- **Versioned served CSS URL:** `http://127.0.0.1:4102/ops/mail/css-6ca6fae7c95efbf0157c3c8066d8a86d`.
+- The browser observed zero non-local requests. Source, built, and served styles were checked against the same run; no remote assets were needed.
+- Installed runtime selected without installing packages or changing the committed project pin: Erlang/OTP `27.3.4.15`, Elixir `1.18.4` for OTP 27, Node `22.14.0`. A temporary local `.tool-versions` override was removed after commands because the repository's exact Erlang/Elixir patch pins are not installed in this environment.
+
+### Final verification at this checkout
+
+| Command / selection | Result | Runtime |
+|---|---|---:|
+| `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 169 rendered"` | 2 passed, 0 failed | 5.5 s |
+| `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 169 connected"` | 9 passed, 0 failed | 14.3 s |
+| Core operator selection, seed 1 (`deliveries_test`, `timeline_test`, `support_summary_test`, `suppressions_test`, `replay_targets_test`) | 39 passed, 0 failed, 0 excluded | 38 s command wall; ExUnit 0.2 s |
+| `(cd mailglass_admin && MIX_ENV=test mix test --seed 1)` | 537 passed, 0 failed, 1 excluded | 5 s command wall; ExUnit 4.5 s |
+| `(cd mailglass_admin && MIX_ENV=test mix mailglass_admin.assets.build)` | Passed | 1 s |
+| Admin token parity and bundle tests, seed 1 | 9 passed, 0 failed | 1 s command wall; ExUnit 0.09 s |
+| `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser` (unfiltered; includes `operator.spec.js`, `flows.spec.js`, gallery, structural, Phase 168 and Phase 169 cases) | 197 passed, 0 failed, 1 skipped of 198 tests | 2.7 min |
+
+The final unfiltered browser run rebuilt assets before tests and again asserted the served stylesheet bytes equal `priv/static/app.css`. The two initial non-elevated browser launch attempts failed before test bodies because macOS denied Chromium's MachPortRendezvous startup; the authorized host-process reruns above passed. The first final Admin run also caught one stale fail-closed manifest citation for the renamed responsive browser test. I updated the citation and reran the complete Admin suite successfully. Neither setup issue was counted as a passing test.
+
+### Visual review and bounded corrections
+
+I applied the Impeccable and Emil design-engineering reviews, then visually inspected the after captures at 320 px Health, 768 px Deliveries and full detail, and 1440 px replay review. Essential labels and controls remained visible; the 768 px app uses cards because its actual main content is 528 px, while the 1440 px app uses the table at 1200 px of content. The modal backdrop and reviewed target/request/action groups remain distinct and readable. The existing overlay motion is brief; no new animation was warranted. Quick view and replay review captures disabled animation so they show settled content, not a mid-transition frame. The Plan 169 gallery matrix had exposed two dev-gallery specimens overflowing at 768 because three theme wrappers were squeezed into one cell row. I changed the dev-only theme wrappers to remain stacked until `xl`; both the all-specimen and long-value stress matrix now pass. I also updated the incumbent overview drill-through and responsive-layout assertions to the approved support-focus/content-width behavior, their fail-closed test-title citation, and the repeated replay feedback assertion to check stable node/text/detail and no detail re-animation rather than internal DOM repatch count.
+
+The final explicit “Back to deliveries” action clears selected Delivery, full-detail mode, and exact support-event focus, does not reopen Quick view, and preserves Account plus committed provider/event/window/page. This matches `169-UI-SPEC.md` § Back to deliveries; exact support IDs are required across intermediate support, Quick view, and full-detail navigation, not after that explicit final Back. Earlier test assertions expecting support IDs to survive final Back were corrected to match the approved contract.
+
+### Terminal audit persistence proof boundary
+
+The browser proves the real successful replay command, then a one-shot `replay_history` **read** failure after the command; known local command feedback remains visible while persisted history cannot be refreshed. Existing LiveView/ExUnit coverage proves the requested-only audit fact does not imply completion and preserves known command feedback when audit-history reading is unavailable (`operator_live_test.exs`, tests around lines 1119–1142). No browser or ExUnit fault injection makes the terminal audit database **write/insert** fail. Therefore terminal-audit persistence failure is not proven as a live injected write-failure scenario; the UI correctly separates request/command feedback from persisted audit evidence, and the write-failure injection remains an explicit evidence limit.
+
+### Prohibitions still flagged, not verified
+
+The phase probe serializer does not yet encode direct enforcement judgments for these prohibitions. They remain **FLAGGED / UNVERIFIED**, despite the passing tests, and must not be treated as green:
+
+1. **OUTUX-01:** Never present partial or time-limited Health observations as universal clearance for outbound mail.
+2. **OUTUX-02:** Never silently substitute a different Account or Delivery when the requested identity cannot be resolved.
+3. **OUTUX-03:** Never describe provider handoff, tracking, or replay audit as inbox placement or human reading.
+4. **OUTUX-04:** Never imply that one matching suppression or unmatched Event grants permission to send or a generic repair action.
+5. **OUTUX-05:** Never describe stored webhook replay as resend, distributed exactly-once execution, or completed work from requested-only evidence.
+
+The automated coverage is current at the checkout revision above. Native zoom was observed on one route family only; actual physical-device touch and manual OS appearance switching were not performed. The Impeccable package supplied `detect` rather than the skill reference's `audit` command: `audit` returned “Unknown command”; the available detector completed on the changed UI files without output, so no scored audit report is claimed.

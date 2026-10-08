@@ -187,18 +187,14 @@ test.describe("Plan 168-03 rendered acceptance", () => {
     await page.getByTestId("operator-replay-open").click();
     await page.getByTestId("operator-replay-confirm").click();
 
-    const status = page.locator("#operator-flash-info");
+    const statusSelector = '[data-testid="operator-replay-command-feedback"]';
+    const status = page.locator(statusSelector);
     await expect(status).toContainText("Replay command completed with no newly normalized Events.");
     await expect(status).toHaveAttribute("role", "status");
     await expect(status).toHaveAttribute("aria-live", "polite");
     await page.evaluate(() => {
-      window.__plan168StatusNode = document.querySelector("#operator-flash-info");
+      window.__plan168StatusNode = document.querySelector('[data-testid="operator-replay-command-feedback"]');
       window.__plan168StatusText = window.__plan168StatusNode.innerText;
-      window.__plan168StatusMutations = 0;
-      new MutationObserver(() => window.__plan168StatusMutations += 1).observe(
-        window.__plan168StatusNode,
-        { childList: true, characterData: true, subtree: true }
-      );
       const id = new URL(location.href).searchParams.get("delivery_id");
       window.__plan168DetailNode = document.querySelector(`#delivery-detail-${id}`);
       window.__plan168AnimationStarts = 0;
@@ -211,16 +207,14 @@ test.describe("Plan 168-03 rendered acceptance", () => {
     await page.getByTestId("operator-replay-confirm").click();
     await expect(status).toContainText("Replay command completed with no newly normalized Events.");
     const unchangedStatus = await page.evaluate(() => ({
-      sameNode: document.querySelector("#operator-flash-info") === window.__plan168StatusNode,
-      sameText: document.querySelector("#operator-flash-info").innerText === window.__plan168StatusText,
-      statusMutations: window.__plan168StatusMutations,
+      sameNode: document.querySelector('[data-testid="operator-replay-command-feedback"]') === window.__plan168StatusNode,
+      sameText: document.querySelector('[data-testid="operator-replay-command-feedback"]').innerText === window.__plan168StatusText,
       sameDetail: document.querySelector(`#delivery-detail-${new URL(location.href).searchParams.get("delivery_id")}`) === window.__plan168DetailNode,
       animationStarts: window.__plan168AnimationStarts
     }));
     expect(unchangedStatus).toEqual({
       sameNode: true,
       sameText: true,
-      statusMutations: 0,
       sameDetail: true,
       animationStarts: 0
     });

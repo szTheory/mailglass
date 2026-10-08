@@ -2431,11 +2431,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("data-display structural proof — Phase 113", () => {
 
-    test("responsive: operator-deliveries-table visible at 768px; operator-deliveries-cards visible at 390px (DATA-01)", async ({ page }) => {
-      await page.setViewportSize({ width: 768, height: 900 });
+    test("responsive: operator collection follows available content width for table/cards (DATA-01)", async ({ page }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
       await openOperator(page);
 
-      // At >=768px: table visible, cards hidden (hidden md:block / md:hidden)
+      const contentWidth = await page.locator("main").evaluate(el => el.getBoundingClientRect().width);
+      expect(contentWidth).toBeGreaterThanOrEqual(768);
       await expect(page.getByTestId("operator-deliveries-table")).toBeVisible();
       await expect(page.getByTestId("operator-deliveries-cards")).toBeHidden();
 

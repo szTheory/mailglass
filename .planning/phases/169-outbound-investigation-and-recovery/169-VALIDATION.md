@@ -9,7 +9,7 @@ created: "2026-10-07"
 
 # Phase 169 — Validation Strategy
 
-Planning contract only. No Phase 169 product checks, browser launch, or runtime verification have run. All rows below are commands for execution, not passing evidence. Five serial waves contain 12 tasks; every task has a named automated check and an immediately following observable fails_when signal in its PLAN.
+This file defines the five-wave Phase 169 validation contract (12 tasks). Plan 169-05 has now recorded its current execution evidence in `169-BASELINE.md`; earlier-wave rows remain owned by their respective plan summaries and are not retroactively marked complete here. Phase-level validation and verifier sign-off remain pending.
 
 ## Test Infrastructure
 
@@ -22,7 +22,7 @@ Planning contract only. No Phase 169 product checks, browser launch, or runtime 
 | Browser focused command | `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 169"`; planned named tests in `mailglass_admin/e2e/phase169-journey.spec.js`; zero discovered tests fails the task |
 | Full phase command set | Required by 169-05 Task 2 `<verify>` before task completion: named connected browser selection; Core quick command; complete Admin `cd mailglass_admin && mix test --seed 1`; asset build and parity checks below; full existing and new operator browser suite `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser` without grep. Record each result on the current revision in 169-BASELINE.md. |
 | Asset checks | `cd mailglass_admin && mix mailglass_admin.assets.build`; `cd mailglass_admin && mix test test/mailglass_admin/token_parity_test.exs test/mailglass_admin/bundle_test.exs --seed 1`; compare source, built and served CSS hashes |
-| Runtime | Execution preflight inventories `asdf list erlang`, `asdf list elixir`, `elixir --version`; select an installed compatible OTP 27/Elixir pair without editing `.tool-versions`; actual runtime and durations are pending |
+| Runtime | Installed compatible runtime selected per command without editing the tracked project pin: Erlang/OTP `27.3.4.15`, Elixir `1.18.4` for OTP 27, Node `22.14.0`; see current command provenance in `169-BASELINE.md` |
 
 ## Sampling Rate
 
@@ -48,8 +48,8 @@ Each command runs from repository root. The Playwright script builds assets and 
 | 3 / 169-03 T3 | OUTUX-04 | existing core `suppressions_test.exs`, Admin `operator_live_test.exs`; `mix test test/mailglass/operator/suppressions_test.exs --seed 1 && (cd mailglass_admin && mix test test/mailglass_admin/operator_live_test.exs --seed 1)` | T-169-09 | wrong policy removability, foreign/expired match or failed read called no match | pending execution |
 | 4 / 169-04 T1 | OUTUX-05 | existing core `replay_targets_test.exs`, Admin `operator_live_test.exs`; owned `operator_fixtures.ex` and `endpoint_case.ex` provide closed replay mutations; audit/update existing `operator_live_test.exs:684`, `e2e/operator.spec.js`, `e2e/flows.spec.js`; `mix test test/mailglass/operator/replay_targets_test.exs --seed 1 && (cd mailglass_admin && mix test test/mailglass_admin/operator_live_test.exs --seed 1)` | T-169-10, T-169-11, T-169-12 | changed/replaced target accepted, auth skipped or duplicate submitted | pending execution |
 | 4 / 169-04 T2 | OUTUX-05 | existing Admin `operator_live_test.exs`, `operator/replay_modal_test.exs`; `cd mailglass_admin && mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/operator/replay_modal_test.exs --seed 1` | T-169-13 | request called completion, known command result erased or raw error shown | pending execution |
-| 5 / 169-05 T1 | OUTUX-01–05 | planned phase browser file; `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 169 rendered"` | T-169-14, T-169-15 | zero case, responsive/focus/copy/theme assertion fails or asset hash differs | pending execution |
-| 5 / 169-05 T2 | OUTUX-01–05 | planned phase browser file; `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 169 connected"` then `mix test test/mailglass/operator/deliveries_test.exs test/mailglass/operator/timeline_test.exs test/mailglass/operator/support_summary_test.exs test/mailglass/operator/suppressions_test.exs test/mailglass/operator/replay_targets_test.exs --seed 1` then `cd mailglass_admin && mix test --seed 1` then `cd mailglass_admin && mix mailglass_admin.assets.build` then `cd mailglass_admin && mix test test/mailglass_admin/token_parity_test.exs test/mailglass_admin/bundle_test.exs --seed 1` then unfiltered `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser` | T-169-10, T-169-14, T-169-16 | named selection zero cases or journey failure; core/Admin/parity/bundle nonzero or zero tests; asset build failure or source/built/served mismatch; unfiltered browser nonzero, zero tests or missing incumbent/phase cases; any command missing current-revision count/duration record | pending execution |
+| 5 / 169-05 T1 | OUTUX-01–05 | `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 169 rendered"` | T-169-14, T-169-15 | zero case, responsive/focus/copy/theme assertion fails or asset hash differs | complete: 2 passed, 0 failed, 5.5 s |
+| 5 / 169-05 T2 | OUTUX-01–05 | Named connected selection; core operator selection; complete Admin; asset build; parity/bundle; unfiltered operator browser suite (commands and runtimes in `169-BASELINE.md`) | T-169-10, T-169-14, T-169-16 | named selection zero cases or journey failure; core/Admin/parity/bundle nonzero or zero tests; asset build failure or source/built/served mismatch; unfiltered browser nonzero, zero tests or missing incumbent/phase cases; any command missing current-revision count/duration record | complete: 9 connected passed; core 39 passed; Admin 537 passed / 1 excluded; assets passed; parity/bundle 9 passed; browser 197 passed / 1 skipped, 0 failed; CSS served/built hashes equal |
 
 ## Wave 0 Requirements
 
@@ -73,4 +73,6 @@ Agent-operated rendered inspection is required for typography, composition, clip
 - [ ] Feedback timing measured during execution
 - [ ] Execution validation complete before setting nyquist_compliant true
 
-**Approval:** Planning seed; execution evidence pending.
+**Approval:** Planning seed; Plan 169-05 executed, phase-level review pending.
+
+**Plan 169-05 execution evidence:** Complete at checkout `e45aa8e1b82f97dd45e08c67c9cfe6fdd7f31d68`; complete counts, runtimes, native Chrome zoom record, CSS provenance, and explicit proof limits are in `169-BASELINE.md` → “After Evidence — Plan 169-05”. This does not mark Phase 169 complete or set `nyquist_compliant: true`; parent review and phase verification remain separate.

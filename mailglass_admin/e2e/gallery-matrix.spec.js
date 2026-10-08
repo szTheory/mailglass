@@ -85,8 +85,23 @@ function themeWrapper(page, cellTestId, theme) {
 // assertNoElementHorizontalOverflow in structural.spec.js).
 async function assertNoHorizontalOverflow(locator, label) {
   await expect(locator, `${label} visible`).toBeVisible();
-  const overflow = await locator.evaluate(el => el.scrollWidth - el.clientWidth);
-  expect(overflow, `${label} horizontal overflow (scrollWidth - clientWidth)`).toBeLessThanOrEqual(1);
+  const geometry = await locator.evaluate(el => {
+    const overflowing = [...el.querySelectorAll("*")]
+      .map(child => ({
+        tag: child.tagName.toLowerCase(),
+        testId: child.getAttribute("data-testid"),
+        className: typeof child.className === "string" ? child.className : "",
+        text: child.textContent?.trim().slice(0, 80),
+        overflow: child.scrollWidth - child.clientWidth
+      }))
+      .filter(child => child.overflow > 1)
+      .slice(0, 8);
+    return { overflow: el.scrollWidth - el.clientWidth, overflowing };
+  });
+  expect(
+    geometry.overflow,
+    `${label} horizontal overflow (scrollWidth - clientWidth); overflowing descendants=${JSON.stringify(geometry.overflowing)}`
+  ).toBeLessThanOrEqual(1);
 }
 
 // At 320px nothing may be clipped or hidden. "Not clipped" is a PER-SPECIMEN
@@ -136,15 +151,15 @@ async function discoverGalleryCells(page) {
   return Array.from(new Set(ids)).filter(id => !COMPOSED_INNER_TESTIDS.has(id));
 }
 
-// Widths below md render the three theme wrappers STACKED full-width, so every
+// Widths below xl render the three theme wrappers STACKED full-width, so every
 // specimen gets the whole cell width — the overflow invariant is enforced for
-// ALL cells here. At/above md the wrappers share a 3-column row (~230px each):
+// ALL cells here. At/above xl the wrappers share a 3-column row (~400px each):
 // a set of intrinsically-wide card/SVG specimens (the logo SVG, the theme_picker
 // fieldset, routing_trace/tabs/suppression/composed cards) cannot fit three to a
 // row and overflow their narrow column. That is a pre-existing gallery-SHELL
 // layout property (STATE.md [110/113]), not a specimen defect, and is out of
-// scope for this fixtures plan — those cells are allowlisted at md+ so the gate
-// stays honest (it still fails closed if a NEW specimen overflows at md+, and it
+// scope for this fixtures plan — those cells are allowlisted at xl+ so the gate
+// stays honest (it still fails closed if a NEW specimen overflows at xl+, and it
 // enforces every cell strictly at the 320/390 mobile floors the RATCHET-02
 // "must not clip at 320" contract targets).
 const WIDE_SHELL_OVERFLOW_ALLOWLIST = new Set([

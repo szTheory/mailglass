@@ -126,16 +126,13 @@ defmodule MailglassAdmin.GalleryLive do
                   <p class="text-label font-bold text-secondary">
                     {component_label(component)} — {state}
                   </p>
-                  <!-- Theme wrappers stack full-width below md and only share a
-                       row at md+ so each wrapper gets the full cell width at the
-                       320/390 matrix floors — card-based specimens (timeline,
-                       tables) need the full width to fit (RATCHET-02 overflow
-                       gate). flex-1 at narrow widths gave ~88px columns that no
-                       card layout fits. -->
-                  <div class="flex flex-col gap-md md:flex-row md:flex-wrap">
+                  <!-- Keep the theme specimens full-width until xl: the audit
+                       shell's cell padding leaves too little room for card and
+                       timeline specimens in three columns at tablet widths. -->
+                  <div class="flex flex-col gap-md xl:flex-row xl:flex-wrap">
                     <div
                       data-theme="mailglass-light"
-                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full md:flex-1"
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full xl:flex-1"
                     >
                       <.render_specimen
                         component={component}
@@ -145,7 +142,7 @@ defmodule MailglassAdmin.GalleryLive do
                     </div>
                     <div
                       data-theme="mailglass-dark"
-                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full md:flex-1"
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full xl:flex-1"
                     >
                       <.render_specimen
                         component={component}
@@ -155,7 +152,7 @@ defmodule MailglassAdmin.GalleryLive do
                     </div>
                     <div
                       data-testid={"gallery-#{component}-#{state}-system"}
-                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full md:flex-1"
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full xl:flex-1"
                     >
                       <.render_specimen
                         component={component}

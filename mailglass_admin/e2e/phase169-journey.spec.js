@@ -396,7 +396,7 @@ test.describe("Phase 169 connected journey", () => {
     })}`);
   });
 
-  test("Phase 169 baseline and exact replay tracer", async ({ page }) => {
+  test("Phase 169 connected Health, exact support, aged-out Delivery, replay, and return", async ({ page }) => {
     const unknownScenario = await page.request.get("/ops/browser-reset?scenario=unlisted");
     expect(unknownScenario.status()).toBe(400);
 
@@ -406,13 +406,41 @@ test.describe("Phase 169 connected journey", () => {
     expect(fixture.delivery_id).toBeTruthy();
     expect(fixture.webhook_event_id).toBeTruthy();
 
-    const listPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&provider=postmark&event=delivered&window_hours=168&page=2`;
-    await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(listPath)}`);
-    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
-
-    const detailPath = `${listPath}&delivery_id=${fixture.delivery_id}&full=1`;
-    await page.goto(detailPath);
+    const filterPath = `/ops/mail?tenant_id=${tenantId}&provider=postmark&event=delivered&window_hours=168&page=2`;
+    await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(filterPath)}`);
+    await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
+    await expect(page.getByTestId("operator-overview-health-failures")).toContainText("1");
+    await page.getByTestId("operator-overview-health-failures-link").click();
+    await page.waitForURL(url => new URL(url).searchParams.get("support_focus") === "failed_ingest");
+    const supportURL = new URL(page.url());
+    expect(supportURL.searchParams.get("support_webhook_event_id")).toBe(fixture.webhook_event_id);
+    expect(supportURL.searchParams.get("provider")).toBe("postmark");
+    expect(supportURL.searchParams.get("event")).toBe("delivered");
+    expect(supportURL.searchParams.get("window_hours")).toBe("168");
+    expect(supportURL.searchParams.get("page")).toBe("2");
+    const exactSupport = page.getByTestId("operator-support-exact-evidence");
+    await expect(exactSupport).toContainText(fixture.webhook_event_id);
+    await expect(exactSupport).toContainText("A unique linked Delivery is recorded.");
+    await exactSupport.getByTestId("operator-support-linked-delivery").click();
+    await page.waitForURL(url => new URL(url).searchParams.get("delivery_id") === fixture.delivery_id);
     await expect(page.getByTestId("operator-detail-header")).toBeVisible();
+    await expect(page.getByTestId("operator-detail-header")).toContainText(fixture.delivery_id);
+    await expect(page.getByTestId("operator-support-exact-evidence")).toContainText(fixture.webhook_event_id);
+    const linkedDetailURL = new URL(page.url());
+    expect(linkedDetailURL.searchParams.get("support_webhook_event_id")).toBe(fixture.webhook_event_id);
+    expect(linkedDetailURL.searchParams.get("window_hours")).toBe("168");
+    expect(fixture.listed_delivery_ids).not.toContain(fixture.delivery_id);
+
+    await page.getByTestId("operator-detail-back").click();
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await expect(page.getByTestId("operator-delivery-row").filter({ visible: true })).not.toContainText(fixture.delivery_id);
+    const quickViewPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&provider=postmark&event=delivered&window_hours=168&page=2&delivery_id=${fixture.delivery_id}&support_focus=failed_ingest&support_webhook_event_id=${fixture.webhook_event_id}`;
+    await page.goto(quickViewPath);
+    const quickView = page.getByTestId("operator-quick-view");
+    await expect(quickView).toBeVisible();
+    await expect(quickView).toContainText(fixture.delivery_id);
+    await expect(quickView).not.toContainText("phase169-exact@example.com");
+    await page.getByTestId("operator-quick-view-full").click();
     await expect(page.getByTestId("operator-detail-header")).toContainText(fixture.delivery_id);
     await page.getByTestId("operator-replay-open").click();
     const review = page.getByTestId("operator-replay-modal");
@@ -440,6 +468,8 @@ test.describe("Phase 169 connected journey", () => {
     expect(returned.searchParams.get("event")).toBe("delivered");
     expect(returned.searchParams.get("window_hours")).toBe("168");
     expect(returned.searchParams.get("page")).toBe("2");
+    expect(returned.searchParams.has("support_focus")).toBe(false);
+    expect(returned.searchParams.has("support_webhook_event_id")).toBe(false);
     expect(returned.searchParams.has("delivery_id")).toBe(false);
     await expect(page.getByTestId("operator-quick-view")).toHaveCount(0);
   });

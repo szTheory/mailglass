@@ -33,7 +33,7 @@ defmodule MailglassAdmin.Operator.Timeline do
       data-testid="operator-timeline"
       data-group-card="operator-timeline"
     >
-      <div class="mb-md flex items-center justify-between gap-sm">
+      <div class="mb-md flex min-w-0 flex-wrap items-center justify-between gap-sm">
         <h3 class="text-body font-bold text-base-content">Event timeline</h3>
         <span class="text-label text-secondary">Chronological order</span>
       </div>

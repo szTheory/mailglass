@@ -124,6 +124,20 @@ framework integration but are not part of the general adopter promise.
 - Internal query/read-model surfaces that first-party packages may call while
   the maintainers keep the right to refine their shape outside the documented
   stable subset above.
+- Phase 169's exact investigation reads used by `mailglass_admin` are
+  sibling-package-only: `Mailglass.Operator.Deliveries.get_delivery/2`,
+  `Mailglass.Operator.Timeline.get_delivery_event/3`, and
+  `Mailglass.Operator.SupportSummary.read_failed_ingest/1`,
+  `read_orphan_backlog/1`, `read_replay_outcomes/1`, `read_reconcile_facts/1`,
+  `get_webhook_event/2`, and `get_unmatched_event/2`. The exact getters return a
+  scoped projection or `nil`; the aggregate readers return support-read maps.
+  Their helper projections, read-state handling, and call shapes are not
+  general adopter promises.
+
+These additions do not change any existing adopter-facing signature, return
+type, closed atom set, result ordering, or pagination behavior in the documented
+stable operator read models. The new exact helpers above are not a change to
+those existing contracts.
 
 ## Stable Inventory
 

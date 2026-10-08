@@ -128,6 +128,26 @@ The admin contract does not freeze:
 - layout markup or CSS class names
 - compatibility or deprecation lifecycle policy by itself
 
+### Core exact-read dependency
+
+The Admin implementation also calls core sibling-package-only investigation
+helpers to keep exact Account support evidence and out-of-window Delivery/Event
+identity separate from the stable list projections:
+
+- `Mailglass.Operator.Deliveries.get_delivery/2`
+- `Mailglass.Operator.Timeline.get_delivery_event/3`
+- `Mailglass.Operator.SupportSummary.read_failed_ingest/1`,
+  `read_orphan_backlog/1`, `read_replay_outcomes/1`, and
+  `read_reconcile_facts/1`
+- `Mailglass.Operator.SupportSummary.get_webhook_event/2` and
+  `get_unmatched_event/2`
+
+These helpers are Admin implementation dependencies, not new stable adopter
+signatures in either package. Their scoped projections and unavailable/stale
+read handling remain internal. The stable boundary remains the documented
+router/auth contract and operator semantics; existing adopter-facing query
+signatures, result types, closed atoms, ordering, and pagination are unchanged.
+
 ## Relationship To Core `mailglass`
 
 `mailglass_admin` depends on the core package's contract inventory in

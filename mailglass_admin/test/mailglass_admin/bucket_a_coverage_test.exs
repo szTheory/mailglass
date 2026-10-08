@@ -95,7 +95,7 @@ defmodule MailglassAdmin.BucketACoverageTest do
 
     # --- A10: squished / unreadable table columns ---------------------------
     %{id: "A10", desc: "Responsive table->cards below breakpoint (DATA-01)", guard_kind: :playwright_title,
-      locator: "responsive: operator-deliveries-table visible at 768px; operator-deliveries-cards visible at 390px (DATA-01)", status: :live},
+      locator: "responsive: operator collection follows available content width for table/cards (DATA-01)", status: :live},
 
     # --- A11: table overuse (NET-NEW 116-05) --------------------------------
     %{id: "A11", desc: "Table-overuse count-must-not-increase floor", guard_kind: :grep_gate,
