@@ -99,6 +99,7 @@ defmodule Mailglass do
         Operator.ReplayTargets,
         Operator.Timeline,
         Operator.Suppressions,
+        Operator.SupportSummary,
         Adapter,
         Adapters.Fake,
         Adapters.Swoosh,

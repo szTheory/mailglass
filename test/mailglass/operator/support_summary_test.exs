@@ -191,7 +191,8 @@ defmodule Mailglass.Operator.SupportSummaryTest do
                provider: "postmark",
                provider_event_id: webhook.provider_event_id,
                received_at: webhook.received_at,
-               status: :dead
+               status: :dead,
+               delivery_id: nil
              }
 
       assert SupportSummary.get_webhook_event("tenant-a", Ecto.UUID.generate()) == nil
@@ -216,6 +217,23 @@ defmodule Mailglass.Operator.SupportSummaryTest do
       assert linked.delivery_id == replay.delivery.id
       assert linked.event_id == replay.replayed.id
       assert SupportSummary.get_unmatched_event("tenant-a", Ecto.UUID.generate()) == nil
+    end
+
+    test "reports only a unique Account Event linkage for a webhook row" do
+      webhook = insert_webhook_event!(%{tenant_id: "tenant-a", status: :dead})
+      delivery = Generators.delivery_fixture(tenant_id: "tenant-a", provider: "postmark")
+
+      {:ok, _event} =
+        Events.append(%{
+          tenant_id: "tenant-a",
+          delivery_id: delivery.id,
+          type: :bounced,
+          occurred_at: DateTime.utc_now(),
+          needs_reconciliation: false,
+          metadata: %{"webhook_event_id" => webhook.id, "provider" => "postmark"}
+        })
+
+      assert SupportSummary.get_webhook_event("tenant-a", webhook.id).delivery_id == delivery.id
     end
   end
 

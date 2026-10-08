@@ -48,11 +48,46 @@ test.describe("Phase 169 connected journey", () => {
     await page.getByRole("button", { name: "Retry observations" }).click();
     await expect(page.getByTestId("operator-health-stale-orphan_backlog")).toBeVisible();
     await expect(unmatched).toContainText("1");
+    await expect(unmatched).toContainText("Last retrieved");
     await expect(failures).toContainText("1");
     await expect(page.getByTestId("operator-health-partial")).toBeVisible();
     await expect(page.getByTestId("operator-overview-health-replay")).toBeVisible();
     await expect(page.locator("body")).not.toContainText("synthetic transient operator read failure");
     await page.screenshot({ path: "test-results/phase169-health-partial.png", fullPage: true });
+  });
+
+  test("Account support keeps exact IDs with no matching Deliveries and opens only proven linkage", async ({ page }) => {
+    const reset = await page.request.get("/ops/browser-reset?scenario=phase169-support-empty");
+    expect(reset.ok()).toBeTruthy();
+    const fixture = await reset.json();
+
+    const emptyPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&event=opened&support_focus=failed_ingest&support_webhook_event_id=${fixture.older_webhook_event_id}`;
+    await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(emptyPath)}`);
+    await expect(page.getByTestId("data-state-empty")).toBeVisible();
+    const exactWebhook = page.getByTestId("operator-support-exact-evidence");
+    await expect(exactWebhook).toContainText(fixture.older_webhook_event_id);
+    await expect(exactWebhook).not.toContainText(fixture.newer_webhook_event_id);
+
+    const exactEventPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&event=opened&support_focus=orphan_backlog&support_event_id=${fixture.newer_unlinked_event_id}`;
+    await page.goto(exactEventPath);
+    const exactEvent = page.getByTestId("operator-support-exact-evidence");
+    await expect(exactEvent).toContainText(fixture.newer_unlinked_event_id);
+    await expect(exactEvent).toContainText("No Delivery linkage is recorded for this Event.");
+    await expect(exactEvent).toContainText("phase169-long-safe-reference-");
+    await expect(exactEvent.getByTestId("operator-support-linked-delivery")).toHaveCount(0);
+
+    const linkedEventPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&event=opened&support_focus=orphan_backlog&support_event_id=${fixture.linked_event_id}`;
+    await page.goto(linkedEventPath);
+    const linkedEvent = page.getByTestId("operator-support-exact-evidence");
+    await expect(linkedEvent).toContainText(`Linked Delivery: ${fixture.other_delivery_id}`);
+    await linkedEvent.getByTestId("operator-support-linked-delivery").click();
+    await page.waitForURL(url => new URL(url).searchParams.get("delivery_id") === fixture.other_delivery_id);
+    const linkedURL = new URL(page.url());
+    expect(linkedURL.searchParams.get("support_event_id")).toBe(fixture.linked_event_id);
+    await expect(page.getByTestId("operator-detail-header")).toContainText(fixture.other_delivery_id);
+    await expect(page.getByTestId("operator-support-exact-evidence")).toContainText(fixture.linked_event_id);
+    await page.waitForTimeout(350);
+    await page.screenshot({ path: "test-results/phase169-support-exact.png", fullPage: true });
   });
 
   for (const width of [390, 1440]) {

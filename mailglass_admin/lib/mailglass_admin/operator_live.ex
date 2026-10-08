@@ -70,6 +70,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:suppression_count, nil)
       |> assign(:support_summary, nil)
       |> assign(:support_state, default_support_state())
+      |> assign(:support_exact_evidence, default_support_exact_evidence())
       |> assign(:health_panel_states, default_health_panel_states())
       |> assign(:health_observed_at, nil)
       |> assign(:health_window, nil)
@@ -584,9 +585,6 @@ defmodule MailglassAdmin.OperatorLive do
           <div data-testid="operator-overview" class="grid gap-lg">
             <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
               <div data-testid="operator-overview-health" class="grid gap-md">
-                <p class="text-body text-secondary" data-testid="operator-health-subtitle">
-                  Review failed webhook attempts, unmatched Events, replay and reconciliation records, and active suppression records for this Account.
-                </p>
                 <div class="grid gap-md lg:grid-cols-3">
                   <.link
                     patch={support_evidence_path(@base_path, @filter_params, @dark_chrome, :failed_ingest, @support_summary)}
@@ -599,7 +597,13 @@ defmodule MailglassAdmin.OperatorLive do
                       value={health_metric_count(@support_summary, :failed_ingest)}
                       state={health_metric_state(@support_summary, :failed_ingest, @health_panel_states)}
                       severity={health_metric_severity(@support_summary, :failed_ingest, :warning)}
-                      severity_label={health_metric_severity_label(@support_summary, :failed_ingest)}
+                      severity_label={
+                        health_metric_severity_label(
+                          @support_summary,
+                          :failed_ingest,
+                          @health_panel_states
+                        )
+                      }
                       hint="Failed and dead webhook rows received during the selected Account observation window. This counts processing attempts, not failed Deliveries."
                       data-testid="operator-overview-health-failures"
                     />
@@ -615,7 +619,13 @@ defmodule MailglassAdmin.OperatorLive do
                       value={health_metric_count(@support_summary, :orphan_backlog)}
                       state={health_metric_state(@support_summary, :orphan_backlog, @health_panel_states)}
                       severity={health_metric_severity(@support_summary, :orphan_backlog, :warning)}
-                      severity_label={health_metric_severity_label(@support_summary, :orphan_backlog)}
+                      severity_label={
+                        health_metric_severity_label(
+                          @support_summary,
+                          :orphan_backlog,
+                          @health_panel_states
+                        )
+                      }
                       hint="Unresolved Event records in the selected Account observation window. A shown oldest Event is one example, not the complete population."
                       data-testid="operator-overview-health-orphans"
                     />
@@ -640,7 +650,12 @@ defmodule MailglassAdmin.OperatorLive do
                       value={@suppression_count}
                       state={panel_value_state(@health_panel_states, :active_suppressions, @suppression_count)}
                       severity={suppression_severity(@suppression_count)}
-                      severity_label={suppression_severity_label(@suppression_count)}
+                      severity_label={
+                        suppression_severity_label(
+                          @suppression_count,
+                          @health_panel_states
+                        )
+                      }
                       hint="Currently active suppression records at check time. This count is independent of the observation window and is not a recipient count."
                       data-testid="operator-overview-health-suppressions"
                     />
@@ -656,7 +671,13 @@ defmodule MailglassAdmin.OperatorLive do
                       value={health_metric_count(@support_summary, :replay_outcomes)}
                       state={health_metric_state(@support_summary, :replay_outcomes, @health_panel_states)}
                       severity={health_metric_severity(@support_summary, :replay_outcomes, :info)}
-                      severity_label={health_metric_severity_label(@support_summary, :replay_outcomes)}
+                      severity_label={
+                        health_metric_severity_label(
+                          @support_summary,
+                          :replay_outcomes,
+                          @health_panel_states
+                        )
+                      }
                       hint="Recorded replay audit outcomes during the selected observation window. These facts do not establish Delivery outcome."
                       data-testid="operator-overview-health-replay"
                     />
@@ -672,7 +693,13 @@ defmodule MailglassAdmin.OperatorLive do
                       value={health_metric_count(@support_summary, :reconcile_facts)}
                       state={health_metric_state(@support_summary, :reconcile_facts, @health_panel_states)}
                       severity={health_metric_severity(@support_summary, :reconcile_facts, :info)}
-                      severity_label={health_metric_severity_label(@support_summary, :reconcile_facts)}
+                      severity_label={
+                        health_metric_severity_label(
+                          @support_summary,
+                          :reconcile_facts,
+                          @health_panel_states
+                        )
+                      }
                       hint="Recorded reconciliation audit Events during the selected observation window. This is separate from unresolved Events."
                       data-testid="operator-overview-health-reconcile"
                     />
@@ -816,6 +843,16 @@ defmodule MailglassAdmin.OperatorLive do
                           support_summary={@support_summary}
                           support_state={@support_state}
                           suppression_count={@suppression_count}
+                          exact_support_evidence={@support_exact_evidence}
+                          exact_delivery_path={
+                            exact_support_delivery_path(
+                              @base_path,
+                              @filter_params,
+                              @dark_chrome,
+                              @support_exact_evidence,
+                              @support_state
+                            )
+                          }
                         />
                       </div>
                   <% end %>
@@ -920,6 +957,16 @@ defmodule MailglassAdmin.OperatorLive do
                     support_summary={@support_summary}
                     support_state={@support_state}
                     suppression_count={@suppression_count}
+                    exact_support_evidence={@support_exact_evidence}
+                    exact_delivery_path={
+                      exact_support_delivery_path(
+                        @base_path,
+                        @filter_params,
+                        @dark_chrome,
+                        @support_exact_evidence,
+                        @support_state
+                      )
+                    }
                   />
                 </div>
               <% end %>
@@ -1331,6 +1378,10 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(
       :replay_selected_target_id,
       preserve_replay_selection(replay_targets, socket.assigns[:replay_selected_target_id])
+    )
+    |> assign(
+      :support_exact_evidence,
+      load_support_exact_evidence(socket, filter_params, socket.assigns.support_state)
     )
   end
 
@@ -1794,6 +1845,22 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp orphan_backlog_event_id(_support_summary), do: nil
 
+  defp exact_support_delivery_path(base_path, filter_params, dark_chrome, evidence, support_state) do
+    case get_in(evidence || %{}, [:record, :delivery_id]) do
+      delivery_id when is_binary(delivery_id) ->
+        build_path(
+          base_path,
+          filter_params |> Map.put("view", "deliveries") |> Map.put("full", "1"),
+          delivery_id,
+          dark_chrome,
+          support_state
+        )
+
+      _ ->
+        nil
+    end
+  end
+
   defp pagination_path(base_path, filter_params, _dark_chrome, direction) do
     page = parse_positive_integer(filter_params["page"]) || 1
 
@@ -1899,6 +1966,63 @@ defmodule MailglassAdmin.OperatorLive do
     %{focus: nil, event_id: nil, webhook_event_id: nil}
   end
 
+  defp default_support_exact_evidence do
+    %{focus: nil, id: nil, status: :none, record: nil, checked_at: nil}
+  end
+
+  defp load_support_exact_evidence(socket, filter_params, support_state) do
+    tenant_id = blank_to_nil(filter_params["tenant_id"])
+
+    {focus, id, operation, read} =
+      case support_state do
+        %{focus: :failed_ingest, webhook_event_id: id} when is_binary(id) ->
+          {:failed_ingest, id, :exact_failed_ingest,
+           fn ->
+             SupportSummary.get_webhook_event(tenant_id, id)
+           end}
+
+        %{focus: :orphan_backlog, event_id: id} when is_binary(id) ->
+          {:orphan_backlog, id, :exact_unmatched_event,
+           fn ->
+             SupportSummary.get_unmatched_event(tenant_id, id)
+           end}
+
+        _ ->
+          {nil, nil, nil, nil}
+      end
+
+    if is_nil(tenant_id) or is_nil(id) do
+      default_support_exact_evidence()
+    else
+      prior = socket.assigns[:support_exact_evidence]
+      same_request? = prior && prior.focus == focus && prior.id == id
+
+      try do
+        run_read_fault(socket.assigns[:operator_read_fault], operation)
+        record = read.()
+
+        %{
+          focus: focus,
+          id: id,
+          status: if(is_map(record), do: :ready, else: :not_found),
+          record: record,
+          checked_at: DateTime.utc_now()
+        }
+      rescue
+        error ->
+          if transient_read_error?(error) do
+            if same_request? && prior.status in [:ready, :stale] && is_map(prior.record) do
+              %{prior | status: :stale}
+            else
+              %{focus: focus, id: id, status: :unavailable, record: nil, checked_at: nil}
+            end
+          else
+            reraise(error, __STACKTRACE__)
+          end
+      end
+    end
+  end
+
   defp normalize_support_state(params) do
     %{
       focus: normalize_support_focus(params["support_focus"]),
@@ -1937,7 +2061,8 @@ defmodule MailglassAdmin.OperatorLive do
   defp support_focus_param(focus), do: Atom.to_string(focus)
 
   defp page_subtitle(:overview),
-    do: "Check recent failures, unmatched webhooks, and active suppressions for this account."
+    do:
+      "Review failed webhook attempts, unmatched Events, replay and reconciliation records, and active suppression records for this Account."
 
   defp page_subtitle(:deliveries),
     do:
@@ -1989,12 +2114,16 @@ defmodule MailglassAdmin.OperatorLive do
     end
   end
 
-  defp health_metric_severity_label(summary, metric) do
-    case health_metric_count(summary, metric) do
-      count when is_integer(count) and count > 0 -> "Needs attention"
-      count when is_integer(count) and count == 0 -> "No matching evidence"
-      count when is_integer(count) -> "Observed"
-      _count -> "Unavailable"
+  defp health_metric_severity_label(summary, metric, panel_states) do
+    if get_in(panel_states, [metric, :status]) == :stale do
+      "Last retrieved"
+    else
+      case health_metric_count(summary, metric) do
+        count when is_integer(count) and count > 0 -> "Needs attention"
+        count when is_integer(count) and count == 0 -> "No matching evidence"
+        count when is_integer(count) -> "Observed"
+        _count -> "Unavailable"
+      end
     end
   end
 
@@ -2004,8 +2133,13 @@ defmodule MailglassAdmin.OperatorLive do
   defp suppression_severity(count) when is_integer(count), do: :info
   defp suppression_severity(_count), do: :neutral
 
-  defp suppression_severity_label(count) when is_integer(count), do: "Tracked"
-  defp suppression_severity_label(_count), do: "Unavailable"
+  defp suppression_severity_label(count, panel_states) do
+    cond do
+      get_in(panel_states, [:active_suppressions, :status]) == :stale -> "Last retrieved"
+      is_integer(count) -> "Tracked"
+      true -> "Unavailable"
+    end
+  end
 
   defp normalize_stat_count(count) when is_integer(count), do: count
   defp normalize_stat_count(_count), do: nil

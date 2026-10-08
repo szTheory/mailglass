@@ -72,19 +72,45 @@ defmodule Mailglass.Operator.SupportSummary do
   @spec get_webhook_event(String.t(), String.t()) :: map() | nil
   def get_webhook_event(tenant_id, webhook_event_id)
       when is_binary(tenant_id) and tenant_id != "" and is_binary(webhook_event_id) do
-    from(webhook_event in WebhookEvent,
-      where: webhook_event.tenant_id == ^tenant_id,
-      where: webhook_event.id == ^webhook_event_id,
-      select: %{
-        webhook_event_id: webhook_event.id,
-        provider: webhook_event.provider,
-        provider_event_id: webhook_event.provider_event_id,
-        received_at: webhook_event.received_at,
-        status: webhook_event.status
-      }
-    )
-    |> Tenancy.scope(tenant_id)
-    |> Repo.one()
+    webhook_event =
+      from(webhook_event in WebhookEvent,
+        where: webhook_event.tenant_id == ^tenant_id,
+        where: webhook_event.id == ^webhook_event_id,
+        select: %{
+          webhook_event_id: webhook_event.id,
+          provider: webhook_event.provider,
+          provider_event_id: webhook_event.provider_event_id,
+          received_at: webhook_event.received_at,
+          status: webhook_event.status
+        }
+      )
+      |> Tenancy.scope(tenant_id)
+      |> Repo.one()
+
+    case webhook_event do
+      nil ->
+        nil
+
+      webhook_event ->
+        delivery_ids =
+          from(event in Event,
+            where: event.tenant_id == ^tenant_id,
+            where: fragment("?->>'webhook_event_id'", event.metadata) == ^webhook_event_id,
+            where: not is_nil(event.delivery_id),
+            distinct: true,
+            select: event.delivery_id
+          )
+          |> Tenancy.scope(tenant_id)
+          |> Repo.all()
+
+        delivery_id =
+          case delivery_ids do
+            [delivery_id] -> delivery_id
+            _ -> nil
+          end
+
+        Map.put(webhook_event, :delivery_id, delivery_id)
+    end
   end
 
   @doc false

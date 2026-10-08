@@ -221,11 +221,12 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     %{tenant_id: @tenant_id, failed_webhook_event_id: failed.id, unmatched_event_id: unmatched.id}
   end
 
-  def seed_phase169_support_empty! do
+  def seed_phase169_support_empty!(tenant_id \\ @tenant_id) do
     reset!()
 
     older_webhook =
       insert_webhook_event!(%{
+        tenant_id: tenant_id,
         provider_event_id: "phase169-support-older",
         status: :dead,
         received_at: hours_ago(8)
@@ -233,6 +234,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
     newer_webhook =
       insert_webhook_event!(%{
+        tenant_id: tenant_id,
         provider_event_id: "phase169-support-newer",
         status: :failed,
         received_at: hours_ago(1)
@@ -240,7 +242,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
     {:ok, unlinked_event} =
       Mailglass.Events.append(%{
-        tenant_id: @tenant_id,
+        tenant_id: tenant_id,
         type: :delivered,
         delivery_id: nil,
         occurred_at: hours_ago(9),
@@ -252,16 +254,39 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
         }
       })
 
+    {:ok, newer_unlinked_event} =
+      Mailglass.Events.append(%{
+        tenant_id: tenant_id,
+        type: :bounced,
+        delivery_id: nil,
+        occurred_at: hours_ago(2),
+        needs_reconciliation: true,
+        metadata: %{
+          "provider" => "postmark",
+          "provider_event_id" => String.duplicate("phase169-long-safe-reference-", 8),
+          "webhook_event_id" => newer_webhook.id
+        }
+      })
+
     other_delivery =
       insert_delivery!(%{
+        tenant_id: tenant_id,
         recipient: "phase169-other-delivery@example.com",
         provider: "postmark",
         provider_message_id: "pm_phase169_other_delivery"
       })
 
+    selected_delivery =
+      insert_delivery!(%{
+        tenant_id: tenant_id,
+        recipient: "phase169-selected-delivery@example.com",
+        provider: "sendgrid",
+        provider_message_id: "sg_phase169_selected_delivery"
+      })
+
     {:ok, linked_event} =
       Mailglass.Events.append(%{
-        tenant_id: @tenant_id,
+        tenant_id: tenant_id,
         type: :delivered,
         delivery_id: other_delivery.id,
         occurred_at: hours_ago(7),
@@ -274,18 +299,20 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
       })
 
     %{
-      tenant_id: @tenant_id,
+      tenant_id: tenant_id,
       older_webhook_event_id: older_webhook.id,
       newer_webhook_event_id: newer_webhook.id,
       unlinked_event_id: unlinked_event.id,
+      newer_unlinked_event_id: newer_unlinked_event.id,
       linked_event_id: linked_event.id,
-      other_delivery_id: other_delivery.id
+      other_delivery_id: other_delivery.id,
+      selected_delivery_id: selected_delivery.id
     }
   end
 
   def arm_reader_fault!(session_key, operation, kind)
       when is_binary(session_key) and is_binary(operation) and kind in [:known, :unexpected] do
-    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions) do
+    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event) do
       raise ArgumentError, "unsupported test reader operation"
     end
 

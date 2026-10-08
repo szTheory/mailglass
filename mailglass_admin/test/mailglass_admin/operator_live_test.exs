@@ -558,10 +558,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
       detail_html = view |> element("[data-testid='operator-detail-header']") |> render()
 
       assert html =~ ~s(data-testid="operator-support-cards")
-      assert html =~ "Recent failures"
-      assert html =~ "Unmatched webhooks"
+      assert html =~ "Failed webhook attempts"
+      assert html =~ "Unmatched Events"
       assert html =~ "Replay outcomes"
-      assert html =~ "Reconciled:"
+      assert html =~ "Reconciliation audit facts"
+      assert html =~ "Reconciled Events"
       assert html =~ "Account-scoped facts from the current support window."
       assert html =~ "Replay succeeded"
       assert html =~ "Reconciled"
@@ -2188,9 +2189,153 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ ~s(data-testid="operator-support-focus-detail")
       assert html =~ "Unmatched webhook evidence"
-      assert html =~ "Oldest unmatched webhook: orphan-open"
+      assert html =~ "Oldest unmatched Event example: orphan-open"
       assert html =~ "Showing unmatched webhook evidence"
       refute html =~ "Select a delivery to inspect its event timeline and suppression state."
+    end
+
+    test "exact webhook ID survives a newer failure example and an empty Delivery result", %{
+      conn: conn
+    } do
+      fixture = OperatorFixtures.seed_phase169_support_empty!(@tenant_id)
+
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "opened",
+            "support_focus" => "failed_ingest",
+            "support_webhook_event_id" => fixture.older_webhook_event_id
+          })
+        )
+
+      assert html =~ ~s(data-testid="operator-support-exact-evidence")
+      assert html =~ ~s(data-testid="data-state-empty")
+      {:ok, document} = Floki.parse_document(html)
+      [exact] = Floki.find(document, "[data-testid='operator-support-exact-evidence']")
+      exact_text = Floki.text(exact)
+      assert exact_text =~ fixture.older_webhook_event_id
+      assert exact_text =~ "Dead"
+      refute exact_text =~ fixture.newer_webhook_event_id
+      refute Floki.find(exact, "[data-testid='operator-support-linked-delivery']") |> Enum.any?()
+    end
+
+    test "exact Account Event is independent of the moving oldest exemplar and reports no linkage",
+         %{
+           conn: conn
+         } do
+      fixture = OperatorFixtures.seed_phase169_support_empty!(@tenant_id)
+
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "opened",
+            "support_focus" => "orphan_backlog",
+            "support_event_id" => fixture.newer_unlinked_event_id
+          })
+        )
+
+      {:ok, document} = Floki.parse_document(html)
+      [exact] = Floki.find(document, "[data-testid='operator-support-exact-evidence']")
+      exact_text = Floki.text(exact)
+
+      assert exact_text =~ fixture.newer_unlinked_event_id
+      assert exact_text =~ "No Delivery linkage is recorded for this Event."
+      assert exact_text =~ "phase169-long-safe-reference-"
+      refute Floki.find(exact, "[data-testid='operator-support-linked-delivery']") |> Enum.any?()
+      assert html =~ "phase169-unlinked-event"
+    end
+
+    test "a linked exact Event opens its recorded Delivery, not the selected Delivery", %{
+      conn: conn
+    } do
+      fixture = OperatorFixtures.seed_phase169_support_empty!(@tenant_id)
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "event" => "opened",
+            "delivery_id" => fixture.selected_delivery_id,
+            "full" => "1",
+            "support_focus" => "orphan_backlog",
+            "support_event_id" => fixture.linked_event_id
+          })
+        )
+
+      assert html =~ fixture.selected_delivery_id
+      assert html =~ fixture.other_delivery_id
+      {:ok, document} = Floki.parse_document(html)
+      [link] = Floki.find(document, "[data-testid='operator-support-linked-delivery']")
+      href = link |> Floki.attribute("href") |> List.first()
+      assert href =~ "delivery_id=#{fixture.other_delivery_id}"
+      refute href =~ "delivery_id=#{fixture.selected_delivery_id}"
+      assert Floki.text(link) =~ fixture.other_delivery_id
+    end
+
+    test "foreign exact support IDs share the non-disclosing Account state", %{conn: conn} do
+      _fixture = OperatorFixtures.seed_phase169_support_empty!(@tenant_id)
+
+      foreign =
+        insert_webhook_event!(%{
+          tenant_id: "foreign-tenant",
+          provider_event_id: "secret-foreign-reference"
+        })
+
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "support_focus" => "failed_ingest",
+            "support_webhook_event_id" => foreign.id
+          })
+        )
+
+      assert html =~ ~s(data-testid="operator-support-exact-not-found")
+      refute html =~ foreign.id
+      refute html =~ "secret-foreign-reference"
+    end
+
+    test "an unavailable exact read does not degrade other Account support observations", %{
+      conn: conn
+    } do
+      fixture = OperatorFixtures.seed_phase169_support_empty!(@tenant_id)
+      OperatorFixtures.arm_reader_fault!("operator-1", "exact_unmatched_event", :known)
+      OperatorFixtures.arm_reader_fault!("operator-1", "failed_ingest", :known)
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "support_focus" => "orphan_backlog",
+            "support_event_id" => fixture.unlinked_event_id
+          })
+        )
+
+      assert html =~ ~s(data-testid="operator-support-exact-unavailable")
+      assert html =~ ~s(data-testid="support-card-orphan-backlog-tier1")
+      assert html =~ "Failed webhook attempts unavailable"
+      refute html =~ "No failed webhook attempts in this window"
+      refute html =~ "synthetic transient operator read failure"
     end
 
     test "zero Health observations use limited evidence copy without global clearance", %{
@@ -2621,7 +2766,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       initial = Floki.parse_document!(initial_html)
 
       initial_orphans =
-        Floki.text(Floki.find(initial, "[data-testid='operator-overview-health-orphans']"))
+        initial
+        |> Floki.find("[data-testid='operator-overview-health-orphans'] p.mono")
+        |> List.first()
+        |> Floki.text()
 
       OperatorFixtures.arm_reader_fault!("operator-1", "orphan_backlog", :known)
       html = render_click(view, "retry_health")
@@ -2629,8 +2777,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ ~s(data-testid="operator-health-stale-orphan_backlog")
 
-      assert Floki.text(Floki.find(document, "[data-testid='operator-overview-health-orphans']")) ==
-               initial_orphans
+      current_orphans =
+        document
+        |> Floki.find("[data-testid='operator-overview-health-orphans'] p.mono")
+        |> List.first()
+        |> Floki.text()
+
+      assert current_orphans == initial_orphans
 
       assert html =~ ~s(data-testid="operator-overview-health-failures")
       assert html =~ ~s(data-testid="operator-overview-health-suppressions")
