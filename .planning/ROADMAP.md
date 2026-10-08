@@ -88,8 +88,17 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
   4. A user can operate shared controls and overlays by keyboard or touch, understand their applicable default/focus/hover/pressed/selected/disabled/busy/validation states, and perceive status beyond color with correct focus containment and return.
   5. A user can choose one clear Light, Dark, or System preference across navigation and reload, see OS changes while System is selected, and receive prompt feedback without blocking or repeated motion, including under reduced motion and LiveView updates.
 
-**Plans**: 4/4 plans complete
+**Plans**: 5/8 plans executed; three focused gap-closure plans are ready
 Plans:
+- [x] 168-01-PLAN.md — Shared Account scope and reproducible baseline
+- [x] 168-02-PLAN.md — Readable Health and Deliveries, filters, and exact evidence
+- [x] 168-03-PLAN.md — Appearance preference and shared feedback
+- [x] 168-04-PLAN.md — Quick view, replay confirmation, and rendered evidence
+- [x] 168-05-PLAN.md
+- [ ] 168-06-PLAN.md — Render downstream Delivery outcomes and capture current readability evidence
+- [ ] 168-07-PLAN.md — Keep operator caches scoped and replay confirmation recoverable
+- [ ] 168-08-PLAN.md — Clear Preview success feedback by its backing flash key
+
 **Wave 1**
 - [x] 168-01-PLAN.md — Reconcile the preserved workspace, capture the served baseline, and make Account switching work in shared navigation.
 
@@ -101,6 +110,14 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [x] 168-04-PLAN.md — Complete accessible Quick view and confirmation behavior with restrained motion and before/after evidence.
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [x] 168-05-PLAN.md — Close G-168-5 with exact Delivery value wrapping and browser geometry coverage.
+
+**Wave 6** *(gap closure plans; parallel after completed Wave 5)*
+- [ ] 168-06-PLAN.md — Close G-168-6 and refresh bounded zoom/readability screenshot evidence.
+- [ ] 168-07-PLAN.md — Close G-168-7, G-168-9, and G-168-10 at the scoped LiveView read seams.
+- [ ] 168-08-PLAN.md — Close G-168-8 through shared flash-key handling and a real LiveView dismissal.
 
 **UI hint**: yes
 **Acceptance focus**: Inspect rendered shell, navigation, account selector, typography, and shared controls in representative operator jobs; cover desktop/mobile, light/dark/System, keyboard/touch, zoom, and reduced motion. The inventory accompanies a working visual baseline.
@@ -231,7 +248,7 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 168. Shared Workspace and Usable Baseline | 4/4 | Complete    | 2026-10-07 |
+| 168. Shared Workspace and Usable Baseline | 5/5 | In Progress |  |
 | 169. Outbound Investigation and Recovery | 5/5 | Complete    | 2026-10-07 |
 | 170. Inbound Investigation and Recovery | 0/8 | Planned     | — |
 | 171. Developer Preview | 0/TBD | Not started | — |
