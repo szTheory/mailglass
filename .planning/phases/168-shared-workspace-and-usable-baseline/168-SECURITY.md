@@ -56,3 +56,11 @@ Authored threat registers from all four plans were checked against implementatio
 - [x] `status: verified` set.
 
 **Approval:** Verified 2026-10-07 at configured L1 depth.
+
+## Security Audit 2026-10-08
+
+| Metric | Count |
+|---|---|
+| Threats found | 10 |
+| Closed | 10 |
+| Open | 0 |
