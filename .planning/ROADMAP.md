@@ -117,7 +117,23 @@ Plans:
   4. An operator can relate suppression and failed or unmatched webhook evidence to a delivery and find the supported next investigation step without seeing an unavailable repair action promised.
   5. An authorized operator can review one eligible stored replay target and its consequence, confirm it, and distinguish requested work, new work, no change, and failure; denied or stale actions preserve Account scope and action-time authorization.
 
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+**Wave 1**
+- [ ] 169-01-PLAN.md — Source-identified tracer, exact Delivery selection, filters, list and return
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 169-02-PLAN.md — Scoped Health observations and exact Account support evidence
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 169-03-PLAN.md — Bounded event history and current suppression truth
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 169-04-PLAN.md — Frozen exact webhook replay and truthful outcomes
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 169-05-PLAN.md — Connected rendered acceptance and sibling API inventory
+
 **UI hint**: yes
 **Acceptance focus**: Follow actual Email health → delivery → evidence/recovery handoffs and back navigation. Exercise zero/one/many, long and non-ASCII data, unavailable evidence, permission, busy, and failure states using real controls and rendered forms.
 

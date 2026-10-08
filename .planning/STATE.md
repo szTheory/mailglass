@@ -4,16 +4,16 @@ milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 169
 current_phase_name: Outbound Investigation and Recovery
-status: planning
-stopped_at: Phase 169 UI-SPEC approved; ready for implementation planning
-last_updated: "2026-10-07T22:46:07.422Z"
-last_activity: 2026-10-07
-last_activity_desc: Phase 169 UI design contract approved; ready for implementation planning
-state_head: fdc2db16ecdb3df041827440f3b4785c44dc40ec
+status: executing
+stopped_at: Phase 169 plans verified; ready to execute five serial waves
+last_updated: "2026-10-08T00:05:15.854Z"
+last_activity: 2026-10-08
+last_activity_desc: Phase 169 implementation plans approved; ready to execute five plans across five waves
+state_head: 88ae9bbec7fc3f1ef2bfcc36175402d079f54af0
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 4
+  total_plans: 9
   completed_plans: 4
   percent: 17
 ---
@@ -39,15 +39,15 @@ See: .planning/PROJECT.md (updated 2026-10-07)
 
 ## Current Position
 
-Phase: 169 — Outbound Investigation and Recovery
+Phase: 169 (Outbound Investigation and Recovery) — READY TO EXECUTE
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-07 — Phase 169 UI design contract approved; ready for implementation planning
+Status: Ready to execute
+Last activity: 2026-10-08 — Phase 169 implementation plans approved; ready to execute five plans across five waves
 
 ## v2.9 Roadmap Shape
 
 - Phases 168–173 own all 28 approved requirements; Phase 168 is complete and verified (UXF-01–08).
-- Phase 168 established the shared workspace and usable baseline. Phase 169 discussion and UI design contract are complete: 26 adopted decisions, seven design dimensions passed, and 82 explicit state criteria across 11 surfaces. Implementation planning is next; later slices follow ROADMAP.md.
+- Phase 168 established the shared workspace and usable baseline. Phase 169 planning is complete: five plans, five serial waves and 12 tasks cover five requirements, 26 decisions and 82 explicit UI state criteria. The independent plan checker passed after the final regression gate was made executable. Implementation is next; later slices follow ROADMAP.md.
 - Code-first; equal engineer and support/on-call operator priority; bounded direct visual inspection and existing automated checks.
 - The approved unsubscribe boundary covers truthful GET/invalid/expired pages; interactive browser submission remains deferred.
 
@@ -461,13 +461,13 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-07T22:46:07.395Z
-Stopped at: Phase 169 UI-SPEC approved; ready for implementation planning
-Resume file: .planning/phases/169-outbound-investigation-and-recovery/169-UI-SPEC.md
+Last session: 2026-10-08T00:05:15.827Z
+Stopped at: Phase 169 plans verified; ready to execute five serial waves
+Resume file: .planning/phases/169-outbound-investigation-and-recovery/169-01-PLAN.md
 
 ## Operator Next Steps
 
 - Phase 168 is complete and independently verified. All four plans and both code-review corrections are committed.
-- Phase 169 discussion and UI design contract are complete under the owner's delegated recommendations. See `.planning/phases/169-outbound-investigation-and-recovery/169-CONTEXT.md`, its decision brief, and the approved `169-UI-SPEC.md`.
-- Next: `$gsd-plan-phase 169`. The approved UI contract passed seven dimensions and the state-coverage probe resolved 82 criteria. No Phase 169 implementation or product verification has started.
+- Phase 169 research, pattern map, validation strategy and five implementation plans are complete under the owner's delegated recommendations. See `.planning/phases/169-outbound-investigation-and-recovery/169-PLAN-CHECK.md` and `169-PLAN-COVERAGE.md`.
+- Next: `$gsd-execute-phase 169`. Five serial waves cover exact Delivery navigation, Health/support evidence, timeline/suppression, frozen replay review/outcomes, and connected rendered acceptance. Full core/Admin/assets/unfiltered browser regression is required by the final task. No Phase 169 implementation or product verification has started. Three unclassified edge-probe assumptions and five descriptor-less prohibitions remain explicitly flagged for later verification; no enforcement proof is claimed.
 - Current demo: `http://localhost:4015`; source/asset identity and rendered evidence are in `168-BASELINE.md`. Local admin checks: 513 ExUnit tests, zero failures, one exclusion; Playwright 184 passed, one guarded skip. Remote delivery/CI proof remains Phase 173 scope.
