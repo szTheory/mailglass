@@ -198,3 +198,9 @@ Plan 02 can build on the exact selection, filter-state, read-error, and browser 
 
 - Summary file exists at the required path.
 - All four task commits are ancestors of the current HEAD.
+
+## Orchestrator Post-Wave Integration Gate
+
+At task head `2e870aa7` / summary head `d6257799`, Admin compilation passed using `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 MIX_ENV=test mix compile`. The complete Admin suite first found one stale shared-component assertion for the replaced time-window dropdown. The assertion now checks the numeric input, retained value, preset datalist, min/max/step constraints, and updated label order.
+
+Rerun command: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 ASDF_ERLANG_VERSION=27.3.4.15 MIX_ENV=test mix test --seed 1` from `mailglass_admin`. Result: 519 tests, 0 failures, 1 excluded. Schema-drift and UI safety gates reported `block:false`; codebase-drift abstained with `no-structure-md`. No remote CI claim is made.

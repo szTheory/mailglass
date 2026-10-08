@@ -1144,7 +1144,7 @@ defmodule MailglassAdmin.ComponentsTest do
         ~s(<option value="postmark" selected>),
         "Postmark",
         "Provider",
-        # The single lifecycle "Status" filter is backed by the :event field.
+        # The latest recorded event filter is backed by the :event field.
         ~s(<label for="filters_event"),
         ~s(<select),
         ~s(id="filters_event"),
@@ -1156,10 +1156,15 @@ defmodule MailglassAdmin.ComponentsTest do
         ~s(aria-invalid="true"),
         ~s(<label for="filters_window_hours"),
         "Time window",
-        ~s(value="168" selected>)
+        ~s(<input id="filters_window_hours" name="filters[window_hours]" type="number" value="168"),
+        ~s(list="operator-window-options"),
+        ~s(min="1"),
+        ~s(max="1000000"),
+        ~s(step="1"),
+        ~s(<datalist id="operator-window-options">)
       ])
 
-      assert field_order(html, ["Provider", "Status", "Time window"])
+      assert field_order(html, ["Provider", "Latest recorded event", "Time window"])
       refute html =~ ~s(name="filters[tenant_id]")
       refute html =~ ~s(name="filters[status]")
     end
