@@ -1,4 +1,6 @@
-const { test, expect } = require("@playwright/test");
+const { test, expect, chromium } = require("@playwright/test");
+const fs = require("fs");
+const path = require("path");
 
 // =============================================================================
 // flows.spec.js — Phase 115 Plan 04 (FLOW-01 / FLOW-02 / FLOW-03)
@@ -17,6 +19,10 @@ const { test, expect } = require("@playwright/test");
 
 const tenantId = "browser-tenant";
 const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
+const gapClosureArtifacts = path.resolve(
+  __dirname,
+  "../../.planning/phases/168-shared-workspace-and-usable-baseline/artifacts/gap-closure"
+);
 
 // The full-walk axis: 320px floor (FLOW-02) and the system theme (FLOW-02 3rd axis).
 const FLOW_VIEWPORT = { width: 320, height: 900 };
@@ -559,8 +565,16 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
 test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
   const mailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
-  await page.setViewportSize({ width: 1280, height: 900 });
+  fs.mkdirSync(gapClosureArtifacts, { recursive: true });
+  await page.setViewportSize({ width: 720, height: 900 });
   await loginOperator(page, "/ops/mail?tenant_id=northstar", "operator-1", "northstar", "accounts");
+  await expect(page.getByTestId("operator-overview-health")).toBeVisible();
+  expect(await page.evaluate(() => window.innerWidth), "Health CSS viewport width").toBe(720);
+  const healthScreenshot = path.join(gapClosureArtifacts, "health-720-css.png");
+  await page.screenshot({ path: healthScreenshot, fullPage: true });
+  expect(fs.statSync(healthScreenshot).size, "Health screenshot is non-empty").toBeGreaterThan(0);
+
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
   await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
   await page.getByTestId("operator-account-switcher").click();
@@ -578,7 +592,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     .filter({ hasText: mailable });
   await expect(mailableElement).toHaveText(mailable);
 
-  for (const width of [320, 390, 768, 1440]) {
+  for (const width of [320, 390, 720, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     const geometry = await mailableElement.evaluate(element => {
       const rect = element.getBoundingClientRect();
@@ -611,6 +625,153 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       geometry.documentScrollWidth,
       `document width at ${width}px; overflowing elements: ${geometry.overflowing.join("; ")}`
     ).toBeLessThanOrEqual(geometry.viewportWidth);
+
+    if ([320, 720, 1440].includes(width)) {
+      const screenshot = path.join(gapClosureArtifacts, `delivery-${width}-css.png`);
+      await page.screenshot({ path: screenshot, fullPage: true });
+      expect(fs.statSync(screenshot).size, `Delivery screenshot at ${width} CSS px is non-empty`)
+        .toBeGreaterThan(0);
+    }
+  }
+
+  const extensionPath = path.resolve(__dirname, "support/browser-zoom-extension");
+  const zoomContext = await chromium.launchPersistentContext("", {
+    channel: "chromium",
+    headless: true,
+    viewport: { width: 1440, height: 900 },
+    // Keep a 1440px device-pixel capture after the actual tab zoom halves CSS width.
+    deviceScaleFactor: 2,
+    args: [
+      `--disable-extensions-except=${extensionPath}`,
+      `--load-extension=${extensionPath}`
+    ]
+  });
+
+  try {
+    const zoomPage = zoomContext.pages()[0] || (await zoomContext.newPage());
+    await loginOperator(
+      zoomPage,
+      "/ops/mail?tenant_id=northstar",
+      "operator-1",
+      "northstar",
+      "accounts"
+    );
+    await zoomPage.goto("/ops/mail?tenant_id=northstar&view=deliveries");
+    await expect(zoomPage.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await zoomPage.getByTestId("operator-account-switcher").click();
+    await zoomPage
+      .locator('[data-testid="operator-account-option"][data-account-id="fjordline-aps"]')
+      .click();
+    await expect(zoomPage).toHaveURL(/tenant_id=fjordline-aps/);
+
+    const zoomRow = zoomPage.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+    await selectDeliveryFull(zoomPage, zoomRow);
+    const zoomedMailable = zoomPage
+      .getByTestId("operator-detail-header")
+      .locator("p")
+      .filter({ hasText: mailable });
+    await expect(zoomedMailable).toHaveText(mailable);
+    const initialDevicePixelRatio = await zoomPage.evaluate(() => window.devicePixelRatio);
+
+    const serviceWorker =
+      zoomContext.serviceWorkers()[0] || (await zoomContext.waitForEvent("serviceworker"));
+    const tabZoom = await serviceWorker.evaluate(async () => {
+      const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      if (!tab?.id) throw new Error("The active browser tab is unavailable");
+      await chrome.tabs.setZoom(tab.id, 2);
+      return { requested: await chrome.tabs.getZoom(tab.id), tabId: tab.id };
+    });
+    expect(tabZoom.requested, "real Chromium tab zoom factor").toBe(2);
+
+    await expect
+      .poll(() => zoomPage.evaluate(() => window.devicePixelRatio))
+      .toBe(initialDevicePixelRatio * 2);
+    const zoomGeometry = await zoomedMailable.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return {
+        layoutViewportWidth: window.innerWidth,
+        devicePixelRatio: window.devicePixelRatio,
+        overflowWrap: getComputedStyle(element).overflowWrap,
+        left: rect.left,
+        right: rect.right,
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+        documentScrollWidth: document.documentElement.scrollWidth
+      };
+    });
+    expect(zoomGeometry.layoutViewportWidth, "200% zoom halves the 1440 CSS layout viewport")
+      .toBe(720);
+    expect(
+      zoomGeometry.devicePixelRatio / initialDevicePixelRatio,
+      "200% browser zoom doubles devicePixelRatio"
+    ).toBe(2);
+    expect(zoomGeometry.overflowWrap, "Mailable wraps under actual 200% browser zoom").toBe("anywhere");
+    expect(zoomGeometry.left, "zoomed Mailable left edge").toBeGreaterThanOrEqual(0);
+    expect(zoomGeometry.right, "zoomed Mailable right edge")
+      .toBeLessThanOrEqual(zoomGeometry.layoutViewportWidth);
+    expect(zoomGeometry.scrollWidth - zoomGeometry.clientWidth, "zoomed Mailable element overflow")
+      .toBeLessThanOrEqual(1);
+    expect(zoomGeometry.documentScrollWidth, "zoomed document overflow")
+      .toBeLessThanOrEqual(zoomGeometry.layoutViewportWidth);
+
+    const description = zoomPage.getByText(
+      "Prove what happened to a message — inspect its event timeline, suppression state, and replay history.",
+      { exact: true }
+    );
+    await expect(description).toBeVisible();
+    const clippedCopy = await Promise.all([description, zoomedMailable].map(locator =>
+      locator.evaluate(element => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        return {
+          text: element.textContent.trim(),
+          bounds: (() => {
+            const rect = element.getBoundingClientRect();
+            return { left: rect.left, right: rect.right };
+          })(),
+          lines: [...range.getClientRects()].map(rect => ({ left: rect.left, right: rect.right })),
+          lastCharacter: (() => {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+            let lastText = null;
+            while (walker.nextNode()) {
+              if (walker.currentNode.textContent.trim()) lastText = walker.currentNode;
+            }
+            if (!lastText) return null;
+            const character = document.createRange();
+            character.setStart(lastText, lastText.length - 1);
+            character.setEnd(lastText, lastText.length);
+            const rect = character.getBoundingClientRect();
+            const elementRect = element.getBoundingClientRect();
+            return { left: rect.left, right: rect.right, elementLeft: elementRect.left, elementRight: elementRect.right };
+          })()
+        };
+      })
+    ));
+    for (const copy of clippedCopy) {
+      expect(copy.text.length, "zoomed exact-value copy is present").toBeGreaterThan(0);
+      expect(copy.lines.length, "zoomed text produces visible line boxes").toBeGreaterThan(0);
+      expect(
+        copy.lines.every(line =>
+          line.left >= copy.bounds.left &&
+          line.right <= copy.bounds.right + 1 &&
+          line.left >= 0 &&
+          line.right <= zoomGeometry.layoutViewportWidth + 1
+        ),
+        `all rendered text lines fit their element and the ${zoomGeometry.layoutViewportWidth} CSS px viewport`
+      ).toBeTruthy();
+      expect(copy.lastCharacter?.left, "exact-value final character remains visible inside its element")
+        .toBeGreaterThanOrEqual(copy.bounds.left);
+      expect(copy.lastCharacter?.right, "exact-value final character does not clip past its element")
+        .toBeLessThanOrEqual(copy.bounds.right + 1);
+      expect(copy.lastCharacter?.right, "exact-value final character remains inside the viewport")
+        .toBeLessThanOrEqual(zoomGeometry.layoutViewportWidth + 1);
+    }
+
+    const zoomScreenshot = path.join(gapClosureArtifacts, "delivery-200-browser-zoom.png");
+    await zoomPage.screenshot({ path: zoomScreenshot, fullPage: true, scale: "device" });
+    expect(fs.statSync(zoomScreenshot).size, "200% zoom screenshot is non-empty").toBeGreaterThan(0);
+  } finally {
+    await zoomContext.close();
   }
 });
 
