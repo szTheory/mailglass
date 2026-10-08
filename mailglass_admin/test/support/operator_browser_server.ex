@@ -36,7 +36,7 @@ defmodule MailglassAdmin.TestSupport.OperatorBrowserServer do
 
     log_stage(started_at_ms, "admin_bootstrap_complete")
     OperatorFixtures.seed_browser_scenario!()
-    log_stage(started_at_ms, "fixtures_seeded")
+    log_stage(started_at_ms, "fixtures_seeded", "scenario=default")
 
     url =
       "http://127.0.0.1:#{port}/dev/mail/operator?tenant_id=#{OperatorFixtures.tenant_id()}"

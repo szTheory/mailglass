@@ -425,11 +425,24 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("confirm_replay", _params, socket) do
-    with %{id: delivery_id, tenant_id: tenant_id} = delivery <-
+    with %{id: delivery_id, tenant_id: tenant_id} <-
            socket.assigns.selected_delivery || {:error, :no_selected_delivery},
+         %{} = delivery <-
+           Deliveries.get_delivery(
+             %{
+               tenant_id: tenant_id,
+               delivery_id: delivery_id
+             },
+             []
+           ) || {:error, :unavailable},
+         {:ok, fresh_targets} <-
+           ReplayTargets.list_delivery_targets(%{
+             tenant_id: tenant_id,
+             delivery_id: delivery_id
+           }),
          {:ok, target} <-
            selected_replay_target(
-             socket.assigns.replay_targets,
+             fresh_targets,
              socket.assigns.replay_selected_target_id
            ),
          {:ok, socket} <-
@@ -673,14 +686,7 @@ defmodule MailglassAdmin.OperatorLive do
                     Reached from the Quick view's "Open full detail" or a &full=1 deep link. --%>
                 <div data-testid="operator-detail-column" class="space-y-4">
                   <.link
-                    patch={
-                      build_path(
-                        @base_path,
-                        @filter_params,
-                        @selected_delivery && @selected_delivery.id,
-                        @dark_chrome
-                      )
-                    }
+                    patch={build_path_with_view(@base_path, @filter_params, @dark_chrome)}
                     data-testid="operator-detail-back"
                     class="mg-focus-ring btn btn-ghost !h-11 min-h-11"
                   >
@@ -1134,7 +1140,10 @@ defmodule MailglassAdmin.OperatorLive do
   defp assign_delivery_state(socket, filter_params, selected_delivery_id, full?, support_focus?) do
     deliveries_page = load_deliveries_page(filter_params)
     deliveries = deliveries_page.entries
-    selected_delivery = find_selected_delivery(deliveries, selected_delivery_id)
+
+    selected_delivery =
+      find_selected_delivery(deliveries, selected_delivery_id) ||
+        load_exact_delivery(filter_params, selected_delivery_id)
 
     replay_targets =
       if full?, do: load_replay_targets(filter_params, selected_delivery), else: nil
@@ -1164,6 +1173,16 @@ defmodule MailglassAdmin.OperatorLive do
       :replay_selected_target_id,
       preserve_replay_selection(replay_targets, socket.assigns[:replay_selected_target_id])
     )
+  end
+
+  defp load_exact_delivery(_filter_params, nil), do: nil
+
+  defp load_exact_delivery(filter_params, delivery_id) do
+    tenant_id = blank_to_nil(filter_params["tenant_id"])
+
+    if tenant_id do
+      Deliveries.get_delivery(%{tenant_id: tenant_id, delivery_id: delivery_id}, [])
+    end
   end
 
   defp assign_overview_state(socket, filter_params) do
@@ -1254,8 +1273,11 @@ defmodule MailglassAdmin.OperatorLive do
   defp selected_replay_target(%{status: :unavailable}, _selected_target_id),
     do: {:error, :unavailable}
 
-  defp selected_replay_target(%{status: :exact, candidate: candidate}, _selected_target_id),
-    do: {:ok, candidate}
+  defp selected_replay_target(%{status: :exact, candidate: candidate}, selected_target_id) do
+    if candidate.webhook_event_id == selected_target_id,
+      do: {:ok, candidate},
+      else: {:error, :target_required}
+  end
 
   defp selected_replay_target(%{status: :ambiguous, candidates: _candidates}, nil),
     do: {:error, :target_required}

@@ -70,6 +70,25 @@ defmodule Mailglass.Operator.Deliveries do
     page_result(entries, total_count, page, per_page)
   end
 
+  @doc false
+  @spec get_delivery(filters(), keyword()) :: map() | nil
+  def get_delivery(filters, _opts) do
+    normalized = normalize_filters(filters)
+    tenant_id = fetch_tenant_id!(normalized)
+
+    case Ecto.UUID.cast(Map.get(normalized, :delivery_id)) do
+      {:ok, delivery_id} ->
+        Delivery
+        |> where([delivery], delivery.tenant_id == ^tenant_id and delivery.id == ^delivery_id)
+        |> Tenancy.scope(tenant_id)
+        |> delivery_projection()
+        |> Repo.one()
+
+      :error ->
+        nil
+    end
+  end
+
   defp scoped_query(normalized, tenant_id) do
     Delivery
     |> where([delivery], delivery.tenant_id == ^tenant_id)

@@ -75,6 +75,7 @@ defmodule MailglassAdmin.TestAdopter.Router do
 
     get("/browser-ready", MailglassAdmin.TestAdopter.BrowserSessionController, :ready)
     get("/browser-reset", MailglassAdmin.TestAdopter.BrowserSessionController, :reset)
+    get("/browser-auth-log", MailglassAdmin.TestAdopter.BrowserSessionController, :auth_log)
     get("/browser-login", MailglassAdmin.TestAdopter.BrowserSessionController, :create)
 
     get(
@@ -135,13 +136,28 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
   def reset(conn, _params) do
     conn = Plug.Conn.fetch_query_params(conn)
 
-    case conn.query_params["scenario"] do
-      "sole" -> OperatorFixtures.seed_browser_scenario!(deny_reveal?: false)
-      "accounts" -> OperatorFixtures.seed_persona_cohort!()
-      _ -> OperatorFixtures.seed_browser_scenario!()
-    end
+    result =
+      case conn.query_params["scenario"] do
+        nil -> {:ok, OperatorFixtures.seed_browser_scenario!()}
+        "default" -> {:ok, OperatorFixtures.seed_browser_scenario!()}
+        "sole" -> {:ok, OperatorFixtures.seed_browser_scenario!(deny_reveal?: false)}
+        "accounts" -> {:ok, OperatorFixtures.seed_persona_cohort!()}
+        "phase169-exact" -> {:ok, OperatorFixtures.seed_phase169_scenario!()}
+        _ -> :unknown
+      end
 
-    text(conn, "ok")
+    case result do
+      {:ok, payload} ->
+        MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+        json(conn, payload)
+
+      :unknown ->
+        conn |> put_status(:bad_request) |> text("unknown browser scenario")
+    end
+  end
+
+  def auth_log(conn, _params) do
+    json(conn, %{destructive_actions: MailglassAdmin.TestOperatorAuth.destructive_calls()})
   end
 
   def create(conn, params) do
@@ -191,6 +207,9 @@ defmodule MailglassAdmin.TestOperatorAuth do
 
   @max_age_seconds 900
 
+  def reset_destructive_calls!, do: :persistent_term.put({__MODULE__, :destructive_calls}, [])
+  def destructive_calls, do: :persistent_term.get({__MODULE__, :destructive_calls}, [])
+
   def authorize(:operator_access, %{actor: %{subject_id: nil}}) do
     {:error, :unauthorized, %{message: "Operator access requires a signed-in actor.", to: "/login"}}
   end
@@ -215,8 +234,17 @@ defmodule MailglassAdmin.TestOperatorAuth do
     {:error, :stale_auth, %{message: "Recent authentication is required."}}
   end
 
-  def authorize(:destructive_action, %{actor: %{recent_auth_at: recent_auth_at}})
+  def authorize(
+        :destructive_action,
+        %{
+          actor: %{recent_auth_at: recent_auth_at},
+          delivery: delivery,
+          replay_target: target
+        }
+      )
       when is_struct(recent_auth_at, DateTime) do
+    record_destructive_call(delivery.id, target.webhook_event_id)
+
     if DateTime.diff(DateTime.utc_now(), recent_auth_at, :second) <= @max_age_seconds do
       {:ok, %{subject_id: "operator-1", recent_auth_at: recent_auth_at}}
     else
@@ -256,6 +284,18 @@ defmodule MailglassAdmin.TestOperatorAuth do
 
   def authorize(:reveal_raw, %{actor: actor}) do
     {:ok, %{actor: actor}}
+  end
+
+  defp record_destructive_call(delivery_id, webhook_event_id) do
+    calls = destructive_calls()
+
+    :persistent_term.put(
+      {__MODULE__, :destructive_calls},
+      [
+        %{delivery_id: delivery_id, webhook_event_id: webhook_event_id, at: DateTime.utc_now()}
+        | calls
+      ]
+    )
   end
 end
 

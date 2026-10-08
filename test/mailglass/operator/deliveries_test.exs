@@ -250,4 +250,72 @@ defmodule Mailglass.Operator.DeliveriesTest do
       assert id == deliveries |> List.last() |> Map.fetch!(:id)
     end
   end
+
+  describe "get_delivery/2" do
+    test "resolves the exact tenant delivery independently of list filters and page boundaries" do
+      target =
+        Generators.delivery_fixture(
+          tenant_id: "tenant-exact",
+          recipient: "exact@example.com",
+          provider: "postmark",
+          status: :sent,
+          last_event_type: :delivered,
+          last_event_at: DateTime.add(DateTime.utc_now(), -240, :hour)
+        )
+
+      _recent =
+        Generators.delivery_fixture(
+          tenant_id: "tenant-exact",
+          recipient: "recent@example.com",
+          provider: "sendgrid",
+          status: :failed,
+          last_event_type: :failed,
+          last_event_at: DateTime.add(DateTime.utc_now(), -1, :hour)
+        )
+
+      page =
+        Deliveries.list_recent_deliveries_page(
+          %{
+            tenant_id: "tenant-exact",
+            provider: "sendgrid",
+            event: :failed,
+            window_hours: 24,
+            per_page: 1
+          },
+          []
+        )
+
+      assert Enum.map(page.entries, & &1.id) != [target.id]
+
+      assert %{
+               id: id,
+               tenant_id: "tenant-exact",
+               recipient: "exact@example.com",
+               provider: "postmark",
+               last_event_type: :delivered
+             } = Deliveries.get_delivery(%{tenant_id: "tenant-exact", delivery_id: target.id}, [])
+
+      assert id == target.id
+    end
+
+    test "returns no row for a malformed, missing, or foreign exact ID" do
+      foreign = Generators.delivery_fixture(tenant_id: "tenant-foreign")
+
+      assert is_nil(
+               Deliveries.get_delivery(
+                 %{tenant_id: "tenant-exact-lookup", delivery_id: "not-a-uuid"},
+                 []
+               )
+             )
+
+      assert is_nil(Deliveries.get_delivery(%{tenant_id: "tenant-exact-lookup"}, []))
+
+      assert is_nil(
+               Deliveries.get_delivery(
+                 %{tenant_id: "tenant-exact-lookup", delivery_id: foreign.id},
+                 []
+               )
+             )
+    end
+  end
 end

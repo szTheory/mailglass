@@ -151,6 +151,52 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     }
   end
 
+  def seed_phase169_scenario! do
+    reset!()
+
+    recent =
+      for index <- 1..21 do
+        insert_delivery!(%{
+          recipient: "phase169-#{index}@example.com",
+          provider: "postmark",
+          provider_message_id: "pm_phase169_#{index}",
+          status: :sent,
+          last_event_type: :delivered,
+          last_event_at: hours_ago(index),
+          inserted_at: hours_ago(index + 1),
+          mailable: "Mailglass.Example.BrowserMailer"
+        })
+      end
+
+    target =
+      insert_delivery!(%{
+        recipient: "phase169-exact@example.com",
+        provider: "postmark",
+        provider_message_id: "pm_phase169_exact",
+        status: :sent,
+        last_event_type: :delivered,
+        last_event_at: hours_ago(200),
+        inserted_at: hours_ago(201),
+        mailable: "Mailglass.Example.BrowserMailer"
+      })
+
+    webhook =
+      insert_webhook_event!(%{
+        provider_event_id: "phase169-exact-delivery",
+        raw_payload: raw_postmark_payload("pm_phase169_exact", 16901),
+        received_at: hours_ago(200)
+      })
+
+    insert_linked_event!(target, webhook, "phase169-exact-child")
+
+    %{
+      tenant_id: @tenant_id,
+      delivery_id: target.id,
+      webhook_event_id: webhook.id,
+      listed_delivery_ids: Enum.map(recent, & &1.id)
+    }
+  end
+
   def reset! do
     TestRepo.query!(
       "TRUNCATE TABLE mailglass_inbound_replay_runs, mailglass_inbound_evidence, mailglass_inbound_records, mailglass_webhook_events, mailglass_events, mailglass_suppressions, mailglass_deliveries RESTART IDENTITY CASCADE"
