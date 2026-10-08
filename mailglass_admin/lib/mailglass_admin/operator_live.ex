@@ -2512,7 +2512,7 @@ defmodule MailglassAdmin.OperatorLive do
   defp health_window_copy(_window), do: "Observation interval unavailable"
 
   defp health_checked_copy(%DateTime{} = at),
-    do: "Last checked: #{DateTime.to_iso8601(DateTime.truncate(at, :second))} UTC"
+    do: "Last checked #{DateTime.to_iso8601(DateTime.truncate(at, :second))} UTC"
 
   defp health_checked_copy(_at), do: "Last checked: Unavailable"
 

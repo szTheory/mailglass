@@ -2232,14 +2232,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Reconciliation audit facts"
       assert html =~ "Observed from "
       assert html =~ " UTC (168 hours)"
-      assert html =~ "Last checked:"
+      assert html =~ "Last checked "
+      refute html =~ "Last checked:"
       refute html =~ "Overall status"
       refute html =~ "Orphan backlog"
       refute html =~ ~s(data-testid="operator-overview-health-allclear")
 
       assert_in_order(html, [
         "Observed from ",
-        "Last checked:",
+        "Last checked ",
         "Failed webhook attempts",
         "Unmatched Events",
         "Active suppression records",
