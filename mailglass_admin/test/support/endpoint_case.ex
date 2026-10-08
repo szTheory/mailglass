@@ -139,15 +139,41 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
 
     result =
       case conn.query_params["scenario"] do
-        nil -> {:ok, OperatorFixtures.seed_browser_scenario!()}
-        "default" -> {:ok, OperatorFixtures.seed_browser_scenario!()}
-        "sole" -> {:ok, OperatorFixtures.seed_browser_scenario!(deny_reveal?: false)}
-        "accounts" -> {:ok, OperatorFixtures.seed_persona_cohort!()}
-        "phase169-exact" -> {:ok, OperatorFixtures.seed_phase169_scenario!()}
-        "phase169-timeline-101" -> {:ok, OperatorFixtures.seed_phase169_timeline_101!()}
-        "phase169-health-partial" -> {:ok, OperatorFixtures.seed_phase169_health_partial!()}
-        "phase169-support-empty" -> {:ok, OperatorFixtures.seed_phase169_support_empty!()}
-        _ -> :unknown
+        nil ->
+          {:ok, OperatorFixtures.seed_browser_scenario!()}
+
+        "default" ->
+          {:ok, OperatorFixtures.seed_browser_scenario!()}
+
+        "sole" ->
+          {:ok, OperatorFixtures.seed_browser_scenario!(deny_reveal?: false)}
+
+        "accounts" ->
+          {:ok, OperatorFixtures.seed_persona_cohort!()}
+
+        "phase169-exact" ->
+          {:ok, OperatorFixtures.seed_phase169_scenario!()}
+
+        "phase169-timeline-101" ->
+          {:ok, OperatorFixtures.seed_phase169_timeline_101!()}
+
+        "phase169-suppression" ->
+          case conn.query_params["variant"] || "one" do
+            variant when variant in ["empty", "one", "many"] ->
+              {:ok, OperatorFixtures.seed_phase169_suppression!(variant)}
+
+            _ ->
+              :unknown
+          end
+
+        "phase169-health-partial" ->
+          {:ok, OperatorFixtures.seed_phase169_health_partial!()}
+
+        "phase169-support-empty" ->
+          {:ok, OperatorFixtures.seed_phase169_support_empty!()}
+
+        _ ->
+          :unknown
       end
 
     case result do

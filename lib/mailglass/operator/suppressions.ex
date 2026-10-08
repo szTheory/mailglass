@@ -10,7 +10,7 @@ defmodule Mailglass.Operator.Suppressions do
   alias Mailglass.Suppression.Entry
   alias Mailglass.{Repo, Tenancy}
 
-  @immutable_reasons [:complaint, :policy, :unsubscribe]
+  @blocked_removal_reasons [:complaint, :unsubscribe]
 
   @type context :: map() | keyword()
 
@@ -107,7 +107,7 @@ defmodule Mailglass.Operator.Suppressions do
   defp project_state(nil), do: nil
 
   defp project_state(%Entry{} = entry) do
-    reversibility = reversibility_for(entry.reason)
+    removal_policy = removal_policy_for(entry.reason)
 
     %{
       id: entry.id,
@@ -118,17 +118,16 @@ defmodule Mailglass.Operator.Suppressions do
       reason: entry.reason,
       source: entry.source,
       expires_at: entry.expires_at,
-      reversible?: reversibility == :reversible,
-      reversibility: reversibility,
-      reversibility_copy: reversibility_copy(reversibility)
+      removal_policy: removal_policy,
+      removal_copy: removal_copy(removal_policy)
     }
   end
 
-  defp reversibility_for(reason) when reason in @immutable_reasons, do: :immutable
-  defp reversibility_for(_reason), do: :reversible
+  defp removal_policy_for(reason) when reason in @blocked_removal_reasons, do: :blocked
+  defp removal_policy_for(_reason), do: :supported
 
-  defp reversibility_copy(:reversible), do: "Reversible in a later phase"
-  defp reversibility_copy(:immutable), do: "Immutable by policy"
+  defp removal_copy(:supported), do: "The public removal command permits this reason."
+  defp removal_copy(:blocked), do: "The public removal command blocks this reason."
 
   defp extract_domain(email) do
     case String.split(email, "@", parts: 2) do

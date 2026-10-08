@@ -289,6 +289,88 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     }
   end
 
+  def seed_phase169_suppression!(variant \\ "one") when variant in ["empty", "one", "many"] do
+    reset!()
+    recipient = "phase169-long-suppression-recipient-東京-ångström@example.test"
+    now = DateTime.utc_now()
+
+    delivery =
+      insert_delivery!(%{
+        recipient: recipient,
+        provider_message_id: "pm_phase169_suppression",
+        status: :suppressed,
+        last_event_type: :suppressed
+      })
+
+    historical_event =
+      TestRepo.insert!(
+        Ecto.Changeset.change(%Event{}, %{
+          tenant_id: @tenant_id,
+          delivery_id: delivery.id,
+          type: :suppressed,
+          occurred_at: DateTime.add(now, -60, :second),
+          inserted_at: DateTime.add(now, -60, :second),
+          metadata: %{"source" => "historic delivery outcome"},
+          normalized_payload: %{"private_payload" => "never render"}
+        })
+      )
+
+    suppression_ids =
+      case variant do
+        "empty" ->
+          []
+
+        "one" ->
+          [
+            insert_suppression!(%{
+              tenant_id: @tenant_id,
+              address: recipient,
+              scope: :address,
+              reason: :policy,
+              source: "operator review · Ångström",
+              expires_at: DateTime.add(now, 3_600, :second)
+            })
+          ]
+
+        "many" ->
+          [
+            insert_suppression!(%{
+              tenant_id: @tenant_id,
+              address: recipient,
+              scope: :address_stream,
+              stream: :transactional,
+              reason: :complaint,
+              source: "phase169-address-stream",
+              expires_at: nil
+            }),
+            insert_suppression!(%{
+              tenant_id: @tenant_id,
+              address: recipient,
+              scope: :address,
+              reason: :manual,
+              source: "address-level",
+              expires_at: DateTime.add(now, 3_600, :second)
+            }),
+            insert_suppression!(%{
+              tenant_id: @tenant_id,
+              address: "example.test",
+              scope: :domain,
+              reason: :policy,
+              source: "domain-level",
+              expires_at: nil
+            })
+          ]
+      end
+
+    %{
+      tenant_id: @tenant_id,
+      delivery_id: delivery.id,
+      recipient: recipient,
+      historical_event_id: historical_event.id,
+      current_suppression_count: length(suppression_ids)
+    }
+  end
+
   def seed_phase169_health_partial! do
     reset!()
 
@@ -403,7 +485,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   def arm_reader_fault!(session_key, operation, kind)
       when is_binary(session_key) and is_binary(operation) and kind in [:known, :unexpected] do
-    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event delivery_timeline selected_delivery_event) do
+    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event delivery_timeline selected_delivery_event delivery_suppression) do
       raise ArgumentError, "unsupported test reader operation"
     end
 
@@ -683,6 +765,8 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
           row.inserted_at
         ]
       )
+
+    row.id
   end
 
   defp seed_inbound_matrix! do

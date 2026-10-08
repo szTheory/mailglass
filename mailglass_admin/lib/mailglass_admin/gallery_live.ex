@@ -1035,11 +1035,13 @@ defmodule MailglassAdmin.GalleryLive do
     {:suppression_card, "present",
      %{
        suppression_state: %{
-         scope: :global,
-         reason: :bounced,
+         address: "blocked@example.test",
+         scope: :address,
+         reason: :manual,
          stream: :transactional,
          source: "provider:postmark",
-         reversibility: :immutable
+         expires_at: nil,
+         removal_policy: :supported
        }
      }},
     {:suppression_card, "absent", %{suppression_state: nil}},

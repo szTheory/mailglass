@@ -69,6 +69,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:timeline_state, :ready)
       |> assign(:selected_timeline_event, nil)
       |> assign(:suppression_state, nil)
+      |> assign(:suppression_read_state, :ready)
       |> assign(:suppression_count, nil)
       |> assign(:support_summary, nil)
       |> assign(:support_state, default_support_state())
@@ -442,6 +443,23 @@ defmodule MailglassAdmin.OperatorLive do
      )}
   end
 
+  def handle_event("retry_suppression", _params, socket) do
+    case read_suppression(
+           socket.assigns.filter_params,
+           socket.assigns.selected_delivery,
+           socket.assigns[:operator_read_fault]
+         ) do
+      {:ok, suppression} ->
+        {:noreply,
+         socket
+         |> assign(:suppression_state, suppression)
+         |> assign(:suppression_read_state, :ready)}
+
+      {:error, :unavailable} ->
+        {:noreply, assign(socket, :suppression_read_state, :unavailable)}
+    end
+  end
+
   def handle_event("retry_health", _params, socket) do
     {:noreply, assign_overview_state(socket, socket.assigns.filter_params)}
   end
@@ -656,7 +674,7 @@ defmodule MailglassAdmin.OperatorLive do
                       )
                     }
                     class={health_metric_link_class()}
-                    aria-label="View active suppressions in Deliveries"
+                    aria-label="View historical suppressed Delivery Events in Deliveries"
                     data-testid="operator-overview-health-suppressions-link"
                   >
                     <Components.stat_card
@@ -670,7 +688,7 @@ defmodule MailglassAdmin.OperatorLive do
                           @health_panel_states
                         )
                       }
-                      hint="Currently active suppression records at check time. This count is independent of the observation window and is not a recipient count."
+                      hint="Account-wide active Mailglass suppression records at check time, independent of the observation window. This is not a recipient count; the link opens historical suppressed Delivery Events, a separate population."
                       data-testid="operator-overview-health-suppressions"
                     />
                   </.link>
@@ -854,7 +872,10 @@ defmodule MailglassAdmin.OperatorLive do
                           read_state={@timeline_state}
                           selected_event={@selected_timeline_event}
                         />
-                        <SuppressionCard.suppression_card suppression_state={@suppression_state} />
+                        <SuppressionCard.suppression_card
+                          suppression_state={@suppression_state}
+                          read_state={@suppression_read_state}
+                        />
                         <SupportCards.support_cards
                           support_summary={@support_summary}
                           support_state={@support_state}
@@ -1134,6 +1155,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:timeline_state, :ready)
     |> assign(:selected_timeline_event, nil)
     |> assign(:suppression_state, nil)
+    |> assign(:suppression_read_state, :ready)
     |> assign(:support_summary, nil)
     |> assign(:health_panel_states, default_health_panel_states())
     |> assign(:health_observed_at, nil)
@@ -1326,17 +1348,25 @@ defmodule MailglassAdmin.OperatorLive do
     end
   end
 
-  defp load_suppression(_filter_params, nil), do: nil
+  defp read_suppression(_filter_params, nil, _read_fault), do: {:ok, nil}
 
-  defp load_suppression(filter_params, delivery) do
-    Suppressions.get_delivery_suppression_state(
-      %{
-        tenant_id: filter_params["tenant_id"],
-        recipient: delivery.recipient,
-        stream: delivery.stream
-      },
-      []
-    )
+  defp read_suppression(filter_params, delivery, read_fault) do
+    run_read_fault(read_fault, :delivery_suppression)
+
+    {:ok,
+     Suppressions.get_delivery_suppression_state(
+       %{
+         tenant_id: filter_params["tenant_id"],
+         recipient: delivery.recipient,
+         stream: delivery.stream
+       },
+       []
+     )}
+  rescue
+    error ->
+      if transient_read_error?(error),
+        do: {:error, :unavailable},
+        else: reraise(error, __STACKTRACE__)
   end
 
   defp find_selected_delivery(_deliveries, nil), do: nil
@@ -1442,7 +1472,25 @@ defmodule MailglassAdmin.OperatorLive do
           ),
         else: nil
 
-    suppression = if full?, do: load_suppression(filter_params, selected_delivery), else: nil
+    previous_suppression =
+      if get_in(socket.assigns, [Access.key(:selected_delivery), Access.key(:id)]) ==
+           selected_delivery_id do
+        socket.assigns[:suppression_state]
+      end
+
+    {suppression, suppression_read_state} =
+      if full? do
+        case read_suppression(
+               filter_params,
+               selected_delivery,
+               socket.assigns[:operator_read_fault]
+             ) do
+          {:ok, state} -> {state, :ready}
+          {:error, :unavailable} -> {previous_suppression, :unavailable}
+        end
+      else
+        {nil, :ready}
+      end
 
     {support_summary, health_panel_states, suppression_count, health_observed_at, health_window} =
       if full? or support_focus? do
@@ -1470,6 +1518,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:timeline_state, timeline_state)
     |> assign(:selected_timeline_event, selected_timeline_event)
     |> assign(:suppression_state, suppression)
+    |> assign(:suppression_read_state, suppression_read_state)
     |> assign(:support_summary, support_summary)
     |> assign(:suppression_count, suppression_count)
     |> assign(:health_panel_states, health_panel_states)
@@ -1589,6 +1638,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:selected_delivery, nil)
     |> assign(:timeline_events, [])
     |> assign(:suppression_state, nil)
+    |> assign(:suppression_read_state, :ready)
     |> assign(:detail_error, nil)
     |> assign(:replay_targets, nil)
     |> assign(:replay_history, [])

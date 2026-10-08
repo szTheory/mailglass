@@ -185,6 +185,66 @@ test.describe("Phase 169 connected journey", () => {
     await page.screenshot({ path: "test-results/phase169-copy-status.png", fullPage: true });
   });
 
+  test("Phase 169 current suppression stays distinct from history, totals, and an unavailable refresh", async ({ page }) => {
+    const reset = await page.request.get("/ops/browser-reset?scenario=phase169-suppression&variant=one");
+    expect(reset.ok()).toBeTruthy();
+    const fixture = await reset.json();
+    const detailPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=${fixture.delivery_id}&full=1`;
+    await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(detailPath)}`);
+
+    const current = page.getByTestId("operator-suppression-card");
+    await expect(current).toContainText("Current Mailglass match");
+    await expect(current).toContainText(fixture.recipient);
+    await expect(current).toContainText("Address · Account-local");
+    await expect(current).toContainText("Policy");
+    await expect(current).toContainText("operator review · Ångström");
+    await expect(current).toContainText("Expires at");
+    await expect(page.getByTestId("operator-timeline")).toContainText("Suppressed");
+    await expect(page.getByTestId("operator-support-cards")).toContainText("Active suppressions: 1");
+    await page.goto(`/ops/mail?tenant_id=${tenantId}`);
+    await expect(page.getByRole("link", { name: "View historical suppressed Delivery Events in Deliveries" })).toBeVisible();
+    await page.goto(detailPath);
+
+    const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
+    const armed = await page.evaluate(async ({ csrfToken }) => {
+      const response = await fetch("/ops/browser-mutate?action=arm-known-read-failure&operation=delivery_suppression", {
+        method: "POST",
+        headers: { "x-csrf-token": csrfToken },
+        body: undefined,
+        redirect: "manual"
+      });
+      return { status: response.status, body: await response.text() };
+    }, { csrfToken });
+    expect(armed.status, armed.body).toBe(200);
+
+    await page.getByTestId("operator-suppression-refresh").click();
+    await expect(page.getByTestId("operator-suppression-unavailable")).toBeVisible();
+    await expect(current).toContainText("last retrieved record and may be out of date");
+    await expect(current).toContainText("The public Mailglass removal command permits Policy records.");
+    await expect(page.getByTestId("operator-timeline")).toContainText(fixture.historical_event_id);
+    await expect(page.locator("body")).not.toContainText("never render");
+
+    for (const variant of ["empty", "many"]) {
+      const next = await page.request.get(`/ops/browser-reset?scenario=phase169-suppression&variant=${variant}`);
+      expect(next.ok()).toBeTruthy();
+      const nextFixture = await next.json();
+      const path = `/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=${nextFixture.delivery_id}&full=1`;
+      await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(path)}`);
+      const card = page.getByTestId("operator-suppression-card");
+
+      if (variant === "empty") {
+        await expect(card).toContainText("No current matching suppression recorded in Mailglass was found");
+        await expect(card).toContainText("does not establish absence of configured-store or provider restrictions");
+      } else {
+        await expect(card).toContainText("Address + stream · Account-local");
+        await expect(card).toContainText("Complaint");
+        await expect(card).toContainText("The public Mailglass removal command blocks Complaint records.");
+        await expect(card).toContainText(nextFixture.recipient);
+      }
+    }
+    await page.screenshot({ path: "test-results/phase169-current-suppression.png", fullPage: true });
+  });
+
   for (const width of [390, 1440]) {
     test(`Phase 169 pre-edit baseline at ${width}px`, async ({ page }) => {
     fs.mkdirSync(beforeDir, { recursive: true });

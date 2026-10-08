@@ -391,7 +391,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert empty_html =~ ~s(data-testid="operator-deliveries-list-card")
     end
 
-    test "selects a delivery and renders summary, timeline, reversible suppression copy, and read-only boundaries",
+    test "selects a delivery and renders summary, timeline, public suppression policy, and read-only boundaries",
          %{conn: conn} do
       conn = operator_conn(conn)
 
@@ -474,11 +474,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-suppression-card")
       assert html =~ "Mailglass.Example.WelcomeMailer"
       assert html =~ "pm_123"
-      assert html =~ "Suppression"
-      assert html =~ "Reversible in a later phase"
-
-      assert html =~
-               "This Suppression is reversible. Remove via the suppressions API or contact support."
+      assert html =~ "Current matching suppression"
+      assert html =~ "Address · Account-local"
+      assert html =~ "The public Mailglass removal command permits Manual records."
+      assert html =~ "does not cover configured stores or provider policy"
 
       assert html =~ "Sent"
       assert html =~ "Delivered"
@@ -487,6 +486,54 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ "Remove suppression"
       refute html =~ "recent-auth"
       refute html =~ "recent auth"
+    end
+
+    test "suppression read failure retains its last match and historical timeline with retry", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      delivery =
+        insert_delivery!(
+          recipient: "retain@example.com",
+          status: :suppressed,
+          last_event_type: :suppressed
+        )
+
+      insert_event!(delivery, %{
+        type: :suppressed,
+        occurred_at: hours_ago(1),
+        metadata: %{source: "historical event"}
+      })
+
+      insert_suppression!(%{
+        tenant_id: @tenant_id,
+        address: delivery.recipient,
+        scope: :address,
+        reason: :policy,
+        source: "ops:review",
+        expires_at: DateTime.add(DateTime.utc_now(), 3_600, :second)
+      })
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "delivery_suppression", :known)
+
+      view
+      |> element(~s([data-testid="operator-suppression-refresh"]))
+      |> render_click()
+
+      html = render(view)
+      assert html =~ "The current Mailglass suppression read is unavailable."
+      assert html =~ "last retrieved record and may be out of date"
+      assert html =~ "The public Mailglass removal command permits Policy records."
+      assert html =~ "Suppressed"
+      assert html =~ ~s(data-testid="operator-timeline")
+      refute html =~ "No current matching suppression recorded in Mailglass was found"
     end
 
     test "full detail keeps exact Unicode labels, provider IDs, and timestamps readable", %{
@@ -718,7 +765,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert detail_html =~ ~s(pm-support-linked)
     end
 
-    test "renders no timeline events and immutable suppression copy when selected delivery has no events",
+    test "renders no timeline events and complaint removal restriction when selected delivery has no events",
          %{conn: conn} do
       conn = operator_conn(conn)
 
@@ -747,10 +794,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       html = render(view)
 
       assert html =~ "No events are recorded for this Delivery."
-      assert html =~ "Immutable by policy"
-
-      assert html =~
-               "This Suppression is permanent. Future sends to this address will be blocked."
+      assert html =~ "The public Mailglass removal command blocks Complaint records."
+      refute html =~ "This Suppression is permanent."
     end
 
     test "rejects operator mounts without an authorized actor", %{conn: conn} do
@@ -995,11 +1040,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
   end
 
   describe "CR-01/02/03 nil-guards" do
-    test "suppression card renders novel-shape fallback copy" do
+    test "suppression card renders successful no-match and configured-store caveat" do
       html = render_component(&SuppressionCard.suppression_card/1, suppression_state: %{})
 
-      assert html =~ "No suppression"
-      assert html =~ "No active Suppression for this Delivery."
+      assert html =~ "No current Mailglass match"
+
+      assert html =~
+               "No current matching suppression recorded in Mailglass was found for this Delivery."
+
+      assert html =~ "does not establish absence of configured-store or provider restrictions"
     end
 
     test "suppressed status badge renders a real Suppressed badge" do
@@ -2048,7 +2097,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
                "Unresolved Event records in the selected Account observation window. A shown oldest Event is one example, not the complete population."
 
       assert html =~
-               "Currently active suppression records at check time. This count is independent of the observation window and is not a recipient count."
+               "Account-wide active Mailglass suppression records at check time, independent of the observation window. This is not a recipient count; the link opens historical suppressed Delivery Events, a separate population."
     end
 
     test "with-tenant Health attention cards use one warning treatment", %{conn: conn} do
@@ -2152,8 +2201,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
              "failures drill-through link must preserve tenant_id, got: #{inspect(href)}"
     end
 
-    # SHELL-02: suppressions stat card wrapped in drill-through link (event=suppressed, tenant-scoped)
-    test "suppressions stat card is wrapped in a drill-through link to suppressed Deliveries",
+    # The metric counts active records while its destination shows historical Delivery Events.
+    test "active suppression metric labels its distinct historical suppressed Delivery destination",
          %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
@@ -2174,7 +2223,12 @@ defmodule MailglassAdmin.OperatorLiveTest do
       href = suppressions_link |> Floki.attribute("href") |> List.first() || ""
 
       assert href =~ "event=suppressed",
-             "suppressions drill-through link href must contain event=suppressed, got: #{inspect(href)}"
+             "the metric destination remains the historical suppressed Delivery Event filter"
+
+      assert Floki.attribute(suppressions_link, "aria-label") ==
+               ["View historical suppressed Delivery Events in Deliveries"]
+
+      assert html =~ "the link opens historical suppressed Delivery Events, a separate population"
 
       assert href =~ "tenant_id=#{@tenant_id}",
              "suppressions drill-through link must preserve tenant_id, got: #{inspect(href)}"
