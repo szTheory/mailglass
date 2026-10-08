@@ -612,8 +612,8 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
   });
 
   test("Phase 168 shared spacing: operator icon and Preview scenario gap use 4px", async ({ page }) => {
-    await openInbound(page, `tenant_id=${tenantId}&inbound_id=does-not-exist`);
-    const operatorError = page.getByTestId("inbound-quick-view-error");
+    await openOperator(page, `tenant_id=${tenantId}&view=deliveries&delivery_id=does-not-exist`);
+    const operatorError = page.getByTestId("operator-quick-view-error");
     await expect(operatorError).toBeVisible();
     const operatorErrorIcon = operatorError.locator(".mt-xs");
     await expect(operatorErrorIcon).toBeVisible();
