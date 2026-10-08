@@ -98,8 +98,8 @@ defmodule MailglassAdmin.Operator.Timeline do
                       value={Components.timestamp_value(event.occurred_at)}
                       label="Copy recorded time"
                     />
-                    <p :if={event.provider_occurred_at} class="mt-xs break-words">
-                      Provider occurrence time: {event.provider_occurred_at}
+                    <p :if={Map.get(event, :provider_occurred_at)} class="mt-xs break-words">
+                      Provider occurrence time: {Map.get(event, :provider_occurred_at)}
                     </p>
                     <p :if={is_nil(event.occurred_at)} class="break-words">Unavailable</p>
                   </div>

@@ -193,3 +193,9 @@ The bounded timeline, exact selected-event read, copy behavior, and current supp
 
 - SUMMARY.md exists at the expected phase path.
 - Task commits `9473873f`, `b13a8ca3`, `5feeb480`, and `18901af3`, plus summary commit `e29d07ce`, are present in the current history.
+
+## Orchestrator Post-Wave Integration Gate
+
+Admin compilation passed. The complete suite caught a gallery-load crash when an older timeline projection omitted optional `provider_occurred_at`. The timeline now checks this optional key with `Map.get/2`, preserving existing gallery projections and omitting unavailable provider time. Existing gallery asset-load coverage exercises this regression.
+
+Rerun from `mailglass_admin`: `ASDF_ELIXIR_VERSION=1.20.4-otp-29 ASDF_ERLANG_VERSION=29.1.1 HEX_HOME=/private/tmp/mailglass-169-hex MIX_ENV=test mix test --seed 1` — 529 passed, 0 failed, 1 excluded. Schema and UI gates report `block:false`; codebase-drift abstains with `no-structure-md`.
