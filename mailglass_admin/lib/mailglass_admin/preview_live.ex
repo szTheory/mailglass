@@ -903,7 +903,8 @@ defmodule MailglassAdmin.PreviewLive do
         {:ok, default} ->
           case parse_scalar(default, input) do
             {:ok, parsed} ->
-              {status, Map.put(values, key, parsed), drafts, errors}
+              draft = if is_binary(input), do: Map.put(drafts, key, input), else: drafts
+              {status, Map.put(values, key, parsed), draft, errors}
 
             :read_only ->
               {status, values, drafts, errors}
