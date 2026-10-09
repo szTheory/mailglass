@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
-current_phase: 172
-current_phase_name: Recipient Output and Built-in Pages
-status: verifying
-stopped_at: Completed 172-03-PLAN.md
-last_updated: "2026-10-09T22:17:59.336Z"
+current_phase: 173
+current_phase_name: Consistency and Delivery Evidence
+status: planning
+stopped_at: Phase 173 context gathered (assumptions mode)
+last_updated: "2026-10-09T23:38:48.876Z"
 last_activity: 2026-10-09
-last_activity_desc: Phase 172 execution started
-state_head: 03c5689834b7faa41b5e57ac1f01f75e138c42b5
+last_activity_desc: Phase 172 complete, transitioned to Phase 173
+state_head: 168c1076b77306539baf8a7e080589194c7ecd22
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 30
   completed_plans: 30
-  percent: 67
+  percent: 83
 ---
 
 # Project State
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 172 — Recipient Output and Built-in Pages
+**Current focus:** Phase 173 — Consistency and Delivery Evidence
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,16 +39,16 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 ## Current Position
 
-Phase: 172 (Recipient Output and Built-in Pages) — EXECUTING
-Plan: 3 of 3
-Status: Phase complete — ready for verification
-Last activity: 2026-10-09 — Phase 172 execution started
+Phase: 173 — Consistency and Delivery Evidence
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-09 — Phase 172 complete, transitioned to Phase 173
 
-Progress: 4/6 phases ([███████░░░] 67%); [██████████████░░░░░░] 27/30 planned plans (90%).
+Progress: 5/6 phases ([████████░░] 83%); [████████████████████] 30/30 planned plans (100%).
 
 ## v2.9 Roadmap Shape
 
-- Phases 168–173 own all 28 approved requirements. Phases 168–171 are complete; Phase 170 independently passed 30/30 must-haves across INUX-01–04. Phases 172–173 remain.
+- Phases 168–173 own all 28 approved requirements. Phases 168–172 are complete; Phase 170 independently passed 30/30 must-haves across INUX-01–04, and Phase 172 passed 9/9 must-haves across MAILUX-01–04. Phase 173 remains.
 - Phase 168 passed 96/96 plan truths and 5/5 roadmap truths. Phase 169 passed 100 positive must-haves, including 82 UI states, with five negative constraints individually adjudicated. Phase 170 completed eight plans across six waves; its verification, 21-threat security audit, clean code review, package suites, and connected browser checks passed. D-52 leaves no machine-observable owner UAT. Later slices follow ROADMAP.md.
 - Code-first; equal engineer and support/on-call operator priority; bounded direct visual inspection and existing automated checks.
 - The approved unsubscribe boundary covers truthful GET/invalid/expired pages; interactive browser submission remains deferred.
@@ -154,7 +154,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 **Velocity:**
 
-- Total plans completed: 101
+- Total plans completed: 104
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -171,6 +171,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | 168 | 10 | - | - |
 | 170 | 8 | - | - |
 | 171 | 4 | - | - |
+| 172 | 3 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -543,9 +544,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T22:17:59.261Z
-Stopped at: Completed 172-03-PLAN.md
-Resume file: None
+Last session: 2026-10-09T23:38:48.762Z
+Stopped at: Phase 173 context gathered (assumptions mode)
+Resume file: .planning/phases/173-consistency-and-delivery-evidence/173-CONTEXT.md
 
 ## Operator Next Steps
 
@@ -555,5 +556,6 @@ Resume file: None
 - Phase 170 is complete: eight plans across six dependency waves; independent verification passed 30/30 must-haves for INUX-01–04. Security closed 21/21 threats and code review found no current issues.
 - Automated evidence: Admin 577 tests (0 failures, 1 excluded); inbound 3 properties plus 480 tests (0 failures); full operator browser 206 passed and 1 guarded skip. Rendered checks are recorded; no human-only acceptance remains under D-52.
 - Phase 170 artifacts and evidence are in `.planning/phases/170-inbound-investigation-and-recovery/`. GSD emitted three nonblocking missing-path warnings for package-relative references in summaries; the verifier checked the actual package-root files.
-- Phase 171 is complete. Phase 172 is executing its three approved plans across two waves. If execution is interrupted and context is cleared, run `$gsd-resume-work`; do not repeat Phase 172 discussion, research, UI design, or planning.
+- Phase 172 is complete and verified: 9/9 must-haves, 30 connected browser tests, captured preview/unsubscribe screenshots, fresh 24/24 UI review, clean code review, and zero open security threats. No owner UAT remains under D-52; delivered-email client rendering remains unverified.
+- Phase 173 — Consistency and Delivery Evidence — is the remaining phase and is ready for discussion. If work is interrupted after context is cleared, run `$gsd-resume-work`; do not repeat Phase 172 discussion, research, UI design, or planning.
 - Original unrelated planning-file deletions, configuration edits, and Phase 168/169 screenshot modifications were preserved. Remote delivery/CI proof remains Phase 173 scope.
