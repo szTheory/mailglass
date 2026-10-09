@@ -102,4 +102,55 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
       refute html =~ "secret-raw-payload-121-02"
     end
   end
+
+  describe "safe verification projection (D-05/D-06)" do
+    test "ordinary evidence shows only the fixed SES authentication fact and withholds untrusted data" do
+      evidence = %{
+        provider: "ses",
+        raw_payload: %{"body" => "raw-body-secret-170-03"},
+        raw_mime: "raw-mime-secret-170-03",
+        raw_headers: %{"x-api-key" => "header-secret-170-03"},
+        verification_facts: %{
+          auth: :sns_x509,
+          api_key: "verification-secret-170-03",
+          durable_route_binding: "binding-secret-170-03",
+          exception: "exception-secret-170-03",
+          markup: "<img src=x onerror=alert(1)>"
+        }
+      }
+
+      html = render_component(&EvidenceCard.evidence_card/1, evidence: evidence, reveal_state: :redacted)
+
+      assert html =~ "SNS X.509 authentication verified"
+      assert html =~ "SES"
+
+      for secret <- [
+            "raw-body-secret-170-03",
+            "raw-mime-secret-170-03",
+            "header-secret-170-03",
+            "verification-secret-170-03",
+            "binding-secret-170-03",
+            "exception-secret-170-03",
+            "onerror=alert(1)",
+            "durable_route_binding",
+            "api_key"
+          ] do
+        refute html =~ secret
+      end
+    end
+
+    test "absent or unrecognized SES authentication renders unavailable without raw values" do
+      for facts <- [nil, %{}, %{auth: :unrecognized_secret_auth, token: "unknown-secret-170-03"}] do
+        html =
+          render_component(&EvidenceCard.evidence_card/1,
+            evidence: %{provider: "ses", verification_facts: facts},
+            reveal_state: :redacted
+          )
+
+        assert html =~ "Unavailable"
+        refute html =~ "unrecognized_secret_auth"
+        refute html =~ "unknown-secret-170-03"
+      end
+    end
+  end
 end
