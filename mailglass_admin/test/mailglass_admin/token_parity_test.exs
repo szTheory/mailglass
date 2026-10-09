@@ -108,16 +108,22 @@ defmodule MailglassAdmin.TokenParityTest do
 
   test "shared workspace templates stay on the 4px spacing grid" do
     half_step_spacing =
-      ~r/(?:^|[\s"'`])(-?(?:[a-z0-9-]+:)*-?(?:m(?:t|r|b|l|x|y|s|e)?|p(?:t|r|b|l|x|y|s|e)?|gap(?:-[xy])?|space-[xy])-0\.5)(?=$|[\s"'`])/
+      ~r/(?:^|[\s"'`])(-?(?:(?:[a-z0-9-]+(?:\[[^\]]+\])?|\[[^\]]+\]):)*-?(?:m(?:t|r|b|l|x|y|s|e)?|p(?:t|r|b|l|x|y|s|e)?|gap(?:-[xy])?|space-[xy])-0\.5)(?=$|[\s"'`])/
 
     unsupported_2xs_spacing =
-      ~r/(?:^|[\s"'`])(-?(?:[a-z0-9-]+:)*-?(?:m(?:t|r|b|l|x|y|s|e)?|p(?:t|r|b|l|x|y|s|e)?|gap(?:-[xy])?|space-[xy])-2xs)(?=$|[\s"'`])/
+      ~r/(?:^|[\s"'`])(-?(?:(?:[a-z0-9-]+(?:\[[^\]]+\])?|\[[^\]]+\]):)*-?(?:m(?:t|r|b|l|x|y|s|e)?|p(?:t|r|b|l|x|y|s|e)?|gap(?:-[xy])?|space-[xy])-2xs)(?=$|[\s"'`])/
 
     assert Regex.match?(half_step_spacing, " hover:-mt-0.5 "),
            "Spacing guard must detect variant-prefixed negative half-step margins"
 
     assert Regex.match?(unsupported_2xs_spacing, " sm:-mt-2xs "),
            "Spacing guard must detect variant-prefixed negative 2xs margins"
+
+    assert Regex.match?(half_step_spacing, " supports-[display:grid]:-mt-0.5 "),
+           "Spacing guard must detect negative half-step margins after arbitrary variants"
+
+    assert Regex.match?(unsupported_2xs_spacing, " [&:hover]:sm:-mt-2xs "),
+           "Spacing guard must detect negative 2xs margins after bracketed variants"
 
     violations =
       Enum.flat_map(@shared_spacing_template_paths, fn path ->
