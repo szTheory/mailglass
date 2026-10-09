@@ -21,9 +21,12 @@ created: "2026-10-08"
 | **Admin quick run command** | From `mailglass_admin`: `mix test test/mailglass_admin/inbound_live_test.exs test/mailglass_admin/inbound/components_test.exs test/mailglass_admin/inbound/evidence_card_test.exs test/mailglass_admin/inbound/replay_modal_test.exs`. |
 | **Connected acceptance command** | From `mailglass_admin`: `npm run test:operator-browser`. |
 | **Full suite commands** | `mix test --seed 1` from each of `mailglass_inbound` and `mailglass_admin`; `npm run test:operator-browser` from `mailglass_admin`; build and verify committed assets with `mix mailglass_admin.assets.build` and the existing token-parity/bundle tests when source classes change. |
-| **Feedback latency** | Final closeout evidence: Admin 575 tests (1 excluded), inbound 3 properties + 479 tests, and full operator browser 206 passed / 1 guarded skip. The focused records suite passed 40/40. |
+| **Recurring CI coverage** | `support_contract_admin` and `inbound_test` are required leaves behind `CI Green`; `Operator Browser Gate` runs on code changes but is outside the `CI Green` aggregate (advisory). |
+| **Feedback latency** | Final closeout evidence: Admin full suite 577 tests (0 failures, 1 excluded), followed after the locked-copy restoration by 130 focused tests (0 failures, 1 excluded); inbound 3 properties + 480 tests (0 failures); browser full suite 206 passed / 1 guarded skip, followed by 7 focused Phase 170 cases (0 failures); asset parity/bundle tests 10 passed. |
 
 The project pins Elixir `1.18.4` and Erlang `27.3.4.13`; phase acceptance evidence used the pinned toolchain. Playwright Chromium ran successfully; this audit required runtime escalation because sandbox launch permissions blocked Chromium before test execution. No test or browser dependency was added.
+
+The generic GSD regression hook found no root `test` target or `workflow.test_command` and therefore resolved to `true`; that no-op was not counted as test evidence. The package and browser suites above were run directly. Existing CI provides recurring package coverage through required `CI Green` leaves; its operator browser lane remains advisory.
 
 ## Sampling Rate
 
