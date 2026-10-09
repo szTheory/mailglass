@@ -155,7 +155,7 @@ The suite reports one pre-existing excluded LiveReload log test at `mailglass_ad
 ## Open Planning Assumptions
 
 - `PRVUX-01` remains `unclassified` / `unresolved` in the SPEC-less edge probe. The selection and setup checks here follow the approved CONTEXT and UI-SPEC; this summary does not invent an edge classification.
-- The descriptor-less prohibition in the plan's `must_haves` remains flagged-unverified for product/host-boundary review.
+- The host-owned route-exposure prohibition is resolved as test-tier: `router_test.exs` pins the development-only adopter guard, and the preview guide states the macro adds no environment enforcement or authorization.
 
 ## Next Phase Readiness
 

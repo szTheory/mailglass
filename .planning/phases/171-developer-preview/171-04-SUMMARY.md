@@ -126,6 +126,8 @@ The two remaining stale advisory browser assertions were left unchanged because 
 
 None. The changes only refine planned preview labels, focus, layout, and synthetic rendered evidence. Screenshots remain temporary and preview-pipeline-only.
 
+The browser-client certification prohibition is resolved as test-tier by the exact limitation-copy assertion in `preview_live_test.exs` and the connected framing journey in `structural.spec.js`.
+
 ## Self-Check: PASSED
 
 - All three RED evidence files, the rendered review, deferred items, and this summary exist.

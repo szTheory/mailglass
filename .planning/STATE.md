@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
-current_phase: 171
-current_phase_name: Developer Preview
-status: verifying
-stopped_at: Completed 171-04-PLAN.md
-last_updated: "2026-10-09T14:46:38.654Z"
+current_phase: 172
+current_phase_name: Recipient Output and Built-in Pages
+status: planning
+stopped_at: Phase 171 complete, ready to plan Phase 172
+last_updated: "2026-10-09T19:22:32.635Z"
 last_activity: 2026-10-09
-last_activity_desc: Phase 171 execution started
-state_head: 916150a5ae955bb70067c316be0b5eb412f391cf
+last_activity_desc: Phase 171 complete, transitioned to Phase 172
+state_head: c8239032cbfc8fa9c03211fa774c19105d40ab56
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 27
   completed_plans: 27
-  percent: 50
+  percent: 67
 ---
 
 # Project State
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 171 — Developer Preview
+**Current focus:** Phase 172 — Recipient Output and Built-in Pages
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,16 +39,16 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 ## Current Position
 
-Phase: 171 (Developer Preview) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-10-09 — Phase 171 execution started
+Phase: 172 — Recipient Output and Built-in Pages
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-09 — Phase 171 complete, transitioned to Phase 172
 
-Progress: 3/6 phases ([█████░░░░░] 50%); [████████████████████] 23/23 plans (100%).
+Progress: 4/6 phases ([███████░░░] 67%); [████████████████████] 27/27 planned plans (100%).
 
 ## v2.9 Roadmap Shape
 
-- Phases 168–173 own all 28 approved requirements. Phases 168–170 are complete; Phase 170 independently passed 30/30 must-haves across INUX-01–04. Phases 171–173 remain.
+- Phases 168–173 own all 28 approved requirements. Phases 168–171 are complete; Phase 170 independently passed 30/30 must-haves across INUX-01–04. Phases 172–173 remain.
 - Phase 168 passed 96/96 plan truths and 5/5 roadmap truths. Phase 169 passed 100 positive must-haves, including 82 UI states, with five negative constraints individually adjudicated. Phase 170 completed eight plans across six waves; its verification, 21-threat security audit, clean code review, package suites, and connected browser checks passed. D-52 leaves no machine-observable owner UAT. Later slices follow ROADMAP.md.
 - Code-first; equal engineer and support/on-call operator priority; bounded direct visual inspection and existing automated checks.
 - The approved unsubscribe boundary covers truthful GET/invalid/expired pages; interactive browser submission remains deferred.
@@ -154,7 +154,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 **Velocity:**
 
-- Total plans completed: 97
+- Total plans completed: 101
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -170,6 +170,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | 167 | 4 | - | - |
 | 168 | 10 | - | - |
 | 170 | 8 | - | - |
+| 171 | 4 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -536,7 +537,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 ## Session Continuity
 
 Last session: 2026-10-09T14:46:38.591Z
-Stopped at: Completed 171-04-PLAN.md
+Stopped at: Phase 171 complete, ready to plan Phase 172
 Resume file: None
 
 ## Operator Next Steps

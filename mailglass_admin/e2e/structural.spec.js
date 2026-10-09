@@ -1480,9 +1480,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(mailablesPicker).toBeVisible();
       await expect(mailablesPicker).toHaveAttribute("data-picker-variant", "menu");
       await expect(menuTrigger).toBeVisible();
-      await expect(menuTrigger).toContainText("HappyMailer");
+      await expect(menuTrigger.getByTestId("preview-email-menu-active-identity"))
+        .toContainText("MailglassAdmin.Fixtures.HappyMailer");
       await expect(menuTrigger).toContainText("welcome_default");
-      await expect(menuTrigger).not.toContainText("MailglassAdmin.Fixtures");
       await expect(menuTrigger).not.toContainText("2 emails");
       await expect(menuTrigger.locator(".hero-envelope")).toHaveCount(0);
       await expect(menuTrigger.locator(".hero-chevron-down")).toHaveCount(0);

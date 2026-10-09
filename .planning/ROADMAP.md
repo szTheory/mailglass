@@ -70,7 +70,7 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
 - [x] **Phase 168: Shared Workspace and Usable Baseline** - Make the real operator workspace legible, navigable, and operable through representative shared patterns. (completed 2026-10-07)
 - [x] **Phase 169: Outbound Investigation and Recovery** - Make Email health, delivery evidence, suppression, and exact-target replay understandable and usable. (completed 2026-10-07)
 - [x] **Phase 170: Inbound Investigation and Recovery** - Make received-message routing evidence and permitted replay clear without losing scope or history. (completed 2026-10-09)
-- [ ] **Phase 171: Developer Preview** - Make supported scenario rendering and output inspection usable across devices and states.
+- [x] **Phase 171: Developer Preview** - Make supported scenario rendering and output inspection usable across devices and states. (completed 2026-10-09)
 - [ ] **Phase 172: Recipient Output and Built-in Pages** - Improve public transactional output, truthful examples, plaintext, and bounded unsubscribe GET pages.
 - [ ] **Phase 173: Consistency and Delivery Evidence** - Consolidate shipped patterns and provide a reproducible, reviewable delivery candidate.
 
@@ -206,7 +206,7 @@ Plans:
   3. An author can inspect HTML, plaintext, raw output, and headers with usable tab/selection behavior and readable long content without changing supported rendering semantics.
   4. An author can change device framing and preview appearance independently of admin appearance and understand that a browser frame does not establish email-client or dark-mode compatibility.
 
-**Plans**: 4/4 plans executed
+**Plans**: 4/4 plans complete
 Plans:
 **Wave 1**
 - [x] 171-01-PLAN.md — Discover, select, and orient on a named renderer preview
@@ -269,6 +269,6 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 | 168. Shared Workspace and Usable Baseline | 10/10 | Complete    | 2026-10-08 |
 | 169. Outbound Investigation and Recovery | 5/5 | Complete    | 2026-10-07 |
 | 170. Inbound Investigation and Recovery | 8/8 | Complete    | 2026-10-09 |
-| 171. Developer Preview | 4/4 | In Progress | — |
+| 171. Developer Preview | 4/4 | Complete    | 2026-10-09 |
 | 172. Recipient Output and Built-in Pages | 0/TBD | Not started | — |
 | 173. Consistency and Delivery Evidence | 0/TBD | Not started | — |

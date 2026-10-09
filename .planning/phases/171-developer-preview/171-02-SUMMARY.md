@@ -145,7 +145,7 @@ The excluded LiveReload subscription-log test is pre-existing and remains tracke
 ## Flagged Spec-less Assumptions
 
 - PRVUX-02 remains `unclassified`/`unresolved` in the SPEC-less edge probe; this plan implements the cases established by CONTEXT and UI-SPEC without assigning a new taxonomy.
-- The descriptor-less prohibition in `must_haves` remains flagged-unverified.
+- The retained-output prohibition is resolved as test-tier by the LiveView recovery cases and connected browser assertions for pending and failed edits.
 
 ## Next Phase Readiness
 

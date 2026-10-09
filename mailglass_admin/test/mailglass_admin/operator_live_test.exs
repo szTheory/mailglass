@@ -1785,6 +1785,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       {:ok, view, _html} = live(conn, @base_path)
 
+      render(view)
+
       assert_patch(view, operator_path(%{"tenant_id" => "solo-tenant"}))
     end
 

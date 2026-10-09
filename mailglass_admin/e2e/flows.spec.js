@@ -562,7 +562,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
   // --------------------------------- PREVIEW --------------------------------
 
-  test("Preview happy: scenario -> assigns form + render CTA; single dominant CTA at 320/system", async ({ page }) => {
+  test("Preview happy: scenario -> editable assigns + reset; no redundant render action at 320/system", async ({ page }) => {
     await openPreviewScenario(page, "");
     await assertSingleH1(page, "preview happy");
     await assertNoRootOverflow(page, "preview happy");
@@ -574,15 +574,11 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
       .evaluate(el => getComputedStyle(el).display);
     expect(scenarioLayoutDisplay).not.toBe("grid");
 
-    // The single obvious top action for Preview: the render CTA inside the
-    // assigns form. Live copy is "Render preview" (btn-primary); the planner's
-    // prose label "Render scenario" approximates it. Assert it is the dominant
-    // (btn-primary) action and visible at 320.
-    const renderCta = page.getByTestId("preview-assigns-form").locator("button.btn-primary").first();
-    await expect(renderCta).toBeVisible();
-    const box = await renderCta.boundingBox();
-    expect(box, "preview render CTA box").not.toBeNull();
-    expect(Math.round(box.height), "preview render CTA target floor").toBeGreaterThanOrEqual(44);
+    // Supported scalar edits render automatically. Reset is the explicit
+    // action; a separate Render button would be redundant and imply stale state.
+    const assignsForm = page.getByTestId("preview-assigns-form");
+    await expect(assignsForm.getByRole("button", { name: "Reset assigns", exact: true })).toBeVisible();
+    await expect(assignsForm.getByRole("button", { name: /render preview/i })).toHaveCount(0);
   });
 
   test("Preview error: BrokenMailer -> render error", async ({ page }) => {

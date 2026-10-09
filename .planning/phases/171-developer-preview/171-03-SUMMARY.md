@@ -103,6 +103,7 @@ The RED tests failed on the intended missing output labels and four tabbable con
 - HTML/Text are Renderer content; the Raw envelope is illustrative and Headers show scenario or preview values. Neither preview values nor browser output are provider or recipient proof.
 - Arrow/Home/End moves focus only. Enter, Space, and click keep using the existing `set_tab` event.
 - The HTML iframe remains script-disabled and only mounts while its panel is selected, so inactive panels do not initiate its resource loads.
+- The Raw/Headers provenance prohibition is resolved as test-tier by the exact preview-page copy and illustrative-envelope assertions in `preview_live_test.exs`.
 
 ## Deviations from Plan
 
