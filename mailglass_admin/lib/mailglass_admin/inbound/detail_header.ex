@@ -18,8 +18,8 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.Accounts
 
-  attr :detail, :map, required: true
-  attr :account_labels, :map, default: %{}
+  attr(:detail, :map, required: true)
+  attr(:account_labels, :map, default: %{})
 
   def detail_header(assigns) do
     assigns =
@@ -140,7 +140,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
     do: "Replay is unavailable: this message did not match any mailbox."
 
   defp replay_hint(_outcome),
-    do: "Replay re-runs mailbox routing against the stored message and records a new replay run."
+    do: "Review the recorded Mailbox identity and eligibility before replaying this stored message."
 
   defp matched_mailbox(:no_match, _mailbox), do: "No match"
   defp matched_mailbox(nil, _mailbox), do: "No execution recorded"

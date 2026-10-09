@@ -1190,7 +1190,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       html =
         view
-        |> element("button[phx-click='confirm_replay']")
+        |> element("#inbound-replay-confirm")
         |> render_click()
 
       assert unescape(html) =~
@@ -1388,6 +1388,7 @@ defmodule MailglassAdmin.InboundLiveTest do
           inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
         )
 
+      render_click(view, "open_replay", %{})
       html = render_click(view, "confirm_replay", %{})
 
       assert html =~ "Replay blocked: this action is not authorized for the current operator."
@@ -1832,6 +1833,7 @@ defmodule MailglassAdmin.InboundLiveTest do
           inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => matched.id, "full" => "1"})
         )
 
+      render_click(view1, "open_replay", %{})
       success_html = render_click(view1, "confirm_replay", %{})
 
       assert unescape(success_html) =~
@@ -1849,6 +1851,7 @@ defmodule MailglassAdmin.InboundLiveTest do
           inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => nomatch.id, "full" => "1"})
         )
 
+      render_click(view2, "open_replay", %{})
       block_html = render_click(view2, "confirm_replay", %{})
 
       assert block_html =~
@@ -1866,6 +1869,7 @@ defmodule MailglassAdmin.InboundLiveTest do
           inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => denied.id, "full" => "1"})
         )
 
+      render_click(view3, "open_replay", %{})
       denied_html = render_click(view3, "confirm_replay", %{})
 
       assert denied_html =~

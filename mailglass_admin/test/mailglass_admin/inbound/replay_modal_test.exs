@@ -32,7 +32,8 @@ defmodule MailglassAdmin.Inbound.ReplayModalTest do
       assert html =~ "currently deployed code against the stored InboundMessage"
       assert html =~ "does not evaluate current router rules or redeliver through the provider"
       assert html =~ ~s(phx-click="close_replay")
-      assert html =~ ~s(phx-click="confirm_replay")
+      confirm_button = Floki.find(Floki.parse_document!(html), "#inbound-replay-confirm")
+      assert Floki.attribute(confirm_button, "phx-click") |> List.first() =~ "confirm_replay"
       refute html =~ "Re-runs Mailbox routing"
       refute html =~ ~s(disabled="disabled")
       refute html =~ ~s(type="radio")
