@@ -59,6 +59,9 @@ coverage:
       - kind: unit
         ref: "mailglass_admin/test/mailglass_admin/inbound/components_test.exs#RecordsList.records_list/1 does not label a failed execution as no match"
         status: pass
+      - kind: integration
+        ref: "mailglass_inbound/test/mailglass_inbound/internal/operator/records_test.exs#filters by the same latest-fresh outcome projected on each row"
+        status: pass
     human_judgment: false
   - id: D2
     description: "Detail and timeline preserve mailbox result, source, run ID, exact timestamp, and chronological order while distinguishing no-change from ignore and withholding raw failure reasons."

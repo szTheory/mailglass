@@ -76,8 +76,10 @@ coverage:
       - kind: unit
         ref: "mailglass_admin/test/mailglass_admin/inbound/replay_modal_test.exs"
         status: pass
-    human_judgment: true
-    rationale: "The LiveView tests assert modal focus-trap wiring and keyboard affordances; connected keyboard focus behavior is scheduled for the Phase 170 browser journey in Plan 08."
+      - kind: e2e
+        ref: "mailglass_admin/e2e/phase170-journey.spec.js#Account, exact record, evidence, replay review, history refresh, and return stay connected"
+        status: pass
+    human_judgment: false
 
 # Metrics
 duration: 15min

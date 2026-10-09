@@ -87,15 +87,19 @@ The operator can investigate an exact inbound record, review a permitted replay,
 
 ## Verification
 
-- Connected Phase 170 cases passed: `BROWSER_SERVER_PORT=4102 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec npm run test:operator-browser -- --grep "Phase 170 connected"` — 2 passed.
+- Connected Phase 170 cases passed: `BROWSER_SERVER_PORT=4102 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec npm run test:operator-browser -- --grep "Phase 170 connected"` — the final suite includes connected stale, denied, and rapid-repeat replay confirmation checks.
 - Rendered Phase 170 case passed on final revision `7146f69c`: `BROWSER_SERVER_PORT=4102 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec npm run test:operator-browser -- --grep "Phase 170 rendered"` — 1 passed. The actual 200% screenshot was opened and visually reviewed after the final CSS correction.
-- Final full operator browser suite on `7146f69c`: `BROWSER_SERVER_PORT=4102 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec npm run test:operator-browser -- --reporter=line` — 202 passed, 1 existing guarded skip, 0 failed (2.8m).
+- Final full operator browser suite after closeout security coverage: `BROWSER_SERVER_PORT=4102 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec npm run test:operator-browser` — 206 passed, 1 existing guarded skip, 0 failed (2.8m).
 - Admin package suite: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix test --seed 1` — 575 tests, 0 failures, 1 excluded.
-- Inbound package suite: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix test --seed 1` — 3 properties, 478 tests, 0 failures.
+- Inbound package suite: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix test --seed 1` — 3 properties, 479 tests, 0 failures.
 - Final CSS token-parity and bundle checks: `ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix test test/mailglass_admin/token_parity_test.exs test/mailglass_admin/bundle_test.exs --seed 1` — 10 tests, 0 failures.
 - Full browser suite's one skip is the pre-existing guarded centered-modal outcome at `mailglass_admin/e2e/structural.spec.js:2852`; its assertion applies only when a header-anchored overlay exists. No Plan 08 check was skipped or left for owner UAT.
 
 ## Deviations from Plan
+
+### Phase Security Audit Closure
+
+The phase security audit identified two gaps in the declared controls. The outcome filter previously matched any stored run even though the row showed only the latest fresh outcome; it now filters through the same tenant-scoped latest-fresh subquery, with a regression for older fresh and replay outcomes. Connected browser coverage now asserts stale confirmation is rejected before authorization, denied confirmation adds no run, and a rapid repeated confirmation adds at most one run. The security audit closed all 21/21 threats with `threats_open: 0`; full package and browser results are recorded above.
 
 ### Auto-fixed Issues
 
