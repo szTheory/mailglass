@@ -1168,6 +1168,21 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       review_html = render_click(view, "open_replay", %{})
 
+      initial_html = render(view)
+
+      initial_timeline_count =
+        initial_html
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='inbound-timeline-run']")
+        |> length()
+
+      initial_snapshot_at =
+        initial_html
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='inbound-timeline-snapshot'] time")
+        |> Floki.attribute("datetime")
+        |> List.first()
+
       assert review_html =~ ~s(id="inbound-replay-modal")
       assert review_html =~ record.id
       assert review_html =~ "Recorded Mailbox: Elixir.MyApp.Mailboxes.SupportMailbox"
@@ -1200,6 +1215,36 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(role="status")
       assert html =~ ~s(aria-live="polite")
       refute html =~ "Replay requested"
+
+      # The successful command is reported independently from the selected
+      # history snapshot. It does not trigger a read or invent a timeline event.
+      assert length(
+               Floki.find(Floki.parse_document!(html), "[data-testid='inbound-timeline-run']")
+             ) ==
+               initial_timeline_count
+
+      assert Floki.find(
+               Floki.parse_document!(html),
+               "[data-testid='inbound-timeline-snapshot'] time"
+             )
+             |> Floki.attribute("datetime")
+             |> List.first() == initial_snapshot_at
+
+      replay_run = latest_run(record.id)
+      refute html =~ replay_run.id
+
+      refreshed_html = render_click(view, "refresh_inbound_timeline", %{})
+      assert refreshed_html =~ replay_run.id
+
+      assert length(
+               Floki.find(
+                 Floki.parse_document!(refreshed_html),
+                 "[data-testid='inbound-timeline-run']"
+               )
+             ) ==
+               initial_timeline_count + 1
+
+      assert refreshed_html =~ "Replay run recorded. Mailbox outcome: Accepted."
 
       after_count = run_count(record.id)
       assert after_count == before_count + 1

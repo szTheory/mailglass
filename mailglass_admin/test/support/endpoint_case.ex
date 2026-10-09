@@ -140,9 +140,15 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
     result =
       case conn.query_params["scenario"] do
         nil ->
+          Application.put_env(:mailglass_admin, :inbound_gateway_available?, true)
           {:ok, OperatorFixtures.seed_browser_scenario!()}
 
         "default" ->
+          Application.put_env(:mailglass_admin, :inbound_gateway_available?, true)
+          {:ok, OperatorFixtures.seed_browser_scenario!()}
+
+        "phase170-package-unavailable" ->
+          Application.put_env(:mailglass_admin, :inbound_gateway_available?, false)
           {:ok, OperatorFixtures.seed_browser_scenario!()}
 
         "sole" ->

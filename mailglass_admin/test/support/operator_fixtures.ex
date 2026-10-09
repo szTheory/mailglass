@@ -1012,14 +1012,31 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   defp seed_inbound_run_record!(record_attrs, run_opts) do
     record = insert_inbound_record!(record_attrs)
-    evidence = insert_inbound_evidence!(record.tenant_id, record.id)
+
+    route_binding =
+      if Keyword.get(run_opts, :outcome, :accept) == :no_match do
+        %{"status" => "no_match"}
+      else
+        %{
+          "status" => "matched",
+          "mailbox" => browser_inbound_mailbox()
+        }
+      end
+
+    evidence = insert_inbound_evidence!(record.tenant_id, record.id, route_binding)
     insert_inbound_run!(record.tenant_id, record.id, evidence.id, run_opts)
     record
   end
 
   defp seed_inbound_run_record!(record_attrs) do
     record = insert_inbound_record!(record_attrs)
-    evidence = insert_inbound_evidence!(record.tenant_id, record.id)
+
+    evidence =
+      insert_inbound_evidence!(record.tenant_id, record.id, %{
+        "status" => "matched",
+        "mailbox" => browser_inbound_mailbox()
+      })
+
     insert_inbound_run!(record.tenant_id, record.id, evidence.id)
     record
   end
@@ -1091,7 +1108,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     %{id: row.id, tenant_id: row.tenant_id, subject: row.subject}
   end
 
-  defp insert_inbound_evidence!(tenant_id, inbound_record_id) do
+  defp insert_inbound_evidence!(tenant_id, inbound_record_id, route_binding) do
     id = Ecto.UUID.generate()
     now = DateTime.utc_now()
 
@@ -1114,7 +1131,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
           %{},
           %{},
           nil,
-          %{},
+          %{"mailglass_execution_route" => route_binding},
           %{},
           %{},
           now,
@@ -1169,7 +1186,13 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   defp default_inbound_mailbox("no_match"), do: nil
   defp default_inbound_mailbox("failed"), do: nil
-  defp default_inbound_mailbox(_outcome), do: "Mailglass.Example.BrowserMailbox"
+  defp default_inbound_mailbox(_outcome), do: browser_inbound_mailbox()
+
+  defp browser_inbound_mailbox do
+    mailbox = MailglassAdmin.TestSupport.InboundTestMailbox
+    Code.ensure_loaded!(mailbox)
+    Atom.to_string(mailbox)
+  end
 
   defp hours_ago(hours), do: DateTime.add(DateTime.utc_now(), -hours, :hour)
 
