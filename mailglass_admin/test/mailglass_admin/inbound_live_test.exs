@@ -184,7 +184,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "accepted-101@example.com"
     end
 
-    test "gateway-unavailable runtime path renders the calm no-data pane without leaking", %{
+    test "gateway-unavailable runtime path names missing support without claiming successful empty data", %{
       conn: conn
     } do
       conn = operator_conn(conn)
@@ -196,15 +196,41 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      # Gateway-down degrades to an empty record set; with no records, no active
-      # filters, and no filter errors this is genuine no-data — the calm pane
-      # renders and the health strip is withheld (Phase 121 D-02). The degraded
-      # path must still not crash and must not leak the seeded recipient.
-      assert html =~ "No records"
-      assert html =~ "No InboundMessages have been recorded yet."
-      assert html =~ ~s(data-testid="inbound-orientation")
+      assert html =~ ~s(data-testid="inbound-package-unavailable")
+      assert html =~ "Inbound support is unavailable"
+      refute html =~ "No InboundMessages have been recorded yet."
+      refute html =~ ~s(data-testid="inbound-orientation")
       refute html =~ ~s(data-testid="inbound-overview")
+      refute html =~ ~s(data-testid="inbound-result-count")
       refute html =~ "hidden@example.com"
+    end
+
+    test "an out-of-range page keeps the real count and offers a route back to page one", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      InboundFixtures.seed_matched!(@tenant_id,
+        provider: "mailgun",
+        subject: "Existing record"
+      )
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "provider" => "mailgun",
+            "page" => "99"
+          })
+        )
+
+      assert html =~ "No records on this page"
+      assert html =~ "1 message"
+      assert html =~ ~s(data-testid="inbound-page-reset")
+      assert html =~ "provider=mailgun"
+      assert html =~ "page=1"
+      refute html =~ "No records match the current filters."
     end
 
     test "active filters with no matching records render filtered empty and reset action", %{
