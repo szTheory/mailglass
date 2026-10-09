@@ -37,6 +37,129 @@ test.describe("mailglass demo evidence", () => {
     await expect(page.getByTestId("preview-email-menu-trigger")).toContainText("AccountMailer");
   });
 
+  test("preview distinguishes the public component and AtlasDesk HTML authoring paths", async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto(
+      "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375",
+    );
+
+    await expect(page.getByTestId("preview-email-menu-active-identity")).toContainText("AccountMailer");
+    const frameSelector = 'iframe[title="Email HTML preview — browser rendering only"]';
+    let emailFrame = page.frameLocator(frameSelector);
+    await expect(emailFrame.locator('[data-brand="AtlasDesk"]')).toBeVisible();
+    await expect(emailFrame.locator("h1")).toContainText("Join Northstar Logistics");
+
+    const invoiceOption = page
+      .getByTestId("preview-email-menu-panel")
+      .getByTestId("preview-email-menu-option")
+      .filter({ hasText: "invoice_ready" });
+    await expect(invoiceOption).toHaveAttribute(
+      "href",
+      "/dev/mail/MailglassDemoWeb.Mailers.ComponentMailer/invoice_ready?width=375",
+    );
+    await page.goto(
+      "/dev/mail/MailglassDemoWeb.Mailers.ComponentMailer/invoice_ready?width=375",
+    );
+
+    await expect(page).toHaveURL(/\/MailglassDemoWeb\.Mailers\.ComponentMailer\/invoice_ready\?width=375$/);
+    await expect(page.getByTestId("preview-email-menu-active-identity")).toContainText("ComponentMailer");
+    await expect(page.getByTestId("preview-email-menu-active-identity")).toContainText("invoice_ready");
+
+    await expect(emailFrame.locator("h1")).toContainText("Invoice INV-2026-0601 is ready");
+    await expect(emailFrame.locator("body")).toContainText("Élodie Fernández-Sørensen");
+    await expect(emailFrame.locator("body")).toContainText("AtlasDesk");
+    await expect(emailFrame.getByRole("link", { name: /Review invoice INV-2026-0601/ })).toBeVisible();
+    await expect(
+      emailFrame.getByRole("link", { name: "Download the itemized invoice" }),
+    ).toHaveAttribute(
+      "href",
+      "https://app.atlasdesk.example/invoices/INV-2026-0601/download",
+    );
+    await expect(emailFrame.locator("img")).toHaveAttribute(
+      "alt",
+      "Illustration of the May 2026 invoice summary for Northstar Logistics",
+    );
+
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.locator(frameSelector).evaluate((iframe) => {
+      iframe.style.width = "320px";
+    });
+    emailFrame = page.frameLocator(frameSelector);
+    await expect(page.locator(frameSelector)).toBeAttached();
+    await expect(emailFrame.locator("h1")).toContainText("Invoice INV-2026-0601 is ready");
+
+    const publicOutput = await page.locator(frameSelector).evaluate((iframe) => {
+      const document = iframe.contentDocument;
+      const body = document.body;
+
+      return {
+        html: body.innerHTML,
+        scrollWidth: document.documentElement.scrollWidth,
+        viewportWidth: document.documentElement.clientWidth,
+        overflowingElements: Array.from(document.querySelectorAll("body *"))
+        .map((element) => {
+          const rect = element.getBoundingClientRect();
+          return {
+            tag: element.tagName,
+            width: rect.width,
+            right: rect.right,
+            attrWidth: element.getAttribute("width"),
+            style: element.getAttribute("style"),
+            text: element.textContent.trim().slice(0, 40),
+          };
+        })
+          .filter((element) => element.right > document.documentElement.clientWidth + 1)
+          .slice(0, 8),
+      };
+    });
+    expect(publicOutput.html).toContain('table role="presentation" width="100%"');
+    expect(publicOutput.html).toContain("max-width:600px;width:100%");
+    expect(publicOutput.html).toContain("v:roundrect");
+    expect(publicOutput.html).not.toContain('data-brand="AtlasDesk"');
+    expect(
+      publicOutput.scrollWidth,
+      JSON.stringify({ viewportWidth: publicOutput.viewportWidth, overflowingElements: publicOutput.overflowingElements }),
+    ).toBeLessThanOrEqual(publicOutput.viewportWidth);
+
+    const pageOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(pageOverflow).toBeLessThanOrEqual(0);
+
+    // A 2× zoom on the rendered email keeps the same live text and link available.
+    await emailFrame.locator("html").evaluate((html) => {
+      html.style.zoom = "2";
+    });
+    await expect(emailFrame.locator("h1")).toContainText("Invoice INV-2026-0601 is ready");
+    await expect(emailFrame.getByRole("link", { name: "Download the itemized invoice" })).toBeVisible();
+
+    await page.setViewportSize({ width: 1024, height: 900 });
+    const existingOption = page
+      .getByTestId("preview-email-menu-panel")
+      .getByTestId("preview-email-menu-option")
+      .filter({ hasText: "invite_admin" });
+    await expect(existingOption).toHaveAttribute(
+      "href",
+      "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375",
+    );
+    await page.goto(
+      "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375",
+    );
+    await expect(page).toHaveURL(/\/MailglassDemoWeb\.Mailers\.AccountMailer\/invite_admin\?width=375$/);
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.locator(frameSelector).evaluate((iframe) => {
+      iframe.style.width = "320px";
+    });
+    await expect(
+      page.frameLocator(frameSelector).locator('[data-brand="AtlasDesk"]'),
+    ).toBeVisible();
+    const bespokeWidth = await page
+      .frameLocator(frameSelector)
+      .locator("body")
+      .evaluate(() => document.documentElement.scrollWidth);
+    expect(bespokeWidth).toBeLessThanOrEqual(320);
+  });
+
   test("outbound operator opens with seeded delivery evidence", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("link", { name: /trace a sent email/i }).click();
