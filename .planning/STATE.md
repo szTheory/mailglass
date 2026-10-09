@@ -5,16 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 170
 current_phase_name: Inbound Investigation and Recovery
 status: executing
-stopped_at: Completed 170-02-PLAN.md
-last_updated: "2026-10-09T01:34:52.903Z"
+stopped_at: Completed 170-03-PLAN.md
+last_updated: "2026-10-09T02:28:11.617Z"
 last_activity: 2026-10-09 UTC — Phase 168 closeout complete; Phase 170 plans ready to execute.
 last_activity_desc: Phase 170 execution started
-state_head: f183b60260f58b5b0aeae0ad0309ba76fc30f898
+state_head: 557573a547831ec1bb26f78d0c9d4f07d0b92ec5
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 17
+  completed_plans: 18
   percent: 33
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 ## Current Position
 
 Phase: 170 (Inbound Investigation and Recovery) — EXECUTING
-Plan: 3 of 8
+Plan: 4 of 8
 Status: Ready to execute
 Last activity: 2026-10-08 — Phase 170 execution started
 
@@ -268,6 +268,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 168 P10 | 6m | 2 tasks | 11 files |
 | Phase 170 P01 | 16 min | 2 tasks | 5 files |
 | Phase 170 P02 | 11 min | 2 tasks | 11 files |
+| Phase 170 P03 | 8 min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -448,6 +449,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 168]: UXF-03: enforce the approved 4px spacing grid across seven shared operator, Inbound, and Preview templates with source, generated CSS, and rendered browser assertions.
 - [Phase 168]: UXF-03 rendered spacing verification remains in the existing advisory operator-browser lane.
 - [Phase 170]: Only literal :no_change callback results assert no mutation; ignore and failures stay distinct. — Execution history must preserve an authoritative callback fact without inferring state from unrelated outcomes.
+- [Phase 170]: Only SES auth :sns_x509 is rendered as a fixed authentication fact; all other verification input is unavailable in ordinary evidence. — Provider maps can contain personal data, credentials, route bindings, exception text, and markup. An exact allowlist prevents arbitrary values from reaching ordinary HTML while retaining one source-backed safe fact.
+- [Phase 170]: RoutingTrace is explicitly labeled as a simulation of the currently configured router. — Persisted ExecutionRun and durable route-binding records are historical facts. Current rules may change and cannot establish which route ran when the message arrived.
+- [Phase 170]: The routing disclosure uses native HTML details and summary elements. — Browser-owned disclosure semantics keep keyboard operation and expanded state aligned with visibility without adding JavaScript or duplicating state in LiveView.
 
 ## Quick Tasks Completed
 
@@ -493,8 +497,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T01:34:52.845Z
-Stopped at: Completed 170-02-PLAN.md
+Last session: 2026-10-09T02:27:53.039Z
+Stopped at: Completed 170-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
