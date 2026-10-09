@@ -101,7 +101,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     <details
       data-testid={@testid}
       data-picker-variant="menu"
-      class="group relative mg-layer-dropdown min-w-0 w-full sm:max-w-md"
+      class="group relative mg-layer-dropdown min-w-0 w-full"
     >
       <summary
         data-testid="preview-email-menu-trigger"
@@ -114,7 +114,10 @@ defmodule MailglassAdmin.Preview.Sidebar do
             class="block min-w-0 whitespace-normal break-all text-body font-bold text-base-content"
           >
             {@current_mailable_label}
-            <span :if={@current_scenario_label} class="block whitespace-normal break-all font-normal text-secondary">
+            <span
+              :if={@current_scenario_label}
+              class="block whitespace-normal break-all font-normal text-secondary"
+            >
               · {@current_scenario_label}
             </span>
           </span>
@@ -126,8 +129,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
           <span
             aria-hidden="true"
             class="h-2 w-2 rotate-45 border-r-2 border-b-2 border-current"
-          >
-          </span>
+          ></span>
         </span>
       </summary>
 

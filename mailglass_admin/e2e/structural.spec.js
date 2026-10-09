@@ -1,4 +1,4 @@
-const { test, expect } = require("@playwright/test");
+const { test, expect, chromium } = require("@playwright/test");
 const fs = require("fs");
 const path = require("path");
 
@@ -1597,13 +1597,13 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const frameWidth = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
       const previewPane = page.getByTestId("preview-pane");
       const frame = previewPane.locator("iframe");
-      await expect(frameWidth.getByRole("button", { name: "375 CSS px", exact: true })).toBeVisible();
-      await expect(frameWidth.getByRole("button", { name: "768 CSS px", exact: true })).toHaveAttribute("aria-pressed", "true");
+      await expect(frameWidth.getByRole("button", { name: "375 CSS pixels", exact: true })).toBeVisible();
+      await expect(frameWidth.getByRole("button", { name: "768 CSS pixels", exact: true })).toHaveAttribute("aria-pressed", "true");
 
-      await frameWidth.getByRole("button", { name: "375 CSS px", exact: true }).click();
+      await frameWidth.getByRole("button", { name: "375 CSS pixels", exact: true }).click();
       await expect(frame).toHaveAttribute("style", /width:\s*375px/);
       await expect(page).toHaveURL(/width=375/);
-      await frameWidth.getByRole("button", { name: "1024 CSS px", exact: true }).click();
+      await frameWidth.getByRole("button", { name: "1024 CSS pixels", exact: true }).click();
       await expect(frame).toHaveAttribute("style", /width:\s*1024px/);
       await expect(page).toHaveURL(/width=1024/);
 
@@ -1618,7 +1618,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("preview-pane").locator("iframe")).toHaveAttribute("style", /width:\s*1024px/);
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
       await expect(page.getByRole("group", { name: "Preview frame width in CSS pixels" })
-        .getByRole("button", { name: "1024 CSS px", exact: true })).toHaveAttribute("aria-pressed", "true");
+        .getByRole("button", { name: "1024 CSS pixels", exact: true })).toHaveAttribute("aria-pressed", "true");
       await expect(page).toHaveURL(/width=1024/);
     });
 
@@ -1635,11 +1635,13 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(identity).toContainText(longScenario);
 
       const widthGroup = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
-      const widthButton = widthGroup.getByRole("button", { name: "375 CSS px", exact: true });
+      const widthButton = widthGroup.getByRole("button", { name: "375 CSS pixels", exact: true });
       const backdrop = page.getByTestId("preview-frame-theme-toggle");
-      await assertTouchTarget(widthButton, "375 CSS px preview control at 320 CSS px");
+      await assertTouchTarget(widthButton, "375 CSS pixel preview control at 320 CSS px");
       await assertTouchTarget(backdrop, "preview backdrop control at 320 CSS px");
       await widthButton.focus();
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Shift+Tab");
       await expect(widthButton).toBeFocused();
       const focusStyle = await widthButton.evaluate(el => {
         const style = getComputedStyle(el);
@@ -1652,6 +1654,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(nameInput).toBeEditable();
       const longName = "é東京 — recipient preview ".repeat(180);
       await nameInput.fill(longName);
+      await expect.poll(() => page.locator("#tab-panel-html iframe").getAttribute("srcdoc"), {
+        timeout: 10_000
+      }).toContain(longName);
       const textTab = page.getByRole("tab", { name: "Text", exact: true });
       await textTab.click();
       const textPanel = page.locator("#tab-panel-text");
@@ -1676,6 +1681,24 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       }));
       expect(tabletLayout.scrollWidth, "390 CSS px preview has no page-level horizontal overflow")
         .toBeLessThanOrEqual(tabletLayout.clientWidth);
+
+      const captureDir = path.resolve(__dirname, "../tmp/mailglass_admin_preview_capture");
+      fs.mkdirSync(captureDir, { recursive: true });
+      await page.screenshot({ path: path.join(captureDir, "phase171-390-light.png"), fullPage: true });
+      await page.emulateMedia({ colorScheme: "dark" });
+      await page.getByRole("radio", { name: "System", exact: true }).click();
+      await expect(page.getByTestId("preview-shell")).not.toHaveAttribute("data-theme");
+      await page.screenshot({ path: path.join(captureDir, "phase171-390-system-dark.png"), fullPage: true });
+      await page.setViewportSize({ width: 1024, height: 900 });
+      await page.getByRole("radio", { name: "Dark", exact: true }).click();
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+      const identityBox = await identity.boundingBox();
+      expect(identityBox, "selected identity has a rendered box at 1024 CSS px").not.toBeNull();
+      expect(identityBox.width, "selected identity does not collapse beside frame controls")
+        .toBeGreaterThanOrEqual(200);
+      expect(identityBox.height, "selected identity wraps across words rather than one character per line")
+        .toBeLessThan(200);
+      await page.screenshot({ path: path.join(captureDir, "phase171-1024-dark.png"), fullPage: true });
       const motion = await textTab.evaluate(el => ({
         animationDuration: Number.parseFloat(getComputedStyle(el).animationDuration),
         transitionDuration: Number.parseFloat(getComputedStyle(el).transitionDuration)
@@ -1685,7 +1708,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values?theme=light");
       await expect(page.locator('#preview-assigns-form [name="assigns[label]"]')).toBeEditable();
-      await expect(page.getByTestId("preview-assigns-form").getByText("mode", { exact: true })).toBeVisible();
+      await expect(page.locator('#preview-assigns-form #assigns-mode[data-readonly-display="true"]'))
+        .toHaveAttribute("aria-readonly", "true");
+      await expect(page.locator("#assigns-mode")).toContainText(":preview");
 
       await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/recoverable?theme=light");
       await page.locator('#preview-assigns-form [name="assigns[response]"]').fill("first changed");
@@ -1696,6 +1721,80 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.getByTestId("preview-assigns-form").evaluate(el => el.classList.add("phx-change-loading"));
       await expect(pendingStatus).toBeVisible();
       await expect(page.getByText("Last successful preview — not current.", { exact: true })).toBeVisible();
+    });
+
+    test("Phase 171 rendered: actual 200% zoom retains preview controls and long identity at 320 CSS px", async () => {
+      const extensionPath = path.resolve(__dirname, "support/browser-zoom-extension");
+      const zoomContext = await chromium.launchPersistentContext("", {
+        channel: "chromium",
+        headless: true,
+        viewport: { width: 1440, height: 900 },
+        deviceScaleFactor: 2,
+        args: [
+          `--disable-extensions-except=${extensionPath}`,
+          `--load-extension=${extensionPath}`
+        ]
+      });
+
+      try {
+        const zoomPage = zoomContext.pages()[0] || await zoomContext.newPage();
+        await zoomPage.goto(new URL(
+          "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_überraschung_東京__with_a_deliberately_long_name?theme=light",
+          baseURL
+        ).toString());
+        await expect(zoomPage.getByTestId("preview-shell")).toBeVisible();
+        const initialDpr = await zoomPage.evaluate(() => window.devicePixelRatio);
+        const serviceWorker = zoomContext.serviceWorkers()[0] || await zoomContext.waitForEvent("serviceworker");
+        const zoom = await serviceWorker.evaluate(async () => {
+          const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+          if (!tab?.id) throw new Error("The active browser tab is unavailable");
+          await chrome.tabs.setZoom(tab.id, 2);
+          return chrome.tabs.getZoom(tab.id);
+        });
+        expect(zoom, "real Chromium tab zoom factor").toBe(2);
+        await expect.poll(() => zoomPage.evaluate(() => window.devicePixelRatio)).toBe(initialDpr * 2);
+        await zoomPage.setViewportSize({ width: 640, height: 900 });
+        await expect.poll(() => zoomPage.evaluate(() => window.innerWidth)).toBe(320);
+
+        const identity = zoomPage.getByTestId("preview-email-menu-active-identity");
+        await expect(identity).toContainText("welcome_überraschung_東京__with_a_deliberately_long_name");
+        const widthGroup = zoomPage.getByRole("group", { name: "Preview frame width in CSS pixels" });
+        const frameControls = [
+          widthGroup.getByRole("button", { name: "375 CSS pixels", exact: true }),
+          widthGroup.getByRole("button", { name: "768 CSS pixels", exact: true }),
+          widthGroup.getByRole("button", { name: "1024 CSS pixels", exact: true }),
+          zoomPage.getByTestId("preview-frame-theme-toggle")
+        ];
+        for (const [index, control] of frameControls.entries()) {
+          await expect(control, `preview control ${index + 1} at actual 200% zoom`).toBeVisible();
+          const bounds = await control.boundingBox();
+          expect(bounds, `preview control ${index + 1} has a rendered box`).not.toBeNull();
+          expect(bounds.width, `preview control ${index + 1} width`).toBeGreaterThanOrEqual(44);
+          expect(bounds.height, `preview control ${index + 1} height`).toBeGreaterThanOrEqual(44);
+          expect(bounds.x, `preview control ${index + 1} stays inside the viewport`).toBeGreaterThanOrEqual(0);
+          expect(bounds.x + bounds.width, `preview control ${index + 1} right edge stays in the viewport`)
+            .toBeLessThanOrEqual(320);
+        }
+
+        const layout = await zoomPage.evaluate(() => ({
+          clientWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          identityWidth: document.querySelector('[data-testid="preview-email-menu-active-identity"]').clientWidth,
+          identityScrollWidth: document.querySelector('[data-testid="preview-email-menu-active-identity"]').scrollWidth
+        }));
+        expect(layout.scrollWidth, "actual 200% zoom has no page-level horizontal overflow")
+          .toBeLessThanOrEqual(layout.clientWidth);
+        expect(layout.identityScrollWidth, "long selected identity remains within its container")
+          .toBeLessThanOrEqual(layout.identityWidth + 1);
+
+        const captureDir = path.resolve(__dirname, "../tmp/mailglass_admin_preview_capture");
+        fs.mkdirSync(captureDir, { recursive: true });
+        const screenshot = path.join(captureDir, "phase171-320-actual-200-percent.png");
+        await zoomPage.screenshot({ path: screenshot, fullPage: true });
+        expect(fs.statSync(screenshot).size, "200% zoom screenshot is non-empty").toBeGreaterThan(0);
+      } finally {
+        await zoomContext.close();
+      }
     });
 
     test("Phase 171 tabs: manual keyboard focus, activation, and long output scrolling", async ({ page }) => {

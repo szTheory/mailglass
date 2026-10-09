@@ -25,11 +25,14 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.CaptureTest do
         ])
 
       assert output =~ "Preview capture dry-run"
-      assert output =~ "matrix entries: 4"
+      assert output =~ "matrix entries: 10"
       assert output =~ "width(s): 375, 768"
       assert output =~ "theme(s): dark"
       assert output =~ "MailglassAdmin.Fixtures.HappyMailer:welcome_default width=375 theme=dark"
-      assert output =~ "MailglassAdmin.Fixtures.HappyMailer:welcome_enterprise width=768 theme=dark"
+
+      assert output =~
+               "MailglassAdmin.Fixtures.HappyMailer:welcome_enterprise width=768 theme=dark"
+
       assert output =~ "skipped: 1"
       assert output =~ "MailglassAdmin.Fixtures.StubMailer -> no_previews"
       assert File.exists?(Path.join(output_dir, "manifest.json"))

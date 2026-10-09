@@ -340,10 +340,13 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(data-testid="preview-frame-theme-toggle")
       assert html =~ ~s(phx-click="toggle_preview_frame_theme")
       assert html =~ ~s(aria-label="Preview frame width in CSS pixels")
-      assert html =~ "375 CSS px"
-      assert html =~ "768 CSS px"
-      assert html =~ "1024 CSS px"
-      assert html =~ "Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior."
+      assert html =~ "375 px"
+      assert html =~ "768 px"
+      assert html =~ "1024 px"
+
+      assert html =~
+               "Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior."
+
       assert html =~ ~s(data-testid="preview-mailables-picker")
       assert html =~ ~s(data-picker-variant="menu")
       assert html =~ ~s(data-testid="preview-email-menu-trigger")
@@ -581,11 +584,13 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       html_375 = render_click(view, "set_device", %{"width" => "375"})
       assert html_375 =~ "width: 375px"
+
       button_375 =
         html_375
         |> Floki.parse_document!()
         |> Floki.find(~s(button[phx-value-width="375"]))
-      assert Floki.text(button_375) =~ "375 CSS px"
+
+      assert Floki.text(button_375) =~ "375 px"
       assert Floki.attribute(button_375, "aria-pressed") == ["true"]
 
       html_1024 = render_click(view, "set_device", %{"width" => "1024"})

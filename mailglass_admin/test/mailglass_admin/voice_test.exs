@@ -62,7 +62,7 @@ defmodule MailglassAdmin.VoiceTest do
       assert html =~ "Preview"
 
       assert html =~
-               "Render an email exactly as your app would send it, then inspect HTML, text, raw source, headers, and assigns."
+               "Inspect renderer HTML and plaintext, an illustrative raw preview, generated preview headers, and scenario assigns. This is not final provider or recipient output."
 
       # Compact preview picker label
       assert html =~ "Email preview"

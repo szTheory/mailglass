@@ -1,6 +1,6 @@
 defmodule MailglassAdmin.Fixtures.HappyMailer do
   @moduledoc """
-  Fixture mailable with a healthy `preview_props/0` callback returning two
+  Fixture mailable with a healthy `preview_props/0` callback returning five
   scenarios. Discovery tests assert this produces the expected scenario
   keyword list (CONTEXT D-11); LiveView tests mount the `:welcome_default`
   scenario to drive sidebar/tabs/assigns-form coverage.

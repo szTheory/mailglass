@@ -30,28 +30,31 @@ defmodule MailglassAdmin.Preview.DeviceFrame do
         type="button"
         phx-click="set_device"
         phx-value-width="375"
+        aria-label="375 CSS pixels"
         aria-pressed={to_string(@device_width == 375)}
-        class={["btn btn-sm min-h-11 join-item", button_classes(@device_width == 375)]}
+        class={["mg-focus-ring btn btn-sm min-h-11 join-item", button_classes(@device_width == 375)]}
       >
-        375 CSS px
+        375 px
       </button>
       <button
         type="button"
         phx-click="set_device"
         phx-value-width="768"
+        aria-label="768 CSS pixels"
         aria-pressed={to_string(@device_width == 768)}
-        class={["btn btn-sm min-h-11 join-item", button_classes(@device_width == 768)]}
+        class={["mg-focus-ring btn btn-sm min-h-11 join-item", button_classes(@device_width == 768)]}
       >
-        768 CSS px
+        768 px
       </button>
       <button
         type="button"
         phx-click="set_device"
         phx-value-width="1024"
+        aria-label="1024 CSS pixels"
         aria-pressed={to_string(@device_width == 1024)}
-        class={["btn btn-sm min-h-11 join-item", button_classes(@device_width == 1024)]}
+        class={["mg-focus-ring btn btn-sm min-h-11 join-item", button_classes(@device_width == 1024)]}
       >
-        1024 CSS px
+        1024 px
       </button>
     </div>
     """
