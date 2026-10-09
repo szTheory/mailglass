@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ExUnit" tests="13" failures="3" errors="0" skipped="0">
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay fails explicitly when only no-match fresh history exists"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay reuses stored canonical and evidence truth, defaults to the latest fresh matched mailbox, and appends replay lineage"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay raises without a :tenant_id (T-49-17 cross-tenant replay guard)"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay appends and returns the explicit no-change result from the bound mailbox"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test execution lineage the legacy replay schema decodes an explicit no-change outcome"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: :ex_unit_no_meaningful_value, right: :ex_unit_no_meaningful_value, message: &quot;Expected truthy, got false&quot;, expr: {:assert, [], [{{:., [line: 271], [{:changeset, [line: 271], nil}, :valid?]}, [no_parens: true, line: 271], []}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: :==}, [{MailglassInbound.ReplayTest, :&quot;test execution lineage the legacy replay schema decodes an explicit no-change outcome&quot;, 1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 271]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: :ex_unit_no_meaningful_value,
+     right: :ex_unit_no_meaningful_value,
+     message: &quot;Expected truthy, got false&quot;,
+     expr: {:assert, [],
+      [
+        {{:., [line: 271], [{:changeset, [line: 271], nil}, :valid?]},
+         [no_parens: true, line: 271], []}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: :==
+   },
+   [
+     {MailglassInbound.ReplayTest,
+      :&quot;test execution lineage the legacy replay schema decodes an explicit no-change outcome&quot;,
+      1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 271]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay real terminal evidence refetches, normalizes, updates, routes, and executes end to end"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay fails explicitly when the record predates execution lineage capture"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay recognizes a legacy no-change run as matched while refusing its unbound mailbox"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {:error, {:replay_mailbox_missing, {:%{}, [line: 382, column: 49], [reason: :invalid_mailbox]}}}, right: {:error, {:replay_mailbox_missing, %{reason: :no_prior_match}}}, message: &quot;match (=) failed&quot;, expr: {:assert, [line: 382], [{:=, [line: 382], [{:error, {:replay_mailbox_missing, {:%{}, [line: 382], [reason: :invalid_mailbox]}}}, {{:., [line: 383], [{:__aliases__, [line: 383], [:Replay]}, :replay]}, [line: 383], [{{:., [line: 383], [{:record, [line: 383], nil}, :id]}, [no_parens: true, line: 383], []}, [tenant_id: {{:., [line: 383], [{:record, [line: 383], nil}, :tenant_id]}, [no_parens: true, line: 383], []}, repo: {:__aliases__, [line: 383], [:TestRepo]}]]}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, []}}, [{MailglassInbound.ReplayTest, :&quot;test internal replay recognizes a legacy no-change run as matched while refusing its unbound mailbox&quot;, 1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 382]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {:error,
+      {:replay_mailbox_missing,
+       {:%{}, [line: 382, column: 49], [reason: :invalid_mailbox]}}},
+     right: {:error, {:replay_mailbox_missing, %{reason: :no_prior_match}}},
+     message: &quot;match (=) failed&quot;,
+     expr: {:assert, [line: 382],
+      [
+        {:=, [line: 382],
+         [
+           {:error,
+            {:replay_mailbox_missing,
+             {:%{}, [line: 382], [reason: :invalid_mailbox]}}},
+           {{:., [line: 383], [{:__aliases__, [line: 383], [:Replay]}, :replay]},
+            [line: 383],
+            [
+              {{:., [line: 383], [{:record, [line: 383], nil}, :id]},
+               [no_parens: true, line: 383], []},
+              [
+                tenant_id: {{:., [line: 383],
+                  [{:record, [line: 383], nil}, :tenant_id]},
+                 [no_parens: true, line: 383], []},
+                repo: {:__aliases__, [line: 383], [:TestRepo]}
+              ]
+            ]}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match, []}
+   },
+   [
+     {MailglassInbound.ReplayTest,
+      :&quot;test internal replay recognizes a legacy no-change run as matched while refusing its unbound mailbox&quot;,
+      1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 382]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test execution lineage keeps execution persistence append-only and canonical receive truth immutable"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test sendgrid duplicate persistence collapses duplicates on tenant/provider/raw mime fingerprint without overloading provider_message_id"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test execution lineage normalizes fresh and replay outcomes plus execution failures into append-only execution truth"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {&quot;must be :no_match, :accept, :ignore, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata&quot;, {:_, [line: 256, column: 15], nil}}, right: {&quot;must be :no_match, :accept, :ignore, :no_change, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata&quot;, []}, message: &quot;match (=) failed&quot;, expr: {:assert, [line: 256], [{:=, [line: 256], [{&quot;must be :no_match, :accept, :ignore, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata&quot;, {:_, [line: 256], nil}}, {{:., [line: 257], [Access, :get]}, [line: 257], [{{:., [line: 257], [{:invalid, [line: 257], nil}, :errors]}, [no_parens: true, line: 257], []}, :outcome]}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, []}}, [{MailglassInbound.ReplayTest, :&quot;test execution lineage normalizes fresh and replay outcomes plus execution failures into append-only execution truth&quot;, 1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 255]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {&quot;must be :no_match, :accept, :ignore, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata&quot;,
+      {:_, [line: 256, column: 15], nil}},
+     right: {&quot;must be :no_match, :accept, :ignore, :no_change, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata&quot;,
+      []},
+     message: &quot;match (=) failed&quot;,
+     expr: {:assert, [line: 256],
+      [
+        {:=, [line: 256],
+         [
+           {&quot;must be :no_match, :accept, :ignore, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata&quot;,
+            {:_, [line: 256], nil}},
+           {{:., [line: 257], [Access, :get]}, [line: 257],
+            [
+              {{:., [line: 257], [{:invalid, [line: 257], nil}, :errors]},
+               [no_parens: true, line: 257], []},
+              :outcome
+            ]}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match, []}
+   },
+   [
+     {MailglassInbound.ReplayTest,
+      :&quot;test execution lineage normalizes fresh and replay outcomes plus execution failures into append-only execution truth&quot;,
+      1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 255]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay rejects a loaded non-mailbox persisted identity without invocation"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test execution lineage links fresh and replay execution runs to stored record and evidence truth"></testcase>
+</testsuite>
