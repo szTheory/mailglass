@@ -441,6 +441,37 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
       refute bounced.id in ids
     end
 
+    test "filters by the same latest-fresh outcome projected on each row" do
+      {:ok, record} = insert_record("tenant-a")
+      {:ok, evidence} = insert_evidence("tenant-a", record.id)
+
+      {:ok, _older_fresh} =
+        insert_run("tenant-a", record.id, evidence.id,
+          source: :fresh,
+          outcome: :accept,
+          inserted_at: DateTime.add(DateTime.utc_now(), -60, :second)
+        )
+
+      {:ok, _replay} =
+        insert_run("tenant-a", record.id, evidence.id,
+          source: :replay,
+          outcome: :accept
+        )
+
+      {:ok, _latest_fresh} =
+        insert_run("tenant-a", record.id, evidence.id,
+          source: :fresh,
+          outcome: :ignore
+        )
+
+      record_id = record.id
+
+      assert [%{id: ^record_id, outcome: :ignore}] =
+               Records.list_records(%{tenant_id: "tenant-a", outcome: :ignore}, [])
+
+      assert Records.list_records(%{tenant_id: "tenant-a", outcome: :accept}, []) == []
+    end
+
     test "an unknown outcome value is ignored (filter dropped), not passed to SQL" do
       {:ok, record} = insert_record("tenant-a")
 

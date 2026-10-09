@@ -285,20 +285,23 @@ defmodule MailglassInbound.Internal.Operator.Records do
     |> String.replace("_", "\\_")
   end
 
-  # Outcome filter: keep only records that have at least one execution run with
-  # the requested outcome. The outcome value is cast against the closed
-  # `ExecutionRun.__outcomes__/0` allow-list — an unknown value is IGNORED (the
-  # filter is dropped) and never reaches SQL.
+  # Outcome filter: match the outcome projected into the row — the latest fresh
+  # run only. Replay and superseded fresh outcomes must not make a record match
+  # a filter while its badge shows a different disposition. The outcome value is
+  # cast against the closed `ExecutionRun.__outcomes__/0` allow-list — an unknown
+  # value is IGNORED (the filter is dropped) and never reaches SQL.
   defp maybe_filter_outcome(query, tenant_id, outcome) do
     case cast_outcome(outcome) do
       {:ok, outcome} ->
-        matching_ids =
-          from(run in ExecutionRun,
-            where: run.tenant_id == ^tenant_id and run.outcome == ^outcome,
-            select: run.inbound_record_id
-          )
+        # The scalar subquery has no Ecto.Enum binding for parameter inference,
+        # so compare against the enum's stored representation explicitly.
+        outcome_value = Atom.to_string(outcome)
 
-        where(query, [record], record.id in subquery(matching_ids))
+        where(
+          query,
+          [rec: _record],
+          subquery(latest_fresh_run_field(tenant_id, :outcome)) == ^outcome_value
+        )
 
       :ignore ->
         query

@@ -5,6 +5,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   alias Mailglass.Events.Event
   alias Mailglass.IdempotencyKey
+  alias MailglassInbound.InboundRecords.InboundEvidence
   alias Mailglass.Outbound.Delivery
   alias MailglassAdmin.TestRepo
   alias Mailglass.Webhook.WebhookEvent
@@ -152,6 +153,33 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
       tenant_id: @tenant_id,
       selected_recipient: selected_delivery.recipient
     }
+  end
+
+  # Narrow test-only mutation used by the connected Phase 170 stale-confirm
+  # case: make the reviewed durable route binding differ before confirmation.
+  def mutate_phase170_stale_replay!(record_id) when is_binary(record_id) do
+    with {:ok, record_id} <- Ecto.UUID.cast(record_id),
+         %InboundEvidence{} = evidence <-
+           TestRepo.one(
+             from(evidence in InboundEvidence,
+               where:
+                 evidence.tenant_id == ^@tenant_id and
+                   evidence.inbound_record_id == ^record_id,
+               limit: 1
+             )
+           ) do
+      verification_facts =
+        Map.put(evidence.verification_facts, "mailglass_execution_route", %{
+          "status" => "no_match"
+        })
+
+      updated =
+        TestRepo.update!(Ecto.Changeset.change(evidence, verification_facts: verification_facts))
+
+      %{record_id: record_id, evidence_id: updated.id}
+    else
+      _ -> raise ArgumentError, "unsupported Phase 170 replay mutation"
+    end
   end
 
   def seed_phase169_scenario! do
@@ -303,7 +331,8 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
   defp seeded_replay_webhook!(provider_event_id) do
     TestRepo.one!(
       from(webhook in WebhookEvent,
-        where: webhook.tenant_id == ^@tenant_id and webhook.provider_event_id == ^provider_event_id,
+        where:
+          webhook.tenant_id == ^@tenant_id and webhook.provider_event_id == ^provider_event_id,
         limit: 1
       )
     )

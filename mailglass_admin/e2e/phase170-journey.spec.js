@@ -14,6 +14,42 @@ async function resetAndOpenInbound(page, route = `/ops/mail/inbound?tenant_id=${
   await expect(page.getByRole("heading", { name: "Inbound records", exact: true })).toBeVisible();
 }
 
+async function openAcceptedReplay(page, subjectId = "operator-1") {
+  const reset = await page.request.get("/ops/browser-reset");
+  expect(reset.ok()).toBeTruthy();
+  const route = `/ops/mail/inbound?tenant_id=${tenantId}`;
+  await page.goto(
+    `/ops/browser-login?tenant_id=${tenantId}&subject_id=${subjectId}&return_to=${encodeURIComponent(route)}`
+  );
+  await expect(page.getByRole("heading", { name: "Inbound records", exact: true })).toBeVisible();
+
+  const accepted = page.getByTestId("inbound-record-row")
+    .filter({ has: page.locator('[data-testid^="inbound-outcome-accept"]') })
+    .first();
+  const recordOpen = accepted.getByTestId("inbound-record-open");
+  const recordId = await recordOpen.getAttribute("phx-value-id");
+  expect(recordId).toMatch(/^[0-9a-f-]{36}$/i);
+  await recordOpen.click();
+  await page.getByTestId("inbound-quick-view-full").click();
+  await expect(page.getByTestId("inbound-detail-header")).toContainText(recordId);
+
+  const initialRunCount = await page.getByTestId("inbound-timeline-run").count();
+  await page.getByTestId("inbound-replay-open").click();
+  await expect(page.getByTestId("inbound-replay-modal")).toBeVisible();
+  return { recordId, initialRunCount };
+}
+
+async function mutateReplayFixture(page, recordId) {
+  const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
+  return page.evaluate(async ({ csrfToken, recordId }) => {
+    const response = await fetch(
+      `/ops/browser-mutate?action=phase170-stale-replay&record_id=${encodeURIComponent(recordId)}`,
+      { method: "POST", headers: { "x-csrf-token": csrfToken }, redirect: "manual" }
+    );
+    return { status: response.status, body: await response.text() };
+  }, { csrfToken, recordId });
+}
+
 async function overflowState(page) {
   return page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
@@ -128,6 +164,66 @@ test.describe("Phase 170 connected", () => {
     await expect(page.locator("body")).not.toContainText("fixture execution failure");
     await page.screenshot({ path: "test-results/phase170-connected-detail.png", fullPage: true });
     expect(noMatchId).toMatch(/^[0-9a-f-]{36}$/i);
+  });
+
+  test("stale replay confirmation is rejected before authorization and appends no run", async ({ page }) => {
+    const { recordId, initialRunCount } = await openAcceptedReplay(page);
+    const mutation = await mutateReplayFixture(page, recordId);
+    expect(mutation.status, mutation.body).toBe(200);
+
+    await page.getByTestId("inbound-replay-confirm").click();
+    await expect(page.getByTestId("inbound-replay-feedback")).toContainText(
+      "Replay review is stale. Reopen it to check the recorded Mailbox again."
+    );
+    await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
+    await page.getByRole("button", { name: "Refresh history" }).click();
+    await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(initialRunCount);
+
+    const authLog = await page.request.get("/ops/browser-auth-log");
+    expect((await authLog.json()).inbound_replay_calls).toEqual([]);
+  });
+
+  test("denied replay confirmation is visible and appends no run", async ({ page }) => {
+    const { recordId, initialRunCount } = await openAcceptedReplay(page, "deny-replay");
+
+    await page.getByTestId("inbound-replay-confirm").click();
+    await expect(page.getByTestId("inbound-replay-feedback")).toContainText(
+      "Replay blocked: this action is not authorized for the current operator."
+    );
+    await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
+    await page.getByRole("button", { name: "Refresh history" }).click();
+    await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(initialRunCount);
+
+    const authLog = await page.request.get("/ops/browser-auth-log");
+    expect((await authLog.json()).inbound_replay_calls).toEqual([recordId]);
+  });
+
+  test("rapid repeated replay confirmation appends at most one run", async ({ page }) => {
+    const { recordId, initialRunCount } = await openAcceptedReplay(page);
+    const confirm = page.getByTestId("inbound-replay-confirm");
+
+    // Dispatch two real button click events synchronously, before a server diff
+    // can remove the review. This models a rapid double activation while using
+    // the same connected browser event path as an operator click.
+    await confirm.evaluate(button => {
+      const click = () => button.dispatchEvent(new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      }));
+      click();
+      click();
+    });
+
+    await expect(page.getByTestId("inbound-replay-feedback")).toContainText(
+      /Replay run recorded|Replay was already submitted|Replay is already in progress/
+    );
+    await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
+    await page.getByRole("button", { name: "Refresh history" }).click();
+    await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(initialRunCount + 1);
+
+    const authLog = await page.request.get("/ops/browser-auth-log");
+    expect((await authLog.json()).inbound_replay_calls).toEqual([recordId]);
   });
 
   test("foreign IDs, empty, filtered-empty, and out-of-range stay distinct", async ({ page }) => {

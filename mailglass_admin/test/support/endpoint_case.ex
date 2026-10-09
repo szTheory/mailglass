@@ -201,6 +201,7 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
     case result do
       {:ok, payload} ->
         MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+        MailglassAdmin.TestOperatorAuth.reset_inbound_replay_calls!()
         json(conn, payload)
 
       :unknown ->
@@ -209,7 +210,10 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
   end
 
   def auth_log(conn, _params) do
-    json(conn, %{destructive_actions: MailglassAdmin.TestOperatorAuth.destructive_calls()})
+    json(conn, %{
+      destructive_actions: MailglassAdmin.TestOperatorAuth.destructive_calls(),
+      inbound_replay_calls: MailglassAdmin.TestOperatorAuth.inbound_replay_calls()
+    })
   end
 
   def mutate(conn, params) do
@@ -227,24 +231,33 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
         _ -> nil
       end
 
-    if is_binary(session_key) and action == "phase169-replay-mutate" do
-      try do
-        result = OperatorFixtures.mutate_phase169_scenario!(Map.get(params, "mutation"))
-        json(conn, %{mutated: true, result: result})
-      rescue
-        ArgumentError -> conn |> put_status(:bad_request) |> text("unsupported test mutation")
-      end
-    else
-      if is_binary(session_key) and is_binary(operation) and kind do
+    cond do
+      is_binary(session_key) and action == "phase170-stale-replay" ->
+        try do
+          result = OperatorFixtures.mutate_phase170_stale_replay!(Map.get(params, "record_id"))
+          json(conn, %{mutated: true, result: result})
+        rescue
+          ArgumentError -> conn |> put_status(:bad_request) |> text("unsupported test mutation")
+        end
+
+      is_binary(session_key) and action == "phase169-replay-mutate" ->
+        try do
+          result = OperatorFixtures.mutate_phase169_scenario!(Map.get(params, "mutation"))
+          json(conn, %{mutated: true, result: result})
+        rescue
+          ArgumentError -> conn |> put_status(:bad_request) |> text("unsupported test mutation")
+        end
+
+      is_binary(session_key) and is_binary(operation) and kind ->
         try do
           OperatorFixtures.arm_reader_fault!(session_key, operation, kind)
           json(conn, %{armed: true, operation: operation, action: action})
         rescue
           ArgumentError -> conn |> put_status(:bad_request) |> text("unsupported test mutation")
         end
-      else
+
+      true ->
         conn |> put_status(:bad_request) |> text("unsupported test mutation")
-      end
     end
   end
 
@@ -342,7 +355,9 @@ defmodule MailglassAdmin.TestOperatorAuth do
 
   def reset_destructive_calls!, do: :persistent_term.put({__MODULE__, :destructive_calls}, [])
   def destructive_calls, do: :persistent_term.get({__MODULE__, :destructive_calls}, [])
-  def reset_inbound_replay_calls!, do: :persistent_term.put({__MODULE__, :inbound_replay_calls}, [])
+
+  def reset_inbound_replay_calls!,
+    do: :persistent_term.put({__MODULE__, :inbound_replay_calls}, [])
 
   def inbound_replay_calls do
     {__MODULE__, :inbound_replay_calls}
@@ -351,7 +366,8 @@ defmodule MailglassAdmin.TestOperatorAuth do
   end
 
   def authorize(:operator_access, %{actor: %{subject_id: nil}}) do
-    {:error, :unauthorized, %{message: "Operator access requires a signed-in actor.", to: "/login"}}
+    {:error, :unauthorized,
+     %{message: "Operator access requires a signed-in actor.", to: "/login"}}
   end
 
   def authorize(:operator_access, %{actor: %{subject_id: "blocked"}}) do
