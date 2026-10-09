@@ -2,8 +2,8 @@ defmodule Mailglass.Compliance.UnsubscribeController do
   @moduledoc """
   Core RFC 8058 unsubscribe controller.
 
-  GET renders the built-in confirmation page by default or redirects to the
-  configured escape hatch. POST handling lands in the next task.
+  GET renders the built-in informational page by default or redirects to the
+  configured escape hatch. Only the separate POST path mutates unsubscribe state.
   """
 
   use Phoenix.Controller, formats: [:html]
@@ -57,7 +57,7 @@ defmodule Mailglass.Compliance.UnsubscribeController do
       |> put_root_layout(false)
       |> put_layout(false)
       |> put_view(html: UnsubscribeHTML)
-      |> render(:confirm, recipient: delivery.recipient)
+      |> render(:state, state: :valid, recipient: delivery.recipient)
     end
   end
 

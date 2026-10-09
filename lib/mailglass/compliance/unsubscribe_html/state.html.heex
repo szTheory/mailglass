@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= if @state == :valid, do: "Unsubscribe", else: "Unsubscribe link" %></title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: #F8FBFD;
+        color: #0D1B2A;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.6;
+      }
+      main {
+        width: 100%;
+        max-width: 36rem;
+        margin: 64px auto;
+        padding: 24px;
+        background: #FFFFFF;
+        border: 1px solid #D9E5EC;
+        border-radius: 16px;
+      }
+      .brand {
+        margin: 0 0 12px;
+        color: #5C6B7A;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0 0 16px;
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      p { margin: 0 0 12px; overflow-wrap: break-word; word-wrap: break-word; }
+      strong { font-weight: 700; }
+      @media (max-width: 600px) {
+        main { margin: 24px auto; padding: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="brand">Mailglass</p>
+      <h1>
+        <%= case @state do %>
+          <% :valid -> %>Unsubscribe<% :invalid -> %>This unsubscribe link is not valid.<% :expired -> %>This unsubscribe link has expired.<% end %>
+      </h1>
+      <%= case @state do %>
+        <% :valid -> %>
+          <p>This page is for <strong><%= @recipient %></strong>.</p>
+          <p>You have not been unsubscribed. Visiting this page does not change your subscription.</p>
+          <p>To unsubscribe, use your mail app's unsubscribe control when available, or contact the sender using the details in the message.</p>
+        <% :invalid -> %>
+          <p>Check the message for a current link, or contact the sender using the details in the message.</p>
+        <% :expired -> %>
+          <p>Use your mail app's unsubscribe control when available, or contact the sender using the details in the message.</p>
+      <% end %>
+    </main>
+  </body>
+</html>
