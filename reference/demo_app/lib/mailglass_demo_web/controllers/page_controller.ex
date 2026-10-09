@@ -2,7 +2,31 @@ defmodule MailglassDemoWeb.PageController do
   use Phoenix.Controller, formats: [:html]
 
   alias MailglassDemo.DemoData
+  alias Mailglass.Compliance.UnsubscribeHTML
+
   def health(conn, _params), do: text(conn, "ok")
+
+  def unsubscribe_state(conn, %{"state" => "valid"}) do
+    render_unsubscribe_state(conn, :valid, %{recipient: "synthetic-recipient@example.test"})
+  end
+
+  def unsubscribe_state(conn, %{"state" => "invalid"}) do
+    render_unsubscribe_state(conn, :invalid, %{})
+  end
+
+  def unsubscribe_state(conn, %{"state" => "expired"}) do
+    render_unsubscribe_state(conn, :expired, %{})
+  end
+
+  def unsubscribe_state(conn, _params), do: send_resp(conn, 404, "")
+
+  defp render_unsubscribe_state(conn, state, assigns) do
+    conn
+    |> put_root_layout(false)
+    |> put_layout(false)
+    |> put_view(html: UnsubscribeHTML)
+    |> render(:state, Map.put(assigns, :state, state))
+  end
 
   def home(conn, _params) do
     summary = DemoData.summary()

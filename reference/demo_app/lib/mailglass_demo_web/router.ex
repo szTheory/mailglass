@@ -77,6 +77,8 @@ defmodule MailglassDemoWeb.Router do
   scope "/dev" do
     pipe_through(:browser)
 
+    get("/unsubscribe/:state", MailglassDemoWeb.PageController, :unsubscribe_state)
+
     mailglass_admin_routes("/mail",
       mailables: [
         MailglassDemoWeb.Mailers.AccountMailer,

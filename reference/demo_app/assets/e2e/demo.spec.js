@@ -10,6 +10,60 @@ test.describe("mailglass demo evidence", () => {
     expect(response.ok()).toBeTruthy();
   });
 
+  test("built-in unsubscribe pages keep their copy within narrow viewports", async ({ page }) => {
+    const states = [
+      {
+        name: "valid",
+        heading: "Unsubscribe",
+        copy: "You have not been unsubscribed. Visiting this page does not change your subscription.",
+        nextStep: "To unsubscribe, use your mail app's unsubscribe control when available, or contact the sender using the details in the message.",
+      },
+      {
+        name: "invalid",
+        heading: "This unsubscribe link is not valid.",
+        copy: "Check the message for a current link, or contact the sender using the details in the message.",
+      },
+      {
+        name: "expired",
+        heading: "This unsubscribe link has expired.",
+        copy: "Use your mail app's unsubscribe control when available, or contact the sender using the details in the message.",
+      },
+    ];
+
+    for (const state of states) {
+      for (const width of [320, 160]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(`/dev/unsubscribe/${state.name}`);
+        await expect(page.getByRole("heading", { name: state.heading, exact: true })).toBeVisible();
+        await expect(page.getByText(state.copy, { exact: true })).toBeVisible();
+        if (state.nextStep) {
+          await expect(page.getByText(state.nextStep, { exact: true })).toBeVisible();
+        }
+
+        const geometry = await page.evaluate(() => {
+          const documentElement = document.documentElement;
+          const main = document.querySelector("main");
+          const paragraphs = Array.from(document.querySelectorAll("main p"));
+
+          return {
+            scrollWidth: documentElement.scrollWidth,
+            viewportWidth: documentElement.clientWidth,
+            mainLeft: main.getBoundingClientRect().left,
+            mainRight: main.getBoundingClientRect().right,
+            clippedParagraphs: paragraphs.filter(
+              (paragraph) => paragraph.scrollWidth > paragraph.clientWidth + 1,
+            ).length,
+          };
+        });
+
+        expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+        expect(geometry.mainLeft).toBeGreaterThanOrEqual(0);
+        expect(geometry.mainRight).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+        expect(geometry.clippedParagraphs).toBe(0);
+      }
+    }
+  });
+
   test("dashboard links to preview and operator surfaces", async ({ page }) => {
     await page.goto("/");
     await expect(
