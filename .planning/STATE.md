@@ -4,17 +4,17 @@ milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 170
 current_phase_name: Inbound Investigation and Recovery
-status: executing
-stopped_at: Completed 170-07-PLAN.md
-last_updated: "2026-10-09T03:27:57.502Z"
+status: verifying
+stopped_at: Completed 170-08-PLAN.md
+last_updated: "2026-10-09T04:52:58.950Z"
 last_activity: 2026-10-09 UTC — Phase 168 closeout complete; Phase 170 plans ready to execute.
 last_activity_desc: Phase 170 execution started
-state_head: bb729798abda76cb00ba72969f1ee722b9cb8ac6
+state_head: 7146f69c7a1c959a084a1bdafdefd1c78624d0b1
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 22
+  completed_plans: 23
   percent: 33
 ---
 
@@ -41,7 +41,7 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 Phase: 170 (Inbound Investigation and Recovery) — EXECUTING
 Plan: 8 of 8
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-08 — Phase 170 execution started
 
 Progress: 2/6 phases ([███░░░░░░░] 33%); [█████████████░░░░░░░] 15/23 plans (65%).
@@ -273,6 +273,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 170 P05 | 13min | 2 tasks | 15 files |
 | Phase 170 P06 | 15min | 2 tasks | 10 files |
 | Phase 170 P07 | 6m | 2 tasks | 3 files |
+| Phase 170 P08 | 82m | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -466,6 +467,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 170]: Replay review identifiers are consumed server side; busy wording describes only local in-flight work.
 - [Phase 170]: Replay outcome feedback is derived from the returned structured result and remains separate from later timeline reads.
 - [Phase 170]: Selected history is labeled through its last successful scoped read and refreshed through an explicit native control.
+- [Phase 170]: Replay command feedback remains separate from the timestamped history snapshot; native Refresh history performs the next scoped timeline read.
+- [Phase 170]: The deterministic browser fixture persists the same durable execution-route binding required by replay eligibility.
+- [Phase 170]: Actual 200% zoom stacks shell actions and gives the evidence disclosure 44.1px minimum height for strict 44px acceptance.
+- [Phase 170]: INUX-01 through INUX-04 remain unclassified/unresolved in the spec-less edge probe; no taxonomy was assigned.
 
 ## Quick Tasks Completed
 
@@ -511,8 +516,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T03:27:57.455Z
-Stopped at: Completed 170-07-PLAN.md
+Last session: 2026-10-09T04:52:58.906Z
+Stopped at: Completed 170-08-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

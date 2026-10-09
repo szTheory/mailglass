@@ -28,9 +28,9 @@
 
 ### Inbound investigation and recovery
 
-- [ ] **INUX-01**: An operator can find and inspect an inbound record and return to the same account/filter context, including no records, no filter matches, and unavailable selections.
-- [ ] **INUX-02**: An operator can follow an inbound record's routing and execution evidence and distinguish a matched mailbox, no match, failed execution, and missing history without invented certainty.
-- [ ] **INUX-03**: An authorized operator can inspect available inbound evidence through readable progressive disclosure while preserving existing redaction and reveal permissions.
+- [x] **INUX-01**: An operator can find and inspect an inbound record and return to the same account/filter context, including no records, no filter matches, and unavailable selections.
+- [x] **INUX-02**: An operator can follow an inbound record's routing and execution evidence and distinguish a matched mailbox, no match, failed execution, and missing history without invented certainty.
+- [x] **INUX-03**: An authorized operator can inspect available inbound evidence through readable progressive disclosure while preserving existing redaction and reveal permissions.
 - [x] **INUX-04**: An operator can understand replay eligibility and perform a permitted inbound replay with clear confirmation and truthful outcomes, including disabled, denied, busy, no-change, and failure states.
 
 ### Developer preview
@@ -91,9 +91,9 @@ The approved [roadmap](ROADMAP.md) assigns each of the 28 v2.9 requirements to e
 | OUTUX-03 | Phase 169 | Complete |
 | OUTUX-04 | Phase 169 | Complete |
 | OUTUX-05 | Phase 169 | Complete |
-| INUX-01 | Phase 170 | Pending |
-| INUX-02 | Phase 170 | Pending |
-| INUX-03 | Phase 170 | Pending |
+| INUX-01 | Phase 170 | Complete |
+| INUX-02 | Phase 170 | Complete |
+| INUX-03 | Phase 170 | Complete |
 | INUX-04 | Phase 170 | Complete |
 | PRVUX-01 | Phase 171 | Pending |
 | PRVUX-02 | Phase 171 | Pending |
