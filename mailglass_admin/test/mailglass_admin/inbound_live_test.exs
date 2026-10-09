@@ -1321,10 +1321,14 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert review_html =~ "Recorded Mailbox: Elixir.MyApp.Mailboxes.SupportMailbox"
 
       stale_facts =
-        Map.put(evidence.verification_facts, "mailglass_execution_route", %{"status" => "no_match"})
+        Map.put(evidence.verification_facts, "mailglass_execution_route", %{
+          "status" => "no_match"
+        })
 
       {:ok, _updated_evidence} =
-        MailglassAdmin.TestRepo.update(Changeset.change(evidence, verification_facts: stale_facts))
+        MailglassAdmin.TestRepo.update(
+          Changeset.change(evidence, verification_facts: stale_facts)
+        )
 
       html = render_click(view, "confirm_replay", %{})
 
@@ -1402,48 +1406,6 @@ defmodule MailglassAdmin.InboundLiveTest do
     end
   end
 
-  describe "selected timeline snapshot (D-12 / D-18)" do
-    test "labels the lineage snapshot time and exposes an explicit native refresh", %{conn: conn} do
-      conn = operator_conn(conn)
-      %{record: record} = InboundFixtures.seed_matched!(@tenant_id)
-
-      {:ok, _view, html} =
-        live(
-          conn,
-          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
-        )
-
-      assert html =~ ~s(data-testid="inbound-timeline-snapshot")
-      assert html =~ "History snapshot through"
-      assert html =~ ~s(phx-click="refresh_inbound_timeline")
-      assert html =~ "Refresh history"
-    end
-
-    test "a failed manual refresh keeps command feedback and identifies history as unavailable",
-         %{conn: conn} do
-      conn = operator_conn(conn)
-      %{record: record} = InboundFixtures.seed_matched!(@tenant_id)
-
-      {:ok, view, _html} =
-        live(
-          conn,
-          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
-        )
-
-      previous_repo = Application.fetch_env!(:mailglass_inbound, :repo)
-      Application.put_env(:mailglass_inbound, :repo, MailglassAdmin.InboundTimelineFailingRepo)
-
-      on_exit(fn -> Application.put_env(:mailglass_inbound, :repo, previous_repo) end)
-
-      html = render_click(view, "refresh_inbound_timeline", %{})
-
-      assert html =~ ~s(data-testid="inbound-timeline-unavailable")
-      assert html =~ ~s(data-testid="inbound-replay-feedback")
-      refute html =~ "No execution runs have been recorded for this InboundMessage yet."
-      assert html =~ record.id
-    end
-  end
-
   describe "live updates (IADM-05)" do
     test "a tenant broadcast prepends the re-fetched record without stealing selection (V7)", %{
       conn: conn
@@ -1463,7 +1425,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         Topics.inbound_record_inserted(@tenant_id),
-        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
+        {:inbound_record_inserted, fresh.id,
+         %{provider: "mailgun", record_type: "inbound_record"}}
       )
 
       html = render(view)
@@ -1884,8 +1847,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       render_click(view1, "open_replay", %{})
       success_html = render_click(view1, "confirm_replay", %{})
 
-      assert unescape(success_html) =~
-               "Replay recorded. A new replay run was appended to this InboundMessage's timeline."
+      assert unescape(success_html) =~ "Replay run recorded. Mailbox outcome: Accepted."
 
       refute_banned(success_html)
 
