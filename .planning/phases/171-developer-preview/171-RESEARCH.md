@@ -94,8 +94,8 @@ Preserve the existing Phoenix/LiveView/HEEx and Admin visual system. The focused
 | Library | Version | Purpose | Why Standard |
 |---------|---------|---------|--------------|
 | Elixir | project target `1.18.4` | LiveView and core rendering runtime | Existing package toolchain. Verbatim toolchain values: `elixir 1.18.4` and `erlang 27.3.4.13`. [VERIFIED: `.tool-versions:1-2`] |
-| Phoenix | locked `1.8.14` | Router and component system | Existing Admin framework. Verbatim lock value: `"phoenix": {:hex, :phoenix, "1.8.14"`. [VERIFIED: `mailglass_admin/mix.lock:35`] |
-| Phoenix LiveView | locked `1.2.12` | Stateful preview events and HEEx view | Existing preview owner; use its built-in form binding/debounce and current version's behavior. Verbatim lock value: `"phoenix_live_view": {:hex, :phoenix_live_view, "1.2.12"`. [VERIFIED: `mailglass_admin/mix.lock:38`] |
+| Phoenix | locked `1.8.14` (published 2026-09-14; latest stable registry release is `1.8.15`, 2026-09-25) | Router and component system | Existing Admin framework. Keep the lock for this feature-only phase; do not roll a dependency upgrade into preview UX work. Verbatim lock value: `"phoenix": {:hex, :phoenix, "1.8.14"`. [VERIFIED: `mailglass_admin/mix.lock:35`; Hex API: https://hex.pm/api/packages/phoenix/releases/1.8.14; https://hex.pm/api/packages/phoenix`] |
+| Phoenix LiveView | locked and latest stable `1.2.12` (published 2026-09-16) | Stateful preview events and HEEx view | Existing preview owner; use its built-in form binding/debounce and current version's behavior. Verbatim lock value: `"phoenix_live_view": {:hex, :phoenix_live_view, "1.2.12"`. [VERIFIED: `mailglass_admin/mix.lock:38`; Hex API: https://hex.pm/api/packages/phoenix_live_view/releases/1.2.12; https://hex.pm/api/packages/phoenix_live_view`] |
 | Phoenix.Component / HEEx | Phoenix `1.8.14` | Reusable function components and escaped HTML output | Existing markup boundary. The exact dependency declaration is `{:phoenix, "~> 1.8"}` and the locked Phoenix version is `1.8.14`. [VERIFIED: `mailglass_admin/mix.exs:111-117`; `mailglass_admin/mix.lock:35`] |
 | Mailglass.Renderer | in-repo | HTML rendering, plaintext derivation, CSS inlining, attribute stripping | The shared content render used by outbound preflight. [VERIFIED: `lib/mailglass/renderer.ex:1-24,63-84`] |
 | ExUnit + Phoenix.LiveViewTest | existing test stack | Server-side LiveView and output contract tests | Existing required Admin suite includes preview tests. [VERIFIED: `mailglass_admin/test/mailglass_admin/preview_live_test.exs:13-29`] |
@@ -107,6 +107,7 @@ Preserve the existing Phoenix/LiveView/HEEx and Admin visual system. The focused
 
 | Library / System | Version | Purpose | When to Use |
 |------------------|---------|---------|-------------|
+| Phoenix HTML | locked and latest stable `4.3.0` (published 2025-09-28) | HTML helpers integrated by Phoenix | Existing dependency; no need for changes in this phase. Verbatim lock value: `"phoenix_html": {:hex, :phoenix_html, "4.3.0"`. [VERIFIED: `mailglass_admin/mix.lock:36`; Hex API: https://hex.pm/api/packages/phoenix_html/releases/4.3.0; https://hex.pm/api/packages/phoenix_html`] |
 | Tailwind standalone Hex binary + vendored daisyUI | existing | Admin styles and semantic tokens | Continue existing HEEx utility classes; rebuild and commit `priv/static/app.css` when class scanning changes. [VERIFIED: `mailglass_admin/docs/design-system.md`] |
 | Playwright Chromium | existing | Browser keyboard, responsive layout, zoom, and screenshots | Use focused cases through existing `npm run test:operator-browser`; do not equate Chromium output with email-client output. [VERIFIED: `mailglass_admin/package.json:4-10`; `mailglass_admin/dev/mix/tasks/mailglass_admin.preview.capture.ex:1-25`] |
 | W3C APG and WCAG 2.2 | current guidance | Tab keyboard pattern and responsive/interaction acceptance | Use APG tabs as interaction guidance and WCAG success criteria for reflow, keyboard access, and status messaging. [CITED: https://www.w3.org/WAI/ARIA/apg/patterns/tabs/; https://www.w3.org/WAI/WCAG22/quickref/] |
@@ -451,6 +452,7 @@ This phase depends on existing runtime/test/browser tools. Probes did not boot t
 ### Lookup notes
 
 - Context7 MCP was unavailable and `ctx7` was not installed. As prescribed by documentation lookup instructions, current official documentation URLs were fetched directly; no docs CLI was downloaded.
+- Existing Phoenix family versions and release dates were checked against the official Hex package/release API on 2026-10-09. The current Phoenix lock is one patch behind the latest stable registry release; no upgrade is recommended within this phase. [VERIFIED: Hex API URLs in the Standard Stack table]
 - No app boot, test execution, screenshot capture, rendered review, or CI run was performed in this research task.
 - The official docs page inspected for current LiveView forms/security reported v1.2.12. The project lock also contains LiveView `1.2.12`, whereas task-specific source notes still mention v1.1.33. Versioned docs matching the lock should guide the implementation.
 
