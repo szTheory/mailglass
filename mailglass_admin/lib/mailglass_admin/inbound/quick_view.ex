@@ -5,10 +5,9 @@ defmodule MailglassAdmin.Inbound.QuickView do
 
   Sibling of `MailglassAdmin.Operator.QuickView`. A URL-driven overlay
   (`?inbound_id=` with no `full`): a right slide-over on desktop, a bottom sheet on
-  mobile. Renders from the list-row projection already loaded in `@records`, so
-  flipping records fires no new queries. The heavy evidence — execution timeline,
-  routing trace, raw evidence — lives in Full detail (`&full=1`), reached via
-  "Open full detail".
+  mobile. The exact selected Account-scoped record may be outside the current list
+  page or filters. The heavy evidence — execution timeline, routing trace, raw
+  evidence — lives in Full detail (`&full=1`), reached via "Open full detail".
   """
 
   use Phoenix.Component
@@ -19,6 +18,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
 
   attr(:record, :map, default: nil)
   attr(:detail_error, :atom, default: nil)
+  attr(:outside_results?, :boolean, default: false)
   attr(:account_labels, :map, default: %{})
   attr(:full_path, :string, required: true)
   attr(:close_path, :string, required: true)
@@ -85,11 +85,18 @@ defmodule MailglassAdmin.Inbound.QuickView do
                 class="mt-xs h-5 w-5 shrink-0 text-error"
               />
               <p class="text-body text-base-content">
-                InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again.
+                This InboundMessage could not be loaded in the selected Account. Check the record ID and try again.
               </p>
             </div>
           <% @record -> %>
             <div class="mt-md space-y-md">
+              <p
+                :if={@outside_results?}
+                data-testid="inbound-selection-outside-results"
+                class="text-label text-secondary"
+              >
+                This InboundMessage is outside your current results.
+              </p>
               <div class="flex flex-wrap items-center gap-sm">
                 <h3 class="text-heading font-bold text-base-content">{subject(@record)}</h3>
                 <Components.status_badge status={

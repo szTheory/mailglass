@@ -98,6 +98,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:empty_state, :no_tenant)
      |> assign(:full_detail?, false)
      |> assign(:selected_record, nil)
+     |> assign(:selected_outside_results?, false)
      |> assign(:detail, nil)
      |> assign(:runs, [])
      |> assign(:routing_trace, [])
@@ -555,8 +556,20 @@ defmodule MailglassAdmin.InboundLive do
                   <span aria-hidden="true" class="mr-xs">←</span> Back to inbound records
                 </.link>
 
+                <p
+                  :if={@selected_outside_results?}
+                  data-testid="inbound-selection-outside-results"
+                  class="text-label text-secondary"
+                >
+                  This InboundMessage is outside your current results.
+                </p>
+
                 <%= if @detail do %>
-                  <div id={"inbound-detail-#{@detail.record.id}"} data-region class="motion-reveal space-y-4">
+                  <div
+                    id={"inbound-detail-#{@detail.record.id}"}
+                    data-region
+                    class="motion-reveal space-y-4"
+                  >
                     <DetailHeader.detail_header detail={@detail} account_labels={@account_labels} />
                     <Timeline.timeline runs={@runs} />
                     <RoutingTrace.routing_trace
@@ -576,7 +589,7 @@ defmodule MailglassAdmin.InboundLive do
                     <div class="flex items-center gap-2">
                       <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
                       <h2 class="text-body font-bold text-base-content">
-                        InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again.
+                        This InboundMessage could not be loaded in the selected Account. Check the record ID and try again.
                       </h2>
                     </div>
                   </div>
@@ -648,7 +661,9 @@ defmodule MailglassAdmin.InboundLive do
                   class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
                 >
                   <div class="border-b border-base-300 px-4 py-3">
-                    <h2 class="text-label uppercase font-bold text-secondary">Recent InboundMessages</h2>
+                    <h2 class="text-label uppercase font-bold text-secondary">
+                      Recent InboundMessages
+                    </h2>
                   </div>
                   <RecordsList.records_list
                     records={@records}
@@ -672,6 +687,7 @@ defmodule MailglassAdmin.InboundLive do
               :if={not @full_detail? and (@selected_record != nil or @detail_error != nil)}
               record={@selected_record}
               detail_error={@detail_error}
+              outside_results?={@selected_outside_results?}
               account_labels={@account_labels}
               full_path={
                 detail_path(
@@ -684,10 +700,26 @@ defmodule MailglassAdmin.InboundLive do
               }
               close_path={build_path(@base_path, @filter_params, nil, @dark_chrome)}
               previous_path={
-                neighbor_path("prev", @records, @selected_record, @base_path, @filter_params, @dark_chrome, false)
+                neighbor_path(
+                  "prev",
+                  @records,
+                  @selected_record,
+                  @base_path,
+                  @filter_params,
+                  @dark_chrome,
+                  false
+                )
               }
               next_path={
-                neighbor_path("next", @records, @selected_record, @base_path, @filter_params, @dark_chrome, false)
+                neighbor_path(
+                  "next",
+                  @records,
+                  @selected_record,
+                  @base_path,
+                  @filter_params,
+                  @dark_chrome,
+                  false
+                )
               }
               position={record_position(@records, @selected_record, @records_page_meta)}
               keyboard?={not @replay_modal_open?}
@@ -720,11 +752,9 @@ defmodule MailglassAdmin.InboundLive do
   # through the runtime gateway (apply/3). No bare optional-inbound reference.
   # ---------------------------------------------------------------------------
 
-  # Two-tier load (mirror of OperatorLive): the Quick view renders from the list-row
-  # projection already in `records` — no gateway `detail`/timeline/routing/evidence
-  # load — so flipping records fires no extra queries. Full detail (`full?`) loads the
-  # gateway detail and its lineage. In the Quick view, an id that isn't on the current
-  # page surfaces `:not_found` without a gateway round-trip.
+  # Resolve the requested ID independently of the current list page/filter for both
+  # Quick view and Full detail. The exact detail read is tenant-scoped by the gateway;
+  # timeline, routing and evidence are loaded only for Full detail.
   #
   # Selecting (or re-selecting) a record collapses the evidence card back to redacted —
   # reveal is a per-view capability action, never sticky across selections.
@@ -742,40 +772,33 @@ defmodule MailglassAdmin.InboundLive do
       |> assign(:reveal_state, :redacted)
       |> assign(:focus_reveal_after_redact, false)
 
-    if full? do
-      detail = load_selected_detail(filter_params, selected_inbound_id)
-      runs = load_selected_timeline(filter_params, selected_inbound_id, detail)
-      {detail, runs} = filter_selected_detail(detail, runs, filter_params)
+    detail = load_selected_detail(filter_params, selected_inbound_id)
 
-      selected_record =
-        find_selected_record(records, selected_inbound_id) || list_projection_from_detail(detail)
+    runs =
+      if full?, do: load_selected_timeline(filter_params, selected_inbound_id, detail), else: []
 
-      detail_error = detail_error_for(selected_inbound_id, detail)
+    selected_record =
+      find_selected_record(records, selected_inbound_id) || list_projection_from_detail(detail)
 
-      socket
-      |> assign(:selected_record, selected_record)
-      |> assign(:detail, detail)
-      |> assign(:runs, runs)
-      |> assign(:routing_trace, routing_trace_for(socket.assigns.inbound_router, detail))
-      |> assign(:detail_error, detail_error)
-      # Route a load/authorization failure into the dormant RecordsList data_state
-      # (D-09) — only when there is NO record to show; otherwise the bad selection is
-      # surfaced by the detail-error band.
-      |> assign(:data_state, data_state_for(records, detail_error))
-    else
-      selected_record = find_selected_record(records, selected_inbound_id)
+    detail_error = detail_error_for(selected_inbound_id, detail)
 
-      detail_error =
-        if not is_nil(selected_inbound_id) and is_nil(selected_record), do: :not_found, else: nil
+    selected_outside_results? =
+      not is_nil(selected_record) and is_nil(find_selected_record(records, selected_inbound_id))
 
-      socket
-      |> assign(:selected_record, selected_record)
-      |> assign(:detail, nil)
-      |> assign(:runs, [])
-      |> assign(:routing_trace, [])
-      |> assign(:detail_error, detail_error)
-      |> assign(:data_state, data_state_for(records, detail_error))
-    end
+    socket
+    |> assign(:selected_record, selected_record)
+    |> assign(:selected_outside_results?, selected_outside_results?)
+    |> assign(:detail, if(full?, do: detail, else: nil))
+    |> assign(:runs, runs)
+    |> assign(
+      :routing_trace,
+      if(full?, do: routing_trace_for(socket.assigns.inbound_router, detail), else: [])
+    )
+    |> assign(:detail_error, detail_error)
+    # Route a load/authorization failure into the dormant RecordsList data_state
+    # (D-09) — only when there is NO record to show; otherwise the non-disclosing
+    # selection-error band is rendered by Quick view or Full detail.
+    |> assign(:data_state, data_state_for(records, detail_error))
   end
 
   defp tenant_state(nil, [], _tenant_param_present?), do: :none
@@ -791,6 +814,7 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:inbound_summary, @zero_summary)
     |> assign(:empty_state, :no_tenant)
     |> assign(:selected_record, nil)
+    |> assign(:selected_outside_results?, false)
     |> assign(:detail, nil)
     |> assign(:runs, [])
     |> assign(:routing_trace, [])
@@ -1112,74 +1136,6 @@ defmodule MailglassAdmin.InboundLive do
 
   defp load_selected_timeline(filter_params, selected_inbound_id, _detail),
     do: load_timeline(filter_params, selected_inbound_id)
-
-  defp filter_selected_detail(nil, _runs, _filter_params), do: {nil, []}
-
-  defp filter_selected_detail(detail, runs, filter_params) do
-    if detail_matches_active_filters?(detail, runs, filter_params) do
-      {detail, runs}
-    else
-      {nil, []}
-    end
-  end
-
-  defp detail_matches_active_filters?(%{record: record}, runs, filter_params) do
-    detail_matches_provider?(record, filter_params) and
-      detail_matches_search?(record, filter_params) and
-      detail_matches_window?(record, filter_params) and
-      detail_matches_outcome?(runs, filter_params)
-  end
-
-  defp detail_matches_provider?(record, filter_params) do
-    case blank_to_nil(Map.get(filter_params, "provider")) do
-      nil -> true
-      provider -> Map.get(record, :provider) == provider
-    end
-  end
-
-  defp detail_matches_search?(record, filter_params) do
-    case blank_to_nil(Map.get(filter_params, "search")) do
-      nil ->
-        true
-
-      search ->
-        needle = String.downcase(search)
-
-        [
-          Map.get(record, :subject),
-          Map.get(record, :envelope_recipient),
-          Map.get(record, :provider_message_id)
-        ]
-        |> Enum.any?(&case_insensitive_contains?(&1, needle))
-    end
-  end
-
-  defp detail_matches_window?(record, filter_params) do
-    window_hours =
-      parse_positive_integer(Map.get(filter_params, "window_hours")) || @default_window_hours
-
-    since = DateTime.add(DateTime.utc_now(), -window_hours, :hour)
-
-    case Map.get(record, :received_at) do
-      %DateTime{} = received_at -> DateTime.compare(received_at, since) != :lt
-      _received_at -> false
-    end
-  end
-
-  defp detail_matches_outcome?(runs, filter_params) do
-    case cast_enum(Map.get(filter_params, "outcome"), @outcome_values) do
-      nil -> true
-      outcome -> Enum.any?(runs, &(&1.outcome == outcome))
-    end
-  end
-
-  defp case_insensitive_contains?(value, needle) when is_binary(value) do
-    value
-    |> String.downcase()
-    |> String.contains?(needle)
-  end
-
-  defp case_insensitive_contains?(_value, _needle), do: false
 
   defp list_projection_from_detail(nil), do: nil
 

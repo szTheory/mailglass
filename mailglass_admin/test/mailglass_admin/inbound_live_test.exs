@@ -288,7 +288,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       # Row click → Quick view (peek) over the still-mounted list.
       view
-      |> element("button[phx-value-id='#{record.id}']")
+      |> element("button[data-testid='inbound-record-open'][phx-value-id='#{record.id}']")
       |> render_click()
 
       assert_patch(
@@ -302,7 +302,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       quick_html = render(view)
       assert quick_html =~ ~s(data-testid="inbound-quick-view")
-      assert quick_html =~ ~s(aria-selected="true")
+      assert quick_html =~ ~s(aria-current="true")
       assert quick_html =~ "s*******@e******.com"
       refute quick_html =~ "selected@example.com"
       refute quick_html =~ "Execution timeline"
@@ -575,12 +575,13 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-detail-error")
 
       assert html =~
-               "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
+               "This InboundMessage could not be loaded in the selected Account. Check the record ID and try again."
     end
 
-    test "exact selected record opens outside the current result page and returns to its context", %{
-      conn: conn
-    } do
+    test "exact selected record opens outside the current result page and returns to its context",
+         %{
+           conn: conn
+         } do
       conn = operator_conn(conn)
 
       %{record: selected} =
@@ -599,6 +600,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       result_context = %{
         "tenant_id" => @tenant_id,
         "provider" => "ses",
+        "window_hours" => "168",
         "page" => "2"
       }
 
@@ -615,7 +617,14 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "InboundMessage not loaded"
 
       document = Floki.parse_document!(html)
-      row = Floki.find(document, "#inbound-records-table tr[data-testid='inbound-record-row']") |> hd()
+
+      row =
+        Floki.find(
+          document,
+          "[data-testid='inbound-records-table'] tr[data-testid='inbound-record-row']"
+        )
+        |> hd()
+
       assert Floki.find(row, "button[data-testid='inbound-record-open']") != []
       refute Floki.attribute(row, "phx-click") != []
 
@@ -1218,8 +1227,9 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert provider_pos < received_pos
     end
 
-    test "both table and cards carry phx-click=select_inbound and selected record shows aria-selected=true",
-         %{conn: conn} do
+    test "table and card selections use native controls with an accessible current state", %{
+      conn: conn
+    } do
       conn = operator_conn(conn)
 
       %{record: record} =
@@ -1228,14 +1238,25 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, view, _html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       view
-      |> element("button[phx-value-id='#{record.id}']")
+      |> element("button[data-testid='inbound-record-open'][phx-value-id='#{record.id}']")
       |> render_click()
 
       html = render(view)
+      document = Floki.parse_document!(html)
+
+      row =
+        Floki.find(
+          document,
+          "[data-testid='inbound-records-table'] tr[data-testid='inbound-record-row']"
+        )
+        |> hd()
 
       assert html =~ ~s(phx-click="select_inbound")
       assert html =~ ~s(phx-value-id="#{record.id}")
-      assert html |> String.split(~s(aria-selected="true")) |> length() >= 2
+      assert Floki.find(row, "button[data-testid='inbound-record-open']") != []
+      refute Floki.attribute(row, "phx-click") != []
+      assert html |> String.split(~s(aria-current="true")) |> length() >= 2
+      refute html =~ ~s(aria-selected="true")
     end
 
     test "inbound-record-row testid remains reachable and outcome badges carry inbound-outcome- testids",
@@ -1476,7 +1497,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id}))
 
       assert html =~
-               "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
+               "This InboundMessage could not be loaded in the selected Account. Check the record ID and try again."
 
       refute_banned(html)
     end

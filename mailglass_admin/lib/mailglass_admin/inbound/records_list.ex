@@ -138,22 +138,28 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                 :for={record <- @records}
                 data-testid="inbound-record-row"
                 data-selected={if selected?(@selected_record, record), do: "true", else: "false"}
-                phx-click="select_inbound"
-                phx-value-id={record.id}
-                aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
-                aria-selected={if selected?(@selected_record, record), do: "true", else: "false"}
                 class={[
-                  "mg-focus-ring-inset min-h-11 cursor-pointer transition-colors",
+                  "min-h-11 transition-colors",
                   row_classes(@selected_record, record)
                 ]}
               >
                 <td class="text-body text-base-content">
-                  <span data-testid={"inbound-outcome-#{record_outcome(record)}"}>
-                    <Components.status_badge
-                      status={Components.normalize_inbound_outcome(record_outcome(record))}
-                      size={:sm}
-                    />
-                  </span>
+                  <button
+                    type="button"
+                    data-testid="inbound-record-open"
+                    phx-click="select_inbound"
+                    phx-value-id={record.id}
+                    aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
+                    aria-label={"Open InboundMessage #{record.id}"}
+                    class="mg-focus-ring inline-flex min-h-11 items-center rounded-xs px-xs text-left"
+                  >
+                    <span data-testid={"inbound-outcome-#{record_outcome(record)}"}>
+                      <Components.status_badge
+                        status={Components.normalize_inbound_outcome(record_outcome(record))}
+                        size={:sm}
+                      />
+                    </span>
+                  </button>
                 </td>
                 <td class="min-w-0 text-body text-base-content">
                   <span
@@ -209,7 +215,6 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                 phx-click="select_inbound"
                 phx-value-id={record.id}
                 aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
-                aria-selected={if selected?(@selected_record, record), do: "true", else: "false"}
                 class={[
                   "mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors",
                   row_classes(@selected_record, record)
