@@ -693,6 +693,77 @@ defmodule MailglassAdmin.PreviewLiveTest do
              "iframe srcdoc must reflect updated user_name assign"
     end
 
+    test "supported scalar edits preserve their types and update renderer output", %{conn: conn} do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
+
+      html =
+        render_change(view, "assigns_changed", %{
+          "assigns" => %{
+            "label" => "東京 résumé",
+            "quantity" => "8",
+            "ratio" => "2.75",
+            "enabled?" => "false",
+            "due_on" => "2026-10-10"
+          }
+        })
+
+      assert html =~ "東京 résumé 9 5.500000"
+      assert html =~ "false 2026-10-11"
+      assert html =~ ~s(value="東京 résumé")
+    end
+
+    test "invalid numeric and date drafts stay visible with field-associated errors", %{
+      conn: conn
+    } do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
+
+      for {key, invalid} <- [{"quantity", "8items"}, {"ratio", "2.75tail"}, {"due_on", "2026-02-30"}] do
+        html =
+          render_change(view, "assigns_changed", %{"assigns" => %{key => invalid}})
+
+        assert html =~ "value=\"#{invalid}\""
+        assert html =~ ~s(id="assigns-#{key}-error")
+        assert html =~ ~s(aria-describedby="assigns-#{key}-help assigns-#{key}-error")
+        assert html =~ ~s(aria-invalid="true")
+      end
+    end
+
+    test "structured and timezone-sensitive defaults cannot be forged through form events", %{
+      conn: conn
+    } do
+      {:ok, view, html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
+
+      assert html =~ ~s(data-readonly-display="true")
+      assert html =~ "edit it in the Mailable scenario"
+      refute html =~ ~s(name="assigns[metadata]")
+      refute html =~ ~s(type="datetime-local")
+
+      forged =
+        render_change(view, "assigns_changed", %{
+          "assigns" => %{
+            "metadata" => %{"attacker" => "forged"},
+            "scheduled_at" => "2026-10-10T00:00:00Z",
+            "unknown_key" => "injected"
+          }
+        })
+
+      assert forged =~ "%{source: \"fixture\"}"
+      refute forged =~ "forged"
+      refute forged =~ "injected"
+    end
+
+    test "free text fields have a stable form id and built-in debounce" do
+      html = render_component(&AssignsForm.assigns_form/1, scenario_assigns: %{label: "Ada"})
+
+      assert html =~ ~s(id="preview-assigns-form")
+      assert html =~ ~s(phx-debounce="150")
+      refute html =~ "Render preview"
+      assert html =~ "Reset assigns"
+    end
+
     test "string assigns render stable labels, IDs, names, and help associations" do
       html = render_component(&AssignsForm.field/1, key: :user_name, value: "Ada")
 
@@ -738,6 +809,20 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "unsupported type"
       refute html =~ ~s(type="text" disabled)
       refute html =~ ~s(disabled)
+    end
+
+    test "maps and timezone-sensitive DateTimes render as truthful read-only values" do
+      for {key, value} <- [
+            {:metadata, %{source: "fixture"}},
+            {:scheduled_at, ~U[2026-10-09 12:00:00Z]}
+          ] do
+        html = render_component(&AssignsForm.field/1, key: key, value: value)
+
+        assert html =~ ~s(data-readonly-display="true")
+        assert html =~ "edit it in the Mailable scenario"
+        refute html =~ "JSON"
+        refute html =~ "<textarea"
+      end
     end
   end
 

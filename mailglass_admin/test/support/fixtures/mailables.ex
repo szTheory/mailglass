@@ -12,6 +12,16 @@ defmodule MailglassAdmin.Fixtures.HappyMailer do
     [
       welcome_default: %{user_name: "Ada", plan: :free, admin?: false},
       welcome_enterprise: %{user_name: "Babbage", plan: :enterprise, admin?: true},
+      typed_values: %{
+        label: "Original",
+        quantity: 3,
+        ratio: 1.5,
+        enabled?: true,
+        due_on: ~D[2026-10-09],
+        metadata: %{source: "fixture"},
+        mode: :preview,
+        scheduled_at: ~U[2026-10-09 12:00:00Z]
+      },
       welcome_überraschung_東京__with_a_deliberately_long_name: %{
         user_name: "Ada",
         plan: :free,
@@ -38,6 +48,24 @@ defmodule MailglassAdmin.Fixtures.HappyMailer do
     |> Mailglass.Message.html_body("<p>Hi #{assigns.user_name} — enterprise plan</p>")
     |> Mailglass.Message.text_body("Hi #{assigns.user_name} — enterprise plan")
     |> Mailglass.Message.put_function(:welcome_enterprise)
+  end
+
+  def typed_values(assigns) do
+    next_day = Date.add(assigns.due_on, 1)
+
+    new()
+    |> Mailglass.Message.from("no-reply@example.test")
+    |> Mailglass.Message.to("ada@example.test")
+    |> Mailglass.Message.subject(
+      "#{assigns.label} #{assigns.quantity + 1} #{:erlang.float_to_binary(assigns.ratio * 2, decimals: 6)}"
+    )
+    |> Mailglass.Message.html_body(
+      "<p>#{assigns.label} #{assigns.quantity + 1} #{:erlang.float_to_binary(assigns.ratio * 2, decimals: 6)} #{assigns.enabled?} #{next_day}</p>"
+    )
+    |> Mailglass.Message.text_body(
+      "#{assigns.label} #{assigns.quantity + 1} #{:erlang.float_to_binary(assigns.ratio * 2, decimals: 6)} #{assigns.enabled?} #{next_day}"
+    )
+    |> Mailglass.Message.put_function(:typed_values)
   end
 
   def welcome_überraschung_東京__with_a_deliberately_long_name(assigns) do
