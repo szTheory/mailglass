@@ -101,6 +101,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:summary_read_state, :ok)
      |> assign(:detail_read_state, :ok)
      |> assign(:timeline_read_state, :not_requested)
+     |> assign(:timeline_read_at, nil)
      |> assign(:provider_options_state, :ok)
      |> assign(:empty_state, :no_tenant)
      |> assign(:full_detail?, false)
@@ -431,6 +432,10 @@ defmodule MailglassAdmin.InboundLive do
     {:noreply, close_replay_modal(socket)}
   end
 
+  def handle_event("refresh_inbound_timeline", _params, socket) do
+    {:noreply, refresh_selected_timeline(socket)}
+  end
+
   # Evidence reveal (IADM-02) — capability-gated by the :reveal_raw atom over the
   # SAME Auth.authorize/3 seam as replay (no new auth surface, -09). On grant
   # the evidence card renders the raw payload read-only; on denial the redacted
@@ -654,6 +659,29 @@ defmodule MailglassAdmin.InboundLive do
                     class="motion-reveal space-y-4"
                   >
                     <DetailHeader.detail_header detail={@detail} account_labels={@account_labels} />
+                    <div
+                      data-testid="inbound-timeline-snapshot"
+                      class="flex flex-wrap items-center justify-between gap-sm rounded-box border border-base-300 bg-base-200 p-3"
+                    >
+                      <p class="text-label text-secondary">
+                        <%= cond do %>
+                          <% @timeline_read_state == :ok and @timeline_read_at -> %>
+                            History snapshot through <Components.timestamp at={@timeline_read_at} />
+                          <% @timeline_read_at -> %>
+                            Last successful history snapshot through
+                            <Components.timestamp at={@timeline_read_at} />
+                          <% true -> %>
+                            History snapshot unavailable.
+                        <% end %>
+                      </p>
+                      <button
+                        type="button"
+                        phx-click="refresh_inbound_timeline"
+                        class="btn btn-ghost min-h-11 px-4"
+                      >
+                        Refresh history
+                      </button>
+                    </div>
                     <%= if @timeline_read_state == :ok do %>
                       <Timeline.timeline runs={@runs} />
                     <% else %>
@@ -916,6 +944,8 @@ defmodule MailglassAdmin.InboundLive do
         {[], :not_requested}
       end
 
+    timeline_read_at = if full? and timeline_read_state == :ok, do: DateTime.utc_now(), else: nil
+
     selected_record =
       find_selected_record(records, selected_inbound_id) || list_projection_from_detail(detail)
 
@@ -931,6 +961,7 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:runs, runs)
     |> assign(:detail_read_state, detail_read_state)
     |> assign(:timeline_read_state, timeline_read_state)
+    |> assign(:timeline_read_at, timeline_read_at)
     |> assign(:replay_feedback, nil)
     |> assign(
       :routing_trace,
@@ -955,6 +986,7 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:summary_read_state, :ok)
     |> assign(:detail_read_state, :ok)
     |> assign(:timeline_read_state, :not_requested)
+    |> assign(:timeline_read_at, nil)
     |> assign(:provider_options_state, :ok)
     |> assign(:empty_state, :no_tenant)
     |> assign(:selected_record, nil)
@@ -1093,6 +1125,30 @@ defmodule MailglassAdmin.InboundLive do
 
   defp replay_result_copy(_result),
     do: "Replay run recorded. Mailbox outcome is unavailable."
+
+  defp refresh_selected_timeline(socket) do
+    case socket.assigns do
+      %{full_detail?: true, detail: %{record: %{id: record_id}}} ->
+        refresh_selected_timeline_for(socket, record_id)
+
+      _assigns ->
+        socket
+    end
+  end
+
+  defp refresh_selected_timeline_for(socket, record_id) do
+    {runs, read_state} = load_timeline(socket.assigns.filter_params, record_id)
+
+    socket
+    |> assign(:runs, if(read_state == :ok, do: runs, else: []))
+    |> assign(:timeline_read_state, read_state)
+    |> maybe_assign_timeline_read_at(read_state)
+  end
+
+  defp maybe_assign_timeline_read_at(socket, :ok),
+    do: assign(socket, :timeline_read_at, DateTime.utc_now())
+
+  defp maybe_assign_timeline_read_at(socket, _read_state), do: socket
 
   # -05 cross-tenant gate: the active tenant comes from filter_params; the
   # record's tenant_id must match it. (The detail read-model already tenant-scopes
