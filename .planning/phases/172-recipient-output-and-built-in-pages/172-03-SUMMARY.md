@@ -91,7 +91,7 @@ plan_head_after: 03c5689834b7faa41b5e57ac1f01f75e138c42b5
 - **Started:** 2026-10-09T22:08:15Z
 - **Completed:** 2026-10-09T22:17:17Z
 - **Tasks:** 3
-- **Files modified:** 8
+- **Files modified:** 9
 
 ## Accomplishments
 
@@ -117,6 +117,7 @@ Each task was committed atomically:
 - `guides/unsubscribe.md` — Documents GET and POST behavior and adopter rollout checks.
 - `reference/demo_app/lib/mailglass_demo_web/router.ex` and `page_controller.ex` — Adds the fixed synthetic state evidence route under `/dev`.
 - `reference/demo_app/assets/e2e/demo.spec.js` — Verifies state copy and no overflow at both required viewport sizes.
+- `test/mailglass/docs/unsubscribe_guide_test.exs` — Updated the guide contract after review so it pins the informational GET and current POST/replay behavior.
 
 ## Decisions Made
 
@@ -142,10 +143,13 @@ Each task was committed atomically:
 ## Verification
 
 - Focused controller suite: 10 tests, 0 failures.
+- Unsubscribe guide contract suite after review follow-up: 5 tests, 0 failures.
 - Required regression gate: core 78 tests passed; Admin 593 passed with 1 excluded; Inbound 480 tests and 3 properties passed with 3 excluded; connected operator browser suite 30 passed.
 - Demo browser evidence: the new unsubscribe test passed at 320px and 160px. The existing advisory lane had 72 passing tests and two unrelated failures: the Helios empty-state heading and inbound detail header. A preview test failed once and passed on retry. These pre-existing surfaces were left unchanged.
 
 ## Issues Encountered
+
+- **Review follow-up:** Code review found the unsubscribe guide contract test still asserted the retired confirmation-page wording and manual UAT labels. Updated the test to assert the current read-only GET, configured redirect, empty POST response, and replay event contract. The focused guide suite passes; disposition is recorded in `172-REVIEW-DISPOSITION.md`.
 
 - The demo evidence script updated `reference/demo_app/mix.lock` during dependency resolution. That file was clean before the run and outside this plan, so the generated lockfile drift was restored.
 - The first regression-gate attempt could not launch host Chromium under the workspace sandbox. The reviewed retry completed the connected browser suite successfully with 30 passing tests.

@@ -18,14 +18,15 @@ defmodule Mailglass.Docs.UnsubscribeGuideTest do
       assert guide =~ "copies zero files"
     end
 
-    test "keeps the built-in GET page, redirect escape hatch, and replay UAT steps load-bearing" do
+    test "keeps the informational GET page, redirect escape hatch, and replay POST contract load-bearing" do
       guide = File.read!("guides/unsubscribe.md")
 
-      assert guide =~ "renders a built-in confirmation page by default"
+      assert guide =~ "renders an informational page by default"
+      assert guide =~ "Visiting it does not unsubscribe the recipient"
+      assert guide =~ "GET is read-only."
       assert guide =~ "If `redirect` is configured, GET redirects to that path"
-      assert guide =~ "One-click POST check"
-      assert guide =~ "Replay POST check"
-      assert guide =~ "still returns `200`"
+      assert guide =~ "POST returns `200` with an empty body for the first click and for replayed clicks."
+      assert guide =~ "Replayed POSTs converge on the same durable `:unsubscribed` event instead of creating duplicates."
     end
 
     test "documents the previous_secrets rotation playbook" do
