@@ -1,6 +1,6 @@
 ---
 phase: 171-developer-preview
-reviewed: 2026-10-09T15:26:06Z
+reviewed: 2026-10-09T16:54:32Z
 depth: standard
 files_reviewed: 15
 files_reviewed_list:
@@ -21,48 +21,29 @@ files_reviewed_list:
   - mailglass_admin/test/support/fixtures/mailables.ex
 findings:
   critical: 0
-  warning: 3
+  warning: 0
   info: 0
-  total: 3
-status: issues_found
+  total: 0
+status: clean
 ---
 
 # Phase 171: Code Review Report
 
-**Reviewed:** 2026-10-09T15:26:06Z  
+**Reviewed:** 2026-10-09T16:54:32Z  
 **Depth:** standard  
 **Files Reviewed:** 15  
-**Status:** issues_found
+**Status:** clean
 
 ## Summary
 
-Reviewed the 15-file phase scope, including the preview LiveView, its components, assets, docs, and focused tests. The phase evaluation-scope resolver returned `degraded` (`no-task-commit-rows`); its file list matched the supplied scope and summary extraction. Three defects make generated preview header/MIME output misleading for some valid messages.
+Re-reviewed the same 15-file scope. The evaluation-scope resolver remains degraded (`no-task-commit-rows`), and its supplied file list still matches the review scope. The case-insensitive header check and RFC 5322 Date formatting are fixed, with focused tests covering both. The prior Raw-parts finding is withdrawn: `Mailglass.Renderer.render/2` always replaces `text_body` with plaintext derived from rendered HTML before Preview builds the Raw view; the integration test confirms both renderer-produced representations are present. All reviewed files meet quality standards. No issues found.
 
-## Warnings
+## Narrative Findings (AI reviewer)
 
-### WR-01: Header existence checks are case-sensitive
-
-**Classification:** WARNING  
-**File:** `mailglass_admin/lib/mailglass_admin/preview_live.ex:1114`  
-**Issue:** RFC header names are case-insensitive, but `ensure_header/3` compares with exact string equality. A message that supplies `message-id` or `date` in lowercase is treated as missing that header, so the Headers and Raw tabs show a duplicate semantic header alongside the supplied value.  
-**Fix:** Compare normalized names, for example `String.downcase(to_string(k)) == String.downcase(name)`, and preserve the scenario's original header entry when a match exists.
-
-### WR-02: Generated Date value is not an RFC mail date
-
-**Classification:** WARNING  
-**File:** `mailglass_admin/lib/mailglass_admin/preview_live.ex:1127-1132`  
-**Issue:** `DateTime.to_string/1` emits an ISO-style value such as `2026-10-09 12:00:00Z`, which is not the RFC 5322 `Date` header format. The Headers tab and illustrative envelope therefore show an invalid representative mail header.  
-**Fix:** Format the value with an RFC 5322 date formatter, including weekday and numeric zone, such as `Calendar.strftime(dt, "%a, %d %b %Y %H:%M:%S +0000")` after converting to UTC.
-
-### WR-03: Raw preview invents MIME parts for absent bodies
-
-**Classification:** WARNING  
-**File:** `mailglass_admin/lib/mailglass_admin/preview_live.ex:1058-1073`  
-**Issue:** The Raw tab always declares `multipart/alternative` and emits both text and HTML parts, even when either body is absent. For a valid HTML-only or text-only message, this displays an empty part that the source message does not contain and can conceal the missing-body condition the preview is meant to expose.  
-**Fix:** Build the part list from the bodies actually present and select the matching `Content-Type`; if this panel intentionally remains schematic, show an explicit placeholder for each absent body instead of presenting it as an emitted MIME part.
+No findings.
 
 ---
 
-_Reviewed: 2026-10-09T15:26:06Z_  
+_Reviewed: 2026-10-09T16:54:32Z_  
 _Reviewer: the agent (gsd-code-reviewer)_  
 _Depth: standard_
