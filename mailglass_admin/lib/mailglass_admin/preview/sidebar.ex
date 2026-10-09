@@ -92,13 +92,10 @@ defmodule MailglassAdmin.Preview.Sidebar do
   than a second navigation column.
   """
   def menu(assigns) do
-    {_namespace, leaf} = current_mailable_parts(assigns.current_mailable)
-
     assigns =
       assigns
-      |> assign(:current_leaf, leaf)
+      |> assign(:current_mailable_label, current_mailable_label(assigns.current_mailable))
       |> assign(:current_scenario_label, current_scenario_label(assigns.current_scenario))
-      |> assign(:current_title, current_title(assigns.current_mailable, assigns.current_scenario))
 
     ~H"""
     <details
@@ -112,9 +109,12 @@ defmodule MailglassAdmin.Preview.Sidebar do
       >
         <span class="min-w-0 flex-1">
           <span class="block text-label font-bold uppercase text-primary">Email preview</span>
-          <span class="block truncate text-body font-bold text-base-content" title={@current_title}>
-            {@current_leaf}
-            <span :if={@current_scenario_label} class="font-normal text-secondary">
+          <span
+            data-testid="preview-email-menu-active-identity"
+            class="block min-w-0 whitespace-normal break-all text-body font-bold text-base-content"
+          >
+            {@current_mailable_label}
+            <span :if={@current_scenario_label} class="block whitespace-normal break-all font-normal text-secondary">
               · {@current_scenario_label}
             </span>
           </span>
@@ -343,24 +343,12 @@ defmodule MailglassAdmin.Preview.Sidebar do
     end
   end
 
-  defp current_mailable_parts(nil), do: {nil, "Choose an email"}
-  defp current_mailable_parts(mod), do: module_parts(mod)
+  defp current_mailable_label(nil), do: "Choose an email"
+  defp current_mailable_label(mod), do: inspect(mod)
 
   defp current_scenario_label(nil), do: nil
   defp current_scenario_label(:__error__), do: "render error"
   defp current_scenario_label(scenario), do: Atom.to_string(scenario)
-
-  defp current_title(nil, _scenario), do: "Choose an email preview"
-
-  defp current_title(mod, scenario) do
-    {_namespace, leaf} = current_mailable_parts(mod)
-
-    leaf <>
-      case current_scenario_label(scenario) do
-        nil -> ""
-        label -> " · " <> label
-      end
-  end
 
   defp email_count_label(mailables) do
     count =

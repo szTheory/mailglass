@@ -163,7 +163,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       trigger_text = Floki.text(trigger)
       assert trigger_text =~ "HappyMailer"
       assert trigger_text =~ "welcome_default"
-      refute trigger_text =~ "MailglassAdmin.Fixtures"
+      assert trigger_text =~ "MailglassAdmin.Fixtures.HappyMailer"
       refute trigger_text =~ "3 emails"
       [affordance] = Floki.find(trigger, ~s([data-testid="preview-email-menu-affordance"]))
       [affordance_class] = Floki.attribute(affordance, "class")
@@ -400,10 +400,11 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert text =~ "MailglassAdmin.Fixtures.HappyMailer"
       assert text =~ "welcome_überraschung_東京__with_a_deliberately_long_name"
 
-      [identity] = Floki.find(trigger, "span.block")
+      [identity] = Floki.find(trigger, ~s([data-testid="preview-email-menu-active-identity"]))
       [identity_class] = Floki.attribute(identity, "class")
       refute identity_class =~ "truncate"
       assert identity_class =~ "break-all"
+      refute Floki.attribute(identity, "title") != []
     end
   end
 
