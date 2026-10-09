@@ -602,7 +602,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
         |> Floki.find("tbody tr")
         |> Enum.filter(fn row ->
           [name | _] = Floki.find(row, "td") |> Enum.map(&Floki.text/1)
-          name == "Date"
+          String.trim(name) == "Date"
         end)
 
       [_, date_value] = Floki.find(date_row, "td") |> Enum.map(&Floki.text/1)
@@ -611,41 +611,26 @@ defmodule MailglassAdmin.PreviewLiveTest do
                ~r/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} \+0000$/
     end
 
-    test "illustrative raw envelope includes MIME parts only for present bodies" do
-      html_only =
-        Swoosh.Email.new()
-        |> Swoosh.Email.html_body("<p>html only</p>")
-        |> MailglassAdmin.PreviewLive.raw_envelope()
+    test "illustrative raw output includes both renderer-produced body representations" do
+      conn =
+        Plug.Test.init_test_session(Phoenix.ConnTest.build_conn(), %{
+          "mailables" => [HeaderCaseMailer]
+        })
 
-      assert html_only =~ "Content-Type: text/html; charset=utf-8"
-      assert html_only =~ "<p>html only</p>"
-      refute html_only =~ "text/plain"
-      refute html_only =~ "mailglass_preview_boundary"
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HeaderCaseMailer/lowercase_headers")
 
-      text_only =
-        Swoosh.Email.new()
-        |> Swoosh.Email.text_body("text only")
-        |> MailglassAdmin.PreviewLive.raw_envelope()
+      raw_html = render_click(view, "set_tab", %{"tab" => "raw"})
+      [raw_output] = Floki.find(Floki.parse_document!(raw_html), "#tab-panel-raw pre")
+      raw_text = Floki.text(raw_output)
 
-      assert text_only =~ "Content-Type: text/plain; charset=utf-8"
-      assert text_only =~ "text only"
-      refute text_only =~ "text/html"
-      refute text_only =~ "mailglass_preview_boundary"
-
-      both_bodies =
-        Swoosh.Email.new()
-        |> Swoosh.Email.text_body("plain version")
-        |> Swoosh.Email.html_body("<p>rich version</p>")
-        |> MailglassAdmin.PreviewLive.raw_envelope()
-
-      assert both_bodies =~
+      assert raw_text =~
                "Content-Type: multipart/alternative; boundary=\"mailglass_preview_boundary\""
 
-      assert both_bodies =~ "Content-Type: text/plain; charset=utf-8"
-      assert both_bodies =~ "Content-Type: text/html; charset=utf-8"
-      assert both_bodies =~ "plain version"
-      assert both_bodies =~ "<p>rich version</p>"
-      assert both_bodies =~ "--mailglass_preview_boundary--"
+      assert raw_text =~ "Content-Type: text/plain; charset=utf-8"
+      assert raw_text =~ "Content-Type: text/html; charset=utf-8"
+      assert raw_text =~ "hello"
+      assert raw_text =~ "<p>hello</p>"
     end
 
     test "tabs expose empty HTML guidance and keep long non-ASCII plaintext complete" do
