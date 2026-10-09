@@ -578,39 +578,67 @@ defmodule MailglassAdmin.InboundLiveTest do
                "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
     end
 
-    test "a selected record outside active filters surfaces the detail-error band", %{conn: conn} do
+    test "exact selected record opens outside the current result page and returns to its context", %{
+      conn: conn
+    } do
       conn = operator_conn(conn)
 
-      %{record: mailgun_record} =
+      %{record: selected} =
         InboundFixtures.seed_matched!(@tenant_id,
-          recipient: "mailgun-filtered@example.com",
+          recipient: "mailgun-selected@example.com",
           provider: "mailgun"
         )
 
-      %{record: ses_record} =
+      for index <- 1..21 do
         InboundFixtures.seed_matched!(@tenant_id,
-          recipient: "ses-visible@example.com",
+          recipient: "ses-visible-#{index}@example.com",
           provider: "ses"
         )
+      end
+
+      result_context = %{
+        "tenant_id" => @tenant_id,
+        "provider" => "ses",
+        "page" => "2"
+      }
 
       {:ok, _view, html} =
         live(
           conn,
-          inbound_path(%{
-            "tenant_id" => @tenant_id,
-            "provider" => "ses",
-            "inbound_id" => mailgun_record.id
-          })
+          inbound_path(Map.put(result_context, "inbound_id", selected.id))
         )
 
-      # Quick view: the filtered-out record is not on the page, so it surfaces the
-      # no-leak error band while the visible (ses) row stays in the list behind it.
-      assert html =~ ses_record.id
-      refute html =~ mailgun_record.id
-      assert html =~ ~s(data-testid="inbound-quick-view-error")
+      # The exact same-Account record is resolved independently of the active
+      # provider/page slice, and the native table control remains the opener.
+      assert html =~ selected.id
+      assert html =~ "outside your current results"
+      refute html =~ "InboundMessage not loaded"
 
-      assert html =~
-               "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
+      document = Floki.parse_document!(html)
+      row = Floki.find(document, "#inbound-records-table tr[data-testid='inbound-record-row']") |> hd()
+      assert Floki.find(row, "button[data-testid='inbound-record-open']") != []
+      refute Floki.attribute(row, "phx-click") != []
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(Map.put(result_context, "inbound_id", selected.id)))
+
+      view
+      |> element("a[data-testid='inbound-quick-view-full']")
+      |> render_click()
+
+      assert_patch(
+        view,
+        inbound_path(Map.merge(result_context, %{"inbound_id" => selected.id, "full" => "1"}))
+      )
+
+      assert render(view) =~ ~s(id="inbound-detail-#{selected.id}")
+      assert render(view) =~ "outside your current results"
+
+      view
+      |> element("a[data-testid='inbound-detail-back']")
+      |> render_click()
+
+      assert_patch(view, inbound_path(Map.put(result_context, "inbound_id", selected.id)))
     end
 
     test "a valid selected record outside the capped recent list still loads detail", %{
