@@ -3,7 +3,46 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
 
   alias MailglassDemoWeb.Mailers.AccountMailer
   alias MailglassDemoWeb.Mailers.BillingMailer
+  alias MailglassDemoWeb.Mailers.ComponentMailer
   alias MailglassDemoWeb.Mailers.OperationsMailer
+
+  describe "public component preview scenarios" do
+    test "preview_props keeps deterministic order and values" do
+      props = ComponentMailer.preview_props()
+
+      assert Keyword.keys(props) == [:invoice_ready]
+      assert props[:invoice_ready].recipient == "mira.chen@northstar.example"
+      assert props[:invoice_ready].recipient_name == "Élodie Fernández-Sørensen"
+    end
+
+    test "invoice_ready renders through the public components beside AtlasDesk HTML" do
+      message = ComponentMailer.invoice_ready(ComponentMailer.preview_props()[:invoice_ready])
+
+      assert message.mailable_function == :invoice_ready
+      assert message.swoosh_email.from == {"AtlasDesk", "notify@atlasdesk.example"}
+      assert_recipient(message, "mira.chen@northstar.example")
+      assert message.swoosh_email.subject == "Invoice INV-2026-0601 is ready for Northstar Logistics"
+
+      assert {:ok, rendered} = Mailglass.Renderer.render(message)
+      html = rendered.swoosh_email.html_body
+      text = rendered.swoosh_email.text_body
+
+      assert html =~ "Invoice INV-2026-0601 is ready"
+      assert html =~ "Élodie Fernández-Sørensen"
+      assert html =~ "alt=\"Invoice preview showing the Northstar Logistics monthly total\""
+      assert html =~ "https://app.atlasdesk.example/invoices/INV-2026-0601"
+      assert html =~ "<!--[if mso]>"
+      assert html =~ "<table"
+      refute html =~ "data-mg-"
+      assert text =~ "Review invoice INV-2026-0601"
+      assert text =~ "(https://app.atlasdesk.example/invoices/INV-2026-0601)"
+
+      bespoke = OperationsMailer.usage_alert(OperationsMailer.preview_props()[:usage_alert])
+      assert_real_atlasdesk_email(bespoke)
+      refute bespoke.swoosh_email.html_body =~ "<!--[if mso]>"
+      refute bespoke.swoosh_email.html_body =~ "<table role=\"presentation\" width=\"600\""
+    end
+  end
 
   describe "account preview scenarios" do
     test "preview_props keeps deterministic order and values" do
