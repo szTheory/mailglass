@@ -5,16 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 171
 current_phase_name: Developer Preview
 status: executing
-stopped_at: Completed 171-02-PLAN.md
-last_updated: "2026-10-09T13:53:49.466Z"
+stopped_at: Completed 171-03-PLAN.md
+last_updated: "2026-10-09T14:17:08.429Z"
 last_activity: 2026-10-09
 last_activity_desc: Phase 171 execution started
-state_head: b746964941f74b95f566d331ae3faa2f2dd93202
+state_head: 0827bb7c81c02ce0d1b90659808b616fa785712c
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 27
-  completed_plans: 25
+  completed_plans: 26
   percent: 50
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 ## Current Position
 
 Phase: 171 (Developer Preview) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-10-09 — Phase 171 execution started
 
@@ -277,6 +277,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 170 P08 | 82m | 2 tasks | 17 files |
 | Phase 171 P01 | 14m | 2 tasks | 7 files |
 | Phase 171 P02 | 13min | 2 tasks | 5 files |
+| Phase 171 P03 | 17min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -482,6 +483,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 171]: Keep maps, structs, atoms, and timezone-sensitive DateTimes read-only with guidance to edit the Mailable scenario.
 - [Phase 171]: Retain renderer artifacts only after success and label prior output as not current during pending, validation, and render errors.
 - [Phase 171]: Retry through the existing render event and reset to the selected scenario defaults.
+- [Phase 171]: Label Preview outputs by provenance and distinguish the shared Renderer stage from downstream preflight and delivery.
+- [Phase 171]: Use manual-activation tabs so arrow-key focus remains local and does not send a LiveView event.
+- [Phase 171]: Mount the script-disabled HTML iframe only while its panel is selected, with remote resource behavior documented.
 
 ## Quick Tasks Completed
 
@@ -527,8 +531,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T13:53:49.371Z
-Stopped at: Completed 171-02-PLAN.md
+Last session: 2026-10-09T14:17:08.368Z
+Stopped at: Completed 171-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
