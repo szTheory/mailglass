@@ -88,7 +88,7 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
   4. A user can operate shared controls and overlays by keyboard or touch, understand their applicable default/focus/hover/pressed/selected/disabled/busy/validation states, and perceive status beyond color with correct focus containment and return.
   5. A user can choose one clear Light, Dark, or System preference across navigation and reload, see OS changes while System is selected, and receive prompt feedback without blocking or repeated motion, including under reduced motion and LiveView updates.
 
-**Plans**: 10/10 plans executed; one focused gap-closure plan remains
+**Plans**: 10/10 plans complete, including the focused gap-closure plan
 Plans:
 - [x] 168-10-PLAN.md
 - [x] 168-01-PLAN.md — Shared Account scope and reproducible baseline
@@ -253,7 +253,7 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 168. Shared Workspace and Usable Baseline | 10/10 | In Progress |  |
+| 168. Shared Workspace and Usable Baseline | 10/10 | Complete    | 2026-10-08 |
 | 169. Outbound Investigation and Recovery | 5/5 | Complete    | 2026-10-07 |
 | 170. Inbound Investigation and Recovery | 0/8 | Planned     | — |
 | 171. Developer Preview | 0/TBD | Not started | — |

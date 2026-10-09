@@ -9,7 +9,7 @@ requires:
   - phase: 168-09
     provides: Shared operator and Preview baseline for the final UXF-03 gap closure
 provides:
-  - Six-template 4px spacing compliance across shared operator, Inbound, and Preview UI
+  - Seven-template 4px spacing compliance across shared operator, Inbound, and Preview UI
   - Source, generated-CSS, and rendered computed-style regression checks
 affects: [Phase 168 verification, UXF-03]
 
@@ -35,6 +35,7 @@ key-files:
     - mailglass_admin/lib/mailglass_admin/components.ex
     - mailglass_admin/lib/mailglass_admin/operator/quick_view.ex
     - mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex
+    - mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex
     - mailglass_admin/lib/mailglass_admin/preview_live.ex
     - mailglass_admin/lib/mailglass_admin/preview/sidebar.ex
     - mailglass_admin/test/mailglass_admin/token_parity_test.exs
@@ -57,10 +58,10 @@ coverage:
     requirement: UXF-03
     verification:
       - kind: unit
-        ref: "mailglass_admin/test/mailglass_admin/token_parity_test.exs#shared operator and Preview templates stay on the 4px spacing grid"
+        ref: "mailglass_admin/test/mailglass_admin/token_parity_test.exs#shared workspace templates stay on the 4px spacing grid"
         status: pass
       - kind: e2e
-        ref: "mailglass_admin/e2e/flows.spec.js#Phase 168 shared spacing: operator icon and Preview scenario gap use 4px"
+        ref: "mailglass_admin/e2e/flows.spec.js#Phase 168 shared spacing: operator, Inbound reveal, and Preview gaps use 4px"
         status: pass
       - kind: other
         ref: "mix mailglass_admin.assets.build"
@@ -78,7 +79,7 @@ commits: 3
 
 # Phase 168 Plan 10: Shared 4px Spacing Summary
 
-**The six shared operator and Preview templates now use the approved 4px xs grid, guarded by source, generated CSS, and rendered browser checks.**
+**The shared operator, Inbound, and Preview templates use the approved 4px xs grid, guarded by source, generated CSS, and rendered browser checks.**
 
 ## Performance
 
@@ -92,8 +93,10 @@ commits: 3
 
 - Replaced all eight operator and Inbound icon `mt-0.5` classes with `mt-xs`.
 - Replaced both Preview feedback icon margins with `mt-xs` and all three scenario-list `gap-0.5` classes with `gap-xs`.
-- Added a six-template source guard, source/bundle token and utility checks, and a focused browser assertion for computed 4px margin and row gap.
-- Rebuilt `priv/static/app.css` so the served bundle reflects the source classes.
+- A follow-up rendered audit found an unsupported `gap-2xs` in the Inbound evidence card. Replaced it with `gap-xs` and expanded the source guard to all seven shared templates.
+- The source guard rejects half-step and unsupported `2xs` spacing utilities across named, arbitrary, nested, and slash-qualified Tailwind variants, and checks source/bundle token and utility output.
+- The focused browser assertion checks computed 4px operator icon margin, Inbound evidence reveal row gap, and Preview scenario-list row gap.
+- Rebuilt `mailglass_admin/priv/static/app.css` so the served bundle reflects the source classes.
 
 ## Task Commits
 
@@ -103,9 +106,10 @@ commits: 3
 
 ## Files Created/Modified
 
-- Six named HEEx templates: all 13 2px classes now use `mt-xs` or `gap-xs`.
-- `mailglass_admin/test/mailglass_admin/token_parity_test.exs` - rejects half-step Tailwind spacing utilities across the six templates and verifies the source token and generated rules.
-- `mailglass_admin/e2e/flows.spec.js` - checks 4px computed margin in rendered Inbound UI and 4px Preview scenario row gap.
+- Seven named HEEx templates: the original 13 half-step utilities use `mt-xs`/`gap-xs`, and the evidence-card's unsupported `gap-2xs` uses `gap-xs`.
+- `mailglass_admin/lib/mailglass_admin/inbound/evidence_card.ex` - uses the emitted 4px `gap-xs` utility for the evidence reveal stack.
+- `mailglass_admin/test/mailglass_admin/token_parity_test.exs` - rejects half-step and unsupported spacing utilities across seven templates, including variant-prefixed forms, and verifies the source token and generated rules.
+- `mailglass_admin/e2e/flows.spec.js` - checks computed 4px operator margin and Inbound/Preview row gaps.
 - `mailglass_admin/priv/static/app.css` - regenerated bundle.
 - `168-10-tdd-red-evidence.json` and `168-10-playwright-red.xml` - validated failing browser assertion evidence.
 
@@ -123,6 +127,8 @@ commits: 3
 - Plan final focused command: `mix mailglass_admin.assets.build`, then the three focused ExUnit files, then `npm run --silent test:operator-browser -- --grep "Phase 168 shared spacing"` — 135 ExUnit tests and 1 Playwright test passed.
 - Code review identified that the initial browser test used the Inbound quick-view icon instead of operator markup. Follow-up commit `46f8d2fb` changed the fixture to the operator Quick view error state; the same focused Playwright command passed again (1 test, 0 failures).
 - The browser job remains advisory outside CI Green. No owner UAT was required under D-52 because these criteria are deterministic.
+- Follow-up full-suite evidence: Admin ExUnit **551 tests, 0 failures, 1 excluded**; complete operator Playwright **199 passed, 1 existing guarded skip, 0 failed**. The browser suite ran after the source and E2E changes; only the ExUnit variant-recognition guard was refined afterward, then the full Admin suite was rerun and passed.
+- The original `gap-2xs` finding directly violated the same approved 4px UI-SPEC contract. This was a narrow correction within Plan 10's UXF-03 scope; no dependency, harness, or CI job was added.
 
 ## Decisions Made
 

@@ -109,7 +109,7 @@ status: complete
 ## Files Created/Modified
 
 - `mailglass_admin/test/support/tap_formatter.ex` - Optional ExUnit TAP formatter used only for the GSD TDD evidence gate.
-- `mailglass_admin/lib/mailglass_admin/operator/{deliveries_list,detail_header,quick_view}.ex` - Use the shared downstream-aware display status for each badge.
+- `mailglass_admin/lib/mailglass_admin/operator/deliveries_list.ex`, `detail_header.ex`, and `quick_view.ex` - Use the shared downstream-aware display status for each badge.
 - `mailglass_admin/test/mailglass_admin/components_test.exs` - Rendered outcome matrix for table, card, detail, and Quick view.
 - `mailglass_admin/e2e/flows.spec.js` - Fresh CSS viewport artifacts and actual-tab-zoom browser assertions.
 - `mailglass_admin/e2e/support/browser-zoom-extension/` - Minimal test-only extension using the `tabs` permission.

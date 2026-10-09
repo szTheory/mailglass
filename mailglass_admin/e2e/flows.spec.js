@@ -611,7 +611,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await expect(mailablesPicker.getByRole("link", { name: "welcome_default", exact: true })).toBeVisible();
   });
 
-  test("Phase 168 shared spacing: operator icon and Preview scenario gap use 4px", async ({ page }) => {
+  test("Phase 168 shared spacing: operator, Inbound reveal, and Preview gaps use 4px", async ({ page }) => {
     await openOperator(page, `tenant_id=${tenantId}&view=deliveries&delivery_id=does-not-exist`);
     const operatorError = page.getByTestId("operator-quick-view-error");
     await expect(operatorError).toBeVisible();
@@ -619,6 +619,15 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await expect(operatorErrorIcon).toBeVisible();
     const iconMarginTop = await operatorErrorIcon.evaluate(element => getComputedStyle(element).marginTop);
     expect(iconMarginTop, "operator error icon margin-top").toBe("4px");
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openInbound(page);
+    await selectInboundFull(page, noMatchRow(page));
+    const evidenceCard = page.getByTestId("inbound-evidence-card");
+    await expect(evidenceCard).toBeVisible();
+    const revealStack = evidenceCard.locator(".flex.flex-col.items-end");
+    const revealStackRowGap = await revealStack.evaluate(element => getComputedStyle(element).rowGap);
+    expect(revealStackRowGap, "Inbound evidence reveal row gap").toBe("4px");
 
     await openPreviewIndex(page);
     await page.getByTestId("preview-email-menu-trigger").click();

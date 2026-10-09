@@ -16,7 +16,7 @@
     {
       "number": "170",
       "name": "Inbound Investigation and Recovery",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "171",
@@ -39,5 +39,5 @@
     "label": "Advance to the next step",
     "reason": "Phase 170 of 6 · 33% · executing"
   },
-  "updated_at": "2026-10-08T14:05:20.843Z"
+  "updated_at": "2026-10-09T00:30:18.776Z"
 }

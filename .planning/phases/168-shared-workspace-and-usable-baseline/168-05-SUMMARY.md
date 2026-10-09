@@ -120,8 +120,8 @@ commits: 2
 ## Issues Encountered
 
 - An initial focused browser attempt could not launch Chromium under the restricted process sandbox. A later approved run completed the focused case and full operator browser suite successfully.
-- The first GSD staging attempt could not create `.git/index.lock`; the narrow commit retry was approved and recorded as `414e2963`.
-- The final metadata commit could not stage the summary because Git could not create `.git/index.lock` (`Operation not permitted`). The summary, STATE, and ROADMAP updates remain in the working tree; no raw-Git fallback was used.
+- The first GSD metadata-staging attempt was denied; the narrow commit retry was approved and recorded as `414e2963`.
+- The final metadata commit could not stage the summary because sandbox policy denied repository metadata writes. The summary, STATE, and ROADMAP updates remained in the working tree; no raw-Git fallback was used.
 - The expected plan-head ledger was absent at closeout; commit count and base were measured from the first task commit's parent, yielding two task commits from `462e2c8c` through `414e2963`.
 
 ## User Setup Required

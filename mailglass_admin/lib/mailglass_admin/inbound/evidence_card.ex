@@ -46,7 +46,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           <span :if={@reveal_state != :revealed} class="badge badge-outline text-label">
             Raw source locked
           </span>
-          <div class="flex flex-col items-end gap-2xs">
+          <div class="flex flex-col items-end gap-xs">
             <button
               id="inbound-evidence-reveal-btn"
               type="button"
