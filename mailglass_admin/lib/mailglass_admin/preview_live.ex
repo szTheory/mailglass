@@ -1111,7 +1111,9 @@ defmodule MailglassAdmin.PreviewLive do
   defp swoosh_headers(_), do: []
 
   defp ensure_header(headers, name, default) do
-    if Enum.any?(headers, fn {k, _} -> to_string(k) == name end) do
+    normalized_name = String.downcase(name)
+
+    if Enum.any?(headers, fn {k, _} -> String.downcase(to_string(k)) == normalized_name end) do
       headers
     else
       headers ++ [{name, default}]

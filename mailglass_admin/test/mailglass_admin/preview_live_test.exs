@@ -1,3 +1,21 @@
+defmodule MailglassAdmin.Fixtures.HeaderCaseMailer do
+  use Mailglass.Mailable, stream: :transactional
+
+  def preview_props, do: [lowercase_headers: %{}]
+
+  def lowercase_headers(_assigns) do
+    new()
+    |> Mailglass.Message.from("no-reply@example.test")
+    |> Mailglass.Message.to("ada@example.test")
+    |> Mailglass.Message.subject("Lowercase headers")
+    |> Mailglass.Message.header("message-id", "<provided@example.test>")
+    |> Mailglass.Message.header("date", "Fri, 09 Oct 2026 12:00:00 +0000")
+    |> Mailglass.Message.html_body("<p>hello</p>")
+    |> Mailglass.Message.text_body("hello")
+    |> Mailglass.Message.put_function(:lowercase_headers)
+  end
+end
+
 defmodule MailglassAdmin.PreviewLiveTest do
   @moduledoc """
   RED-by-default coverage for PREV-03 (sidebar + tabs + device/dark toggle
@@ -14,7 +32,13 @@ defmodule MailglassAdmin.PreviewLiveTest do
   # LiveViewCase imports Phoenix.LiveViewTest and sets @endpoint to the
   # synthetic MailglassAdmin.TestAdopter.Endpoint.
 
-  alias MailglassAdmin.Fixtures.{EmptyScenarioMailer, HappyMailer, StubMailer, BrokenMailer}
+  alias MailglassAdmin.Fixtures.{
+    EmptyScenarioMailer,
+    HappyMailer,
+    StubMailer,
+    BrokenMailer,
+    HeaderCaseMailer
+  }
   alias MailglassAdmin.Preview.{AssignsForm, Discovery, Sidebar}
 
   @fixture_mailables [HappyMailer, StubMailer, BrokenMailer]
@@ -534,6 +558,23 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert headers_html =~ "Message-ID and Date are generated for this preview"
       assert headers_html =~ "Preview value"
       assert headers_html =~ ~r/preview-[0-9]+@mailglass\.dev/
+    end
+
+    test "lowercase supplied headers prevent generated duplicate headers", %{conn: conn} do
+      conn = Plug.Test.init_test_session(conn, %{"mailables" => [HeaderCaseMailer]})
+
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HeaderCaseMailer/lowercase_headers")
+
+      raw_html = render_click(view, "set_tab", %{"tab" => "raw"})
+      assert raw_html =~ "message-id: &lt;provided@example.test&gt;"
+      assert raw_html =~ "date: Fri, 09 Oct 2026 12:00:00 +0000"
+      refute raw_html =~ ~r/Message-ID: &lt;preview-/i
+
+      headers_html = render_click(view, "set_tab", %{"tab" => "headers"})
+      assert headers_html =~ "message-id"
+      assert headers_html =~ "date"
+      refute headers_html =~ ~r/preview-[0-9]+@mailglass\.dev/
     end
 
     test "tabs expose empty HTML guidance and keep long non-ASCII plaintext complete" do
