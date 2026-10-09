@@ -446,6 +446,64 @@ defmodule Mailglass.DocsContractTest do
       assert {:ok, _quoted} = Code.string_to_quoted(code)
     end
 
+    test "rendered Mailable guides use the generated-plaintext contract" do
+      canonical = File.read!("guides/authoring-mailables.md")
+
+      assert canonical =~ "## Generated plaintext"
+      assert canonical =~ "Mailglass.Renderer.render/2` derives `text_body` from rendered `html_body`"
+      assert canonical =~ "replaces any `text_body` already set on the message"
+      assert canonical =~ "public `Mailglass.Message.text_body/2` setter remains available"
+      assert canonical =~ "not an explicit-text override"
+
+      examples = [
+        {
+          "guides/authoring-mailables.md",
+          Enum.find(extract_code_blocks("guides/authoring-mailables.md"), fn block ->
+            String.contains?(block, "defmodule MyApp.BillingMailer")
+          end)
+        },
+        {
+          "guides/getting-started.md",
+          extract_block_after_heading("guides/getting-started.md", "4) Send your first message")
+        },
+        {
+          "guides/migration-from-swoosh.md",
+          Enum.find(extract_code_blocks("guides/migration-from-swoosh.md"), fn block ->
+            String.contains?(block, "defmodule MyApp.UserMailer")
+          end)
+        },
+        {
+          "guides/jobs.md",
+          Enum.find(extract_code_blocks("guides/jobs.md"), fn block ->
+            String.contains?(block, "def password_reset")
+          end)
+        },
+        {
+          "guides/b2c-first-adopter.md",
+          Enum.find(extract_code_blocks("guides/b2c-first-adopter.md"), fn block ->
+            String.contains?(block, "defmodule MyApp.StudyReminder")
+          end)
+        }
+      ]
+
+      for {path, example} <- examples do
+        assert example, "#{path} is missing its rendered Mailable example"
+        assert example =~ "html_body", "#{path} must provide the renderer's HTML source"
+        refute example =~ "text_body(", "#{path} presents caller text as the rendered companion"
+        assert {:ok, _quoted} = Code.string_to_quoted(example)
+      end
+
+      for path <- [
+            "guides/getting-started.md",
+            "guides/migration-from-swoosh.md",
+            "guides/jobs.md",
+            "guides/b2c-first-adopter.md"
+          ] do
+        assert File.read!(path) =~ "authoring-mailables.md#generated-plaintext",
+               "#{path} must link to the canonical generated-plaintext explanation"
+      end
+    end
+
     test "Config examples are valid" do
       code = extract_block_after_heading("guides/getting-started.md", "2) Configure mailglass")
       assert code
