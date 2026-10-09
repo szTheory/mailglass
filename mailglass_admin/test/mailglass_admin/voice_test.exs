@@ -88,7 +88,7 @@ defmodule MailglassAdmin.VoiceTest do
       assert Floki.text(document) =~ "No mailables discovered yet."
 
       [generator_command] = Floki.find(document, ~s([data-testid="preview-mailable-generator"]))
-      assert Floki.text(generator_command) == "mix mailglass.gen.mailable"
+      assert String.trim(Floki.text(generator_command)) == "mix mailglass.gen.mailable"
       refute Floki.text(generator_command) =~ "`"
     end
 

@@ -15,7 +15,7 @@ confirm the observed fact, in past tense — an Event is a fact, not a hope.
 |---|---|
 | Error | Mailable failed to render: the template raised before a Message could be built. The error and stack trace are in your logs. |
 | Empty | No mailables discovered yet. Define one with `mix mailglass.gen.mailable` and it will appear here, ready to preview. |
-| Success | Mailable rendered. The Message preview below is exactly what a recipient would receive. |
+| Success | Mailable rendered. The preview below shows Mailglass.Renderer output; outbound preflight and delivery have not run. |
 | Warning | This mailable has no text body. Many clients and most spam filters expect a text part alongside the HTML. |
 
 ## Message

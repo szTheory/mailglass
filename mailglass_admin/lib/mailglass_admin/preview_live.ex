@@ -440,23 +440,20 @@ defmodule MailglassAdmin.PreviewLive do
               class="motion-reveal mx-auto max-w-prose rounded-box border border-base-300 bg-base-200 p-lg"
             >
               <Components.icon name="hero-magnifying-glass" class="mb-md h-10 w-10 text-secondary" />
-              <%!-- Empty-state copy is the brandbook-canonical Mailable Empty string
-                      (brandbook/copy/microcopy.md:17), kept VERBATIM with literal
-                      backticks so voice_test.exs greps it byte-for-byte
-                      (D-09 / Pitfall-2 green-only-forward). The generator chip below is
-                      the PRIMARY next step; the two discovery checks are a secondary
-                      recovery checklist. --%>
               <h2 class="mb-sm text-heading font-bold text-base-content">
-                No mailables discovered yet. Define one with `mix mailglass.gen.mailable` and it will appear here, ready to preview.
+                No mailables discovered yet.
               </h2>
-              <p class="mt-md text-label font-bold text-secondary">Generate your first Mailable</p>
-              <code class="font-mono text-primary mt-sm inline-block overflow-auto whitespace-pre-wrap text-label">
-                mix mailglass.gen.mailable
-              </code>
               <p class="mt-sm text-body text-secondary">
-                Then reload — Preview discovers it automatically.
+                Define a Mailable with
+                <code
+                  data-testid="preview-mailable-generator"
+                  class="mx-xs font-mono text-primary text-label"
+                >
+                  mix mailglass.gen.mailable
+                </code>
+                and it will appear here, ready to preview. Reload Preview after compiling it.
               </p>
-              <p class="mt-md text-label font-bold text-secondary">Still not showing up?</p>
+              <p class="mt-md text-label font-bold text-secondary">If it is still missing</p>
               <ul class="mt-sm grid gap-sm text-body text-secondary">
                 <li class="flex items-start gap-sm">
                   <Components.icon
@@ -486,16 +483,38 @@ defmodule MailglassAdmin.PreviewLive do
                 Read preview setup
               </a>
             </div>
-          <% true -> %>
+          <% Enum.any?(@mailables, fn {_mod, reflection} -> reflection == :no_previews end) -> %>
             <div
               data-testid="preview-no-previewable-mailables"
-              role="status"
               class="motion-reveal rounded-box border border-base-300 bg-base-200 p-lg"
             >
-              <h2 class="text-heading font-bold text-base-content">No previewable emails yet</h2>
-              <p class="mt-sm text-body text-secondary">
-                Add a preview scenario to one of your Mailables and it will open here.
+              <h2 class="text-heading font-bold text-base-content">
+                No preview scenarios configured.
+              </h2>
+              <p
+                :for={{mod, :no_previews} <- @mailables}
+                class="mt-sm text-body text-secondary"
+              >
+                Add named scenarios to <code class="font-mono text-label">preview_props/0</code>
+                in <code class="break-all font-mono text-label">{inspect(mod)}</code>.
               </p>
+              <p class="mt-md text-body text-secondary">
+                Reload Preview after the Mailable module has compiled.
+              </p>
+            </div>
+          <% true -> %>
+            <div
+              data-testid="preview-scenario-discovery-error"
+              role="alert"
+              class="motion-reveal rounded-box border border-base-300 bg-base-200 p-lg"
+            >
+              <h2 class="text-heading font-bold text-base-content">
+                Preview scenarios could not be loaded.
+              </h2>
+              <div :for={{mod, {:error, msg}} <- @mailables} class="mt-md">
+                <p class="text-body text-secondary">{inspect(mod)}</p>
+                <pre class="mt-xs overflow-auto whitespace-pre-wrap break-all font-mono text-label text-error">{msg}</pre>
+              </div>
             </div>
         <% end %>
       </div>

@@ -272,7 +272,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       document = Floki.parse_document!(html)
       [generator_command] = Floki.find(document, ~s([data-testid="preview-mailable-generator"]))
-      assert Floki.text(generator_command) == "mix mailglass.gen.mailable"
+      assert String.trim(Floki.text(generator_command)) == "mix mailglass.gen.mailable"
       refute Floki.text(generator_command) =~ "`"
 
       assert html =~ "Read preview setup"
@@ -377,7 +377,9 @@ defmodule MailglassAdmin.PreviewLiveTest do
   end
 
   describe "scenario selection" do
-    test "patching to another discovered scenario updates identity and renderer HTML", %{conn: conn} do
+    test "patching to another discovered scenario updates identity and renderer HTML", %{
+      conn: conn
+    } do
       path = "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default"
       {:ok, view, html} = live(conn, path)
       assert html =~ "Hi Ada"
@@ -386,7 +388,11 @@ defmodule MailglassAdmin.PreviewLiveTest do
       |> element(~s(a[href*="welcome_enterprise"]))
       |> render_click()
 
-      assert_patch(view, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_enterprise?width=768")
+      assert_patch(
+        view,
+        "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_enterprise?width=768"
+      )
+
       html = render(view)
       assert html =~ "Hi Babbage — enterprise plan"
 

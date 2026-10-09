@@ -1,6 +1,6 @@
 # Preview
 
-The preview surface runs in dev and uses your production render pipeline, so HTML/Text/Raw/Headers stay consistent with real delivery.
+The preview uses `Mailglass.Renderer` to build HTML and text from a selected Mailable scenario. It does not run outbound preflight or delivery, so the browser output is not a promise of what a recipient or provider will receive.
 
 The screenshot capture workflow is for **preview-pipeline confidence only**. It
 does **not** claim cross-client parity across Outlook/Gmail/Apple Mail.
@@ -8,7 +8,8 @@ does **not** claim cross-client parity across Outlook/Gmail/Apple Mail.
 ## Prerequisites
 
 - `mailglass_admin` dependency available in `:dev`
-- Router mounted behind your dev-only routes
+- Router mounted at a path selected by your host application
+- Route exposure guarded by your host application's `:dev_routes` setting
 
 ## Mount preview routes
 
@@ -26,6 +27,18 @@ defmodule MyAppWeb.Router do
 end
 ```
 
+The route macro does not add environment enforcement or authorization. The
+host application owns route exposure and must keep this preview mount behind
+its development-only guard. The path passed to `mailglass_admin_routes/2`
+controls the mount path used by Preview's scenario links.
+
+By default, Preview discovers loaded Mailglass.Mailable modules automatically.
+You can pass an explicit list when auto-discovery is not suitable:
+
+```elixir
+mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]
+```
+
 ## Start and open preview
 
 ```bash
@@ -41,10 +54,27 @@ defmodule MyApp.UserMailer do
 
   @impl Mailglass.Mailable
   def preview_props do
-    [name: "Alice", email: "alice@example.com"]
+    [
+      welcome_default: %{
+        name: "Alice",
+        email: "alice@example.com"
+      }
+    ]
+  end
+
+  def welcome_default(assigns) do
+    new()
+    |> Mailglass.Message.to(assigns.email)
+    |> Mailglass.Message.subject("Welcome, #{assigns.name}")
+    |> Mailglass.Message.html_body("<p>Welcome, #{assigns.name}.</p>")
+    |> Mailglass.Message.put_function(:welcome_default)
   end
 end
 ```
+
+`preview_props/0` returns an ordered keyword list of scenario names and their
+default assigns maps. Each scenario name must match a Mailable function that
+builds a `Mailglass.Message`.
 
 ## End-to-End Example
 
