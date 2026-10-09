@@ -208,10 +208,18 @@ Plans:
 
 **Plans**: 4 plans
 Plans:
+**Wave 1**
 - [ ] 171-01-PLAN.md — Discover, select, and orient on a named renderer preview
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 171-02-PLAN.md — Edit supported assigns and recover from invalid or failed renders
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 171-03-PLAN.md — Inspect truthful output through accessible manual tabs
+
+**Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 171-04-PLAN.md — Frame browser output independently and verify responsive evidence
+
 **UI hint**: yes
 **Acceptance focus**: Use rendered inputs and output tabs for valid, invalid, long, and non-ASCII scenarios; inspect narrow/desktop and light/dark/System combinations where applicable, including failure recovery.
 
