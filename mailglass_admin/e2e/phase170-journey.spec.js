@@ -264,6 +264,10 @@ test.describe("Phase 170 rendered", () => {
       const geometry = await overflowState(zoomPage);
       expect(geometry.viewport).toBe(720);
       expect(geometry.document, `actual 200% zoom should not scroll horizontally: ${geometry.offenders}`).toBeLessThanOrEqual(720);
+      const accountControl = await zoomPage.getByTestId("operator-account-switcher").boundingBox();
+      expect(accountControl.x + accountControl.width, "Account control remains fully visible at actual 200% zoom").toBeLessThanOrEqual(720);
+      const appearanceControl = await zoomPage.getByRole("group", { name: "Appearance" }).boundingBox();
+      expect(appearanceControl.x + appearanceControl.width, "appearance controls remain fully visible at actual 200% zoom").toBeLessThanOrEqual(720);
       const zoomTargets = await zoomPage.locator("button, a").evaluateAll(elements => elements
         .filter(element => {
           const rect = element.getBoundingClientRect();

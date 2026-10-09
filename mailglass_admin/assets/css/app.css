@@ -536,6 +536,25 @@ code, pre, .mono {
   display: block;
 }
 
+/* At browser zoom, a desktop device can expose a narrow CSS viewport. Move the
+   shell actions below the logo before the Account control gets clipped. */
+@media (max-width: 767px) {
+  .mg-admin-root [data-testid="admin-shell-actions"] {
+    flex-basis: 100%;
+    margin-left: 0;
+    max-width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+}
+
+/* Actual browser zoom can resolve a nominal 44px target a fraction below 44
+   after layout scaling; keep the evidence disclosure above the strict floor. */
+.mg-admin-root [data-testid="inbound-evidence-reveal"] {
+  min-height: 44.1px;
+}
+
 @container (min-width: 768px) {
   .operator-deliveries-table {
     display: block;
