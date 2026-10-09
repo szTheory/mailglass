@@ -81,7 +81,8 @@ defmodule MailglassDemoWeb.Router do
       mailables: [
         MailglassDemoWeb.Mailers.AccountMailer,
         MailglassDemoWeb.Mailers.BillingMailer,
-        MailglassDemoWeb.Mailers.OperationsMailer
+        MailglassDemoWeb.Mailers.OperationsMailer,
+        MailglassDemoWeb.Mailers.ComponentMailer
       ],
       navigation: [
         overview_path: "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar",
