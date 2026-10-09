@@ -37,13 +37,13 @@ defmodule MailglassAdmin.OptionalDeps.MailglassInboundTest do
 
   describe "eligibility/2" do
     test "routes the narrow replay-eligibility read through the runtime gateway" do
+      assert Code.ensure_loaded?(MailglassInbound)
       assert function_exported?(MailglassInbound, :eligibility, 2)
 
       assert {:error, :not_found} =
                apply(MailglassInbound, :eligibility, [
                  "record-id",
-                 tenant_id: "tenant-a",
-                 repo: NoRecordRepo
+                 [tenant_id: "tenant-a", repo: NoRecordRepo]
                ])
     end
   end

@@ -87,10 +87,11 @@ defmodule MailglassAdmin.MixProject do
   defp elixirc_paths(:test), do: ["lib", "test/support", "dev", @persona_spec_dir]
   defp elixirc_paths(_), do: ["lib"]
 
-  # CONTEXT D-24: phoenix_live_reload is dev-only optional; declare here so
-  # bare references compile cleanly on the no-optional-deps CI lane.
+  # Optional modules are referenced only behind runtime load checks. Declaring
+  # them here keeps the no-optional-deps CI lane warning-clean when their
+  # packages are genuinely absent.
   defp elixirc_options do
-    [no_warn_undefined: [Phoenix.LiveReloader]]
+    [no_warn_undefined: [Phoenix.LiveReloader, MailglassAdmin.OptionalDeps.MailglassInbound]]
   end
 
   defp deps do

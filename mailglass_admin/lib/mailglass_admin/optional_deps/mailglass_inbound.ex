@@ -171,6 +171,13 @@ if Code.ensure_loaded?(MailglassInbound) do
       apply(MailglassInbound.Internal.Replay, :replay, [inbound_record_id, opts])
     end
 
+    @doc "Replay eligibility for one tenant-scoped inbound record."
+    @doc since: "0.2.0"
+    @spec eligibility(Ecto.UUID.t(), keyword()) :: {:ok, map()} | {:error, :not_found}
+    def eligibility(inbound_record_id, opts \\ []) do
+      apply(MailglassInbound.Internal.Replay, :eligibility, [inbound_record_id, opts])
+    end
+
     defp blank?(value), do: not is_binary(value) or String.trim(value) == ""
   end
 end

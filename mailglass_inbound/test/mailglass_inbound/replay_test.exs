@@ -800,7 +800,7 @@ defmodule MailglassInbound.ReplayTest do
   end
 
   defp eligibility_result(record_id, opts) do
-    if function_exported?(Replay, :eligibility, 2) do
+    if Code.ensure_loaded?(Replay) and function_exported?(Replay, :eligibility, 2) do
       apply(Replay, :eligibility, [record_id, opts])
     else
       {:error, :eligibility_unavailable}

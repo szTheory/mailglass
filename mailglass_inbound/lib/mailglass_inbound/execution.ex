@@ -438,7 +438,7 @@ defmodule MailglassInbound.Execution do
     case Enum.find_value(:code.all_loaded(), fn {module, _path} ->
            if Atom.to_string(module) == mailbox_name and mailbox_module?(module), do: module
          end) do
-      module when is_atom(module) -> {:ok, module}
+      module when is_atom(module) and not is_nil(module) -> {:ok, module}
       nil -> {:error, :unavailable}
     end
   end
