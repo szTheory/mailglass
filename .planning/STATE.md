@@ -5,11 +5,11 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 173
 current_phase_name: Consistency and Delivery Evidence
 status: planning
-stopped_at: Phase 173 context gathered (assumptions mode)
-last_updated: "2026-10-09T23:38:48.876Z"
+stopped_at: Phase 173 UI-SPEC approved
+last_updated: "2026-10-09T23:47:03.190Z"
 last_activity: 2026-10-09
 last_activity_desc: Phase 172 complete, transitioned to Phase 173
-state_head: 168c1076b77306539baf8a7e080589194c7ecd22
+state_head: bbc79a8c33f588f29c3ee393cab5e713daa3232f
 progress:
   total_phases: 6
   completed_phases: 5
@@ -544,9 +544,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T23:38:48.762Z
-Stopped at: Phase 173 context gathered (assumptions mode)
-Resume file: .planning/phases/173-consistency-and-delivery-evidence/173-CONTEXT.md
+Last session: 2026-10-09T23:47:03.103Z
+Stopped at: Phase 173 UI-SPEC approved
+Resume file: .planning/phases/173-consistency-and-delivery-evidence/173-UI-SPEC.md
 
 ## Operator Next Steps
 
