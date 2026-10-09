@@ -233,6 +233,19 @@ defmodule Mailglass.Renderer do
     end
   end
 
+  defp apply_strategy(_default, "img", attrs, _children) do
+    case List.keyfind(attrs, "alt", 0) do
+      {_, alt} when alt != "" -> "#{alt}\n"
+      _ -> ""
+    end
+  end
+
+  defp apply_strategy(_default, tag, _attrs, children)
+       when tag in ["p", "h1", "h2", "h3", "h4", "h5", "h6"] do
+    text = children |> extract_plaintext_nodes([]) |> Enum.join("") |> String.trim()
+    if text == "", do: "", else: "\n#{text}\n"
+  end
+
   # Skip script/style blocks entirely.
   defp apply_strategy(_default, "script", _attrs, _children), do: ""
   defp apply_strategy(_default, "style", _attrs, _children), do: ""

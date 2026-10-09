@@ -76,6 +76,56 @@ defmodule Mailglass.RendererTest do
              "Expected 'Label (url)' format for link plaintext; got:\n#{text_body}"
     end
 
+    test "render replaces caller text with complete ordered Unicode plaintext" do
+      long_copy = String.duplicate("Información útil para tu cuenta — café 🌱. ", 80)
+
+      html =
+        """
+        <html>
+          <head><style>.copy { color: red; }</style></head>
+          <body>
+            <h1 data-mg-plaintext="heading_block_1">Tu resumen</h1>
+            <p class="copy">#{long_copy}</p>
+            <p>Consulta <a href="https://example.com/account">tu cuenta</a>.</p>
+            <img src="https://example.com/mark.png" alt="Marca de ejemplo" />
+            <a href="https://example.com/continue" data-mg-plaintext="link_pair">Continuar</a>
+          </body>
+        </html>
+        """
+
+      message =
+        %Swoosh.Email{html_body: html}
+        |> Mailglass.Message.build(tenant_id: "t")
+        |> Mailglass.Message.text_body("caller supplied text must be replaced")
+
+      assert {:ok, rendered} = Mailglass.Renderer.render(message)
+      text_body = rendered.swoosh_email.text_body
+      html = rendered.swoosh_email.html_body
+
+      assert String.starts_with?(text_body, "TU RESUMEN")
+      assert String.contains?(text_body, String.trim_trailing(long_copy))
+      assert String.contains?(text_body, "tu cuenta (https://example.com/account)")
+      assert String.contains?(text_body, "Marca de ejemplo")
+      assert String.contains?(text_body, "Continuar (https://example.com/continue)")
+      assert length(Regex.scan(~r/https:\/\/example\.com\/continue/, text_body)) == 1
+      refute String.contains?(text_body, "caller supplied text")
+      assert byte_size(text_body) > byte_size(long_copy)
+      assert elem(:binary.match(text_body, "TU RESUMEN"), 0) <
+               elem(:binary.match(text_body, "Información útil"), 0)
+
+      assert elem(:binary.match(text_body, "Información útil"), 0) <
+               elem(:binary.match(text_body, "tu cuenta"), 0)
+
+      assert elem(:binary.match(text_body, "tu cuenta"), 0) <
+               elem(:binary.match(text_body, "Marca de ejemplo"), 0)
+
+      assert elem(:binary.match(text_body, "Marca de ejemplo"), 0) <
+               elem(:binary.match(text_body, "Continuar"), 0)
+
+      refute String.contains?(html, "data-mg-plaintext")
+      assert String.contains?(html, "color:")
+    end
+
     test "hr component produces '---' divider in plaintext" do
       message = Fixtures.component_message()
       assert {:ok, rendered} = Mailglass.Renderer.render(message)
