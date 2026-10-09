@@ -4,16 +4,16 @@ milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 172
 current_phase_name: Recipient Output and Built-in Pages
-status: planning
-stopped_at: Phase 172 UI-SPEC approved
-last_updated: "2026-10-09T19:51:08.153Z"
+status: executing
+stopped_at: Phase 172 execution started
+last_updated: "2026-10-09T21:05:35.917Z"
 last_activity: 2026-10-09
-last_activity_desc: Phase 171 complete, transitioned to Phase 172
-state_head: aba3f78901e24d79876d772063505be44409c3a0
+last_activity_desc: Phase 172 execution started
+state_head: 6eb753213a9f4f6d21c1b81cbf915c8f672faf88
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 27
+  total_plans: 30
   completed_plans: 27
   percent: 67
 ---
@@ -39,12 +39,12 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 ## Current Position
 
-Phase: 172 — Recipient Output and Built-in Pages
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-09 — Phase 171 complete, transitioned to Phase 172
+Phase: 172 (Recipient Output and Built-in Pages) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 172
+Last activity: 2026-10-09 — Phase 172 execution started
 
-Progress: 4/6 phases ([███████░░░] 67%); [████████████████████] 27/27 planned plans (100%).
+Progress: 4/6 phases ([███████░░░] 67%); [██████████████░░░░░░] 27/30 planned plans (90%).
 
 ## v2.9 Roadmap Shape
 
@@ -536,9 +536,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T19:51:08.078Z
-Stopped at: Phase 172 UI-SPEC approved
-Resume file: .planning/phases/172-recipient-output-and-built-in-pages/172-UI-SPEC.md
+Last session: 2026-10-09T21:05:35.917Z
+Stopped at: Phase 172 execution started
+Resume file: .planning/phases/172-recipient-output-and-built-in-pages/172-01-PLAN.md
 
 ## Operator Next Steps
 
@@ -548,5 +548,5 @@ Resume file: .planning/phases/172-recipient-output-and-built-in-pages/172-UI-SPE
 - Phase 170 is complete: eight plans across six dependency waves; independent verification passed 30/30 must-haves for INUX-01–04. Security closed 21/21 threats and code review found no current issues.
 - Automated evidence: Admin 577 tests (0 failures, 1 excluded); inbound 3 properties plus 480 tests (0 failures); full operator browser 206 passed and 1 guarded skip. Rendered checks are recorded; no human-only acceptance remains under D-52.
 - Phase 170 artifacts and evidence are in `.planning/phases/170-inbound-investigation-and-recovery/`. GSD emitted three nonblocking missing-path warnings for package-relative references in summaries; the verifier checked the actual package-root files.
-- Next command: `$gsd-execute-phase 171` — Phase 171 is planned as four executable plans across four dependency waves. Execute these plans; do not repeat Phase 171 discussion, research, UI design, or planning.
+- Phase 171 is complete. Phase 172 is executing its three approved plans across two waves. If execution is interrupted and context is cleared, run `$gsd-resume-work`; do not repeat Phase 172 discussion, research, UI design, or planning.
 - Original unrelated planning-file deletions, configuration edits, and Phase 168/169 screenshot modifications were preserved. Remote delivery/CI proof remains Phase 173 scope.
