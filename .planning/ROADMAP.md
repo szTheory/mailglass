@@ -206,7 +206,7 @@ Plans:
   3. An author can inspect HTML, plaintext, raw output, and headers with usable tab/selection behavior and readable long content without changing supported rendering semantics.
   4. An author can change device framing and preview appearance independently of admin appearance and understand that a browser frame does not establish email-client or dark-mode compatibility.
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans executed
 Plans:
 **Wave 1**
 - [x] 171-01-PLAN.md — Discover, select, and orient on a named renderer preview
@@ -218,7 +218,7 @@ Plans:
 - [x] 171-03-PLAN.md — Inspect truthful output through accessible manual tabs
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 171-04-PLAN.md — Frame browser output independently and verify responsive evidence
+- [x] 171-04-PLAN.md — Frame browser output independently and verify responsive evidence
 
 **UI hint**: yes
 **Acceptance focus**: Use rendered inputs and output tabs for valid, invalid, long, and non-ASCII scenarios; inspect narrow/desktop and light/dark/System combinations where applicable, including failure recovery.
@@ -269,6 +269,6 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 | 168. Shared Workspace and Usable Baseline | 10/10 | Complete    | 2026-10-08 |
 | 169. Outbound Investigation and Recovery | 5/5 | Complete    | 2026-10-07 |
 | 170. Inbound Investigation and Recovery | 8/8 | Complete    | 2026-10-09 |
-| 171. Developer Preview | 3/4 | In Progress | — |
+| 171. Developer Preview | 4/4 | In Progress | — |
 | 172. Recipient Output and Built-in Pages | 0/TBD | Not started | — |
 | 173. Consistency and Delivery Evidence | 0/TBD | Not started | — |

@@ -4,17 +4,17 @@ milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 171
 current_phase_name: Developer Preview
-status: executing
-stopped_at: Completed 171-03-PLAN.md
-last_updated: "2026-10-09T14:17:08.429Z"
+status: verifying
+stopped_at: Completed 171-04-PLAN.md
+last_updated: "2026-10-09T14:46:38.654Z"
 last_activity: 2026-10-09
 last_activity_desc: Phase 171 execution started
-state_head: 0827bb7c81c02ce0d1b90659808b616fa785712c
+state_head: 916150a5ae955bb70067c316be0b5eb412f391cf
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 27
-  completed_plans: 26
+  completed_plans: 27
   percent: 50
 ---
 
@@ -41,7 +41,7 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 Phase: 171 (Developer Preview) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-09 — Phase 171 execution started
 
 Progress: 3/6 phases ([█████░░░░░] 50%); [████████████████████] 23/23 plans (100%).
@@ -278,6 +278,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 171 P01 | 14m | 2 tasks | 7 files |
 | Phase 171 P02 | 13min | 2 tasks | 5 files |
 | Phase 171 P03 | 17min | 2 tasks | 6 files |
+| Phase 171 P04 | 25min | 2 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -486,6 +487,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 171]: Label Preview outputs by provenance and distinguish the shared Renderer stage from downstream preflight and delivery.
 - [Phase 171]: Use manual-activation tabs so arrow-key focus remains local and does not send a LiveView event.
 - [Phase 171]: Mount the script-disabled HTML iframe only while its panel is selected, with remote resource behavior documented.
+- [Phase 171]: Label preview widths as CSS pixels, with concise visible values and complete accessible names.
+- [Phase 171]: Keep controls stacked until the wide breakpoint and remove the spacing-token max-width that collapsed the selected identity.
+- [Phase 171]: Treat preview browser screenshots as preview-pipeline evidence only, not recipient-client or email dark-mode certification.
 
 ## Quick Tasks Completed
 
@@ -531,8 +535,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T14:17:08.368Z
-Stopped at: Completed 171-03-PLAN.md
+Last session: 2026-10-09T14:46:38.591Z
+Stopped at: Completed 171-04-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
