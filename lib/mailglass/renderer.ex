@@ -118,7 +118,7 @@ defmodule Mailglass.Renderer do
     * `"heading_block_1"` — uppercase + blank lines (h1)
     * `"heading_block_2"` / `"_3"` / `"_4"` — title case + blank lines
     * `"text"` — raw text content; for `<img>`, uses the alt attribute
-    * anything else (including missing) — recurses into children
+    * anything else — recurses into children; ordinary anchors include their destination
 
   Runs on the pre-VML logical HTML tree so VML artifacts never leak into
   plaintext output.
@@ -201,7 +201,8 @@ defmodule Mailglass.Renderer do
   end
 
   defp apply_strategy("text", tag, attrs, children) do
-    # For <img>: use alt text; for anything else: element text content.
+    # For <img>: use alt text. Other text-marked elements walk children so
+    # nested anchors retain their destinations in source order.
     case tag do
       "img" ->
         case List.keyfind(attrs, "alt", 0) do
@@ -210,8 +211,25 @@ defmodule Mailglass.Renderer do
         end
 
       _ ->
-        text = children |> Floki.text() |> String.trim()
+        text = children |> extract_plaintext_nodes([]) |> Enum.join("") |> String.trim()
         if text == "", do: "", else: "#{text}\n"
+    end
+  end
+
+  # link_pair remains terminal above so it contributes its own URL exactly once.
+  defp apply_strategy(_default, "a", attrs, children) do
+    label = children |> extract_plaintext_nodes([]) |> Enum.join("") |> normalize_whitespace()
+
+    href =
+      case List.keyfind(attrs, "href", 0) do
+        {_, url} -> url
+        nil -> ""
+      end
+
+    cond do
+      label == "" -> ""
+      href == "" -> label
+      true -> "#{label} (#{href})"
     end
   end
 
@@ -229,6 +247,7 @@ defmodule Mailglass.Renderer do
   defp normalize_whitespace(text) do
     text
     |> String.replace(~r/[ \t]+/, " ")
+    |> String.replace(~r/ +([,.;:!?])/, "\\1")
     |> String.replace(~r/\n{3,}/, "\n\n")
     |> String.trim()
   end

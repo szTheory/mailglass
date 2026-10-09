@@ -199,6 +199,53 @@ defmodule Mailglass.RendererTest do
       assert String.contains?(result, "Click (https://example.com)")
     end
 
+    test "ordinary anchors retain their destination inside paragraph text" do
+      html = ~s|<p>Read <a href="https://example.com/guide">the guide</a> today.</p>|
+
+      assert Mailglass.Renderer.to_plaintext(html) ==
+               "Read the guide (https://example.com/guide) today."
+    end
+
+    test "nested anchors retain their destination inside a text strategy" do
+      html =
+        ~s|<p data-mg-plaintext="text">Before <span><a href="https://example.com/nested"><strong>open this</strong> page</a></span> after.</p>|
+
+      result = Mailglass.Renderer.to_plaintext(html)
+
+      assert result == "Before open this page (https://example.com/nested) after."
+    end
+
+    test "ordinary link destinations stay in reading order and repeat once per anchor" do
+      html =
+        ~s|<p>Start <a href="https://example.com">first</a>, middle <a href="https://example.com">second</a>, end.</p>|
+
+      result = Mailglass.Renderer.to_plaintext(html)
+
+      assert result ==
+               "Start first (https://example.com), middle second (https://example.com), end."
+
+      assert length(Regex.scan(~r/https:\/\/example\.com/, result)) == 2
+    end
+
+    test "empty-href and destination-free anchors keep their readable label only" do
+      html = ~s|<p><a href="">empty destination</a> and <a>no destination</a><a href="https://example.com/empty"></a>.</p>|
+
+      result = Mailglass.Renderer.to_plaintext(html)
+
+      assert result == "empty destination and no destination."
+      refute result =~ "()"
+    end
+
+    test "marked link_pair anchors keep their destination exactly once" do
+      html =
+        ~s|<a href="https://example.com/cta" data-mg-plaintext="link_pair"><strong>Continue</strong></a>|
+
+      result = Mailglass.Renderer.to_plaintext(html)
+
+      assert result == "Continue (https://example.com/cta)"
+      assert length(Regex.scan(~r/https:\/\/example\.com\/cta/, result)) == 1
+    end
+
     test "divider produces '---'" do
       html = ~s|<td data-mg-plaintext="divider">&nbsp;</td>|
       result = Mailglass.Renderer.to_plaintext(html)
