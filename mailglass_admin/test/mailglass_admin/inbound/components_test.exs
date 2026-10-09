@@ -343,8 +343,97 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "Dimension"
       assert html =~ "Expected"
       assert html =~ "Actual"
+      assert html =~ "Current router simulation"
+      assert html =~ "does not prove which route was selected when the message arrived"
+      assert html =~ "<details"
+      refute html =~ "<details open"
+      assert html =~ "<summary"
+      assert html =~ ~s(aria-controls="inbound-routing-trace-content")
+      assert html =~ "min-h-11"
+      assert html =~ "mg-focus-ring"
+      refute html =~ "support@example.com"
       refute html =~ "nomatch@example.com"
+      refute html =~ "Need help"
+      refute html =~ "~r/help/i"
+      refute html =~ "x-mailglass-topic"
+      refute html =~ "billing"
       assert html =~ "n******@e******.com"
+    end
+
+    test "masks long non-ASCII values and safely labels unsupported route clauses" do
+      long_subject_expected =
+        "subject-expected-170-03-秘密-🔐" <> String.duplicate("expected-long-value-東京-", 12)
+
+      long_subject_actual =
+        "subject-actual-170-03-非公開-📨" <> String.duplicate("actual-long-value-秘密-", 12)
+
+      private_values = [
+        "recipient-expected-170-03@example.invalid",
+        "recipient-actual-170-03@example.invalid",
+        long_subject_expected,
+        long_subject_actual,
+        "regex-source-secret-170-03",
+        "regex-actual-secret-170-03",
+        "x-private-header-170-03",
+        "header-expected-secret-170-03",
+        "header-actual-secret-170-03",
+        "binding-secret-170-03",
+        "exception-secret-170-03"
+      ]
+
+      trace = [
+        %{
+          mailbox: "MyApp.SupportMailbox",
+          verdicts: [
+            {:recipient, "recipient-expected-170-03@example.invalid",
+             "recipient-actual-170-03@example.invalid", false}
+          ]
+        },
+        %{
+          mailbox: "MyApp.SupportMailbox",
+          verdicts: [{:subject, long_subject_expected, long_subject_actual, false}]
+        },
+        %{
+          mailbox: "MyApp.SupportMailbox",
+          verdicts: [
+            {:subject, ~r/regex-source-secret-170-03/, "regex-actual-secret-170-03", false}
+          ]
+        },
+        %{
+          mailbox: "MyApp.SupportMailbox",
+          verdicts: [
+            {:header, "x-private-header-170-03", "header-expected-secret-170-03",
+             ["header-actual-secret-170-03"], false}
+          ]
+        },
+        %{
+          mailbox: "MyApp.SupportMailbox",
+          verdicts: [
+            {:binding, "binding-secret-170-03", "exception-secret-170-03", false}
+          ]
+        }
+      ]
+
+      rendered =
+        try do
+          {:ok, render_component(&RoutingTrace.routing_trace/1, trace: trace)}
+        rescue
+          FunctionClauseError -> {:error, :unsupported_route_clause}
+        end
+
+      assert {:ok, html} = rendered
+
+      for value <- private_values do
+        refute html =~ value
+      end
+
+      assert html =~ "Other condition"
+      assert html =~ "Regular expression matcher"
+      assert html =~ "Exact value matcher"
+      assert html =~ "Value withheld"
+      assert html =~ "Recipient did not match the current route."
+      assert html =~ "Subject did not match the current route."
+      assert html =~ "Header did not match the current route."
     end
   end
 
