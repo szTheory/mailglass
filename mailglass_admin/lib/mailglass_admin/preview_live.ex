@@ -1032,9 +1032,9 @@ defmodule MailglassAdmin.PreviewLive do
   defp build_and_render(mod, scenario, assigns_map)
        when is_atom(mod) and is_atom(scenario) and is_map(assigns_map) do
     msg = apply(mod, scenario, [assigns_map])
-    # Fully-qualified call site for auditability — this is the ONE place
-    # PreviewLive reaches into the core render pipeline. Matches the
-    # production send path; PREV-03 "no placeholder shape divergence".
+    # Fully-qualified call site for auditability. Renderer is the shared
+    # content-rendering stage used in outbound preflight; Preview stops here
+    # before preflight, adaptation, later transformations, and delivery.
     Mailglass.Renderer.render(msg)
   end
 
