@@ -34,6 +34,7 @@ defmodule MailglassAdmin.TokenParityTest do
                                       "../../lib/mailglass_admin/components.ex",
                                       "../../lib/mailglass_admin/operator/quick_view.ex",
                                       "../../lib/mailglass_admin/inbound/quick_view.ex",
+                                      "../../lib/mailglass_admin/inbound/evidence_card.ex",
                                       "../../lib/mailglass_admin/preview_live.ex",
                                       "../../lib/mailglass_admin/preview/sidebar.ex"
                                     ],
@@ -105,19 +106,32 @@ defmodule MailglassAdmin.TokenParityTest do
     {:ok, css: css}
   end
 
-  test "shared operator and Preview templates stay on the 4px spacing grid" do
+  test "shared workspace templates stay on the 4px spacing grid" do
     half_step_spacing =
-      ~r/(?:^|[\s"'`])(-?(?:[a-z0-9-]+:)*(?:m(?:t|r|b|l|x|y|s|e)?|p(?:t|r|b|l|x|y|s|e)?|gap(?:-[xy])?|space-[xy])-0\.5)(?=$|[\s"'`])/
+      ~r/(?:^|[\s"'`])(-?(?:[a-z0-9-]+:)*-?(?:m(?:t|r|b|l|x|y|s|e)?|p(?:t|r|b|l|x|y|s|e)?|gap(?:-[xy])?|space-[xy])-0\.5)(?=$|[\s"'`])/
+
+    unsupported_2xs_spacing =
+      ~r/(?:^|[\s"'`])(-?(?:[a-z0-9-]+:)*-?(?:m(?:t|r|b|l|x|y|s|e)?|p(?:t|r|b|l|x|y|s|e)?|gap(?:-[xy])?|space-[xy])-2xs)(?=$|[\s"'`])/
+
+    assert Regex.match?(half_step_spacing, " hover:-mt-0.5 "),
+           "Spacing guard must detect variant-prefixed negative half-step margins"
+
+    assert Regex.match?(unsupported_2xs_spacing, " sm:-mt-2xs "),
+           "Spacing guard must detect variant-prefixed negative 2xs margins"
 
     violations =
       Enum.flat_map(@shared_spacing_template_paths, fn path ->
         source = File.read!(path)
-        Regex.scan(half_step_spacing, source, capture: :all_but_first)
-        |> Enum.map(fn [class] -> "#{path}: #{class}" end)
+
+        [half_step_spacing, unsupported_2xs_spacing]
+        |> Enum.flat_map(fn pattern ->
+          Regex.scan(pattern, source, capture: :all_but_first)
+          |> Enum.map(fn [class] -> "#{path}: #{class}" end)
+        end)
       end)
 
     assert violations == [],
-           "Half-step Tailwind spacing classes are outside the approved 4px grid:\n" <>
+           "Unsupported Tailwind spacing classes are outside the approved 4px grid:\n" <>
              Enum.join(violations, "\n")
 
     source_css = File.read!(@css_source_path)
