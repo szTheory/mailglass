@@ -507,8 +507,11 @@ defmodule MailglassAdmin.PreviewLive do
                         name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}
                         class="w-5 h-5"
                       />
-                      <span class="text-label font-bold">Preview backdrop</span>
+                      <span class="text-label font-bold">Browser preview backdrop</span>
                     </button>
+                    <p class="basis-full text-right text-label text-secondary">
+                      Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior.
+                    </p>
                     <%!-- Backdrop state is announced in TEXT, never the backdrop color
                             alone (WCAG 1.4.1). The region is always present so the flip is
                             perceived in both directions (mirrors evidence_card.ex). --%>

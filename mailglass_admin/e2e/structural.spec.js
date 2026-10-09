@@ -1595,7 +1595,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await openPreviewScenario(page, "theme=light");
 
       const frameWidth = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
-      const frame = page.getByTestId("preview-pane");
+      const previewPane = page.getByTestId("preview-pane");
+      const frame = previewPane.locator("iframe");
       await expect(frameWidth.getByRole("button", { name: "375 CSS px", exact: true })).toBeVisible();
       await expect(frameWidth.getByRole("button", { name: "768 CSS px", exact: true })).toHaveAttribute("aria-pressed", "true");
 
@@ -1610,11 +1611,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(limitation).toBeVisible();
       await page.getByTestId("preview-frame-theme-toggle").click();
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
-      await expect(frame).toHaveAttribute("data-preview-frame-theme", "dark");
+      await expect(previewPane).toHaveAttribute("data-preview-frame-theme", "dark");
 
       await page.getByTestId("preview-global-controls").locator('input[name="preview_admin_theme"][value="dark"]').click();
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
-      await expect(page.getByTestId("preview-pane")).toHaveAttribute("style", /width:\s*1024px/);
+      await expect(page.getByTestId("preview-pane").locator("iframe")).toHaveAttribute("style", /width:\s*1024px/);
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
       await expect(page.getByRole("group", { name: "Preview frame width in CSS pixels" })
         .getByRole("button", { name: "1024 CSS px", exact: true })).toHaveAttribute("aria-pressed", "true");
