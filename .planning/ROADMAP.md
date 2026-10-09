@@ -51,7 +51,7 @@ Full phase detail: [milestones/v2.8-ROADMAP.md](milestones/v2.8-ROADMAP.md) · p
 
 ## v2.9 — Operator, Preview & Email UI Refinement
 
-**Status:** Approved 2026-10-07. Phases 168 and 169 are complete and verified; Phase 170 is ready for discussion and planning.
+**Status:** Approved 2026-10-07. Phases 168–170 are complete and verified; Phase 171 Developer Preview is next.
 **Granularity:** Standard, from [config.json](config.json). Phase IDs continue after the archived v2.8 milestone at 168.
 
 ## Overview
@@ -69,7 +69,7 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
 
 - [x] **Phase 168: Shared Workspace and Usable Baseline** - Make the real operator workspace legible, navigable, and operable through representative shared patterns. (completed 2026-10-07)
 - [x] **Phase 169: Outbound Investigation and Recovery** - Make Email health, delivery evidence, suppression, and exact-target replay understandable and usable. (completed 2026-10-07)
-- [ ] **Phase 170: Inbound Investigation and Recovery** - Make received-message routing evidence and permitted replay clear without losing scope or history.
+- [x] **Phase 170: Inbound Investigation and Recovery** - Make received-message routing evidence and permitted replay clear without losing scope or history. (completed 2026-10-09)
 - [ ] **Phase 171: Developer Preview** - Make supported scenario rendering and output inspection usable across devices and states.
 - [ ] **Phase 172: Recipient Output and Built-in Pages** - Improve public transactional output, truthful examples, plaintext, and bounded unsubscribe GET pages.
 - [ ] **Phase 173: Consistency and Delivery Evidence** - Consolidate shipped patterns and provide a reproducible, reviewable delivery candidate.
@@ -170,7 +170,7 @@ Plans:
   3. An authorized operator can progressively inspect available inbound evidence in a readable view while redaction and reveal permissions still govern what is shown.
   4. An operator can see replay eligibility, confirm a permitted inbound replay, and understand disabled, denied, busy, requested, no-change, and failure results without losing the selected record or Account.
 
-**Plans**: 8/8 plans executed
+**Plans**: 8/8 plans complete
 Plans:
 **Wave 1**
 - [x] 170-01-PLAN.md — Exact Account-scoped selection, return context, and read states
@@ -255,7 +255,7 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 |-------|----------------|--------|-----------|
 | 168. Shared Workspace and Usable Baseline | 10/10 | Complete    | 2026-10-08 |
 | 169. Outbound Investigation and Recovery | 5/5 | Complete    | 2026-10-07 |
-| 170. Inbound Investigation and Recovery | 8/8 | In Progress | — |
+| 170. Inbound Investigation and Recovery | 8/8 | Complete    | 2026-10-09 |
 | 171. Developer Preview | 0/TBD | Not started | — |
 | 172. Recipient Output and Built-in Pages | 0/TBD | Not started | — |
 | 173. Consistency and Delivery Evidence | 0/TBD | Not started | — |

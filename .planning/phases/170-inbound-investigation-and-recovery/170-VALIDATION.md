@@ -96,3 +96,14 @@ The project pins Elixir `1.18.4` and Erlang `27.3.4.13`; phase acceptance eviden
 - The first sandboxed invocation failed before test execution because Chromium could not start (`bootstrap_check_in ... Permission denied`). The same command passed with runtime escalation; this was an environment launch restriction, not a behavioral failure.
 - Final expanded full browser run after security-gate remediation: **206 passed, 1 guarded skip, 0 failed**. Admin: **575 tests, 0 failures, 1 excluded**; inbound: **3 properties + 479 tests, 0 failures**; token/bundle: **10 tests, 0 failures**. The existing skip is the guarded structural-modal case documented in the plan summary, not a Phase 170 case.
 - The security audit found and closed T-170-12 (outcome filtering now matches displayed latest-fresh state) and T-170-20 (connected browser stale, denied, and rapid-repeat confirmation checks); all **21/21** threats are closed.
+
+## Final Closeout Evidence (2026-10-09)
+
+- Refreshed the standard code review across 45 phase files after the last UI and replay fixes: **clean, 0 findings**. The selected-Account access contract was checked against `mailglass_admin/docs/operator-trust.md`; no tenant-membership authorization change was required.
+- Refreshed the UI audit after replacing one-off spacing, promoting the records-list heading, improving non-locked operator copy and accessible row labels, adding native disabled Quick view boundary buttons, and announcing Refresh history's pending state. The audit scores **21/24**. It retains a visual/color evidence limitation for the changed overlays because no independent new overlay screenshots were captured; this is not an acceptance criterion or a human UAT request.
+- Preserved Phase 101/121 byte-frozen copy (`COPY-LD-07`, LD-12, LD-16, and D-07) after cross-phase review. Only non-locked labels and copy changed.
+- Re-ran the full Admin suite after the UI updates: **577 tests, 0 failures, 1 excluded**. After restoring the exact locked subtitle, the focused voice and Inbound LiveView/component/modal suites passed: **130 tests, 0 failures, 1 excluded**.
+- Re-ran the full inbound package suite after the legacy-binding fix: **3 properties + 480 tests, 0 failures**.
+- Re-ran the full connected operator browser suite: **206 passed, 1 existing guarded skip, 0 failed**. After restoring the exact locked subtitle, the focused Phase 170 connected and rendered browser cases passed: **7 passed, 0 failed**.
+- Rebuilt Admin assets and ran token-parity/bundle verification: **10 tests, 0 failures**. The served CSS hash matches the generated bundle; final hashes and rendered limitations are recorded in `170-RENDERED.md`.
+- No machine-observable Phase 170 acceptance remains for owner UAT. The existing guarded browser skip is unrelated to Phase 170 and remains documented in the Plan 08 summary.

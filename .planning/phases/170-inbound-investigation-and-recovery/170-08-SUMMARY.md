@@ -156,3 +156,17 @@ Plan 08 is complete. Phase-level verification can proceed with rendered provenan
 - `170-08-SUMMARY.md`, `170-RENDERED.md`, and current rendered provenance exist.
 - Task commits `901c341d`, `c4c47bbf`, and `7146f69c` exist and are ancestors of the checkout.
 - The measured plan commit count is 3 from `plan_head_before` through `plan_head_after`.
+
+## Phase Closeout Follow-Up (2026-10-09)
+
+The post-plan review fixed the inbound route trace so each route's displayed state follows its clause verdicts, and limited the outside-results hint to successful list reads. Replay eligibility now treats a failed run with persisted Mailbox identity as a matched-but-unsafe legacy binding and refuses it without resolving stored module text. Regression tests cover these cases.
+
+The UI audit follow-up replaced numeric spacing utilities with semantic tokens, brought the Quick view title and list heading into the shared typography scale, matched Account empty-state wording, added a pending announcement for Refresh history, improved non-locked labels/copy, and rendered unavailable Quick view navigation as accessible native disabled buttons. Earlier byte-frozen Phase 101/121 copy remains unchanged.
+
+Final closeout evidence:
+
+- Full Admin suite: **577 tests, 0 failures, 1 excluded**; focused final copy and Inbound UI suites after restoring the locked subtitle: **130 tests, 0 failures, 1 excluded**.
+- Full inbound suite: **3 properties + 480 tests, 0 failures**.
+- Full connected browser suite: **206 passed, 1 existing guarded skip, 0 failed**; focused Phase 170 connected/rendered suite after final locked-copy restoration: **7 passed, 0 failed**.
+- CSS build and token-parity/bundle checks passed (**10 tests, 0 failures**); final source, generated, and served asset hashes are in `170-RENDERED.md`.
+- Refreshed security audit: **21/21 threats closed**. Refreshed code review: **45 files, clean, 0 findings**. Refreshed UI review: **21/24**, with only a documented screenshot evidence limitation for the updated overlays; no machine-observable acceptance remains for owner UAT.

@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
-current_phase: 170
-current_phase_name: Inbound Investigation and Recovery
-status: verifying
-stopped_at: Completed 170-08-PLAN.md
-last_updated: "2026-10-09T04:52:58.950Z"
-last_activity: 2026-10-09 UTC — Phase 168 closeout complete; Phase 170 plans ready to execute.
-last_activity_desc: Phase 170 execution started
-state_head: 7146f69c7a1c959a084a1bdafdefd1c78624d0b1
+current_phase: 171
+current_phase_name: Developer Preview
+status: planning
+stopped_at: Phase 170 complete and verified; ready to discuss Phase 171
+last_updated: "2026-10-09T06:01:06Z"
+last_activity: 2026-10-09
+last_activity_desc: Phase 170 complete, transitioned to Phase 171
+state_head: c9b594018260f349d1e2e22a21aa5181208583cd
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 23
   completed_plans: 23
-  percent: 33
+  percent: 50
 ---
 
 # Project State
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 170 — Inbound Investigation and Recovery
+**Current focus:** Phase 171 — Developer Preview
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,17 +39,17 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 ## Current Position
 
-Phase: 170 (Inbound Investigation and Recovery) — EXECUTING
-Plan: 8 of 8
-Status: Phase complete — ready for verification
-Last activity: 2026-10-08 — Phase 170 execution started
+Phase: 171 — Developer Preview
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-09 — Phase 170 verification passed; ready to discuss Phase 171
 
-Progress: 2/6 phases ([███░░░░░░░] 33%); [█████████████░░░░░░░] 15/23 plans (65%).
+Progress: 3/6 phases ([██████████░░░░░░░░░░] 50%); [████████████████████] 23/23 plans (100%).
 
 ## v2.9 Roadmap Shape
 
-- Phases 168–173 own all 28 approved requirements. Phase 168 is complete with 96/96 plan truths and 5/5 roadmap truths verified; Phase 169 verification passed (OUTUX-01–05). Phase 170 is planned and ready to execute.
-- Phase 169 completed all five plans and 12 tasks. Independent verification passed 100 positive must-haves, including 82 UI states; five negative constraints have individual delegated judgments with explicit evidence limits. Phase 170 discussion and planning are complete: eight plans across six waves, with independent decision coverage passing 18/18. Later slices follow ROADMAP.md.
+- Phases 168–173 own all 28 approved requirements. Phases 168–170 are complete; Phase 170 independently passed 30/30 must-haves across INUX-01–04. Phases 171–173 remain.
+- Phase 168 passed 96/96 plan truths and 5/5 roadmap truths. Phase 169 passed 100 positive must-haves, including 82 UI states, with five negative constraints individually adjudicated. Phase 170 completed eight plans across six waves; its verification, 21-threat security audit, clean code review, package suites, and connected browser checks passed. D-52 leaves no machine-observable owner UAT. Later slices follow ROADMAP.md.
 - Code-first; equal engineer and support/on-call operator priority; bounded direct visual inspection and existing automated checks.
 - The approved unsubscribe boundary covers truthful GET/invalid/expired pages; interactive browser submission remains deferred.
 
@@ -154,7 +154,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 **Velocity:**
 
-- Total plans completed: 89
+- Total plans completed: 97
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -169,6 +169,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | 165 | 5 | - | - |
 | 167 | 4 | - | - |
 | 168 | 10 | - | - |
+| 170 | 8 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -516,8 +517,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T04:52:58.906Z
-Stopped at: Completed 170-08-PLAN.md
+Last session: 2026-10-09T06:01:06Z
+Stopped at: Phase 170 complete and verified; ready to discuss Phase 171
 Resume file: None
 
 ## Operator Next Steps
@@ -525,7 +526,8 @@ Resume file: None
 - Phase 168 is complete: independent verification passed 96/96 plan truths and 5/5 roadmap truths, including the automated 4px spacing guard and rendered checks. No owner UAT remains.
 - Phase 169 is complete: five plans, all five OUTUX requirements, independent verification passed, code review clean, security 17/17 closed, and Nyquist compliant.
 - Final local evidence: 49 core tests; 542 Admin tests with zero failures and one exclusion; full operator browser 197 passed and one guarded skip; prior-phase browser gate 163 passed and one guarded skip. See `169-VERIFICATION.md`, `169-REGRESSION.md`, and `169-REVIEW-FIX.md` in the phase directory.
-- Phase 170 is planned and ready: eight plans across six dependency waves, 18/18 decision coverage, and independent plan verification passed. No Phase 170 implementation or tests have run.
-- Next command: `$gsd-execute-phase 170` to implement the approved plans. Phase 168 verification and planning are complete; do not repeat its verification, or Phase 170 discussion and planning.
-- Phase 170 artifacts are in `.planning/phases/170-inbound-investigation-and-recovery/`; the checker result is `170-PLAN-CHECK.md`.
-- Original unrelated planning-file deletions and config modification were preserved. Browser verification used isolated port 4102. The previously recorded feedback preview was not redeployed by this phase; its current served revision was not re-certified. Remote delivery/CI proof remains Phase 173 scope.
+- Phase 170 is complete: eight plans across six dependency waves; independent verification passed 30/30 must-haves for INUX-01–04. Security closed 21/21 threats and code review found no current issues.
+- Automated evidence: Admin 577 tests (0 failures, 1 excluded); inbound 3 properties plus 480 tests (0 failures); full operator browser 206 passed and 1 guarded skip. Rendered checks are recorded; no human-only acceptance remains under D-52.
+- Phase 170 artifacts and evidence are in `.planning/phases/170-inbound-investigation-and-recovery/`. GSD emitted three nonblocking missing-path warnings for package-relative references in summaries; the verifier checked the actual package-root files.
+- Next command: `$gsd-discuss-phase 171` — Phase 171 Developer Preview has no context artifact yet, so discuss it before planning. Do not repeat Phase 168–170 execution or verification.
+- Original unrelated planning-file deletions, configuration edits, and Phase 168/169 screenshot modifications were preserved. Remote delivery/CI proof remains Phase 173 scope.
