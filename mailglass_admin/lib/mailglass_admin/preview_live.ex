@@ -81,10 +81,9 @@ defmodule MailglassAdmin.PreviewLive do
       |> assign(:page_uri, nil)
       |> assign(:active_tab, :html)
       |> assign(:render_nonce, System.unique_integer([:positive]))
-      |> assign(:html_body, "")
-      |> assign(:text_body, "")
-      |> assign(:raw_envelope, "")
-      |> assign(:headers, [])
+      |> assign(:last_success, %{html_body: "", text_body: "", raw_envelope: "", headers: []})
+      |> assign(:has_last_success?, false)
+      |> assign(:output_current?, false)
       |> assign(:render_error, nil)
       |> assign(:page_title, "Preview")
 
@@ -207,7 +206,8 @@ defmodule MailglassAdmin.PreviewLive do
         {:noreply,
          socket
          |> assign(:draft_assigns, Map.merge(socket.assigns.draft_assigns, drafts))
-         |> assign(:field_errors, errors)}
+         |> assign(:field_errors, errors)
+         |> assign(:output_current?, false)}
 
       :invalid ->
         {:noreply, socket}
@@ -354,7 +354,7 @@ defmodule MailglassAdmin.PreviewLive do
 
       <div class="space-y-lg">
         <%= cond do %>
-          <% @render_error -> %>
+          <% @render_error && @current_scenario == :__error__ -> %>
             <div
               data-testid="preview-scenario-layout"
               class="space-y-lg"
@@ -372,7 +372,6 @@ defmodule MailglassAdmin.PreviewLive do
 
               <div
                 data-testid="preview-render-error"
-                role="alert"
                 class="motion-reveal rounded-box border border-error bg-base-200 p-lg"
               >
                 <%!-- Announce the error transition once, concisely. Scoping the
@@ -405,7 +404,80 @@ defmodule MailglassAdmin.PreviewLive do
               data-testid="preview-scenario-layout"
               class="space-y-lg"
             >
-              <div class="min-w-0 space-y-lg">
+              <div
+                id="preview-workbench"
+                data-testid="preview-workbench"
+                data-output-current={to_string(@output_current?)}
+                class="min-w-0 space-y-lg"
+              >
+                <style>
+                  #preview-workbench [data-output-not-current],
+                  #preview-workbench #preview-pending-status { display: none; }
+                  #preview-workbench[data-output-current="false"] [data-output-not-current] { display: block; }
+                  #preview-workbench:has(#preview-assigns-form.phx-change-loading) [data-output-not-current],
+                  #preview-workbench:has(#preview-assigns-form.phx-change-loading) #preview-pending-status { display: block; }
+                  #preview-workbench:has(#preview-assigns-form.phx-change-loading) #preview-state-status { display: none; }
+                  #preview-workbench:has(#preview-assigns-form.phx-change-loading) [role="tabpanel"] { opacity: 0.65; }
+                </style>
+
+                <p
+                  id="preview-pending-status"
+                  role="status"
+                  aria-live="polite"
+                  class="rounded-box border border-primary bg-base-200 p-sm text-body text-base-content"
+                >
+                  Updating preview. The visible output is not current.
+                </p>
+
+                <p
+                  :if={@has_last_success? && not @output_current?}
+                  data-output-not-current="true"
+                  class="rounded-box border border-warning bg-base-200 p-sm text-body text-base-content"
+                >
+                  Last successful preview — not current.
+                </p>
+
+                <p
+                  id="preview-state-status"
+                  role="status"
+                  aria-live="polite"
+                  class="sr-only"
+                >
+                  <%= cond do %>
+                    <% map_size(@field_errors) > 0 -> %>
+                      Correct the highlighted assign fields. Visible output is the last successful preview and is not current.
+                    <% @render_error && @has_last_success? -> %>
+                      Preview render failed. Visible output is the last successful preview and is not current.
+                    <% @render_error -> %>
+                      Preview render failed. Correct the assign or retry the preview.
+                    <% true -> %>
+                      Preview output is current.
+                  <% end %>
+                </p>
+
+                <div
+                  :if={@render_error}
+                  data-testid="preview-render-error"
+                  class="rounded-box border border-error bg-base-200 p-lg"
+                >
+                  <div class="flex items-center gap-sm mb-md">
+                    <Components.icon name="hero-exclamation-circle" class="w-5 h-5 text-error" />
+                    <h2 class="text-heading font-bold text-base-content">Preview render failed.</h2>
+                  </div>
+                  <p class="text-body text-secondary">
+                    Fix the selected Mailable scenario or retry the preview. The attempted assign values remain available below.
+                  </p>
+                  <pre class="mt-md min-w-0 break-all font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-100 p-md rounded-box border border-base-300"><code>{@render_error}</code></pre>
+                  <button
+                    type="button"
+                    data-testid="preview-render-retry"
+                    phx-click="render_preview"
+                    class="mg-focus-ring btn btn-ghost mt-md min-h-11 px-5"
+                  >
+                    Retry preview
+                  </button>
+                </div>
+
                 <header class="relative mg-layer-dropdown flex flex-col gap-sm lg:flex-row lg:items-start lg:justify-between">
                   <Sidebar.menu
                     mailables={@mailables}
@@ -454,10 +526,10 @@ defmodule MailglassAdmin.PreviewLive do
 
                 <Tabs.tabs
                   active_tab={@active_tab}
-                  html_body={@html_body}
-                  text_body={@text_body}
-                  raw_envelope={@raw_envelope}
-                  headers={@headers}
+                  html_body={@last_success.html_body}
+                  text_body={@last_success.text_body}
+                  raw_envelope={@last_success.raw_envelope}
+                  headers={@last_success.headers}
                   device_width={@device_width}
                   render_nonce={@render_nonce}
                   preview_frame_dark_chrome={@preview_frame_dark_chrome}
@@ -920,25 +992,39 @@ defmodule MailglassAdmin.PreviewLive do
       case build_and_render(mod, scenario, assigns_map) do
         {:ok, rendered} ->
           email = rendered.swoosh_email
+          html_body = email.html_body || ""
+          text_body = email.text_body || ""
+          raw_envelope = raw_envelope(email)
+          headers = swoosh_headers(email)
 
           socket
-          |> assign(:html_body, email.html_body || "")
-          |> assign(:text_body, email.text_body || "")
-          |> assign(:raw_envelope, raw_envelope(email))
-          |> assign(:headers, swoosh_headers(email))
+          |> assign(:last_success, %{
+            html_body: html_body,
+            text_body: text_body,
+            raw_envelope: raw_envelope,
+            headers: headers
+          })
+          |> assign(:has_last_success?, true)
+          |> assign(:output_current?, true)
           |> assign(:render_nonce, System.unique_integer([:positive]))
           |> assign(:render_error, nil)
 
         {:error, %Mailglass.TemplateError{} = err} ->
           # Match by struct — never by message string (CLAUDE.md pitfall #7).
-          assign(socket, :render_error, Exception.message(err))
+          socket
+          |> assign(:render_error, Exception.message(err))
+          |> assign(:output_current?, false)
 
         {:error, other} ->
-          assign(socket, :render_error, inspect(other))
+          socket
+          |> assign(:render_error, inspect(other))
+          |> assign(:output_current?, false)
       end
     rescue
       e ->
-        assign(socket, :render_error, Exception.format(:error, e, __STACKTRACE__))
+        socket
+        |> assign(:render_error, Exception.format(:error, e, __STACKTRACE__))
+        |> assign(:output_current?, false)
     end
   end
 
