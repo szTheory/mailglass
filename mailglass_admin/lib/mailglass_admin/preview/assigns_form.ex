@@ -3,8 +3,7 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   Type-inferred assigns form per 05-UI-SPEC §"Assigns form — type-inferred
   fields" (lines 354-368) + 05-RESEARCH.md lines 1470-1571.
 
-  Walks the scenario defaults map and renders an input per key dispatched
-  by the Elixir type of the default value:
+  Walks scenario defaults and edits only values with a lossless scalar parser:
 
     | Type              | Input                                       |
     |-------------------|---------------------------------------------|
@@ -12,20 +11,17 @@ defmodule MailglassAdmin.Preview.AssignsForm do
     | `integer`         | `<input type="number" step="1">`            |
     | `float`           | `<input type="number" step="any">`          |
     | `boolean`         | `<input type="checkbox">`                   |
-    | `atom`            | read-only display row (URL edit only)       |
-    | `DateTime`        | `<input type="datetime-local">`             |
+    | `atom`            | read-only Elixir value                      |
+    | `DateTime`        | read-only Elixir value                      |
     | `Date`            | `<input type="date">`                       |
-    | struct            | `<textarea>` JSON (struct label)            |
-    | `map`             | `<textarea>` JSON (plain map)               |
+    | struct / `map`    | read-only Elixir value                      |
     | fallback          | read-only display row "(unsupported type)"  |
 
   Form fires `phx-change="assigns_changed"` on every field edit; the
   LiveView re-calls the mailable function with updated assigns and pipes
   through `Mailglass.Renderer.render/1`.
 
-  Action buttons use the verb+noun copy locked in 05-UI-SPEC Copywriting
-  Contract lines 453-458: "Render preview" + "Reset assigns". The voice
-  test greps the rendered HTML for these exact strings.
+  Supported scalar changes render live. Reset restores the scenario defaults.
 
   Boundary classification: submodule auto-classifies into the
   `MailglassAdmin` root boundary.
@@ -34,6 +30,8 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   use Phoenix.Component
 
   attr :scenario_assigns, :map, required: true
+  attr :draft_assigns, :map, default: %{}
+  attr :field_errors, :map, default: %{}
 
   @doc """
   Renders the assigns form for the current scenario.
@@ -42,18 +40,26 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   def assigns_form(assigns) do
     ~H"""
     <form
+      id="preview-assigns-form"
       phx-change="assigns_changed"
       data-testid="preview-assigns-form"
       class="assigns-form space-y-4 rounded-box border border-base-300 bg-base-200 p-md"
     >
-      <%= for {key, value} <- Enum.sort_by(@scenario_assigns, fn {k, _} -> Atom.to_string(k) end) do %>
-        <.field key={key} value={value} />
+      <%= if editable_values?(@scenario_assigns) do %>
+        <.field
+          :for={{key, value} <- Enum.sort_by(@scenario_assigns, fn {k, _} -> Atom.to_string(k) end)}
+          key={key}
+          value={value}
+          draft={Map.get(@draft_assigns, key)}
+          error={Map.get(@field_errors, key)}
+        />
+      <% else %>
+        <p data-testid="preview-no-editable-assigns" class="text-body text-secondary">
+          There are no editable values here. Edit this scenario's defaults in its Mailable.
+        </p>
       <% end %>
 
       <div class="flex flex-wrap gap-2">
-        <button type="button" class="btn btn-primary min-h-11 px-5" phx-click="render_preview">
-          Render preview
-        </button>
         <button type="button" class="btn btn-ghost min-h-11 px-5" phx-click="reset_assigns">
           Reset assigns
         </button>
@@ -64,6 +70,8 @@ defmodule MailglassAdmin.Preview.AssignsForm do
 
   attr :key, :atom, required: true
   attr :value, :any, required: true
+  attr :draft, :any, default: nil
+  attr :error, :string, default: nil
 
   # binary -> text input
   def field(%{value: v} = assigns) when is_binary(v) do
@@ -76,11 +84,14 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         id={@control_id}
         type="text"
         name={@control_name}
-        value={@value}
-        aria-describedby={@help_id}
+        value={@input_value}
+        phx-debounce="150"
+        aria-describedby={@described_by}
+        aria-invalid={if @error, do: "true", else: nil}
         class="input input-bordered input-sm w-full"
       />
       <.field_help id={@help_id} text={@help_text} />
+      <.field_error :if={@error} id={@error_id} text={@error} />
     </div>
     """
   end
@@ -97,11 +108,13 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         type="number"
         step="1"
         name={@control_name}
-        value={Integer.to_string(@value)}
-        aria-describedby={@help_id}
+        value={@input_value}
+        aria-describedby={@described_by}
+        aria-invalid={if @error, do: "true", else: nil}
         class="input input-bordered input-sm w-full"
       />
       <.field_help id={@help_id} text={@help_text} />
+      <.field_error :if={@error} id={@error_id} text={@error} />
     </div>
     """
   end
@@ -118,11 +131,13 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         type="number"
         step="any"
         name={@control_name}
-        value={Float.to_string(@value)}
-        aria-describedby={@help_id}
+        value={@input_value}
+        aria-describedby={@described_by}
+        aria-invalid={if @error, do: "true", else: nil}
         class="input input-bordered input-sm w-full"
       />
       <.field_help id={@help_id} text={@help_text} />
+      <.field_error :if={@error} id={@error_id} text={@error} />
     </div>
     """
   end
@@ -140,7 +155,8 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         name={@control_name}
         value="true"
         checked={@value}
-        aria-describedby={@help_id}
+        aria-describedby={@described_by}
+        aria-invalid={if @error, do: "true", else: nil}
         class="checkbox checkbox-sm"
       />
       <.field_label
@@ -149,28 +165,14 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         class="label cursor-pointer justify-start gap-sm px-0"
       />
       <.field_help id={@help_id} text={@help_text} />
+      <.field_error :if={@error} id={@error_id} text={@error} />
     </div>
     """
   end
 
-  # DateTime -> datetime-local
+  # DateTime is read-only because datetime-local loses timezone semantics.
   def field(%{value: %DateTime{}} = assigns) do
-    assigns = assign_control_metadata(assigns)
-
-    ~H"""
-    <div class="form-control w-full">
-      <.field_label for={@control_id} text={@label} />
-      <input
-        id={@control_id}
-        type="datetime-local"
-        name={@control_name}
-        value={DateTime.to_iso8601(@value)}
-        aria-describedby={@help_id}
-        class="input input-bordered input-sm w-full"
-      />
-      <.field_help id={@help_id} text={@help_text} />
-    </div>
-    """
+    assigns |> assign_control_metadata() |> assign(:type_badge, "DateTime") |> readonly_field()
   end
 
   # Date -> date
@@ -184,35 +186,26 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         id={@control_id}
         type="date"
         name={@control_name}
-        value={Date.to_iso8601(@value)}
-        aria-describedby={@help_id}
+        value={@input_value}
+        aria-describedby={@described_by}
+        aria-invalid={if @error, do: "true", else: nil}
         class="input input-bordered input-sm w-full"
       />
       <.field_help id={@help_id} text={@help_text} />
+      <.field_error :if={@error} id={@error_id} text={@error} />
     </div>
     """
   end
 
-  # struct -> JSON textarea with struct label
+  # Structs have no general-purpose form round-trip contract.
   def field(%{value: %{__struct__: _}} = assigns) do
-    assigns = assign_control_metadata(assigns)
-
-    ~H"""
-    <div class="form-control w-full">
-      <.field_label for={@control_id} text={@label} badge={inspect(@value.__struct__)} />
-      <textarea
-        id={@control_id}
-        name={@control_name}
-        aria-describedby={@help_id}
-        class="textarea textarea-bordered textarea-sm w-full font-mono text-label"
-        rows="3"
-      >{inspect(@value, pretty: true, limit: :infinity)}</textarea>
-      <.field_help id={@help_id} text={@help_text} />
-    </div>
-    """
+    assigns
+    |> assign_control_metadata()
+    |> assign(:type_badge, inspect(assigns.value.__struct__))
+    |> readonly_field()
   end
 
-  # atom -> read-only display row (v0.1; v0.5 ships atom-space form_hints select)
+  # atom -> read-only display row
   def field(%{value: v} = assigns) when is_atom(v) do
     assigns
     |> assign_control_metadata()
@@ -220,23 +213,9 @@ defmodule MailglassAdmin.Preview.AssignsForm do
     |> readonly_field()
   end
 
-  # plain map -> JSON textarea
+  # Plain maps have no general-purpose form round-trip contract.
   def field(%{value: v} = assigns) when is_map(v) do
-    assigns = assign_control_metadata(assigns)
-
-    ~H"""
-    <div class="form-control w-full">
-      <.field_label for={@control_id} text={@label} badge="map" />
-      <textarea
-        id={@control_id}
-        name={@control_name}
-        aria-describedby={@help_id}
-        class="textarea textarea-bordered textarea-sm w-full font-mono text-label"
-        rows="3"
-      >{inspect(@value, pretty: true, limit: :infinity)}</textarea>
-      <.field_help id={@help_id} text={@help_text} />
-    </div>
-    """
+    assigns |> assign_control_metadata() |> assign(:type_badge, "map") |> readonly_field()
   end
 
   # fallback — read-only inspect
@@ -272,6 +251,15 @@ defmodule MailglassAdmin.Preview.AssignsForm do
     """
   end
 
+  attr :id, :string, required: true
+  attr :text, :string, required: true
+
+  defp field_error(assigns) do
+    ~H"""
+    <p id={@id} class="mt-1 text-label text-error">{@text}</p>
+    """
+  end
+
   defp readonly_field(assigns) do
     ~H"""
     <div class="form-control w-full">
@@ -303,7 +291,10 @@ defmodule MailglassAdmin.Preview.AssignsForm do
     |> assign(:control_name, control_name(key))
     |> assign(:help_id, help_id(key))
     |> assign(:label_id, label_id(key))
+    |> assign(:error_id, error_id(key))
     |> assign(:label, humanize(key))
+    |> assign(:input_value, Map.get(assigns, :draft) || assigns.value)
+    |> assign(:described_by, described_by(key, Map.get(assigns, :error)))
     |> assign(:help_text, help_text_for(assigns.value))
   end
 
@@ -316,17 +307,28 @@ defmodule MailglassAdmin.Preview.AssignsForm do
       is_binary(value) -> "Text value."
       is_integer(value) -> "Whole number."
       is_float(value) -> "Decimal number."
-      is_struct(value, DateTime) -> "Date and time."
+      is_struct(value, DateTime) -> "Read-only; edit it in the Mailable scenario."
       is_struct(value, Date) -> "Date."
-      is_struct(value) or is_map(value) -> "Edit as JSON, then re-render."
-      is_atom(value) -> "Set this in the URL; read-only here."
-      true -> "Read-only."
+      is_struct(value) or is_map(value) -> "Read-only; edit it in the Mailable scenario."
+      is_atom(value) -> "Read-only; edit it in the Mailable scenario."
+      true -> "Read-only; edit it in the Mailable scenario."
     end
   end
+
+  defp editable_values?(assigns),
+    do: Enum.any?(assigns, fn {_key, value} -> editable_value?(value) end)
+
+  defp editable_value?(value),
+    do:
+      is_binary(value) or is_integer(value) or is_float(value) or is_boolean(value) or
+        is_struct(value, Date)
 
   defp control_id(key), do: "assigns-" <> Atom.to_string(key)
   defp control_name(key), do: "assigns[" <> Atom.to_string(key) <> "]"
   defp help_id(key), do: control_id(key) <> "-help"
+  defp error_id(key), do: control_id(key) <> "-error"
+  defp described_by(key, nil), do: help_id(key)
+  defp described_by(key, _error), do: help_id(key) <> " " <> error_id(key)
   defp label_id(key), do: control_id(key) <> "-label"
 
   # snake_case_atom -> "Snake case atom" (sentence case per UI-SPEC line 97)

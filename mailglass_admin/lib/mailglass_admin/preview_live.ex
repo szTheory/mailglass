@@ -68,7 +68,10 @@ defmodule MailglassAdmin.PreviewLive do
       |> assign_new(:mailables, fn -> [] end)
       |> assign(:current_mailable, nil)
       |> assign(:current_scenario, nil)
+      |> assign(:scenario_defaults, %{})
       |> assign(:current_assigns, %{})
+      |> assign(:draft_assigns, %{})
+      |> assign(:field_errors, %{})
       |> assign(:device_width, 768)
       |> assign(:admin_chrome_theme, nil)
       |> assign(:preview_frame_dark_chrome, false)
@@ -119,7 +122,10 @@ defmodule MailglassAdmin.PreviewLive do
           socket
           |> assign(:current_mailable, mailable)
           |> assign(:current_scenario, scenario)
+          |> assign(:scenario_defaults, defaults)
           |> assign(:current_assigns, current_assigns)
+          |> assign(:draft_assigns, %{})
+          |> assign(:field_errors, %{})
           |> assign(:device_width, device_width)
           |> assign(:admin_chrome_theme, admin_chrome_theme)
           |> assign(:preview_frame_dark_chrome, frame_from_params(params, socket))
@@ -188,9 +194,27 @@ defmodule MailglassAdmin.PreviewLive do
 
   @impl true
   def handle_event("assigns_changed", %{"assigns" => params}, socket) do
-    merged = merge_assigns(socket.assigns.current_assigns, params)
-    {:noreply, socket |> assign(:current_assigns, merged) |> rerender()}
+    case parse_assigns(socket.assigns.scenario_defaults, socket.assigns.current_assigns, params) do
+      {:ok, parsed} ->
+        {:noreply,
+         socket
+         |> assign(:current_assigns, parsed)
+         |> assign(:draft_assigns, %{})
+         |> assign(:field_errors, %{})
+         |> rerender()}
+
+      {:error, drafts, errors} ->
+        {:noreply,
+         socket
+         |> assign(:draft_assigns, Map.merge(socket.assigns.draft_assigns, drafts))
+         |> assign(:field_errors, errors)}
+
+      :invalid ->
+        {:noreply, socket}
+    end
   end
+
+  def handle_event("assigns_changed", _params, socket), do: {:noreply, socket}
 
   def handle_event("set_device", %{"width" => w}, socket) do
     width = parse_device_width_param(w)
@@ -238,7 +262,13 @@ defmodule MailglassAdmin.PreviewLive do
            socket.assigns.current_scenario
          ) do
       {:ok, defaults} ->
-        {:noreply, socket |> assign(:current_assigns, defaults) |> rerender()}
+        {:noreply,
+         socket
+         |> assign(:scenario_defaults, defaults)
+         |> assign(:current_assigns, defaults)
+         |> assign(:draft_assigns, %{})
+         |> assign(:field_errors, %{})
+         |> rerender()}
 
       _ ->
         {:noreply, socket}
@@ -433,7 +463,11 @@ defmodule MailglassAdmin.PreviewLive do
                   preview_frame_dark_chrome={@preview_frame_dark_chrome}
                 />
 
-                <AssignsForm.assigns_form scenario_assigns={@current_assigns} />
+                <AssignsForm.assigns_form
+                  scenario_assigns={@current_assigns}
+                  draft_assigns={@draft_assigns}
+                  field_errors={@field_errors}
+                />
               </div>
             </div>
           <% @mailables == [] -> %>
@@ -785,25 +819,42 @@ defmodule MailglassAdmin.PreviewLive do
     end
   end
 
-  # merge form params (strings) back into the assigns map, respecting the
-  # type of the default value. Unknown keys (atoms not in current_assigns)
-  # are ignored — adopter cannot grow the assigns namespace from the form.
-  defp merge_assigns(current, params) when is_map(params) do
-    Enum.reduce(params, current, fn {k, v}, acc ->
-      key = safe_key_atom(k)
+  # Browser values are strings. Only keys and scalar types declared by the
+  # original scenario defaults are editable; parsing must consume the complete
+  # value so invalid input can never fall back to a previous/default value.
+  defp parse_assigns(defaults, current, params) when is_map(params) do
+    Enum.reduce(params, {:ok, current, %{}, %{}}, fn {name, input},
+                                                     {status, values, drafts, errors} ->
+      key = safe_key_atom(name)
 
-      if key && Map.has_key?(acc, key) do
-        Map.put(acc, key, coerce(acc[key], v))
-      else
-        acc
+      case key && Map.fetch(defaults, key) do
+        {:ok, default} ->
+          case parse_scalar(default, input) do
+            {:ok, parsed} ->
+              {status, Map.put(values, key, parsed), drafts, errors}
+
+            :read_only ->
+              {status, values, drafts, errors}
+
+            :error ->
+              error = parse_error(default)
+              draft = if is_binary(input), do: Map.put(drafts, key, input), else: drafts
+              {:error, values, draft, Map.put(errors, key, error)}
+          end
+
+        _ ->
+          {status, values, drafts, errors}
       end
     end)
+    |> case do
+      {:ok, parsed, _drafts, _errors} -> {:ok, parsed}
+      {:error, _parsed, drafts, errors} -> {:error, drafts, errors}
+    end
   end
 
-  # A crafted "assigns_changed" event can bind "assigns" to a non-map (string,
-  # list) on this dev surface; ignore malformed payloads rather than raising
-  # FunctionClauseError and tearing down the LiveView (WR-03).
-  defp merge_assigns(current, _params), do: current
+  # A malformed root payload has no editable field representation; ignore it
+  # and preserve the previously successful assigns.
+  defp parse_assigns(_defaults, _current, _params), do: :invalid
 
   defp safe_key_atom(k) when is_binary(k) do
     String.to_existing_atom(k)
@@ -811,25 +862,52 @@ defmodule MailglassAdmin.PreviewLive do
     ArgumentError -> nil
   end
 
-  defp coerce(default, incoming) when is_integer(default) and is_binary(incoming) do
+  defp parse_scalar(default, incoming) when is_binary(default) and is_binary(incoming),
+    do: {:ok, incoming}
+
+  defp parse_scalar(default, _incoming) when is_binary(default), do: :error
+
+  defp parse_scalar(default, incoming) when is_integer(default) and is_binary(incoming) do
     case Integer.parse(incoming) do
-      {n, _} -> n
-      :error -> default
+      {n, ""} -> {:ok, n}
+      _ -> :error
     end
   end
 
-  defp coerce(default, incoming) when is_float(default) and is_binary(incoming) do
+  defp parse_scalar(default, _incoming) when is_integer(default), do: :error
+
+  defp parse_scalar(default, incoming) when is_float(default) and is_binary(incoming) do
     case Float.parse(incoming) do
-      {n, _} -> n
-      :error -> default
+      {n, ""} -> {:ok, n}
+      _ -> :error
     end
   end
 
-  defp coerce(default, incoming) when is_boolean(default) do
-    incoming == "true" or incoming == true
+  defp parse_scalar(default, _incoming) when is_float(default), do: :error
+
+  defp parse_scalar(default, incoming)
+       when is_boolean(default) and incoming in ["true", "false"] do
+    {:ok, incoming == "true"}
   end
 
-  defp coerce(_default, incoming), do: incoming
+  defp parse_scalar(default, _incoming) when is_boolean(default), do: :error
+
+  defp parse_scalar(%Date{}, incoming) when is_binary(incoming) do
+    case Date.from_iso8601(incoming) do
+      {:ok, date} -> {:ok, date}
+      _ -> :error
+    end
+  end
+
+  defp parse_scalar(%Date{}, _incoming), do: :error
+
+  defp parse_scalar(_default, _incoming), do: :read_only
+
+  defp parse_error(default) when is_integer(default), do: "Enter a whole number."
+  defp parse_error(default) when is_float(default), do: "Enter a decimal number."
+  defp parse_error(%Date{}), do: "Enter a valid calendar date."
+  defp parse_error(default) when is_boolean(default), do: "Choose true or false."
+  defp parse_error(_), do: "Enter a valid value."
 
   # The Mailglass.Renderer pipeline invocation. This is the SAME pipeline
   # production sends use — no placeholder shape divergence (PREV-03).
