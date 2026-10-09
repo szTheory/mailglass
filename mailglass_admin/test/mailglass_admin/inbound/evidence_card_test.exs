@@ -119,7 +119,11 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
         }
       }
 
-      html = render_component(&EvidenceCard.evidence_card/1, evidence: evidence, reveal_state: :redacted)
+      html =
+        render_component(&EvidenceCard.evidence_card/1,
+          evidence: evidence,
+          reveal_state: :redacted
+        )
 
       assert html =~ "SNS X.509 authentication verified"
       assert html =~ "SES"
