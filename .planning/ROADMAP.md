@@ -170,7 +170,7 @@ Plans:
   3. An authorized operator can progressively inspect available inbound evidence in a readable view while redaction and reveal permissions still govern what is shown.
   4. An operator can see replay eligibility, confirm a permitted inbound replay, and understand disabled, denied, busy, requested, no-change, and failure results without losing the selected record or Account.
 
-**Plans**: 3/8 plans executed
+**Plans**: 4/8 plans executed
 Plans:
 **Wave 1**
 - [x] 170-01-PLAN.md — Exact Account-scoped selection, return context, and read states
@@ -178,7 +178,7 @@ Plans:
 - [x] 170-03-PLAN.md — Privacy-safe evidence and current-router simulation
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 170-04-PLAN.md — Tenant-scoped latest-fresh disposition and chronological read model
+- [x] 170-04-PLAN.md — Tenant-scoped latest-fresh disposition and chronological read model
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 170-05-PLAN.md — Admin list, detail, filter, and historical presentation
@@ -255,7 +255,7 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 |-------|----------------|--------|-----------|
 | 168. Shared Workspace and Usable Baseline | 10/10 | Complete    | 2026-10-08 |
 | 169. Outbound Investigation and Recovery | 5/5 | Complete    | 2026-10-07 |
-| 170. Inbound Investigation and Recovery | 3/8 | In Progress | — |
+| 170. Inbound Investigation and Recovery | 4/8 | In Progress | — |
 | 171. Developer Preview | 0/TBD | Not started | — |
 | 172. Recipient Output and Built-in Pages | 0/TBD | Not started | — |
 | 173. Consistency and Delivery Evidence | 0/TBD | Not started | — |

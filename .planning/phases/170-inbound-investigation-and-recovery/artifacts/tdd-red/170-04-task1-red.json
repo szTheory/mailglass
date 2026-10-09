@@ -5,5 +5,6 @@
   "targetTest": "test Detail.fetch/2 a later fresh failure replaces an older matched disposition",
   "targetFile": "test/mailglass_inbound/internal/operator/records_test.exs",
   "expected": "The latest fresh failed execution is returned with no mailbox.",
-  "actual": "Detail.fetch returned the older :accept outcome from MyApp.OldMailbox."
+  "actual": "Detail.fetch returned the older :accept outcome from MyApp.OldMailbox.",
+  "semanticAssessment": "The named target test executed and failed on its planned assertion: Detail.fetch returned the older :accept outcome from MyApp.OldMailbox instead of the newer :failed fresh execution. The same stale-match behavior also failed the newer :no_match case. No setup, fixture, discovery, or unrelated assertion failure caused the RED result."
 }
