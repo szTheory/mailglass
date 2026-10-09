@@ -1622,6 +1622,82 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page).toHaveURL(/width=1024/);
     });
 
+    test("Phase 171 rendered: narrow layout keeps long identity, edits, output, and controls readable", async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.setViewportSize({ width: 320, height: 900 });
+      await openPreviewScenario(page, "theme=light");
+
+      const longScenario = "welcome_überraschung_東京__with_a_deliberately_long_name";
+      await page.getByTestId("preview-email-menu-trigger").click();
+      await page.getByTestId("preview-email-menu-option").filter({ hasText: longScenario }).click();
+      const identity = page.getByTestId("preview-email-menu-active-identity");
+      await expect(identity).toContainText("MailglassAdmin.Fixtures.HappyMailer");
+      await expect(identity).toContainText(longScenario);
+
+      const widthGroup = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
+      const widthButton = widthGroup.getByRole("button", { name: "375 CSS px", exact: true });
+      const backdrop = page.getByTestId("preview-frame-theme-toggle");
+      await assertTouchTarget(widthButton, "375 CSS px preview control at 320 CSS px");
+      await assertTouchTarget(backdrop, "preview backdrop control at 320 CSS px");
+      await widthButton.focus();
+      await expect(widthButton).toBeFocused();
+      const focusStyle = await widthButton.evaluate(el => {
+        const style = getComputedStyle(el);
+        return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth };
+      });
+      expect(focusStyle).toEqual({ outlineStyle: "solid", outlineWidth: "2px" });
+
+      const form = page.getByTestId("preview-assigns-form");
+      const nameInput = form.locator('[name="assigns[user_name]"]');
+      await expect(nameInput).toBeEditable();
+      const longName = "é東京 — recipient preview ".repeat(180);
+      await nameInput.fill(longName);
+      const textTab = page.getByRole("tab", { name: "Text", exact: true });
+      await textTab.click();
+      const textPanel = page.locator("#tab-panel-text");
+      await expect(textPanel.locator("pre")).toContainText(longName, { timeout: 10_000 });
+      await textPanel.focus();
+      await page.keyboard.press("PageDown");
+      const textScroll = await textPanel.evaluate(el => ({ top: el.scrollTop, height: el.scrollHeight, client: el.clientHeight }));
+      expect(textScroll.height).toBeGreaterThan(textScroll.client);
+      expect(textScroll.top).toBeGreaterThan(0);
+
+      const narrowLayout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth
+      }));
+      expect(narrowLayout.scrollWidth, "320 CSS px preview has no page-level horizontal overflow")
+        .toBeLessThanOrEqual(narrowLayout.clientWidth);
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      const tabletLayout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth
+      }));
+      expect(tabletLayout.scrollWidth, "390 CSS px preview has no page-level horizontal overflow")
+        .toBeLessThanOrEqual(tabletLayout.clientWidth);
+      const motion = await textTab.evaluate(el => ({
+        animationDuration: Number.parseFloat(getComputedStyle(el).animationDuration),
+        transitionDuration: Number.parseFloat(getComputedStyle(el).transitionDuration)
+      }));
+      expect(motion.animationDuration, "reduced-motion suppresses preview animation").toBeLessThanOrEqual(0.001);
+      expect(motion.transitionDuration, "reduced-motion suppresses preview transitions").toBeLessThanOrEqual(0.001);
+
+      await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values?theme=light");
+      await expect(page.locator('#preview-assigns-form [name="assigns[label]"]')).toBeEditable();
+      await expect(page.getByTestId("preview-assigns-form").getByText("mode", { exact: true })).toBeVisible();
+
+      await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/recoverable?theme=light");
+      await page.locator('#preview-assigns-form [name="assigns[response]"]').fill("first changed");
+      await page.locator('#preview-assigns-form [name="assigns[response]"]').fill("fail");
+      await expect(page.getByTestId("preview-render-error")).toBeVisible();
+      await expect(page.getByText("Last successful preview — not current.", { exact: true })).toBeVisible();
+      const pendingStatus = page.locator("#preview-pending-status");
+      await page.getByTestId("preview-assigns-form").evaluate(el => el.classList.add("phx-change-loading"));
+      await expect(pendingStatus).toBeVisible();
+      await expect(page.getByText("Last successful preview — not current.", { exact: true })).toBeVisible();
+    });
+
     test("Phase 171 tabs: manual keyboard focus, activation, and long output scrolling", async ({ page }) => {
       await openPreviewScenario(page, "theme=light");
 
