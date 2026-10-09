@@ -85,7 +85,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
                 class="mt-xs h-5 w-5 shrink-0 text-error"
               />
               <p class="text-body text-base-content">
-                This InboundMessage could not be loaded in the selected Account. Check the record ID and try again.
+                {detail_error_copy(@detail_error)}
               </p>
             </div>
           <% @record -> %>
@@ -194,4 +194,15 @@ defmodule MailglassAdmin.Inbound.QuickView do
   end
 
   defp present?(value), do: value not in [nil, ""]
+
+  defp detail_error_copy(:package_unavailable),
+    do: "Inbound support is unavailable. The selected record could not be checked."
+
+  defp detail_error_copy(:read_unavailable),
+    do:
+      "This record could not be checked because inbound data is temporarily unavailable. Refresh the page or try again shortly."
+
+  defp detail_error_copy(_reason),
+    do:
+      "This InboundMessage could not be loaded in the selected Account. Check the record ID and try again."
 end

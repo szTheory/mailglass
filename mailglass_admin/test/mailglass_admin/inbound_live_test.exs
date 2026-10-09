@@ -1,3 +1,39 @@
+defmodule MailglassAdmin.InboundUnavailableRepo do
+  @moduledoc false
+
+  def all(_queryable, _opts \\ []),
+    do: raise(DBConnection.ConnectionError, message: "synthetic inbound connection failure")
+
+  def one(_queryable, _opts \\ []),
+    do: raise(DBConnection.ConnectionError, message: "synthetic inbound connection failure")
+end
+
+defmodule MailglassAdmin.InboundTimelineFailingRepo do
+  @moduledoc false
+
+  alias MailglassAdmin.TestRepo
+  alias MailglassInbound.InboundRecords.ExecutionRun
+
+  def all(queryable, opts \\ []) do
+    case query_source(queryable) do
+      {_table, ExecutionRun} ->
+        raise DBConnection.ConnectionError, message: "synthetic timeline connection failure"
+
+      _source ->
+        TestRepo.all(queryable, opts)
+    end
+  end
+
+  def one(queryable, opts \\ []), do: TestRepo.one(queryable, opts)
+
+  defp query_source(queryable) do
+    queryable
+    |> Ecto.Queryable.to_query()
+    |> Map.fetch!(:from)
+    |> Map.fetch!(:source)
+  end
+end
+
 defmodule MailglassAdmin.InboundLiveTest do
   @moduledoc """
   InboundLive shell behaviour (Wave 1, plan 48-02).
@@ -14,6 +50,7 @@ defmodule MailglassAdmin.InboundLiveTest do
   import Ecto.Query
 
   alias MailglassAdmin.PubSub.Topics
+  alias MailglassAdmin.Inbound.ReadResult
   alias MailglassAdmin.Inbound.RecordsList
   alias MailglassAdmin.TestSupport.InboundFixtures
   alias MailglassInbound.InboundRecords.ExecutionRun
@@ -184,9 +221,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "accepted-101@example.com"
     end
 
-    test "gateway-unavailable runtime path names missing support without claiming successful empty data", %{
-      conn: conn
-    } do
+    test "gateway-unavailable runtime path names missing support without claiming successful empty data",
+         %{
+           conn: conn
+         } do
       conn = operator_conn(conn)
 
       Application.put_env(:mailglass_admin, :inbound_gateway_available?, false)
@@ -194,10 +232,14 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       InboundFixtures.seed_matched!(@tenant_id, recipient: "hidden@example.com")
 
-      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+      selected_id = Ecto.UUID.generate()
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => selected_id}))
 
       assert html =~ ~s(data-testid="inbound-package-unavailable")
       assert html =~ "Inbound support is unavailable"
+      assert html =~ "The selected record could not be checked."
       refute html =~ "No InboundMessages have been recorded yet."
       refute html =~ ~s(data-testid="inbound-orientation")
       refute html =~ ~s(data-testid="inbound-overview")
@@ -229,7 +271,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "1 message"
       assert html =~ ~s(data-testid="inbound-page-reset")
       assert html =~ "provider=mailgun"
-      assert html =~ "page=1"
+      refute html =~ "page=99"
       refute html =~ "No records match the current filters."
     end
 
@@ -255,6 +297,67 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "No records match the current filters."
       assert clear_filters_count(html) == 2
       refute html =~ "No records have been recorded yet."
+    end
+
+    test "connection failures are identified without claiming empty records or zero summary", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      previous_repo = Application.fetch_env!(:mailglass_inbound, :repo)
+      Application.put_env(:mailglass_inbound, :repo, MailglassAdmin.InboundUnavailableRepo)
+
+      on_exit(fn -> Application.put_env(:mailglass_inbound, :repo, previous_repo) end)
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="inbound-read-unavailable")
+      assert html =~ "Inbound records unavailable"
+      assert html =~ "Inbound summary unavailable"
+      refute html =~ "No InboundMessages have been recorded yet."
+      refute html =~ "synthetic inbound connection failure"
+      refute html =~ ~s(data-testid="inbound-result-count")
+      refute html =~ ~s(data-testid="inbound-overview-total")
+    end
+
+    test "a timeline connection failure does not erase the independently loaded record", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "timeline@example.com")
+
+      previous_repo = Application.fetch_env!(:mailglass_inbound, :repo)
+      Application.put_env(:mailglass_inbound, :repo, MailglassAdmin.InboundTimelineFailingRepo)
+
+      on_exit(fn -> Application.put_env(:mailglass_inbound, :repo, previous_repo) end)
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      assert html =~ record.id
+      assert html =~ ~s(data-testid="inbound-timeline-unavailable")
+      assert html =~ "Timeline unavailable"
+      refute html =~ "No execution runs have been recorded for this InboundMessage yet."
+      refute html =~ "synthetic timeline connection failure"
+    end
+
+    test "gateway result classification is narrow and sanitizes explicit failures" do
+      assert ReadResult.fetch(fn -> [] end) == {:ok, []}
+
+      assert ReadResult.fetch(fn -> {:error, {:database, "private failure"}} end) ==
+               {:error, :read_unavailable}
+
+      assert ReadResult.fetch(fn ->
+               raise DBConnection.ConnectionError, message: "synthetic transient failure"
+             end) == {:error, :read_unavailable}
+
+      assert_raise ArgumentError, "unexpected programming error", fn ->
+        ReadResult.fetch(fn -> raise ArgumentError, "unexpected programming error" end)
+      end
     end
 
     test "inbound page links preserve tenant scope and expose honest boundaries", %{conn: conn} do

@@ -11,8 +11,8 @@ defmodule MailglassAdmin.InboundLive do
   `MailglassAdmin.OptionalDeps.MailglassInbound`. This module never
   references the optional inbound modules directly, so the `--no-optional-deps`
   compile lane stays green: when `mailglass_inbound` is absent the gateway module is
-  elided, `gateway_available?/0` returns `false`, and every data call degrades to the
-  empty surface.
+  elided, `gateway_available?/0` returns `false`, and every data call presents an
+  unavailable state instead of a false empty result.
 
   Tenant-required-or-empty: a blank/missing tenant renders the empty state
   and never leaks another tenant's record id or recipient. The read-model enforces
@@ -30,6 +30,7 @@ defmodule MailglassAdmin.InboundLive do
   alias MailglassAdmin.Inbound.FiltersForm
   alias MailglassAdmin.Inbound.Overview
   alias MailglassAdmin.Inbound.QuickView
+  alias MailglassAdmin.Inbound.ReadResult
   alias MailglassAdmin.Inbound.RecordsList
   alias MailglassAdmin.Inbound.ReplayModal
   alias MailglassAdmin.Inbound.RoutingTrace
@@ -95,6 +96,11 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:records, [])
      |> assign(:records_page_meta, empty_page_meta())
      |> assign(:inbound_summary, @zero_summary)
+     |> assign(:records_read_state, :ok)
+     |> assign(:summary_read_state, :ok)
+     |> assign(:detail_read_state, :ok)
+     |> assign(:timeline_read_state, :not_requested)
+     |> assign(:provider_options_state, :ok)
      |> assign(:empty_state, :no_tenant)
      |> assign(:full_detail?, false)
      |> assign(:selected_record, nil)
@@ -116,6 +122,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:preview_path, session_navigation_path(session, :preview_path))
      |> assign(:account_labels, session_account_labels(session))
      |> assign(:tenant_options, [])
+     |> assign(:tenant_options_state, :ok)
      |> assign(:tenant_state, :none)
      |> assign(:selected_tenant_id, nil)
      |> assign(:outcome_values, @outcome_values)
@@ -159,16 +166,28 @@ defmodule MailglassAdmin.InboundLive do
     else
       {filter_params, filter_errors} = normalize_filter_params_with_errors(params)
 
-      tenant_options =
-        TenantSelector.list_tenants(socket.assigns.operator_actor,
-          account_labels: socket.assigns.account_labels
-        )
+      {tenant_options, tenant_options_state} =
+        ReadResult.fetch(fn ->
+          TenantSelector.list_tenants(socket.assigns.operator_actor,
+            account_labels: socket.assigns.account_labels
+          )
+        end)
+        |> case do
+          {:ok, options} -> {options, :ok}
+          {:error, :read_unavailable} -> {[], :read_unavailable}
+        end
 
       selected_tenant_id = blank_to_nil(filter_params["tenant_id"])
       theme_choice = MailglassAdmin.Operator.Shell.theme_choice(%{}, socket.assigns.theme_cookie)
 
       tenant_state =
-        tenant_state(selected_tenant_id, tenant_options, Map.has_key?(params, "tenant_id"))
+        if tenant_options_state == :read_unavailable and is_nil(selected_tenant_id) do
+          :unavailable
+        else
+          tenant_state(selected_tenant_id, tenant_options, Map.has_key?(params, "tenant_id"))
+        end
+
+      {provider_options, provider_options_state} = load_provider_options(filter_params)
 
       socket =
         socket
@@ -180,9 +199,11 @@ defmodule MailglassAdmin.InboundLive do
         |> assign(:filter_form, to_form(filter_params, as: :filters))
         |> assign(:filter_errors, filter_errors)
         |> assign(:tenant_options, tenant_options)
+        |> assign(:tenant_options_state, tenant_options_state)
         |> assign(:tenant_state, tenant_state)
         |> assign(:selected_tenant_id, selected_tenant_id)
-        |> assign(:provider_options, load_provider_options(filter_params))
+        |> assign(:provider_options, provider_options)
+        |> assign(:provider_options_state, provider_options_state)
 
       if connected?(socket) and tenant_state == :auto_select do
         send(self(), :canonicalize_tenant)
@@ -192,7 +213,7 @@ defmodule MailglassAdmin.InboundLive do
         tenant_state == :auto_select ->
           {:noreply, clear_surface_state(socket) |> close_replay_modal()}
 
-        tenant_state in [:select_required, :none] ->
+        tenant_state in [:select_required, :none, :unavailable] ->
           {:noreply, clear_surface_state(socket) |> close_replay_modal()}
 
         true ->
@@ -255,7 +276,7 @@ defmodule MailglassAdmin.InboundLive do
      socket
      |> assign(:filter_form, to_form(normalized, as: :filters))
      |> assign(:filter_errors, filter_errors)
-     |> assign(:provider_options, load_provider_options(normalized))}
+     |> assign_provider_options(normalized)}
   end
 
   def handle_event("select_inbound", %{"id" => inbound_id}, socket) do
@@ -504,15 +525,25 @@ defmodule MailglassAdmin.InboundLive do
       subtitle="See why an InboundMessage routed the way it did — execution timeline, routing trace, and raw evidence."
       flash={@flash}
     >
-      <%= if @tenant_state in [:select_required, :none] do %>
-        <MailglassAdmin.Operator.Shell.tenant_selector
-          state={@tenant_state}
-          tenant_options={@tenant_options}
-          current_uri={@page_uri}
-        />
+      <%= if @tenant_state in [:select_required, :none, :unavailable] do %>
+        <%= if @tenant_state == :unavailable do %>
+          <div data-testid="inbound-tenant-options-unavailable">
+            <Components.data_state
+              kind={:error}
+              title="Account options unavailable"
+              body="Account options could not be loaded. Refresh the page or try again shortly."
+            />
+          </div>
+        <% else %>
+          <MailglassAdmin.Operator.Shell.tenant_selector
+            state={@tenant_state}
+            tenant_options={@tenant_options}
+            current_uri={@page_uri}
+          />
+        <% end %>
       <% else %>
         <%= cond do %>
-          <% @records == [] and not filters_active?(@filter_params) and @filter_errors == %{} -> %>
+          <% @records == [] and @records_read_state == :ok and @empty_state == :truly_empty and not filters_active?(@filter_params) and @filter_errors == %{} -> %>
             <%!-- Genuine no-data: a single calm pane only — inbound-empty-truly + orientation strip.
                   The filters toolbar, the Open-record CTA, the Inbound.Overview health strip, and the
                   entire master-detail grid (and therefore the "Select an InboundMessage…" helper nested
@@ -571,7 +602,17 @@ defmodule MailglassAdmin.InboundLive do
                     class="motion-reveal space-y-4"
                   >
                     <DetailHeader.detail_header detail={@detail} account_labels={@account_labels} />
-                    <Timeline.timeline runs={@runs} />
+                    <%= if @timeline_read_state == :ok do %>
+                      <Timeline.timeline runs={@runs} />
+                    <% else %>
+                      <div data-testid="inbound-timeline-unavailable">
+                        <Components.data_state
+                          kind={:error}
+                          title="Timeline unavailable"
+                          body="Execution history could not be loaded. Refresh the page or try again shortly."
+                        />
+                      </div>
+                    <% end %>
                     <RoutingTrace.routing_trace
                       :if={@detail[:outcome] == :no_match}
                       trace={@routing_trace}
@@ -589,7 +630,7 @@ defmodule MailglassAdmin.InboundLive do
                     <div class="flex items-center gap-2">
                       <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
                       <h2 class="text-body font-bold text-base-content">
-                        This InboundMessage could not be loaded in the selected Account. Check the record ID and try again.
+                        {detail_error_copy(@detail_error)}
                       </h2>
                     </div>
                   </div>
@@ -598,7 +639,27 @@ defmodule MailglassAdmin.InboundLive do
             <% else %>
               <%!-- LIST PAGE: account health strip + filters + full-width records list.
                   The Quick view overlay (below) sits on top when a record is focused. --%>
-              <Overview.overview summary={@inbound_summary} />
+              <%= if @summary_read_state == :ok do %>
+                <Overview.overview summary={@inbound_summary} />
+              <% else %>
+                <div data-testid="inbound-summary-unavailable">
+                  <Components.data_state
+                    kind={:error}
+                    title={
+                      if @summary_read_state == :package_unavailable,
+                        do: "Inbound support is unavailable",
+                        else: "Inbound summary unavailable"
+                    }
+                    body={
+                      if @summary_read_state == :package_unavailable,
+                        do:
+                          "The optional inbound package is not available in this deployment. Inbound counts are not being shown.",
+                        else:
+                          "Inbound summary counts could not be loaded. Refresh the page or try again shortly."
+                    }
+                  />
+                </div>
+              <% end %>
 
               <section
                 data-testid="inbound-filters"
@@ -621,6 +682,13 @@ defmodule MailglassAdmin.InboundLive do
                     phx-submit="apply_filters"
                     class="mt-4 grid gap-md md:mt-0"
                   >
+                    <p
+                      :if={@provider_options_state != :ok}
+                      data-testid="inbound-provider-options-unavailable"
+                      class="text-label text-secondary"
+                    >
+                      Provider options could not be loaded. The current account and filters are unchanged.
+                    </p>
                     <input
                       id="filters_tenant_id"
                       type="hidden"
@@ -674,6 +742,14 @@ defmodule MailglassAdmin.InboundLive do
                       pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
                     }
                     next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
+                    first_page_path={
+                      build_path(
+                        @base_path,
+                        Map.put(@filter_params, "page", "1"),
+                        nil,
+                        @dark_chrome
+                      )
+                    }
                     selected_record={@selected_record}
                     empty_state={@empty_state}
                     data_state={@data_state}
@@ -759,28 +835,39 @@ defmodule MailglassAdmin.InboundLive do
   # Selecting (or re-selecting) a record collapses the evidence card back to redacted —
   # reveal is a per-view capability action, never sticky across selections.
   defp assign_inbound_state(socket, filter_params, selected_inbound_id, full?) do
-    records_page = load_inbound_records_page(filter_params)
-    records = records_page.entries
+    {records_page, records_read_state} = load_inbound_records_page(filter_params)
+    records = Map.get(records_page, :entries, [])
+
+    {empty_state, records_read_state} =
+      empty_state_for(filter_params, records_page, records_read_state)
+
+    {summary, summary_read_state} = load_inbound_summary(filter_params)
 
     socket =
       socket
       |> assign(:full_detail?, full?)
       |> assign(:records, records)
       |> assign(:records_page_meta, page_meta_without_entries(records_page))
-      |> assign(:inbound_summary, load_inbound_summary(filter_params))
-      |> assign(:empty_state, empty_state_for(filter_params, records))
+      |> assign(:inbound_summary, summary)
+      |> assign(:records_read_state, records_read_state)
+      |> assign(:summary_read_state, summary_read_state)
+      |> assign(:empty_state, empty_state)
       |> assign(:reveal_state, :redacted)
       |> assign(:focus_reveal_after_redact, false)
 
-    detail = load_selected_detail(filter_params, selected_inbound_id)
+    {detail, detail_read_state} = load_selected_detail(filter_params, selected_inbound_id)
 
-    runs =
-      if full?, do: load_selected_timeline(filter_params, selected_inbound_id, detail), else: []
+    {runs, timeline_read_state} =
+      if full? do
+        load_selected_timeline(filter_params, selected_inbound_id, detail)
+      else
+        {[], :not_requested}
+      end
 
     selected_record =
       find_selected_record(records, selected_inbound_id) || list_projection_from_detail(detail)
 
-    detail_error = detail_error_for(selected_inbound_id, detail)
+    detail_error = detail_error_for(selected_inbound_id, detail, detail_read_state)
 
     selected_outside_results? =
       not is_nil(selected_record) and is_nil(find_selected_record(records, selected_inbound_id))
@@ -790,15 +877,14 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:selected_outside_results?, selected_outside_results?)
     |> assign(:detail, if(full?, do: detail, else: nil))
     |> assign(:runs, runs)
+    |> assign(:detail_read_state, detail_read_state)
+    |> assign(:timeline_read_state, timeline_read_state)
     |> assign(
       :routing_trace,
       if(full?, do: routing_trace_for(socket.assigns.inbound_router, detail), else: [])
     )
     |> assign(:detail_error, detail_error)
-    # Route a load/authorization failure into the dormant RecordsList data_state
-    # (D-09) — only when there is NO record to show; otherwise the non-disclosing
-    # selection-error band is rendered by Quick view or Full detail.
-    |> assign(:data_state, data_state_for(records, detail_error))
+    |> assign(:data_state, records_data_state(records_read_state))
   end
 
   defp tenant_state(nil, [], _tenant_param_present?), do: :none
@@ -812,6 +898,11 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:records, [])
     |> assign(:records_page_meta, empty_page_meta())
     |> assign(:inbound_summary, @zero_summary)
+    |> assign(:records_read_state, :ok)
+    |> assign(:summary_read_state, :ok)
+    |> assign(:detail_read_state, :ok)
+    |> assign(:timeline_read_state, :not_requested)
+    |> assign(:provider_options_state, :ok)
     |> assign(:empty_state, :no_tenant)
     |> assign(:selected_record, nil)
     |> assign(:selected_outside_results?, false)
@@ -912,18 +1003,35 @@ defmodule MailglassAdmin.InboundLive do
     do:
       "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
 
-  defp empty_state_for(%{"tenant_id" => tenant_id}, _records) when tenant_id in [nil, ""],
-    do: :no_tenant
+  defp empty_state_for(%{"tenant_id" => tenant_id}, _page, _read_state)
+       when tenant_id in [nil, ""],
+       do: {:no_tenant, :ok}
 
-  defp empty_state_for(filter_params, []) do
+  defp empty_state_for(_filter_params, _page, read_state) when read_state != :ok,
+    do: {:filtered, read_state}
+
+  defp empty_state_for(filter_params, page, :ok) do
+    entries = Map.get(page, :entries, [])
+
     cond do
-      filters_active?(filter_params) -> :filtered
-      tenant_has_inbound_history?(filter_params) -> :filtered
-      true -> :truly_empty
+      Map.get(page, :total_count, 0) > 0 and
+          Map.get(page, :page, 1) > Map.get(page, :total_pages, 0) ->
+        {:out_of_range, :ok}
+
+      entries != [] ->
+        {:filtered, :ok}
+
+      filters_active?(filter_params) ->
+        {:filtered, :ok}
+
+      true ->
+        case tenant_has_inbound_history?(filter_params) do
+          {:ok, true} -> {:filtered, :ok}
+          {:ok, false} -> {:truly_empty, :ok}
+          {:error, read_state} -> {:filtered, read_state}
+        end
     end
   end
-
-  defp empty_state_for(_filter_params, _records), do: :filtered
 
   defp filters_active?(filter_params) do
     Enum.any?(["provider", "search", "outcome"], fn key ->
@@ -941,10 +1049,12 @@ defmodule MailglassAdmin.InboundLive do
   end
 
   defp tenant_has_inbound_history?(filter_params) do
-    filter_params
-    |> tenant_history_params()
-    |> load_inbound_records()
-    |> Enum.any?()
+    {records, read_state} = load_inbound_records(tenant_history_params(filter_params))
+
+    case read_state do
+      :ok -> {:ok, Enum.any?(records)}
+      unavailable -> {:error, unavailable}
+    end
   end
 
   defp tenant_history_params(filter_params) do
@@ -985,19 +1095,22 @@ defmodule MailglassAdmin.InboundLive do
   defp fetch_live_record(%{"tenant_id" => ""}, _record_id), do: nil
 
   defp fetch_live_record(filter_params, record_id) do
-    filter_params
-    |> load_inbound_records()
-    |> Enum.find(&(&1.id == record_id))
+    case load_inbound_records(filter_params) do
+      {records, :ok} -> Enum.find(records, &(&1.id == record_id))
+      {_records, _unavailable} -> nil
+    end
   end
 
   # Tenant-required-or-empty (-04) — the load-bearing security head BEFORE any
   # data call. A blank tenant yields [] without touching the gateway.
-  defp load_inbound_records(%{"tenant_id" => ""}), do: []
+  defp load_inbound_records(%{"tenant_id" => tenant_id}) when tenant_id in [nil, ""],
+    do: {[], :ok}
 
   defp load_inbound_records(filter_params) do
-    filter_params
-    |> load_inbound_records_page()
-    |> Map.fetch!(:entries)
+    case load_inbound_records_page(filter_params) do
+      {page, :ok} -> {Map.fetch!(page, :entries), :ok}
+      {_page, unavailable} -> {[], unavailable}
+    end
   end
 
   # Provider filter options (mirrors Operator.load_provider_options/1): distinct
@@ -1007,38 +1120,51 @@ defmodule MailglassAdmin.InboundLive do
   defp load_provider_options(filter_params) do
     selected_provider = blank_to_nil(filter_params["provider"])
 
-    case blank_to_nil(filter_params["tenant_id"]) do
-      nil ->
-        []
+    {providers, state} =
+      case blank_to_nil(filter_params["tenant_id"]) do
+        nil ->
+          {[], :ok}
 
-      tenant_id ->
-        providers =
+        tenant_id ->
           if gateway_available?() do
-            apply(@gateway, :list_providers, [
-              %{
-                tenant_id: tenant_id,
-                window_hours:
-                  parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
-              },
-              []
-            ])
-          else
-            []
-          end
+            filters = %{
+              tenant_id: tenant_id,
+              window_hours:
+                parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
+            }
 
-        providers =
-          if selected_provider && selected_provider not in providers do
-            [selected_provider | providers]
+            case ReadResult.fetch(fn -> apply(@gateway, :list_providers, [filters, []]) end) do
+              {:ok, providers} -> {providers, :ok}
+              {:error, :read_unavailable} -> {[], :read_unavailable}
+            end
           else
-            providers
+            {[], :package_unavailable}
           end
+      end
 
+    providers =
+      if selected_provider && selected_provider not in providers do
+        [selected_provider | providers]
+      else
         providers
-        |> Enum.reject(&is_nil/1)
-        |> Enum.uniq()
-        |> Enum.sort_by(&String.downcase/1)
-        |> Enum.map(&{provider_label(&1), &1})
-    end
+      end
+
+    options =
+      providers
+      |> Enum.reject(&is_nil/1)
+      |> Enum.uniq()
+      |> Enum.sort_by(&String.downcase/1)
+      |> Enum.map(&{provider_label(&1), &1})
+
+    {options, state}
+  end
+
+  defp assign_provider_options(socket, filter_params) do
+    {provider_options, state} = load_provider_options(filter_params)
+
+    socket
+    |> assign(:provider_options, provider_options)
+    |> assign(:provider_options_state, state)
   end
 
   defp provider_label("sendgrid"), do: "SendGrid"
@@ -1053,86 +1179,108 @@ defmodule MailglassAdmin.InboundLive do
     |> Enum.map_join(" ", &String.capitalize/1)
   end
 
-  defp load_inbound_records_page(%{"tenant_id" => ""}), do: empty_page_meta()
+  defp load_inbound_records_page(%{"tenant_id" => tenant_id}) when tenant_id in [nil, ""],
+    do: {empty_page_meta(), :ok}
 
   defp load_inbound_records_page(filter_params) do
-    if gateway_available?() do
-      apply(@gateway, :list_records_page, [
-        %{
-          tenant_id: filter_params["tenant_id"],
-          provider: blank_to_nil(filter_params["provider"]),
-          outcome: cast_enum(filter_params["outcome"], @outcome_values),
-          window_hours:
-            parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
-          search: blank_to_nil(filter_params["search"]),
-          page: parse_positive_integer(filter_params["page"]) || 1,
-          per_page: @inbound_records_per_page
-        },
-        []
-      ])
-    else
+    inbound_read(
+      fn ->
+        apply(@gateway, :list_records_page, [
+          %{
+            tenant_id: filter_params["tenant_id"],
+            provider: blank_to_nil(filter_params["provider"]),
+            outcome: cast_enum(filter_params["outcome"], @outcome_values),
+            window_hours:
+              parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
+            search: blank_to_nil(filter_params["search"]),
+            page: parse_positive_integer(filter_params["page"]) || 1,
+            per_page: @inbound_records_per_page
+          },
+          []
+        ])
+      end,
       empty_page_meta()
-    end
+    )
   end
 
   defp load_inbound_summary(%{"tenant_id" => tenant_id})
        when tenant_id in [nil, ""],
-       do: @zero_summary
+       do: {@zero_summary, :ok}
 
   defp load_inbound_summary(filter_params) do
-    if gateway_available?() do
-      summary_filters = %{
-        tenant_id: filter_params["tenant_id"],
-        provider: blank_to_nil(filter_params["provider"]),
-        window_hours:
-          parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
-        search: blank_to_nil(filter_params["search"])
-      }
+    summary_filters = %{
+      tenant_id: filter_params["tenant_id"],
+      provider: blank_to_nil(filter_params["provider"]),
+      window_hours:
+        parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
+      search: blank_to_nil(filter_params["search"])
+    }
 
-      apply(@gateway, :summary, [summary_filters, []])
-    else
-      @zero_summary
-    end
+    inbound_read(fn -> apply(@gateway, :summary, [summary_filters, []]) end, @zero_summary)
   end
 
-  defp load_detail(%{"tenant_id" => ""}, _selected_inbound_id), do: nil
-  defp load_detail(_filter_params, nil), do: nil
+  defp load_detail(%{"tenant_id" => tenant_id}, _selected_inbound_id) when tenant_id in [nil, ""],
+    do: {nil, :ok}
+
+  defp load_detail(_filter_params, nil), do: {nil, :ok}
 
   defp load_detail(filter_params, selected_inbound_id) do
-    if valid_uuid?(selected_inbound_id) and gateway_available?() do
-      apply(@gateway, :detail, [
-        %{tenant_id: filter_params["tenant_id"], inbound_record_id: selected_inbound_id},
-        []
-      ])
+    if valid_uuid?(selected_inbound_id) do
+      inbound_read(
+        fn ->
+          apply(@gateway, :detail, [
+            %{tenant_id: filter_params["tenant_id"], inbound_record_id: selected_inbound_id},
+            []
+          ])
+        end,
+        nil
+      )
     else
-      nil
+      {nil, :ok}
     end
   end
 
-  defp load_timeline(%{"tenant_id" => ""}, _selected_inbound_id), do: []
-  defp load_timeline(_filter_params, nil), do: []
+  defp load_timeline(%{"tenant_id" => tenant_id}, _selected_inbound_id)
+       when tenant_id in [nil, ""],
+       do: {[], :ok}
+
+  defp load_timeline(_filter_params, nil), do: {[], :ok}
 
   defp load_timeline(filter_params, selected_inbound_id) do
-    if valid_uuid?(selected_inbound_id) and gateway_available?() do
-      apply(@gateway, :timeline, [
-        %{tenant_id: filter_params["tenant_id"], inbound_record_id: selected_inbound_id},
+    if valid_uuid?(selected_inbound_id) do
+      inbound_read(
+        fn ->
+          apply(@gateway, :timeline, [
+            %{tenant_id: filter_params["tenant_id"], inbound_record_id: selected_inbound_id},
+            []
+          ])
+        end,
         []
-      ])
+      )
     else
-      []
+      {[], :ok}
+    end
+  end
+
+  defp inbound_read(read, fallback) do
+    if gateway_available?() do
+      case ReadResult.fetch(read) do
+        {:ok, value} -> {value, :ok}
+        {:error, :read_unavailable} -> {fallback, :read_unavailable}
+      end
+    else
+      {fallback, :package_unavailable}
     end
   end
 
   defp find_selected_record(_records, nil), do: nil
   defp find_selected_record(records, inbound_id), do: Enum.find(records, &(&1.id == inbound_id))
 
-  defp load_selected_detail(_filter_params, nil), do: nil
-
   defp load_selected_detail(filter_params, selected_inbound_id),
     do: load_detail(filter_params, selected_inbound_id)
 
-  defp load_selected_timeline(_filter_params, nil, _detail), do: []
-  defp load_selected_timeline(_filter_params, _selected_inbound_id, nil), do: []
+  defp load_selected_timeline(_filter_params, nil, _detail), do: {[], :not_requested}
+  defp load_selected_timeline(_filter_params, _selected_inbound_id, nil), do: {[], :not_requested}
 
   defp load_selected_timeline(filter_params, selected_inbound_id, _detail),
     do: load_timeline(filter_params, selected_inbound_id)
@@ -1162,22 +1310,28 @@ defmodule MailglassAdmin.InboundLive do
 
   defp valid_uuid?(_value), do: false
 
-  # A selected id with no resolvable detail (wrong tenant, deleted, never existed)
-  # surfaces the bordered detail-error band rather than a silent blank pane.
-  defp detail_error_for(nil, _detail), do: nil
-  defp detail_error_for(_inbound_id, nil), do: :not_found
-  defp detail_error_for(_inbound_id, _detail), do: nil
+  # Foreign and missing IDs keep identical non-disclosing copy. Read failures use
+  # distinct global/package states because the ID was not successfully checked.
+  defp detail_error_for(nil, _detail, _read_state), do: nil
+  defp detail_error_for(_inbound_id, _detail, :package_unavailable), do: :package_unavailable
+  defp detail_error_for(_inbound_id, _detail, :read_unavailable), do: :read_unavailable
+  defp detail_error_for(_inbound_id, nil, _read_state), do: :not_found
+  defp detail_error_for(_inbound_id, _detail, _read_state), do: nil
 
-  # Wire the dormant RecordsList data_state (D-09) from the failure signal the
-  # LiveView already computes (detail_error_for/2). The records list must always
-  # render rows it loaded, so when records are present data_state stays nil (the
-  # bad selection is surfaced by the detail-error band). Only when there are no
-  # rows to show does a load/authorization failure escalate the list to :error,
-  # making the previously-dead error branch reachable. nil is the normal flow.
-  defp data_state_for([_ | _], _detail_error), do: nil
-  defp data_state_for(_records, nil), do: nil
-  defp data_state_for(_records, :not_found), do: :error
-  defp data_state_for(_records, _reason), do: :error
+  defp detail_error_copy(:package_unavailable),
+    do: "Inbound support is unavailable. The selected record could not be checked."
+
+  defp detail_error_copy(:read_unavailable),
+    do:
+      "This record could not be checked because inbound data is temporarily unavailable. Refresh the page or try again shortly."
+
+  defp detail_error_copy(_reason),
+    do:
+      "This InboundMessage could not be loaded in the selected Account. Check the record ID and try again."
+
+  defp records_data_state(:ok), do: nil
+  defp records_data_state(:package_unavailable), do: :package_unavailable
+  defp records_data_state(:read_unavailable), do: :read_unavailable
 
   defp selected_record_struct(nil), do: nil
   defp selected_record_struct(%{record: record}), do: record

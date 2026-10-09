@@ -12,10 +12,11 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   an outcome badge via `Components.status_badge/1` (normalized through
   `normalize_inbound_outcome/1`), and a meta line mailbox · account · provider · received_at.
 
-  Data-state branches render four distinct `Components.data_state/1` kinds when
-  there is no row data to show. The four branches are:
+  Data-state branches render distinct `Components.data_state/1` kinds when
+  there is no row data to show. Optional-package and database-read failures stay
+  separate from successful empty results:
 
-    * `:empty` — no records (no-data / filtered / no-tenant distinction preserved)
+    * `:empty` — no records (no-data / filtered / page-boundary distinction preserved)
     * `:error` — data unavailable
     * `:permission_denied` — access restricted
     * `:stale` — data may be out of date
@@ -41,17 +42,19 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   attr(:selected_record, :map, default: nil)
 
   attr(:empty_state, :atom,
-    values: [:no_tenant, :truly_empty, :filtered],
+    values: [:no_tenant, :truly_empty, :filtered, :out_of_range],
     default: :filtered
   )
 
   # :empty | :error | :permission_denied | :stale | nil
   # nil means "normal flow": render records or the legacy empty branches
   attr(:data_state, :atom, default: nil)
+  attr(:first_page_path, :string, default: nil)
 
   def records_list(assigns) do
     ~H"""
     <div
+      :if={is_nil(@data_state)}
       data-testid="inbound-result-count"
       class="border-b border-base-300 px-4 py-3 text-body text-secondary"
     >
@@ -64,6 +67,22 @@ defmodule MailglassAdmin.Inbound.RecordsList do
           title="Record data unavailable"
           body="Record data could not be loaded. Refresh the page or adjust the filters, then try again."
         />
+      <% @data_state == :package_unavailable -> %>
+        <div data-testid="inbound-package-unavailable">
+          <Components.data_state
+            kind={:error}
+            title="Inbound support is unavailable"
+            body="The optional inbound package is not available in this deployment. Inbound records and counts are not being shown."
+          />
+        </div>
+      <% @data_state == :read_unavailable -> %>
+        <div data-testid="inbound-read-unavailable">
+          <Components.data_state
+            kind={:error}
+            title="Inbound records unavailable"
+            body="Inbound records could not be loaded. Refresh the page or adjust the filters, then try again."
+          />
+        </div>
       <% @data_state == :permission_denied -> %>
         <Components.data_state
           kind={:permission_denied}
@@ -88,7 +107,9 @@ defmodule MailglassAdmin.Inbound.RecordsList do
         <% else %>
           <Components.data_state
             kind={:empty}
-            title="No records"
+            title={
+              if @empty_state == :out_of_range, do: "No records on this page", else: "No records"
+            }
             body={empty_body(@empty_state)}
           />
           <%= if @empty_state == :filtered do %>
@@ -102,7 +123,18 @@ defmodule MailglassAdmin.Inbound.RecordsList do
               Clear filters
             </button>
           <% else %>
-            <div data-testid="inbound-empty-truly" style="display:none" />
+            <%= if @empty_state == :out_of_range and is_binary(@first_page_path) do %>
+              <div data-testid="inbound-empty-out-of-range" style="display:none" />
+              <.link
+                patch={@first_page_path}
+                data-testid="inbound-page-reset"
+                class="btn btn-ghost min-h-11 mx-auto block"
+              >
+                Go to page 1
+              </.link>
+            <% else %>
+              <div data-testid="inbound-empty-truly" style="display:none" />
+            <% end %>
           <% end %>
         <% end %>
       <% true -> %>
@@ -390,6 +422,9 @@ defmodule MailglassAdmin.Inbound.RecordsList do
     do: "No InboundMessages have been recorded yet."
 
   defp empty_body(:filtered), do: "No records match the current filters."
+
+  defp empty_body(:out_of_range),
+    do: "This page is outside the current results. Return to page 1 to see matching records."
 
   defp row_classes(%{id: id}, %{id: id}),
     do: "border-l-4 border-primary bg-base-100 text-base-content"
