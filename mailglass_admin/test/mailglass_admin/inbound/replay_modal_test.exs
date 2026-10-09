@@ -62,5 +62,25 @@ defmodule MailglassAdmin.Inbound.ReplayModalTest do
       confirm_button = Floki.find(Floki.parse_document!(html), "#inbound-replay-confirm")
       assert Floki.attribute(confirm_button, "disabled") != []
     end
+
+    test "keeps duplicate confirmation disabled while the local command is pending" do
+      html =
+        render_component(&ReplayModal.replay_modal/1,
+          open?: true,
+          busy?: true,
+          review: %{
+            tenant_id: "tenant-a",
+            record_id: "rec-1",
+            eligibility: %{status: :eligible, mailbox: "Elixir.MyApp.Mailboxes.SupportMailbox"}
+          },
+          record: %{id: "rec-1", tenant_id: "tenant-a"}
+        )
+
+      confirm_button = Floki.find(Floki.parse_document!(html), "#inbound-replay-confirm")
+      assert Floki.attribute(confirm_button, "disabled") != []
+      assert Floki.text(confirm_button) =~ "Replaying"
+      refute html =~ "locked globally"
+      refute html =~ "retry"
+    end
   end
 end
