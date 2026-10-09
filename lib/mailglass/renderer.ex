@@ -189,15 +189,8 @@ defmodule Mailglass.Renderer do
   defp apply_strategy("divider", _tag, _attrs, _children), do: "\n---\n"
 
   defp apply_strategy(<<"heading_block_", level::binary>>, _tag, _attrs, children) do
-    text = children |> Floki.text() |> String.trim()
-
-    formatted =
-      case level do
-        "1" -> String.upcase(text)
-        _ -> text
-      end
-
-    "\n#{formatted}\n\n"
+    text = extract_heading_text(children, level)
+    "\n#{text}\n\n"
   end
 
   defp apply_strategy("text", tag, attrs, children) do
@@ -255,6 +248,68 @@ defmodule Mailglass.Renderer do
     children
     |> extract_plaintext_nodes([])
     |> Enum.join("")
+  end
+
+  # Heading labels follow the existing heading case rules, but linked destinations must
+  # remain byte-for-byte intact: uppercasing a heading's entire flattened string would
+  # corrupt case-sensitive URL paths.
+  defp extract_heading_text(children, level) do
+    children
+    |> Enum.map(&extract_heading_node(&1, level))
+    |> Enum.join("")
+    |> String.trim()
+  end
+
+  defp extract_heading_node(text, "1") when is_binary(text), do: String.upcase(text)
+  defp extract_heading_node(text, _level) when is_binary(text), do: text
+  defp extract_heading_node({:comment, _content}, _level), do: ""
+  defp extract_heading_node({:pi, _, _}, _level), do: ""
+
+  defp extract_heading_node({tag, attrs, children}, level)
+       when is_binary(tag) and is_list(attrs) and is_list(children) do
+    case get_strategy(attrs) do
+      "skip" ->
+        ""
+
+      "divider" ->
+        "\n---\n"
+
+      "link_pair" ->
+        heading_link_text(attrs, children, level)
+
+      _ when tag in ["script", "style", "head"] ->
+        ""
+
+      _ when tag == "img" ->
+        case List.keyfind(attrs, "alt", 0) do
+          {_, alt} when alt != "" -> extract_heading_node(alt, level)
+          _ -> ""
+        end
+
+      _ when tag == "a" ->
+        heading_link_text(attrs, children, level)
+
+      _ ->
+        extract_heading_text(children, level)
+    end
+  end
+
+  defp extract_heading_node(_other, _level), do: ""
+
+  defp heading_link_text(attrs, children, level) do
+    label = extract_heading_text(children, level)
+
+    href =
+      case List.keyfind(attrs, "href", 0) do
+        {_, url} -> url
+        nil -> ""
+      end
+
+    cond do
+      label == "" -> ""
+      href == "" -> label
+      true -> "#{label} (#{href})"
+    end
   end
 
   defp normalize_whitespace(text) do

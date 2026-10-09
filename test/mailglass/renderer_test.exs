@@ -110,6 +110,7 @@ defmodule Mailglass.RendererTest do
       assert length(Regex.scan(~r/https:\/\/example\.com\/continue/, text_body)) == 1
       refute String.contains?(text_body, "caller supplied text")
       assert byte_size(text_body) > byte_size(long_copy)
+
       assert elem(:binary.match(text_body, "TU RESUMEN"), 0) <
                elem(:binary.match(text_body, "Información útil"), 0)
 
@@ -278,7 +279,8 @@ defmodule Mailglass.RendererTest do
     end
 
     test "empty-href and destination-free anchors keep their readable label only" do
-      html = ~s|<p><a href="">empty destination</a> and <a>no destination</a><a href="https://example.com/empty"></a>.</p>|
+      html =
+        ~s|<p><a href="">empty destination</a> and <a>no destination</a><a href="https://example.com/empty"></a>.</p>|
 
       result = Mailglass.Renderer.to_plaintext(html)
 
@@ -306,6 +308,14 @@ defmodule Mailglass.RendererTest do
       html = ~s|<h1 data-mg-plaintext="heading_block_1">Welcome</h1>|
       result = Mailglass.Renderer.to_plaintext(html)
       assert String.contains?(result, "WELCOME")
+    end
+
+    test "heading plaintext retains nested link destinations without changing URL case" do
+      html =
+        ~s|<h1 data-mg-plaintext="heading_block_1">Open <a href="https://example.com/Invoice/ABC">your invoice</a></h1>|
+
+      assert Mailglass.Renderer.to_plaintext(html) ==
+               "OPEN YOUR INVOICE (https://example.com/Invoice/ABC)"
     end
 
     test "heading_block_2 preserves case" do
