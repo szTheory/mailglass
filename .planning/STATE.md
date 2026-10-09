@@ -5,16 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 170
 current_phase_name: Inbound Investigation and Recovery
 status: executing
-stopped_at: Completed 170-04-PLAN.md
-last_updated: "2026-10-09T02:37:32.114Z"
+stopped_at: Completed 170-05-PLAN.md
+last_updated: "2026-10-09T02:58:25.321Z"
 last_activity: 2026-10-09 UTC — Phase 168 closeout complete; Phase 170 plans ready to execute.
 last_activity_desc: Phase 170 execution started
-state_head: c4e7b2f8bd49d739b0ffe943830db5b92cccce88
+state_head: 0e95c4365205c5e3a301583347beffacdf40997e
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 19
+  completed_plans: 20
   percent: 33
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 ## Current Position
 
 Phase: 170 (Inbound Investigation and Recovery) — EXECUTING
-Plan: 5 of 8
+Plan: 6 of 8
 Status: Ready to execute
 Last activity: 2026-10-08 — Phase 170 execution started
 
@@ -270,6 +270,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 170 P02 | 11 min | 2 tasks | 11 files |
 | Phase 170 P03 | 8 min | 2 tasks | 4 files |
 | Phase 170 P04 | 8 min | 2 tasks | 4 files |
+| Phase 170 P05 | 13min | 2 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -454,6 +455,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 170]: RoutingTrace is explicitly labeled as a simulation of the currently configured router. — Persisted ExecutionRun and durable route-binding records are historical facts. Current rules may change and cannot establish which route ran when the message arrived.
 - [Phase 170]: The routing disclosure uses native HTML details and summary elements. — Browser-owned disclosure semantics keep keyboard operation and expanded state aligned with visibility without adding JavaScript or duplicating state in LiveView.
 - [Phase 170]: Latest fresh disposition uses inserted_at descending with ExecutionRun ID descending as the tie-breaker. — A deterministic shared order keeps list and exact detail aligned when persisted runs have equal insertion timestamps.
+- [Phase 170]: Keep :no_change distinct from :ignore in list, detail, filter, and timeline vocabulary.
+- [Phase 170]: Map nil latest-fresh outcome to No history; reserve No match for literal :no_match.
+- [Phase 170]: Omit free-form outcome_reason and failure metadata from the operator timeline.
 
 ## Quick Tasks Completed
 
@@ -499,8 +503,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T02:37:31.787Z
-Stopped at: Completed 170-04-PLAN.md
+Last session: 2026-10-09T02:58:25.266Z
+Stopped at: Completed 170-05-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
