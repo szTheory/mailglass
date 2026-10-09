@@ -462,17 +462,46 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~r/<iframe[^>]*srcdoc=/i,
              "HTML tab must render <iframe ... srcdoc=\"...\"/>"
 
+      assert html =~ "Renderer HTML"
+      assert html =~ "Browser rendering only"
+      assert html =~ ~s(sandbox="allow-same-origin")
+      refute html =~ ~s(sandbox="allow-same-origin allow-scripts")
+
+      # Every control reference must resolve, including inactive tabs. The
+      # only exposed panel is the selected one and its accessible name comes
+      # from that tab.
+      document = Floki.parse_document!(html)
+      tabs = Floki.find(document, ~s([role="tab"]))
+      panels = Floki.find(document, ~s([role="tabpanel"]))
+
+      assert length(tabs) == 4
+      assert length(panels) == 4
+
+      Enum.each(tabs, fn tab ->
+        [panel_id] = Floki.attribute(tab, "aria-controls")
+        [tab_id] = Floki.attribute(tab, "id")
+        [panel] = Floki.find(document, "##{panel_id}")
+        assert Floki.attribute(panel, "role") == ["tabpanel"]
+        assert Floki.attribute(panel, "aria-labelledby") == [tab_id]
+      end)
+
+      assert Enum.count(panels, &(Floki.attribute(&1, "hidden") == [])) == 1
+      assert Enum.count(tabs, &(Floki.attribute(&1, "aria-selected") == ["true"])) == 1
+
       # Text tab shows the literal rendered text_body
       text_html = render_click(view, "set_tab", %{"tab" => "text"})
 
       assert text_html =~ "Hi Ada",
              "Text tab must contain the rendered text_body literal"
+      assert text_html =~ "Renderer plaintext"
 
       # Raw tab shows MIME boundary-looking content
       raw_html = render_click(view, "set_tab", %{"tab" => "raw"})
 
       assert raw_html =~ ~r/(boundary=|Content-Type:|MIME-Version:)/i,
              "Raw tab must contain RFC 5322 envelope markers"
+      assert raw_html =~ "Illustrative MIME-shaped preview"
+      refute raw_html =~ "serialized wire bytes"
 
       # Headers tab shows auto-injected Message-ID + Date rows
       headers_html = render_click(view, "set_tab", %{"tab" => "headers"})
@@ -482,6 +511,29 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert headers_html =~ "Date",
              "Headers tab must show the Date row"
+      assert headers_html =~ "Preview-generated value"
+      assert headers_html =~ ~r/preview-[0-9]+@mailglass\.dev/
+    end
+
+    test "tabs expose empty HTML guidance and keep long non-ASCII plaintext complete" do
+      text = String.duplicate("Prüfung 東京 — ", 1_000)
+
+      html =
+        render_component(&MailglassAdmin.Preview.Tabs.tabs/1,
+          active_tab: :html,
+          html_body: "",
+          text_body: text,
+          raw_envelope: "illustrative",
+          headers: [],
+          device_width: 768,
+          render_nonce: 1,
+          preview_frame_dark_chrome: false
+        )
+
+      assert html =~ "No HTML body"
+      assert html =~ "this Mailable's template returned empty content"
+      assert html =~ text
+      assert html =~ "whitespace-pre-wrap"
     end
   end
 
