@@ -313,6 +313,13 @@ defmodule MailglassAdmin.TestOperatorAuth do
 
   def reset_destructive_calls!, do: :persistent_term.put({__MODULE__, :destructive_calls}, [])
   def destructive_calls, do: :persistent_term.get({__MODULE__, :destructive_calls}, [])
+  def reset_inbound_replay_calls!, do: :persistent_term.put({__MODULE__, :inbound_replay_calls}, [])
+
+  def inbound_replay_calls do
+    {__MODULE__, :inbound_replay_calls}
+    |> :persistent_term.get([])
+    |> Enum.reverse()
+  end
 
   def authorize(:operator_access, %{actor: %{subject_id: nil}}) do
     {:error, :unauthorized, %{message: "Operator access requires a signed-in actor.", to: "/login"}}
@@ -359,12 +366,18 @@ defmodule MailglassAdmin.TestOperatorAuth do
   # Inbound replay capability (D-48-09 — rides the existing atom() action type, no
   # new auth surface). Denied for the sentinel actor so denial-path tests drive the
   # gate via the session-controlled subject_id; granted otherwise.
-  def authorize(:replay_inbound, %{actor: %{subject_id: "deny-replay"}}) do
+  def authorize(
+        :replay_inbound,
+        %{actor: %{subject_id: "deny-replay"}, inbound_record: record}
+      ) do
+    record_inbound_replay_call(record.id)
+
     {:error, :unauthorized,
      %{message: "Replay blocked: this action is not authorized for the current operator."}}
   end
 
-  def authorize(:replay_inbound, %{actor: actor, inbound_record: _record}) do
+  def authorize(:replay_inbound, %{actor: actor, inbound_record: record}) do
+    record_inbound_replay_call(record.id)
     {:ok, %{actor: actor}}
   end
 
@@ -388,6 +401,11 @@ defmodule MailglassAdmin.TestOperatorAuth do
 
   def authorize(:reveal_raw, %{actor: actor}) do
     {:ok, %{actor: actor}}
+  end
+
+  defp record_inbound_replay_call(record_id) do
+    key = {__MODULE__, :inbound_replay_calls}
+    :persistent_term.put(key, [record_id | :persistent_term.get(key, [])])
   end
 
   defp record_destructive_call(delivery_id, webhook_event_id) do

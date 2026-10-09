@@ -49,6 +49,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
   import Ecto.Query
 
+  alias Ecto.Changeset
   alias MailglassAdmin.PubSub.Topics
   alias MailglassAdmin.Inbound.ReadResult
   alias MailglassAdmin.Inbound.RecordsList
@@ -1152,6 +1153,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       conn: conn
     } do
       conn = operator_conn(conn)
+      MailglassAdmin.TestOperatorAuth.reset_inbound_replay_calls!()
 
       %{record: record} =
         InboundFixtures.seed_matched!(@tenant_id, recipient: "replay@example.com")
@@ -1164,7 +1166,27 @@ defmodule MailglassAdmin.InboundLiveTest do
           inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
         )
 
-      view |> element("button[phx-click='open_replay']") |> render_click()
+      review_html = render_click(view, "open_replay", %{})
+
+      assert review_html =~ ~s(id="inbound-replay-modal")
+      assert review_html =~ record.id
+      assert review_html =~ "Recorded Mailbox: Elixir.MyApp.Mailboxes.SupportMailbox"
+      assert review_html =~ "currently deployed code against the stored InboundMessage"
+
+      assert review_html =~
+               "does not evaluate current router rules or redeliver through the provider"
+
+      refute review_html =~ "Re-runs Mailbox routing"
+
+      confirm_button = Floki.find(Floki.parse_document!(review_html), "#inbound-replay-confirm")
+      assert Floki.attribute(confirm_button, "disabled") == []
+
+      assert review_html =~ ~s(phx-hook="ModalFocusTrap")
+      assert review_html =~ ~s(data-focus-trap="start")
+      assert review_html =~ ~s(data-focus-trap="end")
+      assert review_html =~ ~s(phx-window-keydown="close_replay")
+      assert review_html =~ ~s(id="inbound-replay-close")
+      assert review_html =~ ~s(id="inbound-replay-cancel")
 
       html =
         view
@@ -1176,6 +1198,14 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       after_count = run_count(record.id)
       assert after_count == before_count + 1
+      assert MailglassAdmin.TestOperatorAuth.inbound_replay_calls() == [record.id]
+
+      duplicate_html = render_click(view, "confirm_replay", %{})
+
+      assert duplicate_html =~
+               "Replay review is no longer open. Review the record again before confirming."
+
+      assert run_count(record.id) == after_count
 
       # The newest run is source: :replay (append-only — prior rows untouched).
       latest = latest_run(record.id)
@@ -1196,6 +1226,11 @@ defmodule MailglassAdmin.InboundLiveTest do
           conn,
           inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
         )
+
+      review_html = render_click(view, "open_replay", %{})
+      assert review_html =~ "No mailbox matched this message when it was received"
+      confirm_button = Floki.find(Floki.parse_document!(review_html), "#inbound-replay-confirm")
+      assert Floki.attribute(confirm_button, "disabled") != []
 
       # The confirm path is defensively mapped even though the button is disabled
       # in the header (render→click race) — drive the event directly.
@@ -1227,6 +1262,11 @@ defmodule MailglassAdmin.InboundLiveTest do
           inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
         )
 
+      review_html = render_click(view, "open_replay", %{})
+      assert review_html =~ "The original Mailbox binding is missing or unsafe"
+      confirm_button = Floki.find(Floki.parse_document!(review_html), "#inbound-replay-confirm")
+      assert Floki.attribute(confirm_button, "disabled") != []
+
       html = render_click(view, "confirm_replay", %{})
 
       assert html =~
@@ -1235,6 +1275,81 @@ defmodule MailglassAdmin.InboundLiveTest do
       # The operator must not be pointed at a missing module they could "fix".
       refute html =~ "mailbox module not found"
       refute_banned(html)
+      assert run_count(record.id) == before_count
+    end
+
+    test "missing execution history disables confirmation with its own reason", %{conn: conn} do
+      conn = operator_conn(conn)
+      record = InboundFixtures.insert_record!(@tenant_id, recipient: "history@example.com")
+      InboundFixtures.insert_evidence!(@tenant_id, record.id)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      review_html = render_click(view, "open_replay", %{})
+
+      assert review_html =~ "No execution history is recorded for this message"
+      confirm_button = Floki.find(Floki.parse_document!(review_html), "#inbound-replay-confirm")
+      assert Floki.attribute(confirm_button, "disabled") != []
+      assert run_count(record.id) == 0
+    end
+
+    test "a changed binding after review is rejected before host authorization", %{conn: conn} do
+      conn = operator_conn(conn)
+      MailglassAdmin.TestOperatorAuth.reset_inbound_replay_calls!()
+
+      %{record: record, evidence: evidence} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "stale@example.com")
+
+      before_count = run_count(record.id)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      review_html = render_click(view, "open_replay", %{})
+      assert review_html =~ "Recorded Mailbox: Elixir.MyApp.Mailboxes.SupportMailbox"
+
+      stale_facts =
+        Map.put(evidence.verification_facts, "mailglass_execution_route", %{"status" => "no_match"})
+
+      {:ok, _updated_evidence} =
+        MailglassAdmin.TestRepo.update(Changeset.change(evidence, verification_facts: stale_facts))
+
+      html = render_click(view, "confirm_replay", %{})
+
+      assert html =~ "Replay review is stale. Reopen it to check the recorded Mailbox again."
+      assert MailglassAdmin.TestOperatorAuth.inbound_replay_calls() == []
+      assert run_count(record.id) == before_count
+    end
+
+    test "switching Accounts closes the reviewed target and cannot replay it", %{conn: conn} do
+      conn = operator_conn(conn)
+      MailglassAdmin.TestOperatorAuth.reset_inbound_replay_calls!()
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "account-switch@example.com")
+
+      before_count = run_count(record.id)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      render_click(view, "open_replay", %{})
+      render_patch(view, inbound_path(%{"tenant_id" => @other_tenant, "inbound_id" => record.id}))
+
+      html = render_click(view, "confirm_replay", %{})
+
+      refute html =~ ~s(data-testid="inbound-replay-modal")
+      assert MailglassAdmin.TestOperatorAuth.inbound_replay_calls() == []
       assert run_count(record.id) == before_count
     end
 
@@ -1299,8 +1414,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         Topics.inbound_record_inserted(@tenant_id),
-        {:inbound_record_inserted, fresh.id,
-         %{provider: "mailgun", record_type: "inbound_record"}}
+        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
       )
 
       html = render(view)
