@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 7
+open_count: 8
 waived_count: 9
 fixed_count: 31
-total_count: 47
-last_updated: 2026-10-08T23:31:52.647Z
+total_count: 48
+last_updated: 2026-10-09T13:38:40.425Z
 ---
 
 # Broken Windows Ledger
@@ -62,6 +62,7 @@ last_updated: 2026-10-08T23:31:52.647Z
 | 45 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex | 141 | Changed the replay panel to an explicit 42rem max width with bounded internal scrolling after the 320px browser check found max-w-2xl rendered at 48px. | open |  | 2026-10-08T02:02:40.851Z |  |
 | 46 | 169 | deviation | mailglass_admin/e2e/flows.spec.js | 1115 | Updated replay browser expectations for the contracted close label and the next enabled focus target after a consumed review. | open |  | 2026-10-08T02:02:40.936Z |  |
 | 47 | 168 | deviation | mailglass_admin/e2e/flows.spec.js | 614 | Rendered spacing probe uses the deterministic Inbound quick-view error icon instead of the deliveries orientation icon; both validate the in-scope mt-xs utility. | waived | Accepted test-target adjustment: the Inbound quick-view icon is a deterministic rendered in-scope mt-xs sample for the operator-side computed margin criterion. | 2026-10-08T23:31:45.710Z | 2026-10-08T23:31:52.647Z |
+| 48 | 171 | skipped-test | mailglass_admin/test/mailglass_admin/voice_test.exs | 104 | Pre-existing LiveReload subscription log test remains tagged skip until persistent_term-gated logging lands. | open |  | 2026-10-09T13:38:40.425Z |  |
 
 ````json
 [
@@ -638,6 +639,19 @@ last_updated: 2026-10-08T23:31:52.647Z
     "reason": "Accepted test-target adjustment: the Inbound quick-view icon is a deterministic rendered in-scope mt-xs sample for the operator-side computed margin criterion.",
     "recorded_at": "2026-10-08T23:31:45.710Z",
     "resolved_at": "2026-10-08T23:31:52.647Z",
+    "milestone": "v2.9"
+  },
+  {
+    "id": 48,
+    "kind": "skipped-test",
+    "phase": "171",
+    "file": "mailglass_admin/test/mailglass_admin/voice_test.exs",
+    "line": 113,
+    "description": "Pre-existing LiveReload subscription log test remains tagged skip until persistent_term-gated logging lands.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-09T13:38:40.425Z",
+    "resolved_at": null,
     "milestone": "v2.9"
   }
 ]

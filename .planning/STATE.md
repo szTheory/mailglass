@@ -3,18 +3,18 @@ gsd_state_version: "1.0"
 milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 171
-current_phase_name: developer-preview
+current_phase_name: Developer Preview
 status: executing
-stopped_at: Phase 171 plans independently verified; four plans ready to execute.
-last_updated: "2026-10-09T13:22:13.809Z"
+stopped_at: Completed 171-01-PLAN.md
+last_updated: "2026-10-09T13:38:16.371Z"
 last_activity: 2026-10-09
-last_activity_desc: Phase 171 plans independently verified; ready to execute
-state_head: 70fe62635de7a8efff7a91f47155c9f9e03b4f50
+last_activity_desc: Phase 171 execution started
+state_head: 66ed025a3ad753d9554172609c5a40a0a12524aa
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 27
-  completed_plans: 23
+  completed_plans: 24
   percent: 50
 ---
 
@@ -39,10 +39,10 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 ## Current Position
 
-Phase: 171 (developer-preview) — READY TO EXECUTE
-Plan: Not started
+Phase: 171 (Developer Preview) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-10-09 — Phase 171 plans independently verified; ready to execute
+Last activity: 2026-10-09 — Phase 171 execution started
 
 Progress: 3/6 phases ([█████░░░░░] 50%); [████████████████████] 23/23 plans (100%).
 
@@ -275,6 +275,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 170 P06 | 15min | 2 tasks | 10 files |
 | Phase 170 P07 | 6m | 2 tasks | 3 files |
 | Phase 170 P08 | 82m | 2 tasks | 17 files |
+| Phase 171 P01 | 14m | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -472,6 +473,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 170]: The deterministic browser fixture persists the same durable execution-route binding required by replay eligibility.
 - [Phase 170]: Actual 200% zoom stacks shell actions and gives the evidence disclosure 44.1px minimum height for strict 44px acceptance.
 - [Phase 170]: INUX-01 through INUX-04 remain unclassified/unresolved in the spec-less edge probe; no taxonomy was assigned.
+- [Phase 171]: Display the full Mailable module path and scenario in the compact picker so narrow layouts retain the selected identity.
+- [Phase 171]: Render discovery, missing-scenario, and discovery-error states separately with actionable copy for each.
+- [Phase 171]: Describe Preview as Mailglass.Renderer output and keep route exposure under the host application's dev guard.
+- [Phase 171]: Treat a valid empty preview_props/0 list as a missing-scenario setup state.
 
 ## Quick Tasks Completed
 
@@ -517,9 +522,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T13:21:53.321Z
-Stopped at: Phase 171 plans independently verified; four plans ready to execute.
-Resume file: .planning/phases/171-developer-preview/171-01-PLAN.md
+Last session: 2026-10-09T13:36:24.346Z
+Stopped at: Completed 171-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
