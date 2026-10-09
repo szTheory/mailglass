@@ -273,7 +273,10 @@ defmodule MailglassAdmin.PreviewLive do
 
   @impl true
   def render(assigns) do
-    assigns = assign(assigns, :surface_paths, preview_surface_paths(assigns))
+    assigns =
+      assigns
+      |> assign(:surface_paths, preview_surface_paths(assigns))
+      |> assign(:no_preview_modules, no_preview_modules(assigns.mailables))
 
     ~H"""
     <AdminShell.shell
@@ -483,7 +486,7 @@ defmodule MailglassAdmin.PreviewLive do
                 Read preview setup
               </a>
             </div>
-          <% Enum.any?(@mailables, fn {_mod, reflection} -> reflection == :no_previews end) -> %>
+          <% @no_preview_modules != [] -> %>
             <div
               data-testid="preview-no-previewable-mailables"
               class="motion-reveal rounded-box border border-base-300 bg-base-200 p-lg"
@@ -492,7 +495,7 @@ defmodule MailglassAdmin.PreviewLive do
                 No preview scenarios configured.
               </h2>
               <p
-                :for={{mod, :no_previews} <- @mailables}
+                :for={mod <- @no_preview_modules}
                 class="mt-sm text-body text-secondary"
               >
                 Add named scenarios to <code class="font-mono text-label">preview_props/0</code>
@@ -541,6 +544,14 @@ defmodule MailglassAdmin.PreviewLive do
     Enum.find_value(mailables, fn
       {mod, [{scenario, _defaults} | _]} -> {mod, scenario}
       _ -> nil
+    end)
+  end
+
+  defp no_preview_modules(mailables) do
+    Enum.flat_map(mailables, fn
+      {mod, :no_previews} -> [mod]
+      {mod, []} -> [mod]
+      _ -> []
     end)
   end
 
