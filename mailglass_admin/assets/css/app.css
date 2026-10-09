@@ -292,6 +292,11 @@
   overscroll-behavior: contain;
 }
 
+.mg-inbound-replay-dialog {
+  max-height: calc(100vh - 2rem);
+  max-width: 42rem;
+}
+
 @media (min-width: 768px) {
   .mg-detail-panel {
     inset-inline-start: auto;

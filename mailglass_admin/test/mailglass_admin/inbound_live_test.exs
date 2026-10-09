@@ -34,6 +34,18 @@ defmodule MailglassAdmin.InboundTimelineFailingRepo do
   end
 end
 
+defmodule MailglassAdmin.InboundListFailingRepo do
+  @moduledoc false
+
+  alias MailglassAdmin.TestRepo
+
+  def all(_queryable, _opts \\ []),
+    do: raise(DBConnection.ConnectionError, message: "synthetic inbound list connection failure")
+
+  def one(queryable, opts \\ []), do: TestRepo.one(queryable, opts)
+  def get(queryable, id, opts \\ []), do: TestRepo.get(queryable, id, opts)
+end
+
 defmodule MailglassAdmin.InboundLiveTest do
   @moduledoc """
   InboundLive shell behaviour (Wave 1, plan 48-02).
@@ -188,7 +200,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="inbound-overview")
-      assert html =~ "InboundMessages"
+      assert html =~ "Inbound messages"
       assert html =~ "No match"
       assert html =~ "Accepted"
       assert html =~ "No-match rate"
@@ -217,7 +229,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="inbound-overview")
-      assert html =~ "InboundMessages"
+      assert html =~ "Inbound messages"
       assert html =~ "101"
       refute html =~ "accepted-101@example.com"
     end
@@ -318,6 +330,29 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "synthetic inbound connection failure"
       refute html =~ ~s(data-testid="inbound-result-count")
       refute html =~ ~s(data-testid="inbound-overview-total")
+    end
+
+    test "an unavailable records list does not claim the selected record is outside the results",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "list-unavailable@example.com")
+
+      previous_repo = Application.fetch_env!(:mailglass_inbound, :repo)
+      Application.put_env(:mailglass_inbound, :repo, MailglassAdmin.InboundListFailingRepo)
+
+      on_exit(fn -> Application.put_env(:mailglass_inbound, :repo, previous_repo) end)
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id})
+        )
+
+      assert html =~ record.id
+      assert html =~ ~s(data-testid="inbound-read-unavailable")
+      refute html =~ "This inbound message is outside your current results."
     end
 
     test "a timeline connection failure does not erase the independently loaded record", %{
@@ -432,6 +467,22 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       quick_html = render(view)
       assert quick_html =~ ~s(data-testid="inbound-quick-view")
+      assert quick_html =~ ~s(aria-labelledby="inbound-quick-view-title")
+      assert quick_html =~ "Previous inbound record"
+      assert quick_html =~ "Next inbound record"
+      assert quick_html =~ "text-heading font-bold text-base-content"
+      quick_document = Floki.parse_document!(quick_html)
+
+      for {direction, label} <- [
+            {"prev", "Previous inbound record"},
+            {"next", "Next inbound record"}
+          ] do
+        button = Floki.find(quick_document, "[data-testid='inbound-quick-view-#{direction}']")
+        assert button != []
+        assert Floki.attribute(button, "disabled") != []
+        assert Floki.attribute(button, "aria-label") == [label]
+      end
+
       assert quick_html =~ ~s(aria-current="true")
       assert quick_html =~ "s*******@e******.com"
       refute quick_html =~ "selected@example.com"
@@ -705,7 +756,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-detail-error")
 
       assert html =~
-               "This InboundMessage could not be loaded in the selected Account. Check the record ID and try again."
+               "This inbound message could not be loaded in the selected Account. Check the record ID and try again."
     end
 
     test "exact selected record opens outside the current result page and returns to its context",
@@ -1049,7 +1100,8 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ ~s(data-testid="inbound-routing-trace")
       assert html =~ "Current router simulation"
-      assert html =~ "Why the currently configured routes did not match"
+      assert html =~ "How current route rules compare"
+      assert html =~ "Does not match current clauses"
 
       # One sub-card per declared route (3 routes in the synthetic router).
       trace_cards =
@@ -1070,6 +1122,31 @@ defmodule MailglassAdmin.InboundLiveTest do
       # Legend (verbatim).
       assert html =~
                "Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and a regular-expression matcher uses its configured expression."
+    end
+
+    test "labels a route that matches current rules even when the stored outcome was no-match",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+
+      # The stored execution says no-match, but the current router's billing
+      # subject route matches this message. The trace must report current rules.
+      %{record: record} =
+        InboundFixtures.seed_no_match!(@tenant_id,
+          recipient: "nobody@example.com",
+          subject: "[billing] current route match",
+          headers: %{}
+        )
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
+
+      assert html =~ "Current router simulation"
+      assert html =~ "Matches current clauses"
+      assert html =~ "Does not match current clauses"
+      assert html =~ ~s(data-testid="inbound-route-result")
     end
 
     test "renders safe matcher summaries and masks recipient actual",
@@ -1186,7 +1263,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert review_html =~ ~s(id="inbound-replay-modal")
       assert review_html =~ record.id
       assert review_html =~ "Recorded Mailbox: Elixir.MyApp.Mailboxes.SupportMailbox"
-      assert review_html =~ "currently deployed code against the stored InboundMessage"
+      assert review_html =~ "currently deployed code against the stored inbound message"
 
       assert review_html =~
                "does not evaluate current router rules or redeliver through the provider"
@@ -1464,7 +1541,15 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ ~s(data-testid="inbound-timeline-snapshot")
       assert html =~ "History snapshot through"
-      assert html =~ ~s(phx-click="refresh_inbound_timeline")
+
+      refresh =
+        Floki.find(Floki.parse_document!(html), "[data-testid='inbound-timeline-refresh']")
+        |> hd()
+
+      assert Floki.attribute(refresh, "phx-click") == ["refresh_inbound_timeline"]
+      assert Floki.attribute(refresh, "phx-disable-with") == ["Refreshing history…"]
+      assert Floki.attribute(refresh, "aria-live") == ["polite"]
+      assert Floki.attribute(refresh, "aria-atomic") == ["true"]
       assert html =~ "Refresh history"
     end
 
@@ -1903,7 +1988,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id}))
 
       assert html =~
-               "This InboundMessage could not be loaded in the selected Account. Check the record ID and try again."
+               "This inbound message could not be loaded in the selected Account. Check the record ID and try again."
 
       refute_banned(html)
     end
@@ -2021,7 +2106,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       assert html =~ "Current router simulation"
-      assert html =~ "Why the currently configured routes did not match"
+      assert html =~ "How current route rules compare"
 
       assert html =~
                "Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and a regular-expression matcher uses its configured expression."

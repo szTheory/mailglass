@@ -139,7 +139,7 @@ async function openInbound(page, theme) {
         hasNot: page.locator(".badge-warning", { hasText: "No match" })
       })
       .first();
-    const selectControl = replayableRow.getByRole("button", { name: /^Open InboundMessage/ }).first();
+    const selectControl = replayableRow.getByRole("button", { name: /^Open inbound message/ }).first();
     const recordLabel = await selectControl.getAttribute("aria-label");
     const recordId = recordLabel?.match(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i)?.[0];
     expect(recordId, "the replayable inbound row exposes its exact record ID").toBeTruthy();

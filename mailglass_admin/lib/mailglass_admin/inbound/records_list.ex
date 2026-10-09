@@ -56,7 +56,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
     <div
       :if={is_nil(@data_state)}
       data-testid="inbound-result-count"
-      class="border-b border-base-300 px-4 py-3 text-body text-secondary"
+      class="border-b border-base-300 px-md py-sm text-body text-secondary"
     >
       {result_count_label(@page_meta)}
     </div>
@@ -100,8 +100,8 @@ defmodule MailglassAdmin.Inbound.RecordsList do
         <%= if @empty_state == :no_tenant do %>
           <Components.data_state
             kind={:empty}
-            title="Choose an account"
-            body="Pick the customer account whose Deliveries and inbound routing you want to inspect. Mailglass keeps that account boundary in the URL as tenant_id."
+            title="Choose an Account"
+            body="Select an Account to see scoped operator data."
           />
           <div data-testid="inbound-empty-no-tenant" style="display:none" />
         <% else %>
@@ -182,7 +182,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                     phx-click="select_inbound"
                     phx-value-id={record.id}
                     aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
-                    aria-label={"Open InboundMessage #{record.id}"}
+                    aria-label={"Open inbound message #{record.id}"}
                     class="mg-focus-ring inline-flex min-h-11 items-center rounded-xs px-xs text-left"
                   >
                     <span data-testid={"inbound-outcome-#{record_outcome(record)}"}>
@@ -248,7 +248,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                 phx-value-id={record.id}
                 aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
                 class={[
-                  "mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors",
+                  "mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm px-md py-md text-left transition-colors",
                   row_classes(@selected_record, record)
                 ]}
               >
@@ -352,7 +352,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
       :if={Map.get(@page_meta, :total_pages, 0) > 1}
       data-testid="inbound-pagination"
       aria-label="Inbound records pagination"
-      class="flex items-center justify-between gap-sm border-t border-base-300 px-4 py-3 text-body"
+      class="flex items-center justify-between gap-sm border-t border-base-300 px-md py-sm text-body"
     >
       <.pagination_link
         enabled?={Map.get(@page_meta, :has_previous?, false)}
@@ -414,9 +414,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   defp selected?(_selected_record, _record), do: false
 
   defp empty_body(:no_tenant),
-    do:
-      "Pick the customer account whose Deliveries and inbound routing you want to inspect. " <>
-        "Mailglass keeps that account boundary in the URL as tenant_id."
+    do: "Select an Account to see scoped operator data."
 
   defp empty_body(:truly_empty),
     do: "No InboundMessages have been recorded yet."

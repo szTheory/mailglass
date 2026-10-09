@@ -612,7 +612,7 @@ defmodule MailglassAdmin.InboundLive do
             <%= if @full_detail? and (@selected_record || @detail_error) do %>
               <%!-- FULL DETAIL: the complete InboundMessage on its own, full width
                   (list hidden). Reached from Quick view's "Open full detail" or &full=1. --%>
-              <div data-testid="inbound-detail-column" class="space-y-4">
+              <div data-testid="inbound-detail-column" class="space-y-md">
                 <.link
                   patch={
                     build_path(
@@ -633,7 +633,7 @@ defmodule MailglassAdmin.InboundLive do
                   data-testid="inbound-selection-outside-results"
                   class="text-label text-secondary"
                 >
-                  This InboundMessage is outside your current results.
+                  This inbound message is outside your current results.
                 </p>
 
                 <div
@@ -642,7 +642,7 @@ defmodule MailglassAdmin.InboundLive do
                   role="status"
                   aria-live="polite"
                   class={[
-                    "rounded-box border p-3 text-body",
+                    "rounded-box border p-sm text-body",
                     if(@replay_feedback && @replay_feedback.kind == :error,
                       do: "border-error bg-error/10 text-base-content",
                       else: "border-success bg-success/10 text-base-content"
@@ -656,12 +656,12 @@ defmodule MailglassAdmin.InboundLive do
                   <div
                     id={"inbound-detail-#{@detail.record.id}"}
                     data-region
-                    class="motion-reveal space-y-4"
+                    class="motion-reveal space-y-md"
                   >
                     <DetailHeader.detail_header detail={@detail} account_labels={@account_labels} />
                     <div
                       data-testid="inbound-timeline-snapshot"
-                      class="flex flex-wrap items-center justify-between gap-sm rounded-box border border-base-300 bg-base-200 p-3"
+                      class="flex flex-wrap items-center justify-between gap-sm rounded-box border border-base-300 bg-base-200 p-md"
                     >
                       <p class="text-label text-secondary">
                         <%= cond do %>
@@ -677,7 +677,11 @@ defmodule MailglassAdmin.InboundLive do
                       <button
                         type="button"
                         phx-click="refresh_inbound_timeline"
-                        class="btn btn-ghost min-h-11 px-4"
+                        phx-disable-with="Refreshing history…"
+                        aria-live="polite"
+                        aria-atomic="true"
+                        data-testid="inbound-timeline-refresh"
+                        class="btn btn-ghost min-h-11 px-md"
                       >
                         Refresh history
                       </button>
@@ -705,9 +709,9 @@ defmodule MailglassAdmin.InboundLive do
                 <% else %>
                   <div
                     data-testid="inbound-detail-error"
-                    class="card rounded-box border border-error bg-base-100 p-6"
+                    class="card rounded-box border border-error bg-base-100 p-lg"
                   >
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-sm">
                       <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
                       <h2 class="text-body font-bold text-base-content">
                         {detail_error_copy(@detail_error)}
@@ -743,7 +747,7 @@ defmodule MailglassAdmin.InboundLive do
 
               <section
                 data-testid="inbound-filters"
-                class="card mt-6 rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
+                class="card mt-lg rounded-box border border-base-300 bg-base-200 p-md md:p-lg"
               >
                 <button
                   type="button"
@@ -760,7 +764,7 @@ defmodule MailglassAdmin.InboundLive do
                     id="inbound-filters"
                     phx-change="validate_filters"
                     phx-submit="apply_filters"
-                    class="mt-4 grid gap-md md:mt-0"
+                    class="mt-md grid gap-md md:mt-0"
                   >
                     <p
                       :if={@provider_options_state != :ok}
@@ -783,18 +787,18 @@ defmodule MailglassAdmin.InboundLive do
                       errors={@filter_errors}
                     />
 
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-sm">
                       <button
                         type="submit"
                         phx-disable-with="Applying filters…"
-                        class="btn btn-primary min-h-11 w-40 px-5"
+                        class="btn btn-primary min-h-11 w-40 px-md"
                       >
                         Apply filters
                       </button>
                       <button
                         type="button"
                         phx-click="clear_filters"
-                        class="btn btn-ghost min-h-11 px-5"
+                        class="btn btn-ghost min-h-11 px-md"
                       >
                         Clear filters
                       </button>
@@ -803,13 +807,13 @@ defmodule MailglassAdmin.InboundLive do
                 </div>
               </section>
 
-              <section data-testid="inbound-master-detail" class="mt-6">
+              <section data-testid="inbound-master-detail" class="mt-lg">
                 <aside
                   data-testid="inbound-records-list-card"
                   class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
                 >
-                  <div class="border-b border-base-300 px-4 py-3">
-                    <h2 class="text-label uppercase font-bold text-secondary">
+                  <div class="border-b border-base-300 px-md py-sm">
+                    <h2 class="text-body font-bold text-base-content">
                       Recent InboundMessages
                     </h2>
                   </div>
@@ -952,7 +956,8 @@ defmodule MailglassAdmin.InboundLive do
     detail_error = detail_error_for(selected_inbound_id, detail, detail_read_state)
 
     selected_outside_results? =
-      not is_nil(selected_record) and is_nil(find_selected_record(records, selected_inbound_id))
+      records_read_state == :ok and not is_nil(selected_record) and
+        is_nil(find_selected_record(records, selected_inbound_id))
 
     socket
     |> assign(:selected_record, selected_record)
@@ -1312,7 +1317,7 @@ defmodule MailglassAdmin.InboundLive do
 
   defp replay_error_copy(:not_found),
     do:
-      "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
+      "This inbound message is unavailable in the selected Account or current results. Refresh the page or adjust the filters, then try again."
 
   defp replay_error_copy(:unavailable),
     do: "Replay blocked: the inbound package is not available."
@@ -1326,7 +1331,7 @@ defmodule MailglassAdmin.InboundLive do
 
   defp replay_error_copy(_reason),
     do:
-      "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
+      "This inbound message is unavailable in the selected Account or current results. Refresh the page or adjust the filters, then try again."
 
   defp empty_state_for(%{"tenant_id" => tenant_id}, _page, _read_state)
        when tenant_id in [nil, ""],
@@ -1652,7 +1657,7 @@ defmodule MailglassAdmin.InboundLive do
 
   defp detail_error_copy(_reason),
     do:
-      "This InboundMessage could not be loaded in the selected Account. Check the record ID and try again."
+      "This inbound message could not be loaded in the selected Account. Check the record ID and try again."
 
   defp records_data_state(:ok), do: nil
   defp records_data_state(:package_unavailable), do: :package_unavailable

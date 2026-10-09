@@ -29,7 +29,7 @@ defmodule MailglassAdmin.Inbound.ReplayModalTest do
       assert html =~ ~s(id="inbound-replay-modal-title")
       assert html =~ "rec-1"
       assert html =~ "Recorded Mailbox: Elixir.MyApp.Mailboxes.SupportMailbox"
-      assert html =~ "currently deployed code against the stored InboundMessage"
+      assert html =~ "currently deployed code against the stored inbound message"
       assert html =~ "does not evaluate current router rules or redeliver through the provider"
       assert html =~ ~s(phx-click="close_replay")
       confirm_button = Floki.find(Floki.parse_document!(html), "#inbound-replay-confirm")

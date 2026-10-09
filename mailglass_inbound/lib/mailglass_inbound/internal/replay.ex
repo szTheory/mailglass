@@ -12,7 +12,10 @@ defmodule MailglassInbound.Internal.Replay do
   alias MailglassInbound.Ingress.{Request, VerifiedRequest}
   alias MailglassInbound.Router.Matcher
 
-  @matched_outcomes [:accept, :ignore, :no_change, :reject, :bounce]
+  # A failed callback still persists the resolved Mailbox identity. In a legacy
+  # record without a durable route binding, that proves routing matched but does
+  # not make the persisted module name safe to resolve for replay.
+  @mailbox_routed_outcomes [:accept, :ignore, :no_change, :reject, :bounce, :failed]
 
   defp schema_opts, do: [prefix: MailglassInbound.Config.schema()]
 
@@ -361,7 +364,7 @@ defmodule MailglassInbound.Internal.Replay do
           run.tenant_id == ^tenant_id and
           run.source == :fresh and
           not is_nil(run.mailbox) and
-          run.outcome in ^@matched_outcomes,
+          run.outcome in ^@mailbox_routed_outcomes,
       order_by: [desc: run.inserted_at, desc: run.id],
       limit: 1
     )

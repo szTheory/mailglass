@@ -23,7 +23,7 @@ defmodule MailglassAdmin.Inbound.Overview do
     <section data-testid="inbound-overview" class="grid gap-md">
       <div class="grid gap-sm sm:grid-cols-2 xl:grid-cols-4">
         <Components.stat_card
-          label="InboundMessages"
+          label="Inbound messages"
           value={@total}
           severity={:info}
           severity_label="Tracked"
@@ -52,10 +52,10 @@ defmodule MailglassAdmin.Inbound.Overview do
         />
       </div>
 
-      <div :if={@secondary != []} class="mt-4 flex flex-wrap gap-2">
+      <div :if={@secondary != []} class="mt-md flex flex-wrap gap-sm">
         <span
           :for={{label, count} <- @secondary}
-          class="rounded-box border border-base-300 bg-base-100 px-3 py-2 text-label text-secondary"
+          class="rounded-box border border-base-300 bg-base-100 px-sm py-sm text-label text-secondary"
         >
           <span>{label}</span>
           <span class="mono font-bold text-base-content">{count}</span>

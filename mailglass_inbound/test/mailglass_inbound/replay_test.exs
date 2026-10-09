@@ -543,6 +543,43 @@ defmodule MailglassInbound.ReplayTest do
                Replay.replay(record.id, tenant_id: record.tenant_id, repo: TestRepo)
     end
 
+    test "classifies a failed legacy run with a mailbox as an unsafe binding" do
+      owner = Sandbox.start_owner!(TestRepo, shared: true)
+      TestRepo.query!("TRUNCATE TABLE mailglass_inbound_records CASCADE", [])
+      on_exit(fn -> Sandbox.stop_owner(owner) end)
+
+      assert {:ok, %{status: :inserted}} =
+               Persist.persist(valid_sendgrid_handoff(), repo: TestRepo, routes: [])
+
+      record = TestRepo.get_by!(InboundRecord, tenant_id: "tenant-123")
+      evidence = TestRepo.get_by!(InboundEvidence, inbound_record_id: record.id)
+
+      evidence
+      |> Ecto.Changeset.change(
+        verification_facts: Map.delete(evidence.verification_facts, "mailglass_execution_route")
+      )
+      |> TestRepo.update!()
+
+      {:ok, _failed_run} =
+        TestRepo.insert(
+          ExecutionRun.changeset(%{
+            tenant_id: record.tenant_id,
+            inbound_record_id: record.id,
+            inbound_evidence_id: evidence.id,
+            source: :fresh,
+            mailbox: "Legacy.Mailboxes.FailedMailbox",
+            outcome: :failed,
+            failure: %{"kind" => "callback_error"}
+          })
+        )
+
+      assert {:ok, %{status: :ineligible, reason: :invalid_mailbox}} =
+               eligibility_result(record.id, tenant_id: record.tenant_id, repo: TestRepo)
+
+      assert {:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}} =
+               Replay.replay(record.id, tenant_id: record.tenant_id, repo: TestRepo)
+    end
+
     test "reuses stored canonical and evidence truth, defaults to the latest fresh matched mailbox, and appends replay lineage" do
       record = valid_inbound_record()
       evidence = valid_inbound_evidence(record.id)

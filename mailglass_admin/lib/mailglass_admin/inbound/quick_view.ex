@@ -56,15 +56,15 @@ defmodule MailglassAdmin.Inbound.QuickView do
         <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
 
         <div class="flex items-center justify-between gap-sm border-b border-base-300 pb-sm">
-          <h2 id="inbound-quick-view-title" class="text-label font-bold uppercase text-secondary">
+          <h2 id="inbound-quick-view-title" class="text-heading font-bold text-base-content">
             Quick view
           </h2>
           <div class="flex items-center gap-xs">
-            <.nav_button dir="prev" path={@previous_path} label="Previous InboundMessage">‹</.nav_button>
+            <.nav_button dir="prev" path={@previous_path} label="Previous inbound record">‹</.nav_button>
             <span :if={@position} aria-live="polite" class="mono px-xs text-label text-secondary">
               {@position.index} of {@position.total}
             </span>
-            <.nav_button dir="next" path={@next_path} label="Next InboundMessage">›</.nav_button>
+            <.nav_button dir="next" path={@next_path} label="Next inbound record">›</.nav_button>
             <.link
               id="inbound-quick-view-close"
               patch={@close_path}
@@ -95,7 +95,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
                 data-testid="inbound-selection-outside-results"
                 class="text-label text-secondary"
               >
-                This InboundMessage is outside your current results.
+                This inbound message is outside your current results.
               </p>
               <div class="flex flex-wrap items-center gap-sm">
                 <h3 class="text-heading font-bold text-base-content">{subject(@record)}</h3>
@@ -167,9 +167,15 @@ defmodule MailglassAdmin.Inbound.QuickView do
 
   defp nav_button(%{path: nil} = assigns) do
     ~H"""
-    <span aria-disabled="true" aria-label={@label} class="btn btn-ghost btn-sm opacity-40">
+    <button
+      type="button"
+      disabled
+      aria-label={@label}
+      data-testid={"inbound-quick-view-#{@dir}"}
+      class="btn btn-ghost min-h-11 min-w-11 cursor-not-allowed opacity-40"
+    >
       {render_slot(@inner_block)}
-    </span>
+    </button>
     """
   end
 
@@ -179,7 +185,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
       patch={@path}
       data-testid={"inbound-quick-view-#{@dir}"}
       aria-label={@label}
-      class="mg-focus-ring btn btn-ghost btn-sm"
+      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11"
     >
       {render_slot(@inner_block)}
     </.link>
@@ -204,5 +210,5 @@ defmodule MailglassAdmin.Inbound.QuickView do
 
   defp detail_error_copy(_reason),
     do:
-      "This InboundMessage could not be loaded in the selected Account. Check the record ID and try again."
+      "This inbound message could not be loaded in the selected Account. Check the record ID and try again."
 end

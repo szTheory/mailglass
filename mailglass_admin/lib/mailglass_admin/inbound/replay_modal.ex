@@ -16,7 +16,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
     ~H"""
     <%= if @open? and is_map(@record) and is_map(@review) do %>
       <div
-        class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 flex items-center justify-center overflow-hidden p-4"
+        class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 flex items-center justify-center overflow-hidden p-md"
         phx-remove={
           JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})
         }
@@ -33,7 +33,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
           phx-mounted={JS.focus(to: "#inbound-replay-close")}
           phx-window-keydown="close_replay"
           phx-key="Escape"
-          class="motion-overlay mg-layer-overlay-panel relative my-4 max-h-[calc(100vh-2rem)] w-full max-w-[42rem] shrink-0 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
+          class="motion-overlay mg-layer-overlay-panel mg-inbound-replay-dialog relative my-md w-full shrink-0 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-lg shadow-overlay"
           phx-remove={
             JS.hide(
               time: 150,
@@ -48,31 +48,33 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
                 Review inbound replay
               </h2>
               <p id="inbound-replay-modal-description" class="text-body text-secondary">
-                Replay uses the recorded Mailbox identity with currently deployed code against the stored InboundMessage. It does not evaluate current router rules or redeliver through the provider.
+                Replay uses the recorded Mailbox identity with currently deployed code against the stored inbound message. It does not evaluate current router rules or redeliver through the provider.
               </p>
             </div>
             <button
               id="inbound-replay-close"
               type="button"
               phx-click="close_replay"
-              class="btn btn-ghost min-h-11 shrink-0 px-4"
+              class="btn btn-ghost min-h-11 shrink-0 px-md"
             >
               Close replay review
             </button>
           </div>
 
-          <dl class="mt-6 grid gap-sm rounded-box border border-base-300 bg-base-200 p-4 text-body sm:grid-cols-2">
+          <dl class="mt-lg grid gap-sm rounded-box border border-base-300 bg-base-200 p-md text-body sm:grid-cols-2">
             <div class="min-w-0">
               <dt class="text-label text-secondary">Account ID</dt>
-              <dd class="mono mt-1 break-all text-base-content">{@review.tenant_id}</dd>
+              <dd class="mono mt-xs break-all text-base-content">{@review.tenant_id}</dd>
             </div>
             <div class="min-w-0">
-              <dt class="text-label text-secondary">InboundMessage ID</dt>
-              <dd class="mono mt-1 break-all text-base-content">{@review.record_id}</dd>
+              <dt class="text-label text-secondary">Inbound message ID</dt>
+              <dd class="mono mt-xs break-all text-base-content">{@review.record_id}</dd>
             </div>
             <div class="min-w-0 sm:col-span-2">
               <dt class="text-label text-secondary">Mailbox</dt>
-              <dd class="mono mt-1 break-all text-base-content">Recorded Mailbox: {mailbox_label(@review.eligibility)}</dd>
+              <dd class="mono mt-xs break-all text-base-content">
+                Recorded Mailbox: {mailbox_label(@review.eligibility)}
+              </dd>
             </div>
           </dl>
 
@@ -81,7 +83,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
             role="status"
             aria-live="polite"
             class={[
-              "mt-4 rounded-box border p-4 text-body",
+              "mt-md rounded-box border p-md text-body",
               eligible?(@review.eligibility) && "border-success bg-success/10 text-base-content",
               not eligible?(@review.eligibility) && "border-warning bg-warning/10 text-base-content"
             ]}
@@ -89,12 +91,12 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
             {eligibility_copy(@review.eligibility)}
           </p>
 
-          <div class="mt-6 flex flex-wrap justify-end gap-sm">
+          <div class="mt-lg flex flex-wrap justify-end gap-sm">
             <button
               id="inbound-replay-cancel"
               type="button"
               phx-click="close_replay"
-              class="btn btn-ghost min-h-11 px-5"
+              class="btn btn-ghost min-h-11 px-md"
             >
               Cancel
             </button>
@@ -106,7 +108,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
               disabled={@busy? or not eligible?(@review.eligibility)}
               aria-live="polite"
               data-testid="inbound-replay-confirm"
-              class="btn btn-error min-h-11 px-5"
+              class="btn btn-error min-h-11 px-md"
             >
               {if(@busy?, do: "Replaying…", else: "Confirm replay")}
             </button>
@@ -118,8 +120,9 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
     """
   end
 
-  defp eligible?(%{status: :eligible, mailbox: mailbox}) when is_binary(mailbox) and mailbox != "",
-    do: true
+  defp eligible?(%{status: :eligible, mailbox: mailbox})
+       when is_binary(mailbox) and mailbox != "",
+       do: true
 
   defp eligible?(_eligibility), do: false
 

@@ -25,7 +25,7 @@ async function openDeliveryFull(page, row) {
 }
 
 async function openInboundFull(page, row) {
-  const selectControl = row.getByRole("button", { name: /^Open InboundMessage/ }).first();
+  const selectControl = row.getByRole("button", { name: /^Open inbound message/ }).first();
   if (await selectControl.count()) await selectControl.click();
   else await row.click();
   await expect(page.getByTestId("inbound-quick-view")).toBeVisible();

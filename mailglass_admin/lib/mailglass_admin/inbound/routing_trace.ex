@@ -28,7 +28,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
           class="mg-focus-ring block min-h-11 cursor-pointer rounded-box focus:outline-none"
         >
           <span class="text-body font-bold text-base-content">Current router simulation</span>
-          <span class="block text-label text-secondary">Why the currently configured routes did not match</span>
+          <span class="block text-label text-secondary">How current route rules compare</span>
         </summary>
 
         <div id="inbound-routing-trace-content" class="mt-md space-y-md">
@@ -49,7 +49,20 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                 >
                   <div class="mb-sm flex flex-wrap items-center justify-between gap-sm">
                     <p class="mono min-w-0 break-all text-body text-base-content">{route.mailbox}</p>
-                    <span class="badge badge-outline badge-error">No match</span>
+                    <span
+                      data-testid="inbound-route-result"
+                      class={[
+                        "badge badge-outline",
+                        if(route_matches_current_rules?(route.verdicts),
+                          do: "badge-success",
+                          else: "badge-error"
+                        )
+                      ]}
+                    >
+                      {if route_matches_current_rules?(route.verdicts),
+                        do: "Matches current clauses",
+                        else: "Does not match current clauses"}
+                    </span>
                   </div>
 
                   <ul class="min-w-0 space-y-md">
@@ -184,6 +197,11 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
     do: elem(verdict, tuple_size(verdict) - 1)
 
   defp pass?(_verdict), do: false
+
+  defp route_matches_current_rules?(verdicts) when is_list(verdicts),
+    do: Enum.all?(verdicts, &(pass?(&1) === true))
+
+  defp route_matches_current_rules?(_verdicts), do: false
 
   defp matcher_of({:recipient, matcher, _actual, _pass?}), do: matcher
   defp matcher_of({:subject, matcher, _actual, _pass?}), do: matcher

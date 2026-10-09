@@ -749,12 +749,13 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         eligibility: %{status: :eligible, mailbox: "MyApp.Mailboxes.Support"}
       }
 
-      html = render_component(&ReplayModal.replay_modal/1, open?: true, record: record, review: review)
+      html =
+        render_component(&ReplayModal.replay_modal/1, open?: true, record: record, review: review)
 
       assert html =~ ~s(data-testid="inbound-replay-modal")
 
       assert html =~
-               "Replay uses the recorded Mailbox identity with currently deployed code against the stored InboundMessage. It does not evaluate current router rules or redeliver through the provider."
+               "Replay uses the recorded Mailbox identity with currently deployed code against the stored inbound message. It does not evaluate current router rules or redeliver through the provider."
 
       assert html =~ "text-heading"
       assert html =~ "min-h-11"

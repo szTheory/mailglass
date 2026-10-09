@@ -659,7 +659,7 @@ async function selectInboundFull(page, row) {
   // The desktop table wraps the selection action in an inner button; the
   // mobile card is itself the selection control. Match the actual LiveView
   // action so hidden responsive duplicates cannot make us click a non-control.
-  const selectControl = row.getByRole("button", { name: /^Open InboundMessage/ }).first();
+  const selectControl = row.getByRole("button", { name: /^Open inbound message/ }).first();
   if (await selectControl.count()) await selectControl.click();
   else await row.click();
   await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
@@ -672,7 +672,7 @@ async function inboundRecordIdFromRow(row) {
   const actionId = (await row.getAttribute("phx-value-id")) || (await action.getAttribute("phx-value-id"));
   if (actionId) return actionId;
 
-  const desktopButton = row.getByRole("button", { name: /^Open InboundMessage/ }).first();
+  const desktopButton = row.getByRole("button", { name: /^Open inbound message/ }).first();
   const control = await desktopButton.count() ? desktopButton : row;
   const copy =
     (await control.getAttribute("aria-label")) ||
