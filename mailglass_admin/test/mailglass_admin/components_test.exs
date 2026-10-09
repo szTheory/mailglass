@@ -4,7 +4,7 @@ defmodule MailglassAdmin.ComponentsTest do
   Components.normalize_inbound_outcome/1 adapter.
 
   Covers all 24 atoms across the four frozen taxonomy tables from
-  74-UI-SPEC.md: 14 outbound delivery statuses, 6 inbound message outcomes,
+  74-UI-SPEC.md: 14 outbound delivery statuses, 7 inbound message outcomes,
   4 timeline event markers, plus the normalize_inbound_outcome/1 adapter
   (Wave 0 Nyquist requirement per 76-VALIDATION.md DS-01).
 
@@ -126,7 +126,7 @@ defmodule MailglassAdmin.ComponentsTest do
     end
   end
 
-  describe "status_badge/1 — inbound message outcomes (6 atoms)" do
+  describe "status_badge/1 — inbound message outcomes" do
     test "accepted renders badge-success + check-circle icon" do
       html = render_component(&Components.status_badge/1, status: :accepted, size: :sm)
       assert html =~ "badge-success"
@@ -160,6 +160,13 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "badge-outline"
       assert html =~ "hero-minus-circle"
       assert html =~ "Ignored"
+    end
+
+    test "no_change renders a separate neutral badge" do
+      html = render_component(&Components.status_badge/1, status: :no_change, size: :sm)
+      assert html =~ "badge-outline"
+      assert html =~ "No change"
+      refute html =~ "Ignored"
     end
 
     test "failed_ingest renders badge-error + exclamation-circle icon" do
@@ -227,8 +234,8 @@ defmodule MailglassAdmin.ComponentsTest do
       assert Components.normalize_inbound_outcome(:ignore) == :ignore
     end
 
-    test "passes nil through unchanged" do
-      assert Components.normalize_inbound_outcome(nil) == nil
+    test "maps nil to the missing-history display state" do
+      assert Components.normalize_inbound_outcome(nil) == :missing_history
     end
   end
 

@@ -870,6 +870,45 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "MyApp.Mailboxes.SupportMailbox"
       assert html =~ "No match"
     end
+
+    test "filters an explicit no-change run without including an ignored run", %{conn: conn} do
+      conn = operator_conn(conn)
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "initial@example.com")
+
+      {:ok, view, _html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      no_change = InboundFixtures.insert_record!(@tenant_id, recipient: "no-change@example.com")
+      no_change_evidence = InboundFixtures.insert_evidence!(@tenant_id, no_change.id)
+
+      InboundFixtures.insert_run!(@tenant_id, no_change.id, no_change_evidence.id,
+        outcome: :no_change
+      )
+
+      ignored = InboundFixtures.insert_record!(@tenant_id, recipient: "ignored@example.com")
+      ignored_evidence = InboundFixtures.insert_evidence!(@tenant_id, ignored.id)
+
+      InboundFixtures.insert_run!(@tenant_id, ignored.id, ignored_evidence.id, outcome: :ignore)
+
+      view
+      |> form("#inbound-filters",
+        filters: %{
+          "tenant_id" => @tenant_id,
+          "provider" => "",
+          "outcome" => "no_change",
+          "window_hours" => "168",
+          "search" => ""
+        }
+      )
+      |> render_submit()
+
+      assert_patch(view, inbound_path(%{"tenant_id" => @tenant_id, "outcome" => "no_change"}))
+
+      html = render(view)
+      assert html =~ no_change.id
+      refute html =~ ignored.id
+      assert html =~ ~s(<option value="no_change" selected)
+      assert html =~ "No change"
+    end
   end
 
   describe "search filter (WR-03) — end-to-end narrowing" do
@@ -978,7 +1017,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
 
       refute html =~ ~s(data-testid="inbound-routing-trace")
-      refute html =~ "Routing trace"
+      refute html =~ "Current router simulation"
     end
 
     test "renders per-route clause diffs from explain/2 for a :no_match record", %{conn: conn} do
@@ -1001,8 +1040,8 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       assert html =~ ~s(data-testid="inbound-routing-trace")
-      assert html =~ "Routing trace"
-      assert html =~ "Why this message did not match"
+      assert html =~ "Current router simulation"
+      assert html =~ "Why the currently configured routes did not match"
 
       # One sub-card per declared route (3 routes in the synthetic router).
       trace_cards =
@@ -1018,13 +1057,14 @@ defmodule MailglassAdmin.InboundLiveTest do
       # Clause dimensions.
       assert html =~ "Recipient"
       assert html =~ "Subject"
-      assert html =~ "Header: x-priority"
+      assert html =~ "Header"
+      refute html =~ "x-priority"
       # Legend (verbatim).
       assert html =~
-               "Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and ~r/…/ matches by regular expression."
+               "Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and a regular-expression matcher uses its configured expression."
     end
 
-    test "renders matcher kinds — nil → any, exact verbatim, regex → ~r/, and masks recipient actual",
+    test "renders safe matcher summaries and masks recipient actual",
          %{conn: conn} do
       conn = operator_conn(conn)
 
@@ -1041,10 +1081,12 @@ defmodule MailglassAdmin.InboundLiveTest do
           inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
         )
 
-      # Exact recipient matcher verbatim (route 1: recipient "support@example.com").
-      assert html =~ "support@example.com"
-      # Regex subject matcher rendered as ~r/ form (route 2: ~r/^\[billing\]/).
-      assert html =~ "~r/"
+      # Recipient matcher is masked like the recipient actual; both are PII.
+      assert html =~ "s******@e******.com"
+      refute html =~ "support@example.com"
+      # Regex matcher internals are withheld; the UI communicates its kind only.
+      assert html =~ "Regular expression matcher"
+      refute html =~ "billing"
       # Wildcard clauses (nil matchers, e.g. the subject on route 1) render "any".
       assert html =~ ~r/>\s*any\s*</
       # The recipient ACTUAL is masked, never raw.
@@ -1084,8 +1126,17 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       # The raw payload bytes MUST be absent from the HTML by default.
       refute html =~ secret
-      # Verification facts ARE shown (not redacted).
-      assert html =~ "spf"
+      # Arbitrary provider verification keys and values are withheld.
+      verification_text =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='inbound-evidence-verification']")
+        |> Floki.text()
+
+      assert verification_text =~ "Unavailable"
+      refute verification_text =~ "spf"
+      refute verification_text =~ "dkim"
+      refute verification_text =~ "pass"
     end
   end
 
@@ -1741,11 +1792,11 @@ defmodule MailglassAdmin.InboundLiveTest do
           inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
         )
 
-      assert html =~ "Routing trace"
-      assert html =~ "Why this message did not match"
+      assert html =~ "Current router simulation"
+      assert html =~ "Why the currently configured routes did not match"
 
       assert html =~
-               "Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and ~r/…/ matches by regular expression."
+               "Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and a regular-expression matcher uses its configured expression."
 
       refute_banned(html)
     end

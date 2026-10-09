@@ -51,7 +51,34 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "a****@e******.com"
       assert html =~ "rec-1"
       assert html =~ "MAILGUN"
-      assert html =~ "no match"
+      assert html =~ "No execution recorded"
+    end
+
+    test "keeps long and non-ASCII row values readable on mobile cards" do
+      recipient = String.duplicate("a", 64) <> "@exämple.com"
+      masked_recipient = "a" <> String.duplicate("*", 63) <> "@e******.com"
+      record_id = "rec-" <> String.duplicate("界", 40)
+
+      record = %{
+        id: record_id,
+        tenant_id: "tenant-東京",
+        provider: "postmark",
+        envelope_recipient: recipient,
+        subject: "A subject not shown in this compact row",
+        received_at: ~U[2026-05-24 10:00:00Z],
+        outcome: :accept,
+        mailbox: "MyApp.箱"
+      }
+
+      html =
+        render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
+
+      assert html =~ masked_recipient
+      assert html =~ ~s(title="#{masked_recipient}")
+      assert html =~ record_id
+      assert html =~ "tenant-東京"
+      assert html =~ "MyApp.箱"
+      refute html =~ recipient
     end
 
     test "renders the real outcome badge + matched mailbox for a matched record (WR-01)" do
@@ -96,7 +123,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "no match"
     end
 
-    test "renders the neutral Unknown badge for a record with no run yet (nil outcome)" do
+    test "renders no history when the record has no execution run yet" do
       record = %{
         id: "rec-4",
         tenant_id: "tenant-a",
@@ -111,9 +138,50 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html =
         render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
-      assert html =~ "Unknown"
+      assert html =~ "No history"
       assert html =~ "badge-outline"
-      assert html =~ "no match"
+      assert html =~ "No execution recorded"
+      refute html =~ "no match"
+    end
+
+    test "renders an explicit no-change outcome separately from other outcomes" do
+      record = %{
+        id: "rec-no-change",
+        tenant_id: "tenant-a",
+        provider: "postmark",
+        envelope_recipient: "alice@example.com",
+        subject: "Hello",
+        received_at: ~U[2026-05-24 10:00:00Z],
+        outcome: :no_change,
+        mailbox: "MyApp.SupportMailbox"
+      }
+
+      html =
+        render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
+
+      assert html =~ "No change"
+      assert html =~ "badge-outline"
+      assert html =~ "MyApp.SupportMailbox"
+    end
+
+    test "does not label a failed execution as no match" do
+      record = %{
+        id: "rec-failed",
+        tenant_id: "tenant-a",
+        provider: "postmark",
+        envelope_recipient: "alice@example.com",
+        subject: "Hello",
+        received_at: ~U[2026-05-24 10:00:00Z],
+        outcome: :failed,
+        mailbox: nil
+      }
+
+      html =
+        render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
+
+      assert html =~ "Failed"
+      assert html =~ "Unavailable"
+      refute html =~ "no match"
     end
   end
 
