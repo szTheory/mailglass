@@ -35,9 +35,9 @@
     }
   ],
   "next": {
-    "command": "/gsd:progress --next",
-    "label": "Advance to the next step (plan phase 171)",
-    "reason": "Phase 171 of 6 — needs a plan"
+    "command": "/gsd:execute-phase 171",
+    "label": "Execute Phase 171",
+    "reason": "Phase 171 has 4 plans across 4 waves and is ready to execute"
   },
-  "updated_at": "2026-10-09T05:57:58.234Z"
+  "updated_at": "2026-10-09T13:22:14.000Z"
 }
