@@ -52,6 +52,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       html
       |> Floki.parse_document!()
       |> Floki.find(~s([data-testid="preview-pane"]))
+      |> Enum.filter(&(Floki.attribute(&1, "hidden") == []))
 
     %{
       frame_theme: Floki.attribute(pane, "data-preview-frame-theme"),
@@ -319,7 +320,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(data-testid="admin-shell-page-header")
 
       assert html =~
-               "Render an email exactly as your app would send it, then inspect HTML, text, raw source, headers, and assigns."
+               "Inspect renderer HTML and plaintext, an illustrative raw preview, generated preview headers, and scenario assigns. This is not final provider or recipient output."
 
       assert html =~ ~s(data-testid="admin-shell-sidebar")
       assert html =~ ~s(data-testid="surface-nav-sidebar")
@@ -493,6 +494,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert text_html =~ "Hi Ada",
              "Text tab must contain the rendered text_body literal"
+
       assert text_html =~ "Renderer plaintext"
 
       # Raw tab shows MIME boundary-looking content
@@ -500,8 +502,9 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert raw_html =~ ~r/(boundary=|Content-Type:|MIME-Version:)/i,
              "Raw tab must contain RFC 5322 envelope markers"
+
       assert raw_html =~ "Illustrative MIME-shaped preview"
-      refute raw_html =~ "serialized wire bytes"
+      assert raw_html =~ "serialized wire bytes"
 
       # Headers tab shows auto-injected Message-ID + Date rows
       headers_html = render_click(view, "set_tab", %{"tab" => "headers"})
@@ -511,7 +514,9 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert headers_html =~ "Date",
              "Headers tab must show the Date row"
-      assert headers_html =~ "Preview-generated value"
+
+      assert headers_html =~ "Message-ID and Date are generated for this preview"
+      assert headers_html =~ "Preview value"
       assert headers_html =~ ~r/preview-[0-9]+@mailglass\.dev/
     end
 

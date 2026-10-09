@@ -1,6 +1,8 @@
 # Preview
 
-The preview uses `Mailglass.Renderer` to build HTML and text from a selected Mailable scenario. It does not run outbound preflight or delivery, so the browser output is not a promise of what a recipient or provider will receive.
+The preview uses `Mailglass.Renderer` to build HTML and plaintext from a selected Mailable scenario. This is the content-rendering stage also used by outbound preflight; preflight checks, adapter encoding, tracking/compliance transformations, and delivery happen later. This Preview code path does not call `Mailglass.Outbound.deliver/2` and has no send control, so the browser output is not a promise of what a recipient or provider will receive.
+
+The Raw tab is an illustrative MIME-shaped preview, not serialized wire bytes. The Headers tab shows scenario or preview values; Message-ID and Date are generated for the preview when the scenario does not provide them. The HTML iframe shows browser rendering only. Scripts stay disabled, but the iframe is not an HTML sanitizer or network/privacy boundary: rendered remote resource URLs may cause browser requests. Use synthetic, non-sensitive preview assigns.
 
 The screenshot capture workflow is for **preview-pipeline confidence only**. It
 does **not** claim cross-client parity across Outlook/Gmail/Apple Mail.

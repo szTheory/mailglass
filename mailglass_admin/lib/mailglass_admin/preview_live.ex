@@ -30,15 +30,14 @@ defmodule MailglassAdmin.PreviewLive do
   return (this plan) flows through `handle_params/3` into the same error
   card.
 
-  ## No PII in telemetry
+  ## Telemetry and delivery boundary
 
-  v0.1 emits NO telemetry. The cost of shipping the wrong whitelist once
-  is permanent (PII leaks into adopter handlers). v0.5 adds a
-  `mailables_count` counter after whitelist review.
-
-  Preview NEVER calls `Mailglass.Outbound.deliver/2` — per CLAUDE.md
-  pitfall #4 the admin boundary's `exports: [Router]` already
-  structurally prevents it, but the principle is reinforced here.
+  Preview adds no preview-specific telemetry. The shared `Mailglass.Renderer`
+  emits its normal render lifecycle telemetry. This LiveView calls the
+  renderer for content output; outbound preflight, adapter encoding,
+  tracking/compliance transformations, and delivery happen later. This
+  preview code path does not call `Mailglass.Outbound.deliver/2` and has no
+  send control.
 
   Boundary classification: submodule auto-classifies into the
   `MailglassAdmin` root boundary.
@@ -348,7 +347,7 @@ defmodule MailglassAdmin.PreviewLive do
       <:page_header>
         <h1 class="text-heading font-bold tracking-tight text-base-content">Preview</h1>
         <p class="text-body text-secondary">
-          Render an email exactly as your app would send it, then inspect HTML, text, raw source, headers, and assigns.
+          Inspect renderer HTML and plaintext, an illustrative raw preview, generated preview headers, and scenario assigns. This is not final provider or recipient output.
         </p>
       </:page_header>
 
@@ -982,8 +981,9 @@ defmodule MailglassAdmin.PreviewLive do
   defp parse_error(default) when is_boolean(default), do: "Choose true or false."
   defp parse_error(_), do: "Enter a valid value."
 
-  # The Mailglass.Renderer pipeline invocation. This is the SAME pipeline
-  # production sends use — no placeholder shape divergence (PREV-03).
+  # Preview uses the same content-rendering stage as outbound preflight.
+  # Preflight, adapter encoding, later transformations, and delivery remain
+  # outside this browser-only projection.
   defp rerender(socket) do
     mod = socket.assigns.current_mailable
     scenario = socket.assigns.current_scenario
