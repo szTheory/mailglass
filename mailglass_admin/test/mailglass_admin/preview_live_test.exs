@@ -49,6 +49,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
     BrokenMailer,
     HeaderCaseMailer
   }
+
   alias MailglassAdmin.Preview.{AssignsForm, Discovery, Sidebar}
 
   @fixture_mailables [HappyMailer, StubMailer, BrokenMailer]
@@ -608,6 +609,43 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert date_value =~
                ~r/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} \+0000$/
+    end
+
+    test "illustrative raw envelope includes MIME parts only for present bodies" do
+      html_only =
+        Swoosh.Email.new()
+        |> Swoosh.Email.html_body("<p>html only</p>")
+        |> MailglassAdmin.PreviewLive.raw_envelope()
+
+      assert html_only =~ "Content-Type: text/html; charset=utf-8"
+      assert html_only =~ "<p>html only</p>"
+      refute html_only =~ "text/plain"
+      refute html_only =~ "mailglass_preview_boundary"
+
+      text_only =
+        Swoosh.Email.new()
+        |> Swoosh.Email.text_body("text only")
+        |> MailglassAdmin.PreviewLive.raw_envelope()
+
+      assert text_only =~ "Content-Type: text/plain; charset=utf-8"
+      assert text_only =~ "text only"
+      refute text_only =~ "text/html"
+      refute text_only =~ "mailglass_preview_boundary"
+
+      both_bodies =
+        Swoosh.Email.new()
+        |> Swoosh.Email.text_body("plain version")
+        |> Swoosh.Email.html_body("<p>rich version</p>")
+        |> MailglassAdmin.PreviewLive.raw_envelope()
+
+      assert both_bodies =~
+               "Content-Type: multipart/alternative; boundary=\"mailglass_preview_boundary\""
+
+      assert both_bodies =~ "Content-Type: text/plain; charset=utf-8"
+      assert both_bodies =~ "Content-Type: text/html; charset=utf-8"
+      assert both_bodies =~ "plain version"
+      assert both_bodies =~ "<p>rich version</p>"
+      assert both_bodies =~ "--mailglass_preview_boundary--"
     end
 
     test "tabs expose empty HTML guidance and keep long non-ASCII plaintext complete" do

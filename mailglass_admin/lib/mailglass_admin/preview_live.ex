@@ -1044,36 +1044,54 @@ defmodule MailglassAdmin.PreviewLive do
   defp build_and_render(_mod, _scenario, _assigns), do: {:error, :invalid_selection}
 
   # Best-effort RFC 5322 envelope. Swoosh has no public encode/1 in 1.25,
-  # so v0.1 inspect-fallbacks. The Raw tab shows Message-ID / Content-Type /
-  # boundary markers via explicit Swoosh.Email fields rather than a full
-  # MIME serialization.
-  defp raw_envelope(%Swoosh.Email{} = email) do
+  # so this produces an illustrative MIME-shaped preview rather than a full
+  # serialization. MIME parts are included only for bodies present on the email.
+  @doc false
+  def raw_envelope(%Swoosh.Email{} = email) do
     headers = swoosh_headers(email)
+    {content_type, body} = raw_body(email)
 
-    lines = [
-      format_header("From", format_address(email.from)),
-      format_header("To", format_addresses(email.to)),
-      format_header("Subject", email.subject || ""),
-      format_header("MIME-Version", "1.0"),
-      format_header(
-        "Content-Type",
-        "multipart/alternative; boundary=\"mailglass_preview_boundary\""
-      )
-      | Enum.map(headers, fn {k, v} -> format_header(to_string(k), to_string(v)) end)
-    ]
+    content_type_header =
+      if content_type, do: [format_header("Content-Type", content_type)], else: []
 
-    Enum.join(lines, "\n") <>
-      "\n\n" <>
-      "--mailglass_preview_boundary\n" <>
-      "Content-Type: text/plain; charset=utf-8\n\n" <>
-      (email.text_body || "") <>
-      "\n--mailglass_preview_boundary\n" <>
-      "Content-Type: text/html; charset=utf-8\n\n" <>
-      (email.html_body || "") <>
-      "\n--mailglass_preview_boundary--\n"
+    lines =
+      [
+        format_header("From", format_address(email.from)),
+        format_header("To", format_addresses(email.to)),
+        format_header("Subject", email.subject || ""),
+        format_header("MIME-Version", "1.0")
+      ] ++
+        content_type_header ++
+        Enum.map(headers, fn {k, v} -> format_header(to_string(k), to_string(v)) end)
+
+    Enum.join(lines, "\n") <> "\n\n" <> body
   end
 
   defp raw_envelope(_), do: ""
+
+  defp raw_body(%Swoosh.Email{text_body: text, html_body: html})
+       when is_binary(text) and is_binary(html) do
+    boundary = "mailglass_preview_boundary"
+
+    {
+      "multipart/alternative; boundary=\"#{boundary}\"",
+      "--#{boundary}\n" <>
+        "Content-Type: text/plain; charset=utf-8\n\n" <>
+        text <>
+        "\n--#{boundary}\n" <>
+        "Content-Type: text/html; charset=utf-8\n\n" <>
+        html <>
+        "\n--#{boundary}--\n"
+    }
+  end
+
+  defp raw_body(%Swoosh.Email{text_body: text}) when is_binary(text),
+    do: {"text/plain; charset=utf-8", text}
+
+  defp raw_body(%Swoosh.Email{html_body: html}) when is_binary(html),
+    do: {"text/html; charset=utf-8", html}
+
+  defp raw_body(%Swoosh.Email{}), do: {nil, ""}
 
   defp format_header(name, value), do: name <> ": " <> value
 
