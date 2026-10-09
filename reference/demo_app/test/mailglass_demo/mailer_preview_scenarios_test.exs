@@ -29,7 +29,7 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
 
       assert html =~ "Invoice INV-2026-0601 is ready"
       assert html =~ "Élodie Fernández-Sørensen"
-      assert html =~ "alt=\"Invoice preview showing the Northstar Logistics monthly total\""
+      assert html =~ "alt=\"Invoice summary for Northstar Logistics: $2,480.00 for May 2026\""
       assert html =~ "https://app.atlasdesk.example/invoices/INV-2026-0601"
       assert html =~ "<!--[if mso]>"
       assert html =~ "<table"
