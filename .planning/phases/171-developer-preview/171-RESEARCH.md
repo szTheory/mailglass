@@ -84,7 +84,7 @@ Preserve the existing Phoenix/LiveView/HEEx and Admin visual system. The focused
 | Build email and render output | API / Backend | Frontend Server (SSR) | Mailable builds a `Mailglass.Message`; core `Mailglass.Renderer` creates content outputs, while Preview projects them to a browser. [VERIFIED: `mailglass_admin/lib/mailglass_admin/preview_live.ex:837-846`; `lib/mailglass/renderer.ex:1-24`] |
 | Inspect HTML, text, raw, and headers | Browser / Client | Frontend Server (SSR) | Function components expose one selected tab panel; HTML is framed in an iframe and other representations are text/table DOM. [VERIFIED: `mailglass_admin/lib/mailglass_admin/preview/tabs.ex:1-20,30-140`] |
 | Frame width and backdrop | Browser / Client | Frontend Server (SSR) | Width and backdrop are presentation state; admin chrome theme remains an independent persisted preference. [VERIFIED: `mailglass_admin/lib/mailglass_admin/preview_live.ex:195-224`] |
-| Dev-only route exposure | API / Backend | — | Adopter owns the surrounding dev route guard; the route macro is not itself a production authorization boundary. [VERIFIED: `guides/preview.md:10-30`; `mailglass_admin/lib/mailglass_admin/router.ex`] |
+| Dev-only route exposure | API / Backend | — | Adopter owns the surrounding dev route guard; the route macro is not itself a production authorization boundary. [VERIFIED: `guides/preview.md:10-30`; `mailglass_admin/lib/mailglass_admin/router.ex:71-79`] |
 | Automated interaction evidence | Browser / Client | API / Backend | ExUnit covers server state/render contracts; Playwright is needed to prove browser focus, tab keys, and measured layout. [VERIFIED: `mailglass_admin/test/mailglass_admin/preview_live_test.exs:359-410`; `mailglass_admin/e2e/structural.spec.js:1439-1525`] |
 
 ## Standard Stack
@@ -108,7 +108,7 @@ Preserve the existing Phoenix/LiveView/HEEx and Admin visual system. The focused
 | Library / System | Version | Purpose | When to Use |
 |------------------|---------|---------|-------------|
 | Phoenix HTML | locked and latest stable `4.3.0` (published 2025-09-28) | HTML helpers integrated by Phoenix | Existing dependency; no need for changes in this phase. Verbatim lock value: `"phoenix_html": {:hex, :phoenix_html, "4.3.0"`. [VERIFIED: `mailglass_admin/mix.lock:36`; Hex API: https://hex.pm/api/packages/phoenix_html/releases/4.3.0; https://hex.pm/api/packages/phoenix_html`] |
-| Tailwind standalone Hex binary + vendored daisyUI | existing | Admin styles and semantic tokens | Continue existing HEEx utility classes; rebuild and commit `priv/static/app.css` when class scanning changes. [VERIFIED: `mailglass_admin/docs/design-system.md`] |
+| Tailwind standalone Hex binary + vendored daisyUI | existing | Admin styles and semantic tokens | Continue existing HEEx utility classes; rebuild and commit `priv/static/app.css` when class scanning changes. [VERIFIED: `mailglass_admin/docs/design-system.md:15-29`] |
 | Playwright Chromium | existing | Browser keyboard, responsive layout, zoom, and screenshots | Use focused cases through existing `npm run test:operator-browser`; do not equate Chromium output with email-client output. [VERIFIED: `mailglass_admin/package.json:4-10`; `mailglass_admin/dev/mix/tasks/mailglass_admin.preview.capture.ex:1-25`] |
 | W3C APG and WCAG 2.2 | current guidance | Tab keyboard pattern and responsive/interaction acceptance | Use APG tabs as interaction guidance and WCAG success criteria for reflow, keyboard access, and status messaging. [CITED: https://www.w3.org/WAI/ARIA/apg/patterns/tabs/; https://www.w3.org/WAI/WCAG22/quickref/] |
 
@@ -168,7 +168,7 @@ mailglass_admin/e2e/structural.spec.js
 guides/preview.md
 ```
 
-These paths are already in use. [VERIFIED: `mailglass_admin/lib/mailglass_admin/preview_live.ex:1-12`; `mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex:1-6`; `mailglass_admin/lib/mailglass_admin/preview/tabs.ex:1-6`; `mailglass_admin/test/mailglass_admin/preview_live_test.exs:1-18`; `mailglass_admin/e2e/structural.spec.js`]
+These paths are already in use. [VERIFIED: `mailglass_admin/lib/mailglass_admin/preview_live.ex:1-12`; `mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex:1-6`; `mailglass_admin/lib/mailglass_admin/preview/tabs.ex:1-6`; `mailglass_admin/test/mailglass_admin/preview_live_test.exs:1-18`; `mailglass_admin/e2e/structural.spec.js:1439-1525`]
 
 ### Pattern 1: Discovered scenario selection only
 
@@ -353,7 +353,7 @@ Use focused deterministic fixtures for valid, invalid, long, non-ASCII and unsup
 
 ### Wave 0 Gaps
 
-- Add focused cases to existing test modules for strict number/date parse and retained invalid draft, stale-output label and failure editor visibility, structured read-only value, all tab-to-panel references, and manual tab key behavior. [VERIFIED: existing files `mailglass_admin/test/mailglass_admin/preview_live_test.exs` and `mailglass_admin/e2e/structural.spec.js`]
+- Add focused cases to existing test modules for strict number/date parse and retained invalid draft, stale-output label and failure editor visibility, structured read-only value, all tab-to-panel references, and manual tab key behavior. [VERIFIED: `mailglass_admin/test/mailglass_admin/preview_live_test.exs:359-410`; `mailglass_admin/e2e/structural.spec.js:1439-1525`]
 - Add browser assertions for horizontal arrow wrapping, Home/End, activation by Enter/Space, focus ring, panel reachability/scroll, narrow layout and page-level overflow at 320/390 CSS px, browser zoom, and independent chrome/backdrop/width state. The 320px reflow requirement is WCAG 2.2; the 390px specimen already exists in browser tests. [CITED: https://www.w3.org/WAI/WCAG22/quickref/] [VERIFIED: `mailglass_admin/e2e/structural.spec.js:1474-1525`]
 - No framework install or new configuration is needed. The project uses an existing LiveView/HEEx stack and existing Playwright package. [VERIFIED: `mailglass_admin/mix.exs:111-117`; `mailglass_admin/package.json:1-11`]
 
