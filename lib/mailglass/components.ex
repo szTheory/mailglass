@@ -85,7 +85,7 @@ defmodule Mailglass.Components do
            style={CSS.merge_style("width:100%;background-color:#{@bg_color};", @class)}>
       <tr>
         <td align="center">
-          <table role="presentation" width="600" border="0" cellpadding="0" cellspacing="0"
+          <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"
                  style="max-width:600px;width:100%;mso-table-lspace:0pt;mso-table-rspace:0pt;">
             <tr>
               <td {@rest}>

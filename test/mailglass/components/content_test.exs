@@ -100,7 +100,7 @@ defmodule Mailglass.Components.ContentTest do
       )
 
     assert html =~ "role=\"presentation\" width=\"100%\""
-    assert html =~ "width=\"600\""
+    assert html =~ "width=\"100%\""
     assert html =~ "max-width:600px;width:100%"
     assert html =~ "style=\"width:100%;"
   end

@@ -21,15 +21,18 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
       assert message.mailable_function == :invoice_ready
       assert message.swoosh_email.from == {"AtlasDesk", "notify@atlasdesk.example"}
       assert_recipient(message, "mira.chen@northstar.example")
-      assert message.swoosh_email.subject == "Invoice INV-2026-0601 is ready for Northstar Logistics"
+
+      assert message.swoosh_email.subject ==
+               "Invoice INV-2026-0601 is ready for Northstar Logistics"
 
       assert {:ok, rendered} = Mailglass.Renderer.render(message)
       html = rendered.swoosh_email.html_body
       text = rendered.swoosh_email.text_body
 
+      assert html =~ "AtlasDesk"
       assert html =~ "Invoice INV-2026-0601 is ready"
       assert html =~ "Élodie Fernández-Sørensen"
-      assert html =~ "alt=\"Invoice summary for Northstar Logistics: $2,480.00 for May 2026\""
+      assert html =~ "alt=\"Illustration of the May 2026 invoice summary for Northstar Logistics\""
       assert html =~ "https://app.atlasdesk.example/invoices/INV-2026-0601"
       assert html =~ "<!--[if mso]>"
       assert html =~ "<table"
