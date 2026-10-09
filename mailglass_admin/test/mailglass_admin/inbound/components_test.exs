@@ -231,6 +231,53 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ ~r/data-testid="inbound-replay-open"[^>]*disabled/
     end
 
+    test "shows missing history separately from no match" do
+      detail = %{
+        record: %{
+          id: "rec-no-history",
+          tenant_id: "tenant-a",
+          provider: "mailgun",
+          envelope_recipient: "alice@example.com",
+          subject: "Hello",
+          received_at: ~U[2026-05-24 10:00:00Z]
+        },
+        mailbox: nil,
+        outcome: nil,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+
+      assert html =~ "No history"
+      assert html =~ "No execution recorded"
+      refute html =~ "No match"
+    end
+
+    test "shows an unavailable mailbox for a failed execution without one" do
+      detail = %{
+        record: %{
+          id: "rec-failed",
+          tenant_id: "tenant-a",
+          provider: "mailgun",
+          envelope_recipient: "alice@example.com",
+          subject: "Hello",
+          received_at: ~U[2026-05-24 10:00:00Z]
+        },
+        mailbox: nil,
+        outcome: :failed,
+        outcome_reason: "private execution detail",
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+
+      assert html =~ "Failed"
+      assert html =~ "Unavailable"
+      refute html =~ "No match"
+      refute html =~ "private execution detail"
+    end
+
     test "Replay button is enabled for a matched outcome" do
       detail = %{
         record: %{
@@ -384,6 +431,68 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html = render_component(&Timeline.timeline/1, runs: [])
 
       assert html =~ "No execution runs have been recorded for this message yet."
+    end
+
+    test "labels no-change separately from ignore and preserves chronological run identity" do
+      runs = [
+        %{
+          id: "run-ignore",
+          source: :fresh,
+          mailbox: "MyApp.SupportMailbox",
+          outcome: :ignore,
+          outcome_reason: nil,
+          executed_at: ~U[2026-05-24 10:00:00Z],
+          inserted_at: ~U[2026-05-24 10:00:00Z]
+        },
+        %{
+          id: "run-no-change",
+          source: :replay,
+          mailbox: "MyApp.SupportMailbox",
+          outcome: :no_change,
+          outcome_reason: nil,
+          executed_at: ~U[2026-05-24 11:00:00Z],
+          inserted_at: ~U[2026-05-24 11:00:00Z]
+        }
+      ]
+
+      html = render_component(&Timeline.timeline/1, runs: runs)
+
+      assert html =~ "Ignored"
+      assert html =~ "No change"
+      refute html =~ ">Ignore</p>"
+      assert html =~ "Fresh"
+      assert html =~ "Replay"
+      assert html =~ "2026-05-24T10:00:00Z"
+      assert html =~ "2026-05-24T11:00:00Z"
+
+      row_ids =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("[data-testid='inbound-timeline-run']")
+        |> Enum.map(fn row -> row |> Floki.attribute("data-run-id") |> List.first() end)
+
+      assert row_ids == ["run-ignore", "run-no-change"]
+    end
+
+    test "never renders raw execution failure reasons" do
+      private_reason = "exception-secret-170-05-task2"
+
+      run = %{
+        id: "run-failed",
+        source: :fresh,
+        mailbox: nil,
+        outcome: :failed,
+        outcome_reason: private_reason,
+        failure: %{"kind" => private_reason},
+        executed_at: ~U[2026-05-24 10:00:00Z],
+        inserted_at: ~U[2026-05-24 10:00:00Z]
+      }
+
+      html = render_component(&Timeline.timeline/1, runs: [run])
+
+      assert html =~ "Failed"
+      refute html =~ private_reason
+      refute html =~ "Reason:"
     end
   end
 
@@ -583,7 +692,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       end
     end
 
-    test "uses token-clean labels and Time window copy" do
+    test "uses outcome vocabulary and describes the latest fresh result" do
       form =
         to_form(
           %{
@@ -608,6 +717,16 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         )
 
       assert html =~ "Time window"
+      assert html =~ "Accepted"
+      assert html =~ "No match"
+      assert html =~ "Ignored"
+      assert html =~ "No change"
+      assert html =~ "Rejected"
+      assert html =~ "Bounced"
+      assert html =~ "Failed"
+
+      assert html =~
+               "Filter by the latest fresh mailbox outcome, including an explicit no-change result."
 
       assert html =~
                ~r/<legend class="(?=[^"]*\btext-label\b)(?=[^"]*\buppercase\b)(?=[^"]*\bfont-bold\b)(?=[^"]*\btext-secondary\b)[^"]*">Filters<\/legend>/
