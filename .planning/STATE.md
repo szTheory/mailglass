@@ -5,16 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 170
 current_phase_name: Inbound Investigation and Recovery
 status: executing
-stopped_at: Completed 170-06-PLAN.md
-last_updated: "2026-10-09T03:20:57.547Z"
+stopped_at: Completed 170-07-PLAN.md
+last_updated: "2026-10-09T03:27:57.502Z"
 last_activity: 2026-10-09 UTC — Phase 168 closeout complete; Phase 170 plans ready to execute.
 last_activity_desc: Phase 170 execution started
-state_head: d55c9ea325bc89ab238284b05e6aa76fdf6f3907
+state_head: bb729798abda76cb00ba72969f1ee722b9cb8ac6
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 21
+  completed_plans: 22
   percent: 33
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 ## Current Position
 
 Phase: 170 (Inbound Investigation and Recovery) — EXECUTING
-Plan: 7 of 8
+Plan: 8 of 8
 Status: Ready to execute
 Last activity: 2026-10-08 — Phase 170 execution started
 
@@ -272,6 +272,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 170 P04 | 8 min | 2 tasks | 4 files |
 | Phase 170 P05 | 13min | 2 tasks | 15 files |
 | Phase 170 P06 | 15min | 2 tasks | 10 files |
+| Phase 170 P07 | 6m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -462,6 +463,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 170]: Tenant-scoped replay eligibility uses stored binding/history, never current-router matching. — Eligibility must explain the exact stored replay target without guessing or leaking raw evidence.
 - [Phase 170]: A replay review is a short-lived snapshot, not an authorization token. — At confirmation, reread the selected tenant/record and eligibility, then use the existing host authorization immediately before replay.
 - [Phase 170]: Replay consequence copy must name the recorded Mailbox and stored message behavior. — Operators must distinguish execution with current code from current-router simulation and provider redelivery.
+- [Phase 170]: Replay review identifiers are consumed server side; busy wording describes only local in-flight work.
+- [Phase 170]: Replay outcome feedback is derived from the returned structured result and remains separate from later timeline reads.
+- [Phase 170]: Selected history is labeled through its last successful scoped read and refreshed through an explicit native control.
 
 ## Quick Tasks Completed
 
@@ -507,8 +511,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T03:20:37.004Z
-Stopped at: Completed 170-06-PLAN.md
+Last session: 2026-10-09T03:27:57.455Z
+Stopped at: Completed 170-07-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
