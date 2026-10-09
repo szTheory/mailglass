@@ -5,15 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 170
 current_phase_name: Inbound Investigation and Recovery
 status: executing
-stopped_at: Completed 170-01-PLAN.md
-last_updated: "2026-10-09T01:22:44.932Z"
+stopped_at: Completed 170-02-PLAN.md
+last_updated: "2026-10-09T01:34:52.903Z"
 last_activity: 2026-10-09 UTC — Phase 168 closeout complete; Phase 170 plans ready to execute.
-state_head: 14ced5234db06cae906f45790e35a331d56be548
+last_activity_desc: Phase 170 execution started
+state_head: f183b60260f58b5b0aeae0ad0309ba76fc30f898
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 16
+  completed_plans: 17
   percent: 33
 ---
 
@@ -38,10 +39,10 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 ## Current Position
 
-Phase: 170 — Inbound Investigation and Recovery
-Plan: Not started
+Phase: 170 (Inbound Investigation and Recovery) — EXECUTING
+Plan: 3 of 8
 Status: Ready to execute
-Last activity: 2026-10-09 UTC — Phase 168 closeout complete; Phase 170 plans ready to execute.
+Last activity: 2026-10-08 — Phase 170 execution started
 
 Progress: 2/6 phases ([███░░░░░░░] 33%); [█████████████░░░░░░░] 15/23 plans (65%).
 
@@ -266,6 +267,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 168 P05 | 16min | 1 tasks | 2 files |
 | Phase 168 P10 | 6m | 2 tasks | 11 files |
 | Phase 170 P01 | 16 min | 2 tasks | 5 files |
+| Phase 170 P02 | 11 min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -445,6 +447,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 168]: Keep Delivery technical identifiers intact and use browser-verified arbitrary wrapping to close the 320–1440px overflow gap.
 - [Phase 168]: UXF-03: enforce the approved 4px spacing grid across seven shared operator, Inbound, and Preview templates with source, generated CSS, and rendered browser assertions.
 - [Phase 168]: UXF-03 rendered spacing verification remains in the existing advisory operator-browser lane.
+- [Phase 170]: Only literal :no_change callback results assert no mutation; ignore and failures stay distinct. — Execution history must preserve an authoritative callback fact without inferring state from unrelated outcomes.
 
 ## Quick Tasks Completed
 
@@ -490,8 +493,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T01:22:44.882Z
-Stopped at: Completed 170-01-PLAN.md
+Last session: 2026-10-09T01:34:52.845Z
+Stopped at: Completed 170-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
