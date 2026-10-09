@@ -1127,9 +1127,6 @@ defmodule MailglassAdmin.PreviewLive do
   end
 
   defp rfc2822_date do
-    # Best-effort RFC 2822 timestamp. Not strictly RFC-compliant at v0.1
-    # (no weekday name); the Headers tab's contract is "row exists with
-    # name + non-empty value", not "passes rfc2822 grammar".
-    DateTime.utc_now() |> DateTime.to_string()
+    DateTime.utc_now() |> Calendar.strftime("%a, %d %b %Y %H:%M:%S +0000")
   end
 end

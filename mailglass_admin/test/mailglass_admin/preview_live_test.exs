@@ -1,7 +1,7 @@
 defmodule MailglassAdmin.Fixtures.HeaderCaseMailer do
   use Mailglass.Mailable, stream: :transactional
 
-  def preview_props, do: [lowercase_headers: %{}]
+  def preview_props, do: [lowercase_headers: %{}, generated_date: %{}]
 
   def lowercase_headers(_assigns) do
     new()
@@ -13,6 +13,16 @@ defmodule MailglassAdmin.Fixtures.HeaderCaseMailer do
     |> Mailglass.Message.html_body("<p>hello</p>")
     |> Mailglass.Message.text_body("hello")
     |> Mailglass.Message.put_function(:lowercase_headers)
+  end
+
+  def generated_date(_assigns) do
+    new()
+    |> Mailglass.Message.from("no-reply@example.test")
+    |> Mailglass.Message.to("ada@example.test")
+    |> Mailglass.Message.subject("Generated date")
+    |> Mailglass.Message.html_body("<p>hello</p>")
+    |> Mailglass.Message.text_body("hello")
+    |> Mailglass.Message.put_function(:generated_date)
   end
 end
 
@@ -575,6 +585,29 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert headers_html =~ "message-id"
       assert headers_html =~ "date"
       refute headers_html =~ ~r/preview-[0-9]+@mailglass\.dev/
+    end
+
+    test "generated Date header uses RFC 5322 weekday and numeric zone format", %{conn: conn} do
+      conn = Plug.Test.init_test_session(conn, %{"mailables" => [HeaderCaseMailer]})
+
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HeaderCaseMailer/generated_date")
+
+      headers_html = render_click(view, "set_tab", %{"tab" => "headers"})
+      document = Floki.parse_document!(headers_html)
+
+      [date_row] =
+        document
+        |> Floki.find("tbody tr")
+        |> Enum.filter(fn row ->
+          [name | _] = Floki.find(row, "td") |> Enum.map(&Floki.text/1)
+          name == "Date"
+        end)
+
+      [_, date_value] = Floki.find(date_row, "td") |> Enum.map(&Floki.text/1)
+
+      assert date_value =~
+               ~r/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} \+0000$/
     end
 
     test "tabs expose empty HTML guidance and keep long non-ASCII plaintext complete" do
