@@ -5,16 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 170
 current_phase_name: Inbound Investigation and Recovery
 status: executing
-stopped_at: Completed 170-05-PLAN.md
-last_updated: "2026-10-09T02:58:25.321Z"
+stopped_at: Completed 170-06-PLAN.md
+last_updated: "2026-10-09T03:20:57.547Z"
 last_activity: 2026-10-09 UTC — Phase 168 closeout complete; Phase 170 plans ready to execute.
 last_activity_desc: Phase 170 execution started
-state_head: 0e95c4365205c5e3a301583347beffacdf40997e
+state_head: d55c9ea325bc89ab238284b05e6aa76fdf6f3907
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 20
+  completed_plans: 21
   percent: 33
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 ## Current Position
 
 Phase: 170 (Inbound Investigation and Recovery) — EXECUTING
-Plan: 6 of 8
+Plan: 7 of 8
 Status: Ready to execute
 Last activity: 2026-10-08 — Phase 170 execution started
 
@@ -271,6 +271,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 170 P03 | 8 min | 2 tasks | 4 files |
 | Phase 170 P04 | 8 min | 2 tasks | 4 files |
 | Phase 170 P05 | 13min | 2 tasks | 15 files |
+| Phase 170 P06 | 15min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -458,6 +459,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 170]: Keep :no_change distinct from :ignore in list, detail, filter, and timeline vocabulary.
 - [Phase 170]: Map nil latest-fresh outcome to No history; reserve No match for literal :no_match.
 - [Phase 170]: Omit free-form outcome_reason and failure metadata from the operator timeline.
+- [Phase 170]: Tenant-scoped replay eligibility uses stored binding/history, never current-router matching. — Eligibility must explain the exact stored replay target without guessing or leaking raw evidence.
+- [Phase 170]: A replay review is a short-lived snapshot, not an authorization token. — At confirmation, reread the selected tenant/record and eligibility, then use the existing host authorization immediately before replay.
+- [Phase 170]: Replay consequence copy must name the recorded Mailbox and stored message behavior. — Operators must distinguish execution with current code from current-router simulation and provider redelivery.
 
 ## Quick Tasks Completed
 
@@ -503,8 +507,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T02:58:25.266Z
-Stopped at: Completed 170-05-PLAN.md
+Last session: 2026-10-09T03:20:37.004Z
+Stopped at: Completed 170-06-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
