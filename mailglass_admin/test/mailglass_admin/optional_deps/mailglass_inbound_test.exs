@@ -18,6 +18,10 @@ defmodule MailglassAdmin.OptionalDeps.MailglassInboundTest do
     end
   end
 
+  defmodule NoRecordRepo do
+    def one(_query, _opts), do: nil
+  end
+
   describe "list_tenants/2" do
     test "surfaces inbound tenant ids through the runtime apply gateway when mailglass_inbound is loaded" do
       context = %{subject_id: "operator-1", test_pid: self()}
@@ -28,6 +32,19 @@ defmodule MailglassAdmin.OptionalDeps.MailglassInboundTest do
              ]
 
       assert_received {:inbound_context, ^context, [read_model: InboundTenantReadModel]}
+    end
+  end
+
+  describe "eligibility/2" do
+    test "routes the narrow replay-eligibility read through the runtime gateway" do
+      assert function_exported?(MailglassInbound, :eligibility, 2)
+
+      assert {:error, :not_found} =
+               apply(MailglassInbound, :eligibility, [
+                 "record-id",
+                 tenant_id: "tenant-a",
+                 repo: NoRecordRepo
+               ])
     end
   end
 end

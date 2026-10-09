@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ExUnit" tests="20" failures="7" errors="0" skipped="0">
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test eligibility/2 reports an unsafe legacy binding separately from missing history"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {:ok, {:%{}, [line: 397, column: 20], [status: :ineligible, reason: :invalid_mailbox]}}, right: {:error, :eligibility_unavailable}, message: &quot;match (=) failed&quot;, expr: {:assert, [line: 397], [{:=, [line: 397], [{:ok, {:%{}, [line: 397], [status: :ineligible, reason: :invalid_mailbox]}}, {:eligibility_result, [line: 398], [{{:., [line: 398], [{:record, [line: 398], nil}, :id]}, [no_parens: true, line: 398], []}, [tenant_id: {{:., [line: 399], [{:record, [line: 399], nil}, :tenant_id]}, [no_parens: true, line: 399], []}, repo: {:__aliases__, [line: 400], [:ReplayRepo]}]]}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, []}}, [{MailglassInbound.ReplayTest, :&quot;test eligibility/2 reports an unsafe legacy binding separately from missing history&quot;, 1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 397]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {:ok,
+      {:%{}, [line: 397, column: 20],
+       [status: :ineligible, reason: :invalid_mailbox]}},
+     right: {:error, :eligibility_unavailable},
+     message: &quot;match (=) failed&quot;,
+     expr: {:assert, [line: 397],
+      [
+        {:=, [line: 397],
+         [
+           {:ok,
+            {:%{}, [line: 397], [status: :ineligible, reason: :invalid_mailbox]}},
+           {:eligibility_result, [line: 398],
+            [
+              {{:., [line: 398], [{:record, [line: 398], nil}, :id]},
+               [no_parens: true, line: 398], []},
+              [
+                tenant_id: {{:., [line: 399],
+                  [{:record, [line: 399], nil}, :tenant_id]},
+                 [no_parens: true, line: 399], []},
+                repo: {:__aliases__, [line: 400], [:ReplayRepo]}
+              ]
+            ]}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match, []}
+   },
+   [
+     {MailglassInbound.ReplayTest,
+      :&quot;test eligibility/2 reports an unsafe legacy binding separately from missing history&quot;,
+      1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 397]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test eligibility/2 distinguishes missing execution history from no prior match"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {:ok, {:%{}, [line: 376, column: 20], [status: :ineligible, reason: :execution_history_missing]}}, right: {:error, :eligibility_unavailable}, message: &quot;match (=) failed&quot;, expr: {:assert, [line: 376], [{:=, [line: 376], [{:ok, {:%{}, [line: 376], [status: :ineligible, reason: :execution_history_missing]}}, {:eligibility_result, [line: 377], [{{:., [line: 377], [{:record, [line: 377], nil}, :id]}, [no_parens: true, line: 377], []}, [tenant_id: {{:., [line: 378], [{:record, [line: 378], nil}, :tenant_id]}, [no_parens: true, line: 378], []}, repo: {:__aliases__, [line: 379], [:ReplayRepo]}]]}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, []}}, [{MailglassInbound.ReplayTest, :&quot;test eligibility/2 distinguishes missing execution history from no prior match&quot;, 1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 376]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {:ok,
+      {:%{}, [line: 376, column: 20],
+       [status: :ineligible, reason: :execution_history_missing]}},
+     right: {:error, :eligibility_unavailable},
+     message: &quot;match (=) failed&quot;,
+     expr: {:assert, [line: 376],
+      [
+        {:=, [line: 376],
+         [
+           {:ok,
+            {:%{}, [line: 376],
+             [status: :ineligible, reason: :execution_history_missing]}},
+           {:eligibility_result, [line: 377],
+            [
+              {{:., [line: 377], [{:record, [line: 377], nil}, :id]},
+               [no_parens: true, line: 377], []},
+              [
+                tenant_id: {{:., [line: 378],
+                  [{:record, [line: 378], nil}, :tenant_id]},
+                 [no_parens: true, line: 378], []},
+                repo: {:__aliases__, [line: 379], [:ReplayRepo]}
+              ]
+            ]}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match, []}
+   },
+   [
+     {MailglassInbound.ReplayTest,
+      :&quot;test eligibility/2 distinguishes missing execution history from no prior match&quot;,
+      1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 376]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay real terminal evidence refetches, normalizes, updates, routes, and executes end to end"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay raises without a :tenant_id (T-49-17 cross-tenant replay guard)"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay reuses stored canonical and evidence truth, defaults to the latest fresh matched mailbox, and appends replay lineage"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test eligibility/2 uses the same non-disclosing result for foreign and missing IDs"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {:error, :not_found}, right: {:error, :eligibility_unavailable}, message: &quot;match (=) failed&quot;, expr: {:assert, [line: 450], [{:=, [line: 450], [{:error, :not_found}, {:eligibility_result, [line: 451], [{{:., [line: 451], [{:record, [line: 451], nil}, :id]}, [no_parens: true, line: 451], []}, [tenant_id: &quot;tenant-foreign&quot;, repo: {:__aliases__, [line: 451], [:TestRepo]}]]}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, []}}, [{MailglassInbound.ReplayTest, :&quot;test eligibility/2 uses the same non-disclosing result for foreign and missing IDs&quot;, 1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 450]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {:error, :not_found},
+     right: {:error, :eligibility_unavailable},
+     message: &quot;match (=) failed&quot;,
+     expr: {:assert, [line: 450],
+      [
+        {:=, [line: 450],
+         [
+           {:error, :not_found},
+           {:eligibility_result, [line: 451],
+            [
+              {{:., [line: 451], [{:record, [line: 451], nil}, :id]},
+               [no_parens: true, line: 451], []},
+              [
+                tenant_id: &quot;tenant-foreign&quot;,
+                repo: {:__aliases__, [line: 451], [:TestRepo]}
+              ]
+            ]}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match, []}
+   },
+   [
+     {MailglassInbound.ReplayTest,
+      :&quot;test eligibility/2 uses the same non-disclosing result for foreign and missing IDs&quot;,
+      1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 450]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay rejects a loaded non-mailbox persisted identity without invocation"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test eligibility/2 returns the resolvable Mailbox identity stored in durable evidence"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {:ok, {:%{}, [line: 345, column: 20], [status: :eligible, mailbox: {:^, [line: 345, column: 50], [{:mailbox, [line: 345, column: 51], nil}]}]}}, right: {:error, :eligibility_unavailable}, message: &quot;match (=) failed\nThe following variables were pinned:\n  mailbox = \&quot;Elixir.MailglassInbound.ReplayTest.SupportMailbox\&quot;&quot;, expr: {:assert, [line: 345], [{:=, [line: 345], [{:ok, {:%{}, [line: 345], [status: :eligible, mailbox: {:^, [line: 345], [{:mailbox, [line: 345], nil}]}]}}, {:eligibility_result, [line: 346], [{{:., [line: 346], [{:record, [line: 346], nil}, :id]}, [no_parens: true, line: 346], []}, [tenant_id: {{:., [line: 347], [{:record, [line: 347], nil}, :tenant_id]}, [no_parens: true, line: 347], []}, repo: {:__aliases__, [line: 348], [:ReplayRepo]}]]}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, [{{:mailbox, nil}, &quot;Elixir.MailglassInbound.ReplayTest.SupportMailbox&quot;}]}}, [{MailglassInbound.ReplayTest, :&quot;test eligibility/2 returns the resolvable Mailbox identity stored in durable evidence&quot;, 1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 345]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {:ok,
+      {:%{}, [line: 345, column: 20],
+       [
+         status: :eligible,
+         mailbox: {:^, [line: 345, column: 50],
+          [{:mailbox, [line: 345, column: 51], nil}]}
+       ]}},
+     right: {:error, :eligibility_unavailable},
+     message: &quot;match (=) failed\nThe following variables were pinned:\n  mailbox = \&quot;Elixir.MailglassInbound.ReplayTest.SupportMailbox\&quot;&quot;,
+     expr: {:assert, [line: 345],
+      [
+        {:=, [line: 345],
+         [
+           {:ok,
+            {:%{}, [line: 345],
+             [
+               status: :eligible,
+               mailbox: {:^, [line: 345], [{:mailbox, [line: 345], nil}]}
+             ]}},
+           {:eligibility_result, [line: 346],
+            [
+              {{:., [line: 346], [{:record, [line: 346], nil}, :id]},
+               [no_parens: true, line: 346], []},
+              [
+                tenant_id: {{:., [line: 347],
+                  [{:record, [line: 347], nil}, :tenant_id]},
+                 [no_parens: true, line: 347], []},
+                repo: {:__aliases__, [line: 348], [:ReplayRepo]}
+              ]
+            ]}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match,
+      [{{:mailbox, nil}, &quot;Elixir.MailglassInbound.ReplayTest.SupportMailbox&quot;}]}
+   },
+   [
+     {MailglassInbound.ReplayTest,
+      :&quot;test eligibility/2 returns the resolvable Mailbox identity stored in durable evidence&quot;,
+      1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 345]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test execution lineage the legacy replay schema decodes an explicit no-change outcome"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay appends and returns the explicit no-change result from the bound mailbox"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay fails explicitly when only no-match fresh history exists"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test eligibility/2 reports a currently unavailable Mailbox without exposing binding text"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {:ok, {:%{}, [line: 436, column: 20], [status: :ineligible, reason: :mailbox_unavailable]}}, right: {:error, :eligibility_unavailable}, message: &quot;match (=) failed&quot;, expr: {:assert, [line: 436], [{:=, [line: 436], [{:ok, {:%{}, [line: 436], [status: :ineligible, reason: :mailbox_unavailable]}}, {:result, [line: 436], nil}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, []}}, [{MailglassInbound.ReplayTest, :&quot;test eligibility/2 reports a currently unavailable Mailbox without exposing binding text&quot;, 1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 436]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {:ok,
+      {:%{}, [line: 436, column: 20],
+       [status: :ineligible, reason: :mailbox_unavailable]}},
+     right: {:error, :eligibility_unavailable},
+     message: &quot;match (=) failed&quot;,
+     expr: {:assert, [line: 436],
+      [
+        {:=, [line: 436],
+         [
+           {:ok,
+            {:%{}, [line: 436],
+             [status: :ineligible, reason: :mailbox_unavailable]}},
+           {:result, [line: 436], nil}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match, []}
+   },
+   [
+     {MailglassInbound.ReplayTest,
+      :&quot;test eligibility/2 reports a currently unavailable Mailbox without exposing binding text&quot;,
+      1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 436]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test eligibility/2 reports stored no-match evidence without rerunning the router"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {:ok, {:%{}, [line: 364, column: 20], [status: :ineligible, reason: :no_prior_match]}}, right: {:error, :eligibility_unavailable}, message: &quot;match (=) failed&quot;, expr: {:assert, [line: 364], [{:=, [line: 364], [{:ok, {:%{}, [line: 364], [status: :ineligible, reason: :no_prior_match]}}, {:eligibility_result, [line: 365], [{{:., [line: 365], [{:record, [line: 365], nil}, :id]}, [no_parens: true, line: 365], []}, [tenant_id: {{:., [line: 366], [{:record, [line: 366], nil}, :tenant_id]}, [no_parens: true, line: 366], []}, repo: {:__aliases__, [line: 367], [:ReplayRepo]}]]}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, []}}, [{MailglassInbound.ReplayTest, :&quot;test eligibility/2 reports stored no-match evidence without rerunning the router&quot;, 1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 364]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {:ok,
+      {:%{}, [line: 364, column: 20],
+       [status: :ineligible, reason: :no_prior_match]}},
+     right: {:error, :eligibility_unavailable},
+     message: &quot;match (=) failed&quot;,
+     expr: {:assert, [line: 364],
+      [
+        {:=, [line: 364],
+         [
+           {:ok,
+            {:%{}, [line: 364], [status: :ineligible, reason: :no_prior_match]}},
+           {:eligibility_result, [line: 365],
+            [
+              {{:., [line: 365], [{:record, [line: 365], nil}, :id]},
+               [no_parens: true, line: 365], []},
+              [
+                tenant_id: {{:., [line: 366],
+                  [{:record, [line: 366], nil}, :tenant_id]},
+                 [no_parens: true, line: 366], []},
+                repo: {:__aliases__, [line: 367], [:ReplayRepo]}
+              ]
+            ]}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match, []}
+   },
+   [
+     {MailglassInbound.ReplayTest,
+      :&quot;test eligibility/2 reports stored no-match evidence without rerunning the router&quot;,
+      1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 364]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay recognizes a legacy no-change run as matched while refusing its unbound mailbox"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test internal replay fails explicitly when the record predates execution lineage capture"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test execution lineage keeps execution persistence append-only and canonical receive truth immutable"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test sendgrid duplicate persistence collapses duplicates on tenant/provider/raw mime fingerprint without overloading provider_message_id"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test execution lineage normalizes fresh and replay outcomes plus execution failures into append-only execution truth"></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test eligibility/2 reports missing evidence separately from a missing or foreign record"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {:ok, {:%{}, [line: 408, column: 20], [status: :ineligible, reason: :missing_evidence]}}, right: {:error, :eligibility_unavailable}, message: &quot;match (=) failed&quot;, expr: {:assert, [line: 408], [{:=, [line: 408], [{:ok, {:%{}, [line: 408], [status: :ineligible, reason: :missing_evidence]}}, {:eligibility_result, [line: 409], [{{:., [line: 409], [{:record, [line: 409], nil}, :id]}, [no_parens: true, line: 409], []}, [tenant_id: {{:., [line: 410], [{:record, [line: 410], nil}, :tenant_id]}, [no_parens: true, line: 410], []}, repo: {:__aliases__, [line: 411], [:ReplayRepo]}]]}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, []}}, [{MailglassInbound.ReplayTest, :&quot;test eligibility/2 reports missing evidence separately from a missing or foreign record&quot;, 1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 408]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {:ok,
+      {:%{}, [line: 408, column: 20],
+       [status: :ineligible, reason: :missing_evidence]}},
+     right: {:error, :eligibility_unavailable},
+     message: &quot;match (=) failed&quot;,
+     expr: {:assert, [line: 408],
+      [
+        {:=, [line: 408],
+         [
+           {:ok,
+            {:%{}, [line: 408],
+             [status: :ineligible, reason: :missing_evidence]}},
+           {:eligibility_result, [line: 409],
+            [
+              {{:., [line: 409], [{:record, [line: 409], nil}, :id]},
+               [no_parens: true, line: 409], []},
+              [
+                tenant_id: {{:., [line: 410],
+                  [{:record, [line: 410], nil}, :tenant_id]},
+                 [no_parens: true, line: 410], []},
+                repo: {:__aliases__, [line: 411], [:ReplayRepo]}
+              ]
+            ]}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match, []}
+   },
+   [
+     {MailglassInbound.ReplayTest,
+      :&quot;test eligibility/2 reports missing evidence separately from a missing or foreign record&quot;,
+      1, [file: ~c&quot;test/mailglass_inbound/replay_test.exs&quot;, line: 408]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.ReplayTest" name="test execution lineage links fresh and replay execution runs to stored record and evidence truth"></testcase>
+</testsuite>
