@@ -22,6 +22,7 @@ defmodule MailglassAdmin.Fixtures.HappyMailer do
         mode: :preview,
         scheduled_at: ~U[2026-10-09 12:00:00Z]
       },
+      recoverable: %{response: "first"},
       welcome_überraschung_東京__with_a_deliberately_long_name: %{
         user_name: "Ada",
         plan: :free,
@@ -66,6 +67,18 @@ defmodule MailglassAdmin.Fixtures.HappyMailer do
       "#{assigns.label} #{assigns.quantity + 1} #{:erlang.float_to_binary(assigns.ratio * 2, decimals: 6)} #{assigns.enabled?} #{next_day}"
     )
     |> Mailglass.Message.put_function(:typed_values)
+  end
+
+  def recoverable(assigns) do
+    if assigns.response == "fail", do: raise("deliberate recoverable preview failure")
+
+    new()
+    |> Mailglass.Message.from("no-reply@example.test")
+    |> Mailglass.Message.to("ada@example.test")
+    |> Mailglass.Message.subject("Recoverable #{assigns.response}")
+    |> Mailglass.Message.html_body("<p>Recoverable #{assigns.response}</p>")
+    |> Mailglass.Message.text_body("Recoverable #{assigns.response}")
+    |> Mailglass.Message.put_function(:recoverable)
   end
 
   def welcome_überraschung_東京__with_a_deliberately_long_name(assigns) do

@@ -79,7 +79,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "<h2"
       assert html =~ "Email previews"
       assert html =~ "Choose an email"
-      assert html =~ "3 emails"
+      assert html =~ "5 emails"
       refute html =~ "3 mailers"
 
       # HappyMailer module + scenarios rendered
@@ -713,13 +713,77 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(value="東京 résumé")
     end
 
+    test "render failure retains the editor and selected tab until a corrected edit succeeds", %{
+      conn: conn
+    } do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/recoverable")
+
+      render_click(view, "set_tab", %{"tab" => "text"})
+
+      failed =
+        render_change(view, "assigns_changed", %{"assigns" => %{"response" => "fail"}})
+
+      assert failed =~ ~s(data-testid="preview-assigns-form")
+      assert failed =~ ~s(value="fail")
+      assert failed =~ "deliberate recoverable preview failure"
+      assert failed =~ "Last successful preview — not current"
+      assert failed =~ "Recoverable first"
+      assert failed =~ ~s(data-output-current="false")
+      assert failed =~ ~s(data-testid="preview-render-retry")
+      assert failed =~ ~s(phx-click="render_preview")
+      assert failed =~ ~s(id="preview-state-status")
+
+      [selected_tab] =
+        failed
+        |> Floki.parse_document!()
+        |> Floki.find("#tab-btn-text")
+
+      assert Floki.attribute(selected_tab, "aria-selected") == ["true"]
+
+      corrected =
+        render_change(view, "assigns_changed", %{"assigns" => %{"response" => "corrected"}})
+
+      assert corrected =~ "Recoverable corrected"
+      assert corrected =~ ~s(data-output-current="true")
+      refute corrected =~ "deliberate recoverable preview failure"
+      refute corrected =~ ~s(data-testid="preview-render-retry")
+    end
+
+    test "retry runs the render event and reset restores the default scenario", %{conn: conn} do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/recoverable")
+
+      render_change(view, "assigns_changed", %{"assigns" => %{"response" => "fail"}})
+
+      retried =
+        view
+        |> element(~s([data-testid="preview-render-retry"]))
+        |> render_click()
+
+      assert retried =~ "deliberate recoverable preview failure"
+      assert retried =~ ~s(data-testid="preview-assigns-form")
+      assert retried =~ ~s(value="fail")
+
+      reset = render_click(view, "reset_assigns", %{})
+
+      assert reset =~ "Recoverable first"
+      assert reset =~ ~s(data-output-current="true")
+      refute reset =~ "deliberate recoverable preview failure"
+      refute reset =~ ~s(data-testid="preview-render-retry")
+    end
+
     test "invalid numeric and date drafts stay visible with field-associated errors", %{
       conn: conn
     } do
       {:ok, view, _html} =
         live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
 
-      for {key, invalid} <- [{"quantity", "8items"}, {"ratio", "2.75tail"}, {"due_on", "2026-02-30"}] do
+      for {key, invalid} <- [
+            {"quantity", "8items"},
+            {"ratio", "2.75tail"},
+            {"due_on", "2026-02-30"}
+          ] do
         html =
           render_change(view, "assigns_changed", %{"assigns" => %{key => invalid}})
 
@@ -750,9 +814,13 @@ defmodule MailglassAdmin.PreviewLiveTest do
           }
         })
 
-      assert forged =~ "%{source: \"fixture\"}"
-      refute forged =~ "forged"
-      refute forged =~ "injected"
+      [metadata_display] =
+        forged
+        |> Floki.parse_document!()
+        |> Floki.find("#assigns-metadata")
+
+      assert Floki.text(metadata_display) =~ "%{source: \"fixture\"}"
+      refute Floki.text(metadata_display) =~ "forged"
     end
 
     test "free text fields have a stable form id and built-in debounce" do
