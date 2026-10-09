@@ -156,15 +156,15 @@ defmodule MailglassInbound.Internal.Operator.Records do
 
   # Correlated subquery: the named `field` of the LATEST FRESH ExecutionRun for the
   # outer `:rec` record, tenant-scoped (T-48-01). Mirrors `Detail.latest_fresh_run/2`
-  # ordering (newest `inserted_at` first). Returns nil when the record has no fresh
-  # run — the admin list then renders "no match"/"Pending".
+  # ordering (newest `inserted_at`, then greatest ID for ties). Returns nil when
+  # the record has no fresh run — the admin list then renders "no match"/"Pending".
   defp latest_fresh_run_field(tenant_id, field) do
     from(run in ExecutionRun,
       where:
         run.tenant_id == ^tenant_id and
           run.source == :fresh and
           run.inbound_record_id == parent_as(:rec).id,
-      order_by: [desc: run.inserted_at],
+      order_by: [desc: run.inserted_at, desc: run.id],
       limit: 1,
       select: field(run, ^field)
     )

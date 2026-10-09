@@ -4,8 +4,8 @@ defmodule MailglassInbound.Internal.Operator.Timeline do
   #
   # Mirrors `MailglassInbound.Internal.Replay`'s `latest_fresh_run` query shape
   # but returns ALL execution runs (fresh AND replay) for a record, ordered
-  # chronologically (`executed_at` ascending) for timeline display — it drops the
-  # `limit: 1` and the `source == :fresh` filter. It reads the ExecutionRun
+  # chronologically (`executed_at`, `inserted_at`, then ID ascending) for timeline
+  # display — it drops the `limit: 1` and the `source == :fresh` filter. It reads the ExecutionRun
   # lineage schema, never the replay-run schema (Pitfall 7: the ExecutionRun row
   # is the one carrying `:no_match` + `source`). A blank/missing tenant returns
   # `[]` (the design contract). Every query applies

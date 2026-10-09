@@ -20,8 +20,6 @@ defmodule MailglassInbound.Internal.Operator.Detail do
   alias MailglassInbound.Repo
   alias Mailglass.Tenancy
 
-  @matched_outcomes [:accept, :ignore, :reject, :bounce]
-
   @type filters :: map() | keyword()
 
   @type detail :: %{
@@ -94,39 +92,17 @@ defmodule MailglassInbound.Internal.Operator.Detail do
     |> Repo.one()
   end
 
-  # The matched mailbox + outcome from the latest FRESH ExecutionRun (mirrors
-  # Replay.latest_matched_fresh_run/2, falling back to latest_fresh_run/2 so a
-  # :no_match disposition is still surfaced). Tenant-scoped on every query.
+  # The disposition of the latest FRESH ExecutionRun. A later no-match or failure
+  # is still the latest disposition; older matched history remains available only
+  # through the chronological timeline. Tenant-scoped on every query.
   defp resolve_outcome(tenant_id, record_id) do
-    case latest_matched_fresh_run(tenant_id, record_id) do
+    case latest_fresh_run(tenant_id, record_id) do
       %ExecutionRun{mailbox: mailbox, outcome: outcome, outcome_reason: reason} ->
         {mailbox, outcome, reason}
 
       nil ->
-        case latest_fresh_run(tenant_id, record_id) do
-          %ExecutionRun{mailbox: mailbox, outcome: outcome, outcome_reason: reason} ->
-            {mailbox, outcome, reason}
-
-          nil ->
-            {nil, nil, nil}
-        end
+        {nil, nil, nil}
     end
-  end
-
-  defp latest_matched_fresh_run(tenant_id, record_id) do
-    ExecutionRun
-    |> where(
-      [run],
-      run.tenant_id == ^tenant_id and
-        run.inbound_record_id == ^record_id and
-        run.source == :fresh and
-        not is_nil(run.mailbox) and
-        run.outcome in ^@matched_outcomes
-    )
-    |> order_by([run], desc: run.inserted_at)
-    |> limit(1)
-    |> Tenancy.scope(tenant_id)
-    |> Repo.one()
   end
 
   defp latest_fresh_run(tenant_id, record_id) do
@@ -137,7 +113,7 @@ defmodule MailglassInbound.Internal.Operator.Detail do
         run.inbound_record_id == ^record_id and
         run.source == :fresh
     )
-    |> order_by([run], desc: run.inserted_at)
+    |> order_by([run], desc: run.inserted_at, desc: run.id)
     |> limit(1)
     |> Tenancy.scope(tenant_id)
     |> Repo.one()
