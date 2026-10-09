@@ -206,7 +206,12 @@ Plans:
   3. An author can inspect HTML, plaintext, raw output, and headers with usable tab/selection behavior and readable long content without changing supported rendering semantics.
   4. An author can change device framing and preview appearance independently of admin appearance and understand that a browser frame does not establish email-client or dark-mode compatibility.
 
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 171-01-PLAN.md — Discover, select, and orient on a named renderer preview
+- [ ] 171-02-PLAN.md — Edit supported assigns and recover from invalid or failed renders
+- [ ] 171-03-PLAN.md — Inspect truthful output through accessible manual tabs
+- [ ] 171-04-PLAN.md — Frame browser output independently and verify responsive evidence
 **UI hint**: yes
 **Acceptance focus**: Use rendered inputs and output tabs for valid, invalid, long, and non-ASCII scenarios; inspect narrow/desktop and light/dark/System combinations where applicable, including failure recovery.
 

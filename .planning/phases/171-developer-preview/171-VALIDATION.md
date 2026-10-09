@@ -41,21 +41,25 @@ The research environment does not currently have the pinned Elixir `1.18.4` inst
 
 ## Per-Task Verification Map
 
-The task/plan IDs below are the initial requirement crosswalk for planning; the planner should retain these IDs where practical and update the mapping if the final vertical slices use different task boundaries.
+The task/plan IDs below match the final four-plan vertical slicing. Commands are planned for execution; no local Mix, browser, capture, or CI result is asserted here.
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 171-01-T1 | 01 | 1 | PRVUX-01 | — | Selection resolves only against discovered Mailables/scenarios; no untrusted string-to-atom conversion. | LiveView + browser | `cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | Existing module/fixtures; focused assertions to add | ⬜ pending |
-| 171-02-T1 | 02 | 2 | PRVUX-02 | — | Invalid drafts remain visible; supported parsing is type-safe; failed renders do not present stale output as current. | LiveView | `cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | Existing module and broken fixture; focused cases to add | ⬜ pending |
-| 171-03-T1 | 03 | 2 | PRVUX-03 | — | Preserve renderer-only and illustrative-output semantics; disabled scripts do not imply sanitization or network isolation. | LiveView + browser | `cd mailglass_admin && npm run test:operator-browser` | Existing test module and browser suite; focused assertions to add | ⬜ pending |
-| 171-04-T1 | 04 | 2 | PRVUX-04 | — | Width, backdrop, and Admin theme remain independent presentation state; no email-client or dark-mode proof claim. | LiveView + browser/capture | `cd mailglass_admin && npm run test:operator-browser` | Existing LiveView/browser/capture paths; focused assertions to add | ⬜ pending |
+| 171-01-T1 | 01 | 1 | PRVUX-01 | T-171-01 | Selected route and event values resolve against discovered Mailables/scenarios only. | LiveView | `cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | Existing module/fixtures; focused assertions to add | ⬜ pending |
+| 171-01-T2 | 01 | 1 | PRVUX-01 | T-171-02 | Zero discovery and no-scenario setup remain distinct; host owns the dev route guard. | LiveView + voice | `cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs test/mailglass_admin/voice_test.exs --warnings-as-errors` | Existing modules; focused assertions to add | ⬜ pending |
+| 171-02-T1 | 02 | 2 | PRVUX-02 | T-171-03 | Only known editable scalar keys parse; invalid drafts never silently reuse defaults. | LiveView + voice | `cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs test/mailglass_admin/voice_test.exs --warnings-as-errors` | Existing modules/fixtures; typed cases to add | ⬜ pending |
+| 171-02-T2 | 02 | 2 | PRVUX-02 | T-171-04 | Failure retains editor/draft and marks previous output as last successful. | LiveView | `cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | Existing module/fixtures; failure sequence to add | ⬜ pending |
+| 171-03-T1 | 03 | 3 | PRVUX-03 | T-171-06, T-171-08 | Renderer output, illustrative Raw/header labels, and script-disabled iframe are asserted. | LiveView | `cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | Existing module; provenance cases to add | ⬜ pending |
+| 171-03-T2 | 03 | 3 | PRVUX-03 | T-171-06 | Browser proves manual tab focus/activation and keyboard panel access. | Browser | `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 171 tabs"` | Existing suite; connected cases to add | ⬜ pending |
+| 171-04-T1 | 04 | 4 | PRVUX-04 | T-171-09 | CSS-pixel width, browser backdrop, and Admin theme stay independent across remount. | LiveView + browser | `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 171 framing"` | Existing suites; connected cases to add | ⬜ pending |
+| 171-04-T2 | 04 | 4 | PRVUX-01–04 | T-171-10 | Synthetic captures and connected layout/state checks keep evidence bounded to browser preview. | Browser + asset + capture contract | `BROWSER_SERVER_PORT=4102 npm --prefix mailglass_admin run test:operator-browser -- --grep "Phase 171 rendered"` | Existing browser/capture paths; cases to add | ⬜ pending |
 
 ---
 
 ## Wave 0 Requirements
 
 - [x] Existing ExUnit, LiveViewTest, Playwright, fixture, and capture infrastructure is present; no framework, new test configuration, or dependency is needed.
-- [ ] Add the requirement-specific assertions to the existing preview LiveView and browser test modules; keep real keyboard/focus assertions in the browser suite.
+- [ ] Add the requirement-specific assertions in Plans 01–04 to the existing preview LiveView and browser test modules; keep real keyboard/focus assertions in the browser suite.
 - [ ] Confirm the pinned Elixir toolchain is selected before running local Mix checks; CI remains the existing pinned-runtime path if the local toolchain is unavailable.
 
 ---
