@@ -1591,6 +1591,36 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-theme", "mailglass-dark");
     });
 
+    test("Phase 171 framing: CSS-pixel width and browser backdrop survive Admin theme remount", async ({ page }) => {
+      await openPreviewScenario(page, "theme=light");
+
+      const frameWidth = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
+      const frame = page.getByTestId("preview-pane");
+      await expect(frameWidth.getByRole("button", { name: "375 CSS px", exact: true })).toBeVisible();
+      await expect(frameWidth.getByRole("button", { name: "768 CSS px", exact: true })).toHaveAttribute("aria-pressed", "true");
+
+      await frameWidth.getByRole("button", { name: "375 CSS px", exact: true }).click();
+      await expect(frame).toHaveAttribute("style", /width:\s*375px/);
+      await expect(page).toHaveURL(/width=375/);
+      await frameWidth.getByRole("button", { name: "1024 CSS px", exact: true }).click();
+      await expect(frame).toHaveAttribute("style", /width:\s*1024px/);
+      await expect(page).toHaveURL(/width=1024/);
+
+      const limitation = page.getByText("Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior.", { exact: true });
+      await expect(limitation).toBeVisible();
+      await page.getByTestId("preview-frame-theme-toggle").click();
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+      await expect(frame).toHaveAttribute("data-preview-frame-theme", "dark");
+
+      await page.getByTestId("preview-global-controls").locator('input[name="preview_admin_theme"][value="dark"]').click();
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+      await expect(page.getByTestId("preview-pane")).toHaveAttribute("style", /width:\s*1024px/);
+      await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
+      await expect(page.getByRole("group", { name: "Preview frame width in CSS pixels" })
+        .getByRole("button", { name: "1024 CSS px", exact: true })).toHaveAttribute("aria-pressed", "true");
+      await expect(page).toHaveURL(/width=1024/);
+    });
+
     test("Phase 171 tabs: manual keyboard focus, activation, and long output scrolling", async ({ page }) => {
       await openPreviewScenario(page, "theme=light");
 
