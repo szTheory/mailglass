@@ -974,13 +974,15 @@ defmodule MailglassAdmin.Components do
   normalization is admin-side only.
 
   Maps: `:accept` → `:accepted`, `:reject` → `:rejected`, `:bounce` → `:bounced`.
-  All other atoms (including nil) pass through unchanged.
+  `nil` maps to `:missing_history`, which is a display-only state. All other atoms
+  pass through unchanged.
   """
   @doc since: "1.5.0"
   @spec normalize_inbound_outcome(atom() | nil) :: atom() | nil
   def normalize_inbound_outcome(:accept), do: :accepted
   def normalize_inbound_outcome(:reject), do: :rejected
   def normalize_inbound_outcome(:bounce), do: :bounced
+  def normalize_inbound_outcome(nil), do: :missing_history
   def normalize_inbound_outcome(atom), do: atom
 
   attr(:status, :atom,
@@ -1002,6 +1004,8 @@ defmodule MailglassAdmin.Components do
       :accepted,
       :no_match,
       :ignore,
+      :no_change,
+      :missing_history,
       :failed_ingest,
       :webhook_replay_requested,
       :webhook_replay_succeeded,
@@ -1154,6 +1158,8 @@ defmodule MailglassAdmin.Components do
   defp status_class(:accepted), do: "badge-success"
   defp status_class(:no_match), do: "badge-warning"
   defp status_class(:ignore), do: "badge-outline"
+  defp status_class(:no_change), do: "badge-outline"
+  defp status_class(:missing_history), do: "badge-outline"
   defp status_class(:failed_ingest), do: "badge-error"
   defp status_class(:webhook_replay_requested), do: "badge-outline"
   defp status_class(:webhook_replay_succeeded), do: "badge-success"
@@ -1181,6 +1187,8 @@ defmodule MailglassAdmin.Components do
   defp status_icon(:accepted), do: "hero-check-circle"
   defp status_icon(:no_match), do: "hero-exclamation-triangle"
   defp status_icon(:ignore), do: "hero-minus-circle"
+  defp status_icon(:no_change), do: "hero-minus-circle"
+  defp status_icon(:missing_history), do: "hero-question-mark-circle"
   defp status_icon(:failed_ingest), do: "hero-exclamation-circle"
   defp status_icon(:webhook_replay_requested), do: "hero-arrow-path"
   defp status_icon(:webhook_replay_succeeded), do: "hero-check-circle"
@@ -1208,6 +1216,8 @@ defmodule MailglassAdmin.Components do
   defp status_label(:accepted), do: "Accepted"
   defp status_label(:no_match), do: "No match"
   defp status_label(:ignore), do: "Ignored"
+  defp status_label(:no_change), do: "No change"
+  defp status_label(:missing_history), do: "No history"
   defp status_label(:failed_ingest), do: "Ingest failed"
   defp status_label(:webhook_replay_requested), do: "Replay requested"
   defp status_label(:webhook_replay_succeeded), do: "Replay succeeded"

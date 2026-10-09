@@ -44,7 +44,7 @@ defmodule MailglassAdmin.InboundLive do
   # The closed outcome allow-list. Hard-coded here (and asserted against the
   # read-model in the inbound test) so the LiveView has no compile-time reference
   # to MailglassInbound — keeping the --no-optional-deps lane clean.
-  @outcome_values [:no_match, :accept, :ignore, :reject, :bounce, :failed]
+  @outcome_values [:no_match, :accept, :ignore, :no_change, :reject, :bounce, :failed]
   @default_window_hours 168
   @inbound_records_per_page 20
   @outcome_filter_error "Mailbox outcome was not applied. Choose a listed outcome."
@@ -60,6 +60,7 @@ defmodule MailglassAdmin.InboundLive do
       no_match: 0,
       accept: 0,
       ignore: 0,
+      no_change: 0,
       reject: 0,
       bounce: 0,
       failed: 0

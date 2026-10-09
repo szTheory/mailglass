@@ -848,7 +848,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ unmatched.id
       assert html =~ "No match"
-      assert html =~ "no match"
+      assert html =~ "No match"
       assert html =~ "badge-warning"
     end
 
@@ -901,7 +901,14 @@ defmodule MailglassAdmin.InboundLiveTest do
       )
       |> render_submit()
 
-      assert_patch(view, inbound_path(%{"tenant_id" => @tenant_id, "outcome" => "no_change"}))
+      assert_patch(
+        view,
+        inbound_path(%{
+          "tenant_id" => @tenant_id,
+          "outcome" => "no_change",
+          "window_hours" => "168"
+        })
+      )
 
       html = render(view)
       assert html =~ no_change.id

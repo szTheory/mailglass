@@ -120,7 +120,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       assert html =~ "No match"
       assert html =~ "badge-warning"
-      assert html =~ "no match"
+      assert html =~ "No match"
     end
 
     test "renders no history when the record has no execution run yet" do
