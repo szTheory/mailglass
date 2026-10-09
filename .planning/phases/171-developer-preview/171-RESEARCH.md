@@ -416,22 +416,22 @@ This phase depends on existing runtime/test/browser tools. Probes did not boot t
 |---|-------|---------|---------------|
 | A1 | `150ms` in the illustrative `phx-debounce` snippet is a starting point, not a measured latency target. | Code Examples | If too small it may still render on rapid typing; if too large the preview feels delayed. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Which scalar types should be editable?**
-   - What we know: text, integer, float, boolean, Date and DateTime controls exist, but form payloads are strings and current coercion is lossy for malformed values.
-   - What's unclear: Whether the complete default fixture set includes Date values that are useful to edit.
-   - Recommendation: Plan text, integer, float and boolean edits first; include Date only with strict parsing and fixture coverage. Keep DateTime read-only unless timezone round-trip semantics are proven from source/tests.
+   - **RESOLVED:** Plan 171-02 Task 1 selects text, integer, float, true/false boolean and calendar-valid Date as editable, with complete parsing and synthetic valid/invalid fixture coverage. DateTime, nested maps, structs and atoms are read-only with edit-in-scenario guidance.
+   - Evidence and rationale: `mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex` already presents the scalar controls, while `preview_live.ex` currently accepts partial numbers and falls back to prior values on parse failure. The plan's `<behavior>` and `<action>` require strict parsing against scenario-default types, retained invalid drafts, false checkbox submission, and Date fixture cases; they do not establish a timezone-safe DateTime round trip.
+   - Recommendation retained: expose only values with a lossless scalar editor contract; do not add a general nested-value schema.
 
 2. **Exact debounce interval?**
-   - What we know: the task explicitly selects built-in LiveView debounce for free text.
-   - What's unclear: No render-latency measurement was collected for current fixtures.
-   - Recommendation: Choose the smallest practical built-in debounce and cover end-result responsiveness, not a speculative performance target.
+   - **RESOLVED:** No millisecond constant is locked at planning time. D-04 explicitly leaves the smallest practical built-in LiveView debounce to implementation discretion; Plan 171-02 Task 1 requires it on free-text fields, and Plan 171-04 Task 2 requires connected-browser evidence for the pending interval.
+   - Evidence and rationale: No render-latency measurement was collected for current fixtures. The illustrative `150ms` in the code example is a starting point, not an acceptance target; choosing a number without measurement would create unsupported precision.
+   - Recommendation retained: choose a short built-in interval during implementation and verify the resulting interaction rather than treating the example value as a contract.
 
 3. **Manual tabs key handling implementation?**
-   - What we know: APG keyboard semantics and manual activation are locked; no additional frontend framework or package is in scope.
-   - What's unclear: Whether current compiled LiveView client has a suitable existing key binding path or whether a small local hook is the least-complex implementation.
-   - Recommendation: At planning time inspect `assets/js/app.js` and current hook/client conventions; use the minimal project-native client behavior required, covered by real-browser tests. Do not add a general widget library.
+   - **RESOLVED:** Plan 171-03 Task 2 uses a tablist-scoped `phx-hook` in `mailglass_admin/lib/mailglass_admin/controllers/assets.ex`: Left/Right/Home/End move DOM focus locally, while Enter/Space/click activate through the existing LiveView `set_tab` event. The hook removes its listeners on destruction and is proved in the existing browser suite.
+   - Evidence and rationale: `controllers/assets.ex` embeds the current `Hooks` registry and `LiveSocket` bootstrap; `171-PATTERNS.md` identifies it as the closest project-native analog. There is no tracked `mailglass_admin/assets/js/app.js` in this repository, so the earlier path suggestion was stale. APG manual activation avoids a server event on every arrow focus move.
+   - Recommendation retained: use the existing client bootstrap and four-tab component, with no new framework, package or general widget abstraction.
 
 ## Sources
 
