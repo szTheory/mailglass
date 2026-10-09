@@ -17,11 +17,14 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
 
   use ExUnit.Case, async: false
 
+  import Ecto.Changeset, only: [put_change: 3]
+
   alias Ecto.Adapters.SQL.Sandbox
   alias MailglassInbound.InboundRecords
   alias MailglassInbound.Internal.Operator.Detail
   alias MailglassInbound.Internal.Operator.Records
   alias MailglassInbound.Internal.Operator.Timeline
+  alias MailglassInbound.Repo
   alias MailglassInbound.TestRepo
 
   setup do
@@ -285,6 +288,32 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
       assert row.outcome == nil
       assert row.mailbox == nil
     end
+
+    test "a same-time tie chooses the fresh run with the greatest id" do
+      {:ok, record} = insert_record("tenant-a")
+      {:ok, evidence} = insert_evidence("tenant-a", record.id)
+      inserted_at = ~U[2026-01-01 00:00:00.000000Z]
+
+      {:ok, _higher_id} =
+        insert_run("tenant-a", record.id, evidence.id,
+          id: "ffffffff-ffff-7fff-8fff-ffffffffffff",
+          inserted_at: inserted_at,
+          source: :fresh,
+          outcome: :accept
+        )
+
+      {:ok, _lower_id} =
+        insert_run("tenant-a", record.id, evidence.id,
+          id: "00000000-0000-7000-8000-000000000001",
+          inserted_at: inserted_at,
+          source: :fresh,
+          outcome: :no_match
+        )
+
+      assert [row] = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      assert row.outcome == :accept
+      assert row.mailbox == "MyApp.Mailboxes.SupportMailbox"
+    end
   end
 
   describe "Records.list_records/2 suppression flag projection (IOPS-05)" do
@@ -467,6 +496,55 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
 
       assert Timeline.list_runs(%{tenant_id: "tenant-a", inbound_record_id: record.id}, []) == []
     end
+
+    test "preserves exact source, outcome, ID and times with same-time ID ordering" do
+      {:ok, record} = insert_record("tenant-a")
+      {:ok, evidence} = insert_evidence("tenant-a", record.id)
+      executed_at = ~U[2026-02-03 04:05:06.000000Z]
+      inserted_at = ~U[2026-02-03 04:05:07.000000Z]
+
+      {:ok, _higher_id} =
+        insert_run("tenant-a", record.id, evidence.id,
+          id: "ffffffff-ffff-7fff-8fff-ffffffffffff",
+          inserted_at: inserted_at,
+          executed_at: executed_at,
+          source: :replay,
+          outcome: :no_change
+        )
+
+      {:ok, _lower_id} =
+        insert_run("tenant-a", record.id, evidence.id,
+          id: "00000000-0000-7000-8000-000000000001",
+          inserted_at: inserted_at,
+          executed_at: executed_at,
+          source: :fresh,
+          outcome: :ignore
+        )
+
+      assert [
+               %{
+                 id: "00000000-0000-7000-8000-000000000001",
+                 source: :fresh,
+                 outcome: :ignore,
+                 executed_at: ^executed_at,
+                 inserted_at: ^inserted_at
+               },
+               %{
+                 id: "ffffffff-ffff-7fff-8fff-ffffffffffff",
+                 source: :replay,
+                 outcome: :no_change,
+                 executed_at: ^executed_at,
+                 inserted_at: ^inserted_at
+               }
+             ] = Timeline.list_runs(%{tenant_id: "tenant-a", inbound_record_id: record.id}, [])
+    end
+
+    test "returns [] when a scoped record has no execution history" do
+      {:ok, record} = insert_record("tenant-a")
+
+      assert Timeline.list_runs(%{tenant_id: "tenant-a", inbound_record_id: record.id}, []) ==
+               []
+    end
   end
 
   describe "Detail.fetch/2" do
@@ -493,6 +571,93 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
              } = Detail.fetch(%{tenant_id: "tenant-a", inbound_record_id: record.id}, [])
 
       assert record_id == record.id
+    end
+
+    test "a later fresh failure replaces an older matched disposition" do
+      {:ok, record} = insert_record("tenant-a")
+      {:ok, evidence} = insert_evidence("tenant-a", record.id)
+      earlier = ~U[2026-01-01 00:00:00.000000Z]
+      later = ~U[2026-01-01 00:00:01.000000Z]
+
+      {:ok, _accepted} =
+        insert_run("tenant-a", record.id, evidence.id,
+          inserted_at: earlier,
+          outcome: :accept,
+          mailbox: "MyApp.OldMailbox"
+        )
+
+      {:ok, _failed} =
+        insert_run("tenant-a", record.id, evidence.id,
+          inserted_at: later,
+          outcome: :failed,
+          mailbox: nil,
+          failure: %{"kind" => "fixture"}
+        )
+
+      assert [row] = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      assert row.outcome == :failed
+      assert row.mailbox == nil
+
+      assert %{outcome: :failed, mailbox: nil, outcome_reason: nil} =
+               Detail.fetch(%{tenant_id: "tenant-a", inbound_record_id: record.id}, [])
+    end
+
+    test "a later fresh no-match replaces an older matched disposition" do
+      {:ok, record} = insert_record("tenant-a")
+      {:ok, evidence} = insert_evidence("tenant-a", record.id)
+      earlier = ~U[2026-01-01 00:00:00.000000Z]
+      later = ~U[2026-01-01 00:00:01.000000Z]
+
+      {:ok, _accepted} =
+        insert_run("tenant-a", record.id, evidence.id,
+          inserted_at: earlier,
+          outcome: :accept,
+          mailbox: "MyApp.OldMailbox"
+        )
+
+      {:ok, _no_match} =
+        insert_run("tenant-a", record.id, evidence.id,
+          inserted_at: later,
+          outcome: :no_match
+        )
+
+      assert [row] = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      assert row.outcome == :no_match
+      assert row.mailbox == nil
+
+      assert %{outcome: :no_match, mailbox: nil, outcome_reason: nil} =
+               Detail.fetch(%{tenant_id: "tenant-a", inbound_record_id: record.id}, [])
+    end
+
+    test "missing history stays missing and replay does not replace fresh disposition" do
+      {:ok, empty_record} = insert_record("tenant-a")
+
+      assert %{outcome: nil, mailbox: nil, outcome_reason: nil} =
+               Detail.fetch(%{tenant_id: "tenant-a", inbound_record_id: empty_record.id}, [])
+
+      {:ok, record} = insert_record("tenant-a")
+      {:ok, evidence} = insert_evidence("tenant-a", record.id)
+
+      {:ok, _fresh} =
+        insert_run("tenant-a", record.id, evidence.id,
+          inserted_at: ~U[2026-01-01 00:00:00.000000Z],
+          outcome: :no_change
+        )
+
+      {:ok, _replay} =
+        insert_run("tenant-a", record.id, evidence.id,
+          inserted_at: ~U[2026-01-01 00:00:01.000000Z],
+          source: :replay,
+          outcome: :ignore
+        )
+
+      rows = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      assert row = Enum.find(rows, &(&1.id == record.id))
+      assert row.id == record.id
+      assert row.outcome == :no_change
+
+      assert %{outcome: :no_change, mailbox: "MyApp.Mailboxes.SupportMailbox"} =
+               Detail.fetch(%{tenant_id: "tenant-a", inbound_record_id: record.id}, [])
     end
 
     test "returns nil for a record that belongs to a different tenant (gate before replay)" do
@@ -544,8 +709,13 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
         :outcome_reason,
         Keyword.get(opts, :outcome_reason, default_reason(base.outcome))
       )
+      |> maybe_put_failure(base.outcome, Keyword.get(opts, :failure))
 
-    InboundRecords.insert_execution_run(attrs)
+    changeset = InboundRecords.change_execution_run(attrs)
+    changeset = maybe_put_change(changeset, :id, Keyword.get(opts, :id))
+    changeset = maybe_put_change(changeset, :inserted_at, Keyword.get(opts, :inserted_at))
+
+    Repo.insert(changeset)
   end
 
   # ExecutionRun.validate_outcome_shape/1 requires a mailbox for accept/ignore/
@@ -556,8 +726,17 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
   defp default_reason(outcome) when outcome in [:reject, :bounce], do: "fixture reason"
   defp default_reason(_outcome), do: nil
 
+  defp maybe_put_failure(attrs, :failed, nil),
+    do: Map.put(attrs, :failure, %{"kind" => "fixture_failure"})
+
+  defp maybe_put_failure(attrs, _outcome, nil), do: attrs
+  defp maybe_put_failure(attrs, _outcome, failure), do: Map.put(attrs, :failure, failure)
+
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)
+
+  defp maybe_put_change(changeset, _key, nil), do: changeset
+  defp maybe_put_change(changeset, key, value), do: put_change(changeset, key, value)
 
   defp unique(prefix), do: "#{prefix}-#{System.unique_integer([:positive])}"
 end
