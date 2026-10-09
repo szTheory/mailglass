@@ -779,6 +779,14 @@ defmodule MailglassAdmin.PreviewLiveTest do
       {:ok, view, _html} =
         live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
 
+      mixed_draft =
+        render_change(view, "assigns_changed", %{
+          "assigns" => %{"quantity" => "8items", "label" => "Long draft 東京"}
+        })
+
+      assert mixed_draft =~ ~s(value="Long draft 東京")
+      assert mixed_draft =~ ~s(value="8items")
+
       for {key, invalid} <- [
             {"quantity", "8items"},
             {"ratio", "2.75tail"},
