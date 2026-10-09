@@ -1,25 +1,12 @@
 defmodule MailglassAdmin.Inbound.RoutingTrace do
   @moduledoc """
-  Routing-trace card — the one novel inbound surface.
+  Routing-trace card — a current-router simulation for inbound no-match records.
 
-  Answers "why did this message not match any mailbox?" without an `iex` session,
-  by rendering a per-route clause diff for a `:no_match` record. This component is
-  NET-NEW, but reuses ONLY existing card/badge/marker chrome (no charts, no JS).
-
-  The verdicts are computed upstream by the internal matcher explain function
-  (reached through the runtime gateway), so the rendered pass/fail equals
-  real matcher behavior — this view NEVER re-implements equality/regex/wildcard
-  semantics. The `trace` assign is a list (declared route order) of
-  `%{mailbox: String.t(), verdicts: [tuple()]}`; each verdict tuple's LAST element
-  is the clause `pass?` boolean (per `Matcher.clause_verdict`):
-
-    - `{:recipient, matcher, actual, pass?}`
-    - `{:subject, matcher, actual, pass?}`
-    - `{:header, name, matcher, actual_list, pass?}`
-
-  Recipient actuals are masked via `Components.mask_recipient/1` (PII discipline,
-  T-48-13). A `nil` matcher renders the literal `any` (wildcard); a `%Regex{}`
-  renders `~r/.../`; an exact string renders verbatim — all in `.mono`.
+  Verdicts come from the internal matcher explanation function. This component
+  preserves those pass/fail results while applying a field-specific display
+  policy before any matcher or message value reaches ordinary HTML. A native
+  `details` disclosure owns its expanded state so browser and assistive
+  technology state cannot drift from the visible content.
   """
 
   use Phoenix.Component
@@ -35,84 +22,98 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
       data-testid="inbound-routing-trace"
       data-group-card="inbound-routing-trace"
     >
-      <div class="mb-md space-y-xs">
-        <h3 class="text-body font-bold text-base-content">Routing trace</h3>
-        <p class="text-label text-secondary">Why this message did not match</p>
-      </div>
+      <details data-testid="inbound-routing-disclosure">
+        <summary
+          aria-controls="inbound-routing-trace-content"
+          class="mg-focus-ring block min-h-11 cursor-pointer rounded-box focus:outline-none"
+        >
+          <span class="text-body font-bold text-base-content">Current router simulation</span>
+          <span class="block text-label text-secondary">Why the currently configured routes did not match</span>
+        </summary>
 
-      <%= if @trace == [] do %>
-        <p class="text-body text-secondary">
-          No inbound routes are declared, so there is nothing to trace.
-        </p>
-      <% else %>
-        <div class="space-y-lg">
-          <%= for route <- @trace do %>
-            <section
-              data-testid="inbound-route-card"
-              class="min-w-0 rounded-box border border-base-300 bg-base-100 p-md"
-            >
-              <div class="mb-sm flex flex-wrap items-center justify-between gap-sm">
-                <p class="mono min-w-0 break-all text-body text-base-content">{route.mailbox}</p>
-                <span class="badge badge-outline badge-error">No match</span>
-              </div>
+        <div id="inbound-routing-trace-content" class="mt-md space-y-md">
+          <p class="text-label text-secondary">
+            This evaluates the router configured now; it does not prove which route was selected when the message arrived. Recorded execution runs and durable route bindings are historical evidence.
+          </p>
 
-              <ul class="min-w-0 space-y-md">
-                <%= for verdict <- annotate(route.verdicts) do %>
-                  <li
-                    data-testid="inbound-trace-clause"
-                    class={[
-                      "min-w-0 rounded-box",
-                      verdict.first_failing? && "border-l-4 border-error px-sm"
-                    ]}
-                  >
-                    <div class="grid min-w-0 gap-sm sm:grid-cols-[minmax(7rem,10rem)_1fr_1fr]">
-                      <div class="min-w-0 space-y-xs">
-                        <span class="text-label uppercase font-bold text-secondary">Dimension</span>
-                        <div class="flex items-center gap-sm">
-                          <Components.icon
-                            name={if verdict.pass?, do: "hero-check-circle", else: "hero-x-circle"}
-                            class={[
-                              "h-4 w-4",
-                              if(verdict.pass?, do: "text-success", else: "text-error")
-                            ]}
-                          />
-                          <span class="text-body text-base-content">{verdict.dimension}</span>
+          <%= if @trace == [] do %>
+            <p class="text-body text-secondary">
+              No inbound routes are declared, so there is nothing to trace.
+            </p>
+          <% else %>
+            <div class="space-y-lg">
+              <%= for route <- @trace do %>
+                <section
+                  data-testid="inbound-route-card"
+                  class="min-w-0 rounded-box border border-base-300 bg-base-100 p-md"
+                >
+                  <div class="mb-sm flex flex-wrap items-center justify-between gap-sm">
+                    <p class="mono min-w-0 break-all text-body text-base-content">{route.mailbox}</p>
+                    <span class="badge badge-outline badge-error">No match</span>
+                  </div>
+
+                  <ul class="min-w-0 space-y-md">
+                    <%= for verdict <- annotate(route.verdicts) do %>
+                      <li
+                        data-testid="inbound-trace-clause"
+                        class={[
+                          "min-w-0 rounded-box",
+                          verdict.first_failing? && "border-l-4 border-error px-sm"
+                        ]}
+                      >
+                        <div class="grid min-w-0 gap-sm sm:grid-cols-[minmax(7rem,10rem)_1fr_1fr]">
+                          <div class="min-w-0 space-y-xs">
+                            <span class="text-label uppercase font-bold text-secondary">Dimension</span>
+                            <div class="flex items-center gap-sm">
+                              <Components.icon
+                                name={
+                                  if verdict.pass?, do: "hero-check-circle", else: "hero-x-circle"
+                                }
+                                class={[
+                                  "h-4 w-4",
+                                  if(verdict.pass?, do: "text-success", else: "text-error")
+                                ]}
+                              />
+                              <span class="text-body text-base-content">{verdict.dimension}</span>
+                            </div>
+                          </div>
+
+                          <div class="min-w-0 space-y-xs">
+                            <span class="text-label uppercase font-bold text-secondary">Expected</span>
+                            {expected_markup(assigns, verdict)}
+                          </div>
+
+                          <div class="min-w-0 space-y-xs">
+                            <span class="text-label uppercase font-bold text-secondary">Actual</span>
+                            <span class="mono block min-w-0 break-all rounded-box border border-base-300 bg-base-100 px-sm py-xs text-label text-base-content">
+                              {verdict.actual}
+                            </span>
+                          </div>
                         </div>
-                      </div>
 
-                      <div class="min-w-0 space-y-xs">
-                        <span class="text-label uppercase font-bold text-secondary">Expected</span>
-                        {expected_markup(assigns, verdict)}
-                      </div>
+                        <p
+                          :if={verdict.first_failing?}
+                          class="min-w-0 break-words text-body text-secondary"
+                        >
+                          {verdict.reason}
+                        </p>
+                      </li>
+                    <% end %>
+                  </ul>
+                </section>
+              <% end %>
+            </div>
 
-                      <div class="min-w-0 space-y-xs">
-                        <span class="text-label uppercase font-bold text-secondary">Actual</span>
-                        <span class="mono block min-w-0 break-all rounded-box border border-base-300 bg-base-100 px-sm py-xs text-label text-base-content">
-                          {verdict.actual}
-                        </span>
-                      </div>
-                    </div>
-
-                    <p :if={verdict.first_failing?} class="min-w-0 break-words text-body text-secondary">
-                      {verdict.reason}
-                    </p>
-                  </li>
-                <% end %>
-              </ul>
-            </section>
+            <p class="text-label text-secondary">
+              Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and a regular-expression matcher uses its configured expression.
+            </p>
           <% end %>
         </div>
-
-        <p class="mt-md text-label text-secondary">
-          Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and ~r/…/ matches by regular expression.
-        </p>
-      <% end %>
+      </details>
     </Components.card>
     """
   end
 
-  # Renders the Expected matcher: nil → "any" (text-secondary), regex → ~r/.../,
-  # exact string verbatim — all wrapped in a mono chip.
   defp expected_markup(assigns, %{matcher_kind: :wildcard}) do
     ~H"""
     <span class="mono block min-w-0 break-all rounded-box border border-base-300 bg-base-100 px-sm py-xs text-label text-secondary">
@@ -121,7 +122,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
     """
   end
 
-  defp expected_markup(assigns, %{matcher_kind: _other} = verdict) do
+  defp expected_markup(assigns, verdict) do
     assigns = Phoenix.Component.assign(assigns, :expected, verdict.expected)
 
     ~H"""
@@ -131,88 +132,101 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
     """
   end
 
-  # Decorate each verdict with: dimension label, rendered Expected/Actual strings,
-  # pass?, matcher_kind, the first-failing flag, and the composed reason copy.
   defp annotate(verdicts) do
-    first_failing_index =
-      Enum.find_index(verdicts, fn verdict -> not pass?(verdict) end)
+    first_failing_index = Enum.find_index(verdicts, fn verdict -> not pass?(verdict) end)
 
     verdicts
     |> Enum.with_index()
     |> Enum.map(fn {verdict, index} ->
-      pass = pass?(verdict)
-
       base = %{
-        pass?: pass,
+        pass?: pass?(verdict),
         first_failing?: index == first_failing_index,
         matcher_kind: matcher_kind(matcher_of(verdict))
       }
 
-      verdict
-      |> decorate(base)
+      decorate(verdict, base)
     end)
   end
 
   defp decorate({:recipient, matcher, actual, _pass?}, base) do
     base
     |> Map.put(:dimension, "Recipient")
-    |> Map.put(:expected, render_matcher(matcher))
-    |> Map.put(:actual, Components.mask_recipient(actual))
-    |> Map.put(:reason, recipient_reason(matcher, actual))
+    |> Map.put(:expected, render_matcher(matcher, :recipient))
+    |> Map.put(:actual, masked_recipient(actual))
+    |> Map.put(:reason, "Recipient did not match the current route.")
   end
 
   defp decorate({:subject, matcher, actual, _pass?}, base) do
     base
     |> Map.put(:dimension, "Subject")
-    |> Map.put(:expected, render_matcher(matcher))
-    |> Map.put(:actual, present(actual))
-    |> Map.put(:reason, subject_reason(matcher, actual))
+    |> Map.put(:expected, render_matcher(matcher, :subject))
+    |> Map.put(:actual, masked_subject(actual))
+    |> Map.put(:reason, "Subject did not match the current route.")
   end
 
-  defp decorate({:header, name, matcher, actual_list, _pass?}, base) do
+  defp decorate({:header, _name, matcher, actual_list, _pass?}, base) do
     base
-    |> Map.put(:dimension, "Header: " <> name)
-    |> Map.put(:expected, render_matcher(matcher))
+    |> Map.put(:dimension, "Header")
+    |> Map.put(:expected, render_matcher(matcher, :header))
     |> Map.put(:actual, render_header_actual(actual_list))
-    |> Map.put(:reason, header_reason(name, matcher, actual_list))
+    |> Map.put(:reason, header_reason(actual_list))
   end
 
-  # The clause pass? is always the LAST element of the tuple, regardless of arity.
-  defp pass?(verdict), do: elem(verdict, tuple_size(verdict) - 1)
+  defp decorate(_unsupported_clause, base) do
+    base
+    |> Map.put(:dimension, "Other condition")
+    |> Map.put(:expected, "Matcher details withheld")
+    |> Map.put(:actual, "Value withheld")
+    |> Map.put(:reason, "This route condition did not match.")
+  end
+
+  defp pass?(verdict) when is_tuple(verdict) and tuple_size(verdict) > 0,
+    do: elem(verdict, tuple_size(verdict) - 1)
+
+  defp pass?(_verdict), do: false
 
   defp matcher_of({:recipient, matcher, _actual, _pass?}), do: matcher
   defp matcher_of({:subject, matcher, _actual, _pass?}), do: matcher
-  defp matcher_of({:header, _name, matcher, _actual, _pass?}), do: matcher
+  defp matcher_of({:header, _name, matcher, _actual_list, _pass?}), do: matcher
+  defp matcher_of(_unsupported_clause), do: :unsupported
 
   defp matcher_kind(nil), do: :wildcard
   defp matcher_kind(%Regex{}), do: :regex
-  defp matcher_kind(_matcher), do: :exact
+  defp matcher_kind(:unsupported), do: :unsupported
+  defp matcher_kind(matcher) when is_binary(matcher), do: :exact
+  defp matcher_kind(_matcher), do: :unsupported
 
-  defp render_matcher(nil), do: "any"
-  defp render_matcher(%Regex{} = regex), do: "~r/" <> regex.source <> "/"
-  defp render_matcher(matcher) when is_binary(matcher), do: matcher
+  defp render_matcher(nil, _dimension), do: "any"
+  defp render_matcher(%Regex{}, _dimension), do: "Regular expression matcher"
 
-  defp render_header_actual([]), do: "(no such header)"
-  defp render_header_actual(list) when is_list(list), do: Enum.join(list, ", ")
+  defp render_matcher(matcher, :recipient) when is_binary(matcher),
+    do: masked_recipient(matcher)
 
-  defp present(nil), do: "—"
-  defp present(""), do: "—"
-  defp present(value), do: value
+  defp render_matcher(matcher, :subject) when is_binary(matcher),
+    do: masked_subject(matcher)
 
-  # Composed, specific failing-clause reasons (UI-SPEC Copywriting Contract).
-  defp recipient_reason(matcher, actual) do
-    "Recipient did not match: expected #{render_matcher(matcher)}, message envelope was #{Components.mask_recipient(actual)}."
-  end
+  defp render_matcher(_matcher, :header), do: "Exact value matcher"
+  defp render_matcher(_matcher, _dimension), do: "Matcher details withheld"
 
-  defp subject_reason(matcher, actual) do
-    "Subject did not match: expected #{render_matcher(matcher)}, message subject was #{present(actual)}."
-  end
+  defp masked_recipient(nil), do: "Unavailable"
 
-  defp header_reason(name, _matcher, []) do
-    "Header #{name} was required by this route but the message had no such header."
-  end
+  defp masked_recipient(value) when is_binary(value) and value != "",
+    do: Components.mask_recipient(value)
 
-  defp header_reason(name, matcher, actual_list) do
-    "Header #{name} did not match: expected #{render_matcher(matcher)}, message had #{render_header_actual(actual_list)}."
-  end
+  defp masked_recipient(_value), do: "Unavailable"
+
+  defp masked_subject(nil), do: "Unavailable"
+  defp masked_subject(""), do: "Unavailable"
+
+  defp masked_subject(value) when is_binary(value),
+    do: Components.mask_value(value)
+
+  defp masked_subject(_value), do: "Unavailable"
+
+  defp render_header_actual([]), do: "Not present"
+  defp render_header_actual(values) when is_list(values), do: "Value withheld"
+  defp render_header_actual(_values), do: "Unavailable"
+
+  defp header_reason([]), do: "Required header was not present on the current message."
+  defp header_reason(_values), do: "Header did not match the current route."
 end
