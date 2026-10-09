@@ -5,8 +5,11 @@ defmodule MailglassAdmin.Inbound.Timeline do
   Sibling of `MailglassAdmin.Operator.Timeline`. Rows are
   `ExecutionRun` projections (Pitfall 7 — the lineage schema, NOT the replay-run
   schema) from the internal inbound timeline gateway, each carrying
-  `source` (`:fresh`/`:replay`), `mailbox`, `outcome`, `outcome_reason`,
+  `source` (`:fresh`/`:replay`), `mailbox`, and `outcome`,
   `executed_at`, and the run `id`.
+
+  Free-form `outcome_reason` and failure metadata are intentionally omitted so
+  provider exception details cannot leak into the operator timeline.
   """
 
   use Phoenix.Component
@@ -47,13 +50,12 @@ defmodule MailglassAdmin.Inbound.Timeline do
                 <div class="flex flex-wrap items-start justify-between gap-sm">
                   <div class="space-y-xs">
                     <div class="flex flex-wrap items-center gap-sm">
-                      <p class="text-body font-bold text-base-content">{outcome_label(run.outcome)}</p>
+                      <p class="text-body font-bold text-base-content">
+                        {outcome_label(run.outcome)}
+                      </p>
                       <span class="badge badge-outline">{source_label(run.source)}</span>
                     </div>
                     <p :if={present?(run.mailbox)} class="text-label text-secondary">{run.mailbox}</p>
-                    <p :if={present?(run.outcome_reason)} class="text-body text-secondary">
-                      Reason: {run.outcome_reason}
-                    </p>
                     <p class="mono text-label text-secondary">{run.id}</p>
                   </div>
                   <p class="text-label text-secondary"><.timestamp at={run.executed_at} /></p>
@@ -76,9 +78,16 @@ defmodule MailglassAdmin.Inbound.Timeline do
   defp outcome_dot_class(:ignore), do: "bg-secondary"
   defp outcome_dot_class(_outcome), do: "bg-secondary"
 
-  defp outcome_label(nil), do: "Unknown"
+  defp outcome_label(:no_match), do: "No match"
+  defp outcome_label(:accept), do: "Accepted"
+  defp outcome_label(:ignore), do: "Ignored"
+  defp outcome_label(:no_change), do: "No change"
+  defp outcome_label(:reject), do: "Rejected"
+  defp outcome_label(:bounce), do: "Bounced"
+  defp outcome_label(:failed), do: "Failed"
+  defp outcome_label(nil), do: "Outcome unavailable"
 
-  defp outcome_label(value) do
+  defp outcome_label(value) when is_atom(value) do
     value
     |> Atom.to_string()
     |> String.replace("_", " ")

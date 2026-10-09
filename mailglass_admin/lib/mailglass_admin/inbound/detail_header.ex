@@ -79,7 +79,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
           </div>
           <div class="min-w-0">
             <dt class="text-label font-bold uppercase">Matched mailbox</dt>
-            <dd class="mt-xs text-base-content">{matched_mailbox(@mailbox)}</dd>
+            <dd class="mt-xs text-base-content">{matched_mailbox(@outcome, @mailbox)}</dd>
           </div>
         </dl>
       </div>
@@ -142,8 +142,13 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
   defp replay_hint(_outcome),
     do: "Replay re-runs mailbox routing against the stored message and records a new replay run."
 
-  defp matched_mailbox(mailbox) when is_binary(mailbox) and mailbox != "", do: mailbox
-  defp matched_mailbox(_mailbox), do: "No match"
+  defp matched_mailbox(:no_match, _mailbox), do: "No match"
+  defp matched_mailbox(nil, _mailbox), do: "No execution recorded"
+
+  defp matched_mailbox(_outcome, mailbox) when is_binary(mailbox) and mailbox != "",
+    do: mailbox
+
+  defp matched_mailbox(_outcome, _mailbox), do: "Unavailable"
 
   defp present(value) when value in [nil, ""], do: "—"
   defp present(value), do: value

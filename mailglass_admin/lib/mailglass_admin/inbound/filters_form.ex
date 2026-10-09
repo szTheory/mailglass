@@ -4,7 +4,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
 
   Sibling of `MailglassAdmin.Operator.FiltersForm`. The mailbox-outcome
   select offers exactly the internal execution-run outcome set
-  (`[:no_match, :accept, :ignore, :reject, :bounce, :failed]`) — the same closed
+  (`[:no_match, :accept, :ignore, :no_change, :reject, :bounce, :failed]`) — the same closed
   set the read-model casts against (V5 input-validation allow-list).
   """
 
@@ -38,7 +38,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         field={@form[:outcome]}
         type={:select}
         label="Mailbox outcome"
-        help="Filter by routing outcome."
+        help="Filter by the latest fresh mailbox outcome, including an explicit no-change result."
         error={field_error(@errors, "outcome")}
         prompt="Any outcome"
         options={enum_options(@outcome_values)}
@@ -65,6 +65,14 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
   end
 
   defp label(nil), do: "Unknown"
+
+  defp label(:no_match), do: "No match"
+  defp label(:accept), do: "Accepted"
+  defp label(:ignore), do: "Ignored"
+  defp label(:no_change), do: "No change"
+  defp label(:reject), do: "Rejected"
+  defp label(:bounce), do: "Bounced"
+  defp label(:failed), do: "Failed"
 
   defp label(value) do
     value
