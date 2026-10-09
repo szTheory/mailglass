@@ -136,20 +136,31 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
 
   def reset(conn, _params) do
     conn = Plug.Conn.fetch_query_params(conn)
+    Application.put_env(:mailglass_admin, :inbound_gateway_available?, true)
+    Application.put_env(:mailglass_inbound, :repo, MailglassAdmin.TestRepo)
 
     result =
       case conn.query_params["scenario"] do
         nil ->
-          Application.put_env(:mailglass_admin, :inbound_gateway_available?, true)
           {:ok, OperatorFixtures.seed_browser_scenario!()}
 
         "default" ->
-          Application.put_env(:mailglass_admin, :inbound_gateway_available?, true)
           {:ok, OperatorFixtures.seed_browser_scenario!()}
 
         "phase170-package-unavailable" ->
           Application.put_env(:mailglass_admin, :inbound_gateway_available?, false)
           {:ok, OperatorFixtures.seed_browser_scenario!()}
+
+        "phase170-read-unavailable" ->
+          seeded = OperatorFixtures.seed_browser_scenario!()
+
+          Application.put_env(
+            :mailglass_inbound,
+            :repo,
+            MailglassAdmin.TestSupport.BrowserConnectionFailingRepo
+          )
+
+          {:ok, seeded}
 
         "sole" ->
           {:ok, OperatorFixtures.seed_browser_scenario!(deny_reveal?: false)}
@@ -264,6 +275,18 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
     conn
     |> Plug.Conn.put_session("mailables", [])
     |> Phoenix.Controller.redirect(to: "/dev/mail/")
+  end
+end
+
+defmodule MailglassAdmin.TestSupport.BrowserConnectionFailingRepo do
+  @moduledoc false
+
+  def all(_queryable, _opts), do: fail()
+  def one(_queryable, _opts), do: fail()
+  def get(_queryable, _id, _opts), do: fail()
+
+  defp fail do
+    raise DBConnection.ConnectionError, message: "synthetic browser inbound connection failure"
   end
 end
 

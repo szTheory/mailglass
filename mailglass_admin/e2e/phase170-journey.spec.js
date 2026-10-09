@@ -162,6 +162,20 @@ test.describe("Phase 170 connected", () => {
 
     await page.screenshot({ path: "test-results/phase170-out-of-range.png", fullPage: true });
   });
+
+  test("database connection failures render as sanitized unavailable data", async ({ page }) => {
+    const reset = await page.request.get("/ops/browser-reset?scenario=phase170-read-unavailable");
+    expect(reset.ok()).toBeTruthy();
+    const route = `/ops/mail/inbound?tenant_id=${tenantId}`;
+    await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(route)}`);
+
+    const unavailable = page.getByTestId("inbound-read-unavailable");
+    await expect(unavailable).toBeVisible();
+    await expect(unavailable).toContainText("Inbound records could not be loaded.");
+    await expect(unavailable).not.toContainText("synthetic browser inbound connection failure");
+    await expect(page.getByTestId("inbound-empty-truly")).toHaveCount(0);
+    await expect(page.getByTestId("inbound-empty-filtered")).toHaveCount(0);
+  });
 });
 
 test.describe("Phase 170 rendered", () => {
