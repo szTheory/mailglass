@@ -12,7 +12,7 @@ defmodule MailglassInbound.Internal.Replay do
   alias MailglassInbound.Ingress.{Request, VerifiedRequest}
   alias MailglassInbound.Router.Matcher
 
-  @matched_outcomes [:accept, :ignore, :reject, :bounce]
+  @matched_outcomes [:accept, :ignore, :no_change, :reject, :bounce]
 
   defp schema_opts, do: [prefix: MailglassInbound.Config.schema()]
 

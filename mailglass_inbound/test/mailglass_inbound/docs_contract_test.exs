@@ -83,6 +83,18 @@ defmodule MailglassInbound.DocsContractTest do
     refute stability =~ "Conductor UI"
   end
 
+  test "mailbox no-change docs require an explicit outcome and preserve ignore semantics" do
+    stability = File.read!(@stability_path)
+    operator = File.read!(@operator_path)
+
+    assert stability =~ "valid outcomes are `:accept`, `:ignore`, `:no_change`"
+    assert stability =~ "explicit callback assertion that no mutation occurred"
+    assert stability =~ "never inferred from `:ignore`"
+    assert operator =~ "### Mailbox outcome `:no_change`"
+    assert operator =~ "The execution history records that exact result"
+    assert operator =~ "`:ignore` remains a separate outcome"
+  end
+
   test "postmark docs describe the body_reader requirement and explicit duplicate semantics" do
     postmark = File.read!(@postmark_ingress_path)
 

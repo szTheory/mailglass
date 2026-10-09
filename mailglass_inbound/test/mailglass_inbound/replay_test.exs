@@ -50,6 +50,17 @@ defmodule MailglassInbound.ReplayTest do
     route(NoChangeMailbox, recipient: "support@example.com")
   end
 
+  defmodule IgnoreMailbox do
+    @behaviour MailglassInbound.Mailbox
+    def process(_message), do: :ignore
+  end
+
+  defmodule IgnoreRouter do
+    use MailglassInbound.Router
+
+    route(IgnoreMailbox, recipient: "support@example.com")
+  end
+
   defmodule LoadedProcessSentinel do
     def process(_message) do
       send(Application.fetch_env!(:mailglass_inbound, :replay_test_pid), :sentinel_invoked)
@@ -252,7 +263,7 @@ defmodule MailglassInbound.ReplayTest do
 
       refute invalid.valid?
 
-      assert {"must be :no_match, :accept, :ignore, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata",
+      assert {"must be :no_match, :accept, :ignore, :no_change, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata",
               _} =
                invalid.errors[:outcome]
     end
@@ -347,6 +358,36 @@ defmodule MailglassInbound.ReplayTest do
       assert replay_run.outcome == :no_change
       assert replay_run.mailbox == Atom.to_string(NoChangeMailbox)
       refute TestRepo.get_by(ExecutionRun, inbound_record_id: record.id, source: :fresh)
+
+      ignore_handoff =
+        valid_sendgrid_handoff()
+        |> Map.put(:tenant_id, "tenant-ignore")
+        |> Map.update!(:message, &%{&1 | tenant_id: "tenant-ignore"})
+
+      assert {:ok, %{status: :inserted, route: %{status: :matched, mailbox: IgnoreMailbox}}} =
+               Persist.persist(ignore_handoff, repo: TestRepo, router: IgnoreRouter)
+
+      ignore_record = TestRepo.get_by!(InboundRecord, tenant_id: "tenant-ignore")
+
+      assert {:ok, %{outcome: :ignore}} =
+               Replay.replay(ignore_record.id,
+                 tenant_id: ignore_record.tenant_id,
+                 repo: TestRepo,
+                 router: IgnoreRouter
+               )
+
+      ignore_run =
+        TestRepo.get_by!(ExecutionRun,
+          inbound_record_id: ignore_record.id,
+          source: :replay
+        )
+
+      assert ignore_run.outcome == :ignore
+
+      assert {:error, :not_found} =
+               Replay.replay(record.id, tenant_id: "tenant-foreign", repo: TestRepo)
+
+      assert TestRepo.aggregate(ExecutionRun, :count) == 2
     end
 
     test "recognizes a legacy no-change run as matched while refusing its unbound mailbox" do
@@ -362,8 +403,7 @@ defmodule MailglassInbound.ReplayTest do
 
       evidence
       |> Ecto.Changeset.change(
-        verification_facts:
-          Map.delete(evidence.verification_facts, "mailglass_execution_route")
+        verification_facts: Map.delete(evidence.verification_facts, "mailglass_execution_route")
       )
       |> TestRepo.update!()
 
