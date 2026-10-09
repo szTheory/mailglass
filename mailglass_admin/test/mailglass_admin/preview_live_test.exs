@@ -267,11 +267,31 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "Preview"
       # D-09: onboarding leads with the brandbook Empty string verbatim and
       # surfaces the generator as the PRIMARY next step.
-      assert html =~ "No mailables discovered yet. Define one with `mix mailglass.gen.mailable`"
+      assert html =~ "No mailables discovered yet."
       assert html =~ "mix mailglass.gen.mailable"
+
+      document = Floki.parse_document!(html)
+      [generator_command] = Floki.find(document, ~s([data-testid="preview-mailable-generator"]))
+      assert Floki.text(generator_command) == "mix mailglass.gen.mailable"
+      refute Floki.text(generator_command) =~ "`"
 
       assert html =~ "Read preview setup"
       refute html =~ "Preview the first email"
+    end
+
+    @tag :page_groups
+    test "discovered Mailables without scenarios point to preview_props setup", %{conn: _conn} do
+      no_scenario_conn =
+        Plug.Test.init_test_session(Phoenix.ConnTest.build_conn(), %{"mailables" => [StubMailer]})
+
+      {:ok, _view, html} = live(no_scenario_conn, "/dev/mail")
+
+      assert html =~ ~s(data-testid="preview-no-previewable-mailables")
+      assert html =~ "MailglassAdmin.Fixtures.StubMailer"
+      assert html =~ "Add named scenarios to"
+      assert html =~ "preview_props/0"
+      refute html =~ ~s(data-testid="preview-empty-mailables")
+      refute html =~ "mix mailglass.gen.mailable"
     end
 
     @tag :page_groups

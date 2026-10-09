@@ -76,7 +76,7 @@ defmodule MailglassAdmin.VoiceTest do
       assert html =~ "This Mailable raised while rendering"
     end
 
-    test "empty-mailables onboarding leads with the brandbook Empty string verbatim", %{
+    test "empty-mailables onboarding uses a code element for the generator command", %{
       conn: conn
     } do
       # No mailables in the session -> the empty-mailables onboarding arm renders.
@@ -84,11 +84,12 @@ defmodule MailglassAdmin.VoiceTest do
 
       {:ok, _view, html} = live(conn, "/dev/mail")
 
-      # Brandbook-canonical Mailable Empty string (brandbook/copy/microcopy.md:17),
-      # rendered VERBATIM with the generator name + literal backtick (D-09). Mirror
-      # of the operator brandbook-string grep pattern.
-      assert html =~ "No mailables discovered yet. Define one with `mix mailglass.gen.mailable`",
-             "D-09: empty-mailables onboarding must lead with the brandbook Empty string verbatim"
+      document = Floki.parse_document!(html)
+      assert Floki.text(document) =~ "No mailables discovered yet."
+
+      [generator_command] = Floki.find(document, ~s([data-testid="preview-mailable-generator"]))
+      assert Floki.text(generator_command) == "mix mailglass.gen.mailable"
+      refute Floki.text(generator_command) =~ "`"
     end
 
     test "button labels use verb+noun form", %{conn: conn} do
