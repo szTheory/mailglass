@@ -15,6 +15,11 @@ defmodule MailglassInbound.MailboxExecutionTest do
     def process(_message), do: :ignore
   end
 
+  defmodule NoChangeMailbox do
+    @behaviour MailglassInbound.Mailbox
+    def process(_message), do: :no_change
+  end
+
   defmodule RejectMailbox do
     @behaviour MailglassInbound.Mailbox
     def process(_message), do: {:reject, :spam}
@@ -116,6 +121,26 @@ defmodule MailglassInbound.MailboxExecutionTest do
                mailbox: nil,
                mailbox_outcome: :no_match
              } = Process.get(:mailglass_inbound_execution_attrs)
+    end
+
+    test "persists an explicit no-change mailbox outcome without conflating ignore" do
+      assert {:ok, %{outcome: :no_change}} =
+               Execution.execute(
+                 persisted_payload(%{status: :matched, mailbox: NoChangeMailbox}),
+                 inbound_records: RecordingInboundRecords
+               )
+
+      assert %{
+               mailbox: "Elixir.MailglassInbound.MailboxExecutionTest.NoChangeMailbox",
+               mailbox_outcome: :no_change,
+               source: :fresh
+             } = Process.get(:mailglass_inbound_execution_attrs)
+
+      assert {:ok, %{outcome: :ignore}} =
+               Execution.execute(
+                 persisted_payload(%{status: :matched, mailbox: IgnoreMailbox}),
+                 inbound_records: RecordingInboundRecords
+               )
     end
 
     test "normalizes semantic mailbox outcomes without widening the mailbox contract" do
