@@ -14,7 +14,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
   # LiveViewCase imports Phoenix.LiveViewTest and sets @endpoint to the
   # synthetic MailglassAdmin.TestAdopter.Endpoint.
 
-  alias MailglassAdmin.Fixtures.{HappyMailer, StubMailer, BrokenMailer}
+  alias MailglassAdmin.Fixtures.{EmptyScenarioMailer, HappyMailer, StubMailer, BrokenMailer}
   alias MailglassAdmin.Preview.{AssignsForm, Discovery, Sidebar}
 
   @fixture_mailables [HappyMailer, StubMailer, BrokenMailer]
@@ -292,6 +292,21 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "preview_props/0"
       refute html =~ ~s(data-testid="preview-empty-mailables")
       refute html =~ "mix mailglass.gen.mailable"
+    end
+
+    @tag :page_groups
+    test "a valid empty scenario list uses the missing-scenario setup state", %{conn: _conn} do
+      empty_scenario_conn =
+        Plug.Test.init_test_session(Phoenix.ConnTest.build_conn(), %{
+          "mailables" => [EmptyScenarioMailer]
+        })
+
+      {:ok, _view, html} = live(empty_scenario_conn, "/dev/mail")
+
+      assert html =~ ~s(data-testid="preview-no-previewable-mailables")
+      assert html =~ "MailglassAdmin.Fixtures.EmptyScenarioMailer"
+      assert html =~ "preview_props/0"
+      refute html =~ ~s(data-testid="preview-scenario-discovery-error")
     end
 
     @tag :page_groups

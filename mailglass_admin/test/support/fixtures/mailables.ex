@@ -64,6 +64,14 @@ defmodule MailglassAdmin.Fixtures.StubMailer do
   # Deliberately no preview_props/0.
 end
 
+defmodule MailglassAdmin.Fixtures.EmptyScenarioMailer do
+  @moduledoc "Fixture Mailable whose valid preview_props/0 callback returns no scenarios."
+
+  use Mailglass.Mailable, stream: :transactional
+
+  def preview_props, do: []
+end
+
 defmodule MailglassAdmin.Fixtures.BrokenMailer do
   @moduledoc """
   Fixture mailable whose `preview_props/0` raises. Discovery tests assert
