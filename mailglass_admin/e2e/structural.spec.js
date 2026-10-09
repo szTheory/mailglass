@@ -1591,6 +1591,72 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-theme", "mailglass-dark");
     });
 
+    test("Phase 171 tabs: manual keyboard focus, activation, and long output scrolling", async ({ page }) => {
+      await openPreviewScenario(page, "theme=light");
+
+      const tabs = page.getByRole("tab");
+      const htmlTab = page.getByRole("tab", { name: "HTML", exact: true });
+      const textTab = page.getByRole("tab", { name: "Text", exact: true });
+      const rawTab = page.getByRole("tab", { name: "Raw", exact: true });
+      const headersTab = page.getByRole("tab", { name: "Headers", exact: true });
+      const textPanel = page.locator("#tab-panel-text");
+
+      await expect(tabs).toHaveCount(4);
+      expect(await tabs.evaluateAll(elements => elements.filter(el => el.tabIndex === 0).length)).toBe(1);
+      await htmlTab.focus();
+
+      await page.keyboard.press("ArrowLeft");
+      await expect(headersTab).toBeFocused();
+      await expect(htmlTab).toHaveAttribute("aria-selected", "true");
+      await expect(headersTab).toHaveAttribute("aria-selected", "false");
+
+      await page.keyboard.press("ArrowRight");
+      await expect(htmlTab).toBeFocused();
+      await page.keyboard.press("End");
+      await expect(headersTab).toBeFocused();
+      await page.keyboard.press("Home");
+      await expect(htmlTab).toBeFocused();
+      await expect(htmlTab).toHaveAttribute("aria-selected", "true");
+
+      await page.keyboard.press("ArrowRight");
+      await expect(textTab).toBeFocused();
+      const focusCue = await textTab.evaluate(el => {
+        const style = getComputedStyle(el);
+        return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth };
+      });
+      expect(focusCue).toEqual({ outlineStyle: "solid", outlineWidth: "2px" });
+      await page.keyboard.press("Enter");
+      await expect(textTab).toHaveAttribute("aria-selected", "true");
+      await expect(textPanel).toBeVisible();
+
+      await page.keyboard.press("ArrowRight");
+      await expect(rawTab).toBeFocused();
+      await expect(textTab).toHaveAttribute("aria-selected", "true");
+      await page.keyboard.press("Space");
+      await expect(rawTab).toHaveAttribute("aria-selected", "true");
+
+      await headersTab.click();
+      await expect(headersTab).toHaveAttribute("aria-selected", "true");
+
+      const longValue = "é東京 — ".repeat(2_500);
+      await page.locator('#preview-assigns-form [name="user_name"]').fill(longValue);
+      await textTab.focus();
+      await page.keyboard.press("Enter");
+      await expect(textPanel.locator("pre")).toContainText(longValue, { timeout: 10_000 });
+      await expect(textPanel).toBeVisible();
+
+      await textTab.focus();
+      await page.keyboard.press("Tab");
+      await expect(textPanel).toBeFocused();
+      await page.keyboard.press("Tab");
+      const output = textPanel.locator("pre");
+      await expect(output).toBeFocused();
+      await page.keyboard.press("End");
+      const scroll = await output.evaluate(el => ({ top: el.scrollTop, height: el.scrollHeight, client: el.clientHeight }));
+      expect(scroll.height).toBeGreaterThan(scroll.client);
+      expect(scroll.top).toBeGreaterThan(0);
+    });
+
     test("Preview: WCAG AA contrast matrix covers light/dark themes at 390/768/1440", async ({ page }) => {
       const themes = [
         { name: "light", query: "theme=light", expectedTheme: "mailglass-light" },
