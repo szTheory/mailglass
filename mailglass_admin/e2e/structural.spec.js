@@ -1639,7 +1639,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(headersTab).toHaveAttribute("aria-selected", "true");
 
       const longValue = "é東京 — ".repeat(2_500);
-      await page.locator('#preview-assigns-form [name="user_name"]').fill(longValue);
+      await page.locator('#preview-assigns-form [name="assigns[user_name]"]').fill(longValue);
       await textTab.focus();
       await page.keyboard.press("Enter");
       await expect(textPanel.locator("pre")).toContainText(longValue, { timeout: 10_000 });
@@ -1648,13 +1648,18 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await textTab.focus();
       await page.keyboard.press("Tab");
       await expect(textPanel).toBeFocused();
-      await page.keyboard.press("Tab");
-      const output = textPanel.locator("pre");
-      await expect(output).toBeFocused();
-      await page.keyboard.press("End");
-      const scroll = await output.evaluate(el => ({ top: el.scrollTop, height: el.scrollHeight, client: el.clientHeight }));
+      await page.keyboard.press("PageDown");
+      const scroll = await textPanel.evaluate(el => ({ top: el.scrollTop, height: el.scrollHeight, client: el.clientHeight }));
       expect(scroll.height).toBeGreaterThan(scroll.client);
       expect(scroll.top).toBeGreaterThan(0);
+
+      await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/recoverable?theme=light");
+      await expect(page.getByTestId("preview-tab-strip")).toBeVisible();
+      await rawTab.click();
+      await page.locator('#preview-assigns-form [name="assigns[response]"]').fill("fail");
+      await expect(page.getByTestId("preview-render-error")).toBeVisible();
+      await expect(rawTab).toHaveAttribute("aria-selected", "true");
+      expect(await tabs.evaluateAll(elements => elements.filter(el => el.tabIndex === 0).map(el => el.id))).toEqual(["tab-btn-raw"]);
     });
 
     test("Preview: WCAG AA contrast matrix covers light/dark themes at 390/768/1440", async ({ page }) => {

@@ -33,9 +33,11 @@ defmodule MailglassAdmin.Preview.Tabs do
     <div class="space-y-4">
       <div
         role="tablist"
+        id="preview-tablist"
         data-testid="preview-tab-strip"
         class="flex flex-wrap border-b border-base-300"
         aria-label="Preview format"
+        phx-hook="PreviewTabs"
       >
         <button
           :for={{tab, label} <- @panels}
@@ -46,6 +48,7 @@ defmodule MailglassAdmin.Preview.Tabs do
           id={"tab-btn-" <> Atom.to_string(tab)}
           aria-selected={to_string(@active_tab == tab)}
           aria-controls={"tab-panel-" <> Atom.to_string(tab)}
+          tabindex={if(@active_tab == tab, do: "0", else: "-1")}
           class={[
             "mg-focus-ring-inset px-4 py-2 min-h-11 text-body transition-colors",
             tab_classes(@active_tab == tab)
@@ -61,13 +64,15 @@ defmodule MailglassAdmin.Preview.Tabs do
         hidden={@active_tab != tab}
         data-preview-frame-theme={preview_frame_theme_attr(tab, @preview_frame_dark_chrome)}
         data-theme={preview_frame_data_theme_attr(tab, @preview_frame_dark_chrome)}
-        data-testid="preview-pane"
+        data-testid={if(@active_tab == tab, do: "preview-pane")}
         role="tabpanel"
         aria-labelledby={"tab-btn-" <> Atom.to_string(tab)}
         tabindex="0"
-        class="motion-tab-swap min-w-0 rounded-box border border-base-300 bg-base-200 p-md"
+        phx-hook="PreviewPanelScroll"
+        class="motion-tab-swap min-w-0 max-h-[70vh] overflow-auto rounded-box border border-base-300 bg-base-200 p-md"
       >
         <.tab_content
+          :if={@active_tab == tab}
           active_tab={tab}
           html_body={@html_body}
           text_body={@text_body}
@@ -119,7 +124,7 @@ defmodule MailglassAdmin.Preview.Tabs do
     ~H"""
     <div class="min-w-0 space-y-sm">
       <p class="text-label text-secondary">Renderer plaintext</p>
-      <pre class="font-mono text-label leading-relaxed text-base-content bg-base-200 p-4 rounded-box overflow-auto max-h-150 whitespace-pre-wrap break-words">{@text_body}</pre>
+      <pre class="font-mono text-label leading-relaxed text-base-content bg-base-200 p-4 rounded-box whitespace-pre-wrap break-words">{@text_body}</pre>
     </div>
     """
   end
@@ -130,7 +135,7 @@ defmodule MailglassAdmin.Preview.Tabs do
       <p class="text-label text-secondary">
         Illustrative MIME-shaped preview. This is not serialized wire bytes or provider output.
       </p>
-      <pre class="font-mono text-label leading-relaxed text-base-content bg-base-200 p-4 rounded-box overflow-auto max-h-150 whitespace-pre">{@raw_envelope}</pre>
+      <pre class="font-mono text-label leading-relaxed text-base-content bg-base-200 p-4 rounded-box whitespace-pre">{@raw_envelope}</pre>
     </div>
     """
   end
@@ -141,7 +146,7 @@ defmodule MailglassAdmin.Preview.Tabs do
       <p class="text-label text-secondary">
         Preview header values. Message-ID and Date are generated for this preview when the scenario does not provide them.
       </p>
-      <div class="overflow-auto max-h-150">
+      <div>
         <table class="table table-sm w-full">
           <thead>
             <tr>

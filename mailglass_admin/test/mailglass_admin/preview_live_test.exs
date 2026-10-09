@@ -457,11 +457,17 @@ defmodule MailglassAdmin.PreviewLiveTest do
       {:ok, view, _html} =
         live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
+      {:ok, renderer_result} =
+        Mailglass.Renderer.render(HappyMailer.welcome_default(%{user_name: "Ada"}))
+
       # HTML tab (default) renders an iframe with srcdoc
       html = render(view)
 
       assert html =~ ~r/<iframe[^>]*srcdoc=/i,
              "HTML tab must render <iframe ... srcdoc=\"...\"/>"
+
+      [iframe] = Floki.find(Floki.parse_document!(html), "#tab-panel-html iframe")
+      assert Floki.attribute(iframe, "srcdoc") == [renderer_result.swoosh_email.html_body]
 
       assert html =~ "Renderer HTML"
       assert html =~ "Browser rendering only"
@@ -496,6 +502,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
              "Text tab must contain the rendered text_body literal"
 
       assert text_html =~ "Renderer plaintext"
+      [text_output] = Floki.find(Floki.parse_document!(text_html), "#tab-panel-text pre")
+      assert Floki.text(text_output) == renderer_result.swoosh_email.text_body
 
       # Raw tab shows MIME boundary-looking content
       raw_html = render_click(view, "set_tab", %{"tab" => "raw"})
@@ -537,8 +545,21 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert html =~ "No HTML body"
       assert html =~ "this Mailable's template returned empty content"
-      assert html =~ text
-      assert html =~ "whitespace-pre-wrap"
+
+      text_html =
+        render_component(&MailglassAdmin.Preview.Tabs.tabs/1,
+          active_tab: :text,
+          html_body: "",
+          text_body: text,
+          raw_envelope: "illustrative",
+          headers: [],
+          device_width: 768,
+          render_nonce: 1,
+          preview_frame_dark_chrome: false
+        )
+
+      assert text_html =~ text
+      assert text_html =~ "whitespace-pre-wrap"
     end
   end
 
