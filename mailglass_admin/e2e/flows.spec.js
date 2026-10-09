@@ -120,7 +120,13 @@ async function selectDeliveryFull(page, row) {
 }
 
 async function selectInboundFull(page, row) {
-  await row.click();
+  const openButton = row.getByTestId("inbound-record-open");
+  if (await openButton.count()) {
+    await openButton.click();
+  } else {
+    // Mobile cards are the native control for opening Quick view.
+    await row.click();
+  }
   await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
   await page.getByTestId("inbound-quick-view-full").click();
   await expect(page.getByTestId("inbound-detail-column")).toBeVisible();

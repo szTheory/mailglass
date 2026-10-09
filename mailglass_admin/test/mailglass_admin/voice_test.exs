@@ -317,11 +317,11 @@ defmodule MailglassAdmin.VoiceTest do
     # Flash strings only render after a user action (put_flash/3 in event handlers),
     # so they cannot be asserted against a first-render. Assert at source level (D-11).
 
-    test "inbound replay-success flash uses InboundMessage domain noun" do
+    test "inbound replay-success flash reports the recorded Mailbox outcome" do
       source = File.read!("lib/mailglass_admin/inbound_live.ex")
 
-      assert source =~ "InboundMessage's timeline",
-             "LD-13: replay flash must use InboundMessage not generic 'message'"
+      assert source =~ "Replay run recorded. Mailbox outcome:",
+             "replay feedback must identify the recorded run and its Mailbox outcome"
     end
 
     test "inbound no-selection flash matches LD-16 locked string" do

@@ -89,8 +89,7 @@ mail or prove that a provider received or accepted a message.
   the persisted evidence is labeled unavailable.
 
 The stored provider request and later local replay are distinct. Outbound replay
-reprocesses the existing request synchronously through the local command; it is
-not a fresh provider receipt.
+reprocesses the existing request synchronously through the local command; it is not a fresh provider receipt.
 
 Replay and reconcile are intentionally distinct. Replay reruns one exact stored
 outbound webhook request through local normalization and does not silently
@@ -107,6 +106,12 @@ Inbound mailbox execution may happen later through Oban-backed durable jobs or,
 when Oban is unavailable, through a bounded Task.Supervisor fallback with no
 automatic retry. Inbound replay supports recovery after fallback loss or an
 earlier mailbox execution failure. Its execution-history requirements include:
+
+- Fresh receipt resolves a mailbox using the router deployed at receipt time.
+  Replay uses the durable mailbox binding from that execution; it does not silently reroute through current router rules. When the Task.Supervisor fallback is active, the scheduling path is best-effort and recovery may require an operator replay.
+- The selected execution timeline is a timestamped snapshot for the current
+  Account and InboundMessage. Replay command feedback remains separate from
+  that snapshot; an operator uses Refresh history to request a new scoped read.
 
 - `no_prior_match` means fresh execution history only proves `:no_match`, so
   replay cannot safely infer a mailbox target.

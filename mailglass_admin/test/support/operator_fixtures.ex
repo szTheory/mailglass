@@ -889,7 +889,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
       seed_inbound_run_record!(%{
         provider_message_id: "pm_browser_inbound_accept",
         envelope_recipient: "support@browser-scenario.example",
-        subject: "Browser scenario support request",
+        subject: "Browser support — résumé routing diagnostics across multiple accounts",
         from: [%{"address" => "user@browser-test.example"}],
         to: [%{"address" => "support@browser-scenario.example"}],
         received_at: hours_ago(10)

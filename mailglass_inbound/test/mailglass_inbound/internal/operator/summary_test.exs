@@ -12,7 +12,7 @@ defmodule MailglassInbound.Internal.Operator.SummaryTest do
 
   @zero_summary %{
     total: 0,
-    outcomes: %{no_match: 0, accept: 0, ignore: 0, reject: 0, bounce: 0, failed: 0},
+    outcomes: %{no_match: 0, accept: 0, ignore: 0, no_change: 0, reject: 0, bounce: 0, failed: 0},
     unclassified: 0,
     no_match_rate: 0.0
   }

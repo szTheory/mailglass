@@ -134,14 +134,19 @@ async function openInbound(page, theme) {
   return openOverlay(page, "inbound", async () => {
     const replayableRow = page
       .getByTestId("inbound-record-row")
+      .filter({ visible: true })
       .filter({
         hasNot: page.locator(".badge-warning", { hasText: "No match" })
       })
       .first();
-    await replayableRow.click();
-    await page.waitForURL(/inbound_id=/);
-    await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
-    await page.getByTestId("inbound-quick-view-full").click();
+    const selectControl = replayableRow.getByRole("button", { name: /^Open InboundMessage/ }).first();
+    const recordLabel = await selectControl.getAttribute("aria-label");
+    const recordId = recordLabel?.match(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i)?.[0];
+    expect(recordId, "the replayable inbound row exposes its exact record ID").toBeTruthy();
+    const detailUrl = new URL(page.url());
+    detailUrl.searchParams.set("inbound_id", recordId);
+    detailUrl.searchParams.set("full", "1");
+    await page.goto(detailUrl.toString());
     await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
     await page.getByTestId("inbound-replay-open").click();
     const modal = page.getByTestId("inbound-replay-modal");

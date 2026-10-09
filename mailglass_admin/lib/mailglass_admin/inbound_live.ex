@@ -1048,9 +1048,8 @@ defmodule MailglassAdmin.InboundLive do
       end
 
     case result do
-      {:ok, authorized_socket, record, replay_result} ->
+      {:ok, authorized_socket, _record, replay_result} ->
         authorized_socket
-        |> assign_inbound_state(socket.assigns.filter_params, record.id, true)
         |> close_replay_modal()
         |> replay_feedback(:info, replay_result_copy(replay_result))
 

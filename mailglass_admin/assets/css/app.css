@@ -361,6 +361,12 @@ h1, h2, h3 {
 code, pre, .mono {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
 }
+.mono {
+  overflow-wrap: anywhere;
+}
+[data-testid="inbound-timeline-run"] p {
+  overflow-wrap: anywhere;
+}
 
 /* ── Motion vocabulary ─────────────────────────────────────────────────────
    Brand metaphor "clarity through panes": content ARRIVES by becoming visible

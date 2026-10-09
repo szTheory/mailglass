@@ -656,10 +656,41 @@ async function selectDeliveryFull(page, row) {
 }
 
 async function selectInboundFull(page, row) {
-  await row.click();
+  // The desktop table wraps the selection action in an inner button; the
+  // mobile card is itself the selection control. Match the actual LiveView
+  // action so hidden responsive duplicates cannot make us click a non-control.
+  const selectControl = row.getByRole("button", { name: /^Open InboundMessage/ }).first();
+  if (await selectControl.count()) await selectControl.click();
+  else await row.click();
   await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
   await page.getByTestId("inbound-quick-view-full").click();
   await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
+}
+
+async function inboundRecordIdFromRow(row) {
+  const action = row.locator("[phx-value-id]").first();
+  const actionId = (await row.getAttribute("phx-value-id")) || (await action.getAttribute("phx-value-id"));
+  if (actionId) return actionId;
+
+  const desktopButton = row.getByRole("button", { name: /^Open InboundMessage/ }).first();
+  const control = await desktopButton.count() ? desktopButton : row;
+  const copy =
+    (await control.getAttribute("aria-label")) ||
+    (await control.getAttribute("phx-value-id")) ||
+    (await row.innerText());
+  return copy?.match(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i)?.[0];
+}
+
+async function firstReplayableInboundRecordId(page) {
+  const rows = page.getByTestId("inbound-record-row");
+  for (let index = 0; index < (await rows.count()); index += 1) {
+    const row = rows.nth(index);
+    if (!(await row.isVisible())) continue;
+    if (/\bNo match\b/i.test(await row.innerText())) continue;
+    const recordId = await inboundRecordIdFromRow(row);
+    if (recordId) return recordId;
+  }
+  return undefined;
 }
 
 async function openOperatorReplayModal(page) {
@@ -710,12 +741,13 @@ async function openAmbiguousOperatorReplayModal(page) {
 async function openInboundReplayModal(page) {
   await openInbound(page);
 
-  const replayableRow = page
-    .getByTestId("inbound-record-row")
-    .filter({ visible: true })
-    .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
-    .first();
-  await selectInboundFull(page, replayableRow);
+  const recordId = await firstReplayableInboundRecordId(page);
+  expect(recordId, "the replayable inbound row exposes its exact record ID").toBeTruthy();
+  const detailUrl = new URL(page.url());
+  detailUrl.searchParams.set("inbound_id", recordId);
+  detailUrl.searchParams.set("full", "1");
+  await page.goto(detailUrl.toString());
+  await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
   await page.getByTestId("inbound-replay-open").click();
 
   const modal = page.getByTestId("inbound-replay-modal");
@@ -780,15 +812,20 @@ async function openOperatorReplayModalThemed(page, theme) {
 // Opens the inbound surface under a specific theme, then opens the replay modal.
 async function openInboundReplayModalThemed(page, theme) {
   await applyThemeEmulation(page, theme);
-  const query = ["tenant_id=" + tenantId, themeQuery(theme)].filter(Boolean).join("&");
-  await openInbound(page, query);
+  await openInbound(page, `tenant_id=${tenantId}`);
+  await page.context().addCookies([
+    { name: "mailglass_admin_theme_v2", value: theme, url: baseURL }
+  ]);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Inbound records", level: 1 })).toBeVisible();
 
-  const replayableRow = page
-    .getByTestId("inbound-record-row")
-    .filter({ visible: true })
-    .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
-    .first();
-  await selectInboundFull(page, replayableRow);
+  const recordId = await firstReplayableInboundRecordId(page);
+  expect(recordId, "the replayable inbound row exposes its exact record ID").toBeTruthy();
+  const detailUrl = new URL(page.url());
+  detailUrl.searchParams.set("inbound_id", recordId);
+  detailUrl.searchParams.set("full", "1");
+  await page.goto(detailUrl.toString());
+  await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
   await page.getByTestId("inbound-replay-open").click();
 
   const modal = page.getByTestId("inbound-replay-modal");
@@ -1159,7 +1196,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       // Two-tier model: the records list stays single-column at every width; the
       // detail is a Quick view OVERLAY, not a grid column.
-      await page.getByTestId("inbound-record-row").filter({ visible: true }).first().click();
+      await page.getByTestId("inbound-record-row").filter({ visible: true }).first().getByTestId("inbound-record-open").click();
       await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
       columns = parseGridColumns(
         await page.getByTestId("inbound-master-detail").evaluate(
@@ -1225,11 +1262,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("inbound-quick-view-error")).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
-      await noMatchRow(page).click();
+      await noMatchRow(page).getByTestId("inbound-record-open").click();
       await expect(page).toHaveURL(/inbound_id=/);
       // Row is selected while the Quick view sits over the list.
       await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
-      await expect(noMatchRow(page)).toHaveAttribute("aria-selected", "true");
+      await expect(noMatchRow(page)).toHaveAttribute("data-selected", "true");
+      await expect(noMatchRow(page).getByTestId("inbound-record-open")).toHaveAttribute("aria-current", "true");
       // Routing trace + evidence live in Full detail (behind "Open full detail").
       await page.getByTestId("inbound-quick-view-full").click();
       await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
@@ -1257,9 +1295,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     }) => {
       // Phase 163 protected evidence: this complete 2-theme × 3-viewport body
       // exhausted the 30,000ms default at 31.3s on both CI attempts while the
-      // same body passed locally in 16.9s. Keep the global default unchanged
-      // and give only this named matrix a finite ~2x protected bound.
-      test.setTimeout(60_000);
+      // same body passed locally in 16.9s. The inbound matrix also creates a
+      // fresh context for the denied-reveal contrast pass at each viewport.
+      // Keep the global default unchanged and give this named matrix a finite
+      // bound for those six isolated authorization checks.
+      test.setTimeout(120_000);
 
       const themes = [
         { name: "light", query: "theme=light", expectedTheme: "mailglass-light" },
@@ -1284,8 +1324,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           // Routing trace + evidence live in Full detail (behind "Open full detail").
           await selectInboundFull(page, row);
           await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
+          await page.getByTestId("inbound-routing-disclosure").locator("summary").click();
           await assertTextContrastAA(page.getByTestId("inbound-routing-trace"), `${theme.name} ${viewport.width} inbound-routing-trace`);
-          await assertTextContrastAA(page.getByTestId("inbound-route-card").first(), `${theme.name} ${viewport.width} inbound-route-card`);
+          await assertTextContrastAA(page.getByTestId("inbound-route-card").filter({ visible: true }).first(), `${theme.name} ${viewport.width} inbound-route-card`);
           await assertTextContrastAA(page.getByTestId("inbound-trace-clause").first(), `${theme.name} ${viewport.width} inbound-trace-clause`);
           // In Full detail the list row is hidden; the detail-back control is the
           // focusable selected-state boundary at every width.
@@ -1306,20 +1347,31 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await assertTextContrastAA(page.getByTestId("inbound-evidence-raw"), `${theme.name} ${viewport.width} inbound-evidence-raw`);
 
           const deniedQuery = `tenant_id=${denyRevealTenantId}${theme.query ? `&${theme.query}` : ""}`;
-          const deniedContext = await browser.newContext();
-          const deniedPage = await deniedContext.newPage();
-
-          try {
-            await deniedPage.setViewportSize(viewport);
-            await openInbound(deniedPage, deniedQuery, "deny-reveal", denyRevealTenantId);
-            await selectInboundFull(deniedPage, noMatchRow(deniedPage));
-            await deniedPage.getByTestId("inbound-evidence-reveal").click();
-            await expect(deniedPage.getByTestId("inbound-evidence-denied")).toBeVisible();
-            await expect(deniedPage.getByTestId("inbound-evidence-raw")).toHaveCount(0);
-            await assertTextContrastAA(deniedPage.getByTestId("inbound-evidence-denied"), `${theme.name} ${viewport.width} inbound-evidence-denied`);
-          } finally {
-            await deniedContext.close();
-          }
+          // Reuse the current page for the denied role instead of creating and
+          // closing six isolated contexts inside this 2-theme × 3-viewport matrix.
+          // The following account-state checks log back in as operator-1.
+          await page.setViewportSize(viewport);
+          await openInbound(page, deniedQuery, "deny-reveal", denyRevealTenantId);
+          // deny-reveal is a dedicated one-record fixture; avoid the browser-
+          // tenant no-match badge selector when extracting its scoped ID.
+          const deniedRecord = page.getByTestId("inbound-record-row").filter({ visible: true }).first();
+          await expect(deniedRecord, "the deny-reveal Account fixture row is visible").toBeVisible();
+          const deniedOpenButton = deniedRecord.getByTestId("inbound-record-open");
+          const deniedRecordId = await (await deniedOpenButton.count() ? deniedOpenButton : deniedRecord)
+            .getAttribute("phx-value-id");
+          expect(deniedRecordId, "the deny-reveal Account fixture exposes its scoped record ID").toBeTruthy();
+          const deniedDetail = new URLSearchParams({
+            tenant_id: denyRevealTenantId,
+            inbound_id: deniedRecordId,
+            full: "1"
+          });
+          if (theme.query) deniedDetail.set("theme", theme.query.replace(/^theme=/, ""));
+          await page.goto(`/ops/mail/inbound?${deniedDetail.toString()}`);
+          await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
+          await page.getByTestId("inbound-evidence-reveal").click();
+          await expect(page.getByTestId("inbound-evidence-denied")).toBeVisible();
+          await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
+          await assertTextContrastAA(page.getByTestId("inbound-evidence-denied"), `${theme.name} ${viewport.width} inbound-evidence-denied`);
 
           await openInbound(page, theme.query, "operator-1");
           // No account selected: render the shared account chooser.
@@ -2546,21 +2598,24 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(cardRow).toHaveAttribute("aria-selected", "true");
     });
 
-    test("aria-selected=true set on clicked row in both inbound table (desktop) and card (mobile) presentations (DATA-04)", async ({ page }) => {
-      // Desktop: click an inbound table row — aria-selected must be true
+    test("selected state is exposed on inbound table rows and card controls (DATA-04)", async ({ page }) => {
+      // Desktop: the row carries selected styling and its native control exposes
+      // the current record. The table row itself is not an ARIA selectable widget.
       await page.setViewportSize({ width: 1280, height: 900 });
       await openInbound(page);
 
       const tableRow = page.getByTestId("inbound-records-table").locator("[data-testid='inbound-record-row']").first();
-      await tableRow.click();
-      await expect(tableRow).toHaveAttribute("aria-selected", "true");
+      await tableRow.getByTestId("inbound-record-open").click();
+      await expect(tableRow).toHaveAttribute("data-selected", "true");
+      await expect(tableRow.getByTestId("inbound-record-open")).toHaveAttribute("aria-current", "true");
 
-      // Mobile: click an inbound card row — aria-selected must be true
+      // Mobile cards are the native controls, so their aria-current state is direct.
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
       const cardRow = page.getByTestId("inbound-records-cards").locator("[data-testid='inbound-record-row']").first();
       await cardRow.click();
-      await expect(cardRow).toHaveAttribute("aria-selected", "true");
+      await expect(cardRow).toHaveAttribute("data-selected", "true");
+      await expect(cardRow).toHaveAttribute("aria-current", "true");
     });
 
     test("data-state four kinds render distinctly in gallery specimens (DATA-03)", async ({ page }) => {

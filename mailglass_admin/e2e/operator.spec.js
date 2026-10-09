@@ -25,7 +25,9 @@ async function openDeliveryFull(page, row) {
 }
 
 async function openInboundFull(page, row) {
-  await row.click();
+  const selectControl = row.getByRole("button", { name: /^Open InboundMessage/ }).first();
+  if (await selectControl.count()) await selectControl.click();
+  else await row.click();
   await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
   await page.getByTestId("inbound-quick-view-full").click();
   await expect(page).toHaveURL(/full=1/);
@@ -446,9 +448,14 @@ test.describe("operator browser gate", () => {
     await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
 
     // The record-keyed id (#inbound-detail-<uuid>) now lives in Full detail.
-    await openInboundFull(page, page.getByTestId("inbound-record-row").nth(0));
-    const inboundId = new URL(page.url()).searchParams.get("inbound_id");
+    const firstRow = page.getByTestId("inbound-record-row").filter({ visible: true }).first();
+    const openLabel = await firstRow.getByRole("button").first().getAttribute("aria-label");
+    const inboundId = openLabel?.match(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i)?.[0];
     expect(inboundId).toBeTruthy();
+    // This guard verifies the record-keyed detail target itself. Connected row
+    // selection and Quick view behavior are covered by the browser journey tests.
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}&inbound_id=${inboundId}&full=1`);
+    await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
 
     // The detail pane must carry the record-keyed id
     await expect(page.locator(`#inbound-detail-${inboundId}`)).toBeVisible();

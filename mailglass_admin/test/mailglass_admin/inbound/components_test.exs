@@ -736,24 +736,31 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
   end
 
   describe "ReplayModal.replay_modal/1" do
-    test "renders the single confirmation body with Confirm replay always enabled when open" do
+    test "renders the single confirmation body for an eligible recorded Mailbox" do
       record = %{
         id: "rec-1",
         tenant_id: "tenant-a",
         envelope_recipient: "alice@example.com"
       }
 
-      html = render_component(&ReplayModal.replay_modal/1, open?: true, record: record)
+      review = %{
+        record_id: "rec-1",
+        tenant_id: "tenant-a",
+        eligibility: %{status: :eligible, mailbox: "MyApp.Mailboxes.Support"}
+      }
+
+      html = render_component(&ReplayModal.replay_modal/1, open?: true, record: record, review: review)
 
       assert html =~ ~s(data-testid="inbound-replay-modal")
 
       assert html =~
-               "Re-runs Mailbox routing against the stored InboundMessage and records a new replay run in the append-only ledger. Confirm to replay."
+               "Replay uses the recorded Mailbox identity with currently deployed code against the stored InboundMessage. It does not evaluate current router rules or redeliver through the provider."
 
       assert html =~ "text-heading"
       assert html =~ "min-h-11"
       refute html =~ "text-lg"
       assert html =~ ~s(data-testid="inbound-replay-confirm")
+      assert html =~ "Eligible: this exact record can replay through its recorded Mailbox."
     end
 
     test "renders nothing when closed" do
