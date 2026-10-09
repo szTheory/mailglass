@@ -5,11 +5,11 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 171
 current_phase_name: Developer Preview
 status: planning
-stopped_at: Phase 171 context gathered (assumptions mode)
-last_updated: "2026-10-09T12:12:26.744Z"
+stopped_at: Phase 171 context gathered; ready for UI design contract
+last_updated: "2026-10-09T12:13:53.795Z"
 last_activity: 2026-10-09
 last_activity_desc: Phase 170 complete, transitioned to Phase 171
-state_head: 2977d54779c40c0b53f0bc5dfcc73aa9a9a19dfe
+state_head: db260b359e11af63128a747976302f414a116c1f
 progress:
   total_phases: 6
   completed_phases: 3
@@ -42,7 +42,7 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 Phase: 171 — Developer Preview
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-10-09 — Phase 170 verification passed; ready to discuss Phase 171
+Last activity: 2026-10-09 — Phase 171 context gathered; ready for its UI design contract
 
 Progress: 3/6 phases ([█████░░░░░] 50%); [████████████████████] 23/23 plans (100%).
 
@@ -517,8 +517,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T12:12:26.672Z
-Stopped at: Phase 171 context gathered (assumptions mode)
+Last session: 2026-10-09T12:13:53.707Z
+Stopped at: Phase 171 context gathered; ready for UI design contract
 Resume file: .planning/phases/171-developer-preview/171-CONTEXT.md
 
 ## Operator Next Steps
@@ -529,5 +529,5 @@ Resume file: .planning/phases/171-developer-preview/171-CONTEXT.md
 - Phase 170 is complete: eight plans across six dependency waves; independent verification passed 30/30 must-haves for INUX-01–04. Security closed 21/21 threats and code review found no current issues.
 - Automated evidence: Admin 577 tests (0 failures, 1 excluded); inbound 3 properties plus 480 tests (0 failures); full operator browser 206 passed and 1 guarded skip. Rendered checks are recorded; no human-only acceptance remains under D-52.
 - Phase 170 artifacts and evidence are in `.planning/phases/170-inbound-investigation-and-recovery/`. GSD emitted three nonblocking missing-path warnings for package-relative references in summaries; the verifier checked the actual package-root files.
-- Next command: `$gsd-discuss-phase 171` — Phase 171 Developer Preview has no context artifact yet, so discuss it before planning. Do not repeat Phase 168–170 execution or verification.
+- Next command: `$gsd-ui-phase 171` — Phase 171 is a frontend phase and its UI-SPEC is not present; create the design contract from 171-CONTEXT.md before planning. Then run `$gsd-plan-phase 171`. Do not repeat Phase 171 discussion or Phases 168–170 execution/verification.
 - Original unrelated planning-file deletions, configuration edits, and Phase 168/169 screenshot modifications were preserved. Remote delivery/CI proof remains Phase 173 scope.
