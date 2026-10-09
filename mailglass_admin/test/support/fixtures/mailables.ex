@@ -11,7 +11,12 @@ defmodule MailglassAdmin.Fixtures.HappyMailer do
   def preview_props do
     [
       welcome_default: %{user_name: "Ada", plan: :free, admin?: false},
-      welcome_enterprise: %{user_name: "Babbage", plan: :enterprise, admin?: true}
+      welcome_enterprise: %{user_name: "Babbage", plan: :enterprise, admin?: true},
+      welcome_überraschung_東京__with_a_deliberately_long_name: %{
+        user_name: "Ada",
+        plan: :free,
+        admin?: false
+      }
     ]
   end
 
@@ -33,6 +38,16 @@ defmodule MailglassAdmin.Fixtures.HappyMailer do
     |> Mailglass.Message.html_body("<p>Hi #{assigns.user_name} — enterprise plan</p>")
     |> Mailglass.Message.text_body("Hi #{assigns.user_name} — enterprise plan")
     |> Mailglass.Message.put_function(:welcome_enterprise)
+  end
+
+  def welcome_überraschung_東京__with_a_deliberately_long_name(assigns) do
+    new()
+    |> Mailglass.Message.from("no-reply@example.test")
+    |> Mailglass.Message.to("ada@example.test")
+    |> Mailglass.Message.subject("A surprising welcome for #{assigns.user_name}")
+    |> Mailglass.Message.html_body("<p>Surprise, #{assigns.user_name}!</p>")
+    |> Mailglass.Message.text_body("Surprise, #{assigns.user_name}!")
+    |> Mailglass.Message.put_function(:welcome_überraschung_東京__with_a_deliberately_long_name)
   end
 end
 

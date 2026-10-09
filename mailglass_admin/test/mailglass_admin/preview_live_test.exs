@@ -79,7 +79,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "<h2"
       assert html =~ "Email previews"
       assert html =~ "Choose an email"
-      assert html =~ "2 emails"
+      assert html =~ "3 emails"
       refute html =~ "3 mailers"
 
       # HappyMailer module + scenarios rendered
@@ -149,7 +149,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert show_html =~ ~s(data-testid="preview-header-controls")
       assert show_html =~ ~s(data-picker-variant="menu")
       assert show_html =~ ~s(data-testid="preview-email-menu-trigger")
-      refute show_html =~ "2 emails"
+      refute show_html =~ "3 emails"
       refute show_html =~ "3 mailers"
 
       document = Floki.parse_document!(show_html)
@@ -164,7 +164,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert trigger_text =~ "HappyMailer"
       assert trigger_text =~ "welcome_default"
       refute trigger_text =~ "MailglassAdmin.Fixtures"
-      refute trigger_text =~ "2 emails"
+      refute trigger_text =~ "3 emails"
       [affordance] = Floki.find(trigger, ~s([data-testid="preview-email-menu-affordance"]))
       [affordance_class] = Floki.attribute(affordance, "class")
       assert Floki.find(affordance, "span") != []
@@ -353,6 +353,57 @@ defmodule MailglassAdmin.PreviewLiveTest do
       # Inline scrollable <pre> kept (no redirect to logs — dev DX, D-10).
       assert html =~ "max-h-80"
       refute html =~ "Something went wrong"
+    end
+  end
+
+  describe "scenario selection" do
+    test "patching to another discovered scenario updates identity and renderer HTML", %{conn: conn} do
+      path = "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default"
+      {:ok, view, html} = live(conn, path)
+      assert html =~ "Hi Ada"
+
+      view
+      |> element(~s(a[href*="welcome_enterprise"]))
+      |> render_click()
+
+      assert_patch(view, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_enterprise?width=768")
+      html = render(view)
+      assert html =~ "Hi Babbage — enterprise plan"
+
+      [trigger] =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find(~s([data-testid="preview-email-menu-trigger"]))
+
+      trigger_text = Floki.text(trigger)
+      assert trigger_text =~ "MailglassAdmin.Fixtures.HappyMailer"
+      assert trigger_text =~ "welcome_enterprise"
+    end
+
+    test "compact picker exposes long non-ASCII scenario identity without truncation" do
+      html =
+        render_component(&Sidebar.menu/1,
+          mailables: discovered_fixture_mailables(),
+          current_mailable: HappyMailer,
+          current_scenario: :welcome_überraschung_東京__with_a_deliberately_long_name,
+          device_width: 375,
+          admin_chrome_theme: nil,
+          mount_path: "/dev/mail"
+        )
+
+      [trigger] =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find(~s([data-testid="preview-email-menu-trigger"]))
+
+      text = Floki.text(trigger)
+      assert text =~ "MailglassAdmin.Fixtures.HappyMailer"
+      assert text =~ "welcome_überraschung_東京__with_a_deliberately_long_name"
+
+      [identity] = Floki.find(trigger, "span.block")
+      [identity_class] = Floki.attribute(identity, "class")
+      refute identity_class =~ "truncate"
+      assert identity_class =~ "break-all"
     end
   end
 
