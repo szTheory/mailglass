@@ -36,7 +36,7 @@
 ### Developer preview
 
 - [x] **PRVUX-01**: An author can find a Mailable/scenario and retain a clear sense of the selected preview, including narrow layouts and the no-Mailables/setup state.
-- [ ] **PRVUX-02**: An author can edit scenario inputs, render through the supported pipeline, and recover from validation/render failures without losing useful input or mistaking stale output for the new result.
+- [x] **PRVUX-02**: An author can edit scenario inputs, render through the supported pipeline, and recover from validation/render failures without losing useful input or mistaking stale output for the new result.
 - [x] **PRVUX-03**: An author can inspect HTML, plaintext, raw output, and headers with readable long content and clear tab/selection behavior while preserving the same supported rendering semantics used for delivery.
 - [ ] **PRVUX-04**: An author can change device framing and preview appearance independently of admin appearance and understand the limits of what those controls demonstrate about actual email clients.
 
@@ -96,7 +96,7 @@ The approved [roadmap](ROADMAP.md) assigns each of the 28 v2.9 requirements to e
 | INUX-03 | Phase 170 | Complete |
 | INUX-04 | Phase 170 | Complete |
 | PRVUX-01 | Phase 171 | Complete |
-| PRVUX-02 | Phase 171 | Pending |
+| PRVUX-02 | Phase 171 | Complete |
 | PRVUX-03 | Phase 171 | Complete |
 | PRVUX-04 | Phase 171 | Pending |
 | MAILUX-01 | Phase 172 | Pending |

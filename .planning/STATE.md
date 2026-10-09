@@ -5,16 +5,16 @@ milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 171
 current_phase_name: Developer Preview
 status: executing
-stopped_at: Completed 171-01-PLAN.md
-last_updated: "2026-10-09T13:38:16.371Z"
+stopped_at: Completed 171-02-PLAN.md
+last_updated: "2026-10-09T13:53:49.466Z"
 last_activity: 2026-10-09
 last_activity_desc: Phase 171 execution started
-state_head: 66ed025a3ad753d9554172609c5a40a0a12524aa
+state_head: b746964941f74b95f566d331ae3faa2f2dd93202
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 27
-  completed_plans: 24
+  completed_plans: 25
   percent: 50
 ---
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 ## Current Position
 
 Phase: 171 (Developer Preview) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-10-09 — Phase 171 execution started
 
@@ -276,6 +276,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 170 P07 | 6m | 2 tasks | 3 files |
 | Phase 170 P08 | 82m | 2 tasks | 17 files |
 | Phase 171 P01 | 14m | 2 tasks | 7 files |
+| Phase 171 P02 | 13min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -477,6 +478,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 171]: Render discovery, missing-scenario, and discovery-error states separately with actionable copy for each.
 - [Phase 171]: Describe Preview as Mailglass.Renderer output and keep route exposure under the host application's dev guard.
 - [Phase 171]: Treat a valid empty preview_props/0 list as a missing-scenario setup state.
+- [Phase 171]: Edit only text, integer, float, boolean, and calendar-valid Date defaults with complete, type-preserving parsers.
+- [Phase 171]: Keep maps, structs, atoms, and timezone-sensitive DateTimes read-only with guidance to edit the Mailable scenario.
+- [Phase 171]: Retain renderer artifacts only after success and label prior output as not current during pending, validation, and render errors.
+- [Phase 171]: Retry through the existing render event and reset to the selected scenario defaults.
 
 ## Quick Tasks Completed
 
@@ -522,8 +527,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T13:36:24.346Z
-Stopped at: Completed 171-01-PLAN.md
+Last session: 2026-10-09T13:53:49.371Z
+Stopped at: Completed 171-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
