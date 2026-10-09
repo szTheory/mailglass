@@ -44,8 +44,8 @@
 
 - [ ] **MAILUX-01**: An author using the public email components can produce readable transactional messages with coherent heading/body/action hierarchy and usable long-content, narrow-width, link, and image-fallback behavior while preserving email-specific markup support.
 - [ ] **MAILUX-02**: An evaluator can review representative existing transactional scenarios with consistent sender branding and explicit coverage of both the public components and AtlasDesk's separate renderer; examples accurately demonstrate supported authoring paths.
-- [ ] **MAILUX-03**: A recipient can understand the message and its essential action from plaintext output as well as HTML, with meaningful links and content preserved through the renderer.
-- [ ] **MAILUX-04**: A recipient visiting the built-in unsubscribe GET page or an invalid/expired link sees readable, accessible, truthful state and next-step copy; configured host redirects and the existing protocol POST contract remain intact, with no unsupported confirmation or completion claim.
+- [x] **MAILUX-03**: A recipient can understand the message and its essential action from plaintext output as well as HTML, with meaningful links and content preserved through the renderer.
+- [x] **MAILUX-04**: A recipient visiting the built-in unsubscribe GET page or an invalid/expired link sees readable, accessible, truthful state and next-step copy; configured host redirects and the existing protocol POST contract remain intact, with no unsupported confirmation or completion claim.
 
 ### Consistency, evidence, and delivery
 
@@ -101,8 +101,8 @@ The approved [roadmap](ROADMAP.md) assigns each of the 28 v2.9 requirements to e
 | PRVUX-04 | Phase 171 | Complete |
 | MAILUX-01 | Phase 172 | Pending |
 | MAILUX-02 | Phase 172 | Pending |
-| MAILUX-03 | Phase 172 | Pending |
-| MAILUX-04 | Phase 172 | Pending |
+| MAILUX-03 | Phase 172 | Complete |
+| MAILUX-04 | Phase 172 | Complete |
 | UIQ-01 | Phase 173 | Pending |
 | UIQ-02 | Phase 173 | Pending |
 | UIQ-03 | Phase 173 | Pending |

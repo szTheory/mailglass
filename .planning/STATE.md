@@ -4,17 +4,17 @@ milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 172
 current_phase_name: Recipient Output and Built-in Pages
-status: executing
-stopped_at: Phase 172 execution started
-last_updated: "2026-10-09T21:05:35.917Z"
+status: verifying
+stopped_at: Completed 172-03-PLAN.md
+last_updated: "2026-10-09T22:17:59.336Z"
 last_activity: 2026-10-09
 last_activity_desc: Phase 172 execution started
-state_head: 6eb753213a9f4f6d21c1b81cbf915c8f672faf88
+state_head: 03c5689834b7faa41b5e57ac1f01f75e138c42b5
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 30
-  completed_plans: 27
+  completed_plans: 30
   percent: 67
 ---
 
@@ -40,8 +40,8 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 ## Current Position
 
 Phase: 172 (Recipient Output and Built-in Pages) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 172
+Plan: 3 of 3
+Status: Phase complete — ready for verification
 Last activity: 2026-10-09 — Phase 172 execution started
 
 Progress: 4/6 phases ([███████░░░] 67%); [██████████████░░░░░░] 27/30 planned plans (90%).
@@ -280,6 +280,8 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 171 P02 | 13min | 2 tasks | 5 files |
 | Phase 171 P03 | 17min | 2 tasks | 6 files |
 | Phase 171 P04 | 25min | 2 tasks | 16 files |
+| Phase 172 P02 | 8min | 3 tasks | 8 files |
+| Phase 172 P03 | 9min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -491,6 +493,11 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 171]: Label preview widths as CSS pixels, with concise visible values and complete accessible names.
 - [Phase 171]: Keep controls stacked until the wide breakpoint and remove the spacing-token max-width that collapsed the selected identity.
 - [Phase 171]: Treat preview browser screenshots as preview-pipeline evidence only, not recipient-client or email dark-mode certification.
+- [Phase 172]: Keep Renderer.render/2 responsible for replacing text_body from rendered HTML while retaining the public setter.
+- [Phase 172]: Use the existing Floki traversal and normalization; do not add a dependency or alternate MIME path.
+- [Phase 172]: Valid GET remains informational and does not change subscription state.
+- [Phase 172]: Fixed state atoms render failure copy without recipient or token assigns.
+- [Phase 172]: Configured redirect applies to GET only; POST remains the mutation path.
 
 ## Quick Tasks Completed
 
@@ -536,9 +543,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T21:05:35.917Z
-Stopped at: Phase 172 execution started
-Resume file: .planning/phases/172-recipient-output-and-built-in-pages/172-01-PLAN.md
+Last session: 2026-10-09T22:17:59.261Z
+Stopped at: Completed 172-03-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 

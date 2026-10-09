@@ -235,6 +235,10 @@ Plans:
   4. A recipient opening the built-in unsubscribe GET page or an invalid/expired link sees readable, accessible, truthful state and a supported next step, with no claim that GET already unsubscribed them; configured host redirects and the existing protocol POST behavior still work.
 
 **Plans**: TBD
+- [x] 172-01-PLAN.md
+- [x] 172-02-PLAN.md
+- [x] 172-03-PLAN.md
+
 **UI hint**: yes
 **Acceptance focus**: Inspect public-component and AtlasDesk output separately; use affected HTML/plaintext and browser renders plus existing rendering checks. State which email clients and dark-mode behaviors have not been verified.
 
@@ -270,5 +274,5 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 | 169. Outbound Investigation and Recovery | 5/5 | Complete    | 2026-10-07 |
 | 170. Inbound Investigation and Recovery | 8/8 | Complete    | 2026-10-09 |
 | 171. Developer Preview | 4/4 | Complete    | 2026-10-09 |
-| 172. Recipient Output and Built-in Pages | 0/TBD | Not started | — |
+| 172. Recipient Output and Built-in Pages | 3/3 | In Progress | — |
 | 173. Consistency and Delivery Evidence | 0/TBD | Not started | — |
