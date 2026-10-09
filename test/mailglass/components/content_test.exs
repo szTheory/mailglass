@@ -31,10 +31,16 @@ defmodule Mailglass.Components.ContentTest do
     hostile_copy = "<script>Zoë & Søren</script> " <> long_name
 
     heading =
-      render(&Components.heading/1, Map.merge(slot_assigns(hostile_copy), %{level: 1, align: "left", tone: "ink"}))
+      render(
+        &Components.heading/1,
+        Map.merge(slot_assigns(hostile_copy), %{level: 1, align: "left", tone: "ink"})
+      )
 
     body =
-      render(&Components.text/1, Map.merge(slot_assigns(hostile_copy), %{size: "base", tone: "ink", align: "left"}))
+      render(
+        &Components.text/1,
+        Map.merge(slot_assigns(hostile_copy), %{size: "base", tone: "ink", align: "left"})
+      )
 
     assert heading =~ "<h1"
     assert heading =~ "font-size:20px"
@@ -63,7 +69,7 @@ defmodule Mailglass.Components.ContentTest do
     assert html =~ "#1D637A"
     assert html =~ "overflow-wrap:anywhere"
     assert html =~ "word-break:break-word"
-    assert html =~ "href=\"#{destination}&quot;&lt;script&gt;"
+    assert html =~ "href=\"#{destination}?quoted=&quot;&lt;script&gt;"
     assert html =~ long_label
     refute html =~ "href=\"#{destination}\""
   end
@@ -103,7 +109,10 @@ defmodule Mailglass.Components.ContentTest do
     html =
       render(
         &Components.link/1,
-        Map.merge(slot_assigns("Billing details"), %{tone: "ink", rest: %{href: "https://example.test"}})
+        Map.merge(slot_assigns("Billing details"), %{
+          tone: "ink",
+          rest: %{href: "https://example.test"}
+        })
       )
 
     assert html =~ Mailglass.Components.Theme.color(:ink)

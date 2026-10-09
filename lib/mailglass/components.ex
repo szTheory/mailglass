@@ -266,6 +266,9 @@ defmodule Mailglass.Components do
 
   defp heading_style(%{tone: tone, align: align}) do
     "color:#{Theme.color(String.to_atom(tone))};" <>
+      "font-size:20px;" <>
+      "font-weight:700;" <>
+      "line-height:1.25;" <>
       "text-align:#{align};" <>
       "mso-line-height-rule:exactly;" <>
       "margin:0 0 16px 0;" <>
@@ -333,7 +336,12 @@ defmodule Mailglass.Components do
 
     html_style =
       "display:inline-block;" <>
+        "max-width:100%;" <>
+        "box-sizing:border-box;" <>
         "padding:12px 24px;" <>
+        "line-height:20px;" <>
+        "overflow-wrap:anywhere;" <>
+        "word-break:break-word;" <>
         "background-color:#{bg_color};" <>
         "color:#{text_color};" <>
         "text-decoration:none;" <>
@@ -424,7 +432,7 @@ defmodule Mailglass.Components do
          alt={@alt}
          width={@width}
          height={@height}
-         style={CSS.merge_style("-ms-interpolation-mode:bicubic;max-width:100%;border:0;display:block;", @class)}
+         style={CSS.merge_style("-ms-interpolation-mode:bicubic;max-width:100%;height:auto;border:0;display:block;", @class)}
          data-mg-plaintext="text"
          {@rest} />
     """
@@ -445,15 +453,18 @@ defmodule Mailglass.Components do
   """
   @doc since: "0.1.0"
   def link(assigns) do
-    link_color = Theme.color(String.to_atom(assigns.tone))
+    link_color = readable_link_color(assigns.tone)
     body_font = Theme.font(:body)
 
     a_style =
       "color:#{link_color};" <>
         "text-decoration:underline;" <>
+        "overflow-wrap:anywhere;" <>
+        "word-break:break-word;" <>
         "font-family:#{body_font};"
 
-    span_style = "color:#{link_color};text-decoration:underline;"
+    span_style =
+      "color:#{link_color};text-decoration:underline;overflow-wrap:anywhere;word-break:break-word;"
 
     assigns =
       assigns
@@ -502,4 +513,13 @@ defmodule Mailglass.Components do
   defp resolve_bg("custom", bg_hex) when is_binary(bg_hex), do: bg_hex
   defp resolve_bg("custom", _), do: "#FFFFFF"
   defp resolve_bg(bg, _bg_hex) when is_binary(bg), do: Theme.color(String.to_atom(bg))
+
+  defp readable_link_color("glass") do
+    case Theme.color(:glass) do
+      "#277B96" -> "#1D637A"
+      color -> color
+    end
+  end
+
+  defp readable_link_color(tone), do: Theme.color(String.to_atom(tone))
 end
