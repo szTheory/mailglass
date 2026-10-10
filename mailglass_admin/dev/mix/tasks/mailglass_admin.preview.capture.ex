@@ -68,7 +68,7 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
       )
 
     if config.dry_run do
-      _ = write_contract_artifacts(matrix, config, :identity)
+      _ = write_contract_artifacts(matrix, config, :identity, %{})
       print_dry_run(matrix, config)
     else
       run_capture(matrix, config)
@@ -119,7 +119,9 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
     File.mkdir_p!(config.output_dir)
 
     if entries == [] do
-      Mix.raise("Preview capture blocked: matrix is empty. Define preview_props/0 or widen filters.")
+      Mix.raise(
+        "Preview capture blocked: matrix is empty. Define preview_props/0 or widen filters."
+      )
     end
 
     Enum.each(entries, fn state ->
@@ -138,13 +140,12 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
           )
 
         {:error, {:command_failed, exit_code, output}} ->
-          Mix.raise(
-            "Preview capture failed (exit #{exit_code}) for #{state.url}: #{output}"
-          )
+          Mix.raise("Preview capture failed (exit #{exit_code}) for #{state.url}: #{output}")
       end
     end)
 
-    _ = write_contract_artifacts(matrix, config, :files)
+    provenance = capture_provenance(config, hd(entries).url)
+    _ = write_contract_artifacts(matrix, config, :files, provenance)
 
     Mix.shell().info(
       "Captured #{Enum.count(entries)} screenshots to #{config.output_dir}. Wrote manifest/checkpoint: #{config.manifest_out}, #{config.checkpoint_out}"
@@ -160,7 +161,11 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
     Mix.shell().info("  base-url: #{config.base_url}")
     Mix.shell().info("  output-dir: #{config.output_dir}")
     Mix.shell().info("  theme(s): #{Enum.map_join(config.themes, ", ", &Atom.to_string/1)}")
-    Mix.shell().info("  width(s): #{Enum.join(Enum.map(config.widths, &Integer.to_string/1), ", ")}")
+
+    Mix.shell().info(
+      "  width(s): #{Enum.join(Enum.map(config.widths, &Integer.to_string/1), ", ")}"
+    )
+
     Mix.shell().info("  matrix entries: #{Enum.count(entries)}")
     Mix.shell().info("  manifest-out: #{config.manifest_out}")
     Mix.shell().info("  checkpoint-out: #{config.checkpoint_out}")
@@ -313,12 +318,102 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
     )
   end
 
-  defp write_contract_artifacts(matrix, config, sha_mode) do
+  defp write_contract_artifacts(matrix, config, sha_mode, provenance) do
     CaptureManifest.write_from_states!(matrix.entries, matrix.skipped,
       output_dir: config.output_dir,
       sha_mode: sha_mode,
+      provenance: provenance,
       manifest_path: config.manifest_out,
       checkpoint_path: config.checkpoint_out
     )
+  end
+
+  defp capture_provenance(_config, route) do
+    root = git!(["rev-parse", "--show-toplevel"]) |> String.trim()
+    revision = git!(["rev-parse", "HEAD"]) |> String.trim()
+    dirty = git!(["status", "--porcelain", "--untracked-files=no"]) |> String.trim() != ""
+
+    source_path = Path.join(root, "mailglass_admin/assets/css/app.css")
+    build_path = Path.join(root, "mailglass_admin/priv/static/app.css")
+    source_sha = file_sha256!(source_path, "source CSS")
+    build_sha = file_sha256!(build_path, "built CSS")
+
+    binary =
+      Chromium.discover_binary() ||
+        Mix.raise("Preview capture blocked: Chromium binary not found")
+
+    {browser_version, 0} =
+      System.cmd(binary, ["--version"], stderr_to_stdout: true)
+
+    served = served_stylesheet!(route)
+
+    %{
+      candidate: %{revision: revision, dirty: dirty},
+      browser: %{name: "Chromium", version: String.trim(browser_version)},
+      assets: %{
+        source: %{path: "mailglass_admin/assets/css/app.css", sha256: source_sha},
+        build: %{path: "mailglass_admin/priv/static/app.css", sha256: build_sha},
+        served: %{url: served.url, sha256: served.sha256}
+      }
+    }
+  rescue
+    error in MatchError ->
+      Mix.raise(
+        "Preview capture blocked: unable to identify Chromium version (#{Exception.message(error)})"
+      )
+  end
+
+  defp served_stylesheet!(route) do
+    :inets.start()
+    :ssl.start()
+    html = http_get!(route, "preview route")
+
+    href =
+      case Regex.run(~r/<link\b[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["']/i, html) do
+        [_, value] -> value
+        _ -> Mix.raise("Preview capture blocked: route did not serve a stylesheet href")
+      end
+
+    asset_url = URI.merge(route, href) |> URI.to_string()
+    css = http_get!(asset_url, "served stylesheet")
+    %{url: href, sha256: sha256(css)}
+  end
+
+  defp http_get!(url, description) do
+    request = {String.to_charlist(url), []}
+
+    case :httpc.request(:get, request, [autoredirect: true], body_format: :binary) do
+      {:ok, {{_version, status, _reason}, _headers, body}} when status in 200..299 ->
+        body
+
+      other ->
+        Mix.raise(
+          "Preview capture blocked: could not read #{description} at #{url}: #{inspect(other)}"
+        )
+    end
+  end
+
+  defp file_sha256!(path, description) do
+    case File.read(path) do
+      {:ok, contents} ->
+        sha256(contents)
+
+      {:error, reason} ->
+        Mix.raise("Preview capture blocked: cannot read #{description}: #{inspect(reason)}")
+    end
+  end
+
+  defp sha256(bytes), do: Base.encode16(:crypto.hash(:sha256, bytes), case: :lower)
+
+  defp git!(args) do
+    case System.cmd("git", args, stderr_to_stdout: true) do
+      {output, 0} ->
+        output
+
+      {output, status} ->
+        Mix.raise(
+          "Preview capture blocked: git #{Enum.join(args, " ")} failed (#{status}): #{output}"
+        )
+    end
   end
 end

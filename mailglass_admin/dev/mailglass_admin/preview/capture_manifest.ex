@@ -30,22 +30,34 @@ defmodule MailglassAdmin.Preview.CaptureManifest do
     "#{module_slug}--#{scenario}--w#{state.width}--#{theme}.png"
   end
 
-  @spec build_entries([CaptureState.t()], String.t(), sha_mode()) :: [map()]
-  def build_entries(states, output_dir, sha_mode) when is_list(states) and is_binary(output_dir) do
+  @spec build_entries([CaptureState.t()], String.t(), sha_mode(), map()) :: [map()]
+  def build_entries(states, output_dir, sha_mode, provenance \\ %{})
+
+  def build_entries(states, output_dir, sha_mode, provenance)
+      when is_list(states) and is_binary(output_dir) and is_map(provenance) do
     states
-    |> Enum.map(&entry_for_state(&1, output_dir, sha_mode))
+    |> Enum.map(&entry_for_state(&1, output_dir, sha_mode, provenance))
     |> Enum.sort_by(&entry_sort_key/1)
   end
 
-  @spec write_from_states!([CaptureState.t()], [map()], keyword()) :: %{manifest: map(), checkpoint: map()}
+  @spec write_from_states!([CaptureState.t()], [map()], keyword()) :: %{
+          manifest: map(),
+          checkpoint: map()
+        }
   def write_from_states!(states, skipped, opts) when is_list(states) and is_list(skipped) do
     output_dir = Keyword.fetch!(opts, :output_dir)
     sha_mode = Keyword.get(opts, :sha_mode, :identity)
+    provenance = Keyword.get(opts, :provenance, %{})
     manifest_path = Keyword.fetch!(opts, :manifest_path)
     checkpoint_path = Keyword.fetch!(opts, :checkpoint_path)
 
-    entries = build_entries(states, output_dir, sha_mode)
-    write!(entries, skipped, manifest_path: manifest_path, checkpoint_path: checkpoint_path)
+    entries = build_entries(states, output_dir, sha_mode, provenance)
+
+    write!(entries, skipped,
+      manifest_path: manifest_path,
+      checkpoint_path: checkpoint_path,
+      capture_mode: if(sha_mode == :files, do: "actual", else: "identity_only")
+    )
   end
 
   @spec write!([map()], [map()], keyword()) :: %{manifest: map(), checkpoint: map()}
@@ -54,11 +66,18 @@ defmodule MailglassAdmin.Preview.CaptureManifest do
     checkpoint_path = Keyword.fetch!(opts, :checkpoint_path)
 
     normalized_entries = Enum.sort_by(entries, &entry_sort_key/1)
-    normalized_skipped = skipped |> Enum.map(&normalize_skipped/1) |> Enum.sort_by(&skipped_sort_key/1)
+
+    normalized_skipped =
+      skipped |> Enum.map(&normalize_skipped/1) |> Enum.sort_by(&skipped_sort_key/1)
+
+    capture_mode = Keyword.get(opts, :capture_mode, "identity_only")
+    review_complete = capture_mode == "actual" and normalized_entries != []
 
     manifest = %{
       "schema_version" => @schema_version,
       "claim_boundary" => @claim_boundary,
+      "capture_mode" => capture_mode,
+      "review_complete" => review_complete,
       "captures" => normalized_entries,
       "skipped" => normalized_skipped
     }
@@ -66,6 +85,8 @@ defmodule MailglassAdmin.Preview.CaptureManifest do
     checkpoint = %{
       "schema_version" => @schema_version,
       "claim_boundary" => @claim_boundary,
+      "capture_mode" => capture_mode,
+      "review_complete" => review_complete,
       "capture_count" => Enum.count(normalized_entries),
       "skipped_count" => Enum.count(normalized_skipped),
       "matrix_sha256" => matrix_sha256(normalized_entries),
@@ -78,31 +99,97 @@ defmodule MailglassAdmin.Preview.CaptureManifest do
     %{manifest: manifest, checkpoint: checkpoint}
   end
 
-  defp entry_for_state(%CaptureState{} = state, output_dir, sha_mode) do
+  defp entry_for_state(%CaptureState{} = state, output_dir, sha_mode, provenance) do
     path = screenshot_name(state)
     absolute_path = Path.join(output_dir, path)
 
-    %{
+    identity = %{
       "mailable" => inspect(state.mailable),
       "scenario" => Atom.to_string(state.scenario),
       "width" => state.width,
       "theme" => Atom.to_string(state.theme),
-      "path" => path,
-      "sha256" => sha256_for(absolute_path, state, path, sha_mode)
+      "path" => path
     }
-  end
 
-  defp sha256_for(path, state, relative_path, :files) do
-    case File.read(path) do
-      {:ok, contents} ->
-        Base.encode16(:crypto.hash(:sha256, contents), case: :lower)
+    case sha_mode do
+      :files ->
+        validate_actual_provenance!(provenance)
 
-      {:error, _reason} ->
-        identity_sha256(state, relative_path)
+        Map.merge(identity, %{
+          "route" => state.url,
+          "interaction_state" => "initial_render",
+          "source_relation" => "candidate_render; no paired before/after baseline",
+          "candidate" => normalize_map(provenance.candidate),
+          "browser" => normalize_map(provenance.browser),
+          "assets" => normalize_assets(provenance.assets),
+          "sha256" => sha256_for(absolute_path, output_dir, path)
+        })
+
+      :identity ->
+        Map.put(identity, "sha256", identity_sha256(state, path))
     end
   end
 
-  defp sha256_for(_path, state, relative_path, :identity), do: identity_sha256(state, relative_path)
+  defp validate_actual_provenance!(provenance) do
+    candidate = Map.get(provenance, :candidate, %{})
+    browser = Map.get(provenance, :browser, %{})
+    assets = Map.get(provenance, :assets, %{})
+
+    require_value!(Map.get(candidate, :revision), "candidate revision")
+    require_boolean!(Map.get(candidate, :dirty), "candidate dirty state")
+    require_value!(Map.get(browser, :name), "browser name")
+    require_value!(Map.get(browser, :version), "browser version")
+
+    for asset <- [:source, :build, :served] do
+      metadata = Map.get(assets, asset, %{})
+      require_value!(Map.get(metadata, :path) || Map.get(metadata, :url), "#{asset} asset path")
+      require_sha256!(Map.get(metadata, :sha256), "#{asset} asset sha256")
+    end
+  end
+
+  defp normalize_assets(assets) do
+    Map.new([:source, :build, :served], fn kind ->
+      {Atom.to_string(kind), normalize_map(Map.fetch!(assets, kind))}
+    end)
+  end
+
+  defp normalize_map(map) when is_map(map) do
+    Map.new(map, fn {key, value} -> {to_string(key), value} end)
+  end
+
+  defp require_value!(value, _label) when is_binary(value) and value != "", do: :ok
+  defp require_value!(_value, label), do: raise(ArgumentError, "#{label} is required")
+
+  defp require_boolean!(value, _label) when is_boolean(value), do: :ok
+  defp require_boolean!(_value, label), do: raise(ArgumentError, "#{label} is required")
+
+  defp require_sha256!(value, label) do
+    unless is_binary(value) and Regex.match?(~r/\A[0-9a-f]{64}\z/, value) do
+      raise ArgumentError, "#{label} must be a lowercase SHA-256 digest"
+    end
+  end
+
+  defp sha256_for(path, output_dir, relative_path) do
+    expanded_dir = Path.expand(output_dir)
+    expanded_path = Path.expand(path)
+    relative = Path.relative_to(expanded_path, expanded_dir)
+
+    if relative in ["..", ""] or String.starts_with?(relative, "../") or
+         Path.type(relative) == :absolute do
+      raise ArgumentError, "capture path must stay inside the output directory"
+    end
+
+    case File.lstat(expanded_path) do
+      {:ok, %{type: :regular}} ->
+        case File.read(expanded_path) do
+          {:ok, contents} -> Base.encode16(:crypto.hash(:sha256, contents), case: :lower)
+          {:error, _reason} -> raise ArgumentError, "PNG file is unreadable: #{relative_path}"
+        end
+
+      _ ->
+        raise ArgumentError, "PNG file is unreadable or not a regular file: #{relative_path}"
+    end
+  end
 
   defp identity_sha256(state, relative_path) do
     [
