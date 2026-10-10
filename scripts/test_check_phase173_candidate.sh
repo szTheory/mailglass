@@ -125,7 +125,7 @@ printf 'real Git sparse checkout left both synthetic protected sentinels unmater
 node - "$ROOT_DIR/scripts/phase173_json_output.cjs" "$TEST_DIR" <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
-const { writeJson } = require(process.argv[2]);
+const { writeJson, writeFileExclusive } = require(process.argv[2]);
 const testDir = process.argv[3];
 const target = path.join(testDir, "symlink-target.json");
 const link = path.join(testDir, "symlink-output.json");
@@ -149,6 +149,23 @@ try { writeJson(path.join(linkedParent, "parent-output.json"), { should: "not be
 catch { parentRejected = true; }
 if (!parentRejected) throw new Error("JSON evidence writer followed a symlinked parent directory");
 if (fs.existsSync(path.join(realParent, "parent-output.json"))) throw new Error("symlinked parent received JSON output");
+
+const trustedRoot = path.join(testDir, "trusted-root");
+const nestedOutput = path.join(trustedRoot, "missing", "nested", "output.bin");
+fs.mkdirSync(trustedRoot);
+writeFileExclusive(nestedOutput, Buffer.from("nested output"), trustedRoot);
+if (fs.readFileSync(nestedOutput, "utf8") !== "nested output") throw new Error("secure writer failed to create a missing nested parent");
+
+const externalTarget = path.join(testDir, "external-target");
+const externalLink = path.join(trustedRoot, "linked-parent");
+fs.mkdirSync(externalTarget);
+fs.symlinkSync(externalTarget, externalLink, "dir");
+let externalRejected = false;
+try {
+  writeFileExclusive(path.join(externalLink, "new-child", "output.bin"), Buffer.from("must not escape"), trustedRoot);
+} catch { externalRejected = true; }
+if (!externalRejected) throw new Error("secure writer followed a symlinked parent outside its trusted root");
+if (fs.existsSync(path.join(externalTarget, "new-child"))) throw new Error("symlink target received a created directory");
 NODE
 
 node - "$ROOT_DIR" <<'NODE'
@@ -168,6 +185,10 @@ function assertContract(launcher, dockerignore, compose, runner) {
   const candidateStart = launcher.indexOf("\nSHA=", outerStart);
   if (!(outerStart >= 0 && candidateStart > outerStart)) throw new Error("launcher outer/candidate mode boundary is missing");
   const outer = launcher.slice(outerStart, candidateStart);
+  if (outer.includes('mkdir -p "$EVIDENCE_DIR"')) throw new Error("outer launcher creates output parents by pathname");
+  if (launcher.includes('mkdir -p "$(dirname "$DELIVERY_JSON")"')) throw new Error("candidate launcher creates output parents by pathname");
+  if (launcher.includes('fs.mkdirSync(candidateRoot, { recursive: true })')) throw new Error("baseline transfer creates destination by pathname");
+  if (!launcher.includes("writeFileExclusive(destination, bytes,")) throw new Error("baseline transfer does not use the secure exclusive writer");
   if (/git\s+(status|diff|ls-files|cat-file)\b/.test(outer)) throw new Error("outer launcher inventories origin paths");
   const add = outer.indexOf("git worktree add --detach --no-checkout");
   const sparse = outer.indexOf("sparse-checkout set --no-cone --no-sparse-index --stdin");

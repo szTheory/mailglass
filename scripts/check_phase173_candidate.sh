@@ -34,7 +34,6 @@ if [[ "${PHASE173_CANDIDATE_MODE:-false}" != "true" ]]; then
   cd "$REPO_ROOT"
   ORIGIN_SHA="$(git rev-parse HEAD)"
   ORIGIN_META="$EVIDENCE_DIR/origin-dirty-paths.json"
-  mkdir -p "$EVIDENCE_DIR"
   git check-ignore -q -- "$ORIGIN_META" || fail "$ORIGIN_META must be ignored by git"
   node - "$ORIGIN_META" "$ORIGIN_SHA" "$REPO_ROOT" "$SCRIPT_DIR/phase173_json_output.cjs" <<'NODE'
 const fs = require("node:fs");
@@ -74,7 +73,7 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const [sourceRoot, candidateRoot, candidateSha, writerPath] = process.argv.slice(2);
-const { writeJson } = require(writerPath);
+const { writeJson, writeFileExclusive } = require(writerPath);
 const validator = require(path.resolve(sourceRoot, "../../assets/scripts/check-demo-browser-evidence.cjs"));
 const outputPath = path.join(sourceRoot, "delivery-candidate.json");
 try {
@@ -84,11 +83,6 @@ try {
   const candidateRootResolved = path.resolve(candidateRoot);
   if (!candidateRootResolved.startsWith(`${resolvedCandidateParent}${path.sep}`)) {
     throw new Error("candidate evidence destination escapes its detached worktree");
-  }
-  fs.mkdirSync(candidateRoot, { recursive: true });
-  const targetRoot = fs.lstatSync(candidateRoot);
-  if (!targetRoot.isDirectory() || targetRoot.isSymbolicLink()) {
-    throw new Error("candidate evidence destination is not a regular directory");
   }
   for (const expected of pinned) {
     const sourcePath = path.resolve(resolvedSource, expected.path);
@@ -100,17 +94,11 @@ try {
     if (digest !== expected.sha256) throw new Error(`baseline changed after validation: ${expected.path}`);
     const destination = path.join(candidateRoot, expected.path);
     if (!destination.startsWith(`${candidateRootResolved}${path.sep}`)) throw new Error(`candidate baseline escapes evidence directory: ${expected.path}`);
-    let destinationExists = false;
     try {
-      fs.lstatSync(destination);
-      destinationExists = true;
+      writeFileExclusive(destination, bytes, path.resolve(candidateRoot, "../../../.."));
     } catch (error) {
-      if (error.code !== "ENOENT") throw error;
+      throw new Error(`candidate baseline destination already exists or traverses a symlink: ${expected.path}: ${error.message}`);
     }
-    if (destinationExists || fs.lstatSync(path.dirname(destination)).isSymbolicLink()) {
-      throw new Error(`candidate baseline destination already exists or traverses a symlink: ${expected.path}`);
-    }
-    fs.writeFileSync(destination, bytes, { flag: "wx" });
   }
 } catch (error) {
   writeJson(outputPath, {
@@ -165,8 +153,6 @@ DELIVERY_JSON="$ROOT_DIR/$EVIDENCE_REL/delivery-candidate.json"
 git check-ignore -q -- "$DELIVERY_JSON" || fail "$DELIVERY_JSON must be ignored by git"
 rg -q -e "\"originSha\"[[:space:]]*:[[:space:]]*\"$SHA\"" "$ORIGIN_META" ||
   fail "original dirty metadata does not identify the candidate SHA"
-mkdir -p "$(dirname "$DELIVERY_JSON")"
-
 declare -a FAILURES=()
 declare -a PRIOR_SUMMARIES=()
 declare -a ADVISORY_JOBS=()
