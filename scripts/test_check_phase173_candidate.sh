@@ -140,6 +140,22 @@ if (!rejected) throw new Error("JSON evidence writer accepted a symlink destinat
 if (!fs.readFileSync(target).equals(original)) throw new Error("symlink target bytes changed");
 if (!fs.lstatSync(link).isSymbolicLink()) throw new Error("rejected symlink destination was replaced");
 
+const exclusiveTarget = path.join(testDir, "exclusive-target.png");
+const exclusiveLink = path.join(testDir, "exclusive-link.png");
+const exclusiveOriginal = Buffer.from("existing PNG bytes must not be overwritten");
+fs.writeFileSync(exclusiveTarget, exclusiveOriginal);
+let existingRejected = false;
+try { writeFileExclusive(exclusiveTarget, Buffer.from("replacement bytes"), testDir); }
+catch { existingRejected = true; }
+if (!existingRejected) throw new Error("exclusive PNG writer overwrote an existing file");
+if (!fs.readFileSync(exclusiveTarget).equals(exclusiveOriginal)) throw new Error("existing PNG bytes changed after exclusive-write rejection");
+fs.symlinkSync(exclusiveTarget, exclusiveLink);
+let exclusiveSymlinkRejected = false;
+try { writeFileExclusive(exclusiveLink, Buffer.from("replacement bytes"), testDir); }
+catch { exclusiveSymlinkRejected = true; }
+if (!exclusiveSymlinkRejected) throw new Error("exclusive PNG writer accepted a symlink destination");
+if (!fs.readFileSync(exclusiveTarget).equals(exclusiveOriginal)) throw new Error("exclusive PNG symlink changed target bytes");
+
 const realParent = path.join(testDir, "real-parent");
 const linkedParent = path.join(testDir, "linked-parent");
 fs.mkdirSync(realParent);
@@ -166,6 +182,15 @@ try {
 } catch { externalRejected = true; }
 if (!externalRejected) throw new Error("secure writer followed a symlinked parent outside its trusted root");
 if (fs.existsSync(path.join(externalTarget, "new-child"))) throw new Error("symlink target received a created directory");
+
+let escapeRejected = false;
+const restrictedRoot = path.join(testDir, "restricted-root");
+const escapedOutput = path.join(testDir, "outside-trusted-root.json");
+fs.mkdirSync(restrictedRoot);
+try { writeJson(escapedOutput, { should: "not escape" }, restrictedRoot); }
+catch (error) { escapeRejected = /escapes its trusted root/.test(error.message); }
+if (!escapeRejected) throw new Error("JSON evidence writer accepted a destination outside its trusted root");
+if (fs.existsSync(escapedOutput)) throw new Error("trusted-root escape received JSON output");
 NODE
 
 node - "$ROOT_DIR" <<'NODE'
