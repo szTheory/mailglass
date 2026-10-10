@@ -474,7 +474,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-suppression-card")
       assert html =~ "Mailglass.Example.WelcomeMailer"
       assert html =~ "pm_123"
-      assert html =~ "Current matching suppression"
+      assert html =~ "Current suppression"
       assert html =~ "Address · Account-local"
       assert html =~ "The public Mailglass removal command permits Manual records."
       assert html =~ "does not cover configured stores or provider policy"

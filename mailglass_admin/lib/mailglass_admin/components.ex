@@ -523,11 +523,157 @@ defmodule MailglassAdmin.Components do
     <div class="mb-sm flex min-w-0 flex-wrap items-baseline gap-x-sm gap-y-xs" {@rest}>
       <h2 :if={@title} class="text-body font-bold text-base-content">
         {@title}
-        <span :if={not is_nil(@count)} data-testid={@count_testid} aria-label={@count_label} class="font-normal tabular-nums text-secondary">({@count})</span>
+        <span
+          :if={not is_nil(@count)}
+          data-testid={@count_testid}
+          aria-label={@count_label}
+          class="font-normal tabular-nums text-secondary"
+        >
+          ({@count})
+        </span>
       </h2>
-      <span :if={is_nil(@title) and not is_nil(@count)} data-testid={@count_testid} aria-label={@count_label} class="text-label tabular-nums text-secondary">({@count})</span>
+      <span
+        :if={is_nil(@title) and not is_nil(@count)}
+        data-testid={@count_testid}
+        aria-label={@count_label}
+        class="text-label tabular-nums text-secondary"
+      >
+        ({@count})
+      </span>
     </div>
     """
+  end
+
+  @doc "Message identity shared by quick views and full detail, with contextual outcome help."
+  attr(:subject, :string, default: nil)
+  attr(:recipient, :string, default: nil)
+  attr(:status, :atom, required: true)
+  attr(:context, :atom, required: true)
+  attr(:id, :string, required: true)
+
+  attr(:heading_tag, :string, values: ["h2", "h3"], default: "h2")
+
+  def message_identity(assigns) do
+    ~H"""
+    <div class="min-w-0 space-y-sm">
+      <div class="flex min-w-0 flex-wrap items-center gap-sm">
+        <.dynamic_tag
+          tag_name={@heading_tag}
+          class="min-w-0 max-w-full text-heading font-bold text-base-content [overflow-wrap:anywhere]"
+        >
+          {if @subject == "", do: "(No subject)", else: @subject || @recipient || "Message"}
+        </.dynamic_tag>
+        <.outcome_badge id={@id} status={@status} context={@context} />
+      </div>
+      <p :if={not is_nil(@subject)} class="text-body text-secondary [overflow-wrap:anywhere]">
+        To <span class="text-base-content">{@recipient || "Recipient not recorded"}</span>
+      </p>
+      <p :if={is_nil(@subject)} class="text-label text-secondary">Subject not recorded</p>
+    </div>
+    """
+  end
+
+  @doc "Technical identifiers remain available without dominating message inspection."
+  attr(:id, :string, required: true)
+  attr(:divider?, :boolean, default: true)
+  slot(:inner_block, required: true)
+
+  def technical_details(assigns) do
+    ~H"""
+    <details id={@id} class={["min-w-0", @divider? && "border-t border-base-300 pt-sm"]}>
+      <summary class="mg-focus-ring min-h-11 cursor-pointer content-center rounded-field text-label font-bold text-secondary">
+        Technical details
+      </summary>
+      <dl class="mt-sm grid min-w-0 gap-md text-body sm:grid-cols-2 [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]">
+        {render_slot(@inner_block)}
+      </dl>
+    </details>
+    """
+  end
+
+  @doc "Short module name with the exact identity available through contextual help."
+  attr(:value, :string, required: true)
+  attr(:id, :string, required: true)
+  attr(:segments, :integer, default: 1)
+
+  def module_identity(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :short_name,
+        assigns.value |> String.split(".") |> Enum.take(-assigns.segments) |> Enum.join(".")
+      )
+
+    ~H"""
+    <.field_help
+      id={@id}
+      label={@short_name}
+      text={@value}
+      trigger_text={@short_name}
+      trigger_class="text-base-content"
+    />
+    """
+  end
+
+  attr(:record, :map, required: true)
+  attr(:id, :string, required: true)
+
+  def mailbox_identity(assigns) do
+    full_name = matched_mailbox_label(assigns.record)
+
+    {label, explanation, matched?} =
+      case full_name do
+        "Unrouted" ->
+          {full_name,
+           "None of the routing rules matched this email, so it wasn't sent to a mailbox. Open the message to see which rules were checked.",
+           false}
+
+        "No execution recorded" ->
+          {full_name, "No processing attempt is recorded for this message.", false}
+
+        "Unavailable" ->
+          {"Not recorded",
+           if(Map.get(assigns.record, :outcome) == :failed,
+             do:
+               "Processing failed, but no mailbox name was saved for this attempt. Open the message to inspect the error.",
+             else:
+               "No mailbox name was saved for this processing attempt. Open the message to inspect its processing history."
+           ), false}
+
+        mailbox ->
+          {mailbox |> String.split(".") |> List.last(), mailbox, true}
+      end
+
+    icon =
+      case full_name do
+        "Unrouted" -> "hero-minus-circle"
+        "Unavailable" -> "hero-question-mark-circle"
+        "No execution recorded" -> "hero-clock"
+        _ -> nil
+      end
+
+    assigns =
+      assign(assigns, label: label, explanation: explanation, matched?: matched?, icon: icon)
+
+    ~H"""
+    <.field_help
+      id={@id}
+      label={@label}
+      text={@explanation}
+      trigger_text={@label}
+      trigger_icon={@icon}
+      trigger_class={if @matched?, do: "text-base-content", else: "text-secondary"}
+    />
+    """
+  end
+
+  defp matched_mailbox_label(record) do
+    case {Map.get(record, :outcome), Map.get(record, :mailbox)} do
+      {:no_match, _mailbox} -> "Unrouted"
+      {nil, _mailbox} -> "No execution recorded"
+      {_outcome, mailbox} when is_binary(mailbox) and mailbox != "" -> mailbox
+      {_outcome, _mailbox} -> "Unavailable"
+    end
   end
 
   attr(:kind, :atom, values: [:empty, :error, :permission_denied, :stale], required: true)
@@ -883,12 +1029,23 @@ defmodule MailglassAdmin.Components do
         ]}
       >
         <.icon :if={@trigger_icon} name={@trigger_icon} class="h-4 w-4 shrink-0" />
-        <span :if={@trigger_text && @trigger_content == []} class="min-w-0 break-words">{@trigger_text}</span>
+        <span :if={@trigger_text && @trigger_content == []} class="min-w-0 break-words">
+          {@trigger_text}
+        </span>
         {render_slot(@trigger_content)}
-        <.icon :if={!@trigger_text && @trigger_content == []} name="hero-information-circle" class="h-4 w-4" />
+        <.icon
+          :if={!@trigger_text && @trigger_content == []}
+          name="hero-information-circle"
+          class="h-4 w-4"
+        />
       </button>
       <span id={@id} class="sr-only">{@text}</span>
-      <span id={@id <> "-tooltip"} role="tooltip" aria-hidden="true" class="mg-field-help-tooltip [overflow-wrap:anywhere]">
+      <span
+        id={@id <> "-tooltip"}
+        role="tooltip"
+        aria-hidden="true"
+        class="mg-field-help-tooltip [overflow-wrap:anywhere]"
+      >
         {@text}
       </span>
     </span>
@@ -1157,12 +1314,19 @@ defmodule MailglassAdmin.Components do
 
   def outcome_badge(assigns) do
     ~H"""
-    <.field_help id={@id} label={status_label(@status)}
-      trigger_text={status_label(@status)} text={outcome_help(@context, @status)}>
+    <.field_help
+      id={@id}
+      label={status_label(@status)}
+      trigger_text={status_label(@status)}
+      text={outcome_help(@context, @status)}
+    >
       <:trigger_content><.status_badge status={@status} size={:sm} /></:trigger_content>
     </.field_help>
     """
   end
+
+  @doc false
+  def outcome_description(context, status), do: outcome_help(context, status)
 
   defp outcome_help(:inbound, :accepted), do: "A mailbox processed and accepted this message."
 
@@ -1191,7 +1355,8 @@ defmodule MailglassAdmin.Components do
   defp outcome_help(:delivery, :queued), do: "This message is waiting to be sent to the provider."
 
   defp outcome_help(:delivery, :dispatched),
-    do: "This message was handed to the provider. Delivery to the recipient has not been confirmed."
+    do:
+      "This message was handed to the provider. Delivery to the recipient has not been confirmed."
 
   defp outcome_help(:delivery, :delivered),
     do:
@@ -1312,7 +1477,9 @@ defmodule MailglassAdmin.Components do
         data-local-time="true"
         data-utc={utc_string(@at)}
         class="tabular-nums"
-      >{utc_string(@at)}</time>
+      >
+        {utc_string(@at)}
+      </time>
     </button>
     <time
       :if={!@copyable}
@@ -1322,7 +1489,9 @@ defmodule MailglassAdmin.Components do
       title={utc_string(@at)}
       aria-label={"Recorded at #{utc_string(@at)}"}
       class={["tabular-nums", @class]}
-    >{utc_string(@at)}</time>
+    >
+      {utc_string(@at)}
+    </time>
     """
   end
 
@@ -1337,7 +1506,9 @@ defmodule MailglassAdmin.Components do
         class="btn btn-ghost min-h-11 mg-focus-ring"
         data-copy-value={@value}
         aria-label={@label}
-      >{@label}</button>
+      >
+        {@label}
+      </button>
       <span role="status" aria-live="polite" aria-atomic="true" data-copy-status></span>
     </span>
     """

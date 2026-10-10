@@ -19,9 +19,20 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
       )
 
     ~H"""
-    <Components.card padding={:lg} data-testid="operator-suppression-card" data-group-card="operator-suppression-card">
+    <Components.card
+      padding={:lg}
+      data-testid="operator-suppression-card"
+      data-group-card="operator-suppression-card"
+    >
       <div class="mb-md flex flex-wrap items-center justify-between gap-sm">
-        <h3 class="text-body font-bold text-base-content">Current matching suppression</h3>
+        <div class="flex flex-wrap items-center gap-xs">
+          <h3 class="text-body font-bold text-base-content">Current suppression</h3>
+          <Components.field_help
+            id="delivery-suppression-scope"
+            label="suppression scope"
+            text="This shows one current Mailglass match for this account. Other configured stores and provider restrictions are not checked. Address and domain rules can apply across streams."
+          />
+        </div>
         <span class="badge badge-outline">{headline(@suppression_state, @read_state)}</span>
       </div>
 
@@ -40,47 +51,52 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
       <%= if @has_match? do %>
         <dl class="grid gap-md sm:grid-cols-2 [&_dd]:break-words">
           <div>
-            <dt class="text-label font-bold uppercase text-secondary">Address or domain</dt>
-            <dd class="mt-xs break-all text-body text-base-content">{value(@suppression_state, :address)}</dd>
+            <dt class="text-label font-bold text-secondary">Address or domain</dt>
+            <dd class="mt-xs break-all text-body text-base-content">
+              {value(@suppression_state, :address)}
+            </dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase text-secondary">Scope</dt>
-            <dd class="mt-xs text-body text-base-content">{scope_label(Map.get(@suppression_state, :scope))}</dd>
+            <dt class="text-label font-bold text-secondary">Scope</dt>
+            <dd class="mt-xs text-body text-base-content">
+              {scope_label(Map.get(@suppression_state, :scope))}
+            </dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase text-secondary">Reason</dt>
+            <dt class="text-label font-bold text-secondary">Reason</dt>
             <dd class="mt-xs text-body text-base-content">{value(@suppression_state, :reason)}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase text-secondary">Source</dt>
-            <dd class="mt-xs break-words text-body text-base-content">{value(@suppression_state, :source)}</dd>
+            <dt class="text-label font-bold text-secondary">Source</dt>
+            <dd class="mt-xs break-words text-body text-base-content">
+              {value(@suppression_state, :source)}
+            </dd>
           </div>
           <div :if={Map.get(@suppression_state, :scope) == :address_stream}>
-            <dt class="text-label font-bold uppercase text-secondary">Stream</dt>
+            <dt class="text-label font-bold text-secondary">Stream</dt>
             <dd class="mt-xs text-body text-base-content">{value(@suppression_state, :stream)}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase text-secondary">Expires at</dt>
+            <dt class="text-label font-bold text-secondary">Expires at</dt>
             <dd class="mt-xs break-words text-body text-base-content">
-              <Components.timestamp :if={match?(%DateTime{}, Map.get(@suppression_state, :expires_at))} at={@suppression_state.expires_at} />
-              <span :if={not match?(%DateTime{}, Map.get(@suppression_state, :expires_at))}>Unavailable</span>
+              <Components.timestamp
+                :if={match?(%DateTime{}, Map.get(@suppression_state, :expires_at))}
+                at={@suppression_state.expires_at}
+              />
+              <span :if={not match?(%DateTime{}, Map.get(@suppression_state, :expires_at))}>
+                Unavailable
+              </span>
             </dd>
           </div>
           <div class="sm:col-span-2">
-            <dt class="text-label font-bold uppercase text-secondary">Public removal command</dt>
+            <dt class="text-label font-bold text-secondary">Public removal command</dt>
             <dd class="mt-xs text-body text-secondary">{removal_copy(@suppression_state)}</dd>
           </div>
         </dl>
-        <p class="mt-md text-body text-secondary">
-          This is one current Mailglass match for the selected Delivery in this Account. Address and domain matches can apply across streams; an address + stream match names its stream. This read does not cover configured stores or provider policy. This card is read-only.
-        </p>
       <% else %>
         <%= if @read_state == :ready do %>
           <p class="text-body text-secondary" data-testid="operator-suppression-empty">
-            No current matching suppression recorded in Mailglass was found for this Delivery.
-          </p>
-          <p class="mt-sm text-body text-secondary">
-            This one-record Account-local read does not establish absence of configured-store or provider restrictions.
+            No current Mailglass suppression matches this delivery.
           </p>
         <% end %>
       <% end %>
@@ -90,7 +106,9 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
         phx-click="retry_suppression"
         class="btn btn-ghost mt-md min-h-11"
         data-testid="operator-suppression-refresh"
-      >{if @read_state == :unavailable, do: "Retry suppression read", else: "Refresh suppression read"}</button>
+      >
+        {if @read_state == :unavailable, do: "Retry suppression read", else: "Refresh suppression"}
+      </button>
     </Components.card>
     """
   end

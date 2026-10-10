@@ -561,7 +561,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ ~s(data-testid="inbound-detail-header")
       assert html =~ ~s(data-testid="inbound-detail-back")
-      assert html =~ "Back to inbound records"
+      assert html =~ "Back to quick view"
       assert html =~ ~s(data-testid="inbound-timeline")
       assert html =~ "Execution timeline"
       assert html =~ "MyApp.Mailboxes.SupportMailbox"
@@ -577,7 +577,7 @@ defmodule MailglassAdmin.InboundLiveTest do
              ]
 
       # Fresh + replay source badges both appear (V matched seed).
-      assert html =~ "Fresh"
+      assert html =~ "Initial processing"
       assert html =~ "Replay"
       # Detail shows the recipient.
       assert html =~ "selected@example.com"
@@ -1271,7 +1271,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "Raw provider source"
       # Redacted-by-default copy (verbatim).
       assert html =~
-               "Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability."
+               "Raw source is hidden by default. Reveal it to inspect the provider payload."
 
       # The raw payload bytes MUST be absent from the HTML by default.
       refute html =~ secret
@@ -1600,7 +1600,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       assert html =~ ~s(data-testid="inbound-timeline-snapshot")
-      assert html =~ "History snapshot through"
+      assert html =~ "Updated"
 
       refresh =
         Floki.find(Floki.parse_document!(html), "[data-testid='inbound-timeline-refresh']")
@@ -2140,12 +2140,12 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       assert html =~
-               "Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability."
+               "Raw source is hidden by default. Reveal it to inspect the provider payload."
 
       denied_html = render_click(view, "reveal_raw", %{})
 
       assert denied_html =~
-               "Raw source not revealed: the reveal_raw capability is not granted for this operator."
+               "You do not have permission to reveal raw source."
 
       refute denied_html =~ "SECRET-BYTES"
       refute_banned(denied_html)
@@ -2267,7 +2267,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute redacted_html =~ secret
 
       assert redacted_html =~
-               "Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability."
+               "Raw source is hidden by default. Reveal it to inspect the provider payload."
     end
 
     test "reveal emits a PII-free [:reveal_raw, :stop] with outcome=:granted (D-12)", %{

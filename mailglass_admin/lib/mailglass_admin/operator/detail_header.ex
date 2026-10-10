@@ -18,24 +18,31 @@ defmodule MailglassAdmin.Operator.DetailHeader do
       data-testid="operator-detail-header"
       data-group-card="operator-detail-header"
     >
-      <div class="flex flex-wrap items-start justify-between gap-md">
-        <div class="min-w-0 space-y-sm">
-          <div class="flex flex-wrap items-center gap-sm">
-            <h2 class="text-heading font-bold text-base-content">{@delivery.recipient}</h2>
-            <Components.status_badge status={Components.delivery_display_status(@delivery)} />
-          </div>
-          <p class="mono text-label text-secondary">{@delivery.id}</p>
-          <p
-            :if={present?(@delivery.mailable)}
-            class="text-body text-secondary [overflow-wrap:anywhere]"
-          >
-            {@delivery.mailable}
-          </p>
-        </div>
-
-        <dl class="grid min-w-0 gap-sm text-body text-secondary sm:grid-cols-2">
+      <div class="min-w-0 space-y-lg">
+        <Components.message_identity
+          subject={Map.get(@delivery, :subject)}
+          recipient={@delivery.recipient}
+          status={Components.delivery_display_status(@delivery)}
+          context={:delivery}
+          id="delivery-detail-outcome"
+        />
+        <dl class="grid min-w-0 gap-md text-body text-secondary sm:grid-cols-2 lg:grid-cols-4 [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]">
           <div>
-            <dt class="text-label font-bold uppercase">Account</dt>
+            <dt class="text-label font-bold">Provider</dt>
+            <dd class="mt-xs text-base-content">{String.upcase(@delivery.provider || "unknown")}</dd>
+          </div>
+          <div>
+            <dt class="text-label font-bold">Stream</dt>
+            <dd class="mt-xs text-base-content">{label(@delivery.stream)}</dd>
+          </div>
+          <div>
+            <dt class="text-label font-bold">Updated</dt>
+            <dd class="mt-xs text-base-content">
+              <Components.timestamp at={@delivery.last_event_at} />
+            </dd>
+          </div>
+          <div>
+            <dt class="text-label font-bold">Account</dt>
             <dd
               class="mt-xs text-base-content"
               title={Accounts.title(@delivery.tenant_id, @account_labels)}
@@ -43,31 +50,40 @@ defmodule MailglassAdmin.Operator.DetailHeader do
               {Accounts.label(@delivery.tenant_id, @account_labels)}
             </dd>
           </div>
-          <div>
-            <dt class="text-label font-bold uppercase">Provider</dt>
-            <dd class="mt-xs text-base-content">{String.upcase(@delivery.provider || "unknown")}</dd>
-          </div>
-          <div>
-            <dt class="text-label font-bold uppercase">Stream</dt>
-            <dd class="mt-xs text-base-content">{label(@delivery.stream)}</dd>
-          </div>
-          <div>
-            <dt class="text-label font-bold uppercase">Latest event</dt>
+          <div :if={
+            @delivery.last_event_type not in [nil, Components.delivery_display_status(@delivery)]
+          }>
+            <dt class="text-label font-bold">Latest event</dt>
             <dd class="mt-xs text-base-content">{label(@delivery.last_event_type)}</dd>
           </div>
+        </dl>
+        <Components.technical_details id="delivery-detail-technical">
           <div>
-            <dt class="text-label font-bold uppercase">Updated</dt>
-            <dd class="mt-xs text-base-content">
-              <Components.timestamp at={@delivery.last_event_at} />
+            <dt class="text-label font-bold text-secondary">Delivery ID</dt>
+            <dd class="mono mt-xs break-all text-label text-base-content">{@delivery.id}</dd>
+            <Components.copy_button value={@delivery.id} label="Copy delivery ID" />
+          </div>
+          <div :if={present?(@delivery.mailable)}>
+            <dt class="text-label font-bold text-secondary">Mailable</dt>
+            <dd class="mt-xs">
+              <Components.module_identity
+                value={@delivery.mailable}
+                segments={2}
+                id="delivery-detail-mailable"
+              />
             </dd>
           </div>
           <div :if={present?(@delivery.provider_message_id)}>
-            <dt class="text-label font-bold uppercase">Provider message</dt>
-            <dd class="mono mt-xs text-base-content [overflow-wrap:anywhere]">
+            <dt class="text-label font-bold text-secondary">Provider message ID</dt>
+            <dd class="mono mt-xs break-all text-label text-base-content">
               {@delivery.provider_message_id}
             </dd>
+            <Components.copy_button
+              value={@delivery.provider_message_id}
+              label="Copy provider message ID"
+            />
           </div>
-        </dl>
+        </Components.technical_details>
       </div>
     </Components.card>
     """

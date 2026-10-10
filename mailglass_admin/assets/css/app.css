@@ -410,6 +410,7 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
 }
 
 .mg-field-help-tooltip {
+  display: none;
   position: absolute;
   inset-block-start: calc(100% + var(--spacing-xs));
   inset-inline-start: 0;
@@ -457,6 +458,7 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
 .mg-field-help:not(:has(button[data-dismissed])):hover .mg-field-help-tooltip,
 .mg-field-help:has(button:not([data-dismissed]):focus-visible) .mg-field-help-tooltip,
 .mg-field-help:has(button[aria-expanded="true"]) .mg-field-help-tooltip {
+  display: block;
   opacity: 1;
   visibility: visible;
 }
@@ -522,11 +524,11 @@ code, pre, .mono {
    tokens; only the keyframe-based motions need classes here. */
 @keyframes mg-reveal {
   from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: none; }
 }
 @keyframes mg-timeline-in {
   from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: none; }
 }
 @keyframes mg-fade-in {
   from { opacity: 0; }
@@ -539,7 +541,8 @@ code, pre, .mono {
 
 /* reveal — detail pane / header / cards become visible after a selection. */
 .motion-reveal {
-  animation: mg-reveal var(--duration-reveal) var(--ease-out) both;
+  /* Release the transform containing block after entry so fixed tooltips stay viewport anchored. */
+  animation: mg-reveal var(--duration-reveal) var(--ease-out) backwards;
 }
 
 /* tab-swap — crossfade a panel whose content swapped in place (tabs, frame).
@@ -599,7 +602,7 @@ code, pre, .mono {
    pure CSS (predetermined sequence → keyframes, per great-animations). Capped
    at 8 steps; later items appear without added delay. */
 .motion-timeline > * {
-  animation: mg-timeline-in var(--duration-reveal) var(--ease-out) both;
+  animation: mg-timeline-in var(--duration-reveal) var(--ease-out) backwards;
 }
 .motion-timeline > *:nth-child(1) { animation-delay: 0ms; }
 .motion-timeline > *:nth-child(2) { animation-delay: 40ms; }

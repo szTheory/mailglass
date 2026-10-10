@@ -1020,27 +1020,37 @@ defmodule MailglassAdmin.OperatorLive do
                           suppression_state={@suppression_state}
                           read_state={@suppression_read_state}
                         />
-                        <SupportCards.support_cards
-                          support_summary={@support_summary}
-                          support_state={@support_state}
-                          suppression_count={@suppression_count}
-                          exact_support_evidence={@support_exact_evidence}
-                          exact_delivery_path={
-                            exact_support_delivery_path(
-                              @base_path,
-                              @filter_params,
-                              @dark_chrome,
-                              @support_exact_evidence,
-                              @support_state
-                            )
-                          }
-                        />
                         <ReplayAction.replay_action
                           replay_targets={@replay_targets}
                           latest_replay={latest_replay(@replay_history)}
                           replay_history_read_state={@replay_history_read_state}
                           replay_command_feedback={@replay_command_feedback}
                         />
+                        <details
+                          open={support_focus?(@support_state)}
+                          class="min-w-0 border-t border-base-300 pt-md"
+                        >
+                          <summary class="mg-focus-ring min-h-11 cursor-pointer content-center rounded-field text-body font-bold text-base-content">
+                            Account diagnostics
+                          </summary>
+                          <div class="mt-md">
+                            <SupportCards.support_cards
+                              support_summary={@support_summary}
+                              support_state={@support_state}
+                              suppression_count={@suppression_count}
+                              exact_support_evidence={@support_exact_evidence}
+                              exact_delivery_path={
+                                exact_support_delivery_path(
+                                  @base_path,
+                                  @filter_params,
+                                  @dark_chrome,
+                                  @support_exact_evidence,
+                                  @support_state
+                                )
+                              }
+                            />
+                          </div>
+                        </details>
                       </div>
                   <% end %>
                 </div>
@@ -1103,7 +1113,10 @@ defmodule MailglassAdmin.OperatorLive do
                 <%!-- LIST PAGE: filters lead the collection; supporting evidence follows.
                     The Quick view overlay (below) sits on top when a record is focused. --%>
                 <section
-                  :if={@filter_params["event"] in [nil, ""] and @deliveries_read_state == :ready and Map.has_key?(@deliveries_page_meta, :outcome_groups)}
+                  :if={
+                    @filter_params["event"] in [nil, ""] and @deliveries_read_state == :ready and
+                      Map.has_key?(@deliveries_page_meta, :outcome_groups)
+                  }
                   data-testid="operator-delivery-summary"
                   class="mt-md border-b border-base-300 pb-md"
                 >
@@ -1114,11 +1127,17 @@ defmodule MailglassAdmin.OperatorLive do
                       label={label}
                       value={count}
                       severity={if key == :attention and count > 0, do: :warning, else: :neutral}
-                      severity_label={if key == :attention and count > 0, do: "Needs attention", else: "Tracked"}
+                      severity_label={
+                        if key == :attention and count > 0, do: "Needs attention", else: "Tracked"
+                      }
                       compact
                     >
                       <:label_help>
-                        <Components.field_help id={"delivery-summary-#{key}-help"} label={label} text={help} />
+                        <Components.field_help
+                          id={"delivery-summary-#{key}-help"}
+                          label={label}
+                          text={help}
+                        />
                       </:label_help>
                     </Components.stat_card>
                   </div>
@@ -1359,7 +1378,8 @@ defmodule MailglassAdmin.OperatorLive do
       "tenant_id" => normalize_string(Map.get(params, "tenant_id", defaults["tenant_id"])),
       "provider" => normalize_string(Map.get(params, "provider", defaults["provider"])),
       "event" => event,
-      "search" => normalize_string(Map.get(params, "search", defaults["search"])) |> String.trim(),
+      "search" =>
+        normalize_string(Map.get(params, "search", defaults["search"])) |> String.trim(),
       "window_hours" => window_hours,
       "page" => normalize_page(params, defaults)
     }
@@ -1567,7 +1587,8 @@ defmodule MailglassAdmin.OperatorLive do
     do: "This delivery link is invalid. Return to deliveries and open a listed record."
 
   defp detail_error_copy(:not_found),
-    do: "This delivery is not available in the selected Account. Return to deliveries to continue."
+    do:
+      "This delivery is not available in the selected Account. Return to deliveries to continue."
 
   defp detail_error_copy(:unavailable),
     do:
@@ -1988,7 +2009,8 @@ defmodule MailglassAdmin.OperatorLive do
       summary = %{
         failed_ingest: failed || %{count: nil, latest: nil},
         orphan_backlog: orphan || %{count: nil, oldest: nil, oldest_age_seconds: nil},
-        replay_outcomes: replay || %{counts: %{failed: nil, noop: nil, replayed: nil}, latest: nil},
+        replay_outcomes:
+          replay || %{counts: %{failed: nil, noop: nil, replayed: nil}, latest: nil},
         reconcile_facts:
           reconcile ||
             %{

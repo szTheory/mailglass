@@ -478,11 +478,13 @@ defmodule MailglassAdmin.InboundLive do
 
       %{replay_modal_open?: false, replay_consumed_review_id: consumed}
       when not is_nil(consumed) ->
-        {:noreply, replay_feedback(socket, :error, "Replay was already submitted for this review.")}
+        {:noreply,
+         replay_feedback(socket, :error, "Replay was already submitted for this review.")}
 
       %{replay_consumed_review_id: consumed, replay_review: %{review_id: consumed}}
       when not is_nil(consumed) ->
-        {:noreply, replay_feedback(socket, :error, "Replay was already submitted for this review.")}
+        {:noreply,
+         replay_feedback(socket, :error, "Replay was already submitted for this review.")}
 
       %{replay_pending_review_id: pending, replay_review: %{review_id: pending}}
       when not is_nil(pending) ->
@@ -623,7 +625,7 @@ defmodule MailglassAdmin.InboundLive do
                   data-testid="inbound-detail-back"
                   class="mg-focus-ring btn btn-ghost !h-11 min-h-11"
                 >
-                  <span aria-hidden="true" class="mr-xs">←</span> Back to inbound records
+                  <span aria-hidden="true" class="mr-xs">←</span> Back to quick view
                 </.link>
 
                 <p
@@ -635,6 +637,7 @@ defmodule MailglassAdmin.InboundLive do
                 </p>
 
                 <div
+                  :if={@replay_feedback}
                   id="inbound-replay-feedback"
                   data-testid="inbound-replay-feedback"
                   role="status"
@@ -657,44 +660,11 @@ defmodule MailglassAdmin.InboundLive do
                     class="motion-reveal space-y-md"
                   >
                     <DetailHeader.detail_header detail={@detail} account_labels={@account_labels} />
-                    <div
-                      data-testid="inbound-timeline-snapshot"
-                      class="flex flex-wrap items-center justify-between gap-sm rounded-box border border-base-300 bg-base-200 p-md"
-                    >
-                      <p class="text-label text-secondary">
-                        <%= cond do %>
-                          <% @timeline_read_state == :ok and @timeline_read_at -> %>
-                            History snapshot through <Components.timestamp at={@timeline_read_at} />
-                          <% @timeline_read_at -> %>
-                            Last successful history snapshot through
-                            <Components.timestamp at={@timeline_read_at} />
-                          <% true -> %>
-                            History snapshot unavailable.
-                        <% end %>
-                      </p>
-                      <button
-                        type="button"
-                        phx-click="refresh_inbound_timeline"
-                        phx-disable-with="Refreshing history…"
-                        aria-live="polite"
-                        aria-atomic="true"
-                        data-testid="inbound-timeline-refresh"
-                        class="btn btn-ghost min-h-11 px-md"
-                      >
-                        Refresh history
-                      </button>
-                    </div>
-                    <%= if @timeline_read_state == :ok do %>
-                      <Timeline.timeline runs={@runs} />
-                    <% else %>
-                      <div data-testid="inbound-timeline-unavailable">
-                        <Components.data_state
-                          kind={:error}
-                          title="Timeline unavailable"
-                          body="Execution history could not be loaded. Refresh the page or try again shortly."
-                        />
-                      </div>
-                    <% end %>
+                    <Timeline.timeline
+                      runs={@runs}
+                      read_state={@timeline_read_state}
+                      read_at={@timeline_read_at}
+                    />
                     <RoutingTrace.routing_trace
                       :if={@detail[:outcome] == :no_match}
                       trace={@routing_trace}
@@ -1540,7 +1510,8 @@ defmodule MailglassAdmin.InboundLive do
     summary_filters = %{
       tenant_id: filter_params["tenant_id"],
       provider: blank_to_nil(filter_params["provider"]),
-      window_hours: parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
+      window_hours:
+        parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
       search: blank_to_nil(filter_params["search"])
     }
 

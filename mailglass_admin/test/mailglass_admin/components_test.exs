@@ -388,6 +388,36 @@ defmodule MailglassAdmin.ComponentsTest do
     |> Enum.map(&(Floki.text(&1) |> String.trim()))
   end
 
+  test "inspection identity wraps long content and provides outcome help" do
+    html =
+      render_component(&Components.message_identity/1,
+        subject: "Payment action needed",
+        recipient: "billing@northstar.example",
+        status: :bounced,
+        context: :delivery,
+        id: "inspection-outcome"
+      )
+
+    assert html =~ "Payment action needed"
+    assert html =~ "billing@northstar.example"
+    assert html =~ "overflow-wrap:anywhere"
+    assert html =~ "could not be delivered"
+    assert html =~ ~s(id="inspection-outcome-trigger")
+  end
+
+  test "technical details disclose exact IDs without opening by default" do
+    html =
+      render_component(&Components.technical_details/1,
+        id: "inspection-technical",
+        inner_block: [%{inner_block: fn _, _ -> "exact-record-id" end}]
+      )
+
+    [details] = Floki.find(Floki.parse_document!(html), "details")
+    refute Floki.attribute(details, "open") != []
+    assert html =~ "exact-record-id"
+    assert html =~ "Technical details"
+  end
+
   describe "timestamp/1" do
     test "a UTC datetime exposes its exact UTC value for local-time enhancement" do
       at = ~U[2026-06-14 14:32:05.000000Z]
@@ -1296,12 +1326,10 @@ defmodule MailglassAdmin.ComponentsTest do
         ~s(aria-invalid="true"),
         ~s(<label for="filters_window_hours"),
         "Time window",
-        ~s(<input id="filters_window_hours" name="filters[window_hours]" type="number" value="168"),
-        ~s(list="operator-window-options"),
-        ~s(min="1"),
-        ~s(max="1000000"),
-        ~s(step="1"),
-        ~s(<datalist id="operator-window-options">)
+        ~s(id="filters_window_hours"),
+        ~s(name="filters[window_hours]"),
+        ~s(<option value="168" selected>),
+        "Last 7 days"
       ])
 
       assert field_order(html, ["Provider", "Latest recorded event", "Time window"])

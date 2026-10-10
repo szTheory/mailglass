@@ -178,7 +178,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
       assert html =~ "Failed"
-      assert html =~ "Unavailable"
+      assert html =~ "Not recorded"
       refute html =~ "no match"
     end
   end
@@ -416,7 +416,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&Timeline.timeline/1, runs: runs)
 
-      assert html =~ "Fresh"
+      assert html =~ "Initial processing"
       assert html =~ "Replay"
       assert html =~ "run-fresh"
       assert html =~ "run-replay"
@@ -458,7 +458,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "Ignored"
       assert html =~ "No change"
       refute html =~ ">Ignore</p>"
-      assert html =~ "Fresh"
+      assert html =~ "Initial processing"
       assert html =~ "Replay"
       assert html =~ "2026-05-24T10:00:00Z"
       assert html =~ "2026-05-24T11:00:00Z"
@@ -514,12 +514,12 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ ~s(data-testid="inbound-trace-clause")
       assert html =~ "sm:grid-cols"
       assert html =~ "bg-base-100"
-      assert html =~ "border-l-4 border-error"
+      assert html =~ "bg-error/10"
       assert html =~ "Dimension"
       assert html =~ "Expected"
       assert html =~ "Actual"
       assert html =~ "Current router simulation"
-      assert html =~ "does not prove which route was selected when the message arrived"
+      assert html =~ "may differ from the rules used when this message arrived"
       assert html =~ "<details"
       refute html =~ "<details open"
       assert html =~ "<summary"
@@ -634,7 +634,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert redacted_html =~ "Payload size"
       assert redacted_html =~ "Header count"
       assert redacted_html =~ "Verification facts"
-      assert redacted_html =~ "bg-base-100"
+      assert redacted_html =~ "Raw source is hidden by default"
       assert redacted_html =~ "min-h-11"
       refute redacted_html =~ ~s(data-testid="inbound-evidence-raw")
       refute redacted_html =~ "secret-raw-payload-99-03"
