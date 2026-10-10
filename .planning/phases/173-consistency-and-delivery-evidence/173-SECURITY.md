@@ -43,6 +43,9 @@ created: "2026-10-10"
 | T-173-15 | Information Disclosure | CI Admin discovery | high | mitigate | CI allowlist precedes discovery and selects the synthetic fixture (`mailglass_admin/dev/mix/tasks/mailglass_admin.preview.capture.ex:55-64,79-85`; `.github/workflows/ci.yml:1153-1163`). | closed |
 | T-173-16 | Denial of Service | Demo evidence reset | high | mitigate | Shared read-only preflight verifies the run-owned app marker before reset; both screenshot producers call it (`reference/demo_app/assets/scripts/check-persona-reset-target.cjs:32-60`; `reference/demo_app/assets/e2e/phase173-evidence.spec.js:239-240`; `reference/demo_app/assets/e2e/persona-screenshots.spec.js:151`). | closed |
 | T-173-SC | Tampering | Package supply chain | high | mitigate | Exact package-lock gate runs before all four demo browser install paths (`reference/demo_app/assets/scripts/check-demo-browser-deps.cjs:59-82`; `scripts/run_demo_browser_evidence.sh:88`; `compose.demo.yml:91-94`; `reference/demo_app/Dockerfile:11-12`; `reference/demo_app/mix.exs:83-84`). | closed |
+| T-173-18 | Information Disclosure | Candidate checkout, deliverable scan, and Docker build context | high | mitigate | Candidate isolation configures sparse exclusions before checkout, skips protected paths before Git probes, avoids original-workspace path inventory, and excludes the paths from Docker context; synthetic mutation tests cover each boundary (`scripts/check_phase173_candidate.sh`; `scripts/test_check_phase173_candidate.sh`; `.dockerignore`). | closed |
+| T-173-19 | Repudiation | Candidate delivery disposition | high | mitigate | Delivery evidence binds local results, preview, checkpoint, and retained worktree to one full SHA; missing exact-SHA CI or protected owner acceptance keeps the disposition incomplete (`scripts/check_phase173_candidate.sh`; `173-08-SUMMARY.md`). | closed |
+| T-173-20 | Tampering | Phase 173 JSON and PNG evidence output | high | mitigate | JSON replacement, temporary cleanup, parent creation, and baseline PNG creation use held directory descriptors, no-follow checks, and exclusive creation; symlink and nested-parent contracts exercise the boundary (`scripts/phase173_json_output.cjs`; `scripts/phase173_json_output.py`; `scripts/test_check_phase173_candidate.sh`). | closed |
 
 *Status: open · closed · open — below high threshold (non-blocking)*  
 *Severity: critical > high > medium > low — only open threats at or above the configured high threshold count toward `threats_open`.*
@@ -56,14 +59,23 @@ No accepted risks.
 | Audit Date | Threats Total | Closed | Open | Run By |
 |------------|---------------|--------|------|--------|
 | 2026-10-10 | 17 | 17 | 0 | gsd-security-auditor (ASVS Level 1) |
+| 2026-10-10 | 20 | 20 | 0 | gsd-security-auditor (ASVS Level 1; Plan 08 evidence-output review) |
 
 ## Sign-Off
 
 - [x] All threats have a disposition (mitigate / accept / transfer)
 - [x] Accepted risks documented in Accepted Risks Log
-- [x] `threats_open: 0` confirmed
+- [x] `threats_open: 0` confirmed across all 20 threats
 - [x] `status: verified` set in frontmatter
 
 **Approval:** verified 2026-10-10
 
 The security gate is clear. The separate exact-candidate delivery gate remains incomplete; UIQ-03 is still Pending until its required delivery evidence passes.
+
+## Security Audit 2026-10-10
+
+| Metric | Count |
+|---|---|
+| Threats found | 20 |
+| Closed | 20 |
+| Open | 0 |
