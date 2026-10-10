@@ -18,6 +18,7 @@ cleanup() {
 trap cleanup EXIT
 mkdir -p "$FAKE_BIN" "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence" "$FAKE_ROOT/scripts" \
   "$FAKE_ROOT/mailglass_admin/assets/css" "$FAKE_ROOT/mailglass_admin/priv/static" \
+  "$FAKE_ROOT/mailglass_inbound" \
   "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence" \
   "$FAKE_ROOT/reference/demo_app/assets/scripts" "$FIXTURES"
 cp "$ROOT_DIR/reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs" \
@@ -104,7 +105,10 @@ const sparseRules = ["/*", ...protectedPaths.map((item) => `!/${item}`)];
 const activeDockerRules = (text) => text.replace(/\r\n?/g, "\n").split("\n").map((line) => line.trim())
   .filter((line) => line && !line.startsWith("#"));
 function assertContract(launcher, dockerignore, compose, runner) {
-  const outer = launcher.split(/\nSHA=/, 1)[0];
+  const outerStart = launcher.indexOf('if [[ "${PHASE173_CANDIDATE_MODE:-false}" != "true" ]]');
+  const candidateStart = launcher.indexOf("\nSHA=", outerStart);
+  if (!(outerStart >= 0 && candidateStart > outerStart)) throw new Error("launcher outer/candidate mode boundary is missing");
+  const outer = launcher.slice(outerStart, candidateStart);
   if (/git\s+(status|diff|ls-files|cat-file)\b/.test(outer)) throw new Error("outer launcher inventories origin paths");
   const add = outer.indexOf("git worktree add --detach --no-checkout");
   const sparse = outer.indexOf("sparse-checkout set --no-cone --no-sparse-index --stdin");
@@ -115,6 +119,9 @@ function assertContract(launcher, dockerignore, compose, runner) {
     throw new Error("candidate checkout or materialization precedes sparse exclusion setup");
   }
   for (const rule of sparseRules) if (!outer.includes(rule)) throw new Error(`sparse exclusion missing: ${rule}`);
+  if (!outer.includes('status --porcelain=v1 --untracked-files=all -- . \\\n    \':(exclude)reference/demo_app/README.md\' \\\n    \':(exclude)reference/demo_app/assets/e2e/demo.spec.js\'')) {
+    throw new Error("initial candidate cleanliness check does not exclude protected paths");
+  }
   const loop = launcher.slice(launcher.indexOf("while IFS= read -r listed_path"), launcher.indexOf("# Run the phase regression gate"));
   let cursor = -1;
   for (const item of protectedPaths) {
@@ -127,6 +134,21 @@ function assertContract(launcher, dockerignore, compose, runner) {
   if (!launcher.includes('ownerAcceptance: { status: ownerAcceptanceStatus }') ||
       !launcher.includes('OWNER_ACCEPTANCE_STATUS="unverified"') || !launcher.includes('dirtyInventory: original.dirtyInventory')) {
     throw new Error("owner acceptance or SHA-only inventory is not explicit");
+  }
+  if (!launcher.includes("asdf exec mix deps.get --check-locked") || !launcher.includes("npm ci --no-audit --no-fund")) {
+    throw new Error("candidate regression dependencies are not restored from existing lockfiles");
+  }
+  const previewStartup = launcher.indexOf("if compose up --build --detach --wait --wait-timeout 600 demo; then");
+  const previewRestore = launcher.indexOf("restore_candidate_demo_lock", previewStartup);
+  const evidenceRun = launcher.indexOf('if DEMO_CANDIDATE_REVISION="$SHA" bash scripts/run_demo_browser_evidence.sh; then');
+  const evidenceRestore = launcher.indexOf("restore_candidate_demo_lock", evidenceRun);
+  if (!(previewStartup >= 0 && previewRestore > previewStartup && evidenceRun > previewRestore && evidenceRestore > evidenceRun)) {
+    throw new Error("candidate-generated demo lockfile is not restored around both evidence startups");
+  }
+  if (!launcher.includes("assert_candidate_clean") ||
+      !launcher.includes("':(exclude)reference/demo_app/README.md'") ||
+      !launcher.includes("':(exclude)reference/demo_app/assets/e2e/demo.spec.js'")) {
+    throw new Error("candidate cleanliness check lacks explicit protected-path exclusions");
   }
   if (launcher.includes("ACCEPTANCE_PATHS") || launcher.includes("OWNER_GAPS") || launcher.includes("excludedDirtyPaths")) {
     throw new Error("owner acceptance is inferred from a dirty-path inventory");
@@ -150,7 +172,9 @@ const cases = [
   [0, (x) => x.replace('[[ "$listed_path" == "reference/demo_app/README.md" ]] && continue', "# skip removed")],
   [1, (x) => x.replace("reference/demo_app/README.md\n", "")],
   [1, (x) => `${x}\n!reference/demo_app/README.md\n`],
-  [3, (x) => x.replace("phase173-evidence.spec.js", "*.spec.js")]
+  [3, (x) => x.replace("phase173-evidence.spec.js", "*.spec.js")],
+  [0, (x) => x.replaceAll("asdf exec mix deps.get --check-locked", "asdf exec mix deps.get")],
+  [0, (x) => x.replace("restore_candidate_demo_lock\n    TMP_DIR", "TMP_DIR")]
 ];
 for (const [caseIndex, [sourceIndex, mutation]] of cases.entries()) {
   const candidate = initial.slice();
@@ -186,6 +210,9 @@ shift || true
 case "$command" in
   rev-parse)
     if [[ "${1:-}" == --show-toplevel ]]; then printf '%s\n' "$PWD"; else printf '%s\n' "${FAKE_GIT_HEAD:-$SHA}"; fi
+    ;;
+  hash-object)
+    printf '%s\n' "${FAKE_GIT_HEAD:-$SHA}"
     ;;
   status)
     if [[ ! -f "$FIXTURES/worktree-added" && -n "${FAKE_ORIGIN_STATUS:-}" ]]; then
@@ -269,6 +296,11 @@ cat > "$FAKE_BIN/mix" <<'MIX'
 printf 'mix %s\n' "$*" >> "$LOG"
 exit 0
 MIX
+cat > "$FAKE_BIN/npm" <<'NPM'
+#!/usr/bin/env bash
+printf 'npm %s\n' "$*" >> "$LOG"
+exit 0
+NPM
 cat > "$FAKE_BIN/gh" <<'GH'
 #!/usr/bin/env bash
 printf 'gh %s\n' "$*" >> "$LOG"
@@ -457,7 +489,7 @@ done
 assert_failure wrong_sha FAKE_GIT_HEAD=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 rg -q 'candidate HEAD does not match' "$TEST_DIR/wrong_sha.out"
 assert_failure dirty_candidate FAKE_GIT_STATUS=' M lib/dirty.ex'
-rg -q 'candidate worktree is dirty' "$TEST_DIR/dirty_candidate.out"
+rg -q 'candidate worktree has tracked or untracked changes' "$TEST_DIR/dirty_candidate.out"
 assert_failure missing_ancestor FAKE_MISSING_COMMIT=deadbeef
 rg -q 'missing from candidate ancestry' "$TEST_DIR/missing_ancestor.out"
 assert_failure bad_http FAKE_HTTP_FAIL_ROUTE=/dev/mail/gallery

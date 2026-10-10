@@ -11,6 +11,25 @@ fail() {
   exit 1
 }
 
+assert_candidate_clean() {
+  local dirty
+  dirty="$(git status --porcelain=v1 --untracked-files=all -- . \
+    ':(exclude)reference/demo_app/README.md' \
+    ':(exclude)reference/demo_app/assets/e2e/demo.spec.js')"
+  [[ -z "$dirty" ]] || fail "candidate worktree has tracked or untracked changes outside the protected exclusions: $dirty"
+}
+
+restore_candidate_demo_lock() {
+  local lock_path="reference/demo_app/mix.lock"
+  local expected actual
+  expected="$(git rev-parse "$SHA:$lock_path")" || fail "candidate demo lockfile is missing at the captured SHA"
+  if ! git diff --quiet -- "$lock_path"; then
+    git restore --worktree -- "$lock_path" || fail "could not restore candidate-generated demo lockfile changes"
+  fi
+  actual="$(git hash-object "$lock_path")" || fail "could not verify candidate demo lockfile"
+  [[ "$actual" == "$expected" ]] || fail "candidate demo lockfile differs from its captured SHA after restore"
+}
+
 if [[ "${PHASE173_CANDIDATE_MODE:-false}" != "true" ]]; then
   cd "$REPO_ROOT"
   ORIGIN_SHA="$(git rev-parse HEAD)"
@@ -41,7 +60,9 @@ NODE
     fail "could not materialize exact-SHA candidate after sparse exclusions"
   [[ "$(git -C "$CANDIDATE_WORKTREE" rev-parse HEAD)" == "$ORIGIN_SHA" ]] ||
     fail "detached worktree HEAD differs from captured candidate SHA"
-  [[ -z "$(git -C "$CANDIDATE_WORKTREE" status --porcelain=v1 --untracked-files=all)" ]] ||
+  [[ -z "$(git -C "$CANDIDATE_WORKTREE" status --porcelain=v1 --untracked-files=all -- . \
+    ':(exclude)reference/demo_app/README.md' \
+    ':(exclude)reference/demo_app/assets/e2e/demo.spec.js')" ]] ||
     fail "new candidate worktree is not clean"
 
   # Validate the exact pinned baseline set before transferring any bytes into
@@ -136,8 +157,7 @@ cd "$WORKTREE"
 ROOT_DIR="$(git rev-parse --show-toplevel)"
 [[ "$ROOT_DIR" == "$WORKTREE" ]] || fail "candidate worktree path does not match its Git root (reported=$ROOT_DIR expected=$WORKTREE)"
 [[ "$(git rev-parse HEAD)" == "$SHA" ]] || fail "candidate HEAD does not match requested SHA"
-[[ -z "$(git status --porcelain=v1 --untracked-files=all)" ]] ||
-  fail "candidate worktree is dirty before runtime evidence"
+assert_candidate_clean
 
 ORIGIN_META_REL="$EVIDENCE_REL/origin-dirty-paths.json"
 DELIVERY_JSON="$ROOT_DIR/$EVIDENCE_REL/delivery-candidate.json"
@@ -207,7 +227,18 @@ done
 
 # Run the phase regression gate from the clean candidate only.
 if [[ "${PHASE173_SKIP_LOCAL_CHECKS:-false}" != "true" ]]; then
-  if bash scripts/gsd-regression-gate.sh; then
+  # A fresh detached worktree has no ignored Mix/npm install directories. Restore
+  # the existing exact-lock dependencies needed by the regression suites; this
+  # does not add or update dependencies.
+  if ! (
+    asdf exec mix deps.get --check-locked &&
+    (cd mailglass_admin && asdf exec mix deps.get --check-locked) &&
+    (cd mailglass_inbound && asdf exec mix deps.get --check-locked) &&
+    (cd mailglass_admin && npm ci --no-audit --no-fund)
+  ); then
+    REGRESSION_STATUS="failed"
+    FAILURES+=("exact-lock candidate dependency setup failed")
+  elif bash scripts/gsd-regression-gate.sh; then
     REGRESSION_STATUS="passed"
   else
     REGRESSION_STATUS="failed"
@@ -267,6 +298,7 @@ PY
       docker compose -p "$REVIEW_PROJECT" -f "$ROOT_DIR/compose.demo.yml" "$@"
   }
   if compose up --build --detach --wait --wait-timeout 600 demo; then
+    restore_candidate_demo_lock
     TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mailglass-phase173-probe.XXXXXX")"
     route_failure=false
     for route in / /health /dev/mail /dev/mail/gallery /dev/storybook/primitives/nav_link?variation_id=long_label; do
@@ -391,6 +423,8 @@ else
   WRAPPER_STATUS="failed"
   FAILURES+=("focused disposable browser evidence wrapper failed")
 fi
+restore_candidate_demo_lock
+assert_candidate_clean
 if EVIDENCE_ERROR="$(node - "$ROOT_DIR/$EVIDENCE_REL" "$SHA" 2>&1 <<'NODE'
 const crypto = require("node:crypto");
 const fs = require("node:fs");
