@@ -337,8 +337,8 @@ This evidence flow depends on Docker Compose, Elixir/Mix, Node/npm, and Chromium
 
 ## Open Questions
 
-1. The candidate checkout, dirty state, served CSS identity, and required CI result cannot be settled during planning; capture them when the implementation candidate exists and keep any mismatch explicit.
-2. Docker daemon was not reachable during this research probe. Confirm the existing Compose path on the actual execution runner; if unavailable locally, use the configured CI runner rather than reporting evidence as passed.
+1. **(RESOLVED at plan level; runtime facts pending)** Plan 173-03 Task 3 creates a clean final-candidate checkout, retains a separately named review preview, records its exact SHA/dirty state/URL and served CSS byte identity, and requires `CI Green` for that SHA. Its contract rejects absent or mismatched facts, so planning does not fabricate a candidate or CI result. Final values are measured only after the task-owned commits and CI run exist.
+2. **(RESOLVED at plan level; runner availability pending)** Plan 173-01 Task 1 makes the evidence Compose lifecycle project-scoped and tests it without Docker. Plan 173-01 Task 2 runs real browser evidence on a reachable local Engine or the existing CI runner; Plan 173-03 Task 3 requires a reachable Engine for the retained owner-review preview. Recheck availability at execution. If neither a local Engine nor a suitable existing runner can host that exact committed candidate, leave UIQ-02/UIQ-03 proof missing and report the specific unavailable runner; do not mark the phase passed.
 
 ## Sources
 
