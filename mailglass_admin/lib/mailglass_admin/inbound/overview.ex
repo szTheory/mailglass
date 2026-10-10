@@ -16,27 +16,18 @@ defmodule MailglassAdmin.Inbound.Overview do
         total: summary_count(assigns.summary, :total),
         no_match_rate: summary_rate(assigns.summary, :no_match_rate),
         outcomes: outcome_counts(assigns.summary),
-        scope: summary_scope(assigns.filters),
         list_outcome: list_outcome(assigns.filters)
       )
 
     ~H"""
     <section data-testid="inbound-overview" class="mt-md border-b border-base-300 pb-md">
-      <div class="relative mb-sm flex flex-wrap items-center gap-xs text-label text-secondary">
-        <p data-testid="inbound-summary-scope" class="min-w-0 [overflow-wrap:anywhere]">
-          {@scope}
-        </p>
-        <span class="inline-flex">
-          <Components.field_help
-            id="inbound-summary-help"
-            label="summary counts"
-            text="Counts follow the applied provider, time window, and search filters across all results, including other pages. Mailbox outcome only narrows the message list."
-          />
-        </span>
-        <p :if={@list_outcome} data-testid="inbound-summary-outcome-scope" class="font-bold">
-          List filtered to {@list_outcome}
-        </p>
-      </div>
+      <p
+        :if={@list_outcome}
+        data-testid="inbound-summary-outcome-scope"
+        class="mb-sm text-label text-secondary"
+      >
+        Counts include all outcomes; list shows {@list_outcome}.
+      </p>
       <div class="mg-inbound-summary-counts">
         <Components.stat_card
           label="Messages"
@@ -82,19 +73,6 @@ defmodule MailglassAdmin.Inbound.Overview do
       outcome = if key == :accepted, do: :accept, else: key
       {key, label, outcome_count(summary, outcome)}
     end)
-  end
-
-  defp summary_scope(filters) do
-    window =
-      case filters["window_hours"] do
-        "24" -> "Last 24 hours"
-        "720" -> "Last 30 days"
-        _ -> "Last 7 days"
-      end
-
-    provider = if filters["provider"] in [nil, ""], do: "Any provider", else: filters["provider"]
-    search = if filters["search"] in [nil, ""], do: [], else: ["Search: " <> filters["search"]]
-    Enum.join(["All outcomes", window, provider] ++ search, " · ")
   end
 
   defp list_outcome(filters) do

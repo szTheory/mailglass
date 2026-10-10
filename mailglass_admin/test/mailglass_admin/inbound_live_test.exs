@@ -258,11 +258,11 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       doc = Floki.parse_document!(html)
 
-      assert Floki.find(doc, "[data-testid='inbound-summary-scope']") |> Floki.text() =~
-               "All outcomes · Last 24 hours · mailgun · Search: Invoice"
+      assert Floki.find(doc, "[data-testid='inbound-summary-scope']") == []
+      assert Floki.find(doc, "#inbound-summary-help-trigger") == []
 
       assert Floki.find(doc, "[data-testid='inbound-summary-outcome-scope']") |> Floki.text() =~
-               "List filtered to Accepted"
+               "Counts include all outcomes; list shows Accepted."
 
       assert Floki.find(doc, "[data-testid='inbound-overview-total'] p")
              |> Enum.at(1)

@@ -377,8 +377,7 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
   display: block;
 }
 
-.mg-inbound-filters:has(.mg-field-help:hover, .mg-field-help button:focus-visible, .mg-field-help button[aria-expanded="true"]),
-[data-testid="inbound-overview"]:has(.mg-field-help:hover, .mg-field-help button:focus-visible, .mg-field-help button[aria-expanded="true"]) {
+.mg-inbound-filters:has(.mg-field-help:hover, .mg-field-help button:focus-visible, .mg-field-help button[aria-expanded="true"]) {
   position: relative;
   z-index: var(--z-dropdown);
 }
@@ -398,11 +397,6 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
   font-weight: 400;
   line-height: 1.5;
   visibility: hidden;
-}
-
-#inbound-summary-help-tooltip {
-  inset-inline-start: auto;
-  inset-inline-end: 0;
 }
 
 .mg-field-help:not(:has(button[data-dismissed])):hover .mg-field-help-tooltip,
