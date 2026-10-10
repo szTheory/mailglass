@@ -26,20 +26,30 @@ defmodule MailglassAdmin.TokenParityTest do
             ])
 
   @css_source_path Path.expand("../../assets/css/app.css", __DIR__)
+  @design_system_path Path.expand("../../docs/design-system.md", __DIR__)
+  @gallery_path Path.expand("../../lib/mailglass_admin/gallery_live.ex", __DIR__)
+  @storybook_path Path.expand(
+                    "../../../reference/demo_app/dev/mailglass_demo_web/storybook.ex",
+                    __DIR__
+                  )
+  @demo_router_path Path.expand(
+                      "../../../reference/demo_app/lib/mailglass_demo_web/router.ex",
+                      __DIR__
+                    )
   @root_layout_path Path.expand("../../lib/mailglass_admin/layouts/root.html.heex", __DIR__)
 
   @shared_spacing_template_paths Enum.map(
-                                    [
-                                      "../../lib/mailglass_admin/operator/shell.ex",
-                                      "../../lib/mailglass_admin/components.ex",
-                                      "../../lib/mailglass_admin/operator/quick_view.ex",
-                                      "../../lib/mailglass_admin/inbound/quick_view.ex",
-                                      "../../lib/mailglass_admin/inbound/evidence_card.ex",
-                                      "../../lib/mailglass_admin/preview_live.ex",
-                                      "../../lib/mailglass_admin/preview/sidebar.ex"
-                                    ],
-                                    &Path.expand(&1, __DIR__)
-                                  )
+                                   [
+                                     "../../lib/mailglass_admin/operator/shell.ex",
+                                     "../../lib/mailglass_admin/components.ex",
+                                     "../../lib/mailglass_admin/operator/quick_view.ex",
+                                     "../../lib/mailglass_admin/inbound/quick_view.ex",
+                                     "../../lib/mailglass_admin/inbound/evidence_card.ex",
+                                     "../../lib/mailglass_admin/preview_live.ex",
+                                     "../../lib/mailglass_admin/preview/sidebar.ex"
+                                   ],
+                                   &Path.expand(&1, __DIR__)
+                                 )
 
   # Three levels up from test/mailglass_admin/ → test/ → mailglass_admin/ → monorepo root → brandbook/
   @tokens_path Path.expand(Path.join([__DIR__, "..", "..", "..", "brandbook", "tokens.json"]))
@@ -171,15 +181,53 @@ defmodule MailglassAdmin.TokenParityTest do
       assert stylesheet =~ ~r/\.mg-detail-panel\s*\{[^}]*position:\s*fixed/s,
              "Quick view panel positioning is missing from #{label} CSS"
 
-      assert stylesheet =~ ~r/\.mg-detail-panel\s*\{[^}]*max-height:\s*90vh[^}]*overflow-y:\s*auto/s,
+      assert stylesheet =~
+               ~r/\.mg-detail-panel\s*\{[^}]*max-height:\s*90vh[^}]*overflow-y:\s*auto/s,
              "Quick view mobile panel must keep a bounded scroll region in #{label} CSS"
 
-      assert stylesheet =~ ~r/@media\s*\(min-width:\s*768px\)[^{]*\{[^}]*\.mg-detail-panel\s*\{[^}]*max-width:\s*42rem/s,
+      assert stylesheet =~
+               ~r/@media\s*\(min-width:\s*768px\)[^{]*\{[^}]*\.mg-detail-panel\s*\{[^}]*max-width:\s*42rem/s,
              "Quick view desktop panel width is missing from #{label} CSS"
     end
 
     refute layout =~ ".mg-detail-panel",
            "Quick view positioning must not be duplicated in root.html.heex"
+  end
+
+  test "design-system guide matches current token ownership, scales, and review surfaces" do
+    guide = File.read!(@design_system_path)
+    source_css = File.read!(@css_source_path)
+    gallery = File.read!(@gallery_path)
+    storybook = File.read!(@storybook_path)
+    demo_router = File.read!(@demo_router_path)
+    tokens = File.read!(Path.expand("../../../brandbook/tokens.css", __DIR__))
+
+    assert guide =~ "brandbook/brand-book.md owns identity and voice"
+    assert guide =~ "brandbook/tokens.css owns"
+    assert guide =~ "assets/css/app.css maps those values"
+    assert guide =~ "base-200 | White #FFFFFF | Ink-raised #152538"
+    assert guide =~ "14/16/20/28px"
+    assert guide =~ "/dev/mail/gallery"
+    assert guide =~ "/dev/storybook"
+    assert guide =~ "Host applications"
+    assert guide =~ "Historical screenshots and visual scores"
+    refute guide =~ "Ask for a per-pillar before/after score"
+
+    assert source_css =~ "--color-base-200: var(--mg-color-surface-raised)"
+    assert source_css =~ "--color-base-300: var(--mg-color-border)"
+    assert source_css =~ ~r/--text-label:\s*0\.875rem;/
+    assert source_css =~ ~r/--text-body:\s*1rem;/
+    assert source_css =~ ~r/--text-heading:\s*1\.25rem;/
+    assert source_css =~ ~r/--text-display:\s*1\.75rem;/
+    assert source_css =~ ~r/--size-control-sm:\s*36px;/
+    assert source_css =~ ~r/--size-control-md:\s*44px;/
+    assert source_css =~ ~r/--size-control-lg:\s*52px;/
+    assert tokens =~ "--mg-color-surface-raised: #FFFFFF;"
+    assert gallery =~ "/dev/mail/gallery"
+    assert demo_router =~ "live_storybook(\"/storybook\""
+
+    assert storybook =~
+             "css_path: \"/dev/mail/css-\" <> MailglassAdmin.Controllers.Assets.css_hash()"
   end
 
   @tag :token_parity

@@ -1,14 +1,14 @@
 # mailglass_admin Design System
 
-The reference for how the admin UI is built, so each component compounds the
-same polish rather than re-deciding it. The voice and palette come from
-`brandbook/brand-book.md`; this doc covers the *mechanics* — tokens, motion,
-conformance, and how to audit them.
+This guide explains the current implementation mechanics for Mailglass Admin.
+brandbook/brand-book.md owns identity and voice; brandbook/tokens.css owns
+canonical brand values; assets/css/app.css maps those values to the semantic
+roles and utilities used by Admin. Keep examples here aligned with the shipped
+source CSS and committed bundle.
 
-> **One rule above all:** there is a single source of truth for every visual
-> decision. Color lives in the daisyUI theme blocks; size / type / elevation /
-> motion live in the `@theme` block and `:root` tokens. Components compose those
-> tokens — they never hardcode hex, pixels, or durations.
+> Ownership: brand values live in the brandbook. Admin CSS owns their
+> implementation mapping. Components use the semantic roles and scales defined
+> by that mapping.
 
 ---
 
@@ -30,7 +30,8 @@ conformance, and how to audit them.
 
 ## Token layers
 
-Two layers that own disjoint namespaces, so they never collide:
+The brandbook defines values; Admin CSS maps them into implementation roles. It
+is the source for the Admin semantic mapping:
 
 ### 1. Color — daisyUI theme blocks (`@plugin "daisyui-theme"` in `app.css`)
 
@@ -38,15 +39,15 @@ The **only** place light and dark diverge. Brand palette mapped to daisyUI
 semantic tokens. Use the semantic names, never raw Tailwind palette
 (`text-gray-500`) and never hex in HEEx.
 
-| Semantic | Light (brand) | Use |
-|---|---|---|
-| `base-100` | Paper `#F8FBFD` | app/detail surface |
-| `base-200` | Mist `#EAF6FB` | cards, list/filter panes, sidebar |
-| `base-300` | Ice `#A6EAF2` | borders, hover/active |
-| `base-content` | Ink `#0D1B2A` | primary text |
-| `primary` | Glass `#277B96` | **accent — use sparingly** |
-| `secondary` | Slate `#5C6B7A` | secondary text/meta |
-| `success` / `warning` / `error` | Pine / Amber / Crimson | status only |
+| Semantic | Light | Dark | Use |
+|---|---|---|---|
+| base-100 | Paper #F8FBFD | Ink #0D1B2A | app/detail surface |
+| base-200 | White #FFFFFF | Ink-raised #152538 | raised surfaces |
+| base-300 | Mist-edge #C7DCE5 | Ink-edge #315069 | borders |
+| base-content | Ink #0D1B2A | Mist #EAF6FB | primary text |
+| primary / accent | Glass #277B96 | Ice #A6EAF2 | accent and focus emphasis |
+| secondary / neutral | Slate #5C6B7A | Mist-soft #B8CAD4 | secondary text |
+| success / warning / error | Pine / Amber / Crimson | Pine-bright / Amber-bright / Crimson-bright | status only |
 
 **Accent discipline (the 10% rule):** `primary`/Glass appears only on the
 selected-row border, the primary CTA, the active nav/timeline node, and focus
@@ -60,7 +61,7 @@ Each `@theme` token is simultaneously a CSS variable and a Tailwind utility.
 | Scale | Tokens | Utilities |
 |---|---|---|
 | Spacing (4px grid) | `--spacing-xs…3xl` (4/8/16/24/32/48/64) | `p-md`, `gap-sm`, `px-lg`, … |
-| Type (400/700 only) | `--text-label/body/heading/display` (12/14/20/28) | `text-body`, `text-heading`, … |
+| Type (400/700 only) | --text-label/body/heading/display (14/16/20/28px) | text-label, text-body, … |
 | Elevation | `--shadow-flat/raised/overlay` | `shadow-overlay` (modals only) |
 | Easing | `--ease-out`, `--ease-in-out` | `ease-out` |
 | Motion (≤300ms) | `--duration-instant/fast/reveal/flash` | `duration-(--duration-fast)` |
@@ -120,43 +121,32 @@ A component passes only if all hold:
   semantic list/table markup; visible focus ring; `role="dialog"`/`aria-modal`
   on modals.
 
-## Visual audit loop
+## Review surfaces
 
-Matrix: **screen × theme (light/dark) × viewport (390/768/1440) × state
-(default / row-selected / modal-open / reduced-motion)**.
+The broad, interactive component and state inventory is the Admin Gallery at
+/dev/mail/gallery. The reference demo's /dev/storybook is a curated explorer
+for reusable primitives and representative examples; it intentionally does not
+duplicate every Gallery state. Shared examples such as navigation and theme
+selection should remain consistent in both places. Both surfaces use the
+versioned Admin CSS bundle rather than maintaining a second stylesheet.
 
-- **Ad-hoc (agent-browser):** `scripts/ui-audit.sh` boots the reference demo,
-  walks the screens, and writes screenshots to the gitignored `tmp/ui-audit/`
-  (never `priv/static/` — must not trip the bundle gate). Review the PNGs (or
-  hand them to a multimodal model with this checklist as the rubric: accent
-  overuse? faux-bold? non-flat shadow? off-grid spacing? contrast ≥ 4.5:1?).
-- **Before/after LLM-critique ritual:** The Phase 74 baseline represents the
-  pre-v1.7 state (PNG set captured to the maintainer's local `tmp/ui-audit/` at
-  baseline time, or regenerated from the Phase 74 git state — do not commit
-  either set). To run a comparison: open the Phase 74 baseline PNGs alongside the
-  current `tmp/ui-audit/` run, then supply both sets to a multimodal model with
-  the 6-pillar rubric above (Spacing/size, Radius, Color, Type, Elevation,
-  Motion/A11y) as the scoring framework. Ask for a per-pillar before/after score
-  and a list of remaining issues if any. The following GAP rows should show
-  visible improvement in the comparison:
-  - **GAP-01/03/05/06** — badge color consistency: colors now come from
-    `Components.status_badge/1`; phantom `:suppressed` and blanket `:badge-error`
-    for all replay types should be absent.
-  - **GAP-13** — support-card hierarchy: Tier 1 full cards for non-zero/actionable
-    states; Tier 2 compact border-t row for zero states.
-  - **GAP-07** — 390px orientation strip visible on the deliveries surface.
-  - **GAP-21** — single `h1` "Operator overview" heading on the landing screen.
-  - **IA note:** `/ops/mail/` now lands on the Operator Overview, not the
-    Deliveries list. A reviewer comparing deliveries-at-landing screenshots
-    should expect a different page — this is intentional, not a regression.
-- **CI regression net (Playwright):** `e2e/operator.spec.js` is the committed
-  structural gate. The v2.1 Phase 139 admin asset gate separately proves hard
-  refresh and deep-link styling, so this e2e still asserts
-  structure/order/`data-testid`/text — not pixels.
+These routes are examples for the default development mount. Host applications
+choose the Admin mount path, so use the path configured by that application
+when opening the Gallery or Preview.
 
-State is URL-driven on every screen, so any state is reproducible by URL
-(`?tenant_id=…&delivery_id=…&theme=dark`) — the audit script relies on this
-rather than on driving clicks.
+## Review workflow
+
+Use the Gallery for broad component/state coverage and Storybook for the
+curated primitive examples. For repeatable browser evidence, run the focused
+existing browser specs and record the candidate, route, theme, viewport, state,
+and served stylesheet identity with the captures. Screenshots help compare
+rendered output; semantic, accessibility, interaction, and layout assertions
+remain the machine-verifiable behavior checks.
+
+Historical screenshots and visual scores describe their original review only.
+They are not current acceptance criteria. Browser-rendered Preview output also
+does not certify Gmail, Outlook, Apple Mail, remote image loading, or delivered
+email dark-mode behavior.
 
 ## Asset URL robustness
 
