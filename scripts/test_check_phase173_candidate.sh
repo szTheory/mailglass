@@ -470,7 +470,9 @@ const checker = require(path.resolve("reference/demo_app/assets/scripts/check-de
 const captures = [];
 for (const baseline of checker.EXPECTED_BASELINES) {
   const bytes = fs.readFileSync(path.join(evidenceDir, baseline.path));
-  const relative = `captures/fixture-${baseline.captureId}.png`;
+  const relative = mode === "baseline-alias"
+    ? `captures/../${baseline.path}`
+    : `captures/fixture-${baseline.captureId}.png`;
   fs.writeFileSync(path.join(evidenceDir, relative), bytes);
   captures.push({
     id: baseline.captureId,
@@ -581,7 +583,7 @@ const record = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 if (record.localChecks.previewAssets !== "passed") throw new Error("changed Admin assets did not record the preview asset check result");
 NODE
 
-for evidence_mode in failed missing missing-checkpoint stale changed mixed-dirty; do
+for evidence_mode in failed missing missing-checkpoint stale changed mixed-dirty baseline-alias; do
   TEST_ENV=(FAKE_EVIDENCE_MODE="$evidence_mode")
   assert_failure "evidence_$evidence_mode" "FAKE_EVIDENCE_MODE=$evidence_mode"
   node - "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence/delivery-candidate.json" <<'NODE'

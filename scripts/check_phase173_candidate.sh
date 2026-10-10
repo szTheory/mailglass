@@ -421,8 +421,14 @@ const root = path.resolve(rootArg);
 const checker = require(path.join(root, "../..", "assets/scripts/check-demo-browser-evidence.cjs"));
 const hash = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
 const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-function regularOwnedFile(relative) {
-  if (typeof relative !== "string" || !relative.startsWith("captures/")) throw new Error(`unsafe capture path: ${relative}`);
+function regularOwnedFile(relative, captureId) {
+  const prefix = "captures/";
+  const suffix = `-${captureId}.png`;
+  if (typeof relative !== "string" || !relative.startsWith(prefix) || !relative.endsWith(suffix)) {
+    throw new Error(`unsafe capture path: ${relative}`);
+  }
+  const runId = relative.slice(prefix.length, -suffix.length);
+  if (!/^[A-Za-z0-9-]+$/.test(runId)) throw new Error(`unsafe capture path: ${relative}`);
   const full = path.resolve(root, relative);
   if (!full.startsWith(`${root}${path.sep}`)) throw new Error(`capture path escapes evidence root: ${relative}`);
   let cursor = root;
@@ -454,15 +460,22 @@ try {
   }
   checker.validatePinnedBaselines(root);
   const seen = new Set();
+  const seenCapturePaths = new Set();
+  const capturePaths = checkpoint.captures.map((capture) => {
+    const full = regularOwnedFile(capture.path, capture.id);
+    if (seenCapturePaths.has(full)) throw new Error(`duplicate retained capture path: ${capture.path}`);
+    seenCapturePaths.add(full);
+    return full;
+  });
   const retainedExpected = new Set(["checkpoint.json"]);
-  for (const capture of checkpoint.captures) {
+  for (const [index, capture] of checkpoint.captures.entries()) {
     const baseline = checker.EXPECTED_BASELINES.find((item) => item.captureId === capture.id);
     if (!baseline || seen.has(capture.id)) throw new Error(`unknown or duplicate retained capture: ${capture.id}`);
     seen.add(capture.id);
     if (!capture.before_after || capture.before_after.baseline_path !== baseline.path || capture.before_after.baseline_sha256 !== baseline.sha256) {
       throw new Error(`retained capture has stale baseline provenance: ${capture.id}`);
     }
-    const currentPath = regularOwnedFile(capture.path);
+    const currentPath = capturePaths[index];
     const currentBytes = fs.readFileSync(currentPath);
     if (!currentBytes.subarray(0, signature.length).equals(signature) || hash(currentBytes) !== capture.sha256) {
       throw new Error(`current capture bytes do not match checkpoint: ${capture.id}`);
