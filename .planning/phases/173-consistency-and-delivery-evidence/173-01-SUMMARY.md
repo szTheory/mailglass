@@ -132,5 +132,5 @@ The browser evidence certifies only rendered browser surfaces. It does not estab
 
 - Summary file exists at the required phase path.
 - All four measured plan commits (`7e372023`, `f79b55f1`, `f7649d25`, `9dfe992d`) are ancestors of `HEAD`.
-- `plan_head_before` is `HEAD~4`; measured plan commits are 4; `plan_head_after` matches current `HEAD` `9dfe992dcc14d61f017fcfb9e10b951712eab7c6`.
+- At summary creation, `plan_head_before` was `HEAD~4`; four implementation commits landed through `plan_head_after` `9dfe992dcc14d61f017fcfb9e10b951712eab7c6`.
 - The plan-owned source files contain no TODO, FIXME, placeholder, or coming-soon stubs.
