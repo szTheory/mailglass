@@ -2,12 +2,12 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const { test, expect } = require("@playwright/test");
+const { resetDisposableEvidence } = require("../scripts/check-persona-reset-target.cjs");
 
 const REPO_ROOT = path.resolve(__dirname, "../../../../");
 const EVIDENCE_DIR = path.resolve(__dirname, "../../tmp/demo_browser_evidence");
 const CAPTURE_DIR = path.join(EVIDENCE_DIR, "captures");
 const MANIFEST_PATH = path.join(EVIDENCE_DIR, "phase173-captures.json");
-const RESET_TOKEN = process.env.DEMO_EVIDENCE_RESET_TOKEN || "";
 const RUN_ID = process.env.DEMO_EVIDENCE_RUN_ID || "";
 const CANDIDATE_REVISION = process.env.DEMO_CANDIDATE_REVISION || "";
 const CANDIDATE_DIRTY = process.env.DEMO_CANDIDATE_DIRTY === "true";
@@ -237,10 +237,7 @@ test.beforeAll(() => {
 });
 
 test.beforeEach(async ({ request }) => {
-  const response = await request.post("/demo/evidence/reset", {
-    headers: { "x-mailglass-demo-reset-token": RESET_TOKEN }
-  });
-  expect(response.ok(), "synthetic demo fixture reset must succeed").toBeTruthy();
+  await resetDisposableEvidence(request);
 });
 
 test("dashboard links to preview and operator surfaces", async ({ page, browser }, testInfo) => {

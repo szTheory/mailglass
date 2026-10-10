@@ -4,7 +4,15 @@ defmodule MailglassDemoWeb.PageController do
   alias MailglassDemo.DemoData
   alias Mailglass.Compliance.UnsubscribeHTML
 
-  def health(conn, _params), do: text(conn, "ok")
+  def health(conn, _params) do
+    conn =
+      case evidence_project_id() do
+        {:ok, project_id} -> put_resp_header(conn, "x-mailglass-evidence-project-id", project_id)
+        :error -> conn
+      end
+
+    text(conn, "ok")
+  end
 
   def unsubscribe_state(conn, %{"state" => "valid"}) do
     render_unsubscribe_state(conn, :valid, %{recipient: "synthetic-recipient@example.test"})
@@ -209,7 +217,19 @@ defmodule MailglassDemoWeb.PageController do
       |> Plug.Conn.get_req_header("x-mailglass-demo-reset-token")
       |> List.first()
 
-    secure_token_match?(provided_token, expected_token)
+    secure_token_match?(provided_token, expected_token) and match?({:ok, _}, evidence_project_id())
+  end
+
+  defp evidence_project_id do
+    case System.get_env("DEMO_EVIDENCE_PROJECT_ID") do
+      project_id when is_binary(project_id) ->
+        if Regex.match?(~r/^mailglass-evidence-[0-9]{14}-[0-9]+-[0-9]+$/, project_id),
+          do: {:ok, project_id},
+          else: :error
+
+      _ ->
+        :error
+    end
   end
 
   defp secure_token_match?(provided_token, expected_token)

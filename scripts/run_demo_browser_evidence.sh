@@ -42,6 +42,7 @@ else
   export DEMO_CANDIDATE_DIRTY=false
 fi
 export DEMO_EVIDENCE_RUN_ID="$COMPOSE_PROJECT"
+export DEMO_EVIDENCE_PROJECT_ID="$COMPOSE_PROJECT"
 
 compose() {
   docker compose -p "$COMPOSE_PROJECT" -f "$ROOT_DIR/compose.demo.yml" "$@"
@@ -79,6 +80,7 @@ compose run --build --no-deps --rm \
   --env DEMO_CANDIDATE_REVISION \
   --env DEMO_CANDIDATE_DIRTY \
   --env DEMO_EVIDENCE_RUN_ID \
+  --env DEMO_EVIDENCE_RESET_TOKEN \
   --env DEMO_PAGE_CONTROLLER_BEAM_SHA256 \
   --env DEMO_UNSUBSCRIBE_HTML_BEAM_SHA256 \
   --env PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright \

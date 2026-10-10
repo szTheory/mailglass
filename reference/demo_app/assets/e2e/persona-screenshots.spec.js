@@ -51,6 +51,7 @@ const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
 const { execFileSync } = require("child_process");
+const { resetDisposableEvidence } = require("../scripts/check-persona-reset-target.cjs");
 
 // Git-ignored evidence cache (D-02). Resolved relative to this spec file:
 // assets/e2e -> ../../../../ is the repo root.
@@ -147,17 +148,7 @@ test.describe("persona-critic screenshot seam (METHOD-01 evidence producer)", ()
   // seam demo.spec.js uses (DemoData.reset! -> Personas.seed!). Kept serial by the
   // shared playwright.config.cjs (no fullyParallel) — the reset races a shared DB.
   test.beforeEach(async ({ request }) => {
-    const response = await request.post("/demo/evidence/reset", {
-      headers: {
-        "x-mailglass-demo-reset-token":
-          process.env.DEMO_EVIDENCE_RESET_TOKEN || ""
-      }
-    });
-    if (!response.ok()) {
-      throw new Error(
-        `demo reset failed (${response.status()}); is \`make demo\` up and DEMO_EVIDENCE_RESET_TOKEN set?`
-      );
-    }
+    await resetDisposableEvidence(request);
   });
 
   for (const surface of SURFACES) {

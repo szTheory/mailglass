@@ -43,6 +43,7 @@ services:
       # scripts/run_demo_browser_evidence.sh still pass an explicit strong token;
       # the destructive reset endpoint stays off the network via loopback binding.
       DEMO_EVIDENCE_RESET_TOKEN: ${DEMO_EVIDENCE_RESET_TOKEN:-mailglass-dev-demo}
+      DEMO_EVIDENCE_PROJECT_ID: ${DEMO_EVIDENCE_PROJECT_ID:-}
     ports:
       # Container port stays 4015 (PORT env + healthcheck unchanged); only the
       # HOST port is configurable + loopback-bound:
@@ -82,6 +83,7 @@ services:
       PLAYWRIGHT_BROWSERS_PATH: /cache/playwright
       npm_config_cache: /cache/npm
       DEMO_EVIDENCE_RESET_TOKEN: ${DEMO_EVIDENCE_RESET_TOKEN:-mailglass-dev-demo}
+      DEMO_EVIDENCE_RUN_ID: ${DEMO_EVIDENCE_RUN_ID:-}
     depends_on:
       demo:
         condition: service_healthy

@@ -38,7 +38,7 @@ printf 'stale\n' >"$EVIDENCE_DIR/retained/stale.txt"
 cat >"$TEMP_DIR/bin/docker" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
-printf '%s\t%s\t%s\n' "$*" "${MAILGLASS_DEMO_HTTP_PORT:-}" "${MAILGLASS_DEMO_DB_PORT:-}" >>"$DEMO_FAKE_DOCKER_LOG"
+printf '%s\t%s\t%s\t%s\t%s\n' "$*" "${MAILGLASS_DEMO_HTTP_PORT:-}" "${MAILGLASS_DEMO_DB_PORT:-}" "${DEMO_EVIDENCE_PROJECT_ID:-}" "${DEMO_EVIDENCE_RUN_ID:-}" >>"$DEMO_FAKE_DOCKER_LOG"
 if [[ " $* " == *" up "* && -e "$DEMO_FAKE_EVIDENCE_DIR/retained" ]]; then
   echo "wrapper did not remove stale retained evidence before the run" >&2
   exit 24
@@ -92,9 +92,11 @@ assert_project_and_ports() {
   local project=""
   local http_port=""
   local db_port=""
+  local app_project_id=""
+  local browser_run_id=""
   while IFS= read -r line; do
-    local command project_argument http_argument db_argument
-    IFS=$'\t' read -r command http_argument db_argument <<<"$line"
+    local command project_argument http_argument db_argument logged_project_id logged_run_id
+    IFS=$'\t' read -r command http_argument db_argument logged_project_id logged_run_id <<<"$line"
     project_argument="$(sed -nE 's/.* -p (mailglass-evidence-[^ ]+).*/\1/p' <<<"$command")"
     [[ "$project_argument" == "$project_prefix"* ]] || {
       echo "Compose command is not scoped to a run-owned evidence project: $line" >&2
@@ -108,11 +110,17 @@ assert_project_and_ports() {
       echo "Compose command reused a retained demo default port: $line" >&2
       return 1
     }
+    [[ "$logged_project_id" == "$project_argument" && "$logged_run_id" == "$project_argument" ]] || {
+      echo "Compose app marker and browser run ID differ from the run-owned project: $line" >&2
+      return 1
+    }
     if [[ -z "$project" ]]; then
       project="$project_argument"
       http_port="$http_argument"
       db_port="$db_argument"
-    elif [[ "$project" != "$project_argument" || "$http_port" != "$http_argument" || "$db_port" != "$db_argument" ]]; then
+      app_project_id="$logged_project_id"
+      browser_run_id="$logged_run_id"
+    elif [[ "$project" != "$project_argument" || "$http_port" != "$http_argument" || "$db_port" != "$db_argument" || "$app_project_id" != "$logged_project_id" || "$browser_run_id" != "$logged_run_id" ]]; then
       echo "Compose lifecycle changed project identity or host ports: $line" >&2
       return 1
     fi
