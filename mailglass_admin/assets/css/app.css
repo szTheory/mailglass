@@ -279,6 +279,24 @@
   position: relative;
 }
 
+.mg-timestamp-copy-trigger {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: copy;
+  text-decoration: none;
+}
+
+.mg-timestamp-copy-trigger:hover,
+.mg-timestamp-copy-trigger:focus-visible {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+}
+
 /* The hover lift creates a stacking context around the link. Raise that
    context with its tooltip so later cards cannot paint over the hint. */
 a:has(> .mg-stat-card-hint):is(:hover, :focus-within) {
@@ -387,27 +405,64 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
   z-index: var(--z-dropdown);
 }
 
+.mg-field-help {
+  position: relative;
+}
+
 .mg-field-help-tooltip {
   position: absolute;
-  inset-block-start: 100%;
+  inset-block-start: calc(100% + var(--spacing-xs));
   inset-inline-start: 0;
   z-index: var(--z-dropdown);
   width: min(18rem, calc(100vw - 2 * var(--spacing-md)));
+  border: 1px solid var(--color-base-300);
   border-radius: var(--radius-field);
-  background: var(--color-base-200);
+  background: var(--color-base-100);
   box-shadow: var(--shadow-overlay);
   color: var(--color-base-content);
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   font-size: var(--text-label);
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.45;
+  text-align: left;
+  text-wrap: pretty;
+  pointer-events: auto;
+  opacity: 0;
   visibility: hidden;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.mg-field-help-tooltip::before {
+  content: "";
+  position: absolute;
+  left: var(--mg-tooltip-arrow-x, 0.75rem);
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--color-base-100);
+  transform: rotate(45deg);
+}
+
+.mg-field-help-tooltip[data-placement="bottom"]::before {
+  top: -0.3rem;
+  border-top: 1px solid var(--color-base-300);
+  border-left: 1px solid var(--color-base-300);
+}
+
+.mg-field-help-tooltip[data-placement="top"]::before {
+  bottom: -0.3rem;
+  border-right: 1px solid var(--color-base-300);
+  border-bottom: 1px solid var(--color-base-300);
 }
 
 .mg-field-help:not(:has(button[data-dismissed])):hover .mg-field-help-tooltip,
 .mg-field-help:has(button:not([data-dismissed]):focus-visible) .mg-field-help-tooltip,
 .mg-field-help:has(button[aria-expanded="true"]) .mg-field-help-tooltip {
+  opacity: 1;
   visibility: visible;
+}
+
+#mg-copy-toast[hidden] {
+  display: none !important;
 }
 
 /* Keep readable column widths on intermediate screens; the table's existing
@@ -424,18 +479,6 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--spacing-md);
-}
-
-.mg-inbound-summary-counts .mg-stat-compact:last-child .mg-field-help-tooltip {
-  inset-inline-start: auto;
-  inset-inline-end: 0;
-}
-
-@media (max-width: 767px) {
-  .mg-inbound-summary-counts .mg-stat-compact:nth-child(2) .mg-field-help-tooltip {
-    inset-inline-start: 50%;
-    translate: -50% 0;
-  }
 }
 
 /* Admin shell body height: viewport minus the 5rem sticky header. There is no

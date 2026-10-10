@@ -143,9 +143,9 @@ test.describe("Phase 169 connected journey", () => {
     const time = visibleEvent.locator("time[data-local-time]");
     const originalLocal = await time.innerText();
     const originalUtc = await time.getAttribute("data-utc");
-    const copyTime = visibleEvent.getByRole("button", { name: "Copy recorded time" });
+    const copyTime = visibleEvent.locator("button[data-timestamp-copy]");
     await copyTime.click();
-    await expect(copyTime.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText("Copied.");
+    await expect(page.getByTestId("copy-toast")).toContainText("Timestamp copied as UTC.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(originalUtc);
     await expect(time).toHaveText(originalLocal);
 
@@ -178,9 +178,9 @@ test.describe("Phase 169 connected journey", () => {
       await touchPage.setViewportSize({ width: 390, height: 844 });
       await touchPage.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(detailPath)}`);
       const touchCopy = touchPage.getByTestId("operator-timeline-event").first()
-        .getByRole("button", { name: "Copy recorded time" });
+        .locator("button[data-timestamp-copy]");
       await touchCopy.tap();
-      await expect(touchCopy.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText("Copied.");
+      await expect(touchPage.getByTestId("copy-toast")).toContainText("Timestamp copied as UTC.");
     } finally {
       await touchContext.close();
     }

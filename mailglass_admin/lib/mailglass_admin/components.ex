@@ -1153,14 +1153,17 @@ defmodule MailglassAdmin.Components do
   def delivery_display_status(_delivery), do: :dispatched
 
   attr(:at, :any, required: true, doc: "a UTC %DateTime{} or nil")
-  attr(:class, :string, default: "", doc: "extra classes for the <time> element")
+  attr(:class, :string, default: "", doc: "extra classes for the rendered timestamp")
+
+  attr(:copyable, :boolean,
+    default: true,
+    doc: "whether the timestamp copies its exact UTC value"
+  )
 
   @doc """
-  Renders a UTC `%DateTime{}` as a machine-readable <time> element. The client
-  replaces the UTC fallback with one human-readable value in the browser's local
-  timezone; the exact UTC value remains available in the title, with a copy action
-  on detail surfaces that support it.
-  `nil` renders an unavailable sentinel (no <time>).
+  Renders a machine-readable <time> in the browser's local timezone. When copyable,
+  the timestamp itself is a keyboard-accessible control that copies the exact UTC
+  value and announces the result. `nil` renders an unavailable sentinel.
   """
   @doc since: "1.7.0"
   def timestamp(%{at: nil} = assigns) do
@@ -1171,7 +1174,24 @@ defmodule MailglassAdmin.Components do
 
   def timestamp(assigns) do
     ~H"""
+    <button
+      :if={@copyable}
+      type="button"
+      data-timestamp-copy="true"
+      data-copy-value={utc_string(@at)}
+      aria-label={"Copy timestamp as UTC: #{utc_string(@at)}"}
+      title="Click to copy the exact timestamp in UTC"
+      class={["mg-timestamp-copy-trigger mg-focus-ring", @class]}
+    >
+      <time
+        datetime={DateTime.to_iso8601(@at)}
+        data-local-time="true"
+        data-utc={utc_string(@at)}
+        class="tabular-nums"
+      >{utc_string(@at)}</time>
+    </button>
     <time
+      :if={!@copyable}
       datetime={DateTime.to_iso8601(@at)}
       data-local-time="true"
       data-utc={utc_string(@at)}

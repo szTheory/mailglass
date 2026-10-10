@@ -9,6 +9,39 @@ async function openInbound(page) {
   await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
 }
 
+test("timestamp itself copies exact UTC on click and keyboard activation", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await openInbound(page);
+
+  const copyControl = page.locator("button[data-timestamp-copy]").first();
+  const expectedUtc = await copyControl.getAttribute("data-copy-value");
+  await expect(copyControl).toHaveAttribute("aria-label", /^Copy timestamp as UTC:/);
+  await copyControl.click();
+  const toast = page.getByTestId("copy-toast");
+  await expect(toast).toBeVisible();
+  await expect(toast).toContainText("Timestamp copied as UTC.");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expectedUtc);
+
+  await copyControl.focus();
+  await page.keyboard.press("Enter");
+  await expect(toast).toContainText("Timestamp copied as UTC.");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expectedUtc);
+});
+
+test("mobile inbound timestamp copies without opening the message", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openInbound(page);
+
+  const timestamp = page.locator("button[data-timestamp-copy]").filter({ visible: true }).first();
+  const expectedUtc = await timestamp.getAttribute("data-copy-value");
+  await timestamp.click();
+  await expect(page.getByTestId("copy-toast")).toContainText("Timestamp copied as UTC.");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expectedUtc);
+  await expect(page).not.toHaveURL(/inbound_id=/);
+});
+
 for (const width of [1440, 1024, 390, 320]) {
   test(`inbound compact filters and accessible help at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -43,8 +76,11 @@ for (const width of [1440, 1024, 390, 320]) {
       await help.hover();
       await expect(tooltip).toBeVisible();
       const bounds = await tooltip.boundingBox();
+      const helpBounds = await help.boundingBox();
       expect(bounds.x).toBeGreaterThanOrEqual(0);
       expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      expect(bounds.x).toBeLessThan(helpBounds.x + helpBounds.width);
+      expect(bounds.x + bounds.width).toBeGreaterThan(helpBounds.x);
       expect(await tooltip.evaluate(element => {
         const rect = element.getBoundingClientRect();
         return document.elementFromPoint(rect.left + 12, rect.top + 12) === element;

@@ -27,5 +27,18 @@
   </head>
   <body>
     {@inner_content}
+    <div
+      id="mg-copy-toast"
+      data-testid="copy-toast"
+      class="toast toast-bottom toast-end mg-toast mg-layer-toast"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      hidden
+    >
+      <div class="alert alert-success flex items-start gap-sm text-body">
+        <span data-copy-toast-message></span>
+      </div>
+    </div>
   </body>
 </html>

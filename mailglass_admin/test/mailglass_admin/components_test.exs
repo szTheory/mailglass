@@ -360,19 +360,31 @@ defmodule MailglassAdmin.ComponentsTest do
       at = ~U[2026-06-14 14:32:05.000000Z]
       html = render_component(&Components.timestamp/1, at: at, class: "whitespace-nowrap")
 
-      # No-JavaScript fallback and exact machine value remain in body + title + data-utc.
+      # No-JavaScript fallback remains visible and the exact machine value is copied.
       assert html =~ "2026-06-14 14:32:05.000000 UTC"
       # Machine-readable ISO8601 (Z) for the client script to parse.
       assert html =~ ~s(datetime="2026-06-14T14:32:05.000000Z")
       assert html =~ "data-local-time"
       assert html =~ ~s(data-utc="2026-06-14 14:32:05.000000 UTC")
-      assert html =~ ~s(title="2026-06-14 14:32:05.000000 UTC")
-      assert html =~ ~s(aria-label="Recorded at 2026-06-14 14:32:05.000000 UTC")
+      assert html =~ ~s(data-copy-value="2026-06-14 14:32:05.000000 UTC")
+      assert html =~ ~s(aria-label="Copy timestamp as UTC: 2026-06-14 14:32:05.000000 UTC")
+      assert html =~ ~s(title="Click to copy the exact timestamp in UTC")
       assert html =~ "<time"
+      assert html =~ "data-timestamp-copy"
       assert html =~ "whitespace-nowrap"
       refute html =~ "data-local-time-supplement"
       assert html =~ "tabular-nums"
       refute html =~ "mono"
+    end
+
+    test "a non-copyable timestamp stays a semantic time value without a nested control" do
+      at = ~U[2026-06-14 14:32:05Z]
+      html = render_component(&Components.timestamp/1, at: at, copyable: false, class: "block")
+
+      assert html =~ "<time"
+      assert html =~ "block"
+      refute html =~ "data-timestamp-copy"
+      refute html =~ "<button"
     end
 
     test "a precise UTC datetime preserves fractional seconds for visible and copied values" do

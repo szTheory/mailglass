@@ -244,26 +244,103 @@ defmodule MailglassAdmin.Controllers.Assets do
       })
     })
 
-    // Native copy buttons remain functional after LiveView patches. Feedback is kept
-    // in the associated live region; the exact server-rendered value never changes.
+    function positionFieldHelpTooltip(button) {
+      const tooltipId = button.getAttribute("aria-controls")
+      const tooltip = tooltipId && document.getElementById(tooltipId)
+      if (!tooltip) return
+
+      const trigger = button.getBoundingClientRect()
+      const panel = tooltip.getBoundingClientRect()
+      const padding = 12
+      const gap = 8
+      const left = Math.min(
+        Math.max(trigger.left + (trigger.width - panel.width) / 2, padding),
+        Math.max(padding, window.innerWidth - panel.width - padding)
+      )
+      const below = trigger.bottom + gap
+      const above = trigger.top - panel.height - gap
+      const placement = below + panel.height <= window.innerHeight - padding || above < padding
+        ? "bottom"
+        : "top"
+      const top = placement === "bottom" ? below : above
+
+      tooltip.style.position = "fixed"
+      tooltip.style.inset = "auto"
+      tooltip.style.left = `${Math.round(left)}px`
+      tooltip.style.top = `${Math.round(top)}px`
+      tooltip.style.translate = "none"
+      tooltip.dataset.placement = placement
+      tooltip.style.setProperty("--mg-tooltip-arrow-x", `${Math.round(trigger.left + trigger.width / 2 - left)}px`)
+    }
+
+    function positionActiveFieldHelpTooltips() {
+      document
+        .querySelectorAll(".mg-field-help button:is(:hover,:focus-visible,[aria-expanded=true])")
+        .forEach(positionFieldHelpTooltip)
+    }
+
+    document.addEventListener("pointerover", (e) => {
+      const button = e.target.closest && e.target.closest(".mg-field-help button")
+      if (button) positionFieldHelpTooltip(button)
+    }, true)
+    document.addEventListener("focusin", (e) => {
+      const button = e.target.closest && e.target.closest(".mg-field-help button")
+      if (button) positionFieldHelpTooltip(button)
+    }, true)
+    document.addEventListener("click", (e) => {
+      const button = e.target.closest && e.target.closest(".mg-field-help button")
+      if (button) requestAnimationFrame(() => positionFieldHelpTooltip(button))
+    }, true)
+    window.addEventListener("resize", positionActiveFieldHelpTooltips)
+    window.addEventListener("scroll", positionActiveFieldHelpTooltips, true)
+
+    let copyToastTimer
+    function showCopyToast(message, isError = false) {
+      const toast = document.getElementById("mg-copy-toast")
+      const messageEl = toast?.querySelector("[data-copy-toast-message]")
+      const alert = messageEl?.parentElement
+      if (!toast || !messageEl || !alert) return
+
+      window.clearTimeout(copyToastTimer)
+      alert.classList.toggle("alert-success", !isError)
+      alert.classList.toggle("alert-error", isError)
+      messageEl.textContent = message
+      toast.hidden = false
+      copyToastTimer = window.setTimeout(() => { toast.hidden = true }, 2400)
+    }
+
+    // Copy controls remain functional after LiveView patches. Timestamp clicks use
+    // the shared toast; other copy controls keep their adjacent live-region status.
     document.addEventListener("click", (e) => {
       const button = e.target.closest && e.target.closest("button[data-copy-value]")
       if (!button) return
       e.stopPropagation()
       e.preventDefault()
+      document.querySelectorAll(".mg-field-help button[aria-expanded=true]").forEach((trigger) => {
+        trigger.setAttribute("aria-expanded", "false")
+      })
+      document.querySelectorAll("details[data-dismiss-outside][open]").forEach((menu) => {
+        menu.removeAttribute("open")
+      })
+      const timestampCopy = button.hasAttribute("data-timestamp-copy")
       const status = button.parentElement.querySelector("[data-copy-status]")
       const value = button.getAttribute("data-copy-value")
-      if (!status || value === null) return
+      if ((!timestampCopy && !status) || value === null) return
 
-      status.textContent = ""
+      if (status) status.textContent = ""
       Promise.resolve()
         .then(() => {
           if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable")
           return navigator.clipboard.writeText(value)
         })
-        .then(() => { status.textContent = "Copied." })
+        .then(() => {
+          if (timestampCopy) showCopyToast("Timestamp copied as UTC.")
+          else status.textContent = "Copied."
+        })
         .catch(() => {
-          status.textContent = "Clipboard unavailable. Select and copy the visible value manually."
+          const message = "Clipboard access failed. Select and copy the visible value manually."
+          if (timestampCopy) showCopyToast(message, true)
+          else status.textContent = "Clipboard unavailable. Select and copy the visible value manually."
         })
     }, true)
 

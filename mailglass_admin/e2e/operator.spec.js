@@ -701,8 +701,10 @@ test.describe("operator browser gate", () => {
     const ts = page.locator("time[data-local-time]").first();
     await expect(ts).toBeVisible();
     await expect(ts).toHaveAttribute("datetime", /Z$/);
-    await expect(ts).toHaveAttribute("title", /UTC$/);
     await expect(ts).toHaveAttribute("data-utc", /UTC$/);
+    await expect(ts.locator("xpath=ancestor::button[@data-timestamp-copy]")).toHaveAttribute(
+      "title", "Click to copy the exact timestamp in UTC"
+    );
     await expect(ts).toHaveAttribute("data-localized", "1");
     await expect(ts).not.toContainText("Local:");
     await expect(ts).toHaveAttribute("aria-label", /local time$/);

@@ -307,7 +307,11 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     <div>
                       <span class="font-bold uppercase">Updated</span>
                       <p>
-                        <Components.timestamp at={delivery.last_event_at} class="whitespace-nowrap" />
+                        <Components.timestamp
+                          at={delivery.last_event_at}
+                          class="whitespace-nowrap"
+                          copyable={false}
+                        />
                       </p>
                     </div>
                   </div>

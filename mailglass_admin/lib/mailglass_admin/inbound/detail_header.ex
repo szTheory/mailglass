@@ -77,11 +77,6 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
             <dt class="text-label font-bold uppercase">Received</dt>
             <dd class="mt-xs flex flex-wrap items-center gap-sm text-base-content">
               <Components.timestamp at={@record.received_at} />
-              <Components.copy_button
-                :if={match?(%DateTime{}, @record.received_at)}
-                value={Components.timestamp_value(@record.received_at)}
-                label="Copy UTC"
-              />
             </dd>
           </div>
           <div class="min-w-0">

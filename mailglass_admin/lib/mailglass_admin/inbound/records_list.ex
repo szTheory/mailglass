@@ -254,85 +254,86 @@ defmodule MailglassAdmin.Inbound.RecordsList do
             class="divide-y divide-base-300"
           >
             <li :for={record <- @records}>
-              <button
-                data-testid="inbound-record-row"
-                data-selected={if selected?(@selected_record, record), do: "true", else: "false"}
-                type="button"
-                phx-click="select_inbound"
-                phx-value-id={record.id}
-                aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
-                class={[
-                  "mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm px-md py-md text-left transition-colors",
-                  row_classes(@selected_record, record)
-                ]}
-              >
-                <%!-- Outcome badge first/prominent --%>
-                <div>
-                  <span data-testid={"inbound-outcome-#{record_outcome(record)}"}>
-                    <Components.status_badge
-                      status={Components.normalize_inbound_outcome(record_outcome(record))}
-                      size={:sm}
-                    />
-                  </span>
-                </div>
-
-                <%!-- Envelope recipient (masked) --%>
-                <div class="min-w-0">
-                  <span class="text-label font-bold text-secondary">Recipient</span>
-                  <p
-                    class="min-w-0 truncate text-body text-base-content"
-                    title={Components.mask_recipient(Map.get(record, :envelope_recipient))}
-                  >
-                    {Components.mask_recipient(Map.get(record, :envelope_recipient))}
-                  </p>
-                </div>
-
-                <%!-- Record ID with truncate+title --%>
-                <div class="min-w-0">
-                  <span class="text-label font-bold text-secondary">ID</span>
-                  <p
-                    class="mono min-w-0 truncate text-label text-secondary"
-                    title={Map.get(record, :id, "")}
-                  >
-                    {Map.get(record, :id, "")}
-                  </p>
-                </div>
-
-                <div class="flex flex-wrap items-start gap-md text-label text-secondary">
-                  <%!-- Mailbox --%>
-                  <div class="min-w-0">
-                    <span class="font-bold">Mailbox</span>
-                    <p
-                      class="min-w-0 truncate"
-                      title={matched_mailbox_label(record)}
-                    >
-                      {matched_mailbox_label(record)}
-                    </p>
-                  </div>
-
-                  <%!-- Account --%>
-                  <div :if={@show_account?} class="min-w-0">
-                    <span class="font-bold">Account</span>
-                    <p
-                      class="min-w-0 truncate"
-                      title={Accounts.title(Map.get(record, :tenant_id, ""), @account_labels)}
-                    >
-                      {Accounts.label(Map.get(record, :tenant_id, ""), @account_labels)}
-                    </p>
-                  </div>
-
-                  <%!-- Provider --%>
+              <div class={[
+                "flex min-h-11 w-full flex-col gap-sm px-md py-md transition-colors",
+                row_classes(@selected_record, record)
+              ]}>
+                <button
+                  data-testid="inbound-record-row"
+                  data-selected={if selected?(@selected_record, record), do: "true", else: "false"}
+                  type="button"
+                  phx-click="select_inbound"
+                  phx-value-id={record.id}
+                  aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
+                  class="mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm text-left"
+                >
+                  <%!-- Outcome badge first/prominent --%>
                   <div>
-                    <span class="font-bold">Provider</span>
+                    <span data-testid={"inbound-outcome-#{record_outcome(record)}"}>
+                      <Components.status_badge
+                        status={Components.normalize_inbound_outcome(record_outcome(record))}
+                        size={:sm}
+                      />
+                    </span>
+                  </div>
+
+                  <%!-- Envelope recipient (masked) --%>
+                  <div class="min-w-0">
+                    <span class="text-label font-bold text-secondary">Recipient</span>
                     <p
-                      class="mono min-w-0 truncate"
-                      title={String.upcase(Map.get(record, :provider, nil) || "unknown")}
+                      class="min-w-0 truncate text-body text-base-content"
+                      title={Components.mask_recipient(Map.get(record, :envelope_recipient))}
                     >
-                      {String.upcase(Map.get(record, :provider, nil) || "unknown")}
+                      {Components.mask_recipient(Map.get(record, :envelope_recipient))}
                     </p>
                   </div>
 
-                  <%!-- Received timestamp --%>
+                  <%!-- Record ID with truncate+title --%>
+                  <div class="min-w-0">
+                    <span class="text-label font-bold text-secondary">ID</span>
+                    <p
+                      class="mono min-w-0 truncate text-label text-secondary"
+                      title={Map.get(record, :id, "")}
+                    >
+                      {Map.get(record, :id, "")}
+                    </p>
+                  </div>
+
+                  <div class="flex flex-wrap items-start gap-md text-label text-secondary">
+                    <%!-- Mailbox --%>
+                    <div class="min-w-0">
+                      <span class="font-bold">Mailbox</span>
+                      <p class="min-w-0 truncate" title={matched_mailbox_label(record)}>
+                        {matched_mailbox_label(record)}
+                      </p>
+                    </div>
+
+                    <%!-- Account --%>
+                    <div :if={@show_account?} class="min-w-0">
+                      <span class="font-bold">Account</span>
+                      <p
+                        class="min-w-0 truncate"
+                        title={Accounts.title(Map.get(record, :tenant_id, ""), @account_labels)}
+                      >
+                        {Accounts.label(Map.get(record, :tenant_id, ""), @account_labels)}
+                      </p>
+                    </div>
+
+                    <%!-- Provider --%>
+                    <div>
+                      <span class="font-bold">Provider</span>
+                      <p
+                        class="mono min-w-0 truncate"
+                        title={String.upcase(Map.get(record, :provider, nil) || "unknown")}
+                      >
+                        {String.upcase(Map.get(record, :provider, nil) || "unknown")}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                <%!-- The received time is its own control, separate from opening the message. --%>
+                <div class="flex flex-wrap items-start gap-md text-label text-secondary">
                   <div>
                     <span class="font-bold">Received</span>
                     <p class="mg-inbound-received">
@@ -343,7 +344,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                     </p>
                   </div>
                 </div>
-              </button>
+              </div>
             </li>
           </ul>
         </div>

@@ -556,9 +556,13 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-timeline")
       assert html =~ "Execution timeline"
       assert html =~ "MyApp.Mailboxes.SupportMailbox"
-      utc_copy = Floki.find(Floki.parse_document!(html), "button[aria-label='Copy UTC']")
+      timestamp_copy =
+        Floki.find(
+          Floki.parse_document!(html),
+          "[data-testid='inbound-detail-header'] button[data-timestamp-copy]"
+        )
 
-      assert Floki.attribute(utc_copy, "data-copy-value") == [
+      assert Floki.attribute(timestamp_copy, "data-copy-value") == [
                MailglassAdmin.Components.timestamp_value(record.received_at)
              ]
 

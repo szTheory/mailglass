@@ -93,11 +93,6 @@ defmodule MailglassAdmin.Operator.Timeline do
                   <div class="min-w-0 text-label text-secondary">
                     <p>Recorded time</p>
                     <Components.timestamp at={event.occurred_at} />
-                    <Components.copy_button
-                      :if={event.occurred_at}
-                      value={Components.timestamp_value(event.occurred_at)}
-                      label="Copy recorded time"
-                    />
                     <p :if={Map.get(event, :provider_occurred_at)} class="mt-xs break-words">
                       Provider occurrence time: {Map.get(event, :provider_occurred_at)}
                     </p>
@@ -136,11 +131,6 @@ defmodule MailglassAdmin.Operator.Timeline do
             </p>
             <p class="text-label text-secondary">Recorded time</p>
             <Components.timestamp at={@selected_event.event.occurred_at} />
-            <Components.copy_button
-              :if={@selected_event.event.occurred_at}
-              value={Components.timestamp_value(@selected_event.event.occurred_at)}
-              label="Copy recorded time"
-            />
             <p :if={is_nil(@selected_event.event.occurred_at)} class="break-words">Unavailable</p>
             <p :if={provider_time(@selected_event.event)} class="break-words text-label text-secondary">
               Provider occurrence time: {provider_time(@selected_event.event)}
