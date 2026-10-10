@@ -46,7 +46,7 @@
 // system theme + 320 + 768 are added on the #1/#2 surfaces only (App-shell+Health,
 // Deliveries). The register cites the exact cell per finding, so coverage is auditable.
 
-const { test } = require("@playwright/test");
+const { test, expect } = require("@playwright/test");
 const path = require("path");
 const fs = require("fs");
 
@@ -190,3 +190,118 @@ test.describe("persona-critic screenshot seam (METHOD-01 evidence producer)", ()
     }
   }
 });
+
+test.describe("review surfaces", () => {
+  // These checks are read-only. They deliberately do not call the demo reset
+  // endpoint, so they can run against an isolated disposable preview without
+  // changing any retained feedback data.
+  test("Gallery and curated Storybook share the Admin CSS and expose matching nav/theme patterns", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 768, height: 900 });
+
+    await page.goto("/dev/mail/gallery");
+    await expect(page.getByRole("heading", { name: "Component Gallery" })).toBeVisible();
+
+    const galleryNav = page.getByTestId("gallery-nav_link-active");
+    await expect(galleryNav.getByRole("link", { name: "Deliveries" }).first()).toBeVisible();
+    await expect(page.getByTestId("gallery-nav_link-long-label")).toBeVisible();
+
+    const galleryLongLabel =
+      "Deliveries needing operator review before the account handoff";
+    const galleryLongText = page
+      .getByTestId("gallery-nav_link-long-label")
+      .getByText(galleryLongLabel, { exact: true })
+      .first();
+    await expect(galleryLongText).toBeVisible();
+    await expect(galleryLongText).toHaveAttribute("title", galleryLongLabel);
+
+    const galleryDarkTheme = page
+      .getByTestId("gallery-theme_picker-dark-selected")
+      .locator('[data-theme="mailglass-dark"]');
+    await expect(galleryDarkTheme.getByRole("radio", { name: "Dark" })).toBeChecked();
+
+    const galleryCss = await adminCssPath(page);
+    expect((await page.request.get(galleryCss)).status()).toBe(200);
+    const specimenGeometry = await page
+      .getByTestId("gallery-nav_link-long-label")
+      .evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          viewportWidth: window.innerWidth,
+          right: Math.ceil(rect.right),
+          scrollWidth: element.scrollWidth,
+          clientWidth: element.clientWidth
+        };
+      });
+    expect(specimenGeometry.right, JSON.stringify(specimenGeometry)).toBeLessThanOrEqual(
+      specimenGeometry.viewportWidth + 1
+    );
+    expect(specimenGeometry.scrollWidth, JSON.stringify(specimenGeometry)).toBeLessThanOrEqual(
+      specimenGeometry.clientWidth + 1
+    );
+
+    await page.goto("/dev/storybook/primitives/nav_link?variation_id=long_label");
+    const storyLongText = await textInAnyFrame(
+      page,
+      "Operations and deliverability diagnostics overview",
+    );
+    await expect(storyLongText).toBeVisible();
+    await expect(storyLongText).toHaveAttribute(
+      "title",
+      "Operations and deliverability diagnostics overview"
+    );
+    const storybookCss = await adminCssPath(page);
+    expect(storybookCss).toBe(galleryCss);
+    expect((await page.request.get(storybookCss)).status()).toBe(200);
+
+    await page.goto("/dev/storybook/primitives/nav_link?variation_id=active_dark");
+    const darkNav = page.locator('[data-theme="mailglass-dark"] a[aria-current="page"]');
+    await expect(darkNav).toHaveText("Deliveries");
+
+    await page.goto("/dev/storybook/primitives/theme_picker?variation_id=dark_selected");
+    const themeGroupNames = await page
+      .locator('input[type="radio"][name^="storybook_theme_"]')
+      .evaluateAll((radios) => [...new Set(radios.map((radio) => radio.name))].sort());
+    expect(themeGroupNames).toEqual([
+      "storybook_theme_dark_selected",
+      "storybook_theme_disabled",
+      "storybook_theme_light_selected",
+      "storybook_theme_system_selected_dark",
+      "storybook_theme_system_selected_light"
+    ]);
+
+    const selectedDarkRadio = page
+      .locator("#theme-picker-single-dark-selected")
+      .getByRole("radio", { name: "Dark" });
+    await expect(selectedDarkRadio).toBeChecked();
+  });
+});
+
+async function adminCssPath(page) {
+  for (const frame of page.frames()) {
+    const href = await frame.evaluate(() => {
+      const link = [...document.querySelectorAll('link[rel="stylesheet"]')]
+        .map((element) => element.href)
+        .find((url) => new URL(url).pathname.startsWith("/dev/mail/css-"));
+      if (link) return link;
+
+      const imports = [...document.querySelectorAll("style")]
+        .map((element) => element.textContent || "")
+        .join("\n");
+      return imports.match(/@import\s+["']([^"']*\/dev\/mail\/css-[^"']+)["']/)?.[1] || null;
+    }).catch(() => null);
+
+    if (href) return new URL(href, frame.url()).pathname;
+  }
+
+  throw new Error("the review surface did not load the versioned Admin stylesheet");
+}
+
+async function textInAnyFrame(page, text) {
+  for (const frame of page.frames()) {
+    const locator = frame.getByText(text, { exact: true });
+    if ((await locator.count()) > 0) return locator.first();
+  }
+  throw new Error("review surface did not render text " + JSON.stringify(text));
+}
