@@ -109,7 +109,7 @@ defmodule MailglassAdmin.Preview.CaptureManifestTest do
       manifest_path = Path.join(output_dir, "manifest.json")
       checkpoint_path = Path.join(output_dir, "checkpoint.json")
       state = CaptureState.new("/dev/mail", HappyMailer, :welcome_default, 375, :dark)
-      png = <<137, 80, 78, 71, 13, 10, 26, 10, 0, 1, 2, 3>>
+      png = png_fixture()
       path = CaptureManifest.screenshot_name(state)
       File.write!(Path.join(output_dir, path), png)
 
@@ -135,6 +135,21 @@ defmodule MailglassAdmin.Preview.CaptureManifestTest do
       assert entry["assets"]["served"]["sha256"] == String.duplicate("c", 64)
     end
 
+    test "actual capture rejects non-PNG and truncated IHDR bytes" do
+      output_dir = tmp_dir("invalid-png")
+      state = CaptureState.new("/dev/mail", HappyMailer, :welcome_default, 375, :dark)
+      path = Path.join(output_dir, CaptureManifest.screenshot_name(state))
+      valid_png = png_fixture()
+
+      for invalid_png <- ["not a PNG", binary_part(valid_png, 0, 32)] do
+        File.write!(path, invalid_png)
+
+        assert_raise ArgumentError, ~r/invalid or incomplete IHDR/, fn ->
+          CaptureManifest.build_entries([state], output_dir, :files, actual_provenance())
+        end
+      end
+    end
+
     test "actual capture rejects missing PNG files instead of using identity hashes" do
       output_dir = tmp_dir("missing-png")
       state = CaptureState.new("/dev/mail", HappyMailer, :welcome_default, 375, :dark)
@@ -147,8 +162,10 @@ defmodule MailglassAdmin.Preview.CaptureManifestTest do
     test "actual capture rejects a built/served CSS mismatch before writing proof" do
       output_dir = tmp_dir("css-mismatch-state")
       state = CaptureState.new("/dev/mail", HappyMailer, :welcome_default, 375, :dark)
-      File.write!(Path.join(output_dir, CaptureManifest.screenshot_name(state)), "png")
-      provenance = put_in(actual_provenance(), [:assets, :served, :sha256], String.duplicate("e", 64))
+      File.write!(Path.join(output_dir, CaptureManifest.screenshot_name(state)), png_fixture())
+
+      provenance =
+        put_in(actual_provenance(), [:assets, :served, :sha256], String.duplicate("e", 64))
 
       assert_raise ArgumentError, ~r/built and served CSS SHA-256 values must match/, fn ->
         CaptureManifest.write_from_states!([state], [],
@@ -167,7 +184,7 @@ defmodule MailglassAdmin.Preview.CaptureManifestTest do
     test "direct actual writer rejects built/served CSS mismatch before writing proof" do
       output_dir = tmp_dir("css-mismatch-direct")
       state = CaptureState.new("/dev/mail", HappyMailer, :welcome_default, 375, :dark)
-      File.write!(Path.join(output_dir, CaptureManifest.screenshot_name(state)), "png")
+      File.write!(Path.join(output_dir, CaptureManifest.screenshot_name(state)), png_fixture())
 
       [entry] = CaptureManifest.build_entries([state], output_dir, :files, actual_provenance())
       mismatched = put_in(entry, ["assets", "served", "sha256"], String.duplicate("d", 64))
@@ -189,7 +206,7 @@ defmodule MailglassAdmin.Preview.CaptureManifestTest do
       state = CaptureState.new("/dev/mail", HappyMailer, :welcome_default, 375, :dark)
       path = CaptureManifest.screenshot_name(state)
       outside = Path.join(Path.dirname(output_dir), path)
-      File.write!(outside, "png")
+      File.write!(outside, png_fixture())
       File.ln_s!(outside, Path.join(output_dir, path))
 
       assert_raise ArgumentError, ~r/inside the output directory|not a regular file/, fn ->
@@ -200,7 +217,7 @@ defmodule MailglassAdmin.Preview.CaptureManifestTest do
     test "actual capture requires all candidate, browser, and served-asset identity" do
       output_dir = tmp_dir("incomplete")
       state = CaptureState.new("/dev/mail", HappyMailer, :welcome_default, 375, :dark)
-      File.write!(Path.join(output_dir, CaptureManifest.screenshot_name(state)), "png")
+      File.write!(Path.join(output_dir, CaptureManifest.screenshot_name(state)), png_fixture())
       provenance = put_in(actual_provenance(), [:assets, :served, :sha256], "")
 
       assert_raise ArgumentError, ~r/served asset sha256/, fn ->
@@ -246,6 +263,12 @@ defmodule MailglassAdmin.Preview.CaptureManifestTest do
   end
 
   defp decode!(path), do: path |> File.read!() |> Jason.decode!()
+
+  defp png_fixture do
+    Base.decode64!(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lN8AAAAASUVORK5CYII="
+    )
+  end
 
   defp tmp_dir(suffix) do
     path =

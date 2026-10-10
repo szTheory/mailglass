@@ -7,6 +7,9 @@ defmodule MailglassAdmin.Preview.CaptureManifest do
 
   @schema_version "preview_capture.v1"
   @claim_boundary "preview-pipeline confidence only; not cross-client parity"
+  @png_signature <<137, 80, 78, 71, 13, 10, 26, 10>>
+  @max_png_dimension 32_768
+  @max_png_pixels 268_435_456
 
   @type sha_mode :: :identity | :files
 
@@ -199,14 +202,50 @@ defmodule MailglassAdmin.Preview.CaptureManifest do
     case File.lstat(expanded_path) do
       {:ok, %{type: :regular}} ->
         case File.read(expanded_path) do
-          {:ok, contents} -> Base.encode16(:crypto.hash(:sha256, contents), case: :lower)
-          {:error, _reason} -> raise ArgumentError, "PNG file is unreadable: #{relative_path}"
+          {:ok, contents} ->
+            validate_png!(contents, relative_path)
+            Base.encode16(:crypto.hash(:sha256, contents), case: :lower)
+
+          {:error, _reason} ->
+            raise ArgumentError, "PNG file is unreadable: #{relative_path}"
         end
 
       _ ->
         raise ArgumentError, "PNG file is unreadable or not a regular file: #{relative_path}"
     end
   end
+
+  defp validate_png!(contents, relative_path) do
+    case contents do
+      <<signature::binary-size(8), 13::unsigned-big-32, "IHDR", width::unsigned-big-32,
+        height::unsigned-big-32, bit_depth, color_type, compression, filter, interlace,
+        ihdr_crc::unsigned-big-32, _rest::binary>> ->
+        ihdr_data = binary_part(contents, 12, 17)
+
+        valid_dimensions? =
+          width > 0 and height > 0 and width <= @max_png_dimension and
+            height <= @max_png_dimension and width * height <= @max_png_pixels
+
+        valid_format? =
+          valid_bit_depth?(color_type, bit_depth) and compression == 0 and filter == 0 and
+            interlace in [0, 1]
+
+        unless signature == @png_signature and valid_dimensions? and valid_format? and
+                 :erlang.crc32(ihdr_data) == ihdr_crc do
+          raise ArgumentError, "PNG file has an invalid or incomplete IHDR: #{relative_path}"
+        end
+
+      _ ->
+        raise ArgumentError, "PNG file has an invalid or incomplete IHDR: #{relative_path}"
+    end
+  end
+
+  defp valid_bit_depth?(0, depth), do: depth in [1, 2, 4, 8, 16]
+  defp valid_bit_depth?(2, depth), do: depth in [8, 16]
+  defp valid_bit_depth?(3, depth), do: depth in [1, 2, 4, 8]
+  defp valid_bit_depth?(4, depth), do: depth in [8, 16]
+  defp valid_bit_depth?(6, depth), do: depth in [8, 16]
+  defp valid_bit_depth?(_color_type, _depth), do: false
 
   defp identity_sha256(state, relative_path) do
     [
