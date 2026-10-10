@@ -115,7 +115,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "Recent deliveries"
+      assert html =~ "Deliveries"
       assert html =~ ~s(data-testid="operator-master-detail")
       assert html =~ "s*******@e******.com"
       refute html =~ delivery.recipient

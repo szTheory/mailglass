@@ -949,7 +949,7 @@ defmodule MailglassAdmin.OperatorLive do
               <div class="space-y-lg">
                 <section
                   data-testid="operator-deliveries-empty-pane"
-                  class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+                  class="min-w-0"
                 >
                   <DeliveriesList.deliveries_list
                     deliveries={[]}
@@ -1127,11 +1127,8 @@ defmodule MailglassAdmin.OperatorLive do
                 <section data-testid="operator-master-detail" class="mt-6">
                   <aside
                     data-testid="operator-deliveries-list-card"
-                    class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+                    class="min-w-0"
                   >
-                    <div class="border-b border-base-300 px-4 py-3">
-                      <h2 class="text-heading font-bold text-base-content">Recent deliveries</h2>
-                    </div>
                     <DeliveriesList.deliveries_list
                       deliveries={@deliveries}
                       page_meta={@deliveries_page_meta}

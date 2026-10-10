@@ -478,13 +478,11 @@ defmodule MailglassAdmin.InboundLive do
 
       %{replay_modal_open?: false, replay_consumed_review_id: consumed}
       when not is_nil(consumed) ->
-        {:noreply,
-         replay_feedback(socket, :error, "Replay was already submitted for this review.")}
+        {:noreply, replay_feedback(socket, :error, "Replay was already submitted for this review.")}
 
       %{replay_consumed_review_id: consumed, replay_review: %{review_id: consumed}}
       when not is_nil(consumed) ->
-        {:noreply,
-         replay_feedback(socket, :error, "Replay was already submitted for this review.")}
+        {:noreply, replay_feedback(socket, :error, "Replay was already submitted for this review.")}
 
       %{replay_pending_review_id: pending, replay_review: %{review_id: pending}}
       when not is_nil(pending) ->
@@ -815,7 +813,7 @@ defmodule MailglassAdmin.InboundLive do
               <section data-testid="inbound-master-detail" class="mt-lg">
                 <aside
                   data-testid="inbound-records-list-card"
-                  class="card min-w-0 overflow-hidden rounded-box border border-base-300 bg-base-200 p-0"
+                  class="min-w-0"
                 >
                   <RecordsList.records_list
                     heading="Received messages"
@@ -1542,8 +1540,7 @@ defmodule MailglassAdmin.InboundLive do
     summary_filters = %{
       tenant_id: filter_params["tenant_id"],
       provider: blank_to_nil(filter_params["provider"]),
-      window_hours:
-        parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
+      window_hours: parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
       search: blank_to_nil(filter_params["search"])
     }
 

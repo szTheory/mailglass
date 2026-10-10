@@ -53,20 +53,14 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
   def records_list(assigns) do
     ~H"""
-    <div
+    <Components.collection_header
       :if={@heading || is_nil(@data_state)}
+      title={@heading}
+      count_label={if(is_nil(@data_state), do: result_count_label(@page_meta))}
+      count_testid="inbound-result-count"
       data-testid="inbound-collection-header"
-      class="flex flex-wrap items-baseline justify-between gap-x-md gap-y-xs border-b border-base-300 px-md py-sm"
-    >
-      <h2 :if={@heading} class="text-body font-bold text-base-content">{@heading}</h2>
-      <span
-        :if={is_nil(@data_state)}
-        data-testid="inbound-result-count"
-        class={["text-secondary tabular-nums", if(@heading, do: "text-label", else: "text-body")]}
-      >
-        {result_count_label(@page_meta)}
-      </span>
-    </div>
+    />
+    <div class="min-w-0 overflow-hidden rounded-box border border-base-300 bg-base-200">
     <%= cond do %>
       <% @data_state == :error -> %>
         <Components.data_state
@@ -343,6 +337,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
       previous_page_path={@previous_page_path}
       next_page_path={@next_page_path}
     />
+    </div>
     """
   end
 

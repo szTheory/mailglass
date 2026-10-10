@@ -24,6 +24,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.Accounts
 
+  attr(:heading, :string, default: "Deliveries")
   attr(:deliveries, :list, required: true)
   attr(:account_labels, :map, default: %{})
 
@@ -46,12 +47,12 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   def deliveries_list(assigns) do
     ~H"""
-    <div
-      data-testid="operator-result-count"
-      class="border-b border-base-300 px-4 py-3 text-body text-secondary"
-    >
-      {result_count_label(@page_meta)}
-    </div>
+    <Components.collection_header
+      title={@heading}
+      count_label={result_count_label(@page_meta)}
+      count_testid="operator-result-count"
+    />
+    <div class="min-w-0 overflow-hidden rounded-box border border-base-300 bg-base-200">
     <Components.data_state
       :if={@data_state == :stale}
       kind={:stale}
@@ -276,6 +277,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
       previous_page_path={@previous_page_path}
       next_page_path={@next_page_path}
     />
+    </div>
     """
   end
 

@@ -511,6 +511,23 @@ defmodule MailglassAdmin.Components do
     """
   end
 
+  @doc "A collection title and optional result count above its bordered table or mobile list."
+  attr(:title, :string, default: nil)
+  attr(:count_label, :string, default: nil)
+  attr(:count_testid, :string, default: nil)
+  attr(:rest, :global)
+
+  def collection_header(assigns) do
+    ~H"""
+    <div class="mb-sm flex min-w-0 flex-wrap items-baseline gap-x-sm gap-y-xs" {@rest}>
+      <h2 :if={@title} class="text-body font-bold text-base-content">{@title}</h2>
+      <span :if={@count_label} data-testid={@count_testid} class="text-label tabular-nums text-secondary">
+        {@count_label}
+      </span>
+    </div>
+    """
+  end
+
   attr(:kind, :atom, values: [:empty, :error, :permission_denied, :stale], required: true)
   attr(:title, :string, required: true)
   attr(:body, :string, required: true)
