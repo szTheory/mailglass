@@ -7,12 +7,17 @@ TEST_DIR="$(mktemp -d "${TMPDIR:-/tmp}/phase173-candidate-contract.XXXXXX")"
 FAKE_BIN="$TEST_DIR/bin"
 FAKE_ROOT="$TEST_DIR/candidate"
 FIXTURES="$TEST_DIR/fixtures"
+SPARSE_REPO="$TEST_DIR/sparse-origin"
+SPARSE_WORKTREE="$TEST_DIR/sparse-worktree"
 LOG="$TEST_DIR/cli.log"
 SHA="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 CSS_TEXT=".candidate { color: #123456; }"
 CSS_MD5="$(printf '%s' "$CSS_TEXT" | md5 -q 2>/dev/null || printf '%s' "$CSS_TEXT" | md5sum | cut -d ' ' -f1)"
 
 cleanup() {
+  if [[ -d "$SPARSE_REPO/.git" ]]; then
+    git -C "$SPARSE_REPO" worktree remove --force "$SPARSE_WORKTREE" >/dev/null 2>&1 || true
+  fi
   rm -rf "$TEST_DIR"
 }
 trap cleanup EXIT
@@ -23,6 +28,7 @@ mkdir -p "$FAKE_BIN" "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-e
   "$FAKE_ROOT/reference/demo_app/assets/scripts" "$FIXTURES"
 cp "$ROOT_DIR/reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs" \
   "$FAKE_ROOT/reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs"
+cp "$ROOT_DIR/scripts/phase173_json_output.cjs" "$FAKE_ROOT/scripts/phase173_json_output.cjs"
 node - "$ROOT_DIR" "$FAKE_ROOT" "$FIXTURES" <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
@@ -91,6 +97,48 @@ for phase in 168 169 170 171 172; do
   done
 done
 export SUMMARY_PATHS FAKE_ROOT FAKE_BIN FIXTURES LOG SHA CSS_MD5 CSS_TEXT ROOT_DIR
+
+# Exercise the actual Git sparse-checkout behavior in a disposable repository.
+# The protected path strings below are created only inside TEST_DIR.
+mkdir -p "$SPARSE_REPO/reference/demo_app/assets/e2e"
+git -C "$SPARSE_REPO" init -q
+git -C "$SPARSE_REPO" config user.name "Phase 173 Contract"
+git -C "$SPARSE_REPO" config user.email "phase173-contract@example.invalid"
+printf 'harmless synthetic README sentinel\n' > "$SPARSE_REPO/reference/demo_app/README.md"
+printf 'harmless synthetic E2E sentinel\n' > "$SPARSE_REPO/reference/demo_app/assets/e2e/demo.spec.js"
+printf 'visible synthetic file\n' > "$SPARSE_REPO/visible.txt"
+git -C "$SPARSE_REPO" add .
+git -C "$SPARSE_REPO" commit -qm 'synthetic sparse checkout fixture'
+git -C "$SPARSE_REPO" worktree add --detach --no-checkout "$SPARSE_WORKTREE" HEAD
+printf '%s\n' '/*' '!/reference/demo_app/README.md' '!/reference/demo_app/assets/e2e/demo.spec.js' |
+  git -C "$SPARSE_WORKTREE" sparse-checkout set --no-cone --no-sparse-index --stdin
+git -C "$SPARSE_WORKTREE" checkout --detach HEAD
+[[ -f "$SPARSE_WORKTREE/visible.txt" ]] || { printf 'FAIL: sparse checkout omitted visible sentinel\n' >&2; exit 1; }
+[[ ! -e "$SPARSE_WORKTREE/reference/demo_app/README.md" ]] || { printf 'FAIL: sparse checkout materialized synthetic README sentinel\n' >&2; exit 1; }
+[[ ! -e "$SPARSE_WORKTREE/reference/demo_app/assets/e2e/demo.spec.js" ]] || { printf 'FAIL: sparse checkout materialized synthetic E2E sentinel\n' >&2; exit 1; }
+git -C "$SPARSE_REPO" worktree remove --force "$SPARSE_WORKTREE"
+printf 'real Git sparse checkout left both synthetic protected sentinels unmaterialized\n'
+
+# The shared JSON evidence writer must reject a destination symlink without
+# changing the target bytes. Both the link and target live under TEST_DIR.
+node - "$ROOT_DIR/scripts/phase173_json_output.cjs" "$TEST_DIR" <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+const { writeJson } = require(process.argv[2]);
+const testDir = process.argv[3];
+const target = path.join(testDir, "symlink-target.json");
+const link = path.join(testDir, "symlink-output.json");
+const original = Buffer.from("target bytes must remain unchanged\n");
+fs.writeFileSync(target, original);
+fs.symlinkSync(target, link);
+let rejected = false;
+try { writeJson(link, { should: "not be written" }, testDir); } catch (error) {
+  rejected = /not a regular file/.test(error.message);
+}
+if (!rejected) throw new Error("JSON evidence writer accepted a symlink destination");
+if (!fs.readFileSync(target).equals(original)) throw new Error("symlink target bytes changed");
+if (!fs.lstatSync(link).isSymbolicLink()) throw new Error("rejected symlink destination was replaced");
+NODE
 
 node - "$ROOT_DIR" <<'NODE'
 const fs = require("node:fs");
@@ -509,6 +557,7 @@ TEST_ENV=(FAKE_REQUIRED_DIRTY=true)
 # Exercise the outer launcher with fake Git: it snapshots path/status metadata,
 # creates a detached exact-SHA candidate, and invokes the committed candidate mode.
 cp "$ROOT_DIR/scripts/check_phase173_candidate.sh" "$FAKE_ROOT/scripts/check_phase173_candidate.sh"
+cp "$ROOT_DIR/scripts/phase173_json_output.cjs" "$FAKE_ROOT/scripts/phase173_json_output.cjs"
 chmod +x "$FAKE_ROOT/scripts/check_phase173_candidate.sh"
 write_metadata
 : > "$LOG"
