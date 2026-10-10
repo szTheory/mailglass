@@ -168,3 +168,12 @@ if grep -E 'down .*mailglass-demo|down .*--all|down .*--rmi|prune|reset' "$DEMO_
 fi
 
 echo "demo browser evidence wrapper contract passed"
+
+grep -F 'demo-e2e: ## Run the isolated synthetic browser-evidence suite' "$ROOT_DIR/Makefile" >/dev/null || {
+  echo "make demo-e2e does not advertise the isolated evidence runner" >&2
+  exit 1
+}
+grep -F $'\t@bash scripts/run_demo_browser_evidence.sh' "$ROOT_DIR/Makefile" >/dev/null || {
+  echo "make demo-e2e bypasses the run-owned disposable evidence runner" >&2
+  exit 1
+}
