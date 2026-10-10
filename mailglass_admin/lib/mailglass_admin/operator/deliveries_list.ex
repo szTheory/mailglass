@@ -49,6 +49,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     ~H"""
     <Components.collection_header
       title={@heading}
+      count={Map.get(@page_meta, :total_count, 0)}
       count_label={result_count_label(@page_meta)}
       count_testid="operator-result-count"
     />

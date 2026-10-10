@@ -56,6 +56,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
     <Components.collection_header
       :if={@heading || is_nil(@data_state)}
       title={@heading}
+      count={if(is_nil(@data_state), do: Map.get(@page_meta, :total_count, 0))}
       count_label={if(is_nil(@data_state), do: result_count_label(@page_meta))}
       count_testid="inbound-result-count"
       data-testid="inbound-collection-header"

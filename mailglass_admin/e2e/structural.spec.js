@@ -2471,7 +2471,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(activeDesktop).toHaveClass(/border-l-2/);
       await expect(activeDesktop).toHaveClass(/border-primary/);
 
-      await expect(page.getByTestId("operator-result-count")).toContainText("6 deliveries");
+      await expect(page.getByTestId("operator-result-count")).toContainText("(6)");
       // Honest single-page boundary: 6 deliveries at 20/page is one page, so the
       // pagination control (rendered only when total_pages > 1) is absent. Multi-page
       // boundary behaviour is covered by the inbound pagination test below.
@@ -2536,7 +2536,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.getByTestId("operator-account-switcher").click();
       await page.screenshot({ path: path.join(reviewArtifacts, "account-options-1440.png"), fullPage: true });
 
-      await expect(page.getByTestId("inbound-result-count")).toContainText("9 messages");
+      await expect(page.getByTestId("inbound-result-count")).toContainText("(9)");
       // With per_page 20 (parity with Deliveries) the 9-record demo dataset fits on one
       // page, so no pagination chrome renders — the honest single-page state. The
       // multi-page prev/next path is covered by the inbound_live unit test (21-record fixture).
