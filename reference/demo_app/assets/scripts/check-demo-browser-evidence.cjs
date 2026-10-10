@@ -17,6 +17,25 @@ const REQUIRED_TESTS = [
   "recipient browser shows a truthful expired unsubscribe state"
 ];
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
+const sha256 = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
+const MAX_PNG_BYTES = 8 * 1024 * 1024;
+const BASELINE_SOURCE_REVISION = "7e3720237f51f2907b77c7dcb03042f2dd379d53";
+const EXPECTED_BASELINES = Object.freeze([
+  ["dashboard", "baseline-dashboard-7e372023-375-light", "baseline-dashboard-7e372023-375-light.png", "54f7f188fba06483302e72a96340487217e700880a5389de6e71e22eec45b9a4", "375x1613"],
+  ["preview", "baseline-preview-7e372023-375-light", "baseline-preview-7e372023-375-light.png", "263e69bac41292128583b2accb5f6f7c43d5a5c1a9aa86b09fe758d032d85206", "375x1847"],
+  ["outbound-primary", "baseline-outbound-7e372023-1440-light", "baseline-outbound-7e372023-1440-light.png", "7984796b17ceb0b04f9d465925aae0c9356b1bd26732d28c8a5b448a2d749791", "1440x2002"],
+  ["inbound-primary", "baseline-inbound-7e372023-1440-dark", "baseline-inbound-7e372023-1440-dark.png", "e5b263b3dba88cebe5636b1f27e868457045d9841ce070bb873fc0aaa97e3b6c", "1440x1431"],
+  ["empty-account-adverse", "baseline-empty-account-7e372023-375-dark", "baseline-empty-account-7e372023-375-dark.png", "8809d1c8094f5698cbd7e55f1bcdc34e198947bd8cf2cbe59202b3522f95c9b7", "375x1013"],
+  ["recipient-expired-adverse", "baseline-recipient-expired-7e372023-375-light", "baseline-recipient-expired-7e372023-375-light.png", "bf9013f075e08143128675efb4436f8e3f52b091201e4ab06f9930bb8182d560", "375x900"]
+].map(([captureId, id, path, sha256, dimensions]) => Object.freeze({ captureId, id, path, sha256, dimensions })));
+const EXPECTED_TITLES = Object.freeze({
+  dashboard: "dashboard links to preview and operator surfaces",
+  preview: "dashboard links to preview and operator surfaces",
+  "outbound-primary": "outbound operator opens with seeded delivery evidence",
+  "inbound-primary": "inbound operator opens with seeded support mailbox evidence",
+  "empty-account-adverse": "empty account stays isolated and explains the absence of deliveries",
+  "recipient-expired-adverse": "recipient browser shows a truthful expired unsubscribe state"
+});
 
 function requireString(value, label) {
   if (typeof value !== "string" || value.length === 0) throw new Error(`${label} is missing`);
@@ -83,6 +102,14 @@ function safeCapturePath(root, relativePath) {
 
   let realRoot;
   let realCapture;
+  let stat;
+  try {
+    stat = fs.lstatSync(capturePath);
+  } catch {
+    throw new Error(`missing or invalid PNG: ${relativePath}`);
+  }
+  if (stat.isSymbolicLink()) throw new Error(`capture path is outside the owned evidence directory: ${relativePath}`);
+  if (!stat.isFile()) throw new Error(`capture is not a regular file: ${relativePath}`);
   try {
     realRoot = fs.realpathSync(resolvedRoot);
     realCapture = fs.realpathSync(capturePath);
@@ -210,6 +237,7 @@ function createCheckpoint({
 
     const safePath = safeCapturePath(root, capture.path);
     const bytes = fs.readFileSync(safePath.absolutePath);
+    if (bytes.length > MAX_PNG_BYTES) throw new Error(`PNG exceeds size limit: ${capture.path}`);
     if (bytes.length < PNG_SIGNATURE.length || !bytes.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)) {
       throw new Error(`missing or invalid PNG: ${capture.path}`);
     }
@@ -231,13 +259,93 @@ function createCheckpoint({
     };
   });
 
+  if (requiredTestTitles === REQUIRED_TESTS) {
+    if (captures.length !== EXPECTED_BASELINES.length) throw new Error("capture set does not match the six approved synthetic captures");
+    const seen = new Set();
+    for (const capture of captures) {
+      const expected = EXPECTED_BASELINES.find((item) => item.captureId === capture.id);
+      if (!expected || seen.has(capture.id)) throw new Error(`unknown or duplicate synthetic capture: ${capture.id}`);
+      seen.add(capture.id);
+      if (capture.test_title !== EXPECTED_TITLES[capture.id]) throw new Error(`unexpected test title for synthetic capture: ${capture.id}`);
+      if (capture.before_after.baseline_id !== expected.id || capture.before_after.baseline_path !== expected.path ||
+          capture.before_after.baseline_sha256 !== expected.sha256 || capture.before_after.baseline_source_revision !== BASELINE_SOURCE_REVISION ||
+          capture.before_after.baseline_capture_dimensions !== expected.dimensions) {
+        throw new Error(`baseline provenance does not match the approved synthetic record: ${capture.id}`);
+      }
+    }
+    validatePinnedBaselines(root);
+  }
+
   return {
     schema_version: "demo_browser_evidence.v2",
     generated_at: new Date().toISOString(),
     status: "passed",
     candidate_revision: candidateRevision,
-    captures
+    candidate_dirty: captures.every((capture) => capture.candidate_dirty),
+    route: "synthetic demo browser routes",
+    fixture: "synthetic fixtures only",
+    theme: "per-capture pinned theme",
+    viewport: "per-capture pinned viewport",
+    interaction_state: "per-capture pinned interaction state",
+    browser: "per-capture identified browser",
+    before_after: "six pinned baseline pairs",
+    source_build_served_identity: "validated per capture",
+    captures: captures.map((capture) => ({
+      id: capture.id,
+      test_title: capture.test_title,
+      route: capture.route,
+      fixture: capture.fixture,
+      theme: capture.theme,
+      viewport: capture.viewport,
+      interaction_state: capture.interaction_state,
+      browser: capture.browser,
+      rendering_scope: capture.rendering_scope,
+      candidate_revision: capture.candidate_revision,
+      candidate_dirty: capture.candidate_dirty,
+      before_after: capture.before_after,
+      assets: capture.assets,
+      path: capture.path,
+      sha256: capture.sha256
+    }))
   };
+}
+
+function validatePinnedBaselines(root) {
+  const resolvedRoot = path.resolve(root);
+  return EXPECTED_BASELINES.map((expected) => {
+    const fullPath = path.resolve(resolvedRoot, expected.path);
+    if (!fullPath.startsWith(`${resolvedRoot}${path.sep}`)) throw new Error(`baseline path escapes evidence directory: ${expected.path}`);
+    const stat = fs.lstatSync(fullPath);
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_PNG_BYTES) throw new Error(`baseline is not an owned regular PNG: ${expected.path}`);
+    const bytes = fs.readFileSync(fullPath);
+    const dimensions = expected.dimensions.split("x").map(Number);
+    if (!bytes.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE) || sha256(bytes) !== expected.sha256 ||
+        bytes.readUInt32BE(16) !== dimensions[0] || bytes.readUInt32BE(20) !== dimensions[1]) {
+      throw new Error(`pinned baseline validation failed: ${expected.path}`);
+    }
+    return expected;
+  });
+}
+
+function stageRetainedEvidence(root, checkpoint) {
+  const target = path.join(path.resolve(root), "retained");
+  const staging = path.join(path.resolve(root), `.retained-${process.pid}-${Date.now()}`);
+  fs.rmSync(staging, { recursive: true, force: true });
+  fs.mkdirSync(staging, { recursive: true });
+  try {
+    fs.writeFileSync(path.join(staging, "checkpoint.json"), `${JSON.stringify(checkpoint, null, 2)}\n`, { flag: "wx" });
+    for (const capture of checkpoint.captures) {
+      const baseline = EXPECTED_BASELINES.find((item) => item.captureId === capture.id);
+      const currentPath = safeCapturePath(root, capture.path).absolutePath;
+      fs.copyFileSync(currentPath, path.join(staging, `${capture.id}-current.png`), fs.constants.COPYFILE_EXCL);
+      fs.copyFileSync(path.join(root, baseline.path), path.join(staging, `${capture.id}-baseline.png`), fs.constants.COPYFILE_EXCL);
+    }
+    fs.rmSync(target, { recursive: true, force: true });
+    fs.renameSync(staging, target);
+  } catch (error) {
+    fs.rmSync(staging, { recursive: true, force: true });
+    throw error;
+  }
 }
 
 function main() {
@@ -252,6 +360,7 @@ function main() {
     });
     fs.mkdirSync(evidenceDir, { recursive: true });
     fs.writeFileSync(checkpointPath, `${JSON.stringify(checkpoint, null, 2)}\n`);
+    stageRetainedEvidence(evidenceDir, checkpoint);
     console.log(`Demo browser evidence passed. Checkpoint: ${checkpointPath}`);
   } catch (error) {
     const checkpoint = {
@@ -270,4 +379,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { createCheckpoint, collectTests, safeCapturePath };
+module.exports = { createCheckpoint, collectTests, safeCapturePath, validatePinnedBaselines, EXPECTED_BASELINES };

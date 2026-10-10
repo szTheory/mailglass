@@ -58,6 +58,7 @@ cleanup() {
 trap cleanup EXIT
 
 mkdir -p "$EVIDENCE_DIR/captures"
+rm -rf "$EVIDENCE_DIR/retained"
 rm -f \
   "$EVIDENCE_DIR/playwright-report.json" \
   "$EVIDENCE_DIR/phase173-captures.json" \

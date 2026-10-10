@@ -12,6 +12,10 @@ for file in playwright-report.json phase173-captures.json checkpoint.json; do
     touch "$TEMP_DIR/$file.existed"
   fi
 done
+if [[ -d "$EVIDENCE_DIR/retained" ]]; then
+  cp -a "$EVIDENCE_DIR/retained" "$TEMP_DIR/retained.saved"
+  touch "$TEMP_DIR/retained.existed"
+fi
 restore_evidence_files() {
   for file in playwright-report.json phase173-captures.json checkpoint.json; do
     if [[ -f "$TEMP_DIR/$file.existed" ]]; then
@@ -20,15 +24,25 @@ restore_evidence_files() {
       rm -f "$EVIDENCE_DIR/$file"
     fi
   done
+  rm -rf "$EVIDENCE_DIR/retained"
+  if [[ -f "$TEMP_DIR/retained.existed" ]]; then
+    cp -a "$TEMP_DIR/retained.saved" "$EVIDENCE_DIR/retained"
+  fi
   rm -rf "$TEMP_DIR"
 }
 trap restore_evidence_files EXIT
 mkdir -p "$TEMP_DIR/bin"
+mkdir -p "$EVIDENCE_DIR/retained"
+printf 'stale\n' >"$EVIDENCE_DIR/retained/stale.txt"
 
 cat >"$TEMP_DIR/bin/docker" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\t%s\t%s\n' "$*" "${MAILGLASS_DEMO_HTTP_PORT:-}" "${MAILGLASS_DEMO_DB_PORT:-}" >>"$DEMO_FAKE_DOCKER_LOG"
+if [[ " $* " == *" up "* && -e "$DEMO_FAKE_EVIDENCE_DIR/retained" ]]; then
+  echo "wrapper did not remove stale retained evidence before the run" >&2
+  exit 24
+fi
 if [[ "${DEMO_FAKE_DOCKER_FAIL:-}" == run && " $* " == *" run "* ]]; then
   exit 23
 fi

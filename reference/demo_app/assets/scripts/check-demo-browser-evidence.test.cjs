@@ -6,6 +6,7 @@ const path = require("node:path");
 const test = require("node:test");
 
 const { createCheckpoint } = require("./check-demo-browser-evidence.cjs");
+const workflowPath = path.resolve(__dirname, "../../../../.github/workflows/ci.yml");
 const png = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lN8AAAAASUVORK5CYII=",
   "base64"
@@ -209,4 +210,43 @@ test("rejects baseline PNG dimensions that do not match declared capture dimensi
     () => createCheckpoint(checkpointArgs(evidenceDir, report, manifest)),
     /baseline PNG dimensions do not match its viewport/
   );
+});
+
+function assertUploadContract(text) {
+  const jobStart = text.indexOf("  demo_browser_evidence:");
+  if (jobStart < 0) throw new Error("demo browser job is missing");
+  const nextJob = text.indexOf("\n  [a-zA-Z0-9_-]+:\n", jobStart);
+  const job = text.slice(jobStart, nextJob < 0 ? undefined : nextJob);
+  const runStart = job.indexOf("      - name: Run demo browser evidence");
+  const uploadStart = job.indexOf("      - name: Upload demo browser evidence artifact");
+  if (runStart < 0 || uploadStart < runStart) throw new Error("evidence run/upload steps are missing or out of order");
+  const runStep = job.slice(runStart, uploadStart);
+  const uploadEnd = job.indexOf("\n      - name:", uploadStart + 1);
+  const uploadStep = job.slice(uploadStart, uploadEnd < 0 ? undefined : uploadEnd);
+  if (!/^        id: evidence$/m.test(runStep)) throw new Error("evidence run step needs an ID");
+  if (!/^        if: steps\.evidence\.outcome == 'success'$/m.test(uploadStep)) throw new Error("upload must require successful evidence");
+  if (!/^          if-no-files-found: error$/m.test(uploadStep)) throw new Error("upload must fail when retained files are missing");
+  if (!/^          retention-days: 14$/m.test(uploadStep)) throw new Error("upload retention must remain 14 days");
+  if (!/^          path: reference\/demo_app\/tmp\/demo_browser_evidence\/retained\/$/m.test(uploadStep)) {
+    throw new Error("upload must select only the retained evidence directory");
+  }
+  if (/playwright-report|test-results|phase173-captures/.test(uploadStep)) throw new Error("raw browser output cannot be uploaded");
+}
+
+test("workflow uploads only retained evidence after successful evidence run", () => {
+  const workflow = fs.readFileSync(workflowPath, "utf8");
+  assert.doesNotThrow(() => assertUploadContract(workflow));
+  const jobStart = workflow.indexOf("  demo_browser_evidence:");
+  const nextJob = workflow.indexOf("\n  preview_capture_advisory:", jobStart);
+  const job = workflow.slice(jobStart, nextJob);
+  const mutations = [
+    job.replace("if: steps.evidence.outcome == 'success'", "if: always()"),
+    job.replace("if-no-files-found: error", "if-no-files-found: warn"),
+    job.replace("retention-days: 14", "retention-days: 90"),
+    job.replace("path: reference/demo_app/tmp/demo_browser_evidence/retained/", "path: reference/demo_app/tmp/demo_browser_evidence/playwright-report.json")
+  ];
+  for (const mutatedJob of mutations) {
+    const mutatedWorkflow = workflow.slice(0, jobStart) + mutatedJob + workflow.slice(nextJob);
+    assert.throws(() => assertUploadContract(mutatedWorkflow));
+  }
 });
