@@ -52,8 +52,10 @@ created: "2026-10-09"
 | 173-05-T1 | 05 | 5 | UIQ-02, UIQ-03 | T-173-07, T-173-16 | Reset requires token plus run-owned identity; both producers preflight before POST | ExUnit + Node + shell + Playwright | `cd reference/demo_app && ASDF_ERLANG_VERSION=27.3.4.13 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix test test/mailglass_demo_web/page_controller_security_test.exs --warnings-as-errors --seed 1 && node --test assets/scripts/check-persona-reset-target.test.cjs && bash ../scripts/test_run_demo_browser_evidence.sh` | `reference/demo_app/test/mailglass_demo_web/page_controller_security_test.exs`; `reference/demo_app/assets/scripts/check-persona-reset-target.test.cjs`; `scripts/test_run_demo_browser_evidence.sh` | ✅ green — fresh: 9 ExUnit and 12 Node tests plus shell contract passed; Plan 05 summary records the isolated browser wrapper pass |
 | 173-05-T2 | 05 | 5 | UIQ-02, UIQ-03 | T-173-13, T-173-14, T-173-15 | Exact candidate gate transfers only pinned baselines and rejects stale/unsafe retained evidence | shell + Node document contract | `bash scripts/test_check_phase173_candidate.sh`; delivery-doc contract prior result only (not rerun) | `scripts/test_check_phase173_candidate.sh`; `reference/demo_app/assets/scripts/check-phase173-delivery-docs.test.cjs` | ✅ green for repeatable contracts — fake-CLI passed fresh; Plan 05 summary reports 4 docs checks passed. Final delivery remains incomplete under 173-06 |
 | 173-06-T1 | 06 | 6 | UIQ-03 | T-173-13, T-173-14, T-173-15, T-173-16 | Exact-SHA gate reports CI, owner-input, local regression and retained-evidence status without false completion | exact-candidate machine gate | `bash scripts/check_phase173_candidate.sh` (prior run; not rerun because it invokes acceptance/regression paths touching excluded owner data) | `scripts/check_phase173_candidate.sh`; ignored candidate JSON records named in Plan 06 summary | ⚠ incomplete external machine gate — prior run returned incomplete for missing exact-SHA CI, owner-dirty acceptance input, local regression dependency failure, and `candidate_dirty=true` evidence. UIQ-03 remains Pending |
+| 173-08-T1 | 08 | 8 | UIQ-03 | T-173-18 | Protected inputs stay unmaterialized/unprobed and Docker context excludes them; secure evidence writers reject unsafe destinations and exclusive PNG overwrite | shell + synthetic Git + Node contract | `bash scripts/test_check_phase173_candidate.sh` | `scripts/test_check_phase173_candidate.sh` | ✅ green — fresh audit: sparse sentinel fixture, source mutation matrix, secure JSON/PNG writer regressions, and fake candidate CLI contract passed |
+| 173-08-T2 | 08 | 8 | UIQ-03 | T-173-19 | Exact-SHA candidate local delivery proof with CI and owner acceptance kept separate | exact-candidate machine gate | `bash scripts/check_phase173_candidate.sh` (not run: explicitly prohibited hard fence covers its candidate scan/build/test inputs) | `scripts/check_phase173_candidate.sh`; ignored candidate JSON from prior Plan 08 run | ⚠ not rerun under audit fence — preserve prior Plan 08 recorded local result and truthful incomplete delivery status; no new exact-SHA CI or owner-acceptance claim |
 
-**Environment and scope:** Fresh safe checks in this audit passed: shell isolation contract; 10 evidence Node tests; 12 reset-target Node tests; 13 dependency-lock Node tests; candidate fake-CLI contract; 18 capture ExUnit tests; 5 token-parity ExUnit tests; 9 reset-endpoint ExUnit tests; lock-only gate; npm audit (0 vulnerabilities). Browser and delivery-doc test results are cited from the plan summaries where not rerun. The protected `reference/demo_app/assets/e2e/demo.spec.js` and owner-dirty `reference/demo_app/README.md` were not opened, read, modified, staged, or executed. Tests that consume README contents and the actual candidate gate were not rerun. No exact-SHA `CI Green` evidence is available; Plan 06's recorded gate result remains incomplete and is not replaced by human UAT.
+**Environment and scope:** Fresh safe checks in this audit passed: shell isolation contract; 10 evidence Node tests; 12 reset-target Node tests; 13 dependency-lock Node tests; candidate fake-CLI contract including the secure JSON/PNG writer assertions; 18 capture ExUnit tests; 5 token-parity ExUnit tests; 9 reset-endpoint ExUnit tests; lock-only gate; npm audit (0 vulnerabilities). Browser and delivery-doc test results are cited from the plan summaries where not rerun. The protected `reference/demo_app/assets/e2e/demo.spec.js` and owner-dirty `reference/demo_app/README.md` were not opened, read, modified, staged, or executed. Tests that consume README contents and the actual candidate gate were not rerun. No exact-SHA `CI Green` evidence is available; Plan 06's recorded gate result remains incomplete and is not replaced by human UAT.
 
 ---
 
@@ -89,13 +91,15 @@ All machine-observable Phase 173 criteria are assigned to automation, CI evidenc
 
 | Metric | Count |
 |---|---|
-| Planned task checks audited | 14 |
-| Repeatable checks green | 11 |
-| Incomplete acceptance gates | 3 (173-03-T2, 173-03-T3, 173-06-T1) |
+| Planned task checks audited | 16 |
+| Repeatable checks green | 12 |
+| Incomplete or not-rerun delivery gates | 4 (173-03-T2, 173-03-T3, 173-06-T1, 173-08-T2) |
 | Missing automated test gaps | 0 |
 | Escalated implementation bugs | 0 |
 
 The incomplete rows are covered by repeatable machine checks, but their current acceptance inputs are absent or rejected: the owner-dirty README acceptance input is excluded, exact-SHA required CI is absent, the exact candidate's local regression lacked dependencies during the recorded gate, and retained evidence with `candidate_dirty=true` was rejected. These are external delivery prerequisites, not human visual UAT. UIQ-03 must remain Pending until the committed candidate gate passes with those machine-observable inputs.
+
+Plan 08 Task 1 was freshly rerun under the audit fence. Its secure-writer test now proves that an existing PNG destination cannot be overwritten, a symlink destination cannot redirect exclusive output, and JSON output cannot escape its trusted root. Plan 08 Task 2 was not rerun: the user-specified hard fence prohibits the full candidate gate because its operations can consume the two protected inputs. Its prior summary remains historical evidence only; no exact-SHA CI or owner-acceptance status is inferred from it.
 
 ## Review-fix Regression Evidence 2026-10-10
 
@@ -108,3 +112,11 @@ The incomplete rows are covered by repeatable machine checks, but their current 
 The changed Elixir files also pass `mix format --check-formatted`, and `git diff --check` passes. These checks close the code-review findings. They do not replace exact-SHA CI or resolve the excluded owner acceptance inputs; UIQ-03 remains Pending.
 
 The configured Phase 173 regression gate passed on retry with local browser-launch permissions: core 79 tests, Admin 605 tests (1 excluded), inbound 480 tests (3 excluded), and 30 connected browser tests. The retry was necessary because the sandbox denied Chromium's macOS Mach rendezvous before tests could launch.
+
+## Validation Audit 2026-10-10
+
+| Metric | Count |
+|---|---|
+| Gaps found | 1 |
+| Resolved | 1 |
+| Escalated | 0 |
