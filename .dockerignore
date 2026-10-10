@@ -47,3 +47,7 @@ test/tmp
 
 # Local env overrides (never bake secrets/ports into the image)
 .env
+
+# Protected demo inputs are excluded from root-context image builds.
+reference/demo_app/README.md
+reference/demo_app/assets/e2e/demo.spec.js

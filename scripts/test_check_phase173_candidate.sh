@@ -49,7 +49,7 @@ cat > "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence/173-02-
 <task><files>tracked/phase173-02.ex</files></task>
 PLAN
 cat > "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence/173-03-PLAN.md" <<'PLAN'
-<task><files>tracked/phase173-03.ex</files></task>
+<task><files>tracked/phase173-03.ex, reference/demo_app/README.md, reference/demo_app/assets/e2e/demo.spec.js</files></task>
 PLAN
 cat > "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence/173-04-PLAN.md" <<'PLAN'
 <task><files>tracked/phase173-04.ex</files></task>
@@ -90,6 +90,92 @@ for phase in 168 169 170 171 172; do
   done
 done
 export SUMMARY_PATHS FAKE_ROOT FAKE_BIN FIXTURES LOG SHA CSS_MD5 CSS_TEXT ROOT_DIR
+
+node - "$ROOT_DIR" <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+const root = process.argv[2];
+const launcherPath = path.join(root, "scripts/check_phase173_candidate.sh");
+const dockerPath = path.join(root, ".dockerignore");
+const composePath = path.join(root, "compose.demo.yml");
+const runnerPath = path.join(root, "scripts/run_demo_browser_evidence.sh");
+const protectedPaths = ["reference/demo_app/README.md", "reference/demo_app/assets/e2e/demo.spec.js"];
+const sparseRules = ["/*", ...protectedPaths.map((item) => `!/${item}`)];
+const activeDockerRules = (text) => text.replace(/\r\n?/g, "\n").split("\n").map((line) => line.trim())
+  .filter((line) => line && !line.startsWith("#"));
+function assertContract(launcher, dockerignore, compose, runner) {
+  const outer = launcher.split(/\nSHA=/, 1)[0];
+  if (/git\s+(status|diff|ls-files|cat-file)\b/.test(outer)) throw new Error("outer launcher inventories origin paths");
+  const add = outer.indexOf("git worktree add --detach --no-checkout");
+  const sparse = outer.indexOf("sparse-checkout set --no-cone --no-sparse-index --stdin");
+  const checkout = outer.indexOf("checkout --detach");
+  const transfer = outer.indexOf("validatePinnedBaselines");
+  const candidate = outer.indexOf("PHASE173_CANDIDATE_MODE=true");
+  if (!(add >= 0 && sparse > add && checkout > sparse && transfer > checkout && candidate > transfer)) {
+    throw new Error("candidate checkout or materialization precedes sparse exclusion setup");
+  }
+  for (const rule of sparseRules) if (!outer.includes(rule)) throw new Error(`sparse exclusion missing: ${rule}`);
+  const loop = launcher.slice(launcher.indexOf("while IFS= read -r listed_path"), launcher.indexOf("# Run the phase regression gate"));
+  let cursor = -1;
+  for (const item of protectedPaths) {
+    const skip = loop.indexOf(`listed_path\" == \"${item}\"`);
+    const probe = loop.indexOf("git cat-file -e");
+    if (!(skip >= 0 && probe > skip)) throw new Error(`protected path is not skipped before git cat-file: ${item}`);
+    if (skip <= cursor) throw new Error("protected skips are not in deterministic order");
+    cursor = skip;
+  }
+  if (!launcher.includes('ownerAcceptance: { status: ownerAcceptanceStatus }') ||
+      !launcher.includes('OWNER_ACCEPTANCE_STATUS="unverified"') || !launcher.includes('dirtyInventory: original.dirtyInventory')) {
+    throw new Error("owner acceptance or SHA-only inventory is not explicit");
+  }
+  if (launcher.includes("ACCEPTANCE_PATHS") || launcher.includes("OWNER_GAPS") || launcher.includes("excludedDirtyPaths")) {
+    throw new Error("owner acceptance is inferred from a dirty-path inventory");
+  }
+  const dockerRules = activeDockerRules(dockerignore);
+  if (JSON.stringify(dockerRules.slice(-2)) !== JSON.stringify(protectedPaths)) throw new Error("Docker protected exclusions are not final active rules");
+  if (dockerRules.some((line) => line.startsWith("!") && protectedPaths.includes(line.slice(1)))) throw new Error("Docker exclusions are re-included");
+  if ((compose.match(/context:\s*\./g) || []).length !== 2) throw new Error("both demo builds must use repository-root context");
+  if (fs.existsSync(path.join(root, "Dockerfile.dockerignore")) || fs.existsSync(path.join(root, "reference/demo_app/Dockerfile.dockerignore"))) {
+    throw new Error("Dockerfile-specific ignore override bypasses the root exclusions");
+  }
+  if (!runner.includes("test:e2e -- phase173-evidence.spec.js --reporter=json")) throw new Error("focused Phase 173 browser selector changed");
+}
+const initial = [fs.readFileSync(launcherPath, "utf8"), fs.readFileSync(dockerPath, "utf8"),
+  fs.readFileSync(composePath, "utf8"), fs.readFileSync(runnerPath, "utf8")];
+assertContract(...initial);
+const cases = [
+  [0, (x) => x.replace('ORIGIN_META="$EVIDENCE_DIR/origin-dirty-paths.json"', 'git status --porcelain=v1\n  ORIGIN_META="$EVIDENCE_DIR/origin-dirty-paths.json"')],
+  [0, (x) => x.replace('git -C "$CANDIDATE_WORKTREE" sparse-checkout set --no-cone --no-sparse-index --stdin', 'git -C "$CANDIDATE_WORKTREE" checkout --detach "$ORIGIN_SHA"')],
+  [0, (x) => x.replace("!/reference/demo_app/README.md", "")],
+  [0, (x) => x.replace('[[ "$listed_path" == "reference/demo_app/README.md" ]] && continue', "# skip removed")],
+  [1, (x) => x.replace("reference/demo_app/README.md\n", "")],
+  [1, (x) => `${x}\n!reference/demo_app/README.md\n`],
+  [3, (x) => x.replace("phase173-evidence.spec.js", "*.spec.js")]
+];
+for (const [caseIndex, [sourceIndex, mutation]] of cases.entries()) {
+  const candidate = initial.slice();
+  candidate[sourceIndex] = mutation(candidate[sourceIndex]);
+  let rejected = false;
+  try { assertContract(...candidate); } catch { rejected = true; }
+  if (!rejected) throw new Error(`contract mutation ${caseIndex + 1} was accepted`);
+}
+const secondDockerMutation = initial.slice();
+secondDockerMutation[1] = secondDockerMutation[1].replace("reference/demo_app/assets/e2e/demo.spec.js\n", "");
+try { assertContract(...secondDockerMutation); throw new Error("Docker second-rule mutation was accepted"); } catch (error) {
+  if (error.message === "Docker second-rule mutation was accepted") throw error;
+}
+const secondSparseMutation = initial.slice();
+secondSparseMutation[0] = secondSparseMutation[0].replace("!/reference/demo_app/assets/e2e/demo.spec.js", "");
+try { assertContract(...secondSparseMutation); throw new Error("sparse second-rule mutation was accepted"); } catch (error) {
+  if (error.message === "sparse second-rule mutation was accepted") throw error;
+}
+const secondSkipMutation = initial.slice();
+secondSkipMutation[0] = secondSkipMutation[0].replace('[[ "$listed_path" == "reference/demo_app/assets/e2e/demo.spec.js" ]] && continue', "# skip removed");
+try { assertContract(...secondSkipMutation); throw new Error("scan second-skip mutation was accepted"); } catch (error) {
+  if (error.message === "scan second-skip mutation was accepted") throw error;
+}
+console.log("protected-path source contract passed all positive and negative mutations");
+NODE
 
 cat > "$FAKE_BIN/git" <<'GIT'
 #!/usr/bin/env bash
@@ -135,15 +221,29 @@ case "$command" in
     ;;
   cat-file)
     path="${2#*:}"
+    [[ "$path" != "reference/demo_app/README.md" && "$path" != "reference/demo_app/assets/e2e/demo.spec.js" ]] || {
+      printf 'PROTECTED PATH PROBED: %s\n' "$path" >&2
+      exit 92
+    }
     [[ "${FAKE_MISSING_PATH:-}" != "$path" ]]
+    ;;
+  sparse-checkout)
+    if [[ "${1:-}" == set ]]; then
+      cat > "$FIXTURES/sparse-rules"
+      touch "$FIXTURES/sparse-set"
+    fi
+    ;;
+  checkout)
+    [[ -f "$FIXTURES/sparse-set" ]] || { printf 'checkout before sparse setup\n' >&2; exit 93; }
+    cp -R "$FAKE_ORIGIN_DIR/." "$PWD/"
+    rm -rf "$PWD/reference/demo_app/tmp/demo_browser_evidence"
+    touch "$FIXTURES/checkout-done"
     ;;
   worktree)
     if [[ "${1:-}" == add ]]; then
-      destination="${3:-}"
+      destination="${4:-}"
       mkdir -p "$destination"
       touch "$FIXTURES/worktree-added"
-      cp -R "$FAKE_ORIGIN_DIR/." "$destination/"
-      rm -rf "$destination/reference/demo_app/tmp/demo_browser_evidence"
     fi
     ;;
   *)
@@ -264,7 +364,7 @@ chmod +x "$FAKE_ROOT/scripts/run_demo_browser_evidence.sh"
 
 write_metadata() {
   cat > "$TEST_DIR/origin-dirty-paths.json" <<EOF
-{"schemaVersion":1,"originSha":"$SHA","files":[{"status":" M","path":"reference/demo_app/assets/e2e/demo.spec.js"}]}
+{"schemaVersion":1,"originSha":"$SHA","workspace":"synthetic-origin","dirtyInventory":{"status":"not-collected","reason":"protected-path fence"}}
 EOF
 }
 
@@ -283,6 +383,17 @@ run_candidate() {
     bash "$ROOT_DIR/scripts/check_phase173_candidate.sh"
 }
 
+run_locally_passed_candidate() {
+  local output="$1"
+  local exit_code=0
+  if run_candidate > "$output" 2>&1; then exit_code=0; else exit_code=$?; fi
+  if [[ "$exit_code" -ne 1 ]]; then
+    cat "$output" >&2
+    printf 'FAIL: candidate returned %s; expected only the explicit external-pending status\n' "$exit_code" >&2
+    exit 1
+  fi
+}
+
 assert_failure() {
   local label="$1"
   shift
@@ -295,16 +406,16 @@ assert_failure() {
 }
 
 TEST_ENV=()
-if ! run_candidate > "$TEST_DIR/passed.out" 2>&1; then cat "$TEST_DIR/passed.out" >&2; cat "$LOG" >&2; exit 1; fi
+run_locally_passed_candidate "$TEST_DIR/passed.out"
 node - "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence/delivery-candidate.json" "$LOG" <<'NODE'
 const fs = require("node:fs");
 const record = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const log = fs.readFileSync(process.argv[3], "utf8");
-if (record.status !== "passed" || record.requiredCi.status !== "passed" || record.readiness.status !== "passed") {
-  throw new Error("good candidate did not produce complete preview/CI evidence");
+if (record.status !== "incomplete" || record.requiredCi.status !== "passed" || record.readiness.status !== "passed") {
+  throw new Error("fake-green candidate did not remain incomplete pending owner acceptance");
 }
-if (!record.originalWorkspace.excludedDirtyPaths.some((x) => x.path === "reference/demo_app/assets/e2e/demo.spec.js")) {
-  throw new Error("owner dirty path/status was not recorded as excluded");
+if (record.ownerAcceptance.status !== "unverified" || record.originalWorkspace.dirtyInventory.status !== "not-collected" || "excludedDirtyPaths" in record.originalWorkspace || "requiredOwnerDirtyPaths" in record) {
+  throw new Error("owner acceptance or origin dirty inventory was inferred");
 }
 if (record.browserEvidence.status !== "passed" || record.uploadableArtifactDirectory !== "reference/demo_app/tmp/demo_browser_evidence/retained/") {
   throw new Error("sanitized retained evidence was not required and recorded");
@@ -323,7 +434,7 @@ if (log.includes("verify.preview")) throw new Error("preview asset check ran wit
 NODE
 
 TEST_ENV=(FAKE_ASSET_DIFF='mailglass_admin/assets/css/app.css')
-if ! run_candidate > "$TEST_DIR/changed_assets.out" 2>&1; then cat "$TEST_DIR/changed_assets.out" >&2; cat "$LOG" >&2; exit 1; fi
+run_locally_passed_candidate "$TEST_DIR/changed_assets.out"
 rg -q 'asdf exec mix verify.preview' "$LOG"
 node - "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence/delivery-candidate.json" <<'NODE'
 const fs = require("node:fs");
@@ -361,15 +472,6 @@ assert_failure wrong_sha_ci FAKE_CI_HEAD_SHA=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 rg -q 'no successful CI workflow run exists' "$TEST_DIR/wrong_sha_ci.out"
 
 TEST_ENV=(FAKE_REQUIRED_DIRTY=true)
-assert_failure required_owner_dirty FAKE_REQUIRED_DIRTY=true
-node - "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence/delivery-candidate.json" <<'NODE'
-const fs = require("node:fs");
-const record = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
-if (!record.requiredOwnerDirtyPaths.some((x) => x.includes("reference/demo_app/assets/e2e/demo.spec.js"))) {
-  throw new Error("required owner path was not reported as path/status only");
-}
-NODE
-
 # Exercise the outer launcher with fake Git: it snapshots path/status metadata,
 # creates a detached exact-SHA candidate, and invokes the committed candidate mode.
 cp "$ROOT_DIR/scripts/check_phase173_candidate.sh" "$FAKE_ROOT/scripts/check_phase173_candidate.sh"
@@ -380,15 +482,37 @@ env PATH="$FAKE_BIN:$NODE_BIN_DIR:$PATH" \
   FAKE_ROOT="$FAKE_ROOT" FAKE_ORIGIN_DIR="$FAKE_ROOT" FAKE_ORIGIN_STATUS=' M reference/demo_app/assets/e2e/demo.spec.js' \
   FAKE_BIN="$FAKE_BIN" FIXTURES="$FIXTURES" LOG="$LOG" SHA="$SHA" CSS_MD5="$CSS_MD5" CSS_TEXT="$CSS_TEXT" \
   SUMMARY_PATHS="$SUMMARY_PATHS" \
-  bash "$FAKE_ROOT/scripts/check_phase173_candidate.sh" > "$TEST_DIR/outer.out"
+  bash "$FAKE_ROOT/scripts/check_phase173_candidate.sh" > "$TEST_DIR/outer.out" || [[ "$?" -eq 1 ]]
 rg -q 'phase173 candidate worktree: /tmp/mailglass-phase173\.' "$TEST_DIR/outer.out"
 node - "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence/origin-dirty-paths.json" <<'NODE'
 const fs = require("node:fs");
 const record = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
-const entry = record.files.find((item) => item.path === "reference/demo_app/assets/e2e/demo.spec.js");
-if (!entry || entry.status !== " M") throw new Error(`outer launcher did not preserve owner path/status metadata: ${JSON.stringify(record)}`);
+if (record.dirtyInventory.status !== "not-collected" || record.dirtyInventory.reason !== "protected-path fence" || "files" in record) {
+  throw new Error(`outer launcher collected or inferred a dirty path inventory: ${JSON.stringify(record)}`);
+}
 NODE
-rg -q 'git worktree add --detach' "$LOG"
+rg -q 'git worktree add --detach --no-checkout' "$LOG"
+rg -q 'sparse-checkout set --no-cone --no-sparse-index --stdin' "$LOG"
+rg -q 'checkout --detach' "$LOG"
+node - "$FIXTURES/sparse-rules" "$LOG" <<'NODE'
+const fs = require("node:fs");
+const rules = fs.readFileSync(process.argv[2], "utf8").trim().split(/\r?\n/);
+const log = fs.readFileSync(process.argv[3], "utf8");
+const add = log.indexOf("git worktree add --detach --no-checkout");
+const sparse = log.indexOf("sparse-checkout set --no-cone --no-sparse-index --stdin");
+const checkout = log.indexOf("checkout --detach");
+if (JSON.stringify(rules) !== JSON.stringify(["/*", "!/reference/demo_app/README.md", "!/reference/demo_app/assets/e2e/demo.spec.js"])) {
+  throw new Error(`wrong sparse exclusions: ${JSON.stringify(rules)}`);
+}
+if (!(add >= 0 && sparse > add && checkout > sparse)) throw new Error("checkout/materialization did not follow sparse setup");
+if (log.slice(0, add).includes("git status") || log.slice(0, add).includes("git diff") || log.slice(0, add).includes("git ls-files")) {
+  throw new Error("origin inventory command ran before candidate isolation");
+}
+if (log.includes("git cat-file -e aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:reference/demo_app/README.md") ||
+    log.includes("git cat-file -e aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:reference/demo_app/assets/e2e/demo.spec.js")) {
+  throw new Error("protected deliverable path reached git cat-file");
+}
+NODE
 if rg -q 'git (add |push |merge )|gh workflow run|docker compose.* down|worktree remove' "$LOG"; then
   printf 'FAIL: launcher attempted a prohibited GitHub write or retained-resource cleanup\n' >&2
   exit 1

@@ -17,39 +17,28 @@ if [[ "${PHASE173_CANDIDATE_MODE:-false}" != "true" ]]; then
   ORIGIN_META="$EVIDENCE_DIR/origin-dirty-paths.json"
   mkdir -p "$EVIDENCE_DIR"
   git check-ignore -q -- "$ORIGIN_META" || fail "$ORIGIN_META must be ignored by git"
-
-  git status --porcelain=v1 -z --untracked-files=all |
-    node -e '
+  node - "$ORIGIN_META" "$ORIGIN_SHA" "$REPO_ROOT" <<'NODE'
 const fs = require("node:fs");
-let input = "";
-process.stdin.setEncoding("utf8");
-process.stdin.on("data", (chunk) => (input += chunk));
-process.stdin.on("end", () => {
-  const records = input.split("\0").filter(Boolean);
-  const files = [];
-  for (let index = 0; index < records.length; index += 1) {
-    const record = records[index];
-    const status = record.slice(0, 2);
-    const path = record.slice(3);
-    files.push({ status, path });
-    if (status.includes("R") || status.includes("C")) {
-      const previousPath = records[++index];
-      if (previousPath) files[files.length - 1].previousPath = previousPath;
-    }
-  }
-  fs.writeFileSync(process.argv[1], JSON.stringify({
-    schemaVersion: 1,
-    capturedAt: new Date().toISOString(),
-    originSha: process.argv[2],
-    workspace: process.argv[3],
-    files
-  }, null, 2) + "\n");
-});
-' "$ORIGIN_META" "$ORIGIN_SHA" "$REPO_ROOT"
+const [output, originSha, workspace] = process.argv.slice(2);
+fs.writeFileSync(output, JSON.stringify({
+  schemaVersion: 1,
+  capturedAt: new Date().toISOString(),
+  originSha,
+  workspace,
+  dirtyInventory: { status: "not-collected", reason: "protected-path fence" }
+}, null, 2) + "\n");
+NODE
 
   RUN_PARENT="$(mktemp -d /tmp/mailglass-phase173.XXXXXXXX)"
   CANDIDATE_WORKTREE="$RUN_PARENT/candidate"
-  git worktree add --detach "$CANDIDATE_WORKTREE" "$ORIGIN_SHA"
+  git worktree add --detach --no-checkout "$CANDIDATE_WORKTREE" "$ORIGIN_SHA"
+  printf '%s\n' '/*' '!/reference/demo_app/README.md' '!/reference/demo_app/assets/e2e/demo.spec.js' |
+    git -C "$CANDIDATE_WORKTREE" sparse-checkout set --no-cone --no-sparse-index --stdin ||
+    fail "could not establish protected-path sparse exclusions"
+  [[ "$(git -C "$CANDIDATE_WORKTREE" rev-parse HEAD)" == "$ORIGIN_SHA" ]] ||
+    fail "no-checkout worktree HEAD differs from captured candidate SHA"
+  git -C "$CANDIDATE_WORKTREE" checkout --detach "$ORIGIN_SHA" ||
+    fail "could not materialize exact-SHA candidate after sparse exclusions"
   [[ "$(git -C "$CANDIDATE_WORKTREE" rev-parse HEAD)" == "$ORIGIN_SHA" ]] ||
     fail "detached worktree HEAD differs from captured candidate SHA"
   [[ -z "$(git -C "$CANDIDATE_WORKTREE" status --porcelain=v1 --untracked-files=all)" ]] ||
@@ -130,7 +119,7 @@ NODE
   STATUS=$?
   set -e
   printf 'phase173 candidate worktree: %s\n' "$CANDIDATE_WORKTREE"
-  printf 'phase173 original dirty path/status record: %s\n' "$ORIGIN_META"
+  printf 'phase173 original SHA-only metadata record: %s\n' "$ORIGIN_META"
   exit "$STATUS"
 fi
 
@@ -140,7 +129,7 @@ ORIGIN_META="${PHASE173_ORIGIN_DIRTY_METADATA:-}"
 [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || fail "candidate SHA must be a full 40-character commit"
 [[ -n "$WORKTREE" && -n "$ORIGIN_META" ]] || fail "candidate mode needs worktree and dirty metadata paths"
 [[ -d "$WORKTREE" ]] || fail "candidate worktree does not exist: $WORKTREE"
-[[ -f "$ORIGIN_META" ]] || fail "original dirty path/status record is missing"
+[[ -f "$ORIGIN_META" ]] || fail "original SHA metadata record is missing"
 WORKTREE="$(cd "$WORKTREE" && pwd -P)"
 
 cd "$WORKTREE"
@@ -158,7 +147,6 @@ rg -q -e "\"originSha\"[[:space:]]*:[[:space:]]*\"$SHA\"" "$ORIGIN_META" ||
 mkdir -p "$(dirname "$DELIVERY_JSON")"
 
 declare -a FAILURES=()
-declare -a OWNER_GAPS=()
 declare -a PRIOR_SUMMARIES=()
 declare -a ADVISORY_JOBS=()
 declare -a CI_JOBS=()
@@ -210,39 +198,12 @@ for plan_file in "$PHASE_173_DIR/173-01-PLAN.md" "$PHASE_173_DIR/173-02-PLAN.md"
   listed_files="$(sed -nE 's#^[[:space:]]*<files>(.*)</files>.*#\1#p' "$plan_file" | tr ',' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
   while IFS= read -r listed_path; do
     [[ -n "$listed_path" ]] || continue
+    [[ "$listed_path" == "reference/demo_app/README.md" ]] && continue
+    [[ "$listed_path" == "reference/demo_app/assets/e2e/demo.spec.js" ]] && continue
     [[ "$listed_path" == *"/tmp/demo_browser_evidence/"* ]] && continue
     git cat-file -e "$SHA:$listed_path" || fail "candidate is missing Phase 173 deliverable $listed_path"
   done <<< "$listed_files"
 done
-
-# Compare path/status-only owner metadata against prior accepted files and the
-# Phase 173 plan inputs. Never read original dirty file contents.
-ACCEPTANCE_PATHS=""
-for summary_path in "${PRIOR_SUMMARIES[@]}"; do
-  summary="$(git show "$SHA:$summary_path")"
-  summary_paths="$(printf '%s\n' "$summary" | awk '
-    /^key-files:/ { in_keys=1; next }
-    in_keys && /^[^[:space:]]/ { exit }
-    in_keys && /^[[:space:]]+- / { sub(/^[[:space:]]+- /, ""); print }
-  ')"
-  ACCEPTANCE_PATHS+="$summary_paths"$'\n'
-done
-for plan_file in "$PHASE_173_DIR/173-01-PLAN.md" "$PHASE_173_DIR/173-02-PLAN.md" "$PHASE_173_DIR/173-03-PLAN.md" "$PHASE_173_DIR/173-04-PLAN.md" "$PHASE_173_DIR/173-05-PLAN.md" "$PHASE_173_DIR/173-06-PLAN.md"; do
-  ACCEPTANCE_PATHS+="$(sed -nE 's#^[[:space:]]*<files>(.*)</files>.*#\1#p' "$plan_file" | tr ',' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"$'\n'
-done
-while IFS=$'\t' read -r dirty_status dirty_path; do
-  [[ -n "$dirty_path" ]] || continue
-  if printf '%s\n' "$ACCEPTANCE_PATHS" | rg -F -x -q -- "$dirty_path"; then
-    OWNER_GAPS+=("$dirty_status $dirty_path")
-  fi
-done < <(node - "$ORIGIN_META" <<'NODE'
-const fs = require("node:fs");
-const metadata = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
-for (const file of metadata.files || []) {
-  console.log(`${file.status}\t${file.path}`);
-}
-NODE
-)
 
 # Run the phase regression gate from the clean candidate only.
 if [[ "${PHASE173_SKIP_LOCAL_CHECKS:-false}" != "true" ]]; then
@@ -522,21 +483,20 @@ else
 fi
 
 [[ -n "${ADVISORY_JSON:-}" ]] || ADVISORY_JSON='[]'
-if ((${#OWNER_GAPS[@]} > 0)); then
-  for owner_gap in "${OWNER_GAPS[@]}"; do FAILURES+=("required acceptance input remains owner-dirty: $owner_gap"); done
-fi
+OWNER_ACCEPTANCE_STATUS="unverified"
+FAILURES+=("protected owner acceptance remains unverified")
 
 FINAL_STATUS="incomplete"
-if [[ "$PREVIEW_STATUS" == passed && "$CI_STATUS" == passed && "$REGRESSION_STATUS" == passed && "$ASSET_STATUS" != failed && "$EVIDENCE_STATUS" == passed && ${#OWNER_GAPS[@]} -eq 0 && ${#FAILURES[@]} -eq 0 ]]; then
+if [[ "$PREVIEW_STATUS" == passed && "$CI_STATUS" == passed && "$REGRESSION_STATUS" == passed && "$ASSET_STATUS" != failed && "$EVIDENCE_STATUS" == passed && "$OWNER_ACCEPTANCE_STATUS" == accepted && ${#FAILURES[@]} -eq 0 ]]; then
   FINAL_STATUS="passed"
 fi
 
-node - "$DELIVERY_JSON" "$FINAL_STATUS" "$SHA" "$WORKTREE" "$REVIEW_PROJECT" "$HTTP_PORT" "$DB_PORT" "$PREVIEW_URL" "$PREVIEW_STATUS" "$CI_STATUS" "$CI_RUN_ID" "$CI_URL" "$REGRESSION_STATUS" "$ASSET_STATUS" "$EVIDENCE_STATUS" "$SERVED_CSS_PATH" "$SOURCE_CSS_SHA256" "$BUILT_CSS_SHA256" "$SERVED_CSS_SHA256" "$ORIGIN_META" "$ADVISORY_JSON" "$(printf '%s\n' "${OWNER_GAPS[@]:-}")" "$(printf '%s\n' "${FAILURES[@]:-}")" <<'NODE'
+node - "$DELIVERY_JSON" "$FINAL_STATUS" "$SHA" "$WORKTREE" "$REVIEW_PROJECT" "$HTTP_PORT" "$DB_PORT" "$PREVIEW_URL" "$PREVIEW_STATUS" "$CI_STATUS" "$CI_RUN_ID" "$CI_URL" "$REGRESSION_STATUS" "$ASSET_STATUS" "$EVIDENCE_STATUS" "$SERVED_CSS_PATH" "$SOURCE_CSS_SHA256" "$BUILT_CSS_SHA256" "$SERVED_CSS_SHA256" "$ORIGIN_META" "$ADVISORY_JSON" "$OWNER_ACCEPTANCE_STATUS" "$(printf '%s\n' "${FAILURES[@]:-}")" <<'NODE'
 const fs = require("node:fs");
 const [output, status, candidateSha, worktree, reviewProject, httpPort, dbPort, previewUrl,
   previewStatus, ciStatus, ciRunId, ciUrl, regressionStatus, assetStatus, evidenceStatus, servedCssPath,
   sourceCssSha256, builtCssSha256, servedCssSha256, originMetadata, advisoryJson,
-  ownerGapsRaw, failuresRaw] = process.argv.slice(2);
+  ownerAcceptanceStatus, failuresRaw] = process.argv.slice(2);
 const original = JSON.parse(fs.readFileSync(originMetadata, "utf8"));
 const record = {
   schemaVersion: 1,
@@ -553,11 +513,11 @@ const record = {
     served: { path: servedCssPath || null, sha256: servedCssSha256 || null }
   },
   requiredCi: { status: ciStatus, workflow: "CI", job: "CI Green", runId: ciRunId || null, url: ciUrl || null, headSha: candidateSha },
+  ownerAcceptance: { status: ownerAcceptanceStatus },
   advisoryJobs: JSON.parse(advisoryJson || "[]"),
   localChecks: { regression: regressionStatus, previewAssets: assetStatus },
   browserEvidence: { status: evidenceStatus, sanitizedPath: `${"reference/demo_app/tmp/demo_browser_evidence"}/retained/` },
-  originalWorkspace: { sha: original.originSha, excludedDirtyPaths: original.files || [] },
-  requiredOwnerDirtyPaths: (ownerGapsRaw || "").split("\n").filter(Boolean),
+  originalWorkspace: { sha: original.originSha, dirtyInventory: original.dirtyInventory },
   failures: (failuresRaw || "").split("\n").filter(Boolean),
   cleanup: {
     compose: `docker compose -p "${reviewProject}" -f "${worktree}/compose.demo.yml" down`,
