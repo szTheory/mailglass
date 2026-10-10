@@ -173,6 +173,7 @@ function createCheckpoint({
       "baseline_fixture",
       "baseline_theme",
       "baseline_viewport",
+      "baseline_capture_dimensions",
       "baseline_interaction_state",
       "baseline_browser",
       "relation"
@@ -184,6 +185,8 @@ function createCheckpoint({
     }
     const baselineDimensions = /^(\d+)x(\d+)$/.exec(capture.before_after.baseline_viewport);
     if (!baselineDimensions) throw new Error(`baseline viewport is invalid: ${capture.test_title}`);
+    const baselineCaptureDimensions = /^(\d+)x(\d+)$/.exec(capture.before_after.baseline_capture_dimensions);
+    if (!baselineCaptureDimensions) throw new Error(`baseline capture dimensions are invalid: ${capture.test_title}`);
     const baselineBytes = fs.readFileSync(baselinePath.absolutePath);
     if (baselineBytes.length < PNG_SIGNATURE.length || !baselineBytes.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)) {
       throw new Error(`missing or invalid baseline PNG: ${capture.before_after.baseline_path}`);
@@ -193,8 +196,10 @@ function createCheckpoint({
       throw new Error(`baseline PNG digest mismatch: ${capture.before_after.baseline_path}`);
     }
     if (
-      baselineBytes.readUInt32BE(16) !== Number(baselineDimensions[1]) ||
-      baselineBytes.readUInt32BE(20) !== Number(baselineDimensions[2])
+      baselineBytes.readUInt32BE(16) !== Number(baselineCaptureDimensions[1]) ||
+      baselineBytes.readUInt32BE(20) !== Number(baselineCaptureDimensions[2]) ||
+      Number(baselineCaptureDimensions[1]) !== Number(baselineDimensions[1]) ||
+      Number(baselineCaptureDimensions[2]) < Number(baselineDimensions[2])
     ) {
       throw new Error(`baseline PNG dimensions do not match its viewport: ${capture.before_after.baseline_path}`);
     }
@@ -217,6 +222,10 @@ function createCheckpoint({
 
     return {
       ...capture,
+      before_after: {
+        ...capture.before_after,
+        baseline_capture_dimensions: `${baselineBytes.readUInt32BE(16)}x${baselineBytes.readUInt32BE(20)}`
+      },
       path: safePath.relativePath,
       sha256: actualSha256
     };

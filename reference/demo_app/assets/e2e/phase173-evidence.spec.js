@@ -24,6 +24,7 @@ const BASELINES = {
     fixture: "synthetic seeded AtlasDesk dashboard summary",
     theme: "light",
     viewport: "375x900",
+    captureDimensions: "375x1613",
     interactionState: "initial dashboard route before selecting a review surface",
     browser: "Chromium 148.0.7778.0",
     relation: "same route and initial dashboard state"
@@ -38,6 +39,7 @@ const BASELINES = {
     fixture: "synthetic seeded AtlasDesk Mailable preview root",
     theme: "light",
     viewport: "375x900",
+    captureDimensions: "375x1847",
     interactionState: "initial preview route before selecting a Mailable scenario",
     browser: "Chromium 148.0.7778.0",
     relation: "same preview surface; current capture selects the default scenario"
@@ -52,6 +54,7 @@ const BASELINES = {
     fixture: "synthetic seeded northstar deliveries",
     theme: "light",
     viewport: "1440x900",
+    captureDimensions: "1440x2002",
     interactionState: "delivery list before selecting a row",
     browser: "Chromium 148.0.7778.0",
     relation: "same list surface; current capture follows opening the first delivery quick view"
@@ -66,6 +69,7 @@ const BASELINES = {
     fixture: "synthetic seeded northstar support mailbox records",
     theme: "dark",
     viewport: "1440x900",
+    captureDimensions: "1440x1431",
     interactionState: "inbound record list before selection",
     browser: "Chromium 148.0.7778.0",
     relation: "same mailbox surface; current capture follows opening the first record quick view"
@@ -80,6 +84,7 @@ const BASELINES = {
     fixture: "synthetic helios-void account with zero delivery rows",
     theme: "dark",
     viewport: "375x900",
+    captureDimensions: "375x1013",
     interactionState: "direct route to the empty account deliveries state",
     browser: "Chromium 148.0.7778.0",
     relation: "same route, fixture, theme, viewport, and empty state"
@@ -94,6 +99,7 @@ const BASELINES = {
     fixture: "fixed synthetic expired unsubscribe route state",
     theme: "light",
     viewport: "375x900",
+    captureDimensions: "375x900",
     interactionState: "initial expired recipient link state",
     browser: "Chromium 148.0.7778.0",
     relation: "same route, fixture, theme, viewport, and expired state"
@@ -195,6 +201,7 @@ async function recordCapture({ page, browser, testInfo, id, fixture, theme, inte
       baseline_fixture: baseline.fixture,
       baseline_theme: baseline.theme,
       baseline_viewport: baseline.viewport,
+      baseline_capture_dimensions: baseline.captureDimensions,
       baseline_interaction_state: baseline.interactionState,
       baseline_browser: baseline.browser,
       relation: baseline.relation

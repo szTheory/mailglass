@@ -64,6 +64,7 @@ function fixture(evidenceDir, attachmentPath) {
       baseline_fixture: "synthetic preview fixture",
       baseline_theme: "light",
       baseline_viewport: "1x1",
+      baseline_capture_dimensions: "1x1",
       baseline_interaction_state: "initial route",
       baseline_browser: "Chromium test fixture",
       relation: "paired current and baseline captures"
@@ -195,5 +196,17 @@ test("rejects incomplete capture provenance", (t) => {
   assert.throws(
     () => createCheckpoint(checkpointArgs(evidenceDir, report, manifest)),
     /before\/after baseline_interaction_state is missing/
+  );
+});
+
+test("rejects baseline PNG dimensions that do not match declared capture dimensions", (t) => {
+  const evidenceDir = fs.mkdtempSync(path.join(os.tmpdir(), "mailglass-evidence-"));
+  t.after(() => fs.rmSync(evidenceDir, { recursive: true, force: true }));
+  const { report, manifest } = fixture(evidenceDir);
+  manifest.captures[0].before_after.baseline_capture_dimensions = "2x2";
+
+  assert.throws(
+    () => createCheckpoint(checkpointArgs(evidenceDir, report, manifest)),
+    /baseline PNG dimensions do not match its viewport/
   );
 });
