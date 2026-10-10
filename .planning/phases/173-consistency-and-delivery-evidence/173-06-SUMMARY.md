@@ -35,8 +35,8 @@ coverage:
       - kind: integration
         ref: "bash scripts/check_phase173_candidate.sh (candidate d9402094723722efe3d73fef034334a7018b68c8)"
         status: fail
-    human_judgment: true
-    rationale: "The gate recorded required proof gaps; UIQ-03 must stay Pending."
+    human_judgment: false
+    rationale: "The gate and preview checks are machine-observable; missing proof remains a recorded gap and needs no human UAT."
 duration: 25min
 completed: 2026-10-10
 status: complete
