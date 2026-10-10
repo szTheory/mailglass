@@ -726,10 +726,12 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "Failed"
 
       assert html =~
-               "Filter by the latest fresh mailbox outcome, including an explicit no-change result."
+               "Filter by the latest fresh mailbox outcome, including no change."
 
-      assert html =~
-               ~r/<legend class="(?=[^"]*\btext-label\b)(?=[^"]*\buppercase\b)(?=[^"]*\bfont-bold\b)(?=[^"]*\btext-secondary\b)[^"]*">Filters<\/legend>/
+      assert html =~ "Summary counts still show all outcomes."
+      document = Floki.parse_document!(html)
+      assert Floki.find(document, "legend") |> Floki.text() |> String.trim() == "Filters"
+      assert Floki.find(document, "legend") |> Floki.attribute("class") == ["sr-only"]
 
       refute html =~ "tracking-["
     end

@@ -22,13 +22,14 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     ~H"""
     <Components.filter_section
       title="Filters"
-      description="Show received mail for one account, then narrow by provider, outcome, time, or search."
+      compact
     >
       <Components.filter_field
         field={@form[:provider]}
         type={:select}
         label="Provider"
         help="Filter by the inbound provider recorded for this account."
+        help_display={:tooltip}
         error={field_error(@errors, "provider")}
         prompt="Any provider"
         options={@provider_options}
@@ -38,7 +39,8 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         field={@form[:outcome]}
         type={:select}
         label="Mailbox outcome"
-        help="Filter by the latest fresh mailbox outcome, including an explicit no-change result."
+        help="Filter by the latest fresh mailbox outcome, including no change. Summary counts still show all outcomes."
+        help_display={:tooltip}
         error={field_error(@errors, "outcome")}
         prompt="Any outcome"
         options={enum_options(@outcome_values)}
@@ -49,6 +51,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         type={:select}
         label="Time window"
         help="Limit results to recently received messages."
+        help_display={:tooltip}
         error={field_error(@errors, "window_hours")}
         options={@window_options}
       />
@@ -57,8 +60,9 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         field={@form[:search]}
         label="Search"
         help="Find by subject, recipient, or provider message id."
+        help_display={:tooltip}
         error={field_error(@errors, "search")}
-        placeholder="subject or recipient"
+        placeholder="Subject or recipient"
       />
     </Components.filter_section>
     """

@@ -367,6 +367,68 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
   z-index: var(--z-base);
 }
 
+.mg-inbound-filters {
+  position: relative;
+}
+
+/* A class preserves the desktop breakpoint after the mobile panel is closed;
+   JS.toggle's inline display:none would also hide the desktop controls. */
+.mg-inbound-filters-open {
+  display: block;
+}
+
+.mg-inbound-filters:has(.mg-field-help:hover, .mg-field-help button:focus-visible, .mg-field-help button[aria-expanded="true"]),
+[data-testid="inbound-overview"]:has(.mg-field-help:hover, .mg-field-help button:focus-visible, .mg-field-help button[aria-expanded="true"]) {
+  position: relative;
+  z-index: var(--z-dropdown);
+}
+
+.mg-field-help-tooltip {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline-start: 0;
+  z-index: var(--z-dropdown);
+  width: min(18rem, calc(100vw - 2 * var(--spacing-md)));
+  border-radius: var(--radius-field);
+  background: var(--color-base-200);
+  box-shadow: var(--shadow-overlay);
+  color: var(--color-base-content);
+  padding: var(--spacing-md);
+  font-size: var(--text-label);
+  font-weight: 400;
+  line-height: 1.5;
+  visibility: hidden;
+}
+
+#inbound-summary-help-tooltip {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+.mg-field-help:not(:has(button[data-dismissed])):hover .mg-field-help-tooltip,
+.mg-field-help:has(button:not([data-dismissed]):focus-visible) .mg-field-help-tooltip,
+.mg-field-help:has(button[aria-expanded="true"]) .mg-field-help-tooltip {
+  visibility: visible;
+}
+
+.mg-inbound-summary-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-md);
+}
+
+@media (min-width: 768px) {
+  .mg-inbound-summary-counts {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .mg-inbound-summary-counts {
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+  }
+}
+
 /* Admin shell body height: viewport minus the 5rem sticky header. There is no
    4px-grid token for "viewport minus header", and SIZE-GATE only exempts bare
    viewport units, so the calc lives here as a named utility rather than as an

@@ -8,71 +8,106 @@ defmodule MailglassAdmin.Inbound.Overview do
   alias MailglassAdmin.Components
 
   attr :summary, :map, required: true
+  attr :filters, :map, default: %{}
 
   def overview(assigns) do
     assigns =
       assign(assigns,
         total: summary_count(assigns.summary, :total),
-        no_match: outcome_count(assigns.summary, :no_match),
-        accepted: outcome_count(assigns.summary, :accept),
         no_match_rate: summary_rate(assigns.summary, :no_match_rate),
-        secondary: secondary_counts(assigns.summary)
+        outcomes: outcome_counts(assigns.summary),
+        scope: summary_scope(assigns.filters),
+        list_outcome: list_outcome(assigns.filters)
       )
 
     ~H"""
-    <section data-testid="inbound-overview" class="grid gap-md">
-      <div class="grid gap-sm sm:grid-cols-2 xl:grid-cols-4">
+    <section data-testid="inbound-overview" class="mt-md border-b border-base-300 pb-md">
+      <div class="relative mb-sm flex flex-wrap items-center gap-xs text-label text-secondary">
+        <p data-testid="inbound-summary-scope" class="min-w-0 [overflow-wrap:anywhere]">
+          {@scope}
+        </p>
+        <span class="inline-flex">
+          <Components.field_help
+            id="inbound-summary-help"
+            label="summary counts"
+            text="Counts follow the applied provider, time window, and search filters across all results, including other pages. Mailbox outcome only narrows the message list."
+          />
+        </span>
+        <p :if={@list_outcome} data-testid="inbound-summary-outcome-scope" class="font-bold">
+          List filtered to {@list_outcome}
+        </p>
+      </div>
+      <div class="mg-inbound-summary-counts">
         <Components.stat_card
-          label="Inbound messages"
+          label="Messages"
           value={@total}
+          compact
           severity={:info}
           severity_label="Tracked"
           data-testid="inbound-overview-total"
         />
         <Components.stat_card
-          label="No match"
-          value={@no_match}
-          severity={attention_severity(@no_match)}
-          severity_label={attention_label(@no_match)}
-          data-testid="inbound-overview-no-match"
-        />
-        <Components.stat_card
-          label="Accepted"
-          value={@accepted}
-          severity={accepted_severity(@accepted)}
-          severity_label={accepted_label(@accepted)}
-          data-testid="inbound-overview-accepted"
-        />
-        <Components.stat_card
           label="No-match rate"
           value={"#{@no_match_rate}%"}
+          compact
           severity={rate_severity(@no_match_rate)}
           severity_label={rate_label(@no_match_rate)}
           data-testid="inbound-overview-no-match-rate"
         />
-      </div>
-
-      <div :if={@secondary != []} class="mt-md flex flex-wrap gap-sm">
-        <span
-          :for={{label, count} <- @secondary}
-          class="rounded-box border border-base-300 bg-base-100 px-sm py-sm text-label text-secondary"
-        >
-          <span>{label}</span>
-          <span class="mono font-bold text-base-content">{count}</span>
-        </span>
+        <Components.stat_card
+          :for={{key, label, count} <- @outcomes}
+          label={label}
+          value={count}
+          compact
+          severity={if key == :no_match, do: attention_severity(count), else: :neutral}
+          severity_label={if key == :no_match, do: attention_label(count), else: "Tracked"}
+          data-testid={"inbound-overview-#{String.replace(Atom.to_string(key), "_", "-")}"}
+        />
       </div>
     </section>
     """
   end
 
-  defp secondary_counts(summary) do
+  defp outcome_counts(summary) do
     [
-      {"Rejected", outcome_count(summary, :reject)},
-      {"Bounced", outcome_count(summary, :bounce)},
-      {"Failed", outcome_count(summary, :failed)},
-      {"Ignored", outcome_count(summary, :ignore)}
+      {:no_match, "No match"},
+      {:accepted, "Accepted"},
+      {:reject, "Rejected"},
+      {:bounce, "Bounced"},
+      {:failed, "Failed"},
+      {:ignore, "Ignored"},
+      {:no_change, "No change"}
     ]
-    |> Enum.reject(fn {_label, count} -> count == 0 end)
+    |> Enum.map(fn {key, label} ->
+      outcome = if key == :accepted, do: :accept, else: key
+      {key, label, outcome_count(summary, outcome)}
+    end)
+  end
+
+  defp summary_scope(filters) do
+    window =
+      case filters["window_hours"] do
+        "24" -> "Last 24 hours"
+        "720" -> "Last 30 days"
+        _ -> "Last 7 days"
+      end
+
+    provider = if filters["provider"] in [nil, ""], do: "Any provider", else: filters["provider"]
+    search = if filters["search"] in [nil, ""], do: [], else: ["Search: " <> filters["search"]]
+    Enum.join(["All outcomes", window, provider] ++ search, " · ")
+  end
+
+  defp list_outcome(filters) do
+    case filters["outcome"] do
+      "no_match" -> "No match"
+      "accept" -> "Accepted"
+      "reject" -> "Rejected"
+      "bounce" -> "Bounced"
+      "failed" -> "Failed"
+      "ignore" -> "Ignored"
+      "no_change" -> "No change"
+      _ -> nil
+    end
   end
 
   defp summary_count(summary, key) do
@@ -119,12 +154,6 @@ defmodule MailglassAdmin.Inbound.Overview do
 
   defp attention_label(count) when is_integer(count) and count > 0, do: "Needs attention"
   defp attention_label(_count), do: "All clear"
-
-  defp accepted_severity(count) when is_integer(count) and count > 0, do: :success
-  defp accepted_severity(_count), do: :neutral
-
-  defp accepted_label(count) when is_integer(count) and count > 0, do: "Healthy"
-  defp accepted_label(_count), do: "No accepted mail yet"
 
   defp rate_severity(rate) when is_number(rate) and rate > 0, do: :warning
   defp rate_severity(_rate), do: :success

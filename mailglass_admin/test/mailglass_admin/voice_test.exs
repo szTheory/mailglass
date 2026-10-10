@@ -178,7 +178,7 @@ defmodule MailglassAdmin.VoiceTest do
       # LD-16: the no-selection surface leads with the InboundMessage domain noun (the
       # former select prompt is now a no-selection put_flash, asserted at source in the
       # flash-guards describe; the initial render shows the full-width list).
-      assert html =~ "Recent InboundMessages",
+      assert html =~ "Received messages",
              "LD-16: no-selection surface must lead with the InboundMessage domain noun"
 
       # LD-03: filtered empty-state body — Phase 113 UI-SPEC updated to "No records match

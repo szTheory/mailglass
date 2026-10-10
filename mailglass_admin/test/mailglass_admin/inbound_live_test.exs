@@ -109,7 +109,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ "Recent InboundMessages"
+      assert html =~ "Received messages"
       assert html =~ ~s(data-testid="inbound-master-detail")
       # V5 masking half: masked by default, raw recipient never rendered.
       assert html =~ "a****@e******.com"
@@ -200,7 +200,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="inbound-overview")
-      assert html =~ "Inbound messages"
+      assert html =~ "Messages"
       assert html =~ "No match"
       assert html =~ "Accepted"
       assert html =~ "No-match rate"
@@ -210,8 +210,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "foreign@example.com"
 
       assert_in_order(html, [
-        ~s(data-testid="inbound-overview"),
         ~s(data-testid="inbound-filters"),
+        ~s(data-testid="inbound-overview"),
         ~s(data-testid="inbound-master-detail")
       ])
     end
@@ -229,9 +229,59 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="inbound-overview")
-      assert html =~ "Inbound messages"
+      assert html =~ "Messages"
       assert html =~ "101"
       refute html =~ "accepted-101@example.com"
+    end
+
+    test "summary explains its applied scope while outcome only narrows records", %{conn: conn} do
+      conn = operator_conn(conn)
+      matched = InboundFixtures.seed_matched!(@tenant_id, provider: "mailgun", subject: "Invoice")
+
+      unmatched =
+        InboundFixtures.seed_no_match!(@tenant_id, provider: "mailgun", subject: "Invoice")
+
+      InboundFixtures.seed_matched!(@tenant_id, provider: "ses", subject: "Invoice")
+      InboundFixtures.seed_matched!(@tenant_id, provider: "mailgun", subject: "Other")
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "provider" => "mailgun",
+            "search" => "Invoice",
+            "window_hours" => "24",
+            "outcome" => "accept"
+          })
+        )
+
+      doc = Floki.parse_document!(html)
+
+      assert Floki.find(doc, "[data-testid='inbound-summary-scope']") |> Floki.text() =~
+               "All outcomes · Last 24 hours · mailgun · Search: Invoice"
+
+      assert Floki.find(doc, "[data-testid='inbound-summary-outcome-scope']") |> Floki.text() =~
+               "List filtered to Accepted"
+
+      assert Floki.find(doc, "[data-testid='inbound-overview-total'] p")
+             |> Enum.at(1)
+             |> Floki.text()
+             |> String.trim() == "2"
+
+      assert Floki.find(doc, "[data-testid='inbound-overview-no-match'] p")
+             |> Enum.at(1)
+             |> Floki.text()
+             |> String.trim() == "1"
+
+      assert html =~ matched.record.id
+      refute html =~ unmatched.record.id
+
+      assert Floki.attribute(Floki.find(doc, "#filters_provider"), "aria-describedby") == [
+               "filters_provider-help"
+             ]
+
+      assert Floki.find(doc, "#filters_provider-help") |> Floki.attribute("class") == ["sr-only"]
     end
 
     test "gateway-unavailable runtime path names missing support without claiming successful empty data",
@@ -428,7 +478,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-filters")
       assert html =~ ~s(data-testid="inbound-filters-toggle")
       assert html =~ ~s(phx-disable-with="Applying filters…")
-      assert html =~ "w-40"
+      assert html =~ ~s(aria-controls="inbound-filter-panel")
+      assert html =~ ~s(aria-expanded="false")
       assert html =~ "toggle"
       assert html =~ ~s(to&quot;:&quot;#inbound-filter-panel&quot;)
       assert html =~ ~s(id="inbound-filter-panel")
@@ -437,7 +488,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       # selected. The split-percentage grid is asserted in the selection test.
       assert html =~ "grid-cols-1"
       refute html =~ "md:grid-cols-[40%_60%]"
-      assert html =~ "Recent InboundMessages"
+      assert html =~ "Received messages"
       refute html =~ "tracking-[0.08em]"
     end
 
@@ -1971,7 +2022,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
       {:ok, _view, populated_html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      assert populated_html =~ "Recent InboundMessages"
+      assert populated_html =~ "Received messages"
       refute populated_html =~ ~s(data-testid="inbound-quick-view")
       refute_banned(populated_html)
     end

@@ -32,6 +32,8 @@ defmodule MailglassAdmin.Components do
 
   use Phoenix.Component
 
+  alias Phoenix.LiveView.JS
+
   attr(:name, :string, required: true)
   attr(:class, :any, default: nil)
 
@@ -436,13 +438,14 @@ defmodule MailglassAdmin.Components do
   attr(:loading_text, :string, default: "Resolving")
   attr(:unavailable_text, :string, default: "Unavailable")
   attr(:hint, :string, default: nil)
+  attr(:compact, :boolean, default: false)
   attr(:rest, :global, default: %{})
 
   @doc """
   Renders a canonical stat card with wrapping label/value and severity.
 
-  Severity is a closed set and always renders as icon plus visible label plus
-  semantic color.
+  Severity is a closed set. Compact summaries retain the severity description
+  for assistive technology while presenting the counts without card chrome.
   """
   @doc since: "1.8.0"
   def stat_card(assigns) do
@@ -458,14 +461,20 @@ defmodule MailglassAdmin.Components do
     <article
       id={@id}
       class={[
-        "min-w-0 rounded-box border border-base-300 bg-base-200 p-md",
+        if(@compact,
+          do: "mg-stat-compact min-w-0",
+          else: "min-w-0 rounded-box border border-base-300 bg-base-200 p-md"
+        ),
         present?(@hint) && "mg-stat-card-hint"
       ]}
       aria-busy={if @state == :loading, do: "true"}
       {@rest}
     >
       <div class="flex min-w-0 items-start justify-between gap-sm">
-        <p class="flex min-w-0 flex-wrap items-center gap-xs text-label font-bold uppercase text-secondary">
+        <p class={[
+          "flex min-w-0 flex-wrap items-center gap-xs text-label text-secondary",
+          !@compact && "font-bold uppercase"
+        ]}>
           <span class="min-w-0 break-words [overflow-wrap:anywhere]">{@label}</span>
           <span
             :if={present?(@hint)}
@@ -480,11 +489,15 @@ defmodule MailglassAdmin.Components do
       <p :if={present?(@hint)} class="mg-stat-card-tooltip" aria-hidden="true">
         {@hint}
       </p>
-      <p class="mono mt-xs break-all text-display font-bold tabular-nums whitespace-normal text-base-content [overflow-wrap:anywhere]">
+      <p class={[
+        "mt-xs font-bold tabular-nums whitespace-normal text-base-content [overflow-wrap:anywhere]",
+        if(@compact, do: "text-heading", else: "mono break-all text-display")
+      ]}>
         {@display_value}
       </p>
       <p class={[
         "mt-sm inline-flex items-center gap-xs text-label font-bold",
+        @compact && "sr-only",
         stat_severity_class(@severity)
       ]}>
         <.icon name={stat_severity_icon(@severity)} class="h-4 w-4 shrink-0" />
@@ -605,6 +618,7 @@ defmodule MailglassAdmin.Components do
 
   attr(:title, :string, required: true)
   attr(:description, :string, default: nil)
+  attr(:compact, :boolean, default: false)
   attr(:rest, :global, default: %{})
 
   slot(:inner_block, required: true)
@@ -619,12 +633,19 @@ defmodule MailglassAdmin.Components do
   def filter_section(assigns) do
     ~H"""
     <fieldset class="min-w-0 w-full" {@rest}>
-      <legend class="text-label font-bold uppercase text-secondary">{@title}</legend>
+      <legend class={
+        if @compact, do: "sr-only", else: "text-label font-bold uppercase text-secondary"
+      }>
+        {@title}
+      </legend>
       <div class="grid min-w-0 gap-md">
         <p :if={@description} class="max-w-prose text-pretty text-body text-secondary">
           {@description}
         </p>
-        <div class="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div class={[
+          "grid grid-cols-1 gap-md sm:grid-cols-2",
+          if(@compact, do: "xl:grid-cols-4", else: "lg:grid-cols-3 xl:grid-cols-5")
+        ]}>
           {render_slot(@inner_block)}
         </div>
       </div>
@@ -639,6 +660,7 @@ defmodule MailglassAdmin.Components do
   attr(:type, :atom, values: [:text, :number, :select, :textarea, :checkbox], default: :text)
   attr(:label, :string, required: true)
   attr(:help, :string, default: nil)
+  attr(:help_display, :atom, values: [:inline, :tooltip], default: :inline)
   attr(:error, :any, default: nil)
   attr(:options, :list, default: [])
   attr(:prompt, :string, default: nil)
@@ -669,7 +691,15 @@ defmodule MailglassAdmin.Components do
 
     ~H"""
     <div class="grid min-w-0 content-start gap-xs">
-      <label for={@control_id} class="text-label font-bold text-base-content">{@label}</label>
+      <div class="relative flex items-center gap-xs">
+        <label for={@control_id} class="text-label font-bold text-base-content">{@label}</label>
+        <.field_help
+          :if={present?(@help) and @help_display == :tooltip}
+          id={@help_id}
+          label={@label}
+          text={@help}
+        />
+      </div>
 
       <input
         :if={@type in [:text, :number] and !@display_readonly?}
@@ -762,7 +792,9 @@ defmodule MailglassAdmin.Components do
         value={@control_value}
       />
 
-      <p :if={@help} id={@help_id} class="text-label text-secondary">{@help}</p>
+      <p :if={@help && @help_display == :inline} id={@help_id} class="text-label text-secondary">
+        {@help}
+      </p>
 
       <p
         :if={@error_text}
@@ -776,6 +808,48 @@ defmodule MailglassAdmin.Components do
         </span>
       </p>
     </div>
+    """
+  end
+
+  attr(:id, :string, required: true)
+  attr(:label, :string, required: true)
+  attr(:text, :string, required: true)
+
+  @doc "Optional field help, available on hover, keyboard focus, or tap."
+  def field_help(assigns) do
+    active_trigger = "##{assigns.id}-trigger:is(:hover,:focus,[aria-expanded=true])"
+    assigns = assign(assigns, :active_trigger, active_trigger)
+
+    ~H"""
+    <span class="mg-field-help inline-flex">
+      <button
+        id={@id <> "-trigger"}
+        type="button"
+        aria-label={"Help for #{@label}"}
+        aria-describedby={@id}
+        aria-expanded="false"
+        aria-controls={@id <> "-tooltip"}
+        phx-click={
+          JS.toggle_attribute({"aria-expanded", "true", "false"})
+          |> JS.remove_attribute("data-dismissed")
+        }
+        phx-focus={JS.remove_attribute("data-dismissed")}
+        phx-blur={JS.remove_attribute("data-dismissed")}
+        phx-click-away={JS.set_attribute({"aria-expanded", "false"})}
+        phx-window-keydown={
+          JS.set_attribute({"data-dismissed", "true"}, to: @active_trigger)
+          |> JS.set_attribute({"aria-expanded", "false"}, to: @active_trigger)
+        }
+        phx-key="Escape"
+        class="mg-focus-ring inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-field text-secondary hover:text-base-content"
+      >
+        <.icon name="hero-information-circle" class="h-4 w-4" />
+      </button>
+      <span id={@id} class="sr-only">{@text}</span>
+      <span id={@id <> "-tooltip"} role="tooltip" aria-hidden="true" class="mg-field-help-tooltip">
+        {@text}
+      </span>
+    </span>
     """
   end
 
