@@ -1,32 +1,85 @@
 {
   "version": "1.0",
-  "timestamp": "2026-09-19T20:54:58.386Z",
-  "phase": null,
-  "phase_name": "between milestones",
-  "phase_dir": null,
-  "plan": null,
-  "task": null,
-  "total_tasks": null,
+  "timestamp": "2026-10-10T14:18:44.174Z",
+  "phase": "173",
+  "phase_name": "Consistency and Delivery Evidence",
+  "phase_dir": ".planning/phases/173-consistency-and-delivery-evidence",
+  "plan": 8,
+  "task": 2,
+  "total_tasks": 2,
   "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "Publish v2.8 milestone archive work to main", "status": "done", "commit": "61994c22"},
-    {"id": 2, "name": "Repair CI formatter regression", "status": "done", "commit": "e3ec2f00"},
-    {"id": 3, "name": "Patch Mint security advisory", "status": "done", "commit": "6c8dca46"}
+    {
+      "id": "173-08-T1",
+      "name": "Candidate boundary and secure evidence writer checks",
+      "status": "done",
+      "commit": "49944421"
+    }
   ],
   "remaining_tasks": [
-    {"id": 4, "name": "Observe CI and Advisory Matrix for 6c8dca46", "status": "in_progress"},
-    {"id": 5, "name": "Start a new milestone only when a concrete objective exists", "status": "not_started"}
+    {
+      "id": "173-08-T2",
+      "name": "Exact-SHA local delivery proof for the current candidate",
+      "status": "blocked",
+      "progress": "Earlier full gate result is for a7fd4843d17c2bf201fb1366c588d65af0f22c3d. The current code follow-up SHA 4994442105315afdaa71beba73f6ab85e40f8533 has not received the full candidate or regression gate because the active protected-path fence may be crossed."
+    },
+    {
+      "id": "delivery-gates",
+      "name": "Current candidate CI, full gate, and authorized owner acceptance",
+      "status": "blocked"
+    }
   ],
   "blockers": [
-    {"description": "GitHub CI and Advisory Matrix are still running for 6c8dca46.", "type": "external", "workaround": "Check the linked runs before making a release or starting follow-up work."}
+    {
+      "description": "Exact-SHA GitHub CI is absent for candidate code SHA 4994442105315afdaa71beba73f6ab85e40f8533. A read-only GitHub query returned no status checks and no workflow runs.",
+      "type": "external",
+      "workaround": "Obtain a required CI Green result for the authoritative final candidate SHA after remote CI is explicitly authorized. Do not count the older SHA result."
+    },
+    {
+      "description": "Authorized owner acceptance remains unverified and cannot be created on the owner's behalf.",
+      "type": "human_action",
+      "workaround": "The authorized owner records acceptance through the approved project path; this is separate from UAT."
+    },
+    {
+      "description": "A hard fence prohibits accessing reference/demo_app/README.md and reference/demo_app/assets/e2e/demo.spec.js. The full candidate and regression gates may access those files.",
+      "type": "technical",
+      "workaround": "Keep both paths untouched. Resume the full gates only after explicit fence revision or proof of a path-safe execution context."
+    }
   ],
   "async_jobs": [],
-  "human_actions_pending": [],
-  "decisions": [
-    {"decision": "Do not publish local v2.8 as a product tag.", "rationale": "It is a milestone-archive tag; the package manifest remains 2.6.0 and protected release policy owns publication.", "phase": null},
-    {"decision": "Update only Mint to 1.10.1.", "rationale": "The live Hex audit reported a medium advisory in Mint 1.10.0 and 1.10.1 is the minimal compatible patch.", "phase": null}
+  "human_actions_pending": [
+    {
+      "action": "Respond to the pending request to lift the protected-path fence and authorize pushing or dispatching CI for the candidate SHA.",
+      "context": "The exact-SHA read-only CI query found no runs. No push or dispatch has been made.",
+      "blocking": true
+    },
+    {
+      "action": "Have the authorized owner record candidate acceptance.",
+      "context": "Owner acceptance is an external authenticated gate; no manual UAT items are required by the current verification report.",
+      "blocking": true
+    }
   ],
-  "uncommitted_files": [" M .planning/config.json"],
-  "next_action": "Check GitHub CI and Advisory Matrix for 6c8dca46; release-please completed successfully and created no proposal.",
-  "context_notes": "v2.8 is archived. This session pushed the archive work, found and fixed a formatter failure, then found and patched a Mint advisory. Local verification after the patch passed lock integrity, Hex audit, formatter, focused trust-lane tests, and diff checks. No PII-pattern matches were found in v2.8 archive content."
+  "decisions": [
+    {
+      "decision": "The capture validator accepts only captures/<run-id>-<capture-id>.png paths, validates the run ID and capture suffix, and rejects duplicate capture paths before hashing.",
+      "rationale": "This closes the baseline path-alias bug that could falsely present a pinned baseline as fresh browser evidence.",
+      "phase": "173"
+    },
+    {
+      "decision": "Keep the phase open until exact-candidate delivery evidence and authorized owner acceptance are recorded.",
+      "rationale": "Historical evidence for an older SHA cannot prove the current candidate, and owner acceptance cannot be fabricated.",
+      "phase": "173"
+    },
+    {
+      "decision": "Do not create a gap-closure plan solely to restate external CI and owner prerequisites.",
+      "rationale": "No local code gap remains that such a plan could safely close under the active fence.",
+      "phase": "173"
+    }
+  ],
+  "uncommitted_files": [
+    " M .planning/phases/173-consistency-and-delivery-evidence/173-07-SUMMARY.md",
+    "?? .planning/phases/173-consistency-and-delivery-evidence/173-05-SUMMARY.md"
+  ],
+  "next_action": "On resume, preserve the two scoped uncommitted summary files, resolve the pending fence/CI authorization and owner-acceptance prerequisites, then reconcile the authoritative candidate SHA before running $gsd-execute-phase 173.",
+  "context_notes": "Phase 172 is complete. Phase 173 plans 01-08 have summaries; the phase remains verifying with 24/27 must-haves and verification status gaps_found. The source-path fix commit is 4994442105315afdaa71beba73f6ab85e40f8533; later planning/report commits advanced repository HEAD to f84f9b8a03341bb8f4050ff866145dfa6dcba212. These SHAs are not interchangeable: confirm which SHA is the final delivery candidate before CI. Refreshed 173-VERIFICATION.md is committed at f84f9b8a; its safe fingerprint is v3:sha256:b46d3260fc8a5e6ca99e3cad461e80bcb69a2d98cd5aa8717c9dd0b0b8b49325. Focused syntax/contract checks passed after the source fix; independent re-review was clean. No full candidate or regression gate ran for the current candidate. The GSD router reports $gsd-plan-phase 173 --gaps, but it was not run because remaining gaps are external evidence and no executable local fix was identified. Scoped git status found the two listed summary changes; repository-wide status was not run under the safety fence. No async jobs were found, no services were started in this session, and the retained preview was not changed."
 }
