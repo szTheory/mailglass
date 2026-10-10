@@ -71,6 +71,7 @@ defmodule MailglassAdmin.Preview.CaptureManifest do
       skipped |> Enum.map(&normalize_skipped/1) |> Enum.sort_by(&skipped_sort_key/1)
 
     capture_mode = Keyword.get(opts, :capture_mode, "identity_only")
+    if capture_mode == "actual", do: validate_entry_css_identity!(normalized_entries)
     review_complete = capture_mode == "actual" and normalized_entries != []
 
     manifest = %{
@@ -97,6 +98,18 @@ defmodule MailglassAdmin.Preview.CaptureManifest do
     write_json!(checkpoint_path, checkpoint)
 
     %{manifest: manifest, checkpoint: checkpoint}
+  end
+
+  defp validate_entry_css_identity!(entries) do
+    Enum.each(entries, fn entry ->
+      assets = Map.get(entry, "assets", %{})
+      build_sha = get_in(assets, ["build", "sha256"])
+      served_sha = get_in(assets, ["served", "sha256"])
+
+      unless is_binary(build_sha) and build_sha == served_sha do
+        raise ArgumentError, "built and served CSS SHA-256 values must match for actual capture"
+      end
+    end)
   end
 
   defp entry_for_state(%CaptureState{} = state, output_dir, sha_mode, provenance) do
@@ -144,6 +157,10 @@ defmodule MailglassAdmin.Preview.CaptureManifest do
       metadata = Map.get(assets, asset, %{})
       require_value!(Map.get(metadata, :path) || Map.get(metadata, :url), "#{asset} asset path")
       require_sha256!(Map.get(metadata, :sha256), "#{asset} asset sha256")
+    end
+
+    if get_in(assets, [:build, :sha256]) != get_in(assets, [:served, :sha256]) do
+      raise ArgumentError, "built and served CSS SHA-256 values must match for actual capture"
     end
   end
 

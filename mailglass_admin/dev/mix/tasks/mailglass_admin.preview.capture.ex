@@ -55,6 +55,7 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
     validate_cli!(opts, rest, invalid)
 
     config = build_config!(opts)
+    validate_ci_mailables!(config.mailables)
 
     Mix.Task.run("app.start")
 
@@ -72,6 +73,15 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
       print_dry_run(matrix, config)
     else
       run_capture(matrix, config)
+    end
+  end
+
+  defp validate_ci_mailables!(mailables) do
+    if String.downcase(System.get_env("CI", "false")) == "true" and
+         mailables != [MailglassAdmin.Fixtures.HappyMailer] do
+      Mix.raise(
+        "Preview capture blocked: CI requires exactly --mailables MailglassAdmin.Fixtures.HappyMailer"
+      )
     end
   end
 

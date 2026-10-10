@@ -132,7 +132,7 @@ defmodule MailglassAdmin.Preview.CaptureManifestTest do
       assert entry["browser"] == %{"name" => "Chromium", "version" => "148.0"}
       assert entry["assets"]["source"]["sha256"] == String.duplicate("b", 64)
       assert entry["assets"]["build"]["sha256"] == String.duplicate("c", 64)
-      assert entry["assets"]["served"]["sha256"] == String.duplicate("d", 64)
+      assert entry["assets"]["served"]["sha256"] == String.duplicate("c", 64)
     end
 
     test "actual capture rejects missing PNG files instead of using identity hashes" do
@@ -142,6 +142,46 @@ defmodule MailglassAdmin.Preview.CaptureManifestTest do
       assert_raise ArgumentError, ~r/PNG file is unreadable/, fn ->
         CaptureManifest.build_entries([state], output_dir, :files, actual_provenance())
       end
+    end
+
+    test "actual capture rejects a built/served CSS mismatch before writing proof" do
+      output_dir = tmp_dir("css-mismatch-state")
+      state = CaptureState.new("/dev/mail", HappyMailer, :welcome_default, 375, :dark)
+      File.write!(Path.join(output_dir, CaptureManifest.screenshot_name(state)), "png")
+      provenance = put_in(actual_provenance(), [:assets, :served, :sha256], String.duplicate("e", 64))
+
+      assert_raise ArgumentError, ~r/built and served CSS SHA-256 values must match/, fn ->
+        CaptureManifest.write_from_states!([state], [],
+          output_dir: output_dir,
+          sha_mode: :files,
+          manifest_path: Path.join(output_dir, "manifest.json"),
+          checkpoint_path: Path.join(output_dir, "checkpoint.json"),
+          provenance: provenance
+        )
+      end
+
+      refute File.exists?(Path.join(output_dir, "manifest.json"))
+      refute File.exists?(Path.join(output_dir, "checkpoint.json"))
+    end
+
+    test "direct actual writer rejects built/served CSS mismatch before writing proof" do
+      output_dir = tmp_dir("css-mismatch-direct")
+      state = CaptureState.new("/dev/mail", HappyMailer, :welcome_default, 375, :dark)
+      File.write!(Path.join(output_dir, CaptureManifest.screenshot_name(state)), "png")
+
+      [entry] = CaptureManifest.build_entries([state], output_dir, :files, actual_provenance())
+      mismatched = put_in(entry, ["assets", "served", "sha256"], String.duplicate("d", 64))
+
+      assert_raise ArgumentError, ~r/built and served CSS SHA-256 values must match/, fn ->
+        CaptureManifest.write!([mismatched], [],
+          manifest_path: Path.join(output_dir, "manifest.json"),
+          checkpoint_path: Path.join(output_dir, "checkpoint.json"),
+          capture_mode: "actual"
+        )
+      end
+
+      refute File.exists?(Path.join(output_dir, "manifest.json"))
+      refute File.exists?(Path.join(output_dir, "checkpoint.json"))
     end
 
     test "actual capture rejects output paths that escape the owned directory" do
@@ -200,7 +240,7 @@ defmodule MailglassAdmin.Preview.CaptureManifestTest do
       assets: %{
         source: %{path: "mailglass_admin/assets/css/app.css", sha256: String.duplicate("b", 64)},
         build: %{path: "mailglass_admin/priv/static/app.css", sha256: String.duplicate("c", 64)},
-        served: %{url: "/dev/mail/css-deadbeef", sha256: String.duplicate("d", 64)}
+        served: %{url: "/dev/mail/css-deadbeef", sha256: String.duplicate("c", 64)}
       }
     }
   end
