@@ -219,10 +219,12 @@ defmodule MailglassDemo.Personas do
         status: :sent,
         last_event_type: payload.event_type,
         last_event_at: occurred_at,
-        terminal: false,
+        terminal: true,
+        delivered_at: occurred_at,
         idempotency_key: "demo-delivery-#{payload.long_delivery_id}",
         metadata: %{
           "persona" => @fjordline,
+          "subject" => "Welcome to Fjordline A/S",
           # Non-ASCII display names live in metadata because the outbound
           # Delivery schema has no structured `from` field. The gallery and
           # drift-guard read these same literals.

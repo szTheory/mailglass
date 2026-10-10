@@ -563,6 +563,7 @@ defmodule MailglassAdmin.InboundLive do
       account_labels={@account_labels}
       page_uri={@page_uri}
       title="Inbound records"
+      subtitle="Follow each received message through routing and mailbox processing."
       flash={@flash}
     >
       <%= if @tenant_state in [:select_required, :none, :unavailable] do %>

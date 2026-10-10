@@ -20,7 +20,7 @@ defmodule MailglassDemo.DemoDataResetTest do
 
     assert Map.take(rerun, deterministic_keys()) == Map.take(baseline, deterministic_keys())
     assert rerun.deliveries == 17
-    assert rerun.events == 36
+    assert rerun.events == 39
     assert rerun.inbound == 6
     assert rerun.suppressions == 1
     assert rerun.inbound_evidence == 6
@@ -30,7 +30,6 @@ defmodule MailglassDemo.DemoDataResetTest do
              "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
              "pm-demo-badge-clicked-001",
              "pm-demo-badge-opened-001",
-             "pm-demo-badge-queued-001",
              "pm-demo-badge-rejected-001",
              "pm-demo-badge-unknown-001",
              "pm-demo-invite-001",
@@ -38,12 +37,13 @@ defmodule MailglassDemo.DemoDataResetTest do
              "pm-demo-payment-failed-001",
              "pm-demo-receipt-001",
              "pm-demo-truncation-stress-001",
-             "sg-demo-badge-autoresponded-001",
              "sg-demo-badge-complained-001",
+             "sg-demo-badge-deferred-001",
              "sg-demo-badge-subscribed-001",
              "sg-demo-badge-unsubscribed-001",
-             "sg-demo-incident-001",
-             "sg-demo-usage-001"
+             "sg-demo-usage-001",
+             nil,
+             nil
            ]
 
     assert rerun.webhook_provider_event_ids == [
@@ -81,6 +81,38 @@ defmodule MailglassDemo.DemoDataResetTest do
              {"pm-demo-spam-001", "fresh", "reject", "spam"},
              {"pm-inbound-demo-nomatch-001", "fresh", "no_match", nil}
            ]
+  end
+
+  test "seed histories and projection timestamps describe consistent scenarios" do
+    DemoData.reset!()
+
+    for delivery <- Repo.all(Delivery) do
+      assert is_binary(delivery.metadata["subject"])
+      assert byte_size(hd(String.split(delivery.recipient, "@"))) <= 64
+      events = Repo.all(from(event in Event, where: event.delivery_id == ^delivery.id))
+      latest = Enum.max_by(events, &DateTime.to_unix(&1.occurred_at, :microsecond))
+      assert delivery.last_event_at == latest.occurred_at
+      assert delivery.last_event_type == latest.type
+
+      if Enum.any?(events, &(&1.type == :delivered)) do
+        assert delivery.delivered_at != nil
+        assert delivery.terminal
+      end
+
+      if Enum.any?(events, &(&1.type == :sent)) do
+        assert delivery.status == :sent
+      end
+    end
+
+    %{rows: [[invalid_runs]]} =
+      Repo.query!("""
+      SELECT count(*) FROM mailglass.mailglass_inbound_replay_runs run
+      JOIN mailglass.mailglass_inbound_records record ON record.id = run.inbound_record_id
+      WHERE run.executed_at < record.received_at
+         OR (run.mailbox IS NOT NULL AND run.mailbox != 'MailglassDemoWeb.Inbound.SupportMailbox')
+      """)
+
+    assert invalid_runs == 0
   end
 
   defp snapshot do

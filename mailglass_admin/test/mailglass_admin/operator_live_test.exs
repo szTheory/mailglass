@@ -210,8 +210,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render(view)
 
-      assert html =~ "m****@e******.com"
-      refute html =~ matching.recipient
+      assert html =~ "match@example.com"
+      assert html =~ matching.recipient
       refute html =~ "skip@example.com"
       assert selected_filter_value(html, "#filters_provider") == "postmark"
       assert html =~ ~s(<option value="delivered" selected)
@@ -296,8 +296,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Status was not applied. Choose a listed status."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
-      assert html =~ "m****@e******.com"
-      assert input_value(html, "#filters_window_hours") == "0"
+      assert html =~ "match@example.com"
+      assert selected_filter_value(html, "#filters_window_hours") == "0"
       assert html =~ "Latest recorded event"
       refute html =~ "not-listed"
       # Inspect the filter's option selection directly: the full LiveView document
@@ -326,7 +326,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Status was not applied. Choose a listed status."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
-      assert input_value(html, "#filters_window_hours") == "-5"
+      assert selected_filter_value(html, "#filters_window_hours") == "-5"
 
       assert_raise ArgumentError, fn ->
         assert_patch(view, 0)
@@ -356,8 +356,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
           })
         )
 
-      assert input_value(html, "#filters_window_hours") == "9000"
-      assert html =~ ~s|<datalist id="operator-window-options">|
+      assert selected_filter_value(html, "#filters_window_hours") == "9000"
+      assert html =~ "Custom period (9000 hours)"
 
       unsafe_html =
         render_hook(view, "validate_filters", %{
@@ -371,7 +371,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert unsafe_html =~ "Time window was not applied. Choose a positive listed time window."
 
-      assert input_value(unsafe_html, "#filters_window_hours") ==
+      assert selected_filter_value(unsafe_html, "#filters_window_hours") ==
                "999999999999999999999999999999999999999"
 
       assert unsafe_html =~ ~s(data-testid="operator-deliveries-list-card")
@@ -387,7 +387,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         })
 
       assert empty_html =~ "Time window was not applied. Choose a positive listed time window."
-      assert input_value(empty_html, "#filters_window_hours") == ""
+      assert selected_filter_value(empty_html, "#filters_window_hours") == ""
       assert empty_html =~ ~s(data-testid="operator-deliveries-list-card")
     end
 
@@ -3139,7 +3139,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(aria-selected="true")
     end
 
-    test "recipients render via mask_recipient in both table and card presentations — no raw recipient string" do
+    test "recipients are readable in both table and card presentations" do
       delivery = %{
         id: "mask-delivery-id-004",
         tenant_id: "t1",
@@ -3165,8 +3165,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
           }
         )
 
-      refute html =~ "masktest@example.com"
-      assert html =~ "m*******@e******.com"
+      assert html =~ "masktest@example.com"
+      refute html =~ "m*******@e******.com"
     end
 
     test "delivery id renders with a title attribute equal to the id and a truncate/mono class in both presentations" do
@@ -3519,16 +3519,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert inspect(exit) =~ "synthetic unexpected operator read failure"
     end
 
-    test "Health subtitle explains the named populations", %{conn: conn} do
+    test "Health subtitle summarizes the investigation task", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~
-               "Review failed webhook attempts, unmatched Events, replay and reconciliation records, and active suppression records for this Account.",
-             "Health subtitle must orient the page rather than duplicate stat-card status"
+      assert html =~ "Find email issues and inspect the records behind them.",
+             "Health subtitle should orient the page without listing every record type"
     end
 
-    test "Health subtitle stays explanatory while attention status stays in cards", %{conn: conn} do
+    test "Health subtitle stays focused while attention status stays in cards", %{conn: conn} do
       conn = operator_conn(conn)
       # Insert a failed webhook_event to force attention state
       insert_webhook_event!(status: :failed)
@@ -3543,9 +3542,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ "Email delivery needs attention.",
              "Health header must not render the old unexplained status sentence"
 
-      assert html =~
-               "Review failed webhook attempts, unmatched Events, replay and reconciliation records, and active suppression records for this Account.",
-             "Health subtitle must remain explanatory even in attention state"
+      assert html =~ "Find email issues and inspect the records behind them.",
+             "Health subtitle should stay focused even in attention state"
     end
 
     test "Health subtitle never contains 'Oops' or 'Navigate to'", %{conn: conn} do
@@ -3559,16 +3557,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
              "subtitle must never contain 'Navigate to'"
     end
 
-    test "deliveries surface subtitle is the inspection-focused triage line", %{conn: conn} do
+    test "deliveries surface subtitle describes the investigation task", %{conn: conn} do
       conn = operator_conn(conn)
       insert_delivery!(recipient: "sub-test@example.com")
 
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~
-               "Prove what happened to a message — inspect its event timeline, suppression state, and replay history.",
-             "Deliveries subtitle must be the inspection-focused triage line"
+      assert html =~ "Trace each delivery through its event history.",
+             "Deliveries subtitle should describe the work without promising proof"
     end
 
     test "zero observations never render global clearance language", %{conn: conn} do

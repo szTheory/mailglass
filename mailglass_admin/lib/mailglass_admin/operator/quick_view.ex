@@ -106,7 +106,7 @@ defmodule MailglassAdmin.Operator.QuickView do
             <div class="mt-md space-y-md">
               <div class="flex flex-wrap items-center gap-sm">
                 <h3 class="text-heading font-bold text-base-content">
-                  {Components.mask_recipient(@delivery.recipient)}
+                  {@delivery.recipient}
                 </h3>
                 <Components.status_badge status={Components.delivery_display_status(@delivery)} />
               </div>
@@ -205,8 +205,7 @@ defmodule MailglassAdmin.Operator.QuickView do
     do: "This delivery link is invalid. Return to deliveries and open a listed record."
 
   defp detail_error_copy(:not_found),
-    do:
-      "This delivery is not available in the selected Account. Return to deliveries to continue."
+    do: "This delivery is not available in the selected Account. Return to deliveries to continue."
 
   defp detail_error_copy(:unavailable),
     do:

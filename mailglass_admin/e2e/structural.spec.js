@@ -1480,8 +1480,16 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(mailablesPicker).toBeVisible();
       await expect(mailablesPicker).toHaveAttribute("data-picker-variant", "menu");
       await expect(menuTrigger).toBeVisible();
+      const menuLabel = page.getByTestId("preview-email-menu-label");
+      await expect(menuLabel).toHaveText("Email preview");
+      await expect(menuTrigger).not.toContainText("Email preview");
+      await expect(menuTrigger).toHaveAccessibleName(
+        /Email preview.*HappyMailer/
+      );
       await expect(menuTrigger.getByTestId("preview-email-menu-active-identity"))
-        .toContainText("MailglassAdmin.Fixtures.HappyMailer");
+        .toContainText("HappyMailer");
+      await expect(menuTrigger.getByTestId("preview-email-menu-active-identity"))
+        .not.toContainText("MailglassAdmin.Fixtures");
       await expect(menuTrigger).toContainText("welcome_default");
       await expect(menuTrigger).not.toContainText("2 emails");
       await expect(menuTrigger.locator(".hero-envelope")).toHaveCount(0);
@@ -1504,6 +1512,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         .getByTestId("preview-email-menu-group-label")
         .filter({ hasText: "HappyMailer" });
       await expect(operationsGroupLabel).toBeVisible();
+      await expect(operationsGroupLabel).toHaveAttribute("title", "MailglassAdmin.Fixtures.HappyMailer");
       await expect(operationsGroupLabel).toHaveClass(/text-label/);
       await expect(operationsGroupLabel).toHaveClass(/uppercase/);
       await expect(operationsGroupLabel).toHaveClass(/text-secondary/);
@@ -1536,6 +1545,21 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(
         mailablesPicker.locator("a[href*='MailglassAdmin.Fixtures.HappyMailer/welcome_default']")
       ).not.toHaveAttribute("href", /theme=/);
+    });
+
+    test("Preview: desktop email picker uses available width and shows a concise mailable name", async ({ page }) => {
+      await page.setViewportSize({ width: 2048, height: 1200 });
+      await openPreviewScenario(page);
+
+      const picker = page.getByTestId("preview-mailables-picker");
+      const identity = page.getByTestId("preview-email-menu-active-identity");
+      const bounds = await picker.boundingBox();
+
+      expect(bounds?.width).toBeGreaterThan(700);
+      expect(bounds?.width).toBeLessThanOrEqual(896);
+      await expect(identity).toContainText("HappyMailer");
+      await expect(identity).toContainText("welcome_default");
+      await expect(identity).not.toContainText("MailglassAdmin.Fixtures");
     });
 
     test("Preview: no-Mailables empty branch exposes setup action only", async ({ page }) => {
@@ -1597,6 +1621,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const frameWidth = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
       const previewPane = page.getByTestId("preview-pane");
       const frame = previewPane.locator("iframe");
+      const identity = page.getByTestId("preview-email-menu-active-identity");
+      await expect(identity).toHaveCSS("white-space", "nowrap");
+      await expect(page.getByText("Frame width", { exact: true })).toBeVisible();
+      await expect(page.getByText("Preview background", { exact: true })).toBeVisible();
       await expect(frameWidth.getByRole("button", { name: "375 CSS pixels", exact: true })).toBeVisible();
       await expect(frameWidth.getByRole("button", { name: "768 CSS pixels", exact: true })).toHaveAttribute("aria-pressed", "true");
 
@@ -1607,7 +1635,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(frame).toHaveAttribute("style", /width:\s*1024px/);
       await expect(page).toHaveURL(/width=1024/);
 
-      const limitation = page.getByText("Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior.", { exact: true });
+      const limitationHelp = page.getByRole("button", { name: "Help for preview background" });
+      const limitation = page.locator("#preview-backdrop-help-tooltip");
+      await expect(limitationHelp).toBeVisible();
+      await expect(limitation).toBeHidden();
+      await limitationHelp.click();
       await expect(limitation).toBeVisible();
       await page.getByTestId("preview-frame-theme-toggle").click();
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
@@ -1631,7 +1663,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.getByTestId("preview-email-menu-trigger").click();
       await page.getByTestId("preview-email-menu-option").filter({ hasText: longScenario }).click();
       const identity = page.getByTestId("preview-email-menu-active-identity");
-      await expect(identity).toContainText("MailglassAdmin.Fixtures.HappyMailer");
+      await expect(identity).toContainText("HappyMailer");
+      await expect(identity).not.toContainText("MailglassAdmin.Fixtures");
       await expect(identity).toContainText(longScenario);
 
       const widthGroup = page.getByRole("group", { name: "Preview frame width in CSS pixels" });

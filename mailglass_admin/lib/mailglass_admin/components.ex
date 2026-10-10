@@ -623,6 +623,7 @@ defmodule MailglassAdmin.Components do
   attr(:title, :string, required: true)
   attr(:description, :string, default: nil)
   attr(:compact, :boolean, default: false)
+  attr(:columns, :integer, default: 4, values: [3, 4])
   attr(:rest, :global, default: %{})
 
   slot(:inner_block, required: true)
@@ -648,7 +649,10 @@ defmodule MailglassAdmin.Components do
         </p>
         <div class={[
           "grid grid-cols-1 gap-md sm:grid-cols-2",
-          if(@compact, do: "xl:grid-cols-4", else: "lg:grid-cols-3 xl:grid-cols-5")
+          if(@compact,
+            do: if(@columns == 3, do: "xl:grid-cols-3", else: "xl:grid-cols-4"),
+            else: "lg:grid-cols-3 xl:grid-cols-5"
+          )
         ]}>
           {render_slot(@inner_block)}
         </div>
@@ -819,6 +823,11 @@ defmodule MailglassAdmin.Components do
   attr(:label, :string, required: true)
   attr(:text, :string, required: true)
 
+  attr(:trigger_text, :string, default: nil)
+  attr(:trigger_class, :string, default: nil)
+  attr(:trigger_icon, :string, default: nil)
+  slot(:trigger_content)
+
   @doc "Optional field help, available on hover, keyboard focus, or tap."
   def field_help(assigns) do
     active_trigger = "##{assigns.id}-trigger:is(:hover,:focus,[aria-expanded=true])"
@@ -829,7 +838,7 @@ defmodule MailglassAdmin.Components do
       <button
         id={@id <> "-trigger"}
         type="button"
-        aria-label={"Help for #{@label}"}
+        aria-label={if @trigger_text, do: @label, else: "Help for #{@label}"}
         aria-describedby={@id}
         aria-expanded="false"
         aria-controls={@id <> "-tooltip"}
@@ -845,12 +854,22 @@ defmodule MailglassAdmin.Components do
           |> JS.set_attribute({"aria-expanded", "false"}, to: @active_trigger)
         }
         phx-key="Escape"
-        class="mg-focus-ring inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-field text-secondary hover:text-base-content"
+        class={[
+          "mg-focus-ring inline-flex items-center rounded-field hover:text-base-content",
+          if(@trigger_text,
+            do: "min-h-11 min-w-0 gap-xs text-left text-body",
+            else: "h-6 w-6 shrink-0 justify-center text-secondary"
+          ),
+          @trigger_class
+        ]}
       >
-        <.icon name="hero-information-circle" class="h-4 w-4" />
+        <.icon :if={@trigger_icon} name={@trigger_icon} class="h-4 w-4 shrink-0" />
+        <span :if={@trigger_text && @trigger_content == []} class="min-w-0 break-words">{@trigger_text}</span>
+        {render_slot(@trigger_content)}
+        <.icon :if={!@trigger_text && @trigger_content == []} name="hero-information-circle" class="h-4 w-4" />
       </button>
       <span id={@id} class="sr-only">{@text}</span>
-      <span id={@id <> "-tooltip"} role="tooltip" aria-hidden="true" class="mg-field-help-tooltip">
+      <span id={@id <> "-tooltip"} role="tooltip" aria-hidden="true" class="mg-field-help-tooltip [overflow-wrap:anywhere]">
         {@text}
       </span>
     </span>
@@ -1113,6 +1132,89 @@ defmodule MailglassAdmin.Components do
     """
   end
 
+  attr(:id, :string, required: true)
+  attr(:status, :atom, required: true)
+  attr(:context, :atom, values: [:delivery, :inbound], required: true)
+
+  def outcome_badge(assigns) do
+    ~H"""
+    <.field_help id={@id} label={status_label(@status)}
+      trigger_text={status_label(@status)} text={outcome_help(@context, @status)}>
+      <:trigger_content><.status_badge status={@status} size={:sm} /></:trigger_content>
+    </.field_help>
+    """
+  end
+
+  defp outcome_help(:inbound, :accepted), do: "A mailbox processed and accepted this message."
+
+  defp outcome_help(:inbound, :no_match),
+    do: "No routing rule matched, so this message was not sent to a mailbox."
+
+  defp outcome_help(:inbound, :ignore),
+    do: "The mailbox deliberately skipped this message without rejecting it."
+
+  defp outcome_help(:inbound, :no_change),
+    do: "The mailbox processed this message without changing its state."
+
+  defp outcome_help(:inbound, :rejected),
+    do: "The mailbox rejected this message. Open it to inspect the recorded reason."
+
+  defp outcome_help(:inbound, :bounced),
+    do:
+      "The mailbox returned a bounce result for this message. Open it to inspect the recorded reason."
+
+  defp outcome_help(:inbound, :failed),
+    do: "Mailbox processing failed. Open the message to inspect the error."
+
+  defp outcome_help(:inbound, :missing_history),
+    do: "No mailbox processing attempt is recorded for this message."
+
+  defp outcome_help(:delivery, :queued), do: "This message is waiting to be sent to the provider."
+
+  defp outcome_help(:delivery, :dispatched),
+    do: "This message was handed to the provider. Delivery to the recipient has not been confirmed."
+
+  defp outcome_help(:delivery, :delivered),
+    do:
+      "The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read."
+
+  defp outcome_help(:delivery, :opened),
+    do:
+      "The provider recorded an open. Image loading, privacy features, or automated activity can trigger this signal."
+
+  defp outcome_help(:delivery, :clicked),
+    do:
+      "The provider recorded a link click. Security scanners or other automated activity can trigger this signal."
+
+  defp outcome_help(:delivery, :failed),
+    do:
+      "Sending failed before a successful handoff to the provider. Open the delivery to inspect the error."
+
+  defp outcome_help(:delivery, :bounced),
+    do:
+      "The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason."
+
+  defp outcome_help(:delivery, :rejected),
+    do: "The provider rejected this message. Open the delivery to inspect the recorded reason."
+
+  defp outcome_help(:delivery, :deferred),
+    do: "The provider reported a temporary delivery delay. Delivery has not been confirmed."
+
+  defp outcome_help(:delivery, :suppressed),
+    do: "Sending to this recipient was blocked by a suppression rule."
+
+  defp outcome_help(:delivery, :complained),
+    do: "The provider reported a spam complaint for this message."
+
+  defp outcome_help(:delivery, :unsubscribed),
+    do: "The provider recorded an unsubscribe for this recipient."
+
+  defp outcome_help(:delivery, :autoresponded),
+    do:
+      "The provider reported an automatic reply, such as an out-of-office response. This does not confirm that a person read the message."
+
+  defp outcome_help(_, _), do: "Open the message to inspect its recorded processing history."
+
   # Downstream outcome events that supersede the dispatch snapshot — when one of these
   # is the delivery's latest event, it IS the status the operator should see.
   @downstream_outcomes [
@@ -1123,7 +1225,8 @@ defmodule MailglassAdmin.Components do
     :complained,
     :rejected,
     :deferred,
-    :unsubscribed
+    :unsubscribed,
+    :autoresponded
   ]
 
   @doc """
@@ -1131,7 +1234,7 @@ defmodule MailglassAdmin.Components do
 
   The core `Delivery.status` is a stable adopter snapshot that stops at `:sent`
   (handed off to the provider) and never advances. For the operator view we surface
-  the message's *furthest-known* state instead: a downstream event
+  the latest delivery or engagement result instead: a downstream event
   (delivered/opened/clicked/bounced/…) supersedes the dispatch snapshot, so the badge
   reflects what actually happened. The in-flight, handed-off-but-unconfirmed state
   renders as `:dispatched` ("Dispatched"). This is presentation only — it never
@@ -1144,6 +1247,8 @@ defmodule MailglassAdmin.Components do
   def delivery_display_status(%{status: :failed}), do: :failed
   def delivery_display_status(%{status: :suppressed}), do: :suppressed
   def delivery_display_status(%{last_event_type: :suppressed}), do: :suppressed
+
+  def delivery_display_status(%{delivery_confirmed: true}), do: :delivered
 
   def delivery_display_status(%{status: :queued, last_event_type: event})
       when event in [:queued, nil],
@@ -1180,7 +1285,7 @@ defmodule MailglassAdmin.Components do
       data-timestamp-copy="true"
       data-copy-value={utc_string(@at)}
       aria-label={"Copy timestamp as UTC: #{utc_string(@at)}"}
-      title="Click to copy the exact timestamp in UTC"
+      title={utc_string(@at) <> " · Click to copy"}
       class={["mg-timestamp-copy-trigger mg-focus-ring", @class]}
     >
       <time
@@ -1310,7 +1415,7 @@ defmodule MailglassAdmin.Components do
   defp status_label(:unsubscribed), do: "Unsubscribed"
   defp status_label(:opened), do: "Opened"
   defp status_label(:clicked), do: "Clicked"
-  defp status_label(:autoresponded), do: "Autoresponded"
+  defp status_label(:autoresponded), do: "Auto-replied"
   defp status_label(:unknown), do: "Unknown"
   defp status_label(:accepted), do: "Accepted"
   defp status_label(:no_match), do: "Unrouted"

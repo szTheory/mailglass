@@ -26,6 +26,28 @@ defmodule MailglassAdmin.ComponentsTest do
   alias MailglassAdmin.Operator.QuickView
   alias MailglassAdmin.Operator.FiltersForm, as: OperatorFiltersForm
 
+  test "outcome help distinguishes provider delivery from mailbox processing" do
+    delivered =
+      render_component(&Components.outcome_badge/1,
+        id: "delivery-outcome-test",
+        status: :delivered,
+        context: :delivery
+      )
+
+    assert delivered =~ "recipient&#39;s mail server accepted"
+    assert delivered =~ ~s(aria-describedby="delivery-outcome-test")
+    assert delivered =~ ~s(role="tooltip")
+
+    failed =
+      render_component(&Components.outcome_badge/1,
+        id: "inbound-outcome-test",
+        status: :failed,
+        context: :inbound
+      )
+
+    assert failed =~ "Mailbox processing failed"
+  end
+
   describe "status_badge/1 — outbound delivery statuses (14 atoms)" do
     test "dispatched renders badge-primary + paper-airplane icon" do
       html = render_component(&Components.status_badge/1, status: :dispatched, size: :sm)
@@ -115,7 +137,7 @@ defmodule MailglassAdmin.ComponentsTest do
       html = render_component(&Components.status_badge/1, status: :autoresponded, size: :sm)
       assert html =~ "badge-outline"
       assert html =~ "hero-arrow-uturn-left"
-      assert html =~ "Autoresponded"
+      assert html =~ "Auto-replied"
     end
 
     test "unknown renders badge-outline + question-mark-circle icon" do
@@ -271,6 +293,17 @@ defmodule MailglassAdmin.ComponentsTest do
                :dispatched
     end
 
+    test "subscription feedback preserves confirmed delivery and automatic replies are explicit" do
+      assert Components.delivery_display_status(%{
+               status: :sent,
+               last_event_type: :subscribed,
+               delivery_confirmed: true
+             }) == :delivered
+
+      assert Components.delivery_display_status(%{status: :sent, last_event_type: :autoresponded}) ==
+               :autoresponded
+    end
+
     test "queued before dispatch reads as :queued" do
       assert Components.delivery_display_status(%{status: :queued, last_event_type: :queued}) ==
                :queued
@@ -368,7 +401,7 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ ~s(data-utc="2026-06-14 14:32:05.000000 UTC")
       assert html =~ ~s(data-copy-value="2026-06-14 14:32:05.000000 UTC")
       assert html =~ ~s(aria-label="Copy timestamp as UTC: 2026-06-14 14:32:05.000000 UTC")
-      assert html =~ ~s(title="Click to copy the exact timestamp in UTC")
+      assert html =~ ~s(title="2026-06-14 14:32:05.000000 UTC · Click to copy")
       assert html =~ "<time"
       assert html =~ "data-timestamp-copy"
       assert html =~ "whitespace-nowrap"

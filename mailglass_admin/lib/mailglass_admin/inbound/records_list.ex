@@ -7,8 +7,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   result-count, and pagination.
 
   Sibling of `MailglassAdmin.Operator.DeliveriesList` (clone, not a
-  refactor). Rows render the masked envelope recipient via the one promoted
-  `MailglassAdmin.Components.mask_recipient/1` definition, the record id in mono,
+  refactor). Rows render the envelope recipient, the record id in mono,
   an outcome badge via `Components.status_badge/1` (normalized through
   `normalize_inbound_outcome/1`), and a meta line mailbox · account · provider · received_at.
 
@@ -147,20 +146,20 @@ defmodule MailglassAdmin.Inbound.RecordsList do
         <% end %>
       <% true -> %>
         <%!-- Desktop table (>=768px) --%>
-        <div class="hidden md:block overflow-x-auto" data-testid="inbound-records-table">
+        <div class="hidden md:block overflow-x-auto" data-testid="inbound-records-table" role="region" aria-label="Inbound records" tabindex="0">
           <table class={[
             "mg-inbound-records-table table w-full table-fixed",
             @show_account? && "mg-inbound-records-table-all-accounts"
           ]}>
             <thead>
               <tr>
+                <th scope="col" class="text-label font-bold text-secondary">
+                  Recipient / Subject
+                </th>
                 <th scope="col" class="text-label font-bold text-secondary w-40">
                   Outcome
                 </th>
-                <th scope="col" class="text-label font-bold text-secondary w-1/5">
-                  Recipient
-                </th>
-                <th scope="col" class="text-label font-bold text-secondary">Mailbox</th>
+                <th scope="col" class="text-label font-bold text-secondary w-52">Mailbox</th>
                 <th
                   :if={@show_account?}
                   scope="col"
@@ -186,7 +185,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                   row_classes(@selected_record, record)
                 ]}
               >
-                <td class="text-body text-base-content">
+                <td class="min-w-0 text-body text-base-content">
                   <button
                     type="button"
                     data-testid="inbound-record-open"
@@ -194,31 +193,23 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                     phx-value-id={record.id}
                     aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
                     aria-label={"Open inbound message #{record.id}"}
-                    class="mg-focus-ring inline-flex min-h-11 items-center rounded-xs px-xs text-left"
+                    title={Map.get(record, :envelope_recipient) || "Unavailable"}
+                    class="mg-focus-ring flex min-h-11 w-full min-w-0 flex-col items-start justify-center rounded-xs text-left"
                   >
-                    <span data-testid={"inbound-outcome-#{record_outcome(record)}"}>
-                      <Components.status_badge
-                        status={Components.normalize_inbound_outcome(record_outcome(record))}
-                        size={:sm}
-                      />
+                    <span class="min-w-0 w-full truncate">
+                      {Map.get(record, :envelope_recipient) || "Unavailable"}
                     </span>
+                    <span class="min-w-0 w-full truncate text-label text-secondary" title={subject(record)}>{subject(record)}</span>
                   </button>
                 </td>
-                <td class="min-w-0 text-body text-base-content">
-                  <span
-                    class="min-w-0 truncate block"
-                    title={Components.mask_recipient(Map.get(record, :envelope_recipient))}
-                  >
-                    {Components.mask_recipient(Map.get(record, :envelope_recipient))}
+                <td class="text-body text-base-content">
+                  <span data-testid={"inbound-outcome-#{record_outcome(record)}"}>
+                    <Components.outcome_badge id={"inbound-outcome-table-#{record.id}"}
+                      status={Components.normalize_inbound_outcome(record_outcome(record))} context={:inbound} />
                   </span>
                 </td>
                 <td class="min-w-0 text-body text-base-content">
-                  <span
-                    class="min-w-0 truncate block"
-                    title={matched_mailbox_label(record)}
-                  >
-                    {matched_mailbox_label(record)}
-                  </span>
+                  <.mailbox_name record={record} id={"inbound-mailbox-table-#{record.id}"} />
                 </td>
                 <td :if={@show_account?} class="min-w-0 text-body text-base-content">
                   <span
@@ -267,25 +258,26 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                   aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
                   class="mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm text-left"
                 >
-                  <%!-- Outcome badge first/prominent --%>
-                  <div>
-                    <span data-testid={"inbound-outcome-#{record_outcome(record)}"}>
-                      <Components.status_badge
-                        status={Components.normalize_inbound_outcome(record_outcome(record))}
-                        size={:sm}
-                      />
-                    </span>
-                  </div>
-
-                  <%!-- Envelope recipient (masked) --%>
+                  <%!-- Envelope recipient --%>
                   <div class="min-w-0">
                     <span class="text-label font-bold text-secondary">Recipient</span>
                     <p
                       class="min-w-0 truncate text-body text-base-content"
-                      title={Components.mask_recipient(Map.get(record, :envelope_recipient))}
+                      title={Map.get(record, :envelope_recipient) || "Unavailable"}
                     >
-                      {Components.mask_recipient(Map.get(record, :envelope_recipient))}
+                      {Map.get(record, :envelope_recipient) || "Unavailable"}
                     </p>
+                  </div>
+
+                  <p class="min-w-0 break-words text-label text-secondary" title={subject(record)}>{subject(record)}</p>
+
+                </button>
+                  <%!-- Outcome --%>
+                  <div>
+                    <span data-testid={"inbound-outcome-#{record_outcome(record)}"}>
+                      <Components.outcome_badge id={"inbound-outcome-card-#{record.id}"}
+                        status={Components.normalize_inbound_outcome(record_outcome(record))} context={:inbound} />
+                    </span>
                   </div>
 
                   <%!-- Record ID with truncate+title --%>
@@ -300,14 +292,6 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                   </div>
 
                   <div class="flex flex-wrap items-start gap-md text-label text-secondary">
-                    <%!-- Mailbox --%>
-                    <div class="min-w-0">
-                      <span class="font-bold">Mailbox</span>
-                      <p class="min-w-0 truncate" title={matched_mailbox_label(record)}>
-                        {matched_mailbox_label(record)}
-                      </p>
-                    </div>
-
                     <%!-- Account --%>
                     <div :if={@show_account?} class="min-w-0">
                       <span class="font-bold">Account</span>
@@ -330,10 +314,15 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                       </p>
                     </div>
                   </div>
-                </button>
 
-                <%!-- The received time is its own control, separate from opening the message. --%>
+                <%!-- Metadata controls stay separate from opening the message. --%>
                 <div class="flex flex-wrap items-start gap-md text-label text-secondary">
+                  <div class="min-w-0">
+                    <span class="font-bold">Mailbox</span>
+                    <p>
+                      <.mailbox_name record={record} id={"inbound-mailbox-card-#{record.id}"} />
+                    </p>
+                  </div>
                   <div>
                     <span class="font-bold">Received</span>
                     <p class="mg-inbound-received">
@@ -449,12 +438,72 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   # is read defensively — an absent key renders the neutral outline badge.
   defp record_outcome(record), do: Map.get(record, :outcome)
 
+  attr(:record, :map, required: true)
+  attr(:id, :string, required: true)
+
+  defp mailbox_name(assigns) do
+    full_name = matched_mailbox_label(assigns.record)
+
+    {label, explanation, matched?} =
+      case full_name do
+        "Unrouted" ->
+          {full_name,
+           "None of the routing rules matched this email, so it wasn't sent to a mailbox. Open the message to see which rules were checked.",
+           false}
+
+        "No execution recorded" ->
+          {full_name, "No processing attempt is recorded for this message.", false}
+
+        "Unavailable" ->
+          {"Not recorded",
+           if(Map.get(assigns.record, :outcome) == :failed,
+             do:
+               "Processing failed, but no mailbox name was saved for this attempt. Open the message to inspect the error.",
+             else:
+               "No mailbox name was saved for this processing attempt. Open the message to inspect its processing history."
+           ), false}
+
+        mailbox ->
+          {mailbox |> String.split(".") |> List.last(), mailbox, true}
+      end
+
+    icon =
+      case full_name do
+        "Unrouted" -> "hero-minus-circle"
+        "Unavailable" -> "hero-question-mark-circle"
+        "No execution recorded" -> "hero-clock"
+        _ -> nil
+      end
+
+    assigns =
+      assign(assigns, label: label, explanation: explanation, matched?: matched?, icon: icon)
+
+    ~H"""
+    <Components.field_help
+      id={@id}
+      label={@label}
+      text={@explanation}
+      trigger_text={@label}
+      trigger_icon={@icon}
+      trigger_class={if @matched?, do: "text-base-content", else: "text-secondary"}
+    />
+    """
+  end
+
   defp matched_mailbox_label(record) do
     case {Map.get(record, :outcome), Map.get(record, :mailbox)} do
       {:no_match, _mailbox} -> "Unrouted"
       {nil, _mailbox} -> "No execution recorded"
       {_outcome, mailbox} when is_binary(mailbox) and mailbox != "" -> mailbox
       {_outcome, _mailbox} -> "Unavailable"
+    end
+  end
+
+  defp subject(record) do
+    case Map.get(record, :subject) do
+      nil -> "Subject not recorded"
+      "" -> "(No subject)"
+      value -> value
     end
   end
 end

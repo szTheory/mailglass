@@ -542,7 +542,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:replay_command_feedback, nil)
 
     with %{id: delivery_id, tenant_id: tenant_id} <-
-         socket.assigns.selected_delivery || {:error, :no_selected_delivery},
+           socket.assigns.selected_delivery || {:error, :no_selected_delivery},
          %{} = delivery <-
            read_confirmation_delivery(socket, tenant_id, delivery_id),
          {:ok, fresh_targets} <- read_confirmation_targets(socket, tenant_id, delivery_id),
@@ -1045,37 +1045,9 @@ defmodule MailglassAdmin.OperatorLive do
                   <% end %>
                 </div>
               <% else %>
-                <%!-- LIST PAGE: delivery collection first, with filters/supporting evidence secondary.
-                    The Quick view overlay (below) sits on top when a record is focused. --%>
-                <section data-testid="operator-master-detail" class="mt-6">
-                  <aside
-                    data-testid="operator-deliveries-list-card"
-                    class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
-                  >
-                    <div class="border-b border-base-300 px-4 py-3">
-                      <h2 class="text-heading font-bold text-base-content">Recent deliveries</h2>
-                    </div>
-                    <DeliveriesList.deliveries_list
-                      deliveries={@deliveries}
-                      page_meta={@deliveries_page_meta}
-                      account_labels={@account_labels}
-                      show_account?={false}
-                      previous_page_path={
-                        pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
-                      }
-                      next_page_path={
-                        pagination_path(@base_path, @filter_params, @dark_chrome, :next)
-                      }
-                      selected_delivery={@selected_delivery}
-                      data_state={@deliveries_read_state}
-                      filters_active?={filters_active?(@filter_params)}
-                    />
-                  </aside>
-                </section>
-
                 <section
                   data-testid="operator-filters"
-                  class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
+                  class="border-b border-base-300 pb-md"
                 >
                   <button
                     type="button"
@@ -1092,7 +1064,7 @@ defmodule MailglassAdmin.OperatorLive do
                       id="operator-filters"
                       phx-change="validate_filters"
                       phx-submit="apply_filters"
-                      class="mt-4 grid gap-md md:mt-0"
+                      class="mt-md grid gap-md md:mt-0 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
                     >
                       <input
                         id="filters_tenant_id"
@@ -1126,6 +1098,56 @@ defmodule MailglassAdmin.OperatorLive do
                       </div>
                     </.form>
                   </div>
+                </section>
+
+                <%!-- LIST PAGE: filters lead the collection; supporting evidence follows.
+                    The Quick view overlay (below) sits on top when a record is focused. --%>
+                <section
+                  :if={@filter_params["event"] in [nil, ""] and @deliveries_read_state == :ready and Map.has_key?(@deliveries_page_meta, :outcome_groups)}
+                  data-testid="operator-delivery-summary"
+                  class="mt-md border-b border-base-300 pb-md"
+                >
+                  <div class="mg-delivery-summary-counts">
+                    <Components.stat_card
+                      :for={{key, label, count, help} <- delivery_summary(@deliveries_page_meta)}
+                      id={"delivery-summary-#{key}"}
+                      label={label}
+                      value={count}
+                      severity={if key == :attention and count > 0, do: :warning, else: :neutral}
+                      severity_label={if key == :attention and count > 0, do: "Needs attention", else: "Tracked"}
+                      compact
+                    >
+                      <:label_help>
+                        <Components.field_help id={"delivery-summary-#{key}-help"} label={label} text={help} />
+                      </:label_help>
+                    </Components.stat_card>
+                  </div>
+                </section>
+
+                <section data-testid="operator-master-detail" class="mt-6">
+                  <aside
+                    data-testid="operator-deliveries-list-card"
+                    class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+                  >
+                    <div class="border-b border-base-300 px-4 py-3">
+                      <h2 class="text-heading font-bold text-base-content">Recent deliveries</h2>
+                    </div>
+                    <DeliveriesList.deliveries_list
+                      deliveries={@deliveries}
+                      page_meta={@deliveries_page_meta}
+                      account_labels={@account_labels}
+                      show_account?={false}
+                      previous_page_path={
+                        pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
+                      }
+                      next_page_path={
+                        pagination_path(@base_path, @filter_params, @dark_chrome, :next)
+                      }
+                      selected_delivery={@selected_delivery}
+                      data_state={@deliveries_read_state}
+                      filters_active?={filters_active?(@filter_params)}
+                    />
+                  </aside>
                 </section>
 
                 <div
@@ -1240,6 +1262,7 @@ defmodule MailglassAdmin.OperatorLive do
       "tenant_id" => "",
       "provider" => "",
       "event" => "",
+      "search" => "",
       "window_hours" => Integer.to_string(@default_window_hours),
       "page" => "1"
     }
@@ -1339,6 +1362,7 @@ defmodule MailglassAdmin.OperatorLive do
       "tenant_id" => normalize_string(Map.get(params, "tenant_id", defaults["tenant_id"])),
       "provider" => normalize_string(Map.get(params, "provider", defaults["provider"])),
       "event" => event,
+      "search" => normalize_string(Map.get(params, "search", defaults["search"])) |> String.trim(),
       "window_hours" => window_hours,
       "page" => normalize_page(params, defaults)
     }
@@ -1366,6 +1390,7 @@ defmodule MailglassAdmin.OperatorLive do
         tenant_id: filter_params["tenant_id"],
         provider: blank_to_nil(filter_params["provider"]),
         event: cast_enum(filter_params["event"], @event_values),
+        search: blank_to_nil(filter_params["search"]),
         window_hours:
           parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
         page: parse_positive_integer(filter_params["page"]) || 1,
@@ -1840,7 +1865,8 @@ defmodule MailglassAdmin.OperatorLive do
   defp transient_read_error?(_error), do: false
 
   defp delivery_query_key(filter_params),
-    do: Map.take(filter_params, ["tenant_id", "provider", "event", "window_hours", "page"])
+    do:
+      Map.take(filter_params, ["tenant_id", "provider", "event", "search", "window_hours", "page"])
 
   defp assign_overview_state(socket, filter_params) do
     {support_summary, health_panel_states, suppression_count, observed_at, health_window} =
@@ -2026,7 +2052,9 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp health_observation_cache_key(filter_params) do
     case blank_to_nil(filter_params["tenant_id"]) do
-      nil -> nil
+      nil ->
+        nil
+
       tenant_id ->
         window_hours =
           parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
@@ -2419,6 +2447,7 @@ defmodule MailglassAdmin.OperatorLive do
       default_support_exact_evidence()
     else
       prior = socket.assigns[:support_exact_evidence]
+
       same_request? =
         prior && prior.tenant_id == tenant_id && prior.focus == focus && prior.id == id
 
@@ -2493,13 +2522,48 @@ defmodule MailglassAdmin.OperatorLive do
   defp support_focus_param(nil), do: nil
   defp support_focus_param(focus), do: Atom.to_string(focus)
 
+  defp delivery_summary(page_meta) do
+    counts =
+      Enum.reduce(Map.get(page_meta, :outcome_groups, []), %{}, fn group, counts ->
+        bucket =
+          case Components.delivery_display_status(group) do
+            status when status in [:delivered, :opened, :clicked] ->
+              :delivered
+
+            status
+            when status in [
+                   :failed,
+                   :bounced,
+                   :rejected,
+                   :complained,
+                   :suppressed,
+                   :unsubscribed,
+                   :deferred
+                 ] ->
+              :attention
+
+            _ ->
+              :awaiting
+          end
+
+        Map.update(counts, bucket, group.count, &(&1 + group.count))
+      end)
+
+    [
+      {:delivered, "Delivered", Map.get(counts, :delivered, 0),
+       "Messages with delivery confirmation or an open or click event, unless a later delivery problem was recorded. Counts include all results for the applied provider, time window, and search."},
+      {:attention, "Needs attention", Map.get(counts, :attention, 0),
+       "Failed, bounced, rejected, deferred, suppressed, complained, or unsubscribed deliveries. Open a delivery to inspect what happened. Counts include all matching results."},
+      {:awaiting, "Awaiting confirmation", Map.get(counts, :awaiting, 0),
+       "Messages are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results."}
+    ]
+  end
+
   defp page_subtitle(:overview),
-    do:
-      "Review failed webhook attempts, unmatched Events, replay and reconciliation records, and active suppression records for this Account."
+    do: "Find email issues and inspect the records behind them."
 
   defp page_subtitle(:deliveries),
-    do:
-      "Prove what happened to a message — inspect its event timeline, suppression state, and replay history."
+    do: "Trace each delivery through its event history."
 
   defp health_metric_count(nil, _metric), do: nil
 

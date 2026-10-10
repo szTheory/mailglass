@@ -67,7 +67,23 @@ defmodule Mailglass.Operator.Deliveries do
       |> delivery_projection()
       |> Repo.all()
 
+    outcome_groups =
+      query
+      |> group_by([delivery], [
+        delivery.status,
+        delivery.last_event_type,
+        not is_nil(delivery.delivered_at)
+      ])
+      |> select([delivery], %{
+        status: delivery.status,
+        last_event_type: delivery.last_event_type,
+        delivery_confirmed: not is_nil(delivery.delivered_at),
+        count: count(delivery.id)
+      })
+      |> Repo.all()
+
     page_result(entries, total_count, page, per_page)
+    |> Map.put(:outcome_groups, outcome_groups)
   end
 
   @doc false
@@ -93,6 +109,7 @@ defmodule Mailglass.Operator.Deliveries do
     Delivery
     |> where([delivery], delivery.tenant_id == ^tenant_id)
     |> maybe_filter_provider(normalized[:provider])
+    |> maybe_filter_search(normalized[:search])
     |> maybe_filter_status(normalized[:status])
     |> maybe_filter_event(normalized[:event] || normalized[:last_event_type])
     |> maybe_filter_window(normalized[:window_hours] || normalized[:recent_window_hours])
@@ -106,13 +123,41 @@ defmodule Mailglass.Operator.Deliveries do
       mailable: delivery.mailable,
       stream: delivery.stream,
       recipient: delivery.recipient,
+      subject: fragment("?->>'subject'", delivery.metadata),
       provider: delivery.provider,
       provider_message_id: delivery.provider_message_id,
       status: delivery.status,
       last_event_type: delivery.last_event_type,
+      delivery_confirmed: not is_nil(delivery.delivered_at),
       last_event_at: delivery.last_event_at,
       inserted_at: delivery.inserted_at
     })
+  end
+
+  defp maybe_filter_search(query, search) when is_binary(search) do
+    case String.trim(search) do
+      "" ->
+        query
+
+      value ->
+        pattern = "%" <> escape_like(value) <> "%"
+
+        where(
+          query,
+          [delivery],
+          ilike(delivery.recipient, ^pattern) or
+            ilike(fragment("?->>'subject'", delivery.metadata), ^pattern)
+        )
+    end
+  end
+
+  defp maybe_filter_search(query, _search), do: query
+
+  defp escape_like(value) do
+    value
+    |> String.replace("\\", "\\\\")
+    |> String.replace("%", "\\%")
+    |> String.replace("_", "\\_")
   end
 
   defp normalize_filters(filters) when is_list(filters), do: Map.new(filters)

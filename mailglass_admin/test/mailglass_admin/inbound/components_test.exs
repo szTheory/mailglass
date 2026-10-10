@@ -33,7 +33,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "Clear filters"
     end
 
-    test "masks the recipient and renders the record id + meta line" do
+    test "shows the recipient and renders the record id + meta line" do
       record = %{
         id: "rec-1",
         tenant_id: "tenant-a",
@@ -47,8 +47,8 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html =
         render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
-      refute html =~ "alice@example.com"
-      assert html =~ "a****@e******.com"
+      assert html =~ "alice@example.com"
+      refute html =~ "a****@e******.com"
       assert html =~ "rec-1"
       assert html =~ "MAILGUN"
       assert html =~ "No execution recorded"
@@ -56,7 +56,6 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
     test "keeps long and non-ASCII row values readable on mobile cards" do
       recipient = String.duplicate("a", 64) <> "@exämple.com"
-      masked_recipient = "a" <> String.duplicate("*", 63) <> "@e******.com"
       record_id = "rec-" <> String.duplicate("界", 40)
 
       record = %{
@@ -73,12 +72,11 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html =
         render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
-      assert html =~ masked_recipient
-      assert html =~ ~s(title="#{masked_recipient}")
+      assert html =~ recipient
+      assert html =~ ~s(title="#{recipient}")
       assert html =~ record_id
       assert html =~ "tenant-東京"
       assert html =~ "MyApp.箱"
-      refute html =~ recipient
     end
 
     test "renders the real outcome badge + matched mailbox for a matched record (WR-01)" do
@@ -321,8 +319,8 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       # Sender masked + present; raw sender never leaks.
       assert html =~ "b**@s*****.test"
       refute html =~ "bob@sender.test"
-      # The recipient is masked in the title, but the From cell is the sender.
-      assert html =~ "a****@e******.com"
+      # The recipient is shown in the title, but the From cell is the sender.
+      assert html =~ "alice@example.com"
     end
 
     test "the From cell reads STRING-keyed `from` maps (DB JSONB round-trip)" do

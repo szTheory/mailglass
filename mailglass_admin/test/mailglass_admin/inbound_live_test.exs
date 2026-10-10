@@ -75,6 +75,15 @@ defmodule MailglassAdmin.InboundLiveTest do
   @theme_cookie MailglassAdmin.Theme.cookie_name()
 
   describe "inbound surface" do
+    test "inbound page header describes its review task", %{conn: conn} do
+      conn = operator_conn(conn)
+      InboundFixtures.seed_matched!("header-inbound", recipient: "reader@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => "header-inbound"}))
+
+      assert html =~ "Follow each received message through routing and mailbox processing."
+    end
+
     test "bare inbound URL with exactly one accessible tenant canonicalizes to tenant_id", %{
       conn: conn
     } do
@@ -101,7 +110,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "add a tenant_id to the URL"
     end
 
-    test "renders the no-selection prompt and masks recipients by default (V5)", %{conn: conn} do
+    test "renders the no-selection prompt and identifiable recipients", %{conn: conn} do
       conn = operator_conn(conn)
 
       %{record: record} =
@@ -111,9 +120,9 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ "Received messages"
       assert html =~ ~s(data-testid="inbound-master-detail")
-      # V5 masking half: masked by default, raw recipient never rendered.
-      assert html =~ "a****@e******.com"
-      refute html =~ "alice@example.com"
+      # Operators can identify the destination address from the list.
+      assert html =~ "alice@example.com"
+      refute html =~ "a****@e******.com"
       # No selection → the list stands alone; the Quick view overlay and Full detail
       # are both absent until a record is focused.
       refute html =~ ~s(data-testid="inbound-quick-view")
@@ -556,6 +565,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-timeline")
       assert html =~ "Execution timeline"
       assert html =~ "MyApp.Mailboxes.SupportMailbox"
+
       timestamp_copy =
         Floki.find(
           Floki.parse_document!(html),
@@ -569,9 +579,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       # Fresh + replay source badges both appear (V matched seed).
       assert html =~ "Fresh"
       assert html =~ "Replay"
-      # Detail still masks the recipient.
-      assert html =~ "s*******@e******.com"
-      refute html =~ "selected@example.com"
+      # Detail shows the recipient.
+      assert html =~ "selected@example.com"
 
       # Back from Full detail returns to the Quick view (id kept, full dropped).
       view
@@ -1811,7 +1820,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "inbound-outcome-"
     end
 
-    test "envelope recipient renders via mask_recipient in both table and card presentations", %{
+    test "envelope recipient is readable in both table and card presentations", %{
       conn: conn
     } do
       conn = operator_conn(conn)
@@ -1819,14 +1828,10 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      # Masked recipient appears (at least twice — once for table, once for cards)
-      # "maskinboth" has 10 chars: m + 9 stars = "m*********"
-      # "example" has 7 chars: e + 6 stars = "e******"
-      masked = "m*********@e******.com"
-      assert html =~ masked
-      assert html |> String.split(masked) |> length() >= 3
-      # Raw recipient never appears
-      refute html =~ "maskinboth@example.com"
+      recipient = "maskinboth@example.com"
+      assert html =~ recipient
+      assert html |> String.split(recipient) |> length() >= 3
+      refute html =~ "m*********@e******.com"
     end
 
     test "record id renders with title attribute and mono truncate; result count reads from page_meta",

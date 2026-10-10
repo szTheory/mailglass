@@ -17,13 +17,15 @@ defmodule MailglassAdmin.Operator.FiltersForm do
     ~H"""
     <Components.filter_section
       title="Filters"
-      description="Show email activity for one account, then narrow by provider, status, or time."
+      compact
+      columns={4}
     >
       <Components.filter_field
         field={@form[:provider]}
         type={:select}
         label="Provider"
         help="Filter by the sending provider recorded for this account."
+        help_display={:tooltip}
         error={field_error(@errors, "provider")}
         prompt="Any provider"
         options={@provider_options}
@@ -34,6 +36,7 @@ defmodule MailglassAdmin.Operator.FiltersForm do
         type={:select}
         label="Latest recorded event"
         help="Filter by the latest event recorded for each delivery."
+        help_display={:tooltip}
         error={field_error(@errors, "event")}
         prompt="Any status"
         options={enum_options(@event_values)}
@@ -41,22 +44,32 @@ defmodule MailglassAdmin.Operator.FiltersForm do
 
       <Components.filter_field
         field={@form[:window_hours]}
-        type={:number}
+        type={:select}
         label="Time window"
-        help="Limit results to recent delivery activity."
+        help="Show deliveries with activity during this period."
+        help_display={:tooltip}
         error={field_error(@errors, "window_hours")}
-        min="1"
-        max="1000000"
-        step="1"
-        inputmode="numeric"
-        list="operator-window-options"
-        placeholder="168"
+        options={window_options(@window_options, @form[:window_hours].value)}
       />
-      <datalist id="operator-window-options">
-        <option :for={{label, value} <- @window_options} value={value}>{label}</option>
-      </datalist>
+      <Components.filter_field
+        field={@form[:search]}
+        label="Search"
+        help="Find deliveries by recipient email address or subject."
+        help_display={:tooltip}
+        placeholder="Subject or recipient"
+      />
     </Components.filter_section>
     """
+  end
+
+  defp window_options(options, value) do
+    value = to_string(value || "")
+
+    if Enum.any?(options, fn {_label, hours} -> to_string(hours) == value end) do
+      options
+    else
+      [{"Custom period (#{value} hours)", value} | options]
+    end
   end
 
   defp label(nil), do: "Unknown"

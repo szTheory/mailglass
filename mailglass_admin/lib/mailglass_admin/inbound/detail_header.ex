@@ -37,7 +37,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
         <div class="min-w-0 space-y-sm">
           <div class="flex flex-wrap items-center gap-sm">
             <h2 class="min-w-0 break-words text-heading font-bold text-base-content">
-              {Components.mask_recipient(@record.envelope_recipient)}
+              {@record.envelope_recipient || "Unavailable"}
             </h2>
             <Components.status_badge status={Components.normalize_inbound_outcome(@outcome)} />
           </div>
@@ -142,8 +142,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
     do: "Replay is unavailable: this message did not match any mailbox."
 
   defp replay_hint(_outcome),
-    do:
-      "Review the recorded Mailbox identity and eligibility before replaying this stored message."
+    do: "Review the recorded Mailbox identity and eligibility before replaying this stored message."
 
   defp matched_mailbox(:no_match, _mailbox), do: "No mailbox matched"
   defp matched_mailbox(nil, _mailbox), do: "No execution recorded"

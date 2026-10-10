@@ -98,62 +98,70 @@ defmodule MailglassAdmin.Preview.Sidebar do
       |> assign(:current_scenario_label, current_scenario_label(assigns.current_scenario))
 
     ~H"""
-    <details
-      data-testid={@testid}
-      data-picker-variant="menu"
-      class="group relative mg-layer-dropdown min-w-0 w-full"
-    >
-      <summary
-        data-testid="preview-email-menu-trigger"
-        class="mg-focus-ring flex min-h-11 w-full max-w-full cursor-pointer list-none items-center gap-sm rounded-field border border-base-300 bg-base-100 px-sm py-xs text-left transition-colors ease-out duration-(--duration-fast) hover:bg-base-200 [&::-webkit-details-marker]:hidden"
+    <div class="grid w-full min-w-0 max-w-4xl gap-xs">
+      <p
+        id="preview-email-menu-label"
+        data-testid="preview-email-menu-label"
+        class="text-label font-bold text-base-content"
       >
-        <span class="min-w-0 flex-1">
-          <span class="block text-label font-bold uppercase text-primary">Email preview</span>
-          <span
-            data-testid="preview-email-menu-active-identity"
-            class="block min-w-0 whitespace-normal break-all text-body font-bold text-base-content"
-          >
-            {@current_mailable_label}
+        Email preview
+      </p>
+      <details
+        data-testid={@testid}
+        data-picker-variant="menu"
+        class="group relative mg-layer-dropdown min-w-0 w-full"
+      >
+        <summary
+          data-testid="preview-email-menu-trigger"
+          aria-labelledby="preview-email-menu-label preview-email-menu-active-identity"
+          class="mg-focus-ring flex min-h-11 w-full max-w-full cursor-pointer list-none items-center gap-sm rounded-field border border-base-300 bg-base-100 px-sm py-xs text-left transition-colors ease-out duration-(--duration-fast) hover:bg-base-200 [&::-webkit-details-marker]:hidden"
+        >
+          <span class="min-w-0 flex-1">
             <span
-              :if={@current_scenario_label}
-              class="block whitespace-normal break-all font-normal text-secondary"
+              id="preview-email-menu-active-identity"
+              data-testid="preview-email-menu-active-identity"
+              class="block min-w-0 flex-1 truncate text-body"
             >
-              · {@current_scenario_label}
+              <span class="font-bold text-base-content">{@current_mailable_label}</span>
+              <span :if={@current_scenario_label} class="font-normal text-secondary">
+                {" · "}{@current_scenario_label}
+              </span>
             </span>
           </span>
-        </span>
-        <span
-          data-testid="preview-email-menu-affordance"
-          class="ml-xs flex h-8 w-8 shrink-0 items-center justify-center text-secondary transition-transform ease-out duration-(--duration-fast) group-open:rotate-180"
-        >
           <span
-            aria-hidden="true"
-            class="h-2 w-2 rotate-45 border-r-2 border-b-2 border-current"
-          ></span>
-        </span>
-      </summary>
+            data-testid="preview-email-menu-affordance"
+            class="ml-xs flex h-8 w-8 shrink-0 items-center justify-center text-secondary transition-transform ease-out duration-(--duration-fast) group-open:rotate-180"
+          >
+            <span
+              aria-hidden="true"
+              class="h-2 w-2 rotate-45 border-r-2 border-b-2 border-current"
+            >
+            </span>
+          </span>
+        </summary>
 
-      <div
-        data-testid="preview-email-menu-panel"
-        class="absolute left-0 mt-1 max-h-[70vh] w-full overflow-auto rounded-box border border-base-300 bg-base-100 p-xs shadow-overlay"
-      >
-        <ul class="grid gap-xs">
-          <%= for {mod, reflection} <- @mailables do %>
-            <li class="py-xs">
-              <.mailable_menu_entry
-                mod={mod}
-                reflection={reflection}
-                current_mailable={@current_mailable}
-                current_scenario={@current_scenario}
-                device_width={@device_width}
-                admin_chrome_theme={@admin_chrome_theme}
-                mount_path={@mount_path}
-              />
-            </li>
-          <% end %>
-        </ul>
-      </div>
-    </details>
+        <div
+          data-testid="preview-email-menu-panel"
+          class="absolute left-0 mt-1 max-h-[70vh] w-full overflow-auto rounded-box border border-base-300 bg-base-100 p-xs shadow-overlay"
+        >
+          <ul class="grid gap-xs">
+            <%= for {mod, reflection} <- @mailables do %>
+              <li class="py-xs">
+                <.mailable_menu_entry
+                  mod={mod}
+                  reflection={reflection}
+                  current_mailable={@current_mailable}
+                  current_scenario={@current_scenario}
+                  device_width={@device_width}
+                  admin_chrome_theme={@admin_chrome_theme}
+                  mount_path={@mount_path}
+                />
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </details>
+    </div>
     """
   end
 
@@ -346,7 +354,11 @@ defmodule MailglassAdmin.Preview.Sidebar do
   end
 
   defp current_mailable_label(nil), do: "Choose an email"
-  defp current_mailable_label(mod), do: inspect(mod)
+
+  defp current_mailable_label(mod) do
+    {_namespace, leaf} = module_parts(mod)
+    leaf
+  end
 
   defp current_scenario_label(nil), do: nil
   defp current_scenario_label(:__error__), do: "render error"

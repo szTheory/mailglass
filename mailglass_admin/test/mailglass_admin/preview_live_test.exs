@@ -199,7 +199,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       trigger_text = Floki.text(trigger)
       assert trigger_text =~ "HappyMailer"
       assert trigger_text =~ "welcome_default"
-      assert trigger_text =~ "MailglassAdmin.Fixtures.HappyMailer"
+      refute trigger_text =~ "MailglassAdmin.Fixtures"
       refute trigger_text =~ "3 emails"
       [affordance] = Floki.find(trigger, ~s([data-testid="preview-email-menu-affordance"]))
       [affordance_class] = Floki.attribute(affordance, "class")
@@ -355,7 +355,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(data-testid="admin-shell-page-header")
 
       assert html =~
-               "Inspect renderer HTML and plaintext, an illustrative raw preview, generated preview headers, and scenario assigns. This is not final provider or recipient output."
+               "See how your emails look in HTML and plain text."
 
       assert html =~ ~s(data-testid="admin-shell-sidebar")
       assert html =~ ~s(data-testid="surface-nav-sidebar")
@@ -378,6 +378,9 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "375 px"
       assert html =~ "768 px"
       assert html =~ "1024 px"
+      assert html =~ "Frame width"
+      assert html =~ "Preview background"
+      assert html =~ ~s(aria-label="Help for preview background")
 
       assert html =~
                "Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior."
@@ -461,7 +464,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
         |> Floki.find(~s([data-testid="preview-email-menu-trigger"]))
 
       trigger_text = Floki.text(trigger)
-      assert trigger_text =~ "MailglassAdmin.Fixtures.HappyMailer"
+      assert trigger_text =~ "HappyMailer"
+      refute trigger_text =~ "MailglassAdmin.Fixtures"
       assert trigger_text =~ "welcome_enterprise"
     end
 
@@ -476,19 +480,30 @@ defmodule MailglassAdmin.PreviewLiveTest do
           mount_path: "/dev/mail"
         )
 
-      [trigger] =
-        html
-        |> Floki.parse_document!()
-        |> Floki.find(~s([data-testid="preview-email-menu-trigger"]))
+      document = Floki.parse_document!(html)
+
+      [label] = Floki.find(document, ~s([data-testid="preview-email-menu-label"]))
+      assert Floki.text(label) == "Email preview"
+
+      [trigger] = Floki.find(document, ~s([data-testid="preview-email-menu-trigger"]))
+      assert Floki.find(trigger, ~s([data-testid="preview-email-menu-label"])) == []
+
+      [label_id] = Floki.attribute(label, "id")
+      [identity] = Floki.find(trigger, ~s([data-testid="preview-email-menu-active-identity"]))
+      [identity_id] = Floki.attribute(identity, "id")
+      assert Floki.attribute(trigger, "aria-labelledby") == ["#{label_id} #{identity_id}"]
 
       text = Floki.text(trigger)
-      assert text =~ "MailglassAdmin.Fixtures.HappyMailer"
+      assert text =~ "HappyMailer"
+      refute text =~ "MailglassAdmin.Fixtures"
       assert text =~ "welcome_überraschung_東京__with_a_deliberately_long_name"
 
       [identity] = Floki.find(trigger, ~s([data-testid="preview-email-menu-active-identity"]))
       [identity_class] = Floki.attribute(identity, "class")
-      refute identity_class =~ "truncate"
-      assert identity_class =~ "break-all"
+      assert identity_class =~ "truncate"
+      refute identity_class =~ "whitespace-normal"
+      refute identity_class =~ "[overflow-wrap:anywhere]"
+      refute identity_class =~ "break-all"
       refute Floki.attribute(identity, "title") != []
     end
   end

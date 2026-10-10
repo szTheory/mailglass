@@ -702,3 +702,38 @@ code, pre, .mono {
     display: none;
   }
 }
+
+/* Keep summary labels and counts aligned when the delivery list becomes cards. */
+.mg-delivery-summary-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-md);
+}
+
+@media (width < 40rem) {
+  .mg-delivery-summary-counts { grid-template-columns: minmax(0, 1fr); }
+  .mg-delivery-summary-counts .mg-stat-compact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+  }
+  .mg-delivery-summary-counts .mg-stat-compact > p:not(.sr-only) { margin-top: 0; }
+}
+
+/* Each records region scrolls its rows beneath a persistent header. */
+[data-testid="inbound-records-table"],
+.operator-deliveries-table {
+  max-height: 70dvh;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+[data-testid="inbound-records-table"] thead th,
+.operator-deliveries-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--color-base-200);
+  box-shadow: 0 1px 0 var(--color-base-300);
+}

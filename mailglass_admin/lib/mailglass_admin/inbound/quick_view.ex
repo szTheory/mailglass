@@ -112,7 +112,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
                 <div>
                   <dt class="text-label font-bold uppercase">Recipient</dt>
                   <dd class="mt-xs truncate text-base-content">
-                    {Components.mask_recipient(Map.get(@record, :envelope_recipient))}
+                    {Map.get(@record, :envelope_recipient) || "Unavailable"}
                   </dd>
                 </div>
                 <div>
