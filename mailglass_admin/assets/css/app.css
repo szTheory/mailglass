@@ -279,6 +279,13 @@
   position: relative;
 }
 
+/* The hover lift creates a stacking context around the link. Raise that
+   context with its tooltip so later cards cannot paint over the hint. */
+a:has(> .mg-stat-card-hint):is(:hover, :focus-within) {
+  position: relative;
+  z-index: var(--z-dropdown);
+}
+
 /* Delivery Quick view: a bottom sheet on compact screens and a right panel
    from the existing 768px breakpoint. The panel owns its scroll region and
    stays above the shared overlay scrim. */
