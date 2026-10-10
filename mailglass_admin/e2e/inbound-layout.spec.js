@@ -9,7 +9,7 @@ async function openInbound(page) {
   await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
 }
 
-for (const width of [1440, 390, 320]) {
+for (const width of [1440, 1024, 390, 320]) {
   test(`inbound compact filters and accessible help at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await openInbound(page);
@@ -23,11 +23,23 @@ for (const width of [1440, 390, 320]) {
     expect(summaryBox.y + summaryBox.height).toBeLessThanOrEqual(listBox.y);
     // The mobile account/theme header occupies more space; the collection
     // heading and first record still start within the initial 900px viewport.
-    expect(listBox.y).toBeLessThan(width >= 768 ? 500 : 750);
-    expect(filterBox.height).toBeLessThan(width >= 768 ? 100 : 70);
+    expect(listBox.y).toBeLessThan(width >= 1280 ? 500 : 750);
+    expect(filterBox.height).toBeLessThan(width >= 1280 ? 100 : width >= 768 ? 240 : 70);
     await expect(summary.getByRole("button")).toHaveCount(1);
     await expect(summary.getByRole("link")).toHaveCount(0);
     await expect(page.getByTestId("inbound-summary-scope")).toContainText("All outcomes · Last 7 days · Any provider");
+    const collectionHeader = page.getByTestId("inbound-collection-header");
+    await expect(collectionHeader.getByRole("heading", { name: "Received messages", exact: true })).toBeVisible();
+    await expect(collectionHeader.getByTestId("inbound-result-count")).toBeVisible();
+    if (width >= 768) {
+      // Full UTC values and the separately labelled local times stay inside
+      // their cell, including at the intermediate tablet/desktop width.
+      const receivedCells = page.getByTestId("inbound-records-table").locator("td.mg-inbound-received");
+      expect(await receivedCells.evaluateAll(cells => cells.every(cell => cell.scrollWidth <= cell.clientWidth))).toBe(true);
+      expect(await receivedCells.locator("time").evaluateAll(times => times.every(time => time.textContent.endsWith(" UTC")))).toBe(true);
+      const mailboxColumn = page.getByRole("columnheader", { name: "Mailbox", exact: true });
+      expect((await mailboxColumn.boundingBox()).width).toBeGreaterThan(100);
+    }
     if (process.env.INBOUND_LAYOUT_CAPTURE_PREFIX) {
       await page.screenshot({ path: `${process.env.INBOUND_LAYOUT_CAPTURE_PREFIX}-${width}.png` });
     }

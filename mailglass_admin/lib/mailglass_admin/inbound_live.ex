@@ -816,12 +816,8 @@ defmodule MailglassAdmin.InboundLive do
                   data-testid="inbound-records-list-card"
                   class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
                 >
-                  <div class="border-b border-base-300 px-md py-sm">
-                    <h2 class="text-body font-bold text-base-content">
-                      Received messages
-                    </h2>
-                  </div>
                   <RecordsList.records_list
+                    heading="Received messages"
                     records={@records}
                     page_meta={@records_page_meta}
                     account_labels={@account_labels}

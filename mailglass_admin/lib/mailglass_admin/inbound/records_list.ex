@@ -28,6 +28,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   alias MailglassAdmin.Operator.Accounts
 
   attr(:records, :list, required: true)
+  attr(:heading, :string, default: nil)
   attr(:account_labels, :map, default: %{})
   # Single-account operator surface: the Account column repeats a constant, so callers
   # pass `false` to reclaim that width for the record data.
@@ -54,11 +55,18 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   def records_list(assigns) do
     ~H"""
     <div
-      :if={is_nil(@data_state)}
-      data-testid="inbound-result-count"
-      class="border-b border-base-300 px-md py-sm text-body text-secondary"
+      :if={@heading || is_nil(@data_state)}
+      data-testid="inbound-collection-header"
+      class="flex flex-wrap items-baseline justify-between gap-x-md gap-y-xs border-b border-base-300 px-md py-sm"
     >
-      {result_count_label(@page_meta)}
+      <h2 :if={@heading} class="text-body font-bold text-base-content">{@heading}</h2>
+      <span
+        :if={is_nil(@data_state)}
+        data-testid="inbound-result-count"
+        class={["text-secondary tabular-nums", if(@heading, do: "text-label", else: "text-body")]}
+      >
+        {result_count_label(@page_meta)}
+      </span>
     </div>
     <%= cond do %>
       <% @data_state == :error -> %>
@@ -140,27 +148,30 @@ defmodule MailglassAdmin.Inbound.RecordsList do
       <% true -> %>
         <%!-- Desktop table (>=768px) --%>
         <div class="hidden md:block overflow-x-auto" data-testid="inbound-records-table">
-          <table class="table w-full table-fixed">
+          <table class={[
+            "mg-inbound-records-table table w-full table-fixed",
+            @show_account? && "mg-inbound-records-table-all-accounts"
+          ]}>
             <thead>
               <tr>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">
+                <th scope="col" class="text-label font-bold text-secondary w-40">
                   Outcome
                 </th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-64">
+                <th scope="col" class="text-label font-bold text-secondary w-1/5">
                   Recipient
                 </th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary">Mailbox</th>
+                <th scope="col" class="text-label font-bold text-secondary">Mailbox</th>
                 <th
                   :if={@show_account?}
                   scope="col"
-                  class="text-label font-bold uppercase text-secondary w-40"
+                  class="text-label font-bold text-secondary w-40"
                 >
                   Account
                 </th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">
+                <th scope="col" class="text-label font-bold text-secondary w-32">
                   Provider
                 </th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-52">
+                <th scope="col" class="text-label font-bold text-secondary w-52">
                   Received
                 </th>
               </tr>
@@ -225,8 +236,11 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                     {String.upcase(Map.get(record, :provider, nil) || "unknown")}
                   </span>
                 </td>
-                <td class="text-label text-secondary">
-                  <Components.timestamp at={Map.get(record, :received_at)} class="whitespace-nowrap" />
+                <td class="mg-inbound-received text-label text-secondary">
+                  <Components.timestamp
+                    at={Map.get(record, :received_at)}
+                    class="block whitespace-normal [overflow-wrap:anywhere]"
+                  />
                 </td>
               </tr>
             </tbody>
@@ -264,7 +278,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
                 <%!-- Envelope recipient (masked) --%>
                 <div class="min-w-0">
-                  <span class="text-label font-bold uppercase text-secondary">Recipient</span>
+                  <span class="text-label font-bold text-secondary">Recipient</span>
                   <p
                     class="min-w-0 truncate text-body text-base-content"
                     title={Components.mask_recipient(Map.get(record, :envelope_recipient))}
@@ -275,7 +289,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
                 <%!-- Record ID with truncate+title --%>
                 <div class="min-w-0">
-                  <span class="text-label font-bold uppercase text-secondary">ID</span>
+                  <span class="text-label font-bold text-secondary">ID</span>
                   <p
                     class="mono min-w-0 truncate text-label text-secondary"
                     title={Map.get(record, :id, "")}
@@ -287,7 +301,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                 <div class="flex flex-wrap items-start gap-md text-label text-secondary">
                   <%!-- Mailbox --%>
                   <div class="min-w-0">
-                    <span class="font-bold uppercase">Mailbox</span>
+                    <span class="font-bold">Mailbox</span>
                     <p
                       class="min-w-0 truncate"
                       title={matched_mailbox_label(record)}
@@ -298,7 +312,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
                   <%!-- Account --%>
                   <div :if={@show_account?} class="min-w-0">
-                    <span class="font-bold uppercase">Account</span>
+                    <span class="font-bold">Account</span>
                     <p
                       class="min-w-0 truncate"
                       title={Accounts.title(Map.get(record, :tenant_id, ""), @account_labels)}
@@ -309,7 +323,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
                   <%!-- Provider --%>
                   <div>
-                    <span class="font-bold uppercase">Provider</span>
+                    <span class="font-bold">Provider</span>
                     <p
                       class="mono min-w-0 truncate"
                       title={String.upcase(Map.get(record, :provider, nil) || "unknown")}
@@ -320,11 +334,11 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
                   <%!-- Received timestamp --%>
                   <div>
-                    <span class="font-bold uppercase">Received</span>
-                    <p>
+                    <span class="font-bold">Received</span>
+                    <p class="mg-inbound-received">
                       <Components.timestamp
                         at={Map.get(record, :received_at)}
-                        class="whitespace-nowrap"
+                        class="block whitespace-normal [overflow-wrap:anywhere]"
                       />
                     </p>
                   </div>

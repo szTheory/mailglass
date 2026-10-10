@@ -411,6 +411,23 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
   visibility: visible;
 }
 
+/* Keep readable column widths on intermediate screens; the table's existing
+   scroll container owns any overflow rather than squeezing Mailbox to zero. */
+.mg-inbound-records-table {
+  min-width: 48rem;
+}
+
+.mg-inbound-records-table-all-accounts {
+  min-width: 64rem;
+}
+
+/* UTC remains canonical and fully visible; the labelled local supplement
+   occupies its own line instead of spilling into the adjacent column. */
+.mg-inbound-received [data-local-time-supplement] {
+  display: block;
+  margin-inline-start: 0;
+}
+
 .mg-inbound-summary-counts {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
