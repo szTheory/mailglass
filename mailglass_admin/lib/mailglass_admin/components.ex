@@ -161,7 +161,7 @@ defmodule MailglassAdmin.Components do
       id={"flash-#{@kind}"}
       class={
         if @placement == :toast,
-          do: "toast toast-top toast-end mg-layer-toast max-w-[min(100vw-2rem,32rem)]"
+          do: "toast toast-top toast-end mg-toast mg-layer-toast"
       }
       role={@live_role}
       aria-live={if @kind == :error, do: "assertive", else: "polite"}

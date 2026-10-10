@@ -203,12 +203,6 @@
      "runtime-loaded proof router", ~D[2026-12-31]},
     {".", "test/support/reference_host/trust_runner_fixtures.ex",
      "Type specification for webhook_ingest_evidence is a supertype of the success typing.",
-     "test-support", "forward-compatible proof fixture", ~D[2026-12-31]},
-    {".", "lib/mailglass/operator/deliveries.ex",
-     "Type specification for list_recent_deliveries is a supertype of the success typing.", "core",
-     "Ecto projection typing artifact", ~D[2026-12-31]},
-    {".", "lib/mailglass/operator/tenants.ex",
-     "Invalid type specification for function list_tenants.", "core",
-     "Ecto projection typing artifact", ~D[2026-12-31]}
+     "test-support", "forward-compatible proof fixture", ~D[2026-12-31]}
   ]
 }

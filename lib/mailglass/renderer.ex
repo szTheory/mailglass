@@ -267,34 +267,33 @@ defmodule Mailglass.Renderer do
 
   defp extract_heading_node({tag, attrs, children}, level)
        when is_binary(tag) and is_list(attrs) and is_list(children) do
-    case get_strategy(attrs) do
-      "skip" ->
-        ""
-
-      "divider" ->
-        "\n---\n"
-
-      "link_pair" ->
-        heading_link_text(attrs, children, level)
-
-      _ when tag in ["script", "style", "head"] ->
-        ""
-
-      _ when tag == "img" ->
-        case List.keyfind(attrs, "alt", 0) do
-          {_, alt} when alt != "" -> extract_heading_node(alt, level)
-          _ -> ""
-        end
-
-      _ when tag == "a" ->
-        heading_link_text(attrs, children, level)
-
-      _ ->
-        extract_heading_text(children, level)
-    end
+    extract_heading_element(get_strategy(attrs), tag, attrs, children, level)
   end
 
   defp extract_heading_node(_other, _level), do: ""
+
+  defp extract_heading_element("skip", _tag, _attrs, _children, _level), do: ""
+  defp extract_heading_element("divider", _tag, _attrs, _children, _level), do: "\n---\n"
+
+  defp extract_heading_element("link_pair", _tag, attrs, children, level),
+    do: heading_link_text(attrs, children, level)
+
+  defp extract_heading_element(_strategy, tag, _attrs, _children, _level)
+       when tag in ["script", "style", "head"],
+       do: ""
+
+  defp extract_heading_element(_strategy, "img", attrs, _children, level) do
+    case List.keyfind(attrs, "alt", 0) do
+      {_, alt} when alt != "" -> extract_heading_node(alt, level)
+      _ -> ""
+    end
+  end
+
+  defp extract_heading_element(_strategy, "a", attrs, children, level),
+    do: heading_link_text(attrs, children, level)
+
+  defp extract_heading_element(_strategy, _tag, _attrs, children, level),
+    do: extract_heading_text(children, level)
 
   defp heading_link_text(attrs, children, level) do
     label = extract_heading_text(children, level)

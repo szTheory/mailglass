@@ -28,4 +28,16 @@ function writeFileExclusive(outputPath, bytes, trustedRoot = process.cwd()) {
   }
 }
 
-module.exports = { writeJson, writeFileExclusive };
+function writePinnedFile(outputPath, bytes, trustedRoot = process.cwd()) {
+  const helper = path.join(__dirname, "phase173_json_output.py");
+  const result = spawnSync("python3", [helper, trustedRoot, outputPath, "--pinned-file"], {
+    input: bytes,
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    const detail = (result.stderr || Buffer.alloc(0)).toString("utf8").trim();
+    throw new Error(detail || `Pinned file output failed with status ${result.status}`);
+  }
+}
+
+module.exports = { writeJson, writeFileExclusive, writePinnedFile };

@@ -25,8 +25,12 @@ defmodule Mailglass.Docs.UnsubscribeGuideTest do
       assert guide =~ "Visiting it does not unsubscribe the recipient"
       assert guide =~ "GET is read-only."
       assert guide =~ "If `redirect` is configured, GET redirects to that path"
-      assert guide =~ "POST returns `200` with an empty body for the first click and for replayed clicks."
-      assert guide =~ "Replayed POSTs converge on the same durable `:unsubscribed` event instead of creating duplicates."
+
+      assert guide =~
+               "POST returns `200` with an empty body for the first click and for replayed clicks."
+
+      assert guide =~
+               "Replayed POSTs converge on the same durable `:unsubscribed` event instead of creating duplicates."
     end
 
     test "documents the previous_secrets rotation playbook" do

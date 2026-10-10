@@ -81,7 +81,7 @@
       category: :liveness
     },
     %{
-      source: "test/mailglass/compliance/unsubscribe_controller_test.exs:163",
+      source: "test/mailglass/compliance/unsubscribe_controller_test.exs:197",
       kind: :sleep,
       owner: "core",
       reason: "token TTL boundary",
@@ -89,7 +89,7 @@
       category: :ttl
     },
     %{
-      source: "test/mailglass/compliance/unsubscribe_controller_test.exs:278",
+      source: "test/mailglass/compliance/unsubscribe_controller_test.exs:348",
       kind: :sleep,
       owner: "core",
       reason: "token TTL boundary",
@@ -153,7 +153,7 @@
       category: :liveness
     },
     %{
-      source: "test/mailglass/docs_contract_test.exs:746",
+      source: "test/mailglass/docs_contract_test.exs:807",
       kind: :skip,
       owner: "core",
       reason: "documented compatibility fixture",

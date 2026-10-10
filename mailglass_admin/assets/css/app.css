@@ -297,6 +297,18 @@
   max-width: 42rem;
 }
 
+.mg-scope-identity {
+  max-width: 18rem;
+}
+
+.mg-scope-menu {
+  width: min(22rem, calc(100vw - 2rem));
+}
+
+.mg-toast {
+  max-width: min(100vw - 2rem, 32rem);
+}
+
 @media (min-width: 768px) {
   .mg-detail-panel {
     inset-inline-start: auto;

@@ -138,8 +138,13 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert html =~ ~s(<meta charset="utf-8")
       assert html =~ ~s(<meta name="viewport")
       assert length(Regex.scan(~r/<h1\b/, html)) == 1
-      assert html =~ "You have not been unsubscribed. Visiting this page does not change your subscription."
-      assert html =~ "To unsubscribe, use your mail app's unsubscribe control when available, or contact the sender using the details in the message."
+
+      assert html =~
+               "You have not been unsubscribed. Visiting this page does not change your subscription."
+
+      assert html =~
+               "To unsubscribe, use your mail app's unsubscribe control when available, or contact the sender using the details in the message."
+
       assert html =~ delivery.recipient
       refute html =~ "about to unsubscribe"
       refute html =~ "<form"
@@ -198,7 +203,10 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert html =~ ~s(<meta name="viewport")
       assert length(Regex.scan(~r/<h1\b/, html)) == 1
       assert html =~ "This unsubscribe link has expired."
-      assert html =~ "Use your mail app's unsubscribe control when available, or contact the sender using the details in the message."
+
+      assert html =~
+               "Use your mail app's unsubscribe control when available, or contact the sender using the details in the message."
+
       refute html =~ token
       refute html =~ delivery.recipient
       refute html =~ delivery.id
@@ -214,7 +222,10 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert html =~ ~s(<meta name="viewport")
       assert length(Regex.scan(~r/<h1\b/, html)) == 1
       assert html =~ "This unsubscribe link is not valid."
-      assert html =~ "Check the message for a current link, or contact the sender using the details in the message."
+
+      assert html =~
+               "Check the message for a current link, or contact the sender using the details in the message."
+
       refute html =~ "not-a-real-token"
       refute html =~ "You have not been unsubscribed"
       refute html =~ "<form"

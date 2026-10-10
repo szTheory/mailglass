@@ -710,7 +710,10 @@ jobs:
         run: mix dialyzer
       - name: Evict stale PLT + rebuild
         if: steps.dialyzer.outcome == 'failure'
-        run: rm -rf _build/test/*.plt && mix dialyzer --plt && mix dialyzer
+        run: |
+          rm -f _build/test/*.plt
+          mix dialyzer --force-check --plt
+          mix dialyzer
 
   inbound_dialyzer:
     name: Inbound Dialyzer (Elixir 1.18 / OTP 27)
@@ -1040,6 +1043,8 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - name: Audit demo browser lockfile
         run: npm --prefix reference/demo_app/assets audit --package-lock-only --audit-level=high
+      - name: Test pinned baseline provisioning
+        run: node --test test_js/phase173-baselines.test.cjs
       - name: Run demo browser evidence
         id: evidence
         run: bash scripts/run_demo_browser_evidence.sh

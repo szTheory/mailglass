@@ -25,7 +25,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
       <details data-testid="inbound-routing-disclosure">
         <summary
           aria-controls="inbound-routing-trace-content"
-          class="mg-focus-ring block min-h-11 cursor-pointer rounded-box focus:outline-none"
+          class="mg-focus-ring block min-h-11 cursor-pointer rounded-box"
         >
           <span class="text-body font-bold text-base-content">Current router simulation</span>
           <span class="block text-label text-secondary">How current route rules compare</span>

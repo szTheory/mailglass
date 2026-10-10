@@ -69,7 +69,8 @@ defmodule Mailglass.Operator.SupportSummary do
   end
 
   @doc false
-  @spec get_webhook_event(String.t(), String.t()) :: map() | nil
+  @spec get_webhook_event(String.t(), String.t()) ::
+          %{required(:delivery_id) => String.t() | nil, optional(atom()) => term()} | nil
   def get_webhook_event(tenant_id, webhook_event_id)
       when is_binary(tenant_id) and tenant_id != "" and is_binary(webhook_event_id) do
     webhook_event =
@@ -114,7 +115,13 @@ defmodule Mailglass.Operator.SupportSummary do
   end
 
   @doc false
-  @spec get_unmatched_event(String.t(), String.t()) :: map() | nil
+  @spec get_unmatched_event(String.t(), String.t()) ::
+          %{
+            required(:delivery_id) => String.t() | nil,
+            required(:reconciled_event_id) => String.t() | nil,
+            optional(atom()) => term()
+          }
+          | nil
   def get_unmatched_event(tenant_id, event_id)
       when is_binary(tenant_id) and tenant_id != "" and is_binary(event_id) do
     event =

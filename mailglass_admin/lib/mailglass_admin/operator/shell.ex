@@ -251,14 +251,14 @@ defmodule MailglassAdmin.Operator.Shell do
         <span
           :if={@selected_tenant_id}
           data-testid="operator-account-label"
-          class="block max-w-[18rem] break-words text-body font-bold text-base-content"
+          class="mg-scope-identity block break-words text-body font-bold text-base-content"
         >
           {@selected_label}
         </span>
         <span
           :if={@selected_tenant_id}
           data-testid="operator-account-id"
-          class="mono block max-w-[18rem] break-all text-label text-secondary"
+          class="mg-scope-identity mono block break-all text-label text-secondary"
         >
           {@selected_tenant_id}
         </span>
@@ -276,7 +276,7 @@ defmodule MailglassAdmin.Operator.Shell do
         </summary>
         <ul
           aria-label="Available Accounts"
-          class="mg-layer-dropdown absolute right-0 top-full z-20 mt-xs max-h-64 w-[min(22rem,calc(100vw-2rem))] list-none overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
+          class="mg-scope-menu mg-layer-dropdown absolute right-0 top-full mt-xs max-h-64 list-none overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
         >
           <li :for={{tenant, index} <- Enum.with_index(@tenant_options)}>
             <.link
