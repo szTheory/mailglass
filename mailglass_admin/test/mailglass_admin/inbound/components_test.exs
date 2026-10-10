@@ -103,7 +103,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       refute html =~ "no match"
     end
 
-    test "renders 'no match' + warning badge for a :no_match record (WR-01)" do
+    test "renders 'Unrouted' + warning badge for a :no_match record (WR-01)" do
       record = %{
         id: "rec-3",
         tenant_id: "tenant-a",
@@ -118,9 +118,9 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html =
         render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
-      assert html =~ "No match"
+      assert html =~ "Unrouted"
       assert html =~ "badge-warning"
-      assert html =~ "No match"
+      assert html =~ "Unrouted"
     end
 
     test "renders no history when the record has no execution run yet" do
@@ -718,7 +718,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       assert html =~ "Time window"
       assert html =~ "Accepted"
-      assert html =~ "No match"
+      assert html =~ "Unrouted"
       assert html =~ "Ignored"
       assert html =~ "No change"
       assert html =~ "Rejected"
@@ -726,9 +726,8 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "Failed"
 
       assert html =~
-               "Filter by the latest fresh mailbox outcome, including no change."
+               "Filter by the latest fresh mailbox outcome, including unrouted messages and no change. Summary counts still show all outcomes."
 
-      assert html =~ "Summary counts still show all outcomes."
       document = Floki.parse_document!(html)
       assert Floki.find(document, "legend") |> Floki.text() |> String.trim() == "Filters"
       assert Floki.find(document, "legend") |> Floki.attribute("class") == ["sr-only"]

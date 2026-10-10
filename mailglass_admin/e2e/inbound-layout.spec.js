@@ -25,13 +25,30 @@ for (const width of [1440, 1024, 390, 320]) {
     // heading and first record still start within the initial 900px viewport.
     expect(listBox.y).toBeLessThan(width >= 1280 ? 500 : 750);
     expect(filterBox.height).toBeLessThan(width >= 1280 ? 100 : width >= 768 ? 240 : 70);
-    await expect(summary.getByRole("button")).toHaveCount(0);
+    await expect(summary.getByRole("button")).toHaveCount(3);
     await expect(summary.getByRole("link")).toHaveCount(0);
     await expect(page.getByTestId("inbound-summary-scope")).toHaveCount(0);
     await expect(page.getByTestId("inbound-summary-outcome-scope")).toHaveCount(0);
     const collectionHeader = page.getByTestId("inbound-collection-header");
     await expect(collectionHeader.getByRole("heading", { name: "Received messages", exact: true })).toBeVisible();
     await expect(collectionHeader.getByTestId("inbound-result-count")).toBeVisible();
+    for (const outcome of ["accepted", "no-match", "failed"]) {
+      const stat = page.getByTestId(`inbound-overview-${outcome}`);
+      const help = stat.getByRole("button");
+      const tooltip = page.locator(`#inbound-overview-${outcome}-help-tooltip`);
+      await expect(help).toHaveAttribute("aria-describedby", `inbound-overview-${outcome}-help`);
+      await expect(tooltip).toBeHidden();
+      await help.hover();
+      await expect(tooltip).toBeVisible();
+      const bounds = await tooltip.boundingBox();
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      expect(await tooltip.evaluate(element => {
+        const rect = element.getBoundingClientRect();
+        return document.elementFromPoint(rect.left + 12, rect.top + 12) === element;
+      })).toBe(true);
+      await page.mouse.move(0, 0);
+    }
     if (width >= 768) {
       // Full UTC values and the separately labelled local times stay inside
       // their cell, including at the intermediate tablet/desktop width.
@@ -107,26 +124,29 @@ for (const width of [1440, 1024, 390, 320]) {
 test("inbound summary explains only the outcome distinction and follows applied filters", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openInbound(page);
-  const total = page.getByTestId("inbound-overview-total").locator("p").nth(1);
-  const before = await total.innerText();
+  const accepted = page.getByTestId("inbound-overview-accepted").locator("p").nth(1);
+  const unrouted = page.getByTestId("inbound-overview-no-match").locator("p").nth(1);
+  const before = await accepted.innerText();
+  const unroutedBefore = await unrouted.innerText();
   await page.getByLabel("Mailbox outcome", { exact: true }).selectOption("accept");
   await page.getByRole("button", { name: "Apply filters", exact: true }).click();
   await expect(page).toHaveURL(/outcome=accept/);
-  await expect(total).toHaveText(before);
+  await expect(accepted).toHaveText(before);
+  await expect(unrouted).toHaveText(unroutedBefore);
   await expect(page.getByTestId("inbound-summary-outcome-scope")).toHaveText("Counts include all outcomes; list shows Accepted.");
   await page.getByLabel("Time window", { exact: true }).selectOption("24");
-  await expect(total).toHaveText(before);
+  await expect(accepted).toHaveText(before);
   await page.getByRole("button", { name: "Apply filters", exact: true }).click();
   await expect(page).toHaveURL(/window_hours=24/);
-  const appliedTotal = await total.innerText();
+  const appliedTotal = await accepted.innerText();
   await page.getByLabel("Search", { exact: true }).fill("no-matching-message-7f2a");
-  await expect(total).toHaveText(appliedTotal);
+  await expect(accepted).toHaveText(appliedTotal);
   await page.getByRole("button", { name: "Apply filters", exact: true }).click();
-  await expect(total).toHaveText("0");
+  await expect(accepted).toHaveText("0");
   await expect(page.getByTestId("inbound-empty-filtered")).toHaveCount(1);
   await page.getByTestId("inbound-filters").getByRole("button", { name: "Clear filters", exact: true }).click();
   await expect(page.getByTestId("inbound-summary-outcome-scope")).toHaveCount(0);
-  await expect(total).toHaveText(before);
+  await expect(accepted).toHaveText(before);
   await expect(page.getByLabel("Time window", { exact: true })).toHaveValue("168");
   await expect(page).toHaveURL(/tenant_id=browser-tenant/);
 });

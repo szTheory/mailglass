@@ -439,6 +439,7 @@ defmodule MailglassAdmin.Components do
   attr(:unavailable_text, :string, default: "Unavailable")
   attr(:hint, :string, default: nil)
   attr(:compact, :boolean, default: false)
+  slot(:label_help)
   attr(:rest, :global, default: %{})
 
   @doc """
@@ -476,6 +477,9 @@ defmodule MailglassAdmin.Components do
           !@compact && "font-bold uppercase"
         ]}>
           <span class="min-w-0 break-words [overflow-wrap:anywhere]">{@label}</span>
+          <span :if={@label_help != []} class="inline-flex shrink-0">
+            {render_slot(@label_help)}
+          </span>
           <span
             :if={present?(@hint)}
             class="inline-flex shrink-0 text-secondary"
@@ -1288,7 +1292,7 @@ defmodule MailglassAdmin.Components do
   defp status_label(:autoresponded), do: "Autoresponded"
   defp status_label(:unknown), do: "Unknown"
   defp status_label(:accepted), do: "Accepted"
-  defp status_label(:no_match), do: "No match"
+  defp status_label(:no_match), do: "Unrouted"
   defp status_label(:ignore), do: "Ignored"
   defp status_label(:no_change), do: "No change"
   defp status_label(:missing_history), do: "No history"

@@ -474,10 +474,10 @@ test.describe("operator browser gate", () => {
 
     const noMatchRow = page
       .getByTestId("inbound-record-row")
-      .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+      .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
       .first();
 
-    await expect(noMatchRow).toContainText("No match");
+    await expect(noMatchRow).toContainText("Unrouted");
     await openInboundFull(page, noMatchRow);
 
     await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
@@ -500,7 +500,7 @@ test.describe("operator browser gate", () => {
     await page
       .getByTestId("inbound-record-row")
       .filter({ visible: true })
-      .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+      .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
       .first()
       .click();
 

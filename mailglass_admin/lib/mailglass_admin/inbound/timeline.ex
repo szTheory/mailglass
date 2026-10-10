@@ -16,7 +16,7 @@ defmodule MailglassAdmin.Inbound.Timeline do
 
   import MailglassAdmin.Components, only: [card: 1, timestamp: 1]
 
-  attr :runs, :list, required: true
+  attr(:runs, :list, required: true)
 
   def timeline(assigns) do
     ~H"""
@@ -78,7 +78,7 @@ defmodule MailglassAdmin.Inbound.Timeline do
   defp outcome_dot_class(:ignore), do: "bg-secondary"
   defp outcome_dot_class(_outcome), do: "bg-secondary"
 
-  defp outcome_label(:no_match), do: "No match"
+  defp outcome_label(:no_match), do: "Unrouted"
   defp outcome_label(:accept), do: "Accepted"
   defp outcome_label(:ignore), do: "Ignored"
   defp outcome_label(:no_change), do: "No change"

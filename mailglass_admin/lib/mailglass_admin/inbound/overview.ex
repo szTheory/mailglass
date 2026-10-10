@@ -7,14 +7,12 @@ defmodule MailglassAdmin.Inbound.Overview do
 
   alias MailglassAdmin.Components
 
-  attr :summary, :map, required: true
-  attr :filters, :map, default: %{}
+  attr(:summary, :map, required: true)
+  attr(:filters, :map, default: %{})
 
   def overview(assigns) do
     assigns =
       assign(assigns,
-        total: summary_count(assigns.summary, :total),
-        no_match_rate: summary_rate(assigns.summary, :no_match_rate),
         outcomes: outcome_counts(assigns.summary),
         list_outcome: list_outcome(assigns.filters)
       )
@@ -30,30 +28,21 @@ defmodule MailglassAdmin.Inbound.Overview do
       </p>
       <div class="mg-inbound-summary-counts">
         <Components.stat_card
-          label="Messages"
-          value={@total}
-          compact
-          severity={:info}
-          severity_label="Tracked"
-          data-testid="inbound-overview-total"
-        />
-        <Components.stat_card
-          label="No-match rate"
-          value={"#{@no_match_rate}%"}
-          compact
-          severity={rate_severity(@no_match_rate)}
-          severity_label={rate_label(@no_match_rate)}
-          data-testid="inbound-overview-no-match-rate"
-        />
-        <Components.stat_card
-          :for={{key, label, count} <- @outcomes}
+          :for={{key, label, count, help} <- @outcomes}
+          id={"inbound-overview-#{String.replace(Atom.to_string(key), "_", "-")}"}
           label={label}
           value={count}
           compact
-          severity={if key == :no_match, do: attention_severity(count), else: :neutral}
-          severity_label={if key == :no_match, do: attention_label(count), else: "Tracked"}
           data-testid={"inbound-overview-#{String.replace(Atom.to_string(key), "_", "-")}"}
-        />
+        >
+          <:label_help>
+            <Components.field_help
+              id={"inbound-overview-#{String.replace(Atom.to_string(key), "_", "-")}-help"}
+              label={label}
+              text={help}
+            />
+          </:label_help>
+        </Components.stat_card>
       </div>
     </section>
     """
@@ -61,23 +50,21 @@ defmodule MailglassAdmin.Inbound.Overview do
 
   defp outcome_counts(summary) do
     [
-      {:no_match, "No match"},
-      {:accepted, "Accepted"},
-      {:reject, "Rejected"},
-      {:bounce, "Bounced"},
-      {:failed, "Failed"},
-      {:ignore, "Ignored"},
-      {:no_change, "No change"}
+      {:accepted, "Accepted", :accept,
+       "Messages whose latest fresh run was accepted by a mailbox."},
+      {:no_match, "Unrouted", :no_match,
+       "No mailbox routing rule matched these messages. Open a message to inspect the routes that were checked."},
+      {:failed, "Failed", :failed,
+       "Mailbox processing ended in failure. Open a message to inspect the recorded error."}
     ]
-    |> Enum.map(fn {key, label} ->
-      outcome = if key == :accepted, do: :accept, else: key
-      {key, label, outcome_count(summary, outcome)}
+    |> Enum.map(fn {key, label, outcome, help} ->
+      {key, label, outcome_count(summary, outcome), help}
     end)
   end
 
   defp list_outcome(filters) do
     case filters["outcome"] do
-      "no_match" -> "No match"
+      "no_match" -> "Unrouted"
       "accept" -> "Accepted"
       "reject" -> "Rejected"
       "bounce" -> "Bounced"
@@ -86,12 +73,6 @@ defmodule MailglassAdmin.Inbound.Overview do
       "no_change" -> "No change"
       _ -> nil
     end
-  end
-
-  defp summary_count(summary, key) do
-    summary
-    |> value_for(key)
-    |> normalize_count()
   end
 
   defp outcome_count(summary, outcome) do
@@ -108,16 +89,6 @@ defmodule MailglassAdmin.Inbound.Overview do
     |> normalize_count()
   end
 
-  defp summary_rate(summary, key) do
-    summary
-    |> value_for(key)
-    |> case do
-      value when is_float(value) -> Float.round(value, 1)
-      value when is_integer(value) -> Float.round(value * 1.0, 1)
-      _ -> 0.0
-    end
-  end
-
   defp value_for(map, key) when is_map(map) do
     Map.get(map, key) || Map.get(map, Atom.to_string(key))
   end
@@ -126,16 +97,4 @@ defmodule MailglassAdmin.Inbound.Overview do
 
   defp normalize_count(value) when is_integer(value) and value >= 0, do: value
   defp normalize_count(_value), do: 0
-
-  defp attention_severity(count) when is_integer(count) and count > 0, do: :warning
-  defp attention_severity(_count), do: :success
-
-  defp attention_label(count) when is_integer(count) and count > 0, do: "Needs attention"
-  defp attention_label(_count), do: "All clear"
-
-  defp rate_severity(rate) when is_number(rate) and rate > 0, do: :warning
-  defp rate_severity(_rate), do: :success
-
-  defp rate_label(rate) when is_number(rate) and rate > 0, do: "Needs attention"
-  defp rate_label(_rate), do: "All clear"
 end

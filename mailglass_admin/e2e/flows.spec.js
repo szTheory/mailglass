@@ -104,7 +104,7 @@ async function openPreviewError(page, query = "theme=light") {
 function noMatchRow(page) {
   return page
     .getByTestId("inbound-record-row")
-    .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+    .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
     .filter({ visible: true })
     .first();
 }
@@ -254,7 +254,7 @@ async function openInboundReplayModal(page) {
   await openInbound(page);
   const replayableRow = page
     .getByTestId("inbound-record-row")
-    .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+    .filter({ hasNot: page.locator(".badge-warning", { hasText: "Unrouted" }) })
     .filter({ visible: true })
     .first();
   await selectInboundFull(page, replayableRow);
@@ -501,7 +501,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     const replayableRow = page
       .getByTestId("inbound-records-cards")
       .getByTestId("inbound-record-row")
-      .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+      .filter({ hasNot: page.locator(".badge-warning", { hasText: "Unrouted" }) })
       .filter({ visible: true })
       .first();
     await selectInboundFull(page, replayableRow);

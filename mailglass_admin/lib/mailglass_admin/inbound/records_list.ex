@@ -450,7 +450,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
   defp matched_mailbox_label(record) do
     case {Map.get(record, :outcome), Map.get(record, :mailbox)} do
-      {:no_match, _mailbox} -> "No match"
+      {:no_match, _mailbox} -> "Unrouted"
       {nil, _mailbox} -> "No execution recorded"
       {_outcome, mailbox} when is_binary(mailbox) and mailbox != "" -> mailbox
       {_outcome, _mailbox} -> "Unavailable"

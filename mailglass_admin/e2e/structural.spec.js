@@ -641,7 +641,7 @@ function noMatchRow(page) {
   // Use the visible() filter to always get the visible row regardless of viewport.
   return page
     .getByTestId("inbound-record-row")
-    .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+    .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
     .filter({ visible: true })
     .first();
 }
@@ -686,7 +686,7 @@ async function firstReplayableInboundRecordId(page) {
   for (let index = 0; index < (await rows.count()); index += 1) {
     const row = rows.nth(index);
     if (!(await row.isVisible())) continue;
-    if (/\bNo match\b/i.test(await row.innerText())) continue;
+    if (/\bUnrouted\b/i.test(await row.innerText())) continue;
     const recordId = await inboundRecordIdFromRow(row);
     if (recordId) return recordId;
   }
@@ -1231,7 +1231,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const mobileNoMatchRow = page
         .getByTestId("inbound-records-cards")
         .getByTestId("inbound-record-row")
-        .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+        .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
         .first();
       await mobileNoMatchRow.click();
       await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
@@ -1393,7 +1393,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Select a replayable (non-no-match) row — the matched :accept row has an enabled replay button
       const replayableRow = page
         .getByTestId("inbound-record-row")
-        .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+        .filter({ hasNot: page.locator(".badge-warning", { hasText: "Unrouted" }) })
         .first();
       // Replay lives in Full detail (behind "Open full detail"), not the Quick view.
       await selectInboundFull(page, replayableRow);

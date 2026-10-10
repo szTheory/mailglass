@@ -200,13 +200,14 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="inbound-overview")
-      assert html =~ "Messages"
-      assert html =~ "No match"
+      assert html =~ "Unrouted"
       assert html =~ "Accepted"
-      assert html =~ "No-match rate"
-      assert html =~ "2"
-      assert html =~ "1"
-      assert html =~ "50.0%"
+      refute html =~ "No-match rate"
+      doc = Floki.parse_document!(html)
+      assert summary_count(doc, "accepted") == "1"
+      assert summary_count(doc, "no-match") == "1"
+      assert summary_count(doc, "failed") == "0"
+      assert Floki.find(doc, "[data-testid='inbound-overview-no-change']") == []
       refute html =~ "foreign@example.com"
 
       assert_in_order(html, [
@@ -229,8 +230,13 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="inbound-overview")
-      assert html =~ "Messages"
-      assert html =~ "101"
+      assert html =~ "Accepted"
+
+      assert Floki.find(Floki.parse_document!(html), "[data-testid='inbound-overview-accepted'] p")
+             |> Enum.at(1)
+             |> Floki.text()
+             |> String.trim() == "101"
+
       refute html =~ "accepted-101@example.com"
     end
 
@@ -263,11 +269,6 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert Floki.find(doc, "[data-testid='inbound-summary-outcome-scope']") |> Floki.text() =~
                "Counts include all outcomes; list shows Accepted."
-
-      assert Floki.find(doc, "[data-testid='inbound-overview-total'] p")
-             |> Enum.at(1)
-             |> Floki.text()
-             |> String.trim() == "2"
 
       assert Floki.find(doc, "[data-testid='inbound-overview-no-match'] p")
              |> Enum.at(1)
@@ -950,8 +951,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ unmatched.id
-      assert html =~ "No match"
-      assert html =~ "No match"
+      assert html =~ "Unrouted"
+      assert html =~ "Unrouted"
       assert html =~ "badge-warning"
     end
 
@@ -971,7 +972,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       # Both real dispositions are present — the list is no longer a constant.
       assert html =~ "Accept"
       assert html =~ "MyApp.Mailboxes.SupportMailbox"
-      assert html =~ "No match"
+      assert html =~ "Unrouted"
     end
 
     test "filters an explicit no-change run without including an ignored run", %{conn: conn} do
@@ -1346,9 +1347,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       # The successful command is reported independently from the selected
       # history snapshot. It does not trigger a read or invent a timeline event.
-      assert length(
-               Floki.find(Floki.parse_document!(html), "[data-testid='inbound-timeline-run']")
-             ) ==
+      assert length(Floki.find(Floki.parse_document!(html), "[data-testid='inbound-timeline-run']")) ==
                initial_timeline_count
 
       assert Floki.find(
@@ -1499,9 +1498,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         })
 
       {:ok, _updated_evidence} =
-        MailglassAdmin.TestRepo.update(
-          Changeset.change(evidence, verification_facts: stale_facts)
-        )
+        MailglassAdmin.TestRepo.update(Changeset.change(evidence, verification_facts: stale_facts))
 
       html = render_click(view, "confirm_replay", %{})
 
@@ -1654,8 +1651,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         Topics.inbound_record_inserted(@tenant_id),
-        {:inbound_record_inserted, fresh.id,
-         %{provider: "mailgun", record_type: "inbound_record"}}
+        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
       )
 
       html = render(view)
@@ -1937,7 +1933,7 @@ defmodule MailglassAdmin.InboundLiveTest do
   end
 
   describe "inbound KPI stat_card certification (DATA-02, Task 3)" do
-    test "all four inbound KPI tiles render with meaningful non-dash values", %{conn: conn} do
+    test "only actionable inbound summary counts render with explanations", %{conn: conn} do
       conn = operator_conn(conn)
 
       InboundFixtures.seed_matched!(@tenant_id, recipient: "kpi@example.com")
@@ -1945,14 +1941,17 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ ~s(data-testid="inbound-overview-total")
-      assert html =~ ~s(data-testid="inbound-overview-no-match")
       assert html =~ ~s(data-testid="inbound-overview-accepted")
-      assert html =~ ~s(data-testid="inbound-overview-no-match-rate")
+      assert html =~ ~s(data-testid="inbound-overview-no-match")
+      assert html =~ ~s(data-testid="inbound-overview-failed")
+      assert html =~ "Messages whose latest fresh run was accepted by a mailbox."
+      assert html =~ "No mailbox routing rule matched these messages."
+      assert html =~ "Mailbox processing ended in failure."
+      refute html =~ ~s(data-testid="inbound-overview-total")
+      refute html =~ "No-match rate"
 
-      # Meaningful values present (not dashes)
-      refute html =~ ~s(<span class="tabular-nums">—</span>)
-      refute html =~ ~s(<span class="tabular-nums">-</span>)
+      assert Floki.find(Floki.parse_document!(html), "[data-testid='inbound-overview-no-change']") ==
+               []
     end
   end
 
@@ -2382,6 +2381,14 @@ defmodule MailglassAdmin.InboundLiveTest do
       "" -> @base_path
       query -> @base_path <> "?" <> query
     end
+  end
+
+  defp summary_count(doc, outcome) do
+    doc
+    |> Floki.find("[data-testid='inbound-overview-#{outcome}'] p")
+    |> Enum.at(1)
+    |> Floki.text()
+    |> String.trim()
   end
 
   defp clear_filters_count(html) do

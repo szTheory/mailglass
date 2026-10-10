@@ -12,11 +12,11 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
 
   alias MailglassAdmin.Components
 
-  attr :form, Phoenix.HTML.Form, required: true
-  attr :provider_options, :list, default: []
-  attr :outcome_values, :list, required: true
-  attr :window_options, :list, required: true
-  attr :errors, :map, default: %{}
+  attr(:form, Phoenix.HTML.Form, required: true)
+  attr(:provider_options, :list, default: [])
+  attr(:outcome_values, :list, required: true)
+  attr(:window_options, :list, required: true)
+  attr(:errors, :map, default: %{})
 
   def fields(assigns) do
     ~H"""
@@ -39,7 +39,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         field={@form[:outcome]}
         type={:select}
         label="Mailbox outcome"
-        help="Filter by the latest fresh mailbox outcome, including no change. Summary counts still show all outcomes."
+        help="Filter by the latest fresh mailbox outcome, including unrouted messages and no change. Summary counts still show all outcomes."
         help_display={:tooltip}
         error={field_error(@errors, "outcome")}
         prompt="Any outcome"
@@ -70,7 +70,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
 
   defp label(nil), do: "Unknown"
 
-  defp label(:no_match), do: "No match"
+  defp label(:no_match), do: "Unrouted"
   defp label(:accept), do: "Accepted"
   defp label(:ignore), do: "Ignored"
   defp label(:no_change), do: "No change"

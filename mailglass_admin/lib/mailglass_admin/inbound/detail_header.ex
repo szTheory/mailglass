@@ -142,7 +142,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
   defp replay_hint(_outcome),
     do: "Review the recorded Mailbox identity and eligibility before replaying this stored message."
 
-  defp matched_mailbox(:no_match, _mailbox), do: "No match"
+  defp matched_mailbox(:no_match, _mailbox), do: "No mailbox matched"
   defp matched_mailbox(nil, _mailbox), do: "No execution recorded"
 
   defp matched_mailbox(_outcome, mailbox) when is_binary(mailbox) and mailbox != "",

@@ -382,6 +382,11 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
   z-index: var(--z-dropdown);
 }
 
+.mg-inbound-summary-counts .mg-stat-compact:has(.mg-field-help:hover, .mg-field-help button:focus-visible, .mg-field-help button[aria-expanded="true"]) {
+  position: relative;
+  z-index: var(--z-dropdown);
+}
+
 .mg-field-help-tooltip {
   position: absolute;
   inset-block-start: 100%;
@@ -428,15 +433,15 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
   gap: var(--spacing-md);
 }
 
-@media (min-width: 768px) {
-  .mg-inbound-summary-counts {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
+.mg-inbound-summary-counts .mg-stat-compact:last-child .mg-field-help-tooltip {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
 }
 
-@media (min-width: 1280px) {
-  .mg-inbound-summary-counts {
-    grid-template-columns: repeat(9, minmax(0, 1fr));
+@media (max-width: 767px) {
+  .mg-inbound-summary-counts .mg-stat-compact:nth-child(2) .mg-field-help-tooltip {
+    inset-inline-start: 50%;
+    translate: -50% 0;
   }
 }
 

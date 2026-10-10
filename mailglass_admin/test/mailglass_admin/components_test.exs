@@ -138,7 +138,7 @@ defmodule MailglassAdmin.ComponentsTest do
       html = render_component(&Components.status_badge/1, status: :no_match, size: :sm)
       assert html =~ "badge-warning"
       assert html =~ "hero-exclamation-triangle"
-      assert html =~ "No match"
+      assert html =~ "Unrouted"
     end
 
     test "rejected (inbound) renders badge-error + x-circle icon" do
