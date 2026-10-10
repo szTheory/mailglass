@@ -86,7 +86,8 @@ services:
       demo:
         condition: service_healthy
     command: >
-      sh -lc "npm --prefix assets ci --no-audit --no-fund
+      sh -lc "node assets/scripts/check-demo-browser-deps.cjs --lock-only
+      && npm --prefix assets ci --no-audit --no-fund
       && npx --prefix assets playwright install chromium
       && npm --prefix assets run test:e2e:ci"
     volumes:

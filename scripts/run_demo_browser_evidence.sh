@@ -83,7 +83,7 @@ compose run --build --no-deps --rm \
   --env DEMO_UNSUBSCRIBE_HTML_BEAM_SHA256 \
   --env PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright \
   demo_e2e sh -lc \
-  'mkdir -p /workspace/reference/demo_app/tmp/demo_browser_evidence && npm --prefix assets ci --no-audit --no-fund && npm --silent --prefix assets run test:e2e -- phase173-evidence.spec.js --reporter=json > /workspace/reference/demo_app/tmp/demo_browser_evidence/playwright-report.json'
+  'mkdir -p /workspace/reference/demo_app/tmp/demo_browser_evidence && node assets/scripts/check-demo-browser-deps.cjs --lock-only && npm --prefix assets ci --no-audit --no-fund && npm --silent --prefix assets run test:e2e -- phase173-evidence.spec.js --reporter=json > /workspace/reference/demo_app/tmp/demo_browser_evidence/playwright-report.json'
 
 test -f "$EVIDENCE_DIR/playwright-report.json"
 test -f "$EVIDENCE_DIR/phase173-captures.json"
