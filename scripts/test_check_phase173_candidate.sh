@@ -29,6 +29,7 @@ mkdir -p "$FAKE_BIN" "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-e
 cp "$ROOT_DIR/reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs" \
   "$FAKE_ROOT/reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs"
 cp "$ROOT_DIR/scripts/phase173_json_output.cjs" "$FAKE_ROOT/scripts/phase173_json_output.cjs"
+cp "$ROOT_DIR/scripts/phase173_json_output.py" "$FAKE_ROOT/scripts/phase173_json_output.py"
 node - "$ROOT_DIR" "$FAKE_ROOT" "$FIXTURES" <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
@@ -138,6 +139,16 @@ try { writeJson(link, { should: "not be written" }, testDir); } catch (error) {
 if (!rejected) throw new Error("JSON evidence writer accepted a symlink destination");
 if (!fs.readFileSync(target).equals(original)) throw new Error("symlink target bytes changed");
 if (!fs.lstatSync(link).isSymbolicLink()) throw new Error("rejected symlink destination was replaced");
+
+const realParent = path.join(testDir, "real-parent");
+const linkedParent = path.join(testDir, "linked-parent");
+fs.mkdirSync(realParent);
+fs.symlinkSync(realParent, linkedParent, "dir");
+let parentRejected = false;
+try { writeJson(path.join(linkedParent, "parent-output.json"), { should: "not be written" }, testDir); }
+catch { parentRejected = true; }
+if (!parentRejected) throw new Error("JSON evidence writer followed a symlinked parent directory");
+if (fs.existsSync(path.join(realParent, "parent-output.json"))) throw new Error("symlinked parent received JSON output");
 NODE
 
 node - "$ROOT_DIR" <<'NODE'
@@ -558,6 +569,7 @@ TEST_ENV=(FAKE_REQUIRED_DIRTY=true)
 # creates a detached exact-SHA candidate, and invokes the committed candidate mode.
 cp "$ROOT_DIR/scripts/check_phase173_candidate.sh" "$FAKE_ROOT/scripts/check_phase173_candidate.sh"
 cp "$ROOT_DIR/scripts/phase173_json_output.cjs" "$FAKE_ROOT/scripts/phase173_json_output.cjs"
+cp "$ROOT_DIR/scripts/phase173_json_output.py" "$FAKE_ROOT/scripts/phase173_json_output.py"
 chmod +x "$FAKE_ROOT/scripts/check_phase173_candidate.sh"
 write_metadata
 : > "$LOG"
