@@ -1,43 +1,45 @@
 ---
 phase: 173
-status: fixed
-iterations: 1
-fixed: 3
+fixed_at: 2026-10-10T13:35:14Z
+review_path: /Users/jon/projects/mailglass/.planning/phases/173-consistency-and-delivery-evidence/173-REVIEW.md
+iteration: 3
+findings_in_scope: 1
+fixed: 1
 skipped: 0
-deferred: 0
+status: all_fixed
 ---
 
-# Phase 173: Code Review Fixes
+# Phase 173: Code Review Fix Report
+
+**Fixed at:** 2026-10-10T13:35:14Z  
+**Source review:** `.planning/phases/173-consistency-and-delivery-evidence/173-REVIEW.md`  
+**Iteration:** 3
+
+**Summary:**
+- Findings in scope: 1
+- Fixed: 1
+- Skipped: 0
 
 ## Fixed Issues
 
-### CR-01: Mixed capture dirtiness can be recorded as a clean candidate — BLOCKER
+### CR-01: BLOCKER — Callers create output directories through unchecked pathnames
 
-- Reject inconsistent `candidate_dirty` values while building a checkpoint; derive the aggregate conservatively.
-- Require every retained capture to explicitly prove `candidate_dirty: false` before exact-candidate acceptance.
-- Added Node and fake-candidate regressions for mixed dirty/clean capture metadata.
-- Validation: 12 evidence Node tests passed; `bash scripts/test_check_phase173_candidate.sh` passed.
-- Commit: `ae0de199`.
+**Files modified:** `scripts/check_phase173_candidate.sh`, `scripts/phase173_json_output.cjs`, `scripts/phase173_json_output.py`, `scripts/test_check_phase173_candidate.sh`  
+**Commit:** `273bc1c0`  
+**Applied fix:** Removed caller-side `mkdir -p` and recursive `fs.mkdirSync` before secure validation. Extended the Python standard-library helper to create missing parents relative to held, verified directory descriptors using directory-relative `mkdir` and `O_DIRECTORY | O_NOFOLLOW` opens. Routed PNG baseline output through the helper's descriptor-relative exclusive file creation while preserving baseline validation and hash checks. Added safe nested-parent and symlinked-parent tests, and source-contract checks that forbid the unsafe caller patterns.  
+**Verification:** Python AST parsing, `node --check scripts/phase173_json_output.cjs`, `bash -n scripts/check_phase173_candidate.sh scripts/test_check_phase173_candidate.sh`, and `bash scripts/test_check_phase173_candidate.sh` passed in the main checkout. The focused script retained its direct symlink target-byte assertion and real Git sparse-checkout sentinels.  
+**Review note:** The security and path-handling logic passed a focused symlink/parent contract, a synthetic real-Git sparse-checkout contract, and an independent standard-depth code review. These automated checks cover the implementation; owner acceptance remains a separate unverified phase gate.
 
-### WR-01: Default Compose E2E run lacks the reset identity required by its specs — WARNING
+## Previously Fixed Issues
 
-- Route the supported `make demo-e2e` entry point through the existing randomized, disposable Compose runner.
-- Document that this target uses an isolated app/database and does not reset the retained demo.
-- Keep direct Compose use fail-closed when no run-owned identity is supplied.
-- Validation: `bash scripts/test_run_demo_browser_evidence.sh` passed, including its assertion that `make demo-e2e` invokes the wrapper.
-- Commit: `03b43c54`.
-
-### WR-02: Actual capture writer accepts non-PNG bytes as screenshot evidence — WARNING
-
-- Validate the PNG signature, complete IHDR chunk and CRC, legal color/depth/encoding fields, and bounded nonzero dimensions before hashing actual capture bytes.
-- Replace the truncated success fixture with a valid PNG and reject non-PNG and truncated-IHDR fixtures.
-- Validation: focused ExUnit suite passed (11 tests); both changed Elixir files pass `mix format --check-formatted`.
-- Commit: `4e8d9e5b`.
-
-## Skipped Issues
-
-None.
+The iteration 1 WR-01 and iteration 2 CR-01 fixes remain in their respective commits (`04115f01` and `3b869044`).
 
 ## Verification Boundary
 
-These fixes close all findings from the Phase 173 source review. They do not create exact-SHA required CI evidence or resolve the owner-controlled acceptance inputs recorded by Plan 06. The actual candidate gate was not rerun because it consumes acceptance paths that remain excluded from this work.
+Verification ran in the main checkout. Exact-SHA CI remains required, and `ownerAcceptance` remains `unverified`. This report is intentionally uncommitted.
+
+---
+
+_Fixed: 2026-10-10T13:35:14Z_  
+_Fixer: the agent (gsd-code-fixer)_  
+_Iteration: 3_
