@@ -135,7 +135,9 @@ function assertContract(launcher, dockerignore, compose, runner) {
       !launcher.includes('OWNER_ACCEPTANCE_STATUS="unverified"') || !launcher.includes('dirtyInventory: original.dirtyInventory')) {
     throw new Error("owner acceptance or SHA-only inventory is not explicit");
   }
-  if (!launcher.includes("asdf exec mix deps.get --check-locked") || !launcher.includes("npm ci --no-audit --no-fund")) {
+  const lockedMixPrep = "ASDF_ERLANG_VERSION=27.3.4.13 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix deps.get --check-locked";
+  if (launcher.split(lockedMixPrep).length - 1 !== 3 ||
+      !launcher.includes("npm ci --no-audit --no-fund")) {
     throw new Error("candidate regression dependencies are not restored from existing lockfiles");
   }
   const previewStartup = launcher.indexOf("if compose up --build --detach --wait --wait-timeout 600 demo; then");
@@ -173,7 +175,7 @@ const cases = [
   [1, (x) => x.replace("reference/demo_app/README.md\n", "")],
   [1, (x) => `${x}\n!reference/demo_app/README.md\n`],
   [3, (x) => x.replace("phase173-evidence.spec.js", "*.spec.js")],
-  [0, (x) => x.replaceAll("asdf exec mix deps.get --check-locked", "asdf exec mix deps.get")],
+  [0, (x) => x.replaceAll("ASDF_ERLANG_VERSION=27.3.4.13 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix deps.get --check-locked", "asdf exec mix deps.get")],
   [0, (x) => x.replace("restore_candidate_demo_lock\n    TMP_DIR", "TMP_DIR")]
 ];
 for (const [caseIndex, [sourceIndex, mutation]] of cases.entries()) {

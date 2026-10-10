@@ -231,9 +231,9 @@ if [[ "${PHASE173_SKIP_LOCAL_CHECKS:-false}" != "true" ]]; then
   # the existing exact-lock dependencies needed by the regression suites; this
   # does not add or update dependencies.
   if ! (
-    asdf exec mix deps.get --check-locked &&
-    (cd mailglass_admin && asdf exec mix deps.get --check-locked) &&
-    (cd mailglass_inbound && asdf exec mix deps.get --check-locked) &&
+    ASDF_ERLANG_VERSION=27.3.4.13 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix deps.get --check-locked &&
+    (cd mailglass_admin && ASDF_ERLANG_VERSION=27.3.4.13 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix deps.get --check-locked) &&
+    (cd mailglass_inbound && ASDF_ERLANG_VERSION=27.3.4.13 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix deps.get --check-locked) &&
     (cd mailglass_admin && npm ci --no-audit --no-fund)
   ); then
     REGRESSION_STATUS="failed"
