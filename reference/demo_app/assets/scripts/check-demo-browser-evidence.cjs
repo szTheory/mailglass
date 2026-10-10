@@ -259,6 +259,10 @@ function createCheckpoint({
     };
   });
 
+  if (captures.some((capture) => capture.candidate_dirty !== captures[0].candidate_dirty)) {
+    throw new Error("capture candidate dirty-tree state is inconsistent");
+  }
+
   if (requiredTestTitles === REQUIRED_TESTS) {
     if (captures.length !== EXPECTED_BASELINES.length) throw new Error("capture set does not match the six approved synthetic captures");
     const seen = new Set();
@@ -281,7 +285,7 @@ function createCheckpoint({
     generated_at: new Date().toISOString(),
     status: "passed",
     candidate_revision: candidateRevision,
-    candidate_dirty: captures.every((capture) => capture.candidate_dirty),
+    candidate_dirty: captures.some((capture) => capture.candidate_dirty),
     route: "synthetic demo browser routes",
     fixture: "synthetic fixtures only",
     theme: "per-capture pinned theme",

@@ -467,6 +467,9 @@ try {
   if (!Array.isArray(checkpoint.captures) || checkpoint.captures.length !== checker.EXPECTED_BASELINES.length) {
     throw new Error("retained checkpoint does not contain all six synthetic captures");
   }
+  if (checkpoint.captures.some((capture) => !capture || capture.candidate_dirty !== false)) {
+    throw new Error("retained captures do not all prove a clean candidate");
+  }
   checker.validatePinnedBaselines(root);
   const seen = new Set();
   const retainedExpected = new Set(["checkpoint.json"]);

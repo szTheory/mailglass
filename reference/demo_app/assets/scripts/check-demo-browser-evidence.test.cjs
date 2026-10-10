@@ -106,8 +106,33 @@ test("accepts one current capture and hashes its PNG bytes", (t) => {
   const checkpoint = createCheckpoint(checkpointArgs(evidenceDir, report, manifest));
 
   assert.equal(checkpoint.status, "passed");
+  assert.equal(checkpoint.candidate_dirty, true);
   assert.equal(checkpoint.captures.length, 1);
   assert.equal(checkpoint.captures[0].sha256, crypto.createHash("sha256").update(png).digest("hex"));
+});
+
+test("records a clean candidate when every capture is clean", (t) => {
+  const evidenceDir = fs.mkdtempSync(path.join(os.tmpdir(), "mailglass-evidence-"));
+  t.after(() => fs.rmSync(evidenceDir, { recursive: true, force: true }));
+  const { report, manifest } = fixture(evidenceDir);
+  manifest.captures[0].candidate_dirty = false;
+  const checkpoint = createCheckpoint(checkpointArgs(evidenceDir, report, manifest));
+
+  assert.equal(checkpoint.candidate_dirty, false);
+  assert.equal(checkpoint.captures[0].candidate_dirty, false);
+});
+
+test("rejects captures with inconsistent candidate dirty-tree state", (t) => {
+  const evidenceDir = fs.mkdtempSync(path.join(os.tmpdir(), "mailglass-evidence-"));
+  t.after(() => fs.rmSync(evidenceDir, { recursive: true, force: true }));
+  const { report, manifest } = fixture(evidenceDir);
+  fs.copyFileSync(path.join(evidenceDir, "preview.png"), path.join(evidenceDir, "second.png"));
+  manifest.captures.push({ ...manifest.captures[0], id: "second-capture", path: "second.png", candidate_dirty: false });
+
+  assert.throws(
+    () => createCheckpoint(checkpointArgs(evidenceDir, report, manifest)),
+    /candidate dirty-tree state is inconsistent/
+  );
 });
 
 test("rejects a report with zero current captures", (t) => {

@@ -238,7 +238,7 @@ for (const baseline of checker.EXPECTED_BASELINES) {
     path: relative,
     sha256: baseline.sha256,
     candidate_revision: revision,
-    candidate_dirty: false,
+    candidate_dirty: mode === "mixed-dirty" && baseline.captureId === "dashboard",
     before_after: { baseline_path: baseline.path, baseline_sha256: baseline.sha256 }
   });
   fs.copyFileSync(path.join(evidenceDir, baseline.path), path.join(evidenceDir, "retained", `${baseline.captureId}-baseline.png`));
@@ -331,7 +331,7 @@ const record = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 if (record.localChecks.previewAssets !== "passed") throw new Error("changed Admin assets did not record the preview asset check result");
 NODE
 
-for evidence_mode in failed missing missing-checkpoint stale changed; do
+for evidence_mode in failed missing missing-checkpoint stale changed mixed-dirty; do
   TEST_ENV=(FAKE_EVIDENCE_MODE="$evidence_mode")
   assert_failure "evidence_$evidence_mode" "FAKE_EVIDENCE_MODE=$evidence_mode"
   node - "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence/delivery-candidate.json" <<'NODE'
