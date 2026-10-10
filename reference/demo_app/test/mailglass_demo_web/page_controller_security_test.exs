@@ -1,7 +1,9 @@
 defmodule MailglassDemoWeb.PageControllerSecurityTest do
   use MailglassDemo.ConnCase, async: false
 
+  alias Mailglass.Outbound.Delivery
   alias MailglassDemo.DemoData
+  alias MailglassDemo.Repo
 
   setup do
     previous_token = System.get_env("DEMO_EVIDENCE_RESET_TOKEN")
@@ -65,19 +67,24 @@ defmodule MailglassDemoWeb.PageControllerSecurityTest do
 
   test "evidence reset denies requests without the configured reset token", %{conn: conn} do
     System.put_env("DEMO_EVIDENCE_PROJECT_ID", "mailglass-evidence-20261010093046-123-456")
+    sentinel = insert_sentinel_delivery!()
 
     conn = post(conn, "/demo/evidence/reset")
 
     assert json_response(conn, 403) == %{"error" => "forbidden"}
+    assert Repo.get!(Delivery, sentinel.id).recipient == "untouched@example.test"
   end
 
   test "evidence reset denies token-only requests without a disposable project marker", %{conn: conn} do
+    sentinel = insert_sentinel_delivery!()
+
     conn =
       conn
       |> put_req_header("x-mailglass-demo-reset-token", "test-demo-reset-token")
       |> post("/demo/evidence/reset")
 
     assert json_response(conn, 403) == %{"error" => "forbidden"}
+    assert Repo.get!(Delivery, sentinel.id).recipient == "untouched@example.test"
   end
 
   test "evidence reset denies malformed project markers", %{conn: conn} do
@@ -103,5 +110,20 @@ defmodule MailglassDemoWeb.PageControllerSecurityTest do
              "status" => "ok",
              "warning" => "Destructive demo reset endpoint: truncates and reseeds demo evidence tables."
            } = json_response(conn, 200)
+  end
+
+  defp insert_sentinel_delivery! do
+    Repo.insert!(
+      Delivery.changeset(%{
+        tenant_id: "northstar",
+        mailable: "sentinel",
+        stream: :transactional,
+        recipient: "untouched@example.test",
+        provider: "test",
+        provider_message_id: "evidence-reset-sentinel",
+        last_event_type: :queued,
+        last_event_at: DateTime.utc_now()
+      })
+    )
   end
 end
