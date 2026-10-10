@@ -1562,8 +1562,13 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       const replayTrigger = page.getByTestId("operator-replay-open");
       await replayTrigger.tap();
       const deniedModal = page.getByTestId("operator-replay-modal").filter({ visible: true }).first();
+      // LiveView's mounted focus runs after two animation frames. Let it
+      // finish before moving focus so Enter cannot activate Close instead.
+      await expect(deniedModal.locator("#operator-replay-close")).toBeFocused();
       const deniedTarget = await deniedModal.getByTestId("operator-replay-target-id").innerText();
-      await deniedModal.getByTestId("operator-replay-confirm").focus();
+      const deniedConfirm = deniedModal.getByTestId("operator-replay-confirm");
+      await deniedConfirm.focus();
+      await expect(deniedConfirm).toBeFocused();
       await page.keyboard.press("Enter");
       await expect.poll(() => page.locator("body").innerText()).toContain("Recent authentication is required.");
       await expect(deniedModal).toBeVisible();
