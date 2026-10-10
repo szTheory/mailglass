@@ -37,6 +37,9 @@ if [[ " $* " == *" run "* ]]; then
   : >"$DEMO_FAKE_EVIDENCE_DIR/playwright-report.json"
   : >"$DEMO_FAKE_EVIDENCE_DIR/phase173-captures.json"
 fi
+if [[ " $* " == *" exec "* ]]; then
+  printf '%064d  fake-runtime.beam\n' 0
+fi
 SH
 
 cat >"$TEMP_DIR/bin/node" <<'SH'
@@ -111,6 +114,18 @@ grep -F 'phase173-evidence.spec.js' "$DEMO_FAKE_DOCKER_LOG" >/dev/null || {
   echo "success path did not select phase173-evidence.spec.js" >&2
   exit 1
 }
+grep -F 'npm --silent --prefix assets run test:e2e -- phase173-evidence.spec.js --reporter=json' "$DEMO_FAKE_DOCKER_LOG" >/dev/null || {
+  echo "success path did not use the focused existing Playwright script" >&2
+  exit 1
+}
+grep -F 'sha256sum /workspace/reference/demo_app/_build/dev/lib/mailglass_demo/ebin/Elixir.MailglassDemoWeb.PageController.beam' "$DEMO_FAKE_DOCKER_LOG" >/dev/null || {
+  echo "success path did not fingerprint the compiled demo route template" >&2
+  exit 1
+}
+if grep -E 'test:e2e:ci|demo\.spec\.js' "$DEMO_FAKE_DOCKER_LOG" >/dev/null; then
+  echo "success path selected the full suite or the dirty Phase 172 demo spec" >&2
+  exit 1
+fi
 grep -F 'check-demo-browser-evidence.cjs' "$DEMO_FAKE_NODE_LOG" >/dev/null || {
   echo "success path did not run the evidence checkpoint" >&2
   exit 1

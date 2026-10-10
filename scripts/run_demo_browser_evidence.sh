@@ -50,7 +50,7 @@ compose() {
 cleanup() {
   local exit_code=$?
   if [[ "$exit_code" -ne 0 ]]; then
-    compose logs --no-color demo demo_e2e || true
+    compose logs --no-color --tail 50 demo demo_e2e || true
   fi
   compose down --volumes --remove-orphans >/dev/null 2>&1 || true
   return "$exit_code"
@@ -64,12 +64,25 @@ rm -f \
   "$EVIDENCE_DIR/checkpoint.json"
 
 compose up --build --detach --wait --wait-timeout 300 demo
+PAGE_CONTROLLER_BEAM="/workspace/reference/demo_app/_build/dev/lib/mailglass_demo/ebin/Elixir.MailglassDemoWeb.PageController.beam"
+UNSUBSCRIBE_BEAM="/workspace/reference/demo_app/_build/dev/lib/mailglass/ebin/Elixir.Mailglass.Compliance.UnsubscribeHTML.beam"
+export DEMO_PAGE_CONTROLLER_BEAM_SHA256="$(compose exec -T demo sha256sum "$PAGE_CONTROLLER_BEAM" | awk '{print $1}')"
+export DEMO_UNSUBSCRIBE_HTML_BEAM_SHA256="$(compose exec -T demo sha256sum "$UNSUBSCRIBE_BEAM" | awk '{print $1}')"
+for digest in "$DEMO_PAGE_CONTROLLER_BEAM_SHA256" "$DEMO_UNSUBSCRIBE_HTML_BEAM_SHA256"; do
+  if [[ ! "$digest" =~ ^[0-9a-f]{64}$ ]]; then
+    echo "Could not identify the compiled route templates in the run-owned demo container" >&2
+    exit 1
+  fi
+done
 compose run --build --no-deps --rm \
   --env DEMO_CANDIDATE_REVISION \
   --env DEMO_CANDIDATE_DIRTY \
   --env DEMO_EVIDENCE_RUN_ID \
+  --env DEMO_PAGE_CONTROLLER_BEAM_SHA256 \
+  --env DEMO_UNSUBSCRIBE_HTML_BEAM_SHA256 \
+  --env PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright \
   demo_e2e sh -lc \
-  'npm --prefix assets ci --no-audit --no-fund && npx --prefix assets playwright install chromium && npm --prefix assets run test:e2e -- phase173-evidence.spec.js'
+  'mkdir -p tmp/demo_browser_evidence && npm --prefix assets ci --no-audit --no-fund && npm --silent --prefix assets run test:e2e -- phase173-evidence.spec.js --reporter=json > tmp/demo_browser_evidence/playwright-report.json'
 
 test -f "$EVIDENCE_DIR/playwright-report.json"
 test -f "$EVIDENCE_DIR/phase173-captures.json"
