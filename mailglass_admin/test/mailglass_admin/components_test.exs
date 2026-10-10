@@ -418,6 +418,30 @@ defmodule MailglassAdmin.ComponentsTest do
     assert html =~ "Technical details"
   end
 
+  test "a lone technical value is visible without a disclosure" do
+    html =
+      render_component(&Components.technical_details/1,
+        id: "single-id",
+        collapsible: false,
+        inner_block: [%{inner_block: fn _, _ -> "exact-record-id" end}]
+      )
+
+    assert Floki.find(Floki.parse_document!(html), "details, summary") == []
+    assert html =~ "exact-record-id"
+    refute html =~ "Technical details"
+  end
+
+  test "clickable identifiers expose the exact value and shared copy feedback" do
+    html =
+      render_component(&Components.copy_value/1, value: "exact-record-id", label: "Delivery ID")
+
+    [button] = Floki.find(Floki.parse_document!(html), "button")
+    assert Floki.attribute(button, "data-copy-value") == ["exact-record-id"]
+    assert Floki.attribute(button, "data-copy-toast") == ["Delivery ID copied."]
+    assert Floki.attribute(button, "aria-label") == ["Copy Delivery ID"]
+    assert Floki.text(button) =~ "exact-record-id"
+  end
+
   describe "timestamp/1" do
     test "a UTC datetime exposes its exact UTC value for local-time enhancement" do
       at = ~U[2026-06-14 14:32:05.000000Z]

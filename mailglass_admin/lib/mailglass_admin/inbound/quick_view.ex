@@ -62,7 +62,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
           </h2>
           <div class="flex items-center gap-xs">
             <.nav_button dir="prev" path={@previous_path} label="Previous inbound record">
-              <Components.icon name="hero-chevron-left" class="h-4 w-4" />
+              <Components.icon name="hero-chevron-down" class="h-4 w-4 rotate-90" />
             </.nav_button>
             <span
               :if={@position}
@@ -72,7 +72,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
               {@position.index} of {@position.total}
             </span>
             <.nav_button dir="next" path={@next_path} label="Next inbound record">
-              <Components.icon name="hero-chevron-right" class="h-4 w-4" />
+              <Components.icon name="hero-chevron-down" class="h-4 w-4 -rotate-90" />
             </.nav_button>
             <.link
               id="inbound-quick-view-close"
@@ -141,13 +141,12 @@ defmodule MailglassAdmin.Inbound.QuickView do
                   </dd>
                 </div>
               </dl>
-              <Components.technical_details id="inbound-quick-technical">
+              <Components.technical_details collapsible={false} id="inbound-quick-technical">
                 <div>
                   <dt class="text-label font-bold text-secondary">Record ID</dt>
-                  <dd class="mono mt-xs break-all text-label text-base-content">
-                    {Map.get(@record, :id)}
+                  <dd class="mt-xs">
+                    <Components.copy_value value={Map.get(@record, :id)} label="Record ID" />
                   </dd>
-                  <Components.copy_button value={Map.get(@record, :id)} label="Copy record ID" />
                 </div>
               </Components.technical_details>
             </div>
@@ -180,6 +179,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
       type="button"
       disabled
       aria-label={@label}
+      title={@label}
       data-testid={"inbound-quick-view-#{@dir}"}
       class="btn btn-ghost min-h-11 min-w-11 cursor-not-allowed opacity-40"
     >
@@ -194,7 +194,8 @@ defmodule MailglassAdmin.Inbound.QuickView do
       patch={@path}
       data-testid={"inbound-quick-view-#{@dir}"}
       aria-label={@label}
-      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11"
+      title={@label}
+      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 border border-base-300"
     >
       {render_slot(@inner_block)}
     </.link>

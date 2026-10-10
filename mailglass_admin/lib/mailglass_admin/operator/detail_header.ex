@@ -57,11 +57,13 @@ defmodule MailglassAdmin.Operator.DetailHeader do
             <dd class="mt-xs text-base-content">{label(@delivery.last_event_type)}</dd>
           </div>
         </dl>
-        <Components.technical_details id="delivery-detail-technical">
+        <Components.technical_details
+          collapsible={present?(@delivery.mailable) or present?(@delivery.provider_message_id)}
+          id="delivery-detail-technical"
+        >
           <div>
             <dt class="text-label font-bold text-secondary">Delivery ID</dt>
-            <dd class="mono mt-xs break-all text-label text-base-content">{@delivery.id}</dd>
-            <Components.copy_button value={@delivery.id} label="Copy delivery ID" />
+            <dd class="mt-xs"><Components.copy_value value={@delivery.id} label="Delivery ID" /></dd>
           </div>
           <div :if={present?(@delivery.mailable)}>
             <dt class="text-label font-bold text-secondary">Mailable</dt>
@@ -75,13 +77,12 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           </div>
           <div :if={present?(@delivery.provider_message_id)}>
             <dt class="text-label font-bold text-secondary">Provider message ID</dt>
-            <dd class="mono mt-xs break-all text-label text-base-content">
-              {@delivery.provider_message_id}
+            <dd class="mt-xs">
+              <Components.copy_value
+                value={@delivery.provider_message_id}
+                label="Provider message ID"
+              />
             </dd>
-            <Components.copy_button
-              value={@delivery.provider_message_id}
-              label="Copy provider message ID"
-            />
           </div>
         </Components.technical_details>
       </div>

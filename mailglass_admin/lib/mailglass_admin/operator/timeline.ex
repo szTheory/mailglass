@@ -141,18 +141,23 @@ defmodule MailglassAdmin.Operator.Timeline do
                         {source_summary(event.type, event.metadata)}
                       </p>
                       <Components.technical_details
+                        collapsible={not is_nil(provider_reference(event))}
                         divider?={false}
                         id={"delivery-event-technical-#{event.id}"}
                       >
                         <div>
                           <dt class="text-label font-bold text-secondary">Event ID</dt>
-                          <dd class="mono mt-xs break-all text-label text-secondary">{event.id}</dd>
-                          <Components.copy_button value={event.id} label="Copy event ID" />
+                          <dd class="mt-xs">
+                            <Components.copy_value value={event.id} label="Event ID" />
+                          </dd>
                         </div>
                         <div :if={provider_reference(event)}>
                           <dt class="text-label font-bold text-secondary">Provider event ID</dt>
-                          <dd class="mono mt-xs break-all text-label text-secondary">
-                            {provider_reference(event)}
+                          <dd class="mt-xs">
+                            <Components.copy_value
+                              value={provider_reference(event)}
+                              label="Provider event ID"
+                            />
                           </dd>
                         </div>
                       </Components.technical_details>
@@ -198,8 +203,7 @@ defmodule MailglassAdmin.Operator.Timeline do
             <p class="break-words text-label text-secondary">
               {source_summary(@selected_event.event.type, @selected_event.event.metadata)}
             </p>
-            <p class="mono min-w-0 break-all text-label text-secondary">{@selected_event.event.id}</p>
-            <Components.copy_button value={@selected_event.event.id} label="Copy event ID" />
+            <Components.copy_value value={@selected_event.event.id} label="Event ID" />
             <p
               :if={provider_reference(@selected_event.event)}
               class="mono min-w-0 break-all text-label text-secondary"

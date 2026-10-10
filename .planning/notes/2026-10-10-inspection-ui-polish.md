@@ -51,3 +51,12 @@ Scope: Delivery quick view, Inbound quick view, and both full detail pages.
 Full LiveView and E2E suites were not run in this pass. Their directly affected copy assertions were updated; the verified component suite and browser checks are the evidence for completion.
 
 No new dependencies. Sender masking, raw-source authorization, replay confirmation/eligibility, tenant scope and append-only evidence behavior remain in place. Live filter/search and custom date range work remains deferred in SEED-261010-gad-operator-date-range-and-live-filters.md.
+
+## Follow-up: clear subjects, visible navigation and direct ID copy
+
+- Added an explicit Subject label to shared message identity in quick/full inspection.
+- Replaced unavailable left/right icon names with the bundled down chevron rotated appropriately. Previous/next links now have visible borders and hover titles; clicked navigation verified from 3 of 16 to 4 of 16.
+- IDs themselves are accessible copy buttons with the shared success/failure toast; redundant separate Copy controls removed in inspection metadata and timeline entries.
+- Single-value technical sections render directly with no disclosure or generic heading, and use the full available width. Multiple-value sections retain their disclosure.
+- Delivery and Inbound quick-view copy success toasts observed in the browser. Desktop/mobile checks completed; 390px layout has no horizontal overflow; viewport reset afterward.
+- Shared/inbound component suite: 140 tests, 0 failures. Final screenshot: /private/tmp/mailglass-quick-view-copy-id.png.

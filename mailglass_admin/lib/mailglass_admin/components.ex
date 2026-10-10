@@ -556,6 +556,7 @@ defmodule MailglassAdmin.Components do
   def message_identity(assigns) do
     ~H"""
     <div class="min-w-0 space-y-sm">
+      <p :if={not is_nil(@subject)} class="text-label font-bold text-secondary">Subject</p>
       <div class="flex min-w-0 flex-wrap items-center gap-sm">
         <.dynamic_tag
           tag_name={@heading_tag}
@@ -576,18 +577,29 @@ defmodule MailglassAdmin.Components do
   @doc "Technical identifiers remain available without dominating message inspection."
   attr(:id, :string, required: true)
   attr(:divider?, :boolean, default: true)
+  attr(:collapsible, :boolean, default: true)
   slot(:inner_block, required: true)
 
   def technical_details(assigns) do
     ~H"""
-    <details id={@id} class={["min-w-0", @divider? && "border-t border-base-300 pt-sm"]}>
-      <summary class="mg-focus-ring min-h-11 cursor-pointer content-center rounded-field text-label font-bold text-secondary">
+    <.dynamic_tag
+      tag_name={if @collapsible, do: "details", else: "div"}
+      id={@id}
+      class={["min-w-0", @divider? && "border-t border-base-300 pt-sm"]}
+    >
+      <summary
+        :if={@collapsible}
+        class="mg-focus-ring min-h-11 cursor-pointer content-center rounded-field text-label font-bold text-secondary"
+      >
         Technical details
       </summary>
-      <dl class="mt-sm grid min-w-0 gap-md text-body sm:grid-cols-2 [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]">
+      <dl class={[
+        "grid min-w-0 gap-md text-body [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]",
+        @collapsible && "mt-sm sm:grid-cols-2"
+      ]}>
         {render_slot(@inner_block)}
       </dl>
-    </details>
+    </.dynamic_tag>
     """
   end
 
@@ -1492,6 +1504,25 @@ defmodule MailglassAdmin.Components do
     >
       {utc_string(@at)}
     </time>
+    """
+  end
+
+  @doc "A visible identifier doubles as its copy control, using the shared toast."
+  attr(:value, :string, required: true)
+  attr(:label, :string, required: true)
+
+  def copy_value(assigns) do
+    ~H"""
+    <button
+      type="button"
+      data-copy-value={@value}
+      data-copy-toast={@label <> " copied."}
+      aria-label={"Copy " <> @label}
+      title="Click to copy"
+      class="mg-timestamp-copy-trigger mg-focus-ring mono max-w-full break-all text-left text-label text-secondary"
+    >
+      {@value}
+    </button>
     """
   end
 

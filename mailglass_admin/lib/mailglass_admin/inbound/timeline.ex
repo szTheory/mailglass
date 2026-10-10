@@ -87,13 +87,15 @@ defmodule MailglassAdmin.Inbound.Timeline do
                         id={"inbound-run-mailbox-#{run.id}"}
                       />
                       <Components.technical_details
+                        collapsible={false}
                         divider?={false}
                         id={"inbound-run-technical-#{run.id}"}
                       >
                         <div>
                           <dt class="text-label font-bold text-secondary">Run ID</dt>
-                          <dd class="mono mt-xs break-all text-label text-secondary">{run.id}</dd>
-                          <Components.copy_button value={run.id} label="Copy run ID" />
+                          <dd class="mt-xs">
+                            <Components.copy_value value={run.id} label="Run ID" />
+                          </dd>
                         </div>
                       </Components.technical_details>
                     </div>

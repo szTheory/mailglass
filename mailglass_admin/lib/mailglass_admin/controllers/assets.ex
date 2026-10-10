@@ -310,7 +310,7 @@ defmodule MailglassAdmin.Controllers.Assets do
     }
 
     // Copy controls remain functional after LiveView patches. Timestamp clicks use
-    // the shared toast; other copy controls keep their adjacent live-region status.
+    // the shared toast, as do clickable identifiers; other controls keep adjacent status.
     document.addEventListener("click", (e) => {
       const button = e.target.closest && e.target.closest("button[data-copy-value]")
       if (!button) return
@@ -323,9 +323,10 @@ defmodule MailglassAdmin.Controllers.Assets do
         menu.removeAttribute("open")
       })
       const timestampCopy = button.hasAttribute("data-timestamp-copy")
+      const copyToast = timestampCopy ? "Timestamp copied as UTC." : button.getAttribute("data-copy-toast")
       const status = button.parentElement.querySelector("[data-copy-status]")
       const value = button.getAttribute("data-copy-value")
-      if ((!timestampCopy && !status) || value === null) return
+      if ((!copyToast && !status) || value === null) return
 
       if (status) status.textContent = ""
       Promise.resolve()
@@ -334,12 +335,12 @@ defmodule MailglassAdmin.Controllers.Assets do
           return navigator.clipboard.writeText(value)
         })
         .then(() => {
-          if (timestampCopy) showCopyToast("Timestamp copied as UTC.")
+          if (copyToast) showCopyToast(copyToast)
           else status.textContent = "Copied."
         })
         .catch(() => {
           const message = "Clipboard access failed. Select and copy the visible value manually."
-          if (timestampCopy) showCopyToast(message, true)
+          if (copyToast) showCopyToast(message, true)
           else status.textContent = "Clipboard unavailable. Select and copy the visible value manually."
         })
     }, true)

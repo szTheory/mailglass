@@ -80,21 +80,19 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
             </dd>
           </div>
         </dl>
-        <Components.technical_details id="inbound-detail-technical">
+        <Components.technical_details
+          collapsible={not is_nil(Map.get(@record, :provider_message_id))}
+          id="inbound-detail-technical"
+        >
           <div>
             <dt class="text-label font-bold text-secondary">Record ID</dt>
-            <dd class="mono mt-xs break-all text-label text-base-content">{@record.id}</dd>
-            <Components.copy_button value={@record.id} label="Copy record ID" />
+            <dd class="mt-xs"><Components.copy_value value={@record.id} label="Record ID" /></dd>
           </div>
           <div :if={Map.get(@record, :provider_message_id)}>
             <dt class="text-label font-bold text-secondary">Provider message ID</dt>
-            <dd class="mono mt-xs break-all text-label text-base-content">
-              {@record.provider_message_id}
+            <dd class="mt-xs">
+              <Components.copy_value value={@record.provider_message_id} label="Provider message ID" />
             </dd>
-            <Components.copy_button
-              value={@record.provider_message_id}
-              label="Copy provider message ID"
-            />
           </div>
         </Components.technical_details>
       </div>

@@ -68,7 +68,7 @@ defmodule MailglassAdmin.Operator.QuickView do
           </h2>
           <div class="flex items-center gap-xs">
             <.nav_button dir="prev" path={@previous_path} label="Previous delivery">
-              <Components.icon name="hero-chevron-left" class="h-4 w-4" />
+              <Components.icon name="hero-chevron-down" class="h-4 w-4 rotate-90" />
             </.nav_button>
             <span
               :if={@position}
@@ -78,7 +78,7 @@ defmodule MailglassAdmin.Operator.QuickView do
               {@position.index} of {@position.total}
             </span>
             <.nav_button dir="next" path={@next_path} label="Next delivery">
-              <Components.icon name="hero-chevron-right" class="h-4 w-4" />
+              <Components.icon name="hero-chevron-down" class="h-4 w-4 -rotate-90" />
             </.nav_button>
             <.link
               id="operator-quick-view-close"
@@ -153,11 +153,12 @@ defmodule MailglassAdmin.Operator.QuickView do
                   </dd>
                 </div>
               </dl>
-              <Components.technical_details id="operator-quick-technical">
+              <Components.technical_details collapsible={false} id="operator-quick-technical">
                 <div>
                   <dt class="text-label font-bold text-secondary">Delivery ID</dt>
-                  <dd class="mono mt-xs break-all text-label text-base-content">{@delivery.id}</dd>
-                  <Components.copy_button value={@delivery.id} label="Copy delivery ID" />
+                  <dd class="mt-xs">
+                    <Components.copy_value value={@delivery.id} label="Delivery ID" />
+                  </dd>
                 </div>
               </Components.technical_details>
             </div>
@@ -189,6 +190,7 @@ defmodule MailglassAdmin.Operator.QuickView do
     <span
       aria-disabled="true"
       aria-label={@label}
+      title={@label}
       class="btn btn-ghost min-h-11 min-w-11 opacity-40"
     >
       {render_slot(@inner_block)}
@@ -202,7 +204,8 @@ defmodule MailglassAdmin.Operator.QuickView do
       patch={@path}
       data-testid={"operator-quick-view-#{@dir}"}
       aria-label={@label}
-      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11"
+      title={@label}
+      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 border border-base-300"
     >
       {render_slot(@inner_block)}
     </.link>
