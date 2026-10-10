@@ -36,16 +36,17 @@ if [[ "${PHASE173_CANDIDATE_MODE:-false}" != "true" ]]; then
   ORIGIN_META="$EVIDENCE_DIR/origin-dirty-paths.json"
   mkdir -p "$EVIDENCE_DIR"
   git check-ignore -q -- "$ORIGIN_META" || fail "$ORIGIN_META must be ignored by git"
-  node - "$ORIGIN_META" "$ORIGIN_SHA" "$REPO_ROOT" <<'NODE'
+  node - "$ORIGIN_META" "$ORIGIN_SHA" "$REPO_ROOT" "$SCRIPT_DIR/phase173_json_output.cjs" <<'NODE'
 const fs = require("node:fs");
-const [output, originSha, workspace] = process.argv.slice(2);
-fs.writeFileSync(output, JSON.stringify({
+const [output, originSha, workspace, writerPath] = process.argv.slice(2);
+const { writeJson } = require(writerPath);
+writeJson(output, {
   schemaVersion: 1,
   capturedAt: new Date().toISOString(),
   originSha,
   workspace,
   dirtyInventory: { status: "not-collected", reason: "protected-path fence" }
-}, null, 2) + "\n");
+}, workspace);
 NODE
 
   RUN_PARENT="$(mktemp -d /tmp/mailglass-phase173.XXXXXXXX)"
@@ -68,11 +69,12 @@ NODE
   # Validate the exact pinned baseline set before transferring any bytes into
   # the isolated candidate. Only validated PNG buffers are copied; no evidence
   # directory, source, manifest, README, or owner workspace content is cloned.
-  if ! node - "$EVIDENCE_DIR" "$CANDIDATE_WORKTREE/$EVIDENCE_REL" "$ORIGIN_SHA" <<'NODE'
+  if ! node - "$EVIDENCE_DIR" "$CANDIDATE_WORKTREE/$EVIDENCE_REL" "$ORIGIN_SHA" "$SCRIPT_DIR/phase173_json_output.cjs" <<'NODE'
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
-const [sourceRoot, candidateRoot, candidateSha] = process.argv.slice(2);
+const [sourceRoot, candidateRoot, candidateSha, writerPath] = process.argv.slice(2);
+const { writeJson } = require(writerPath);
 const validator = require(path.resolve(sourceRoot, "../../assets/scripts/check-demo-browser-evidence.cjs"));
 const outputPath = path.join(sourceRoot, "delivery-candidate.json");
 try {
@@ -111,15 +113,14 @@ try {
     fs.writeFileSync(destination, bytes, { flag: "wx" });
   }
 } catch (error) {
-  fs.mkdirSync(sourceRoot, { recursive: true });
-  fs.writeFileSync(outputPath, JSON.stringify({
+  writeJson(outputPath, {
     schemaVersion: 1,
     status: "incomplete",
     candidateSha,
     baselineValidation: "failed",
     failures: [error.message],
     artifactDirectory: "reference/demo_app/tmp/demo_browser_evidence/"
-  }, null, 2) + "\n");
+  }, path.resolve(sourceRoot, "../../../.."));
   console.error(error.message);
   process.exitCode = 1;
 }
@@ -525,12 +526,13 @@ if [[ "$PREVIEW_STATUS" == passed && "$CI_STATUS" == passed && "$REGRESSION_STAT
   FINAL_STATUS="passed"
 fi
 
-node - "$DELIVERY_JSON" "$FINAL_STATUS" "$SHA" "$WORKTREE" "$REVIEW_PROJECT" "$HTTP_PORT" "$DB_PORT" "$PREVIEW_URL" "$PREVIEW_STATUS" "$CI_STATUS" "$CI_RUN_ID" "$CI_URL" "$REGRESSION_STATUS" "$ASSET_STATUS" "$EVIDENCE_STATUS" "$SERVED_CSS_PATH" "$SOURCE_CSS_SHA256" "$BUILT_CSS_SHA256" "$SERVED_CSS_SHA256" "$ORIGIN_META" "$ADVISORY_JSON" "$OWNER_ACCEPTANCE_STATUS" "$(printf '%s\n' "${FAILURES[@]:-}")" <<'NODE'
+node - "$DELIVERY_JSON" "$FINAL_STATUS" "$SHA" "$WORKTREE" "$REVIEW_PROJECT" "$HTTP_PORT" "$DB_PORT" "$PREVIEW_URL" "$PREVIEW_STATUS" "$CI_STATUS" "$CI_RUN_ID" "$CI_URL" "$REGRESSION_STATUS" "$ASSET_STATUS" "$EVIDENCE_STATUS" "$SERVED_CSS_PATH" "$SOURCE_CSS_SHA256" "$BUILT_CSS_SHA256" "$SERVED_CSS_SHA256" "$ORIGIN_META" "$ADVISORY_JSON" "$OWNER_ACCEPTANCE_STATUS" "$(printf '%s\n' "${FAILURES[@]:-}")" "$SCRIPT_DIR/phase173_json_output.cjs" <<'NODE'
 const fs = require("node:fs");
 const [output, status, candidateSha, worktree, reviewProject, httpPort, dbPort, previewUrl,
   previewStatus, ciStatus, ciRunId, ciUrl, regressionStatus, assetStatus, evidenceStatus, servedCssPath,
   sourceCssSha256, builtCssSha256, servedCssSha256, originMetadata, advisoryJson,
-  ownerAcceptanceStatus, failuresRaw] = process.argv.slice(2);
+  ownerAcceptanceStatus, failuresRaw, writerPath] = process.argv.slice(2);
+const { writeJson } = require(writerPath);
 const original = JSON.parse(fs.readFileSync(originMetadata, "utf8"));
 const record = {
   schemaVersion: 1,
@@ -563,7 +565,7 @@ const record = {
   artifactRetention: "14 days advisory",
   capturedAt: new Date().toISOString()
 };
-fs.writeFileSync(output, JSON.stringify(record, null, 2) + "\n");
+writeJson(output, record, process.cwd());
 console.log(JSON.stringify({ status, candidateSha, previewUrl: record.previewUrl, ci: record.requiredCi, reviewProject, candidateWorktree: worktree, failures: record.failures }));
 NODE
 
