@@ -91,13 +91,20 @@ Keep the review Compose project and detached candidate available for owner revie
 
 The fake contract also needed updates for its source-boundary slice, lock hash mock, npm stub, and expected cleanliness message. These were test fixture corrections; the final contract passed.
 
-## Self-Check: PASSED
+## Plan 08 Execution Self-Check: PASSED (`a7fd4843d17c2bf201fb1366c588d65af0f22c3d`)
 
 - The candidate delivery JSON names the committed full SHA and reports local regression, preview, and browser evidence as passed.
 - The retained checkpoint reports `candidate_dirty=false`, six captures, and each capture clean; retained evidence validation checked the PNG bytes and hashes.
 - Candidate status is clean with explicit exclusions for the two protected paths, and `reference/demo_app/mix.lock` matches the captured candidate SHA.
 - `ownerAcceptance.status` remains `unverified`, CI is `missing`, original dirty inventory is `not-collected`, and overall delivery remains `incomplete`.
 - The review Compose project and detached candidate remain available; prior retained resources were preserved.
+
+## Post-Plan Review Follow-Up (`4994442105315afdaa71beba73f6ab85e40f8533`)
+
+- The Nyquist audit added secure evidence-writer assertions for existing PNG destinations, symlink destinations, and JSON trusted-root escape; the synthetic candidate contract passed.
+- Independent code review found that `captures/../<pinned-baseline>.png` could alias a baseline as a current screenshot. The candidate gate now requires a safe top-level PNG path tied to its capture ID and rejects duplicate paths.
+- The new baseline-alias fixture failed against the old gate and passed after the fix. The independent re-review is clean.
+- The Plan 08 full delivery gate has not been rerun for this follow-up SHA. The prior local pass is historical; exact-SHA CI and owner acceptance remain unverified, so Phase 173 and UIQ-03 remain incomplete.
 
 ---
 *Plan: 173-08*  

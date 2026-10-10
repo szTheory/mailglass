@@ -1,6 +1,6 @@
 ---
-phase: 173
-reviewed: 2026-10-10T13:36:13Z
+phase: 173-consistency-and-delivery-evidence
+reviewed: 2026-10-10T13:49:28Z
 depth: standard
 files_reviewed: 5
 files_reviewed_list:
@@ -19,17 +19,21 @@ status: clean
 
 # Phase 173: Code Review Report
 
-**Reviewed:** 2026-10-10T13:36:13Z  
+**Reviewed:** 2026-10-10T13:49:28Z
 **Depth:** standard  
 **Files Reviewed:** 5  
 **Status:** clean
 
 ## Summary
 
-Reviewed the Docker exclusions, candidate gate, JSON output helpers, and contract fixture. The outer metadata, initial baseline-failure record, final delivery JSON, and transferred PNGs use the secure writer. It creates directories and targets relative to held descriptors with no-follow/exclusive flags; JSON replacement and temporary-file cleanup are directory-relative. The helper checks required filesystem capabilities before writing and errors if a required flag or operation is unavailable. The synthetic protected-path files and real Git sparse-checkout exercise are confined to `TEST_DIR`. The gate requires successful CI Green for the exact candidate SHA, treats browser/capture jobs as advisory, and leaves owner acceptance `unverified`, so delivery remains incomplete pending that external gate. No issues found. No tests were run.
+Re-reviewed the candidate gate, JSON output helpers, Docker exclusions, and candidate contract fixture. The retained capture path now must begin under `captures/`, end with the matching capture ID, and contain only an alphanumeric/hyphen run ID; the component walk rejects symlinks and non-directory parents. The `baseline-alias` fixture exercises a `captures/../baseline-…png` path and verifies that browser evidence remains incomplete. No correctness, security, or maintainability findings were confirmed. Tests were not run.
+
+## Narrative Findings (AI reviewer)
+
+No findings.
 
 ---
 
-_Reviewed: 2026-10-10T13:36:13Z_  
+_Reviewed: 2026-10-10T13:49:28Z_
 _Reviewer: the agent (gsd-code-reviewer)_  
 _Depth: standard_

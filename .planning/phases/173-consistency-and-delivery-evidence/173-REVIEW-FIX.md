@@ -1,8 +1,8 @@
 ---
 phase: 173
-fixed_at: 2026-10-10T13:35:14Z
+fixed_at: 2026-10-10T13:50:14Z
 review_path: /Users/jon/projects/mailglass/.planning/phases/173-consistency-and-delivery-evidence/173-REVIEW.md
-iteration: 3
+iteration: 4
 findings_in_scope: 1
 fixed: 1
 skipped: 0
@@ -11,9 +11,9 @@ status: all_fixed
 
 # Phase 173: Code Review Fix Report
 
-**Fixed at:** 2026-10-10T13:35:14Z  
-**Source review:** `.planning/phases/173-consistency-and-delivery-evidence/173-REVIEW.md`  
-**Iteration:** 3
+**Fixed at:** 2026-10-10T13:50:14Z
+**Source review:** `.planning/phases/173-consistency-and-delivery-evidence/173-REVIEW.md`
+**Iteration:** 4
 
 **Summary:**
 - Findings in scope: 1
@@ -22,24 +22,27 @@ status: all_fixed
 
 ## Fixed Issues
 
-### CR-01: BLOCKER — Callers create output directories through unchecked pathnames
+### CR-04: BLOCKER — Capture paths can alias files outside the captures directory
 
-**Files modified:** `scripts/check_phase173_candidate.sh`, `scripts/phase173_json_output.cjs`, `scripts/phase173_json_output.py`, `scripts/test_check_phase173_candidate.sh`  
-**Commit:** `273bc1c0`  
-**Applied fix:** Removed caller-side `mkdir -p` and recursive `fs.mkdirSync` before secure validation. Extended the Python standard-library helper to create missing parents relative to held, verified directory descriptors using directory-relative `mkdir` and `O_DIRECTORY | O_NOFOLLOW` opens. Routed PNG baseline output through the helper's descriptor-relative exclusive file creation while preserving baseline validation and hash checks. Added safe nested-parent and symlinked-parent tests, and source-contract checks that forbid the unsafe caller patterns.  
-**Verification:** Python AST parsing, `node --check scripts/phase173_json_output.cjs`, `bash -n scripts/check_phase173_candidate.sh scripts/test_check_phase173_candidate.sh`, and `bash scripts/test_check_phase173_candidate.sh` passed in the main checkout. The focused script retained its direct symlink target-byte assertion and real Git sparse-checkout sentinels.  
-**Review note:** The security and path-handling logic passed a focused symlink/parent contract, a synthetic real-Git sparse-checkout contract, and an independent standard-depth code review. These automated checks cover the implementation; owner acceptance remains a separate unverified phase gate.
+**Review-local finding ID:** `CR-01` (phase ledger ID `CR-04` avoids colliding with the earlier Phase 173 `CR-01`.)
 
-## Previously Fixed Issues
+**Files modified:** `scripts/check_phase173_candidate.sh`, `scripts/test_check_phase173_candidate.sh`
+**Commit:** `49944421`
+**Applied fix:** Candidate evidence validation now accepts only a top-level `captures/<run-id>-<capture-id>.png` path, restricts run IDs to ASCII letters, digits, and hyphens, and rejects reused capture paths before hashing. This prevents `captures/../<pinned-baseline>.png` and mismatched capture IDs from satisfying the fresh-render check.
+**Regression evidence:** Added a synthetic `baseline-alias` mode. The test failed before the fix because the candidate gate accepted the pinned baseline as a current capture. After the fix, `bash -n scripts/check_phase173_candidate.sh scripts/test_check_phase173_candidate.sh` and `bash scripts/test_check_phase173_candidate.sh` passed. The fixture runs only under its disposable `/tmp` test directory.
+**Review:** Independent standard-depth re-review completed with zero findings.
 
-The iteration 1 WR-01 and iteration 2 CR-01 fixes remain in their respective commits (`04115f01` and `3b869044`).
+## Earlier Review Fixes
+
+- Iteration 1: WR-01, real Git sparse-checkout contract — `04115f01`.
+- Iteration 2: CR-01, held-descriptor parent traversal — `3b869044`.
+- Iteration 3: CR-01, secure parent creation and exclusive PNG output — `273bc1c0`.
+- Earlier reports also record JSON symlink hardening (`66c5b27f`) and the real sparse-checkout fixture (`04115f01`).
 
 ## Verification Boundary
 
-Verification ran in the main checkout. Exact-SHA CI remains required, and `ownerAcceptance` remains `unverified`. This report is intentionally uncommitted.
+The focused synthetic candidate contract passes. The full candidate delivery gate was not rerun for the post-fix HEAD because the active protected-path fence prohibits running its scan/build/test inputs. Exact-SHA required CI and owner acceptance remain unverified; the previously recorded full gate applies only to its earlier candidate SHA.
 
 ---
-
-_Fixed: 2026-10-10T13:35:14Z_  
-_Fixer: the agent (gsd-code-fixer)_  
-_Iteration: 3_
+*Fixed: 2026-10-10T13:50:14Z*
+*Fixer: the agent (Codex orchestrator)*
