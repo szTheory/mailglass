@@ -125,7 +125,7 @@ for mapping in 168:10 169:5 170:8 171:4 172:3; do
     [[ -n "$summary_path" ]] || continue
     PRIOR_SUMMARIES+=("$summary_path")
     summary="$(git show "$SHA:$summary_path")" || fail "cannot read committed summary $summary_path"
-    task_commits="$(printf '%s\n' "$summary" | awk '/^## Task Commits/{inside=1; next} /^## /{inside=0} inside' | sed -nE 's/.*`([0-9a-f]{7,40})`.*/\1/p')"
+    task_commits="$(printf '%s\n' "$summary" | awk '/^## Task Commits/{inside=1; next} /^## /{inside=0} inside' | grep -oE '(^|[^[:alnum:]])[0-9a-f]{7,40}([^[:alnum:]]|$)' | tr -cd '0-9a-f\n')"
     [[ -n "$task_commits" ]] || fail "committed summary has no Task Commits list: $summary_path"
     while IFS= read -r task_sha; do
       [[ -n "$task_sha" ]] || continue
