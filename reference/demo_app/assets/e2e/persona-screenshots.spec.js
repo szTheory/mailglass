@@ -49,6 +49,8 @@
 const { test, expect } = require("@playwright/test");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
+const { execFileSync } = require("child_process");
 
 // Git-ignored evidence cache (D-02). Resolved relative to this spec file:
 // assets/e2e -> ../../../../ is the repo root.
@@ -275,6 +277,91 @@ test.describe("review surfaces", () => {
       .locator("#theme-picker-single-dark-selected")
       .getByRole("radio", { name: "Dark" });
     await expect(selectedDarkRadio).toBeChecked();
+  });
+});
+
+test.describe("working preview readiness", () => {
+  test("serves the expected routes and the committed Admin CSS at its mount path", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+
+    const previewResponse = await page.goto("/dev/mail");
+    expect(previewResponse?.ok(), "preview route must return a successful page").toBe(true);
+    const previewCssPath = await adminCssPath(page);
+    expect(previewCssPath).toMatch(/^\/dev\/mail\/css-[a-f0-9]{32}$/);
+
+    const previewCssResponse = await page.request.get(previewCssPath);
+    expect(previewCssResponse.status()).toBe(200);
+    const servedCss = await previewCssResponse.body();
+    const cssRouteDigest = previewCssPath.match(/css-([a-f0-9]{32})$/)?.[1];
+    const servedMd5 = crypto.createHash("md5").update(servedCss).digest("hex");
+    expect(servedMd5).toBe(cssRouteDigest);
+
+    const repoRoot = path.resolve(__dirname, "../../../../");
+    const sourceCssPath = path.join(repoRoot, "mailglass_admin/assets/css/app.css");
+    const builtCssPath = path.join(repoRoot, "mailglass_admin/priv/static/app.css");
+    const sha256 = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
+    const sourceCssSha256 = sha256(fs.readFileSync(sourceCssPath));
+    const builtCssSha256 = sha256(fs.readFileSync(builtCssPath));
+    const servedCssSha256 = sha256(servedCss);
+    expect(servedCssSha256, "served CSS must match the committed Admin bundle").toBe(
+      builtCssSha256
+    );
+
+    const galleryResponse = await page.goto("/dev/mail/gallery");
+    expect(galleryResponse?.ok(), "Gallery route must return a successful page").toBe(true);
+    await expect(page.getByRole("heading", { name: "Component Gallery" })).toBeVisible();
+    const galleryCssPath = await adminCssPath(page);
+    expect(galleryCssPath).toBe(previewCssPath);
+
+    const longLabel = "Deliveries needing operator review before the account handoff";
+    const longLabelLink = page.getByTestId("gallery-nav_link-long-label");
+    const longLabelText = longLabelLink.getByText(longLabel, { exact: true }).first();
+    await expect(longLabelText).toBeVisible();
+    await expect(longLabelText).toHaveAttribute("title", longLabel);
+    const deliveriesLink = page.getByRole("link", { name: "Deliveries" }).first();
+    await expect(deliveriesLink).toBeVisible();
+    expect(await deliveriesLink.evaluate((element) => element.tabIndex)).toBeGreaterThanOrEqual(0);
+
+    const storybookResponse = await page.goto(
+      "/dev/storybook/primitives/nav_link?variation_id=long_label"
+    );
+    expect(storybookResponse?.ok(), "Storybook review route must return a successful page").toBe(
+      true
+    );
+    const storyText = await textInAnyFrame(
+      page,
+      "Operations and deliverability diagnostics overview"
+    );
+    await expect(storyText).toBeVisible();
+    const storybookCssPath = await adminCssPath(page);
+    expect(storybookCssPath).toBe(previewCssPath);
+    const storybookCssResponse = await page.request.get(storybookCssPath);
+    expect(storybookCssResponse.status()).toBe(200);
+    expect(sha256(await storybookCssResponse.body())).toBe(builtCssSha256);
+
+    const candidateSha = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: repoRoot,
+      encoding: "utf8"
+    }).trim();
+    console.log(
+      JSON.stringify({
+        event: "working-preview-readiness",
+        candidateSha,
+        routes: [
+          "/dev/mail",
+          "/dev/mail/gallery",
+          "/dev/storybook/primitives/nav_link?variation_id=long_label"
+        ],
+        adminCss: {
+          source: { path: "mailglass_admin/assets/css/app.css", sha256: sourceCssSha256 },
+          built: { path: "mailglass_admin/priv/static/app.css", sha256: builtCssSha256 },
+          served: { path: previewCssPath, sha256: servedCssSha256, md5: servedMd5 }
+        },
+        narrowViewport: 375
+      })
+    );
   });
 });
 
