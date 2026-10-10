@@ -23,6 +23,14 @@ into the candidate. The excluded owner paths are listed in the metadata record. 
 excluded owner path is also required by a committed
 acceptance path, the gate names it and leaves that proof incomplete.
 
+Before candidate execution, the launcher validates Plan 04's six pinned baseline
+PNG paths, byte hashes, and dimensions in the original ignored evidence directory.
+Only those six validated byte buffers are copied into the detached candidate under
+their existing relative names. Missing, altered, escaped, symlinked, or conflicting
+baseline files leave an incomplete delivery record and stop before browser capture.
+No evidence directory or other owner workspace content is copied. A dirty
+`reference/demo_app/README.md` is recorded only as a path/status acceptance gap.
+
 On successful preview startup, open the exact URL printed by the gate and recorded
 in `reference/demo_app/tmp/demo_browser_evidence/delivery-candidate.json`:
 
@@ -52,6 +60,15 @@ Storybook pages and hashes the bytes fetched from their versioned CSS route agai
 `mailglass_admin/priv/static/app.css`; `mailglass_admin/assets/css/app.css` is
 recorded separately as the source CSS identity. A startup log or URL string alone
 never establishes readiness.
+
+The candidate then runs the focused evidence wrapper in a separate disposable
+Compose project. That generated project ID is passed to the app as
+`DEMO_EVIDENCE_PROJECT_ID` and to Playwright as `DEMO_EVIDENCE_RUN_ID`. Each reset
+first reads `/health` without following redirects and requires the returned project
+identity to match the run ID before it sends the reset token. The candidate gate
+accepts delivery only when the retained checkpoint reports `passed`, names the exact
+candidate SHA, records `candidate_dirty=false`, and every current/baseline PNG is an
+allowlisted regular file with its recorded SHA-256 bytes.
 
 ## Checks and evidence limits
 
@@ -85,14 +102,19 @@ recorded by Plan 02 remains deferred and is not a pass.
 
 Runtime JSON and screenshots live only under the ignored
 `reference/demo_app/tmp/demo_browser_evidence/` directory. Capture artifacts have a
-14-day advisory retention period. Keep the candidate Compose project and detached
-worktree available for owner review; the gate does not dispose of either one on
-success or when CI proof is missing.
+14-day advisory retention period. `artifactDirectory` is the local evidence root;
+only `uploadableArtifactDirectory` at
+`reference/demo_app/tmp/demo_browser_evidence/retained/` contains the sanitized
+checkpoint and six current/baseline PNG pairs allowed into advisory retention. Raw
+reports, full capture manifests, and `delivery-candidate.json` stay local. Keep the
+candidate review Compose project and detached worktree available for owner review;
+the gate does not dispose of either one on success or when CI proof is missing.
 
 ## Scoped cleanup after review
 
-Read `REVIEW_PROJECT` and `WORKTREE` from `delivery-candidate.json`, then stop only
-that review project and remove only its detached worktree:
+Read `REVIEW_PROJECT` and `WORKTREE` from
+`reference/demo_app/tmp/demo_browser_evidence/delivery-candidate.json`, then stop
+only that review project and remove only its detached worktree:
 
 ```bash
 docker compose -p "$REVIEW_PROJECT" -f "$WORKTREE/compose.demo.yml" down

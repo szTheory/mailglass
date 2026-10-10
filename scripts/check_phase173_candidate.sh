@@ -55,6 +55,69 @@ process.stdin.on("end", () => {
   [[ -z "$(git -C "$CANDIDATE_WORKTREE" status --porcelain=v1 --untracked-files=all)" ]] ||
     fail "new candidate worktree is not clean"
 
+  # Validate the exact pinned baseline set before transferring any bytes into
+  # the isolated candidate. Only validated PNG buffers are copied; no evidence
+  # directory, source, manifest, README, or owner workspace content is cloned.
+  if ! node - "$EVIDENCE_DIR" "$CANDIDATE_WORKTREE/$EVIDENCE_REL" "$ORIGIN_SHA" <<'NODE'
+const crypto = require("node:crypto");
+const fs = require("node:fs");
+const path = require("node:path");
+const [sourceRoot, candidateRoot, candidateSha] = process.argv.slice(2);
+const validator = require(path.resolve(sourceRoot, "../../assets/scripts/check-demo-browser-evidence.cjs"));
+const outputPath = path.join(sourceRoot, "delivery-candidate.json");
+try {
+  const pinned = validator.validatePinnedBaselines(sourceRoot);
+  const resolvedSource = fs.realpathSync(sourceRoot);
+  const resolvedCandidateParent = path.dirname(candidateRoot);
+  const candidateRootResolved = path.resolve(candidateRoot);
+  if (!candidateRootResolved.startsWith(`${resolvedCandidateParent}${path.sep}`)) {
+    throw new Error("candidate evidence destination escapes its detached worktree");
+  }
+  fs.mkdirSync(candidateRoot, { recursive: true });
+  const targetRoot = fs.lstatSync(candidateRoot);
+  if (!targetRoot.isDirectory() || targetRoot.isSymbolicLink()) {
+    throw new Error("candidate evidence destination is not a regular directory");
+  }
+  for (const expected of pinned) {
+    const sourcePath = path.resolve(resolvedSource, expected.path);
+    if (!sourcePath.startsWith(`${resolvedSource}${path.sep}`)) throw new Error(`baseline path escapes evidence directory: ${expected.path}`);
+    const sourceStat = fs.lstatSync(sourcePath);
+    if (!sourceStat.isFile() || sourceStat.isSymbolicLink()) throw new Error(`baseline is not a regular file: ${expected.path}`);
+    const bytes = fs.readFileSync(sourcePath);
+    const digest = crypto.createHash("sha256").update(bytes).digest("hex");
+    if (digest !== expected.sha256) throw new Error(`baseline changed after validation: ${expected.path}`);
+    const destination = path.join(candidateRoot, expected.path);
+    if (!destination.startsWith(`${candidateRootResolved}${path.sep}`)) throw new Error(`candidate baseline escapes evidence directory: ${expected.path}`);
+    let destinationExists = false;
+    try {
+      fs.lstatSync(destination);
+      destinationExists = true;
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    if (destinationExists || fs.lstatSync(path.dirname(destination)).isSymbolicLink()) {
+      throw new Error(`candidate baseline destination already exists or traverses a symlink: ${expected.path}`);
+    }
+    fs.writeFileSync(destination, bytes, { flag: "wx" });
+  }
+} catch (error) {
+  fs.mkdirSync(sourceRoot, { recursive: true });
+  fs.writeFileSync(outputPath, JSON.stringify({
+    schemaVersion: 1,
+    status: "incomplete",
+    candidateSha,
+    baselineValidation: "failed",
+    failures: [error.message],
+    artifactDirectory: "reference/demo_app/tmp/demo_browser_evidence/"
+  }, null, 2) + "\n");
+  console.error(error.message);
+  process.exitCode = 1;
+}
+NODE
+  then
+    fail "pinned baseline validation or transfer failed; see $EVIDENCE_DIR/delivery-candidate.json"
+  fi
+
   set +e
   (
     cd "$CANDIDATE_WORKTREE"
@@ -106,6 +169,7 @@ CI_STATUS="missing"
 CI_URL=""
 CI_RUN_ID=""
 REVIEW_PROJECT=""
+EVIDENCE_STATUS="not-run"
 HTTP_PORT=""
 DB_PORT=""
 PREVIEW_URL=""
@@ -141,7 +205,7 @@ done
 
 # Every tracked deliverable listed in the Phase 173 plans must exist at this SHA.
 PHASE_173_DIR=".planning/phases/173-consistency-and-delivery-evidence"
-for plan_file in "$PHASE_173_DIR/173-01-PLAN.md" "$PHASE_173_DIR/173-02-PLAN.md" "$PHASE_173_DIR/173-03-PLAN.md"; do
+for plan_file in "$PHASE_173_DIR/173-01-PLAN.md" "$PHASE_173_DIR/173-02-PLAN.md" "$PHASE_173_DIR/173-03-PLAN.md" "$PHASE_173_DIR/173-04-PLAN.md" "$PHASE_173_DIR/173-05-PLAN.md" "$PHASE_173_DIR/173-06-PLAN.md"; do
   git cat-file -e "$SHA:$plan_file" || fail "candidate is missing plan $plan_file"
   listed_files="$(sed -nE 's#^[[:space:]]*<files>(.*)</files>.*#\1#p' "$plan_file" | tr ',' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
   while IFS= read -r listed_path; do
@@ -163,7 +227,7 @@ for summary_path in "${PRIOR_SUMMARIES[@]}"; do
   ')"
   ACCEPTANCE_PATHS+="$summary_paths"$'\n'
 done
-for plan_file in "$PHASE_173_DIR/173-01-PLAN.md" "$PHASE_173_DIR/173-02-PLAN.md" "$PHASE_173_DIR/173-03-PLAN.md"; do
+for plan_file in "$PHASE_173_DIR/173-01-PLAN.md" "$PHASE_173_DIR/173-02-PLAN.md" "$PHASE_173_DIR/173-03-PLAN.md" "$PHASE_173_DIR/173-04-PLAN.md" "$PHASE_173_DIR/173-05-PLAN.md" "$PHASE_173_DIR/173-06-PLAN.md"; do
   ACCEPTANCE_PATHS+="$(sed -nE 's#^[[:space:]]*<files>(.*)</files>.*#\1#p' "$plan_file" | tr ',' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"$'\n'
 done
 while IFS=$'\t' read -r dirty_status dirty_path; do
@@ -358,20 +422,116 @@ else
   FAILURES+=("gh CLI is unavailable for read-only CI verification")
 fi
 
+# Capture fresh synthetic evidence in its own disposable Compose project, then
+# independently validate the sanitized retained checkpoint and every PNG byte.
+if DEMO_CANDIDATE_REVISION="$SHA" bash scripts/run_demo_browser_evidence.sh; then
+  WRAPPER_STATUS="passed"
+else
+  WRAPPER_STATUS="failed"
+  FAILURES+=("focused disposable browser evidence wrapper failed")
+fi
+if EVIDENCE_ERROR="$(node - "$ROOT_DIR/$EVIDENCE_REL" "$SHA" 2>&1 <<'NODE'
+const crypto = require("node:crypto");
+const fs = require("node:fs");
+const path = require("node:path");
+const [rootArg, candidateSha] = process.argv.slice(2);
+const root = path.resolve(rootArg);
+const checker = require(path.join(root, "../..", "assets/scripts/check-demo-browser-evidence.cjs"));
+const hash = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
+const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+function regularOwnedFile(relative) {
+  if (typeof relative !== "string" || !relative.startsWith("captures/")) throw new Error(`unsafe capture path: ${relative}`);
+  const full = path.resolve(root, relative);
+  if (!full.startsWith(`${root}${path.sep}`)) throw new Error(`capture path escapes evidence root: ${relative}`);
+  let cursor = root;
+  for (const part of relative.split("/")) {
+    cursor = path.join(cursor, part);
+    const stat = fs.lstatSync(cursor);
+    if (stat.isSymbolicLink()) throw new Error(`symlinked evidence path: ${relative}`);
+    if (cursor !== full && !stat.isDirectory()) throw new Error(`unsafe evidence path component: ${relative}`);
+  }
+  const stat = fs.lstatSync(full);
+  if (!stat.isFile()) throw new Error(`evidence path is not a regular file: ${relative}`);
+  return full;
+}
+try {
+  const checkpointPath = path.join(root, "retained/checkpoint.json");
+  const retainedRoot = fs.lstatSync(path.join(root, "retained"));
+  if (!retainedRoot.isDirectory() || retainedRoot.isSymbolicLink()) throw new Error("retained evidence directory is missing or unsafe");
+  const stat = fs.lstatSync(checkpointPath);
+  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("retained checkpoint is missing or unsafe");
+  const checkpoint = JSON.parse(fs.readFileSync(checkpointPath, "utf8"));
+  if (checkpoint.status !== "passed") throw new Error(`retained checkpoint status is ${checkpoint.status || "missing"}`);
+  if (checkpoint.candidate_revision !== candidateSha) throw new Error("retained checkpoint candidate SHA is stale");
+  if (checkpoint.candidate_dirty !== false) throw new Error("retained checkpoint does not prove a clean candidate");
+  if (!Array.isArray(checkpoint.captures) || checkpoint.captures.length !== checker.EXPECTED_BASELINES.length) {
+    throw new Error("retained checkpoint does not contain all six synthetic captures");
+  }
+  checker.validatePinnedBaselines(root);
+  const seen = new Set();
+  const retainedExpected = new Set(["checkpoint.json"]);
+  for (const capture of checkpoint.captures) {
+    const baseline = checker.EXPECTED_BASELINES.find((item) => item.captureId === capture.id);
+    if (!baseline || seen.has(capture.id)) throw new Error(`unknown or duplicate retained capture: ${capture.id}`);
+    seen.add(capture.id);
+    if (!capture.before_after || capture.before_after.baseline_path !== baseline.path || capture.before_after.baseline_sha256 !== baseline.sha256) {
+      throw new Error(`retained capture has stale baseline provenance: ${capture.id}`);
+    }
+    const currentPath = regularOwnedFile(capture.path);
+    const currentBytes = fs.readFileSync(currentPath);
+    if (!currentBytes.subarray(0, signature.length).equals(signature) || hash(currentBytes) !== capture.sha256) {
+      throw new Error(`current capture bytes do not match checkpoint: ${capture.id}`);
+    }
+    const currentRelative = `${capture.id}-current.png`;
+    const baselineRelative = `${capture.id}-baseline.png`;
+    retainedExpected.add(currentRelative);
+    retainedExpected.add(baselineRelative);
+    for (const relative of [currentRelative, baselineRelative]) {
+      const full = path.join(root, "retained", relative);
+      const entry = fs.lstatSync(full);
+      if (!entry.isFile() || entry.isSymbolicLink()) throw new Error(`retained PNG is missing or unsafe: ${relative}`);
+      const bytes = fs.readFileSync(full);
+      if (!bytes.subarray(0, signature.length).equals(signature)) throw new Error(`retained file is not a PNG: ${relative}`);
+      if (relative === currentRelative && (hash(bytes) !== capture.sha256 || !bytes.equals(currentBytes))) {
+        throw new Error(`retained current PNG changed: ${relative}`);
+      }
+      if (relative === baselineRelative && (hash(bytes) !== baseline.sha256 || !bytes.equals(fs.readFileSync(path.join(root, baseline.path))))) {
+        throw new Error(`retained baseline PNG changed: ${relative}`);
+      }
+    }
+  }
+  const actualNames = fs.readdirSync(path.join(root, "retained")).sort();
+  const expectedNames = [...retainedExpected].sort();
+  if (JSON.stringify(actualNames) !== JSON.stringify(expectedNames)) throw new Error("retained evidence contains missing or unallowlisted files");
+  console.log("retained synthetic evidence passed exact SHA, clean state, six PNG pairs and byte hashes");
+} catch (error) {
+  console.error(error.message);
+  process.exitCode = 1;
+}
+NODE
+  )"; then
+  [[ -n "$EVIDENCE_ERROR" ]] && printf '%s\n' "$EVIDENCE_ERROR"
+  EVIDENCE_STATUS="passed"
+else
+  EVIDENCE_STATUS="incomplete"
+  EVIDENCE_ERROR="${EVIDENCE_ERROR##*$'\n'}"
+  FAILURES+=("retained evidence validation failed: ${EVIDENCE_ERROR:-no checkpoint output}")
+fi
+
 [[ -n "${ADVISORY_JSON:-}" ]] || ADVISORY_JSON='[]'
 if ((${#OWNER_GAPS[@]} > 0)); then
   for owner_gap in "${OWNER_GAPS[@]}"; do FAILURES+=("required acceptance input remains owner-dirty: $owner_gap"); done
 fi
 
 FINAL_STATUS="incomplete"
-if [[ "$PREVIEW_STATUS" == passed && "$CI_STATUS" == passed && "$REGRESSION_STATUS" == passed && "$ASSET_STATUS" != failed && ${#OWNER_GAPS[@]} -eq 0 && ${#FAILURES[@]} -eq 0 ]]; then
+if [[ "$PREVIEW_STATUS" == passed && "$CI_STATUS" == passed && "$REGRESSION_STATUS" == passed && "$ASSET_STATUS" != failed && "$EVIDENCE_STATUS" == passed && ${#OWNER_GAPS[@]} -eq 0 && ${#FAILURES[@]} -eq 0 ]]; then
   FINAL_STATUS="passed"
 fi
 
-node - "$DELIVERY_JSON" "$FINAL_STATUS" "$SHA" "$WORKTREE" "$REVIEW_PROJECT" "$HTTP_PORT" "$DB_PORT" "$PREVIEW_URL" "$PREVIEW_STATUS" "$CI_STATUS" "$CI_RUN_ID" "$CI_URL" "$REGRESSION_STATUS" "$ASSET_STATUS" "$SERVED_CSS_PATH" "$SOURCE_CSS_SHA256" "$BUILT_CSS_SHA256" "$SERVED_CSS_SHA256" "$ORIGIN_META" "$ADVISORY_JSON" "$(printf '%s\n' "${OWNER_GAPS[@]:-}")" "$(printf '%s\n' "${FAILURES[@]:-}")" <<'NODE'
+node - "$DELIVERY_JSON" "$FINAL_STATUS" "$SHA" "$WORKTREE" "$REVIEW_PROJECT" "$HTTP_PORT" "$DB_PORT" "$PREVIEW_URL" "$PREVIEW_STATUS" "$CI_STATUS" "$CI_RUN_ID" "$CI_URL" "$REGRESSION_STATUS" "$ASSET_STATUS" "$EVIDENCE_STATUS" "$SERVED_CSS_PATH" "$SOURCE_CSS_SHA256" "$BUILT_CSS_SHA256" "$SERVED_CSS_SHA256" "$ORIGIN_META" "$ADVISORY_JSON" "$(printf '%s\n' "${OWNER_GAPS[@]:-}")" "$(printf '%s\n' "${FAILURES[@]:-}")" <<'NODE'
 const fs = require("node:fs");
 const [output, status, candidateSha, worktree, reviewProject, httpPort, dbPort, previewUrl,
-  previewStatus, ciStatus, ciRunId, ciUrl, regressionStatus, assetStatus, servedCssPath,
+  previewStatus, ciStatus, ciRunId, ciUrl, regressionStatus, assetStatus, evidenceStatus, servedCssPath,
   sourceCssSha256, builtCssSha256, servedCssSha256, originMetadata, advisoryJson,
   ownerGapsRaw, failuresRaw] = process.argv.slice(2);
 const original = JSON.parse(fs.readFileSync(originMetadata, "utf8"));
@@ -392,6 +552,7 @@ const record = {
   requiredCi: { status: ciStatus, workflow: "CI", job: "CI Green", runId: ciRunId || null, url: ciUrl || null, headSha: candidateSha },
   advisoryJobs: JSON.parse(advisoryJson || "[]"),
   localChecks: { regression: regressionStatus, previewAssets: assetStatus },
+  browserEvidence: { status: evidenceStatus, sanitizedPath: `${"reference/demo_app/tmp/demo_browser_evidence"}/retained/` },
   originalWorkspace: { sha: original.originSha, excludedDirtyPaths: original.files || [] },
   requiredOwnerDirtyPaths: (ownerGapsRaw || "").split("\n").filter(Boolean),
   failures: (failuresRaw || "").split("\n").filter(Boolean),
@@ -401,6 +562,7 @@ const record = {
     parent: `rmdir "${require("node:path").dirname(worktree)}"`
   },
   artifactDirectory: "reference/demo_app/tmp/demo_browser_evidence/",
+  uploadableArtifactDirectory: "reference/demo_app/tmp/demo_browser_evidence/retained/",
   artifactRetention: "14 days advisory",
   capturedAt: new Date().toISOString()
 };

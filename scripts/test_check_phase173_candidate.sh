@@ -18,7 +18,22 @@ cleanup() {
 trap cleanup EXIT
 mkdir -p "$FAKE_BIN" "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence" "$FAKE_ROOT/scripts" \
   "$FAKE_ROOT/mailglass_admin/assets/css" "$FAKE_ROOT/mailglass_admin/priv/static" \
-  "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence" "$FIXTURES"
+  "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence" \
+  "$FAKE_ROOT/reference/demo_app/assets/scripts" "$FIXTURES"
+cp "$ROOT_DIR/reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs" \
+  "$FAKE_ROOT/reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs"
+node - "$ROOT_DIR" "$FAKE_ROOT" "$FIXTURES" <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+const [sourceRoot, fakeRoot, fixtures] = process.argv.slice(2);
+const checker = require(path.join(sourceRoot, "reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs"));
+const sourceEvidence = path.join(sourceRoot, "reference/demo_app/tmp/demo_browser_evidence");
+const fakeEvidence = path.join(fakeRoot, "reference/demo_app/tmp/demo_browser_evidence");
+for (const baseline of checker.validatePinnedBaselines(sourceEvidence)) {
+  fs.copyFileSync(path.join(sourceEvidence, baseline.path), path.join(fakeEvidence, baseline.path));
+  fs.copyFileSync(path.join(sourceEvidence, baseline.path), path.join(fixtures, baseline.path));
+}
+NODE
 printf '%s' "$CSS_TEXT" > "$FAKE_ROOT/mailglass_admin/assets/css/app.css"
 cp "$FAKE_ROOT/mailglass_admin/assets/css/app.css" "$FAKE_ROOT/mailglass_admin/priv/static/app.css"
 touch "$FAKE_ROOT/compose.demo.yml"
@@ -36,10 +51,19 @@ PLAN
 cat > "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence/173-03-PLAN.md" <<'PLAN'
 <task><files>tracked/phase173-03.ex</files></task>
 PLAN
+cat > "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence/173-04-PLAN.md" <<'PLAN'
+<task><files>tracked/phase173-04.ex</files></task>
+PLAN
+cat > "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence/173-05-PLAN.md" <<'PLAN'
+<task><files>tracked/phase173-05.ex</files></task>
+PLAN
+cat > "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence/173-06-PLAN.md" <<'PLAN'
+<task><files>tracked/phase173-06.ex</files></task>
+PLAN
 cat > "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence/173-01-SUMMARY.md" <<'SUMMARY'
 plan_head_before: 1111111111111111111111111111111111111111
 SUMMARY
-for path in tracked/phase173-01.ex tracked/phase173-02.ex tracked/phase173-03.ex; do
+for path in tracked/phase173-01.ex tracked/phase173-02.ex tracked/phase173-03.ex tracked/phase173-04.ex tracked/phase173-05.ex tracked/phase173-06.ex; do
   mkdir -p "$FAKE_ROOT/$(dirname "$path")"
   touch "$FAKE_ROOT/$path"
 done
@@ -192,6 +216,52 @@ exit 0
 CURL
 chmod +x "$FAKE_BIN"/*
 
+cat > "$FAKE_ROOT/scripts/run_demo_browser_evidence.sh" <<'EVIDENCE'
+#!/usr/bin/env bash
+set -euo pipefail
+EVIDENCE_DIR="reference/demo_app/tmp/demo_browser_evidence"
+printf 'focused evidence wrapper invoked\n' >>"$LOG"
+rm -rf "$EVIDENCE_DIR/retained"
+mkdir -p "$EVIDENCE_DIR/captures" "$EVIDENCE_DIR/retained"
+node - "$EVIDENCE_DIR" "${FAKE_EVIDENCE_MODE:-valid}" "${DEMO_CANDIDATE_REVISION:-}" <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+const [evidenceDir, mode, revision] = process.argv.slice(2);
+const checker = require(path.resolve("reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs"));
+const captures = [];
+for (const baseline of checker.EXPECTED_BASELINES) {
+  const bytes = fs.readFileSync(path.join(evidenceDir, baseline.path));
+  const relative = `captures/fixture-${baseline.captureId}.png`;
+  fs.writeFileSync(path.join(evidenceDir, relative), bytes);
+  captures.push({
+    id: baseline.captureId,
+    path: relative,
+    sha256: baseline.sha256,
+    candidate_revision: revision,
+    candidate_dirty: false,
+    before_after: { baseline_path: baseline.path, baseline_sha256: baseline.sha256 }
+  });
+  fs.copyFileSync(path.join(evidenceDir, baseline.path), path.join(evidenceDir, "retained", `${baseline.captureId}-baseline.png`));
+  if (!(mode === "missing" && baseline.captureId === "dashboard")) {
+    fs.copyFileSync(path.join(evidenceDir, relative), path.join(evidenceDir, "retained", `${baseline.captureId}-current.png`));
+  }
+}
+const checkpoint = {
+  schema_version: "demo_browser_evidence.v2",
+  status: mode === "failed" ? "failed" : "passed",
+  candidate_revision: mode === "stale" ? "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" : revision,
+  candidate_dirty: false,
+  captures
+};
+if (mode !== "missing-checkpoint") fs.writeFileSync(path.join(evidenceDir, "retained/checkpoint.json"), `${JSON.stringify(checkpoint, null, 2)}\n`);
+if (mode === "changed" && fs.existsSync(path.join(evidenceDir, "retained/dashboard-current.png"))) {
+  fs.appendFileSync(path.join(evidenceDir, "retained/dashboard-current.png"), Buffer.from([0]));
+}
+NODE
+if [[ "${FAKE_EVIDENCE_MODE:-valid}" == failed ]]; then exit 23; fi
+EVIDENCE
+chmod +x "$FAKE_ROOT/scripts/run_demo_browser_evidence.sh"
+
 write_metadata() {
   cat > "$TEST_DIR/origin-dirty-paths.json" <<EOF
 {"schemaVersion":1,"originSha":"$SHA","files":[{"status":" M","path":"reference/demo_app/assets/e2e/demo.spec.js"}]}
@@ -218,6 +288,7 @@ assert_failure() {
   shift
   TEST_ENV=("$@")
   if run_candidate > "$TEST_DIR/$label.out" 2>&1; then
+    cat "$TEST_DIR/$label.out" >&2
     printf 'FAIL: %s unexpectedly passed\n' "$label" >&2
     exit 1
   fi
@@ -234,6 +305,9 @@ if (record.status !== "passed" || record.requiredCi.status !== "passed" || recor
 }
 if (!record.originalWorkspace.excludedDirtyPaths.some((x) => x.path === "reference/demo_app/assets/e2e/demo.spec.js")) {
   throw new Error("owner dirty path/status was not recorded as excluded");
+}
+if (record.browserEvidence.status !== "passed" || record.uploadableArtifactDirectory !== "reference/demo_app/tmp/demo_browser_evidence/retained/") {
+  throw new Error("sanitized retained evidence was not required and recorded");
 }
 if ([4015, 5415].includes(record.ports.http) || [4015, 5415].includes(record.ports.database)) {
   throw new Error("candidate reused a default demo port");
@@ -256,6 +330,18 @@ const fs = require("node:fs");
 const record = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 if (record.localChecks.previewAssets !== "passed") throw new Error("changed Admin assets did not record the preview asset check result");
 NODE
+
+for evidence_mode in failed missing missing-checkpoint stale changed; do
+  TEST_ENV=(FAKE_EVIDENCE_MODE="$evidence_mode")
+  assert_failure "evidence_$evidence_mode" "FAKE_EVIDENCE_MODE=$evidence_mode"
+  node - "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence/delivery-candidate.json" <<'NODE'
+const fs = require("node:fs");
+const record = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+if (record.status !== "incomplete" || record.browserEvidence.status !== "incomplete") {
+  throw new Error("invalid retained evidence incorrectly passed the candidate gate");
+}
+NODE
+done
 
 assert_failure wrong_sha FAKE_GIT_HEAD=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 rg -q 'candidate HEAD does not match' "$TEST_DIR/wrong_sha.out"
@@ -307,5 +393,67 @@ if rg -q 'git (add |push |merge )|gh workflow run|docker compose.* down|worktree
   printf 'FAIL: launcher attempted a prohibited GitHub write or retained-resource cleanup\n' >&2
   exit 1
 fi
+
+node - "$TEST_DIR/outer.out" "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence" "$ROOT_DIR/reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs" <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+const [outputPath, sourceEvidence, checkerPath] = process.argv.slice(2);
+const output = fs.readFileSync(outputPath, "utf8");
+const worktree = output.match(/phase173 candidate worktree: (.+)/)?.[1];
+if (!worktree) throw new Error("outer launcher did not report its candidate worktree");
+const checker = require(checkerPath);
+const candidateEvidence = path.join(worktree, "reference/demo_app/tmp/demo_browser_evidence");
+const transferred = fs.readdirSync(candidateEvidence).filter((name) => name.startsWith("baseline-") && name.endsWith(".png")).sort();
+const expected = checker.EXPECTED_BASELINES.map((item) => item.path).sort();
+if (JSON.stringify(transferred) !== JSON.stringify(expected)) throw new Error(`candidate received a non-allowlisted baseline set: ${transferred}`);
+for (const baseline of checker.EXPECTED_BASELINES) {
+  const source = fs.readFileSync(path.join(sourceEvidence, baseline.path));
+  const candidate = fs.readFileSync(path.join(candidateEvidence, baseline.path));
+  if (!source.equals(candidate)) throw new Error(`candidate baseline bytes differ: ${baseline.path}`);
+}
+NODE
+
+run_outer() {
+  local name="$1"
+  : > "$LOG"
+  env PATH="$FAKE_BIN:$NODE_BIN_DIR:$PATH" \
+    FAKE_ROOT="$FAKE_ROOT" FAKE_ORIGIN_DIR="$FAKE_ROOT" FAKE_ORIGIN_STATUS=' M reference/demo_app/assets/e2e/demo.spec.js' \
+    FAKE_BIN="$FAKE_BIN" FIXTURES="$FIXTURES" LOG="$LOG" SHA="$SHA" CSS_MD5="$CSS_MD5" CSS_TEXT="$CSS_TEXT" \
+    SUMMARY_PATHS="$SUMMARY_PATHS" \
+    bash "$FAKE_ROOT/scripts/check_phase173_candidate.sh" > "$TEST_DIR/$name.out" 2>&1
+}
+
+for baseline_mode in missing altered symlinked; do
+  baseline_path="$(node - "$ROOT_DIR/reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs" <<'NODE'
+const checker = require(process.argv[2]);
+process.stdout.write(checker.EXPECTED_BASELINES[0].path);
+NODE
+)"
+  original="$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence/$baseline_path"
+  saved="$FIXTURES/$baseline_path"
+  case "$baseline_mode" in
+    missing) rm "$original" ;;
+    altered) printf 'altered' > "$original" ;;
+    symlinked) rm "$original"; ln -s "$saved" "$original" ;;
+  esac
+  if run_outer "baseline_$baseline_mode"; then
+    printf 'FAIL: outer launcher accepted %s baseline\n' "$baseline_mode" >&2
+    exit 1
+  fi
+  rg -q 'baseline validation or transfer failed' "$TEST_DIR/baseline_$baseline_mode.out"
+  node - "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence/delivery-candidate.json" <<'NODE'
+const fs = require("node:fs");
+const record = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+if (record.status !== "incomplete" || record.baselineValidation !== "failed" || !record.failures[0].includes("baseline")) {
+  throw new Error("invalid baseline did not leave a specific incomplete delivery record");
+}
+NODE
+  if rg -q 'focused evidence wrapper invoked' "$LOG"; then
+    printf 'FAIL: %s baseline reached focused capture\n' "$baseline_mode" >&2
+    exit 1
+  fi
+  rm -f "$original"
+  cp "$saved" "$original"
+done
 
 printf 'Phase 173 candidate fake-CLI contract passed (SHA, cleanliness, ancestry, owner dirt, HTTP/CSS, CI, retention, no remote writes).\n'
