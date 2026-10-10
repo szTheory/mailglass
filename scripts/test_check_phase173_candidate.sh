@@ -36,6 +36,9 @@ PLAN
 cat > "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence/173-03-PLAN.md" <<'PLAN'
 <task><files>tracked/phase173-03.ex</files></task>
 PLAN
+cat > "$FAKE_ROOT/.planning/phases/173-consistency-and-delivery-evidence/173-01-SUMMARY.md" <<'SUMMARY'
+plan_head_before: 1111111111111111111111111111111111111111
+SUMMARY
 for path in tracked/phase173-01.ex tracked/phase173-02.ex tracked/phase173-03.ex; do
   mkdir -p "$FAKE_ROOT/$(dirname "$path")"
   touch "$FAKE_ROOT/$path"
@@ -90,7 +93,9 @@ case "$command" in
   show)
     spec="$1"
     path="${spec#*:}"
-    if [[ "${FAKE_REQUIRED_DIRTY:-false}" == true && "$path" == .planning/phases/172-fixture/* ]]; then
+    if [[ "$path" == .planning/phases/173-consistency-and-delivery-evidence/173-01-SUMMARY.md ]]; then
+      cat "$FAKE_ROOT/$path"
+    elif [[ "${FAKE_REQUIRED_DIRTY:-false}" == true && "$path" == .planning/phases/172-fixture/* ]]; then
       printf '## Task Commits\n\n1. **Task 1** — `deadbeef` (`fix`)\n\nkey-files:\n  created:\n    - reference/demo_app/assets/e2e/demo.spec.js\n'
     else
       cat "$FAKE_ROOT/$path"
@@ -98,6 +103,11 @@ case "$command" in
     ;;
   merge-base)
     [[ "${FAKE_MISSING_COMMIT:-}" != "${2:-}" ]]
+    ;;
+  diff)
+    if [[ "$*" == *"mailglass_admin/assets"* || "$*" == *"mailglass_admin/priv/static"* ]]; then
+      printf '%s' "${FAKE_ASSET_DIFF:-}"
+    fi
     ;;
   cat-file)
     path="${2#*:}"
@@ -234,6 +244,17 @@ if (log.includes("worktree remove") || /git (add |push |merge )|gh workflow run/
   throw new Error("gate attempted staging, push, merge, dispatch, or cleanup");
 }
 if (record.assets.built.sha256 !== record.assets.served.sha256) throw new Error("served CSS did not match bundle");
+if (record.localChecks.previewAssets !== "not-run-unchanged") throw new Error("unchanged Admin assets should not run the preview asset check");
+if (log.includes("verify.preview")) throw new Error("preview asset check ran without Admin asset changes");
+NODE
+
+TEST_ENV=(FAKE_ASSET_DIFF='mailglass_admin/assets/css/app.css')
+if ! run_candidate > "$TEST_DIR/changed_assets.out" 2>&1; then cat "$TEST_DIR/changed_assets.out" >&2; cat "$LOG" >&2; exit 1; fi
+rg -q 'asdf exec mix verify.preview' "$LOG"
+node - "$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence/delivery-candidate.json" <<'NODE'
+const fs = require("node:fs");
+const record = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+if (record.localChecks.previewAssets !== "passed") throw new Error("changed Admin assets did not record the preview asset check result");
 NODE
 
 assert_failure wrong_sha FAKE_GIT_HEAD=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb

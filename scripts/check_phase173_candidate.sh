@@ -189,14 +189,28 @@ if [[ "${PHASE173_SKIP_LOCAL_CHECKS:-false}" != "true" ]]; then
     FAILURES+=("candidate regression gate failed")
   fi
 
-  if (cd mailglass_admin && ASDF_ERLANG_VERSION=27.3.4.13 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix verify.preview); then
-    ASSET_STATUS="passed"
+  # Run the pinned preview asset check only when this phase changed Admin
+  # source or generated assets. The phase summary records a stable comparison
+  # point for clean detached candidate worktrees.
+  PHASE_BASE_SHA="$(git show "$SHA:$PHASE_173_DIR/173-01-SUMMARY.md" | sed -nE 's/^plan_head_before:[[:space:]]*([0-9a-f]{40})$/\1/p' | head -n 1)"
+  [[ "$PHASE_BASE_SHA" =~ ^[0-9a-f]{40}$ ]] ||
+    fail "Phase 173 starting SHA is missing from 173-01-SUMMARY.md"
+  git merge-base --is-ancestor "$PHASE_BASE_SHA" "$SHA" ||
+    fail "Phase 173 starting SHA is not an ancestor of the candidate"
+  ADMIN_ASSET_CHANGES="$(git diff --name-only "$PHASE_BASE_SHA" "$SHA" -- mailglass_admin/assets mailglass_admin/priv/static)"
+  if [[ -n "$ADMIN_ASSET_CHANGES" ]]; then
+    if (cd mailglass_admin && ASDF_ERLANG_VERSION=27.3.4.13 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix verify.preview); then
+      ASSET_STATUS="passed"
+    else
+      ASSET_STATUS="failed"
+      FAILURES+=("pinned-toolchain mix verify.preview failed")
+    fi
   else
-    ASSET_STATUS="failed"
-    FAILURES+=("pinned-toolchain mix verify.preview failed")
+    ASSET_STATUS="not-run-unchanged"
   fi
 else
   REGRESSION_STATUS="skipped-test-mode"
+  ASSET_STATUS="skipped-test-mode"
 fi
 
 if ! command -v docker >/dev/null 2>&1; then
