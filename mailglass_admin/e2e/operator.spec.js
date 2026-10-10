@@ -695,23 +695,22 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("preview-orientation")).toBeVisible();
   });
 
-  // UTC stays visible while a separately labeled local time is progressively added.
-  test("Deliveries timestamps retain visible UTC with a local-time supplement", async ({ page }) => {
+  test("timestamps show one local value and retain the exact UTC value", async ({ page }) => {
     await openOperator(page);
 
     const ts = page.locator("time[data-local-time]").first();
     await expect(ts).toBeVisible();
-
-    // Machine-readable ISO8601 (Z) drives the optional local-time supplement.
     await expect(ts).toHaveAttribute("datetime", /Z$/);
     await expect(ts).toHaveAttribute("title", /UTC$/);
     await expect(ts).toHaveAttribute("data-utc", /UTC$/);
-    const utc = await ts.getAttribute("data-utc");
-    await expect(ts).toHaveText(utc);
-    await expect(ts.locator("xpath=following-sibling::*[@data-local-time-supplement]")).toContainText("Local:");
-
-    // The script marks nodes it has enhanced without replacing the UTC value.
     await expect(ts).toHaveAttribute("data-localized", "1");
+    await expect(ts).not.toContainText("Local:");
+    await expect(ts).toHaveAttribute("aria-label", /local time$/);
+    const expectedLocal = await ts.evaluate(el => new Date(el.dateTime).toLocaleString(undefined, {
+      year: "numeric", month: "short", day: "numeric",
+      hour: "numeric", minute: "2-digit"
+    }));
+    await expect(ts).toHaveText(expectedLocal);
     await expect(page).not.toHaveURL(/delivery_id=/);
   });
 });

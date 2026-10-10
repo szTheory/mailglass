@@ -75,7 +75,14 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
           </div>
           <div class="min-w-0">
             <dt class="text-label font-bold uppercase">Received</dt>
-            <dd class="mt-xs text-base-content"><Components.timestamp at={@record.received_at} /></dd>
+            <dd class="mt-xs flex flex-wrap items-center gap-sm text-base-content">
+              <Components.timestamp at={@record.received_at} />
+              <Components.copy_button
+                :if={match?(%DateTime{}, @record.received_at)}
+                value={Components.timestamp_value(@record.received_at)}
+                label="Copy UTC"
+              />
+            </dd>
           </div>
           <div class="min-w-0">
             <dt class="text-label font-bold uppercase">Matched mailbox</dt>
@@ -140,7 +147,8 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
     do: "Replay is unavailable: this message did not match any mailbox."
 
   defp replay_hint(_outcome),
-    do: "Review the recorded Mailbox identity and eligibility before replaying this stored message."
+    do:
+      "Review the recorded Mailbox identity and eligibility before replaying this stored message."
 
   defp matched_mailbox(:no_match, _mailbox), do: "No mailbox matched"
   defp matched_mailbox(nil, _mailbox), do: "No execution recorded"

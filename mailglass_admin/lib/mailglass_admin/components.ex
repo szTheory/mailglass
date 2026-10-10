@@ -392,11 +392,11 @@ defmodule MailglassAdmin.Components do
   def theme_picker(assigns) do
     ~H"""
     <fieldset
+      aria-label="Appearance"
       class="flex min-h-11 flex-wrap items-center gap-xs rounded-box border border-base-300 bg-base-200 p-xs text-label"
       disabled={@disabled}
       {@rest}
     >
-      <legend class="px-xs text-label font-bold text-base-content">Appearance</legend>
       <label
         :for={option <- theme_options()}
         title={option.label}
@@ -1156,9 +1156,11 @@ defmodule MailglassAdmin.Components do
   attr(:class, :string, default: "", doc: "extra classes for the <time> element")
 
   @doc """
-  Renders a UTC `%DateTime{}` as a `<time>` element whose visible value remains the
-  canonical UTC string (`"YYYY-MM-DD HH:MM:SS UTC"`). The client may add a separately
-  labeled local-time supplement. `nil` renders an unavailable sentinel (no `<time>`).
+  Renders a UTC `%DateTime{}` as a machine-readable <time> element. The client
+  replaces the UTC fallback with one human-readable value in the browser's local
+  timezone; the exact UTC value remains available in the title, with a copy action
+  on detail surfaces that support it.
+  `nil` renders an unavailable sentinel (no <time>).
   """
   @doc since: "1.7.0"
   def timestamp(%{at: nil} = assigns) do
@@ -1175,9 +1177,8 @@ defmodule MailglassAdmin.Components do
       data-utc={utc_string(@at)}
       title={utc_string(@at)}
       aria-label={"Recorded at #{utc_string(@at)}"}
-      class={["mono", @class]}
+      class={["tabular-nums", @class]}
     >{utc_string(@at)}</time>
-    <span data-local-time-supplement class="ml-xs text-label text-secondary"></span>
     """
   end
 

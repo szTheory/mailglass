@@ -266,7 +266,7 @@ defmodule MailglassAdmin.Operator.Shell do
           Choose Account
         </span>
       </div>
-      <details :if={@tenant_options != []} class="relative min-w-0">
+      <details :if={@tenant_options != []} class="relative min-w-0" data-dismiss-outside>
         <summary
           class="mg-focus-ring flex min-h-11 cursor-pointer list-none items-center rounded-field border border-base-300 bg-base-100 px-md py-sm text-label font-bold text-base-content hover:border-primary"
           aria-label="Change Account"
@@ -281,13 +281,16 @@ defmodule MailglassAdmin.Operator.Shell do
           <li :for={{tenant, index} <- Enum.with_index(@tenant_options)}>
             <.link
               patch={tenant_switch_path(@page_uri, tenant.id)}
-              phx-click={JS.show(
-                to: "#operator-account-switch-status-#{index}",
-                display: "block"
-              )}
+              phx-click={
+                JS.show(
+                  to: "#operator-account-switch-status-#{index}",
+                  display: "block"
+                )
+              }
               aria-current={if tenant.id == @selected_tenant_id, do: "true", else: nil}
               data-testid="operator-account-option"
               data-account-id={tenant.id}
+              data-dismiss-menu
               class="mg-focus-ring flex min-h-11 flex-col justify-center rounded-field px-sm py-xs text-body text-base-content hover:bg-base-200"
             >
               <span class="break-words">{tenant.label}</span>

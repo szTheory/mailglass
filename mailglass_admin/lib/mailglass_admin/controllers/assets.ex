@@ -191,14 +191,13 @@ defmodule MailglassAdmin.Controllers.Assets do
     }
   })();
 
-  // Local-time progressive enhancement: keep the server-rendered UTC visible and add a
-  // clearly labeled local-time supplement. No phx-hook: a MutationObserver enhances
-  // timestamps inserted by LiveView patches.
+  // Show one concise timestamp in the browser's local timezone. The server-rendered
+  // UTC value remains the no-JS fallback and the exact value stays in the title/data.
+  // No phx-hook: a MutationObserver enhances timestamps inserted by LiveView patches.
   ;(() => {
     const FMT = {
       year: "numeric", month: "short", day: "numeric",
-      hour: "numeric", minute: "2-digit", second: "2-digit",
-      timeZoneName: "short"
+      hour: "numeric", minute: "2-digit"
     }
 
     function localize(el) {
@@ -206,13 +205,15 @@ defmodule MailglassAdmin.Controllers.Assets do
       if (!iso) return
       const d = new Date(iso)
       if (isNaN(d.getTime())) return
-      const supplement = el.nextElementSibling
-      if (!supplement?.hasAttribute("data-local-time-supplement")) return
+      let localValue
       try {
-        supplement.textContent = `Local: ${d.toLocaleString(undefined, FMT)}`
+        localValue = d.toLocaleString(undefined, FMT)
       } catch (_e) {
         return
       }
+      if (!localValue) return
+      el.textContent = localValue
+      el.setAttribute("aria-label", `Recorded at ${localValue} local time`)
       el.dataset.localized = "1"
     }
 
@@ -228,6 +229,20 @@ defmodule MailglassAdmin.Controllers.Assets do
       scheduled = true
       requestAnimationFrame(() => { scheduled = false; localizeAll() })
     }
+
+    // Native account disclosure menus should dismiss when the operator clicks away.
+    document.addEventListener("click", (e) => {
+      const target = e.target
+      const accountOption = target?.closest?.("[data-dismiss-menu]")
+      if (accountOption) {
+        accountOption.closest("details[data-dismiss-outside]")?.removeAttribute("open")
+        return
+      }
+      if (target?.closest?.("details[data-dismiss-outside]")) return
+      document.querySelectorAll("details[data-dismiss-outside][open]").forEach((menu) => {
+        menu.removeAttribute("open")
+      })
+    })
 
     // Native copy buttons remain functional after LiveView patches. Feedback is kept
     // in the associated live region; the exact server-rendered value never changes.

@@ -420,13 +420,6 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
   min-width: 64rem;
 }
 
-/* UTC remains canonical and fully visible; the labelled local supplement
-   occupies its own line instead of spilling into the adjacent column. */
-.mg-inbound-received [data-local-time-supplement] {
-  display: block;
-  margin-inline-start: 0;
-}
-
 .mg-inbound-summary-counts {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

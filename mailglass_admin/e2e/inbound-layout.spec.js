@@ -25,6 +25,8 @@ for (const width of [1440, 1024, 390, 320]) {
     // heading and first record still start within the initial 900px viewport.
     expect(listBox.y).toBeLessThan(width >= 1280 ? 500 : 750);
     expect(filterBox.height).toBeLessThan(width >= 1280 ? 100 : width >= 768 ? 240 : 70);
+    await expect(page.getByRole("group", { name: "Appearance" })).toBeVisible();
+    await expect(page.getByText("Appearance", { exact: true })).toHaveCount(0);
     await expect(summary.getByRole("button")).toHaveCount(3);
     await expect(summary.getByRole("link")).toHaveCount(0);
     await expect(page.getByTestId("inbound-summary-scope")).toHaveCount(0);
@@ -54,7 +56,9 @@ for (const width of [1440, 1024, 390, 320]) {
       // their cell, including at the intermediate tablet/desktop width.
       const receivedCells = page.getByTestId("inbound-records-table").locator("td.mg-inbound-received");
       expect(await receivedCells.evaluateAll(cells => cells.every(cell => cell.scrollWidth <= cell.clientWidth))).toBe(true);
-      expect(await receivedCells.locator("time").evaluateAll(times => times.every(time => time.textContent.endsWith(" UTC")))).toBe(true);
+      expect(await receivedCells.locator("time").evaluateAll(times => times.every(time =>
+        time.dataset.localized === "1" && time.textContent.trim() !== "" && !time.textContent.includes("Local:")
+      ))).toBe(true);
       const mailboxColumn = page.getByRole("columnheader", { name: "Mailbox", exact: true });
       expect((await mailboxColumn.boundingBox()).width).toBeGreaterThan(100);
     }
@@ -121,32 +125,44 @@ for (const width of [1440, 1024, 390, 320]) {
   });
 }
 
-test("inbound summary explains only the outcome distinction and follows applied filters", async ({ page }) => {
+test("outcome filters hide all-outcome stats and clearing restores them", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openInbound(page);
+  const summary = page.getByTestId("inbound-overview");
   const accepted = page.getByTestId("inbound-overview-accepted").locator("p").nth(1);
-  const unrouted = page.getByTestId("inbound-overview-no-match").locator("p").nth(1);
   const before = await accepted.innerText();
-  const unroutedBefore = await unrouted.innerText();
+
   await page.getByLabel("Mailbox outcome", { exact: true }).selectOption("accept");
+  await expect(summary).toBeVisible();
   await page.getByRole("button", { name: "Apply filters", exact: true }).click();
   await expect(page).toHaveURL(/outcome=accept/);
-  await expect(accepted).toHaveText(before);
-  await expect(unrouted).toHaveText(unroutedBefore);
-  await expect(page.getByTestId("inbound-summary-outcome-scope")).toHaveText("Counts include all outcomes; list shows Accepted.");
+  await expect(summary).toHaveCount(0);
+  await expect(page.getByTestId("inbound-result-count")).toBeVisible();
+  await expect(page.getByTestId("inbound-summary-outcome-scope")).toHaveCount(0);
+
   await page.getByLabel("Time window", { exact: true }).selectOption("24");
-  await expect(accepted).toHaveText(before);
+  await expect(summary).toHaveCount(0);
   await page.getByRole("button", { name: "Apply filters", exact: true }).click();
   await expect(page).toHaveURL(/window_hours=24/);
-  const appliedTotal = await accepted.innerText();
   await page.getByLabel("Search", { exact: true }).fill("no-matching-message-7f2a");
-  await expect(accepted).toHaveText(appliedTotal);
   await page.getByRole("button", { name: "Apply filters", exact: true }).click();
-  await expect(accepted).toHaveText("0");
   await expect(page.getByTestId("inbound-empty-filtered")).toHaveCount(1);
+
   await page.getByTestId("inbound-filters").getByRole("button", { name: "Clear filters", exact: true }).click();
-  await expect(page.getByTestId("inbound-summary-outcome-scope")).toHaveCount(0);
+  await expect(summary).toBeVisible();
   await expect(accepted).toHaveText(before);
   await expect(page.getByLabel("Time window", { exact: true })).toHaveValue("168");
   await expect(page).toHaveURL(/tenant_id=browser-tenant/);
+});
+
+
+test("account menu closes when the operator clicks outside it", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openInbound(page);
+  const switcher = page.getByTestId("operator-account-switcher");
+  const accounts = page.getByRole("list", { name: "Available Accounts" });
+  await switcher.click();
+  await expect(accounts).toBeVisible();
+  await page.getByTestId("inbound-collection-header").click();
+  await expect(accounts).toBeHidden();
 });

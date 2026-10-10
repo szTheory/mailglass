@@ -726,7 +726,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "Failed"
 
       assert html =~
-               "Filter by the latest fresh mailbox outcome, including unrouted messages and no change. Summary counts still show all outcomes."
+               "Filter by the latest fresh mailbox outcome, including unrouted messages and no change. The summary is hidden while this filter is applied."
 
       document = Floki.parse_document!(html)
       assert Floki.find(document, "legend") |> Floki.text() |> String.trim() == "Filters"

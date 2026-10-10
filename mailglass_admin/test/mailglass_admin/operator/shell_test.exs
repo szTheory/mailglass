@@ -449,6 +449,8 @@ defmodule MailglassAdmin.Operator.ShellTest do
       assert html =~ "System"
       assert html =~ "Light"
       assert html =~ "Dark"
+      assert html =~ ~s(aria-label="Appearance")
+      refute html =~ "<legend"
       assert html =~ "hero-window"
       assert html =~ "hero-sun"
       assert html =~ "hero-moon"

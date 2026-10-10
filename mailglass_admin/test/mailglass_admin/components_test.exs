@@ -356,11 +356,11 @@ defmodule MailglassAdmin.ComponentsTest do
   end
 
   describe "timestamp/1" do
-    test "a UTC datetime remains visible and may show a labeled local-time supplement" do
+    test "a UTC datetime exposes its exact UTC value for local-time enhancement" do
       at = ~U[2026-06-14 14:32:05.000000Z]
       html = render_component(&Components.timestamp/1, at: at, class: "whitespace-nowrap")
 
-      # Server-rendered fallback is the canonical UTC string, in body + title + data-utc.
+      # No-JavaScript fallback and exact machine value remain in body + title + data-utc.
       assert html =~ "2026-06-14 14:32:05.000000 UTC"
       # Machine-readable ISO8601 (Z) for the client script to parse.
       assert html =~ ~s(datetime="2026-06-14T14:32:05.000000Z")
@@ -370,9 +370,9 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ ~s(aria-label="Recorded at 2026-06-14 14:32:05.000000 UTC")
       assert html =~ "<time"
       assert html =~ "whitespace-nowrap"
-      assert html =~ "data-local-time-supplement"
-      refute html =~ "tabindex=\"0\""
-      refute html =~ "cursor-pointer"
+      refute html =~ "data-local-time-supplement"
+      assert html =~ "tabular-nums"
+      refute html =~ "mono"
     end
 
     test "a precise UTC datetime preserves fractional seconds for visible and copied values" do
@@ -615,11 +615,11 @@ defmodule MailglassAdmin.ComponentsTest do
   end
 
   describe "theme_picker/1 primitive contract" do
-    test "theme_picker system selected renders fieldset legend and exactly three radio inputs" do
+    test "theme_picker system selected renders a named group and exactly three radio inputs" do
       html = render_component(&Components.theme_picker/1, selected: :system)
 
-      assert_all(html, ["<fieldset", "<legend", "Appearance", "System", "Light", "Dark"])
-      assert html =~ ~r/<legend[^>]*>Appearance<\/legend>/
+      assert_all(html, ["<fieldset", ~s(aria-label="Appearance"), "System", "Light", "Dark"])
+      refute html =~ "<legend"
       assert html =~ ~r/<span class="pointer-events-none">System<\/span>/
       assert html =~ ~r/<span class="pointer-events-none">Light<\/span>/
       assert html =~ ~r/<span class="pointer-events-none">Dark<\/span>/

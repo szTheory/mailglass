@@ -11,21 +11,14 @@ defmodule MailglassAdmin.Inbound.Overview do
   attr(:filters, :map, default: %{})
 
   def overview(assigns) do
-    assigns =
-      assign(assigns,
-        outcomes: outcome_counts(assigns.summary),
-        list_outcome: list_outcome(assigns.filters)
-      )
+    assigns = assign(assigns, outcomes: outcome_counts(assigns.summary))
 
     ~H"""
-    <section data-testid="inbound-overview" class="mt-md border-b border-base-300 pb-md">
-      <p
-        :if={@list_outcome}
-        data-testid="inbound-summary-outcome-scope"
-        class="mb-sm text-label text-secondary"
-      >
-        Counts include all outcomes; list shows {@list_outcome}.
-      </p>
+    <section
+      :if={all_outcomes?(@filters)}
+      data-testid="inbound-overview"
+      class="mt-md border-b border-base-300 pb-md"
+    >
       <div class="mg-inbound-summary-counts">
         <Components.stat_card
           :for={{key, label, count, help} <- @outcomes}
@@ -62,18 +55,7 @@ defmodule MailglassAdmin.Inbound.Overview do
     end)
   end
 
-  defp list_outcome(filters) do
-    case filters["outcome"] do
-      "no_match" -> "Unrouted"
-      "accept" -> "Accepted"
-      "reject" -> "Rejected"
-      "bounce" -> "Bounced"
-      "failed" -> "Failed"
-      "ignore" -> "Ignored"
-      "no_change" -> "No change"
-      _ -> nil
-    end
-  end
+  defp all_outcomes?(filters), do: Map.get(filters, "outcome") in [nil, ""]
 
   defp outcome_count(summary, outcome) do
     outcomes =

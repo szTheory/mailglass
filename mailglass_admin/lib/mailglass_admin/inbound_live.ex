@@ -814,7 +814,7 @@ defmodule MailglassAdmin.InboundLive do
               <section data-testid="inbound-master-detail" class="mt-lg">
                 <aside
                   data-testid="inbound-records-list-card"
-                  class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+                  class="card min-w-0 overflow-hidden rounded-box border border-base-300 bg-base-200 p-0"
                 >
                   <RecordsList.records_list
                     heading="Received messages"

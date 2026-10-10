@@ -141,12 +141,13 @@ test.describe("Phase 169 connected journey", () => {
 
     const visibleEvent = page.getByTestId("operator-timeline-event").first();
     const time = visibleEvent.locator("time[data-local-time]");
-    const originalUtc = await time.innerText();
+    const originalLocal = await time.innerText();
+    const originalUtc = await time.getAttribute("data-utc");
     const copyTime = visibleEvent.getByRole("button", { name: "Copy recorded time" });
     await copyTime.click();
     await expect(copyTime.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText("Copied.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(originalUtc);
-    await expect(time).toHaveText(originalUtc);
+    await expect(time).toHaveText(originalLocal);
 
     await page.evaluate(() => {
       Object.defineProperty(navigator, "clipboard", {

@@ -39,7 +39,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         field={@form[:outcome]}
         type={:select}
         label="Mailbox outcome"
-        help="Filter by the latest fresh mailbox outcome, including unrouted messages and no change. Summary counts still show all outcomes."
+        help="Filter by the latest fresh mailbox outcome, including unrouted messages and no change. The summary is hidden while this filter is applied."
         help_display={:tooltip}
         error={field_error(@errors, "outcome")}
         prompt="Any outcome"
