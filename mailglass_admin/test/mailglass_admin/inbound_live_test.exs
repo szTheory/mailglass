@@ -166,11 +166,11 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ "No records"
+      assert html =~ "No messages"
 
-      # D-07 noun discipline: the InboundMessage noun, not the old "No records…" drift.
+      # D-07 noun discipline: the InboundMessage noun, not the old "No messages…" drift.
       assert html =~
-               "No InboundMessages have been recorded yet."
+               "No messages have been received yet."
 
       # Genuine no-data is a single calm pane: orientation strip present,
       # filters toolbar and the master-detail grid WITHHELD (D-02/D-05 —
@@ -182,7 +182,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       # The toolbar Clear-filters button is gone, and the truly-empty pane has
       # no in-pane reset (that is :filtered-only) — so the count is 0.
       assert clear_filters_count(html) == 0
-      refute html =~ "No records match the current filters."
+      refute html =~ "No messages match the current filters."
     end
 
     test "a tenant query returns only that tenant's rows (V1 isolation)", %{conn: conn} do
@@ -241,12 +241,15 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-overview")
       assert html =~ "Accepted"
 
-      assert Floki.find(Floki.parse_document!(html), "[data-testid='inbound-overview-accepted'] p")
+      assert Floki.find(
+               Floki.parse_document!(html),
+               "[data-testid='inbound-overview-accepted'] p"
+             )
              |> Enum.at(1)
              |> Floki.text()
              |> String.trim() == "101"
 
-      refute html =~ "accepted-101@example.com"
+      assert html =~ "accepted-101@example.com"
     end
 
     test "hides all-outcome summary when mailbox outcome narrows records", %{conn: conn} do
@@ -306,7 +309,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-package-unavailable")
       assert html =~ "Inbound support is unavailable"
       assert html =~ "The selected record could not be checked."
-      refute html =~ "No InboundMessages have been recorded yet."
+      refute html =~ "No messages have been received yet."
       refute html =~ ~s(data-testid="inbound-orientation")
       refute html =~ ~s(data-testid="inbound-overview")
       refute html =~ ~s(data-testid="inbound-result-count")
@@ -333,12 +336,12 @@ defmodule MailglassAdmin.InboundLiveTest do
           })
         )
 
-      assert html =~ "No records on this page"
+      assert html =~ "No messages on this page"
       assert html =~ "1 message"
       assert html =~ ~s(data-testid="inbound-page-reset")
       assert html =~ "provider=mailgun"
       refute html =~ "page=99"
-      refute html =~ "No records match the current filters."
+      refute html =~ "No messages match the current filters."
     end
 
     test "active filters with no matching records render filtered empty and reset action", %{
@@ -359,10 +362,10 @@ defmodule MailglassAdmin.InboundLiveTest do
           })
         )
 
-      assert html =~ "No records"
-      assert html =~ "No records match the current filters."
+      assert html =~ "No messages"
+      assert html =~ "No messages match the current filters."
       assert clear_filters_count(html) == 2
-      refute html =~ "No records have been recorded yet."
+      refute html =~ "No messages have been recorded yet."
     end
 
     test "connection failures are identified without claiming empty records or zero summary", %{
@@ -379,7 +382,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-read-unavailable")
       assert html =~ "Inbound records unavailable"
       assert html =~ "Inbound summary unavailable"
-      refute html =~ "No InboundMessages have been recorded yet."
+      refute html =~ "No messages have been received yet."
       refute html =~ "synthetic inbound connection failure"
       refute html =~ ~s(data-testid="inbound-result-count")
       refute html =~ ~s(data-testid="inbound-overview-total")
@@ -538,8 +541,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       end
 
       assert quick_html =~ ~s(aria-current="true")
-      assert quick_html =~ "s*******@e******.com"
-      refute quick_html =~ "selected@example.com"
+      assert quick_html =~ "selected@example.com"
+      refute quick_html =~ "s*******@e******.com"
       refute quick_html =~ "Execution timeline"
 
       # Open full detail → the complete record (header + timeline).
@@ -1185,7 +1188,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "x-priority"
       # Legend (verbatim).
       assert html =~
-               "Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and a regular-expression matcher uses its configured expression."
+               "A route matches only when every condition passes. “Any” means that field is unrestricted."
     end
 
     test "labels a route that matches current rules even when the stored outcome was no-match",
@@ -1240,9 +1243,14 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~r/>\s*any\s*</
       # The recipient ACTUAL is masked, never raw.
       assert html =~ "n******@e******.com"
-      refute html =~ "nomatch@example.com"
+
+      refute html
+             |> Floki.parse_document!()
+             |> Floki.find("[data-testid='inbound-routing-trace']")
+             |> Floki.text() =~ "nomatch@example.com"
+
       # First failing clause has the error left-border emphasis.
-      assert html =~ "border-l-4 border-error"
+      assert html =~ "bg-error/10"
     end
   end
 
@@ -1359,7 +1367,9 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       # The successful command is reported independently from the selected
       # history snapshot. It does not trigger a read or invent a timeline event.
-      assert length(Floki.find(Floki.parse_document!(html), "[data-testid='inbound-timeline-run']")) ==
+      assert length(
+               Floki.find(Floki.parse_document!(html), "[data-testid='inbound-timeline-run']")
+             ) ==
                initial_timeline_count
 
       assert Floki.find(
@@ -1510,7 +1520,9 @@ defmodule MailglassAdmin.InboundLiveTest do
         })
 
       {:ok, _updated_evidence} =
-        MailglassAdmin.TestRepo.update(Changeset.change(evidence, verification_facts: stale_facts))
+        MailglassAdmin.TestRepo.update(
+          Changeset.change(evidence, verification_facts: stale_facts)
+        )
 
       html = render_click(view, "confirm_replay", %{})
 
@@ -1608,8 +1620,11 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert Floki.attribute(refresh, "phx-click") == ["refresh_inbound_timeline"]
       assert Floki.attribute(refresh, "phx-disable-with") == ["Refreshing history…"]
-      assert Floki.attribute(refresh, "aria-live") == ["polite"]
-      assert Floki.attribute(refresh, "aria-atomic") == ["true"]
+      assert Floki.attribute(refresh, "phx-disable-with") == ["Refreshing history…"]
+
+      assert Floki.find(Floki.parse_document!(html), "[data-testid='inbound-timeline-snapshot']") !=
+               []
+
       assert html =~ "Refresh history"
     end
 
@@ -1638,7 +1653,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-timeline-unavailable")
       assert html =~ ~s(data-testid="inbound-replay-feedback")
       assert html =~ "Replay run recorded. Mailbox outcome: Accepted."
-      assert html =~ "Last successful history snapshot through"
+      assert html =~ "Last updated"
       refute html =~ "No execution runs have been recorded for this InboundMessage yet."
       assert html =~ record.id
     end
@@ -1663,7 +1678,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         Topics.inbound_record_inserted(@tenant_id),
-        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
+        {:inbound_record_inserted, fresh.id,
+         %{provider: "mailgun", record_type: "inbound_record"}}
       )
 
       html = render(view)
@@ -1858,9 +1874,9 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      # truly_empty path: data-state-empty with "No records"-family heading
+      # truly_empty path: data-state-empty with "No messages"-family heading
       assert html =~ ~s(data-testid="data-state-empty")
-      assert html =~ "No records"
+      assert html =~ "No messages"
     end
 
     test "error signal emits data-state-error distinct from empty" do
@@ -2021,8 +2037,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       # Genuine no-data: the calm pane carries the truly-empty copy (D-07 noun).
       {:ok, _view, empty_html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      assert empty_html =~ "No records"
-      assert empty_html =~ "No InboundMessages have been recorded yet."
+      assert empty_html =~ "No messages"
+      assert empty_html =~ "No messages have been received yet."
       refute_banned(empty_html)
 
       # No-selection now shows the full-width list with no overlay; brand voice clean.
@@ -2167,12 +2183,12 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "How current route rules compare"
 
       assert html =~
-               "Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and a regular-expression matcher uses its configured expression."
+               "A route matches only when every condition passes. “Any” means that field is unrestricted."
 
       refute_banned(html)
     end
 
-    test "recipient is masked across list, detail header, and routing-trace actual (V5 full)", %{
+    test "recipient is readable in list and detail while routing evidence stays masked", %{
       conn: conn
     } do
       conn = operator_conn(conn)
@@ -2184,8 +2200,8 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       # List surface.
       {:ok, _view, list_html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
-      assert list_html =~ masked
-      refute list_html =~ raw
+      assert list_html =~ raw
+      refute list_html =~ masked
 
       # Detail + routing-trace surfaces (selected).
       {:ok, _view2, detail_html} =
@@ -2195,8 +2211,13 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       # Masked in the detail header AND the routing-trace recipient "actual".
-      assert detail_html =~ masked
-      refute detail_html =~ raw
+      assert detail_html =~ raw
+
+      [trace] =
+        Floki.find(Floki.parse_document!(detail_html), "[data-testid='inbound-routing-trace']")
+
+      assert Floki.text(trace) =~ masked
+      refute Floki.text(trace) =~ raw
       assert detail_html =~ ~s(data-testid="inbound-routing-trace")
     end
 

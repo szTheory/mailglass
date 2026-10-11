@@ -181,9 +181,9 @@ defmodule MailglassAdmin.VoiceTest do
       assert html =~ "Received messages",
              "LD-16: no-selection surface must lead with the InboundMessage domain noun"
 
-      # LD-03: filtered empty-state body — Phase 113 UI-SPEC updated to "No records match
-      # the current filters." (data_state/1 routes through title "No records" + this body).
-      assert html =~ "No records match the current filters.",
+      # LD-03: filtered empty-state body — Phase 113 UI-SPEC updated to "No messages match
+      # the current filters." (data_state/1 routes through title "No messages" + this body).
+      assert html =~ "No messages match the current filters.",
              "LD-03: filtered empty state must be present (UI-SPEC copy from Phase 113)"
     end
   end

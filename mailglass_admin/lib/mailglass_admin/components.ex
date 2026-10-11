@@ -1011,7 +1011,7 @@ defmodule MailglassAdmin.Components do
     assigns = assign(assigns, :active_trigger, active_trigger)
 
     ~H"""
-    <span class="mg-field-help inline-flex">
+    <span class="mg-field-help inline-flex min-w-0 max-w-full">
       <button
         id={@id <> "-trigger"}
         type="button"
@@ -1034,14 +1034,17 @@ defmodule MailglassAdmin.Components do
         class={[
           "mg-focus-ring inline-flex items-center rounded-field hover:text-base-content",
           if(@trigger_text,
-            do: "min-h-11 min-w-0 gap-xs text-left text-body",
+            do: "min-h-11 min-w-0 max-w-full gap-xs text-left text-body",
             else: "h-6 w-6 shrink-0 justify-center text-secondary"
           ),
           @trigger_class
         ]}
       >
         <.icon :if={@trigger_icon} name={@trigger_icon} class="h-4 w-4 shrink-0" />
-        <span :if={@trigger_text && @trigger_content == []} class="min-w-0 break-words">
+        <span
+          :if={@trigger_text && @trigger_content == []}
+          class="min-w-0 break-words [overflow-wrap:anywhere]"
+        >
           {@trigger_text}
         </span>
         {render_slot(@trigger_content)}

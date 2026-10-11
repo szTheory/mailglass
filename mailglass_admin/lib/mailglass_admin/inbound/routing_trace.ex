@@ -55,7 +55,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                     <span
                       data-testid="inbound-route-result"
                       class={[
-                        "badge badge-outline",
+                        "badge badge-outline max-w-full whitespace-normal h-auto py-xs",
                         if(route_matches_current_rules?(route.verdicts),
                           do: "badge-success",
                           else: "badge-error"

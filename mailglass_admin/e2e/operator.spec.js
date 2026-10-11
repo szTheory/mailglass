@@ -27,7 +27,11 @@ async function openDeliveryFull(page, row) {
 async function openInboundFull(page, row) {
   const selectControl = row.getByRole("button", { name: /^Open inbound message/ }).first();
   if (await selectControl.count()) await selectControl.click();
-  else await row.click();
+  else {
+    const mobileOpen = row.getByTestId("inbound-record-row");
+    if (await mobileOpen.count()) await mobileOpen.click();
+    else await row.click();
+  }
   await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
   await page.getByTestId("inbound-quick-view-full").click();
   await expect(page).toHaveURL(/full=1/);
@@ -94,7 +98,7 @@ test.describe("operator browser gate", () => {
     const quickView = page.getByTestId("operator-quick-view");
     await expect(quickView).toBeVisible();
     await expect(deliveriesCard).toBeVisible();
-    await expect(selectedRow).toHaveAttribute("aria-selected", "true");
+    await expect(selectedRow.getByRole("button", { name: /^Open delivery/ })).toHaveAttribute("aria-selected", "true");
     await expect(selectedRow).toHaveAttribute("data-selected", "true");
     await expect(page).toHaveURL(/\/ops\/mail\?/);
     await expect(page).toHaveURL(/delivery_id=/);
@@ -118,13 +122,14 @@ test.describe("operator browser gate", () => {
     await expect(page.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
 
     // Full detail leads with the event timeline (above suppression).
+    await page.getByText("Account diagnostics", { exact: true }).click();
     const timelineBox = await page.getByTestId("operator-timeline").boundingBox();
     const suppressionBox = await page.getByTestId("operator-suppression-card").boundingBox();
     const supportBox = await page.getByTestId("operator-support-cards").boundingBox();
     const replayBox = await page.getByTestId("operator-replay-action").boundingBox();
     expect(timelineBox.y).toBeLessThan(suppressionBox.y);
-    expect(suppressionBox.y).toBeLessThan(supportBox.y);
-    expect(supportBox.y).toBeLessThan(replayBox.y);
+    expect(suppressionBox.y).toBeLessThan(replayBox.y);
+    expect(replayBox.y).toBeLessThan(supportBox.y);
   });
 
   test("mobile: row opens the Quick view bottom sheet; full detail preserves section order", async ({ page }) => {
@@ -136,7 +141,7 @@ test.describe("operator browser gate", () => {
     const deliveriesCard = page.getByTestId("operator-deliveries-list-card");
     await expect(deliveriesCard).toBeVisible();
     await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
-    await expect(deliveryRow(page, 0)).toContainText("Open delivery");
+    await expect(deliveryRow(page, 0)).toContainText(selectedRecipient);
 
     await deliveryRow(page, 0).click();
 
@@ -149,6 +154,7 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-detail-back")).toBeVisible();
 
     // Full detail keeps evidence ahead of the final eligible replay action.
+    await page.getByText("Account diagnostics", { exact: true }).click();
     const headerBox = await page.getByTestId("operator-detail-header").boundingBox();
     const timelineBox = await page.getByTestId("operator-timeline").boundingBox();
     const suppressionBox = await page.getByTestId("operator-suppression-card").boundingBox();
@@ -160,8 +166,8 @@ test.describe("operator browser gate", () => {
     expect(suppressionBox).not.toBeNull();
     expect(headerBox.y).toBeLessThan(timelineBox.y);
     expect(timelineBox.y).toBeLessThan(suppressionBox.y);
-    expect(suppressionBox.y).toBeLessThan(supportBox.y);
-    expect(supportBox.y).toBeLessThan(replayBox.y);
+    expect(suppressionBox.y).toBeLessThan(replayBox.y);
+    expect(replayBox.y).toBeLessThan(supportBox.y);
 
     // Re-confirm strip absence on the populated &view=deliveries route at 390px.
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
@@ -210,7 +216,7 @@ test.describe("operator browser gate", () => {
       "Replay command added 1 newly normalized Event."
     );
     await expect(page.getByTestId("operator-replay-action")).toContainText(
-      "Last retrieved replay evidence: completed · 1 newly normalized Event"
+      "Last replay: completed · 1 newly normalized Event"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("Webhook replay completed", { timeout: 10000 });
     await expect(page.getByTestId("operator-timeline")).toContainText("Replay succeeded");
@@ -311,7 +317,7 @@ test.describe("operator browser gate", () => {
       "The latest persisted replay evidence could not be refreshed."
     );
     await expect(page.locator("[data-testid='operator-replay-action']")).not.toContainText(
-      "Last retrieved replay evidence: completed"
+      "Last replay: completed"
     );
 
     await page.getByRole("button", { name: "Refresh replay evidence" }).click();
@@ -320,7 +326,7 @@ test.describe("operator browser gate", () => {
       "Replay command added 1 newly normalized Event."
     );
     await expect(page.getByTestId("operator-replay-action")).toContainText(
-      "Last retrieved replay evidence: completed · 1 newly normalized Event"
+      "Last replay: completed · 1 newly normalized Event"
     );
   });
 
@@ -377,7 +383,7 @@ test.describe("operator browser gate", () => {
       "Replay command completed with no newly normalized Events."
     );
     await expect(page.getByTestId("operator-replay-action")).toContainText(
-      "Last retrieved replay evidence: completed · 0 newly normalized Events"
+      "Last replay: completed · 0 newly normalized Events"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("completed");
     await expect(page.getByTestId("operator-timeline")).toContainText("no change");
@@ -470,11 +476,11 @@ test.describe("operator browser gate", () => {
 
     const overview = page.getByTestId("inbound-overview");
     await expect(overview).toBeVisible();
-    await expect(overview).toContainText("No-match rate");
+    await expect(overview).toContainText("Unrouted");
 
     const noMatchRow = page
-      .getByTestId("inbound-record-row")
-      .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
+      .locator('[data-testid="inbound-records-table"] tbody tr, [data-testid="inbound-records-cards"] li')
+      .filter({ has: page.getByRole("button", { name: "Unrouted", exact: true }) })
       .first();
 
     await expect(noMatchRow).toContainText("Unrouted");
@@ -498,10 +504,9 @@ test.describe("operator browser gate", () => {
     await expect(recordsCard).toBeVisible();
 
     await page
-      .getByTestId("inbound-record-row")
-      .filter({ visible: true })
-      .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
-      .first()
+      .getByTestId("inbound-records-cards").locator("li")
+      .filter({ has: page.getByRole("button", { name: "Unrouted", exact: true }) })
+      .first().getByTestId("inbound-record-row")
       .click();
 
     // Row click opens the Quick view bottom sheet; the list stays mounted behind it.
@@ -703,7 +708,7 @@ test.describe("operator browser gate", () => {
     await expect(ts).toHaveAttribute("datetime", /Z$/);
     await expect(ts).toHaveAttribute("data-utc", /UTC$/);
     await expect(ts.locator("xpath=ancestor::button[@data-timestamp-copy]")).toHaveAttribute(
-      "title", "Click to copy the exact timestamp in UTC"
+      "title", /UTC · Click to copy$/
     );
     await expect(ts).toHaveAttribute("data-localized", "1");
     await expect(ts).not.toContainText("Local:");

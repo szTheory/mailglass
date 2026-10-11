@@ -483,7 +483,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       document = Floki.parse_document!(html)
 
       [label] = Floki.find(document, ~s([data-testid="preview-email-menu-label"]))
-      assert Floki.text(label) == "Email preview"
+      assert String.trim(Floki.text(label)) == "Email preview"
 
       [trigger] = Floki.find(document, ~s([data-testid="preview-email-menu-trigger"]))
       assert Floki.find(trigger, ~s([data-testid="preview-email-menu-label"])) == []
@@ -527,8 +527,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
       [iframe] = Floki.find(Floki.parse_document!(html), "#tab-panel-html iframe")
       assert Floki.attribute(iframe, "srcdoc") == [renderer_result.swoosh_email.html_body]
 
-      assert html =~ "Renderer HTML"
-      assert html =~ "Browser rendering only"
+      assert html =~ "Email HTML preview"
+      assert html =~ "browser rendering only"
       assert html =~ ~s(sandbox="allow-same-origin")
       refute html =~ ~s(sandbox="allow-same-origin allow-scripts")
 
@@ -559,7 +559,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert text_html =~ "Hi Ada",
              "Text tab must contain the rendered text_body literal"
 
-      assert text_html =~ "Renderer plaintext"
+      assert text_html =~ "<pre"
       [text_output] = Floki.find(Floki.parse_document!(text_html), "#tab-panel-text pre")
       assert Floki.text(text_output) == renderer_result.swoosh_email.text_body
 
@@ -569,8 +569,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert raw_html =~ ~r/(boundary=|Content-Type:|MIME-Version:)/i,
              "Raw tab must contain RFC 5322 envelope markers"
 
-      assert raw_html =~ "Illustrative MIME-shaped preview"
-      assert raw_html =~ "serialized wire bytes"
+      assert raw_html =~ "Example MIME source"
+      assert raw_html =~ "provider may send a different format"
 
       # Headers tab shows auto-injected Message-ID + Date rows
       headers_html = render_click(view, "set_tab", %{"tab" => "headers"})
@@ -581,7 +581,9 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert headers_html =~ "Date",
              "Headers tab must show the Date row"
 
-      assert headers_html =~ "Message-ID and Date are generated for this preview"
+      assert headers_html =~
+               "Message-ID and Date are generated when the scenario leaves them unset"
+
       assert headers_html =~ "Preview value"
       assert headers_html =~ ~r/preview-[0-9]+@mailglass\.dev/
     end
@@ -663,8 +665,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
           preview_frame_dark_chrome: false
         )
 
-      assert html =~ "No HTML body"
-      assert html =~ "this Mailable's template returned empty content"
+      assert html =~ "This email has no HTML content."
+      assert html =~ "This email has no HTML content."
 
       text_html =
         render_component(&MailglassAdmin.Preview.Tabs.tabs/1,

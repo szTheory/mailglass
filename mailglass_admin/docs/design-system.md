@@ -173,3 +173,17 @@ email dark-mode behavior.
   `<base>` tags, URL canonicalization redirects, CDN/host asset rewrites, and
   public router macro options add churn without being needed for the verified
   behavior.
+
+## Contextual help and copy controls
+
+Use `Components.field_help` for optional explanations and full module identities.
+Keep text triggers within their container and allow long names to wrap. Help panels
+are positioned relative to the viewport. Reveal, overlay, and timeline containers
+with help use opacity-only entry animations: transforms change the coordinate
+origin of fixed descendants and can push a tooltip outside a narrow viewport.
+
+Use `Components.timestamp` and `Components.copy_value` for dates and identifiers.
+The displayed value is the copy control; the shared toast confirms success. Dates
+show local time and expose the exact UTC value on hover and copy. Native controls
+inside quick views own Enter, so keyboard copying or opening a link must not also
+invoke the global full-detail shortcut.

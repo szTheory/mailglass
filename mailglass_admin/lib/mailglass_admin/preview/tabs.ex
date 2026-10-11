@@ -97,13 +97,10 @@ defmodule MailglassAdmin.Preview.Tabs do
   def tab_content(%{active_tab: :html} = assigns) do
     ~H"""
     <div class="min-w-0 space-y-sm">
-      <p class="text-label text-secondary">
-        Renderer HTML. Browser rendering only; this does not show how an email client will render it.
-      </p>
       <div class="overflow-auto">
         <%= if @html_body == "" do %>
           <p class="text-body text-secondary py-lg text-center">
-            No HTML body — this Mailable's template returned empty content.
+            This email has no HTML content.
           </p>
         <% else %>
           <iframe
@@ -123,8 +120,13 @@ defmodule MailglassAdmin.Preview.Tabs do
   def tab_content(%{active_tab: :text} = assigns) do
     ~H"""
     <div class="min-w-0 space-y-sm">
-      <p class="text-label text-secondary">Renderer plaintext</p>
-      <pre class="font-mono text-label leading-relaxed text-base-content bg-base-200 p-4 rounded-box whitespace-pre-wrap break-words">{@text_body}</pre>
+      <p :if={@text_body == ""} class="text-body text-secondary py-lg text-center">
+        This email has no plain text content.
+      </p>
+      <pre
+        :if={@text_body != ""}
+        class="font-mono text-label leading-relaxed text-base-content bg-base-200 p-4 rounded-box whitespace-pre-wrap break-words"
+      >{@text_body}</pre>
     </div>
     """
   end
@@ -133,7 +135,7 @@ defmodule MailglassAdmin.Preview.Tabs do
     ~H"""
     <div class="min-w-0 space-y-sm">
       <p class="text-label text-secondary">
-        Illustrative MIME-shaped preview. This is not serialized wire bytes or provider output.
+        Example MIME source; the provider may send a different format.
       </p>
       <pre class="font-mono text-label leading-relaxed text-base-content bg-base-200 p-4 rounded-box whitespace-pre">{@raw_envelope}</pre>
     </div>
@@ -144,7 +146,7 @@ defmodule MailglassAdmin.Preview.Tabs do
     ~H"""
     <div class="min-w-0 space-y-sm">
       <p class="text-label text-secondary">
-        Preview header values. Message-ID and Date are generated for this preview when the scenario does not provide them.
+        Sample headers. Message-ID and Date are generated when the scenario leaves them unset.
       </p>
       <div>
         <table class="table table-sm w-full">

@@ -714,12 +714,19 @@ defmodule MailglassAdmin.OperatorLive do
             <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
               <div data-testid="operator-overview-health" class="grid gap-md">
                 <div class="flex flex-wrap items-center justify-between gap-sm text-label text-secondary">
-                  <p data-testid="operator-health-window">{health_window_copy(@health_window)}</p>
+                  <div class="inline-flex items-center gap-xs">
+                    <p data-testid="operator-health-window">{health_window_copy(@health_window)}</p>
+                    <Components.field_help
+                      id="operator-health-window-help"
+                      label="observation period"
+                      text={health_window_description(@health_window)}
+                    />
+                  </div>
                   <p data-testid="operator-health-last-checked">
-                    {health_checked_copy(@health_observed_at)}
+                    Last checked <Components.timestamp at={@health_observed_at} />
                   </p>
                   <button type="button" phx-click="retry_health" class="btn btn-ghost min-h-11">
-                    Retry observations
+                    Refresh health
                   </button>
                 </div>
                 <div class="grid gap-md md:grid-cols-2">
@@ -904,9 +911,8 @@ defmodule MailglassAdmin.OperatorLive do
                 data-testid={"operator-health-stale-#{panel}"}
                 class="text-label text-secondary"
               >
-                Showing the last retrieved {health_panel_name(panel)} from {health_checked_copy(
-                  state.checked_at
-                )}.
+                Showing the last retrieved {health_panel_name(panel)} from
+                <Components.timestamp at={state.checked_at} />.
               </p>
               <p
                 :for={{panel, state} <- @health_panel_states}
@@ -1065,7 +1071,7 @@ defmodule MailglassAdmin.OperatorLive do
                     data-testid="operator-filters-toggle"
                     class="btn btn-ghost !h-11 min-h-11 md:hidden"
                   >
-                    Filters <span aria-hidden="true">v</span>
+                    Filters <Components.icon name="hero-chevron-down" class="h-4 w-4" />
                   </button>
 
                   <div id="operator-filter-panel" class="hidden md:block">
@@ -2662,18 +2668,25 @@ defmodule MailglassAdmin.OperatorLive do
          ended_at: %DateTime{} = ended_at
        }) do
     hours = div(DateTime.diff(ended_at, started_at, :second), 3_600)
-    start_copy = started_at |> DateTime.to_naive() |> NaiveDateTime.to_iso8601()
-    end_copy = ended_at |> DateTime.to_naive() |> NaiveDateTime.to_iso8601()
 
-    "Observed from #{start_copy} to #{end_copy} UTC (#{hours} hours)"
+    if rem(hours, 24) == 0 do
+      days = div(hours, 24)
+      "Last #{days} #{if days == 1, do: "day", else: "days"}"
+    else
+      "Last #{hours} hours"
+    end
   end
 
-  defp health_window_copy(_window), do: "Observation interval unavailable"
+  defp health_window_copy(_window), do: "Observation period unavailable"
 
-  defp health_checked_copy(%DateTime{} = at),
-    do: "Last checked #{DateTime.to_iso8601(DateTime.truncate(at, :second))} UTC"
+  defp health_window_description(%{
+         started_at: %DateTime{} = started_at,
+         ended_at: %DateTime{} = ended_at
+       }) do
+    "Time-based counts cover #{Components.timestamp_value(started_at)} to #{Components.timestamp_value(ended_at)}. Active suppressions reflect the current account state."
+  end
 
-  defp health_checked_copy(_at), do: "Last checked: Unavailable"
+  defp health_window_description(_window), do: "The observation period could not be loaded."
 
   defp health_partial?(states) do
     values = Map.values(states || %{})

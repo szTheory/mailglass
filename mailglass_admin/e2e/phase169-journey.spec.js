@@ -46,7 +46,7 @@ test.describe("Phase 169 connected journey", () => {
     }, { csrfToken });
     expect(fault.status, fault.body).toBe(200);
 
-    await page.getByRole("button", { name: "Retry observations" }).click();
+    await page.getByRole("button", { name: "Refresh health" }).click();
     await expect(page.getByTestId("operator-health-stale-orphan_backlog")).toBeVisible();
     await expect(unmatched).toContainText("1");
     await expect(unmatched).toContainText("Last retrieved");
@@ -295,7 +295,7 @@ test.describe("Phase 169 connected journey", () => {
       await expect(page.getByRole("img", { name: "mailglass" })).toBeVisible();
       await expect(page.getByTestId("operator-overview-health")).toBeVisible();
       await expect(page.getByTestId("operator-health-window")).toHaveText(
-        /^Observed from .+ to .+ UTC \(168 hours\)$/
+        /^Last 7 days$/
       );
       const windowPrecedesMetrics = await page.evaluate(() => {
         const window = document.querySelector('[data-testid="operator-health-window"]');
@@ -334,7 +334,7 @@ test.describe("Phase 169 connected journey", () => {
 
       await page.goto(`/ops/mail?tenant_id=${tenantId}&window_hours=24`);
       await expect(page.getByTestId("operator-health-window")).toHaveText(
-        /^Observed from .+ to .+ UTC \(24 hours\)$/
+        /^Last 1 day$/
       );
 
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);

@@ -98,7 +98,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
             body="Refresh the view to check for updates."
           />
         <% @data_state == :empty or (@data_state == nil and @records == []) -> %>
-          <%!-- :no_tenant retains its original selector copy; :truly_empty and :filtered use UI-SPEC "No records" copy --%>
+          <%!-- :no_tenant retains its original selector copy; :truly_empty and :filtered use UI-SPEC "No messages" copy --%>
           <%= if @empty_state == :no_tenant do %>
             <Components.data_state
               kind={:empty}
@@ -110,7 +110,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
             <Components.data_state
               kind={:empty}
               title={
-                if @empty_state == :out_of_range, do: "No records on this page", else: "No records"
+                if @empty_state == :out_of_range, do: "No messages on this page", else: "No messages"
               }
               body={empty_body(@empty_state)}
             />
@@ -441,9 +441,9 @@ defmodule MailglassAdmin.Inbound.RecordsList do
     do: "Select an Account to see scoped operator data."
 
   defp empty_body(:truly_empty),
-    do: "No InboundMessages have been recorded yet."
+    do: "No messages have been received yet."
 
-  defp empty_body(:filtered), do: "No records match the current filters."
+  defp empty_body(:filtered), do: "No messages match the current filters."
 
   defp empty_body(:out_of_range),
     do: "This page is outside the current results. Return to page 1 to see matching records."

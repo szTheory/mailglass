@@ -625,7 +625,8 @@ defmodule MailglassAdmin.InboundLive do
                   data-testid="inbound-detail-back"
                   class="mg-focus-ring btn btn-ghost !h-11 min-h-11"
                 >
-                  <span aria-hidden="true" class="mr-xs">←</span> Back to quick view
+                  <Components.icon name="hero-arrow-uturn-left" class="mr-xs h-4 w-4" />
+                  {if @selected_record, do: "Back to quick view", else: "Back to inbound records"}
                 </.link>
 
                 <p
@@ -679,12 +680,11 @@ defmodule MailglassAdmin.InboundLive do
                     data-testid="inbound-detail-error"
                     class="card rounded-box border border-error bg-base-100 p-lg"
                   >
-                    <div class="flex items-center gap-sm">
-                      <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
-                      <h2 class="text-body font-bold text-base-content">
-                        {detail_error_copy(@detail_error)}
-                      </h2>
-                    </div>
+                    <Components.data_state
+                      kind={:error}
+                      title="Message unavailable"
+                      body={detail_error_copy(@detail_error)}
+                    />
                   </div>
                 <% end %>
               </div>

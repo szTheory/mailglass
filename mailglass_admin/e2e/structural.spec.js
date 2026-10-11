@@ -1250,11 +1250,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await page.goto(`/ops/mail/inbound?tenant_id=browser-empty`);
       // Phase 121 (D-07): truly-empty body uses the InboundMessage noun
-      await expect(page.getByText("No InboundMessages have been recorded yet.")).toBeVisible();
+      await expect(page.getByText("No messages have been received yet.")).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}&search=impossible-filtered-empty`);
       // Phase 113: filtered-empty copy updated per UI-SPEC contract
-      await expect(page.getByText("No records match the current filters.")).toBeVisible();
+      await expect(page.getByText("No messages match the current filters.")).toBeVisible();
 
       // A bare inbound_id deep-link opens the Quick view; an off-page id surfaces
       // the error inside it (inbound-quick-view-error).
@@ -1378,9 +1378,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await assertTextContrastAA(page.getByRole("heading", { name: "Choose an account" }), `${theme.name} ${viewport.width} no-tenant`);
           await openInbound(page, `tenant_id=browser-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
           // Phase 121 (D-07): truly-empty body uses the InboundMessage noun; filtered-empty unchanged
-          await assertTextContrastAA(page.getByText("No InboundMessages have been recorded yet."), `${theme.name} ${viewport.width} truly-empty`);
+          await assertTextContrastAA(page.getByText("No messages have been received yet."), `${theme.name} ${viewport.width} truly-empty`);
           await openInbound(page, `tenant_id=${tenantId}&search=filtered-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
-          await assertTextContrastAA(page.getByText("No records match the current filters."), `${theme.name} ${viewport.width} filtered-empty`);
+          await assertTextContrastAA(page.getByText("No messages match the current filters."), `${theme.name} ${viewport.width} filtered-empty`);
           await openInbound(page, `tenant_id=${tenantId}&inbound_id=does-not-exist${theme.query ? `&${theme.query}` : ""}`, "operator-1");
           await assertTextContrastAA(page.getByTestId("inbound-quick-view-error"), `${theme.name} ${viewport.width} detail-error`);
         }

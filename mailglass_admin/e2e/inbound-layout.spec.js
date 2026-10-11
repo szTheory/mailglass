@@ -65,7 +65,7 @@ for (const width of [1440, 1024, 390, 320]) {
     await expect(page.getByTestId("inbound-summary-scope")).toHaveCount(0);
     await expect(page.getByTestId("inbound-summary-outcome-scope")).toHaveCount(0);
     const collectionHeader = page.getByTestId("inbound-collection-header");
-    await expect(collectionHeader.getByRole("heading", { name: "Received messages", exact: true })).toBeVisible();
+    await expect(collectionHeader.getByRole("heading", { name: /^Received messages/ })).toBeVisible();
     await expect(collectionHeader.getByTestId("inbound-result-count")).toBeVisible();
     for (const outcome of ["accepted", "no-match", "failed"]) {
       const stat = page.getByTestId(`inbound-overview-${outcome}`);
@@ -202,3 +202,34 @@ test("account menu closes when the operator clicks outside it", async ({ page })
   await page.getByTestId("inbound-collection-header").click();
   await expect(accounts).toBeHidden();
 });
+
+for (const width of [1440, 390]) {
+  test(`quick view identifies subject and copies a lone ID directly at ${width}px`, async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.setViewportSize({ width, height: 900 });
+    await openInbound(page);
+    const open = width < 768
+      ? page.getByTestId("inbound-records-cards").getByTestId("inbound-record-row").first()
+      : page.getByTestId("inbound-record-open").first();
+    await open.click();
+    const quick = page.getByTestId("inbound-quick-view");
+    await expect(quick.getByText("Subject", { exact: true })).toBeVisible();
+    await expect(quick.locator("#inbound-quick-technical details, #inbound-quick-technical summary")).toHaveCount(0);
+    const copy = quick.getByRole("button", { name: "Copy Record ID", exact: true });
+    const expected = await copy.getAttribute("data-copy-value");
+    await copy.click();
+    await expect(page.getByTestId("copy-toast")).toContainText("Record ID copied.");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
+    await copy.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByTestId("copy-toast")).toContainText("Record ID copied.");
+    await expect(quick).toBeVisible();
+    await expect(page).not.toHaveURL(/full=1/);
+    const next = quick.getByRole("link", { name: "Next inbound record", exact: true });
+    await expect(next.locator(".hero-chevron-down")).toHaveCSS("mask-image", /url\(/);
+    await next.click();
+    await expect(quick.getByRole("button", { name: "Copy Record ID", exact: true })).not.toHaveAttribute("data-copy-value", expected);
+    await quick.getByRole("link", { name: "Previous inbound record", exact: true }).click();
+    await expect(quick.getByRole("button", { name: "Copy Record ID", exact: true })).toHaveAttribute("data-copy-value", expected);
+  });
+}

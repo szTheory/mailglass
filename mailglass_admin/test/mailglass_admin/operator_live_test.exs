@@ -33,7 +33,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Sent"
       assert has_element?(view, "[data-testid='operator-delivery-row']", "Sent")
-      assert has_element?(view, "[data-testid='operator-delivery-row']", "Latest event")
+      refute has_element?(view, "[data-testid='operator-delivery-row']", "Latest event")
 
       updated =
         delivery
@@ -117,8 +117,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Deliveries"
       assert html =~ ~s(data-testid="operator-master-detail")
-      assert html =~ "s*******@e******.com"
-      refute html =~ delivery.recipient
+      assert html =~ delivery.recipient
+      refute html =~ "s*******@e******.com"
       # No selection → the list stands alone; the Quick view overlay and the full
       # detail are both absent until a record is focused.
       refute html =~ ~s(data-testid="operator-quick-view")
@@ -431,7 +431,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       # Clicking a row opens the Quick view (peek) over the still-mounted list —
       # the row is highlighted behind the overlay; the heavy evidence is not loaded yet.
       view
-      |> element("button[phx-value-id='#{delivery.id}']")
+      |> element(".operator-deliveries-table button[phx-value-id='#{delivery.id}']")
       |> render_click()
 
       assert_patch(
@@ -477,7 +477,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Current suppression"
       assert html =~ "Address · Account-local"
       assert html =~ "The public Mailglass removal command permits Manual records."
-      assert html =~ "does not cover configured stores or provider policy"
+      assert html =~ "Other configured stores and provider restrictions are not checked."
 
       assert html =~ "Sent"
       assert html =~ "Delivered"
@@ -698,8 +698,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
         ~s(data-testid="operator-detail-header"),
         ~s(data-testid="operator-timeline"),
         ~s(data-testid="operator-suppression-card"),
-        ~s(data-testid="operator-support-cards"),
-        ~s(data-testid="operator-replay-action")
+        ~s(data-testid="operator-replay-action"),
+        ~s(data-testid="operator-support-cards")
       ])
     end
 
@@ -823,7 +823,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       # A row click opens the Quick view (peek) — the Replay CTA lives one tier deeper.
       view
-      |> element("button[phx-value-id='#{delivery.id}']")
+      |> element(".operator-deliveries-table button[phx-value-id='#{delivery.id}']")
       |> render_click()
 
       refute render(view) =~ "Review webhook replay"
@@ -1265,7 +1265,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "POSTMARK"
       assert html =~ "requested"
       assert html =~ "completed"
-      assert html =~ "Last retrieved replay evidence: completed · 1 newly normalized Event"
+      assert html =~ "Last replay: completed · 1 newly normalized Event"
     end
 
     test "shows explicit no-op replay copy when the replay converges", %{conn: conn} do
@@ -1302,7 +1302,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Replay command completed with no newly normalized Events."
       assert html =~ "Webhook replay completed"
-      assert html =~ "Last retrieved replay evidence: completed · 0 newly normalized Events"
+      assert html =~ "Last replay: completed · 0 newly normalized Events"
     end
 
     test "reports terminal audit write failure safely and retains requested and failed evidence",
@@ -1388,7 +1388,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
         )
 
-      assert html =~ "Last retrieved replay evidence: requested · completion not recorded"
+      assert html =~ "Last replay: requested · completion not recorded"
       assert html =~ "POSTMARK"
       refute html =~ "private-operator-identifier"
       refute html =~ "raw provider response secret"
@@ -1420,9 +1420,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "No current Mailglass match"
 
       assert html =~
-               "No current matching suppression recorded in Mailglass was found for this Delivery."
+               "No current Mailglass suppression matches this delivery."
 
-      assert html =~ "does not establish absence of configured-store or provider restrictions"
+      assert html =~ "Other configured stores and provider restrictions are not checked."
     end
 
     test "suppressed status badge renders a real Suppressed badge" do
@@ -1907,7 +1907,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
         |> Enum.map(fn [_, id] -> id end)
         |> Enum.uniq()
 
-      view |> element("button[phx-value-id='#{first_id}']") |> render_click()
+      view
+      |> element(".operator-deliveries-table button[phx-value-id='#{first_id}']")
+      |> render_click()
+
       assert render(view) =~ ~s(data-testid="operator-quick-view")
 
       # ArrowDown/j/ArrowRight = next; ArrowUp/k/ArrowLeft = prev (all reach detail_key
@@ -2427,8 +2430,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Active suppression records"
       assert html =~ "Replay audit facts"
       assert html =~ "Reconciliation audit facts"
-      assert html =~ "Observed from "
-      assert html =~ " UTC (168 hours)"
+      assert html =~ "Last 7 days"
+      assert html =~ "Last 7 days"
       assert html =~ "Last checked "
       refute html =~ "Last checked:"
       refute html =~ "Overall status"
@@ -2436,7 +2439,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ ~s(data-testid="operator-overview-health-allclear")
 
       assert_in_order(html, [
-        "Observed from ",
+        "Last 7 days",
         "Last checked ",
         "Failed webhook attempts",
         "Unmatched Events",
@@ -3103,7 +3106,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "<table"
       assert html =~ ~s(scope="col")
       assert html =~ "Outcome"
-      assert html =~ "Latest event"
+      refute html =~ "Latest event"
       assert html =~ "Delivered"
     end
 
@@ -3414,7 +3417,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "window_hours" => "168"}))
 
-      assert has_element?(view, "[data-testid='operator-health-window']", "(168 hours)")
+      assert has_element?(view, "[data-testid='operator-health-window']", "Last 7 days")
 
       [initial_card] =
         Floki.find(
@@ -3437,7 +3440,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       )
 
       same_window_html = render(view)
-      assert has_element?(view, "[data-testid='operator-health-window']", "(168 hours)")
+      assert has_element?(view, "[data-testid='operator-health-window']", "Last 7 days")
 
       [same_window_card] =
         Floki.find(
@@ -3462,7 +3465,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       )
 
       changed_window_html = render(view)
-      assert has_element?(view, "[data-testid='operator-health-window']", "(24 hours)")
+      assert has_element?(view, "[data-testid='operator-health-window']", "Last 1 day")
 
       [changed_window_card] =
         Floki.find(

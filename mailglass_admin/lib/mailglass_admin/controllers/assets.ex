@@ -294,6 +294,15 @@ defmodule MailglassAdmin.Controllers.Assets do
     window.addEventListener("resize", positionActiveFieldHelpTooltips)
     window.addEventListener("scroll", positionActiveFieldHelpTooltips, true)
 
+    // Native controls own Enter. Keep the Quick view's global shortcut from
+    // opening full detail when a focused copy/help button or link is activated.
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && e.target.closest?.(".mg-detail-panel") &&
+          e.target.closest?.("button, a, input, select, textarea, summary")) {
+        e.stopPropagation()
+      }
+    }, true)
+
     let copyToastTimer
     function showCopyToast(message, isError = false) {
       const toast = document.getElementById("mg-copy-toast")
