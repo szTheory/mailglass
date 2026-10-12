@@ -2721,10 +2721,10 @@ defmodule MailglassAdmin.OperatorLive do
   defp health_window_copy(_window), do: "Observation period unavailable"
 
   defp health_window_description(%{
-         started_at: %DateTime{} = started_at,
-         ended_at: %DateTime{} = ended_at
+         started_at: %DateTime{},
+         ended_at: %DateTime{}
        }) do
-    "Time-based counts cover #{Components.timestamp_value(started_at)} to #{Components.timestamp_value(ended_at)}. Active suppressions reflect the current account state."
+    "Webhook and audit counts cover this period. Active suppressions show the current total."
   end
 
   defp health_window_description(_window), do: "The observation period could not be loaded."
