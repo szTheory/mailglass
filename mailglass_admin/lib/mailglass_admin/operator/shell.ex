@@ -246,37 +246,33 @@ defmodule MailglassAdmin.Operator.Shell do
       aria-label="Account context"
       class="flex min-w-0 flex-wrap items-center gap-sm"
     >
-      <div class="min-w-0">
-        <span class="block text-label font-bold text-secondary">Account</span>
-        <span
-          :if={@selected_tenant_id}
-          data-testid="operator-account-label"
-          class="mg-scope-identity block break-words text-body font-bold text-base-content"
-        >
-          {@selected_label}
-        </span>
-        <span
-          :if={@selected_tenant_id}
-          data-testid="operator-account-id"
-          class="mg-scope-identity mono block break-all text-label text-secondary"
-        >
-          {@selected_tenant_id}
-        </span>
-        <span :if={!@selected_tenant_id} class="block text-body text-base-content">
-          Choose Account
-        </span>
-      </div>
-      <details :if={@tenant_options != []} class="relative min-w-0" data-dismiss-outside>
+      <details
+        :if={@tenant_options != []}
+        class="group relative min-w-0 max-w-full"
+        data-dismiss-outside
+      >
         <summary
-          class="mg-focus-ring flex min-h-11 cursor-pointer list-none items-center rounded-field border border-base-300 bg-base-100 px-md py-sm text-label font-bold text-base-content hover:border-primary"
-          aria-label="Change Account"
+          class="mg-focus-ring flex min-h-11 min-w-0 max-w-full cursor-pointer list-none items-center gap-sm rounded-field border border-base-300 bg-base-100 px-sm py-xs text-left text-base-content transition-colors hover:bg-base-200 [&::-webkit-details-marker]:hidden"
+          aria-label={"Change Account: #{@selected_label || "Choose Account"}"}
           data-testid="operator-account-switcher"
         >
-          Change Account
+          <span class="min-w-0">
+            <span class="block text-label text-secondary">Account</span>
+            <span
+              data-testid="operator-account-label"
+              class="mg-scope-identity block break-words text-body font-bold"
+            >
+              {@selected_label || "Choose Account"}
+            </span>
+          </span>
+          <Components.icon
+            name="hero-chevron-down"
+            class="h-4 w-4 shrink-0 text-secondary transition-transform group-open:rotate-180"
+          />
         </summary>
         <ul
           aria-label="Available Accounts"
-          class="mg-scope-menu mg-layer-dropdown absolute right-0 top-full mt-xs max-h-64 list-none overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
+          class="mg-scope-menu mg-layer-dropdown absolute left-0 top-full sm:left-auto sm:right-0 mt-xs max-h-64 list-none overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
         >
           <li :for={{tenant, index} <- Enum.with_index(@tenant_options)}>
             <.link
@@ -299,6 +295,18 @@ defmodule MailglassAdmin.Operator.Shell do
           </li>
         </ul>
       </details>
+      <div :if={@tenant_options == []} class="min-w-0">
+        <span class="block text-label text-secondary">Account</span>
+        <span
+          data-testid="operator-account-label"
+          class="mg-scope-identity block break-words text-body font-bold text-base-content"
+        >
+          {@selected_label || "Choose Account"}
+        </span>
+      </div>
+      <span :if={@selected_tenant_id} data-testid="operator-account-id" class="sr-only">
+        {@selected_tenant_id}
+      </span>
       <span
         :for={{tenant, index} <- Enum.with_index(@tenant_options)}
         :if={tenant.id != @selected_tenant_id}
@@ -332,10 +340,12 @@ defmodule MailglassAdmin.Operator.Shell do
         class="motion-reveal flex min-w-0 items-start gap-sm rounded-box border border-success bg-success/10 px-md py-sm text-body text-base-content"
       >
         <Components.icon name="hero-check-circle" class="mt-xs h-5 w-5 shrink-0 text-success" />
-        <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{Phoenix.Flash.get(
-          @flash,
-          :info
-        )}</span>
+        <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+          {Phoenix.Flash.get(
+            @flash,
+            :info
+          )}
+        </span>
         <button
           type="button"
           phx-click="lv:clear-flash"
@@ -355,10 +365,12 @@ defmodule MailglassAdmin.Operator.Shell do
         class="motion-reveal flex min-w-0 items-start gap-sm rounded-box border border-error bg-error/10 px-md py-sm text-body text-base-content"
       >
         <Components.icon name="hero-exclamation-circle" class="mt-xs h-5 w-5 shrink-0 text-error" />
-        <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{Phoenix.Flash.get(
-          @flash,
-          :error
-        )}</span>
+        <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+          {Phoenix.Flash.get(
+            @flash,
+            :error
+          )}
+        </span>
         <button
           type="button"
           phx-click="lv:clear-flash"
