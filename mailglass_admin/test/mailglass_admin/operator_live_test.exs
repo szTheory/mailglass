@@ -2426,10 +2426,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
              |> Enum.any?(fn h2 -> Floki.text(h2) == "Health" end)
 
       assert html =~ "Failed webhook attempts"
-      assert html =~ "Unmatched Events"
+      assert html =~ "Unmatched events"
       assert html =~ "Active suppression records"
-      assert html =~ "Replay audit facts"
-      assert html =~ "Reconciliation audit facts"
+      assert html =~ "Replay history"
+      assert html =~ "Reconciliation history"
       assert html =~ "Last 7 days"
       assert html =~ "Last 7 days"
       assert html =~ "Last checked "
@@ -2442,10 +2442,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
         "Last 7 days",
         "Last checked ",
         "Failed webhook attempts",
-        "Unmatched Events",
+        "Unmatched events",
         "Active suppression records",
-        "Replay audit facts",
-        "Reconciliation audit facts"
+        "Replay history",
+        "Reconciliation history"
       ])
 
       {:ok, doc} = Floki.parse_document(html)
@@ -2486,7 +2486,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
                "Webhook events that failed processing or exhausted their retries within this account’s observation period. This count does not represent failed email deliveries."
 
       assert html =~
-               "Unresolved Event records in the selected Account observation window. A shown oldest Event is one example, not the complete population."
+               "Webhook events that could not be linked to a delivery during this period. Investigate them to fill gaps in delivery tracking."
 
       assert html =~
                "Account-wide active Mailglass suppression records at check time, independent of the observation window. This is not a recipient count; the link opens historical suppressed Delivery Events, a separate population."
@@ -2520,7 +2520,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
       replay = Floki.find(health, ~s([data-testid="operator-overview-health-replay"]))
       suppression = Floki.find(health, ~s([data-testid="operator-overview-health-suppressions"]))
       assert Floki.find(suppression, "p.mt-sm") == []
-      assert Floki.find(replay, "p.mt-sm") == []
+      assert replay == []
+
+      assert Floki.find(
+               health,
+               ~s(details [data-testid="operator-overview-health-reconcile-link"])
+             ) != []
+
       refute Floki.text(replay) =~ "Needs attention"
 
       {:ok, _event} =
@@ -2538,6 +2544,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
         |> Floki.parse_document!()
         |> Floki.find(~s([data-testid="operator-overview-health-replay"]))
 
+      assert Floki.text(failed_replay) =~ "Failed replays"
+      assert String.trim(Floki.text(Floki.find(failed_replay, "p.mono"))) == "1"
       assert Floki.text(failed_replay) =~ "Needs attention"
       assert Floki.find(failed_replay, ".text-warning .hero-exclamation-triangle") != []
 

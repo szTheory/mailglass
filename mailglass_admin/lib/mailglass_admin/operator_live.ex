@@ -749,7 +749,11 @@ defmodule MailglassAdmin.OperatorLive do
                     </button>
                   </div>
                 </div>
-                <div class="grid gap-md md:grid-cols-2">
+                <div class={[
+                  "grid gap-md md:grid-cols-2",
+                  health_metric_count(@support_summary, :replay_outcomes) not in [nil, 0] &&
+                    "lg:grid-cols-3"
+                ]}>
                   <.link
                     patch={
                       support_evidence_path(
@@ -804,7 +808,7 @@ defmodule MailglassAdmin.OperatorLive do
                     data-testid="operator-overview-health-orphans-link"
                   >
                     <Components.stat_card
-                      label="Unmatched Events"
+                      label="Unmatched events"
                       value={health_metric_count(@support_summary, :orphan_backlog)}
                       state={
                         health_metric_state(@support_summary, :orphan_backlog, @health_panel_states)
@@ -824,50 +828,12 @@ defmodule MailglassAdmin.OperatorLive do
                           @health_panel_states
                         )
                       }
-                      hint="Unresolved Event records in the selected Account observation window. A shown oldest Event is one example, not the complete population."
+                      hint="Webhook events that could not be linked to a delivery during this period. Investigate them to fill gaps in delivery tracking."
                       data-testid="operator-overview-health-orphans"
                     />
                   </.link>
                   <.link
-                    patch={
-                      build_path(
-                        @base_path,
-                        @filter_params
-                        |> Map.put("view", "deliveries")
-                        |> Map.put("event", "suppressed"),
-                        nil,
-                        @dark_chrome
-                      )
-                    }
-                    class={health_metric_link_class()}
-                    aria-label="View historical suppressed Delivery Events in Deliveries"
-                    data-testid="operator-overview-health-suppressions-link"
-                  >
-                    <Components.stat_card
-                      label="Active suppression records"
-                      value={@suppression_count}
-                      state={
-                        panel_value_state(
-                          @health_panel_states,
-                          :active_suppressions,
-                          @suppression_count
-                        )
-                      }
-                      severity={suppression_severity(@suppression_count)}
-                      show_severity={
-                        health_status_visible?(@health_panel_states, :active_suppressions, :info)
-                      }
-                      severity_label={
-                        suppression_severity_label(
-                          @suppression_count,
-                          @health_panel_states
-                        )
-                      }
-                      hint="Account-wide active Mailglass suppression records at check time, independent of the observation window. This is not a recipient count; the link opens historical suppressed Delivery Events, a separate population."
-                      data-testid="operator-overview-health-suppressions"
-                    />
-                  </.link>
-                  <.link
+                    :if={health_metric_count(@support_summary, :replay_outcomes) not in [nil, 0]}
                     patch={
                       support_evidence_path(
                         @base_path,
@@ -882,7 +848,7 @@ defmodule MailglassAdmin.OperatorLive do
                     data-testid="operator-overview-health-replay-link"
                   >
                     <Components.stat_card
-                      label="Replay audit facts"
+                      label="Failed replays"
                       value={health_metric_count(@support_summary, :replay_outcomes)}
                       state={
                         health_metric_state(@support_summary, :replay_outcomes, @health_panel_states)
@@ -902,50 +868,92 @@ defmodule MailglassAdmin.OperatorLive do
                           @health_panel_states
                         )
                       }
-                      hint="Recorded replay audit outcomes during the selected observation window. These facts do not establish Delivery outcome."
+                      hint="Attempts to process a webhook event again that failed during this period. Open replay history to inspect the errors."
                       data-testid="operator-overview-health-replay"
                     />
                   </.link>
-                  <.link
-                    patch={
-                      support_evidence_path(
-                        @base_path,
-                        @filter_params,
-                        @dark_chrome,
-                        :reconcile_facts,
-                        @support_summary
-                      )
-                    }
-                    class={health_metric_link_class()}
-                    aria-label="View reconciliation audit evidence"
-                    data-testid="operator-overview-health-reconcile-link"
-                  >
-                    <Components.stat_card
-                      label="Reconciliation audit facts"
-                      value={health_metric_count(@support_summary, :reconcile_facts)}
-                      state={
-                        health_metric_state(@support_summary, :reconcile_facts, @health_panel_states)
-                      }
-                      severity={health_metric_severity(@support_summary, :reconcile_facts, :info)}
-                      show_severity={
-                        health_status_visible?(
-                          @health_panel_states,
-                          :reconcile_facts,
-                          health_metric_severity(@support_summary, :reconcile_facts, :info)
-                        )
-                      }
-                      severity_label={
-                        health_metric_severity_label(
-                          @support_summary,
-                          :reconcile_facts,
-                          @health_panel_states
-                        )
-                      }
-                      hint="Recorded reconciliation audit Events during the selected observation window. This is separate from unresolved Events."
-                      data-testid="operator-overview-health-reconcile"
-                    />
-                  </.link>
                 </div>
+                <details data-testid="operator-health-additional-records" class="mt-md">
+                  <summary class="mg-focus-ring w-fit cursor-pointer rounded-field py-sm text-body text-secondary">
+                    Additional records
+                  </summary>
+                  <div class="mt-sm flex flex-col gap-sm">
+                    <.link
+                      patch={
+                        build_path(
+                          @base_path,
+                          @filter_params
+                          |> Map.put("view", "deliveries")
+                          |> Map.put("event", "suppressed"),
+                          nil,
+                          @dark_chrome
+                        )
+                      }
+                      class={health_metric_link_class()}
+                      aria-label="View historical suppressed Delivery Events in Deliveries"
+                      data-testid="operator-overview-health-suppressions-link"
+                    >
+                      <Components.stat_card
+                        compact
+                        label="Active suppression records"
+                        value={@suppression_count}
+                        state={
+                          panel_value_state(
+                            @health_panel_states,
+                            :active_suppressions,
+                            @suppression_count
+                          )
+                        }
+                        severity={suppression_severity(@suppression_count)}
+                        show_severity={
+                          health_status_visible?(@health_panel_states, :active_suppressions, :info)
+                        }
+                        severity_label={
+                          suppression_severity_label(
+                            @suppression_count,
+                            @health_panel_states
+                          )
+                        }
+                        hint="Account-wide active Mailglass suppression records at check time, independent of the observation window. This is not a recipient count; the link opens historical suppressed Delivery Events, a separate population."
+                        data-testid="operator-overview-health-suppressions"
+                      />
+                    </.link>
+                    <div class="flex flex-wrap gap-md">
+                      <.link
+                        patch={
+                          support_evidence_path(
+                            @base_path,
+                            @filter_params,
+                            @dark_chrome,
+                            :replay_outcomes,
+                            @support_summary
+                          )
+                        }
+                        class="mg-focus-ring inline-flex min-h-11 items-center text-body text-primary underline underline-offset-4"
+                        aria-label="View replay history"
+                        data-testid="operator-health-replay-history-link"
+                      >
+                        Replay history
+                      </.link>
+                      <.link
+                        patch={
+                          support_evidence_path(
+                            @base_path,
+                            @filter_params,
+                            @dark_chrome,
+                            :reconcile_facts,
+                            @support_summary
+                          )
+                        }
+                        class="mg-focus-ring inline-flex min-h-11 items-center text-body text-primary underline underline-offset-4"
+                        aria-label="View reconciliation audit evidence"
+                        data-testid="operator-overview-health-reconcile-link"
+                      >
+                        Reconciliation history
+                      </.link>
+                    </div>
+                  </div>
+                </details>
               </div>
               <p
                 :if={health_partial?(@health_panel_states)}
@@ -2644,20 +2652,8 @@ defmodule MailglassAdmin.OperatorLive do
   defp health_metric_count(nil, _metric), do: nil
 
   defp health_metric_count(summary, :replay_outcomes) do
-    counts = get_in(summary, [:replay_outcomes, :counts])
-
-    case counts do
-      %{failed: failed, noop: noop, replayed: replayed}
-      when is_integer(failed) and is_integer(noop) and is_integer(replayed) ->
-        failed + noop + replayed
-
-      _ ->
-        nil
-    end
+    summary |> get_in([:replay_outcomes, :counts, :failed]) |> normalize_stat_count()
   end
-
-  defp health_metric_count(summary, :reconcile_facts),
-    do: summary |> get_in([:reconcile_facts, :reconciled_count]) |> normalize_stat_count()
 
   defp health_metric_count(summary, metric) do
     summary

@@ -11,7 +11,12 @@ for (const width of [1440, 390]) {
       await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
 
       const links = page.locator('[data-testid="operator-overview-health"] a:has(.mg-stat-card-tooltip)');
-      await expect(links).toHaveCount(5);
+      await expect(links).toHaveCount(3);
+      await expect(page.getByTestId("operator-overview-health-suppressions-link")).not.toBeVisible();
+      await expect(page.getByTestId("operator-overview-health-reconcile-link")).not.toBeVisible();
+      await page.getByText("Additional records", { exact: true }).click();
+      await expect(page.getByTestId("operator-overview-health-reconcile-link")).toBeVisible();
+      await expect(page.getByTestId("operator-health-replay-history-link")).toBeVisible();
       for (let index = 0; index < await links.count(); index++) {
         const link = links.nth(index);
         const tooltip = link.locator(".mg-stat-card-tooltip");

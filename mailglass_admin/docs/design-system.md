@@ -212,3 +212,9 @@ viewport margin. Their arrow points toward the trigger after that adjustment.
 The shared observer repairs placement after LiveView patches and viewport changes;
 only changed styles are written to avoid an observer feedback loop. A tooltip stays
 hidden until it has a calculated position, so it cannot flash at the viewport origin.
+
+Health prioritizes processing failures and unmatched events. Show failed replays
+only when failures were recorded, and count failures rather than all replay activity.
+Keep active suppressions and replay/reconciliation history in “Additional records”.
+Routine audit counts cannot establish health and do not earn headline space. Keep
+partial, stale, and unavailable notices visible even for collapsed records.
