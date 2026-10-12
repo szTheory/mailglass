@@ -2507,6 +2507,40 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert health != nil, "expected operator-overview-health element"
       assert Floki.text(health) =~ "Needs attention"
 
+      for status <-
+            Floki.find(health, "p")
+            |> Enum.filter(&(String.trim(Floki.text(&1)) == "Needs attention")) do
+        assert "text-warning" in String.split(hd(Floki.attribute(status, "class")))
+        assert Floki.find(status, ".hero-exclamation-triangle") != []
+      end
+
+      reconcile = Floki.find(health, ~s([data-testid="operator-overview-health-reconcile"]))
+      assert Floki.text(reconcile) =~ "Recorded"
+      refute Floki.text(reconcile) =~ "Needs attention"
+      replay = Floki.find(health, ~s([data-testid="operator-overview-health-replay"]))
+      assert Floki.text(replay) =~ "Recorded"
+      refute Floki.text(replay) =~ "Needs attention"
+
+      {:ok, _event} =
+        Mailglass.Events.append(%{
+          tenant_id: @tenant_id,
+          type: :webhook_replay_failed,
+          occurred_at: hours_ago(1),
+          metadata: %{"provider" => "postmark", "outcome" => "failed"}
+        })
+
+      {:ok, _view, failed_html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      failed_replay =
+        failed_html
+        |> Floki.parse_document!()
+        |> Floki.find(~s([data-testid="operator-overview-health-replay"]))
+
+      assert Floki.text(failed_replay) =~ "Needs attention"
+      assert Floki.find(failed_replay, ".text-warning .hero-exclamation-triangle") != []
+
+      refute Floki.find(health, ".hero-question-mark-circle") != []
+
       assert health
              |> Floki.find(".hero-exclamation-triangle")
              |> Enum.any?()

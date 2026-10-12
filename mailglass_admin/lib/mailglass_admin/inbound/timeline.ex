@@ -31,19 +31,21 @@ defmodule MailglassAdmin.Inbound.Timeline do
       <div class="mb-md flex min-w-0 flex-wrap items-center justify-between gap-sm">
         <div class="min-w-0 space-y-xs">
           <h3 class="text-body font-bold text-base-content">Execution timeline</h3>
+        </div>
+        <div class="flex min-w-0 flex-wrap items-center gap-sm">
           <p :if={@read_at} data-testid="inbound-timeline-snapshot" class="text-label text-secondary">
             {if @read_state == :ok, do: "Updated", else: "Last updated"} <.timestamp at={@read_at} />
           </p>
+          <button
+            type="button"
+            phx-click="refresh_inbound_timeline"
+            phx-disable-with="Refreshing history…"
+            data-testid="inbound-timeline-refresh"
+            class="btn btn-ghost min-h-11 px-md"
+          >
+            Refresh history
+          </button>
         </div>
-        <button
-          type="button"
-          phx-click="refresh_inbound_timeline"
-          phx-disable-with="Refreshing history…"
-          data-testid="inbound-timeline-refresh"
-          class="btn btn-ghost min-h-11 px-md"
-        >
-          Refresh history
-        </button>
       </div>
       <%= if @read_state != :ok do %>
         <div data-testid="inbound-timeline-unavailable">

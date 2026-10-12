@@ -1077,7 +1077,7 @@ defmodule MailglassAdmin.Components do
   defp stat_display_value(%{value: value}), do: to_string(value)
 
   defp stat_severity_icon(:neutral), do: "hero-minus-circle"
-  defp stat_severity_icon(:info), do: "hero-question-mark-circle"
+  defp stat_severity_icon(:info), do: "hero-information-circle"
   defp stat_severity_icon(:success), do: "hero-check-circle"
   defp stat_severity_icon(:warning), do: "hero-exclamation-triangle"
   defp stat_severity_icon(:error), do: "hero-x-circle"

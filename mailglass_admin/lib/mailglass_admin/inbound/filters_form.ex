@@ -25,14 +25,22 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
       compact
     >
       <Components.filter_field
-        field={@form[:provider]}
-        type={:select}
-        label="Provider"
-        help="Filter by the inbound provider recorded for this account."
+        field={@form[:search]}
+        label="Search"
+        help="Find by subject, recipient, or provider message id."
         help_display={:tooltip}
-        error={field_error(@errors, "provider")}
-        prompt="Any provider"
-        options={@provider_options}
+        error={field_error(@errors, "search")}
+        placeholder="Subject or recipient"
+      />
+
+      <Components.filter_field
+        field={@form[:window_hours]}
+        type={:select}
+        label="Time window"
+        help="Limit results to recently received messages."
+        help_display={:tooltip}
+        error={field_error(@errors, "window_hours")}
+        options={@window_options}
       />
 
       <Components.filter_field
@@ -47,22 +55,14 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
       />
 
       <Components.filter_field
-        field={@form[:window_hours]}
+        field={@form[:provider]}
         type={:select}
-        label="Time window"
-        help="Limit results to recently received messages."
+        label="Provider"
+        help="Filter by the inbound provider recorded for this account."
         help_display={:tooltip}
-        error={field_error(@errors, "window_hours")}
-        options={@window_options}
-      />
-
-      <Components.filter_field
-        field={@form[:search]}
-        label="Search"
-        help="Find by subject, recipient, or provider message id."
-        help_display={:tooltip}
-        error={field_error(@errors, "search")}
-        placeholder="Subject or recipient"
+        error={field_error(@errors, "provider")}
+        prompt="Any provider"
+        options={@provider_options}
       />
     </Components.filter_section>
     """

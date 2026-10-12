@@ -816,7 +816,7 @@ defmodule MailglassAdmin.ComponentsTest do
       html =
         render_component(&Components.stat_card/1, label: "Queued", value: 12, severity: :info)
 
-      assert_stat_markers(html, "hero-question-mark-circle", "Info", "text-primary")
+      assert_stat_markers(html, "hero-information-circle", "Info", "text-primary")
     end
 
     test "stat_card success severity renders icon plus visible label plus semantic color" do
@@ -1356,7 +1356,7 @@ defmodule MailglassAdmin.ComponentsTest do
         "Last 7 days"
       ])
 
-      assert field_order(html, ["Provider", "Latest recorded event", "Time window"])
+      assert field_order(html, ["Search", "Time window", "Latest recorded event", "Provider"])
       refute html =~ ~s(name="filters[tenant_id]")
       refute html =~ ~s(name="filters[status]")
     end
@@ -1405,7 +1405,7 @@ defmodule MailglassAdmin.ComponentsTest do
         "Search"
       ])
 
-      assert field_order(html, ["Provider", "Mailbox outcome", "Time window", "Search"])
+      assert field_order(html, ["Search", "Time window", "Mailbox outcome", "Provider"])
       refute html =~ ~s(name="filters[tenant_id]")
     end
   end

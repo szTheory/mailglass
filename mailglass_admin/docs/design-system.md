@@ -187,3 +187,19 @@ The displayed value is the copy control; the shared toast confirms success. Date
 show local time and expose the exact UTC value on hover and copy. Native controls
 inside quick views own Enter, so keyboard copying or opening a link must not also
 invoke the global full-detail shortcut.
+
+## Investigation controls and health signals
+
+Keep a refresh control adjacent to its observation timestamp; treat them as one
+wrapping group rather than distributing them across a toolbar. Other context,
+such as the observation period or section title, stays separate.
+
+Delivery and inbound filters follow task order in the DOM and visually: Search,
+Time window, latest event or mailbox outcome, then Provider. Keep the distinct
+meaning of delivery events and mailbox outcomes in their labels and help.
+
+Health warnings use an amber triangle and “Needs attention” only for failure or
+unresolved evidence. Replay activity requires that treatment only when a replay
+failed. Reconciliation activity uses “Recorded”; active suppressions use “Active.”
+Informational stat cards use an information icon, not a question mark. Activity
+alone does not establish a problem or a successful email delivery.

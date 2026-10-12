@@ -725,7 +725,7 @@ defmodule MailglassAdmin.OperatorLive do
           <div data-testid="operator-overview" class="grid gap-lg">
             <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
               <div data-testid="operator-overview-health" class="grid gap-md">
-                <div class="flex flex-wrap items-center justify-between gap-sm text-label text-secondary">
+                <div class="flex flex-col items-start gap-sm text-label text-secondary sm:flex-row sm:flex-wrap sm:items-center">
                   <div class="inline-flex items-center gap-xs">
                     <p data-testid="operator-health-window">{health_window_copy(@health_window)}</p>
                     <Components.field_help
@@ -734,18 +734,20 @@ defmodule MailglassAdmin.OperatorLive do
                       text={health_window_description(@health_window)}
                     />
                   </div>
-                  <p data-testid="operator-health-last-checked">
-                    Last checked <Components.timestamp at={@health_observed_at} />
-                  </p>
-                  <button
-                    type="button"
-                    phx-click="retry_health"
-                    class="btn btn-ghost min-h-11"
-                  >
-                    <Components.icon name="hero-arrow-path" class="h-4 w-4" />
-                    <span class="[.phx-click-loading_&]:hidden">Refresh health</span>
-                    <span class="hidden [.phx-click-loading_&]:inline">Refreshing…</span>
-                  </button>
+                  <div class="flex min-w-0 flex-wrap items-center gap-sm sm:ml-auto">
+                    <p data-testid="operator-health-last-checked">
+                      Last checked <Components.timestamp at={@health_observed_at} />
+                    </p>
+                    <button
+                      type="button"
+                      phx-click="retry_health"
+                      class="btn btn-ghost min-h-11"
+                    >
+                      <Components.icon name="hero-arrow-path" class="h-4 w-4" />
+                      <span class="[.phx-click-loading_&]:hidden">Refresh health</span>
+                      <span class="hidden [.phx-click-loading_&]:inline">Refreshing…</span>
+                    </button>
+                  </div>
                 </div>
                 <div class="grid gap-md md:grid-cols-2">
                   <.link
@@ -2646,6 +2648,16 @@ defmodule MailglassAdmin.OperatorLive do
     end
   end
 
+  defp health_metric_severity(summary, :replay_outcomes, _severity) do
+    failed = get_in(summary || %{}, [:replay_outcomes, :counts, :failed])
+
+    cond do
+      is_integer(failed) and failed > 0 -> :warning
+      health_metric_count(summary, :replay_outcomes) in [nil, 0] -> :neutral
+      true -> :info
+    end
+  end
+
   defp health_metric_severity(summary, metric, attention_severity) do
     case health_metric_count(summary, metric) do
       count when is_integer(count) and count > 0 -> attention_severity
@@ -2659,21 +2671,32 @@ defmodule MailglassAdmin.OperatorLive do
       "Last retrieved"
     else
       case health_metric_count(summary, metric) do
-        count when is_integer(count) and count > 0 -> "Needs attention"
-        count when is_integer(count) and count == 0 -> "No matching evidence"
-        count when is_integer(count) -> "Observed"
-        _count -> "Unavailable"
+        count when is_integer(count) and count > 0 ->
+          if metric in [:replay_outcomes, :reconcile_facts] and
+               health_metric_severity(summary, metric, :info) != :warning,
+             do: "Recorded",
+             else: "Needs attention"
+
+        count when is_integer(count) and count == 0 ->
+          "No matching evidence"
+
+        count when is_integer(count) ->
+          "Observed"
+
+        _count ->
+          "Unavailable"
       end
     end
   end
 
-  defp suppression_severity(count) when is_integer(count), do: :info
+  defp suppression_severity(count) when is_integer(count) and count > 0, do: :info
   defp suppression_severity(_count), do: :neutral
 
   defp suppression_severity_label(count, panel_states) do
     cond do
       get_in(panel_states, [:active_suppressions, :status]) == :stale -> "Last retrieved"
-      is_integer(count) -> "Tracked"
+      is_integer(count) and count > 0 -> "Active"
+      is_integer(count) -> "None active"
       true -> "Unavailable"
     end
   end

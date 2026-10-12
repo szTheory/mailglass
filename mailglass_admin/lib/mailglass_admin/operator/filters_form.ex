@@ -21,14 +21,21 @@ defmodule MailglassAdmin.Operator.FiltersForm do
       columns={4}
     >
       <Components.filter_field
-        field={@form[:provider]}
-        type={:select}
-        label="Provider"
-        help="Filter by the sending provider recorded for this account."
+        field={@form[:search]}
+        label="Search"
+        help="Find deliveries by recipient email address or subject."
         help_display={:tooltip}
-        error={field_error(@errors, "provider")}
-        prompt="Any provider"
-        options={@provider_options}
+        placeholder="Subject or recipient"
+      />
+
+      <Components.filter_field
+        field={@form[:window_hours]}
+        type={:select}
+        label="Time window"
+        help="Show deliveries with activity during this period."
+        help_display={:tooltip}
+        error={field_error(@errors, "window_hours")}
+        options={window_options(@window_options, @form[:window_hours].value)}
       />
 
       <Components.filter_field
@@ -43,20 +50,14 @@ defmodule MailglassAdmin.Operator.FiltersForm do
       />
 
       <Components.filter_field
-        field={@form[:window_hours]}
+        field={@form[:provider]}
         type={:select}
-        label="Time window"
-        help="Show deliveries with activity during this period."
+        label="Provider"
+        help="Filter by the sending provider recorded for this account."
         help_display={:tooltip}
-        error={field_error(@errors, "window_hours")}
-        options={window_options(@window_options, @form[:window_hours].value)}
-      />
-      <Components.filter_field
-        field={@form[:search]}
-        label="Search"
-        help="Find deliveries by recipient email address or subject."
-        help_display={:tooltip}
-        placeholder="Subject or recipient"
+        error={field_error(@errors, "provider")}
+        prompt="Any provider"
+        options={@provider_options}
       />
     </Components.filter_section>
     """
