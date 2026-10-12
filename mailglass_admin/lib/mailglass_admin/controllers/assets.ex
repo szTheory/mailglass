@@ -246,7 +246,7 @@ defmodule MailglassAdmin.Controllers.Assets do
 
     function positionFieldHelpTooltip(button) {
       const tooltipId = button.getAttribute("aria-controls")
-      const tooltip = tooltipId && document.getElementById(tooltipId)
+      const tooltip = tooltipId ? document.getElementById(tooltipId) : button.closest(".mg-field-help")?.querySelector(".mg-field-help-tooltip")
       if (!tooltip) return
 
       const trigger = button.getBoundingClientRect()
@@ -292,16 +292,23 @@ defmodule MailglassAdmin.Controllers.Assets do
 
     document.addEventListener("pointerover", (e) => {
       const button = e.target.closest && e.target.closest(".mg-field-help button")
-      if (button) positionFieldHelpTooltip(button)
+      if (button) { button.removeAttribute("data-dismissed"); positionFieldHelpTooltip(button) }
     }, true)
     document.addEventListener("focusin", (e) => {
       const button = e.target.closest && e.target.closest(".mg-field-help button")
-      if (button) positionFieldHelpTooltip(button)
+      if (button) { button.removeAttribute("data-dismissed"); positionFieldHelpTooltip(button) }
     }, true)
     document.addEventListener("click", (e) => {
       const button = e.target.closest && e.target.closest(".mg-field-help button")
       if (button) requestAnimationFrame(() => positionFieldHelpTooltip(button))
     }, true)
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return
+      document.querySelectorAll(".mg-field-help button:is(:hover,:focus-visible,[aria-expanded=true])").forEach(button => {
+        button.setAttribute("data-dismissed", "true")
+        if (button.hasAttribute("aria-expanded")) button.setAttribute("aria-expanded", "false")
+      })
+    })
     window.addEventListener("resize", positionActiveFieldHelpTooltips)
     window.addEventListener("scroll", positionActiveFieldHelpTooltips, true)
 

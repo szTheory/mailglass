@@ -455,7 +455,9 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ ~s(data-utc="2026-06-14 14:32:05.000000 UTC")
       assert html =~ ~s(data-copy-value="2026-06-14 14:32:05.000000 UTC")
       assert html =~ ~s(aria-label="Copy timestamp as UTC: 2026-06-14 14:32:05.000000 UTC")
-      assert html =~ ~s(title="2026-06-14 14:32:05.000000 UTC · Click to copy")
+      assert html =~ "2026-06-14 14:32:05.000000 UTC · Click to copy"
+      assert html =~ "mg-field-help-tooltip"
+      refute html =~ ~s(title="2026-06-14 14:32:05.000000 UTC · Click to copy")
       assert html =~ "<time"
       assert html =~ "data-timestamp-copy"
       assert html =~ "whitespace-nowrap"
@@ -534,8 +536,7 @@ defmodule MailglassAdmin.ComponentsTest do
         ~s(aria-current="page"),
         "hero-paper-airplane",
         ">Deliveries</span>",
-        "border-l-2",
-        "border-primary",
+        "mg-nav-current",
         "font-bold"
       ])
     end
@@ -579,7 +580,7 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "mg-focus-ring"
     end
 
-    test "nav_link long-content state truncates with a title" do
+    test "nav_link long-content state retains its accessible label" do
       label = "Deliveries with exceptionally long operator context"
 
       html =
@@ -589,7 +590,8 @@ defmodule MailglassAdmin.ComponentsTest do
           href: "/ops/mail"
         )
 
-      assert html =~ ~s(title="#{label}")
+      assert html =~ label
+      refute html =~ ~s(title="#{label}")
       assert html =~ "truncate"
     end
 
@@ -617,9 +619,7 @@ defmodule MailglassAdmin.ComponentsTest do
 
       assert_all(html, [
         ~s(aria-current="page"),
-        "bg-primary/10",
-        "border-b-2",
-        "border-primary",
+        "mg-nav-current",
         "font-bold",
         ">Deliveries</span>"
       ])
@@ -888,7 +888,7 @@ defmodule MailglassAdmin.ComponentsTest do
       refute html =~ "truncate"
     end
 
-    test "stat_card hint renders card-hover affordance and screen-reader copy" do
+    test "stat_card hint uses shared hover focus and tap help" do
       hint = "Open Deliveries to find the affected message and retry from evidence."
 
       html =
@@ -899,8 +899,10 @@ defmodule MailglassAdmin.ComponentsTest do
           hint: hint
         )
 
-      assert html =~ "mg-stat-card-hint"
-      assert html =~ "mg-stat-card-tooltip"
+      assert html =~ "mg-field-help"
+      assert html =~ "mg-field-help-tooltip"
+      assert html =~ ~s(role="tooltip")
+      assert html =~ ~s(aria-expanded="false")
       assert html =~ "hero-information-circle"
       assert html =~ ~s(class="sr-only")
       assert html =~ hint
@@ -920,7 +922,7 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ hint
       refute html =~ "Open"
       refute html =~ "hero-arrow-up-right"
-      refute html =~ "phx-click"
+      assert html =~ "Help for Recent failures"
       refute html =~ ~s(role="button")
     end
 

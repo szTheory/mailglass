@@ -29,6 +29,7 @@ defmodule MailglassAdmin.OperatorLive do
     DetailHeader,
     DestructiveAction,
     FiltersForm,
+    HealthOverview,
     QuickView,
     RepairState,
     ReplayAction,
@@ -86,6 +87,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:health_observed_at, nil)
       |> assign(:health_window, nil)
       |> assign(:health_loaded_for, nil)
+      |> assign(:health_activity, %{deliveries: nil, inbound: nil})
       |> assign(:detail_error, nil)
       |> assign(:replay_targets, nil)
       |> assign(:replay_history, [])
@@ -725,7 +727,7 @@ defmodule MailglassAdmin.OperatorLive do
           <div data-testid="operator-overview" class="grid gap-lg">
             <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
               <div data-testid="operator-overview-health" class="grid gap-md">
-                <div class="flex flex-col items-start gap-sm text-label text-secondary sm:flex-row sm:flex-wrap sm:items-center">
+                <div class="grid grid-cols-[1fr_auto] items-center gap-x-sm gap-y-xs text-label text-secondary sm:flex sm:flex-wrap sm:gap-sm">
                   <div class="inline-flex items-center gap-xs">
                     <p data-testid="operator-health-window">{health_window_copy(@health_window)}</p>
                     <Components.field_help
@@ -734,14 +736,17 @@ defmodule MailglassAdmin.OperatorLive do
                       text={health_window_description(@health_window)}
                     />
                   </div>
-                  <div class="flex min-w-0 flex-wrap items-center gap-sm sm:ml-auto">
-                    <p data-testid="operator-health-last-checked">
+                  <div class="contents sm:ml-auto sm:flex sm:min-w-0 sm:flex-wrap sm:items-center sm:gap-sm">
+                    <p
+                      data-testid="operator-health-last-checked"
+                      class="order-3 col-span-2 text-right sm:order-none"
+                    >
                       Last checked <Components.timestamp at={@health_observed_at} />
                     </p>
                     <button
                       type="button"
                       phx-click="retry_health"
-                      class="btn btn-ghost min-h-11"
+                      class="btn btn-ghost order-2 min-h-11 sm:order-none"
                     >
                       <Components.icon name="hero-arrow-path" class="h-4 w-4" />
                       <span class="[.phx-click-loading_&]:hidden">Refresh health</span>
@@ -749,239 +754,26 @@ defmodule MailglassAdmin.OperatorLive do
                     </button>
                   </div>
                 </div>
-                <div class={[
-                  "grid gap-md md:grid-cols-2",
-                  health_metric_count(@support_summary, :replay_outcomes) not in [nil, 0] &&
-                    "lg:grid-cols-3"
-                ]}>
-                  <.link
-                    patch={
-                      support_evidence_path(
-                        @base_path,
-                        @filter_params,
-                        @dark_chrome,
-                        :failed_ingest,
-                        @support_summary
-                      )
-                    }
-                    class={health_metric_link_class()}
-                    aria-label="View recent failures in Deliveries"
-                    data-testid="operator-overview-health-failures-link"
-                  >
-                    <Components.stat_card
-                      label="Failed webhook attempts"
-                      value={health_metric_count(@support_summary, :failed_ingest)}
-                      state={
-                        health_metric_state(@support_summary, :failed_ingest, @health_panel_states)
-                      }
-                      severity={health_metric_severity(@support_summary, :failed_ingest, :warning)}
-                      show_severity={
-                        health_status_visible?(
-                          @health_panel_states,
-                          :failed_ingest,
-                          health_metric_severity(@support_summary, :failed_ingest, :warning)
-                        )
-                      }
-                      severity_label={
-                        health_metric_severity_label(
-                          @support_summary,
-                          :failed_ingest,
-                          @health_panel_states
-                        )
-                      }
-                      hint="Webhook events that failed processing or exhausted their retries within this account’s observation period. This count does not represent failed email deliveries."
-                      data-testid="operator-overview-health-failures"
-                    />
-                  </.link>
-                  <.link
-                    patch={
-                      support_evidence_path(
-                        @base_path,
-                        @filter_params,
-                        @dark_chrome,
-                        :orphan_backlog,
-                        @support_summary
-                      )
-                    }
-                    class={health_metric_link_class()}
-                    aria-label="View unmatched webhook evidence in Deliveries"
-                    data-testid="operator-overview-health-orphans-link"
-                  >
-                    <Components.stat_card
-                      label="Unmatched events"
-                      value={health_metric_count(@support_summary, :orphan_backlog)}
-                      state={
-                        health_metric_state(@support_summary, :orphan_backlog, @health_panel_states)
-                      }
-                      severity={health_metric_severity(@support_summary, :orphan_backlog, :warning)}
-                      show_severity={
-                        health_status_visible?(
-                          @health_panel_states,
-                          :orphan_backlog,
-                          health_metric_severity(@support_summary, :orphan_backlog, :warning)
-                        )
-                      }
-                      severity_label={
-                        health_metric_severity_label(
-                          @support_summary,
-                          :orphan_backlog,
-                          @health_panel_states
-                        )
-                      }
-                      hint="Webhook events that could not be linked to a delivery during this period. Investigate them to fill gaps in delivery tracking."
-                      data-testid="operator-overview-health-orphans"
-                    />
-                  </.link>
-                  <.link
-                    :if={health_metric_count(@support_summary, :replay_outcomes) not in [nil, 0]}
-                    patch={
-                      support_evidence_path(
-                        @base_path,
-                        @filter_params,
-                        @dark_chrome,
-                        :replay_outcomes,
-                        @support_summary
-                      )
-                    }
-                    class={health_metric_link_class()}
-                    aria-label="View replay audit evidence"
-                    data-testid="operator-overview-health-replay-link"
-                  >
-                    <Components.stat_card
-                      label="Failed replays"
-                      value={health_metric_count(@support_summary, :replay_outcomes)}
-                      state={
-                        health_metric_state(@support_summary, :replay_outcomes, @health_panel_states)
-                      }
-                      severity={health_metric_severity(@support_summary, :replay_outcomes, :info)}
-                      show_severity={
-                        health_status_visible?(
-                          @health_panel_states,
-                          :replay_outcomes,
-                          health_metric_severity(@support_summary, :replay_outcomes, :info)
-                        )
-                      }
-                      severity_label={
-                        health_metric_severity_label(
-                          @support_summary,
-                          :replay_outcomes,
-                          @health_panel_states
-                        )
-                      }
-                      hint="Attempts to process a webhook event again that failed during this period. Open replay history to inspect the errors."
-                      data-testid="operator-overview-health-replay"
-                    />
-                  </.link>
-                </div>
-                <details data-testid="operator-health-additional-records" class="mt-md">
-                  <summary class="mg-focus-ring w-fit cursor-pointer rounded-field py-sm text-body text-secondary">
-                    Additional records
-                  </summary>
-                  <div class="mt-sm flex flex-col gap-sm">
-                    <.link
-                      patch={
-                        build_path(
-                          @base_path,
-                          @filter_params
-                          |> Map.put("view", "deliveries")
-                          |> Map.put("event", "suppressed"),
-                          nil,
-                          @dark_chrome
-                        )
-                      }
-                      class={health_metric_link_class()}
-                      aria-label="View historical suppressed Delivery Events in Deliveries"
-                      data-testid="operator-overview-health-suppressions-link"
-                    >
-                      <Components.stat_card
-                        compact
-                        label="Active suppression records"
-                        value={@suppression_count}
-                        state={
-                          panel_value_state(
-                            @health_panel_states,
-                            :active_suppressions,
-                            @suppression_count
-                          )
-                        }
-                        severity={suppression_severity(@suppression_count)}
-                        show_severity={
-                          health_status_visible?(@health_panel_states, :active_suppressions, :info)
-                        }
-                        severity_label={
-                          suppression_severity_label(
-                            @suppression_count,
-                            @health_panel_states
-                          )
-                        }
-                        hint="Account-wide active Mailglass suppression records at check time, independent of the observation window. This is not a recipient count; the link opens historical suppressed Delivery Events, a separate population."
-                        data-testid="operator-overview-health-suppressions"
-                      />
-                    </.link>
-                    <div class="flex flex-wrap gap-md">
-                      <.link
-                        patch={
-                          support_evidence_path(
-                            @base_path,
-                            @filter_params,
-                            @dark_chrome,
-                            :replay_outcomes,
-                            @support_summary
-                          )
-                        }
-                        class="mg-focus-ring inline-flex min-h-11 items-center text-body text-primary underline underline-offset-4"
-                        aria-label="View replay history"
-                        data-testid="operator-health-replay-history-link"
-                      >
-                        Replay history
-                      </.link>
-                      <.link
-                        patch={
-                          support_evidence_path(
-                            @base_path,
-                            @filter_params,
-                            @dark_chrome,
-                            :reconcile_facts,
-                            @support_summary
-                          )
-                        }
-                        class="mg-focus-ring inline-flex min-h-11 items-center text-body text-primary underline underline-offset-4"
-                        aria-label="View reconciliation audit evidence"
-                        data-testid="operator-overview-health-reconcile-link"
-                      >
-                        Reconciliation history
-                      </.link>
-                    </div>
-                  </div>
-                </details>
+                <HealthOverview.overview
+                  issues={
+                    health_issues(
+                      @support_summary,
+                      @health_activity,
+                      @health_panel_states,
+                      @base_path,
+                      @filter_params,
+                      @dark_chrome,
+                      @inbound_path
+                    )
+                  }
+                  activity={@health_activity}
+                  states={@health_panel_states}
+                  deliveries_path={
+                    build_path_with_view(@base_path, health_filters(@filter_params), @dark_chrome)
+                  }
+                  inbound_path={health_inbound_path(@inbound_path, @filter_params)}
+                />
               </div>
-              <p
-                :if={health_partial?(@health_panel_states)}
-                role="status"
-                data-testid="operator-health-partial"
-                class="rounded-box border border-warning bg-base-200 p-sm text-body text-secondary"
-              >
-                Some evidence is unavailable. Available observations remain visible; an unavailable read does not mean that no records exist.
-              </p>
-              <p
-                :for={{panel, state} <- @health_panel_states}
-                :if={state.status == :stale}
-                role="status"
-                data-testid={"operator-health-stale-#{panel}"}
-                class="text-label text-secondary"
-              >
-                Showing the last retrieved {health_panel_name(panel)} from
-                <Components.timestamp at={state.checked_at} />.
-              </p>
-              <p
-                :for={{panel, state} <- @health_panel_states}
-                :if={state.status == :unavailable}
-                role="status"
-                data-testid={"operator-health-unavailable-#{panel}"}
-                class="text-label text-error"
-              >
-                These {health_panel_name(panel)} could not be loaded. Other available sections remain visible.
-              </p>
             <% else %>
               <div
                 data-testid="operator-overview-no-tenant"
@@ -1419,6 +1211,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:health_observed_at, nil)
     |> assign(:health_window, nil)
     |> assign(:health_loaded_for, nil)
+    |> assign(:health_activity, %{deliveries: nil, inbound: nil})
     |> assign(:suppression_count, nil)
     |> assign(:detail_error, nil)
     |> assign(:replay_targets, nil)
@@ -1952,8 +1745,8 @@ defmodule MailglassAdmin.OperatorLive do
       Map.take(filter_params, ["tenant_id", "provider", "event", "search", "window_hours", "page"])
 
   defp assign_overview_state(socket, filter_params) do
-    {support_summary, health_panel_states, suppression_count, observed_at, health_window} =
-      load_health_observations(socket, filter_params)
+    {support_summary, health_panel_states, activity, observed_at, health_window} =
+      load_overview_observations(socket, filter_params)
 
     paths =
       MailglassAdmin.Operator.Shell.surface_paths(
@@ -1967,7 +1760,8 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:view, :overview)
     |> assign(:full_detail?, false)
     |> assign(:support_summary, support_summary)
-    |> assign(:suppression_count, suppression_count)
+    |> assign(:suppression_count, nil)
+    |> assign(:health_activity, activity)
     |> assign(:health_panel_states, health_panel_states)
     |> assign(:health_observed_at, observed_at)
     |> assign(:health_window, health_window)
@@ -1984,6 +1778,72 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:replay_targets, nil)
     |> assign(:replay_history, [])
     |> assign(:replay_selected_target_id, nil)
+  end
+
+  # The overview reads only actionable problems and recent activity. Suppression
+  # policy and replay/reconciliation history belong to record investigation.
+  defp load_overview_observations(socket, filter_params) do
+    filters = health_filters(filter_params)
+    tenant_id = blank_to_nil(filters["tenant_id"])
+    hours = parse_positive_integer(filters["window_hours"]) || @default_window_hours
+    as_of = DateTime.utc_now()
+    scope = %{tenant_id: tenant_id, window_hours: hours, as_of: as_of}
+    same_scope? = socket.assigns[:health_loaded_for] == health_observation_cache_key(filters)
+    prior_summary = if same_scope?, do: socket.assigns[:support_summary], else: nil
+    prior_activity = if same_scope?, do: socket.assigns[:health_activity], else: nil
+    prior_states = if same_scope?, do: socket.assigns[:health_panel_states], else: %{}
+
+    readers = [
+      {:failed_ingest, fn -> SupportSummary.read_failed_ingest(scope) end,
+       prior_summary && prior_summary[:failed_ingest]},
+      {:orphan_backlog, fn -> SupportSummary.read_orphan_backlog(scope) end,
+       prior_summary && prior_summary[:orphan_backlog]},
+      {:delivery_activity,
+       fn ->
+         page = Deliveries.list_recent_deliveries_page(Map.put(scope, :per_page, 1))
+         %{total: page.total_count, outcome_groups: page.outcome_groups}
+       end, prior_activity && prior_activity[:deliveries]}
+    ]
+
+    readers =
+      if MailglassAdmin.Operator.Shell.inbound_available?() do
+        readers ++
+          [
+            {:inbound_activity,
+             fn -> apply(MailglassAdmin.OptionalDeps.MailglassInbound, :summary, [scope, []]) end,
+             prior_activity && prior_activity[:inbound]}
+          ]
+      else
+        readers
+      end
+
+    {values, states} =
+      Enum.reduce(readers, {%{}, %{}}, fn {key, reader, previous}, {values, states} ->
+        {value, state} =
+          read_health_panel(
+            socket.assigns[:operator_read_fault],
+            key,
+            reader,
+            previous,
+            prior_states[key],
+            &is_map/1,
+            as_of
+          )
+
+        {Map.put(values, key, value), Map.put(states, key, state)}
+      end)
+
+    current? = Enum.any?(states, fn {_, state} -> state.status == :ready end)
+    summary = Map.take(values, [:failed_ingest, :orphan_backlog])
+    activity = %{deliveries: values[:delivery_activity], inbound: values[:inbound_activity]}
+    observed_at = if current?, do: as_of, else: prior_observed_at(socket, same_scope?)
+
+    window =
+      if current?,
+        do: %{started_at: DateTime.add(as_of, -hours, :hour), ended_at: as_of},
+        else: if(same_scope?, do: socket.assigns[:health_window], else: nil)
+
+    {summary, states, activity, observed_at, window}
   end
 
   defp load_health_observations(socket, filter_params) do
@@ -2229,10 +2089,6 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp latest_replay([]), do: nil
   defp latest_replay(replay_history), do: List.last(replay_history)
-
-  defp health_metric_link_class do
-    "group block rounded-box mg-focus-ring transition-transform ease-out duration-(--duration-fast) hover:-translate-y-px [&>article]:h-full"
-  end
 
   defp build_path(
          base_path,
@@ -2651,85 +2507,8 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp health_metric_count(nil, _metric), do: nil
 
-  defp health_metric_count(summary, :replay_outcomes) do
-    summary |> get_in([:replay_outcomes, :counts, :failed]) |> normalize_stat_count()
-  end
-
   defp health_metric_count(summary, metric) do
-    summary
-    |> Map.get(metric, %{})
-    |> Map.get(:count)
-    |> normalize_stat_count()
-  end
-
-  defp health_metric_state(summary, metric, panel_states) do
-    value = health_metric_count(summary, metric)
-    panel_value_state(panel_states, metric, value)
-  end
-
-  defp panel_value_state(panel_states, panel, value) do
-    case get_in(panel_states, [panel, :status]) do
-      :unavailable -> :unavailable
-      _ when is_integer(value) -> :ready
-      _ -> :unavailable
-    end
-  end
-
-  defp health_status_visible?(panel_states, panel, severity) do
-    get_in(panel_states, [panel, :status]) != :ready or severity in [:warning, :error]
-  end
-
-  defp health_metric_severity(summary, :replay_outcomes, _severity) do
-    failed = get_in(summary || %{}, [:replay_outcomes, :counts, :failed])
-
-    cond do
-      is_integer(failed) and failed > 0 -> :warning
-      health_metric_count(summary, :replay_outcomes) in [nil, 0] -> :neutral
-      true -> :info
-    end
-  end
-
-  defp health_metric_severity(summary, metric, attention_severity) do
-    case health_metric_count(summary, metric) do
-      count when is_integer(count) and count > 0 -> attention_severity
-      count when is_integer(count) -> :neutral
-      _count -> :neutral
-    end
-  end
-
-  defp health_metric_severity_label(summary, metric, panel_states) do
-    if get_in(panel_states, [metric, :status]) == :stale do
-      "Last retrieved"
-    else
-      case health_metric_count(summary, metric) do
-        count when is_integer(count) and count > 0 ->
-          if metric in [:replay_outcomes, :reconcile_facts] and
-               health_metric_severity(summary, metric, :info) != :warning,
-             do: "Recorded",
-             else: "Needs attention"
-
-        count when is_integer(count) and count == 0 ->
-          "No matching evidence"
-
-        count when is_integer(count) ->
-          "Observed"
-
-        _count ->
-          "Unavailable"
-      end
-    end
-  end
-
-  defp suppression_severity(count) when is_integer(count) and count > 0, do: :info
-  defp suppression_severity(_count), do: :neutral
-
-  defp suppression_severity_label(count, panel_states) do
-    cond do
-      get_in(panel_states, [:active_suppressions, :status]) == :stale -> "Last retrieved"
-      is_integer(count) and count > 0 -> "Active"
-      is_integer(count) -> "None active"
-      true -> "Unavailable"
-    end
+    summary |> get_in([metric, :count]) |> normalize_stat_count()
   end
 
   defp normalize_stat_count(count) when is_integer(count), do: count
@@ -2755,23 +2534,106 @@ defmodule MailglassAdmin.OperatorLive do
          started_at: %DateTime{},
          ended_at: %DateTime{}
        }) do
-    "Webhook and audit counts cover this period. Active suppressions show the current total."
+    "Activity and recorded issues for this account during this period."
   end
 
   defp health_window_description(_window), do: "The observation period could not be loaded."
 
-  defp health_partial?(states) do
-    values = Map.values(states || %{})
-
-    Enum.any?(values, &(&1.status in [:unavailable, :stale])) and
-      Enum.any?(values, &(&1.status in [:ready, :stale]))
+  defp health_filters(params) do
+    default_filter_params()
+    |> Map.merge(Map.take(params, ["tenant_id", "window_hours"]))
   end
 
-  defp health_panel_name(:failed_ingest), do: "failed webhook evidence"
-  defp health_panel_name(:orphan_backlog), do: "unmatched Event evidence"
-  defp health_panel_name(:replay_outcomes), do: "replay audit evidence"
-  defp health_panel_name(:reconcile_facts), do: "reconciliation evidence"
-  defp health_panel_name(:active_suppressions), do: "active suppression records"
+  defp health_inbound_path(path, params, outcome \\ nil) do
+    uri = URI.parse(path)
+    query = URI.decode_query(uri.query || "") |> Map.put("window_hours", params["window_hours"])
+    query = if outcome, do: Map.put(query, "outcome", Atom.to_string(outcome)), else: query
+    URI.to_string(%{uri | query: URI.encode_query(query)})
+  end
+
+  defp health_issues(summary, activity, states, base_path, params, dark?, inbound_path) do
+    params = health_filters(params)
+
+    webhook_issues =
+      [
+        {:failed_ingest, "Failed webhook attempts",
+         "Webhook events that failed processing or exhausted their retries. These failures affect delivery tracking; they are not failed email deliveries.",
+         "operator-overview-health-failures"},
+        {:orphan_backlog, "Unmatched events",
+         "Webhook events that could not be linked to a delivery. Investigate them to fill gaps in delivery tracking.",
+         "operator-overview-health-orphans"}
+      ]
+      |> Enum.map(fn {key, label, help, testid} ->
+        %{
+          count: health_metric_count(summary, key),
+          label: label,
+          help: help,
+          testid: testid,
+          surface: :deliveries,
+          path: support_evidence_path(base_path, params, dark?, key, summary),
+          stale?: states[key].status == :stale
+        }
+      end)
+
+    groups = get_in(activity, [:deliveries, :outcome_groups]) || []
+
+    delivery_issues =
+      [
+        {:failed, "Failed deliveries",
+         "Sending failed before a successful handoff to the provider."},
+        {:bounced, "Bounced deliveries",
+         "The provider reported that these messages could not be delivered."},
+        {:rejected, "Rejected deliveries", "The provider rejected these messages."},
+        {:deferred, "Delayed deliveries",
+         "The provider reported a temporary delivery delay. Delivery has not been confirmed."}
+      ]
+      |> Enum.map(fn {event, label, help} ->
+        matching = Enum.filter(groups, &(Components.delivery_display_status(&1) == event))
+        count = Enum.reduce(matching, 0, &(&1.count + &2))
+        # Older records can have a failure status without a matching latest event.
+        # Keep the problem visible; don't send that subset to an empty event filter.
+        destination =
+          if Enum.all?(matching, &(&1.last_event_type == event)),
+            do: Map.put(params, "event", Atom.to_string(event)),
+            else: params
+
+        %{
+          count: count,
+          label: label,
+          help: help,
+          testid: "operator-health-deliveries-#{event}",
+          surface: :deliveries,
+          path: build_path_with_view(base_path, destination, dark?),
+          stale?: states.delivery_activity.status == :stale
+        }
+      end)
+
+    inbound_issues =
+      if Map.has_key?(states, :inbound_activity) do
+        [
+          {:failed, "Failed inbound processing",
+           "Mailbox processing ended in failure when these messages were received. Open a message to inspect its error and any later recovery attempts."},
+          {:no_match, "Unrouted inbound messages",
+           "No mailbox routing rule matched these messages when they were received."}
+        ]
+        |> Enum.map(fn {outcome, label, help} ->
+          %{
+            count: get_in(activity, [:inbound, :outcomes, outcome]),
+            label: label,
+            help: help,
+            testid: "operator-health-inbound-#{outcome}",
+            surface: :inbound,
+            path: health_inbound_path(inbound_path, params, outcome),
+            stale?: states.inbound_activity.status == :stale
+          }
+        end)
+      else
+        []
+      end
+
+    (delivery_issues ++ inbound_issues ++ webhook_issues)
+    |> Enum.filter(&(is_integer(&1.count) and &1.count > 0))
+  end
 
   defp support_evidence_path(base_path, filter_params, dark_chrome, :orphan_backlog, summary) do
     unmatched_events_path(base_path, filter_params, dark_chrome, summary)

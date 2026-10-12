@@ -2468,8 +2468,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         .filter({ hasText: "Deliveries" })
         .first();
       await expect(activeDesktop).toBeVisible();
-      await expect(activeDesktop).toHaveClass(/border-l-2/);
-      await expect(activeDesktop).toHaveClass(/border-primary/);
+      await expect(activeDesktop).toHaveClass(/mg-nav-current/);
+      await expect(activeDesktop.locator(".mg-nav-label")).toHaveCSS("text-decoration-line", "underline");
 
       await expect(page.getByTestId("operator-result-count")).toContainText("(6)");
       // Honest single-page boundary: 6 deliveries at 20/page is one page, so the
@@ -2529,8 +2529,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         .filter({ visible: true })
         .last();
       await expect(activeMobile).toBeVisible();
-      await expect(activeMobile).toHaveClass(/border-b-2/);
-      await expect(activeMobile).toHaveClass(/border-primary/);
+      await expect(activeMobile).toHaveClass(/mg-nav-current/);
+      await expect(activeMobile.locator(".mg-nav-label")).toHaveCSS("text-decoration-line", "underline");
 
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.getByTestId("operator-account-switcher").click();

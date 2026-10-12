@@ -198,23 +198,33 @@ Delivery and inbound filters follow task order in the DOM and visually: Search,
 Time window, latest event or mailbox outcome, then Provider. Keep the distinct
 meaning of delivery events and mailbox outcomes in their labels and help.
 
-Health warnings use an amber triangle and “Needs attention” only for failure or
-unresolved evidence. Replay activity requires that treatment only when a replay
-failed. Health cards omit routine informational and zero-count captions: their
-label and count already convey the fact. Keep captions for warnings, stale reads,
-and unavailable data. Informational stat cards elsewhere use an information icon,
-not a question mark. Activity alone does not establish a problem or a successful
-email delivery.
+Health answers whether recorded problems need investigation. Show only nonzero
+failed/bounced/rejected/delayed deliveries, inbound processing failures/unrouted messages,
+and failed/unmatched webhook processing. Use compact issue rows with scoped
+investigation links, not a permanent grid of zero-count KPI cards. Intentional
+suppression policy, replay history, and reconciliation activity belong to record
+investigation and are neither fetched nor displayed on this overview.
 
-Shared field-help tooltips open 8px below their trigger, centered where space
-permits. They flip above near the bottom edge and shift inward to retain a 12px
-viewport margin. Their arrow points toward the trigger after that adjustment.
-The shared observer repairs placement after LiveView patches and viewport changes;
-only changed styles are written to avoid an observer feedback loop. A tooltip stays
-hidden until it has a calculated position, so it cannot flash at the viewport origin.
+When all checks are current, active mail with no recorded problems shows “No issues
+found”, explicitly limited to the observation period. No activity shows a neutral
+“No recent mail activity”. Stale or unavailable reads must never produce an
+all-clear; retain known problems and identify the data that could not be refreshed.
+Small outbound/inbound activity counts provide context without implying successful
+delivery. Health ignores provider, status, search, and paging parameters inherited
+from investigation links. Hide inbound activity and checks when inbound is absent.
 
-Health prioritizes processing failures and unmatched events. Show failed replays
-only when failures were recorded, and count failures rather than all replay activity.
-Keep active suppressions and replay/reconciliation history in “Additional records”.
-Routine audit counts cannot establish health and do not earn headline space. Keep
-partial, stale, and unavailable notices visible even for collapsed records.
+All custom help, stat hints, and copyable timestamp tooltips use the shared
+`mg-field-help` implementation. Help belongs to its icon/label trigger rather than
+the whole card. Tooltips open 8px below their trigger, centered where space permits.
+They flip above near the bottom edge and shift inward to retain a 12px viewport
+margin. Their arrow points toward the trigger after that adjustment. The shared
+observer repairs placement after LiveView patches and viewport changes; only
+changed styles are written to avoid an observer feedback loop. A tooltip stays
+hidden until it has a calculated position. Escape dismisses help, including UTC
+copy hints. Keep accessible descriptions independently available to assistive
+technology. Do not nest a help button inside a clickable card or link.
+
+Desktop section navigation uses the brand accent on the current icon and a short
+underline beneath its bold label. Avoid combining an accent rail, filled tile,
+and bold text for one selection. Mobile tabs use a matching underline and no
+filled selection tile. Keep the 44px targets and visible keyboard focus.

@@ -243,13 +243,13 @@ defmodule MailglassAdmin.Components do
       aria-disabled="true"
       tabindex="-1"
       class={[
-        "flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body",
-        "border-transparent text-secondary opacity-100"
+        "flex min-h-11 items-center gap-sm rounded-field px-sm text-body",
+        "text-secondary opacity-100"
       ]}
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate">{@label}</span>
     </span>
     """
   end
@@ -260,14 +260,14 @@ defmodule MailglassAdmin.Components do
       href={@href}
       aria-current={@active && "page"}
       class={[
-        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out",
+        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field px-sm text-body transition-colors ease-out",
         "duration-(--duration-fast)",
         nav_link_class(@active)
       ]}
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate">{@label}</span>
     </.link>
     """
   end
@@ -278,14 +278,14 @@ defmodule MailglassAdmin.Components do
       navigate={@href}
       aria-current={@active && "page"}
       class={[
-        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out",
+        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field px-sm text-body transition-colors ease-out",
         "duration-(--duration-fast)",
         nav_link_class(@active)
       ]}
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate">{@label}</span>
     </.link>
     """
   end
@@ -310,10 +310,10 @@ defmodule MailglassAdmin.Components do
       role="link"
       aria-disabled="true"
       tabindex="-1"
-      class="flex min-h-11 items-center rounded-field border-b-2 border-transparent px-sm text-body text-secondary opacity-100"
+      class="flex min-h-11 items-center rounded-field px-sm text-body text-secondary opacity-100"
       {@rest}
     >
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
     </span>
     """
   end
@@ -324,12 +324,12 @@ defmodule MailglassAdmin.Components do
       href={@href}
       aria-current={@active && "page"}
       class={[
-        "mg-focus-ring flex min-h-11 items-center rounded-field border-b-2 px-sm text-body transition-colors ease-out duration-(--duration-fast)",
+        "mg-focus-ring flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-(--duration-fast)",
         nav_pill_class(@active)
       ]}
       {@rest}
     >
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
     </.link>
     """
   end
@@ -340,12 +340,12 @@ defmodule MailglassAdmin.Components do
       navigate={@href}
       aria-current={@active && "page"}
       class={[
-        "mg-focus-ring flex min-h-11 items-center rounded-field border-b-2 px-sm text-body transition-colors ease-out duration-(--duration-fast)",
+        "mg-focus-ring flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-(--duration-fast)",
         nav_pill_class(@active)
       ]}
       {@rest}
     >
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
     </.link>
     """
   end
@@ -455,6 +455,11 @@ defmodule MailglassAdmin.Components do
       assigns
       |> assign(:display_value, stat_display_value(assigns))
       |> assign(
+        :hint_id,
+        (assigns.id || Map.get(assigns.rest, :"data-testid") ||
+           "stat-#{:erlang.phash2({assigns.label, assigns.hint})}") <> "-help"
+      )
+      |> assign(
         :display_severity_label,
         assigns.severity_label || stat_severity_label(assigns.severity)
       )
@@ -466,8 +471,7 @@ defmodule MailglassAdmin.Components do
         if(@compact,
           do: "mg-stat-compact min-w-0",
           else: "min-w-0 rounded-box border border-base-300 bg-base-200 p-md"
-        ),
-        present?(@hint) && "mg-stat-card-hint"
+        )
       ]}
       aria-busy={if @state == :loading, do: "true"}
       {@rest}
@@ -483,17 +487,12 @@ defmodule MailglassAdmin.Components do
           </span>
           <span
             :if={present?(@hint)}
-            class="inline-flex shrink-0 text-secondary"
-            aria-hidden="true"
+            class="inline-flex shrink-0"
           >
-            <.icon name="hero-information-circle" class="h-3.5 w-3.5" />
+            <.field_help id={@hint_id} label={@label} text={@hint} />
           </span>
         </p>
       </div>
-      <p :if={present?(@hint)} class="sr-only">{@hint}</p>
-      <p :if={present?(@hint)} class="mg-stat-card-tooltip" aria-hidden="true">
-        {@hint}
-      </p>
       <p class={[
         "mt-xs font-bold tabular-nums whitespace-normal text-base-content [overflow-wrap:anywhere]",
         if(@compact, do: "text-heading", else: "mono break-all text-display")
@@ -773,13 +772,13 @@ defmodule MailglassAdmin.Components do
   defp card_padding(:md), do: "p-md"
   defp card_padding(:lg), do: "p-lg"
 
-  defp nav_link_class(true), do: "border-primary bg-base-100 font-bold text-base-content"
+  defp nav_link_class(true), do: "mg-nav-current font-bold text-base-content"
 
   defp nav_link_class(false),
-    do: "border-transparent text-secondary hover:bg-base-100/60 hover:text-base-content"
+    do: "text-secondary hover:bg-base-100/60 hover:text-base-content"
 
-  defp nav_pill_class(true), do: "border-primary bg-primary/10 font-bold text-base-content"
-  defp nav_pill_class(false), do: "border-transparent text-secondary hover:text-base-content"
+  defp nav_pill_class(true), do: "mg-nav-current font-bold text-base-content"
+  defp nav_pill_class(false), do: "text-secondary hover:text-base-content"
 
   defp tenant_chip_title(nil), do: "Account currently in view"
   defp tenant_chip_title(tenant), do: "Account currently in view: " <> tenant
@@ -1482,24 +1481,27 @@ defmodule MailglassAdmin.Components do
 
   def timestamp(assigns) do
     ~H"""
-    <button
-      :if={@copyable}
-      type="button"
-      data-timestamp-copy="true"
-      data-copy-value={utc_string(@at)}
-      aria-label={"Copy timestamp as UTC: #{utc_string(@at)}"}
-      title={utc_string(@at) <> " · Click to copy"}
-      class={["mg-timestamp-copy-trigger mg-focus-ring", @class]}
-    >
-      <time
-        datetime={DateTime.to_iso8601(@at)}
-        data-local-time="true"
-        data-utc={utc_string(@at)}
-        class="tabular-nums"
+    <span :if={@copyable} class="mg-field-help inline-flex max-w-full">
+      <button
+        type="button"
+        data-timestamp-copy="true"
+        data-copy-value={utc_string(@at)}
+        aria-label={"Copy timestamp as UTC: #{utc_string(@at)}"}
+        class={["mg-timestamp-copy-trigger mg-focus-ring", @class]}
       >
-        {utc_string(@at)}
-      </time>
-    </button>
+        <time
+          datetime={DateTime.to_iso8601(@at)}
+          data-local-time="true"
+          data-utc={utc_string(@at)}
+          class="tabular-nums"
+        >
+          {utc_string(@at)}
+        </time>
+      </button>
+      <span role="tooltip" aria-hidden="true" class="mg-field-help-tooltip [overflow-wrap:anywhere]">
+        {utc_string(@at)} · Click to copy
+      </span>
+    </span>
     <time
       :if={!@copyable}
       datetime={DateTime.to_iso8601(@at)}

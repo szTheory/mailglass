@@ -289,14 +289,11 @@ defmodule MailglassAdmin.Operator.ShellTest do
 
       classes = current_nav_classes(html)
 
-      assert Enum.any?(classes, &String.contains?(&1, "border-l-2")),
-             "desktop nav_link should expose a border-left current cue, got: #{inspect(classes)}"
+      assert Enum.any?(classes, &String.contains?(&1, "mg-nav-current")),
+             "desktop nav_link should expose a text underline current cue, got: #{inspect(classes)}"
 
-      assert Enum.any?(classes, &String.contains?(&1, "border-b-2")),
-             "mobile nav_pill should expose a border-bottom current cue, got: #{inspect(classes)}"
-
-      assert Enum.all?(classes, &String.contains?(&1, "border-primary")),
-             "all active shell nav cues should use the active border token, got: #{inspect(classes)}"
+      assert Enum.all?(classes, &String.contains?(&1, "mg-nav-current")),
+             "desktop and mobile nav should share the text underline current cue"
 
       assert Enum.all?(classes, &String.contains?(&1, "font-bold")),
              "all active shell nav cues should keep bold active text, got: #{inspect(classes)}"

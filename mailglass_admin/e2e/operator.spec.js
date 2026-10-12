@@ -522,10 +522,10 @@ test.describe("operator browser gate", () => {
   });
 
   // VERIF-02: structural coverage for Operator Overview landing (D-05 / GAP-register sev-4 closeout)
-  // Asserts the health-count cards container and drill-through links are visible
+  // Asserts recorded problems and their investigation links are visible
   // when the tenant is scoped. Uses getByTestId for structural assertions (not pixel-based).
   // Note: operator-overview-nav (Navigate block) was removed in Phase 119 (SHELL-02).
-  test("operator overview landing has health cards and drill-through links", async ({ page }) => {
+  test("operator overview shows recorded problems and recent activity", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
@@ -536,18 +536,19 @@ test.describe("operator browser gate", () => {
     // Overview container
     await expect(page.getByTestId("operator-overview")).toBeVisible();
 
-    // Health-count cards container (all four sub-cards always render; colors vary by seed state)
+    // Health contains nonzero problems and recent activity; zero-count rows are absent.
     await expect(page.getByTestId("operator-overview-health")).toBeVisible();
 
     // SHELL-02: failures stat card is wrapped in a drill-through link to failed Deliveries
-    const failuresLink = page.getByTestId("operator-overview-health-failures-link");
+    const failuresLink = page.getByTestId("operator-health-deliveries-failed-link");
     await expect(failuresLink).toBeVisible();
-    await expect(failuresLink).toHaveAttribute("href", /support_focus=failed_ingest/);
+    await expect(failuresLink).toHaveAttribute("href", /event=failed/);
+    await expect(page.getByTestId("operator-overview-health-failures-link")).toHaveCount(0);
 
-    // SHELL-02: suppressions stat card is wrapped in a drill-through link to suppressed Deliveries
-    const suppressionsLink = page.getByTestId("operator-overview-health-suppressions-link");
-    await expect(suppressionsLink).toBeVisible();
-    await expect(suppressionsLink).toHaveAttribute("href", /event=suppressed/);
+    await expect(page.getByTestId("operator-health-status")).toContainText("Needs attention");
+    await expect(page.getByTestId("operator-health-outbound-activity")).toContainText("6");
+    await expect(page.getByTestId("operator-overview-health-suppressions-link")).toHaveCount(0);
+    await expect(page.getByText("Additional records", { exact: true })).toHaveCount(0);
   });
 
   // SHELL-02: orientation strip is empty-pane-only — present on all-clear, absent when attention needed.
@@ -707,9 +708,9 @@ test.describe("operator browser gate", () => {
     await expect(ts).toBeVisible();
     await expect(ts).toHaveAttribute("datetime", /Z$/);
     await expect(ts).toHaveAttribute("data-utc", /UTC$/);
-    await expect(ts.locator("xpath=ancestor::button[@data-timestamp-copy]")).toHaveAttribute(
-      "title", /UTC · Click to copy$/
-    );
+    const copyTrigger = ts.locator("xpath=ancestor::button[@data-timestamp-copy]");
+    await copyTrigger.hover();
+    await expect(copyTrigger.locator("xpath=..").locator(".mg-field-help-tooltip")).toContainText("UTC · Click to copy");
     await expect(ts).toHaveAttribute("data-localized", "1");
     await expect(ts).not.toContainText("Local:");
     await expect(ts).toHaveAttribute("aria-label", /local time$/);
