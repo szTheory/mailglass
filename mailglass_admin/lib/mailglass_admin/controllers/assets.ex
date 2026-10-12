@@ -227,7 +227,7 @@ defmodule MailglassAdmin.Controllers.Assets do
     function schedule() {
       if (scheduled) return
       scheduled = true
-      requestAnimationFrame(() => { scheduled = false; localizeAll() })
+      requestAnimationFrame(() => { scheduled = false; localizeAll(); positionActiveFieldHelpTooltips() })
     }
 
     // Native account disclosure menus should dismiss when the operator clicks away.
@@ -262,15 +262,26 @@ defmodule MailglassAdmin.Controllers.Assets do
       const placement = below + panel.height <= window.innerHeight - padding || above < padding
         ? "bottom"
         : "top"
-      const top = placement === "bottom" ? below : above
+      const top = Math.max(padding, Math.min(
+        placement === "bottom" ? below : above,
+        window.innerHeight - panel.height - padding
+      ))
 
-      tooltip.style.position = "fixed"
-      tooltip.style.inset = "auto"
-      tooltip.style.left = `${Math.round(left)}px`
-      tooltip.style.top = `${Math.round(top)}px`
-      tooltip.style.translate = "none"
-      tooltip.dataset.placement = placement
-      tooltip.style.setProperty("--mg-tooltip-arrow-x", `${Math.round(trigger.left + trigger.width / 2 - left)}px`)
+      // Only write changed values: the observer also repairs styles removed by
+      // LiveView patches, and identical writes would create a mutation loop.
+      const styles = {
+        position: "fixed", right: "auto", bottom: "auto",
+        left: `${Math.round(left)}px`, top: `${Math.round(top)}px`, translate: "none"
+      }
+      for (const [property, value] of Object.entries(styles)) {
+        if (tooltip.style[property] !== value) tooltip.style[property] = value
+      }
+      if (tooltip.dataset.placement !== placement) tooltip.dataset.placement = placement
+      const arrow = `${Math.round(Math.max(12, Math.min(panel.width - 12,
+        trigger.left + trigger.width / 2 - left)))}px`
+      if (tooltip.style.getPropertyValue("--mg-tooltip-arrow-x") !== arrow) {
+        tooltip.style.setProperty("--mg-tooltip-arrow-x", arrow)
+      }
     }
 
     function positionActiveFieldHelpTooltips() {
@@ -379,7 +390,7 @@ defmodule MailglassAdmin.Controllers.Assets do
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ["data-localized", "datetime"],
+        attributeFilter: ["data-localized", "datetime", "aria-expanded", "style"],
         characterData: true
       })
     }

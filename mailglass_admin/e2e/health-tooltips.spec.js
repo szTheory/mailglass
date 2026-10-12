@@ -67,3 +67,35 @@ test("health refresh retains its icon after repeated requests", async ({ page })
     await expect(refresh.locator(".hero-arrow-path")).toBeVisible();
   }
 });
+
+for (const width of [1440, 390]) {
+  test(`shared help keeps its anchor after a LiveView style reset at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const reset = await page.request.get("/ops/browser-reset");
+    expect(reset.ok()).toBeTruthy();
+    const returnTo = encodeURIComponent("/ops/mail?tenant_id=browser-tenant");
+    await page.goto(`/ops/browser-login?tenant_id=browser-tenant&return_to=${returnTo}`);
+    const trigger = page.locator("#operator-health-window-help-trigger");
+    const tooltip = page.locator("#operator-health-window-help-tooltip");
+    await trigger.click();
+    const anchored = async () => {
+      const button = await trigger.boundingBox();
+      const panel = await tooltip.boundingBox();
+      return panel && button && panel.x >= 12 && panel.x + panel.width <= width - 11 &&
+        Math.abs(panel.y - (button.y + button.height + 8)) <= 1;
+    };
+    await expect.poll(anchored).toBeTruthy();
+    await expect(tooltip).toHaveCSS("opacity", "1");
+    // Morphdom can discard client-owned inline styles when replacing attributes.
+    await tooltip.evaluate(element => element.removeAttribute("style"));
+    await expect.poll(anchored).toBeTruthy();
+    await expect(tooltip).toHaveCSS("opacity", "1");
+    await page.setViewportSize({ width, height: 420 });
+    await expect.poll(async () => {
+      const panel = await tooltip.boundingBox();
+      return panel && panel.y >= 12 && panel.y + panel.height <= 409;
+    }).toBeTruthy();
+    await page.keyboard.press("Escape");
+    await expect(tooltip).toHaveCSS("visibility", "hidden");
+  });
+}

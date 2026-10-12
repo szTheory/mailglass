@@ -203,3 +203,10 @@ unresolved evidence. Replay activity requires that treatment only when a replay
 failed. Reconciliation activity uses “Recorded”; active suppressions use “Active.”
 Informational stat cards use an information icon, not a question mark. Activity
 alone does not establish a problem or a successful email delivery.
+
+Shared field-help tooltips open 8px below their trigger, centered where space
+permits. They flip above near the bottom edge and shift inward to retain a 12px
+viewport margin. Their arrow points toward the trigger after that adjustment.
+The shared observer repairs placement after LiveView patches and viewport changes;
+only changed styles are written to avoid an observer feedback loop. A tooltip stays
+hidden until it has a calculated position, so it cannot flash at the viewport origin.
