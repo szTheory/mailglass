@@ -685,16 +685,59 @@ code, pre, .mono {
   display: block;
 }
 
-/* At browser zoom, a desktop device can expose a narrow CSS viewport. Move the
-   shell actions below the logo before the Account control gets clipped. */
+/* Narrow chrome has two deliberate rows: identity/theme, then account scope.
+   Keep native radio names and 44px targets while hiding their redundant text. */
 @media (max-width: 767px) {
+  .mg-admin-root [data-testid="admin-shell-topbar"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
   .mg-admin-root [data-testid="admin-shell-actions"] {
-    flex-basis: 100%;
-    margin-left: 0;
-    max-width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
+    display: contents;
+  }
+
+  .mg-admin-root [data-testid="admin-shell-actions"] > fieldset[aria-label="Appearance"] {
+    grid-column: 2;
+    grid-row: 1;
+    flex-wrap: nowrap;
+    justify-self: end;
+  }
+
+  .mg-admin-root [data-testid="admin-shell-actions"] > fieldset[aria-label="Appearance"] label {
+    padding-inline: 0;
+    min-width: 46px;
+    min-height: 46px;
+  }
+
+  .mg-admin-root [data-testid="admin-shell-actions"] > fieldset[aria-label="Appearance"] label > span:not([aria-hidden]) {
+    display: none;
+  }
+
+  .mg-admin-root [data-testid="operator-account-context"] {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .mg-admin-root [data-testid="operator-account-context"] > details {
+    width: 100%;
+  }
+
+  .mg-admin-root [data-testid="operator-account-context"] .mg-scope-menu {
+    width: 100%;
+  }
+
+  .mg-admin-root [data-testid="operator-account-switcher"] {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mg-admin-root [data-testid="operator-account-switcher"] > span > .text-secondary {
+    display: none;
+  }
+
+  .mg-admin-root [data-testid="operator-account-label"] {
+    max-width: none;
   }
 }
 
