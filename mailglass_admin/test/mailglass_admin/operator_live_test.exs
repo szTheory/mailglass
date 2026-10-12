@@ -2483,7 +2483,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~
-               "Failed and dead webhook rows received during the selected Account observation window. This counts processing attempts, not failed Deliveries."
+               "Webhook events that failed processing or exhausted their retries within this account’s observation period. This count does not represent failed email deliveries."
 
       assert html =~
                "Unresolved Event records in the selected Account observation window. A shown oldest Event is one example, not the complete population."
@@ -2715,9 +2715,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert exact_text =~ "Exact Account webhook"
       assert exact_text =~ fixture.older_webhook_event_id
       assert exact_text =~ "Succeeded"
-      assert html =~ "Showing exact Account webhook row"
+      assert html =~ "Showing the selected webhook event"
       refute exact_text =~ "Exact failed webhook"
-      assert html =~ "The requested Account webhook row is retained below"
+      assert html =~ "The selected webhook event is shown below"
     end
 
     test "exact webhook ID survives a newer failure example and an empty Delivery result", %{

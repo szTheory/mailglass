@@ -52,3 +52,18 @@ for (const width of [1440, 390]) {
     });
   }
 }
+
+test("health refresh retains its icon after repeated requests", async ({ page }) => {
+  const reset = await page.request.get("/ops/browser-reset");
+  expect(reset.ok()).toBeTruthy();
+  const returnTo = encodeURIComponent("/ops/mail?tenant_id=browser-tenant");
+  await page.goto(`/ops/browser-login?tenant_id=browser-tenant&return_to=${returnTo}`);
+  const refresh = page.getByRole("button", { name: "Refresh health", exact: true });
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await refresh.click();
+    await expect(page.getByTestId("copy-toast")).toBeVisible();
+    await expect(page.getByTestId("copy-toast")).toContainText("Email health refreshed.");
+    await expect(refresh).toBeEnabled();
+    await expect(refresh.locator(".hero-arrow-path")).toBeVisible();
+  }
+});

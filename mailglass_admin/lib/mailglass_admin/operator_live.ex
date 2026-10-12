@@ -740,10 +740,11 @@ defmodule MailglassAdmin.OperatorLive do
                   <button
                     type="button"
                     phx-click="retry_health"
-                    phx-disable-with="Refreshing…"
                     class="btn btn-ghost min-h-11"
                   >
-                    <Components.icon name="hero-arrow-path" class="h-4 w-4" /> Refresh health
+                    <Components.icon name="hero-arrow-path" class="h-4 w-4" />
+                    <span class="[.phx-click-loading_&]:hidden">Refresh health</span>
+                    <span class="hidden [.phx-click-loading_&]:inline">Refreshing…</span>
                   </button>
                 </div>
                 <div class="grid gap-md md:grid-cols-2">
@@ -775,7 +776,7 @@ defmodule MailglassAdmin.OperatorLive do
                           @health_panel_states
                         )
                       }
-                      hint="Failed and dead webhook rows received during the selected Account observation window. This counts processing attempts, not failed Deliveries."
+                      hint="Webhook events that failed processing or exhausted their retries within this account’s observation period. This count does not represent failed email deliveries."
                       data-testid="operator-overview-health-failures"
                     />
                   </.link>
@@ -2770,7 +2771,7 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp support_focus_body(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),
     do:
-      "The requested Account webhook row is retained below with its current stored status, which may differ from the failed-attempt population that linked here."
+      "The selected webhook event is shown below with its current status. It may have changed since the failure was recorded."
 
   defp support_focus_body(%{focus: :orphan_backlog}),
     do:
