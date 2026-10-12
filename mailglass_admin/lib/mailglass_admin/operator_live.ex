@@ -771,6 +771,13 @@ defmodule MailglassAdmin.OperatorLive do
                         health_metric_state(@support_summary, :failed_ingest, @health_panel_states)
                       }
                       severity={health_metric_severity(@support_summary, :failed_ingest, :warning)}
+                      show_severity={
+                        health_status_visible?(
+                          @health_panel_states,
+                          :failed_ingest,
+                          health_metric_severity(@support_summary, :failed_ingest, :warning)
+                        )
+                      }
                       severity_label={
                         health_metric_severity_label(
                           @support_summary,
@@ -803,6 +810,13 @@ defmodule MailglassAdmin.OperatorLive do
                         health_metric_state(@support_summary, :orphan_backlog, @health_panel_states)
                       }
                       severity={health_metric_severity(@support_summary, :orphan_backlog, :warning)}
+                      show_severity={
+                        health_status_visible?(
+                          @health_panel_states,
+                          :orphan_backlog,
+                          health_metric_severity(@support_summary, :orphan_backlog, :warning)
+                        )
+                      }
                       severity_label={
                         health_metric_severity_label(
                           @support_summary,
@@ -840,6 +854,9 @@ defmodule MailglassAdmin.OperatorLive do
                         )
                       }
                       severity={suppression_severity(@suppression_count)}
+                      show_severity={
+                        health_status_visible?(@health_panel_states, :active_suppressions, :info)
+                      }
                       severity_label={
                         suppression_severity_label(
                           @suppression_count,
@@ -871,6 +888,13 @@ defmodule MailglassAdmin.OperatorLive do
                         health_metric_state(@support_summary, :replay_outcomes, @health_panel_states)
                       }
                       severity={health_metric_severity(@support_summary, :replay_outcomes, :info)}
+                      show_severity={
+                        health_status_visible?(
+                          @health_panel_states,
+                          :replay_outcomes,
+                          health_metric_severity(@support_summary, :replay_outcomes, :info)
+                        )
+                      }
                       severity_label={
                         health_metric_severity_label(
                           @support_summary,
@@ -903,6 +927,13 @@ defmodule MailglassAdmin.OperatorLive do
                         health_metric_state(@support_summary, :reconcile_facts, @health_panel_states)
                       }
                       severity={health_metric_severity(@support_summary, :reconcile_facts, :info)}
+                      show_severity={
+                        health_status_visible?(
+                          @health_panel_states,
+                          :reconcile_facts,
+                          health_metric_severity(@support_summary, :reconcile_facts, :info)
+                        )
+                      }
                       severity_label={
                         health_metric_severity_label(
                           @support_summary,
@@ -2192,7 +2223,7 @@ defmodule MailglassAdmin.OperatorLive do
   defp latest_replay(replay_history), do: List.last(replay_history)
 
   defp health_metric_link_class do
-    "group block rounded-box mg-focus-ring transition-transform ease-out duration-(--duration-fast) hover:-translate-y-px"
+    "group block rounded-box mg-focus-ring transition-transform ease-out duration-(--duration-fast) hover:-translate-y-px [&>article]:h-full"
   end
 
   defp build_path(
@@ -2646,6 +2677,10 @@ defmodule MailglassAdmin.OperatorLive do
       _ when is_integer(value) -> :ready
       _ -> :unavailable
     end
+  end
+
+  defp health_status_visible?(panel_states, panel, severity) do
+    get_in(panel_states, [panel, :status]) != :ready or severity in [:warning, :error]
   end
 
   defp health_metric_severity(summary, :replay_outcomes, _severity) do

@@ -433,6 +433,7 @@ defmodule MailglassAdmin.Components do
   attr(:value, :any, default: nil)
   attr(:severity, :atom, values: [:neutral, :info, :success, :warning, :error], default: :neutral)
   attr(:severity_label, :string, default: nil)
+  attr(:show_severity, :boolean, default: true)
   attr(:state, :atom, values: [:ready, :empty, :loading, :unavailable], default: :ready)
   attr(:empty_text, :string, default: "No data yet")
   attr(:loading_text, :string, default: "Resolving")
@@ -499,11 +500,14 @@ defmodule MailglassAdmin.Components do
       ]}>
         {@display_value}
       </p>
-      <p class={[
-        "mt-sm inline-flex items-center gap-xs text-label font-bold",
-        @compact && "sr-only",
-        stat_severity_class(@severity)
-      ]}>
+      <p
+        :if={@show_severity}
+        class={[
+          "mt-sm inline-flex items-center gap-xs text-label font-bold",
+          @compact && "sr-only",
+          stat_severity_class(@severity)
+        ]}
+      >
         <.icon name={stat_severity_icon(@severity)} class="h-4 w-4 shrink-0" />
         <span>{@display_severity_label}</span>
       </p>

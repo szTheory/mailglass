@@ -2515,10 +2515,12 @@ defmodule MailglassAdmin.OperatorLiveTest do
       end
 
       reconcile = Floki.find(health, ~s([data-testid="operator-overview-health-reconcile"]))
-      assert Floki.text(reconcile) =~ "Recorded"
+      assert Floki.find(reconcile, "p.mt-sm") == []
       refute Floki.text(reconcile) =~ "Needs attention"
       replay = Floki.find(health, ~s([data-testid="operator-overview-health-replay"]))
-      assert Floki.text(replay) =~ "Recorded"
+      suppression = Floki.find(health, ~s([data-testid="operator-overview-health-suppressions"]))
+      assert Floki.find(suppression, "p.mt-sm") == []
+      assert Floki.find(replay, "p.mt-sm") == []
       refute Floki.text(replay) =~ "Needs attention"
 
       {:ok, _event} =
@@ -3024,7 +3026,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-overview-health"),
              "overview health block must render without crashing"
 
-      assert html =~ "No matching evidence"
+      refute html =~ "No matching evidence"
       refute html =~ "Email delivery is healthy"
       refute html =~ "All clear"
     end
@@ -3625,7 +3627,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ "No matching evidence"
+      refute html =~ "No matching evidence"
       refute html =~ "Email delivery is healthy"
     end
 
