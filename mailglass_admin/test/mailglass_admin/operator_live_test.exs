@@ -3481,6 +3481,17 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute changed_window_html =~ "synthetic transient operator read failure"
     end
 
+    test "refresh health confirms completed reads", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
+      html = render_click(view, "retry_health")
+      assert html =~ "hero-arrow-path"
+
+      assert_push_event(view, "mailglass:toast", %{
+        message: "Email health refreshed.",
+        error: false
+      })
+    end
+
     test "keeps a failed observation isolated while retaining its last known value", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, view, initial_html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
@@ -3495,6 +3506,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
       OperatorFixtures.arm_reader_fault!("operator-1", "orphan_backlog", :known)
       html = render_click(view, "retry_health")
       document = Floki.parse_document!(html)
+
+      assert_push_event(view, "mailglass:toast", %{
+        message: "Some health data could not be refreshed.",
+        error: true
+      })
 
       assert html =~ ~s(data-testid="operator-health-stale-orphan_backlog")
 

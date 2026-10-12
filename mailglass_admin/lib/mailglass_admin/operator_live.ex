@@ -509,7 +509,19 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("retry_health", _params, socket) do
-    {:noreply, assign_overview_state(socket, socket.assigns.filter_params)}
+    socket = assign_overview_state(socket, socket.assigns.filter_params)
+
+    refreshed? =
+      Enum.all?(socket.assigns.health_panel_states, fn {_panel, state} ->
+        state.status == :ready
+      end)
+
+    message =
+      if refreshed?,
+        do: "Email health refreshed.",
+        else: "Some health data could not be refreshed."
+
+    {:noreply, push_event(socket, "mailglass:toast", %{message: message, error: !refreshed?})}
   end
 
   def handle_event("choose_replay_target", %{"webhook_event_id" => webhook_event_id}, socket) do
@@ -725,8 +737,13 @@ defmodule MailglassAdmin.OperatorLive do
                   <p data-testid="operator-health-last-checked">
                     Last checked <Components.timestamp at={@health_observed_at} />
                   </p>
-                  <button type="button" phx-click="retry_health" class="btn btn-ghost min-h-11">
-                    Refresh health
+                  <button
+                    type="button"
+                    phx-click="retry_health"
+                    phx-disable-with="Refreshing…"
+                    class="btn btn-ghost min-h-11"
+                  >
+                    <Components.icon name="hero-arrow-path" class="h-4 w-4" /> Refresh health
                   </button>
                 </div>
                 <div class="grid gap-md md:grid-cols-2">

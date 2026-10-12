@@ -303,20 +303,25 @@ defmodule MailglassAdmin.Controllers.Assets do
       }
     }, true)
 
-    let copyToastTimer
-    function showCopyToast(message, isError = false) {
+    let toastTimer
+    function showToast(message, isError = false) {
       const toast = document.getElementById("mg-copy-toast")
       const messageEl = toast?.querySelector("[data-copy-toast-message]")
       const alert = messageEl?.parentElement
       if (!toast || !messageEl || !alert) return
 
-      window.clearTimeout(copyToastTimer)
+      window.clearTimeout(toastTimer)
       alert.classList.toggle("alert-success", !isError)
       alert.classList.toggle("alert-error", isError)
       messageEl.textContent = message
       toast.hidden = false
-      copyToastTimer = window.setTimeout(() => { toast.hidden = true }, 2400)
+      toastTimer = window.setTimeout(() => { toast.hidden = true }, 2400)
     }
+
+    // Server notifications share the same feedback surface as copy actions.
+    window.addEventListener("phx:mailglass:toast", ({detail}) => {
+      showToast(detail.message, detail.error === true)
+    })
 
     // Copy controls remain functional after LiveView patches. Timestamp clicks use
     // the shared toast, as do clickable identifiers; other controls keep adjacent status.
@@ -344,12 +349,12 @@ defmodule MailglassAdmin.Controllers.Assets do
           return navigator.clipboard.writeText(value)
         })
         .then(() => {
-          if (copyToast) showCopyToast(copyToast)
+          if (copyToast) showToast(copyToast)
           else status.textContent = "Copied."
         })
         .catch(() => {
           const message = "Clipboard access failed. Select and copy the visible value manually."
-          if (copyToast) showCopyToast(message, true)
+          if (copyToast) showToast(message, true)
           else status.textContent = "Clipboard unavailable. Select and copy the visible value manually."
         })
     }, true)
