@@ -3,7 +3,7 @@ defmodule MailglassAdmin.Controllers.Assets do
   Compile-time asset server for the mailglass_admin preview dashboard.
 
   Embeds `priv/static/app.css`, the concatenated Phoenix + Phoenix
-  LiveView JS bundles, the logo SVG, and the font woff2 subsets into
+  LiveView JS bundles, the logo and favicon SVGs, and the font woff2 subsets into
   module attributes at compile time via `@external_resource` +
   `File.read!/1`. Request-time cost is a single `Plug.Conn.send_resp/3`
   from the module-attribute bytes — no filesystem I/O, no Plug.Static
@@ -418,6 +418,12 @@ defmodule MailglassAdmin.Controllers.Assets do
   @external_resource @logo_path
   @logo File.read!(@logo_path)
 
+  # ---- Favicon: the brand's small-size mark, with OS dark-mode support ----
+  @favicon_path Path.join([:code.priv_dir(:mailglass_admin), "static", "favicon.svg"])
+  @external_resource @favicon_path
+  @favicon File.read!(@favicon_path)
+  @favicon_hash Base.encode16(:crypto.hash(:md5, @favicon), case: :lower)
+
   @doc """
   MD5 hash (lowercase hex) of the embedded `priv/static/app.css` bytes.
 
@@ -438,6 +444,10 @@ defmodule MailglassAdmin.Controllers.Assets do
   @spec js_hash() :: String.t()
   def js_hash, do: @js_hash
 
+  @doc "Content hash used to version the embedded favicon URL."
+  @spec favicon_hash() :: String.t()
+  def favicon_hash, do: @favicon_hash
+
   @doc false
   @spec js_body() :: binary()
   def js_body, do: @js
@@ -446,11 +456,12 @@ defmodule MailglassAdmin.Controllers.Assets do
   # Router emits `get "/css-:md5", MailglassAdmin.Controllers.Assets, :css`
   # which calls `init(:css)` once at compile time + `call(conn, :css)`
   # on every request.
-  def init(action) when action in [:css, :js, :font, :logo], do: action
+  def init(action) when action in [:css, :js, :font, :logo, :favicon], do: action
 
   def call(conn, :css), do: serve(conn, @css, "text/css; charset=utf-8")
   def call(conn, :js), do: serve(conn, @js, "application/javascript; charset=utf-8")
   def call(conn, :logo), do: serve(conn, @logo, "image/svg+xml")
+  def call(conn, :favicon), do: serve(conn, @favicon, "image/svg+xml")
 
   def call(conn, :font) do
     name = conn.params["name"]

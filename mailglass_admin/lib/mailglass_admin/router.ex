@@ -340,6 +340,7 @@ defmodule MailglassAdmin.Router do
       get("/js-:md5", MailglassAdmin.Controllers.Assets, :js)
       get("/fonts/:name", MailglassAdmin.Controllers.Assets, :font)
       get("/logo.svg", MailglassAdmin.Controllers.Assets, :logo)
+      get("/favicon.svg", MailglassAdmin.Controllers.Assets, :favicon)
     end
   end
 

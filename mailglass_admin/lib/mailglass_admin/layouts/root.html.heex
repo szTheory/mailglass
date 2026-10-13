@@ -7,6 +7,7 @@
     <.live_title suffix=" · mailglass">
       {assigns[:page_title] || "Preview"}
     </.live_title>
+    <link rel="icon" type="image/svg+xml" sizes="any" href={favicon_url(assigns)} />
     <link rel="stylesheet" href={css_url(assigns)} />
     <style>
       /* Until the local-time script marks a <time> localized, show a static, muted

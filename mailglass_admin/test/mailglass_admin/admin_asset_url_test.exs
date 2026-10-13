@@ -1,6 +1,6 @@
 defmodule MailglassAdmin.AdminAssetUrlTest do
   @moduledoc """
-  First-HTML proof that admin stylesheet hrefs are rooted at the effective
+  First-HTML proof that admin asset hrefs are rooted at the effective
   macro mount path for direct loads and deep links.
   """
 
@@ -113,6 +113,16 @@ defmodule MailglassAdmin.AdminAssetUrlTest do
         href = stylesheet_href!(html)
 
         assert_stylesheet_href_rooted!(href, mount_root, path)
+
+        {:ok, doc} = Floki.parse_document(html)
+        [favicon] = Floki.find(doc, ~s(link[rel="icon"]))
+        assert Floki.attribute(favicon, "type") == ["image/svg+xml"]
+        assert Floki.attribute(favicon, "sizes") == ["any"]
+
+        assert Floki.attribute(favicon, "href") == [
+                 Path.join(mount_root, "favicon.svg") <>
+                   "?v=" <> MailglassAdmin.Controllers.Assets.favicon_hash()
+               ]
       end
     end
   end
