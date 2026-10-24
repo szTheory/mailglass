@@ -514,7 +514,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ ~s(data-testid="inbound-trace-clause")
       assert html =~ "sm:grid-cols"
       assert html =~ "bg-base-100"
-      assert html =~ "bg-error/10"
+      assert html =~ "mg-trace-clause-failing"
       assert html =~ "Dimension"
       assert html =~ "Expected"
       assert html =~ "Actual"

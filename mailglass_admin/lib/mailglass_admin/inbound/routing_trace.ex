@@ -74,7 +74,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                         data-testid="inbound-trace-clause"
                         class={[
                           "min-w-0 rounded-box",
-                          verdict.first_failing? && "bg-error/10 p-sm"
+                          verdict.first_failing? && "mg-trace-clause-failing p-sm"
                         ]}
                       >
                         <div class="grid min-w-0 gap-sm sm:grid-cols-[minmax(7rem,10rem)_1fr_1fr]">

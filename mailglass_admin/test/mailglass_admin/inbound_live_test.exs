@@ -1249,8 +1249,8 @@ defmodule MailglassAdmin.InboundLiveTest do
              |> Floki.find("[data-testid='inbound-routing-trace']")
              |> Floki.text() =~ "nomatch@example.com"
 
-      # First failing clause has the error left-border emphasis.
-      assert html =~ "bg-error/10"
+      # First failing clause carries the opaque error-tint emphasis.
+      assert html =~ "mg-trace-clause-failing"
     end
   end
 

@@ -286,7 +286,22 @@
   color: var(--color-primary);
 }
 
+/* First failing routing clause: a quiet error tint on its base-100 route card.
+   Mixed to an opaque surface (same appearance as a 10% error overlay) so the
+   clause's text sits on a definite background in both themes. */
+.mg-trace-clause-failing {
+  background-color: color-mix(in oklab, var(--color-error) 10%, var(--color-base-100));
+}
+
+/* Clickable timestamps and identifiers are real buttons, so they keep the
+   44×44 touch-target floor every other operator control meets. */
 .mg-timestamp-copy-trigger {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  max-width: 100%;
+  vertical-align: middle;
   appearance: none;
   border: 0;
   padding: 0;
