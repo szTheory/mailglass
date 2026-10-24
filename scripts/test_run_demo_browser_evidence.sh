@@ -132,14 +132,14 @@ DEMO_FAKE_NODE_LOG="$TEMP_DIR/node.log"
 
 run_contract success
 assert_project_and_ports
-grep -F 'phase173-evidence.spec.js' "$DEMO_FAKE_DOCKER_LOG" >/dev/null || {
-  echo "success path did not select phase173-evidence.spec.js" >&2
+grep -F 'npm --silent --prefix assets run test:e2e -- --reporter=json' "$DEMO_FAKE_DOCKER_LOG" >/dev/null || {
+  echo "success path did not run the full existing Playwright suite" >&2
   exit 1
 }
-grep -F 'npm --silent --prefix assets run test:e2e -- phase173-evidence.spec.js --reporter=json' "$DEMO_FAKE_DOCKER_LOG" >/dev/null || {
-  echo "success path did not use the focused existing Playwright script" >&2
+if grep -E 'test:e2e -- [^-][^ ]*\.spec\.js' "$DEMO_FAKE_DOCKER_LOG" >/dev/null; then
+  echo "success path narrowed the Playwright suite to a spec file" >&2
   exit 1
-}
+fi
 grep -F 'sha256sum /workspace/reference/demo_app/_build/dev/lib/mailglass_demo/ebin/Elixir.MailglassDemoWeb.PageController.beam' "$DEMO_FAKE_DOCKER_LOG" >/dev/null || {
   echo "success path did not fingerprint the compiled demo route template" >&2
   exit 1

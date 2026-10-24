@@ -270,7 +270,7 @@ function assertContract(launcher, dockerignore, compose, runner) {
   if (fs.existsSync(path.join(root, "Dockerfile.dockerignore")) || fs.existsSync(path.join(root, "reference/demo_app/Dockerfile.dockerignore"))) {
     throw new Error("Dockerfile-specific ignore override bypasses the root exclusions");
   }
-  if (!runner.includes("test:e2e -- phase173-evidence.spec.js --reporter=json")) throw new Error("focused Phase 173 browser selector changed");
+  if (!runner.includes("test:e2e -- --reporter=json")) throw new Error("full demo browser suite selector changed");
 }
 const initial = [fs.readFileSync(launcherPath, "utf8"), fs.readFileSync(dockerPath, "utf8"),
   fs.readFileSync(composePath, "utf8"), fs.readFileSync(runnerPath, "utf8")];
@@ -282,7 +282,7 @@ const cases = [
   [0, (x) => x.replace('[[ "$listed_path" == "reference/demo_app/README.md" ]] && continue', "# skip removed")],
   [1, (x) => x.replace("reference/demo_app/README.md\n", "")],
   [1, (x) => `${x}\n!reference/demo_app/README.md\n`],
-  [3, (x) => x.replace("phase173-evidence.spec.js", "*.spec.js")],
+  [3, (x) => x.replace("test:e2e -- --reporter=json", "test:e2e -- phase173-evidence.spec.js --reporter=json")],
   [0, (x) => x.replaceAll("ASDF_ERLANG_VERSION=27.3.4.13 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec mix deps.get --check-locked", "asdf exec mix deps.get")],
   [0, (x) => x.replace("restore_candidate_demo_lock\n    TMP_DIR", "TMP_DIR")]
 ];
