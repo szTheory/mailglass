@@ -42,15 +42,15 @@
 
 ### Recipient output and built-in pages
 
-- [ ] **MAILUX-01**: An author using the public email components can produce readable transactional messages with coherent heading/body/action hierarchy and usable long-content, narrow-width, link, and image-fallback behavior while preserving email-specific markup support.
-- [ ] **MAILUX-02**: An evaluator can review representative existing transactional scenarios with consistent sender branding and explicit coverage of both the public components and AtlasDesk's separate renderer; examples accurately demonstrate supported authoring paths.
+- [x] **MAILUX-01**: An author using the public email components can produce readable transactional messages with coherent heading/body/action hierarchy and usable long-content, narrow-width, link, and image-fallback behavior while preserving email-specific markup support.
+- [x] **MAILUX-02**: An evaluator can review representative existing transactional scenarios with consistent sender branding and explicit coverage of both the public components and AtlasDesk's separate renderer; examples accurately demonstrate supported authoring paths.
 - [x] **MAILUX-03**: A recipient can understand the message and its essential action from plaintext output as well as HTML, with meaningful links and content preserved through the renderer.
 - [x] **MAILUX-04**: A recipient visiting the built-in unsubscribe GET page or an invalid/expired link sees readable, accessible, truthful state and next-step copy; configured host redirects and the existing protocol POST contract remain intact, with no unsupported confirmation or completion claim.
 
 ### Consistency, evidence, and delivery
 
 - [ ] **UIQ-01**: A maintainer can find the delivered shared patterns and applicable states in the existing gallery/Storybook and current design-system documentation, with clear ownership of tokens and no obsolete implementation left competing with the new patterns.
-- [ ] **UIQ-02**: A maintainer can reproduce focused automated checks and inspect source-identified before/after renders covering the changed primary flows and relevant adverse states, with email-client and other evidence limits stated explicitly.
+- [x] **UIQ-02**: A maintainer can reproduce focused automated checks and inspect source-identified before/after renders covering the changed primary flows and relevant adverse states, with email-client and other evidence limits stated explicitly.
 - [ ] **UIQ-03**: The owner can review the completed milestone in a documented working preview, with required CI passing on the delivery candidate, task-owned changes committed, generated assets current, and temporary artifacts/services disposed of or explicitly retained for feedback.
 
 ## Acceptance applying to every delivery slice
@@ -99,12 +99,12 @@ The approved [roadmap](ROADMAP.md) assigns each of the 28 v2.9 requirements to e
 | PRVUX-02 | Phase 171 | Complete |
 | PRVUX-03 | Phase 171 | Complete |
 | PRVUX-04 | Phase 171 | Complete |
-| MAILUX-01 | Phase 172 | Pending |
-| MAILUX-02 | Phase 172 | Pending |
+| MAILUX-01 | Phase 172 | Complete |
+| MAILUX-02 | Phase 172 | Complete |
 | MAILUX-03 | Phase 172 | Complete |
 | MAILUX-04 | Phase 172 | Complete |
 | UIQ-01 | Phase 173 | Pending |
-| UIQ-02 | Phase 173 | Pending |
+| UIQ-02 | Phase 173 | Complete |
 | UIQ-03 | Phase 173 | Pending |
 
 **Coverage:** 28/28 mapped; no duplicate or orphaned requirement IDs.

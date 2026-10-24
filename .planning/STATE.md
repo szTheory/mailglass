@@ -4,17 +4,17 @@ milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
 current_phase: 173
 current_phase_name: Consistency and Delivery Evidence
-status: executing
-stopped_at: Phase 173 UI-SPEC approved
-last_updated: "2026-10-10T00:28:23.389Z"
-last_activity: 2026-10-09
-last_activity_desc: Phase 172 complete, transitioned to Phase 173
-state_head: f3433d69980b2700c752e1bd729d4bcd69872df3
+status: verifying
+stopped_at: Inbound summary cleanup a17f0ee5 locally verified; prior full delivery proof is for 9b6e60e4; owner acceptance outstanding
+last_updated: "2026-10-10T19:06:54Z"
+last_activity: 2026-10-10
+last_activity_desc: Removed repeated summary filter context and locally committed as a17f0ee5; 621 admin tests and 9 browser checks pass; current UI review at port 55483; prior 9b6e60e4 delivery evidence retained
+state_head: 4a219c42c6ba075a534d9860535ff37acd4e0ad8
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 33
-  completed_plans: 30
+  total_plans: 38
+  completed_plans: 38
   percent: 83
 ---
 
@@ -39,12 +39,12 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 ## Current Position
 
-Phase: 173 (Consistency and Delivery Evidence) — READY TO EXECUTE
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-10-09 — Phase 172 complete, transitioned to Phase 173
+Phase: 173 (Consistency and Delivery Evidence) — VERIFYING
+Plan: 8 of 8
+Status: Inbound summary cleanup a17f0ee5 is locally committed and verified (621 admin tests, 9 browser checks), ready for review at port 55483. It has not been pushed or given fresh remote CI/full delivery-gate evidence. The previous 9b6e60e4 candidate passed all local delivery predicates and all 26 exact-SHA CI jobs; its retained record and port 59905 preview remain unchanged. Authenticated owner acceptance remains unverified. Last formal goal-verification report: 24/27 (historical, not re-scored). Current UI follow-up: `173-INBOUND-REFINEMENT.md`; prior exact-SHA delivery proof: `173-DELIVERY-CHECKS.md`.
+Last activity: 2026-10-10 — Removed repeated summary context after polishing the filters and collection on http://127.0.0.1:55483/ops/mail/inbound?tenant_id=northstar; retained the previous full delivery preview at http://127.0.0.1:59905/dev/mail.
 
-Progress: 5/6 phases ([████████░░] 83%); [████████████████████] 30/30 planned plans (100%).
+Progress: 5/6 phases ([████████░░] 83%); [████████████████████] 38/38 planned plans have summaries (100%); Phase 173 delivery remains incomplete
 
 ## v2.9 Roadmap Shape
 
@@ -283,6 +283,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | Phase 171 P04 | 25min | 2 tasks | 16 files |
 | Phase 172 P02 | 8min | 3 tasks | 8 files |
 | Phase 172 P03 | 9min | 3 tasks | 8 files |
+| Phase 173 P05 | 27min | 2 tasks | 13 files |
+| Phase 173 P06 | 7m | 1 tasks | 2 files |
+| Phase 173 P07 | 21min | 2 tasks | 16 files |
+| Phase 173 P08 | 32min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -499,6 +503,15 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 - [Phase 172]: Valid GET remains informational and does not change subscription state.
 - [Phase 172]: Fixed state atoms render failure copy without recipient or token assigns.
 - [Phase 172]: Configured redirect applies to GET only; POST remains the mutation path.
+- [Phase 173]: Evidence resets require a strict run-owned project identity plus the existing token.
+- [Phase 173]: Only validated pinned baseline bytes and revalidated sanitized PNG pairs can enter candidate evidence.
+- [Phase 173]: UIQ-03 remains Pending until required exact-SHA CI, clean acceptance inputs, local regression, and retained evidence all pass.
+- [Phase 173]: Bind current browser and preview evidence to candidate SHA 3d6314bae62729b921b6ed7049adbda5181c5b64.
+- [Phase 173]: Keep the retained preview and detached candidate available for owner review, with exact scoped cleanup commands recorded.
+- [Phase 173]: Leave UIQ-03 incomplete until owner acceptance, full local gate proof and exact-SHA required CI Green are established.
+- [Phase 173]: Use sparse exclusions before candidate materialization and exclude both protected inputs from Docker contexts.
+- [Phase 173]: Install only lockfile-pinned Mix/npm dependencies in the detached candidate and restore only candidate-generated demo lock drift.
+- [Phase 173]: Keep delivery incomplete until required exact-SHA CI Green and protected owner acceptance are verified.
 
 ## Quick Tasks Completed
 
@@ -544,9 +557,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-09T23:47:03.103Z
-Stopped at: Phase 173 UI-SPEC approved
-Resume file: .planning/phases/173-consistency-and-delivery-evidence/173-UI-SPEC.md
+Last session: 2026-10-10T15:44:07Z
+Stopped at: User approved the exact candidate push and manual CI dispatch. Branch gsd/phase-173-delivery-8b4ce3e9 now points to 8b4ce3e9643dd1b6a64cc5c96213245bb284512a. CI run 38064299090 has a terminal failed CI Green aggregate. See 173-REMOTE-CI.md for the failures and repair route. Local evidence and review preview http://127.0.0.1:63769/dev/mail remain retained. Owner acceptance remains outstanding.
+Resume file: .planning/phases/173-consistency-and-delivery-evidence/.continue-here.md
 
 ## Operator Next Steps
 
@@ -557,5 +570,5 @@ Resume file: .planning/phases/173-consistency-and-delivery-evidence/173-UI-SPEC.
 - Automated evidence: Admin 577 tests (0 failures, 1 excluded); inbound 3 properties plus 480 tests (0 failures); full operator browser 206 passed and 1 guarded skip. Rendered checks are recorded; no human-only acceptance remains under D-52.
 - Phase 170 artifacts and evidence are in `.planning/phases/170-inbound-investigation-and-recovery/`. GSD emitted three nonblocking missing-path warnings for package-relative references in summaries; the verifier checked the actual package-root files.
 - Phase 172 is complete and verified: 9/9 must-haves, 30 connected browser tests, captured preview/unsubscribe screenshots, fresh 24/24 UI review, clean code review, and zero open security threats. No owner UAT remains under D-52; delivered-email client rendering remains unverified.
-- Phase 173 — Consistency and Delivery Evidence — is the remaining phase and is ready for discussion. If work is interrupted after context is cleared, run `$gsd-resume-work`; do not repeat Phase 172 discussion, research, UI design, or planning.
+- Phase 173 — Consistency and Delivery Evidence — remains verifying. All eight plans have summaries. The full sparse local gate passed for exact candidate 8b4ce3e9: Core 79, Admin 605, Inbound three properties plus 480, connected browser 30, five preview routes, matching built/served CSS, and six clean screenshot/baseline pairs. The user then approved publishing that exact SHA to `gsd/phase-173-delivery-8b4ce3e9` and dispatching CI there; both actions completed. Required `CI Green` failed in run 38064299090. See `173-REMOTE-CI.md` for concrete failures requiring bounded gap repair and `173-LOCAL-GATE.md` for retained local evidence. Authenticated owner acceptance remains outstanding. The original protected-file fence remains active; merge, release, and main writes remain outside the approval.
 - Original unrelated planning-file deletions, configuration edits, and Phase 168/169 screenshot modifications were preserved. Remote delivery/CI proof remains Phase 173 scope.

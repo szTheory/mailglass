@@ -18,7 +18,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 - Usable developer preview plus public email components, sender-branded examples, plaintext, and truthful built-in unsubscribe GET pages.
 - Current shared-pattern guidance, bounded automated and rendered acceptance, and a working feedback preview with passing required CI on the delivery candidate.
 
-**Planning contract:** Approved 2026-10-07: 28 requirements across Phases 168–173. Phases 168–171 are implemented and verified. Phase 170 completed eight plans covering INUX-01–04; independent goal-backward verification passed 30/30 must-haves. Phase 171 Developer Preview is complete; Phase 172 Recipient Output and Built-in Pages is now executing. Engineers and support/on-call operators are equal primary Admin audiences. The owner selected code-first; use Impeccable and relevant Kowalski guidance with the existing LiveView/HEEx stack and brand. [Scope](research/v2.9/SCOPE.md), [requirements](REQUIREMENTS.md), and [roadmap](ROADMAP.md) are canonical for this milestone; root [PRODUCT.md](../PRODUCT.md) owns durable product context.
+**Planning contract:** Approved 2026-10-07: 28 requirements across Phases 168–173. Phases 168–172 are implemented and verified; Phase 173, Consistency and Delivery Evidence, is the remaining phase. Phase 170 completed eight plans covering INUX-01–04; independent goal-backward verification passed 30/30 must-haves. Phase 172 Recipient Output and Built-in Pages passed 9/9 goal-backward must-haves with automated and screenshot evidence. Engineers and support/on-call operators are equal primary Admin audiences. The owner selected code-first; use Impeccable and relevant Kowalski guidance with the existing LiveView/HEEx stack and brand. [Scope](research/v2.9/SCOPE.md), [requirements](REQUIREMENTS.md), and [roadmap](ROADMAP.md) are canonical for this milestone; root [PRODUCT.md](../PRODUCT.md) owns durable product context.
 
 **Standing verification rule (owner decision D-52, 2026-10-08):** Automate every machine-observable acceptance criterion before asking for UAT. Add integration, browser, smoke, or seam tests at the boundary that proves the user-visible contract, run recurring regression checks in CI when their maintenance/runtime cost is justified, and reuse existing dependencies and CI lanes first. GSD confirmation checkpoints are for irreducible human judgment only; passing automated evidence closes its UAT row without another confirmation. See [METHODOLOGY.md](METHODOLOGY.md#shift-left-verification-by-default).
 
@@ -28,7 +28,9 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 **Phase 170 completed and verified 2026-10-09.** Inbound investigation and permitted recovery now preserve Account/filter context, distinguish current-router simulation from historical execution, constrain ordinary evidence to safe projections, and revalidate exact replay eligibility before host authorization. All 30/30 must-haves passed. Local evidence: Admin 577 tests (0 failures, 1 excluded), inbound 3 properties plus 480 tests (0 failures), and operator browser 206 passed with 1 guarded skip. Security closed 21/21 threats; code review is clean. Machine-observable acceptance is automated under D-52; no owner UAT remains. Remote delivery and CI proof remain Phase 173 work.
 
-**Phase 171 completed and verified 2026-10-09.** Developer Preview requirements PRVUX-01–04 are complete. Phase 172 is now executing from its approved three-plan set.
+**Phase 171 completed and verified 2026-10-09.** Developer Preview requirements PRVUX-01–04 are complete. Phase 172 followed from its approved three-plan set and is now complete.
+
+**Phase 172 completed and verified 2026-10-09.** Recipient Output and Built-in Pages requirements MAILUX-01–04 passed 9/9 goal-backward must-haves. The invoice preview and all three unsubscribe states have saved narrow and desktop browser captures; UI review scored 24/24, code review found no issues, and security has zero open threats. Required local checks passed: core 79; Admin 593 (1 excluded); inbound 3 properties plus 480 tests (3 excluded); connected browser 30; focused Mailable 11 and demo Playwright 2. D-52 automation closes the visual UAT item using the saved captures and visual review. Gmail, Outlook, Apple Mail, and delivered-email rendering remain unverified. Phase 173 is the remaining milestone phase.
 
 **Phase 169 completed and verified 2026-10-08 UTC.** Outbound investigation now preserves exact Account/Delivery/support identity, presents bounded truthful Health and timeline evidence, and supports refreshed exact webhook replay review with action-time host authorization. Terminal audit write failures return safe feedback and roll back replay writes. Independent code review is clean, security closed all 17 declared threats, and validation is compliant. Final local checks: 49 core tests; 542 Admin tests with zero failures and one exclusion; full browser suite 197 passed and one guarded skip; cross-phase browser gate 163 passed and one guarded skip. Representative rendered review is complete; physical-device and exhaustive native zoom matrices are not claimed. Milestone delivery and remote CI remain Phase 173 work.
 
@@ -219,11 +221,11 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 - ✓ UXF-01–08: shared workspace and interaction — implemented and verified in Phase 168.
 - ✓ OUTUX-01–05: outbound investigation and recovery — implemented and verified in Phase 169.
 - ✓ INUX-01–04: inbound investigation and recovery — implemented and verified in Phase 170.
-- PRVUX-01–04: developer preview (Phase 171).
-- MAILUX-01–04: recipient output and built-in pages (Phase 172).
+- ✓ PRVUX-01–04: developer preview — implemented and verified in Phase 171.
+- ✓ MAILUX-01–04: recipient output and built-in pages — implemented and verified in Phase 172.
 - UIQ-01–03: consistency, evidence, and delivery (Phase 173).
 
-Phases 168–170 validated 17 requirements; the remaining 11 belong to Phases 171–173. The v2.8 and v2.7 requirements remain in their milestone archives.
+Phases 168–172 validated 25 requirements; the remaining three belong to Phase 173. The v2.8 and v2.7 requirements remain in their milestone archives.
 
 ### v2.7 scope record (archived)
 
@@ -1157,7 +1159,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-10-09 UTC after Phase 171 verification; Phase 172 Recipient Output and Built-in Pages is executing.*
+*Last updated: 2026-10-09 UTC after Phase 172 verification; Phase 173 Consistency and Delivery Evidence is ready for discussion.*
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->

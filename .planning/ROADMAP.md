@@ -71,7 +71,7 @@ Deliver a visibly usable shared operator workspace first, then complete the exis
 - [x] **Phase 169: Outbound Investigation and Recovery** - Make Email health, delivery evidence, suppression, and exact-target replay understandable and usable. (completed 2026-10-07)
 - [x] **Phase 170: Inbound Investigation and Recovery** - Make received-message routing evidence and permitted replay clear without losing scope or history. (completed 2026-10-09)
 - [x] **Phase 171: Developer Preview** - Make supported scenario rendering and output inspection usable across devices and states. (completed 2026-10-09)
-- [ ] **Phase 172: Recipient Output and Built-in Pages** - Improve public transactional output, truthful examples, plaintext, and bounded unsubscribe GET pages.
+- [x] **Phase 172: Recipient Output and Built-in Pages** - Improve public transactional output, truthful examples, plaintext, and bounded unsubscribe GET pages. (completed 2026-10-09)
 - [ ] **Phase 173: Consistency and Delivery Evidence** - Consolidate shipped patterns and provide a reproducible, reviewable delivery candidate.
 
 ## Phase Details
@@ -252,7 +252,29 @@ Plans:
   2. A maintainer can repeat focused existing checks and inspect source-identified before/after renders of changed primary flows and adverse states, with browser, email-client, and historical-score evidence clearly distinguished.
   3. The owner can open a documented working preview of the completed milestone and review a concise task-based walkthrough; the delivery candidate has passing required CI, current generated assets, committed task-owned changes, and disposed or explicitly retained temporary artifacts/services.
 
-**Plans**: TBD
+**Plans**: 8/8 plans executed
+Plans:
+- [x] 173-08-PLAN.md
+- [x] 173-07-PLAN.md
+
+**Wave 1**
+- [x] 173-01-PLAN.md — Isolate demo evidence and bind current browser captures to the candidate
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 173-02-PLAN.md — Reconcile review surfaces, design guidance, and Admin capture provenance
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [x] 173-03-PLAN.md — Prove working preview, exact candidate CI, assets, and resource disposition
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [x] 173-04-PLAN.md — Close evidence retention, synthetic capture, CSS provenance, and npm lock checks
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [x] 173-05-PLAN.md — Guard reset and verify the exact delivery candidate
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [x] 173-06-PLAN.md — Run the final committed candidate gate and record exact proof
+
 **UI hint**: yes
 **Acceptance focus**: Confirm cross-slice handoffs, mounted assets and custom paths, gallery/Storybook parity, a bounded render set, and the existing PR/required-check process. This phase does not authorize an automatic merge or package publication.
 
@@ -274,5 +296,5 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 | 169. Outbound Investigation and Recovery | 5/5 | Complete    | 2026-10-07 |
 | 170. Inbound Investigation and Recovery | 8/8 | Complete    | 2026-10-09 |
 | 171. Developer Preview | 4/4 | Complete    | 2026-10-09 |
-| 172. Recipient Output and Built-in Pages | 3/3 | In Progress | — |
-| 173. Consistency and Delivery Evidence | 0/TBD | Not started | — |
+| 172. Recipient Output and Built-in Pages | 3/3 | Complete    | 2026-10-09 |
+| 173. Consistency and Delivery Evidence | 8/8 | In Progress | — |

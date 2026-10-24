@@ -167,6 +167,15 @@ MAILUX-04 is implemented with controller and browser evidence. The two unrelated
 - Summary file exists.
 - Task commits `a0adfb58`, `bc9741bc`, and `03c56898` are ancestors of the current HEAD.
 
+## Phase-Level UI Review Follow-Up
+
+The unsubscribe page now follows the Phase 172 UI contract with the Inter/system UI stack, a 14px regular brand label, 16px paragraph rhythm, and a plain centered reading column. Invalid and expired headings use the documented destructive color with explicit state copy. The valid recipient-identification line remains and is HTML-escaped as required by the plan and spec.
+
+- Focused configuration, component, VML, and unsubscribe-controller suites: 57 tests, 0 failures.
+- Latest full demo browser evidence rerun: the unsubscribe case passed at 320px and 160px; 73 tests passed and the same two unrelated advisory failures recurred (Helios empty-state heading, inbound detail header).
+- Required cross-project regression gate after these changes: core 79, Admin 593 (1 excluded), inbound 3 properties plus 480 tests (3 excluded), and connected browser 30; all passed.
+- The initial implementation audit had no screenshots. Final follow-up captured and visually reviewed valid, invalid, and expired unsubscribe pages at 1280px and 320px; the refreshed UI review scores 24/24. No email-client delivery rendering claim is made.
+
 ---
 *Phase: 172-recipient-output-and-built-in-pages*
 *Completed: 2026-10-09*

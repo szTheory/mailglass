@@ -26,18 +26,18 @@
     {
       "number": "172",
       "name": "Recipient Output and Built-in Pages",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "173",
       "name": "Consistency and Delivery Evidence",
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
   "next": {
-    "command": "/gsd:discuss-phase 172",
-    "label": "Discuss Phase 172",
-    "reason": "Phase 172 is the next unplanned slice; resolve its context before planning."
+    "command": "/gsd:verify-work",
+    "label": "Re-verify work",
+    "reason": "Recent verification failed — re-verify or debug"
   },
-  "updated_at": "2026-10-09T19:22:32.686Z"
+  "updated_at": "2026-10-10T13:14:47.499Z"
 }

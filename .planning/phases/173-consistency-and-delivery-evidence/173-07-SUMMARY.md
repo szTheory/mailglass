@@ -12,7 +12,7 @@ provides:
   - An incomplete delivery disposition recording owner acceptance, full local checks, and CI gaps
 affects: [UIQ-02, UIQ-03, Phase-173-verification]
 actuals:
-  tokens: 13887 # chars/4 across disposition, both checkpoint JSON files, and summary
+  tokens: 14481 # chars/4 across disposition, both checkpoint JSON files, and summary
   tasks: 2
   commits: 0 # No tracked task changes; evidence outputs are ignored runtime artifacts.
   commits: 0
@@ -78,7 +78,8 @@ status: complete
 - Ran the focused synthetic browser producer from detached candidate `/private/tmp/mailglass-phase173-gap.TrXwThCj/candidate` at SHA `3d6314bae62729b921b6ed7049adbda5181c5b64`. Its retained checkpoint reports `passed`, `candidate_dirty=false`, and six captures. Independent byte hashing verified six current PNGs and six pinned baseline PNGs against their checkpoint SHA-256 values.
 - Started and retained Compose project `mailglass-phase173-review-3d6314ba-20261010115642-72946-14875` on HTTP port `64514` and DB port `64515`. The owner review URL is [http://127.0.0.1:64514/dev/mail](http://127.0.0.1:64514/dev/mail). The `/`, `/health`, `/dev/mail`, `/dev/mail/gallery`, and `/dev/storybook/primitives/nav_link?variation_id=long_label` routes each returned HTTP 200.
 - Verified the versioned Admin CSS route `/dev/mail/css-7ad717cac50971a2b37f819f8c45975e`. Source CSS SHA-256 is `218a8b6932504a29f92f21d1ac3518e6a5e0fac6f67a86e179defc2c1b958f05`; built and served CSS hashes both equal `91c0b80fd5d2d9dd42d6501b615f3167b5f25a13beed92894e11fdfa1b6abff1`.
-- Read-only `gh run list --commit 3d6314bae62729b921b6ed7049adbda5181c5b64 --workflow CI` returned no runs. The disposition remains `incomplete`: protected README owner acceptance is unverified, the full local regression gate was not run under the protected-file constraint, and exact-SHA required `CI Green` is absent. No UIQ-03 or Phase 173 completion claim is made.
+- Ran `bash scripts/gsd-regression-gate.sh` from the clean detached candidate at the same SHA after restoring only its lockfile-pinned dependencies: Core 79 passed; Admin 605 passed/1 excluded; Inbound 3 properties and 480 tests passed/3 excluded; connected Playwright 30 passed. The candidate remained clean and all lockfiles remained unchanged.
+- Read-only `gh run list --commit 3d6314bae62729b921b6ed7049adbda5181c5b64 --workflow CI` returned no runs. The disposition remains `incomplete`: protected README owner acceptance is unverified, the full candidate delivery gate was not run because its repository-root Docker context includes the protected demo inputs, and exact-SHA required `CI Green` is absent. No UIQ-03 or Phase 173 completion claim is made.
 
 ## Task Commits
 
@@ -104,7 +105,9 @@ None. The focused runtime and preview startup each modified only the detached ca
 ## Issues Encountered
 
 - The initial detached worktree creation and Docker BuildKit operations encountered sandbox permission denials. The orchestrator provisioned the planned detached worktree and retried the exact local runtime commands with elevated access.
-- The task intentionally did not run the broad candidate gate, read either protected input, query or modify external systems beyond read-only GitHub CI metadata, or perform visual UAT.
+- The first candidate gate attempt stopped before tests because dependencies were not installed in the isolated worktree. Restored existing locked Mix packages with `mix deps.get --check-locked` and Admin JavaScript packages with `npm ci`; candidate lockfiles stayed unchanged. Hex reported the already-accepted cowlib advisories for the locked version; no dependency update was made in this evidence-only plan.
+- Chromium could not start inside the sandbox because macOS denied its MachPort rendezvous. The same regression gate passed when rerun with local browser permission; it did not invoke either protected demo input.
+- The full `scripts/check_phase173_candidate.sh` delivery gate was not run because its repository-root Docker build context would include the protected demo inputs. No external writes or visual UAT were performed; the GitHub CI lookup was read-only.
 
 ## Retained Resources and Scoped Cleanup
 
@@ -117,12 +120,13 @@ The same exact commands are stored in the ignored disposition JSON. Neither comm
 
 ## Next Phase Readiness
 
-UIQ-02 has current local evidence and the owner can review the retained URL above. UIQ-03 and Phase 173 remain unresolved until a separately authorized path provides protected README acceptance, proves the full local gate, and finds successful required `CI Green` for the same final SHA. The retained preview is synthetic browser evidence and does not certify delivered-email client rendering.
+UIQ-02 has current local evidence, a passing clean-candidate regression gate, and the owner can review the retained URL above. UIQ-03 and Phase 173 remain unresolved until an authorized path supplies accepted protected README input, completes the full candidate delivery gate in a context that excludes protected inputs, and finds successful required `CI Green` for the same final SHA. The retained preview is synthetic browser evidence and does not certify delivered-email client rendering.
 
 ## Self-Check: PASSED
 
 - The summary file exists.
 - The retained checkpoint and all twelve PNG files exist in the detached candidate; their hashes match the validated checkpoint.
+- The exact-SHA candidate regression gate passed all four suites; the candidate worktree and lockfiles remained clean afterward.
 - Candidate HEAD is the recorded SHA and its tracked/untracked status is clean.
 - The new Compose project is healthy; all five routes and the served-to-built CSS hash check passed.
 - No task-specific Git commit exists because the task evidence outputs are ignored; the summary-only closeout is committed separately.

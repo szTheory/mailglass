@@ -156,6 +156,14 @@ The registered public-component example and narrow-layout component behavior are
 
 All seven declared implementation files and this summary exist. All seven task commits are ancestors of the current plan head, and the final JavaScript syntax and changed-source whitespace checks pass.
 
+## Phase-Level UI Review Follow-Up
+
+The phase UI audit found that the implemented component defaults did not yet match the declared typography, spacing, and email-safe font contract. Follow-up corrections now set the public text variants to 14/16/20px, heading line height to 1.2, button labels to weight 700 in both HTML and VML, and default section padding to 24px. Runtime body/display font defaults and the uncached theme fallback now use `Arial, Helvetica, sans-serif`; custom adopter font tokens remain supported. Configuration and rendered-component assertions pin these defaults.
+
+- Focused configuration, component, VML, and unsubscribe-controller suites: 57 tests, 0 failures.
+- Required cross-project regression gate after these changes: 79 core tests, 593 Admin tests (1 excluded), 3 inbound properties plus 480 tests (3 excluded), and 30 connected browser tests; all passed.
+- The initial UI review had no screenshots. Final follow-up captured and visually reviewed the component invoice preview at 375px and 320px; the refreshed UI review scores 24/24. Fresh code review is clean (12 changed source/test files, 0 findings). No delivered-email-client rendering claim is made.
+
 ---
 *Phase: 172-recipient-output-and-built-in-pages*
 *Completed: 2026-10-09*
