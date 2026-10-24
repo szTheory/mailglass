@@ -120,7 +120,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
             <span
               id="preview-email-menu-active-identity"
               data-testid="preview-email-menu-active-identity"
-              class="block min-w-0 flex-1 truncate text-body"
+              class="block min-w-0 flex-1 whitespace-normal [overflow-wrap:anywhere] text-body"
             >
               <span class="font-bold text-base-content">{@current_mailable_label}</span>
               <span :if={@current_scenario_label} class="font-normal text-secondary">
@@ -135,8 +135,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
             <span
               aria-hidden="true"
               class="h-2 w-2 rotate-45 border-r-2 border-b-2 border-current"
-            >
-            </span>
+            ></span>
           </span>
         </summary>
 

@@ -500,10 +500,11 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       [identity] = Floki.find(trigger, ~s([data-testid="preview-email-menu-active-identity"]))
       [identity_class] = Floki.attribute(identity, "class")
-      assert identity_class =~ "truncate"
-      refute identity_class =~ "whitespace-normal"
-      refute identity_class =~ "[overflow-wrap:anywhere]"
-      refute identity_class =~ "break-all"
+      # Phase 171: the long identity wraps inside the trigger (readable at 200% zoom
+      # and 320 CSS px) rather than being clipped behind an ellipsis.
+      refute identity_class =~ "truncate"
+      assert identity_class =~ "whitespace-normal"
+      assert identity_class =~ "[overflow-wrap:anywhere]"
       refute Floki.attribute(identity, "title") != []
     end
   end
