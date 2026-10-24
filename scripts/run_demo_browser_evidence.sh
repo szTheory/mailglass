@@ -52,6 +52,10 @@ cleanup() {
   local exit_code=$?
   if [[ "$exit_code" -ne 0 ]]; then
     compose logs --no-color --tail 50 demo demo_e2e || true
+    if [[ -s "$EVIDENCE_DIR/playwright-report.json" ]]; then
+      node "$ROOT_DIR/reference/demo_app/assets/scripts/summarize-playwright-failures.cjs" \
+        "$EVIDENCE_DIR/playwright-report.json" || true
+    fi
   fi
   compose down --volumes --remove-orphans >/dev/null 2>&1 || true
   return "$exit_code"
