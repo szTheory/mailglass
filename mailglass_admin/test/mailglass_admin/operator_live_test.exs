@@ -2019,14 +2019,6 @@ defmodule MailglassAdmin.OperatorLiveTest do
     end)
   end
 
-  defp input_value(html, selector) do
-    html
-    |> Floki.parse_document!()
-    |> Floki.find(selector)
-    |> List.first()
-    |> then(fn input -> input |> Floki.attribute("value") |> List.first() end)
-  end
-
   defp operator_conn(conn, session \\ %{}) do
     now = DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
 
