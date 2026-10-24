@@ -249,7 +249,7 @@ defmodule MailglassAdmin.Components do
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="mg-nav-label truncate">{@label}</span>
+      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
     </span>
     """
   end
@@ -267,7 +267,7 @@ defmodule MailglassAdmin.Components do
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="mg-nav-label truncate">{@label}</span>
+      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
     </.link>
     """
   end
@@ -285,7 +285,7 @@ defmodule MailglassAdmin.Components do
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="mg-nav-label truncate">{@label}</span>
+      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
     </.link>
     """
   end
