@@ -45,14 +45,14 @@ defmodule MailglassDemoWeb.Mailers.ComponentMailer do
             src={@invoice_preview_image_src}
             alt={"Illustration of the #{@billing_period} invoice summary for #{@workspace}"}
           />
-          <.text>
+          <.text class="margin-top:16px;">
             The invoice total is {@amount}. This amount is also shown here so you can read it
             when images are unavailable.
           </.text>
           <.button href={"https://app.atlasdesk.example/invoices/#{@invoice_id}"}>
-            Review invoice {@invoice_id}
+            Review invoice
           </.button>
-          <.text>
+          <.text class="margin-top:16px;">
             <.link href={"https://app.atlasdesk.example/invoices/#{@invoice_id}/download"}>
               Download the itemized invoice
             </.link>

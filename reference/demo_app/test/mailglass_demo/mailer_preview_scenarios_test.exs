@@ -37,7 +37,7 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
       assert html =~ "<!--[if mso]>"
       assert html =~ "<table"
       refute html =~ "data-mg-"
-      assert text =~ "Review invoice INV-2026-0601"
+      assert text =~ "Review invoice"
       assert text =~ "(https://app.atlasdesk.example/invoices/INV-2026-0601)"
 
       bespoke = OperationsMailer.usage_alert(OperationsMailer.preview_props()[:usage_alert])

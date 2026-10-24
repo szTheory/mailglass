@@ -1,4 +1,30 @@
 const { test, expect } = require("@playwright/test");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const phase172EvidenceDir = path.resolve(
+  __dirname,
+  "../../../../.planning/phases/172-recipient-output-and-built-in-pages/artifacts/browser-evidence",
+);
+
+test.beforeAll(() => {
+  fs.mkdirSync(phase172EvidenceDir, { recursive: true });
+});
+
+async function captureEmailPreview(page, frameSelector, filename, expectedWidth) {
+  const frame = page.locator(frameSelector);
+  await expect(frame).toBeVisible();
+  await frame.evaluate((iframe, width) => {
+    iframe.style.width = `${width}px`;
+  }, expectedWidth);
+  const bounds = await frame.boundingBox();
+  expect(bounds).not.toBeNull();
+  expect(Math.abs(bounds.width - expectedWidth)).toBeLessThanOrEqual(1);
+  await page.screenshot({
+    path: path.join(phase172EvidenceDir, filename),
+    clip: bounds,
+  });
+}
 
 test.describe("mailglass demo evidence", () => {
   test.beforeEach(async ({ request }) => {
@@ -31,7 +57,7 @@ test.describe("mailglass demo evidence", () => {
     ];
 
     for (const state of states) {
-      for (const width of [320, 160]) {
+      for (const width of [1280, 320, 160]) {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(`/dev/unsubscribe/${state.name}`);
         await expect(page.getByRole("heading", { name: state.heading, exact: true })).toBeVisible();
@@ -60,6 +86,16 @@ test.describe("mailglass demo evidence", () => {
         expect(geometry.mainLeft).toBeGreaterThanOrEqual(0);
         expect(geometry.mainRight).toBeLessThanOrEqual(geometry.viewportWidth + 1);
         expect(geometry.clippedParagraphs).toBe(0);
+
+        if (width === 1280 || width === 320) {
+          await page.screenshot({
+            path: path.join(
+              phase172EvidenceDir,
+              `unsubscribe-${state.name}-${width}.png`,
+            ),
+            fullPage: true,
+          });
+        }
       }
     }
   });
@@ -122,7 +158,16 @@ test.describe("mailglass demo evidence", () => {
     await expect(emailFrame.locator("h1")).toContainText("Invoice INV-2026-0601 is ready");
     await expect(emailFrame.locator("body")).toContainText("Élodie Fernández-Sørensen");
     await expect(emailFrame.locator("body")).toContainText("AtlasDesk");
-    await expect(emailFrame.getByRole("link", { name: /Review invoice INV-2026-0601/ })).toBeVisible();
+    await expect(emailFrame.getByRole("link", { name: "Review invoice" })).toBeVisible();
+    const imageBounds = await emailFrame.locator("img").boundingBox();
+    const imageFallbackBounds = await emailFrame
+      .getByText(/This amount is also shown here/)
+      .boundingBox();
+    expect(imageBounds).not.toBeNull();
+    expect(imageFallbackBounds).not.toBeNull();
+    expect(imageFallbackBounds.y).toBeGreaterThanOrEqual(
+      imageBounds.y + imageBounds.height + 12,
+    );
     await expect(
       emailFrame.getByRole("link", { name: "Download the itemized invoice" }),
     ).toHaveAttribute(
@@ -133,6 +178,23 @@ test.describe("mailglass demo evidence", () => {
       "alt",
       "Illustration of the May 2026 invoice summary for Northstar Logistics",
     );
+    await page.setViewportSize({ width: 1024, height: 1600 });
+    await captureEmailPreview(page, frameSelector, "invoice-preview-375.png", 375);
+
+    const previewOrder = await page.locator(frameSelector).evaluate((iframe) => {
+      const document = iframe.contentDocument;
+      const selectors = [
+        "h1",
+        'a[href="https://app.atlasdesk.example/invoices/INV-2026-0601"]',
+        'a[href="https://app.atlasdesk.example/invoices/INV-2026-0601/download"]',
+      ];
+      return selectors.map((selector) => {
+        const rect = document.querySelector(selector).getBoundingClientRect();
+        return { top: rect.top, bottom: rect.bottom };
+      });
+    });
+    expect(previewOrder[1].top).toBeGreaterThanOrEqual(previewOrder[0].bottom);
+    expect(previewOrder[2].top).toBeGreaterThanOrEqual(previewOrder[1].bottom + 12);
 
     await page.setViewportSize({ width: 320, height: 900 });
     await page.locator(frameSelector).evaluate((iframe) => {
@@ -141,6 +203,13 @@ test.describe("mailglass demo evidence", () => {
     emailFrame = page.frameLocator(frameSelector);
     await expect(page.locator(frameSelector)).toBeAttached();
     await expect(emailFrame.locator("h1")).toContainText("Invoice INV-2026-0601 is ready");
+    const primaryAction = emailFrame.getByRole("link", { name: "Review invoice" });
+    await expect(primaryAction).toBeVisible();
+    const primaryActionBounds = await primaryAction.boundingBox();
+    expect(primaryActionBounds).not.toBeNull();
+    expect(primaryActionBounds.width).toBeGreaterThanOrEqual(44);
+    expect(primaryActionBounds.height).toBeGreaterThanOrEqual(44);
+    expect(primaryActionBounds.height).toBeLessThanOrEqual(52);
 
     const publicOutput = await page.locator(frameSelector).evaluate((iframe) => {
       const document = iframe.contentDocument;
@@ -174,11 +243,15 @@ test.describe("mailglass demo evidence", () => {
       publicOutput.scrollWidth,
       JSON.stringify({ viewportWidth: publicOutput.viewportWidth, overflowingElements: publicOutput.overflowingElements }),
     ).toBeLessThanOrEqual(publicOutput.viewportWidth);
-
     const pageOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(pageOverflow).toBeLessThanOrEqual(0);
+    // Keep the preview application wide enough to show the entire email iframe;
+    // the iframe itself stays at 320px, the rendered-email width under test.
+    await page.setViewportSize({ width: 1024, height: 1600 });
+    await expect(emailFrame.locator("h1")).toContainText("Invoice INV-2026-0601 is ready");
+    await captureEmailPreview(page, frameSelector, "invoice-preview-320.png", 320);
 
     // A 2× zoom on the rendered email keeps the same live text and link available.
     await emailFrame.locator("html").evaluate((html) => {
