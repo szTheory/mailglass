@@ -3,9 +3,9 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
   Component tests for the EvidenceCard reveal disclosure a11y hardening (D-11).
 
   Asserts the reveal control is a true ARIA disclosure (aria-expanded/aria-controls),
-  the :revealed branch carries a "Re-redact raw source" collapse button, an
+  the :revealed branch carries a "Hide raw source" collapse button, an
   aria-live="polite" role="status" region announces the state change in TEXT
-  (WCAG 1.4.1, never border color alone), the secondary "Contains unredacted PII."
+  (WCAG 1.4.1, never border color alone), the secondary "May contain personal information."
   line is present, and the denied/redacted body copy is byte-frozen with the raw
   payload absent in every non-revealed state (D-10 redacted-by-default).
   """
@@ -39,7 +39,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
       assert html =~ "mg-focus-ring"
       # Reveal label unchanged + NEW secondary line.
       assert html =~ "Reveal raw source"
-      assert html =~ "Contains unredacted PII."
+      assert html =~ "May contain personal information."
       # Redacted-by-default: raw bytes absent.
       refute html =~ ~s(data-testid="inbound-evidence-raw")
       refute html =~ "secret-raw-payload-121-02"
@@ -55,7 +55,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
       # Re-redact collapse button — NEW, routes back to :redacted via re_redact_raw.
       assert html =~ ~s(data-testid="inbound-evidence-re-redact")
       assert html =~ ~s(phx-click="re_redact_raw")
-      assert html =~ "Re-redact raw source"
+      assert html =~ "Hide raw source"
 
       # Raw payload present only here.
       assert html =~ ~s(data-testid="inbound-evidence-raw")
@@ -69,7 +69,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
 
       assert html =~ ~s(role="status")
       assert html =~ ~s(aria-live="polite")
-      assert html =~ "Raw source revealed. This payload contains unredacted PII."
+      assert html =~ "Raw source revealed. It may contain personal information."
     end
 
     test "the status region is present in :redacted without announcing a reveal" do
@@ -77,7 +77,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
 
       assert html =~ ~s(role="status")
       assert html =~ ~s(aria-live="polite")
-      refute html =~ "Raw source revealed. This payload contains unredacted PII."
+      refute html =~ "Raw source revealed. It may contain personal information."
     end
   end
 
@@ -86,7 +86,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
       html = render_state(:denied)
 
       assert html =~
-               "Raw source not revealed: the reveal_raw capability is not granted for this operator."
+               "You do not have permission to reveal raw source."
 
       refute html =~ ~s(data-testid="inbound-evidence-raw")
       refute html =~ "secret-raw-payload-121-02"
@@ -96,7 +96,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCardTest do
       html = render_state(:redacted)
 
       assert html =~
-               "Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability."
+               "Raw source is hidden by default. Reveal it to inspect the provider payload."
 
       refute html =~ ~s(data-testid="inbound-evidence-raw")
       refute html =~ "secret-raw-payload-121-02"

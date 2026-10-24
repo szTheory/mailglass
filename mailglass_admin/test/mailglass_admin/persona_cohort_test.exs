@@ -113,12 +113,12 @@ defmodule MailglassAdmin.PersonaCohortTest do
         live(conn, @base_path <> "?" <> URI.encode_query(%{"tenant_id" => "helios-void"}))
 
       assert html =~ "helios-void"
-      assert html =~ "Failed webhook attempts"
-      assert html =~ "Unmatched Events"
-      assert html =~ "Active suppression records"
-      assert html =~ "Recorded replay audit outcomes"
-      assert html =~ "Recorded reconciliation audit Events"
+      assert html =~ "No recent mail activity"
+      assert html =~ "deliveries updated"
+      assert html =~ "messages received"
       refute html =~ "All clear"
+      refute html =~ ~s(data-testid="operator-overview-health-failures")
+      refute html =~ ~s(data-testid="operator-overview-health-orphans")
     end
 
     test "deliveries view renders the empty-state copy", %{conn: conn} do
