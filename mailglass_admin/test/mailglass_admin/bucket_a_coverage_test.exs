@@ -131,8 +131,8 @@ defmodule MailglassAdmin.BucketACoverageTest do
       locator: "theme_picker keeps native three-radio semantics without pressed-button state", status: :live},
 
     # --- A18: tabs not showing selected / active state ----------------------
-    %{id: "A18", desc: "aria-selected on clicked row in table + card presentation", guard_kind: :playwright_title,
-      locator: "aria-selected=true set on clicked row in both table (desktop) and card (mobile) presentations (DATA-04)", status: :live},
+    %{id: "A18", desc: "Selected state (data-selected + aria-current) on clicked delivery in table + card presentation", guard_kind: :playwright_title,
+      locator: "selected state is exposed on clicked delivery in both table (desktop) and card (mobile) presentations (DATA-04)", status: :live},
 
     # --- A19: weird pagination when nothing to paginate ---------------------
     %{id: "A19", desc: "Honest pagination boundaries (only when total_pages > 1)", guard_kind: :playwright_title,

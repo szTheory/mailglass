@@ -639,11 +639,20 @@ async function assertPanelAboveScrim(modal, label) {
 function noMatchRow(page) {
   // Phase 113: inbound-record-row appears in both hidden table and visible cards at mobile.
   // Use the visible() filter to always get the visible row regardless of viewport.
-  return page
+  // The outcome badge is an interactive help trigger, so a card renders it beside
+  // (not inside) its selection button: match the card by its badge, then take the
+  // card's selection control.
+  const unrouted = page.locator(".badge-warning", { hasText: "Unrouted" });
+  const tableRow = page
+    .getByTestId("inbound-records-table")
     .getByTestId("inbound-record-row")
-    .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
-    .filter({ visible: true })
-    .first();
+    .filter({ has: unrouted });
+  const cardRow = page
+    .getByTestId("inbound-records-cards")
+    .locator("li")
+    .filter({ has: unrouted })
+    .getByTestId("inbound-record-row");
+  return tableRow.or(cardRow).filter({ visible: true }).first();
 }
 
 // Two-tier inspection: a row click opens the condensed Quick view (peek); the full
@@ -656,6 +665,7 @@ async function selectDeliveryFull(page, row) {
 }
 
 async function selectInboundFull(page, row) {
+  await expect(row).toBeVisible();
   // The desktop table wraps the selection action in an inner button; the
   // mobile card is itself the selection control. Match the actual LiveView
   // action so hidden responsive duplicates cannot make us click a non-control.
@@ -683,6 +693,10 @@ async function inboundRecordIdFromRow(row) {
 
 async function firstReplayableInboundRecordId(page) {
   const rows = page.getByTestId("inbound-record-row");
+  // The heading paints before the connected LiveView settles its records (the
+  // account chooser or an empty list can render first). Read rows only once the
+  // records list has actually rendered, so the scan cannot see zero rows.
+  await expect(rows.filter({ visible: true }).first()).toBeVisible();
   for (let index = 0; index < (await rows.count()); index += 1) {
     const row = rows.nth(index);
     if (!(await row.isVisible())) continue;
@@ -891,13 +905,16 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("ARIA roles/states", () => {
 
-    test("Operator: selected delivery row has aria-selected=true, nav has aria-current=page", async ({ page }) => {
+    test("Operator: selected delivery row exposes its current record, nav has aria-current=page", async ({ page }) => {
       await openOperator(page);
 
-      // Click the first delivery row and assert aria-selected is set
+      // The desktop table row is not an ARIA selectable widget (a plain table, not a
+      // grid). Its first cell holds the native "Open delivery" button, which carries
+      // the selection state — the same contract the inbound records table uses.
       const firstRow = page.getByTestId("operator-delivery-row").first();
       await firstRow.click();
-      await expect(firstRow).toHaveAttribute("aria-selected", "true");
+      await expect(firstRow).toHaveAttribute("data-selected", "true");
+      await expect(firstRow.getByRole("button", { name: /^Open delivery/ })).toHaveAttribute("aria-current", "true");
 
       // Assert a nav link with aria-current="page" exists (getByRole with current:true)
       await expect(
@@ -1230,9 +1247,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Quick view bottom sheet.
       const mobileNoMatchRow = page
         .getByTestId("inbound-records-cards")
-        .getByTestId("inbound-record-row")
+        .locator("li")
         .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
-        .first();
+        .first()
+        .getByTestId("inbound-record-row");
       await mobileNoMatchRow.click();
       await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
       await expect(page.getByTestId("inbound-detail-back")).toBeVisible();
@@ -1622,7 +1640,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const previewPane = page.getByTestId("preview-pane");
       const frame = previewPane.locator("iframe");
       const identity = page.getByTestId("preview-email-menu-active-identity");
-      await expect(identity).toHaveCSS("white-space", "nowrap");
+      // Phase 171: the selected identity wraps rather than clipping behind an
+      // ellipsis, so long names stay readable at narrow widths and 200% zoom.
+      await expect(identity).toHaveCSS("white-space", "normal");
+      await expect(identity).toHaveCSS("overflow-wrap", "anywhere");
       await expect(page.getByText("Frame width", { exact: true })).toBeVisible();
       await expect(page.getByText("Preview background", { exact: true })).toBeVisible();
       await expect(frameWidth.getByRole("button", { name: "375 CSS pixels", exact: true })).toBeVisible();
@@ -2853,19 +2874,27 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await openOperator(page);
 
-      const tableRow = page.getByTestId("operator-deliveries-table").locator("[data-testid='operator-delivery-row']").first();
+      const table = page.getByTestId("operator-deliveries-table");
+      const tableRow = table.locator("[data-testid='operator-delivery-row']").first();
       await expect(tableRow).toBeVisible();
+      // Recipient / Subject leads the row; the outcome badge lives in the column
+      // whose header is "Outcome". Resolve that column by its header, not position.
+      const headers = (await table.locator("thead th").allInnerTexts()).map(text => text.trim());
+      const outcomeIndex = headers.indexOf("Outcome");
+      expect(outcomeIndex, `delivery table has an Outcome column: ${JSON.stringify(headers)}`).toBeGreaterThanOrEqual(0);
       // status_badge renders a <span> with text — assert the badge has non-empty text
-      const tableStatusBadge = tableRow.locator("td").first().locator(".badge");
+      const tableStatusBadge = tableRow.locator("td").nth(outcomeIndex).locator(".badge");
       await expect(tableStatusBadge).toBeVisible();
       await expect(tableStatusBadge).toHaveText(/.+/);
 
-      // Mobile: cards visible — check status badge has visible text label
+      // Mobile: cards visible — the badge is an outcome-help trigger, so it sits
+      // beside (not inside) the card's selection button, within the same card.
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
-      const cardRow = page.getByTestId("operator-deliveries-cards").locator("[data-testid='operator-delivery-row']").first();
+      const card = page.getByTestId("operator-deliveries-cards").locator("li").first();
+      const cardRow = card.locator("[data-testid='operator-delivery-row']");
       await expect(cardRow).toBeVisible();
-      const cardStatusBadge = cardRow.locator(".badge").first();
+      const cardStatusBadge = card.locator(".badge").first();
       await expect(cardStatusBadge).toBeVisible();
       await expect(cardStatusBadge).toHaveText(/.+/);
     });
@@ -2875,37 +2904,47 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await openInbound(page);
 
-      const tableRow = page.getByTestId("inbound-records-table").locator("[data-testid='inbound-record-row']").first();
+      const table = page.getByTestId("inbound-records-table");
+      const tableRow = table.locator("[data-testid='inbound-record-row']").first();
       await expect(tableRow).toBeVisible();
-      const tableOutcomeBadge = tableRow.locator("td").first().locator(".badge");
+      const headers = (await table.locator("thead th").allInnerTexts()).map(text => text.trim());
+      const outcomeIndex = headers.indexOf("Outcome");
+      expect(outcomeIndex, `inbound table has an Outcome column: ${JSON.stringify(headers)}`).toBeGreaterThanOrEqual(0);
+      const tableOutcomeBadge = tableRow.locator("td").nth(outcomeIndex).locator(".badge");
       await expect(tableOutcomeBadge).toBeVisible();
       await expect(tableOutcomeBadge).toHaveText(/.+/);
 
-      // Mobile: inbound cards visible — check outcome badge has visible text
+      // Mobile: inbound cards visible — the outcome badge is a help trigger beside
+      // the card's selection button, inside the same card.
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
-      const cardRow = page.getByTestId("inbound-records-cards").locator("[data-testid='inbound-record-row']").first();
+      const card = page.getByTestId("inbound-records-cards").locator("li").first();
+      const cardRow = card.locator("[data-testid='inbound-record-row']");
       await expect(cardRow).toBeVisible();
-      const cardOutcomeBadge = cardRow.locator(".badge").first();
+      const cardOutcomeBadge = card.locator(".badge").first();
       await expect(cardOutcomeBadge).toBeVisible();
       await expect(cardOutcomeBadge).toHaveText(/.+/);
     });
 
-    test("aria-selected=true set on clicked row in both table (desktop) and card (mobile) presentations (DATA-04)", async ({ page }) => {
-      // Desktop: click a table row — aria-selected must be true
+    test("selected state is exposed on clicked delivery in both table (desktop) and card (mobile) presentations (DATA-04)", async ({ page }) => {
+      // Desktop: the row carries selected styling and its native "Open delivery"
+      // control exposes the current record (aria-current). The table row itself is
+      // not an ARIA selectable widget — same contract as the inbound table below.
       await page.setViewportSize({ width: 1280, height: 900 });
       await openOperator(page);
 
       const tableRow = page.getByTestId("operator-deliveries-table").locator("[data-testid='operator-delivery-row']").first();
       await tableRow.click();
-      await expect(tableRow).toHaveAttribute("aria-selected", "true");
+      await expect(tableRow).toHaveAttribute("data-selected", "true");
+      await expect(tableRow.getByRole("button", { name: /^Open delivery/ })).toHaveAttribute("aria-current", "true");
 
-      // Mobile: click a card row — aria-selected must be true
+      // Mobile cards are the native controls, so their aria-current state is direct.
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
       const cardRow = page.getByTestId("operator-deliveries-cards").locator("[data-testid='operator-delivery-row']").first();
       await cardRow.click();
-      await expect(cardRow).toHaveAttribute("aria-selected", "true");
+      await expect(cardRow).toHaveAttribute("data-selected", "true");
+      await expect(cardRow).toHaveAttribute("aria-current", "true");
     });
 
     test("selected state is exposed on inbound table rows and card controls (DATA-04)", async ({ page }) => {
@@ -3090,13 +3129,41 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           // group is wider than the VIEWPORT. At wide widths the column is roomy,
           // so the standard self-relative check applies directly.
           if (vp <= 768) {
-            const widestDescendant = await region.evaluate(el => {
+            // Field-help descriptions stay available to assistive technology as
+            // visually-hidden (sr-only) text. Those nodes are clipped 1×1px boxes;
+            // their scrollWidth is the length of unrendered nowrap text, not
+            // layout. They are measured separately below: each must remain a
+            // clipped ≤1px box, so none can contribute visible overflow.
+            const { widestDescendant, hiddenTextBoxes } = await region.evaluate(el => {
+              const visuallyHidden = node => {
+                const s = getComputedStyle(node);
+                const r = node.getBoundingClientRect();
+                return s.position === "absolute" && s.overflow === "hidden" &&
+                  r.width <= 1 && r.height <= 1 &&
+                  (s.clip !== "auto" || s.clipPath !== "none");
+              };
               let max = 0;
+              const hidden = [];
               for (const node of el.querySelectorAll("*")) {
+                const srOnly = node.closest(".sr-only");
+                if (srOnly) {
+                  // Measure the clipping sr-only box itself; its descendants are
+                  // inside that clip and cannot paint outside it.
+                  if (srOnly === node) {
+                    const box = node.getBoundingClientRect();
+                    hidden.push({ width: box.width, height: box.height, clipped: visuallyHidden(node) });
+                  }
+                  continue;
+                }
                 if (node.scrollWidth > max) max = node.scrollWidth;
               }
-              return max;
+              return { widestDescendant: max, hiddenTextBoxes: hidden };
             });
+            for (const box of hiddenTextBoxes) {
+              expect(box.clipped, `${innerTestId} sr-only text is a clipped visually-hidden box @${vp}`).toBeTruthy();
+              expect(box.width, `${innerTestId} sr-only text box width @${vp}`).toBeLessThanOrEqual(1);
+              expect(box.height, `${innerTestId} sr-only text box height @${vp}`).toBeLessThanOrEqual(1);
+            }
             expect(
               widestDescendant,
               `${innerTestId} widest descendant fits viewport @${vp}`

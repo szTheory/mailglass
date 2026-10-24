@@ -50,7 +50,7 @@ Phase-116 baseline.
 | **A16-system** | System theme dark parity | playwright_title | `Bucket-A A16-system: system theme contrast parity with explicit dark` | live (net-new) |
 | A16 (axe) | WCAG 2.2 AA axe baseline (system ≤ dark) | axe | `axe-baseline.json` (+ comparator + producer) | live |
 | A17 | No system/light/dark picker | playwright_title | `theme_picker keeps native three-radio semantics without pressed-button state` | live |
-| A18 | Tabs not showing selected state | playwright_title | `aria-selected=true set on clicked row in both table (desktop) and card (mobile) presentations (DATA-04)` | live |
+| A18 | Tabs not showing selected state | playwright_title | `selected state is exposed on clicked delivery in both table (desktop) and card (mobile) presentations (DATA-04)` | live |
 | A19 | Weird pagination when nothing to paginate | playwright_title | `sole tenant canonicalizes, …, and pagination boundaries are honest` | live |
 | A20 | Icons that don't semantically read | grep_gate | `ICON-EXISTS-GATE` | live |
 | **A21** | Loading states that jump layout (CLS) | playwright_title | `Bucket-A A21: loading-state CLS height delta within threshold` | live (net-new) |

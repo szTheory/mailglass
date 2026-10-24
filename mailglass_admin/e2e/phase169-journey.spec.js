@@ -112,7 +112,13 @@ test.describe("Phase 169 connected journey", () => {
     await expect(page.getByTestId("operator-timeline-selected-event")).toContainText(
       "This exact Event is outside the displayed timeline.",
     );
-    await expect(page.getByTestId("operator-timeline-selected-event")).toContainText("Recorded time");
+    // The recorded time renders as the shared timestamp (local display, exact UTC
+    // retained) without a separate "Recorded time" caption.
+    const selectedTime = page.getByTestId("operator-timeline-selected-event").locator("time[data-local-time]");
+    await expect(selectedTime).toHaveCount(1);
+    await expect(selectedTime).toBeVisible();
+    await expect(selectedTime).toHaveAttribute("data-utc", /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)? UTC$/);
+    await expect(selectedTime).toHaveAttribute("aria-label", /^Recorded at .+ local time$/);
 
     const ordinaryWebhook = page.locator(`[data-event-id="${fixture.ordinary_linked_event_id}"]`);
     await expect(ordinaryWebhook).toContainText("Delivered");
@@ -131,12 +137,19 @@ test.describe("Phase 169 connected journey", () => {
     const detailPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=${fixture.delivery_id}&support_focus=orphan_backlog&support_event_id=${fixture.selected_event_id}&full=1`;
     await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(detailPath)}`);
 
+    // The visible Event ID is itself the copy control; feedback uses the shared
+    // copy toast (role=status, aria-live=polite) instead of an adjacent status node.
     const selected = page.getByTestId("operator-timeline-selected-event");
-    const eventId = selected.getByRole("button", { name: "Copy event ID" });
+    const eventId = selected.getByRole("button", { name: "Copy Event ID", exact: true });
+    const copyToast = page.getByTestId("copy-toast");
+    await expect(copyToast).toHaveAttribute("role", "status");
+    await expect(copyToast).toHaveAttribute("aria-live", "polite");
     await expect(selected).toContainText("evt-東京-Ångström-");
+    await expect(eventId).toHaveText(fixture.selected_event_id);
     await eventId.focus();
     await page.keyboard.press("Enter");
-    await expect(eventId.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText("Copied.");
+    await expect(copyToast).toBeVisible();
+    await expect(copyToast).toContainText("Event ID copied.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(fixture.selected_event_id);
     await expect(selected).toContainText(fixture.selected_event_id);
 
@@ -157,8 +170,9 @@ test.describe("Phase 169 connected journey", () => {
       });
     });
     await eventId.click();
-    await expect(eventId.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText(
-      "Clipboard unavailable. Select and copy the visible value manually."
+    await expect(copyToast).toBeVisible();
+    await expect(copyToast).toContainText(
+      "Clipboard access failed. Select and copy the visible value manually."
     );
     await expect(selected).toContainText(fixture.selected_event_id);
 
@@ -167,9 +181,12 @@ test.describe("Phase 169 connected journey", () => {
       window.liveSocket.connect();
     });
     await expect(eventId).toBeVisible();
+    // Let the previous failure toast expire so this assertion proves a fresh report.
+    await expect(copyToast).toBeHidden();
     await eventId.click();
-    await expect(eventId.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText(
-      "Clipboard unavailable. Select and copy the visible value manually."
+    await expect(copyToast).toBeVisible();
+    await expect(copyToast).toContainText(
+      "Clipboard access failed. Select and copy the visible value manually."
     );
     await expect(selected).toContainText(fixture.selected_event_id);
 
@@ -204,8 +221,19 @@ test.describe("Phase 169 connected journey", () => {
     await expect(current).toContainText("Expires at");
     await expect(page.getByTestId("operator-timeline")).toContainText("Suppressed");
     await expect(page.getByTestId("operator-support-cards")).toContainText("Active suppressions: 1");
+    // Health no longer carries a suppression metric: intentional suppression policy
+    // is neither fetched nor displayed there (docs/design-system.md, Health). The
+    // historical suppressed Delivery Events stay a separate population, reached
+    // through the Deliveries event filter rather than conflated with current policy.
     await page.goto(`/ops/mail?tenant_id=${tenantId}`);
-    await expect(page.getByRole("link", { name: "View historical suppressed Delivery Events in Deliveries" })).toBeVisible();
+    const health = page.getByTestId("operator-overview-health");
+    await expect(health).toBeVisible();
+    await expect(health).not.toContainText(/suppress/i);
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&event=suppressed`);
+    await expect(page.locator('select[name="filters[event]"]')).toHaveValue("suppressed");
+    await expect(
+      page.getByTestId("operator-delivery-row").filter({ visible: true }).filter({ hasText: fixture.recipient })
+    ).not.toHaveCount(0);
     await page.goto(detailPath);
 
     const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
@@ -236,8 +264,11 @@ test.describe("Phase 169 connected journey", () => {
       const card = page.getByTestId("operator-suppression-card");
 
       if (variant === "empty") {
-        await expect(card).toContainText("No current matching suppression recorded in Mailglass was found");
-        await expect(card).toContainText("does not establish absence of configured-store or provider restrictions");
+        // Shorter absence copy; the scope limit (other stores and provider
+        // restrictions are not checked) is the card's shared scope help.
+        await expect(card).toContainText("No current Mailglass match");
+        await expect(card).toContainText("No current Mailglass suppression matches this delivery.");
+        await expect(card).toContainText("Other configured stores and provider restrictions are not checked.");
       } else {
         await expect(card).toContainText("Address + stream · Account-local");
         await expect(card).toContainText("Complaint");
@@ -298,12 +329,15 @@ test.describe("Phase 169 connected journey", () => {
       await expect(page.getByTestId("operator-health-window")).toHaveText(
         /^Last 7 days$/
       );
+      // Health shows only nonzero issue rows, so the always-present status section
+      // (verdict + any issue rows) is the summary the observation basis must precede.
+      await expect(page.getByTestId("operator-health-status")).toBeVisible();
       const windowPrecedesMetrics = await page.evaluate(() => {
         const window = document.querySelector('[data-testid="operator-health-window"]');
-        const metrics = document.querySelector('[data-testid="operator-overview-health-failures"]');
-        return Boolean(window.compareDocumentPosition(metrics) & Node.DOCUMENT_POSITION_FOLLOWING);
+        const status = document.querySelector('[data-testid="operator-health-status"]');
+        return Boolean(window && status && (window.compareDocumentPosition(status) & Node.DOCUMENT_POSITION_FOLLOWING));
       });
-      expect(windowPrecedesMetrics, "observation basis precedes summary metrics").toBeTruthy();
+      expect(windowPrecedesMetrics, "observation basis precedes the health summary").toBeTruthy();
       await page.evaluate(() => {
         const probe = document.createElement("img");
         probe.alt = "";
@@ -327,7 +361,9 @@ test.describe("Phase 169 connected journey", () => {
       expect(healthGeometry.labels.length).toBeGreaterThan(0);
       expect(Math.min(...healthGeometry.labels)).toBe(14);
       expect(healthGeometry.decorativeIcons).toBeGreaterThan(0);
-      expect(healthGeometry.metricColumns).toBe(width < 768 ? 1 : 2);
+      // Health is a status column (verdict + issue rows) beside a Recent activity
+      // column from the lg breakpoint; below it the two stack in one column.
+      expect(healthGeometry.metricColumns).toBe(width < 1024 ? 1 : 2);
       geometryByWidth.push({ width, ...healthGeometry });
       await page.locator('img[src*="phase169-missing"]').evaluate(image => image.remove());
       await page.screenshot({ path: path.join(afterDir, `health-${width}.png`), fullPage: true });
@@ -340,20 +376,19 @@ test.describe("Phase 169 connected journey", () => {
 
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
       await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
-      const rowOpener = page.getByText("Open delivery →", { exact: true }).first();
-      const colors = await rowOpener.evaluate(el => {
-        const probe = document.createElement("span");
-        probe.style.color = "var(--mg-color-link)";
-        document.body.append(probe);
-        const colors = { actual: getComputedStyle(el).color, expected: getComputedStyle(probe).color };
-        probe.remove();
-        return colors;
-      });
-      expect(colors.actual).toBe(colors.expected);
+      // The separate link-coloured "Open delivery →" opener was replaced: the
+      // recipient/subject itself is the row's native open button (desktop names it
+      // "Open delivery for …"; a card's name is its visible recipient and subject).
+      const rowOpeners = page
+        .locator('[data-testid="operator-deliveries-list-card"] button[phx-click="select_delivery"]')
+        .filter({ visible: true });
+      await expect(rowOpeners.first()).toBeVisible();
+      await expect(rowOpeners.first()).toHaveAccessibleName(/\S/);
       const contentWidth = await page.locator("main").first().evaluate(el => el.getBoundingClientRect().width);
       if (contentWidth >= 768) {
         await expect(page.getByTestId("operator-deliveries-table")).toBeVisible();
         await expect(page.getByTestId("operator-deliveries-cards")).toBeHidden();
+        await expect(rowOpeners.first()).toHaveAccessibleName(/^Open delivery for /);
       } else {
         await expect(page.getByTestId("operator-deliveries-cards")).toBeVisible();
         await expect(page.getByTestId("operator-deliveries-table")).toBeHidden();
@@ -372,13 +407,19 @@ test.describe("Phase 169 connected journey", () => {
       await page.screenshot({ path: path.join(afterDir, `deliveries-${width}.png`), fullPage: true });
       routes.push({ width, contentWidth, state: "Deliveries", url: new URL(page.url()).pathname + new URL(page.url()).search });
 
-      await page.getByRole("button", { name: "Open delivery" }).nth(3).click();
+      await rowOpeners.nth(3).click();
       const quickView = page.getByTestId("operator-quick-view");
       await expect(quickView).toBeVisible();
       await expect(quickView).toHaveAttribute("aria-modal", "true");
-      await expect(quickView).toContainText("Latest recorded event:");
+      // "Latest event" now appears only when it differs from the outcome, so the
+      // always-present recency fact is the Updated timestamp.
+      await expect(quickView).toContainText("Updated");
+      await expect(quickView.locator("time[data-local-time]").first()).toBeVisible();
       await expect(quickView).toContainText("Delivery ID");
-      await expect(page.locator("body")).not.toContainText("browser-exact@example.com");
+      await expect(quickView.getByRole("button", { name: "Copy Delivery ID", exact: true })).toBeVisible();
+      // Recipients are readable (not masked) in inspection views: the Quick view
+      // identity names the same exact recipient the Full detail header shows.
+      await expect(quickView).toContainText("browser-exact@example.com");
       // Overlays are fixed to the viewport; fullPage screenshots resize the capture
       // surface and place the sheet at the artificial bottom of a very tall image.
       await page.screenshot({ path: path.join(afterDir, `quick-view-${width}.png`), animations: "disabled" });
@@ -388,14 +429,25 @@ test.describe("Phase 169 connected journey", () => {
       await expect(page.getByTestId("operator-detail-header")).toBeVisible();
       await expect(page.getByTestId("operator-detail-header")).toContainText("browser-exact@example.com");
       await expect(page.getByTestId("operator-timeline")).toBeVisible();
-      const detailOrder = await page.evaluate(() => [
-        "operator-detail-header",
-        "operator-timeline",
-        "operator-suppression-card",
-        "operator-support-cards",
-        "operator-replay-action"
-      ].map(testid => document.querySelector(`[data-testid="${testid}"]`)?.getBoundingClientRect().top));
-      expect(detailOrder.every((top, index) => Number.isFinite(top) && (index === 0 || detailOrder[index - 1] < top))).toBeTruthy();
+      // Message-specific sections lead; account-level diagnostics (support cards)
+      // trail in a disclosure after the replay action, collapsed unless support
+      // evidence was selected. Order is measured on the disclosure's summary.
+      const diagnostics = page.locator("details").filter({ has: page.getByTestId("operator-support-cards") });
+      await expect(diagnostics).toHaveCount(1);
+      await expect(diagnostics.locator("summary")).toHaveText("Account diagnostics");
+      await expect(diagnostics).not.toHaveAttribute("open", /.*/);
+      const detailOrder = await page.evaluate(() => {
+        const top = el => el?.getBoundingClientRect().top;
+        const byId = testid => document.querySelector(`[data-testid="${testid}"]`);
+        return [
+          top(byId("operator-detail-header")),
+          top(byId("operator-timeline")),
+          top(byId("operator-suppression-card")),
+          top(byId("operator-replay-action")),
+          top(byId("operator-support-cards")?.closest("details")?.querySelector("summary"))
+        ];
+      });
+      expect(detailOrder.every((top, index) => Number.isFinite(top) && (index === 0 || detailOrder[index - 1] < top)), `detail section order ${JSON.stringify(detailOrder)}`).toBeTruthy();
       await page.screenshot({ path: path.join(afterDir, `detail-${width}.png`), fullPage: true });
       routes.push({ width, state: "Full detail", url: new URL(page.url()).pathname + new URL(page.url()).search });
 

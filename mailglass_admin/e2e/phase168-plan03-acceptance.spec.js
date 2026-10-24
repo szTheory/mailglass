@@ -103,10 +103,15 @@ test.describe("Plan 168-03 rendered acceptance", () => {
     const unavailableCell = page.getByTestId("gallery-timestamp-unavailable-system");
     await expect(unavailableCell).toContainText("Unavailable");
     const recordedCell = page.getByTestId("gallery-timestamp-recorded-system");
-    await expect(recordedCell.locator("time")).toHaveAttribute(
-      "aria-label",
-      "Recorded at 2026-10-07 20:06:18 UTC"
-    );
+    // Timestamps display in the browser's local time; the exact UTC value stays in
+    // the machine-readable attributes and is what the timestamp's copy control copies.
+    const recordedTime = recordedCell.locator("time");
+    await expect(recordedTime).toHaveAttribute("datetime", "2026-10-07T20:06:18Z");
+    await expect(recordedTime).toHaveAttribute("data-utc", "2026-10-07 20:06:18 UTC");
+    await expect(recordedTime).toHaveAttribute("aria-label", /^Recorded at .+ local time$/);
+    const recordedCopy = recordedCell.locator("button[data-timestamp-copy]");
+    await expect(recordedCopy).toHaveAttribute("data-copy-value", "2026-10-07 20:06:18 UTC");
+    await expect(recordedCopy).toHaveAttribute("aria-label", "Copy timestamp as UTC: 2026-10-07 20:06:18 UTC");
 
     const loadingCell = page.getByTestId("gallery-stat_card-loading-system");
     await expect(loadingCell).toContainText("Loading");

@@ -160,7 +160,11 @@ test.describe("Phase 170 connected", () => {
     await simulation.locator("summary").focus();
     await page.keyboard.press("Enter");
     await expect(simulation).toHaveAttribute("open", "");
-    await expect(simulation).toContainText("does not prove which route was selected when the message arrived");
+    // The caveat distinguishes today's rules from the rules in force when the
+    // message arrived (shortened copy, same scope limit).
+    await expect(simulation).toContainText(
+      "These are today’s routing rules. They may differ from the rules used when this message arrived."
+    );
     await expect(page.locator("body")).not.toContainText("fixture execution failure");
     await page.screenshot({ path: "test-results/phase170-connected-detail.png", fullPage: true });
     expect(noMatchId).toMatch(/^[0-9a-f-]{36}$/i);
