@@ -26,6 +26,19 @@ defmodule Mailglass.Components.ContentTest do
     }
   end
 
+  defmodule DefaultSectionRenderer do
+    use Phoenix.Component
+    import Mailglass.Components
+
+    def render(assigns) do
+      ~H"""
+      <.section>
+        <span>Default section spacing</span>
+      </.section>
+      """
+    end
+  end
+
   test "heading and body keep one readable semantic hierarchy" do
     long_name = String.duplicate("Zoë Fernández Sørensen ", 16)
     hostile_copy = "<script>Zoë & Søren</script> " <> long_name
@@ -45,12 +58,47 @@ defmodule Mailglass.Components.ContentTest do
     assert heading =~ "<h1"
     assert heading =~ "font-size:20px"
     assert heading =~ "font-weight:700"
+    assert heading =~ "font-family:Arial, Helvetica, sans-serif"
     assert body =~ "<p"
     assert body =~ "font-size:16px"
+    assert body =~ "font-family:Arial, Helvetica, sans-serif"
     assert body =~ "line-height:1.5"
     assert body =~ "&lt;script&gt;Zoë &amp; Søren&lt;/script&gt;"
     assert body =~ long_name
     refute body =~ "<script>"
+  end
+
+  test "text variants and email spacing follow the published type scale" do
+    for {size, expected} <- [{"sm", "14px"}, {"base", "16px"}, {"lg", "20px"}] do
+      html =
+        render(
+          &Components.text/1,
+          Map.merge(slot_assigns("Copy"), %{size: size, tone: "ink", align: "left"})
+        )
+
+      assert html =~ "font-size:#{expected}"
+    end
+
+    section =
+      render(
+        &Components.section/1,
+        Map.merge(slot_assigns("Section"), %{
+          bg: "paper",
+          bg_hex: nil,
+          padding: "24px",
+          rest: %{}
+        })
+      )
+
+    assert section =~ "padding:24px;mso-line-height-rule:exactly;"
+
+    default_section =
+      DefaultSectionRenderer.render(%{})
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+
+    assert default_section =~ "padding:24px;mso-line-height-rule:exactly;"
+    assert Components.Theme.font(:unknown_role) == "Arial, Helvetica, sans-serif"
   end
 
   test "inline links use the readable theme-aware color and wrap long labels and destinations" do

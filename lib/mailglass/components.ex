@@ -105,7 +105,7 @@ defmodule Mailglass.Components do
 
   attr(:bg, :string, values: ~w(paper mist ink custom), default: "paper")
   attr(:bg_hex, :string, default: nil)
-  attr(:padding, :string, default: "20px")
+  attr(:padding, :string, default: "24px")
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: @global_includes)
   slot(:inner_block, required: true)
@@ -268,7 +268,7 @@ defmodule Mailglass.Components do
     "color:#{Theme.color(String.to_atom(tone))};" <>
       "font-size:20px;" <>
       "font-weight:700;" <>
-      "line-height:1.25;" <>
+      "line-height:1.2;" <>
       "text-align:#{align};" <>
       "mso-line-height-rule:exactly;" <>
       "margin:0 0 16px 0;" <>
@@ -289,7 +289,7 @@ defmodule Mailglass.Components do
   @doc "Renders a paragraph with brand-tone color and size variant."
   @doc since: "0.1.0"
   def text(assigns) do
-    font_size = Map.fetch!(%{"sm" => "13px", "base" => "16px", "lg" => "18px"}, assigns.size)
+    font_size = Map.fetch!(%{"sm" => "14px", "base" => "16px", "lg" => "20px"}, assigns.size)
 
     base_style =
       "font-size:#{font_size};" <>
@@ -347,7 +347,7 @@ defmodule Mailglass.Components do
         "text-decoration:none;" <>
         "font-family:#{body_font};" <>
         "font-size:16px;" <>
-        "font-weight:600;" <>
+        "font-weight:700;" <>
         "border:1px solid #{border_color};" <>
         "border-radius:4px;" <>
         "mso-hide:all;"
@@ -371,7 +371,7 @@ defmodule Mailglass.Components do
         ~s(style="height:44px;v-text-anchor:middle;width:200px;" ) <>
         ~s(arcsize="8%" fillcolor="#{bg_color}" strokecolor="#{border_color}">) <>
         ~s(<w:anchorlock/>) <>
-        ~s(<center style="font-family:#{body_font};font-size:16px;color:#{text_color};font-weight:600;">) <>
+        ~s(<center style="font-family:#{body_font};font-size:16px;color:#{text_color};font-weight:700;">) <>
         slot_binary <>
         ~s(</center></v:roundrect>) <>
         ~s(<![endif]-->)

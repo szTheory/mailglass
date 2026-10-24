@@ -63,6 +63,13 @@ defmodule Mailglass.Components.ButtonTest do
     assert String.contains?(html, "mso-hide:all"), "Missing mso-hide:all on HTML <a> fallback"
   end
 
+  test "<.button> uses the approved bold weight in both HTML and VML paths" do
+    html = render_button(base_assigns())
+
+    assert length(Regex.scan(~r/font-weight:700;/, html)) == 2
+    refute html =~ "font-weight:600;"
+  end
+
   test "<.button> HTML fallback keeps a fluid, wrapping 44px action area" do
     html = render_button(base_assigns())
 
