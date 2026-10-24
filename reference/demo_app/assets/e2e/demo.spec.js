@@ -317,7 +317,10 @@ test.describe("mailglass demo evidence", () => {
     // viewport-agnostic inbound-records-list-card <aside> wrapper instead.
     await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
 
-    const inboundId = await page.getByTestId("inbound-record-row").first().getAttribute("phx-value-id");
+    // The desktop table row is not itself a control; its native "Open inbound
+    // message" button carries the record id (Phase 170-08 selection contract).
+    const inboundId = await page.getByTestId("inbound-record-open").first().getAttribute("phx-value-id");
+    expect(inboundId).toMatch(/^[0-9a-f-]{36}$/i);
     const returnTo = encodeURIComponent(
       `/ops/mail/inbound?tenant_id=northstar&inbound_id=${inboundId}&full=1`,
     );
