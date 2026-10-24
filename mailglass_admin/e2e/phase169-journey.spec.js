@@ -46,13 +46,14 @@ test.describe("Phase 169 connected journey", () => {
     }, { csrfToken });
     expect(fault.status, fault.body).toBe(200);
 
-    await page.getByRole("button", { name: "Retry observations" }).click();
+    await page.getByRole("button", { name: "Refresh health" }).click();
     await expect(page.getByTestId("operator-health-stale-orphan_backlog")).toBeVisible();
     await expect(unmatched).toContainText("1");
     await expect(unmatched).toContainText("Last retrieved");
     await expect(failures).toContainText("1");
-    await expect(page.getByTestId("operator-health-partial")).toBeVisible();
-    await expect(page.getByTestId("operator-overview-health-replay")).toBeVisible();
+    await expect(page.getByTestId("operator-health-status")).toContainText("Needs attention");
+    await expect(page.getByTestId("operator-health-outbound-activity")).toBeVisible();
+    await expect(page.getByTestId("operator-overview-health-replay")).toHaveCount(0);
     await expect(page.locator("body")).not.toContainText("synthetic transient operator read failure");
     await page.screenshot({ path: "test-results/phase169-health-partial.png", fullPage: true });
   });
@@ -141,12 +142,13 @@ test.describe("Phase 169 connected journey", () => {
 
     const visibleEvent = page.getByTestId("operator-timeline-event").first();
     const time = visibleEvent.locator("time[data-local-time]");
-    const originalUtc = await time.innerText();
-    const copyTime = visibleEvent.getByRole("button", { name: "Copy recorded time" });
+    const originalLocal = await time.innerText();
+    const originalUtc = await time.getAttribute("data-utc");
+    const copyTime = visibleEvent.locator("button[data-timestamp-copy]");
     await copyTime.click();
-    await expect(copyTime.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText("Copied.");
+    await expect(page.getByTestId("copy-toast")).toContainText("Timestamp copied as UTC.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(originalUtc);
-    await expect(time).toHaveText(originalUtc);
+    await expect(time).toHaveText(originalLocal);
 
     await page.evaluate(() => {
       Object.defineProperty(navigator, "clipboard", {
@@ -177,9 +179,9 @@ test.describe("Phase 169 connected journey", () => {
       await touchPage.setViewportSize({ width: 390, height: 844 });
       await touchPage.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent(detailPath)}`);
       const touchCopy = touchPage.getByTestId("operator-timeline-event").first()
-        .getByRole("button", { name: "Copy recorded time" });
+        .locator("button[data-timestamp-copy]");
       await touchCopy.tap();
-      await expect(touchCopy.locator("xpath=following-sibling::*[@data-copy-status]")).toHaveText("Copied.");
+      await expect(touchPage.getByTestId("copy-toast")).toContainText("Timestamp copied as UTC.");
     } finally {
       await touchContext.close();
     }
@@ -294,7 +296,7 @@ test.describe("Phase 169 connected journey", () => {
       await expect(page.getByRole("img", { name: "mailglass" })).toBeVisible();
       await expect(page.getByTestId("operator-overview-health")).toBeVisible();
       await expect(page.getByTestId("operator-health-window")).toHaveText(
-        /^Observed from .+ to .+ UTC \(168 hours\)$/
+        /^Last 7 days$/
       );
       const windowPrecedesMetrics = await page.evaluate(() => {
         const window = document.querySelector('[data-testid="operator-health-window"]');
@@ -333,7 +335,7 @@ test.describe("Phase 169 connected journey", () => {
 
       await page.goto(`/ops/mail?tenant_id=${tenantId}&window_hours=24`);
       await expect(page.getByTestId("operator-health-window")).toHaveText(
-        /^Observed from .+ to .+ UTC \(24 hours\)$/
+        /^Last 1 day$/
       );
 
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
@@ -448,10 +450,10 @@ test.describe("Phase 169 connected journey", () => {
     await page.waitForURL(url => new URL(url).searchParams.get("support_focus") === "failed_ingest");
     const supportURL = new URL(page.url());
     expect(supportURL.searchParams.get("support_webhook_event_id")).toBe(fixture.webhook_event_id);
-    expect(supportURL.searchParams.get("provider")).toBe("postmark");
-    expect(supportURL.searchParams.get("event")).toBe("delivered");
+    expect(supportURL.searchParams.has("provider")).toBe(false);
+    expect(supportURL.searchParams.has("event")).toBe(false);
     expect(supportURL.searchParams.get("window_hours")).toBe("168");
-    expect(supportURL.searchParams.get("page")).toBe("2");
+    expect(supportURL.searchParams.has("page")).toBe(false);
     const exactSupport = page.getByTestId("operator-support-exact-evidence");
     await expect(exactSupport).toContainText(fixture.webhook_event_id);
     await expect(exactSupport).toContainText("A unique linked Delivery is recorded.");
@@ -467,13 +469,13 @@ test.describe("Phase 169 connected journey", () => {
 
     await page.getByTestId("operator-detail-back").click();
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
-    await expect(page.getByTestId("operator-delivery-row").filter({ visible: true })).not.toContainText(fixture.delivery_id);
+    await expect(page.locator(`[data-testid="operator-delivery-row"][phx-value-id="${fixture.delivery_id}"]`)).toHaveCount(0);
     const quickViewPath = `/ops/mail?tenant_id=${tenantId}&view=deliveries&provider=postmark&event=delivered&window_hours=168&page=2&delivery_id=${fixture.delivery_id}&support_focus=failed_ingest&support_webhook_event_id=${fixture.webhook_event_id}`;
     await page.goto(quickViewPath);
     const quickView = page.getByTestId("operator-quick-view");
     await expect(quickView).toBeVisible();
     await expect(quickView).toContainText(fixture.delivery_id);
-    await expect(quickView).not.toContainText("phase169-exact@example.com");
+    await expect(quickView).toContainText("phase169-exact@example.com");
     await page.getByTestId("operator-quick-view-full").click();
     await expect(page.getByTestId("operator-detail-header")).toContainText(fixture.delivery_id);
     await page.getByTestId("operator-replay-open").click();
@@ -482,9 +484,7 @@ test.describe("Phase 169 connected journey", () => {
     await expect(review.getByTestId("operator-replay-target-id")).toHaveText(fixture.webhook_event_id);
     await page.getByTestId("operator-replay-confirm").click();
     await expect(page.getByTestId("operator-replay-command-feedback")).toBeVisible();
-      await expect(page.getByTestId("operator-replay-action")).toContainText(
-        "Last retrieved replay evidence:"
-      );
+    await expect(page.getByTestId("operator-replay-action")).toContainText("Last replay:");
 
     const authResponse = await page.request.get("/ops/browser-auth-log");
     expect(authResponse.ok()).toBeTruthy();

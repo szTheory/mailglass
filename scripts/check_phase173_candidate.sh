@@ -68,17 +68,17 @@ NODE
   # Validate the exact pinned baseline set before transferring any bytes into
   # the isolated candidate. Only validated PNG buffers are copied; no evidence
   # directory, source, manifest, README, or owner workspace content is cloned.
-  if ! node - "$EVIDENCE_DIR" "$CANDIDATE_WORKTREE/$EVIDENCE_REL" "$ORIGIN_SHA" "$SCRIPT_DIR/phase173_json_output.cjs" <<'NODE'
+  if ! node - "$EVIDENCE_DIR" "$CANDIDATE_WORKTREE/$EVIDENCE_REL" "$ORIGIN_SHA" "$SCRIPT_DIR/phase173_json_output.cjs" "$REPO_ROOT/reference/demo_app/assets/baselines/phase173" <<'NODE'
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
-const [sourceRoot, candidateRoot, candidateSha, writerPath] = process.argv.slice(2);
+const [sourceRoot, candidateRoot, candidateSha, writerPath, baselineRoot] = process.argv.slice(2);
 const { writeJson, writeFileExclusive } = require(writerPath);
 const validator = require(path.resolve(sourceRoot, "../../assets/scripts/check-demo-browser-evidence.cjs"));
 const outputPath = path.join(sourceRoot, "delivery-candidate.json");
 try {
-  const pinned = validator.validatePinnedBaselines(sourceRoot);
-  const resolvedSource = fs.realpathSync(sourceRoot);
+  const pinned = validator.validatePinnedBaselines(baselineRoot);
+  const resolvedSource = fs.realpathSync(baselineRoot);
   const resolvedCandidateParent = path.dirname(candidateRoot);
   const candidateRootResolved = path.resolve(candidateRoot);
   if (!candidateRootResolved.startsWith(`${resolvedCandidateParent}${path.sep}`)) {

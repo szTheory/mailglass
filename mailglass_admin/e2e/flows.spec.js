@@ -21,7 +21,7 @@ const tenantId = "browser-tenant";
 const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
 const gapClosureArtifacts = path.resolve(
   __dirname,
-  "../../.planning/phases/168-shared-workspace-and-usable-baseline/artifacts/gap-closure"
+  "../test-results/baseline-layout"
 );
 
 // The full-walk axis: 320px floor (FLOW-02) and the system theme (FLOW-02 3rd axis).
@@ -103,8 +103,8 @@ async function openPreviewError(page, query = "theme=light") {
 // noMatchRow mirrors structural.spec.js — visible() filter resolves across table/cards.
 function noMatchRow(page) {
   return page
-    .getByTestId("inbound-record-row")
-    .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+    .locator('[data-testid="inbound-records-table"] tbody tr, [data-testid="inbound-records-cards"] li')
+    .filter({ has: page.getByRole("button", { name: "Unrouted", exact: true }) })
     .filter({ visible: true })
     .first();
 }
@@ -125,7 +125,9 @@ async function selectInboundFull(page, row) {
     await openButton.click();
   } else {
     // Mobile cards are the native control for opening Quick view.
-    await row.click();
+    const mobileOpen = row.getByTestId("inbound-record-row");
+    if (await mobileOpen.count()) await mobileOpen.click();
+    else await row.click();
   }
   await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
   await page.getByTestId("inbound-quick-view-full").click();
@@ -253,8 +255,8 @@ async function openOperatorReplayModal(page) {
 async function openInboundReplayModal(page) {
   await openInbound(page);
   const replayableRow = page
-    .getByTestId("inbound-record-row")
-    .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+    .locator('[data-testid="inbound-records-table"] tbody tr, [data-testid="inbound-records-cards"] li')
+    .filter({ hasNot: page.getByRole("button", { name: "Unrouted", exact: true }) })
     .filter({ visible: true })
     .first();
   await selectInboundFull(page, replayableRow);
@@ -500,8 +502,8 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     // prose label "Replay inbound message" approximates it.
     const replayableRow = page
       .getByTestId("inbound-records-cards")
-      .getByTestId("inbound-record-row")
-      .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+      .locator("li")
+      .filter({ hasNot: page.getByRole("button", { name: "Unrouted", exact: true }) })
       .filter({ visible: true })
       .first();
     await selectInboundFull(page, replayableRow);
@@ -525,7 +527,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
   test("Inbound boundary: filtered-empty window", async ({ page }) => {
     await openInbound(page, `tenant_id=${tenantId}&search=impossible-filtered-empty`);
-    await expect(page.getByText("No records match the current filters.")).toBeVisible();
+    await expect(page.getByText("No messages match the current filters.")).toBeVisible();
     await assertSingleH1(page, "inbound boundary");
     await assertNoRootOverflow(page, "inbound boundary");
     await assertNoElementHorizontalOverflow(page.getByTestId("inbound-master-detail"), "inbound boundary master-detail");
@@ -713,11 +715,10 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
 
   const row = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
   await selectDeliveryFull(page, row);
-  const mailableElement = page
-    .getByTestId("operator-detail-header")
-    .locator("p")
-    .filter({ hasText: mailable });
-  await expect(mailableElement).toHaveText(mailable);
+  await page.locator("#delivery-detail-technical > summary").click();
+  const mailableElement = page.locator("#delivery-detail-mailable-trigger");
+  await expect(mailableElement).toHaveText("Mailables.TransactionalEmailWithVeryLongModuleName");
+  await expect(page.locator("#delivery-detail-mailable")).toHaveText(mailable);
 
   for (const width of [320, 390, 720, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -796,11 +797,9 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     expect(expectedDeliveryId, "the selected fixture row exposes its complete Delivery ID").toBeTruthy();
     await selectDeliveryFull(zoomPage, zoomRow);
     const expectedMailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
-    const zoomedMailable = zoomPage
-      .getByTestId("operator-detail-header")
-      .locator("p")
-      .filter({ hasText: expectedMailable });
-    await expect(zoomedMailable).toHaveText(expectedMailable);
+    await zoomPage.locator("#delivery-detail-technical > summary").click();
+    const zoomedMailable = zoomPage.locator("#delivery-detail-mailable-trigger");
+    await expect(zoomPage.locator("#delivery-detail-mailable")).toHaveText(expectedMailable);
     const initialDevicePixelRatio = await zoomPage.evaluate(() => window.devicePixelRatio);
 
     const serviceWorker =
@@ -836,8 +835,8 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     }
 
     const detail = zoomPage.getByTestId("operator-detail-header");
-    await assertZoomReadableValue(detail.locator("p.mono").first(), "Delivery ID", expectedDeliveryId, 720);
-    await assertZoomReadableValue(zoomedMailable, "Mailable", expectedMailable, 720);
+    await assertZoomReadableValue(detail.getByRole("button", { name: "Copy Delivery ID", exact: true }), "Delivery ID", expectedDeliveryId, 720);
+    await assertZoomReadableValue(zoomedMailable, "Mailable", "Mailables.TransactionalEmailWithVeryLongModuleName", 720);
     await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider", "POSTMARK", 720);
     await assertZoomReadableValue(
       detail.getByText("del_01JXW9ZQKB3V1N4P2RMT7FHCG", { exact: true }),
@@ -852,10 +851,10 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     expect(expectedEventId, "the selected fixture event exposes its complete Event ID").toBeTruthy();
     const recordedTimestamp = timelineEvent.locator("time").first();
     await expect(recordedTimestamp, "the fixture event has a recorded timestamp").toHaveCount(1);
-    const expectedRecordedTimestamp = await recordedTimestamp.getAttribute("data-utc");
+    const expectedRecordedTimestamp = (await recordedTimestamp.textContent()).trim();
     expect(expectedRecordedTimestamp, "the fixture timestamp exposes its canonical UTC value").toBeTruthy();
     await assertZoomReadableValue(
-      timelineEvent.locator("p.mono").first(),
+      timelineEvent.getByRole("button", { name: "Copy Event ID", exact: true }),
       "Timeline Event ID",
       expectedEventId,
       720
@@ -896,7 +895,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       .toBeLessThanOrEqual(zoomGeometry.layoutViewportWidth);
 
     const description = zoomPage.getByText(
-      "Prove what happened to a message — inspect its event timeline, suppression state, and replay history.",
+      "Trace each delivery through its event history.",
       { exact: true }
     );
 
@@ -915,8 +914,8 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     for (const [label, control] of topbarControls) {
       await assertZoomReachableControl(control, `${label} at 320 CSS px`, 320);
     }
-    await assertZoomReadableValue(detail.locator("p.mono").first(), "Delivery ID at 320 CSS px", expectedDeliveryId, 320);
-    await assertZoomReadableValue(zoomedMailable, "Mailable at 320 CSS px", expectedMailable, 320);
+    await assertZoomReadableValue(detail.getByRole("button", { name: "Copy Delivery ID", exact: true }), "Delivery ID at 320 CSS px", expectedDeliveryId, 320);
+    await assertZoomReadableValue(zoomedMailable, "Mailable at 320 CSS px", "Mailables.TransactionalEmailWithVeryLongModuleName", 320);
     await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider at 320 CSS px", "POSTMARK", 320);
     await assertZoomReadableValue(
       detail.getByText("del_01JXW9ZQKB3V1N4P2RMT7FHCG", { exact: true }),
@@ -925,7 +924,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
       320
     );
     await assertZoomReadableValue(
-      timelineEvent.locator("p.mono").first(),
+      timelineEvent.getByRole("button", { name: "Copy Event ID", exact: true }),
       "Timeline Event ID at 320 CSS px",
       expectedEventId,
       320
@@ -939,7 +938,7 @@ test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
     await assertZoomReadableValue(
       description,
       "Delivery explanation at 320 CSS px",
-      "Prove what happened to a message — inspect its event timeline, suppression state, and replay history.",
+      "Trace each delivery through its event history.",
       320
     );
     const narrowDocumentWidth = await zoomPage.evaluate(() => document.documentElement.scrollWidth);
@@ -1358,7 +1357,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(pendingSwitch).toHaveText("Switching to fjordline-aps…");
     await expect(page.getByTestId("operator-account-id")).toHaveText("northstar");
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
-    await expect(page.getByTestId("operator-delivery-row").filter({ visible: true }).first()).toHaveText(committedRowText);
+    await expect(page.getByTestId("operator-delivery-row").filter({ visible: true }).first()).toHaveText(committedRowText, { useInnerText: true });
     liveSocket.send(heldAccountReply);
     heldAccountReply = null;
 
@@ -1368,7 +1367,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(pendingSwitch).toHaveCount(0);
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
     const scopedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
-    await expect(scopedRow).toContainText("f************.example");
+    await expect(scopedRow).toContainText("fjordline-aps.example");
     await scopedRow.click();
     await expect(page.getByTestId("operator-quick-view")).toContainText("fjordline-aps");
   });
@@ -1408,8 +1407,8 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     const quickView = page.getByTestId("operator-quick-view");
     await expect(quickView).toBeVisible();
     await expect(quickView).toHaveAttribute("aria-modal", "true");
-    await expect(page.getByRole("heading", { name: "Delivery quick view", exact: true })).toBeVisible();
-    await expect(quickView).toContainText("Latest recorded event:");
+    await expect(page.getByRole("heading", { name: "Quick view", exact: true })).toBeVisible();
+    await expect(quickView).toContainText("Updated");
     await expect(quickView).toContainText("Delivery ID");
     await expect(quickView).toContainText(deliveryId.replace("operator-delivery-mobile-", ""));
     await expect(page.getByTestId("operator-quick-view-focus-return")).toHaveAttribute("data-focus-return-id", deliveryId);
@@ -1419,7 +1418,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await page.keyboard.press("Shift+Tab");
     await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("data-testid"))).toBe("operator-quick-view-full");
 
-    const idField = quickView.locator("dd.mono");
+    const idField = quickView.getByRole("button", { name: "Copy Delivery ID", exact: true });
     const overflow = await idField.evaluate(element => element.scrollWidth - element.clientWidth);
     expect(overflow, "full delivery ID wraps within the narrow dialog").toBeLessThanOrEqual(1);
 
@@ -1562,8 +1561,13 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       const replayTrigger = page.getByTestId("operator-replay-open");
       await replayTrigger.tap();
       const deniedModal = page.getByTestId("operator-replay-modal").filter({ visible: true }).first();
+      // LiveView's mounted focus runs after two animation frames. Let it
+      // finish before moving focus so Enter cannot activate Close instead.
+      await expect(deniedModal.locator("#operator-replay-close")).toBeFocused();
       const deniedTarget = await deniedModal.getByTestId("operator-replay-target-id").innerText();
-      await deniedModal.getByTestId("operator-replay-confirm").focus();
+      const deniedConfirm = deniedModal.getByTestId("operator-replay-confirm");
+      await deniedConfirm.focus();
+      await expect(deniedConfirm).toBeFocused();
       await page.keyboard.press("Enter");
       await expect.poll(() => page.locator("body").innerText()).toContain("Recent authentication is required.");
       await expect(deniedModal).toBeVisible();

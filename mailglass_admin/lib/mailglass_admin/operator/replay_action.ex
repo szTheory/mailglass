@@ -20,7 +20,7 @@ defmodule MailglassAdmin.Operator.ReplayAction do
     >
       <div class="flex flex-wrap items-start justify-between gap-md">
         <div class="space-y-xs">
-          <h2 class="text-body font-bold uppercase text-secondary">Webhook replay</h2>
+          <h2 class="text-body font-bold text-base-content">Webhook replay</h2>
           <p class="text-body text-base-content">{RepairState.availability_hint(@replay_targets)}</p>
           <p
             :if={@replay_command_feedback}
@@ -48,7 +48,7 @@ defmodule MailglassAdmin.Operator.ReplayAction do
             </button>
           </div>
           <p :if={@latest_replay} class="text-label text-secondary">
-            Last retrieved replay evidence: {RepairState.latest_replay_summary(@latest_replay)} at
+            Last replay: {RepairState.latest_replay_summary(@latest_replay)} at
             <Components.timestamp at={@latest_replay.occurred_at} />
           </p>
         </div>

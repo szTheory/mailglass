@@ -10,19 +10,21 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.CaptureTest do
       output_dir = tmp_output_dir("dry-run")
 
       output =
-        run_task!([
-          "--dry-run",
-          "--base-url",
-          "http://localhost:4000/dev/mail",
-          "--output-dir",
-          output_dir,
-          "--theme",
-          "dark",
-          "--widths",
-          "768,375",
-          "--mailables",
-          "MailglassAdmin.Fixtures.HappyMailer,MailglassAdmin.Fixtures.StubMailer"
-        ])
+        with_ci_env(nil, fn ->
+          run_task!([
+            "--dry-run",
+            "--base-url",
+            "http://localhost:4000/dev/mail",
+            "--output-dir",
+            output_dir,
+            "--theme",
+            "dark",
+            "--widths",
+            "768,375",
+            "--mailables",
+            "MailglassAdmin.Fixtures.HappyMailer,MailglassAdmin.Fixtures.StubMailer"
+          ])
+        end)
 
       assert output =~ "Preview capture dry-run"
       assert output =~ "matrix entries: 10"
@@ -51,12 +53,18 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.CaptureTest do
       with_ci_env("true", fn ->
         for args <- [
               ["--dry-run"],
-              ["--dry-run", "--mailables", "MailglassAdmin.Fixtures.HappyMailer,MailglassAdmin.Fixtures.StubMailer"],
+              [
+                "--dry-run",
+                "--mailables",
+                "MailglassAdmin.Fixtures.HappyMailer,MailglassAdmin.Fixtures.StubMailer"
+              ],
               ["--dry-run", "--mailables", "MailglassAdmin.Fixtures.StubMailer"]
             ] do
-          assert_raise Mix.Error, ~r/CI requires exactly --mailables MailglassAdmin.Fixtures.HappyMailer/, fn ->
-            run_task!(args)
-          end
+          assert_raise Mix.Error,
+                       ~r/CI requires exactly --mailables MailglassAdmin.Fixtures.HappyMailer/,
+                       fn ->
+                         run_task!(args)
+                       end
         end
       end)
     end

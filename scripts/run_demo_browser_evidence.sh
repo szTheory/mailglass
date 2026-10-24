@@ -58,6 +58,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
+node "$ROOT_DIR/scripts/prepare_phase173_baselines.cjs"
+
 mkdir -p "$EVIDENCE_DIR/captures"
 rm -rf "$EVIDENCE_DIR/retained"
 rm -f \

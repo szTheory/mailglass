@@ -33,27 +33,45 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
       data-testid="inbound-detail-header"
       data-group-card="inbound-detail-header"
     >
-      <div class="flex flex-wrap items-start justify-between gap-md">
-        <div class="min-w-0 space-y-sm">
-          <div class="flex flex-wrap items-center gap-sm">
-            <h2 class="min-w-0 break-words text-heading font-bold text-base-content">
-              {Components.mask_recipient(@record.envelope_recipient)}
-            </h2>
-            <Components.status_badge status={Components.normalize_inbound_outcome(@outcome)} />
+      <div class="min-w-0 space-y-lg">
+        <Components.message_identity
+          subject={@record.subject}
+          recipient={@record.envelope_recipient}
+          status={Components.normalize_inbound_outcome(@outcome)}
+          context={:inbound}
+          id="inbound-detail-outcome"
+        />
+        <p
+          :if={suppression_flagged?(@record)}
+          data-testid="inbound-suppression-flag"
+          class="text-body text-warning"
+        >
+          Sender suppressed: this message was flagged, not bounced, to preserve diagnostic signal.
+        </p>
+        <dl class="grid min-w-0 gap-md text-body text-secondary sm:grid-cols-2 lg:grid-cols-3 [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]">
+          <div>
+            <dt class="text-label font-bold">From</dt>
+            <dd class="mt-xs text-base-content">{sender_display(@record)}</dd>
           </div>
-          <p class="mono min-w-0 break-all text-label text-secondary">{@record.id}</p>
-          <p
-            :if={suppression_flagged?(@record)}
-            data-testid="inbound-suppression-flag"
-            class="text-body text-warning"
-          >
-            Sender suppressed: this message was flagged, not bounced, to preserve diagnostic signal.
-          </p>
-        </div>
-
-        <dl class="grid min-w-0 gap-sm text-body text-secondary sm:grid-cols-2 [&>div]:min-w-0 [&_dd]:break-words">
-          <div class="min-w-0">
-            <dt class="text-label font-bold uppercase">Account</dt>
+          <div>
+            <dt class="text-label font-bold">Provider</dt>
+            <dd class="mt-xs text-base-content">{String.upcase(@record.provider || "unknown")}</dd>
+          </div>
+          <div>
+            <dt class="text-label font-bold">Received</dt>
+            <dd class="mt-xs text-base-content"><Components.timestamp at={@record.received_at} /></dd>
+          </div>
+          <div>
+            <dt class="text-label font-bold">Mailbox</dt>
+            <dd class="mt-xs">
+              <Components.mailbox_identity
+                record={%{outcome: @outcome, mailbox: @mailbox}}
+                id="inbound-detail-mailbox"
+              />
+            </dd>
+          </div>
+          <div>
+            <dt class="text-label font-bold">Account</dt>
             <dd
               class="mt-xs text-base-content"
               title={Accounts.title(@record.tenant_id, @account_labels)}
@@ -61,32 +79,27 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
               {Accounts.label(@record.tenant_id, @account_labels)}
             </dd>
           </div>
-          <div class="min-w-0">
-            <dt class="text-label font-bold uppercase">Provider</dt>
-            <dd class="mt-xs text-base-content">{String.upcase(@record.provider || "unknown")}</dd>
-          </div>
-          <div class="min-w-0">
-            <dt class="text-label font-bold uppercase">From</dt>
-            <dd class="mt-xs text-base-content">{sender_display(@record)}</dd>
-          </div>
-          <div class="min-w-0">
-            <dt class="text-label font-bold uppercase">Subject</dt>
-            <dd class="mt-xs text-base-content">{present(@record.subject)}</dd>
-          </div>
-          <div class="min-w-0">
-            <dt class="text-label font-bold uppercase">Received</dt>
-            <dd class="mt-xs text-base-content"><Components.timestamp at={@record.received_at} /></dd>
-          </div>
-          <div class="min-w-0">
-            <dt class="text-label font-bold uppercase">Matched mailbox</dt>
-            <dd class="mt-xs text-base-content">{matched_mailbox(@outcome, @mailbox)}</dd>
-          </div>
         </dl>
+        <Components.technical_details
+          collapsible={not is_nil(Map.get(@record, :provider_message_id))}
+          id="inbound-detail-technical"
+        >
+          <div>
+            <dt class="text-label font-bold text-secondary">Record ID</dt>
+            <dd class="mt-xs"><Components.copy_value value={@record.id} label="Record ID" /></dd>
+          </div>
+          <div :if={Map.get(@record, :provider_message_id)}>
+            <dt class="text-label font-bold text-secondary">Provider message ID</dt>
+            <dd class="mt-xs">
+              <Components.copy_value value={@record.provider_message_id} label="Provider message ID" />
+            </dd>
+          </div>
+        </Components.technical_details>
       </div>
 
       <div class="mt-lg flex flex-wrap items-start justify-between gap-md border-t border-base-300 pt-md">
         <div class="space-y-xs">
-          <h3 class="text-body font-bold uppercase text-secondary">Replay</h3>
+          <h3 class="text-body font-bold text-base-content">Replay</h3>
           <p class="text-body text-base-content">{replay_hint(@outcome)}</p>
         </div>
 
@@ -98,7 +111,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
           disabled={replay_disabled?(@outcome)}
           class={["btn btn-error min-h-11 px-md", replay_disabled?(@outcome) && "btn-disabled"]}
         >
-          Replay inbound
+          Review replay
         </button>
       </div>
     </Components.card>
@@ -110,8 +123,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
 
   # The masked SENDER for the "From" cell (WR-02). `InboundRecord.from` is an
   # `{:array, :map}` of parsed address maps — the sender is PII, so each address is
-  # masked through the one audited `Components.mask_recipient/1` definition (same
-  # treatment recipients get). Address maps round-trip through JSONB as STRING keys
+  # masked through the one audited `Components.mask_recipient/1` definition (kept separate from the readable recipient identity). Address maps round-trip through JSONB as STRING keys
   # ("address"), but freshly built structs carry ATOM keys (:address); both are
   # read. An empty or malformed `from` (no usable address) degrades to the neutral
   # "Unavailable" placeholder rather than crashing or rendering a falsehood.
@@ -140,16 +152,6 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
     do: "Replay is unavailable: this message did not match any mailbox."
 
   defp replay_hint(_outcome),
-    do: "Review the recorded Mailbox identity and eligibility before replaying this stored message."
-
-  defp matched_mailbox(:no_match, _mailbox), do: "No match"
-  defp matched_mailbox(nil, _mailbox), do: "No execution recorded"
-
-  defp matched_mailbox(_outcome, mailbox) when is_binary(mailbox) and mailbox != "",
-    do: mailbox
-
-  defp matched_mailbox(_outcome, _mailbox), do: "Unavailable"
-
-  defp present(value) when value in [nil, ""], do: "—"
-  defp present(value), do: value
+    do:
+      "Run this stored message through its recorded mailbox again. Review the replay before starting it."
 end

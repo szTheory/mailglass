@@ -130,7 +130,7 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     const table = page.getByTestId("operator-deliveries-table");
     await expect(table).toBeVisible();
 
-    // northstar carries the many/high-count/error lifecycle (incl the >=80-char
+    // northstar carries the many/high-count/error lifecycle (incl the long, valid
     // truncation-stress recipient). The page must not overflow / collapse.
     await expectNoPageHorizontalOverflow(page);
 

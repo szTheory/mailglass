@@ -158,7 +158,7 @@ def write_json(output_path, trusted_root, payload):
         os.close(root_anchor)
 
 
-def write_file_exclusive(output_path, trusted_root, content):
+def write_file_exclusive(output_path, trusted_root, content, reuse_identical=False):
     require_secure_primitives()
     root_path = normalized_absolute(trusted_root)
     destination = normalized_absolute(output_path)
@@ -176,12 +176,28 @@ def write_file_exclusive(output_path, trusted_root, content):
         root_fd = open_directory_from_root(os.path.realpath(root_path), root_anchor)
         parent_relative = os.path.relpath(parent_path, root_path)
         parent_fd = open_or_create_directory_chain(parent_relative, root_fd)
-        file_fd = os.open(
-            basename,
-            os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
-            0o600,
-            dir_fd=parent_fd,
-        )
+        try:
+            file_fd = os.open(
+                basename,
+                os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                0o600,
+                dir_fd=parent_fd,
+            )
+        except FileExistsError:
+            if not reuse_identical:
+                raise
+            file_fd = os.open(
+                basename,
+                os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                dir_fd=parent_fd,
+            )
+            with os.fdopen(file_fd, "rb") as existing:
+                file_fd = None
+                if not stat.S_ISREG(os.fstat(existing.fileno()).st_mode):
+                    raise RuntimeError("Pinned baseline destination is not a regular file")
+                if existing.read(len(content) + 1) != content:
+                    raise RuntimeError("Pinned baseline destination bytes differ; refusing overwrite")
+            return
         with os.fdopen(file_fd, "wb") as output:
             file_fd = None
             output.write(content)
@@ -204,6 +220,10 @@ if __name__ == "__main__":
     try:
         if len(sys.argv) == 4 and sys.argv[3] == "--exclusive-file":
             write_file_exclusive(sys.argv[2], sys.argv[1], sys.stdin.buffer.read())
+        elif len(sys.argv) == 4 and sys.argv[3] == "--pinned-file":
+            write_file_exclusive(
+                sys.argv[2], sys.argv[1], sys.stdin.buffer.read(), reuse_identical=True
+            )
         elif len(sys.argv) == 3:
             data = sys.stdin.read()
             json.loads(data)

@@ -199,7 +199,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       trigger_text = Floki.text(trigger)
       assert trigger_text =~ "HappyMailer"
       assert trigger_text =~ "welcome_default"
-      assert trigger_text =~ "MailglassAdmin.Fixtures.HappyMailer"
+      refute trigger_text =~ "MailglassAdmin.Fixtures"
       refute trigger_text =~ "3 emails"
       [affordance] = Floki.find(trigger, ~s([data-testid="preview-email-menu-affordance"]))
       [affordance_class] = Floki.attribute(affordance, "class")
@@ -355,7 +355,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(data-testid="admin-shell-page-header")
 
       assert html =~
-               "Inspect renderer HTML and plaintext, an illustrative raw preview, generated preview headers, and scenario assigns. This is not final provider or recipient output."
+               "See how your emails look in HTML and plain text."
 
       assert html =~ ~s(data-testid="admin-shell-sidebar")
       assert html =~ ~s(data-testid="surface-nav-sidebar")
@@ -378,6 +378,9 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "375 px"
       assert html =~ "768 px"
       assert html =~ "1024 px"
+      assert html =~ "Frame width"
+      assert html =~ "Preview background"
+      assert html =~ ~s(aria-label="Help for preview background")
 
       assert html =~
                "Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior."
@@ -461,7 +464,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
         |> Floki.find(~s([data-testid="preview-email-menu-trigger"]))
 
       trigger_text = Floki.text(trigger)
-      assert trigger_text =~ "MailglassAdmin.Fixtures.HappyMailer"
+      assert trigger_text =~ "HappyMailer"
+      refute trigger_text =~ "MailglassAdmin.Fixtures"
       assert trigger_text =~ "welcome_enterprise"
     end
 
@@ -476,19 +480,30 @@ defmodule MailglassAdmin.PreviewLiveTest do
           mount_path: "/dev/mail"
         )
 
-      [trigger] =
-        html
-        |> Floki.parse_document!()
-        |> Floki.find(~s([data-testid="preview-email-menu-trigger"]))
+      document = Floki.parse_document!(html)
+
+      [label] = Floki.find(document, ~s([data-testid="preview-email-menu-label"]))
+      assert String.trim(Floki.text(label)) == "Email preview"
+
+      [trigger] = Floki.find(document, ~s([data-testid="preview-email-menu-trigger"]))
+      assert Floki.find(trigger, ~s([data-testid="preview-email-menu-label"])) == []
+
+      [label_id] = Floki.attribute(label, "id")
+      [identity] = Floki.find(trigger, ~s([data-testid="preview-email-menu-active-identity"]))
+      [identity_id] = Floki.attribute(identity, "id")
+      assert Floki.attribute(trigger, "aria-labelledby") == ["#{label_id} #{identity_id}"]
 
       text = Floki.text(trigger)
-      assert text =~ "MailglassAdmin.Fixtures.HappyMailer"
+      assert text =~ "HappyMailer"
+      refute text =~ "MailglassAdmin.Fixtures"
       assert text =~ "welcome_überraschung_東京__with_a_deliberately_long_name"
 
       [identity] = Floki.find(trigger, ~s([data-testid="preview-email-menu-active-identity"]))
       [identity_class] = Floki.attribute(identity, "class")
-      refute identity_class =~ "truncate"
-      assert identity_class =~ "break-all"
+      assert identity_class =~ "truncate"
+      refute identity_class =~ "whitespace-normal"
+      refute identity_class =~ "[overflow-wrap:anywhere]"
+      refute identity_class =~ "break-all"
       refute Floki.attribute(identity, "title") != []
     end
   end
@@ -512,8 +527,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
       [iframe] = Floki.find(Floki.parse_document!(html), "#tab-panel-html iframe")
       assert Floki.attribute(iframe, "srcdoc") == [renderer_result.swoosh_email.html_body]
 
-      assert html =~ "Renderer HTML"
-      assert html =~ "Browser rendering only"
+      assert html =~ "Email HTML preview"
+      assert html =~ "browser rendering only"
       assert html =~ ~s(sandbox="allow-same-origin")
       refute html =~ ~s(sandbox="allow-same-origin allow-scripts")
 
@@ -544,7 +559,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert text_html =~ "Hi Ada",
              "Text tab must contain the rendered text_body literal"
 
-      assert text_html =~ "Renderer plaintext"
+      assert text_html =~ "<pre"
       [text_output] = Floki.find(Floki.parse_document!(text_html), "#tab-panel-text pre")
       assert Floki.text(text_output) == renderer_result.swoosh_email.text_body
 
@@ -554,8 +569,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert raw_html =~ ~r/(boundary=|Content-Type:|MIME-Version:)/i,
              "Raw tab must contain RFC 5322 envelope markers"
 
-      assert raw_html =~ "Illustrative MIME-shaped preview"
-      assert raw_html =~ "serialized wire bytes"
+      assert raw_html =~ "Example MIME source"
+      assert raw_html =~ "provider may send a different format"
 
       # Headers tab shows auto-injected Message-ID + Date rows
       headers_html = render_click(view, "set_tab", %{"tab" => "headers"})
@@ -566,7 +581,9 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert headers_html =~ "Date",
              "Headers tab must show the Date row"
 
-      assert headers_html =~ "Message-ID and Date are generated for this preview"
+      assert headers_html =~
+               "Message-ID and Date are generated when the scenario leaves them unset"
+
       assert headers_html =~ "Preview value"
       assert headers_html =~ ~r/preview-[0-9]+@mailglass\.dev/
     end
@@ -648,8 +665,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
           preview_frame_dark_chrome: false
         )
 
-      assert html =~ "No HTML body"
-      assert html =~ "this Mailable's template returned empty content"
+      assert html =~ "This email has no HTML content."
+      assert html =~ "This email has no HTML content."
 
       text_html =
         render_component(&MailglassAdmin.Preview.Tabs.tabs/1,

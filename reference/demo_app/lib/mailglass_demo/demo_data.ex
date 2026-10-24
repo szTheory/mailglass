@@ -144,7 +144,7 @@ defmodule MailglassDemo.DemoData do
         recipient: "billing@northstar.example",
         provider: "postmark",
         provider_message_id: "pm-demo-payment-failed-001",
-        status: :failed,
+        status: :sent,
         last_event_type: :bounced,
         last_event_at: minutes_ago(20),
         metadata: %{
@@ -168,7 +168,7 @@ defmodule MailglassDemo.DemoData do
         recipient: "ops@northstar.example",
         provider: "sendgrid",
         provider_message_id: "sg-demo-usage-001",
-        status: :failed,
+        status: :sent,
         last_event_type: :bounced,
         last_event_at: minutes_ago(8),
         metadata: %{
@@ -214,7 +214,7 @@ defmodule MailglassDemo.DemoData do
         last_event_type: :suppressed,
         last_event_at: minutes_ago(5),
         metadata: %{
-          "incident" => "INC-7741",
+          "incident" => "INC-4421",
           "status" => "monitoring",
           "scenario" => "incident_update"
         }
@@ -242,9 +242,9 @@ defmodule MailglassDemo.DemoData do
         recipient: "queued@northstar.example",
         provider: "postmark",
         provider_message_id: "pm-demo-badge-queued-001",
-        status: :sent,
+        status: :queued,
         last_event_type: :queued,
-        last_event_at: minutes_ago(132),
+        last_event_at: minutes_ago(133),
         metadata: %{"scenario" => "badge_queued"}
       })
 
@@ -257,7 +257,7 @@ defmodule MailglassDemo.DemoData do
         recipient: "rejected@northstar.example",
         provider: "postmark",
         provider_message_id: "pm-demo-badge-rejected-001",
-        status: :failed,
+        status: :sent,
         last_event_type: :rejected,
         last_event_at: minutes_ago(134),
         metadata: %{"scenario" => "badge_rejected"}
@@ -270,24 +270,24 @@ defmodule MailglassDemo.DemoData do
       "classification" => "domain_block"
     })
 
-    autoresponded_d =
+    deferred_d =
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
         stream: :transactional,
-        recipient: "autoresponded@northstar.example",
+        recipient: "deferred@northstar.example",
         provider: "sendgrid",
-        provider_message_id: "sg-demo-badge-autoresponded-001",
+        provider_message_id: "sg-demo-badge-deferred-001",
         status: :sent,
-        last_event_type: :autoresponded,
+        last_event_type: :deferred,
         last_event_at: minutes_ago(136),
-        metadata: %{"scenario" => "badge_autoresponded"}
+        metadata: %{"scenario" => "badge_deferred"}
       })
 
-    event!(autoresponded_d, :sent, minutes_ago(137), %{"provider" => "sendgrid", "source" => "api"})
+    event!(deferred_d, :sent, minutes_ago(137), %{"provider" => "sendgrid", "source" => "api"})
 
-    event!(autoresponded_d, :autoresponded, minutes_ago(136), %{
+    event!(deferred_d, :deferred, minutes_ago(136), %{
       "provider" => "sendgrid",
-      "classification" => "out_of_office"
+      "classification" => "temporary_failure"
     })
 
     opened_d =
@@ -343,7 +343,7 @@ defmodule MailglassDemo.DemoData do
         recipient: "complained@northstar.example",
         provider: "sendgrid",
         provider_message_id: "sg-demo-badge-complained-001",
-        status: :failed,
+        status: :sent,
         last_event_type: :complained,
         last_event_at: minutes_ago(142),
         metadata: %{"scenario" => "badge_complained"}
@@ -362,7 +362,7 @@ defmodule MailglassDemo.DemoData do
     unsubscribed_d =
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert",
-        stream: :operational,
+        stream: :bulk,
         recipient: "unsubscribed@northstar.example",
         provider: "sendgrid",
         provider_message_id: "sg-demo-badge-unsubscribed-001",
@@ -384,8 +384,8 @@ defmodule MailglassDemo.DemoData do
 
     subscribed_d =
       delivery!(%{
-        mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
-        stream: :transactional,
+        mailable: "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert",
+        stream: :bulk,
         recipient: "subscribed@northstar.example",
         provider: "sendgrid",
         provider_message_id: "sg-demo-badge-subscribed-001",
@@ -395,9 +395,16 @@ defmodule MailglassDemo.DemoData do
         metadata: %{"scenario" => "badge_subscribed"}
       })
 
+    event!(subscribed_d, :sent, minutes_ago(148), %{"provider" => "sendgrid", "source" => "api"})
+
+    event!(subscribed_d, :delivered, minutes_ago(147), %{
+      "provider" => "sendgrid",
+      "source" => "webhook"
+    })
+
     event!(subscribed_d, :subscribed, minutes_ago(146), %{
       "provider" => "sendgrid",
-      "classification" => "list_subscribe"
+      "classification" => "group_resubscribe"
     })
 
     unknown_d =
@@ -413,19 +420,20 @@ defmodule MailglassDemo.DemoData do
         metadata: %{"scenario" => "badge_unknown"}
       })
 
+    event!(unknown_d, :sent, minutes_ago(149), %{"provider" => "postmark", "source" => "api"})
+
     event!(unknown_d, :unknown, minutes_ago(148), %{
       "provider" => "postmark",
       "raw_type" => "ProprietaryEvent"
     })
 
-    # --- Truncation stress delivery: recipient local-part >= 80 chars (D-08 / GAP-16) ---
+    # --- Truncation stress delivery: long but valid recipient address (D-08 / GAP-16) ---
 
     stress_d =
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
         stream: :transactional,
-        recipient:
-          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@northstar-stress.example",
+        recipient: "operations.billing.notifications.enterprise.accounts@northstar-stress.example",
         provider: "postmark",
         provider_message_id: "pm-demo-truncation-stress-001",
         status: :sent,
@@ -475,7 +483,7 @@ defmodule MailglassDemo.DemoData do
           "provider" => "sendgrid",
           "provider_event_id" => "sg-orphan-a",
           "webhook_event_id" => "00000000-0000-0000-0000-000000000001",
-          "provider_message_id" => "sg-orphan-msg-001"
+          "provider_message_id" => "sg-demo-usage-001"
         },
         normalized_payload: %{}
       }
@@ -501,10 +509,10 @@ defmodule MailglassDemo.DemoData do
     |> Event.changeset()
     |> Repo.insert!()
 
-    # :reconciled event — links orphan_a to the invite delivery
+    # :reconciled event — links orphan_a to the matching SendGrid delivery
     %{
       tenant_id: @tenant,
-      delivery_id: invite.id,
+      delivery_id: usage_alert.id,
       type: :reconciled,
       occurred_at: minutes_ago(127),
       idempotency_key: "reconciled:" <> to_string(orphan_a.id),
@@ -524,10 +532,10 @@ defmodule MailglassDemo.DemoData do
       tenant_id: @tenant,
       provider: "sendgrid",
       provider_event_id: "sg-demo-failed-ingest-001",
-      event_type_raw: "Bounce",
+      event_type_raw: "bounce",
       event_type_normalized: "bounced",
       status: :failed,
-      raw_payload: %{"RecordType" => "Bounce", "error" => "parse_failure"},
+      raw_payload: %{"event" => "bounce", "timestamp" => "invalid", "error" => "parse_failure"},
       received_at: minutes_ago(124),
       processed_at: minutes_ago(124)
     }
@@ -594,7 +602,7 @@ defmodule MailglassDemo.DemoData do
         envelope_recipient: "support@demo.mailglass.local",
         from: [%{"address" => "bulk-sender@spam.local"}],
         to: [%{"address" => "support@demo.mailglass.local"}],
-        subject: "[promo] Buy follower bundles now",
+        subject: "[spam] Buy follower bundles now",
         text_body: "Limited-time offer from a blocked sender.",
         headers: %{"x-demo-priority" => "low", "x-demo-scenario" => "spam_reject"},
         metadata: %{"scenario" => "spam_reject"}
@@ -657,7 +665,7 @@ defmodule MailglassDemo.DemoData do
       ignore_evidence,
       :fresh,
       :ignore,
-      "MailglassDemoWeb.Inbound.SpamMailbox"
+      "MailglassDemoWeb.Inbound.SupportMailbox"
     )
 
     # --- :failed inbound outcome + truncation stress subject >= 150 chars (D-04 / D-08 / GAP-16) ---
@@ -670,8 +678,9 @@ defmodule MailglassDemo.DemoData do
         from: [%{"address" => "noreply@vendor-platform.example"}],
         to: [%{"address" => "support@demo.mailglass.local"}],
         subject:
-          "This is a very long subject line for a vendor notification that was not expected and has exceeded the maximum subject line length that the truncation column can display without ellipsis overflow occurring here",
-        text_body: "Automated vendor notification that failed to be parsed by the mailbox router.",
+          "Delivery integration incident: customer notification payload could not be processed for the Northstar Logistics production workspace after the vendor changed its notification format",
+        text_body:
+          "Vendor notification with an invalid payload that the support mailbox could not process.",
         headers: %{"x-demo-scenario" => "inbound_failed"},
         metadata: %{"scenario" => "inbound_failed"},
         attachments: [],
@@ -688,7 +697,8 @@ defmodule MailglassDemo.DemoData do
         inbound_record_id: failed_record.id,
         inbound_evidence_id: failed_evidence.id,
         source: :fresh,
-        executed_at: minutes_ago(36),
+        executed_at: minutes_ago(34),
+        mailbox: "MailglassDemoWeb.Inbound.SupportMailbox",
         metadata: %{"demo" => true},
         execution_failure: %{"reason" => "parse_error", "provider" => "mailgun"}
       })
@@ -702,25 +712,60 @@ defmodule MailglassDemo.DemoData do
       idempotency_key: "demo-delivery-#{attrs.provider_message_id}"
     }
 
+    attrs =
+      if attrs.status in [:queued, :suppressed],
+        do: Map.put(attrs, :provider_message_id, nil),
+        else: attrs
+
     attrs
+    |> Map.update!(:metadata, &Map.put(&1, "subject", subject_for(attrs)))
     |> Map.merge(defaults)
     |> Delivery.changeset()
     |> Repo.insert!()
   end
 
+  defp subject_for(attrs) do
+    case List.last(String.split(attrs.mailable, ".")) do
+      "invite_admin" ->
+        "Sam Rivera invited you to Northstar Logistics"
+
+      "magic_link" ->
+        "Your Northstar Logistics sign-in link"
+
+      "receipt_paid" ->
+        "Receipt #{Map.get(attrs.metadata, "invoice_id", "INV-2026-0601")} for Northstar Logistics"
+
+      "payment_failed" ->
+        "Payment action needed for Northstar Logistics"
+
+      "usage_alert" ->
+        "Northstar Logistics email usage reached 85%"
+
+      "incident_update" ->
+        "INC-4421 is monitoring"
+    end
+  end
+
   defp event!(delivery, type, occurred_at, metadata) do
-    %{
-      tenant_id: @tenant,
-      delivery_id: delivery.id,
-      type: type,
-      occurred_at: occurred_at,
-      idempotency_key:
-        "demo-event-#{delivery.provider_message_id}-#{type}-#{DateTime.to_unix(occurred_at)}",
-      metadata: metadata,
-      normalized_payload: %{"recipient" => delivery.recipient}
-    }
-    |> Event.changeset()
-    |> Repo.insert!()
+    event =
+      %{
+        tenant_id: @tenant,
+        delivery_id: delivery.id,
+        type: type,
+        occurred_at: occurred_at,
+        idempotency_key:
+          "demo-event-#{delivery.provider_message_id}-#{type}-#{DateTime.to_unix(occurred_at)}",
+        metadata: metadata,
+        normalized_payload: %{"recipient" => delivery.recipient}
+      }
+      |> Event.changeset()
+      |> Repo.insert!()
+
+    Repo.get!(Delivery, delivery.id)
+    |> Mailglass.Outbound.Projector.update_projections(event)
+    |> Repo.update!()
+
+    event
   end
 
   defp webhook!(
@@ -738,14 +783,27 @@ defmodule MailglassDemo.DemoData do
       event_type_raw: event_type_raw,
       event_type_normalized: event_type_normalized,
       status: :succeeded,
-      raw_payload: %{
-        "RecordType" => "Delivery",
-        "MessageID" => message_id,
-        "ID" => event_id,
-        "DeliveredAt" => "2026-06-01T14:10:00Z"
-      },
-      received_at: minutes_ago(45),
-      processed_at: minutes_ago(44)
+      raw_payload:
+        if(provider == "sendgrid",
+          do: %{
+            "event" => "bounce",
+            "sg_message_id" => message_id,
+            "sg_event_id" => provider_event_id,
+            "email" => "ops@northstar.example",
+            "timestamp" => DateTime.to_unix(minutes_ago(8)),
+            "status" => "5.2.2",
+            "reason" => "Mailbox full"
+          },
+          else: %{
+            "RecordType" => event_type_raw,
+            "MessageID" => message_id,
+            "ID" => event_id,
+            "Recipient" => "billing@northstar.example",
+            "DeliveredAt" => DateTime.to_iso8601(minutes_ago(44))
+          }
+        ),
+      received_at: minutes_ago(if(provider == "sendgrid", do: 8, else: 44)),
+      processed_at: minutes_ago(if(provider == "sendgrid", do: 8, else: 44))
     }
     |> WebhookEvent.changeset()
     |> Repo.insert!()

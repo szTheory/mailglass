@@ -35,10 +35,13 @@ const fs = require("node:fs");
 const path = require("node:path");
 const [sourceRoot, fakeRoot, fixtures] = process.argv.slice(2);
 const checker = require(path.join(sourceRoot, "reference/demo_app/assets/scripts/check-demo-browser-evidence.cjs"));
-const sourceEvidence = path.join(sourceRoot, "reference/demo_app/tmp/demo_browser_evidence");
+const sourceEvidence = path.join(sourceRoot, "reference/demo_app/assets/baselines/phase173");
 const fakeEvidence = path.join(fakeRoot, "reference/demo_app/tmp/demo_browser_evidence");
+const fakeBaselines = path.join(fakeRoot, "reference/demo_app/assets/baselines/phase173");
+fs.mkdirSync(fakeBaselines, { recursive: true });
 for (const baseline of checker.validatePinnedBaselines(sourceEvidence)) {
   fs.copyFileSync(path.join(sourceEvidence, baseline.path), path.join(fakeEvidence, baseline.path));
+  fs.copyFileSync(path.join(sourceEvidence, baseline.path), path.join(fakeBaselines, baseline.path));
   fs.copyFileSync(path.join(sourceEvidence, baseline.path), path.join(fixtures, baseline.path));
 }
 NODE
@@ -696,7 +699,7 @@ const checker = require(process.argv[2]);
 process.stdout.write(checker.EXPECTED_BASELINES[0].path);
 NODE
 )"
-  original="$FAKE_ROOT/reference/demo_app/tmp/demo_browser_evidence/$baseline_path"
+  original="$FAKE_ROOT/reference/demo_app/assets/baselines/phase173/$baseline_path"
   saved="$FIXTURES/$baseline_path"
   case "$baseline_mode" in
     missing) rm "$original" ;;

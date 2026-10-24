@@ -38,7 +38,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           phx-mounted={JS.focus(to: "#operator-replay-close")}
           phx-key="Escape"
           phx-window-keydown="close_replay"
-          class="motion-overlay mg-layer-overlay-panel relative my-4 max-h-[calc(100vh-2rem)] w-full max-w-[42rem] shrink-0 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
+          class="motion-overlay mg-layer-overlay-panel mg-inbound-replay-dialog relative my-md w-full shrink-0 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-lg shadow-overlay"
           phx-remove={
             JS.hide(
               time: 150,

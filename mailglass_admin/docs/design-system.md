@@ -173,3 +173,58 @@ email dark-mode behavior.
   `<base>` tags, URL canonicalization redirects, CDN/host asset rewrites, and
   public router macro options add churn without being needed for the verified
   behavior.
+
+## Contextual help and copy controls
+
+Use `Components.field_help` for optional explanations and full module identities.
+Keep text triggers within their container and allow long names to wrap. Help panels
+are positioned relative to the viewport. Reveal, overlay, and timeline containers
+with help use opacity-only entry animations: transforms change the coordinate
+origin of fixed descendants and can push a tooltip outside a narrow viewport.
+
+Use `Components.timestamp` and `Components.copy_value` for dates and identifiers.
+The displayed value is the copy control; the shared toast confirms success. Dates
+show local time and expose the exact UTC value on hover and copy. Native controls
+inside quick views own Enter, so keyboard copying or opening a link must not also
+invoke the global full-detail shortcut.
+
+## Investigation controls and health signals
+
+Keep a refresh control adjacent to its observation timestamp; treat them as one
+wrapping group rather than distributing them across a toolbar. Other context,
+such as the observation period or section title, stays separate.
+
+Delivery and inbound filters follow task order in the DOM and visually: Search,
+Time window, latest event or mailbox outcome, then Provider. Keep the distinct
+meaning of delivery events and mailbox outcomes in their labels and help.
+
+Health answers whether recorded problems need investigation. Show only nonzero
+failed/bounced/rejected/delayed deliveries, inbound processing failures/unrouted messages,
+and failed/unmatched webhook processing. Use compact issue rows with scoped
+investigation links, not a permanent grid of zero-count KPI cards. Intentional
+suppression policy, replay history, and reconciliation activity belong to record
+investigation and are neither fetched nor displayed on this overview.
+
+When all checks are current, active mail with no recorded problems shows “No issues
+found”, explicitly limited to the observation period. No activity shows a neutral
+“No recent mail activity”. Stale or unavailable reads must never produce an
+all-clear; retain known problems and identify the data that could not be refreshed.
+Small outbound/inbound activity counts provide context without implying successful
+delivery. Health ignores provider, status, search, and paging parameters inherited
+from investigation links. Hide inbound activity and checks when inbound is absent.
+
+All custom help, stat hints, and copyable timestamp tooltips use the shared
+`mg-field-help` implementation. Help belongs to its icon/label trigger rather than
+the whole card. Tooltips open 8px below their trigger, centered where space permits.
+They flip above near the bottom edge and shift inward to retain a 12px viewport
+margin. Their arrow points toward the trigger after that adjustment. The shared
+observer repairs placement after LiveView patches and viewport changes; only
+changed styles are written to avoid an observer feedback loop. A tooltip stays
+hidden until it has a calculated position. Escape dismisses help, including UTC
+copy hints. Keep accessible descriptions independently available to assistive
+technology. Do not nest a help button inside a clickable card or link.
+
+Desktop section navigation uses the brand accent on the current icon and a short
+underline beneath its bold label. Avoid combining an accent rail, filled tile,
+and bold text for one selection. Mobile tabs use a matching underline and no
+filled selection tile. Keep the 44px targets and visible keyboard focus.

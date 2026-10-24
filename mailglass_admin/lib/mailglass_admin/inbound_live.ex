@@ -563,7 +563,7 @@ defmodule MailglassAdmin.InboundLive do
       account_labels={@account_labels}
       page_uri={@page_uri}
       title="Inbound records"
-      subtitle="See why an InboundMessage routed the way it did — execution timeline, routing trace, and raw evidence."
+      subtitle="Follow each received message through routing and mailbox processing."
       flash={@flash}
     >
       <%= if @tenant_state in [:select_required, :none, :unavailable] do %>
@@ -625,7 +625,8 @@ defmodule MailglassAdmin.InboundLive do
                   data-testid="inbound-detail-back"
                   class="mg-focus-ring btn btn-ghost !h-11 min-h-11"
                 >
-                  <span aria-hidden="true" class="mr-xs">←</span> Back to inbound records
+                  <Components.icon name="hero-arrow-uturn-left" class="mr-xs h-4 w-4" />
+                  {if @selected_record, do: "Back to quick view", else: "Back to inbound records"}
                 </.link>
 
                 <p
@@ -637,6 +638,7 @@ defmodule MailglassAdmin.InboundLive do
                 </p>
 
                 <div
+                  :if={@replay_feedback}
                   id="inbound-replay-feedback"
                   data-testid="inbound-replay-feedback"
                   role="status"
@@ -659,44 +661,11 @@ defmodule MailglassAdmin.InboundLive do
                     class="motion-reveal space-y-md"
                   >
                     <DetailHeader.detail_header detail={@detail} account_labels={@account_labels} />
-                    <div
-                      data-testid="inbound-timeline-snapshot"
-                      class="flex flex-wrap items-center justify-between gap-sm rounded-box border border-base-300 bg-base-200 p-md"
-                    >
-                      <p class="text-label text-secondary">
-                        <%= cond do %>
-                          <% @timeline_read_state == :ok and @timeline_read_at -> %>
-                            History snapshot through <Components.timestamp at={@timeline_read_at} />
-                          <% @timeline_read_at -> %>
-                            Last successful history snapshot through
-                            <Components.timestamp at={@timeline_read_at} />
-                          <% true -> %>
-                            History snapshot unavailable.
-                        <% end %>
-                      </p>
-                      <button
-                        type="button"
-                        phx-click="refresh_inbound_timeline"
-                        phx-disable-with="Refreshing history…"
-                        aria-live="polite"
-                        aria-atomic="true"
-                        data-testid="inbound-timeline-refresh"
-                        class="btn btn-ghost min-h-11 px-md"
-                      >
-                        Refresh history
-                      </button>
-                    </div>
-                    <%= if @timeline_read_state == :ok do %>
-                      <Timeline.timeline runs={@runs} />
-                    <% else %>
-                      <div data-testid="inbound-timeline-unavailable">
-                        <Components.data_state
-                          kind={:error}
-                          title="Timeline unavailable"
-                          body="Execution history could not be loaded. Refresh the page or try again shortly."
-                        />
-                      </div>
-                    <% end %>
+                    <Timeline.timeline
+                      runs={@runs}
+                      read_state={@timeline_read_state}
+                      read_at={@timeline_read_at}
+                    />
                     <RoutingTrace.routing_trace
                       :if={@detail[:outcome] == :no_match}
                       trace={@routing_trace}
@@ -711,51 +680,33 @@ defmodule MailglassAdmin.InboundLive do
                     data-testid="inbound-detail-error"
                     class="card rounded-box border border-error bg-base-100 p-lg"
                   >
-                    <div class="flex items-center gap-sm">
-                      <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
-                      <h2 class="text-body font-bold text-base-content">
-                        {detail_error_copy(@detail_error)}
-                      </h2>
-                    </div>
+                    <Components.data_state
+                      kind={:error}
+                      title="Message unavailable"
+                      body={detail_error_copy(@detail_error)}
+                    />
                   </div>
                 <% end %>
               </div>
             <% else %>
-              <%!-- LIST PAGE: account health strip + filters + full-width records list.
+              <%!-- LIST PAGE: filters + scoped summary + full-width records list.
                   The Quick view overlay (below) sits on top when a record is focused. --%>
-              <%= if @summary_read_state == :ok do %>
-                <Overview.overview summary={@inbound_summary} />
-              <% else %>
-                <div data-testid="inbound-summary-unavailable">
-                  <Components.data_state
-                    kind={:error}
-                    title={
-                      if @summary_read_state == :package_unavailable,
-                        do: "Inbound support is unavailable",
-                        else: "Inbound summary unavailable"
-                    }
-                    body={
-                      if @summary_read_state == :package_unavailable,
-                        do:
-                          "The optional inbound package is not available in this deployment. Inbound counts are not being shown.",
-                        else:
-                          "Inbound summary counts could not be loaded. Refresh the page or try again shortly."
-                    }
-                  />
-                </div>
-              <% end %>
-
               <section
                 data-testid="inbound-filters"
-                class="card mt-lg rounded-box border border-base-300 bg-base-200 p-md md:p-lg"
+                class="mg-inbound-filters border-b border-base-300 pb-md"
               >
                 <button
                   type="button"
-                  phx-click={JS.toggle(to: "#inbound-filter-panel")}
+                  phx-click={
+                    JS.toggle_class("mg-inbound-filters-open", to: "#inbound-filter-panel")
+                    |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+                  }
                   data-testid="inbound-filters-toggle"
+                  aria-controls="inbound-filter-panel"
+                  aria-expanded="false"
                   class="btn btn-ghost !h-11 min-h-11 md:hidden"
                 >
-                  Filters <span aria-hidden="true">v</span>
+                  Filters <Components.icon name="hero-chevron-down" class="h-4 w-4" />
                 </button>
 
                 <div id="inbound-filter-panel" class="hidden md:block">
@@ -764,12 +715,12 @@ defmodule MailglassAdmin.InboundLive do
                     id="inbound-filters"
                     phx-change="validate_filters"
                     phx-submit="apply_filters"
-                    class="mt-md grid gap-md md:mt-0"
+                    class="mt-md grid gap-md md:mt-0 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
                   >
                     <p
                       :if={@provider_options_state != :ok}
                       data-testid="inbound-provider-options-unavailable"
-                      class="text-label text-secondary"
+                      class="text-label text-secondary xl:col-span-2"
                     >
                       Provider options could not be loaded. The current account and filters are unchanged.
                     </p>
@@ -791,7 +742,7 @@ defmodule MailglassAdmin.InboundLive do
                       <button
                         type="submit"
                         phx-disable-with="Applying filters…"
-                        class="btn btn-primary min-h-11 w-40 px-md"
+                        class="btn btn-primary min-h-11 px-md"
                       >
                         Apply filters
                       </button>
@@ -807,17 +758,35 @@ defmodule MailglassAdmin.InboundLive do
                 </div>
               </section>
 
+              <%= if @summary_read_state == :ok do %>
+                <Overview.overview summary={@inbound_summary} filters={@filter_params} />
+              <% else %>
+                <div data-testid="inbound-summary-unavailable">
+                  <Components.data_state
+                    kind={:error}
+                    title={
+                      if @summary_read_state == :package_unavailable,
+                        do: "Inbound support is unavailable",
+                        else: "Inbound summary unavailable"
+                    }
+                    body={
+                      if @summary_read_state == :package_unavailable,
+                        do:
+                          "The optional inbound package is not available in this deployment. Inbound counts are not being shown.",
+                        else:
+                          "Inbound summary counts could not be loaded. Refresh the page or try again shortly."
+                    }
+                  />
+                </div>
+              <% end %>
+
               <section data-testid="inbound-master-detail" class="mt-lg">
                 <aside
                   data-testid="inbound-records-list-card"
-                  class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+                  class="min-w-0"
                 >
-                  <div class="border-b border-base-300 px-md py-sm">
-                    <h2 class="text-body font-bold text-base-content">
-                      Recent InboundMessages
-                    </h2>
-                  </div>
                   <RecordsList.records_list
+                    heading="Received messages"
                     records={@records}
                     page_meta={@records_page_meta}
                     account_labels={@account_labels}

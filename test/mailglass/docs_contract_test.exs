@@ -450,7 +450,10 @@ defmodule Mailglass.DocsContractTest do
       canonical = File.read!("guides/authoring-mailables.md")
 
       assert canonical =~ "## Generated plaintext"
-      assert canonical =~ "Mailglass.Renderer.render/2` derives `text_body` from rendered `html_body`"
+
+      assert canonical =~
+               "Mailglass.Renderer.render/2` derives `text_body` from rendered `html_body`"
+
       assert canonical =~ "replaces any `text_body` already set on the message"
       assert canonical =~ "public `Mailglass.Message.text_body/2` setter remains available"
       assert canonical =~ "not an explicit-text override"

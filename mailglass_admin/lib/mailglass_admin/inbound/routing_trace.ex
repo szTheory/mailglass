@@ -13,7 +13,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
 
   alias MailglassAdmin.Components
 
-  attr :trace, :list, required: true
+  attr(:trace, :list, required: true)
 
   def routing_trace(assigns) do
     ~H"""
@@ -25,7 +25,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
       <details data-testid="inbound-routing-disclosure">
         <summary
           aria-controls="inbound-routing-trace-content"
-          class="mg-focus-ring block min-h-11 cursor-pointer rounded-box focus:outline-none"
+          class="mg-focus-ring block min-h-11 cursor-pointer rounded-box"
         >
           <span class="text-body font-bold text-base-content">Current router simulation</span>
           <span class="block text-label text-secondary">How current route rules compare</span>
@@ -33,7 +33,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
 
         <div id="inbound-routing-trace-content" class="mt-md space-y-md">
           <p class="text-label text-secondary">
-            This evaluates the router configured now; it does not prove which route was selected when the message arrived. Recorded execution runs and durable route bindings are historical evidence.
+            These are today’s routing rules. They may differ from the rules used when this message arrived.
           </p>
 
           <%= if @trace == [] do %>
@@ -48,11 +48,14 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                   class="min-w-0 rounded-box border border-base-300 bg-base-100 p-md"
                 >
                   <div class="mb-sm flex flex-wrap items-center justify-between gap-sm">
-                    <p class="mono min-w-0 break-all text-body text-base-content">{route.mailbox}</p>
+                    <Components.module_identity
+                      value={route.mailbox}
+                      id={"inbound-route-mailbox-#{:erlang.phash2(route)}"}
+                    />
                     <span
                       data-testid="inbound-route-result"
                       class={[
-                        "badge badge-outline",
+                        "badge badge-outline max-w-full whitespace-normal h-auto py-xs",
                         if(route_matches_current_rules?(route.verdicts),
                           do: "badge-success",
                           else: "badge-error"
@@ -71,12 +74,14 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                         data-testid="inbound-trace-clause"
                         class={[
                           "min-w-0 rounded-box",
-                          verdict.first_failing? && "border-l-4 border-error px-sm"
+                          verdict.first_failing? && "bg-error/10 p-sm"
                         ]}
                       >
                         <div class="grid min-w-0 gap-sm sm:grid-cols-[minmax(7rem,10rem)_1fr_1fr]">
                           <div class="min-w-0 space-y-xs">
-                            <span class="text-label uppercase font-bold text-secondary">Dimension</span>
+                            <span class="text-label uppercase font-bold text-secondary">
+                              Dimension
+                            </span>
                             <div class="flex items-center gap-sm">
                               <Components.icon
                                 name={
@@ -92,7 +97,9 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                           </div>
 
                           <div class="min-w-0 space-y-xs">
-                            <span class="text-label uppercase font-bold text-secondary">Expected</span>
+                            <span class="text-label uppercase font-bold text-secondary">
+                              Expected
+                            </span>
                             {expected_markup(assigns, verdict)}
                           </div>
 
@@ -118,7 +125,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
             </div>
 
             <p class="text-label text-secondary">
-              Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and a regular-expression matcher uses its configured expression.
+              A route matches only when every condition passes. “Any” means that field is unrestricted.
             </p>
           <% end %>
         </div>

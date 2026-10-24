@@ -136,7 +136,7 @@ async function openInbound(page, theme) {
       .getByTestId("inbound-record-row")
       .filter({ visible: true })
       .filter({
-        hasNot: page.locator(".badge-warning", { hasText: "No match" })
+        hasNot: page.locator(".badge-warning", { hasText: "Unrouted" })
       })
       .first();
     const selectControl = replayableRow.getByRole("button", { name: /^Open inbound message/ }).first();

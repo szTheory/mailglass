@@ -29,6 +29,7 @@ defmodule MailglassAdmin.OperatorLive do
     DetailHeader,
     DestructiveAction,
     FiltersForm,
+    HealthOverview,
     QuickView,
     RepairState,
     ReplayAction,
@@ -86,6 +87,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:health_observed_at, nil)
       |> assign(:health_window, nil)
       |> assign(:health_loaded_for, nil)
+      |> assign(:health_activity, %{deliveries: nil, inbound: nil})
       |> assign(:detail_error, nil)
       |> assign(:replay_targets, nil)
       |> assign(:replay_history, [])
@@ -509,7 +511,19 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("retry_health", _params, socket) do
-    {:noreply, assign_overview_state(socket, socket.assigns.filter_params)}
+    socket = assign_overview_state(socket, socket.assigns.filter_params)
+
+    refreshed? =
+      Enum.all?(socket.assigns.health_panel_states, fn {_panel, state} ->
+        state.status == :ready
+      end)
+
+    message =
+      if refreshed?,
+        do: "Email health refreshed.",
+        else: "Some health data could not be refreshed."
+
+    {:noreply, push_event(socket, "mailglass:toast", %{message: message, error: !refreshed?})}
   end
 
   def handle_event("choose_replay_target", %{"webhook_event_id" => webhook_event_id}, socket) do
@@ -542,7 +556,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:replay_command_feedback, nil)
 
     with %{id: delivery_id, tenant_id: tenant_id} <-
-         socket.assigns.selected_delivery || {:error, :no_selected_delivery},
+           socket.assigns.selected_delivery || {:error, :no_selected_delivery},
          %{} = delivery <-
            read_confirmation_delivery(socket, tenant_id, delivery_id),
          {:ok, fresh_targets} <- read_confirmation_targets(socket, tenant_id, delivery_id),
@@ -713,210 +727,53 @@ defmodule MailglassAdmin.OperatorLive do
           <div data-testid="operator-overview" class="grid gap-lg">
             <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
               <div data-testid="operator-overview-health" class="grid gap-md">
-                <div class="flex flex-wrap items-center justify-between gap-sm text-label text-secondary">
-                  <p data-testid="operator-health-window">{health_window_copy(@health_window)}</p>
-                  <p data-testid="operator-health-last-checked">
-                    {health_checked_copy(@health_observed_at)}
-                  </p>
-                  <button type="button" phx-click="retry_health" class="btn btn-ghost min-h-11">
-                    Retry observations
-                  </button>
+                <div class="grid grid-cols-[1fr_auto] items-center gap-x-sm gap-y-xs text-label text-secondary sm:flex sm:flex-wrap sm:gap-sm">
+                  <div class="inline-flex items-center gap-xs">
+                    <p data-testid="operator-health-window">{health_window_copy(@health_window)}</p>
+                    <Components.field_help
+                      id="operator-health-window-help"
+                      label="observation period"
+                      text={health_window_description(@health_window)}
+                    />
+                  </div>
+                  <div class="contents sm:ml-auto sm:flex sm:min-w-0 sm:flex-wrap sm:items-center sm:gap-sm">
+                    <p
+                      data-testid="operator-health-last-checked"
+                      class="order-3 col-span-2 text-right sm:order-none"
+                    >
+                      Last checked <Components.timestamp at={@health_observed_at} />
+                    </p>
+                    <button
+                      type="button"
+                      phx-click="retry_health"
+                      class="btn btn-ghost order-2 min-h-11 sm:order-none"
+                    >
+                      <Components.icon name="hero-arrow-path" class="h-4 w-4" />
+                      <span class="[.phx-click-loading_&]:hidden">Refresh health</span>
+                      <span class="hidden [.phx-click-loading_&]:inline">Refreshing…</span>
+                    </button>
+                  </div>
                 </div>
-                <div class="grid gap-md md:grid-cols-2">
-                  <.link
-                    patch={
-                      support_evidence_path(
-                        @base_path,
-                        @filter_params,
-                        @dark_chrome,
-                        :failed_ingest,
-                        @support_summary
-                      )
-                    }
-                    class={health_metric_link_class()}
-                    aria-label="View recent failures in Deliveries"
-                    data-testid="operator-overview-health-failures-link"
-                  >
-                    <Components.stat_card
-                      label="Failed webhook attempts"
-                      value={health_metric_count(@support_summary, :failed_ingest)}
-                      state={
-                        health_metric_state(@support_summary, :failed_ingest, @health_panel_states)
-                      }
-                      severity={health_metric_severity(@support_summary, :failed_ingest, :warning)}
-                      severity_label={
-                        health_metric_severity_label(
-                          @support_summary,
-                          :failed_ingest,
-                          @health_panel_states
-                        )
-                      }
-                      hint="Failed and dead webhook rows received during the selected Account observation window. This counts processing attempts, not failed Deliveries."
-                      data-testid="operator-overview-health-failures"
-                    />
-                  </.link>
-                  <.link
-                    patch={
-                      support_evidence_path(
-                        @base_path,
-                        @filter_params,
-                        @dark_chrome,
-                        :orphan_backlog,
-                        @support_summary
-                      )
-                    }
-                    class={health_metric_link_class()}
-                    aria-label="View unmatched webhook evidence in Deliveries"
-                    data-testid="operator-overview-health-orphans-link"
-                  >
-                    <Components.stat_card
-                      label="Unmatched Events"
-                      value={health_metric_count(@support_summary, :orphan_backlog)}
-                      state={
-                        health_metric_state(@support_summary, :orphan_backlog, @health_panel_states)
-                      }
-                      severity={health_metric_severity(@support_summary, :orphan_backlog, :warning)}
-                      severity_label={
-                        health_metric_severity_label(
-                          @support_summary,
-                          :orphan_backlog,
-                          @health_panel_states
-                        )
-                      }
-                      hint="Unresolved Event records in the selected Account observation window. A shown oldest Event is one example, not the complete population."
-                      data-testid="operator-overview-health-orphans"
-                    />
-                  </.link>
-                  <.link
-                    patch={
-                      build_path(
-                        @base_path,
-                        @filter_params
-                        |> Map.put("view", "deliveries")
-                        |> Map.put("event", "suppressed"),
-                        nil,
-                        @dark_chrome
-                      )
-                    }
-                    class={health_metric_link_class()}
-                    aria-label="View historical suppressed Delivery Events in Deliveries"
-                    data-testid="operator-overview-health-suppressions-link"
-                  >
-                    <Components.stat_card
-                      label="Active suppression records"
-                      value={@suppression_count}
-                      state={
-                        panel_value_state(
-                          @health_panel_states,
-                          :active_suppressions,
-                          @suppression_count
-                        )
-                      }
-                      severity={suppression_severity(@suppression_count)}
-                      severity_label={
-                        suppression_severity_label(
-                          @suppression_count,
-                          @health_panel_states
-                        )
-                      }
-                      hint="Account-wide active Mailglass suppression records at check time, independent of the observation window. This is not a recipient count; the link opens historical suppressed Delivery Events, a separate population."
-                      data-testid="operator-overview-health-suppressions"
-                    />
-                  </.link>
-                  <.link
-                    patch={
-                      support_evidence_path(
-                        @base_path,
-                        @filter_params,
-                        @dark_chrome,
-                        :replay_outcomes,
-                        @support_summary
-                      )
-                    }
-                    class={health_metric_link_class()}
-                    aria-label="View replay audit evidence"
-                    data-testid="operator-overview-health-replay-link"
-                  >
-                    <Components.stat_card
-                      label="Replay audit facts"
-                      value={health_metric_count(@support_summary, :replay_outcomes)}
-                      state={
-                        health_metric_state(@support_summary, :replay_outcomes, @health_panel_states)
-                      }
-                      severity={health_metric_severity(@support_summary, :replay_outcomes, :info)}
-                      severity_label={
-                        health_metric_severity_label(
-                          @support_summary,
-                          :replay_outcomes,
-                          @health_panel_states
-                        )
-                      }
-                      hint="Recorded replay audit outcomes during the selected observation window. These facts do not establish Delivery outcome."
-                      data-testid="operator-overview-health-replay"
-                    />
-                  </.link>
-                  <.link
-                    patch={
-                      support_evidence_path(
-                        @base_path,
-                        @filter_params,
-                        @dark_chrome,
-                        :reconcile_facts,
-                        @support_summary
-                      )
-                    }
-                    class={health_metric_link_class()}
-                    aria-label="View reconciliation audit evidence"
-                    data-testid="operator-overview-health-reconcile-link"
-                  >
-                    <Components.stat_card
-                      label="Reconciliation audit facts"
-                      value={health_metric_count(@support_summary, :reconcile_facts)}
-                      state={
-                        health_metric_state(@support_summary, :reconcile_facts, @health_panel_states)
-                      }
-                      severity={health_metric_severity(@support_summary, :reconcile_facts, :info)}
-                      severity_label={
-                        health_metric_severity_label(
-                          @support_summary,
-                          :reconcile_facts,
-                          @health_panel_states
-                        )
-                      }
-                      hint="Recorded reconciliation audit Events during the selected observation window. This is separate from unresolved Events."
-                      data-testid="operator-overview-health-reconcile"
-                    />
-                  </.link>
-                </div>
+                <HealthOverview.overview
+                  issues={
+                    health_issues(
+                      @support_summary,
+                      @health_activity,
+                      @health_panel_states,
+                      @base_path,
+                      @filter_params,
+                      @dark_chrome,
+                      @inbound_path
+                    )
+                  }
+                  activity={@health_activity}
+                  states={@health_panel_states}
+                  deliveries_path={
+                    build_path_with_view(@base_path, health_filters(@filter_params), @dark_chrome)
+                  }
+                  inbound_path={health_inbound_path(@inbound_path, @filter_params)}
+                />
               </div>
-              <p
-                :if={health_partial?(@health_panel_states)}
-                role="status"
-                data-testid="operator-health-partial"
-                class="rounded-box border border-warning bg-base-200 p-sm text-body text-secondary"
-              >
-                Some evidence is unavailable. Available observations remain visible; an unavailable read does not mean that no records exist.
-              </p>
-              <p
-                :for={{panel, state} <- @health_panel_states}
-                :if={state.status == :stale}
-                role="status"
-                data-testid={"operator-health-stale-#{panel}"}
-                class="text-label text-secondary"
-              >
-                Showing the last retrieved {health_panel_name(panel)} from {health_checked_copy(
-                  state.checked_at
-                )}.
-              </p>
-              <p
-                :for={{panel, state} <- @health_panel_states}
-                :if={state.status == :unavailable}
-                role="status"
-                data-testid={"operator-health-unavailable-#{panel}"}
-                class="text-label text-error"
-              >
-                These {health_panel_name(panel)} could not be loaded. Other available sections remain visible.
-              </p>
             <% else %>
               <div
                 data-testid="operator-overview-no-tenant"
@@ -949,7 +806,7 @@ defmodule MailglassAdmin.OperatorLive do
               <div class="space-y-lg">
                 <section
                   data-testid="operator-deliveries-empty-pane"
-                  class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+                  class="min-w-0"
                 >
                   <DeliveriesList.deliveries_list
                     deliveries={[]}
@@ -1020,62 +877,44 @@ defmodule MailglassAdmin.OperatorLive do
                           suppression_state={@suppression_state}
                           read_state={@suppression_read_state}
                         />
-                        <SupportCards.support_cards
-                          support_summary={@support_summary}
-                          support_state={@support_state}
-                          suppression_count={@suppression_count}
-                          exact_support_evidence={@support_exact_evidence}
-                          exact_delivery_path={
-                            exact_support_delivery_path(
-                              @base_path,
-                              @filter_params,
-                              @dark_chrome,
-                              @support_exact_evidence,
-                              @support_state
-                            )
-                          }
-                        />
                         <ReplayAction.replay_action
                           replay_targets={@replay_targets}
                           latest_replay={latest_replay(@replay_history)}
                           replay_history_read_state={@replay_history_read_state}
                           replay_command_feedback={@replay_command_feedback}
                         />
+                        <details
+                          open={support_focus?(@support_state)}
+                          class="min-w-0 border-t border-base-300 pt-md"
+                        >
+                          <summary class="mg-focus-ring min-h-11 cursor-pointer content-center rounded-field text-body font-bold text-base-content">
+                            Account diagnostics
+                          </summary>
+                          <div class="mt-md">
+                            <SupportCards.support_cards
+                              support_summary={@support_summary}
+                              support_state={@support_state}
+                              suppression_count={@suppression_count}
+                              exact_support_evidence={@support_exact_evidence}
+                              exact_delivery_path={
+                                exact_support_delivery_path(
+                                  @base_path,
+                                  @filter_params,
+                                  @dark_chrome,
+                                  @support_exact_evidence,
+                                  @support_state
+                                )
+                              }
+                            />
+                          </div>
+                        </details>
                       </div>
                   <% end %>
                 </div>
               <% else %>
-                <%!-- LIST PAGE: delivery collection first, with filters/supporting evidence secondary.
-                    The Quick view overlay (below) sits on top when a record is focused. --%>
-                <section data-testid="operator-master-detail" class="mt-6">
-                  <aside
-                    data-testid="operator-deliveries-list-card"
-                    class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
-                  >
-                    <div class="border-b border-base-300 px-4 py-3">
-                      <h2 class="text-heading font-bold text-base-content">Recent deliveries</h2>
-                    </div>
-                    <DeliveriesList.deliveries_list
-                      deliveries={@deliveries}
-                      page_meta={@deliveries_page_meta}
-                      account_labels={@account_labels}
-                      show_account?={false}
-                      previous_page_path={
-                        pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
-                      }
-                      next_page_path={
-                        pagination_path(@base_path, @filter_params, @dark_chrome, :next)
-                      }
-                      selected_delivery={@selected_delivery}
-                      data_state={@deliveries_read_state}
-                      filters_active?={filters_active?(@filter_params)}
-                    />
-                  </aside>
-                </section>
-
                 <section
                   data-testid="operator-filters"
-                  class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
+                  class="border-b border-base-300 pb-md"
                 >
                   <button
                     type="button"
@@ -1083,7 +922,7 @@ defmodule MailglassAdmin.OperatorLive do
                     data-testid="operator-filters-toggle"
                     class="btn btn-ghost !h-11 min-h-11 md:hidden"
                   >
-                    Filters <span aria-hidden="true">v</span>
+                    Filters <Components.icon name="hero-chevron-down" class="h-4 w-4" />
                   </button>
 
                   <div id="operator-filter-panel" class="hidden md:block">
@@ -1092,7 +931,7 @@ defmodule MailglassAdmin.OperatorLive do
                       id="operator-filters"
                       phx-change="validate_filters"
                       phx-submit="apply_filters"
-                      class="mt-4 grid gap-md md:mt-0"
+                      class="mt-md grid gap-md md:mt-0 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
                     >
                       <input
                         id="filters_tenant_id"
@@ -1126,6 +965,62 @@ defmodule MailglassAdmin.OperatorLive do
                       </div>
                     </.form>
                   </div>
+                </section>
+
+                <%!-- LIST PAGE: filters lead the collection; supporting evidence follows.
+                    The Quick view overlay (below) sits on top when a record is focused. --%>
+                <section
+                  :if={
+                    @filter_params["event"] in [nil, ""] and @deliveries_read_state == :ready and
+                      Map.has_key?(@deliveries_page_meta, :outcome_groups)
+                  }
+                  data-testid="operator-delivery-summary"
+                  class="mt-md border-b border-base-300 pb-md"
+                >
+                  <div class="mg-delivery-summary-counts">
+                    <Components.stat_card
+                      :for={{key, label, count, help} <- delivery_summary(@deliveries_page_meta)}
+                      id={"delivery-summary-#{key}"}
+                      label={label}
+                      value={count}
+                      severity={if key == :attention and count > 0, do: :warning, else: :neutral}
+                      severity_label={
+                        if key == :attention and count > 0, do: "Needs attention", else: "Tracked"
+                      }
+                      compact
+                    >
+                      <:label_help>
+                        <Components.field_help
+                          id={"delivery-summary-#{key}-help"}
+                          label={label}
+                          text={help}
+                        />
+                      </:label_help>
+                    </Components.stat_card>
+                  </div>
+                </section>
+
+                <section data-testid="operator-master-detail" class="mt-6">
+                  <aside
+                    data-testid="operator-deliveries-list-card"
+                    class="min-w-0"
+                  >
+                    <DeliveriesList.deliveries_list
+                      deliveries={@deliveries}
+                      page_meta={@deliveries_page_meta}
+                      account_labels={@account_labels}
+                      show_account?={false}
+                      previous_page_path={
+                        pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
+                      }
+                      next_page_path={
+                        pagination_path(@base_path, @filter_params, @dark_chrome, :next)
+                      }
+                      selected_delivery={@selected_delivery}
+                      data_state={@deliveries_read_state}
+                      filters_active?={filters_active?(@filter_params)}
+                    />
+                  </aside>
                 </section>
 
                 <div
@@ -1240,6 +1135,7 @@ defmodule MailglassAdmin.OperatorLive do
       "tenant_id" => "",
       "provider" => "",
       "event" => "",
+      "search" => "",
       "window_hours" => Integer.to_string(@default_window_hours),
       "page" => "1"
     }
@@ -1315,6 +1211,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:health_observed_at, nil)
     |> assign(:health_window, nil)
     |> assign(:health_loaded_for, nil)
+    |> assign(:health_activity, %{deliveries: nil, inbound: nil})
     |> assign(:suppression_count, nil)
     |> assign(:detail_error, nil)
     |> assign(:replay_targets, nil)
@@ -1339,6 +1236,8 @@ defmodule MailglassAdmin.OperatorLive do
       "tenant_id" => normalize_string(Map.get(params, "tenant_id", defaults["tenant_id"])),
       "provider" => normalize_string(Map.get(params, "provider", defaults["provider"])),
       "event" => event,
+      "search" =>
+        normalize_string(Map.get(params, "search", defaults["search"])) |> String.trim(),
       "window_hours" => window_hours,
       "page" => normalize_page(params, defaults)
     }
@@ -1366,6 +1265,7 @@ defmodule MailglassAdmin.OperatorLive do
         tenant_id: filter_params["tenant_id"],
         provider: blank_to_nil(filter_params["provider"]),
         event: cast_enum(filter_params["event"], @event_values),
+        search: blank_to_nil(filter_params["search"]),
         window_hours:
           parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
         page: parse_positive_integer(filter_params["page"]) || 1,
@@ -1545,7 +1445,8 @@ defmodule MailglassAdmin.OperatorLive do
     do: "This delivery link is invalid. Return to deliveries and open a listed record."
 
   defp detail_error_copy(:not_found),
-    do: "This delivery is not available in the selected Account. Return to deliveries to continue."
+    do:
+      "This delivery is not available in the selected Account. Return to deliveries to continue."
 
   defp detail_error_copy(:unavailable),
     do:
@@ -1840,11 +1741,12 @@ defmodule MailglassAdmin.OperatorLive do
   defp transient_read_error?(_error), do: false
 
   defp delivery_query_key(filter_params),
-    do: Map.take(filter_params, ["tenant_id", "provider", "event", "window_hours", "page"])
+    do:
+      Map.take(filter_params, ["tenant_id", "provider", "event", "search", "window_hours", "page"])
 
   defp assign_overview_state(socket, filter_params) do
-    {support_summary, health_panel_states, suppression_count, observed_at, health_window} =
-      load_health_observations(socket, filter_params)
+    {support_summary, health_panel_states, activity, observed_at, health_window} =
+      load_overview_observations(socket, filter_params)
 
     paths =
       MailglassAdmin.Operator.Shell.surface_paths(
@@ -1858,7 +1760,8 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:view, :overview)
     |> assign(:full_detail?, false)
     |> assign(:support_summary, support_summary)
-    |> assign(:suppression_count, suppression_count)
+    |> assign(:suppression_count, nil)
+    |> assign(:health_activity, activity)
     |> assign(:health_panel_states, health_panel_states)
     |> assign(:health_observed_at, observed_at)
     |> assign(:health_window, health_window)
@@ -1875,6 +1778,72 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:replay_targets, nil)
     |> assign(:replay_history, [])
     |> assign(:replay_selected_target_id, nil)
+  end
+
+  # The overview reads only actionable problems and recent activity. Suppression
+  # policy and replay/reconciliation history belong to record investigation.
+  defp load_overview_observations(socket, filter_params) do
+    filters = health_filters(filter_params)
+    tenant_id = blank_to_nil(filters["tenant_id"])
+    hours = parse_positive_integer(filters["window_hours"]) || @default_window_hours
+    as_of = DateTime.utc_now()
+    scope = %{tenant_id: tenant_id, window_hours: hours, as_of: as_of}
+    same_scope? = socket.assigns[:health_loaded_for] == health_observation_cache_key(filters)
+    prior_summary = if same_scope?, do: socket.assigns[:support_summary], else: nil
+    prior_activity = if same_scope?, do: socket.assigns[:health_activity], else: nil
+    prior_states = if same_scope?, do: socket.assigns[:health_panel_states], else: %{}
+
+    readers = [
+      {:failed_ingest, fn -> SupportSummary.read_failed_ingest(scope) end,
+       prior_summary && prior_summary[:failed_ingest]},
+      {:orphan_backlog, fn -> SupportSummary.read_orphan_backlog(scope) end,
+       prior_summary && prior_summary[:orphan_backlog]},
+      {:delivery_activity,
+       fn ->
+         page = Deliveries.list_recent_deliveries_page(Map.put(scope, :per_page, 1))
+         %{total: page.total_count, outcome_groups: page.outcome_groups}
+       end, prior_activity && prior_activity[:deliveries]}
+    ]
+
+    readers =
+      if MailglassAdmin.Operator.Shell.inbound_available?() do
+        readers ++
+          [
+            {:inbound_activity,
+             fn -> apply(MailglassAdmin.OptionalDeps.MailglassInbound, :summary, [scope, []]) end,
+             prior_activity && prior_activity[:inbound]}
+          ]
+      else
+        readers
+      end
+
+    {values, states} =
+      Enum.reduce(readers, {%{}, %{}}, fn {key, reader, previous}, {values, states} ->
+        {value, state} =
+          read_health_panel(
+            socket.assigns[:operator_read_fault],
+            key,
+            reader,
+            previous,
+            prior_states[key],
+            &is_map/1,
+            as_of
+          )
+
+        {Map.put(values, key, value), Map.put(states, key, state)}
+      end)
+
+    current? = Enum.any?(states, fn {_, state} -> state.status == :ready end)
+    summary = Map.take(values, [:failed_ingest, :orphan_backlog])
+    activity = %{deliveries: values[:delivery_activity], inbound: values[:inbound_activity]}
+    observed_at = if current?, do: as_of, else: prior_observed_at(socket, same_scope?)
+
+    window =
+      if current?,
+        do: %{started_at: DateTime.add(as_of, -hours, :hour), ended_at: as_of},
+        else: if(same_scope?, do: socket.assigns[:health_window], else: nil)
+
+    {summary, states, activity, observed_at, window}
   end
 
   defp load_health_observations(socket, filter_params) do
@@ -1965,7 +1934,8 @@ defmodule MailglassAdmin.OperatorLive do
       summary = %{
         failed_ingest: failed || %{count: nil, latest: nil},
         orphan_backlog: orphan || %{count: nil, oldest: nil, oldest_age_seconds: nil},
-        replay_outcomes: replay || %{counts: %{failed: nil, noop: nil, replayed: nil}, latest: nil},
+        replay_outcomes:
+          replay || %{counts: %{failed: nil, noop: nil, replayed: nil}, latest: nil},
         reconcile_facts:
           reconcile ||
             %{
@@ -2026,7 +1996,9 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp health_observation_cache_key(filter_params) do
     case blank_to_nil(filter_params["tenant_id"]) do
-      nil -> nil
+      nil ->
+        nil
+
       tenant_id ->
         window_hours =
           parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
@@ -2117,10 +2089,6 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp latest_replay([]), do: nil
   defp latest_replay(replay_history), do: List.last(replay_history)
-
-  defp health_metric_link_class do
-    "group block rounded-box mg-focus-ring transition-transform ease-out duration-(--duration-fast) hover:-translate-y-px"
-  end
 
   defp build_path(
          base_path,
@@ -2419,6 +2387,7 @@ defmodule MailglassAdmin.OperatorLive do
       default_support_exact_evidence()
     else
       prior = socket.assigns[:support_exact_evidence]
+
       same_request? =
         prior && prior.tenant_id == tenant_id && prior.focus == focus && prior.id == id
 
@@ -2493,82 +2462,53 @@ defmodule MailglassAdmin.OperatorLive do
   defp support_focus_param(nil), do: nil
   defp support_focus_param(focus), do: Atom.to_string(focus)
 
+  defp delivery_summary(page_meta) do
+    counts =
+      Enum.reduce(Map.get(page_meta, :outcome_groups, []), %{}, fn group, counts ->
+        bucket =
+          case Components.delivery_display_status(group) do
+            status when status in [:delivered, :opened, :clicked] ->
+              :delivered
+
+            status
+            when status in [
+                   :failed,
+                   :bounced,
+                   :rejected,
+                   :complained,
+                   :suppressed,
+                   :unsubscribed,
+                   :deferred
+                 ] ->
+              :attention
+
+            _ ->
+              :awaiting
+          end
+
+        Map.update(counts, bucket, group.count, &(&1 + group.count))
+      end)
+
+    [
+      {:delivered, "Delivered", Map.get(counts, :delivered, 0),
+       "Messages with delivery confirmation or an open or click event, unless a later delivery problem was recorded. Counts include all results for the applied provider, time window, and search."},
+      {:attention, "Needs attention", Map.get(counts, :attention, 0),
+       "Failed, bounced, rejected, deferred, suppressed, complained, or unsubscribed deliveries. Open a delivery to inspect what happened. Counts include all matching results."},
+      {:awaiting, "Awaiting confirmation", Map.get(counts, :awaiting, 0),
+       "Messages are queued or have been sent to the provider, but no delivery result has been recorded. A missing result does not mean delivery failed. Counts include all matching results."}
+    ]
+  end
+
   defp page_subtitle(:overview),
-    do:
-      "Review failed webhook attempts, unmatched Events, replay and reconciliation records, and active suppression records for this Account."
+    do: "Find email issues and inspect the records behind them."
 
   defp page_subtitle(:deliveries),
-    do:
-      "Prove what happened to a message — inspect its event timeline, suppression state, and replay history."
+    do: "Trace each delivery through its event history."
 
   defp health_metric_count(nil, _metric), do: nil
 
-  defp health_metric_count(summary, :replay_outcomes) do
-    counts = get_in(summary, [:replay_outcomes, :counts])
-
-    case counts do
-      %{failed: failed, noop: noop, replayed: replayed}
-      when is_integer(failed) and is_integer(noop) and is_integer(replayed) ->
-        failed + noop + replayed
-
-      _ ->
-        nil
-    end
-  end
-
-  defp health_metric_count(summary, :reconcile_facts),
-    do: summary |> get_in([:reconcile_facts, :reconciled_count]) |> normalize_stat_count()
-
   defp health_metric_count(summary, metric) do
-    summary
-    |> Map.get(metric, %{})
-    |> Map.get(:count)
-    |> normalize_stat_count()
-  end
-
-  defp health_metric_state(summary, metric, panel_states) do
-    value = health_metric_count(summary, metric)
-    panel_value_state(panel_states, metric, value)
-  end
-
-  defp panel_value_state(panel_states, panel, value) do
-    case get_in(panel_states, [panel, :status]) do
-      :unavailable -> :unavailable
-      _ when is_integer(value) -> :ready
-      _ -> :unavailable
-    end
-  end
-
-  defp health_metric_severity(summary, metric, attention_severity) do
-    case health_metric_count(summary, metric) do
-      count when is_integer(count) and count > 0 -> attention_severity
-      count when is_integer(count) -> :neutral
-      _count -> :neutral
-    end
-  end
-
-  defp health_metric_severity_label(summary, metric, panel_states) do
-    if get_in(panel_states, [metric, :status]) == :stale do
-      "Last retrieved"
-    else
-      case health_metric_count(summary, metric) do
-        count when is_integer(count) and count > 0 -> "Needs attention"
-        count when is_integer(count) and count == 0 -> "No matching evidence"
-        count when is_integer(count) -> "Observed"
-        _count -> "Unavailable"
-      end
-    end
-  end
-
-  defp suppression_severity(count) when is_integer(count), do: :info
-  defp suppression_severity(_count), do: :neutral
-
-  defp suppression_severity_label(count, panel_states) do
-    cond do
-      get_in(panel_states, [:active_suppressions, :status]) == :stale -> "Last retrieved"
-      is_integer(count) -> "Tracked"
-      true -> "Unavailable"
-    end
+    summary |> get_in([metric, :count]) |> normalize_stat_count()
   end
 
   defp normalize_stat_count(count) when is_integer(count), do: count
@@ -2579,31 +2519,121 @@ defmodule MailglassAdmin.OperatorLive do
          ended_at: %DateTime{} = ended_at
        }) do
     hours = div(DateTime.diff(ended_at, started_at, :second), 3_600)
-    start_copy = started_at |> DateTime.to_naive() |> NaiveDateTime.to_iso8601()
-    end_copy = ended_at |> DateTime.to_naive() |> NaiveDateTime.to_iso8601()
 
-    "Observed from #{start_copy} to #{end_copy} UTC (#{hours} hours)"
+    if rem(hours, 24) == 0 do
+      days = div(hours, 24)
+      "Last #{days} #{if days == 1, do: "day", else: "days"}"
+    else
+      "Last #{hours} hours"
+    end
   end
 
-  defp health_window_copy(_window), do: "Observation interval unavailable"
+  defp health_window_copy(_window), do: "Observation period unavailable"
 
-  defp health_checked_copy(%DateTime{} = at),
-    do: "Last checked #{DateTime.to_iso8601(DateTime.truncate(at, :second))} UTC"
-
-  defp health_checked_copy(_at), do: "Last checked: Unavailable"
-
-  defp health_partial?(states) do
-    values = Map.values(states || %{})
-
-    Enum.any?(values, &(&1.status in [:unavailable, :stale])) and
-      Enum.any?(values, &(&1.status in [:ready, :stale]))
+  defp health_window_description(%{
+         started_at: %DateTime{},
+         ended_at: %DateTime{}
+       }) do
+    "Activity and recorded issues for this account during this period."
   end
 
-  defp health_panel_name(:failed_ingest), do: "failed webhook evidence"
-  defp health_panel_name(:orphan_backlog), do: "unmatched Event evidence"
-  defp health_panel_name(:replay_outcomes), do: "replay audit evidence"
-  defp health_panel_name(:reconcile_facts), do: "reconciliation evidence"
-  defp health_panel_name(:active_suppressions), do: "active suppression records"
+  defp health_window_description(_window), do: "The observation period could not be loaded."
+
+  defp health_filters(params) do
+    default_filter_params()
+    |> Map.merge(Map.take(params, ["tenant_id", "window_hours"]))
+  end
+
+  defp health_inbound_path(path, params, outcome \\ nil) do
+    uri = URI.parse(path)
+    query = URI.decode_query(uri.query || "") |> Map.put("window_hours", params["window_hours"])
+    query = if outcome, do: Map.put(query, "outcome", Atom.to_string(outcome)), else: query
+    URI.to_string(%{uri | query: URI.encode_query(query)})
+  end
+
+  defp health_issues(summary, activity, states, base_path, params, dark?, inbound_path) do
+    params = health_filters(params)
+
+    webhook_issues =
+      [
+        {:failed_ingest, "Failed webhook attempts",
+         "Webhook events that failed processing or exhausted their retries. These failures affect delivery tracking; they are not failed email deliveries.",
+         "operator-overview-health-failures"},
+        {:orphan_backlog, "Unmatched events",
+         "Webhook events that could not be linked to a delivery. Investigate them to fill gaps in delivery tracking.",
+         "operator-overview-health-orphans"}
+      ]
+      |> Enum.map(fn {key, label, help, testid} ->
+        %{
+          count: health_metric_count(summary, key),
+          label: label,
+          help: help,
+          testid: testid,
+          surface: :deliveries,
+          path: support_evidence_path(base_path, params, dark?, key, summary),
+          stale?: states[key].status == :stale
+        }
+      end)
+
+    groups = get_in(activity, [:deliveries, :outcome_groups]) || []
+
+    delivery_issues =
+      [
+        {:failed, "Failed deliveries",
+         "Sending failed before a successful handoff to the provider."},
+        {:bounced, "Bounced deliveries",
+         "The provider reported that these messages could not be delivered."},
+        {:rejected, "Rejected deliveries", "The provider rejected these messages."},
+        {:deferred, "Delayed deliveries",
+         "The provider reported a temporary delivery delay. Delivery has not been confirmed."}
+      ]
+      |> Enum.map(fn {event, label, help} ->
+        matching = Enum.filter(groups, &(Components.delivery_display_status(&1) == event))
+        count = Enum.reduce(matching, 0, &(&1.count + &2))
+        # Older records can have a failure status without a matching latest event.
+        # Keep the problem visible; don't send that subset to an empty event filter.
+        destination =
+          if Enum.all?(matching, &(&1.last_event_type == event)),
+            do: Map.put(params, "event", Atom.to_string(event)),
+            else: params
+
+        %{
+          count: count,
+          label: label,
+          help: help,
+          testid: "operator-health-deliveries-#{event}",
+          surface: :deliveries,
+          path: build_path_with_view(base_path, destination, dark?),
+          stale?: states.delivery_activity.status == :stale
+        }
+      end)
+
+    inbound_issues =
+      if Map.has_key?(states, :inbound_activity) do
+        [
+          {:failed, "Failed inbound processing",
+           "Mailbox processing ended in failure when these messages were received. Open a message to inspect its error and any later recovery attempts."},
+          {:no_match, "Unrouted inbound messages",
+           "No mailbox routing rule matched these messages when they were received."}
+        ]
+        |> Enum.map(fn {outcome, label, help} ->
+          %{
+            count: get_in(activity, [:inbound, :outcomes, outcome]),
+            label: label,
+            help: help,
+            testid: "operator-health-inbound-#{outcome}",
+            surface: :inbound,
+            path: health_inbound_path(inbound_path, params, outcome),
+            stale?: states.inbound_activity.status == :stale
+          }
+        end)
+      else
+        []
+      end
+
+    (delivery_issues ++ inbound_issues ++ webhook_issues)
+    |> Enum.filter(&(is_integer(&1.count) and &1.count > 0))
+  end
 
   defp support_evidence_path(base_path, filter_params, dark_chrome, :orphan_backlog, summary) do
     unmatched_events_path(base_path, filter_params, dark_chrome, summary)
@@ -2657,7 +2687,7 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp support_focus_body(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),
     do:
-      "The requested Account webhook row is retained below with its current stored status, which may differ from the failed-attempt population that linked here."
+      "The selected webhook event is shown below with its current status. It may have changed since the failure was recorded."
 
   defp support_focus_body(%{focus: :orphan_backlog}),
     do:

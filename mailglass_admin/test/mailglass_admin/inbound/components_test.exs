@@ -26,14 +26,14 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
   describe "RecordsList.records_list/1" do
     test "renders the empty-state copy for []" do
       # Phase 113: empty state now routes through Components.data_state/1 with UI-SPEC copy.
-      # Default empty_state is :filtered; renders "No records match the current filters."
+      # Default empty_state is :filtered; renders "No messages match the current filters."
       html = render_component(&RecordsList.records_list/1, records: [], selected_record: nil)
 
-      assert html =~ "No records match the current filters."
+      assert html =~ "No messages match the current filters."
       assert html =~ "Clear filters"
     end
 
-    test "masks the recipient and renders the record id + meta line" do
+    test "shows the recipient and renders the record id + meta line" do
       record = %{
         id: "rec-1",
         tenant_id: "tenant-a",
@@ -47,8 +47,8 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html =
         render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
-      refute html =~ "alice@example.com"
-      assert html =~ "a****@e******.com"
+      assert html =~ "alice@example.com"
+      refute html =~ "a****@e******.com"
       assert html =~ "rec-1"
       assert html =~ "MAILGUN"
       assert html =~ "No execution recorded"
@@ -56,7 +56,6 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
     test "keeps long and non-ASCII row values readable on mobile cards" do
       recipient = String.duplicate("a", 64) <> "@exämple.com"
-      masked_recipient = "a" <> String.duplicate("*", 63) <> "@e******.com"
       record_id = "rec-" <> String.duplicate("界", 40)
 
       record = %{
@@ -73,12 +72,11 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html =
         render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
-      assert html =~ masked_recipient
-      assert html =~ ~s(title="#{masked_recipient}")
+      assert html =~ recipient
+      assert html =~ ~s(title="#{recipient}")
       assert html =~ record_id
       assert html =~ "tenant-東京"
       assert html =~ "MyApp.箱"
-      refute html =~ recipient
     end
 
     test "renders the real outcome badge + matched mailbox for a matched record (WR-01)" do
@@ -103,7 +101,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       refute html =~ "no match"
     end
 
-    test "renders 'no match' + warning badge for a :no_match record (WR-01)" do
+    test "renders 'Unrouted' + warning badge for a :no_match record (WR-01)" do
       record = %{
         id: "rec-3",
         tenant_id: "tenant-a",
@@ -118,9 +116,9 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html =
         render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
-      assert html =~ "No match"
+      assert html =~ "Unrouted"
       assert html =~ "badge-warning"
-      assert html =~ "No match"
+      assert html =~ "Unrouted"
     end
 
     test "renders no history when the record has no execution run yet" do
@@ -180,7 +178,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
       assert html =~ "Failed"
-      assert html =~ "Unavailable"
+      assert html =~ "Not recorded"
       refute html =~ "no match"
     end
   end
@@ -321,8 +319,8 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       # Sender masked + present; raw sender never leaks.
       assert html =~ "b**@s*****.test"
       refute html =~ "bob@sender.test"
-      # The recipient is masked in the title, but the From cell is the sender.
-      assert html =~ "a****@e******.com"
+      # The recipient is shown in the title, but the From cell is the sender.
+      assert html =~ "alice@example.com"
     end
 
     test "the From cell reads STRING-keyed `from` maps (DB JSONB round-trip)" do
@@ -418,7 +416,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&Timeline.timeline/1, runs: runs)
 
-      assert html =~ "Fresh"
+      assert html =~ "Initial processing"
       assert html =~ "Replay"
       assert html =~ "run-fresh"
       assert html =~ "run-replay"
@@ -460,7 +458,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "Ignored"
       assert html =~ "No change"
       refute html =~ ">Ignore</p>"
-      assert html =~ "Fresh"
+      assert html =~ "Initial processing"
       assert html =~ "Replay"
       assert html =~ "2026-05-24T10:00:00Z"
       assert html =~ "2026-05-24T11:00:00Z"
@@ -516,12 +514,12 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ ~s(data-testid="inbound-trace-clause")
       assert html =~ "sm:grid-cols"
       assert html =~ "bg-base-100"
-      assert html =~ "border-l-4 border-error"
+      assert html =~ "bg-error/10"
       assert html =~ "Dimension"
       assert html =~ "Expected"
       assert html =~ "Actual"
       assert html =~ "Current router simulation"
-      assert html =~ "does not prove which route was selected when the message arrived"
+      assert html =~ "may differ from the rules used when this message arrived"
       assert html =~ "<details"
       refute html =~ "<details open"
       assert html =~ "<summary"
@@ -636,7 +634,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert redacted_html =~ "Payload size"
       assert redacted_html =~ "Header count"
       assert redacted_html =~ "Verification facts"
-      assert redacted_html =~ "bg-base-100"
+      assert redacted_html =~ "Raw source is hidden by default"
       assert redacted_html =~ "min-h-11"
       refute redacted_html =~ ~s(data-testid="inbound-evidence-raw")
       refute redacted_html =~ "secret-raw-payload-99-03"
@@ -718,7 +716,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       assert html =~ "Time window"
       assert html =~ "Accepted"
-      assert html =~ "No match"
+      assert html =~ "Unrouted"
       assert html =~ "Ignored"
       assert html =~ "No change"
       assert html =~ "Rejected"
@@ -726,10 +724,11 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "Failed"
 
       assert html =~
-               "Filter by the latest fresh mailbox outcome, including an explicit no-change result."
+               "Filter by the latest fresh mailbox outcome, including unrouted messages and no change. The summary is hidden while this filter is applied."
 
-      assert html =~
-               ~r/<legend class="(?=[^"]*\btext-label\b)(?=[^"]*\buppercase\b)(?=[^"]*\bfont-bold\b)(?=[^"]*\btext-secondary\b)[^"]*">Filters<\/legend>/
+      document = Floki.parse_document!(html)
+      assert Floki.find(document, "legend") |> Floki.text() |> String.trim() == "Filters"
+      assert Floki.find(document, "legend") |> Floki.attribute("class") == ["sr-only"]
 
       refute html =~ "tracking-["
     end

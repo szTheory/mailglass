@@ -125,9 +125,9 @@ framework integration but are not part of the general adopter promise.
   the maintainers keep the right to refine their shape outside the documented
   stable subset above.
 - Phase 169's exact investigation reads used by `mailglass_admin` are
-  sibling-package-only: `Mailglass.Operator.Deliveries.get_delivery/2`,
-  `Mailglass.Operator.Timeline.get_delivery_event/3`, and
-  `Mailglass.Operator.SupportSummary.read_failed_ingest/1`,
+  sibling-package-only: <code>Mailglass.Operator.Deliveries.get_delivery/2</code>,
+  <code>Mailglass.Operator.Timeline.get_delivery_event/3</code>, and
+  <code>Mailglass.Operator.SupportSummary.read_failed_ingest/1</code>,
   `read_orphan_backlog/1`, `read_replay_outcomes/1`, `read_reconcile_facts/1`,
   `get_webhook_event/2`, and `get_unmatched_event/2`. The exact getters return a
   scoped projection or `nil`; the aggregate readers return support-read maps.

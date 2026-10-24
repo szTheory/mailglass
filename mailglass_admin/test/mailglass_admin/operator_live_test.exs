@@ -33,7 +33,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Sent"
       assert has_element?(view, "[data-testid='operator-delivery-row']", "Sent")
-      assert has_element?(view, "[data-testid='operator-delivery-row']", "Latest event")
+      refute has_element?(view, "[data-testid='operator-delivery-row']", "Latest event")
 
       updated =
         delivery
@@ -115,10 +115,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "Recent deliveries"
+      assert html =~ "Deliveries"
       assert html =~ ~s(data-testid="operator-master-detail")
-      assert html =~ "s*******@e******.com"
-      refute html =~ delivery.recipient
+      assert html =~ delivery.recipient
+      refute html =~ "s*******@e******.com"
       # No selection → the list stands alone; the Quick view overlay and the full
       # detail are both absent until a record is focused.
       refute html =~ ~s(data-testid="operator-quick-view")
@@ -210,8 +210,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render(view)
 
-      assert html =~ "m****@e******.com"
-      refute html =~ matching.recipient
+      assert html =~ "match@example.com"
+      assert html =~ matching.recipient
       refute html =~ "skip@example.com"
       assert selected_filter_value(html, "#filters_provider") == "postmark"
       assert html =~ ~s(<option value="delivered" selected)
@@ -296,8 +296,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Status was not applied. Choose a listed status."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
-      assert html =~ "m****@e******.com"
-      assert input_value(html, "#filters_window_hours") == "0"
+      assert html =~ "match@example.com"
+      assert selected_filter_value(html, "#filters_window_hours") == "0"
       assert html =~ "Latest recorded event"
       refute html =~ "not-listed"
       # Inspect the filter's option selection directly: the full LiveView document
@@ -326,7 +326,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Status was not applied. Choose a listed status."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
-      assert input_value(html, "#filters_window_hours") == "-5"
+      assert selected_filter_value(html, "#filters_window_hours") == "-5"
 
       assert_raise ArgumentError, fn ->
         assert_patch(view, 0)
@@ -356,8 +356,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
           })
         )
 
-      assert input_value(html, "#filters_window_hours") == "9000"
-      assert html =~ ~s|<datalist id="operator-window-options">|
+      assert selected_filter_value(html, "#filters_window_hours") == "9000"
+      assert html =~ "Custom period (9000 hours)"
 
       unsafe_html =
         render_hook(view, "validate_filters", %{
@@ -371,7 +371,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert unsafe_html =~ "Time window was not applied. Choose a positive listed time window."
 
-      assert input_value(unsafe_html, "#filters_window_hours") ==
+      assert selected_filter_value(unsafe_html, "#filters_window_hours") ==
                "999999999999999999999999999999999999999"
 
       assert unsafe_html =~ ~s(data-testid="operator-deliveries-list-card")
@@ -387,7 +387,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         })
 
       assert empty_html =~ "Time window was not applied. Choose a positive listed time window."
-      assert input_value(empty_html, "#filters_window_hours") == ""
+      assert selected_filter_value(empty_html, "#filters_window_hours") == ""
       assert empty_html =~ ~s(data-testid="operator-deliveries-list-card")
     end
 
@@ -431,7 +431,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       # Clicking a row opens the Quick view (peek) over the still-mounted list —
       # the row is highlighted behind the overlay; the heavy evidence is not loaded yet.
       view
-      |> element("button[phx-value-id='#{delivery.id}']")
+      |> element(".operator-deliveries-table button[phx-value-id='#{delivery.id}']")
       |> render_click()
 
       assert_patch(
@@ -474,10 +474,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-suppression-card")
       assert html =~ "Mailglass.Example.WelcomeMailer"
       assert html =~ "pm_123"
-      assert html =~ "Current matching suppression"
+      assert html =~ "Current suppression"
       assert html =~ "Address · Account-local"
       assert html =~ "The public Mailglass removal command permits Manual records."
-      assert html =~ "does not cover configured stores or provider policy"
+      assert html =~ "Other configured stores and provider restrictions are not checked."
 
       assert html =~ "Sent"
       assert html =~ "Delivered"
@@ -698,8 +698,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
         ~s(data-testid="operator-detail-header"),
         ~s(data-testid="operator-timeline"),
         ~s(data-testid="operator-suppression-card"),
-        ~s(data-testid="operator-support-cards"),
-        ~s(data-testid="operator-replay-action")
+        ~s(data-testid="operator-replay-action"),
+        ~s(data-testid="operator-support-cards")
       ])
     end
 
@@ -823,7 +823,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       # A row click opens the Quick view (peek) — the Replay CTA lives one tier deeper.
       view
-      |> element("button[phx-value-id='#{delivery.id}']")
+      |> element(".operator-deliveries-table button[phx-value-id='#{delivery.id}']")
       |> render_click()
 
       refute render(view) =~ "Review webhook replay"
@@ -1265,7 +1265,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "POSTMARK"
       assert html =~ "requested"
       assert html =~ "completed"
-      assert html =~ "Last retrieved replay evidence: completed · 1 newly normalized Event"
+      assert html =~ "Last replay: completed · 1 newly normalized Event"
     end
 
     test "shows explicit no-op replay copy when the replay converges", %{conn: conn} do
@@ -1302,7 +1302,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Replay command completed with no newly normalized Events."
       assert html =~ "Webhook replay completed"
-      assert html =~ "Last retrieved replay evidence: completed · 0 newly normalized Events"
+      assert html =~ "Last replay: completed · 0 newly normalized Events"
     end
 
     test "reports terminal audit write failure safely and retains requested and failed evidence",
@@ -1388,7 +1388,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
         )
 
-      assert html =~ "Last retrieved replay evidence: requested · completion not recorded"
+      assert html =~ "Last replay: requested · completion not recorded"
       assert html =~ "POSTMARK"
       refute html =~ "private-operator-identifier"
       refute html =~ "raw provider response secret"
@@ -1420,9 +1420,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "No current Mailglass match"
 
       assert html =~
-               "No current matching suppression recorded in Mailglass was found for this Delivery."
+               "No current Mailglass suppression matches this delivery."
 
-      assert html =~ "does not establish absence of configured-store or provider restrictions"
+      assert html =~ "Other configured stores and provider restrictions are not checked."
     end
 
     test "suppressed status badge renders a real Suppressed badge" do
@@ -1907,7 +1907,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
         |> Enum.map(fn [_, id] -> id end)
         |> Enum.uniq()
 
-      view |> element("button[phx-value-id='#{first_id}']") |> render_click()
+      view
+      |> element(".operator-deliveries-table button[phx-value-id='#{first_id}']")
+      |> render_click()
+
       assert render(view) =~ ~s(data-testid="operator-quick-view")
 
       # ArrowDown/j/ArrowRight = next; ArrowUp/k/ArrowLeft = prev (all reach detail_key
@@ -2408,133 +2411,185 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ ~s(data-testid="operator-overview-health")
     end
 
-    test "with-tenant Health renders actionable metric cards without a synthetic summary card", %{
+    test "quiet Health has one empty state and no zero-count or audit cards", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
+
+      assert has_element?(
+               view,
+               "[data-testid='operator-health-status']",
+               "No recent mail activity"
+             )
+
+      assert has_element?(view, "[data-testid='operator-health-outbound-activity']", "0")
+      refute has_element?(view, "[data-testid='operator-overview-health-failures']")
+      refute has_element?(view, "[data-testid='operator-overview-health-orphans']")
+
+      refute has_element?(view, "[data-testid='operator-health-additional-records']")
+
+      refute render(view) =~ "Active suppression records"
+      refute render(view) =~ "Replay history"
+      refute render(view) =~ "Reconciliation history"
+    end
+
+    test "Health shows only nonzero problems with shared help and scoped investigation links", %{
       conn: conn
     } do
-      conn = operator_conn(conn)
-      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
-
-      assert html =~ ~s(data-testid="operator-overview")
-      assert html =~ ~s(data-testid="operator-overview-health")
-
-      refute html
-             |> Floki.parse_document!()
-             |> Floki.find(~s([data-testid="operator-overview-health"] h2))
-             |> Enum.any?(fn h2 -> Floki.text(h2) == "Health" end)
-
-      assert html =~ "Failed webhook attempts"
-      assert html =~ "Unmatched Events"
-      assert html =~ "Active suppression records"
-      assert html =~ "Replay audit facts"
-      assert html =~ "Reconciliation audit facts"
-      assert html =~ "Observed from "
-      assert html =~ " UTC (168 hours)"
-      assert html =~ "Last checked "
-      refute html =~ "Last checked:"
-      refute html =~ "Overall status"
-      refute html =~ "Orphan backlog"
-      refute html =~ ~s(data-testid="operator-overview-health-allclear")
-
-      assert_in_order(html, [
-        "Observed from ",
-        "Last checked ",
-        "Failed webhook attempts",
-        "Unmatched Events",
-        "Active suppression records",
-        "Replay audit facts",
-        "Reconciliation audit facts"
-      ])
-
-      {:ok, doc} = Floki.parse_document(html)
-
-      assert doc
-             |> Floki.find(~s([data-testid="operator-overview-health-failures-link"]))
-             |> Enum.any?()
-
-      assert doc
-             |> Floki.find(~s([data-testid="operator-overview-health-orphans-link"]))
-             |> Enum.any?()
-
-      assert doc
-             |> Floki.find(~s([data-testid="operator-overview-health-suppressions-link"]))
-             |> Enum.any?()
-
-      health =
-        doc
-        |> Floki.find(~s([data-testid="operator-overview-health"]))
-        |> List.first()
-
-      assert health != nil, "expected operator-overview-health element"
-
-      refute health
-             |> Floki.find(".hero-arrow-up-right")
-             |> Enum.any?()
-
-      refute health
-             |> Floki.find("span")
-             |> Enum.any?(fn span -> String.trim(Floki.text(span)) == "Open" end)
-    end
-
-    test "with-tenant Health renders actionable metric hints", %{conn: conn} do
-      conn = operator_conn(conn)
-      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
-
-      assert html =~
-               "Failed and dead webhook rows received during the selected Account observation window. This counts processing attempts, not failed Deliveries."
-
-      assert html =~
-               "Unresolved Event records in the selected Account observation window. A shown oldest Event is one example, not the complete population."
-
-      assert html =~
-               "Account-wide active Mailglass suppression records at check time, independent of the observation window. This is not a recipient count; the link opens historical suppressed Delivery Events, a separate population."
-    end
-
-    test "with-tenant Health attention cards use one warning treatment", %{conn: conn} do
-      conn = operator_conn(conn)
       insert_support_summary_fixture!()
+      {:ok, view, html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
+      assert has_element?(view, "[data-testid='operator-health-status']", "Needs attention")
 
-      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
-      {:ok, doc} = Floki.parse_document(html)
+      assert has_element?(
+               view,
+               "[data-testid='operator-overview-health-failures']",
+               "Failed webhook attempts"
+             )
 
-      health =
-        doc
-        |> Floki.find(~s([data-testid="operator-overview-health"]))
-        |> List.first()
+      assert has_element?(
+               view,
+               "[data-testid='operator-overview-health-orphans']",
+               "Unmatched events"
+             )
 
-      assert health != nil, "expected operator-overview-health element"
-      assert Floki.text(health) =~ "Needs attention"
+      assert has_element?(view, "#operator-overview-health-failures-help-tooltip[role='tooltip']")
 
-      assert health
-             |> Floki.find(".hero-exclamation-triangle")
-             |> Enum.any?()
+      assert html =~
+               "These failures affect delivery tracking; they are not failed email deliveries."
 
-      assert health
-             |> Floki.find(".text-warning")
-             |> Enum.any?()
-
-      refute health
-             |> Floki.find(".hero-x-circle")
-             |> Enum.any?()
-
-      refute health
-             |> Floki.find(".text-error")
-             |> Enum.any?()
+      refute html =~ "mg-stat-card-tooltip"
+      refute html =~ "No issues found"
+      refute html =~ "Additional records"
     end
 
-    test "suppression count degradation renders em-dash in text-secondary when count errors", %{
-      conn: conn
-    } do
-      # When suppression_count is nil (e.g., module error), the Health view renders "—"
-      # We test this by mounting with a tenant and checking that a suppression count
-      # is rendered (either as number or em-dash — both are valid render outputs).
-      conn = operator_conn(conn)
-      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+    test "Health counts activity and failures across all pages without inheriting investigation filters",
+         %{conn: conn} do
+      for i <- 1..25,
+          do:
+            insert_delivery!(last_event_type: :delivered, provider_message_id: "pm_activity_#{i}")
 
-      # The overview must render without crashing when suppression count is 0 or nil.
-      # It should show either a number or an em-dash, never crash.
-      assert html =~ ~s(data-testid="operator-overview-health")
-      # With no suppressions inserted, count is 0 — rendered as "0" or may render "—" on error
-      assert html =~ "Active suppression records"
+      insert_delivery!(status: :failed, last_event_type: :failed, provider: "mailgun")
+      insert_delivery!(status: :failed, last_event_type: :failed, tenant_id: "foreign-tenant")
+
+      insert_delivery!(
+        status: :failed,
+        last_event_type: :failed,
+        last_event_at: hours_ago(200),
+        provider_message_id: "pm_old_activity"
+      )
+
+      {:ok, view, _html} =
+        live(
+          operator_conn(conn),
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "search" => "absent",
+            "provider" => "postmark",
+            "event" => "opened"
+          })
+        )
+
+      assert has_element?(view, "[data-testid='operator-health-outbound-activity']", "26")
+      assert has_element?(view, "[data-testid='operator-health-deliveries-failed']", "1")
+
+      href =
+        view
+        |> element("[data-testid='operator-health-deliveries-failed-link']")
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.attribute("href")
+        |> hd()
+
+      assert href =~ "event=failed"
+      assert href =~ "tenant_id=#{@tenant_id}"
+      refute href =~ "provider="
+      refute href =~ "search="
+    end
+
+    test "active mail with no recorded problems has a bounded all-clear", %{conn: conn} do
+      insert_delivery!(last_event_type: :delivered)
+      {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
+      assert has_element?(view, "[data-testid='operator-health-status']", "No issues found")
+      assert has_element?(view, "[data-testid='operator-health-status']", "in this period")
+      refute has_element?(view, "[data-testid='operator-overview-health-failures']")
+      refute render(view) =~ "Email delivery is healthy"
+    end
+
+    test "a persisted send failure stays visible without a matching latest event", %{conn: conn} do
+      insert_delivery!(status: :failed, last_event_type: :sent)
+      {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
+      assert has_element?(view, "[data-testid='operator-health-deliveries-failed']", "1")
+      assert has_element?(view, "[data-testid='operator-health-status']", "Needs attention")
+
+      href =
+        view
+        |> element("[data-testid='operator-health-deliveries-failed-link']")
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.attribute("href")
+        |> hd()
+
+      refute href =~ "event=failed"
+    end
+
+    test "a stale zero result cannot produce an all-clear", %{conn: conn} do
+      insert_delivery!(last_event_type: :delivered)
+      {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
+      OperatorFixtures.arm_reader_fault!("operator-1", "failed_ingest", :known)
+      html = render_click(view, "retry_health")
+      assert html =~ "Health check incomplete"
+      assert html =~ ~s(data-testid="operator-health-stale-failed_ingest")
+      refute html =~ "No issues found"
+      refute html =~ "No recent mail activity"
+    end
+
+    test "Health shows received message activity and only inbound processing or routing problems",
+         %{conn: conn} do
+      for outcome <- [:accept, :ignore, :no_match, :failed] do
+        record =
+          InboundRecord.changeset(%{
+            tenant_id: @tenant_id,
+            provider: "postmark",
+            received_at: hours_ago(1)
+          })
+          |> TestRepo.insert!()
+
+        evidence =
+          InboundEvidence.changeset(%{
+            tenant_id: @tenant_id,
+            inbound_record_id: record.id,
+            provider: "postmark",
+            raw_payload: %{},
+            verification_facts: %{}
+          })
+          |> TestRepo.insert!()
+
+        ExecutionRun.changeset(%{
+          tenant_id: @tenant_id,
+          inbound_record_id: record.id,
+          inbound_evidence_id: evidence.id,
+          source: :fresh,
+          mailbox: if(outcome == :no_match, do: nil, else: "SupportMailbox"),
+          outcome: outcome,
+          failure: if(outcome == :failed, do: %{"error" => "processing failed"}, else: %{})
+        })
+        |> TestRepo.insert!()
+      end
+
+      {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
+      assert has_element?(view, "[data-testid='operator-health-inbound-activity']", "4")
+      assert has_element?(view, "[data-testid='operator-health-inbound-failed']", "1")
+      assert has_element?(view, "[data-testid='operator-health-inbound-no_match']", "1")
+
+      href =
+        view
+        |> element("[data-testid='operator-health-inbound-failed-link']")
+        |> render()
+        |> Floki.parse_document!()
+        |> Floki.attribute("href")
+        |> hd()
+
+      assert href =~ "/inbound?"
+      assert href =~ "outcome=failed"
+      assert href =~ "tenant_id=#{@tenant_id}"
     end
 
     test "?view=deliveries param shows Deliveries list not Health", %{conn: conn} do
@@ -2564,6 +2619,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       conn: conn
     } do
       conn = operator_conn(conn)
+      insert_webhook_event!(status: :failed)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="operator-overview-health-failures-link"),
@@ -2590,37 +2646,27 @@ defmodule MailglassAdmin.OperatorLiveTest do
              "failures drill-through link must preserve tenant_id, got: #{inspect(href)}"
     end
 
-    # The metric counts active records while its destination shows historical Delivery Events.
-    test "active suppression metric labels its distinct historical suppressed Delivery destination",
-         %{conn: conn} do
-      conn = operator_conn(conn)
-      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+    test "Health does not read routine suppression or replay/reconciliation history", %{
+      conn: conn
+    } do
+      on_exit(&OperatorFixtures.clear_reader_faults!/0)
+      insert_delivery!(last_event_type: :delivered)
+      {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ ~s(data-testid="operator-overview-health-suppressions-link"),
-             "suppressions stat card must be wrapped in a drill-through link"
+      for operation <- ["active_suppressions", "replay_outcomes", "reconcile_facts"],
+          do: OperatorFixtures.arm_reader_fault!("operator-1", operation, :unexpected)
 
-      {:ok, doc} = Floki.parse_document(html)
+      html = render_click(view, "retry_health")
+      assert html =~ "No issues found"
+      refute html =~ "Additional records"
+      refute html =~ "Active suppression records"
+      refute html =~ "Replay history"
+      refute html =~ "Reconciliation history"
 
-      suppressions_link =
-        doc
-        |> Floki.find(~s([data-testid="operator-overview-health-suppressions-link"]))
-        |> List.first()
-
-      assert suppressions_link != nil,
-             "expected operator-overview-health-suppressions-link element"
-
-      href = suppressions_link |> Floki.attribute("href") |> List.first() || ""
-
-      assert href =~ "event=suppressed",
-             "the metric destination remains the historical suppressed Delivery Event filter"
-
-      assert Floki.attribute(suppressions_link, "aria-label") ==
-               ["View historical suppressed Delivery Events in Deliveries"]
-
-      assert html =~ "the link opens historical suppressed Delivery Events, a separate population"
-
-      assert href =~ "tenant_id=#{@tenant_id}",
-             "suppressions drill-through link must preserve tenant_id, got: #{inspect(href)}"
+      assert_push_event(view, "mailglass:toast", %{
+        message: "Email health refreshed.",
+        error: false
+      })
     end
 
     test "unmatched webhooks stat card links to support-focused Deliveries evidence", %{
@@ -2712,9 +2758,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert exact_text =~ "Exact Account webhook"
       assert exact_text =~ fixture.older_webhook_event_id
       assert exact_text =~ "Succeeded"
-      assert html =~ "Showing exact Account webhook row"
+      assert html =~ "Showing the selected webhook event"
       refute exact_text =~ "Exact failed webhook"
-      assert html =~ "The requested Account webhook row is retained below"
+      assert html =~ "The selected webhook event is shown below"
     end
 
     test "exact webhook ID survives a newer failure example and an empty Delivery result", %{
@@ -2987,7 +3033,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-overview-health"),
              "overview health block must render without crashing"
 
-      assert html =~ "No matching evidence"
+      refute html =~ "No matching evidence"
       refute html =~ "Email delivery is healthy"
       refute html =~ "All clear"
     end
@@ -3103,7 +3149,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "<table"
       assert html =~ ~s(scope="col")
       assert html =~ "Outcome"
-      assert html =~ "Latest event"
+      refute html =~ "Latest event"
       assert html =~ "Delivered"
     end
 
@@ -3139,7 +3185,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(aria-selected="true")
     end
 
-    test "recipients render via mask_recipient in both table and card presentations — no raw recipient string" do
+    test "recipients are readable in both table and card presentations" do
       delivery = %{
         id: "mask-delivery-id-004",
         tenant_id: "t1",
@@ -3165,8 +3211,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
           }
         )
 
-      refute html =~ "masktest@example.com"
-      assert html =~ "m*******@e******.com"
+      assert html =~ "masktest@example.com"
+      refute html =~ "m*******@e******.com"
     end
 
     test "delivery id renders with a title attribute equal to the id and a truncate/mono class in both presentations" do
@@ -3414,7 +3460,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "window_hours" => "168"}))
 
-      assert has_element?(view, "[data-testid='operator-health-window']", "(168 hours)")
+      assert has_element?(view, "[data-testid='operator-health-window']", "Last 7 days")
 
       [initial_card] =
         Floki.find(
@@ -3437,7 +3483,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       )
 
       same_window_html = render(view)
-      assert has_element?(view, "[data-testid='operator-health-window']", "(168 hours)")
+      assert has_element?(view, "[data-testid='operator-health-window']", "Last 7 days")
 
       [same_window_card] =
         Floki.find(
@@ -3462,24 +3508,30 @@ defmodule MailglassAdmin.OperatorLiveTest do
       )
 
       changed_window_html = render(view)
-      assert has_element?(view, "[data-testid='operator-health-window']", "(24 hours)")
+      assert has_element?(view, "[data-testid='operator-health-window']", "Last 1 day")
 
-      [changed_window_card] =
-        Floki.find(
-          Floki.parse_document!(changed_window_html),
-          "[data-testid='operator-overview-health-failures']"
-        )
-
-      assert Floki.text(hd(Floki.find(changed_window_card, "p.mono"))) |> String.trim() ==
-               "Unavailable"
-
-      refute Floki.text(changed_window_card) =~ "Last retrieved"
+      assert changed_window_html =~ ~s(data-testid="operator-health-unavailable-failed_ingest")
+      assert changed_window_html =~ "could not be loaded"
+      assert changed_window_html =~ "Health check incomplete"
+      refute changed_window_html =~ ~s(data-testid="operator-overview-health-failures")
       refute changed_window_html =~ provider_event_id
       refute changed_window_html =~ "synthetic transient operator read failure"
     end
 
+    test "refresh health confirms completed reads", %{conn: conn} do
+      {:ok, view, _html} = live(operator_conn(conn), operator_path(%{"tenant_id" => @tenant_id}))
+      html = render_click(view, "retry_health")
+      assert html =~ "hero-arrow-path"
+
+      assert_push_event(view, "mailglass:toast", %{
+        message: "Email health refreshed.",
+        error: false
+      })
+    end
+
     test "keeps a failed observation isolated while retaining its last known value", %{conn: conn} do
       conn = operator_conn(conn)
+      insert_support_summary_fixture!()
       {:ok, view, initial_html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
       initial = Floki.parse_document!(initial_html)
 
@@ -3493,6 +3545,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
       html = render_click(view, "retry_health")
       document = Floki.parse_document!(html)
 
+      assert_push_event(view, "mailglass:toast", %{
+        message: "Some health data could not be refreshed.",
+        error: true
+      })
+
       assert html =~ ~s(data-testid="operator-health-stale-orphan_backlog")
 
       current_orphans =
@@ -3504,7 +3561,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert current_orphans == initial_orphans
 
       assert html =~ ~s(data-testid="operator-overview-health-failures")
-      assert html =~ ~s(data-testid="operator-overview-health-suppressions")
+      refute html =~ ~s(data-testid="operator-overview-health-suppressions")
       refute html =~ "synthetic transient operator read failure"
     end
 
@@ -3513,22 +3570,21 @@ defmodule MailglassAdmin.OperatorLiveTest do
       conn = operator_conn(conn)
       {:ok, view, _html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
-      OperatorFixtures.arm_reader_fault!("operator-1", "replay_outcomes", :unexpected)
+      OperatorFixtures.arm_reader_fault!("operator-1", "failed_ingest", :unexpected)
 
       exit = catch_exit(render_click(view, "retry_health"))
       assert inspect(exit) =~ "synthetic unexpected operator read failure"
     end
 
-    test "Health subtitle explains the named populations", %{conn: conn} do
+    test "Health subtitle summarizes the investigation task", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~
-               "Review failed webhook attempts, unmatched Events, replay and reconciliation records, and active suppression records for this Account.",
-             "Health subtitle must orient the page rather than duplicate stat-card status"
+      assert html =~ "Find email issues and inspect the records behind them.",
+             "Health subtitle should orient the page without listing every record type"
     end
 
-    test "Health subtitle stays explanatory while attention status stays in cards", %{conn: conn} do
+    test "Health subtitle stays focused while attention status stays in cards", %{conn: conn} do
       conn = operator_conn(conn)
       # Insert a failed webhook_event to force attention state
       insert_webhook_event!(status: :failed)
@@ -3543,9 +3599,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ "Email delivery needs attention.",
              "Health header must not render the old unexplained status sentence"
 
-      assert html =~
-               "Review failed webhook attempts, unmatched Events, replay and reconciliation records, and active suppression records for this Account.",
-             "Health subtitle must remain explanatory even in attention state"
+      assert html =~ "Find email issues and inspect the records behind them.",
+             "Health subtitle should stay focused even in attention state"
     end
 
     test "Health subtitle never contains 'Oops' or 'Navigate to'", %{conn: conn} do
@@ -3559,23 +3614,22 @@ defmodule MailglassAdmin.OperatorLiveTest do
              "subtitle must never contain 'Navigate to'"
     end
 
-    test "deliveries surface subtitle is the inspection-focused triage line", %{conn: conn} do
+    test "deliveries surface subtitle describes the investigation task", %{conn: conn} do
       conn = operator_conn(conn)
       insert_delivery!(recipient: "sub-test@example.com")
 
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~
-               "Prove what happened to a message — inspect its event timeline, suppression state, and replay history.",
-             "Deliveries subtitle must be the inspection-focused triage line"
+      assert html =~ "Trace each delivery through its event history.",
+             "Deliveries subtitle should describe the work without promising proof"
     end
 
     test "zero observations never render global clearance language", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ "No matching evidence"
+      refute html =~ "No matching evidence"
       refute html =~ "Email delivery is healthy"
     end
 
@@ -3589,15 +3643,17 @@ defmodule MailglassAdmin.OperatorLiveTest do
     end
   end
 
-  describe "operator KPI stat_card call sites — DATA-02 certification (Plan 02 Task 3)" do
-    test "the three operator Health KPI testids render through the stat_card primitive" do
-      conn = operator_conn(build_conn())
-      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+  describe "Health overview layout" do
+    test "issue rows replace the decorative KPI card grid" do
+      insert_webhook_event!(status: :failed)
+
+      {:ok, _view, html} =
+        live(operator_conn(build_conn()), operator_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="operator-overview-health-failures")
-      assert html =~ ~s(data-testid="operator-overview-health-orphans")
-      assert html =~ ~s(data-testid="operator-overview-health-suppressions")
-      refute html =~ ~s(data-testid="operator-overview-health-allclear")
+      refute html =~ "mg-stat-card-tooltip"
+      refute html =~ ~s(data-testid="operator-overview-health-suppressions")
+      refute html =~ ~s(data-testid="operator-health-additional-records")
     end
   end
 end

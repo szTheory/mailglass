@@ -19,6 +19,7 @@ defmodule MailglassAdmin.AssetsTest do
       assert conn.status == 200
 
       content_type = get_resp_header(conn, "content-type") |> List.first()
+
       assert content_type =~ "text/css",
              "expected content-type to start with text/css, got #{inspect(content_type)}"
 
@@ -26,6 +27,7 @@ defmodule MailglassAdmin.AssetsTest do
       assert cache_control == "public, max-age=31536000, immutable"
 
       assert is_binary(conn.resp_body)
+
       assert byte_size(conn.resp_body) > 1000,
              "compiled app.css should be > 1KB"
     end
@@ -37,8 +39,10 @@ defmodule MailglassAdmin.AssetsTest do
       conn = get(conn, "/dev/mail/js-#{hash}")
 
       assert conn.status == 200
+
       assert conn.resp_body =~ "Phoenix",
              "bundled JS must contain phoenix.js exports (look for literal 'Phoenix')"
+
       assert conn.resp_body =~ "LiveView",
              "bundled JS must contain phoenix_live_view.js exports (look for literal 'LiveView')"
     end
@@ -51,6 +55,7 @@ defmodule MailglassAdmin.AssetsTest do
       assert conn.status == 200
 
       content_type = get_resp_header(conn, "content-type") |> List.first()
+
       assert content_type =~ "font/woff2",
              "font content-type must be font/woff2, got #{inspect(content_type)}"
     end
@@ -71,6 +76,30 @@ defmodule MailglassAdmin.AssetsTest do
 
       content_type = get_resp_header(conn, "content-type") |> List.first()
       assert content_type =~ "image/svg+xml"
+    end
+  end
+
+  describe "GET favicon.svg" do
+    test "serves the small-size brand mark from both admin mounts", %{conn: conn} do
+      favicon = File.read!(Application.app_dir(:mailglass_admin, "priv/static/favicon.svg"))
+      hash = MailglassAdmin.Controllers.Assets.favicon_hash()
+
+      assert hash == Base.encode16(:crypto.hash(:md5, favicon), case: :lower)
+
+      for mount <- ["/dev/mail", "/ops/mail", "/alt/dev/console", "/secure/console"] do
+        response = get(conn, "#{mount}/favicon.svg?v=#{hash}")
+
+        assert response.status == 200
+        assert get_resp_header(response, "content-type") == ["image/svg+xml"]
+
+        assert get_resp_header(response, "cache-control") == [
+                 "public, max-age=31536000, immutable"
+               ]
+
+        assert response.resp_body == favicon
+        assert response.resp_body =~ ~s(viewBox="0 0 16 16")
+        assert response.resp_body =~ "prefers-color-scheme: dark"
+      end
     end
   end
 end

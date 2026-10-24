@@ -42,7 +42,8 @@ defmodule MailglassAdmin.Operator.QuickView do
         tabindex="-1"
         data-testid="operator-quick-view-scrim"
         class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 block"
-      ></.link>
+      >
+      </.link>
       <div
         id="operator-quick-view"
         data-testid="operator-quick-view"
@@ -62,15 +63,23 @@ defmodule MailglassAdmin.Operator.QuickView do
         <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
 
         <div class="flex items-center justify-between gap-sm border-b border-base-300 pb-sm">
-          <h2 id="operator-quick-view-title" class="text-label font-bold uppercase text-secondary">
-            Delivery quick view
+          <h2 id="operator-quick-view-title" class="text-body font-bold text-base-content">
+            Quick view
           </h2>
           <div class="flex items-center gap-xs">
-            <.nav_button dir="prev" path={@previous_path} label="Previous delivery">‹</.nav_button>
-            <span :if={@position} aria-live="polite" class="mono px-xs text-label text-secondary">
+            <.nav_button dir="prev" path={@previous_path} label="Previous delivery">
+              <Components.icon name="hero-chevron-down" class="h-4 w-4 rotate-90" />
+            </.nav_button>
+            <span
+              :if={@position}
+              aria-live="polite"
+              class="px-xs text-label tabular-nums text-secondary"
+            >
               {@position.index} of {@position.total}
             </span>
-            <.nav_button dir="next" path={@next_path} label="Next delivery">›</.nav_button>
+            <.nav_button dir="next" path={@next_path} label="Next delivery">
+              <Components.icon name="hero-chevron-down" class="h-4 w-4 -rotate-90" />
+            </.nav_button>
             <.link
               id="operator-quick-view-close"
               patch={@close_path}
@@ -104,22 +113,32 @@ defmodule MailglassAdmin.Operator.QuickView do
             </div>
           <% @delivery -> %>
             <div class="mt-md space-y-md">
-              <div class="flex flex-wrap items-center gap-sm">
-                <h3 class="text-heading font-bold text-base-content">
-                  {Components.mask_recipient(@delivery.recipient)}
-                </h3>
-                <Components.status_badge status={Components.delivery_display_status(@delivery)} />
-              </div>
-
-              <p class="text-body text-secondary">
-                Latest recorded event:
-                <span class="text-base-content">{event_label(@delivery.last_event_type)}</span>
-                · <Components.timestamp at={@delivery.last_event_at} />
+              <Components.message_identity
+                heading_tag="h3"
+                subject={Map.get(@delivery, :subject)}
+                recipient={@delivery.recipient}
+                status={Components.delivery_display_status(@delivery)}
+                context={:delivery}
+                id="delivery-quick-outcome"
+              />
+              <p class="text-label text-secondary">
+                Updated <Components.timestamp at={@delivery.last_event_at} />
+              </p>
+              <p
+                :if={
+                  @delivery.last_event_type not in [
+                    nil,
+                    Components.delivery_display_status(@delivery)
+                  ]
+                }
+                class="text-label text-secondary"
+              >
+                Latest event: {event_label(@delivery.last_event_type)}
               </p>
 
-              <dl class="grid gap-sm text-body text-secondary sm:grid-cols-2">
+              <dl class="grid min-w-0 gap-md text-body text-secondary sm:grid-cols-2 [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]">
                 <div>
-                  <dt class="text-label font-bold uppercase">Account</dt>
+                  <dt class="text-label font-bold">Account</dt>
                   <dd
                     class="mt-xs text-base-content"
                     title={Accounts.title(@delivery.tenant_id, @account_labels)}
@@ -128,18 +147,20 @@ defmodule MailglassAdmin.Operator.QuickView do
                   </dd>
                 </div>
                 <div>
-                  <dt class="text-label font-bold uppercase">Provider</dt>
+                  <dt class="text-label font-bold">Provider</dt>
                   <dd class="mt-xs text-base-content">
                     {provider_label(@delivery.provider)}
                   </dd>
                 </div>
-                <div class="sm:col-span-2">
-                  <dt class="text-label font-bold uppercase">Delivery ID</dt>
-                  <dd class="mono mt-xs break-all text-base-content" title={@delivery.id}>
-                    {@delivery.id}
+              </dl>
+              <Components.technical_details collapsible={false} id="operator-quick-technical">
+                <div>
+                  <dt class="text-label font-bold text-secondary">Delivery ID</dt>
+                  <dd class="mt-xs">
+                    <Components.copy_value value={@delivery.id} label="Delivery ID" />
                   </dd>
                 </div>
-              </dl>
+              </Components.technical_details>
             </div>
         <% end %>
 
@@ -169,7 +190,8 @@ defmodule MailglassAdmin.Operator.QuickView do
     <span
       aria-disabled="true"
       aria-label={@label}
-      class="btn btn-ghost btn-sm opacity-40"
+      title={@label}
+      class="btn btn-ghost min-h-11 min-w-11 opacity-40"
     >
       {render_slot(@inner_block)}
     </span>
@@ -182,7 +204,8 @@ defmodule MailglassAdmin.Operator.QuickView do
       patch={@path}
       data-testid={"operator-quick-view-#{@dir}"}
       aria-label={@label}
-      class="mg-focus-ring btn btn-ghost btn-sm"
+      title={@label}
+      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 border border-base-300"
     >
       {render_slot(@inner_block)}
     </.link>
@@ -209,8 +232,7 @@ defmodule MailglassAdmin.Operator.QuickView do
       "This delivery is not available in the selected Account. Return to deliveries to continue."
 
   defp detail_error_copy(:unavailable),
-    do:
-      "Delivery details are temporarily unavailable. Retry the scoped read or return to deliveries."
+    do: "Delivery details are temporarily unavailable. Try again or return to deliveries."
 
   defp detail_error_copy(_),
     do: "Delivery details are unavailable. Return to deliveries to continue."

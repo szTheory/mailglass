@@ -150,14 +150,14 @@ defmodule Mailglass.Repo do
   @spec multi_opts(keyword()) :: keyword()
   def multi_opts(opts \\ []), do: Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
 
-  @doc "Delegates to the host Repo's `one/2`."
+  @doc "Delegates to the host Repo's `one/2`, preserving schema, map, or scalar selections."
   @doc since: "0.1.0"
-  @spec one(Ecto.Queryable.t(), keyword()) :: struct() | nil
+  @spec one(Ecto.Queryable.t(), keyword()) :: term()
   def one(queryable, opts \\ []), do: repo().one(queryable, put_prefix(opts))
 
-  @doc "Delegates to the host Repo's `all/2`."
+  @doc "Delegates to the host Repo's `all/2`, preserving schema, map, or scalar selections."
   @doc since: "0.1.0"
-  @spec all(Ecto.Queryable.t(), keyword()) :: [struct()]
+  @spec all(Ecto.Queryable.t(), keyword()) :: [term()]
   def all(queryable, opts \\ []), do: repo().all(queryable, put_prefix(opts))
 
   @doc """

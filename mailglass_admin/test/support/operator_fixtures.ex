@@ -329,13 +329,15 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
   end
 
   defp seeded_replay_webhook!(provider_event_id) do
-    TestRepo.one!(
-      from(webhook in WebhookEvent,
-        where:
-          webhook.tenant_id == ^@tenant_id and webhook.provider_event_id == ^provider_event_id,
-        limit: 1
+    # Keep fixture access on the same SQL path as insert_webhook_event!/1;
+    # the Admin production boundary does not depend on the Webhook schema.
+    %{columns: columns, rows: [row]} =
+      TestRepo.query!(
+        "SELECT * FROM mailglass_webhook_events WHERE tenant_id = $1 AND provider_event_id = $2 LIMIT 1",
+        [@tenant_id, provider_event_id]
       )
-    )
+
+    TestRepo.load(WebhookEvent, {columns, row})
   end
 
   def seed_phase169_timeline_101! do

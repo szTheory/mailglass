@@ -4,6 +4,9 @@ defmodule MailglassDemoWeb.Inbound.SupportMailbox do
   @impl true
   def process(message) do
     cond do
+      String.contains?(String.downcase(message.subject || ""), "your request has been noted") ->
+        :ignore
+
       String.contains?(String.downcase(message.subject || ""), "refund") ->
         {:bounce, :mailbox_full}
 

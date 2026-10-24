@@ -27,6 +27,21 @@ defmodule MailglassAdmin.TestSupport.BrowserInboundInstallMigration do
   def down, do: :ok
 end
 
+# Core also uses the public programmatic installer, not a priv migrations directory.
+defmodule MailglassAdmin.TestSupport.CoreInstallMigration do
+  use Boundary, top_level?: true, check: [in: false, out: false]
+  use Ecto.Migration
+
+  def up do
+    Mailglass.Migration.up(
+      prefix: Application.get_env(:mailglass, :schema, "public"),
+      repo: MailglassAdmin.TestRepo
+    )
+  end
+
+  def down, do: :ok
+end
+
 defmodule MailglassAdmin.TestSupport.AdminBootstrap do
   @moduledoc false
 
@@ -90,10 +105,6 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
   end
 
   def ensure_repo_started!(opts \\ []) do
-    core_migrations_path =
-      :code.priv_dir(:mailglass)
-      |> Path.join("repo/migrations")
-
     test_repo_config = Application.get_env(:mailglass, MailglassAdmin.TestRepo)
     pool_mode = Keyword.get(opts, :pool, :sandbox)
 
@@ -106,12 +117,17 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
     Application.put_env(
       :mailglass,
       MailglassAdmin.TestRepo,
-      Keyword.put(test_repo_config, :pool, runtime_pool)
+      Keyword.put(test_repo_config, :pool, DBConnection.ConnectionPool)
     )
 
     {:ok, _, _} =
       Ecto.Migrator.with_repo(MailglassAdmin.TestRepo, fn repo ->
-        Ecto.Migrator.run(repo, core_migrations_path, :up, all: true, log: false)
+        Ecto.Migrator.up(
+          repo,
+          99_000_000_000_000,
+          MailglassAdmin.TestSupport.CoreInstallMigration,
+          log: false
+        )
 
         # Inbound schema via its programmatic installer under a dedicated version
         # slot (large enough not to collide with any core migration timestamp).
@@ -124,7 +140,11 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
         )
       end)
 
-    Application.put_env(:mailglass, MailglassAdmin.TestRepo, test_repo_config)
+    Application.put_env(
+      :mailglass,
+      MailglassAdmin.TestRepo,
+      Keyword.put(test_repo_config, :pool, runtime_pool)
+    )
 
     case Process.whereis(MailglassAdmin.TestRepo) do
       nil ->

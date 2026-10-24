@@ -12,36 +12,25 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
 
   alias MailglassAdmin.Components
 
-  attr :form, Phoenix.HTML.Form, required: true
-  attr :provider_options, :list, default: []
-  attr :outcome_values, :list, required: true
-  attr :window_options, :list, required: true
-  attr :errors, :map, default: %{}
+  attr(:form, Phoenix.HTML.Form, required: true)
+  attr(:provider_options, :list, default: [])
+  attr(:outcome_values, :list, required: true)
+  attr(:window_options, :list, required: true)
+  attr(:errors, :map, default: %{})
 
   def fields(assigns) do
     ~H"""
     <Components.filter_section
       title="Filters"
-      description="Show received mail for one account, then narrow by provider, outcome, time, or search."
+      compact
     >
       <Components.filter_field
-        field={@form[:provider]}
-        type={:select}
-        label="Provider"
-        help="Filter by the inbound provider recorded for this account."
-        error={field_error(@errors, "provider")}
-        prompt="Any provider"
-        options={@provider_options}
-      />
-
-      <Components.filter_field
-        field={@form[:outcome]}
-        type={:select}
-        label="Mailbox outcome"
-        help="Filter by the latest fresh mailbox outcome, including an explicit no-change result."
-        error={field_error(@errors, "outcome")}
-        prompt="Any outcome"
-        options={enum_options(@outcome_values)}
+        field={@form[:search]}
+        label="Search"
+        help="Find by subject, recipient, or provider message id."
+        help_display={:tooltip}
+        error={field_error(@errors, "search")}
+        placeholder="Subject or recipient"
       />
 
       <Components.filter_field
@@ -49,16 +38,31 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
         type={:select}
         label="Time window"
         help="Limit results to recently received messages."
+        help_display={:tooltip}
         error={field_error(@errors, "window_hours")}
         options={@window_options}
       />
 
       <Components.filter_field
-        field={@form[:search]}
-        label="Search"
-        help="Find by subject, recipient, or provider message id."
-        error={field_error(@errors, "search")}
-        placeholder="subject or recipient"
+        field={@form[:outcome]}
+        type={:select}
+        label="Mailbox outcome"
+        help="Filter by the latest fresh mailbox outcome, including unrouted messages and no change. The summary is hidden while this filter is applied."
+        help_display={:tooltip}
+        error={field_error(@errors, "outcome")}
+        prompt="Any outcome"
+        options={enum_options(@outcome_values)}
+      />
+
+      <Components.filter_field
+        field={@form[:provider]}
+        type={:select}
+        label="Provider"
+        help="Filter by the inbound provider recorded for this account."
+        help_display={:tooltip}
+        error={field_error(@errors, "provider")}
+        prompt="Any provider"
+        options={@provider_options}
       />
     </Components.filter_section>
     """
@@ -66,7 +70,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
 
   defp label(nil), do: "Unknown"
 
-  defp label(:no_match), do: "No match"
+  defp label(:no_match), do: "Unrouted"
   defp label(:accept), do: "Accepted"
   defp label(:ignore), do: "Ignored"
   defp label(:no_change), do: "No change"

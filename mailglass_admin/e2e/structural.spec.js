@@ -641,7 +641,7 @@ function noMatchRow(page) {
   // Use the visible() filter to always get the visible row regardless of viewport.
   return page
     .getByTestId("inbound-record-row")
-    .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+    .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
     .filter({ visible: true })
     .first();
 }
@@ -686,7 +686,7 @@ async function firstReplayableInboundRecordId(page) {
   for (let index = 0; index < (await rows.count()); index += 1) {
     const row = rows.nth(index);
     if (!(await row.isVisible())) continue;
-    if (/\bNo match\b/i.test(await row.innerText())) continue;
+    if (/\bUnrouted\b/i.test(await row.innerText())) continue;
     const recordId = await inboundRecordIdFromRow(row);
     if (recordId) return recordId;
   }
@@ -1231,7 +1231,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const mobileNoMatchRow = page
         .getByTestId("inbound-records-cards")
         .getByTestId("inbound-record-row")
-        .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+        .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
         .first();
       await mobileNoMatchRow.click();
       await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
@@ -1250,11 +1250,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await page.goto(`/ops/mail/inbound?tenant_id=browser-empty`);
       // Phase 121 (D-07): truly-empty body uses the InboundMessage noun
-      await expect(page.getByText("No InboundMessages have been recorded yet.")).toBeVisible();
+      await expect(page.getByText("No messages have been received yet.")).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}&search=impossible-filtered-empty`);
       // Phase 113: filtered-empty copy updated per UI-SPEC contract
-      await expect(page.getByText("No records match the current filters.")).toBeVisible();
+      await expect(page.getByText("No messages match the current filters.")).toBeVisible();
 
       // A bare inbound_id deep-link opens the Quick view; an off-page id surfaces
       // the error inside it (inbound-quick-view-error).
@@ -1378,9 +1378,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await assertTextContrastAA(page.getByRole("heading", { name: "Choose an account" }), `${theme.name} ${viewport.width} no-tenant`);
           await openInbound(page, `tenant_id=browser-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
           // Phase 121 (D-07): truly-empty body uses the InboundMessage noun; filtered-empty unchanged
-          await assertTextContrastAA(page.getByText("No InboundMessages have been recorded yet."), `${theme.name} ${viewport.width} truly-empty`);
+          await assertTextContrastAA(page.getByText("No messages have been received yet."), `${theme.name} ${viewport.width} truly-empty`);
           await openInbound(page, `tenant_id=${tenantId}&search=filtered-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
-          await assertTextContrastAA(page.getByText("No records match the current filters."), `${theme.name} ${viewport.width} filtered-empty`);
+          await assertTextContrastAA(page.getByText("No messages match the current filters."), `${theme.name} ${viewport.width} filtered-empty`);
           await openInbound(page, `tenant_id=${tenantId}&inbound_id=does-not-exist${theme.query ? `&${theme.query}` : ""}`, "operator-1");
           await assertTextContrastAA(page.getByTestId("inbound-quick-view-error"), `${theme.name} ${viewport.width} detail-error`);
         }
@@ -1393,7 +1393,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Select a replayable (non-no-match) row — the matched :accept row has an enabled replay button
       const replayableRow = page
         .getByTestId("inbound-record-row")
-        .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+        .filter({ hasNot: page.locator(".badge-warning", { hasText: "Unrouted" }) })
         .first();
       // Replay lives in Full detail (behind "Open full detail"), not the Quick view.
       await selectInboundFull(page, replayableRow);
@@ -1480,8 +1480,16 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(mailablesPicker).toBeVisible();
       await expect(mailablesPicker).toHaveAttribute("data-picker-variant", "menu");
       await expect(menuTrigger).toBeVisible();
+      const menuLabel = page.getByTestId("preview-email-menu-label");
+      await expect(menuLabel).toHaveText("Email preview");
+      await expect(menuTrigger).not.toContainText("Email preview");
+      await expect(menuTrigger).toHaveAccessibleName(
+        /Email preview.*HappyMailer/
+      );
       await expect(menuTrigger.getByTestId("preview-email-menu-active-identity"))
-        .toContainText("MailglassAdmin.Fixtures.HappyMailer");
+        .toContainText("HappyMailer");
+      await expect(menuTrigger.getByTestId("preview-email-menu-active-identity"))
+        .not.toContainText("MailglassAdmin.Fixtures");
       await expect(menuTrigger).toContainText("welcome_default");
       await expect(menuTrigger).not.toContainText("2 emails");
       await expect(menuTrigger.locator(".hero-envelope")).toHaveCount(0);
@@ -1504,6 +1512,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         .getByTestId("preview-email-menu-group-label")
         .filter({ hasText: "HappyMailer" });
       await expect(operationsGroupLabel).toBeVisible();
+      await expect(operationsGroupLabel).toHaveAttribute("title", "MailglassAdmin.Fixtures.HappyMailer");
       await expect(operationsGroupLabel).toHaveClass(/text-label/);
       await expect(operationsGroupLabel).toHaveClass(/uppercase/);
       await expect(operationsGroupLabel).toHaveClass(/text-secondary/);
@@ -1536,6 +1545,21 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(
         mailablesPicker.locator("a[href*='MailglassAdmin.Fixtures.HappyMailer/welcome_default']")
       ).not.toHaveAttribute("href", /theme=/);
+    });
+
+    test("Preview: desktop email picker uses available width and shows a concise mailable name", async ({ page }) => {
+      await page.setViewportSize({ width: 2048, height: 1200 });
+      await openPreviewScenario(page);
+
+      const picker = page.getByTestId("preview-mailables-picker");
+      const identity = page.getByTestId("preview-email-menu-active-identity");
+      const bounds = await picker.boundingBox();
+
+      expect(bounds?.width).toBeGreaterThan(700);
+      expect(bounds?.width).toBeLessThanOrEqual(896);
+      await expect(identity).toContainText("HappyMailer");
+      await expect(identity).toContainText("welcome_default");
+      await expect(identity).not.toContainText("MailglassAdmin.Fixtures");
     });
 
     test("Preview: no-Mailables empty branch exposes setup action only", async ({ page }) => {
@@ -1597,6 +1621,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const frameWidth = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
       const previewPane = page.getByTestId("preview-pane");
       const frame = previewPane.locator("iframe");
+      const identity = page.getByTestId("preview-email-menu-active-identity");
+      await expect(identity).toHaveCSS("white-space", "nowrap");
+      await expect(page.getByText("Frame width", { exact: true })).toBeVisible();
+      await expect(page.getByText("Preview background", { exact: true })).toBeVisible();
       await expect(frameWidth.getByRole("button", { name: "375 CSS pixels", exact: true })).toBeVisible();
       await expect(frameWidth.getByRole("button", { name: "768 CSS pixels", exact: true })).toHaveAttribute("aria-pressed", "true");
 
@@ -1607,7 +1635,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(frame).toHaveAttribute("style", /width:\s*1024px/);
       await expect(page).toHaveURL(/width=1024/);
 
-      const limitation = page.getByText("Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior.", { exact: true });
+      const limitationHelp = page.getByRole("button", { name: "Help for preview background" });
+      const limitation = page.locator("#preview-backdrop-help-tooltip");
+      await expect(limitationHelp).toBeVisible();
+      await expect(limitation).toBeHidden();
+      await limitationHelp.click();
       await expect(limitation).toBeVisible();
       await page.getByTestId("preview-frame-theme-toggle").click();
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
@@ -1631,7 +1663,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.getByTestId("preview-email-menu-trigger").click();
       await page.getByTestId("preview-email-menu-option").filter({ hasText: longScenario }).click();
       const identity = page.getByTestId("preview-email-menu-active-identity");
-      await expect(identity).toContainText("MailglassAdmin.Fixtures.HappyMailer");
+      await expect(identity).toContainText("HappyMailer");
+      await expect(identity).not.toContainText("MailglassAdmin.Fixtures");
       await expect(identity).toContainText(longScenario);
 
       const widthGroup = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
@@ -2435,10 +2468,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         .filter({ hasText: "Deliveries" })
         .first();
       await expect(activeDesktop).toBeVisible();
-      await expect(activeDesktop).toHaveClass(/border-l-2/);
-      await expect(activeDesktop).toHaveClass(/border-primary/);
+      await expect(activeDesktop).toHaveClass(/mg-nav-current/);
+      await expect(activeDesktop.locator(".mg-nav-label")).toHaveCSS("text-decoration-line", "underline");
 
-      await expect(page.getByTestId("operator-result-count")).toContainText("6 deliveries");
+      await expect(page.getByTestId("operator-result-count")).toContainText("(6)");
       // Honest single-page boundary: 6 deliveries at 20/page is one page, so the
       // pagination control (rendered only when total_pages > 1) is absent. Multi-page
       // boundary behaviour is covered by the inbound pagination test below.
@@ -2496,14 +2529,14 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         .filter({ visible: true })
         .last();
       await expect(activeMobile).toBeVisible();
-      await expect(activeMobile).toHaveClass(/border-b-2/);
-      await expect(activeMobile).toHaveClass(/border-primary/);
+      await expect(activeMobile).toHaveClass(/mg-nav-current/);
+      await expect(activeMobile.locator(".mg-nav-label")).toHaveCSS("text-decoration-line", "underline");
 
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.getByTestId("operator-account-switcher").click();
       await page.screenshot({ path: path.join(reviewArtifacts, "account-options-1440.png"), fullPage: true });
 
-      await expect(page.getByTestId("inbound-result-count")).toContainText("9 messages");
+      await expect(page.getByTestId("inbound-result-count")).toContainText("(9)");
       // With per_page 20 (parity with Deliveries) the 9-record demo dataset fits on one
       // page, so no pagination chrome renders — the honest single-page state. The
       // multi-page prev/next path is covered by the inbound_live unit test (21-record fixture).

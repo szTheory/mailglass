@@ -347,7 +347,7 @@ defmodule MailglassAdmin.PreviewLive do
       <:page_header>
         <h1 class="text-heading font-bold tracking-tight text-base-content">Preview</h1>
         <p class="text-body text-secondary">
-          Inspect renderer HTML and plaintext, an illustrative raw preview, generated preview headers, and scenario assigns. This is not final provider or recipient output.
+          See how your emails look in HTML and plain text.
         </p>
       </:page_header>
 
@@ -477,7 +477,7 @@ defmodule MailglassAdmin.PreviewLive do
                   </button>
                 </div>
 
-                <header class="relative mg-layer-dropdown flex flex-col items-stretch gap-sm xl:flex-row xl:items-start xl:justify-between">
+                <header class="relative mg-layer-dropdown grid gap-md xl:grid-cols-2 xl:items-start">
                   <Sidebar.menu
                     mailables={@mailables}
                     current_mailable={@current_mailable}
@@ -488,30 +488,42 @@ defmodule MailglassAdmin.PreviewLive do
                   />
                   <div
                     data-testid="preview-header-controls"
-                    class="flex flex-wrap items-center justify-end gap-sm"
+                    class="flex min-w-0 flex-wrap items-start justify-start gap-md"
                   >
-                    <DeviceFrame.device_frame device_width={@device_width} />
-                    <button
-                      type="button"
-                      data-testid="preview-frame-theme-toggle"
-                      phx-click="toggle_preview_frame_theme"
-                      aria-pressed={if @preview_frame_dark_chrome, do: "true", else: "false"}
-                      aria-label={
-                        if @preview_frame_dark_chrome,
-                          do: "Switch the preview backdrop to light",
-                          else: "Switch the preview backdrop to dark"
-                      }
-                      class="mg-focus-ring btn btn-ghost btn-sm min-h-11 gap-xs px-sm"
-                    >
-                      <Components.icon
-                        name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}
-                        class="w-5 h-5"
-                      />
-                      <span class="text-label font-bold">Browser preview backdrop</span>
-                    </button>
-                    <p class="basis-full text-right text-label text-secondary">
-                      Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior.
-                    </p>
+                    <div class="grid min-w-0 content-start gap-xs">
+                      <p class="text-label font-bold text-base-content">Frame width</p>
+                      <DeviceFrame.device_frame device_width={@device_width} />
+                    </div>
+                    <div class="grid min-w-0 content-start gap-xs">
+                      <p class="text-label font-bold text-base-content">Preview background</p>
+                      <div class="flex items-center gap-xs">
+                        <button
+                          type="button"
+                          data-testid="preview-frame-theme-toggle"
+                          phx-click="toggle_preview_frame_theme"
+                          aria-pressed={if @preview_frame_dark_chrome, do: "true", else: "false"}
+                          aria-label={
+                            if @preview_frame_dark_chrome,
+                              do: "Switch the preview backdrop to light",
+                              else: "Switch the preview backdrop to dark"
+                          }
+                          class="mg-focus-ring btn btn-ghost btn-sm min-h-11 gap-xs px-sm"
+                        >
+                          <Components.icon
+                            name={if @preview_frame_dark_chrome, do: "hero-moon", else: "hero-sun"}
+                            class="w-5 h-5"
+                          />
+                          <span class="text-label font-bold">
+                            {if @preview_frame_dark_chrome, do: "Dark", else: "Light"}
+                          </span>
+                        </button>
+                        <Components.field_help
+                          id="preview-backdrop-help"
+                          label="preview background"
+                          text="Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior."
+                        />
+                      </div>
+                    </div>
                     <%!-- Backdrop state is announced in TEXT, never the backdrop color
                             alone (WCAG 1.4.1). The region is always present so the flip is
                             perceived in both directions (mirrors evidence_card.ex). --%>

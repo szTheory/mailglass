@@ -31,6 +31,11 @@ defmodule MailglassAdmin.Layouts do
     end
   end
 
+  defp favicon_url(assigns) do
+    mounted_asset_url(assigns, "favicon.svg") <>
+      "?v=" <> MailglassAdmin.Controllers.Assets.favicon_hash()
+  end
+
   # `:mount_path` is seeded on every admin socket by
   # `MailglassAdmin.MountPathHook` and flows into the root layout as a socket
   # assign — the only mount-aware value reliably available here as of

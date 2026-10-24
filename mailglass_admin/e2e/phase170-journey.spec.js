@@ -89,7 +89,7 @@ test.describe("Phase 170 connected", () => {
     const detail = page.getByTestId("inbound-detail-header");
     await expect(detail).toContainText(recordId);
     await expect(detail).toContainText("browser-tenant");
-    await expect(page.getByTestId("inbound-timeline-run").first()).toContainText("Fresh");
+    await expect(page.getByTestId("inbound-timeline-run").first()).toContainText("Initial processing");
     await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
     await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
     const reveal = page.getByTestId("inbound-evidence-reveal");
@@ -102,7 +102,7 @@ test.describe("Phase 170 connected", () => {
     await expect(reveal).toHaveAttribute("aria-expanded", "false");
 
     const snapshot = page.getByTestId("inbound-timeline-snapshot");
-    await expect(snapshot).toContainText("History snapshot through");
+    await expect(snapshot).toContainText("Updated");
     await expect(snapshot.locator("time")).toHaveAttribute("datetime", /Z$/);
     const beforeRuns = await page.getByTestId("inbound-timeline-run").count();
     await page.getByTestId("inbound-replay-open").click();
@@ -116,10 +116,10 @@ test.describe("Phase 170 connected", () => {
     const feedback = page.getByTestId("inbound-replay-feedback");
     await expect(feedback).toContainText(/Replay run recorded|Replay failed|Replay was already submitted/);
     await expect(modal).toHaveCount(0);
-    await expect(page.getByTestId("inbound-timeline-snapshot")).toContainText("History snapshot through");
+    await expect(page.getByTestId("inbound-timeline-snapshot")).toContainText("Updated");
     await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(beforeRuns);
     await page.getByRole("button", { name: "Refresh history" }).click();
-    await expect(page.getByTestId("inbound-timeline-snapshot")).toContainText("History snapshot through");
+    await expect(page.getByTestId("inbound-timeline-snapshot")).toContainText("Updated");
     await expect(page.getByTestId("inbound-timeline-run")).toHaveCount(beforeRuns + 1);
     await expect(page.getByTestId("inbound-timeline-run").last()).toContainText("Replay");
 
@@ -154,7 +154,7 @@ test.describe("Phase 170 connected", () => {
     const noMatchId = await noMatchOpen.getAttribute("phx-value-id");
     await noMatchOpen.click();
     await page.getByTestId("inbound-quick-view-full").click();
-    await expect(page.getByTestId("inbound-timeline-run").first()).toContainText("Fresh");
+    await expect(page.getByTestId("inbound-timeline-run").first()).toContainText("Initial processing");
     const simulation = page.getByTestId("inbound-routing-disclosure");
     await expect(simulation).toContainText("Current router simulation");
     await simulation.locator("summary").focus();

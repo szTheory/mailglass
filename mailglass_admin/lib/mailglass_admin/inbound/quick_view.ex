@@ -36,7 +36,8 @@ defmodule MailglassAdmin.Inbound.QuickView do
         tabindex="-1"
         data-testid="inbound-quick-view-scrim"
         class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 block"
-      ></.link>
+      >
+      </.link>
       <div
         id="inbound-quick-view"
         data-testid="inbound-quick-view"
@@ -56,15 +57,23 @@ defmodule MailglassAdmin.Inbound.QuickView do
         <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
 
         <div class="flex items-center justify-between gap-sm border-b border-base-300 pb-sm">
-          <h2 id="inbound-quick-view-title" class="text-heading font-bold text-base-content">
+          <h2 id="inbound-quick-view-title" class="text-body font-bold text-base-content">
             Quick view
           </h2>
           <div class="flex items-center gap-xs">
-            <.nav_button dir="prev" path={@previous_path} label="Previous inbound record">‹</.nav_button>
-            <span :if={@position} aria-live="polite" class="mono px-xs text-label text-secondary">
+            <.nav_button dir="prev" path={@previous_path} label="Previous inbound record">
+              <Components.icon name="hero-chevron-down" class="h-4 w-4 rotate-90" />
+            </.nav_button>
+            <span
+              :if={@position}
+              aria-live="polite"
+              class="px-xs text-label tabular-nums text-secondary"
+            >
               {@position.index} of {@position.total}
             </span>
-            <.nav_button dir="next" path={@next_path} label="Next inbound record">›</.nav_button>
+            <.nav_button dir="next" path={@next_path} label="Next inbound record">
+              <Components.icon name="hero-chevron-down" class="h-4 w-4 -rotate-90" />
+            </.nav_button>
             <.link
               id="inbound-quick-view-close"
               patch={@close_path}
@@ -97,36 +106,33 @@ defmodule MailglassAdmin.Inbound.QuickView do
               >
                 This inbound message is outside your current results.
               </p>
-              <div class="flex flex-wrap items-center gap-sm">
-                <h3 class="text-heading font-bold text-base-content">{subject(@record)}</h3>
-                <Components.status_badge status={
-                  Components.normalize_inbound_outcome(Map.get(@record, :outcome))
-                } />
-              </div>
-
-              <p class="text-body text-secondary">
-                Received: <Components.timestamp at={Map.get(@record, :received_at)} />
+              <Components.message_identity
+                heading_tag="h3"
+                subject={Map.get(@record, :subject)}
+                recipient={Map.get(@record, :envelope_recipient)}
+                status={Components.normalize_inbound_outcome(Map.get(@record, :outcome))}
+                context={:inbound}
+                id="inbound-quick-outcome"
+              />
+              <p class="text-label text-secondary">
+                Received <Components.timestamp at={Map.get(@record, :received_at)} />
               </p>
 
-              <dl class="grid gap-sm text-body text-secondary sm:grid-cols-2">
+              <dl class="grid min-w-0 gap-md text-body text-secondary sm:grid-cols-2 [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]">
                 <div>
-                  <dt class="text-label font-bold uppercase">Recipient</dt>
-                  <dd class="mt-xs truncate text-base-content">
-                    {Components.mask_recipient(Map.get(@record, :envelope_recipient))}
-                  </dd>
-                </div>
-                <div>
-                  <dt class="text-label font-bold uppercase">Provider</dt>
+                  <dt class="text-label font-bold">Provider</dt>
                   <dd class="mt-xs text-base-content">
                     {String.upcase(Map.get(@record, :provider) || "unknown")}
                   </dd>
                 </div>
-                <div :if={present?(Map.get(@record, :mailbox))}>
-                  <dt class="text-label font-bold uppercase">Mailbox</dt>
-                  <dd class="mt-xs text-base-content">{Map.get(@record, :mailbox)}</dd>
+                <div>
+                  <dt class="text-label font-bold">Mailbox</dt>
+                  <dd class="mt-xs">
+                    <Components.mailbox_identity record={@record} id="inbound-quick-mailbox" />
+                  </dd>
                 </div>
                 <div>
-                  <dt class="text-label font-bold uppercase">Account</dt>
+                  <dt class="text-label font-bold">Account</dt>
                   <dd
                     class="mt-xs text-base-content"
                     title={Accounts.title(Map.get(@record, :tenant_id), @account_labels)}
@@ -134,13 +140,15 @@ defmodule MailglassAdmin.Inbound.QuickView do
                     {Accounts.label(Map.get(@record, :tenant_id), @account_labels)}
                   </dd>
                 </div>
-                <div class="sm:col-span-2">
-                  <dt class="text-label font-bold uppercase">Record ID</dt>
-                  <dd class="mono mt-xs truncate text-base-content" title={Map.get(@record, :id)}>
-                    {Map.get(@record, :id)}
+              </dl>
+              <Components.technical_details collapsible={false} id="inbound-quick-technical">
+                <div>
+                  <dt class="text-label font-bold text-secondary">Record ID</dt>
+                  <dd class="mt-xs">
+                    <Components.copy_value value={Map.get(@record, :id)} label="Record ID" />
                   </dd>
                 </div>
-              </dl>
+              </Components.technical_details>
             </div>
         <% end %>
 
@@ -171,6 +179,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
       type="button"
       disabled
       aria-label={@label}
+      title={@label}
       data-testid={"inbound-quick-view-#{@dir}"}
       class="btn btn-ghost min-h-11 min-w-11 cursor-not-allowed opacity-40"
     >
@@ -185,21 +194,13 @@ defmodule MailglassAdmin.Inbound.QuickView do
       patch={@path}
       data-testid={"inbound-quick-view-#{@dir}"}
       aria-label={@label}
-      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11"
+      title={@label}
+      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 border border-base-300"
     >
       {render_slot(@inner_block)}
     </.link>
     """
   end
-
-  defp subject(record) do
-    case Map.get(record, :subject) do
-      value when is_binary(value) and value != "" -> value
-      _ -> "(no subject)"
-    end
-  end
-
-  defp present?(value), do: value not in [nil, ""]
 
   defp detail_error_copy(:package_unavailable),
     do: "Inbound support is unavailable. The selected record could not be checked."
