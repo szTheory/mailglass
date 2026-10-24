@@ -10,25 +10,23 @@
         margin: 0;
         background: #F8FBFD;
         color: #0D1B2A;
-        font-family: Arial, sans-serif;
+        font-family: Inter, system-ui, sans-serif;
         font-size: 16px;
         font-weight: 400;
-        line-height: 1.6;
+        line-height: 1.5;
       }
       main {
         width: 100%;
         max-width: 36rem;
         margin: 64px auto;
         padding: 24px;
-        background: #FFFFFF;
-        border: 1px solid #D9E5EC;
-        border-radius: 16px;
       }
       .brand {
-        margin: 0 0 12px;
+        margin: 0 0 16px;
         color: #5C6B7A;
-        font-size: 12px;
-        font-weight: 700;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.4;
         letter-spacing: .08em;
         text-transform: uppercase;
       }
@@ -40,7 +38,8 @@
         overflow-wrap: break-word;
         word-wrap: break-word;
       }
-      p { margin: 0 0 12px; overflow-wrap: break-word; word-wrap: break-word; }
+      .state-error h1 { color: #B42318; }
+      p { margin: 0 0 16px; overflow-wrap: break-word; word-wrap: break-word; }
       strong { font-weight: 700; }
       @media (max-width: 600px) {
         main { margin: 24px auto; padding: 16px; }
@@ -48,7 +47,7 @@
     </style>
   </head>
   <body>
-    <main>
+    <main class={if @state == :valid, do: "state-valid", else: "state-error"}>
       <p class="brand">Mailglass</p>
       <h1>
         <%= case @state do %>

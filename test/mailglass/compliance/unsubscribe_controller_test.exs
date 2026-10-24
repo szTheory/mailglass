@@ -138,8 +138,21 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert html =~ ~s(<meta charset="utf-8")
       assert html =~ ~s(<meta name="viewport")
       assert length(Regex.scan(~r/<h1\b/, html)) == 1
-      assert html =~ "You have not been unsubscribed. Visiting this page does not change your subscription."
-      assert html =~ "To unsubscribe, use your mail app's unsubscribe control when available, or contact the sender using the details in the message."
+      assert html =~ "font-family: Inter, system-ui, sans-serif;"
+      assert html =~ "font-size: 14px;"
+      assert html =~ "font-weight: 400;"
+      assert html =~ "margin: 0 0 16px;"
+      assert html =~ "p { margin: 0 0 16px;"
+      assert html =~ ~s(<main class="state-valid">)
+      refute html =~ "border-radius: 16px"
+      refute html =~ "border: 1px solid #D9E5EC"
+
+      assert html =~
+               "You have not been unsubscribed. Visiting this page does not change your subscription."
+
+      assert html =~
+               "To unsubscribe, use your mail app's unsubscribe control when available, or contact the sender using the details in the message."
+
       assert html =~ delivery.recipient
       refute html =~ "about to unsubscribe"
       refute html =~ "<form"
@@ -197,8 +210,14 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert html =~ ~s(<html lang="en">)
       assert html =~ ~s(<meta name="viewport")
       assert length(Regex.scan(~r/<h1\b/, html)) == 1
+      assert html =~ ~s(<main class="state-error">)
+      assert html =~ ".state-error h1"
+      assert html =~ "color: #B42318;"
       assert html =~ "This unsubscribe link has expired."
-      assert html =~ "Use your mail app's unsubscribe control when available, or contact the sender using the details in the message."
+
+      assert html =~
+               "Use your mail app's unsubscribe control when available, or contact the sender using the details in the message."
+
       refute html =~ token
       refute html =~ delivery.recipient
       refute html =~ delivery.id
@@ -213,8 +232,14 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert html =~ ~s(<html lang="en">)
       assert html =~ ~s(<meta name="viewport")
       assert length(Regex.scan(~r/<h1\b/, html)) == 1
+      assert html =~ ~s(<main class="state-error">)
+      assert html =~ ".state-error h1"
+      assert html =~ "color: #B42318;"
       assert html =~ "This unsubscribe link is not valid."
-      assert html =~ "Check the message for a current link, or contact the sender using the details in the message."
+
+      assert html =~
+               "Check the message for a current link, or contact the sender using the details in the message."
+
       refute html =~ "not-a-real-token"
       refute html =~ "You have not been unsubscribed"
       refute html =~ "<form"
