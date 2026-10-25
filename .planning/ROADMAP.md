@@ -304,7 +304,7 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 **Goal:** [Urgent work - to be planned] Close the v2.9 audit debt in `.planning/v2.9-MILESTONE-AUDIT.md`: (1) the demo `AdminAuth` grants `:destructive_action`, so outbound replay works in the demo, the dead `:replay_webhook` grant is removed, and a contract test asserts that the demo handles every action atom the library calls; (2) `:replay_inbound` and `:reveal_raw` are documented in `mailglass_admin/docs/api_stability.md`; (3) the advisory Demo Browser Evidence red at `demo.spec.js:130/:245` (iframe 373 > 320, run 40210111685) is diagnosed and fixed, and the lane is green on main.
 **Requirements**: TBD
 **Depends on:** Phase 173
-**Plans:** 3/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 **Wave 1**
@@ -315,7 +315,7 @@ Plans:
 - [x] 173.1-05-PLAN.md — Outbound replay success e2e in the demo (outbound-replay.spec.js) + demo seed fix if needed + owner todo 8/9 status (wave 2)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 173.1-03-PLAN.md — Non-bumping PR (owner-approved push) + Demo Browser Evidence green on 3 consecutive flake-free CI attempts (wave 3)
+- [x] 173.1-03-PLAN.md — Non-bumping PR (owner-approved push) + Demo Browser Evidence green on 3 consecutive flake-free CI attempts (wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 173.1-04-PLAN.md — Owner squash-merge + Demo Browser Evidence green on the main push run, no phantom release (wave 4)
+- [x] 173.1-04-PLAN.md — Owner squash-merge + Demo Browser Evidence green on the main push run, no phantom release (wave 4)

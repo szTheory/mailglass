@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
-current_phase: "173.1"
-current_phase_name: "Address tech debt: demo auth + browser evidence (INSERTED)"
-status: executing
-stopped_at: Inbound summary cleanup a17f0ee5 locally verified; prior full delivery proof is for 9b6e60e4; owner acceptance outstanding
-last_updated: "2026-10-25T18:47:51.883Z"
+current_phase: 173
+current_phase_name: Consistency and Delivery Evidence
+status: verifying
+stopped_at: Phase 173.1 complete, ready to verify Phase 173
+last_updated: "2026-10-25T21:23:12.666Z"
 last_activity: 2026-10-25
-last_activity_desc: Phase 173.1 execution started
-state_head: 7813215b1f9822567720f77a68b988566eb85605
+last_activity_desc: Phase 173.1 complete, transitioned to Phase 173
+state_head: 81a4860fe7894967f6c7c33ee308229e1a99a6c5
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 43
-  completed_plans: 38
-  percent: 71
+  completed_plans: 43
+  percent: 83
 ---
 
 # Project State
@@ -39,12 +39,12 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 ## Current Position
 
-Phase: 173.1 (Address tech debt: demo auth + browser evidence (INSERTED)) — EXECUTING
-Plan: 1 of 5
-Status: Executing Phase 173.1
-Last activity: 2026-10-25 — Phase 173.1 execution started
+Phase: 173 — Consistency and Delivery Evidence
+Plan: 8
+Status: Phase complete — ready for verification
+Last activity: 2026-10-25 — Phase 173.1 complete, transitioned to Phase 173
 
-Progress: 5/6 phases ([███████░░░] 71%); [████████████████████] 38/38 planned plans have summaries (100%); Phase 173 delivery remains incomplete
+Progress: 5/6 phases ([████████░░] 83%); [████████████████████] 38/38 planned plans have summaries (100%); Phase 173 delivery remains incomplete
 
 ## v2.9 Roadmap Shape
 
@@ -154,7 +154,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 **Velocity:**
 
-- Total plans completed: 104
+- Total plans completed: 109
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -172,6 +172,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 | 170 | 8 | - | - |
 | 171 | 4 | - | - |
 | 172 | 3 | - | - |
+| 173.1 | 5 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -559,7 +560,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 ## Session Continuity
 
 Last session: 2026-10-10T15:44:07Z
-Stopped at: User approved the exact candidate push and manual CI dispatch. Branch gsd/phase-173-delivery-8b4ce3e9 now points to 8b4ce3e9643dd1b6a64cc5c96213245bb284512a. CI run 38064299090 has a terminal failed CI Green aggregate. See 173-REMOTE-CI.md for the failures and repair route. Local evidence and review preview http://127.0.0.1:63769/dev/mail remain retained. Owner acceptance remains outstanding.
+Stopped at: Phase 173.1 complete, ready to verify Phase 173
 Resume file: .planning/phases/173-consistency-and-delivery-evidence/.continue-here.md
 
 ## Operator Next Steps
