@@ -25,7 +25,7 @@ const PRIMITIVE_VIEWPORTS = [
 ];
 
 const PRIMITIVE_STATES = {
-  nav_link: ["active", "inactive", "hover-ready", "focus-visible", "disabled", "long-label"],
+  nav_link: ["active", "inactive", "hover-ready", "focus-visible", "disabled"],
   nav_pill: ["active", "inactive", "hover-ready", "focus-visible", "disabled", "long-label"],
   tenant_chip: ["with-tenant", "no-tenant", "long-tenant", "non-ascii-tenant"],
   theme_picker: ["system-selected", "light-selected", "dark-selected", "hover-ready", "focus-visible", "disabled"],

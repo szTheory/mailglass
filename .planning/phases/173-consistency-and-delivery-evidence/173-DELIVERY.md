@@ -44,7 +44,7 @@ Use these review routes:
    text, raw, and header views.
 2. **Component inventory:** `/dev/mail/gallery` — browse the broad Admin Gallery
    and its representative states.
-3. **Curated component stories:** `/dev/storybook/primitives/nav_link?variation_id=long_label`
+3. **Curated component stories:** `/dev/storybook/primitives/nav_link?variation_id=active_light`
    — inspect the focused Storybook example using the same Admin CSS.
 4. **Outbound operations:** `/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar`
    — review delivery detail and replay investigation.

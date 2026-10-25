@@ -288,7 +288,7 @@ PY
     restore_candidate_demo_lock
     TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mailglass-phase173-probe.XXXXXX")"
     route_failure=false
-    for route in / /health /dev/mail /dev/mail/gallery /dev/storybook/primitives/nav_link?variation_id=long_label; do
+    for route in / /health /dev/mail /dev/mail/gallery /dev/storybook/primitives/nav_link?variation_id=active_light; do
       status="$(curl --silent --show-error --location --output "$TMP_DIR/route.html" --write-out '%{http_code}' --max-time 30 "$PREVIEW_URL$route" 2>/dev/null || true)"
       if [[ "$status" != 200 ]]; then
         route_failure=true
@@ -541,7 +541,7 @@ const record = {
   reviewProject,
   ports: { http: Number(httpPort) || null, database: Number(dbPort) || null },
   previewUrl: previewUrl ? `${previewUrl}/dev/mail` : null,
-  readiness: { status: previewStatus, routes: ["/", "/health", "/dev/mail", "/dev/mail/gallery", "/dev/storybook/primitives/nav_link?variation_id=long_label"] },
+  readiness: { status: previewStatus, routes: ["/", "/health", "/dev/mail", "/dev/mail/gallery", "/dev/storybook/primitives/nav_link?variation_id=active_light"] },
   assets: {
     source: { path: "mailglass_admin/assets/css/app.css", sha256: sourceCssSha256 || null },
     built: { path: "mailglass_admin/priv/static/app.css", sha256: builtCssSha256 || null },

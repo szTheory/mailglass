@@ -234,6 +234,10 @@ defmodule MailglassAdmin.Components do
 
   Disabled links are rendered as inert text with link semantics, `aria-disabled`,
   and no LiveView navigation attribute.
+
+  Keep labels short (one or two words). The label truncates as a layout safety
+  net only; there is no tooltip and no long-label state to maintain. A label
+  long enough to truncate should be shortened rather than accommodated.
   """
   @doc since: "1.8.0"
   def nav_link(%{disabled: true} = assigns) do
@@ -249,7 +253,7 @@ defmodule MailglassAdmin.Components do
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate">{@label}</span>
     </span>
     """
   end
@@ -267,7 +271,7 @@ defmodule MailglassAdmin.Components do
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate">{@label}</span>
     </.link>
     """
   end
@@ -285,7 +289,7 @@ defmodule MailglassAdmin.Components do
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate">{@label}</span>
     </.link>
     """
   end

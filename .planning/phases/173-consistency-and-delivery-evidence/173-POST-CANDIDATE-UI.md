@@ -46,3 +46,16 @@ candidate is the PR head after integration, and it needs its own CI and gate run
 
 Several subjects are not Conventional Commits. That does not matter for the squash-merged v2.9 PR,
 whose title alone feeds release-please.
+
+## Decision: nav_link has no long-label state (2026-10-25)
+
+Owner decision: sidebar nav labels are always short, and a label long enough to
+truncate is a naming smell to fix by shortening it, not a state to support. So
+`nav_link` keeps no `title` tooltip (restoring the owner's 20ed2d61 intent and
+reversing 941cac11), and the long-label specimen is removed from the Gallery,
+the curated Storybook, the unit test, and the structural/persona browser specs.
+The candidate gate and `173-DELIVERY.md` now review the Storybook route
+`nav_link?variation_id=active_light` instead. `truncate` stays as a layout
+safety net only. `nav_pill` (filter pills) is unchanged and keeps its tooltip
+and long-label specimen. The decision is also stated in the `nav_link` docs.
+Do not reintroduce a long-label nav_link state.

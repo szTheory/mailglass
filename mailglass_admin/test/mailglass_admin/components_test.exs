@@ -580,23 +580,6 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "mg-focus-ring"
     end
 
-    test "nav_link long-content state truncates with a title carrying the full label" do
-      label = "Deliveries with exceptionally long operator context"
-
-      html =
-        render_component(&Components.nav_link/1,
-          label: label,
-          icon: "hero-paper-airplane",
-          href: "/ops/mail"
-        )
-
-      # A truncated nav label keeps its full text available on hover via title
-      # (the same contract nav_pill uses); the visible text is the label itself.
-      assert html =~ label
-      assert html =~ ~s(title="#{label}")
-      assert html =~ "truncate"
-    end
-
     test "nav_link loading not applicable in Phase 110" do
       html =
         render_component(&Components.nav_link/1,

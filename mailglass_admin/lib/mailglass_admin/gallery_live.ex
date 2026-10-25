@@ -20,8 +20,11 @@ defmodule MailglassAdmin.GalleryLive do
   - flash (error, info, success, warning kinds)
   - badge (warning, stub)
   - status_badge (22 atoms + phantom nil)
-  - nav_link, nav_pill (active, inactive, hover-ready,
-    focus-visible, disabled, long-label)
+  - nav_link (active, inactive, hover-ready, focus-visible,
+    disabled); nav labels are short by convention, so there is
+    no long-label specimen
+  - nav_pill (active, inactive, hover-ready, focus-visible,
+    disabled, long-label)
   - tenant_chip (with-tenant, no-tenant, long-tenant,
     non-ascii-tenant)
   - theme_picker (system-selected, light-selected, dark-selected,
@@ -671,7 +674,8 @@ defmodule MailglassAdmin.GalleryLive do
     # phantom nil fallback — badge-outline
     {:status_badge, "phantom-nil", %{status: nil, size: :sm}},
 
-    # STATE-LD-06: nav_link — active, inactive, hover-ready, focus-visible, disabled, long-label
+    # STATE-LD-06: nav_link — active, inactive, hover-ready, focus-visible, disabled
+    # No long-label specimen: a nav label long enough to truncate should be shortened.
     # loading not applicable: nav_link is immediate navigation; disabled covers unavailable navigation.
     {:nav_link, "active",
      %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: true}},
@@ -682,13 +686,6 @@ defmodule MailglassAdmin.GalleryLive do
     {:nav_link, "focus-visible", %{label: "Preview", icon: "hero-eye", href: "#", active: false}},
     {:nav_link, "disabled",
      %{label: "Analytics unavailable", icon: "hero-chart-bar", href: "#", disabled: true}},
-    {:nav_link, "long-label",
-     %{
-       label: "Deliveries needing operator review before the account handoff",
-       icon: "hero-paper-airplane",
-       href: "#",
-       active: false
-     }},
 
     # STATE-LD-06: nav_pill — active, inactive, hover-ready, focus-visible, disabled, long-label
     # loading not applicable: nav_pill is immediate navigation; disabled covers unavailable navigation.

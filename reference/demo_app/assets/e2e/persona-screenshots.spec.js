@@ -198,17 +198,6 @@ test.describe("review surfaces", () => {
 
     const galleryNav = page.getByTestId("gallery-nav_link-active");
     await expect(galleryNav.getByRole("link", { name: "Deliveries" }).first()).toBeVisible();
-    await expect(page.getByTestId("gallery-nav_link-long-label")).toBeVisible();
-
-    const galleryLongLabel =
-      "Deliveries needing operator review before the account handoff";
-    const galleryLongText = page
-      .getByTestId("gallery-nav_link-long-label")
-      .getByText(galleryLongLabel, { exact: true })
-      .first();
-    await expect(galleryLongText).toBeVisible();
-    await expect(galleryLongText).toHaveAttribute("title", galleryLongLabel);
-
     const galleryDarkTheme = page
       .getByTestId("gallery-theme_picker-dark-selected")
       .locator('[data-theme="mailglass-dark"]');
@@ -216,34 +205,8 @@ test.describe("review surfaces", () => {
 
     const galleryCss = await adminCssPath(page);
     expect((await page.request.get(galleryCss)).status()).toBe(200);
-    const specimenGeometry = await page
-      .getByTestId("gallery-nav_link-long-label")
-      .evaluate((element) => {
-        const rect = element.getBoundingClientRect();
-        return {
-          viewportWidth: window.innerWidth,
-          right: Math.ceil(rect.right),
-          scrollWidth: element.scrollWidth,
-          clientWidth: element.clientWidth
-        };
-      });
-    expect(specimenGeometry.right, JSON.stringify(specimenGeometry)).toBeLessThanOrEqual(
-      specimenGeometry.viewportWidth + 1
-    );
-    expect(specimenGeometry.scrollWidth, JSON.stringify(specimenGeometry)).toBeLessThanOrEqual(
-      specimenGeometry.clientWidth + 1
-    );
-
-    await page.goto("/dev/storybook/primitives/nav_link?variation_id=long_label");
-    const storyLongText = await textInAnyFrame(
-      page,
-      "Operations and deliverability diagnostics overview",
-    );
-    await expect(storyLongText).toBeVisible();
-    await expect(storyLongText).toHaveAttribute(
-      "title",
-      "Operations and deliverability diagnostics overview"
-    );
+    await page.goto("/dev/storybook/primitives/nav_link?variation_id=active_light");
+    await expect(await textInAnyFrame(page, "Deliveries")).toBeVisible();
     const storybookCss = await adminCssPath(page);
     expect(storybookCss).toBe(galleryCss);
     expect((await page.request.get(storybookCss)).status()).toBe(200);
@@ -306,25 +269,17 @@ test.describe("working preview readiness", () => {
     const galleryCssPath = await adminCssPath(page);
     expect(galleryCssPath).toBe(previewCssPath);
 
-    const longLabel = "Deliveries needing operator review before the account handoff";
-    const longLabelLink = page.getByTestId("gallery-nav_link-long-label");
-    const longLabelText = longLabelLink.getByText(longLabel, { exact: true }).first();
-    await expect(longLabelText).toBeVisible();
-    await expect(longLabelText).toHaveAttribute("title", longLabel);
     const deliveriesLink = page.getByRole("link", { name: "Deliveries" }).first();
     await expect(deliveriesLink).toBeVisible();
     expect(await deliveriesLink.evaluate((element) => element.tabIndex)).toBeGreaterThanOrEqual(0);
 
     const storybookResponse = await page.goto(
-      "/dev/storybook/primitives/nav_link?variation_id=long_label"
+      "/dev/storybook/primitives/nav_link?variation_id=active_light"
     );
     expect(storybookResponse?.ok(), "Storybook review route must return a successful page").toBe(
       true
     );
-    const storyText = await textInAnyFrame(
-      page,
-      "Operations and deliverability diagnostics overview"
-    );
+    const storyText = await textInAnyFrame(page, "Deliveries");
     await expect(storyText).toBeVisible();
     const storybookCssPath = await adminCssPath(page);
     expect(storybookCssPath).toBe(previewCssPath);
@@ -347,7 +302,7 @@ test.describe("working preview readiness", () => {
         routes: [
           "/dev/mail",
           "/dev/mail/gallery",
-          "/dev/storybook/primitives/nav_link?variation_id=long_label"
+          "/dev/storybook/primitives/nav_link?variation_id=active_light"
         ],
         adminCss: {
           source: { path: "mailglass_admin/assets/css/app.css", sha256: sourceCssSha256 },
