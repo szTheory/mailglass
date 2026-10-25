@@ -298,3 +298,24 @@ All **28/28** approved v2.9 requirements have exactly one owning phase: 8 shared
 | 171. Developer Preview | 4/4 | Complete    | 2026-10-09 |
 | 172. Recipient Output and Built-in Pages | 3/3 | Complete    | 2026-10-09 |
 | 173. Consistency and Delivery Evidence | 8/8 | In Progress | — |
+
+### Phase 173.1: Address tech debt: demo auth + browser evidence (INSERTED)
+
+**Goal:** [Urgent work - to be planned] Close the v2.9 audit debt in `.planning/v2.9-MILESTONE-AUDIT.md`: (1) the demo `AdminAuth` grants `:destructive_action`, so outbound replay works in the demo, the dead `:replay_webhook` grant is removed, and a contract test asserts that the demo handles every action atom the library calls; (2) `:replay_inbound` and `:reveal_raw` are documented in `mailglass_admin/docs/api_stability.md`; (3) the advisory Demo Browser Evidence red at `demo.spec.js:130/:245` (iframe 373 > 320, run 40210111685) is diagnosed and fixed, and the lane is green on main.
+**Requirements**: TBD
+**Depends on:** Phase 173
+**Plans:** 5 plans
+
+Plans:
+**Wave 1**
+- [ ] 173.1-01-PLAN.md — Demo AdminAuth grants :destructive_action (dead grant removed) + admin-lane auth-actions contract test + :replay_inbound/:reveal_raw documented (wave 1)
+- [ ] 173.1-02-PLAN.md — demo.spec.js waits for LiveView connect before iframe mutation (render_nonce race); 8x repeat proof; reload-flicker backlog todo (wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 173.1-05-PLAN.md — Outbound replay success e2e in the demo (outbound-replay.spec.js) + demo seed fix if needed + owner todo 8/9 status (wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 173.1-03-PLAN.md — Non-bumping PR (owner-approved push) + Demo Browser Evidence green on 3 consecutive flake-free CI attempts (wave 3)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 173.1-04-PLAN.md — Owner squash-merge + Demo Browser Evidence green on the main push run, no phantom release (wave 4)

@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
-current_phase: 173
-current_phase_name: Consistency and Delivery Evidence
+current_phase: "173.1"
+current_phase_name: "Address tech debt: demo auth + browser evidence"
 status: verifying
 stopped_at: Inbound summary cleanup a17f0ee5 locally verified; prior full delivery proof is for 9b6e60e4; owner acceptance outstanding
-last_updated: "2026-10-10T19:06:54Z"
+last_updated: "2026-10-25T18:40:47.201Z"
 last_activity: 2026-10-10
 last_activity_desc: Removed repeated summary filter context and locally committed as a17f0ee5; 621 admin tests and 9 browser checks pass; current UI review at port 55483; prior 9b6e60e4 delivery evidence retained
-state_head: 4a219c42c6ba075a534d9860535ff37acd4e0ad8
+state_head: 5654e40bb65e3ad3a09fd81412b9962a15df1adc
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 5
-  total_plans: 38
+  total_plans: 43
   completed_plans: 38
-  percent: 83
+  percent: 71
 ---
 
 # Project State
@@ -39,12 +39,12 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 ## Current Position
 
-Phase: 173 (Consistency and Delivery Evidence) — VERIFYING
+Phase: 173.1 (Address tech debt: demo auth + browser evidence) — READY TO EXECUTE
 Plan: 8 of 8
 Status: Inbound summary cleanup a17f0ee5 is locally committed and verified (621 admin tests, 9 browser checks), ready for review at port 55483. It has not been pushed or given fresh remote CI/full delivery-gate evidence. The previous 9b6e60e4 candidate passed all local delivery predicates and all 26 exact-SHA CI jobs; its retained record and port 59905 preview remain unchanged. Authenticated owner acceptance remains unverified. Last formal goal-verification report: 24/27 (historical, not re-scored). Current UI follow-up: `173-INBOUND-REFINEMENT.md`; prior exact-SHA delivery proof: `173-DELIVERY-CHECKS.md`.
 Last activity: 2026-10-10 — Removed repeated summary context after polishing the filters and collection on http://127.0.0.1:55483/ops/mail/inbound?tenant_id=northstar; retained the previous full delivery preview at http://127.0.0.1:59905/dev/mail.
 
-Progress: 5/6 phases ([████████░░] 83%); [████████████████████] 38/38 planned plans have summaries (100%); Phase 173 delivery remains incomplete
+Progress: 5/6 phases ([███████░░░] 71%); [████████████████████] 38/38 planned plans have summaries (100%); Phase 173 delivery remains incomplete
 
 ## v2.9 Roadmap Shape
 
@@ -298,6 +298,7 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 - Phase 165 added: Reconcile terminal proof and milestone archive ordering
 - Phase 167.1 inserted after Phase 167: Close gap: CTRL-02/CTRL-03 — proposal control cannot produce evidence when should_run=false (URGENT)
+- Phase 173.1 inserted after Phase 173: Address tech debt: demo auth + browser evidence (from v2.9-MILESTONE-AUDIT.md) (URGENT)
 
 ### Decisions
 
