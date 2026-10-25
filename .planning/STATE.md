@@ -3,13 +3,13 @@ gsd_state_version: "1.0"
 milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
 current_phase: "173.1"
-current_phase_name: "Address tech debt: demo auth + browser evidence"
-status: verifying
+current_phase_name: "Address tech debt: demo auth + browser evidence (INSERTED)"
+status: executing
 stopped_at: Inbound summary cleanup a17f0ee5 locally verified; prior full delivery proof is for 9b6e60e4; owner acceptance outstanding
-last_updated: "2026-10-25T18:40:47.201Z"
-last_activity: 2026-10-10
-last_activity_desc: Removed repeated summary filter context and locally committed as a17f0ee5; 621 admin tests and 9 browser checks pass; current UI review at port 55483; prior 9b6e60e4 delivery evidence retained
-state_head: 5654e40bb65e3ad3a09fd81412b9962a15df1adc
+last_updated: "2026-10-25T18:47:51.883Z"
+last_activity: 2026-10-25
+last_activity_desc: Phase 173.1 execution started
+state_head: 7813215b1f9822567720f77a68b988566eb85605
 progress:
   total_phases: 7
   completed_phases: 5
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 173 — Consistency and Delivery Evidence
+**Current focus:** Phase 173.1 — Address tech debt: demo auth + browser evidence (INSERTED)
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,10 +39,10 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 ## Current Position
 
-Phase: 173.1 (Address tech debt: demo auth + browser evidence) — READY TO EXECUTE
-Plan: 8 of 8
-Status: Inbound summary cleanup a17f0ee5 is locally committed and verified (621 admin tests, 9 browser checks), ready for review at port 55483. It has not been pushed or given fresh remote CI/full delivery-gate evidence. The previous 9b6e60e4 candidate passed all local delivery predicates and all 26 exact-SHA CI jobs; its retained record and port 59905 preview remain unchanged. Authenticated owner acceptance remains unverified. Last formal goal-verification report: 24/27 (historical, not re-scored). Current UI follow-up: `173-INBOUND-REFINEMENT.md`; prior exact-SHA delivery proof: `173-DELIVERY-CHECKS.md`.
-Last activity: 2026-10-10 — Removed repeated summary context after polishing the filters and collection on http://127.0.0.1:55483/ops/mail/inbound?tenant_id=northstar; retained the previous full delivery preview at http://127.0.0.1:59905/dev/mail.
+Phase: 173.1 (Address tech debt: demo auth + browser evidence (INSERTED)) — EXECUTING
+Plan: 1 of 5
+Status: Executing Phase 173.1
+Last activity: 2026-10-25 — Phase 173.1 execution started
 
 Progress: 5/6 phases ([███████░░░] 71%); [████████████████████] 38/38 planned plans have summaries (100%); Phase 173 delivery remains incomplete
 
