@@ -24,6 +24,9 @@ defmodule MailglassAdmin.AuthActionsContractTest do
   @known_actions [:destructive_action, :operator_access, :replay_inbound, :reveal_raw]
 
   @call_site ~r/(?<![A-Za-z0-9_])Auth\.authorize\(\s*[^,]+,\s*:([a-z_]+)/
+  # Deliberately looser than @call_site: any `Auth.authorize(` mention, including
+  # piped, variable-action, or multi-arg-expression shapes the strict scan skips.
+  @any_call ~r/(?<![A-Za-z0-9_])Auth\.authorize\(/
 
   setup_all do
     mod = Module.concat(["MailglassDemoWeb", "AdminAuth"])
@@ -35,17 +38,41 @@ defmodule MailglassAdmin.AuthActionsContractTest do
     {:ok, demo_auth: mod}
   end
 
-  defp called_actions do
+  defp lib_sources do
     @lib_dir
     |> Path.join("**/*.ex")
     |> Path.wildcard()
-    |> Enum.flat_map(fn path ->
+    |> Enum.map(&{&1, File.read!(&1)})
+  end
+
+  # Names stay strings until compared: a brand-new action's atom may not exist
+  # yet (modules load lazily), and `String.to_existing_atom/1` would raise an
+  # opaque ArgumentError instead of reaching the "update @known_actions" message.
+  defp called_actions do
+    lib_sources()
+    |> Enum.flat_map(fn {_path, src} ->
       @call_site
-      |> Regex.scan(File.read!(path), capture: :all_but_first)
-      |> Enum.map(fn [name] -> String.to_existing_atom(name) end)
+      |> Regex.scan(src, capture: :all_but_first)
+      |> Enum.map(fn [name] -> name end)
     end)
     |> Enum.uniq()
     |> Enum.sort()
+  end
+
+  defp known_action_names, do: @known_actions |> Enum.map(&Atom.to_string/1) |> Enum.sort()
+
+  test "every Auth.authorize call site is matched by the action scan" do
+    total = Enum.sum(for {_path, src} <- lib_sources(), do: length(Regex.scan(@any_call, src)))
+
+    matched =
+      Enum.sum(for {_path, src} <- lib_sources(), do: length(Regex.scan(@call_site, src)))
+
+    assert total > 0, "no Auth.authorize call sites found at all"
+
+    assert matched == total,
+           "#{total - matched} Auth.authorize call site(s) use a shape the action scan " <>
+             "cannot read (piped, variable action, or nested args); use a literal atom " <>
+             "action or extend @call_site"
   end
 
   test "scan finds the library's authorize call sites" do
@@ -53,12 +80,14 @@ defmodule MailglassAdmin.AuthActionsContractTest do
 
     refute actions == [], "call-site scan matched nothing: #{inspect(actions)}"
 
-    assert actions == @known_actions,
-           "call-site scan returned #{inspect(actions)}, expected #{inspect(@known_actions)}"
+    assert actions == known_action_names(),
+           "call-site scan returned #{inspect(actions)}, expected #{inspect(known_action_names())}; " <>
+             "update @known_actions, the demo adapter, and docs/api_stability.md together"
   end
 
   test "demo AdminAuth grants every action the library calls", %{demo_auth: mod} do
-    for action <- called_actions() do
+    for name <- called_actions() do
+      action = String.to_atom(name)
       result = mod.authorize(action, %{actor: %{subject_id: "operator-1"}})
 
       assert match?({:ok, _}, result),
@@ -89,8 +118,8 @@ defmodule MailglassAdmin.AuthActionsContractTest do
     assert block != "" and block =~ ":operator_access",
            "api_stability.md Auth seam Stable promise block not found"
 
-    for action <- called_actions() do
-      assert block =~ inspect(action), "api_stability.md does not document #{inspect(action)}"
+    for name <- called_actions() do
+      assert block =~ ":" <> name, "api_stability.md does not document :#{name}"
     end
   end
 end
