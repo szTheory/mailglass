@@ -1,0 +1,38 @@
+---
+created: 2026-10-25
+source: owner review of the PR #302 candidate (4ed3ada1), demo preview
+priority: follow-up PR right after #302 merges ("owner review fixes"); taste items go to SEED-009
+---
+
+# Owner review feedback on the PR #302 candidate
+
+## Praised (keep, do not regress)
+- **Email preview (/dev/mail)** is "one of the strongest parts of the UI". The owner is happy with it overall.
+- **Health overview "Needs attention":** the items are specific and deep-link to where you can act. See 2026-10-25-health-overview-layout-owner-feedback.md.
+
+## Change
+1. **Auto-apply filters** on Deliveries and Inbound: no Apply button. Use LiveView `phx-change`, debouncing text inputs, and keep the URL params as the source of truth. This activates the dormant seeds SEED-261010-gad (operator live filters) and SEED-261010-hjp (inbound auto-apply plus search-as-you-type).
+2. **Replay from the quick view (side pane).** Today "Review webhook replay" exists only in Full detail (`MailglassAdmin.Operator.ReplayAction`), and the quick view has no replay entry, so the owner could not find it. Replay is a common action, so add a quick-view entry point that opens the same ReplayModal. Same for the inbound quick view.
+3. **Unmask addresses in inbound.** Inbound detail shows `From v*****@p*******.example`, which is not useful to an operator. Outbound was unmasked in PR #129 (memory: "unmask recipient/sender everywhere, retires mask_recipient/1"), but inbound still calls `Components.mask_recipient/1` (`inbound/detail_header.ex:138`, `inbound/routing_trace.ex:239`) and `mask_value` (`routing_trace.ex:247`). Finish the retirement. Telemetry stays PII-free; this is display only.
+4. **Show "Technical details" on the full detail page** instead of collapsing it in a `<details>`. On full detail the operator wants it. Keep it visually segregated and grouped below the primary info. Collapsing may still make sense in the quick view.
+5. **The "Raw provider source" evidence card is visually messy:** see the screenshot of the inbound full detail at `/ops/mail/inbound?full=1&inbound_id=01a1736b-f9d9-78d7-a253-aef9dd817800&tenant_id=northstar`. The "Raw source locked" badge, the "Reveal raw source" heading and "May contain personal information" float ragged at the top right. Provider, Payload size and Header count are spread across three far-apart columns. "Verification facts" mixes label sizes ("Provider authentication" small, "Unavailable" large), and the help line floats at the bottom. Fix the hierarchy, alignment and proximity: one header row (title on the left, a reveal control with its PII note grouped on the right), a compact key/value grid, consistent label and value type roles.
+
+6. **Don't offer replay when it is unavailable.** On a delivery with no exact webhook linkage, e.g. the northstar payment_failed bounce `01a1736b-f9b3-7c30-949b-46639d98d1af`, the card still shows a primary "Review webhook replay" button, and the modal opens only to say "Replay unavailable". The owner hit this. Make the unavailable state visible on the card itself, with no dead-end primary button and plainer copy about why. Check the demo seeds too: the review runbook should point at a replayable delivery (usage_alert bounce `01a1736b-f9b5-7eb9-a8f9-0b72be90104f` is "ready").
+
+7. **The replay modal is busy and overwhelming. Redesign it.** Owner points:
+   - The description ("Replay reprocesses the full stored request through current normalization. It may add Events or update Delivery and suppression records for multiple Deliveries in this Account. It does not resend outbound mail or prove provider receipt.") is too verbose and internal. Rewrite it in plain, user-facing language: one short sentence on what happens, plus "This won't resend the email." Use the ux-writing skill.
+   - "Close replay review" should be an **X icon button** (with aria-label "Close"), the modal convention. **Standardize one modal component** across operator and inbound: X close, Escape, focus trap, primary action bottom-right. Deviate only where behaviour truly differs.
+   - "Selected target" is an odd term for a webhook replay. Use user-facing language (e.g. "Webhook to replay"). The difference between "Selected target" and "Reviewed request" is unclear to the owner. Merge them or explain them in one block: which stored webhook, received when, from which provider.
+   - "Confirm replay" should be more action-oriented (e.g. "Replay webhook").
+8. **The confirm flow is broken or confusing.** The owner clicked "Confirm replay" on the usage_alert bounce (`01a1736b-f9b5-7eb9-a8f9-0b72be90104f`). The modal visibly closed and reopened, then "Confirm replay" was greyed out, with no toast, and Cancel was still shown.
+   - Hypothesis from the code (`operator_live.ex` `handle_event("confirm_replay")`, ~line 541): the catch-all `{:error, reason}` branch re-runs `assign_delivery_state`, which re-renders the modal (the close/reopen flicker). It leaves the modal open with `replay_review_consumed?: true` (the disabled button), and the error goes to a flash that is likely hidden behind the overlay. No new event was written for that delivery afterwards, so execution failed before `Replay.execute` appended anything. Even when replay is "ready", the demo seed's linkage may not actually execute (its prior replay shows `webhook_replay_failed` / `webhook_event_not_found`).
+   - Expected behaviour: on success, close the modal and show a toast ("Webhook replayed"), with the card updated. On failure, keep the modal open with an inline error inside it, re-enable or explain the retry, and never show a dead Cancel/disabled pair. Fix the seed so "ready" really replays successfully, and add an e2e that clicks Confirm and asserts the toast and the new event.
+
+9. **Root cause of #8, diagnosed 2026-10-25.** A headless reproduction against the review preview clicked Confirm on `01a1736b-f9b5-7eb9-a8f9-0b72be90104f`. The hidden flash said **"This action is not authorized."**
+   - **Cause:** `MailglassAdmin.Operator.DestructiveAction` authorizes with the documented, stable action `:destructive_action` (`auth.ex:33`, `docs/api_stability.md:101`, `docs/operator-trust.md`). The demo's `MailglassDemoWeb.AdminAuth` only grants `:replay_webhook`, an action name the library never uses, so it falls through to its catch-all denial. **Outbound replay has never worked in the demo.** The library contract is correct; the demo adapter is stale.
+   - **Demo fix:** grant `:destructive_action` in `reference/demo_app/lib/mailglass_demo_web/admin_auth.ex` (keep `:replay_inbound`, which inbound uses). Add a demo e2e that confirms a replay and asserts success.
+   - **Library UX defects exposed:** on the auth-denied and other error branches the modal stays open, the review is consumed (Confirm is disabled), and the error goes to a page flash hidden behind the overlay. Render the error inside the modal, explain whether a retry is possible, and stop the re-render flicker from `assign_delivery_state` in the catch-all branch.
+   - **Guard:** consider a doc or contract test that the reference apps' Auth adapters handle every action the library calls (`:operator_access`, `:destructive_action`, `:replay_inbound`, `:reveal_raw`), so a stale adapter cannot silently disable a feature again.
+
+## Answered (no change)
+- `/dev/unsubscribe/:state` is a dev preview of the web page mailglass serves to an email's RECIPIENT when they click the unsubscribe link (RFC 8058 List-Unsubscribe). Its three states are valid, invalid and expired. Consider labelling it clearly in the demo index.
