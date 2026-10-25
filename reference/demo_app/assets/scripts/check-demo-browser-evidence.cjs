@@ -86,6 +86,25 @@ function collectTests(suites, acc = []) {
   return acc;
 }
 
+function summarizeTestOutcomes(tests) {
+  const counts = { expected: 0, unexpected: 0, flaky: 0, skipped: 0 };
+  const flaky = new Set();
+  const passed = new Set();
+  for (const test of tests) {
+    const outcome = test.outcome === "passed" ? "expected" : test.outcome;
+    // An unrecognised status must never read as clean.
+    const key = Object.prototype.hasOwnProperty.call(counts, outcome) ? outcome : "unexpected";
+    counts[key] += 1;
+    if (key === "flaky") flaky.add(test.title);
+    if (key === "expected") passed.add(test.title);
+  }
+  return {
+    counts,
+    flaky_titles: [...flaky].sort(),
+    passed_titles: [...passed].sort()
+  };
+}
+
 function safeCapturePath(root, relativePath) {
   if (typeof relativePath !== "string" || relativePath.length === 0) {
     throw new Error("capture path is missing");
@@ -294,6 +313,7 @@ function createCheckpoint({
     browser: "per-capture identified browser",
     before_after: "six pinned baseline pairs",
     source_build_served_identity: "validated per capture",
+    test_outcomes: summarizeTestOutcomes(tests),
     captures: captures.map((capture) => ({
       id: capture.id,
       test_title: capture.test_title,
