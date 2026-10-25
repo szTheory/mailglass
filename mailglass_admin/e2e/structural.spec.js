@@ -2239,6 +2239,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("gallery certifies filter_field, filter_section, and migrated filters_form states", async ({
       page
     }) => {
+      // Viewport × theme × state matrix; ran 25.7s of the default 30s on CI before
+      // the v2.9 polish and now exceeds it. Same budget as the other matrix proofs.
+      test.setTimeout(60_000);
       await openGallery(page);
       await expect(page.locator('[data-testid^="gallery-flash-"] .toast')).toHaveCount(0);
 

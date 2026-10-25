@@ -332,10 +332,14 @@ test.describe("working preview readiness", () => {
     expect(storybookCssResponse.status()).toBe(200);
     expect(sha256(await storybookCssResponse.body())).toBe(builtCssSha256);
 
-    const candidateSha = execFileSync("git", ["rev-parse", "HEAD"], {
-      cwd: repoRoot,
-      encoding: "utf8"
-    }).trim();
+    // The evidence wrapper exports the candidate revision; inside its container the
+    // bind-mounted repo belongs to another uid, so git refuses it as dubious ownership.
+    const candidateSha =
+      process.env.DEMO_CANDIDATE_REVISION ||
+      execFileSync("git", ["rev-parse", "HEAD"], {
+        cwd: repoRoot,
+        encoding: "utf8"
+      }).trim();
     console.log(
       JSON.stringify({
         event: "working-preview-readiness",
