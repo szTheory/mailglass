@@ -101,6 +101,9 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     await page.goto(
       `/ops/mail?tenant_id=fjordline-aps&delivery_id=${deliveryId}&full=1`
     );
+    // The socket join patches the DOM from the server render, which drops a
+    // client-set <details open>; toggle the disclosure only after connect.
+    await page.locator("[data-phx-main].phx-connected").waitFor();
 
     const detail = page.getByTestId("operator-detail-header");
     await expect(detail).toBeVisible();
