@@ -1,8 +1,8 @@
 ---
 phase: 173-consistency-and-delivery-evidence
 verified: 2026-10-10T13:58:01Z
-status: gaps_found
-score: 24/27 must-haves verified
+status: passed
+score: 27/27 must-haves verified (3 by owner-accepted override)
 covered_files:
   - .github/workflows/ci.yml
   - .planning/phases/173-consistency-and-delivery-evidence/173-01-PLAN.md
@@ -54,7 +54,20 @@ covered_files:
   - scripts/test_run_demo_browser_evidence.sh
 covered_digest: "v3:sha256:b46d3260fc8a5e6ca99e3cad461e80bcb69a2d98cd5aa8717c9dd0b0b8b49325"
 behavior_unverified: 0
-overrides_applied: 0
+overrides_applied: 3
+overrides:
+  - must_have: "Roadmap SC3: The owner can review the completed milestone from a documented working candidate with required CI, committed acceptance inputs, current assets, and explicit resource disposition."
+    reason: "Final candidate 4ed3ada16dc7aeb4aee912658141de31abd68c23 (PR #302 head): required CI run 40199863646 passed with headSha 4ed3ada1 (CI Green, 34 pass / 0 fail); scripts/check_phase173_candidate.sh ran the full gate on that exact SHA (clean detached candidate, demo browser evidence, six PNG pairs and byte hashes passed; preview http://127.0.0.1:63130/dev/mail) and its only failure was the by-design owner-acceptance predicate. The owner reviewed the preview and stated verbatim: 'accepted for 4ed3ada1'. The 4994442105/a7fd4843 SHAs named in the gaps are superseded by this candidate."
+    accepted_by: szTheory
+    accepted_at: 2026-10-25
+  - must_have: "UIQ-03/D-08: Required CI Green passes for the exact final committed delivery candidate, separately from advisory browser/capture jobs."
+    reason: "Final candidate 4ed3ada16dc7aeb4aee912658141de31abd68c23 (PR #302 head): required CI run 40199863646 passed with headSha 4ed3ada1 (CI Green, 34 pass / 0 fail); scripts/check_phase173_candidate.sh ran the full gate on that exact SHA (clean detached candidate, demo browser evidence, six PNG pairs and byte hashes passed; preview http://127.0.0.1:63130/dev/mail) and its only failure was the by-design owner-acceptance predicate. The owner reviewed the preview and stated verbatim: 'accepted for 4ed3ada1'. The 4994442105/a7fd4843 SHAs named in the gaps are superseded by this candidate."
+    accepted_by: szTheory
+    accepted_at: 2026-10-25
+  - must_have: "UIQ-03/D-05/D-10: The live full candidate delivery gate passes its required local, evidence, owner-acceptance, and exact-SHA CI predicates."
+    reason: "Final candidate 4ed3ada16dc7aeb4aee912658141de31abd68c23 (PR #302 head): required CI run 40199863646 passed with headSha 4ed3ada1 (CI Green, 34 pass / 0 fail); scripts/check_phase173_candidate.sh ran the full gate on that exact SHA (clean detached candidate, demo browser evidence, six PNG pairs and byte hashes passed; preview http://127.0.0.1:63130/dev/mail) and its only failure was the by-design owner-acceptance predicate. The owner reviewed the preview and stated verbatim: 'accepted for 4ed3ada1'. The 4994442105/a7fd4843 SHAs named in the gaps are superseded by this candidate."
+    accepted_by: szTheory
+    accepted_at: 2026-10-25
 re_verification:
   previous_status: gaps_found
   previous_score: 24/27
@@ -299,3 +312,11 @@ UIQ-01 and UIQ-02 remain supported by current source inspection and the phase-ow
 
 _Verified: 2026-10-10T13:58:01Z_
 _Verifier: the agent (gsd-verifier)_
+
+## Owner acceptance (2026-10-25)
+
+The owner reviewed the retained preview of final candidate `4ed3ada16dc7aeb4aee912658141de31abd68c23` and wrote, verbatim: **"accepted for 4ed3ada1"**. Supporting evidence for that exact SHA:
+- **Required CI:** run 40199863646, CI Green, 34 pass / 0 fail.
+- **Full candidate gate:** clean candidate, demo browser evidence, and six PNG pairs passed. Its only failure was the by-design owner-acceptance predicate, now satisfied.
+
+The three remaining gaps are closed by recorded overrides. Review feedback raised during acceptance is non-blocking and is tracked for the follow-up in `.planning/todos/2026-10-25-owner-review-pr302-ui-feedback.md` and `2026-10-25-health-overview-layout-owner-feedback.md`. The most notable item: outbound replay is denied in the demo by a stale demo auth adapter (`:replay_webhook` vs the documented `:destructive_action`), while the library contract is correct.
