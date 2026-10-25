@@ -10,6 +10,7 @@ defmodule MailglassInbound.Mailbox do
 
   - `:accept`
   - `:ignore`
+  - `:no_change` when the mailbox explicitly confirms it made no mutation
   - `{:reject, reason}`
   - `{:bounce, reason}`
 
@@ -20,7 +21,12 @@ defmodule MailglassInbound.Mailbox do
   alias MailglassInbound.InboundMessage
 
   @type outcome_reason :: term()
-  @type outcome :: :accept | :ignore | {:reject, outcome_reason()} | {:bounce, outcome_reason()}
+  @type outcome ::
+          :accept
+          | :ignore
+          | :no_change
+          | {:reject, outcome_reason()}
+          | {:bounce, outcome_reason()}
 
   @doc since: "0.1.0"
   @callback process(InboundMessage.t()) :: outcome()
@@ -28,6 +34,7 @@ defmodule MailglassInbound.Mailbox do
   @spec valid_outcome?(term()) :: boolean()
   def valid_outcome?(:accept), do: true
   def valid_outcome?(:ignore), do: true
+  def valid_outcome?(:no_change), do: true
   def valid_outcome?({:reject, _reason}), do: true
   def valid_outcome?({:bounce, _reason}), do: true
   def valid_outcome?(_outcome), do: false

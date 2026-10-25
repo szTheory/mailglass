@@ -1,0 +1,1 @@
+No external API integration: Phase 170 refines existing internal Mailglass inbound/Admin read and replay seams and adds one Mailbox callback outcome; references to API stability describe the project's own adopter contract.

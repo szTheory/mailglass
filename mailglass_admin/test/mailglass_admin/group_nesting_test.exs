@@ -45,10 +45,10 @@ defmodule MailglassAdmin.GroupNestingTest do
       assert max_elevation_depth(html) <= 2
     end
 
-    # The composed_* specimens above carry zero counts, so the three Tier-1
+    # The composed_* specimens above carry zero counts, so the populated Tier-1
     # `bg-base-100` insets inside `support_cards` are gated off by `:if={count > 0}`
-    # and never render — the data-free proof only measures depth 1. This populated
-    # render forces all three insets present so the regression guard actually
+    # do not all render. This populated render forces all four evidence insets
+    # present so the regression guard actually
     # exercises the section(bg-base-200) -> inset(bg-base-100) nesting the
     # box-prison fix governs (GROUP-02 / D-07).
     test "support-cards group nests exactly 2 elevation surfaces with insets populated" do
@@ -68,10 +68,14 @@ defmodule MailglassAdmin.GroupNestingTest do
           suppression_count: 7
         })
 
-      # The three Tier-1 insets must actually render in the populated state
+      # All four Tier-1 evidence insets must render in the populated state
       # (parse top-down like `max_elevation_depth`, never via a raw-string selector).
       {:ok, doc} = Floki.parse_fragment(html)
-      assert length(Floki.find(doc, "article.bg-base-100")) == 3
+      assert length(Floki.find(doc, "article.bg-base-100")) == 4
+
+      for kind <- ~w(failed-ingest orphan-backlog reconcile-facts replay-outcomes) do
+        assert length(Floki.find(doc, ~s([data-testid="support-card-#{kind}-tier1"]))) == 1
+      end
 
       # section (raised card, bg-base-200) -> inset (bg-base-100) = depth 2, no deeper.
       assert max_elevation_depth(html) == 2

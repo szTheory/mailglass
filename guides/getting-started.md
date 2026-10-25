@@ -66,7 +66,6 @@ defmodule MyApp.UserMailer do
     |> from({"MyApp", "support@example.com"})
     |> subject("Welcome")
     |> html_body("<h1>Welcome to MyApp</h1>")
-    |> text_body("Welcome to MyApp")
     |> Mailglass.Message.put_function(:welcome)
   end
 end
@@ -76,6 +75,8 @@ end
   |> MyApp.UserMailer.welcome()
   |> Mailglass.deliver()
 ```
+
+See [Generated plaintext](authoring-mailables.md#generated-plaintext) for how the renderer creates the text body from the HTML body.
 
 ## End-to-End Example
 

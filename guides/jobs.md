@@ -164,7 +164,6 @@ defmodule MyApp.UserMailer do
     |> from({"MyApp", "support@example.com"})
     |> subject("Reset your password")
     |> html_body("<p>Reset it here: #{url}</p>")
-    |> text_body("Reset it here: #{url}")
     |> Mailglass.Message.put_function(:password_reset)
   end
 end
@@ -174,6 +173,8 @@ end
   |> MyApp.UserMailer.password_reset("https://example.com/reset/abc")
   |> Mailglass.deliver()
 ```
+
+See [Generated plaintext](authoring-mailables.md#generated-plaintext) for how rendered Mailables get their text body.
 
 **What this job really buys you:** auth mail is safe by default. Open/click
 tracking stays off, and the `NoTrackingOnAuthStream` Credo check turns unsafe

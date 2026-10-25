@@ -4,8 +4,8 @@ defmodule MailglassAdmin.Operator.QuickView do
   inspection flow ("what happened, at a glance").
 
   A URL-driven overlay (`?delivery_id=` with no `full`): a right slide-over pane on
-  desktop, a bottom sheet on mobile (positioning in the root layout's inline
-  `<style>` via `.mg-detail-panel`). Renders entirely from the list-row projection
+  desktop, a bottom sheet on mobile (positioning in the shared app stylesheet
+  via `.mg-detail-panel`). Renders entirely from the list-row projection
   already loaded in `@deliveries`, so flipping records with the `‹ ›` controls (and,
   in Stage C, the keyboard) fires no new queries. The heavy evidence — full event
   timeline, suppression state, replay history — lives one step deeper in Full detail
@@ -31,6 +31,7 @@ defmodule MailglassAdmin.Operator.QuickView do
   attr(:next_path, :string, default: nil)
   attr(:position, :map, default: nil)
   attr(:keyboard?, :boolean, default: true)
+  attr(:focus_return_id, :string, default: nil)
 
   def quick_view(assigns) do
     ~H"""
@@ -44,10 +45,12 @@ defmodule MailglassAdmin.Operator.QuickView do
       >
       </.link>
       <div
+        id="operator-quick-view"
         data-testid="operator-quick-view"
         role="dialog"
         aria-modal="true"
         aria-labelledby="operator-quick-view-title"
+        phx-hook="ModalFocusTrap"
         phx-window-keydown={if @keyboard?, do: "detail_key", else: nil}
         class="mg-detail-panel motion-overlay mg-layer-overlay-panel border-l border-base-300 bg-base-100 p-lg shadow-overlay"
         phx-remove={
@@ -57,19 +60,26 @@ defmodule MailglassAdmin.Operator.QuickView do
           )
         }
       >
-        <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#operator-quick-view-close")}>
-        </span>
+        <span tabindex="0" aria-hidden="true" data-focus-trap="start"></span>
 
         <div class="flex items-center justify-between gap-sm border-b border-base-300 pb-sm">
-          <h2 id="operator-quick-view-title" class="text-label font-bold uppercase text-secondary">
+          <h2 id="operator-quick-view-title" class="text-body font-bold text-base-content">
             Quick view
           </h2>
           <div class="flex items-center gap-xs">
-            <.nav_button dir="prev" path={@previous_path} label="Previous delivery">‹</.nav_button>
-            <span :if={@position} aria-live="polite" class="mono px-xs text-label text-secondary">
+            <.nav_button dir="prev" path={@previous_path} label="Previous delivery">
+              <Components.icon name="hero-chevron-down" class="h-4 w-4 rotate-90" />
+            </.nav_button>
+            <span
+              :if={@position}
+              aria-live="polite"
+              class="px-xs text-label tabular-nums text-secondary"
+            >
               {@position.index} of {@position.total}
             </span>
-            <.nav_button dir="next" path={@next_path} label="Next delivery">›</.nav_button>
+            <.nav_button dir="next" path={@next_path} label="Next delivery">
+              <Components.icon name="hero-chevron-down" class="h-4 w-4 -rotate-90" />
+            </.nav_button>
             <.link
               id="operator-quick-view-close"
               patch={@close_path}
@@ -85,29 +95,50 @@ defmodule MailglassAdmin.Operator.QuickView do
         <%= cond do %>
           <% @detail_error -> %>
             <div data-testid="operator-quick-view-error" class="mt-md flex items-start gap-sm">
-              <Components.icon name="hero-exclamation-circle" class="mt-0.5 h-5 w-5 shrink-0 text-error" />
+              <Components.icon
+                name="hero-exclamation-circle"
+                class="mt-xs h-5 w-5 shrink-0 text-error"
+              />
               <p class="text-body text-base-content">
-                Delivery data could not be loaded. Refresh the page or adjust the filters, then try again.
+                {detail_error_copy(@detail_error)}
               </p>
+              <button
+                :if={@detail_error == :unavailable}
+                type="button"
+                phx-click="retry_details"
+                class="btn btn-ghost min-h-11"
+              >
+                Retry details
+              </button>
             </div>
           <% @delivery -> %>
             <div class="mt-md space-y-md">
-              <div class="flex flex-wrap items-center gap-sm">
-                <h3 class="text-heading font-bold text-base-content">
-                  {Components.mask_recipient(@delivery.recipient)}
-                </h3>
-                <Components.status_badge status={Components.delivery_display_status(@delivery)} />
-              </div>
-
-              <p class="text-body text-secondary">
-                Latest:
-                <span class="text-base-content">{event_label(@delivery.last_event_type)}</span>
-                · <Components.timestamp at={@delivery.last_event_at} />
+              <Components.message_identity
+                heading_tag="h3"
+                subject={Map.get(@delivery, :subject)}
+                recipient={@delivery.recipient}
+                status={Components.delivery_display_status(@delivery)}
+                context={:delivery}
+                id="delivery-quick-outcome"
+              />
+              <p class="text-label text-secondary">
+                Updated <Components.timestamp at={@delivery.last_event_at} />
+              </p>
+              <p
+                :if={
+                  @delivery.last_event_type not in [
+                    nil,
+                    Components.delivery_display_status(@delivery)
+                  ]
+                }
+                class="text-label text-secondary"
+              >
+                Latest event: {event_label(@delivery.last_event_type)}
               </p>
 
-              <dl class="grid gap-sm text-body text-secondary sm:grid-cols-2">
+              <dl class="grid min-w-0 gap-md text-body text-secondary sm:grid-cols-2 [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]">
                 <div>
-                  <dt class="text-label font-bold uppercase">Account</dt>
+                  <dt class="text-label font-bold">Account</dt>
                   <dd
                     class="mt-xs text-base-content"
                     title={Accounts.title(@delivery.tenant_id, @account_labels)}
@@ -116,18 +147,20 @@ defmodule MailglassAdmin.Operator.QuickView do
                   </dd>
                 </div>
                 <div>
-                  <dt class="text-label font-bold uppercase">Provider</dt>
+                  <dt class="text-label font-bold">Provider</dt>
                   <dd class="mt-xs text-base-content">
-                    {String.upcase(@delivery.provider || "unknown")}
-                  </dd>
-                </div>
-                <div class="sm:col-span-2">
-                  <dt class="text-label font-bold uppercase">Delivery ID</dt>
-                  <dd class="mono mt-xs truncate text-base-content" title={@delivery.id}>
-                    {@delivery.id}
+                    {provider_label(@delivery.provider)}
                   </dd>
                 </div>
               </dl>
+              <Components.technical_details collapsible={false} id="operator-quick-technical">
+                <div>
+                  <dt class="text-label font-bold text-secondary">Delivery ID</dt>
+                  <dd class="mt-xs">
+                    <Components.copy_value value={@delivery.id} label="Delivery ID" />
+                  </dd>
+                </div>
+              </Components.technical_details>
             </div>
         <% end %>
 
@@ -141,8 +174,7 @@ defmodule MailglassAdmin.Operator.QuickView do
           </.link>
         </div>
 
-        <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#operator-quick-view-close")}>
-        </span>
+        <span tabindex="0" aria-hidden="true" data-focus-trap="end"></span>
       </div>
     </div>
     """
@@ -158,7 +190,8 @@ defmodule MailglassAdmin.Operator.QuickView do
     <span
       aria-disabled="true"
       aria-label={@label}
-      class="btn btn-ghost btn-sm opacity-40"
+      title={@label}
+      class="btn btn-ghost min-h-11 min-w-11 opacity-40"
     >
       {render_slot(@inner_block)}
     </span>
@@ -171,14 +204,15 @@ defmodule MailglassAdmin.Operator.QuickView do
       patch={@path}
       data-testid={"operator-quick-view-#{@dir}"}
       aria-label={@label}
-      class="mg-focus-ring btn btn-ghost btn-sm"
+      title={@label}
+      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 border border-base-300"
     >
       {render_slot(@inner_block)}
     </.link>
     """
   end
 
-  defp event_label(nil), do: "Unknown"
+  defp event_label(nil), do: "Unavailable"
 
   defp event_label(value) do
     value
@@ -186,4 +220,20 @@ defmodule MailglassAdmin.Operator.QuickView do
     |> String.replace("_", " ")
     |> String.capitalize()
   end
+
+  defp provider_label(nil), do: "Unavailable"
+  defp provider_label(value), do: String.upcase(value)
+
+  defp detail_error_copy(:invalid_id),
+    do: "This delivery link is invalid. Return to deliveries and open a listed record."
+
+  defp detail_error_copy(:not_found),
+    do:
+      "This delivery is not available in the selected Account. Return to deliveries to continue."
+
+  defp detail_error_copy(:unavailable),
+    do: "Delivery details are temporarily unavailable. Try again or return to deliveries."
+
+  defp detail_error_copy(_),
+    do: "Delivery details are unavailable. Return to deliveries to continue."
 end

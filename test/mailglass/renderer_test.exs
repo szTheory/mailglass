@@ -76,6 +76,57 @@ defmodule Mailglass.RendererTest do
              "Expected 'Label (url)' format for link plaintext; got:\n#{text_body}"
     end
 
+    test "render replaces caller text with complete ordered Unicode plaintext" do
+      long_copy = String.duplicate("Información útil para tu cuenta — café 🌱. ", 80)
+
+      html =
+        """
+        <html>
+          <head><style>.copy { color: red; }</style></head>
+          <body>
+            <h1 data-mg-plaintext="heading_block_1">Tu resumen</h1>
+            <p class="copy">#{long_copy}</p>
+            <p>Consulta <a href="https://example.com/account">tu cuenta</a>.</p>
+            <img src="https://example.com/mark.png" alt="Marca de ejemplo" />
+            <a href="https://example.com/continue" data-mg-plaintext="link_pair">Continuar</a>
+          </body>
+        </html>
+        """
+
+      message =
+        %Swoosh.Email{html_body: html}
+        |> Mailglass.Message.build(tenant_id: "t")
+        |> Mailglass.Message.text_body("caller supplied text must be replaced")
+
+      assert {:ok, rendered} = Mailglass.Renderer.render(message)
+      text_body = rendered.swoosh_email.text_body
+      html = rendered.swoosh_email.html_body
+
+      assert String.starts_with?(text_body, "TU RESUMEN")
+      assert String.contains?(text_body, String.trim_trailing(long_copy))
+      assert String.contains?(text_body, "tu cuenta (https://example.com/account)")
+      assert String.contains?(text_body, "Marca de ejemplo")
+      assert String.contains?(text_body, "Continuar (https://example.com/continue)")
+      assert length(Regex.scan(~r/https:\/\/example\.com\/continue/, text_body)) == 1
+      refute String.contains?(text_body, "caller supplied text")
+      assert byte_size(text_body) > byte_size(long_copy)
+
+      assert elem(:binary.match(text_body, "TU RESUMEN"), 0) <
+               elem(:binary.match(text_body, "Información útil"), 0)
+
+      assert elem(:binary.match(text_body, "Información útil"), 0) <
+               elem(:binary.match(text_body, "tu cuenta"), 0)
+
+      assert elem(:binary.match(text_body, "tu cuenta"), 0) <
+               elem(:binary.match(text_body, "Marca de ejemplo"), 0)
+
+      assert elem(:binary.match(text_body, "Marca de ejemplo"), 0) <
+               elem(:binary.match(text_body, "Continuar"), 0)
+
+      refute String.contains?(html, "data-mg-plaintext")
+      assert String.contains?(html, "color:")
+    end
+
     test "hr component produces '---' divider in plaintext" do
       message = Fixtures.component_message()
       assert {:ok, rendered} = Mailglass.Renderer.render(message)
@@ -199,6 +250,54 @@ defmodule Mailglass.RendererTest do
       assert String.contains?(result, "Click (https://example.com)")
     end
 
+    test "ordinary anchors retain their destination inside paragraph text" do
+      html = ~s|<p>Read <a href="https://example.com/guide">the guide</a> today.</p>|
+
+      assert Mailglass.Renderer.to_plaintext(html) ==
+               "Read the guide (https://example.com/guide) today."
+    end
+
+    test "nested anchors retain their destination inside a text strategy" do
+      html =
+        ~s|<p data-mg-plaintext="text">Before <span><a href="https://example.com/nested"><strong>open this</strong> page</a></span> after.</p>|
+
+      result = Mailglass.Renderer.to_plaintext(html)
+
+      assert result == "Before open this page (https://example.com/nested) after."
+    end
+
+    test "ordinary link destinations stay in reading order and repeat once per anchor" do
+      html =
+        ~s|<p>Start <a href="https://example.com">first</a>, middle <a href="https://example.com">second</a>, end.</p>|
+
+      result = Mailglass.Renderer.to_plaintext(html)
+
+      assert result ==
+               "Start first (https://example.com), middle second (https://example.com), end."
+
+      assert length(Regex.scan(~r/https:\/\/example\.com/, result)) == 2
+    end
+
+    test "empty-href and destination-free anchors keep their readable label only" do
+      html =
+        ~s|<p><a href="">empty destination</a> and <a>no destination</a><a href="https://example.com/empty"></a>.</p>|
+
+      result = Mailglass.Renderer.to_plaintext(html)
+
+      assert result == "empty destination and no destination."
+      refute result =~ "()"
+    end
+
+    test "marked link_pair anchors keep their destination exactly once" do
+      html =
+        ~s|<a href="https://example.com/cta" data-mg-plaintext="link_pair"><strong>Continue</strong></a>|
+
+      result = Mailglass.Renderer.to_plaintext(html)
+
+      assert result == "Continue (https://example.com/cta)"
+      assert length(Regex.scan(~r/https:\/\/example\.com\/cta/, result)) == 1
+    end
+
     test "divider produces '---'" do
       html = ~s|<td data-mg-plaintext="divider">&nbsp;</td>|
       result = Mailglass.Renderer.to_plaintext(html)
@@ -209,6 +308,14 @@ defmodule Mailglass.RendererTest do
       html = ~s|<h1 data-mg-plaintext="heading_block_1">Welcome</h1>|
       result = Mailglass.Renderer.to_plaintext(html)
       assert String.contains?(result, "WELCOME")
+    end
+
+    test "heading plaintext retains nested link destinations without changing URL case" do
+      html =
+        ~s|<h1 data-mg-plaintext="heading_block_1">Open <a href="https://example.com/Invoice/ABC">your invoice</a></h1>|
+
+      assert Mailglass.Renderer.to_plaintext(html) ==
+               "OPEN YOUR INVOICE (https://example.com/Invoice/ABC)"
     end
 
     test "heading_block_2 preserves case" do

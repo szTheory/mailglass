@@ -108,13 +108,37 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     // provider_message_id and 64-char mailable name (truncation contract).
     await expectNoPageHorizontalOverflow(page);
 
-    // The long delivery id (provider_message_id) renders verbatim in the
-    // "Provider message" field (truncated by CSS, not the string).
-    await expect(detail.getByText(LONG_DELIVERY_ID)).toBeVisible();
-    // The 64-char long mailable module name renders verbatim.
-    await expect(detail.getByText(LONG_MAILABLE)).toBeVisible();
     // The recipient renders verbatim (unmasked) in the detail header.
     await expect(detail.getByText(FJORDLINE_RECIPIENT)).toBeVisible();
+
+    // Technical identifiers sit behind the header's native "Technical details"
+    // disclosure (progressive disclosure), collapsed by default. Opening it must
+    // show them verbatim and still keep the page free of horizontal overflow.
+    const technical = detail.locator("details#delivery-detail-technical");
+    await expect(technical).toHaveCount(1);
+    await expect(technical).not.toHaveAttribute("open", /.*/);
+    await technical.locator("summary", { hasText: "Technical details" }).click();
+    await expect(technical).toHaveAttribute("open", "");
+    await expectNoPageHorizontalOverflow(page);
+
+    // The long delivery id (provider_message_id) renders verbatim as its own
+    // copy control in the "Provider message ID" field.
+    const providerId = technical.getByRole("button", { name: "Copy Provider message ID", exact: true });
+    await expect(providerId).toBeVisible();
+    await expect(providerId).toHaveText(LONG_DELIVERY_ID);
+
+    // The 64-char mailable shows its short module name; the exact module is the
+    // trigger's accessible description and appears in its help on activation.
+    const mailable = technical.getByRole("button", {
+      name: "Mailables.TransactionalEmailWithVeryLongModuleName",
+      exact: true,
+    });
+    await expect(mailable).toBeVisible();
+    await expect(mailable).toHaveAccessibleDescription(LONG_MAILABLE);
+    await mailable.click();
+    await expect(technical.locator("#delivery-detail-mailable-tooltip")).toBeVisible();
+    await expect(technical.locator("#delivery-detail-mailable-tooltip")).toHaveText(LONG_MAILABLE);
+    await expectNoPageHorizontalOverflow(page);
 
     // The single event is :delivered with reject_reason: nil -> the timeline
     // shows NO "Reason:" line (the legitimate null branch, not an error).
@@ -130,7 +154,7 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     const table = page.getByTestId("operator-deliveries-table");
     await expect(table).toBeVisible();
 
-    // northstar carries the many/high-count/error lifecycle (incl the >=80-char
+    // northstar carries the many/high-count/error lifecycle (incl the long, valid
     // truncation-stress recipient). The page must not overflow / collapse.
     await expectNoPageHorizontalOverflow(page);
 
@@ -147,11 +171,15 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     // A crash would surface a Phoenix/Plug error page, not the operator shell.
     await expect(page.getByTestId("admin-shell-sidebar")).toContainText("Deliveries");
 
-    // The deliveries surface for a zero-delivery account shows the empty state
-    // ("No deliveries" heading), never another tenant's rows.
+    // The deliveries surface for a zero-delivery account shows the truly-empty
+    // state (its collection heading counts zero), never another tenant's rows.
     await expect(
-      page.getByRole("heading", { name: "No deliveries", exact: true })
+      page.getByRole("heading", { name: "No deliveries in this time window", exact: true })
     ).toBeVisible();
+    await expect(
+      page.getByText("No deliveries have been recorded for this Account during the selected time window.")
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: /^Deliveries\b/ }).first()).toContainText("(0)");
     await expect(page.getByTestId("operator-delivery-row")).toHaveCount(0);
 
     // No server-error page.

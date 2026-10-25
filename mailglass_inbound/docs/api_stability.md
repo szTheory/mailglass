@@ -257,8 +257,10 @@ Stable mailbox callback contract.
 Documented guarantees:
 
 - `process/1` is the only stable callback
-- valid outcomes are `:accept`, `:ignore`, `{:reject, reason}`, and
+- valid outcomes are `:accept`, `:ignore`, `:no_change`, `{:reject, reason}`, and
   `{:bounce, reason}`
+- `:no_change` records an explicit callback assertion that no mutation occurred;
+  it is never inferred from `:ignore`, a raised error, or another failure
 - raises, throws, and exits are execution failures handled by internal runners,
   not semantic mailbox outcomes
 - replay uses stored canonical and raw evidence truth, but replay

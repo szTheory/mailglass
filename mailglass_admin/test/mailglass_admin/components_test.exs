@@ -4,7 +4,7 @@ defmodule MailglassAdmin.ComponentsTest do
   Components.normalize_inbound_outcome/1 adapter.
 
   Covers all 24 atoms across the four frozen taxonomy tables from
-  74-UI-SPEC.md: 14 outbound delivery statuses, 6 inbound message outcomes,
+  74-UI-SPEC.md: 14 outbound delivery statuses, 7 inbound message outcomes,
   4 timeline event markers, plus the normalize_inbound_outcome/1 adapter
   (Wave 0 Nyquist requirement per 76-VALIDATION.md DS-01).
 
@@ -21,7 +21,32 @@ defmodule MailglassAdmin.ComponentsTest do
 
   alias MailglassAdmin.Components
   alias MailglassAdmin.Inbound.FiltersForm, as: InboundFiltersForm
+  alias MailglassAdmin.Operator.DeliveriesList
+  alias MailglassAdmin.Operator.DetailHeader
+  alias MailglassAdmin.Operator.QuickView
   alias MailglassAdmin.Operator.FiltersForm, as: OperatorFiltersForm
+
+  test "outcome help distinguishes provider delivery from mailbox processing" do
+    delivered =
+      render_component(&Components.outcome_badge/1,
+        id: "delivery-outcome-test",
+        status: :delivered,
+        context: :delivery
+      )
+
+    assert delivered =~ "recipient&#39;s mail server accepted"
+    assert delivered =~ ~s(aria-describedby="delivery-outcome-test")
+    assert delivered =~ ~s(role="tooltip")
+
+    failed =
+      render_component(&Components.outcome_badge/1,
+        id: "inbound-outcome-test",
+        status: :failed,
+        context: :inbound
+      )
+
+    assert failed =~ "Mailbox processing failed"
+  end
 
   describe "status_badge/1 — outbound delivery statuses (14 atoms)" do
     test "dispatched renders badge-primary + paper-airplane icon" do
@@ -112,7 +137,7 @@ defmodule MailglassAdmin.ComponentsTest do
       html = render_component(&Components.status_badge/1, status: :autoresponded, size: :sm)
       assert html =~ "badge-outline"
       assert html =~ "hero-arrow-uturn-left"
-      assert html =~ "Autoresponded"
+      assert html =~ "Auto-replied"
     end
 
     test "unknown renders badge-outline + question-mark-circle icon" do
@@ -123,7 +148,7 @@ defmodule MailglassAdmin.ComponentsTest do
     end
   end
 
-  describe "status_badge/1 — inbound message outcomes (6 atoms)" do
+  describe "status_badge/1 — inbound message outcomes" do
     test "accepted renders badge-success + check-circle icon" do
       html = render_component(&Components.status_badge/1, status: :accepted, size: :sm)
       assert html =~ "badge-success"
@@ -135,7 +160,7 @@ defmodule MailglassAdmin.ComponentsTest do
       html = render_component(&Components.status_badge/1, status: :no_match, size: :sm)
       assert html =~ "badge-warning"
       assert html =~ "hero-exclamation-triangle"
-      assert html =~ "No match"
+      assert html =~ "Unrouted"
     end
 
     test "rejected (inbound) renders badge-error + x-circle icon" do
@@ -157,6 +182,13 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "badge-outline"
       assert html =~ "hero-minus-circle"
       assert html =~ "Ignored"
+    end
+
+    test "no_change renders a separate neutral badge" do
+      html = render_component(&Components.status_badge/1, status: :no_change, size: :sm)
+      assert html =~ "badge-outline"
+      assert html =~ "No change"
+      refute html =~ "Ignored"
     end
 
     test "failed_ingest renders badge-error + exclamation-circle icon" do
@@ -224,59 +256,269 @@ defmodule MailglassAdmin.ComponentsTest do
       assert Components.normalize_inbound_outcome(:ignore) == :ignore
     end
 
-    test "passes nil through unchanged" do
-      assert Components.normalize_inbound_outcome(nil) == nil
+    test "maps nil to the missing-history display state" do
+      assert Components.normalize_inbound_outcome(nil) == :missing_history
     end
   end
 
   describe "delivery_display_status/1" do
     test "a downstream outcome event supersedes the :sent snapshot" do
-      for event <- [:delivered, :opened, :clicked, :bounced, :complained, :rejected, :deferred, :unsubscribed] do
-        assert Components.delivery_display_status(%{status: :sent, last_event_type: event}) == event
+      for event <- [
+            :delivered,
+            :opened,
+            :clicked,
+            :bounced,
+            :complained,
+            :rejected,
+            :deferred,
+            :unsubscribed
+          ] do
+        assert Components.delivery_display_status(%{status: :sent, last_event_type: event}) ==
+                 event
       end
     end
 
     test "in-flight (handed off, no downstream outcome) reads as :dispatched" do
-      assert Components.delivery_display_status(%{status: :sent, last_event_type: :dispatched}) == :dispatched
-      assert Components.delivery_display_status(%{status: :sent, last_event_type: :sent}) == :dispatched
-      assert Components.delivery_display_status(%{status: :sent, last_event_type: nil}) == :dispatched
+      assert Components.delivery_display_status(%{status: :sent, last_event_type: :dispatched}) ==
+               :dispatched
+
+      assert Components.delivery_display_status(%{status: :sent, last_event_type: :sent}) ==
+               :dispatched
+
+      assert Components.delivery_display_status(%{status: :sent, last_event_type: nil}) ==
+               :dispatched
+
       # A non-outcome event (autoresponded/subscribed/unknown) is not a delivery state → still in-flight.
-      assert Components.delivery_display_status(%{status: :sent, last_event_type: :unknown}) == :dispatched
+      assert Components.delivery_display_status(%{status: :sent, last_event_type: :unknown}) ==
+               :dispatched
+    end
+
+    test "subscription feedback preserves confirmed delivery and automatic replies are explicit" do
+      assert Components.delivery_display_status(%{
+               status: :sent,
+               last_event_type: :subscribed,
+               delivery_confirmed: true
+             }) == :delivered
+
+      assert Components.delivery_display_status(%{status: :sent, last_event_type: :autoresponded}) ==
+               :autoresponded
     end
 
     test "queued before dispatch reads as :queued" do
-      assert Components.delivery_display_status(%{status: :queued, last_event_type: :queued}) == :queued
-      assert Components.delivery_display_status(%{status: :queued, last_event_type: nil}) == :queued
+      assert Components.delivery_display_status(%{status: :queued, last_event_type: :queued}) ==
+               :queued
+
+      assert Components.delivery_display_status(%{status: :queued, last_event_type: nil}) ==
+               :queued
     end
 
     test "failed and suppressed statuses are preserved" do
-      assert Components.delivery_display_status(%{status: :failed, last_event_type: :failed}) == :failed
-      assert Components.delivery_display_status(%{status: :suppressed, last_event_type: :suppressed}) == :suppressed
+      assert Components.delivery_display_status(%{status: :failed, last_event_type: :failed}) ==
+               :failed
+
+      assert Components.delivery_display_status(%{
+               status: :suppressed,
+               last_event_type: :suppressed
+             }) == :suppressed
     end
   end
 
+  describe "G-168-6 rendered downstream Delivery status" do
+    @tag :g_168_6
+    test "a :delivered event is shown in both list layouts, detail, and Quick view" do
+      assert_rendered_delivery_status(:delivered, "Delivered")
+    end
+
+    @tag :g_168_6
+    test "a :bounced event is shown in both list layouts, detail, and Quick view" do
+      assert_rendered_delivery_status(:bounced, "Bounced")
+    end
+
+    @tag :g_168_6
+    test "an :opened event is shown in both list layouts, detail, and Quick view" do
+      assert_rendered_delivery_status(:opened, "Opened")
+    end
+  end
+
+  defp assert_rendered_delivery_status(event, expected_label) do
+    delivery = %Mailglass.Outbound.Delivery{
+      id: "g1686-#{event}",
+      tenant_id: "g1686-account",
+      status: :sent,
+      last_event_type: event,
+      last_event_at: ~U[2026-10-08 12:00:00Z],
+      recipient: "operator@example.test",
+      provider: "postmark",
+      stream: :transactional,
+      mailable: "G1686.Mailer"
+    }
+
+    list_html =
+      render_component(&DeliveriesList.deliveries_list/1,
+        deliveries: [delivery],
+        show_account?: false
+      )
+
+    detail_html = render_component(&DetailHeader.detail_header/1, delivery: delivery)
+
+    quick_view_html =
+      render_component(&QuickView.quick_view/1,
+        delivery: delivery,
+        full_path: "/ops/mail?delivery_id=#{delivery.id}&full=1",
+        close_path: "/ops/mail"
+      )
+
+    assert badge_text(list_html, "[data-testid='operator-deliveries-table'] .badge") ==
+             [expected_label]
+
+    assert badge_text(list_html, "[data-testid='operator-deliveries-cards'] .badge") ==
+             [expected_label]
+
+    assert badge_text(detail_html, "[data-testid='operator-detail-header'] .badge") ==
+             [expected_label]
+
+    assert badge_text(quick_view_html, "[data-testid='operator-quick-view'] .badge") ==
+             [expected_label]
+  end
+
+  defp badge_text(html, selector) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find(selector)
+    |> Enum.map(&(Floki.text(&1) |> String.trim()))
+  end
+
+  test "inspection identity wraps long content and provides outcome help" do
+    html =
+      render_component(&Components.message_identity/1,
+        subject: "Payment action needed",
+        recipient: "billing@northstar.example",
+        status: :bounced,
+        context: :delivery,
+        id: "inspection-outcome"
+      )
+
+    assert html =~ "Payment action needed"
+    assert html =~ "billing@northstar.example"
+    assert html =~ "overflow-wrap:anywhere"
+    assert html =~ "could not be delivered"
+    assert html =~ ~s(id="inspection-outcome-trigger")
+  end
+
+  test "technical details disclose exact IDs without opening by default" do
+    html =
+      render_component(&Components.technical_details/1,
+        id: "inspection-technical",
+        inner_block: [%{inner_block: fn _, _ -> "exact-record-id" end}]
+      )
+
+    [details] = Floki.find(Floki.parse_document!(html), "details")
+    refute Floki.attribute(details, "open") != []
+    assert html =~ "exact-record-id"
+    assert html =~ "Technical details"
+  end
+
+  test "a lone technical value is visible without a disclosure" do
+    html =
+      render_component(&Components.technical_details/1,
+        id: "single-id",
+        collapsible: false,
+        inner_block: [%{inner_block: fn _, _ -> "exact-record-id" end}]
+      )
+
+    assert Floki.find(Floki.parse_document!(html), "details, summary") == []
+    assert html =~ "exact-record-id"
+    refute html =~ "Technical details"
+  end
+
+  test "clickable identifiers expose the exact value and shared copy feedback" do
+    html =
+      render_component(&Components.copy_value/1, value: "exact-record-id", label: "Delivery ID")
+
+    [button] = Floki.find(Floki.parse_document!(html), "button")
+    assert Floki.attribute(button, "data-copy-value") == ["exact-record-id"]
+    assert Floki.attribute(button, "data-copy-toast") == ["Delivery ID copied."]
+    assert Floki.attribute(button, "aria-label") == ["Copy Delivery ID"]
+    assert Floki.text(button) =~ "exact-record-id"
+  end
+
   describe "timestamp/1" do
-    test "a UTC datetime renders a <time> the local-time script can enhance" do
+    test "a UTC datetime exposes its exact UTC value for local-time enhancement" do
       at = ~U[2026-06-14 14:32:05.000000Z]
       html = render_component(&Components.timestamp/1, at: at, class: "whitespace-nowrap")
 
-      # Server-rendered fallback is the canonical UTC string, in body + title + data-utc.
-      assert html =~ "2026-06-14 14:32:05 UTC"
+      # No-JavaScript fallback remains visible and the exact machine value is copied.
+      assert html =~ "2026-06-14 14:32:05.000000 UTC"
       # Machine-readable ISO8601 (Z) for the client script to parse.
       assert html =~ ~s(datetime="2026-06-14T14:32:05.000000Z")
       assert html =~ "data-local-time"
-      assert html =~ ~s(data-utc="2026-06-14 14:32:05 UTC")
-      assert html =~ ~s(title="2026-06-14 14:32:05 UTC")
+      assert html =~ ~s(data-utc="2026-06-14 14:32:05.000000 UTC")
+      assert html =~ ~s(data-copy-value="2026-06-14 14:32:05.000000 UTC")
+      assert html =~ ~s(aria-label="Copy timestamp as UTC: 2026-06-14 14:32:05.000000 UTC")
+      assert html =~ "2026-06-14 14:32:05.000000 UTC · Click to copy"
+      assert html =~ "mg-field-help-tooltip"
+      refute html =~ ~s(title="2026-06-14 14:32:05.000000 UTC · Click to copy")
       assert html =~ "<time"
+      assert html =~ "data-timestamp-copy"
       assert html =~ "whitespace-nowrap"
-      assert html =~ "cursor-pointer"
+      refute html =~ "data-local-time-supplement"
+      assert html =~ "tabular-nums"
+      refute html =~ "mono"
     end
 
-    test "nil renders the Pending sentinel and no <time>" do
+    test "a non-copyable timestamp stays a semantic time value without a nested control" do
+      at = ~U[2026-06-14 14:32:05Z]
+      html = render_component(&Components.timestamp/1, at: at, copyable: false, class: "block")
+
+      assert html =~ "<time"
+      assert html =~ "block"
+      refute html =~ "data-timestamp-copy"
+      refute html =~ "<button"
+    end
+
+    test "a precise UTC datetime preserves fractional seconds for visible and copied values" do
+      at = ~U[2026-06-14 14:32:05.123400Z]
+      html = render_component(&Components.timestamp/1, at: at)
+
+      assert html =~ "2026-06-14 14:32:05.123400 UTC"
+      assert Components.timestamp_value(at) == "2026-06-14 14:32:05.123400 UTC"
+    end
+
+    test "copy buttons expose exact values and an accessible status region" do
+      html =
+        render_component(&Components.copy_button/1, value: "evt-東京-Å", label: "Copy event ID")
+
+      assert html =~ ~s(data-copy-value="evt-東京-Å")
+      assert html =~ ~s(aria-label="Copy event ID")
+      assert html =~ ~s(role="status")
+      assert html =~ ~s(aria-live="polite")
+      assert html =~ ~s(type="button")
+    end
+
+    test "nil renders the unavailable sentinel and no <time>" do
       html = render_component(&Components.timestamp/1, at: nil)
 
-      assert html =~ "Pending"
+      assert html =~ "Unavailable"
       refute html =~ "<time"
+    end
+  end
+
+  describe "flash/1" do
+    test "errors are assertive, readable and have a keyboard-sized dismissal control" do
+      html =
+        render_component(&Components.flash/1,
+          kind: :error,
+          message: "Delivery failed. Retry the request."
+        )
+
+      assert html =~ ~s(role="alert")
+      assert html =~ ~s(aria-live="assertive")
+      assert html =~ "Delivery failed. Retry the request."
+      assert html =~ ~s(phx-click="lv:clear-flash")
+      assert html =~ ~s(phx-value-key="error")
+      assert html =~ ~s(aria-label="Dismiss error message")
+      assert html =~ "min-h-11 min-w-11"
+      assert html =~ "[overflow-wrap:anywhere]"
     end
   end
 
@@ -294,8 +536,7 @@ defmodule MailglassAdmin.ComponentsTest do
         ~s(aria-current="page"),
         "hero-paper-airplane",
         ">Deliveries</span>",
-        "border-l-2",
-        "border-primary",
+        "mg-nav-current",
         "font-bold"
       ])
     end
@@ -339,20 +580,6 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "mg-focus-ring"
     end
 
-    test "nav_link long-content state truncates with a title" do
-      label = "Deliveries with exceptionally long operator context"
-
-      html =
-        render_component(&Components.nav_link/1,
-          label: label,
-          icon: "hero-paper-airplane",
-          href: "/ops/mail"
-        )
-
-      assert html =~ ~s(title="#{label}")
-      assert html =~ "truncate"
-    end
-
     test "nav_link loading not applicable in Phase 110" do
       html =
         render_component(&Components.nav_link/1,
@@ -377,9 +604,7 @@ defmodule MailglassAdmin.ComponentsTest do
 
       assert_all(html, [
         ~s(aria-current="page"),
-        "bg-primary/10",
-        "border-b-2",
-        "border-primary",
+        "mg-nav-current",
         "font-bold",
         ">Deliveries</span>"
       ])
@@ -474,10 +699,14 @@ defmodule MailglassAdmin.ComponentsTest do
   end
 
   describe "theme_picker/1 primitive contract" do
-    test "theme_picker system selected renders fieldset legend and exactly three radio inputs" do
+    test "theme_picker system selected renders a named group and exactly three radio inputs" do
       html = render_component(&Components.theme_picker/1, selected: :system)
 
-      assert_all(html, ["<fieldset", "<legend", "Theme", "System", "Light", "Dark"])
+      assert_all(html, ["<fieldset", ~s(aria-label="Appearance"), "System", "Light", "Dark"])
+      refute html =~ "<legend"
+      assert html =~ ~r/<span class="pointer-events-none">System<\/span>/
+      assert html =~ ~r/<span class="pointer-events-none">Light<\/span>/
+      assert html =~ ~r/<span class="pointer-events-none">Dark<\/span>/
       assert_all(html, ["hero-window", "hero-sun", "hero-moon"])
 
       assert_all(html, [
@@ -488,6 +717,7 @@ defmodule MailglassAdmin.ComponentsTest do
 
       assert radio_count(html) == 3
       assert html =~ ~r/value="system"[^>]*checked/
+      assert Regex.scan(~r/\bchecked\b/, html) |> length() == 1
     end
 
     test "theme_picker light selected checks the light radio" do
@@ -571,7 +801,7 @@ defmodule MailglassAdmin.ComponentsTest do
       html =
         render_component(&Components.stat_card/1, label: "Queued", value: 12, severity: :info)
 
-      assert_stat_markers(html, "hero-question-mark-circle", "Info", "text-primary")
+      assert_stat_markers(html, "hero-information-circle", "Info", "text-primary")
     end
 
     test "stat_card success severity renders icon plus visible label plus semantic color" do
@@ -630,17 +860,20 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ "Problem"
     end
 
-    test "stat_card long-label state truncates with title" do
+    test "stat_card long-label state remains visible without hover" do
       label = "Delivery health metric with an intentionally long descriptive label"
 
       html =
         render_component(&Components.stat_card/1, label: label, value: 42, severity: :success)
 
-      assert html =~ ~s(title="#{label}")
-      assert html =~ "truncate"
+      assert html =~ label
+      assert html =~ "break-words"
+      assert html =~ "overflow-wrap:anywhere"
+      refute html =~ "title=\"#{label}\""
+      refute html =~ "truncate"
     end
 
-    test "stat_card hint renders card-hover affordance and screen-reader copy" do
+    test "stat_card hint uses shared hover focus and tap help" do
       hint = "Open Deliveries to find the affected message and retry from evidence."
 
       html =
@@ -651,8 +884,10 @@ defmodule MailglassAdmin.ComponentsTest do
           hint: hint
         )
 
-      assert html =~ "mg-stat-card-hint"
-      assert html =~ "mg-stat-card-tooltip"
+      assert html =~ "mg-field-help"
+      assert html =~ "mg-field-help-tooltip"
+      assert html =~ ~s(role="tooltip")
+      assert html =~ ~s(aria-expanded="false")
       assert html =~ "hero-information-circle"
       assert html =~ ~s(class="sr-only")
       assert html =~ hint
@@ -672,11 +907,11 @@ defmodule MailglassAdmin.ComponentsTest do
       assert html =~ hint
       refute html =~ "Open"
       refute html =~ "hero-arrow-up-right"
-      refute html =~ "phx-click"
+      assert html =~ "Help for Recent failures"
       refute html =~ ~s(role="button")
     end
 
-    test "stat_card long-value state is tabular and whitespace-nowrap with title" do
+    test "stat_card long-value state is tabular and wraps without hover" do
       value = "123456789012345678901234567890"
 
       html =
@@ -686,7 +921,15 @@ defmodule MailglassAdmin.ComponentsTest do
           severity: :neutral
         )
 
-      assert_all(html, ["tabular-nums", "whitespace-nowrap", ~s(title="#{value}")])
+      assert_all(html, [
+        "tabular-nums",
+        "break-all",
+        "whitespace-normal",
+        "overflow-wrap:anywhere",
+        value
+      ])
+
+      refute html =~ "title=\"#{value}\""
     end
 
     test "stat_card is non-interactive unless a future attr makes it actionable" do
@@ -1055,7 +1298,6 @@ defmodule MailglassAdmin.ComponentsTest do
     test "operator wrapper renders stable primitive-backed controls in delivery filter order" do
       form =
         filters_form(%{
-          "tenant_id" => "tenant-123",
           "provider" => "postmark",
           "event" => "delivered",
           "window_hours" => "168"
@@ -1065,7 +1307,6 @@ defmodule MailglassAdmin.ComponentsTest do
         render_component(&OperatorFiltersForm.fields/1,
           form: form,
           event_values: [:dispatched, :delivered],
-          account_options: [{"Acme Support", "tenant-123"}],
           provider_options: [{"Postmark", "postmark"}, {"SendGrid", "sendgrid"}],
           window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
           errors: %{"event" => "Status was not applied. Choose a listed status."}
@@ -1075,15 +1316,7 @@ defmodule MailglassAdmin.ComponentsTest do
         "<fieldset",
         "<legend",
         "Filters",
-        ~s(<label for="filters_tenant_id"),
         ~s(<select),
-        ~s(id="filters_tenant_id"),
-        ~s(name="filters[tenant_id]"),
-        "Account",
-        "Account maps to tenant_id in code and URLs.",
-        ~s(<option value="">Choose account</option>),
-        ~s(<option value="tenant-123" selected>),
-        "Acme Support",
         ~s(<label for="filters_provider"),
         ~s(<select),
         ~s(id="filters_provider"),
@@ -1092,7 +1325,7 @@ defmodule MailglassAdmin.ComponentsTest do
         ~s(<option value="postmark" selected>),
         "Postmark",
         "Provider",
-        # The single lifecycle "Status" filter is backed by the :event field.
+        # The latest recorded event filter is backed by the :event field.
         ~s(<label for="filters_event"),
         ~s(<select),
         ~s(id="filters_event"),
@@ -1104,17 +1337,20 @@ defmodule MailglassAdmin.ComponentsTest do
         ~s(aria-invalid="true"),
         ~s(<label for="filters_window_hours"),
         "Time window",
-        ~s(value="168" selected>)
+        ~s(id="filters_window_hours"),
+        ~s(name="filters[window_hours]"),
+        ~s(<option value="168" selected>),
+        "Last 7 days"
       ])
 
-      assert field_order(html, ["Account", "Provider", "Status", "Time window"])
+      assert field_order(html, ["Search", "Time window", "Latest recorded event", "Provider"])
+      refute html =~ ~s(name="filters[tenant_id]")
       refute html =~ ~s(name="filters[status]")
     end
 
     test "inbound wrapper renders stable primitive-backed controls in inbound filter order" do
       form =
         filters_form(%{
-          "tenant_id" => "tenant-123",
           "provider" => "mailgun",
           "outcome" => "accept",
           "window_hours" => "168",
@@ -1125,7 +1361,6 @@ defmodule MailglassAdmin.ComponentsTest do
         render_component(&InboundFiltersForm.fields/1,
           form: form,
           outcome_values: [:no_match, :accept],
-          account_options: [{"Acme Support", "tenant-123"}],
           window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
           errors: %{"outcome" => "Mailbox outcome was not applied. Choose a listed outcome."}
         )
@@ -1134,15 +1369,7 @@ defmodule MailglassAdmin.ComponentsTest do
         "<fieldset",
         "<legend",
         "Filters",
-        ~s(<label for="filters_tenant_id"),
         ~s(<select),
-        ~s(id="filters_tenant_id"),
-        ~s(name="filters[tenant_id]"),
-        "Account",
-        "Account maps to tenant_id in code and URLs.",
-        ~s(<option value="">Choose account</option>),
-        ~s(<option value="tenant-123" selected>),
-        "Acme Support",
         ~s(<label for="filters_provider"),
         ~s(id="filters_provider"),
         ~s(name="filters[provider]"),
@@ -1165,7 +1392,8 @@ defmodule MailglassAdmin.ComponentsTest do
         "Search"
       ])
 
-      assert field_order(html, ["Account", "Provider", "Mailbox outcome", "Time window", "Search"])
+      assert field_order(html, ["Search", "Time window", "Mailbox outcome", "Provider"])
+      refute html =~ ~s(name="filters[tenant_id]")
     end
   end
 
@@ -1217,7 +1445,7 @@ defmodule MailglassAdmin.ComponentsTest do
   end
 
   defp assert_stat_markers(html, icon, label, color_class) do
-    assert_all(html, [icon, label, color_class, "tabular-nums", "whitespace-nowrap"])
+    assert_all(html, [icon, label, color_class, "tabular-nums", "text-display"])
   end
 
   defp radio_count(html), do: length(Regex.scan(~r/type="radio"/, html))

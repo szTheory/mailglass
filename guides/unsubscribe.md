@@ -63,11 +63,14 @@ The task prints config, router, preflight, UAT, and DKIM instructions. It copies
 
 Mailglass ships one controller for both mailbox-provider POSTs and user-visible browser GETs:
 
-- `GET /mailglass/unsubscribe/:token` renders a built-in confirmation page by default.
+- A valid `GET /mailglass/unsubscribe/:token` renders an informational page by default. Visiting it does not unsubscribe the recipient; the page directs them to their mail app's unsubscribe control when available, or to contact the sender using the message details.
 - If `redirect` is configured, GET redirects to that path instead of rendering the library page.
+- Invalid tokens return `404` with recovery guidance. Expired tokens return `410` with separate recovery guidance. Neither page includes recipient, delivery, or token data.
 - `POST /mailglass/unsubscribe/:token` is the RFC 8058 one-click endpoint.
 - POST returns `200` with an empty body for the first click and for replayed clicks.
 - Replayed POSTs converge on the same durable `:unsubscribed` event instead of creating duplicates.
+
+GET is read-only. POST is the only built-in unsubscribe mutation path; a configured redirect changes valid GET behavior only and does not change POST's response or durable event semantics.
 
 Use the built-in page if you want a safe default. Use `redirect` only when your app owns the confirmation UI.
 
@@ -119,16 +122,14 @@ Rotation playbook:
 
 This keeps old links valid while all newly generated links use the current secret.
 
-## 7) UAT checklist
+## 7) Rollout checklist
 
-Run these checks before rollout:
+The deterministic built-in GET states and POST replay behavior have automated controller coverage. Before rollout:
 
 1. Generate a real unsubscribe link from a bulk delivery.
-2. Browser GET check: visit `GET /mailglass/unsubscribe/:token` and confirm the built-in page renders, or confirm the configured redirect lands on your app page.
-3. One-click POST check: `POST /mailglass/unsubscribe/:token` with the same token and confirm the endpoint returns `200` without redirecting.
-4. Replay POST check: repeat the same POST and confirm it still returns `200`.
-5. Generator check: rerun `mix mailglass.gen.unsubscribe` and confirm it still copies zero files.
-6. DKIM check: inspect an actual delivered message and verify both `List-Unsubscribe` and `List-Unsubscribe-Post` appear in the DKIM `h=` list.
+2. If `redirect` is configured, verify your application-owned page and recovery behavior.
+3. Generator check: rerun `mix mailglass.gen.unsubscribe` and confirm it still copies zero files.
+4. DKIM check: inspect an actual delivered message and verify both `List-Unsubscribe` and `List-Unsubscribe-Post` appear in the DKIM `h=` list.
 
 ## 8) Troubleshooting
 

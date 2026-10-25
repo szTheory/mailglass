@@ -14,10 +14,10 @@ defmodule MailglassInbound.InboundRecords.ExecutionRun do
   alias MailglassInbound.InboundRecords.InboundRecord
 
   @sources [:fresh, :replay]
-  @outcomes [:no_match, :accept, :ignore, :reject, :bounce, :failed]
+  @outcomes [:no_match, :accept, :ignore, :no_change, :reject, :bounce, :failed]
 
   @type source :: :fresh | :replay
-  @type outcome :: :no_match | :accept | :ignore | :reject | :bounce | :failed
+  @type outcome :: :no_match | :accept | :ignore | :no_change | :reject | :bounce | :failed
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t() | nil,
@@ -85,7 +85,8 @@ defmodule MailglassInbound.InboundRecords.ExecutionRun do
       outcome == :no_match and is_nil(mailbox) and map_size(failure) == 0 ->
         changeset
 
-      outcome in [:accept, :ignore] and present_string?(mailbox) and map_size(failure) == 0 ->
+      outcome in [:accept, :ignore, :no_change] and present_string?(mailbox) and
+          map_size(failure) == 0 ->
         changeset
 
       outcome in [:reject, :bounce] and present_string?(mailbox) and
@@ -99,7 +100,7 @@ defmodule MailglassInbound.InboundRecords.ExecutionRun do
         add_error(
           changeset,
           :outcome,
-          "must be :no_match, :accept, :ignore, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata"
+          "must be :no_match, :accept, :ignore, :no_change, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata"
         )
     end
   end

@@ -15,6 +15,21 @@ defmodule MailglassAdmin.RouterTest do
   @legacy_theme_cookie MailglassAdmin.Theme.legacy_cookie_name()
 
   describe "router macro expansion" do
+    test "documents the adopter-owned development guard for preview routes" do
+      guide = File.read!(Path.expand("../../../guides/preview.md", __DIR__))
+      example = File.read!(Path.expand("../../../test/example/README.md", __DIR__))
+
+      assert guide =~ "The route macro does not add environment enforcement or authorization."
+
+      assert guide =~
+               "host application owns route exposure and must keep this preview mount behind"
+
+      assert Regex.match?(
+               ~r/if Application\.compile_env\(:example, :dev_routes\) do\s+scope "\/dev" do\s+pipe_through :browser\s+mailglass_admin_routes "\/mail"\s+end\s+end/s,
+               example
+             )
+    end
+
     test "keeps preview routes isolated from the production operator mount" do
       routes = MailglassAdmin.TestAdopter.Router.__routes__()
 

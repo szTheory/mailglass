@@ -16,7 +16,7 @@ defmodule Mailglass.Components.Theme do
   """
 
   @default_color "#277B96"
-  @default_font "sans-serif"
+  @default_font "Arial, Helvetica, sans-serif"
 
   @doc "Returns the cached theme keyword list. Empty list when uncached."
   @doc since: "0.1.0"

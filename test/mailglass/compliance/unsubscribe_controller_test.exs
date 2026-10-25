@@ -5,6 +5,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
   alias Mailglass.Events.Event
   alias Mailglass.Generators
   alias Mailglass.PubSub.Topics
+  alias Mailglass.Suppression.Entry
   alias Mailglass.TestRepo
   alias Mailglass.TestSupport.SandboxOwnership
 
@@ -124,13 +125,54 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
   describe "GET /mailglass/unsubscribe/:token" do
     @describetag :get_flow
 
-    test "renders the built-in confirmation page by default", %{conn: conn} do
+    test "renders an informational page without changing unsubscribe state", %{conn: conn} do
       delivery = Generators.delivery_fixture()
       token = Unsubscribe.sign_token(delivery.id)
-      conn = get(conn, "/mailglass/unsubscribe/#{token}")
+      before_events = unsubscribe_event_count(delivery.id)
+      before_suppressions = suppression_count(delivery.tenant_id)
 
-      assert html_response(conn, 200) =~ "Unsubscribe"
-      assert html_response(conn, 200) =~ delivery.recipient
+      conn = get(conn, "/mailglass/unsubscribe/#{token}")
+      html = html_response(conn, 200)
+
+      assert html =~ ~s(<html lang="en">)
+      assert html =~ ~s(<meta charset="utf-8")
+      assert html =~ ~s(<meta name="viewport")
+      assert length(Regex.scan(~r/<h1\b/, html)) == 1
+      assert html =~ "font-family: Inter, system-ui, sans-serif;"
+      assert html =~ "font-size: 14px;"
+      assert html =~ "font-weight: 400;"
+      assert html =~ "margin: 0 0 16px;"
+      assert html =~ "p { margin: 0 0 16px;"
+      assert html =~ ~s(<main class="state-valid">)
+      refute html =~ "border-radius: 16px"
+      refute html =~ "border: 1px solid #D9E5EC"
+
+      assert html =~
+               "You have not been unsubscribed. Visiting this page does not change your subscription."
+
+      assert html =~
+               "To unsubscribe, use your mail app's unsubscribe control when available, or contact the sender using the details in the message."
+
+      assert html =~ delivery.recipient
+      refute html =~ "about to unsubscribe"
+      refute html =~ "<form"
+      assert unsubscribe_event_count(delivery.id) == before_events
+      assert suppression_count(delivery.tenant_id) == before_suppressions
+    end
+
+    test "escapes long non-ASCII recipient text in the embedded page" do
+      recipient = String.duplicate("Élodie <script>alert('x')</script> 漢字 ", 24)
+
+      html =
+        Mailglass.Compliance.UnsubscribeHTML.state(%{state: :valid, recipient: recipient})
+        |> Phoenix.HTML.Safe.to_iodata()
+        |> IO.iodata_to_binary()
+
+      assert length(String.split(html, "Élodie")) == 25
+      assert html =~ "Élodie &lt;script&gt;"
+      refute html =~ "<script>"
+      refute html =~ "alert('x')"
+      assert html =~ "word-wrap: break-word"
     end
 
     test "redirects when compliance redirect is configured", %{conn: conn} do
@@ -151,7 +193,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       assert redirected_to(conn, 302) == "/settings/unsubscribe"
     end
 
-    test "returns structured 410 for expired tokens", %{conn: conn} do
+    test "returns a private recovery page with 410 for expired tokens", %{conn: conn} do
       Application.put_env(
         :mailglass,
         :compliance,
@@ -163,14 +205,44 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       Process.sleep(1_100)
 
       conn = get(conn, "/mailglass/unsubscribe/#{token}")
+      html = html_response(conn, 410)
 
-      assert response(conn, 410) =~ "expired"
+      assert html =~ ~s(<html lang="en">)
+      assert html =~ ~s(<meta name="viewport")
+      assert length(Regex.scan(~r/<h1\b/, html)) == 1
+      assert html =~ ~s(<main class="state-error">)
+      assert html =~ ".state-error h1"
+      assert html =~ "color: #B42318;"
+      assert html =~ "This unsubscribe link has expired."
+
+      assert html =~
+               "Use your mail app's unsubscribe control when available, or contact the sender using the details in the message."
+
+      refute html =~ token
+      refute html =~ delivery.recipient
+      refute html =~ delivery.id
+      refute html =~ "You have not been unsubscribed"
+      refute html =~ "<form"
     end
 
-    test "returns structured 404 for invalid tokens", %{conn: conn} do
+    test "returns a private recovery page with 404 for invalid tokens", %{conn: conn} do
       conn = get(conn, "/mailglass/unsubscribe/not-a-real-token")
+      html = html_response(conn, 404)
 
-      assert response(conn, 404) =~ "invalid"
+      assert html =~ ~s(<html lang="en">)
+      assert html =~ ~s(<meta name="viewport")
+      assert length(Regex.scan(~r/<h1\b/, html)) == 1
+      assert html =~ ~s(<main class="state-error">)
+      assert html =~ ".state-error h1"
+      assert html =~ "color: #B42318;"
+      assert html =~ "This unsubscribe link is not valid."
+
+      assert html =~
+               "Check the message for a current link, or contact the sender using the details in the message."
+
+      refute html =~ "not-a-real-token"
+      refute html =~ "You have not been unsubscribed"
+      refute html =~ "<form"
     end
 
     test "returns structured 404 for tampered tokens", %{conn: conn} do
@@ -179,8 +251,10 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       tampered = tamper_token!(token)
 
       conn = get(conn, "/mailglass/unsubscribe/#{tampered}")
+      html = html_response(conn, 404)
 
-      assert response(conn, 404) =~ "invalid"
+      assert html =~ "This unsubscribe link is not valid."
+      refute html =~ tampered
     end
   end
 
@@ -191,6 +265,16 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       conn: conn
     } do
       Application.put_env(:mailglass, :unsubscribe_test_pid, self())
+
+      Application.put_env(
+        :mailglass,
+        :compliance,
+        Keyword.put(
+          Application.fetch_env!(:mailglass, :compliance),
+          :redirect,
+          "/settings/unsubscribe"
+        )
+      )
 
       Application.put_env(
         :mailglass,
@@ -331,5 +415,18 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
   defp mutate_segment!(segment) when is_binary(segment) and segment != "" do
     replacement = if String.first(segment) == "A", do: "B", else: "A"
     String.replace_prefix(segment, String.first(segment), replacement)
+  end
+
+  defp unsubscribe_event_count(delivery_id) do
+    TestRepo.aggregate(
+      from(event in Event,
+        where: event.delivery_id == ^delivery_id and event.type == :unsubscribed
+      ),
+      :count
+    )
+  end
+
+  defp suppression_count(tenant_id) do
+    TestRepo.aggregate(from(entry in Entry, where: entry.tenant_id == ^tenant_id), :count)
   end
 end

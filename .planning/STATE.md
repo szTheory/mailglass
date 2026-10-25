@@ -1,31 +1,31 @@
 ---
 gsd_state_version: "1.0"
-milestone: v2.8
-milestone_name: Truthful Repo
-status: Awaiting next milestone
-stopped_at: Repository disposition complete; CTRL-03 transcribed; WINDOWS ledger triaged; awaiting natural CTRL-05 cron and independently wanted release for CTRL-02
-last_updated: "2026-09-19T19:15:02.205Z"
-last_activity: 2026-09-19
-last_activity_desc: Milestone v2.8 completed and archived
-state_head: 7e43abe8acb1f309d20a50a55677507f046b1d71
+milestone: v2.9
+milestone_name: Operator, Preview & Email UI Refinement
+current_phase: 173
+current_phase_name: Consistency and Delivery Evidence
+status: verifying
+stopped_at: Inbound summary cleanup a17f0ee5 locally verified; prior full delivery proof is for 9b6e60e4; owner acceptance outstanding
+last_updated: "2026-10-10T19:06:54Z"
+last_activity: 2026-10-10
+last_activity_desc: Removed repeated summary filter context and locally committed as a17f0ee5; 621 admin tests and 9 browser checks pass; current UI review at port 55483; prior 9b6e60e4 delivery evidence retained
+state_head: 4a219c42c6ba075a534d9860535ff37acd4e0ad8
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 10
-  completed_plans: 10
-  percent: 100
-current_phase: null
-current_phase_name: Planning next milestone
+  total_phases: 6
+  completed_phases: 5
+  total_plans: 38
+  completed_plans: 38
+  percent: 83
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-09-19)
+See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Planning the next milestone.
+**Current focus:** Phase 173 — Consistency and Delivery Evidence
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,12 +39,23 @@ See: .planning/PROJECT.md (updated 2026-09-19)
 
 ## Current Position
 
-Phase: Milestone v2.8 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-09-19 — Milestone v2.8 completed and archived
+Phase: 173 (Consistency and Delivery Evidence) — VERIFYING
+Plan: 8 of 8
+Status: Inbound summary cleanup a17f0ee5 is locally committed and verified (621 admin tests, 9 browser checks), ready for review at port 55483. It has not been pushed or given fresh remote CI/full delivery-gate evidence. The previous 9b6e60e4 candidate passed all local delivery predicates and all 26 exact-SHA CI jobs; its retained record and port 59905 preview remain unchanged. Authenticated owner acceptance remains unverified. Last formal goal-verification report: 24/27 (historical, not re-scored). Current UI follow-up: `173-INBOUND-REFINEMENT.md`; prior exact-SHA delivery proof: `173-DELIVERY-CHECKS.md`.
+Last activity: 2026-10-10 — Removed repeated summary context after polishing the filters and collection on http://127.0.0.1:55483/ops/mail/inbound?tenant_id=northstar; retained the previous full delivery preview at http://127.0.0.1:59905/dev/mail.
+
+Progress: 5/6 phases ([████████░░] 83%); [████████████████████] 38/38 planned plans have summaries (100%); Phase 173 delivery remains incomplete
+
+## v2.9 Roadmap Shape
+
+- Phases 168–173 own all 28 approved requirements. Phases 168–172 are complete; Phase 170 independently passed 30/30 must-haves across INUX-01–04, and Phase 172 passed 9/9 must-haves across MAILUX-01–04. Phase 173 remains.
+- Phase 168 passed 96/96 plan truths and 5/5 roadmap truths. Phase 169 passed 100 positive must-haves, including 82 UI states, with five negative constraints individually adjudicated. Phase 170 completed eight plans across six waves; its verification, 21-threat security audit, clean code review, package suites, and connected browser checks passed. D-52 leaves no machine-observable owner UAT. Later slices follow ROADMAP.md.
+- Code-first; equal engineer and support/on-call operator priority; bounded direct visual inspection and existing automated checks.
+- The approved unsubscribe boundary covers truthful GET/invalid/expired pages; interactive browser submission remains deferred.
 
 ## v2.8 Roadmap Shape
+
+Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 restriction does not apply to the approved v2.9 roadmap.
 
 - **Phase 166** — GREEN-01..05 + CTRL-01..05 (10 requirements). First because fixing a false green can
   surface previously-unrun failures (GREEN-01 exposes 325 never-executed admin tests; all 510 pass
@@ -143,7 +154,7 @@ Last activity: 2026-09-19 — Milestone v2.8 completed and archived
 
 **Velocity:**
 
-- Total plans completed: 79
+- Total plans completed: 104
 - Average duration: 14m
 - Total execution time: 72m
 
@@ -157,6 +168,10 @@ Last activity: 2026-09-19 — Milestone v2.8 completed and archived
 | 164. Repository Truth Reconciliation and Closeout | 44 | — | — |
 | 165 | 5 | - | - |
 | 167 | 4 | - | - |
+| 168 | 10 | - | - |
+| 170 | 8 | - | - |
+| 171 | 4 | - | - |
+| 172 | 3 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -243,6 +258,35 @@ Last activity: 2026-09-19 — Milestone v2.8 completed and archived
 | Phase 167 P03 | 15min | 3 tasks | 8 files |
 | Phase 167.1 P01 | 24m | 3 tasks | 2 files |
 | Phase 167.1 P02 | 12min | 2 tasks | 2 files |
+| Phase 168 P1 | 48 | 3 tasks | 26 files |
+| Phase 168 P02 | 53m | 3 tasks | 34 files |
+| Phase 168 P03 | 5 min | 2 tasks | 8 files |
+| Phase 168 P04 | 60min | 3 tasks | 22 files |
+| Phase 169 P01 | 24m | 3 tasks | 31 files |
+| Phase 169 P02 | 24m | 2 tasks | 9 files |
+| Phase 169 P03 | 21m | 3 tasks | 16 files |
+| Phase 169 P04 | 22m | 2 tasks | 17 files |
+| Phase 169 P05 | ~2h 25m | 2 tasks | 35 files |
+| Phase 168 P05 | 16min | 1 tasks | 2 files |
+| Phase 168 P10 | 6m | 2 tasks | 11 files |
+| Phase 170 P01 | 16 min | 2 tasks | 5 files |
+| Phase 170 P02 | 11 min | 2 tasks | 11 files |
+| Phase 170 P03 | 8 min | 2 tasks | 4 files |
+| Phase 170 P04 | 8 min | 2 tasks | 4 files |
+| Phase 170 P05 | 13min | 2 tasks | 15 files |
+| Phase 170 P06 | 15min | 2 tasks | 10 files |
+| Phase 170 P07 | 6m | 2 tasks | 3 files |
+| Phase 170 P08 | 82m | 2 tasks | 17 files |
+| Phase 171 P01 | 14m | 2 tasks | 7 files |
+| Phase 171 P02 | 13min | 2 tasks | 5 files |
+| Phase 171 P03 | 17min | 2 tasks | 6 files |
+| Phase 171 P04 | 25min | 2 tasks | 16 files |
+| Phase 172 P02 | 8min | 3 tasks | 8 files |
+| Phase 172 P03 | 9min | 3 tasks | 8 files |
+| Phase 173 P05 | 27min | 2 tasks | 13 files |
+| Phase 173 P06 | 7m | 1 tasks | 2 files |
+| Phase 173 P07 | 21min | 2 tasks | 16 files |
+| Phase 173 P08 | 32min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -390,6 +434,84 @@ Last activity: 2026-09-19 — Milestone v2.8 completed and archived
 - [Phase ?]: [Phase 167.1]: D-05 widening added exactly one new admissible pass pair (pending / proposal_awaiting_release_action) to release-please.yml's twin predicates -- a positive observation reachable only after gh pr list succeeded and exactly one open proposal was counted; capture-proposal's should_run gate left byte-identical so an un-gated discovery can never validate a pre-sibling-sync digest.
 - [Phase ?]: [Phase 167.1]: CTRL-02/CTRL-03's structural block is closed (167.1-01 merged the code fix), but both requirements' Accept clauses are post-merge observations this plan cannot produce -- they remain evidence-pending, not complete. Plan 02 owns the harvest.
 - [Phase ?]: CTRL-02/CTRL-03 requirement prose corrected to name the measured conflated-should_run-flag mechanism (D-06); both Accept clauses left byte-identical
+- [Phase 168]: Keep tenant_id as the URL and filter-submission scope; remove duplicate Account filter selection.
+- [Phase 168]: Keep selected Account identity and scope switching in shared operator chrome; keep Preview outside production Account scope.
+- [Phase 168]: Preserve host-owned tenant resolution and authorization; Account option links are navigation aids only.
+- [Phase 168, superseded by Phase 169]: Health now uses the approved two-column arrangement and one column below 768px; the earlier three-column decision is historical.
+- [Phase 168]: Filter submit busy labels use fixed-width buttons to preserve action position.
+- [Phase 168]: Stale/unavailable Delivery states use approved recovery copy and never invent an observation time.
+- [Phase 168]: Keep System, Light and Dark visible beside native radio controls and preserve the existing persisted preference.
+- [Phase 168]: Use explicit alert/status live regions, exact UTC timestamp names and keyboard-accessible feedback dismissal.
+- [Phase 168]: Render missing timestamps as Unavailable and never invent stale observation times.
+- [Phase 168]: Quick view returns focus only to the stable row ID matching its URL-selected delivery.
+- [Phase 168]: Gallery Flash specimens render inline so they cannot obscure other gallery controls.
+- [Phase 168]: Replay request and replay completion remain distinct; missing evidence is labeled unavailable.
+- [Phase 169]: Keep exact Delivery selection independent of the current page and time window.
+- [Phase 169]: Retain compatible filters across Account switches while clearing page and object evidence IDs.
+- [Phase 169]: Use content-column width for the table-to-card breakpoint.
+- [Phase 169]: Keep the five Health populations independently readable with windowed evidence bound to one as-of instant; active suppressions remain current-at-read.
+- [Phase 169]: Resolve exact Account webhook and Event IDs independently from Delivery list membership, and name a Delivery only when a unique persisted linkage exists.
+- [Phase 169]: Keep exact support read functions documentation-hidden while exporting their module through the core boundary for Admin use.
+- [Phase 169]: Show at most 100 chronological Events, detect overflow with row 101, and resolve selected Events independently by Account, Delivery, and Event.
+- [Phase 169]: Keep exact recorded UTC values visible and make local time a separately labeled supplement.
+- [Phase 169]: Present one current Mailglass suppression match separately from historical Events and Account-wide active-record totals.
+- [Phase 169]: Freeze the selected webhook ID and material Account, Delivery, provider, receipt-time, and eligibility facts at review open.
+- [Phase 169]: Re-read and compare the same target before host authorization; reject stale or replaced review without selecting a substitute.
+- [Phase 169]: Use command-returned row counts for local outcomes and persisted audit reads only for terminal evidence.
+- [Phase 169]: Do not expose raw audit metadata, actor identifiers, failure reasons, or exception bodies in operator feedback.
+- [Phase 169]: Final Back to deliveries clears selected Delivery, full-detail mode, and exact support focus while preserving Account and committed list state, per the approved UI spec.
+- [Phase 169]: Keep dev-gallery theme specimens stacked through tablet widths; use actual available content width for production collection layout.
+- [Phase 169]: Terminal audit database write failure is trigger-tested at core and LiveView boundaries; safe failure feedback retains context while normalized writes roll back.
+- [Phase 169]: Exact support records use neutral labels with current status and proven reconciliation linkage. Explicit new replay review refreshes candidates; private dialog correlation rejects old queued confirms.
+- [Phase 168]: Keep Delivery technical identifiers intact and use browser-verified arbitrary wrapping to close the 320–1440px overflow gap.
+- [Phase 168]: UXF-03: enforce the approved 4px spacing grid across seven shared operator, Inbound, and Preview templates with source, generated CSS, and rendered browser assertions.
+- [Phase 168]: UXF-03 rendered spacing verification remains in the existing advisory operator-browser lane.
+- [Phase 170]: Only literal :no_change callback results assert no mutation; ignore and failures stay distinct. — Execution history must preserve an authoritative callback fact without inferring state from unrelated outcomes.
+- [Phase 170]: Only SES auth :sns_x509 is rendered as a fixed authentication fact; all other verification input is unavailable in ordinary evidence. — Provider maps can contain personal data, credentials, route bindings, exception text, and markup. An exact allowlist prevents arbitrary values from reaching ordinary HTML while retaining one source-backed safe fact.
+- [Phase 170]: RoutingTrace is explicitly labeled as a simulation of the currently configured router. — Persisted ExecutionRun and durable route-binding records are historical facts. Current rules may change and cannot establish which route ran when the message arrived.
+- [Phase 170]: The routing disclosure uses native HTML details and summary elements. — Browser-owned disclosure semantics keep keyboard operation and expanded state aligned with visibility without adding JavaScript or duplicating state in LiveView.
+- [Phase 170]: Latest fresh disposition uses inserted_at descending with ExecutionRun ID descending as the tie-breaker. — A deterministic shared order keeps list and exact detail aligned when persisted runs have equal insertion timestamps.
+- [Phase 170]: Keep :no_change distinct from :ignore in list, detail, filter, and timeline vocabulary.
+- [Phase 170]: Map nil latest-fresh outcome to No history; reserve No match for literal :no_match.
+- [Phase 170]: Omit free-form outcome_reason and failure metadata from the operator timeline.
+- [Phase 170]: Tenant-scoped replay eligibility uses stored binding/history, never current-router matching. — Eligibility must explain the exact stored replay target without guessing or leaking raw evidence.
+- [Phase 170]: A replay review is a short-lived snapshot, not an authorization token. — At confirmation, reread the selected tenant/record and eligibility, then use the existing host authorization immediately before replay.
+- [Phase 170]: Replay consequence copy must name the recorded Mailbox and stored message behavior. — Operators must distinguish execution with current code from current-router simulation and provider redelivery.
+- [Phase 170]: Replay review identifiers are consumed server side; busy wording describes only local in-flight work.
+- [Phase 170]: Replay outcome feedback is derived from the returned structured result and remains separate from later timeline reads.
+- [Phase 170]: Selected history is labeled through its last successful scoped read and refreshed through an explicit native control.
+- [Phase 170]: Replay command feedback remains separate from the timestamped history snapshot; native Refresh history performs the next scoped timeline read.
+- [Phase 170]: The deterministic browser fixture persists the same durable execution-route binding required by replay eligibility.
+- [Phase 170]: Actual 200% zoom stacks shell actions and gives the evidence disclosure 44.1px minimum height for strict 44px acceptance.
+- [Phase 170]: INUX-01 through INUX-04 remain unclassified/unresolved in the spec-less edge probe; no taxonomy was assigned.
+- [Phase 171]: Display the full Mailable module path and scenario in the compact picker so narrow layouts retain the selected identity.
+- [Phase 171]: Render discovery, missing-scenario, and discovery-error states separately with actionable copy for each.
+- [Phase 171]: Describe Preview as Mailglass.Renderer output and keep route exposure under the host application's dev guard.
+- [Phase 171]: Treat a valid empty preview_props/0 list as a missing-scenario setup state.
+- [Phase 171]: Edit only text, integer, float, boolean, and calendar-valid Date defaults with complete, type-preserving parsers.
+- [Phase 171]: Keep maps, structs, atoms, and timezone-sensitive DateTimes read-only with guidance to edit the Mailable scenario.
+- [Phase 171]: Retain renderer artifacts only after success and label prior output as not current during pending, validation, and render errors.
+- [Phase 171]: Retry through the existing render event and reset to the selected scenario defaults.
+- [Phase 171]: Label Preview outputs by provenance and distinguish the shared Renderer stage from downstream preflight and delivery.
+- [Phase 171]: Use manual-activation tabs so arrow-key focus remains local and does not send a LiveView event.
+- [Phase 171]: Mount the script-disabled HTML iframe only while its panel is selected, with remote resource behavior documented.
+- [Phase 171]: Label preview widths as CSS pixels, with concise visible values and complete accessible names.
+- [Phase 171]: Keep controls stacked until the wide breakpoint and remove the spacing-token max-width that collapsed the selected identity.
+- [Phase 171]: Treat preview browser screenshots as preview-pipeline evidence only, not recipient-client or email dark-mode certification.
+- [Phase 172]: Keep Renderer.render/2 responsible for replacing text_body from rendered HTML while retaining the public setter.
+- [Phase 172]: Use the existing Floki traversal and normalization; do not add a dependency or alternate MIME path.
+- [Phase 172]: Valid GET remains informational and does not change subscription state.
+- [Phase 172]: Fixed state atoms render failure copy without recipient or token assigns.
+- [Phase 172]: Configured redirect applies to GET only; POST remains the mutation path.
+- [Phase 173]: Evidence resets require a strict run-owned project identity plus the existing token.
+- [Phase 173]: Only validated pinned baseline bytes and revalidated sanitized PNG pairs can enter candidate evidence.
+- [Phase 173]: UIQ-03 remains Pending until required exact-SHA CI, clean acceptance inputs, local regression, and retained evidence all pass.
+- [Phase 173]: Bind current browser and preview evidence to candidate SHA 3d6314bae62729b921b6ed7049adbda5181c5b64.
+- [Phase 173]: Keep the retained preview and detached candidate available for owner review, with exact scoped cleanup commands recorded.
+- [Phase 173]: Leave UIQ-03 incomplete until owner acceptance, full local gate proof and exact-SHA required CI Green are established.
+- [Phase 173]: Use sparse exclusions before candidate materialization and exclude both protected inputs from Docker contexts.
+- [Phase 173]: Install only lockfile-pinned Mix/npm dependencies in the detached candidate and restore only candidate-generated demo lock drift.
+- [Phase 173]: Keep delivery incomplete until required exact-SHA CI Green and protected owner acceptance are verified.
 
 ## Quick Tasks Completed
 
@@ -435,14 +557,18 @@ Last activity: 2026-09-19 — Milestone v2.8 completed and archived
 
 ## Session Continuity
 
-Last session: 2026-09-19T14:10:26.482Z
-Stopped at: Repository disposition complete; CTRL-03 transcribed; WINDOWS ledger triaged; awaiting natural CTRL-05 cron and independently wanted release for CTRL-02
-partial, waiting only on post-merge observations that cannot be forced. Earlier context: the
-consolidated lockfile refresh (#260 → `753a840c`); open PRs went 15 → 1. Milestone v2.7 remains
-archived and integrated (`79247daf`) with §6–7 terminal proof closed out as not achievable under
-current policy. No v2.7 lifecycle work is pending.
-Resume file: None
+Last session: 2026-10-10T15:44:07Z
+Stopped at: User approved the exact candidate push and manual CI dispatch. Branch gsd/phase-173-delivery-8b4ce3e9 now points to 8b4ce3e9643dd1b6a64cc5c96213245bb284512a. CI run 38064299090 has a terminal failed CI Green aggregate. See 173-REMOTE-CI.md for the failures and repair route. Local evidence and review preview http://127.0.0.1:63769/dev/mail remain retained. Owner acceptance remains outstanding.
+Resume file: .planning/phases/173-consistency-and-delivery-evidence/.continue-here.md
 
 ## Operator Next Steps
 
-- Start the next milestone with $gsd-new-milestone
+- Phase 168 is complete: independent verification passed 96/96 plan truths and 5/5 roadmap truths, including the automated 4px spacing guard and rendered checks. No owner UAT remains.
+- Phase 169 is complete: five plans, all five OUTUX requirements, independent verification passed, code review clean, security 17/17 closed, and Nyquist compliant.
+- Final local evidence: 49 core tests; 542 Admin tests with zero failures and one exclusion; full operator browser 197 passed and one guarded skip; prior-phase browser gate 163 passed and one guarded skip. See `169-VERIFICATION.md`, `169-REGRESSION.md`, and `169-REVIEW-FIX.md` in the phase directory.
+- Phase 170 is complete: eight plans across six dependency waves; independent verification passed 30/30 must-haves for INUX-01–04. Security closed 21/21 threats and code review found no current issues.
+- Automated evidence: Admin 577 tests (0 failures, 1 excluded); inbound 3 properties plus 480 tests (0 failures); full operator browser 206 passed and 1 guarded skip. Rendered checks are recorded; no human-only acceptance remains under D-52.
+- Phase 170 artifacts and evidence are in `.planning/phases/170-inbound-investigation-and-recovery/`. GSD emitted three nonblocking missing-path warnings for package-relative references in summaries; the verifier checked the actual package-root files.
+- Phase 172 is complete and verified: 9/9 must-haves, 30 connected browser tests, captured preview/unsubscribe screenshots, fresh 24/24 UI review, clean code review, and zero open security threats. No owner UAT remains under D-52; delivered-email client rendering remains unverified.
+- Phase 173 — Consistency and Delivery Evidence — remains verifying. All eight plans have summaries. The full sparse local gate passed for exact candidate 8b4ce3e9: Core 79, Admin 605, Inbound three properties plus 480, connected browser 30, five preview routes, matching built/served CSS, and six clean screenshot/baseline pairs. The user then approved publishing that exact SHA to `gsd/phase-173-delivery-8b4ce3e9` and dispatching CI there; both actions completed. Required `CI Green` failed in run 38064299090. See `173-REMOTE-CI.md` for concrete failures requiring bounded gap repair and `173-LOCAL-GATE.md` for retained local evidence. Authenticated owner acceptance remains outstanding. The original protected-file fence remains active; merge, release, and main writes remain outside the approval.
+- Original unrelated planning-file deletions, configuration edits, and Phase 168/169 screenshot modifications were preserved. Remote delivery/CI proof remains Phase 173 scope.

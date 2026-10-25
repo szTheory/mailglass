@@ -51,9 +51,7 @@ defmodule MailglassAdmin.PersonaCohortTest do
       literals = MailglassDemo.Personas.specimen_literals()
 
       fjordline_deliveries =
-        TestRepo.all(
-          from(d in Delivery, where: d.tenant_id == "fjordline-aps", select: d)
-        )
+        TestRepo.all(from(d in Delivery, where: d.tenant_id == "fjordline-aps", select: d))
 
       assert [delivery] = fjordline_deliveries
       assert delivery.provider_message_id == literals.long_delivery_id
@@ -109,13 +107,18 @@ defmodule MailglassAdmin.PersonaCohortTest do
       conn = operator_conn(conn)
 
       # Direct navigation to the zero-delivery tenant must render the scoped
-      # no-data state (the overview's all-clear health), not crash or leak
+      # no-data observations without asserting global health, crashing, or leaking
       # another tenant's data.
       {:ok, _view, html} =
         live(conn, @base_path <> "?" <> URI.encode_query(%{"tenant_id" => "helios-void"}))
 
       assert html =~ "helios-void"
-      assert html =~ "All clear"
+      assert html =~ "No recent mail activity"
+      assert html =~ "deliveries updated"
+      assert html =~ "messages received"
+      refute html =~ "All clear"
+      refute html =~ ~s(data-testid="operator-overview-health-failures")
+      refute html =~ ~s(data-testid="operator-overview-health-orphans")
     end
 
     test "deliveries view renders the empty-state copy", %{conn: conn} do
@@ -131,7 +134,8 @@ defmodule MailglassAdmin.PersonaCohortTest do
         )
 
       # 116-UI-SPEC: helios-void direct-URL empty state copy.
-      assert html =~ "No deliveries have been recorded yet."
+      assert html =~
+               "No deliveries have been recorded for this Account during the selected time window."
     end
   end
 

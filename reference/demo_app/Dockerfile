@@ -7,7 +7,9 @@ RUN apt-get update \
 RUN mix local.hex --force && mix local.rebar --force
 
 COPY reference/demo_app/assets/package*.json /tmp/mailglass-demo-assets/
-RUN npm --prefix /tmp/mailglass-demo-assets ci --no-audit --no-fund \
+COPY reference/demo_app/assets/scripts/check-demo-browser-deps.cjs /tmp/mailglass-demo-assets/scripts/
+RUN node /tmp/mailglass-demo-assets/scripts/check-demo-browser-deps.cjs --lock-only \
+  && npm --prefix /tmp/mailglass-demo-assets ci --no-audit --no-fund \
   && npx --prefix /tmp/mailglass-demo-assets playwright install --with-deps chromium \
   && rm -rf /tmp/mailglass-demo-assets
 

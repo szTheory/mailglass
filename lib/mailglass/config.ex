@@ -56,8 +56,8 @@ defmodule Mailglass.Runtime.Schema do
         fonts: [
           type: :map,
           default: %{
-            body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-            display: "'Inter Tight', 'Inter', sans-serif",
+            body: "Arial, Helvetica, sans-serif",
+            display: "Arial, Helvetica, sans-serif",
             mono: "'IBM Plex Mono', ui-monospace, monospace"
           },
           doc: "Font-stack map. Keys: `:body`, `:display`, `:mono`."

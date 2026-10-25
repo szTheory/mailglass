@@ -710,7 +710,10 @@ jobs:
         run: mix dialyzer
       - name: Evict stale PLT + rebuild
         if: steps.dialyzer.outcome == 'failure'
-        run: rm -rf _build/test/*.plt && mix dialyzer --plt && mix dialyzer
+        run: |
+          rm -f _build/test/*.plt
+          mix dialyzer --force-check --plt
+          mix dialyzer
 
   inbound_dialyzer:
     name: Inbound Dialyzer (Elixir 1.18 / OTP 27)
@@ -1038,19 +1041,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Audit demo browser lockfile
+        run: npm --prefix reference/demo_app/assets audit --package-lock-only --audit-level=high
+      - name: Test pinned baseline provisioning
+        run: node --test test_js/phase173-baselines.test.cjs
       - name: Run demo browser evidence
+        id: evidence
         run: bash scripts/run_demo_browser_evidence.sh
       - name: Upload demo browser evidence artifact
-        if: always()
+        if: steps.evidence.outcome == 'success'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: demo-browser-evidence-${{ github.run_id }}
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14
-          path: |
-            reference/demo_app/tmp/demo_browser_evidence/checkpoint.json
-            reference/demo_app/tmp/demo_browser_evidence/playwright-report.json
-            reference/demo_app/assets/test-results
+          path: reference/demo_app/tmp/demo_browser_evidence/retained/
 
   preview_capture_advisory:
     name: Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ExUnit" tests="2" failures="1" errors="0" skipped="0">
+<testcase classname="Elixir.MailglassAdmin.OptionalDeps.MailglassInboundTest" name="test eligibility/2 routes the narrow replay-eligibility read through the runtime gateway"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: :ex_unit_no_meaningful_value, right: :ex_unit_no_meaningful_value, message: &quot;Expected truthy, got false&quot;, expr: {:assert, [], [{:function_exported?, [line: 40], [{:__aliases__, [line: 40], [:MailglassInbound]}, :eligibility, 2]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: :==}, [{MailglassAdmin.OptionalDeps.MailglassInboundTest, :&quot;test eligibility/2 routes the narrow replay-eligibility read through the runtime gateway&quot;, 1, [file: ~c&quot;test/mailglass_admin/optional_deps/mailglass_inbound_test.exs&quot;, line: 40]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: :ex_unit_no_meaningful_value,
+     right: :ex_unit_no_meaningful_value,
+     message: &quot;Expected truthy, got false&quot;,
+     expr: {:assert, [],
+      [
+        {:function_exported?, [line: 40],
+         [{:__aliases__, [line: 40], [:MailglassInbound]}, :eligibility, 2]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: :==
+   },
+   [
+     {MailglassAdmin.OptionalDeps.MailglassInboundTest,
+      :&quot;test eligibility/2 routes the narrow replay-eligibility read through the runtime gateway&quot;,
+      1,
+      [
+        file: ~c&quot;test/mailglass_admin/optional_deps/mailglass_inbound_test.exs&quot;,
+        line: 40
+      ]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassAdmin.OptionalDeps.MailglassInboundTest" name="test list_tenants/2 surfaces inbound tenant ids through the runtime apply gateway when mailglass_inbound is loaded"></testcase>
+</testsuite>

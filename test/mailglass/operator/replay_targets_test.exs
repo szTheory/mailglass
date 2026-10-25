@@ -45,6 +45,7 @@ defmodule Mailglass.Operator.ReplayTargetsTest do
                })
 
       assert candidate.webhook_event_id == webhook_event.id
+      assert candidate.tenant_id == "tenant-a"
       assert candidate.provider == "postmark"
       assert candidate.provider_event_id == "postmark-webhook-1"
       assert candidate.webhook_timestamp == webhook_event.received_at

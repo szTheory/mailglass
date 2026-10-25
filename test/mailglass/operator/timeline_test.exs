@@ -43,6 +43,46 @@ defmodule Mailglass.Operator.TimelineTest do
       assert Enum.all?(rows, &(&1.delivery_id == selected.id))
     end
 
+    test "get_delivery_event/3 requires the exact Account, Delivery, and Event tuple" do
+      delivery = Generators.delivery_fixture(tenant_id: "tenant-a", recipient: "exact@example.com")
+
+      other_delivery =
+        Generators.delivery_fixture(tenant_id: "tenant-a", recipient: "other@example.com")
+
+      {:ok, selected} =
+        Events.append(%{
+          tenant_id: "tenant-a",
+          delivery_id: delivery.id,
+          type: :failed,
+          occurred_at: DateTime.utc_now(),
+          reject_reason: :bounced,
+          metadata: %{
+            "provider" => "postmark",
+            "source" => "provider webhook",
+            "provider_event_id" => "evt-東京-Ångström",
+            "provider_occurred_at" => "2026-10-07T12:34:56.123456Z",
+            "private_payload" => "must not be projected"
+          },
+          normalized_payload: %{"private" => "must not be projected"}
+        })
+
+      assert %{id: id, tenant_id: "tenant-a", delivery_id: delivery_id} =
+               Timeline.get_delivery_event("tenant-a", delivery.id, selected.id)
+
+      assert id == selected.id
+      assert delivery_id == delivery.id
+
+      event = Timeline.get_delivery_event("tenant-a", delivery.id, selected.id)
+      assert event.metadata.provider_event_id == "evt-東京-Ångström"
+      assert event.metadata.provider_occurred_at == "2026-10-07T12:34:56.123456Z"
+      refute Map.has_key?(event, :normalized_payload)
+      refute Map.has_key?(event.metadata, :private_payload)
+
+      assert Timeline.get_delivery_event("tenant-b", delivery.id, selected.id) == nil
+      assert Timeline.get_delivery_event("tenant-a", other_delivery.id, selected.id) == nil
+      assert Timeline.get_delivery_event("tenant-a", delivery.id, Ecto.UUID.generate()) == nil
+    end
+
     test "excludes mismatched-tenant rows" do
       delivery = Generators.delivery_fixture(tenant_id: "tenant-a", recipient: "tenant@example.com")
 

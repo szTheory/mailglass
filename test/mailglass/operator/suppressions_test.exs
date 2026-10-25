@@ -33,7 +33,7 @@ defmodule Mailglass.Operator.SuppressionsTest do
              } = state
     end
 
-    test "complaint and policy suppressions resolve to immutable state" do
+    test "complaint and unsubscribe removals are blocked while policy removals are supported" do
       insert_entry(%{
         tenant_id: "tenant-a",
         address: "complaint@example.com",
@@ -48,8 +48,24 @@ defmodule Mailglass.Operator.SuppressionsTest do
           []
         )
 
-      assert complaint_state.reversibility == :immutable
-      assert complaint_state.reversibility_copy == "Immutable by policy"
+      assert complaint_state.removal_policy == :blocked
+      assert complaint_state.removal_copy == "The public removal command blocks this reason."
+
+      insert_entry(%{
+        tenant_id: "tenant-a",
+        address: "unsubscribe@example.com",
+        scope: :address,
+        reason: :unsubscribe,
+        source: "webhook:auto_suppress"
+      })
+
+      unsubscribe_state =
+        Suppressions.get_delivery_suppression_state(
+          %{tenant_id: "tenant-a", recipient: "unsubscribe@example.com"},
+          []
+        )
+
+      assert unsubscribe_state.removal_policy == :blocked
 
       insert_entry(%{
         tenant_id: "tenant-a",
@@ -65,8 +81,8 @@ defmodule Mailglass.Operator.SuppressionsTest do
           []
         )
 
-      assert policy_state.reversibility == :immutable
-      assert policy_state.reversibility_copy == "Immutable by policy"
+      assert policy_state.removal_policy == :supported
+      assert policy_state.removal_copy == "The public removal command permits this reason."
     end
 
     test "reversible suppressions are distinguishable without mutating anything" do
@@ -90,8 +106,8 @@ defmodule Mailglass.Operator.SuppressionsTest do
           []
         )
 
-      assert state.reversibility == :reversible
-      assert state.reversibility_copy == "Reversible in a later phase"
+      assert state.removal_policy == :supported
+      assert state.removal_copy == "The public removal command permits this reason."
       refute function_exported?(Suppressions, :remove, 2)
       refute function_exported?(Suppressions, :delete, 2)
       refute function_exported?(Suppressions, :update, 2)
@@ -109,6 +125,24 @@ defmodule Mailglass.Operator.SuppressionsTest do
       assert is_nil(
                Suppressions.get_delivery_suppression_state(
                  %{tenant_id: "tenant-a", recipient: "foreign@example.com"},
+                 []
+               )
+             )
+    end
+
+    test "expired matching entries are not shown as a current Mailglass match" do
+      insert_entry(%{
+        tenant_id: "tenant-a",
+        address: "expired@example.com",
+        scope: :address,
+        reason: :manual,
+        source: "ops:review",
+        expires_at: DateTime.add(DateTime.utc_now(), -60, :second)
+      })
+
+      assert is_nil(
+               Suppressions.get_delivery_suppression_state(
+                 %{tenant_id: "tenant-a", recipient: "expired@example.com"},
                  []
                )
              )

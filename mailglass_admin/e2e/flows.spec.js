@@ -1,4 +1,6 @@
-const { test, expect } = require("@playwright/test");
+const { test, expect, chromium } = require("@playwright/test");
+const fs = require("fs");
+const path = require("path");
 
 // =============================================================================
 // flows.spec.js — Phase 115 Plan 04 (FLOW-01 / FLOW-02 / FLOW-03)
@@ -17,6 +19,10 @@ const { test, expect } = require("@playwright/test");
 
 const tenantId = "browser-tenant";
 const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
+const gapClosureArtifacts = path.resolve(
+  __dirname,
+  "../test-results/baseline-layout"
+);
 
 // The full-walk axis: 320px floor (FLOW-02) and the system theme (FLOW-02 3rd axis).
 const FLOW_VIEWPORT = { width: 320, height: 900 };
@@ -25,9 +31,18 @@ const FLOW_VIEWPORT = { width: 320, height: 900 };
 // Login + open helpers (mirror structural.spec.js exactly — no shared module)
 // ---------------------------------------------------------------------------
 
-async function loginOperator(page, returnTo, subjectId = "operator-1", sessionTenantId = tenantId) {
+async function loginOperator(
+  page,
+  returnTo,
+  subjectId = "operator-1",
+  sessionTenantId = tenantId,
+  resetScenario = null,
+  recentAuthAt = null
+) {
   await page.context().clearCookies();
-  const resetResponse = await page.request.get("/ops/browser-reset");
+  const resetResponse = await page.request.get(
+    `/ops/browser-reset${resetScenario ? `?scenario=${encodeURIComponent(resetScenario)}` : ""}`
+  );
   expect(resetResponse.ok()).toBeTruthy();
 
   const loginParams = new URLSearchParams({
@@ -35,6 +50,7 @@ async function loginOperator(page, returnTo, subjectId = "operator-1", sessionTe
     return_to: returnTo,
     subject_id: subjectId
   });
+  if (recentAuthAt) loginParams.set("recent_auth_at", recentAuthAt);
 
   const loginURL = new URL(`/ops/browser-login?${loginParams.toString()}`, baseURL).toString();
   await page.goto(loginURL);
@@ -87,8 +103,8 @@ async function openPreviewError(page, query = "theme=light") {
 // noMatchRow mirrors structural.spec.js — visible() filter resolves across table/cards.
 function noMatchRow(page) {
   return page
-    .getByTestId("inbound-record-row")
-    .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+    .locator('[data-testid="inbound-records-table"] tbody tr, [data-testid="inbound-records-cards"] li')
+    .filter({ has: page.getByRole("button", { name: "Unrouted", exact: true }) })
     .filter({ visible: true })
     .first();
 }
@@ -104,10 +120,117 @@ async function selectDeliveryFull(page, row) {
 }
 
 async function selectInboundFull(page, row) {
-  await row.click();
+  const openButton = row.getByTestId("inbound-record-open");
+  if (await openButton.count()) {
+    await openButton.click();
+  } else {
+    // Mobile cards are the native control for opening Quick view.
+    const mobileOpen = row.getByTestId("inbound-record-row");
+    if (await mobileOpen.count()) await mobileOpen.click();
+    else await row.click();
+  }
   await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
   await page.getByTestId("inbound-quick-view-full").click();
   await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
+}
+
+async function assertZoomReadableValue(locator, label, expectedText, viewportWidth) {
+  await expect(locator, `${label} is rendered and visible`).toBeVisible();
+  await expect(locator, `${label} matches its complete fixture value`).toHaveText(expectedText);
+  await locator.scrollIntoViewIfNeeded();
+  const geometry = await locator.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const lines = [...range.getClientRects()].map(line => ({
+      left: line.left,
+      right: line.right,
+      top: line.top,
+      bottom: line.bottom
+    }));
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let lastText = null;
+    while (walker.nextNode()) {
+      if (walker.currentNode.textContent.trim()) lastText = walker.currentNode;
+    }
+    let lastCharacter = null;
+    if (lastText) {
+      let offset = lastText.textContent.length - 1;
+      while (offset >= 0 && /\s/.test(lastText.textContent[offset])) offset -= 1;
+      const character = document.createRange();
+      character.setStart(lastText, Math.max(offset, 0));
+      character.setEnd(lastText, Math.max(offset, 0) + 1);
+      const characterRect = character.getBoundingClientRect();
+      lastCharacter = { left: characterRect.left, right: characterRect.right };
+    }
+    return {
+      text: element.textContent.trim(),
+      left: rect.left,
+      right: rect.right,
+      top: rect.top,
+      bottom: rect.bottom,
+      viewportHeight: document.documentElement.clientHeight,
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+      documentScrollWidth: document.documentElement.scrollWidth,
+      lines,
+      lastCharacter
+    };
+  });
+
+  expect(geometry.text.length, `${label} has complete rendered text`).toBeGreaterThan(0);
+  expect(geometry.text, `${label} is not replaced by truncation`).not.toMatch(/(?:\.\.\.|…)/);
+  expect(geometry.lines.length, `${label} has rendered text geometry`).toBeGreaterThan(0);
+  expect(geometry.left, `${label} left edge`).toBeGreaterThanOrEqual(0);
+  expect(geometry.right, `${label} right edge`).toBeLessThanOrEqual(viewportWidth);
+  expect(geometry.top, `${label} top edge`).toBeGreaterThanOrEqual(0);
+  expect(geometry.bottom, `${label} bottom edge`).toBeLessThanOrEqual(geometry.viewportHeight);
+  expect(geometry.lines.every(line =>
+    line.left >= geometry.left && line.right <= geometry.right + 1 &&
+    line.left >= 0 && line.right <= viewportWidth + 1
+  ), `${label} text lines fit the value and layout viewport`).toBeTruthy();
+  expect(geometry.lastCharacter?.left, `${label} final character starts within the value`)
+    .toBeGreaterThanOrEqual(geometry.left);
+  expect(geometry.lastCharacter?.right, `${label} final character ends within the value`)
+    .toBeLessThanOrEqual(geometry.right + 1);
+  expect(geometry.scrollWidth - geometry.clientWidth, `${label} horizontal clipping`)
+    .toBeLessThanOrEqual(1);
+  expect(geometry.scrollHeight - geometry.clientHeight, `${label} vertical clipping`)
+    .toBeLessThanOrEqual(1);
+  expect(geometry.documentScrollWidth, `${label} document horizontal overflow`)
+    .toBeLessThanOrEqual(viewportWidth);
+}
+
+async function assertZoomReachableControl(control, label, viewportWidth) {
+  await expect(control, `${label} is visible at actual 200% zoom`).toBeVisible();
+  await control.scrollIntoViewIfNeeded();
+  const geometry = await control.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    return {
+      left: rect.left,
+      right: rect.right,
+      top: rect.top,
+      bottom: rect.bottom,
+      viewportWidth: document.documentElement.clientWidth,
+      viewportHeight: document.documentElement.clientHeight,
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+      documentScrollWidth: document.documentElement.scrollWidth
+    };
+  });
+
+  expect(geometry.viewportWidth, `${label} layout viewport width`).toBe(viewportWidth);
+  expect(geometry.left, `${label} left edge`).toBeGreaterThanOrEqual(0);
+  expect(geometry.right, `${label} right edge`).toBeLessThanOrEqual(viewportWidth);
+  expect(geometry.top, `${label} top edge`).toBeGreaterThanOrEqual(0);
+  expect(geometry.bottom, `${label} bottom edge`).toBeLessThanOrEqual(geometry.viewportHeight);
+  expect(geometry.scrollWidth - geometry.clientWidth, `${label} horizontal clipping`).toBeLessThanOrEqual(1);
+  expect(geometry.scrollHeight - geometry.clientHeight, `${label} vertical clipping`).toBeLessThanOrEqual(1);
+  expect(geometry.documentScrollWidth, `${label} document horizontal overflow`).toBeLessThanOrEqual(viewportWidth);
 }
 
 async function openOperatorReplayModal(page) {
@@ -126,20 +249,25 @@ async function openOperatorReplayModal(page) {
   await page.getByTestId("operator-replay-open").click();
   const modal = page.getByTestId("operator-replay-modal");
   await expect(modal).toBeVisible();
+  // phx-mounted moves initial focus to Close after the dialog is visible; wait for it
+  // so a test that drives focus is not overtaken by the mount focus on slow runners.
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-close");
   return modal;
 }
 
 async function openInboundReplayModal(page) {
   await openInbound(page);
   const replayableRow = page
-    .getByTestId("inbound-record-row")
-    .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+    .locator('[data-testid="inbound-records-table"] tbody tr, [data-testid="inbound-records-cards"] li')
+    .filter({ hasNot: page.getByRole("button", { name: "Unrouted", exact: true }) })
     .filter({ visible: true })
     .first();
   await selectInboundFull(page, replayableRow);
   await page.getByTestId("inbound-replay-open").click();
   const modal = page.getByTestId("inbound-replay-modal");
   await expect(modal).toBeVisible();
+  // Same mount-focus sync point as openOperatorReplayModal.
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-close");
   return modal;
 }
 
@@ -297,7 +425,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
     // The single obvious top action for Operator: the replay CTA (the one
     // destructive/dominant action in the detail header). It must be visible and
-    // be the dominant action button at 320px. Live copy is "Replay webhook"
+    // be the dominant action button at 320px. Live copy is "Review webhook replay"
     // (btn-error); the planner's prose label "Replay delivery" approximates it.
     const replayCta = page.getByTestId("operator-replay-open");
     await expect(replayCta).toBeVisible();
@@ -312,7 +440,10 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     // A bare delivery_id deep-link opens the Quick view; an off-page id surfaces
     // the error inside it (operator-quick-view-error), the list still behind it.
     await openOperator(page, `tenant_id=${tenantId}&view=deliveries&delivery_id=does-not-exist`);
+    const quickView = page.getByTestId("operator-quick-view");
     await expect(page.getByTestId("operator-quick-view-error")).toBeVisible();
+    await expect(quickView.getByTestId("operator-quick-view-full")).toHaveCount(0);
+    await expect(quickView.locator("dl")).toHaveCount(0);
     await assertSingleH1(page, "operator error");
     await assertNoRootOverflow(page, "operator error");
     await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator error master-detail");
@@ -376,8 +507,8 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     // prose label "Replay inbound message" approximates it.
     const replayableRow = page
       .getByTestId("inbound-records-cards")
-      .getByTestId("inbound-record-row")
-      .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+      .locator("li")
+      .filter({ hasNot: page.getByRole("button", { name: "Unrouted", exact: true }) })
       .filter({ visible: true })
       .first();
     await selectInboundFull(page, replayableRow);
@@ -401,7 +532,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
   test("Inbound boundary: filtered-empty window", async ({ page }) => {
     await openInbound(page, `tenant_id=${tenantId}&search=impossible-filtered-empty`);
-    await expect(page.getByText("No records match the current filters.")).toBeVisible();
+    await expect(page.getByText("No messages match the current filters.")).toBeVisible();
     await assertSingleH1(page, "inbound boundary");
     await assertNoRootOverflow(page, "inbound boundary");
     await assertNoElementHorizontalOverflow(page.getByTestId("inbound-master-detail"), "inbound boundary master-detail");
@@ -438,7 +569,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
   // --------------------------------- PREVIEW --------------------------------
 
-  test("Preview happy: scenario -> assigns form + render CTA; single dominant CTA at 320/system", async ({ page }) => {
+  test("Preview happy: scenario -> editable assigns + reset; no redundant render action at 320/system", async ({ page }) => {
     await openPreviewScenario(page, "");
     await assertSingleH1(page, "preview happy");
     await assertNoRootOverflow(page, "preview happy");
@@ -450,15 +581,11 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
       .evaluate(el => getComputedStyle(el).display);
     expect(scenarioLayoutDisplay).not.toBe("grid");
 
-    // The single obvious top action for Preview: the render CTA inside the
-    // assigns form. Live copy is "Render preview" (btn-primary); the planner's
-    // prose label "Render scenario" approximates it. Assert it is the dominant
-    // (btn-primary) action and visible at 320.
-    const renderCta = page.getByTestId("preview-assigns-form").locator("button.btn-primary").first();
-    await expect(renderCta).toBeVisible();
-    const box = await renderCta.boundingBox();
-    expect(box, "preview render CTA box").not.toBeNull();
-    expect(Math.round(box.height), "preview render CTA target floor").toBeGreaterThanOrEqual(44);
+    // Supported scalar edits render automatically. Reset is the explicit
+    // action; a separate Render button would be redundant and imply stale state.
+    const assignsForm = page.getByTestId("preview-assigns-form");
+    await expect(assignsForm.getByRole("button", { name: "Reset assigns", exact: true })).toBeVisible();
+    await expect(assignsForm.getByRole("button", { name: /render preview/i })).toHaveCount(0);
   });
 
   test("Preview error: BrokenMailer -> render error", async ({ page }) => {
@@ -491,6 +618,32 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await expect(mailablesPicker).toHaveAttribute("data-picker-variant", "menu");
     await page.getByTestId("preview-email-menu-trigger").click();
     await expect(mailablesPicker.getByRole("link", { name: "welcome_default", exact: true })).toBeVisible();
+  });
+
+  test("Phase 168 shared spacing: operator, Inbound reveal, and Preview gaps use 4px", async ({ page }) => {
+    await openOperator(page, `tenant_id=${tenantId}&view=deliveries&delivery_id=does-not-exist`);
+    const operatorError = page.getByTestId("operator-quick-view-error");
+    await expect(operatorError).toBeVisible();
+    const operatorErrorIcon = operatorError.locator(".mt-xs");
+    await expect(operatorErrorIcon).toBeVisible();
+    const iconMarginTop = await operatorErrorIcon.evaluate(element => getComputedStyle(element).marginTop);
+    expect(iconMarginTop, "operator error icon margin-top").toBe("4px");
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openInbound(page);
+    await selectInboundFull(page, noMatchRow(page));
+    const evidenceCard = page.getByTestId("inbound-evidence-card");
+    await expect(evidenceCard).toBeVisible();
+    const revealStack = evidenceCard.locator(".flex.flex-col.items-end");
+    const revealStackRowGap = await revealStack.evaluate(element => getComputedStyle(element).rowGap);
+    expect(revealStackRowGap, "Inbound evidence reveal row gap").toBe("4px");
+
+    await openPreviewIndex(page);
+    await page.getByTestId("preview-email-menu-trigger").click();
+    const scenarioList = page.getByTestId("preview-email-menu-scenario-list").first();
+    await expect(scenarioList).toBeVisible();
+    const scenarioRowGap = await scenarioList.evaluate(element => getComputedStyle(element).rowGap);
+    expect(scenarioRowGap, "Preview scenario list row gap").toBe("4px");
   });
 
   test("Preview advanced: frame theme differs from admin theme without overflow at 320", async ({ page }) => {
@@ -542,6 +695,314 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     expect(afterBg).not.toBe(beforeBg);
   });
 
+});
+
+test("Phase 168 Delivery Mailable wrapping", async ({ page }) => {
+  const mailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
+  fs.mkdirSync(gapClosureArtifacts, { recursive: true });
+  await page.setViewportSize({ width: 720, height: 900 });
+  await loginOperator(page, "/ops/mail?tenant_id=northstar", "operator-1", "northstar", "accounts");
+  await expect(page.getByTestId("operator-overview-health")).toBeVisible();
+  expect(await page.evaluate(() => window.innerWidth), "Health CSS viewport width").toBe(720);
+  const healthScreenshot = path.join(gapClosureArtifacts, "health-720-css.png");
+  await page.screenshot({ path: healthScreenshot, fullPage: true });
+  expect(fs.statSync(healthScreenshot).size, "Health screenshot is non-empty").toBeGreaterThan(0);
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
+  await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+  await page.getByTestId("operator-account-switcher").click();
+  const fjordline = page.locator(
+    '[data-testid="operator-account-option"][data-account-id="fjordline-aps"]'
+  );
+  await fjordline.click();
+  await expect(page).toHaveURL(/tenant_id=fjordline-aps/);
+
+  const row = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+  await selectDeliveryFull(page, row);
+  await page.locator("#delivery-detail-technical > summary").click();
+  const mailableElement = page.locator("#delivery-detail-mailable-trigger");
+  await expect(mailableElement).toHaveText("Mailables.TransactionalEmailWithVeryLongModuleName");
+  await expect(page.locator("#delivery-detail-mailable")).toHaveText(mailable);
+
+  for (const width of [320, 390, 720, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const geometry = await mailableElement.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return {
+        overflowWrap: getComputedStyle(element).overflowWrap,
+        left: rect.left,
+        right: rect.right,
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+        documentScrollWidth: document.documentElement.scrollWidth,
+        viewportWidth: window.innerWidth,
+        overflowing: [...document.querySelectorAll("body *")]
+          .map(node => ({ node, overflow: node.scrollWidth - node.clientWidth }))
+          .filter(({ overflow }) => overflow > 1)
+          .sort((a, b) => b.overflow - a.overflow)
+          .slice(0, 3)
+          .map(({ node, overflow }) =>
+            `${node.dataset.testid || node.tagName.toLowerCase()}: ${node.textContent.trim().slice(0, 48)} (+${overflow}px)`
+          )
+      };
+    });
+    expect(geometry.overflowWrap, `Mailable wrapping at ${width}px`).toBe("anywhere");
+    expect(geometry.left, `Mailable left edge at ${width}px`).toBeGreaterThanOrEqual(0);
+    expect(geometry.right, `Mailable right edge at ${width}px`).toBeLessThanOrEqual(width);
+    expect(
+      geometry.scrollWidth - geometry.clientWidth,
+      `Mailable element overflow at ${width}px`
+    ).toBeLessThanOrEqual(1);
+    expect(
+      geometry.documentScrollWidth,
+      `document width at ${width}px; overflowing elements: ${geometry.overflowing.join("; ")}`
+    ).toBeLessThanOrEqual(geometry.viewportWidth);
+
+    if ([320, 720, 1440].includes(width)) {
+      const screenshot = path.join(gapClosureArtifacts, `delivery-${width}-css.png`);
+      await page.screenshot({ path: screenshot, fullPage: true });
+      expect(fs.statSync(screenshot).size, `Delivery screenshot at ${width} CSS px is non-empty`)
+        .toBeGreaterThan(0);
+    }
+  }
+
+  const extensionPath = path.resolve(__dirname, "support/browser-zoom-extension");
+  const zoomContext = await chromium.launchPersistentContext("", {
+    channel: "chromium",
+    headless: true,
+    viewport: { width: 1440, height: 900 },
+    // Keep a 1440px device-pixel capture after the actual tab zoom halves CSS width.
+    deviceScaleFactor: 2,
+    args: [
+      `--disable-extensions-except=${extensionPath}`,
+      `--load-extension=${extensionPath}`
+    ]
+  });
+
+  try {
+    const zoomPage = zoomContext.pages()[0] || (await zoomContext.newPage());
+    await loginOperator(
+      zoomPage,
+      "/ops/mail?tenant_id=northstar",
+      "operator-1",
+      "northstar",
+      "accounts"
+    );
+    await zoomPage.goto("/ops/mail?tenant_id=northstar&view=deliveries");
+    await expect(zoomPage.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await zoomPage.getByTestId("operator-account-switcher").click();
+    await zoomPage
+      .locator('[data-testid="operator-account-option"][data-account-id="fjordline-aps"]')
+      .click();
+    await expect(zoomPage).toHaveURL(/tenant_id=fjordline-aps/);
+
+    const zoomRow = zoomPage.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+    const expectedDeliveryId = await zoomRow.getAttribute("phx-value-id");
+    expect(expectedDeliveryId, "the selected fixture row exposes its complete Delivery ID").toBeTruthy();
+    await selectDeliveryFull(zoomPage, zoomRow);
+    const expectedMailable = "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName";
+    await zoomPage.locator("#delivery-detail-technical > summary").click();
+    const zoomedMailable = zoomPage.locator("#delivery-detail-mailable-trigger");
+    await expect(zoomPage.locator("#delivery-detail-mailable")).toHaveText(expectedMailable);
+    const initialDevicePixelRatio = await zoomPage.evaluate(() => window.devicePixelRatio);
+
+    const serviceWorker =
+      zoomContext.serviceWorkers()[0] || (await zoomContext.waitForEvent("serviceworker"));
+    const tabZoom = await serviceWorker.evaluate(async () => {
+      const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      if (!tab?.id) throw new Error("The active browser tab is unavailable");
+      await chrome.tabs.setZoom(tab.id, 2);
+      return { requested: await chrome.tabs.getZoom(tab.id), tabId: tab.id };
+    });
+    expect(tabZoom.requested, "real Chromium tab zoom factor").toBe(2);
+
+    await expect
+      .poll(() => zoomPage.evaluate(() => window.devicePixelRatio))
+      .toBe(initialDevicePixelRatio * 2);
+
+    const accountContext = zoomPage.getByTestId("operator-account-context");
+    await expect(accountContext).toBeVisible();
+    await expect(accountContext).toContainText("fjordline-aps");
+    const topbarControls = [
+      ["committed Account context", accountContext],
+      ["Account switcher", zoomPage.getByTestId("operator-account-switcher")],
+      ["Appearance group", zoomPage.getByRole("group", { name: "Appearance", exact: true })],
+      ["System radio", zoomPage.getByRole("radio", { name: "System", exact: true })],
+      ["System radio label", zoomPage.getByRole("radio", { name: "System", exact: true }).locator("xpath=..")],
+      ["Light radio", zoomPage.getByRole("radio", { name: "Light", exact: true })],
+      ["Light radio label", zoomPage.getByRole("radio", { name: "Light", exact: true }).locator("xpath=..")],
+      ["Dark radio", zoomPage.getByRole("radio", { name: "Dark", exact: true })],
+      ["Dark radio label", zoomPage.getByRole("radio", { name: "Dark", exact: true }).locator("xpath=..")]
+    ];
+    for (const [label, control] of topbarControls) {
+      await assertZoomReachableControl(control, label, 720);
+    }
+
+    const detail = zoomPage.getByTestId("operator-detail-header");
+    await assertZoomReadableValue(detail.getByRole("button", { name: "Copy Delivery ID", exact: true }), "Delivery ID", expectedDeliveryId, 720);
+    await assertZoomReadableValue(zoomedMailable, "Mailable", "Mailables.TransactionalEmailWithVeryLongModuleName", 720);
+    await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider", "POSTMARK", 720);
+    await assertZoomReadableValue(
+      detail.getByText("del_01JXW9ZQKB3V1N4P2RMT7FHCG", { exact: true }),
+      "Provider message ID",
+      "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
+      720
+    );
+
+    const timelineEvent = zoomPage.getByTestId("operator-timeline-event").first();
+    await expect(timelineEvent).toBeVisible();
+    const expectedEventId = await timelineEvent.getAttribute("data-event-id");
+    expect(expectedEventId, "the selected fixture event exposes its complete Event ID").toBeTruthy();
+    const recordedTimestamp = timelineEvent.locator("time").first();
+    await expect(recordedTimestamp, "the fixture event has a recorded timestamp").toHaveCount(1);
+    const expectedRecordedTimestamp = (await recordedTimestamp.textContent()).trim();
+    expect(expectedRecordedTimestamp, "the fixture timestamp exposes its canonical UTC value").toBeTruthy();
+    await assertZoomReadableValue(
+      timelineEvent.getByRole("button", { name: "Copy Event ID", exact: true }),
+      "Timeline Event ID",
+      expectedEventId,
+      720
+    );
+    await assertZoomReadableValue(recordedTimestamp, "Recorded timestamp", expectedRecordedTimestamp, 720);
+    const providerEventId = timelineEvent.locator("p.mono").filter({ hasText: /^Provider Event ID:/ });
+    await expect(providerEventId, "the selected fixture event has no provider event ID").toHaveCount(0);
+    const providerTimestamp = timelineEvent.locator("p").filter({ hasText: /^Provider occurrence time:/ });
+    await expect(providerTimestamp, "the selected fixture event has no provider occurrence timestamp")
+      .toHaveCount(0);
+
+    const zoomGeometry = await zoomedMailable.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return {
+        layoutViewportWidth: window.innerWidth,
+        devicePixelRatio: window.devicePixelRatio,
+        overflowWrap: getComputedStyle(element).overflowWrap,
+        left: rect.left,
+        right: rect.right,
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+        documentScrollWidth: document.documentElement.scrollWidth
+      };
+    });
+    expect(zoomGeometry.layoutViewportWidth, "200% zoom halves the 1440 CSS layout viewport")
+      .toBe(720);
+    expect(
+      zoomGeometry.devicePixelRatio / initialDevicePixelRatio,
+      "200% browser zoom doubles devicePixelRatio"
+    ).toBe(2);
+    expect(zoomGeometry.overflowWrap, "Mailable wraps under actual 200% browser zoom").toBe("anywhere");
+    expect(zoomGeometry.left, "zoomed Mailable left edge").toBeGreaterThanOrEqual(0);
+    expect(zoomGeometry.right, "zoomed Mailable right edge")
+      .toBeLessThanOrEqual(zoomGeometry.layoutViewportWidth);
+    expect(zoomGeometry.scrollWidth - zoomGeometry.clientWidth, "zoomed Mailable element overflow")
+      .toBeLessThanOrEqual(1);
+    expect(zoomGeometry.documentScrollWidth, "zoomed document overflow")
+      .toBeLessThanOrEqual(zoomGeometry.layoutViewportWidth);
+
+    const description = zoomPage.getByText(
+      "Trace each delivery through its event history.",
+      { exact: true }
+    );
+
+    // UI-SPEC requires the supported 320 CSS px layout width and 200% browser
+    // zoom together. With the 2x device scale, a 640px Playwright viewport
+    // yields an actual 320 CSS px layout viewport while the tab remains at 2x.
+    await zoomPage.setViewportSize({ width: 640, height: 900 });
+    await expect.poll(() => zoomPage.evaluate(() => window.innerWidth)).toBe(320);
+    await expect.poll(() => zoomPage.evaluate(() => document.documentElement.clientWidth)).toBe(320);
+    const narrowTabZoom = await serviceWorker.evaluate(async () => {
+      const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      if (!tab?.id) throw new Error("The active browser tab is unavailable");
+      return chrome.tabs.getZoom(tab.id);
+    });
+    expect(narrowTabZoom, "narrow layout retains actual 200% browser zoom").toBe(2);
+    for (const [label, control] of topbarControls) {
+      await assertZoomReachableControl(control, `${label} at 320 CSS px`, 320);
+    }
+    await assertZoomReadableValue(detail.getByRole("button", { name: "Copy Delivery ID", exact: true }), "Delivery ID at 320 CSS px", expectedDeliveryId, 320);
+    await assertZoomReadableValue(zoomedMailable, "Mailable at 320 CSS px", "Mailables.TransactionalEmailWithVeryLongModuleName", 320);
+    await assertZoomReadableValue(detail.getByText("POSTMARK", { exact: true }), "Provider at 320 CSS px", "POSTMARK", 320);
+    await assertZoomReadableValue(
+      detail.getByText("del_01JXW9ZQKB3V1N4P2RMT7FHCG", { exact: true }),
+      "Provider message ID at 320 CSS px",
+      "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
+      320
+    );
+    await assertZoomReadableValue(
+      timelineEvent.getByRole("button", { name: "Copy Event ID", exact: true }),
+      "Timeline Event ID at 320 CSS px",
+      expectedEventId,
+      320
+    );
+    await assertZoomReadableValue(
+      recordedTimestamp,
+      "Recorded timestamp at 320 CSS px",
+      expectedRecordedTimestamp,
+      320
+    );
+    await assertZoomReadableValue(
+      description,
+      "Delivery explanation at 320 CSS px",
+      "Trace each delivery through its event history.",
+      320
+    );
+    const narrowDocumentWidth = await zoomPage.evaluate(() => document.documentElement.scrollWidth);
+    expect(narrowDocumentWidth, "320 CSS px at 200% has no page-level horizontal overflow").toBeLessThanOrEqual(320);
+    await expect(description).toBeVisible();
+    const clippedCopy = await Promise.all([description, zoomedMailable].map(locator =>
+      locator.evaluate(element => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        return {
+          text: element.textContent.trim(),
+          bounds: (() => {
+            const rect = element.getBoundingClientRect();
+            return { left: rect.left, right: rect.right };
+          })(),
+          lines: [...range.getClientRects()].map(rect => ({ left: rect.left, right: rect.right })),
+          lastCharacter: (() => {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+            let lastText = null;
+            while (walker.nextNode()) {
+              if (walker.currentNode.textContent.trim()) lastText = walker.currentNode;
+            }
+            if (!lastText) return null;
+            const character = document.createRange();
+            character.setStart(lastText, lastText.length - 1);
+            character.setEnd(lastText, lastText.length);
+            const rect = character.getBoundingClientRect();
+            const elementRect = element.getBoundingClientRect();
+            return { left: rect.left, right: rect.right, elementLeft: elementRect.left, elementRight: elementRect.right };
+          })()
+        };
+      })
+    ));
+    for (const copy of clippedCopy) {
+      expect(copy.text.length, "zoomed exact-value copy is present").toBeGreaterThan(0);
+      expect(copy.lines.length, "zoomed text produces visible line boxes").toBeGreaterThan(0);
+      expect(
+        copy.lines.every(line =>
+          line.left >= copy.bounds.left &&
+          line.right <= copy.bounds.right + 1 &&
+          line.left >= 0 &&
+          line.right <= zoomGeometry.layoutViewportWidth + 1
+        ),
+        `all rendered text lines fit their element and the ${zoomGeometry.layoutViewportWidth} CSS px viewport`
+      ).toBeTruthy();
+      expect(copy.lastCharacter?.left, "exact-value final character remains visible inside its element")
+        .toBeGreaterThanOrEqual(copy.bounds.left);
+      expect(copy.lastCharacter?.right, "exact-value final character does not clip past its element")
+        .toBeLessThanOrEqual(copy.bounds.right + 1);
+      expect(copy.lastCharacter?.right, "exact-value final character remains inside the viewport")
+        .toBeLessThanOrEqual(zoomGeometry.layoutViewportWidth + 1);
+    }
+
+    const zoomScreenshot = path.join(gapClosureArtifacts, "delivery-200-browser-zoom.png");
+    await zoomPage.screenshot({ path: zoomScreenshot, fullPage: true, scale: "device" });
+    expect(fs.statSync(zoomScreenshot).size, "200% zoom screenshot is non-empty").toBeGreaterThan(0);
+  } finally {
+    await zoomContext.close();
+  }
 });
 
 // =============================================================================
@@ -806,12 +1267,20 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     // sentinel wraps focus back to the first control, so focus stays inside the dialog.
     await page.locator("#inbound-replay-confirm").focus();
     await page.keyboard.press("Tab");
-    const focusInside = await modal.evaluate(el => el.contains(document.activeElement));
-    expect(focusInside, "focus remains within the inbound replay dialog after Tab past Confirm").toBeTruthy();
+    await expect
+      .poll(() => modal.evaluate(el => el.contains(document.activeElement)), {
+        message: "focus remains within the inbound replay dialog after Tab past Confirm"
+      })
+      .toBe(true);
 
     // Double-submit lock: Confirm carries phx-disable-with so a render->click double-fire
     // cannot append a duplicate replay run to the append-only ledger.
     await expect(page.locator("#inbound-replay-confirm")).toHaveAttribute("phx-disable-with", "Replaying…");
+    await page.locator("#inbound-replay-close").focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-confirm");
+    await page.keyboard.press("Tab");
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-close");
   });
 
   test("Operator replay modal: Tab off the last control keeps focus inside the dialog; Confirm locks after first click", async ({
@@ -822,10 +1291,320 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
 
     await page.locator("#operator-replay-confirm").focus();
     await page.keyboard.press("Tab");
-    const focusInside = await modal.evaluate(el => el.contains(document.activeElement));
-    expect(focusInside, "focus remains within the operator replay dialog after Tab past Confirm").toBeTruthy();
+    await expect
+      .poll(() => modal.evaluate(el => el.contains(document.activeElement)), {
+        message: "focus remains within the operator replay dialog after Tab past Confirm"
+      })
+      .toBe(true);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-close");
 
     await expect(page.locator("#operator-replay-confirm")).toHaveAttribute("phx-disable-with", "Replaying…");
+  });
+
+  test("Phase 168 Account scope", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    let holdAccountReply = false;
+    let heldAccountReply = null;
+    let resolveAccountReply;
+    let liveSocket = null;
+    await page.routeWebSocket(/\/live\/websocket/, socket => {
+      liveSocket = socket;
+      const server = socket.connectToServer();
+      socket.onMessage(message => server.send(message));
+      server.onMessage(message => {
+        if (holdAccountReply && String(message).includes("fjordline-aps")) {
+          holdAccountReply = false;
+          heldAccountReply = message;
+          resolveAccountReply?.();
+        } else {
+          socket.send(message);
+        }
+      });
+    });
+
+    await loginOperator(
+      page,
+      "/ops/mail?tenant_id=northstar",
+      "operator-1",
+      "northstar",
+      "accounts"
+    );
+    await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await expect(page.getByTestId("operator-account-id")).toHaveText("northstar");
+
+    // Give the prior Account a selected record; switching must drop this ID.
+    await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
+    await expect(page).toHaveURL(/delivery_id=/);
+    const targetAccount = page.locator(
+      '[data-testid="operator-account-option"][data-account-id="fjordline-aps"]'
+    );
+    await expect(targetAccount).toHaveAttribute("href", /tenant_id=fjordline-aps/);
+    await expect(targetAccount).not.toHaveAttribute("href", /delivery_id=/);
+    // Quick view is modal, so finish its focused task before opening the selector.
+    await page.getByTestId("operator-detail-back").click();
+    await expect(page).not.toHaveURL(/delivery_id=/);
+    const committedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+    const committedRowText = await committedRow.innerText();
+    const pendingSwitch = page
+      .getByTestId("operator-account-switch-status")
+      .filter({ hasText: "Switching to fjordline-aps…" });
+    await expect(pendingSwitch, "the target Account's pending status is available to the switch control")
+      .toHaveCount(1);
+    await expect(pendingSwitch, "status target uses a safe numeric token independent of the Account ID")
+      .toHaveAttribute("id", /^operator-account-switch-status-\d+$/);
+    await expect(pendingSwitch).toBeHidden();
+    await page.getByTestId("operator-account-switcher").click();
+    holdAccountReply = true;
+    const pendingAccountReply = new Promise(resolve => { resolveAccountReply = resolve; });
+    await targetAccount.click();
+
+    await pendingAccountReply;
+    await expect(pendingSwitch, "a delayed Account switch has visible pending feedback").toBeVisible();
+    await expect(pendingSwitch).toHaveAttribute("role", "status");
+    await expect(pendingSwitch).toHaveAttribute("aria-live", "polite");
+    await expect(pendingSwitch).toHaveAttribute("aria-atomic", "true");
+    await expect(pendingSwitch).toHaveText("Switching to fjordline-aps…");
+    await expect(page.getByTestId("operator-account-id")).toHaveText("northstar");
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await expect(page.getByTestId("operator-delivery-row").filter({ visible: true }).first()).toHaveText(committedRowText, { useInnerText: true });
+    liveSocket.send(heldAccountReply);
+    heldAccountReply = null;
+
+    await expect(page).toHaveURL(/tenant_id=fjordline-aps/);
+    await expect(page).not.toHaveURL(/delivery_id=/);
+    await expect(page.getByTestId("operator-account-id")).toHaveText("fjordline-aps");
+    await expect(pendingSwitch).toHaveCount(0);
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    const scopedRow = page.getByTestId("operator-delivery-row").filter({ visible: true }).first();
+    await expect(scopedRow).toContainText("fjordline-aps.example");
+    await scopedRow.click();
+    await expect(page.getByTestId("operator-quick-view")).toContainText("fjordline-aps");
+  });
+
+  test("Phase 168 essential shell and status type roles meet the UI contract", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await openOperator(page);
+
+    const sizes = await page.evaluate(() => {
+      const pixels = element => Number.parseFloat(getComputedStyle(element).fontSize);
+      const body = document.querySelector(".text-body");
+      const badges = [...document.querySelectorAll(".badge")];
+      const navigation = [...document.querySelectorAll('[data-testid="operator-shell"] nav a')];
+      return {
+        body: body ? pixels(body) : null,
+        badge: badges.map(pixels),
+        navigation: navigation.map(pixels)
+      };
+    });
+
+    expect(sizes.body, "body text uses the 16px role").toBe(16);
+    expect(sizes.badge.length, "status badges render on the selected operator page").toBeGreaterThan(0);
+    expect(Math.min(...sizes.badge), `essential badge sizes ${sizes.badge}`).toBeGreaterThanOrEqual(14);
+    expect(sizes.navigation.length, "operator navigation links render").toBeGreaterThan(0);
+    expect(Math.min(...sizes.navigation), `navigation sizes ${sizes.navigation}`).toBeGreaterThanOrEqual(14);
+  });
+
+  test("Phase 168 Quick view focus", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await openOperator(page);
+
+    const mobileRow = page.locator('[id^="operator-delivery-mobile-"]').first();
+    const deliveryId = await mobileRow.getAttribute("id");
+    await mobileRow.focus();
+    await page.keyboard.press("Enter");
+
+    const quickView = page.getByTestId("operator-quick-view");
+    await expect(quickView).toBeVisible();
+    await expect(quickView).toHaveAttribute("aria-modal", "true");
+    await expect(page.getByRole("heading", { name: "Quick view", exact: true })).toBeVisible();
+    await expect(quickView).toContainText("Updated");
+    await expect(quickView).toContainText("Delivery ID");
+    await expect(quickView).toContainText(deliveryId.replace("operator-delivery-mobile-", ""));
+    await expect(page.getByTestId("operator-quick-view-focus-return")).toHaveAttribute("data-focus-return-id", deliveryId);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-quick-view-close");
+
+    await quickView.getByTestId("operator-quick-view-next").focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("data-testid"))).toBe("operator-quick-view-full");
+
+    const idField = quickView.getByRole("button", { name: "Copy Delivery ID", exact: true });
+    const overflow = await idField.evaluate(element => element.scrollWidth - element.clientWidth);
+    expect(overflow, "full delivery ID wraps within the narrow dialog").toBeLessThanOrEqual(1);
+
+    const firstQuickViewControl = await quickView.evaluate(el => {
+      const controls = [...el.querySelectorAll(
+        "a[href], area[href], input:not([disabled]):not([type='hidden']), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [contenteditable='true'], [tabindex]:not([tabindex='-1'])"
+      )].filter(element => !element.hasAttribute("data-focus-trap") && element.getClientRects().length > 0);
+      return controls[0]?.id || controls[0]?.getAttribute("data-testid");
+    });
+    await page.getByTestId("operator-quick-view-full").focus();
+    await page.keyboard.press("Tab");
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id || document.activeElement?.getAttribute("data-testid"))).toBe(firstQuickViewControl);
+
+    await page.keyboard.press("Escape");
+    await expect(quickView).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(deliveryId);
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const desktopRow = page.locator('[id^="operator-delivery-desktop-"]').first();
+    const desktopId = await desktopRow.getAttribute("id");
+    await desktopRow.focus();
+    await page.keyboard.press("Enter");
+    await expect(quickView).toBeVisible();
+
+    await page.getByTestId("operator-detail-back").click();
+    await expect(quickView).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(desktopId);
+  });
+
+  test("Phase 168 confirmation focus", async ({ browser }) => {
+    const context = await browser.newContext({
+      baseURL,
+      viewport: { width: 320, height: 900 },
+      isMobile: true,
+      hasTouch: true
+    });
+    const page = await context.newPage();
+
+    let holdNextReply = false;
+    let holdReplayResponse = true;
+    let heldReply = null;
+    let resolveHeldReply = null;
+    let liveSocket = null;
+
+    await page.routeWebSocket(/\/live\/websocket/, socket => {
+      liveSocket = socket;
+      const server = socket.connectToServer();
+
+      socket.onMessage(message => {
+        if (holdReplayResponse && String(message).includes("confirm_replay")) holdNextReply = true;
+        server.send(message);
+      });
+
+      server.onMessage(message => {
+        if (holdNextReply) {
+          holdNextReply = false;
+          heldReply = message;
+          resolveHeldReply?.();
+        } else {
+          socket.send(message);
+        }
+      });
+    });
+
+    try {
+      await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+      await openOperator(page);
+      await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3));
+      await page.getByTestId("operator-replay-open").tap();
+      const modal = page.getByTestId("operator-replay-modal");
+      await expect(modal).toBeVisible();
+      await expect(modal.getByRole("heading", { name: "Review webhook replay" })).toBeVisible();
+      await expect(modal).toHaveAttribute("aria-describedby", "replay-modal-description");
+      await expect(modal).toContainText("browser-exact-delivery");
+      const operatorShell = page.getByTestId("operator-shell");
+      await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
+      const lightModalBackground = await modal.evaluate(element => getComputedStyle(element).backgroundColor);
+      await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+      await expect.poll(() => modal.evaluate(element => getComputedStyle(element).backgroundColor)).not.toBe(lightModalBackground);
+      const darkModalBackground = await modal.evaluate(element => getComputedStyle(element).backgroundColor);
+      expect(darkModalBackground).not.toBe(lightModalBackground);
+      await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+      await expect.poll(() => modal.evaluate(element => getComputedStyle(element).backgroundColor)).toBe(lightModalBackground);
+      await expect(operatorShell).not.toHaveAttribute("data-theme", /mailglass-/);
+      const motion = await modal.evaluate(element => ({
+        animation: getComputedStyle(element).animationDuration,
+        transition: getComputedStyle(element).transitionDuration
+      }));
+      expect(Number.parseFloat(motion.animation), `reduced-motion animation ${motion.animation}`).toBeLessThanOrEqual(0.001);
+      expect(Number.parseFloat(motion.transition), `reduced-motion transition ${motion.transition}`).toBeLessThanOrEqual(0.001);
+      const exactTargetId = await modal.getByTestId("operator-replay-target-id").innerText();
+      expect(exactTargetId).toMatch(/^[0-9a-f-]{36}$/i);
+      const initialFocus = await page.evaluate(() => ({
+        tag: document.activeElement?.tagName,
+        id: document.activeElement?.id,
+        text: document.activeElement?.textContent?.trim().slice(0, 60)
+      }));
+      expect(
+        await modal.evaluate(el => el.contains(document.activeElement)),
+        `focus should enter the confirmation dialog; active=${JSON.stringify(initialFocus)}`
+      ).toBeTruthy();
+
+      const pendingReply = new Promise(resolve => { resolveHeldReply = resolve; });
+      const confirm = modal.getByTestId("operator-replay-confirm");
+      await confirm.tap();
+      await pendingReply;
+      await expect(confirm).toHaveText("Replaying…");
+      await expect(confirm).toBeDisabled();
+      await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(exactTargetId);
+      await expect(modal).toContainText("Selected target");
+      await modal.locator("#operator-replay-close").focus();
+      await page.keyboard.press("Shift+Tab");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
+      await expect.poll(() => modal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
+
+      liveSocket.send(heldReply);
+      heldReply = null;
+      holdReplayResponse = false;
+      await expect(modal).toHaveCount(0);
+      await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+        "Replay command added 1 newly normalized Event."
+      );
+      const detail = page.getByTestId("operator-detail-column");
+      await expect(detail).toContainText("Webhook replay requested");
+      await expect(detail).toContainText("Webhook replay completed");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("replay-open-btn");
+
+      const staleAuthAt = "2000-01-01T00:00:00.000Z";
+      await loginOperator(
+        page,
+        `/ops/mail?tenant_id=${tenantId}`,
+        "operator-1",
+        tenantId,
+        null,
+        staleAuthAt
+      );
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+      await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+      await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3));
+      const replayTrigger = page.getByTestId("operator-replay-open");
+      await replayTrigger.tap();
+      const deniedModal = page.getByTestId("operator-replay-modal").filter({ visible: true }).first();
+      // LiveView's mounted focus runs after two animation frames. Let it
+      // finish before moving focus so Enter cannot activate Close instead.
+      await expect(deniedModal.locator("#operator-replay-close")).toBeFocused();
+      const deniedTarget = await deniedModal.getByTestId("operator-replay-target-id").innerText();
+      const deniedConfirm = deniedModal.getByTestId("operator-replay-confirm");
+      await deniedConfirm.focus();
+      await expect(deniedConfirm).toBeFocused();
+      await page.keyboard.press("Enter");
+      await expect.poll(() => page.locator("body").innerText()).toContain("Recent authentication is required.");
+      await expect(deniedModal).toBeVisible();
+      await expect(deniedModal.getByTestId("operator-replay-target-id")).toHaveText(deniedTarget);
+      await deniedModal.locator("#operator-replay-close").focus();
+      await page.keyboard.press("Shift+Tab");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
+      await expect.poll(() => deniedModal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
+      await page.keyboard.press("Escape");
+      await expect(page.getByTestId("operator-replay-modal").filter({ visible: true })).toHaveCount(0);
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("replay-open-btn");
+
+      await openOperator(page);
+      await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").filter({ visible: true }).first());
+      await page.getByTestId("operator-replay-open").tap();
+      const unavailableModal = page.getByTestId("operator-replay-modal");
+      await expect(unavailableModal).toContainText("Replay unavailable");
+      await expect(unavailableModal.getByTestId("operator-replay-confirm")).toHaveCount(0);
+      await expect(unavailableModal.getByTestId("operator-replay-target-id")).toHaveCount(0);
+      await unavailableModal.locator("#operator-replay-close").focus();
+      await page.keyboard.press("Shift+Tab");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
+      await expect.poll(() => unavailableModal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
+    } finally {
+      await context.close();
+    }
   });
 
 });

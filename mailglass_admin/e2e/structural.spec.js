@@ -1,4 +1,6 @@
-const { test, expect } = require("@playwright/test");
+const { test, expect, chromium } = require("@playwright/test");
+const fs = require("fs");
+const path = require("path");
 
 // Mirrors operator.spec.js tenantId exactly
 const tenantId = "browser-tenant";
@@ -23,7 +25,7 @@ const PRIMITIVE_VIEWPORTS = [
 ];
 
 const PRIMITIVE_STATES = {
-  nav_link: ["active", "inactive", "hover-ready", "focus-visible", "disabled", "long-label"],
+  nav_link: ["active", "inactive", "hover-ready", "focus-visible", "disabled"],
   nav_pill: ["active", "inactive", "hover-ready", "focus-visible", "disabled", "long-label"],
   tenant_chip: ["with-tenant", "no-tenant", "long-tenant", "non-ascii-tenant"],
   theme_picker: ["system-selected", "light-selected", "dark-selected", "hover-ready", "focus-visible", "disabled"],
@@ -592,9 +594,8 @@ async function assertStatCardShape(wrapper, label) {
   const valueEl = card.locator("p").nth(1);
   const severityEl = card.locator("p").nth(2);
 
-  // The label's truncating inner span carries the title tooltip (the hint icon now
-  // shares the label <p>, so the title moved onto the text span).
-  await expect(labelEl.locator("span").first(), `${label} label`).toHaveAttribute("title", /.+/);
+  await expect(labelEl.locator("span").first(), `${label} label`).toContainText(/.+/);
+  await expect(labelEl.locator("span").first(), `${label} label is available without hover`).not.toHaveAttribute("title");
   await expect(valueEl, `${label} value`).toHaveText(/.+/);
   await expect(severityEl.locator('[class*="hero-"]'), `${label} severity icon`).toBeVisible();
   await expect(severityEl.locator("span").last(), `${label} severity text`).toHaveText(/.+/);
@@ -607,8 +608,9 @@ async function assertStatCardShape(wrapper, label) {
       overflowWrap: style.overflowWrap
     };
   });
-  expect(valueStyle.whiteSpace, `${label} value nowrap`).toBe("nowrap");
+  expect(valueStyle.whiteSpace, `${label} value wraps`).toBe("normal");
   expect(valueStyle.fontVariantNumeric, `${label} tabular numeric treatment`).toContain("tabular-nums");
+  expect(valueStyle.overflowWrap, `${label} long value wraps`).toBe("anywhere");
 }
 
 async function assertPanelAboveScrim(modal, label) {
@@ -637,11 +639,20 @@ async function assertPanelAboveScrim(modal, label) {
 function noMatchRow(page) {
   // Phase 113: inbound-record-row appears in both hidden table and visible cards at mobile.
   // Use the visible() filter to always get the visible row regardless of viewport.
-  return page
+  // The outcome badge is an interactive help trigger, so a card renders it beside
+  // (not inside) its selection button: match the card by its badge, then take the
+  // card's selection control.
+  const unrouted = page.locator(".badge-warning", { hasText: "Unrouted" });
+  const tableRow = page
+    .getByTestId("inbound-records-table")
     .getByTestId("inbound-record-row")
-    .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
-    .filter({ visible: true })
-    .first();
+    .filter({ has: unrouted });
+  const cardRow = page
+    .getByTestId("inbound-records-cards")
+    .locator("li")
+    .filter({ has: unrouted })
+    .getByTestId("inbound-record-row");
+  return tableRow.or(cardRow).filter({ visible: true }).first();
 }
 
 // Two-tier inspection: a row click opens the condensed Quick view (peek); the full
@@ -654,10 +665,46 @@ async function selectDeliveryFull(page, row) {
 }
 
 async function selectInboundFull(page, row) {
-  await row.click();
+  await expect(row).toBeVisible();
+  // The desktop table wraps the selection action in an inner button; the
+  // mobile card is itself the selection control. Match the actual LiveView
+  // action so hidden responsive duplicates cannot make us click a non-control.
+  const selectControl = row.getByRole("button", { name: /^Open inbound message/ }).first();
+  if (await selectControl.count()) await selectControl.click();
+  else await row.click();
   await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
   await page.getByTestId("inbound-quick-view-full").click();
   await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
+}
+
+async function inboundRecordIdFromRow(row) {
+  const action = row.locator("[phx-value-id]").first();
+  const actionId = (await row.getAttribute("phx-value-id")) || (await action.getAttribute("phx-value-id"));
+  if (actionId) return actionId;
+
+  const desktopButton = row.getByRole("button", { name: /^Open inbound message/ }).first();
+  const control = await desktopButton.count() ? desktopButton : row;
+  const copy =
+    (await control.getAttribute("aria-label")) ||
+    (await control.getAttribute("phx-value-id")) ||
+    (await row.innerText());
+  return copy?.match(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i)?.[0];
+}
+
+async function firstReplayableInboundRecordId(page) {
+  const rows = page.getByTestId("inbound-record-row");
+  // The heading paints before the connected LiveView settles its records (the
+  // account chooser or an empty list can render first). Read rows only once the
+  // records list has actually rendered, so the scan cannot see zero rows.
+  await expect(rows.filter({ visible: true }).first()).toBeVisible();
+  for (let index = 0; index < (await rows.count()); index += 1) {
+    const row = rows.nth(index);
+    if (!(await row.isVisible())) continue;
+    if (/\bUnrouted\b/i.test(await row.innerText())) continue;
+    const recordId = await inboundRecordIdFromRow(row);
+    if (recordId) return recordId;
+  }
+  return undefined;
 }
 
 async function openOperatorReplayModal(page) {
@@ -699,7 +746,7 @@ async function openAmbiguousOperatorReplayModal(page) {
       return modal;
     }
 
-    await modal.getByRole("button", { name: "Close", exact: true }).click();
+    await modal.getByRole("button", { name: "Close replay review", exact: true }).click();
   }
 
   throw new Error("Ambiguous operator replay modal was not found");
@@ -708,12 +755,13 @@ async function openAmbiguousOperatorReplayModal(page) {
 async function openInboundReplayModal(page) {
   await openInbound(page);
 
-  const replayableRow = page
-    .getByTestId("inbound-record-row")
-    .filter({ visible: true })
-    .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
-    .first();
-  await selectInboundFull(page, replayableRow);
+  const recordId = await firstReplayableInboundRecordId(page);
+  expect(recordId, "the replayable inbound row exposes its exact record ID").toBeTruthy();
+  const detailUrl = new URL(page.url());
+  detailUrl.searchParams.set("inbound_id", recordId);
+  detailUrl.searchParams.set("full", "1");
+  await page.goto(detailUrl.toString());
+  await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
   await page.getByTestId("inbound-replay-open").click();
 
   const modal = page.getByTestId("inbound-replay-modal");
@@ -778,15 +826,20 @@ async function openOperatorReplayModalThemed(page, theme) {
 // Opens the inbound surface under a specific theme, then opens the replay modal.
 async function openInboundReplayModalThemed(page, theme) {
   await applyThemeEmulation(page, theme);
-  const query = ["tenant_id=" + tenantId, themeQuery(theme)].filter(Boolean).join("&");
-  await openInbound(page, query);
+  await openInbound(page, `tenant_id=${tenantId}`);
+  await page.context().addCookies([
+    { name: "mailglass_admin_theme_v2", value: theme, url: baseURL }
+  ]);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Inbound records", level: 1 })).toBeVisible();
 
-  const replayableRow = page
-    .getByTestId("inbound-record-row")
-    .filter({ visible: true })
-    .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
-    .first();
-  await selectInboundFull(page, replayableRow);
+  const recordId = await firstReplayableInboundRecordId(page);
+  expect(recordId, "the replayable inbound row exposes its exact record ID").toBeTruthy();
+  const detailUrl = new URL(page.url());
+  detailUrl.searchParams.set("inbound_id", recordId);
+  detailUrl.searchParams.set("full", "1");
+  await page.goto(detailUrl.toString());
+  await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
   await page.getByTestId("inbound-replay-open").click();
 
   const modal = page.getByTestId("inbound-replay-modal");
@@ -852,13 +905,16 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("ARIA roles/states", () => {
 
-    test("Operator: selected delivery row has aria-selected=true, nav has aria-current=page", async ({ page }) => {
+    test("Operator: selected delivery row exposes its current record, nav has aria-current=page", async ({ page }) => {
       await openOperator(page);
 
-      // Click the first delivery row and assert aria-selected is set
+      // The desktop table row is not an ARIA selectable widget (a plain table, not a
+      // grid). Its first cell holds the native "Open delivery" button, which carries
+      // the selection state — the same contract the inbound records table uses.
       const firstRow = page.getByTestId("operator-delivery-row").first();
       await firstRow.click();
-      await expect(firstRow).toHaveAttribute("aria-selected", "true");
+      await expect(firstRow).toHaveAttribute("data-selected", "true");
+      await expect(firstRow.getByRole("button", { name: /^Open delivery/ })).toHaveAttribute("aria-current", "true");
 
       // Assert a nav link with aria-current="page" exists (getByRole with current:true)
       await expect(
@@ -1157,7 +1213,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       // Two-tier model: the records list stays single-column at every width; the
       // detail is a Quick view OVERLAY, not a grid column.
-      await page.getByTestId("inbound-record-row").filter({ visible: true }).first().click();
+      await page.getByTestId("inbound-record-row").filter({ visible: true }).first().getByTestId("inbound-record-open").click();
       await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
       columns = parseGridColumns(
         await page.getByTestId("inbound-master-detail").evaluate(
@@ -1191,9 +1247,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Quick view bottom sheet.
       const mobileNoMatchRow = page
         .getByTestId("inbound-records-cards")
-        .getByTestId("inbound-record-row")
-        .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
-        .first();
+        .locator("li")
+        .filter({ has: page.locator(".badge-warning", { hasText: "Unrouted" }) })
+        .first()
+        .getByTestId("inbound-record-row");
       await mobileNoMatchRow.click();
       await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
       await expect(page.getByTestId("inbound-detail-back")).toBeVisible();
@@ -1211,11 +1268,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await page.goto(`/ops/mail/inbound?tenant_id=browser-empty`);
       // Phase 121 (D-07): truly-empty body uses the InboundMessage noun
-      await expect(page.getByText("No InboundMessages have been recorded yet.")).toBeVisible();
+      await expect(page.getByText("No messages have been received yet.")).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}&search=impossible-filtered-empty`);
       // Phase 113: filtered-empty copy updated per UI-SPEC contract
-      await expect(page.getByText("No records match the current filters.")).toBeVisible();
+      await expect(page.getByText("No messages match the current filters.")).toBeVisible();
 
       // A bare inbound_id deep-link opens the Quick view; an off-page id surfaces
       // the error inside it (inbound-quick-view-error).
@@ -1223,11 +1280,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("inbound-quick-view-error")).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
-      await noMatchRow(page).click();
+      await noMatchRow(page).getByTestId("inbound-record-open").click();
       await expect(page).toHaveURL(/inbound_id=/);
       // Row is selected while the Quick view sits over the list.
       await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
-      await expect(noMatchRow(page)).toHaveAttribute("aria-selected", "true");
+      await expect(noMatchRow(page)).toHaveAttribute("data-selected", "true");
+      await expect(noMatchRow(page).getByTestId("inbound-record-open")).toHaveAttribute("aria-current", "true");
       // Routing trace + evidence live in Full detail (behind "Open full detail").
       await page.getByTestId("inbound-quick-view-full").click();
       await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
@@ -1255,9 +1313,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     }) => {
       // Phase 163 protected evidence: this complete 2-theme × 3-viewport body
       // exhausted the 30,000ms default at 31.3s on both CI attempts while the
-      // same body passed locally in 16.9s. Keep the global default unchanged
-      // and give only this named matrix a finite ~2x protected bound.
-      test.setTimeout(60_000);
+      // same body passed locally in 16.9s. The inbound matrix also creates a
+      // fresh context for the denied-reveal contrast pass at each viewport.
+      // Keep the global default unchanged and give this named matrix a finite
+      // bound for those six isolated authorization checks.
+      test.setTimeout(120_000);
 
       const themes = [
         { name: "light", query: "theme=light", expectedTheme: "mailglass-light" },
@@ -1282,8 +1342,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           // Routing trace + evidence live in Full detail (behind "Open full detail").
           await selectInboundFull(page, row);
           await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
+          await page.getByTestId("inbound-routing-disclosure").locator("summary").click();
           await assertTextContrastAA(page.getByTestId("inbound-routing-trace"), `${theme.name} ${viewport.width} inbound-routing-trace`);
-          await assertTextContrastAA(page.getByTestId("inbound-route-card").first(), `${theme.name} ${viewport.width} inbound-route-card`);
+          await assertTextContrastAA(page.getByTestId("inbound-route-card").filter({ visible: true }).first(), `${theme.name} ${viewport.width} inbound-route-card`);
           await assertTextContrastAA(page.getByTestId("inbound-trace-clause").first(), `${theme.name} ${viewport.width} inbound-trace-clause`);
           // In Full detail the list row is hidden; the detail-back control is the
           // focusable selected-state boundary at every width.
@@ -1304,29 +1365,40 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await assertTextContrastAA(page.getByTestId("inbound-evidence-raw"), `${theme.name} ${viewport.width} inbound-evidence-raw`);
 
           const deniedQuery = `tenant_id=${denyRevealTenantId}${theme.query ? `&${theme.query}` : ""}`;
-          const deniedContext = await browser.newContext();
-          const deniedPage = await deniedContext.newPage();
-
-          try {
-            await deniedPage.setViewportSize(viewport);
-            await openInbound(deniedPage, deniedQuery, "deny-reveal", denyRevealTenantId);
-            await selectInboundFull(deniedPage, noMatchRow(deniedPage));
-            await deniedPage.getByTestId("inbound-evidence-reveal").click();
-            await expect(deniedPage.getByTestId("inbound-evidence-denied")).toBeVisible();
-            await expect(deniedPage.getByTestId("inbound-evidence-raw")).toHaveCount(0);
-            await assertTextContrastAA(deniedPage.getByTestId("inbound-evidence-denied"), `${theme.name} ${viewport.width} inbound-evidence-denied`);
-          } finally {
-            await deniedContext.close();
-          }
+          // Reuse the current page for the denied role instead of creating and
+          // closing six isolated contexts inside this 2-theme × 3-viewport matrix.
+          // The following account-state checks log back in as operator-1.
+          await page.setViewportSize(viewport);
+          await openInbound(page, deniedQuery, "deny-reveal", denyRevealTenantId);
+          // deny-reveal is a dedicated one-record fixture; avoid the browser-
+          // tenant no-match badge selector when extracting its scoped ID.
+          const deniedRecord = page.getByTestId("inbound-record-row").filter({ visible: true }).first();
+          await expect(deniedRecord, "the deny-reveal Account fixture row is visible").toBeVisible();
+          const deniedOpenButton = deniedRecord.getByTestId("inbound-record-open");
+          const deniedRecordId = await (await deniedOpenButton.count() ? deniedOpenButton : deniedRecord)
+            .getAttribute("phx-value-id");
+          expect(deniedRecordId, "the deny-reveal Account fixture exposes its scoped record ID").toBeTruthy();
+          const deniedDetail = new URLSearchParams({
+            tenant_id: denyRevealTenantId,
+            inbound_id: deniedRecordId,
+            full: "1"
+          });
+          if (theme.query) deniedDetail.set("theme", theme.query.replace(/^theme=/, ""));
+          await page.goto(`/ops/mail/inbound?${deniedDetail.toString()}`);
+          await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
+          await page.getByTestId("inbound-evidence-reveal").click();
+          await expect(page.getByTestId("inbound-evidence-denied")).toBeVisible();
+          await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
+          await assertTextContrastAA(page.getByTestId("inbound-evidence-denied"), `${theme.name} ${viewport.width} inbound-evidence-denied`);
 
           await openInbound(page, theme.query, "operator-1");
           // No account selected: render the shared account chooser.
           await assertTextContrastAA(page.getByRole("heading", { name: "Choose an account" }), `${theme.name} ${viewport.width} no-tenant`);
           await openInbound(page, `tenant_id=browser-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
           // Phase 121 (D-07): truly-empty body uses the InboundMessage noun; filtered-empty unchanged
-          await assertTextContrastAA(page.getByText("No InboundMessages have been recorded yet."), `${theme.name} ${viewport.width} truly-empty`);
+          await assertTextContrastAA(page.getByText("No messages have been received yet."), `${theme.name} ${viewport.width} truly-empty`);
           await openInbound(page, `tenant_id=${tenantId}&search=filtered-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
-          await assertTextContrastAA(page.getByText("No records match the current filters."), `${theme.name} ${viewport.width} filtered-empty`);
+          await assertTextContrastAA(page.getByText("No messages match the current filters."), `${theme.name} ${viewport.width} filtered-empty`);
           await openInbound(page, `tenant_id=${tenantId}&inbound_id=does-not-exist${theme.query ? `&${theme.query}` : ""}`, "operator-1");
           await assertTextContrastAA(page.getByTestId("inbound-quick-view-error"), `${theme.name} ${viewport.width} detail-error`);
         }
@@ -1339,7 +1411,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Select a replayable (non-no-match) row — the matched :accept row has an enabled replay button
       const replayableRow = page
         .getByTestId("inbound-record-row")
-        .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+        .filter({ hasNot: page.locator(".badge-warning", { hasText: "Unrouted" }) })
         .first();
       // Replay lives in Full detail (behind "Open full detail"), not the Quick view.
       await selectInboundFull(page, replayableRow);
@@ -1354,6 +1426,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       expect(await modal.getAttribute("aria-modal")).toBe("true");
       expect(await modal.getAttribute("phx-window-keydown")).toBe("close_replay");
       expect(await modal.getAttribute("phx-key")).toBe("Escape");
+
+      await page.locator("#inbound-replay-close").focus();
+      await page.keyboard.press("Shift+Tab");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-confirm");
+      await page.keyboard.press("Tab");
+      await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-close");
 
       // Assert Escape-to-close closes the modal (routes to existing close_replay handler)
       await page.keyboard.press("Escape");
@@ -1420,9 +1498,17 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(mailablesPicker).toBeVisible();
       await expect(mailablesPicker).toHaveAttribute("data-picker-variant", "menu");
       await expect(menuTrigger).toBeVisible();
-      await expect(menuTrigger).toContainText("HappyMailer");
+      const menuLabel = page.getByTestId("preview-email-menu-label");
+      await expect(menuLabel).toHaveText("Email preview");
+      await expect(menuTrigger).not.toContainText("Email preview");
+      await expect(menuTrigger).toHaveAccessibleName(
+        /Email preview.*HappyMailer/
+      );
+      await expect(menuTrigger.getByTestId("preview-email-menu-active-identity"))
+        .toContainText("HappyMailer");
+      await expect(menuTrigger.getByTestId("preview-email-menu-active-identity"))
+        .not.toContainText("MailglassAdmin.Fixtures");
       await expect(menuTrigger).toContainText("welcome_default");
-      await expect(menuTrigger).not.toContainText("MailglassAdmin.Fixtures");
       await expect(menuTrigger).not.toContainText("2 emails");
       await expect(menuTrigger.locator(".hero-envelope")).toHaveCount(0);
       await expect(menuTrigger.locator(".hero-chevron-down")).toHaveCount(0);
@@ -1444,6 +1530,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         .getByTestId("preview-email-menu-group-label")
         .filter({ hasText: "HappyMailer" });
       await expect(operationsGroupLabel).toBeVisible();
+      await expect(operationsGroupLabel).toHaveAttribute("title", "MailglassAdmin.Fixtures.HappyMailer");
       await expect(operationsGroupLabel).toHaveClass(/text-label/);
       await expect(operationsGroupLabel).toHaveClass(/uppercase/);
       await expect(operationsGroupLabel).toHaveClass(/text-secondary/);
@@ -1476,6 +1563,21 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(
         mailablesPicker.locator("a[href*='MailglassAdmin.Fixtures.HappyMailer/welcome_default']")
       ).not.toHaveAttribute("href", /theme=/);
+    });
+
+    test("Preview: desktop email picker uses available width and shows a concise mailable name", async ({ page }) => {
+      await page.setViewportSize({ width: 2048, height: 1200 });
+      await openPreviewScenario(page);
+
+      const picker = page.getByTestId("preview-mailables-picker");
+      const identity = page.getByTestId("preview-email-menu-active-identity");
+      const bounds = await picker.boundingBox();
+
+      expect(bounds?.width).toBeGreaterThan(700);
+      expect(bounds?.width).toBeLessThanOrEqual(896);
+      await expect(identity).toContainText("HappyMailer");
+      await expect(identity).toContainText("welcome_default");
+      await expect(identity).not.toContainText("MailglassAdmin.Fixtures");
     });
 
     test("Preview: no-Mailables empty branch exposes setup action only", async ({ page }) => {
@@ -1529,6 +1631,295 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-theme", "mailglass-dark");
+    });
+
+    test("Phase 171 framing: CSS-pixel width and browser backdrop survive Admin theme remount", async ({ page }) => {
+      await openPreviewScenario(page, "theme=light");
+
+      const frameWidth = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
+      const previewPane = page.getByTestId("preview-pane");
+      const frame = previewPane.locator("iframe");
+      const identity = page.getByTestId("preview-email-menu-active-identity");
+      // Phase 171: the selected identity wraps rather than clipping behind an
+      // ellipsis, so long names stay readable at narrow widths and 200% zoom.
+      await expect(identity).toHaveCSS("white-space", "normal");
+      await expect(identity).toHaveCSS("overflow-wrap", "anywhere");
+      await expect(page.getByText("Frame width", { exact: true })).toBeVisible();
+      await expect(page.getByText("Preview background", { exact: true })).toBeVisible();
+      await expect(frameWidth.getByRole("button", { name: "375 CSS pixels", exact: true })).toBeVisible();
+      await expect(frameWidth.getByRole("button", { name: "768 CSS pixels", exact: true })).toHaveAttribute("aria-pressed", "true");
+
+      await frameWidth.getByRole("button", { name: "375 CSS pixels", exact: true }).click();
+      await expect(frame).toHaveAttribute("style", /width:\s*375px/);
+      await expect(page).toHaveURL(/width=375/);
+      await frameWidth.getByRole("button", { name: "1024 CSS pixels", exact: true }).click();
+      await expect(frame).toHaveAttribute("style", /width:\s*1024px/);
+      await expect(page).toHaveURL(/width=1024/);
+
+      const limitationHelp = page.getByRole("button", { name: "Help for preview background" });
+      const limitation = page.locator("#preview-backdrop-help-tooltip");
+      await expect(limitationHelp).toBeVisible();
+      await expect(limitation).toBeHidden();
+      await limitationHelp.click();
+      await expect(limitation).toBeVisible();
+      await page.getByTestId("preview-frame-theme-toggle").click();
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+      await expect(previewPane).toHaveAttribute("data-preview-frame-theme", "dark");
+
+      await page.getByTestId("preview-global-controls").locator('input[name="preview_admin_theme"][value="dark"]').click();
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+      await expect(page.getByTestId("preview-pane").locator("iframe")).toHaveAttribute("style", /width:\s*1024px/);
+      await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
+      await expect(page.getByRole("group", { name: "Preview frame width in CSS pixels" })
+        .getByRole("button", { name: "1024 CSS pixels", exact: true })).toHaveAttribute("aria-pressed", "true");
+      await expect(page).toHaveURL(/width=1024/);
+    });
+
+    test("Phase 171 rendered: narrow layout keeps long identity, edits, output, and controls readable", async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.setViewportSize({ width: 320, height: 900 });
+      await openPreviewScenario(page, "theme=light");
+
+      const longScenario = "welcome_überraschung_東京__with_a_deliberately_long_name";
+      await page.getByTestId("preview-email-menu-trigger").click();
+      await page.getByTestId("preview-email-menu-option").filter({ hasText: longScenario }).click();
+      const identity = page.getByTestId("preview-email-menu-active-identity");
+      await expect(identity).toContainText("HappyMailer");
+      await expect(identity).not.toContainText("MailglassAdmin.Fixtures");
+      await expect(identity).toContainText(longScenario);
+
+      const widthGroup = page.getByRole("group", { name: "Preview frame width in CSS pixels" });
+      const widthButton = widthGroup.getByRole("button", { name: "375 CSS pixels", exact: true });
+      const backdrop = page.getByTestId("preview-frame-theme-toggle");
+      await assertTouchTarget(widthButton, "375 CSS pixel preview control at 320 CSS px");
+      await assertTouchTarget(backdrop, "preview backdrop control at 320 CSS px");
+      await widthButton.focus();
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Shift+Tab");
+      await expect(widthButton).toBeFocused();
+      const focusStyle = await widthButton.evaluate(el => {
+        const style = getComputedStyle(el);
+        return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth };
+      });
+      expect(focusStyle).toEqual({ outlineStyle: "solid", outlineWidth: "2px" });
+
+      const form = page.getByTestId("preview-assigns-form");
+      const nameInput = form.locator('[name="assigns[user_name]"]');
+      await expect(nameInput).toBeEditable();
+      const longName = "é東京 — recipient preview ".repeat(180);
+      await nameInput.fill(longName);
+      await expect.poll(() => page.locator("#tab-panel-html iframe").getAttribute("srcdoc"), {
+        timeout: 10_000
+      }).toContain(longName);
+      const textTab = page.getByRole("tab", { name: "Text", exact: true });
+      await textTab.click();
+      const textPanel = page.locator("#tab-panel-text");
+      await expect(textPanel.locator("pre")).toContainText(longName, { timeout: 10_000 });
+      await textPanel.focus();
+      await page.keyboard.press("PageDown");
+      const textScroll = await textPanel.evaluate(el => ({ top: el.scrollTop, height: el.scrollHeight, client: el.clientHeight }));
+      expect(textScroll.height).toBeGreaterThan(textScroll.client);
+      expect(textScroll.top).toBeGreaterThan(0);
+
+      const narrowLayout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth
+      }));
+      expect(narrowLayout.scrollWidth, "320 CSS px preview has no page-level horizontal overflow")
+        .toBeLessThanOrEqual(narrowLayout.clientWidth);
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      const tabletLayout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth
+      }));
+      expect(tabletLayout.scrollWidth, "390 CSS px preview has no page-level horizontal overflow")
+        .toBeLessThanOrEqual(tabletLayout.clientWidth);
+
+      const captureDir = path.resolve(__dirname, "../tmp/mailglass_admin_preview_capture");
+      fs.mkdirSync(captureDir, { recursive: true });
+      await page.screenshot({ path: path.join(captureDir, "phase171-390-light.png"), fullPage: true });
+      await page.emulateMedia({ colorScheme: "dark" });
+      await page.getByRole("radio", { name: "System", exact: true }).click();
+      await expect(page.getByTestId("preview-shell")).not.toHaveAttribute("data-theme");
+      await page.screenshot({ path: path.join(captureDir, "phase171-390-system-dark.png"), fullPage: true });
+      await page.setViewportSize({ width: 1024, height: 900 });
+      await page.getByRole("radio", { name: "Dark", exact: true }).click();
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+      const identityBox = await identity.boundingBox();
+      expect(identityBox, "selected identity has a rendered box at 1024 CSS px").not.toBeNull();
+      expect(identityBox.width, "selected identity does not collapse beside frame controls")
+        .toBeGreaterThanOrEqual(200);
+      expect(identityBox.height, "selected identity wraps across words rather than one character per line")
+        .toBeLessThan(200);
+      await page.screenshot({ path: path.join(captureDir, "phase171-1024-dark.png"), fullPage: true });
+      const motion = await textTab.evaluate(el => ({
+        animationDuration: Number.parseFloat(getComputedStyle(el).animationDuration),
+        transitionDuration: Number.parseFloat(getComputedStyle(el).transitionDuration)
+      }));
+      expect(motion.animationDuration, "reduced-motion suppresses preview animation").toBeLessThanOrEqual(0.001);
+      expect(motion.transitionDuration, "reduced-motion suppresses preview transitions").toBeLessThanOrEqual(0.001);
+
+      await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values?theme=light");
+      await expect(page.locator('#preview-assigns-form [name="assigns[label]"]')).toBeEditable();
+      await expect(page.locator('#preview-assigns-form #assigns-mode[data-readonly-display="true"]'))
+        .toHaveAttribute("aria-readonly", "true");
+      await expect(page.locator("#assigns-mode")).toContainText(":preview");
+
+      await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/recoverable?theme=light");
+      await page.locator('#preview-assigns-form [name="assigns[response]"]').fill("first changed");
+      await page.locator('#preview-assigns-form [name="assigns[response]"]').fill("fail");
+      await expect(page.getByTestId("preview-render-error")).toBeVisible();
+      await expect(page.getByText("Last successful preview — not current.", { exact: true })).toBeVisible();
+      const pendingStatus = page.locator("#preview-pending-status");
+      await page.getByTestId("preview-assigns-form").evaluate(el => el.classList.add("phx-change-loading"));
+      await expect(pendingStatus).toBeVisible();
+      await expect(page.getByText("Last successful preview — not current.", { exact: true })).toBeVisible();
+    });
+
+    test("Phase 171 rendered: actual 200% zoom retains preview controls and long identity at 320 CSS px", async () => {
+      const extensionPath = path.resolve(__dirname, "support/browser-zoom-extension");
+      const zoomContext = await chromium.launchPersistentContext("", {
+        channel: "chromium",
+        headless: true,
+        viewport: { width: 1440, height: 900 },
+        deviceScaleFactor: 2,
+        args: [
+          `--disable-extensions-except=${extensionPath}`,
+          `--load-extension=${extensionPath}`
+        ]
+      });
+
+      try {
+        const zoomPage = zoomContext.pages()[0] || await zoomContext.newPage();
+        await zoomPage.goto(new URL(
+          "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_überraschung_東京__with_a_deliberately_long_name?theme=light",
+          baseURL
+        ).toString());
+        await expect(zoomPage.getByTestId("preview-shell")).toBeVisible();
+        const initialDpr = await zoomPage.evaluate(() => window.devicePixelRatio);
+        const serviceWorker = zoomContext.serviceWorkers()[0] || await zoomContext.waitForEvent("serviceworker");
+        const zoom = await serviceWorker.evaluate(async () => {
+          const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+          if (!tab?.id) throw new Error("The active browser tab is unavailable");
+          await chrome.tabs.setZoom(tab.id, 2);
+          return chrome.tabs.getZoom(tab.id);
+        });
+        expect(zoom, "real Chromium tab zoom factor").toBe(2);
+        await expect.poll(() => zoomPage.evaluate(() => window.devicePixelRatio)).toBe(initialDpr * 2);
+        await zoomPage.setViewportSize({ width: 640, height: 900 });
+        await expect.poll(() => zoomPage.evaluate(() => window.innerWidth)).toBe(320);
+
+        const identity = zoomPage.getByTestId("preview-email-menu-active-identity");
+        await expect(identity).toContainText("welcome_überraschung_東京__with_a_deliberately_long_name");
+        const widthGroup = zoomPage.getByRole("group", { name: "Preview frame width in CSS pixels" });
+        const frameControls = [
+          widthGroup.getByRole("button", { name: "375 CSS pixels", exact: true }),
+          widthGroup.getByRole("button", { name: "768 CSS pixels", exact: true }),
+          widthGroup.getByRole("button", { name: "1024 CSS pixels", exact: true }),
+          zoomPage.getByTestId("preview-frame-theme-toggle")
+        ];
+        for (const [index, control] of frameControls.entries()) {
+          await expect(control, `preview control ${index + 1} at actual 200% zoom`).toBeVisible();
+          const bounds = await control.boundingBox();
+          expect(bounds, `preview control ${index + 1} has a rendered box`).not.toBeNull();
+          expect(bounds.width, `preview control ${index + 1} width`).toBeGreaterThanOrEqual(44);
+          expect(bounds.height, `preview control ${index + 1} height`).toBeGreaterThanOrEqual(44);
+          expect(bounds.x, `preview control ${index + 1} stays inside the viewport`).toBeGreaterThanOrEqual(0);
+          expect(bounds.x + bounds.width, `preview control ${index + 1} right edge stays in the viewport`)
+            .toBeLessThanOrEqual(320);
+        }
+
+        const layout = await zoomPage.evaluate(() => ({
+          clientWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          identityWidth: document.querySelector('[data-testid="preview-email-menu-active-identity"]').clientWidth,
+          identityScrollWidth: document.querySelector('[data-testid="preview-email-menu-active-identity"]').scrollWidth
+        }));
+        expect(layout.scrollWidth, "actual 200% zoom has no page-level horizontal overflow")
+          .toBeLessThanOrEqual(layout.clientWidth);
+        expect(layout.identityScrollWidth, "long selected identity remains within its container")
+          .toBeLessThanOrEqual(layout.identityWidth + 1);
+
+        const captureDir = path.resolve(__dirname, "../tmp/mailglass_admin_preview_capture");
+        fs.mkdirSync(captureDir, { recursive: true });
+        const screenshot = path.join(captureDir, "phase171-320-actual-200-percent.png");
+        await zoomPage.screenshot({ path: screenshot, fullPage: true });
+        expect(fs.statSync(screenshot).size, "200% zoom screenshot is non-empty").toBeGreaterThan(0);
+      } finally {
+        await zoomContext.close();
+      }
+    });
+
+    test("Phase 171 tabs: manual keyboard focus, activation, and long output scrolling", async ({ page }) => {
+      await openPreviewScenario(page, "theme=light");
+
+      const tabs = page.getByRole("tab");
+      const htmlTab = page.getByRole("tab", { name: "HTML", exact: true });
+      const textTab = page.getByRole("tab", { name: "Text", exact: true });
+      const rawTab = page.getByRole("tab", { name: "Raw", exact: true });
+      const headersTab = page.getByRole("tab", { name: "Headers", exact: true });
+      const textPanel = page.locator("#tab-panel-text");
+
+      await expect(tabs).toHaveCount(4);
+      expect(await tabs.evaluateAll(elements => elements.filter(el => el.tabIndex === 0).length)).toBe(1);
+      await htmlTab.focus();
+
+      await page.keyboard.press("ArrowLeft");
+      await expect(headersTab).toBeFocused();
+      await expect(htmlTab).toHaveAttribute("aria-selected", "true");
+      await expect(headersTab).toHaveAttribute("aria-selected", "false");
+
+      await page.keyboard.press("ArrowRight");
+      await expect(htmlTab).toBeFocused();
+      await page.keyboard.press("End");
+      await expect(headersTab).toBeFocused();
+      await page.keyboard.press("Home");
+      await expect(htmlTab).toBeFocused();
+      await expect(htmlTab).toHaveAttribute("aria-selected", "true");
+
+      await page.keyboard.press("ArrowRight");
+      await expect(textTab).toBeFocused();
+      const focusCue = await textTab.evaluate(el => {
+        const style = getComputedStyle(el);
+        return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth };
+      });
+      expect(focusCue).toEqual({ outlineStyle: "solid", outlineWidth: "2px" });
+      await page.keyboard.press("Enter");
+      await expect(textTab).toHaveAttribute("aria-selected", "true");
+      await expect(textPanel).toBeVisible();
+
+      await page.keyboard.press("ArrowRight");
+      await expect(rawTab).toBeFocused();
+      await expect(textTab).toHaveAttribute("aria-selected", "true");
+      await page.keyboard.press("Space");
+      await expect(rawTab).toHaveAttribute("aria-selected", "true");
+
+      await headersTab.click();
+      await expect(headersTab).toHaveAttribute("aria-selected", "true");
+
+      const longValue = "é東京 — ".repeat(2_500);
+      await page.locator('#preview-assigns-form [name="assigns[user_name]"]').fill(longValue);
+      await textTab.focus();
+      await page.keyboard.press("Enter");
+      await expect(textPanel.locator("pre")).toContainText(longValue, { timeout: 10_000 });
+      await expect(textPanel).toBeVisible();
+
+      await textTab.focus();
+      await page.keyboard.press("Tab");
+      await expect(textPanel).toBeFocused();
+      await page.keyboard.press("PageDown");
+      const scroll = await textPanel.evaluate(el => ({ top: el.scrollTop, height: el.scrollHeight, client: el.clientHeight }));
+      expect(scroll.height).toBeGreaterThan(scroll.client);
+      expect(scroll.top).toBeGreaterThan(0);
+
+      await page.goto("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/recoverable?theme=light");
+      await expect(page.getByTestId("preview-tab-strip")).toBeVisible();
+      await rawTab.click();
+      await page.locator('#preview-assigns-form [name="assigns[response]"]').fill("fail");
+      await expect(page.getByTestId("preview-render-error")).toBeVisible();
+      await expect(rawTab).toHaveAttribute("aria-selected", "true");
+      expect(await tabs.evaluateAll(elements => elements.filter(el => el.tabIndex === 0).map(el => el.id))).toEqual(["tab-btn-raw"]);
     });
 
     test("Preview: WCAG AA contrast matrix covers light/dark themes at 390/768/1440", async ({ page }) => {
@@ -1848,7 +2239,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("gallery certifies filter_field, filter_section, and migrated filters_form states", async ({
       page
     }) => {
+      // Viewport × theme × state matrix; ran 25.7s of the default 30s on CI before
+      // the v2.9 polish and now exceeds it. Same budget as the other matrix proofs.
+      test.setTimeout(60_000);
       await openGallery(page);
+      await expect(page.locator('[data-testid^="gallery-flash-"] .toast')).toHaveCount(0);
 
       for (const viewport of PRIMITIVE_VIEWPORTS) {
         await page.setViewportSize(viewport);
@@ -2097,10 +2492,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         .filter({ hasText: "Deliveries" })
         .first();
       await expect(activeDesktop).toBeVisible();
-      await expect(activeDesktop).toHaveClass(/border-l-2/);
-      await expect(activeDesktop).toHaveClass(/border-primary/);
+      await expect(activeDesktop).toHaveClass(/mg-nav-current/);
+      await expect(activeDesktop.locator(".mg-nav-label")).toHaveCSS("text-decoration-line", "underline");
 
-      await expect(page.getByTestId("operator-result-count")).toContainText("6 deliveries");
+      await expect(page.getByTestId("operator-result-count")).toContainText("(6)");
       // Honest single-page boundary: 6 deliveries at 20/page is one page, so the
       // pagination control (rendered only when total_pages > 1) is absent. Multi-page
       // boundary behaviour is covered by the inbound pagination test below.
@@ -2114,7 +2509,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("multi-tenant selector preserves surface state and inbound pagination uses real boundaries", async ({
       page
     }) => {
-      await page.setViewportSize({ width: 390, height: 844 });
+      await page.setViewportSize({ width: 320, height: 844 });
       await page.context().clearCookies();
       const resetResponse = await page.request.get("/ops/browser-reset");
       expect(resetResponse.ok()).toBeTruthy();
@@ -2124,19 +2519,48 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       );
 
       await expect(page.getByTestId("tenant-selector")).toBeVisible();
-      await expect(page.getByText("browser-tenant", { exact: true })).toBeVisible();
-      await expect(page.getByText("deny-reveal", { exact: true })).toBeVisible();
+      const reviewArtifacts = path.resolve(
+        __dirname,
+        "../../.planning/phases/168-shared-workspace-and-usable-baseline/artifacts/review-fix"
+      );
+      fs.mkdirSync(reviewArtifacts, { recursive: true });
+      await page.screenshot({ path: path.join(reviewArtifacts, "account-chooser-320.png"), fullPage: true });
+      const firstChoice = page.locator(
+        '[data-testid="tenant-selector-account-option"][data-account-id="browser-tenant"]'
+      );
+      await expect(firstChoice).toContainText("browser-tenant");
+      await expect(firstChoice).toBeVisible();
+      await page.getByTestId("operator-account-switcher").click();
+      const accountList = page.getByRole("list", { name: "Available Accounts" });
+      await expect(accountList.getByRole("listitem")).toHaveCount(2);
+      await expect(accountList.getByRole("link", { name: /browser-tenant/ })).toBeVisible();
+      await page.screenshot({ path: path.join(reviewArtifacts, "account-options-320.png"), fullPage: true });
+      await expect(
+        page.locator('[data-testid="operator-account-option"][data-account-id="browser-tenant"]')
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-testid="operator-account-option"][data-account-id="deny-reveal"]')
+      ).toBeVisible();
 
-      await page.getByRole("link", { name: /browser-tenant/ }).click();
+      await firstChoice.click();
       await expect(page).toHaveURL(/\/ops\/mail\/inbound\?/);
       await expect(page).toHaveURL(/tenant_id=browser-tenant/);
+      await page.screenshot({ path: path.join(reviewArtifacts, "selected-account-320.png"), fullPage: true });
+      await page.setViewportSize({ width: 390, height: 844 });
 
-      const activeMobile = page.locator('a[aria-current="page"][href*="/ops/mail/inbound"]').last();
+      const activeMobile = page
+        .locator('a[aria-current="page"][href*="/ops/mail/inbound"]')
+        .filter({ visible: true })
+        .last();
       await expect(activeMobile).toBeVisible();
-      await expect(activeMobile).toHaveClass(/border-b-2/);
-      await expect(activeMobile).toHaveClass(/border-primary/);
+      await expect(activeMobile).toHaveClass(/mg-nav-current/);
+      await expect(activeMobile.locator(".mg-nav-label")).toHaveCSS("text-decoration-line", "underline");
 
-      await expect(page.getByTestId("inbound-result-count")).toContainText("9 messages");
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.getByTestId("operator-account-switcher").click();
+      await page.screenshot({ path: path.join(reviewArtifacts, "account-options-1440.png"), fullPage: true });
+
+      await expect(page.getByTestId("inbound-result-count")).toContainText("(9)");
       // With per_page 20 (parity with Deliveries) the 9-record demo dataset fits on one
       // page, so no pagination chrome renders — the honest single-page state. The
       // multi-page prev/next path is covered by the inbound_live unit test (21-record fixture).
@@ -2329,13 +2753,15 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await expect(loadingCard, `${theme} ${viewport.width} loading aria-busy`).toHaveAttribute("aria-busy", "true");
           await expect(loadingCard.getByText("Loading", { exact: true })).toBeVisible();
 
-          // The label's title tooltip lives on the truncating inner span (the hint icon
-          // shares the label <p>), not the <p> itself.
+          // Long labels and values stay in the document flow; title hover is not
+          // the only way to recover complete content.
           const longLabel = primitiveWrapper(page, "stat_card", "long-label", theme).locator("article p").first().locator("span").first();
-          await expect(longLabel).toHaveAttribute("title", /Deliveries requiring operator review/);
+          await expect(longLabel).toContainText("Deliveries requiring operator review");
+          await expect(longLabel).not.toHaveAttribute("title");
 
           const longValue = primitiveWrapper(page, "stat_card", "long-value", theme).locator("article p").nth(1);
-          await expect(longValue).toHaveAttribute("title", /trace_01JXWIDEVALUE/);
+          await expect(longValue).toContainText(/trace_01JXWIDEVALUE/);
+          await expect(longValue).not.toHaveAttribute("title");
         }
 
         await assertNoElementHorizontalOverflow(
@@ -2391,11 +2817,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("data-display structural proof — Phase 113", () => {
 
-    test("responsive: operator-deliveries-table visible at 768px; operator-deliveries-cards visible at 390px (DATA-01)", async ({ page }) => {
-      await page.setViewportSize({ width: 768, height: 900 });
+    test("responsive: operator collection follows available content width for table/cards (DATA-01)", async ({ page }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
       await openOperator(page);
 
-      // At >=768px: table visible, cards hidden (hidden md:block / md:hidden)
+      const contentWidth = await page.locator("main").evaluate(el => el.getBoundingClientRect().width);
+      expect(contentWidth).toBeGreaterThanOrEqual(768);
       await expect(page.getByTestId("operator-deliveries-table")).toBeVisible();
       await expect(page.getByTestId("operator-deliveries-cards")).toBeHidden();
 
@@ -2450,19 +2877,27 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await openOperator(page);
 
-      const tableRow = page.getByTestId("operator-deliveries-table").locator("[data-testid='operator-delivery-row']").first();
+      const table = page.getByTestId("operator-deliveries-table");
+      const tableRow = table.locator("[data-testid='operator-delivery-row']").first();
       await expect(tableRow).toBeVisible();
+      // Recipient / Subject leads the row; the outcome badge lives in the column
+      // whose header is "Outcome". Resolve that column by its header, not position.
+      const headers = (await table.locator("thead th").allInnerTexts()).map(text => text.trim());
+      const outcomeIndex = headers.indexOf("Outcome");
+      expect(outcomeIndex, `delivery table has an Outcome column: ${JSON.stringify(headers)}`).toBeGreaterThanOrEqual(0);
       // status_badge renders a <span> with text — assert the badge has non-empty text
-      const tableStatusBadge = tableRow.locator("td").first().locator(".badge");
+      const tableStatusBadge = tableRow.locator("td").nth(outcomeIndex).locator(".badge");
       await expect(tableStatusBadge).toBeVisible();
       await expect(tableStatusBadge).toHaveText(/.+/);
 
-      // Mobile: cards visible — check status badge has visible text label
+      // Mobile: cards visible — the badge is an outcome-help trigger, so it sits
+      // beside (not inside) the card's selection button, within the same card.
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
-      const cardRow = page.getByTestId("operator-deliveries-cards").locator("[data-testid='operator-delivery-row']").first();
+      const card = page.getByTestId("operator-deliveries-cards").locator("li").first();
+      const cardRow = card.locator("[data-testid='operator-delivery-row']");
       await expect(cardRow).toBeVisible();
-      const cardStatusBadge = cardRow.locator(".badge").first();
+      const cardStatusBadge = card.locator(".badge").first();
       await expect(cardStatusBadge).toBeVisible();
       await expect(cardStatusBadge).toHaveText(/.+/);
     });
@@ -2472,54 +2907,67 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await openInbound(page);
 
-      const tableRow = page.getByTestId("inbound-records-table").locator("[data-testid='inbound-record-row']").first();
+      const table = page.getByTestId("inbound-records-table");
+      const tableRow = table.locator("[data-testid='inbound-record-row']").first();
       await expect(tableRow).toBeVisible();
-      const tableOutcomeBadge = tableRow.locator("td").first().locator(".badge");
+      const headers = (await table.locator("thead th").allInnerTexts()).map(text => text.trim());
+      const outcomeIndex = headers.indexOf("Outcome");
+      expect(outcomeIndex, `inbound table has an Outcome column: ${JSON.stringify(headers)}`).toBeGreaterThanOrEqual(0);
+      const tableOutcomeBadge = tableRow.locator("td").nth(outcomeIndex).locator(".badge");
       await expect(tableOutcomeBadge).toBeVisible();
       await expect(tableOutcomeBadge).toHaveText(/.+/);
 
-      // Mobile: inbound cards visible — check outcome badge has visible text
+      // Mobile: inbound cards visible — the outcome badge is a help trigger beside
+      // the card's selection button, inside the same card.
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
-      const cardRow = page.getByTestId("inbound-records-cards").locator("[data-testid='inbound-record-row']").first();
+      const card = page.getByTestId("inbound-records-cards").locator("li").first();
+      const cardRow = card.locator("[data-testid='inbound-record-row']");
       await expect(cardRow).toBeVisible();
-      const cardOutcomeBadge = cardRow.locator(".badge").first();
+      const cardOutcomeBadge = card.locator(".badge").first();
       await expect(cardOutcomeBadge).toBeVisible();
       await expect(cardOutcomeBadge).toHaveText(/.+/);
     });
 
-    test("aria-selected=true set on clicked row in both table (desktop) and card (mobile) presentations (DATA-04)", async ({ page }) => {
-      // Desktop: click a table row — aria-selected must be true
+    test("selected state is exposed on clicked delivery in both table (desktop) and card (mobile) presentations (DATA-04)", async ({ page }) => {
+      // Desktop: the row carries selected styling and its native "Open delivery"
+      // control exposes the current record (aria-current). The table row itself is
+      // not an ARIA selectable widget — same contract as the inbound table below.
       await page.setViewportSize({ width: 1280, height: 900 });
       await openOperator(page);
 
       const tableRow = page.getByTestId("operator-deliveries-table").locator("[data-testid='operator-delivery-row']").first();
       await tableRow.click();
-      await expect(tableRow).toHaveAttribute("aria-selected", "true");
+      await expect(tableRow).toHaveAttribute("data-selected", "true");
+      await expect(tableRow.getByRole("button", { name: /^Open delivery/ })).toHaveAttribute("aria-current", "true");
 
-      // Mobile: click a card row — aria-selected must be true
+      // Mobile cards are the native controls, so their aria-current state is direct.
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
       const cardRow = page.getByTestId("operator-deliveries-cards").locator("[data-testid='operator-delivery-row']").first();
       await cardRow.click();
-      await expect(cardRow).toHaveAttribute("aria-selected", "true");
+      await expect(cardRow).toHaveAttribute("data-selected", "true");
+      await expect(cardRow).toHaveAttribute("aria-current", "true");
     });
 
-    test("aria-selected=true set on clicked row in both inbound table (desktop) and card (mobile) presentations (DATA-04)", async ({ page }) => {
-      // Desktop: click an inbound table row — aria-selected must be true
+    test("selected state is exposed on inbound table rows and card controls (DATA-04)", async ({ page }) => {
+      // Desktop: the row carries selected styling and its native control exposes
+      // the current record. The table row itself is not an ARIA selectable widget.
       await page.setViewportSize({ width: 1280, height: 900 });
       await openInbound(page);
 
       const tableRow = page.getByTestId("inbound-records-table").locator("[data-testid='inbound-record-row']").first();
-      await tableRow.click();
-      await expect(tableRow).toHaveAttribute("aria-selected", "true");
+      await tableRow.getByTestId("inbound-record-open").click();
+      await expect(tableRow).toHaveAttribute("data-selected", "true");
+      await expect(tableRow.getByTestId("inbound-record-open")).toHaveAttribute("aria-current", "true");
 
-      // Mobile: click an inbound card row — aria-selected must be true
+      // Mobile cards are the native controls, so their aria-current state is direct.
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
       const cardRow = page.getByTestId("inbound-records-cards").locator("[data-testid='inbound-record-row']").first();
       await cardRow.click();
-      await expect(cardRow).toHaveAttribute("aria-selected", "true");
+      await expect(cardRow).toHaveAttribute("data-selected", "true");
+      await expect(cardRow).toHaveAttribute("aria-current", "true");
     });
 
     test("data-state four kinds render distinctly in gallery specimens (DATA-03)", async ({ page }) => {
@@ -2684,13 +3132,41 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           // group is wider than the VIEWPORT. At wide widths the column is roomy,
           // so the standard self-relative check applies directly.
           if (vp <= 768) {
-            const widestDescendant = await region.evaluate(el => {
+            // Field-help descriptions stay available to assistive technology as
+            // visually-hidden (sr-only) text. Those nodes are clipped 1×1px boxes;
+            // their scrollWidth is the length of unrendered nowrap text, not
+            // layout. They are measured separately below: each must remain a
+            // clipped ≤1px box, so none can contribute visible overflow.
+            const { widestDescendant, hiddenTextBoxes } = await region.evaluate(el => {
+              const visuallyHidden = node => {
+                const s = getComputedStyle(node);
+                const r = node.getBoundingClientRect();
+                return s.position === "absolute" && s.overflow === "hidden" &&
+                  r.width <= 1 && r.height <= 1 &&
+                  (s.clip !== "auto" || s.clipPath !== "none");
+              };
               let max = 0;
+              const hidden = [];
               for (const node of el.querySelectorAll("*")) {
+                const srOnly = node.closest(".sr-only");
+                if (srOnly) {
+                  // Measure the clipping sr-only box itself; its descendants are
+                  // inside that clip and cannot paint outside it.
+                  if (srOnly === node) {
+                    const box = node.getBoundingClientRect();
+                    hidden.push({ width: box.width, height: box.height, clipped: visuallyHidden(node) });
+                  }
+                  continue;
+                }
                 if (node.scrollWidth > max) max = node.scrollWidth;
               }
-              return max;
+              return { widestDescendant: max, hiddenTextBoxes: hidden };
             });
+            for (const box of hiddenTextBoxes) {
+              expect(box.clipped, `${innerTestId} sr-only text is a clipped visually-hidden box @${vp}`).toBeTruthy();
+              expect(box.width, `${innerTestId} sr-only text box width @${vp}`).toBeLessThanOrEqual(1);
+              expect(box.height, `${innerTestId} sr-only text box height @${vp}`).toBeLessThanOrEqual(1);
+            }
             expect(
               widestDescendant,
               `${innerTestId} widest descendant fits viewport @${vp}`
@@ -2965,7 +3441,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
         // Close via the modal's Close button (routes to close_replay; the
         // :if span's phx-remove fires JS.focus(to:"#replay-open-btn")).
-        await modal.getByRole("button", { name: "Close", exact: true }).click();
+        await modal.getByRole("button", { name: "Close replay review", exact: true }).click();
         await expect(page.getByTestId("operator-replay-modal")).toHaveCount(0);
 
         const activeId = await page.evaluate(

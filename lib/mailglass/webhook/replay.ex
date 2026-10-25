@@ -62,30 +62,38 @@ defmodule Mailglass.Webhook.Replay do
 
   defp run_replay(params, webhook_event, provider, normalized_events, requested_audit) do
     result =
-      Repo.transact(fn ->
-        _ = Repo.query!("SET LOCAL statement_timeout = '2s'", [])
-        _ = Repo.query!("SET LOCAL lock_timeout = '500ms'", [])
+      try do
+        Repo.transact(fn ->
+          _ = Repo.query!("SET LOCAL statement_timeout = '2s'", [])
+          _ = Repo.query!("SET LOCAL lock_timeout = '500ms'", [])
 
-        multi =
-          Multi.new()
-          |> append_events_for_each(normalized_events, provider, webhook_event)
-          |> update_projections_for_each(normalized_events, webhook_event.tenant_id)
-          |> Multi.run(:outcome_summary, fn _repo, changes ->
-            {:ok, summarize_replay(changes, normalized_events)}
-          end)
-          |> Events.append_multi(:replay_success_audit, fn changes ->
-            outcome = Map.fetch!(changes, :outcome_summary)
-            success_audit_attrs(params, webhook_event, requested_audit.id, outcome)
-          end)
+          multi =
+            Multi.new()
+            |> append_events_for_each(normalized_events, provider, webhook_event)
+            |> update_projections_for_each(normalized_events, webhook_event.tenant_id)
+            |> Multi.run(:outcome_summary, fn _repo, changes ->
+              {:ok, summarize_replay(changes, normalized_events)}
+            end)
+            |> Events.append_multi(:replay_success_audit, fn changes ->
+              outcome = Map.fetch!(changes, :outcome_summary)
+              success_audit_attrs(params, webhook_event, requested_audit.id, outcome)
+            end)
 
-        case Repo.multi(multi) do
-          {:ok, changes} ->
-            {:ok, build_success_result(params, webhook_event, provider, requested_audit, changes)}
+          case Repo.multi(multi) do
+            {:ok, changes} ->
+              {:ok, build_success_result(params, webhook_event, provider, requested_audit, changes)}
 
-          {:error, _step, reason, _changes} ->
-            {:error, reason}
-        end
-      end)
+            {:error, _step, reason, _changes} ->
+              {:error, reason}
+          end
+        end)
+      rescue
+        # A PostgreSQL exception aborts the transaction, including all normalized
+        # rows and projections. Convert only this supported persistence boundary to
+        # the command's safe failure shape; configuration and programming errors
+        # continue to raise.
+        _error in Postgrex.Error -> {:error, :result_persistence_failed}
+      end
 
     case result do
       {:ok, replay_result} ->
@@ -375,6 +383,7 @@ defmodule Mailglass.Webhook.Replay do
 
   defp classify_failure(reason) when reason in [:normalize_failed, :invalid_raw_payload], do: reason
   defp classify_failure(:webhook_event_not_found), do: :webhook_event_not_found
+  defp classify_failure(:result_persistence_failed), do: :result_persistence_failed
   defp classify_failure(_reason), do: :replay_failed
 
   defp event_step_name(idx) when is_integer(idx) and idx >= 0, do: :"event_#{idx}"

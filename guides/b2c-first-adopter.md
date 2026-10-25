@@ -28,10 +28,12 @@ defmodule MyApp.StudyReminder do
     |> subject("Your next Spanish review is ready")
     |> header("List-Unsubscribe", "<#{unsubscribe_url}>")
     |> header("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
-    |> text_body("Your review is ready.")
+    |> html_body("<p>Your next Spanish review is ready.</p>")
   end
 end
 ```
+
+See [Generated plaintext](authoring-mailables.md#generated-plaintext) for how rendered Mailables get their text body from HTML.
 
 Generate `unsubscribe_url` in the host or preference service from an opaque, signed recipient reference. Its POST action must be idempotent and disable only the represented notification category. Do not put an email address in the token or URL. Chimeway owns notification-key/channel preferences, quiet hours, caps, scheduling, digests, and fallback; Mailglass transports the headers and records delivery evidence. The built-in Mailglass stream-level endpoint remains the safe default when category-specific preferences are not needed.
 

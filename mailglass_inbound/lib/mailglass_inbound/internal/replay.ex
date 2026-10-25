@@ -12,9 +12,33 @@ defmodule MailglassInbound.Internal.Replay do
   alias MailglassInbound.Ingress.{Request, VerifiedRequest}
   alias MailglassInbound.Router.Matcher
 
-  @matched_outcomes [:accept, :ignore, :reject, :bounce]
+  # A failed callback still persists the resolved Mailbox identity. In a legacy
+  # record without a durable route binding, that proves routing matched but does
+  # not make the persisted module name safe to resolve for replay.
+  @mailbox_routed_outcomes [:accept, :ignore, :no_change, :reject, :bounce, :failed]
 
   defp schema_opts, do: [prefix: MailglassInbound.Config.schema()]
+
+  @spec eligibility(Ecto.UUID.t(), keyword()) :: {:ok, map()} | {:error, :not_found}
+  def eligibility(inbound_record_id, opts \\ [])
+      when is_binary(inbound_record_id) and is_list(opts) do
+    repo = Keyword.get(opts, :repo, MailglassInbound.Repo)
+    tenant_id = require_tenant!(opts)
+
+    case load_record(repo, inbound_record_id, tenant_id) do
+      %InboundRecord{} ->
+        case load_evidence(repo, inbound_record_id, tenant_id) do
+          %InboundEvidence{} = evidence ->
+            replay_eligibility(repo, inbound_record_id, tenant_id, evidence)
+
+          nil ->
+            ineligible(:missing_evidence)
+        end
+
+      nil ->
+        {:error, :not_found}
+    end
+  end
 
   # T-49-17 cross-tenant replay guard. Every load (record, evidence, execution
   # runs) is scoped by tenant via an explicit `tenant_id` where-clause AND
@@ -266,6 +290,40 @@ defmodule MailglassInbound.Internal.Replay do
     |> repo.one(schema_opts())
   end
 
+  defp replay_eligibility(repo, inbound_record_id, tenant_id, evidence) do
+    case Execution.route_from_evidence(evidence) do
+      {:ok, %{status: :matched, mailbox: mailbox}}
+      when is_atom(mailbox) and not is_nil(mailbox) ->
+        {:ok, %{status: :eligible, mailbox: Atom.to_string(mailbox)}}
+
+      {:ok, %{status: :matched}} ->
+        ineligible(:mailbox_unavailable)
+
+      {:ok, %{status: :no_match}} ->
+        ineligible(:no_prior_match)
+
+      {:error, :missing_binding} ->
+        legacy_eligibility(repo, inbound_record_id, tenant_id)
+
+      {:error, :unavailable} ->
+        ineligible(:mailbox_unavailable)
+
+      {:error, :not_authorized} ->
+        ineligible(:invalid_mailbox)
+
+      {:error, _reason} ->
+        ineligible(:invalid_mailbox)
+    end
+  end
+
+  defp legacy_eligibility(repo, inbound_record_id, tenant_id) do
+    case legacy_replay_mailbox_error(repo, inbound_record_id, tenant_id) do
+      {:error, {:replay_mailbox_missing, %{reason: reason}}} -> ineligible(reason)
+    end
+  end
+
+  defp ineligible(reason), do: {:ok, %{status: :ineligible, reason: reason}}
+
   defp resolve_mailbox(repo, inbound_record_id, tenant_id, evidence) do
     case Execution.route_from_evidence(evidence) do
       {:ok, %{status: :matched, mailbox: mailbox}} ->
@@ -306,8 +364,8 @@ defmodule MailglassInbound.Internal.Replay do
           run.tenant_id == ^tenant_id and
           run.source == :fresh and
           not is_nil(run.mailbox) and
-          run.outcome in ^@matched_outcomes,
-      order_by: [desc: run.inserted_at],
+          run.outcome in ^@mailbox_routed_outcomes,
+      order_by: [desc: run.inserted_at, desc: run.id],
       limit: 1
     )
     |> Tenancy.scope(tenant_id)
@@ -320,7 +378,7 @@ defmodule MailglassInbound.Internal.Replay do
         run.inbound_record_id == ^inbound_record_id and
           run.tenant_id == ^tenant_id and
           run.source == :fresh,
-      order_by: [desc: run.inserted_at],
+      order_by: [desc: run.inserted_at, desc: run.id],
       limit: 1
     )
     |> Tenancy.scope(tenant_id)

@@ -1,4 +1,30 @@
 const { test, expect } = require("@playwright/test");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const phase172EvidenceDir = path.resolve(
+  __dirname,
+  "../../../../.planning/phases/172-recipient-output-and-built-in-pages/artifacts/browser-evidence",
+);
+
+test.beforeAll(() => {
+  fs.mkdirSync(phase172EvidenceDir, { recursive: true });
+});
+
+async function captureEmailPreview(page, frameSelector, filename, expectedWidth) {
+  const frame = page.locator(frameSelector);
+  await expect(frame).toBeVisible();
+  await frame.evaluate((iframe, width) => {
+    iframe.style.width = `${width}px`;
+  }, expectedWidth);
+  const bounds = await frame.boundingBox();
+  expect(bounds).not.toBeNull();
+  expect(Math.abs(bounds.width - expectedWidth)).toBeLessThanOrEqual(1);
+  await page.screenshot({
+    path: path.join(phase172EvidenceDir, filename),
+    clip: bounds,
+  });
+}
 
 test.describe("mailglass demo evidence", () => {
   test.beforeEach(async ({ request }) => {
@@ -8,6 +34,70 @@ test.describe("mailglass demo evidence", () => {
       },
     });
     expect(response.ok()).toBeTruthy();
+  });
+
+  test("built-in unsubscribe pages keep their copy within narrow viewports", async ({ page }) => {
+    const states = [
+      {
+        name: "valid",
+        heading: "Unsubscribe",
+        copy: "You have not been unsubscribed. Visiting this page does not change your subscription.",
+        nextStep: "To unsubscribe, use your mail app's unsubscribe control when available, or contact the sender using the details in the message.",
+      },
+      {
+        name: "invalid",
+        heading: "This unsubscribe link is not valid.",
+        copy: "Check the message for a current link, or contact the sender using the details in the message.",
+      },
+      {
+        name: "expired",
+        heading: "This unsubscribe link has expired.",
+        copy: "Use your mail app's unsubscribe control when available, or contact the sender using the details in the message.",
+      },
+    ];
+
+    for (const state of states) {
+      for (const width of [1280, 320, 160]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(`/dev/unsubscribe/${state.name}`);
+        await expect(page.getByRole("heading", { name: state.heading, exact: true })).toBeVisible();
+        await expect(page.getByText(state.copy, { exact: true })).toBeVisible();
+        if (state.nextStep) {
+          await expect(page.getByText(state.nextStep, { exact: true })).toBeVisible();
+        }
+
+        const geometry = await page.evaluate(() => {
+          const documentElement = document.documentElement;
+          const main = document.querySelector("main");
+          const paragraphs = Array.from(document.querySelectorAll("main p"));
+
+          return {
+            scrollWidth: documentElement.scrollWidth,
+            viewportWidth: documentElement.clientWidth,
+            mainLeft: main.getBoundingClientRect().left,
+            mainRight: main.getBoundingClientRect().right,
+            clippedParagraphs: paragraphs.filter(
+              (paragraph) => paragraph.scrollWidth > paragraph.clientWidth + 1,
+            ).length,
+          };
+        });
+
+        expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+        expect(geometry.mainLeft).toBeGreaterThanOrEqual(0);
+        expect(geometry.mainRight).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+        expect(geometry.clippedParagraphs).toBe(0);
+
+        if (width === 1280 || width === 320) {
+          await page.screenshot({
+            path: path.join(
+              phase172EvidenceDir,
+              `unsubscribe-${state.name}-${width}.png`,
+            ),
+            fullPage: true,
+          });
+        }
+      }
+    }
   });
 
   test("dashboard links to preview and operator surfaces", async ({ page }) => {
@@ -35,6 +125,166 @@ test.describe("mailglass demo evidence", () => {
     await expect(page.getByTestId("admin-shell-page-header")).toBeVisible();
     await expect(page.getByTestId("preview-email-menu-trigger")).toBeVisible();
     await expect(page.getByTestId("preview-email-menu-trigger")).toContainText("AccountMailer");
+  });
+
+  test("preview distinguishes the public component and AtlasDesk HTML authoring paths", async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto(
+      "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375",
+    );
+
+    await expect(page.getByTestId("preview-email-menu-active-identity")).toContainText("AccountMailer");
+    const frameSelector = 'iframe[title="Email HTML preview — browser rendering only"]';
+    let emailFrame = page.frameLocator(frameSelector);
+    await expect(emailFrame.locator('[data-brand="AtlasDesk"]')).toBeVisible();
+    await expect(emailFrame.locator("h1")).toContainText("Join Northstar Logistics");
+
+    const invoiceOption = page
+      .getByTestId("preview-email-menu-panel")
+      .getByTestId("preview-email-menu-option")
+      .filter({ hasText: "invoice_ready" });
+    await expect(invoiceOption).toHaveAttribute(
+      "href",
+      "/dev/mail/MailglassDemoWeb.Mailers.ComponentMailer/invoice_ready?width=375",
+    );
+    await page.goto(
+      "/dev/mail/MailglassDemoWeb.Mailers.ComponentMailer/invoice_ready?width=375",
+    );
+
+    await expect(page).toHaveURL(/\/MailglassDemoWeb\.Mailers\.ComponentMailer\/invoice_ready\?width=375$/);
+    await expect(page.getByTestId("preview-email-menu-active-identity")).toContainText("ComponentMailer");
+    await expect(page.getByTestId("preview-email-menu-active-identity")).toContainText("invoice_ready");
+
+    await expect(emailFrame.locator("h1")).toContainText("Invoice INV-2026-0601 is ready");
+    await expect(emailFrame.locator("body")).toContainText("Élodie Fernández-Sørensen");
+    await expect(emailFrame.locator("body")).toContainText("AtlasDesk");
+    await expect(emailFrame.getByRole("link", { name: "Review invoice" })).toBeVisible();
+    const imageBounds = await emailFrame.locator("img").boundingBox();
+    const imageFallbackBounds = await emailFrame
+      .getByText(/This amount is also shown here/)
+      .boundingBox();
+    expect(imageBounds).not.toBeNull();
+    expect(imageFallbackBounds).not.toBeNull();
+    expect(imageFallbackBounds.y).toBeGreaterThanOrEqual(
+      imageBounds.y + imageBounds.height + 12,
+    );
+    await expect(
+      emailFrame.getByRole("link", { name: "Download the itemized invoice" }),
+    ).toHaveAttribute(
+      "href",
+      "https://app.atlasdesk.example/invoices/INV-2026-0601/download",
+    );
+    await expect(emailFrame.locator("img")).toHaveAttribute(
+      "alt",
+      "Illustration of the May 2026 invoice summary for Northstar Logistics",
+    );
+    await page.setViewportSize({ width: 1024, height: 1600 });
+    await captureEmailPreview(page, frameSelector, "invoice-preview-375.png", 375);
+
+    const previewOrder = await page.locator(frameSelector).evaluate((iframe) => {
+      const document = iframe.contentDocument;
+      const selectors = [
+        "h1",
+        'a[href="https://app.atlasdesk.example/invoices/INV-2026-0601"]',
+        'a[href="https://app.atlasdesk.example/invoices/INV-2026-0601/download"]',
+      ];
+      return selectors.map((selector) => {
+        const rect = document.querySelector(selector).getBoundingClientRect();
+        return { top: rect.top, bottom: rect.bottom };
+      });
+    });
+    expect(previewOrder[1].top).toBeGreaterThanOrEqual(previewOrder[0].bottom);
+    expect(previewOrder[2].top).toBeGreaterThanOrEqual(previewOrder[1].bottom + 12);
+
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.locator(frameSelector).evaluate((iframe) => {
+      iframe.style.width = "320px";
+    });
+    emailFrame = page.frameLocator(frameSelector);
+    await expect(page.locator(frameSelector)).toBeAttached();
+    await expect(emailFrame.locator("h1")).toContainText("Invoice INV-2026-0601 is ready");
+    const primaryAction = emailFrame.getByRole("link", { name: "Review invoice" });
+    await expect(primaryAction).toBeVisible();
+    const primaryActionBounds = await primaryAction.boundingBox();
+    expect(primaryActionBounds).not.toBeNull();
+    expect(primaryActionBounds.width).toBeGreaterThanOrEqual(44);
+    expect(primaryActionBounds.height).toBeGreaterThanOrEqual(44);
+    expect(primaryActionBounds.height).toBeLessThanOrEqual(52);
+
+    const publicOutput = await page.locator(frameSelector).evaluate((iframe) => {
+      const document = iframe.contentDocument;
+      const body = document.body;
+
+      return {
+        html: body.innerHTML,
+        scrollWidth: document.documentElement.scrollWidth,
+        viewportWidth: document.documentElement.clientWidth,
+        overflowingElements: Array.from(document.querySelectorAll("body *"))
+        .map((element) => {
+          const rect = element.getBoundingClientRect();
+          return {
+            tag: element.tagName,
+            width: rect.width,
+            right: rect.right,
+            attrWidth: element.getAttribute("width"),
+            style: element.getAttribute("style"),
+            text: element.textContent.trim().slice(0, 40),
+          };
+        })
+          .filter((element) => element.right > document.documentElement.clientWidth + 1)
+          .slice(0, 8),
+      };
+    });
+    expect(publicOutput.html).toContain('table role="presentation" width="100%"');
+    expect(publicOutput.html).toContain("max-width:600px;width:100%");
+    expect(publicOutput.html).toContain("v:roundrect");
+    expect(publicOutput.html).not.toContain('data-brand="AtlasDesk"');
+    expect(
+      publicOutput.scrollWidth,
+      JSON.stringify({ viewportWidth: publicOutput.viewportWidth, overflowingElements: publicOutput.overflowingElements }),
+    ).toBeLessThanOrEqual(publicOutput.viewportWidth);
+    const pageOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(pageOverflow).toBeLessThanOrEqual(0);
+    // Keep the preview application wide enough to show the entire email iframe;
+    // the iframe itself stays at 320px, the rendered-email width under test.
+    await page.setViewportSize({ width: 1024, height: 1600 });
+    await expect(emailFrame.locator("h1")).toContainText("Invoice INV-2026-0601 is ready");
+    await captureEmailPreview(page, frameSelector, "invoice-preview-320.png", 320);
+
+    // A 2× zoom on the rendered email keeps the same live text and link available.
+    await emailFrame.locator("html").evaluate((html) => {
+      html.style.zoom = "2";
+    });
+    await expect(emailFrame.locator("h1")).toContainText("Invoice INV-2026-0601 is ready");
+    await expect(emailFrame.getByRole("link", { name: "Download the itemized invoice" })).toBeVisible();
+
+    await page.setViewportSize({ width: 1024, height: 900 });
+    const existingOption = page
+      .getByTestId("preview-email-menu-panel")
+      .getByTestId("preview-email-menu-option")
+      .filter({ hasText: "invite_admin" });
+    await expect(existingOption).toHaveAttribute(
+      "href",
+      "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375",
+    );
+    await page.goto(
+      "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375",
+    );
+    await expect(page).toHaveURL(/\/MailglassDemoWeb\.Mailers\.AccountMailer\/invite_admin\?width=375$/);
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.locator(frameSelector).evaluate((iframe) => {
+      iframe.style.width = "320px";
+    });
+    await expect(
+      page.frameLocator(frameSelector).locator('[data-brand="AtlasDesk"]'),
+    ).toBeVisible();
+    const bespokeWidth = await page
+      .frameLocator(frameSelector)
+      .locator("body")
+      .evaluate(() => document.documentElement.scrollWidth);
+    expect(bespokeWidth).toBeLessThanOrEqual(320);
   });
 
   test("outbound operator opens with seeded delivery evidence", async ({ page }) => {
@@ -67,7 +317,10 @@ test.describe("mailglass demo evidence", () => {
     // viewport-agnostic inbound-records-list-card <aside> wrapper instead.
     await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
 
-    const inboundId = await page.getByTestId("inbound-record-row").first().getAttribute("phx-value-id");
+    // The desktop table row is not itself a control; its native "Open inbound
+    // message" button carries the record id (Phase 170-08 selection contract).
+    const inboundId = await page.getByTestId("inbound-record-open").first().getAttribute("phx-value-id");
+    expect(inboundId).toMatch(/^[0-9a-f-]{36}$/i);
     const returnTo = encodeURIComponent(
       `/ops/mail/inbound?tenant_id=northstar&inbound_id=${inboundId}&full=1`,
     );

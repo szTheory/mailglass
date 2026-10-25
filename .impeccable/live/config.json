@@ -1,0 +1,8 @@
+{
+  "files": [
+    "mailglass_admin/lib/mailglass_admin/layouts/root.html.heex"
+  ],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}

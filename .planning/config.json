@@ -14,6 +14,8 @@
     "quick_branch_template": null
   },
   "workflow": {
+    "test_command": "bash scripts/gsd-regression-gate.sh",
+    "test_gate_timeout": 600,
     "research": true,
     "plan_check": true,
     "verifier": true,

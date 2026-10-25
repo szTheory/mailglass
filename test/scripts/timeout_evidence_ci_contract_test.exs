@@ -67,7 +67,7 @@ defmodule Mailglass.Scripts.TimeoutEvidenceCIContractTest do
     assert gallery =~ "expect(cells.length, \"gallery exposes specimen cells\").toBeGreaterThan(50)"
 
     assert structural =~
-             ~r/Inbound: WCAG AA contrast matrix covers light\/dark themes at 390\/768\/1440[\s\S]{0,800}test\.setTimeout\(60_000\)/
+             ~r/Inbound: WCAG AA contrast matrix covers light\/dark themes at 390\/768\/1440[\s\S]{0,800}test\.setTimeout\(120_000\)/
 
     assert structural =~
              ~r/primitive cells render every planned state in light, dark, and system wrappers[\s\S]{0,800}test\.setTimeout\(60_000\)/

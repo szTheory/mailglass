@@ -142,6 +142,7 @@ defmodule Mailglass.Operator.ReplayTargets do
 
   defp candidate(%Delivery{} = delivery, webhook_event) when is_map(webhook_event) do
     %{
+      tenant_id: delivery.tenant_id,
       webhook_event_id: normalize_uuid(webhook_event.id),
       provider: webhook_event.provider,
       webhook_timestamp: normalize_timestamp(webhook_event.received_at),

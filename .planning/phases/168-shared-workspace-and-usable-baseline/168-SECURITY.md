@@ -1,0 +1,107 @@
+---
+phase: "168"
+slug: "shared-workspace-and-usable-baseline"
+status: verified
+threats_open: 0
+asvs_level: 1
+created: "2026-10-07"
+---
+
+# Phase 168 — Security
+
+Authored threat registers across Phase 168 were checked against the current implementation at ASVS L1 depth. All 18 threats are closed; the existing asset supply-chain risk remains accepted as documented at plan time. This is a mitigation-presence audit, not a penetration test. The workflow permits the L1 short circuit with an authored register and no open threats.
+
+## Trust Boundaries
+
+| Boundary | Description | Data crossing |
+| --- | --- | --- |
+| Browser to server selection | Account, filter and record parameters are untrusted | Tenant and Delivery IDs, filter strings |
+| Host operator grant to Account selection | `:operator_access` is global across the host's Mailglass persistence scope; options do not grant authority | Operator grant, selected tenant ID, activity-derived options |
+| Stored facts to rendered UI | HEEx escapes values; summaries retain observed semantics | Names, IDs, diagnostics, events and timestamps |
+| Confirmation to replay | Exact scoped target and action-time authorization precede execution | Tenant, Delivery, webhook event and actor |
+| Theme request to persistence | Closed values and namespaced cookie | System/Light/Dark preference |
+
+## Threat Register
+
+| Threat ID | Category | Component | Severity | Disposition | Mitigation / evidence | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| T-168-01 | Information disclosure | Account switch and reads | high | mitigate | Owner-confirmed policy: `:operator_access` is a global operator grant, not per-account membership. Activity-derived options are navigation aids. `Operator.Shell.tenant_switch_path/2` removes prior record IDs; reads retain the selected tenant predicate and `Tenancy.scope`, and live subscriptions use the selected tenant topic. Account-scope browser case and LiveView tests cover the switch. | closed |
+| T-168-02 | Spoofing | Active navigation and scope label | medium | mitigate | Shell Account label and active destinations derive from committed server route/selection. URL helpers whitelist preserved filters. No client-side optimistic label substitution. Delayed/rejected visual presentation remains a UI evidence concern, not a missing scope control. | closed |
+| T-168-03 | Injection | Labels, filters and diagnostics | medium | mitigate | Existing HEEx escaped interpolation and URI helpers remain in shell, filters, Quick view and replay; no raw HTML path added for host values. | closed |
+| T-168-04 | Repudiation | Delivery summary | medium | mitigate | Quick view/detail retain event values and timestamps; missing values render Unavailable. Delivery status is not fabricated from absent observations. Focused operator/component tests retain exact facts. | closed |
+| T-168-05 | Tampering | Theme preference | low | mitigate | `Theme.query_choice`/`cookie_choice` constrain choices; invalid or absent means System; existing namespaced HttpOnly SameSite cookie and local persistence path remain. Component and browser tests cover System versus explicit choice. | closed |
+| T-168-06 | Repudiation | Status and feedback | medium | mitigate | Shared timestamps expose recorded UTC values, nil is Unavailable, fabricated gallery refresh time removed. `RepairState.flash_success` distinguishes observed replay outcomes; repeated-patch browser cases retain the same factual status. | closed |
+| T-168-07 | Information disclosure | Quick view target | high | mitigate | `find_selected_delivery/2` matches the exact ID in the tenant-scoped collection; absent ID cannot fall back to another record. Browser Quick view case covers unavailable target. | closed |
+| T-168-08 | Elevation of privilege | Replay confirmation | high | mitigate | `confirm_replay` selects from server candidate set, invokes `DestructiveAction.authorize` with actor/Delivery/target, then `Replay.execute`; core replay fetch retains tenant and Delivery predicates. LiveView/browser tests exercise recent-auth denial and exact target. | closed |
+| T-168-09 | Repudiation | Replay outcome | medium | mitigate | Replay result status feeds existing `RepairState` outcome copy; pending, no-change, completion and denial retain target/facts. No downstream-delivery claim is inferred. | closed |
+| T-168-10 | Tampering | HEEx-to-served CSS bundle | low | mitigate | Existing Mix asset build runs before Playwright, and the Delivery wrapping case asserts computed wrapping and geometry against the served stylesheet at documented widths. | closed |
+| T-168-11 | Tampering | Delivery status badge projection | medium | mitigate | The list, detail, and Quick view use the downstream-aware status helper; `g_168_6` asserts rendered downstream outcomes without mutating the persisted `:sent` snapshot. | closed |
+| T-168-12 | Information disclosure | Exact support evidence cache | high | mitigate | Fallback identity includes tenant, focus, and record; `g_168_7` switches Accounts during a transient read and asserts no prior-tenant exact value renders. | closed |
+| T-168-13 | Denial of service | Replay confirmation read boundary | medium | mitigate | Only classified transient fresh-read errors are recoverable; `g_168_9` covers both reads, retained exact target, no premature side effect, and normal retry authorization. Unexpected errors still fail loudly. | closed |
+| T-168-14 | Tampering | Health observation cache | medium | mitigate | Cache identity includes tenant and parsed interval; `g_168_10` proves prior-window stale data is unavailable under the changed window while same-window stale behavior remains. | closed |
+| T-168-15 | Tampering | Shared flash component | low | mitigate | Preview separates success styling from its backing `:info` key; `g_168_8` clicks the rendered clear control and verifies the message remains absent. Existing callers default to their visual kind. | closed |
+| T-168-16 | Information disclosure | Pending Account switch status | high | mitigate | Pending feedback is shown separately from committed Account identity and data. `JS.show` targets a numeric option index independent of tenant ID syntax; the delayed-switch Playwright case verifies the old scope/data while the patch is held and the new scope after release. | closed |
+| T-168-17 | Tampering | HEEx-to-served CSS spacing contract | low | mitigate | The seven-template ExUnit guard rejects half-step and unsupported 2xs spacing utilities across named, arbitrary, nested, and slash-qualified variants, and verifies source/bundle 4px token rules; the existing Playwright lane verifies computed 4px operator margin plus Inbound evidence and Preview row gaps. | closed |
+| T-168-SC | Tampering | Asset dependencies | low | accept | Existing Mix build, vendored assets and opt-in browser tooling reused. Locked dependencies were synchronized for execution; no new dependency/toolchain introduced by Phase 168. | closed |
+
+## Accepted Risks Log
+
+| Risk ID | Threat ref | Rationale | Accepted by | Date |
+| --- | --- | --- | --- | --- |
+| R-168-SC | T-168-SC | Existing dependency supply-chain exposure; phase introduces no new dependency or product Node toolchain. Plan wording about no installation refers to avoiding new packages, not restoring existing locked dependencies. | Approved execution plans 168-01..04 | 2026-10-07 |
+
+## Security Audit Trail
+
+| Audit date | Threats total | Closed | Open | Run by |
+| --- | --- | --- | --- | --- |
+| 2026-10-07 | 10 | 10 | 0 | Execute-phase orchestrator, L1 mitigation-presence check |
+| 2026-10-08 | 16 | 16 | 0 | Execute-phase orchestrator, L1 plan-mitigation check |
+| 2026-10-08 | 17 | 17 | 0 | GSD security auditor, ASVS L1 |
+
+## Sign-Off
+
+- [x] All threats have a disposition.
+- [x] Accepted risk documented from authored plans.
+- [x] `threats_open: 0` confirmed (high blocking threshold).
+- [x] `status: verified` set.
+
+**Approval:** Verified 2026-10-08 at configured L1 depth.
+
+## Security Audit 2026-10-08
+
+The owner confirmed that `:operator_access` intentionally grants global operator
+access across Account IDs in the host's Mailglass persistence scope. No per-user
+Account membership contract is implied by the activity-derived selector list.
+The stable operator trust document now records this boundary.
+
+| Metric | Count |
+|---|---|
+| Threats found | 10 |
+| Closed | 10 |
+| Open | 0 |
+
+## Security Audit 2026-10-08
+
+| Metric | Count |
+|---|---|
+| Threats found | 16 |
+| Closed | 16 |
+| Open | 0 |
+
+## Security Audit 2026-10-08 — Plan 09
+
+The current Account-switch mitigation uses numeric option indices for `JS.show` targets, so arbitrary tenant IDs cannot alter CSS selector parsing. The held-response Playwright regression confirms the previous committed Account/data remain paired until the new scope commits.
+
+| Metric | Count |
+|---|---|
+| Threats found | 17 |
+| Closed | 17 |
+| Open | 0 |
+
+## Security Audit 2026-10-08
+
+| Metric | Count |
+|---|---|
+| Threats found | 18 |
+| Closed | 18 |
+| Open | 0 |

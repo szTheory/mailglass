@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 0
-waived_count: 8
-fixed_count: 28
-total_count: 36
-last_updated: 2026-09-19T14:05:44.937Z
+open_count: 8
+waived_count: 9
+fixed_count: 31
+total_count: 48
+last_updated: 2026-10-09T13:38:40.425Z
 ---
 
 # Broken Windows Ledger
@@ -51,6 +51,18 @@ last_updated: 2026-09-19T14:05:44.937Z
 | 34 | 164 | deviation | test/scripts/phase_164_closeout_test.exs |  | Consolidated argv, environment, and remote-relation assertions to preserve the five-test repository-attack contract | fixed |  | 2026-09-12T03:12:39.474Z | 2026-09-12T03:14:01.534Z |
 | 35 | 165 | deviation | test/support/suite_floor.ex | 249 | Extended installed-boundary exclusion compatibility contracts for Phase 165 | fixed |  | 2026-09-13T16:27:17.139Z | 2026-09-13T16:27:42.458Z |
 | 36 | 165 | deviation | .planning/STATE.md |  | state.update-progress undercounted completed predecessor phases and duplicated decision prefixes required normalization | fixed |  | 2026-09-13T18:29:48.613Z | 2026-09-13T18:30:03.302Z |
+| 37 | 168 | unmet-truth | mailglass_admin/lib/mailglass_admin/components.ex |  | Responsive Health page has 1px/164px document overflow at 320px/768px from the existing invisible stat-card tooltip; correct in overview/stat-card styling work. | fixed |  | 2026-10-07T19:07:23.109Z | 2026-10-07T19:27:18.127Z |
+| 38 | 168 | deviation | mailglass_admin/lib/mailglass_admin/inbound/records_list.ex | 83 | Removed synthetic stale observation time and used truthful stale copy with refresh guidance. | fixed |  | 2026-10-07T20:14:05.678Z | 2026-10-07T20:24:36.618Z |
+| 39 | 168 | unrun-verify | .planning/phases/168-shared-workspace-and-usable-baseline/168-BASELINE.md |  | Live OS appearance transition, reduced-motion behavior, transient error/pending feedback, and missing icon/font fallback were not directly emulated; focused tests cover semantics and long-copy behavior. | fixed |  | 2026-10-07T20:14:05.766Z | 2026-10-07T20:24:36.719Z |
+| 40 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Full-detail Back action retained the selected Delivery and reopened Quick view; explicit return now clears the selection while preserving list context. | open |  | 2026-10-08T00:33:40.535Z |  |
+| 41 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Exact Delivery LiveView read initially used the wrong arity; it now passes Account and Delivery ID. | open |  | 2026-10-08T00:33:40.627Z |  |
+| 42 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Invalid selection and read failures could resemble an empty Account; distinct non-disclosing and retry states now preserve query truth. | open |  | 2026-10-08T00:33:40.722Z |  |
+| 43 | 169 | deviation | mailglass_admin/test/support/operator_fixtures.ex |  | Timeline browser fixtures use a valid Event UUID and database-required timestamp values. | open |  | 2026-10-08T01:23:39.478Z |  |
+| 44 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator_live.ex |  | Health active-suppression count and historical suppressed-Event destination are labeled as separate populations. | open |  | 2026-10-08T01:23:39.597Z |  |
+| 45 | 169 | deviation | mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex | 141 | Changed the replay panel to an explicit 42rem max width with bounded internal scrolling after the 320px browser check found max-w-2xl rendered at 48px. | open |  | 2026-10-08T02:02:40.851Z |  |
+| 46 | 169 | deviation | mailglass_admin/e2e/flows.spec.js | 1115 | Updated replay browser expectations for the contracted close label and the next enabled focus target after a consumed review. | open |  | 2026-10-08T02:02:40.936Z |  |
+| 47 | 168 | deviation | mailglass_admin/e2e/flows.spec.js | 614 | Rendered spacing probe uses the deterministic Inbound quick-view error icon instead of the deliveries orientation icon; both validate the in-scope mt-xs utility. | waived | Accepted test-target adjustment: the Inbound quick-view icon is a deterministic rendered in-scope mt-xs sample for the operator-side computed margin criterion. | 2026-10-08T23:31:45.710Z | 2026-10-08T23:31:52.647Z |
+| 48 | 171 | skipped-test | mailglass_admin/test/mailglass_admin/voice_test.exs | 104 | Pre-existing LiveReload subscription log test remains tagged skip until persistent_term-gated logging lands. | open |  | 2026-10-09T13:38:40.425Z |  |
 
 ````json
 [
@@ -485,6 +497,162 @@ last_updated: 2026-09-19T14:05:44.937Z
     "reason": "",
     "recorded_at": "2026-09-13T18:29:48.613Z",
     "resolved_at": "2026-09-13T18:30:03.302Z"
+  },
+  {
+    "id": 37,
+    "kind": "unmet-truth",
+    "phase": "168",
+    "file": "mailglass_admin/lib/mailglass_admin/components.ex",
+    "line": null,
+    "description": "Responsive Health page has 1px/164px document overflow at 320px/768px from the existing invisible stat-card tooltip; correct in overview/stat-card styling work.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-10-07T19:07:23.109Z",
+    "resolved_at": "2026-10-07T19:27:18.127Z",
+    "milestone": "v2.9"
+  },
+  {
+    "id": 38,
+    "kind": "deviation",
+    "phase": "168",
+    "file": "mailglass_admin/lib/mailglass_admin/inbound/records_list.ex",
+    "line": 83,
+    "description": "Removed synthetic stale observation time and used truthful stale copy with refresh guidance.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-10-07T20:14:05.678Z",
+    "resolved_at": "2026-10-07T20:24:36.618Z",
+    "milestone": "v2.9"
+  },
+  {
+    "id": 39,
+    "kind": "unrun-verify",
+    "phase": "168",
+    "file": ".planning/phases/168-shared-workspace-and-usable-baseline/168-BASELINE.md",
+    "line": null,
+    "description": "Live OS appearance transition, reduced-motion behavior, transient error/pending feedback, and missing icon/font fallback were not directly emulated; focused tests cover semantics and long-copy behavior.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-10-07T20:14:05.766Z",
+    "resolved_at": "2026-10-07T20:24:36.719Z",
+    "milestone": "v2.9"
+  },
+  {
+    "id": 40,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+    "line": null,
+    "description": "Full-detail Back action retained the selected Delivery and reopened Quick view; explicit return now clears the selection while preserving list context.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T00:33:40.535Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 41,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+    "line": null,
+    "description": "Exact Delivery LiveView read initially used the wrong arity; it now passes Account and Delivery ID.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T00:33:40.627Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 42,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+    "line": null,
+    "description": "Invalid selection and read failures could resemble an empty Account; distinct non-disclosing and retry states now preserve query truth.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T00:33:40.722Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 43,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/test/support/operator_fixtures.ex",
+    "line": null,
+    "description": "Timeline browser fixtures use a valid Event UUID and database-required timestamp values.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T01:23:39.478Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 44,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/lib/mailglass_admin/operator_live.ex",
+    "line": null,
+    "description": "Health active-suppression count and historical suppressed-Event destination are labeled as separate populations.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T01:23:39.597Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 45,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex",
+    "line": 141,
+    "description": "Changed the replay panel to an explicit 42rem max width with bounded internal scrolling after the 320px browser check found max-w-2xl rendered at 48px.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T02:02:40.851Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 46,
+    "kind": "deviation",
+    "phase": "169",
+    "file": "mailglass_admin/e2e/flows.spec.js",
+    "line": 1115,
+    "description": "Updated replay browser expectations for the contracted close label and the next enabled focus target after a consumed review.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-08T02:02:40.936Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
+  },
+  {
+    "id": 47,
+    "kind": "deviation",
+    "phase": "168",
+    "file": "mailglass_admin/e2e/flows.spec.js",
+    "line": 614,
+    "description": "Rendered spacing probe uses the deterministic Inbound quick-view error icon instead of the deliveries orientation icon; both validate the in-scope mt-xs utility.",
+    "status": "waived",
+    "reason": "Accepted test-target adjustment: the Inbound quick-view icon is a deterministic rendered in-scope mt-xs sample for the operator-side computed margin criterion.",
+    "recorded_at": "2026-10-08T23:31:45.710Z",
+    "resolved_at": "2026-10-08T23:31:52.647Z",
+    "milestone": "v2.9"
+  },
+  {
+    "id": 48,
+    "kind": "skipped-test",
+    "phase": "171",
+    "file": "mailglass_admin/test/mailglass_admin/voice_test.exs",
+    "line": 113,
+    "description": "Pre-existing LiveReload subscription log test remains tagged skip until persistent_term-gated logging lands.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-09T13:38:40.425Z",
+    "resolved_at": null,
+    "milestone": "v2.9"
   }
 ]
 ````

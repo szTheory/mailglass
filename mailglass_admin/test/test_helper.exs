@@ -1,9 +1,5 @@
 ExUnit.start(exclude: [:skip])
 
-core_migrations_path =
-  :code.priv_dir(:mailglass)
-  |> Path.join("repo/migrations")
-
 # Inbound tables land in the SAME admin test DB so InboundLive-suite fixtures
 # (InboundRecord + InboundEvidence + ExecutionRun) and the operator overview's
 # list_tenants read (mailglass_inbound_records) resolve against
@@ -46,7 +42,9 @@ Application.put_env(
 
 {:ok, _, _} =
   Ecto.Migrator.with_repo(MailglassAdmin.TestRepo, fn repo ->
-    Ecto.Migrator.run(repo, core_migrations_path, :up, all: true, log: false)
+    Ecto.Migrator.up(repo, 99_000_000_000_000, MailglassAdmin.TestSupport.CoreInstallMigration,
+      log: false
+    )
 
     # Inbound schema via its programmatic installer under a dedicated version
     # slot (large enough not to collide with any core migration timestamp).

@@ -17,7 +17,13 @@ defmodule MailglassAdmin.DiscoveryTest do
     test "explicit list returns scenarios for healthy mailable" do
       assert [{HappyMailer, scenarios}] = Discovery.discover([HappyMailer])
 
-      assert Keyword.keys(scenarios) == [:welcome_default, :welcome_enterprise],
+      assert Keyword.keys(scenarios) == [
+               :welcome_default,
+               :welcome_enterprise,
+               :typed_values,
+               :recoverable,
+               :welcome_überraschung_東京__with_a_deliberately_long_name
+             ],
              "scenarios must preserve HappyMailer.preview_props/0 order"
     end
 
@@ -27,6 +33,7 @@ defmodule MailglassAdmin.DiscoveryTest do
 
     test "raising preview_props/0 yields {:error, formatted_stacktrace}" do
       assert [{BrokenMailer, {:error, msg}}] = Discovery.discover([BrokenMailer])
+
       assert msg =~ "boom",
              "formatted stacktrace must contain the raised message substring"
     end

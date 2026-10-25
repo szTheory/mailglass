@@ -18,6 +18,13 @@ defmodule MailglassInbound.MailboxTest do
     def process(_message), do: :ignore
   end
 
+  defmodule NoChangeMailbox do
+    @behaviour MailglassInbound.Mailbox
+
+    @impl true
+    def process(_message), do: :no_change
+  end
+
   defmodule RejectMailbox do
     @behaviour MailglassInbound.Mailbox
 
@@ -37,6 +44,7 @@ defmodule MailglassInbound.MailboxTest do
 
     assert :accept = AcceptMailbox.process(message)
     assert :ignore = IgnoreMailbox.process(message)
+    assert :no_change = NoChangeMailbox.process(message)
     assert {:reject, :invalid_sender} = RejectMailbox.process(message)
     assert {:bounce, :mailbox_full} = BounceMailbox.process(message)
   end
@@ -44,6 +52,7 @@ defmodule MailglassInbound.MailboxTest do
   test "only the locked mailbox outcomes are treated as valid results" do
     assert Mailbox.valid_outcome?(:accept)
     assert Mailbox.valid_outcome?(:ignore)
+    assert Mailbox.valid_outcome?(:no_change)
     assert Mailbox.valid_outcome?({:reject, :invalid_sender})
     assert Mailbox.valid_outcome?({:bounce, :mailbox_full})
 

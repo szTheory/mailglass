@@ -108,6 +108,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
       base
       |> maybe_put(:mailbox, Keyword.get(opts, :mailbox, default_mailbox(outcome)))
       |> maybe_put(:outcome_reason, Keyword.get(opts, :outcome_reason, default_reason(outcome)))
+      |> maybe_put(:failure, default_failure(outcome))
 
     {:ok, run} = InboundRecords.insert_execution_run(attrs)
     run
@@ -217,6 +218,9 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
 
   defp default_reason(outcome) when outcome in [:reject, :bounce], do: "fixture reason"
   defp default_reason(_outcome), do: nil
+
+  defp default_failure(:failed), do: %{"kind" => "fixture failure"}
+  defp default_failure(_outcome), do: nil
 
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)

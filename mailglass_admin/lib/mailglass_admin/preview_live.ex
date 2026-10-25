@@ -30,15 +30,14 @@ defmodule MailglassAdmin.PreviewLive do
   return (this plan) flows through `handle_params/3` into the same error
   card.
 
-  ## No PII in telemetry
+  ## Telemetry and delivery boundary
 
-  v0.1 emits NO telemetry. The cost of shipping the wrong whitelist once
-  is permanent (PII leaks into adopter handlers). v0.5 adds a
-  `mailables_count` counter after whitelist review.
-
-  Preview NEVER calls `Mailglass.Outbound.deliver/2` — per CLAUDE.md
-  pitfall #4 the admin boundary's `exports: [Router]` already
-  structurally prevents it, but the principle is reinforced here.
+  Preview adds no preview-specific telemetry. The shared `Mailglass.Renderer`
+  emits its normal render lifecycle telemetry. This LiveView calls the
+  renderer for content output; outbound preflight, adapter encoding,
+  tracking/compliance transformations, and delivery happen later. This
+  preview code path does not call `Mailglass.Outbound.deliver/2` and has no
+  send control.
 
   Boundary classification: submodule auto-classifies into the
   `MailglassAdmin` root boundary.
@@ -68,7 +67,10 @@ defmodule MailglassAdmin.PreviewLive do
       |> assign_new(:mailables, fn -> [] end)
       |> assign(:current_mailable, nil)
       |> assign(:current_scenario, nil)
+      |> assign(:scenario_defaults, %{})
       |> assign(:current_assigns, %{})
+      |> assign(:draft_assigns, %{})
+      |> assign(:field_errors, %{})
       |> assign(:device_width, 768)
       |> assign(:admin_chrome_theme, nil)
       |> assign(:preview_frame_dark_chrome, false)
@@ -78,10 +80,9 @@ defmodule MailglassAdmin.PreviewLive do
       |> assign(:page_uri, nil)
       |> assign(:active_tab, :html)
       |> assign(:render_nonce, System.unique_integer([:positive]))
-      |> assign(:html_body, "")
-      |> assign(:text_body, "")
-      |> assign(:raw_envelope, "")
-      |> assign(:headers, [])
+      |> assign(:last_success, %{html_body: "", text_body: "", raw_envelope: "", headers: []})
+      |> assign(:has_last_success?, false)
+      |> assign(:output_current?, false)
       |> assign(:render_error, nil)
       |> assign(:page_title, "Preview")
 
@@ -119,7 +120,10 @@ defmodule MailglassAdmin.PreviewLive do
           socket
           |> assign(:current_mailable, mailable)
           |> assign(:current_scenario, scenario)
+          |> assign(:scenario_defaults, defaults)
           |> assign(:current_assigns, current_assigns)
+          |> assign(:draft_assigns, %{})
+          |> assign(:field_errors, %{})
           |> assign(:device_width, device_width)
           |> assign(:admin_chrome_theme, admin_chrome_theme)
           |> assign(:preview_frame_dark_chrome, frame_from_params(params, socket))
@@ -188,9 +192,28 @@ defmodule MailglassAdmin.PreviewLive do
 
   @impl true
   def handle_event("assigns_changed", %{"assigns" => params}, socket) do
-    merged = merge_assigns(socket.assigns.current_assigns, params)
-    {:noreply, socket |> assign(:current_assigns, merged) |> rerender()}
+    case parse_assigns(socket.assigns.scenario_defaults, socket.assigns.current_assigns, params) do
+      {:ok, parsed} ->
+        {:noreply,
+         socket
+         |> assign(:current_assigns, parsed)
+         |> assign(:draft_assigns, %{})
+         |> assign(:field_errors, %{})
+         |> rerender()}
+
+      {:error, drafts, errors} ->
+        {:noreply,
+         socket
+         |> assign(:draft_assigns, Map.merge(socket.assigns.draft_assigns, drafts))
+         |> assign(:field_errors, errors)
+         |> assign(:output_current?, false)}
+
+      :invalid ->
+        {:noreply, socket}
+    end
   end
+
+  def handle_event("assigns_changed", _params, socket), do: {:noreply, socket}
 
   def handle_event("set_device", %{"width" => w}, socket) do
     width = parse_device_width_param(w)
@@ -238,7 +261,13 @@ defmodule MailglassAdmin.PreviewLive do
            socket.assigns.current_scenario
          ) do
       {:ok, defaults} ->
-        {:noreply, socket |> assign(:current_assigns, defaults) |> rerender()}
+        {:noreply,
+         socket
+         |> assign(:scenario_defaults, defaults)
+         |> assign(:current_assigns, defaults)
+         |> assign(:draft_assigns, %{})
+         |> assign(:field_errors, %{})
+         |> rerender()}
 
       _ ->
         {:noreply, socket}
@@ -273,7 +302,10 @@ defmodule MailglassAdmin.PreviewLive do
 
   @impl true
   def render(assigns) do
-    assigns = assign(assigns, :surface_paths, preview_surface_paths(assigns))
+    assigns =
+      assigns
+      |> assign(:surface_paths, preview_surface_paths(assigns))
+      |> assign(:no_preview_modules, no_preview_modules(assigns.mailables))
 
     ~H"""
     <AdminShell.shell
@@ -315,13 +347,13 @@ defmodule MailglassAdmin.PreviewLive do
       <:page_header>
         <h1 class="text-heading font-bold tracking-tight text-base-content">Preview</h1>
         <p class="text-body text-secondary">
-          Render an email exactly as your app would send it, then inspect HTML, text, raw source, headers, and assigns.
+          See how your emails look in HTML and plain text.
         </p>
       </:page_header>
 
       <div class="space-y-lg">
         <%= cond do %>
-          <% @render_error -> %>
+          <% @render_error && @current_scenario == :__error__ -> %>
             <div
               data-testid="preview-scenario-layout"
               class="space-y-lg"
@@ -339,7 +371,6 @@ defmodule MailglassAdmin.PreviewLive do
 
               <div
                 data-testid="preview-render-error"
-                role="alert"
                 class="motion-reveal rounded-box border border-error bg-base-200 p-lg"
               >
                 <%!-- Announce the error transition once, concisely. Scoping the
@@ -357,14 +388,14 @@ defmodule MailglassAdmin.PreviewLive do
                   </h2>
                 </div>
                 <p class="text-body text-secondary">
-                  <code class="font-mono text-label">{inspect(@current_mailable)}</code>
+                  <code class="break-all font-mono text-label">{inspect(@current_mailable)}</code>
                   raised while rendering the
-                  <code class="font-mono text-label">{@current_scenario}</code>
+                  <code class="break-all font-mono text-label">{@current_scenario}</code>
                   scenario. Fix it in
-                  <code class="font-mono text-label">{inspect(@current_mailable)}</code>
+                  <code class="break-all font-mono text-label">{inspect(@current_mailable)}</code>
                   and save to reload — the full error is below.
                 </p>
-                <pre class="mt-md font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-100 p-md rounded-box border border-base-300"><code>{@render_error}</code></pre>
+                <pre class="mt-md min-w-0 break-all font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-100 p-md rounded-box border border-base-300"><code>{@render_error}</code></pre>
               </div>
             </div>
           <% @current_scenario -> %>
@@ -372,8 +403,81 @@ defmodule MailglassAdmin.PreviewLive do
               data-testid="preview-scenario-layout"
               class="space-y-lg"
             >
-              <div class="min-w-0 space-y-lg">
-                <header class="relative mg-layer-dropdown flex flex-col gap-sm lg:flex-row lg:items-start lg:justify-between">
+              <div
+                id="preview-workbench"
+                data-testid="preview-workbench"
+                data-output-current={to_string(@output_current?)}
+                class="min-w-0 space-y-lg"
+              >
+                <style>
+                  #preview-workbench [data-output-not-current],
+                  #preview-workbench #preview-pending-status { display: none; }
+                  #preview-workbench[data-output-current="false"] [data-output-not-current] { display: block; }
+                  #preview-workbench:has(#preview-assigns-form.phx-change-loading) [data-output-not-current],
+                  #preview-workbench:has(#preview-assigns-form.phx-change-loading) #preview-pending-status { display: block; }
+                  #preview-workbench:has(#preview-assigns-form.phx-change-loading) #preview-state-status { display: none; }
+                  #preview-workbench:has(#preview-assigns-form.phx-change-loading) [role="tabpanel"] { opacity: 0.65; }
+                </style>
+
+                <p
+                  id="preview-pending-status"
+                  role="status"
+                  aria-live="polite"
+                  class="rounded-box border border-primary bg-base-200 p-sm text-body text-base-content"
+                >
+                  Updating preview. The visible output is not current.
+                </p>
+
+                <p
+                  :if={@has_last_success? && not @output_current?}
+                  data-output-not-current="true"
+                  class="rounded-box border border-warning bg-base-200 p-sm text-body text-base-content"
+                >
+                  Last successful preview — not current.
+                </p>
+
+                <p
+                  id="preview-state-status"
+                  role="status"
+                  aria-live="polite"
+                  class="sr-only"
+                >
+                  <%= cond do %>
+                    <% map_size(@field_errors) > 0 -> %>
+                      Correct the highlighted assign fields. Visible output is the last successful preview and is not current.
+                    <% @render_error && @has_last_success? -> %>
+                      Preview render failed. Visible output is the last successful preview and is not current.
+                    <% @render_error -> %>
+                      Preview render failed. Correct the assign or retry the preview.
+                    <% true -> %>
+                      Preview output is current.
+                  <% end %>
+                </p>
+
+                <div
+                  :if={@render_error}
+                  data-testid="preview-render-error"
+                  class="rounded-box border border-error bg-base-200 p-lg"
+                >
+                  <div class="flex items-center gap-sm mb-md">
+                    <Components.icon name="hero-exclamation-circle" class="w-5 h-5 text-error" />
+                    <h2 class="text-heading font-bold text-base-content">Preview render failed.</h2>
+                  </div>
+                  <p class="text-body text-secondary">
+                    Fix the selected Mailable scenario or retry the preview. The attempted assign values remain available below.
+                  </p>
+                  <pre class="mt-md min-w-0 break-all font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-100 p-md rounded-box border border-base-300"><code>{@render_error}</code></pre>
+                  <button
+                    type="button"
+                    data-testid="preview-render-retry"
+                    phx-click="render_preview"
+                    class="mg-focus-ring btn btn-ghost mt-md min-h-11 px-5"
+                  >
+                    Retry preview
+                  </button>
+                </div>
+
+                <header class="relative mg-layer-dropdown grid gap-md xl:grid-cols-2 xl:items-start">
                   <Sidebar.menu
                     mailables={@mailables}
                     current_mailable={@current_mailable}
@@ -384,27 +488,42 @@ defmodule MailglassAdmin.PreviewLive do
                   />
                   <div
                     data-testid="preview-header-controls"
-                    class="flex flex-wrap items-center justify-end gap-sm"
+                    class="flex min-w-0 flex-wrap items-start justify-start gap-md"
                   >
-                    <DeviceFrame.device_frame device_width={@device_width} />
-                    <button
-                      type="button"
-                      data-testid="preview-frame-theme-toggle"
-                      phx-click="toggle_preview_frame_theme"
-                      aria-pressed={if @preview_frame_dark_chrome, do: "true", else: "false"}
-                      aria-label={
-                        if @preview_frame_dark_chrome,
-                          do: "Switch the preview backdrop to light",
-                          else: "Switch the preview backdrop to dark"
-                      }
-                      class="mg-focus-ring btn btn-ghost btn-sm min-h-11 gap-xs px-sm"
-                    >
-                      <Components.icon
-                        name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}
-                        class="w-5 h-5"
-                      />
-                      <span class="text-label font-bold">Preview backdrop</span>
-                    </button>
+                    <div class="grid min-w-0 content-start gap-xs">
+                      <p class="text-label font-bold text-base-content">Frame width</p>
+                      <DeviceFrame.device_frame device_width={@device_width} />
+                    </div>
+                    <div class="grid min-w-0 content-start gap-xs">
+                      <p class="text-label font-bold text-base-content">Preview background</p>
+                      <div class="flex items-center gap-xs">
+                        <button
+                          type="button"
+                          data-testid="preview-frame-theme-toggle"
+                          phx-click="toggle_preview_frame_theme"
+                          aria-pressed={if @preview_frame_dark_chrome, do: "true", else: "false"}
+                          aria-label={
+                            if @preview_frame_dark_chrome,
+                              do: "Switch the preview backdrop to light",
+                              else: "Switch the preview backdrop to dark"
+                          }
+                          class="mg-focus-ring btn btn-ghost btn-sm min-h-11 gap-xs px-sm"
+                        >
+                          <Components.icon
+                            name={if @preview_frame_dark_chrome, do: "hero-moon", else: "hero-sun"}
+                            class="w-5 h-5"
+                          />
+                          <span class="text-label font-bold">
+                            {if @preview_frame_dark_chrome, do: "Dark", else: "Light"}
+                          </span>
+                        </button>
+                        <Components.field_help
+                          id="preview-backdrop-help"
+                          label="preview background"
+                          text="Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior."
+                        />
+                      </div>
+                    </div>
                     <%!-- Backdrop state is announced in TEXT, never the backdrop color
                             alone (WCAG 1.4.1). The region is always present so the flip is
                             perceived in both directions (mirrors evidence_card.ex). --%>
@@ -421,16 +540,20 @@ defmodule MailglassAdmin.PreviewLive do
 
                 <Tabs.tabs
                   active_tab={@active_tab}
-                  html_body={@html_body}
-                  text_body={@text_body}
-                  raw_envelope={@raw_envelope}
-                  headers={@headers}
+                  html_body={@last_success.html_body}
+                  text_body={@last_success.text_body}
+                  raw_envelope={@last_success.raw_envelope}
+                  headers={@last_success.headers}
                   device_width={@device_width}
                   render_nonce={@render_nonce}
                   preview_frame_dark_chrome={@preview_frame_dark_chrome}
                 />
 
-                <AssignsForm.assigns_form scenario_assigns={@current_assigns} />
+                <AssignsForm.assigns_form
+                  scenario_assigns={@current_assigns}
+                  draft_assigns={@draft_assigns}
+                  field_errors={@field_errors}
+                />
               </div>
             </div>
           <% @mailables == [] -> %>
@@ -440,28 +563,25 @@ defmodule MailglassAdmin.PreviewLive do
               class="motion-reveal mx-auto max-w-prose rounded-box border border-base-300 bg-base-200 p-lg"
             >
               <Components.icon name="hero-magnifying-glass" class="mb-md h-10 w-10 text-secondary" />
-              <%!-- Empty-state copy is the brandbook-canonical Mailable Empty string
-                      (brandbook/copy/microcopy.md:17), kept VERBATIM with literal
-                      backticks so voice_test.exs greps it byte-for-byte
-                      (D-09 / Pitfall-2 green-only-forward). The generator chip below is
-                      the PRIMARY next step; the two discovery checks are a secondary
-                      recovery checklist. --%>
               <h2 class="mb-sm text-heading font-bold text-base-content">
-                No mailables discovered yet. Define one with `mix mailglass.gen.mailable` and it will appear here, ready to preview.
+                No mailables discovered yet.
               </h2>
-              <p class="mt-md text-label font-bold text-secondary">Generate your first Mailable</p>
-              <code class="font-mono text-primary mt-sm inline-block overflow-auto whitespace-pre-wrap text-label">
-                mix mailglass.gen.mailable
-              </code>
               <p class="mt-sm text-body text-secondary">
-                Then reload — Preview discovers it automatically.
+                Define a Mailable with
+                <code
+                  data-testid="preview-mailable-generator"
+                  class="mx-xs font-mono text-primary text-label"
+                >
+                  mix mailglass.gen.mailable
+                </code>
+                and it will appear here, ready to preview. Reload Preview after compiling it.
               </p>
-              <p class="mt-md text-label font-bold text-secondary">Still not showing up?</p>
+              <p class="mt-md text-label font-bold text-secondary">If it is still missing</p>
               <ul class="mt-sm grid gap-sm text-body text-secondary">
                 <li class="flex items-start gap-sm">
                   <Components.icon
                     name="hero-check-circle"
-                    class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                    class="mt-xs h-4 w-4 shrink-0 text-primary"
                   />
                   <span>
                     Confirm the module calls
@@ -472,7 +592,7 @@ defmodule MailglassAdmin.PreviewLive do
                 <li class="flex items-start gap-sm">
                   <Components.icon
                     name="hero-check-circle"
-                    class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                    class="mt-xs h-4 w-4 shrink-0 text-primary"
                   />
                   <span>
                     Or pass an explicit list to the router: <code class="font-mono text-label overflow-auto whitespace-pre-wrap">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
@@ -486,22 +606,48 @@ defmodule MailglassAdmin.PreviewLive do
                 Read preview setup
               </a>
             </div>
-          <% true -> %>
+          <% @no_preview_modules != [] -> %>
             <div
               data-testid="preview-no-previewable-mailables"
-              role="status"
               class="motion-reveal rounded-box border border-base-300 bg-base-200 p-lg"
             >
-              <h2 class="text-heading font-bold text-base-content">No previewable emails yet</h2>
-              <p class="mt-sm text-body text-secondary">
-                Add a preview scenario to one of your Mailables and it will open here.
+              <h2 class="text-heading font-bold text-base-content">
+                No preview scenarios configured.
+              </h2>
+              <p
+                :for={mod <- @no_preview_modules}
+                class="mt-sm text-body text-secondary"
+              >
+                Add named scenarios to <code class="font-mono text-label">preview_props/0</code>
+                in <code class="break-all font-mono text-label">{inspect(mod)}</code>.
               </p>
+              <p class="mt-md text-body text-secondary">
+                Reload Preview after the Mailable module has compiled.
+              </p>
+            </div>
+          <% true -> %>
+            <div
+              data-testid="preview-scenario-discovery-error"
+              role="alert"
+              class="motion-reveal rounded-box border border-base-300 bg-base-200 p-lg"
+            >
+              <h2 class="text-heading font-bold text-base-content">
+                Preview scenarios could not be loaded.
+              </h2>
+              <div :for={{mod, {:error, msg}} <- @mailables} class="mt-md">
+                <p class="text-body text-secondary">{inspect(mod)}</p>
+                <pre class="mt-xs overflow-auto whitespace-pre-wrap break-all font-mono text-label text-error">{msg}</pre>
+              </div>
             </div>
         <% end %>
       </div>
 
       <%= if Phoenix.Flash.get(@flash, :info) do %>
-        <Components.flash kind={:success} message={Phoenix.Flash.get(@flash, :info)} />
+        <Components.flash
+          kind={:success}
+          flash_key={:info}
+          message={Phoenix.Flash.get(@flash, :info)}
+        />
       <% end %>
     </AdminShell.shell>
     """
@@ -518,6 +664,14 @@ defmodule MailglassAdmin.PreviewLive do
     Enum.find_value(mailables, fn
       {mod, [{scenario, _defaults} | _]} -> {mod, scenario}
       _ -> nil
+    end)
+  end
+
+  defp no_preview_modules(mailables) do
+    Enum.flat_map(mailables, fn
+      {mod, :no_previews} -> [mod]
+      {mod, []} -> [mod]
+      _ -> []
     end)
   end
 
@@ -751,25 +905,43 @@ defmodule MailglassAdmin.PreviewLive do
     end
   end
 
-  # merge form params (strings) back into the assigns map, respecting the
-  # type of the default value. Unknown keys (atoms not in current_assigns)
-  # are ignored — adopter cannot grow the assigns namespace from the form.
-  defp merge_assigns(current, params) when is_map(params) do
-    Enum.reduce(params, current, fn {k, v}, acc ->
-      key = safe_key_atom(k)
+  # Browser values are strings. Only keys and scalar types declared by the
+  # original scenario defaults are editable; parsing must consume the complete
+  # value so invalid input can never fall back to a previous/default value.
+  defp parse_assigns(defaults, current, params) when is_map(params) do
+    Enum.reduce(params, {:ok, current, %{}, %{}}, fn {name, input},
+                                                     {status, values, drafts, errors} ->
+      key = safe_key_atom(name)
 
-      if key && Map.has_key?(acc, key) do
-        Map.put(acc, key, coerce(acc[key], v))
-      else
-        acc
+      case key && Map.fetch(defaults, key) do
+        {:ok, default} ->
+          case parse_scalar(default, input) do
+            {:ok, parsed} ->
+              draft = if is_binary(input), do: Map.put(drafts, key, input), else: drafts
+              {status, Map.put(values, key, parsed), draft, errors}
+
+            :read_only ->
+              {status, values, drafts, errors}
+
+            :error ->
+              error = parse_error(default)
+              draft = if is_binary(input), do: Map.put(drafts, key, input), else: drafts
+              {:error, values, draft, Map.put(errors, key, error)}
+          end
+
+        _ ->
+          {status, values, drafts, errors}
       end
     end)
+    |> case do
+      {:ok, parsed, _drafts, _errors} -> {:ok, parsed}
+      {:error, _parsed, drafts, errors} -> {:error, drafts, errors}
+    end
   end
 
-  # A crafted "assigns_changed" event can bind "assigns" to a non-map (string,
-  # list) on this dev surface; ignore malformed payloads rather than raising
-  # FunctionClauseError and tearing down the LiveView (WR-03).
-  defp merge_assigns(current, _params), do: current
+  # A malformed root payload has no editable field representation; ignore it
+  # and preserve the previously successful assigns.
+  defp parse_assigns(_defaults, _current, _params), do: :invalid
 
   defp safe_key_atom(k) when is_binary(k) do
     String.to_existing_atom(k)
@@ -777,28 +949,56 @@ defmodule MailglassAdmin.PreviewLive do
     ArgumentError -> nil
   end
 
-  defp coerce(default, incoming) when is_integer(default) and is_binary(incoming) do
+  defp parse_scalar(default, incoming) when is_binary(default) and is_binary(incoming),
+    do: {:ok, incoming}
+
+  defp parse_scalar(default, _incoming) when is_binary(default), do: :error
+
+  defp parse_scalar(default, incoming) when is_integer(default) and is_binary(incoming) do
     case Integer.parse(incoming) do
-      {n, _} -> n
-      :error -> default
+      {n, ""} -> {:ok, n}
+      _ -> :error
     end
   end
 
-  defp coerce(default, incoming) when is_float(default) and is_binary(incoming) do
+  defp parse_scalar(default, _incoming) when is_integer(default), do: :error
+
+  defp parse_scalar(default, incoming) when is_float(default) and is_binary(incoming) do
     case Float.parse(incoming) do
-      {n, _} -> n
-      :error -> default
+      {n, ""} -> {:ok, n}
+      _ -> :error
     end
   end
 
-  defp coerce(default, incoming) when is_boolean(default) do
-    incoming == "true" or incoming == true
+  defp parse_scalar(default, _incoming) when is_float(default), do: :error
+
+  defp parse_scalar(default, incoming)
+       when is_boolean(default) and incoming in ["true", "false"] do
+    {:ok, incoming == "true"}
   end
 
-  defp coerce(_default, incoming), do: incoming
+  defp parse_scalar(default, _incoming) when is_boolean(default), do: :error
 
-  # The Mailglass.Renderer pipeline invocation. This is the SAME pipeline
-  # production sends use — no placeholder shape divergence (PREV-03).
+  defp parse_scalar(%Date{}, incoming) when is_binary(incoming) do
+    case Date.from_iso8601(incoming) do
+      {:ok, date} -> {:ok, date}
+      _ -> :error
+    end
+  end
+
+  defp parse_scalar(%Date{}, _incoming), do: :error
+
+  defp parse_scalar(_default, _incoming), do: :read_only
+
+  defp parse_error(default) when is_integer(default), do: "Enter a whole number."
+  defp parse_error(default) when is_float(default), do: "Enter a decimal number."
+  defp parse_error(%Date{}), do: "Enter a valid calendar date."
+  defp parse_error(default) when is_boolean(default), do: "Choose true or false."
+  defp parse_error(_), do: "Enter a valid value."
+
+  # Preview uses the same content-rendering stage as outbound preflight.
+  # Preflight, adapter encoding, later transformations, and delivery remain
+  # outside this browser-only projection.
   defp rerender(socket) do
     mod = socket.assigns.current_mailable
     scenario = socket.assigns.current_scenario
@@ -808,34 +1008,48 @@ defmodule MailglassAdmin.PreviewLive do
       case build_and_render(mod, scenario, assigns_map) do
         {:ok, rendered} ->
           email = rendered.swoosh_email
+          html_body = email.html_body || ""
+          text_body = email.text_body || ""
+          raw_envelope = raw_envelope(email)
+          headers = swoosh_headers(email)
 
           socket
-          |> assign(:html_body, email.html_body || "")
-          |> assign(:text_body, email.text_body || "")
-          |> assign(:raw_envelope, raw_envelope(email))
-          |> assign(:headers, swoosh_headers(email))
+          |> assign(:last_success, %{
+            html_body: html_body,
+            text_body: text_body,
+            raw_envelope: raw_envelope,
+            headers: headers
+          })
+          |> assign(:has_last_success?, true)
+          |> assign(:output_current?, true)
           |> assign(:render_nonce, System.unique_integer([:positive]))
           |> assign(:render_error, nil)
 
         {:error, %Mailglass.TemplateError{} = err} ->
           # Match by struct — never by message string (CLAUDE.md pitfall #7).
-          assign(socket, :render_error, Exception.message(err))
+          socket
+          |> assign(:render_error, Exception.message(err))
+          |> assign(:output_current?, false)
 
         {:error, other} ->
-          assign(socket, :render_error, inspect(other))
+          socket
+          |> assign(:render_error, inspect(other))
+          |> assign(:output_current?, false)
       end
     rescue
       e ->
-        assign(socket, :render_error, Exception.format(:error, e, __STACKTRACE__))
+        socket
+        |> assign(:render_error, Exception.format(:error, e, __STACKTRACE__))
+        |> assign(:output_current?, false)
     end
   end
 
   defp build_and_render(mod, scenario, assigns_map)
        when is_atom(mod) and is_atom(scenario) and is_map(assigns_map) do
     msg = apply(mod, scenario, [assigns_map])
-    # Fully-qualified call site for auditability — this is the ONE place
-    # PreviewLive reaches into the core render pipeline. Matches the
-    # production send path; PREV-03 "no placeholder shape divergence".
+    # Fully-qualified call site for auditability. Renderer is the shared
+    # content-rendering stage used in outbound preflight; Preview stops here
+    # before preflight, adaptation, later transformations, and delivery.
     Mailglass.Renderer.render(msg)
   end
 
@@ -909,7 +1123,9 @@ defmodule MailglassAdmin.PreviewLive do
   defp swoosh_headers(_), do: []
 
   defp ensure_header(headers, name, default) do
-    if Enum.any?(headers, fn {k, _} -> to_string(k) == name end) do
+    normalized_name = String.downcase(name)
+
+    if Enum.any?(headers, fn {k, _} -> String.downcase(to_string(k)) == normalized_name end) do
       headers
     else
       headers ++ [{name, default}]
@@ -923,9 +1139,6 @@ defmodule MailglassAdmin.PreviewLive do
   end
 
   defp rfc2822_date do
-    # Best-effort RFC 2822 timestamp. Not strictly RFC-compliant at v0.1
-    # (no weekday name); the Headers tab's contract is "row exists with
-    # name + non-empty value", not "passes rfc2822 grammar".
-    DateTime.utc_now() |> DateTime.to_string()
+    DateTime.utc_now() |> Calendar.strftime("%a, %d %b %Y %H:%M:%S +0000")
   end
 end

@@ -32,6 +32,8 @@ defmodule MailglassAdmin.Components do
 
   use Phoenix.Component
 
+  alias Phoenix.LiveView.JS
+
   attr(:name, :string, required: true)
   attr(:class, :any, default: nil)
 
@@ -140,7 +142,9 @@ defmodule MailglassAdmin.Components do
   end
 
   attr(:kind, :atom, values: [:info, :success, :warning, :error], default: :info)
+  attr(:flash_key, :atom, default: nil)
   attr(:message, :string, required: true)
+  attr(:placement, :atom, values: [:toast, :inline], default: :toast)
 
   @doc """
   Renders a brand-voice flash message in a daisyUI toast wrapper.
@@ -151,15 +155,41 @@ defmodule MailglassAdmin.Components do
   """
   @doc since: "0.1.0"
   def flash(assigns) do
+    assigns =
+      assign(assigns, :live_role, if(assigns.kind == :error, do: "alert", else: "status"))
+
     ~H"""
-    <div class="toast toast-top toast-end mg-layer-toast" role="status" aria-live="polite">
-      <div class={["motion-reveal alert text-body gap-2 py-2 px-3", alert_class(@kind)]}>
+    <div
+      id={"flash-#{@kind}"}
+      class={
+        if @placement == :toast,
+          do: "toast toast-top toast-end mg-toast mg-layer-toast"
+      }
+      role={@live_role}
+      aria-live={if @kind == :error, do: "assertive", else: "polite"}
+      aria-atomic="true"
+    >
+      <div class={["motion-reveal alert flex items-start gap-sm text-body", alert_class(@kind)]}>
         <.icon name="hero-arrow-path" class="w-4 h-4" />
-        <span>{@message}</span>
+        <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{@message}</span>
+        <button
+          type="button"
+          phx-click="lv:clear-flash"
+          phx-value-key={Atom.to_string(@flash_key || @kind)}
+          aria-label={"Dismiss #{flash_kind_label(@kind)} message"}
+          class="mg-focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-field"
+        >
+          <.icon name="hero-x-mark" class="h-4 w-4" />
+        </button>
       </div>
     </div>
     """
   end
+
+  defp flash_kind_label(:info), do: "information"
+  defp flash_kind_label(:success), do: "success"
+  defp flash_kind_label(:warning), do: "warning"
+  defp flash_kind_label(:error), do: "error"
 
   defp alert_class(:info), do: "alert-info"
   defp alert_class(:success), do: "alert-success"
@@ -179,7 +209,7 @@ defmodule MailglassAdmin.Components do
   @doc since: "0.1.0"
   def badge(%{variant: :warning} = assigns) do
     ~H"""
-    <span class="badge badge-warning badge-sm gap-1">
+    <span class="badge badge-warning badge-sm gap-1 text-label">
       <.icon name="hero-exclamation-triangle" class="w-3 h-3" /> Error
     </span>
     """
@@ -204,6 +234,10 @@ defmodule MailglassAdmin.Components do
 
   Disabled links are rendered as inert text with link semantics, `aria-disabled`,
   and no LiveView navigation attribute.
+
+  Keep labels short (one or two words). The label truncates as a layout safety
+  net only; there is no tooltip and no long-label state to maintain. A label
+  long enough to truncate should be shortened rather than accommodated.
   """
   @doc since: "1.8.0"
   def nav_link(%{disabled: true} = assigns) do
@@ -213,13 +247,13 @@ defmodule MailglassAdmin.Components do
       aria-disabled="true"
       tabindex="-1"
       class={[
-        "flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body",
-        "border-transparent text-secondary opacity-100"
+        "flex min-h-11 items-center gap-sm rounded-field px-sm text-body",
+        "text-secondary opacity-100"
       ]}
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate">{@label}</span>
     </span>
     """
   end
@@ -230,14 +264,14 @@ defmodule MailglassAdmin.Components do
       href={@href}
       aria-current={@active && "page"}
       class={[
-        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out",
+        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field px-sm text-body transition-colors ease-out",
         "duration-(--duration-fast)",
         nav_link_class(@active)
       ]}
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate">{@label}</span>
     </.link>
     """
   end
@@ -248,14 +282,14 @@ defmodule MailglassAdmin.Components do
       navigate={@href}
       aria-current={@active && "page"}
       class={[
-        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out",
+        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field px-sm text-body transition-colors ease-out",
         "duration-(--duration-fast)",
         nav_link_class(@active)
       ]}
       {@rest}
     >
       <.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate">{@label}</span>
     </.link>
     """
   end
@@ -280,10 +314,10 @@ defmodule MailglassAdmin.Components do
       role="link"
       aria-disabled="true"
       tabindex="-1"
-      class="flex min-h-11 items-center rounded-field border-b-2 border-transparent px-sm text-body text-secondary opacity-100"
+      class="flex min-h-11 items-center rounded-field px-sm text-body text-secondary opacity-100"
       {@rest}
     >
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
     </span>
     """
   end
@@ -294,12 +328,12 @@ defmodule MailglassAdmin.Components do
       href={@href}
       aria-current={@active && "page"}
       class={[
-        "mg-focus-ring flex min-h-11 items-center rounded-field border-b-2 px-sm text-body transition-colors ease-out duration-(--duration-fast)",
+        "mg-focus-ring flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-(--duration-fast)",
         nav_pill_class(@active)
       ]}
       {@rest}
     >
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
     </.link>
     """
   end
@@ -310,12 +344,12 @@ defmodule MailglassAdmin.Components do
       navigate={@href}
       aria-current={@active && "page"}
       class={[
-        "mg-focus-ring flex min-h-11 items-center rounded-field border-b-2 px-sm text-body transition-colors ease-out duration-(--duration-fast)",
+        "mg-focus-ring flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-(--duration-fast)",
         nav_pill_class(@active)
       ]}
       {@rest}
     >
-      <span class="truncate" title={@label}>{@label}</span>
+      <span class="mg-nav-label truncate" title={@label}>{@label}</span>
     </.link>
     """
   end
@@ -362,16 +396,16 @@ defmodule MailglassAdmin.Components do
   def theme_picker(assigns) do
     ~H"""
     <fieldset
-      class="inline-flex min-h-11 items-center gap-xs rounded-box border border-base-300 bg-base-200 p-xs text-label"
+      aria-label="Appearance"
+      class="flex min-h-11 flex-wrap items-center gap-xs rounded-box border border-base-300 bg-base-200 p-xs text-label"
       disabled={@disabled}
       {@rest}
     >
-      <legend class="sr-only">Theme</legend>
       <label
         :for={option <- theme_options()}
         title={option.label}
         class={[
-          "mg-focus-ring-within mg-state-layer relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-field px-sm",
+          "mg-focus-ring-within mg-state-layer relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-xs rounded-field px-sm",
           theme_option_class(@selected == option.theme, @disabled)
         ]}
       >
@@ -391,8 +425,8 @@ defmodule MailglassAdmin.Components do
           phx-value-theme={if @event, do: option.value}
           class="absolute inset-0 m-0 cursor-pointer appearance-none rounded-field opacity-0 disabled:cursor-default"
         />
-        <.icon name={option.icon} class="pointer-events-none h-5 w-5" />
-        <span class="sr-only">{option.label}</span>
+        <.icon name={option.icon} class="pointer-events-none h-5 w-5 shrink-0" />
+        <span class="pointer-events-none">{option.label}</span>
       </label>
     </fieldset>
     """
@@ -403,24 +437,32 @@ defmodule MailglassAdmin.Components do
   attr(:value, :any, default: nil)
   attr(:severity, :atom, values: [:neutral, :info, :success, :warning, :error], default: :neutral)
   attr(:severity_label, :string, default: nil)
+  attr(:show_severity, :boolean, default: true)
   attr(:state, :atom, values: [:ready, :empty, :loading, :unavailable], default: :ready)
   attr(:empty_text, :string, default: "No data yet")
   attr(:loading_text, :string, default: "Resolving")
   attr(:unavailable_text, :string, default: "Unavailable")
   attr(:hint, :string, default: nil)
+  attr(:compact, :boolean, default: false)
+  slot(:label_help)
   attr(:rest, :global, default: %{})
 
   @doc """
-  Renders a canonical stat card with label, no-wrap value, and severity.
+  Renders a canonical stat card with wrapping label/value and severity.
 
-  Severity is a closed set and always renders as icon plus visible label plus
-  semantic color.
+  Severity is a closed set. Compact summaries retain the severity description
+  for assistive technology while presenting the counts without card chrome.
   """
   @doc since: "1.8.0"
   def stat_card(assigns) do
     assigns =
       assigns
       |> assign(:display_value, stat_display_value(assigns))
+      |> assign(
+        :hint_id,
+        (assigns.id || Map.get(assigns.rest, :"data-testid") ||
+           "stat-#{:erlang.phash2({assigns.label, assigns.hint})}") <> "-help"
+      )
       |> assign(
         :display_severity_label,
         assigns.severity_label || stat_severity_label(assigns.severity)
@@ -430,43 +472,227 @@ defmodule MailglassAdmin.Components do
     <article
       id={@id}
       class={[
-        "min-w-0 rounded-box border border-base-300 bg-base-200 p-md",
-        present?(@hint) && "mg-stat-card-hint"
+        if(@compact,
+          do: "mg-stat-compact min-w-0",
+          else: "min-w-0 rounded-box border border-base-300 bg-base-200 p-md"
+        )
       ]}
       aria-busy={if @state == :loading, do: "true"}
       {@rest}
     >
       <div class="flex min-w-0 items-start justify-between gap-sm">
-        <p class="flex min-w-0 items-center gap-xs text-label font-bold uppercase text-secondary">
-          <span class="truncate" title={@label}>{@label}</span>
+        <p class={[
+          "flex min-w-0 flex-wrap items-center gap-xs text-label text-secondary",
+          !@compact && "font-bold uppercase"
+        ]}>
+          <span class="min-w-0 break-words [overflow-wrap:anywhere]">{@label}</span>
+          <span :if={@label_help != []} class="inline-flex shrink-0">
+            {render_slot(@label_help)}
+          </span>
           <span
             :if={present?(@hint)}
-            class="inline-flex shrink-0 text-secondary"
-            aria-hidden="true"
+            class="inline-flex shrink-0"
           >
-            <.icon name="hero-information-circle" class="h-3.5 w-3.5" />
+            <.field_help id={@hint_id} label={@label} text={@hint} />
           </span>
         </p>
       </div>
-      <p :if={present?(@hint)} class="sr-only">{@hint}</p>
-      <p :if={present?(@hint)} class="mg-stat-card-tooltip" aria-hidden="true">
-        {@hint}
-      </p>
-      <p
-        class="mono mt-xs truncate text-display font-bold tabular-nums whitespace-nowrap text-base-content"
-        title={@display_value}
-      >
+      <p class={[
+        "mt-xs font-bold tabular-nums whitespace-normal text-base-content [overflow-wrap:anywhere]",
+        if(@compact, do: "text-heading", else: "mono break-all text-display")
+      ]}>
         {@display_value}
       </p>
-      <p class={[
-        "mt-sm inline-flex items-center gap-xs text-label font-bold",
-        stat_severity_class(@severity)
-      ]}>
+      <p
+        :if={@show_severity}
+        class={[
+          "mt-sm inline-flex items-center gap-xs text-label font-bold",
+          @compact && "sr-only",
+          stat_severity_class(@severity)
+        ]}
+      >
         <.icon name={stat_severity_icon(@severity)} class="h-4 w-4 shrink-0" />
         <span>{@display_severity_label}</span>
       </p>
     </article>
     """
+  end
+
+  @doc "A collection title and optional result count above its bordered table or mobile list."
+  attr(:title, :string, default: nil)
+  attr(:count, :integer, default: nil)
+  attr(:count_label, :string, default: nil)
+  attr(:count_testid, :string, default: nil)
+  attr(:rest, :global)
+
+  def collection_header(assigns) do
+    ~H"""
+    <div class="mb-sm flex min-w-0 flex-wrap items-baseline gap-x-sm gap-y-xs" {@rest}>
+      <h2 :if={@title} class="text-body font-bold text-base-content">
+        {@title}
+        <span
+          :if={not is_nil(@count)}
+          data-testid={@count_testid}
+          aria-label={@count_label}
+          class="font-normal tabular-nums text-secondary"
+        >
+          ({@count})
+        </span>
+      </h2>
+      <span
+        :if={is_nil(@title) and not is_nil(@count)}
+        data-testid={@count_testid}
+        aria-label={@count_label}
+        class="text-label tabular-nums text-secondary"
+      >
+        ({@count})
+      </span>
+    </div>
+    """
+  end
+
+  @doc "Message identity shared by quick views and full detail, with contextual outcome help."
+  attr(:subject, :string, default: nil)
+  attr(:recipient, :string, default: nil)
+  attr(:status, :atom, required: true)
+  attr(:context, :atom, required: true)
+  attr(:id, :string, required: true)
+
+  attr(:heading_tag, :string, values: ["h2", "h3"], default: "h2")
+
+  def message_identity(assigns) do
+    ~H"""
+    <div class="min-w-0 space-y-sm">
+      <p :if={not is_nil(@subject)} class="text-label font-bold text-secondary">Subject</p>
+      <div class="flex min-w-0 flex-wrap items-center gap-sm">
+        <.dynamic_tag
+          tag_name={@heading_tag}
+          class="min-w-0 max-w-full text-heading font-bold text-base-content [overflow-wrap:anywhere]"
+        >
+          {if @subject == "", do: "(No subject)", else: @subject || @recipient || "Message"}
+        </.dynamic_tag>
+        <.outcome_badge id={@id} status={@status} context={@context} />
+      </div>
+      <p :if={not is_nil(@subject)} class="text-body text-secondary [overflow-wrap:anywhere]">
+        To <span class="text-base-content">{@recipient || "Recipient not recorded"}</span>
+      </p>
+      <p :if={is_nil(@subject)} class="text-label text-secondary">Subject not recorded</p>
+    </div>
+    """
+  end
+
+  @doc "Technical identifiers remain available without dominating message inspection."
+  attr(:id, :string, required: true)
+  attr(:divider?, :boolean, default: true)
+  attr(:collapsible, :boolean, default: true)
+  slot(:inner_block, required: true)
+
+  def technical_details(assigns) do
+    ~H"""
+    <.dynamic_tag
+      tag_name={if @collapsible, do: "details", else: "div"}
+      id={@id}
+      class={["min-w-0", @divider? && "border-t border-base-300 pt-sm"]}
+    >
+      <summary
+        :if={@collapsible}
+        class="mg-focus-ring min-h-11 cursor-pointer content-center rounded-field text-label font-bold text-secondary"
+      >
+        Technical details
+      </summary>
+      <dl class={[
+        "grid min-w-0 gap-md text-body [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]",
+        @collapsible && "mt-sm sm:grid-cols-2"
+      ]}>
+        {render_slot(@inner_block)}
+      </dl>
+    </.dynamic_tag>
+    """
+  end
+
+  @doc "Short module name with the exact identity available through contextual help."
+  attr(:value, :string, required: true)
+  attr(:id, :string, required: true)
+  attr(:segments, :integer, default: 1)
+
+  def module_identity(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :short_name,
+        assigns.value |> String.split(".") |> Enum.take(-assigns.segments) |> Enum.join(".")
+      )
+
+    ~H"""
+    <.field_help
+      id={@id}
+      label={@short_name}
+      text={@value}
+      trigger_text={@short_name}
+      trigger_class="text-base-content"
+    />
+    """
+  end
+
+  attr(:record, :map, required: true)
+  attr(:id, :string, required: true)
+
+  def mailbox_identity(assigns) do
+    full_name = matched_mailbox_label(assigns.record)
+
+    {label, explanation, matched?} =
+      case full_name do
+        "Unrouted" ->
+          {full_name,
+           "None of the routing rules matched this email, so it wasn't sent to a mailbox. Open the message to see which rules were checked.",
+           false}
+
+        "No execution recorded" ->
+          {full_name, "No processing attempt is recorded for this message.", false}
+
+        "Unavailable" ->
+          {"Not recorded",
+           if(Map.get(assigns.record, :outcome) == :failed,
+             do:
+               "Processing failed, but no mailbox name was saved for this attempt. Open the message to inspect the error.",
+             else:
+               "No mailbox name was saved for this processing attempt. Open the message to inspect its processing history."
+           ), false}
+
+        mailbox ->
+          {mailbox |> String.split(".") |> List.last(), mailbox, true}
+      end
+
+    icon =
+      case full_name do
+        "Unrouted" -> "hero-minus-circle"
+        "Unavailable" -> "hero-question-mark-circle"
+        "No execution recorded" -> "hero-clock"
+        _ -> nil
+      end
+
+    assigns =
+      assign(assigns, label: label, explanation: explanation, matched?: matched?, icon: icon)
+
+    ~H"""
+    <.field_help
+      id={@id}
+      label={@label}
+      text={@explanation}
+      trigger_text={@label}
+      trigger_icon={@icon}
+      trigger_class={if @matched?, do: "text-base-content", else: "text-secondary"}
+    />
+    """
+  end
+
+  defp matched_mailbox_label(record) do
+    case {Map.get(record, :outcome), Map.get(record, :mailbox)} do
+      {:no_match, _mailbox} -> "Unrouted"
+      {nil, _mailbox} -> "No execution recorded"
+      {_outcome, mailbox} when is_binary(mailbox) and mailbox != "" -> mailbox
+      {_outcome, _mailbox} -> "Unavailable"
+    end
   end
 
   attr(:kind, :atom, values: [:empty, :error, :permission_denied, :stale], required: true)
@@ -505,7 +731,7 @@ defmodule MailglassAdmin.Components do
         class={["h-8 w-8", data_state_icon_class(@kind)]}
       />
       <h3 class="text-body font-bold text-base-content">{@title}</h3>
-      <p class="text-body text-secondary">{@body}</p>
+      <p class="max-w-prose break-words text-body text-secondary [overflow-wrap:anywhere]">{@body}</p>
     </section>
     """
   end
@@ -550,13 +776,13 @@ defmodule MailglassAdmin.Components do
   defp card_padding(:md), do: "p-md"
   defp card_padding(:lg), do: "p-lg"
 
-  defp nav_link_class(true), do: "border-primary bg-base-100 font-bold text-base-content"
+  defp nav_link_class(true), do: "mg-nav-current font-bold text-base-content"
 
   defp nav_link_class(false),
-    do: "border-transparent text-secondary hover:bg-base-100/60 hover:text-base-content"
+    do: "text-secondary hover:bg-base-100/60 hover:text-base-content"
 
-  defp nav_pill_class(true), do: "border-primary bg-primary/10 font-bold text-base-content"
-  defp nav_pill_class(false), do: "border-transparent text-secondary hover:text-base-content"
+  defp nav_pill_class(true), do: "mg-nav-current font-bold text-base-content"
+  defp nav_pill_class(false), do: "text-secondary hover:text-base-content"
 
   defp tenant_chip_title(nil), do: "Account currently in view"
   defp tenant_chip_title(tenant), do: "Account currently in view: " <> tenant
@@ -580,6 +806,8 @@ defmodule MailglassAdmin.Components do
 
   attr(:title, :string, required: true)
   attr(:description, :string, default: nil)
+  attr(:compact, :boolean, default: false)
+  attr(:columns, :integer, default: 4, values: [3, 4])
   attr(:rest, :global, default: %{})
 
   slot(:inner_block, required: true)
@@ -594,12 +822,22 @@ defmodule MailglassAdmin.Components do
   def filter_section(assigns) do
     ~H"""
     <fieldset class="min-w-0 w-full" {@rest}>
-      <legend class="text-label font-bold uppercase text-secondary">{@title}</legend>
+      <legend class={
+        if @compact, do: "sr-only", else: "text-label font-bold uppercase text-secondary"
+      }>
+        {@title}
+      </legend>
       <div class="grid min-w-0 gap-md">
         <p :if={@description} class="max-w-prose text-pretty text-body text-secondary">
           {@description}
         </p>
-        <div class="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div class={[
+          "grid grid-cols-1 gap-md sm:grid-cols-2",
+          if(@compact,
+            do: if(@columns == 3, do: "xl:grid-cols-3", else: "xl:grid-cols-4"),
+            else: "lg:grid-cols-3 xl:grid-cols-5"
+          )
+        ]}>
           {render_slot(@inner_block)}
         </div>
       </div>
@@ -614,6 +852,7 @@ defmodule MailglassAdmin.Components do
   attr(:type, :atom, values: [:text, :number, :select, :textarea, :checkbox], default: :text)
   attr(:label, :string, required: true)
   attr(:help, :string, default: nil)
+  attr(:help_display, :atom, values: [:inline, :tooltip], default: :inline)
   attr(:error, :any, default: nil)
   attr(:options, :list, default: [])
   attr(:prompt, :string, default: nil)
@@ -624,7 +863,7 @@ defmodule MailglassAdmin.Components do
 
   attr(:rest, :global,
     default: %{},
-    include: ~w(autocomplete inputmode max min pattern placeholder step)
+    include: ~w(autocomplete inputmode list max min pattern placeholder step)
   )
 
   @doc """
@@ -644,7 +883,15 @@ defmodule MailglassAdmin.Components do
 
     ~H"""
     <div class="grid min-w-0 content-start gap-xs">
-      <label for={@control_id} class="text-label font-bold text-base-content">{@label}</label>
+      <div class="relative flex items-center gap-xs">
+        <label for={@control_id} class="text-label font-bold text-base-content">{@label}</label>
+        <.field_help
+          :if={present?(@help) and @help_display == :tooltip}
+          id={@help_id}
+          label={@label}
+          text={@help}
+        />
+      </div>
 
       <input
         :if={@type in [:text, :number] and !@display_readonly?}
@@ -737,7 +984,9 @@ defmodule MailglassAdmin.Components do
         value={@control_value}
       />
 
-      <p :if={@help} id={@help_id} class="text-label text-secondary">{@help}</p>
+      <p :if={@help && @help_display == :inline} id={@help_id} class="text-label text-secondary">
+        {@help}
+      </p>
 
       <p
         :if={@error_text}
@@ -745,12 +994,83 @@ defmodule MailglassAdmin.Components do
         role="alert"
         class="flex items-start gap-xs text-label text-error"
       >
-        <.icon name="hero-exclamation-circle" class="mt-0.5 h-4 w-4 shrink-0" />
+        <.icon name="hero-exclamation-circle" class="mt-xs h-4 w-4 shrink-0" />
         <span>
           <span class="font-bold">Action needed:</span> {@error_text}
         </span>
       </p>
     </div>
+    """
+  end
+
+  attr(:id, :string, required: true)
+  attr(:label, :string, required: true)
+  attr(:text, :string, required: true)
+
+  attr(:trigger_text, :string, default: nil)
+  attr(:trigger_class, :string, default: nil)
+  attr(:trigger_icon, :string, default: nil)
+  slot(:trigger_content)
+
+  @doc "Optional field help, available on hover, keyboard focus, or tap."
+  def field_help(assigns) do
+    active_trigger = "##{assigns.id}-trigger:is(:hover,:focus,[aria-expanded=true])"
+    assigns = assign(assigns, :active_trigger, active_trigger)
+
+    ~H"""
+    <span class="mg-field-help inline-flex min-w-0 max-w-full">
+      <button
+        id={@id <> "-trigger"}
+        type="button"
+        aria-label={if @trigger_text, do: @label, else: "Help for #{@label}"}
+        aria-describedby={@id}
+        aria-expanded="false"
+        aria-controls={@id <> "-tooltip"}
+        phx-click={
+          JS.toggle_attribute({"aria-expanded", "true", "false"})
+          |> JS.remove_attribute("data-dismissed")
+        }
+        phx-focus={JS.remove_attribute("data-dismissed")}
+        phx-blur={JS.remove_attribute("data-dismissed")}
+        phx-click-away={JS.set_attribute({"aria-expanded", "false"})}
+        phx-window-keydown={
+          JS.set_attribute({"data-dismissed", "true"}, to: @active_trigger)
+          |> JS.set_attribute({"aria-expanded", "false"}, to: @active_trigger)
+        }
+        phx-key="Escape"
+        class={[
+          "mg-focus-ring inline-flex items-center rounded-field hover:text-base-content",
+          if(@trigger_text,
+            do: "min-h-11 min-w-0 max-w-full gap-xs text-left text-body",
+            else: "h-6 w-6 shrink-0 justify-center text-secondary"
+          ),
+          @trigger_class
+        ]}
+      >
+        <.icon :if={@trigger_icon} name={@trigger_icon} class="h-4 w-4 shrink-0" />
+        <span
+          :if={@trigger_text && @trigger_content == []}
+          class="min-w-0 break-words [overflow-wrap:anywhere]"
+        >
+          {@trigger_text}
+        </span>
+        {render_slot(@trigger_content)}
+        <.icon
+          :if={!@trigger_text && @trigger_content == []}
+          name="hero-information-circle"
+          class="h-4 w-4"
+        />
+      </button>
+      <span id={@id} class="sr-only">{@text}</span>
+      <span
+        id={@id <> "-tooltip"}
+        role="tooltip"
+        aria-hidden="true"
+        class="mg-field-help-tooltip [overflow-wrap:anywhere]"
+      >
+        {@text}
+      </span>
+    </span>
     """
   end
 
@@ -764,7 +1084,7 @@ defmodule MailglassAdmin.Components do
   defp stat_display_value(%{value: value}), do: to_string(value)
 
   defp stat_severity_icon(:neutral), do: "hero-minus-circle"
-  defp stat_severity_icon(:info), do: "hero-question-mark-circle"
+  defp stat_severity_icon(:info), do: "hero-information-circle"
   defp stat_severity_icon(:success), do: "hero-check-circle"
   defp stat_severity_icon(:warning), do: "hero-exclamation-triangle"
   defp stat_severity_icon(:error), do: "hero-x-circle"
@@ -949,13 +1269,15 @@ defmodule MailglassAdmin.Components do
   normalization is admin-side only.
 
   Maps: `:accept` → `:accepted`, `:reject` → `:rejected`, `:bounce` → `:bounced`.
-  All other atoms (including nil) pass through unchanged.
+  `nil` maps to `:missing_history`, which is a display-only state. All other atoms
+  pass through unchanged.
   """
   @doc since: "1.5.0"
   @spec normalize_inbound_outcome(atom() | nil) :: atom() | nil
   def normalize_inbound_outcome(:accept), do: :accepted
   def normalize_inbound_outcome(:reject), do: :rejected
   def normalize_inbound_outcome(:bounce), do: :bounced
+  def normalize_inbound_outcome(nil), do: :missing_history
   def normalize_inbound_outcome(atom), do: atom
 
   attr(:status, :atom,
@@ -977,6 +1299,8 @@ defmodule MailglassAdmin.Components do
       :accepted,
       :no_match,
       :ignore,
+      :no_change,
+      :missing_history,
       :failed_ingest,
       :webhook_replay_requested,
       :webhook_replay_succeeded,
@@ -1000,11 +1324,102 @@ defmodule MailglassAdmin.Components do
   @doc since: "1.5.0"
   def status_badge(assigns) do
     ~H"""
-    <span class={["badge", size_class(@size), status_class(@status)]}>
+    <span class={["badge text-label whitespace-nowrap", size_class(@size), status_class(@status)]}>
       <span class={[status_icon(@status), "w-3 h-3"]} aria-hidden="true"></span>{status_label(@status)}
     </span>
     """
   end
+
+  attr(:id, :string, required: true)
+  attr(:status, :atom, required: true)
+  attr(:context, :atom, values: [:delivery, :inbound], required: true)
+
+  def outcome_badge(assigns) do
+    ~H"""
+    <.field_help
+      id={@id}
+      label={status_label(@status)}
+      trigger_text={status_label(@status)}
+      text={outcome_help(@context, @status)}
+    >
+      <:trigger_content><.status_badge status={@status} size={:sm} /></:trigger_content>
+    </.field_help>
+    """
+  end
+
+  @doc false
+  def outcome_description(context, status), do: outcome_help(context, status)
+
+  defp outcome_help(:inbound, :accepted), do: "A mailbox processed and accepted this message."
+
+  defp outcome_help(:inbound, :no_match),
+    do: "No routing rule matched, so this message was not sent to a mailbox."
+
+  defp outcome_help(:inbound, :ignore),
+    do: "The mailbox deliberately skipped this message without rejecting it."
+
+  defp outcome_help(:inbound, :no_change),
+    do: "The mailbox processed this message without changing its state."
+
+  defp outcome_help(:inbound, :rejected),
+    do: "The mailbox rejected this message. Open it to inspect the recorded reason."
+
+  defp outcome_help(:inbound, :bounced),
+    do:
+      "The mailbox returned a bounce result for this message. Open it to inspect the recorded reason."
+
+  defp outcome_help(:inbound, :failed),
+    do: "Mailbox processing failed. Open the message to inspect the error."
+
+  defp outcome_help(:inbound, :missing_history),
+    do: "No mailbox processing attempt is recorded for this message."
+
+  defp outcome_help(:delivery, :queued), do: "This message is waiting to be sent to the provider."
+
+  defp outcome_help(:delivery, :dispatched),
+    do:
+      "This message was handed to the provider. Delivery to the recipient has not been confirmed."
+
+  defp outcome_help(:delivery, :delivered),
+    do:
+      "The provider reported that the recipient's mail server accepted this message. This does not confirm it reached the inbox or was read."
+
+  defp outcome_help(:delivery, :opened),
+    do:
+      "The provider recorded an open. Image loading, privacy features, or automated activity can trigger this signal."
+
+  defp outcome_help(:delivery, :clicked),
+    do:
+      "The provider recorded a link click. Security scanners or other automated activity can trigger this signal."
+
+  defp outcome_help(:delivery, :failed),
+    do:
+      "Sending failed before a successful handoff to the provider. Open the delivery to inspect the error."
+
+  defp outcome_help(:delivery, :bounced),
+    do:
+      "The provider reported that this message could not be delivered. Open the delivery to inspect the bounce reason."
+
+  defp outcome_help(:delivery, :rejected),
+    do: "The provider rejected this message. Open the delivery to inspect the recorded reason."
+
+  defp outcome_help(:delivery, :deferred),
+    do: "The provider reported a temporary delivery delay. Delivery has not been confirmed."
+
+  defp outcome_help(:delivery, :suppressed),
+    do: "Sending to this recipient was blocked by a suppression rule."
+
+  defp outcome_help(:delivery, :complained),
+    do: "The provider reported a spam complaint for this message."
+
+  defp outcome_help(:delivery, :unsubscribed),
+    do: "The provider recorded an unsubscribe for this recipient."
+
+  defp outcome_help(:delivery, :autoresponded),
+    do:
+      "The provider reported an automatic reply, such as an out-of-office response. This does not confirm that a person read the message."
+
+  defp outcome_help(_, _), do: "Open the message to inspect its recorded processing history."
 
   # Downstream outcome events that supersede the dispatch snapshot — when one of these
   # is the delivery's latest event, it IS the status the operator should see.
@@ -1016,7 +1431,8 @@ defmodule MailglassAdmin.Components do
     :complained,
     :rejected,
     :deferred,
-    :unsubscribed
+    :unsubscribed,
+    :autoresponded
   ]
 
   @doc """
@@ -1024,7 +1440,7 @@ defmodule MailglassAdmin.Components do
 
   The core `Delivery.status` is a stable adopter snapshot that stops at `:sent`
   (handed off to the provider) and never advances. For the operator view we surface
-  the message's *furthest-known* state instead: a downstream event
+  the latest delivery or engagement result instead: a downstream event
   (delivered/opened/clicked/bounced/…) supersedes the dispatch snapshot, so the badge
   reflects what actually happened. The in-flight, handed-off-but-unconfirmed state
   renders as `:dispatched` ("Dispatched"). This is presentation only — it never
@@ -1038,6 +1454,8 @@ defmodule MailglassAdmin.Components do
   def delivery_display_status(%{status: :suppressed}), do: :suppressed
   def delivery_display_status(%{last_event_type: :suppressed}), do: :suppressed
 
+  def delivery_display_status(%{delivery_confirmed: true}), do: :delivered
+
   def delivery_display_status(%{status: :queued, last_event_type: event})
       when event in [:queued, nil],
       do: :queued
@@ -1046,36 +1464,117 @@ defmodule MailglassAdmin.Components do
   def delivery_display_status(_delivery), do: :dispatched
 
   attr(:at, :any, required: true, doc: "a UTC %DateTime{} or nil")
-  attr(:class, :string, default: "", doc: "extra classes for the <time> element")
+  attr(:class, :string, default: "", doc: "extra classes for the rendered timestamp")
+
+  attr(:copyable, :boolean,
+    default: true,
+    doc: "whether the timestamp copies its exact UTC value"
+  )
 
   @doc """
-  Renders a UTC `%DateTime{}` as a `<time>` element the admin's local-time script
-  progressively enhances: the server-rendered text is the canonical UTC string
-  (`"YYYY-MM-DD HH:MM:SS UTC"`), and on the client the script rewrites the text to the
-  viewer's local timezone, keeps the UTC in the `title` tooltip, and copies the UTC to
-  the clipboard on click. With JS off (or before hydration) the UTC string stands on its
-  own. `nil` renders the plain `"Pending"` sentinel (no `<time>`).
+  Renders a machine-readable <time> in the browser's local timezone. When copyable,
+  the timestamp itself is a keyboard-accessible control that copies the exact UTC
+  value and announces the result. `nil` renders an unavailable sentinel.
   """
   @doc since: "1.7.0"
   def timestamp(%{at: nil} = assigns) do
     ~H"""
-    Pending
+    Unavailable
     """
   end
 
   def timestamp(assigns) do
     ~H"""
+    <span :if={@copyable} class="mg-field-help inline-flex max-w-full">
+      <button
+        type="button"
+        data-timestamp-copy="true"
+        data-copy-value={utc_string(@at)}
+        aria-label={"Copy timestamp as UTC: #{utc_string(@at)}"}
+        class={["mg-timestamp-copy-trigger mg-focus-ring", @class]}
+      >
+        <time
+          datetime={DateTime.to_iso8601(@at)}
+          data-local-time="true"
+          data-utc={utc_string(@at)}
+          class="tabular-nums"
+        >
+          {utc_string(@at)}
+        </time>
+      </button>
+      <span role="tooltip" aria-hidden="true" class="mg-field-help-tooltip [overflow-wrap:anywhere]">
+        {utc_string(@at)} · Click to copy
+      </span>
+    </span>
     <time
+      :if={!@copyable}
       datetime={DateTime.to_iso8601(@at)}
       data-local-time="true"
       data-utc={utc_string(@at)}
       title={utc_string(@at)}
-      class={["mono cursor-pointer", @class]}
-    >{utc_string(@at)}</time>
+      aria-label={"Recorded at #{utc_string(@at)}"}
+      class={["tabular-nums", @class]}
+    >
+      {utc_string(@at)}
+    </time>
     """
   end
 
-  defp utc_string(%DateTime{} = at), do: Calendar.strftime(at, "%Y-%m-%d %H:%M:%S UTC")
+  @doc "A visible identifier doubles as its copy control, using the shared toast."
+  attr(:value, :string, required: true)
+  attr(:label, :string, required: true)
+
+  def copy_value(assigns) do
+    ~H"""
+    <button
+      type="button"
+      data-copy-value={@value}
+      data-copy-toast={@label <> " copied."}
+      aria-label={"Copy " <> @label}
+      title="Click to copy"
+      class="mg-timestamp-copy-trigger mg-focus-ring mono max-w-full break-all text-left text-label text-secondary"
+    >
+      {@value}
+    </button>
+    """
+  end
+
+  attr(:value, :string, required: true)
+  attr(:label, :string, required: true)
+
+  def copy_button(assigns) do
+    ~H"""
+    <span class="inline-flex flex-wrap items-center gap-xs">
+      <button
+        type="button"
+        class="btn btn-ghost min-h-11 mg-focus-ring"
+        data-copy-value={@value}
+        aria-label={@label}
+      >
+        {@label}
+      </button>
+      <span role="status" aria-live="polite" aria-atomic="true" data-copy-status></span>
+    </span>
+    """
+  end
+
+  @doc false
+  def timestamp_value(%DateTime{} = at), do: utc_string(at)
+
+  defp utc_string(%DateTime{} = at) do
+    base = Calendar.strftime(at, "%Y-%m-%d %H:%M:%S")
+    {microseconds, precision} = at.microsecond
+
+    fraction =
+      if precision > 0 do
+        digits = microseconds |> Integer.to_string() |> String.pad_leading(6, "0")
+        "." <> binary_part(digits, 0, precision)
+      else
+        ""
+      end
+
+    base <> fraction <> " UTC"
+  end
 
   defp size_class(:sm), do: "badge-sm"
   defp size_class(:md), do: "badge-md"
@@ -1097,6 +1596,8 @@ defmodule MailglassAdmin.Components do
   defp status_class(:accepted), do: "badge-success"
   defp status_class(:no_match), do: "badge-warning"
   defp status_class(:ignore), do: "badge-outline"
+  defp status_class(:no_change), do: "badge-outline"
+  defp status_class(:missing_history), do: "badge-outline"
   defp status_class(:failed_ingest), do: "badge-error"
   defp status_class(:webhook_replay_requested), do: "badge-outline"
   defp status_class(:webhook_replay_succeeded), do: "badge-success"
@@ -1124,6 +1625,8 @@ defmodule MailglassAdmin.Components do
   defp status_icon(:accepted), do: "hero-check-circle"
   defp status_icon(:no_match), do: "hero-exclamation-triangle"
   defp status_icon(:ignore), do: "hero-minus-circle"
+  defp status_icon(:no_change), do: "hero-minus-circle"
+  defp status_icon(:missing_history), do: "hero-question-mark-circle"
   defp status_icon(:failed_ingest), do: "hero-exclamation-circle"
   defp status_icon(:webhook_replay_requested), do: "hero-arrow-path"
   defp status_icon(:webhook_replay_succeeded), do: "hero-check-circle"
@@ -1146,11 +1649,13 @@ defmodule MailglassAdmin.Components do
   defp status_label(:unsubscribed), do: "Unsubscribed"
   defp status_label(:opened), do: "Opened"
   defp status_label(:clicked), do: "Clicked"
-  defp status_label(:autoresponded), do: "Autoresponded"
+  defp status_label(:autoresponded), do: "Auto-replied"
   defp status_label(:unknown), do: "Unknown"
   defp status_label(:accepted), do: "Accepted"
-  defp status_label(:no_match), do: "No match"
+  defp status_label(:no_match), do: "Unrouted"
   defp status_label(:ignore), do: "Ignored"
+  defp status_label(:no_change), do: "No change"
+  defp status_label(:missing_history), do: "No history"
   defp status_label(:failed_ingest), do: "Ingest failed"
   defp status_label(:webhook_replay_requested), do: "Replay requested"
   defp status_label(:webhook_replay_succeeded), do: "Replay succeeded"

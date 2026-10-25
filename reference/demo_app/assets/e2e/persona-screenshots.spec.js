@@ -46,9 +46,12 @@
 // system theme + 320 + 768 are added on the #1/#2 surfaces only (App-shell+Health,
 // Deliveries). The register cites the exact cell per finding, so coverage is auditable.
 
-const { test } = require("@playwright/test");
+const { test, expect } = require("@playwright/test");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
+const { execFileSync } = require("child_process");
+const { resetDisposableEvidence } = require("../scripts/check-persona-reset-target.cjs");
 
 // Git-ignored evidence cache (D-02). Resolved relative to this spec file:
 // assets/e2e -> ../../../../ is the repo root.
@@ -145,17 +148,7 @@ test.describe("persona-critic screenshot seam (METHOD-01 evidence producer)", ()
   // seam demo.spec.js uses (DemoData.reset! -> Personas.seed!). Kept serial by the
   // shared playwright.config.cjs (no fullyParallel) — the reset races a shared DB.
   test.beforeEach(async ({ request }) => {
-    const response = await request.post("/demo/evidence/reset", {
-      headers: {
-        "x-mailglass-demo-reset-token":
-          process.env.DEMO_EVIDENCE_RESET_TOKEN || ""
-      }
-    });
-    if (!response.ok()) {
-      throw new Error(
-        `demo reset failed (${response.status()}); is \`make demo\` up and DEMO_EVIDENCE_RESET_TOKEN set?`
-      );
-    }
+    await resetDisposableEvidence(request);
   });
 
   for (const surface of SURFACES) {
@@ -190,3 +183,162 @@ test.describe("persona-critic screenshot seam (METHOD-01 evidence producer)", ()
     }
   }
 });
+
+test.describe("review surfaces", () => {
+  // These checks are read-only. They deliberately do not call the demo reset
+  // endpoint, so they can run against an isolated disposable preview without
+  // changing any retained feedback data.
+  test("Gallery and curated Storybook share the Admin CSS and expose matching nav/theme patterns", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 768, height: 900 });
+
+    await page.goto("/dev/mail/gallery");
+    await expect(page.getByRole("heading", { name: "Component Gallery" })).toBeVisible();
+
+    const galleryNav = page.getByTestId("gallery-nav_link-active");
+    await expect(galleryNav.getByRole("link", { name: "Deliveries" }).first()).toBeVisible();
+    const galleryDarkTheme = page
+      .getByTestId("gallery-theme_picker-dark-selected")
+      .locator('[data-theme="mailglass-dark"]');
+    await expect(galleryDarkTheme.getByRole("radio", { name: "Dark" })).toBeChecked();
+
+    const galleryCss = await adminCssPath(page);
+    expect((await page.request.get(galleryCss)).status()).toBe(200);
+    await page.goto("/dev/storybook/primitives/nav_link?variation_id=active_light");
+    await expect(await textInAnyFrame(page, "Deliveries")).toBeVisible();
+    const storybookCss = await adminCssPath(page);
+    expect(storybookCss).toBe(galleryCss);
+    expect((await page.request.get(storybookCss)).status()).toBe(200);
+
+    await page.goto("/dev/storybook/primitives/nav_link?variation_id=active_dark");
+    const darkNav = page.locator('[data-theme="mailglass-dark"] a[aria-current="page"]');
+    await expect(darkNav).toHaveText("Deliveries");
+
+    await page.goto("/dev/storybook/primitives/theme_picker?variation_id=dark_selected");
+    const themeGroupNames = await page
+      .locator('input[type="radio"][name^="storybook_theme_"]')
+      .evaluateAll((radios) => [...new Set(radios.map((radio) => radio.name))].sort());
+    expect(themeGroupNames).toEqual([
+      "storybook_theme_dark_selected",
+      "storybook_theme_disabled",
+      "storybook_theme_light_selected",
+      "storybook_theme_system_selected_dark",
+      "storybook_theme_system_selected_light"
+    ]);
+
+    const selectedDarkRadio = page
+      .locator("#theme-picker-single-dark-selected")
+      .getByRole("radio", { name: "Dark" });
+    await expect(selectedDarkRadio).toBeChecked();
+  });
+});
+
+test.describe("working preview readiness", () => {
+  test("serves the expected routes and the committed Admin CSS at its mount path", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+
+    const previewResponse = await page.goto("/dev/mail");
+    expect(previewResponse?.ok(), "preview route must return a successful page").toBe(true);
+    const previewCssPath = await adminCssPath(page);
+    expect(previewCssPath).toMatch(/^\/dev\/mail\/css-[a-f0-9]{32}$/);
+
+    const previewCssResponse = await page.request.get(previewCssPath);
+    expect(previewCssResponse.status()).toBe(200);
+    const servedCss = await previewCssResponse.body();
+    const cssRouteDigest = previewCssPath.match(/css-([a-f0-9]{32})$/)?.[1];
+    const servedMd5 = crypto.createHash("md5").update(servedCss).digest("hex");
+    expect(servedMd5).toBe(cssRouteDigest);
+
+    const repoRoot = path.resolve(__dirname, "../../../../");
+    const sourceCssPath = path.join(repoRoot, "mailglass_admin/assets/css/app.css");
+    const builtCssPath = path.join(repoRoot, "mailglass_admin/priv/static/app.css");
+    const sha256 = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
+    const sourceCssSha256 = sha256(fs.readFileSync(sourceCssPath));
+    const builtCssSha256 = sha256(fs.readFileSync(builtCssPath));
+    const servedCssSha256 = sha256(servedCss);
+    expect(servedCssSha256, "served CSS must match the committed Admin bundle").toBe(
+      builtCssSha256
+    );
+
+    const galleryResponse = await page.goto("/dev/mail/gallery");
+    expect(galleryResponse?.ok(), "Gallery route must return a successful page").toBe(true);
+    await expect(page.getByRole("heading", { name: "Component Gallery" })).toBeVisible();
+    const galleryCssPath = await adminCssPath(page);
+    expect(galleryCssPath).toBe(previewCssPath);
+
+    const deliveriesLink = page.getByRole("link", { name: "Deliveries" }).first();
+    await expect(deliveriesLink).toBeVisible();
+    expect(await deliveriesLink.evaluate((element) => element.tabIndex)).toBeGreaterThanOrEqual(0);
+
+    const storybookResponse = await page.goto(
+      "/dev/storybook/primitives/nav_link?variation_id=active_light"
+    );
+    expect(storybookResponse?.ok(), "Storybook review route must return a successful page").toBe(
+      true
+    );
+    const storyText = await textInAnyFrame(page, "Deliveries");
+    await expect(storyText).toBeVisible();
+    const storybookCssPath = await adminCssPath(page);
+    expect(storybookCssPath).toBe(previewCssPath);
+    const storybookCssResponse = await page.request.get(storybookCssPath);
+    expect(storybookCssResponse.status()).toBe(200);
+    expect(sha256(await storybookCssResponse.body())).toBe(builtCssSha256);
+
+    // The evidence wrapper exports the candidate revision; inside its container the
+    // bind-mounted repo belongs to another uid, so git refuses it as dubious ownership.
+    const candidateSha =
+      process.env.DEMO_CANDIDATE_REVISION ||
+      execFileSync("git", ["rev-parse", "HEAD"], {
+        cwd: repoRoot,
+        encoding: "utf8"
+      }).trim();
+    console.log(
+      JSON.stringify({
+        event: "working-preview-readiness",
+        candidateSha,
+        routes: [
+          "/dev/mail",
+          "/dev/mail/gallery",
+          "/dev/storybook/primitives/nav_link?variation_id=active_light"
+        ],
+        adminCss: {
+          source: { path: "mailglass_admin/assets/css/app.css", sha256: sourceCssSha256 },
+          built: { path: "mailglass_admin/priv/static/app.css", sha256: builtCssSha256 },
+          served: { path: previewCssPath, sha256: servedCssSha256, md5: servedMd5 }
+        },
+        narrowViewport: 375
+      })
+    );
+  });
+});
+
+async function adminCssPath(page) {
+  for (const frame of page.frames()) {
+    const href = await frame.evaluate(() => {
+      const link = [...document.querySelectorAll('link[rel="stylesheet"]')]
+        .map((element) => element.href)
+        .find((url) => new URL(url).pathname.startsWith("/dev/mail/css-"));
+      if (link) return link;
+
+      const imports = [...document.querySelectorAll("style")]
+        .map((element) => element.textContent || "")
+        .join("\n");
+      return imports.match(/@import\s+["']([^"']*\/dev\/mail\/css-[^"']+)["']/)?.[1] || null;
+    }).catch(() => null);
+
+    if (href) return new URL(href, frame.url()).pathname;
+  }
+
+  throw new Error("the review surface did not load the versioned Admin stylesheet");
+}
+
+async function textInAnyFrame(page, text) {
+  for (const frame of page.frames()) {
+    const locator = frame.getByText(text, { exact: true });
+    if ((await locator.count()) > 0) return locator.first();
+  }
+  throw new Error("review surface did not render text " + JSON.stringify(text));
+}

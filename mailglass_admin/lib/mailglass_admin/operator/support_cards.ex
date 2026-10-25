@@ -16,6 +16,8 @@ defmodule MailglassAdmin.Operator.SupportCards do
   attr(:support_summary, :map, required: true)
   attr(:support_state, :map, required: true)
   attr(:suppression_count, :integer, default: nil)
+  attr(:exact_support_evidence, :map, default: %{status: :none})
+  attr(:exact_delivery_path, :string, default: nil)
 
   def support_cards(assigns) do
     ~H"""
@@ -35,6 +37,110 @@ defmodule MailglassAdmin.Operator.SupportCards do
         <span class="badge badge-outline">Read-only</span>
       </div>
 
+      <section
+        :if={@exact_support_evidence.status != :none}
+        data-testid="operator-support-exact-evidence"
+        class="mt-md rounded-box border border-base-300 bg-base-100 p-md"
+      >
+        <h4 class="text-body font-bold text-base-content">
+          {exact_evidence_title(@exact_support_evidence.focus)}
+        </h4>
+        <p
+          :if={@exact_support_evidence.status == :unavailable}
+          role="status"
+          data-testid="operator-support-exact-unavailable"
+          class="mt-xs text-body text-warning"
+        >
+          This exact Account support record could not be loaded. The requested ID is retained.
+        </p>
+        <p
+          :if={@exact_support_evidence.status == :not_found}
+          role="status"
+          data-testid="operator-support-exact-not-found"
+          class="mt-xs text-body text-secondary"
+        >
+          This exact support record is unavailable for this Account.
+        </p>
+        <p
+          :if={@exact_support_evidence.status == :stale}
+          role="status"
+          data-testid="operator-support-exact-stale"
+          class="mt-xs text-body text-warning"
+        >
+          Showing the last retrieved version of this exact record.
+        </p>
+        <dl
+          :if={
+            @exact_support_evidence.status in [:ready, :stale] &&
+              is_map(@exact_support_evidence.record)
+          }
+          class="mt-sm grid gap-sm text-body text-secondary"
+        >
+          <div>
+            <dt class="text-label uppercase font-bold">Exact record ID</dt>
+            <dd class="mono mt-xs break-all text-base-content" data-testid="operator-support-exact-id">
+              {exact_record_id(@exact_support_evidence)}
+            </dd>
+          </div>
+          <div :if={exact_provider(@exact_support_evidence)}>
+            <dt class="text-label uppercase font-bold">Provider</dt>
+            <dd class="mono mt-xs break-all text-base-content">
+              {exact_provider(@exact_support_evidence)}
+            </dd>
+          </div>
+          <div :if={exact_provider_event_id(@exact_support_evidence)}>
+            <dt class="text-label uppercase font-bold">Provider event</dt>
+            <dd class="mono mt-xs break-all text-base-content">
+              {exact_provider_event_id(@exact_support_evidence)}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-label uppercase font-bold">Recorded time</dt>
+            <dd class="mt-xs break-all text-base-content">
+              {exact_recorded_at(@exact_support_evidence)}
+            </dd>
+          </div>
+          <div :if={exact_status(@exact_support_evidence)}>
+            <dt class="text-label uppercase font-bold">Stored status</dt>
+            <dd class="mt-xs text-base-content">{exact_status(@exact_support_evidence)}</dd>
+          </div>
+          <div :if={@exact_support_evidence.focus == :orphan_backlog}>
+            <dt class="text-label uppercase font-bold">Delivery relationship</dt>
+            <dd class="mt-xs text-base-content">
+              {exact_event_relationship(@exact_support_evidence.record)}
+            </dd>
+            <.link
+              :if={@exact_delivery_path}
+              navigate={@exact_delivery_path}
+              class="btn btn-secondary mt-sm min-h-11"
+              data-testid="operator-support-linked-delivery"
+            >
+              Open linked Delivery {@exact_support_evidence.record.delivery_id}
+            </.link>
+          </div>
+          <div :if={@exact_support_evidence.focus == :failed_ingest && @exact_delivery_path}>
+            <dt class="text-label uppercase font-bold">Delivery relationship</dt>
+            <dd class="mt-xs text-base-content">A unique linked Delivery is recorded.</dd>
+            <.link
+              navigate={@exact_delivery_path}
+              class="btn btn-secondary mt-sm min-h-11"
+              data-testid="operator-support-linked-delivery"
+            >
+              Open linked Delivery {@exact_support_evidence.record.delivery_id}
+            </.link>
+          </div>
+        </dl>
+        <p
+          :if={
+            @exact_support_evidence.status in [:ready, :stale] && is_nil(@exact_delivery_path) &&
+              @exact_support_evidence.focus == :failed_ingest
+          }
+          class="mt-sm text-label text-secondary"
+        >
+          This webhook event could not be linked to a single delivery.
+        </p>
+      </section>
+
       <%!-- Tier 1: non-zero/actionable counts — full card containers --%>
       <div class="flex flex-col gap-lg mt-md">
         <article
@@ -45,11 +151,13 @@ defmodule MailglassAdmin.Operator.SupportCards do
           <div class="text-display font-bold text-error">
             {@support_summary.failed_ingest.count}
           </div>
-          <p class="text-body text-secondary">Recent failures (last 24h)</p>
+          <p class="text-body text-secondary">
+            Failed webhook attempts in the selected Account window.
+          </p>
 
           <div :if={@support_summary.failed_ingest.latest} class="mt-sm space-y-sm">
             <p class="text-label text-secondary">
-              Exemplar webhook row: {@support_summary.failed_ingest.latest.provider_event_id}
+              Example webhook event: {@support_summary.failed_ingest.latest.provider_event_id}
             </p>
             <button
               type="button"
@@ -68,7 +176,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
               class="grid gap-sm text-body text-secondary"
             >
               <div>
-                <dt class="text-label uppercase font-bold">Webhook row ID</dt>
+                <dt class="text-label uppercase font-bold">Webhook event ID</dt>
                 <dd class="mono mt-xs text-base-content">
                   {@support_summary.failed_ingest.latest.webhook_event_id}
                 </dd>
@@ -91,11 +199,11 @@ defmodule MailglassAdmin.Operator.SupportCards do
           <div class="text-display font-bold text-warning">
             {@support_summary.orphan_backlog.count}
           </div>
-          <p class="text-body text-secondary">Unmatched webhooks</p>
+          <p class="text-body text-secondary">Unmatched Events in the selected Account window.</p>
 
           <div :if={@support_summary.orphan_backlog.oldest} class="mt-sm space-y-sm">
             <p class="text-label text-secondary">
-              Oldest unmatched webhook: {@support_summary.orphan_backlog.oldest.provider_event_id}
+              Oldest unmatched Event example: {@support_summary.orphan_backlog.oldest.provider_event_id}
             </p>
             <button
               type="button"
@@ -127,6 +235,43 @@ defmodule MailglassAdmin.Operator.SupportCards do
               </div>
             </dl>
           </div>
+        </article>
+
+        <article
+          :if={reconcile_visible?(@support_summary)}
+          class="rounded-box bg-base-100 p-lg border-l-4 border-info"
+          data-testid="support-card-reconcile-facts-tier1"
+        >
+          <h4 class="text-body font-bold text-base-content">Reconciliation audit facts</h4>
+          <p class="mt-xs text-label text-secondary">
+            Recorded reconciliation facts for this Account support window.
+          </p>
+          <dl class="mt-sm grid gap-sm text-body text-secondary">
+            <div>
+              <dt class="text-label uppercase font-bold">Reconciled Events</dt>
+              <dd class="mt-xs text-base-content">
+                {count_or_unavailable(@support_summary.reconcile_facts.reconciled_count)}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-label uppercase font-bold">Still unmatched</dt>
+              <dd class="mt-xs text-base-content">
+                {count_or_unavailable(@support_summary.reconcile_facts.still_unmatched_count)}
+              </dd>
+            </div>
+          </dl>
+          <button
+            :if={@support_summary.reconcile_facts.latest_reconciled}
+            type="button"
+            phx-click="open_support_exemplar"
+            phx-value-focus="reconcile_facts"
+            phx-value-event_id={@support_summary.reconcile_facts.latest_reconciled.event_id}
+            phx-value-delivery_id={@support_summary.reconcile_facts.latest_reconciled.delivery_id}
+            data-testid="support-card-reconcile-facts-drilldown"
+            class="btn btn-ghost mt-sm px-sm min-h-11"
+          >
+            View reconciliation audit
+          </button>
         </article>
 
         <article
@@ -168,58 +313,31 @@ defmodule MailglassAdmin.Operator.SupportCards do
 
       <%!-- Tier 2: zero-state compact row — informational items always visible --%>
       <div class="border-t border-base-300 flex flex-wrap gap-md items-center py-sm text-label text-secondary mt-md">
-        <span :if={not (@support_summary && @support_summary.failed_ingest.count > 0)}>
-          No failures
+        <span :if={summary_count(@support_summary, :failed_ingest) == 0}>
+          No failed webhook attempts in this window
         </span>
         <span
           :if={
-            not (@support_summary && @support_summary.failed_ingest.count > 0) and
-              not (@support_summary && @support_summary.orphan_backlog.count > 0)
+            summary_count(@support_summary, :failed_ingest) == 0 and
+              summary_count(@support_summary, :orphan_backlog) == 0
           }
           aria-hidden="true"
         >
           ·
         </span>
-        <span :if={not (@support_summary && @support_summary.orphan_backlog.count > 0)}>
-          No unmatched webhooks
+        <span :if={summary_count(@support_summary, :orphan_backlog) == 0}>
+          No unmatched Events in this window
+        </span>
+        <span :if={summary_count(@support_summary, :failed_ingest) == nil}>
+          Failed webhook attempts unavailable
+        </span>
+        <span :if={summary_count(@support_summary, :orphan_backlog) == nil}>
+          Unmatched Events unavailable
         </span>
         <span aria-hidden="true">·</span>
         <span data-testid="support-card-suppression-count">
           Active suppressions: {if @suppression_count, do: @suppression_count, else: "—"}
         </span>
-        <span
-          :if={@support_summary && @support_summary.reconcile_facts.reconciled_count > 0}
-          aria-hidden="true"
-        >
-          ·
-        </span>
-        <span :if={@support_summary && @support_summary.reconcile_facts.reconciled_count > 0}>
-          Reconciled: {@support_summary.reconcile_facts.reconciled_count}
-        </span>
-        <span
-          :if={@support_summary && @support_summary.reconcile_facts.still_unmatched_count > 0}
-          aria-hidden="true"
-        >
-          ·
-        </span>
-        <button
-          :if={@support_summary && @support_summary.reconcile_facts.still_unmatched_count > 0}
-          type="button"
-          phx-click="open_support_exemplar"
-          phx-value-focus="reconcile_facts"
-          phx-value-event_id={
-            @support_summary.reconcile_facts.latest_reconciled &&
-              @support_summary.reconcile_facts.latest_reconciled.event_id
-          }
-          phx-value-delivery_id={
-            @support_summary.reconcile_facts.latest_reconciled &&
-              @support_summary.reconcile_facts.latest_reconciled.delivery_id
-          }
-          data-testid="support-card-reconcile-facts-drilldown"
-          class="btn btn-ghost px-sm min-h-11"
-        >
-          Still unmatched webhooks: {@support_summary.reconcile_facts.still_unmatched_count}
-        </button>
       </div>
 
       <div
@@ -233,6 +351,66 @@ defmodule MailglassAdmin.Operator.SupportCards do
     """
   end
 
+  defp exact_evidence_title(:failed_ingest), do: "Exact Account webhook"
+  defp exact_evidence_title(:orphan_backlog), do: "Exact Account Event"
+  defp exact_evidence_title(_evidence), do: "Exact support record"
+
+  defp summary_count(summary, key) do
+    case get_in(summary || %{}, [key, :count]) do
+      count when is_integer(count) -> count
+      _ -> nil
+    end
+  end
+
+  defp reconcile_visible?(%{reconcile_facts: facts}) do
+    is_integer(facts.reconciled_count) or is_integer(facts.still_unmatched_count)
+  end
+
+  defp reconcile_visible?(_summary), do: false
+
+  defp count_or_unavailable(count) when is_integer(count), do: Integer.to_string(count)
+  defp count_or_unavailable(_count), do: "Unavailable"
+
+  defp exact_record_id(%{focus: :failed_ingest, record: %{webhook_event_id: id}}), do: id
+  defp exact_record_id(%{focus: :orphan_backlog, record: %{event_id: id}}), do: id
+  defp exact_record_id(_evidence), do: nil
+
+  defp exact_provider(%{record: record}), do: record[:provider]
+  defp exact_provider(_evidence), do: nil
+
+  defp exact_provider_event_id(%{record: record}), do: record[:provider_event_id]
+  defp exact_provider_event_id(_evidence), do: nil
+
+  defp exact_recorded_at(%{record: %{received_at: %DateTime{} = at}}),
+    do: DateTime.to_iso8601(at) <> " UTC"
+
+  defp exact_recorded_at(%{record: %{occurred_at: %DateTime{} = at}}),
+    do: DateTime.to_iso8601(at) <> " UTC"
+
+  defp exact_recorded_at(_evidence), do: "Unavailable"
+
+  defp exact_event_relationship(%{
+         reconciled_event_id: reconciliation_id,
+         delivery_id: delivery_id
+       })
+       when is_binary(reconciliation_id) and is_binary(delivery_id),
+       do:
+         "Resolved by reconciliation Event #{reconciliation_id}; linked Delivery: #{delivery_id}."
+
+  defp exact_event_relationship(%{delivery_id: delivery_id}) when is_binary(delivery_id),
+    do: "Linked Delivery: #{delivery_id}."
+
+  defp exact_event_relationship(_record),
+    do: "No Delivery linkage is recorded for this Event."
+
+  defp exact_status(%{record: %{status: status}}) when is_atom(status),
+    do: status |> Atom.to_string() |> String.capitalize()
+
+  defp exact_status(%{record: %{event_type: event_type}}) when is_atom(event_type),
+    do: event_type |> Atom.to_string() |> String.capitalize()
+
+  defp exact_status(_evidence), do: nil
+
   defp replay_any_nonzero?(counts) do
     counts.failed > 0 or counts.noop > 0 or counts.replayed > 0
   end
@@ -241,7 +419,13 @@ defmodule MailglassAdmin.Operator.SupportCards do
     "failed #{counts.failed} · no change #{counts.noop} · new work #{counts.replayed}"
   end
 
-  defp drilldown_banner(%{focus: :failed_ingest}), do: "Showing failed ingest webhook row"
+  defp drilldown_banner(%{focus: :failed_ingest, webhook_event_id: id}) when is_binary(id),
+    do: "Showing the selected webhook event"
+
+  defp drilldown_banner(%{focus: :orphan_backlog, event_id: id}) when is_binary(id),
+    do: "Showing exact Account Event"
+
+  defp drilldown_banner(%{focus: :failed_ingest}), do: "Showing a webhook processing failure"
   defp drilldown_banner(%{focus: :orphan_backlog}), do: "Showing unmatched webhook evidence"
   defp drilldown_banner(%{focus: :replay_outcomes}), do: "Showing replay audit fact"
   defp drilldown_banner(%{focus: :reconcile_facts}), do: "Showing reconcile fact"

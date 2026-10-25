@@ -14,9 +14,9 @@ defmodule MailglassInbound.InboundRecords.ReplayRun do
   alias MailglassInbound.InboundRecords.InboundEvidence
   alias MailglassInbound.InboundRecords.InboundRecord
 
-  @outcomes [:accept, :ignore, :reject, :bounce, :failed]
+  @outcomes [:accept, :ignore, :no_change, :reject, :bounce, :failed]
 
-  @type outcome :: :accept | :ignore | :reject | :bounce | :failed
+  @type outcome :: :accept | :ignore | :no_change | :reject | :bounce | :failed
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t() | nil,
@@ -77,7 +77,7 @@ defmodule MailglassInbound.InboundRecords.ReplayRun do
     failure = get_field(changeset, :failure) || %{}
 
     cond do
-      outcome in [:accept, :ignore] and map_size(failure) == 0 ->
+      outcome in [:accept, :ignore, :no_change] and map_size(failure) == 0 ->
         changeset
 
       outcome in [:reject, :bounce] and present_string?(get_field(changeset, :outcome_reason)) and
@@ -91,7 +91,7 @@ defmodule MailglassInbound.InboundRecords.ReplayRun do
         add_error(
           changeset,
           :outcome,
-          "must be :accept, :ignore, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata"
+          "must be :accept, :ignore, :no_change, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata"
         )
     end
   end

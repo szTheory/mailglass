@@ -12,6 +12,10 @@ defmodule Mailglass.ConfigTest do
       assert Keyword.get(config, :adapter) == {Mailglass.Adapters.Fake, []}
       assert Keyword.get(config, :suppression_store) == Mailglass.SuppressionStore.Ecto
       assert Keyword.get(config, :adapters) == []
+
+      fonts = config |> Keyword.fetch!(:theme) |> Keyword.fetch!(:fonts)
+      assert fonts.body == "Arial, Helvetica, sans-serif"
+      assert fonts.display == "Arial, Helvetica, sans-serif"
     end
 
     test "accepts valid opts unchanged and fills defaults" do

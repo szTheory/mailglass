@@ -2,8 +2,8 @@ defmodule Mailglass.Compliance.UnsubscribeController do
   @moduledoc """
   Core RFC 8058 unsubscribe controller.
 
-  GET renders the built-in confirmation page by default or redirects to the
-  configured escape hatch. POST handling lands in the next task.
+  GET renders the built-in informational page by default or redirects to the
+  configured escape hatch. Only the separate POST path mutates unsubscribe state.
   """
 
   use Phoenix.Controller, formats: [:html]
@@ -27,9 +27,9 @@ defmodule Mailglass.Compliance.UnsubscribeController do
          %Delivery{} = delivery <- fetch_delivery(delivery_id) do
       maybe_redirect_or_render(conn, delivery)
     else
-      {:error, :expired} -> failure(conn, 410, "unsubscribe token expired")
-      {:error, :invalid} -> failure(conn, 404, "unsubscribe token invalid")
-      nil -> failure(conn, 404, "unsubscribe token invalid")
+      {:error, :expired} -> failure(conn, 410, :expired)
+      {:error, :invalid} -> failure(conn, 404, :invalid)
+      nil -> failure(conn, 404, :invalid)
     end
   end
 
@@ -57,14 +57,17 @@ defmodule Mailglass.Compliance.UnsubscribeController do
       |> put_root_layout(false)
       |> put_layout(false)
       |> put_view(html: UnsubscribeHTML)
-      |> render(:confirm, recipient: delivery.recipient)
+      |> render(:state, state: :valid, recipient: delivery.recipient)
     end
   end
 
-  defp failure(conn, status, message) do
+  defp failure(conn, status, state) do
     conn
-    |> put_resp_content_type("text/html")
-    |> send_resp(status, "<!doctype html><html><body>#{message}</body></html>")
+    |> put_status(status)
+    |> put_root_layout(false)
+    |> put_layout(false)
+    |> put_view(html: UnsubscribeHTML)
+    |> render(:state, state: state)
   end
 
   defp resolve_delivery(token) do

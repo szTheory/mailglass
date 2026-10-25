@@ -49,15 +49,6 @@ defmodule Storybook.Primitives.NavLink do
       %Variation{
         id: :disabled,
         attributes: %{label: "Suppressions", icon: "hero-no-symbol", href: "#", disabled: true}
-      },
-      %Variation{
-        id: :long_label,
-        attributes: %{
-          label: "Operations and deliverability diagnostics overview",
-          icon: "hero-chart-bar",
-          href: "#",
-          active: false
-        }
       }
     ]
   end

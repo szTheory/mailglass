@@ -1,13 +1,17 @@
 defmodule MailglassAdmin.TestSupport.OperatorFixtures do
   @moduledoc false
 
+  import Ecto.Query
+
   alias Mailglass.Events.Event
   alias Mailglass.IdempotencyKey
+  alias MailglassInbound.InboundRecords.InboundEvidence
   alias Mailglass.Outbound.Delivery
   alias MailglassAdmin.TestRepo
   alias Mailglass.Webhook.WebhookEvent
 
   @tenant_id "browser-tenant"
+  @reader_faults_key {__MODULE__, :reader_faults}
 
   def seed_browser_scenario!(opts \\ []) do
     reset!()
@@ -151,7 +155,525 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     }
   end
 
+  # Narrow test-only mutation used by the connected Phase 170 stale-confirm
+  # case: make the reviewed durable route binding differ before confirmation.
+  def mutate_phase170_stale_replay!(record_id) when is_binary(record_id) do
+    with {:ok, record_id} <- Ecto.UUID.cast(record_id),
+         %InboundEvidence{} = evidence <-
+           TestRepo.one(
+             from(evidence in InboundEvidence,
+               where:
+                 evidence.tenant_id == ^@tenant_id and
+                   evidence.inbound_record_id == ^record_id,
+               limit: 1
+             )
+           ) do
+      verification_facts =
+        Map.put(evidence.verification_facts, "mailglass_execution_route", %{
+          "status" => "no_match"
+        })
+
+      updated =
+        TestRepo.update!(Ecto.Changeset.change(evidence, verification_facts: verification_facts))
+
+      %{record_id: record_id, evidence_id: updated.id}
+    else
+      _ -> raise ArgumentError, "unsupported Phase 170 replay mutation"
+    end
+  end
+
+  def seed_phase169_scenario! do
+    reset!()
+
+    recent =
+      for index <- 1..21 do
+        insert_delivery!(%{
+          recipient: "phase169-#{index}@example.com",
+          provider: "postmark",
+          provider_message_id: "pm_phase169_#{index}",
+          status: :sent,
+          last_event_type: :delivered,
+          last_event_at: hours_ago(index),
+          inserted_at: hours_ago(index + 1),
+          mailable: "Mailglass.Example.BrowserMailer"
+        })
+      end
+
+    target =
+      insert_delivery!(%{
+        recipient: "phase169-exact@example.com",
+        provider: "postmark",
+        provider_message_id: "pm_phase169_exact",
+        status: :sent,
+        last_event_type: :delivered,
+        last_event_at: hours_ago(200),
+        inserted_at: hours_ago(201),
+        mailable: "Mailglass.Example.BrowserMailer"
+      })
+
+    webhook =
+      insert_webhook_event!(%{
+        provider_event_id: "phase169-exact-delivery",
+        status: :dead,
+        raw_payload: raw_postmark_payload("pm_phase169_exact", 16901),
+        received_at: hours_ago(1)
+      })
+
+    insert_linked_event!(target, webhook, "phase169-exact-child")
+
+    %{
+      tenant_id: @tenant_id,
+      delivery_id: target.id,
+      webhook_event_id: webhook.id,
+      listed_delivery_ids: Enum.map(recent, & &1.id)
+    }
+  end
+
+  def seed_phase169_replay!(variant) when variant in ["zero", "one", "many"] do
+    reset!()
+
+    delivery =
+      insert_delivery!(%{
+        recipient: "phase169-replay-#{variant}@example.com",
+        provider: "postmark",
+        provider_message_id: "pm_phase169_replay_#{variant}",
+        status: :sent,
+        last_event_type: :delivered
+      })
+
+    primary =
+      insert_webhook_event!(%{
+        provider_event_id: "phase169-replay-one",
+        raw_payload: raw_postmark_payload(delivery.provider_message_id, 16911)
+      })
+
+    if variant != "zero" do
+      insert_linked_event!(delivery, primary, "phase169-replay-child-one")
+    end
+
+    additional =
+      if variant == "many" do
+        second =
+          insert_webhook_event!(%{
+            provider_event_id: "phase169-replay-many-second",
+            raw_payload: raw_postmark_payload(delivery.provider_message_id, 16912)
+          })
+
+        insert_linked_event!(delivery, second, "phase169-replay-child-many")
+        [second.id]
+      else
+        []
+      end
+
+    %{
+      tenant_id: @tenant_id,
+      delivery_id: delivery.id,
+      webhook_event_id: primary.id,
+      candidate_ids: [primary.id | additional]
+    }
+  end
+
+  def mutate_phase169_scenario!("replace-reviewed") do
+    delivery = seeded_replay_delivery!()
+    reviewed = seeded_replay_webhook!("phase169-replay-one")
+
+    replacement =
+      insert_webhook_event!(%{
+        provider_event_id: "phase169-replay-replacement",
+        raw_payload: raw_postmark_payload(delivery.provider_message_id, 16913)
+      })
+
+    TestRepo.delete!(reviewed)
+    %{replacement_id: replacement.id}
+  end
+
+  def mutate_phase169_scenario!("remove-reviewed") do
+    TestRepo.delete!(seeded_replay_webhook!("phase169-replay-one"))
+    :ok
+  end
+
+  def mutate_phase169_scenario!("change-reviewed") do
+    reviewed = seeded_replay_webhook!("phase169-replay-one")
+
+    TestRepo.query!(
+      "UPDATE mailglass_webhook_events SET provider_event_id = $1, received_at = $2 WHERE id = $3::uuid AND tenant_id = $4",
+      [
+        "phase169-replay-one-changed",
+        DateTime.add(reviewed.received_at, 1, :second),
+        Ecto.UUID.dump!(reviewed.id),
+        @tenant_id
+      ]
+    )
+
+    :ok
+  end
+
+  def mutate_phase169_scenario!(_operation),
+    do: raise(ArgumentError, "unsupported replay mutation")
+
+  def insert_replay_audit!(delivery, type, metadata)
+      when type in [:webhook_replay_requested, :webhook_replay_succeeded, :webhook_replay_failed] and
+             is_map(metadata) do
+    insert_event!(delivery, %{type: type, metadata: metadata})
+  end
+
+  defp seeded_replay_delivery! do
+    TestRepo.one!(
+      from(delivery in Delivery,
+        where:
+          delivery.tenant_id == ^@tenant_id and
+            delivery.provider_message_id == "pm_phase169_replay_one",
+        limit: 1
+      )
+    )
+  end
+
+  defp seeded_replay_webhook!(provider_event_id) do
+    # Keep fixture access on the same SQL path as insert_webhook_event!/1;
+    # the Admin production boundary does not depend on the Webhook schema.
+    %{columns: columns, rows: [row]} =
+      TestRepo.query!(
+        "SELECT * FROM mailglass_webhook_events WHERE tenant_id = $1 AND provider_event_id = $2 LIMIT 1",
+        [@tenant_id, provider_event_id]
+      )
+
+    TestRepo.load(WebhookEvent, {columns, row})
+  end
+
+  def seed_phase169_timeline_101! do
+    reset!()
+
+    delivery =
+      insert_delivery!(%{
+        recipient: "phase169-timeline-101@example.com",
+        provider_message_id: "pm_phase169_timeline_101",
+        status: :sent,
+        last_event_type: :failed
+      })
+
+    base = ~U[2026-10-07 12:00:00.000000Z]
+
+    events =
+      for index <- 1..101 do
+        tied? = index in [99, 100]
+
+        occurred_at =
+          cond do
+            index == 101 -> DateTime.add(base, 101, :second)
+            tied? -> DateTime.add(base, 99, :second)
+            true -> DateTime.add(base, index, :second)
+          end
+
+        inserted_at =
+          if tied?,
+            do: DateTime.add(base, 200, :second),
+            else: DateTime.add(base, index + 200, :second)
+
+        metadata =
+          cond do
+            index == 3 ->
+              %{
+                "provider" => "postmark",
+                "source" => "provider webhook",
+                "webhook_event_id" => "00000000-0000-0000-0000-000000000001"
+              }
+
+            index == 4 ->
+              %{"provider" => "postmark"}
+
+            index == 101 ->
+              %{
+                "provider" => "postmark",
+                "source" => "provider webhook",
+                "provider_event_id" => String.duplicate("evt-東京-Ångström-", 8),
+                "provider_occurred_at" => "2026-10-07T12:34:56.123456Z"
+              }
+
+            true ->
+              %{"provider" => "postmark", "source" => "api"}
+          end
+
+        type =
+          case index do
+            2 -> :unknown
+            3 -> :delivered
+            101 -> :failed
+            _ -> :sent
+          end
+
+        id =
+          case index do
+            99 -> "00000000-0000-0000-0000-000000000099"
+            100 -> "00000000-0000-0000-0000-000000000100"
+            _ -> Ecto.UUID.generate()
+          end
+
+        TestRepo.insert!(
+          Ecto.Changeset.change(%Event{}, %{
+            id: id,
+            tenant_id: @tenant_id,
+            delivery_id: delivery.id,
+            type: type,
+            occurred_at: occurred_at,
+            inserted_at: inserted_at,
+            metadata: metadata,
+            normalized_payload: %{"private_payload" => "never render"}
+          })
+        )
+      end
+
+    %{
+      tenant_id: @tenant_id,
+      delivery_id: delivery.id,
+      selected_event_id: List.last(events).id,
+      ordinary_linked_event_id: Enum.at(events, 2).id,
+      unknown_event_id: Enum.at(events, 1).id
+    }
+  end
+
+  def seed_phase169_suppression!(variant \\ "one") when variant in ["empty", "one", "many"] do
+    reset!()
+    recipient = "phase169-long-suppression-recipient-東京-ångström@example.test"
+    now = DateTime.utc_now()
+
+    delivery =
+      insert_delivery!(%{
+        recipient: recipient,
+        provider_message_id: "pm_phase169_suppression",
+        status: :suppressed,
+        last_event_type: :suppressed
+      })
+
+    historical_event =
+      TestRepo.insert!(
+        Ecto.Changeset.change(%Event{}, %{
+          tenant_id: @tenant_id,
+          delivery_id: delivery.id,
+          type: :suppressed,
+          occurred_at: DateTime.add(now, -60, :second),
+          inserted_at: DateTime.add(now, -60, :second),
+          metadata: %{"source" => "historic delivery outcome"},
+          normalized_payload: %{"private_payload" => "never render"}
+        })
+      )
+
+    suppression_ids =
+      case variant do
+        "empty" ->
+          []
+
+        "one" ->
+          [
+            insert_suppression!(%{
+              tenant_id: @tenant_id,
+              address: recipient,
+              scope: :address,
+              reason: :policy,
+              source: "operator review · Ångström",
+              expires_at: DateTime.add(now, 3_600, :second)
+            })
+          ]
+
+        "many" ->
+          [
+            insert_suppression!(%{
+              tenant_id: @tenant_id,
+              address: recipient,
+              scope: :address_stream,
+              stream: :transactional,
+              reason: :complaint,
+              source: "phase169-address-stream",
+              expires_at: nil
+            }),
+            insert_suppression!(%{
+              tenant_id: @tenant_id,
+              address: recipient,
+              scope: :address,
+              reason: :manual,
+              source: "address-level",
+              expires_at: DateTime.add(now, 3_600, :second)
+            }),
+            insert_suppression!(%{
+              tenant_id: @tenant_id,
+              address: "example.test",
+              scope: :domain,
+              reason: :policy,
+              source: "domain-level",
+              expires_at: nil
+            })
+          ]
+      end
+
+    %{
+      tenant_id: @tenant_id,
+      delivery_id: delivery.id,
+      recipient: recipient,
+      historical_event_id: historical_event.id,
+      current_suppression_count: length(suppression_ids)
+    }
+  end
+
+  def seed_phase169_health_partial! do
+    reset!()
+
+    failed =
+      insert_webhook_event!(%{
+        provider_event_id: "phase169-health-failed",
+        status: :dead,
+        received_at: hours_ago(2)
+      })
+
+    {:ok, unmatched} =
+      Mailglass.Events.append(%{
+        tenant_id: @tenant_id,
+        type: :delivered,
+        delivery_id: nil,
+        occurred_at: hours_ago(3),
+        needs_reconciliation: true,
+        metadata: %{"provider" => "postmark", "provider_event_id" => "phase169-unmatched"}
+      })
+
+    %{tenant_id: @tenant_id, failed_webhook_event_id: failed.id, unmatched_event_id: unmatched.id}
+  end
+
+  def seed_phase169_support_empty!(tenant_id \\ @tenant_id) do
+    reset!()
+
+    older_webhook =
+      insert_webhook_event!(%{
+        tenant_id: tenant_id,
+        provider_event_id: "phase169-support-older",
+        status: :dead,
+        received_at: hours_ago(8)
+      })
+
+    newer_webhook =
+      insert_webhook_event!(%{
+        tenant_id: tenant_id,
+        provider_event_id: "phase169-support-newer",
+        status: :failed,
+        received_at: hours_ago(1)
+      })
+
+    {:ok, unlinked_event} =
+      Mailglass.Events.append(%{
+        tenant_id: tenant_id,
+        type: :delivered,
+        delivery_id: nil,
+        occurred_at: hours_ago(9),
+        needs_reconciliation: true,
+        metadata: %{
+          "provider" => "postmark",
+          "provider_event_id" => "phase169-unlinked-event",
+          "webhook_event_id" => older_webhook.id
+        }
+      })
+
+    {:ok, newer_unlinked_event} =
+      Mailglass.Events.append(%{
+        tenant_id: tenant_id,
+        type: :bounced,
+        delivery_id: nil,
+        occurred_at: hours_ago(2),
+        needs_reconciliation: true,
+        metadata: %{
+          "provider" => "postmark",
+          "provider_event_id" => String.duplicate("phase169-long-safe-reference-", 8),
+          "webhook_event_id" => newer_webhook.id
+        }
+      })
+
+    other_delivery =
+      insert_delivery!(%{
+        tenant_id: tenant_id,
+        recipient: "phase169-other-delivery@example.com",
+        provider: "postmark",
+        provider_message_id: "pm_phase169_other_delivery"
+      })
+
+    selected_delivery =
+      insert_delivery!(%{
+        tenant_id: tenant_id,
+        recipient: "phase169-selected-delivery@example.com",
+        provider: "sendgrid",
+        provider_message_id: "sg_phase169_selected_delivery"
+      })
+
+    {:ok, linked_event} =
+      Mailglass.Events.append(%{
+        tenant_id: tenant_id,
+        type: :delivered,
+        delivery_id: other_delivery.id,
+        occurred_at: hours_ago(7),
+        needs_reconciliation: true,
+        metadata: %{
+          "provider" => "postmark",
+          "provider_event_id" => "phase169-other-delivery-event",
+          "webhook_event_id" => newer_webhook.id
+        }
+      })
+
+    %{
+      tenant_id: tenant_id,
+      older_webhook_event_id: older_webhook.id,
+      newer_webhook_event_id: newer_webhook.id,
+      unlinked_event_id: unlinked_event.id,
+      newer_unlinked_event_id: newer_unlinked_event.id,
+      linked_event_id: linked_event.id,
+      other_delivery_id: other_delivery.id,
+      selected_delivery_id: selected_delivery.id
+    }
+  end
+
+  def arm_reader_fault!(session_key, operation, kind)
+      when is_binary(session_key) and is_binary(operation) and kind in [:known, :unexpected] do
+    unless operation in ~w(failed_ingest orphan_backlog replay_outcomes reconcile_facts active_suppressions exact_failed_ingest exact_unmatched_event delivery_timeline selected_delivery selected_delivery_event delivery_suppression replay_history replay_targets) do
+      raise ArgumentError, "unsupported test reader operation"
+    end
+
+    with_reader_faults(fn faults ->
+      Map.put(faults, {session_key, operation}, kind)
+    end)
+  end
+
+  def take_reader_fault(session_key, operation)
+      when is_binary(session_key) and is_atom(operation) do
+    key = {session_key, Atom.to_string(operation)}
+
+    {kind, _faults} =
+      with_reader_faults(fn faults -> {Map.get(faults, key), Map.delete(faults, key)} end)
+
+    kind
+  end
+
+  def clear_reader_faults! do
+    with_reader_faults(fn _faults -> %{} end)
+  end
+
+  # The browser mutation endpoint runs in short-lived request processes. A
+  # request-owned ETS table disappears before the LiveView can consume it, so
+  # keep this tiny test-only registry in VM state and serialize its one-shot
+  # writes/reads with a global lock.
+  defp with_reader_faults(update) do
+    :global.trans({{__MODULE__, :reader_faults}, self()}, fn ->
+      faults = :persistent_term.get(@reader_faults_key, %{})
+      result = update.(faults)
+
+      case result do
+        {value, next_faults} ->
+          :persistent_term.put(@reader_faults_key, next_faults)
+          {value, next_faults}
+
+        next_faults when is_map(next_faults) ->
+          :persistent_term.put(@reader_faults_key, next_faults)
+          :ok
+      end
+    end)
+  end
+
   def reset! do
+    clear_reader_faults!()
+
     TestRepo.query!(
       "TRUNCATE TABLE mailglass_inbound_replay_runs, mailglass_inbound_evidence, mailglass_inbound_records, mailglass_webhook_events, mailglass_events, mailglass_suppressions, mailglass_deliveries RESTART IDENTITY CASCADE"
     )
@@ -341,7 +863,11 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     insert_event!(delivery, %{
       type: :sent,
       metadata:
-        linked_replay_metadata(webhook_event, child_provider_event_id, delivery.provider_message_id)
+        linked_replay_metadata(
+          webhook_event,
+          child_provider_event_id,
+          delivery.provider_message_id
+        )
     })
   end
 
@@ -385,6 +911,8 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
           row.inserted_at
         ]
       )
+
+    row.id
   end
 
   defp seed_inbound_matrix! do
@@ -392,7 +920,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
       seed_inbound_run_record!(%{
         provider_message_id: "pm_browser_inbound_accept",
         envelope_recipient: "support@browser-scenario.example",
-        subject: "Browser scenario support request",
+        subject: "Browser support — résumé routing diagnostics across multiple accounts",
         from: [%{"address" => "user@browser-test.example"}],
         to: [%{"address" => "support@browser-scenario.example"}],
         received_at: hours_ago(10)
@@ -515,14 +1043,31 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   defp seed_inbound_run_record!(record_attrs, run_opts) do
     record = insert_inbound_record!(record_attrs)
-    evidence = insert_inbound_evidence!(record.tenant_id, record.id)
+
+    route_binding =
+      if Keyword.get(run_opts, :outcome, :accept) == :no_match do
+        %{"status" => "no_match"}
+      else
+        %{
+          "status" => "matched",
+          "mailbox" => browser_inbound_mailbox()
+        }
+      end
+
+    evidence = insert_inbound_evidence!(record.tenant_id, record.id, route_binding)
     insert_inbound_run!(record.tenant_id, record.id, evidence.id, run_opts)
     record
   end
 
   defp seed_inbound_run_record!(record_attrs) do
     record = insert_inbound_record!(record_attrs)
-    evidence = insert_inbound_evidence!(record.tenant_id, record.id)
+
+    evidence =
+      insert_inbound_evidence!(record.tenant_id, record.id, %{
+        "status" => "matched",
+        "mailbox" => browser_inbound_mailbox()
+      })
+
     insert_inbound_run!(record.tenant_id, record.id, evidence.id)
     record
   end
@@ -594,7 +1139,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     %{id: row.id, tenant_id: row.tenant_id, subject: row.subject}
   end
 
-  defp insert_inbound_evidence!(tenant_id, inbound_record_id) do
+  defp insert_inbound_evidence!(tenant_id, inbound_record_id, route_binding) do
     id = Ecto.UUID.generate()
     now = DateTime.utc_now()
 
@@ -617,7 +1162,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
           %{},
           %{},
           nil,
-          %{},
+          %{"mailglass_execution_route" => route_binding},
           %{},
           %{},
           now,
@@ -672,7 +1217,13 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   defp default_inbound_mailbox("no_match"), do: nil
   defp default_inbound_mailbox("failed"), do: nil
-  defp default_inbound_mailbox(_outcome), do: "Mailglass.Example.BrowserMailbox"
+  defp default_inbound_mailbox(_outcome), do: browser_inbound_mailbox()
+
+  defp browser_inbound_mailbox do
+    mailbox = MailglassAdmin.TestSupport.InboundTestMailbox
+    Code.ensure_loaded!(mailbox)
+    Atom.to_string(mailbox)
+  end
 
   defp hours_ago(hours), do: DateTime.add(DateTime.utc_now(), -hours, :hour)
 

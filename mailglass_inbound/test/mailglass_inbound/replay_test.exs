@@ -6,6 +6,7 @@ defmodule MailglassInbound.ReplayTest do
   alias MailglassInbound.InboundRecords.InboundEvidence
   alias MailglassInbound.InboundRecords.ExecutionRun
   alias MailglassInbound.InboundRecords.InboundRecord
+  alias MailglassInbound.InboundRecords.ReplayRun
   alias MailglassInbound.Ingress.Persist
   alias MailglassInbound.Ingress.{Request, VerifiedRequest}
   alias MailglassInbound.Internal.Replay
@@ -36,6 +37,28 @@ defmodule MailglassInbound.ReplayTest do
     use MailglassInbound.Router
 
     route(SupportMailbox, recipient: "support@example.com")
+  end
+
+  defmodule NoChangeMailbox do
+    @behaviour MailglassInbound.Mailbox
+    def process(_message), do: :no_change
+  end
+
+  defmodule NoChangeRouter do
+    use MailglassInbound.Router
+
+    route(NoChangeMailbox, recipient: "support@example.com")
+  end
+
+  defmodule IgnoreMailbox do
+    @behaviour MailglassInbound.Mailbox
+    def process(_message), do: :ignore
+  end
+
+  defmodule IgnoreRouter do
+    use MailglassInbound.Router
+
+    route(IgnoreMailbox, recipient: "support@example.com")
   end
 
   defmodule LoadedProcessSentinel do
@@ -240,9 +263,24 @@ defmodule MailglassInbound.ReplayTest do
 
       refute invalid.valid?
 
-      assert {"must be :no_match, :accept, :ignore, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata",
+      assert {"must be :no_match, :accept, :ignore, :no_change, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata",
               _} =
                invalid.errors[:outcome]
+    end
+
+    test "the legacy replay schema decodes an explicit no-change outcome" do
+      changeset =
+        ReplayRun.changeset(%{
+          tenant_id: "tenant-123",
+          inbound_record_id: Ecto.UUID.generate(),
+          inbound_evidence_id: Ecto.UUID.generate(),
+          replay_id: "replay-123",
+          mailbox: "MyApp.Mailboxes.SupportMailbox",
+          outcome: :no_change
+        })
+
+      assert changeset.valid?
+      assert Ecto.Changeset.get_field(changeset, :outcome) == :no_change
     end
 
     test "keeps execution persistence append-only and canonical receive truth immutable" do
@@ -297,7 +335,251 @@ defmodule MailglassInbound.ReplayTest do
     end
   end
 
+  describe "eligibility/2" do
+    test "returns the resolvable Mailbox identity stored in durable evidence" do
+      record = valid_inbound_record()
+      evidence = valid_inbound_evidence(record.id)
+      mailbox = Atom.to_string(SupportMailbox)
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence])
+
+      assert {:ok, %{status: :eligible, mailbox: ^mailbox}} =
+               eligibility_result(record.id,
+                 tenant_id: record.tenant_id,
+                 repo: ReplayRepo
+               )
+    end
+
+    test "reports stored no-match evidence without rerunning the router" do
+      record = valid_inbound_record()
+
+      evidence = %{
+        valid_inbound_evidence(record.id)
+        | verification_facts: %{
+            "mailglass_execution_route" => %{"status" => "no_match"}
+          }
+      }
+
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence])
+
+      assert {:ok, %{status: :ineligible, reason: :no_prior_match}} =
+               eligibility_result(record.id,
+                 tenant_id: record.tenant_id,
+                 repo: ReplayRepo
+               )
+    end
+
+    test "distinguishes missing execution history from no prior match" do
+      record = valid_inbound_record()
+      evidence = %{valid_inbound_evidence(record.id) | verification_facts: %{auth: :basic_auth}}
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence, nil, nil])
+
+      assert {:ok, %{status: :ineligible, reason: :execution_history_missing}} =
+               eligibility_result(record.id,
+                 tenant_id: record.tenant_id,
+                 repo: ReplayRepo
+               )
+    end
+
+    test "reports an unsafe legacy binding separately from missing history" do
+      record = valid_inbound_record()
+      evidence = %{valid_inbound_evidence(record.id) | verification_facts: %{auth: :basic_auth}}
+
+      legacy_run = %ExecutionRun{
+        inbound_record_id: record.id,
+        inbound_evidence_id: evidence.id,
+        source: :fresh,
+        mailbox: "Legacy.Mailboxes.UnboundMailbox",
+        outcome: :no_change
+      }
+
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence, legacy_run])
+
+      assert {:ok, %{status: :ineligible, reason: :invalid_mailbox}} =
+               eligibility_result(record.id,
+                 tenant_id: record.tenant_id,
+                 repo: ReplayRepo
+               )
+    end
+
+    test "reports missing evidence separately from a missing or foreign record" do
+      record = valid_inbound_record()
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, nil])
+
+      assert {:ok, %{status: :ineligible, reason: :missing_evidence}} =
+               eligibility_result(record.id,
+                 tenant_id: record.tenant_id,
+                 repo: ReplayRepo
+               )
+    end
+
+    test "reports a currently unavailable Mailbox without exposing binding text" do
+      record = valid_inbound_record()
+
+      evidence = %{
+        valid_inbound_evidence(record.id)
+        | verification_facts: %{
+            "mailglass_execution_route" => %{
+              "status" => "matched",
+              "mailbox" => "Private.Mailboxes.NotLoaded"
+            }
+          }
+      }
+
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence])
+
+      result =
+        eligibility_result(record.id,
+          tenant_id: record.tenant_id,
+          repo: ReplayRepo
+        )
+
+      assert {:ok, %{status: :ineligible, reason: :mailbox_unavailable}} = result
+      refute inspect(result) =~ "Private.Mailboxes.NotLoaded"
+    end
+
+    test "uses the same non-disclosing result for foreign and missing IDs" do
+      owner = Sandbox.start_owner!(TestRepo, shared: true)
+      TestRepo.query!("TRUNCATE TABLE mailglass_inbound_records CASCADE", [])
+      on_exit(fn -> Sandbox.stop_owner(owner) end)
+
+      assert {:ok, %{status: :inserted}} =
+               Persist.persist(valid_sendgrid_handoff(), repo: TestRepo, routes: [])
+
+      record = TestRepo.get_by!(InboundRecord, tenant_id: "tenant-123")
+
+      assert {:error, :not_found} =
+               eligibility_result(record.id, tenant_id: "tenant-foreign", repo: TestRepo)
+
+      assert {:error, :not_found} =
+               eligibility_result(Ecto.UUID.generate(), tenant_id: record.tenant_id, repo: TestRepo)
+    end
+  end
+
   describe "internal replay" do
+    test "appends and returns the explicit no-change result from the bound mailbox" do
+      owner = Sandbox.start_owner!(TestRepo, shared: true)
+      TestRepo.query!("TRUNCATE TABLE mailglass_inbound_records CASCADE", [])
+      on_exit(fn -> Sandbox.stop_owner(owner) end)
+
+      assert {:ok, %{status: :inserted, route: %{status: :matched, mailbox: NoChangeMailbox}}} =
+               Persist.persist(valid_sendgrid_handoff(), repo: TestRepo, router: NoChangeRouter)
+
+      record = TestRepo.get_by!(InboundRecord, tenant_id: "tenant-123")
+
+      assert {:ok, %{outcome: :no_change}} =
+               Replay.replay(record.id,
+                 tenant_id: record.tenant_id,
+                 repo: TestRepo,
+                 router: NoChangeRouter
+               )
+
+      replay_run = TestRepo.get_by!(ExecutionRun, inbound_record_id: record.id, source: :replay)
+
+      assert replay_run.outcome == :no_change
+      assert replay_run.mailbox == Atom.to_string(NoChangeMailbox)
+      refute TestRepo.get_by(ExecutionRun, inbound_record_id: record.id, source: :fresh)
+
+      ignore_handoff =
+        valid_sendgrid_handoff()
+        |> Map.put(:tenant_id, "tenant-ignore")
+        |> Map.update!(:message, &%{&1 | tenant_id: "tenant-ignore"})
+
+      assert {:ok, %{status: :inserted, route: %{status: :matched, mailbox: IgnoreMailbox}}} =
+               Persist.persist(ignore_handoff, repo: TestRepo, router: IgnoreRouter)
+
+      ignore_record = TestRepo.get_by!(InboundRecord, tenant_id: "tenant-ignore")
+
+      assert {:ok, %{outcome: :ignore}} =
+               Replay.replay(ignore_record.id,
+                 tenant_id: ignore_record.tenant_id,
+                 repo: TestRepo,
+                 router: IgnoreRouter
+               )
+
+      ignore_run =
+        TestRepo.get_by!(ExecutionRun,
+          inbound_record_id: ignore_record.id,
+          source: :replay
+        )
+
+      assert ignore_run.outcome == :ignore
+
+      assert {:error, :not_found} =
+               Replay.replay(record.id, tenant_id: "tenant-foreign", repo: TestRepo)
+
+      assert TestRepo.aggregate(ExecutionRun, :count) == 2
+    end
+
+    test "recognizes a legacy no-change run as matched while refusing its unbound mailbox" do
+      owner = Sandbox.start_owner!(TestRepo, shared: true)
+      TestRepo.query!("TRUNCATE TABLE mailglass_inbound_records CASCADE", [])
+      on_exit(fn -> Sandbox.stop_owner(owner) end)
+
+      assert {:ok, %{status: :inserted}} =
+               Persist.persist(valid_sendgrid_handoff(), repo: TestRepo, routes: [])
+
+      record = TestRepo.get_by!(InboundRecord, tenant_id: "tenant-123")
+      evidence = TestRepo.get_by!(InboundEvidence, inbound_record_id: record.id)
+
+      evidence
+      |> Ecto.Changeset.change(
+        verification_facts: Map.delete(evidence.verification_facts, "mailglass_execution_route")
+      )
+      |> TestRepo.update!()
+
+      {:ok, _legacy_run} =
+        TestRepo.insert(
+          ExecutionRun.changeset(%{
+            tenant_id: record.tenant_id,
+            inbound_record_id: record.id,
+            inbound_evidence_id: evidence.id,
+            source: :fresh,
+            mailbox: "Legacy.Mailboxes.UnboundMailbox",
+            outcome: :no_change
+          })
+        )
+
+      assert {:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}} =
+               Replay.replay(record.id, tenant_id: record.tenant_id, repo: TestRepo)
+    end
+
+    test "classifies a failed legacy run with a mailbox as an unsafe binding" do
+      owner = Sandbox.start_owner!(TestRepo, shared: true)
+      TestRepo.query!("TRUNCATE TABLE mailglass_inbound_records CASCADE", [])
+      on_exit(fn -> Sandbox.stop_owner(owner) end)
+
+      assert {:ok, %{status: :inserted}} =
+               Persist.persist(valid_sendgrid_handoff(), repo: TestRepo, routes: [])
+
+      record = TestRepo.get_by!(InboundRecord, tenant_id: "tenant-123")
+      evidence = TestRepo.get_by!(InboundEvidence, inbound_record_id: record.id)
+
+      evidence
+      |> Ecto.Changeset.change(
+        verification_facts: Map.delete(evidence.verification_facts, "mailglass_execution_route")
+      )
+      |> TestRepo.update!()
+
+      {:ok, _failed_run} =
+        TestRepo.insert(
+          ExecutionRun.changeset(%{
+            tenant_id: record.tenant_id,
+            inbound_record_id: record.id,
+            inbound_evidence_id: evidence.id,
+            source: :fresh,
+            mailbox: "Legacy.Mailboxes.FailedMailbox",
+            outcome: :failed,
+            failure: %{"kind" => "callback_error"}
+          })
+        )
+
+      assert {:ok, %{status: :ineligible, reason: :invalid_mailbox}} =
+               eligibility_result(record.id, tenant_id: record.tenant_id, repo: TestRepo)
+
+      assert {:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}} =
+               Replay.replay(record.id, tenant_id: record.tenant_id, repo: TestRepo)
+    end
+
     test "reuses stored canonical and evidence truth, defaults to the latest fresh matched mailbox, and appends replay lineage" do
       record = valid_inbound_record()
       evidence = valid_inbound_evidence(record.id)
@@ -552,5 +834,13 @@ defmodule MailglassInbound.ReplayTest do
       parse_warnings: %{},
       attachment_blobs: %{}
     }
+  end
+
+  defp eligibility_result(record_id, opts) do
+    if Code.ensure_loaded?(Replay) and function_exported?(Replay, :eligibility, 2) do
+      apply(Replay, :eligibility, [record_id, opts])
+    else
+      {:error, :eligibility_unavailable}
+    end
   end
 end

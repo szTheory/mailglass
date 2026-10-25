@@ -91,10 +91,14 @@ make            # list every demo command (same as: make help)
 make demo       # build, start, and print the URLs
 make demo-down  # stop the demo (keeps cached deps for a fast restart)
 make demo-reset # reseed the deterministic AtlasDesk demo data
-make demo-e2e   # run the Playwright browser-evidence suite
+make demo-e2e   # run isolated synthetic browser-evidence checks
 make demo-logs  # follow the app logs
 make demo-clean # stop and remove all volumes (full reset)
 ```
+
+`make demo-e2e` provisions a separate disposable app and database with a unique
+run identity, then removes only that run's containers and volumes. It does not
+reset the demo you started with `make demo`.
 
 > **`make demo-reset` is destructive.** It truncates the seeded demo tables
 > before reseeding preview, delivery, suppression, inbound record, evidence,

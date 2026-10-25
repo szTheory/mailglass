@@ -1,0 +1,112 @@
+---
+phase: "170"
+slug: inbound-investigation-and-recovery
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
+created: "2026-10-08"
+---
+
+# Phase 170 — Validation Strategy
+
+> Per-phase validation contract for feedback sampling during execution.
+
+## Test Infrastructure
+
+| Property | Value |
+|----------|-------|
+| **Framework** | ExUnit in `mailglass_inbound` and `mailglass_admin`; Playwright Test for connected operator browser acceptance. |
+| **Config files** | `mailglass_inbound/test/test_helper.exs`; `mailglass_admin/test/test_helper.exs`; `mailglass_admin/playwright.config.cjs`. |
+| **Inbound quick run command** | From `mailglass_inbound`: `mix test test/mailglass_inbound/internal/operator/records_test.exs test/mailglass_inbound/replay_test.exs test/mailglass_inbound/async_execution_test.exs`. |
+| **Admin quick run command** | From `mailglass_admin`: `mix test test/mailglass_admin/inbound_live_test.exs test/mailglass_admin/inbound/components_test.exs test/mailglass_admin/inbound/evidence_card_test.exs test/mailglass_admin/inbound/replay_modal_test.exs`. |
+| **Connected acceptance command** | From `mailglass_admin`: `npm run test:operator-browser`. |
+| **Full suite commands** | `mix test --seed 1` from each of `mailglass_inbound` and `mailglass_admin`; `npm run test:operator-browser` from `mailglass_admin`; build and verify committed assets with `mix mailglass_admin.assets.build` and the existing token-parity/bundle tests when source classes change. |
+| **Recurring CI coverage** | `support_contract_admin` and `inbound_test` are required leaves behind `CI Green`; `Operator Browser Gate` runs on code changes but is outside the `CI Green` aggregate (advisory). |
+| **Feedback latency** | Final closeout evidence: Admin full suite 577 tests (0 failures, 1 excluded), followed after the locked-copy restoration by 130 focused tests (0 failures, 1 excluded); inbound 3 properties + 480 tests (0 failures); browser full suite 206 passed / 1 guarded skip, followed by 7 focused Phase 170 cases (0 failures); asset parity/bundle tests 10 passed. |
+
+The project pins Elixir `1.18.4` and Erlang `27.3.4.13`; phase acceptance evidence used the pinned toolchain. Playwright Chromium ran successfully; this audit required runtime escalation because sandbox launch permissions blocked Chromium before test execution. No test or browser dependency was added.
+
+The generic GSD regression hook found no root `test` target or `workflow.test_command` and therefore resolved to `true`; that no-op was not counted as test evidence. The package and browser suites above were run directly. Existing CI provides recurring package coverage through required `CI Green` leaves; its operator browser lane remains advisory.
+
+## Sampling Rate
+
+- After each inbound read/replay task commit: run the affected `mailglass_inbound` operator or replay ExUnit modules.
+- After each Admin LiveView/component task commit: run the affected `mailglass_admin` inbound ExUnit modules.
+- After each connected operator journey task: run its named Playwright case through `npm run test:operator-browser`.
+- Before `$gsd-verify-work`: run both package suites, the complete operator browser suite, and the Admin asset/parity checks if CSS changed.
+- Never report a browser interaction as verified by a component test alone; record the evidence boundary between ExUnit, connected browser, and rendered inspection.
+
+## Per-Requirement Verification Map
+
+| Requirement | Required observable behavior | Test locations / type | Planned automated evidence | Status |
+|-------------|-----------------------------|-----------------------|----------------------------|--------|
+| INUX-01 | Exact same-Account selection survives page/filter boundaries; return context is preserved; successful empty, filtered-empty, out-of-range, unavailable selection, absent package, explicit gateway error and DB connection failure are distinct; foreign IDs disclose no existence. | Inbound records ExUnit; Admin LiveView ExUnit; connected Playwright. | Both package suites; full browser suite; focused DB connection failure browser test. | **Green** — full suites and focused read-failure browser case passed. |
+| INUX-02 | List and detail agree on the latest fresh disposition; history is chronological; matched Mailbox, no match, failed execution, and missing history remain distinct; current-router trace is labeled as simulation. | Inbound operator ExUnit; Admin LiveView/component ExUnit; connected Playwright. | Both package suites and full operator browser suite. | **Green** — projection and filter now share latest-fresh ordering; timeline, component, and connected simulation checks passed. |
+| INUX-03 | Verification and route facts follow an explicit safe-field policy; raw payload/MIME is redacted by default; reveal authorization is checked at action time and resets on Account/record changes. | Admin component and LiveView ExUnit; connected keyboard/browser cases. | Admin package suite; full operator browser suite; rendered Phase 170 case. | **Green** — redaction, action-time authorization, keyboard reveal/re-redact, focus return, and rendered checks passed. |
+| INUX-04 | Eligibility is revalidated for the exact Account/record at confirmation; denied, stale, repeated, recorded failure, command failure, and unavailable history remain distinct; `:no_change` appears only when explicitly returned by Mailbox and persisted; context is retained. Selected lineage is a timestamped snapshot until an explicit refresh succeeds. | Inbound replay ExUnit; Admin LiveView/modal ExUnit; connected Playwright. | Both package suites; full operator browser suite; Admin token-parity/bundle tests. | **Green** — callback/replay lineage, exact revalidation, connected stale/denied/repeat checks, one-submit feedback, and explicit history refresh passed. |
+
+## Wave 0 Requirements
+
+- [x] Existing ExUnit and Playwright infrastructure covers the phase; no framework or fixture package is identified.
+- [x] Map all final plan tasks to the verified coverage crosswalk below; each PLAN task retains an observable `<fails_when>` condition.
+- [x] Confirm pinned Elixir/Erlang and Playwright availability through recorded package/browser runs.
+- [x] D-16 end to end: explicit `:no_change` persistence and presentation; `:ignore`, projection diffs and reread results remain distinct.
+- [x] D-17 narrow read failure mapping; unrelated exceptions propagate. A connected DB-failure assertion was added during this audit because the earlier Plan 08 browser cases exercised package absence but not an operational read failure.
+- [x] D-18 timestamped selected-history snapshot and explicit native refresh; no polling or new PubSub completion event.
+
+## Manual-Only Verifications
+
+| Behavior | Requirement | Why Manual | Test Instructions |
+|----------|-------------|------------|-------------------|
+| None remaining for machine-observable acceptance. Rendered inspection is complete and recorded in `170-RENDERED.md`; no subjective review remains as a phase acceptance gate. | — | — | — |
+
+## Validation Sign-Off
+
+- [x] Every final plan task has an `<automated>` verify command or a declared Wave 0 dependency.
+- [x] No three consecutive tasks omit automated verification.
+- [x] Wave 0 covers every missing runtime/test/browser prerequisite.
+- [x] No watch-mode flags appear in commands.
+- [x] Nyquist coverage is confirmed by this audit and its executed gap test.
+
+**Approval:** complete — D-52 shift-left automation applied; no machine-observable criterion remains for owner UAT.
+
+## Plan Task Coverage Crosswalk
+
+| Task | Observable behavior covered | Evidence | Status |
+|------|-----------------------------|----------|--------|
+| 170-01-T1 | Exact tenant record outside page/filter, retained return context, foreign/missing nondisclosure, native selection | Admin LiveView suite; connected exact-selection/foreign-ID cases | Green |
+| 170-01-T2 | Empty/filter-empty/out-of-range/package absence/read errors; narrow exception boundary | Admin suite; browser package and DB connection failure cases | Green |
+| 170-02-T1 | Explicit callback `:no_change` persistence; distinct from ignore/failure | Inbound suite (`mailbox_test.exs`, `mailbox_execution_test.exs`) | Green |
+| 170-02-T2 | Tenant-scoped replay lineage, legacy binding refusal, docs contract | Inbound suite (`replay_test.exs`, `docs_contract_test.exs`) | Green |
+| 170-03-T1 | Allowlisted verification projection, redaction, reveal authorization | Admin suite; connected keyboard reveal/re-redact case | Green |
+| 170-03-T2 | Masked current-router simulation and native disclosure | Admin component suite; connected simulation/disclosure case | Green |
+| 170-04-T1 | Shared latest-fresh disposition, failure/no-match and deterministic tie behavior | Inbound suite (`internal/operator/records_test.exs`) | Green |
+| 170-04-T2 | Chronological fresh/replay timeline, IDs/timestamps, missing history and tenant isolation | Inbound suite (`internal/operator/records_test.exs`) | Green |
+| 170-05-T1 | Outcome/filter vocabulary, latest-fresh filter parity, no-change vs ignore, missing history and long values | Admin suite plus Inbound `records_test.exs` latest-fresh filter regression | Green |
+| 170-05-T2 | Detail/timeline labels, chronological identity, hidden free-form failure text | Admin inbound component suite | Green |
+| 170-06-T1 | Typed scoped eligibility reasons, foreign/missing equivalence, optional gateway | Inbound replay and Admin optional-dependency suites | Green |
+| 170-06-T2 | Exact review revalidation before authorization, denial, modal behavior | Admin LiveView/modal suite; connected replay journey | Green |
+| 170-07-T1 | Consumed review token, one replay, truthful distinct outcomes and context | Admin LiveView/modal suite; connected replay journey | Green |
+| 170-07-T2 | Timestamped history snapshot, explicit refresh, unavailable refresh preservation | Admin LiveView suite; connected history-refresh journey | Green |
+| 170-08-T1 | Connected end-to-end and negative states, including operational read failure | Full browser suite; focused `database connection failures` case | Green |
+| 170-08-T2 | Responsive/theme/zoom/touch/keyboard/reduced-motion and asset provenance | Rendered case, token-parity/bundle checks, `170-RENDERED.md` | Green |
+
+## Gap Audit Trail (2026-10-09)
+
+- Reviewed all eight Phase 170 plans and summaries, this validation map, D-52 in `.planning/METHODOLOGY.md`, `170-RENDERED.md`, and the source/test seams named by each task.
+- Found a Plan 08 browser-coverage hole: the existing connected tests proved optional-package absence but did not trigger an operational database read failure through the rendered page. Added a test-only failing Repo scenario and a behavioral Playwright assertion; product files were not changed.
+- Executed `BROWSER_SERVER_PORT=4102 ASDF_ELIXIR_VERSION=1.18.4-otp-27 asdf exec npm run test:operator-browser -- --grep "database connection failures"` from `mailglass_admin`: **1 passed, 0 failed** (1.7s). It checks sanitized read-unavailable copy, no synthetic exception text, and no successful-empty state. Then ran all named Phase 170 browser cases with `--grep "Phase 170"`: **4 passed, 0 failed** (10.3s), including connected journey and rendered checks.
+- The first sandboxed invocation failed before test execution because Chromium could not start (`bootstrap_check_in ... Permission denied`). The same command passed with runtime escalation; this was an environment launch restriction, not a behavioral failure.
+- Final expanded full browser run after security-gate remediation: **206 passed, 1 guarded skip, 0 failed**. Admin: **575 tests, 0 failures, 1 excluded**; inbound: **3 properties + 479 tests, 0 failures**; token/bundle: **10 tests, 0 failures**. The existing skip is the guarded structural-modal case documented in the plan summary, not a Phase 170 case.
+- The security audit found and closed T-170-12 (outcome filtering now matches displayed latest-fresh state) and T-170-20 (connected browser stale, denied, and rapid-repeat confirmation checks); all **21/21** threats are closed.
+
+## Final Closeout Evidence (2026-10-09)
+
+- Refreshed the standard code review across 45 phase files after the last UI and replay fixes: **clean, 0 findings**. The selected-Account access contract was checked against `mailglass_admin/docs/operator-trust.md`; no tenant-membership authorization change was required.
+- Refreshed the UI audit after replacing one-off spacing, promoting the records-list heading, improving non-locked operator copy and accessible row labels, adding native disabled Quick view boundary buttons, and announcing Refresh history's pending state. The audit scores **21/24**. It retains a visual/color evidence limitation for the changed overlays because no independent new overlay screenshots were captured; this is not an acceptance criterion or a human UAT request.
+- Preserved Phase 101/121 byte-frozen copy (`COPY-LD-07`, LD-12, LD-16, and D-07) after cross-phase review. Only non-locked labels and copy changed.
+- Re-ran the full Admin suite after the UI updates: **577 tests, 0 failures, 1 excluded**. After restoring the exact locked subtitle, the focused voice and Inbound LiveView/component/modal suites passed: **130 tests, 0 failures, 1 excluded**.
+- Re-ran the full inbound package suite after the legacy-binding fix: **3 properties + 480 tests, 0 failures**.
+- Re-ran the full connected operator browser suite: **206 passed, 1 existing guarded skip, 0 failed**. After restoring the exact locked subtitle, the focused Phase 170 connected and rendered browser cases passed: **7 passed, 0 failed**.
+- Rebuilt Admin assets and ran token-parity/bundle verification: **10 tests, 0 failures**. The served CSS hash matches the generated bundle; final hashes and rendered limitations are recorded in `170-RENDERED.md`.
+- No machine-observable Phase 170 acceptance remains for owner UAT. The existing guarded browser skip is unrelated to Phase 170 and remains documented in the Plan 08 summary.

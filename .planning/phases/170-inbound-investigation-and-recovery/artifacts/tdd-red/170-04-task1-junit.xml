@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ExUnit" tests="39" failures="2" errors="0" skipped="0">
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records_page/2 returns last-page entries with boundary metadata"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 outcome filter filters records to those with a matching execution-run outcome"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Timeline.list_runs/2 does not return another tenant&apos;s runs"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Detail.fetch/2 a later fresh failure replaces an older matched disposition"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {:%{}, [line: 601, column: 14], [outcome: :failed, mailbox: nil, outcome_reason: nil]}, right: %{record: %MailglassInbound.InboundRecords.InboundRecord{__meta__: #Ecto.Schema.Metadata&lt;:loaded, &quot;public&quot;, &quot;mailglass_inbound_records&quot;&gt;, id: &quot;01a11e82-07ce-7951-9b89-fa844b8848f0&quot;, tenant_id: &quot;tenant-a&quot;, provider: &quot;postmark&quot;, provider_message_id: &quot;pmid-8775&quot;, message_id: nil, envelope_recipient: &quot;support@example.com&quot;, from: [], to: [], cc: [], bcc: [], reply_to: [], subject: &quot;Inbound fixture&quot;, headers: %{}, sent_at: nil, received_at: ~U[2026-10-09 02:33:20.590698Z], text_body: nil, html_body: nil, attachments: [], suppression_flagged: false, evidence: #Ecto.Association.NotLoaded&lt;association :evidence is not loaded&gt;, replay_runs: #Ecto.Association.NotLoaded&lt;association :replay_runs is not loaded&gt;, inserted_at: ~U[2026-10-09 02:33:20.590809Z], updated_at: ~U[2026-10-09 02:33:20.590809Z]}, mailbox: &quot;MyApp.OldMailbox&quot;, evidence: #MailglassInbound.InboundRecords.InboundEvidence&lt;__meta__: #Ecto.Schema.Metadata&lt;:loaded, &quot;public&quot;, &quot;mailglass_inbound_evidence&quot;&gt;, id: &quot;01a11e82-07cf-7908-a9bb-eeba923450f2&quot;, tenant_id: &quot;tenant-a&quot;, provider: &quot;postmark&quot;, raw_headers: %{}, raw_mime_fingerprint: nil, terminal_failure_class: nil, verification_facts: %{}, parse_warnings: %{}, attachment_blobs: %{}, inbound_record_id: &quot;01a11e82-07ce-7951-9b89-fa844b8848f0&quot;, inbound_record: #Ecto.Association.NotLoaded&lt;association :inbound_record is not loaded&gt;, replay_runs: #Ecto.Association.NotLoaded&lt;association :replay_runs is not loaded&gt;, inserted_at: ~U[2026-10-09 02:33:20.591977Z], updated_at: ~U[2026-10-09 02:33:20.591977Z], ...&gt;, outcome: :accept, outcome_reason: nil}, message: &quot;match (=) failed&quot;, expr: {:assert, [line: 601], [{:=, [line: 601], [{:%{}, [line: 601], [outcome: :failed, mailbox: nil, outcome_reason: nil]}, {{:., [line: 602], [{:__aliases__, [line: 602], [:Detail]}, :fetch]}, [line: 602], [{:%{}, [line: 602], [tenant_id: &quot;tenant-a&quot;, inbound_record_id: {{:., [line: 602], [{:record, [line: 602], nil}, :id]}, [no_parens: true, line: 602], []}]}, []]}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, []}}, [{MailglassInbound.Internal.Operator.RecordsTest, :&quot;test Detail.fetch/2 a later fresh failure replaces an older matched disposition&quot;, 1, [file: ~c&quot;test/mailglass_inbound/internal/operator/records_test.exs&quot;, line: 601]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {:%{}, [line: 601, column: 14],
+      [outcome: :failed, mailbox: nil, outcome_reason: nil]},
+     right: %{
+       record: %MailglassInbound.InboundRecords.InboundRecord{
+         __meta__: #Ecto.Schema.Metadata&lt;:loaded, &quot;public&quot;, &quot;mailglass_inbound_records&quot;&gt;,
+         id: &quot;01a11e82-07ce-7951-9b89-fa844b8848f0&quot;,
+         tenant_id: &quot;tenant-a&quot;,
+         provider: &quot;postmark&quot;,
+         provider_message_id: &quot;pmid-8775&quot;,
+         message_id: nil,
+         envelope_recipient: &quot;support@example.com&quot;,
+         from: [],
+         to: [],
+         cc: [],
+         bcc: [],
+         reply_to: [],
+         subject: &quot;Inbound fixture&quot;,
+         headers: %{},
+         sent_at: nil,
+         received_at: ~U[2026-10-09 02:33:20.590698Z],
+         text_body: nil,
+         html_body: nil,
+         attachments: [],
+         suppression_flagged: false,
+         evidence: #Ecto.Association.NotLoaded&lt;association :evidence is not loaded&gt;,
+         replay_runs: #Ecto.Association.NotLoaded&lt;association :replay_runs is not loaded&gt;,
+         inserted_at: ~U[2026-10-09 02:33:20.590809Z],
+         updated_at: ~U[2026-10-09 02:33:20.590809Z]
+       },
+       mailbox: &quot;MyApp.OldMailbox&quot;,
+       evidence: #MailglassInbound.InboundRecords.InboundEvidence&lt;
+         __meta__: #Ecto.Schema.Metadata&lt;:loaded, &quot;public&quot;, &quot;mailglass_inbound_evidence&quot;&gt;,
+         id: &quot;01a11e82-07cf-7908-a9bb-eeba923450f2&quot;,
+         tenant_id: &quot;tenant-a&quot;,
+         provider: &quot;postmark&quot;,
+         raw_headers: %{},
+         raw_mime_fingerprint: nil,
+         terminal_failure_class: nil,
+         verification_facts: %{},
+         parse_warnings: %{},
+         attachment_blobs: %{},
+         inbound_record_id: &quot;01a11e82-07ce-7951-9b89-fa844b8848f0&quot;,
+         inbound_record: #Ecto.Association.NotLoaded&lt;association :inbound_record is not loaded&gt;,
+         replay_runs: #Ecto.Association.NotLoaded&lt;association :replay_runs is not loaded&gt;,
+         inserted_at: ~U[2026-10-09 02:33:20.591977Z],
+         updated_at: ~U[2026-10-09 02:33:20.591977Z],
+         ...
+       &gt;,
+       outcome: :accept,
+       outcome_reason: nil
+     },
+     message: &quot;match (=) failed&quot;,
+     expr: {:assert, [line: 601],
+      [
+        {:=, [line: 601],
+         [
+           {:%{}, [line: 601],
+            [outcome: :failed, mailbox: nil, outcome_reason: nil]},
+           {{:., [line: 602], [{:__aliases__, [line: 602], [:Detail]}, :fetch]},
+            [line: 602],
+            [
+              {:%{}, [line: 602],
+               [
+                 tenant_id: &quot;tenant-a&quot;,
+                 inbound_record_id: {{:., [line: 602],
+                   [{:record, [line: 602], nil}, :id]},
+                  [no_parens: true, line: 602], []}
+               ]},
+              []
+            ]}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match, []}
+   },
+   [
+     {MailglassInbound.Internal.Operator.RecordsTest,
+      :&quot;test Detail.fetch/2 a later fresh failure replaces an older matched disposition&quot;,
+      1,
+      [
+        file: ~c&quot;test/mailglass_inbound/internal/operator/records_test.exs&quot;,
+        line: 601
+      ]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records_page/2 returns honest total and first-page boundaries from tenant and filter scoped count"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Detail.fetch/2 missing history stays missing and replay does not replace fresh disposition"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 outcome filter an unknown outcome STRING is ignored without raising on to_existing_atom"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Detail.fetch/2 returns the record + evidence + matched outcome from the latest fresh run"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 search filter (WR-03) missing search is a no-op (returns all)"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 search filter (WR-03) blank search is a no-op (returns all)"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Detail.fetch/2 a later fresh no-match replaces an older matched disposition"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {:%{}, [line: 628, column: 14], [outcome: :no_match, mailbox: nil, outcome_reason: nil]}, right: %{record: %MailglassInbound.InboundRecords.InboundRecord{__meta__: #Ecto.Schema.Metadata&lt;:loaded, &quot;public&quot;, &quot;mailglass_inbound_records&quot;&gt;, id: &quot;01a11e82-0802-7151-8bcd-0e59a873cc50&quot;, tenant_id: &quot;tenant-a&quot;, provider: &quot;postmark&quot;, provider_message_id: &quot;pmid-260&quot;, message_id: nil, envelope_recipient: &quot;support@example.com&quot;, from: [], to: [], cc: [], bcc: [], reply_to: [], subject: &quot;Inbound fixture&quot;, headers: %{}, sent_at: nil, received_at: ~U[2026-10-09 02:33:20.642699Z], text_body: nil, html_body: nil, attachments: [], suppression_flagged: false, evidence: #Ecto.Association.NotLoaded&lt;association :evidence is not loaded&gt;, replay_runs: #Ecto.Association.NotLoaded&lt;association :replay_runs is not loaded&gt;, inserted_at: ~U[2026-10-09 02:33:20.642750Z], updated_at: ~U[2026-10-09 02:33:20.642750Z]}, mailbox: &quot;MyApp.OldMailbox&quot;, evidence: #MailglassInbound.InboundRecords.InboundEvidence&lt;__meta__: #Ecto.Schema.Metadata&lt;:loaded, &quot;public&quot;, &quot;mailglass_inbound_evidence&quot;&gt;, id: &quot;01a11e82-0803-70a8-96e1-8d3f13d7b129&quot;, tenant_id: &quot;tenant-a&quot;, provider: &quot;postmark&quot;, raw_headers: %{}, raw_mime_fingerprint: nil, terminal_failure_class: nil, verification_facts: %{}, parse_warnings: %{}, attachment_blobs: %{}, inbound_record_id: &quot;01a11e82-0802-7151-8bcd-0e59a873cc50&quot;, inbound_record: #Ecto.Association.NotLoaded&lt;association :inbound_record is not loaded&gt;, replay_runs: #Ecto.Association.NotLoaded&lt;association :replay_runs is not loaded&gt;, inserted_at: ~U[2026-10-09 02:33:20.643282Z], updated_at: ~U[2026-10-09 02:33:20.643282Z], ...&gt;, outcome: :accept, outcome_reason: nil}, message: &quot;match (=) failed&quot;, expr: {:assert, [line: 628], [{:=, [line: 628], [{:%{}, [line: 628], [outcome: :no_match, mailbox: nil, outcome_reason: nil]}, {{:., [line: 629], [{:__aliases__, [line: 629], [:Detail]}, :fetch]}, [line: 629], [{:%{}, [line: 629], [tenant_id: &quot;tenant-a&quot;, inbound_record_id: {{:., [line: 629], [{:record, [line: 629], nil}, :id]}, [no_parens: true, line: 629], []}]}, []]}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, []}}, [{MailglassInbound.Internal.Operator.RecordsTest, :&quot;test Detail.fetch/2 a later fresh no-match replaces an older matched disposition&quot;, 1, [file: ~c&quot;test/mailglass_inbound/internal/operator/records_test.exs&quot;, line: 628]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {:%{}, [line: 628, column: 14],
+      [outcome: :no_match, mailbox: nil, outcome_reason: nil]},
+     right: %{
+       record: %MailglassInbound.InboundRecords.InboundRecord{
+         __meta__: #Ecto.Schema.Metadata&lt;:loaded, &quot;public&quot;, &quot;mailglass_inbound_records&quot;&gt;,
+         id: &quot;01a11e82-0802-7151-8bcd-0e59a873cc50&quot;,
+         tenant_id: &quot;tenant-a&quot;,
+         provider: &quot;postmark&quot;,
+         provider_message_id: &quot;pmid-260&quot;,
+         message_id: nil,
+         envelope_recipient: &quot;support@example.com&quot;,
+         from: [],
+         to: [],
+         cc: [],
+         bcc: [],
+         reply_to: [],
+         subject: &quot;Inbound fixture&quot;,
+         headers: %{},
+         sent_at: nil,
+         received_at: ~U[2026-10-09 02:33:20.642699Z],
+         text_body: nil,
+         html_body: nil,
+         attachments: [],
+         suppression_flagged: false,
+         evidence: #Ecto.Association.NotLoaded&lt;association :evidence is not loaded&gt;,
+         replay_runs: #Ecto.Association.NotLoaded&lt;association :replay_runs is not loaded&gt;,
+         inserted_at: ~U[2026-10-09 02:33:20.642750Z],
+         updated_at: ~U[2026-10-09 02:33:20.642750Z]
+       },
+       mailbox: &quot;MyApp.OldMailbox&quot;,
+       evidence: #MailglassInbound.InboundRecords.InboundEvidence&lt;
+         __meta__: #Ecto.Schema.Metadata&lt;:loaded, &quot;public&quot;, &quot;mailglass_inbound_evidence&quot;&gt;,
+         id: &quot;01a11e82-0803-70a8-96e1-8d3f13d7b129&quot;,
+         tenant_id: &quot;tenant-a&quot;,
+         provider: &quot;postmark&quot;,
+         raw_headers: %{},
+         raw_mime_fingerprint: nil,
+         terminal_failure_class: nil,
+         verification_facts: %{},
+         parse_warnings: %{},
+         attachment_blobs: %{},
+         inbound_record_id: &quot;01a11e82-0802-7151-8bcd-0e59a873cc50&quot;,
+         inbound_record: #Ecto.Association.NotLoaded&lt;association :inbound_record is not loaded&gt;,
+         replay_runs: #Ecto.Association.NotLoaded&lt;association :replay_runs is not loaded&gt;,
+         inserted_at: ~U[2026-10-09 02:33:20.643282Z],
+         updated_at: ~U[2026-10-09 02:33:20.643282Z],
+         ...
+       &gt;,
+       outcome: :accept,
+       outcome_reason: nil
+     },
+     message: &quot;match (=) failed&quot;,
+     expr: {:assert, [line: 628],
+      [
+        {:=, [line: 628],
+         [
+           {:%{}, [line: 628],
+            [outcome: :no_match, mailbox: nil, outcome_reason: nil]},
+           {{:., [line: 629], [{:__aliases__, [line: 629], [:Detail]}, :fetch]},
+            [line: 629],
+            [
+              {:%{}, [line: 629],
+               [
+                 tenant_id: &quot;tenant-a&quot;,
+                 inbound_record_id: {{:., [line: 629],
+                   [{:record, [line: 629], nil}, :id]},
+                  [no_parens: true, line: 629], []}
+               ]},
+              []
+            ]}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match, []}
+   },
+   [
+     {MailglassInbound.Internal.Operator.RecordsTest,
+      :&quot;test Detail.fetch/2 a later fresh no-match replaces an older matched disposition&quot;,
+      1,
+      [
+        file: ~c&quot;test/mailglass_inbound/internal/operator/records_test.exs&quot;,
+        line: 628
+      ]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Timeline.list_runs/2 returns ALL runs (fresh + replay) for a record, chronologically, scoped to tenant"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 outcome filter an unknown outcome value is ignored (filter dropped), not passed to SQL"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 disposition projection (WR-01) the disposition subquery is tenant-scoped — a foreign run never leaks in"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 disposition projection (WR-01) a record with no fresh run projects nil outcome + nil mailbox"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 suppression flag projection (IOPS-05) the list select surfaces each record&apos;s suppression_flagged column"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Detail.fetch/2 blank tenant returns nil"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 search filter (WR-03) matches against the envelope recipient"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_providers/2 blank tenant returns []"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 tenant safety nil tenant returns []"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 disposition projection (WR-01) projects the LATEST fresh run when a record has several"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 disposition projection (WR-01) a same-time tie chooses the fresh run with the greatest id"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 disposition projection (WR-01) a :no_match record projects a nil mailbox (reads as &apos;no match&apos;)"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Detail.fetch/2 returns nil for a record that belongs to a different tenant (gate before replay)"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_providers/2 returns distinct providers for one tenant within the window"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 search filter (WR-03) stays tenant-scoped — a matching foreign row is invisible"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 search filter (WR-03) narrows results by a case-insensitive subject substring"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 disposition projection (WR-01) ignores a replay run, projecting only the latest FRESH disposition"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 search filter (WR-03) treats LIKE wildcards as literals (no widening)"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Timeline.list_runs/2 blank tenant returns []"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Timeline.list_runs/2 returns [] when a scoped record has no execution history"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 search filter (WR-03) matches against the provider message id"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 suppression flag projection (IOPS-05) a record left at the column default reads suppression_flagged: false"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 tenant safety returns ONLY the queried tenant&apos;s rows"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 tenant safety does not leak another tenant&apos;s row even with a matching provider filter"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 tenant safety missing tenant returns []"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 disposition projection (WR-01) a matched record projects its latest-fresh-run outcome + mailbox"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Records.list_records/2 tenant safety blank tenant returns []"></testcase>
+<testcase classname="Elixir.MailglassInbound.Internal.Operator.RecordsTest" name="test Timeline.list_runs/2 preserves exact source, outcome, ID and times with same-time ID ordering"></testcase>
+</testsuite>

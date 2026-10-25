@@ -4,6 +4,68 @@ defmodule Mailglass.Operator.DeliveriesTest do
   alias Mailglass.Generators
   alias Mailglass.Operator.Deliveries
 
+  test "outcome groups cover filtered results across pages and exclude other tenants" do
+    recent = DateTime.add(DateTime.utc_now(), -60, :second)
+
+    for event <- [:delivered, :bounced, :queued] do
+      Generators.delivery_fixture(
+        tenant_id: "summary-tenant",
+        recipient: "#{event}@example.com",
+        provider: "postmark",
+        status: :sent,
+        last_event_type: event,
+        last_event_at: recent
+      )
+    end
+
+    for {tenant, provider} <- [{"other-tenant", "postmark"}, {"summary-tenant", "sendgrid"}] do
+      Generators.delivery_fixture(
+        tenant_id: tenant,
+        recipient: "excluded@example.com",
+        provider: provider,
+        status: :sent,
+        last_event_type: :delivered,
+        last_event_at: recent
+      )
+    end
+
+    page =
+      Deliveries.list_recent_deliveries_page(
+        %{tenant_id: "summary-tenant", provider: "postmark"},
+        per_page: 1
+      )
+
+    assert length(page.entries) == 1
+    assert page.total_count == 3
+    assert Enum.sum(Enum.map(page.outcome_groups, & &1.count)) == 3
+
+    assert MapSet.new(Enum.map(page.outcome_groups, & &1.last_event_type)) ==
+             MapSet.new([:delivered, :bounced, :queued])
+  end
+
+  test "search matches visible subjects and recipients, escapes wildcards, and stays tenant scoped" do
+    for {tenant, recipient, subject} <- [
+          {"search-tenant", "billing@example.com", "Invoice 100% paid"},
+          {"search-tenant", "other@example.com", "Invoice 1000 paid"},
+          {"other-tenant", "billing@example.com", "Invoice 100% paid"}
+        ] do
+      Generators.delivery_fixture(
+        tenant_id: tenant,
+        recipient: recipient,
+        metadata: %{"subject" => subject},
+        provider: "postmark"
+      )
+    end
+
+    page = Deliveries.list_recent_deliveries_page(%{tenant_id: "search-tenant", search: "100%"})
+    assert [%{recipient: "billing@example.com", subject: "Invoice 100% paid"}] = page.entries
+    assert page.total_count == 1
+    assert Enum.sum(Enum.map(page.outcome_groups, & &1.count)) == 1
+
+    assert [%{recipient: "billing@example.com"}] =
+             Deliveries.list_recent_deliveries(%{tenant_id: "search-tenant", search: "BILLING@"})
+  end
+
   describe "list_recent_deliveries/2" do
     test "excludes rows from other tenants" do
       recent = DateTime.add(DateTime.utc_now(), -60, :second)
@@ -248,6 +310,74 @@ defmodule Mailglass.Operator.DeliveriesTest do
              } = page
 
       assert id == deliveries |> List.last() |> Map.fetch!(:id)
+    end
+  end
+
+  describe "get_delivery/2" do
+    test "resolves the exact tenant delivery independently of list filters and page boundaries" do
+      target =
+        Generators.delivery_fixture(
+          tenant_id: "tenant-exact",
+          recipient: "exact@example.com",
+          provider: "postmark",
+          status: :sent,
+          last_event_type: :delivered,
+          last_event_at: DateTime.add(DateTime.utc_now(), -240, :hour)
+        )
+
+      _recent =
+        Generators.delivery_fixture(
+          tenant_id: "tenant-exact",
+          recipient: "recent@example.com",
+          provider: "sendgrid",
+          status: :failed,
+          last_event_type: :failed,
+          last_event_at: DateTime.add(DateTime.utc_now(), -1, :hour)
+        )
+
+      page =
+        Deliveries.list_recent_deliveries_page(
+          %{
+            tenant_id: "tenant-exact",
+            provider: "sendgrid",
+            event: :failed,
+            window_hours: 24,
+            per_page: 1
+          },
+          []
+        )
+
+      assert Enum.map(page.entries, & &1.id) != [target.id]
+
+      assert %{
+               id: id,
+               tenant_id: "tenant-exact",
+               recipient: "exact@example.com",
+               provider: "postmark",
+               last_event_type: :delivered
+             } = Deliveries.get_delivery(%{tenant_id: "tenant-exact", delivery_id: target.id}, [])
+
+      assert id == target.id
+    end
+
+    test "returns no row for a malformed, missing, or foreign exact ID" do
+      foreign = Generators.delivery_fixture(tenant_id: "tenant-foreign")
+
+      assert is_nil(
+               Deliveries.get_delivery(
+                 %{tenant_id: "tenant-exact-lookup", delivery_id: "not-a-uuid"},
+                 []
+               )
+             )
+
+      assert is_nil(Deliveries.get_delivery(%{tenant_id: "tenant-exact-lookup"}, []))
+
+      assert is_nil(
+               Deliveries.get_delivery(
+                 %{tenant_id: "tenant-exact-lookup", delivery_id: foreign.id},
+                 []
+               )
+             )
     end
   end
 end

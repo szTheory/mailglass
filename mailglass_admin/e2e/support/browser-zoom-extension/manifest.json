@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Mailglass Playwright Zoom Control",
+  "version": "1.0.0",
+  "permissions": ["tabs"],
+  "background": {
+    "service_worker": "service-worker.js"
+  }
+}

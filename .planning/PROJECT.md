@@ -8,7 +8,33 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
+## Current Milestone: v2.9 Operator, Preview & Email UI Refinement
+
+**Goal:** Make Mailglass's existing operator, author, and recipient journeys coherent, readable, responsive, and reviewable with clear actions and truthful outcomes.
+
+**Target features:**
+- A shared workspace with consistent navigation, account context, typography, controls, themes, accessibility, domain language, and purposeful motion.
+- Complete outbound and inbound investigation/recovery flows with exact evidence and supported actions.
+- Usable developer preview plus public email components, sender-branded examples, plaintext, and truthful built-in unsubscribe GET pages.
+- Current shared-pattern guidance, bounded automated and rendered acceptance, and a working feedback preview with passing required CI on the delivery candidate.
+
+**Planning contract:** Approved 2026-10-07: 28 requirements across Phases 168–173. Phases 168–172 are implemented and verified; Phase 173, Consistency and Delivery Evidence, is the remaining phase. Phase 170 completed eight plans covering INUX-01–04; independent goal-backward verification passed 30/30 must-haves. Phase 172 Recipient Output and Built-in Pages passed 9/9 goal-backward must-haves with automated and screenshot evidence. Engineers and support/on-call operators are equal primary Admin audiences. The owner selected code-first; use Impeccable and relevant Kowalski guidance with the existing LiveView/HEEx stack and brand. [Scope](research/v2.9/SCOPE.md), [requirements](REQUIREMENTS.md), and [roadmap](ROADMAP.md) are canonical for this milestone; root [PRODUCT.md](../PRODUCT.md) owns durable product context.
+
+**Standing verification rule (owner decision D-52, 2026-10-08):** Automate every machine-observable acceptance criterion before asking for UAT. Add integration, browser, smoke, or seam tests at the boundary that proves the user-visible contract, run recurring regression checks in CI when their maintenance/runtime cost is justified, and reuse existing dependencies and CI lanes first. GSD confirmation checkpoints are for irreducible human judgment only; passing automated evidence closes its UAT row without another confirmation. See [METHODOLOGY.md](METHODOLOGY.md#shift-left-verification-by-default).
+
+**Boundaries:** Refine existing capabilities, preserve authorization/account/replay/rendering/protocol contracts, and defer an interactive browser unsubscribe submission journey. Reuse source-backed research and existing checks with targeted investigation as needed. The milestone label does not request a package version or authorize publication or merge. Phase 168 reconciled the preserved local workspace with merged cleanup and recorded the checkout and assets served by the preview.
+
 ## Current State
+
+**Phase 170 completed and verified 2026-10-09.** Inbound investigation and permitted recovery now preserve Account/filter context, distinguish current-router simulation from historical execution, constrain ordinary evidence to safe projections, and revalidate exact replay eligibility before host authorization. All 30/30 must-haves passed. Local evidence: Admin 577 tests (0 failures, 1 excluded), inbound 3 properties plus 480 tests (0 failures), and operator browser 206 passed with 1 guarded skip. Security closed 21/21 threats; code review is clean. Machine-observable acceptance is automated under D-52; no owner UAT remains. Remote delivery and CI proof remain Phase 173 work.
+
+**Phase 171 completed and verified 2026-10-09.** Developer Preview requirements PRVUX-01–04 are complete. Phase 172 followed from its approved three-plan set and is now complete.
+
+**Phase 172 completed and verified 2026-10-09.** Recipient Output and Built-in Pages requirements MAILUX-01–04 passed 9/9 goal-backward must-haves. The invoice preview and all three unsubscribe states have saved narrow and desktop browser captures; UI review scored 24/24, code review found no issues, and security has zero open threats. Required local checks passed: core 79; Admin 593 (1 excluded); inbound 3 properties plus 480 tests (3 excluded); connected browser 30; focused Mailable 11 and demo Playwright 2. D-52 automation closes the visual UAT item using the saved captures and visual review. Gmail, Outlook, Apple Mail, and delivered-email rendering remain unverified. Phase 173 is the remaining milestone phase.
+
+**Phase 169 completed and verified 2026-10-08 UTC.** Outbound investigation now preserves exact Account/Delivery/support identity, presents bounded truthful Health and timeline evidence, and supports refreshed exact webhook replay review with action-time host authorization. Terminal audit write failures return safe feedback and roll back replay writes. Independent code review is clean, security closed all 17 declared threats, and validation is compliant. Final local checks: 49 core tests; 542 Admin tests with zero failures and one exclusion; full browser suite 197 passed and one guarded skip; cross-phase browser gate 163 passed and one guarded skip. Representative rendered review is complete; physical-device and exhaustive native zoom matrices are not claimed. Milestone delivery and remote CI remain Phase 173 work.
+
+**Phase 168 completed and verified 2026-10-08.** The shared workspace now has visible Account scope, readable type and exact values, System/Light/Dark selection, accessible feedback, and working keyboard focus containment/return in Quick view and replay dialogs. The current source and served demo assets are recorded in the phase baseline. Independent verification passed 96/96 plan truths and 5/5 roadmap truths with no owner UAT. Final local Admin verification reports 551 ExUnit tests with zero failures and one exclusion; Playwright reports 199 passed and one existing guarded skip. This is local implementation evidence; milestone delivery and required remote CI remain Phase 173 work.
 
 **v2.7 Repository Stewardship & Operational Hygiene SHIPPED and ARCHIVED 2026-09-15.** The bounded
 maintenance milestone closed with its canonical audit `status: passed` — 16/16 requirements, 5/5 phases,
@@ -24,7 +50,7 @@ requirement gaps. Artifacts are archived to `.planning/milestones/v2.8-ROADMAP.m
 
 The close is an `override_closeout`: 28 legacy audit records were acknowledged as historical deferred
 items at close, and remain disclosed in `.planning/STATE.md`. No personal data is recorded in this
-closeout. The next milestone has not yet been defined.
+closeout. The approved next milestone is v2.9, described above.
 
 It expanded no product surface, redesigned no architecture, overhauled no CI for speed, and forced no Hex
 release. Package versions were unchanged *at its close* at `mailglass` 2.5.0 / `mailglass_admin` 2.5.0 /
@@ -190,10 +216,16 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 
 ## Active Requirements
 
-**v2.8 Truthful Repo is open.** Its committed requirements are defined in
-`.planning/REQUIREMENTS.md` and mapped to phases in `.planning/ROADMAP.md`; the supporting evidence
-for every one of them is `.planning/research/v2.8/FINDINGS.md`. The 16 v2.7 requirements are archived
-and validated in `.planning/milestones/v2.7-REQUIREMENTS.md`.
+**v2.9 Operator, Preview & Email UI Refinement is active.** The 28 approved requirements are defined in [REQUIREMENTS.md](REQUIREMENTS.md) and each maps to one phase in [ROADMAP.md](ROADMAP.md):
+
+- ✓ UXF-01–08: shared workspace and interaction — implemented and verified in Phase 168.
+- ✓ OUTUX-01–05: outbound investigation and recovery — implemented and verified in Phase 169.
+- ✓ INUX-01–04: inbound investigation and recovery — implemented and verified in Phase 170.
+- ✓ PRVUX-01–04: developer preview — implemented and verified in Phase 171.
+- ✓ MAILUX-01–04: recipient output and built-in pages — implemented and verified in Phase 172.
+- UIQ-01–03: consistency, evidence, and delivery (Phase 173).
+
+Phases 168–172 validated 25 requirements; the remaining three belong to Phase 173. The v2.8 and v2.7 requirements remain in their milestone archives.
 
 ### v2.7 scope record (archived)
 
@@ -1027,6 +1059,31 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 
 ## Key Decisions
 
+### Phase 170 implementation decisions
+
+- Persist `:no_change` only when Mailbox explicitly returns it; keep it distinct from `:ignore`, no match, and failure.
+- Keep current-router traces explicitly simulated and project provider verification through a narrow safe-field allowlist; raw payloads, matcher details, and free-form failure metadata stay out of ordinary operator views.
+- Derive current disposition from the latest fresh run with deterministic tie-breaking while keeping the timeline chronological and separate.
+- Base replay eligibility on tenant-scoped durable evidence, then reread the exact record and authorize immediately before the side effect.
+- Keep command feedback separate from the selected history snapshot; refresh history explicitly through a native control.
+
+### Phase 169 implementation decisions
+
+- Resolve requested Account/Delivery/Event/webhook identities independently of list membership; distinguish Account support facts from selected-Delivery evidence and retain proven reconciliation linkage.
+- Keep Health populations independent and time-bounded, distinguish current suppression from complete policy, and show the oldest 100 timeline Events with explicit overflow and separately reachable selected evidence.
+- Freeze each exact replay review, revalidate at action time, preserve host authorization, and refresh candidates only on explicit new review; private dialog correlation rejects queued stale confirmations.
+- Keep command feedback separate from persisted audit evidence. A terminal audit database write failure rolls back replay mutations and returns a controlled result.
+- Put evidence before recovery actions, preserve exact UTC and readable responsive layouts, and record source-backed representative visual proof without claiming exhaustive physical-device coverage.
+
+### Phase 168 implementation decisions
+
+- Account options assist navigation; they do not authorize scope. Preserve host-owned access checks and selected permitted IDs absent from activity-derived options.
+- Keep body/label type at 16/14px and exact identifiers readable through wrapping or accessible detail.
+- Use one persisted appearance preference; System remains selected while following the OS.
+- Derive dialog focus destinations from visible, enabled controls using the shared LiveView hook. Preserve action-time replay authorization and exact-target confirmation.
+- Record representative rendered evidence and distinguish inapplicable host/browser states from passing application states.
+
+
 | ID | Decision | Rationale | Outcome |
 |----|----------|-----------|---------|
 | D-01 | Sibling packages from v0.1 (`mailglass`, `mailglass_admin`, `mailglass_inbound` v0.5+) | Per accrue/sigra DNA — admin is mounted in adopters' apps, not run standalone; linked-version releases via Release Please | ✓ Validated v0.1 — Release Please linked-versions works; `mailglass_admin/mix.exs` pins `{:mailglass, "== <ver>"}` |
@@ -1102,7 +1159,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-09-19 after archiving v2.8 Truthful Repo. All 17 requirements are verified; the next milestone has not yet been defined.*
+*Last updated: 2026-10-09 UTC after Phase 172 verification; Phase 173 Consistency and Delivery Evidence is ready for discussion.*
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->

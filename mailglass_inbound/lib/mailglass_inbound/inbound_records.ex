@@ -83,6 +83,11 @@ defmodule MailglassInbound.InboundRecords do
         |> Map.put(:mailbox, nil)
         |> Map.put_new(:failure, %{})
 
+      mailbox_outcome == :no_change ->
+        attrs
+        |> Map.put(:outcome, :no_change)
+        |> Map.put_new(:failure, %{})
+
       mailbox_outcome in [:accept, :ignore] ->
         attrs
         |> Map.put(:outcome, mailbox_outcome)

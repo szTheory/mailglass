@@ -157,6 +157,14 @@ Replay is stored-truth recovery: it is not a fresh provider receipt, it does
 not silently reroute to another mailbox, and it is not a public replay runtime
 API contract.
 
+### Mailbox outcome `:no_change`
+
+A mailbox can return `:no_change` when its callback explicitly confirms that it
+made no mutation. The execution history records that exact result for fresh
+processing and replay. `:ignore` remains a separate outcome, and the package
+does not infer `:no_change` from an ignored message, an exception, or a failed
+execution.
+
 ### Zero matches
 
 When no records match the selectors, the task exits `0` with:

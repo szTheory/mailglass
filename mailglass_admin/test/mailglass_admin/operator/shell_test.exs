@@ -86,6 +86,25 @@ defmodule MailglassAdmin.Operator.ShellTest do
              ) == "/ops/mail?tenant_id=beta&provider=postmark"
     end
 
+    test "retains compatible filters but clears page and support evidence on Account switch" do
+      path =
+        Shell.tenant_switch_path(
+          "/ops/mail?tenant_id=alpha&view=deliveries&page=8&provider=postmark&window_hours=9000&support_focus=failed_ingest&support_event_id=event-1&support_webhook_event_id=webhook-1&delivery_id=old-id",
+          "beta"
+        )
+
+      query = path |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert query["tenant_id"] == "beta"
+      assert query["view"] == "deliveries"
+      assert query["provider"] == "postmark"
+      assert query["window_hours"] == "9000"
+      refute Map.has_key?(query, "page")
+      refute Map.has_key?(query, "delivery_id")
+      refute Map.has_key?(query, "support_focus")
+      refute Map.has_key?(query, "support_event_id")
+      refute Map.has_key?(query, "support_webhook_event_id")
+    end
+
     test "keeps the inbound surface and drops selected inbound ids when switching tenants" do
       assert Shell.tenant_switch_path(
                "/ops/mail/inbound?tenant_id=alpha&inbound_id=old-id&provider=mailgun",
@@ -270,14 +289,11 @@ defmodule MailglassAdmin.Operator.ShellTest do
 
       classes = current_nav_classes(html)
 
-      assert Enum.any?(classes, &String.contains?(&1, "border-l-2")),
-             "desktop nav_link should expose a border-left current cue, got: #{inspect(classes)}"
+      assert Enum.any?(classes, &String.contains?(&1, "mg-nav-current")),
+             "desktop nav_link should expose a text underline current cue, got: #{inspect(classes)}"
 
-      assert Enum.any?(classes, &String.contains?(&1, "border-b-2")),
-             "mobile nav_pill should expose a border-bottom current cue, got: #{inspect(classes)}"
-
-      assert Enum.all?(classes, &String.contains?(&1, "border-primary")),
-             "all active shell nav cues should use the active border token, got: #{inspect(classes)}"
+      assert Enum.all?(classes, &String.contains?(&1, "mg-nav-current")),
+             "desktop and mobile nav should share the text underline current cue"
 
       assert Enum.all?(classes, &String.contains?(&1, "font-bold")),
              "all active shell nav cues should keep bold active text, got: #{inspect(classes)}"
@@ -352,6 +368,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
         rendered_to_string(~H"""
         <Shell.shell
           active={:deliveries}
+          preview_path="/dev/mail"
           overview_path="/operator"
           deliveries_path="/operator?view=deliveries"
           inbound_path="/operator/inbound"
@@ -372,6 +389,18 @@ defmodule MailglassAdmin.Operator.ShellTest do
 
       assert length(health_links) >= 2,
              "expected at least 2 Health nav items (sidebar + mobile), got: #{length(health_links)}"
+
+      nav_links = Floki.find(doc, ~s([data-testid^="surface-nav-"] a))
+      labels = Enum.map(nav_links, &(Floki.text(&1) |> String.trim()))
+      hrefs = Enum.map(nav_links, &(Floki.attribute(&1, "href") |> List.first()))
+
+      assert "Preview" in labels
+
+      refute "Inbound" in labels,
+             "Inbound must be omitted when the optional inbound surface is unavailable"
+
+      assert "/dev/mail" in hrefs
+      refute "/operator/inbound" in hrefs
 
       Enum.each(health_links, fn link ->
         href = link |> Floki.attribute("href") |> List.first()
@@ -417,6 +446,8 @@ defmodule MailglassAdmin.Operator.ShellTest do
       assert html =~ "System"
       assert html =~ "Light"
       assert html =~ "Dark"
+      assert html =~ ~s(aria-label="Appearance")
+      refute html =~ "<legend"
       assert html =~ "hero-window"
       assert html =~ "hero-sun"
       assert html =~ "hero-moon"

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ExUnit" tests="10" failures="2" errors="0" skipped="0">
+<testcase classname="Elixir.MailglassInbound.MailboxTest" name="test only the locked mailbox outcomes are treated as valid results"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: :ex_unit_no_meaningful_value, right: :ex_unit_no_meaningful_value, message: &quot;Expected truthy, got false&quot;, expr: {:assert, [], [{{:., [line: 55], [{:__aliases__, [line: 55], [:Mailbox]}, :valid_outcome?]}, [line: 55], [:no_change]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: :==}, [{MailglassInbound.MailboxTest, :&quot;test only the locked mailbox outcomes are treated as valid results&quot;, 1, [file: ~c&quot;test/mailglass_inbound/mailbox_test.exs&quot;, line: 55]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: :ex_unit_no_meaningful_value,
+     right: :ex_unit_no_meaningful_value,
+     message: &quot;Expected truthy, got false&quot;,
+     expr: {:assert, [],
+      [
+        {{:., [line: 55],
+          [{:__aliases__, [line: 55], [:Mailbox]}, :valid_outcome?]},
+         [line: 55], [:no_change]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: :==
+   },
+   [
+     {MailglassInbound.MailboxTest,
+      :&quot;test only the locked mailbox outcomes are treated as valid results&quot;, 1,
+      [file: ~c&quot;test/mailglass_inbound/mailbox_test.exs&quot;, line: 55]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.MailboxTest" name="test mailbox contract exposes one process callback over the inbound message struct"></testcase>
+<testcase classname="Elixir.MailglassInbound.MailboxExecutionTest" name="test fresh execution lineage rejects invalid persisted providers without allocating atoms"></testcase>
+<testcase classname="Elixir.MailglassInbound.MailboxExecutionTest" name="test fresh execution lineage classifies raises, exits, throws, and invalid return shapes as failed execution runs"></testcase>
+<testcase classname="Elixir.MailglassInbound.MailboxExecutionTest" name="test fresh execution lineage records :no_match without invoking a mailbox"></testcase>
+<testcase classname="Elixir.MailglassInbound.MailboxExecutionTest" name="test fresh execution lineage loads every supported persisted provider through a finite map"></testcase>
+<testcase classname="Elixir.MailglassInbound.MailboxExecutionTest" name="test fresh execution lineage persists an explicit no-change mailbox outcome without conflating ignore"><failure type="ExUnitFailure" message="[{:error, %ExUnit.AssertionError{left: {:ok, {:%{}, [line: 127, column: 20], [outcome: :no_change]}}, right: {:ok, %{failure: %{value: &quot;:no_change&quot;, kind: :invalid_return}, outcome: :failed}}, message: &quot;match (=) failed&quot;, expr: {:assert, [line: 127], [{:=, [line: 127], [{:ok, {:%{}, [line: 127], [outcome: :no_change]}}, {{:., [line: 128], [{:__aliases__, [line: 128], [:Execution]}, :execute]}, [line: 128], [{:persisted_payload, [line: 129], [{:%{}, [line: 129], [status: :matched, mailbox: {:__aliases__, [line: 129], [:NoChangeMailbox]}]}]}, [inbound_records: {:__aliases__, [line: 130], [:RecordingInboundRecords]}]]}]}]}, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: {:match, []}}, [{MailglassInbound.MailboxExecutionTest, :&quot;test fresh execution lineage persists an explicit no-change mailbox outcome without conflating ignore&quot;, 1, [file: ~c&quot;test/mailglass_inbound/mailbox_execution_test.exs&quot;, line: 127]}]}]">[
+  {:error,
+   %ExUnit.AssertionError{
+     left: {:ok, {:%{}, [line: 127, column: 20], [outcome: :no_change]}},
+     right: {:ok,
+      %{
+        failure: %{value: &quot;:no_change&quot;, kind: :invalid_return},
+        outcome: :failed
+      }},
+     message: &quot;match (=) failed&quot;,
+     expr: {:assert, [line: 127],
+      [
+        {:=, [line: 127],
+         [
+           {:ok, {:%{}, [line: 127], [outcome: :no_change]}},
+           {{:., [line: 128],
+             [{:__aliases__, [line: 128], [:Execution]}, :execute]},
+            [line: 128],
+            [
+              {:persisted_payload, [line: 129],
+               [
+                 {:%{}, [line: 129],
+                  [
+                    status: :matched,
+                    mailbox: {:__aliases__, [line: 129], [:NoChangeMailbox]}
+                  ]}
+               ]},
+              [
+                inbound_records: {:__aliases__, [line: 130],
+                 [:RecordingInboundRecords]}
+              ]
+            ]}
+         ]}
+      ]},
+     args: :ex_unit_no_meaningful_value,
+     doctest: :ex_unit_no_meaningful_value,
+     context: {:match, []}
+   },
+   [
+     {MailglassInbound.MailboxExecutionTest,
+      :&quot;test fresh execution lineage persists an explicit no-change mailbox outcome without conflating ignore&quot;,
+      1,
+      [file: ~c&quot;test/mailglass_inbound/mailbox_execution_test.exs&quot;, line: 127]}
+   ]}
+]</failure></testcase>
+<testcase classname="Elixir.MailglassInbound.MailboxExecutionTest" name="test fresh execution lineage normalizes semantic mailbox outcomes without widening the mailbox contract"></testcase>
+<testcase classname="Elixir.MailglassInbound.MailboxExecutionTest" name="test fresh execution lineage records matched mailbox outcomes as append-only execution runs"></testcase>
+<testcase classname="Elixir.MailglassInbound.MailboxExecutionTest" name="test fresh execution lineage captures matched mailbox identity for fresh execution runs"></testcase>
+</testsuite>

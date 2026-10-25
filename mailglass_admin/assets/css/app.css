@@ -116,13 +116,13 @@
   --spacing-3xl: 64px;
 
   /* Type sizes — paired with line-heights. Weight is set per-element (400/700). */
-  --text-label: 12px;
-  --text-label--line-height: 1.5;
-  --text-body: 14px;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.4;
+  --text-body: 1rem;
   --text-body--line-height: 1.5;
-  --text-heading: 20px;
+  --text-heading: 1.25rem;
   --text-heading--line-height: 1.2;
-  --text-display: 28px;
+  --text-display: 1.75rem;
   --text-display--line-height: 1.2;
 
   /* Elevation — borders-first. Ink (#0D1B2A) tinted so shadow reads as
@@ -275,48 +275,193 @@
   transition: outline-color var(--duration-instant) var(--ease-out);
 }
 
-.mg-stat-card-hint {
-  position: relative;
+.mg-nav-current .mg-nav-label {
+  text-decoration: underline;
+  text-decoration-color: var(--color-primary);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
 }
 
-.mg-stat-card-tooltip {
-  position: absolute;
-  inset-block-start: calc(100% - var(--spacing-xs));
-  inset-inline-start: var(--spacing-md);
-  z-index: var(--z-dropdown);
-  max-width: min(20rem, calc(100vw - 2rem));
-  width: max-content;
-  border: 1px solid var(--color-base-300);
-  border-radius: var(--radius-field);
-  background: var(--color-base-100);
-  box-shadow: var(--shadow-overlay);
-  color: var(--color-base-content);
-  font-size: var(--text-label);
-  font-weight: 400;
-  line-height: 1.45;
-  opacity: 0;
-  padding: var(--spacing-sm);
-  pointer-events: none;
-  text-align: left;
-  text-transform: none;
-  text-wrap: pretty;
-  transform: translateY(-4px);
-  transition:
-    opacity var(--duration-fast) var(--ease-out),
-    transform var(--duration-fast) var(--ease-out);
+.mg-nav-current > [aria-hidden="true"] {
+  color: var(--color-primary);
 }
 
-.mg-stat-card-hint:hover .mg-stat-card-tooltip,
-.mg-stat-card-hint:focus-within .mg-stat-card-tooltip,
-a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
-  opacity: 1;
-  transform: translateY(0);
+/* First failing routing clause: a quiet error tint on its base-100 route card.
+   Mixed to an opaque surface (same appearance as a 10% error overlay) so the
+   clause's text sits on a definite background in both themes. */
+.mg-trace-clause-failing {
+  background-color: color-mix(in oklab, var(--color-error) 10%, var(--color-base-100));
+}
+
+/* Clickable timestamps and identifiers are real buttons, so they keep the
+   44×44 touch-target floor every other operator control meets. */
+.mg-timestamp-copy-trigger {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  max-width: 100%;
+  vertical-align: middle;
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: copy;
+  text-decoration: none;
+}
+
+.mg-timestamp-copy-trigger:hover,
+.mg-timestamp-copy-trigger:focus-visible {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+}
+
+/* Delivery Quick view: a bottom sheet on compact screens and a right panel
+   from the existing 768px breakpoint. The panel owns its scroll region and
+   stays above the shared overlay scrim. */
+.mg-detail-panel {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.mg-inbound-replay-dialog {
+  max-height: calc(100vh - 2rem);
+  max-width: 42rem;
+}
+
+.mg-scope-identity {
+  max-width: 18rem;
+}
+
+.mg-scope-menu {
+  width: min(22rem, calc(100vw - 2rem));
+}
+
+.mg-toast {
+  max-width: min(100vw - 2rem, 32rem);
+}
+
+@media (min-width: 768px) {
+  .mg-detail-panel {
+    inset-inline-start: auto;
+    inset-block: 0;
+    height: 100%;
+    max-height: none;
+    width: 100%;
+    max-width: 42rem;
+  }
 }
 
 .mg-admin-root {
   isolation: isolate;
   position: relative;
   z-index: var(--z-base);
+}
+
+.mg-inbound-filters {
+  position: relative;
+}
+
+/* A class preserves the desktop breakpoint after the mobile panel is closed;
+   JS.toggle's inline display:none would also hide the desktop controls. */
+.mg-inbound-filters-open {
+  display: block;
+}
+
+.mg-inbound-filters:has(.mg-field-help:hover, .mg-field-help button:focus-visible, .mg-field-help button[aria-expanded="true"]) {
+  position: relative;
+  z-index: var(--z-dropdown);
+}
+
+.mg-inbound-summary-counts .mg-stat-compact:has(.mg-field-help:hover, .mg-field-help button:focus-visible, .mg-field-help button[aria-expanded="true"]) {
+  position: relative;
+  z-index: var(--z-dropdown);
+}
+
+.mg-field-help {
+  position: relative;
+}
+
+.mg-field-help-tooltip {
+  display: block;
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: var(--z-dropdown);
+  width: min(18rem, calc(100vw - 2 * var(--spacing-md)));
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-field);
+  background: var(--color-base-100);
+  box-shadow: var(--shadow-overlay);
+  color: var(--color-base-content);
+  padding: var(--spacing-sm);
+  font-size: var(--text-label);
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: left;
+  text-wrap: pretty;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.mg-field-help-tooltip::before {
+  content: "";
+  position: absolute;
+  left: var(--mg-tooltip-arrow-x, 0.75rem);
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--color-base-100);
+  transform: rotate(45deg);
+}
+
+.mg-field-help-tooltip[data-placement="bottom"]::before {
+  top: -0.3rem;
+  border-top: 1px solid var(--color-base-300);
+  border-left: 1px solid var(--color-base-300);
+}
+
+.mg-field-help-tooltip[data-placement="top"]::before {
+  bottom: -0.3rem;
+  border-right: 1px solid var(--color-base-300);
+  border-bottom: 1px solid var(--color-base-300);
+}
+
+.mg-field-help:not(:has(button[data-dismissed])):hover .mg-field-help-tooltip[data-placement][style],
+.mg-field-help:has(button:not([data-dismissed]):focus-visible) .mg-field-help-tooltip[data-placement][style],
+.mg-field-help:has(button[aria-expanded="true"]) .mg-field-help-tooltip[data-placement][style] {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+#mg-copy-toast[hidden] {
+  display: none !important;
+}
+
+/* Keep readable column widths on intermediate screens; the table's existing
+   scroll container owns any overflow rather than squeezing Mailbox to zero. */
+.mg-inbound-records-table {
+  min-width: 48rem;
+}
+
+.mg-inbound-records-table-all-accounts {
+  min-width: 64rem;
+}
+
+.mg-inbound-summary-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-md);
 }
 
 /* Admin shell body height: viewport minus the 5rem sticky header. There is no
@@ -337,6 +482,12 @@ h1, h2, h3 {
 code, pre, .mono {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
 }
+.mono {
+  overflow-wrap: anywhere;
+}
+[data-testid="inbound-timeline-run"] p {
+  overflow-wrap: anywhere;
+}
 
 /* ── Motion vocabulary ─────────────────────────────────────────────────────
    Brand metaphor "clarity through panes": content ARRIVES by becoming visible
@@ -354,11 +505,11 @@ code, pre, .mono {
    tokens; only the keyframe-based motions need classes here. */
 @keyframes mg-reveal {
   from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: none; }
 }
 @keyframes mg-timeline-in {
   from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: none; }
 }
 @keyframes mg-fade-in {
   from { opacity: 0; }
@@ -371,7 +522,16 @@ code, pre, .mono {
 
 /* reveal — detail pane / header / cards become visible after a selection. */
 .motion-reveal {
-  animation: mg-reveal var(--duration-reveal) var(--ease-out) both;
+  /* Release the transform containing block after entry so fixed tooltips stay viewport anchored. */
+  animation: mg-reveal var(--duration-reveal) var(--ease-out) backwards;
+}
+
+/* A transformed entry container changes the origin of fixed tooltips while
+   animating. Fade tooltip-bearing panels so help stays viewport anchored. */
+.motion-reveal:has(.mg-field-help),
+.motion-overlay:has(.mg-field-help),
+.motion-timeline > :has(.mg-field-help) {
+  animation-name: mg-fade-in;
 }
 
 /* tab-swap — crossfade a panel whose content swapped in place (tabs, frame).
@@ -431,7 +591,7 @@ code, pre, .mono {
    pure CSS (predetermined sequence → keyframes, per great-animations). Capped
    at 8 steps; later items appear without added delay. */
 .motion-timeline > * {
-  animation: mg-timeline-in var(--duration-reveal) var(--ease-out) both;
+  animation: mg-timeline-in var(--duration-reveal) var(--ease-out) backwards;
 }
 .motion-timeline > *:nth-child(1) { animation-delay: 0ms; }
 .motion-timeline > *:nth-child(2) { animation-delay: 40ms; }
@@ -490,4 +650,127 @@ code, pre, .mono {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Choose the deliveries presentation from the content column, not viewport
+   width; the shared Account sidebar can leave less than 768px at tablet sizes. */
+.operator-deliveries-layout {
+  container-type: inline-size;
+}
+
+.operator-deliveries-table {
+  display: none;
+}
+
+.operator-deliveries-cards {
+  display: block;
+}
+
+/* Narrow chrome has two deliberate rows: identity/theme, then account scope.
+   Keep native radio names and 44px targets while hiding their redundant text. */
+@media (max-width: 767px) {
+  .mg-admin-root [data-testid="admin-shell-topbar"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .mg-admin-root [data-testid="admin-shell-actions"] {
+    display: contents;
+  }
+
+  .mg-admin-root [data-testid="admin-shell-actions"] > fieldset[aria-label="Appearance"] {
+    grid-column: 2;
+    grid-row: 1;
+    flex-wrap: nowrap;
+    justify-self: end;
+  }
+
+  .mg-admin-root [data-testid="admin-shell-actions"] > fieldset[aria-label="Appearance"] label {
+    padding-inline: 0;
+    min-width: 46px;
+    min-height: 46px;
+  }
+
+  .mg-admin-root [data-testid="admin-shell-actions"] > fieldset[aria-label="Appearance"] label > span:not([aria-hidden]) {
+    display: none;
+  }
+
+  .mg-admin-root [data-testid="operator-account-context"] {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .mg-admin-root [data-testid="operator-account-context"] > details {
+    width: 100%;
+  }
+
+  .mg-admin-root [data-testid="operator-account-context"] .mg-scope-menu {
+    width: 100%;
+  }
+
+  .mg-admin-root [data-testid="operator-account-switcher"] {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mg-admin-root [data-testid="operator-account-switcher"] > span > .text-secondary {
+    display: none;
+  }
+
+  .mg-admin-root [data-testid="operator-account-label"] {
+    max-width: none;
+  }
+}
+
+/* Actual browser zoom can resolve a nominal 44px target a fraction below 44
+   after layout scaling; keep the evidence disclosure above the strict floor. */
+.mg-admin-root [data-testid="inbound-evidence-reveal"] {
+  min-height: 44.1px;
+}
+
+@container (min-width: 768px) {
+  .operator-deliveries-table {
+    display: block;
+  }
+
+  .operator-deliveries-cards {
+    display: none;
+  }
+}
+
+/* Keep summary labels and counts aligned when the delivery list becomes cards. */
+.mg-delivery-summary-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-md);
+}
+
+@media (width < 40rem) {
+  .mg-delivery-summary-counts, .mg-inbound-summary-counts { grid-template-columns: minmax(0, 1fr); }
+  .mg-delivery-summary-counts .mg-stat-compact,
+  .mg-inbound-summary-counts .mg-stat-compact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+  }
+  .mg-delivery-summary-counts .mg-stat-compact > p:not(.sr-only),
+  .mg-inbound-summary-counts .mg-stat-compact > p:not(.sr-only) { margin-top: 0; }
+}
+
+/* Each records region scrolls its rows beneath a persistent header. */
+[data-testid="inbound-records-table"],
+.operator-deliveries-table {
+  max-height: 70dvh;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+[data-testid="inbound-records-table"] thead th,
+.operator-deliveries-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--color-base-200);
+  box-shadow: 0 1px 0 var(--color-base-300);
 }

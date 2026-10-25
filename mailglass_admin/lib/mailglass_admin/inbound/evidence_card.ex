@@ -5,8 +5,8 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   NET-NEW chrome reuse. PII handling is determined by the schema: `raw_payload`
   and `raw_mime` are `redact: true` on `MailglassInbound.InboundRecords.InboundEvidence`
   (T-48-12). This card NEVER renders those bytes by default — it shows
-  `verification_facts` plus a redacted summary (provider, payload byte size,
-  header count) and a masked placeholder for the raw body.
+  a provider-aware safe verification summary plus a redacted summary (provider,
+  payload byte size, header count) and a masked placeholder for the raw body.
 
   Revealing the raw payload requires the `:reveal_raw` capability (the same
   `MailglassAdmin.Auth.authorize/3` seam as replay — no new auth surface).
@@ -46,7 +46,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           <span :if={@reveal_state != :revealed} class="badge badge-outline text-label">
             Raw source locked
           </span>
-          <div class="flex flex-col items-end gap-2xs">
+          <div class="flex flex-col items-end gap-xs">
             <button
               id="inbound-evidence-reveal-btn"
               type="button"
@@ -59,7 +59,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
               {if @reveal_state == :revealed, do: "Raw source revealed", else: "Reveal raw source"}
             </button>
             <span :if={@reveal_state != :revealed} class="text-label text-secondary">
-              Contains unredacted PII.
+              May contain personal information.
             </span>
           </div>
         </div>
@@ -70,34 +70,30 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           No raw provider source has been stored for this message.
         </p>
       <% else %>
-        <dl class="mb-md grid gap-sm text-body text-secondary sm:grid-cols-2">
-          <div class="rounded-box border border-base-300 bg-base-100 px-sm py-xs">
-            <dt class="text-label uppercase font-bold text-secondary">Provider</dt>
-            <dd class="mono text-label text-base-content">
-              {String.upcase(@evidence.provider || "unknown")}
-            </dd>
+        <dl class="mb-md grid gap-md text-body text-secondary sm:grid-cols-3">
+          <div class="min-w-0">
+            <dt class="text-label font-bold text-secondary">Provider</dt>
+            <dd class="mono text-label text-base-content">{provider_label(@evidence.provider)}</dd>
           </div>
-          <div class="rounded-box border border-base-300 bg-base-100 px-sm py-xs">
-            <dt class="text-label uppercase font-bold text-secondary">Payload size</dt>
+          <div class="min-w-0">
+            <dt class="text-label font-bold text-secondary">Payload size</dt>
             <dd class="mono text-label text-base-content">{payload_byte_size(@evidence)} bytes</dd>
           </div>
-          <div class="rounded-box border border-base-300 bg-base-100 px-sm py-xs">
-            <dt class="text-label uppercase font-bold text-secondary">Header count</dt>
+          <div class="min-w-0">
+            <dt class="text-label font-bold text-secondary">Header count</dt>
             <dd class="mono text-label text-base-content">{header_count(@evidence)}</dd>
           </div>
         </dl>
 
-        <div :if={map_size(@evidence.verification_facts || %{}) > 0} class="mb-md space-y-xs">
-          <p class="text-label uppercase font-bold text-secondary">
+        <div class="mb-md space-y-xs" data-testid="inbound-evidence-verification">
+          <p class="text-label font-bold text-secondary">
             Verification facts
           </p>
           <dl class="grid gap-sm text-body sm:grid-cols-2">
-            <%= for {key, value} <- @evidence.verification_facts do %>
-              <div class="rounded-box border border-base-300 bg-base-100 px-sm py-xs">
-                <dt class="mono text-label text-secondary">{key}</dt>
-                <dd class="mono text-label text-base-content">{inspect_value(value)}</dd>
-              </div>
-            <% end %>
+            <div class="min-w-0">
+              <dt class="text-label text-secondary">Provider authentication</dt>
+              <dd class="text-body text-base-content">{safe_verification_status(@evidence)}</dd>
+            </div>
           </dl>
         </div>
 
@@ -105,7 +101,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           <% :revealed -> %>
             <div class="space-y-xs">
               <div class="flex flex-wrap items-center justify-between gap-sm">
-                <p class="text-label uppercase font-bold text-secondary">
+                <p class="text-label font-bold text-secondary">
                   Raw payload (read-only)
                 </p>
                 <button
@@ -114,7 +110,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
                   data-testid="inbound-evidence-re-redact"
                   class="mg-focus-ring btn btn-ghost min-h-11 px-sm"
                 >
-                  Re-redact raw source
+                  Hide raw source
                 </button>
               </div>
               <pre
@@ -127,14 +123,14 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
               data-testid="inbound-evidence-denied"
               class="rounded-box border border-warning bg-base-100 p-sm text-body text-base-content"
             >
-              Raw source not revealed: the reveal_raw capability is not granted for this operator.
+              You do not have permission to reveal raw source.
             </p>
           <% _redacted -> %>
             <p
               data-testid="inbound-evidence-redacted"
-              class="mono rounded-box border border-base-300 bg-base-100 p-sm text-label text-secondary"
+              class="text-label text-secondary"
             >
-              Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability.
+              Raw source is hidden by default. Reveal it to inspect the provider payload.
             </p>
         <% end %>
 
@@ -177,13 +173,26 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   defp raw_payload_text(%{raw_mime: mime}) when is_binary(mime) and mime != "", do: mime
   defp raw_payload_text(_evidence), do: "(empty)"
 
-  defp inspect_value(value) when is_binary(value), do: value
-  defp inspect_value(value), do: inspect(value)
+  defp provider_label(provider) when provider in [:mailgun, "mailgun"], do: "MAILGUN"
+  defp provider_label(provider) when provider in [:postmark, "postmark"], do: "POSTMARK"
+  defp provider_label(provider) when provider in [:sendgrid, "sendgrid"], do: "SENDGRID"
+  defp provider_label(provider) when provider in [:ses, "ses"], do: "SES"
+  defp provider_label(_provider), do: "UNKNOWN"
+
+  defp safe_verification_status(%{provider: provider, verification_facts: facts})
+       when provider in [:ses, "ses"] and is_map(facts) do
+    case Map.get(facts, :auth, Map.get(facts, "auth")) do
+      auth when auth in [:sns_x509, "sns_x509"] -> "SNS X.509 authentication verified"
+      _unrecognized -> "Unavailable"
+    end
+  end
+
+  defp safe_verification_status(_evidence), do: "Unavailable"
 
   # Text announced through the aria-live status region (WCAG 1.4.1, D-11). The
   # state change is perceivable in TEXT, never the warning border color alone.
   defp reveal_status_text(:revealed),
-    do: "Raw source revealed. This payload contains unredacted PII."
+    do: "Raw source revealed. It may contain personal information."
 
-  defp reveal_status_text(_redacted_or_denied), do: "Raw source re-redacted."
+  defp reveal_status_text(_redacted_or_denied), do: "Raw source hidden."
 end

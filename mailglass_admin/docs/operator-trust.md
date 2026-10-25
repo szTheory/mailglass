@@ -55,45 +55,71 @@ This means mount-time access is not treated as blanket approval for later
 destructive actions. Adopters keep ownership of the policy through
 the `MailglassAdmin.Auth` `authorize/2` callback.
 
+`:operator_access` is a global grant to the Mailglass operator data available
+through the host's configured persistence scope. An authorized operator may
+select any `tenant_id` in that scope; the actor's optional `tenant_id` and the
+activity-derived Account options do not form a per-account membership list.
+Account options help operators navigate, while each read and live-update
+subscription remains scoped to the selected `tenant_id`. Hosts that need
+per-account operator membership must enforce it at their own boundary; the
+current stable auth contract does not provide a separate Account-selection
+authorization action.
+
 ## Replay semantics
 
-Replay is an operator recovery action against one exact stored inbound receive
-truth for one selected delivery.
+Replay is an operator recovery action against one exact stored outbound webhook
+request for one selected Delivery. It reprocesses that request through current
+normalization, which can add Events and update Delivery or suppression records
+for multiple Deliveries in the selected Account. It does not resend outbound
+mail or prove that a provider received or accepted a message.
 
 - Replay is exact-target, not delivery-wide guessing.
 - Replay stays tenant-scoped.
-- Replay is ledger-audited as requested, succeeded, or failed facts.
-- Replay runs after canonical and raw evidence truth already exists; it is not
-  a fresh provider receipt.
-- Replay can honestly end in `new work` or `no change`.
+- Host authorization and recent-auth policy are evaluated immediately before
+  the local replay command.
+- Replay is ledger-audited as requested, succeeded, or failed facts. A requested
+  fact means the command was recorded as requested; it does not mean completion
+  was recorded or that the command is still running.
+- Local command feedback reports only the normalized Event row count returned
+  by that command: new work means newly normalized Event rows, and no change
+  means zero newly normalized rows. A no-change result is not a
+  failure and not proof that the Delivery or audit history was unchanged.
+- A terminal persisted result is shown only when the scoped audit read supplies
+  that fact. If that read is unavailable, command feedback remains separate and
+  the persisted evidence is labeled unavailable.
 
-Fresh provider receipt and later execution are intentionally distinct. The
-durable promise is the stored inbound receive truth. Execution may happen later
-through Oban-backed durable jobs or, when Oban is unavailable, through a
-bounded Task.Supervisor fallback with no automatic retry. Replay is the
-recovery tool when operators need to rerun stored truth after best-effort
-fallback loss or a previous failure.
+The stored provider request and later local replay are distinct. Outbound replay
+reprocesses the existing request synchronously through the local command; it is not a fresh provider receipt.
 
 Replay and reconcile are intentionally distinct. Replay reruns one exact stored
-inbound target through local semantics and does not silently reroute to a
-different mailbox. Reconcile is background-first backlog maintenance for
-unmatched webhook rows and is not a delivery-detail replay tool.
+outbound webhook request through local normalization and does not silently
+substitute another request. Reconcile is background-first backlog maintenance
+for unmatched webhook rows and is not a delivery-detail replay tool.
 
 Replay command semantics are stable at the operator level, but this does not
 create a public replay runtime API. Internal replay orchestration modules,
 worker/queue internals, and admin execution wiring remain implementation detail.
 
-Known replay failure cases are also part of the honest operator story:
+### Inbound mailbox recovery
+
+Inbound mailbox execution may happen later through Oban-backed durable jobs or,
+when Oban is unavailable, through a bounded Task.Supervisor fallback with no
+automatic retry. Inbound replay supports recovery after fallback loss or an
+earlier mailbox execution failure. Its execution-history requirements include:
+
+- Fresh receipt resolves a mailbox using the router deployed at receipt time.
+  Replay uses the durable mailbox binding from that execution; it does not silently reroute through current router rules. When the Task.Supervisor fallback is active, the scheduling path is best-effort and recovery may require an operator replay.
+- The selected execution timeline is a timestamped snapshot for the current
+  Account and InboundMessage. Replay command feedback remains separate from
+  that snapshot; an operator uses Refresh history to request a new scoped read.
 
 - `no_prior_match` means fresh execution history only proves `:no_match`, so
   replay cannot safely infer a mailbox target.
 - `execution_history_missing` means the record predates execution-lineage
   capture or lacks the stored facts replay needs to rerun mailbox execution.
 
-When execution history is incomplete, replay fails explicitly rather than
-guessing. The current failure vocabulary includes `:no_prior_match` for records
-whose fresh history never matched a mailbox and `:execution_history_missing`
-for records that predate execution-lineage capture.
+These mailbox-history errors belong to inbound recovery. Outbound webhook replay
+uses the selected stored provider request and its Account-scoped audit evidence.
 
 ## Intentionally internal
 

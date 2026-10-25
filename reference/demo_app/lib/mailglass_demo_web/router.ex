@@ -77,11 +77,14 @@ defmodule MailglassDemoWeb.Router do
   scope "/dev" do
     pipe_through(:browser)
 
+    get("/unsubscribe/:state", MailglassDemoWeb.PageController, :unsubscribe_state)
+
     mailglass_admin_routes("/mail",
       mailables: [
         MailglassDemoWeb.Mailers.AccountMailer,
         MailglassDemoWeb.Mailers.BillingMailer,
-        MailglassDemoWeb.Mailers.OperationsMailer
+        MailglassDemoWeb.Mailers.OperationsMailer,
+        MailglassDemoWeb.Mailers.ComponentMailer
       ],
       navigation: [
         overview_path: "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar",

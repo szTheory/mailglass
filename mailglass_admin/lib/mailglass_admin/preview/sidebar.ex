@@ -45,7 +45,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     <section
       data-testid={@testid}
       data-picker-variant="directory"
-      class="motion-reveal rounded-box border border-base-300 bg-base-200 p-md md:p-lg"
+      class="motion-reveal min-w-0 rounded-box border border-base-300 bg-base-200 p-md md:p-lg"
     >
       <div class="mb-md flex flex-wrap items-start justify-between gap-sm">
         <div class="min-w-0">
@@ -57,9 +57,9 @@ defmodule MailglassAdmin.Preview.Sidebar do
         </span>
       </div>
 
-      <ul class="grid gap-sm">
+      <ul class="grid min-w-0 gap-sm">
         <%= for {mod, reflection} <- @mailables do %>
-          <li>
+          <li class="min-w-0">
             <.mailable_entry
               mod={mod}
               reflection={reflection}
@@ -92,66 +92,75 @@ defmodule MailglassAdmin.Preview.Sidebar do
   than a second navigation column.
   """
   def menu(assigns) do
-    {_namespace, leaf} = current_mailable_parts(assigns.current_mailable)
-
     assigns =
       assigns
-      |> assign(:current_leaf, leaf)
+      |> assign(:current_mailable_label, current_mailable_label(assigns.current_mailable))
       |> assign(:current_scenario_label, current_scenario_label(assigns.current_scenario))
-      |> assign(:current_title, current_title(assigns.current_mailable, assigns.current_scenario))
 
     ~H"""
-    <details
-      data-testid={@testid}
-      data-picker-variant="menu"
-      class="group relative mg-layer-dropdown min-w-0 w-full sm:max-w-md"
-    >
-      <summary
-        data-testid="preview-email-menu-trigger"
-        class="mg-focus-ring flex min-h-11 w-full max-w-full cursor-pointer list-none items-center gap-sm rounded-field border border-base-300 bg-base-100 px-sm py-xs text-left transition-colors ease-out duration-(--duration-fast) hover:bg-base-200 [&::-webkit-details-marker]:hidden"
+    <div class="grid w-full min-w-0 max-w-4xl gap-xs">
+      <p
+        id="preview-email-menu-label"
+        data-testid="preview-email-menu-label"
+        class="text-label font-bold text-base-content"
       >
-        <span class="min-w-0 flex-1">
-          <span class="block text-label font-bold uppercase text-primary">Email preview</span>
-          <span class="block truncate text-body font-bold text-base-content" title={@current_title}>
-            {@current_leaf}
-            <span :if={@current_scenario_label} class="font-normal text-secondary">
-              · {@current_scenario_label}
+        Email preview
+      </p>
+      <details
+        data-testid={@testid}
+        data-picker-variant="menu"
+        class="group relative mg-layer-dropdown min-w-0 w-full"
+      >
+        <summary
+          data-testid="preview-email-menu-trigger"
+          aria-labelledby="preview-email-menu-label preview-email-menu-active-identity"
+          class="mg-focus-ring flex min-h-11 w-full max-w-full cursor-pointer list-none items-center gap-sm rounded-field border border-base-300 bg-base-100 px-sm py-xs text-left transition-colors ease-out duration-(--duration-fast) hover:bg-base-200 [&::-webkit-details-marker]:hidden"
+        >
+          <span class="min-w-0 flex-1">
+            <span
+              id="preview-email-menu-active-identity"
+              data-testid="preview-email-menu-active-identity"
+              class="block min-w-0 flex-1 whitespace-normal [overflow-wrap:anywhere] text-body"
+            >
+              <span class="font-bold text-base-content">{@current_mailable_label}</span>
+              <span :if={@current_scenario_label} class="font-normal text-secondary">
+                {" · "}{@current_scenario_label}
+              </span>
             </span>
           </span>
-        </span>
-        <span
-          data-testid="preview-email-menu-affordance"
-          class="ml-xs flex h-8 w-8 shrink-0 items-center justify-center text-secondary transition-transform ease-out duration-(--duration-fast) group-open:rotate-180"
-        >
           <span
-            aria-hidden="true"
-            class="h-2 w-2 rotate-45 border-r-2 border-b-2 border-current"
+            data-testid="preview-email-menu-affordance"
+            class="ml-xs flex h-8 w-8 shrink-0 items-center justify-center text-secondary transition-transform ease-out duration-(--duration-fast) group-open:rotate-180"
           >
+            <span
+              aria-hidden="true"
+              class="h-2 w-2 rotate-45 border-r-2 border-b-2 border-current"
+            ></span>
           </span>
-        </span>
-      </summary>
+        </summary>
 
-      <div
-        data-testid="preview-email-menu-panel"
-        class="absolute left-0 mt-1 max-h-[70vh] w-full overflow-auto rounded-box border border-base-300 bg-base-100 p-xs shadow-overlay"
-      >
-        <ul class="grid gap-xs">
-          <%= for {mod, reflection} <- @mailables do %>
-            <li class="py-xs">
-              <.mailable_menu_entry
-                mod={mod}
-                reflection={reflection}
-                current_mailable={@current_mailable}
-                current_scenario={@current_scenario}
-                device_width={@device_width}
-                admin_chrome_theme={@admin_chrome_theme}
-                mount_path={@mount_path}
-              />
-            </li>
-          <% end %>
-        </ul>
-      </div>
-    </details>
+        <div
+          data-testid="preview-email-menu-panel"
+          class="absolute left-0 mt-1 max-h-[70vh] w-full overflow-auto rounded-box border border-base-300 bg-base-100 p-xs shadow-overlay"
+        >
+          <ul class="grid gap-xs">
+            <%= for {mod, reflection} <- @mailables do %>
+              <li class="py-xs">
+                <.mailable_menu_entry
+                  mod={mod}
+                  reflection={reflection}
+                  current_mailable={@current_mailable}
+                  current_scenario={@current_scenario}
+                  device_width={@device_width}
+                  admin_chrome_theme={@admin_chrome_theme}
+                  mount_path={@mount_path}
+                />
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </details>
+    </div>
     """
   end
 
@@ -170,7 +179,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     ~H"""
     <div class="grid gap-xs">
       <.mailable_menu_label mod={@mod} />
-      <ul data-testid="preview-email-menu-scenario-list" class="grid gap-0.5 pl-sm">
+      <ul data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <%= for {scenario_name, _defaults} <- @reflection do %>
           <li>
             <.link
@@ -209,7 +218,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     ~H"""
     <div class="grid gap-xs">
       <.mailable_menu_label mod={@mod} />
-      <div data-testid="preview-email-menu-scenario-list" class="grid gap-0.5 pl-sm">
+      <div data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <div class="flex min-h-11 items-center gap-sm rounded-field px-sm py-xs text-body text-secondary">
           <span class="min-w-0 flex-1 truncate">No previews defined</span>
           <Components.badge variant={:stub} />
@@ -223,7 +232,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     ~H"""
     <div class="grid gap-xs">
       <.mailable_menu_label mod={@mod} />
-      <div data-testid="preview-email-menu-scenario-list" class="grid gap-0.5 pl-sm">
+      <div data-testid="preview-email-menu-scenario-list" class="grid gap-xs pl-sm">
         <.link
           patch={broken_path(@mount_path, @mod)}
           title="This Mailable raised while rendering"
@@ -343,24 +352,16 @@ defmodule MailglassAdmin.Preview.Sidebar do
     end
   end
 
-  defp current_mailable_parts(nil), do: {nil, "Choose an email"}
-  defp current_mailable_parts(mod), do: module_parts(mod)
+  defp current_mailable_label(nil), do: "Choose an email"
+
+  defp current_mailable_label(mod) do
+    {_namespace, leaf} = module_parts(mod)
+    leaf
+  end
 
   defp current_scenario_label(nil), do: nil
   defp current_scenario_label(:__error__), do: "render error"
   defp current_scenario_label(scenario), do: Atom.to_string(scenario)
-
-  defp current_title(nil, _scenario), do: "Choose an email preview"
-
-  defp current_title(mod, scenario) do
-    {_namespace, leaf} = current_mailable_parts(mod)
-
-    leaf <>
-      case current_scenario_label(scenario) do
-        nil -> ""
-        label -> " · " <> label
-      end
-  end
 
   defp email_count_label(mailables) do
     count =

@@ -3,7 +3,7 @@ defmodule MailglassAdmin.Controllers.Assets do
   Compile-time asset server for the mailglass_admin preview dashboard.
 
   Embeds `priv/static/app.css`, the concatenated Phoenix + Phoenix
-  LiveView JS bundles, the logo SVG, and the font woff2 subsets into
+  LiveView JS bundles, the logo and favicon SVGs, and the font woff2 subsets into
   module attributes at compile time via `@external_resource` +
   `File.read!/1`. Request-time cost is a single `Plug.Conn.send_resp/3`
   from the module-attribute bytes — no filesystem I/O, no Plug.Static
@@ -55,7 +55,10 @@ defmodule MailglassAdmin.Controllers.Assets do
   # Read from the host's already-installed priv dirs so they are NOT
   # charged to mailglass_admin's Hex tarball.
   @phoenix_js Application.app_dir(:phoenix, "priv/static/phoenix.js")
-  @phoenix_live_view_js Application.app_dir(:phoenix_live_view, "priv/static/phoenix_live_view.js")
+  @phoenix_live_view_js Application.app_dir(
+                          :phoenix_live_view,
+                          "priv/static/phoenix_live_view.js"
+                        )
   @external_resource @phoenix_js
   @external_resource @phoenix_live_view_js
   @live_socket_bootstrap """
@@ -69,8 +72,114 @@ defmodule MailglassAdmin.Controllers.Assets do
       .querySelector("meta[name='csrf-token']")
       ?.getAttribute("content")
 
+    const Hooks = {
+      ModalFocusTrap: {
+        mounted() {
+          this.handleFocusIn = (event) => {
+            const sentinel = event.target.closest?.("[data-focus-trap]")
+            if (!sentinel || !this.el.contains(sentinel)) return
+
+            const controls = [...this.el.querySelectorAll(
+              "a[href], area[href], input:not([disabled]):not([type='hidden']), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [contenteditable='true'], [tabindex]:not([tabindex='-1'])"
+            )].filter((element) =>
+              !element.hasAttribute("data-focus-trap") &&
+              element.getClientRects().length > 0 &&
+              getComputedStyle(element).visibility !== "hidden"
+            )
+
+            const target = sentinel.dataset.focusTrap === "start"
+              ? controls[controls.length - 1]
+              : controls[0]
+            target?.focus()
+          }
+          this.el.addEventListener("focusin", this.handleFocusIn)
+        },
+        destroyed() {
+          this.el.removeEventListener("focusin", this.handleFocusIn)
+        }
+      },
+      PreviewTabs: {
+        mounted() {
+          this.syncTabStops = () => {
+            const tabs = [...this.el.querySelectorAll('[role="tab"]')]
+            const focusedTab = tabs.find((tab) => tab.id === this.focusedTabId)
+            const selectedTab = tabs.find((tab) => tab.getAttribute("aria-selected") === "true")
+            const tabStop = focusedTab || selectedTab
+
+            tabs.forEach((tab) => {
+              tab.tabIndex = tab === tabStop ? 0 : -1
+            })
+          }
+
+          this.handleFocusIn = (event) => {
+            const tab = event.target.closest?.('[role="tab"]')
+            if (!tab || !this.el.contains(tab)) return
+            this.focusedTabId = tab.id
+            this.syncTabStops()
+          }
+
+          this.handleKeydown = (event) => {
+            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+
+            const current = event.target.closest?.('[role="tab"]')
+            if (!current || !this.el.contains(current)) return
+
+            const tabs = [...this.el.querySelectorAll('[role="tab"]')]
+            const currentIndex = tabs.indexOf(current)
+            let nextIndex
+
+            if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % tabs.length
+            else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + tabs.length) % tabs.length
+            else if (event.key === "Home") nextIndex = 0
+            else if (event.key === "End") nextIndex = tabs.length - 1
+            else return
+
+            event.preventDefault()
+            const next = tabs[nextIndex]
+            this.focusedTabId = next.id
+            this.syncTabStops()
+            next.focus()
+          }
+
+          this.el.addEventListener("focusin", this.handleFocusIn)
+          this.el.addEventListener("keydown", this.handleKeydown)
+          this.syncTabStops()
+        },
+        updated() {
+          this.syncTabStops()
+        },
+        destroyed() {
+          this.el.removeEventListener("focusin", this.handleFocusIn)
+          this.el.removeEventListener("keydown", this.handleKeydown)
+        }
+      },
+      PreviewPanelScroll: {
+        mounted() {
+          this.handleKeydown = (event) => {
+            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+
+            let distance
+            if (event.key === "PageDown" || event.key === " ") distance = this.el.clientHeight * 0.8
+            else if (event.key === "PageUp") distance = -this.el.clientHeight * 0.8
+            else if (event.key === "ArrowDown") distance = 40
+            else if (event.key === "ArrowUp") distance = -40
+            else return
+
+            event.preventDefault()
+            this.el.scrollTop += distance
+          }
+
+          this.el.addEventListener("keydown", this.handleKeydown)
+        },
+        destroyed() {
+          this.el.removeEventListener("keydown", this.handleKeydown)
+        }
+      }
+    }
+
     const liveSocket = new LiveView.LiveSocket("/live", Phoenix.Socket, {
-      params: csrfToken ? { _csrf_token: csrfToken } : {}
+      params: csrfToken ? { _csrf_token: csrfToken } : {},
+      hooks: Hooks
     })
 
     window.liveSocket = liveSocket
@@ -82,18 +191,13 @@ defmodule MailglassAdmin.Controllers.Assets do
     }
   })();
 
-  // Local-time progressive enhancement: the server renders every timestamp as a
-  // <time data-local-time datetime="…Z" data-utc="… UTC">… UTC</time>. Here we rewrite
-  // the visible text to the viewer's local timezone (with a short tz label), keep the
-  // UTC in the title tooltip, and copy the UTC string to the clipboard on click. With
-  // JS off the server-rendered UTC stands on its own. No phx-hook: a MutationObserver
-  // re-localizes nodes LiveView patches back to UTC (morphdom drops our data-localized
-  // marker on re-render), and click handling is delegated so it survives patches.
+  // Show one concise timestamp in the browser's local timezone. The server-rendered
+  // UTC value remains the no-JS fallback and the exact value stays in the title/data.
+  // No phx-hook: a MutationObserver enhances timestamps inserted by LiveView patches.
   ;(() => {
     const FMT = {
       year: "numeric", month: "short", day: "numeric",
-      hour: "numeric", minute: "2-digit", second: "2-digit",
-      timeZoneName: "short"
+      hour: "numeric", minute: "2-digit"
     }
 
     function localize(el) {
@@ -101,11 +205,15 @@ defmodule MailglassAdmin.Controllers.Assets do
       if (!iso) return
       const d = new Date(iso)
       if (isNaN(d.getTime())) return
+      let localValue
       try {
-        el.textContent = d.toLocaleString(undefined, FMT)
+        localValue = d.toLocaleString(undefined, FMT)
       } catch (_e) {
         return
       }
+      if (!localValue) return
+      el.textContent = localValue
+      el.setAttribute("aria-label", `Recorded at ${localValue} local time`)
       el.dataset.localized = "1"
     }
 
@@ -119,23 +227,154 @@ defmodule MailglassAdmin.Controllers.Assets do
     function schedule() {
       if (scheduled) return
       scheduled = true
-      requestAnimationFrame(() => { scheduled = false; localizeAll() })
+      requestAnimationFrame(() => { scheduled = false; localizeAll(); positionActiveFieldHelpTooltips() })
     }
 
-    // Capture phase: this runs during the top-down capture pass, before the event
-    // reaches LiveView's window-bubble click handler — so stopPropagation() prevents
-    // the surrounding row's phx-click (e.g. select_delivery) from also firing.
+    // Native account disclosure menus should dismiss when the operator clicks away.
     document.addEventListener("click", (e) => {
-      const el = e.target.closest && e.target.closest("time[data-local-time]")
-      if (!el) return
+      const target = e.target
+      const accountOption = target?.closest?.("[data-dismiss-menu]")
+      if (accountOption) {
+        accountOption.closest("details[data-dismiss-outside]")?.removeAttribute("open")
+        return
+      }
+      if (target?.closest?.("details[data-dismiss-outside]")) return
+      document.querySelectorAll("details[data-dismiss-outside][open]").forEach((menu) => {
+        menu.removeAttribute("open")
+      })
+    })
+
+    function positionFieldHelpTooltip(button) {
+      const tooltipId = button.getAttribute("aria-controls")
+      const tooltip = tooltipId ? document.getElementById(tooltipId) : button.closest(".mg-field-help")?.querySelector(".mg-field-help-tooltip")
+      if (!tooltip) return
+
+      const trigger = button.getBoundingClientRect()
+      const panel = tooltip.getBoundingClientRect()
+      const padding = 12
+      const gap = 8
+      const left = Math.min(
+        Math.max(trigger.left + (trigger.width - panel.width) / 2, padding),
+        Math.max(padding, window.innerWidth - panel.width - padding)
+      )
+      const below = trigger.bottom + gap
+      const above = trigger.top - panel.height - gap
+      const placement = below + panel.height <= window.innerHeight - padding || above < padding
+        ? "bottom"
+        : "top"
+      const top = Math.max(padding, Math.min(
+        placement === "bottom" ? below : above,
+        window.innerHeight - panel.height - padding
+      ))
+
+      // Only write changed values: the observer also repairs styles removed by
+      // LiveView patches, and identical writes would create a mutation loop.
+      const styles = {
+        position: "fixed", right: "auto", bottom: "auto",
+        left: `${Math.round(left)}px`, top: `${Math.round(top)}px`, translate: "none"
+      }
+      for (const [property, value] of Object.entries(styles)) {
+        if (tooltip.style[property] !== value) tooltip.style[property] = value
+      }
+      if (tooltip.dataset.placement !== placement) tooltip.dataset.placement = placement
+      const arrow = `${Math.round(Math.max(12, Math.min(panel.width - 12,
+        trigger.left + trigger.width / 2 - left)))}px`
+      if (tooltip.style.getPropertyValue("--mg-tooltip-arrow-x") !== arrow) {
+        tooltip.style.setProperty("--mg-tooltip-arrow-x", arrow)
+      }
+    }
+
+    function positionActiveFieldHelpTooltips() {
+      document
+        .querySelectorAll(".mg-field-help button:is(:hover,:focus-visible,[aria-expanded=true])")
+        .forEach(positionFieldHelpTooltip)
+    }
+
+    document.addEventListener("pointerover", (e) => {
+      const button = e.target.closest && e.target.closest(".mg-field-help button")
+      if (button) { button.removeAttribute("data-dismissed"); positionFieldHelpTooltip(button) }
+    }, true)
+    document.addEventListener("focusin", (e) => {
+      const button = e.target.closest && e.target.closest(".mg-field-help button")
+      if (button) { button.removeAttribute("data-dismissed"); positionFieldHelpTooltip(button) }
+    }, true)
+    document.addEventListener("click", (e) => {
+      const button = e.target.closest && e.target.closest(".mg-field-help button")
+      if (button) requestAnimationFrame(() => positionFieldHelpTooltip(button))
+    }, true)
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return
+      document.querySelectorAll(".mg-field-help button:is(:hover,:focus-visible,[aria-expanded=true])").forEach(button => {
+        button.setAttribute("data-dismissed", "true")
+        if (button.hasAttribute("aria-expanded")) button.setAttribute("aria-expanded", "false")
+      })
+    })
+    window.addEventListener("resize", positionActiveFieldHelpTooltips)
+    window.addEventListener("scroll", positionActiveFieldHelpTooltips, true)
+
+    // Native controls own Enter. Keep the Quick view's global shortcut from
+    // opening full detail when a focused copy/help button or link is activated.
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && e.target.closest?.(".mg-detail-panel") &&
+          e.target.closest?.("button, a, input, select, textarea, summary")) {
+        e.stopPropagation()
+      }
+    }, true)
+
+    let toastTimer
+    function showToast(message, isError = false) {
+      const toast = document.getElementById("mg-copy-toast")
+      const messageEl = toast?.querySelector("[data-copy-toast-message]")
+      const alert = messageEl?.parentElement
+      if (!toast || !messageEl || !alert) return
+
+      window.clearTimeout(toastTimer)
+      alert.classList.toggle("alert-success", !isError)
+      alert.classList.toggle("alert-error", isError)
+      messageEl.textContent = message
+      toast.hidden = false
+      toastTimer = window.setTimeout(() => { toast.hidden = true }, 2400)
+    }
+
+    // Server notifications share the same feedback surface as copy actions.
+    window.addEventListener("phx:mailglass:toast", ({detail}) => {
+      showToast(detail.message, detail.error === true)
+    })
+
+    // Copy controls remain functional after LiveView patches. Timestamp clicks use
+    // the shared toast, as do clickable identifiers; other controls keep adjacent status.
+    document.addEventListener("click", (e) => {
+      const button = e.target.closest && e.target.closest("button[data-copy-value]")
+      if (!button) return
       e.stopPropagation()
       e.preventDefault()
-      const utc = el.getAttribute("data-utc") || el.getAttribute("datetime")
-      if (!utc || !navigator.clipboard) return
-      navigator.clipboard.writeText(utc).then(() => {
-        el.textContent = "Copied ✓"
-        setTimeout(() => { delete el.dataset.localized; localize(el) }, 1200)
-      }).catch(() => {})
+      document.querySelectorAll(".mg-field-help button[aria-expanded=true]").forEach((trigger) => {
+        trigger.setAttribute("aria-expanded", "false")
+      })
+      document.querySelectorAll("details[data-dismiss-outside][open]").forEach((menu) => {
+        menu.removeAttribute("open")
+      })
+      const timestampCopy = button.hasAttribute("data-timestamp-copy")
+      const copyToast = timestampCopy ? "Timestamp copied as UTC." : button.getAttribute("data-copy-toast")
+      const status = button.parentElement.querySelector("[data-copy-status]")
+      const value = button.getAttribute("data-copy-value")
+      if ((!copyToast && !status) || value === null) return
+
+      if (status) status.textContent = ""
+      Promise.resolve()
+        .then(() => {
+          if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable")
+          return navigator.clipboard.writeText(value)
+        })
+        .then(() => {
+          if (copyToast) showToast(copyToast)
+          else status.textContent = "Copied."
+        })
+        .catch(() => {
+          const message = "Clipboard access failed. Select and copy the visible value manually."
+          if (copyToast) showToast(message, true)
+          else status.textContent = "Clipboard unavailable. Select and copy the visible value manually."
+        })
     }, true)
 
     // While the Quick view overlay is open, its arrow keys drive prev/next record
@@ -158,7 +397,7 @@ defmodule MailglassAdmin.Controllers.Assets do
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ["data-localized", "datetime"],
+        attributeFilter: ["data-localized", "datetime", "aria-expanded", "style"],
         characterData: true
       })
     }
@@ -178,6 +417,12 @@ defmodule MailglassAdmin.Controllers.Assets do
   @logo_path Path.join([:code.priv_dir(:mailglass_admin), "static", "mailglass-logo.svg"])
   @external_resource @logo_path
   @logo File.read!(@logo_path)
+
+  # ---- Favicon: the brand's small-size mark, with OS dark-mode support ----
+  @favicon_path Path.join([:code.priv_dir(:mailglass_admin), "static", "favicon.svg"])
+  @external_resource @favicon_path
+  @favicon File.read!(@favicon_path)
+  @favicon_hash Base.encode16(:crypto.hash(:md5, @favicon), case: :lower)
 
   @doc """
   MD5 hash (lowercase hex) of the embedded `priv/static/app.css` bytes.
@@ -199,6 +444,10 @@ defmodule MailglassAdmin.Controllers.Assets do
   @spec js_hash() :: String.t()
   def js_hash, do: @js_hash
 
+  @doc "Content hash used to version the embedded favicon URL."
+  @spec favicon_hash() :: String.t()
+  def favicon_hash, do: @favicon_hash
+
   @doc false
   @spec js_body() :: binary()
   def js_body, do: @js
@@ -207,11 +456,12 @@ defmodule MailglassAdmin.Controllers.Assets do
   # Router emits `get "/css-:md5", MailglassAdmin.Controllers.Assets, :css`
   # which calls `init(:css)` once at compile time + `call(conn, :css)`
   # on every request.
-  def init(action) when action in [:css, :js, :font, :logo], do: action
+  def init(action) when action in [:css, :js, :font, :logo, :favicon], do: action
 
   def call(conn, :css), do: serve(conn, @css, "text/css; charset=utf-8")
   def call(conn, :js), do: serve(conn, @js, "application/javascript; charset=utf-8")
   def call(conn, :logo), do: serve(conn, @logo, "image/svg+xml")
+  def call(conn, :favicon), do: serve(conn, @favicon, "image/svg+xml")
 
   def call(conn, :font) do
     name = conn.params["name"]

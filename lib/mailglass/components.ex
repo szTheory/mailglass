@@ -85,7 +85,7 @@ defmodule Mailglass.Components do
            style={CSS.merge_style("width:100%;background-color:#{@bg_color};", @class)}>
       <tr>
         <td align="center">
-          <table role="presentation" width="600" border="0" cellpadding="0" cellspacing="0"
+          <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"
                  style="max-width:600px;width:100%;mso-table-lspace:0pt;mso-table-rspace:0pt;">
             <tr>
               <td {@rest}>
@@ -105,7 +105,7 @@ defmodule Mailglass.Components do
 
   attr(:bg, :string, values: ~w(paper mist ink custom), default: "paper")
   attr(:bg_hex, :string, default: nil)
-  attr(:padding, :string, default: "20px")
+  attr(:padding, :string, default: "24px")
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: @global_includes)
   slot(:inner_block, required: true)
@@ -266,6 +266,9 @@ defmodule Mailglass.Components do
 
   defp heading_style(%{tone: tone, align: align}) do
     "color:#{Theme.color(String.to_atom(tone))};" <>
+      "font-size:20px;" <>
+      "font-weight:700;" <>
+      "line-height:1.2;" <>
       "text-align:#{align};" <>
       "mso-line-height-rule:exactly;" <>
       "margin:0 0 16px 0;" <>
@@ -286,7 +289,7 @@ defmodule Mailglass.Components do
   @doc "Renders a paragraph with brand-tone color and size variant."
   @doc since: "0.1.0"
   def text(assigns) do
-    font_size = Map.fetch!(%{"sm" => "13px", "base" => "16px", "lg" => "18px"}, assigns.size)
+    font_size = Map.fetch!(%{"sm" => "14px", "base" => "16px", "lg" => "20px"}, assigns.size)
 
     base_style =
       "font-size:#{font_size};" <>
@@ -333,13 +336,18 @@ defmodule Mailglass.Components do
 
     html_style =
       "display:inline-block;" <>
+        "max-width:100%;" <>
+        "box-sizing:border-box;" <>
         "padding:12px 24px;" <>
+        "line-height:20px;" <>
+        "overflow-wrap:anywhere;" <>
+        "word-break:break-word;" <>
         "background-color:#{bg_color};" <>
         "color:#{text_color};" <>
         "text-decoration:none;" <>
         "font-family:#{body_font};" <>
         "font-size:16px;" <>
-        "font-weight:600;" <>
+        "font-weight:700;" <>
         "border:1px solid #{border_color};" <>
         "border-radius:4px;" <>
         "mso-hide:all;"
@@ -363,7 +371,7 @@ defmodule Mailglass.Components do
         ~s(style="height:44px;v-text-anchor:middle;width:200px;" ) <>
         ~s(arcsize="8%" fillcolor="#{bg_color}" strokecolor="#{border_color}">) <>
         ~s(<w:anchorlock/>) <>
-        ~s(<center style="font-family:#{body_font};font-size:16px;color:#{text_color};font-weight:600;">) <>
+        ~s(<center style="font-family:#{body_font};font-size:16px;color:#{text_color};font-weight:700;">) <>
         slot_binary <>
         ~s(</center></v:roundrect>) <>
         ~s(<![endif]-->)
@@ -424,7 +432,7 @@ defmodule Mailglass.Components do
          alt={@alt}
          width={@width}
          height={@height}
-         style={CSS.merge_style("-ms-interpolation-mode:bicubic;max-width:100%;border:0;display:block;", @class)}
+         style={CSS.merge_style("-ms-interpolation-mode:bicubic;max-width:100%;height:auto;border:0;display:block;", @class)}
          data-mg-plaintext="text"
          {@rest} />
     """
@@ -445,15 +453,18 @@ defmodule Mailglass.Components do
   """
   @doc since: "0.1.0"
   def link(assigns) do
-    link_color = Theme.color(String.to_atom(assigns.tone))
+    link_color = readable_link_color(assigns.tone)
     body_font = Theme.font(:body)
 
     a_style =
       "color:#{link_color};" <>
         "text-decoration:underline;" <>
+        "overflow-wrap:anywhere;" <>
+        "word-break:break-word;" <>
         "font-family:#{body_font};"
 
-    span_style = "color:#{link_color};text-decoration:underline;"
+    span_style =
+      "color:#{link_color};text-decoration:underline;overflow-wrap:anywhere;word-break:break-word;"
 
     assigns =
       assigns
@@ -502,4 +513,13 @@ defmodule Mailglass.Components do
   defp resolve_bg("custom", bg_hex) when is_binary(bg_hex), do: bg_hex
   defp resolve_bg("custom", _), do: "#FFFFFF"
   defp resolve_bg(bg, _bg_hex) when is_binary(bg), do: Theme.color(String.to_atom(bg))
+
+  defp readable_link_color("glass") do
+    case Theme.color(:glass) do
+      "#277B96" -> "#1D637A"
+      color -> color
+    end
+  end
+
+  defp readable_link_color(tone), do: Theme.color(String.to_atom(tone))
 end

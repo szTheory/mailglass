@@ -10,30 +10,69 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.CaptureTest do
       output_dir = tmp_output_dir("dry-run")
 
       output =
-        run_task!([
-          "--dry-run",
-          "--base-url",
-          "http://localhost:4000/dev/mail",
-          "--output-dir",
-          output_dir,
-          "--theme",
-          "dark",
-          "--widths",
-          "768,375",
-          "--mailables",
-          "MailglassAdmin.Fixtures.HappyMailer,MailglassAdmin.Fixtures.StubMailer"
-        ])
+        with_ci_env(nil, fn ->
+          run_task!([
+            "--dry-run",
+            "--base-url",
+            "http://localhost:4000/dev/mail",
+            "--output-dir",
+            output_dir,
+            "--theme",
+            "dark",
+            "--widths",
+            "768,375",
+            "--mailables",
+            "MailglassAdmin.Fixtures.HappyMailer,MailglassAdmin.Fixtures.StubMailer"
+          ])
+        end)
 
       assert output =~ "Preview capture dry-run"
-      assert output =~ "matrix entries: 4"
+      assert output =~ "matrix entries: 10"
       assert output =~ "width(s): 375, 768"
       assert output =~ "theme(s): dark"
       assert output =~ "MailglassAdmin.Fixtures.HappyMailer:welcome_default width=375 theme=dark"
-      assert output =~ "MailglassAdmin.Fixtures.HappyMailer:welcome_enterprise width=768 theme=dark"
+
+      assert output =~
+               "MailglassAdmin.Fixtures.HappyMailer:welcome_enterprise width=768 theme=dark"
+
       assert output =~ "skipped: 1"
       assert output =~ "MailglassAdmin.Fixtures.StubMailer -> no_previews"
       assert File.exists?(Path.join(output_dir, "manifest.json"))
       assert File.exists?(Path.join(output_dir, "checkpoint.json"))
+    end
+
+    test "CI accepts only the explicit synthetic HappyMailer" do
+      with_ci_env("true", fn ->
+        output = run_task!(["--dry-run", "--mailables", "MailglassAdmin.Fixtures.HappyMailer"])
+        assert output =~ "Preview capture dry-run"
+        assert output =~ "MailglassAdmin.Fixtures.HappyMailer"
+      end)
+    end
+
+    test "CI rejects omitted, extra, and alternative mailable lists before discovery" do
+      with_ci_env("true", fn ->
+        for args <- [
+              ["--dry-run"],
+              [
+                "--dry-run",
+                "--mailables",
+                "MailglassAdmin.Fixtures.HappyMailer,MailglassAdmin.Fixtures.StubMailer"
+              ],
+              ["--dry-run", "--mailables", "MailglassAdmin.Fixtures.StubMailer"]
+            ] do
+          assert_raise Mix.Error,
+                       ~r/CI requires exactly --mailables MailglassAdmin.Fixtures.HappyMailer/,
+                       fn ->
+                         run_task!(args)
+                       end
+        end
+      end)
+    end
+
+    test "local auto-scan behavior remains available" do
+      with_ci_env(nil, fn ->
+        assert run_task!(["--dry-run"]) =~ "Preview capture dry-run"
+      end)
     end
 
     test "rejects unknown flags loudly" do
@@ -68,6 +107,17 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.CaptureTest do
     capture_io(fn ->
       Mix.Tasks.MailglassAdmin.Preview.Capture.run(argv)
     end)
+  end
+
+  defp with_ci_env(value, fun) do
+    previous = System.get_env("CI")
+    if is_nil(value), do: System.delete_env("CI"), else: System.put_env("CI", value)
+
+    try do
+      fun.()
+    after
+      if is_nil(previous), do: System.delete_env("CI"), else: System.put_env("CI", previous)
+    end
   end
 
   defp tmp_output_dir(suffix) do

@@ -25,7 +25,13 @@ async function openDeliveryFull(page, row) {
 }
 
 async function openInboundFull(page, row) {
-  await row.click();
+  const selectControl = row.getByRole("button", { name: /^Open inbound message/ }).first();
+  if (await selectControl.count()) await selectControl.click();
+  else {
+    const mobileOpen = row.getByTestId("inbound-record-row");
+    if (await mobileOpen.count()) await mobileOpen.click();
+    else await row.click();
+  }
   await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
   await page.getByTestId("inbound-quick-view-full").click();
   await expect(page).toHaveURL(/full=1/);
@@ -60,7 +66,18 @@ async function openOperator(page) {
 }
 
 test.describe("operator browser gate", () => {
-  test("desktop: a row opens the Quick view over the list; Open full detail shows the full record", async ({
+  test("collection switches to cards until the content column is at least 768px", async ({ page }) => {
+    await page.setViewportSize({ width: 1000, height: 900 });
+    await openOperator(page);
+    await expect(page.getByTestId("operator-deliveries-cards")).toBeVisible();
+    await expect(page.getByTestId("operator-deliveries-table")).toBeHidden();
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(page.getByTestId("operator-deliveries-table")).toBeVisible();
+    await expect(page.getByTestId("operator-deliveries-cards")).toBeHidden();
+  });
+
+  test("desktop: Open delivery opens Quick view over the list; Open full detail shows the full record", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -74,13 +91,14 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-detail-header")).toHaveCount(0);
 
     const selectedRow = deliveryRow(page, 0);
-    await selectedRow.click();
+    await expect(page.getByRole("button", { name: "Open delivery" }).first()).toBeVisible();
+    await page.getByRole("button", { name: "Open delivery" }).first().click();
 
     // Quick view (peek) slides in; the list stays in the DOM behind it, row highlighted.
     const quickView = page.getByTestId("operator-quick-view");
     await expect(quickView).toBeVisible();
     await expect(deliveriesCard).toBeVisible();
-    await expect(selectedRow).toHaveAttribute("aria-selected", "true");
+    await expect(selectedRow.getByRole("button", { name: /^Open delivery/ })).toHaveAttribute("aria-selected", "true");
     await expect(selectedRow).toHaveAttribute("data-selected", "true");
     await expect(page).toHaveURL(/\/ops\/mail\?/);
     await expect(page).toHaveURL(/delivery_id=/);
@@ -96,19 +114,22 @@ test.describe("operator browser gate", () => {
 
     await expect(page.getByTestId("operator-detail-header")).toBeVisible();
     await expect(page.getByTestId("operator-detail-header")).toContainText(selectedRecipient);
-    await expect(page.getByTestId("operator-detail-header")).toContainText(
-      "Replay is unavailable."
-    );
     await expect(page.getByTestId("operator-timeline")).toBeVisible();
     await expect(page.getByTestId("operator-suppression-card")).toBeVisible();
     await expect(page.getByTestId("operator-suppression-card")).toContainText("ops:review");
     await expect(page.getByTestId("operator-replay-open")).toBeVisible();
+    await expect(page.getByTestId("operator-replay-action")).toContainText("Replay is unavailable.");
     await expect(page.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
 
     // Full detail leads with the event timeline (above suppression).
+    await page.getByText("Account diagnostics", { exact: true }).click();
     const timelineBox = await page.getByTestId("operator-timeline").boundingBox();
     const suppressionBox = await page.getByTestId("operator-suppression-card").boundingBox();
+    const supportBox = await page.getByTestId("operator-support-cards").boundingBox();
+    const replayBox = await page.getByTestId("operator-replay-action").boundingBox();
     expect(timelineBox.y).toBeLessThan(suppressionBox.y);
+    expect(suppressionBox.y).toBeLessThan(replayBox.y);
+    expect(replayBox.y).toBeLessThan(supportBox.y);
   });
 
   test("mobile: row opens the Quick view bottom sheet; full detail preserves section order", async ({ page }) => {
@@ -120,6 +141,7 @@ test.describe("operator browser gate", () => {
     const deliveriesCard = page.getByTestId("operator-deliveries-list-card");
     await expect(deliveriesCard).toBeVisible();
     await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
+    await expect(deliveryRow(page, 0)).toContainText(selectedRecipient);
 
     await deliveryRow(page, 0).click();
 
@@ -131,16 +153,21 @@ test.describe("operator browser gate", () => {
     await expect(page).toHaveURL(/full=1/);
     await expect(page.getByTestId("operator-detail-back")).toBeVisible();
 
-    // Detail-section order (header → timeline → suppression) is a stable contract.
+    // Full detail keeps evidence ahead of the final eligible replay action.
+    await page.getByText("Account diagnostics", { exact: true }).click();
     const headerBox = await page.getByTestId("operator-detail-header").boundingBox();
     const timelineBox = await page.getByTestId("operator-timeline").boundingBox();
     const suppressionBox = await page.getByTestId("operator-suppression-card").boundingBox();
+    const supportBox = await page.getByTestId("operator-support-cards").boundingBox();
+    const replayBox = await page.getByTestId("operator-replay-action").boundingBox();
 
     expect(headerBox).not.toBeNull();
     expect(timelineBox).not.toBeNull();
     expect(suppressionBox).not.toBeNull();
     expect(headerBox.y).toBeLessThan(timelineBox.y);
     expect(timelineBox.y).toBeLessThan(suppressionBox.y);
+    expect(suppressionBox.y).toBeLessThan(replayBox.y);
+    expect(replayBox.y).toBeLessThan(supportBox.y);
 
     // Re-confirm strip absence on the populated &view=deliveries route at 390px.
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
@@ -172,26 +199,135 @@ test.describe("operator browser gate", () => {
 
     await openDeliveryFull(page, exactRow);
     await expect(page.getByTestId("operator-detail-header")).toContainText(exactRecipient);
-    await expect(page.getByTestId("operator-detail-header")).toContainText("Replay is ready.");
+    await expect(page.getByTestId("operator-replay-action")).toContainText("Replay is ready.");
 
     await page.getByTestId("operator-replay-open").click();
 
     const modal = page.getByTestId("operator-replay-modal");
     await expect(modal).toBeVisible();
-    await expect(modal).toContainText("Replay is ready.");
-    await expect(modal).toContainText("Confirm to replay that stored request.");
+    await expect(modal).toContainText("Review the exact stored request before confirming.");
+    await expect(modal).toContainText("does not resend outbound mail or prove provider receipt");
+    await expect(modal).toContainText("Reviewed request");
+    await expect(modal).toContainText("Account");
     await expect(modal).toContainText("browser-exact-delivery");
-
     await page.getByTestId("operator-replay-confirm").click();
 
-    await expect(page.getByText("Replay completed with new work.")).toBeVisible();
-    await expect(page.getByTestId("operator-detail-header")).toContainText(
-      "Last replay: completed · new work"
+    await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+      "Replay command added 1 newly normalized Event."
+    );
+    await expect(page.getByTestId("operator-replay-action")).toContainText(
+      "Last replay: completed · 1 newly normalized Event"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("Webhook replay completed", { timeout: 10000 });
     await expect(page.getByTestId("operator-timeline")).toContainText("Replay succeeded");
     await expect(page.getByTestId("operator-timeline")).toContainText("completed");
     await expect(page.getByTestId("operator-timeline")).toContainText("new work");
+  });
+
+  test("Phase 169 replay review keeps the frozen request through persisted mutations", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    for (const mutation of ["replace-reviewed", "remove-reviewed", "change-reviewed"]) {
+      const reset = await page.request.get("/ops/browser-reset?scenario=phase169-replay-one");
+      expect(reset.ok()).toBeTruthy();
+      const scenario = await reset.json();
+      const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${scenario.tenant_id}`);
+      await page.goto(`/ops/browser-login?tenant_id=${scenario.tenant_id}&return_to=${returnTo}`);
+      await page.goto(
+        `/ops/mail?tenant_id=${scenario.tenant_id}&delivery_id=${scenario.delivery_id}&full=1`
+      );
+      await page.getByTestId("operator-replay-open").click();
+
+      const modal = page.getByTestId("operator-replay-modal");
+      const reviewedId = await modal.getByTestId("operator-replay-target-id").innerText();
+      const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
+      const mutationResult = await page.evaluate(async ({ csrfToken, mutation }) => {
+        const response = await fetch(
+          `/ops/browser-mutate?action=phase169-replay-mutate&mutation=${mutation}`,
+          { method: "POST", headers: { "x-csrf-token": csrfToken }, redirect: "manual" }
+        );
+        return { status: response.status, body: await response.text() };
+      }, { csrfToken, mutation });
+      expect(mutationResult.status, mutationResult.body).toBe(200);
+
+      await modal.getByTestId("operator-replay-confirm").click();
+      await expect(page.locator("body")).toContainText(
+        "This webhook request changed or is no longer eligible."
+      );
+      await expect(modal.getByTestId("operator-replay-target-id")).toHaveText(reviewedId);
+
+      const authLog = await page.request.get("/ops/browser-auth-log");
+      expect((await authLog.json()).destructive_actions).toHaveLength(0);
+    }
+  });
+
+  test("Phase 169 replay review handles zero and many candidates without implicit selection", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    for (const variant of ["zero", "many"]) {
+      const reset = await page.request.get(`/ops/browser-reset?scenario=phase169-replay-${variant}`);
+      expect(reset.ok()).toBeTruthy();
+      const scenario = await reset.json();
+      const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${scenario.tenant_id}`);
+      await page.goto(`/ops/browser-login?tenant_id=${scenario.tenant_id}&return_to=${returnTo}`);
+      await page.goto(
+        `/ops/mail?tenant_id=${scenario.tenant_id}&delivery_id=${scenario.delivery_id}&full=1`
+      );
+      await page.getByTestId("operator-replay-open").click();
+      const modal = page.getByTestId("operator-replay-modal");
+
+      if (variant === "zero") {
+        await expect(modal).toContainText("Replay unavailable");
+        await expect(modal).toContainText(
+          "This delivery does not yet have any linked webhook events to replay."
+        );
+        await expect(modal.getByTestId("operator-replay-confirm")).toHaveCount(0);
+      } else {
+        await expect(modal).toContainText("Choose the exact stored request to review.");
+        await expect(modal.getByTestId("operator-replay-confirm")).toHaveCount(0);
+        await expect(modal.getByRole("radio")).toHaveCount(2);
+      }
+    }
+  });
+
+  test("Phase 169 replay keeps command feedback when persisted audit refresh fails", async ({ page }) => {
+    const reset = await page.request.get("/ops/browser-reset?scenario=phase169-replay-one");
+    expect(reset.ok()).toBeTruthy();
+    const fixture = await reset.json();
+    const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${fixture.tenant_id}&delivery_id=${fixture.delivery_id}&full=1`);
+    await page.goto(`/ops/browser-login?tenant_id=${fixture.tenant_id}&return_to=${returnTo}`);
+    await page.goto(`/ops/mail?tenant_id=${fixture.tenant_id}&delivery_id=${fixture.delivery_id}&full=1`);
+    await page.getByTestId("operator-replay-open").click();
+
+    const csrfToken = await page.locator('meta[name="csrf-token"]').getAttribute("content");
+    const armed = await page.evaluate(async ({ csrfToken }) => {
+      const response = await fetch(
+        "/ops/browser-mutate?action=arm-known-read-failure&operation=replay_history",
+        { method: "POST", headers: { "x-csrf-token": csrfToken }, redirect: "manual" }
+      );
+      return { status: response.status, body: await response.text() };
+    }, { csrfToken });
+    expect(armed.status, armed.body).toBe(200);
+
+    await page.getByTestId("operator-replay-confirm").click();
+    await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+      "Replay command added 1 newly normalized Event."
+    );
+    await expect(page.getByTestId("operator-replay-evidence-unavailable")).toContainText(
+      "The latest persisted replay evidence could not be refreshed."
+    );
+    await expect(page.locator("[data-testid='operator-replay-action']")).not.toContainText(
+      "Last replay: completed"
+    );
+
+    await page.getByRole("button", { name: "Refresh replay evidence" }).click();
+    await expect(page.getByTestId("operator-replay-evidence-unavailable")).toHaveCount(0);
+    await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+      "Replay command added 1 newly normalized Event."
+    );
+    await expect(page.getByTestId("operator-replay-action")).toContainText(
+      "Last replay: completed · 1 newly normalized Event"
+    );
   });
 
   test("ambiguous replay flow requires an explicit choice before confirm is available", async ({
@@ -204,9 +340,7 @@ test.describe("operator browser gate", () => {
 
     await openDeliveryFull(page, ambiguousRow);
     await expect(page.getByTestId("operator-detail-header")).toContainText(ambiguousRecipient);
-    await expect(page.getByTestId("operator-detail-header")).toContainText(
-      "Replay is choice required."
-    );
+    await expect(page.getByTestId("operator-replay-action")).toContainText("Replay is choice required.");
 
     await page.getByTestId("operator-replay-open").click();
 
@@ -214,11 +348,16 @@ test.describe("operator browser gate", () => {
     await expect(modal).toBeVisible();
     await expect(modal).toContainText("Replay is choice required.");
     await expect(modal).toContainText(
-      "The operator UI will not guess across multiple replayable webhook rows."
+      "Choose the exact stored request to review. No request is selected for you."
     );
     await expect(modal).toContainText("browser-ambiguous-delivery-1");
     await expect(modal).toContainText("browser-ambiguous-delivery-2");
     await expect(page.getByTestId("operator-replay-confirm")).toHaveCount(0);
+
+    await modal.locator("#operator-replay-close").focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-cancel");
+    await expect.poll(() => modal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
 
     const secondTarget = page.getByRole("radio", { name: "POSTMARK webhook target", exact: true }).nth(1);
     await secondTarget.focus();
@@ -235,14 +374,16 @@ test.describe("operator browser gate", () => {
 
     await openDeliveryFull(page, noopRow);
     await expect(page.getByTestId("operator-detail-header")).toContainText(noopRecipient);
-    await expect(page.getByTestId("operator-detail-header")).toContainText("Replay is ready.");
+    await expect(page.getByTestId("operator-replay-action")).toContainText("Replay is ready.");
 
     await page.getByTestId("operator-replay-open").click();
     await page.getByTestId("operator-replay-confirm").click();
 
-    await expect(page.getByText("Replay completed with no change.")).toBeVisible();
-    await expect(page.getByTestId("operator-detail-header")).toContainText(
-      "Last replay: completed · no change"
+    await expect(page.getByTestId("operator-replay-command-feedback")).toContainText(
+      "Replay command completed with no newly normalized Events."
+    );
+    await expect(page.getByTestId("operator-replay-action")).toContainText(
+      "Last replay: completed · 0 newly normalized Events"
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("completed");
     await expect(page.getByTestId("operator-timeline")).toContainText("no change");
@@ -264,11 +405,12 @@ test.describe("operator browser gate", () => {
     expect(deliveryId).toBeTruthy();
     await expect(page.locator(`#delivery-detail-${deliveryId}`)).toBeVisible();
 
-    // Flip to the next record via the Quick view (all push_patch, no full reload) and
-    // re-enter Full detail — the id must change (element replaced, not patched in place).
+    // Full detail's explicit return drops the selected id and returns to the list.
     await page.getByTestId("operator-detail-back").click();
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await expect(page.getByTestId("operator-quick-view")).toHaveCount(0);
+    await deliveryRow(page, 1).click();
     await expect(page.getByTestId("operator-quick-view")).toBeVisible();
-    await page.getByTestId("operator-quick-view-next").click();
     await page.waitForURL((url) => {
       const id = new URL(url).searchParams.get("delivery_id");
       return Boolean(id) && id !== deliveryId;
@@ -312,9 +454,14 @@ test.describe("operator browser gate", () => {
     await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
 
     // The record-keyed id (#inbound-detail-<uuid>) now lives in Full detail.
-    await openInboundFull(page, page.getByTestId("inbound-record-row").nth(0));
-    const inboundId = new URL(page.url()).searchParams.get("inbound_id");
+    const firstRow = page.getByTestId("inbound-record-row").filter({ visible: true }).first();
+    const openLabel = await firstRow.getByRole("button").first().getAttribute("aria-label");
+    const inboundId = openLabel?.match(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i)?.[0];
     expect(inboundId).toBeTruthy();
+    // This guard verifies the record-keyed detail target itself. Connected row
+    // selection and Quick view behavior are covered by the browser journey tests.
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}&inbound_id=${inboundId}&full=1`);
+    await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
 
     // The detail pane must carry the record-keyed id
     await expect(page.locator(`#inbound-detail-${inboundId}`)).toBeVisible();
@@ -329,14 +476,14 @@ test.describe("operator browser gate", () => {
 
     const overview = page.getByTestId("inbound-overview");
     await expect(overview).toBeVisible();
-    await expect(overview).toContainText("No-match rate");
+    await expect(overview).toContainText("Unrouted");
 
     const noMatchRow = page
-      .getByTestId("inbound-record-row")
-      .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+      .locator('[data-testid="inbound-records-table"] tbody tr, [data-testid="inbound-records-cards"] li')
+      .filter({ has: page.getByRole("button", { name: "Unrouted", exact: true }) })
       .first();
 
-    await expect(noMatchRow).toContainText("No match");
+    await expect(noMatchRow).toContainText("Unrouted");
     await openInboundFull(page, noMatchRow);
 
     await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
@@ -357,10 +504,9 @@ test.describe("operator browser gate", () => {
     await expect(recordsCard).toBeVisible();
 
     await page
-      .getByTestId("inbound-record-row")
-      .filter({ visible: true })
-      .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
-      .first()
+      .getByTestId("inbound-records-cards").locator("li")
+      .filter({ has: page.getByRole("button", { name: "Unrouted", exact: true }) })
+      .first().getByTestId("inbound-record-row")
       .click();
 
     // Row click opens the Quick view bottom sheet; the list stays mounted behind it.
@@ -376,10 +522,10 @@ test.describe("operator browser gate", () => {
   });
 
   // VERIF-02: structural coverage for Operator Overview landing (D-05 / GAP-register sev-4 closeout)
-  // Asserts the health-count cards container and drill-through links are visible
+  // Asserts recorded problems and their investigation links are visible
   // when the tenant is scoped. Uses getByTestId for structural assertions (not pixel-based).
   // Note: operator-overview-nav (Navigate block) was removed in Phase 119 (SHELL-02).
-  test("operator overview landing has health cards and drill-through links", async ({ page }) => {
+  test("operator overview shows recorded problems and recent activity", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
@@ -390,18 +536,19 @@ test.describe("operator browser gate", () => {
     // Overview container
     await expect(page.getByTestId("operator-overview")).toBeVisible();
 
-    // Health-count cards container (all four sub-cards always render; colors vary by seed state)
+    // Health contains nonzero problems and recent activity; zero-count rows are absent.
     await expect(page.getByTestId("operator-overview-health")).toBeVisible();
 
     // SHELL-02: failures stat card is wrapped in a drill-through link to failed Deliveries
-    const failuresLink = page.getByTestId("operator-overview-health-failures-link");
+    const failuresLink = page.getByTestId("operator-health-deliveries-failed-link");
     await expect(failuresLink).toBeVisible();
     await expect(failuresLink).toHaveAttribute("href", /event=failed/);
+    await expect(page.getByTestId("operator-overview-health-failures-link")).toHaveCount(0);
 
-    // SHELL-02: suppressions stat card is wrapped in a drill-through link to suppressed Deliveries
-    const suppressionsLink = page.getByTestId("operator-overview-health-suppressions-link");
-    await expect(suppressionsLink).toBeVisible();
-    await expect(suppressionsLink).toHaveAttribute("href", /event=suppressed/);
+    await expect(page.getByTestId("operator-health-status")).toContainText("Needs attention");
+    await expect(page.getByTestId("operator-health-outbound-activity")).toContainText("6");
+    await expect(page.getByTestId("operator-overview-health-suppressions-link")).toHaveCount(0);
+    await expect(page.getByText("Additional records", { exact: true })).toHaveCount(0);
   });
 
   // SHELL-02: orientation strip is empty-pane-only — present on all-clear, absent when attention needed.
@@ -451,9 +598,8 @@ test.describe("operator browser gate", () => {
     // Strip absent on populated; toolbar present.
     await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
     await expect(page.getByTestId("operator-filters")).toBeVisible();
-    // The Status column reflects the message's real lifecycle state: a delivered
-    // message (status :sent + last_event :delivered in the seed) now badges "Delivered",
-    // not a perpetual "Sent".
+    // The stored outcome remains "Sent" while the separate Latest event field records
+    // the provider's "Delivered" observation.
     await expect(page.getByTestId("operator-deliveries-list-card")).toContainText("Delivered");
 
     // --- GENUINE NO-DATA Deliveries view ---
@@ -555,54 +701,24 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("preview-orientation")).toBeVisible();
   });
 
-  // Timestamps render server-side as UTC, then the local-time script rewrites the
-  // visible text to the viewer's timezone (keeping UTC in the title) and copies UTC
-  // on click. Node/Chromium here runs in UTC, so the localized text still reads UTC-
-  // equivalent — assert the mechanism (machine-readable <time>, title, clipboard),
-  // not a specific offset.
-  test("Deliveries timestamps are <time> elements localized client-side and copy UTC on click", async ({
-    page,
-    context
-  }) => {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  test("timestamps show one local value and retain the exact UTC value", async ({ page }) => {
     await openOperator(page);
 
     const ts = page.locator("time[data-local-time]").first();
     await expect(ts).toBeVisible();
-
-    // Machine-readable ISO8601 (Z) drives the client conversion; UTC stays in the tooltip.
     await expect(ts).toHaveAttribute("datetime", /Z$/);
-    await expect(ts).toHaveAttribute("title", /UTC$/);
     await expect(ts).toHaveAttribute("data-utc", /UTC$/);
-
-    // The script marks nodes it has localized.
+    const copyTrigger = ts.locator("xpath=ancestor::button[@data-timestamp-copy]");
+    await copyTrigger.hover();
+    await expect(copyTrigger.locator("xpath=..").locator(".mg-field-help-tooltip")).toContainText("UTC · Click to copy");
     await expect(ts).toHaveAttribute("data-localized", "1");
-
-    // js-enabled marker is set (scopes the skeleton), and the skeleton CSS is delivered:
-    // an unlocalized <time data-local-time> paints a muted bar with transparent text.
-    const skeleton = await page.evaluate(() => {
-      const hasJs = document.documentElement.classList.contains("mg-js");
-      const t = document.createElement("time");
-      t.setAttribute("data-local-time", "true");
-      document.body.appendChild(t);
-      const cs = getComputedStyle(t);
-      const out = { hasJs, color: cs.color, background: cs.backgroundColor };
-      t.remove();
-      return out;
-    });
-    expect(skeleton.hasJs).toBe(true);
-    expect(skeleton.color).toBe("rgba(0, 0, 0, 0)"); // transparent text
-    expect(skeleton.background).not.toBe("rgba(0, 0, 0, 0)"); // muted bar present
-
-    // Clicking copies the canonical UTC string to the clipboard...
-    const utc = await ts.getAttribute("data-utc");
-    await ts.click();
-    const clip = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clip).toBe(utc);
-    expect(clip).toContain("UTC");
-
-    // ...and does NOT navigate: the click must not bubble to the row's select_delivery
-    // phx-click (the bug this guards).
+    await expect(ts).not.toContainText("Local:");
+    await expect(ts).toHaveAttribute("aria-label", /local time$/);
+    const expectedLocal = await ts.evaluate(el => new Date(el.dateTime).toLocaleString(undefined, {
+      year: "numeric", month: "short", day: "numeric",
+      hour: "numeric", minute: "2-digit"
+    }));
+    await expect(ts).toHaveText(expectedLocal);
     await expect(page).not.toHaveURL(/delivery_id=/);
   });
 });

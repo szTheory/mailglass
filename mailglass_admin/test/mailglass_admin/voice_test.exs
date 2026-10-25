@@ -62,7 +62,7 @@ defmodule MailglassAdmin.VoiceTest do
       assert html =~ "Preview"
 
       assert html =~
-               "Render an email exactly as your app would send it, then inspect HTML, text, raw source, headers, and assigns."
+               "See how your emails look in HTML and plain text."
 
       # Compact preview picker label
       assert html =~ "Email preview"
@@ -76,7 +76,7 @@ defmodule MailglassAdmin.VoiceTest do
       assert html =~ "This Mailable raised while rendering"
     end
 
-    test "empty-mailables onboarding leads with the brandbook Empty string verbatim", %{
+    test "empty-mailables onboarding uses a code element for the generator command", %{
       conn: conn
     } do
       # No mailables in the session -> the empty-mailables onboarding arm renders.
@@ -84,24 +84,26 @@ defmodule MailglassAdmin.VoiceTest do
 
       {:ok, _view, html} = live(conn, "/dev/mail")
 
-      # Brandbook-canonical Mailable Empty string (brandbook/copy/microcopy.md:17),
-      # rendered VERBATIM with the generator name + literal backtick (D-09). Mirror
-      # of the operator brandbook-string grep pattern.
-      assert html =~ "No mailables discovered yet. Define one with `mix mailglass.gen.mailable`",
-             "D-09: empty-mailables onboarding must lead with the brandbook Empty string verbatim"
+      document = Floki.parse_document!(html)
+      assert Floki.text(document) =~ "No mailables discovered yet."
+
+      [generator_command] = Floki.find(document, ~s([data-testid="preview-mailable-generator"]))
+      assert String.trim(Floki.text(generator_command)) == "mix mailglass.gen.mailable"
+      refute Floki.text(generator_command) =~ "`"
     end
 
-    test "button labels use verb+noun form", %{conn: conn} do
+    test "assigns form names its reset action without a duplicate render action", %{conn: conn} do
       conn = Plug.Test.init_test_session(conn, %{"mailables" => [HappyMailer]})
 
       {:ok, _view, html} =
         live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
-      assert html =~ "Render preview",
-             "primary CTA must be the verb+noun 'Render preview' (not bare 'Render')"
-
       assert html =~ "Reset assigns",
              "secondary action must be the verb+noun 'Reset assigns' (not bare 'Reset')"
+
+      assert html =~ ~s(id="preview-assigns-form")
+      refute html =~ "Render preview"
+      refute html =~ ~s(phx-click="render_preview")
     end
   end
 
@@ -176,12 +178,12 @@ defmodule MailglassAdmin.VoiceTest do
       # LD-16: the no-selection surface leads with the InboundMessage domain noun (the
       # former select prompt is now a no-selection put_flash, asserted at source in the
       # flash-guards describe; the initial render shows the full-width list).
-      assert html =~ "Recent InboundMessages",
+      assert html =~ "Received messages",
              "LD-16: no-selection surface must lead with the InboundMessage domain noun"
 
-      # LD-03: filtered empty-state body — Phase 113 UI-SPEC updated to "No records match
-      # the current filters." (data_state/1 routes through title "No records" + this body).
-      assert html =~ "No records match the current filters.",
+      # LD-03: filtered empty-state body — Phase 113 UI-SPEC updated to "No messages match
+      # the current filters." (data_state/1 routes through title "No messages" + this body).
+      assert html =~ "No messages match the current filters.",
              "LD-03: filtered empty state must be present (UI-SPEC copy from Phase 113)"
     end
   end
@@ -267,7 +269,7 @@ defmodule MailglassAdmin.VoiceTest do
         )
 
       refute_banned_words(html, "account state :none")
-      assert html =~ "No accounts with mail activity"
+      assert html =~ "No Accounts with mail activity"
       assert html =~ "Send a Message from your app"
       assert html =~ "tenant_id"
     end
@@ -284,15 +286,15 @@ defmodule MailglassAdmin.VoiceTest do
         )
 
       refute_banned_words(html, "account state :select_required")
-      assert html =~ "Choose an account"
+      assert html =~ "Choose an Account"
 
       assert html =~
-               "Pick the customer account whose Deliveries and inbound routing you want to inspect."
+               "Select an Account to see scoped operator data."
 
       assert html =~ "Account maps to"
       assert html =~ "tenant_id"
       # Domain nouns enforced as POSITIVE assertions only (D-12) — never a ban grep.
-      assert html =~ "Open account", "per-account link label must be present"
+      assert html =~ "Choose Account", "per-account link label must be present"
       assert html =~ "Acme Support"
       assert html =~ "Beacon Retail"
     end
@@ -317,11 +319,11 @@ defmodule MailglassAdmin.VoiceTest do
     # Flash strings only render after a user action (put_flash/3 in event handlers),
     # so they cannot be asserted against a first-render. Assert at source level (D-11).
 
-    test "inbound replay-success flash uses InboundMessage domain noun" do
+    test "inbound replay-success flash reports the recorded Mailbox outcome" do
       source = File.read!("lib/mailglass_admin/inbound_live.ex")
 
-      assert source =~ "InboundMessage's timeline",
-             "LD-13: replay flash must use InboundMessage not generic 'message'"
+      assert source =~ "Replay run recorded. Mailbox outcome:",
+             "replay feedback must identify the recorded run and its Mailbox outcome"
     end
 
     test "inbound no-selection flash matches LD-16 locked string" do

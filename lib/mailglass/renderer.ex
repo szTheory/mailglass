@@ -118,7 +118,7 @@ defmodule Mailglass.Renderer do
     * `"heading_block_1"` — uppercase + blank lines (h1)
     * `"heading_block_2"` / `"_3"` / `"_4"` — title case + blank lines
     * `"text"` — raw text content; for `<img>`, uses the alt attribute
-    * anything else (including missing) — recurses into children
+    * anything else — recurses into children; ordinary anchors include their destination
 
   Runs on the pre-VML logical HTML tree so VML artifacts never leak into
   plaintext output.
@@ -189,19 +189,13 @@ defmodule Mailglass.Renderer do
   defp apply_strategy("divider", _tag, _attrs, _children), do: "\n---\n"
 
   defp apply_strategy(<<"heading_block_", level::binary>>, _tag, _attrs, children) do
-    text = children |> Floki.text() |> String.trim()
-
-    formatted =
-      case level do
-        "1" -> String.upcase(text)
-        _ -> text
-      end
-
-    "\n#{formatted}\n\n"
+    text = extract_heading_text(children, level)
+    "\n#{text}\n\n"
   end
 
   defp apply_strategy("text", tag, attrs, children) do
-    # For <img>: use alt text; for anything else: element text content.
+    # For <img>: use alt text. Other text-marked elements walk children so
+    # nested anchors retain their destinations in source order.
     case tag do
       "img" ->
         case List.keyfind(attrs, "alt", 0) do
@@ -210,9 +204,39 @@ defmodule Mailglass.Renderer do
         end
 
       _ ->
-        text = children |> Floki.text() |> String.trim()
+        text = children |> extract_plaintext_nodes([]) |> Enum.join("") |> String.trim()
         if text == "", do: "", else: "#{text}\n"
     end
+  end
+
+  # link_pair remains terminal above so it contributes its own URL exactly once.
+  defp apply_strategy(_default, "a", attrs, children) do
+    label = children |> extract_plaintext_nodes([]) |> Enum.join("") |> normalize_whitespace()
+
+    href =
+      case List.keyfind(attrs, "href", 0) do
+        {_, url} -> url
+        nil -> ""
+      end
+
+    cond do
+      label == "" -> ""
+      href == "" -> label
+      true -> "#{label} (#{href})"
+    end
+  end
+
+  defp apply_strategy(_default, "img", attrs, _children) do
+    case List.keyfind(attrs, "alt", 0) do
+      {_, alt} when alt != "" -> "#{alt}\n"
+      _ -> ""
+    end
+  end
+
+  defp apply_strategy(_default, tag, _attrs, children)
+       when tag in ["p", "h1", "h2", "h3", "h4", "h5", "h6"] do
+    text = children |> extract_plaintext_nodes([]) |> Enum.join("") |> String.trim()
+    if text == "", do: "", else: "\n#{text}\n"
   end
 
   # Skip script/style blocks entirely.
@@ -226,9 +250,71 @@ defmodule Mailglass.Renderer do
     |> Enum.join("")
   end
 
+  # Heading labels follow the existing heading case rules, but linked destinations must
+  # remain byte-for-byte intact: uppercasing a heading's entire flattened string would
+  # corrupt case-sensitive URL paths.
+  defp extract_heading_text(children, level) do
+    children
+    |> Enum.map(&extract_heading_node(&1, level))
+    |> Enum.join("")
+    |> String.trim()
+  end
+
+  defp extract_heading_node(text, "1") when is_binary(text), do: String.upcase(text)
+  defp extract_heading_node(text, _level) when is_binary(text), do: text
+  defp extract_heading_node({:comment, _content}, _level), do: ""
+  defp extract_heading_node({:pi, _, _}, _level), do: ""
+
+  defp extract_heading_node({tag, attrs, children}, level)
+       when is_binary(tag) and is_list(attrs) and is_list(children) do
+    extract_heading_element(get_strategy(attrs), tag, attrs, children, level)
+  end
+
+  defp extract_heading_node(_other, _level), do: ""
+
+  defp extract_heading_element("skip", _tag, _attrs, _children, _level), do: ""
+  defp extract_heading_element("divider", _tag, _attrs, _children, _level), do: "\n---\n"
+
+  defp extract_heading_element("link_pair", _tag, attrs, children, level),
+    do: heading_link_text(attrs, children, level)
+
+  defp extract_heading_element(_strategy, tag, _attrs, _children, _level)
+       when tag in ["script", "style", "head"],
+       do: ""
+
+  defp extract_heading_element(_strategy, "img", attrs, _children, level) do
+    case List.keyfind(attrs, "alt", 0) do
+      {_, alt} when alt != "" -> extract_heading_node(alt, level)
+      _ -> ""
+    end
+  end
+
+  defp extract_heading_element(_strategy, "a", attrs, children, level),
+    do: heading_link_text(attrs, children, level)
+
+  defp extract_heading_element(_strategy, _tag, _attrs, children, level),
+    do: extract_heading_text(children, level)
+
+  defp heading_link_text(attrs, children, level) do
+    label = extract_heading_text(children, level)
+
+    href =
+      case List.keyfind(attrs, "href", 0) do
+        {_, url} -> url
+        nil -> ""
+      end
+
+    cond do
+      label == "" -> ""
+      href == "" -> label
+      true -> "#{label} (#{href})"
+    end
+  end
+
   defp normalize_whitespace(text) do
     text
     |> String.replace(~r/[ \t]+/, " ")
+    |> String.replace(~r/ +([,.;:!?])/, "\\1")
     |> String.replace(~r/\n{3,}/, "\n\n")
     |> String.trim()
   end

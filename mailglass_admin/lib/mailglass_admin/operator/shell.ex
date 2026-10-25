@@ -29,8 +29,10 @@ defmodule MailglassAdmin.Operator.Shell do
 
   alias MailglassAdmin.AdminShell
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.Accounts
   alias MailglassAdmin.SurfaceNav
   alias MailglassAdmin.Theme
+  alias Phoenix.LiveView.JS
 
   @doc """
   Whether the inbound surface is present — the SAME gate the router uses to
@@ -147,7 +149,7 @@ defmodule MailglassAdmin.Operator.Shell do
   defp blank_to_nil(value) when value in [nil, ""], do: nil
   defp blank_to_nil(value), do: value
 
-  @switch_query_keys ~w(provider status event outcome window_hours search support_focus support_event_id support_webhook_event_id view)
+  @switch_query_keys ~w(provider status event outcome window_hours search view)
 
   defp preserved_switch_query(query) do
     query
@@ -165,6 +167,10 @@ defmodule MailglassAdmin.Operator.Shell do
   attr(:inbound_available?, :boolean, default: false)
   attr(:dark_chrome, :boolean, default: false)
   attr(:theme_choice, :atom, values: [:system, :light, :dark], default: :system)
+  attr(:selected_tenant_id, :string, default: nil)
+  attr(:tenant_options, :list, default: [])
+  attr(:account_labels, :map, default: %{})
+  attr(:page_uri, :string, default: "/ops/mail")
   attr(:title, :string, required: true)
   attr(:subtitle, :string, default: nil)
   attr(:flash, :map, default: %{})
@@ -182,6 +188,12 @@ defmodule MailglassAdmin.Operator.Shell do
       main_max_width_class="max-w-7xl"
     >
       <:actions>
+        <.account_context
+          selected_tenant_id={@selected_tenant_id}
+          tenant_options={@tenant_options}
+          account_labels={@account_labels}
+          page_uri={@page_uri}
+        />
         <Components.theme_picker selected={@theme_choice} event="set_theme" />
       </:actions>
       <:sidebar>
@@ -217,6 +229,100 @@ defmodule MailglassAdmin.Operator.Shell do
     """
   end
 
+  attr(:selected_tenant_id, :string, default: nil)
+  attr(:tenant_options, :list, default: [])
+  attr(:account_labels, :map, default: %{})
+  attr(:page_uri, :string, required: true)
+
+  def account_context(assigns) do
+    assigns =
+      assign(assigns,
+        selected_label: Accounts.label(assigns.selected_tenant_id, assigns.account_labels)
+      )
+
+    ~H"""
+    <div
+      data-testid="operator-account-context"
+      aria-label="Account context"
+      class="flex min-w-0 flex-wrap items-center gap-sm"
+    >
+      <details
+        :if={@tenant_options != []}
+        class="group relative min-w-0 max-w-full"
+        data-dismiss-outside
+      >
+        <summary
+          class="mg-focus-ring flex min-h-11 min-w-0 max-w-full cursor-pointer list-none items-center gap-sm rounded-field border border-base-300 bg-base-100 px-sm py-xs text-left text-base-content transition-colors hover:bg-base-200 [&::-webkit-details-marker]:hidden"
+          aria-label={"Change Account: #{@selected_label || "Choose Account"}"}
+          data-testid="operator-account-switcher"
+        >
+          <span class="min-w-0">
+            <span class="block text-label text-secondary">Account</span>
+            <span
+              data-testid="operator-account-label"
+              class="mg-scope-identity block break-words text-body font-bold"
+            >
+              {@selected_label || "Choose Account"}
+            </span>
+          </span>
+          <Components.icon
+            name="hero-chevron-down"
+            class="h-4 w-4 shrink-0 text-secondary transition-transform group-open:rotate-180"
+          />
+        </summary>
+        <ul
+          aria-label="Available Accounts"
+          class="mg-scope-menu mg-layer-dropdown absolute left-0 top-full sm:left-auto sm:right-0 mt-xs max-h-64 list-none overflow-y-auto rounded-field border border-base-300 bg-base-100 p-xs shadow-overlay"
+        >
+          <li :for={{tenant, index} <- Enum.with_index(@tenant_options)}>
+            <.link
+              patch={tenant_switch_path(@page_uri, tenant.id)}
+              phx-click={
+                JS.show(
+                  to: "#operator-account-switch-status-#{index}",
+                  display: "block"
+                )
+              }
+              aria-current={if tenant.id == @selected_tenant_id, do: "true", else: nil}
+              data-testid="operator-account-option"
+              data-account-id={tenant.id}
+              data-dismiss-menu
+              class="mg-focus-ring flex min-h-11 flex-col justify-center rounded-field px-sm py-xs text-body text-base-content hover:bg-base-200"
+            >
+              <span class="break-words">{tenant.label}</span>
+              <span class="mono break-all text-label text-secondary">{tenant.id}</span>
+            </.link>
+          </li>
+        </ul>
+      </details>
+      <div :if={@tenant_options == []} class="min-w-0">
+        <span class="block text-label text-secondary">Account</span>
+        <span
+          data-testid="operator-account-label"
+          class="mg-scope-identity block break-words text-body font-bold text-base-content"
+        >
+          {@selected_label || "Choose Account"}
+        </span>
+      </div>
+      <span :if={@selected_tenant_id} data-testid="operator-account-id" class="sr-only">
+        {@selected_tenant_id}
+      </span>
+      <span
+        :for={{tenant, index} <- Enum.with_index(@tenant_options)}
+        :if={tenant.id != @selected_tenant_id}
+        id={"operator-account-switch-status-#{index}"}
+        data-testid="operator-account-switch-status"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        class="hidden basis-full min-w-0 break-words text-label text-secondary"
+      >
+        Switching to {tenant.label}…
+      </span>
+    </div>
+    """
+  end
+
   attr(:flash, :map, default: %{})
 
   defp flash_region(assigns) do
@@ -227,19 +333,53 @@ defmodule MailglassAdmin.Operator.Shell do
     >
       <div
         :if={Phoenix.Flash.get(@flash, :info)}
+        id="operator-flash-info"
         role="status"
-        class="motion-reveal flex items-start gap-sm rounded-box border border-success bg-success/10 px-md py-sm text-body text-base-content"
+        aria-live="polite"
+        aria-atomic="true"
+        class="motion-reveal flex min-w-0 items-start gap-sm rounded-box border border-success bg-success/10 px-md py-sm text-body text-base-content"
       >
-        <Components.icon name="hero-check-circle" class="mt-0.5 h-5 w-5 shrink-0 text-success" />
-        <span>{Phoenix.Flash.get(@flash, :info)}</span>
+        <Components.icon name="hero-check-circle" class="mt-xs h-5 w-5 shrink-0 text-success" />
+        <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+          {Phoenix.Flash.get(
+            @flash,
+            :info
+          )}
+        </span>
+        <button
+          type="button"
+          phx-click="lv:clear-flash"
+          phx-value-key="info"
+          aria-label="Dismiss success message"
+          class="mg-focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-field"
+        >
+          <Components.icon name="hero-x-mark" class="h-4 w-4" />
+        </button>
       </div>
       <div
         :if={Phoenix.Flash.get(@flash, :error)}
+        id="operator-flash-error"
         role="alert"
-        class="motion-reveal flex items-start gap-sm rounded-box border border-error bg-error/10 px-md py-sm text-body text-base-content"
+        aria-live="assertive"
+        aria-atomic="true"
+        class="motion-reveal flex min-w-0 items-start gap-sm rounded-box border border-error bg-error/10 px-md py-sm text-body text-base-content"
       >
-        <Components.icon name="hero-exclamation-circle" class="mt-0.5 h-5 w-5 shrink-0 text-error" />
-        <span>{Phoenix.Flash.get(@flash, :error)}</span>
+        <Components.icon name="hero-exclamation-circle" class="mt-xs h-5 w-5 shrink-0 text-error" />
+        <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+          {Phoenix.Flash.get(
+            @flash,
+            :error
+          )}
+        </span>
+        <button
+          type="button"
+          phx-click="lv:clear-flash"
+          phx-value-key="error"
+          aria-label="Dismiss error message"
+          class="mg-focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-field"
+        >
+          <Components.icon name="hero-x-mark" class="h-4 w-4" />
+        </button>
       </div>
     </div>
     """
@@ -256,23 +396,23 @@ defmodule MailglassAdmin.Operator.Shell do
       class="rounded-box border border-base-300 bg-base-200 p-lg"
     >
       <div class="flex items-start gap-sm">
-        <Components.icon name="hero-building-office-2" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <Components.icon name="hero-building-office-2" class="mt-xs h-5 w-5 shrink-0 text-primary" />
         <div class="min-w-0 flex-1">
           <%= if @state == :none do %>
-            <h2 class="text-heading font-bold text-base-content">No accounts with mail activity</h2>
+            <h2 class="text-heading font-bold text-base-content">No Accounts with mail activity</h2>
             <p class="mt-sm text-body text-secondary">
-              This operator does not have an account with mail activity yet. Send a Message from your app, or check how your app sets <code class="mono">tenant_id</code>.
+              Send a Message from your app, or check how your app sets <code class="mono">tenant_id</code>.
             </p>
           <% else %>
             <p class="text-label font-bold uppercase text-secondary">Account</p>
-            <h2 class="mt-xs text-heading font-bold text-base-content">Choose an account</h2>
+            <h2 class="mt-xs text-heading font-bold text-base-content">Choose an Account</h2>
             <p class="mt-sm text-body text-secondary">
-              Pick the customer account whose Deliveries and inbound routing you want to inspect.
+              Select an Account to see scoped operator data.
             </p>
             <p class="mt-sm flex items-start gap-xs text-label text-secondary">
               <Components.icon
                 name="hero-information-circle"
-                class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                class="mt-xs h-4 w-4 shrink-0 text-primary"
               />
               <span>
                 Account maps to <code class="mono">tenant_id</code>
@@ -283,15 +423,19 @@ defmodule MailglassAdmin.Operator.Shell do
               <.link
                 :for={tenant <- @tenant_options}
                 patch={tenant_switch_path(@current_uri, tenant.id)}
-                class="mg-focus-ring flex min-h-11 items-center justify-between gap-md rounded-field border border-base-300 bg-base-100 px-md py-sm text-body hover:border-primary"
+                data-testid="tenant-selector-account-option"
+                data-account-id={tenant.id}
+                class="mg-focus-ring grid min-h-11 min-w-0 grid-cols-1 items-center gap-xs rounded-field border border-base-300 bg-base-100 px-md py-sm text-body hover:border-primary sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-md"
               >
-                <span
-                  class="mono min-w-0 truncate font-bold text-base-content"
-                  title={account_title(tenant)}
-                >
-                  {tenant.label}
+                <span class="min-w-0">
+                  <span class="block break-words [overflow-wrap:anywhere] font-bold text-base-content">
+                    {tenant.label}
+                  </span>
+                  <span class="mono block break-all text-label text-secondary">{tenant.id}</span>
                 </span>
-                <span class="shrink-0 text-label font-bold text-primary">Open account</span>
+                <span class="justify-self-end text-label font-bold text-primary sm:shrink-0">
+                  Choose Account
+                </span>
               </.link>
             </div>
           <% end %>
@@ -300,12 +444,6 @@ defmodule MailglassAdmin.Operator.Shell do
     </section>
     """
   end
-
-  defp account_title(%{id: id, label: label}) when is_binary(id) and is_binary(label) do
-    if id == label, do: label, else: "#{label} (tenant_id: #{id})"
-  end
-
-  defp account_title(%{label: label}), do: to_string(label)
 
   @doc """
   Renders the orientation strip for an operator surface — a persistent, symptom-first
@@ -326,7 +464,7 @@ defmodule MailglassAdmin.Operator.Shell do
       data-testid={"#{@surface}-orientation"}
     >
       <div class="flex items-start gap-sm">
-        <Components.icon name="hero-lifebuoy" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <Components.icon name="hero-lifebuoy" class="mt-xs h-5 w-5 shrink-0 text-primary" />
         <div class="min-w-0">
           <h2 class="text-body font-bold text-base-content">{@copy.heading}</h2>
           <ul class="mt-2 grid gap-1 text-label text-secondary">

@@ -102,8 +102,8 @@ demo-clean: ## Stop and remove all volumes (the reset after an Elixir/base-image
 demo-reset: ## Reseed the deterministic AtlasDesk demo data
 	@$(COMPOSE) exec demo mix demo.reset
 
-demo-e2e: ## Run the Playwright browser-evidence suite against the demo
-	@$(COMPOSE) run --rm demo_e2e
+demo-e2e: ## Run the isolated synthetic browser-evidence suite
+	@bash scripts/run_demo_browser_evidence.sh
 
 demo-logs: ## Follow the demo app logs
 	@$(COMPOSE) logs -f demo

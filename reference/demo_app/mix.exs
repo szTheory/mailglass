@@ -77,7 +77,12 @@ defmodule MailglassDemo.MixProject do
 
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup", "cmd npm --prefix assets ci --no-audit --no-fund"],
+      setup: [
+        "deps.get",
+        "ecto.setup",
+        "cmd node assets/scripts/check-demo-browser-deps.cjs --lock-only",
+        "cmd npm --prefix assets ci --no-audit --no-fund"
+      ],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       "demo.reset": ["run priv/repo/seeds.exs"],

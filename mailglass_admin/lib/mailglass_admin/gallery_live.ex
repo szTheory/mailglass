@@ -20,8 +20,11 @@ defmodule MailglassAdmin.GalleryLive do
   - flash (error, info, success, warning kinds)
   - badge (warning, stub)
   - status_badge (22 atoms + phantom nil)
-  - nav_link, nav_pill (active, inactive, hover-ready,
-    focus-visible, disabled, long-label)
+  - nav_link (active, inactive, hover-ready, focus-visible,
+    disabled); nav labels are short by convention, so there is
+    no long-label specimen
+  - nav_pill (active, inactive, hover-ready, focus-visible,
+    disabled, long-label)
   - tenant_chip (with-tenant, no-tenant, long-tenant,
     non-ascii-tenant)
   - theme_picker (system-selected, light-selected, dark-selected,
@@ -78,6 +81,7 @@ defmodule MailglassAdmin.GalleryLive do
   alias MailglassAdmin.Operator.SuppressionCard
   alias MailglassAdmin.Operator.Timeline
   alias MailglassAdmin.Operator.ReplayModal
+  alias MailglassAdmin.Operator.ReplayAction
   alias MailglassAdmin.Inbound.RecordsList
   alias MailglassAdmin.Inbound.RoutingTrace
   alias MailglassAdmin.Inbound.EvidenceCard
@@ -126,16 +130,13 @@ defmodule MailglassAdmin.GalleryLive do
                   <p class="text-label font-bold text-secondary">
                     {component_label(component)} — {state}
                   </p>
-                  <!-- Theme wrappers stack full-width below md and only share a
-                       row at md+ so each wrapper gets the full cell width at the
-                       320/390 matrix floors — card-based specimens (timeline,
-                       tables) need the full width to fit (RATCHET-02 overflow
-                       gate). flex-1 at narrow widths gave ~88px columns that no
-                       card layout fits. -->
-                  <div class="flex flex-col gap-md md:flex-row md:flex-wrap">
+                  <!-- Keep the theme specimens full-width until xl: the audit
+                       shell's cell padding leaves too little room for card and
+                       timeline specimens in three columns at tablet widths. -->
+                  <div class="flex flex-col gap-md xl:flex-row xl:flex-wrap">
                     <div
                       data-theme="mailglass-light"
-                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full md:flex-1"
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full xl:flex-1"
                     >
                       <.render_specimen
                         component={component}
@@ -145,7 +146,7 @@ defmodule MailglassAdmin.GalleryLive do
                     </div>
                     <div
                       data-theme="mailglass-dark"
-                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full md:flex-1"
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full xl:flex-1"
                     >
                       <.render_specimen
                         component={component}
@@ -155,7 +156,7 @@ defmodule MailglassAdmin.GalleryLive do
                     </div>
                     <div
                       data-testid={"gallery-#{component}-#{state}-system"}
-                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full md:flex-1"
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full xl:flex-1"
                     >
                       <.render_specimen
                         component={component}
@@ -192,7 +193,17 @@ defmodule MailglassAdmin.GalleryLive do
 
   defp render_specimen(%{component: :flash} = assigns) do
     ~H"""
-    <Components.flash kind={@assigns_map[:kind]} message={@assigns_map[:message]} />
+    <Components.flash
+      kind={@assigns_map[:kind]}
+      message={@assigns_map[:message]}
+      placement={:inline}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :timestamp} = assigns) do
+    ~H"""
+    <Components.timestamp at={@assigns_map[:at]} />
     """
   end
 
@@ -302,11 +313,7 @@ defmodule MailglassAdmin.GalleryLive do
 
   defp render_specimen(%{component: :detail_header} = assigns) do
     ~H"""
-    <DetailHeader.detail_header
-      delivery={@assigns_map[:delivery]}
-      replay_targets={@assigns_map[:replay_targets]}
-      latest_replay={@assigns_map[:latest_replay]}
-    />
+    <DetailHeader.detail_header delivery={@assigns_map[:delivery]} />
     """
   end
 
@@ -536,11 +543,9 @@ defmodule MailglassAdmin.GalleryLive do
 
     ~H"""
     <div data-region class="space-y-4">
-      <DetailHeader.detail_header
-        delivery={@delivery}
-        replay_targets={%{status: :unavailable, reason: :no_webhook}}
-        latest_replay={@latest_replay}
-      />
+      <DetailHeader.detail_header delivery={@delivery} />
+      <Timeline.timeline timeline_events={[]} highlight_event_id={@highlight_event_id} />
+      <SuppressionCard.suppression_card suppression_state={@suppression_state} />
       <SupportCards.support_cards
         support_summary={
           %{
@@ -557,8 +562,10 @@ defmodule MailglassAdmin.GalleryLive do
         support_state={%{focused_card: nil, drilldown_banner: nil}}
         suppression_count={0}
       />
-      <Timeline.timeline timeline_events={[]} highlight_event_id={@highlight_event_id} />
-      <SuppressionCard.suppression_card suppression_state={@suppression_state} />
+      <ReplayAction.replay_action
+        replay_targets={%{status: :unavailable, reason: :no_webhook}}
+        latest_replay={@latest_replay}
+      />
     </div>
     """
   end
@@ -624,6 +631,18 @@ defmodule MailglassAdmin.GalleryLive do
      %{kind: :success, message: "Webhook replayed: event recorded in the ledger"}},
     {:flash, "warning-kind",
      %{kind: :warning, message: "Draft only — Mailable has no preview_props/0 defined"}},
+    {:flash, "long-error-copy",
+     %{
+       kind: :error,
+       message:
+         "Delivery status could not be refreshed because the provider response exceeded the available inspection window. Refresh the page to try again, then contact your Mailglass host administrator if the same recorded failure remains unavailable. " <>
+           String.duplicate("unbroken-recovery-evidence-", 8)
+     }},
+
+    # Plan 168-03: missing time must render a truthful fallback and remain testable
+    # in the browser gallery without overriding live page content.
+    {:timestamp, "unavailable", %{at: nil}},
+    {:timestamp, "recorded", %{at: ~U[2026-10-07 20:06:18Z]}},
 
     # STATE-LD-04: badge — warning and stub
     {:badge, "warning", %{variant: :warning}},
@@ -655,7 +674,8 @@ defmodule MailglassAdmin.GalleryLive do
     # phantom nil fallback — badge-outline
     {:status_badge, "phantom-nil", %{status: nil, size: :sm}},
 
-    # STATE-LD-06: nav_link — active, inactive, hover-ready, focus-visible, disabled, long-label
+    # STATE-LD-06: nav_link — active, inactive, hover-ready, focus-visible, disabled
+    # No long-label specimen: a nav label long enough to truncate should be shortened.
     # loading not applicable: nav_link is immediate navigation; disabled covers unavailable navigation.
     {:nav_link, "active",
      %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: true}},
@@ -666,13 +686,6 @@ defmodule MailglassAdmin.GalleryLive do
     {:nav_link, "focus-visible", %{label: "Preview", icon: "hero-eye", href: "#", active: false}},
     {:nav_link, "disabled",
      %{label: "Analytics unavailable", icon: "hero-chart-bar", href: "#", disabled: true}},
-    {:nav_link, "long-label",
-     %{
-       label: "Deliveries needing operator review before the account handoff",
-       icon: "hero-paper-airplane",
-       href: "#",
-       active: false
-     }},
 
     # STATE-LD-06: nav_pill — active, inactive, hover-ready, focus-visible, disabled, long-label
     # loading not applicable: nav_pill is immediate navigation; disabled covers unavailable navigation.
@@ -1013,11 +1026,13 @@ defmodule MailglassAdmin.GalleryLive do
     {:suppression_card, "present",
      %{
        suppression_state: %{
-         scope: :global,
-         reason: :bounced,
+         address: "blocked@example.test",
+         scope: :address,
+         reason: :manual,
          stream: :transactional,
          source: "provider:postmark",
-         reversibility: :immutable
+         expires_at: nil,
+         removal_policy: :supported
        }
      }},
     {:suppression_card, "absent", %{suppression_state: nil}},
@@ -1203,7 +1218,7 @@ defmodule MailglassAdmin.GalleryLive do
      %{
        kind: :stale,
        title: "Data may be out of date",
-       body: "Showing Deliveries as of 14:32. Refresh to load the latest."
+       body: "This view may be out of date. Refresh to check for updates."
      }},
 
     # Phase 113: deliveries_list — table/cards populated state (DATA-01)
@@ -1381,6 +1396,7 @@ defmodule MailglassAdmin.GalleryLive do
   defp component_label(:icon), do: "icon"
   defp component_label(:logo), do: "logo"
   defp component_label(:flash), do: "flash"
+  defp component_label(:timestamp), do: "timestamp"
   defp component_label(:badge), do: "badge"
   defp component_label(:status_badge), do: "status_badge"
   defp component_label(:nav_link), do: "nav_link"

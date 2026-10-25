@@ -1,3 +1,31 @@
+defmodule MailglassAdmin.Fixtures.HeaderCaseMailer do
+  use Mailglass.Mailable, stream: :transactional
+
+  def preview_props, do: [lowercase_headers: %{}, generated_date: %{}]
+
+  def lowercase_headers(_assigns) do
+    new()
+    |> Mailglass.Message.from("no-reply@example.test")
+    |> Mailglass.Message.to("ada@example.test")
+    |> Mailglass.Message.subject("Lowercase headers")
+    |> Mailglass.Message.header("message-id", "<provided@example.test>")
+    |> Mailglass.Message.header("date", "Fri, 09 Oct 2026 12:00:00 +0000")
+    |> Mailglass.Message.html_body("<p>hello</p>")
+    |> Mailglass.Message.text_body("hello")
+    |> Mailglass.Message.put_function(:lowercase_headers)
+  end
+
+  def generated_date(_assigns) do
+    new()
+    |> Mailglass.Message.from("no-reply@example.test")
+    |> Mailglass.Message.to("ada@example.test")
+    |> Mailglass.Message.subject("Generated date")
+    |> Mailglass.Message.html_body("<p>hello</p>")
+    |> Mailglass.Message.text_body("hello")
+    |> Mailglass.Message.put_function(:generated_date)
+  end
+end
+
 defmodule MailglassAdmin.PreviewLiveTest do
   @moduledoc """
   RED-by-default coverage for PREV-03 (sidebar + tabs + device/dark toggle
@@ -14,7 +42,14 @@ defmodule MailglassAdmin.PreviewLiveTest do
   # LiveViewCase imports Phoenix.LiveViewTest and sets @endpoint to the
   # synthetic MailglassAdmin.TestAdopter.Endpoint.
 
-  alias MailglassAdmin.Fixtures.{HappyMailer, StubMailer, BrokenMailer}
+  alias MailglassAdmin.Fixtures.{
+    EmptyScenarioMailer,
+    HappyMailer,
+    StubMailer,
+    BrokenMailer,
+    HeaderCaseMailer
+  }
+
   alias MailglassAdmin.Preview.{AssignsForm, Discovery, Sidebar}
 
   @fixture_mailables [HappyMailer, StubMailer, BrokenMailer]
@@ -52,6 +87,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       html
       |> Floki.parse_document!()
       |> Floki.find(~s([data-testid="preview-pane"]))
+      |> Enum.filter(&(Floki.attribute(&1, "hidden") == []))
 
     %{
       frame_theme: Floki.attribute(pane, "data-preview-frame-theme"),
@@ -79,7 +115,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "<h2"
       assert html =~ "Email previews"
       assert html =~ "Choose an email"
-      assert html =~ "2 emails"
+      assert html =~ "5 emails"
       refute html =~ "3 mailers"
 
       # HappyMailer module + scenarios rendered
@@ -149,7 +185,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert show_html =~ ~s(data-testid="preview-header-controls")
       assert show_html =~ ~s(data-picker-variant="menu")
       assert show_html =~ ~s(data-testid="preview-email-menu-trigger")
-      refute show_html =~ "2 emails"
+      refute show_html =~ "3 emails"
       refute show_html =~ "3 mailers"
 
       document = Floki.parse_document!(show_html)
@@ -164,7 +200,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert trigger_text =~ "HappyMailer"
       assert trigger_text =~ "welcome_default"
       refute trigger_text =~ "MailglassAdmin.Fixtures"
-      refute trigger_text =~ "2 emails"
+      refute trigger_text =~ "3 emails"
       [affordance] = Floki.find(trigger, ~s([data-testid="preview-email-menu-affordance"]))
       [affordance_class] = Floki.attribute(affordance, "class")
       assert Floki.find(affordance, "span") != []
@@ -267,11 +303,46 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "Preview"
       # D-09: onboarding leads with the brandbook Empty string verbatim and
       # surfaces the generator as the PRIMARY next step.
-      assert html =~ "No mailables discovered yet. Define one with `mix mailglass.gen.mailable`"
+      assert html =~ "No mailables discovered yet."
       assert html =~ "mix mailglass.gen.mailable"
+
+      document = Floki.parse_document!(html)
+      [generator_command] = Floki.find(document, ~s([data-testid="preview-mailable-generator"]))
+      assert String.trim(Floki.text(generator_command)) == "mix mailglass.gen.mailable"
+      refute Floki.text(generator_command) =~ "`"
 
       assert html =~ "Read preview setup"
       refute html =~ "Preview the first email"
+    end
+
+    @tag :page_groups
+    test "discovered Mailables without scenarios point to preview_props setup", %{conn: _conn} do
+      no_scenario_conn =
+        Plug.Test.init_test_session(Phoenix.ConnTest.build_conn(), %{"mailables" => [StubMailer]})
+
+      {:ok, _view, html} = live(no_scenario_conn, "/dev/mail")
+
+      assert html =~ ~s(data-testid="preview-no-previewable-mailables")
+      assert html =~ "MailglassAdmin.Fixtures.StubMailer"
+      assert html =~ "Add named scenarios to"
+      assert html =~ "preview_props/0"
+      refute html =~ ~s(data-testid="preview-empty-mailables")
+      refute html =~ "mix mailglass.gen.mailable"
+    end
+
+    @tag :page_groups
+    test "a valid empty scenario list uses the missing-scenario setup state", %{conn: _conn} do
+      empty_scenario_conn =
+        Plug.Test.init_test_session(Phoenix.ConnTest.build_conn(), %{
+          "mailables" => [EmptyScenarioMailer]
+        })
+
+      {:ok, _view, html} = live(empty_scenario_conn, "/dev/mail")
+
+      assert html =~ ~s(data-testid="preview-no-previewable-mailables")
+      assert html =~ "MailglassAdmin.Fixtures.EmptyScenarioMailer"
+      assert html =~ "preview_props/0"
+      refute html =~ ~s(data-testid="preview-scenario-discovery-error")
     end
 
     @tag :page_groups
@@ -284,7 +355,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(data-testid="admin-shell-page-header")
 
       assert html =~
-               "Render an email exactly as your app would send it, then inspect HTML, text, raw source, headers, and assigns."
+               "See how your emails look in HTML and plain text."
 
       assert html =~ ~s(data-testid="admin-shell-sidebar")
       assert html =~ ~s(data-testid="surface-nav-sidebar")
@@ -303,6 +374,17 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ ~s(phx-value-theme="system")
       assert html =~ ~s(data-testid="preview-frame-theme-toggle")
       assert html =~ ~s(phx-click="toggle_preview_frame_theme")
+      assert html =~ ~s(aria-label="Preview frame width in CSS pixels")
+      assert html =~ "375 px"
+      assert html =~ "768 px"
+      assert html =~ "1024 px"
+      assert html =~ "Frame width"
+      assert html =~ "Preview background"
+      assert html =~ ~s(aria-label="Help for preview background")
+
+      assert html =~
+               "Browser preview framing only. It does not establish email-client compatibility or dark-mode behavior."
+
       assert html =~ ~s(data-testid="preview-mailables-picker")
       assert html =~ ~s(data-picker-variant="menu")
       assert html =~ ~s(data-testid="preview-email-menu-trigger")
@@ -356,6 +438,77 @@ defmodule MailglassAdmin.PreviewLiveTest do
     end
   end
 
+  describe "scenario selection" do
+    test "patching to another discovered scenario updates identity and renderer HTML", %{
+      conn: conn
+    } do
+      path = "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default"
+      {:ok, view, html} = live(conn, path)
+      assert html =~ "Hi Ada"
+
+      view
+      |> element(~s(a[href*="welcome_enterprise"]))
+      |> render_click()
+
+      assert_patch(
+        view,
+        "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_enterprise?width=768"
+      )
+
+      html = render(view)
+      assert html =~ "Hi Babbage — enterprise plan"
+
+      [trigger] =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find(~s([data-testid="preview-email-menu-trigger"]))
+
+      trigger_text = Floki.text(trigger)
+      assert trigger_text =~ "HappyMailer"
+      refute trigger_text =~ "MailglassAdmin.Fixtures"
+      assert trigger_text =~ "welcome_enterprise"
+    end
+
+    test "compact picker exposes long non-ASCII scenario identity without truncation" do
+      html =
+        render_component(&Sidebar.menu/1,
+          mailables: discovered_fixture_mailables(),
+          current_mailable: HappyMailer,
+          current_scenario: :welcome_überraschung_東京__with_a_deliberately_long_name,
+          device_width: 375,
+          admin_chrome_theme: nil,
+          mount_path: "/dev/mail"
+        )
+
+      document = Floki.parse_document!(html)
+
+      [label] = Floki.find(document, ~s([data-testid="preview-email-menu-label"]))
+      assert String.trim(Floki.text(label)) == "Email preview"
+
+      [trigger] = Floki.find(document, ~s([data-testid="preview-email-menu-trigger"]))
+      assert Floki.find(trigger, ~s([data-testid="preview-email-menu-label"])) == []
+
+      [label_id] = Floki.attribute(label, "id")
+      [identity] = Floki.find(trigger, ~s([data-testid="preview-email-menu-active-identity"]))
+      [identity_id] = Floki.attribute(identity, "id")
+      assert Floki.attribute(trigger, "aria-labelledby") == ["#{label_id} #{identity_id}"]
+
+      text = Floki.text(trigger)
+      assert text =~ "HappyMailer"
+      refute text =~ "MailglassAdmin.Fixtures"
+      assert text =~ "welcome_überraschung_東京__with_a_deliberately_long_name"
+
+      [identity] = Floki.find(trigger, ~s([data-testid="preview-email-menu-active-identity"]))
+      [identity_class] = Floki.attribute(identity, "class")
+      # Phase 171: the long identity wraps inside the trigger (readable at 200% zoom
+      # and 320 CSS px) rather than being clipped behind an ellipsis.
+      refute identity_class =~ "truncate"
+      assert identity_class =~ "whitespace-normal"
+      assert identity_class =~ "[overflow-wrap:anywhere]"
+      refute Floki.attribute(identity, "title") != []
+    end
+  end
+
   describe "tabs" do
     @tag :tabs
     test "HTML, Text, Raw, Headers tabs each render the correct artifact",
@@ -363,11 +516,43 @@ defmodule MailglassAdmin.PreviewLiveTest do
       {:ok, view, _html} =
         live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
+      {:ok, renderer_result} =
+        Mailglass.Renderer.render(HappyMailer.welcome_default(%{user_name: "Ada"}))
+
       # HTML tab (default) renders an iframe with srcdoc
       html = render(view)
 
       assert html =~ ~r/<iframe[^>]*srcdoc=/i,
              "HTML tab must render <iframe ... srcdoc=\"...\"/>"
+
+      [iframe] = Floki.find(Floki.parse_document!(html), "#tab-panel-html iframe")
+      assert Floki.attribute(iframe, "srcdoc") == [renderer_result.swoosh_email.html_body]
+
+      assert html =~ "Email HTML preview"
+      assert html =~ "browser rendering only"
+      assert html =~ ~s(sandbox="allow-same-origin")
+      refute html =~ ~s(sandbox="allow-same-origin allow-scripts")
+
+      # Every control reference must resolve, including inactive tabs. The
+      # only exposed panel is the selected one and its accessible name comes
+      # from that tab.
+      document = Floki.parse_document!(html)
+      tabs = Floki.find(document, ~s([role="tab"]))
+      panels = Floki.find(document, ~s([role="tabpanel"]))
+
+      assert length(tabs) == 4
+      assert length(panels) == 4
+
+      Enum.each(tabs, fn tab ->
+        [panel_id] = Floki.attribute(tab, "aria-controls")
+        [tab_id] = Floki.attribute(tab, "id")
+        [panel] = Floki.find(document, "##{panel_id}")
+        assert Floki.attribute(panel, "role") == ["tabpanel"]
+        assert Floki.attribute(panel, "aria-labelledby") == [tab_id]
+      end)
+
+      assert Enum.count(panels, &(Floki.attribute(&1, "hidden") == [])) == 1
+      assert Enum.count(tabs, &(Floki.attribute(&1, "aria-selected") == ["true"])) == 1
 
       # Text tab shows the literal rendered text_body
       text_html = render_click(view, "set_tab", %{"tab" => "text"})
@@ -375,11 +560,18 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert text_html =~ "Hi Ada",
              "Text tab must contain the rendered text_body literal"
 
+      assert text_html =~ "<pre"
+      [text_output] = Floki.find(Floki.parse_document!(text_html), "#tab-panel-text pre")
+      assert Floki.text(text_output) == renderer_result.swoosh_email.text_body
+
       # Raw tab shows MIME boundary-looking content
       raw_html = render_click(view, "set_tab", %{"tab" => "raw"})
 
       assert raw_html =~ ~r/(boundary=|Content-Type:|MIME-Version:)/i,
              "Raw tab must contain RFC 5322 envelope markers"
+
+      assert raw_html =~ "Example MIME source"
+      assert raw_html =~ "provider may send a different format"
 
       # Headers tab shows auto-injected Message-ID + Date rows
       headers_html = render_click(view, "set_tab", %{"tab" => "headers"})
@@ -389,6 +581,108 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert headers_html =~ "Date",
              "Headers tab must show the Date row"
+
+      assert headers_html =~
+               "Message-ID and Date are generated when the scenario leaves them unset"
+
+      assert headers_html =~ "Preview value"
+      assert headers_html =~ ~r/preview-[0-9]+@mailglass\.dev/
+    end
+
+    test "lowercase supplied headers prevent generated duplicate headers", %{conn: conn} do
+      conn = Plug.Test.init_test_session(conn, %{"mailables" => [HeaderCaseMailer]})
+
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HeaderCaseMailer/lowercase_headers")
+
+      raw_html = render_click(view, "set_tab", %{"tab" => "raw"})
+      assert raw_html =~ "message-id: &lt;provided@example.test&gt;"
+      assert raw_html =~ "date: Fri, 09 Oct 2026 12:00:00 +0000"
+      refute raw_html =~ ~r/Message-ID: &lt;preview-/i
+
+      headers_html = render_click(view, "set_tab", %{"tab" => "headers"})
+      assert headers_html =~ "message-id"
+      assert headers_html =~ "date"
+      refute headers_html =~ ~r/preview-[0-9]+@mailglass\.dev/
+    end
+
+    test "generated Date header uses RFC 5322 weekday and numeric zone format", %{conn: conn} do
+      conn = Plug.Test.init_test_session(conn, %{"mailables" => [HeaderCaseMailer]})
+
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HeaderCaseMailer/generated_date")
+
+      headers_html = render_click(view, "set_tab", %{"tab" => "headers"})
+      document = Floki.parse_document!(headers_html)
+
+      [date_row] =
+        document
+        |> Floki.find("tbody tr")
+        |> Enum.filter(fn row ->
+          [name | _] = Floki.find(row, "td") |> Enum.map(&Floki.text/1)
+          String.trim(name) == "Date"
+        end)
+
+      [_, date_value] = Floki.find(date_row, "td") |> Enum.map(&Floki.text/1)
+
+      assert date_value =~
+               ~r/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} \+0000$/
+    end
+
+    test "illustrative raw output includes both renderer-produced body representations" do
+      conn =
+        Plug.Test.init_test_session(Phoenix.ConnTest.build_conn(), %{
+          "mailables" => [HeaderCaseMailer]
+        })
+
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HeaderCaseMailer/lowercase_headers")
+
+      raw_html = render_click(view, "set_tab", %{"tab" => "raw"})
+      [raw_output] = Floki.find(Floki.parse_document!(raw_html), "#tab-panel-raw pre")
+      raw_text = Floki.text(raw_output)
+
+      assert raw_text =~
+               "Content-Type: multipart/alternative; boundary=\"mailglass_preview_boundary\""
+
+      assert raw_text =~ "Content-Type: text/plain; charset=utf-8"
+      assert raw_text =~ "Content-Type: text/html; charset=utf-8"
+      assert raw_text =~ "hello"
+      assert raw_text =~ "<p>hello</p>"
+    end
+
+    test "tabs expose empty HTML guidance and keep long non-ASCII plaintext complete" do
+      text = String.duplicate("Prüfung 東京 — ", 1_000)
+
+      html =
+        render_component(&MailglassAdmin.Preview.Tabs.tabs/1,
+          active_tab: :html,
+          html_body: "",
+          text_body: text,
+          raw_envelope: "illustrative",
+          headers: [],
+          device_width: 768,
+          render_nonce: 1,
+          preview_frame_dark_chrome: false
+        )
+
+      assert html =~ "This email has no HTML content."
+      assert html =~ "This email has no HTML content."
+
+      text_html =
+        render_component(&MailglassAdmin.Preview.Tabs.tabs/1,
+          active_tab: :text,
+          html_body: "",
+          text_body: text,
+          raw_envelope: "illustrative",
+          headers: [],
+          device_width: 768,
+          render_nonce: 1,
+          preview_frame_dark_chrome: false
+        )
+
+      assert text_html =~ text
+      assert text_html =~ "whitespace-pre-wrap"
     end
   end
 
@@ -405,6 +699,14 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       html_375 = render_click(view, "set_device", %{"width" => "375"})
       assert html_375 =~ "width: 375px"
+
+      button_375 =
+        html_375
+        |> Floki.parse_document!()
+        |> Floki.find(~s(button[phx-value-width="375"]))
+
+      assert Floki.text(button_375) =~ "375 px"
+      assert Floki.attribute(button_375, "aria-pressed") == ["true"]
 
       html_1024 = render_click(view, "set_device", %{"width" => "1024"})
       assert html_1024 =~ "width: 1024px"
@@ -600,6 +902,153 @@ defmodule MailglassAdmin.PreviewLiveTest do
              "iframe srcdoc must reflect updated user_name assign"
     end
 
+    test "supported scalar edits preserve their types and update renderer output", %{conn: conn} do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
+
+      html =
+        render_change(view, "assigns_changed", %{
+          "assigns" => %{
+            "label" => "東京 résumé",
+            "quantity" => "8",
+            "ratio" => "2.75",
+            "enabled?" => "false",
+            "due_on" => "2026-10-10"
+          }
+        })
+
+      assert html =~ "東京 résumé 9 5.500000"
+      assert html =~ "false 2026-10-11"
+      assert html =~ ~s(value="東京 résumé")
+    end
+
+    test "render failure retains the editor and selected tab until a corrected edit succeeds", %{
+      conn: conn
+    } do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/recoverable")
+
+      render_click(view, "set_tab", %{"tab" => "text"})
+
+      failed =
+        render_change(view, "assigns_changed", %{"assigns" => %{"response" => "fail"}})
+
+      assert failed =~ ~s(data-testid="preview-assigns-form")
+      assert failed =~ ~s(value="fail")
+      assert failed =~ "deliberate recoverable preview failure"
+      assert failed =~ "Last successful preview — not current"
+      assert failed =~ "Recoverable first"
+      assert failed =~ ~s(data-output-current="false")
+      assert failed =~ ~s(data-testid="preview-render-retry")
+      assert failed =~ ~s(phx-click="render_preview")
+      assert failed =~ ~s(id="preview-state-status")
+
+      [selected_tab] =
+        failed
+        |> Floki.parse_document!()
+        |> Floki.find("#tab-btn-text")
+
+      assert Floki.attribute(selected_tab, "aria-selected") == ["true"]
+
+      corrected =
+        render_change(view, "assigns_changed", %{"assigns" => %{"response" => "corrected"}})
+
+      assert corrected =~ "Recoverable corrected"
+      assert corrected =~ ~s(data-output-current="true")
+      refute corrected =~ "deliberate recoverable preview failure"
+      refute corrected =~ ~s(data-testid="preview-render-retry")
+    end
+
+    test "retry runs the render event and reset restores the default scenario", %{conn: conn} do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/recoverable")
+
+      render_change(view, "assigns_changed", %{"assigns" => %{"response" => "fail"}})
+
+      retried =
+        view
+        |> element(~s([data-testid="preview-render-retry"]))
+        |> render_click()
+
+      assert retried =~ "deliberate recoverable preview failure"
+      assert retried =~ ~s(data-testid="preview-assigns-form")
+      assert retried =~ ~s(value="fail")
+
+      reset = render_click(view, "reset_assigns", %{})
+
+      assert reset =~ "Recoverable first"
+      assert reset =~ ~s(data-output-current="true")
+      refute reset =~ "deliberate recoverable preview failure"
+      refute reset =~ ~s(data-testid="preview-render-retry")
+    end
+
+    test "invalid numeric and date drafts stay visible with field-associated errors", %{
+      conn: conn
+    } do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
+
+      mixed_draft =
+        render_change(view, "assigns_changed", %{
+          "assigns" => %{"quantity" => "8items", "label" => "Long draft 東京"}
+        })
+
+      assert mixed_draft =~ ~s(value="Long draft 東京")
+      assert mixed_draft =~ ~s(value="8items")
+
+      for {key, invalid} <- [
+            {"quantity", "8items"},
+            {"ratio", "2.75tail"},
+            {"due_on", "2026-02-30"}
+          ] do
+        html =
+          render_change(view, "assigns_changed", %{"assigns" => %{key => invalid}})
+
+        assert html =~ "value=\"#{invalid}\""
+        assert html =~ ~s(id="assigns-#{key}-error")
+        assert html =~ ~s(aria-describedby="assigns-#{key}-help assigns-#{key}-error")
+        assert html =~ ~s(aria-invalid="true")
+      end
+    end
+
+    test "structured and timezone-sensitive defaults cannot be forged through form events", %{
+      conn: conn
+    } do
+      {:ok, view, html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/typed_values")
+
+      assert html =~ ~s(data-readonly-display="true")
+      assert html =~ "edit it in the Mailable scenario"
+      refute html =~ ~s(name="assigns[metadata]")
+      refute html =~ ~s(type="datetime-local")
+
+      forged =
+        render_change(view, "assigns_changed", %{
+          "assigns" => %{
+            "metadata" => %{"attacker" => "forged"},
+            "scheduled_at" => "2026-10-10T00:00:00Z",
+            "unknown_key" => "injected"
+          }
+        })
+
+      [metadata_display] =
+        forged
+        |> Floki.parse_document!()
+        |> Floki.find("#assigns-metadata")
+
+      assert Floki.text(metadata_display) =~ "%{source: \"fixture\"}"
+      refute Floki.text(metadata_display) =~ "forged"
+    end
+
+    test "free text fields have a stable form id and built-in debounce" do
+      html = render_component(&AssignsForm.assigns_form/1, scenario_assigns: %{label: "Ada"})
+
+      assert html =~ ~s(id="preview-assigns-form")
+      assert html =~ ~s(phx-debounce="150")
+      refute html =~ "Render preview"
+      assert html =~ "Reset assigns"
+    end
+
     test "string assigns render stable labels, IDs, names, and help associations" do
       html = render_component(&AssignsForm.field/1, key: :user_name, value: "Ada")
 
@@ -646,9 +1095,47 @@ defmodule MailglassAdmin.PreviewLiveTest do
       refute html =~ ~s(type="text" disabled)
       refute html =~ ~s(disabled)
     end
+
+    test "maps and timezone-sensitive DateTimes render as truthful read-only values" do
+      for {key, value} <- [
+            {:metadata, %{source: "fixture"}},
+            {:scheduled_at, ~U[2026-10-09 12:00:00Z]}
+          ] do
+        html = render_component(&AssignsForm.field/1, key: key, value: value)
+
+        assert html =~ ~s(data-readonly-display="true")
+        assert html =~ "edit it in the Mailable scenario"
+        refute html =~ "JSON"
+        refute html =~ "<textarea"
+      end
+    end
   end
 
   describe "live reload" do
+    @tag :g_168_8
+    test "Preview success feedback dismisses its backing info flash", %{conn: conn} do
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+
+      send(view.pid, {:mailglass_live_reload, "lib/my_app/user_mailer.ex"})
+
+      before_dismiss = render(view)
+      assert before_dismiss =~ ~s(id="flash-success")
+      assert before_dismiss =~ ~s(role="status")
+      assert before_dismiss =~ ~s(phx-value-key="info")
+      assert before_dismiss =~ "alert-success"
+      assert before_dismiss =~ "Reloaded: user_mailer.ex"
+
+      dismissed =
+        view
+        |> element("#flash-success button[phx-click='lv:clear-flash']")
+        |> render_click()
+
+      refute dismissed =~ "Reloaded: user_mailer.ex"
+      refute dismissed =~ ~s(id="flash-success")
+      refute render(view) =~ "Reloaded: user_mailer.ex"
+    end
+
     @tag :live_reload
     test "PreviewLive subscribes to mailglass:admin:reload and refreshes on broadcast",
          %{conn: conn} do

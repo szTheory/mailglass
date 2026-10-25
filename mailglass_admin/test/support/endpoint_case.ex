@@ -75,6 +75,8 @@ defmodule MailglassAdmin.TestAdopter.Router do
 
     get("/browser-ready", MailglassAdmin.TestAdopter.BrowserSessionController, :ready)
     get("/browser-reset", MailglassAdmin.TestAdopter.BrowserSessionController, :reset)
+    get("/browser-auth-log", MailglassAdmin.TestAdopter.BrowserSessionController, :auth_log)
+    post("/browser-mutate", MailglassAdmin.TestAdopter.BrowserSessionController, :mutate)
     get("/browser-login", MailglassAdmin.TestAdopter.BrowserSessionController, :create)
 
     get(
@@ -134,14 +136,129 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
 
   def reset(conn, _params) do
     conn = Plug.Conn.fetch_query_params(conn)
+    Application.put_env(:mailglass_admin, :inbound_gateway_available?, true)
+    Application.put_env(:mailglass_inbound, :repo, MailglassAdmin.TestRepo)
 
-    if conn.query_params["scenario"] == "sole" do
-      OperatorFixtures.seed_browser_scenario!(deny_reveal?: false)
-    else
-      OperatorFixtures.seed_browser_scenario!()
+    result =
+      case conn.query_params["scenario"] do
+        nil ->
+          {:ok, OperatorFixtures.seed_browser_scenario!()}
+
+        "default" ->
+          {:ok, OperatorFixtures.seed_browser_scenario!()}
+
+        "phase170-package-unavailable" ->
+          Application.put_env(:mailglass_admin, :inbound_gateway_available?, false)
+          {:ok, OperatorFixtures.seed_browser_scenario!()}
+
+        "phase170-read-unavailable" ->
+          seeded = OperatorFixtures.seed_browser_scenario!()
+
+          Application.put_env(
+            :mailglass_inbound,
+            :repo,
+            MailglassAdmin.TestSupport.BrowserConnectionFailingRepo
+          )
+
+          {:ok, seeded}
+
+        "sole" ->
+          {:ok, OperatorFixtures.seed_browser_scenario!(deny_reveal?: false)}
+
+        "accounts" ->
+          {:ok, OperatorFixtures.seed_persona_cohort!()}
+
+        "phase169-exact" ->
+          {:ok, OperatorFixtures.seed_phase169_scenario!()}
+
+        scenario
+        when scenario in ["phase169-replay-zero", "phase169-replay-one", "phase169-replay-many"] ->
+          variant = scenario |> String.replace_prefix("phase169-replay-", "")
+          {:ok, OperatorFixtures.seed_phase169_replay!(variant)}
+
+        "phase169-timeline-101" ->
+          {:ok, OperatorFixtures.seed_phase169_timeline_101!()}
+
+        "phase169-suppression" ->
+          case conn.query_params["variant"] || "one" do
+            variant when variant in ["empty", "one", "many"] ->
+              {:ok, OperatorFixtures.seed_phase169_suppression!(variant)}
+
+            _ ->
+              :unknown
+          end
+
+        "phase169-health-partial" ->
+          {:ok, OperatorFixtures.seed_phase169_health_partial!()}
+
+        "phase169-support-empty" ->
+          {:ok, OperatorFixtures.seed_phase169_support_empty!()}
+
+        _ ->
+          :unknown
+      end
+
+    case result do
+      {:ok, payload} ->
+        MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+        MailglassAdmin.TestOperatorAuth.reset_inbound_replay_calls!()
+        json(conn, payload)
+
+      :unknown ->
+        conn |> put_status(:bad_request) |> text("unknown browser scenario")
     end
+  end
 
-    text(conn, "ok")
+  def auth_log(conn, _params) do
+    json(conn, %{
+      destructive_actions: MailglassAdmin.TestOperatorAuth.destructive_calls(),
+      inbound_replay_calls: MailglassAdmin.TestOperatorAuth.inbound_replay_calls()
+    })
+  end
+
+  def mutate(conn, params) do
+    conn = Plug.Conn.fetch_query_params(conn)
+    params = Map.merge(conn.query_params, params)
+    session_key = get_session(conn, "current_user_id")
+
+    operation = Map.get(params, "operation")
+    action = Map.get(params, "action")
+
+    kind =
+      case action do
+        "arm-known-read-failure" -> :known
+        "arm-unexpected-read-failure" -> :unexpected
+        _ -> nil
+      end
+
+    cond do
+      is_binary(session_key) and action == "phase170-stale-replay" ->
+        try do
+          result = OperatorFixtures.mutate_phase170_stale_replay!(Map.get(params, "record_id"))
+          json(conn, %{mutated: true, result: result})
+        rescue
+          ArgumentError -> conn |> put_status(:bad_request) |> text("unsupported test mutation")
+        end
+
+      is_binary(session_key) and action == "phase169-replay-mutate" ->
+        try do
+          result = OperatorFixtures.mutate_phase169_scenario!(Map.get(params, "mutation"))
+          json(conn, %{mutated: true, result: result})
+        rescue
+          ArgumentError -> conn |> put_status(:bad_request) |> text("unsupported test mutation")
+        end
+
+      is_binary(session_key) and is_binary(operation) and kind ->
+        try do
+          OperatorFixtures.arm_reader_fault!(session_key, operation, kind)
+          json(conn, %{armed: true, operation: operation, action: action})
+        rescue
+          ArgumentError -> conn |> put_status(:bad_request) |> text("unsupported test mutation")
+        end
+
+      true ->
+        conn |> put_status(:bad_request) |> text("unsupported test mutation")
+    end
   end
 
   def create(conn, params) do
@@ -152,13 +269,14 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
     return_to = Map.get(params, "return_to", "/ops/mail?tenant_id=#{tenant_id}")
     subject_id = Map.get(params, "subject_id", "operator-1")
     now = DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+    recent_auth_at = Map.get(params, "recent_auth_at", now)
 
     conn
     |> Plug.Conn.put_session("current_user_id", subject_id)
     |> Plug.Conn.put_session("subject_id", subject_id)
     |> Plug.Conn.put_session("tenant_id", tenant_id)
     |> Plug.Conn.put_session("auth_method", "password")
-    |> Plug.Conn.put_session("recent_auth_at", now)
+    |> Plug.Conn.put_session("recent_auth_at", recent_auth_at)
     |> Plug.Conn.put_resp_header("cache-control", "no-store")
     |> Phoenix.Controller.redirect(to: return_to)
   end
@@ -173,13 +291,58 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
   end
 end
 
+defmodule MailglassAdmin.TestSupport.BrowserConnectionFailingRepo do
+  @moduledoc false
+
+  def all(_queryable, _opts), do: fail()
+  def one(_queryable, _opts), do: fail()
+  def get(_queryable, _id, _opts), do: fail()
+
+  defp fail do
+    raise DBConnection.ConnectionError, message: "synthetic browser inbound connection failure"
+  end
+end
+
 defmodule MailglassAdmin.TestOperatorHook do
   @moduledoc false
 
   import Phoenix.Component, only: [assign: 3]
 
-  def on_mount(:audit, _params, _session, socket) do
-    {:cont, assign(socket, :operator_hook, :audit)}
+  def on_mount(:audit, _params, session, socket) do
+    requested_fault =
+      case Map.get(session, "auth_method") do
+        "fault:" <> fault -> fault
+        _ -> nil
+      end
+
+    fault =
+      if requested_fault in ["deliveries", "exact_delivery", "replay_history", "replay_targets"],
+        do: requested_fault,
+        else: nil
+
+    session_key = Map.get(session, "current_user_id")
+
+    callback = fn operation ->
+      if fault == Atom.to_string(operation) do
+        raise DBConnection.ConnectionError, message: "synthetic transient operator read failure"
+      end
+
+      case MailglassAdmin.TestSupport.OperatorFixtures.take_reader_fault(session_key, operation) do
+        :known ->
+          raise DBConnection.ConnectionError, message: "synthetic transient operator read failure"
+
+        :unexpected ->
+          raise ArgumentError, "synthetic unexpected operator read failure"
+
+        nil ->
+          :ok
+      end
+    end
+
+    {:cont,
+     socket
+     |> assign(:operator_hook, :audit)
+     |> assign(:operator_read_fault, callback)}
   end
 end
 
@@ -190,8 +353,21 @@ defmodule MailglassAdmin.TestOperatorAuth do
 
   @max_age_seconds 900
 
+  def reset_destructive_calls!, do: :persistent_term.put({__MODULE__, :destructive_calls}, [])
+  def destructive_calls, do: :persistent_term.get({__MODULE__, :destructive_calls}, [])
+
+  def reset_inbound_replay_calls!,
+    do: :persistent_term.put({__MODULE__, :inbound_replay_calls}, [])
+
+  def inbound_replay_calls do
+    {__MODULE__, :inbound_replay_calls}
+    |> :persistent_term.get([])
+    |> Enum.reverse()
+  end
+
   def authorize(:operator_access, %{actor: %{subject_id: nil}}) do
-    {:error, :unauthorized, %{message: "Operator access requires a signed-in actor.", to: "/login"}}
+    {:error, :unauthorized,
+     %{message: "Operator access requires a signed-in actor.", to: "/login"}}
   end
 
   def authorize(:operator_access, %{actor: %{subject_id: "blocked"}}) do
@@ -214,8 +390,17 @@ defmodule MailglassAdmin.TestOperatorAuth do
     {:error, :stale_auth, %{message: "Recent authentication is required."}}
   end
 
-  def authorize(:destructive_action, %{actor: %{recent_auth_at: recent_auth_at}})
+  def authorize(
+        :destructive_action,
+        %{
+          actor: %{recent_auth_at: recent_auth_at},
+          delivery: delivery,
+          replay_target: target
+        }
+      )
       when is_struct(recent_auth_at, DateTime) do
+    record_destructive_call(delivery.id, target.webhook_event_id)
+
     if DateTime.diff(DateTime.utc_now(), recent_auth_at, :second) <= @max_age_seconds do
       {:ok, %{subject_id: "operator-1", recent_auth_at: recent_auth_at}}
     else
@@ -226,12 +411,18 @@ defmodule MailglassAdmin.TestOperatorAuth do
   # Inbound replay capability (D-48-09 — rides the existing atom() action type, no
   # new auth surface). Denied for the sentinel actor so denial-path tests drive the
   # gate via the session-controlled subject_id; granted otherwise.
-  def authorize(:replay_inbound, %{actor: %{subject_id: "deny-replay"}}) do
+  def authorize(
+        :replay_inbound,
+        %{actor: %{subject_id: "deny-replay"}, inbound_record: record}
+      ) do
+    record_inbound_replay_call(record.id)
+
     {:error, :unauthorized,
      %{message: "Replay blocked: this action is not authorized for the current operator."}}
   end
 
-  def authorize(:replay_inbound, %{actor: actor, inbound_record: _record}) do
+  def authorize(:replay_inbound, %{actor: actor, inbound_record: record}) do
+    record_inbound_replay_call(record.id)
     {:ok, %{actor: actor}}
   end
 
@@ -255,6 +446,23 @@ defmodule MailglassAdmin.TestOperatorAuth do
 
   def authorize(:reveal_raw, %{actor: actor}) do
     {:ok, %{actor: actor}}
+  end
+
+  defp record_inbound_replay_call(record_id) do
+    key = {__MODULE__, :inbound_replay_calls}
+    :persistent_term.put(key, [record_id | :persistent_term.get(key, [])])
+  end
+
+  defp record_destructive_call(delivery_id, webhook_event_id) do
+    calls = destructive_calls()
+
+    :persistent_term.put(
+      {__MODULE__, :destructive_calls},
+      [
+        %{delivery_id: delivery_id, webhook_event_id: webhook_event_id, at: DateTime.utc_now()}
+        | calls
+      ]
+    )
   end
 end
 
