@@ -249,6 +249,9 @@ async function openOperatorReplayModal(page) {
   await page.getByTestId("operator-replay-open").click();
   const modal = page.getByTestId("operator-replay-modal");
   await expect(modal).toBeVisible();
+  // phx-mounted moves initial focus to Close after the dialog is visible; wait for it
+  // so a test that drives focus is not overtaken by the mount focus on slow runners.
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-close");
   return modal;
 }
 
@@ -263,6 +266,8 @@ async function openInboundReplayModal(page) {
   await page.getByTestId("inbound-replay-open").click();
   const modal = page.getByTestId("inbound-replay-modal");
   await expect(modal).toBeVisible();
+  // Same mount-focus sync point as openOperatorReplayModal.
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-close");
   return modal;
 }
 
@@ -1262,8 +1267,11 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     // sentinel wraps focus back to the first control, so focus stays inside the dialog.
     await page.locator("#inbound-replay-confirm").focus();
     await page.keyboard.press("Tab");
-    const focusInside = await modal.evaluate(el => el.contains(document.activeElement));
-    expect(focusInside, "focus remains within the inbound replay dialog after Tab past Confirm").toBeTruthy();
+    await expect
+      .poll(() => modal.evaluate(el => el.contains(document.activeElement)), {
+        message: "focus remains within the inbound replay dialog after Tab past Confirm"
+      })
+      .toBe(true);
 
     // Double-submit lock: Confirm carries phx-disable-with so a render->click double-fire
     // cannot append a duplicate replay run to the append-only ledger.
@@ -1283,8 +1291,11 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
 
     await page.locator("#operator-replay-confirm").focus();
     await page.keyboard.press("Tab");
-    const focusInside = await modal.evaluate(el => el.contains(document.activeElement));
-    expect(focusInside, "focus remains within the operator replay dialog after Tab past Confirm").toBeTruthy();
+    await expect
+      .poll(() => modal.evaluate(el => el.contains(document.activeElement)), {
+        message: "focus remains within the operator replay dialog after Tab past Confirm"
+      })
+      .toBe(true);
     await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("operator-replay-close");
 
     await expect(page.locator("#operator-replay-confirm")).toHaveAttribute("phx-disable-with", "Replaying…");
