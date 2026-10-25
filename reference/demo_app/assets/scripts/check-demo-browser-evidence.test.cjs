@@ -258,6 +258,25 @@ function assertUploadContract(text) {
   if (/playwright-report|test-results|phase173-captures/.test(uploadStep)) throw new Error("raw browser output cannot be uploaded");
 }
 
+test("checkpoint records Playwright test outcomes", (t) => {
+  const evidenceDir = fs.mkdtempSync(path.join(os.tmpdir(), "mailglass-evidence-"));
+  t.after(() => fs.rmSync(evidenceDir, { recursive: true, force: true }));
+  const { report, manifest } = fixture(evidenceDir);
+  report.suites[0].specs.push(
+    {
+      title: "retried then passed",
+      tests: [{ outcome: "flaky", results: [{ status: "failed" }, { status: "passed" }] }]
+    },
+    { title: "skipped one", tests: [{ outcome: "skipped", results: [] }] },
+    { title: "second expected", tests: [{ outcome: "expected", results: [{ status: "passed" }] }] }
+  );
+  const checkpoint = createCheckpoint(checkpointArgs(evidenceDir, report, manifest));
+
+  assert.deepEqual(checkpoint.test_outcomes.counts, { expected: 2, unexpected: 0, flaky: 1, skipped: 1 });
+  assert.deepEqual(checkpoint.test_outcomes.flaky_titles, ["retried then passed"]);
+  assert.deepEqual(checkpoint.test_outcomes.passed_titles, ["current preview route", "second expected"]);
+});
+
 test("workflow uploads only retained evidence after successful evidence run", () => {
   const workflow = fs.readFileSync(workflowPath, "utf8");
   assert.doesNotThrow(() => assertUploadContract(workflow));

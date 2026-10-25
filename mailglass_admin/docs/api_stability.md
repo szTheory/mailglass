@@ -98,14 +98,21 @@ Not promised:
 Stable promise:
 
 - `authorize(action(), context)` is the one authorization callback contract
-- `:operator_access` and `:destructive_action` are the named stable action
-  semantics used by the package today
+- four named stable actions are used by the package today: `:operator_access`
+  (mount), `:destructive_action` (outbound webhook replay), `:replay_inbound`
+  (inbound replay), and `:reveal_raw` (inbound raw-source reveal)
+- every action's context includes `:actor`
+- an adapter that does not grant an action denies it, and the operator surface
+  shows the denial
 - result normalization accepts the documented success and failure tuple shapes
 - `recent_auth_at` is part of the stable semantic seam when adopters choose to
   enforce step-up or recent-auth policy
 
 Not promised:
 
+- context keys other than `:actor`: `:params`, `:session`, `:socket` (mount),
+  `:delivery`, `:replay_target` (outbound replay), and `:inbound_record`
+  (inbound replay) are passed today but are informational and may change
 - the adopter's auth policy itself
 - any hosted login/session product from `mailglass_admin`
 

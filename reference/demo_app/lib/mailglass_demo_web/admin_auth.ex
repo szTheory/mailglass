@@ -1,4 +1,13 @@
 defmodule MailglassDemoWeb.AdminAuth do
+  @moduledoc """
+  Demo policy for the mounted MailglassAdmin dashboard.
+
+  This adapter grants every operator action to any logged-in demo operator so
+  the demo can show each flow. It is not a recommended production policy. Real
+  hosts decide each action themselves and deny by default, as the catch-all
+  clause here does.
+  """
+
   @behaviour MailglassAdmin.Auth
 
   @impl true
@@ -6,7 +15,7 @@ defmodule MailglassDemoWeb.AdminAuth do
     {:ok, %{subject_id: subject_id, role: :support_lead}}
   end
 
-  def authorize(:replay_webhook, %{actor: %{subject_id: subject_id}}) when is_binary(subject_id) do
+  def authorize(:destructive_action, %{actor: %{subject_id: subject_id}}) when is_binary(subject_id) do
     {:ok, %{subject_id: subject_id, role: :support_lead}}
   end
 
