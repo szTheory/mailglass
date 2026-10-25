@@ -11,6 +11,13 @@ test.beforeAll(() => {
   fs.mkdirSync(phase172EvidenceDir, { recursive: true });
 });
 
+// PreviewLive mints a new render_nonce on connected mount, so the preview-iframe-<nonce>
+// element is replaced when the socket joins; any inline style written before that is lost.
+async function gotoPreview(page, url) {
+  await page.goto(url);
+  await page.locator("[data-phx-main].phx-connected").waitFor();
+}
+
 async function captureEmailPreview(page, frameSelector, filename, expectedWidth) {
   const frame = page.locator(frameSelector);
   await expect(frame).toBeVisible();
@@ -129,9 +136,7 @@ test.describe("mailglass demo evidence", () => {
 
   test("preview distinguishes the public component and AtlasDesk HTML authoring paths", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 900 });
-    await page.goto(
-      "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375",
-    );
+    await gotoPreview(page, "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375");
 
     await expect(page.getByTestId("preview-email-menu-active-identity")).toContainText("AccountMailer");
     const frameSelector = 'iframe[title="Email HTML preview — browser rendering only"]';
@@ -147,9 +152,7 @@ test.describe("mailglass demo evidence", () => {
       "href",
       "/dev/mail/MailglassDemoWeb.Mailers.ComponentMailer/invoice_ready?width=375",
     );
-    await page.goto(
-      "/dev/mail/MailglassDemoWeb.Mailers.ComponentMailer/invoice_ready?width=375",
-    );
+    await gotoPreview(page, "/dev/mail/MailglassDemoWeb.Mailers.ComponentMailer/invoice_ready?width=375");
 
     await expect(page).toHaveURL(/\/MailglassDemoWeb\.Mailers\.ComponentMailer\/invoice_ready\?width=375$/);
     await expect(page.getByTestId("preview-email-menu-active-identity")).toContainText("ComponentMailer");
@@ -269,9 +272,7 @@ test.describe("mailglass demo evidence", () => {
       "href",
       "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375",
     );
-    await page.goto(
-      "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375",
-    );
+    await gotoPreview(page, "/dev/mail/MailglassDemoWeb.Mailers.AccountMailer/invite_admin?width=375");
     await expect(page).toHaveURL(/\/MailglassDemoWeb\.Mailers\.AccountMailer\/invite_admin\?width=375$/);
     await page.setViewportSize({ width: 320, height: 900 });
     await page.locator(frameSelector).evaluate((iframe) => {
