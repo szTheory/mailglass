@@ -20,6 +20,7 @@ defmodule MailglassAdmin.AuthActionsContractTest do
                     "../../../reference/demo_app/lib/mailglass_demo_web/admin_auth.ex",
                     __DIR__
                   )
+  @api_doc_path Path.expand("../../docs/api_stability.md", __DIR__)
   @known_actions [:destructive_action, :operator_access, :replay_inbound, :reveal_raw]
 
   @call_site ~r/(?<![A-Za-z0-9_])Auth\.authorize\(\s*[^,]+,\s*:([a-z_]+)/
@@ -62,6 +63,34 @@ defmodule MailglassAdmin.AuthActionsContractTest do
 
       assert match?({:ok, _}, result),
              "demo AdminAuth denies #{inspect(action)}: #{inspect(result)}"
+    end
+  end
+
+  defp auth_seam_stable_promise do
+    [_, after_heading] = String.split(File.read!(@api_doc_path), "### Auth seam", parts: 2)
+
+    section =
+      after_heading
+      |> String.split("\n")
+      |> Enum.take_while(
+        &(not String.starts_with?(&1, "## ") and not String.starts_with?(&1, "### "))
+      )
+      |> Enum.join("\n")
+
+    case String.split(section, "Stable promise:", parts: 2) do
+      [_, rest] -> rest |> String.split("Not promised:", parts: 2) |> hd()
+      _ -> ""
+    end
+  end
+
+  test "every called action is documented in api_stability.md" do
+    block = auth_seam_stable_promise()
+
+    assert block != "" and block =~ ":operator_access",
+           "api_stability.md Auth seam Stable promise block not found"
+
+    for action <- called_actions() do
+      assert block =~ inspect(action), "api_stability.md does not document #{inspect(action)}"
     end
   end
 end
