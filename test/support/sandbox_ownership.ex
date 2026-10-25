@@ -419,7 +419,10 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   Every Ecto return value this function touches is matched, never discarded:
   `on_exit`'s `Sandbox.stop_owner/1` result is matched against `:ok`, and when
   the checkout was shared the release is followed by `assert_manual!/3` so
-  the release is *verified*, not assumed.
+  the release is *verified*, not assumed — and, when that verdict accepted
+  this release's own dead owner because the ownership manager had not yet
+  unshared, the release writes `:manual` itself so the next module never
+  inherits `{:shared, pid}` (CI run 40226888519; see `complete_release!/3`).
 
   **`shared: true` REQUIRES `context:`** — the `setup` context map ExUnit
   hands the calling callback (`setup tags do ... checkout!(shared: not
@@ -481,10 +484,36 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
           attempts: settle_attempts,
           interval_ms: settle_interval_ms
         )
+
+        complete_release!(repo, owner, caller)
       end
     end)
 
     owner
+  end
+
+  # `assert_manual!/3` returning `:ok` is a VERDICT ("the next shared
+  # acquisition will not collide"), not a statement that the pool reads
+  # `:manual`: once its bound is exhausted it accepts `{:shared, holder}` for a
+  # dead holder. The ownership manager unshares only on the checkout PROXY's
+  # `:DOWN` (`manager.ex:241-243`; the monitor is on the proxy, `manager.ex:278`),
+  # and the proxy exits only after it has handled the owner's own `:DOWN` and
+  # torn its connection down — on a loaded runner, after heavy churn through the
+  # shared connection, that outlasts the bound. The release then used to return
+  # with the pool still naming this release's own dead owner, and the next
+  # `async: false` module inherited a pool that read `{:shared, pid}` (CI run
+  # 40226888519, seed 165497: `SandboxOwnershipTest`'s first test probed it).
+  #
+  # So the release finishes the job itself, and ONLY for the exact state it
+  # created: the pool names `owner` — which `stop_owner/1` above has already
+  # stopped, so it is provably dead — and nothing else. A live holder never
+  # reaches here (`assert_manual!/3` raised), and any other mode is left
+  # untouched for the formatter's pure probe to report.
+  defp complete_release!(repo, owner, caller) do
+    case probe(repo) do
+      {:leaked, {:shared, ^owner}} -> mode_manual!(repo, caller: caller)
+      _settled_or_not_ours -> :ok
+    end
   end
 
   # FAIL-CLOSED (D-31) *and* observable by construction. The `:unknown` branch
@@ -1109,6 +1138,10 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
       DOES verify via `assert_manual!/3`) is still the operation that owns
       the acquire/release invariant for these two files; this call is a
       convenience revert, not a second release path.
+
+  `checkout!/1`'s own shared release also routes its completion write through
+  here, but only for the one state it created itself: the pool still naming
+  the release's own, already-stopped owner (see `complete_release!/3`).
 
   Neither caller acquires or releases an owner through this function — it
   performs no `start_owner!`/`stop_owner` pairing of its own, so it does not

@@ -622,6 +622,58 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
     assert SandboxOwnership.live_holder(Mailglass.TestRepo) == nil
   end
 
+  # ── checkout!/1's release under proxy-teardown latency (CI 40226888519) ──
+
+  # The ownership manager unshares on the checkout PROXY's :DOWN
+  # (`manager.ex:241-243`, monitor taken at `manager.ex:278`), not the owner's.
+  # The proxy exits only after it has handled the owner's own :DOWN and torn
+  # its connection down, which on a loaded runner can outlast `assert_manual!/3`'s
+  # ~150ms bound. The bound then accepts the dead holder — correct as a
+  # verdict — but the release used to return leaving `{:shared, <dead owner>}`
+  # behind, and the NEXT `async: false` module inherited it. Run 40226888519
+  # (seed 165497) ordered this file's "no context is supplied" test first and
+  # it probed exactly that state. Suspending the proxy reproduces the slow
+  # teardown deterministically.
+  test "checkout!/1's release leaves the pool :manual even while the released owner's proxy is still tearing down" do
+    # The release runs in its own on_exit scope (a fresh registration for a
+    # child process), so this file's own `setup` revert to `:manual` — which
+    # the test process's on_exit chain would run straight after the release —
+    # cannot heal the pool before the probe looks. The probe must see what the
+    # release ALONE left behind, which is all the next module ever inherits.
+    task =
+      Task.async(fn ->
+        ExUnit.OnExitHandler.register(self())
+        owner = SandboxOwnership.checkout!(shared: true, context: @sync_context)
+        proxy = owner_proxy!(owner)
+        :ok = :sys.suspend(proxy)
+
+        try do
+          release = ExUnit.OnExitHandler.run(self(), 5_000)
+
+          {release, Process.alive?(owner), Process.alive?(proxy),
+           SandboxOwnership.probe(Mailglass.TestRepo)}
+        after
+          :sys.resume(proxy)
+        end
+      end)
+
+    {release, owner_alive?, proxy_alive?, probe} = Task.await(task, 10_000)
+
+    assert release == :ok
+    # The fixture really is the race: the owner was dead and its proxy had not
+    # exited yet, so the manager could not have unshared on its own.
+    refute owner_alive?
+    assert proxy_alive?
+
+    assert probe == :ok
+  end
+
+  defp owner_proxy!(owner) do
+    %{pid: manager} = Ecto.Adapter.lookup_meta(Mailglass.TestRepo)
+    %{checkouts: %{^owner => {:owner, _ref, proxy}}} = :sys.get_state(manager)
+    proxy
+  end
+
   # ── with_schema!/2 (143-07, D-31 Class B) ───────────────────────────────
 
   # 9. Restore-first: a raise registered AFTER with_schema!/2's own restore
