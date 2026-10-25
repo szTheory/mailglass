@@ -41,9 +41,12 @@ test.describe("demo outbound replay", () => {
     await page.locator("[data-phx-main].phx-connected").waitFor();
     await expect(page.getByTestId("operator-detail-header")).toBeVisible();
 
-    const succeeded = page
-      .getByTestId("operator-timeline-event")
-      .filter({ hasText: "Replay audit · completed" });
+    // count() does not auto-wait: hold until the timeline has hydrated with its seeded events,
+    // or the baseline can be read as 0 while rows are still arriving.
+    const events = page.getByTestId("operator-timeline-event");
+    await expect(page.getByTestId("operator-timeline")).toBeVisible();
+    await expect(events.first()).toBeVisible();
+    const succeeded = events.filter({ hasText: "Replay audit · completed" });
     const before = await succeeded.count();
 
     await page.getByTestId("operator-replay-open").click();
