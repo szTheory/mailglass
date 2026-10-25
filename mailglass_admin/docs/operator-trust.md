@@ -24,6 +24,9 @@ The stable admin seams are:
   `tenant_id`, optional `auth_method`, and optional `recent_auth_at`
 - mount-time authorization through `:operator_access`
 - action-time authorization through `:destructive_action`
+- action-time authorization through `:replay_inbound` (inbound replay)
+- action-time authorization through `:reveal_raw` (revealing an inbound
+  message's raw source)
 
 These are semantic promises. They describe what adopters can mount, authorize,
 and reason about. They do not freeze the implementation that renders the UI.
@@ -48,8 +51,9 @@ Authorization is split across two stable moments:
 
 - `:operator_access` runs at mount time to decide whether the operator surface
   can be entered at all.
-- `:destructive_action` runs at action time immediately before a sensitive
-  operation such as replay.
+- Action-time checks run immediately before a sensitive operation:
+  `:destructive_action` before outbound replay, `:replay_inbound` before inbound
+  replay, and `:reveal_raw` before an inbound message's raw source is revealed.
 
 This means mount-time access is not treated as blanket approval for later
 destructive actions. Adopters keep ownership of the policy through
@@ -64,6 +68,9 @@ subscription remains scoped to the selected `tenant_id`. Hosts that need
 per-account operator membership must enforce it at their own boundary; the
 current stable auth contract does not provide a separate Account-selection
 authorization action.
+
+The reference demo grants every action to its logged-in demo operator for
+demonstration only. Hosts own the policy and should deny by default.
 
 ## Replay semantics
 
