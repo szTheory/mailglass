@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-10-26T23:09:16.382Z",
+  "phase": null,
+  "phase_name": null,
+  "phase_dir": null,
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
+  "completed_tasks": [
+    {"id": 1, "name": "v2.9 milestone archived", "status": "done", "commit": "c6020c9a"},
+    {"id": 2, "name": "release-please preflight fix (release PRs can open after close-out)", "status": "done", "commit": "47db380c"},
+    {"id": 3, "name": "2.7.0/2.7.0/2.4.0 published to Hex and closed out (ledger inactive)", "status": "done", "commit": "96e25e5a"},
+    {"id": 4, "name": "Admin dead LiveView handlers removed (#314)", "status": "done", "commit": "28dfe31e"},
+    {"id": 5, "name": "Dependabot bumps consolidated (#315; #298 #299 #301 #303 #304 closed)", "status": "done", "commit": "e326da4d"},
+    {"id": 6, "name": "Release pipeline streamlined to one approval (#316)", "status": "done", "commit": "0f3714ba"}
+  ],
+  "remaining_tasks": [
+    {"id": 7, "name": "Start next milestone with /gsd-new-milestone", "status": "not_started"},
+    {"id": 8, "name": "Optional: scripts/release.sh one-command release driver (item #9 of the streamline plan)", "status": "not_started"}
+  ],
+  "blockers": [],
+  "async_jobs": [],
+  "human_actions_pending": [
+    {"action": "Decide the next milestone's scope", "context": "Candidates: owner-review UI follow-up (todos/2026-10-25-owner-review-pr302-ui-feedback.md) plus F7 demo unsubscribe routes; CI efficiency wave 1; SEED-009 fractal storybook", "blocking": true},
+    {"action": "Optionally push the local v2.9 tag (git push origin v2.9)", "context": "v2.8 tag was never pushed either", "blocking": false}
+  ],
+  "decisions": [
+    {"decision": "Recovered the 2.7.0 publish by force-moving the three tags from ee933491 to f2c91e40", "rationale": "Owner chose it over a 2.7.1 recut; only .planning allowlists changed, shipped-content digest identical", "phase": null},
+    {"decision": "One hex-publish approval per release instead of three", "rationale": "Owner asked for a streamlined pipeline; HEX_API_KEY is a repo secret so the publish jobs need no environment; one human gate remains", "phase": null}
+  ],
+  "uncommitted_files": [
+    " M .planning/config.json",
+    "?? .planning/milestones/v2.9-phases/173.1-address-tech-debt-demo-auth-browser-evidence/.gitkeep",
+    "?? prompt.txt"
+  ],
+  "next_action": "Run /gsd-new-milestone",
+  "context_notes": "All three uncommitted files are owner WIP; never stage them. Zero open PRs. main is in sync with origin at 0f3714ba plus this handoff commit."
+}
