@@ -16,8 +16,6 @@ defmodule Mailglass.Publish.AuditAllowlistTest do
         cowlib 2.17.1 - EEF-CVE-2026-43966 (MEDIUM)
           aka: CVE-2026-43966
           HTTP Response Splitting via Non-VCHAR Bytes
-        cowlib 2.17.1 - EEF-CVE-2026-43969 (LOW)
-          aka: CVE-2026-43969, GHSA-g2wm-735q-3f56
       """
 
       assert Check.unaccepted_audit_findings(output) == []
@@ -57,7 +55,7 @@ defmodule Mailglass.Publish.AuditAllowlistTest do
   # unaccepted_deps_audit_findings/1 now matches by :id OR any :aliases entry
   # (Mailglass.SupplyChain.AcceptedAdvisories, Phase 142/VULN-05), so a
   # deps.audit finding IS suppressed when its GHSA id is a registered alias
-  # (e.g. GHSA-g2wm-735q-3f56 for EEF-CVE-2026-43969's cowlib entry); a GHSA id
+  # (e.g. GHSA-w4f7-4cxr-rv3c for EEF-CVE-2026-43966's cowlib entry); a GHSA id
   # with no matching alias still surfaces. See the SUMMARY (A4) for the format
   # provenance.
   describe "unaccepted_deps_audit_findings/1" do
@@ -106,9 +104,9 @@ defmodule Mailglass.Publish.AuditAllowlistTest do
     end
 
     test "a non-aliased GHSA id is still correctly NOT suppressed (negative control)" do
-      # This GHSA id is NOT a registered alias of either accepted cowlib entry,
+      # This GHSA id is NOT a registered alias of the accepted cowlib entry,
       # so it must still surface. The real positive alias-suppression proof
-      # (a GHSA id that IS a registered alias, e.g. GHSA-g2wm-735q-3f56) lives
+      # (a GHSA id that IS a registered alias, e.g. GHSA-w4f7-4cxr-rv3c) lives
       # in test/mailglass/supply_chain/accepted_advisories_test.exs (F2).
       output = """
       Name: cowlib

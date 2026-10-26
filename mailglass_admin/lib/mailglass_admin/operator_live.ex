@@ -267,17 +267,6 @@ defmodule MailglassAdmin.OperatorLive do
     end
   end
 
-  def handle_event("toggle_theme", _params, socket) do
-    {:noreply,
-     redirect(socket,
-       to:
-         MailglassAdmin.Operator.Shell.toggle_theme_path(
-           socket.assigns.page_uri,
-           socket.assigns.theme_choice == :dark
-         )
-     )}
-  end
-
   def handle_event("set_theme", %{"theme" => theme}, socket) do
     {:noreply,
      redirect(socket,
@@ -301,27 +290,6 @@ defmodule MailglassAdmin.OperatorLive do
 
   def handle_event("select_delivery", %{"delivery-id" => delivery_id} = params, socket) do
     select_delivery(socket, delivery_id, params)
-  end
-
-  # Close the Quick view / Full detail — drop delivery_id (+ full + support-focus),
-  # returning to the deliveries LIST (view=deliveries, not the overview). Used by the
-  # Escape key; the ✕ and scrim are `<.link patch>`s that target the same list path.
-  def handle_event("close_detail", _params, socket) do
-    {:noreply,
-     push_patch(socket,
-       to:
-         build_path_with_view(
-           socket.assigns.base_path,
-           socket.assigns.filter_params,
-           socket.assigns.dark_chrome
-         )
-     )}
-  end
-
-  # Prev/next through the loaded page (the `‹ ›` buttons). Preserves the current
-  # tier (quick view vs full detail) so flipping works at both.
-  def handle_event("nav_record", %{"dir" => dir}, socket) do
-    navigate_record(socket, dir)
   end
 
   # Keyboard mirror of the `‹ ›` buttons + Enter/Escape. Bound only while the Quick

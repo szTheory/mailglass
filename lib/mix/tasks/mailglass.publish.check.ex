@@ -1184,8 +1184,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   # Thin delegation (Pattern 1). unaccepted_deps_audit_findings/1 now matches
   # by :id OR any :aliases entry, so a deps.audit finding IS suppressed when
-  # its GHSA id is a registered alias (e.g. GHSA-g2wm-735q-3f56 for
-  # EEF-CVE-2026-43969); an id with no matching alias still surfaces (F2 —
+  # its GHSA id is a registered alias (e.g. GHSA-w4f7-4cxr-rv3c for
+  # EEF-CVE-2026-43966); an id with no matching alias still surfaces (F2 —
   # this corrects the prior stale claim that a GHSA finding was never
   # auto-suppressed).
   @doc false

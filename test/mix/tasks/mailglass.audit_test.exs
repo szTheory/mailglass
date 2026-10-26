@@ -32,20 +32,18 @@ defmodule Mix.Tasks.Mailglass.AuditTest do
          """
          Advisories:
            cowlib 2.19.0 - EEF-CVE-2026-43966 (MEDIUM)
-           cowlib 2.19.0 - EEF-CVE-2026-43969 (LOW)
          """, 1},
         {"mailglass_inbound", "No retired packages found", 0}
       ]
 
       assert {:ok, accepted} = Audit.evaluate(:hex, dir_outputs)
       assert Enum.any?(accepted, &(&1 =~ "EEF-CVE-2026-43966"))
-      assert Enum.any?(accepted, &(&1 =~ "EEF-CVE-2026-43969"))
     end
 
     test "a clean scan everywhere except the still-accepted cowlib findings passes" do
       # A "fully clean" (zero findings anywhere) scenario is NOT the real-world
-      # baseline: both allowlist entries are live cowlib findings in
-      # mailglass_admin today, and their absence would correctly trip
+      # baseline: the allowlist entry is a live cowlib finding in
+      # mailglass_admin today, and its absence would correctly trip
       # unused_entries/1 (D-10). This test proves the actual steady-state:
       # accepted findings present + clean elsewhere passes with zero blocking.
       dir_outputs = [
@@ -54,7 +52,6 @@ defmodule Mix.Tasks.Mailglass.AuditTest do
          """
          Advisories:
            cowlib 2.19.0 - EEF-CVE-2026-43966 (MEDIUM)
-           cowlib 2.19.0 - EEF-CVE-2026-43969 (LOW)
          """, 1},
         {"mailglass_inbound", "No retired packages found", 0}
       ]
@@ -79,7 +76,6 @@ defmodule Mix.Tasks.Mailglass.AuditTest do
          """
          Advisories:
            cowlib 2.19.0 - EEF-CVE-2026-43966 (MEDIUM)
-           cowlib 2.19.0 - EEF-CVE-2026-43969 (LOW)
          """, 1},
         {"mailglass_admin", "registry unavailable", 1},
         {"mailglass_inbound", "No retired packages found", 0}
@@ -121,8 +117,8 @@ defmodule Mix.Tasks.Mailglass.AuditTest do
          """
          Name: cowlib
          Version: 2.19.0
-         URL: https://github.com/advisories/GHSA-g2wm-735q-3f56
-         Title: Cookie Request Header Injection
+         URL: https://github.com/advisories/GHSA-w4f7-4cxr-rv3c
+         Title: HTTP Response Splitting via Non-VCHAR Bytes
 
          Vulnerabilities found!
          """, 1},
@@ -135,8 +131,8 @@ defmodule Mix.Tasks.Mailglass.AuditTest do
     test "expired_entries/unused_entries are NOT applied to the :deps kind" do
       # Decision 2 (142-01-PLAN.md): --kind deps never appends
       # expired_entries/1 or unused_entries/1 findings, even though the real
-      # allowlist entries are both permanently "unused" from a deps.audit
-      # perspective (mix_audit doesn't natively detect them).
+      # allowlist entry is permanently "unused" from a deps.audit
+      # perspective (mix_audit doesn't natively detect it).
       dir_outputs = [
         {"", "No vulnerabilities found.", 0},
         {"mailglass_admin", "No vulnerabilities found.", 0},
