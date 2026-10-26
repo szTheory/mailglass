@@ -44,7 +44,7 @@ lib/mailglass/compliance.ex
 lib/mailglass/compliance/unsubscribe.ex
 lib/mailglass/compliance/unsubscribe_controller.ex
 lib/mailglass/compliance/unsubscribe_html.ex
-lib/mailglass/compliance/unsubscribe_html/confirm.html.heex
+lib/mailglass/compliance/unsubscribe_html/state.html.heex
 lib/mailglass/components.ex
 lib/mailglass/components/css.ex
 lib/mailglass/components/layout.ex
@@ -111,7 +111,6 @@ lib/mailglass/optional_deps/gen_smtp.ex
 lib/mailglass/optional_deps/mjml.ex
 lib/mailglass/optional_deps/oban.ex
 lib/mailglass/optional_deps/opentelemetry.ex
-lib/mailglass/optional_deps/sigra.ex
 lib/mailglass/outbound.ex
 lib/mailglass/outbound/async_adapter.ex
 lib/mailglass/outbound/async_adapter/inline.ex

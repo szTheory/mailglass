@@ -22,6 +22,7 @@ lib/mailglass_admin/inbound/evidence_card.ex
 lib/mailglass_admin/inbound/filters_form.ex
 lib/mailglass_admin/inbound/overview.ex
 lib/mailglass_admin/inbound/quick_view.ex
+lib/mailglass_admin/inbound/read_result.ex
 lib/mailglass_admin/inbound/records_list.ex
 lib/mailglass_admin/inbound/replay_modal.ex
 lib/mailglass_admin/inbound/routing_trace.ex
@@ -37,9 +38,11 @@ lib/mailglass_admin/operator/deliveries_list.ex
 lib/mailglass_admin/operator/destructive_action.ex
 lib/mailglass_admin/operator/detail_header.ex
 lib/mailglass_admin/operator/filters_form.ex
+lib/mailglass_admin/operator/health_overview.ex
 lib/mailglass_admin/operator/mount.ex
 lib/mailglass_admin/operator/quick_view.ex
 lib/mailglass_admin/operator/repair_state.ex
+lib/mailglass_admin/operator/replay_action.ex
 lib/mailglass_admin/operator/replay_modal.ex
 lib/mailglass_admin/operator/shell.ex
 lib/mailglass_admin/operator/support_cards.ex
@@ -65,6 +68,7 @@ lib/mix/tasks/mailglass_admin.assets.watch.ex
 lib/mix/tasks/mailglass_admin.daisyui.update.ex
 mix.exs
 priv/static/app.css
+priv/static/favicon.svg
 priv/static/fonts/ibm-plex-mono-400.woff2
 priv/static/fonts/ibm-plex-mono-700.woff2
 priv/static/fonts/inter-400.woff2
