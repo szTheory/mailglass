@@ -668,10 +668,24 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
     assert probe == :ok
   end
 
+  # Reaches into private state on purpose: the fixture needs the owner's proxy
+  # pid to suspend it. Written against db_connection's ownership manager as
+  # locked in mix.lock (checkouts: %{owner => {:owner, ref, proxy}}) and the
+  # pinned Elixir 1.18 `ExUnit.OnExitHandler` (`@moduledoc false`; register/1
+  # and run/2). If either shifts, this raises with the shape it found.
   defp owner_proxy!(owner) do
     %{pid: manager} = Ecto.Adapter.lookup_meta(Mailglass.TestRepo)
-    %{checkouts: %{^owner => {:owner, _ref, proxy}}} = :sys.get_state(manager)
-    proxy
+    checkouts = Map.get(:sys.get_state(manager), :checkouts, %{})
+
+    case Map.fetch(checkouts, owner) do
+      {:ok, {:owner, _ref, proxy}} ->
+        proxy
+
+      other ->
+        raise "db_connection ownership manager state shape changed: expected " <>
+                "checkouts[owner] == {:owner, ref, proxy}, got #{inspect(other)}. " <>
+                "Update owner_proxy!/1 in #{__ENV__.file}."
+    end
   end
 
   # ── with_schema!/2 (143-07, D-31 Class B) ───────────────────────────────
