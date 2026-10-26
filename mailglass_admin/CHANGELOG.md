@@ -4,6 +4,19 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.7.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.6.0...mailglass_admin-v2.7.0) (2026-10-26)
+
+
+### Features
+
+* **v2.8:** truthful repo — earned greens, truthful docs, and the standing control ([#281](https://github.com/szTheory/mailglass/issues/281)) ([dcbda58](https://github.com/szTheory/mailglass/commit/dcbda58f62a3c324d97f1e44998f40721cb55d40))
+* v2.9 operator, preview & email UI refinement ([#302](https://github.com/szTheory/mailglass/issues/302)) ([9588d4f](https://github.com/szTheory/mailglass/commit/9588d4f0b7214a1fbbdd16e84f3fcccadb218e6c))
+
+
+### Bug Fixes
+
+* clear admin CI and dependency audit blockers ([#295](https://github.com/szTheory/mailglass/issues/295)) ([f668e07](https://github.com/szTheory/mailglass/commit/f668e0703076ac59526a63fb5167aeb7cee0d405))
+
 ## [2.6.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.5.0...mailglass_admin-v2.6.0) (2026-09-17)
 
 
