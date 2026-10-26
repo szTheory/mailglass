@@ -29,8 +29,9 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
            }
 
     refute Map.has_key?(report, :candidate_versions)
-    refute inspect(report) =~ "2.6.0"
-    refute inspect(report) =~ "2.3.0"
+    refute inspect(report) =~ "2.7.0"
+    # Inbound's live 2.4.0 coincides with this fixture's core 2.4.0, so pin it to inbound.
+    refute inspect(report) =~ ~s("mailglass_inbound" => "2.4.0")
   end
 
   test "accepts exact equality while preserving linked core/admin and independent inbound" do
@@ -316,17 +317,17 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
 
     # The published baselines this test now asserts against.
     assert File.read!(Path.join(@repo_root, "CHANGELOG.md")) =~
-             "## [2.6.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.5.0...mailglass-v2.6.0) (2026-09-17)"
+             "## [2.7.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.6.0...mailglass-v2.7.0) (2026-10-26)"
 
     assert File.read!(Path.join(@repo_root, "mailglass_admin/CHANGELOG.md")) =~
-             "## [2.6.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.5.0...mailglass_admin-v2.6.0) (2026-09-17)"
+             "## [2.7.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.6.0...mailglass_admin-v2.7.0) (2026-10-26)"
 
     assert File.read!(Path.join(@repo_root, "mailglass_inbound/CHANGELOG.md")) =~
-             "## [2.3.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v2.2.0...mailglass_inbound-v2.3.0) (2026-09-17)"
+             "## [2.4.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v2.3.0...mailglass_inbound-v2.4.0) (2026-10-26)"
 
     # The publish fan-out advances only mailglass_inbound's summary; core and
     # admin lag a release behind until someone regenerates them. That happened
-    # at 2.5.0 and again at 2.6.0, so it is the shape of the pipeline, not a
+    # at 2.5.0, 2.6.0 and again at 2.7.0, so it is the shape of the pipeline, not a
     # one-off. Both were regenerated with `mix mailglass.publish.check` under
     # the Publish Summary Snapshot Protocol (MAINTAINING.md) as part of this
     # close-out, so all three agree with the published baseline again.
@@ -611,13 +612,13 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     end)
   end
 
-  # The published baselines, read from Hex: 2.6.0/2.6.0/2.3.0 went live
-  # 2026-09-17, superseding 2.5.0/2.5.0/2.2.0 (2026-08-20). Advancing these
+  # The published baselines, read from Hex: 2.7.0/2.7.0/2.4.0 went live
+  # 2026-10-26, superseding 2.6.0/2.6.0/2.3.0 (2026-09-17). Advancing these
   # literals is part of the release close-out, not an afterthought: once the
   # ledger returns to `inactive` this test stops taking its release-candidate
   # branch and compares the tree against these values exactly.
   defp baseline_versions do
-    %{"mailglass" => "2.6.0", "mailglass_admin" => "2.6.0", "mailglass_inbound" => "2.3.0"}
+    %{"mailglass" => "2.7.0", "mailglass_admin" => "2.7.0", "mailglass_inbound" => "2.4.0"}
   end
 
   defp release_candidate_tree?(repository_versions) do
@@ -644,11 +645,11 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
       }
     else
       %{
-        "version" => "2.3.0",
-        "manifest_version" => "2.3.0",
-        "source_ref" => "v2.3.0",
+        "version" => "2.4.0",
+        "manifest_version" => "2.4.0",
+        "source_ref" => "v2.4.0",
         "linked_versions" => baseline_versions(),
-        "mailglass_inbound_publish_pin" => "~> 2.6 and >= 2.6.0"
+        "mailglass_inbound_publish_pin" => "~> 2.7 and >= 2.7.0"
       }
     end
   end
@@ -661,18 +662,18 @@ defmodule Mailglass.Scripts.ReconcileReleaseVersionsTest do
     %{
       "hex_package_endpoints" => Map.new(@packages, &{&1, "https://hex.pm/api/packages/#{&1}"}),
       "hex_release_endpoints" => %{
-        "mailglass" => "https://hex.pm/api/packages/mailglass/releases/2.6.0",
-        "mailglass_admin" => "https://hex.pm/api/packages/mailglass_admin/releases/2.6.0",
-        "mailglass_inbound" => "https://hex.pm/api/packages/mailglass_inbound/releases/2.3.0"
+        "mailglass" => "https://hex.pm/api/packages/mailglass/releases/2.7.0",
+        "mailglass_admin" => "https://hex.pm/api/packages/mailglass_admin/releases/2.7.0",
+        "mailglass_inbound" => "https://hex.pm/api/packages/mailglass_inbound/releases/2.4.0"
       },
       # Read from the Hex release API, never computed locally.
       "hex_release_checksums" => %{
-        "mailglass" => "bf6b7b782c36bfd95fae148ab9413e10312987081839e8135b2ca82066c555c6",
-        "mailglass_admin" => "e0f34013e56cf2d8ca41322d59cf9595e58bb65446bb071f75cf393bccb67db5",
-        "mailglass_inbound" => "f83a7aede26dc68fd72298aa95bef55fb53ada5ac5f272ede34743f141ad1b4d"
+        "mailglass" => "8cfc05d6f625e491cc6a9fca826e1720f9ee86c0c138bcd23253275ffb8e4ca4",
+        "mailglass_admin" => "aa5fce08e90cc72ff0b31d36ad556dae3b9f0e66458e2d0b4b10c037c04ffa42",
+        "mailglass_inbound" => "04b3c2a1014004449c3246525343f864242f5d55325b2eddb365b1f5b8dc8c42"
       },
-      "historical_tag" => "mailglass-v2.6.0",
-      "historical_tag_sha" => "6a0447a900e26b2b07332ac50682767801ddcda7"
+      "historical_tag" => "mailglass-v2.7.0",
+      "historical_tag_sha" => "f2c91e40a4338c85a735142192f2278b939cd67c"
     }
   end
 
