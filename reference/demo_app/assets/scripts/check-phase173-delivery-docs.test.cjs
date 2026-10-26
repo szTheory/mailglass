@@ -5,7 +5,7 @@ const assert = require("node:assert/strict");
 
 const repoRoot = resolve(__dirname, "../../../../");
 const runbook = readFileSync(
-  join(repoRoot, ".planning/phases/173-consistency-and-delivery-evidence/173-DELIVERY.md"),
+  join(repoRoot, ".planning/milestones/v2.9-phases/173-consistency-and-delivery-evidence/173-DELIVERY.md"),
   "utf8"
 );
 

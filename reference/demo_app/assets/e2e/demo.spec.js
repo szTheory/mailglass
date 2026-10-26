@@ -4,7 +4,7 @@ const path = require("node:path");
 
 const phase172EvidenceDir = path.resolve(
   __dirname,
-  "../../../../.planning/phases/172-recipient-output-and-built-in-pages/artifacts/browser-evidence",
+  "../../../../.planning/milestones/v2.9-phases/172-recipient-output-and-built-in-pages/artifacts/browser-evidence",
 );
 
 test.beforeAll(() => {
