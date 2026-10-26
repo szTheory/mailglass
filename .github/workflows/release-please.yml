@@ -920,7 +920,7 @@ jobs:
 
       - name: Upload proposal-only release control result
         if: ${{ always() && github.event.inputs.candidate_digest == '' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: release-proposal-control-result-${{ github.run_id }}
           path: ${{ runner.temp }}/release-proposal-control-result.json
@@ -937,7 +937,7 @@ jobs:
 
       - name: Upload sanitized release proposal candidate
         if: ${{ github.event.inputs.candidate_digest == '' && steps.capture-proposal.outputs.captured == 'true' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: release-proposal-candidate-${{ github.run_id }}
           path: .planning/release-candidates/proposal-candidate.json

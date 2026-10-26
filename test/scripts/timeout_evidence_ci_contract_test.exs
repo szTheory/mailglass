@@ -36,7 +36,7 @@ defmodule Mailglass.Scripts.TimeoutEvidenceCIContractTest do
              ~r/name: operator-browser-timeout-evidence-.*?\n\s+if-no-files-found: error\n\s+retention-days: 90/s
 
     assert length(
-             Regex.scan(~r/actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a/, ci)
+             Regex.scan(~r/actions\/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9/, ci)
            ) >= 6
 
     assert ci =~ "name: Core Deterministic Suite (Elixir 1.18 / OTP 27)"
