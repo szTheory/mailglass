@@ -1057,18 +1057,53 @@ jobs:
 
             core.info(`advisory-matrix.yml run ${amLatest.id} on ${sha}: both Core Full Suite gating legs green.`);
 
-  publish-core:
+  # The ONE human gate for a linked release. Before this job existed, each of
+  # publish-core, publish-admin and publish-inbound declared the `hex-publish`
+  # environment, and GitHub requires reviewer approval per job per environment,
+  # so a linked release stopped for three approvals (2.7.0). This job carries the
+  # environment and its `required_reviewers` rule once, after gate-ci-green and
+  # before the fan-out; every publish job needs its success. It holds no
+  # credential and runs no code from the tree. Approve it in the run page or with
+  # `scripts/release_approve.sh <run-id>`.
+  approve-release:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 5
     needs: [gate-ci-green, prepublish-summary]
     if: |
       github.event_name == 'workflow_dispatch' &&
       github.event.inputs.dry_run != 'true' &&
       needs.prepublish-summary.outputs.authorized == 'true' &&
       github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest &&
-      github.event_name == 'workflow_dispatch' &&
       github.event.inputs.package == 'all'
     environment: hex-publish
+    steps:
+      - name: Record the approved release
+        env:
+          TAG_SHA: ${{ needs.prepublish-summary.outputs.tag_sha }}
+          CANDIDATE_DIGEST: ${{ needs.prepublish-summary.outputs.candidate_digest }}
+        run: |
+          {
+            echo "### Release approved"
+            echo
+            echo "- tag SHA: \`${TAG_SHA}\`"
+            echo "- candidate digest: \`${CANDIDATE_DIGEST}\`"
+            echo "- publish order: mailglass, mailglass_admin, mailglass_inbound"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [approve-release, gate-ci-green, prepublish-summary]
+    # No `environment:` here: approve-release is the single human gate, and
+    # HEX_API_KEY is a repository secret bound to the publish step only.
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.dry_run != 'true' &&
+      needs.prepublish-summary.outputs.authorized == 'true' &&
+      github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest &&
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.package == 'all' &&
+      needs.approve-release.result == 'success'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -1133,7 +1168,7 @@ jobs:
   publish-admin:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    needs: [gate-ci-green, prepublish-summary, publish-core]
+    needs: [approve-release, gate-ci-green, prepublish-summary, publish-core]
     # Linked core/admin releases publish admin only after a successful core
     # publish. Inbound is independently versioned and release-event ineligible;
     # dispatch-only recovery may still publish it or all packages explicitly.
@@ -1145,8 +1180,8 @@ jobs:
       github.event_name == 'workflow_dispatch' &&
       github.event.inputs.package == 'all' &&
       needs.gate-ci-green.result == 'success' &&
+      needs.approve-release.result == 'success' &&
       needs.publish-core.result == 'success'
-    environment: hex-publish
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -1239,10 +1274,10 @@ jobs:
   publish-inbound:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    needs: [gate-ci-green, prepublish-summary, publish-core, publish-admin]
+    needs: [approve-release, gate-ci-green, prepublish-summary, publish-core, publish-admin]
     # Inbound is independently versioned and can only be published by an
-    # explicit recovery dispatch. A failed or skipped gate never exposes the
-    # protected publishing environment.
+    # explicit recovery dispatch. A failed or skipped gate or an unapproved
+    # release never reaches the publish step or its credential.
     if: |
       always() &&
       github.event.inputs.dry_run != 'true' &&
@@ -1251,9 +1286,9 @@ jobs:
       github.event_name == 'workflow_dispatch' &&
       github.event.inputs.package == 'all' &&
       needs.gate-ci-green.result == 'success' &&
+      needs.approve-release.result == 'success' &&
       needs.publish-core.result == 'success' &&
       needs.publish-admin.result == 'success'
-    environment: hex-publish
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1

@@ -72,7 +72,7 @@ jobs_json=$(gh api "repos/${repository}/actions/runs/${run_id}/jobs?per_page=100
 
 jq -e '
   def required_jobs:
-    ["prepublish-summary", "ensure-live-ci-runs", "gate-ci-green",
+    ["prepublish-summary", "ensure-live-ci-runs", "gate-ci-green", "approve-release",
      "publish-core", "publish-admin", "publish-inbound",
      "dispatch-post-publish-smoke"];
   type == "object" and

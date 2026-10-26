@@ -203,7 +203,7 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       %{
         jobs_json:
           Jason.encode!(%{
-            "total_count" => 7,
+            "total_count" => 8,
             "jobs" =>
               Enum.map(valid_jobs["jobs"], fn
                 %{"name" => "publish-admin"} = job -> %{job | "conclusion" => "skipped"}
@@ -214,8 +214,28 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       %{
         jobs_json:
           Jason.encode!(%{
-            "total_count" => 8,
+            "total_count" => 9,
             "jobs" => [hd(valid_jobs["jobs"]) | valid_jobs["jobs"]]
+          })
+      },
+      # The single release approval is part of the live graph: a run that never
+      # crossed approve-release is not publication provenance.
+      %{
+        jobs_json:
+          Jason.encode!(%{
+            "total_count" => 7,
+            "jobs" => Enum.reject(valid_jobs["jobs"], &(&1["name"] == "approve-release"))
+          })
+      },
+      %{
+        jobs_json:
+          Jason.encode!(%{
+            "total_count" => 8,
+            "jobs" =>
+              Enum.map(valid_jobs["jobs"], fn
+                %{"name" => "approve-release"} = job -> %{job | "conclusion" => "skipped"}
+                job -> job
+              end)
           })
       }
     ]
@@ -371,6 +391,7 @@ defmodule Mailglass.Scripts.VerifyPublishedReleaseTest do
       "prepublish-summary",
       "ensure-live-ci-runs",
       "gate-ci-green",
+      "approve-release",
       "publish-core",
       "publish-admin",
       "publish-inbound",

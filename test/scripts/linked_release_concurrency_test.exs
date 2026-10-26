@@ -58,11 +58,12 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     admin = extract_publish_job!(source, "mailglass_admin")
     inbound = extract_publish_job!(source, "mailglass_inbound")
 
-    assert core =~ "needs: [gate-ci-green, prepublish-summary]"
+    assert core =~ "needs: [approve-release, gate-ci-green, prepublish-summary]"
     assert core =~ "github.event_name == 'workflow_dispatch'"
     assert core =~ "needs.prepublish-summary.outputs.authorized == 'true'"
 
-    assert admin =~ "needs: [gate-ci-green, prepublish-summary, publish-core]"
+    assert admin =~ "needs: [approve-release, gate-ci-green, prepublish-summary, publish-core]"
+    assert admin =~ "needs.approve-release.result == 'success'"
     assert admin =~ "needs.gate-ci-green.result == 'success'"
     assert admin =~ "needs.publish-core.result == 'success'"
 
@@ -71,7 +72,10 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
 
     refute admin =~ "publish-inbound]"
 
-    assert inbound =~ "needs: [gate-ci-green, prepublish-summary, publish-core, publish-admin]"
+    assert inbound =~
+             "needs: [approve-release, gate-ci-green, prepublish-summary, publish-core, publish-admin]"
+
+    assert inbound =~ "needs.approve-release.result == 'success'"
     assert inbound =~ "github.event_name == 'workflow_dispatch'"
     assert inbound =~ "needs.prepublish-summary.outputs.authorized == 'true'"
     assert inbound =~ "needs.publish-admin.result == 'success'"
@@ -96,15 +100,60 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     refute gate =~ "createWorkflowDispatch"
   end
 
-  test "all publish jobs preserve the protected environment and step-local credential" do
+  test "one approve-release job carries the protected environment for the whole fan-out" do
     source = File.read!(@publish_path)
+    assert single_release_approval?(source)
+
+    approve = extract_job!(source, "approve-release")
+    assert approve =~ "needs: [gate-ci-green, prepublish-summary]"
+    assert approve =~ "github.event.inputs.dry_run != 'true'"
+    assert approve =~ "needs.prepublish-summary.outputs.authorized == 'true'"
+
+    assert approve =~
+             "github.event.inputs.candidate_digest == needs.prepublish-summary.outputs.candidate_digest"
+
+    refute approve =~ "always()"
+    refute approve =~ "secrets."
 
     Enum.each(@packages, fn package ->
       job = extract_publish_job!(source, package)
-
-      assert job =~ "environment: hex-publish"
       assert job =~ "HEX_API_KEY: ${{ secrets.HEX_API_KEY }}"
     end)
+
+    # Negative controls: three per-job gates (the 2.7.0 shape), a publish job that
+    # can run without the approval, and a removed gate all fail.
+    per_job_gates =
+      Enum.reduce(["publish-core", "publish-admin", "publish-inbound"], source, fn job, acc ->
+        String.replace(acc, "  #{job}:\n", "  #{job}:\n    environment: hex-publish\n")
+      end)
+
+    refute single_release_approval?(per_job_gates)
+
+    refute single_release_approval?(
+             String.replace(
+               source,
+               "needs: [approve-release, gate-ci-green, prepublish-summary]\n",
+               "needs: [gate-ci-green, prepublish-summary]\n"
+             )
+           )
+
+    refute single_release_approval?(String.replace(source, "    environment: hex-publish\n", ""))
+  end
+
+  # Exactly one job declares the hex-publish environment, it is approve-release,
+  # and every publish job both needs it and requires its success.
+  defp single_release_approval?(source) do
+    environments = Regex.scan(~r/^    environment: (\S+)$/m, source, capture: :all_but_first)
+
+    environments == [["hex-publish"]] and
+      extract_job!(source, "approve-release") =~ "    environment: hex-publish\n" and
+      Enum.all?(@packages, fn package ->
+        job = extract_publish_job!(source, package)
+
+        job =~ ~r/^    needs: \[approve-release, /m and
+          job =~ "needs.approve-release.result == 'success'" and
+          not (job =~ ~r/^    environment:/m)
+      end)
   end
 
   test "only a successful ordered protected publish dispatches exact smoke inputs" do

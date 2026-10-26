@@ -1194,7 +1194,8 @@ defmodule Mailglass.DocsContractTest do
     # Negative-first: the defect is a specific misleading phrase, and there are
     # many valid ways to phrase the correction, so a positive-only assertion
     # would over-constrain the prose. A positive backstop (required_reviewers +
-    # three) is added so that deleting the sentence outright cannot pass either.
+    # approve-release) is added so that deleting the sentence outright cannot
+    # pass either.
     test "publish fan-out is described as gated, not hands-free" do
       maintaining = File.read!("MAINTAINING.md")
 
@@ -1207,8 +1208,11 @@ defmodule Mailglass.DocsContractTest do
       assert maintaining =~ "required_reviewers",
              "MAINTAINING.md must name the required_reviewers approval mechanism"
 
-      assert maintaining =~ "three",
-             "MAINTAINING.md must state the three required_reviewers approval stops"
+      assert maintaining =~ "approve-release",
+             "MAINTAINING.md must name the single approve-release gate"
+
+      refute maintaining =~ "approval per package",
+             "MAINTAINING.md still describes one approval per package (pre-approve-release)"
     end
 
     # Positive-only: the defect here is an *absent* section, so there is no
@@ -1305,8 +1309,11 @@ defmodule Mailglass.DocsContractTest do
       assert claude =~ "required_reviewers",
              "CLAUDE.md must still name the required_reviewers approval mechanism"
 
-      assert claude =~ "three approvals",
-             "CLAUDE.md must still state the three required approvals"
+      assert claude =~ "one approval",
+             "CLAUDE.md must state the single release approval"
+
+      refute claude =~ "three approvals",
+             "CLAUDE.md still states three approvals (one per package, pre-approve-release)"
     end
   end
 

@@ -581,9 +581,14 @@ defmodule Mailglass.Scripts.ReleasePolicyContractTest do
     for job <- ["publish-core", "publish-admin", "publish-inbound"] do
       block = extract_job!(publish, job)
       assert block =~ "github.event.inputs.dry_run != 'true'"
-      assert block =~ "environment: hex-publish"
+      assert block =~ "needs.approve-release.result == 'success'"
       assert block =~ "HEX_API_KEY: ${{ secrets.HEX_API_KEY }}"
     end
+
+    # The single human gate is itself unreachable on a dry run.
+    approve = extract_job!(publish, "approve-release")
+    assert approve =~ "github.event.inputs.dry_run != 'true'"
+    assert approve =~ "environment: hex-publish"
 
     prepublish = extract_job!(publish, "prepublish-summary")
     refute prepublish =~ "environment: hex-publish"

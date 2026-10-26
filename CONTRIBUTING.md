@@ -233,12 +233,16 @@ gh workflow run publish-hex.yml --ref main \
 The first dispatch revalidates and merges only the immutable proposal generated
 by Release Please, then creates the three linked release tags/releases. It does not
 publish to Hex. After those tags are verified, the second dispatch revalidates
-the final tag SHA and runs the read-only CI gate before the ordered
-core → admin → inbound publish. Successful publication automatically hands the same exact
-versions and immutable SHA to `post-publish-smoke.yml`.
+the final tag SHA and runs the read-only CI gate, then stops once at the
+`approve-release` job for the `hex-publish` environment's `required_reviewers`
+approval, before the ordered core → admin → inbound publish. One approval covers
+the whole linked release; approve in the run page or with
+`scripts/release_approve.sh <run-id>`. Successful publication automatically
+hands the same exact versions and immutable SHA to `post-publish-smoke.yml`.
 
 The protected live predecessor may dispatch missing CI runs on that validated
-ref. Captured dry-runs are credential-free and read-only: they can inspect
+ref, and re-dispatches a run that can never gate (cancelled, or its gating
+lanes path-skipped). Captured dry-runs are credential-free and read-only: they can inspect
 already-completed CI, but cannot self-dispatch it.
 
 If any lookup is missing, stale, ambiguous, or red, stop and replay the same
