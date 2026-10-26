@@ -1,7 +1,7 @@
 ---
 phase: 11-rfc-8058-list-unsubscribe
 verified: 2026-04-28T22:20:45Z
-status: pass
+status: passed
 score: 10/10 must-haves verified
 overrides_applied: 0
 gaps: []
