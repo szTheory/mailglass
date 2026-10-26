@@ -257,17 +257,6 @@ defmodule MailglassAdmin.InboundLive do
     end
   end
 
-  def handle_event("toggle_theme", _params, socket) do
-    {:noreply,
-     redirect(socket,
-       to:
-         MailglassAdmin.Operator.Shell.toggle_theme_path(
-           socket.assigns.page_uri,
-           socket.assigns.theme_choice == :dark
-         )
-     )}
-  end
-
   def handle_event("set_theme", %{"theme" => theme}, socket) do
     {:noreply,
      redirect(socket,
@@ -296,25 +285,6 @@ defmodule MailglassAdmin.InboundLive do
            socket.assigns.dark_chrome
          )
      )}
-  end
-
-  # Close the Quick view / Full detail — drop inbound_id (+ full), returning to the
-  # full-width list. Used by ✕, scrim click, and Escape.
-  def handle_event("close_detail", _params, socket) do
-    {:noreply,
-     push_patch(socket,
-       to:
-         build_path(
-           socket.assigns.base_path,
-           socket.assigns.filter_params,
-           nil,
-           socket.assigns.dark_chrome
-         )
-     )}
-  end
-
-  def handle_event("nav_record", %{"dir" => dir}, socket) do
-    navigate_record(socket, dir)
   end
 
   # Keyboard mirror of the `‹ ›` buttons + Enter/Escape, bound only while the Quick
