@@ -211,6 +211,55 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end)
   end
 
+  test "a digestless run after close-out proposes the next release unless HEAD is the release commit" do
+    preflight = extract_step_block!(workflow_source(), "Detect already-tagged release PR")
+
+    # Regression: once every manifest version had a GitHub release, the
+    # preflight skipped release-please on every push and schedule, so no
+    # proposal ever opened after a close-out (2.6.0 → v2.9 features stranded).
+    for {head_change, expected} <- [{:other_file, true}, {:manifest, false}] do
+      with_fake_gh(:all_present, "", fn temp_dir, env ->
+        repo = closed_out_repo!(temp_dir, head_change)
+        script = Path.join(temp_dir, "preflight.sh")
+        File.write!(script, preflight_script(preflight))
+
+        assert {output, 0} =
+                 System.cmd("bash", [script],
+                   cd: repo,
+                   env: Map.to_list(Map.put(env, "CANDIDATE_DIGEST", "")),
+                   stderr_to_stdout: true
+                 )
+
+        assert output =~ "All expected release tags already exist"
+        assert should_run?(temp_dir) == expected, output
+      end)
+    end
+
+    # Without readable history the push cannot be classified; fail closed.
+    with_fake_gh(:all_present, "", fn temp_dir, env ->
+      repo = closed_out_repo!(temp_dir, :none)
+      script = Path.join(temp_dir, "preflight.sh")
+      File.write!(script, preflight_script(preflight))
+
+      assert {output, status} =
+               System.cmd("bash", [script],
+                 cd: repo,
+                 env: Map.to_list(Map.put(env, "CANDIDATE_DIGEST", "")),
+                 stderr_to_stdout: true
+               )
+
+      assert status != 0
+      assert output =~ "cannot read the parent of HEAD"
+      refute should_run?(temp_dir)
+    end)
+
+    # The protected exact-digest path keeps the unconditional skip.
+    with_fake_gh(:all_present, "", fn temp_dir, env ->
+      assert {_output, 0} = run_preflight(preflight, temp_dir, env)
+      refute should_run?(temp_dir)
+    end)
+  end
+
   test "release action is mutually guarded by preflight output" do
     source = workflow_source()
     action = extract_action_block!(source, "release")
@@ -825,9 +874,9 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     gate =
       extract_step_block!(source, "Fail non-pass proposal control result after evidence upload")
 
-    # This is the permanent post-close-out steady state: main's manifest tags
-    # all already exist, so should_run is false on every push and every
-    # hourly schedule, and exactly one release proposal is open against main.
+    # should_run=false with one open proposal: a rerun of the release commit
+    # itself, or the protected exact-digest path, after every manifest tag
+    # already exists. Later digestless pushes run release-please instead.
     with_idle_schedule_fixture(:one, "push", "false", fn temp_dir, env ->
       File.write!(Path.join(temp_dir, "discovery.sh"), proposal_result_script(discovery))
       File.write!(Path.join(temp_dir, "result.sh"), proposal_result_script(result))
@@ -1641,6 +1690,56 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   defp should_run?(temp_dir) do
     output = Path.join(temp_dir, "github-output")
     File.exists?(output) and File.read!(output) =~ "should_run=true"
+  end
+
+  # A throwaway repository whose manifest versions are all "released" (the fake
+  # gh reports every tag present). `head_change` picks what HEAD's commit
+  # touched: the manifest (a release commit), another file, or nothing at all
+  # because HEAD is the root commit.
+  defp closed_out_repo!(temp_dir, head_change) do
+    repo = Path.join(temp_dir, "repo")
+    scripts = Path.join(repo, "scripts")
+    File.mkdir_p!(scripts)
+
+    File.write!(Path.join(scripts, "release_policy_expected_tags.sh"), """
+    #!/usr/bin/env bash
+    printf 'mailglass-v2.6.0\\nmailglass_admin-v2.6.0\\nmailglass_inbound-v2.3.0\\n'
+    """)
+
+    File.chmod!(Path.join(scripts, "release_policy_expected_tags.sh"), 0o755)
+    manifest = Path.join(repo, ".release-please-manifest.json")
+    File.write!(manifest, ~s({".": "2.5.0"}\n))
+
+    git = fn args ->
+      {_, 0} =
+        System.cmd(
+          "git",
+          ["-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false"] ++
+            args,
+          cd: repo,
+          stderr_to_stdout: true
+        )
+    end
+
+    git.(["init", "-q"])
+    git.(["add", "-A"])
+    git.(["commit", "-q", "-m", "root"])
+
+    case head_change do
+      :none ->
+        :ok
+
+      :manifest ->
+        File.write!(manifest, ~s({".": "2.6.0"}\n))
+        git.(["commit", "-q", "-am", "chore: release main"])
+
+      :other_file ->
+        File.write!(Path.join(repo, "feature.txt"), "feat\n")
+        git.(["add", "feature.txt"])
+        git.(["commit", "-q", "-m", "feat: something releasable"])
+    end
+
+    repo
   end
 
   defp run_preflight(preflight, temp_dir, env) do

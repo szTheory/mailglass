@@ -132,6 +132,24 @@ jobs:
 
           if [ "${#missing_tags[@]}" -eq 0 ]; then
             printf 'All expected release tags already exist: %s\n' "$(IFS=,; echo "${present_tags[*]}")"
+            # Every manifest version is released. That makes a rerun of the
+            # release commit itself stale, but on any later commit Release
+            # Please must still run so it can propose the next version.
+            # Skipping here unconditionally left main with no release
+            # proposal after every close-out. The protected exact-digest path
+            # derives its tags from the release target and keeps the skip.
+            if [ -z "${CANDIDATE_DIGEST:-}" ]; then
+              if ! git rev-parse -q --verify 'HEAD^' >/dev/null; then
+                echo "ERROR: cannot read the parent of HEAD to classify the pushed commit" >&2
+                exit 1
+              fi
+              if git diff --quiet 'HEAD^' HEAD -- "$manifest"; then
+                echo "HEAD did not change $manifest; running release-please to propose the next release."
+                echo "should_run=true" >>"$GITHUB_OUTPUT"
+                exit 0
+              fi
+              echo "HEAD is the release commit that changed $manifest; skipping the stale release-please rerun."
+            fi
             echo "should_run=false" >>"$GITHUB_OUTPUT"
             exit 0
           fi
@@ -587,10 +605,11 @@ jobs:
               result_reason=no_open_proposal
               ;;
             1)
-              # CTRL-02/CTRL-03 (#166-04, closed by 167.1): in the permanent
-              # post-close-out steady state, should_run is false on every push
-              # and every hourly schedule because main's manifest tags all
-              # already exist -- 23 consecutive reds beginning at 7e9617b2,
+              # CTRL-02/CTRL-03 (#166-04, closed by 167.1): should_run is false
+              # when main's manifest tags all already exist and HEAD is the
+              # release commit (or on the protected digest path). Before the
+              # preflight let later pushes propose, that was every push and
+              # schedule -- 23 consecutive reds beginning at 7e9617b2,
               # both triggers agreeing at dcbda58f. Capture never runs standalone
               # discovery, so without this split the writer's cannot-check /
               # github_evidence_unavailable defaults stood in for a real
