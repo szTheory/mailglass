@@ -208,6 +208,14 @@ or synchronize a release proposal, but cannot merge it, create a tag, or publish
 There is no ordinary auto-merge path, and the schedule is not a recovery or
 publication mechanism.
 
+**Authorization checkpoint:** `scripts/release_authorize.sh <run-id>` writes
+the authorized ledger from a proposal-only run's
+`release-proposal-candidate-<run-id>` artifact, validates it
+(`validate-target`, `validate-candidate`, `validate-authorization`), and prints
+the candidate digest. The publishable-content digest in the ledger is not the
+candidate digest and authorizes nothing. Add `--pr` to open the reviewed
+authorization PR; without it the script only writes the file.
+
 **Protected exact-digest chain:** after the candidate has passed its explicit
 authorization checkpoint, run the two distinct dispatches below. Reuse the
 same exact digest throughout; `CORE_VERSION` is the reviewed core/admin version
