@@ -14,6 +14,21 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.7.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.6.0...mailglass-v2.7.0) (2026-10-26)
+
+
+### Features
+
+* **v2.8:** truthful repo — earned greens, truthful docs, and the standing control ([#281](https://github.com/szTheory/mailglass/issues/281)) ([dcbda58](https://github.com/szTheory/mailglass/commit/dcbda58f62a3c324d97f1e44998f40721cb55d40))
+* v2.9 operator, preview & email UI refinement ([#302](https://github.com/szTheory/mailglass/issues/302)) ([9588d4f](https://github.com/szTheory/mailglass/commit/9588d4f0b7214a1fbbdd16e84f3fcccadb218e6c))
+
+
+### Bug Fixes
+
+* clear admin CI and dependency audit blockers ([#295](https://github.com/szTheory/mailglass/issues/295)) ([f668e07](https://github.com/szTheory/mailglass/commit/f668e0703076ac59526a63fb5167aeb7cee0d405))
+* **deps:** update mint security patch ([6c8dca4](https://github.com/szTheory/mailglass/commit/6c8dca46f5f213ada594050fd47fef4b279afd59))
+* **release:** close the two cleanup gaps from the 2.6.0 ceremony ([#279](https://github.com/szTheory/mailglass/issues/279)) ([7e9617b](https://github.com/szTheory/mailglass/commit/7e9617b28facd083ec47925ef6a082afc04a02f3))
+
 ## [2.6.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.5.0...mailglass-v2.6.0) (2026-09-17)
 
 
