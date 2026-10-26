@@ -1220,6 +1220,63 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end
   end
 
+  # Push run 40362661068 captured 748910fe while the sibling-pin sync had already
+  # pushed 27cdfa10: the PR's headRefOid lags a push. Capture now binds the
+  # proposal head to the release branch tip on origin.
+  test "proposal capture waits for the PR head to reach the branch tip and fails if it moves" do
+    source = workflow_source()
+
+    capture =
+      extract_step_block!(source, "Capture Release Please proposal identity without activation")
+
+    result = extract_step_block!(source, "Write proposal-only release control result")
+    stale = String.duplicate("d", 40)
+    head = String.duplicate("b", 40)
+    moved = String.duplicate("f", 40)
+
+    run = fn script, overrides ->
+      with_capture_fixture(:pass, script, result, fn temp_dir, env ->
+        {out, status} = run_capture(script, temp_dir, Map.merge(env, overrides))
+        {status, read_output!(Path.join(temp_dir, "capture-output")), out}
+      end)
+    end
+
+    # The PR reports the pre-sync head first, then catches up: capture the tip.
+    {status, emitted, _} = run.(capture, %{"FAKE_PR_HEADS" => "#{stale},#{stale},#{head}"})
+    assert status == 0
+    assert {emitted["result_status"], emitted["proposal_head"]} == {"pass", head}
+
+    # The PR never catches up within the bounded wait.
+    {status, emitted, out} = run.(capture, %{"FAKE_PR_HEADS" => stale})
+    assert status == 1
+
+    assert {emitted["result_status"], emitted["result_reason"]} ==
+             {"blocked", "proposal_head_unsettled"}
+
+    assert out =~ "never matched branch tip"
+
+    # The branch moves after the candidate was built: the candidate is stale.
+    {status, emitted, _} = run.(capture, %{"FAKE_BRANCH_TIPS" => "#{head},#{moved}"})
+    assert status == 1
+
+    assert {emitted["result_status"], emitted["result_reason"]} ==
+             {"blocked", "proposal_head_moved"}
+
+    refute Map.has_key?(emitted, "captured")
+
+    # Negative control: without the tip binding, the lagging head is captured.
+    unbound =
+      String.replace(
+        capture,
+        ~s(if [ "$proposal_head" = "$branch_tip" ]; then),
+        "if true; then"
+      )
+
+    refute unbound == capture
+    {_status, emitted, _} = run.(unbound, %{"FAKE_PR_HEADS" => "#{stale},#{head}"})
+    assert emitted["proposal_head"] == stale
+  end
+
   test "contributing documents proposal-only triggers and the protected exact-digest chain" do
     recovery_runbook =
       extract_markdown_section!(
@@ -1583,7 +1640,11 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       "GITHUB_OUTPUT" => Path.join(temp_dir, "capture-output"),
       "FAKE_TARGET" => Path.join(temp_dir, "target.json"),
       "GIT_LOG" => Path.join(temp_dir, "git.log"),
-      "COMMAND_LOG" => Path.join(temp_dir, "command.log")
+      "COMMAND_LOG" => Path.join(temp_dir, "command.log"),
+      "GH_CALLS" => Path.join(temp_dir, "gh-calls"),
+      "TIP_CALLS" => Path.join(temp_dir, "tip-calls"),
+      "CAPTURE_HEAD_SETTLE_SECONDS" => "0",
+      "CAPTURE_HEAD_SETTLE_ATTEMPTS" => "3"
     }
 
     try do
@@ -1600,7 +1661,12 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     #!/usr/bin/env bash
     set -euo pipefail
     printf 'gh %s\\n' "$*" >> "$COMMAND_LOG"
-    printf '[{"number":222,"headRefOid":"%s","baseRefOid":"%s"}]\\n' "$(printf 'b%.0s' {1..40})" "$(printf 'c%.0s' {1..40})"
+    # FAKE_PR_HEADS: comma-separated headRefOid per successive call (last repeats).
+    n=$(( $(cat "$GH_CALLS" 2>/dev/null || echo 0) + 1 ))
+    printf '%s' "$n" > "$GH_CALLS"
+    IFS=, read -r -a heads <<<"${FAKE_PR_HEADS:-$(printf 'b%.0s' {1..40})}"
+    i=$(( n <= ${#heads[@]} ? n - 1 : ${#heads[@]} - 1 ))
+    printf '[{"number":222,"headRefOid":"%s","baseRefOid":"%s"}]\\n' "${heads[$i]}" "$(printf 'c%.0s' {1..40})"
     """)
 
     File.write!(Path.join(bin, "git"), """
@@ -1611,6 +1677,14 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       fetch:*|checkout:*) exit 0 ;;
       show:*) cat "$FAKE_TARGET" ;;
       merge-base:*) exit 0 ;;
+      ls-remote:*)
+        # FAKE_BRANCH_TIPS: comma-separated branch tip per successive call (last repeats).
+        n=$(( $(cat "$TIP_CALLS" 2>/dev/null || echo 0) + 1 ))
+        printf '%s' "$n" > "$TIP_CALLS"
+        IFS=, read -r -a tips <<<"${FAKE_BRANCH_TIPS:-$(printf 'b%.0s' {1..40})}"
+        i=$(( n <= ${#tips[@]} ? n - 1 : ${#tips[@]} - 1 ))
+        printf '%s\\trefs/heads/release-please--branches--main\\n' "${tips[$i]}"
+        ;;
       worktree:add)
         printf 'worktree add %s\\n' "$4" >> "$GIT_LOG"
         mkdir -p "$4"

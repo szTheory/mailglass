@@ -733,23 +733,56 @@ jobs:
           # Capture proposal/source identity only after the sibling-pin sync
           # has settled the release branch; its publishable-content digest is
           # Plan 05 input.
-          prs=$(retry_gh gh pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid)
-          if [ "$(jq -er 'length' <<<"$prs")" -gt 1 ]; then
-            result_status=blocked
-            result_reason=multiple_open_proposals
-            exit 1
-          fi
+          #
+          # A PR's headRefOid updates asynchronously after a push. Push run
+          # 40362661068 captured 748910fe while the sync step above had
+          # already pushed 27cdfa10 six seconds earlier, so the recorded
+          # candidate was stale and needed a recapture dispatch. Bind the
+          # proposal head to the release branch tip on origin, and wait
+          # (bounded) until the PR reports that same head.
+          release_branch_tip() {
+            local tip
+            tip=$(git ls-remote --heads origin release-please--branches--main | awk '{print $1}')
+            [[ "$tip" =~ ^[0-9a-f]{40}$ ]] || return 1
+            printf '%s\n' "$tip"
+          }
 
-          if [ "$(jq -er 'length' <<<"$prs")" -ne 1 ]; then
-            result_status=blocked
-            result_reason=proposal_missing
-            exit 1
-          fi
-          proposal=$(jq -cer '.[0]' <<<"$prs")
-          proposal_head=$(jq -er '.headRefOid' <<<"$proposal")
-          source_sha=$(jq -er '.baseRefOid' <<<"$proposal")
-          [[ "$proposal_head" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]]
+          settle_attempt=0
+          settle_attempts="${CAPTURE_HEAD_SETTLE_ATTEMPTS:-12}"
+          settle_seconds="${CAPTURE_HEAD_SETTLE_SECONDS:-5}"
+          while :; do
+            prs=$(retry_gh gh pr list --head release-please--branches--main --base main --state open --json number,headRefOid,baseRefOid)
+            if [ "$(jq -er 'length' <<<"$prs")" -gt 1 ]; then
+              result_status=blocked
+              result_reason=multiple_open_proposals
+              exit 1
+            fi
+
+            if [ "$(jq -er 'length' <<<"$prs")" -ne 1 ]; then
+              result_status=blocked
+              result_reason=proposal_missing
+              exit 1
+            fi
+            proposal=$(jq -cer '.[0]' <<<"$prs")
+            proposal_head=$(jq -er '.headRefOid' <<<"$proposal")
+            source_sha=$(jq -er '.baseRefOid' <<<"$proposal")
+            [[ "$proposal_head" =~ ^[0-9a-f]{40}$ ]]
+            [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]]
+
+            branch_tip=$(release_branch_tip)
+            if [ "$proposal_head" = "$branch_tip" ]; then
+              break
+            fi
+            if [ "$settle_attempt" -ge "$settle_attempts" ]; then
+              echo "ERROR: release PR head $proposal_head never matched branch tip $branch_tip" >&2
+              result_status=blocked
+              result_reason=proposal_head_unsettled
+              exit 1
+            fi
+            settle_attempt=$((settle_attempt + 1))
+            echo "Release PR head $proposal_head is behind branch tip $branch_tip; re-reading in ${settle_seconds}s ($settle_attempt/$settle_attempts)." >&2
+            sleep "$settle_seconds"
+          done
           git fetch --no-tags origin "$source_sha" "$proposal_head"
           source_target=$(mktemp)
           git show "$source_sha":.planning/release-target.json > "$source_target"
@@ -844,6 +877,18 @@ jobs:
 
           jq -e '.candidate_versions.mailglass == .candidate_versions.mailglass_admin' .planning/release-candidates/proposal-candidate.json >/dev/null
           candidate_digest=$(jq -er '.publishable_content.digest' .planning/release-candidates/proposal-candidate.json)
+
+          # The candidate describes $proposal_head. If the branch moved while
+          # it was being built, it is already stale: fail rather than publish a
+          # candidate for a head the PR no longer has.
+          final_tip=$(release_branch_tip)
+          if [ "$final_tip" != "$proposal_head" ]; then
+            echo "ERROR: release branch moved from $proposal_head to $final_tip during capture" >&2
+            result_status=blocked
+            result_reason=proposal_head_moved
+            exit 1
+          fi
+
           result_status=pass
           if [ "$closed_out" = true ]; then
             result_reason=release_target_closed_out
