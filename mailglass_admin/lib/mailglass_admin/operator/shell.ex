@@ -89,18 +89,12 @@ defmodule MailglassAdmin.Operator.Shell do
   end
 
   @doc """
-  Builds the push_patch target for the theme toggle: flips the `theme` param on
-  the CURRENT url, preserving every other filter/selection param.
-  """
-  def toggle_theme_path(uri, currently_dark?) when is_binary(uri) do
-    set_theme_path(uri, if(currently_dark?, do: "system", else: "dark"))
-  end
-
-  @doc """
   Builds a same-surface tenant switch path from the current URL.
 
-  Tenant switches preserve compatible filters and theme while dropping selected
-  record ids that cannot safely carry across tenants.
+  Tenant switches preserve compatible filters while dropping selected record ids
+  that cannot safely carry across tenants. Any `theme` query param is dropped
+  too: the theme survives the switch because it persists in the admin theme
+  cookie, not in the URL.
   """
   def tenant_switch_path(uri, tenant_id) when is_binary(uri) and is_binary(tenant_id) do
     parsed = URI.parse(uri)
