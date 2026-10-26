@@ -5,6 +5,10 @@ planted: 2026-10-10
 planted_during: v2.9 / Phase 173 — Consistency and Delivery Evidence
 trigger_when: after the inbound admin UI baseline is reviewed and accepted
 scope: unknown
+audit_acknowledged:
+  milestone: v2.9
+  at: 2026-10-26
+  status: dormant
 ---
 
 # SEED-261010-hjp: Auto-apply inbound filters and search as you type

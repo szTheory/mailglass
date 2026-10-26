@@ -73,8 +73,8 @@ run_browser_suite() {
 # the regression gate never replaces evidence or user workspace changes.
 BACKUP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mailglass-gsd-regression.XXXXXX")"
 ARTIFACT_DIRS=(
-  ".planning/phases/168-shared-workspace-and-usable-baseline/artifacts"
-  ".planning/phases/169-outbound-investigation-and-recovery/artifacts"
+  ".planning/milestones/v2.9-phases/168-shared-workspace-and-usable-baseline/artifacts"
+  ".planning/milestones/v2.9-phases/169-outbound-investigation-and-recovery/artifacts"
 )
 
 restore_artifacts() {

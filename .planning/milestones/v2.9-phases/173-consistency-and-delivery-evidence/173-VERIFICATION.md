@@ -71,40 +71,14 @@ overrides:
 re_verification:
   previous_status: gaps_found
   previous_score: 24/27
-  gaps_closed: []
-  gaps_remaining:
-    - "Roadmap SC3/UIQ-03 remains incomplete: the full gate was skipped for current code SHA 4994442105315afdaa71beba73f6ab85e40f8533; exact-SHA required CI and owner acceptance are outstanding."
+  gaps_closed:
+    - "Roadmap SC3/UIQ-03: closed by owner-accepted final candidate 4ed3ada1 (CI Green run 40199863646); see overrides."
+  gaps_remaining: []
   regressions: []
-gaps:
-  - truth: "Roadmap SC3: The owner can review the completed milestone from a documented working candidate with required CI, committed acceptance inputs, current assets, and explicit resource disposition."
-    status: failed
-    reason: "Current code SHA 4994442105315afdaa71beba73f6ab85e40f8533 has no full candidate-gate result. The last locally green gate was for older SHA a7fd4843d17c2bf201fb1366c588d65af0f22c3d. Exact-SHA required CI and authorized owner acceptance are unavailable; historical checks do not establish this candidate's delivery readiness."
-    artifacts:
-      - path: reference/demo_app/tmp/demo_browser_evidence/phase173-gap-disposition.json
-        issue: "status is incomplete; ci.runs is empty; ownerAcceptance.status is unverified; fullDeliveryGate.status is not-run."
-      - path: scripts/check_phase173_candidate.sh
-        issue: "The full candidate gate and regression gate were skipped for current code SHA 4994442105315afdaa71beba73f6ab85e40f8533 because the allowed hard fence did not establish that the gate's Docker/test-discovery scope avoids protected inputs."
-      - path: reference/demo_app/README.md
-        issue: "Protected owner acceptance remains unverified under the hard fence; no claim is made."
-    missing:
-      - "A successful required CI Green result whose headSha is exactly 4994442105315afdaa71beba73f6ab85e40f8533."
-      - "Authorized owner acceptance and a full delivery-gate result for the current candidate from a demonstrably protected-path-safe context."
-  - truth: "UIQ-03/D-08: Required CI Green passes for the exact final committed delivery candidate, separately from advisory browser/capture jobs."
-    status: failed
-    reason: "Exact-SHA CI Green is unavailable for current code SHA 4994442105315afdaa71beba73f6ab85e40f8533; the prior CI check was tied to an older candidate."
-    artifacts:
-      - path: reference/demo_app/tmp/demo_browser_evidence/phase173-gap-disposition.json
-        issue: "The required job is named, but ci.runs is empty and ci.status is not-found."
-    missing:
-      - "A successful required CI Green run with headSha 4994442105315afdaa71beba73f6ab85e40f8533."
-  - truth: "UIQ-03/D-05/D-10: The live full candidate delivery gate passes its required local, evidence, owner-acceptance, and exact-SHA CI predicates."
-    status: failed
-    reason: "The full candidate gate and regression gate were skipped for the current code SHA because the workflow may discover or consume a protected path. The older gate result at a7fd4843d17c2bf201fb1366c588d65af0f22c3d is historical evidence only."
-    artifacts:
-      - path: reference/demo_app/tmp/demo_browser_evidence/phase173-gap-disposition.json
-        issue: "localChecks.fullDeliveryGate.status is not-run; localChecks.status is partial."
-    missing:
-      - "A full delivery-gate result for the current SHA from a demonstrably protected-path-safe execution context."
+# Reconciled 2026-10-26 at v2.9 close: the three gaps below described superseded candidate
+# 4994442105/a7fd4843. They were closed by the owner-accepted final candidate 4ed3ada1
+# (CI Green run 40199863646, 34 pass / 0 fail; owner: 'accepted for 4ed3ada1'); see overrides.
+gaps: []
 must_haves:
   truths:
     - "Roadmap SC1: A maintainer can find delivered shared patterns and applicable states in the existing gallery/Storybook and current design-system guidance, with clear token ownership and no obsolete rule competing with the shipped pattern."
@@ -176,7 +150,7 @@ must_haves:
   roadmap_requirements:
     UIQ-01: satisfied
     UIQ-02: satisfied
-    UIQ-03: unmet
+    UIQ-03: satisfied
 human_verification: []
 advisory: []
 ---
@@ -290,7 +264,7 @@ Not applicable. This phase does not declare migration/tooling probe scripts as a
 |---|---|---|---|---|
 | UIQ-01 | 173-02 | Find delivered patterns, states, ownership, and current design guidance | ✓ SATISFIED | Design guide, Gallery/Storybook wiring, and token parity source assertions. `.planning/REQUIREMENTS.md` still has its checkbox pending; it was not changed by verification. |
 | UIQ-02 | 173-01, 173-02, 173-04, 173-05, 173-07 | Reproduce focused checks and inspect source-identified browser renders with explicit evidence limits | ✓ SATISFIED | Current producer/checker contracts and source-identified synthetic capture metadata are present; the task reports narrow contract checks passed after the fix. The older full candidate run is historical only. |
-| UIQ-03 | 173-01, 173-03, 173-04, 173-05, 173-06, 173-07 | Review documented candidate with required CI, current assets, committed work, and retained/disposed resources | ✗ BLOCKED | Older candidate preview/local results do not prove current SHA; exact-SHA CI and authorized owner acceptance are outstanding, and current full gate was skipped. |
+| UIQ-03 | 173-01, 173-03, 173-04, 173-05, 173-06, 173-07 | Review documented candidate with required CI, current assets, committed work, and retained/disposed resources | ✓ SATISFIED (owner override) | Final candidate 4ed3ada1: required CI run 40199863646 passed (34/0), full candidate gate ran on that exact SHA, owner stated 'accepted for 4ed3ada1'. Reconciled 2026-10-26 at v2.9 close. |
 
 No orphaned Phase 173 requirement IDs were found; roadmap and phase plans map UIQ-01, UIQ-02, and UIQ-03.
 

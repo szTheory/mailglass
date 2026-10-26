@@ -2521,7 +2521,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("tenant-selector")).toBeVisible();
       const reviewArtifacts = path.resolve(
         __dirname,
-        "../../.planning/phases/168-shared-workspace-and-usable-baseline/artifacts/review-fix"
+        "../../.planning/milestones/v2.9-phases/168-shared-workspace-and-usable-baseline/artifacts/review-fix"
       );
       fs.mkdirSync(reviewArtifacts, { recursive: true });
       await page.screenshot({ path: path.join(reviewArtifacts, "account-chooser-320.png"), fullPage: true });

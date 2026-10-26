@@ -5,8 +5,8 @@ const path = require("node:path");
 
 const tenantId = "browser-tenant";
 const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
-const beforeDir = path.resolve(process.cwd(), "../.planning/phases/169-outbound-investigation-and-recovery/artifacts/before");
-const afterDir = path.resolve(process.cwd(), "../.planning/phases/169-outbound-investigation-and-recovery/artifacts/after");
+const beforeDir = path.resolve(process.cwd(), "../.planning/milestones/v2.9-phases/169-outbound-investigation-and-recovery/artifacts/before");
+const afterDir = path.resolve(process.cwd(), "../.planning/milestones/v2.9-phases/169-outbound-investigation-and-recovery/artifacts/after");
 
 function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");

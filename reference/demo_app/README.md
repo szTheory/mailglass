@@ -20,7 +20,7 @@ once, configurable ports, troubleshooting — is in
 To review the committed milestone candidate, run `bash scripts/check_phase173_candidate.sh`
 from the repository root. It prints the exact candidate SHA and isolated preview URL;
 open that URL at `/dev/mail` and follow the task-based route list in
-[`173-DELIVERY.md`](../../.planning/phases/173-consistency-and-delivery-evidence/173-DELIVERY.md).
+[`173-DELIVERY.md`](../../.planning/milestones/v2.9-phases/173-consistency-and-delivery-evidence/173-DELIVERY.md).
 The runbook names the source checkout, served Admin CSS, required CI result, retained
 review project, and later scoped cleanup commands. This preview uses synthetic data
 and is browser evidence only; it does not certify delivered-email clients.

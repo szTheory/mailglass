@@ -8,7 +8,9 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v2.9 Operator, Preview & Email UI Refinement
+## Completed Milestone: v2.9 Operator, Preview & Email UI Refinement
+
+**Shipped and archived 2026-10-26.** No milestone is active; the next one starts with `/gsd-new-milestone`.
 
 **Goal:** Make Mailglass's existing operator, author, and recipient journeys coherent, readable, responsive, and reviewable with clear actions and truthful outcomes.
 
@@ -18,13 +20,15 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 - Usable developer preview plus public email components, sender-branded examples, plaintext, and truthful built-in unsubscribe GET pages.
 - Current shared-pattern guidance, bounded automated and rendered acceptance, and a working feedback preview with passing required CI on the delivery candidate.
 
-**Planning contract:** Approved 2026-10-07: 28 requirements across Phases 168–173. Phases 168–172 are implemented and verified; Phase 173, Consistency and Delivery Evidence, is the remaining phase. Phase 170 completed eight plans covering INUX-01–04; independent goal-backward verification passed 30/30 must-haves. Phase 172 Recipient Output and Built-in Pages passed 9/9 goal-backward must-haves with automated and screenshot evidence. Engineers and support/on-call operators are equal primary Admin audiences. The owner selected code-first; use Impeccable and relevant Kowalski guidance with the existing LiveView/HEEx stack and brand. [Scope](research/v2.9/SCOPE.md), [requirements](REQUIREMENTS.md), and [roadmap](ROADMAP.md) are canonical for this milestone; root [PRODUCT.md](../PRODUCT.md) owns durable product context.
+**Planning contract:** Approved 2026-10-07: 28 requirements across Phases 168–173, plus inserted Phase 173.1. All 28 are satisfied and all seven phases verified. Phase 170 completed eight plans covering INUX-01–04; independent goal-backward verification passed 30/30 must-haves. Phase 172 Recipient Output and Built-in Pages passed 9/9 goal-backward must-haves with automated and screenshot evidence. Engineers and support/on-call operators are equal primary Admin audiences. The owner selected code-first; use Impeccable and relevant Kowalski guidance with the existing LiveView/HEEx stack and brand. [Scope](research/v2.9/SCOPE.md), [requirements](milestones/v2.9-REQUIREMENTS.md), and [roadmap](milestones/v2.9-ROADMAP.md) are canonical for this milestone; root [PRODUCT.md](../PRODUCT.md) owns durable product context.
 
 **Standing verification rule (owner decision D-52, 2026-10-08):** Automate every machine-observable acceptance criterion before asking for UAT. Add integration, browser, smoke, or seam tests at the boundary that proves the user-visible contract, run recurring regression checks in CI when their maintenance/runtime cost is justified, and reuse existing dependencies and CI lanes first. GSD confirmation checkpoints are for irreducible human judgment only; passing automated evidence closes its UAT row without another confirmation. See [METHODOLOGY.md](METHODOLOGY.md#shift-left-verification-by-default).
 
 **Boundaries:** Refine existing capabilities, preserve authorization/account/replay/rendering/protocol contracts, and defer an interactive browser unsubscribe submission journey. Reuse source-backed research and existing checks with targeted investigation as needed. The milestone label does not request a package version or authorize publication or merge. Phase 168 reconciled the preserved local workspace with merged cleanup and recorded the checkout and assets served by the preview.
 
 ## Current State
+
+**v2.9 Operator, Preview & Email UI Refinement SHIPPED and ARCHIVED 2026-10-26.** All 28 requirements across Phases 168–173 and inserted Phase 173.1 are satisfied. The milestone audit (`status: tech_debt`, no blockers) records 28/28 requirements, 7/7 phases, 11/14 integration seams, and 6/7 flows. Phase 173 delivered owner-accepted candidate `4ed3ada1` (required CI 34/0). Phase 173.1 fixed demo outbound replay, which had always been denied, and the Demo Browser Evidence red, with the code-review fixes in PR #307. Remaining debt is the demo unsubscribe-link flow (F7: library token routes are not mounted in the demo), Inbound components that copy the Operator ones, partial Gallery/Storybook coverage, and three dead LiveView handlers. Artifacts are archived to `.planning/milestones/v2.9-ROADMAP.md`, `v2.9-REQUIREMENTS.md`, `v2.9-MILESTONE-AUDIT.md`, and `v2.9-phases/`. The close is an `override_closeout`: the verification projection marks all seven reports `stale` because later phases touched their covered files, so the audit re-derived every verdict at `44219dfe`. Six open artifacts were acknowledged and are disclosed in `.planning/STATE.md`. v2.9 merged to `main` with `feat` commits; Hex publication follows the release-cadence rule below and is a separate, owner-attended release ceremony.
 
 **Phase 170 completed and verified 2026-10-09.** Inbound investigation and permitted recovery now preserve Account/filter context, distinguish current-router simulation from historical execution, constrain ordinary evidence to safe projections, and revalidate exact replay eligibility before host authorization. All 30/30 must-haves passed. Local evidence: Admin 577 tests (0 failures, 1 excluded), inbound 3 properties plus 480 tests (0 failures), and operator browser 206 passed with 1 guarded skip. Security closed 21/21 threats; code review is clean. Machine-observable acceptance is automated under D-52; no owner UAT remains. Remote delivery and CI proof remain Phase 173 work.
 
@@ -216,16 +220,18 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 
 ## Active Requirements
 
-**v2.9 Operator, Preview & Email UI Refinement is active.** The 28 approved requirements are defined in [REQUIREMENTS.md](REQUIREMENTS.md) and each maps to one phase in [ROADMAP.md](ROADMAP.md):
+**No milestone is active.** Define the next milestone's requirements with `/gsd-new-milestone`. Candidate inputs: the owner-review follow-up (`todos/2026-10-25-owner-review-pr302-ui-feedback.md`, plus the v2.9 dead handlers, theme doc drift and F7), CI efficiency, and SEED-009 fractal storybook.
 
-- ✓ UXF-01–08: shared workspace and interaction — implemented and verified in Phase 168.
-- ✓ OUTUX-01–05: outbound investigation and recovery — implemented and verified in Phase 169.
-- ✓ INUX-01–04: inbound investigation and recovery — implemented and verified in Phase 170.
-- ✓ PRVUX-01–04: developer preview — implemented and verified in Phase 171.
-- ✓ MAILUX-01–04: recipient output and built-in pages — implemented and verified in Phase 172.
-- UIQ-01–03: consistency, evidence, and delivery (Phase 173).
+## Validated Requirements: v2.9 (SHIPPED 2026-10-26)
 
-Phases 168–172 validated 25 requirements; the remaining three belong to Phase 173. The v2.8 and v2.7 requirements remain in their milestone archives.
+- ✓ UXF-01–08: shared workspace and interaction — v2.9 (Phase 168)
+- ✓ OUTUX-01–05: outbound investigation and recovery — v2.9 (Phase 169; demo replay path fixed in 173.1)
+- ✓ INUX-01–04: inbound investigation and recovery — v2.9 (Phase 170)
+- ✓ PRVUX-01–04: developer preview — v2.9 (Phase 171)
+- ✓ MAILUX-01–04: recipient output and built-in pages — v2.9 (Phase 172)
+- ✓ UIQ-01–03: consistency, evidence, and delivery — v2.9 (Phase 173; UIQ-03 by owner acceptance of `4ed3ada1`)
+
+Full statements: [milestones/v2.9-REQUIREMENTS.md](milestones/v2.9-REQUIREMENTS.md).
 
 ### v2.7 scope record (archived)
 
@@ -1159,7 +1165,8 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-10-09 UTC after Phase 172 verification; Phase 173 Consistency and Delivery Evidence is ready for discussion.*
+*Last updated: 2026-10-26 after v2.9 milestone archive. Audit tech_debt (28/28 requirements, 7/7 phases, 11/14 integration, 6/7 flows); no milestone active.*
+<!-- prior footer: 2026-10-09 UTC after Phase 172 verification. -->
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
 <!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->

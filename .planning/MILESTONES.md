@@ -1,5 +1,31 @@
 # Milestones
 
+## v2.9 Operator, Preview & Email UI Refinement (Shipped: 2026-10-26)
+
+**Phases completed:** 7 phases, 43 plans, 82 tasks
+
+**Key accomplishments:**
+- Shared operator workspace (168): Account context with URL-scoped switching, a named appearance picker shared with Preview, the approved 4px spacing grid, and readable Health/Deliveries at narrow, desktop and 200% zoom.
+- Outbound investigation and recovery (169): exact Delivery history, one current suppression match, latest-event status badges, responsive Quick view and exact-target replay that keeps list context.
+- Inbound investigation and recovery (170): tenant-scoped replay eligibility with exact-target revalidation ahead of host authorization, on the same Quick view / Full detail pattern.
+- Developer Preview (171): full Mailable + scenario identity on mobile, type-preserving scalar edits, clear stale-output state, keyboard-operable tabs for all four output representations, and preview width/backdrop independent of Admin appearance.
+- Recipient output (172): public HEEx email components with an AtlasDesk invoice example, readable plaintext generation, and truthful unsubscribe GET pages with the POST protocol unchanged.
+- Delivery evidence (173, 173.1): fail-closed browser capture checkpoint and owner-accepted candidate 4ed3ada1 (CI 34/0); demo outbound replay now succeeds end to end, with a required-lane auth-actions contract test.
+
+**Audit:** tech_debt, no blockers. 28/28 requirements, 7/7 phases, integration 11/14, flows 6/7 ([milestones/v2.9-MILESTONE-AUDIT.md](milestones/v2.9-MILESTONE-AUDIT.md)).
+
+**Closeout:** override_closeout. All 7 VERIFICATION.md reports are `passed` (173 by 3 owner overrides), but the readiness projection marks them `stale` because later phases and PR #307 touched covered files; the milestone audit re-derived every verdict at 44219dfe.
+Known verification overrides: 6 newly acknowledged, 28 carried forward from a prior close (see STATE.md Deferred Items)
+
+### Known Gaps / Tech Debt
+- F7: the demo does not mount `mailglass_router_routes`, so email unsubscribe link to page is not exercised end to end in the demo (library covered by core tests).
+- Inbound Quick view, replay modal and filters are parallel copies of the Operator components (UXF-07).
+- Admin Gallery/Storybook omits several v2.9 components (UIQ-01); feeds SEED-009 fractal storybook.
+- Dead LiveView handlers `close_detail`, `nav_record`, `toggle_theme` in operator_live.ex and inbound_live.ex; theme-preservation doc drift in operator/shell.ex.
+- 173.1 review IN-01 / IN-02 open.
+
+---
+
 ## v2.8 Truthful Repo (Shipped: 2026-09-19)
 
 **Phases completed:** 2 phases, 10 plans, 26 tasks

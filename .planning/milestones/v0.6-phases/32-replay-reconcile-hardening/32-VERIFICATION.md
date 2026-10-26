@@ -1,7 +1,7 @@
 ---
 phase: 32-replay-reconcile-hardening
 verified: 2026-05-05T20:13:32Z
-status: verified
+status: passed
 score: 6/6 must-haves verified
 overrides_applied: 0
 re_verification:
