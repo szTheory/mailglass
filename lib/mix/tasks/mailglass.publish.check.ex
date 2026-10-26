@@ -63,16 +63,17 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     with_disabled_otel(fn ->
       Mix.Task.run("app.start")
 
+      execute = executor(opts[:allowlist_only] == true)
+
       packages(opts[:package])
       |> Enum.each(fn package ->
-        if opts[:allowlist_only] == true do
-          execute_allowlist_only(package, opts[:keep] == true)
-        else
-          execute_package(package, opts[:keep] == true)
-        end
+        execute.(package, opts[:keep] == true)
       end)
     end)
   end
+
+  defp executor(true), do: &execute_allowlist_only/2
+  defp executor(false), do: &execute_package/2
 
   defp packages(nil), do: [:mailglass, :mailglass_admin, :mailglass_inbound]
 

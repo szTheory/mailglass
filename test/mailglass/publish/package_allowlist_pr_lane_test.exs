@@ -102,7 +102,7 @@ defmodule Mailglass.Publish.PackageAllowlistPrLaneTest do
 
   defp allowlist_only_mode?(source) do
     with true <- source =~ "allowlist_only: :boolean",
-         true <- source =~ "execute_allowlist_only(package, opts[:keep] == true)",
+         true <- source =~ "defp executor(true), do: &execute_allowlist_only/2",
          [_, body] <-
            Regex.run(~r/defp execute_allowlist_only\(.*?\n(.*?)\n  defp /s, source) do
       body =~ "&build_tarball/1" and body =~ "&verify_allowlist/1" and
