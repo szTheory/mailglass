@@ -31,13 +31,13 @@
     {
       "number": "173",
       "name": "Consistency and Delivery Evidence",
-      "status": "in_progress"
+      "status": "complete"
     }
   ],
   "next": {
-    "command": "/gsd-verify-work",
-    "label": "Re-verify work",
-    "reason": "Recent verification failed — re-verify or debug"
+    "command": "/gsd-progress",
+    "label": "Show progress",
+    "reason": "Unsure of state — showing progress"
   },
-  "updated_at": "2026-10-25T21:23:12.684Z"
+  "updated_at": "2026-10-26T13:34:41.641Z"
 }

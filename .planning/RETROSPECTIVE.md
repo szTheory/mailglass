@@ -4,6 +4,47 @@
 
 ---
 
+## Milestone: v2.9 — Operator, Preview & Email UI Refinement
+
+**Shipped 2026-10-26** — 7 phases (168–173, plus inserted 173.1), 43 plans, 82 tasks, 28 requirements; audit `status: tech_debt` (28/28 requirements, 7/7 phases, 11/14 integration, 6/7 flows). Merged to `main` as one squash PR (#302); the Hex release is a separate ceremony.
+
+### What Was Built
+
+- A shared operator workspace with Account context, a persisted appearance picker, readable values and keyboard-safe Quick view / replay dialogs.
+- Outbound and inbound investigation and recovery flows that keep exact identity and list context, and revalidate replay eligibility before host authorization.
+- A Developer Preview that keeps the selected Mailable and scenario visible, preserves edited value types, and separates renderer output from illustrative MIME.
+- Public HEEx email components, readable generated plaintext, and truthful built-in unsubscribe GET pages.
+- A fail-closed browser-capture checkpoint and an owner-accepted delivery candidate; 173.1 made demo outbound replay work and stabilized Demo Browser Evidence.
+
+### What Worked
+
+- Standing rule D-52 (automate every machine-observable acceptance criterion) removed owner UAT from five of six phases; the owner judged only the final candidate.
+- Re-running the milestone audit after inserting 173.1 caught a real defect earlier phases had passed: the demo host denied every outbound replay. It also replaced the earlier audit's stale verdicts.
+
+### What Was Inefficient
+
+- Phase 173 cycled through several delivery candidates (`3d6314ba`, `a7fd4843`, `4994442105`) before `4ed3ada1` was accepted; each verification report described a candidate that had already been superseded.
+- A stale `gaps:` block in 173-VERIFICATION.md sent GSD smart-entry to a false `verify-failed` route until it was reconciled at close.
+- The milestone was developed on one long branch and merged once (#302), which pushed CI and owner review to the very end.
+
+### Patterns Established
+
+- Every authorization action the library calls needs a matching clause in the demo host, enforced by a required-lane contract test.
+- Browser specs that mutate LiveView-rendered DOM must wait for the socket to connect first, because a connected remount replaces nonce-keyed elements.
+- Archiving phase directories breaks any spec or script that hard-codes a `.planning/phases/` path; repoint them in the archive change.
+
+### Key Lessons
+
+- Verify demo-host behavior end to end, not only library behavior; a host adapter can silently deny a path the library test suite proves.
+- When the candidate SHA changes, reconcile the verification frontmatter and body in the same step.
+
+### Cost Observations
+
+- 7 phases / 43 plans / 82 tasks over 2026-10-07 to 2026-10-26.
+- UI-heavy milestone: browser evidence and asset provenance accounted for most of the Phase 173 effort.
+
+---
+
 ## Milestone: v2.8 — Truthful Repo
 
 **Shipped 2026-09-19** — 2 phases (166-167), 10 plans, 26 tasks, 17 requirements; audit `status: tech_debt` with all requirements, integration seams, and five operational flows complete.
@@ -882,3 +923,5 @@ baseline: "I LOVE THE NEW BRANDBOOK."
 | v2.2 | 4 | 30 | CI truth requires fail-closed aggregation, negative controls, and runtime/source cross-checks. |
 | v2.6 | 6 | 41 | Milestone-wide executable integration catches order dependence and local/CI environment drift after phase-local gates pass. |
 | v2.7 | 5 | 75 | Settle an authority model before installing it, and order lifecycle proof after the archive — evidence captured before the state it describes is finalized cannot be true. |
+| v2.8 | 2 | 10 | A control is complete only when its pass path and cannot-check semantics are executable, not merely its failure path. |
+| v2.9 | 7 | 43 | Prove demo-host behavior end to end; library-green paths can still be denied by the host adapter the owner actually clicks through. |

@@ -5,6 +5,10 @@ planted: 2026-10-10
 planted_during: ad-hoc operator UI refinement
 trigger_when: after the operator UI has a strong visual baseline, when planning filtering and incident investigation improvements
 scope: Deliveries and Inbound filtering
+audit_acknowledged:
+  milestone: v2.9
+  at: 2026-10-26
+  status: dormant
 ---
 
 # SEED-261010-gad: Custom date ranges and live operator filtering

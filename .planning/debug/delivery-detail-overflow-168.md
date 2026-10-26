@@ -3,6 +3,10 @@ status: diagnosed
 trigger: "Phase 168 UAT: at actual 320 and 390 CSS px in the running operator demo, full Delivery detail page document.scrollWidth is 473px because the long Mailer value extends beyond the viewport; at 768/1440 it fits. In the 320px DOM, the offending element is `<p class=\"text-body text-secondary\">MailglassDemoWeb.Mailers.OperationsMailer.usage_alert</p>` under #delivery-detail-...."
 created: 2026-10-08T12:04:59-04:00
 updated: 2026-10-08T12:12:00-04:00
+audit_acknowledged:
+  milestone: v2.9
+  at: 2026-10-26
+  status: diagnosed
 ---
 
 ## Current Focus

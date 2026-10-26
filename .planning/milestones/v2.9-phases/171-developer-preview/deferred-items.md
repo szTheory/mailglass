@@ -9,3 +9,4 @@ are covered by the passing connected browser gate documented in `171-REGRESSION.
   Reset action and absence of a redundant Render action.
 - The compact picker intentionally exposes the full active Mailable identity on mobile, so the
   structural check asserts that full identity and the selected scenario.
+  status: acknowledged

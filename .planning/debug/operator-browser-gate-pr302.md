@@ -3,6 +3,10 @@ status: awaiting_human_verify
 trigger: "Operator Browser Gate failing on PR #302 (17 Playwright tests) after 21 admin UI polish commits a17f0ee5..1c547f6c; scope extended to 5 Demo Browser Evidence failures"
 created: 2026-10-24T00:00:00Z
 updated: 2026-10-24T00:00:00Z
+audit_acknowledged:
+  milestone: v2.9
+  at: 2026-10-26
+  status: awaiting_human_verify
 ---
 
 ## Current Focus

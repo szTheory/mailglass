@@ -2,30 +2,30 @@
 gsd_state_version: "1.0"
 milestone: v2.9
 milestone_name: Operator, Preview & Email UI Refinement
-current_phase: 173
-current_phase_name: Consistency and Delivery Evidence
-status: verifying
-stopped_at: Phase 173.1 complete, ready to verify Phase 173
-last_updated: "2026-10-25T21:23:12.666Z"
-last_activity: 2026-10-25
-last_activity_desc: Phase 173.1 complete, transitioned to Phase 173
-state_head: 81a4860fe7894967f6c7c33ee308229e1a99a6c5
+status: Awaiting next milestone
+stopped_at: Milestone v2.9 complete and archived
+last_updated: "2026-10-26T13:36:00.000Z"
+last_activity: 2026-10-26
+last_activity_desc: Milestone v2.9 completed and archived
+state_head: 4711c52450f786b595b7b19ef515aad7fd243ab2
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 7
   total_plans: 43
   completed_plans: 43
-  percent: 83
+  percent: 100
+current_phase: null
+current_phase_name: Planning next milestone
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-09 UTC)
+See: .planning/PROJECT.md (updated 2026-10-26)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 173.1 — Address tech debt: demo auth + browser evidence (INSERTED)
+**Current focus:** Planning next milestone (v2.9 shipped 2026-10-26)
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,12 +39,10 @@ See: .planning/PROJECT.md (updated 2026-10-09 UTC)
 
 ## Current Position
 
-Phase: 173 — Consistency and Delivery Evidence
-Plan: 8
-Status: Phase complete — ready for verification
-Last activity: 2026-10-25 — Phase 173.1 complete, transitioned to Phase 173
-
-Progress: 5/6 phases ([████████░░] 83%); [████████████████████] 38/38 planned plans have summaries (100%); Phase 173 delivery remains incomplete
+Phase: Milestone v2.9 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-10-26
 
 ## v2.9 Roadmap Shape
 
@@ -527,6 +525,12 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 | Category | Item | Status | Deferred At | Milestone |
 |----------|------|--------|-------------|-----------|
+| debug_sessions | delivery-detail-overflow-168 | diagnosed | 2026-10-26 | v2.9 |
+| debug_sessions | operator-browser-gate-pr302 | awaiting_human_verify | 2026-10-26 | v2.9 |
+| seeds | SEED-261010-gad (operator date range and live filters) | dormant | 2026-10-26 | v2.9 |
+| seeds | SEED-261010-hjp (inbound filters auto-apply and live search) | dormant | 2026-10-26 | v2.9 |
+| deferred_items | Phase 168/deferred-items.md (v2.9): both entries record resolution in 168-02 | acknowledged | 2026-10-26 | v2.9 |
+| deferred_items | Phase 171/deferred-items.md (v2.9): no open items; two assertions updated | acknowledged | 2026-10-26 | v2.9 |
 | seeds | SEED-008-delivery-absence-detection | active | 2026-09-19 | v2.8 |
 | uat_gaps | Phase 76/76-HUMAN-UAT.md (v1.7) | partial | 2026-09-19 | v2.8 |
 | uat_gaps | Phase 22/22-HUMAN-UAT.md (v0.4) | superseded | 2026-09-19 | v2.8 |
@@ -560,17 +564,9 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 ## Session Continuity
 
 Last session: 2026-10-10T15:44:07Z
-Stopped at: Phase 173.1 complete, ready to verify Phase 173
-Resume file: .planning/phases/173-consistency-and-delivery-evidence/.continue-here.md
+Stopped at: Milestone v2.9 complete and archived
+Resume file: None
 
 ## Operator Next Steps
 
-- Phase 168 is complete: independent verification passed 96/96 plan truths and 5/5 roadmap truths, including the automated 4px spacing guard and rendered checks. No owner UAT remains.
-- Phase 169 is complete: five plans, all five OUTUX requirements, independent verification passed, code review clean, security 17/17 closed, and Nyquist compliant.
-- Final local evidence: 49 core tests; 542 Admin tests with zero failures and one exclusion; full operator browser 197 passed and one guarded skip; prior-phase browser gate 163 passed and one guarded skip. See `169-VERIFICATION.md`, `169-REGRESSION.md`, and `169-REVIEW-FIX.md` in the phase directory.
-- Phase 170 is complete: eight plans across six dependency waves; independent verification passed 30/30 must-haves for INUX-01–04. Security closed 21/21 threats and code review found no current issues.
-- Automated evidence: Admin 577 tests (0 failures, 1 excluded); inbound 3 properties plus 480 tests (0 failures); full operator browser 206 passed and 1 guarded skip. Rendered checks are recorded; no human-only acceptance remains under D-52.
-- Phase 170 artifacts and evidence are in `.planning/phases/170-inbound-investigation-and-recovery/`. GSD emitted three nonblocking missing-path warnings for package-relative references in summaries; the verifier checked the actual package-root files.
-- Phase 172 is complete and verified: 9/9 must-haves, 30 connected browser tests, captured preview/unsubscribe screenshots, fresh 24/24 UI review, clean code review, and zero open security threats. No owner UAT remains under D-52; delivered-email client rendering remains unverified.
-- Phase 173 — Consistency and Delivery Evidence — remains verifying. All eight plans have summaries. The full sparse local gate passed for exact candidate 8b4ce3e9: Core 79, Admin 605, Inbound three properties plus 480, connected browser 30, five preview routes, matching built/served CSS, and six clean screenshot/baseline pairs. The user then approved publishing that exact SHA to `gsd/phase-173-delivery-8b4ce3e9` and dispatching CI there; both actions completed. Required `CI Green` failed in run 38064299090. See `173-REMOTE-CI.md` for concrete failures requiring bounded gap repair and `173-LOCAL-GATE.md` for retained local evidence. Authenticated owner acceptance remains outstanding. The original protected-file fence remains active; merge, release, and main writes remain outside the approval.
-- Original unrelated planning-file deletions, configuration edits, and Phase 168/169 screenshot modifications were preserved. Remote delivery/CI proof remains Phase 173 scope.
+- Start the next milestone with /gsd-new-milestone
