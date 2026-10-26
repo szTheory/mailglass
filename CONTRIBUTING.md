@@ -208,6 +208,14 @@ or synchronize a release proposal, but cannot merge it, create a tag, or publish
 There is no ordinary auto-merge path, and the schedule is not a recovery or
 publication mechanism.
 
+**Authorization checkpoint:** `scripts/release_authorize.sh <run-id>` writes
+the authorized ledger from a proposal-only run's
+`release-proposal-candidate-<run-id>` artifact, validates it
+(`validate-target`, `validate-candidate`, `validate-authorization`), and prints
+the candidate digest. The publishable-content digest in the ledger is not the
+candidate digest and authorizes nothing. Add `--pr` to open the reviewed
+authorization PR; without it the script only writes the file.
+
 **Protected exact-digest chain:** after the candidate has passed its explicit
 authorization checkpoint, run the two distinct dispatches below. Reuse the
 same exact digest throughout; `CORE_VERSION` is the reviewed core/admin version
@@ -233,12 +241,16 @@ gh workflow run publish-hex.yml --ref main \
 The first dispatch revalidates and merges only the immutable proposal generated
 by Release Please, then creates the three linked release tags/releases. It does not
 publish to Hex. After those tags are verified, the second dispatch revalidates
-the final tag SHA and runs the read-only CI gate before the ordered
-core → admin → inbound publish. Successful publication automatically hands the same exact
-versions and immutable SHA to `post-publish-smoke.yml`.
+the final tag SHA and runs the read-only CI gate, then stops once at the
+`approve-release` job for the `hex-publish` environment's `required_reviewers`
+approval, before the ordered core → admin → inbound publish. One approval covers
+the whole linked release; approve in the run page or with
+`scripts/release_approve.sh <run-id>`. Successful publication automatically
+hands the same exact versions and immutable SHA to `post-publish-smoke.yml`.
 
 The protected live predecessor may dispatch missing CI runs on that validated
-ref. Captured dry-runs are credential-free and read-only: they can inspect
+ref, and re-dispatches a run that can never gate (cancelled, or its gating
+lanes path-skipped). Captured dry-runs are credential-free and read-only: they can inspect
 already-completed CI, but cannot self-dispatch it.
 
 If any lookup is missing, stale, ambiguous, or red, stop and replay the same

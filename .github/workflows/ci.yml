@@ -33,6 +33,9 @@ jobs:
           fetch-depth: 0
       - name: Compute changed-path gate
         id: filter
+        # `.planning/` is docs-only EXCEPT `.planning/publish/`: the package
+        # allowlists are build inputs checked by the Mix Task Tests lane, so an
+        # allowlist-only PR (e.g. #312) must run the matrix, not skip it.
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             # A dispatched release run must always execute the full matrix.
@@ -41,7 +44,7 @@ jobs:
             BASE="${{ github.event.pull_request.base.sha }}"
             HEAD="HEAD"
             CHANGED=$(git diff --name-only "${BASE}...${HEAD}" 2>/dev/null || git diff --name-only "${BASE}" "${HEAD}")
-            NON_DOC=$(echo "$CHANGED" | grep -v '^\.planning/' | grep -v '^prompts/' || true)
+            NON_DOC=$( { echo "$CHANGED" | grep -v '^\.planning/' | grep -v '^prompts/'; echo "$CHANGED" | grep '^\.planning/publish/'; } || true)
             if [ -z "$NON_DOC" ]; then
               echo "code=false" >> "$GITHUB_OUTPUT"
             else
@@ -58,7 +61,7 @@ jobs:
                 echo "Unable to determine changed files for push ${BEFORE}..${AFTER}; refusing to classify it as docs-only." >&2
                 exit 1
               fi
-              NON_DOC=$(echo "$CHANGED" | grep -v '^\.planning/' | grep -v '^prompts/' || true)
+              NON_DOC=$( { echo "$CHANGED" | grep -v '^\.planning/' | grep -v '^prompts/'; echo "$CHANGED" | grep '^\.planning/publish/'; } || true)
               if [ -z "$NON_DOC" ]; then
                 echo "code=false" >> "$GITHUB_OUTPUT"
               else
@@ -369,6 +372,13 @@ jobs:
         # silently escape CI — closes the drift gap that left the Phase-47
         # inbound generators advisory-only. See the verify.mix_tasks alias note.
         run: mix verify.mix_tasks
+      - name: Check package allowlists (all packages)
+        # The allowlist diff of `mix mailglass.publish.check` (build + unpack each
+        # tarball, compare with .planning/publish/<pkg>-files.expected, denylist),
+        # without the network advisory steps. A stale allowlist used to surface
+        # only in publish-hex.yml (2.7.0 publish run 40372273962), after the tags
+        # were cut, and forced a tag move. It now fails the PR that drifts it.
+        run: mix mailglass.publish.check --allowlist-only
       - name: Run CI lane-contract meta-tests
         # This job is chosen because it is publish-gating rather than
         # merge-gating (TRUTH-07, Phase 141): registry drift between

@@ -222,18 +222,26 @@ Delivery blocked: package files diff. Files added since last allowlist
 update: ["lib/mailglass/<new_file>.ex"]
 ```
 
-This fires in `publish-hex`'s `prepublish-summary` job — *before* `gate-ci-green`
-— so the publish fan-out stops with every publish job skipped. Nothing reaches
-Hex. That is the gate working: a new file entered a published tarball and it
-refused to ship it unreviewed.
+The same allowlist diff runs on every pull request: the required
+`Mix Task Tests` lane runs `mix mailglass.publish.check --allowlist-only` for all
+three packages (build, unpack, compare allowlist, denylist; no network steps),
+and `mix ci` runs it locally. A PR that adds, removes, or renames a shipped file
+without updating the allowlist fails there. Before that lane existed, the drift
+surfaced only at publish time (2.7.0 publish run 40372273962), after the tags
+were cut, and forced a tag move.
+
+At publish time it fires again in `publish-hex`'s `prepublish-summary` job —
+*before* `gate-ci-green` — so the publish fan-out stops with every publish job
+skipped. Nothing reaches Hex.
 
 Update the allowlist in the same PR that adds the file:
 
-1. Run `mix mailglass.publish.check --package <pkg> --keep`.
+1. Run `mix mailglass.publish.check --allowlist-only --package <pkg> --keep`.
 2. Copy `_publish_check/<pkg>-files.actual` over
    `.planning/publish/<pkg>-files.expected`. Do not hand-edit — the ordering
    is generated.
-3. Re-run without `--keep` and confirm `conflict=0`.
+3. Re-run `mix mailglass.publish.check --allowlist-only` (all packages) and
+   confirm `conflict=0`.
 
 If the file should *not* ship, exclude it in `mix.exs` under `:package :files`
 instead. Dev-only Mix tasks belong in `dev/`, which is on `elixirc_paths` for
@@ -659,11 +667,17 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    and release-please skips the cut, recover with a tiny follow-up commit that
    carries a `Release-As: <intended-version>` footer. Do not hand-edit
    `.release-please-manifest.json` to force the version.
-3. **Monitor the publish fan-out — gated by one `required_reviewers` approval per package.**
-   The fan-out stops for one manual `required_reviewers` approval per package —
-   three stops on a linked core+admin+inbound release. "Hands-free" describes
-   everything up to that gate, not past it: nothing publishes to Hex without a
-   human clicking approve for each package.
+3. **Monitor the publish fan-out — gated by one `required_reviewers` approval.**
+   The `hex-publish` environment and its `required_reviewers` rule sit on one
+   job, `approve-release`, which runs after `gate-ci-green` and before the
+   core → admin → inbound fan-out. The release stops once for one human
+   approval; every publish job needs `approve-release` to succeed. (Before
+   this, each publish job carried the environment, and a linked release
+   stopped three times.) "Hands-free" describes everything up to that gate,
+   not past it: nothing publishes to Hex without a human approving. Approve
+   in the run page, or from a terminal with
+   `scripts/release_approve.sh <run-id>`, which checks that you are an
+   allowed reviewer and asks for confirmation before it approves.
    Review the pre-publish summary in the workflow run page (rendered by the
    `prepublish-summary` job per D-15) after `gate-ci-green` passes and the
    publish jobs fan out. Verify the file count, total size, CHANGELOG excerpt,
@@ -679,8 +693,11 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
      - **The gate DISPATCHES the run; it does not look one up.** A release-please
        bot-merged release SHA has zero `advisory-matrix.yml` runs — GitHub raises
        no workflow for a `GITHUB_TOKEN` event, and that workflow has no `release:`
-       trigger. So `gate-ci-green` dispatches it on the release tag and waits, under
-       one 30-minute deadline shared with the `ci.yml` self-heal. Expect roughly ten
+       trigger. So `ensure-live-ci-runs` dispatches it on the release tag and waits,
+       under one 55-minute deadline shared with the `ci.yml` self-heal. A run that
+       exists but can never gate (cancelled, or its gating lanes path-skipped, as
+       on a tag cut from a `.planning`-only commit) is re-dispatched once the same
+       way; a failed lane is a verdict and is not re-dispatched. Expect roughly ten
        extra minutes of cold-cache release wall-clock. A missing run is a stall, not
        a pass: the gate blocks rather than reporting success it did not observe.
      - **Override, for a block with no regression behind it.** The gated job also
