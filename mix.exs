@@ -429,6 +429,9 @@ defmodule Mailglass.MixProject do
         "cmd env MIX_ENV=test mix ci.setup",
         "cmd env MIX_ENV=test mix verify.support_contract.core",
         "cmd env MIX_ENV=test mix test --warnings-as-errors",
+        # Same network-free allowlist diff the Mix Task Tests lane runs, so a
+        # stale .planning/publish/*-files.expected fails locally before a PR.
+        "cmd env MIX_ENV=test mix mailglass.publish.check --allowlist-only",
         "cmd --cd mailglass_admin mix deps.get --check-locked",
         "cmd --cd mailglass_admin mix verify.support_contract.admin",
         "cmd --cd mailglass_inbound mix deps.get --check-locked",

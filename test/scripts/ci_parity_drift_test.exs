@@ -187,7 +187,10 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
       "mailglass_inbound mix test --only property"
     ],
     "Core Deterministic Suite (Elixir 1.18 / OTP 27)" => ["mix test --warnings-as-errors"],
-    "Mix Task Tests (Elixir 1.18 / OTP 27)" => ["mix test --warnings-as-errors"],
+    "Mix Task Tests (Elixir 1.18 / OTP 27)" => [
+      "mix test --warnings-as-errors",
+      "mailglass.publish.check --allowlist-only"
+    ],
     "Credo Strict (Elixir 1.18 / OTP 27)" => ["credo --strict"],
     "Docs Warnings as Errors (Elixir 1.18 / OTP 27)" => ["docs --warnings-as-errors"],
     "Dialyzer (Elixir 1.18 / OTP 27)" => ["mix dialyzer"],

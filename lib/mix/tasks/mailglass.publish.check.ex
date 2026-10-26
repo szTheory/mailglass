@@ -14,12 +14,18 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       mix mailglass.publish.check --package mailglass_admin
       mix mailglass.publish.check --package mailglass_inbound
       mix mailglass.publish.check --package mailglass --keep
+      mix mailglass.publish.check --allowlist-only
 
   ## Options
 
     * `--package` - optional package selector (`mailglass`, `mailglass_admin`, or `mailglass_inbound`);
       when omitted, both packages are checked sequentially.
     * `--keep` - preserve `_publish_check/<pkg>/` for inspection.
+    * `--allowlist-only` - build and unpack each tarball, then run only the
+      allowlist and denylist comparisons (steps 2-4). No network advisory
+      checks, no isolated compile. PR CI runs this mode so a stale
+      `.planning/publish/<pkg>-files.expected` fails the pull request instead
+      of the publish run.
 
   ## Pre-publish checks (in order)
 
@@ -47,7 +53,10 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   @impl Mix.Task
   def run(argv) do
-    {opts, rest, invalid} = OptionParser.parse(argv, strict: [package: :string, keep: :boolean])
+    {opts, rest, invalid} =
+      OptionParser.parse(argv,
+        strict: [package: :string, keep: :boolean, allowlist_only: :boolean]
+      )
 
     validate_cli!(rest, invalid)
 
@@ -56,7 +65,11 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
       packages(opts[:package])
       |> Enum.each(fn package ->
-        execute_package(package, opts[:keep] == true)
+        if opts[:allowlist_only] == true do
+          execute_allowlist_only(package, opts[:keep] == true)
+        else
+          execute_package(package, opts[:keep] == true)
+        end
       end)
     end)
   end
@@ -84,6 +97,36 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     end
 
     :ok
+  end
+
+  # Allowlist-only mode: the cheap, network-free subset of the full check.
+  # It shares the build/capture/compare/denylist steps with `execute_package/2`
+  # so the PR lane and the publish lane cannot disagree about what drift is.
+  defp execute_allowlist_only(package, keep?) do
+    ctx = load_package_context(package)
+    counts = %{create: 0, update: 0, unchanged: 0, conflict: 0}
+
+    {counts, ctx} =
+      step(counts, :create, package, "build and unpack tarball", ctx, &build_tarball/1)
+
+    {counts, ctx} = step(counts, :create, package, "capture file list", ctx, &capture_file_list/1)
+    {counts, ctx} = step(counts, :unchanged, package, "compare allowlist", ctx, &verify_allowlist/1)
+    {counts, ctx} = step(counts, :unchanged, package, "check denylist", ctx, &verify_denylist/1)
+
+    {counts, _ctx} =
+      step(
+        counts,
+        if(keep?, do: :unchanged, else: :update),
+        package,
+        cleanup_label(keep?),
+        ctx,
+        fn ctx -> cleanup(ctx, keep?) end
+      )
+
+    Mix.shell().info(
+      "Allowlist check result for #{ctx.package}: create=#{counts.create} update=#{counts.update} " <>
+        "unchanged=#{counts.unchanged} conflict=#{counts.conflict}"
+    )
   end
 
   defp execute_package(package, keep?) do
