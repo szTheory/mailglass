@@ -4,7 +4,11 @@
     "mailglass_admin": "2.6.0",
     "mailglass_inbound": "2.3.0"
   },
-  "candidate_versions": null,
+  "candidate_versions": {
+    "mailglass": "2.7.0",
+    "mailglass_admin": "2.7.0",
+    "mailglass_inbound": "2.4.0"
+  },
   "final_identity": {
     "tag_sha": null
   },
@@ -14,12 +18,12 @@
     "mailglass_inbound"
   ],
   "proposal_identity": {
-    "head_sha": null,
-    "source_sha": null
+    "head_sha": "27cdfa10ddd220469170e877c03dd80a6e3a9dca",
+    "source_sha": "47db380c938f8187aa9b16ea30f07ec77f72334f"
   },
   "publishable_content": {
     "algorithm": "sha256",
-    "digest": null,
+    "digest": "cd76e4a4ae684c897f0649bd9d37105bfe1116be04fc90ea698ddc2780d7bbbd",
     "excludes": [
       ".planning/release-target.json"
     ]
@@ -45,9 +49,9 @@
   },
   "schema_version": 1,
   "states": {
-    "authorization": "unauthorized",
-    "capture": "inactive",
+    "authorization": "authorized",
+    "capture": "captured",
     "publication": "not_started"
   },
-  "status": "inactive"
+  "status": "authorized"
 }
