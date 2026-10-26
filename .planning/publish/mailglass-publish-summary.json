@@ -76,7 +76,7 @@
     "lib/mailglass/compliance/unsubscribe.ex",
     "lib/mailglass/compliance/unsubscribe_controller.ex",
     "lib/mailglass/compliance/unsubscribe_html.ex",
-    "lib/mailglass/compliance/unsubscribe_html/confirm.html.heex",
+    "lib/mailglass/compliance/unsubscribe_html/state.html.heex",
     "lib/mailglass/components.ex",
     "lib/mailglass/components/css.ex",
     "lib/mailglass/components/layout.ex",
@@ -143,7 +143,6 @@
     "lib/mailglass/optional_deps/mjml.ex",
     "lib/mailglass/optional_deps/oban.ex",
     "lib/mailglass/optional_deps/opentelemetry.ex",
-    "lib/mailglass/optional_deps/sigra.ex",
     "lib/mailglass/outbound.ex",
     "lib/mailglass/outbound/async_adapter.ex",
     "lib/mailglass/outbound/async_adapter/inline.ex",
@@ -279,11 +278,11 @@
     ]
   },
   "linked_versions": {
-    "mailglass": "2.6.0",
-    "mailglass_admin": "2.6.0",
-    "mailglass_inbound": "2.3.0"
+    "mailglass": "2.7.0",
+    "mailglass_admin": "2.7.0",
+    "mailglass_inbound": "2.4.0"
   },
-  "manifest_version": "2.6.0",
+  "manifest_version": "2.7.0",
   "package": "mailglass",
   "package_files": [
     "lib",
@@ -319,9 +318,9 @@
     ],
     "status": "ok"
   },
-  "source_ref": "v2.6.0",
+  "source_ref": "v2.7.0",
   "source_ref_pattern": "mailglass-sibling-group-v%{version}",
   "source_url": "https://github.com/szTheory/mailglass",
-  "tarball_size": 1379423,
-  "version": "2.6.0"
+  "tarball_size": 1402912,
+  "version": "2.7.0"
 }

@@ -1,14 +1,10 @@
 {
   "baselines": {
-    "mailglass": "2.6.0",
-    "mailglass_admin": "2.6.0",
-    "mailglass_inbound": "2.3.0"
-  },
-  "candidate_versions": {
     "mailglass": "2.7.0",
     "mailglass_admin": "2.7.0",
     "mailglass_inbound": "2.4.0"
   },
+  "candidate_versions": null,
   "final_identity": {
     "tag_sha": null
   },
@@ -18,12 +14,12 @@
     "mailglass_inbound"
   ],
   "proposal_identity": {
-    "head_sha": "27cdfa10ddd220469170e877c03dd80a6e3a9dca",
-    "source_sha": "47db380c938f8187aa9b16ea30f07ec77f72334f"
+    "head_sha": null,
+    "source_sha": null
   },
   "publishable_content": {
     "algorithm": "sha256",
-    "digest": "cd76e4a4ae684c897f0649bd9d37105bfe1116be04fc90ea698ddc2780d7bbbd",
+    "digest": null,
     "excludes": [
       ".planning/release-target.json"
     ]
@@ -35,23 +31,23 @@
       "mailglass_inbound": "https://hex.pm/api/packages/mailglass_inbound"
     },
     "hex_release_checksums": {
-      "mailglass": "bf6b7b782c36bfd95fae148ab9413e10312987081839e8135b2ca82066c555c6",
-      "mailglass_admin": "e0f34013e56cf2d8ca41322d59cf9595e58bb65446bb071f75cf393bccb67db5",
-      "mailglass_inbound": "f83a7aede26dc68fd72298aa95bef55fb53ada5ac5f272ede34743f141ad1b4d"
+      "mailglass": "8cfc05d6f625e491cc6a9fca826e1720f9ee86c0c138bcd23253275ffb8e4ca4",
+      "mailglass_admin": "aa5fce08e90cc72ff0b31d36ad556dae3b9f0e66458e2d0b4b10c037c04ffa42",
+      "mailglass_inbound": "04b3c2a1014004449c3246525343f864242f5d55325b2eddb365b1f5b8dc8c42"
     },
     "hex_release_endpoints": {
-      "mailglass": "https://hex.pm/api/packages/mailglass/releases/2.6.0",
-      "mailglass_admin": "https://hex.pm/api/packages/mailglass_admin/releases/2.6.0",
-      "mailglass_inbound": "https://hex.pm/api/packages/mailglass_inbound/releases/2.3.0"
+      "mailglass": "https://hex.pm/api/packages/mailglass/releases/2.7.0",
+      "mailglass_admin": "https://hex.pm/api/packages/mailglass_admin/releases/2.7.0",
+      "mailglass_inbound": "https://hex.pm/api/packages/mailglass_inbound/releases/2.4.0"
     },
-    "historical_tag": "mailglass-v2.6.0",
-    "historical_tag_sha": "6a0447a900e26b2b07332ac50682767801ddcda7"
+    "historical_tag": "mailglass-v2.7.0",
+    "historical_tag_sha": "f2c91e40a4338c85a735142192f2278b939cd67c"
   },
   "schema_version": 1,
   "states": {
-    "authorization": "authorized",
-    "capture": "captured",
+    "authorization": "unauthorized",
+    "capture": "inactive",
     "publication": "not_started"
   },
-  "status": "authorized"
+  "status": "inactive"
 }
