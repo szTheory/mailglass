@@ -281,3 +281,167 @@ test("Phase174 delivery scenario manifest accounts for rendered and real-route-o
   expect(manifest.feedback.filter(feedback => ["175", "176", "177", "178"].includes(feedback.owner_phase))
     .every(feedback => feedback.status === "pending")).toBe(true);
 });
+
+test("Phase174 inbound connected navigation preserves Account, filters, keyboard, and boundaries", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const listPath = "/ops/mail/inbound?tenant_id=northstar&provider=postmark&window_hours=168";
+  await loginTo(page, listPath);
+
+  const rows = page.getByTestId("inbound-records-table")
+    .getByTestId("inbound-record-row").filter({ visible: true });
+  await expect(rows).toHaveCount(3);
+  const openAt = index => rows.nth(index).getByTestId("inbound-record-open");
+  const selectedId = await openAt(1).getAttribute("phx-value-id");
+  await openAt(1).click();
+
+  const quickView = page.getByTestId("inbound-quick-view");
+  await expect(quickView).toBeVisible();
+  await expect(quickView.locator('[aria-live="polite"]')).toHaveText("2 of 3");
+  await expect(quickView).toContainText("Northstar Logistics");
+  await expect(quickView).toContainText("POSTMARK");
+  await expect(page).toHaveURL(url =>
+    url.searchParams.get("inbound_id") === selectedId &&
+    url.searchParams.get("tenant_id") === "northstar" &&
+    url.searchParams.get("provider") === "postmark" &&
+    url.searchParams.get("window_hours") === "168"
+  );
+
+  const previous = quickView.getByRole("link", { name: "Previous inbound record" });
+  const next = quickView.getByRole("link", { name: "Next inbound record" });
+  const close = quickView.getByRole("link", { name: "Close quick view" });
+  for (const [control, label] of [[previous, "previous"], [next, "next"], [close, "Close"]]) {
+    const box = await control.boundingBox();
+    expect(box, `${label} has a measurable target`).toBeTruthy();
+    expect(box.width, `${label} target width`).toBeGreaterThanOrEqual(44);
+    expect(box.height, `${label} target height`).toBeGreaterThanOrEqual(44);
+  }
+  for (const arrow of [previous, next]) {
+    const classes = await arrow.getAttribute("class");
+    expect(classes).toContain("btn-ghost");
+    expect(classes).toContain("mg-focus-ring");
+    expect(classes).not.toMatch(/\bborder(?:-[^ ]+)?\b/);
+  }
+
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(() => new URL(page.url()).searchParams.get("inbound_id"))
+    .not.toBe(selectedId);
+  await expect(page).toHaveURL(url =>
+    url.searchParams.get("tenant_id") === "northstar" &&
+    url.searchParams.get("provider") === "postmark" &&
+    url.searchParams.get("window_hours") === "168"
+  );
+  const movedId = new URL(page.url()).searchParams.get("inbound_id");
+  await page.keyboard.press("ArrowUp");
+  await expect.poll(() => new URL(page.url()).searchParams.get("inbound_id")).toBe(selectedId);
+
+  await page.keyboard.press("Escape");
+  await expect(quickView).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("phx-value-id")))
+    .toBe(selectedId);
+
+  await openAt(0).click();
+  await expect(quickView.locator('[aria-live="polite"]')).toHaveText("1 of 3");
+  const firstBoundary = quickView.getByRole("button", { name: "Previous inbound record" });
+  await expect(firstBoundary).toBeDisabled();
+  const firstUrl = page.url();
+  await firstBoundary.click({ force: true });
+  await expect(page).toHaveURL(firstUrl);
+  await quickView.getByRole("link", { name: "Close quick view" }).click();
+
+  await openAt(2).click();
+  await expect(quickView.locator('[aria-live="polite"]')).toHaveText("3 of 3");
+  const lastBoundary = quickView.getByRole("button", { name: "Next inbound record" });
+  await expect(lastBoundary).toBeDisabled();
+  const lastUrl = page.url();
+  await lastBoundary.click({ force: true });
+  await expect(page).toHaveURL(lastUrl);
+  await quickView.getByRole("link", { name: "Close quick view" }).click();
+
+  await page.setViewportSize({ width: 320, height: 900 });
+  const mobileOpen = page.getByTestId("inbound-records-cards")
+    .getByTestId("inbound-record-row").filter({ visible: true }).nth(1);
+  await mobileOpen.click();
+  await expect(quickView).toBeVisible();
+  for (const control of [
+    quickView.getByRole("link", { name: "Previous inbound record" }),
+    quickView.getByRole("link", { name: "Next inbound record" }),
+    quickView.getByRole("link", { name: "Close quick view" })
+  ]) {
+    const box = await control.boundingBox();
+    expect(box, "mobile quick-view target is measurable").toBeTruthy();
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+  }
+
+  await page.goto("/demo/login?return_to=" + encodeURIComponent(
+    "/ops/mail/inbound?tenant_id=helios-void&window_hours=168"
+  ));
+  await page.locator("[data-phx-main].phx-connected").waitFor();
+  await expect(page.getByTestId("inbound-record-row").filter({ visible: true })).toHaveCount(0);
+  await expect(page.getByTestId("inbound-quick-view")).toHaveCount(0);
+  expect(new URL(page.url()).searchParams.has("inbound_id")).toBe(false);
+
+  await page.goto("/ops/mail/inbound?tenant_id=helios-void&inbound_id=" + encodeURIComponent(movedId));
+  await page.locator("[data-phx-main].phx-connected").waitFor();
+  await expect(page.getByTestId("inbound-quick-view-error")).toBeVisible();
+  await expect(page.getByTestId("inbound-quick-view")).not.toContainText("Question about the latest account activity");
+});
+
+test("Phase174 inbound retained production variations cover normal, boundaries, Unicode, and unavailable", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const response = await page.goto("/dev/storybook/quick_views/inbound");
+  expect(response?.status(), "retained Inbound story loads").toBe(200);
+
+  const normal = page.frameLocator('iframe[id*="northstar_normal"]');
+  const first = page.frameLocator('iframe[id*="northstar_first"]');
+  const last = page.frameLocator('iframe[id*="northstar_last"]');
+  const single = page.frameLocator('iframe[id*="fjordline_single_unicode"]');
+  const unavailable = page.frameLocator('iframe[id*="selected_unavailable"]');
+  const normalFrame = page.locator('iframe[id*="northstar_normal"]');
+  expect(await normalFrame.count(), "the retained normal Inbound variation has an iframe").toBe(1);
+  expect(await normalFrame.evaluate(frame => frame.clientHeight)).toBeGreaterThanOrEqual(600);
+  await expect(normal.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("2 of 16");
+  await expect(first.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("1 of 16");
+  await expect(first.getByRole("button", { name: "Previous inbound record" })).toBeDisabled();
+  await expect(last.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("16 of 16");
+  await expect(last.getByRole("button", { name: "Next inbound record" })).toBeDisabled();
+  await expect(single.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("1 of 1");
+  await expect(single.getByRole("heading", { name: "Welcome to Fjordline A/S — Bjørn Hansen / 山田太郎" })).toBeVisible();
+  await expect(unavailable.getByTestId("inbound-quick-view-error")).toContainText("temporarily unavailable");
+  await expect(unavailable.getByRole("link", { name: "Open full detail" })).toHaveCount(0);
+});
+
+test("Phase174 inbound manifest selects exactly five variants and preserves route-only emptiness", async () => {
+  const manifest = JSON.parse(fs.readFileSync(SCENARIO_MANIFEST, "utf8"));
+  const quickViews = manifest.scenarios.filter(scenario => scenario.id.startsWith("qv-delivery-") || scenario.id.startsWith("qv-inbound-"));
+  const rendered = quickViews.filter(scenario => scenario.rendered === true);
+  expect(rendered).toHaveLength(9);
+  expect(new Set(rendered.map(scenario => scenario.id)).size).toBe(9);
+  expect(rendered.filter(scenario => scenario.id.startsWith("qv-inbound-"))).toHaveLength(5);
+
+  const inbound = quickViews.filter(scenario => scenario.id.startsWith("qv-inbound-"));
+  expect(inbound.map(scenario => scenario.id).sort()).toEqual([
+    "qv-inbound-empty",
+    "qv-inbound-first",
+    "qv-inbound-last",
+    "qv-inbound-normal",
+    "qv-inbound-single-unicode",
+    "qv-inbound-unavailable"
+  ]);
+  const selections = manifest.axe_selection.filter(entry => entry.scenario_id.startsWith("qv-delivery-") || entry.scenario_id.startsWith("qv-inbound-"));
+  expect(selections).toHaveLength(11);
+  expect(new Set(selections.map(entry => entry.scenario_id)).size).toBe(11);
+  expect(selections.filter(entry => entry.selected).reduce((total, entry) => total + entry.themes.length, 0)).toBe(18);
+  expect(selections.filter(entry => entry.selected).every(entry =>
+    entry.root_selector === ".mg-admin-root" &&
+    JSON.stringify(entry.themes) === JSON.stringify(["light", "dark"])
+  )).toBe(true);
+  expect(selections.find(entry => entry.scenario_id === "qv-inbound-empty")).toMatchObject({
+    selected: false,
+    proof_boundary: "connected-real-route-only"
+  });
+  expect(selections.find(entry => entry.scenario_id === "qv-delivery-empty")).toMatchObject({
+    selected: false,
+    proof_boundary: "connected-real-route-only"
+  });
+});
