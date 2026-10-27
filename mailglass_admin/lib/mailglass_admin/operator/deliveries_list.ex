@@ -289,7 +289,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   defp pagination_controls(assigns) do
     ~H"""
     <nav
-      :if={Map.get(@page_meta, :total_pages, 0) > 1}
+      :if={Map.get(@page_meta, :total_pages, 0) > 1 or Map.get(@page_meta, :page, 1) > 1}
       data-testid="operator-pagination"
       aria-label="Deliveries pagination"
       class="flex items-center justify-between gap-sm border-t border-base-300 px-4 py-3 text-body"
@@ -302,8 +302,11 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         Previous
       </.pagination_link>
 
-      <span class="text-label text-secondary">
+      <span :if={Map.get(@page_meta, :page, 1) <= Map.get(@page_meta, :total_pages, 0)} class="text-label text-secondary">
         Page {Map.get(@page_meta, :page, 1)} of {Map.get(@page_meta, :total_pages, 1)}
+      </span>
+      <span :if={Map.get(@page_meta, :page, 1) > Map.get(@page_meta, :total_pages, 0)} class="text-label text-secondary">
+        Requested page {Map.get(@page_meta, :page)} is beyond the last available page ({Map.get(@page_meta, :total_pages, 0)}).
       </span>
 
       <.pagination_link

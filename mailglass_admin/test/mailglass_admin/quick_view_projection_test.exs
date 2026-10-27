@@ -8,9 +8,62 @@ defmodule MailglassAdmin.QuickViewProjectionTest do
   alias Mailglass.Tenancy
   alias MailglassAdmin.Inbound.QuickView, as: InboundQuickView
   alias MailglassAdmin.OptionalDeps.MailglassInbound
+  alias MailglassAdmin.Operator.DetailHeader
   alias MailglassAdmin.Operator.QuickView, as: DeliveryQuickView
   alias MailglassAdmin.TestSupport.{InboundFixtures, OperatorFixtures}
   alias MailglassDemo.QuickViewScenarios
+
+  @tag :phase175
+  test "Phase 175 Northstar and Fjordline facts match scoped Delivery projections" do
+    for {scenario_id, tenant_id} <- [
+          {:northstar_complete, "northstar"},
+          {:fjordline_long_unicode, "fjordline-aps"}
+        ] do
+      OperatorFixtures.seed_persona_cohort!()
+      Tenancy.put_current(tenant_id)
+
+      page =
+        Deliveries.list_recent_deliveries_page(
+          %{tenant_id: tenant_id, window_hours: 168},
+          per_page: 20
+        )
+
+      assert [persisted] = page.entries
+      assert page.total_count == 1
+
+      pure = QuickViewScenarios.delivery_investigation(scenario_id)
+      expected = pure.delivery
+
+      assert persisted.tenant_id == tenant_id
+      assert persisted.tenant_id == expected.tenant_id
+      assert persisted.recipient == expected.recipient
+      assert persisted.subject == expected.subject
+      assert persisted.provider == expected.provider
+      assert persisted.provider_message_id == expected.provider_message_id
+      assert persisted.mailable == expected.mailable
+      assert persisted.status == expected.status
+      assert persisted.last_event_type == expected.last_event_type
+      assert persisted.stream == expected.stream
+
+      # The materializer generates Delivery IDs and independently anchors event times.
+      assert persisted.id != expected.id
+      assert %DateTime{} = persisted.last_event_at
+      assert %DateTime{} = expected.last_event_at
+      assert pure.position == %{index: 1, total: page.total_count}
+
+      persisted_html =
+        render_component(&DetailHeader.detail_header/1, Map.put(pure, :delivery, persisted))
+
+      pure_html = render_component(&DetailHeader.detail_header/1, pure)
+
+      assert rendered_text(persisted_html) =~ persisted.id
+      assert rendered_text(pure_html) =~ expected.id
+      assert rendered_text(persisted_html) =~ pure.account_labels[tenant_id]
+      assert rendered_text(pure_html) =~ pure.account_labels[tenant_id]
+      assert rendered_text(persisted_html) =~ expected.recipient
+      assert rendered_text(pure_html) =~ expected.recipient
+    end
+  end
 
   test "Fjordline Delivery pure facts match the tenant-scoped production projection" do
     OperatorFixtures.seed_persona_cohort!()
