@@ -1585,6 +1585,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
 
   test("Phase 175 Delivery tracer", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
+    fs.mkdirSync(gapClosureArtifacts, { recursive: true });
 
     let holdNextReply = false;
     let heldReply = null;
@@ -1642,6 +1643,11 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(modal).toContainText("does not resend mail");
     await expect(modal).toContainText("across this Account");
 
+    const reviewScreenshot = path.join(gapClosureArtifacts, "delivery-175-replay-review.png");
+    await page.screenshot({ path: reviewScreenshot, fullPage: true });
+    expect(fs.statSync(reviewScreenshot).size, "Delivery replay review screenshot is non-empty")
+      .toBeGreaterThan(0);
+
     const pendingReply = new Promise(resolve => { resolveHeldReply = resolve; });
     const confirm = modal.getByTestId("operator-replay-confirm");
     await confirm.click();
@@ -1662,6 +1668,11 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await expect(detail).toContainText("Webhook replay requested");
     await expect(detail).toContainText("Webhook replay completed");
     await expect(detail).toContainText(/Replay command added .* Event|Replay added no new Events/);
+
+    const resultScreenshot = path.join(gapClosureArtifacts, "delivery-175-replay-result.png");
+    await page.screenshot({ path: resultScreenshot, fullPage: true });
+    expect(fs.statSync(resultScreenshot).size, "Delivery replay result screenshot is non-empty")
+      .toBeGreaterThan(0);
 
     const returnedUrl = new URL(page.url());
     expect(returnedUrl.searchParams.get("tenant_id")).toBe(tenantId);
