@@ -36,6 +36,25 @@ async function openInboundFullReplay(page) {
   return { modal, recordId };
 }
 
+async function openInboundQuickReplay(page) {
+  const row = page
+    .locator('[data-testid="inbound-records-table"] tbody tr, [data-testid="inbound-records-cards"] li')
+    .filter({ visible: true })
+    .first();
+  const opener = row.getByTestId("inbound-record-open");
+  if (await opener.count()) await opener.click();
+  else await row.getByTestId("inbound-record-row").click();
+
+  await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
+  const recordId = new URL(page.url()).searchParams.get("inbound_id");
+  expect(recordId, "quick-view selection remains in the URL").toBeTruthy();
+  await page.getByTestId("inbound-quick-replay-open").click();
+  const modal = page.getByTestId("inbound-replay-modal");
+  await expect(modal).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-close");
+  return { modal, recordId, trigger: page.getByTestId("inbound-quick-replay-open") };
+}
+
 test("Phase 175 Inbound full: confirm reports recorded Mailbox outcome and refreshes evidence", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
 
@@ -106,4 +125,39 @@ test("Phase 175 Inbound full: Escape closes review and returns focus to its deta
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-open-btn");
+});
+
+test("Phase 175 Inbound quick: review preserves Account, filters, selection and keyboard context", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openInbound(page, `tenant_id=${tenantId}&outcome=accept&window_hours=168`);
+
+  const { modal, recordId, trigger } = await openInboundQuickReplay(page);
+  const initialUrl = new URL(page.url());
+  expect(initialUrl.searchParams.get("tenant_id")).toBe(tenantId);
+  expect(initialUrl.searchParams.get("outcome")).toBe("accept");
+  expect(initialUrl.searchParams.get("window_hours")).toBe("168");
+  expect(initialUrl.searchParams.get("inbound_id")).toBe(recordId);
+  await expect(modal).toContainText(recordId);
+  await expect(modal).toContainText("Recorded Mailbox:");
+
+  await page.keyboard.press("ArrowDown");
+  expect(new URL(page.url()).searchParams.get("inbound_id")).toBe(recordId);
+
+  await page.locator("#inbound-replay-close").focus();
+  await page.keyboard.press("Shift+Tab");
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-confirm");
+  await page.keyboard.press("Tab");
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-replay-close");
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-quick-replay-open-btn");
+  expect(new URL(page.url()).searchParams.toString()).toBe(initialUrl.searchParams.toString());
+
+  await trigger.click();
+  await expect(page.getByTestId("inbound-replay-modal")).toBeVisible();
+  await page.getByTestId("inbound-replay-cancel").click();
+  await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("inbound-quick-replay-open-btn");
+  expect(new URL(page.url()).searchParams.get("inbound_id")).toBe(recordId);
 });

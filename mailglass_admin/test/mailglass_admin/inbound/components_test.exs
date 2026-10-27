@@ -21,6 +21,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
   alias MailglassAdmin.Inbound.ReplayModal
   alias MailglassAdmin.Inbound.RoutingTrace
   alias MailglassAdmin.Inbound.Timeline
+  alias MailglassAdmin.Inbound.QuickView
   alias MailglassInbound.InboundRecords.ExecutionRun
 
   describe "RecordsList.records_list/1" do
@@ -769,6 +770,88 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html = render_component(&ReplayModal.replay_modal/1, open?: false, record: record)
 
       refute html =~ ~s(data-testid="inbound-replay-modal")
+    end
+  end
+
+  describe "Phase 175 quick replay and technical evidence" do
+    @describetag :phase175
+
+    test "quick view offers an exact replay review only when recorded Mailbox eligibility is clear" do
+      record = %{
+        id: "rec-quick-175",
+        tenant_id: "tenant-a",
+        provider: "postmark",
+        envelope_recipient: "reader@example.com",
+        subject: "Follow-up",
+        received_at: ~U[2026-10-24 10:00:00Z],
+        outcome: :accept,
+        mailbox: "Elixir.Mailboxes.Recorded"
+      }
+
+      attrs = %{
+        record: record,
+        replay_eligibility: %{status: :eligible, mailbox: "Elixir.Mailboxes.Recorded"},
+        detail_error: nil,
+        outside_results?: false,
+        account_labels: %{},
+        full_path: "/inbound?tenant_id=tenant-a&inbound_id=rec-quick-175&full=1",
+        close_path: "/inbound?tenant_id=tenant-a",
+        keyboard?: true
+      }
+
+      html = render_component(&QuickView.quick_view/1, attrs)
+      button = Floki.find(Floki.parse_document!(html), "#inbound-quick-replay-open-btn")
+
+      assert button != []
+      assert Floki.attribute(button, "phx-click") == ["open_replay"]
+      assert Floki.attribute(button, "phx-value-origin") == ["quick"]
+      assert Floki.attribute(button, "data-testid") == ["inbound-quick-replay-open"]
+      assert html =~ "Review inbound replay"
+      assert html =~ "rec-quick-175"
+
+      unavailable_html =
+        render_component(
+          &QuickView.quick_view/1,
+          Map.put(attrs, :replay_eligibility, %{
+            status: :ineligible,
+            reason: :execution_history_missing
+          })
+        )
+
+      assert unavailable_html =~ "No execution history is recorded for this message."
+      refute unavailable_html =~ ~s(id="inbound-quick-replay-open-btn")
+    end
+
+    test "full Inbound technical facts stay open with long Unicode identifiers" do
+      provider_message_id = "thread-東京<&-" <> String.duplicate("🔐-長い-", 12)
+
+      detail = %{
+        record: %{
+          id: "record-東京<&-" <> String.duplicate("界", 24),
+          tenant_id: "tenant-a",
+          provider: "postmark",
+          provider_message_id: provider_message_id,
+          envelope_recipient: "reader@example.com",
+          subject: "Technical evidence",
+          received_at: ~U[2026-10-24 10:00:00Z]
+        },
+        mailbox: "Elixir.Mailboxes.Recorded",
+        outcome: :accept,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+      technical = Floki.find(Floki.parse_document!(html), "#inbound-detail-technical")
+
+      assert length(technical) == 1
+      assert Floki.attribute(technical, "tag") == []
+      assert Floki.raw_html(technical) =~ "thread-東京"
+      refute Floki.raw_html(technical) =~ "<details"
+      refute Floki.raw_html(technical) =~ "<summary"
+      assert Floki.text(technical) =~ provider_message_id
+      assert Floki.text(technical) =~ "record-東京<&-"
+      assert Floki.raw_html(technical) =~ "break-all"
     end
   end
 end
