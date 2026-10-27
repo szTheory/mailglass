@@ -99,6 +99,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:replay_origin, nil)
       |> assign(:replay_focus_return_id, nil)
       |> assign(:replay_selected_target_id, nil)
+      |> assign(:replay_target_changed?, false)
       |> assign(:replay_review_scope, nil)
       |> assign(:replay_review_snapshot, nil)
       |> assign(:replay_review_id, nil)
@@ -414,6 +415,7 @@ defmodule MailglassAdmin.OperatorLive do
        |> assign(:replay_command_feedback, nil)
        |> assign(:replay_dialog_feedback, nil)
        |> assign(:replay_selected_target_id, selected_target_id)
+       |> assign(:replay_target_changed?, false)
        |> assign(:replay_review_scope, review_scope)
        |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
        |> assign(:replay_review_id, review_id)
@@ -1134,6 +1136,7 @@ defmodule MailglassAdmin.OperatorLive do
                 delivery={@selected_delivery}
                 replay_targets={@replay_targets}
                 selected_target_id={@replay_selected_target_id}
+                target_changed?={@replay_target_changed?}
                 review_id={@replay_review_id}
                 account_label={Accounts.label(@selected_tenant_id, @account_labels)}
                 pending?={@replay_pending?}
@@ -2055,6 +2058,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:replay_origin, nil)
     |> assign(:replay_focus_return_id, nil)
     |> assign(:replay_selected_target_id, default_replay_target_id(socket.assigns.replay_targets))
+    |> assign(:replay_target_changed?, false)
     |> assign(:replay_dialog_feedback, nil)
     |> assign(:replay_review_scope, nil)
     |> assign(:replay_review_snapshot, nil)
@@ -2076,10 +2080,16 @@ defmodule MailglassAdmin.OperatorLive do
           RepairState.dialog_feedback(:review_changed)
         end
 
+      target_changed? =
+        socket.assigns.replay_target_changed? or
+          (is_binary(prior_target_id) and is_nil(selected_target_id) and
+             replay_targets.status in [:exact, :ambiguous])
+
       {:noreply,
        socket
        |> assign(:replay_targets, replay_targets)
        |> assign(:replay_selected_target_id, selected_target_id)
+       |> assign(:replay_target_changed?, target_changed?)
        |> assign(:replay_review_snapshot, replay_review_snapshot(socket, replay_targets))
        |> assign(:replay_review_id, Ecto.UUID.generate())
        |> assign(:replay_review_consumed?, false)
@@ -2147,7 +2157,9 @@ defmodule MailglassAdmin.OperatorLive do
     snapshot = socket.assigns[:replay_review_snapshot]
 
     if snapshot && Enum.any?(snapshot.candidates, &(&1.webhook_event_id == target_id)) do
-      assign(socket, :replay_selected_target_id, target_id)
+      socket
+      |> assign(:replay_selected_target_id, target_id)
+      |> assign(:replay_target_changed?, false)
     else
       assign(socket, :replay_selected_target_id, nil)
     end

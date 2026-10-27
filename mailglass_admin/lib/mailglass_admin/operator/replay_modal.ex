@@ -13,6 +13,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
   attr(:delivery, :map, default: nil)
   attr(:replay_targets, :map, default: nil)
   attr(:selected_target_id, :string, default: nil)
+  attr(:target_changed?, :boolean, default: false)
   attr(:review_id, :string, default: nil)
   attr(:account_label, :string, default: nil)
   attr(:pending?, :boolean, default: false)
@@ -44,7 +45,11 @@ defmodule MailglassAdmin.Operator.ReplayModal do
                   <.target_card candidate={candidate} selected={true} />
                 <% else %>
                   <p class="text-body text-base-content">
-                    This exact request changed. Review the current request before confirming.
+                    <%= if @target_changed? do %>
+                      This exact request changed. Review the current request before confirming.
+                    <% else %>
+                      Review the exact stored request before confirming.
+                    <% end %>
                   </p>
                   <form
                     id="operator-replay-targets"

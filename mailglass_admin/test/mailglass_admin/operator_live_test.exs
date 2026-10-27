@@ -1468,6 +1468,43 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert replay_audit_rows_for(webhook_event.id) == []
     end
 
+    @tag :phase175
+    test "first exact target review after an unavailable read still requires deliberate selection",
+         %{
+           conn: conn
+         } do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      on_exit(&OperatorFixtures.clear_reader_faults!/0)
+      on_exit(&MailglassAdmin.TestOperatorAuth.reset_destructive_calls!/0)
+      conn = operator_conn(conn)
+      {delivery, webhook_event} = insert_exact_replay_fixture!("phase175-first-rereview", 17543)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
+        )
+
+      OperatorFixtures.arm_reader_fault!("operator-1", "replay_targets", :known)
+      open_html = view |> element("[data-testid='operator-replay-open']") |> render_click()
+
+      assert open_html =~ ~s(data-testid="operator-replay-review-again")
+      refute has_element?(view, "#operator-replay-confirm")
+
+      review_html =
+        view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+
+      assert review_html =~ "Review the exact stored request before confirming."
+      refute review_html =~ "This exact request changed."
+      assert has_element?(view, "#operator-replay-targets input[type='radio']")
+      refute has_element?(view, "#operator-replay-confirm")
+      assert replay_audit_rows_for(webhook_event.id) == []
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      render_hook(view, "choose_replay_target", %{"webhook_event_id" => webhook_event.id})
+      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
+    end
+
     test "rejects the same webhook ID when reviewed receipt facts change", %{conn: conn} do
       MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
       conn = operator_conn(conn)
@@ -1532,12 +1569,17 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert replay_audit_rows_for(reviewed.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
 
-      view |> element("#operator-replay-close") |> render_click()
-      view |> element("[data-testid='operator-replay-open']") |> render_click()
+      changed_review_html =
+        view |> element("[data-testid='operator-replay-review-again']") |> render_click()
 
       fresh_review_id = replay_review_id(view)
       refute fresh_review_id == old_review_id
-      assert render(view) =~ "replacement-652"
+
+      assert changed_review_html =~
+               "This exact request changed. Review the current request before confirming."
+
+      assert changed_review_html =~ replacement.id
+      refute has_element?(view, "#operator-replay-confirm")
 
       # A queued Confirm from the rejected review cannot consume the new review.
       render_hook(view, "confirm_replay", %{"review" => old_review_id})
@@ -1545,6 +1587,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert replay_audit_rows_for(replacement.id) == []
       assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
 
+      render_hook(view, "choose_replay_target", %{"webhook_event_id" => replacement.id})
+      assert has_element?(view, "#operator-replay-confirm:not([disabled])")
       render_hook(view, "confirm_replay", %{"review" => fresh_review_id})
 
       assert Enum.count(
