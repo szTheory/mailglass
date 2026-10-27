@@ -1926,6 +1926,76 @@ defmodule MailglassAdmin.OperatorLiveTest do
       end
     end
 
+    @tag :phase175
+    test "Phase 175 Delivery safety rechecks authorization revoked after review opens", %{
+      conn: conn
+    } do
+      MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      revoked_key = {MailglassAdmin.TestOperatorAuth, :delivery_replay_revoked}
+      :persistent_term.erase(revoked_key)
+
+      on_exit(fn ->
+        :persistent_term.erase(revoked_key)
+        MailglassAdmin.TestOperatorAuth.reset_destructive_calls!()
+      end)
+
+      conn = operator_conn(conn)
+
+      {delivery, webhook_event} =
+        insert_exact_replay_fixture!("phase175-revoked-after-open", 17542)
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "delivery_id" => delivery.id,
+            "full" => "1"
+          })
+        )
+
+      view |> element("[data-testid='operator-replay-open']") |> render_click()
+      reviewed_id = replay_review_id(view)
+      assert render(view) =~ webhook_event.id
+
+      :persistent_term.put(revoked_key, true)
+      html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+
+      assert html =~
+               "Replay isn’t allowed for your account. Ask an Account administrator to review access."
+
+      assert html =~ ~s(data-testid="operator-replay-modal")
+      assert html =~ webhook_event.id
+      assert replay_review_id(view) == reviewed_id
+      assert replay_audit_rows_for(webhook_event.id) == []
+      assert MailglassAdmin.TestOperatorAuth.destructive_calls() == []
+
+      :persistent_term.put(revoked_key, false)
+      view |> element("[data-testid='operator-replay-review-again']") |> render_click()
+      fresh_review_id = replay_review_id(view)
+      refute fresh_review_id == reviewed_id
+      assert render(view) =~ webhook_event.id
+
+      success_html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
+      assert success_html =~ "Replay command added 1 newly normalized Event."
+
+      assert Enum.count(
+               replay_audit_rows_for(webhook_event.id),
+               &(&1.type == :webhook_replay_requested)
+             ) == 1
+
+      assert Enum.count(
+               replay_audit_rows_for(webhook_event.id),
+               &(&1.type == :webhook_replay_succeeded)
+             ) == 1
+
+      assert [%{delivery_id: authorized_delivery, webhook_event_id: authorized_target}] =
+               MailglassAdmin.TestOperatorAuth.destructive_calls()
+
+      assert authorized_delivery == delivery.id
+      assert authorized_target == webhook_event.id
+    end
+
     test "reports terminal audit write failure safely and retains requested and failed evidence",
          %{
            conn: conn

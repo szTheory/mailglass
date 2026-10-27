@@ -1,0 +1,10 @@
+{
+  "command": "ASDF_ELIXIR_VERSION=1.18.4-otp-27 mix test test/mailglass_admin/operator_live_test.exs:1930 --formatter GSDTapFormatter --no-compile",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - test operator surface Phase 175 Delivery safety rechecks authorization revoked after review opens\n  ---\n  message: \"Assertion with =~ failed\"\n  ...\n1..1\n",
+  "targetTest": "test operator surface Phase 175 Delivery safety rechecks authorization revoked after review opens",
+  "targetFile": "test/mailglass_admin/operator_live_test.exs",
+  "expected": "Revocation after the dialog opens is checked on confirmation; the dialog stays mounted with safe denial copy and no replay audit writes.",
+  "actual": "The named target ran and failed on the denial-copy assertion because the current test auth adapter ignored the revocation toggle and confirmation was not denied.",
+  "semanticAssessment": "RED is valid: the selected test executed and failed on its planned user-visible authorization assertion. The TAP report contains exactly one failing target test; no setup, load, compile, or unrelated test failure occurred."
+}
