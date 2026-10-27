@@ -15,43 +15,24 @@ defmodule Storybook.QuickViews.Delivery do
     """
   end
 
-  @dark_template """
-  <div data-theme="mailglass-dark" class="mg-admin-root bg-base-100 text-base-content p-md">
-    <.psb-variation/>
-  </div>
-  """
-
   def variations do
     [
       %Variation{
         id: :northstar_normal,
-        attributes: %{
-          delivery: normal_delivery(),
-          account_labels: %{"northstar" => "Northstar Logistics"},
-          full_path:
-            "/ops/mail?tenant_id=northstar&view=deliveries&delivery_id=phase174-normal&full=1",
-          close_path: "/ops/mail?tenant_id=northstar&view=deliveries",
-          previous_path:
-            "/ops/mail?tenant_id=northstar&view=deliveries&delivery_id=phase174-previous",
-          next_path:
-            "/ops/mail?tenant_id=northstar&view=deliveries&delivery_id=phase174-next",
-          position: %{index: 2, total: 16},
-          keyboard?: false
-        }
+        attributes: MailglassDemo.QuickViewScenarios.delivery(:northstar_normal)
+      },
+      %Variation{
+        id: :northstar_first,
+        attributes: MailglassDemo.QuickViewScenarios.delivery(:northstar_first)
+      },
+      %Variation{
+        id: :northstar_last,
+        attributes: MailglassDemo.QuickViewScenarios.delivery(:northstar_last)
+      },
+      %Variation{
+        id: :fjordline_single_unicode,
+        attributes: MailglassDemo.QuickViewScenarios.delivery(:fjordline_single_unicode)
       }
     ]
-  end
-
-  defp normal_delivery do
-    %{
-      id: "phase174-normal-delivery",
-      tenant_id: "northstar",
-      recipient: "mira.chen@northstar.example",
-      subject: "Sam Rivera invited you to Northstar Logistics",
-      status: :sent,
-      last_event_type: :delivered,
-      last_event_at: ~U[2026-10-26 12:00:00Z],
-      provider: "postmark"
-    }
   end
 end

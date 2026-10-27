@@ -1,0 +1,293 @@
+{
+  "schema_version": "quick-view-scenarios.v1",
+  "scenarios": [
+    {
+      "id": "qv-delivery-normal",
+      "story_path": "/dev/storybook/quick_views/delivery",
+      "variation_id": "northstar_normal",
+      "role_job": "An operator checks the outcome and account context for one selected Delivery.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_outbound!/0"],
+      "cohort": "northstar",
+      "state": "normal",
+      "reason": "Keeps one real production quick-view component visible at a typical multi-record position.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "delivery": {
+          "id": "phase174-northstar-normal",
+          "recipient": "ops@northstar.example",
+          "subject": "Northstar Logistics email usage reached 85%",
+          "status": "sent",
+          "last_event_type": "bounced",
+          "last_event_at": "2026-10-26T12:00:00Z",
+          "provider": "sendgrid",
+          "provider_message_id": "sg-phase174-normal",
+          "mailable": "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert"
+        },
+        "position": {"index": 2, "total": 16},
+        "previous_id": "phase174-northstar-first",
+        "next_id": "phase174-northstar-third"
+      }
+    },
+    {
+      "id": "qv-delivery-first",
+      "story_path": "/dev/storybook/quick_views/delivery",
+      "variation_id": "northstar_first",
+      "role_job": "An operator starts at the first Delivery and can see the unavailable previous boundary.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_outbound!/0"],
+      "cohort": "northstar",
+      "state": "first",
+      "reason": "Retains a reachable first-record boundary with position and accessible unavailable navigation.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-quiet-quick-view-arrows"],
+      "rendered": true,
+      "projection": {
+        "delivery": {
+          "id": "phase174-northstar-first",
+          "recipient": "ops@northstar.example",
+          "subject": "Northstar Logistics email usage reached 85%",
+          "status": "sent",
+          "last_event_type": "bounced",
+          "last_event_at": "2026-10-26T12:00:00Z",
+          "provider": "sendgrid",
+          "provider_message_id": "sg-phase174-first",
+          "mailable": "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert"
+        },
+        "position": {"index": 1, "total": 16},
+        "previous_id": null,
+        "next_id": "phase174-northstar-second"
+      }
+    },
+    {
+      "id": "qv-delivery-last",
+      "story_path": "/dev/storybook/quick_views/delivery",
+      "variation_id": "northstar_last",
+      "role_job": "An operator finishes at the last Delivery and can see the unavailable next boundary.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_outbound!/0"],
+      "cohort": "northstar",
+      "state": "last",
+      "reason": "Retains the final-record boundary without suggesting another result exists.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-quiet-quick-view-arrows"],
+      "rendered": true,
+      "projection": {
+        "delivery": {
+          "id": "phase174-northstar-last",
+          "recipient": "ops@northstar.example",
+          "subject": "Northstar Logistics email usage reached 85%",
+          "status": "sent",
+          "last_event_type": "bounced",
+          "last_event_at": "2026-10-26T12:00:00Z",
+          "provider": "sendgrid",
+          "provider_message_id": "sg-phase174-last",
+          "mailable": "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert"
+        },
+        "position": {"index": 16, "total": 16},
+        "previous_id": "phase174-northstar-before-last",
+        "next_id": null
+      }
+    },
+    {
+      "id": "qv-delivery-single-unicode",
+      "story_path": "/dev/storybook/quick_views/delivery",
+      "variation_id": "fjordline_single_unicode",
+      "role_job": "An operator inspects the only Fjordline Delivery with exact long and Unicode facts.",
+      "source": ["reference/persona_spec/personas.ex#spec/0"],
+      "cohort": "fjordline-aps",
+      "state": "single-unicode",
+      "reason": "Exercises the real Fjordline persona's exact long identifier, recipient and contact-name literals without truncation.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-and-connected-route",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "delivery": {
+          "id": "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
+          "recipient": "bjorn.hansen@fjordline-aps.example",
+          "subject": "Welcome to Fjordline A/S — Bjørn Hansen / 山田太郎",
+          "status": "sent",
+          "last_event_type": "delivered",
+          "last_event_at": "2026-10-26T12:00:00Z",
+          "provider": "postmark",
+          "provider_message_id": "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
+          "mailable": "Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName"
+        },
+        "position": {"index": 1, "total": 1},
+        "previous_id": null,
+        "next_id": null
+      }
+    },
+    {
+      "id": "qv-delivery-empty",
+      "story_path": null,
+      "variation_id": null,
+      "role_job": "An operator opens the real Deliveries collection for an Account with no records.",
+      "source": ["reference/persona_spec/personas.ex#spec/0"],
+      "cohort": "helios-void",
+      "state": "empty",
+      "reason": "Helios is realized by absence; a story cannot select a Delivery that does not exist.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "connected-real-route-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows"],
+      "rendered": false
+    }
+  ],
+  "axe_selection": [
+    {"scenario_id": "qv-delivery-normal", "state": "normal", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-delivery-first", "state": "first", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-delivery-last", "state": "last", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-delivery-single-unicode", "state": "single-unicode", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-delivery-empty", "state": "empty", "themes": ["light", "dark"], "selected": false, "root_selector": ".mg-admin-root", "proof_boundary": "connected-real-route-only", "reason": "No selected Delivery record or story variation exists for this real absence state."}
+  ],
+  "feedback": [
+    {
+      "id": "fb-health-crowding",
+      "label": "Health crowding, freshness/Refresh grouping, activity hierarchy",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/health_overview.ex", "symbol": "MailglassAdmin.Operator.HealthOverview"}],
+      "owner_requirements": ["OUTUX-06"],
+      "owner_phase": "177",
+      "scenario_ids": [],
+      "status": "pending",
+      "disposition": "The desktop 2:1 grid still gives issue dividers excess width and lets activity compete with freshness. The next health repair owns the composition and deep-link comparison.",
+      "evidence_pointer": "Pending Phase 177 retained Health scenario and connected filtered-link evidence."
+    },
+    {
+      "id": "fb-preview-reset",
+      "label": "Preview reset alignment/weight and repetitive helpers",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/preview/assigns_form.ex", "symbol": "MailglassAdmin.Preview.AssignsForm"}],
+      "owner_requirements": ["PRVUX-05", "PRVUX-06"],
+      "owner_phase": "178",
+      "scenario_ids": [],
+      "status": "pending",
+      "disposition": "Restore defaults remains a ghost action inside the padded form card, with repeated generic Text value help. Preserve parsing and validation when adjusting the authoring layout.",
+      "evidence_pointer": "Pending Phase 178 Preview authoring scenario and reset behavior evidence."
+    },
+    {
+      "id": "fb-preview-identity",
+      "label": "Readable selected Preview scenario/module identity",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex", "symbol": "MailglassAdmin.Preview.Sidebar.menu/1"}],
+      "owner_requirements": ["PRVUX-07"],
+      "owner_phase": "178",
+      "scenario_ids": [],
+      "status": "pending",
+      "disposition": "The selector still combines a raw module/scenario identity with a middle dot; human identity and author access to exact technical identity remain unresolved.",
+      "evidence_pointer": "Pending Phase 178 long/Unicode and narrow Preview identity evidence."
+    },
+    {
+      "id": "fb-account-context",
+      "label": "Compact Account context and coherent Preview return",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/shell.ex", "symbol": "MailglassAdmin.Operator.Shell"}, {"path": "mailglass_admin/lib/mailglass_admin/preview/sidebar.ex", "symbol": "MailglassAdmin.Preview.Sidebar"}],
+      "owner_requirements": ["UXF-09", "UXF-10"],
+      "owner_phase": "177",
+      "scenario_ids": [],
+      "status": "pending",
+      "disposition": "The Account control remains visually heavy and Preview is account-independent; the host-safe return seam has not been added or validated.",
+      "evidence_pointer": "Pending Phase 177 Account-scoped Health/collection and Preview return-route evidence."
+    },
+    {
+      "id": "fb-auto-apply-filters",
+      "label": "Auto-apply both collections, no Apply",
+      "source_path": ".planning/todos/2026-10-25-owner-review-pr302-ui-feedback.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator_live.ex", "symbol": "validate_filters/2 and apply_filters/2"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound_live.ex", "symbol": "validate_filters/2 and apply_filters/2"}],
+      "owner_requirements": ["FILTER-01", "FILTER-02", "FILTER-03", "FILTER-04"],
+      "owner_phase": "176",
+      "scenario_ids": [],
+      "status": "pending",
+      "disposition": "Both live lists still render Apply filters after draft validation; URL-backed immediate select and debounced text behavior remain open.",
+      "evidence_pointer": "Pending Phase 176 connected filter, URL/history, and Back/Forward cases."
+    },
+    {
+      "id": "fb-quiet-quick-view-arrows",
+      "label": "Quiet quick-view arrows on both surfaces",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex", "symbol": "MailglassAdmin.Operator.QuickView.nav_button/1"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex", "symbol": "MailglassAdmin.Inbound.QuickView.nav_button/1"}],
+      "owner_requirements": ["UXF-11"],
+      "owner_phase": "174",
+      "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty"],
+      "status": "partial",
+      "disposition": "Delivery arrows no longer carry the idle border and retain ghost hover, focus ring, labels and 44px targets. Inbound arrows still carry their idle border pending Plan 174-02; keep its native disabled buttons.",
+      "evidence_pointer": "Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js (Phase174 tracer and Phase174 delivery cases); /ops/mail?tenant_id=northstar&view=deliveries and /dev/storybook/quick_views/delivery. Inbound proof is pending Plan 174-02."
+    },
+    {
+      "id": "fb-raw-source-hierarchy",
+      "label": "Raw provider source hierarchy and privacy/reveal grouping",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex", "symbol": "MailglassAdmin.Inbound.DetailHeader"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/routing_trace.ex", "symbol": "MailglassAdmin.Inbound.RoutingTrace"}],
+      "owner_requirements": ["INUX-06"],
+      "owner_phase": "176",
+      "scenario_ids": [],
+      "status": "pending",
+      "disposition": "Raw source controls/privacy copy remain disconnected from the sparse facts grid. This repair must retain the existing reveal authorization and safe allowlist.",
+      "evidence_pointer": "Pending Phase 176 authorized and denied connected reveal states plus retained component layout."
+    },
+    {
+      "id": "fb-suppression-refresh",
+      "label": "Suppression Refresh/Retry and truthful wording",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/suppression_card.ex", "symbol": "MailglassAdmin.Operator.SuppressionCard"}],
+      "owner_requirements": ["OUTUX-07", "OUTUX-08"],
+      "owner_phase": "175",
+      "scenario_ids": [],
+      "status": "pending",
+      "disposition": "Refresh remains below the card facts and copy still exposes internal terms. Keep the real retry read, distinguish unavailable evidence, and do not imply unknown expiry is permanent.",
+      "evidence_pointer": "Pending Phase 175 ready/empty/stale/unavailable suppression evidence."
+    },
+    {
+      "id": "fb-inbound-addresses",
+      "label": "Complete ordinary authorized Inbound addresses",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex", "symbol": "sender_display/1"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/routing_trace.ex", "symbol": "recipient_display/1"}],
+      "owner_requirements": ["INUX-05"],
+      "owner_phase": "176",
+      "scenario_ids": [],
+      "status": "pending",
+      "disposition": "Ordinary sender display still masks the From contact. Keep raw source, routing/header/matcher diagnostics, telemetry, and logs separately protected.",
+      "evidence_pointer": "Pending Phase 176 authorized long/Unicode, missing, and multiple-address connected evidence."
+    },
+    {
+      "id": "fb-storybook-fidelity",
+      "label": "Storybook navigation, fonts/themes/hooks and stories beyond primitives",
+      "source_path": ".planning/todos/2026-10-26-owner-review-health-preview-controls.md",
+      "current_sources": [{"path": "reference/demo_app/lib/mailglass_demo_web/router.ex", "symbol": "MailglassDemoWeb.StorybookRoutes"}, {"path": "reference/demo_app/storybook/primitives/stat_card.story.exs", "symbol": "Storybook.Primitives.StatCard"}],
+      "owner_requirements": ["STORY-03", "STORY-04", "STORY-05", "STORY-06", "STORY-07"],
+      "owner_phase": "174",
+      "pending_phases": ["174-03", "174-04", "174-05", "174-06", "178"],
+      "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty"],
+      "status": "partial",
+      "disposition": "The generated root, Theme Picker, sidebar, direct story and internal assets now retain /dev/storybook; the production Delivery story is retained. The serif stat-card defect remains, while production font/theme receipts, hook lifecycle, axe execution integrity, and final catalogue dispositions remain pending.",
+      "evidence_pointer": "Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js (Phase174 tracer); /dev/storybook, /dev/storybook/primitives/theme_picker, /dev/storybook/quick_views/delivery, /dev/storybook/assets. Pending phases are listed explicitly."
+    },
+    {
+      "id": "fb-replay-review",
+      "label": "Quick-view replay, truthful availability, concise dialog/X, success toast and inline errors/retry",
+      "source_path": ".planning/todos/2026-10-25-owner-review-pr302-ui-feedback.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/replay_action.ex", "symbol": "MailglassAdmin.Operator.ReplayAction"}, {"path": "mailglass_admin/lib/mailglass_admin/operator/replay_modal.ex", "symbol": "MailglassAdmin.Operator.ReplayModal"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/replay_modal.ex", "symbol": "MailglassAdmin.Inbound.ReplayModal"}],
+      "owner_requirements": ["REPLAY-04", "REPLAY-05", "REPLAY-06", "REPLAY-07", "REPLAY-08"],
+      "owner_phase": "175",
+      "scenario_ids": [],
+      "status": "pending",
+      "disposition": "Replay remains a full-detail entry point, and the owner-requested concise close/success and inline retry behavior is unchanged by this quick-view navigation plan.",
+      "evidence_pointer": "Pending Phase 175 connected permitted, unavailable, denied, success, and retry outcomes."
+    },
+    {
+      "id": "fb-technical-details",
+      "label": "Technical evidence visible by default on full detail",
+      "source_path": ".planning/todos/2026-10-25-owner-review-pr302-ui-feedback.md",
+      "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/detail_header.ex", "symbol": "MailglassAdmin.Operator.DetailHeader"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/detail_header.ex", "symbol": "MailglassAdmin.Inbound.DetailHeader"}],
+      "owner_requirements": ["UXF-12"],
+      "owner_phase": "175",
+      "scenario_ids": [],
+      "status": "pending",
+      "disposition": "Full-detail technical identifiers are still collapsed behind details/summary; quick-view technical details remain a distinct compact presentation.",
+      "evidence_pointer": "Pending Phase 175 production story and connected full-detail evidence on both surfaces."
+    }
+  ]
+}
