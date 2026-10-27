@@ -133,6 +133,12 @@ defmodule MailglassAdmin.Operator.RepairState do
         "Replay isn’t allowed for your account. Ask an Account administrator to review access."
     }
 
+  def dialog_feedback({:authorization, :stale_auth, _message}),
+    do: %{kind: :error, text: authorization_feedback("Recent authentication is required.")}
+
+  def dialog_feedback({:authorization, :unauthorized, _message}),
+    do: dialog_feedback(:denied)
+
   def dialog_feedback(:target_required),
     do: %{kind: :error, text: "Choose one exact stored request before confirming replay."}
 

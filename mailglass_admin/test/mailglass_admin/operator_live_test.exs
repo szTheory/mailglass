@@ -1435,6 +1435,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ ~s(data-testid="operator-replay-confirm")
     end
 
+    @tag :phase175
     test "returns a stale-auth error without performing replay", %{conn: conn} do
       stale =
         DateTime.utc_now()
@@ -1457,8 +1458,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = view |> element("[data-testid='operator-replay-confirm']") |> render_click()
 
-      assert html =~
-               "Replay isn’t allowed for your account. Ask an Account administrator to review access."
+      assert html =~ "Recent authentication is required."
+      refute html =~ "Ask an Account administrator to review access."
 
       assert html =~ ~s(data-testid="operator-replay-feedback")
       assert html =~ ~s(data-testid="operator-replay-review-again")

@@ -648,8 +648,8 @@ defmodule MailglassAdmin.OperatorLive do
       {:error, :target_required} ->
         {:noreply, replay_dialog_failure(socket, :target_required)}
 
-      {:error, {:auth, _message}} ->
-        {:noreply, replay_dialog_failure(socket, :denied)}
+      {:error, {:auth, reason, message}} ->
+        {:noreply, replay_dialog_failure(socket, {:authorization, reason, message})}
 
       {:error, _reason} ->
         {:noreply, replay_dialog_failure(socket, :command_failure)}
