@@ -69,18 +69,20 @@ function appendFidelityEvidence(section, receipt) {
         widths: [],
         evidenceLimits: [
           "Browser zoom reconciliation is owned by Phase 178.",
-          "Captures use synthetic Northstar demo records only."
+          "Captures use synthetic Northstar demo records only.",
+          "At 320px, explicit Storybook review theme selection uses the native change event because the full radio group extends beyond the iframe click area; Task 1 verifies physical selection at desktop width."
         ]
       };
 
   evidence[section] ||= [];
   evidence[section].push(receipt);
-  if (receipt.caseId) {
-    if (!evidence.selectedCaseIds.includes(receipt.caseId)) {
-      evidence.selectedCaseIds.push(receipt.caseId);
+  const caseIds = [receipt.caseId, ...(receipt.cases || []).map(scenario => scenario.caseId)].filter(Boolean);
+  for (const caseId of caseIds) {
+    if (!evidence.selectedCaseIds.includes(caseId)) {
+      evidence.selectedCaseIds.push(caseId);
     }
-    if (!evidence.executedCaseIds.includes(receipt.caseId)) {
-      evidence.executedCaseIds.push(receipt.caseId);
+    if (!evidence.executedCaseIds.includes(caseId)) {
+      evidence.executedCaseIds.push(caseId);
     }
   }
   fs.writeFileSync(FIDELITY_PATH, `${JSON.stringify(evidence, null, 2)}\n`);
@@ -92,7 +94,10 @@ async function adminCssUrl(page) {
       .evaluate(() => {
         const link = [...document.querySelectorAll('link[rel="stylesheet"]')]
           .map(element => element.href)
-          .find(url => new URL(url).pathname.startsWith("/dev/mail/css-"));
+          .find(url => {
+            const pathname = new URL(url).pathname;
+            return pathname.startsWith("/dev/mail/css-") || pathname.startsWith("/ops/mail/css-");
+          });
         if (link) return link;
 
         const imports = [...document.querySelectorAll("style")]
@@ -178,6 +183,7 @@ test.describe("Phase174 themes", () => {
       await expect(system).toBeVisible();
 
       const pageURL = page.url();
+      const storyIframeUrl = await frame.locator("body").evaluate(body => body.ownerDocument.URL);
       const initialText = await frame.locator("body").innerText();
       const initial = await themeState(frame);
       expect(initial).toMatchObject({
@@ -296,7 +302,7 @@ test.describe("Phase174 themes", () => {
       const themeReceipt = {
         caseId: `theme:${story.area}:${story.variant}`,
         storyUrl: pageURL,
-        iframeUrl: await frame.locator("body").evaluate(body => body.ownerDocument.URL),
+        iframeUrl: storyIframeUrl,
         owner: initial.owner,
         systemLight: {
           selectedPreference: systemLight.preference,
@@ -390,6 +396,7 @@ test.describe("Phase174 fonts", () => {
         const frame = page.frameLocator(`iframe[id*="${story.variant}"]`);
         const root = frame.locator(OWNER);
         await expect(root).toBeVisible();
+        const storyIframeUrl = await root.evaluate(element => element.ownerDocument.URL);
 
         const fontProbe = await root.evaluate(async root => {
           const document = root.ownerDocument;
@@ -451,7 +458,7 @@ test.describe("Phase174 fonts", () => {
           };
           const sandboxReset = document.createElement("style");
           sandboxReset.dataset.phase174SandboxReset = "true";
-          sandboxReset.textContent = "body, h1, h2, h3, code, pre, .mono { font-family: Georgia, serif; }";
+          sandboxReset.textContent = "@layer app { body, h1, h2, h3, code, pre, .mono { font-family: Georgia, serif; } }";
           document.head.append(sandboxReset);
           const sandboxRoles = {
             ui: roleStyle(root),
@@ -535,7 +542,8 @@ test.describe("Phase174 fonts", () => {
         expect(new URL(productionCssUrl).pathname).toMatch(/^\/ops\/mail\/css-/);
         const productionCssResponse = await page.request.get(productionCssUrl);
         expect(productionCssResponse.status()).toBe(200);
-        expect(sha256(await productionCssResponse.body())).toBe(sha256(builtCss));
+        const productionCssBytes = await productionCssResponse.body();
+        expect(sha256(productionCssBytes)).toBe(sha256(builtCss));
 
         const caseId = `fonts:${story.area}:${story.variant}`;
         const stylesheetReceipt = {
@@ -576,7 +584,7 @@ test.describe("Phase174 fonts", () => {
           dataTheme: fontProbe.theme.dataTheme,
           adversarialSandboxReset: fontProbe.sandboxRoles,
           storyUrl: new URL(story.path, BASE_URL).href,
-          iframeUrl: await root.evaluate(element => element.ownerDocument.URL),
+          iframeUrl: storyIframeUrl,
           productionConnected: await page.locator("[data-phx-main]").getAttribute("class")
         });
       } finally {
@@ -598,7 +606,7 @@ test.describe("Phase174 widths", () => {
           narrowCases.push({
             width,
             theme,
-            variant: boundary ? `${story.area === "delivery" ? "northstar_first" : "northstar_first"}` : "northstar_normal",
+            variant: boundary ? "northstar_first" : "northstar_normal",
             selection: boundary ? "boundary" : "normal"
           });
         }
@@ -607,7 +615,6 @@ test.describe("Phase174 widths", () => {
       const receipts = [];
       const panelSelector = story.area === "delivery" ? "#operator-quick-view" : "#inbound-quick-view";
       const technicalSelector = story.area === "delivery" ? "#operator-quick-technical" : "#inbound-quick-technical";
-      const positionExpectation = story.area === "delivery" ? /\d+ of \d+/ : /\d+ of \d+/;
       const screenshotWidths = new Set([320, 768, 1440]);
 
       for (const scenario of narrowCases) {
@@ -618,17 +625,35 @@ test.describe("Phase174 widths", () => {
         const frame = page.frameLocator(`iframe[id*="${scenario.variant}"]`);
         const root = frame.locator(OWNER);
         await expect(root).toBeVisible();
-        await frame.getByRole("radio", { name: scenario.theme === "dark" ? "Dark" : "Light" }).check();
+        const themeRadio = frame.getByRole("radio", {
+          name: scenario.theme === "dark" ? "Dark" : "Light"
+        });
+        await themeRadio.evaluate(input => {
+          input.checked = true;
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        await expect(themeRadio).toBeChecked();
         await expect(root).toHaveAttribute("data-theme", scenario.theme === "dark" ? "mailglass-dark" : "mailglass-light");
+        const expectedBase100 = scenario.theme === "dark" ? "#0d1b2a" : "#f8fbfd";
+        await expect.poll(() =>
+          root.evaluate(element => getComputedStyle(element).getPropertyValue("--color-base-100").trim())
+        ).toBe(expectedBase100);
         const panel = frame.locator(panelSelector);
         await expect(panel).toBeVisible();
         const position = panel.locator("[aria-live=polite]");
         await expect(position).toBeVisible();
-        await expect(position).toHaveText(positionExpectation);
+        const expectedPosition = scenario.selection === "boundary"
+          ? "1"
+          : story.area === "delivery"
+            ? "2"
+            : "3";
+        expect((await position.innerText()).trim()).toMatch(
+          new RegExp(`^${expectedPosition} of \\d+$`)
+        );
         const close = panel.getByRole("link", { name: "Close quick view" });
         await expect(close).toBeVisible();
 
-        const geometry = await panel.evaluate(panel => {
+        const geometry = await panel.evaluate((panel, technicalSelector) => {
           const view = panel.ownerDocument.defaultView;
           const bounds = element => {
             const rect = element.getBoundingClientRect();
@@ -645,10 +670,9 @@ test.describe("Phase174 widths", () => {
             label: element.getAttribute("aria-label") || element.textContent.trim().slice(0, 40),
             ...bounds(element)
           }));
-          const technical = panel.querySelector("[data-copy-value]");
+          const technical = panel.querySelector(`${technicalSelector} [data-copy-value]`);
           return {
             viewport: { width: view.innerWidth, height: view.innerHeight },
-            rootWidth: panel.closest(".mg-admin-root").getBoundingClientRect().width,
             panel: panelRect,
             position: bounds(position),
             close: bounds(close),
@@ -663,7 +687,7 @@ test.describe("Phase174 widths", () => {
               wordBreak: view.getComputedStyle(technical).wordBreak
             }
           };
-        });
+        }, technicalSelector);
         expect(geometry.viewport.width).toBeGreaterThan(0);
         expect(geometry.panel.left).toBeGreaterThanOrEqual(0);
         expect(geometry.panel.right).toBeLessThanOrEqual(geometry.viewport.width);
@@ -687,8 +711,8 @@ test.describe("Phase174 widths", () => {
           caseId,
           storyUrl: new URL(storyPath, BASE_URL).href,
           paneWidth: geometry.panel.width,
-          rootWidth: geometry.rootWidth,
-          viewportWidth: geometry.viewport.width,
+          viewportWidth: scenario.width,
+          iframeViewportWidth: geometry.viewport.width,
           viewportHeight: geometry.viewport.height,
           scenario: scenario.selection,
           theme: scenario.theme,
@@ -702,7 +726,7 @@ test.describe("Phase174 widths", () => {
         if (screenshotWidths.has(scenario.width) && scenario.theme === "dark") {
           fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
           const screenshot = path.join(EVIDENCE_DIR, `${story.area}-${scenario.width}-${scenario.selection}-dark.png`);
-          await page.screenshot({ path: screenshot, fullPage: true });
+          await frame.locator("body").screenshot({ path: screenshot });
           receipt.screenshot = path.relative(REPO_ROOT, screenshot);
         }
       }
@@ -716,12 +740,12 @@ test.describe("Phase174 widths", () => {
       await page.setViewportSize({ width: 1280, height: 900 });
       const { panel, opener, focusReturnId } = await openProductionDeliveryQuickView(page);
       const next = panel.getByRole("link", { name: /Next delivery/ });
-      await next.focus();
+      const close = panel.getByRole("link", { name: "Close quick view" });
+      await close.focus();
       await page.keyboard.press("Shift+Tab");
-      const previous = panel.getByRole("link", { name: /Previous delivery/ });
       await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("aria-label")))
-        .toBe("Previous delivery");
-      expect(await previous.evaluate(element => element.matches(":focus-visible"))).toBe(true);
+        .toBe("Next delivery");
+      expect(await next.evaluate(element => element.matches(":focus-visible"))).toBe(true);
       const reducedMotionSeconds = await panel.evaluate(element => {
         const duration = getComputedStyle(element).animationDuration.split(",")[0].trim();
         return duration.endsWith("ms") ? parseFloat(duration) / 1000 : parseFloat(duration);

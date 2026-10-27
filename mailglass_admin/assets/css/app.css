@@ -485,6 +485,28 @@ code, pre, .mono {
 .mono {
   overflow-wrap: anywhere;
 }
+
+/* The PhoenixStorybook iframe has its own base typography reset. Keep the
+   production roles on the actual sandbox owner so that reset cannot replace
+   its inherited UI face or the display/code faces. The global rules above
+   remain the defaults for production surfaces outside the admin shell. */
+.mg-admin-root {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+.mg-admin-root h1,
+.mg-admin-root h2,
+.mg-admin-root h3 {
+  font-family: 'Inter Tight', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  letter-spacing: -0.02em;
+}
+.mg-admin-root code,
+.mg-admin-root pre,
+.mg-admin-root .mono {
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.mg-admin-root .mono {
+  overflow-wrap: anywhere;
+}
 [data-testid="inbound-timeline-run"] p {
   overflow-wrap: anywhere;
 }
