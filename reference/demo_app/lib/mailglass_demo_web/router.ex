@@ -6,7 +6,7 @@ defmodule MailglassDemoWeb.StorybookRoutes do
       quote do
         import PhoenixStorybook.Router
 
-        pipeline :storybook_hook_assets do
+        pipeline :storybook_review_assets do
           plug(:put_secure_browser_headers)
         end
 
@@ -17,12 +17,12 @@ defmodule MailglassDemoWeb.StorybookRoutes do
         end
 
         scope "/" do
-          pipe_through(:storybook_hook_assets)
+          pipe_through(:storybook_review_assets)
 
           get(
-            "/dev/storybook-hooks-:md5",
-            MailglassAdmin.Controllers.Assets,
-            :hooks
+            "/dev/storybook-review-js-:md5",
+            MailglassDemoWeb.Storybook,
+            :js
           )
         end
       end
@@ -120,7 +120,8 @@ defmodule MailglassDemoWeb.Router do
   # Dev-only interactive component review surface (PROJECT D-06). The macro keeps
   # its dependency-availability guard and full /dev/storybook mount at root scope.
   # Its sandbox CSS is the committed admin bundle served by
-  # mailglass_admin_routes/2 above at /dev/mail/css-<md5>.
+  # mailglass_admin_routes/2 above at /dev/mail/css-<md5>; its JS endpoint combines
+  # shared production hooks with the local review-theme adapter.
   MailglassDemoWeb.StorybookRoutes.maybe_live_storybook()
 
   scope "/ops" do

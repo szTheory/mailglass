@@ -9,7 +9,13 @@ defmodule Storybook.QuickViews.Delivery do
 
   def template do
     """
-    <div data-theme="mailglass-light" style="min-height: 600px" class="mg-admin-root bg-base-100 text-base-content p-md">
+    <div data-theme-owner="quick-view-story" data-theme-preference="system" data-theme-resolved="light" data-theme-os="light" data-theme="mailglass-light" style="min-height: 600px" class="mg-admin-root bg-base-100 text-base-content p-md">
+      <fieldset aria-label="Review theme" data-testid="quick-view-review-theme" style="position: fixed; top: 8px; left: 8px; z-index: 1000; display: flex; gap: 4px; margin: 0; padding: 4px; border: 1px solid var(--color-base-300); border-radius: 8px; background: var(--color-base-100); color: var(--color-base-content); box-shadow: 0 2px 8px rgb(13 27 42 / 18%);">
+        <legend style="padding: 0 4px;">Review theme</legend>
+        <label style="display: flex; align-items: center; gap: 4px; min-width: 64px; min-height: 44px; padding: 0 8px; cursor: pointer;"><input type="radio" name="quick-view-review-theme" value="light" style="width: 16px; height: 16px;">Light</label>
+        <label style="display: flex; align-items: center; gap: 4px; min-width: 64px; min-height: 44px; padding: 0 8px; cursor: pointer;"><input type="radio" name="quick-view-review-theme" value="dark" style="width: 16px; height: 16px;">Dark</label>
+        <label style="display: flex; align-items: center; gap: 4px; min-width: 64px; min-height: 44px; padding: 0 8px; cursor: pointer;"><input type="radio" name="quick-view-review-theme" value="system" checked style="width: 16px; height: 16px;">System</label>
+      </fieldset>
       <.psb-variation/>
     </div>
     """

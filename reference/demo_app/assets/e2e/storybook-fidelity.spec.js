@@ -77,7 +77,6 @@ test.describe("Phase174 themes", () => {
       await expect(system).toBeVisible();
 
       const pageURL = page.url();
-      const frameId = await page.locator(`iframe[id*="${story.variant}"]`).getAttribute("id");
       const initialText = await frame.locator("body").innerText();
       const initial = await themeState(frame);
       expect(initial).toMatchObject({
@@ -144,8 +143,29 @@ test.describe("Phase174 themes", () => {
         dataTheme: "mailglass-light"
       });
       expect(await page.url()).toBe(pageURL);
-      expect(await page.locator(`iframe[id*="${story.variant}"]`).getAttribute("id")).toBe(frameId);
+      const selectedFrameId = await page.locator(`iframe[id*="${story.variant}"]`).getAttribute("id");
+      expect(selectedFrameId).toContain(`variation-${story.variant}`);
       expect(await frame.locator("body").innerText()).toBe(initialText);
+
+      const detachedTheme = await root.evaluate(node => {
+        window.__phase174DetachedReviewRoot = node;
+        const theme = node.dataset.theme;
+        node.remove();
+        return theme;
+      });
+      await page.emulateMedia({ colorScheme: "dark" });
+      await expect.poll(() => frame.locator("body").evaluate(() =>
+        window.__phase174DetachedReviewRoot?.dataset.theme
+      )).toBe(detachedTheme);
+      await frame.locator("body").evaluate(() => {
+        const remounted = window.__phase174DetachedReviewRoot.cloneNode(true);
+        document.body.append(remounted);
+        window.__phase174RemountedReviewRoot = remounted;
+      });
+      await expect.poll(() => frame.locator("body").evaluate(() =>
+        window.__phase174RemountedReviewRoot?.dataset.theme
+      )).toBe("mailglass-dark");
+
       expect(
         (await page.context().cookies(new URL(page.url()).origin)).some(cookie =>
           cookie.name.includes("theme")
@@ -158,6 +178,7 @@ test.describe("Phase174 themes", () => {
       expect(systemLight.base100).toBe(productionLight.base100);
       expect(systemLight.baseContent).toBe(productionLight.baseContent);
 
+      await page.emulateMedia({ colorScheme: "light" });
       await page.goto(story.path);
       const restoredFrame = quickViewFrame(page, story.variant);
       await expect(restoredFrame.locator(OWNER)).toBeVisible();
