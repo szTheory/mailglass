@@ -1,95 +1,102 @@
 # Phase 174 review: quick views and faithful Storybook evidence
 
-**Review state:** the current-source local cold/warm pilot is complete. Candidate-specific hosted CI evidence is still required before this plan can close. This guide records that gap explicitly and does not treat local receipts as CI proof.
-
 ## Reproduce the selected evidence
 
-From the repository root, run the isolated cold/warm pilot with the pinned local toolchain:
+Run the isolated cold/warm pilot from the repository root with the pinned local toolchain:
 
 ```sh
 ASDF_ERLANG_VERSION=27.3.4.13 ASDF_ELIXIR_VERSION=1.18.4-otp-27 \
   bash scripts/run_demo_browser_evidence.sh --phase174 --pilot
 ```
 
-The wrapper prints its unique run directory. For local-only validation:
+The wrapper prints its unique evidence directory. A local receipt can be checked without claiming hosted CI authority:
 
 ```sh
 node scripts/check_phase174_evidence.cjs \
-  --evidence-dir reference/demo_app/tmp/demo_browser_evidence/<run-id> \
-  --pilot
+  --evidence-dir reference/demo_app/tmp/demo_browser_evidence/<run-id> --pilot
 node --test scripts/check_phase174_evidence.test.cjs
 ```
 
-The local result is deliberately not accepted by `--require-ci`: a local `GITHUB_ACTIONS` label or elapsed time cannot establish GitHub job authority. That flag must reject a local run and must be used only with a downloaded, completed candidate job and independently captured `ci-job.json`.
+For the hosted run, use the exact artifact root and independent GitHub job metadata:
 
-## Current local candidate evidence
+```sh
+node scripts/check_phase174_evidence.cjs \
+  --evidence-dir reference/demo_app/tmp/demo_browser_evidence/ci/40491221303-attempt-1 \
+  --pilot --require-ci
+```
 
-| Field | Measured result |
+The `--require-ci` check rejects local or caller-labeled evidence. It requires a completed successful workflow and named evidence job, a matching candidate SHA/run/attempt/job/runner, completed required setup and evidence steps, and the full runner duration derived from the job timestamps.
+
+## Current candidate evidence
+
+Candidate source is `fbf7d791f4f489db8a5d344455a33f0942a434d4` on `gsd/phase-174-evidence`. The exact GitHub Actions run is [40491221303](https://github.com/szTheory/mailglass/actions/runs/40491221303), attempt 1, `workflow_dispatch`, with the Demo evidence job at [122145432926](https://github.com/szTheory/mailglass/actions/runs/40491221303/job/122145432926). Its run-owned artifact is `demo-browser-evidence-40491221303-1`, retained under the existing 14-day policy through 2026-11-10.
+
+The evidence job completed successfully at `2026-10-27T10:56:49Z`. The full workflow completed/success at `2026-10-27T11:03:56Z` with all 26 jobs successful, including Operator Browser Gate and Core Deterministic Suite. Independent run/job metadata and successful setup/evidence steps are retained in `ci-job.json`, `github-run.raw.json`, and `github-jobs.raw.json`. The final hosted evidence check returned `valid: true` for both cold and warm conditions with matching candidate identity.
+
+| Field | Hosted result |
 | --- | --- |
-| Run | `mailglass-evidence-20261027092905-80235-20765` |
-| Source revision | `b0ea598658595da577a6161e5c5c56f4c68d5814` |
-| Selected-source digest | `8d5e0a48bd6635fc4a05e3ab89d56e9c95317f1a85efe3a275102cbf90e2a09e` |
-| Cold / warm coverage | Each condition expected and executed 98 Demo + 6 hook + 26 fidelity + 18 Axe cases = 148/148; no failed, skipped, flaky, missing, or unfinished case |
-| Axe | Each condition: 18/18 selected, 0 violations, 0 approved violations, 0 untriaged findings, 50 incomplete findings |
-| Cold elapsed | 428,261 ms (7.14 min); setup 226,521 ms; scans/comparison 195,646 ms |
-| Warm elapsed | 198,785 ms (3.31 min); setup 6,570 ms; scans/comparison 187,992 ms |
-| Full local pilot | 630,715 ms (10.51 min), including run-owned Compose teardown; one local executor, hosted runner minutes unavailable |
-| Browser clients | Demo Playwright 1.60.0 / Chromium 1223; Admin Playwright 1.59.1 / Chromium 1217; cold cache miss and warm cache hit for each, under `/cache/playwright` |
+| Selected source digest | `36ce0049cc50c1e33e5a35f203c99c771a12d55f016d1a830ed24f948e335004` |
+| Source inputs and hash method | `phase174/execution.json#source` retains all 45 tracked input paths. Digest method: `sha256(sorted(path\0byte_length\0file_sha256\n))`. |
+| Cold / warm coverage | Each condition expected and executed 98 Demo + 6 hooks + 26 fidelity + 18 Axe cases = 148/148. |
+| Axe comparison | Each condition: 18/18 selected, 0 violations, 0 unapproved violations, 0 untriaged findings, 50 incomplete findings. |
+| Cold phase wall | 355,489 ms (5m55.489s): 194,562 ms setup, 156,293 ms execution, 0 ms per-condition teardown. |
+| Warm phase wall | 158,321 ms (2m38.321s): 2,957 ms setup, 153,281 ms execution, 11,466 ms run-owned teardown. |
+| Pilot wall | 525,889 ms (8m45.889s) including the cold/warm wrapper and final run-owned cleanup. |
+| Browser clients | Demo Playwright 1.60.0 / Chromium 1223; Admin Playwright 1.59.1 / Chromium 1217. Both caches missed cold and hit warm. |
+| Browser install lookup | Demo: 12,597 ms cold / 985 ms warm. Admin: 9,142 ms cold / 422 ms warm. |
 
-The local run retained all receipts and representative screenshots under `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027092905-80235-20765/phase174/`. It used one run-owned Compose project, isolated ports and volumes, serial data resets and one Playwright worker. The browser cases used the same Demo service for the Demo sweep and Admin-owned Axe scan. The wrapper removed only that project's containers and volumes.
+The run used one run-owned Compose project, `mailglass-evidence-40491221303-1`, with isolated ports 44005 and 43899, one Playwright worker, serialized cold/warm conditions and data resets, and the authenticated reset endpoint. It removed its own services and volumes after the warm run. The retained artifacts contain synthetic cohorts; the reset receipt records no token value.
 
-The six font receipts identify the exact served production CSS and Inter, Inter Tight, and IBM Plex Mono faces/weights. Story-local Light, Dark, and System behavior is owned by each quick-view story; live OS changes were exercised without changing the host preference. The iframe mount/remove/remount and focus-return receipts record production hook registration and real connected route cycles. Storybook documents were verified without an Admin bootstrap; the final `/ops/` documents retained the production Admin bootstrap.
-
-### Setup and added-cost limits
-
-Cold/warm local cost includes Demo lock audit and dependency restore, both browser installers, Demo/Postgres startup, Admin dependency restore, all selected browser/axe checks, comparison and teardown. The cold service startup was 123,286 ms; Demo dependency restore was 2,833 ms, Demo Chromium install 51,727 ms, Admin dependency restore 1,553 ms, Admin Chromium install 46,766 ms, Demo scan 153,475 ms, and Admin Axe scan 41,921 ms. Warm browser caches were hits (Demo install lookup 1,811 ms; Admin 1,019 ms); warm Demo scan was 149,986 ms and Axe scan 37,868 ms.
-
-The provisional budget is an **added PR cost** of at most five wall minutes and ten runner minutes. The 10.51-minute local end-to-end pilot is useful setup-inclusive timing, but it is neither a GitHub runner measurement nor a same-profile baseline delta. Accordingly, added PR wall/runner cost is **unmeasured**, and budget compliance is **not established**. No scan-only timing is substituted for the complete job duration. A same-profile existing-lane comparison and actual hosted job timing are still needed to judge duplication and placement.
+The fidelity receipt proves that both Storybook stories use the production stylesheet: source CSS SHA-256 `0d964dcd2c911a642619531c6ce041f22a44d888bb1590fc8097535acb9887e5`; built and served CSS SHA-256 `b74a52501d325bc14e8201ab6fe94c77686d38c3d8ce6f4d674ec51a689e475b`, with served bytes matching the build. Twelve font responses cover Inter, Inter Tight, and IBM Plex Mono at weights 400 and 700 for both stories; all returned HTTP 200 with loaded faces. Twenty responsive cases cover 320, 375, 768, 1280 and 1440 CSS-pixel widths, normal/boundary states and both themes. Story-local Light/Dark/System behavior, live OS changes, explicit selection stability, iframe hook registration/removal/remount and connected Demo route focus return are recorded in the fidelity and hooks receipts. The independently locked Admin client’s connected browser checks passed in Operator Browser Gate job 122145432867 in the same successful workflow.
 
 ## Requirement and scenario evidence map
 
 | Requirement | Current source and retained evidence | Evidence boundary |
 | --- | --- | --- |
-| UXF-11 | `MailglassAdmin.Operator.QuickView` and `MailglassAdmin.Inbound.QuickView`; connected `quick-views.spec.js` Delivery/Inbound navigation, boundary, keyboard, focus-return, scrolling, target-size, and theme cases. Feedback `fb-quiet-quick-view-arrows` now links these to the current run. | Enabled controls are named 44px ghost links. Delivery's unavailable boundary is an inert generic span with screen-reader text and no button/link semantics; Inbound retains its native disabled button. The adapters' different boundary semantics are intentional. |
-| STORY-03 | `MailglassDemoWeb.StorybookRoutes`; `persona-screenshots.spec.js` generated-root/sidebar/deep-link and served-asset cases; quick-view tracer in `quick-views.spec.js`. | Retained paths remain under `/dev/storybook`, including root, Theme Picker, quick-view stories, and internal assets. |
-| STORY-04 | `storybook-fidelity.spec.js` production CSS/font/role receipts and responsive matrix for both stories. | Verifies built and served CSS identity, font bytes/faces/weights, and UI/display/code roles at 320, 375, 768, 1280, and 1440 CSS-pixel viewports. The width cases assert both computed Light and Dark production themes. |
-| STORY-05 | `storybook-fidelity.spec.js` story-owned Light/Dark/System cases for Delivery and Inbound. | Both initial System modes and live light↔dark OS changes are checked; explicit selection remains stable and the host preference is not mutated. |
-| STORY-06 | `storybook-hooks.spec.js`; production `MailglassDemoWeb.Storybook.js_body/0` hook registration; the selected hook receipt. | Six cases cover Storybook mount/remount and connected Delivery/Inbound focus return; the receipt checks iframe lifecycle, socket frames, reduced motion, focus events, both independent locked clients, and real routes. |
-| UIQ-05 | Admin-owned `storybook-axe.spec.js` and `storybook-axe.cjs`; cold/warm `axe.json` receipts and independent `storybook-axe-approved.json` triage. | Exact 18 selected executions in both conditions. There are no approved violation fingerprints. Zero violations and zero untriaged findings do **not** turn the 50 incomplete findings into passes; those machine-incomplete findings remain visible and need human interpretation. |
+| UXF-11 | `MailglassAdmin.Operator.QuickView`, `MailglassAdmin.Inbound.QuickView`; connected checks in `reference/demo_app/assets/e2e/quick-views.spec.js` and the selected browser receipts. Scenarios: `qv-delivery-normal/first/last/single-unicode/empty`, `qv-inbound-normal/first/last/single-unicode/unavailable/empty`. | Enabled controls have accessible names, visible focus and at least 44px targets. Delivery's unavailable boundary is an inert generic span with screen-reader text and no link/button semantics; Inbound retains its native disabled button. Empty states are connected-route-only. |
+| STORY-03 | `MailglassDemoWeb.StorybookRoutes`; selected `persona-screenshots.spec.js` and `quick-views.spec.js` cases. | Root, Theme Picker, sidebar, direct Delivery/Inbound stories and prefixed assets resolve below `/dev/storybook`. |
+| STORY-04 | `storybook-fidelity.spec.js` and `phase174/fidelity.json`. | Built/served CSS identity, six font faces and UI/display/code roles are compared with production. Twenty cases cover the selected viewport/theme matrix; this is not a browser/device Cartesian grid. |
+| STORY-05 | Story-owned Light/Dark/System controls in the Delivery and Inbound stories; theme receipt in `fidelity.json`. | Both System modes and live light↔dark OS changes are checked. Explicit choices stay selected and do not mutate the host preference. |
+| STORY-06 | `storybook-hooks.spec.js`, production hook asset, Admin `flows.spec.js`, and `phase174/hooks.json`; Admin's connected proof is in Operator Browser Gate job 122145432867. | Storybook preview mount/patch/remove/remount and connected Demo Delivery/Inbound focus return are in the Demo hook receipt. Demo LiveView 1.1.33 and Admin LiveView 1.2.13 remain independently locked and both passed their connected checks. The explorer and isolated iframe retain their own sockets; the hook asset creates none. |
+| UIQ-05 | Admin-owned `storybook-axe.spec.js` / `storybook-axe.cjs`, independent `storybook-axe-approved.json` triage, and cold/warm `axe.json` receipts. | Exact 18 selected cases run in each condition. Violation approvals remain empty. Zero violations and zero untriaged findings do not convert the 50 incomplete findings per condition into passes. |
 
-The retained scenario manifest accounts for the meaningful boundaries without implying persistence for story-only projections:
+The scenario manifest distinguishes pure scenario facts from persisted projection agreement. Persisted checks cover `qv-delivery-single-unicode`, `qv-inbound-normal` and `qv-inbound-single-unicode`; `mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs` reads the scoped production projections. Other normal/boundary/unavailable stories are explicit rendering-only checks. `qv-delivery-empty` and `qv-inbound-empty` represent real absence and remain connected-route-only; no empty story fabricates a selected record. The nine rendered stories produce the exact 18-case Light/Dark Axe set.
 
-- Delivery normal, first, last, and single-Unicode states are rendered production stories; connected route cases separately prove operator navigation and focus. Inbound normal, first, last, single-Unicode, and unavailable/error states are rendered stories; connected routes prove reachable interactions.
-- The persisted projection test is `mailglass_admin/test/mailglass_admin/quick_view_projection_test.exs`. The manifest marks `qv-delivery-single-unicode`, `qv-inbound-normal`, and `qv-inbound-single-unicode` as persisted projection checks. Normal/first/last/unavailable variants without persistence are explicitly story-rendered projection-agreement checks, not claims that their fixture rows were inserted.
-- `qv-delivery-empty` and `qv-inbound-empty` are connected-real-route-only; they do not fabricate empty Storybook stories. The selected story Axe matrix is exactly nine rendered variants in Light and Dark (18 executions). The separate `helios-void` direct route stays an empty-account case, not a selectable delivery.
-- The selected findings comparator uses the exact run/revision/source digest, scenario, state, theme, rule, and stable target. It rejects a stale, missing, partial, duplicate, failed, or vacuous report. A previous warm iframe-detachment retry in `quick-views.spec.js` was corrected by using Playwright's retrying property assertion while retaining the exact `SPAN` semantic requirement; the final candidate pilot had no flaky cases.
+## Bounded visual review and remaining limits
 
-The bounded visual review used the retained warm Delivery Light/Dark captures plus Delivery and Inbound 320px boundary captures. The two themes retain clear subject, outcome, account/provider, position, and close hierarchy; narrow content wraps and continues vertically without horizontal spill. At 320px the Storybook review-theme control crowds the Storybook chrome at the top of the capture; that is review chrome, not quick-view content. This is a subjective restraint review, not a score. It covers selected Chromium states, not all browsers/devices or browser zoom. Real zoom and final milestone reconciliation remain Phase 178 work. The StatCard serif/catalogue feedback remains explicitly partial for Phase 178; descriptorless transparency prohibition remains flagged-unverified as recorded in Plan 174-05.
+I reviewed the retained candidate captures `phase174/cold/delivery-light.png`, `phase174/cold/delivery-dark.png`, `phase174/warm/delivery-320-boundary-dark.png`, and `phase174/warm/inbound-1440-boundary-dark.png`. Light and dark keep the subject, outcome, recipient, time, Account/provider and technical identifier in a clear hierarchy. The selected navigation and close controls read as quiet controls with visible boundaries. At 320px, the subject and timestamp wrap and the panel continues vertically without visible horizontal spill. At the wide Inbound capture, the panel remains a contained reading column. The Storybook review-theme control crowds its own chrome at the top of the narrow capture; that is review chrome rather than quick-view content. This is a bounded, subjective review of selected Chromium captures, not an aesthetic score or a statement about all browsers/devices.
+
+The 50 Axe incomplete findings per condition are retained and matched against the independent triage record; they remain incomplete machine results, not passes. No violation fingerprint is approved. The descriptorless transparency prohibition remains flagged-unverified; this evidence does not infer an owner approval. The serif StatCard/catalogue feedback and real browser zoom/final milestone reconciliation remain Phase 178 work. Focus, reduced-motion, width, theme, hook and keyboard evidence for the current repair is not deferred.
 
 ## Feedback disposition
 
-- `fb-quiet-quick-view-arrows` is resolved against the connected Delivery and Inbound routes and the exact distinct boundary semantics above.
-- `fb-storybook-fidelity` remains **partial**. Current sources now include the router, `MailglassDemoWeb.Storybook.js_body/0`, both production quick-view stories and components, Admin asset controller, and `Storybook.Primitives.StatCard`. Current receipts cover prefix/navigation, production assets/fonts, both themes, hooks, connected cases, and Axe triage. The StatCard/catalogue work and real-zoom reconciliation remain owned by Phase 178.
-- Other feedback rows remain with their existing owners and phases (175–178); this plan does not mark them resolved.
+The manifest is `reference/persona_spec/quick_view_scenarios.json`; its `feedback` entries and scenario IDs remain the inventory. The two Phase 174 rows link to this guide and to the current retained evidence:
 
-## CI placement and hosted-proof gate
+| Feedback | Requirement(s) | Current disposition and evidence |
+| --- | --- | --- |
+| `fb-quiet-quick-view-arrows` | UXF-11 | Resolved for Delivery and Inbound connected routes and the scenario IDs above. Delivery unavailable navigation is inert; Inbound unavailable navigation is natively disabled. |
+| `fb-storybook-fidelity` | STORY-03–07 | Partial. Current receipts cover routes/assets, production CSS/fonts, both themes, hooks, connected cases and strict Axe comparison. STORY-07 set-wide reconciliation, serif StatCard/catalogue work and real zoom remain with Phase 178. |
+| `fb-suppression-refresh` | OUTUX-07, OUTUX-08 | Pending Phase 175; retain ready/empty/stale/unavailable suppression evidence and truthful retry/expiry language. |
+| `fb-replay-review` | REPLAY-04–08 | Pending Phase 175; retain permitted, unavailable, denied, success and retry outcomes. |
+| `fb-technical-details` | UXF-12 | Pending Phase 175; retain production stories and connected full-detail evidence on both surfaces. |
+| `fb-auto-apply-filters` | FILTER-01–04 | Pending Phase 176; retain connected URL/history and Back/Forward cases for both lists. |
+| `fb-raw-source-hierarchy` | INUX-06 | Pending Phase 176; keep reveal authorization and the safe source allowlist in connected evidence. |
+| `fb-inbound-addresses` | INUX-05 | Pending Phase 176; retain authorized long/Unicode, missing and multiple-address cases. |
+| `fb-health-crowding` | OUTUX-06 | Pending Phase 177; retain Health hierarchy and filtered deep-link comparison. |
+| `fb-account-context` | UXF-09, UXF-10 | Pending Phase 177; retain scoped Health/collection and host-approved Preview return-route evidence. |
+| `fb-preview-reset` | PRVUX-05, PRVUX-06 | Pending Phase 178; retain authoring/reset behavior while preserving parsing and validation. |
+| `fb-preview-identity` | PRVUX-07 | Pending Phase 178; retain long/Unicode and narrow selector identity evidence. |
 
-The existing `.github/workflows/ci.yml` job `Demo Browser Evidence (Docker Compose / Chromium)` now runs `bash scripts/run_demo_browser_evidence.sh --phase174 --pilot` and uploads its run-owned outputs with the existing 14-day retention. It is advisory and runs when the workflow's code detector selects it. It is not a dependency of `CI Green`; `scripts/ci_green_policy.sh` explicitly rejects an advisory lane presented as required evidence. The live `main` branch-protection snapshot observed on 2026-10-27 had strict required contexts `CI Green` and `Guard Release Trigger`. No aggregate policy or protected context was changed.
+Later rows remain pending with their assigned owners; this plan does not mark them resolved.
 
-**Hosted proof is still open.** This local pilot has no GitHub run/job identity (`job_id: local`, `runner_minutes: null`) and cannot satisfy `--require-ci`. No candidate-specific successful hosted job exists yet. At the time of this review, local candidate `b0ea5986` was not published; `origin/main` was still `8328093e4a07d28251ec7f02dd0f37cda2fd6a7b`, and `gh run list --workflow ci.yml --commit b0ea598658595da577a6161e5c5c56f4c68d5814` returned no run. Do not substitute that stale remote-main state or infer CI authority from the local receipt.
+## CI placement and cost disposition
 
-After the final candidate commits are available on a verified remote ref, use the ordinary code-changing PR workflow or run `gh workflow run ci.yml --ref "$PHASE174_CANDIDATE_REF"` against that explicit candidate ref. Set the variable only after verifying the published ref contains the final candidate. Record and verify the actual run head SHA/ref before downloading anything. For that exact run:
+The existing `demo_browser_evidence` job in `.github/workflows/ci.yml` runs `bash scripts/run_demo_browser_evidence.sh --phase174 --pilot` and uploads run-owned evidence with the existing 14-day retention. It is advisory and is not a dependency of `CI Green`. The live `main` branch-protection snapshot observed on 2026-10-27 remains strict with required contexts `CI Green` and `Guard Release Trigger`; no aggregate policy or protected context changed.
 
-1. Set `PHASE174_CANDIDATE_REF` to the verified published candidate branch/ref and `PHASE174_CI_RUN_ID` to its actual completed workflow run. Check `gh run view "$PHASE174_CI_RUN_ID" --json headSha,status,conclusion,jobs,url`; confirm the head SHA equals the candidate commit and the job is `demo_browser_evidence`, named `Demo Browser Evidence (Docker Compose / Chromium)`.
-2. Download artifact `demo-browser-evidence-$PHASE174_CI_RUN_ID-$GITHUB_RUN_ATTEMPT` into a new run-owned `reference/demo_app/tmp/demo_browser_evidence/ci/<run-id>/` directory. Set `PHASE174_CI_EVIDENCE_DIR` to the downloaded content root containing `phase174/`.
-3. Save an independent `ci-job.json` beside `phase174/`, schema `phase174-ci-job.v1`, from the actual GitHub run/job metadata: workflow run and attempt, repository, head SHA, URL/status/conclusion/timestamps, actual job database ID/name/status/conclusion, runner name/OS/architecture, and the completed successful `Checkout`, `Audit demo browser lockfile`, `Test pinned baseline provisioning`, and `Run demo browser evidence` steps. Derive full runner duration from the actual job `started_at` and `completed_at`; do not derive it from the local cold/warm intervals.
-4. Verify the job and artifact refer to the same candidate SHA, run/attempt, job, runner, and source digest, then run:
+The defensible same-profile baseline is successful main CI run [40414024714](https://github.com/szTheory/mailglass/actions/runs/40414024714), head `e326da4dfb59c3a20942acff763d04a79ada974b`, event `push`, attempt 1. Its same Demo evidence job [121891818059](https://github.com/szTheory/mailglass/actions/runs/40414024714/job/121891818059) ran on `ubuntu-latest` / one GitHub-hosted runner from `2026-10-26T22:45:46Z` to `2026-10-26T22:49:27Z`: 221,000 ms (3m41s).
 
-   ```sh
-   node scripts/check_phase174_evidence.cjs \
-     --evidence-dir "$PHASE174_CI_EVIDENCE_DIR" --pilot --require-ci
-   ```
+Candidate job 122145432926 ran on `ubuntu-latest` / one runner from `2026-10-27T10:47:53Z` to `2026-10-27T10:56:49Z`: 536,000 ms (8m56s, 8.933 runner minutes). The observed same-job delta is **+315,000 ms (5m15s, 5.25 runner minutes)**. The provisional added PR wall budget of five minutes is exceeded by 15 seconds; the ten runner-minute budget is within limit. This is an observational single-job comparison, not a causal estimate or a guarantee about CI critical-path latency. It includes runner/setup variance; the full hosted job timestamps, rather than scan-only intervals, define the measured cost.
 
-Only a successful checker result for that actual completed candidate job closes this gate. Until then, hosted runner cost, added-cost delta, and the five-wall/ten-runner-minute budget disposition remain unmeasured.
+Recommendation: keep the Phase174 pilot integrated into the existing advisory Demo Browser Evidence job rather than add a second CI lane. One lane shares checkout, one isolated Demo/Postgres service, and the cold/warm browser caches while retaining all 148 cases in both conditions. Re-measure the 15-second wall overage on a later run; only consider reducing repeated baseline execution after proving every acceptance case still runs at least once and all Phase174 cases remain in both conditions. Preserve the current required gates.
 
-The local synthetic evidence has no customer payloads or auth secrets. Failure outputs from the earlier flaky run are retained under `reference/demo_app/tmp/demo_browser_evidence/mailglass-evidence-20261027090617-56275-17045/`; the successful current-source run is retained separately. Historical Phase 172 screenshot artifacts were not overwritten.
+The exact run was not merged, published or deployed. The completed overall workflow and independent `--require-ci` check are the final candidate proof; CI placement remains advisory.
