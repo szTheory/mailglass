@@ -1871,9 +1871,8 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     const firstReviewId = await deniedConfirm.getAttribute("phx-value-review");
     await deniedConfirm.click();
     const denial = deniedModal.getByTestId("operator-replay-feedback");
-    await expect(denial).toContainText(
-      "Replay isn’t allowed for your account. Ask an Account administrator to review access."
-    );
+    await expect(denial).toContainText("Recent authentication is required.");
+    await expect(denial).not.toContainText("Ask an Account administrator to review access.");
     await expect(deniedModal).toBeVisible();
     await expect(deniedModal.getByTestId("operator-replay-target-id").first()).toHaveText(deniedTarget);
     await expect(deniedConfirm).toBeDisabled();
@@ -2354,9 +2353,9 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       await deniedConfirm.focus();
       await expect(deniedConfirm).toBeFocused();
       await page.keyboard.press("Enter");
-      await expect(deniedModal.getByTestId("operator-replay-feedback")).toContainText(
-        "Replay isn’t allowed for your account. Ask an Account administrator to review access."
-      );
+      const staleAuthFeedback = deniedModal.getByTestId("operator-replay-feedback");
+      await expect(staleAuthFeedback).toContainText("Recent authentication is required.");
+      await expect(staleAuthFeedback).not.toContainText("Ask an Account administrator to review access.");
       await expect(deniedModal.getByTestId("operator-replay-review-again")).toBeVisible();
       await expect(deniedModal).toBeVisible();
       await expect(deniedModal.getByTestId("operator-replay-target-id")).toHaveText(deniedTarget);
