@@ -1731,7 +1731,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     }
   });
 
-  test("Phase174 scroll access: delivery overflow is keyboard reachable and both navigation boundaries are disabled", async ({ page }) => {
+  test("Phase174 scroll access: delivery overflow is keyboard reachable and both navigation boundaries are inert", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await openOperator(page);
 
@@ -1747,15 +1747,23 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     const [current, total] = (await position.textContent()).trim().split(" of ").map(Number);
     expect(current).toBe(1);
 
-    const previous = quickView.getByRole("button", { name: "Previous delivery", exact: true });
-    await expect(previous).toBeDisabled();
+    const previous = quickView.getByTestId("operator-quick-view-prev");
+    await expect(previous).toHaveJSProperty("tagName", "SPAN");
+    await expect(previous).toHaveAttribute("tabindex", "-1");
+    await expect(previous).not.toHaveAttribute("role");
+    await expect(previous).not.toHaveAttribute("href");
+    await expect(previous).toHaveText("Previous delivery unavailable");
     const previousBox = await previous.boundingBox();
     for (let index = 1; index < total; index += 1) {
       await quickView.getByRole("link", { name: "Next delivery", exact: true }).click();
       await expect(position).toHaveText(`${index + 1} of ${total}`);
     }
-    const next = quickView.getByRole("button", { name: "Next delivery", exact: true });
-    await expect(next).toBeDisabled();
+    const next = quickView.getByTestId("operator-quick-view-next");
+    await expect(next).toHaveJSProperty("tagName", "SPAN");
+    await expect(next).toHaveAttribute("tabindex", "-1");
+    await expect(next).not.toHaveAttribute("role");
+    await expect(next).not.toHaveAttribute("href");
+    await expect(next).toHaveText("Next delivery unavailable");
     const nextBox = await next.boundingBox();
     const closeBox = await quickView.getByRole("link", { name: "Close quick view", exact: true }).boundingBox();
 

@@ -17,6 +17,9 @@ const ciReporters = [
 
 module.exports = defineConfig({
   testDir: "./e2e",
+  // This producer targets the isolated Demo service and requires run metadata.
+  // Its dedicated config is exercised by the Demo Browser Evidence lane.
+  testIgnore: "**/storybook-axe.spec.js",
   timeout: 30_000,
   expect: {
     timeout: 5_000
