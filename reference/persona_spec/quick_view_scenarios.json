@@ -134,6 +134,159 @@
       "proof_boundary": "connected-real-route-only",
       "feedback_ids": ["fb-quiet-quick-view-arrows"],
       "rendered": false
+    },
+    {
+      "id": "qv-inbound-normal",
+      "story_path": "/dev/storybook/quick_views/inbound",
+      "variation_id": "northstar_normal",
+      "role_job": "An operator checks one selected Inbound message's outcome and account context.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_inbound!/0"],
+      "cohort": "northstar",
+      "state": "normal",
+      "reason": "Retains an ordinary account-scoped message and a reachable position between both navigation controls.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "phase174-inbound-normal",
+          "tenant_id": "northstar",
+          "envelope_recipient": "support@demo.mailglass.local",
+          "subject": "[support] Invite email did not arrive",
+          "outcome": "matched",
+          "received_at": "2026-10-26T12:00:00Z",
+          "provider": "mailgun",
+          "mailbox": "MailglassDemoWeb.Inbound.SupportMailbox"
+        },
+        "position": {"index": 3, "total": 6},
+        "previous_id": "phase174-inbound-previous",
+        "next_id": "phase174-inbound-next"
+      }
+    },
+    {
+      "id": "qv-inbound-first",
+      "story_path": "/dev/storybook/quick_views/inbound",
+      "variation_id": "northstar_first",
+      "role_job": "An operator starts at the first Inbound message and sees that there is no previous result.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_inbound!/0"],
+      "cohort": "northstar",
+      "state": "first",
+      "reason": "Retains the first-result position with the native disabled previous button.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "phase174-inbound-first",
+          "tenant_id": "northstar",
+          "envelope_recipient": "support@demo.mailglass.local",
+          "subject": "[support] Invite email did not arrive",
+          "outcome": "matched",
+          "received_at": "2026-10-26T12:00:00Z",
+          "provider": "mailgun",
+          "mailbox": "MailglassDemoWeb.Inbound.SupportMailbox"
+        },
+        "position": {"index": 1, "total": 6},
+        "previous_id": null,
+        "next_id": "phase174-inbound-second"
+      }
+    },
+    {
+      "id": "qv-inbound-last",
+      "story_path": "/dev/storybook/quick_views/inbound",
+      "variation_id": "northstar_last",
+      "role_job": "An operator finishes at the last Inbound message and sees that there is no next result.",
+      "source": ["reference/demo_app/lib/mailglass_demo/demo_data.ex#seed_inbound!/0"],
+      "cohort": "northstar",
+      "state": "last",
+      "reason": "Retains the last-result position with the native disabled next button.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "phase174-inbound-last",
+          "tenant_id": "northstar",
+          "envelope_recipient": "support@demo.mailglass.local",
+          "subject": "[support] Invite email did not arrive",
+          "outcome": "matched",
+          "received_at": "2026-10-26T12:00:00Z",
+          "provider": "mailgun",
+          "mailbox": "MailglassDemoWeb.Inbound.SupportMailbox"
+        },
+        "position": {"index": 6, "total": 6},
+        "previous_id": "phase174-inbound-before-last",
+        "next_id": null
+      }
+    },
+    {
+      "id": "qv-inbound-single-unicode",
+      "story_path": "/dev/storybook/quick_views/inbound",
+      "variation_id": "fjordline_single_unicode",
+      "role_job": "An operator checks a single Inbound message with exact long and Unicode facts.",
+      "source": ["reference/persona_spec/personas.ex#spec/0"],
+      "cohort": "fjordline-aps",
+      "state": "single-unicode",
+      "reason": "Carries the canonical Fjordline recipient and contact-name literals into a synthetic Inbound projection without claiming the Demo seed materializes that cohort.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": {
+          "id": "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
+          "tenant_id": "fjordline-aps",
+          "envelope_recipient": "bjorn.hansen@fjordline-aps.example",
+          "subject": "Welcome to Fjordline A/S — Bjørn Hansen / 山田太郎",
+          "outcome": "matched",
+          "received_at": "2026-10-26T12:00:00Z",
+          "provider": "postmark",
+          "mailbox": "MailglassDemoWeb.Inbound.SupportMailbox"
+        },
+        "position": {"index": 1, "total": 1},
+        "previous_id": null,
+        "next_id": null
+      }
+    },
+    {
+      "id": "qv-inbound-unavailable",
+      "story_path": "/dev/storybook/quick_views/inbound",
+      "variation_id": "selected_unavailable",
+      "role_job": "An operator sees the truthful unavailable state for a selected Inbound record.",
+      "source": ["mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex#detail_error_copy/1"],
+      "cohort": "northstar",
+      "state": "unavailable",
+      "reason": "Uses the existing read-unavailable branch and does not fabricate a selected record or Full detail destination.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "story-render-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows", "fb-storybook-fidelity"],
+      "rendered": true,
+      "projection": {
+        "record": null,
+        "selected_id": "phase174-inbound-unavailable",
+        "detail_error": "read_unavailable",
+        "outside_results?": false,
+        "position": null,
+        "previous_id": null,
+        "next_id": null
+      }
+    },
+    {
+      "id": "qv-inbound-empty",
+      "story_path": null,
+      "variation_id": null,
+      "role_job": "An operator opens the real Inbound collection for an Account with no records.",
+      "source": ["reference/persona_spec/personas.ex#spec/0"],
+      "cohort": "helios-void",
+      "state": "empty",
+      "reason": "Helios Inbound absence is checked on the connected collection route; no selected message exists for a Storybook variation.",
+      "owning_requirements": ["UXF-11", "STORY-03", "STORY-07"],
+      "proof_boundary": "connected-real-route-only",
+      "feedback_ids": ["fb-quiet-quick-view-arrows"],
+      "rendered": false
     }
   ],
   "axe_selection": [
@@ -141,7 +294,13 @@
     {"scenario_id": "qv-delivery-first", "state": "first", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
     {"scenario_id": "qv-delivery-last", "state": "last", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
     {"scenario_id": "qv-delivery-single-unicode", "state": "single-unicode", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
-    {"scenario_id": "qv-delivery-empty", "state": "empty", "themes": ["light", "dark"], "selected": false, "root_selector": ".mg-admin-root", "proof_boundary": "connected-real-route-only", "reason": "No selected Delivery record or story variation exists for this real absence state."}
+    {"scenario_id": "qv-delivery-empty", "state": "empty", "themes": ["light", "dark"], "selected": false, "root_selector": ".mg-admin-root", "proof_boundary": "connected-real-route-only", "reason": "No selected Delivery record or story variation exists for this real absence state."},
+    {"scenario_id": "qv-inbound-normal", "state": "normal", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-inbound-first", "state": "first", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-inbound-last", "state": "last", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-inbound-single-unicode", "state": "single-unicode", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-inbound-unavailable", "state": "unavailable", "themes": ["light", "dark"], "selected": true, "root_selector": ".mg-admin-root"},
+    {"scenario_id": "qv-inbound-empty", "state": "empty", "themes": ["light", "dark"], "selected": false, "root_selector": ".mg-admin-root", "proof_boundary": "connected-real-route-only", "reason": "No selected Inbound record or story variation exists for this real absence state."}
   ],
   "feedback": [
     {
@@ -211,10 +370,10 @@
       "current_sources": [{"path": "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex", "symbol": "MailglassAdmin.Operator.QuickView.nav_button/1"}, {"path": "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex", "symbol": "MailglassAdmin.Inbound.QuickView.nav_button/1"}],
       "owner_requirements": ["UXF-11"],
       "owner_phase": "174",
-      "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty"],
-      "status": "partial",
-      "disposition": "Delivery arrows no longer carry the idle border and retain ghost hover, focus ring, labels and 44px targets. Inbound arrows still carry their idle border pending Plan 174-02; keep its native disabled buttons.",
-      "evidence_pointer": "Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js (Phase174 tracer and Phase174 delivery cases); /ops/mail?tenant_id=northstar&view=deliveries and /dev/storybook/quick_views/delivery. Inbound proof is pending Plan 174-02."
+      "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty", "qv-inbound-normal", "qv-inbound-first", "qv-inbound-last", "qv-inbound-single-unicode", "qv-inbound-unavailable", "qv-inbound-empty"],
+      "status": "resolved",
+      "disposition": "Both production quick views use unoutlined ghost arrows with visible hover and focus states, readable position, accessible names, and 44px targets. Inbound keeps its native disabled buttons at the first/last boundaries.",
+      "evidence_pointer": "Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js (Phase174 tracer, delivery, and inbound cases); /ops/mail?tenant_id=northstar&view=deliveries and /ops/mail/inbound?tenant_id=northstar&provider=postmark&window_hours=168. Retained production stories: /dev/storybook/quick_views/delivery and /dev/storybook/quick_views/inbound."
     },
     {
       "id": "fb-raw-source-hierarchy",
@@ -260,10 +419,10 @@
       "owner_requirements": ["STORY-03", "STORY-04", "STORY-05", "STORY-06", "STORY-07"],
       "owner_phase": "174",
       "pending_phases": ["174-03", "174-04", "174-05", "174-06", "178"],
-      "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty"],
+      "scenario_ids": ["qv-delivery-normal", "qv-delivery-first", "qv-delivery-last", "qv-delivery-single-unicode", "qv-delivery-empty", "qv-inbound-normal", "qv-inbound-first", "qv-inbound-last", "qv-inbound-single-unicode", "qv-inbound-unavailable", "qv-inbound-empty"],
       "status": "partial",
-      "disposition": "The generated root, Theme Picker, sidebar, direct story and internal assets now retain /dev/storybook; the production Delivery story is retained. The serif stat-card defect remains, while production font/theme receipts, hook lifecycle, axe execution integrity, and final catalogue dispositions remain pending.",
-      "evidence_pointer": "Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js (Phase174 tracer); /dev/storybook, /dev/storybook/primitives/theme_picker, /dev/storybook/quick_views/delivery, /dev/storybook/assets. Pending phases are listed explicitly."
+      "disposition": "The generated root, Theme Picker, sidebar, direct story and internal assets now retain /dev/storybook; production Delivery and Inbound quick-view stories are retained. The serif stat-card defect remains, while production font/theme receipts, hook lifecycle, axe execution integrity, and final catalogue dispositions remain pending.",
+      "evidence_pointer": "Connected evidence: reference/demo_app/assets/e2e/quick-views.spec.js (Phase174 tracer, delivery, and inbound cases); /dev/storybook, /dev/storybook/primitives/theme_picker, /dev/storybook/quick_views/delivery, /dev/storybook/quick_views/inbound, /dev/storybook/assets. Pending phases are listed explicitly."
     },
     {
       "id": "fb-replay-review",

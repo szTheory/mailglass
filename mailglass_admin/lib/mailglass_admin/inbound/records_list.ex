@@ -189,9 +189,11 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                   <td class="min-w-0 text-body text-base-content">
                     <button
                       type="button"
+                      id={"inbound-record-open-desktop-#{record.id}"}
                       data-testid="inbound-record-open"
                       phx-click="select_inbound"
                       phx-value-id={record.id}
+                      phx-value-surface="desktop"
                       aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
                       aria-label={"Open inbound message #{record.id}"}
                       title={Map.get(record, :envelope_recipient) || "Unavailable"}
@@ -262,11 +264,13 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                   row_classes(@selected_record, record)
                 ]}>
                   <button
+                    id={"inbound-record-open-mobile-#{record.id}"}
                     data-testid="inbound-record-row"
                     data-selected={if selected?(@selected_record, record), do: "true", else: "false"}
                     type="button"
                     phx-click="select_inbound"
                     phx-value-id={record.id}
+                    phx-value-surface="mobile"
                     aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
                     class="mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm text-left"
                   >

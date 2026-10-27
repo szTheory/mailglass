@@ -107,6 +107,8 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:full_detail?, false)
      |> assign(:selected_record, nil)
      |> assign(:selected_outside_results?, false)
+     |> assign(:quick_view_focus_surface, nil)
+     |> assign(:quick_view_focus_return_id, nil)
      |> assign(:detail, nil)
      |> assign(:runs, [])
      |> assign(:routing_trace, [])
@@ -211,6 +213,11 @@ defmodule MailglassAdmin.InboundLive do
         |> assign(:provider_options, provider_options)
         |> assign(:provider_options_state, provider_options_state)
 
+      socket =
+        if is_nil(blank_to_nil(params["inbound_id"])),
+          do: assign(socket, :quick_view_focus_surface, nil),
+          else: socket
+
       if connected?(socket) and tenant_state == :auto_select do
         send(self(), :canonicalize_tenant)
       end
@@ -274,9 +281,12 @@ defmodule MailglassAdmin.InboundLive do
      |> assign_provider_options(normalized)}
   end
 
-  def handle_event("select_inbound", %{"id" => inbound_id}, socket) do
+  def handle_event("select_inbound", %{"id" => inbound_id} = params, socket) do
+    focus_surface =
+      if params["surface"] in ["desktop", "mobile"], do: params["surface"], else: nil
+
     {:noreply,
-     push_patch(socket,
+     push_patch(assign(socket, :quick_view_focus_surface, focus_surface),
        to:
          build_path(
            socket.assigns.base_path,
@@ -782,6 +792,18 @@ defmodule MailglassAdmin.InboundLive do
             <% end %>
 
             <%!-- Quick view (peek) overlay: a record is focused and we are NOT in Full detail. --%>
+            <%!-- Return focus to the selected row after the URL-driven quick view is removed. --%>
+            <span
+              :if={not @full_detail? and (@selected_record != nil or @detail_error != nil)}
+              data-testid="inbound-quick-view-focus-return"
+              data-focus-return-id={@quick_view_focus_return_id}
+              phx-mounted={JS.focus(to: "#inbound-quick-view-close")}
+              phx-remove={
+                if @quick_view_focus_return_id,
+                  do: JS.focus(to: "##{@quick_view_focus_return_id}"),
+                  else: %JS{}
+              }
+            />
             <QuickView.quick_view
               :if={not @full_detail? and (@selected_record != nil or @detail_error != nil)}
               record={@selected_record}
@@ -898,9 +920,20 @@ defmodule MailglassAdmin.InboundLive do
       records_read_state == :ok and not is_nil(selected_record) and
         is_nil(find_selected_record(records, selected_inbound_id))
 
+    quick_view_focus_return_id =
+      case {socket.assigns.quick_view_focus_surface, selected_record} do
+        {surface, %{id: id}} when surface in ["desktop", "mobile"] ->
+          if Enum.any?(records, &(&1.id == id)),
+            do: "inbound-record-open-#{surface}-#{id}"
+
+        _ ->
+          nil
+      end
+
     socket
     |> assign(:selected_record, selected_record)
     |> assign(:selected_outside_results?, selected_outside_results?)
+    |> assign(:quick_view_focus_return_id, quick_view_focus_return_id)
     |> assign(:detail, if(full?, do: detail, else: nil))
     |> assign(:runs, runs)
     |> assign(:detail_read_state, detail_read_state)
@@ -935,6 +968,8 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:empty_state, :no_tenant)
     |> assign(:selected_record, nil)
     |> assign(:selected_outside_results?, false)
+    |> assign(:quick_view_focus_surface, nil)
+    |> assign(:quick_view_focus_return_id, nil)
     |> assign(:detail, nil)
     |> assign(:runs, [])
     |> assign(:routing_trace, [])

@@ -321,6 +321,19 @@ test("Phase174 inbound connected navigation preserves Account, filters, keyboard
     expect(classes).toContain("mg-focus-ring");
     expect(classes).not.toMatch(/\bborder(?:-[^ ]+)?\b/);
   }
+  const idleBackground = await next.evaluate(element => getComputedStyle(element).backgroundColor);
+  await next.hover();
+  const hoverBackground = await next.evaluate(element => getComputedStyle(element).backgroundColor);
+  expect(hoverBackground, "ghost Inbound navigation has a visible hover state").not.toBe(idleBackground);
+  await next.focus();
+  await page.keyboard.press("Shift+Tab");
+  await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("aria-label")))
+    .toBe("Previous inbound record");
+  expect(await previous.evaluate(element => element.matches(":focus-visible")))
+    .toBe(true);
+  await page.keyboard.press("Tab");
+  await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("aria-label")))
+    .toBe("Next inbound record");
 
   await page.keyboard.press("ArrowDown");
   await expect.poll(() => new URL(page.url()).searchParams.get("inbound_id"))
@@ -330,7 +343,6 @@ test("Phase174 inbound connected navigation preserves Account, filters, keyboard
     url.searchParams.get("provider") === "postmark" &&
     url.searchParams.get("window_hours") === "168"
   );
-  const movedId = new URL(page.url()).searchParams.get("inbound_id");
   await page.keyboard.press("ArrowUp");
   await expect.poll(() => new URL(page.url()).searchParams.get("inbound_id")).toBe(selectedId);
 
@@ -339,6 +351,7 @@ test("Phase174 inbound connected navigation preserves Account, filters, keyboard
   await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("phx-value-id")))
     .toBe(selectedId);
 
+  const firstId = await openAt(0).getAttribute("phx-value-id");
   await openAt(0).click();
   await expect(quickView.locator('[aria-live="polite"]')).toHaveText("1 of 3");
   const firstBoundary = quickView.getByRole("button", { name: "Previous inbound record" });
@@ -347,6 +360,8 @@ test("Phase174 inbound connected navigation preserves Account, filters, keyboard
   await firstBoundary.click({ force: true });
   await expect(page).toHaveURL(firstUrl);
   await quickView.getByRole("link", { name: "Close quick view" }).click();
+  await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("phx-value-id")))
+    .toBe(firstId);
 
   await openAt(2).click();
   await expect(quickView.locator('[aria-live="polite"]')).toHaveText("3 of 3");
@@ -372,6 +387,10 @@ test("Phase174 inbound connected navigation preserves Account, filters, keyboard
     expect(box.width).toBeGreaterThanOrEqual(44);
     expect(box.height).toBeGreaterThanOrEqual(44);
   }
+  const mobileId = await mobileOpen.getAttribute("phx-value-id");
+  await quickView.getByRole("link", { name: "Close quick view" }).click();
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id))
+    .toBe(`inbound-record-open-mobile-${mobileId}`);
 
   await page.goto("/demo/login?return_to=" + encodeURIComponent(
     "/ops/mail/inbound?tenant_id=helios-void&window_hours=168"
@@ -381,10 +400,11 @@ test("Phase174 inbound connected navigation preserves Account, filters, keyboard
   await expect(page.getByTestId("inbound-quick-view")).toHaveCount(0);
   expect(new URL(page.url()).searchParams.has("inbound_id")).toBe(false);
 
-  await page.goto("/ops/mail/inbound?tenant_id=helios-void&inbound_id=" + encodeURIComponent(movedId));
+  const missingId = "00000000-0000-4000-8000-000000000000";
+  await page.goto("/ops/mail/inbound?tenant_id=northstar&inbound_id=" + encodeURIComponent(missingId));
   await page.locator("[data-phx-main].phx-connected").waitFor();
   await expect(page.getByTestId("inbound-quick-view-error")).toBeVisible();
-  await expect(page.getByTestId("inbound-quick-view")).not.toContainText("Question about the latest account activity");
+  await expect(page.getByTestId("inbound-quick-view")).not.toContainText("Invite email did not arrive");
 });
 
 test("Phase174 inbound retained production variations cover normal, boundaries, Unicode, and unavailable", async ({ page }) => {
@@ -400,10 +420,14 @@ test("Phase174 inbound retained production variations cover normal, boundaries, 
   const normalFrame = page.locator('iframe[id*="northstar_normal"]');
   expect(await normalFrame.count(), "the retained normal Inbound variation has an iframe").toBe(1);
   expect(await normalFrame.evaluate(frame => frame.clientHeight)).toBeGreaterThanOrEqual(600);
-  await expect(normal.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("2 of 16");
-  await expect(first.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("1 of 16");
+  await expect(normal.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("3 of 6");
+  await expect(normal.getByRole("heading", { name: "[support] Invite email did not arrive" })).toBeVisible();
+  await expect(normal.getByText("support@demo.mailglass.local", { exact: true })).toBeVisible();
+  await expect(normal.getByText("Northstar Logistics", { exact: true })).toBeVisible();
+  await expect(normal.getByText("MAILGUN", { exact: true })).toBeVisible();
+  await expect(first.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("1 of 6");
   await expect(first.getByRole("button", { name: "Previous inbound record" })).toBeDisabled();
-  await expect(last.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("16 of 16");
+  await expect(last.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("6 of 6");
   await expect(last.getByRole("button", { name: "Next inbound record" })).toBeDisabled();
   await expect(single.getByRole("dialog").locator('[aria-live="polite"]')).toHaveText("1 of 1");
   await expect(single.getByRole("heading", { name: "Welcome to Fjordline A/S — Bjørn Hansen / 山田太郎" })).toBeVisible();

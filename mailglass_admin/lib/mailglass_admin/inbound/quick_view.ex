@@ -36,8 +36,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
         tabindex="-1"
         data-testid="inbound-quick-view-scrim"
         class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 block"
-      >
-      </.link>
+      ></.link>
       <div
         id="inbound-quick-view"
         data-testid="inbound-quick-view"
@@ -195,7 +194,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
       data-testid={"inbound-quick-view-#{@dir}"}
       aria-label={@label}
       title={@label}
-      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 border border-base-300"
+      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11"
     >
       {render_slot(@inner_block)}
     </.link>
