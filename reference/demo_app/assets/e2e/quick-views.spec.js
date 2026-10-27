@@ -296,8 +296,11 @@ test("Phase174 delivery scenario manifest accounts for rendered and real-route-o
     expect(feedback.disposition).toBeTruthy();
     expect(feedback.evidence_pointer).toBeTruthy();
   }
+  const automatedPhase175Feedback = new Set(["fb-technical-details", "fb-suppression-refresh", "fb-replay-review"]);
   expect(manifest.feedback.filter(feedback => ["175", "176", "177", "178"].includes(feedback.owner_phase))
-    .every(feedback => feedback.status === "pending")).toBe(true);
+    .every(feedback => automatedPhase175Feedback.has(feedback.id)
+      ? feedback.owner_phase === "175" && feedback.status === "automated"
+      : feedback.status === "pending")).toBe(true);
 });
 
 test("Phase174 inbound connected navigation preserves Account, filters, keyboard, and boundaries", async ({ page }) => {
