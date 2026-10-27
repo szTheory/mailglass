@@ -1,4 +1,5 @@
 const { test, expect, chromium } = require("@playwright/test");
+const { AxeBuilder } = require("@axe-core/playwright");
 const fs = require("fs");
 const path = require("path");
 
@@ -158,6 +159,40 @@ async function phase174FocusTrapWraps(page, dialogId) {
     const element = document.activeElement;
     return element?.id || element?.getAttribute("data-testid") || element?.getAttribute("aria-label");
   })).toBe(lastControl);
+}
+
+async function assertPhase174QuickViewScrollAccess(page, dialog, dialogId) {
+  await dialog.evaluate(element => {
+    const content = element.ownerDocument.createElement("div");
+    content.dataset.testid = "phase174-overflow-content";
+    content.style.blockSize = "1400px";
+    content.style.marginBlock = "1rem";
+    content.textContent = Array.from({ length: 80 }, (_, index) => `Overflow test line ${index + 1}`).join(" ");
+    element.insertBefore(content, element.querySelector('[data-focus-trap="end"]'));
+  });
+
+  const dimensions = await dialog.evaluate(element => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight
+  }));
+  expect(dimensions.scrollHeight, `${dialogId} contains clipped long content`).toBeGreaterThan(dimensions.clientHeight);
+
+  const axe = await new AxeBuilder({ page })
+    .include(`#${dialogId}`)
+    .withRules(["scrollable-region-focusable"])
+    .analyze();
+  expect(
+    axe.violations.map(violation => violation.id),
+    `${dialogId} has no scrollable-region-focusable violation after a long-content reproduction`
+  ).not.toContain("scrollable-region-focusable");
+
+  await expect(dialog).toHaveAttribute("tabindex", "0");
+  await dialog.focus();
+  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe(dialogId);
+  await page.keyboard.press("PageDown");
+  await expect.poll(() => dialog.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+  await page.keyboard.press("End");
+  await expect.poll(() => dialog.evaluate(element => element.scrollTop + element.clientHeight >= element.scrollHeight - 1)).toBe(true);
 }
 
 async function openPreviewEmpty(page) {
@@ -1693,6 +1728,70 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       await expect.poll(() => unavailableModal.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
     } finally {
       await context.close();
+    }
+  });
+
+  test("Phase174 scroll access: delivery overflow is keyboard reachable and both navigation boundaries are disabled", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await openOperator(page);
+
+    const firstRow = page.locator('[data-testid="operator-delivery-row"]:visible').first();
+    await expect(firstRow).toBeVisible();
+    await firstRow.click();
+    const quickView = page.getByTestId("operator-quick-view");
+    await expect(quickView).toBeVisible();
+    await assertPhase174QuickViewScrollAccess(page, quickView, "operator-quick-view");
+
+    const position = quickView.locator('[aria-live="polite"]');
+    await expect(position).toHaveText(/^1 of \d+$/);
+    const [current, total] = (await position.textContent()).split(" of ").map(Number);
+    expect(current).toBe(1);
+
+    const previous = quickView.getByRole("button", { name: "Previous delivery", exact: true });
+    await expect(previous).toBeDisabled();
+    for (let index = 1; index < total; index += 1) {
+      await quickView.getByRole("link", { name: "Next delivery", exact: true }).click();
+      await expect(position).toHaveText(`${index + 1} of ${total}`);
+    }
+    const next = quickView.getByRole("button", { name: "Next delivery", exact: true });
+    await expect(next).toBeDisabled();
+
+    for (const control of [previous, next, quickView.getByRole("link", { name: "Close quick view", exact: true })]) {
+      const box = await control.boundingBox();
+      expect(box?.width, `${await control.getAttribute("aria-label")} keeps a 44px width`).toBeGreaterThanOrEqual(44);
+      expect(box?.height, `${await control.getAttribute("aria-label")} keeps a 44px height`).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  test("Phase174 scroll access: Inbound overflow is keyboard reachable and both navigation boundaries are disabled", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await openInbound(page);
+
+    const firstRow = page.locator('[data-testid="inbound-record-open"]:visible').first();
+    await expect(firstRow).toBeVisible();
+    await firstRow.click();
+    const quickView = page.getByTestId("inbound-quick-view");
+    await expect(quickView).toBeVisible();
+    await assertPhase174QuickViewScrollAccess(page, quickView, "inbound-quick-view");
+
+    const position = quickView.locator('[aria-live="polite"]');
+    await expect(position).toHaveText(/^1 of \d+$/);
+    const [current, total] = (await position.textContent()).split(" of ").map(Number);
+    expect(current).toBe(1);
+
+    const previous = quickView.getByRole("button", { name: "Previous inbound record", exact: true });
+    await expect(previous).toBeDisabled();
+    for (let index = 1; index < total; index += 1) {
+      await quickView.getByRole("link", { name: "Next inbound record", exact: true }).click();
+      await expect(position).toHaveText(`${index + 1} of ${total}`);
+    }
+    const next = quickView.getByRole("button", { name: "Next inbound record", exact: true });
+    await expect(next).toBeDisabled();
+
+    for (const control of [previous, next, quickView.getByRole("link", { name: "Close quick view", exact: true })]) {
+      const box = await control.boundingBox();
+      expect(box?.width, "Inbound navigation and Close keep a 44px width").toBeGreaterThanOrEqual(44);
+      expect(box?.height, "Inbound navigation and Close keep a 44px height").toBeGreaterThanOrEqual(44);
     }
   });
 
