@@ -603,6 +603,8 @@ defmodule MailglassAdmin.InboundLive do
                     )
                   }
                   data-testid="inbound-detail-back"
+                  id="inbound-detail-back"
+                  phx-mounted={JS.focus(to: "#inbound-detail-back")}
                   class="mg-focus-ring btn btn-ghost !h-11 min-h-11"
                 >
                   <Components.icon name="hero-arrow-uturn-left" class="mr-xs h-4 w-4" />

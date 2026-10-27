@@ -72,10 +72,18 @@ const SOURCE_REQUIRED = [
   "reference/demo_app/assets/scripts/check-demo-browser-deps.cjs",
   "reference/demo_app/assets/scripts/evidence-output-path.cjs",
   "reference/demo_app/dev/mailglass_demo_web/storybook.ex",
+  "reference/demo_app/lib/mailglass_demo_web/router.ex",
+  "reference/demo_app/lib/mailglass_demo_web/controllers/page_controller.ex",
+  "reference/demo_app/assets/scripts/check-persona-reset-target.cjs",
+  "reference/demo_app/storybook/primitives/theme_picker.story.exs",
+  "reference/demo_app/storybook/quick_views/delivery.story.exs",
+  "reference/demo_app/storybook/quick_views/inbound.story.exs",
   "mailglass_admin/mix.lock",
   "mailglass_admin/package.json",
   "mailglass_admin/package-lock.json",
   "mailglass_admin/playwright.storybook.config.cjs",
+  "mailglass_admin/playwright.config.cjs",
+  "mailglass_admin/e2e/flows.spec.js",
   "mailglass_admin/e2e/storybook-axe.spec.js",
   "mailglass_admin/e2e/support/storybook-axe.cjs",
   "mailglass_admin/docs/storybook-axe-approved.json",
@@ -84,6 +92,10 @@ const SOURCE_REQUIRED = [
   "mailglass_admin/priv/static/hooks.js",
   "mailglass_admin/lib/mailglass_admin/operator/quick_view.ex",
   "mailglass_admin/lib/mailglass_admin/inbound/quick_view.ex",
+  "mailglass_admin/lib/mailglass_admin/inbound_live.ex",
+  "mailglass_admin/lib/mailglass_admin/inbound/records_list.ex",
+  "mailglass_admin/lib/mailglass_admin/controllers/assets.ex",
+  "reference/persona_spec/quick_view_scenarios.ex",
   "reference/persona_spec/quick_view_scenarios.json"
 ];
 
@@ -158,7 +170,7 @@ function selectedSourcePaths(root = ROOT) {
   for (const item of tracked) {
     if (
       (item.startsWith("reference/demo_app/assets/e2e/") && item.endsWith(".spec.js")) ||
-      (item.startsWith("reference/demo_app/storybook/quick_views/") && /\.(ex|heex)$/.test(item)) ||
+      (item.startsWith("reference/demo_app/storybook/quick_views/") && /\.(exs?|heex)$/.test(item)) ||
       (item.startsWith("mailglass_admin/priv/static/fonts/") && item.endsWith(".woff2")) ||
       (item.startsWith("mailglass_admin/e2e/storybook-axe") && /\.(js|cjs)$/.test(item)) ||
       (item.startsWith("mailglass_admin/e2e/support/storybook-axe") && /\.(js|cjs)$/.test(item))

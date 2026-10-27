@@ -1805,6 +1805,14 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
       expect(box?.width, `Inbound ${label} control keeps a 44px width`).toBeGreaterThanOrEqual(44);
       expect(box?.height, `Inbound ${label} control keeps a 44px height`).toBeGreaterThanOrEqual(44);
     }
+
+    await quickView.getByRole("link", { name: "Open full detail", exact: true }).click();
+    const back = page.getByTestId("inbound-detail-back");
+    await expect(back).toBeVisible();
+    await expect(back).toBeFocused();
+    await back.click();
+    await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
+    await expect(page.locator("#inbound-quick-view-close")).toBeFocused();
   });
 
   test("Phase174 client hooks: Admin focus traps survive patches, reconnects, and removal", async ({ page }) => {

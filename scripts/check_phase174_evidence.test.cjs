@@ -587,3 +587,32 @@ test("CI producer validates condition timings before completed job metadata exis
   assert.notEqual(runChecker(evidenceDir, ["--require-ci"]).status, 0,
     "the final gate must still require completed independent job metadata");
 });
+
+test('source identity includes dirty route and .story.exs bytes at the same revision', t => {
+  const checker = require('./check_phase174_evidence.cjs');
+  const required = [
+    'reference/demo_app/lib/mailglass_demo_web/router.ex',
+    'reference/demo_app/storybook/quick_views/delivery.story.exs',
+    'reference/demo_app/storybook/quick_views/inbound.story.exs',
+    'reference/demo_app/storybook/primitives/theme_picker.story.exs',
+    'mailglass_admin/lib/mailglass_admin/inbound_live.ex',
+    'mailglass_admin/lib/mailglass_admin/inbound/records_list.ex'
+  ];
+  const paths = checker.selectedSourcePaths(ROOT);
+  for (const file of required) assert.ok(paths.includes(file), `missing exercised source: ${file}`);
+  const copy = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mailglass-source-')));
+  t.after(() => fs.rmSync(copy, { recursive: true, force: true }));
+  for (const file of paths) {
+    fs.mkdirSync(path.dirname(path.join(copy, file)), { recursive: true });
+    fs.copyFileSync(path.join(ROOT, file), path.join(copy, file));
+  }
+  execFileSync('git', ['init', '-q', copy]);
+  execFileSync('git', ['add', '.'], { cwd: copy });
+  const original = checker.computeSourceIdentity(copy, REVISION).source_digest;
+  for (const file of required) {
+    const full = path.join(copy, file), bytes = fs.readFileSync(full);
+    fs.appendFileSync(full, '\n# dirty source proof\n');
+    assert.notEqual(checker.computeSourceIdentity(copy, REVISION).source_digest, original, file);
+    fs.writeFileSync(full, bytes);
+  }
+});

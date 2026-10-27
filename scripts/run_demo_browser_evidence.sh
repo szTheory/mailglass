@@ -29,6 +29,8 @@ fi
 COMPOSE_PROJECT="mailglass-evidence-$RUN_SUFFIX"
 RUN_ID="$COMPOSE_PROJECT"
 RUN_EVIDENCE_ROOT="$EVIDENCE_DIR/$COMPOSE_PROJECT"
+node -e 'require(process.argv[1]).resolveEvidenceOutputPath(process.argv[2]);' \
+  "$ROOT_DIR/reference/demo_app/assets/scripts/evidence-output-path.cjs" "$RUN_EVIDENCE_ROOT"
 if [[ "$PHASE174" == true ]]; then
   if [[ -e "$RUN_EVIDENCE_ROOT" ]]; then
     echo "Refusing to reuse existing evidence output owned by another run: $RUN_EVIDENCE_ROOT" >&2
