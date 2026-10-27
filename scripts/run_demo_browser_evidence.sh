@@ -241,6 +241,14 @@ export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=/wo
 now_ms() { node -e 'process.stdout.write(String(Number(process.hrtime.bigint() / 1000000n)))'; }
 condition_dir="$PHASE174_EVIDENCE_DIR"
 mkdir -p "$condition_dir"
+# Private receipts are created by the container's root user. Return ownership
+# only within this run's condition directory so the host can enrich/upload them.
+# Preserve their private modes and never follow a link into another directory.
+publish_evidence_ownership() {
+  [ -d "$condition_dir" ] || return 0
+  chown -Rh "$PHASE174_HOST_UID:$PHASE174_HOST_GID" "$condition_dir"
+}
+trap 'condition_exit=$?; trap - EXIT; publish_evidence_ownership || exit 1; exit "$condition_exit"' EXIT
 if [ ! -d /cache/playwright ]; then mkdir -p /cache/playwright; fi
 export PLAYWRIGHT_BROWSERS_PATH=/cache/playwright
 demo_evidence_dir="${DEMO_BROWSER_EVIDENCE_DIR:-/workspace/reference/demo_app/tmp/demo_browser_evidence}"
@@ -309,6 +317,8 @@ PHASE174_ENV_ARGS=(
   --env DEMO_EVIDENCE_RUN_ID="$DEMO_EVIDENCE_RUN_ID"
   --env DEMO_EVIDENCE_PROJECT_ID="$DEMO_EVIDENCE_PROJECT_ID"
   --env DEMO_EVIDENCE_RESET_TOKEN="$DEMO_EVIDENCE_RESET_TOKEN"
+  --env PHASE174_HOST_UID="$(id -u)"
+  --env PHASE174_HOST_GID="$(id -g)"
   --env PLAYWRIGHT_BROWSERS_PATH=/cache/playwright
   --env CI=true
 )
