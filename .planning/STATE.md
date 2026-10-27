@@ -1,21 +1,16 @@
 ---
 gsd_state_version: "1.0"
-milestone: v2.9
-milestone_name: Operator, Preview & Email UI Refinement
-status: Awaiting next milestone
-stopped_at: Milestone v2.9 complete and archived
-last_updated: "2026-10-26T13:36:00.000Z"
+milestone: v2.10
+milestone_name: UI Repairs & Faithful Storybook
+status: planning
+last_updated: "2026-10-27T00:10:47.311Z"
 last_activity: 2026-10-26
-last_activity_desc: Milestone v2.9 completed and archived
-state_head: 4711c52450f786b595b7b19ef515aad7fd243ab2
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 43
-  completed_plans: 43
-  percent: 100
-current_phase: null
-current_phase_name: Planning next milestone
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,7 +20,7 @@ current_phase_name: Planning next milestone
 See: .planning/PROJECT.md (updated 2026-10-26)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Planning next milestone (v2.9 shipped 2026-10-26)
+**Current focus:** v2.10 UI Repairs & Faithful Storybook — defining requirements
 
 > **Note on the sections below.** Some of the accumulated context that follows is v2.7-era prose that
 > has since been corrected — `## Operator Next Steps` previously described two `InboundLiveTest` reds
@@ -39,12 +34,14 @@ See: .planning/PROJECT.md (updated 2026-10-26)
 
 ## Current Position
 
-Phase: Milestone v2.9 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-10-26
+Status: Defining requirements
+Last activity: 2026-10-26 — Milestone v2.10 started
 
-## v2.9 Roadmap Shape
+## v2.9 Roadmap Shape (historical; shipped and archived)
+
+The progress statements below are retained execution history; v2.9 is complete.
 
 - Phases 168–173 own all 28 approved requirements. Phases 168–172 are complete; Phase 170 independently passed 30/30 must-haves across INUX-01–04, and Phase 172 passed 9/9 must-haves across MAILUX-01–04. Phase 173 remains.
 - Phase 168 passed 96/96 plan truths and 5/5 roadmap truths. Phase 169 passed 100 positive must-haves, including 82 UI states, with five negative constraints individually adjudicated. Phase 170 completed eight plans across six waves; its verification, 21-threat security audit, clean code review, package suites, and connected browser checks passed. D-52 leaves no machine-observable owner UAT. Later slices follow ROADMAP.md.
@@ -563,10 +560,10 @@ Historical scope for the completed v2.8 milestone follows. Its no-Phase-168 rest
 
 ## Session Continuity
 
-Last session: 2026-10-10T15:44:07Z
-Stopped at: Milestone v2.9 complete and archived
-Resume file: None
+Last session: 2026-10-26T23:57:51.991Z
+Stopped at: v2.10 scope confirmed; research choice before requirements
+Resume file: .planning/research/ui-quality-engine/UPSTREAM-SCOPE.md
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Continue v2.10 initialization: choose reuse of existing research or an additional research pass, then define requirements and roadmap.

@@ -1,43 +1,12 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.9 — Operator, Preview & Email UI Refinement",
-  "phases": [
-    {
-      "number": "168",
-      "name": "Shared Workspace and Usable Baseline",
-      "status": "complete"
-    },
-    {
-      "number": "169",
-      "name": "Outbound Investigation and Recovery",
-      "status": "complete"
-    },
-    {
-      "number": "170",
-      "name": "Inbound Investigation and Recovery",
-      "status": "complete"
-    },
-    {
-      "number": "171",
-      "name": "Developer Preview",
-      "status": "complete"
-    },
-    {
-      "number": "172",
-      "name": "Recipient Output and Built-in Pages",
-      "status": "complete"
-    },
-    {
-      "number": "173",
-      "name": "Consistency and Delivery Evidence",
-      "status": "complete"
-    }
-  ],
+  "milestone": "v2.10",
+  "phases": [],
   "next": {
-    "command": "/gsd-progress",
-    "label": "Show progress",
-    "reason": "Unsure of state — showing progress"
+    "command": "$gsd-discuss-phase",
+    "label": "Discuss the first phase",
+    "reason": "Project initialized — plan your first phase"
   },
-  "updated_at": "2026-10-26T13:34:41.641Z"
+  "updated_at": "2026-10-27T00:10:47.314Z"
 }

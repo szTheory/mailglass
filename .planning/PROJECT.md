@@ -8,9 +8,29 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
+## Current Milestone: v2.10 UI Repairs & Faithful Storybook
+
+**Goal:** Resolve recorded operator and author UI friction through integrated repairs, faithful retained production-component scenarios, and proof at the real affected boundary.
+
+**Scope confirmed:** 2026-10-26. Formalize only the next envelope from [UPSTREAM-SCOPE.md](research/ui-quality-engine/UPSTREAM-SCOPE.md), the current scope authority; the [rolling proposal](research/ui-quality-engine/MILESTONE-PROPOSAL.md) projects later envelopes without admitting them to this milestone. Continue phase numbering at 174.
+
+**Target features:**
+- Health hierarchy, compact Account context and coherent host-supported navigation, preserving actionable issues and truthful scope.
+- Auto-apply selects and debounced text on Deliveries and Inbound, preserving canonical URLs, useful Back, focus, pagination reset, validation and account isolation.
+- Restrained quick-view navigation and discoverable, truthful replay with shared dialog presentation, X-close, requested success toast and explicit in-dialog failure/retry outcomes.
+- Complete ordinary authorized Inbound contact values, useful technical details visible on full detail, and coherent raw-source/suppression presentation without widening sensitive evidence access.
+- Preview restore-defaults/action/helper treatment and readable scenario/module identity, preserving account-independent sample rendering.
+- Storybook mount/font/theme/hook fidelity established early; realistic retained scenarios and real-route checks accompany each repair. Complete one Delivery investigation path as an early integration proof.
+
+**Selected seeds:** SEED-009 (bounded to this envelope), SEED-261010-hjp, and only the live-filter portion of SEED-261010-gad. Custom date ranges remain deferred.
+
+**Boundaries:** Preserve the shipped brand, domain, authorization, Account, exact replay and rendering contracts. No exhaustive Gallery migration, fully storied app, six-profile quota, generic view/fixture framework, capability/provider growth, custom date ranges, account-aware Preview, interactive unsubscribe submission, Gallery-route removal, rebrand, CI-wide redesign or judge service. F7 token-route mounting remains a named following-envelope candidate. Preview return context needs a narrow validated host-supported seam if admitted; it must not expand auth/session contracts. Prefer existing dependencies and incremental presentation extraction.
+
+**Verification:** D-52 applies. Use synthetic normal/empty/long-Unicode cohorts, relevant reachable boundary/failure/permission states, representative themes and viewport/container widths, keyboard/focus, and explicit System/reduced-motion/real-zoom ownership. Fresh axe comparisons and expected/executed counts precede ratchet claims. Measure added cold/warm CI cost against provisional ≤5 wall minutes / ≤10 runner-minutes; these are pilot budgets, not measured facts. Existing required gates retain their meaning.
+
 ## Completed Milestone: v2.9 Operator, Preview & Email UI Refinement
 
-**Shipped and archived 2026-10-26.** No milestone is active; the next one starts with `/gsd-new-milestone`.
+**Shipped and archived 2026-10-26.** Historical v2.9 scope follows; v2.10 is the current milestone above.
 
 **Goal:** Make Mailglass's existing operator, author, and recipient journeys coherent, readable, responsive, and reviewable with clear actions and truthful outcomes.
 
@@ -220,7 +240,13 @@ Reconciliation and Closeout; and Reconcile terminal proof and milestone archive 
 
 ## Active Requirements
 
-**No milestone is active.** Define the next milestone's requirements with `/gsd-new-milestone`. Candidate inputs: the owner-review follow-up (`todos/2026-10-25-owner-review-pr302-ui-feedback.md`, plus the v2.9 dead handlers, theme doc drift and F7), CI efficiency, and SEED-009 fractal storybook.
+**v2.10 UI Repairs & Faithful Storybook** — milestone scope confirmed 2026-10-26; detailed requirements are being defined from the current upstream brief and unresolved owner feedback.
+
+- [ ] Resolve all admitted Health, Account/navigation, collection-filter, quick-view, evidence, suppression, replay and Preview feedback with a current-source disposition for every row.
+- [ ] Establish trustworthy Storybook navigation, assets, typography, themes and hooks, then retain realistic scenarios invoking production presentation alongside the repaired jobs/areas.
+- [ ] Prove interactions at their connected boundaries, preserve trust contracts, and record fresh coverage/accessibility/fidelity and measured cost evidence without speculative infrastructure.
+
+The following whole-job expansion and conditional consolidation envelopes remain future scope. [Current brief](research/ui-quality-engine/UPSTREAM-SCOPE.md), [proposal](research/ui-quality-engine/MILESTONE-PROPOSAL.md), and [thread](threads/ui-quality-engine.md) retain their rationale. Demo auth/browser fixes, dead-handler cleanup and theme-doc cleanup already completed after v2.9 stay completed. CI efficiency remains separate.
 
 ## Validated Requirements: v2.9 (SHIPPED 2026-10-26)
 
@@ -1165,7 +1191,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-10-26 after v2.9 milestone archive. Audit tech_debt (28/28 requirements, 7/7 phases, 11/14 integration, 6/7 flows); no milestone active.*
+*Last updated: 2026-10-26 after confirmation of v2.10 UI Repairs & Faithful Storybook scope; requirements and roadmap definition in progress.*
 <!-- prior footer: 2026-10-09 UTC after Phase 172 verification. -->
 <!-- prior footer: 2026-09-15 after Phase 165. -->
 <!-- prior footer: 2026-07-31 after v2.2 milestone archive. Audit passed 20/20 requirements, 8/8 integration seams, and 6/6 end-to-end flows; next milestone not yet defined. -->
