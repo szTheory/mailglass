@@ -581,4 +581,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Run `$gsd-plan-phase 174` for Faithful Storybook and Quiet Quick Views; use `$gsd-discuss-phase 174` if additional context gathering is useful. Scope, 31 requirements and the five-phase roadmap are approved; implementation has not started.
+- Continue Phase 174 with `$gsd-execute-phase 174` at Plan 3 of 6. Plan 03 owns the shared hook lifecycle and should preserve Plan 02's validated Inbound surface marker and selected-row focus return.
