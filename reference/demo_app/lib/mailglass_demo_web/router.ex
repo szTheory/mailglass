@@ -6,8 +6,10 @@ defmodule MailglassDemoWeb.StorybookRoutes do
       quote do
         import PhoenixStorybook.Router
 
+        # Static Storybook assets share the full mount prefix so generated links
+        # and direct story destinations resolve from the deployed dev route.
         scope "/" do
-          storybook_assets()
+          storybook_assets("/dev/storybook/assets")
         end
       end
     else
@@ -20,10 +22,16 @@ defmodule MailglassDemoWeb.StorybookRoutes do
       quote do
         import PhoenixStorybook.Router
 
-        scope "/dev" do
+        # PhoenixStorybook's 1.2 router macros need a root scope and a complete
+        # mount path. Keep the application browser protections around its own
+        # session/CSRF pipeline.
+        scope "/" do
           pipe_through(:browser)
 
-          live_storybook("/storybook", backend_module: MailglassDemoWeb.Storybook)
+          live_storybook("/dev/storybook",
+            backend_module: MailglassDemoWeb.Storybook,
+            assets_path: "/dev/storybook/assets"
+          )
         end
       end
     else

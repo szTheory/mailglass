@@ -205,7 +205,7 @@ defmodule MailglassAdmin.Operator.QuickView do
       data-testid={"operator-quick-view-#{@dir}"}
       aria-label={@label}
       title={@label}
-      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 border border-base-300"
+      class="mg-focus-ring btn btn-ghost min-h-11 min-w-11"
     >
       {render_slot(@inner_block)}
     </.link>
